@@ -4,424 +4,308 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  timestamp: Date
-  actionTaken?: string
-  proactiveWarning?: string
-  isTyping?: boolean
-}
+type Persona = { id: string; name: string; title: string; emoji: string; color: string; specialty: string }
 
-interface PersonaInfo {
-  id: string
-  name: string
-  title: string
-  avatar: string
-  color: string
-}
+const PERSONAS: Persona[] = [
+  { id: "aysekaya",    name: "Prof. Ayşe Kaya",    title: "Pediatri Uzmanı",        emoji: "👩‍⚕️", color: "#0F9B8E", specialty: "pediatri"    },
+  { id: "mehmetdemir", name: "Prof. Mehmet Demir",  title: "Kardiyoloji Uzmanı",     emoji: "👨‍⚕️", color: "#2563EB", specialty: "kardiyoloji" },
+  { id: "elifsahin",   name: "Prof. Elif Şahin",    title: "Nöroloji & Dahiliye",    emoji: "👩‍⚕️", color: "#7C3AED", specialty: "genel"       },
+]
 
-const PERSONAS: Record<string, PersonaInfo> = {
-  aysekaya:    { id: "aysekaya",    name: "Prof. Ayşe Kaya",    title: "Pediatri Uzmanı",         avatar: "👩‍⚕️", color: "#0F9B8E" },
-  mehmetdemir: { id: "mehmetdemir", name: "Prof. Mehmet Demir", title: "Kardiyoloji Uzmanı",       avatar: "👨‍⚕️", color: "#2563EB" },
-  elifsahin:   { id: "elifsahin",   name: "Prof. Elif Şahin",   title: "Nöroloji & Dahiliye",      avatar: "👩‍⚕️", color: "#7C3AED" },
-}
-
-// Web Speech API types
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition
-    webkitSpeechRecognition: new () => SpeechRecognition
-  }
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean
-  interimResults: boolean
-  lang: string
-  start(): void
-  stop(): void
-  onresult: ((event: SpeechRecognitionEvent) => void) | null
-  onerror: ((event: Event) => void) | null
-  onend: (() => void) | null
-}
-
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList
-}
-
-interface SpeechRecognitionResultList {
-  length: number
-  [index: number]: SpeechRecognitionResult
-}
-
-interface SpeechRecognitionResult {
-  isFinal: boolean
-  [index: number]: SpeechRecognitionAlternative
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string
-}
+type ConvStatus = "idle" | "connecting" | "connected" | "speaking_ai" | "listening" | "error"
+type Message = { id: string; speaker: "doctor" | "ai"; text: string; time: Date }
 
 export default function AsistanPage() {
   const router = useRouter()
+  const [persona, setPersona] = useState<Persona>(PERSONAS[0])
+  const [status, setStatus] = useState<ConvStatus>("idle")
   const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [persona, setPersona] = useState<PersonaInfo>(PERSONAS.elifsahin)
-  const [asistanSessionId, setAsistanSessionId] = useState<string | null>(null)
-  const [isListening, setIsListening] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
-  const [voiceEnabled, setVoiceEnabled] = useState(true)
-  const [specialty, setSpecialty] = useState("genel")
   const [authToken, setAuthToken] = useState<string | null>(null)
-  const [interimText, setInterimText] = useState("")
+  const [error, setError] = useState("")
+  const wsRef = useRef<WebSocket | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)
+  const processorRef = useRef<ScriptProcessorNode | null>(null)
+  const audioQueueRef = useRef<ArrayBuffer[]>([])
+  const isPlayingRef = useRef(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.push("/giris"); return }
       setAuthToken(session.access_token)
     })
-    // Initial greeting
-    const defaultPersona = PERSONAS.elifsahin
-    const greeting = getGreeting(defaultPersona.id)
-    setMessages([{
-      id: Date.now().toString(),
-      role: "assistant",
-      content: greeting,
-      timestamp: new Date()
-    }])
-    if (voiceEnabled) speakText(greeting, defaultPersona.id)
+    return () => { stopConversation() }
   }, [])
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages])
 
-  function getGreeting(personaId: string): string {
-    const greetings: Record<string, string> = {
-      aysekaya:    "Merhaba doktor. Ben Prof. Ayşe. Bugün hangi hastamıza bakıyoruz?",
-      mehmetdemir: "Doktor, dinliyorum. Ne var?",
-      elifsahin:   "Merhaba doktor. Ben Prof. Elif. Vakayı dinliyorum.",
-    }
-    return greetings[personaId] || "Merhaba doktor. Nasıl yardımcı olabilirim?"
+  function addMessage(speaker: "doctor" | "ai", text: string) {
+    setMessages(prev => [...prev, { id: Date.now().toString(), speaker, text, time: new Date() }])
   }
 
-  // ElevenLabs TTS
-  async function speakText(text: string, personaId: string) {
-    if (!voiceEnabled || !process.env.NEXT_PUBLIC_ELEVENLABS_KEY) return
-    const voiceIds: Record<string, string> = {
-      aysekaya:    "21m00Tcm4TlvDq8ikWAM",
-      mehmetdemir: "AZnzlk1XvdvUeBnXmlld",
-      elifsahin:   "EXAVITQu4vr4xnSDxMaL",
-    }
-    try {
-      setIsSpeaking(true)
-      const resp = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceIds[personaId] || voiceIds.elifsahin}/stream`,
-        {
-          method: "POST",
-          headers: {
-            "xi-api-key": process.env.NEXT_PUBLIC_ELEVENLABS_KEY!,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            text: text.slice(0, 500),
-            model_id: "eleven_turbo_v2_5",
-            voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.3 }
-          })
-        }
-      )
-      if (resp.ok) {
-        const blob = await resp.blob()
-        const url = URL.createObjectURL(blob)
-        if (audioRef.current) audioRef.current.pause()
-        audioRef.current = new Audio(url)
-        audioRef.current.onended = () => setIsSpeaking(false)
-        audioRef.current.play()
-      }
-    } catch {
-      setIsSpeaking(false)
-    }
+  // ── AUDIO PLAYBACK ───────────────────────────────────────────
+  async function playAudioChunk(base64Audio: string) {
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioContext({ sampleRate: 16000 })
+    const ctx = audioCtxRef.current
+    const raw = atob(base64Audio)
+    const buf = new ArrayBuffer(raw.length)
+    const view = new Uint8Array(buf)
+    for (let i = 0; i < raw.length; i++) view[i] = raw.charCodeAt(i)
+    audioQueueRef.current.push(buf)
+    if (!isPlayingRef.current) drainAudioQueue()
   }
 
-  // Web Speech API — Voice input
-  function toggleListening() {
-    if (isListening) {
-      recognitionRef.current?.stop()
-      setIsListening(false)
-      return
-    }
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRec) {
-      alert("Tarayıcınız ses tanımayı desteklemiyor. Chrome kullanın.")
-      return
-    }
-    const recognition = new SpeechRec()
-    recognition.continuous = false
-    recognition.interimResults = true
-    recognition.lang = "tr-TR"
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const results = event.results
-      for (let i = 0; i < results.length; i++) {
-        if (results[i].isFinal) {
-          const transcript = results[i][0].transcript
-          setInput(prev => prev + transcript)
-          setInterimText("")
-        } else {
-          setInterimText(results[i][0].transcript)
-        }
-      }
-    }
-    recognition.onend = () => { setIsListening(false); setInterimText("") }
-    recognition.onerror = () => { setIsListening(false); setInterimText("") }
-    recognitionRef.current = recognition
-    recognition.start()
-    setIsListening(true)
-  }
-
-  async function sendMessage(text?: string) {
-    const messageText = text || input.trim()
-    if (!messageText || loading || !authToken) return
-    setInput("")
-    setInterimText("")
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: messageText,
-      timestamp: new Date()
-    }
-    const typingMsg: Message = {
-      id: "typing",
-      role: "assistant",
-      content: "...",
-      timestamp: new Date(),
-      isTyping: true
-    }
-    setMessages(prev => [...prev, userMsg, typingMsg])
-    setLoading(true)
-
-    try {
-      const resp = await fetch("/api/asistan/chat", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: messageText,
-          asistanSessionId,
-          specialty,
-          personaId: persona.id
+  async function drainAudioQueue() {
+    if (isPlayingRef.current || !audioQueueRef.current.length) return
+    isPlayingRef.current = true
+    setStatus("speaking_ai")
+    while (audioQueueRef.current.length > 0) {
+      const buf = audioQueueRef.current.shift()!
+      const ctx = audioCtxRef.current!
+      try {
+        const decoded = await ctx.decodeAudioData(buf.slice(0))
+        await new Promise<void>(resolve => {
+          const source = ctx.createBufferSource()
+          source.buffer = decoded
+          source.connect(ctx.destination)
+          source.onended = () => resolve()
+          source.start()
         })
-      })
-      const data = await resp.json()
-
-      if (data.success) {
-        if (!asistanSessionId) setAsistanSessionId(data.data.asistanSessionId)
-        const aiPersonaId = data.data.personaId
-        if (aiPersonaId && PERSONAS[aiPersonaId]) setPersona(PERSONAS[aiPersonaId])
-
-        const aiMsg: Message = {
-          id: Date.now().toString() + "ai",
-          role: "assistant",
-          content: data.data.speech,
-          timestamp: new Date(),
-          actionTaken: data.data.actionResult?.message,
-          proactiveWarning: data.data.proactiveWarning
-        }
-        setMessages(prev => prev.filter(m => m.id !== "typing").concat(aiMsg))
-        if (voiceEnabled) speakText(data.data.speech, aiPersonaId || persona.id)
-      } else {
-        setMessages(prev => prev.filter(m => m.id !== "typing").concat({
-          id: Date.now().toString(),
-          role: "assistant",
-          content: "Bir hata oluştu. Tekrar deneyin.",
-          timestamp: new Date()
-        }))
-      }
-    } catch {
-      setMessages(prev => prev.filter(m => m.id !== "typing").concat({
-        id: Date.now().toString(),
-        role: "assistant",
-        content: "Bağlantı hatası. İnternet bağlantınızı kontrol edin.",
-        timestamp: new Date()
-      }))
+      } catch { /* skip bad chunk */ }
     }
-    setLoading(false)
+    isPlayingRef.current = false
+    if (wsRef.current?.readyState === WebSocket.OPEN) setStatus("listening")
   }
 
-  const S = (s: Record<string,unknown>) => s as React.CSSProperties
+  function stopAudio() {
+    audioQueueRef.current = []
+    isPlayingRef.current = false
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close()
+      audioCtxRef.current = null
+    }
+  }
 
-  const QUICK_COMMANDS = [
-    "Yeni hasta ekle",
-    "Tanı ne?",
-    "İlaç yaz",
-    "Sevk mektubu",
-    "SGK uyumlu mu?",
-  ]
+  // ── MICROPHONE ───────────────────────────────────────────────
+  async function startMic(ws: WebSocket) {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1 } })
+    micStreamRef.current = stream
+    const ctx = audioCtxRef.current || new AudioContext({ sampleRate: 16000 })
+    audioCtxRef.current = ctx
+    const source = ctx.createMediaStreamSource(stream)
+    const processor = ctx.createScriptProcessor(4096, 1, 1)
+    processor.onaudioprocess = (e) => {
+      if (ws.readyState !== WebSocket.OPEN || isPlayingRef.current) return
+      const pcm = e.inputBuffer.getChannelData(0)
+      const int16 = new Int16Array(pcm.length)
+      for (let i = 0; i < pcm.length; i++) int16[i] = Math.max(-32768, Math.min(32767, pcm[i] * 32768))
+      const b64 = btoa(String.fromCharCode(...new Uint8Array(int16.buffer)))
+      ws.send(JSON.stringify({ user_audio_chunk: b64 }))
+    }
+    source.connect(processor)
+    processor.connect(ctx.destination)
+    processorRef.current = processor
+  }
+
+  function stopMic() {
+    processorRef.current?.disconnect()
+    micStreamRef.current?.getTracks().forEach(t => t.stop())
+    micStreamRef.current = null
+  }
+
+  // ── WEBSOCKET CONVERSATION ───────────────────────────────────
+  async function startConversation() {
+    if (!authToken) return
+    setStatus("connecting")
+    setError("")
+    setMessages([])
+    stopAudio()
+
+    try {
+      // Get signed URL from our API
+      const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      })
+      if (!resp.ok) throw new Error("Bağlantı başlatılamadı")
+      const { signed_url } = await resp.json()
+
+      const ws = new WebSocket(signed_url)
+      wsRef.current = ws
+
+      ws.onopen = () => {
+        // Send init config
+        ws.send(JSON.stringify({
+          type: "conversation_initiation_client_data",
+          conversation_config_override: {
+            agent: { language: "tr" },
+            tts: { optimize_streaming_latency: 4 }
+          }
+        }))
+        setStatus("connected")
+        startMic(ws)
+      }
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data)
+        switch (data.type) {
+          case "conversation_initiation_metadata":
+            setStatus("listening")
+            break
+          case "audio":
+            if (data.audio_event?.audio_base_64) {
+              playAudioChunk(data.audio_event.audio_base_64)
+            }
+            break
+          case "agent_response":
+            if (data.agent_response_event?.agent_response) {
+              addMessage("ai", data.agent_response_event.agent_response)
+            }
+            break
+          case "user_transcript":
+            if (data.user_transcription_event?.user_transcript) {
+              const t = data.user_transcription_event.user_transcript.trim()
+              if (t) addMessage("doctor", t)
+            }
+            break
+          case "interruption":
+            stopAudio()
+            setStatus("listening")
+            break
+          case "ping":
+            ws.send(JSON.stringify({ type: "pong", event_id: data.ping_event?.event_id }))
+            break
+          case "internal_tentative_agent_response":
+            setStatus("speaking_ai")
+            break
+        }
+      }
+
+      ws.onerror = () => { setError("Bağlantı hatası"); setStatus("error") }
+      ws.onclose = () => { setStatus("idle"); stopMic(); stopAudio() }
+
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Hata")
+      setStatus("error")
+    }
+  }
+
+  function stopConversation() {
+    wsRef.current?.close()
+    wsRef.current = null
+    stopMic()
+    stopAudio()
+    setStatus("idle")
+  }
+
+  // ── UI ───────────────────────────────────────────────────────
+  const statusText: Record<ConvStatus, string> = {
+    idle:         "Başlamak için dokunun",
+    connecting:   "Bağlanıyor...",
+    connected:    "Hazırlanıyor...",
+    listening:    "Dinliyor — konuşabilirsiniz",
+    speaking_ai:  `${persona.name.split(" ")[1]} konuşuyor...`,
+    error:        "Bağlantı hatası"
+  }
+
+  const isActive = ["connecting","connected","listening","speaking_ai"].includes(status)
 
   return (
-    <div style={S({minHeight:"100vh",background:"#0A1628",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif"})}>
+    <div style={{height:"100dvh",background:"#080E1A",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",overflow:"hidden"}}>
 
       {/* Header */}
-      <div style={S({background:"#0F2040",borderBottom:"1px solid rgba(255,255,255,.1)",padding:"12px 20px",display:"flex",alignItems:"center",gap:"12px",position:"sticky",top:0,zIndex:50})}>
-        <div onClick={()=>router.push("/dashboard")} style={S({color:"rgba(255,255,255,.5)",cursor:"pointer",fontSize:"13px"})}>←</div>
-        <div style={S({width:"40px",height:"40px",borderRadius:"50%",background:persona.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"20px",flexShrink:0,position:"relative"})}>
-          {persona.avatar}
-          {isSpeaking && <div style={S({position:"absolute",inset:"-3px",borderRadius:"50%",border:`2px solid ${persona.color}`,animation:"speakPulse 1s ease-in-out infinite",opacity:.7})}></div>}
+      <div style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:"12px",borderBottom:"1px solid rgba(255,255,255,.08)"}}>
+        <div onClick={()=>{stopConversation();router.push("/dashboard")}}
+          style={{color:"rgba(255,255,255,.5)",cursor:"pointer",fontSize:"22px",lineHeight:1}}>‹</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:"15px",fontWeight:"600",color:"#fff"}}>{persona.name}</div>
+          <div style={{fontSize:"11px",color:"rgba(255,255,255,.4)"}}>{persona.title}</div>
         </div>
-        <div style={S({flex:1})}>
-          <div style={S({fontSize:"14px",fontWeight:"600",color:"#fff"})}>{persona.name}</div>
-          <div style={S({fontSize:"11px",color:"rgba(255,255,255,.5)"})}>{persona.title} · {isSpeaking ? "🔊 Konuşuyor..." : isListening ? "🎙️ Dinliyor..." : "Hazır"}</div>
-        </div>
-        <div style={S({display:"flex",gap:"8px",alignItems:"center"})}>
-          {/* Voice toggle */}
-          <div onClick={()=>setVoiceEnabled(!voiceEnabled)}
-            style={S({padding:"6px 10px",borderRadius:"20px",background:voiceEnabled?"rgba(37,99,235,.3)":"rgba(255,255,255,.1)",border:`1px solid ${voiceEnabled?"#2563EB":"rgba(255,255,255,.2)"}`,cursor:"pointer",fontSize:"16px"})}>
-            {voiceEnabled ? "🔊" : "🔇"}
-          </div>
-          {/* Persona switcher */}
-          <select
-            value={persona.id}
-            onChange={e => {
-              const p = PERSONAS[e.target.value]
-              setPersona(p)
-              const greeting = getGreeting(p.id)
-              setMessages([{ id: Date.now().toString(), role: "assistant", content: greeting, timestamp: new Date() }])
-              setAsistanSessionId(null)
-              if (voiceEnabled) speakText(greeting, p.id)
-            }}
-            style={S({background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:"8px",color:"#fff",fontSize:"12px",padding:"6px 8px",cursor:"pointer"})}>
-            <option value="elifsahin">Prof. Elif</option>
-            <option value="aysekaya">Prof. Ayşe</option>
-            <option value="mehmetdemir">Prof. Mehmet</option>
-          </select>
+        {/* Persona switcher pills */}
+        <div style={{display:"flex",gap:"4px"}}>
+          {PERSONAS.map(p => (
+            <div key={p.id}
+              onClick={() => { if (isActive) stopConversation(); setPersona(p); setMessages([]) }}
+              style={{padding:"4px 10px",borderRadius:"20px",fontSize:"11px",cursor:"pointer",
+                      background:persona.id===p.id ? p.color : "rgba(255,255,255,.08)",
+                      color:persona.id===p.id ? "#fff" : "rgba(255,255,255,.5)",
+                      fontWeight:persona.id===p.id?"600":"400",
+                      border:`1px solid ${persona.id===p.id ? p.color : "rgba(255,255,255,.1)"}`}}>
+              {p.name.split(" ")[1]}
+            </div>
+          ))}
         </div>
       </div>
 
-      <style>{`
-        @keyframes speakPulse { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.15);opacity:1} }
-        @keyframes typingDot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-        .typing-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin:0 2px; animation:typingDot 1.2s ease-in-out infinite; }
-        .typing-dot:nth-child(2) { animation-delay:.2s }
-        .typing-dot:nth-child(3) { animation-delay:.4s }
-      `}</style>
-
-      {/* Messages */}
-      <div style={S({flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"12px",paddingBottom:"180px"})}>
+      {/* Conversation */}
+      <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"10px"}}>
+        {messages.length === 0 && !isActive && (
+          <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"16px",opacity:.6}}>
+            <div style={{fontSize:"56px"}}>{persona.emoji}</div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:"16px",fontWeight:"500",color:"#fff",marginBottom:"6px"}}>{persona.name}</div>
+              <div style={{fontSize:"13px",color:"rgba(255,255,255,.5)"}}>{persona.title}</div>
+              <div style={{fontSize:"12px",color:"rgba(255,255,255,.35)",marginTop:"12px"}}>Aşağıdaki butona basın ve konuşmaya başlayın</div>
+            </div>
+          </div>
+        )}
         {messages.map(msg => (
-          <div key={msg.id} style={S({display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start",gap:"8px",alignItems:"flex-end"})}>
-            {msg.role === "assistant" && (
-              <div style={S({width:"32px",height:"32px",borderRadius:"50%",background:persona.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px",flexShrink:0})}>
-                {persona.avatar}
+          <div key={msg.id} style={{display:"flex",justifyContent:msg.speaker==="doctor"?"flex-end":"flex-start",gap:"8px",alignItems:"flex-end"}}>
+            {msg.speaker === "ai" && (
+              <div style={{width:"28px",height:"28px",borderRadius:"50%",background:persona.color,
+                           display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:0}}>
+                {persona.emoji}
               </div>
             )}
-            <div style={S({maxWidth:"78%"})}>
-              {msg.proactiveWarning && (
-                <div style={S({background:"#FCEBEB",border:"1px solid rgba(226,75,74,.3)",borderRadius:"10px",padding:"8px 12px",marginBottom:"6px",fontSize:"12px",color:"#A32D2D"})}>
-                  ⚠️ {msg.proactiveWarning}
-                </div>
-              )}
-              <div style={S({
-                padding:"12px 16px",
-                borderRadius:msg.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",
-                background:msg.role==="user"?"#2563EB":"#1A3050",
-                color:"#fff",
-                fontSize:"14px",
-                lineHeight:"1.55",
-                maxWidth:"100%"
-              })}>
-                {msg.isTyping ? (
-                  <div>
-                    <span className="typing-dot"></span>
-                    <span className="typing-dot"></span>
-                    <span className="typing-dot"></span>
-                  </div>
-                ) : msg.content}
-              </div>
-              {msg.actionTaken && (
-                <div style={S({fontSize:"11px",color:"#0F9B8E",marginTop:"4px",paddingLeft:"4px"})}>
-                  ✅ {msg.actionTaken}
-                </div>
-              )}
-              <div style={S({fontSize:"10px",color:"rgba(255,255,255,.3)",marginTop:"3px",paddingLeft:"4px",textAlign:msg.role==="user"?"right":"left"})}>
-                {msg.timestamp.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}
-              </div>
+            <div style={{maxWidth:"78%",padding:"10px 14px",borderRadius:msg.speaker==="doctor"?"16px 16px 4px 16px":"16px 16px 16px 4px",
+                         background:msg.speaker==="doctor"?"#2563EB":"#1A2B45",
+                         color:"#fff",fontSize:"14px",lineHeight:"1.5"}}>
+              {msg.text}
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Bottom input */}
-      <div style={S({position:"fixed",bottom:0,left:0,right:0,background:"#0F2040",borderTop:"1px solid rgba(255,255,255,.1)",padding:"12px 16px 24px"})}>
+      {/* Status + Main Button */}
+      <div style={{padding:"16px 16px 32px",display:"flex",flexDirection:"column",alignItems:"center",gap:"14px",borderTop:"1px solid rgba(255,255,255,.06)"}}>
 
-        {/* Quick commands */}
-        <div style={S({display:"flex",gap:"6px",marginBottom:"10px",overflowX:"auto",paddingBottom:"2px"})}>
-          {QUICK_COMMANDS.map(cmd => (
-            <div key={cmd} onClick={()=>sendMessage(cmd)}
-              style={S({padding:"6px 12px",borderRadius:"20px",background:"rgba(37,99,235,.2)",border:"1px solid rgba(37,99,235,.4)",color:"#93C5FD",fontSize:"12px",whiteSpace:"nowrap",cursor:"pointer",flexShrink:0})}>
-              {cmd}
-            </div>
-          ))}
-        </div>
-
-        {/* Interim voice text */}
-        {interimText && (
-          <div style={S({fontSize:"12px",color:"rgba(255,255,255,.5)",marginBottom:"6px",fontStyle:"italic",paddingLeft:"4px"})}>
-            🎙️ {interimText}...
+        {error && (
+          <div style={{fontSize:"12px",color:"#F87171",background:"rgba(239,68,68,.1)",padding:"8px 16px",borderRadius:"20px"}}>
+            {error}
           </div>
         )}
 
-        <div style={S({display:"flex",gap:"8px",alignItems:"flex-end"})}>
-          {/* Mic button */}
-          <div onClick={toggleListening}
-            style={S({
-              width:"46px",height:"46px",borderRadius:"50%",flexShrink:0,
-              background:isListening?"#DC2626":"rgba(37,99,235,.3)",
-              border:`2px solid ${isListening?"#DC2626":"#2563EB"}`,
-              display:"flex",alignItems:"center",justifyContent:"center",
-              cursor:"pointer",fontSize:"20px",
-              animation:isListening?"speakPulse 1s ease-in-out infinite":undefined
-            })}>
-            {isListening ? "⏹" : "🎙️"}
-          </div>
+        {/* Status indicator */}
+        <div style={{fontSize:"13px",color:"rgba(255,255,255,.5)",display:"flex",alignItems:"center",gap:"8px"}}>
+          {isActive && (
+            <div style={{width:"7px",height:"7px",borderRadius:"50%",
+                         background:status==="speaking_ai"?persona.color:status==="listening"?"#22C55E":"#F59E0B",
+                         animation:"pulse 1.5s ease-in-out infinite"}} />
+          )}
+          {statusText[status]}
+        </div>
 
-          {/* Text input */}
-          <textarea
-            value={input}
-            onChange={e=>setInput(e.target.value)}
-            onKeyDown={e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); sendMessage() } }}
-            placeholder="Doktor, hasta bilgisini girin veya soru sorun..."
-            rows={1}
-            style={S({
-              flex:1,padding:"12px 14px",background:"rgba(255,255,255,.08)",
-              border:"1px solid rgba(255,255,255,.15)",borderRadius:"14px",
-              color:"#fff",fontSize:"14px",fontFamily:"system-ui",resize:"none",
-              outline:"none",lineHeight:"1.4",maxHeight:"100px",overflowY:"auto"
-            })}
-          />
+        {/* The one button */}
+        <div onClick={isActive ? stopConversation : startConversation}
+          style={{width:"80px",height:"80px",borderRadius:"50%",cursor:"pointer",
+                  background:isActive ? `radial-gradient(circle, ${persona.color}, ${persona.color}88)` : "rgba(255,255,255,.08)",
+                  border:`2px solid ${isActive ? persona.color : "rgba(255,255,255,.15)"}`,
+                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:"32px",
+                  boxShadow:isActive ? `0 0 30px ${persona.color}44, 0 0 60px ${persona.color}22` : "none",
+                  transition:"all .3s",animation:status==="speaking_ai"?`glow-${persona.id} 2s ease-in-out infinite`:undefined}}>
+          {isActive ? (status === "speaking_ai" ? "🔊" : "🎙️") : "🎙️"}
+        </div>
 
-          {/* Send button */}
-          <div onClick={()=>sendMessage()}
-            style={S({
-              width:"46px",height:"46px",borderRadius:"50%",flexShrink:0,
-              background:loading||!input.trim()?"rgba(255,255,255,.1)":"#2563EB",
-              display:"flex",alignItems:"center",justifyContent:"center",
-              cursor:loading||!input.trim()?"not-allowed":"pointer",fontSize:"18px"
-            })}>
-            {loading ? "⏳" : "↑"}
-          </div>
+        <div style={{fontSize:"11px",color:"rgba(255,255,255,.25)",textAlign:"center"}}>
+          {isActive ? "Sohbeti bitirmek için dokunun" : "Konuşmayı başlatmak için dokunun"}
         </div>
       </div>
+
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+      `}</style>
     </div>
   )
 }
