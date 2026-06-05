@@ -127,9 +127,7 @@ export async function POST(req: NextRequest) {
     // Parse AI response
     let aiData: { speech: string; action: Record<string, unknown> | null; proactiveWarning: string | null }
     try {
-      const cleanJson = rawResponse.replace(/```json
-?|
-?```/g, "").trim()
+      const cleanJson = rawResponse.replace(/```[a-z]*/g, "").replace(/```/g, "").trim()
       aiData = JSON.parse(cleanJson)
     } catch {
       // If not JSON, treat as plain speech
