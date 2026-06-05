@@ -257,10 +257,4 @@ export async function POST_IYZICO_WEBHOOK(req: NextRequest) {
   return NextResponse.json({ received: true })
 }
 
-// ============================================================
-// NOTYA AI - Middleware
-// ============================================================
 
-export const config = {
-  matcher: ['/api/sessions/:path*', '/api/notes/:path*', '/api/billing/:path*']
-}
