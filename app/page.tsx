@@ -12,8 +12,14 @@ export default function Root() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     supabase.auth.getUser().then(({ data: { user } }) => {
-      router.push(user ? "/dashboard" : "/")
+      router.replace(user ? "/dashboard" : "/home")
     })
   }, [])
-  return null
+  return (
+    <div style={{minHeight:"100vh",background:"#060910",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{fontSize:"24px",fontFamily:"Georgia,serif",color:"rgba(255,255,255,.3)",letterSpacing:"0.15em"}}>
+        NOTYA<span style={{color:"#2563EB"}}>.</span>AI
+      </div>
+    </div>
+  )
 }
