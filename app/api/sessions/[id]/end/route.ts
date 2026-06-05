@@ -81,7 +81,7 @@ export async function POST(
       .eq('id', sessionId)
 
     // AI not üret
-    let generatedNote: Record<string, unknown>
+    let generatedNote: unknown
     try {
       const professionType = (profession || 'doktor') as ProfessionType
       const noteContext: SessionContext = {
@@ -90,7 +90,7 @@ export async function POST(
         ...context,
       }
       
-      generatedNote = await generateNote(professionType, transcript, noteContext)
+      generatedNote = await generateNote(professionType, transcript, noteContext as unknown as Record<string, unknown>)
     } catch (aiError) {
       console.error('[API/sessions/end] AI not üretme hatası:', aiError)
       await supabase.from('sessions').update({ status: 'failed', error_message: String(aiError) }).eq('id', sessionId)
@@ -99,16 +99,17 @@ export async function POST(
 
     // Notu kaydet
     const noteData = generatedNote as Record<string, unknown>
+    const soapData = (noteData?.soap as Record<string, unknown>) || {}
     const { data: note, error: noteError } = await supabase
       .from('notes')
       .insert({
         session_id: sessionId,
         doctor_id: user.id,
         note_type: 'soap',
-        content_subjektif: noteData?.soap?.subjektif || null,
-        content_objektif: noteData?.soap?.objektif || null,
-        content_degerlendirme: noteData?.soap?.degerlendirme || null,
-        content_plan: noteData?.soap?.plan || null,
+        content_subjektif: soapData?.subjektif || null,
+        content_objektif: soapData?.objektif || null,
+        content_degerlendirme: soapData?.degerlendirme || null,
+        content_plan: soapData?.plan || null,
         content_anamnez: noteData?.anamnez || null,
         content_fizik_muayene: noteData?.fizik_muayene || null,
         content_tani: noteData?.tani || noteData?.dosya_ozeti || null,

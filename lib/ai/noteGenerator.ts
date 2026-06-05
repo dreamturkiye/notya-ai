@@ -8,7 +8,6 @@ import type {
   GeneratedNote, SessionContext, TranscriptSegment, MedicalSpecialty 
 } from '@/types/notya'
 import { getSpecialtyTemplate } from './specialtyTemplates'
-import { getProfessionTemplate } from './professionTemplates'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -601,26 +600,26 @@ export async function generateNote(
   profession: ProfessionType,
   transcript: string,
   context: Record<string, unknown>
-): Promise<Record<string, unknown>> {
+): Promise<unknown> {
   switch (profession) {
     case 'doktor':
-      return generateMedicalNote(transcript, context as SessionContext)
+      return generateMedicalNote(transcript, context as unknown as SessionContext) as unknown
     case 'avukat':
-      return generateLegalNote(transcript, context.legal_area as string || 'Genel', context as never)
+      return generateLegalNote(transcript, context.legal_area as string || 'Genel', context as never) as unknown
     case 'psikolog':
-      return generateTherapyNote(transcript, context.therapy_type as string || 'BDT', context as never)
+      return generateTherapyNote(transcript, context.therapy_type as string || 'BDT', context as never) as unknown
     case 'muhasebeci':
-      return generateAccountingNote(transcript, context.service_type as string || 'Genel', context as never)
+      return generateAccountingNote(transcript, context.service_type as string || 'Genel', context as never) as unknown
     case 'ik':
-      return generateHRNote(transcript, context.meeting_type as string || 'Genel', context as never)
+      return generateHRNote(transcript, context.meeting_type as string || 'Genel', context as never) as unknown
     case 'emlakci':
-      return generateRealEstateNote(transcript, context as never)
+      return generateRealEstateNote(transcript, context as never) as unknown
     case 'sigorta':
-      return generateInsuranceNote(transcript, context as never)
+      return generateInsuranceNote(transcript, context as never) as unknown
     case 'egitim':
-      return generateEducationNote(transcript, context as never)
+      return generateEducationNote(transcript, context as never) as unknown
     case 'yonetici':
-      return generateMeetingNote(transcript, context as never)
+      return generateMeetingNote(transcript, context as never) as unknown
     default:
       throw new Error(`Bilinmeyen meslek türü: ${profession}`)
   }

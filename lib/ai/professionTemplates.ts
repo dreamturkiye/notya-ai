@@ -4,19 +4,19 @@
 // ============================================================
 
 export type LegalArea =
-  | 'ceza' | 'medeni' | 'aile' | 'ticaret' | 'is' | 
+  | 'ceza' | 'medeni' | 'aile' | 'ticaret' | 'is'
   | 'idare' | 'icra' | 'miras' | 'gayrimenkul' | 'sigorta_hukuku' | 'genel'
 
 export type TherapyType =
-  | 'bdt' | 'psikoanalitik' | 'gestalt' | 'emdr' | 
+  | 'bdt' | 'psikoanalitik' | 'gestalt' | 'emdr'
   | 'aile_terapisi' | 'grup' | 'cocuk' | 'travma' | 'genel'
 
 export type AccountingService =
-  | 'vergi_danismanligi' | 'muhasebe' | 'denetim' | 
+  | 'vergi_danismanligi' | 'muhasebe' | 'denetim'
   | 'sgk' | 'irs_planlama' | 'konkordato' | 'genel'
 
 export type HRMeetingType =
-  | 'performans' | 'ise_alim' | 'disiplin' | 'cikis' | 
+  | 'performans' | 'ise_alim' | 'disiplin' | 'cikis'
   | 'kariyer_planlama' | 'is_guvenligi' | 'genel'
 
 // ============================================================
@@ -196,6 +196,19 @@ Odak noktaları:
 - Bilinçdışı içerikler
 - Direnç analizı`,
       keyFocus: ['aktarım', 'savunma', 'içgörü', 'erken çocukluk', 'tekrarlayan örüntüler']
+    },
+    gestalt: {
+      name: 'Gestalt Terapi',
+      systemContext: `Gestalt terapi yaklaşımıyla seans notu oluştur.
+      
+Odak noktaları:
+- Şimdi ve burada farkındalığı
+- Tamamlanmamış işler (Zeigarnik etkisi)
+- Temas ve geri çekilme döngüsü
+- Boş sandalye tekniği
+- Bütünleşme çalışması
+- Beden farkındalığı`,
+      keyFocus: ['farkındalık', 'şimdi ve burada', 'temas', 'bütünleşme', 'tamamlanmamış işler']
     },
     emdr: {
       name: 'EMDR (Göz Hareketleriyle Duyarsızlaştırma)',
@@ -560,5 +573,33 @@ export const PROFESSION_LIST = {
       { id: 'yonetici_toplanti', label: 'Toplantı Yöneticisi', type: 'toplanti' },
       { id: 'yonetici_strateji', label: 'Strateji Danışmanı', type: 'strateji' },
     ]
+  }
+}
+
+// ============================================================
+// UNIFIED PROFESSION TEMPLATE GETTER
+// ============================================================
+
+export type ProfessionType = 'doktor' | 'avukat' | 'psikolog' | 'muhasebeci' | 'ik' | 'emlakci' | 'sigortaci' | 'egitimci' | 'yonetici'
+
+export function getProfessionTemplate(
+  professionType: ProfessionType,
+  subType?: string
+): { name: string; systemContext: string; keyFocus?: string[] } {
+  switch (professionType) {
+    case 'avukat':
+      return getLegalTemplate((subType as LegalArea) || 'genel')
+    case 'psikolog':
+      return getTherapyTemplate((subType as TherapyType) || 'genel')
+    case 'muhasebeci':
+      return getAccountingTemplate((subType as AccountingService) || 'genel')
+    case 'ik':
+      return getHRTemplate((subType as HRMeetingType) || 'genel')
+    default:
+      return {
+        name: 'Genel Profesyonel',
+        systemContext: 'Profesyonel not asistanı olarak görev yap. Türkçe, net ve yapılandırılmış notlar oluştur.',
+        keyFocus: ['anahtar noktalar', 'kararlar', 'eylem maddeleri', 'takip']
+      }
   }
 }
