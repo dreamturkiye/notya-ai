@@ -1,23 +1,22 @@
 {
   "name": "Notya AI",
   "short_name": "Notya",
-  "description": "Konuş, Biz Yazalım — Türkiye'nin Evrensel Profesyonel AI Not Asistanı",
-  "start_url": "/",
+  "description": "AI Uzman Asistan — Konuş, Biz Yazalım",
+  "start_url": "/asistan",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0A1628",
   "theme_color": "#0A1628",
   "lang": "tr",
   "icons": [
-    {"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable any"},
-    {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any"}
-  ],
-  "screenshots": [
-    {"src": "/screenshots/mobile.png", "sizes": "375x812", "type": "image/png", "form_factor": "narrow"}
+    {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable any"},
+    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any"}
   ],
   "categories": ["medical", "productivity"],
   "shortcuts": [
-    {"name": "Yeni Seans", "url": "/session/new", "icons": [{"src": "/icons/mic-96.png", "sizes": "96x96"}]},
-    {"name": "Son Notlar", "url": "/notes", "icons": [{"src": "/icons/notes-96.png", "sizes": "96x96"}]}
-  ]
+    {"name": "AI Asistan", "url": "/asistan", "description": "Prof. Elif ile konuş"},
+    {"name": "Yeni Seans",  "url": "/session/new", "description": "Yeni muayene seansı"},
+    {"name": "Dashboard",   "url": "/dashboard",   "description": "Notlarım"}
+  ],
+  "prefer_related_applications": false
 }
