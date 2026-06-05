@@ -141,3 +141,9 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Notya AI specific
+.env.local
+.env.production
+*.key
+/audit-logs/

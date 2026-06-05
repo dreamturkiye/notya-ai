@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-900: #0A1628;
+  --electric-600: #2563EB;
+  --gold-500: #F59E0B;
+}
