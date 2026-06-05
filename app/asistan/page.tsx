@@ -15,18 +15,22 @@ const PERSONAS: Record<string, Persona> = {
 }
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  pediatri: "Sen Prof. Dr. Ayse Kaya - dunya capinda taninmis Pediatri uzmanisın. Nelson Textbook Pediatrics 22e ve Harriet Lane 23e bilgin tam. SEN ASISTAN DEGILSIN. Doktorla esit meslektassin. Yanlis doz gordugunde uyar. SGK kisitlamalarini hatirlatir. Pediatrik dozu kg bazli hesapla. Doktoru 'doktor' diye hitap et. Dogal Turkce konuş. Kisa cumleler.",
-  kardiyoloji: "Sen Prof. Dr. Mehmet Demir - Kardiyoloji uzmanisın. Braunwald Heart Disease 12e ve ESC Guidelines 2024 bilgin eksiksiz. Hizli net guven verici. Doktoru doktor diye hitap et. Turkce konuş.",
-  genel: "Sen Prof. Dr. Elif Sahin - Noroloji ve Dahiliye uzmanisın. Harrisons Principles 22e Adams Victor Neurology 12e bilgin tam. Analitik dikkatli. Doktoru doktor diye hitap et. Turkce konuş.",
+  pediatri:    "Sen Prof. Dr. Ayse Kaya - Pediatri uzmanisın. Nelson Textbook 22e ve Harriet Lane 23e bilgin tam. Doktoru 'doktor' diye hitap et. Yanlis doz gordugunde uyar. Dogal Turkce konuş. Kisa cumleler.",
+  kardiyoloji: "Sen Prof. Dr. Mehmet Demir - Kardiyoloji uzmanisın. Braunwald 12e ve ESC 2024 bilgin tam. Hizli net. Doktoru 'doktor' diye hitap et. Turkce.",
+  genel:       "Sen Prof. Dr. Elif Sahin - Noroloji ve Dahiliye uzmanisın. Harrisons 22e bilgin tam. Analitik. Doktoru 'doktor' diye hitap et. Turkce.",
 }
 
 const FIRST_MESSAGES: Record<string, string> = {
-  pediatri:    "Merhaba doktor. Ben Prof. Ayse. Hangi hastamiza bakiyoruz bugun?",
+  pediatri:    "Merhaba doktor. Ben Prof. Ayse. Hangi hastamiza bakiyoruz?",
   kardiyoloji: "Doktor, dinliyorum.",
   genel:       "Merhaba doktor. Ben Prof. Elif. Vakayı dinliyorum.",
 }
 
-const AGENT_ID = "agent_3601ktc884ntf3dbdkjtyx6vdfwa"
+const VOICE_IDS: Record<string, string> = {
+  pediatri:    "EXAVITQu4vr4xnSDxMaL",
+  kardiyoloji: "AZnzlk1XvdvUeBnXmlld",
+  genel:       "pNInz6obpgDQGcFmaJgB",
+}
 
 export default function AsistanPage() {
   const router = useRouter()
@@ -36,8 +40,7 @@ export default function AsistanPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [errorMsg, setErrorMsg] = useState("")
   const [authToken, setAuthToken] = useState<string | null>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const convRef = useRef<any>(null)
+  const convRef = useRef<{ endSession: () => Promise<void> } | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,7 +52,7 @@ export default function AsistanPage() {
       if (!session) { router.push("/giris"); return }
       setAuthToken(session.access_token)
     })
-    return () => { convRef.current?.endSession?.() }
+    return () => { convRef.current?.endSession?.().catch(() => {}) }
   }, [])
 
   useEffect(() => {
@@ -57,7 +60,8 @@ export default function AsistanPage() {
   }, [messages])
 
   function addMsg(role: "user" | "ai", text: string) {
-    setMessages(prev => [...prev, { id: Date.now().toString() + Math.random(), role, text }])
+    if (!text?.trim()) return
+    setMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: text.trim() }])
   }
 
   async function startConversation() {
@@ -67,20 +71,27 @@ export default function AsistanPage() {
     setMessages([])
 
     try {
-      // Get signed URL from our API
+      // Step 1: Get signed URL from our backend
       const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
         headers: { Authorization: `Bearer ${authToken}` }
       })
-      const data = await resp.json()
-      if (!resp.ok || !data.signed_url) throw new Error(data.error || "URL alınamadı")
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}))
+        throw new Error(errData.error || `API hatası: ${resp.status}`)
+      }
+      const { signed_url } = await resp.json()
+      if (!signed_url) throw new Error("Bağlantı URL'si alınamadı")
 
-      // Dynamically import ElevenLabs SDK to avoid SSR issues
+      // Step 2: Import SDK client-side only
       const { Conversation } = await import("@elevenlabs/client")
 
+      // Step 3: Start session with correct API
+      // signedUrl automatically uses websocket mode (with WebRTC audio quality)
       const conv = await Conversation.startSession({
-        signedUrl: data.signed_url,
+        signedUrl: signed_url,
+        connectionType: "websocket", // explicit - signedUrl requires websocket
 
-        // Override the agent's system prompt for this specialty
+        // Override the agent config for this specialty
         overrides: {
           agent: {
             prompt: { prompt: SYSTEM_PROMPTS[persona.specialty] || SYSTEM_PROMPTS.genel },
@@ -88,57 +99,58 @@ export default function AsistanPage() {
             language: "tr",
           },
           tts: {
-            voiceId: persona.specialty === "pediatri"
-              ? "EXAVITQu4vr4xnSDxMaL"
-              : persona.specialty === "kardiyoloji"
-              ? "AZnzlk1XvdvUeBnXmlld"
-              : "pNInz6obpgDQGcFmaJgB"
+            voiceId: VOICE_IDS[persona.specialty] || VOICE_IDS.genel,
           }
         },
 
-        // ElevenLabs SDK handles WebRTC, echo cancellation, noise suppression automatically
         onConnect: () => {
           setStatus("listening")
         },
 
         onDisconnect: () => {
           setStatus("idle")
+          convRef.current = null
         },
 
-        onMessage: (msg: { message: string; source: string }) => {
-          if (msg.source === "ai" && msg.message?.trim()) {
-            addMsg("ai", msg.message)
-          } else if (msg.source === "user" && msg.message?.trim()) {
-            addMsg("user", msg.message)
-          }
+        onMessage: (props: { message: string; source: "user" | "ai" }) => {
+          addMsg(props.source, props.message)
         },
 
-        onStatusChange: (s: { status: string }) => {
-          if (s.status === "speaking") setStatus("speaking")
-          else if (s.status === "listening") setStatus("listening")
+        onModeChange: (props: { mode: "speaking" | "listening" }) => {
+          if (props.mode === "speaking") setStatus("speaking")
+          else if (props.mode === "listening") setStatus("listening")
         },
 
-        onError: (err: string) => {
-          console.error("[ElevenLabs]", err)
-          setErrorMsg("Bağlantı hatası. Tekrar deneyin.")
+        onError: (message: string) => {
+          console.error("[ElevenLabs onError]", message)
+          setErrorMsg(`Hata: ${message}`)
           setStatus("error")
+          convRef.current = null
         },
       })
 
       convRef.current = conv
 
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e)
-      console.error("[startConversation]", msg)
-      setErrorMsg(msg.includes("microphone") || msg.includes("Permission")
-        ? "Mikrofon erişimi gerekli. Tarayıcı ayarlarından izin verin."
-        : "Bağlantı kurulamadı. İnternet bağlantınızı kontrol edin.")
+      const raw = e instanceof Error ? e.message : String(e)
+      console.error("[startConversation]", raw)
+
+      let friendly = "Bağlantı kurulamadı. Tekrar deneyin."
+      if (raw.toLowerCase().includes("permission") || raw.toLowerCase().includes("denied") || raw.toLowerCase().includes("microphone")) {
+        friendly = "Mikrofon erişimi reddedildi. Tarayıcı adres çubuğundaki mikrofon ikonuna tıklayarak izin verin."
+      } else if (raw.includes("401") || raw.includes("403") || raw.includes("auth")) {
+        friendly = "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."
+      } else if (raw.includes("502") || raw.includes("503")) {
+        friendly = "Sunucu geçici olarak kullanılamıyor. 30 saniye bekleyip tekrar deneyin."
+      }
+
+      setErrorMsg(friendly)
       setStatus("error")
     }
   }
 
   function stopConversation() {
-    convRef.current?.endSession?.()
+    convRef.current?.endSession?.().catch(() => {})
     convRef.current = null
     setStatus("idle")
   }
@@ -158,7 +170,7 @@ export default function AsistanPage() {
     connecting: "Bağlanıyor...",
     listening:  "Dinliyor — konuşabilirsiniz",
     speaking:   `${persona.name.split(" ")[1]} konuşuyor...`,
-    error:      "Hata — tekrar deneyin",
+    error:      "Tekrar deneyin",
   }
 
   return (
@@ -170,12 +182,13 @@ export default function AsistanPage() {
                    borderBottom:"1px solid rgba(255,255,255,.08)",background:"#0A1525"}}>
         <div onClick={() => { stopConversation(); router.push("/dashboard") }}
           style={{color:"rgba(255,255,255,.5)",cursor:"pointer",fontSize:"24px",padding:"4px"}}>‹</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:"15px",fontWeight:"600",color:"#fff"}}>{persona.name}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:"15px",fontWeight:"600",color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+            {persona.name}
+          </div>
           <div style={{fontSize:"11px",color:"rgba(255,255,255,.4)"}}>{persona.title}</div>
         </div>
-        {/* Persona switcher */}
-        <div style={{display:"flex",gap:"4px"}}>
+        <div style={{display:"flex",gap:"4px",flexShrink:0}}>
           {Object.entries(PERSONAS).map(([key, p]) => (
             <div key={key} onClick={() => switchPersona(key)}
               style={{padding:"5px 10px",borderRadius:"16px",fontSize:"11px",cursor:"pointer",
@@ -190,11 +203,10 @@ export default function AsistanPage() {
       </div>
 
       {/* Messages */}
-      <div style={{flex:1,overflowY:"auto",padding:"16px 16px 8px",
-                   display:"flex",flexDirection:"column",gap:"10px"}}>
-        {messages.length === 0 && !isActive && (
+      <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"10px"}}>
+        {messages.length === 0 && status === "idle" && (
           <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",
-                       justifyContent:"center",gap:"12px",opacity:.45,padding:"40px 0"}}>
+                       justifyContent:"center",gap:"12px",opacity:.4}}>
             <div style={{fontSize:"56px"}}>{persona.emoji}</div>
             <div style={{fontSize:"16px",fontWeight:"600",color:"#fff",textAlign:"center"}}>
               {persona.name}
@@ -203,11 +215,12 @@ export default function AsistanPage() {
               {persona.title}
             </div>
             <div style={{fontSize:"12px",color:"rgba(255,255,255,.25)",textAlign:"center",
-                         marginTop:"8px",maxWidth:"240px",lineHeight:"1.6"}}>
-              Mikrofon ikonuna dokunun ve konuşmaya başlayın — arka plan gürültüsü otomatik filtrelenir
+                         marginTop:"8px",maxWidth:"220px",lineHeight:"1.6"}}>
+              Aşağıdaki butona dokunun ve doğal konuşun
             </div>
           </div>
         )}
+
         {messages.map(msg => (
           <div key={msg.id}
             style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start",
@@ -220,14 +233,14 @@ export default function AsistanPage() {
               </div>
             )}
             <div style={{maxWidth:"78%",padding:"10px 14px",fontSize:"14px",lineHeight:"1.55",
-                         borderRadius: msg.role==="user"?"16px 16px 3px 16px":"16px 16px 16px 3px",
+                         borderRadius: msg.role==="user" ? "16px 16px 3px 16px" : "16px 16px 16px 3px",
                          background: msg.role==="user" ? "#006699" : "#1A2B40",
                          color:"#fff"}}>
               {msg.text}
             </div>
           </div>
         ))}
-        {/* Typing indicator when AI is about to speak */}
+
         {status === "connecting" && (
           <div style={{display:"flex",alignItems:"flex-end",gap:"8px"}}>
             <div style={{width:"28px",height:"28px",borderRadius:"50%",background:persona.color,
@@ -235,11 +248,11 @@ export default function AsistanPage() {
               {persona.emoji}
             </div>
             <div style={{padding:"12px 16px",background:"#1A2B40",borderRadius:"16px 16px 16px 3px",
-                         display:"flex",gap:"4px",alignItems:"center"}}>
+                         display:"flex",gap:"5px",alignItems:"center"}}>
               {[0,1,2].map(i => (
                 <div key={i} style={{width:"6px",height:"6px",borderRadius:"50%",
                                      background:"rgba(255,255,255,.4)",
-                                     animation:`bounce 1.2s ease-in-out ${i*0.2}s infinite`}} />
+                                     animation:`bounce 1.2s ease-in-out ${i * 0.2}s infinite`}} />
               ))}
             </div>
           </div>
@@ -248,60 +261,50 @@ export default function AsistanPage() {
       </div>
 
       {/* Controls */}
-      <div style={{padding:"16px 16px 40px",display:"flex",flexDirection:"column",
+      <div style={{padding:"16px 16px 44px",display:"flex",flexDirection:"column",
                    alignItems:"center",gap:"12px",borderTop:"1px solid rgba(255,255,255,.06)",
                    background:"#0A1525"}}>
 
-        {/* Error */}
         {errorMsg && (
           <div style={{fontSize:"12px",color:"#F87171",background:"rgba(239,68,68,.12)",
-                       padding:"8px 18px",borderRadius:"20px",textAlign:"center",maxWidth:"300px",
-                       lineHeight:"1.5"}}>
+                       padding:"10px 18px",borderRadius:"10px",textAlign:"center",
+                       maxWidth:"300px",lineHeight:"1.5"}}>
             {errorMsg}
           </div>
         )}
 
-        {/* Status text */}
         <div style={{fontSize:"13px",color:"rgba(255,255,255,.45)",
                      display:"flex",alignItems:"center",gap:"8px"}}>
           {isActive && (
-            <div style={{width:"7px",height:"7px",borderRadius:"50%",flexShrink:0,
+            <div style={{width:"7px",height:"7px",borderRadius:"50%",
                          background: status === "speaking" ? persona.color
                                    : status === "connecting" ? "#F59E0B" : "#22C55E",
-                         boxShadow: `0 0 8px ${status === "speaking" ? persona.color : "#22C55E"}`}} />
+                         boxShadow:`0 0 8px ${status === "speaking" ? persona.color : status === "connecting" ? "#F59E0B" : "#22C55E"}`}} />
           )}
           {statusLabels[status]}
         </div>
 
-        {/* Main mic button */}
         <div onClick={isActive ? stopConversation : startConversation}
           style={{width:"80px",height:"80px",borderRadius:"50%",cursor:"pointer",
-                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:"30px",
+                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:"32px",
                   background: isActive
-                    ? `radial-gradient(circle, ${persona.color}, ${persona.color}99)`
+                    ? `radial-gradient(circle, ${persona.color}, ${persona.color}88)`
                     : "rgba(255,255,255,.1)",
-                  border: `2px solid ${isActive ? persona.color : "rgba(255,255,255,.2)"}`,
-                  boxShadow: isActive ? `0 0 32px ${persona.color}55, 0 0 64px ${persona.color}22` : "none",
-                  transition:"all .25s",
-                  animation: status === "listening" ? "breathe 3s ease-in-out infinite" : "none"}}>
-          {status === "connecting" ? "⏳"
-            : status === "speaking" ? "🔊"
-            : "🎙️"}
+                  border:`2px solid ${isActive ? persona.color : "rgba(255,255,255,.2)"}`,
+                  boxShadow: isActive ? `0 0 32px ${persona.color}55` : "none",
+                  transition:"all .25s"}}>
+          {status === "connecting" ? "⏳" : status === "speaking" ? "🔊" : "🎙️"}
         </div>
 
-        <div style={{fontSize:"11px",color:"rgba(255,255,255,.2)",textAlign:"center"}}>
-          {isActive ? "Bitirmek için dokunun" : "Başlatmak için dokunun"}
+        <div style={{fontSize:"11px",color:"rgba(255,255,255,.2)"}}>
+          {isActive ? "Konuşmayı bitirmek için dokunun" : "Konuşmayı başlatmak için dokunun"}
         </div>
       </div>
 
       <style>{`
         @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0) }
-          30% { transform: translateY(-5px) }
-        }
-        @keyframes breathe {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.04); }
+          0%,60%,100% { transform:translateY(0) }
+          30% { transform:translateY(-5px) }
         }
       `}</style>
     </div>
