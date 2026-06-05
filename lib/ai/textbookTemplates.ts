@@ -459,7 +459,7 @@ KARDİYOLOJİ ÖZEL KURALLAR (Braunwald + ESC Kılavuzları):
 - İlaç seçiminde ACC/AHA + ESC 2024 kılavuzlarını uygula
 - Statin, ACEi/ARB, beta bloker, diüretik: endikasyon/kontrendikasyon`,
 
-    noroloji: `${basePrompt}
+    nöroloji: `${basePrompt}
 
 NÖROLOJİ ÖZEL KURALLAR (Adams & Victor + ESO İnme Kılavuzu):
 - İnme şüphesi: FAST-BE-FAST ve NIHSS skoru uygula
