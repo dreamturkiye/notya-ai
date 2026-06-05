@@ -93,12 +93,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json({ success: true, data: note })
 }
 
-// ============================================================
-// NOTYA AI - WhatsApp Not Gönderimi
-// POST /api/notes/[id]/whatsapp
-// ============================================================
+// WhatsApp sending moved to /api/notes/whatsapp/route.ts
+// Billing webhook moved to /api/billing/webhook/route.ts
 
-export async function POST_WHATSAPP(req: NextRequest, { params }: { params: { id: string } }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function _POST_WHATSAPP_MOVED(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await getUser(req)
   if (!user) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
 
@@ -192,7 +191,8 @@ function formatNoteForWhatsApp(note: Record<string, unknown>): string {
 // POST /api/billing/webhook
 // ============================================================
 
-export async function POST_IYZICO_WEBHOOK(req: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function _POST_IYZICO_WEBHOOK_MOVED(req: NextRequest) {
   const body = await req.text()
   const signature = req.headers.get('x-iyz-signature') || ''
   
