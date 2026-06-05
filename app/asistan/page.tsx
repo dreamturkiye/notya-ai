@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
+import { Conversation } from "@/components/AsistanConversation"
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
@@ -61,9 +62,7 @@ export default function AsistanPage() {
 
   function addMsg(role: "user" | "ai", text: string) {
     if (!text?.trim()) return
-    setMessages(prev => [...prev, {
-      id: `${Date.now()}-${Math.random()}`, role, text: text.trim()
-    }])
+    setMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: text.trim() }])
   }
 
   async function startConversation() {
@@ -73,58 +72,41 @@ export default function AsistanPage() {
     setMessages([])
 
     try {
-      // Get signed URL
       const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
         headers: { Authorization: `Bearer ${authToken}` }
       })
       if (!resp.ok) {
         const e = await resp.json().catch(() => ({}))
-        throw new Error(e.error || `Sunucu hatası: ${resp.status}`)
+        throw new Error(e.error || `API hatası: ${resp.status}`)
       }
       const { signed_url } = await resp.json()
       if (!signed_url) throw new Error("Bağlantı adresi alınamadı")
 
-      // CRITICAL: import from the browser entry point which registers setupStrategy
-      // Without this the SDK throws "No voice session setup strategy registered"
-      const { Conversation } = await import("@elevenlabs/client/browser")
-
       const conv = await Conversation.startSession({
         signedUrl: signed_url,
-
         overrides: {
           agent: {
             prompt: { prompt: SYSTEM_PROMPTS[persona.specialty] || SYSTEM_PROMPTS.genel },
             firstMessage: FIRST_MESSAGES[persona.specialty] || FIRST_MESSAGES.genel,
             language: "tr",
           },
-          tts: {
-            voiceId: VOICE_IDS[persona.specialty] || VOICE_IDS.genel,
-          }
+          tts: { voiceId: VOICE_IDS[persona.specialty] || VOICE_IDS.genel }
         },
-
         onConnect: () => setStatus("listening"),
         onDisconnect: () => { setStatus("idle"); convRef.current = null },
-
         onMessage: (props: { message: string; source: "user" | "ai" }) => {
           addMsg(props.source, props.message)
         },
-
         onModeChange: (props: { mode: "speaking" | "listening" }) => {
           setStatus(props.mode === "speaking" ? "speaking" : "listening")
         },
-
         onError: (message: string) => {
           console.error("[ElevenLabs]", message)
-          setErrorMsg(
-            message.includes("microphone") || message.includes("Permission")
-              ? "Mikrofon izni gerekli — tarayıcıdan izin verin"
-              : "Bağlantı hatası: " + message.slice(0, 80)
-          )
+          setErrorMsg("Hata: " + message.slice(0, 80))
           setStatus("error")
           convRef.current = null
         },
       })
-
       convRef.current = conv
 
     } catch (e: unknown) {
@@ -132,12 +114,10 @@ export default function AsistanPage() {
       console.error("[Asistan]", raw)
       setErrorMsg(
         raw.includes("microphone") || raw.includes("Permission") || raw.includes("denied")
-          ? "Mikrofon erişimi reddedildi. Tarayıcı ayarlarından izin verin."
-          : raw.includes("setupStrategy") || raw.includes("strategy")
-          ? "Tarayıcı uyumsuz. Chrome veya Safari kullanın."
+          ? "Mikrofon erişimi reddedildi. Tarayıcı adres çubuğundan izin verin."
           : raw.includes("401") || raw.includes("403")
           ? "Oturum süresi dolmuş. Tekrar giriş yapın."
-          : "Bağlantı kurulamadı — " + raw.slice(0, 60)
+          : "Bağlantı hatası: " + raw.slice(0, 60)
       )
       setStatus("error")
     }
@@ -158,12 +138,17 @@ export default function AsistanPage() {
   }
 
   const isActive = ["connecting", "listening", "speaking"].includes(status)
+  const statusLabel = {
+    idle: "Başlatmak için dokunun",
+    connecting: "Bağlanıyor...",
+    listening: "Dinliyor — konuşabilirsiniz",
+    speaking: persona.name.split(" ")[1] + " konuşuyor...",
+    error: "Tekrar deneyin",
+  }[status]
 
   return (
     <div style={{height:"100dvh",background:"#080F1A",display:"flex",flexDirection:"column",
                  fontFamily:"system-ui,sans-serif",overflow:"hidden",userSelect:"none"}}>
-
-      {/* Header */}
       <div style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:"12px",
                    borderBottom:"1px solid rgba(255,255,255,.08)",background:"#0A1525"}}>
         <div onClick={() => { stopConversation(); router.push("/dashboard") }}
@@ -177,19 +162,17 @@ export default function AsistanPage() {
           {Object.entries(PERSONAS).map(([key, p]) => (
             <div key={key} onClick={() => switchPersona(key)}
               style={{padding:"5px 10px",borderRadius:"16px",fontSize:"11px",cursor:"pointer",
-                      fontWeight: personaKey === key ? "700" : "400",
-                      background: personaKey === key ? p.color : "rgba(255,255,255,.08)",
-                      color: personaKey === key ? "#fff" : "rgba(255,255,255,.4)",
-                      border:`1px solid ${personaKey === key ? p.color : "rgba(255,255,255,.1)"}`}}>
+                      fontWeight:personaKey===key?"700":"400",
+                      background:personaKey===key?p.color:"rgba(255,255,255,.08)",
+                      color:personaKey===key?"#fff":"rgba(255,255,255,.4)",
+                      border:`1px solid ${personaKey===key?p.color:"rgba(255,255,255,.1)"}`}}>
               {p.name.split(" ")[1]}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Messages */}
-      <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",
-                   flexDirection:"column",gap:"10px"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"10px"}}>
         {messages.length === 0 && status === "idle" && (
           <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",
                        justifyContent:"center",gap:"12px",opacity:.4}}>
@@ -204,9 +187,8 @@ export default function AsistanPage() {
         )}
         {messages.map(msg => (
           <div key={msg.id} style={{display:"flex",
-            justifyContent:msg.role==="user"?"flex-end":"flex-start",
-            alignItems:"flex-end",gap:"8px"}}>
-            {msg.role === "ai" && (
+            justifyContent:msg.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:"8px"}}>
+            {msg.role==="ai" && (
               <div style={{width:"28px",height:"28px",borderRadius:"50%",background:persona.color,
                            display:"flex",alignItems:"center",justifyContent:"center",
                            fontSize:"14px",flexShrink:0}}>{persona.emoji}</div>
@@ -218,7 +200,7 @@ export default function AsistanPage() {
             </div>
           </div>
         ))}
-        {status === "connecting" && (
+        {status==="connecting" && (
           <div style={{display:"flex",alignItems:"flex-end",gap:"8px"}}>
             <div style={{width:"28px",height:"28px",borderRadius:"50%",background:persona.color,
                          display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px"}}>
@@ -226,44 +208,35 @@ export default function AsistanPage() {
             </div>
             <div style={{padding:"12px 16px",background:"#1A2B40",borderRadius:"16px 16px 16px 3px",
                          display:"flex",gap:"5px",alignItems:"center"}}>
-              {[0,1,2].map(i => (
+              {[0,1,2].map(i=>(
                 <div key={i} style={{width:"6px",height:"6px",borderRadius:"50%",
                                      background:"rgba(255,255,255,.4)",
-                                     animation:`bounce 1.2s ease-in-out ${i*.2}s infinite`}} />
+                                     animation:`bounce 1.2s ease-in-out ${i*.2}s infinite`}}/>
               ))}
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef}/>
       </div>
 
-      {/* Controls */}
       <div style={{padding:"16px 16px 44px",display:"flex",flexDirection:"column",
                    alignItems:"center",gap:"12px",borderTop:"1px solid rgba(255,255,255,.06)",
                    background:"#0A1525"}}>
         {errorMsg && (
           <div style={{fontSize:"12px",color:"#F87171",background:"rgba(239,68,68,.12)",
                        padding:"10px 18px",borderRadius:"10px",textAlign:"center",
-                       maxWidth:"320px",lineHeight:"1.5"}}>
-            {errorMsg}
-          </div>
+                       maxWidth:"320px",lineHeight:"1.5"}}>{errorMsg}</div>
         )}
         <div style={{fontSize:"13px",color:"rgba(255,255,255,.45)",
                      display:"flex",alignItems:"center",gap:"8px"}}>
           {isActive && (
             <div style={{width:"7px",height:"7px",borderRadius:"50%",
                          background:status==="speaking"?persona.color:status==="connecting"?"#F59E0B":"#22C55E",
-                         boxShadow:`0 0 8px ${status==="speaking"?persona.color:"#22C55E"}`}} />
+                         boxShadow:`0 0 8px ${status==="speaking"?persona.color:"#22C55E"}`}}/>
           )}
-          {{
-            idle:       "Başlatmak için dokunun",
-            connecting: "Bağlanıyor...",
-            listening:  "Dinliyor — konuşabilirsiniz",
-            speaking:   persona.name.split(" ")[1] + " konuşuyor...",
-            error:      "Tekrar deneyin",
-          }[status]}
+          {statusLabel}
         </div>
-        <div onClick={isActive ? stopConversation : startConversation}
+        <div onClick={isActive?stopConversation:startConversation}
           style={{width:"80px",height:"80px",borderRadius:"50%",cursor:"pointer",
                   display:"flex",alignItems:"center",justifyContent:"center",fontSize:"32px",
                   background:isActive?`radial-gradient(circle,${persona.color},${persona.color}88)`:"rgba(255,255,255,.1)",
@@ -276,10 +249,7 @@ export default function AsistanPage() {
           {isActive?"Bitirmek için dokunun":"Başlatmak için dokunun"}
         </div>
       </div>
-
-      <style>{`
-        @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
-      `}</style>
+      <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}`}</style>
     </div>
   )
 }
