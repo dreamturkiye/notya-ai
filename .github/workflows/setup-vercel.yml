@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -15,75 +17,40 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Create Vercel project and deploy PRODUCTION
-        id: deploy_prod
+      - name: Deploy PRODUCTION (main branch)
         run: |
-          echo "Deploying to production..."
-          DEPLOY_URL=$(vercel deploy --prod --yes \
+          git checkout main
+          PROD_URL=$(vercel deploy --prod --yes \
             --token=${{ secrets.VERCEL_TOKEN }} \
-            --name=notya-ai \
-            -e NEXT_PUBLIC_SUPABASE_URL=placeholder \
-            -e NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder \
-            -e SUPABASE_SERVICE_ROLE_KEY=placeholder \
-            -e ANTHROPIC_API_KEY=placeholder \
-            -e ENCRYPTION_MASTER_KEY=notya-kvkk-key-2026-temp \
-            2>&1 | tail -1)
-          echo "PROD_URL=$DEPLOY_URL" >> $GITHUB_OUTPUT
-          echo "Production URL: $DEPLOY_URL"
+            --name=notya-ai 2>&1 | grep -E "^https" | tail -1)
+          echo "Production: $PROD_URL"
+          cat .vercel/project.json || echo "No project.json yet"
 
-      - name: Get Vercel Project ID
-        id: project_info
+      - name: Get Project and Org IDs
         run: |
-          PROJECT_INFO=$(vercel inspect ${{ steps.deploy_prod.outputs.PROD_URL }} \
-            --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
-          echo "$PROJECT_INFO"
-          
-          # Get project ID from .vercel/project.json
-          if [ -f .vercel/project.json ]; then
-            cat .vercel/project.json
-            PROJECT_ID=$(cat .vercel/project.json | python3 -c "import json,sys; print(json.load(sys.stdin).get('projectId',''))")
-            ORG_ID=$(cat .vercel/project.json | python3 -c "import json,sys; print(json.load(sys.stdin).get('orgId',''))")
-            echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_OUTPUT
-            echo "ORG_ID=$ORG_ID" >> $GITHUB_OUTPUT
-            echo "Project ID: $PROJECT_ID"
-            echo "Org ID: $ORG_ID"
-          fi
+          cat .vercel/project.json
+          echo "---"
+          python3 -c "
+import json
+with open('.vercel/project.json') as f:
+    d = json.load(f)
+print('VERCEL_PROJECT_ID=' + d.get('projectId',''))
+print('VERCEL_ORG_ID=' + d.get('orgId',''))
+" || echo "Could not read project.json"
 
-      - name: Deploy STAGING environment
+      - name: Deploy STAGING
         run: |
           git checkout staging
           vercel deploy --yes \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            -e NEXT_PUBLIC_APP_ENV=staging \
-            -e NEXT_PUBLIC_SUPABASE_URL=placeholder \
-            -e NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder \
-            -e SUPABASE_SERVICE_ROLE_KEY=placeholder \
-            -e ANTHROPIC_API_KEY=placeholder \
-            -e ENCRYPTION_MASTER_KEY=notya-kvkk-key-2026-temp \
-            2>&1 | tail -5
+            --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tail -3
 
-      - name: Deploy DEV environment
+      - name: Deploy DEV
         run: |
           git checkout dev
           vercel deploy --yes \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            -e NEXT_PUBLIC_APP_ENV=development \
-            -e NEXT_PUBLIC_SUPABASE_URL=placeholder \
-            -e NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder \
-            -e SUPABASE_SERVICE_ROLE_KEY=placeholder \
-            -e ANTHROPIC_API_KEY=placeholder \
-            -e ENCRYPTION_MASTER_KEY=notya-kvkk-key-2026-temp \
-            2>&1 | tail -5
+            --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tail -3
 
-      - name: Summary
+      - name: Done
         run: |
-          echo "==================================="
-          echo "NOTYA AI - VERCEL SETUP COMPLETE"
-          echo "==================================="
-          echo "Production: ${{ steps.deploy_prod.outputs.PROD_URL }}"
-          echo "Project ID: ${{ steps.project_info.outputs.PROJECT_ID }}"
-          echo "Org ID: ${{ steps.project_info.outputs.ORG_ID }}"
-          echo ""
-          echo "Add these to GitHub secrets:"
-          echo "VERCEL_PROJECT_ID=${{ steps.project_info.outputs.PROJECT_ID }}"
-          echo "VERCEL_ORG_ID=${{ steps.project_info.outputs.ORG_ID }}"
+          echo "All 3 environments deployed"
+          echo "Check vercel.com/dashboard for URLs"
