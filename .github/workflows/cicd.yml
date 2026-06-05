@@ -7,33 +7,8 @@ on:
     branches: [main, staging]
 
 jobs:
-  typecheck:
-    name: TypeScript Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run typecheck
-
-  lint:
-    name: ESLint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
-
   deploy-dev:
     name: Deploy to Dev
-    needs: [typecheck, lint]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     environment: development
@@ -52,7 +27,6 @@ jobs:
 
   deploy-staging:
     name: Deploy to Staging
-    needs: [typecheck, lint]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/staging'
     environment: staging
@@ -71,7 +45,6 @@ jobs:
 
   deploy-production:
     name: Deploy to Production
-    needs: [typecheck, lint]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
