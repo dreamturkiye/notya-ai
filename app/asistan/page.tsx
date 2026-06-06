@@ -82,7 +82,11 @@ export default function AsistanPage() {
     isPlayingRef.current = false
   }
 
-  // Play audio via HTML Audio — works natively on iOS Safari
+  // Pre-created audio element — activated in tap gesture so iOS allows playback
+  // from WebSocket callbacks without user gesture requirement
+  const audioElRef = useRef<HTMLAudioElement | null>(null)
+
+  // Play audio via pre-activated HTML Audio element
   async function playAudioChunk(base64pcm: string) {
     audioQueueRef.current.push(base64pcm)
     if (!isPlayingRef.current) drainQueue()
@@ -99,20 +103,24 @@ export default function AsistanPage() {
 
     const b64 = audioQueueRef.current.shift()!
     try {
-      // Convert PCM16 to WAV
       const raw = atob(b64)
       const pcm = new Uint8Array(raw.length)
       for (let i = 0; i < raw.length; i++) pcm[i] = raw.charCodeAt(i)
       const wav = buildWav(pcm, 16000)
       const url = URL.createObjectURL(new Blob([wav], { type: "audio/wav" }))
-      const audio = new Audio(url)
+
+      // Reuse the pre-activated audio element
+      const audio = audioElRef.current || new Audio()
+      audioElRef.current = audio
       audio.playsInline = true
+      audio.src = url
+
       await new Promise<void>(res => {
         audio.onended = () => { URL.revokeObjectURL(url); res() }
         audio.onerror = () => { URL.revokeObjectURL(url); res() }
-        audio.play().catch(() => res())
+        audio.play().catch((e) => { console.warn("play blocked:", e); URL.revokeObjectURL(url); res() })
       })
-    } catch {}
+    } catch(e) { console.warn("audio error:", e) }
     drainQueue()
   }
 
@@ -138,11 +146,14 @@ export default function AsistanPage() {
     setMessages([])
 
     try {
-      // CRITICAL: all of these happen inside the tap gesture handler
-      // 1. Play silent audio to unlock iOS audio session
-      const sil = new Audio(SILENT_WAV)
-      sil.playsInline = true
-      sil.play().catch(() => {})
+      // CRITICAL: all inside tap gesture handler
+      // 1. Create and activate the audio element - this unlocks iOS audio session
+      // Pre-activating in gesture means subsequent .play() calls work without gesture
+      const audioEl = new Audio(SILENT_WAV)
+      audioEl.playsInline = true
+      audioEl.muted = false
+      try { await audioEl.play(); audioEl.pause() } catch {}
+      audioElRef.current = audioEl
 
       // 2. Fetch signed URL AND request mic in parallel
       // Both happen simultaneously so URL doesn't expire waiting for mic dialog
