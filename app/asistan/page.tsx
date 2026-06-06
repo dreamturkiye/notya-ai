@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 
-type ConvStatus = "idle" | "requesting_mic" | "connecting" | "listening" | "speaking" | "error"
+type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
 type Persona = { name: string; title: string; emoji: string; color: string; specialty: string }
 
@@ -32,7 +32,8 @@ const VOICE_IDS: Record<string, string> = {
   genel:       "pNInz6obpgDQGcFmaJgB",
 }
 
-const AGENT_ID = "agent_3601ktc884ntf3dbdkjtyx6vdfwa"
+// Minimal silent WAV to unlock iOS audio session
+const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
 
 export default function AsistanPage() {
   const router = useRouter()
@@ -43,11 +44,10 @@ export default function AsistanPage() {
   const [errorMsg, setErrorMsg] = useState("")
   const [authToken, setAuthToken] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
   const audioQueueRef = useRef<string[]>([])
   const isPlayingRef = useRef(false)
+  const streamRef = useRef<MediaStream | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -72,22 +72,23 @@ export default function AsistanPage() {
   }
 
   function cleanup() {
-    wsRef.current?.close(1000)
+    try { wsRef.current?.close(1000) } catch {}
     wsRef.current = null
-    mediaRecorderRef.current?.stop()
-    mediaRecorderRef.current = null
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
+    try { audioCtxRef.current?.close() } catch {}
+    audioCtxRef.current = null
     audioQueueRef.current = []
     isPlayingRef.current = false
   }
 
-  // Play PCM audio via HTML Audio element — works on iOS Safari natively
+  // Play audio via HTML Audio — works natively on iOS Safari
   async function playAudioChunk(base64pcm: string) {
     audioQueueRef.current.push(base64pcm)
-    if (!isPlayingRef.current) drainAudioQueue()
+    if (!isPlayingRef.current) drainQueue()
   }
 
-  async function drainAudioQueue() {
+  async function drainQueue() {
     if (audioQueueRef.current.length === 0) {
       isPlayingRef.current = false
       if (wsRef.current?.readyState === WebSocket.OPEN) setStatus("listening")
@@ -96,94 +97,91 @@ export default function AsistanPage() {
     isPlayingRef.current = true
     setStatus("speaking")
 
-    const base64 = audioQueueRef.current.shift()!
-    // Convert base64 PCM16 to WAV for HTML Audio
-    const pcmData = atob(base64)
-    const pcmBytes = new Uint8Array(pcmData.length)
-    for (let i = 0; i < pcmData.length; i++) pcmBytes[i] = pcmData.charCodeAt(i)
+    const b64 = audioQueueRef.current.shift()!
+    try {
+      // Convert PCM16 to WAV
+      const raw = atob(b64)
+      const pcm = new Uint8Array(raw.length)
+      for (let i = 0; i < raw.length; i++) pcm[i] = raw.charCodeAt(i)
+      const wav = buildWav(pcm, 16000)
+      const url = URL.createObjectURL(new Blob([wav], { type: "audio/wav" }))
+      const audio = new Audio(url)
+      audio.playsInline = true
+      await new Promise<void>(res => {
+        audio.onended = () => { URL.revokeObjectURL(url); res() }
+        audio.onerror = () => { URL.revokeObjectURL(url); res() }
+        audio.play().catch(() => res())
+      })
+    } catch {}
+    drainQueue()
+  }
 
-    // Build WAV header for PCM16 16kHz mono
-    const sampleRate = 16000
-    const numChannels = 1
-    const bitsPerSample = 16
-    const dataLength = pcmBytes.length
-    const header = new ArrayBuffer(44)
-    const view = new DataView(header)
-    const write = (offset: number, val: number, size: number) => {
-      if (size === 4) view.setUint32(offset, val, true)
-      else if (size === 2) view.setUint16(offset, val, true)
-    }
-    // RIFF chunk
-    "RIFF".split("").forEach((c,i) => view.setUint8(i, c.charCodeAt(0)))
-    write(4, 36 + dataLength, 4)
-    "WAVE".split("").forEach((c,i) => view.setUint8(8+i, c.charCodeAt(0)))
-    // fmt chunk
-    "fmt ".split("").forEach((c,i) => view.setUint8(12+i, c.charCodeAt(0)))
-    write(16, 16, 4)
-    write(20, 1, 2) // PCM
-    write(22, numChannels, 2)
-    write(24, sampleRate, 4)
-    write(28, sampleRate * numChannels * bitsPerSample / 8, 4)
-    write(32, numChannels * bitsPerSample / 8, 2)
-    write(34, bitsPerSample, 2)
-    // data chunk
-    "data".split("").forEach((c,i) => view.setUint8(36+i, c.charCodeAt(0)))
-    write(40, dataLength, 4)
-
-    const wav = new Blob([header, pcmBytes], { type: "audio/wav" })
-    const url = URL.createObjectURL(wav)
-
-    const audio = new Audio(url)
-    audio.playsInline = true
-    // Force speaker output (not earpiece) on iOS
-    try { (audio as any).sinkId && await (audio as any).setSinkId("speaker") } catch {}
-
-    await new Promise<void>(resolve => {
-      audio.onended = () => { URL.revokeObjectURL(url); resolve() }
-      audio.onerror = () => { URL.revokeObjectURL(url); resolve() }
-      audio.play().catch(() => resolve())
-    })
-
-    drainAudioQueue()
+  function buildWav(pcm: Uint8Array, sampleRate: number): ArrayBuffer {
+    const buf = new ArrayBuffer(44 + pcm.length)
+    const v = new DataView(buf)
+    const u = new Uint8Array(buf)
+    const str = (o: number, s: string) => s.split("").forEach((c,i) => v.setUint8(o+i, c.charCodeAt(0)))
+    str(0,"RIFF"); v.setUint32(4, 36+pcm.length, true); str(8,"WAVE")
+    str(12,"fmt "); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true)
+    v.setUint32(24,sampleRate,true); v.setUint32(28,sampleRate*2,true)
+    v.setUint16(32,2,true); v.setUint16(34,16,true)
+    str(36,"data"); v.setUint32(40,pcm.length,true)
+    u.set(pcm, 44)
+    return buf
   }
 
   async function startConversation() {
     if (!authToken) { router.push("/giris"); return }
     cleanup()
-    setStatus("requesting_mic")
+    setStatus("connecting")
     setErrorMsg("")
     setMessages([])
 
     try {
-      // Step 1: unlock audio AND get mic permission in same gesture
-      // Play a silent HTML audio to unlock iOS audio session
-      const silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=")
-      silentAudio.playsInline = true
-      try { await silentAudio.play() } catch {}
+      // CRITICAL: all of these happen inside the tap gesture handler
+      // 1. Play silent audio to unlock iOS audio session
+      const sil = new Audio(SILENT_WAV)
+      sil.playsInline = true
+      sil.play().catch(() => {})
 
-      setStatus('connecting')
+      // 2. Fetch signed URL AND request mic in parallel
+      // Both happen simultaneously so URL doesn't expire waiting for mic dialog
+      const [stream, resp] = await Promise.all([
+        navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+          }
+        }),
+        fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
+          headers: { Authorization: `Bearer ${authToken}` }
+        })
+      ])
 
-      // Step 3: get signed URL
-      const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
-        headers: { Authorization: `Bearer ${authToken}` }
-      })
-      if (!resp.ok) throw new Error(`API hatası: ${resp.status}`)
-      const { signed_url } = await resp.json()
-      if (!signed_url) throw new Error("URL alınamadı")
+      streamRef.current = stream
 
-      // Step 4: open WebSocket AFTER mic granted and audio unlocked
-      const ws = new WebSocket(signed_url)
+      if (!resp.ok) throw new Error(`Sunucu hatası: ${resp.status}`)
+      const body = await resp.json()
+      if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
+
+      // 3. Open WebSocket — URL is fresh, mic is granted, audio is unlocked
+      const ws = new WebSocket(body.signed_url)
       wsRef.current = ws
 
-      const timeout = setTimeout(() => {
+      const connTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          ws.close(); setErrorMsg("Bağlantı zaman aşımı"); setStatus("error")
+          ws.close()
+          setErrorMsg("Bağlantı zaman aşımı — tekrar deneyin")
+          setStatus("error")
         }
       }, 10000)
 
       ws.onopen = () => {
-        clearTimeout(timeout)
-        // Send conversation config override
+        clearTimeout(connTimeout)
+
+        // Send system prompt override
         ws.send(JSON.stringify({
           type: "conversation_initiation_client_data",
           conversation_config_override: {
@@ -192,79 +190,76 @@ export default function AsistanPage() {
               first_message: FIRST_MESSAGES[persona.specialty] || FIRST_MESSAGES.genel,
               language: "tr"
             },
-            tts: { voice_id: VOICE_IDS[persona.specialty] || VOICE_IDS.genel, optimize_streaming_latency: 4 }
+            tts: {
+              voice_id: VOICE_IDS[persona.specialty] || VOICE_IDS.genel,
+              optimize_streaming_latency: 4
+            }
           }
         }))
+
         setStatus("listening")
-        startSendingAudio(stream, ws)
+
+        // Start sending mic audio
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+        const ctx = new AudioCtx({ sampleRate: 16000 })
+        audioCtxRef.current = ctx
+        const src = ctx.createMediaStreamSource(stream)
+        const proc = ctx.createScriptProcessor(4096, 1, 1)
+        proc.onaudioprocess = (e) => {
+          if (ws.readyState !== WebSocket.OPEN || isPlayingRef.current) return
+          const pcm = e.inputBuffer.getChannelData(0)
+          const i16 = new Int16Array(pcm.length)
+          for (let i = 0; i < pcm.length; i++)
+            i16[i] = Math.max(-32768, Math.min(32767, Math.round(pcm[i] * 32768)))
+          ws.send(JSON.stringify({
+            user_audio_chunk: btoa(String.fromCharCode(...new Uint8Array(i16.buffer)))
+          }))
+        }
+        src.connect(proc)
+        proc.connect(ctx.destination)
       }
 
-      ws.onmessage = (event) => {
+      ws.onmessage = (e) => {
         try {
-          const data = JSON.parse(event.data)
-          switch (data.type) {
-            case "audio":
-              if (data.audio_event?.audio_base_64) playAudioChunk(data.audio_event.audio_base_64)
-              break
-            case "agent_response":
-              if (data.agent_response_event?.agent_response)
-                addMsg("ai", data.agent_response_event.agent_response)
-              break
-            case "user_transcript":
-              if (data.user_transcription_event?.user_transcript?.trim())
-                addMsg("user", data.user_transcription_event.user_transcript)
-              break
-            case "interruption":
-              audioQueueRef.current = []
-              isPlayingRef.current = false
-              setStatus("listening")
-              break
-            case "ping":
-              if (data.ping_event?.event_id)
-                ws.send(JSON.stringify({ type: "pong", event_id: data.ping_event.event_id }))
-              break
-          }
+          const d = JSON.parse(e.data)
+          if (d.type === "audio" && d.audio_event?.audio_base_64)
+            playAudioChunk(d.audio_event.audio_base_64)
+          else if (d.type === "agent_response" && d.agent_response_event?.agent_response)
+            addMsg("ai", d.agent_response_event.agent_response)
+          else if (d.type === "user_transcript" && d.user_transcription_event?.user_transcript?.trim())
+            addMsg("user", d.user_transcription_event.user_transcript)
+          else if (d.type === "interruption") {
+            audioQueueRef.current = []; isPlayingRef.current = false; setStatus("listening")
+          } else if (d.type === "ping" && d.ping_event?.event_id)
+            ws.send(JSON.stringify({ type: "pong", event_id: d.ping_event.event_id }))
         } catch {}
       }
 
-      ws.onerror = () => { setErrorMsg("Bağlantı hatası. Tekrar deneyin."); setStatus("error") }
+      ws.onerror = () => {
+        setErrorMsg("WebSocket bağlantı hatası — tekrar deneyin")
+        setStatus("error")
+        cleanup()
+      }
+
       ws.onclose = (e) => {
-        if (e.code !== 1000 && e.code !== 1001) {
-          setErrorMsg(`Bağlantı kesildi (${e.code})`); setStatus("error")
-        } else {
-          setStatus("idle")
-        }
+        clearTimeout(connTimeout)
+        if (e.code === 1000 || e.code === 1001) setStatus("idle")
+        else { setErrorMsg(`Bağlantı kesildi (kod: ${e.code}) — tekrar deneyin`); setStatus("error") }
         cleanup()
       }
 
     } catch (e: unknown) {
       const raw = e instanceof Error ? e.message : String(e)
       setErrorMsg(
-        raw.includes("denied") || raw.includes("NotAllowed")
+        raw.includes("denied") || raw.includes("NotAllowed") || raw.includes("Permission")
           ? "Mikrofon izni reddedildi. Ayarlar → Safari → Mikrofon'dan izin verin."
+          : raw.includes("NotFound")
+          ? "Mikrofon bulunamadı. Cihazınızda mikrofon var mı?"
           : "Hata: " + raw.slice(0, 80)
       )
       setStatus("error")
+      cleanup()
     }
-  }
-
-  function startSendingAudio(stream: MediaStream, ws: WebSocket) {
-    // Send mic audio as PCM chunks via WebSocket
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
-    const ctx = new AudioCtx({ sampleRate: 16000 })
-    const source = ctx.createMediaStreamSource(stream)
-    const processor = ctx.createScriptProcessor(4096, 1, 1)
-    processor.onaudioprocess = (e) => {
-      if (ws.readyState !== WebSocket.OPEN || isPlayingRef.current) return
-      const pcm = e.inputBuffer.getChannelData(0)
-      const int16 = new Int16Array(pcm.length)
-      for (let i = 0; i < pcm.length; i++)
-        int16[i] = Math.max(-32768, Math.min(32767, Math.round(pcm[i] * 32768)))
-      const b64 = btoa(String.fromCharCode(...new Uint8Array(int16.buffer)))
-      ws.send(JSON.stringify({ user_audio_chunk: b64 }))
-    }
-    source.connect(processor)
-    processor.connect(ctx.destination)
   }
 
   function stopConversation() {
@@ -282,17 +277,18 @@ export default function AsistanPage() {
 
   const isActive = ["connecting","listening","speaking"].includes(status)
   const statusLabel = {
-    idle: "Başlatmak için dokunun",
-    requesting_mic: "Mikrofon izni isteniyor...",
+    idle:       "Başlatmak için dokunun",
     connecting: "Bağlanıyor...",
-    listening: "Dinliyor — konuşabilirsiniz",
-    speaking: persona.name.split(" ")[1] + " konuşuyor...",
-    error: "Tekrar deneyin",
+    listening:  "Dinliyor — konuşabilirsiniz",
+    speaking:   persona.name.split(" ")[1] + " konuşuyor...",
+    error:      "Tekrar deneyin",
   }[status]
 
   return (
     <div style={{height:"100dvh",background:"#080F1A",display:"flex",flexDirection:"column",
                  fontFamily:"system-ui,sans-serif",overflow:"hidden",userSelect:"none"}}>
+
+      {/* Header */}
       <div style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:"12px",
                    borderBottom:"1px solid rgba(255,255,255,.08)",background:"#0A1525"}}>
         <div onClick={()=>{stopConversation();router.push("/dashboard")}}
@@ -316,6 +312,7 @@ export default function AsistanPage() {
         </div>
       </div>
 
+      {/* Messages */}
       <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"10px"}}>
         {messages.length===0 && status==="idle" && (
           <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",
@@ -331,7 +328,8 @@ export default function AsistanPage() {
         )}
         {messages.map(msg=>(
           <div key={msg.id} style={{display:"flex",
-            justifyContent:msg.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:"8px"}}>
+            justifyContent:msg.role==="user"?"flex-end":"flex-start",
+            alignItems:"flex-end",gap:"8px"}}>
             {msg.role==="ai"&&(
               <div style={{width:"28px",height:"28px",borderRadius:"50%",background:persona.color,
                            display:"flex",alignItems:"center",justifyContent:"center",
@@ -344,7 +342,7 @@ export default function AsistanPage() {
             </div>
           </div>
         ))}
-        {["connecting","requesting_mic"].includes(status)&&(
+        {status==="connecting" && (
           <div style={{display:"flex",alignItems:"flex-end",gap:"8px"}}>
             <div style={{width:"28px",height:"28px",borderRadius:"50%",background:persona.color,
                          display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px"}}>
@@ -363,6 +361,7 @@ export default function AsistanPage() {
         <div ref={messagesEndRef}/>
       </div>
 
+      {/* Controls */}
       <div style={{padding:"16px 16px 44px",display:"flex",flexDirection:"column",
                    alignItems:"center",gap:"12px",borderTop:"1px solid rgba(255,255,255,.06)",
                    background:"#0A1525"}}>
@@ -373,10 +372,10 @@ export default function AsistanPage() {
         )}
         <div style={{fontSize:"13px",color:"rgba(255,255,255,.45)",
                      display:"flex",alignItems:"center",gap:"8px"}}>
-          {(isActive||status==="requesting_mic")&&(
+          {isActive&&(
             <div style={{width:"7px",height:"7px",borderRadius:"50%",
                          background:status==="speaking"?persona.color
-                           :status==="connecting"||status==="requesting_mic"?"#F59E0B":"#22C55E",
+                           :status==="connecting"?"#F59E0B":"#22C55E",
                          boxShadow:`0 0 8px ${status==="speaking"?persona.color:"#22C55E"}`}}/>
           )}
           {statusLabel}
@@ -384,11 +383,13 @@ export default function AsistanPage() {
         <div onClick={isActive?stopConversation:startConversation}
           style={{width:"80px",height:"80px",borderRadius:"50%",cursor:"pointer",
                   display:"flex",alignItems:"center",justifyContent:"center",fontSize:"32px",
-                  background:isActive?`radial-gradient(circle,${persona.color},${persona.color}88)`:"rgba(255,255,255,.1)",
+                  background:isActive
+                    ?`radial-gradient(circle,${persona.color},${persona.color}88)`
+                    :"rgba(255,255,255,.1)",
                   border:`2px solid ${isActive?persona.color:"rgba(255,255,255,.2)"}`,
                   boxShadow:isActive?`0 0 32px ${persona.color}55`:"none",
                   transition:"all .25s"}}>
-          {status==="requesting_mic"?"🎤":status==="connecting"?"⏳":status==="speaking"?"🔊":"🎙️"}
+          {status==="connecting"?"⏳":status==="speaking"?"🔊":"🎙️"}
         </div>
         <div style={{fontSize:"11px",color:"rgba(255,255,255,.2)"}}>
           {isActive?"Bitirmek için dokunun":"Başlatmak için dokunun"}
