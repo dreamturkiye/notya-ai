@@ -161,12 +161,7 @@ export default function AsistanPage() {
       silentAudio.playsInline = true
       try { await silentAudio.play() } catch {}
 
-      // Step 2: get mic permission — Safari dialog appears here
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-      })
-
-      setStatus("connecting")
+      setStatus('connecting')
 
       // Step 3: get signed URL
       const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
