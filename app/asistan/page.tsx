@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
 
-type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
+type ConvStatus = "idle" | "requesting_mic" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
 type Persona = { name: string; title: string; emoji: string; color: string; specialty: string }
 
@@ -41,7 +41,9 @@ export default function AsistanPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [errorMsg, setErrorMsg] = useState("")
   const [authToken, setAuthToken] = useState<string | null>(null)
+  const [micGranted, setMicGranted] = useState(false)
   const convRef = useRef<{ endSession: () => Promise<void> } | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,7 +55,17 @@ export default function AsistanPage() {
       if (!session) { router.push("/giris"); return }
       setAuthToken(session.access_token)
     })
-    return () => { convRef.current?.endSession?.().catch(() => {}) }
+    // Check if mic permission already granted
+    if (typeof navigator !== "undefined" && navigator.permissions) {
+      navigator.permissions.query({ name: "microphone" as PermissionName })
+        .then(result => {
+          if (result.state === "granted") setMicGranted(true)
+        }).catch(() => {})
+    }
+    return () => {
+      convRef.current?.endSession?.().catch(() => {})
+      micStreamRef.current?.getTracks().forEach(t => t.stop())
+    }
   }, [])
 
   useEffect(() => {
@@ -65,27 +77,27 @@ export default function AsistanPage() {
     setMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: text.trim() }])
   }
 
-  // Detect iOS
-  function isIOS() {
-    if (typeof navigator === "undefined") return false
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-  }
-
-  async function startConversation() {
+  // STEP 1: Request mic permission FIRST, before touching ElevenLabs
+  // Safari shows the "Manage Options" dialog here — WebSocket not open yet
+  // so page suspension won't kill anything
+  async function requestMicThenConnect() {
     if (!authToken) { router.push("/giris"); return }
-    setStatus("connecting")
+
+    // If mic already granted, skip straight to connect
+    if (micGranted) {
+      await connectSession()
+      return
+    }
+
+    setStatus("requesting_mic")
     setErrorMsg("")
-    setMessages([])
 
     try {
-      // CRITICAL for iOS: unlock AudioContext INSIDE the user gesture (this tap)
-      // Safari requires audio to be started within a user gesture handler
-      if (typeof window !== "undefined" && typeof AudioContext !== "undefined") {
+      // Unlock AudioContext inside this gesture
+      if (typeof AudioContext !== "undefined") {
         try {
           const ctx = new AudioContext()
           if (ctx.state === "suspended") await ctx.resume()
-          // Create and play a silent buffer to fully unlock audio
           const buf = ctx.createBuffer(1, 1, 22050)
           const src = ctx.createBufferSource()
           src.buffer = buf
@@ -94,6 +106,41 @@ export default function AsistanPage() {
         } catch { /* ignore */ }
       }
 
+      // Request microphone — Safari shows "Manage Options" dialog HERE
+      // WebSocket is NOT open yet so page suspension is harmless
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000,
+        }
+      })
+
+      // Keep the stream alive — don't stop it, pass it to ElevenLabs
+      micStreamRef.current = stream
+      setMicGranted(true)
+
+      // Now connect — mic permission already granted, no dialog will appear
+      await connectSession()
+
+    } catch (e: unknown) {
+      const raw = e instanceof Error ? e.message : String(e)
+      if (raw.includes("denied") || raw.includes("Permission") || raw.includes("NotAllowed")) {
+        setErrorMsg("Mikrofon erişimi reddedildi. Safari Ayarlar → Safari → Mikrofon bölümünden izin verin.")
+      } else {
+        setErrorMsg("Mikrofon açılamadı: " + raw.slice(0, 60))
+      }
+      setStatus("error")
+    }
+  }
+
+  // STEP 2: Connect ElevenLabs AFTER mic is granted
+  async function connectSession() {
+    if (!authToken) return
+    setStatus("connecting")
+
+    try {
       const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
         headers: { Authorization: `Bearer ${authToken}` }
       })
@@ -106,16 +153,8 @@ export default function AsistanPage() {
 
       const conv = await Conversation.startSession({
         signedUrl: signed_url,
-
-        // iOS Safari: prefer headphones/earpiece, unlock audio on gesture
         preferHeadphonesForIosDevices: true,
-
-        // No connection delay - modern iOS and Android handle this natively
-        connectionDelay: {
-          ios: 0,
-          android: 0,
-          default: 0,
-        },
+        connectionDelay: { ios: 0, android: 0, default: 0 },
 
         overrides: {
           agent: {
@@ -149,14 +188,10 @@ export default function AsistanPage() {
 
     } catch (e: unknown) {
       const raw = e instanceof Error ? e.message : String(e)
-      console.error("[Asistan]", raw)
+      console.error("[connectSession]", raw)
       setErrorMsg(
-        raw.includes("microphone") || raw.includes("Permission") || raw.includes("denied")
-          ? "Mikrofon erişimi reddedildi. Tarayıcı ayarlarından izin verin."
-          : raw.includes("401") || raw.includes("403")
+        raw.includes("401") || raw.includes("403")
           ? "Oturum süresi dolmuş. Tekrar giriş yapın."
-          : raw.includes("worklet") || raw.includes("AudioWorklet")
-          ? "Ses modülü yüklenemedi. Sayfayı yenileyip tekrar deneyin."
           : "Bağlantı hatası: " + raw.slice(0, 60)
       )
       setStatus("error")
@@ -178,13 +213,20 @@ export default function AsistanPage() {
   }
 
   const isActive = ["connecting", "listening", "speaking"].includes(status)
+
   const statusLabel = {
-    idle:       "Başlatmak için dokunun",
-    connecting: "Bağlanıyor...",
-    listening:  "Dinliyor — konuşabilirsiniz",
-    speaking:   persona.name.split(" ")[1] + " konuşuyor...",
-    error:      "Tekrar deneyin",
+    idle:           "Başlatmak için dokunun",
+    requesting_mic: "Mikrofon izni isteniyor...",
+    connecting:     "Bağlanıyor...",
+    listening:      "Dinliyor — konuşabilirsiniz",
+    speaking:       persona.name.split(" ")[1] + " konuşuyor...",
+    error:          "Tekrar deneyin",
   }[status]
+
+  const btnEmoji = status === "requesting_mic" ? "🎤"
+    : status === "connecting" ? "⏳"
+    : status === "speaking" ? "🔊"
+    : "🎙️"
 
   return (
     <div style={{height:"100dvh",background:"#080F1A",display:"flex",flexDirection:"column",
@@ -224,7 +266,7 @@ export default function AsistanPage() {
             <div style={{fontSize:"13px",color:"rgba(255,255,255,.4)"}}>{persona.title}</div>
             <div style={{fontSize:"12px",color:"rgba(255,255,255,.25)",marginTop:"8px",
                          textAlign:"center",maxWidth:"220px",lineHeight:"1.6"}}>
-              Butona dokunun ve doğal konuşun
+              {micGranted ? "Butona dokunun ve doğal konuşun" : "Butona dokunun — mikrofon izni istenecek"}
             </div>
           </div>
         )}
@@ -243,7 +285,7 @@ export default function AsistanPage() {
             </div>
           </div>
         ))}
-        {status==="connecting" && (
+        {(status === "connecting" || status === "requesting_mic") && (
           <div style={{display:"flex",alignItems:"flex-end",gap:"8px"}}>
             <div style={{width:"28px",height:"28px",borderRadius:"50%",background:persona.color,
                          display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px"}}>
@@ -273,24 +315,29 @@ export default function AsistanPage() {
         )}
         <div style={{fontSize:"13px",color:"rgba(255,255,255,.45)",
                      display:"flex",alignItems:"center",gap:"8px"}}>
-          {isActive && (
+          {(isActive || status === "requesting_mic") && (
             <div style={{width:"7px",height:"7px",borderRadius:"50%",
-                         background:status==="speaking"?persona.color:status==="connecting"?"#F59E0B":"#22C55E",
+                         background:status==="speaking"?persona.color
+                           :status==="connecting"||status==="requesting_mic"?"#F59E0B":"#22C55E",
                          boxShadow:`0 0 8px ${status==="speaking"?persona.color:"#22C55E"}`}}/>
           )}
           {statusLabel}
         </div>
-        <div onClick={isActive?stopConversation:startConversation}
+
+        <div onClick={isActive ? stopConversation : requestMicThenConnect}
           style={{width:"80px",height:"80px",borderRadius:"50%",cursor:"pointer",
                   display:"flex",alignItems:"center",justifyContent:"center",fontSize:"32px",
-                  background:isActive?`radial-gradient(circle,${persona.color},${persona.color}88)`:"rgba(255,255,255,.1)",
-                  border:`2px solid ${isActive?persona.color:"rgba(255,255,255,.2)"}`,
+                  background:isActive
+                    ?`radial-gradient(circle,${persona.color},${persona.color}88)`
+                    :status==="requesting_mic"?"rgba(245,158,11,.3)":"rgba(255,255,255,.1)",
+                  border:`2px solid ${isActive?persona.color:status==="requesting_mic"?"#F59E0B":"rgba(255,255,255,.2)"}`,
                   boxShadow:isActive?`0 0 32px ${persona.color}55`:"none",
                   transition:"all .25s"}}>
-          {status==="connecting"?"⏳":status==="speaking"?"🔊":"🎙️"}
+          {btnEmoji}
         </div>
+
         <div style={{fontSize:"11px",color:"rgba(255,255,255,.2)"}}>
-          {isActive?"Bitirmek için dokunun":"Başlatmak için dokunun"}
+          {isActive ? "Bitirmek için dokunun" : "Başlatmak için dokunun"}
         </div>
       </div>
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}`}</style>
