@@ -34,14 +34,14 @@ export async function middleware(req: NextRequest) {
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=*, geolocation=()')
   response.headers.set(
     'Strict-Transport-Security',
     'max-age=31536000; includeSubDomains; preload'
   )
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.deepgram.com wss://api.deepgram.com https://*.supabase.co"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com https://api.deepgram.com wss://api.deepgram.com"
   )
 
   // CORS - Sadece notya.ai domaininden
