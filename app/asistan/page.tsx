@@ -207,12 +207,12 @@ export default function AsistanPage() {
         // Send system prompt override
         // Send ONLY prompt and first_message override - do NOT override voice_id
         // Overriding voice_id via raw WebSocket causes 1008 policy violation
+        // Only override prompt — first_message override not allowed by agent config
         ws.send(JSON.stringify({
           type: "conversation_initiation_client_data",
           conversation_config_override: {
             agent: {
               prompt: { prompt: SYSTEM_PROMPTS[persona.specialty] || SYSTEM_PROMPTS.genel },
-              first_message: FIRST_MESSAGES[persona.specialty] || FIRST_MESSAGES.genel,
               language: "tr"
             }
           }
