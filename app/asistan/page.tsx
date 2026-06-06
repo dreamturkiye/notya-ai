@@ -113,7 +113,9 @@ export default function AsistanPage() {
       const raw = e instanceof Error ? e.message : String(e)
       console.error("[Asistan]", raw)
       setErrorMsg(
-        raw.includes("microphone") || raw.includes("Permission") || raw.includes("denied")
+        raw.includes("worklet") || raw.includes("AudioWorklet") || raw.includes("rawAudioProcessor")
+          ? "Safari iOS ses modülünü yükleyemedi. Lütfen Safari ayarlarından siteye tam erişim verin veya Chrome kullanın."
+          : raw.includes("microphone") || raw.includes("Permission") || raw.includes("denied")
           ? "Mikrofon erişimi reddedildi. Tarayıcı adres çubuğundan izin verin."
           : raw.includes("401") || raw.includes("403")
           ? "Oturum süresi dolmuş. Tekrar giriş yapın."
