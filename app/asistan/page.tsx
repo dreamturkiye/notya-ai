@@ -182,6 +182,8 @@ export default function AsistanPage() {
         clearTimeout(connTimeout)
 
         // Send system prompt override
+        // Send ONLY prompt and first_message override - do NOT override voice_id
+        // Overriding voice_id via raw WebSocket causes 1008 policy violation
         ws.send(JSON.stringify({
           type: "conversation_initiation_client_data",
           conversation_config_override: {
@@ -189,10 +191,6 @@ export default function AsistanPage() {
               prompt: { prompt: SYSTEM_PROMPTS[persona.specialty] || SYSTEM_PROMPTS.genel },
               first_message: FIRST_MESSAGES[persona.specialty] || FIRST_MESSAGES.genel,
               language: "tr"
-            },
-            tts: {
-              voice_id: VOICE_IDS[persona.specialty] || VOICE_IDS.genel,
-              optimize_streaming_latency: 4
             }
           }
         }))
