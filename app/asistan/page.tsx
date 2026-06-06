@@ -110,10 +110,10 @@ export default function AsistanPage() {
         // iOS Safari: prefer headphones/earpiece, unlock audio on gesture
         preferHeadphonesForIosDevices: true,
 
-        // Connection delay for iOS to allow audio mode switch
+        // No connection delay - modern iOS and Android handle this natively
         connectionDelay: {
-          ios: 500,
-          android: 3000,
+          ios: 0,
+          android: 0,
           default: 0,
         },
 
