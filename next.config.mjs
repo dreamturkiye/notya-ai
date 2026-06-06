@@ -7,16 +7,30 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
 
-  // CRITICAL: Allow microphone access from all origins
-  // Without this Safari and some Chrome versions block getUserMedia
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: [
           {
+            // Allow microphone from all origins including ElevenLabs WebRTC
             key: "Permissions-Policy",
             value: "microphone=*, camera=(), geolocation=()",
+          },
+          {
+            // Allow connections to ElevenLabs WebSocket and Supabase
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: https: blob:",
+              "media-src 'self' blob: https:",
+              // Critical: allow ElevenLabs WebSocket connections
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com",
+              "worker-src 'self' blob:",
+            ].join("; "),
           },
           {
             key: "Cross-Origin-Opener-Policy",
