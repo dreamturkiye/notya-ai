@@ -65,6 +65,13 @@ export default function AsistanPage() {
     setMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: text.trim() }])
   }
 
+  // Detect iOS
+  function isIOS() {
+    if (typeof navigator === "undefined") return false
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  }
+
   async function startConversation() {
     if (!authToken) { router.push("/giris"); return }
     setStatus("connecting")
@@ -72,6 +79,21 @@ export default function AsistanPage() {
     setMessages([])
 
     try {
+      // CRITICAL for iOS: unlock AudioContext INSIDE the user gesture (this tap)
+      // Safari requires audio to be started within a user gesture handler
+      if (typeof window !== "undefined" && typeof AudioContext !== "undefined") {
+        try {
+          const ctx = new AudioContext()
+          if (ctx.state === "suspended") await ctx.resume()
+          // Create and play a silent buffer to fully unlock audio
+          const buf = ctx.createBuffer(1, 1, 22050)
+          const src = ctx.createBufferSource()
+          src.buffer = buf
+          src.connect(ctx.destination)
+          src.start(0)
+        } catch { /* ignore */ }
+      }
+
       const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
         headers: { Authorization: `Bearer ${authToken}` }
       })
@@ -84,6 +106,17 @@ export default function AsistanPage() {
 
       const conv = await Conversation.startSession({
         signedUrl: signed_url,
+
+        // iOS Safari: prefer headphones/earpiece, unlock audio on gesture
+        preferHeadphonesForIosDevices: true,
+
+        // Connection delay for iOS to allow audio mode switch
+        connectionDelay: {
+          ios: 500,
+          android: 3000,
+          default: 0,
+        },
+
         overrides: {
           agent: {
             prompt: { prompt: SYSTEM_PROMPTS[persona.specialty] || SYSTEM_PROMPTS.genel },
@@ -92,33 +125,38 @@ export default function AsistanPage() {
           },
           tts: { voiceId: VOICE_IDS[persona.specialty] || VOICE_IDS.genel }
         },
+
         onConnect: () => setStatus("listening"),
         onDisconnect: () => { setStatus("idle"); convRef.current = null },
+
         onMessage: (props: { message: string; source: "user" | "ai" }) => {
           addMsg(props.source, props.message)
         },
+
         onModeChange: (props: { mode: "speaking" | "listening" }) => {
           setStatus(props.mode === "speaking" ? "speaking" : "listening")
         },
+
         onError: (message: string) => {
           console.error("[ElevenLabs]", message)
-          setErrorMsg("Hata: " + message.slice(0, 80))
+          setErrorMsg("Hata: " + message.slice(0, 100))
           setStatus("error")
           convRef.current = null
         },
       })
+
       convRef.current = conv
 
     } catch (e: unknown) {
       const raw = e instanceof Error ? e.message : String(e)
       console.error("[Asistan]", raw)
       setErrorMsg(
-        raw.includes("worklet") || raw.includes("AudioWorklet") || raw.includes("rawAudioProcessor")
-          ? "Safari iOS ses modülünü yükleyemedi. Lütfen Safari ayarlarından siteye tam erişim verin veya Chrome kullanın."
-          : raw.includes("microphone") || raw.includes("Permission") || raw.includes("denied")
-          ? "Mikrofon erişimi reddedildi. Tarayıcı adres çubuğundan izin verin."
+        raw.includes("microphone") || raw.includes("Permission") || raw.includes("denied")
+          ? "Mikrofon erişimi reddedildi. Tarayıcı ayarlarından izin verin."
           : raw.includes("401") || raw.includes("403")
           ? "Oturum süresi dolmuş. Tekrar giriş yapın."
+          : raw.includes("worklet") || raw.includes("AudioWorklet")
+          ? "Ses modülü yüklenemedi. Sayfayı yenileyip tekrar deneyin."
           : "Bağlantı hatası: " + raw.slice(0, 60)
       )
       setStatus("error")
@@ -141,16 +179,18 @@ export default function AsistanPage() {
 
   const isActive = ["connecting", "listening", "speaking"].includes(status)
   const statusLabel = {
-    idle: "Başlatmak için dokunun",
+    idle:       "Başlatmak için dokunun",
     connecting: "Bağlanıyor...",
-    listening: "Dinliyor — konuşabilirsiniz",
-    speaking: persona.name.split(" ")[1] + " konuşuyor...",
-    error: "Tekrar deneyin",
+    listening:  "Dinliyor — konuşabilirsiniz",
+    speaking:   persona.name.split(" ")[1] + " konuşuyor...",
+    error:      "Tekrar deneyin",
   }[status]
 
   return (
     <div style={{height:"100dvh",background:"#080F1A",display:"flex",flexDirection:"column",
                  fontFamily:"system-ui,sans-serif",overflow:"hidden",userSelect:"none"}}>
+
+      {/* Header */}
       <div style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:"12px",
                    borderBottom:"1px solid rgba(255,255,255,.08)",background:"#0A1525"}}>
         <div onClick={() => { stopConversation(); router.push("/dashboard") }}
@@ -174,6 +214,7 @@ export default function AsistanPage() {
         </div>
       </div>
 
+      {/* Messages */}
       <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:"10px"}}>
         {messages.length === 0 && status === "idle" && (
           <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",
@@ -221,6 +262,7 @@ export default function AsistanPage() {
         <div ref={messagesEndRef}/>
       </div>
 
+      {/* Controls */}
       <div style={{padding:"16px 16px 44px",display:"flex",flexDirection:"column",
                    alignItems:"center",gap:"12px",borderTop:"1px solid rgba(255,255,255,.06)",
                    background:"#0A1525"}}>
