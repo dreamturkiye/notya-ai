@@ -43,7 +43,6 @@ export default function AsistanPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [errorMsg, setErrorMsg] = useState("")
   const [authToken, setAuthToken] = useState<string | null>(null)
-  const [debugLog, setDebugLog] = useState<string[]>([])
   const wsRef = useRef<WebSocket | null>(null)
   const audioQueueRef = useRef<string[]>([])
   const isPlayingRef = useRef(false)
@@ -125,7 +124,6 @@ export default function AsistanPage() {
       await new Promise<void>(res => {
         audio.onended = () => { URL.revokeObjectURL(url); res() }
         audio.onerror = () => { URL.revokeObjectURL(url); res() }
-        dbg('Playing audio...')
       audio.play().catch((e) => { dbg('play() blocked:'+e.name); console.warn("play blocked:", e); URL.revokeObjectURL(url); res() })
       })
     } catch(e) { console.warn("audio error:", e) }
@@ -165,7 +163,6 @@ export default function AsistanPage() {
 
       // 2. Fetch signed URL AND request mic in parallel
       // Both happen simultaneously so URL doesn't expire waiting for mic dialog
-      dbg('Starting mic+url fetch...')
       const [stream, resp] = await Promise.all([
         navigator.mediaDevices.getUserMedia({
           audio: {
@@ -179,8 +176,6 @@ export default function AsistanPage() {
           headers: { Authorization: `Bearer ${authToken}` }
         })
       ])
-
-      dbg('Mic granted. URL status:'+resp.status)
       streamRef.current = stream
 
       if (!resp.ok) throw new Error(`Sunucu hatası: ${resp.status}`)
@@ -188,7 +183,6 @@ export default function AsistanPage() {
       if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
 
       // 3. Open WebSocket — URL is fresh, mic is granted, audio is unlocked
-      dbg('Opening WS...')
       const ws = new WebSocket(body.signed_url)
       wsRef.current = ws
 
@@ -201,7 +195,6 @@ export default function AsistanPage() {
       }, 10000)
 
       ws.onopen = () => {
-        dbg('WS opened!')
         clearTimeout(connTimeout)
 
         // Send system prompt override
@@ -238,7 +231,6 @@ export default function AsistanPage() {
         try {
           const d = JSON.parse(e.data)
           if (d.type === "audio" && d.audio_event?.audio_base_64) {
-            dbg('Audio chunk received')
             playAudioChunk(d.audio_event.audio_base_64)
           }
           else if (d.type === "agent_response" && d.agent_response_event?.agent_response)
@@ -260,7 +252,6 @@ export default function AsistanPage() {
       }
 
       ws.onclose = (e) => {
-        dbg('WS close code='+e.code+' reason='+e.reason+' clean='+e.wasClean)
         clearTimeout(connTimeout)
         if (e.code === 1000 || e.code === 1001) setStatus("idle")
         else { setErrorMsg(`Bağlantı kesildi (kod: ${e.code}) — tekrar deneyin`); setStatus("error") }
@@ -414,16 +405,6 @@ export default function AsistanPage() {
           {isActive?"Bitirmek için dokunun":"Başlatmak için dokunun"}
         </div>
       </div>
-      {/* DEBUG OVERLAY - remove after fixing */}
-      {debugLog.length > 0 && (
-        <div style={{position:"fixed",top:0,left:0,right:0,background:"rgba(0,0,0,.92)",
-                     zIndex:9999,padding:"8px",maxHeight:"40vh",overflowY:"auto"}}>
-          {debugLog.map((l,i)=>(
-            <div key={i} style={{fontSize:"10px",fontFamily:"monospace",color:"#0f0",marginBottom:"2px"}}>{l}</div>
-          ))}
-          <div onClick={()=>setDebugLog([])} style={{fontSize:"10px",color:"#f00",marginTop:"4px",cursor:"pointer"}}>✕ clear</div>
-        </div>
-      )}
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}`}</style>
     </div>
   )
