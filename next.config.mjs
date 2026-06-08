@@ -28,7 +28,7 @@ const nextConfig = {
               "img-src 'self' data: https: blob:",
               "media-src 'self' blob: https:",
               // Critical: allow ElevenLabs WebSocket connections
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com https://api.groq.com",
               "worker-src 'self' blob:",
             ].join("; "),
           },
