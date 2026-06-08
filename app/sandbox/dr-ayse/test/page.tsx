@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
-import PatientInterview from "@/components/sandbox/PatientInterview"
+import PatientVoiceChat from "@/components/sandbox/PatientVoiceChat"
 import DoctorChartView from "@/components/sandbox/DoctorChartView"
 import {
   createAppointment,
@@ -34,6 +34,7 @@ function TestPageInner() {
   const token = params.get("token") || ""
   const [step, setStep] = useState<Step>("setup")
   const [patientName, setPatientName] = useState("Gökhan Mamur")
+  const [patientAge, setPatientAge] = useState(42)
   const [complaint, setComplaint] = useState(SCENARIOS[1].complaint)
   const [appointment, setAppointment] = useState<SandboxAppointment | null>(null)
   const [chartBundle, setChartBundle] = useState<SandboxChartBundle | null>(null)
@@ -56,10 +57,13 @@ function TestPageInner() {
     setLoading(true)
     setError("")
     try {
+      const appointmentTime = new Date(Date.now() + 45 * 60 * 1000).toISOString()
       const appt = await createAppointment(token, {
         patient_name: patientName,
         chief_complaint_seed: complaint,
-        appointment_time: new Date().toISOString(),
+        appointment_time: appointmentTime,
+        patient_age: patientAge,
+        patient_gender: "male",
       })
       setAppointment(appt)
       setStep("interview")
@@ -159,10 +163,9 @@ function TestPageInner() {
         <div style={panel}>
           <h2 style={h2}>2. Hasta Görüşmesi — Dr. Ayşe ile konuşun</h2>
           <p style={muted}>Şikayet: {complaint}</p>
-          <PatientInterview
+          <PatientVoiceChat
             token={token}
             appointmentId={appointment.id}
-            compact
             onComplete={() => loadDoctorView()}
           />
           <button onClick={loadDoctorView} style={{ ...btnSecondary, marginTop: 12 }}>

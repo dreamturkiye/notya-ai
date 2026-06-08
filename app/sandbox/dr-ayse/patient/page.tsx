@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
-import PatientInterview from "@/components/sandbox/PatientInterview"
+import PatientVoiceChat from "@/components/sandbox/PatientVoiceChat"
 
 function PatientPageInner() {
   const params = useSearchParams()
@@ -25,7 +25,7 @@ function PatientPageInner() {
       <div style={{
         background: "#0A1525", borderRadius: 16, border: "1px solid rgba(255,255,255,.08)", overflow: "hidden",
       }}>
-        <PatientInterview token={token} appointmentId={appointmentId} />
+        <PatientVoiceChat token={token} appointmentId={appointmentId} />
       </div>
     </div>
   )

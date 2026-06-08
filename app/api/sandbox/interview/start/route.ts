@@ -5,6 +5,7 @@ import { requireSandboxAuth } from '@/lib/sandbox/auth'
 import { getSandboxSupabase } from '@/lib/sandbox/supabase'
 import { getWelcomeMessage } from '@/lib/dr-ayse/interview-engine'
 import { synthesizeSpeech } from '@/lib/dr-ayse/tts'
+import { getInterviewWindow } from '@/lib/sandbox/interview-window'
 
 export async function POST(req: NextRequest) {
   const auth = await requireSandboxAuth(req)
@@ -31,6 +32,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Randevu bulunamadı' }, { status: 404 })
   }
 
+  const window = getInterviewWindow(appointment.appointment_time)
+  if (!window.allowed) {
+    return NextResponse.json({ success: false, error: window.reason }, { status: 403 })
+  }
+
   const { data: existing } = await supabase
     .from('sandbox_patient_interviews')
     .select('id')
@@ -40,7 +46,11 @@ export async function POST(req: NextRequest) {
   let interviewId = existing?.id
 
   if (!interviewId) {
-    const welcome = getWelcomeMessage(appointment.patient_name)
+    const welcome = getWelcomeMessage(
+      appointment.patient_name,
+      appointment.chief_complaint_seed,
+      appointment.appointment_time
+    )
     const { data: interview, error: intErr } = await supabase
       .from('sandbox_patient_interviews')
       .insert({
@@ -61,7 +71,11 @@ export async function POST(req: NextRequest) {
     .update({ status: 'interview_in_progress' })
     .eq('id', appointment_id)
 
-  const welcomeMsg = getWelcomeMessage(appointment.patient_name)
+  const welcomeMsg = getWelcomeMessage(
+    appointment.patient_name,
+    appointment.chief_complaint_seed,
+    appointment.appointment_time
+  )
   let audioBase64: string | null = null
   try {
     const audio = await synthesizeSpeech(welcomeMsg)

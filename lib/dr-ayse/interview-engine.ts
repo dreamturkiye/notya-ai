@@ -146,7 +146,18 @@ export async function generateDrAyseReply(
   }
 }
 
-export function getWelcomeMessage(patientName: string): string {
-  const honorific = patientName.trim().split(/\s+/)[0]
-  return `Merhaba ${honorific} Bey/Hanım, ben Dr. Ayşe. Dr. Gökhan Hocam sizinle görüşmeden önce birkaç soru sormak istedi. Bu bilgileri Hocam ile paylaşacağım. Nasıl yardımcı olabilirim?`
+export function getWelcomeMessage(
+  patientName: string,
+  chiefComplaint?: string | null,
+  appointmentTime?: string | null
+): string {
+  const first = patientName.trim().split(/\s+/)[0]
+  const when = appointmentTime
+    ? new Date(appointmentTime).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    : null
+  const schedule = when ? `${when} tarihli randevunuz için ` : ''
+  const complaint = chiefComplaint
+    ? `Kayıtlarımızda başvuru nedeniniz "${chiefComplaint}" görünüyor. `
+    : ''
+  return `Merhaba ${first} Bey/Hanım, ben Dr. Ayşe. Dr. Gökhan Hocam'ın ${schedule}birkaç dakikalık ön görüşmesini yapacağız. ${complaint}Bu bilgileri Hocam ile paylaşacağım. Hazırsanız başlayalım — bugün sizi en çok rahatsız eden şikayetiniz nedir?`
 }

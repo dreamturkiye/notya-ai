@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   completeInterview,
-  playAudioBase64,
   sendInterviewMessage,
   startInterview,
 } from "@/lib/sandbox/api"
+import { unlockAudioSession, playBase64Mp3 } from "@/lib/sandbox/audio"
+import { createSpeechRecognizer, ensureMicrophonePermission } from "@/lib/sandbox/speech"
 
 type Message = { role: "patient" | "dr_ayse"; text: string }
 
@@ -36,12 +37,14 @@ export default function PatientInterview({ token, appointmentId, onComplete, com
     setLoading(true)
     setError("")
     try {
+      await unlockAudioSession()
+      await ensureMicrophonePermission()
       const { data } = await startInterview(token, appointmentId)
       setMessages([{ role: "dr_ayse", text: data.welcome_message }])
-      playAudioBase64(data.audio_base64)
+      await playBase64Mp3(data.audio_base64)
       setPhase("active")
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Başlatılamadı")
+      setError(e instanceof Error ? e.message : "Bağlantı kurulamadı. Tekrar deneyin.")
     } finally {
       setLoading(false)
     }
@@ -71,7 +74,7 @@ export default function PatientInterview({ token, appointmentId, onComplete, com
       const { data } = await sendInterviewMessage(token, appointmentId, trimmed)
       setMessages((prev) => [...prev, { role: "dr_ayse", text: data.reply }])
       setExchangeCount(data.exchange_count)
-      playAudioBase64(data.audio_base64)
+      await playBase64Mp3(data.audio_base64)
       if (data.should_complete) {
         await finishInterview()
       }
@@ -82,30 +85,24 @@ export default function PatientInterview({ token, appointmentId, onComplete, com
     }
   }, [token, appointmentId, loading, finishInterview])
 
-  const toggleListen = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) {
-      setError("Tarayıcınız ses tanımayı desteklemiyor — yazarak devam edin.")
-      return
-    }
+  const toggleListen = async () => {
     if (listening && recognitionRef.current) {
       recognitionRef.current.stop()
       setListening(false)
       return
     }
-    const rec = new SR()
-    rec.lang = "tr-TR"
-    rec.interimResults = false
-    rec.maxAlternatives = 1
-    rec.onresult = (ev: SpeechRecognitionEvent) => {
-      const transcript = ev.results[0]?.[0]?.transcript
-      if (transcript) sendMessage(transcript)
+    await ensureMicrophonePermission()
+    const rec = createSpeechRecognizer({
+      onResult: (text) => sendMessage(text),
+      onError: (msg) => setError(msg),
+      onListeningChange: setListening,
+    })
+    if (!rec) {
+      setError("Tarayıcınız ses tanımayı desteklemiyor — yazarak devam edin.")
+      return
     }
-    rec.onerror = () => setListening(false)
-    rec.onend = () => setListening(false)
     recognitionRef.current = rec
-    rec.start()
-    setListening(true)
+    ;(rec as { start?: () => void }).start?.()
   }
 
   if (phase === "welcome") {

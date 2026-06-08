@@ -3,10 +3,15 @@ export type SandboxAppointment = {
   doctor_id: string
   patient_name: string
   patient_phone?: string | null
+  patient_age?: number | null
+  patient_gender?: 'male' | 'female' | null
   appointment_time: string
   status: string
   chief_complaint_seed?: string | null
   created_at: string
+  interview_opens_at?: string
+  interview_closes_at?: string
+  interview_allowed?: boolean
 }
 
 export type SandboxChartBundle = {
@@ -23,6 +28,15 @@ async function parseJson<T>(resp: Response): Promise<T> {
   return data as T
 }
 
+export async function fetchAppointment(token: string, appointmentId: string): Promise<SandboxAppointment> {
+  const resp = await fetch(
+    `/api/sandbox/appointments?appointment_id=${encodeURIComponent(appointmentId)}&token=${encodeURIComponent(token)}`,
+    { headers: { 'x-sandbox-token': token } }
+  )
+  const data = await parseJson<{ data: SandboxAppointment }>(resp)
+  return data.data
+}
+
 export async function createAppointment(
   token: string,
   payload: {
@@ -30,6 +44,8 @@ export async function createAppointment(
     chief_complaint_seed: string
     appointment_time?: string
     patient_phone?: string
+    patient_age?: number
+    patient_gender?: 'male' | 'female'
   }
 ): Promise<SandboxAppointment> {
   const resp = await fetch('/api/sandbox/appointments', {
@@ -109,8 +125,4 @@ export async function submitTestScores(
   return parseJson<{ data: Record<string, unknown> }>(resp)
 }
 
-export function playAudioBase64(b64: string | null) {
-  if (!b64) return
-  const audio = new Audio(`data:audio/mpeg;base64,${b64}`)
-  audio.play().catch(() => {})
-}
+export { playBase64Mp3 as playAudioBase64 } from './audio'

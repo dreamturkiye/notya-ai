@@ -6,6 +6,7 @@ import { getSandboxSupabase } from '@/lib/sandbox/supabase'
 import { DR_GOKHAN_ID } from '@/lib/dr-ayse/persona'
 import { buildDoctorMorningBriefPrompt } from '@/lib/dr-ayse/persona'
 import { groqChat } from '@/lib/dr-ayse/groq'
+import { enrichAppointment } from '@/lib/sandbox/appointment-meta'
 
 export async function GET(req: NextRequest) {
   const auth = await requireSandboxAuth(req)
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
     if (error || !data) {
       return NextResponse.json({ success: false, error: 'Randevu bulunamadı' }, { status: 404 })
     }
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: enrichAppointment(data) })
   }
 
   const todayStart = new Date()
@@ -91,6 +92,8 @@ export async function POST(req: NextRequest) {
   const {
     patient_name,
     patient_phone,
+    patient_age,
+    patient_gender,
     appointment_time,
     chief_complaint_seed,
     doctor_id = DR_GOKHAN_ID,
@@ -110,6 +113,8 @@ export async function POST(req: NextRequest) {
       doctor_id,
       patient_name,
       patient_phone: patient_phone || null,
+      patient_age: patient_age ?? null,
+      patient_gender: patient_gender || null,
       appointment_time,
       chief_complaint_seed: chief_complaint_seed || null,
       status: 'scheduled',
@@ -121,5 +126,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, data })
+  return NextResponse.json({ success: true, data: enrichAppointment(data) })
 }

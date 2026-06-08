@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS sandbox_appointments (
   doctor_id TEXT NOT NULL DEFAULT 'dr-gokhan',
   patient_name TEXT NOT NULL,
   patient_phone TEXT,
+  patient_age INTEGER,
+  patient_gender TEXT CHECK (patient_gender IN ('male', 'female')),
   appointment_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled'
     CHECK (status IN ('scheduled', 'interview_in_progress', 'interview_complete', 'chart_ready', 'cancelled')),
