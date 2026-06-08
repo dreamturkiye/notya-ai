@@ -1,9 +1,12 @@
 
-import type { AddressableUser } from '@/lib/address'
-import { address } from '@/lib/address'
+// ============================================================
+// NOTYA ASISTAN — Specialist Persona Engine
 // Each persona is a world-class physician, not an assistant.
 // Proactive, safety-oriented, textbook-grounded.
 // ============================================================
+
+import type { AddressableUser } from '@/lib/address'
+import { address } from '@/lib/address'
 
 export type PersonaId = "aysekaya" | "mehmetdemir" | "elifsahin"
 export type SpecialtyId = "pediatri" | "kardiyoloji" | "noroloji" | "dahiliye" | "psikiyatri" | "genel" | "acil"

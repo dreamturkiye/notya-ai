@@ -1,21 +1,21 @@
-// ============================================================
-// NOTYA AI — Assistant Greetings (Turkish Medical Culture)
-// ============================================================
-
 import { address, type AddressableUser } from './address'
+
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening'
 
 export interface GreetingOptions {
   patientCount?: number
-  timeOfDay?: 'morning' | 'afternoon' | 'evening'
+  timeOfDay?: TimeOfDay
 }
 
-function resolveTimeOfDay(hour = new Date().getHours()): GreetingOptions['timeOfDay'] {
+function resolveTimeOfDay(timeOfDay?: TimeOfDay): TimeOfDay {
+  if (timeOfDay) return timeOfDay
+  const hour = new Date().getHours()
   if (hour < 12) return 'morning'
   if (hour < 18) return 'afternoon'
   return 'evening'
 }
 
-function timeGreeting(timeOfDay: GreetingOptions['timeOfDay']): string {
+function timeGreeting(timeOfDay: TimeOfDay): string {
   switch (timeOfDay) {
     case 'morning':
       return 'Günaydın'
@@ -23,8 +23,6 @@ function timeGreeting(timeOfDay: GreetingOptions['timeOfDay']): string {
       return 'İyi günler'
     case 'evening':
       return 'İyi akşamlar'
-    default:
-      return 'Merhaba'
   }
 }
 
@@ -32,32 +30,41 @@ export function buildAssistantGreeting(
   user: AddressableUser,
   options: GreetingOptions = {}
 ): string {
-  const timeOfDay = options.timeOfDay ?? resolveTimeOfDay()
-  const casual = address(user, 'casual').toLowerCase()
+  const timeOfDay = resolveTimeOfDay(options.timeOfDay)
   const named = address(user, 'named')
-  const base = `${timeGreeting(timeOfDay)} ${casual}`
+  const casual = address(user, 'casual')
 
   if (options.patientCount != null && options.patientCount > 0) {
-    return `${named}, bugün ${options.patientCount} hastanız var`
+    const countLabel =
+      options.patientCount === 1
+        ? '1 hastanız var'
+        : `bugün ${options.patientCount} hastanız var`
+    return `${named}, ${countLabel}`
   }
 
-  return base.charAt(0).toUpperCase() + base.slice(1)
+  if (user.addressingPreference === 'hocam') {
+    return `${timeGreeting(timeOfDay)} hocam`
+  }
+
+  if (user.addressingPreference === 'first_name_only') {
+    return `${timeGreeting(timeOfDay)} ${user.firstName}`
+  }
+
+  return `${timeGreeting(timeOfDay)} ${casual.toLowerCase()}`
+}
+
+const PERSONA_GREETINGS: Record<'pediatri' | 'kardiyoloji' | 'genel', string> = {
+  pediatri: 'Bugün hangi hastamıza bakıyoruz?',
+  kardiyoloji: 'Dinliyorum. Ne var?',
+  genel: 'Vakayı dinliyorum.',
 }
 
 export function buildPersonaFirstMessage(
-  personaShortName: string,
+  colleagueName: string,
   doctor: AddressableUser,
   template: 'pediatri' | 'kardiyoloji' | 'genel'
 ): string {
-  const hitap = address(doctor, 'casual')
-
-  switch (template) {
-    case 'pediatri':
-      return `Merhaba ${hitap}. Ben ${personaShortName}. Bugün hangi hastamıza bakıyoruz?`
-    case 'kardiyoloji':
-      return `${hitap.charAt(0).toUpperCase() + hitap.slice(1)}, dinliyorum.`
-    case 'genel':
-    default:
-      return `Merhaba ${hitap}. Ben ${personaShortName}. Vakayı dinliyorum.`
-  }
+  const named = address(doctor, 'named')
+  const intro = `Merhaba ${named}. Ben ${colleagueName}.`
+  return `${intro} ${PERSONA_GREETINGS[template]}`
 }

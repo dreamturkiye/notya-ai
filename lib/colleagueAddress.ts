@@ -1,38 +1,17 @@
-// ============================================================
-// NOTYA AI — Colleague Address Formatting
-// ============================================================
-
-const TITLE_PREFIXES = [
-  'Prof. Dr.',
-  'Doç. Dr.',
-  'Uzm. Dr.',
-  'Dr.',
-  'Prof.',
-  'Doç.',
-  'Uzm.',
-]
+const TITLE_PATTERN = /^(Prof\.\s*Dr\.|Doç\.\s*Dr\.|Uzm\.\s*Dr\.|Dr\.)\s*/i
 
 export function formatColleagueName(fullName: string): string {
-  let name = fullName.trim()
-  for (const prefix of TITLE_PREFIXES) {
-    if (name.startsWith(prefix)) {
-      name = name.slice(prefix.length).trim()
-      break
-    }
-  }
+  const trimmed = fullName.trim()
+  if (!trimmed) return 'Hocam'
 
-  const firstName = name.split(/\s+/)[0]
-  if (!firstName) return 'Hocam'
+  const withoutTitle = trimmed.replace(TITLE_PATTERN, '').trim()
+  const parts = withoutTitle.split(/\s+/).filter(Boolean)
+  const firstName = parts[0] ?? 'Hocam'
+
   return `${firstName} Hocam`
 }
 
+/** Tab label for colleague persona picker — e.g. "Ayşe Hocam" */
 export function formatColleagueTabLabel(fullName: string): string {
-  let name = fullName.trim()
-  for (const prefix of TITLE_PREFIXES) {
-    if (name.startsWith(prefix)) {
-      name = name.slice(prefix.length).trim()
-      break
-    }
-  }
-  return name.split(/\s+/)[0] || 'Hocam'
+  return formatColleagueName(fullName)
 }

@@ -1,7 +1,3 @@
-// ============================================================
-// GET /api/users/me — Current doctor profile
-// ============================================================
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -13,7 +9,8 @@ const supabase = createClient(
 async function getAuthUser(req: NextRequest) {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) return null
-  const { data: { user } } = await supabase.auth.getUser(authHeader.split(' ')[1])
+  const { data: { user }, error } = await supabase.auth.getUser(authHeader.split(' ')[1])
+  if (error || !user) return null
   return user
 }
 
@@ -39,6 +36,7 @@ export async function GET(req: NextRequest) {
       data: {
         id: user.id,
         email: user.email,
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
         onboarding_completed: false,
       },
     })
