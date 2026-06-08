@@ -9,6 +9,9 @@ export type SessionType = 'muayene' | 'kontrol' | 'konsültasyon' | 'telesağlı
 export type NoteType = 'soap' | 'anamnez' | 'epikriz' | 'konsültan' | 'ameliyat'
 export type AuditAction = 'view' | 'create' | 'update' | 'delete' | 'export' | 'approve'
 export type ConsentType = 'kayit' | 'isleme' | 'paylasim' | 'whatsapp'
+export type DoctorTitle = 'Dr.' | 'Uzm. Dr.' | 'Doç. Dr.' | 'Prof. Dr.'
+export type Gender = 'male' | 'female'
+export type AddressingPreference = 'hocam' | 'named_hocam' | 'first_name_only'
 
 export type MedicalSpecialty =
   | 'dahiliye'
@@ -31,8 +34,15 @@ export interface User {
   id: string
   email: string
   full_name: string
+  first_name?: string
+  last_name?: string
+  title?: DoctorTitle
   specialty?: MedicalSpecialty
+  hospital?: string
   clinic_name?: string
+  gender?: Gender
+  addressing_preference?: AddressingPreference
+  onboarding_completed?: boolean
   subscription_tier: SubscriptionTier
   subscription_status: SubscriptionStatus
   iyzico_customer_id?: string

@@ -5,6 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { formatNotification } from '@/lib/notifications'
+import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const { data: doctor } = await supabase
     .from('users')
-    .select('whatsapp_number, whatsapp_enabled, full_name')
+    .select('whatsapp_number, whatsapp_enabled, full_name, first_name, last_name, title, gender, addressing_preference')
     .eq('id', user.id)
     .single()
 
@@ -45,7 +47,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'WhatsApp aktif değil' }, { status: 400 })
   }
 
-  const message = formatNoteForWhatsApp(note as Record<string, unknown>)
+  const noteBody = formatNoteForWhatsApp(note as Record<string, unknown>)
+  const message = formatNotification(
+    toAddressableUser(doctor as unknown as DoctorProfile),
+    noteBody
+  )
 
   const response = await fetch(
     `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,

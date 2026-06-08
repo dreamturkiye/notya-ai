@@ -6,6 +6,7 @@ import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, ty
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
 import { executeAction } from "@/lib/asistan/actionExecutor"
 import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
+import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,6 +33,14 @@ export async function POST(req: NextRequest) {
       specialty = "genel",
       personaId: requestedPersona,
     } = body
+
+    // Load doctor profile for Hocam addressing
+    const { data: doctorRow } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle()
+    const doctorProfile = toAddressableUser(doctorRow as DoctorProfile | null)
 
     // Load doctor preferences
     const { data: prefs } = await supabase
@@ -106,7 +115,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build system prompt with learning context
-    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient)
+    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile)
 
     // Call Claude with full conversation history
     const response = await anthropic.messages.create({
@@ -141,7 +150,8 @@ export async function POST(req: NextRequest) {
         {
           type: aiData.action.type as never,
           doctorId: user.id,
-          data: (aiData.action.data as Record<string, unknown>) || {}
+          data: (aiData.action.data as Record<string, unknown>) || {},
+          doctorProfile,
         },
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       )

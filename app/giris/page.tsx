@@ -33,6 +33,25 @@ export default function LoginPage() {
 
       if (mode === "register") {
         if (data.error) throw new Error(data.error_description || data.error)
+        if (data.access_token) {
+          localStorage.setItem("sb-anjayzospuurymjmmtim-auth-token", JSON.stringify({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+            expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+            token_type: "bearer",
+            user: data.user
+          }))
+          await fetch("/api/users/profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${data.access_token}`,
+            },
+            body: JSON.stringify({ onboarding_completed: false }),
+          })
+          router.push("/onboarding")
+          return
+        }
         setError("Doğrulama e-postası gönderildi. E-postanızı kontrol edin.")
         setLoading(false)
         return
@@ -48,6 +67,15 @@ export default function LoginPage() {
         token_type: "bearer",
         user: data.user
       }))
+
+      const profileResp = await fetch("/api/users/me", {
+        headers: { Authorization: `Bearer ${data.access_token}` },
+      })
+      const profileData = await profileResp.json()
+      if (!profileData.data?.onboarding_completed) {
+        router.push("/onboarding")
+        return
+      }
 
       router.push("/dashboard")
     } catch (e: unknown) {

@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
+import { buildAssistantGreeting } from "@/lib/greetings"
+import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
 type Note = {
   id: string
@@ -22,13 +24,30 @@ export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<{ email: string } | null>(null)
+  const [greeting, setGreeting] = useState("")
   const [activeNote, setActiveNote] = useState<Note | null>(null)
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/giris"); return }
       setUser({ email: user.email! })
+
+      const session = await supabase.auth.getSession()
+      const token = session.data.session?.access_token
+      if (token) {
+        const resp = await fetch("/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const profileData = await resp.json()
+        if (!profileData.data?.onboarding_completed) {
+          router.push("/onboarding")
+          return
+        }
+        const addressable = toAddressableUser(profileData.data as DoctorProfile)
+        setGreeting(buildAssistantGreeting(addressable))
+      }
+
       loadNotes(user.id)
     })
   }, [])
@@ -65,6 +84,11 @@ export default function Dashboard() {
         </div>
       </div>
       <div style={{maxWidth:"1200px",margin:"0 auto",padding:"24px 20px"}}>
+        {greeting && (
+          <div style={{fontSize:"18px",fontWeight:"600",color:"#0A1628",marginBottom:"16px"}}>
+            {greeting}
+          </div>
+        )}
         {/* AI Asistan Banner */}
         <div onClick={()=>router.push("/asistan")}
           style={{background:"linear-gradient(135deg,#0A1628,#1A3050)",border:"1px solid rgba(124,58,237,.4)",borderRadius:"16px",padding:"20px 24px",marginBottom:"20px",cursor:"pointer",display:"flex",alignItems:"center",gap:"16px"}}>

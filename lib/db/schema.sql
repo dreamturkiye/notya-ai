@@ -15,8 +15,16 @@ CREATE TABLE users (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  title TEXT CHECK (title IS NULL OR title IN ('Dr.', 'Uzm. Dr.', 'Doç. Dr.', 'Prof. Dr.')),
   specialty TEXT, -- Uzmanlık alanı
+  hospital TEXT,
   clinic_name TEXT,
+  gender TEXT CHECK (gender IS NULL OR gender IN ('male', 'female')),
+  addressing_preference TEXT DEFAULT 'named_hocam'
+    CHECK (addressing_preference IN ('hocam', 'named_hocam', 'first_name_only')),
+  onboarding_completed BOOLEAN DEFAULT FALSE,
   subscription_tier TEXT DEFAULT 'free' CHECK (subscription_tier IN ('free', 'starter', 'pro', 'klinik', 'hastane')),
   subscription_status TEXT DEFAULT 'active' CHECK (subscription_status IN ('active', 'cancelled', 'past_due', 'trialing')),
   iyzico_customer_id TEXT,
@@ -177,6 +185,8 @@ CREATE POLICY "Kullanıcı kendi profilini görebilir" ON users
   FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Kullanıcı kendi profilini güncelleyebilir" ON users
   FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Kullanıcı kendi profilini oluşturabilir" ON users
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Patients politikaları
 CREATE POLICY "Doktor sadece kendi hastalarını görür" ON patients

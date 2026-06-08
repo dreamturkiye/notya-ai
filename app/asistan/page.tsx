@@ -5,15 +5,26 @@ import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
 import { connectionErrorHelp, micPermissionHelp } from "@/lib/asistan/platform"
+import { formatColleagueTabLabel } from "@/lib/colleagueAddress"
+import { buildPersonaFirstMessage } from "@/lib/greetings"
+import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
-type Persona = { name: string; title: string; emoji: string; color: string; specialty: string }
+type Persona = {
+  name: string
+  fullName: string
+  title: string
+  emoji: string
+  color: string
+  specialty: string
+  template: "pediatri" | "kardiyoloji" | "genel"
+}
 
 const PERSONAS: Record<string, Persona> = {
-  aysekaya:    { name: "Prof. Ayşe Kaya",    title: "Pediatri Uzmanı",     emoji: "👩‍⚕️", color: "#0F9B8E", specialty: "pediatri"    },
-  mehmetdemir: { name: "Prof. Mehmet Demir",  title: "Kardiyoloji Uzmanı",  emoji: "👨‍⚕️", color: "#006699", specialty: "kardiyoloji" },
-  elifsahin:   { name: "Prof. Elif Şahin",    title: "Nöroloji & Dahiliye", emoji: "👩‍⚕️", color: "#7C3AED", specialty: "genel"       },
+  aysekaya:    { fullName: "Prof. Dr. Ayşe Kaya",    name: "Prof. Ayşe Kaya",    title: "Pediatri Uzmanı",     emoji: "👩‍⚕️", color: "#0F9B8E", specialty: "pediatri",    template: "pediatri"    },
+  mehmetdemir: { fullName: "Prof. Dr. Mehmet Demir",  name: "Prof. Mehmet Demir",  title: "Kardiyoloji Uzmanı",  emoji: "👨‍⚕️", color: "#006699", specialty: "kardiyoloji", template: "kardiyoloji" },
+  elifsahin:   { fullName: "Prof. Dr. Elif Şahin",    name: "Prof. Elif Şahin",    title: "Nöroloji & Dahiliye", emoji: "👩‍⚕️", color: "#7C3AED", specialty: "genel",       template: "genel"       },
 }
 
 type ActiveConversation = Awaited<ReturnType<typeof Conversation.startSession>>
@@ -26,6 +37,7 @@ export default function AsistanPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [errorMsg, setErrorMsg] = useState("")
   const [authToken, setAuthToken] = useState<string | null>(null)
+  const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
   const conversationRef = useRef<ActiveConversation | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient(
@@ -34,9 +46,19 @@ export default function AsistanPage() {
   )
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.push("/giris"); return }
       setAuthToken(session.access_token)
+
+      const resp = await fetch("/api/users/me", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const profileData = await resp.json()
+      if (!profileData.data?.onboarding_completed) {
+        router.push("/onboarding")
+        return
+      }
+      setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
     })
     return () => { void endConversation() }
   }, [])
@@ -86,6 +108,13 @@ export default function AsistanPage() {
         onConnect: () => {
           setStatus("listening")
           setErrorMsg("")
+          const p = PERSONAS[personaKey]
+          const doctor = doctorProfile || toAddressableUser(null)
+          addMsg("ai", buildPersonaFirstMessage(
+            formatColleagueTabLabel(p.fullName),
+            doctor,
+            p.template
+          ))
         },
         onDisconnect: (details) => {
           conversationRef.current = null
@@ -142,7 +171,7 @@ export default function AsistanPage() {
     idle:       "Konuşmayı başlatmak için dokunun",
     connecting: "Bağlanıyor...",
     listening:  "Dinliyor — konuşabilirsiniz",
-    speaking:   `${persona.name.split(" ")[1] || "Asistan"} konuşuyor...`,
+    speaking:   `${formatColleagueTabLabel(persona.fullName)} konuşuyor...`,
     error:      "Tekrar deneyin",
   }[status]
 
@@ -156,7 +185,7 @@ export default function AsistanPage() {
           style={{ color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: "24px", padding: "4px" }}>‹</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: "15px", fontWeight: "600", color: "#fff", overflow: "hidden",
-                        textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{persona.name}</div>
+                        textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatColleagueTabLabel(persona.fullName)}</div>
           <div style={{ fontSize: "11px", color: "rgba(255,255,255,.4)" }}>{persona.title}</div>
         </div>
         <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
@@ -167,7 +196,7 @@ export default function AsistanPage() {
                        background: personaKey === key ? p.color : "rgba(255,255,255,.08)",
                        color: personaKey === key ? "#fff" : "rgba(255,255,255,.4)",
                        border: `1px solid ${personaKey === key ? p.color : "rgba(255,255,255,.1)"}` }}>
-              {p.name.split(" ")[1]}
+              {formatColleagueTabLabel(p.fullName)}
             </div>
           ))}
         </div>
@@ -178,7 +207,7 @@ export default function AsistanPage() {
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
                         justifyContent: "center", gap: "12px", opacity: .4 }}>
             <div style={{ fontSize: "56px" }}>{persona.emoji}</div>
-            <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{persona.name}</div>
+            <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{formatColleagueTabLabel(persona.fullName)}</div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,.4)" }}>{persona.title}</div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,.25)", marginTop: "8px",
                           textAlign: "center", maxWidth: "260px", lineHeight: "1.6" }}>

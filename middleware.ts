@@ -26,6 +26,8 @@ const PUBLIC_ROUTES = [
   '/hakkimizda',
   '/gizlilik',
   '/kullanim-kosullari',
+  '/giris',
+  '/onboarding',
 ]
 
 export async function middleware(req: NextRequest) {

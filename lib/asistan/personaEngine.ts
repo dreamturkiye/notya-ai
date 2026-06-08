@@ -1,6 +1,6 @@
 
-// ============================================================
-// NOTYA ASISTAN — Specialist Persona Engine
+import type { AddressableUser } from '@/lib/address'
+import { address } from '@/lib/address'
 // Each persona is a world-class physician, not an assistant.
 // Proactive, safety-oriented, textbook-grounded.
 // ============================================================
@@ -75,10 +75,13 @@ export const PERSONAS: Record<PersonaId, Persona> = {
 export function buildSystemPrompt(
   persona: Persona,
   prefs: Partial<DoctorPreferences> | null,
-  currentPatient: Record<string, unknown> | null
+  currentPatient: Record<string, unknown> | null,
+  doctor?: AddressableUser | null
 ): string {
   const sessionsCount = prefs?.sessionsCompleted || 0
   const hasLearned = sessionsCount >= 5
+  const casualAddress = address(doctor || { firstName: 'Hocam' }, 'casual')
+  const namedAddress = address(doctor || { firstName: 'Hocam' }, 'named')
 
   const learningContext = hasLearned && prefs ? `
 === DOKTOR HAKKINDA ÖĞRENDİKLERİM ===
@@ -105,9 +108,9 @@ REFERANS KİTAPLARIN (tüm klinik akıl yürütmen bunlara dayanır):
 ${persona.textbooks.map(b => `• ${b}`).join("\n")}
 
 MUTLAK KURALLAR:
-1. Doktoru her zaman "doktor" diye hitap et, asla "siz" değil
+1. Doktoru her zaman "${casualAddress}" diye hitap et (ör: "${namedAddress}") — asla "doktor" veya "siz" deme
 2. Her eylemi gerçekleştirdikten sonra teyit et: "Kaydettim", "Ekledim", "Yazıldı"
-3. Bir eylem bittikten sonra sor: "Başka bir şey var mı doktor?"
+3. Bir eylem bittikten sonra sor: "Başka bir şey var mı ${casualAddress}?"
 4. İlaç dozlarında ASLA hata yapma — dozu her zaman kontrol et
 5. Yanlış doz veya tehlikeli kombinasyon gördüğünde HEMEN uyar
 6. SGK kısıtlamalarını her zaman hatırlat
@@ -116,8 +119,8 @@ MUTLAK KURALLAR:
 9. Kritik bulguyu asla geçme
 
 PROAKTİF DAVRAN — Şunları görünce kendiliğinden söyle:
-• Doz hatası: "Bu doz yetişkin dozudur. Harriet Lane'e göre bu kiloda [DOĞRU DOZ] olmalı — düzelteyim mi?"
-• Tehlikeli kombinasyon: "Dikkat doktor — bu iki ilaç birlikte verilmemeli. [SEBEP]. Alternatif önerim var."
+• Doz hatası: "Bu doz yetişkin dozudur. Harriet Lane'e göre bu kiloda [DOĞRU DOZ] olmalı — düzelteyim mi ${casualAddress}?"
+• Tehlikeli kombinasyon: "Dikkat ${casualAddress} — bu iki ilaç birlikte verilmemeli. [SEBEP]. Alternatif önerim var."
 • Eksik alerji sorgusu: "Hastanın alerji bilgisi girilmemiş — sormamı ister misiniz?"
 • Yanlış tanı yönü: "[REFERANS KITAP]'a göre bu tablo [FARKLI TANI]'yı daha çok düşündürüyor. Ayırıcı tanı olarak ekleyeyim mi?"
 • SGK kısıtlaması: "Bu ilaç SGK'da ön rapor gerektiriyor — hatırlatmak istedim."

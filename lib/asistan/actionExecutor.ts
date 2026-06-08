@@ -5,6 +5,7 @@
 // ============================================================
 
 import { createClient } from "@supabase/supabase-js"
+import { address, type AddressableUser } from "@/lib/address"
 
 export type ActionType =
   | "CREATE_PATIENT"
@@ -19,6 +20,7 @@ export interface ActionRequest {
   type: ActionType
   doctorId: string
   data: Record<string, unknown>
+  doctorProfile?: AddressableUser
 }
 
 export interface ActionResult {
@@ -167,8 +169,12 @@ export async function executeAction(
 
     case "GENERATE_DOCUMENT": {
       const { type, sessionId, patientName } = action.data
+      const referralHeader = address(
+        action.doctorProfile || { firstName: 'Meslektaşım' },
+        'referral'
+      )
       const templates: Record<string, string> = {
-        sevk: `SEVK MEKTUBU\n\nSayın Meslektaşım,\n\n${patientName || "Hastamız"} ileri tetkik ve tedavi amacıyla kliniğinize sevk edilmektedir.\n\nSaygılarımla.`,
+        sevk: `SEVK MEKTUBU\n\n${referralHeader},\n\n${patientName || "Hastamız"} ileri tetkik ve tedavi amacıyla kliniğinize sevk edilmektedir.\n\nSaygılarımla.`,
         istirahat: `İSTİRAHAT RAPORU\n\n${patientName || "Hasta"} ${new Date().toLocaleDateString("tr-TR")} tarihinde muayene edilmiş olup ... gün istirahat uygundur.`,
         rapor: `TIBBİ RAPOR\n\n${patientName || "Hasta"} tarafından kliniğimize başvurulmuş, muayene ve tetkikler yapılmıştır.`,
       }
