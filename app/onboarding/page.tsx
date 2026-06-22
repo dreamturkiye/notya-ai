@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from './page.module.css';
+
 
 const PROFESSIONS = [
   { id: 'doktor', label: 'Doktor/Hekim', desc: 'Medical Notes', emoji: '🏥' },
@@ -70,18 +70,18 @@ export default function Onboarding() {
   }, [step, professionType, title, specialty, hospital, unvan, uzmanlikChips, buroAdi, sehir, firstName, lastName, gender, addressingPreference, router]);
 
   return (
-    <div className={styles.container}>
+    <div >
       {loading && <div>Loading...</div>}
       {error && <div>{error}</div>}
-      <div className={styles.progressIndicator}>
+      <div >
         {[1, 2, 3].map(i => <span key={i} style={{ color: step >= i ? 'blue' : 'gray' }}>•</span>)}
       </div>
       {step === 1 && (
-        <div className={styles.professionSelector}>
+        <div >
           {PROFESSIONS.map(profession => (
             <div
               key={profession.id}
-              className={`${styles.card} ${professionType === profession.id ? styles.selected : ''}`}
+              
               onClick={() => setProfessionType(profession.id)}
             >
               <span>{profession.emoji}</span>
@@ -93,7 +93,7 @@ export default function Onboarding() {
         </div>
       )}
       {step === 2 && (
-        <div className={styles.form}>
+        <div >
           {professionType === 'doktor' && (
             <>
               <select value={title} onChange={(e) => setTitle(e.target.value)}>
@@ -120,11 +120,11 @@ export default function Onboarding() {
                 <option value="YMM">Yeminli Mali Musavir</option>
                 <option value="SM">Serbest Muhasebeci</option>
               </select>
-              <div className={styles.chips}>
+              <div >
                 {['Vergi Danismanligi', 'Muhasebe', 'SGK', 'Denetim', 'Ar-Ge Tesviki', 'Konkordato', 'Transfer Fiyatlandirmasi', 'Enflasyon Muhasebesi'].map(chip => (
                   <button
                     key={chip}
-                    className={`${styles.chip} ${uzmanlikChips.includes(chip) ? styles.selected : ''}`}
+                    
                     onClick={() => setUzmanlikChips(prev => uzmanlikChips.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip])}
                   >
                     {chip}
@@ -167,7 +167,7 @@ export default function Onboarding() {
         </div>
       )}
       {step === 3 && (
-        <div className={styles.form}>
+        <div >
           <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
           <select value={gender} onChange={(e) => setGender(e.target.value)}>
