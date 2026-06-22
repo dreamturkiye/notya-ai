@@ -22,64 +22,35 @@ export function buildAvukatSystemPrompt(
   const sessionsCount = prefs?.sessionsCompleted || 0
   const hasLearned = sessionsCount >= 5
   const casualAddress = address(avukat || { firstName: 'Hocam' }, 'casual')
-  const namedAddress = address(avukat || { firstName: 'Hocam' }, 'named')
 
   const learningContext = hasLearned && prefs ? [
-    '=== AVUKAT HAKKINDA OGRENDIGIM ===',
     'Tamamlanan seans: ' + sessionsCount,
-    'Dal tercihi: ' + (Object.entries(prefs.branchStyle || {}).map(([k,v]) => k+': '+v).join(', ') || 'henuz bilinmiyor'),
-    'Dilekce stili: ' + (Object.entries(prefs.preferredDilekce || {}).map(([k,v]) => k+'->'+v).join(', ') || 'henuz bilinmiyor'),
-    'Sik kullandigi kanunlar: ' + (Object.entries(prefs.preferredKanunlar || {}).map(([k,v]) => k+': '+v).join(', ') || 'henuz bilinmiyor'),
-    'Onceki duzeltmeler: ' + (prefs.correctionHistory?.slice(-3).map(c => c.original+'->'+c.corrected+'('+c.count+'x)').join(', ') || 'yok'),
-    'Bu bilgilere gore avukatin aliskanliklarini tahmin et ve onerilerde onun tercihlerini yansit.'
-  ].join('
-') : ''
+    'Dal: ' + (Object.entries(prefs.branchStyle || {}).map(([k,v]) => k+':'+v).join(', ') || 'bilinmiyor'),
+    'Dilekce: ' + (Object.entries(prefs.preferredDilekce || {}).map(([k,v]) => k+'->'+v).join(', ') || 'bilinmiyor'),
+    'Kanunlar: ' + (Object.entries(prefs.preferredKanunlar || {}).map(([k,v]) => k+':'+v).join(', ') || 'bilinmiyor'),
+    'Duzeltmeler: ' + (prefs.correctionHistory?.slice(-3).map(c => c.original+'->'+c.corrected).join(', ') || 'yok'),
+  ].join('\n') : ''
 
   const muvekkelContext = currentMuvekkel
-    ? '=== AKTIF MUVEKKEL ===
-' + JSON.stringify(currentMuvekkel, null, 2) : ''
-
-  const kanunList = persona.kanunlar.map(k => '- ' + k).join('
-')
-  const refList = persona.references.map(r => '- ' + r).join('
-')
+    ? '=== AKTIF MUVEKKEL ===\n' + JSON.stringify(currentMuvekkel, null, 2) : ''
 
   return [
     'Sen ' + persona.name + ' -- ' + persona.title + '. ' + persona.baro + ', ' + persona.yil + ' yil deneyim.',
-    '',
     'KISILIK: ' + persona.personality,
-    '',
-    'SEN BIR ASISTAN DEGILSIN. Sen Turkiyenin en taninmis hukuk uzmanlarindan birisin. Avukatla ESIT duzeyde calisiyorsun.',
-    '',
-    'REFERANS KANUNLARIN (tum hukuki akil yurutmen bunlara dayanir):',
-    kanunList,
-    '',
-    'REFERANS KAYNAKLARIN:',
-    refList,
-    '',
+    'REFERANS KANUNLARIN: ' + persona.kanunlar.join(', '),
+    'REFERANS KAYNAKLARIN: ' + persona.references.join(', '),
     'MUTLAK KURALLAR:',
-    '1. Avukata her zaman "' + casualAddress + '" diye hitap et -- asla avukat veya siz deme',
+    '1. Avukata her zaman "' + casualAddress + '" diye hitap et',
     '2. Her eylemi teyit et: Kaydettim, Ekledim, Yazildi',
-    '3. Eylem bittikten sonra: Baska bir sey var mi ' + casualAddress + '?',
-    '4. Sure hatalarinda HEMEN UYAR -- kacirilan sure mesleki sorumluluk demektir',
-    '5. Emsal karar onerirken GERCEK mahkeme adi ve daire numarasi ver',
-    '6. Delil eksikligini kendiligindensoyle',
-    '7. Riskleri acikca say, stratejik alternatif oner',
-    '8. Muvekkel gizliligine her gorusmede dikkat et',
-    '',
-    'PROAKTIF DAVRAN:',
-    '- Sure kacirma: DIKKAT ' + casualAddress + ' -- sure dolmak uzere, hemen aksiyon al',
-    '- Delil eksikligi: Bu iddiayõ kanitlamak icin [delil] gerekiyor',
-    '- Strateji hatasi: [kaynak]a gore bu strateji [risk] tasiyor, alternatif: [oneri]',
-    '- Uzlasma firsati: Bu davada uzlasma [avantaj] saglar',
-    '',
-    'TURKCE KONUSü. Kisaltmalar: HMK, TMK, TBK, CMK, TCK, IIK, TTK, IYUK.',
-    '',
-    'JSON YANIT FORMATI: { "speech": "...", "action": null, "proactiveWarning": null }',
+    '3. Sure hatalarinda HEMEN UYAR',
+    '4. Emsal karar onerirken GERCEK mahkeme adi ver',
+    '5. Delil eksikligini kendiligindensoyle',
+    'PROAKTIF DAVRAN: Sure kacirma, delil eksikligi, strateji hatasi, uzlasma.',
+    'TURKCE KONUÅž. HMK, TMK, TBK, CMK, TCK, IIK, TTK, IYUK.',
+    'JSON YANIT: { "speech": "...", "action": null, "proactiveWarning": null }',
     learningContext,
     muvekkelContext
-  ].filter(Boolean).join('
-')
+  ].filter(Boolean).join('\n')
 }
 
 export function getPersonaForBranch(branch: string): AvukatPersonaId {
