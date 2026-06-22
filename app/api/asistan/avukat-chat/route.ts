@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
-import { AVUKAT_PERSONAS, getPersonaForBranch, type AvukatPersonaId } from '@/lib/avukat/personas'
-import { buildAvukatSystemPrompt, type AvukatPreferences } from '@/lib/avukat/avukatPersonaEngine'
+import { AVUKAT_PERSONAS, type AvukatPersonaId } from '@/lib/avukat/personas'
+import { buildAvukatSystemPrompt, getPersonaForBranch, type AvukatPreferences } from '@/lib/avukat/avukatPersonaEngine'
 import { quickClassifyLegal } from '@/lib/avukat/avukatIntentParser'
 import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 
