@@ -62,7 +62,7 @@ const MaliPage = () => {
             </button>
           ))}
         </div>
-        <AsistanConversation
+        <Conversation
           status={status}
           conversationHistory={conversationHistory}
           onStatusChange={setStatus}
