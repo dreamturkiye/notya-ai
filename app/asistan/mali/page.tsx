@@ -36,7 +36,7 @@ const MaliPage = () => {
     // Trigger conversation with the selected question
   };
 
-  const filteredMevzuat = MEVZUAT_DATABASE.filter(item =>
+  const filteredMevzuat = Object.values(MEVZUAT_DATABASE).filter(item =>
     item.kanun.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.madde.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.ozet.toLowerCase().includes(searchTerm.toLowerCase())
