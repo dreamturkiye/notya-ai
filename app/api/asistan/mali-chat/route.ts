@@ -1,290 +1,149 @@
 // app/api/asistan/mali-chat/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import Anthropic from '@anthropic-ai/sdk'
+import { buildMaliSystemPrompt, DERYA_PERSONA, type MaliPreferences } from '@/lib/mali/maliPersonaEngine'
+import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 
-import { NextRequest, NextResponse } from 'next/server';
-import { buildMaliSystemPrompt } from '@/lib/mali/maliPersonaEngine';
-import { AddressableUser } from '@/lib/address';
-import { v4 as uuidv4 } from 'uuid';
-import { Pool } from 'pg';
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+export async function POST(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer '))
+      return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { message, maliSessionId, musteriId, sessionId } = body;
+    const { data: { user } } = await supabase.auth.getUser(authHeader.split(' ')[1])
+    if (!user) return NextResponse.json({ success: false, error: 'Gecersiz token' }, { status: 401 })
 
-  // Load musavir profile
-  const musavir = await getMusavirProfile(sessionId);
+    const body = await req.json()
+    const { message, maliSessionId, musteriId } = body
 
-  // Load mali_preferences
-  let prefs: Partial<MaliPreferences> | null = await loadMaliPreferences(musavir.id);
+    // Load musavir profile
+    const { data: musavirRow } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle()
+    const musavirProfile = toAddressableUser(musavirRow as DoctorProfile | null)
 
-  // Load/create mali_sessions
-  const session = await loadOrCreateSession(maliSessionId, musteriId, musavir.id);
+    // Load mali preferences (learning system)
+    const { data: prefs } = await supabase
+      .from('mali_preferences').select('*').eq('musavir_id', user.id).single()
 
-  // Build system prompt
-  const systemPrompt = buildMaliSystemPrompt(prefs, session.active_context, musavir);
+    // Load or create mali session
+    let maliSession: Record<string, unknown> | null = null
+    if (maliSessionId) {
+      const { data } = await supabase.from('mali_sessions')
+        .select('*').eq('id', maliSessionId).eq('musavir_id', user.id).single()
+      maliSession = data
+    }
+    if (!maliSession) {
+      const { data } = await supabase.from('mali_sessions').insert({
+        musavir_id: user.id,
+        musteri_id: musteriId || null,
+        messages: [],
+        active_context: {}
+      }).select().single()
+      maliSession = data
+    }
 
-  // Call Claude
-  const response = await callClaude(systemPrompt + message);
-  const { speech, action, proactiveWarning } = parseResponse(response);
+    // Load current musteri if any
+    let currentMusteri = null
+    const ctxMusteriId = (maliSession?.active_context as Record<string, unknown>)?.currentMusteriId || musteriId
+    if (ctxMusteriId) {
+      const { data } = await supabase.from('clients').select('*').eq('id', ctxMusteriId).single()
+      currentMusteri = data
+    }
 
-  // Execute mali action if any
-  if (action) {
-    await executeMaliAction(action, session.id, message, response);
+    // Build conversation history
+    const messages: { role: string; content: string }[] = (maliSession?.messages as { role: string; content: string }[]) || []
+
+    // Build system prompt with full learning context
+    const systemPrompt = buildMaliSystemPrompt(
+      prefs as Partial<MaliPreferences> | null,
+      currentMusteri,
+      musavirProfile
+    )
+
+    // Call Claude
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 800,
+      system: systemPrompt,
+      messages: [
+        ...messages.map((m: { role: string; content: string }) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        })),
+        { role: 'user', content: message }
+      ]
+    })
+
+    const rawResponse = response.content[0].type === 'text' ? response.content[0].text : ''
+
+    let aiData: { speech: string; action: Record<string, unknown> | null; proactiveWarning: string | null }
+    try {
+      const cleanJson = rawResponse.replace(/```[a-z]*/g, '').replace(/```/g, '').trim()
+      aiData = JSON.parse(cleanJson)
+    } catch {
+      aiData = { speech: rawResponse, action: null, proactiveWarning: null }
+    }
+
+    // Execute action if any
+    if (aiData.action?.type === 'CREATE_MUSTERI') {
+      const d = (aiData.action.data || {}) as Record<string, unknown>
+      await supabase.from('clients').insert({
+        doctor_id: user.id,
+        name_encrypted: String(d.name || 'Yeni Musteri'),
+        notes_encrypted: String(d.notes || '')
+      })
+    }
+
+    // Update conversation history (keep last 20)
+    const updatedMessages = [
+      ...messages,
+      { role: 'user', content: message },
+      { role: 'assistant', content: aiData.speech }
+    ].slice(-20)
+    await supabase.from('mali_sessions').update({ messages: updatedMessages }).eq('id', maliSession?.id)
+
+    // Log to mali_actions
+    await supabase.from('mali_actions').insert({
+      musavir_id: user.id,
+      mali_session_id: maliSession?.id,
+      action_type: 'CHAT',
+      input_text: message,
+      ai_response: aiData.speech,
+      action_data: aiData.action || {}
+    }).select()
+
+    // Update sessions count (learning system)
+    if (!prefs) {
+      await supabase.from('mali_preferences').insert({
+        musavir_id: user.id,
+        sessions_completed: 1,
+        last_session_at: new Date().toISOString()
+      })
+    } else {
+      await supabase.from('mali_preferences').update({
+        sessions_completed: (prefs.sessions_completed || 0) + 1,
+        last_session_at: new Date().toISOString()
+      }).eq('musavir_id', user.id)
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        speech: aiData.speech,
+        proactiveWarning: aiData.proactiveWarning,
+        action: aiData.action,
+        maliSessionId: maliSession?.id,
+        personaName: DERYA_PERSONA.name,
+      }
+    })
+  } catch (error) {
+    console.error('[mali-chat]', error)
+    return NextResponse.json({ success: false, error: 'Asistan yanit veremedi' }, { status: 500 })
   }
-
-  // Update mali_sessions
-  await updateSession(session.id, message, response.speech);
-
-  // Log mali_actions
-  await logAction(session.id, message, response);
-
-  // Update sessions_completed
-  if (action) {
-    prefs.sessionsCompleted = (prefs.sessionsCompleted || 0) + 1;
-    await updatePreferences(musavir.id, prefs);
-  }
-
-  return NextResponse.json({ success: true, data: { speech, proactiveWarning, action, maliSessionId } });
-}
-
-async function getMusavirProfile(sessionId: string): Promise<AddressableUser> {
-  // Implement logic to load musavir profile from users table
-}
-
-async function loadMaliPreferences(musavirId: string): Promise<Partial<MaliPreferences>> {
-  const res = await pool.query('SELECT * FROM mali_preferences WHERE musavir_id = $1', [musavirId]);
-  return res.rows[0] || {};
-}
-
-async function loadOrCreateSession(maliSessionId: string, musteriId: string, musavirId: string): Promise<any> {
-  if (maliSessionId) {
-    const res = await pool.query('SELECT * FROM mali_sessions WHERE id = $1', [maliSessionId]);
-    return res.rows[0];
-  } else {
-    const sessionId = uuidv4();
-    await pool.query('INSERT INTO mali_sessions (id, musavir_id, musteri_id) VALUES ($1, $2, $3)', [sessionId, musavirId, musteriId]);
-    return { id: sessionId, active_context: {} };
-  }
-}
-
-async function callClaude(systemPrompt: string): Promise<string> {
-  // Implement logic to call Claude and get response
-}
-
-function parseResponse(response: string): any {
-  // Implement logic to parse JSON response from Claude
-}
-
-async function executeMaliAction(action: any, sessionId: string, message: string, aiResponse: string) {
-  // Implement logic to execute mali action based on action type
-}
-
-async function updateSession(sessionId: string, message: string, speech: string) {
-  await pool.query('UPDATE mali_sessions SET messages = array_append(messages, $1), updated_at = NOW() WHERE id = $2', [message, sessionId]);
-}
-
-async function logAction(sessionId: string, message: string, response: any) {
-  const actionData = JSON.stringify(response.action);
-  await pool.query('INSERT INTO mali_actions (mali_session_id, action_type, input_text, ai_response, action_data) VALUES ($1, $2, $3, $4, $5)', [sessionId, response.action.type, message, response.speech, actionData]);
-}
-
-async function updatePreferences(musavirId: string, prefs: Partial<MaliPreferences>) {
-  await pool.query('UPDATE mali_preferences SET preferred_mevzuat = $1, correction_history = $2, note_style = $3, preferred_hizmetler = $4, sessions_completed = $5, updated_at = NOW() WHERE musavir_id = $6', [prefs.preferredMevzuat, prefs.correctionHistory, prefs.noteStyle, prefs.preferredHizmetler, prefs.sessionsCompleted, musavirId]);
-}
-
-// app/api/asistan/mali-chat/route.ts
-
-import { NextRequest, NextResponse } from 'next/server';
-import { buildMaliSystemPrompt } from '@/lib/mali/maliPersonaEngine';
-import { AddressableUser } from '@/lib/address';
-import { v4 as uuidv4 } from 'uuid';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { message, maliSessionId, musteriId, sessionId } = body;
-
-  // Load musavir profile
-  const musavir = await getMusavirProfile(sessionId);
-
-  // Load mali_preferences
-  let prefs: Partial<MaliPreferences> | null = await loadMaliPreferences(musavir.id);
-
-  // Load/create mali_sessions
-  const session = await loadOrCreateSession(maliSessionId, musteriId, musavir.id);
-
-  // Build system prompt
-  const systemPrompt = buildMaliSystemPrompt(prefs, session.active_context, musavir);
-
-  // Call Claude
-  const response = await callClaude(systemPrompt + message);
-  const { speech, action, proactiveWarning } = parseResponse(response);
-
-  // Execute mali action if any
-  if (action) {
-    await executeMaliAction(action, session.id, message, response);
-  }
-
-  // Update mali_sessions
-  await updateSession(session.id, message, response.speech);
-
-  // Log mali_actions
-  await logAction(session.id, message, response);
-
-  // Update sessions_completed
-  if (action) {
-    prefs.sessionsCompleted = (prefs.sessionsCompleted || 0) + 1;
-    await updatePreferences(musavir.id, prefs);
-  }
-
-  return NextResponse.json({ success: true, data: { speech, proactiveWarning, action, maliSessionId } });
-}
-
-async function getMusavirProfile(sessionId: string): Promise<AddressableUser> {
-  // Implement logic to load musavir profile from users table
-}
-
-async function loadMaliPreferences(musavirId: string): Promise<Partial<MaliPreferences>> {
-  const res = await pool.query('SELECT * FROM mali_preferences WHERE musavir_id = $1', [musavirId]);
-  return res.rows[0] || {};
-}
-
-async function loadOrCreateSession(maliSessionId: string, musteriId: string, musavirId: string): Promise<any> {
-  if (maliSessionId) {
-    const res = await pool.query('SELECT * FROM mali_sessions WHERE id = $1', [maliSessionId]);
-    return res.rows[0];
-  } else {
-    const sessionId = uuidv4();
-    await pool.query('INSERT INTO mali_sessions (id, musavir_id, musteri_id) VALUES ($1, $2, $3)', [sessionId, musavirId, musteriId]);
-    return { id: sessionId, active_context: {} };
-  }
-}
-
-async function callClaude(systemPrompt: string): Promise<string> {
-  // Implement logic to call Claude and get response
-}
-
-function parseResponse(response: string): any {
-  // Implement logic to parse JSON response from Claude
-}
-
-async function executeMaliAction(action: any, sessionId: string, message: string, aiResponse: string) {
-  // Implement logic to execute mali action based on action type
-}
-
-async function updateSession(sessionId: string, message: string, speech: string) {
-  await pool.query('UPDATE mali_sessions SET messages = array_append(messages, $1), updated_at = NOW() WHERE id = $2', [message, sessionId]);
-}
-
-async function logAction(sessionId: string, message: string, response: any) {
-  const actionData = JSON.stringify(response.action);
-  await pool.query('INSERT INTO mali_actions (mali_session_id, action_type, input_text, ai_response, action_data) VALUES ($1, $2, $3, $4, $5)', [sessionId, response.action.type, message, response.speech, actionData]);
-}
-
-async function updatePreferences(musavirId: string, prefs: Partial<MaliPreferences>) {
-  await pool.query('UPDATE mali_preferences SET preferred_mevzuat = $1, correction_history = $2, note_style = $3, preferred_hizmetler = $4, sessions_completed = $5, updated_at = NOW() WHERE musavir_id = $6', [prefs.preferredMevzuat, prefs.correctionHistory, prefs.noteStyle, prefs.preferredHizmetler, prefs.sessionsCompleted, musavirId]);
-}
-
-// app/api/asistan/mali-chat/route.ts
-
-import { NextRequest, NextResponse } from 'next/server';
-import { buildMaliSystemPrompt } from '@/lib/mali/maliPersonaEngine';
-import { AddressableUser } from '@/lib/address';
-import { v4 as uuidv4 } from 'uuid';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { message, maliSessionId, musteriId, sessionId } = body;
-
-  // Load musavir profile
-  const musavir = await getMusavirProfile(sessionId);
-
-  // Load mali_preferences
-  let prefs: Partial<MaliPreferences> | null = await loadMaliPreferences(musavir.id);
-
-  // Load/create mali_sessions
-  const session = await loadOrCreateSession(maliSessionId, musteriId, musavir.id);
-
-  // Build system prompt
-  const systemPrompt = buildMaliSystemPrompt(prefs, session.active_context, musavir);
-
-  // Call Claude
-  const response = await callClaude(systemPrompt + message);
-  const { speech, action, proactiveWarning } = parseResponse(response);
-
-  // Execute mali action if any
-  if (action) {
-    await executeMaliAction(action, session.id, message, response);
-  }
-
-  // Update mali_sessions
-  await updateSession(session.id, message, response.speech);
-
-  // Log mali_actions
-  await logAction(session.id, message, response);
-
-  // Update sessions_completed
-  if (action) {
-    prefs.sessionsCompleted = (prefs.sessionsCompleted || 0) + 1;
-    await updatePreferences(musavir.id, prefs);
-  }
-
-  return NextResponse.json({ success: true, data: { speech, proactiveWarning, action, maliSessionId } });
-}
-
-async function getMusavirProfile(sessionId: string): Promise<AddressableUser> {
-  // Implement logic to load musavir profile from users table
-}
-
-async function loadMaliPreferences(musavirId: string): Promise<Partial<MaliPreferences>> {
-  const res = await pool.query('SELECT * FROM mali_preferences WHERE musavir_id = $1', [musavirId]);
-  return res.rows[0] || {};
-}
-
-async function loadOrCreateSession(maliSessionId: string, musteriId: string, musavirId: string): Promise<any> {
-  if (maliSessionId) {
-    const res = await pool.query('SELECT * FROM mali_sessions WHERE id = $1', [maliSessionId]);
-    return res.rows[0];
-  } else {
-    const sessionId = uuidv4();
-    await pool.query('INSERT INTO mali_sessions (id, musavir_id, musteri_id) VALUES ($1, $2, $3)', [sessionId, musavirId, musteriId]);
-    return { id: sessionId, active_context: {} };
-  }
-}
-
-async function callClaude(systemPrompt: string): Promise<string> {
-  // Implement logic to call Claude and get response
-}
-
-function parseResponse(response: string): any {
-  // Implement logic to parse JSON response from Claude
-}
-
-async function executeMaliAction(action: any, sessionId: string, message: string, aiResponse: string) {
-  // Implement logic to execute mali action based on action type
-}
-
-async function updateSession(sessionId: string, message: string, speech: string) {
-  await pool.query('UPDATE mali_sessions SET messages = array_append(messages, $1), updated_at = NOW() WHERE id = $2', [message, sessionId]);
-}
-
-async function logAction(sessionId: string, message: string, response: any) {
-  const actionData = JSON.stringify(response.action);
-  await pool.query('INSERT INTO mali_actions (mali_session_id, action_type, input_text, ai_response, action_data) VALUES ($1, $2, $3, $4, $5)', [sessionId, response.action.type, message, response.speech, actionData]);
-}
-
-async function updatePreferences(musavirId: string, prefs: Partial<MaliPreferences>) {
-  await pool.query('UPDATE mali_preferences SET preferred_mevzuat = $1, correction_history = $2, note_style = $3, preferred_hizmetler = $4, sessions_completed = $5, updated_at = NOW() WHERE musavir_id = $6', [prefs.preferredMevzuat, prefs.correctionHistory, prefs.noteStyle, prefs.preferredHizmetler, prefs.sessionsCompleted, musavirId]);
 }
