@@ -1,100 +1,70 @@
-// app/asistan/mali/page.tsx
-'use client';
+"use client"
+import { useState, useEffect, useRef } from "react"
+import { createClient } from "@supabase/supabase-js"
+import { useRouter } from "next/navigation"
+import { Conversation } from "@/components/AsistanConversation"
 
-import React, { useState } from 'react';
-import { Conversation } from '@/components/AsistanConversation';
-import { MEVZUAT_DATABASE } from '@/lib/ai/mevzuatEngine';
-import { useRouter } from 'next/navigation';
+const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+type CS = "idle"|"connecting"|"listening"|"speaking"|"error"
+type AC = Awaited<ReturnType<typeof Conversation.startSession>>
 
-const DERYA = {
-  fullName: 'Uzm. Mali Musavir Derya Hanim',
-  title: 'SMMM | 15 Yil Istanbul | Vergi & SGK Uzmani',
-  color: '#2563EB'
-};
+export default function MaliAsistanPage() {
+  const router = useRouter()
+  const [status, setStatus] = useState<CS>("idle")
+  const [err, setErr] = useState("")
+  const ref = useRef<AC|null>(null)
 
-const expertiseChips = [
-  'Vergi Danismanligi', 'SGK', 'Enflasyon Muhasebesi', 'Ar-Ge Tesviki', 
-  'Vergi Inceleme Savunmasi', 'Konkordato', 'YMM Tasdik', 'Yapilandirma'
-];
+  useEffect(() => {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/giris/mali")
+    })
+  }, [router])
 
-const quickQuestions = [
-  '2026 nakit tahsilat siniri nedir?', 'MASAK 30-31 ne getirdi?', 
-  'Ar-Ge indirimi nasil hesaplanir?', 'Enflasyon muhasebesi zorunlu mu?', 
-  'YMM tasdik ne zaman gerekli?', 'Vergi yapilandirmasi son basvuru ne zaman?', 
-  'Kurumlar vergisi orani 2026 nedir?', 'KDV tevkifat oranlari nelerdir?'
-];
+  async function start() {
+    try {
+      setStatus("connecting"); setErr("")
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) { router.push("/giris/mali"); return }
+      const r = await fetch("/api/asistan/mali-signed-url", { headers: { Authorization: "Bearer " + session.access_token } })
+      if (!r.ok) throw new Error("Baglanti hatasi")
+      const { signedUrl } = await r.json()
+      const conv = await Conversation.startSession({
+        signedUrl,
+        onStatusChange: ({ status: s }: { status: string }) => {
+          if (s === "connected") setStatus("listening")
+          else if (s === "disconnected") { setStatus("idle"); ref.current = null }
+        },
+        onError: (e: unknown) => { setErr(String(e)); setStatus("error") },
+      })
+      ref.current = conv
+    } catch (e: unknown) { setErr(e instanceof Error ? e.message : "Hata"); setStatus("error") }
+  }
 
-const MaliPage = () => {
-  const router = useRouter();
-  const [status, setStatus] = useState('idle');
-  const [conversationHistory, setConversationHistory] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  async function stop() {
+    await ref.current?.endSession()
+    ref.current = null; setStatus("idle")
+  }
 
-  const handleQuickQuestion = (question: string) => {
-    setConversationHistory([question]);
-    setStatus('connecting');
-    // Trigger conversation with the selected question
-  };
-
-  const filteredMevzuat = Object.values(MEVZUAT_DATABASE).filter(item =>
-    item.kanun.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.madde.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.ozet.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const active = status === "listening" || status === "speaking" || status === "connecting"
+  const label = status==="connecting"?"Baglaniliyor...":status==="listening"?"Dinliyorum...":status==="speaking"?"Konusuyor...":status==="error"?err:"Baslamak icin dokun"
 
   return (
-    <div className="flex flex-col md:flex-row">
-      <main className="flex-1 p-4">
-        <header className="mb-4">
-          <h1 className="text-2xl font-bold">Uzm. Derya - Mali Musavirlik Asistani</h1>
-        </header>
-        <div className="flex mb-4">
-          {expertiseChips.map(chip => (
-            <span key={chip} className="bg-gray-200 text-gray-800 px-3 py-1 mr-2 rounded-full cursor-pointer">
-              {chip}
-            </span>
-          ))}
+    <div style={{minHeight:"100vh",background:"#0A1628",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",padding:"24px"}}>
+      <div style={{background:"#111827",borderRadius:"20px",padding:"40px",maxWidth:"480px",width:"100%",border:"1px solid rgba(16,185,129,0.2)",textAlign:"center"}}>
+        <div style={{fontSize:"48px",marginBottom:"12px"}}>💰</div>
+        <h1 style={{fontSize:"22px",fontWeight:700,color:"#fff",marginBottom:"4px"}}>Uzm. Derya Hanim</h1>
+        <p style={{fontSize:"13px",color:"#64748b",marginBottom:"32px"}}>Mali Musavirlik AI Asistani</p>
+        <div style={{width:"120px",height:"120px",borderRadius:"50%",background:active?"rgba(16,185,129,0.15)":"rgba(255,255,255,0.05)",border:active?"2px solid #10B981":"2px solid rgba(255,255,255,0.1)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 32px"}}>
+          <div style={{fontSize:"40px"}}>{active?"🎙️":"🎙️"}</div>
         </div>
-        <div className="flex mb-4">
-          {quickQuestions.map(question => (
-            <button key={question} onClick={() => handleQuickQuestion(question)} className="bg-blue-500 text-white px-3 py-1 mr-2 rounded-full cursor-pointer">
-              {question}
-            </button>
-          ))}
-        </div>
-        <Conversation
-          status={status}
-          conversationHistory={conversationHistory}
-          onStatusChange={setStatus}
-          onMessageSend={() => {}}
-        />
-      </main>
-      <aside className="hidden md:block w-1/4 p-4 border-l">
-        <input 
-          type="text" 
-          placeholder="Mevzuat ara..." 
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)} 
-          className="w-full mb-4 px-3 py-2 border rounded"
-        />
-        <div className="overflow-y-auto max-h-screen">
-          {filteredMevzuat.map(item => (
-            <div key={item.id} className="mb-4 p-4 bg-white border rounded shadow">
-              <h2 className="text-lg font-bold">{item.kanun}</h2>
-              <p className="text-sm text-gray-600 mb-2"><strong>Maddeler:</strong> {item.madde}</p>
-              <p className="text-sm text-gray-600 line-clamp-3">{item.ozet}</p>
-              <span className={`inline-block px-2 py-1 rounded-full ${item.yururluk ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                {item.yururluk ? 'Yürürlükte' : 'Kullandımdan Kaldırıldı'}
-              </span>
-              <a href={item.url} target="_blank" rel="noopener noreferrer" className="block mt-2 text-blue-500">
-                Daha fazla bilgi
-              </a>
-            </div>
-          ))}
-        </div>
-      </aside>
+        <p style={{fontSize:"14px",color:active?"#10B981":"#64748b",marginBottom:"24px",minHeight:"20px"}}>{label}</p>
+        {!active ? (
+          <button onClick={start} style={{padding:"14px 32px",background:"#10B981",border:"none",borderRadius:"12px",color:"#fff",fontSize:"15px",fontWeight:600,cursor:"pointer",width:"100%"}}>Uzm. Derya ile Konus</button>
+        ) : (
+          <button onClick={stop} style={{padding:"14px 32px",background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.4)",borderRadius:"12px",color:"#fca5a5",fontSize:"15px",fontWeight:600,cursor:"pointer",width:"100%"}}>Gorushmeyi Bitir</button>
+        )}
+        <button onClick={()=>router.push("/dashboard/mali")} style={{marginTop:"12px",padding:"10px",background:"transparent",border:"none",color:"#64748b",fontSize:"13px",cursor:"pointer",width:"100%"}}>Dashboard</button>
+      </div>
     </div>
-  );
-};
-
-export default MaliPage;
+  )
+}
