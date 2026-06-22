@@ -40,7 +40,10 @@ export default function Dashboard() {
           headers: { Authorization: `Bearer ${token}` },
         })
         const profileData = await resp.json()
-        if (!profileData.data?.onboarding_completed) {
+        const profType = profileData.data?.profession_type
+        if (profType === 'mali_musavirlik') { router.replace('/dashboard/mali'); return }
+        if (profType === 'avukat') { router.replace('/dashboard/avukat'); return }
+        if (!profileData.data?.onboarding_completed && !profType) {
           router.push("/onboarding")
           return
         }

@@ -72,10 +72,10 @@ export default function LoginPage() {
         headers: { Authorization: `Bearer ${data.access_token}` },
       })
       const profileData = await profileResp.json()
-      if (!profileData.data?.onboarding_completed) {
-        router.push("/onboarding")
-        return
-      }
+      const profType = profileData.data?.profession_type
+      if (profType === 'mali_musavirlik') { router.replace('/dashboard/mali'); return }
+      if (profType === 'avukat') { router.replace('/dashboard/avukat'); return }
+      if (!profileData.data?.onboarding_completed && !profType) {
 
       router.push("/dashboard")
     } catch (e: unknown) {
