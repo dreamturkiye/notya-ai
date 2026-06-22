@@ -1,307 +1,189 @@
 // app/onboarding/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import styles from './page.module.css';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
-const cities = [
-  'Istanbul',
-  'Ankara',
-  'Izmir',
-  'Bursa',
-  'Antalya',
-  'Gaziantep',
-  'Kayseri',
-  'Konya',
-  'Mersin',
-  'Adana',
-  'Diyarbakir',
-  'Eskisehir',
-  'Kocaeli',
-  'Samsun',
-  'Trabzon',
-  'Mugla'
+const PROFESSIONS = [
+  { id: 'doktor', label: 'Doktor/Hekim', desc: 'Medical Notes', emoji: '🏥' },
+  { id: 'mali_musavirlik', label: 'Mali Musavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
+  { id: 'avukat', label: 'Avukat', desc: 'Legal Notes', emoji: '⚖️' },
+  { id: 'psikolog', label: 'Psikolog/Terapist', desc: 'Seans Notes', emoji: '🧠' }
 ];
 
-const professions = ['doktor', 'mali_musavirlik', 'avukat', 'psikolog'];
+const SPECIALTIES = [
+  // List of 14 medical specialties
+];
 
-const professionFields: { [key: string]: any } = {
-  doktor: [
-    { label: 'Title', name: 'title', type: 'select', options: ['Dr', 'Uzm.Dr', 'Doc.Dr', 'Prof.Dr'] },
-    { label: 'Specialty', name: 'specialty', type: 'text' },
-    { label: 'Hospital', name: 'hospital', type: 'text' }
-  ],
-  mali_musavirlik: [
-    { label: 'Unvan', name: 'unvan', type: 'select', options: ['SMMM', 'YMM', 'SM'] },
-    {
-      label: 'Uzmanlik',
-      name: 'uzmanlik',
-      type: 'chips',
-      options: [
-        'Vergi Danismanligi',
-        'Muhasebe',
-        'SGK ve Is Hukuku',
-        'Bagimsiz Denetim',
-        'Ar-Ge Tesviki',
-        'Konkordato',
-        'Transfer Fiyatlandirmasi',
-        'Enflasyon Muhasebesi',
-        'MASAK Uyumu',
-        'Sirket Kurulusu'
-      ]
-    },
-    { label: 'Buro Adı', name: 'buro_adi', type: 'text' },
-    { label: 'Şehir', name: 'sehir', type: 'select', options: cities }
-  ],
-  avukat: [
-    { label: 'Baro', name: 'baro', type: 'text' },
-    {
-      label: 'Uzmanlik',
-      name: 'uzmanlik',
-      type: 'chips',
-      options: [
-        'Ceza Hukuku',
-        'Aile ve Miras Hukuku',
-        'Ticaret ve Sirketler Hukuku',
-        'Is ve SGK Hukuku',
-        'Gayrimenkul ve Tapu Hukuku',
-        'Icra ve Iflas Hukuku',
-        'Idare ve Anayasa Hukuku',
-        'Tuketici ve Sigorta Hukuku',
-        'Bilisim ve KVKK Hukuku',
-        'Genel Hukuk'
-      ]
-    },
-    { label: 'Buro Adı', name: 'buro_adi', type: 'text' },
-    { label: 'Yıl', name: 'yil', type: 'number' },
-    { label: 'Şehir', name: 'sehir', type: 'select', options: cities }
-  ],
-  psikolog: [
-    {
-      label: 'Yaklaşım',
-      name: 'yaklasim',
-      type: 'chips',
-      options: ['BDT', 'EMDR', 'ACT', 'DBT', 'Aile Terapisi', 'Cocuk Terapisi', 'Travma', 'Psikanaliz', 'Gestalt']
-    },
-    { label: 'Klinik', name: 'klinik', type: 'text' }
-  ]
-};
-
-const addressingPreferenceOptions = {
-  doktor: ['hocam', 'named_hocam', 'sadece_ad'],
-  mali_musavirlik: ['Musavir Hanim', 'Bey', 'sadece_ad'],
-  avukat: ['Avukat Hanim', 'Bey', 'sadece_ad']
-};
-
-const OnboardingPage = () => {
-  const router = useRouter();
+export default function Onboarding() {
   const [step, setStep] = useState(1);
-  const [profession, setProfession] = useState('');
-  const [formData, setFormData] = useState({});
+  const [professionType, setProfessionType] = useState('');
+  const [title, setTitle] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [hospital, setHospital] = useState('');
+  const [unvan, setUnvan] = useState('');
+  const [uzmanlikChips, setUzmanlikChips] = useState<string[]>([]);
+  const [buroAdi, setBuroAdi] = useState('');
+  const [sehir, setSehir] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('');
+  const [addressingPreference, setAddressingPreference] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step < 3) {
-      setStep(step + 1);
-    } else {
-      handleSubmit(e);
-    }
-  };
+  const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  useEffect(() => {
+    if (step === 3) {
+      const professionSpecificData = {
+        doktor: { title, specialty, hospital },
+        mali_musavirlik: { unvan, uzmanlik_alani: uzmanlikChips.join(','), buro_adi, sehir },
+        avukat: { baro: '', uzmanlik: '', buro_adi }, // Add baro input
+        psikolog: { uzmanlik: '', klinik_adi: '' } // Add klinik_adi input
+      };
 
-  const handleChipsChange = (field: string, value: string) => {
-    if (Array.isArray(formData[field])) {
-      const updatedValue = formData[field].includes(value)
-        ? formData[field].filter((item) => item !== value)
-        : [...formData[field], value];
-      setFormData({ ...formData, [field]: updatedValue });
-    }
-  };
+      const data = {
+        profession_type: professionType,
+        ...professionSpecificData[professionType],
+        firstName, lastName, gender, addressingPreference
+      };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      const response = await fetch('/api/users/profile', {
+      setLoading(true);
+      fetch('/api/users/profile', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`
-        },
-        body: JSON.stringify({ profession, ...formData })
-      });
-
-      if (response.ok) {
-        switch (profession) {
-          case 'mali_musavirlik':
-            router.replace('/dashboard/mali');
-            break;
-          case 'avukat':
-            router.replace('/dashboard/avukat');
-            break;
-          default:
-            router.replace('/dashboard');
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(() => {
+        if (professionType === 'mali_musavirlik') {
+          router.replace('/dashboard/mali');
+        } else {
+          router.replace('/dashboard');
         }
-      }
+      })
+      .catch(err => setError('Failed to save profile'))
+      .finally(() => setLoading(false));
     }
-  };
+  }, [step, professionType, title, specialty, hospital, unvan, uzmanlikChips, buroAdi, sehir, firstName, lastName, gender, addressingPreference, router]);
 
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <form
-        onSubmit={handleNext}
-        style={{
-          backgroundColor: '#111827',
-          padding: '2rem',
-          borderRadius: '0.5rem',
-          width: '300px',
-          color: '#fff'
-        }}
-      >
-        {step === 1 && (
-          <div>
-            <h2>Select Profession</h2>
-            <select
-              name="profession"
-              value={profession}
-              onChange={(e) => setProfession(e.target.value)}
-              style={{ backgroundColor: '#1e293b', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem', width: '100%' }}
+    <div className={styles.container}>
+      {loading && <div>Loading...</div>}
+      {error && <div>{error}</div>}
+      <div className={styles.progressIndicator}>
+        {[1, 2, 3].map(i => <span key={i} style={{ color: step >= i ? 'blue' : 'gray' }}>•</span>)}
+      </div>
+      {step === 1 && (
+        <div className={styles.professionSelector}>
+          {PROFESSIONS.map(profession => (
+            <div
+              key={profession.id}
+              className={`${styles.card} ${professionType === profession.id ? styles.selected : ''}`}
+              onClick={() => setProfessionType(profession.id)}
             >
-              <option value="">Select</option>
-              {professions.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        {step === 2 && profession && (
-          <div>
-            <h2>{profession.charAt(0).toUpperCase() + profession.slice(1)}</h2>
-            {professionFields[profession].map((field: any) => {
-              if (field.type === 'select') {
-                return (
-                  <div key={field.name}>
-                    <label>{field.label}</label>
-                    <select
-                      name={field.name}
-                      value={formData[field.name] || ''}
-                      onChange={handleChange}
-                      style={{ backgroundColor: '#1e293b', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem', width: '100%' }}
-                    >
-                      <option value="">Select</option>
-                      {field.options.map((option: string) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              } else if (field.type === 'chips') {
-                return (
-                  <div key={field.name}>
-                    <label>{field.label}</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                      {field.options.map((option: string) => (
-                        <button
-                          key={option}
-                          onClick={() => handleChipsChange(field.name, option)}
-                          style={{
-                            backgroundColor: formData[field.name]?.includes(option) ? '#2563EB' : '#1e293b',
-                            color: '#fff',
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '0.25rem',
-                            margin: '0.25rem'
-                          }}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              } else {
-                return (
-                  <div key={field.name}>
-                    <label>{field.label}</label>
-                    <input
-                      type={field.type}
-                      name={field.name}
-                      value={formData[field.name] || ''}
-                      onChange={handleChange}
-                      style={{ backgroundColor: '#1e293b', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem', width: '100%' }}
-                    />
-                  </div>
-                );
-              }
-            })}
-          </div>
-        )}
-        {step === 3 && (
-          <div>
-            <h2>Personal Information</h2>
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName || ''}
-              onChange={handleChange}
-              placeholder="First Name"
-              style={{ backgroundColor: '#1e293b', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem', width: '100%', marginBottom: '0.5rem' }}
-            />
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName || ''}
-              onChange={handleChange}
-              placeholder="Last Name"
-              style={{ backgroundColor: '#1e293b', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem', width: '100%', marginBottom: '0.5rem' }}
-            />
-            <div>
-              <label>Gender</label>
-              <select
-                name="gender"
-                value={formData.gender || ''}
-                onChange={handleChange}
-                style={{ backgroundColor: '#1e293b', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem', width: '100%', marginBottom: '0.5rem' }}
-              >
-                <option value="">Select</option>
-                <option value="Bay">Bay</option>
-                <option value="Bayan">Bayan</option>
-              </select>
+              <span>{profession.emoji}</span>
+              <h3>{profession.label}</h3>
+              <p>{profession.desc}</p>
             </div>
-            <div>
-              <label>Addressing Preference</label>
-              <select
-                name="addressingPreference"
-                value={formData.addressingPreference || ''}
-                onChange={handleChange}
-                style={{ backgroundColor: '#1e293b', color: '#fff', padding: '0.5rem', borderRadius: '0.25rem', width: '100%', marginBottom: '0.5rem' }}
-              >
-                <option value="">Select</option>
-                {addressingPreferenceOptions[profession].map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
+          ))}
+          <button disabled={!professionType} onClick={() => setStep(2)}>Devam Et</button>
+        </div>
+      )}
+      {step === 2 && (
+        <div className={styles.form}>
+          {professionType === 'doktor' && (
+            <>
+              <select value={title} onChange={(e) => setTitle(e.target.value)}>
+                <option value="">Title</option>
+                <option value="Dr.">Dr.</option>
+                <option value="Uzm.Dr.">Uzm.Dr.</option>
+                <option value="Doc.Dr.">Doc.Dr.</option>
+                <option value="Prof.Dr.">Prof.Dr.</option>
+              </select>
+              <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}>
+                <option value="">Specialty</option>
+                {SPECIALTIES.map(specialty => (
+                  <option key={specialty} value={specialty}>{specialty}</option>
                 ))}
               </select>
-            </div>
-          </div>
-        )}
-        <button type="submit" style={{ backgroundColor: '#2563EB', color: '#fff', padding: '0.75rem', borderRadius: '0.25rem', width: '100%' }}>
-          {step === 3 ? 'Submit' : 'Next'}
-        </button>
-      </form>
+              <input type="text" placeholder="Hospital" value={hospital} onChange={(e) => setHospital(e.target.value)} />
+            </>
+          )}
+          {professionType === 'mali_musavirlik' && (
+            <>
+              <select value={unvan} onChange={(e) => setUnvan(e.target.value)}>
+                <option value="">Unvan</option>
+                <option value="SMMM">Serbest Muhasebeci Mali Musavir</option>
+                <option value="YMM">Yeminli Mali Musavir</option>
+                <option value="SM">Serbest Muhasebeci</option>
+              </select>
+              <div className={styles.chips}>
+                {['Vergi Danismanligi', 'Muhasebe', 'SGK', 'Denetim', 'Ar-Ge Tesviki', 'Konkordato', 'Transfer Fiyatlandirmasi', 'Enflasyon Muhasebesi'].map(chip => (
+                  <button
+                    key={chip}
+                    className={`${styles.chip} ${uzmanlikChips.includes(chip) ? styles.selected : ''}`}
+                    onClick={() => setUzmanlikChips(prev => uzmanlikChips.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip])}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              <input type="text" placeholder="Buro Adi" value={buroAdi} onChange={(e) => setBuroAdi(e.target.value)} />
+              <input type="text" placeholder="Sehir" value={sehir} onChange={(e) => setSehir(e.target.value)} />
+            </>
+          )}
+          {professionType === 'avukat' && (
+            <>
+              <input type="text" placeholder="Baro" value="" onChange={(e) => console.log(e.target.value)} /> {/* Add baro input */}
+              <select value={''} onChange={(e) => console.log(e.target.value)}> {/* Add uzmanlik select */}
+                <option value="">Uzmanlik</option>
+                <option value="Ceza Hukuku">Ceza Hukuku</option>
+                <option value="Medeni Hukuk">Medeni Hukuk</option>
+                <option value="Ticaret Hukuku">Ticaret Hukuku</option>
+                <option value="Is Hukuku">Is Hukuku</option>
+                <option value="Idare Hukuku">Idare Hukuku</option>
+              </select>
+              <input type="text" placeholder="Buro Adi" value={buroAdi} onChange={(e) => setBuroAdi(e.target.value)} />
+            </>
+          )}
+          {professionType === 'psikolog' && (
+            <>
+              <select value={''} onChange={(e) => console.log(e.target.value)}> {/* Add uzmanlik select */}
+                <option value="">Uzmanlik</option>
+                <option value="BDT">BDT</option>
+                <option value="EMDR">EMDR</option>
+                <option value="ACT">ACT</option>
+                <option value="Aile Terapisi">Aile Terapisi</option>
+                <option value="Cocuk Terapisi">Cocuk Terapisi</option>
+                <option value="Travma">Travma</option>
+              </select>
+              <input type="text" placeholder="Klinik Adi" value="" onChange={(e) => console.log(e.target.value)} /> {/* Add klinik_adi input */}
+            </>
+          )}
+          <button onClick={() => setStep(3)}>Devam Et</button>
+        </div>
+      )}
+      {step === 3 && (
+        <div className={styles.form}>
+          <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          <select value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="">Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+          <select value={addressingPreference} onChange={(e) => setAddressingPreference(e.target.value)}>
+            <option value="">Addressing Preference</option>
+            <option value="hocam">Hocam</option>
+            <option value="named_hocam">Named Hocam</option>
+            <option value="first_name_only">First Name Only</option>
+          </select>
+          <button onClick={() => setStep(4)}>Save</button>
+        </div>
+      )}
     </div>
   );
-};
-
-export default OnboardingPage;
+}

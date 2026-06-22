@@ -20,7 +20,7 @@ export default function MaliDashboard() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.push('/giris'); return }
       const { data: u } = await supabase.from('users').select('*').eq('id', session.user.id).single()
-      if (u && !u.onboarding_completed && !u.profession_type) { router.push('/onboarding'); return }
+      if (u && !u.onboarding_completed) { router.push('/onboarding'); return }
       setUser(u)
       const { data: n } = await supabase.from('notes').select('*, sessions(session_type, duration_seconds)').eq('doctor_id', session.user.id).order('created_at', { ascending: false }).limit(20)
       setNotes(n || [])

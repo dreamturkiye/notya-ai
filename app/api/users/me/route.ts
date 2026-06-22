@@ -37,7 +37,6 @@ export async function GET(req: NextRequest) {
         id: user.id,
         email: user.email,
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-        profession_type: user.user_metadata?.profession_type || null,
         onboarding_completed: false,
       },
     })
