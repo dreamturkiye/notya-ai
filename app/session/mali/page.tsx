@@ -321,4 +321,4 @@ const SessionPage: React.FC = () => {
   );
 };
 
-export default RecordingPage;
+export default SessionPage;
