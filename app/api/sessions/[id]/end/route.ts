@@ -38,6 +38,32 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       duration_seconds: body.duration_seconds || 0,
     }).eq("id", sessionId).eq("doctor_id", user.id)
 
+    // Mali musavirlik path
+    if (body.profession === 'muhasebeci' || context?.profession === 'muhasebeci') {
+      const { generateAccountingNoteV2 } = await import('@/lib/ai/noteGenerator')
+      const maliNote = await generateAccountingNoteV2(
+        transcript,
+        context?.service_type || 'genel',
+        context?.gorusme_turu || body.session_type || 'musteri_gorusmesi',
+        { company_name: context?.company_name, vergi_no: context?.vergi_no, faaliyet_alani: context?.faaliyet_alani, tax_period: '2026' }
+      )
+      const { data: note, error: noteError } = await supabase.from('notes').insert({
+        session_id: sessionId, doctor_id: user.id, note_type: 'mali_musavirlik',
+        content_subjektif: JSON.stringify(maliNote.tespitler),
+        content_degerlendirme: JSON.stringify(maliNote.yasal_dayanak),
+        content_plan: JSON.stringify(maliNote.tavsiyeler),
+        kritik_bulgular: maliNote.onemli_uyarilar,
+        vergi_risk_skoru: maliNote.vergi_risk_skoru,
+        gorusme_turu: maliNote.gorusme_turu,
+        profession_type: 'mali_musavirlik',
+        raw_note: JSON.stringify(maliNote),
+        ai_model: 'claude-sonnet-4', ai_confidence: maliNote.ai_confidence,
+      }).select().single()
+      if (noteError) throw new Error('Mali not kaydedilemedi: ' + noteError.message)
+      await supabase.from('sessions').update({ status: 'completed' }).eq('id', sessionId)
+      return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note: maliNote } })
+    }
+
     const specialty = context?.specialty || "genel"
 
     // Build specialty-aware system prompt

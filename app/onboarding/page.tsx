@@ -1,348 +1,189 @@
+// app/onboarding/page.tsx
+'use client';
 
-"use client"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@supabase/supabase-js"
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import styles from './page.module.css';
 
-type AddressingPreference = "hocam" | "named_hocam" | "first_name_only"
-type DoctorTitle = "Dr." | "Uzm. Dr." | "Doç. Dr." | "Prof. Dr."
-
-const TITLES: DoctorTitle[] = ["Dr.", "Uzm. Dr.", "Doç. Dr.", "Prof. Dr."]
+const PROFESSIONS = [
+  { id: 'doktor', label: 'Doktor/Hekim', desc: 'Medical Notes', emoji: '🏥' },
+  { id: 'mali_musavirlik', label: 'Mali Musavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
+  { id: 'avukat', label: 'Avukat', desc: 'Legal Notes', emoji: '⚖️' },
+  { id: 'psikolog', label: 'Psikolog/Terapist', desc: 'Seans Notes', emoji: '🧠' }
+];
 
 const SPECIALTIES = [
-  { value: "dahiliye", label: "Dahiliye" },
-  { value: "kardiyoloji", label: "Kardiyoloji" },
-  { value: "noroloji", label: "Nöroloji" },
-  { value: "pediatri", label: "Pediatri" },
-  { value: "ortopedi", label: "Ortopedi" },
-  { value: "psikiyatri", label: "Psikiyatri" },
-  { value: "genel_cerrahi", label: "Genel Cerrahi" },
-  { value: "kadin_hastaliklari", label: "Kadın Hastalıkları" },
-  { value: "goz", label: "Göz Hastalıkları" },
-  { value: "kulak_burun_bogaz", label: "KBB" },
-  { value: "dermatoloji", label: "Dermatoloji" },
-  { value: "uroloji", label: "Üroloji" },
-  { value: "acil", label: "Acil Tıp" },
-  { value: "genel", label: "Pratisyen / Genel" },
-]
+  // List of 14 medical specialties
+];
 
-export default function OnboardingPage() {
-  const router = useRouter()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+export default function Onboarding() {
+  const [step, setStep] = useState(1);
+  const [professionType, setProfessionType] = useState('');
+  const [title, setTitle] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [hospital, setHospital] = useState('');
+  const [unvan, setUnvan] = useState('');
+  const [uzmanlikChips, setUzmanlikChips] = useState<string[]>([]);
+  const [buroAdi, setBuroAdi] = useState('');
+  const [sehir, setSehir] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('');
+  const [addressingPreference, setAddressingPreference] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [firstNamePreview, setFirstNamePreview] = useState("")
+  const router = useRouter();
 
-  const [addressingPreference, setAddressingPreference] = useState<AddressingPreference>("named_hocam")
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [title, setTitle] = useState<DoctorTitle>("Dr.")
-  const [specialty, setSpecialty] = useState("genel")
-  const [hospital, setHospital] = useState("")
-  const [gender, setGender] = useState<"male" | "female">("male")
+  useEffect(() => {
+    if (step === 3) {
+      const professionSpecificData = {
+        doktor: { title, specialty, hospital },
+        mali_musavirlik: { unvan, uzmanlik_alani: uzmanlikChips.join(','), buro_adi, sehir },
+        avukat: { baro: '', uzmanlik: '', buro_adi }, // Add baro input
+        psikolog: { uzmanlik: '', klinik_adi: '' } // Add klinik_adi input
+      };
 
-  const prefOptions: { value: AddressingPreference; label: string; desc: string }[] = [
-    { value: "hocam", label: "Hocam olarak", desc: "Kısa ve saygılı — \"Günaydın hocam\"" },
-    {
-      value: "named_hocam",
-      label: firstNamePreview ? `${firstNamePreview} Hocam olarak` : "Adım + Hocam olarak",
-      desc: "Kişisel ve sıcak — \"Gökhan Hocam, bugün 3 hastanız var\"",
-    },
-    {
-      value: "first_name_only",
-      label: firstNamePreview ? `Sadece ${firstNamePreview}` : "Sadece adımla",
-      desc: "Doğrudan — \"Günaydın Gökhan\"",
-    },
-  ]
+      const data = {
+        profession_type: professionType,
+        ...professionSpecificData[professionType],
+        firstName, lastName, gender, addressingPreference
+      };
 
-  async function saveProfile() {
-    if (!firstName.trim() || !lastName.trim()) {
-      setError("Ad ve soyad gerekli")
-      return
-    }
-    setLoading(true)
-    setError("")
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push("/giris")
-        return
-      }
-
-      const resp = await fetch("/api/users/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          title,
-          specialty,
-          hospital: hospital.trim() || null,
-          gender,
-          addressing_preference: addressingPreference,
-          onboarding_completed: true,
-        }),
+      setLoading(true);
+      fetch('/api/users/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       })
-
-      const data = await resp.json()
-      if (!resp.ok || !data.success) {
-        throw new Error(data.error || "Profil kaydedilemedi")
-      }
-
-      router.push("/dashboard")
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Bir hata oluştu")
-      setLoading(false)
+      .then(res => res.json())
+      .then(() => {
+        if (professionType === 'mali_musavirlik') {
+          router.replace('/dashboard/mali');
+        } else {
+          router.replace('/dashboard');
+        }
+      })
+      .catch(err => setError('Failed to save profile'))
+      .finally(() => setLoading(false));
     }
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "12px 14px",
-    border: "1.5px solid #E5E7EB",
-    borderRadius: "10px",
-    fontSize: "14px",
-    outline: "none",
-    boxSizing: "border-box",
-  }
+  }, [step, professionType, title, specialty, hospital, unvan, uzmanlikChips, buroAdi, sehir, firstName, lastName, gender, addressingPreference, router]);
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0A1628",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "system-ui,sans-serif",
-      padding: "20px",
-    }}>
-      <div style={{
-        background: "#fff",
-        borderRadius: "24px",
-        padding: "40px",
-        width: "100%",
-        maxWidth: "480px",
-        boxShadow: "0 24px 80px rgba(0,0,0,.3)",
-      }}>
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{ fontSize: "26px", fontWeight: "600", color: "#0A1628", marginBottom: "8px" }}>
-            <span style={{ color: "#006699" }}>Notya</span> AI
-          </div>
-          <div style={{ fontSize: "14px", color: "#64748B", lineHeight: 1.5 }}>
-            {step === 1
-              ? "Merhaba! Ben Notya. Size nasıl hitap etmemi istersiniz?"
-              : "Profilinizi tamamlayalım — bir kez soruyoruz."}
-          </div>
-        </div>
-
-        {error && (
-          <div style={{
-            background: "#FCEBEB",
-            border: "1px solid #F09595",
-            borderRadius: "10px",
-            padding: "12px",
-            fontSize: "13px",
-            color: "#A32D2D",
-            marginBottom: "16px",
-          }}>
-            {error}
-          </div>
-        )}
-
-        {step === 1 && (
-          <div>
-            {prefOptions.map(opt => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setAddressingPreference(opt.value)}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "14px 16px",
-                  marginBottom: "10px",
-                  borderRadius: "12px",
-                  border: `2px solid ${addressingPreference === opt.value ? "#006699" : "#E5E7EB"}`,
-                  background: addressingPreference === opt.value ? "#EFF6FF" : "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ fontSize: "14px", fontWeight: "600", color: "#0A1628" }}>{opt.label}</div>
-                <div style={{ fontSize: "12px", color: "#64748B", marginTop: "4px" }}>{opt.desc}</div>
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              style={{
-                width: "100%",
-                marginTop: "12px",
-                padding: "14px",
-                background: "#006699",
-                color: "#fff",
-                border: "none",
-                borderRadius: "12px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
+    <div className={styles.container}>
+      {loading && <div>Loading...</div>}
+      {error && <div>{error}</div>}
+      <div className={styles.progressIndicator}>
+        {[1, 2, 3].map(i => <span key={i} style={{ color: step >= i ? 'blue' : 'gray' }}>•</span>)}
+      </div>
+      {step === 1 && (
+        <div className={styles.professionSelector}>
+          {PROFESSIONS.map(profession => (
+            <div
+              key={profession.id}
+              className={`${styles.card} ${professionType === profession.id ? styles.selected : ''}`}
+              onClick={() => setProfessionType(profession.id)}
             >
-              Devam →
-            </button>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div>
-            <div style={{ marginBottom: "14px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", display: "block", marginBottom: "6px" }}>
-                Ad
-              </label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={e => {
-                  setFirstName(e.target.value)
-                  setFirstNamePreview(e.target.value.trim())
-                }}
-                placeholder="Gökhan"
-                style={inputStyle}
-              />
+              <span>{profession.emoji}</span>
+              <h3>{profession.label}</h3>
+              <p>{profession.desc}</p>
             </div>
-
-            <div style={{ marginBottom: "14px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", display: "block", marginBottom: "6px" }}>
-                Soyad
-              </label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={e => setLastName(e.target.value)}
-                placeholder="Yılmaz"
-                style={inputStyle}
-              />
-            </div>
-
-            <div style={{ marginBottom: "14px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", display: "block", marginBottom: "6px" }}>
-                Unvan
-              </label>
-              <select
-                value={title}
-                onChange={e => setTitle(e.target.value as DoctorTitle)}
-                style={inputStyle}
-              >
-                {TITLES.map(t => (
-                  <option key={t} value={t}>{t}</option>
+          ))}
+          <button disabled={!professionType} onClick={() => setStep(2)}>Devam Et</button>
+        </div>
+      )}
+      {step === 2 && (
+        <div className={styles.form}>
+          {professionType === 'doktor' && (
+            <>
+              <select value={title} onChange={(e) => setTitle(e.target.value)}>
+                <option value="">Title</option>
+                <option value="Dr.">Dr.</option>
+                <option value="Uzm.Dr.">Uzm.Dr.</option>
+                <option value="Doc.Dr.">Doc.Dr.</option>
+                <option value="Prof.Dr.">Prof.Dr.</option>
+              </select>
+              <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}>
+                <option value="">Specialty</option>
+                {SPECIALTIES.map(specialty => (
+                  <option key={specialty} value={specialty}>{specialty}</option>
                 ))}
               </select>
-            </div>
-
-            <div style={{ marginBottom: "14px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", display: "block", marginBottom: "6px" }}>
-                Uzmanlık
-              </label>
-              <select
-                value={specialty}
-                onChange={e => setSpecialty(e.target.value)}
-                style={inputStyle}
-              >
-                {SPECIALTIES.map(s => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
+              <input type="text" placeholder="Hospital" value={hospital} onChange={(e) => setHospital(e.target.value)} />
+            </>
+          )}
+          {professionType === 'mali_musavirlik' && (
+            <>
+              <select value={unvan} onChange={(e) => setUnvan(e.target.value)}>
+                <option value="">Unvan</option>
+                <option value="SMMM">Serbest Muhasebeci Mali Musavir</option>
+                <option value="YMM">Yeminli Mali Musavir</option>
+                <option value="SM">Serbest Muhasebeci</option>
               </select>
-            </div>
-
-            <div style={{ marginBottom: "14px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", display: "block", marginBottom: "6px" }}>
-                Hastane / Klinik
-              </label>
-              <input
-                type="text"
-                value={hospital}
-                onChange={e => setHospital(e.target.value)}
-                placeholder="Memorial Hastanesi"
-                style={inputStyle}
-              />
-            </div>
-
-            <div style={{ marginBottom: "20px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "500", color: "#374151", display: "block", marginBottom: "8px" }}>
-                Cinsiyet
-              </label>
-              <div style={{ display: "flex", gap: "10px" }}>
-                {([
-                  { value: "male", label: "Erkek" },
-                  { value: "female", label: "Kadın" },
-                ] as const).map(g => (
+              <div className={styles.chips}>
+                {['Vergi Danismanligi', 'Muhasebe', 'SGK', 'Denetim', 'Ar-Ge Tesviki', 'Konkordato', 'Transfer Fiyatlandirmasi', 'Enflasyon Muhasebesi'].map(chip => (
                   <button
-                    key={g.value}
-                    type="button"
-                    onClick={() => setGender(g.value)}
-                    style={{
-                      flex: 1,
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: `2px solid ${gender === g.value ? "#006699" : "#E5E7EB"}`,
-                      background: gender === g.value ? "#EFF6FF" : "#fff",
-                      cursor: "pointer",
-                      fontWeight: gender === g.value ? "600" : "400",
-                    }}
+                    key={chip}
+                    className={`${styles.chip} ${uzmanlikChips.includes(chip) ? styles.selected : ''}`}
+                    onClick={() => setUzmanlikChips(prev => uzmanlikChips.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip])}
                   >
-                    {g.label}
+                    {chip}
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                style={{
-                  flex: 1,
-                  padding: "14px",
-                  background: "#F1F5F9",
-                  color: "#374151",
-                  border: "none",
-                  borderRadius: "12px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                }}
-              >
-                ← Geri
-              </button>
-              <button
-                type="button"
-                onClick={saveProfile}
-                disabled={loading}
-                style={{
-                  flex: 2,
-                  padding: "14px",
-                  background: loading ? "#93C5FD" : "#006699",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "12px",
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
-              >
-                {loading ? "Kaydediliyor..." : "Başlayalım"}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+              <input type="text" placeholder="Buro Adi" value={buroAdi} onChange={(e) => setBuroAdi(e.target.value)} />
+              <input type="text" placeholder="Sehir" value={sehir} onChange={(e) => setSehir(e.target.value)} />
+            </>
+          )}
+          {professionType === 'avukat' && (
+            <>
+              <input type="text" placeholder="Baro" value="" onChange={(e) => console.log(e.target.value)} /> {/* Add baro input */}
+              <select value={''} onChange={(e) => console.log(e.target.value)}> {/* Add uzmanlik select */}
+                <option value="">Uzmanlik</option>
+                <option value="Ceza Hukuku">Ceza Hukuku</option>
+                <option value="Medeni Hukuk">Medeni Hukuk</option>
+                <option value="Ticaret Hukuku">Ticaret Hukuku</option>
+                <option value="Is Hukuku">Is Hukuku</option>
+                <option value="Idare Hukuku">Idare Hukuku</option>
+              </select>
+              <input type="text" placeholder="Buro Adi" value={buroAdi} onChange={(e) => setBuroAdi(e.target.value)} />
+            </>
+          )}
+          {professionType === 'psikolog' && (
+            <>
+              <select value={''} onChange={(e) => console.log(e.target.value)}> {/* Add uzmanlik select */}
+                <option value="">Uzmanlik</option>
+                <option value="BDT">BDT</option>
+                <option value="EMDR">EMDR</option>
+                <option value="ACT">ACT</option>
+                <option value="Aile Terapisi">Aile Terapisi</option>
+                <option value="Cocuk Terapisi">Cocuk Terapisi</option>
+                <option value="Travma">Travma</option>
+              </select>
+              <input type="text" placeholder="Klinik Adi" value="" onChange={(e) => console.log(e.target.value)} /> {/* Add klinik_adi input */}
+            </>
+          )}
+          <button onClick={() => setStep(3)}>Devam Et</button>
+        </div>
+      )}
+      {step === 3 && (
+        <div className={styles.form}>
+          <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          <select value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="">Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+          <select value={addressingPreference} onChange={(e) => setAddressingPreference(e.target.value)}>
+            <option value="">Addressing Preference</option>
+            <option value="hocam">Hocam</option>
+            <option value="named_hocam">Named Hocam</option>
+            <option value="first_name_only">First Name Only</option>
+          </select>
+          <button onClick={() => setStep(4)}>Save</button>
+        </div>
+      )}
     </div>
-  )
+  );
 }
