@@ -127,13 +127,13 @@ const OnboardingPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.getSession();
-    if (!error) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
       const response = await fetch('/api/users/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${supabase.auth.session()?.access_token}`
+          Authorization: `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({ profession, ...formData })
       });
