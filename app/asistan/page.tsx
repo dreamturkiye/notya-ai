@@ -87,6 +87,10 @@ export default function AsistanPage() {
     setStatus("connecting")
     setErrorMsg("")
     setMessages([])
+    // Android: unlock AudioContext on user gesture before any async work
+    if (isAndroid() && typeof window !== "undefined") {
+      try { const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)(); await ctx.resume() } catch { /* non-fatal */ }
+    }
 
     try {
       const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
