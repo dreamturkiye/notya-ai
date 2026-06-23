@@ -92,7 +92,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
               <h3>Hoş Geldiniz!</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {professionType === 'doktor'
+              {(professionType === 'doktor'
                 ? [
                     'Prof. Ayse ile sesli konusin - mikrofona dokunun',
                     'Hasta notlariniz otomatik SOAP formatinda kaydedilir',
@@ -108,7 +108,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
                     '9 uzman avukatla hukuki konulari konusin',
                     'Süre takibi ve dilekçe oluşturma otomatiktir',
                     'Müvekkillerinizi ve davalarinizi dashboard\'dan yonetin',
-                  ]}.map((step, index) => (
+                  ]).map((step, index) => (
                 <div key={index} style={{ padding: '16px', backgroundColor: '#F4F7F6', borderRadius: '8px' }}>
                   <span style={{ color: '#006699', fontSize: '24px', fontWeight: '700', marginRight: '8px' }}>{index + 1}.</span>
                   {step}
