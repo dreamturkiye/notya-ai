@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ success: false, error: "Yetkisiz erişim" }, { status: 401 })
     }
     const token = authHeader.split(" ")[1]
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ success: false, error: "Geçersiz token" }, { status: 401 })
     }
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       .join("\n") || body.transcript || "Transkript mevcut değil"
 
     // Update session as processing
-    await supabase.from("sessions").update({
+    await getSupabase().from("sessions").update({
       status: "processing",
       ended_at: new Date().toISOString(),
       transcript_cleaned: transcript,
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         context?.gorusme_turu || body.session_type || 'musteri_gorusmesi',
         { company_name: context?.company_name, vergi_no: context?.vergi_no, faaliyet_alani: context?.faaliyet_alani, tax_period: '2026' }
       )
-      const { data: note, error: noteError } = await supabase.from('notes').insert({
+      const { data: note, error: noteError } = await getSupabase().from('notes').insert({
         session_id: sessionId, doctor_id: user.id, note_type: 'mali_musavirlik',
         content_subjektif: JSON.stringify(maliNote.tespitler),
         content_degerlendirme: JSON.stringify(maliNote.yasal_dayanak),
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         ai_model: 'claude-sonnet-4', ai_confidence: maliNote.ai_confidence,
       }).select().single()
       if (noteError) throw new Error('Mali not kaydedilemedi: ' + noteError.message)
-      await supabase.from('sessions').update({ status: 'completed' }).eq('id', sessionId)
+      await getSupabase().from('sessions').update({ status: 'completed' }).eq('id', sessionId)
       return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note: maliNote } })
     }
 
@@ -107,7 +107,7 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
   "ai_confidence": 0.92
 }`
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 2000,
       system: systemPrompt,
@@ -119,7 +119,7 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
     const noteData = JSON.parse(cleanJson)
 
     // Save note
-    const { data: note, error: noteError } = await supabase.from("notes").insert({
+    const { data: note, error: noteError } = await getSupabase().from("notes").insert({
       session_id: sessionId,
       doctor_id: user.id,
       note_type: "soap",
@@ -142,7 +142,7 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
     if (noteError) throw new Error("Not kaydedilemedi: " + noteError.message)
 
     // Mark session complete
-    await supabase.from("sessions").update({ status: "completed" }).eq("id", sessionId)
+    await getSupabase().from("sessions").update({ status: "completed" }).eq("id", sessionId)
 
     return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note } })
 

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.split(" ")[1])
+    const { data: { user }, error: authErr } = await getSupabase().auth.getUser(authHeader.split(" ")[1])
     if (authErr || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY

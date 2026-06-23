@@ -21,11 +21,3 @@ export function checkRateLimit(
 export function getRateLimitKey(tokenSnippet: string, ip: string): string {
   return tokenSnippet + ':' + ip
 }
-
-// Cleanup old entries every 5 minutes to prevent memory leak
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, val] of store.entries()) {
-    if (val.resetAt < now) store.delete(key)
-  }
-}, 300000)

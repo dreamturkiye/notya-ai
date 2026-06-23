@@ -6,11 +6,13 @@ import { verifyToken, buildMusteriSystemPrompt, type MusteriPortalSession } from
 import { getBeyanlarimForMusteri } from '@/lib/mali/beyanTakvimiEngine'
 import { checkRateLimit, getRateLimitKey } from '@/lib/mali/portalRateLimit'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 const SECRET = process.env.PORTAL_TOKEN_SECRET || 'notya-portal-secret-2026-change-in-prod'
 
 export async function POST(req: NextRequest) {
@@ -69,7 +71,7 @@ export async function POST(req: NextRequest) {
       sonOdemeler: [],
     }
     const systemPrompt = buildMusteriSystemPrompt(session)
-    const aiResponse = await anthropic.messages.create({
+    const aiResponse = await getAnthropic().messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 300,
       system: systemPrompt,

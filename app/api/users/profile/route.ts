@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     let userId: string | null = null
     let userEmail: string | null = null
     if (authHeader?.startsWith('Bearer ')) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.split(' ')[1])
+      const { data: { user } } = await getSupabase().auth.getUser(authHeader.split(' ')[1])
       userId = user?.id || null
       userEmail = user?.email || null
     }
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Store extra fields in auth metadata (no DB column needed)
     if (gender || addressing_preference || addressingPreference || title || baro || yil) {
-      await supabase.auth.admin.updateUserById(userId, {
+      await getSupabase().auth.admin.updateUserById(userId, {
         user_metadata: {
           gender: gender || null,
           addressing_preference: addressing_preference || addressingPreference || null,
@@ -48,14 +48,14 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { data: existing } = await supabase.from('users').select('id').eq('id', userId).single()
+    const { data: existing } = await getSupabase().from('users').select('id').eq('id', userId).single()
     let result
     if (existing) {
-      const { data, error } = await supabase.from('users').update(updatePayload).eq('id', userId).select().single()
+      const { data, error } = await getSupabase().from('users').update(updatePayload).eq('id', userId).select().single()
       if (error) throw error
       result = data
     } else {
-      const { data, error } = await supabase.from('users').insert({ id: userId, email: userEmail || '', ...updatePayload }).select().single()
+      const { data, error } = await getSupabase().from('users').insert({ id: userId, email: userEmail || '', ...updatePayload }).select().single()
       if (error) throw error
       result = data
     }

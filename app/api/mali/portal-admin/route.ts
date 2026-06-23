@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { generateSecureToken } from '@/lib/mali/musteriPortalEngine'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +15,7 @@ export async function POST(req: NextRequest) {
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(
       authHeader.split(' ')[1]
     )
     if (authError || !user) {
@@ -38,7 +40,7 @@ export async function POST(req: NextRequest) {
         .eq('musavir_id', user.id)
         .eq('is_active', true)
       const result = generateSecureToken(musteriId, user.id, daysValid || 30)
-      await supabase.from('mali_portal_tokens').insert({
+      await getSupabase().from('mali_portal_tokens').insert({
         musteri_id: musteriId,
         musavir_id: user.id,
         token_hash: result.tokenHash,

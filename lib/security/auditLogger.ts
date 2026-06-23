@@ -6,7 +6,7 @@
 import { createClient } from '@supabase/supabase-js'
 import type { AuditAction } from '@/types/notya'
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )

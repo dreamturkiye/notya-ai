@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildEDevletRehber, buildDeryaVoiceResponse, EDevletSorgu } from '@/lib/mali/eDevletEngine'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     const token = authHeader.split(' ')[1]
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const sonuc = buildEDevletRehber(sorgu)
 
     if (useAI) {
-      const aiResponse = await anthropic.messages.create({
+      const aiResponse = await getAnthropic().messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 300,
         system: 'Sen Derya Yilmaz, Turk mali musavirisin. Kisa, net, pratik Turkce cevaplar ver.',
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       if (aiText) sonuc.yapilmasiGerekenler.push(aiText)
     }
 
-    await supabase.from('mali_actions').insert({
+    await getSupabase().from('mali_actions').insert({
       user_id: user.id,
       action_type: 'EDEVLET_SORGU',
       input_text: JSON.stringify(sorgu),

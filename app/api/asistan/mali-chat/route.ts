@@ -5,11 +5,11 @@ import { MALI_PERSONAS, getMaliPersona, buildMaliSystemPrompt, type MaliPersonaI
 import { quickClassifyMali } from "@/lib/mali/maliIntentParser"
 import { toAddressableUser } from "@/lib/userProfile"
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,22 +17,22 @@ export async function POST(req: NextRequest) {
     if (!authHeader) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
     
     const token = authHeader.split(" ")[1]
-    const { data: { user } } = await supabase.auth.getUser(token)
+    const { data: { user } } = await getSupabase().auth.getUser(token)
     if (!user) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
 
     const { message, maliSessionId, musteriId, sessionId, personaId } = await req.json()
 
-    const { data: userRow } = await supabase.from("users").select("*").eq("id", user.id).maybeSingle()
+    const { data: userRow } = await getSupabase().from("users").select("*").eq("id", user.id).maybeSingle()
     if (!userRow) return NextResponse.json({ success: false, error: "User not found" }, { status: 404 })
 
-    const { data: prefs } = await supabase.from("mali_preferences").select("*").eq("musavir_id", user.id).maybeSingle()
+    const { data: prefs } = await getSupabase().from("mali_preferences").select("*").eq("musavir_id", user.id).maybeSingle()
 
     let session
     if (maliSessionId) {
-      const { data: sessionData } = await supabase.from("mali_sessions").select("*").eq("id", maliSessionId).eq("musavir_id", user.id).single()
+      const { data: sessionData } = await getSupabase().from("mali_sessions").select("*").eq("id", maliSessionId).eq("musavir_id", user.id).single()
       session = sessionData
     } else {
-      const { data: newSession } = await supabase.from("mali_sessions").insert({
+      const { data: newSession } = await getSupabase().from("mali_sessions").insert({
         musavir_id: user.id,
         musteri_id: musteriId || null,
         persona_id: personaId || null,
@@ -44,14 +44,14 @@ export async function POST(req: NextRequest) {
 
     let musteri = null
     if (musteriId) {
-      const { data: musteriData } = await supabase.from("mali_musteriler").select("*").eq("id", musteriId).maybeSingle()
+      const { data: musteriData } = await getSupabase().from("mali_musteriler").select("*").eq("id", musteriId).maybeSingle()
       musteri = musteriData
     }
 
     const persona = MALI_PERSONAS[getMaliPersona()]
     const systemPrompt = buildMaliSystemPrompt(persona, prefs, musteri || null, toAddressableUser(userRow))
 
-    const aiResponse = await anthropic.messages.create({
+    const aiResponse = await getAnthropic().messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 800,
       system: systemPrompt,
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     const { speech, action, proactiveWarning } = JSON.parse(rawText)
 
     if (action) {
-      await supabase.from("mali_actions").insert({
+      await getSupabase().from("mali_actions").insert({
         mali_session_id: session.id,
         action_type: action.type,
         input_text: message,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    await supabase.from("mali_sessions").update({ messages: [...session.messages, { role: "user", content: message }, { role: "assistant", content: speech }] }).eq("id", session.id)
+    await getSupabase().from("mali_sessions").update({ messages: [...session.messages, { role: "user", content: message }, { role: "assistant", content: speech }] }).eq("id", session.id)
 
     return NextResponse.json({ success: true, data: { speech, proactiveWarning, action, maliSessionId: session.id } })
   } catch (error) {

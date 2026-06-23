@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { analizMasakRisk, kontrolEtAylikIslemler, MasakIslem } from '@/lib/mali/masakEngine'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
 const TELEGRAM_BOT = '8920614347'
 const TELEGRAM_CHAT = '5545242725'
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
     const token = authHeader.split(' ')[1]
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await supabase.from('mali_actions').insert({
+    await getSupabase().from('mali_actions').insert({
       mali_session_id: null,
       action_type: 'MASAK_ANALIZ',
       input_text: JSON.stringify(body),

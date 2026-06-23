@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getBeyanlarimForMusteri, getKritikBeyanlar, formatTelegramAlert } from '@/lib/mali/beyanTakvimiEngine'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
 const TELEGRAM_BOT = '8920614347'
 const TELEGRAM_CHAT = '5545242725'
 
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
@@ -30,10 +30,10 @@ export async function GET(req: NextRequest) {
     let musteriler: any[] = []
 
     if (musteriId) {
-      const { data } = await supabase.from('mali_musteriler').select('*').eq('id', musteriId).single()
+      const { data } = await getSupabase().from('mali_musteriler').select('*').eq('id', musteriId).single()
       if (data) musteriler = [data]
     } else {
-      const { data } = await supabase.from('mali_musteriler').select('*').eq('musavir_id', user.id)
+      const { data } = await getSupabase().from('mali_musteriler').select('*').eq('musavir_id', user.id)
       musteriler = data || []
     }
 

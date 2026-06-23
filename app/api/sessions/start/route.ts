@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createDeepgramToken } from '@/lib/transcription/deepgramClient'
 import { logAccess } from '@/lib/security/auditLogger'
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
     
     const token = authHeader.split(' ')[1]
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Geçersiz token' }, { status: 401 })
     }

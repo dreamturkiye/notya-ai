@@ -5,11 +5,11 @@ import { AVUKAT_PERSONAS, getPersonaForBranch, buildAvukatSystemPrompt, type Avu
 import { quickClassifyLegal } from "@/lib/avukat/avukatIntentParser"
 import { toAddressableUser } from "@/lib/userProfile"
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,22 +17,22 @@ export async function POST(req: NextRequest) {
     if (!authHeader) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const token = authHeader.split(" ")[1];
-    const { data: { user } } = await supabase.auth.getUser(token);
+    const { data: { user } } = await getSupabase().auth.getUser(token);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { message, avukatSessionId, muvekkilId, sessionId, branch, personaId } = await req.json();
 
-    const { data: userRow } = await supabase.from("users").select("*").eq("id", user.id).maybeSingle();
+    const { data: userRow } = await getSupabase().from("users").select("*").eq("id", user.id).maybeSingle();
     if (!userRow) return NextResponse.json({ error: "User not found" }, { status: 401 });
 
-    const { data: prefs } = await supabase.from("avukat_preferences").select("*").eq("avukat_id", user.id).maybeSingle();
+    const { data: prefs } = await getSupabase().from("avukat_preferences").select("*").eq("avukat_id", user.id).maybeSingle();
 
     let session;
     if (avukatSessionId) {
-      const { data: sessionData } = await supabase.from("avukat_sessions").select("*").eq("id", avukatSessionId).eq("avukat_id", user.id).single();
+      const { data: sessionData } = await getSupabase().from("avukat_sessions").select("*").eq("id", avukatSessionId).eq("avukat_id", user.id).single();
       session = sessionData;
     } else {
-      const { data: newSessionData, error } = await supabase.from("avukat_sessions").insert({
+      const { data: newSessionData, error } = await getSupabase().from("avukat_sessions").insert({
         avukat_id: user.id,
         muvekkel_id: muvekkilId || null,
         persona_id: personaId || null,
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     let muvekkel = null;
     if (muvekkilId) {
-      const { data: muvekkelData } = await supabase.from("musevvekiller").select("*").eq("id", muvekkilId).single();
+      const { data: muvekkelData } = await getSupabase().from("musevvekiller").select("*").eq("id", muvekkilId).single();
       muvekkel = muvekkelData;
     }
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = buildAvukatSystemPrompt(persona, prefs, muvekkel || null, toAddressableUser(userRow));
 
-    const aiResponse = await anthropic.messages.create({
+    const aiResponse = await getAnthropic().messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 800,
       system: systemPrompt,
@@ -64,11 +64,11 @@ export async function POST(req: NextRequest) {
     const rawText = aiResponse.content[0].type === "text" ? aiResponse.content[0].text : "{}";
     const { speech, action, proactiveWarning } = JSON.parse(rawText);
 
-    if (action?.type === "CREATE_MUVEKKEL") await supabase.from("musevvekiller").insert({ avukat_id: user.id, ...action.payload });
-    if (action?.type === "ADD_DELIL") await supabase.from("deliller").insert({ muvekkel_id: muvekkilId, ...action.payload });
-    if (action?.type === "ADD_SURE") await supabase.from("sure_takibi").insert({ avukat_id: user.id, muvekkel_id: muvekkilId, ...action.payload });
+    if (action?.type === "CREATE_MUVEKKEL") await getSupabase().from("musevvekiller").insert({ avukat_id: user.id, ...action.payload });
+    if (action?.type === "ADD_DELIL") await getSupabase().from("deliller").insert({ muvekkel_id: muvekkilId, ...action.payload });
+    if (action?.type === "ADD_SURE") await getSupabase().from("sure_takibi").insert({ avukat_id: user.id, muvekkel_id: muvekkilId, ...action.payload });
 
-    await supabase.from("avukat_sessions").update({ messages: [...session.messages, { role: "user", content: message }, { role: "assistant", content: speech }] }).eq("id", session.id);
+    await getSupabase().from("avukat_sessions").update({ messages: [...session.messages, { role: "user", content: message }, { role: "assistant", content: speech }] }).eq("id", session.id);
 
     return NextResponse.json({ success: true, data: { speech, proactiveWarning, action, avukatSessionId: session.id } });
   } catch (error) {

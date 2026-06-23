@@ -8,11 +8,11 @@ import { executeAction } from "@/lib/asistan/actionExecutor"
 import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ success: false, error: "Yetkisiz" }, { status: 401 })
     }
-    const { data: { user } } = await supabase.auth.getUser(authHeader.split(" ")[1])
+    const { data: { user } } = await getSupabase().auth.getUser(authHeader.split(" ")[1])
     if (!user) return NextResponse.json({ success: false, error: "Geçersiz token" }, { status: 401 })
 
     const body = await req.json()
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile)
 
     // Call Claude with full conversation history
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 800,
       system: systemPrompt,
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
 
       // Update asistan session context if patient was created
       if (aiData.action.type === "CREATE_PATIENT" && actionResult.data?.patient) {
-        await supabase.from("asistan_sessions")
+        await getSupabase().from("asistan_sessions")
           .update({
             patient_id: (actionResult.data.patient as Record<string, unknown>).id,
             active_context: {
@@ -178,12 +178,12 @@ export async function POST(req: NextRequest) {
       { role: "assistant", content: aiData.speech }
     ].slice(-20) // Keep last 20 messages (10 exchanges)
 
-    await supabase.from("asistan_sessions")
+    await getSupabase().from("asistan_sessions")
       .update({ messages: updatedMessages })
       .eq("id", asistanSession?.id)
 
     // Log action for learning
-    await supabase.from("asistan_actions").insert({
+    await getSupabase().from("asistan_actions").insert({
       doctor_id: user.id,
       asistan_session_id: asistanSession?.id,
       action_type: quickIntent || "GENERAL_CHAT",
@@ -194,13 +194,13 @@ export async function POST(req: NextRequest) {
 
     // Update session count in preferences
     if (!prefs) {
-      await supabase.from("doctor_preferences").insert({
+      await getSupabase().from("doctor_preferences").insert({
         doctor_id: user.id,
         sessions_completed: 1,
         last_session_at: new Date().toISOString()
       })
     } else {
-      await supabase.from("doctor_preferences").update({
+      await getSupabase().from("doctor_preferences").update({
         sessions_completed: (prefs.sessions_completed || 0) + 1,
         last_session_at: new Date().toISOString()
       }).eq("doctor_id", user.id)
