@@ -53,14 +53,14 @@ export default function MaliAsistanPage() {
     <div style={{minHeight:"100vh",background:"#0A1628",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",padding:"24px"}}>
       <div style={{background:"#111827",borderRadius:"20px",padding:"40px",maxWidth:"480px",width:"100%",border:"1px solid rgba(16,185,129,0.2)",textAlign:"center"}}>
         <div style={{fontSize:"48px",marginBottom:"12px"}}>💰</div>
-        <h1 style={{fontSize:"22px",fontWeight:700,color:"#fff",marginBottom:"4px"}}>Uzm. Derya Hanim</h1>
+        <h1 style={{fontSize:"22px",fontWeight:700,color:"#fff",marginBottom:"4px"}}>Uzm. Derya Yilmaz</h1>
         <p style={{fontSize:"13px",color:"#64748b",marginBottom:"32px"}}>Mali Musavirlik AI Asistani</p>
         <div style={{width:"120px",height:"120px",borderRadius:"50%",background:active?"rgba(16,185,129,0.15)":"rgba(255,255,255,0.05)",border:active?"2px solid #10B981":"2px solid rgba(255,255,255,0.1)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 32px"}}>
           <div style={{fontSize:"40px"}}>{active?"🎙️":"🎙️"}</div>
         </div>
         <p style={{fontSize:"14px",color:active?"#10B981":"#64748b",marginBottom:"24px",minHeight:"20px"}}>{label}</p>
         {!active ? (
-          <button onClick={start} style={{padding:"14px 32px",background:"#10B981",border:"none",borderRadius:"12px",color:"#fff",fontSize:"15px",fontWeight:600,cursor:"pointer",width:"100%"}}>Uzm. Derya ile Konus</button>
+          <button onClick={start} style={{padding:"14px 32px",background:"#10B981",border:"none",borderRadius:"12px",color:"#fff",fontSize:"15px",fontWeight:600,cursor:"pointer",width:"100%"}}>Derya Yilmaz ile Konus</button>
         ) : (
           <button onClick={stop} style={{padding:"14px 32px",background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.4)",borderRadius:"12px",color:"#fca5a5",fontSize:"15px",fontWeight:600,cursor:"pointer",width:"100%"}}>Gorushmeyi Bitir</button>
         )}
