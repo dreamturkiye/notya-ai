@@ -12,7 +12,7 @@ export default function MasakPage() {
   const [tutar, setTutar] = useState('')
   const [islemTipi, setIslemTipi] = useState('nakit_tahsilat')
   const [aciklama, setAciklama] = useState('')
-  const [tarih, setTarih] = useState(new Date().toISOString().split('T')[0])
+  const [tarih, setTarih] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }))
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 

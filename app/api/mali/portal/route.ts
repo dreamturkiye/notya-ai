@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     const aktifBeyanlar = getBeyanlarimForMusteri(
       payload.musteriId,
       musteri.sirket_adi,
-      new Date()
+      new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
     ).slice(0, 5)
     const session: MusteriPortalSession = {
       musteriId: payload.musteriId,
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     await supabase
       .from('mali_portal_tokens')
       .update({
-        last_used_at: new Date().toISOString(),
+        last_used_at: new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })).toISOString(),
         use_count: (tokenRecord.use_count || 0) + 1,
       })
       .eq('id', tokenRecord.id)
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
     const aktifBeyanlar = getBeyanlarimForMusteri(
       payload.musteriId,
       musteri?.sirket_adi || '',
-      new Date()
+      new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
     ).slice(0, 5)
     return NextResponse.json({
       success: true,

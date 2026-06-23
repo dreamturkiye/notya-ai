@@ -67,7 +67,7 @@ export default function Dashboard() {
 
   const EMOJI: Record<string, string> = { pediatri:"🧒", kardiyoloji:"❤️", noroloji:"🧠", psikiyatri:"💭", dahiliye:"🩺", ortopedi:"🦴", kadin_hastaliklari:"👶", genel:"👨‍⚕️", acil:"🚨" }
 
-  function fmt(iso: string) { return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) }
+  function fmt(iso: string) { return new Date(iso).toLocaleString("tr-TR",{timeZone:'Europe/Istanbul',day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) }
 
   return (
     <>

@@ -1,6 +1,9 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    TZ: 'Europe/Istanbul',
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
