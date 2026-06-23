@@ -44,7 +44,7 @@ export default function AvukatPage() {
             <span style={{fontSize:"18px",fontWeight:"700",color:"var(--primary)",fontFamily:"Merriweather,serif",letterSpacing:"-0.01em"}}>Notya AI</span>
           </div>
           <div style={{display:"flex",gap:"32px",alignItems:"center"}} className="hide-mobile">
-            <a href="#ozellikler" className="nav-link">Özellikler</a>
+            <a href="#özellikler" className="nav-link">Özellikler</a>
             <a href="#uzmanlar" className="nav-link">Uzmanlar</a>
             <a href="#fiyatlar" className="nav-link">Fiyatlar</a>
           </div>
@@ -69,7 +69,7 @@ export default function AvukatPage() {
               Asistanınız.
             </h1>
             <p style={{fontSize:"18px",lineHeight:"1.75",color:"var(--text-muted)",margin:"0 0 36px",fontFamily:"Lato,sans-serif",fontWeight:"300",maxWidth:"460px"}}>
-              TCK, CMK, HMK, TMK — 9 uzman avukat, dilekce olusturur, sure takibi yapar, emsal karar arar. Her seanstan ogrenir.
+              TCK, CMK, HMK, TMK — 9 uzman avukat, dilekçe oluşturur, sure takibi yapar, emsal karar arar. Her seanstan ogrenir.
             </p>
             <div style={{display:"flex",gap:"14px",alignItems:"center",flexWrap:"wrap",marginBottom:"40px"}}>
               <Link href="/giris/avukat" className="btn-primary">Ücretsiz Başlayın</Link>
@@ -103,7 +103,7 @@ export default function AvukatPage() {
                 </div>
               </div>
               <div style={{fontSize:"12px",color:"var(--text)",fontFamily:"Lato,sans-serif",lineHeight:"1.6",background:"var(--primary-light)",padding:"8px 10px",borderRadius:"6px",borderLeft:"3px solid var(--primary)"}}>
-                "DIKKAT — temyiz suresi 15 gun, 3 gun kaldi. CMK Md.291'e gore bugune kadar dosyalanmali."
+                "DIKKAT — temyiz suresi 15 gun, 3 gun kaldi. CMK Md.291'e gore bugüne kadar dosyalanmali."
               </div>
             </div>
             <div className="card" style={{position:"absolute",top:"-16px",right:"-16px",padding:"10px 14px",boxShadow:"0 4px 16px rgba(180,83,9,.15)"}}>
@@ -131,7 +131,7 @@ export default function AvukatPage() {
       </section>
 
       {/* FEATURES */}
-      <section id="ozellikler" style={{padding:"100px 48px",background:"var(--bg)"}}>
+      <section id="özellikler" style={{padding:"100px 48px",background:"var(--bg)"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"60px"}}>
             <div className="section-label" style={{justifyContent:"center"}}>Temel Özellikler</div>
@@ -143,10 +143,10 @@ export default function AvukatPage() {
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}} className="feature-grid">
             {[
               {icon:"⏰",color:"var(--accent)",bg:"#FFF0EC",title:"Süre Takibi",desc:"Temyiz, itiraz, itirazen iptal — tum hukuki sureler otomatik takip. Son gunden 7 ve 3 gun once Telegram uyarisi.",badge:"Otomatik hatırlat"},
-              {icon:"📝",color:"var(--primary)",bg:"var(--primary-light)",title:"Dilekçe Olustur",desc:"Müvekkil bilgilerini soyleyin — mahkeme adina, dosya numarasina ve kanuna gore tam dilekce saniyeler icinde.",badge:"Saniyeler içinde"},
-              {icon:"🔍",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Emsal Arama",desc:"Yargitay ve Danistay kararlarinda emsal arar, dava stratejinizi guclendirecek ictihat ozetler.",badge:"Gerçek emsal"},
+              {icon:"📝",color:"var(--primary)",bg:"var(--primary-light)",title:"Dilekçe Oluştur",desc:"Müvekkil bilgilerini soyleyin — mahkeme adina, dosya numarasina ve kanuna gore tam dilekçe saniyeler icinde.",badge:"Saniyeler içinde"},
+              {icon:"🔍",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Emsal Arama",desc:"Yargitay ve Danistay kararlarinda emsal arar, dava stratejinizi güçlendirecek ictihat ozetler.",badge:"Gerçek emsal"},
               {icon:"🧠",color:"#7C3AED",bg:"#F3E8FF",title:"Strateji Motoru",desc:"Dava dosyasini analiz eder, delil eksikliklerini tespit eder, alternatif hukuki stratejileri proaktif sunar.",badge:"Proaktif analiz"},
-              {icon:"👥",color:"#0891B2",bg:"#E0F7FA",title:"Müvekkil CRM",desc:"Her muvekkelin dosyasi, sureci, delilleri ve yazismalari tek panelde. Hicbir detay kacirilmaz.",badge:"Tam dosya paneli"},
+              {icon:"👥",color:"#0891B2",bg:"#E0F7FA",title:"Müvekkil CRM",desc:"Her müvekkilin dosyasi, sureci, delilleri ve yazismalari tek panelde. Hicbir detay kacirilmaz.",badge:"Tam dosya paneli"},
               {icon:"🔐",color:"#1e3a5f",bg:"var(--primary-light)",title:"Avukat Gizliligi",desc:"Müvekkil bilgileri AES-256 sifreleme. Avukat-muvekkil gizliligine tam uyumlu. Türkiye lokasyonu.",badge:"Gizlilik uyumlu"},
             ].map(f=>(
               <div key={f.title} className="card" style={{padding:"28px"}}>
@@ -182,19 +182,19 @@ export default function AvukatPage() {
                 </div>
               </div>
               {[
-                {side:"right",text:"Ahmet Yilmaz dosyasi, hirsizlik suclama, ifade yarin."},
+                {side:"right",text:"Ahmet Yılmaz dosyasi, hirsizlik suclama, ifade yarin."},
                 {side:"left", text:"DIKKAT — TCK 145'e gore etkin pismanlik indirim hakki var. Sorgu oncesi bu stratejiyi degerlendirelim mi?"},
                 {side:"right",text:"Evet, degerlendir."},
-                {side:"left", text:"Etkin pismanlik beyani hazirladim. Ayrica 3 emsal karar buldum, cezayi 1/3 indirdi — dosyaya ekleyeyim mi?"},
+                {side:"left", text:"Etkin pismanlik beyani hazırladim. Ayrica 3 emsal karar buldum, cezayi 1/3 indirdi — dosyaya ekleyeyim mi?"},
                 {side:"right",text:"Ekle."},
-                {side:"left", text:"Eklendi. Savunma dilekce taslagi da hazir — onayinizi bekliyor."},
+                {side:"left", text:"Eklendi. Savunma dilekçe taslagi da hazır — onayinizi bekliyor."},
               ].map((m,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:m.side==="right"?"flex-end":"flex-start",marginBottom:"8px"}}>
                   <div style={{maxWidth:"80%",padding:"8px 12px",borderRadius:m.side==="right"?"12px 12px 2px 12px":"12px 12px 12px 2px",background:m.side==="right"?"var(--primary)":"var(--bg)",color:m.side==="right"?"#fff":"var(--text)",fontSize:"12px",lineHeight:"1.5",fontFamily:"Lato,sans-serif"}}>{m.text}</div>
                 </div>
               ))}
             </div>
-            <Link href="/giris/avukat" className="btn-primary">Simdi Baslayın</Link>
+            <Link href="/giris/avukat" className="btn-primary">Şimdi Baslayın</Link>
           </div>
           <div style={{position:"relative"}}>
             <div style={{borderRadius:"16px",overflow:"hidden",boxShadow:"0 20px 60px rgba(30,58,95,.12)"}}>
@@ -247,9 +247,9 @@ export default function AvukatPage() {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}} className="pricing-grid">
             {[
-              {name:"Başlangıç",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 muvekkel","Süre takibi","Dilekçe olusturma","Telegram uyarilari"],highlight:false,cta:"Başlayın"},
-              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sınırsız seans","Sınırsız muvekkel","Her sey dahil","Emsal arama","Strateji motoru","Öncelikli destek"],highlight:true,cta:"En Popüler"},
-              {name:"Hukuk Bürosu",price:"2.999 TL",orig:"4.999 TL",features:["Sınırsız seans","5 avukat","Takim paneli","Müvekkil portali","Tüm özellikler"],highlight:false,cta:"Başlayın"},
+              {name:"Başlangıç",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 müvekkil","Süre takibi","Dilekçe oluşturma","Telegram uyarilari"],highlight:false,cta:"Başlayın"},
+              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sınırsız seans","Sınırsız müvekkil","Her sey dahil","Emsal arama","Strateji motoru","Öncelikli destek"],highlight:true,cta:"En Popüler"},
+              {name:"Hukuk Bürosu",price:"2.999 TL",orig:"4.999 TL",features:["Sınırsız seans","5 avukat","Takim paneli","Müvekkil portalı","Tüm özellikler"],highlight:false,cta:"Başlayın"},
             ].map((plan)=>(
               <div key={plan.name} className="card" style={{padding:"32px 28px",position:"relative",border:plan.highlight?"2px solid var(--primary)":"1px solid var(--border)",boxShadow:plan.highlight?"0 8px 32px rgba(30,58,95,.15)":"none"}}>
                 {plan.highlight && <div style={{position:"absolute",top:"-13px",left:"50%",transform:"translateX(-50%)",background:"var(--primary)",color:"#fff",fontSize:"11px",fontWeight:"700",padding:"4px 16px",borderRadius:"20px",fontFamily:"Lato,sans-serif",letterSpacing:".06em",whiteSpace:"nowrap"}}>EN POPULER</div>}
@@ -273,7 +273,7 @@ export default function AvukatPage() {
       {/* FINAL CTA */}
       <section style={{background:"var(--primary-light)",padding:"80px 48px",borderTop:"2px solid var(--primary)",textAlign:"center"}}>
         <div className="section-label" style={{justifyContent:"center"}}>Başlamaya Hazır mısınız?</div>
-        <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugün Başlayın.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>Ilk 14 Gun Ücretsiz.</em></h2>
+        <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugün Başlayın.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>İlk 14 Gün Ücretsiz.</em></h2>
         <p style={{fontSize:"17px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",margin:"0 0 36px",maxWidth:"420px",display:"inline-block",lineHeight:"1.75"}}>Kurucu üye fiyatını kaçırmayın. Ilk 100 avukat icin gecerli.</p>
         <div><Link href="/giris/avukat" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ücretsiz Hesap Ac</Link></div>
         <div style={{marginTop:"16px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>KVKK uyumlu · Baro gizlilik standartlari · Dilediğinizde iptal</div>

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 
 interface HelpWidgetProps {
-  professionType: 'doktor' | 'mali_musavirlik' | 'avukat'
+  professionType: 'doktor' | 'mali_müşavirlik' | 'avukat'
   userName?: string
   isFirstLogin?: boolean
 }
@@ -37,7 +37,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
           content:
             professionType === 'doktor'
               ? 'Merhaba! Prof. Ayse ile nasil calisacaginizi veya dashboard hakkinda sorulariniz icin burdayim.'
-              : professionType === 'mali_musavirlik'
+              : professionType === 'mali_müşavirlik'
               ? 'Merhaba! Uzm. Derya ile nasil calisacaginizi veya beyan takvimi hakkinda sorulariniz icin burdayim.'
               : 'Merhaba! 9 uzman avukatimiz veya sure takibi hakkinda sorulariniz icin burdayim.',
         },
@@ -98,7 +98,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
                     'Hasta notlariniz otomatik SOAP formatinda kaydedilir',
                     'Dashboard\'unuzdan tum notlara ve istatistiklere erisebilirsiniz',
                   ]
-                : professionType === 'mali_musavirlik'
+                : professionType === 'mali_müşavirlik'
                 ? [
                     'Uzm. Derya ile mali sorularinizi konusin',
                     'Beyan takvimi otomatik takip edilir ve hatirlatilir',
@@ -106,7 +106,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
                   ]
                 : [
                     '9 uzman avukatla hukuki konulari konusin',
-                    'Süre takibi ve dilekce olusturma otomatiktir',
+                    'Süre takibi ve dilekçe oluşturma otomatiktir',
                     'Müvekkillerinizi ve davalarinizi dashboard\'dan yonetin',
                   ]}.map((step, index) => (
                 <div key={index} style={{ padding: '16px', backgroundColor: '#F4F7F6', borderRadius: '8px' }}>

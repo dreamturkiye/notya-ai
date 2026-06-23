@@ -37,7 +37,7 @@ export default function LoginPage() {
       })
       const profileData = await profileResp.json()
       const profType = profileData.data?.profession_type
-      if (profType === "mali_musavirlik") { router.replace("/dashboard/mali"); return }
+      if (profType === "mali_müşavirlik") { router.replace("/dashboard/mali"); return }
       if (profType === "avukat") { router.replace("/dashboard/avukat"); return }
       if (!profileData.data?.onboarding_completed && !profType) { router.push("/onboarding"); return }
       router.push("/dashboard")
@@ -55,7 +55,7 @@ export default function LoginPage() {
             <span style={{color:"#2563EB"}}>Notya</span> AI
           </div>
           <div style={{fontSize:"13px",color:"#64748B"}}>
-            {mode === "login" ? "Hesabiniza giris yapin" : "Ücretsiz hesap olusturun"}
+            {mode === "login" ? "Hesabiniza giriş yapin" : "Ücretsiz hesap oluşturun"}
           </div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
@@ -70,7 +70,7 @@ export default function LoginPage() {
           {error && <div style={{background:"#FEF2F2",border:"1px solid #FCA5A5",borderRadius:"8px",padding:"10px 12px",fontSize:"13px",color:"#DC2626"}}>{error}</div>}
           <button onClick={handleAuth} disabled={loading || !email || !password}
             style={{padding:"13px",background:loading||!email||!password?"#94A3B8":"#2563EB",border:"none",borderRadius:"10px",color:"#fff",fontSize:"14px",fontWeight:"600",cursor:loading||!email||!password?"not-allowed":"pointer",marginTop:"4px"}}>
-            {loading ? "Yükleniyor..." : mode === "login" ? "Giriş Yap" : "Hesap Olustur"}
+            {loading ? "Yükleniyor..." : mode === "login" ? "Giriş Yap" : "Hesap Oluştur"}
           </button>
         </div>
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"13px",color:"#64748B"}}>

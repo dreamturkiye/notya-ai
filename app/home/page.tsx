@@ -104,7 +104,7 @@ export default function HomePage() {
                           fontFamily:"Merriweather,serif",letterSpacing:"-0.01em"}}>Notya AI</span>
           </div>
           <div style={{display:"flex",gap:"32px",alignItems:"center"}} className="hide-mobile">
-            <a href="#ozellikler" className="nav-link">Özellikler</a>
+            <a href="#özellikler" className="nav-link">Özellikler</a>
             <a href="#uzmanlar" className="nav-link">Uzmanlar</a>
             <a href="#fiyatlar" className="nav-link">Fiyatlar</a>
           </div>
@@ -248,7 +248,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FEATURES ─────────────────────────────────────────── */}
-      <section id="ozellikler" style={{padding:"100px 48px",background:"var(--bg)"}}>
+      <section id="özellikler" style={{padding:"100px 48px",background:"var(--bg)"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"60px"}}>
             <div className="section-label" style={{justifyContent:"center"}}>Temel Özellikler</div>

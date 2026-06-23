@@ -11,7 +11,7 @@ export default function TakvimPage() {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const [musteriler, setMusteriler] = useState(0)
+  const [müşteriler, setMüşteriler] = useState(0)
   const [kritikCount, setKritikCount] = useState(0)
 
   useEffect(() => { loadTakvim() }, [])
@@ -24,7 +24,7 @@ export default function TakvimPage() {
       headers: { 'Authorization': 'Bearer ' + session.access_token }
     })
     const data = await res.json()
-    if (data.success) { setItems(data.data.items); setMusteriler(data.data.musteriler); setKritikCount(data.data.kritikCount) }
+    if (data.success) { setItems(data.data.items); setMüşteriler(data.data.müşteriler); setKritikCount(data.data.kritikCount) }
     setLoading(false)
   }
 
@@ -41,7 +41,7 @@ export default function TakvimPage() {
       </nav>
       <div style={{ maxWidth: 600, margin: '0 auto', padding: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
-          {[['Toplam Beyan', items.length, '#1e3a5f'], ['Kritik', kritikCount, '#DC2626'], ['Musteri', musteriler, '#1B4332']].map(([l, v, c]) => (
+          {[['Toplam Beyan', items.length, '#1e3a5f'], ['Kritik', kritikCount, '#DC2626'], ['Müşteri', müşteriler, '#1B4332']].map(([l, v, c]) => (
             <div key={l as string} style={{ background: '#fff', borderRadius: 10, padding: 16, textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: c as string }}>{v as number}</div>
               <div style={{ fontSize: 12, color: '#6B7280' }}>{l as string}</div>
@@ -54,14 +54,14 @@ export default function TakvimPage() {
             {sending ? 'Gonderiliyor...' : `${kritikCount} Kritik Uyariyi Telegram'a Gonder`}
           </button>
         )}
-        {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#6B7280' }}>Yukleniyor...</div> : (
+        {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#6B7280' }}>Yükleniyor...</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {items.map((item: any, i: number) => (
               <div key={i} style={{ background: riskBg(item.risk), border: `1px solid ${riskColor(item.risk)}`, borderRadius: 10, padding: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14, color: '#0A1628' }}>{item.beyanTuru}</div>
-                    {item.musteriAdi && <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{item.musteriAdi}</div>}
+                    {item.müşteriAdi && <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{item.müşteriAdi}</div>}
                     <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{item.kanun}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

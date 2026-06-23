@@ -8,7 +8,7 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 export default function MasakPage() {
   const router = useRouter()
-  const [musteriAdi, setMusteriAdi] = useState('')
+  const [müşteriAdi, setMüşteriAdi] = useState('')
   const [tutar, setTutar] = useState('')
   const [islemTipi, setIslemTipi] = useState('nakit_tahsilat')
   const [aciklama, setAciklama] = useState('')
@@ -17,14 +17,14 @@ export default function MasakPage() {
   const [loading, setLoading] = useState(false)
 
   async function analiz() {
-    if (!tutar || !musteriAdi) return
+    if (!tutar || !müşteriAdi) return
     setLoading(true)
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { router.push('/giris/mali'); return }
     const res = await fetch('/api/mali/masak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ islem: { musteriId: 'manual', musteriAdi, islemTipi, tutar: Number(tutar), tarih, aciklama }, sendAlert: false })
+      body: JSON.stringify({ islem: { müşteriId: 'manual', müşteriAdi, islemTipi, tutar: Number(tutar), tarih, aciklama }, sendAlert: false })
     })
     const data = await res.json()
     if (data.success) setResult(data.data[0])
@@ -41,7 +41,7 @@ export default function MasakPage() {
       </nav>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: 20 }}>
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          {[{ label: 'Musteri Adi', val: musteriAdi, set: setMusteriAdi, ph: 'Sirket adi girin' },
+          {[{ label: 'Müşteri Adi', val: müşteriAdi, set: setMüşteriAdi, ph: 'şirket adi girin' },
             { label: 'Tutar (TL)', val: tutar, set: setTutar, ph: 'ornek: 35000' }].map(f => (
             <div key={f.label} style={{ marginBottom: 14 }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>{f.label}</label>

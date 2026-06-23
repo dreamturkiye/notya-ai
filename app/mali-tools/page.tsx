@@ -7,12 +7,12 @@ import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 const TOOLS = [
-  { letter: 'TL', title: 'Bordro Hesaplayici', desc: '2026 parametreleriyle aninda net maas, SGK, kidem ve isveren maliyeti hesabi', color: '#1B4332', bg: '#d8f3dc', route: '/mali-tools/bordro' },
-  { letter: 'KD', title: 'Beyan Takvimi', desc: 'Tum musterileriniz icin yaklasan KDV, Muhtasar ve kurumlar vergisi tarihleri', color: '#1e3a5f', bg: '#dbeafe', route: '/mali-tools/takvim' },
-  { letter: 'MA', title: 'MASAK Analiz', desc: '30.000 TL nakit siniri ve supheli islem uyumluluk kontrolu, anlik risk analizi', color: '#7C2D12', bg: '#fee2e2', route: '/mali-tools/masak' },
+  { letter: 'TL', title: 'Bordro Hesaplayıcı', desc: '2026 parametreleriyle aninda net maas, SGK, kidem ve isveren maliyeti hesabi', color: '#1B4332', bg: '#d8f3dc', route: '/mali-tools/bordro' },
+  { letter: 'KD', title: 'Beyan Takvimi', desc: 'Tum müşterileriniz icin yaklaşan KDV, Muhtasar ve kurumlar vergisi tarihleri', color: '#1e3a5f', bg: '#dbeafe', route: '/mali-tools/takvim' },
+  { letter: 'MA', title: 'MASAK Analiz', desc: '30.000 TL nakit sınırı ve Şüpheli islem uyumluluk kontrolu, anlik risk analizi', color: '#7C2D12', bg: '#fee2e2', route: '/mali-tools/masak' },
   { letter: 'GIB', title: 'GIB e-Beyan', desc: 'KDV hesaplama, iade tespiti ve GIB e-beyan sistemi entegrasyon rehberi', color: '#065F46', bg: '#d1fae5', route: '/mali-tools/ebeyan' },
   { letter: 'eD', title: 'e-Devlet Rehberi', desc: 'Vergi borcu, SGK prim, KOSGEB belgesi ve ticaret sicil sorgulama adim adim', color: '#1e40af', bg: '#eff6ff', route: '/mali-tools/edevlet' },
-  { letter: 'MP', title: 'Musteri Portali', desc: 'Musterilerinize ozel Derya Yilmaz - 7/24 soru cevap, sizi aramadan', color: '#4C1D95', bg: '#ede9fe', route: '/mali-tools/portal' },
+  { letter: 'MP', title: 'Müşteri Portalı', desc: 'Müşterilerinize özel Derya Yılmaz - 7/24 soru cevap, sizi aramadan', color: '#4C1D95', bg: '#ede9fe', route: '/mali-tools/portal' },
 ]
 
 export default function MaliToolsPage() {
@@ -29,7 +29,7 @@ export default function MaliToolsPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#fff', fontSize: 16 }}>Yukleniyor...</div>
+      <div style={{ color: '#fff', fontSize: 16 }}>Yükleniyor...</div>
     </div>
   )
 
@@ -55,7 +55,7 @@ export default function MaliToolsPage() {
         {/* HEADER */}
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0A1628', margin: '0 0 6px' }}>Mali Araclar</h1>
-          <p style={{ color: '#6B7280', fontSize: 15, margin: 0 }}>Zaman kazandiran 6 guc — gunluk 1 saat tasarruf</p>
+          <p style={{ color: '#6B7280', fontSize: 15, margin: 0 }}>Zaman kazandıran 6 güç — günlük 1 saat tasarruf</p>
         </div>
 
         {/* GRID */}
@@ -99,12 +99,12 @@ export default function MaliToolsPage() {
             <span style={{ fontSize: 20 }}>MP</span>
           </div>
           <div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Yeni: Musteri Portali</div>
-            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, lineHeight: 1.5 }}>Musterileriniz sizi aramadan Derya Yilmaz'a sorabilir. Gunluk 1 saat tasarruf.</div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Yeni: Müşteri Portalı</div>
+            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, lineHeight: 1.5 }}>Müşterileriniz sizi aramadan Derya Yılmaz'a sorabilir. Günlük 1 saat tasarruf.</div>
           </div>
           <button onClick={() => router.push('/mali-tools/portal')}
             style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
-            Incele
+            İncele
           </button>
         </div>
       </div>

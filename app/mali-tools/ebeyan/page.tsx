@@ -38,7 +38,7 @@ export default function EBeyanPage() {
       </nav>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: 20 }}>
         <div style={{ background: '#065F46', borderRadius: 12, padding: 16, marginBottom: 20, color: '#fff', fontSize: 13 }}>
-          <strong>GIB e-Beyan Entegrasyonu:</strong> KDV hesaplayin. Gercek GIB API entegrasyonu icin musavirinizin GIB API token bilgisini girmesi gerekir.
+          <strong>GIB e-Beyan Entegrasyonu:</strong> KDV hesaplayin. Gercek GIB API entegrasyonu icin müşavirinizin GIB API token bilgisini girmesi gerekir.
         </div>
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <h2 style={{ margin: '0 0 20px', fontSize: 18, color: '#0A1628' }}>KDV Hesaplama</h2>

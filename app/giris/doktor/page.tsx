@@ -27,7 +27,7 @@ export default function DoktorGiriş() {
       const profileResp = await fetch("/api/users/me", { headers: { Authorization: "Bearer " + data.access_token } })
       const profileData = await profileResp.json()
       const profType = profileData.data?.profession_type
-      if (profType === "mali_musavirlik") { router.replace("/dashboard/mali"); return }
+      if (profType === "mali_müşavirlik") { router.replace("/dashboard/mali"); return }
       if (profType === "avukat") { router.replace("/dashboard/avukat"); return }
       if (!profileData.data?.onboarding_completed && !profType) { router.push("/onboarding"); return }
       router.push("/dashboard")

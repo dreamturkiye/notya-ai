@@ -12,7 +12,7 @@ const SORGULAR = [
   { id: 'sicil_durumu', label: 'Vergi Sicil Durumu', desc: 'Mukellef aktif/pasif durumu', color: '#1B4332' },
   { id: 'kosgeb_belge', label: 'KOSGEB KOBi Belgesi', desc: 'KOBi durum belgesi sorgulama', color: '#4C1D95' },
   { id: 'nace_kodu', label: 'NACE Kodu Sorgulama', desc: 'Faaliyet kodu kontrolu', color: '#92400E' },
-  { id: 'ticaret_sicil', label: 'Ticaret Sicil', desc: 'Sirket tescil durumu', color: '#0F766E' },
+  { id: 'ticaret_sicil', label: 'Ticaret Sicil', desc: 'şirket tescil durumu', color: '#0F766E' },
 ]
 
 export default function EDevletPage() {
@@ -62,7 +62,7 @@ export default function EDevletPage() {
             </div>
             <button onClick={sorgula} disabled={loading}
               style={{ width: '100%', padding: 14, background: '#1e40af', color: '#fff', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-              {loading ? 'Hazirlaniyor...' : 'Rehber ve Adimlar Goster'}
+              {loading ? 'Hazırlaniyor...' : 'Rehber ve Adimlar Goster'}
             </button>
           </div>
         )}

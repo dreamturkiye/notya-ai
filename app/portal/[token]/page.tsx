@@ -5,11 +5,11 @@ import { useParams } from 'next/navigation'
 interface Message { role: 'user' | 'assistant'; content: string }
 interface Beyan { beyanTuru: string; sonGun: string; daysLeft: number }
 
-export default function MusteriPortal() {
+export default function MüşteriPortal() {
   const params = useParams<{ token: string }>()
   const token = params.token
-  const [musteriAdi, setMusteriAdi] = useState('')
-  const [musavirAdi, setMusavirAdi] = useState('')
+  const [müşteriAdi, setMüşteriAdi] = useState('')
+  const [müşavirAdi, setMüşavirAdi] = useState('')
   const [aktifBeyanlar, setAktifBeyanlar] = useState<Beyan[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -23,12 +23,12 @@ export default function MusteriPortal() {
       .then(r => r.json())
       .then(res => {
         if (!res.success) { setError(true); setLoading(false); return }
-        setMusteriAdi(res.data.musteriAdi)
-        setMusavirAdi(res.data.musavirAdi)
+        setMüşteriAdi(res.data.müşteriAdi)
+        setMüşavirAdi(res.data.müşavirAdi)
         setAktifBeyanlar(res.data.aktifBeyanlar)
         setMessages([{
           role: 'assistant',
-          content: `Merhaba! Ben Derya Yılmaz, mali müşavirinizin asistanıyım. ${res.data.musteriAdi} hesabınız hakkında sorularınızı yanıtlayabilirim.`
+          content: `Merhaba! Ben Derya Yılmaz, mali müşavirinizin asistanıyım. ${res.data.müşteriAdi} hesabınız hakkında sorularınızı yanıtlayabilirim.`
         }])
         setLoading(false)
       })
@@ -66,7 +66,7 @@ export default function MusteriPortal() {
       <div style={{ padding: 16, borderBottom: '1px solid #1f2a44', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 32, height: 32, background: '#0ea5e9', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>N</div>
         <div>
-          <div style={{ fontWeight: 600 }}>{musteriAdi}</div>
+          <div style={{ fontWeight: 600 }}>{müşteriAdi}</div>
           <div style={{ fontSize: 12, color: '#64748b' }}>Derya Yılmaz ile konuşuyorsunuz</div>
         </div>
       </div>

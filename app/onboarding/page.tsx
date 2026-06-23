@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 const PROFESSIONS = [
   { id: 'doktor', label: 'Doktor/Hekim', desc: 'Medical Notes', emoji: '🏥' },
-  { id: 'mali_musavirlik', label: 'Mali Müşavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
+  { id: 'mali_müşavirlik', label: 'Mali Müşavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
   { id: 'avukat', label: 'Avukat', desc: 'Legal Notes', emoji: '⚖️' },
   { id: 'psikolog', label: 'Psikolog/Terapist', desc: 'Seans Notes', emoji: '🧠' }
 ];
@@ -24,7 +24,7 @@ export default function Onboarding() {
   const [hospital, setHospital] = useState('');
   const [unvan, setUnvan] = useState('');
   const [uzmanlikChips, setUzmanlikChips] = useState<string[]>([]);
-  const [buroAdi, setBüroAdi] = useState('');
+  const [büroAdi, setBüroAdi] = useState('');
   const [sehir, setSehir] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -39,8 +39,8 @@ export default function Onboarding() {
     if (step === 3) {
       const professionSpecificData = {
         doktor: { title, specialty, hospital },
-        mali_musavirlik: { unvan, uzmanlik_alani: uzmanlikChips.join(','), buro_adi, sehir },
-        avukat: { baro: '', uzmanlik: '', buro_adi }, // Add baro input
+        mali_müşavirlik: { unvan, uzmanlik_alani: uzmanlikChips.join(','), büro_adi, sehir },
+        avukat: { baro: '', uzmanlik: '', büro_adi }, // Add baro input
         psikolog: { uzmanlik: '', klinik_adi: '' } // Add klinik_adi input
       };
 
@@ -58,7 +58,7 @@ export default function Onboarding() {
       })
       .then(res => res.json())
       .then(() => {
-        if (professionType === 'mali_musavirlik') {
+        if (professionType === 'mali_müşavirlik') {
           router.replace('/dashboard/mali');
         } else {
           router.replace('/dashboard');
@@ -67,7 +67,7 @@ export default function Onboarding() {
       .catch(err => setError('Failed to save profile'))
       .finally(() => setLoading(false));
     }
-  }, [step, professionType, title, specialty, hospital, unvan, uzmanlikChips, buroAdi, sehir, firstName, lastName, gender, addressingPreference, router]);
+  }, [step, professionType, title, specialty, hospital, unvan, uzmanlikChips, büroAdi, sehir, firstName, lastName, gender, addressingPreference, router]);
 
   return (
     <div >
@@ -112,7 +112,7 @@ export default function Onboarding() {
               <input type="text" placeholder="Hospital" value={hospital} onChange={(e) => setHospital(e.target.value)} />
             </>
           )}
-          {professionType === 'mali_musavirlik' && (
+          {professionType === 'mali_müşavirlik' && (
             <>
               <select value={unvan} onChange={(e) => setUnvan(e.target.value)}>
                 <option value="">Unvan</option>
@@ -131,7 +131,7 @@ export default function Onboarding() {
                   </button>
                 ))}
               </div>
-              <input type="text" placeholder="Büro Adi" value={buroAdi} onChange={(e) => setBüroAdi(e.target.value)} />
+              <input type="text" placeholder="Büro Adi" value={büroAdi} onChange={(e) => setBüroAdi(e.target.value)} />
               <input type="text" placeholder="Sehir" value={sehir} onChange={(e) => setSehir(e.target.value)} />
             </>
           )}
@@ -146,7 +146,7 @@ export default function Onboarding() {
                 <option value="Is Hukuku">Is Hukuku</option>
                 <option value="İdare Hukuku">İdare Hukuku</option>
               </select>
-              <input type="text" placeholder="Büro Adi" value={buroAdi} onChange={(e) => setBüroAdi(e.target.value)} />
+              <input type="text" placeholder="Büro Adi" value={büroAdi} onChange={(e) => setBüroAdi(e.target.value)} />
             </>
           )}
           {professionType === 'psikolog' && (

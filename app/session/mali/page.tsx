@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import { AccountingNoteV2 } from '@/lib/ai/noteGenerator';
 
 const GORUSME_TYPES = [
-  { value: 'musteri_gorusmesi', label: 'Müşteri Görüşmesi' },
+  { value: 'müşteri_görüşmesi', label: 'Müşteri Görüşmesi' },
   { value: 'vergi_denetim', label: 'Vergi Denetimi Hazırlığı' },
   { value: 'sozlesme_imzasi', label: 'Sözleşme İmzası' },
   { value: 'on_danisma', label: 'On Danışma' },
@@ -32,7 +32,7 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 const SessionPage: React.FC = () => {
   const [step, setStep] = useState<'setup' | 'recording' | 'processing' | 'done'>('setup');
-  const [gorusmeTuru, setGörüşmeTuru] = useState<string>('musteri_gorusmesi');
+  const [görüşmeTuru, setGörüşmeTuru] = useState<string>('müşteri_görüşmesi');
   const [hizmetTuru, setHizmetTuru] = useState<string>('vergi_danismanligi');
   const [companyName, setCompanyName] = useState<string>('');
   const [vergiNo, setVergiNo] = useState<string>('');
@@ -103,7 +103,7 @@ const SessionPage: React.FC = () => {
         .from('sessions')
         .insert([
           {
-            session_type: gorusmeTuru,
+            session_type: görüşmeTuru,
             specialty: hizmetTuru
           }
         ])
@@ -121,7 +121,7 @@ const SessionPage: React.FC = () => {
             transcript,
             profession: 'muhasebeci',
             service_type: hizmetTuru,
-            gorusme_turu: gorusmeTuru,
+            görüşme_turu: görüşmeTuru,
             company_name: companyName,
             vergi_no: vergiNo,
             faaliyet_alani: faaliyetAlani
@@ -212,9 +212,9 @@ const SessionPage: React.FC = () => {
                   style={{
                     padding: '8px 16px',
                     borderRadius: '4px',
-                    backgroundColor: gorusmeTuru === type.value ? '#2563EB' : 'white',
-                    color: gorusmeTuru === type.value ? 'white' : '#0A1628',
-                    border: gorusmeTuru === type.value ? 'none' : '1px solid #0A1628'
+                    backgroundColor: görüşmeTuru === type.value ? '#2563EB' : 'white',
+                    color: görüşmeTuru === type.value ? 'white' : '#0A1628',
+                    border: görüşmeTuru === type.value ? 'none' : '1px solid #0A1628'
                   }}
                 >
                   {type.label}

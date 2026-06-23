@@ -66,7 +66,7 @@ export default function MaliDashboard() {
         <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>Günaydın{user?.first_name ? ` ${user.first_name}!` : '!'}</h1>
         {/* STATS ROW */}
         <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
-          {[{label:'Toplam Görüşme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Müşteriler',val:new Set(notes.map(n=>n.profession_type||'musteri')).size,icon:'active_c'},{label:'Yaklaşan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
+          {[{label:'Toplam Görüşme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Müşteriler',val:new Set(notes.map(n=>n.profession_type||'müşteri')).size,icon:'active_c'},{label:'Yaklaşan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
             <div key={s.icon} className='stat-card' style={{background:'white',borderRadius:12,padding:'20px 24px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
               <div className='stat-number' style={{fontSize:28,fontWeight:700,color:'#2563EB'}}>{s.val}</div>
               <div className='stat-label' style={{fontSize:14,color:'#64748B',marginTop:4}}>{s.label}</div>
@@ -80,14 +80,14 @@ export default function MaliDashboard() {
             {notes.length === 0 ? (
               <div style={{background:'white',borderRadius:12,padding:40,textAlign:'center',color:'#94a3b8'}}>
                 <div className='empty-icon' style={{fontSize:48,marginBottom:12}}>Görüşme yok</div>
-                <p>Henuz gorusme notunuz yok. Ilk gorusmenizi baslatõn</p>
+                <p>Henüz görüşme notunuz yok. Ilk görüşmenizi baslatõn</p>
                 <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Görüşme Baslat</button>
               </div>
             ) : (
               <div className='notes-grid' style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 {notes.map((n) => {
                   const riskScore = n.vergi_risk_skoru as number | undefined
-                  const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.gorusme_turu as string || 'Görüşme'
+                  const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.görüşme_turu as string || 'Görüşme'
                   const dateStr = new Date(n.created_at as string).toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
                   return (
                     <div key={n.id as string} style={{background:'white',borderRadius:12,padding:20,boxShadow:'0 1px 3px rgba(0,0,0,0.1)',borderLeft:'4px solid' + (riskScore ? riskColor(riskScore) : '#2563EB')}}>

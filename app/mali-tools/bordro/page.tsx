@@ -37,7 +37,7 @@ export default function BordroPage() {
     <div style={{ minHeight: '100vh', background: '#F1F5F9', fontFamily: 'system-ui,sans-serif' }}>
       <nav style={{ background: '#0A1628', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/mali-tools')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20 }}>{'<'}</button>
-        <span style={{ color: '#fff', fontWeight: 700 }}>Bordro Hesaplayici 2026</span>
+        <span style={{ color: '#fff', fontWeight: 700 }}>Bordro Hesaplayıcı 2026</span>
       </nav>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: 20 }}>
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -78,9 +78,9 @@ export default function BordroPage() {
                 <span style={{ fontWeight: 600, color: '#0A1628' }}>{fmt(v as number)} TL</span>
               </div>
             ))}
-            {result.data.yillikKidemHakki > 0 && (
+            {result.data.yıllıkKidemHakki > 0 && (
               <div style={{ marginTop: 16, background: '#FEF3C7', borderRadius: 8, padding: 12, fontSize: 13, color: '#92400E' }}>
-                Yillik Kidem Hakki: {fmt(result.data.yillikKidemHakki)} TL ({kidemYili} yil)
+                Yıllık Kidem Hakki: {fmt(result.data.yıllıkKidemHakki)} TL ({kidemYili} yil)
               </div>
             )}
           </div>

@@ -42,7 +42,7 @@ export default function Dashboard() {
         })
         const profileData = await resp.json()
         const profType = profileData.data?.profession_type
-        if (profType === 'mali_musavirlik') { router.replace('/dashboard/mali'); return }
+        if (profType === 'mali_müşavirlik') { router.replace('/dashboard/mali'); return }
         if (profType === 'avukat') { router.replace('/dashboard/avukat'); return }
         if (!profileData.data?.onboarding_completed && !profType) {
           router.push("/onboarding")
