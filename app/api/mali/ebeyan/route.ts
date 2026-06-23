@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { gibTokenDogrula, kdvBeyanGonder, beyanSorgula, kdvHesapla, EBeyanConfig, KdvBeyan } from '@/lib/mali/eBeyanEngine'
+import { gibTokenDogrula, kdvBeyanGönder, beyanSorgula, kdvHesapla, EBeyanConfig, KdvBeyan } from '@/lib/mali/eBeyanEngine'
 
 function getSupabase() {
   return createClient(
@@ -30,12 +30,12 @@ export async function POST(req: NextRequest) {
     if (action === 'dogrula') {
       if (!gibApiKey) return NextResponse.json({ success: false, error: 'gibApiKey required' }, { status: 400 })
       result = await gibTokenDogrula(gibApiKey)
-    } else if (action === 'gonder') {
+    } else if (action === 'gönder') {
       if (!gibApiKey || !vergiNo || !donem || !beyan) {
         return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
       }
       const config: EBeyanConfig = { gibApiKey, vergiNo, donem }
-      result = await kdvBeyanGonder(config, beyan as KdvBeyan)
+      result = await kdvBeyanGönder(config, beyan as KdvBeyan)
       if (result.basarili) {
         await getSupabase().from('mali_actions').insert({
           user_id: user.id,

@@ -109,8 +109,8 @@ export default function HomePage() {
             <a href="#fiyatlar" className="nav-link">Fiyatlar</a>
           </div>
           <div style={{display:"flex",gap:"12px",alignItems:"center"}}>
-            <Link href="/giris" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
-            <Link href="/giris" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}} className="hide-mobile">Ücretsiz Deneyin</Link>
+            <Link href="/giriş" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
+            <Link href="/giriş" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}} className="hide-mobile">Ücretsiz Deneyin</Link>
           </div>
         </div>
       </nav>
@@ -150,7 +150,7 @@ export default function HomePage() {
             </p>
 
             <div style={{display:"flex",gap:"14px",alignItems:"center",flexWrap:"wrap",marginBottom:"40px"}}>
-              <Link href="/giris" className="btn-primary">Ücretsiz Başlayın</Link>
+              <Link href="/giriş" className="btn-primary">Ücretsiz Başlayın</Link>
               <Link href="/asistan" className="btn-secondary">Canlı Demo →</Link>
             </div>
 
@@ -595,7 +595,7 @@ export default function HomePage() {
                     </div>
                   ))}
                 </div>
-                <Link href="/giris" style={{
+                <Link href="/giriş" style={{
                   display:"block",padding:"13px",textAlign:"center",borderRadius:"6px",
                   textDecoration:"none",fontSize:"14px",fontWeight:"700",fontFamily:"Lato,sans-serif",
                   background:plan.highlight?"var(--accent)":"transparent",
@@ -630,7 +630,7 @@ export default function HomePage() {
           Kurucu üye fiyatını kaçırmayın. İlk 100 doktor için geçerli.
         </p>
         <div>
-          <Link href="/giris" className="btn-primary"
+          <Link href="/giriş" className="btn-primary"
             style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>
             Ücretsiz Hesap Aç →
           </Link>

@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       action_data: results,
     })
 
-    return NextResponse.json({ success: true, data: results, alertGonderildi: sendAlert && anyBildirim })
+    return NextResponse.json({ success: true, data: results, alertGönderildi: sendAlert && anyBildirim })
   } catch (e) {
     return NextResponse.json({ success: false, error: 'Sunucu hatasi' }, { status: 500 })
   }

@@ -4,12 +4,12 @@ export interface EDevletSorgu {
   sorguTipi: EDevletSorguTipi
   vergiNo?: string
   tcNo?: string
-  musteriAdi?: string
+  müşteriAdi?: string
 }
 
 export interface EDevletSonuc {
   sorguTipi: EDevletSorguTipi
-  musteriAdi?: string
+  müşteriAdi?: string
   sonuc: string
   detaylar: Record<string, string | number | boolean>
   linkler: { aciklama: string; url: string }[]
@@ -18,19 +18,19 @@ export interface EDevletSonuc {
 }
 
 const EDEVLET_URLS: Record<EDevletSorguTipi, string> = {
-  vergi_borcu: 'https://www.turkiye.gov.tr/gib-intvrg-borc-sorgulama',
-  sgk_prim_borcu: 'https://www.turkiye.gov.tr/sgk-prim-borc-sorgulama',
-  sicil_durumu: 'https://www.turkiye.gov.tr/gib-mukellef-sorgulama',
-  kosgeb_belge: 'https://www.turkiye.gov.tr/kosgeb-kobidurum-belgesi-sorgulama',
-  nace_kodu: 'https://www.turkiye.gov.tr/gib-nace-kodu-sorgulama',
-  ticaret_sicil: 'https://www.turkiye.gov.tr/gtb-ticaret-sicil-gazetesi'
+  vergi_borcu: 'https://www.türkiye.gov.tr/gib-intvrg-borc-sorgulama',
+  sgk_prim_borcu: 'https://www.türkiye.gov.tr/sgk-prim-borc-sorgulama',
+  sicil_durumu: 'https://www.türkiye.gov.tr/gib-mukellef-sorgulama',
+  kosgeb_belge: 'https://www.türkiye.gov.tr/kosgeb-kobidurum-belgesi-sorgulama',
+  nace_kodu: 'https://www.türkiye.gov.tr/gib-nace-kodu-sorgulama',
+  ticaret_sicil: 'https://www.türkiye.gov.tr/gtb-ticaret-sicil-gazetesi'
 }
 
 export function buildEDevletRehber(sorgu: EDevletSorgu): EDevletSonuc {
-  const { sorguTipi, vergiNo, tcNo, musteriAdi } = sorgu
+  const { sorguTipi, vergiNo, tcNo, müşteriAdi } = sorgu
   const base: EDevletSonuc = {
     sorguTipi,
-    musteriAdi,
+    müşteriAdi,
     sonuc: '',
     detaylar: {},
     linkler: [],
@@ -43,7 +43,7 @@ export function buildEDevletRehber(sorgu: EDevletSorgu): EDevletSonuc {
       base.sonuc = 'Vergi borcu sorgulamak icin e-Devlet adimlarini takip edin'
       base.linkler = [{ aciklama: 'GIB Borc Sorgulama', url: EDEVLET_URLS.vergi_borcu }]
       base.yapilmasiGerekenler = [
-        'e-Devlet hesabinizla giris yapin',
+        'e-Devlet hesabinizla giriş yapin',
         'GIB Borc Sorgulama sayfasina gidin',
         `Vergi No girin: ${vergiNo || 'belirtilmedi'}`,
         'Sorgu sonucunu Notya AI ye bildirin'
@@ -53,7 +53,7 @@ export function buildEDevletRehber(sorgu: EDevletSorgu): EDevletSonuc {
       base.sonuc = 'SGK prim borcu sorgulamasi icin e-Devlet adimlarini takip edin'
       base.linkler = [{ aciklama: 'SGK Prim Borc Sorgulama', url: EDEVLET_URLS.sgk_prim_borcu }]
       base.yapilmasiGerekenler = [
-        'e-Devlet hesabinizla giris yapin',
+        'e-Devlet hesabinizla giriş yapin',
         'SGK Prim Borc Sorgulama sayfasina gidin',
         `Isyeri sicil no veya TC girin: ${tcNo || vergiNo || 'belirtilmedi'}`,
         'Sonucu Notya AI ye bildirin'
@@ -63,13 +63,13 @@ export function buildEDevletRehber(sorgu: EDevletSorgu): EDevletSonuc {
     case 'sicil_durumu':
       base.sonuc = 'Mukellef sicil durumu sorgulamasi'
       base.linkler = [{ aciklama: 'GIB Mukellef Sorgulama', url: EDEVLET_URLS.sicil_durumu }]
-      base.yapilmasiGerekenler = ['e-Devlet ile giris yapin', 'Vergi numaranizi girin', 'Sonucu bildirin']
+      base.yapilmasiGerekenler = ['e-Devlet ile giriş yapin', 'Vergi numaranizi girin', 'Sonucu bildirin']
       break
     case 'kosgeb_belge':
       base.sonuc = 'KOSGEB KOBI Durum Belgesi sorgulamasi'
       base.linkler = [{ aciklama: 'KOSGEB Belge Sorgulama', url: EDEVLET_URLS.kosgeb_belge }]
       base.yapilmasiGerekenler = [
-        'e-Devlet hesabinizla giris yapin',
+        'e-Devlet hesabinizla giriş yapin',
         'KOSGEB KOBI Durum Belgesi sayfasina gidin',
         'Isletmeyi secin',
         'Barkodlu PDF indirin'
@@ -89,7 +89,7 @@ export function buildEDevletRehber(sorgu: EDevletSorgu): EDevletSonuc {
     case 'ticaret_sicil':
       base.sonuc = 'Ticaret sicil gazetesi sorgulamasi'
       base.linkler = [{ aciklama: 'Ticaret Sicil Gazetesi', url: EDEVLET_URLS.ticaret_sicil }]
-      base.yapilmasiGerekenler = ['e-Devlet ile giris yapin', 'Sirket bilgilerini girin', 'Sonucu bildirin']
+      base.yapilmasiGerekenler = ['e-Devlet ile giriş yapin', 'şirket bilgilerini girin', 'Sonucu bildirin']
       break
   }
   return base
@@ -97,5 +97,5 @@ export function buildEDevletRehber(sorgu: EDevletSorgu): EDevletSonuc {
 
 export function buildDeryaVoiceResponse(sorgu: EDevletSorgu, sonuc: EDevletSonuc): string {
   const url = EDEVLET_URLS[sorgu.sorguTipi]
-  return `${sorgu.sorguTipi} sorgusu icin simdi e-Devlet adresine gidin: ${url}. ${sonuc.yapilmasiGerekenler[0] || ''} Sonucu bana bildirin. Linki dashboardinizda goruntuluyorsunuz.`
+  return `${sorgu.sorguTipi} sorgusu icin şimdi e-Devlet adresine gidin: ${url}. ${sonuc.yapilmasiGerekenler[0] || ''} Sonucu bana bildirin. Linki dashboardinizda goruntuluyorsunuz.`
 }

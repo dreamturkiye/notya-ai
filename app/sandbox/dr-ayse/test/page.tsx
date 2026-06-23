@@ -15,7 +15,7 @@ import {
 const SCENARIOS = [
   { label: "Basit — Öksürük + ateş", complaint: "Öksürük ve ateş — 3 günlük" },
   { label: "Orta — Göğüs ağrısı", complaint: "Göğüs ağrısı — egzersizle artıyor" },
-  { label: "Karmaşık — Yorgunluk + nefes darlığı", complaint: "Yorgunluk, nefes darlığı, bacaklarda şişlik" },
+  { label: "Karmaşık — Yorgünlük + nefes darlığı", complaint: "Yorgünlük, nefes darlığı, bacaklarda şişlik" },
   { label: "Kronik — Diyabet takibi", complaint: "Diyabet kontrolü — 3 aylık takip" },
   { label: "Acil — Ani baş ağrısı", complaint: "Şiddetli baş ağrısı — ani başlangıç" },
 ]

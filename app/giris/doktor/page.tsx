@@ -52,9 +52,9 @@ export default function DoktorGiriş() {
             {loading ? "Giriş yapiliyor..." : "Giriş Yap"}</button>
         </form>
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"12px",color:"#64748b"}}>
-          <a href="/giris" style={{color:"#94a3b8"}}>Genel giris</a>{" | "}
-          <a href="/giris/mali" style={{color:"#10B981"}}>Mali Müşavir</a>{" | "}
-          <a href="/giris/avukat" style={{color:"#7C3AED"}}>Avukat</a>
+          <a href="/giriş" style={{color:"#94a3b8"}}>Genel giriş</a>{" | "}
+          <a href="/giriş/mali" style={{color:"#10B981"}}>Mali Müşavir</a>{" | "}
+          <a href="/giriş/avukat" style={{color:"#7C3AED"}}>Avukat</a>
         </div>
       </div>
     </div>

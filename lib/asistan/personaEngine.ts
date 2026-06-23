@@ -14,7 +14,7 @@ export type SpecialtyId = "pediatri" | "kardiyoloji" | "noroloji" | "dahiliye" |
 export interface DoctorPreferences {
   doctorId: string
   preferredDrugs: Record<string, string>    // generic -> preferred brand
-  noteStyle: "kisa" | "orta" | "detayli"
+  noteStyle: "kısa" | "orta" | "detayli"
   commonDiagnoses: string[]
   correctionHistory: Array<{
     type: "drug" | "dose" | "diagnosis" | "note"

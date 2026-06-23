@@ -92,7 +92,7 @@ GÖREV: Transkripti analiz et ve aşağıdaki JSON yapısını döndür. Başka 
 
 export interface LegalNote {
   dosya_ozeti: string
-  musteri_talepleri: string
+  müşteri_talepleri: string
   hukuki_sorunlar: string[]
   ilgili_mevzuat: string[]
   deliller: string[]
@@ -134,7 +134,7 @@ Avukat-müvekkil görüşmesini analiz et ve JSON döndür. Başka hiçbir şey 
 
 {
   "dosya_ozeti": "Dava/mesele özeti",
-  "musteri_talepleri": "Müvekkil talep ve beklentileri",
+  "müşteri_talepleri": "Müvekkil talep ve beklentileri",
   "hukuki_sorunlar": ["Tespit edilen hukuki sorunlar"],
   "ilgili_mevzuat": ["Uygulanabilir kanun maddeleri"],
   "deliller": ["Sunulan veya istenecek deliller"],
@@ -237,7 +237,7 @@ Seans transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 // ============================================================
 
 export interface AccountingNote {
-  musteri_ozeti: string
+  müşteri_ozeti: string
   mali_durum: string
   vergi_konulari: string[]
   uyum_gereksinimleri: string[]
@@ -271,7 +271,7 @@ MÜŞTERİ BİLGİLERİ:
 Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 
 {
-  "musteri_ozeti": "Müşteri ve görüşme özeti",
+  "müşteri_ozeti": "Müşteri ve görüşme özeti",
   "mali_durum": "Mevcut mali durum değerlendirmesi",
   "vergi_konulari": ["Ele alınan vergi konuları"],
   "uyum_gereksinimleri": ["Yasal uyum gereksinimleri"],
@@ -304,7 +304,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 // ============================================================
 
 export interface HRNote {
-  gorusme_turu: string
+  görüşme_turu: string
   calisan_ozeti: string
   performans_degerlendirmesi?: string
   tespit_edilen_sorunlar: string[]
@@ -312,7 +312,7 @@ export interface HRNote {
   yonetici_degerlendirmesi: string
   aksiyon_plani: ActionItem[]
   gelisim_onerileri: string[]
-  hr_ozel_notlar: string
+  hr_özel_notlar: string
   takip_tarihi?: string
   ai_confidence: number
 }
@@ -334,7 +334,7 @@ GÖRÜŞME BİLGİLERİ:
 Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 
 {
-  "gorusme_turu": "${meetingType}",
+  "görüşme_turu": "${meetingType}",
   "calisan_ozeti": "Çalışan ve görüşme özeti",
   "performans_degerlendirmesi": "Performans değerlendirme notu (varsa)",
   "tespit_edilen_sorunlar": ["Tespit edilen sorunlar veya endişeler"],
@@ -344,7 +344,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
     {"gorev": "Yapılacak iş", "sorumlu": "İK/Yönetici/Çalışan", "son_tarih": "GG.AA.YYYY", "oncelik": "yüksek"}
   ],
   "gelisim_onerileri": ["Kariyer ve gelişim önerileri"],
-  "hr_ozel_notlar": "İK gizli notları",
+  "hr_özel_notlar": "İK gizli notları",
   "takip_tarihi": "GG.AA.YYYY",
   "ai_confidence": 0.91
 }`
@@ -366,13 +366,13 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 // ============================================================
 
 export interface RealEstateNote {
-  musteri_profili: string
+  müşteri_profili: string
   talep_ozeti: string
   butce: string
-  aranan_ozellikler: string[]
+  aranan_özellikler: string[]
   tercih_edilen_bolgeler: string[]
   gorulen_mulkler: Array<{ adres: string; fiyat: string; izlenim: string }>
-  musteri_karari: string
+  müşteri_karari: string
   sonraki_adimlar: ActionItem[]
   notlar: string
   ai_confidence: number
@@ -392,15 +392,15 @@ MÜŞTERİ: ${context.client_name || 'Belirtilmemiş'}
 Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 
 {
-  "musteri_profili": "Müşteri profili ve ihtiyaç özeti",
+  "müşteri_profili": "Müşteri profili ve ihtiyaç özeti",
   "talep_ozeti": "Mülk talep özeti",
   "butce": "Bütçe aralığı",
-  "aranan_ozellikler": ["İstenen mülk özellikleri"],
+  "aranan_özellikler": ["İstenen mülk özellikleri"],
   "tercih_edilen_bolgeler": ["Tercih edilen mahalle/semt/ilçe"],
   "gorulen_mulkler": [
     {"adres": "Adres", "fiyat": "Fiyat", "izlenim": "Müşteri izlenimi"}
   ],
-  "musteri_karari": "Müşterinin kararı veya tereddütleri",
+  "müşteri_karari": "Müşterinin kararı veya tereddütleri",
   "sonraki_adimlar": [
     {"gorev": "Yapılacak iş", "sorumlu": "Danışman/Müşteri", "son_tarih": "GG.AA.YYYY", "oncelik": "yüksek"}
   ],
@@ -425,7 +425,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 // ============================================================
 
 export interface InsuranceNote {
-  musteri_ozeti: string
+  müşteri_ozeti: string
   mevcut_sigortalar: string[]
   ihtiyac_analizi: string
   onerilen_urunler: Array<{ urun: string; prim: string; kapsam: string; sebep: string }>
@@ -449,7 +449,7 @@ SİGORTA TÜRÜ: ${context.insurance_type || 'Belirtilmemiş'}
 Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 
 {
-  "musteri_ozeti": "Müşteri profili özeti",
+  "müşteri_ozeti": "Müşteri profili özeti",
   "mevcut_sigortalar": ["Mevcut sigorta poliçeleri"],
   "ihtiyac_analizi": "Sigorta ihtiyaç analizi",
   "onerilen_urunler": [
@@ -483,7 +483,7 @@ export interface EducationNote {
   ogrenci_profili: string
   akademik_durum: string
   tespitler: string[]
-  guclu_yonler: string[]
+  güçlu_yonler: string[]
   gelisim_alanlari: string[]
   veli_endiseler: string
   oneriler: string[]
@@ -510,7 +510,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ogrenci_profili": "Öğrenci genel profili",
   "akademik_durum": "Akademik durum özeti",
   "tespitler": ["Görüşmede tespit edilen önemli noktalar"],
-  "guclu_yonler": ["Öğrencinin güçlü yönleri"],
+  "güçlu_yonler": ["Öğrencinin güçlü yönleri"],
   "gelisim_alanlari": ["Gelişim gerektiren alanlar"],
   "veli_endiseler": "Veli endişeleri ve beklentileri",
   "oneriler": ["Akademik ve kişisel gelişim önerileri"],

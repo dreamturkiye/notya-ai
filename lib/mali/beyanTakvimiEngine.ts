@@ -1,7 +1,7 @@
 // FILE 1
-export interface Musteri {
+export interface Müşteri {
   id: string
-  sirket_adi: string
+  şirket_adi: string
   vergi_no?: string
   faaliyet_alani?: string
 }
@@ -13,8 +13,8 @@ export interface BeyanItem {
   daysLeft: number
   risk: 'kritik' | 'uyari' | 'normal'
   kanun: string
-  musteriId?: string
-  musteriAdi?: string
+  müşteriId?: string
+  müşteriAdi?: string
 }
 
 const AYLIK_BEYANLAR = [
@@ -44,7 +44,7 @@ function formatDate(d: Date): string {
   return d.toISOString().split('T')[0]
 }
 
-export function getBeyanlarimForMusteri(musteriId: string, musteriAdi: string, today: Date): BeyanItem[] {
+export function getBeyanlarımForMüşteri(müşteriId: string, müşteriAdi: string, today: Date): BeyanItem[] {
   const items: BeyanItem[] = []
   const endDate = addDays(today, 60)
 
@@ -63,8 +63,8 @@ export function getBeyanlarimForMusteri(musteriId: string, musteriAdi: string, t
           daysLeft,
           risk,
           kanun: b.kanun,
-          musteriId,
-          musteriAdi,
+          müşteriId,
+          müşteriAdi,
         })
       }
     }
@@ -86,8 +86,8 @@ export function getBeyanlarimForMusteri(musteriId: string, musteriAdi: string, t
           daysLeft,
           risk,
           kanun: q.kanun,
-          musteriId,
-          musteriAdi,
+          müşteriId,
+          müşteriAdi,
         })
       }
     }
@@ -106,8 +106,8 @@ export function getBeyanlarimForMusteri(musteriId: string, musteriAdi: string, t
         daysLeft,
         risk,
         kanun: y.kanun,
-        musteriId,
-        musteriAdi,
+        müşteriId,
+        müşteriAdi,
       })
     }
   }
@@ -121,7 +121,7 @@ export function getKritikBeyanlar(items: BeyanItem[]): BeyanItem[] {
 }
 
 export function formatTelegramAlert(item: BeyanItem): string {
-  return `NOTYA AI UYARI\n${item.musteriAdi} - ${item.beyanTuru}\nSon Gun: ${item.sonGun} (${item.daysLeft} gun kaldi)\nKanun: ${item.kanun}`
+  return `NOTYA AI UYARI\n${item.müşteriAdi} - ${item.beyanTuru}\nSon Gun: ${item.sonGun} (${item.daysLeft} gun kaldi)\nKanun: ${item.kanun}`
 }
 
 // FILE 2

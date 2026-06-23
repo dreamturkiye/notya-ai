@@ -1,9 +1,9 @@
 export type AvukatPersonaId = 'kemalbey' | 'selinhanim' | 'muratbey' | 'dilekhanim' | 'halukbey' | 'aysehanim' | 'canbey' | 'zeynephanim' | 'borabey'
-export type BranchId = 'ceza' | 'aile' | 'ticaret' | 'is' | 'gayrimenkul' | 'icra' | 'idare' | 'tuketici' | 'bilisim'
+export type BranchId = 'ceza' | 'aile' | 'ticaret' | 'is' | 'gayrimenkul' | 'icra' | 'idare' | 'tuketici' | 'bilişim'
 
 export interface AvukatPreferences {
   avukatId: string
-  preferredDilekce: Record<string, string>
+  preferredDilekçe: Record<string, string>
   branchStyle: Record<string, string>
   correctionHistory: Array<{ type: string; original: string; corrected: string; count: number }>
   preferredKanunlar: Record<string, string>
@@ -24,21 +24,21 @@ export interface AvukatPersona {
 }
 
 export const AVUKAT_PERSONAS: Record<AvukatPersonaId, AvukatPersona> = {
-  kemalbey: { id: 'kemalbey', name: 'Kemal Celik', title: 'Ceza Hukuku Uzmani', baro: 'Istanbul Barosu', yil: 20, branch: 'ceza', personality: 'Kat ve kararli', kanunlar: ['TCK', 'CMK', 'CGTIIHK'], references: [] },
+  kemalbey: { id: 'kemalbey', name: 'Kemal Celik', title: 'Ceza Hukuku Uzmani', baro: 'İstanbul Barosu', yil: 20, branch: 'ceza', personality: 'Kat ve kararli', kanunlar: ['TCK', 'CMK', 'CGTIIHK'], references: [] },
   selinhanim: { id: 'selinhanim', name: 'Selin Arslan', title: 'Aile Hukuku Uzmani', baro: 'Ankara Barosu', yil: 12, branch: 'aile', personality: 'Empatetik, cozum odakli', kanunlar: ['TMK', 'HMK', 'Nafaka Mevzuati'], references: [] },
-  muratbey: { id: 'muratbey', name: 'Murat Ozturk', title: 'Ticaret Hukuku Uzmani', baro: 'Istanbul Barosu', yil: 18, branch: 'ticaret', personality: 'Analitik, risk odakli', kanunlar: ['TTK', 'TBK', 'ITTK'], references: [] },
+  muratbey: { id: 'muratbey', name: 'Murat Oztürk', title: 'Ticaret Hukuku Uzmani', baro: 'İstanbul Barosu', yil: 18, branch: 'ticaret', personality: 'Analitik, risk odakli', kanunlar: ['TTK', 'TBK', 'ITTK'], references: [] },
   dilekhanim: { id: 'dilekhanim', name: 'Dilek Sahin', title: 'Is Hukuku Uzmani', baro: 'Izmir Barosu', yil: 10, branch: 'is', personality: 'Isci ve isveren dengesi kurar', kanunlar: ['Is Kanunu 4857', 'SGK Mevzuati', 'Kidem Tazminati'], references: [] },
-  halukbey: { id: 'halukbey', name: 'Haluk Demir', title: 'Gayrimenkul Hukuku Uzmani', baro: 'Istanbul Barosu', yil: 22, branch: 'gayrimenkul', personality: 'Detayci, tapu ve imar bilgisi guclu', kanunlar: ['Tapu Kanunu', 'Kat Mulkiyeti', 'Imar Kanunu'], references: [] },
-  aysehanim: { id: 'aysehanim', name: 'Ayse Kaya', title: 'Icra ve Iflas Uzmani', baro: 'Ankara Barosu', yil: 14, branch: 'icra', personality: 'Hizli ve pratik, alacak tahsiline odakli', kanunlar: ['IIK', 'TBK', 'Konkordato Mevzuati'], references: [] },
-  canbey: { id: 'canbey', name: 'Can Yilmaz', title: 'Idare Hukuku Uzmani', baro: 'Ankara Barosu', yil: 16, branch: 'idare', personality: 'Devletle anlasmazliklarda guclu', kanunlar: ['Idari Yargilama Usulu Kanunu', 'Devlet Ihale Kanunu', 'AY'], references: [] },
-  zeynephanim: { id: 'zeynephanim', name: 'Zeynep Aktay', title: 'Tuketici Hukuku Uzmani', baro: 'Istanbul Barosu', yil: 8, branch: 'tuketici', personality: 'Tuketici haklarini savunur', kanunlar: ['Tuketicinin Korunmasi Hakkinda Kanun', 'Garanti Mevzuati'], references: [] },
-  borabey: { id: 'borabey', name: 'Bora Yildiz', title: 'Bilisim ve KVKK Uzmani', baro: 'Istanbul Barosu', yil: 9, branch: 'bilisim', personality: 'Teknoloji odakli, KVKK uzman', kanunlar: ['KVKK 6698', 'Bilisim Suclari TCK 243-245', 'GDPR'], references: [] },
+  halukbey: { id: 'halukbey', name: 'Haluk Demir', title: 'Gayrimenkul Hukuku Uzmani', baro: 'İstanbul Barosu', yil: 22, branch: 'gayrimenkul', personality: 'Detayci, tapu ve imar bilgisi güçlu', kanunlar: ['Tapu Kanunu', 'Kat Mulkiyeti', 'İmar Kanunu'], references: [] },
+  aysehanim: { id: 'aysehanim', name: 'Ayse Kaya', title: 'İcra ve Iflas Uzmani', baro: 'Ankara Barosu', yil: 14, branch: 'icra', personality: 'Hizli ve pratik, alacak tahsiline odakli', kanunlar: ['IIK', 'TBK', 'Konkordato Mevzuati'], references: [] },
+  canbey: { id: 'canbey', name: 'Can Yılmaz', title: 'İdare Hukuku Uzmani', baro: 'Ankara Barosu', yil: 16, branch: 'idare', personality: 'Devletle anlasmazliklarda güçlu', kanunlar: ['Idari Yargilama Usulu Kanunu', 'Devlet Ihale Kanunu', 'AY'], references: [] },
+  zeynephanim: { id: 'zeynephanim', name: 'Zeynep Aktay', title: 'Tuketici Hukuku Uzmani', baro: 'İstanbul Barosu', yil: 8, branch: 'tuketici', personality: 'Tuketici haklarini savunur', kanunlar: ['Tuketicinin Korunmasi Hakkinda Kanun', 'Garanti Mevzuati'], references: [] },
+  borabey: { id: 'borabey', name: 'Bora Yildiz', title: 'Bilişim ve KVKK Uzmani', baro: 'İstanbul Barosu', yil: 9, branch: 'bilişim', personality: 'Teknoloji odakli, KVKK uzman', kanunlar: ['KVKK 6698', 'Bilişim Suclari TCK 243-245', 'GDPR'], references: [] },
 }
 
 export function buildAvukatSystemPrompt(
   persona: AvukatPersona,
   prefs: Partial<AvukatPreferences> | null,
-  currentMuvekkel: Record<string, unknown> | null,
+  currentMüvekkil: Record<string, unknown> | null,
   avukat?: { id: string; name: string } | null
 ): string {
   const addr = avukat ? avukat.name.split(' ')[0] : 'Avukat'
@@ -67,9 +67,9 @@ Tamamlanan seans: ${prefs.sessionsCompleted}`
     if (prefs.preferredKanunlar) prompt += `
 Sik kullandigi kanunlar: ${Object.values(prefs.preferredKanunlar).join(', ')}`
   }
-  if (currentMuvekkel) {
+  if (currentMüvekkil) {
     prompt += `
-=== AKTIF MUVEKKEL === ${JSON.stringify(currentMuvekkel)}`
+=== AKTIF MUVEKKEL === ${JSON.stringify(currentMüvekkil)}`
   }
   return prompt
 }
@@ -78,7 +78,7 @@ export function getPersonaForBranch(branch: BranchId): AvukatPersonaId {
   const map: Record<BranchId, AvukatPersonaId> = {
     ceza: 'kemalbey', aile: 'selinhanim', ticaret: 'muratbey',
     is: 'dilekhanim', gayrimenkul: 'halukbey', icra: 'aysehanim',
-    idare: 'canbey', tuketici: 'zeynephanim', bilisim: 'borabey'
+    idare: 'canbey', tuketici: 'zeynephanim', bilişim: 'borabey'
   }
   return map[branch] || 'kemalbey'
 }

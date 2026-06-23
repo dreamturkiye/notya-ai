@@ -3,16 +3,16 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
 const SECRET = process.env.PORTAL_TOKEN_SECRET || 'notya-portal-secret-2026-change-in-prod'
 
 export interface PortalTokenPayload {
-  musteriId: string
-  musavirId: string
+  müşteriId: string
+  müşavirId: string
   expiresAt: number
   jti: string
 }
 
-export interface MusteriPortalSession {
-  musteriId: string
-  musteriAdi: string
-  musavirAdi: string
+export interface MüşteriPortalSession {
+  müşteriId: string
+  müşteriAdi: string
+  müşavirAdi: string
   vergiNo?: string
   faaliyetAlani?: string
   aktifBeyanlar: { beyanTuru: string; sonGun: string; daysLeft: number }[]
@@ -20,14 +20,14 @@ export interface MusteriPortalSession {
 }
 
 export function generateSecureToken(
-  musteriId: string,
-  musavirId: string,
+  müşteriId: string,
+  müşavirId: string,
   daysValid = 30
 ): { token: string; tokenHash: string; expiresAt: Date } {
   const jti = randomBytes(16).toString('hex')
   const payload: PortalTokenPayload = {
-    musteriId,
-    musavirId,
+    müşteriId,
+    müşavirId,
     expiresAt: Date.now() + daysValid * 86400000,
     jti,
   }
@@ -58,7 +58,7 @@ export function verifyToken(token: string): PortalTokenPayload | null {
   }
 }
 
-export function buildMusteriSystemPrompt(session: MusteriPortalSession): string {
+export function buildMüşteriSystemPrompt(session: MüşteriPortalSession): string {
   const beyanList =
     session.aktifBeyanlar
       .map((b) => `${b.beyanTuru} (${b.sonGun} - ${b.daysLeft} gun)`)
@@ -67,15 +67,15 @@ export function buildMusteriSystemPrompt(session: MusteriPortalSession): string 
     session.sonOdemeler
       .map((o) => `${o.tur}: ${o.tutar} TL (${o.tarih})`)
       .join(', ') || 'Yok'
-  return `Sen Derya Yilmaz, ${session.musavirAdi} bunyesinin guvenilir mali asistanisin.
-Su an ${session.musteriAdi}${session.vergiNo ? ` (${session.vergiNo})` : ''} ile konusuyorsun.
+  return `Sen Derya Yılmaz, ${session.müşavirAdi} bunyesinin guvenilir mali asistanisin.
+Su an ${session.müşteriAdi}${session.vergiNo ? ` (${session.vergiNo})` : ''} ile konusuyorsun.
 Faaliyet alani: ${session.faaliyetAlani || 'Belirtilmemis'}
 Aktif beyan tarihleri: ${beyanList}
 KURALLAR:
-- Sadece bu musterinin mali durumu hakkinda konus
-- Kesin rakam vermek yerine musavire danismayi oner
-- Her zaman Turkce konus, kisa ve net cevaplar ver (max 3 cumle)
-- Diger musteri bilgilerini, gizli vergi stratejilerini asla paylaşma
-- Emin degilsen: "Musavirinize danismanizi oneririm" de
+- Sadece bu müşterinin mali durumu hakkinda konus
+- Kesin rakam vermek yerine müşavire danismayi oner
+- Her zaman Türkçe konus, kısa ve net cevaplar ver (max 3 cumle)
+- Diğer müşteri bilgilerini, gizli vergi stratejilerini asla paylaşma
+- Emin degilsen: "Müşavirinize danismanizi oneririm" de
 JSON YANIT FORMATI: { "speech": "..." }`
 }

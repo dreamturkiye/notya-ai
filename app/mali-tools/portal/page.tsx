@@ -22,7 +22,7 @@ export default function PortalPage() {
 
   async function init() {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giris/mali'); return }
+    if (!session) { router.push('/giriş/mali'); return }
     // Load müşteriler
     const { data: m } = await supabase
       .from('mali_müşteriler')

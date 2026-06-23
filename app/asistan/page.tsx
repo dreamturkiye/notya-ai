@@ -47,7 +47,7 @@ export default function AsistanPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { router.push("/giris"); return }
+      if (!session) { router.push("/giriş"); return }
       setAuthToken(session.access_token)
 
       const resp = await fetch("/api/users/me", {
@@ -82,7 +82,7 @@ export default function AsistanPage() {
   }
 
   async function startConversation() {
-    if (!authToken) { router.push("/giris"); return }
+    if (!authToken) { router.push("/giriş"); return }
     await endConversation()
     setStatus("connecting")
     setErrorMsg("")

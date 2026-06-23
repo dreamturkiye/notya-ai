@@ -21,7 +21,7 @@ export default function MaliToolsPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.push('/giris/mali')
+      if (!session) router.push('/giriş/mali')
       else setLoading(false)
     })
   }, [])

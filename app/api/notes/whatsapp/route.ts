@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 function formatNoteForWhatsApp(note: Record<string, unknown>): string {
   const lines: string[] = [
     '📋 *NOTYA AI - KLİNİK NOT*',
-    `🕐 ${new Date(note.created_at as string).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`,
+    `🕐 ${new Date(note.created_at as string).toLocaleString('tr-TR', { timeZone: 'Europe/İstanbul' })}`,
     '',
   ]
 

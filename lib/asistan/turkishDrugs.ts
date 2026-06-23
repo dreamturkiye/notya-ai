@@ -4,7 +4,7 @@
 // Kaynak: SGK İlaç Listesi + TİTCK + Vademecum
 // ============================================================
 
-export interface TurkishDrug {
+export interface TürkishDrug {
   name: string            // Jenerik ad
   brand: string[]         // Türkiye'deki marka adları
   dose: string            // Standart doz
@@ -18,7 +18,7 @@ export interface TurkishDrug {
   notes?: string
 }
 
-export const TURKISH_DRUGS: Record<string, TurkishDrug> = {
+export const TURKISH_DRUGS: Record<string, TürkishDrug> = {
   amoksisilin: {
     name: "Amoksisilin",
     brand: ["Amoksina", "Amoksipen", "Largopen", "Alfoxil", "Amoklavin (+ klavulanat)"],
@@ -220,7 +220,7 @@ export const TURKISH_DRUGS: Record<string, TurkishDrug> = {
 // ============================================================
 // DRUG SEARCH — by name, brand or category
 // ============================================================
-export function searchDrug(query: string): TurkishDrug[] {
+export function searchDrug(query: string): TürkishDrug[] {
   const q = query.toLowerCase()
   return Object.values(TURKISH_DRUGS).filter(d =>
     d.name.toLowerCase().includes(q) ||

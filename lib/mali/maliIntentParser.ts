@@ -3,7 +3,7 @@ export function quickClassifyMali(message: string): string {
 
     if (lowerMessage.includes('beyan') || lowerMessage.includes('beyanat')) {
         return 'BEYAN_SORUSU';
-    } else if (lowerMessage.includes('musteri ekle') || lowerMessage.includes('müşteri ekle')) {
+    } else if (lowerMessage.includes('müşteri ekle') || lowerMessage.includes('müşteri ekle')) {
         return 'MUSTERI_EKLE';
     } else if (lowerMessage.includes('not al') || lowerMessage.includes('not alma')) {
         return 'NOT_AL';

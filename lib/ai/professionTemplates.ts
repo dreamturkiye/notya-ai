@@ -16,8 +16,8 @@ export type AccountingService =
   | 'sgk' | 'irs_planlama' | 'konkordato' | 'genel'
 
 export type HRMeetingType =
-  | 'performans' | 'ise_alim' | 'disiplin' | 'cikis'
-  | 'kariyer_planlama' | 'is_guvenligi' | 'genel'
+  | 'performans' | 'ise_alim' | 'disiplin' | 'çıkış'
+  | 'kariyer_planlama' | 'is_güvenligi' | 'genel'
 
 // ============================================================
 // HUKUK ALANI ŞABLONLARI
@@ -430,7 +430,7 @@ Dikkat edilecek noktalar:
 - Avukata danışma gerekliliği`,
       legalRefs: ['İş Kanunu 25', 'Haklı Fesih Nedenleri', 'Kıdem Tazminatı Kanunu']
     },
-    cikis: {
+    çıkış: {
       name: 'Çıkış Görüşmesi',
       systemContext: `Çalışan çıkış görüşmesi notu. Veri analitiği için yapılandırılmış format.
       
@@ -457,7 +457,7 @@ Odak noktaları:
 - Şirket içi fırsatlar`,
       legalRefs: ['Eğitim Hakkı', 'Eşit Fırsat', 'İş Sözleşmesi']
     },
-    is_guvenligi: {
+    is_güvenligi: {
       name: 'İş Sağlığı ve Güvenliği Görüşmesi',
       systemContext: `6331 sayılı İş Sağlığı ve Güvenliği Kanunu çerçevesinde İSG görüşme notu.
       
@@ -523,7 +523,7 @@ export const PROFESSION_LIST = {
       { id: 'psikolog_travma', label: 'Travma Terapisti', therapy: 'travma' },
     ]
   },
-  mali_musavirlik: {
+  mali_müşavirlik: {
     label: 'Mali Müşavirlik',
     icon: '📊',
     professions: [
@@ -563,7 +563,7 @@ export const PROFESSION_LIST = {
     icon: '📚',
     professions: [
       { id: 'egitim_okul', label: 'Okul Danışmanı', context: 'okul' },
-      { id: 'egitim_ozel', label: 'Özel Eğitim Uzmanı', context: 'ozel' },
+      { id: 'egitim_özel', label: 'Özel Eğitim Uzmanı', context: 'özel' },
     ]
   },
   yonetim: {

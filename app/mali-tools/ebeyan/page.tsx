@@ -17,7 +17,7 @@ export default function EBeyanPage() {
     if (!hesaplanan || !indirilecek) return
     setLoading(true)
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giris/mali'); return }
+    if (!session) { router.push('/giriş/mali'); return }
     const res = await fetch('/api/mali/ebeyan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
@@ -38,7 +38,7 @@ export default function EBeyanPage() {
       </nav>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: 20 }}>
         <div style={{ background: '#065F46', borderRadius: 12, padding: 16, marginBottom: 20, color: '#fff', fontSize: 13 }}>
-          <strong>GIB e-Beyan Entegrasyonu:</strong> KDV hesaplayin. Gercek GIB API entegrasyonu icin müşavirinizin GIB API token bilgisini girmesi gerekir.
+          <strong>GIB e-Beyan Entegrasyonu:</strong> KDV hesaplayin. Gerçek GIB API entegrasyonu icin müşavirinizin GIB API token bilgisini girmesi gerekir.
         </div>
         <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <h2 style={{ margin: '0 0 20px', fontSize: 18, color: '#0A1628' }}>KDV Hesaplama</h2>
@@ -52,7 +52,7 @@ export default function EBeyanPage() {
           ))}
           <button onClick={hesapla} disabled={loading}
             style={{ width: '100%', padding: 14, background: '#065F46', color: '#fff', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            {loading ? 'Hesaplaniyor...' : 'KDV Hesapla'}
+            {loading ? 'Hesaplanıyor...' : 'KDV Hesapla'}
           </button>
         </div>
         {result && (

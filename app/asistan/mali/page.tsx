@@ -16,7 +16,7 @@ export default function MaliAsistanPage() {
 
   useEffect(() => {
     sb.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.push("/giris/mali")
+      if (!session) router.push("/giriş/mali")
     })
   }, [router])
 
@@ -24,7 +24,7 @@ export default function MaliAsistanPage() {
     try {
       setStatus("connecting"); setErr("")
       const { data: { session } } = await sb.auth.getSession()
-      if (!session) { router.push("/giris/mali"); return }
+      if (!session) { router.push("/giriş/mali"); return }
       const r = await fetch("/api/asistan/mali-signed-url", { headers: { Authorization: "Bearer " + session.access_token } })
       if (!r.ok) throw new Error("Bağlantı hatası")
       const { signed_url } = await r.json()
@@ -47,7 +47,7 @@ export default function MaliAsistanPage() {
   }
 
   const active = status === "listening" || status === "speaking" || status === "connecting"
-  const label = status==="connecting"?"Bağlanılıyor...":status==="listening"?"Dinliyorum...":status==="speaking"?"Konuşuyor...":status==="error"?err:"Başlamak icin dokun"
+  const label = status==="connecting"?"Bağlanılıyor...":status==="listening"?"Dinliyorum...":status==="speaking"?"Konuşuyor...":status==="error"?err:"Başlamak için dokun"
 
   return (
     <div style={{minHeight:"100vh",background:"#0A1628",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",padding:"24px"}}>

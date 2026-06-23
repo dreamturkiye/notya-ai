@@ -16,16 +16,16 @@ export async function POST(req: NextRequest) {
   const user = await getUser(req)
   if (!user) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
 
-  const { note_data, musavir_name, musteri_name, tarih } = await req.json() as {
-    note_data: AccountingNoteV2; musavir_name: string; musteri_name: string; tarih?: string
+  const { note_data, müşavir_name, müşteri_name, tarih } = await req.json() as {
+    note_data: AccountingNoteV2; müşavir_name: string; müşteri_name: string; tarih?: string
   }
 
-  if (!note_data || !musavir_name || !musteri_name) {
+  if (!note_data || !müşavir_name || !müşteri_name) {
     return NextResponse.json({ success: false, error: 'Eksik parametreler' }, { status: 400 })
   }
 
-  const today = tarih || new Date().toLocaleDateString('tr-TR', {timeZone: 'Europe/Istanbul', day:'2-digit', month:'2-digit', year:'numeric' })
-  const dosyaNo = today.replace(/\./g, '') + '-' + musteri_name.substring(0,4).toUpperCase()
+  const today = tarih || new Date().toLocaleDateString('tr-TR', {timeZone: 'Europe/İstanbul', day:'2-digit', month:'2-digit', year:'numeric' })
+  const dosyaNo = today.replace(/\./g, '') + '-' + müşteri_name.substring(0,4).toUpperCase()
 
   const riskColor = note_data.vergi_risk_skoru <= 3 ? '#16A34A' : note_data.vergi_risk_skoru <= 6 ? '#D97706' : '#DC2626'
 
@@ -33,12 +33,12 @@ export async function POST(req: NextRequest) {
 
   const html = `<!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8">
-<title>Danismanlik Notu - ${musteri_name}</title>
+<title>Danismanlik Notu - ${müşteri_name}</title>
 <style>
   body { font-family: Georgia, 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #1a1a1a; font-size: 14px; line-height: 1.6; }
   .header { border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; margin-bottom: 30px; }
   .doc-title { font-size: 24px; font-weight: bold; color: #1e3a5f; letter-spacing: 2px; text-align: center; }
-  .musavir-info { text-align: center; margin-top: 8px; color: #444; }
+  .müşavir-info { text-align: center; margin-top: 8px; color: #444; }
   .meta-row { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #555; }
   h2 { font-size: 13px; font-weight: bold; color: #1e3a5f; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-top: 24px; }
   .risk-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; color: white; font-size: 18px; }
@@ -57,12 +57,12 @@ export async function POST(req: NextRequest) {
 <button class="no-print" onclick="window.print()">Yazdir / PDF Kaydet</button>
 <div class="header">
   <div class="doc-title">DANISMANLIK NOTU</div>
-  <div class="musavir-info">${musavir_name} &nbsp;|&nbsp; SMMM</div>
-  <div class="meta-row"><span>Dosya No: ${dosyaNo}</span><span>Tarih: ${today}</span><span>Musteri: ${musteri_name}</span></div>
+  <div class="müşavir-info">${müşavir_name} &nbsp;|&nbsp; SMMM</div>
+  <div class="meta-row"><span>Dosya No: ${dosyaNo}</span><span>Tarih: ${today}</span><span>Müşteri: ${müşteri_name}</span></div>
 </div>
-<h2>Konu ve Gorusme Ozeti</h2>
-<p><strong>${note_data.konu}</strong></p><p>${note_data.musteri_ozeti}</p>
-<p><em>Gorusme Turu: ${note_data.gorusme_turu}</em></p>
+<h2>Konu ve Görüşme Ozeti</h2>
+<p><strong>${note_data.konu}</strong></p><p>${note_data.müşteri_ozeti}</p>
+<p><em>Görüşme Turu: ${note_data.görüşme_turu}</em></p>
 <h2>Yasal Dayanak</h2><ol>
 ${(note_data.yasal_dayanak||[]).map((y: {kanun:string;madde:string;aciklama:string}) => 
   '<li><strong>' + y.kanun + ' ' + y.madde + '</strong> - ' + y.aciklama + '</li>').join('')}
@@ -92,9 +92,9 @@ ${(note_data.beyan_tarihleri||[]).map((b: {beyan:string;tarih:string}) => '<li>&
 <h2>Onemli Uyarilar</h2>
 ${(note_data.onemli_uyarilar||[]).map((u: string) => '<div class="alert">&#9888; ' + u + '</div>').join('')}
 <div class="footer">
-  <p>Bu danismanlik notu <strong>${musavir_name}</strong> (SMMM) tarafindan Notya AI destegiyle hazirlanmistir.</p>
+  <p>Bu danismanlik notu <strong>${müşavir_name}</strong> (SMMM) tarafindan Notya AI destegiyle hazırlanmistir.</p>
   <p>Mesleki sorumluluk sigortasi kapsamindadir. Tarih: ${today}</p>
-  <div class="sig-line"></div><p style="margin-top:4px;font-size:11px">${musavir_name} - SMMM Imzasi</p>
+  <div class="sig-line"></div><p style="margin-top:4px;font-size:11px">${müşavir_name} - SMMM Imzasi</p>
 </div></body></html>`
 
   return NextResponse.json({ success: true, html })

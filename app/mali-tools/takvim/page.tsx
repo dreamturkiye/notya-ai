@@ -18,7 +18,7 @@ export default function TakvimPage() {
 
   async function loadTakvim(sendAlert = false) {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giris/mali'); return }
+    if (!session) { router.push('/giriş/mali'); return }
     setLoading(true)
     const res = await fetch('/api/mali/takvim' + (sendAlert ? '?sendAlert=true' : ''), {
       headers: { 'Authorization': 'Bearer ' + session.access_token }
@@ -28,7 +28,7 @@ export default function TakvimPage() {
     setLoading(false)
   }
 
-  async function gonderAlert() { setSending(true); await loadTakvim(true); setSending(false) }
+  async function gönderAlert() { setSending(true); await loadTakvim(true); setSending(false) }
 
   const riskColor = (r: string) => r === 'kritik' ? '#DC2626' : r === 'uyari' ? '#D97706' : '#16A34A'
   const riskBg = (r: string) => r === 'kritik' ? '#FEF2F2' : r === 'uyari' ? '#FFFBEB' : '#F0FDF4'
@@ -49,9 +49,9 @@ export default function TakvimPage() {
           ))}
         </div>
         {kritikCount > 0 && (
-          <button onClick={gonderAlert} disabled={sending}
+          <button onClick={gönderAlert} disabled={sending}
             style={{ width: '100%', padding: 14, background: '#DC2626', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>
-            {sending ? 'Gonderiliyor...' : `${kritikCount} Kritik Uyariyi Telegram'a Gonder`}
+            {sending ? 'Gönderiliyor...' : `${kritikCount} Kritik Uyariyi Telegram'a Gönder`}
           </button>
         )}
         {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#6B7280' }}>Yükleniyor...</div> : (

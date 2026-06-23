@@ -12,12 +12,12 @@ export default function MaliDashboard() {
   const [user, setUser] = useState<Record<string,unknown> | null>(null)
   const [loading, setLoading] = useState(true)
   const [mevzuatSearch, setMevzuatSearch] = useState('')
-  const now = new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
+  const now = new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/İstanbul' }))
   const beyanlar = [...getBeyanTakvimi(now.getFullYear(), now.getMonth()+1), ...getBeyanTakvimi(now.getMonth()===11 ? now.getFullYear()+1 : now.getFullYear(), now.getMonth()===11 ? 1 : now.getMonth()+2)]
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { router.push('/giris'); return }
+      if (!session) { router.push('/giriş'); return }
       const { data: u } = await supabase.from('users').select('*').eq('id', session.user.id).single()
       if (u && !u.onboarding_completed && !u.profession_type) { router.push('/onboarding'); return }
       setUser(u)
@@ -59,11 +59,11 @@ export default function MaliDashboard() {
         <div style={{display:'flex',gap:8}}>
           <button onClick={()=>router.push('/asistan/mali')} className='nav-btn' style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button><button onClick={()=>router.push('/mali-tools')} className='nav-btn' style={{background:'#1B4332',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Mali Araçlar</button>
           <button onClick={()=>router.push('/session/mali')} className='hide-mobile' style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Görüşme</button>
-          <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giris'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
+          <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giriş'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
         </div>
       </nav>
       <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:32}}>
-        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>{(() => { const h = parseInt(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', hour12: false })); const g = h < 12 ? 'Günaydın' : h < 18 ? 'İyi Günler' : 'İyi Akşamlar'; return (user?.first_name ? g + ' ' + user.first_name + '!' : g + '!') })()}</h1>
+        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>{(() => { const h = parseInt(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/İstanbul', hour: '2-digit', hour12: false })); const g = h < 12 ? 'Günaydın' : h < 18 ? 'İyi Günler' : 'İyi Akşamlar'; return (user?.first_name ? g + ' ' + user.first_name + '!' : g + '!') })()}</h1>
         {/* STATS ROW */}
         <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
           {[{label:'Toplam Görüşme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Müşteriler',val:new Set(notes.map(n=>n.profession_type||'müşteri')).size,icon:'active_c'},{label:'Yaklaşan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
@@ -81,14 +81,14 @@ export default function MaliDashboard() {
               <div style={{background:'white',borderRadius:12,padding:40,textAlign:'center',color:'#94a3b8'}}>
                 <div className='empty-icon' style={{fontSize:48,marginBottom:12}}>Görüşme yok</div>
                 <p>Henüz görüşme notunuz yok. İlk görüşmenizi başlatın</p>
-                <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Görüşme Baslat</button>
+                <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Görüşme Başlat</button>
               </div>
             ) : (
               <div className='notes-grid' style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 {notes.map((n) => {
                   const riskScore = n.vergi_risk_skoru as number | undefined
                   const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.görüşme_turu as string || 'Görüşme'
-                  const dateStr = new Date(n.created_at as string).toLocaleDateString('tr-TR', {timeZone: 'Europe/Istanbul',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
+                  const dateStr = new Date(n.created_at as string).toLocaleDateString('tr-TR', {timeZone: 'Europe/İstanbul',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
                   return (
                     <div key={n.id as string} style={{background:'white',borderRadius:12,padding:20,boxShadow:'0 1px 3px rgba(0,0,0,0.1)',borderLeft:'4px solid' + (riskScore ? riskColor(riskScore) : '#2563EB')}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>

@@ -12,7 +12,7 @@ export default function MasakPage() {
   const [tutar, setTutar] = useState('')
   const [islemTipi, setIslemTipi] = useState('nakit_tahsilat')
   const [aciklama, setAciklama] = useState('')
-  const [tarih, setTarih] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }))
+  const [tarih, setTarih] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/İstanbul' }))
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
@@ -20,7 +20,7 @@ export default function MasakPage() {
     if (!tutar || !müşteriAdi) return
     setLoading(true)
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giris/mali'); return }
+    if (!session) { router.push('/giriş/mali'); return }
     const res = await fetch('/api/mali/masak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
@@ -53,7 +53,7 @@ export default function MasakPage() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Islem Tipi</label>
             <select value={islemTipi} onChange={e => setIslemTipi(e.target.value)}
               style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 15, boxSizing: 'border-box' }}>
-              {['nakit_tahsilat','nakit_odeme','eft','havale','diger'].map(t => <option key={t} value={t}>{t.replace('_', ' ').toUpperCase()}</option>)}
+              {['nakit_tahsilat','nakit_odeme','eft','havale','diğer'].map(t => <option key={t} value={t}>{t.replace('_', ' ').toUpperCase()}</option>)}
             </select>
           </div>
           {islemTipi === 'eft' && (

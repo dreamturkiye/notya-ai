@@ -201,7 +201,7 @@ const SessionPage: React.FC = () => {
               <option value='tarim'>Tarim ve Hayvancilik</option>
               <option value='enerji'>Enerji</option>
               <option value='finans'>Finans ve Sigorta</option>
-              <option value='diger'>Diger</option>
+              <option value='diğer'>Diğer</option>
             </select>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>

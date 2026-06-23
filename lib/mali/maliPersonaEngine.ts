@@ -1,7 +1,7 @@
-export type MaliPersonaId = 'deryayilmaz'
+export type MaliPersonaId = 'deryayılmaz'
 
 export interface MaliPreferences {
-  musavirId: string
+  müşavirId: string
   preferredMevzuat: Record<string, string>
   correctionHistory: Array<{ type: string; original: string; corrected: string; count: number }>
   noteStyle: Record<string, string>
@@ -22,13 +22,13 @@ export interface MaliPersona {
 }
 
 export const MALI_PERSONAS: Record<MaliPersonaId, MaliPersona> = {
-  deryayilmaz: {
-    id: 'deryayilmaz',
-    name: 'Uzm. Derya Yilmaz',
-    title: 'Mali Musavir & SMMM',
-    oda: 'Istanbul SMMM Odasi',
+  deryayılmaz: {
+    id: 'deryayılmaz',
+    name: 'Uzm. Derya Yılmaz',
+    title: 'Mali Müşavir & SMMM',
+    oda: 'İstanbul SMMM Odasi',
     yil: 15,
-    personality: 'Titiz, pratik, mevzuat odakli. Beyan takvimlerine takilmaz, musteriye anlasilir ozet verir.',
+    personality: 'Titiz, pratik, mevzuat odakli. Beyan takvimlerine takilmaz, müşteriye anlasilir ozet verir.',
     mevzuat: ['VUK', 'KDV Kanunu', 'GVK', 'KVK', 'SGK Mevzuati', 'TTK', 'TFRS'],
     references: ['Maliye Bakanligi Tebligleri', 'GIB Sirkulerleri', 'Yargitay Kararlari']
   }
@@ -37,10 +37,10 @@ export const MALI_PERSONAS: Record<MaliPersonaId, MaliPersona> = {
 export function buildMaliSystemPrompt(
   persona: MaliPersona,
   prefs: Partial<MaliPreferences> | null,
-  currentMusteri: Record<string, unknown> | null,
-  musavir?: { id: string; name: string } | null
+  currentMüşteri: Record<string, unknown> | null,
+  müşavir?: { id: string; name: string } | null
 ): string {
-  const addr = musavir ? musavir.name.split(' ')[0] + ' Bey/Hanim' : 'Musavir'
+  const addr = müşavir ? müşavir.name.split(' ')[0] + ' Bey/Hanim' : 'Müşavir'
   let prompt = `Kimligin: Sen ${persona.name} -- ${persona.title}. ${persona.oda}, ${persona.yil} yil deneyim.`
   prompt += `
 Kisilik: ${persona.personality}`
@@ -70,13 +70,13 @@ Sik kullandigi mevzuat: ${Object.values(prefs.preferredMevzuat).join(', ')}`
     if (prefs.noteStyle) prompt += `
 Not stili: ${JSON.stringify(prefs.noteStyle)}`
   }
-  if (currentMusteri) {
+  if (currentMüşteri) {
     prompt += `
-=== AKTIF MUSTERI === ${JSON.stringify(currentMusteri)}`
+=== AKTIF MUSTERI === ${JSON.stringify(currentMüşteri)}`
   }
   return prompt
 }
 
 export function getMaliPersona(): MaliPersonaId {
-  return 'deryayilmaz'
+  return 'deryayılmaz'
 }

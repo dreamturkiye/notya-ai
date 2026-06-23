@@ -19,7 +19,7 @@ export default function BordroPage() {
     if (!brutMaas || isNaN(Number(brutMaas))) { setError('Geçerli bir brüt maş girin'); return }
     setLoading(true); setError('')
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giris/mali'); return }
+    if (!session) { router.push('/giriş/mali'); return }
     const res = await fetch('/api/mali/bordro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
@@ -63,7 +63,7 @@ export default function BordroPage() {
           {error && <div style={{ color: '#DC2626', fontSize: 13, marginBottom: 12 }}>{error}</div>}
           <button onClick={hesapla} disabled={loading}
             style={{ width: '100%', padding: 14, background: '#1B4332', color: '#fff', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            {loading ? 'Hesaplaniyor...' : 'Bordroyu Hesapla'}
+            {loading ? 'Hesaplanıyor...' : 'Bordroyu Hesapla'}
           </button>
         </div>
         {result && (

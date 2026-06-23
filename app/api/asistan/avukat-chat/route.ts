@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     } else {
       const { data: newSessionData, error } = await getSupabase().from("avukat_sessions").insert({
         avukat_id: user.id,
-        muvekkel_id: muvekkilId || null,
+        müvekkil_id: muvekkilId || null,
         persona_id: personaId || null,
         messages: [],
         active_context: {}
@@ -43,16 +43,16 @@ export async function POST(req: NextRequest) {
       session = newSessionData;
     }
 
-    let muvekkel = null;
+    let müvekkil = null;
     if (muvekkilId) {
-      const { data: muvekkelData } = await getSupabase().from("musevvekiller").select("*").eq("id", muvekkilId).single();
-      muvekkel = muvekkelData;
+      const { data: müvekkilData } = await getSupabase().from("musevvekiller").select("*").eq("id", muvekkilId).single();
+      müvekkil = müvekkilData;
     }
 
     const personaId2 = getPersonaForBranch((branch || "ceza") as BranchId);
     const persona = AVUKAT_PERSONAS[personaId2];
 
-    const systemPrompt = buildAvukatSystemPrompt(persona, prefs, muvekkel || null, toAddressableUser(userRow));
+    const systemPrompt = buildAvukatSystemPrompt(persona, prefs, müvekkil || null, toAddressableUser(userRow));
 
     const aiResponse = await getAnthropic().messages.create({
       model: "claude-sonnet-4-20250514",
@@ -65,8 +65,8 @@ export async function POST(req: NextRequest) {
     const { speech, action, proactiveWarning } = JSON.parse(rawText);
 
     if (action?.type === "CREATE_MUVEKKEL") await getSupabase().from("musevvekiller").insert({ avukat_id: user.id, ...action.payload });
-    if (action?.type === "ADD_DELIL") await getSupabase().from("deliller").insert({ muvekkel_id: muvekkilId, ...action.payload });
-    if (action?.type === "ADD_SURE") await getSupabase().from("sure_takibi").insert({ avukat_id: user.id, muvekkel_id: muvekkilId, ...action.payload });
+    if (action?.type === "ADD_DELIL") await getSupabase().from("deliller").insert({ müvekkil_id: muvekkilId, ...action.payload });
+    if (action?.type === "ADD_SURE") await getSupabase().from("sure_takibi").insert({ avukat_id: user.id, müvekkil_id: muvekkilId, ...action.payload });
 
     await getSupabase().from("avukat_sessions").update({ messages: [...session.messages, { role: "user", content: message }, { role: "assistant", content: speech }] }).eq("id", session.id);
 

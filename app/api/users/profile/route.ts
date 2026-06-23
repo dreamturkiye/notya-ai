@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { profession_type, unvan, buro_adi, uzmanlik_alani, sehir, full_name,
+    const { profession_type, unvan, büro_adi, uzmanlik_alani, sehir, full_name,
             gender, addressing_preference, title, specialty, hospital, baro, uzmanlik, yil,
             firstName, lastName, addressingPreference } = body
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (full_name) updatePayload.full_name = full_name
     if (firstName || lastName) updatePayload.full_name = [firstName, lastName].filter(Boolean).join(' ') || full_name
     if (unvan) updatePayload.unvan = unvan
-    if (buro_adi) updatePayload.buro_adi = buro_adi
+    if (büro_adi) updatePayload.büro_adi = büro_adi
     if (sehir) updatePayload.sehir = sehir
     if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
     if (specialty && profession_type === 'doktor') updatePayload.specialty = specialty

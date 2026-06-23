@@ -38,24 +38,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       duration_seconds: body.duration_seconds || 0,
     }).eq("id", sessionId).eq("doctor_id", user.id)
 
-    // Mali musavirlik path
+    // Mali müşavirlik path
     if (body.profession === 'muhasebeci' || context?.profession === 'muhasebeci') {
       const { generateAccountingNoteV2 } = await import('@/lib/ai/noteGenerator')
       const maliNote = await generateAccountingNoteV2(
         transcript,
         context?.service_type || 'genel',
-        context?.gorusme_turu || body.session_type || 'musteri_gorusmesi',
+        context?.görüşme_turu || body.session_type || 'müşteri_görüşmesi',
         { company_name: context?.company_name, vergi_no: context?.vergi_no, faaliyet_alani: context?.faaliyet_alani, tax_period: '2026' }
       )
       const { data: note, error: noteError } = await getSupabase().from('notes').insert({
-        session_id: sessionId, doctor_id: user.id, note_type: 'mali_musavirlik',
+        session_id: sessionId, doctor_id: user.id, note_type: 'mali_müşavirlik',
         content_subjektif: JSON.stringify(maliNote.tespitler),
         content_degerlendirme: JSON.stringify(maliNote.yasal_dayanak),
         content_plan: JSON.stringify(maliNote.tavsiyeler),
         kritik_bulgular: maliNote.onemli_uyarilar,
         vergi_risk_skoru: maliNote.vergi_risk_skoru,
-        gorusme_turu: maliNote.gorusme_turu,
-        profession_type: 'mali_musavirlik',
+        görüşme_turu: maliNote.görüşme_turu,
+        profession_type: 'mali_müşavirlik',
         raw_note: JSON.stringify(maliNote),
         ai_model: 'claude-sonnet-4', ai_confidence: maliNote.ai_confidence,
       }).select().single()

@@ -110,7 +110,7 @@ export default function NewSession() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push("/giris"); return }
+      if (!user) { router.push("/giriş"); return }
 
       const { data: session, error: se } = await supabase.from("sessions").insert({
         doctor_id: user.id, specialty, session_type: sessionType,

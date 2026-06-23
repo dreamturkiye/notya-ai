@@ -1,7 +1,7 @@
 export interface MasakIslem {
-  musteriId: string
-  musteriAdi: string
-  islemTipi: 'nakit_tahsilat' | 'nakit_odeme' | 'eft' | 'havale' | 'diger'
+  müşteriId: string
+  müşteriAdi: string
+  islemTipi: 'nakit_tahsilat' | 'nakit_odeme' | 'eft' | 'havale' | 'diğer'
   tutar: number
   tarih: string
   aciklama?: string
@@ -37,14 +37,14 @@ export function analizMasakRisk(islem: MasakIslem): MasakAnaliz {
     analiz.bildirimGerekiyor = true
     analiz.riskSeviyesi = 'kritik'
     analiz.nedenler.push('VUK Muk.Md.257: 30.000 TL ve uzeri nakit islemler banka uzerinden yapilmalidir')
-    analiz.yapilmasiGerekenler.push('Banka transferine yonlendirin', 'Nakit kabul etmeyin', 'MASAK bildirimi hazirlayin')
+    analiz.yapilmasiGerekenler.push('Banka transferine yonlendirin', 'Nakit kabul etmeyin', 'MASAK bildirimi hazırlayin')
   }
 
   if (islem.tutar >= 75000) {
     if (analiz.riskSeviyesi === 'yok' || analiz.riskSeviyesi === 'dusuk' || analiz.riskSeviyesi === 'orta') {
       analiz.riskSeviyesi = 'yuksek'
     }
-    analiz.nedenler.push('Yuksek tutarli islem - MASAK supheli islem kontrolu')
+    analiz.nedenler.push('Yuksek tutarli islem - MASAK Şüpheli islem kontrolu')
   }
 
   if (islem.islemTipi === 'eft' && (islem.aciklama?.length || 0) < EFT_ACIKLAMA_MIN_KARAKTER) {
@@ -57,7 +57,7 @@ export function analizMasakRisk(islem: MasakIslem): MasakAnaliz {
   }
 
   if (analiz.bildirimGerekiyor) {
-    analiz.telegramMesaji = `🚨 MASAK KRİTİK UYARI\nMüşteri: ${islem.musteriAdi}\nTutar: ${islem.tutar} TL\nTip: ${islem.islemTipi}\nTarih: ${islem.tarih}\nNeden: ${analiz.nedenler[0]}`
+    analiz.telegramMesaji = `🚨 MASAK KRİTİK UYARI\nMüşteri: ${islem.müşteriAdi}\nTutar: ${islem.tutar} TL\nTip: ${islem.islemTipi}\nTarih: ${islem.tarih}\nNeden: ${analiz.nedenler[0]}`
   }
 
   return analiz
@@ -73,10 +73,10 @@ export function getMasakBildirimTarihleri(year: number, month: number): { gun: n
   const lastDay = new Date(year, month, 0).getDate()
   const result: { gun: number; aciklama: string }[] = []
   if (lastDay >= 30) {
-    result.push({ gun: 30, aciklama: 'MASAK supheli islem bildirimi son gunu (eger ay 30 gun ise)' })
+    result.push({ gun: 30, aciklama: 'MASAK Şüpheli islem bildirimi son gunu (eger ay 30 gun ise)' })
   }
   if (lastDay === 31) {
-    result.push({ gun: 31, aciklama: 'MASAK supheli islem bildirimi son gunu (eger ay 31 gun ise)' })
+    result.push({ gun: 31, aciklama: 'MASAK Şüpheli islem bildirimi son gunu (eger ay 31 gun ise)' })
   }
   return result
 }

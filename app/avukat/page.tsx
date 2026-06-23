@@ -49,8 +49,8 @@ export default function AvukatPage() {
             <a href="#fiyatlar" className="nav-link">Fiyatlar</a>
           </div>
           <div style={{display:"flex",gap:"12px",alignItems:"center"}}>
-            <Link href="/giris/avukat" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
-            <Link href="/giris/avukat" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ücretsiz Deneyin</Link>
+            <Link href="/giriş/avukat" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
+            <Link href="/giriş/avukat" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ücretsiz Deneyin</Link>
           </div>
         </div>
       </nav>
@@ -72,8 +72,8 @@ export default function AvukatPage() {
               TCK, CMK, HMK, TMK — 9 uzman avukat, dilekçe oluşturur, sure takibi yapar, emsal karar arar. Her seanstan ogrenir.
             </p>
             <div style={{display:"flex",gap:"14px",alignItems:"center",flexWrap:"wrap",marginBottom:"40px"}}>
-              <Link href="/giris/avukat" className="btn-primary">Ücretsiz Başlayın</Link>
-              <Link href="/giris/avukat" className="btn-secondary">Demo Goruntule</Link>
+              <Link href="/giriş/avukat" className="btn-primary">Ücretsiz Başlayın</Link>
+              <Link href="/giriş/avukat" className="btn-secondary">Demo Goruntule</Link>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:"16px",paddingTop:"24px",borderTop:"1px solid var(--border)"}}>
               <div style={{display:"flex"}}>
@@ -175,7 +175,7 @@ export default function AvukatPage() {
               <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"14px",paddingBottom:"12px",borderBottom:"1px solid var(--border)"}}>
                 <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--primary-light)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px"}}>⚖️</div>
                 <div>
-                  <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Kemal Celik — Istanbul Barosu</div>
+                  <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Kemal Celik — İstanbul Barosu</div>
                   <div style={{fontSize:"11px",color:"var(--secondary)",fontFamily:"Lato,sans-serif",display:"flex",alignItems:"center",gap:"4px"}}>
                     <span style={{width:"5px",height:"5px",borderRadius:"50%",background:"var(--secondary)",display:"inline-block"}}></span>Dinliyor
                   </div>
@@ -194,11 +194,11 @@ export default function AvukatPage() {
                 </div>
               ))}
             </div>
-            <Link href="/giris/avukat" className="btn-primary">Şimdi Baslayın</Link>
+            <Link href="/giriş/avukat" className="btn-primary">Şimdi Başlayın</Link>
           </div>
           <div style={{position:"relative"}}>
             <div style={{borderRadius:"16px",overflow:"hidden",boxShadow:"0 20px 60px rgba(30,58,95,.12)"}}>
-              <img src={CONSULT_IMG} alt="Avukat calisma" style={{width:"100%",height:"480px",objectFit:"cover",filter:"brightness(.95) saturate(.85)"}} />
+              <img src={CONSULT_IMG} alt="Avukat çalışma" style={{width:"100%",height:"480px",objectFit:"cover",filter:"brightness(.95) saturate(.85)"}} />
             </div>
             <div className="card" style={{position:"absolute",bottom:"24px",right:"-20px",padding:"14px 18px",boxShadow:"0 8px 24px rgba(180,83,9,.15)",borderLeft:"4px solid var(--secondary)"}}>
               <div style={{fontSize:"11px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",marginBottom:"4px"}}>Otomatik Tespit</div>
@@ -262,7 +262,7 @@ export default function AvukatPage() {
                 <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"28px"}}>
                   {plan.features.map(f=>(<div key={f} style={{display:"flex",alignItems:"center",gap:"8px",fontSize:"14px",color:"var(--text)",fontFamily:"Lato,sans-serif"}}><span style={{color:"var(--secondary)",fontWeight:"700"}}>✓</span>{f}</div>))}
                 </div>
-                <Link href="/giris/avukat" style={{display:"block",padding:"13px",textAlign:"center",borderRadius:"6px",textDecoration:"none",fontSize:"14px",fontWeight:"700",fontFamily:"Lato,sans-serif",background:plan.highlight?"var(--accent)":"transparent",color:plan.highlight?"#fff":"var(--primary)",border:plan.highlight?"none":"2px solid var(--primary)",boxShadow:plan.highlight?"0 4px 14px rgba(255,107,75,.3)":"none"}}>{plan.cta}</Link>
+                <Link href="/giriş/avukat" style={{display:"block",padding:"13px",textAlign:"center",borderRadius:"6px",textDecoration:"none",fontSize:"14px",fontWeight:"700",fontFamily:"Lato,sans-serif",background:plan.highlight?"var(--accent)":"transparent",color:plan.highlight?"#fff":"var(--primary)",border:plan.highlight?"none":"2px solid var(--primary)",boxShadow:plan.highlight?"0 4px 14px rgba(255,107,75,.3)":"none"}}>{plan.cta}</Link>
               </div>
             ))}
           </div>
@@ -275,7 +275,7 @@ export default function AvukatPage() {
         <div className="section-label" style={{justifyContent:"center"}}>Başlamaya Hazır mısınız?</div>
         <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugün Başlayın.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>İlk 14 Gün Ücretsiz.</em></h2>
         <p style={{fontSize:"17px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",margin:"0 0 36px",maxWidth:"420px",display:"inline-block",lineHeight:"1.75"}}>Kurucu üye fiyatını kaçırmayın. Ilk 100 avukat icin gecerli.</p>
-        <div><Link href="/giris/avukat" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ücretsiz Hesap Ac</Link></div>
+        <div><Link href="/giriş/avukat" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ücretsiz Hesap Ac</Link></div>
         <div style={{marginTop:"16px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>KVKK uyumlu · Baro gizlilik standartlari · Dilediğinizde iptal</div>
       </section>
 

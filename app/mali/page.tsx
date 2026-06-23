@@ -49,8 +49,8 @@ export default function MaliPage() {
             <a href="#fiyatlar" className="nav-link">Fiyatlar</a>
           </div>
           <div style={{display:"flex",gap:"12px",alignItems:"center"}}>
-            <Link href="/giris/mali" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
-            <Link href="/giris/mali" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ücretsiz Deneyin</Link>
+            <Link href="/giriş/mali" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
+            <Link href="/giriş/mali" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ücretsiz Deneyin</Link>
           </div>
         </div>
       </nav>
@@ -72,8 +72,8 @@ export default function MaliPage() {
               VUK, KDV, GVK ve SGK mevzuatini ustunde tutan, beyan takvimlerini otomatik takip eden, her seanstan öğrenen AI mali müşavir.
             </p>
             <div style={{display:"flex",gap:"14px",alignItems:"center",flexWrap:"wrap",marginBottom:"40px"}}>
-              <Link href="/giris/mali" className="btn-primary">Ücretsiz Başlayın</Link>
-              <Link href="/giris/mali" className="btn-secondary">Demo Goruntule</Link>
+              <Link href="/giriş/mali" className="btn-primary">Ücretsiz Başlayın</Link>
+              <Link href="/giriş/mali" className="btn-secondary">Demo Goruntule</Link>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:"16px",paddingTop:"24px",borderTop:"1px solid var(--border)"}}>
               <div style={{display:"flex"}}>
@@ -194,7 +194,7 @@ export default function MaliPage() {
                 </div>
               ))}
             </div>
-            <Link href="/giris/mali" className="btn-primary">Şimdi Baslayın</Link>
+            <Link href="/giriş/mali" className="btn-primary">Şimdi Başlayın</Link>
           </div>
           <div style={{position:"relative"}}>
             <div style={{borderRadius:"16px",overflow:"hidden",boxShadow:"0 20px 60px rgba(27,67,50,.12)"}}>
@@ -304,7 +304,7 @@ export default function MaliPage() {
                 <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"28px"}}>
                   {plan.features.map(f=>(<div key={f} style={{display:"flex",alignItems:"center",gap:"8px",fontSize:"14px",color:"var(--text)",fontFamily:"Lato,sans-serif"}}><span style={{color:"var(--secondary)",fontWeight:"700"}}>✓</span>{f}</div>))}
                 </div>
-                <Link href="/giris/mali" style={{display:"block",padding:"13px",textAlign:"center",borderRadius:"6px",textDecoration:"none",fontSize:"14px",fontWeight:"700",fontFamily:"Lato,sans-serif",background:plan.highlight?"var(--accent)":"transparent",color:plan.highlight?"#fff":"var(--primary)",border:plan.highlight?"none":"2px solid var(--primary)",boxShadow:plan.highlight?"0 4px 14px rgba(255,107,75,.3)":"none"}}>{plan.cta}</Link>
+                <Link href="/giriş/mali" style={{display:"block",padding:"13px",textAlign:"center",borderRadius:"6px",textDecoration:"none",fontSize:"14px",fontWeight:"700",fontFamily:"Lato,sans-serif",background:plan.highlight?"var(--accent)":"transparent",color:plan.highlight?"#fff":"var(--primary)",border:plan.highlight?"none":"2px solid var(--primary)",boxShadow:plan.highlight?"0 4px 14px rgba(255,107,75,.3)":"none"}}>{plan.cta}</Link>
               </div>
             ))}
           </div>
@@ -317,7 +317,7 @@ export default function MaliPage() {
         <div className="section-label" style={{justifyContent:"center"}}>Başlamaya Hazır mısınız?</div>
         <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugün Başlayın.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>İlk 14 Gün Ücretsiz.</em></h2>
         <p style={{fontSize:"17px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",margin:"0 0 36px",maxWidth:"420px",display:"inline-block",lineHeight:"1.75"}}>Kurucu üye fiyatını kaçırmayın. Ilk 100 SMMM icin gecerli.</p>
-        <div><Link href="/giris/mali" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ücretsiz Hesap Ac</Link></div>
+        <div><Link href="/giriş/mali" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ücretsiz Hesap Ac</Link></div>
         <div style={{marginTop:"16px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>KVKK uyumlu · Türkce destek · Dilediğinizde iptal</div>
       </section>
 

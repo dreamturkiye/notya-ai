@@ -46,9 +46,9 @@ export default function AvukatGiriş() {
             {loading ? "Giriş yapiliyor..." : "Giriş Yap"}</button>
         </form>
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"12px",color:"#64748b"}}>
-          <a href="/giris" style={{color:"#94a3b8"}}>Genel giris</a>{" | "}
-          <a href="/giris/mali" style={{color:"#10B981"}}>Mali Müşavir</a>{" | "}
-          <a href="/giris/doktor" style={{color:"#3B82F6"}}>Doktor</a>
+          <a href="/giriş" style={{color:"#94a3b8"}}>Genel giriş</a>{" | "}
+          <a href="/giriş/mali" style={{color:"#10B981"}}>Mali Müşavir</a>{" | "}
+          <a href="/giriş/doktor" style={{color:"#3B82F6"}}>Doktor</a>
         </div>
       </div>
     </div>

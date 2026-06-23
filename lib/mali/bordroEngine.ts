@@ -18,7 +18,7 @@ export interface BordroResult {
   netMaas: number
   isverenToplamMaliyet: number
   kidemTazminatiTavan: number
-  yillikKidemHakki: number
+  yıllıkKidemHakki: number
   aciklama: string[]
 }
 
@@ -82,7 +82,7 @@ export function hesaplaBordro(input: BordroInput): BordroResult {
   const isverenToplamMaliyet = brut + sgkIsveren + issizlikIsveren
 
   const kidemYili = input.kidemYili ?? 0
-  const yillikKidemHakki = kidemYili * Math.min(brut, KIDEM_TAZMINATI_TAVAN)
+  const yıllıkKidemHakki = kidemYili * Math.min(brut, KIDEM_TAZMINATI_TAVAN)
 
   const aciklama: string[] = [
     `Brüt maaş: ${brut.toLocaleString('tr-TR')} TL`,
@@ -110,7 +110,7 @@ export function hesaplaBordro(input: BordroInput): BordroResult {
     netMaas,
     isverenToplamMaliyet,
     kidemTazminatiTavan: KIDEM_TAZMINATI_TAVAN,
-    yillikKidemHakki,
+    yıllıkKidemHakki,
     aciklama,
   }
 }

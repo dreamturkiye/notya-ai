@@ -5,18 +5,18 @@ export const MEVZUAT_DATABASE: Record<string, { kanun: string; madde: string; oz
   tevkifat: { kanun: "KDV GT 117", madde: "IV/A", ozet: "KDV tevkifat uygulamasi ve oranlari", url: "gib.gov.tr", yururluk: "2012" },
   stopaj: { kanun: "GVK 193", madde: "Md.94", ozet: "Gelir vergisi tevkifati zorunlulugu ve oranlari", url: "mevzuat.gov.tr", yururluk: "1961" },
   kurumlar_vergisi: { kanun: "KVK 5520", madde: "Md.1-36", ozet: "Kurumlar vergisi orani 2026: %25", url: "mevzuat.gov.tr", yururluk: "2006" },
-  transfer_fiyatlandirmasi: { kanun: "KVK", madde: "Md.13", ozet: "Iliskili kisilerle yapilan islemlerde emsallere uygunluk", url: "gib.gov.tr", yururluk: "2006" },
+  transfer_fiyatlandirmasi: { kanun: "KVK", madde: "Md.13", ozet: "Iliskili kisilerle yapilan islemlerde emsallere uygünlük", url: "gib.gov.tr", yururluk: "2006" },
   ar_ge_indirimi: { kanun: "KVK", madde: "Md.32A", ozet: "Ar-Ge harcamalari %100-%150 indirimi", url: "gib.gov.tr", yururluk: "2016" },
   enflasyon_muhasebesi: { kanun: "VUK Muk.Md.298", madde: "298/A-B", ozet: "TMS 29 enflasyon duzeltmesi 2023+ zorunlu", url: "kgk.gov.tr", yururluk: "2023" },
   nakit_tahsilat: { kanun: "VUK Muk.Md.257", madde: "Mukerrer Md.257", ozet: "30.000 TL uzeri tahsilat/odemelerde banka zorunlulugu 2026", url: "gib.gov.tr", yururluk: "2026" },
   efatura: { kanun: "VUK GT 509", madde: "2019/1 Teblig", ozet: "e-Fatura zorunluluk esigi ve uygulama kapsamlari", url: "ebelge.gib.gov.tr", yururluk: "2019" },
   edefter: { kanun: "VUK GT 509", madde: "2019/1 Teblig", ozet: "e-Fatura zorunluluk esigi ve uygulama kapsamlari", url: "ebelge.gib.gov.tr", yururluk: "2019" },
-  sgk_ebildirge: { kanun: "SGK e-Bildirge", madde: "", ozet: "SGK e-Bildirge gonderimi", url: "sgk.gov.tr", yururluk: "2026" },
-  beyanname: { kanun: "Beyanname", madde: "", ozet: "Yillik ve aylik beyanname gonderimi", url: "gib.gov.tr", yururluk: "2026" },
-  muhtasar_beyanname: { kanun: "Muhtasar Beyanname", madde: "", ozet: "Muhtasar beyanname gonderimi", url: "gib.gov.tr", yururluk: "2026" },
-  sgk_uzlasma: { kanun: "SGK Uzlasma", madde: "", ozet: "SGK uzlasma gonderimi", url: "sgk.gov.tr", yururluk: "2026" },
-  kurumlar_gecici_vergi: { kanun: "Kurumlar Gecici Vergi", madde: "", ozet: "Kurumlar gecici vergi gonderimi", url: "gib.gov.tr", yururluk: "2026" },
-  yapilandirma: { kanun: "Yapilandirma", madde: "", ozet: "Yapilandirma gonderimi", url: "gib.gov.tr", yururluk: "2026" },
+  sgk_ebildirge: { kanun: "SGK e-Bildirge", madde: "", ozet: "SGK e-Bildirge gönderimi", url: "sgk.gov.tr", yururluk: "2026" },
+  beyanname: { kanun: "Beyanname", madde: "", ozet: "Yıllık ve aylik beyanname gönderimi", url: "gib.gov.tr", yururluk: "2026" },
+  muhtasar_beyanname: { kanun: "Muhtasar Beyanname", madde: "", ozet: "Muhtasar beyanname gönderimi", url: "gib.gov.tr", yururluk: "2026" },
+  sgk_uzlasma: { kanun: "SGK Uzlasma", madde: "", ozet: "SGK uzlasma gönderimi", url: "sgk.gov.tr", yururluk: "2026" },
+  kurumlar_gecici_vergi: { kanun: "Kurumlar Gecici Vergi", madde: "", ozet: "Kurumlar gecici vergi gönderimi", url: "gib.gov.tr", yururluk: "2026" },
+  yapilandirma: { kanun: "Yapilandirma", madde: "", ozet: "Yapilandirma gönderimi", url: "gib.gov.tr", yururluk: "2026" },
   masak_eft_aciklama: { kanun: "MASAK EFT Aciklama", madde: "", ozet: "EFT aciklamasi 20 karakter", url: "masak.gov.tr", yururluk: "2026" },
   vuk_592: { kanun: "VUK 592", madde: "", ozet: "Vergi uygulama konusu 592", url: "gib.gov.tr", yururluk: "2026" },
 };
@@ -47,7 +47,7 @@ export function getBeyanTakvimi(year: number, month: number): Array<{ beyan: str
   if (month === 2) {
     beyanlar.push({ beyan: "4.Gecici Vergi", son_gun: advanceToNextWeekday(year, month, 17), aciklama: "Dorduncu gecici vergi", kanun: "Gecici Vergi" });
   } else if (month === 3) {
-    beyanlar.push({ beyan: "Yillik GV", son_gun: advanceToNextWeekday(year, month, 31), aciklama: "Yillik genel vergi", kanun: "Genel Vergi" });
+    beyanlar.push({ beyan: "Yıllık GV", son_gun: advanceToNextWeekday(year, month, 31), aciklama: "Yıllık genel vergi", kanun: "Genel Vergi" });
   } else if (month === 4) {
     beyanlar.push({ beyan: "Kurumlar Vergisi", son_gun: advanceToNextWeekday(year, month, 30), aciklama: "Kurumlar vergisi", kanun: "Kurumlar Vergisi" });
   } else if (month === 5) {
@@ -97,10 +97,10 @@ export function detectKeywords(text: string): string[] {
     tevkifat: ["tevkifat", "vergi indirimi"],
     stopaj: ["stopaj", "gelir vergisi"],
     kurumlar_vergisi: ["kurumlar vergisi", "kvy"],
-    transfer_fiyatlandirmasi: ["transfer fiyatlandirma", "emsal uygunluk"],
+    transfer_fiyatlandirmasi: ["transfer fiyatlandirma", "emsal uygünlük"],
     ar_ge_indirimi: ["ar-ge indirim", "ara geliştirme"],
     enflasyon_muhasebesi: ["enflasyon muhasebe", "tms 29"],
-    nakit_tahsilat: ["nakit tahsilat", "30.000 tl siniri"],
+    nakit_tahsilat: ["nakit tahsilat", "30.000 tl sınırı"],
     efatura: ["e-fatura", "elektronik fatura"],
     edefter: ["e-defter", "elektronik defter"],
     sgk_ebildirge: ["sgk bildirge", "sgk e-bildirge"],

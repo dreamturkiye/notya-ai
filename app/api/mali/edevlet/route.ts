@@ -19,23 +19,23 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { sorguTipi, vergiNo, tcNo, musteriAdi, useAI } = body as EDevletSorgu & { useAI?: boolean }
+    const { sorguTipi, vergiNo, tcNo, müşteriAdi, useAI } = body as EDevletSorgu & { useAI?: boolean }
 
     if (!sorguTipi) {
       return NextResponse.json({ success: false, error: 'sorguTipi required' }, { status: 400 })
     }
 
-    const sorgu: EDevletSorgu = { sorguTipi, vergiNo, tcNo, musteriAdi }
+    const sorgu: EDevletSorgu = { sorguTipi, vergiNo, tcNo, müşteriAdi }
     const sonuc = buildEDevletRehber(sorgu)
 
     if (useAI) {
       const aiResponse = await getAnthropic().messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 300,
-        system: 'Sen Derya Yilmaz, Turk mali musavirisin. Kisa, net, pratik Turkce cevaplar ver.',
+        system: 'Sen Derya Yılmaz, Türk mali müşavirisin. Kısa, net, pratik Türkçe cevaplar ver.',
         messages: [{
           role: 'user',
-          content: `Musteri icin ${sorguTipi} sorgusu yapilacak. Sonuclari ve adim adim ne yapmasi gerektigini anlat. Vergi no: ${vergiNo || 'belirtilmedi'}`
+          content: `Müşteri icin ${sorguTipi} sorgusu yapilacak. Sonuclari ve adim adim ne yapmasi gerektigini anlat. Vergi no: ${vergiNo || 'belirtilmedi'}`
         }]
       })
       const aiText = aiResponse.content[0]?.type === 'text' ? aiResponse.content[0].text : ''

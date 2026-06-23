@@ -31,7 +31,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { router.push("/giris"); return }
+      if (!user) { router.push("/giriş"); return }
       setUser({ email: user.email! })
 
       const session = await supabase.auth.getSession()
@@ -63,11 +63,11 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  async function signOut() { await supabase.auth.signOut(); router.push("/giris") }
+  async function signOut() { await supabase.auth.signOut(); router.push("/giriş") }
 
   const EMOJI: Record<string, string> = { pediatri:"🧒", kardiyoloji:"❤️", noroloji:"🧠", psikiyatri:"💭", dahiliye:"🩺", ortopedi:"🦴", kadin_hastaliklari:"👶", genel:"👨‍⚕️", acil:"🚨" }
 
-  function fmt(iso: string) { return new Date(iso).toLocaleString("tr-TR",{timeZone:'Europe/Istanbul',day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) }
+  function fmt(iso: string) { return new Date(iso).toLocaleString("tr-TR",{timeZone:'Europe/İstanbul',day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) }
 
   return (
     <>

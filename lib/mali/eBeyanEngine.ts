@@ -20,7 +20,7 @@ export interface BeyanSonuc {
   mesaj: string
   referansNo?: string
   tahakkukNo?: string
-  odenecekTutar?: number
+  ödenecekTutar?: number
   sonOdemeTarihi?: string
   pdfUrl?: string
   hata?: string
@@ -43,11 +43,11 @@ export async function gibTokenDogrula(apiKey: string): Promise<{ gecerli: boolea
     const error = await res.text()
     return { gecerli: false, mesaj: error || 'Token dogrulama basarisiz' }
   } catch (err: any) {
-    return { gecerli: false, mesaj: err.message || 'Baglanti hatasi' }
+    return { gecerli: false, mesaj: err.message || 'Bağlantı hatası' }
   }
 }
 
-export async function kdvBeyanGonder(config: EBeyanConfig, beyan: KdvBeyan): Promise<BeyanSonuc> {
+export async function kdvBeyanGönder(config: EBeyanConfig, beyan: KdvBeyan): Promise<BeyanSonuc> {
   try {
     const body = {
       vergiNo: beyan.vergiNo,
@@ -60,7 +60,7 @@ export async function kdvBeyanGonder(config: EBeyanConfig, beyan: KdvBeyan): Pro
         istisnaIslemler: beyan.istisnaIslemler
       }
     }
-    const res = await fetch(GIB_EBEYAN_BASE + '/entegrator/api/beyanname/kdv/gonder', {
+    const res = await fetch(GIB_EBEYAN_BASE + '/entegrator/api/beyanname/kdv/gönder', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -70,19 +70,19 @@ export async function kdvBeyanGonder(config: EBeyanConfig, beyan: KdvBeyan): Pro
     })
     const data = await res.json()
     if (!res.ok) {
-      return { basarili: false, mesaj: data.mesaj || 'Gonderim basarisiz', hata: data.hata }
+      return { basarili: false, mesaj: data.mesaj || 'Gönderim basarisiz', hata: data.hata }
     }
     return {
       basarili: true,
-      mesaj: 'Beyanname basariyla gonderildi',
+      mesaj: 'Beyanname basariyla gönderildi',
       referansNo: data.referansNo,
       tahakkukNo: data.tahakkukNo,
-      odenecekTutar: data.odenecekTutar,
+      ödenecekTutar: data.ödenecekTutar,
       sonOdemeTarihi: data.sonOdemeTarihi,
       pdfUrl: data.pdfUrl
     }
   } catch (err: any) {
-    return { basarili: false, mesaj: 'Gonderim hatasi', hata: err.message }
+    return { basarili: false, mesaj: 'Gönderim hatasi', hata: err.message }
   }
 }
 
@@ -106,7 +106,7 @@ export async function beyanSorgula(config: EBeyanConfig, referansNo: string): Pr
       mesaj: 'Sorgulama basarili',
       referansNo: data.referansNo,
       tahakkukNo: data.tahakkukNo,
-      odenecekTutar: data.odenecekTutar,
+      ödenecekTutar: data.ödenecekTutar,
       sonOdemeTarihi: data.sonOdemeTarihi,
       pdfUrl: data.pdfUrl
     }
