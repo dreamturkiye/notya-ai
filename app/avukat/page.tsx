@@ -142,12 +142,12 @@ export default function AvukatPage() {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}} className="feature-grid">
             {[
-              {icon:"⏰",color:"var(--accent)",bg:"#FFF0EC",title:"Süre Takibi",desc:"Temyiz, itiraz, itirazen iptal — tum hukuki sureler otomatik takip. Son gunden 7 ve 3 gun once Telegram uyarisi.",badge:"Otomatik hatırlat"},
-              {icon:"📝",color:"var(--primary)",bg:"var(--primary-light)",title:"Dilekçe Oluştur",desc:"Müvekkil bilgilerini soyleyin — mahkeme adina, dosya numarasina ve kanuna gore tam dilekçe saniyeler icinde.",badge:"Saniyeler içinde"},
-              {icon:"🔍",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Emsal Arama",desc:"Yargitay ve Danistay kararlarinda emsal arar, dava stratejinizi güçlendirecek ictihat ozetler.",badge:"Gerçek emsal"},
-              {icon:"🧠",color:"#7C3AED",bg:"#F3E8FF",title:"Strateji Motoru",desc:"Dava dosyasini analiz eder, delil eksikliklerini tespit eder, alternatif hukuki stratejileri proaktif sunar.",badge:"Proaktif analiz"},
-              {icon:"👥",color:"#0891B2",bg:"#E0F7FA",title:"Müvekkil CRM",desc:"Her müvekkilin dosyasi, sureci, delilleri ve yazismalari tek panelde. Hicbir detay kacirilmaz.",badge:"Tam dosya paneli"},
-              {icon:"🔐",color:"#1e3a5f",bg:"var(--primary-light)",title:"Avukat Gizliligi",desc:"Müvekkil bilgileri AES-256 sifreleme. Avukat-muvekkil gizliligine tam uyumlu. Türkiye lokasyonu.",badge:"Gizlilik uyumlu"},
+              {icon:"📝",color:"var(--primary)",bg:"var(--primary-light)",title:"Dilekce Olusturucu",desc:"Bilgileri girin — 30 saniyede HMK/CMK formatinda mahkemeye hazir tam metin. 8 dilekce turu desteklenir.",badge:"30 saniyede"},
+              {icon:"⏰",color:"var(--accent)",bg:"#FFF0EC",title:"Sure & Deadline Engine",desc:"HMK, CMK, IIK, IYUK surelerini otomatik hesaplar. 3 gun kala kritik uyari. Sure kacirmak artik mumkun degil.",badge:"Sifir sure hatasi"},
+              {icon:"🔗",color:"#0891B2",bg:"#E0F7FA",title:"Muvekkil Portali",desc:"Her muvekkile ozel link. Dava durumu, yaklasan sureler, AI yanit. Telefon trafiginiz ciddi oranda azalir.",badge:"Self-servis muvekkil"},
+              {icon:"🔍",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Ictihat & Yargitay",desc:"Yargitay ve Danistay kararlarinda AI arama. Emsal bulur, dava stratejisi olusturur, kararlari ozetler.",badge:"40+ karar"},
+              {icon:"⚖️",color:"#7C3AED",bg:"#F3E8FF",title:"Sozlesme Analizi",desc:"Metni yapistirin. TBK uyumu, kirmizi bayraklar, eksik maddeler, iyilestirme onerileri — 60 saniyede.",badge:"TBK uyumlu"},
+              {icon:"🔐",color:"#1e3a5f",bg:"var(--primary-light)",title:"Avukat Gizliligi",desc:"Muvekkil bilgileri AES-256 sifreleme. Avukat-muvekkil gizliligine tam uyumlu. Turkiye lokasyonu.",badge:"Gizlilik uyumlu"},
             ].map(f=>(
               <div key={f.title} className="card" style={{padding:"28px"}}>
                 <div style={{width:"48px",height:"48px",borderRadius:"12px",background:f.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",marginBottom:"16px"}}>{f.icon}</div>
@@ -247,9 +247,9 @@ export default function AvukatPage() {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}} className="pricing-grid">
             {[
-              {name:"Başlangıç",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 müvekkil","Süre takibi","Dilekçe oluşturma","Telegram uyarilari"],highlight:false,cta:"Başlayın"},
-              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sınırsız seans","Sınırsız müvekkil","Her sey dahil","Emsal arama","Strateji motoru","Öncelikli destek"],highlight:true,cta:"En Popüler"},
-              {name:"Hukuk Bürosu",price:"2.999 TL",orig:"4.999 TL",features:["Sınırsız seans","5 avukat","Takim paneli","Müvekkil portalı","Tüm özellikler"],highlight:false,cta:"Başlayın"},
+              {name:"Baslangic",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 muvekkil","Sure takibi","Dilekce olusturma","Telegram uyarilari"],highlight:false,cta:"Baslayin"},
+              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sinirsiz seans","Sinirsiz muvekkil","Dilekce + Sure + Ictihat","Sozlesme analizi","Muvekkil portali","Oncelikli destek"],highlight:true,cta:"En Populer"},
+              {name:"Hukuk Burosu",price:"2.999 TL",orig:"4.999 TL",features:["Sinirsiz seans","5 avukat","Takim paneli","Muvekkil portali","Tum ozellikler"],highlight:false,cta:"Baslayin"},
             ].map((plan)=>(
               <div key={plan.name} className="card" style={{padding:"32px 28px",position:"relative",border:plan.highlight?"2px solid var(--primary)":"1px solid var(--border)",boxShadow:plan.highlight?"0 8px 32px rgba(30,58,95,.15)":"none"}}>
                 {plan.highlight && <div style={{position:"absolute",top:"-13px",left:"50%",transform:"translateX(-50%)",background:"var(--primary)",color:"#fff",fontSize:"11px",fontWeight:"700",padding:"4px 16px",borderRadius:"20px",fontFamily:"Lato,sans-serif",letterSpacing:".06em",whiteSpace:"nowrap"}}>EN POPULER</div>}
