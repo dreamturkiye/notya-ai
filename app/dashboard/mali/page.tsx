@@ -42,7 +42,14 @@ export default function MaliDashboard() {
           .main-grid { grid-template-columns: 1fr !important; }
           .notes-grid { grid-template-columns: 1fr !important; }
           .hide-mobile { display:none !important; }
-          .main-pad { padding: 16px !important; }
+          .main-pad { padding: 12px !important; }
+          .stat-number { font-size: 20px !important; }
+          .stat-label { font-size: 11px !important; }
+          .stat-card { padding: 14px 16px !important; }
+          .section-title { font-size: 15px !important; margin-bottom: 10px !important; }
+          .page-title { font-size: 18px !important; margin-bottom: 16px !important; }
+          .nav-btn { padding: 6px 10px !important; font-size: 12px !important; }
+          .empty-icon { font-size: 28px !important; }
         }
       `}} />
       <div style={{minHeight:'100vh', background:'#F1F5F9', fontFamily:'system-ui,sans-serif'}}>
@@ -50,29 +57,29 @@ export default function MaliDashboard() {
       <nav style={{background:'#0A1628',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <span style={{color:'white',fontWeight:700,fontSize:20}}>Notya AI</span>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>router.push('/asistan/mali')} style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button>
+          <button onClick={()=>router.push('/asistan/mali')} className='nav-btn' style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button>
           <button onClick={()=>router.push('/session/mali')} className='hide-mobile' style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Gorusme</button>
           <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giris'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Cikis</button>
         </div>
       </nav>
       <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:32}}>
-        <h1 style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>Gunaydin{user?.first_name ? ` ${user.first_name}!` : '!'}</h1>
+        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>Gunaydin{user?.first_name ? ` ${user.first_name}!` : '!'}</h1>
         {/* STATS ROW */}
         <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
           {[{label:'Toplam Gorusme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Musteriler',val:new Set(notes.map(n=>n.profession_type||'musteri')).size,icon:'active_c'},{label:'Yaklasan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
-            <div key={s.icon} style={{background:'white',borderRadius:12,padding:'20px 24px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
-              <div style={{fontSize:28,fontWeight:700,color:'#2563EB'}}>{s.val}</div>
-              <div style={{fontSize:14,color:'#64748B',marginTop:4}}>{s.label}</div>
+            <div key={s.icon} className='stat-card' style={{background:'white',borderRadius:12,padding:'20px 24px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
+              <div className='stat-number' style={{fontSize:28,fontWeight:700,color:'#2563EB'}}>{s.val}</div>
+              <div className='stat-label' style={{fontSize:14,color:'#64748B',marginTop:4}}>{s.label}</div>
             </div>
           ))}
         </div>
         <div className='main-grid' style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:24}}>
           <div>
             {/* NOTES GRID */}
-            <h2 style={{fontSize:18,fontWeight:600,marginBottom:16}}>Son Gorusmeler</h2>
+            <h2 className='section-title' style={{fontSize:18,fontWeight:600,marginBottom:16}}>Son Gorusmeler</h2>
             {notes.length === 0 ? (
               <div style={{background:'white',borderRadius:12,padding:40,textAlign:'center',color:'#94a3b8'}}>
-                <div style={{fontSize:48,marginBottom:12}}>Gorusme yok</div>
+                <div className='empty-icon' style={{fontSize:48,marginBottom:12}}>Gorusme yok</div>
                 <p>Henuz gorusme notunuz yok. Ilk gorusmenizi baslatõn</p>
                 <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Gorusme Baslat</button>
               </div>
@@ -96,7 +103,7 @@ export default function MaliDashboard() {
             )}
 
             {/* BEYAN TAKVIMI */}
-            <h2 style={{fontSize:18,fontWeight:600,margin:'32px 0 16px'}}>Beyan Takvimi</h2>
+            <h2 className='section-title' style={{fontSize:18,fontWeight:600,margin:'32px 0 16px'}}>Beyan Takvimi</h2>
             <div style={{background:'white',borderRadius:12,padding:20,boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
               {beyanlar.map((b, i) => {
                 const [dd,mm,yyyy] = b.son_gun.split('.')
@@ -119,7 +126,7 @@ export default function MaliDashboard() {
           </div>
           {/* MEVZUAT SIDEBAR */}
           <div>
-            <h2 style={{fontSize:18,fontWeight:600,marginBottom:16}}>Mevzuat Referans</h2>
+            <h2 className='section-title' style={{fontSize:18,fontWeight:600,marginBottom:16}}>Mevzuat Referans</h2>
             <div style={{background:'white',borderRadius:12,padding:16,boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
               <input value={mevzuatSearch} onChange={e=>setMevzuatSearch(e.target.value)} placeholder='KDV, SGK, MASAK...' style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #e2e8f0',marginBottom:12,boxSizing:'border-box'}} />
               {mevzuatEntries.slice(0,8).map(([k,v]) => {
