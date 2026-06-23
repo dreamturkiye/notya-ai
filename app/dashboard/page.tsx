@@ -1,4 +1,5 @@
 
+import HelpWidget from '@/components/HelpWidget'
 "use client"
 import { useState, useEffect } from "react"
 import { createClient } from "@supabase/supabase-js"
@@ -179,5 +180,7 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+
+      <HelpWidget professionType="doktor" isFirstLogin={true} />
   )
 }

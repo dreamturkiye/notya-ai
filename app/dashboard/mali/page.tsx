@@ -1,4 +1,5 @@
 // app/dashboard/mali/page.tsx
+import HelpWidget from '@/components/HelpWidget'
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -129,5 +130,7 @@ export default function MaliDashboard() {
         </div>
       </div>
     </div>
+
+      <HelpWidget professionType="mali_musavirlik" isFirstLogin={true} />
   )
 }
