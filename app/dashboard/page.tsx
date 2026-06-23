@@ -70,7 +70,8 @@ export default function Dashboard() {
   function fmt(iso: string) { return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) }
 
   return (
-    <div style={{minHeight:"100vh",background:"#F1F5F9",fontFamily:"system-ui,sans-serif"}}>
+    <>
+      <div style={{minHeight:"100vh",background:"#F1F5F9",fontFamily:"system-ui,sans-serif"}}>
       <div style={{background:"#0A1628",padding:"0 20px",position:"sticky",top:0,zIndex:50}}>
         <div style={{maxWidth:"1200px",margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 0",gap:"10px"}}>
           <div style={{fontSize:"20px",fontWeight:"600",color:"#fff"}}><span style={{color:"#2563EB"}}>Notya</span> AI</div>
@@ -180,7 +181,7 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-
       <HelpWidget professionType="doktor" isFirstLogin={true} />
+    </>
   )
 }

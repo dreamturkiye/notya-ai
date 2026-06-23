@@ -37,7 +37,8 @@ export default function MaliDashboard() {
   if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F1F5F9'}}><div style={{fontSize:32}}>Yukleniyor...</div></div>
 
   return (
-    <div style={{minHeight:'100vh', background:'#F1F5F9', fontFamily:'system-ui,sans-serif'}}>
+    <>
+      <div style={{minHeight:'100vh', background:'#F1F5F9', fontFamily:'system-ui,sans-serif'}}>
       {/* NAV */}
       <nav style={{background:'#0A1628',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <span style={{color:'white',fontWeight:700,fontSize:20}}>Notya AI</span>
@@ -130,7 +131,7 @@ export default function MaliDashboard() {
         </div>
       </div>
     </div>
-
       <HelpWidget professionType="mali_musavirlik" isFirstLogin={true} />
+    </>
   )
 }
