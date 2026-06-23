@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 const SUPA_URL = "https://anjayzospuurymjmmtim.supabase.co"
 const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE"
-export default function AvukatGiris() {
+export default function AvukatGiriş() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -18,7 +18,7 @@ export default function AvukatGiris() {
         body: JSON.stringify({ email, password })
       })
       const data = await resp.json()
-      if (!data.access_token) throw new Error(data.error_description || "Giris basarisiz")
+      if (!data.access_token) throw new Error(data.error_description || "Giriş basarisiz")
       localStorage.setItem("sb-anjayzospuurymjmmtim-auth-token", JSON.stringify({
         access_token: data.access_token, refresh_token: data.refresh_token,
         expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
@@ -43,11 +43,11 @@ export default function AvukatGiris() {
             <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="12345678" style={inp}/></div>
           {error && <div style={{background:"rgba(220,38,38,0.1)",border:"1px solid rgba(220,38,38,0.3)",borderRadius:"8px",padding:"10px",color:"#fca5a5",fontSize:"13px"}}>{error}</div>}
           <button type="submit" disabled={loading} style={{padding:"13px",background:"#7C3AED",border:"none",borderRadius:"10px",color:"#fff",fontSize:"15px",fontWeight:600,cursor:"pointer",marginTop:"4px"}}>
-            {loading ? "Giris yapiliyor..." : "Giris Yap"}</button>
+            {loading ? "Giriş yapiliyor..." : "Giriş Yap"}</button>
         </form>
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"12px",color:"#64748b"}}>
           <a href="/giris" style={{color:"#94a3b8"}}>Genel giris</a>{" | "}
-          <a href="/giris/mali" style={{color:"#10B981"}}>Mali Musavir</a>{" | "}
+          <a href="/giris/mali" style={{color:"#10B981"}}>Mali Müşavir</a>{" | "}
           <a href="/giris/doktor" style={{color:"#3B82F6"}}>Doktor</a>
         </div>
       </div>

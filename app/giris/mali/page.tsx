@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 const SUPA_URL = "https://anjayzospuurymjmmtim.supabase.co"
 const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE"
-export default function MaliGiris() {
+export default function MaliGiriş() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -18,7 +18,7 @@ export default function MaliGiris() {
         body: JSON.stringify({ email, password })
       })
       const data = await resp.json()
-      if (!data.access_token) throw new Error(data.error_description || "Giris basarisiz")
+      if (!data.access_token) throw new Error(data.error_description || "Giriş basarisiz")
       localStorage.setItem("sb-anjayzospuurymjmmtim-auth-token", JSON.stringify({
         access_token: data.access_token, refresh_token: data.refresh_token,
         expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
@@ -34,7 +34,7 @@ export default function MaliGiris() {
         <div style={{textAlign:"center",marginBottom:"28px"}}>
           <div style={{fontSize:"36px",marginBottom:"8px"}}>&#128176;</div>
           <div style={{fontSize:"22px",fontWeight:700,color:"#fff"}}><span style={{color:"#10B981"}}>Notya</span> AI</div>
-          <div style={{fontSize:"13px",color:"#64748b",marginTop:"4px"}}>Mali Musavirlik Modulu</div>
+          <div style={{fontSize:"13px",color:"#64748b",marginTop:"4px"}}>Mali Müşavirlik Modulu</div>
         </div>
         <form onSubmit={handleLogin} style={{display:"flex",flexDirection:"column",gap:"14px"}}>
           <div><label style={{fontSize:"13px",color:"#94a3b8",marginBottom:"6px",display:"block"}}>E-posta</label>
@@ -43,7 +43,7 @@ export default function MaliGiris() {
             <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="12345678" style={inp}/></div>
           {error && <div style={{background:"rgba(220,38,38,0.1)",border:"1px solid rgba(220,38,38,0.3)",borderRadius:"8px",padding:"10px",color:"#fca5a5",fontSize:"13px"}}>{error}</div>}
           <button type="submit" disabled={loading} style={{padding:"13px",background:"#10B981",border:"none",borderRadius:"10px",color:"#fff",fontSize:"15px",fontWeight:600,cursor:"pointer",marginTop:"4px"}}>
-            {loading ? "Giris yapiliyor..." : "Giris Yap"}</button>
+            {loading ? "Giriş yapiliyor..." : "Giriş Yap"}</button>
         </form>
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"12px",color:"#64748b"}}>
           <a href="/giris" style={{color:"#94a3b8"}}>Genel giris</a>{" | "}

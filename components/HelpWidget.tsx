@@ -89,7 +89,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
               <div style={{ width: '48px', height: '48px', backgroundColor: '#006699', borderRadius: '8px', marginRight: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <span style={{ color: '#fff', fontSize: '24px', fontWeight: '700' }}>N</span>
               </div>
-              <h3>Hos Geldiniz!</h3>
+              <h3>Hoş Geldiniz!</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {professionType === 'doktor'
@@ -102,12 +102,12 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
                 ? [
                     'Uzm. Derya ile mali sorularinizi konusin',
                     'Beyan takvimi otomatik takip edilir ve hatirlatilir',
-                    'Musterilerinizi ve islemlerinizi dashboard\'dan yonetin',
+                    'Müşterilerinizi ve islemlerinizi dashboard\'dan yonetin',
                   ]
                 : [
                     '9 uzman avukatla hukuki konulari konusin',
-                    'Sure takibi ve dilekce olusturma otomatiktir',
-                    'Muvekkillerinizi ve davalarinizi dashboard\'dan yonetin',
+                    'Süre takibi ve dilekce olusturma otomatiktir',
+                    'Müvekkillerinizi ve davalarinizi dashboard\'dan yonetin',
                   ]}.map((step, index) => (
                 <div key={index} style={{ padding: '16px', backgroundColor: '#F4F7F6', borderRadius: '8px' }}>
                   <span style={{ color: '#006699', fontSize: '24px', fontWeight: '700', marginRight: '8px' }}>{index + 1}.</span>
@@ -116,9 +116,9 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
               ))}
             </div>
             <button onClick={closeModal} style={{ marginTop: '32px', padding: '12px 24px', backgroundColor: '#FF6B4B', color: '#fff', fontSize: '16px', fontWeight: '700', borderRadius: '8px' }}>
-              Baslayalim
+              Başlayalım
             </button>
-            <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>Yardim icin ? butonunu kullanin</div>
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>Yardım için ? butonunu kullanin</div>
           </div>
         </div>
       )}
@@ -128,7 +128,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
       {showChat && (
         <div style={{ position: 'fixed', bottom: '80px', right: '24px', width: '380px', height: '480px', backgroundColor: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', borderRadius: '16px', display: 'flex', flexDirection: 'column', zIndex: 999 }}>
           <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', fontSize: '20px', fontWeight: '700', color: '#1F2937', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>Notya AI Yardim</span>
+            <span>Notya AI Yardım</span>
             <div style={{ backgroundColor: '#e5e7eb', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#6B7280' }}>{professionType}</div>
           </div>
           <div id="chat-area" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -163,7 +163,7 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
               style={{ flex: 1, padding: '8px', border: '1px solid #e5e7eb', borderRadius: '4px', marginRight: '8px' }}
             />
             <button onClick={sendMessage} style={{ padding: '8px 16px', backgroundColor: '#006699', color: '#fff', fontSize: '14px', fontWeight: '700', borderRadius: '4px' }}>
-              Gonder
+              Gönder
             </button>
           </div>
         </div>

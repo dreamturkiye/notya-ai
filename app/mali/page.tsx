@@ -44,13 +44,13 @@ export default function MaliPage() {
             <span style={{fontSize:"18px",fontWeight:"700",color:"var(--primary)",fontFamily:"Merriweather,serif",letterSpacing:"-0.01em"}}>Notya AI</span>
           </div>
           <div style={{display:"flex",gap:"32px",alignItems:"center"}} className="hide-mobile">
-            <a href="#ozellikler" className="nav-link">Ozellikler</a>
+            <a href="#ozellikler" className="nav-link">Özellikler</a>
             <a href="#hizmetler" className="nav-link">Hizmetler</a>
             <a href="#fiyatlar" className="nav-link">Fiyatlar</a>
           </div>
           <div style={{display:"flex",gap:"12px",alignItems:"center"}}>
-            <Link href="/giris/mali" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giris</Link>
-            <Link href="/giris/mali" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ucretsiz Deneyin</Link>
+            <Link href="/giris/mali" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
+            <Link href="/giris/mali" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ücretsiz Deneyin</Link>
           </div>
         </div>
       </nav>
@@ -61,18 +61,18 @@ export default function MaliPage() {
           <div>
             <div style={{display:"inline-flex",alignItems:"center",gap:"8px",background:"var(--secondary-light)",border:"1px solid rgba(245,158,11,.2)",borderRadius:"20px",padding:"6px 14px",marginBottom:"24px"}}>
               <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"var(--secondary)"}}></div>
-              <span style={{fontSize:"12px",fontWeight:"700",color:"var(--secondary)",letterSpacing:".06em",textTransform:"uppercase",fontFamily:"Lato,sans-serif"}}>Turkiye'nin Ilk AI Mali Musaviri</span>
+              <span style={{fontSize:"12px",fontWeight:"700",color:"var(--secondary)",letterSpacing:".06em",textTransform:"uppercase",fontFamily:"Lato,sans-serif"}}>Türkiye'nin Ilk AI Mali Müşaviri</span>
             </div>
             <h1 style={{fontSize:"clamp(36px,4.5vw,56px)",fontWeight:"700",lineHeight:"1.1",margin:"0 0 20px",color:"var(--text)",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em"}}>
               Cebinizdeki<br/>
               <span style={{color:"var(--primary)"}}>Uzman Mali</span><br/>
-              Musaviriniz.
+              Müşaviriniz.
             </h1>
             <p style={{fontSize:"18px",lineHeight:"1.75",color:"var(--text-muted)",margin:"0 0 36px",fontFamily:"Lato,sans-serif",fontWeight:"300",maxWidth:"460px"}}>
               VUK, KDV, GVK ve SGK mevzuatini ustunde tutan, beyan takvimlerini otomatik takip eden, her seanstan ogrenen AI mali musavir.
             </p>
             <div style={{display:"flex",gap:"14px",alignItems:"center",flexWrap:"wrap",marginBottom:"40px"}}>
-              <Link href="/giris/mali" className="btn-primary">Ucretsiz Baslayin</Link>
+              <Link href="/giris/mali" className="btn-primary">Ücretsiz Başlayın</Link>
               <Link href="/giris/mali" className="btn-secondary">Demo Goruntule</Link>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:"16px",paddingTop:"24px",borderTop:"1px solid var(--border)"}}>
@@ -82,7 +82,7 @@ export default function MaliPage() {
                 ))}
               </div>
               <div>
-                <div style={{fontSize:"14px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Beta musavirlerimiz aktif</div>
+                <div style={{fontSize:"14px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Beta müşavirlerimiz aktif</div>
                 <div style={{fontSize:"12px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>"Beyan takvimini hic kaciranlar icin." - SMMM A.D.</div>
               </div>
             </div>
@@ -96,7 +96,7 @@ export default function MaliPage() {
               <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"10px"}}>
                 <div style={{width:"32px",height:"32px",borderRadius:"50%",background:"var(--secondary-light)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px"}}>👩‍💼</div>
                 <div>
-                  <div style={{fontSize:"12px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Uzm. Derya Yilmaz</div>
+                  <div style={{fontSize:"12px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Uzm. Derya Yılmaz</div>
                   <div style={{fontSize:"10px",color:"var(--secondary)",fontFamily:"Lato,sans-serif",display:"flex",alignItems:"center",gap:"4px"}}>
                     <span style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--secondary)",display:"inline-block"}}></span>Dinliyor
                   </div>
@@ -118,7 +118,7 @@ export default function MaliPage() {
       {/* TRUST BAR */}
       <section style={{background:"var(--primary)",padding:"20px 48px"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto",display:"flex",gap:"0",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap"}} className="trust-bar">
-          {[["VUK","Vergi Usul"],["KDV Kanunu","Katma Deger"],["GVK","Gelir Vergisi"],["KVK","Kurumlar Vergisi"],["SGK Mevzuati","Sosyal Guvenlik"],["KVKK Uyumlu","Veri Guvenligi"]].map(([title,sub],i)=>(
+          {[["VUK","Vergi Usul"],["KDV Kanunu","Katma Değer"],["GVK","Gelir Vergisi"],["KVK","Kurumlar Vergisi"],["SGK Mevzuati","Sosyal Güvenlik"],["KVKK Uyumlu","Veri Güvenliği"]].map(([title,sub],i)=>(
             <div key={title} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 24px",borderRight:i<5?"1px solid rgba(255,255,255,.2)":"none"}}>
               <div style={{width:"6px",height:"6px",borderRadius:"50%",background:"rgba(255,255,255,.5)",flexShrink:0}}></div>
               <div>
@@ -134,20 +134,20 @@ export default function MaliPage() {
       <section id="ozellikler" style={{padding:"100px 48px",background:"var(--bg)"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"60px"}}>
-            <div className="section-label" style={{justifyContent:"center"}}>Temel Ozellikler</div>
+            <div className="section-label" style={{justifyContent:"center"}}>Temel Özellikler</div>
             <h2 style={{fontSize:"clamp(30px,4vw,44px)",fontWeight:"700",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em",color:"var(--text)",margin:"0 0 16px"}}>
-              Mali Musavirin Ihtiyaci Olan Her Sey<br/>
+              Mali Müşavirin Ihtiyaci Olan Her Sey<br/>
               <em style={{color:"var(--primary)",fontStyle:"italic"}}>Tek Yerde.</em>
             </h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}} className="feature-grid">
             {[
-              {icon:"📅",color:"var(--primary)",bg:"var(--primary-light)",title:"Beyan Takvimi",desc:"KDV, muhtasar, kurumlar vergisi — tum beyan son gunleri otomatik takip. 3 gun kala Telegram uyarisi.",badge:"Otomatik hatirlatma"},
-              {icon:"📖",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Canli Mevzuat",desc:"VUK, GVK, KVK, KDV Kanunu — tum guncel tebligler ve sirkulerler sistemde. Hukuki dayanak otomatik eklenir.",badge:"Guncel mevzuat"},
-              {icon:"⚡",color:"#0891B2",bg:"#E0F7FA",title:"Ogrenen Sistem",desc:"5 seanstan sonra musterilerinizi, tercih ettiginiz aciklama stilini ve sik yaptiginiz islemleri ogrenir.",badge:"Her seans ogrenir"},
+              {icon:"📅",color:"var(--primary)",bg:"var(--primary-light)",title:"Beyan Takvimi",desc:"KDV, muhtasar, kurumlar vergisi — tum beyan son gunleri otomatik takip. 3 gun kala Telegram uyarisi.",badge:"Otomatik hatırlatma"},
+              {icon:"📖",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Canlı Mevzuat",desc:"VUK, GVK, KVK, KDV Kanunu — tum guncel tebligler ve sirkulerler sistemde. Hukuki dayanak otomatik eklenir.",badge:"Guncel mevzuat"},
+              {icon:"⚡",color:"#0891B2",bg:"#E0F7FA",title:"Öğrenen Sistem",desc:"5 seanstan sonra musterilerinizi, tercih ettiginiz aciklama stilini ve sik yaptiginiz islemleri ogrenir.",badge:"Her seans ogrenir"},
               {icon:"🛡️",color:"var(--accent)",bg:"#FFF0EC",title:"Risk Uyarisi",desc:"Vergi riski, ceza olasiligi veya beyan hatasi gordukte sormadan uyarir. 50 musterinin yukunu siz tasimayalim.",badge:"Proaktif uyari"},
-              {icon:"📋",color:"#7C3AED",bg:"#F3E8FF",title:"Otomatik Raporlar",desc:"Musteri gorusmesinden otomatik faaliyet notu, cari donem ozeti ve sonraki adimlar listesi olusturulur.",badge:"Saniyeler icinde"},
-              {icon:"🔐",color:"#1B4332",bg:"#d8f3dc",title:"KVKK Uyumlu",desc:"Tum musteri verileri AES-256 sifreleme ile Turkiye lokasyonunda. Mesleki gizlilik standartlari.",badge:"Veri guvenligi"},
+              {icon:"📋",color:"#7C3AED",bg:"#F3E8FF",title:"Otomatik Raporlar",desc:"Müşteri gorusmesinden otomatik faaliyet notu, cari donem ozeti ve sonraki adimlar listesi olusturulur.",badge:"Saniyeler içinde"},
+              {icon:"🔐",color:"#1B4332",bg:"#d8f3dc",title:"KVKK Uyumlu",desc:"Tum musteri verileri AES-256 sifreleme ile Türkiye lokasyonunda. Mesleki gizlilik standartlari.",badge:"Veri güvenliği"},
             ].map(f=>(
               <div key={f.title} className="card" style={{padding:"28px"}}>
                 <div style={{width:"48px",height:"48px",borderRadius:"12px",background:f.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",marginBottom:"16px"}}>{f.icon}</div>
@@ -168,14 +168,14 @@ export default function MaliPage() {
           <div>
             <div className="section-label">Sesli Konusma</div>
             <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em",color:"var(--text)",margin:"0 0 20px",lineHeight:"1.15"}}>
-              Iki Meslektaslik<br/>
-              <em style={{color:"var(--primary)",fontStyle:"italic"}}>Gibi Calisin.</em>
+              Iki Meslektaşlık<br/>
+              <em style={{color:"var(--primary)",fontStyle:"italic"}}>Gibi Çalışın.</em>
             </h2>
             <div className="card" style={{padding:"20px",marginBottom:"24px"}}>
               <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"14px",paddingBottom:"12px",borderBottom:"1px solid var(--border)"}}>
                 <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--secondary-light)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px"}}>👩‍💼</div>
                 <div>
-                  <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Uzm. Derya Yilmaz</div>
+                  <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Uzm. Derya Yılmaz</div>
                   <div style={{fontSize:"11px",color:"var(--secondary)",fontFamily:"Lato,sans-serif",display:"flex",alignItems:"center",gap:"4px"}}>
                     <span style={{width:"5px",height:"5px",borderRadius:"50%",background:"var(--secondary)",display:"inline-block"}}></span>Dinliyor
                   </div>
@@ -184,7 +184,7 @@ export default function MaliPage() {
               {[
                 {side:"right",text:"ABC Ltd icin Aralik KDV beyani hazir mi?"},
                 {side:"left", text:"Henuz hazirlanmadi. Son gun 26 Ocak — 4 gun kaldi. Simdi baslayalim mi?"},
-                {side:"right",text:"Baslayalim."},
+                {side:"right",text:"Başlayalım."},
                 {side:"left", text:"ABC Ltd Aralik donem KDV hesaplanmistir: Hesaplanan KDV 84.320 TL, indirilecek KDV 61.140 TL, odenmesi gereken 23.180 TL. Onayi verirseniz formu doldurayim."},
                 {side:"right",text:"Onayla."},
                 {side:"left", text:"Kaydedildi. Odeme hatirlatmasi 25 Ocak icin ayarlandı."},
@@ -218,10 +218,10 @@ export default function MaliPage() {
             </div>
           </div>
           <div>
-            <div className="section-label">Ogrenen Sistem</div>
+            <div className="section-label">Öğrenen Sistem</div>
             <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em",color:"var(--text)",margin:"0 0 20px",lineHeight:"1.15"}}>
               5 Seanstan Sonra<br/>
-              <em style={{color:"var(--primary)",fontStyle:"italic"}}>Yillarca Birliktesiniz.</em>
+              <em style={{color:"var(--primary)",fontStyle:"italic"}}>Yıllarca Birliktesiniz.</em>
             </h2>
             <p style={{fontSize:"16px",color:"var(--text-muted)",lineHeight:"1.8",margin:"0 0 32px",fontFamily:"Lato,sans-serif"}}>
               Her musteri tercihini hatirlar. Her aciklama stilinizi ogrenir. 1. seans ile 5. seans arasindaki fark gece ile gunduz gibidir.
@@ -240,7 +240,7 @@ export default function MaliPage() {
               </div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
-              {["Musteri bazinda tercih ettiginiz aciklama stilini hatirlar","Her seans beyan donemini otomatik tahmin eder","Sik yaptiginiz islemleri one ozerir","Vergi risklerini musteri bazinda takip eder"].map(item=>(
+              {["Müşteri bazinda tercih ettiginiz aciklama stilini hatirlar","Her seans beyan donemini otomatik tahmin eder","Sik yaptiginiz islemleri one ozerir","Vergi risklerini musteri bazinda takip eder"].map(item=>(
                 <div key={item} style={{display:"flex",alignItems:"center",gap:"10px",fontSize:"14px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>
                   <div style={{width:"20px",height:"20px",borderRadius:"50%",background:"var(--secondary-light)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"var(--secondary)",fontSize:"10px",fontWeight:"700"}}>✓</div>
                   {item}
@@ -255,7 +255,7 @@ export default function MaliPage() {
       <section id="hizmetler" style={{background:"var(--primary)",padding:"80px 48px"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"48px"}}>
-            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"#fff",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Kapsadigi Mevzuat Alanlari.</h2>
+            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"#fff",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Kapsadığı Mevzuat Alanları.</h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:"8px"}}>
             {[
@@ -284,14 +284,14 @@ export default function MaliPage() {
       <section id="fiyatlar" style={{background:"var(--surface)",padding:"100px 48px"}}>
         <div style={{maxWidth:"900px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"52px"}}>
-            <div className="section-label" style={{justifyContent:"center"}}>Fiyatlandirma</div>
-            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",letterSpacing:"-0.02em"}}>Sade. Seffaf. Adil.</h2>
+            <div className="section-label" style={{justifyContent:"center"}}>Fiyatlandırma</div>
+            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",letterSpacing:"-0.02em"}}>Sade. Şeffaf. Adil.</h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}} className="pricing-grid">
             {[
-              {name:"Baslangic",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 musteri","Beyan takvimi","Mevzuat asistan","Telegram uyarilari"],highlight:false,cta:"Baslayin"},
-              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sinırsiz seans","Sinırsiz musteri","Her sey dahil","Ogrenen sistem","Otomatik raporlar","Oncelikli destek"],highlight:true,cta:"En Populer"},
-              {name:"Buro",price:"2.999 TL",orig:"4.999 TL",features:["Sinırsiz seans","5 kullanici","Takim paneli","Musteri portali","Tum ozellikler"],highlight:false,cta:"Baslayin"},
+              {name:"Başlangıç",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 musteri","Beyan takvimi","Mevzuat asistan","Telegram uyarilari"],highlight:false,cta:"Başlayın"},
+              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sınırsız seans","Sınırsız musteri","Her sey dahil","Ogrenen sistem","Otomatik raporlar","Öncelikli destek"],highlight:true,cta:"En Popüler"},
+              {name:"Büro",price:"2.999 TL",orig:"4.999 TL",features:["Sınırsız seans","5 kullanici","Takim paneli","Müşteri portali","Tüm özellikler"],highlight:false,cta:"Başlayın"},
             ].map((plan)=>(
               <div key={plan.name} className="card" style={{padding:"32px 28px",position:"relative",border:plan.highlight?"2px solid var(--primary)":"1px solid var(--border)",boxShadow:plan.highlight?"0 8px 32px rgba(27,67,50,.15)":"none"}}>
                 {plan.highlight && <div style={{position:"absolute",top:"-13px",left:"50%",transform:"translateX(-50%)",background:"var(--primary)",color:"#fff",fontSize:"11px",fontWeight:"700",padding:"4px 16px",borderRadius:"20px",fontFamily:"Lato,sans-serif",letterSpacing:".06em",whiteSpace:"nowrap"}}>EN POPULER</div>}
@@ -300,7 +300,7 @@ export default function MaliPage() {
                   <span style={{fontSize:"38px",fontWeight:"700",color:"var(--text)",fontFamily:"Merriweather,serif"}}>{plan.price}</span>
                   <span style={{fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>/ay</span>
                 </div>
-                <div style={{fontSize:"12px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",marginBottom:"24px"}}><span style={{textDecoration:"line-through"}}>{plan.orig}</span><span style={{color:"var(--secondary)",fontWeight:"700",marginLeft:"6px"}}>Kurucu fiyati</span></div>
+                <div style={{fontSize:"12px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",marginBottom:"24px"}}><span style={{textDecoration:"line-through"}}>{plan.orig}</span><span style={{color:"var(--secondary)",fontWeight:"700",marginLeft:"6px"}}>Kurucu fiyatı</span></div>
                 <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"28px"}}>
                   {plan.features.map(f=>(<div key={f} style={{display:"flex",alignItems:"center",gap:"8px",fontSize:"14px",color:"var(--text)",fontFamily:"Lato,sans-serif"}}><span style={{color:"var(--secondary)",fontWeight:"700"}}>✓</span>{f}</div>))}
                 </div>
@@ -308,17 +308,17 @@ export default function MaliPage() {
               </div>
             ))}
           </div>
-          <div style={{textAlign:"center",marginTop:"24px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>14 gun ucretsiz · Kredi karti gerektirmez · Dilediginizde iptal</div>
+          <div style={{textAlign:"center",marginTop:"24px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>14 gün ücretsiz · Kredi kartı gerektirmez · Dilediğinizde iptal</div>
         </div>
       </section>
 
       {/* FINAL CTA */}
       <section style={{background:"var(--primary-light)",padding:"80px 48px",borderTop:"2px solid var(--primary)",textAlign:"center"}}>
-        <div className="section-label" style={{justifyContent:"center"}}>Baslamaya Hazir misiniz?</div>
-        <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugun Baslayin.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>Ilk 14 Gun Ucretsiz.</em></h2>
-        <p style={{fontSize:"17px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",margin:"0 0 36px",maxWidth:"420px",display:"inline-block",lineHeight:"1.75"}}>Kurucu uye fiyatini kacirmayin. Ilk 100 SMMM icin gecerli.</p>
-        <div><Link href="/giris/mali" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ucretsiz Hesap Ac</Link></div>
-        <div style={{marginTop:"16px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>KVKK uyumlu · Turkce destek · Dilediginizde iptal</div>
+        <div className="section-label" style={{justifyContent:"center"}}>Başlamaya Hazır mısınız?</div>
+        <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugün Başlayın.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>Ilk 14 Gun Ücretsiz.</em></h2>
+        <p style={{fontSize:"17px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",margin:"0 0 36px",maxWidth:"420px",display:"inline-block",lineHeight:"1.75"}}>Kurucu üye fiyatını kaçırmayın. Ilk 100 SMMM icin gecerli.</p>
+        <div><Link href="/giris/mali" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ücretsiz Hesap Ac</Link></div>
+        <div style={{marginTop:"16px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>KVKK uyumlu · Türkce destek · Dilediğinizde iptal</div>
       </section>
 
       {/* FOOTER */}
@@ -330,7 +330,7 @@ export default function MaliPage() {
             </div>
             <span style={{fontSize:"15px",fontWeight:"700",color:"#fff",fontFamily:"Merriweather,serif"}}>Notya AI</span>
           </div>
-          <div style={{fontSize:"12px",color:"rgba(255,255,255,.4)",fontFamily:"Lato,sans-serif"}}>2026 Dream Turkiye · KVKK Uyumlu</div>
+          <div style={{fontSize:"12px",color:"rgba(255,255,255,.4)",fontFamily:"Lato,sans-serif"}}>2026 Dream Türkiye · KVKK Uyumlu</div>
         </div>
       </footer>
     </main>

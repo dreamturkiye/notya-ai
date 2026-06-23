@@ -32,7 +32,7 @@ export default function MaliDashboard() {
   const upcoming = beyanlar.filter(b => { const d = b.son_gun.split('.').reverse().join('-'); return (new Date(d).getTime() - now.getTime()) / 86400000 <= 7 }).length
   const mevzuatEntries = Object.entries(MEVZUAT_DATABASE).filter(([k,v]) => !mevzuatSearch || k.includes(mevzuatSearch.toLowerCase()) || (v as Record<string,string>).kanun?.toLowerCase().includes(mevzuatSearch.toLowerCase()) || (v as Record<string,string>).ozet?.toLowerCase().includes(mevzuatSearch.toLowerCase()))
 
-  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F1F5F9'}}><div style={{fontSize:32}}>Yukleniyor...</div></div>
+  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F1F5F9'}}><div style={{fontSize:32}}>Yükleniyor...</div></div>
 
   return (
     <>
@@ -58,15 +58,15 @@ export default function MaliDashboard() {
         <span style={{color:'white',fontWeight:700,fontSize:20}}>Notya AI</span>
         <div style={{display:'flex',gap:8}}>
           <button onClick={()=>router.push('/asistan/mali')} className='nav-btn' style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button>
-          <button onClick={()=>router.push('/session/mali')} className='hide-mobile' style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Gorusme</button>
-          <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giris'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Cikis</button>
+          <button onClick={()=>router.push('/session/mali')} className='hide-mobile' style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Görüşme</button>
+          <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giris'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
         </div>
       </nav>
       <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:32}}>
-        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>Gunaydin{user?.first_name ? ` ${user.first_name}!` : '!'}</h1>
+        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>Günaydın{user?.first_name ? ` ${user.first_name}!` : '!'}</h1>
         {/* STATS ROW */}
         <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
-          {[{label:'Toplam Gorusme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Musteriler',val:new Set(notes.map(n=>n.profession_type||'musteri')).size,icon:'active_c'},{label:'Yaklasan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
+          {[{label:'Toplam Görüşme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Müşteriler',val:new Set(notes.map(n=>n.profession_type||'musteri')).size,icon:'active_c'},{label:'Yaklaşan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
             <div key={s.icon} className='stat-card' style={{background:'white',borderRadius:12,padding:'20px 24px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
               <div className='stat-number' style={{fontSize:28,fontWeight:700,color:'#2563EB'}}>{s.val}</div>
               <div className='stat-label' style={{fontSize:14,color:'#64748B',marginTop:4}}>{s.label}</div>
@@ -76,18 +76,18 @@ export default function MaliDashboard() {
         <div className='main-grid' style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:24}}>
           <div>
             {/* NOTES GRID */}
-            <h2 className='section-title' style={{fontSize:18,fontWeight:600,marginBottom:16}}>Son Gorusmeler</h2>
+            <h2 className='section-title' style={{fontSize:18,fontWeight:600,marginBottom:16}}>Son Görüşmeler</h2>
             {notes.length === 0 ? (
               <div style={{background:'white',borderRadius:12,padding:40,textAlign:'center',color:'#94a3b8'}}>
-                <div className='empty-icon' style={{fontSize:48,marginBottom:12}}>Gorusme yok</div>
+                <div className='empty-icon' style={{fontSize:48,marginBottom:12}}>Görüşme yok</div>
                 <p>Henuz gorusme notunuz yok. Ilk gorusmenizi baslatõn</p>
-                <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Gorusme Baslat</button>
+                <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Görüşme Baslat</button>
               </div>
             ) : (
               <div className='notes-grid' style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 {notes.map((n) => {
                   const riskScore = n.vergi_risk_skoru as number | undefined
-                  const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.gorusme_turu as string || 'Gorusme'
+                  const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.gorusme_turu as string || 'Görüşme'
                   const dateStr = new Date(n.created_at as string).toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
                   return (
                     <div key={n.id as string} style={{background:'white',borderRadius:12,padding:20,boxShadow:'0 1px 3px rgba(0,0,0,0.1)',borderLeft:'4px solid' + (riskScore ? riskColor(riskScore) : '#2563EB')}}>

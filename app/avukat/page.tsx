@@ -44,13 +44,13 @@ export default function AvukatPage() {
             <span style={{fontSize:"18px",fontWeight:"700",color:"var(--primary)",fontFamily:"Merriweather,serif",letterSpacing:"-0.01em"}}>Notya AI</span>
           </div>
           <div style={{display:"flex",gap:"32px",alignItems:"center"}} className="hide-mobile">
-            <a href="#ozellikler" className="nav-link">Ozellikler</a>
+            <a href="#ozellikler" className="nav-link">Özellikler</a>
             <a href="#uzmanlar" className="nav-link">Uzmanlar</a>
             <a href="#fiyatlar" className="nav-link">Fiyatlar</a>
           </div>
           <div style={{display:"flex",gap:"12px",alignItems:"center"}}>
-            <Link href="/giris/avukat" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giris</Link>
-            <Link href="/giris/avukat" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ucretsiz Deneyin</Link>
+            <Link href="/giris/avukat" className="btn-secondary" style={{padding:"9px 22px",fontSize:"14px"}}>Giriş</Link>
+            <Link href="/giris/avukat" className="btn-primary" style={{padding:"9px 22px",fontSize:"14px"}}>Ücretsiz Deneyin</Link>
           </div>
         </div>
       </nav>
@@ -61,7 +61,7 @@ export default function AvukatPage() {
           <div>
             <div style={{display:"inline-flex",alignItems:"center",gap:"8px",background:"var(--primary-light)",border:"1px solid rgba(30,58,95,.2)",borderRadius:"20px",padding:"6px 14px",marginBottom:"24px"}}>
               <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"var(--primary)"}}></div>
-              <span style={{fontSize:"12px",fontWeight:"700",color:"var(--primary)",letterSpacing:".06em",textTransform:"uppercase",fontFamily:"Lato,sans-serif"}}>Turkiye'nin Ilk AI Hukuk Asistani</span>
+              <span style={{fontSize:"12px",fontWeight:"700",color:"var(--primary)",letterSpacing:".06em",textTransform:"uppercase",fontFamily:"Lato,sans-serif"}}>Türkiye'nin Ilk AI Hukuk Asistani</span>
             </div>
             <h1 style={{fontSize:"clamp(36px,4.5vw,56px)",fontWeight:"700",lineHeight:"1.1",margin:"0 0 20px",color:"var(--text)",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em"}}>
               Cebinizdeki<br/>
@@ -72,7 +72,7 @@ export default function AvukatPage() {
               TCK, CMK, HMK, TMK — 9 uzman avukat, dilekce olusturur, sure takibi yapar, emsal karar arar. Her seanstan ogrenir.
             </p>
             <div style={{display:"flex",gap:"14px",alignItems:"center",flexWrap:"wrap",marginBottom:"40px"}}>
-              <Link href="/giris/avukat" className="btn-primary">Ucretsiz Baslayin</Link>
+              <Link href="/giris/avukat" className="btn-primary">Ücretsiz Başlayın</Link>
               <Link href="/giris/avukat" className="btn-secondary">Demo Goruntule</Link>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:"16px",paddingTop:"24px",borderTop:"1px solid var(--border)"}}>
@@ -82,8 +82,8 @@ export default function AvukatPage() {
                 ))}
               </div>
               <div>
-                <div style={{fontSize:"14px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Beta avukatlarmiz aktif</div>
-                <div style={{fontSize:"12px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>"Sure takibinde hic gec kalmiyorum artik." - Av. M.O.</div>
+                <div style={{fontSize:"14px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Beta avukatlarımız aktif</div>
+                <div style={{fontSize:"12px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>"Süre takibinde hic gec kalmiyorum artik." - Av. M.O.</div>
               </div>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function AvukatPage() {
       {/* TRUST BAR */}
       <section style={{background:"var(--primary)",padding:"20px 48px"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto",display:"flex",gap:"0",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap"}} className="trust-bar">
-          {[["TCK","Turk Ceza Kanunu"],["CMK","Ceza Muhakemesi"],["HMK","Hukuk Muhakemeleri"],["TMK","Medeni Kanun"],["IIK","Icra ve Iflas"],["KVKK","Veri Guvenligi"]].map(([title,sub],i)=>(
+          {[["TCK","Türk Ceza Kanunu"],["CMK","Ceza Muhakemesi"],["HMK","Hukuk Muhakemeleri"],["TMK","Medeni Kanun"],["IIK","İcra ve Iflas"],["KVKK","Veri Güvenliği"]].map(([title,sub],i)=>(
             <div key={title} style={{display:"flex",alignItems:"center",gap:"10px",padding:"8px 24px",borderRight:i<5?"1px solid rgba(255,255,255,.2)":"none"}}>
               <div style={{width:"6px",height:"6px",borderRadius:"50%",background:"rgba(255,255,255,.5)",flexShrink:0}}></div>
               <div>
@@ -134,20 +134,20 @@ export default function AvukatPage() {
       <section id="ozellikler" style={{padding:"100px 48px",background:"var(--bg)"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"60px"}}>
-            <div className="section-label" style={{justifyContent:"center"}}>Temel Ozellikler</div>
+            <div className="section-label" style={{justifyContent:"center"}}>Temel Özellikler</div>
             <h2 style={{fontSize:"clamp(30px,4vw,44px)",fontWeight:"700",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em",color:"var(--text)",margin:"0 0 16px"}}>
-              Avukatin Ihtiyaci Olan Her Sey<br/>
+              Avukatın Ihtiyaci Olan Her Sey<br/>
               <em style={{color:"var(--primary)",fontStyle:"italic"}}>Tek Yerde.</em>
             </h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}} className="feature-grid">
             {[
-              {icon:"⏰",color:"var(--accent)",bg:"#FFF0EC",title:"Sure Takibi",desc:"Temyiz, itiraz, itirazen iptal — tum hukuki sureler otomatik takip. Son gunden 7 ve 3 gun once Telegram uyarisi.",badge:"Otomatik hatirlat"},
-              {icon:"📝",color:"var(--primary)",bg:"var(--primary-light)",title:"Dilekce Olustur",desc:"Muvekkil bilgilerini soyleyin — mahkeme adina, dosya numarasina ve kanuna gore tam dilekce saniyeler icinde.",badge:"Saniyeler icinde"},
-              {icon:"🔍",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Emsal Arama",desc:"Yargitay ve Danistay kararlarinda emsal arar, dava stratejinizi guclendirecek ictihat ozetler.",badge:"Gercek emsal"},
+              {icon:"⏰",color:"var(--accent)",bg:"#FFF0EC",title:"Süre Takibi",desc:"Temyiz, itiraz, itirazen iptal — tum hukuki sureler otomatik takip. Son gunden 7 ve 3 gun once Telegram uyarisi.",badge:"Otomatik hatırlat"},
+              {icon:"📝",color:"var(--primary)",bg:"var(--primary-light)",title:"Dilekçe Olustur",desc:"Müvekkil bilgilerini soyleyin — mahkeme adina, dosya numarasina ve kanuna gore tam dilekce saniyeler icinde.",badge:"Saniyeler içinde"},
+              {icon:"🔍",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Emsal Arama",desc:"Yargitay ve Danistay kararlarinda emsal arar, dava stratejinizi guclendirecek ictihat ozetler.",badge:"Gerçek emsal"},
               {icon:"🧠",color:"#7C3AED",bg:"#F3E8FF",title:"Strateji Motoru",desc:"Dava dosyasini analiz eder, delil eksikliklerini tespit eder, alternatif hukuki stratejileri proaktif sunar.",badge:"Proaktif analiz"},
-              {icon:"👥",color:"#0891B2",bg:"#E0F7FA",title:"Muvekkel CRM",desc:"Her muvekkelin dosyasi, sureci, delilleri ve yazismalari tek panelde. Hicbir detay kacirilmaz.",badge:"Tam dosya paneli"},
-              {icon:"🔐",color:"#1e3a5f",bg:"var(--primary-light)",title:"Avukat Gizliligi",desc:"Muvekkil bilgileri AES-256 sifreleme. Avukat-muvekkil gizliligine tam uyumlu. Turkiye lokasyonu.",badge:"Gizlilik uyumlu"},
+              {icon:"👥",color:"#0891B2",bg:"#E0F7FA",title:"Müvekkil CRM",desc:"Her muvekkelin dosyasi, sureci, delilleri ve yazismalari tek panelde. Hicbir detay kacirilmaz.",badge:"Tam dosya paneli"},
+              {icon:"🔐",color:"#1e3a5f",bg:"var(--primary-light)",title:"Avukat Gizliligi",desc:"Müvekkil bilgileri AES-256 sifreleme. Avukat-muvekkil gizliligine tam uyumlu. Türkiye lokasyonu.",badge:"Gizlilik uyumlu"},
             ].map(f=>(
               <div key={f.title} className="card" style={{padding:"28px"}}>
                 <div style={{width:"48px",height:"48px",borderRadius:"12px",background:f.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",marginBottom:"16px"}}>{f.icon}</div>
@@ -166,10 +166,10 @@ export default function AvukatPage() {
       <section style={{background:"var(--surface)",padding:"100px 48px"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"72px",alignItems:"center"}} className="feature-grid">
           <div>
-            <div className="section-label">Canli Demo</div>
+            <div className="section-label">Canlı Demo</div>
             <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em",color:"var(--text)",margin:"0 0 20px",lineHeight:"1.15"}}>
-              Iki Meslektaslik<br/>
-              <em style={{color:"var(--primary)",fontStyle:"italic"}}>Gibi Calisin.</em>
+              Iki Meslektaşlık<br/>
+              <em style={{color:"var(--primary)",fontStyle:"italic"}}>Gibi Çalışın.</em>
             </h2>
             <div className="card" style={{padding:"20px",marginBottom:"24px"}}>
               <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"14px",paddingBottom:"12px",borderBottom:"1px solid var(--border)"}}>
@@ -213,7 +213,7 @@ export default function AvukatPage() {
       <section id="uzmanlar" style={{background:"var(--primary)",padding:"80px 48px"}}>
         <div style={{maxWidth:"1200px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"48px"}}>
-            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"#fff",margin:"0 0 16px",letterSpacing:"-0.02em"}}>9 Uzman, 9 Hukuk Dali.</h2>
+            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"#fff",margin:"0 0 16px",letterSpacing:"-0.02em"}}>9 Uzman, 9 Hukuk Dalı.</h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:"8px"}}>
             {[
@@ -221,11 +221,11 @@ export default function AvukatPage() {
               {emoji:"👨‍👩‍👧",label:"Aile Hukuku",book:"TMK"},
               {emoji:"🏢",label:"Ticaret Hukuku",book:"TTK / TBK"},
               {emoji:"👷",label:"Is Hukuku",book:"Is K. 4857"},
-              {emoji:"🏠",label:"Gayrimenkul",book:"Tapu / Imar K."},
-              {emoji:"💸",label:"Icra & Iflas",book:"IIK"},
-              {emoji:"🏛️",label:"Idare Hukuku",book:"IYUK"},
+              {emoji:"🏠",label:"Gayrimenkul",book:"Tapu / İmar K."},
+              {emoji:"💸",label:"İcra & Iflas",book:"IIK"},
+              {emoji:"🏛️",label:"İdare Hukuku",book:"IYUK"},
               {emoji:"🛒",label:"Tuketici Hukuku",book:"TKHK"},
-              {emoji:"💻",label:"Bilisim & KVKK",book:"KVKK 6698"},
+              {emoji:"💻",label:"Bilişim & KVKK",book:"KVKK 6698"},
               {emoji:"📜",label:"Tum Dallar",book:"+ Daha Fazlasi"},
             ].map(s=>(
               <div key={s.label} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.15)",borderRadius:"10px",padding:"16px 12px",textAlign:"center"}}>
@@ -242,14 +242,14 @@ export default function AvukatPage() {
       <section id="fiyatlar" style={{background:"var(--surface)",padding:"100px 48px"}}>
         <div style={{maxWidth:"900px",margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:"52px"}}>
-            <div className="section-label" style={{justifyContent:"center"}}>Fiyatlandirma</div>
-            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",letterSpacing:"-0.02em"}}>Sade. Seffaf. Adil.</h2>
+            <div className="section-label" style={{justifyContent:"center"}}>Fiyatlandırma</div>
+            <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",letterSpacing:"-0.02em"}}>Sade. Şeffaf. Adil.</h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}} className="pricing-grid">
             {[
-              {name:"Baslangic",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 muvekkel","Sure takibi","Dilekce olusturma","Telegram uyarilari"],highlight:false,cta:"Baslayin"},
-              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sinırsiz seans","Sinırsiz muvekkel","Her sey dahil","Emsal arama","Strateji motoru","Oncelikli destek"],highlight:true,cta:"En Populer"},
-              {name:"Hukuk Burosu",price:"2.999 TL",orig:"4.999 TL",features:["Sinırsiz seans","5 avukat","Takim paneli","Muvekkel portali","Tum ozellikler"],highlight:false,cta:"Baslayin"},
+              {name:"Başlangıç",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 muvekkel","Süre takibi","Dilekçe olusturma","Telegram uyarilari"],highlight:false,cta:"Başlayın"},
+              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sınırsız seans","Sınırsız muvekkel","Her sey dahil","Emsal arama","Strateji motoru","Öncelikli destek"],highlight:true,cta:"En Popüler"},
+              {name:"Hukuk Bürosu",price:"2.999 TL",orig:"4.999 TL",features:["Sınırsız seans","5 avukat","Takim paneli","Müvekkil portali","Tüm özellikler"],highlight:false,cta:"Başlayın"},
             ].map((plan)=>(
               <div key={plan.name} className="card" style={{padding:"32px 28px",position:"relative",border:plan.highlight?"2px solid var(--primary)":"1px solid var(--border)",boxShadow:plan.highlight?"0 8px 32px rgba(30,58,95,.15)":"none"}}>
                 {plan.highlight && <div style={{position:"absolute",top:"-13px",left:"50%",transform:"translateX(-50%)",background:"var(--primary)",color:"#fff",fontSize:"11px",fontWeight:"700",padding:"4px 16px",borderRadius:"20px",fontFamily:"Lato,sans-serif",letterSpacing:".06em",whiteSpace:"nowrap"}}>EN POPULER</div>}
@@ -258,7 +258,7 @@ export default function AvukatPage() {
                   <span style={{fontSize:"38px",fontWeight:"700",color:"var(--text)",fontFamily:"Merriweather,serif"}}>{plan.price}</span>
                   <span style={{fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>/ay</span>
                 </div>
-                <div style={{fontSize:"12px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",marginBottom:"24px"}}><span style={{textDecoration:"line-through"}}>{plan.orig}</span><span style={{color:"var(--secondary)",fontWeight:"700",marginLeft:"6px"}}>Kurucu fiyati</span></div>
+                <div style={{fontSize:"12px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",marginBottom:"24px"}}><span style={{textDecoration:"line-through"}}>{plan.orig}</span><span style={{color:"var(--secondary)",fontWeight:"700",marginLeft:"6px"}}>Kurucu fiyatı</span></div>
                 <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"28px"}}>
                   {plan.features.map(f=>(<div key={f} style={{display:"flex",alignItems:"center",gap:"8px",fontSize:"14px",color:"var(--text)",fontFamily:"Lato,sans-serif"}}><span style={{color:"var(--secondary)",fontWeight:"700"}}>✓</span>{f}</div>))}
                 </div>
@@ -266,17 +266,17 @@ export default function AvukatPage() {
               </div>
             ))}
           </div>
-          <div style={{textAlign:"center",marginTop:"24px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>14 gun ucretsiz · Kredi karti gerektirmez · Dilediginizde iptal</div>
+          <div style={{textAlign:"center",marginTop:"24px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>14 gün ücretsiz · Kredi kartı gerektirmez · Dilediğinizde iptal</div>
         </div>
       </section>
 
       {/* FINAL CTA */}
       <section style={{background:"var(--primary-light)",padding:"80px 48px",borderTop:"2px solid var(--primary)",textAlign:"center"}}>
-        <div className="section-label" style={{justifyContent:"center"}}>Baslamaya Hazir misiniz?</div>
-        <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugun Baslayin.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>Ilk 14 Gun Ucretsiz.</em></h2>
-        <p style={{fontSize:"17px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",margin:"0 0 36px",maxWidth:"420px",display:"inline-block",lineHeight:"1.75"}}>Kurucu uye fiyatini kacirmayin. Ilk 100 avukat icin gecerli.</p>
-        <div><Link href="/giris/avukat" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ucretsiz Hesap Ac</Link></div>
-        <div style={{marginTop:"16px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>KVKK uyumlu · Baro gizlilik standartlari · Dilediginizde iptal</div>
+        <div className="section-label" style={{justifyContent:"center"}}>Başlamaya Hazır mısınız?</div>
+        <h2 style={{fontSize:"clamp(30px,4vw,48px)",fontWeight:"700",fontFamily:"Merriweather,serif",color:"var(--text)",margin:"0 0 16px",letterSpacing:"-0.02em"}}>Bugün Başlayın.<br/><em style={{color:"var(--primary)",fontStyle:"italic"}}>Ilk 14 Gun Ücretsiz.</em></h2>
+        <p style={{fontSize:"17px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",margin:"0 0 36px",maxWidth:"420px",display:"inline-block",lineHeight:"1.75"}}>Kurucu üye fiyatını kaçırmayın. Ilk 100 avukat icin gecerli.</p>
+        <div><Link href="/giris/avukat" className="btn-primary" style={{fontSize:"16px",padding:"16px 48px",boxShadow:"0 6px 20px rgba(255,107,75,.4)"}}>Ücretsiz Hesap Ac</Link></div>
+        <div style={{marginTop:"16px",fontSize:"13px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif"}}>KVKK uyumlu · Baro gizlilik standartlari · Dilediğinizde iptal</div>
       </section>
 
       {/* FOOTER */}
@@ -288,7 +288,7 @@ export default function AvukatPage() {
             </div>
             <span style={{fontSize:"15px",fontWeight:"700",color:"#fff",fontFamily:"Merriweather,serif"}}>Notya AI</span>
           </div>
-          <div style={{fontSize:"12px",color:"rgba(255,255,255,.4)",fontFamily:"Lato,sans-serif"}}>2026 Dream Turkiye · KVKK Uyumlu</div>
+          <div style={{fontSize:"12px",color:"rgba(255,255,255,.4)",fontFamily:"Lato,sans-serif"}}>2026 Dream Türkiye · KVKK Uyumlu</div>
         </div>
       </footer>
     </main>

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 const PROFESSIONS = [
   { id: 'doktor', label: 'Doktor/Hekim', desc: 'Medical Notes', emoji: '🏥' },
-  { id: 'mali_musavirlik', label: 'Mali Musavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
+  { id: 'mali_musavirlik', label: 'Mali Müşavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
   { id: 'avukat', label: 'Avukat', desc: 'Legal Notes', emoji: '⚖️' },
   { id: 'psikolog', label: 'Psikolog/Terapist', desc: 'Seans Notes', emoji: '🧠' }
 ];
@@ -24,7 +24,7 @@ export default function Onboarding() {
   const [hospital, setHospital] = useState('');
   const [unvan, setUnvan] = useState('');
   const [uzmanlikChips, setUzmanlikChips] = useState<string[]>([]);
-  const [buroAdi, setBuroAdi] = useState('');
+  const [buroAdi, setBüroAdi] = useState('');
   const [sehir, setSehir] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -116,12 +116,12 @@ export default function Onboarding() {
             <>
               <select value={unvan} onChange={(e) => setUnvan(e.target.value)}>
                 <option value="">Unvan</option>
-                <option value="SMMM">Serbest Muhasebeci Mali Musavir</option>
-                <option value="YMM">Yeminli Mali Musavir</option>
+                <option value="SMMM">Serbest Muhasebeci Mali Müşavir</option>
+                <option value="YMM">Yeminli Mali Müşavir</option>
                 <option value="SM">Serbest Muhasebeci</option>
               </select>
               <div >
-                {['Vergi Danismanligi', 'Muhasebe', 'SGK', 'Denetim', 'Ar-Ge Tesviki', 'Konkordato', 'Transfer Fiyatlandirmasi', 'Enflasyon Muhasebesi'].map(chip => (
+                {['Vergi Danismanligi', 'Muhasebe', 'SGK', 'Denetim', 'Ar-Ge Tesviki', 'Konkordato', 'Transfer Fiyatlandırmasi', 'Enflasyon Muhasebesi'].map(chip => (
                   <button
                     key={chip}
                     
@@ -131,7 +131,7 @@ export default function Onboarding() {
                   </button>
                 ))}
               </div>
-              <input type="text" placeholder="Buro Adi" value={buroAdi} onChange={(e) => setBuroAdi(e.target.value)} />
+              <input type="text" placeholder="Büro Adi" value={buroAdi} onChange={(e) => setBüroAdi(e.target.value)} />
               <input type="text" placeholder="Sehir" value={sehir} onChange={(e) => setSehir(e.target.value)} />
             </>
           )}
@@ -144,9 +144,9 @@ export default function Onboarding() {
                 <option value="Medeni Hukuk">Medeni Hukuk</option>
                 <option value="Ticaret Hukuku">Ticaret Hukuku</option>
                 <option value="Is Hukuku">Is Hukuku</option>
-                <option value="Idare Hukuku">Idare Hukuku</option>
+                <option value="İdare Hukuku">İdare Hukuku</option>
               </select>
-              <input type="text" placeholder="Buro Adi" value={buroAdi} onChange={(e) => setBuroAdi(e.target.value)} />
+              <input type="text" placeholder="Büro Adi" value={buroAdi} onChange={(e) => setBüroAdi(e.target.value)} />
             </>
           )}
           {professionType === 'psikolog' && (

@@ -26,7 +26,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password })
       })
       const data = await resp.json()
-      if (!data.access_token) throw new Error(data.error_description || data.error || "Giris basarisiz")
+      if (!data.access_token) throw new Error(data.error_description || data.error || "Giriş basarisiz")
       localStorage.setItem("sb-anjayzospuurymjmmtim-auth-token", JSON.stringify({
         access_token: data.access_token, refresh_token: data.refresh_token,
         expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
@@ -55,7 +55,7 @@ export default function LoginPage() {
             <span style={{color:"#2563EB"}}>Notya</span> AI
           </div>
           <div style={{fontSize:"13px",color:"#64748B"}}>
-            {mode === "login" ? "Hesabiniza giris yapin" : "Ucretsiz hesap olusturun"}
+            {mode === "login" ? "Hesabiniza giris yapin" : "Ücretsiz hesap olusturun"}
           </div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
@@ -70,18 +70,18 @@ export default function LoginPage() {
           {error && <div style={{background:"#FEF2F2",border:"1px solid #FCA5A5",borderRadius:"8px",padding:"10px 12px",fontSize:"13px",color:"#DC2626"}}>{error}</div>}
           <button onClick={handleAuth} disabled={loading || !email || !password}
             style={{padding:"13px",background:loading||!email||!password?"#94A3B8":"#2563EB",border:"none",borderRadius:"10px",color:"#fff",fontSize:"14px",fontWeight:"600",cursor:loading||!email||!password?"not-allowed":"pointer",marginTop:"4px"}}>
-            {loading ? "Yukleniyor..." : mode === "login" ? "Giris Yap" : "Hesap Olustur"}
+            {loading ? "Yükleniyor..." : mode === "login" ? "Giriş Yap" : "Hesap Olustur"}
           </button>
         </div>
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"13px",color:"#64748B"}}>
           {mode === "login" ? "Hesabiniz yok mu? " : "Zaten hesabiniz var mi? "}
           <span onClick={()=>{setMode(mode==="login"?"register":"login");setError("")}} style={{color:"#2563EB",cursor:"pointer",fontWeight:"500"}}>
-            {mode === "login" ? "Ucretsiz kayit" : "Giris yapin"}
+            {mode === "login" ? "Ücretsiz kayit" : "Giriş yapin"}
           </span>
         </div>
         <div style={{marginTop:"20px",padding:"12px",background:"#F8FAFC",borderRadius:"10px",fontSize:"12px",color:"#64748B",textAlign:"center"}}>
           Profesyonel giris:
-          {" "}<a href="/giris/mali" style={{color:"#10B981"}}>Mali Musavir</a>
+          {" "}<a href="/giris/mali" style={{color:"#10B981"}}>Mali Müşavir</a>
           {" | "}<a href="/giris/avukat" style={{color:"#7C3AED"}}>Avukat</a>
           {" | "}<a href="/giris/doktor" style={{color:"#2563EB"}}>Doktor</a>
         </div>

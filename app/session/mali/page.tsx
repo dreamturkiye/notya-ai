@@ -32,7 +32,7 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 const SessionPage: React.FC = () => {
   const [step, setStep] = useState<'setup' | 'recording' | 'processing' | 'done'>('setup');
-  const [gorusmeTuru, setGorusmeTuru] = useState<string>('musteri_gorusmesi');
+  const [gorusmeTuru, setGörüşmeTuru] = useState<string>('musteri_gorusmesi');
   const [hizmetTuru, setHizmetTuru] = useState<string>('vergi_danismanligi');
   const [companyName, setCompanyName] = useState<string>('');
   const [vergiNo, setVergiNo] = useState<string>('');
@@ -185,7 +185,7 @@ const SessionPage: React.FC = () => {
               style={{ marginBottom: '20px', padding: '8px', borderRadius: '4px' }}
             >
               <option value="">Faaliyet Alanı</option>
-              <option value=''>Faaliyet Alani Secin</option>
+              <option value=''>Faaliyet Alanı Secin</option>
               <option value='ticaret'>Ticaret</option>
               <option value='hizmet'>Hizmet</option>
               <option value='insaat'>Insaat ve Muteahhitlik</option>
@@ -197,7 +197,7 @@ const SessionPage: React.FC = () => {
               <option value='teknoloji'>Teknoloji ve Yazilim</option>
               <option value='tasimacilik'>Tasimacilik ve Lojistik</option>
               <option value='gayrimenkul'>Gayrimenkul</option>
-              <option value='tekstil'>Tekstil ve Hazir Giyim</option>
+              <option value='tekstil'>Tekstil ve Hazır Giyim</option>
               <option value='tarim'>Tarim ve Hayvancilik</option>
               <option value='enerji'>Enerji</option>
               <option value='finans'>Finans ve Sigorta</option>
@@ -208,7 +208,7 @@ const SessionPage: React.FC = () => {
               {GORUSME_TYPES.map((type) => (
                 <button
                   key={type.value}
-                  onClick={() => setGorusmeTuru(type.value)}
+                  onClick={() => setGörüşmeTuru(type.value)}
                   style={{
                     padding: '8px 16px',
                     borderRadius: '4px',
