@@ -160,7 +160,7 @@ async function _POST_WHATSAPP_MOVED(req: NextRequest, { params }: { params: { id
 function formatNoteForWhatsApp(note: Record<string, unknown>): string {
   const lines: string[] = [
     '📋 *NOTYA AI - KLİNİK NOT*',
-    `🕐 ${new Date(note.created_at as string).toLocaleString('tr-TR', { timeZone: 'Europe/İstanbul' })}`,
+    `🕐 ${new Date(note.created_at as string).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}`,
     '',
   ]
 

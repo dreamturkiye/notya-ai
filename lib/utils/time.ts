@@ -1,7 +1,7 @@
 // Shared İstanbul timezone utility for all Notya AI date/time operations
-// All times displayed and calculated in Europe/İstanbul (UTC+3)
+// All times displayed and calculated in Europe/Istanbul (UTC+3)
 
-export const TZ = 'Europe/İstanbul'
+export const TZ = 'Europe/Istanbul'
 export const LOCALE = 'tr-TR'
 
 export function nowİstanbul(): Date {

@@ -12,7 +12,7 @@ export default function MaliDashboard() {
   const [user, setUser] = useState<Record<string,unknown> | null>(null)
   const [loading, setLoading] = useState(true)
   const [mevzuatSearch, setMevzuatSearch] = useState('')
-  const now = new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/İstanbul' }))
+  const now = new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
   const beyanlar = [...getBeyanTakvimi(now.getFullYear(), now.getMonth()+1), ...getBeyanTakvimi(now.getMonth()===11 ? now.getFullYear()+1 : now.getFullYear(), now.getMonth()===11 ? 1 : now.getMonth()+2)]
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function MaliDashboard() {
         </div>
       </nav>
       <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:32}}>
-        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>{(() => { const h = parseInt(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/İstanbul', hour: '2-digit', hour12: false })); const g = h < 12 ? 'Günaydın' : h < 18 ? 'İyi Günler' : 'İyi Akşamlar'; return (user?.first_name ? g + ' ' + user.first_name + '!' : g + '!') })()}</h1>
+        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>{(() => { const h = parseInt(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', hour12: false })); const g = h < 12 ? 'Günaydın' : h < 18 ? 'İyi Günler' : 'İyi Akşamlar'; return (user?.first_name ? g + ' ' + user.first_name + '!' : g + '!') })()}</h1>
         {/* STATS ROW */}
         <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
           {[{label:'Toplam Görüşme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Müşteriler',val:new Set(notes.map(n=>n.profession_type||'müşteri')).size,icon:'active_c'},{label:'Yaklaşan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
@@ -88,7 +88,7 @@ export default function MaliDashboard() {
                 {notes.map((n) => {
                   const riskScore = n.vergi_risk_skoru as number | undefined
                   const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.görüşme_turu as string || 'Görüşme'
-                  const dateStr = new Date(n.created_at as string).toLocaleDateString('tr-TR', {timeZone: 'Europe/İstanbul',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
+                  const dateStr = new Date(n.created_at as string).toLocaleDateString('tr-TR', {timeZone: 'Europe/Istanbul',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
                   return (
                     <div key={n.id as string} style={{background:'white',borderRadius:12,padding:20,boxShadow:'0 1px 3px rgba(0,0,0,0.1)',borderLeft:'4px solid' + (riskScore ? riskColor(riskScore) : '#2563EB')}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Eksik parametreler' }, { status: 400 })
   }
 
-  const today = tarih || new Date().toLocaleDateString('tr-TR', {timeZone: 'Europe/İstanbul', day:'2-digit', month:'2-digit', year:'numeric' })
+  const today = tarih || new Date().toLocaleDateString('tr-TR', {timeZone: 'Europe/Istanbul', day:'2-digit', month:'2-digit', year:'numeric' })
   const dosyaNo = today.replace(/\./g, '') + '-' + müşteri_name.substring(0,4).toUpperCase()
 
   const riskColor = note_data.vergi_risk_skoru <= 3 ? '#16A34A' : note_data.vergi_risk_skoru <= 6 ? '#D97706' : '#DC2626'
