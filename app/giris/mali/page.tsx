@@ -19,7 +19,8 @@ export default function MaliGiris() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    if (!email.trim() || !password.trim()) { setError('E-posta ve sifre gereklidir'); setLoading(false); return }
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     if (authError || !data.session) {
       setError(authError?.message || 'Oturum alinamadi')
       setLoading(false)
@@ -42,14 +43,14 @@ export default function MaliGiris() {
           <div style={{fontSize:'22px',fontWeight:700,color:'#fff'}}><span style={{color:'#10B981'}}>Notya</span> AI</div>
           <div style={{fontSize:'13px',color:'#64748b',marginTop:'4px'}}>Mali Musavirlik Modulu</div>
         </div>
-        <form onSubmit={handleLogin} style={{display:'flex',flexDirection:'column',gap:'14px'}}>
+        <form onSubmit={handleLogin} noValidate style={{display:'flex',flexDirection:'column',gap:'14px'}}>
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>E-posta</label>
-            <input type='email' required value={email} onChange={e=>setEmail(e.target.value)} placeholder='smmm@ornek.com' style={inp} />
+            <input type='text' value={email} onChange={e=>setEmail(e.target.value)} placeholder='smmm@ornek.com' style={inp} />
           </div>
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Sifre</label>
-            <input type='password' required value={password} onChange={e=>setPassword(e.target.value)} placeholder='Sifrenizi girin' style={inp} />
+            <input type='password' value={password} onChange={e=>setPassword(e.target.value)} placeholder='Sifrenizi girin' style={inp} />
           </div>
           {error && (
             <div style={{background:'rgba(220,38,38,0.1)',border:'1px solid rgba(220,38,38,0.3)',borderRadius:'8px',padding:'10px',color:'#fca5a5',fontSize:'13px'}}>{error}</div>
