@@ -88,7 +88,7 @@ export default function MaliDashboard() {
                   return (
                     <div key={n.id as string} style={{background:'white',borderRadius:12,padding:20,boxShadow:'0 1px 3px rgba(0,0,0,0.1)',borderLeft:'4px solid' + (riskScore ? riskColor(riskScore) : '#2563EB')}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                        <span style={{fontWeight:600,fontSize:14}}>{sessionType.replace(/_/g,)}</span>
+                        <span style={{fontWeight:600,fontSize:14}}>{sessionType.replace(/_/g, ' ')}</span>
                         {riskScore && <span style={{background:riskColor(riskScore),color:'white',padding:'2px 8px',borderRadius:12,fontSize:12,fontWeight:700}}>Risk: {riskScore}/10</span>}
                       </div>
                       <div style={{fontSize:12,color:'#94a3b8'}}>{dateStr}</div>
