@@ -1,84 +1,78 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
-import { AVUKAT_PERSONAS, getPersonaForBranch, buildAvukatSystemPrompt } from "@/lib/avukat/avukatPersonaEngine"
+import { AVUKAT_PERSONAS, getPersonaForBranch, buildAvukatSystemPrompt, type AvukatPersonaId, type BranchId } from "@/lib/avukat/avukatPersonaEngine"
+import { quickClassifyLegal } from "@/lib/avukat/avukatIntentParser"
 import { toAddressableUser } from "@/lib/userProfile"
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("Authorization")
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ success: false, error: "Yetkisiz" }, { status: 401 })
-    }
-    const { data: { user } } = await supabase.auth.getUser(authHeader.split(" ")[1])
-    if (!user) return NextResponse.json({ success: false, error: "Gecersiz token" }, { status: 401 })
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { message, avukatSessionId, muvekkilId, branch = "ceza", personaId: requestedPersona } = await req.json()
+    const token = authHeader.split(" ")[1];
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { data: avukatRow } = await supabase.from("users").select("*").eq("id", user.id).maybeSingle()
-    const avukatUser = toAddressableUser(avukatRow)
-    const { data: prefs } = await supabase.from("avukat_preferences").select("*").eq("avukat_id", user.id).maybeSingle()
+    const { message, avukatSessionId, muvekkilId, sessionId, branch, personaId } = await req.json();
 
-    let avukatSession: Record<string, unknown> | null = null
+    const { data: userRow } = await supabase.from("users").select("*").eq("id", user.id).maybeSingle();
+    if (!userRow) return NextResponse.json({ error: "User not found" }, { status: 401 });
+
+    const { data: prefs } = await supabase.from("avukat_preferences").select("*").eq("avukat_id", user.id).maybeSingle();
+
+    let session;
     if (avukatSessionId) {
-      const { data } = await supabase.from("avukat_sessions").select("*").eq("id", avukatSessionId).eq("avukat_id", user.id).single()
-      avukatSession = data
-    }
-    if (!avukatSession) {
-      const pid = requestedPersona || getPersonaForBranch(branch)
-      const { data } = await supabase.from("avukat_sessions").insert({ avukat_id: user.id, muvekkel_id: muvekkilId || null, persona_id: pid, messages: [], active_context: { branch } }).select().single()
-      avukatSession = data
+      const { data: sessionData } = await supabase.from("avukat_sessions").select("*").eq("id", avukatSessionId).eq("avukat_id", user.id).single();
+      session = sessionData;
+    } else {
+      const { data: newSessionData, error } = await supabase.from("avukat_sessions").insert({
+        avukat_id: user.id,
+        muvekkel_id: muvekkilId || null,
+        persona_id: personaId || null,
+        messages: [],
+        active_context: {}
+      }).select().single();
+      if (error) throw error;
+      session = newSessionData;
     }
 
-    let muvekkel: Record<string, unknown> | null = null
+    let muvekkel = null;
     if (muvekkilId) {
-      const { data } = await supabase.from("musevvekiller").select("*").eq("id", muvekkilId).maybeSingle()
-      muvekkel = data
+      const { data: muvekkelData } = await supabase.from("musevvekiller").select("*").eq("id", muvekkilId).single();
+      muvekkel = muvekkelData;
     }
 
-    const personaId = (avukatSession!.persona_id as string) || getPersonaForBranch(branch)
-    const persona = AVUKAT_PERSONAS[personaId]
-    const systemPrompt = buildAvukatSystemPrompt(persona, prefs, muvekkel, avukatUser)
-    const messages = (avukatSession!.messages as Array<{ role: string; content: string }>) || []
-    const last20 = [...messages, { role: "user", content: message }].slice(-20)
+    const personaId2 = getPersonaForBranch((branch || "ceza") as BranchId);
+    const persona = AVUKAT_PERSONAS[personaId2];
 
-    const response = await anthropic.messages.create({
+    const systemPrompt = buildAvukatSystemPrompt(persona, prefs, muvekkel || null, toAddressableUser(userRow));
+
+    const aiResponse = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 800,
       system: systemPrompt,
-      messages: last20 as Array<{ role: "user" | "assistant"; content: string }>
-    })
+      messages: (session.messages as { role: string, content: string }[]).slice(-20).concat([{ role: "user", content: message }])
+    });
 
-    const rawText = response.content[0].type === "text" ? response.content[0].text : ""
-    let parsed: { speech: string; action: Record<string, unknown> | null; proactiveWarning: string | null }
-    try { parsed = JSON.parse(rawText) } catch { parsed = { speech: rawText, action: null, proactiveWarning: null } }
+    const rawText = aiResponse.content[0].type === "text" ? aiResponse.content[0].text : "{}";
+    const { speech, action, proactiveWarning } = JSON.parse(rawText);
 
-    if (parsed.action) {
-      const actionType = (parsed.action as Record<string, unknown>).type
-      const payload = ((parsed.action as Record<string, unknown>).payload || {}) as Record<string, unknown>
-      switch (actionType) {
-        case "CREATE_MUVEKKEL":
-          await supabase.from("musevvekiller").insert({ avukat_id: user.id, ...payload })
-          break
-        case "ADD_DELIL":
-          await supabase.from("deliller").insert({ muvekkel_id: muvekkilId, ...payload })
-          break
-        case "ADD_SURE":
-          await supabase.from("sure_takibi").insert({ avukat_id: user.id, muvekkel_id: muvekkilId, ...payload })
-          break
-      }
-    }
+    if (action?.type === "CREATE_MUVEKKEL") await supabase.from("musevvekiller").insert({ avukat_id: user.id, ...action.payload });
+    if (action?.type === "ADD_DELIL") await supabase.from("deliller").insert({ muvekkel_id: muvekkilId, ...action.payload });
+    if (action?.type === "ADD_SURE") await supabase.from("sure_takibi").insert({ avukat_id: user.id, muvekkel_id: muvekkilId, ...action.payload });
 
-    await supabase.from("avukat_sessions").update({
-      messages: [...messages, { role: "user", content: message }, { role: "assistant", content: parsed.speech }]
-    }).eq("id", avukatSession!.id)
+    await supabase.from("avukat_sessions").update({ messages: [...session.messages, { role: "user", content: message }, { role: "assistant", content: speech }] }).eq("id", session.id);
 
-    return NextResponse.json({ success: true, data: { speech: parsed.speech, proactiveWarning: parsed.proactiveWarning, action: parsed.action, avukatSessionId: avukatSession!.id } })
+    return NextResponse.json({ success: true, data: { speech, proactiveWarning, action, avukatSessionId: session.id } });
   } catch (error) {
-    console.error("[avukat-chat]", error)
-    return NextResponse.json({ success: false, error: "Asistan yanit veremedi" }, { status: 500 })
+    console.error(error);
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
