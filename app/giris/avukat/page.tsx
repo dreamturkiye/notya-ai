@@ -1,4 +1,4 @@
-'use client'
+'use client' // 1782254890
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
