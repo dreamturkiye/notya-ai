@@ -1,6 +1,6 @@
 
-import HelpWidget from '@/components/HelpWidget'
 "use client"
+import HelpWidget from "@/components/HelpWidget"
 import { useState, useEffect } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"

@@ -1,4 +1,5 @@
 'use client'
+import HelpWidget from '@/components/HelpWidget'
 // app/dashboard/mali/page.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
