@@ -52,7 +52,7 @@ export default function MaliToolsPage() {
         </div>
         <button onClick={() => router.push('/dashboard/mali')}
           style={{ color: 'rgba(255,255,255,0.7)', background: 'none', border: '1px solid rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
-          ← Dashboard
+          ← Ana Sayfa
         </button>
       </nav>
 

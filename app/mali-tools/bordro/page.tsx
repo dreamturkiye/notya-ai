@@ -16,7 +16,7 @@ export default function BordroPage() {
   const [error, setError] = useState('')
 
   async function hesapla() {
-    if (!brutMaas || isNaN(Number(brutMaas))) { setError('Gecerli bir brut maas girin'); return }
+    if (!brutMaas || isNaN(Number(brutMaas))) { setError('Geçerli bir brüt maş girin'); return }
     setLoading(true); setError('')
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { router.push('/giris/mali'); return }
@@ -27,7 +27,7 @@ export default function BordroPage() {
     })
     const data = await res.json()
     if (data.success) setResult(data)
-    else setError(data.error || 'Hata olustu')
+    else setError(data.error || 'Hata oluştu')
     setLoading(false)
   }
 

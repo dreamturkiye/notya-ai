@@ -127,7 +127,7 @@ export default function PortalPage() {
           <div style={{ textAlign: 'center', padding: 40, color: '#6B7280' }}>Yükleniyor...</div>
         ) : müşteriler.length === 0 ? (
           <div style={{ background: '#fff', borderRadius: 12, padding: 32, textAlign: 'center', color: '#6B7280' }}>
-            Henüz müşteri eklemediniz. Dashboard'dan müşteri ekleyin.
+            Henüz müşteri eklemediniz. Ana Sayfa'dan müşteri ekleyin.
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
