@@ -180,7 +180,23 @@ const SessionPage: React.FC = () => {
               style={{ marginBottom: '20px', padding: '8px', borderRadius: '4px' }}
             >
               <option value="">Faaliyet Alanı</option>
-              {/* Add options for faaliyet alanları */}
+              <option value=''>Faaliyet Alani Secin</option>
+              <option value='ticaret'>Ticaret</option>
+              <option value='hizmet'>Hizmet</option>
+              <option value='insaat'>Insaat ve Muteahhitlik</option>
+              <option value='imalat'>Imalat ve Uretim</option>
+              <option value='gida'>Gida ve Restoran</option>
+              <option value='turizm'>Turizm ve Otelcilik</option>
+              <option value='saglik'>Saglik ve Klinik</option>
+              <option value='egitim'>Egitim ve Kurs</option>
+              <option value='teknoloji'>Teknoloji ve Yazilim</option>
+              <option value='tasimacilik'>Tasimacilik ve Lojistik</option>
+              <option value='gayrimenkul'>Gayrimenkul</option>
+              <option value='tekstil'>Tekstil ve Hazir Giyim</option>
+              <option value='tarim'>Tarim ve Hayvancilik</option>
+              <option value='enerji'>Enerji</option>
+              <option value='finans'>Finans ve Sigorta</option>
+              <option value='diger'>Diger</option>
             </select>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
