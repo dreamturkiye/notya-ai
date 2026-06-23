@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { logAccess, logNoteApproval } from '@/lib/security/auditLogger'
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
@@ -16,7 +16,7 @@ async function getUser(req: NextRequest) {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) return null
   const token = authHeader.split(' ')[1]
-  const { data: { user } } = await supabase.auth.getUser(token)
+  const { data: { user } } = await getSupabase().auth.getUser(token)
   return user
 }
 
