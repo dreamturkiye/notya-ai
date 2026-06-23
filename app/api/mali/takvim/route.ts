@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     const allItems: any[] = []
     for (const m of müşteriler) {
-      const items = getBeyanlarimForMusteri(m.id, m.sirket_adi, new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })))
+      const items = getBeyanlarimForMusteri(m.id, m.sirket_adi, new Date())
       allItems.push(...items)
     }
 

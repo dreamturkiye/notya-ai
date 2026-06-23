@@ -5,7 +5,7 @@ export const TZ = 'Europe/Istanbul'
 export const LOCALE = 'tr-TR'
 
 export function nowİstanbul(): Date {
-  return new Date(new Date().toLocaleString(LOCALE, { timeZone: TZ }))
+  return new Date()
 }
 
 export function formatDateTime(iso: string | Date, opts?: Intl.DateTimeFormatOptions): string {
@@ -28,7 +28,7 @@ export function todayİstanbul(): string {
 }
 
 export function daysUntil(dateStr: string): number {
-  const now = new Date(new Date().toLocaleString(LOCALE, { timeZone: TZ }))
+  const now = new Date()
   const target = new Date(dateStr)
   return Math.ceil((target.getTime() - now.getTime()) / 86400000)
 }

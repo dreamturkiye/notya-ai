@@ -9,12 +9,12 @@ export interface GreetingOptions {
 
 function resolveTimeOfDay(timeOfDay?: TimeOfDay): TimeOfDay {
   if (timeOfDay) return timeOfDay
-  // Always use İstanbul time (Europe/Istanbul = UTC+3)
-  const İstanbulHour = parseInt(
-    new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', hour12: false })
+  // Safe cross-browser Istanbul hour using Intl.DateTimeFormat
+  const h = parseInt(
+    new Intl.DateTimeFormat('en', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }).format(new Date())
   )
-  if (İstanbulHour < 12) return 'morning'
-  if (İstanbulHour < 18) return 'afternoon'
+  if (h < 12) return 'morning'
+  if (h < 18) return 'afternoon'
   return 'evening'
 }
 

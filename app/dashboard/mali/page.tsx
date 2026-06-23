@@ -12,7 +12,7 @@ export default function MaliDashboard() {
   const [user, setUser] = useState<Record<string,unknown> | null>(null)
   const [loading, setLoading] = useState(true)
   const [mevzuatSearch, setMevzuatSearch] = useState('')
-  const now = new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
+  const now = new Date() // always use native Date - timezone handled at display level
   const beyanlar = [...getBeyanTakvimi(now.getFullYear(), now.getMonth()+1), ...getBeyanTakvimi(now.getMonth()===11 ? now.getFullYear()+1 : now.getFullYear(), now.getMonth()===11 ? 1 : now.getMonth()+2)]
 
   useEffect(() => {
