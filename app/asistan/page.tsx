@@ -54,7 +54,7 @@ export default function AsistanPage() {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
       const profileData = await resp.json()
-      if (!profileData.data?.onboarding_completed) {
+      if (!profileData.data?.onboarding_completed && !profileData.data?.profession_type) {
         router.push("/onboarding")
         return
       }

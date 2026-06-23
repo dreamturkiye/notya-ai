@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         id: user.id,
         email: user.email,
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-        onboarding_completed: false,
+        onboarding_completed: !!user.user_metadata?.onboarding_completed,
       },
     })
   }
