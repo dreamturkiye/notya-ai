@@ -19,24 +19,13 @@ export default function MaliGiris() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
-      if (authError) throw new Error(authError.message)
-      if (!data.session) throw new Error('Oturum alinamadi')
-      const { data: u } = await supabase.from('users').select('profession_type,onboarding_completed').eq('id', data.user.id).single()
-      if (u?.profession_type === 'mali_musavirlik' || u?.profession_type === 'mali_musavir' || u?.profession_type === 'mali_musavirlik') {
-        router.replace('/dashboard/mali')
-        return
-      }
-      if (!u?.onboarding_completed) {
-        router.replace('/onboarding')
-        return
-      }
-      router.replace('/dashboard/mali')
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Giris hatasi')
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    if (authError || !data.session) {
+      setError(authError?.message || 'Oturum alinamadi')
       setLoading(false)
+      return
     }
+    router.replace('/dashboard/mali')
   }
 
   const inp: React.CSSProperties = {
@@ -60,7 +49,7 @@ export default function MaliGiris() {
           </div>
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Sifre</label>
-            <input type='password' required value={password} onChange={e=>setPassword(e.target.value)} placeholder='........' style={inp} />
+            <input type='password' required value={password} onChange={e=>setPassword(e.target.value)} placeholder='Sifrenizi girin' style={inp} />
           </div>
           {error && (
             <div style={{background:'rgba(220,38,38,0.1)',border:'1px solid rgba(220,38,38,0.3)',borderRadius:'8px',padding:'10px',color:'#fca5a5',fontSize:'13px'}}>{error}</div>
