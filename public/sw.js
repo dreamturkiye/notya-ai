@@ -1,4 +1,4 @@
-const CACHE = 'notya-v1'
+const CACHE = 'notya-v3'
 const OFFLINE_ASSETS = ['/', '/notes', '/session/new', '/manifest.json']
 
 self.addEventListener('install', e => {
