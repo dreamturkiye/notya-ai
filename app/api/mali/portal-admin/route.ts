@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { generateSecureToken } from '@/lib/mali/müşteriPortalEngine'
+import { generateSecureToken } from '@/lib/mali/musteriPortalEngine'
 
 function getSupabase() {
   return createClient(
@@ -21,13 +21,13 @@ export async function POST(req: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const { action, müşteriId, tokenId, daysValid } = await req.json()
+    const { action, musteriId, tokenId, daysValid } = await req.json()
     if (action === 'generate') {
       const { data: müşteri } = await supabase
-        .from('mali_müşteriler')
+        .from('mali_musteriler')
         .select('id, şirket_adi')
-        .eq('id', müşteriId)
-        .eq('müşavir_id', user.id)
+        .eq('id', musteriId)
+        .eq('musavir_id', user.id)
         .single()
       if (!müşteri) {
         return NextResponse.json({ error: 'Bu müşteriye erisim yetkiniz yok' }, { status: 403 })
@@ -36,13 +36,13 @@ export async function POST(req: NextRequest) {
       await supabase
         .from('mali_portal_tokens')
         .update({ is_active: false })
-        .eq('müşteri_id', müşteriId)
-        .eq('müşavir_id', user.id)
+        .eq('musteri_id', musteriId)
+        .eq('musavir_id', user.id)
         .eq('is_active', true)
-      const result = generateSecureToken(müşteriId, user.id, daysValid || 30)
+      const result = generateSecureToken(musteriId, user.id, daysValid || 30)
       await getSupabase().from('mali_portal_tokens').insert({
-        müşteri_id: müşteriId,
-        müşavir_id: user.id,
+        musteri_id: musteriId,
+        musavir_id: user.id,
         token_hash: result.tokenHash,
         expires_at: result.expiresAt.toISOString(),
         is_active: true,
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         token: result.token,
         expiresAt: result.expiresAt,
         portalUrl: `${baseUrl}/portal/${result.token}`,
-        müşteriAdi: müşteri.şirket_adi,
+        müşteriAdi: müşteri.sirket_adi,
       })
     }
     if (action === 'revoke') {
@@ -61,14 +61,14 @@ export async function POST(req: NextRequest) {
         .from('mali_portal_tokens')
         .update({ is_active: false })
         .eq('id', tokenId)
-        .eq('müşavir_id', user.id)
+        .eq('musavir_id', user.id)
       return NextResponse.json({ success: true, message: 'Token iptal edildi' })
     }
     if (action === 'list') {
       const { data } = await supabase
         .from('mali_portal_tokens')
         .select('*, mali_müşteriler(şirket_adi)')
-        .eq('müşavir_id', user.id)
+        .eq('musavir_id', user.id)
         .order('created_at', { ascending: false })
       return NextResponse.json({ success: true, data })
     }

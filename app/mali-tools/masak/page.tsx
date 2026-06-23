@@ -24,7 +24,7 @@ export default function MasakPage() {
     const res = await fetch('/api/mali/masak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ islem: { müşteriId: 'manual', müşteriAdi, islemTipi, tutar: Number(tutar), tarih, aciklama }, sendAlert: false })
+      body: JSON.stringify({ islem: { musteriId: 'manual', müşteriAdi, islemTipi, tutar: Number(tutar), tarih, aciklama }, sendAlert: false })
     })
     const data = await res.json()
     if (data.success) setResult(data.data[0])

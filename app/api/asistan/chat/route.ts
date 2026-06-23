@@ -5,7 +5,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, type SpecialtyId } from "@/lib/asistan/personaEngine"
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
 import { executeAction } from "@/lib/asistan/actionExecutor"
-import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/türkishDrugs"
+import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
 const getSupabase = () => createClient(

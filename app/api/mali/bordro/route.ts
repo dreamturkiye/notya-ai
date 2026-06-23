@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { brutMaas, engellilikDerecesi, cocukSayisi, evliMi, kidemYili, müşteriId } = body
+    const { brutMaas, engellilikDerecesi, cocukSayisi, evliMi, kidemYili, musteriId } = body
 
     if (typeof brutMaas !== 'number' || brutMaas <= 0) {
       return NextResponse.json({ success: false, error: 'Geçersiz brutMaas' }, { status: 400 })
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const result = hesaplaBordro(input)
     const ozet = formatBordroText(result)
 
-    if (müşteriId) {
+    if (musteriId) {
       await supabase.from('mali_actions').insert({
         mali_session_id: null,
         action_type: 'BORDRO_HESAP',

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { createHmac } from 'crypto'
-import { verifyToken, buildMüşteriSystemPrompt, type MüşteriPortalSession } from '@/lib/mali/müşteriPortalEngine'
-import { getBeyanlarımForMüşteri } from '@/lib/mali/beyanTakvimiEngine'
+import { verifyToken, buildMusteriSystemPrompt, type MusteriPortalSession } from '@/lib/mali/musteriPortalEngine'
+import { getBeyanlarimForMusteri } from '@/lib/mali/beyanTakvimiEngine'
 import { checkRateLimit, getRateLimitKey } from '@/lib/mali/portalRateLimit'
 
 function getSupabase() {
@@ -44,9 +44,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Link süresi dolmuş' }, { status: 401 })
     }
     const { data: müşteri } = await supabase
-      .from('mali_müşteriler')
+      .from('mali_musteriler')
       .select('*')
-      .eq('id', payload.müşteriId)
+      .eq('id', payload.musteriId)
       .single()
     if (!müşteri) {
       return NextResponse.json({ error: 'Müşteri bulunamadi' }, { status: 404 })
@@ -56,21 +56,21 @@ export async function POST(req: NextRequest) {
       .select('full_name, email')
       .eq('id', payload.müşavirId)
       .single()
-    const aktifBeyanlar = getBeyanlarımForMüşteri(
-      payload.müşteriId,
-      müşteri.şirket_adi,
+    const aktifBeyanlar = getBeyanlarimForMusteri(
+      payload.musteriId,
+      müşteri.sirket_adi,
       new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
     ).slice(0, 5)
     const session: MüşteriPortalSession = {
-      müşteriId: payload.müşteriId,
-      müşteriAdi: müşteri.şirket_adi,
+      musteriId: payload.musteriId,
+      müşteriAdi: müşteri.sirket_adi,
       müşavirAdi: müşavir?.full_name || müşavir?.email || 'Mali Müşaviriniz',
       vergiNo: müşteri.vergi_no,
       faaliyetAlani: müşteri.faaliyet_alani,
       aktifBeyanlar,
       sonOdemeler: [],
     }
-    const systemPrompt = buildMüşteriSystemPrompt(session)
+    const systemPrompt = buildMusteriSystemPrompt(session)
     const aiResponse = await getAnthropic().messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 300,
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         use_count: (tokenRecord.use_count || 0) + 1,
       })
       .eq('id', tokenRecord.id)
-    return NextResponse.json({ success: true, reply, müşteriAdi: müşteri.şirket_adi })
+    return NextResponse.json({ success: true, reply, müşteriAdi: müşteri.sirket_adi })
   } catch {
     return NextResponse.json({ error: 'Sunucu hatasi' }, { status: 500 })
   }
@@ -114,24 +114,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Link gecersiz veya süresi dolmuş' }, { status: 401 })
     }
     const { data: müşteri } = await supabase
-      .from('mali_müşteriler')
+      .from('mali_musteriler')
       .select('*')
-      .eq('id', payload.müşteriId)
+      .eq('id', payload.musteriId)
       .single()
     const { data: müşavir } = await supabase
       .from('users')
       .select('full_name, email')
       .eq('id', payload.müşavirId)
       .single()
-    const aktifBeyanlar = getBeyanlarımForMüşteri(
-      payload.müşteriId,
-      müşteri?.şirket_adi || '',
+    const aktifBeyanlar = getBeyanlarimForMusteri(
+      payload.musteriId,
+      müşteri?.sirket_adi || '',
       new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
     ).slice(0, 5)
     return NextResponse.json({
       success: true,
       data: {
-        müşteriAdi: müşteri?.şirket_adi,
+        müşteriAdi: müşteri?.sirket_adi,
         aktifBeyanlar,
         müşavirAdi: müşavir?.full_name || müşavir?.email || 'Mali Müşaviriniz',
         tokenExpiresAt: tokenRecord.expires_at,

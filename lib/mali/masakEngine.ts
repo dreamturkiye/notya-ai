@@ -1,5 +1,5 @@
 export interface MasakIslem {
-  müşteriId: string
+  musteriId: string
   müşteriAdi: string
   islemTipi: 'nakit_tahsilat' | 'nakit_odeme' | 'eft' | 'havale' | 'diğer'
   tutar: number

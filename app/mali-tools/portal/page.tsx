@@ -25,9 +25,9 @@ export default function PortalPage() {
     if (!session) { router.push('/giriş/mali'); return }
     // Load müşteriler
     const { data: m } = await supabase
-      .from('mali_müşteriler')
+      .from('mali_musteriler')
       .select('*')
-      .eq('müşavir_id', session.user.id)
+      .eq('musavir_id', session.user.id)
       .order('şirket_adi')
     setMüşteriler(m || [])
     // Load existing tokens
@@ -40,26 +40,26 @@ export default function PortalPage() {
     if (data.success) {
       const tokenMap: Record<string, any> = {}
       for (const t of data.data || []) {
-        if (t.is_active) tokenMap[t.müşteri_id] = t
+        if (t.is_active) tokenMap[t.musteri_id] = t
       }
       setTokens(tokenMap)
     }
     setLoading(false)
   }
 
-  async function generateLink(müşteriId: string) {
-    setGenerating(müşteriId)
+  async function generateLink(musteriId: string) {
+    setGenerating(musteriId)
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
     const res = await fetch('/api/mali/portal-admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ action: 'generate', müşteriId, daysValid })
+      body: JSON.stringify({ action: 'generate', musteriId, daysValid })
     })
     const data = await res.json()
     if (data.success) {
       await navigator.clipboard.writeText(data.portalUrl)
-      setCopiedId(müşteriId)
+      setCopiedId(musteriId)
       setTimeout(() => setCopiedId(null), 3000)
       // Refresh tokens
       await init()
@@ -67,8 +67,8 @@ export default function PortalPage() {
     setGenerating(null)
   }
 
-  async function revokeToken(tokenId: string, müşteriId: string) {
-    setRevoking(müşteriId)
+  async function revokeToken(tokenId: string, musteriId: string) {
+    setRevoking(musteriId)
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
     await fetch('/api/mali/portal-admin', {
@@ -80,13 +80,13 @@ export default function PortalPage() {
     setRevoking(null)
   }
 
-  async function copyExistingLink(müşteriId: string) {
-    const t = tokens[müşteriId]
+  async function copyExistingLink(musteriId: string) {
+    const t = tokens[musteriId]
     if (!t) return
     const baseUrl = window.location.origin
     const url = baseUrl + '/portal/' + t.token_hash
     // We don't store the plain token - regenerate
-    await generateLink(müşteriId)
+    await generateLink(musteriId)
   }
 
   const daysLeft = (expiresAt: string) => {
@@ -139,7 +139,7 @@ export default function PortalPage() {
                 <div key={m.id} style={{ background: '#fff', borderRadius: 10, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: hasActiveToken ? 12 : 0 }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: '#0A1628' }}>{m.şirket_adi}</div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: '#0A1628' }}>{m.sirket_adi}</div>
                       {m.vergi_no && <div style={{ fontSize: 12, color: '#6B7280' }}>VN: {m.vergi_no}</div>}
                       {hasActiveToken && (
                         <div style={{ fontSize: 11, color: expiry <= 3 ? '#DC2626' : '#16A34A', marginTop: 2 }}>

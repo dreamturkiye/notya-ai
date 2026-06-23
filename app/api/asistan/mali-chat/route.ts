@@ -20,21 +20,21 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await getSupabase().auth.getUser(token)
     if (!user) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
 
-    const { message, maliSessionId, müşteriId, sessionId, personaId } = await req.json()
+    const { message, maliSessionId, musteriId, sessionId, personaId } = await req.json()
 
     const { data: userRow } = await getSupabase().from("users").select("*").eq("id", user.id).maybeSingle()
     if (!userRow) return NextResponse.json({ success: false, error: "User not found" }, { status: 404 })
 
-    const { data: prefs } = await getSupabase().from("mali_preferences").select("*").eq("müşavir_id", user.id).maybeSingle()
+    const { data: prefs } = await getSupabase().from("mali_preferences").select("*").eq("musavir_id", user.id).maybeSingle()
 
     let session
     if (maliSessionId) {
-      const { data: sessionData } = await getSupabase().from("mali_sessions").select("*").eq("id", maliSessionId).eq("müşavir_id", user.id).single()
+      const { data: sessionData } = await getSupabase().from("mali_sessions").select("*").eq("id", maliSessionId).eq("musavir_id", user.id).single()
       session = sessionData
     } else {
       const { data: newSession } = await getSupabase().from("mali_sessions").insert({
-        müşavir_id: user.id,
-        müşteri_id: müşteriId || null,
+        musavir_id: user.id,
+        musteri_id: musteriId || null,
         persona_id: personaId || null,
         messages: [],
         active_context: {}
@@ -43,9 +43,9 @@ export async function POST(req: NextRequest) {
     }
 
     let müşteri = null
-    if (müşteriId) {
-      const { data: müşteriData } = await getSupabase().from("mali_müşteriler").select("*").eq("id", müşteriId).maybeSingle()
-      müşteri = müşteriData
+    if (musteriId) {
+      const { data: musteriData } = await getSupabase().from("mali_musteriler").select("*").eq("id", musteriId).maybeSingle()
+      müşteri = musteriData
     }
 
     const persona = MALI_PERSONAS[getMaliPersona()]

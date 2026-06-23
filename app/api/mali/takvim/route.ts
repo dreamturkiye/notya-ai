@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getBeyanlarımForMüşteri, getKritikBeyanlar, formatTelegramAlert } from '@/lib/mali/beyanTakvimiEngine'
+import { getBeyanlarimForMusteri, getKritikBeyanlar, formatTelegramAlert } from '@/lib/mali/beyanTakvimiEngine'
 
 function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
 const TELEGRAM_BOT = '8920614347'
@@ -24,22 +24,22 @@ export async function GET(req: NextRequest) {
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
-    const müşteriId = searchParams.get('müşteriId')
+    const musteriId = searchParams.get('musteriId')
     const sendAlert = searchParams.get('sendAlert') === 'true'
 
     let müşteriler: any[] = []
 
-    if (müşteriId) {
-      const { data } = await getSupabase().from('mali_müşteriler').select('*').eq('id', müşteriId).single()
+    if (musteriId) {
+      const { data } = await getSupabase().from('mali_musteriler').select('*').eq('id', musteriId).single()
       if (data) müşteriler = [data]
     } else {
-      const { data } = await getSupabase().from('mali_müşteriler').select('*').eq('müşavir_id', user.id)
+      const { data } = await getSupabase().from('mali_musteriler').select('*').eq('musavir_id', user.id)
       müşteriler = data || []
     }
 
     const allItems: any[] = []
     for (const m of müşteriler) {
-      const items = getBeyanlarımForMüşteri(m.id, m.şirket_adi, new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })))
+      const items = getBeyanlarimForMusteri(m.id, m.sirket_adi, new Date(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })))
       allItems.push(...items)
     }
 

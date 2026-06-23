@@ -1,7 +1,7 @@
 // FILE 1
 export interface Müşteri {
   id: string
-  şirket_adi: string
+  sirket_adi: string
   vergi_no?: string
   faaliyet_alani?: string
 }
@@ -13,7 +13,7 @@ export interface BeyanItem {
   daysLeft: number
   risk: 'kritik' | 'uyari' | 'normal'
   kanun: string
-  müşteriId?: string
+  musteriId?: string
   müşteriAdi?: string
 }
 
@@ -44,7 +44,7 @@ function formatDate(d: Date): string {
   return d.toISOString().split('T')[0]
 }
 
-export function getBeyanlarımForMüşteri(müşteriId: string, müşteriAdi: string, today: Date): BeyanItem[] {
+export function getBeyanlarimForMusteri(musteriId: string, müşteriAdi: string, today: Date): BeyanItem[] {
   const items: BeyanItem[] = []
   const endDate = addDays(today, 60)
 
@@ -63,7 +63,7 @@ export function getBeyanlarımForMüşteri(müşteriId: string, müşteriAdi: st
           daysLeft,
           risk,
           kanun: b.kanun,
-          müşteriId,
+          musteriId,
           müşteriAdi,
         })
       }
@@ -86,7 +86,7 @@ export function getBeyanlarımForMüşteri(müşteriId: string, müşteriAdi: st
           daysLeft,
           risk,
           kanun: q.kanun,
-          müşteriId,
+          musteriId,
           müşteriAdi,
         })
       }
@@ -106,7 +106,7 @@ export function getBeyanlarımForMüşteri(müşteriId: string, müşteriAdi: st
         daysLeft,
         risk,
         kanun: y.kanun,
-        müşteriId,
+        musteriId,
         müşteriAdi,
       })
     }

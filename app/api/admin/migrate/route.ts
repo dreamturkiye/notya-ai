@@ -20,8 +20,8 @@ export async function GET(req: NextRequest) {
     'ALTER TABLE notes ADD COLUMN IF NOT EXISTS görüşme_turu TEXT',
     "ALTER TABLE notes ADD COLUMN IF NOT EXISTS profession_type TEXT DEFAULT 'doktor'",
     'ALTER TABLE sessions ADD COLUMN IF NOT EXISTS görüşme_turu TEXT',
-    'CREATE TABLE IF NOT EXISTS clients (id UUID DEFAULT uuid_generate_v4() PRIMARY KEY, müşavir_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL, şirket_adi TEXT NOT NULL, vergi_no TEXT, faaliyet_alani TEXT, şirket_turu TEXT, yetkili_kisi TEXT, telefon TEXT, email TEXT, is_active BOOLEAN DEFAULT TRUE, notlar TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())',
-    'CREATE TABLE IF NOT EXISTS beyan_takvimi (id UUID DEFAULT uuid_generate_v4() PRIMARY KEY, müşavir_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL, client_id UUID REFERENCES clients(id) ON DELETE CASCADE, beyan_turu TEXT NOT NULL, son_gun DATE NOT NULL, tamamlandi BOOLEAN DEFAULT FALSE, hatırlatma_gönderildi BOOLEAN DEFAULT FALSE, notlar TEXT, created_at TIMESTAMPTZ DEFAULT NOW())',
+    'CREATE TABLE IF NOT EXISTS clients (id UUID DEFAULT uuid_generate_v4() PRIMARY KEY, musavir_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL, şirket_adi TEXT NOT NULL, vergi_no TEXT, faaliyet_alani TEXT, şirket_turu TEXT, yetkili_kisi TEXT, telefon TEXT, email TEXT, is_active BOOLEAN DEFAULT TRUE, notlar TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())',
+    'CREATE TABLE IF NOT EXISTS beyan_takvimi (id UUID DEFAULT uuid_generate_v4() PRIMARY KEY, musavir_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL, client_id UUID REFERENCES clients(id) ON DELETE CASCADE, beyan_turu TEXT NOT NULL, son_gun DATE NOT NULL, tamamlandi BOOLEAN DEFAULT FALSE, hatırlatma_gönderildi BOOLEAN DEFAULT FALSE, notlar TEXT, created_at TIMESTAMPTZ DEFAULT NOW())',
   ]
   for (const sql of sqls) {
     const { error } = await supabase.rpc('exec_sql' as never, { query: sql } as never)

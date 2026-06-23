@@ -3,14 +3,14 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
 const SECRET = process.env.PORTAL_TOKEN_SECRET || 'notya-portal-secret-2026-change-in-prod'
 
 export interface PortalTokenPayload {
-  müşteriId: string
+  musteriId: string
   müşavirId: string
   expiresAt: number
   jti: string
 }
 
 export interface MüşteriPortalSession {
-  müşteriId: string
+  musteriId: string
   müşteriAdi: string
   müşavirAdi: string
   vergiNo?: string
@@ -20,13 +20,13 @@ export interface MüşteriPortalSession {
 }
 
 export function generateSecureToken(
-  müşteriId: string,
+  musteriId: string,
   müşavirId: string,
   daysValid = 30
 ): { token: string; tokenHash: string; expiresAt: Date } {
   const jti = randomBytes(16).toString('hex')
   const payload: PortalTokenPayload = {
-    müşteriId,
+    musteriId,
     müşavirId,
     expiresAt: Date.now() + daysValid * 86400000,
     jti,
@@ -58,7 +58,7 @@ export function verifyToken(token: string): PortalTokenPayload | null {
   }
 }
 
-export function buildMüşteriSystemPrompt(session: MüşteriPortalSession): string {
+export function buildMusteriSystemPrompt(session: MüşteriPortalSession): string {
   const beyanList =
     session.aktifBeyanlar
       .map((b) => `${b.beyanTuru} (${b.sonGun} - ${b.daysLeft} gun)`)
