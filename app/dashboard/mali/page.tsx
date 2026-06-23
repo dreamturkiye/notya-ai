@@ -57,7 +57,7 @@ export default function MaliDashboard() {
       <nav style={{background:'#0A1628',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <span style={{color:'white',fontWeight:700,fontSize:20}}>Notya AI</span>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>router.push('/asistan/mali')} className='nav-btn' style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button><button onClick={()=>router.push('/mali-tools')} className='nav-btn' style={{background:'#1B4332',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Mali Araclar</button>
+          <button onClick={()=>router.push('/asistan/mali')} className='nav-btn' style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button><button onClick={()=>router.push('/mali-tools')} className='nav-btn' style={{background:'#1B4332',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Mali Araçlar</button>
           <button onClick={()=>router.push('/session/mali')} className='hide-mobile' style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Görüşme</button>
           <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giris'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
         </div>
@@ -80,7 +80,7 @@ export default function MaliDashboard() {
             {notes.length === 0 ? (
               <div style={{background:'white',borderRadius:12,padding:40,textAlign:'center',color:'#94a3b8'}}>
                 <div className='empty-icon' style={{fontSize:48,marginBottom:12}}>Görüşme yok</div>
-                <p>Henüz görüşme notunuz yok. Ilk görüşmenizi baslatõn</p>
+                <p>Henüz görüşme notunuz yok. İlk görüşmenizi başlatın</p>
                 <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Görüşme Baslat</button>
               </div>
             ) : (
