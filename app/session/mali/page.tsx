@@ -145,7 +145,12 @@ const SessionPage: React.FC = () => {
         <button onClick={() => router.push('/dashboard/mali')} style={{ background: 'none', border: 'none', color: 'white', marginRight: '10px' }}>
           {'<'}
         </button>
-        <img src="/notya-logo.png" alt="Notya AI Logo" style={{ height: '32px', marginRight: 'auto' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: 'auto' }}>
+          <div style={{ width: '28px', height: '28px', background: '#2563EB', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#fff', fontSize: '14px', fontWeight: '700' }}>N</span>
+          </div>
+          <span style={{ color: '#fff', fontSize: '16px', fontWeight: '700' }}>Notya AI</span>
+        </div>
       </nav>
 
       {step === 'setup' && (
