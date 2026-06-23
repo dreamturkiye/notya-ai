@@ -1,4 +1,5 @@
 'use client'
+import GameChangerTabs from '@/components/avukat/GameChangerTabs'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
@@ -28,7 +29,8 @@ export default function AvukatDashboard() {
   const [chatMsg, setChatMsg] = useState('')
   const [chatHistory, setChatHistory] = useState<{role:string;content:string}[]>([])
   const [chatLoading, setChatLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'dashboard'|'chat'|'sure'|'muvekkiller'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard'|'chat'|'sure'|'muvekkiller'|'dilekce'|'ictihat'|'sozlesme'>('dashboard')
+  const [avukatToken, setAvukatToken] = useState('')
 
   const now = new Date()
   const hour = parseInt(new Intl.DateTimeFormat('tr-TR', { hour: 'numeric', hour12: false, timeZone: 'Europe/Istanbul' }).format(now))
@@ -50,6 +52,8 @@ export default function AvukatDashboard() {
       setSureler(sureRes.data || [])
       setMuvekkilCount(muvRes.count || 0)
       setLoading(false)
+      const {data:{session:s2}} = await supabase.auth.getSession(); if(s2) setAvukatToken(s2.access_token||"")
+      supabase.auth.getSession().then(({data:{session}})=>{ if(session) setAvukatToken(session.access_token||"")})
     })
   }, [])
 
@@ -91,7 +95,7 @@ export default function AvukatDashboard() {
       </div>
 
       <div style={{background:'#fff',borderBottom:'1px solid #E2E8F0',padding:'0 24px',display:'flex',gap:4}}>
-        {([['dashboard','Ozet'],['chat','Asistan'],['sure','Sure Takibi'],['muvekkiller','Muvekkillerim']] as const).map(([tab,label]) => (
+        {([['dashboard','Ozet'],['chat','Asistan'],['sure','Sure Takibi'],['muvekkiller','Muvekkillerim'],['dilekce','Dilekce'],['ictihat','Ictihat'],['sozlesme','Sozlesme']] as const).map(([tab,label]) => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{padding:'12px 20px',border:'none',borderBottom:activeTab===tab?'2px solid #2563EB':'2px solid transparent',background:'transparent',color:activeTab===tab?'#2563EB':'#64748B',cursor:'pointer',fontSize:14,fontWeight:500}}>{label}</button>
         ))}
       </div>
@@ -201,6 +205,7 @@ export default function AvukatDashboard() {
           </div>
         )}
 
+        {(activeTab==='dilekce'||activeTab==='ictihat'||activeTab==='sozlesme') && <GameChangerTabs token={avukatToken} activeTab={activeTab} />}
       </div>
     </>
   )
