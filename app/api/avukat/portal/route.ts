@@ -1,143 +1,70 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { generatePortalToken, verifyPortalToken, buildMuvekkilSystemPrompt } from '@/lib/avukat/avukatPortalEngine';
-import { createClient } from '@supabase/supabase-js';
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-import { rateLimit } from 'express-rate-limit';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import Anthropic from '@anthropic-ai/sdk'
+import { verifyPortalToken, generatePortalToken, buildMuvekkilSystemPrompt } from '@/lib/avukat/avukatPortalEngine'
 
-const limiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 10,
-});
+const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+const SECRET = process.env.PORTAL_SECRET || 'notya-portal-secret-2025'
 
 export async function GET(req: NextRequest) {
-    const token = req.nextUrl.searchParams.get('token');
-    if (!token) return NextResponse.json({ success: false, error: 'Missing token' }, { status: 400 });
-
-    const decodedToken = verifyPortalToken(token, process.env.Portal_SECRET!);
-    if (!decodedToken) return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 });
-
-    const { avukatId, muvekkilId } = decodedToken;
-
-    const { data: musevvekiller } = await supabase
-        .from('musevvekiller')
-        .select('*')
-        .eq('id', muvekkilId)
-        .single();
-
-    if (!musevvekiller) return NextResponse.json({ success: false, error: 'Muvekkil not found' }, { status: 404 });
-
-    const { data: users } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', avukatId)
-        .single();
-
-    if (!users) return NextResponse.json({ success: false, error: 'Avukat not found' }, { status: 404 });
-
-    const { data: sure_takibi } = await supabase
-        .from('sure_takibi')
-        .select('*')
-        .eq('avukat_id', avukatId)
-        .eq('muvekkil_id', muvekkilId)
-        .eq('tamamlandi', false);
-
-    return NextResponse.json({
-        success: true,
-        data: {
-            muvekkilAdi: `${musevvekiller.ad} ${musevvekiller.soyad}`,
-            avukatAdi: users.name,
-            sureler: sure_takibi || [],
-            davaTuru: musevvekiller.dava_turu
-        }
-    });
+  try {
+    const token = req.nextUrl.searchParams.get('token')
+    if (!token) return NextResponse.json({ error: 'Token required' }, { status: 400 })
+    const payload = verifyPortalToken(token, SECRET)
+    if (!payload) return NextResponse.json({ error: 'Gecersiz veya suresi dolmus token' }, { status: 401 })
+    const sb = getSupabase()
+    const [{ data: muv }, { data: avukat }, { data: sureler }] = await Promise.all([
+      sb.from('musevvekiller').select('*').eq('id', payload.muvekkilId).single(),
+      sb.from('users').select('full_name').eq('id', payload.avukatId).single(),
+      sb.from('sure_takibi').select('*').eq('avukat_id', payload.avukatId).eq('tamamlandi', false).order('son_gun', { ascending: true }).limit(5)
+    ])
+    return NextResponse.json({ success: true, data: {
+      muvekkilAdi: muv ? `${muv.ad} ${muv.soyad}` : 'Muvekkil',
+      avukatAdi: avukat?.full_name || 'Avukat',
+      sureler: sureler || [],
+      davaTuru: muv?.dava_turu || 'Genel'
+    }})
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Hata' }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
-    await limiter(req, req.res);
+  try {
+    const { token, message, history, admin, muvekkilId, avukatId } = await req.json()
 
-    const body = await req.json();
-    const { token, message, history } = body;
-
-    if (!token || !message || !history) return NextResponse.json({ success: false, error: 'Missing fields' }, { status: 400 });
-
-    const decodedToken = verifyPortalToken(token, process.env.Portal_SECRET!);
-    if (!decodedToken) return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 });
-
-    const { avukatId, muvekkilId } = decodedToken;
-
-    const { data: musevvekiller } = await supabase
-        .from('musevvekiller')
-        .select('*')
-        .eq('id', muvekkilId)
-        .single();
-
-    if (!musevvekiller) return NextResponse.json({ success: false, error: 'Muvekkil not found' }, { status: 404 });
-
-    const { data: users } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', avukatId)
-        .single();
-
-    if (!users) return NextResponse.json({ success: false, error: 'Avukat not found' }, { status: 404 });
-
-    const systemPrompt = buildMuvekkilSystemPrompt(users, musevvekiller, []);
-    // Here you would call Claude API with the system prompt and message history to get the response
-    // For demonstration purposes, let's assume we have a function called `callClaudeApi` that does this:
-    const { speech } = await callClaudeApi(systemPrompt, history.concat(message));
-
-    return NextResponse.json({
-        success: true,
-        data: {
-            speech
-        }
-    });
-}
-
-export async function POST_ADMIN(req: NextRequest) {
-    const token = req.headers.get('Authorization');
-    if (!token) return NextResponse.json({ success: false, error: 'Missing authorization' }, { status: 401 });
-
-    const decodedToken = verifyPortalToken(token.split(' ')[1], process.env.AVUKAT_SECRET!);
-    if (!decodedToken) return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 });
-
-    const body = await req.json();
-    const { muvekkilId, expiresInDays = 30 } = body;
-
-    const portalToken = generatePortalToken(decodedToken.avukatId, muvekkilId, process.env.Portal_SECRET!);
-    const tokenHash = crypto.createHash('sha256').update(portalToken).digest('hex');
-    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
-
-    const { data: existingTokens } = await supabase
-        .from('avukat_portal_tokens')
-        .select('*')
-        .eq('muvekkel_id', muvekkilId)
-        .single();
-
-    if (existingTokens) {
-        await supabase
-            .from('avukat_portal_tokens')
-            .update({ token_hash, expires_at })
-            .eq('id', existingTokens.id);
-    } else {
-        await supabase
-            .from('avukat_portal_tokens')
-            .insert({
-                avukat_id: decodedToken.avukatId,
-                muvekkel_id: muvekkilId,
-                token_hash,
-                expires_at,
-                is_active: true
-            });
+    if (admin) {
+      const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '')
+      if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const sb = getSupabase()
+      const { data: { user }, error: ae } = await sb.auth.getUser(authHeader)
+      if (ae || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const portalToken = generatePortalToken(avukatId || user.id, muvekkilId, SECRET)
+      const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/portal/avukat/${portalToken}`
+      return NextResponse.json({ success: true, data: { portalUrl, token: portalToken } })
     }
 
-    return NextResponse.json({
-        success: true,
-        data: {
-            portalUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/portal/${portalToken}`,
-            token: portalToken
-        }
-    });
+    if (!token) return NextResponse.json({ error: 'Token required' }, { status: 400 })
+    const payload = verifyPortalToken(token, SECRET)
+    if (!payload) return NextResponse.json({ error: 'Gecersiz token' }, { status: 401 })
+    const sb = getSupabase()
+    const [{ data: muv }, { data: avukat }, { data: sureler }] = await Promise.all([
+      sb.from('musevvekiller').select('*').eq('id', payload.muvekkilId).single(),
+      sb.from('users').select('full_name').eq('id', payload.avukatId).single(),
+      sb.from('sure_takibi').select('*').eq('avukat_id', payload.avukatId).eq('tamamlandi', false).limit(5)
+    ])
+    const system = buildMuvekkilSystemPrompt(
+      { name: avukat?.full_name || 'Avukat' },
+      muv || {},
+      sureler || []
+    )
+    const ai = getAnthropic()
+    const msgs = [...(history || []), { role: 'user' as const, content: message }]
+    const resp = await ai.messages.create({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system, messages: msgs })
+    const reply = resp.content[0].type === 'text' ? resp.content[0].text : 'Yanit alinamadi.'
+    return NextResponse.json({ success: true, data: { speech: reply } })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Hata' }, { status: 500 })
+  }
 }

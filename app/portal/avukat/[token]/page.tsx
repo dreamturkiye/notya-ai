@@ -1,7 +1,7 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { fetcher } from '@/lib/fetcher'; // Assume you have a fetcher utility for API calls
+
 
 const styles = `
     body {
@@ -58,7 +58,7 @@ export default function AvukatPortalPage() {
     useEffect(() => {
         async function fetchMuvekkilInfo() {
             try {
-                const response = await fetcher(`/api/avukat/portal?token=${token}`);
+                const response = await fetch(`/api/avukat/portal?token=${token}`);
                 if (response.success) {
                     setMuvekkilInfo(response.data);
                 } else {
@@ -80,7 +80,7 @@ export default function AvukatPortalPage() {
 
         setLoading(true);
         try {
-            const response = await fetcher('/api/avukat/portal', {
+            const response = await fetch('/api/avukat/portal', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, message: messages[messages.length - 1].content, history: messages.map(msg => msg.content) })

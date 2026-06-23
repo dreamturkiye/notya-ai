@@ -142,12 +142,12 @@ export default function MaliPage() {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}} className="feature-grid">
             {[
-              {icon:"📅",color:"var(--primary)",bg:"var(--primary-light)",title:"Beyan Takvimi",desc:"KDV, muhtasar, kurumlar vergisi — tum beyan son gunleri otomatik takip. 3 gun kala Telegram uyarisi.",badge:"Otomatik hatırlatma"},
-              {icon:"📖",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Canlı Mevzuat",desc:"VUK, GVK, KVK, KDV Kanunu — tum guncel tebligler ve sirkulerler sistemde. Hukuki dayanak otomatik eklenir.",badge:"Guncel mevzuat"},
-              {icon:"⚡",color:"#0891B2",bg:"#E0F7FA",title:"Öğrenen Sistem",desc:"5 seanstan sonra müşterilerinizi, tercih ettiginiz aciklama stilini ve sik yaptiginiz islemleri ogrenir.",badge:"Her seans ogrenir"},
-              {icon:"🛡️",color:"var(--accent)",bg:"#FFF0EC",title:"Risk Uyarisi",desc:"Vergi riski, ceza olasiligi veya beyan hatasi gordukte sormadan uyarir. 50 müşterinin yukunu siz tasimayalim.",badge:"Proaktif uyari"},
-              {icon:"📋",color:"#7C3AED",bg:"#F3E8FF",title:"Otomatik Raporlar",desc:"Müşteri görüşmesinden otomatik faaliyet notu, cari donem ozeti ve sonraki adimlar listesi oluşturulur.",badge:"Saniyeler içinde"},
-              {icon:"🔐",color:"#1B4332",bg:"#d8f3dc",title:"KVKK Uyumlu",desc:"Tum müşteri verileri AES-256 sifreleme ile Türkiye lokasyonunda. Mesleki gizlilik standartlari.",badge:"Veri güvenliği"},
+              {icon:"📅",color:"var(--primary)",bg:"var(--primary-light)",title:"Beyan Takvimi",desc:"KDV, muhtasar, kurumlar vergisi — tum beyan son gunleri otomatik takip. 3 gun kala Telegram uyarisi. Hic kacirilmaz.",badge:"Sifir beyan hatasi"},
+              {icon:"💰",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Bordro Hesaplama",desc:"SGK, vergi, net/brut hesaplama, asgari ucret guncellemeleri. Birden fazla calisan icin toplu bordro.",badge:"Anlik hesaplama"},
+              {icon:"🏦",color:"#0891B2",bg:"#E0F7FA",title:"MASAK Uyum Motoru",desc:"Supheli islem tespiti, musteri risk skoru, MASAK bildirim taslagi. Uyum riskini minimize eder.",badge:"Risk tespiti"},
+              {icon:"📤",color:"var(--accent)",bg:"#FFF0EC",title:"e-Beyan & e-Devlet",desc:"Beyan taslagi olustur, GIB format kontrolu yap, e-Devlet entegrasyon rehberi al. Gondermeye hazir.",badge:"GIB uyumlu"},
+              {icon:"🔗",color:"#7C3AED",bg:"#F3E8FF",title:"Musteri Portali",desc:"Her musteri icin ozel link. Beyan durumu, belgeler, AI sorular. Telefon trafiginiz ciddi oranda azalir.",badge:"Self-servis musteri"},
+              {icon:"🔐",color:"#1B4332",bg:"#d8f3dc",title:"KVKK Uyumlu",desc:"Tum musteri verileri AES-256 sifreleme ile Turkiye lokasyonunda. Mesleki gizlilik standartlarina tam uyum.",badge:"Veri guvenligi"},
             ].map(f=>(
               <div key={f.title} className="card" style={{padding:"28px"}}>
                 <div style={{width:"48px",height:"48px",borderRadius:"12px",background:f.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",marginBottom:"16px"}}>{f.icon}</div>
@@ -289,9 +289,9 @@ export default function MaliPage() {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"16px"}} className="pricing-grid">
             {[
-              {name:"Başlangıç",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 müşteri","Beyan takvimi","Mevzuat asistan","Telegram uyarilari"],highlight:false,cta:"Başlayın"},
-              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sınırsız seans","Sınırsız müşteri","Her sey dahil","Öğrenen sistem","Otomatik raporlar","Öncelikli destek"],highlight:true,cta:"En Popüler"},
-              {name:"Büro",price:"2.999 TL",orig:"4.999 TL",features:["Sınırsız seans","5 kullanici","Takim paneli","Müşteri portalı","Tüm özellikler"],highlight:false,cta:"Başlayın"},
+              {name:"Başlangıç",price:"499 TL",orig:"799 TL",features:["30 seans/ay","10 musteri","Beyan takvimi","Bordro hesaplama","Telegram uyarilari"],highlight:false,cta:"Başlayın"},
+              {name:"Pro",price:"999 TL",orig:"1.599 TL",features:["Sinirsiz seans","Sinirsiz musteri","Bordro + MASAK + e-Beyan","Musteri portali","Otomatik raporlar","Oncelikli destek"],highlight:true,cta:"En Popüler"},
+              {name:"Büro",price:"2.999 TL",orig:"4.999 TL",features:["Sinirsiz seans","5 kullanici","Takim paneli","Musteri portali","Tum ozellikler"],highlight:false,cta:"Başlayın"},
             ].map((plan)=>(
               <div key={plan.name} className="card" style={{padding:"32px 28px",position:"relative",border:plan.highlight?"2px solid var(--primary)":"1px solid var(--border)",boxShadow:plan.highlight?"0 8px 32px rgba(27,67,50,.15)":"none"}}>
                 {plan.highlight && <div style={{position:"absolute",top:"-13px",left:"50%",transform:"translateX(-50%)",background:"var(--primary)",color:"#fff",fontSize:"11px",fontWeight:"700",padding:"4px 16px",borderRadius:"20px",fontFamily:"Lato,sans-serif",letterSpacing:".06em",whiteSpace:"nowrap"}}>EN POPULER</div>}

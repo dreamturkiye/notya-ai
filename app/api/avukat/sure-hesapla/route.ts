@@ -4,10 +4,11 @@ import { NextRequest } from 'next/server';
 import { calculateDeadlines, getSurelerForBranch, formatDateTR } from '@/lib/avukat/sureEngine';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+
+
+
+const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
     tamamlandi: false
   }));
 
-  const { data, error: insertError } = await supabase.from('sure_takibi').insert(insertData);
+  const { data, error: insertError } = await getSupabase().from('sure_takibi').insert(insertData);
 
   if (insertError) {
     return new Response(JSON.stringify({ success: false, error: insertError.message }), { status: 500 });
