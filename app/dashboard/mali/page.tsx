@@ -63,7 +63,7 @@ export default function MaliDashboard() {
         </div>
       </nav>
       <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:32}}>
-        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>Günaydın{user?.first_name ? ` ${user.first_name}!` : '!'}</h1>
+        <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>{(() => { const h = parseInt(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', hour12: false })); const g = h < 12 ? 'Günaydın' : h < 18 ? 'İyi Günler' : 'İyi Akşamlar'; return (user?.first_name ? g + ' ' + user.first_name + '!' : g + '!') })()}</h1>
         {/* STATS ROW */}
         <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
           {[{label:'Toplam Görüşme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Müşteriler',val:new Set(notes.map(n=>n.profession_type||'müşteri')).size,icon:'active_c'},{label:'Yaklaşan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
