@@ -1,6 +1,4 @@
 'use client'
-import HelpWidget from '@/components/HelpWidget'
-// app/dashboard/mali/page.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
@@ -38,16 +36,15 @@ export default function MaliDashboard() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{__html: `
         @media(max-width:768px) {
           .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
           .main-grid { grid-template-columns: 1fr !important; }
           .notes-grid { grid-template-columns: 1fr !important; }
           .hide-mobile { display:none !important; }
           .main-pad { padding: 16px !important; }
-          .nav-actions { gap: 4px !important; }
         }
-      `}</style>
+      `}} />
       <div style={{minHeight:'100vh', background:'#F1F5F9', fontFamily:'system-ui,sans-serif'}}>
       {/* NAV */}
       <nav style={{background:'#0A1628',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -141,7 +138,6 @@ export default function MaliDashboard() {
         </div>
       </div>
     </div>
-      <HelpWidget professionType="mali_musavirlik" isFirstLogin={true} />
     </>
   )
 }
