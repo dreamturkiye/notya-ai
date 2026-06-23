@@ -1,6 +1,5 @@
-// app/dashboard/mali/page.tsx
-import HelpWidget from '@/components/HelpWidget'
 'use client'
+// app/dashboard/mali/page.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
@@ -38,20 +37,30 @@ export default function MaliDashboard() {
 
   return (
     <>
+      <style>{`
+        @media(max-width:768px) {
+          .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .main-grid { grid-template-columns: 1fr !important; }
+          .notes-grid { grid-template-columns: 1fr !important; }
+          .hide-mobile { display:none !important; }
+          .main-pad { padding: 16px !important; }
+          .nav-actions { gap: 4px !important; }
+        }
+      `}</style>
       <div style={{minHeight:'100vh', background:'#F1F5F9', fontFamily:'system-ui,sans-serif'}}>
       {/* NAV */}
       <nav style={{background:'#0A1628',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <span style={{color:'white',fontWeight:700,fontSize:20}}>Notya AI</span>
         <div style={{display:'flex',gap:8}}>
           <button onClick={()=>router.push('/asistan/mali')} style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button>
-          <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Gorusme</button>
+          <button onClick={()=>router.push('/session/mali')} className='hide-mobile' style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Gorusme</button>
           <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giris'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Cikis</button>
         </div>
       </nav>
-      <div style={{maxWidth:1200,margin:'0 auto',padding:32}}>
+      <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:32}}>
         <h1 style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>Gunaydin{user?.first_name ? ` ${user.first_name}!` : '!'}</h1>
         {/* STATS ROW */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
+        <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:32}}>
           {[{label:'Toplam Gorusme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Musteriler',val:new Set(notes.map(n=>n.profession_type||'musteri')).size,icon:'active_c'},{label:'Yaklasan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
             <div key={s.icon} style={{background:'white',borderRadius:12,padding:'20px 24px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
               <div style={{fontSize:28,fontWeight:700,color:'#2563EB'}}>{s.val}</div>
@@ -59,7 +68,7 @@ export default function MaliDashboard() {
             </div>
           ))}
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:24}}>
+        <div className='main-grid' style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:24}}>
           <div>
             {/* NOTES GRID */}
             <h2 style={{fontSize:18,fontWeight:600,marginBottom:16}}>Son Gorusmeler</h2>
@@ -70,7 +79,7 @@ export default function MaliDashboard() {
                 <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Gorusme Baslat</button>
               </div>
             ) : (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+              <div className='notes-grid' style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 {notes.map((n) => {
                   const riskScore = n.vergi_risk_skoru as number | undefined
                   const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.gorusme_turu as string || 'Gorusme'

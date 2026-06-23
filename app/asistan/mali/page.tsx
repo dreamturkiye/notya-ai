@@ -27,9 +27,10 @@ export default function MaliAsistanPage() {
       if (!session) { router.push("/giris/mali"); return }
       const r = await fetch("/api/asistan/mali-signed-url", { headers: { Authorization: "Bearer " + session.access_token } })
       if (!r.ok) throw new Error("Baglanti hatasi")
-      const { signedUrl } = await r.json()
+      const { signed_url } = await r.json()
       const conv = await Conversation.startSession({
-        signedUrl,
+        signedUrl: signed_url,
+        connectionType: "websocket",
         onStatusChange: ({ status: s }: { status: string }) => {
           if (s === "connected") setStatus("listening")
           else if (s === "disconnected") { setStatus("idle"); ref.current = null }
