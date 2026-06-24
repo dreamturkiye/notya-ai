@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import MaliNav from '@/components/mali/MaliNav'
 
 // supabase: use localStorage token only
 
@@ -11,18 +12,18 @@ const FAALIYET_GRUPLARI = [
   { grup: 'Guzellik & Bakim', esnaflar: ['Kuafor','Berber','Guzellik Salonu','Tirnak Studio','Masaj / SPA'] },
   { grup: 'Yiyecek & Icecek', esnaflar: ['Cafe / Kahve','Cay Ocagi','Restoran / Lokanta','Pastane','Unlu Mamul'] },
   { grup: 'Hizmet', esnaflar: ['Terzi / Dikis','Tamirci','Ayakkabi Tamiri','Temizlik','Nakliye'] },
-  { grup: 'Sirketi', esnaflar: ['Limited Sirketi','Anonim Sirketi'] },
+  { grup: 'Şirketi', esnaflar: ['Limited Şirketi','Anonim Şirketi'] },
 ]
 
-export default function MusteriIntakePage() {
+export default function MüşteriIntakePage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<Record<string,unknown>|null>(null)
   const [form, setForm] = useState({
-    sirket_adi: '', vergi_no: '', yetkili_kisi: '', telefon: '', email: '',
-    faaliyet_alani: '', sirket_turu: 'sahis', calisan_sayisi: '0', notlar: '', buyuksehirde: true
+    şirket_adi: '', vergi_no: '', yetkili_kişi: '', telefon: '', email: '',
+    faaliyet_alani: '', şirket_turu: 'sahis', calisan_sayisi: '0', notlar: '', buyuksehirde: true
   })
 
   async function kaydet() {
@@ -30,7 +31,7 @@ export default function MusteriIntakePage() {
     const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
     const { data: { session } } = await sb.auth.getSession()
     if (!session) { router.push('/giris/mali'); return }
-    const res = await fetch('/api/mali/musteri-intake', {
+    const res = await fetch('/api/mali/müşteri-intake', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
       body: JSON.stringify({ ...form, calisan_sayisi: Number(form.calisan_sayisi) })
@@ -46,16 +47,17 @@ export default function MusteriIntakePage() {
 
   if (step === 4 && result) {
     const profil = result.profil as Record<string,unknown>
-    const musteri = result.musteri as Record<string,unknown>
+    const müşteri = result.müşteri as Record<string,unknown>
     const usul = profil.vergilendirmeUsulu as string
     const riskler = profil.riskler as string[]
     return (
       <div style={{minHeight:'100vh',background:'#F8FAFC',fontFamily:'system-ui,sans-serif',padding:24}}>
+      <MaliNav />
         <div style={{maxWidth:560,margin:'0 auto'}}>
           <div style={{background:'#fff',borderRadius:16,padding:28,border:'1px solid #E2E8F0',textAlign:'center',marginBottom:16}}>
             <div style={{fontSize:48,marginBottom:8}}>?</div>
-            <div style={{fontSize:20,fontWeight:800,color:'#1E293B',marginBottom:4}}>{String(musteri.sirket_adi)} eklendi!</div>
-            <div style={{fontSize:14,color:'#64748B'}}>{Number(profil.beyanSayisi)} beyan takvimi otomatik olusturuldu</div>
+            <div style={{fontSize:20,fontWeight:800,color:'#1E293B',marginBottom:4}}>{String(müşteri.şirket_adi)} eklendi!</div>
+            <div style={{fontSize:14,color:'#64748B'}}>{Number(profil.beyanSayisi)} beyan takvimi otomatik oluşturuldu</div>
           </div>
           <div style={{background:usul==='gercek_usul'?'#FEF3C7':'#F0FDF4',borderRadius:12,padding:16,marginBottom:12,border:'1px solid '+(usul==='gercek_usul'?'#F59E0B':'#10B981')}}>
             <div style={{fontWeight:700,fontSize:14,color:usul==='gercek_usul'?'#92400E':'#065F46',marginBottom:4}}>
@@ -70,8 +72,8 @@ export default function MusteriIntakePage() {
             </div>
           )}
           <div style={{display:'flex',gap:10}}>
-            <button onClick={()=>router.push('/dashboard/mali/musteriler')} style={{flex:1,background:G,border:'none',color:'#fff',padding:'12px',borderRadius:9,cursor:'pointer',fontWeight:600,fontSize:14}}>Musterileri Gor</button>
-            <button onClick={()=>{setStep(1);setResult(null);setForm({sirket_adi:'',vergi_no:'',yetkili_kisi:'',telefon:'',email:'',faaliyet_alani:'',sirket_turu:'sahis',calisan_sayisi:'0',notlar:'',buyuksehirde:true})}} style={{flex:1,background:'#F1F5F9',border:'none',color:'#475569',padding:'12px',borderRadius:9,cursor:'pointer',fontSize:14}}>Yeni Musteri Ekle</button>
+            <button onClick={()=>router.push('/dashboard/mali/müşteriler')} style={{flex:1,background:G,border:'none',color:'#fff',padding:'12px',borderRadius:9,cursor:'pointer',fontWeight:600,fontSize:14}}>Müşterileri Gor</button>
+            <button onClick={()=>{setStep(1);setResult(null);setForm({şirket_adi:'',vergi_no:'',yetkili_kişi:'',telefon:'',email:'',faaliyet_alani:'',şirket_turu:'sahis',calisan_sayisi:'0',notlar:'',buyuksehirde:true})}} style={{flex:1,background:'#F1F5F9',border:'none',color:'#475569',padding:'12px',borderRadius:9,cursor:'pointer',fontSize:14}}>Yeni Müşteri Ekle</button>
           </div>
         </div>
       </div>
@@ -81,8 +83,8 @@ export default function MusteriIntakePage() {
   return (
     <div style={{minHeight:'100vh',background:'#F8FAFC',fontFamily:'system-ui,sans-serif'}}>
       <nav style={{background:'#0A1628',padding:'0 20px',height:56,display:'flex',alignItems:'center',gap:12}}>
-        <button onClick={()=>router.push('/dashboard/mali/musteriler')} style={{background:'none',border:'none',color:'#94a3b8',cursor:'pointer',fontSize:20}}>{'<'}</button>
-        <span style={{color:'#fff',fontWeight:700}}>Yeni Musteri Ekle</span>
+        <button onClick={()=>router.push('/dashboard/mali/müşteriler')} style={{background:'none',border:'none',color:'#94a3b8',cursor:'pointer',fontSize:20}}>{'<'}</button>
+        <span style={{color:'#fff',fontWeight:700}}>Yeni Müşteri Ekle</span>
         <span style={{marginLeft:'auto',fontSize:12,color:'#64748B'}}>Adim {step} / 3</span>
       </nav>
       <div style={{maxWidth:560,margin:'0 auto',padding:'24px 16px'}}>
@@ -97,7 +99,7 @@ export default function MusteriIntakePage() {
                 <div style={{fontSize:11,fontWeight:700,color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8}}>{g.grup}</div>
                 <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
                   {g.esnaflar.map(e => (
-                    <button key={e} onClick={()=>{setForm(f=>({...f,faaliyet_alani:e,sirket_turu:e.includes('Limited')||e.includes('Anonim')?e.toLowerCase().split(' ')[0]:'sahis'}));setStep(2)}} style={{padding:'8px 14px',borderRadius:20,border:'1px solid #E2E8F0',background:form.faaliyet_alani===e?G:'#fff',color:form.faaliyet_alani===e?'#fff':'#374151',cursor:'pointer',fontSize:13,fontWeight:form.faaliyet_alani===e?600:400}}>
+                    <button key={e} onClick={()=>{setForm(f=>({...f,faaliyet_alani:e,şirket_turu:e.includes('Limited')||e.includes('Anonim')?e.toLowerCase().split(' ')[0]:'sahis'}));setStep(2)}} style={{padding:'8px 14px',borderRadius:20,border:'1px solid #E2E8F0',background:form.faaliyet_alani===e?G:'#fff',color:form.faaliyet_alani===e?'#fff':'#374151',cursor:'pointer',fontSize:13,fontWeight:form.faaliyet_alani===e?600:400}}>
                       {e}
                     </button>
                   ))}
@@ -113,9 +115,9 @@ export default function MusteriIntakePage() {
             <div style={{fontSize:20,fontWeight:800,color:'#1E293B',marginBottom:6}}>Isletme Bilgileri</div>
             <div style={{fontSize:13,color:'#64748B',marginBottom:20}}>{form.faaliyet_alani} Ñ temel bilgileri doldurun</div>
             {[
-              {label:'Isletme / Sirket Adi *',key:'sirket_adi',placeholder:'Ornek: Hasan Usta Bakkal'},
+              {label:'Isletme / Şirket Adi *',key:'şirket_adi',placeholder:'Ornek: Hasan Usta Bakkal'},
               {label:'Vergi No',key:'vergi_no',placeholder:'10 haneli vergi numarasi'},
-              {label:'Yetkili Kisi',key:'yetkili_kisi',placeholder:'Sahip / Yetkili adi'},
+              {label:'Yetkili Kişi',key:'yetkili_kişi',placeholder:'Sahip / Yetkili adi'},
               {label:'Telefon',key:'telefon',placeholder:'0532 000 0000'},
               {label:'E-posta',key:'email',placeholder:'mail@ornek.com'},
             ].map(({label,key,placeholder}) => (
@@ -126,7 +128,7 @@ export default function MusteriIntakePage() {
             ))}
             <div style={{display:'flex',gap:10,marginTop:8}}>
               <button onClick={()=>setStep(1)} style={{flex:1,background:'#F1F5F9',border:'none',color:'#475569',padding:'13px',borderRadius:9,cursor:'pointer',fontSize:14}}>Geri</button>
-              <button onClick={()=>setStep(3)} disabled={!form.sirket_adi.trim()} style={{flex:2,background:G,border:'none',color:'#fff',padding:'13px',borderRadius:9,cursor:'pointer',fontWeight:700,fontSize:15,opacity:form.sirket_adi.trim()?1:0.5}}>Devam Et</button>
+              <button onClick={()=>setStep(3)} disabled={!form.şirket_adi.trim()} style={{flex:2,background:G,border:'none',color:'#fff',padding:'13px',borderRadius:9,cursor:'pointer',fontWeight:700,fontSize:15,opacity:form.şirket_adi.trim()?1:0.5}}>Devam Et</button>
             </div>
           </div>
         )}
@@ -134,7 +136,7 @@ export default function MusteriIntakePage() {
         {step === 3 && (
           <div>
             <div style={{fontSize:20,fontWeight:800,color:'#1E293B',marginBottom:6}}>Vergi & Calisan</div>
-            <div style={{fontSize:13,color:'#64748B',marginBottom:20}}>Bu bilgiler beyan takvimini otomatik olusturur</div>
+            <div style={{fontSize:13,color:'#64748B',marginBottom:20}}>Bu bilgiler beyan takvimini otomatik oluşturur</div>
             <div style={{marginBottom:16}}>
               <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:8}}>Calisan Sayisi (siz dahil degil)</label>
               <div style={{display:'flex',gap:8}}>
@@ -158,7 +160,7 @@ export default function MusteriIntakePage() {
             {error && <div style={{color:'#DC2626',fontSize:13,marginBottom:10}}>{error}</div>}
             <div style={{display:'flex',gap:10}}>
               <button onClick={()=>setStep(2)} style={{flex:1,background:'#F1F5F9',border:'none',color:'#475569',padding:'13px',borderRadius:9,cursor:'pointer',fontSize:14}}>Geri</button>
-              <button onClick={kaydet} disabled={loading} style={{flex:2,background:G,border:'none',color:'#fff',padding:'13px',borderRadius:9,cursor:'pointer',fontWeight:700,fontSize:15,opacity:loading?0.7:1}}>{loading?'Kaydediliyor...':'Musteri Ekle + Takvim Olustur'}</button>
+              <button onClick={kaydet} disabled={loading} style={{flex:2,background:G,border:'none',color:'#fff',padding:'13px',borderRadius:9,cursor:'pointer',fontWeight:700,fontSize:15,opacity:loading?0.7:1}}>{loading?'Kaydediliyor...':'Müşteri Ekle + Takvim Oluştur'}</button>
             </div>
           </div>
         )}

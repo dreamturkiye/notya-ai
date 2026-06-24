@@ -23,7 +23,7 @@ export default function LoginPage() {
       const resp = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "apikey": SUPA_ANON },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: email.toLowerCase().trim(), password })
       })
       const data = await resp.json()
       if (!data.access_token) throw new Error(data.error_description || data.error || "Giriş basarisiz")
@@ -61,7 +61,7 @@ export default function LoginPage() {
         <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
           <div>
             <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>E-posta</label>
-            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@notya.ai" style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
+            <input type="text" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@notya.ai" style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
           </div>
           <div>
             <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>Sifre</label>

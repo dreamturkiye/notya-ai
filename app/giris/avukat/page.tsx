@@ -16,7 +16,7 @@ export default function Giris() {
     e.preventDefault()
     if (!email.trim() || !password.trim()) { setError('E-posta ve sifre gereklidir'); return }
     setLoading(true); setError('')
-    const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (ae || !data.session) { setError(ae?.message || 'Giris basarisiz'); setLoading(false); return }
     router.replace('/dashboard/avukat')
   }

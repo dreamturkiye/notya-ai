@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
+import MaliNav from '@/components/mali/MaliNav'
 
 // supabase: use localStorage token only
 type CS = "idle"|"connecting"|"listening"|"speaking"|"error"

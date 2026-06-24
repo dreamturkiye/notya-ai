@@ -2,8 +2,9 @@
 export const dynamic = "force-dynamic"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import MaliNav from '@/components/mali/MaliNav'
 
-type RaporData = { donem:string; ozet:{toplam:number;tamamlandi:number;bekleyen:number;geciken:number}; beyanlar:Record<string,unknown>[]; whatsappLinks:{sirketAdi:string;link:string|null;mesaj:string}[] }
+type RaporData = { dönem:string; ozet:{toplam:number;tamamlandi:number;bekleyen:number;geciken:number}; beyanlar:Record<string,unknown>[]; whatsappLinks:{şirketAdi:string;link:string|null;mesaj:string}[] }
 
 export default function AylikRaporPage() {
   const router = useRouter()
@@ -22,13 +23,14 @@ export default function AylikRaporPage() {
     setLoading(false)
   }
 
-  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh'}}>Yukleniyor...</div>
+  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh'}}>Yükleniyor...</div>
 
   return (
     <div style={{minHeight:'100vh',background:'#F8FAFC',fontFamily:'system-ui,sans-serif'}}>
+      <MaliNav />
       <nav style={{background:'#0A1628',padding:'0 20px',height:56,display:'flex',alignItems:'center',gap:12}}>
         <button onClick={()=>router.push('/dashboard/mali')} style={{background:'none',border:'none',color:'#94a3b8',cursor:'pointer',fontSize:20}}>{'<'}</button>
-        <span style={{color:'#fff',fontWeight:700}}>Aylik Rapor - {rapor?.donem}</span>
+        <span style={{color:'#fff',fontWeight:700}}>Aylık Rapor - {rapor?.dönem}</span>
       </nav>
       <div style={{maxWidth:700,margin:'0 auto',padding:'20px 16px'}}>
         {rapor && (
@@ -43,11 +45,11 @@ export default function AylikRaporPage() {
             </div>
             {rapor.whatsappLinks.length > 0 && (
               <div style={{background:'#fff',borderRadius:12,padding:20,border:'1px solid #E2E8F0',marginBottom:16}}>
-                <div style={{fontWeight:700,fontSize:15,marginBottom:12}}>WhatsApp Ozet Gonderin</div>
+                <div style={{fontWeight:700,fontSize:15,marginBottom:12}}>WhatsApp Ozet Gönderin</div>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   {rapor.whatsappLinks.map((w,i)=>(
                     <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:'#F8FAFC',borderRadius:8,border:'1px solid #E2E8F0'}}>
-                      <span style={{fontSize:14,fontWeight:600}}>{w.sirketAdi}</span>
+                      <span style={{fontSize:14,fontWeight:600}}>{w.şirketAdi}</span>
                       {w.link ? (
                         <a href={w.link} target='_blank' rel='noreferrer' style={{background:'#25D366',color:'#fff',padding:'7px 16px',borderRadius:8,fontSize:13,fontWeight:600,textDecoration:'none'}}>WhatsApp</a>
                       ) : (

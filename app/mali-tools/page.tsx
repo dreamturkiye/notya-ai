@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import MaliNav from '@/components/mali/MaliNav'
 
 
 const TOOLS = [
@@ -28,6 +29,7 @@ export default function MaliToolsPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <MaliNav />
       <div style={{ color: '#fff', fontSize: 16 }}>Yükleniyor...</div>
     </div>
   )

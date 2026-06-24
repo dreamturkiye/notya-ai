@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import MaliNav from '@/components/mali/MaliNav'
 
 // sb initialized per-call
 
@@ -59,7 +60,7 @@ export default function MusteriYonetimi() {
   }
 
   async function sil(id: string) {
-    if (!confirm('Bu musteri silinsin mi?')) return
+    if (!confirm('Bu müşteri silinsin mi?')) return
     await fetch('/api/mali/musteriler?id=' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } })
     load(token)
   }
@@ -68,33 +69,34 @@ export default function MusteriYonetimi() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#F8FAFC', fontFamily:'system-ui,sans-serif', padding:'24px' }}>
+      <MaliNav />
       <div style={{ maxWidth:900, margin:'0 auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <div>
             <button onClick={() => router.push('/dashboard/mali')} style={{ background:'none', border:'none', color:'#64748B', cursor:'pointer', fontSize:14, marginBottom:4 }}>Ana Sayfa</button>
-            <div style={{ fontSize:22, fontWeight:700, color:'#1E293B' }}>Musteri Yonetimi</div>
-            <div style={{ fontSize:13, color:'#64748B' }}>{musteriler.length} musteri kayitli</div>
+            <div style={{ fontSize:22, fontWeight:700, color:'#1E293B' }}>Müşteri Yönetimi</div>
+            <div style={{ fontSize:13, color:'#64748B' }}>{musteriler.length} müşteri kayıtlı</div>
           </div>
-          <button onClick={() => router.push('/dashboard/mali/musteri-ekle')} style={{ background:'#10B981', border:'none', color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:600, fontSize:14 }}>+ Yeni Musteri</button>
+          <button onClick={() => router.push('/dashboard/mali/musteri-ekle')} style={{ background:'#10B981', border:'none', color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:600, fontSize:14 }}>+ Yeni Müşteri</button>
         </div>
 
         {showForm && (
           <div style={{ background:'#fff', borderRadius:12, padding:24, marginBottom:24, border:'1px solid #E2E8F0', boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
-            <div style={{ fontWeight:700, fontSize:16, marginBottom:16, color:'#1E293B' }}>{editId ? 'Musteri Duzenle' : 'Yeni Musteri Ekle'}</div>
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:16, color:'#1E293B' }}>{editId ? 'Müşteri Düzenle' : 'Yeni Müşteri Ekle'}</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Sirket Adi *</label><input value={form.sirket_adi} onChange={e=>setForm(f=>({...f,sirket_adi:e.target.value}))} placeholder='ABC Ltd. Sti.' style={inp} /></div>
+              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Sirket Adi *</label><input value={form.sirket_adi} onChange={e=>setForm(f=>({...f,sirket_adi:e.target.value}))} placeholder='ABC Ltd. Şti.' style={inp} /></div>
               <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Vergi No</label><input value={form.vergi_no} onChange={e=>setForm(f=>({...f,vergi_no:e.target.value}))} placeholder='1234567890' style={inp} /></div>
-              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Yetkili Kisi</label><input value={form.yetkili_kisi} onChange={e=>setForm(f=>({...f,yetkili_kisi:e.target.value}))} placeholder='Ahmet Yilmaz' style={inp} /></div>
+              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Yetkili Kisi</label><input value={form.yetkili_kisi} onChange={e=>setForm(f=>({...f,yetkili_kisi:e.target.value}))} placeholder='Ahmet Yılmaz' style={inp} /></div>
               <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Telefon</label><input value={form.telefon} onChange={e=>setForm(f=>({...f,telefon:e.target.value}))} placeholder='0532 000 0000' style={inp} /></div>
               <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>E-posta</label><input type='text' value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder='info@sirket.com' style={inp} /></div>
               <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Sirket Turu</label><select value={form.sirket_turu} onChange={e=>setForm(f=>({...f,sirket_turu:e.target.value}))} style={{...inp,cursor:'pointer'}}><option value='limited'>Limited Sirketi</option><option value='anonim'>Anonim Sirketi</option><option value='sahis'>Sahis Isletmesi</option><option value='koop'>Kooperatif</option></select></div>
-              <div style={{ gridColumn:'1/-1' }}><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Faaliyet Alani</label><input value={form.faaliyet_alani} onChange={e=>setForm(f=>({...f,faaliyet_alani:e.target.value}))} placeholder='Ticaret, insaat, hizmet...' style={inp} /></div>
+              <div style={{ gridColumn:'1/-1' }}><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Faaliyet Alani</label><input value={form.faaliyet_alani} onChange={e=>setForm(f=>({...f,faaliyet_alani:e.target.value}))} placeholder='Ticaret, inşaat, hizmet...' style={inp} /></div>
               <div style={{ gridColumn:'1/-1' }}><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Notlar</label><textarea value={form.notlar} onChange={e=>setForm(f=>({...f,notlar:e.target.value}))} rows={3} placeholder='Ek notlar...' style={{...inp,resize:'vertical'}} /></div>
             </div>
             {error && <div style={{ color:'#DC2626', fontSize:13, marginBottom:10 }}>{error}</div>}
             <div style={{ display:'flex', gap:10 }}>
               <button onClick={save} disabled={saving} style={{ background:'#10B981', border:'none', color:'#fff', padding:'10px 24px', borderRadius:8, cursor:'pointer', fontWeight:600, fontSize:14 }}>{saving?'Kaydediliyor...':'Kaydet'}</button>
-              <button onClick={resetForm} style={{ background:'#F1F5F9', border:'none', color:'#64748B', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontSize:14 }}>Iptal</button>
+              <button onClick={resetForm} style={{ background:'#F1F5F9', border:'none', color:'#64748B', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontSize:14 }}>İptal</button>
             </div>
           </div>
         )}
@@ -104,8 +106,8 @@ export default function MusteriYonetimi() {
         ) : musteriler.length === 0 ? (
           <div style={{ textAlign:'center', padding:60, background:'#fff', borderRadius:12, border:'1px solid #E2E8F0' }}>
             <div style={{ fontSize:40, marginBottom:12 }}>?</div>
-            <div style={{ fontWeight:600, fontSize:16, color:'#1E293B', marginBottom:8 }}>Henuz musteri eklenmedi</div>
-            <div style={{ color:'#64748B', fontSize:14 }}>Yukardaki butona tiklayarak ilk musteriinizi ekleyin</div>
+            <div style={{ fontWeight:600, fontSize:16, color:'#1E293B', marginBottom:8 }}>Henüz müşteri eklenmedi</div>
+            <div style={{ color:'#64748B', fontSize:14 }}>Yukarıdaki butona tiklayarak ilk müşterinizi ekleyin</div>
           </div>
         ) : (
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
@@ -118,7 +120,7 @@ export default function MusteriYonetimi() {
                 </div>
                 <div style={{ display:'flex', gap:8 }}>
                   <span style={{ background:m.sirket_turu==='limited'?'#DBEAFE':m.sirket_turu==='anonim'?'#FEF3C7':'#F0FDF4', color:m.sirket_turu==='limited'?'#1D4ED8':m.sirket_turu==='anonim'?'#D97706':'#15803D', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:600 }}>{m.sirket_turu.toUpperCase()}</span>
-                  <button onClick={() => startEdit(m)} style={{ background:'#F1F5F9', border:'none', color:'#374151', padding:'6px 14px', borderRadius:7, cursor:'pointer', fontSize:12 }}>Duzenle</button>
+                  <button onClick={() => startEdit(m)} style={{ background:'#F1F5F9', border:'none', color:'#374151', padding:'6px 14px', borderRadius:7, cursor:'pointer', fontSize:12 }}>Düzenle</button>
                   <button onClick={() => sil(m.id)} style={{ background:'#FEF2F2', border:'none', color:'#DC2626', padding:'6px 14px', borderRadius:7, cursor:'pointer', fontSize:12 }}>Sil</button>
                 </div>
               </div>

@@ -20,7 +20,7 @@ export default function MaliGiris() {
     setLoading(true)
     setError('')
     if (!email.trim() || !password.trim()) { setError('E-posta ve sifre gereklidir'); setLoading(false); return }
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (authError || !data.session) {
       setError(authError?.message || 'Oturum alinamadi')
       setLoading(false)
