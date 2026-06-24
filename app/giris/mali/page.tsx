@@ -46,11 +46,11 @@ export default function MaliGiris() {
         <form onSubmit={handleLogin} noValidate style={{display:'flex',flexDirection:'column',gap:'14px'}}>
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>E-posta</label>
-            <input type='text' value={email} onChange={e=>setEmail(e.target.value)} placeholder='smmm@ornek.com' style={inp} />
+            <input type='text' value={email} onChange={e=>setEmail(e.target.value)} placeholder='smmm@ornek.com' autoCapitalize='none' autoCorrect='off' autoComplete='email' inputMode='email' spellCheck={false} style={inp} />
           </div>
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Sifre</label>
-            <input type='password' value={password} onChange={e=>setPassword(e.target.value)} placeholder='Sifrenizi girin' style={inp} />
+            <input type='password' value={password} onChange={e=>setPassword(e.target.value)} placeholder='Sifrenizi girin' autoComplete='current-password' style={inp} />
           </div>
           {error && (
             <div style={{background:'rgba(220,38,38,0.1)',border:'1px solid rgba(220,38,38,0.3)',borderRadius:'8px',padding:'10px',color:'#fca5a5',fontSize:'13px'}}>{error}</div>

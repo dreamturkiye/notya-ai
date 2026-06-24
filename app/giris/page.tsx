@@ -61,11 +61,11 @@ export default function LoginPage() {
         <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
           <div>
             <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>E-posta</label>
-            <input type="text" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@notya.ai" style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
+            <input type="text" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@notya.ai" autoCapitalize="none" autoCorrect="off" autoComplete="email" inputMode="email" spellCheck={false} style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
           </div>
           <div>
             <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>Sifre</label>
-            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="12345678" style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
+            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="12345678" autoComplete="current-password" style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
           </div>
           {error && <div style={{background:"#FEF2F2",border:"1px solid #FCA5A5",borderRadius:"8px",padding:"10px 12px",fontSize:"13px",color:"#DC2626"}}>{error}</div>}
           <button type="submit" onClick={handleAuth} disabled={loading || !email || !password}
