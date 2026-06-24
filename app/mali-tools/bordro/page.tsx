@@ -2,9 +2,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 export default function BordroPage() {
   const router = useRouter()
@@ -18,11 +16,12 @@ export default function BordroPage() {
   async function hesapla() {
     if (!brutMaas || isNaN(Number(brutMaas))) { setError('Geçerli bir brüt maş girin'); return }
     setLoading(true); setError('')
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giris/mali'); return }
+    const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('supabase') && k.includes('auth-token')) || '') : null
+    const token = rawToken ? JSON.parse(rawToken).access_token : null
+    if (!token) { router.push('/giris/mali'); setLoading(false); return }
     const res = await fetch('/api/mali/bordro', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ brutMaas: Number(brutMaas), kidemYili: Number(kidemYili) || 0, engellilikDerecesi: engellilik ? Number(engellilik) : null })
     })
     const data = await res.json()
