@@ -144,7 +144,16 @@ export default function IngestionPage() {
         <div style={{background:'#fff',borderRadius:12,padding:20,marginBottom:16,border:'1px solid #E2E8F0'}}>
           <div style={{fontWeight:700,fontSize:14,color:'#1E293B',marginBottom:12}}>3. Dönem ve Dosyalar</div>
           <div style={{marginBottom:14}}>
-            <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Dönem (Ay/Yıl)</label>
+                      {musteriler.length > 0 && (
+            <div style={{marginBottom:14}}>
+              <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Musteri (opsiyonel)</label>
+              <select value={musteriId} onChange={e=>setMusteriId(e.target.value)} style={{...inp,background:'white'}}>
+                <option value=''>-- Genel (musteriye bagli degil) --</option>
+                {musteriler.map(m=><option key={m.id} value={m.id}>{m.sirket_adi}</option>)}
+              </select>
+            </div>
+          )}
+          <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Dönem (Ay/Yıl)</label>
             <input type="month" value={donem} onChange={e=>setDönem(e.target.value)} style={inp} />
           </div>
           <div onClick={()=>inputRef.current?.click()}
@@ -152,6 +161,17 @@ export default function IngestionPage() {
             <div style={{fontSize:36,marginBottom:8}}>📁</div>
             <div style={{fontWeight:600,color:'#1E293B',fontSize:15}}>Dosya seç veya sürükle</div>
             <div style={{fontSize:12,color:'#94A3B8',marginTop:4}}>PDF, JPG, PNG, XLSX — max 10MB</div>
+              <div style={{marginTop:10,display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+                <button type='button'
+                  onClick={(e)=>{e.stopPropagation();const inp2=document.createElement('input');inp2.type='file';inp2.accept='image/*';inp2.capture='environment';inp2.onchange=(ev)=>{const t=ev.target as HTMLInputElement;if(t.files)setFiles(Array.from(t.files))};inp2.click()}}
+                  style={{background:'#0A1628',color:'white',border:'none',padding:'7px 14px',borderRadius:8,fontSize:12,cursor:'pointer',fontWeight:600}}>
+                  Kamera ile Cek
+                </button>
+                <button type='button' onClick={(e)=>{e.stopPropagation();inputRef.current?.click()}}
+                  style={{background:'white',color:'#374151',border:'1px solid #CBD5E1',padding:'7px 14px',borderRadius:8,fontSize:12,cursor:'pointer',fontWeight:600}}>
+                  Dosya Sec
+                </button>
+              </div>
             <input ref={inputRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.xml" onChange={onFileChange} style={{display:'none'}} />
           </div>
           {files.length > 0 && (
