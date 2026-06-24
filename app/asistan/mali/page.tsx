@@ -64,7 +64,7 @@ export default function MaliAsistanPage() {
         ) : (
           <button onClick={stop} style={{padding:"14px 32px",background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.4)",borderRadius:"12px",color:"#fca5a5",fontSize:"15px",fontWeight:600,cursor:"pointer",width:"100%"}}>Görüşmeyi Bitir</button>
         )}
-        <button onClick={()=>router.push("/dashboard/mali")} style={{marginTop:"12px",padding:"10px",background:"transparent",border:"none",color:"#64748b",fontSize:"13px",cursor:"pointer",width:"100%"}}>Dashboard</button>
+        <button onClick={()=>router.push("/dashboard/mali")} style={{marginTop:"12px",padding:"10px",background:"transparent",border:"none",color:"#64748b",fontSize:"13px",cursor:"pointer",width:"100%"}}>Ana Sayfa</button>
       </div>
     </div>
   )
