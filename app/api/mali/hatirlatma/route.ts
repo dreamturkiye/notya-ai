@@ -95,6 +95,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, method: 'api' })
     }
 
+    // Send via Twilio WhatsApp
+    const acctSid = process.env.TWILIO_ACCOUNT_SID
+    const apiKey  = process.env.TWILIO_API_KEY
+    const apiSec  = process.env.TWILIO_API_SECRET
+    const waFrom  = process.env.TWILIO_WHATSAPP_FROM
+    if (acctSid && apiKey && apiSec && waFrom) {
+      const to    = telefon.startsWith('whatsapp:') ? telefon : 'whatsapp:+90'+telefon.replace(/[^0-9]/g,'')
+      const creds = Buffer.from(apiKey+':'+apiSec).toString('base64')
+      const r2    = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${acctSid}/Messages.json`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Basic '+creds, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ From: waFrom, To: to, Body: mesaj }).toString()
+      })
+      if (r2.ok) {
+        await sb.from('mali_beyan_takvimi').update({ hatirlatma_gonderildi: true }).eq('id', beyanId)
+        return NextResponse.json({ success: true, method: 'twilio' })
+      }
+    }
     // Fallback: return click-to-chat link
     const link = olusturWhatsAppLink(telefon, mesaj)
     return NextResponse.json({ success: true, method: 'link', whatsappLink: link, mesaj })
