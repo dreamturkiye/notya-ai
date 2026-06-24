@@ -23,6 +23,7 @@ export default function MaliAsistanPage() {
   async function start() {
     try {
       setStatus("connecting"); setErr("")
+      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
       const { data: { session } } = await sb.auth.getSession()
       if (!session) { router.push("/giris/mali"); return }
       const r = await fetch("/api/asistan/mali-signed-url", { headers: { Authorization: "Bearer " + session.access_token } })

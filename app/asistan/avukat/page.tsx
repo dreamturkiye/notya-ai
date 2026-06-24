@@ -34,6 +34,7 @@ export default function AvukatAsistanPage() {
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
     sb.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.push('/giris/avukat'); return }
       setToken(session.access_token)

@@ -27,6 +27,7 @@ export default function MusteriIntakePage() {
 
   async function kaydet() {
     setLoading(true); setError('')
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
     const { data: { session } } = await sb.auth.getSession()
     if (!session) { router.push('/giris/mali'); return }
     const res = await fetch('/api/mali/musteri-intake', {

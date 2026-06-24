@@ -109,6 +109,7 @@ export default function NewSession() {
     setError("")
 
     try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push("/giris"); return }
 

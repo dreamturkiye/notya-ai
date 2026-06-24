@@ -20,6 +20,7 @@ export default function MusteriYonetimi() {
   const [form, setForm] = useState({ sirket_adi:'', vergi_no:'', yetkili_kisi:'', telefon:'', email:'', faaliyet_alani:'', sirket_turu:'limited', notlar:'' })
 
   useEffect(() => {
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
     sb.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.push('/giris/mali'); return }
       setToken(session.access_token)
