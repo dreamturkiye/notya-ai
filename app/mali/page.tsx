@@ -2,8 +2,8 @@
 import Link from "next/link"
 export default function MaliPage() {
   const HERO_IMG    = "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1600&q=80&fit=crop&crop=center"
-  const CONSULT_IMG = "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=900&q=80&fit=crop"
-  const LEARNING_IMG= "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&q=80&fit=crop"
+  const CONSULT_IMG = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=900&q=80&fit=crop&crop=top"
+  const LEARNING_IMG= "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=900&q=80&fit=crop&crop=top"
   return (
     <main style={{margin:0,padding:0,background:"#F4F7F6",color:"#1F2937",fontFamily:"'Lato','Helvetica Neue',Arial,sans-serif",overflowX:"hidden"}}>
       <style>{`
