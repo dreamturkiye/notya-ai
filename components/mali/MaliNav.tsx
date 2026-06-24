@@ -14,7 +14,7 @@ const ITEMS = [
 ]
 
 // First 3 shown on mobile inline, rest in drawer
-const MOBILE_INLINE = ITEMS.slice(0, 3)
+const MOBILE_INLINE = ITEMS.slice(0, 2)
 
 export default function MaliNav() {
   const router   = useRouter()
@@ -43,7 +43,7 @@ export default function MaliNav() {
     <>
       <nav style={{background:'#0A1628',padding:'0 12px',height:56,display:'flex',
                    alignItems:'center',justifyContent:'space-between',
-                   position:'sticky',top:0,zIndex:100,boxShadow:'0 2px 8px rgba(0,0,0,0.4)'}}>
+                   position:'sticky',top:0,zIndex:100,boxShadow:'0 2px 8px rgba(0,0,0,0.4)',overflow:'hidden'}}>
 
         {/* Logo */}
         <span style={{color:'white',fontWeight:800,fontSize:17,cursor:'pointer',flexShrink:0,marginRight:8}}
@@ -69,11 +69,11 @@ export default function MaliNav() {
         </div>
 
         {/* Mobile: 3 inline buttons + hamburger */}
-        <div className="m-nav" style={{alignItems:'center',gap:6,flex:1,justifyContent:'flex-end'}}>
+        <div className="m-nav" style={{alignItems:'center',gap:5,flex:1,justifyContent:'flex-end',minWidth:0,overflow:'hidden'}}>
           {MOBILE_INLINE.map(item => (
             <button key={item.route} onClick={()=>go(item.route)}
               style={{...btnBase, background:item.bg,
-                      padding:'7px 10px', fontSize:12,
+                      padding:'6px 8px', fontSize:11,
                       opacity:pathname===item.route?1:.85}}>
               {item.label}
             </button>
