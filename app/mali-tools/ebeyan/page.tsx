@@ -17,7 +17,7 @@ export default function EBeyanPage() {
     if (!hesaplanan || !indirilecek) return
     setLoading(true)
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giriş/mali'); return }
+    if (!session) { router.push('/giris/mali'); return }
     const res = await fetch('/api/mali/ebeyan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },

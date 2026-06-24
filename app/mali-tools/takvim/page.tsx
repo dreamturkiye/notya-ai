@@ -18,7 +18,7 @@ export default function TakvimPage() {
 
   async function loadTakvim(sendAlert = false) {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giriş/mali'); return }
+    if (!session) { router.push('/giris/mali'); return }
     setLoading(true)
     const res = await fetch('/api/mali/takvim' + (sendAlert ? '?sendAlert=true' : ''), {
       headers: { 'Authorization': 'Bearer ' + session.access_token }

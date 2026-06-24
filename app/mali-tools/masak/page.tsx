@@ -20,7 +20,7 @@ export default function MasakPage() {
     if (!tutar || !müşteriAdi) return
     setLoading(true)
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giriş/mali'); return }
+    if (!session) { router.push('/giris/mali'); return }
     const res = await fetch('/api/mali/masak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },

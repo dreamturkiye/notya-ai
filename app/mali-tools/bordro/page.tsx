@@ -19,7 +19,7 @@ export default function BordroPage() {
     if (!brutMaas || isNaN(Number(brutMaas))) { setError('Geçerli bir brüt maş girin'); return }
     setLoading(true); setError('')
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/giriş/mali'); return }
+    if (!session) { router.push('/giris/mali'); return }
     const res = await fetch('/api/mali/bordro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
