@@ -2,9 +2,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 export default function TakvimPage() {
   const router = useRouter()
@@ -17,7 +15,8 @@ export default function TakvimPage() {
   useEffect(() => { loadTakvim() }, [])
 
   async function loadTakvim(sendAlert = false) {
-    const { data: { session } } = await supabase.auth.getSession()
+    const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '') : null
+    const session = rawToken ? { access_token: JSON.parse(rawToken).access_token } : null
     if (!session) { router.push('/giris/mali'); return }
     setLoading(true)
     const res = await fetch('/api/mali/takvim' + (sendAlert ? '?sendAlert=true' : ''), {

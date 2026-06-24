@@ -2,9 +2,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 export default function MasakPage() {
   const router = useRouter()
@@ -19,7 +17,8 @@ export default function MasakPage() {
   async function analiz() {
     if (!tutar || !müşteriAdi) return
     setLoading(true)
-    const { data: { session } } = await supabase.auth.getSession()
+    const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '') : null
+    const session = rawToken ? { access_token: JSON.parse(rawToken).access_token } : null
     if (!session) { router.push('/giris/mali'); return }
     const res = await fetch('/api/mali/masak', {
       method: 'POST',

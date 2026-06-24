@@ -2,9 +2,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 export default function PortalPage() {
   const router = useRouter()
@@ -21,7 +19,8 @@ export default function PortalPage() {
   }, [])
 
   async function init() {
-    const { data: { session } } = await supabase.auth.getSession()
+    const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '') : null
+    const session = rawToken ? { access_token: JSON.parse(rawToken).access_token } : null
     if (!session) { router.push('/giris/mali'); return }
     // Load müşteriler
     const { data: m } = await supabase
@@ -49,7 +48,7 @@ export default function PortalPage() {
 
   async function generateLink(musteriId: string) {
     setGenerating(musteriId)
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || ''); return raw ? { data: { session: { access_token: JSON.parse(raw).access_token } } } : { data: { session: null } } })()
     if (!session) return
     const res = await fetch('/api/mali/portal-admin', {
       method: 'POST',
@@ -69,7 +68,7 @@ export default function PortalPage() {
 
   async function revokeToken(tokenId: string, musteriId: string) {
     setRevoking(musteriId)
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || ''); return raw ? { data: { session: { access_token: JSON.parse(raw).access_token } } } : { data: { session: null } } })()
     if (!session) return
     await fetch('/api/mali/portal-admin', {
       method: 'POST',

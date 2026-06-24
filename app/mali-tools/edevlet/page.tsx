@@ -2,9 +2,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 const SORGULAR = [
   { id: 'vergi_borcu', label: 'Vergi Borcu Sorgulama', desc: 'GIB uzerinden mukellef vergi borcu', color: '#1e3a5f' },
@@ -25,7 +23,8 @@ export default function EDevletPage() {
   async function sorgula() {
     if (!selected) return
     setLoading(true)
-    const { data: { session } } = await supabase.auth.getSession()
+    const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '') : null
+    const session = rawToken ? { access_token: JSON.parse(rawToken).access_token } : null
     if (!session) { router.push('/giris/mali'); return }
     const res = await fetch('/api/mali/edevlet', {
       method: 'POST',

@@ -1,9 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 const TOOLS = [
   { letter: 'TL', title: 'Bordro Hesaplayıcı', desc: '2026 parametreleriyle anında net maşaş, SGK, kıdem ve işveren maliyeti hesabı', color: '#1B4332', bg: '#d8f3dc', route: '/mali-tools/bordro' },
@@ -20,7 +18,7 @@ export default function MaliToolsPage() {
   const [hover, setHover] = useState<number | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || ''); return raw ? { data: { session: { access_token: JSON.parse(raw).access_token } } } : { data: { session: null } } })().then(({ data: { session } }) => {
       if (!session) router.push('/giris/mali')
       else setLoading(false)
     })
