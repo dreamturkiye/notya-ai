@@ -58,7 +58,7 @@ export default function IngestionPage() {
       })
       const data = await res.json()
       setResult({ ok: data.success, message: data.message || (data.success ? 'Belgeler başarıyla işlendi. Derya inceliyor.' : data.error || 'Hata oluştu') })
-      if (data.success) { setFiles([]); setNotes('') }
+      if (data.success) { setFiles([]); setNotes(''); setTimeout(()=>router.push('/dashboard/mali/belgeler'), 2000) }
     } catch { setResult({ ok:false, message:'Bağlantı hatası' }) }
     setUploading(false)
   }
