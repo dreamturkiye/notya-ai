@@ -41,13 +41,10 @@ export default function AsistanPage() {
   const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
   const conversationRef = useRef<ActiveConversation | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  // auth via localStorage
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    ;(async () => { const _r = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); const session = _r ? JSON.parse(_r) : null;
       if (!session) { router.push("/giriş"); return }
       setAuthToken(session.access_token)
 
@@ -60,7 +57,7 @@ export default function AsistanPage() {
         return
       }
       setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
-    })
+    })()
     return () => { void endConversation() }
   }, [])
 
