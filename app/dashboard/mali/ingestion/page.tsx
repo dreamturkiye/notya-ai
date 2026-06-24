@@ -40,7 +40,11 @@ export default function IngestionPage() {
   }
 
   async function gonder() {
-    if (!files.length) { alert('Lütfen en az bir belge seçin'); return }
+    // iOS Safari: React state may be stale - read directly from DOM input
+    const currentFiles = (inputRef.current?.files && inputRef.current.files.length > 0)
+      ? Array.from(inputRef.current.files)
+      : files
+    if (!currentFiles.length) { alert('Lutfen en az bir belge secin'); return }
     if (!selectedBelge) { alert('Belge türünü seçin'); return }
     setUploading(true)
     let token = null
@@ -50,7 +54,7 @@ export default function IngestionPage() {
     } catch { token = null }
     if (!token) { router.push('/giris/mali'); return }
     const form = new FormData()
-    files.forEach(f => form.append('files', f))
+    currentFiles.forEach(f => form.append('files', f))
     form.append('belgeTuru', selectedBelge)
     form.append('isletmeTipi', selectedTip)
     form.append('donem', donem)
@@ -59,7 +63,9 @@ export default function IngestionPage() {
       const res = await fetch('/api/mali/ingestion', {
         method:'POST', headers:{'Authorization':'Bearer '+token}, body:form
       })
-      const data = await res.json()
+      const text = await res.text()
+      if (!text) throw new Error('Sunucu bos yanit verdi (HTTP ' + res.status + ')')
+      const data = JSON.parse(text)
       setResult({ ok: data.success, message: data.message || (data.success ? 'Belgeler başarıyla işlendi. Derya inceliyor.' : data.error || 'Hata oluştu') })
       if (data.success) { setFiles([]); setNotes(''); setTimeout(()=>router.push('/dashboard/mali/belgeler'), 2000) }
     } catch(err: unknown) { setResult({ ok:false, message: err instanceof Error ? err.message : 'Sunucuya baglanilamadi. Tekrar deneyin.' }) }
