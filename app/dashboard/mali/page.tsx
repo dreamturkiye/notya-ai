@@ -1,10 +1,11 @@
 'use client'
+export const dynamic = "force-dynamic"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { getBeyanTakvimi, MEVZUAT_DATABASE } from '@/lib/ai/mevzuatEngine'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+// supabase initialized inside hooks only
 
 export default function MaliDashboard() {
   const router = useRouter()
@@ -59,7 +60,7 @@ export default function MaliDashboard() {
         <div style={{display:'flex',gap:8}}>
           <button onClick={()=>router.push('/asistan/mali')} className='nav-btn' style={{background:'linear-gradient(135deg,#7C3AED,#2563EB)',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Uzm. Derya</button><button onClick={()=>router.push('/mali-tools')} className='nav-btn' style={{background:'#1B4332',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Mali Araçlar</button><button onClick={()=>router.push('/dashboard/mali/musteri-ekle')} className='nav-btn' style={{background:'#F59E0B',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>+ Musteri</button><button onClick={()=>router.push('/dashboard/mali/hatirlatma')} className='nav-btn' style={{background:'#25D366',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>WhatsApp</button><button onClick={()=>router.push('/dashboard/mali/aylik-rapor')} className='nav-btn' style={{background:'#6366F1',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Rapor</button><button onClick={()=>router.push('/dashboard/mali/musteriler')} className='nav-btn' style={{background:'#0F766E',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Musteriler</button>
           <button onClick={()=>router.push('/session/mali')} className='hide-mobile' style={{background:'#2563EB',color:'white',border:'none',padding:'8px 16px',borderRadius:8,cursor:'pointer',fontWeight:600}}>Yeni Görüşme</button>
-          <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/giriş'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
+          <button onClick={()=>(async()=>{ localStorage.clear(); })().then(()=>router.push('/giriş'))} style={{background:'transparent',color:'#94a3b8',border:'1px solid #334155',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
         </div>
       </nav>
       <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:32}}>

@@ -1,9 +1,10 @@
 'use client'
+export const dynamic = "force-dynamic"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
-const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+// sb initialized per-call
 
 type Musteri = { id:string; sirket_adi:string; vergi_no:string; yetkili_kisi:string; telefon:string; email:string; faaliyet_alani:string; sirket_turu:string; notlar:string; is_active:boolean }
 

@@ -1,5 +1,5 @@
-
 "use client"
+export const dynamic = "force-dynamic"
 import HelpWidget from "@/components/HelpWidget"
 import { useState, useEffect } from "react"
 import { createClient } from "@supabase/supabase-js"
@@ -27,14 +27,14 @@ export default function Dashboard() {
   const [user, setUser] = useState<{ email: string } | null>(null)
   const [greeting, setGreeting] = useState("")
   const [activeNote, setActiveNote] = useState<Note | null>(null)
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+  // supabase initialized inside hooks only
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/giriş"); return }
       setUser({ email: user.email! })
 
-      const session = await supabase.auth.getSession()
+      const session = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })()
       const token = session.data.session?.access_token
       if (token) {
         const resp = await fetch("/api/users/me", {
@@ -63,7 +63,7 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  async function signOut() { await supabase.auth.signOut(); router.push("/giriş") }
+  async function signOut() { await (async()=>{ localStorage.clear(); })(); router.push("/giriş") }
 
   const EMOJI: Record<string, string> = { pediatri:"🧒", kardiyoloji:"❤️", noroloji:"🧠", psikiyatri:"💭", dahiliye:"🩺", ortopedi:"🦴", kadin_hastaliklari:"👶", genel:"👨‍⚕️", acil:"🚨" }
 

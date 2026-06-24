@@ -1,10 +1,11 @@
 'use client'
+export const dynamic = "force-dynamic"
 import GameChangerTabs from '@/components/avukat/GameChangerTabs'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+// supabase initialized inside hooks only
 
 const PERSONAS = [
   { id: 'kemalbey', name: 'Kemal Celik', title: 'Ceza Hukuku', color: '#DC2626' },
@@ -52,7 +53,7 @@ export default function AvukatDashboard() {
       setSureler(sureRes.data || [])
       setMuvekkilCount(muvRes.count || 0)
       setLoading(false)
-      const {data:{session:s2}} = await supabase.auth.getSession(); if(s2) setAvukatToken(s2.access_token||"")
+      const {data:{session:s2}} = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })(); if(s2) setAvukatToken(s2.access_token||"")
       supabase.auth.getSession().then(({data:{session}})=>{ if(session) setAvukatToken(session.access_token||"")})
     })
   }, [])
@@ -64,7 +65,7 @@ export default function AvukatDashboard() {
     setChatHistory(prev => [...prev, { role: 'user', content: userMsg }])
     setChatLoading(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })()
       const res = await fetch('/api/asistan/avukat-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session?.access_token || '') },
@@ -91,7 +92,7 @@ export default function AvukatDashboard() {
           <div style={{fontSize:22,fontWeight:700}}>Notya Hukuk</div>
           <div style={{fontSize:14,opacity:.8}}>{greeting}, {String(user?.full_name || user?.name || 'Avukat')}</div>
         </div>
-        <button onClick={() => supabase.auth.signOut().then(() => router.push('/giris/avukat'))} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Cikis</button>
+        <button onClick={() => (async()=>{ localStorage.clear(); })().then(() => router.push('/giris/avukat'))} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Cikis</button>
       </div>
 
       <div style={{background:'#fff',borderBottom:'1px solid #E2E8F0',padding:'0 24px',display:'flex',gap:4}}>

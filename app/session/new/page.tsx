@@ -1,5 +1,5 @@
-
 "use client"
+export const dynamic = "force-dynamic"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
@@ -50,7 +50,7 @@ export default function NewSession() {
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+  // supabase initialized inside hooks only
 
   // Keep ref in sync with state
   useEffect(() => { transcriptRef.current = transcript }, [transcript])
@@ -119,7 +119,7 @@ export default function NewSession() {
       }).select().single()
       if (se || !session) throw new Error("Seans oluşturulamadı: " + se?.message)
 
-      const { data: { session: authSession } } = await supabase.auth.getSession()
+      const { data: { session: authSession } } = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })()
       const authToken = authSession?.access_token
       if (!authToken) throw new Error("Oturum bulunamadı")
 

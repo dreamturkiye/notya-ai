@@ -13,7 +13,7 @@ type CezaTuru = 'vergi_ziyai' | 'usulsuzluk_1' | 'usulsuzluk_2' | 'gec_beyanname
 export default function VergiCezasiPage() {
   const router = useRouter()
   const [cezaTuru, setCezaTuru] = useState<CezaTuru>('vergi_ziyai')
-  const [vergiAslõ, setVergiAsli] = useState('')
+  const [vergiAsli, setVergiAsli] = useState('')
   const [gecGun, setGecGun] = useState('')
   const [result, setResult] = useState<Record<string,number|string>|null>(null)
 

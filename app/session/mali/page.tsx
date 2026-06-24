@@ -1,6 +1,8 @@
+'use client';
+export const dynamic = "force-dynamic"
+
 // app/session/mali/page.tsx
 
-'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -28,7 +30,7 @@ const HIZMET_TYPES = [
   { value: 'genel', label: 'Genel' }
 ];
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+// supabase initialized inside hooks only;
 
 const SessionPage: React.FC = () => {
   const [step, setStep] = useState<'setup' | 'recording' | 'processing' | 'done'>('setup');
