@@ -77,4 +77,4 @@ export default function AylikRaporPage() {
       </div>
     </div>
   )
-}
+}// v2
