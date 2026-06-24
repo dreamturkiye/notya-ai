@@ -19,10 +19,10 @@ export default function MaliGiris() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    if (!email.trim() || !password.trim()) { setError('E-posta ve sifre gereklidir'); setLoading(false); return }
+    if (!email.trim() || !password.trim()) { setError('E-posta ve şifre gereklidir'); setLoading(false); return }
     const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (authError || !data.session) {
-      setError(authError?.message || 'Oturum alinamadi')
+      setError(authError?.message || 'Oturum alınamadı')
       setLoading(false)
       return
     }
@@ -41,7 +41,7 @@ export default function MaliGiris() {
         <div style={{textAlign:'center',marginBottom:'28px'}}>
           <div style={{fontSize:'36px',marginBottom:'8px'}}>&#128176;</div>
           <div style={{fontSize:'22px',fontWeight:700,color:'#fff'}}><span style={{color:'#10B981'}}>Notya</span> AI</div>
-          <div style={{fontSize:'13px',color:'#64748b',marginTop:'4px'}}>Mali Musavirlik Modulu</div>
+          <div style={{fontSize:'13px',color:'#64748b',marginTop:'4px'}}>Mali Müşavirlik Modülü</div>
         </div>
         <form onSubmit={handleLogin} noValidate style={{display:'flex',flexDirection:'column',gap:'14px'}}>
           <div>
@@ -49,14 +49,14 @@ export default function MaliGiris() {
             <input type='text' value={email} onChange={e=>setEmail(e.target.value)} placeholder='smmm@ornek.com' autoCapitalize='none' autoCorrect='off' autoComplete='email' inputMode='email' spellCheck={false} style={inp} />
           </div>
           <div>
-            <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Sifre</label>
-            <input type='password' value={password} onChange={e=>setPassword(e.target.value)} placeholder='Sifrenizi girin' autoComplete='current-password' style={inp} />
+            <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Şifre</label>
+            <input type='password' value={password} onChange={e=>setPassword(e.target.value)} placeholder='Şifrenizi girin' autoComplete='current-password' style={inp} />
           </div>
           {error && (
             <div style={{background:'rgba(220,38,38,0.1)',border:'1px solid rgba(220,38,38,0.3)',borderRadius:'8px',padding:'10px',color:'#fca5a5',fontSize:'13px'}}>{error}</div>
           )}
           <button type='submit' disabled={loading} style={{padding:'13px',background:'#10B981',border:'none',borderRadius:'10px',color:'#fff',fontSize:'15px',fontWeight:600,cursor:'pointer',marginTop:'4px',opacity:loading?0.7:1}}>
-            {loading ? 'Giris yapiliyor...' : 'Giris Yap'}
+            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
         <div style={{textAlign:'center',marginTop:'20px',fontSize:'12px',color:'#64748b'}}>

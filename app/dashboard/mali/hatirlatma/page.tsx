@@ -31,7 +31,7 @@ export default function HatırlatmaPage() {
 
   async function gönder(item: HatırlatmaItem) {
     if (!item.telefon) {
-      alert('Bu müşteri icin telefon numarasi kayitli degil. Müşteri kaydini guncelleyin.')
+      alert('Bu müşteri icin telefon numarası kayıtlı değil. Müşteri kaydini guncelleyin.')
       return
     }
     setSending(item.id)
@@ -62,13 +62,13 @@ export default function HatırlatmaPage() {
         <span style={{marginLeft:8,background:'#25D366',color:'#fff',borderRadius:12,padding:'2px 10px',fontSize:12,fontWeight:600}}>WhatsApp</span>
       </nav>
       <div style={{maxWidth:680,margin:'0 auto',padding:'20px 16px'}}>
-        <div style={{fontSize:13,color:'#64748B',marginBottom:20}}>Onumuzdeki 7 gun icinde son gunu gelen beyanlar</div>
+        <div style={{fontSize:13,color:'#64748B',marginBottom:20}}>Önümüzdeki 7 gün içinde son günü gelen beyanlar</div>
         {loading ? (
           <div style={{textAlign:'center',padding:60,color:'#64748B'}}>Yükleniyor...</div>
         ) : items.length === 0 ? (
           <div style={{textAlign:'center',padding:60,background:'#fff',borderRadius:12,border:'1px solid #E2E8F0'}}>
             <div style={{fontSize:40,marginBottom:12}}>?</div>
-            <div style={{fontWeight:600,color:'#1E293B'}}>Onumuzdeki 7 gunun icinde beyan yok</div>
+            <div style={{fontWeight:600,color:'#1E293B'}}>Önümüzdeki 7 günün içinde beyan yok</div>
           </div>
         ) : (
           <div style={{display:'flex',flexDirection:'column',gap:10}}>
@@ -80,7 +80,7 @@ export default function HatırlatmaPage() {
                     <div style={{fontSize:13,color:'#64748B',marginTop:2}}>{String(item.beyanTuru)}</div>
                   </div>
                   <div style={{textAlign:'right'}}>
-                    <div style={{fontSize:13,fontWeight:700,color:renk(item.aciliyet)}}>{item.gunKaldi === 0 ? 'BUGUN' : item.gunKaldi === 1 ? 'YARIN' : item.gunKaldi + ' GUN'}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:renk(item.aciliyet)}}>{item.gunKaldi === 0 ? 'BUGÜN' : item.gunKaldi === 1 ? 'YARIN' : item.gunKaldi + ' GÜN'}</div>
                     <div style={{fontSize:11,color:'#94A3B8',marginTop:1}}>Son: {new Date(item.sonGun).toLocaleDateString('tr-TR')}</div>
                   </div>
                 </div>

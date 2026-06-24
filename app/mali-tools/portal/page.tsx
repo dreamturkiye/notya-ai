@@ -142,7 +142,7 @@ export default function PortalPage() {
                       {m.vergi_no && <div style={{ fontSize: 12, color: '#6B7280' }}>VN: {m.vergi_no}</div>}
                       {hasActiveToken && (
                         <div style={{ fontSize: 11, color: expiry <= 3 ? '#DC2626' : '#16A34A', marginTop: 2 }}>
-                          Aktif link — {expiry} gun kaldi | {token.use_count || 0} kullanim
+                          Aktif link — {expiry} gün kaldı | {token.use_count || 0} kullanim
                         </div>
                       )}
                     </div>

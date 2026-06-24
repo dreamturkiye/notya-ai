@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
   }
 
-  const { data: profile, error } = await supabase
+  const { data: profile, error } = await getSupabase()
     .from('users')
     .select('*')
     .eq('id', user.id)

@@ -84,13 +84,13 @@ export default function MusteriYonetimi() {
           <div style={{ background:'#fff', borderRadius:12, padding:24, marginBottom:24, border:'1px solid #E2E8F0', boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
             <div style={{ fontWeight:700, fontSize:16, marginBottom:16, color:'#1E293B' }}>{editId ? 'Müşteri Düzenle' : 'Yeni Müşteri Ekle'}</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Sirket Adi *</label><input value={form.sirket_adi} onChange={e=>setForm(f=>({...f,sirket_adi:e.target.value}))} placeholder='ABC Ltd. Şti.' style={inp} /></div>
+              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Şirket Adı *</label><input value={form.sirket_adi} onChange={e=>setForm(f=>({...f,sirket_adi:e.target.value}))} placeholder='ABC Ltd. Şti.' style={inp} /></div>
               <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Vergi No</label><input value={form.vergi_no} onChange={e=>setForm(f=>({...f,vergi_no:e.target.value}))} placeholder='1234567890' style={inp} /></div>
-              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Yetkili Kisi</label><input value={form.yetkili_kisi} onChange={e=>setForm(f=>({...f,yetkili_kisi:e.target.value}))} placeholder='Ahmet Yılmaz' style={inp} /></div>
+              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Yetkili Kişi</label><input value={form.yetkili_kisi} onChange={e=>setForm(f=>({...f,yetkili_kisi:e.target.value}))} placeholder='Ahmet Yılmaz' style={inp} /></div>
               <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Telefon</label><input value={form.telefon} onChange={e=>setForm(f=>({...f,telefon:e.target.value}))} placeholder='0532 000 0000' style={inp} /></div>
               <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>E-posta</label><input type='text' value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder='info@sirket.com' style={inp} /></div>
-              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Sirket Turu</label><select value={form.sirket_turu} onChange={e=>setForm(f=>({...f,sirket_turu:e.target.value}))} style={{...inp,cursor:'pointer'}}><option value='limited'>Limited Sirketi</option><option value='anonim'>Anonim Sirketi</option><option value='sahis'>Sahis Isletmesi</option><option value='koop'>Kooperatif</option></select></div>
-              <div style={{ gridColumn:'1/-1' }}><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Faaliyet Alani</label><input value={form.faaliyet_alani} onChange={e=>setForm(f=>({...f,faaliyet_alani:e.target.value}))} placeholder='Ticaret, inşaat, hizmet...' style={inp} /></div>
+              <div><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Şirket Türü</label><select value={form.sirket_turu} onChange={e=>setForm(f=>({...f,sirket_turu:e.target.value}))} style={{...inp,cursor:'pointer'}}><option value='limited'>Limited Şirketi</option><option value='anonim'>Anonim Şirketi</option><option value='sahis'>Şahıs İşletmesi</option><option value='koop'>Kooperatif</option></select></div>
+              <div style={{ gridColumn:'1/-1' }}><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Faaliyet Alanı</label><input value={form.faaliyet_alani} onChange={e=>setForm(f=>({...f,faaliyet_alani:e.target.value}))} placeholder='Ticaret, inşaat, hizmet...' style={inp} /></div>
               <div style={{ gridColumn:'1/-1' }}><label style={{ fontSize:12, color:'#64748B', display:'block', marginBottom:4 }}>Notlar</label><textarea value={form.notlar} onChange={e=>setForm(f=>({...f,notlar:e.target.value}))} rows={3} placeholder='Ek notlar...' style={{...inp,resize:'vertical'}} /></div>
             </div>
             {error && <div style={{ color:'#DC2626', fontSize:13, marginBottom:10 }}>{error}</div>}
@@ -102,7 +102,7 @@ export default function MusteriYonetimi() {
         )}
 
         {loading ? (
-          <div style={{ textAlign:'center', padding:60, color:'#64748B' }}>Yukleniyor...</div>
+          <div style={{ textAlign:'center', padding:60, color:'#64748B' }}>Yükleniyor...</div>
         ) : musteriler.length === 0 ? (
           <div style={{ textAlign:'center', padding:60, background:'#fff', borderRadius:12, border:'1px solid #E2E8F0' }}>
             <div style={{ fontSize:40, marginBottom:12 }}>?</div>

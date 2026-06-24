@@ -21,7 +21,7 @@ export default function MusteriPortalPage() {
         if (d.success) { setMusteri(d.data.musteri); setBeyanlar(d.data.beyanlar || []) }
         else setError(d.error || 'Gecersiz veya suresi dolmus link')
         setLoading(false)
-      }).catch(() => { setError('Baglanti hatasi'); setLoading(false) })
+      }).catch(() => { setError('Bağlantı hatası'); setLoading(false) })
   }, [token])
 
   const today = new Date()
@@ -32,7 +32,7 @@ export default function MusteriPortalPage() {
   const gunKaldi = (iso:string) => Math.ceil((new Date(iso).getTime()-today.getTime())/(86400000))
   const renkBeyan = (iso:string) => { const g=gunKaldi(iso); return g<=1?'#DC2626':g<=3?'#D97706':'#10B981' }
 
-  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',fontFamily:'system-ui'}}>Yukleniyor...</div>
+  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',fontFamily:'system-ui'}}>Yükleniyor...</div>
   if (error || !musteri) return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',fontFamily:'system-ui',flexDirection:'column',gap:12}}>
       <div style={{fontSize:48}}>?</div>
@@ -80,7 +80,7 @@ export default function MusteriPortalPage() {
                     <div style={{fontSize:12,color:'#64748B',marginTop:2}}>{b.aciklama}</div>
                   </div>
                   <div style={{textAlign:'right'}}>
-                    <div style={{fontWeight:700,color:renk}}>{g===0?'BUGUN':g===1?'YARIN':g+' GUN'}</div>
+                    <div style={{fontWeight:700,color:renk}}>{g===0?'BUGÜN':g===1?'YARIN':g+' GÜN'}</div>
                     <div style={{fontSize:11,color:'#94A3B8'}}>{new Date(b.son_gun).toLocaleDateString('tr-TR')}</div>
                   </div>
                 </div>

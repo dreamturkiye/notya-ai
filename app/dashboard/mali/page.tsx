@@ -99,7 +99,7 @@ export default function MaliDashboard() {
                     </div>
                     <div style={{textAlign:'right'}}>
                       <div style={{fontWeight:600,fontSize:14,color:col}}>{b.son_gun}</div>
-                      <div style={{fontSize:12,color:col}}>{daysLeft <= 0 ? 'Gecti!' : daysLeft === 1 ? 'Yarin!' : daysLeft + ' gun kaldi'}</div>
+                      <div style={{fontSize:12,color:col}}>{daysLeft <= 0 ? 'Gecti!' : daysLeft === 1 ? 'Yarin!' : daysLeft + ' gün kaldı'}</div>
                     </div>
                   </div>
                 )

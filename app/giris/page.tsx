@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login"|"register">("login")
 
   async function handleAuth() {
-    if (!email || !password) { setError("E-posta ve sifre gerekli"); return }
+    if (!email || !password) { setError("E-posta ve şifre gerekli"); return }
     setLoading(true); setError("")
     try {
       const endpoint = mode === "login"
@@ -35,7 +35,8 @@ export default function LoginPage() {
       const profileResp = await fetch("/api/users/me", {
         headers: { Authorization: "Bearer " + data.access_token }
       })
-      const profileData = await profileResp.json()
+      let profileData: {data?: {profession_type?: string; onboarding_completed?: boolean}} = {}
+      try { profileData = await profileResp.json() } catch { profileData = {} }
       const profType = profileData.data?.profession_type
       if (profType === "mali_musavirlik") { router.replace("/dashboard/mali"); return }
       if (profType === "avukat") { router.replace("/dashboard/avukat"); return }
@@ -64,17 +65,17 @@ export default function LoginPage() {
             <input type="text" value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@notya.ai" autoCapitalize="none" autoCorrect="off" autoComplete="email" inputMode="email" spellCheck={false} style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
           </div>
           <div>
-            <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>Sifre</label>
+            <label style={{fontSize:"13px",color:"#374151",marginBottom:"6px",display:"block",fontWeight:"500"}}>Şifre</label>
             <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="12345678" autoComplete="current-password" style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
           </div>
           {error && <div style={{background:"#FEF2F2",border:"1px solid #FCA5A5",borderRadius:"8px",padding:"10px 12px",fontSize:"13px",color:"#DC2626"}}>{error}</div>}
-          <button type="submit" onClick={handleAuth} disabled={loading || !email || !password}
-            style={{padding:"13px",background:loading||!email||!password?"#94A3B8":"#2563EB",border:"none",borderRadius:"10px",color:"#fff",fontSize:"14px",fontWeight:"600",cursor:loading||!email||!password?"not-allowed":"pointer",marginTop:"4px"}}>
+          <button type="submit" onClick={handleAuth} disabled={loading}
+            style={{padding:"13px",background:loading?"#94A3B8":"#2563EB",border:"none",borderRadius:"10px",color:"#fff",fontSize:"14px",fontWeight:"600",cursor:loading||!email||!password?"not-allowed":"pointer",marginTop:"4px"}}>
             {loading ? "Yükleniyor..." : mode === "login" ? "Giriş Yap" : "Hesap Oluştur"}
           </button>
         </div>
         <div style={{textAlign:"center",marginTop:"20px",fontSize:"13px",color:"#64748B"}}>
-          {mode === "login" ? "Hesabiniz yok mu? " : "Zaten hesabiniz var mi? "}
+          {mode === "login" ? "Hesabınız yok mu? " : "Zaten hesabınız var mı? "}
           <span onClick={()=>{setMode(mode==="login"?"register":"login");setError("")}} style={{color:"#2563EB",cursor:"pointer",fontWeight:"500"}}>
             {mode === "login" ? "Ücretsiz kayit" : "Giriş yapin"}
           </span>

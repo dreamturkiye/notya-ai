@@ -21,7 +21,7 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
       const res = await fetch('/api/avukat/dilekce', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ turId: dilektceTur, muvekkil_bilgileri: { aciklama: dilekceInput } }) })
       const data = await res.json()
       setDilekceOut(data.success ? data.data.dilekce_metni : (data.error || 'Hata'))
-    } catch { setDilekceOut('Baglanti hatasi') }
+    } catch { setDilekceOut('Bağlantı hatası') }
     setDilekceLoading(false)
   }
 
@@ -33,7 +33,7 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
       const data = await res.json()
       if (data.success) setIctihatOut(data.data.ozet + ' ' + data.data.strateji_onerisi)
       else setIctihatOut(data.error || 'Hata')
-    } catch { setIctihatOut('Baglanti hatasi') }
+    } catch { setIctihatOut('Bağlantı hatası') }
     setIctihatLoading(false)
   }
 
@@ -48,7 +48,7 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
         const riskStr = (d.riskler || []).map((r: {ciddiyet: string; metin: string; oneri: string}) => r.ciddiyet.toUpperCase() + ': ' + r.metin + ' -> ' + r.oneri).join(', ')
         setSozOut('PUAN: ' + d.genel_puan + '/100 | ' + d.ozet + ' | RISKLER: ' + riskStr)
       } else setSozOut(data.error || 'Hata')
-    } catch { setSozOut('Baglanti hatasi') }
+    } catch { setSozOut('Bağlantı hatası') }
     setSozLoading(false)
   }
 

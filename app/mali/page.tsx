@@ -103,7 +103,7 @@ export default function MaliPage() {
                 </div>
               </div>
               <div style={{fontSize:"12px",color:"var(--text)",fontFamily:"Lato,sans-serif",lineHeight:"1.6",background:"var(--primary-light)",padding:"8px 10px",borderRadius:"6px",borderLeft:"3px solid var(--primary)"}}>
-                "KDV beyani icin son gun 3 gun kaldi — şimdi hazırlayalim mi?"
+                "KDV beyani icin son gun 3 gün kaldı — şimdi hazırlayalim mi?"
               </div>
             </div>
             <div className="card" style={{position:"absolute",top:"-16px",right:"-16px",padding:"10px 14px",boxShadow:"0 4px 16px rgba(245,158,11,.15)"}}>
@@ -183,7 +183,7 @@ export default function MaliPage() {
               </div>
               {[
                 {side:"right",text:"ABC Ltd icin Aralik KDV beyani hazır mi?"},
-                {side:"left", text:"Henüz hazırlanmadi. Son gun 26 Ocak — 4 gun kaldi. Şimdi başlayalım mi?"},
+                {side:"left", text:"Henüz hazırlanmadi. Son gun 26 Ocak — 4 gün kaldı. Şimdi başlayalım mi?"},
                 {side:"right",text:"Başlayalım."},
                 {side:"left", text:"ABC Ltd Aralik donem KDV hesaplanmistir: Hesaplanan KDV 84.320 TL, indirilecek KDV 61.140 TL, odenmesi gereken 23.180 TL. Onayi verirseniz formu doldurayim."},
                 {side:"right",text:"Onayla."},

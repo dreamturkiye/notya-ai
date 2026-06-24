@@ -11,14 +11,14 @@ export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("Authorization")
     if (!authHeader?.startsWith("Bearer ")) return NextResponse.json({ success: false }, { status: 401 })
-    const { data: { user } } = await supabase.auth.getUser(authHeader.split(" ")[1])
+    const { data: { user } } = await getSupabase().auth.getUser(authHeader.split(" ")[1])
     if (!user) return NextResponse.json({ success: false }, { status: 401 })
 
     const { correctionType, original, corrected, actionId } = await req.json()
 
     // Mark action as corrected
     if (actionId) {
-      await supabase.from("asistan_actions").update({
+      await getSupabase().from("asistan_actions").update({
         was_corrected: true,
         correction_data: { original, corrected, type: correctionType }
       }).eq("id", actionId)
@@ -51,13 +51,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (!prefs) {
-      await supabase.from("doctor_preferences").insert({
+      await getSupabase().from("doctor_preferences").insert({
         doctor_id: user.id,
         correction_history: corrections,
         preferred_drugs: preferredDrugs
       })
     } else {
-      await supabase.from("doctor_preferences").update({
+      await getSupabase().from("doctor_preferences").update({
         correction_history: corrections.slice(-50), // Keep last 50
         preferred_drugs: preferredDrugs,
         updated_at: new Date().toISOString()

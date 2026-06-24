@@ -103,7 +103,7 @@ export default function AvukatPage() {
                 </div>
               </div>
               <div style={{fontSize:"12px",color:"var(--text)",fontFamily:"Lato,sans-serif",lineHeight:"1.6",background:"var(--primary-light)",padding:"8px 10px",borderRadius:"6px",borderLeft:"3px solid var(--primary)"}}>
-                "DIKKAT — temyiz suresi 15 gun, 3 gun kaldi. CMK Md.291'e gore bugüne kadar dosyalanmali."
+                "DIKKAT — temyiz suresi 15 gun, 3 gün kaldı. CMK Md.291'e gore bugüne kadar dosyalanmali."
               </div>
             </div>
             <div className="card" style={{position:"absolute",top:"-16px",right:"-16px",padding:"10px 14px",boxShadow:"0 4px 16px rgba(180,83,9,.15)"}}>
@@ -202,7 +202,7 @@ export default function AvukatPage() {
             </div>
             <div className="card" style={{position:"absolute",bottom:"24px",right:"-20px",padding:"14px 18px",boxShadow:"0 8px 24px rgba(180,83,9,.15)",borderLeft:"4px solid var(--secondary)"}}>
               <div style={{fontSize:"11px",color:"var(--text-muted)",fontFamily:"Lato,sans-serif",marginBottom:"4px"}}>Otomatik Tespit</div>
-              <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>⚠️ Temyiz suresi 3 gun kaldi</div>
+              <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>⚠️ Temyiz suresi 3 gün kaldı</div>
               <div style={{fontSize:"11px",color:"var(--secondary)",fontFamily:"Lato,sans-serif",marginTop:"3px"}}>CMK Md.291 referans alindi ✓</div>
             </div>
           </div>

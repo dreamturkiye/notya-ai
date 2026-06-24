@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     'CREATE TABLE IF NOT EXISTS beyan_takvimi (id UUID DEFAULT uuid_generate_v4() PRIMARY KEY, musavir_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL, client_id UUID REFERENCES clients(id) ON DELETE CASCADE, beyan_turu TEXT NOT NULL, son_gun DATE NOT NULL, tamamlandi BOOLEAN DEFAULT FALSE, hatırlatma_gönderildi BOOLEAN DEFAULT FALSE, notlar TEXT, created_at TIMESTAMPTZ DEFAULT NOW())',
   ]
   for (const sql of sqls) {
-    const { error } = await supabase.rpc('exec_sql' as never, { query: sql } as never)
+    const { error } = await getSupabase().rpc('exec_sql' as never, { query: sql } as never)
     if (error) {
       // Try direct SQL via from().insert approach - won't work for DDL
       // Instead use the Postgres connection directly

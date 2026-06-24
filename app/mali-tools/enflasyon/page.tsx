@@ -62,7 +62,7 @@ export default function EnflasyonPage() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
             <div>
-              <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Edinme Tarihi (Donem)</label>
+              <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Edinme Tarihi (Dönem)</label>
               <select value={edinmeTarihi} onChange={e=>setEdinmeTarihi(e.target.value)} style={{...inp,cursor:'pointer'}}>
                 {donemler.map(d=><option key={d.value} value={d.value}>{d.label}</option>)}
               </select>

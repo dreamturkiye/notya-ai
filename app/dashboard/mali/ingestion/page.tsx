@@ -32,7 +32,7 @@ export default function IngestionPage() {
   const [notes, setNotes] = useState('')
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState<{ok:boolean;message:string}|null>(null)
-  const [donem, setDonem] = useState(new Date().toISOString().slice(0,7))
+  const [donem, setDönem] = useState(new Date().toISOString().slice(0,7))
   const inputRef = useRef<HTMLInputElement>(null)
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -121,7 +121,7 @@ export default function IngestionPage() {
           <div style={{fontWeight:700,fontSize:14,color:'#1E293B',marginBottom:12}}>3. Dönem ve Dosyalar</div>
           <div style={{marginBottom:14}}>
             <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Dönem (Ay/Yıl)</label>
-            <input type="month" value={donem} onChange={e=>setDonem(e.target.value)} style={inp} />
+            <input type="month" value={donem} onChange={e=>setDönem(e.target.value)} style={inp} />
           </div>
           <div onClick={()=>inputRef.current?.click()}
             style={{border:'2px dashed #CBD5E1',borderRadius:10,padding:'28px 20px',textAlign:'center',cursor:'pointer',background:'#F8FAFC',marginBottom:12}}>

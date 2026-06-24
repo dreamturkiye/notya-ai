@@ -75,7 +75,7 @@ export default function AvukatDashboard() {
       const data = await res.json()
       const reply = data.speech || data.message || data.error || 'Yanit alinamadi.'
       setChatHistory(prev => [...prev, { role: 'assistant', content: reply }])
-    } catch { setChatHistory(prev => [...prev, { role: 'assistant', content: 'Baglanti hatasi.' }]) }
+    } catch { setChatHistory(prev => [...prev, { role: 'assistant', content: 'Bağlantı hatası.' }]) }
     setChatLoading(false)
   }
 
@@ -84,7 +84,7 @@ export default function AvukatDashboard() {
     return (new Date(d).getTime() - now.getTime()) / 86400000 <= 3
   })
 
-  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}><div>Yukleniyor...</div></div>
+  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}><div>Yükleniyor...</div></div>
 
   return (
     <>
@@ -93,7 +93,7 @@ export default function AvukatDashboard() {
           <div style={{fontSize:22,fontWeight:700}}>Notya Hukuk</div>
           <div style={{fontSize:14,opacity:.8}}>{greeting}, {String(user?.full_name || user?.name || 'Avukat')}</div>
         </div>
-        <button onClick={() => supabase.auth.signOut().then(() => router.push('/giris/avukat'))} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Cikis</button>
+        <button onClick={() => supabase.auth.signOut().then(() => router.push('/giris/avukat'))} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
       </div>
 
       <div style={{background:'#fff',borderBottom:'1px solid #E2E8F0',padding:'0 24px',display:'flex',gap:4}}>
