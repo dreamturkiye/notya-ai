@@ -16,7 +16,7 @@ export default function BordroPage() {
   async function hesapla() {
     if (!brutMaas || isNaN(Number(brutMaas))) { setError('Geçerli bir brüt maş girin'); return }
     setLoading(true); setError('')
-    const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('supabase') && k.includes('auth-token')) || '') : null
+    const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '') : null
     const token = rawToken ? JSON.parse(rawToken).access_token : null
     if (!token) { router.push('/giris/mali'); setLoading(false); return }
     const res = await fetch('/api/mali/bordro', {
