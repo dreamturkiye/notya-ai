@@ -47,7 +47,7 @@ export default function MaliDashboard() {
       <div className='main-pad' style={{maxWidth:1200,margin:'0 auto',padding:"16px 12px"}}>
         <h1 className='page-title' style={{fontSize:24,fontWeight:700,color:'#0A1628',marginBottom:24}}>{(() => { const h = parseInt(new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', hour12: false })); const g = h < 12 ? 'Günaydın' : h < 18 ? 'İyi Günler' : 'İyi Akşamlar'; return (user?.first_name ? g + ' ' + user.first_name + '!' : g + '!') })()}</h1>
         {/* STATS ROW */}
-        <div className='stats-grid' style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16,marginBottom:32}}>
+        <div className='stats-grid' style={{display:'grid',gap:10,marginBottom:20}}>
           {[{label:'Toplam Görüşme',val:notes.length,icon:'total_meet'},{label:'Bu Ay',val:thisMonth,icon:'this_mon'},{label:'Aktif Müşteriler',val:new Set(notes.map(n=>n.profession_type||'müşteri')).size,icon:'active_c'},{label:'Yaklaşan Beyanlar',val:upcoming,icon:'upcoming'}].map(s=>(
             <div key={s.icon} className='stat-card' style={{background:'white',borderRadius:12,padding:'20px 24px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
               <div className='stat-number' style={{fontSize:28,fontWeight:700,color:'#2563EB'}}>{s.val}</div>
@@ -55,7 +55,7 @@ export default function MaliDashboard() {
             </div>
           ))}
         </div>
-        <div className='main-grid' style={{display:'grid',gridTemplateColumns:'1fr',gap:24}}>
+        <div className='main-grid' style={{display:'grid',gap:0}}>
           <div>
             {/* NOTES GRID */}
             <h2 className='section-title' style={{fontSize:18,fontWeight:600,marginBottom:16}}>Son Görüşmeler</h2>
@@ -66,7 +66,7 @@ export default function MaliDashboard() {
                 <button onClick={()=>router.push('/session/mali')} style={{background:'#2563EB',color:'white',border:'none',padding:'10px 24px',borderRadius:8,cursor:'pointer',marginTop:12}}>Yeni Görüşme Başlat</button>
               </div>
             ) : (
-              <div className='notes-grid' style={{display:'grid',gridTemplateColumns:'1fr',gap:16}}>
+              <div className='notes-grid' style={{display:'grid',gap:12}}>
                 {notes.map((n) => {
                   const riskScore = n.vergi_risk_skoru as number | undefined
                   const sessionType = (n.sessions as Record<string,unknown>)?.session_type as string || n.görüşme_turu as string || 'Görüşme'
@@ -128,10 +128,18 @@ export default function MaliDashboard() {
       </div>
     <style dangerouslySetInnerHTML={{__html:`
   @media (min-width:768px) {
-    .stats-grid { grid-template-columns: repeat(4,1fr) !important; }
-    .main-grid  { grid-template-columns: 2fr 1fr !important; }
-    .notes-grid { grid-template-columns: 1fr 1fr !important; }
-    .main-pad   { padding: 24px !important; }
+    
+    /* Mobile defaults - already set via class, no grid-template needed */
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .main-grid  { grid-template-columns: 1fr; }
+    .notes-grid { grid-template-columns: 1fr; }
+    .main-pad   { padding: 16px 12px; }
+    @media (min-width:769px) {
+      .stats-grid { grid-template-columns: repeat(4,1fr); }
+      .main-grid  { grid-template-columns: 2fr 1fr; gap: 24px; }
+      .notes-grid { grid-template-columns: 1fr 1fr; }
+      .main-pad   { padding: 24px; }
+    }
   }
 `}} />
     </div>

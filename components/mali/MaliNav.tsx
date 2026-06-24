@@ -52,7 +52,7 @@ export default function MaliNav() {
         </span>
 
         {/* Desktop: all buttons */}
-        <div className="d-nav" style={{display:'flex',gap:5,alignItems:'center',flexWrap:'nowrap',flex:1,justifyContent:'flex-end'}}>
+        <div className="d-nav" style={{gap:5,alignItems:'center',flexWrap:'nowrap',flex:1,justifyContent:'flex-end'}}>
           {ITEMS.map(item => (
             <button key={item.route} onClick={()=>go(item.route)}
               style={{...btnBase, background:item.bg,
@@ -69,7 +69,7 @@ export default function MaliNav() {
         </div>
 
         {/* Mobile: 3 inline buttons + hamburger */}
-        <div className="m-nav" style={{display:'none',alignItems:'center',gap:6,flex:1,justifyContent:'flex-end'}}>
+        <div className="m-nav" style={{alignItems:'center',gap:6,flex:1,justifyContent:'flex-end'}}>
           {MOBILE_INLINE.map(item => (
             <button key={item.route} onClick={()=>go(item.route)}
               style={{...btnBase, background:item.bg,
@@ -150,12 +150,11 @@ export default function MaliNav() {
       )}
 
       <style dangerouslySetInnerHTML={{__html:`
-        @media (max-width:768px) {
-          .d-nav { display:none !important; }
-          .m-nav { display:flex !important; }
-        }
-        @media (min-width:769px) {
-          .m-nav { display:none !important; }
+        .d-nav { display: none; }
+        .m-nav { display: flex; align-items: center; }
+        @media (min-width: 769px) {
+          .d-nav { display: flex; }
+          .m-nav { display: none; }
         }
       `}} />
     </>
