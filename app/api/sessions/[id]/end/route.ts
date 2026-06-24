@@ -48,14 +48,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         { company_name: context?.company_name, vergi_no: context?.vergi_no, faaliyet_alani: context?.faaliyet_alani, tax_period: '2026' }
       )
       const { data: note, error: noteError } = await getSupabase().from('notes').insert({
-        session_id: sessionId, doctor_id: user.id, note_type: 'mali_müşavirlik',
+        session_id: sessionId, doctor_id: user.id, note_type: 'mali_musavirlik',
         content_subjektif: JSON.stringify(maliNote.tespitler),
         content_degerlendirme: JSON.stringify(maliNote.yasal_dayanak),
         content_plan: JSON.stringify(maliNote.tavsiyeler),
         kritik_bulgular: maliNote.onemli_uyarilar,
         vergi_risk_skoru: maliNote.vergi_risk_skoru,
         görüşme_turu: maliNote.görüşme_turu,
-        profession_type: 'mali_müşavirlik',
+        profession_type: 'mali_musavirlik',
         raw_note: JSON.stringify(maliNote),
         ai_model: 'claude-sonnet-4', ai_confidence: maliNote.ai_confidence,
       }).select().single()

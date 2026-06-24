@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 const PROFESSIONS = [
   { id: 'doktor', label: 'Doktor/Hekim', desc: 'Medical Notes', emoji: '🏥' },
-  { id: 'mali_müşavirlik', label: 'Mali Müşavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
+  { id: 'mali_musavirlik', label: 'Mali Müşavir/SMMM/YMM', desc: 'Vergi Notes', emoji: '💰' },
   { id: 'avukat', label: 'Avukat', desc: 'Legal Notes', emoji: '⚖️' },
   { id: 'psikolog', label: 'Psikolog/Terapist', desc: 'Seans Notes', emoji: '🧠' }
 ];
@@ -39,7 +39,7 @@ export default function Onboarding() {
     if (step === 3) {
       const professionSpecificData = {
         doktor: { title, specialty, hospital },
-        mali_müşavirlik: { unvan, uzmanlik_alani: uzmanlikChips.join(','), büro_adi, sehir },
+        mali_musavirlik: { unvan, uzmanlik_alani: uzmanlikChips.join(','), büro_adi, sehir },
         avukat: { baro: '', uzmanlik: '', büro_adi }, // Add baro input
         psikolog: { uzmanlik: '', klinik_adi: '' } // Add klinik_adi input
       };
@@ -58,7 +58,7 @@ export default function Onboarding() {
       })
       .then(res => res.json())
       .then(() => {
-        if (professionType === 'mali_müşavirlik') {
+        if (professionType === 'mali_musavirlik') {
           router.replace('/dashboard/mali');
         } else {
           router.replace('/dashboard');
@@ -112,7 +112,7 @@ export default function Onboarding() {
               <input type="text" placeholder="Hospital" value={hospital} onChange={(e) => setHospital(e.target.value)} />
             </>
           )}
-          {professionType === 'mali_müşavirlik' && (
+          {professionType === 'mali_musavirlik' && (
             <>
               <select value={unvan} onChange={(e) => setUnvan(e.target.value)}>
                 <option value="">Unvan</option>

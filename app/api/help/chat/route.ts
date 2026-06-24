@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       case 'doktor':
         systemPrompt = 'Sen Notya AI yardim asistanisin. Kullanicilar Türkçe konusuyor. Notya AI bir Türk AI saglik platformudur. Prof. Ayse ile sesli konusma, hasta notu kaydetme, SOAP formati, dashboard özellikleri hakkinda yardim et. Kısa ve net cevaplar ver. Maksimum 3 cumle.'
         break
-      case 'mali_müşavirlik':
+      case 'mali_musavirlik':
         systemPrompt = 'Sen Notya AI yardim asistanisin. Kullanicilar Türkçe konusuyor. Notya AI bir Türk AI mali müşavirlik platformudur. Uzm. Derya ile konusma, beyan takvimi, mevzuat arama, müşteri yönetimi hakkinda yardim et. Kısa ve net cevaplar ver. Maksimum 3 cumle.'
         break
       case 'avukat':

@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     if (action === 'list') {
       const { data } = await supabase
         .from('mali_portal_tokens')
-        .select('*, mali_müşteriler(şirket_adi)')
+        .select('*, mali_muşteriler(şirket_adi)')
         .eq('musavir_id', user.id)
         .order('created_at', { ascending: false })
       return NextResponse.json({ success: true, data })

@@ -37,7 +37,7 @@ export default function LoginPage() {
       })
       const profileData = await profileResp.json()
       const profType = profileData.data?.profession_type
-      if (profType === "mali_müşavirlik") { router.replace("/dashboard/mali"); return }
+      if (profType === "mali_musavirlik") { router.replace("/dashboard/mali"); return }
       if (profType === "avukat") { router.replace("/dashboard/avukat"); return }
       if (!profileData.data?.onboarding_completed && !profType) { router.push("/onboarding"); return }
       router.push("/dashboard")
@@ -68,7 +68,7 @@ export default function LoginPage() {
             <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="12345678" style={{width:"100%",background:"#F1F5F9",border:"1.5px solid #E2E8F0",borderRadius:"10px",padding:"12px 14px",fontSize:"14px",outline:"none",boxSizing:"border-box"}} />
           </div>
           {error && <div style={{background:"#FEF2F2",border:"1px solid #FCA5A5",borderRadius:"8px",padding:"10px 12px",fontSize:"13px",color:"#DC2626"}}>{error}</div>}
-          <button onClick={handleAuth} disabled={loading || !email || !password}
+          <button type="submit" onClick={handleAuth} disabled={loading || !email || !password}
             style={{padding:"13px",background:loading||!email||!password?"#94A3B8":"#2563EB",border:"none",borderRadius:"10px",color:"#fff",fontSize:"14px",fontWeight:"600",cursor:loading||!email||!password?"not-allowed":"pointer",marginTop:"4px"}}>
             {loading ? "Yükleniyor..." : mode === "login" ? "Giriş Yap" : "Hesap Oluştur"}
           </button>
@@ -81,9 +81,9 @@ export default function LoginPage() {
         </div>
         <div style={{marginTop:"20px",padding:"12px",background:"#F8FAFC",borderRadius:"10px",fontSize:"12px",color:"#64748B",textAlign:"center"}}>
           Profesyonel giriş:
-          {" "}<a href="/giris">Mali Müşavir</a>
-          {" | "}<a href="/giris">Avukat</a>
-          {" | "}<a href="/giris">Doktor</a>
+          {" "}<a href="/giris/mali">Mali Müşavir</a>
+          {" | "}<a href="/giris/avukat">Avukat</a>
+          {" | "}<a href="/giris/doktor">Doktor</a>
         </div>
       </div>
     </div>
