@@ -1,6 +1,6 @@
 "use client"
 export const dynamic = "force-dynamic"
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import MaliNav from '@/components/mali/MaliNav'
 
@@ -26,13 +26,27 @@ const BELGE_TIPLERI = [
 
 export default function IngestionPage() {
   const router = useRouter()
+  useEffect(() => {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||'') : null
+    const tok = raw ? (() => { try { return JSON.parse(raw).access_token } catch { return null } })() : null
+    if (!tok) return
+    import('@supabase/supabase-js').then(({ createClient }) => {
+      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+      sb.auth.getUser(tok).then(({ data:{ user } }) => {
+        if (!user) return
+        sb.from('mali_musteriler').select('id,sirket_adi').eq('musavir_id',user.id).then(({ data }) => setMusteriler(data||[]))
+      })
+    })
+  }, [])
   const [selectedTip, setSelectedTip] = useState('')
   const [selectedBelge, setSelectedBelge] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [notes, setNotes] = useState('')
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState<{ok:boolean;message:string}|null>(null)
-  const [donem, setDönem] = useState(new Date().toISOString().slice(0,7))
+  const [donem, setDönem]     = useState(new Date().toISOString().slice(0,7))
+  const [musteriId, setMusteriId] = useState('')
+  const [musteriler, setMusteriler] = useState<{id:string,sirket_adi:string}[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -59,6 +73,7 @@ export default function IngestionPage() {
     form.append('isletmeTipi', selectedTip)
     form.append('donem', donem)
     form.append('notlar', notes)
+    if (musteriId) form.append('musteriId', musteriId)
     try {
       const res = await fetch('/api/mali/ingestion', {
         method:'POST', headers:{'Authorization':'Bearer '+token}, body:form
