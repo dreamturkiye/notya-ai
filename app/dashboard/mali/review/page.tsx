@@ -89,7 +89,7 @@ export default function ReviewPage() {
 
         {!loading && items.length === 0 && (
           <div style={{background:"white",borderRadius:12,padding:"40px 20px",textAlign:"center",boxShadow:"0 1px 3px rgba(0,0,0,.08)"}}>
-            <div style={{fontSize:32,marginBottom:12}}>OK</div>
+            <div style={{fontSize:32,marginBottom:12}}>?</div>
             <div style={{fontSize:16,fontWeight:600,color:"#16A34A",marginBottom:8}}>Inceleme bekleyen belge yok</div>
             <p style={{fontSize:13,color:"#94A3B8"}}>Tum belgeler onaylandi veya henuz belge yuklenmedi.</p>
             <button onClick={()=>router.push("/dashboard/mali/belgeler")}

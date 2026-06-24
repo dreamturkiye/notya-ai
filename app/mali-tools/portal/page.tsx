@@ -117,7 +117,7 @@ export default function PortalPage() {
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 16, fontSize: 12, opacity: 0.75 }}>
             <span>HMAC-SHA256 imzali</span>
-            <span>Rate limited</span>
+            <span>Istek limiti asimdi - lutfen bekleyin</span>
             <span>DB'de kayıtlı</span>
             <span>İptal edilebilir</span>
           </div>
