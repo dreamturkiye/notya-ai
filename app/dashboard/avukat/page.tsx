@@ -121,6 +121,13 @@ export default function AvukatDashboard() {
                 </div>
               ))}
             </div>
+            <div style={{background:'linear-gradient(135deg,#1E3A5F 0%,#7C3AED 100%)',borderRadius:12,padding:'16px 20px',marginBottom:20,display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer'}} onClick={() => router.push('/asistan/avukat')}>
+              <div>
+                <div style={{fontSize:15,fontWeight:700,color:'#fff'}}>Sesli Hukuk Asistani</div>
+                <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginTop:2}}>9 uzman avukat ile 2-yonlu sesli gorusme</div>
+              </div>
+              <div style={{fontSize:36}}>🎙️</div>
+            </div>
             <div style={{fontWeight:700,fontSize:16,marginBottom:14,color:'#1E293B'}}>Uzman Asistanlariniz</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:24}}>
               {PERSONAS.map(p => (
