@@ -6,9 +6,9 @@ const getSB = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.
 
 async function replyWA(to: string, body: string) {
   const sid = process.env.TWILIO_ACCOUNT_SID!
-  const tok = process.env.TWILIO_AUTH_TOKEN!
+  const tok = process.env.TWILIO_API_SECRET!
   const frm = process.env.TWILIO_WHATSAPP_FROM!
-  const creds = Buffer.from(sid + ":" + tok).toString("base64")
+  const creds = Buffer.from(process.env.TWILIO_API_KEY! + ":" + tok).toString("base64")
   await fetch("https://api.twilio.com/2010-04-01/Accounts/" + sid + "/Messages.json", {
     method: "POST",
     headers: { Authorization: "Basic " + creds, "Content-Type": "application/x-www-form-urlencoded" },
@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.TWILIO_AUTH_TOKEN) return new NextResponse("Forbidden", { status: 403 })
+    if (!process.env.TWILIO_API_SECRET) return new NextResponse("Forbidden", { status: 403 })
     const form     = await req.formData()
     const from_num = (form.get("From") as string || "").replace("whatsapp:", "")
     const body     = (form.get("Body") as string || "").trim()
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
       if (!mediaUrl) continue
       try {
         const sid   = process.env.TWILIO_ACCOUNT_SID!
-        const tok   = process.env.TWILIO_AUTH_TOKEN!
-        const creds = Buffer.from(sid + ":" + tok).toString("base64")
+        const tok   = process.env.TWILIO_API_SECRET!
+        const creds = Buffer.from(process.env.TWILIO_API_KEY! + ":" + tok).toString("base64")
         const mres  = await fetch(mediaUrl, { headers: { Authorization: "Basic " + creds } })
         const bytes = await mres.arrayBuffer()
         const b64   = Buffer.from(bytes).toString("base64")
