@@ -41,7 +41,14 @@ export async function GET(req: NextRequest) {
     else if (body.token) wssUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&conversation_signature=${body.token}`
     else return NextResponse.json({ error: "Unexpected ElevenLabs response" }, { status: 502 })
 
-    return NextResponse.json({ signed_url: wssUrl, agent_id: AGENT_ID, musteriContext })
+    // Fetch recent ingested documents for context
+    const { data: belgeler } = await sb.from('mali_belgeler')
+      .select('belge_turu,donem,ozet,toplam_tutar,inceleme_bekliyor,created_at')
+      .eq('musavir_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    const incelemeCount = belgeler?.filter(b => b.inceleme_bekliyor)?.length || 0
+    return NextResponse.json({ signed_url: wssUrl, agent_id: AGENT_ID, musteriContext, belgelerContext: belgeler || [], incelemeCount })
   } catch (e: unknown) {
     return NextResponse.json({ error: String(e) }, { status: 500 })
   }
