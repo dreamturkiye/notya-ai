@@ -73,7 +73,7 @@ export default function MusteriYonetimi() {
             <div style={{ fontSize:22, fontWeight:700, color:'#1E293B' }}>Musteri Yonetimi</div>
             <div style={{ fontSize:13, color:'#64748B' }}>{musteriler.length} musteri kayitli</div>
           </div>
-          <button onClick={() => { resetForm(); setShowForm(true) }} style={{ background:'#10B981', border:'none', color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:600, fontSize:14 }}>+ Yeni Musteri</button>
+          <button onClick={() => router.push('/dashboard/mali/musteri-ekle')} style={{ background:'#10B981', border:'none', color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:600, fontSize:14 }}>+ Yeni Musteri</button>
         </div>
 
         {showForm && (
