@@ -11,8 +11,8 @@ const ITEMS = [
   { label:'Müşteriler', short:'MÜ',  route:'/dashboard/mali/musteriler',   bg:'#0F766E', color:'white' },
   { label:'Görüşme',    short:'GR',  route:'/session/mali',                bg:'#2563EB', color:'white' },
   { label:'Belge Yükle',short:'BY',  route:'/dashboard/mali/ingestion',    bg:'#DC2626', color:'white' },
-  { label:'Arsiv',     short:'AR',  route:'/dashboard/mali/belgeler',      bg:'#475569', color:'white' },
-  { label:'Review',    short:'RV',  route:'/dashboard/mali/review',       bg:'#D97706', color:'white' },
+  { label:'Arşiv',     short:'AR',  route:'/dashboard/mali/belgeler',      bg:'#475569', color:'white' },
+  { label:'İnceleme', short:'İK',  route:'/dashboard/mali/review',       bg:'#D97706', color:'white' },
   { label:'Mutabakat',  short:'MT',  route:'/dashboard/mali/mutabakat',    bg:'#7C3AED', color:'white' },
 ]
 

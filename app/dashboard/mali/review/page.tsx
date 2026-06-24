@@ -81,7 +81,7 @@ export default function ReviewPage() {
       <MaliNav />
       <div style={{maxWidth:900,margin:"0 auto",padding:"16px 12px"}}>
         <div style={{marginBottom:20}}>
-          <h1 style={{fontSize:20,fontWeight:700,color:"#0A1628",margin:0}}>Inceleme Kuyrugu</h1>
+          <h1 style={{fontSize:20,fontWeight:700,color:"#0A1628",margin:0}}>İnceleme Kuyruğu</h1>
           <p style={{fontSize:13,color:"#64748B",margin:"4px 0 0"}}>
             {loading ? "Yukleniyor..." : `${items.length} belge SMMM onayı bekliyor`}
           </p>
@@ -90,7 +90,7 @@ export default function ReviewPage() {
         {!loading && items.length === 0 && (
           <div style={{background:"white",borderRadius:12,padding:"40px 20px",textAlign:"center",boxShadow:"0 1px 3px rgba(0,0,0,.08)"}}>
             <div style={{fontSize:32,marginBottom:12}}>?</div>
-            <div style={{fontSize:16,fontWeight:600,color:"#16A34A",marginBottom:8}}>Inceleme bekleyen belge yok</div>
+            <div style={{fontSize:16,fontWeight:600,color:"#16A34A",marginBottom:8}}>İnceleme bekleyen belge yok</div>
             <p style={{fontSize:13,color:"#94A3B8"}}>Tum belgeler onaylandi veya henuz belge yuklenmedi.</p>
             <button onClick={()=>router.push("/dashboard/mali/belgeler")}
               style={{background:"#2563EB",border:"none",color:"white",padding:"10px 24px",borderRadius:8,cursor:"pointer",fontWeight:600,marginTop:16}}>
