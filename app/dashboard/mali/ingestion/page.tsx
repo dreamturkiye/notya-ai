@@ -43,8 +43,11 @@ export default function IngestionPage() {
     if (!files.length) { alert('Lütfen en az bir belge seçin'); return }
     if (!selectedBelge) { alert('Belge türünü seçin'); return }
     setUploading(true)
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||'') : null
-    const token = raw ? JSON.parse(raw).access_token : null
+    let token = null
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||'') : null
+      token = raw ? JSON.parse(raw).access_token : null
+    } catch { token = null }
     if (!token) { router.push('/giris/mali'); return }
     const form = new FormData()
     files.forEach(f => form.append('files', f))
@@ -59,7 +62,7 @@ export default function IngestionPage() {
       const data = await res.json()
       setResult({ ok: data.success, message: data.message || (data.success ? 'Belgeler başarıyla işlendi. Derya inceliyor.' : data.error || 'Hata oluştu') })
       if (data.success) { setFiles([]); setNotes(''); setTimeout(()=>router.push('/dashboard/mali/belgeler'), 2000) }
-    } catch { setResult({ ok:false, message:'Bağlantı hatası' }) }
+    } catch(err: unknown) { setResult({ ok:false, message: err instanceof Error ? err.message : 'Sunucuya baglanilamadi. Tekrar deneyin.' }) }
     setUploading(false)
   }
 
