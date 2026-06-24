@@ -10,6 +10,8 @@ const TOOLS = [
   { letter: 'GİB', title: 'GİB e-Beyan', desc: 'KDV hesaplama, iade tespiti ve GİB e-beyan sistemi entegrasyon rehberi', color: '#065F46', bg: '#d1fae5', route: '/mali-tools/ebeyan' },
   { letter: 'eD', title: 'e-Devlet Rehberi', desc: 'Vergi borcu, SGK prim, KOSGEB belgesi ve ticaret sicil sorgulama adım adım', color: '#1e40af', bg: '#eff6ff', route: '/mali-tools/edevlet' },
   { letter: 'MP', title: 'Müşteri Portalı', desc: 'Müşterilerinize özel Derya Yılmaz - 7/24 soru cevap, sizi aramadan', color: '#4C1D95', bg: '#ede9fe', route: '/mali-tools/portal' },
+  { route: '/mali-tools/enflasyon', letter: 'EF', color: '#8B5CF6', bg: '#F5F3FF', title: 'Enflasyon Muhasebesi', desc: 'VUK 555 TUFE bazli enflasyon duzeltme hesabi. Buyuksehir esnafi icin zorunlu.' },
+  { route: '/mali-tools/vergi-cezasi', letter: 'VC', color: '#DC2626', bg: '#FEF2F2', title: 'Vergi Cezasi Hesaplayici', desc: 'Gecikme faizi, vergi ziyai cezasi, usulsuzluk. 2026 oranlari.' },
 ]
 
 export default function MaliToolsPage() {
