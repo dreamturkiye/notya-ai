@@ -27,11 +27,11 @@ export default function Dashboard() {
   const [user, setUser] = useState<{ email: string } | null>(null)
   const [greeting, setGreeting] = useState("")
   const [activeNote, setActiveNote] = useState<Note | null>(null)
-  // supabase initialized inside hooks only
+  const getSB = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { router.push("/giriş"); return }
+    const supabase = getSB(); supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.push("/giris"); return }
       setUser({ email: user.email! })
 
       const session = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })()
@@ -63,7 +63,7 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  async function signOut() { await (async()=>{ localStorage.clear(); })(); router.push("/giriş") }
+  async function signOut() { await (async()=>{ localStorage.clear(); })(); router.push("/giris")}
 
   const EMOJI: Record<string, string> = { pediatri:"🧒", kardiyoloji:"❤️", noroloji:"🧠", psikiyatri:"💭", dahiliye:"🩺", ortopedi:"🦴", kadin_hastaliklari:"👶", genel:"👨‍⚕️", acil:"🚨" }
 

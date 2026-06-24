@@ -45,7 +45,7 @@ export default function AsistanPage() {
 
   useEffect(() => {
     ;(async () => { const _r = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); const session = _r ? JSON.parse(_r) : null;
-      if (!session) { router.push("/giriş"); return }
+      if (!session) { router.push("/giris"); return }
       setAuthToken(session.access_token)
 
       const resp = await fetch("/api/users/me", {
@@ -80,7 +80,7 @@ export default function AsistanPage() {
   }
 
   async function startConversation() {
-    if (!authToken) { router.push("/giriş"); return }
+    if (!authToken) { router.push("/giris"); return }
     await endConversation()
     setStatus("connecting")
     setErrorMsg("")

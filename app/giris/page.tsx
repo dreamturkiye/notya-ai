@@ -81,9 +81,9 @@ export default function LoginPage() {
         </div>
         <div style={{marginTop:"20px",padding:"12px",background:"#F8FAFC",borderRadius:"10px",fontSize:"12px",color:"#64748B",textAlign:"center"}}>
           Profesyonel giriş:
-          {" "}<a href="/giriş/mali" style={{color:"#10B981"}}>Mali Müşavir</a>
-          {" | "}<a href="/giriş/avukat" style={{color:"#7C3AED"}}>Avukat</a>
-          {" | "}<a href="/giriş/doktor" style={{color:"#2563EB"}}>Doktor</a>
+          {" "}<a href="/giris">Mali Müşavir</a>
+          {" | "}<a href="/giris">Avukat</a>
+          {" | "}<a href="/giris">Doktor</a>
         </div>
       </div>
     </div>

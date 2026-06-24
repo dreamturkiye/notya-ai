@@ -30,7 +30,7 @@ const HIZMET_TYPES = [
   { value: 'genel', label: 'Genel' }
 ];
 
-// supabase initialized inside hooks only;
+const getSB = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 const SessionPage: React.FC = () => {
   const [step, setStep] = useState<'setup' | 'recording' | 'processing' | 'done'>('setup');

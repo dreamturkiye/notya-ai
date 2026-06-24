@@ -50,7 +50,7 @@ export default function NewSession() {
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
-  // supabase initialized inside hooks only
+  const getSB = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   // Keep ref in sync with state
   useEffect(() => { transcriptRef.current = transcript }, [transcript])
@@ -110,7 +110,7 @@ export default function NewSession() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push("/giriş"); return }
+      if (!user) { router.push("/giris"); return }
 
       const { data: session, error: se } = await supabase.from("sessions").insert({
         doctor_id: user.id, specialty, session_type: sessionType,

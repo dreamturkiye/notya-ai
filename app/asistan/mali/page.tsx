@@ -16,16 +16,15 @@ export default function MaliAsistanPage() {
   const ref = useRef<AC|null>(null)
 
   useEffect(() => {
-    sb.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.push("/giriş/mali")
-    })
+    const _r = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||'') : null
+    if (!_r) { router.push('/giris/mali'); return }
   }, [router])
 
   async function start() {
     try {
       setStatus("connecting"); setErr("")
       const { data: { session } } = await sb.auth.getSession()
-      if (!session) { router.push("/giriş/mali"); return }
+      if (!session) { router.push("/giris/mali"); return }
       const r = await fetch("/api/asistan/mali-signed-url", { headers: { Authorization: "Bearer " + session.access_token } })
       if (!r.ok) throw new Error("Bağlantı hatası")
       const { signed_url } = await r.json()
