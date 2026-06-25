@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const AGENT_MAP: Record<string, string> = {
   pediatri: process.env.ELEVENLABS_AGENT_PEDIATRI || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
-  kardiyoloji: process.env.ELEVENLABS_AGENT_KARDIYOLOJI || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
+  kardiyoloji: process.env.ELEVENLABS_AGENT_KARDIYOLOJI || 'agent_6501ktc87nmyeca88wskfvr8dfxh', // Dr. Mehmet - Abdulkadir K male voice,
   noroloji: process.env.ELEVENLABS_AGENT_NOROLOJI || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
   dahiliye: process.env.ELEVENLABS_AGENT_DAHILIYE || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
   psikiyatri: process.env.ELEVENLABS_AGENT_PSIKIYATRI || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',

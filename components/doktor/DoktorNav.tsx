@@ -6,6 +6,7 @@ interface NavItem {
   label: string;
   route: string;
   color: string;
+  hideOnMobile?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -87,7 +88,7 @@ export default function DoktorNav() {
 
         {isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {navItems.slice(0, 3).map((item, idx) => (
+            {navItems.filter(i => !(i.hideOnMobile && isMobile)).slice(0, 3).map((item, idx) => (
               <button
                 key={idx}
                 onClick={() => handleNav(item.route)}

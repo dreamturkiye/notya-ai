@@ -20,7 +20,12 @@ export default function Giris() {
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (ae || !data.session) { setError(ae?.message || 'Giriş başarısız'); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
-    router.replace('/dashboard/doktor')
+    const meta = data.user?.user_metadata || {}
+    if (!meta.onboarding_completed) {
+      router.replace('/onboarding')
+    } else {
+      router.replace('/dashboard/doktor')
+    }
   }
 
   const inp: React.CSSProperties = { width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px 14px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }
@@ -49,6 +54,8 @@ export default function Giris() {
         </form>
         <div style={{textAlign:'center',marginTop:'20px',fontSize:'12px',color:'#64748b'}}>
           <a href='/giris/avukat' style={{color:'#7C3AED'}}>Avukat</a>
+          <span style={{color:'#64748b',margin:'0 8px'}}>•</span>
+          <a href='/kayit' style={{color:'#0F9B8E',fontWeight:600}}>15 Gun Ucretsiz Baslat →</a>
         </div>
       </div>
     </div>

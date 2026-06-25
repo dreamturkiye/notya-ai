@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { profession_type, unvan, büro_adi, uzmanlik_alani, sehir, full_name,
+    const { profession_type, unvan, büro_adi, uzmanlik_alani, sehir, full_name, plan, trial_start,
             gender, addressing_preference, title, specialty, hospital, baro, uzmanlik, yil,
             firstName, lastName, addressingPreference } = body
 
@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
     if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
     if (specialty && profession_type === 'doktor') updatePayload.specialty = specialty
     if (uzmanlik && profession_type === 'avukat') updatePayload.specialty = uzmanlik
+    if (plan) updatePayload.plan = plan
+    if (trial_start) updatePayload.trial_start = trial_start
 
     // Store extra fields in auth metadata (no DB column needed)
     if (gender || addressing_preference || addressingPreference || title || baro || yil) {
