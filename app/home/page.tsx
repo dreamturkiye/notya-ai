@@ -2,116 +2,81 @@
 
 import React from 'react';
 
-const colors = {
-  primary: '#00A89D',
-  primaryDark: '#008F85',
-  dark: '#0A1628',
-  light: '#FFFFFF',
-  gray: '#F9FAFB',
-  text: '#1F2937',
-  textLight: '#6B7280',
-  border: '#E5E7EB',
-};
-
-export default function HomePage() {
-  const scrollTo = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 60;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition - bodyRect - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-    }
-  };
+const HomePage: React.FC = () => {
+  const fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>
+    <div style={{ fontFamily, margin: 0, padding: 0, background: '#fff', color: '#111' }}>
       {/* NAV */}
       <nav style={{
-        position: 'sticky', top: 0, zIndex: 100, height: 52,
-        background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center'
+        position: 'sticky', top: 0, zIndex: 100, height: '52px',
+        background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center'
       }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>N</span>
-            </div>
-            <span style={{ fontSize: 17, fontWeight: 600, letterSpacing: '-0.3px' }}>Notya AI</span>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '32px', height: '32px', background: '#0F766E', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '18px' }}>N</div>
+            <span style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.3px' }}>Notya AI</span>
           </div>
 
-          <div style={{ display: 'none', gap: 32, fontSize: 14, color: '#374151' }} className="desktop-nav">
-            <a onClick={() => scrollTo('ozellikler')} style={{ cursor: 'pointer' }}>Özellikler</a>
-            <a onClick={() => scrollTo('uzmanlar')} style={{ cursor: 'pointer' }}>Uzmanlar</a>
-            <a onClick={() => scrollTo('fiyatlar')} style={{ cursor: 'pointer' }}>Fiyatlar</a>
+          <div style={{ display: 'flex', gap: '32px', fontSize: '14px', fontWeight: 500 }}>
+            <a href="#ozellikler" style={{ color: '#111', textDecoration: 'none' }}>Özellikler</a>
+            <a href="#asistanlar" style={{ color: '#111', textDecoration: 'none' }}>Asistanlar</a>
+            <a href="#entegrasyonlar" style={{ color: '#111', textDecoration: 'none' }}>Entegrasyonlar</a>
+            <a href="#fiyatlar" style={{ color: '#111', textDecoration: 'none' }}>Fiyatlar</a>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
-            <button style={{ padding: '8px 18px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer' }}>Giriş</button>
-            <button onClick={() => scrollTo('fiyatlar')} style={{
-              padding: '8px 18px', background: colors.primary, color: 'white', border: 'none',
-              borderRadius: 6, fontWeight: 500, cursor: 'pointer'
-            }}>Ücretsiz Deneyin</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button style={{ padding: '8px 18px', fontSize: '14px', border: '1px solid #111', borderRadius: '8px', background: 'transparent', cursor: 'pointer' }}>Giriş</button>
+            <button style={{ padding: '8px 18px', fontSize: '14px', background: '#0F766E', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Ücretsiz Deneyin</button>
           </div>
         </div>
       </nav>
 
       {/* HERO */}
-      <section style={{ background: colors.dark, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '80px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
-          <div>
-            <div style={{
-              display: 'inline-block', background: 'rgba(0,168,157,0.15)', color: colors.primary,
-              padding: '4px 14px', borderRadius: 20, fontSize: 13, marginBottom: 24
-            }}>
-              Türkiye’nin İlk AI Tıp Uzmanı
-            </div>
-            <h1 style={{ fontSize: 'clamp(42px, 6vw, 58px)', lineHeight: 1.05, color: 'white', fontWeight: 400, margin: 0 }}>
-              Artık yalnız değilsin.<br />
-              <span style={{ color: colors.primary, fontWeight: 600 }}>Asistanınız burada.</span>
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 18, maxWidth: 420, margin: '28px 0 40px' }}>
-              Her seans için hazır, her zaman öğrenen.
-            </p>
-            <div style={{ display: 'flex', gap: 14 }}>
-              <button onClick={() => scrollTo('fiyatlar')} style={{
-                background: colors.primary, color: 'white', padding: '14px 32px', borderRadius: 8,
-                border: 'none', fontSize: 16, fontWeight: 500, cursor: 'pointer'
-              }}>Başla</button>
-              <button onClick={() => scrollTo('demo')} style={{
-                background: 'transparent', color: 'white', padding: '14px 32px', borderRadius: 8,
-                border: '1px solid rgba(255,255,255,0.3)', fontSize: 16, cursor: 'pointer'
-              }}>Canlı Demo</button>
-            </div>
-            <div style={{ marginTop: 60, display: 'flex', gap: 28, flexWrap: 'wrap', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-              <span>Nelson 22e</span><span>Braunwald 12e</span><span>Harrison 22e</span><span>KVKK</span><span>AES-256</span>
-            </div>
-          </div>
+      <section style={{ background: '#060C18', minHeight: '100vh', color: '#fff', paddingTop: '80px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '60px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '40px', width: '100%' }}>
+              {/* Left */}
+              <div style={{ flex: 1, maxWidth: '560px' }}>
+                <div style={{ display: 'inline-block', background: 'rgba(15,118,110,0.15)', color: '#5EEAD4', padding: '4px 14px', borderRadius: '999px', fontSize: '13px', marginBottom: '24px' }}>
+                  Türkiye'nin ilk klinik AI'sı
+                </div>
+                <h1 style={{ fontSize: 'clamp(42px, 6vw, 64px)', lineHeight: 1.05, fontWeight: 700, margin: 0, letterSpacing: '-2.5px' }}>
+                  Muayenehanenizin<br />yeni asistanı.
+                </h1>
+                <p style={{ fontSize: '17px', maxWidth: '420px', marginTop: '20px', lineHeight: 1.45, color: 'rgba(255,255,255,0.75)' }}>
+                  Hastalarınızı yönetin, raporları alın ve sesli konuşun. Hepsi tek yerde.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+                  <button style={{ padding: '14px 28px', background: '#0F766E', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>Hemen Başla</button>
+                  <button style={{ padding: '14px 28px', background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '10px', fontSize: '15px', cursor: 'pointer' }}>Canlı Demo</button>
+                </div>
+                <div style={{ marginTop: '48px', display: 'flex', flexWrap: 'wrap', gap: '18px', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
+                  <div>Nelson 22e</div><div>Braunwald</div><div>Harrison</div><div>KVKK</div><div>SGK Medula</div>
+                </div>
+              </div>
 
-          {/* Chat Mockup */}
-          <div style={{ display: 'none' }} className="desktop-chat">
-            <div style={{ background: '#111827', borderRadius: 20, padding: 20, boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 36, height: 36, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 600 }}>AY</div>
-                <div>
-                  <div style={{ color: 'white', fontWeight: 500 }}>Prof. Dr. Ayşe Kaya</div>
-                  <div style={{ color: '#64748b', fontSize: 12 }}>Pediatri • Çevrimiçi</div>
+              {/* Right - Chat mockup */}
+              <div style={{ flex: 1, display: 'block', maxWidth: '380px' }}>
+                <div style={{ background: '#0F172A', borderRadius: '20px', padding: '20px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                    <img src="/doctors/dr_ayse.jpg" alt="Dr Ayşe Kaya" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                    <div>
+                      <div style={{ fontWeight: 600 }}>Prof. Dr. Ayşe Kaya</div>
+                      <div style={{ fontSize: '12px', color: '#5EEAD4' }}>Pediatri • Çevrimiçi</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.08)', padding: '10px 14px', borderRadius: '14px', fontSize: '13px', alignSelf: 'flex-start', maxWidth: '78%' }}>
+                      4 yaşındaki hastanın ateş takibi için yeni reçete önerisi?
+                    </div>
+                    <div style={{ background: '#0F766E', padding: '10px 14px', borderRadius: '14px', fontSize: '13px', alignSelf: 'flex-end', maxWidth: '78%' }}>
+                      Nelson 22e'ye göre dozaj 12 mg/kg. Reçeteyi hazırlayayım.
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div style={{ background: '#1f2937', borderRadius: 16, padding: 14, marginBottom: 10, color: '#e5e7eb', fontSize: 14 }}>
-                4 yaşındaki hastada 39.2° ateş ve öksürük var. Öneriniz?
-              </div>
-              <div style={{ background: colors.primary, borderRadius: 16, padding: 14, color: 'white', fontSize: 14 }}>
-                Nelson 22e ve Harriet Lane 23e’ye göre ampirik tedavi önerisi...
-              </div>
-              <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ display: 'flex', gap: 3 }}>
-                  <div style={{ width: 4, height: 4, background: '#64748b', borderRadius: '50%', animation: 'typing 1.2s infinite' }}></div>
-                  <div style={{ width: 4, height: 4, background: '#64748b', borderRadius: '50%', animation: 'typing 1.2s infinite 0.2s' }}></div>
-                  <div style={{ width: 4, height: 4, background: '#64748b', borderRadius: '50%', animation: 'typing 1.2s infinite 0.4s' }}></div>
-                </div>
-                <span style={{ color: '#64748b', fontSize: 12 }}>Yazıyor...</span>
               </div>
             </div>
           </div>
@@ -119,155 +84,199 @@ export default function HomePage() {
       </section>
 
       {/* STAT BAR */}
-      <div style={{ height: 80, background: 'white', display: 'flex', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 24px', display: 'flex', justifyContent: 'center', gap: 80, fontSize: 15 }}>
-          <div style={{ textAlign: 'center' }}><span style={{ fontWeight: 600 }}>Günlük 2+ hasta daha</span></div>
-          <div style={{ width: 1, height: 18, background: '#e5e7eb' }}></div>
-          <div style={{ textAlign: 'center' }}><span style={{ fontWeight: 600 }}>Seans başına 12 dakika tasarruf</span></div>
-          <div style={{ width: 1, height: 18, background: '#e5e7eb' }}></div>
-          <div style={{ textAlign: 'center' }}><span style={{ fontWeight: 600 }}>%94 doktor memnuniyeti</span></div>
+      <div style={{ height: '80px', background: '#fff', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 24px', display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
+          <div>Günlük <strong>2+ hasta</strong> daha</div>
+          <div style={{ borderLeft: '1px solid #ddd', paddingLeft: '24px' }}>12 dakika <strong>tasarruf/seans</strong></div>
+          <div style={{ borderLeft: '1px solid #ddd', paddingLeft: '24px' }}><strong>%94</strong> doktor memnuniyeti</div>
         </div>
       </div>
 
       {/* FEATURES */}
-      <section id="ozellikler" style={{ padding: '120px 0', background: 'white' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 60 }}>
-            <div style={{ color: colors.primary, fontSize: 12, letterSpacing: '1.5px', marginBottom: 12 }}>TEMEL ÖZELLİKLER</div>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 500, margin: 0 }}>Doktorun ihtiyacı olan her şey, tek yerde.</h2>
+      <section id="ozellikler" style={{ padding: '120px 24px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+          <div style={{ color: '#0F766E', fontSize: '13px', fontWeight: 600, letterSpacing: '1px' }}>TEMEL ÖZELLİKLER</div>
+          <h2 style={{ fontSize: 'clamp(32px, 4vw, 44px)', margin: '12px 0 0', fontWeight: 700 }}>Doktorun ihtiyacı olan her şey, tek yerde.</h2>
+        </div>
+
+        {/* Row 1 */}
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '60px', alignItems: 'center', marginBottom: '100px' }}>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ fontSize: '26px', fontWeight: 600 }}>Sesli &amp; Doğal</h3>
+            <p style={{ fontSize: '16px', color: '#444', lineHeight: 1.6 }}>ElevenLabs destekli sesli asistanınızla konsültasyon sırasında not alın, komut verin. Türkçe doğal konuşma tanıma.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+          <div style={{ flex: 1, height: '180px', background: 'linear-gradient(180deg, #F1F5F9 0%, #E0E7FF 100%)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+              {[40, 72, 55, 88, 64, 95, 48].map((h, i) => (
+                <div key={i} style={{ width: '6px', height: `${h}px`, background: '#0F766E', borderRadius: '999px' }} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2 */}
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '60px', alignItems: 'center', marginBottom: '100px' }}>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {[1,2,3].map(i => <div key={i} style={{ width: '92px', height: '120px', background: '#E2E8F0', borderRadius: '8px', boxShadow: '0 10px 20px rgba(0,0,0,0.08)' }} />)}
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ fontSize: '26px', fontWeight: 600 }}>Textbook Zekası</h3>
+            <p style={{ fontSize: '16px', color: '#444', lineHeight: 1.6 }}>Nelson, Braunwald ve Harrison referanslı tıbbi bilgi tabanı. Her yanıt akademik kaynaklıdır.</p>
+          </div>
+        </div>
+
+        {/* Row 3 */}
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '60px', alignItems: 'center' }}>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ fontSize: '26px', fontWeight: 600 }}>Öğrenen Sistem</h3>
+            <p style={{ fontSize: '16px', color: '#444', lineHeight: 1.6 }}>Her seansla birlikte sizin klinik pratiğinize göre uyarlanır. Zamanla daha iyi öneriler sunar.</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ background: '#F8FAFC', borderRadius: '16px', padding: '28px' }}>
+              <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '999px', marginBottom: '8px' }}>
+                <div style={{ width: '84%', height: '6px', background: '#0F766E', borderRadius: '999px' }} />
+              </div>
+              <div style={{ fontSize: '13px', color: '#64748B' }}>Bu ay öğrenme oranı: %84</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CAPABILITIES GRID */}
+      <section style={{ background: '#F9FAFB', padding: '120px 24px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+            <div style={{ color: '#0F766E', fontSize: '13px', fontWeight: 600 }}>KLİNİK ARAÇLAR</div>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', margin: '12px 0 0', fontWeight: 700 }}>Muayenehaneni tam güçle yönet.</h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
             {[
-              { icon: '🎙️', title: 'Sesli ve doğal', desc: 'Mikrofona bir kez dokunun. Doğal konuşma ile anında kayıt.' },
-              { icon: '📚', title: 'Textbook zekası', desc: 'Nelson, Braunwald ve Harrison’dan anında erişim.' },
-              { icon: '🧠', title: 'Öğrenen sistem', desc: 'Her seansla birlikte daha akıllı hale gelir.' }
-            ].map((f, i) => (
-              <div key={i} style={{ background: 'white', border: '1px solid #f0f0f0', borderRadius: 16, padding: 40, transition: 'all 0.2s' }}>
-                <div style={{ fontSize: 52, marginBottom: 24 }}>{f.icon}</div>
-                <div style={{ fontSize: 21, fontWeight: 600, marginBottom: 12 }}>{f.title}</div>
-                <div style={{ color: '#4B5563', lineHeight: 1.5 }}>{f.desc}</div>
+              { title: 'Hasta Yönetimi', desc: 'TC kimlik doğrulama, profil ve tam tıbbi geçmiş' },
+              { title: 'PACS/Görüntüleme', desc: 'X-Ray, MRI, BT yükleme ve merkezi yönetim' },
+              { title: 'İlaçlar Takibi', desc: 'Aktif/pasif ilaç listesi ve etkileşim kontrolü' },
+              { title: 'Hatırlatma', desc: 'WhatsApp ve SMS ile hasta bildirimleri' },
+              { title: 'Aylık Raporlar', desc: 'Isı haritası, istatistik ve ICD-10 analizi' },
+              { title: 'e-Nabız Rehberi', desc: 'Hasta kayıtlarına erişim ve entegrasyon kılavuzu' }
+            ].map((cap, idx) => (
+              <div key={idx} style={{ background: '#fff', borderRadius: '16px', padding: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ width: '36px', height: '36px', background: '#0F766E', borderRadius: '10px', marginBottom: '18px' }} />
+                <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>{cap.title}</div>
+                <div style={{ fontSize: '15px', color: '#555', lineHeight: 1.5 }}>{cap.desc}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* DEMO SECTION */}
-      <section id="demo" style={{ background: colors.dark, padding: '120px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 80, alignItems: 'center' }}>
-          <div>
-            <h2 style={{ color: 'white', fontSize: 'clamp(32px, 4.5vw, 42px)', fontWeight: 500, lineHeight: 1.1 }}>Gerçek bir pediatri konsültasyonu.</h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 18, margin: '24px 0 40px' }}>iPhone ekranında canlı klinik senaryo deneyimi.</p>
-            <button onClick={() => scrollTo('fiyatlar')} style={{ background: colors.primary, color: 'white', padding: '14px 36px', borderRadius: 8, border: 'none', fontSize: 16, fontWeight: 500 }}>Şimdi deneyin</button>
+      {/* ASSISTANTS */}
+      <section id="asistanlar" style={{ padding: '120px 24px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, textAlign: 'center', marginBottom: '12px' }}>Size atanmış asistanınız sizi bekliyor.</h2>
+        <p style={{ textAlign: 'center', color: '#555', marginBottom: '48px' }}>Uzmanlığınıza göre birincil asistan atanır. Konsültasyon için 27+ uzmana erişim.</p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          {/* Card 1 - Primary */}
+          <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', borderLeft: '4px solid #0F766E', boxShadow: '0 10px 30px rgba(15,118,110,0.1)' }}>
+            <img src="/doctors/dr_ayse.jpg" alt="Prof Dr Ayşe Kaya" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px' }} />
+            <div style={{ fontWeight: 600, fontSize: '19px' }}>Prof. Dr. Ayşe Kaya</div>
+            <div style={{ color: '#0F766E', marginBottom: '12px' }}>Pediatri • Birincil Asistan</div>
+            <div style={{ display: 'inline-block', background: '#CCFBF1', color: '#0F766E', padding: '2px 10px', borderRadius: '999px', fontSize: '12px', marginBottom: '16px' }}>BİRİNCİL ASİSTAN</div>
+            <div style={{ fontSize: '13px', color: '#666' }}>Nelson 22e + Harriet Lane</div>
           </div>
-          {/* iPhone Mockup */}
-          <div style={{ background: '#111827', borderRadius: 60, padding: 12, boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)' }}>
-            <div style={{ background: '#0f172a', borderRadius: 48, padding: 20, height: 520, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                <div style={{ width: 120, height: 6, background: '#334155', borderRadius: 3 }}></div>
-              </div>
-              <div style={{ color: '#64748b', fontSize: 13, marginBottom: 16, paddingLeft: 8 }}>Pediatri Konsültasyonu</div>
-              <div style={{ background: '#1e2937', borderRadius: 18, padding: 14, marginBottom: 10, fontSize: 14, color: '#e2e8f0' }}>
-                4 y.o. hasta, 39.2° ateş, prodüktif öksürük.
-              </div>
-              <div style={{ background: colors.primary, borderRadius: 18, padding: 14, fontSize: 14, color: 'white' }}>
-                Nelson 22e önerisi: Amoksisilin 80mg/kg/gün.
-              </div>
-            </div>
+
+          {/* Card 2 */}
+          <div style={{ background: '#fff', borderRadius: '20px', padding: '32px' }}>
+            <img src="/doctors/dr_mehmet.jpg" alt="Prof Dr Mehmet Demir" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px' }} />
+            <div style={{ fontWeight: 600, fontSize: '19px' }}>Prof. Dr. Mehmet Demir</div>
+            <div style={{ color: '#666', marginBottom: '12px' }}>Kardiyoloji</div>
+            <div style={{ display: 'inline-block', background: '#F1F5F9', padding: '2px 10px', borderRadius: '999px', fontSize: '12px', marginBottom: '16px' }}>KONSÜLTASYON</div>
+            <div style={{ fontSize: '13px', color: '#666' }}>Braunwald 12e</div>
+          </div>
+
+          {/* Card 3 */}
+          <div style={{ background: '#fff', borderRadius: '20px', padding: '32px' }}>
+            <img src="/doctors/dr_elif.jpg" alt="Prof Dr Elif Şahin" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px' }} />
+            <div style={{ fontWeight: 600, fontSize: '19px' }}>Prof. Dr. Elif Şahin</div>
+            <div style={{ color: '#666', marginBottom: '12px' }}>Nöroloji</div>
+            <div style={{ display: 'inline-block', background: '#F1F5F9', padding: '2px 10px', borderRadius: '999px', fontSize: '12px', marginBottom: '16px' }}>KONSÜLTASYON</div>
+            <div style={{ fontSize: '13px', color: '#666' }}>Adams &amp; Victor</div>
           </div>
         </div>
+        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '13px', color: '#888' }}>+ 27 uzmanlık alanı konsültasyon için hazır</div>
       </section>
 
-      {/* THREE ASSISTANTS */}
-      <section id="uzmanlar" style={{ padding: '120px 0', background: 'white' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ color: colors.primary, fontSize: 12, letterSpacing: '1px', marginBottom: 8 }}>UZMAN ASİSTANLARINIZ</div>
-            <h2 style={{ fontSize: 'clamp(26px, 3.8vw, 34px)', fontWeight: 500 }}>Size atanmış asistanınız sizi bekliyor.</h2>
-            <p style={{ maxWidth: 520, margin: '16px auto 0', color: '#4B5563' }}>
-              Uzmanlığınıza göre atanan birincil asistanın yanı sıra, konsültasyon için diğer uzmanlara her an erişebilirsiniz.
-            </p>
+      {/* INTEGRATIONS */}
+      <section id="entegrasyonlar" style={{ background: '#060C18', color: '#fff', padding: '120px 24px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+            <div style={{ color: '#5EEAD4', fontSize: '13px', fontWeight: 600 }}>ENTEGRASYONLAR</div>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', margin: '12px 0 0', fontWeight: 700 }}>Türkiye Sağlık Ekosistemi ile tam bağlı.</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-            {/* Primary */}
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderLeft: `3px solid ${colors.primary}`, borderRadius: 20, padding: 32 }}>
-              <div style={{ width: 72, height: 72, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24, fontWeight: 600, marginBottom: 20 }}>AY</div>
-              <div style={{ fontWeight: 600, fontSize: 19 }}>Prof. Dr. Ayşe Kaya</div>
-              <div style={{ color: '#64748b', marginBottom: 16 }}>Pediatri • Birincil Asistan</div>
-              <div style={{ fontSize: 13, color: '#475569' }}>Nelson 22e • Harriet Lane 23e</div>
-              <div style={{ marginTop: 20, display: 'inline-block', background: 'rgba(0,168,157,0.1)', color: colors.primary, padding: '2px 10px', borderRadius: 4, fontSize: 12 }}>Birincil Asistan</div>
-            </div>
-            {/* Konsültasyon */}
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 20, padding: 32 }}>
-              <div style={{ width: 72, height: 72, background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24, fontWeight: 600, marginBottom: 20 }}>MD</div>
-              <div style={{ fontWeight: 600, fontSize: 19 }}>Prof. Dr. Mehmet Demir</div>
-              <div style={{ color: '#64748b', marginBottom: 16 }}>Kardiyoloji • Konsültasyon</div>
-              <div style={{ fontSize: 13, color: '#475569' }}>Braunwald 12e</div>
-            </div>
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 20, padding: 32 }}>
-              <div style={{ width: 72, height: 72, background: '#8b5cf6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24, fontWeight: 600, marginBottom: 20 }}>ES</div>
-              <div style={{ fontWeight: 600, fontSize: 19 }}>Prof. Dr. Elif Şahin</div>
-              <div style={{ color: '#64748b', marginBottom: 16 }}>Nöroloji • Konsültasyon</div>
-              <div style={{ fontSize: 13, color: '#475569' }}>Adams &amp; Victor</div>
-            </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+            {[
+              { name: 'e-Nabız / Sağlık.NET', desc: 'Hasta kayıtları', badge: 'ENTEGRE', color: '#5EEAD4' },
+              { name: 'SGK Medula', desc: 'e-reçete, provizyon', badge: 'ENTEGRE', color: '#5EEAD4' },
+              { name: 'ICD-10 / HBYS', desc: 'Otomatik kodlama', badge: 'ENTEGRE', color: '#5EEAD4' },
+              { name: 'e-Devlet / MERNİS', desc: 'TC kimlik doğrulama', badge: 'ENTEGRE', color: '#5EEAD4' },
+              { name: 'MHRS Randevu', desc: 'Merkezi randevu', badge: 'YAKINDAN', color: '#F59E0B' },
+              { name: 'Paraşüt / Muhasebe', desc: 'Ödeme takibi', badge: 'PLANLANIYOR', color: '#64748B' }
+            ].map((int, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px' }}>
+                <div style={{ fontWeight: 600, marginBottom: '6px' }}>{int.name}</div>
+                <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>{int.desc}</div>
+                <div style={{ display: 'inline-block', background: int.color, color: '#111', padding: '1px 9px', borderRadius: '999px', fontSize: '11px', fontWeight: 600 }}>{int.badge}</div>
+              </div>
+            ))}
           </div>
-          <div style={{ textAlign: 'center', marginTop: 32, fontSize: 13, color: '#64748b' }}>+ 27 uzmanlık alanı konsültasyon için hazır</div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section style={{ background: '#F9FAFB', padding: '120px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <h2 style={{ textAlign: 'center', fontSize: 'clamp(26px, 3.8vw, 34px)', fontWeight: 500, marginBottom: 60 }}>Üç adımda başlayın.</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 40 }}>
-            {[
-              { num: '01', title: 'Kayıt Ol', desc: '2 dakikada hesabınızı oluşturun.' },
-              { num: '02', title: 'Asistanınıza Kavuşun', desc: 'Uzmanlığınıza göre atama yapılır.' },
-              { num: '03', title: 'Çalışın', desc: 'İlk seansınızı bugün başlatın.' }
-            ].map((step, index) => (
-              <div key={index} style={{ position: 'relative' }}>
-                <div style={{ width: 52, height: 52, border: `2px solid ${colors.primary}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 600, color: colors.primary, marginBottom: 20 }}>{step.num}</div>
-                <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>{step.title}</div>
-                <div style={{ color: '#4B5563' }}>{step.desc}</div>
-              </div>
-            ))}
-          </div>
+      <section style={{ padding: '120px 24px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, textAlign: 'center', marginBottom: '56px' }}>Üç adımda başlayın.</h2>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '40px', justifyContent: 'center' }}>
+          {[
+            { num: '01', title: 'Kayıt Ol', desc: '2 dakikada kaydolun' },
+            { num: '02', title: 'Asistanla Tanış', desc: 'Uzmanlığınıza göre atama' },
+            { num: '03', title: 'Çalış', desc: 'İlk seansı bugün yapın' }
+          ].map((step, idx) => (
+            <div key={idx} style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{ fontSize: '42px', fontWeight: 700, color: '#0F766E', marginBottom: '12px' }}>{step.num}</div>
+              <div style={{ fontSize: '19px', fontWeight: 600 }}>{step.title}</div>
+              <div style={{ color: '#555', marginTop: '8px' }}>{step.desc}</div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* PRICING */}
-      <section id="fiyatlar" style={{ padding: '120px 0', background: 'white' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 500 }}>Basit ve şeffaf fiyatlandırma.</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+      <section id="fiyatlar" style={{ background: '#F9FAFB', padding: '120px 24px' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, marginBottom: '56px' }}>Basit ve şeffaf fiyatlandırma.</h2>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '20px', justifyContent: 'center' }}>
             {[
-              { name: 'Starter', price: '299', features: ['Tek asistan', '50 seans/ay', 'Temel destek'] },
-              { name: 'Pro', price: '799', features: ['Birincil + 2 konsültasyon', 'Sınırsız seans', 'Öncelikli destek'], featured: true },
-              { name: 'Klinik', price: '2499', features: ['Tüm uzmanlar', 'Sınırsız seans', 'Kurumsal entegrasyon'] }
-            ].map((tier, i) => (
-              <div key={i} style={{
-                border: tier.featured ? `2px solid ${colors.primary}` : '1px solid #e5e7eb',
-                borderRadius: 20, padding: 36, background: tier.featured ? '#fafafa' : 'white',
-                boxShadow: tier.featured ? '0 10px 15px -3px rgb(0 0 0 / 0.05)' : 'none'
+              { name: 'Starter', price: '299', badge: null },
+              { name: 'Pro', price: '799', badge: 'Önerilen', elevated: true },
+              { name: 'Klinik', price: '2499', badge: null }
+            ].map((tier, idx) => (
+              <div key={idx} style={{
+                flex: 1, background: '#fff', borderRadius: '20px', padding: '36px 32px',
+                border: tier.elevated ? '2px solid #0F766E' : '1px solid #eee',
+                boxShadow: tier.elevated ? '0 20px 40px rgba(15,118,110,0.1)' : 'none',
+                transform: tier.elevated ? 'scale(1.02)' : 'none'
               }}>
-                <div style={{ fontSize: 21, fontWeight: 600 }}>{tier.name}</div>
-                <div style={{ margin: '20px 0' }}>
-                  <span style={{ fontSize: 42, fontWeight: 600 }}>{tier.price}</span>
-                  <span style={{ color: '#6B7280' }}> ₺/ay</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '21px', fontWeight: 600 }}>{tier.name}</div>
+                  {tier.badge && <div style={{ background: '#0F766E', color: '#fff', fontSize: '11px', padding: '2px 10px', borderRadius: '999px' }}>{tier.badge}</div>}
                 </div>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '24px 0' }}>
-                  {tier.features.map((f, idx) => (
-                    <li key={idx} style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: colors.primary }}>✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <button style={{
-                  width: '100%', padding: '14px', background: tier.featured ? colors.primary : '#111827',
-                  color: 'white', border: 'none', borderRadius: 8, fontWeight: 500, cursor: 'pointer'
-                }}>Başla</button>
+                <div style={{ margin: '20px 0' }}>
+                  <span style={{ fontSize: '48px', fontWeight: 700 }}>{tier.price}</span>
+                  <span style={{ fontSize: '15px', color: '#666' }}> TL/ay</span>
+                </div>
+                <button style={{ width: '100%', padding: '14px', background: tier.elevated ? '#0F766E' : '#111', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}>Başla</button>
               </div>
             ))}
           </div>
@@ -275,29 +284,13 @@ export default function HomePage() {
       </section>
 
       {/* FINAL CTA */}
-      <section style={{ background: colors.dark, padding: '80px 0', textAlign: 'center' }}>
-        <div style={{ maxWidth: 620, margin: '0 auto', padding: '0 24px' }}>
-          <h2 style={{ color: 'white', fontSize: 'clamp(28px, 4vw, 38px)', fontWeight: 500, marginBottom: 32 }}>
-            Hemen bugün başlayın.
-          </h2>
-          <button onClick={() => scrollTo('fiyatlar')} style={{
-            background: colors.primary, color: 'white', padding: '16px 52px', borderRadius: 8,
-            border: 'none', fontSize: 17, fontWeight: 600, cursor: 'pointer'
-          }}>14 gün ücretsiz deneyin</button>
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 16 }}>Kredi kartı gerekmez</div>
-        </div>
+      <section style={{ background: '#060C18', color: '#fff', padding: '80px 24px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 700, marginBottom: '24px' }}>Klinik pratiğinizi bir üst seviyeye taşıyın.</h2>
+        <button style={{ padding: '16px 40px', background: '#0F766E', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '17px', fontWeight: 600, cursor: 'pointer' }}>14 Gün Ücretsiz Deneyin</button>
+        <div style={{ marginTop: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>KVKK ve AES-256 uyumlu • Frankfurt sunucuları</div>
       </section>
-
-      <style jsx>{`
-        @keyframes typing {
-          0%, 80%, 100% { transform: scale(0); }
-          40% { transform: scale(1); }
-        }
-        @media (min-width: 768px) {
-          .desktop-nav { display: flex !important; }
-          .desktop-chat { display: block !important; }
-        }
-      `}</style>
     </div>
   );
-}
+};
+
+export default HomePage;
