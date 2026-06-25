@@ -144,7 +144,7 @@ export default function AvukatPage() {
             {[
               {icon:"📝",color:"var(--primary)",bg:"var(--primary-light)",title:"Dilekce Olusturucu",desc:"Bilgileri girin — 30 saniyede HMK/CMK formatinda mahkemeye hazir tam metin. 8 dilekce turu desteklenir.",badge:"30 saniyede"},
               {icon:"⏰",color:"var(--accent)",bg:"#FFF0EC",title:"Sure & Deadline Engine",desc:"HMK, CMK, IIK, IYUK surelerini otomatik hesaplar. 3 gun kala kritik uyari. Sure kacirmak artik mumkun degil.",badge:"Sifir sure hatasi"},
-              {icon:"🔗",color:"#0891B2",bg:"#E0F7FA",title:"Muvekkil Portali",desc:"Her muvekkile ozel link. Dava durumu, yaklasan sureler, AI yanit. Telefon trafiginiz ciddi oranda azalir.",badge:"Self-servis muvekkil"},
+              {icon:"🔗",color:"#0891B2",bg:"#E0F7FA",title:"Müvekkil Portali",desc:"Her müvekkile özel link. Dava durumu, yaklaşan süreler, AI yanıt. Telefon trafiğiniz ciddi oranda azalır.",badge:"Self-servis müvekkil"},
               {icon:"🔍",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Ictihat & Yargitay",desc:"Yargitay ve Danistay kararlarinda AI arama. Emsal bulur, dava stratejisi olusturur, kararlari ozetler.",badge:"40+ karar"},
               {icon:"⚖️",color:"#7C3AED",bg:"#F3E8FF",title:"Sozlesme Analizi",desc:"Metni yapistirin. TBK uyumu, kirmizi bayraklar, eksik maddeler, iyilestirme onerileri — 60 saniyede.",badge:"TBK uyumlu"},
               {icon:"🔐",color:"#1e3a5f",bg:"var(--primary-light)",title:"Avukat Gizliligi",desc:"Muvekkil bilgileri AES-256 sifreleme. Avukat-muvekkil gizliligine tam uyumlu. Turkiye lokasyonu.",badge:"Gizlilik uyumlu"},

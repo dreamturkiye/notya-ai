@@ -58,7 +58,7 @@ export default function BelgelerPage() {
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
-          {[{l:"Toplam Gelir",v:gelir.toLocaleString("tr-TR")+" TL",c:"#16A34A"},{l:"Toplam Gider",v:gider.toLocaleString("tr-TR")+" TL",c:"#DC2626"},{l:"Inceleme Bekliyor",v:String(review)+" belge",c:"#D97706"}].map(s=>(
+          {[{l:"Toplam Gelir",v:gelir.toLocaleString("tr-TR")+" TL",c:"#16A34A"},{l:"Toplam Gider",v:gider.toLocaleString("tr-TR")+" TL",c:"#DC2626"},{l:"İnceleme Bekliyor",v:String(review)+" belge",c:"#D97706"}].map(s=>(
             <div key={s.l} style={{background:"white",borderRadius:10,padding:"12px 14px",boxShadow:"0 1px 3px rgba(0,0,0,.08)"}}>
               <div style={{fontSize:18,fontWeight:700,color:s.c}}>{s.v}</div>
               <div style={{fontSize:11,color:"#64748B",marginTop:3}}>{s.l}</div>

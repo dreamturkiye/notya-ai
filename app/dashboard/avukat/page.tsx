@@ -130,7 +130,7 @@ export default function AvukatDashboard() {
               </div>
               <div style={{fontSize:36}}>🎙️</div>
             </div>
-            <div style={{fontWeight:700,fontSize:16,marginBottom:14,color:'#1E293B'}}>Uzman Asistanlariniz</div>
+            <div style={{fontWeight:700,fontSize:16,marginBottom:14,color:'#1E293B'}}>Uzman Asistanlarınız</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:24}}>
               {PERSONAS.map(p => (
                 <div key={p.id} onClick={() => { setActivePersona(p.id); setActiveTab('chat') }} style={{background:'#fff',borderRadius:12,padding:'18px',boxShadow:'0 1px 4px rgba(0,0,0,.06)',cursor:'pointer',borderTop:'3px solid ' + p.color}}>
@@ -165,7 +165,7 @@ export default function AvukatDashboard() {
             </div>
             <div style={{background:'#fff',borderRadius:12,boxShadow:'0 1px 4px rgba(0,0,0,.06)',height:420,display:'flex',flexDirection:'column'}}>
               <div style={{flex:1,overflowY:'auto',padding:16,display:'flex',flexDirection:'column',gap:10}}>
-                {chatHistory.length === 0 && <div style={{textAlign:'center',color:'#94A3B8',marginTop:60}}>{activePersona ? PERSONAS.find(p=>p.id===activePersona)?.name + ' hazir. Nasil yardimci olabilirim?' : 'Uzman secin.'}</div>}
+                {chatHistory.length === 0 && <div style={{textAlign:'center',color:'#94A3B8',marginTop:60}}>{activePersona ? PERSONAS.find(p=>p.id===activePersona)?.name + ' hazır. Nasıl yardımcı olabilirim?' : 'Uzman seçin.'}</div>}
                 {chatHistory.map((m,i) => (
                   <div key={i} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start'}}>
                     <div style={{padding:'10px 14px',borderRadius:12,maxWidth:'80%',fontSize:14,background:m.role==='user'?'#2563EB':'#F1F5F9',color:m.role==='user'?'#fff':'#1E293B'}}>{m.content}</div>

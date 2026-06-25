@@ -145,8 +145,8 @@ export default function MaliPage() {
               {icon:"📅",color:"var(--primary)",bg:"var(--primary-light)",title:"Beyan Takvimi",desc:"KDV, muhtasar, kurumlar vergisi — tum beyan son gunleri otomatik takip. 3 gun kala Telegram uyarisi. Hic kacirilmaz.",badge:"Sifir beyan hatasi"},
               {icon:"💰",color:"var(--secondary)",bg:"var(--secondary-light)",title:"Bordro Hesaplama",desc:"SGK, vergi, net/brut hesaplama, asgari ucret guncellemeleri. Birden fazla calisan icin toplu bordro.",badge:"Anlik hesaplama"},
               {icon:"🏦",color:"#0891B2",bg:"#E0F7FA",title:"MASAK Uyum Motoru",desc:"Supheli islem tespiti, musteri risk skoru, MASAK bildirim taslagi. Uyum riskini minimize eder.",badge:"Risk tespiti"},
-              {icon:"📤",color:"var(--accent)",bg:"#FFF0EC",title:"e-Beyan & e-Devlet",desc:"Beyan taslagi olustur, GIB format kontrolu yap, e-Devlet entegrasyon rehberi al. Gondermeye hazir.",badge:"GIB uyumlu"},
-              {icon:"🔗",color:"#7C3AED",bg:"#F3E8FF",title:"Musteri Portali",desc:"Her musteri icin ozel link. Beyan durumu, belgeler, AI sorular. Telefon trafiginiz ciddi oranda azalir.",badge:"Self-servis musteri"},
+              {icon:"📤",color:"var(--accent)",bg:"#FFF0EC",title:"e-Beyan & e-Devlet",desc:"Beyan taslagi olustur, GİB format kontrolü yap, e-Devlet entegrasyon rehberi al. Göndermeye hazır.",badge:"GIB uyumlu"},
+              {icon:"🔗",color:"#7C3AED",bg:"#F3E8FF",title:"Müşteri Portali",desc:"Her müşteri için özel link. Beyan durumu, belgeler, AI sorular. Telefon trafiğiniz ciddi oranda azalır.",badge:"Self-servis müşteri"},
               {icon:"🔐",color:"#1B4332",bg:"#d8f3dc",title:"KVKK Uyumlu",desc:"Tum musteri verileri AES-256 sifreleme ile Turkiye lokasyonunda. Mesleki gizlilik standartlarina tam uyum.",badge:"Veri guvenligi"},
             ].map(f=>(
               <div key={f.title} className="card" style={{padding:"28px"}}>

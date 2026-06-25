@@ -45,7 +45,7 @@ export default function MusteriPortalPage() {
     <div style={{minHeight:'100vh',background:'#F0F4F8',fontFamily:'system-ui,sans-serif'}}>
       <div style={{background:'#0A1628',padding:'20px 24px',color:'white'}}>
         <div style={{maxWidth:640,margin:'0 auto'}}>
-          <div style={{fontSize:12,opacity:.6,marginBottom:4}}>Mali Musavirlik Musteri Portali</div>
+          <div style={{fontSize:12,opacity:.6,marginBottom:4}}>Mali Müşavirlik Müşteri Portali</div>
           <div style={{fontSize:22,fontWeight:800}}>{musteri.sirket_adi}</div>
           <div style={{fontSize:13,opacity:.7,marginTop:4}}>{musteri.yetkili_kisi} - {musteri.faaliyet_alani}</div>
         </div>

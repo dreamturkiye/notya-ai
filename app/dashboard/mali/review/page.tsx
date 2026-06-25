@@ -167,7 +167,7 @@ export default function ReviewPage() {
                   <button
                     onClick={() => router.push(`/dashboard/mali/belgeler`)}
                     style={{background:"white",border:"1px solid #E2E8F0",color:"#64748B",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:13}}>
-                    Arsive Git
+                    Arşive Git
                   </button>
                 </div>
               </div>
