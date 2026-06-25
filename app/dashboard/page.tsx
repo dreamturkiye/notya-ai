@@ -1,60 +1,41 @@
-'use client';
-
-export const dynamic = 'force-dynamic';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+'use client'
+export const dynamic = 'force-dynamic'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardRedirect() {
-  const router = useRouter();
-
+  const router = useRouter()
   useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-
-    if (!token) {
-      router.push('/giris/doktor');
-      return;
-    }
-
-    const redirectUser = async () => {
+    const tokenKey = Object.keys(localStorage).find(k => k.includes('auth-token') || k.startsWith('sb-'))
+    if (!tokenKey) { router.push('/giris/doktor'); return }
+    const raw = localStorage.getItem(tokenKey)
+    if (!raw) { router.push('/giris/doktor'); return }
+    let token: string | null = null
+    try { const parsed = JSON.parse(raw); token = parsed?.access_token || parsed?.session?.access_token || null } catch { token = raw }
+    if (!token) { router.push('/giris/doktor'); return }
+    const go = async () => {
       try {
-        const res = await fetch('/api/users/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) {
-          localStorage.removeItem('auth-token');
-          router.push('/giris/doktor');
-          return;
-        }
-
-        const data = await res.json();
-        const type = data.profession_type;
-
-        if (type === 'doktor') router.push('/dashboard/doktor');
-        else if (type === 'mali') router.push('/dashboard/mali');
-        else if (type === 'avukat') router.push('/dashboard/avukat');
-        else router.push('/giris/doktor');
-      } catch {
-        localStorage.removeItem('auth-token');
-        router.push('/giris/doktor');
-      }
-    };
-
-    redirectUser();
-  }, [router]);
-
+        const res = await fetch('/api/users/me', { headers: { Authorization: 'Bearer ' + token } })
+        if (!res.ok) { router.push('/giris/doktor'); return }
+        const json = await res.json()
+        const profile = json.data || json
+        const type = profile.profession_type
+        if (type === 'doktor') router.push('/dashboard/doktor')
+        else if (type === 'mali_musavirlik' || type === 'mali') router.push('/dashboard/mali')
+        else if (type === 'avukat') router.push('/dashboard/avukat')
+        else router.push('/dashboard/doktor')
+      } catch { router.push('/giris/doktor') }
+    }
+    go()
+  }, [router])
   return (
-    <div className="min-h-screen bg-[#0A1628] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-6">
-        <div className="w-12 h-12 rounded-full bg-[#0F9B8E] flex items-center justify-center">
-          <span className="text-white text-3xl font-bold">N</span>
-        </div>
-        <div className="relative w-12 h-12">
-          <div className="absolute inset-0 rounded-full border-4 border-[#0F9B8E] border-t-transparent animate-spin" />
-        </div>
-        <p className="text-white text-lg tracking-wide">Yükleniyor...</p>
+    <div style={{minHeight:'100vh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:24}}>
+      <div style={{width:56,height:56,borderRadius:'50%',background:'#0F9B8E',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <span style={{color:'#fff',fontSize:28,fontWeight:700}}>N</span>
       </div>
+      <div style={{width:40,height:40,borderRadius:'50%',border:'4px solid #0F9B8E',borderTopColor:'transparent',animation:'spin 0.8s linear infinite'}} />
+      <p style={{color:'#fff',fontSize:16}}>Yükleniyor...</p>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
-  );
+  )
 }

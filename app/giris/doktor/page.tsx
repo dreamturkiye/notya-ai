@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient('https://anjayzospuurymjmmtim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
+
 
 export default function Giris() {
   const router = useRouter()
@@ -16,8 +16,10 @@ export default function Giris() {
     e.preventDefault()
     if (!email.trim() || !password.trim()) { setError('E-posta ve şifre gereklidir'); return }
     setLoading(true); setError('')
+    const supabase = createClient('https://anjayzospuurymjmmtim.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (ae || !data.session) { setError(ae?.message || 'Giriş başarısız'); setLoading(false); return }
+    localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
     router.replace('/dashboard/doktor')
   }
 
