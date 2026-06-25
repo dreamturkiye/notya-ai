@@ -26,12 +26,12 @@ interface GroqInteraksiyonSonuc {
 }
 
 async function groqChat(systemPrompt: string, userPrompt: string): Promise<GroqInteraksiyonSonuc> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || '';
   if (!apiKey) {
     throw new Error('GROQ_API_KEY tanımlı değil');
   }
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch((process.env.GROQ_API_KEY ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.x.ai/v1/chat/completions"), {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,

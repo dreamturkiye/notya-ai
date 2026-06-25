@@ -19,19 +19,21 @@ interface GroqResponse {
 }
 
 async function groqChat(systemPrompt: string, userPrompt: string): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || ''
+  const apiBase = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : 'https://api.x.ai/v1'
+  const modelId = process.env.GROQ_API_KEY ? modelId : 'grok-3-mini'
   if (!apiKey) {
     throw new Error('GROQ_API_KEY tanımlı değil');
   }
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch(apiBase + '/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: modelId,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
