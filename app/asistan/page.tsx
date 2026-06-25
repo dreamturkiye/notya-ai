@@ -44,7 +44,7 @@ export default function AsistanPage() {
   // auth via localStorage
 
   useEffect(() => {
-    ;(async () => { const _r = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); const session = _r ? JSON.parse(_r) : null;
+    ;(async () => { const _r = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const session = _r ? JSON.parse(_r) : null;
       if (!session) { router.push("/giris"); return }
       setAuthToken(session.access_token)
 
