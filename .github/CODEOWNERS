@@ -1,0 +1,14 @@
+# NOTYA AI — PRODUCTION PROTECTION
+# All changes require authorization from the repo owner
+# This file is enforced by GitHub branch protection rules
+
+# Everything requires owner approval
+* @dreamturkiye
+
+# Critical production files require explicit sign-off
+/app/                    @dreamturkiye
+/app/api/                @dreamturkiye  
+/app/asistan/            @dreamturkiye
+/app/dashboard/          @dreamturkiye
+/components/             @dreamturkiye
+/lib/                    @dreamturkiye
