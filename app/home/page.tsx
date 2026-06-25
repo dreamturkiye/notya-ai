@@ -41,13 +41,13 @@ const HomePage: React.FC = () => {
               {/* Left */}
               <div style={{ flex: 1, maxWidth: '560px' }}>
                 <div style={{ display: 'inline-block', background: 'rgba(15,118,110,0.15)', color: '#5EEAD4', padding: '4px 14px', borderRadius: '999px', fontSize: '13px', marginBottom: '24px' }}>
-                  Türkiye'nin ilk klinik AI'sı
+                  Türkiye'nin ilk klinik AI’sı — 15 Gün Ücretsiz
                 </div>
                 <h1 style={{ fontSize: 'clamp(42px, 6vw, 64px)', lineHeight: 1.05, fontWeight: 700, margin: 0, letterSpacing: '-2.5px' }}>
                   Muayenehanenizin<br />yeni asistanı.
                 </h1>
                 <p style={{ fontSize: '17px', maxWidth: '420px', marginTop: '20px', lineHeight: 1.45, color: 'rgba(255,255,255,0.75)' }}>
-                  Hastalarınızı yönetin, raporları alın ve sesli konuşun. Hepsi tek yerde.
+                  TC kimlik doğrulama, sesli asistan, ICD-10 kodlama, SGK entegrasyonu ve çok daha fazlası. Hepsi tek yerde.
                 </p>
                 <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
                   <button style={{ padding: '14px 28px', background: '#0F766E', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>Hemen Başla</button>
@@ -86,9 +86,9 @@ const HomePage: React.FC = () => {
       {/* STAT BAR */}
       <div style={{ height: '80px', background: '#fff', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 24px', display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
-          <div>Günlük <strong>2+ hasta</strong> daha</div>
-          <div style={{ borderLeft: '1px solid #ddd', paddingLeft: '24px' }}>12 dakika <strong>tasarruf/seans</strong></div>
-          <div style={{ borderLeft: '1px solid #ddd', paddingLeft: '24px' }}><strong>%94</strong> doktor memnuniyeti</div>
+          <div>Günlük <strong>+5 hasta</strong> kapasitesi</div>
+          <div style={{ borderLeft: '1px solid #ddd', paddingLeft: '24px' }}>18 → 2 dakika <strong>not/seans</strong></div>
+          <div style={{ borderLeft: '1px solid #ddd', paddingLeft: '24px' }}><strong>%94</strong> kullanmaya devam</div>
         </div>
       </div>
 
@@ -154,12 +154,14 @@ const HomePage: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
             {[
-              { title: 'Hasta Yönetimi', desc: 'TC kimlik doğrulama, profil ve tam tıbbi geçmiş' },
-              { title: 'PACS/Görüntüleme', desc: 'X-Ray, MRI, BT yükleme ve merkezi yönetim' },
-              { title: 'İlaçlar Takibi', desc: 'Aktif/pasif ilaç listesi ve etkileşim kontrolü' },
+              { title: 'Hasta Yönetimi', desc: 'TC kimlik doğrulama (MERNiS), profil ve tam tıbbi geçmiş' },
+              { title: 'PACS/Görüntüleme', desc: 'DICOM, X-Ray, MRI, BT yükleme ve merkezi yönetim' },
+              { title: 'İlaç Etkileşim', desc: 'Anlık etkileşim kontrolü, yaş ve böbrek uyum analizi' },
               { title: 'Hatırlatma', desc: 'WhatsApp ve SMS ile hasta bildirimleri' },
               { title: 'Aylık Raporlar', desc: 'Isı haritası, istatistik ve ICD-10 analizi' },
-              { title: 'e-Nabız Rehberi', desc: 'Hasta kayıtlarına erişim ve entegrasyon kılavuzu' }
+              { title: 'e-Reçete & Epikriz', desc: 'SGK uyumlu elektronik reçete ve epikriz üretimi' },
+              { title: 'ICD-10 Kodlama', desc: 'Türkçe tanı girişi ile anlık otomatik kodlama' },
+              { title: '30 SOAP Şablonu', desc: 'Her uzmanlık dalına özel yapılandırılmış not şablonları' }
             ].map((cap, idx) => (
               <div key={idx} style={{ background: '#fff', borderRadius: '16px', padding: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div style={{ width: '36px', height: '36px', background: '#0F766E', borderRadius: '10px', marginBottom: '18px' }} />
@@ -218,6 +220,7 @@ const HomePage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
             {[
               { name: 'e-Nabız / Sağlık.NET', desc: 'Hasta kayıtları', badge: 'ENTEGRE', color: '#5EEAD4' },
+              { name: 'MERNiS / TC Kimlik', desc: 'Otomatik kimlik doğrulama', badge: 'ENTEGRE', color: '#5EEAD4' },
               { name: 'SGK Medula', desc: 'e-reçete, provizyon', badge: 'ENTEGRE', color: '#5EEAD4' },
               { name: 'ICD-10 / HBYS', desc: 'Otomatik kodlama', badge: 'ENTEGRE', color: '#5EEAD4' },
               { name: 'e-Devlet / MERNİS', desc: 'TC kimlik doğrulama', badge: 'ENTEGRE', color: '#5EEAD4' },
@@ -286,8 +289,8 @@ const HomePage: React.FC = () => {
       {/* FINAL CTA */}
       <section style={{ background: '#060C18', color: '#fff', padding: '80px 24px', textAlign: 'center' }}>
         <h2 style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 700, marginBottom: '24px' }}>Klinik pratiğinizi bir üst seviyeye taşıyın.</h2>
-        <button style={{ padding: '16px 40px', background: '#0F766E', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '17px', fontWeight: 600, cursor: 'pointer' }}>14 Gün Ücretsiz Deneyin</button>
-        <div style={{ marginTop: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>KVKK ve AES-256 uyumlu • Frankfurt sunucuları</div>
+        <button style={{ padding: '16px 40px', background: '#0F766E', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '17px', fontWeight: 600, cursor: 'pointer' }}>15 Gün Ücretsiz Deneyin</button>
+        <div style={{ marginTop: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>15 gün ücretsiz • Kredi kartı yok • KVKK & AES-256 uyumlu</div>
       </section>
     </div>
   );
