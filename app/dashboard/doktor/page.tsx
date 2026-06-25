@@ -34,7 +34,7 @@ const specialtyColors: { [key: string]: string } = {
 
 export default function DoktorDashboard() {
   const router = useRouter()
-  const [doktorAdi, setDoktorAdi] = useState('Doktor')
+  const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
   const [recentNotes, setRecentNotes] = useState<NoteItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,7 +80,7 @@ export default function DoktorDashboard() {
         if (meRes.ok) {
           const meData = await meRes.json()
           const name = meData.data?.full_name || meData.data?.email?.split('@')[0] || 'Doktor'
-          setDoktorAdi(name)
+          setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
         }
       } catch {}
 
