@@ -106,12 +106,12 @@ export async function POST(request: NextRequest) {
         )
       : [];
 
-    return NextResponse.json({ sonuclar }, { status: 200 });
+    return NextResponse.json({ results: sonuclar, sonuclar }, { status: 200 });
 
   } catch (error) {
     console.error('ICD-10 API hatası:', error);
     return NextResponse.json(
-      { hata: error instanceof Error ? error.message : String(error), env: { xai: !!process.env.XAI_API_KEY, groq: !!process.env.GROQ_API_KEY, xaiPrefix: (process.env.XAI_API_KEY||'').slice(0,12), groqPrefix: (process.env.GROQ_API_KEY||'').slice(0,12) } },
+      { hata: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

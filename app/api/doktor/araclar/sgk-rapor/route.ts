@@ -26,14 +26,14 @@ async function groqChat(system: string, user: string): Promise<SGKRapor> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
+      model: process.env.GROQ_API_KEY ? 'llama-3.3-70b-versatile' : 'grok-3-mini',
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },
       ],
       temperature: 0.2,
       max_tokens: 2000,
-      response_format: { type: 'json_object' },
+      
     }),
   });
 
