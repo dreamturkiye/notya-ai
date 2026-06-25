@@ -26,7 +26,7 @@ interface GroqInteraksiyonSonuc {
 }
 
 async function groqChat(systemPrompt: string, userPrompt: string): Promise<GroqInteraksiyonSonuc> {
-  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || '';
+  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.GROK_API_KEY || '';
   if (!apiKey) {
     throw new Error('GROQ_API_KEY tanımlı değil');
   }

@@ -16,7 +16,7 @@ interface SGKRapor {
 }
 
 async function groqChat(system: string, user: string): Promise<SGKRapor> {
-  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || '';
+  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.GROK_API_KEY || '';
   if (!apiKey) throw new Error('GROQ_API_KEY tanımlı değil');
 
   const response = await fetch((process.env.GROQ_API_KEY ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.x.ai/v1/chat/completions"), {

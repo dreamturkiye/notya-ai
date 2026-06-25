@@ -19,7 +19,7 @@ interface GroqResponse {
 }
 
 async function groqChat(systemPrompt: string, userPrompt: string): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || ''
+  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.GROK_API_KEY || ''
   const apiBase = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : 'https://api.x.ai/v1'
   const modelId = process.env.GROQ_API_KEY ? 'llama-3.3-70b-versatile' : 'grok-3-mini'
   if (!apiKey) {
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('ICD-10 API hatası:', error);
     return NextResponse.json(
-      { hata: error instanceof Error ? error.message : String(error), env: { xai: !!process.env.XAI_API_KEY, groq: !!process.env.GROQ_API_KEY } },
+      { hata: error instanceof Error ? error.message : String(error), env: { xai: !!process.env.XAI_API_KEY, groq: !!process.env.GROQ_API_KEY, xaiPrefix: (process.env.XAI_API_KEY||'').slice(0,12), groqPrefix: (process.env.GROQ_API_KEY||'').slice(0,12) } },
       { status: 500 }
     );
   }
