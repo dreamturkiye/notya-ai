@@ -3,8 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 
 interface Hasta {
   id: string;
@@ -12,103 +10,102 @@ interface Hasta {
   soyad: string;
 }
 
-interface Gonderilen {
+interface Hatirlatma {
   id: string;
-  hastaId: string;
-  hastaAd: string;
+  hastaAdi: string;
   mesaj: string;
+  kanal: 'WhatsApp' | 'SMS';
   tarih: string;
-  kanal: 'whatsapp' | 'sms';
-  durum: 'bekliyor' | 'gonderildi';
+  durum: 'gonderildi' | 'bekliyor' | 'hata';
 }
 
-interface Sonuc {
-  id: string;
-  basarili: boolean;
-  mesaj: string;
-}
+const DoktorNav = () => (
+  <nav style={{ padding: '16px 24px', borderBottom: '1px solid #1a2233', background: '#060C18', display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{ color: '#fff', fontSize: 18, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>Doktor Paneli</div>
+  </nav>
+);
 
-export default function HatirlatmaPage() {
-  const router = useRouter();
+const tok = () => {
+  try {
+    return JSON.parse(localStorage.getItem('auth-token') || '{}').access_token || '';
+  } catch {
+    return '';
+  }
+};
 
+const glassStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 18,
+  padding: 24,
+  backdropFilter: 'blur(20px)',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 12,
+  padding: '12px 16px',
+  color: '#fff',
+  fontSize: 15,
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  outline: 'none',
+};
+
+const Page: React.FC = () => {
   const [hastalar, setHastalar] = useState<Hasta[]>([]);
-  const [selectedHastaId, setSelectedHastaId] = useState('');
+  const [hatirlatmalar, setHatirlatmalar] = useState<Hatirlatma[]>([]);
+  const [selectedHasta, setSelectedHasta] = useState('');
   const [mesaj, setMesaj] = useState('');
-  const [tarih, setTarih] = useState('');
-  const [kanal, setKanal] = useState<'whatsapp' | 'sms'>('whatsapp');
-  const [sonuclar, setSonuclar] = useState<Sonuc[]>([]);
+  const [tarihSaat, setTarihSaat] = useState('');
+  const [kanal, setKanal] = useState<'WhatsApp' | 'SMS'>('WhatsApp');
   const [loading, setLoading] = useState(false);
-  const [gonderilen, setGonderilen] = useState<Gonderilen[]>([]);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  // Auth kontrolü + hasta listesi
-  useEffect(() => {
-    const token = (() => { const _r = localStorage.getItem('auth-token'); return _r ? (() => { try { return JSON.parse(_r).access_token || _r } catch { return _r } })() : null })();
-    if (!token) {
-      router.push('/giris/doktor');
-      return;
-    }
-
-    const fetchHastalar = async () => {
-      try {
-        const res = await fetch('/api/doktor/hastalar', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setHastalar(data);
-        }
-      } catch (error) {
-        console.error('Hasta listesi alınamadı');
-      }
-    };
-
-    fetchHastalar();
-  }, [router]);
-
-  // Gönderilen hatırlatmaları getir
-  const fetchGonderilenler = async () => {
-    const token = (() => { const _r = localStorage.getItem('auth-token'); return _r ? (() => { try { return JSON.parse(_r).access_token || _r } catch { return _r } })() : null })();
+  const fetchHastalar = async () => {
+    const token = tok();
     if (!token) return;
+    const res = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    setHastalar(data);
+  };
 
-    try {
-      const res = await fetch('/api/doktor/hatirlatma', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setGonderilen(data);
-      }
-    } catch (error) {
-      console.error('Gönderilenler alınamadı');
-    }
+  const fetchHatirlatmalar = async () => {
+    const token = tok();
+    if (!token) return;
+    const res = await fetch('/api/doktor/hatirlatma', { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    setHatirlatmalar(data);
   };
 
   useEffect(() => {
-    fetchGonderilenler();
+    fetchHastalar();
+    fetchHatirlatmalar();
   }, []);
 
-  const handleSablon = (tip: string) => {
-    let sablonMesaj = '';
-    if (tip === 'Takip Randevusu') {
-      sablonMesaj = 'Sayın hastamız, takip randevunuz yaklaşıyor. Lütfen randevu saatinizi kontrol ediniz.';
-    } else if (tip === 'Ilac Yenilemesi') {
-      sablonMesaj = 'Sayın hastamız, reçeteli ilaçlarınızın yenilenme zamanı gelmiştir. Eczanenize başvurabilirsiniz.';
-    } else if (tip === 'Lab Sonucu Hazir') {
-      sablonMesaj = 'Sayın hastamız, laboratuvar sonuçlarınız hazır. Detaylı bilgi için lütfen kliniğimizi ziyaret ediniz.';
-    }
-    setMesaj(sablonMesaj);
+  const sablonlar: Record<string, string> = {
+    'Takip Randevusu': 'Merhaba, takip randevunuz yaklaşıyor. Lütfen tarih ve saati onaylayın.',
+    'Ilac Yenilemesi': 'İlaç reçeteniz yenilenmeye hazır. Eczaneden alabilirsiniz.',
+    'Lab Sonucu Hazir': 'Laboratuvar sonuçlarınız hazır. Detaylar için uygulamayı kontrol edin.',
+    'Kontrol Zamani': 'Kontrol zamanınız geldi. Randevu için iletişime geçin.',
   };
 
-  const handleGonder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedHastaId || !mesaj || !tarih) {
-      alert('Lütfen tüm alanları doldurun.');
+  const handleSablonClick = (key: string) => {
+    setMesaj(sablonlar[key]);
+  };
+
+  const handleGonder = async () => {
+    if (!selectedHasta || !mesaj || !tarihSaat) {
+      setError('Lütfen tüm alanları doldurun.');
       return;
     }
-
     setLoading(true);
-    const token = (() => { const _r = localStorage.getItem('auth-token'); return _r ? (() => { try { return JSON.parse(_r).access_token || _r } catch { return _r } })() : null })();
+    setError('');
+    setSuccess(false);
 
+    const token = tok();
     try {
       const res = await fetch('/api/doktor/hatirlatma', {
         method: 'POST',
@@ -117,194 +114,171 @@ export default function HatirlatmaPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          hastaId: selectedHastaId,
+          hastaId: selectedHasta,
           mesaj,
-          tarih,
           kanal,
+          tarih: tarihSaat,
         }),
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setSonuclar((prev) => [...prev, { id: Date.now().toString(), basarili: true, mesaj: 'Hatırlatma başarıyla gönderildi.' }]);
-        setMesaj('');
-        setTarih('');
-        setSelectedHastaId('');
-        fetchGonderilenler();
-      } else {
-        setSonuclar((prev) => [...prev, { id: Date.now().toString(), basarili: false, mesaj: data.message || 'Gönderim başarısız.' }]);
-      }
-    } catch (error) {
-      setSonuclar((prev) => [...prev, { id: Date.now().toString(), basarili: false, mesaj: 'Sunucu hatası oluştu.' }]);
+      if (!res.ok) throw new Error('Gönderim başarısız');
+      setSuccess(true);
+      setMesaj('');
+      setTarihSaat('');
+      setSelectedHasta('');
+      fetchHatirlatmalar();
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const maskeAd = (ad: string, soyad: string) => {
-    return `${ad[0]}*** ${soyad[0]}***`;
-  };
-
   return (
-    <div className="min-h-screen bg-[#0A1628] text-white">
+    <div style={{ background: '#060C18', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
       <DoktorNav />
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ color: '#14b8a6', fontSize: 12, letterSpacing: 2, fontWeight: 600 }}>HATIRLATMA</div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: '8px 0' }}>Hasta Hatırlatma</h1>
+          <p style={{ color: '#94a3b8', fontSize: 15 }}>WhatsApp veya SMS ile hasta bildirimi gönderin</p>
+        </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* SOL - FORM */}
-          <div className="bg-white text-gray-900 rounded-2xl p-8 shadow-xl">
-            <h1 className="text-2xl font-semibold mb-6">Hatırlatma Gönder</h1>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          {/* LEFT FORM */}
+          <div style={{ ...glassStyle }}>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Yeni Hatırlatma</div>
 
-            <form onSubmit={handleGonder} className="space-y-6">
-              {/* Hasta Seç */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Hasta Seçin</label>
-                <select
-                  value={selectedHastaId}
-                  onChange={(e) => setSelectedHastaId(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  required
-                >
-                  <option value="">Hasta seçiniz...</option>
-                  {hastalar.map((hasta) => (
-                    <option key={hasta.id} value={hasta.id}>
-                      {hasta.ad} {hasta.soyad}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Mesaj */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Mesaj</label>
-                <textarea
-                  value={mesaj}
-                  onChange={(e) => setMesaj(e.target.value)}
-                  placeholder="Sayın hastamız, takip randevunuz yaklaşıyor..."
-                  rows={4}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
-                  required
-                />
-              </div>
-
-              {/* Tarih/Saat */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Tarih ve Saat</label>
-                <input
-                  type="datetime-local"
-                  value={tarih}
-                  onChange={(e) => setTarih(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  required
-                />
-              </div>
-
-              {/* Kanal */}
-              <div>
-                <label className="block text-sm font-medium mb-3">Gönderim Kanalı</label>
-                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="kanal"
-                      value="whatsapp"
-                      checked={kanal === 'whatsapp'}
-                      onChange={() => setKanal('whatsapp')}
-                      className="accent-green-600 w-5 h-5"
-                    />
-                    <span>WhatsApp</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="kanal"
-                      value="sms"
-                      checked={kanal === 'sms'}
-                      onChange={() => setKanal('sms')}
-                      className="accent-blue-600 w-5 h-5"
-                    />
-                    <span>SMS</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Şablonlar */}
-              <div>
-                <label className="block text-sm font-medium mb-3">Hızlı Şablonlar</label>
-                <div className="flex flex-wrap gap-3">
-                  {['Takip Randevusu', 'Ilac Yenilemesi', 'Lab Sonucu Hazir'].map((tip) => (
-                    <button
-                      key={tip}
-                      type="button"
-                      onClick={() => handleSablon(tip)}
-                      className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-                    >
-                      {tip}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Gönder Butonu */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#0A1628] hover:bg-black disabled:bg-gray-400 text-white py-3.5 rounded-xl font-medium transition-all active:scale-[0.985]"
-              >
-                {loading ? 'Gönderiliyor...' : 'Hatırlatmayı Gönder'}
-              </button>
-            </form>
-
-            {/* Sonuçlar */}
-            {sonuclar.length > 0 && (
-              <div className="mt-6 space-y-2">
-                {sonuclar.slice(-2).map((sonuc) => (
-                  <div
-                    key={sonuc.id}
-                    className={`text-sm px-4 py-2 rounded-xl ${sonuc.basarili ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
-                  >
-                    {sonuc.mesaj}
-                  </div>
+            <div style={{ marginBottom: 16 }}>
+              <select value={selectedHasta} onChange={(e) => setSelectedHasta(e.target.value)} style={inputStyle}>
+                <option value="">Hasta seçin</option>
+                {hastalar.map(h => (
+                  <option key={h.id} value={h.id}>{h.ad} {h.soyad}</option>
                 ))}
-              </div>
-            )}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <textarea
+                rows={4}
+                value={mesaj}
+                onChange={(e) => setMesaj(e.target.value)}
+                placeholder="Mesajınızı yazın..."
+                style={{ ...inputStyle, resize: 'none' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <input
+                type="datetime-local"
+                value={tarihSaat}
+                onChange={(e) => setTarihSaat(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
+              {(['WhatsApp', 'SMS'] as const).map(k => (
+                <div
+                  key={k}
+                  onClick={() => setKanal(k)}
+                  style={{
+                    flex: 1,
+                    padding: '10px 0',
+                    textAlign: 'center',
+                    borderRadius: 999,
+                    cursor: 'pointer',
+                    background: kanal === k ? (k === 'WhatsApp' ? '#166534' : '#1e40af') : 'rgba(255,255,255,0.06)',
+                    color: kanal === k ? '#fff' : '#94a3b8',
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  {k}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              {Object.keys(sablonlar).map(key => (
+                <div
+                  key={key}
+                  onClick={() => handleSablonClick(key)}
+                  style={{
+                    padding: '6px 14px',
+                    background: 'rgba(255,255,255,0.06)',
+                    borderRadius: 999,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                  }}
+                >
+                  {key}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={handleGonder}
+              disabled={loading}
+              style={{
+                width: '100%',
+                height: 52,
+                background: '#14b8a6',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 600,
+                cursor: loading ? 'wait' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              {loading ? (
+                <>⟳ Gönderiliyor...</>
+              ) : (
+                'Hatırlatmayı Gönder'
+              )}
+            </button>
+
+            {success && <div style={{ marginTop: 16, padding: 12, background: '#166534', borderRadius: 12, color: '#4ade80', fontSize: 14 }}>Başarıyla gönderildi</div>}
+            {error && <div style={{ marginTop: 16, padding: 12, background: '#7f1d1d', borderRadius: 12, color: '#f87171', fontSize: 14 }}>{error}</div>}
           </div>
 
-          {/* SAĞ - GEÇMİŞ */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-            <h2 className="text-xl font-semibold mb-6">Gönderilen Hatırlatmalar</h2>
+          {/* RIGHT HISTORY */}
+          <div style={{ ...glassStyle }}>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Gönderilen Hatırlatmalar</div>
 
-            {gonderilen.length === 0 ? (
-              <div className="text-white/60 text-center py-12">Henüz hatırlatma gönderilmedi.</div>
-            ) : (
-              <div className="space-y-4 max-h-[620px] overflow-auto pr-2">
-                {gonderilen.map((item) => (
-                  <div key={item.id} className="bg-white/10 rounded-2xl p-5 border border-white/10">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="font-medium">{maskeAd(item.hastaAd.split(' ')[0] || '', item.hastaAd.split(' ')[1] || '')}</div>
-                        <div className="text-xs text-white/60 mt-0.5">
-                          {new Date(item.tarih).toLocaleString('tr-TR')}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className={`px-3 py-1 text-xs rounded-full font-medium ${item.kanal === 'whatsapp' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                          {item.kanal === 'whatsapp' ? 'WhatsApp' : 'SMS'}
-                        </span>
-                        <span className={`px-3 py-1 text-xs rounded-full font-medium ${item.durum === 'gonderildi' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                          {item.durum}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-white/80 line-clamp-2">{item.mesaj}</p>
-                  </div>
-                ))}
-              </div>
+            {hatirlatmalar.length === 0 && (
+              <div style={{ textAlign: 'center', color: '#64748b', padding: '40px 0' }}>Henüz hatırlatma gönderilmedi</div>
             )}
+
+            {hatirlatmalar.map(item => (
+              <div key={item.id} style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ fontSize: 18 }}>{item.kanal === 'WhatsApp' ? '🟢' : '🔵'}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{item.hastaAdi}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 14, margin: '2px 0' }}>{item.mesaj.slice(0, 60)}...</div>
+                  <div style={{ fontSize: 12, color: '#64748b' }}>{new Date(item.tarih).toLocaleString('tr-TR')}</div>
+                </div>
+                <div style={{
+                  padding: '2px 10px',
+                  borderRadius: 999,
+                  fontSize: 12,
+                  background: item.durum === 'gonderildi' ? '#166534' : item.durum === 'bekliyor' ? '#854d0e' : '#7f1d1d',
+                  color: item.durum === 'gonderildi' ? '#4ade80' : item.durum === 'bekliyor' ? '#fbbf24' : '#f87171',
+                }}>
+                  {item.durum}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Page;

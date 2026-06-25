@@ -1,139 +1,83 @@
 'use client';
 
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
 export const dynamic = 'force-dynamic';
 
-import DoktorNav from '@/components/doktor/DoktorNav';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+const DoktorNav = () => (
+  <div style={{ width: '100%', height: '64px', backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', padding: '0 24px', position: 'sticky', top: 0, zIndex: 100 }}>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', fontSize: '17px', fontWeight: 600, color: '#fff', letterSpacing: '-0.3px' }}>Doktor Paneli</div>
+  </div>
+);
 
 interface Tool {
-  letter: string;
+  circleColor: string;
+  icon: string;
   title: string;
-  description: string;
-  path: string;
-  color: string;
-  lightColor: string;
+  desc: string;
+  route: string;
 }
 
 const tools: Tool[] = [
-  {
-    letter: 'eR',
-    title: 'e-Reçete Asistanı',
-    description: 'Elektronik reçete oluşturun, düzenleyin ve SGK entegrasyonunu hızlıca tamamlayın.',
-    path: 'erecete',
-    color: '#065F46',
-    lightColor: '#d1fae5',
-  },
-  {
-    letter: 'EP',
-    title: 'Epikriz Üretici',
-    description: 'Hasta özetlerini otomatik oluşturun ve profesyonel epikriz raporları hazırlayın.',
-    path: 'epikriz',
-    color: '#1e3a5f',
-    lightColor: '#dbeafe',
-  },
-  {
-    letter: 'IK',
-    title: 'ICD-10 Kodlayıcı',
-    description: 'Tanı kodlarını arayın ve doğru ICD-10 kodlarını anında bulun.',
-    path: 'icd10',
-    color: '#7C2D12',
-    lightColor: '#fee2e2',
-  },
-  {
-    letter: 'II',
-    title: 'İlaç İnteraksiyon',
-    description: 'Reçetelerdeki ilaç etkileşimlerini kontrol edin ve uyarıları görüntüleyin.',
-    path: 'ilac-interaksiyon',
-    color: '#4C1D95',
-    lightColor: '#ede9fe',
-  },
-  {
-    letter: 'SR',
-    title: 'SGK Rapor',
-    description: 'SGK uyumlu raporları hızlıca oluşturun ve onay süreçlerini yönetin.',
-    path: 'sgk-rapor',
-    color: '#1B4332',
-    lightColor: '#d8f3dc',
-  },
-  {
-    letter: 'HP',
-    title: 'Hasta Portalı',
-    description: 'Hastalarınızla güvenli iletişim kurun ve portal erişimini yönetin.',
-    path: 'hasta-portali',
-    color: '#92400e',
-    lightColor: '#fef3c7',
-  },
-  {
-    letter: 'HT',
-    title: 'Hatırlatma',
-    description: 'Randevu ve ilaç hatırlatmalarını planlayın, hasta bildirimlerini gönderin.',
-    path: 'hatirlatma',
-    color: '#1e40af',
-    lightColor: '#eff6ff',
-  },
-  {
-    letter: 'TS',
-    title: 'Tetkik İsteği',
-    description: 'Laboratuvar ve görüntüleme tetkiklerini oluşturun ve sonuçları takip edin.',
-    path: 'tetkik',
-    color: '#831843',
-    lightColor: '#fce7f3',
-  },
-  {
-    letter: 'eN',
-    title: 'e-Nabız Rehberi',
-    description: 'e-Nabız entegrasyonu ile hasta verilerine hızlı erişim sağlayın.',
-    path: 'enabiz',
-    color: '#374151',
-    lightColor: '#f3f4f6',
-  },
+  { circleColor: '#0F9B8E', icon: 'Rx', title: 'e-Recete Asistani', desc: 'Elektronik recete olustur ve SGK entegrasyonunu tamamla', route: '/doktor-tools/erecete' },
+  { circleColor: '#8B5CF6', icon: 'EP', title: 'Epikriz Uretici', desc: 'Hasta ozetlerini otomatik olustur ve profesyonel epikriz raporlari hazirla', route: '/doktor-tools/epikriz' },
+  { circleColor: '#F59E0B', icon: 'IK', title: 'ICD-10 Kodlayici', desc: 'Turkce tani girisiyle anlik ICD-10 kodlama', route: '/doktor-tools/icd10' },
+  { circleColor: '#EF4444', icon: 'II', title: 'Ilac Interaksiyon', desc: 'Recetedeki ilac etkilesimlerini kontrol et ve uyarilari goruntule', route: '/doktor-tools/ilac-interaksiyon' },
+  { circleColor: '#166534', icon: 'SR', title: 'SGK Rapor', desc: 'SGK uyumlu raporlari hizlica olustur', route: '/doktor-tools/sgk-rapor' },
+  { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portali', desc: 'Hastalara guvenli portal erisimi ver', route: '/doktor-tools/hasta-portali' },
+  { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-recete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
+  { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabiz Rehberi', desc: 'Hasta kaydi erisimi adim adim', route: '/doktor-tools/enabiz' },
+  { circleColor: '#7C3AED', icon: 'HT', title: 'Hatirlatma', desc: 'WhatsApp/SMS hasta bildirimleri gonder', route: '/doktor-tools/hatirlatma' },
 ];
 
 export default function DoktorToolsPage() {
   const router = useRouter();
-
-  useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    if (!token) {
-      router.push('/giris/doktor');
-    }
-  }, [router]);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9]">
+    <div style={{ minHeight: '100vh', backgroundColor: '#060C18', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
       <DoktorNav />
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900">Doktor Araçları</h1>
-          <p className="text-gray-600 mt-2">Günlük iş akışınızı hızlandıracak araçlara erişin.</p>
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 20px' }}>
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: '#14B8A6', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>ARAÇLAR</div>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, letterSpacing: '-0.6px' }}>Doktor Araçları</h1>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '8px', marginBottom: 0 }}>Klinik is akisinizi hizlandiracak araçlara erisin</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tools.map((tool, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
-            >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>
+          {tools.map((tool, index) => {
+            const isHovered = hoveredIndex === index;
+            return (
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl font-semibold mb-4"
-                style={{ backgroundColor: tool.color }}
+                key={index}
+                onClick={() => router.push(tool.route)}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${isHovered ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: '18px',
+                  padding: '24px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                }}
               >
-                {tool.letter}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: tool.circleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{tool.icon}</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '17px', fontWeight: 600, color: '#fff', marginBottom: '6px' }}>{tool.title}</div>
+                    <div style={{ fontSize: '13px', color: '#9CA3AF', lineHeight: '1.45' }}>{tool.desc}</div>
+                  </div>
+                  <div style={{ color: '#6B7280', fontSize: '18px', marginTop: '2px' }}>→</div>
+                </div>
               </div>
-
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{tool.title}</h3>
-              <p className="text-gray-600 flex-grow mb-6 leading-relaxed">{tool.description}</p>
-
-              <button
-                onClick={() => router.push(`/${tool.path}`)}
-                className="w-full py-3 rounded-xl font-medium text-white transition-colors"
-                style={{ backgroundColor: tool.color }}
-              >
-                Aracı Aç
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

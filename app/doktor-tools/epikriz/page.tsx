@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,239 +14,467 @@ interface Hasta {
 interface Seans {
   id: string;
   tarih: string;
-  uzmanlik: string;
+  saat: string;
 }
 
 interface EpikrizSonuc {
-  basvuruSikayeti: string;
-  anamnestikBilgi: string;
-  fizikMuayene: string;
-  tani: { kod: string; aciklama: string };
-  tedavi: string;
-  takipOnerisi: string;
+  hastaBilgileri: string;
+  taniVeTedavi: string;
+  taburcuOzeti: string;
 }
+
+const DoktorNav = () => (
+  <nav style={{ 
+    height: '64px', 
+    backgroundColor: '#0A1428', 
+    borderBottom: '1px solid #1F2A44',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 24px',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100
+  }}>
+    <div style={{ fontSize: '17px', fontWeight: 600, color: '#fff', letterSpacing: '-0.3px' }}>
+      Doktor Paneli
+    </div>
+  </nav>
+);
 
 export default function EpikrizPage() {
   const [hastalar, setHastalar] = useState<Hasta[]>([]);
-  const [sessions, setSessions] = useState<Seans[]>([]);
-  const [selectedHastaId, setSelectedHastaId] = useState('');
-  const [selectedSeansId, setSelectedSeansId] = useState('');
+  const [seciliHastaId, setSeciliHastaId] = useState('');
+  const [seanslar, setSeanslar] = useState<Seans[]>([]);
+  const [seciliSeansId, setSeciliSeansId] = useState('');
   const [ekBilgi, setEkBilgi] = useState('');
-  const [result, setResult] = useState<EpikrizSonuc | null>(null);
+  const [sonuc, setSonuc] = useState<EpikrizSonuc | null>(null);
   const [loading, setLoading] = useState(false);
+  const [seansLoading, setSeansLoading] = useState(false);
+  const [seansError, setSeansError] = useState('');
+  const [hastaLoading, setHastaLoading] = useState(true);
+
+  const getToken = () => {
+    if (typeof window === 'undefined') return null;
+    const tokenStr = localStorage.getItem('auth-token');
+    if (!tokenStr) return null;
+    try {
+      return JSON.parse(tokenStr).access_token;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
-    const checkAuthAndFetch = async () => {
+    const fetchHastalar = async () => {
+      const token = getToken();
+      if (!token) {
+        setHastaLoading(false);
+        return;
+      }
       try {
-        const authRes = await fetch('/api/auth/session');
-        if (!authRes.ok) {
-          window.location.href = '/giris';
-          return;
-        }
-        const res = await fetch('/api/doktor/hastalar');
+        const res = await fetch('/api/doktor/hastalar', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (res.ok) {
           const data = await res.json();
-          setHastalar(data.hastalar || []);
+          setHastalar(data);
         }
-      } catch (error) {
-        console.error('Auth veya hasta yükleme hatası:', error);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setHastaLoading(false);
       }
     };
-    checkAuthAndFetch();
+    fetchHastalar();
   }, []);
 
-  const handleHastaChange = async (hastaId: string) => {
-    setSelectedHastaId(hastaId);
-    setSelectedSeansId('');
-    setSessions([]);
-    setResult(null);
-    setEkBilgi('');
+  const handleHastaChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const hastaId = e.target.value;
+    setSeciliHastaId(hastaId);
+    setSeciliSeansId('');
+    setSeanslar([]);
+    setSeansError('');
+    setSonuc(null);
 
     if (!hastaId) return;
 
+    setSeansLoading(true);
+    const token = getToken();
+    if (!token) {
+      setSeansLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/doktor/hastalar/${hastaId}`);
-      if (res.ok) {
+      const res = await fetch(`/api/doktor/hastalar/${hastaId}/sessions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 404) {
+        setSeansError('Seans bulunamadi');
+        setSeanslar([]);
+      } else if (res.ok) {
         const data = await res.json();
-        setSessions(data.seanslar || []);
+        setSeanslar(data);
+        setSeansError('');
       }
-    } catch (error) {
-      console.error('Seans yükleme hatası:', error);
+    } catch (e) {
+      setSeansError('Seans bulunamadi');
+    } finally {
+      setSeansLoading(false);
     }
   };
 
   const handleUret = async () => {
-    if (!selectedHastaId || !selectedSeansId) return;
+    if (!seciliHastaId || !seciliSeansId) return;
 
     setLoading(true);
+    const token = getToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/doktor/araclar/epikriz', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          hastaId: selectedHastaId,
-          seansId: selectedSeansId,
+          hastaId: seciliHastaId,
+          seansId: seciliSeansId,
           ekBilgi,
         }),
       });
 
       if (res.ok) {
-        const data = await res.json();
-        setResult(data.epikriz);
+        const data: EpikrizSonuc = await res.json();
+        setSonuc(data);
       }
-    } catch (error) {
-      console.error('Epikriz üretme hatası:', error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleKopyala = () => {
+    if (!sonuc) return;
+    const text = `${sonuc.hastaBilgileri}\n\n${sonuc.taniVeTedavi}\n\n${sonuc.taburcuOzeti}`;
+    navigator.clipboard.writeText(text);
   };
 
   const handleYazdir = () => {
     window.print();
   };
 
-  const handleKopyala = () => {
-    if (!result) return;
-    const text = `
-EPIKRIZ
-Tarih: ${new Date().toLocaleDateString('tr-TR')}
-Hastane: Özel Sağlık Merkezi
-
-BASVURU SIKAYETI
-${result.basvuruSikayeti}
-
-ANAMNESTIK BILGI
-${result.anamnestikBilgi}
-
-FIZIK MUAYENE
-${result.fizikMuayene}
-
-TANI
-${result.tani.kod} - ${result.tani.aciklama}
-
-TEDAVI
-${result.tedavi}
-
-TAKIP ONERISI
-${result.takipOnerisi}
-    `.trim();
-    navigator.clipboard.writeText(text);
-    alert('Epikriz panoya kopyalandı.');
+  const handlePDF = () => {
+    alert('PDF indirme başlatıldı (demo)');
   };
 
-  const selectedSeans = sessions.find(s => s.id === selectedSeansId);
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#060C18', 
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+    }}>
       <DoktorNav />
       
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-8">Epikriz Oluştur</h1>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 24px' }}>
+        {/* HEADER */}
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ 
+            color: '#14B8A6', 
+            fontSize: '13px', 
+            fontWeight: 600, 
+            letterSpacing: '1.5px',
+            marginBottom: '8px' 
+          }}>
+            EPIKRIZ
+          </div>
+          <h1 style={{ 
+            fontSize: '28px', 
+            fontWeight: 700, 
+            color: '#fff', 
+            margin: 0,
+            letterSpacing: '-0.6px'
+          }}>
+            Epikriz Uretici
+          </h1>
+          <p style={{ 
+            color: '#8A94A8', 
+            fontSize: '15px', 
+            marginTop: '8px' 
+          }}>
+            Hasta ve seans seçerek profesyonel epikriz raporu oluşturun
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* SOL FORM */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-medium mb-6">Hasta ve Seans Seçimi</h2>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 1fr', 
+          gap: '32px' 
+        }}>
+          {/* LEFT - FORM */}
+          <div>
+            <div style={{
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '18px',
+              padding: '24px',
+              backdropFilter: 'blur(20px)'
+            }}>
+              <div style={{ 
+                fontSize: '18px', 
+                fontWeight: 600, 
+                color: '#fff', 
+                marginBottom: '24px' 
+              }}>
+                Epikriz Bilgileri
+              </div>
 
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Hasta</label>
-                <select
-                  value={selectedHastaId}
-                  onChange={(e) => handleHastaChange(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              {/* Hasta Select */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#A1A9BB', 
+                  fontSize: '13px', 
+                  marginBottom: '8px' 
+                }}>
+                  Hasta
+                </label>
+                <select 
+                  value={seciliHastaId} 
+                  onChange={handleHastaChange}
+                  disabled={hastaLoading}
+                  style={{
+                    width: '100%',
+                    height: '48px',
+                    backgroundColor: '#0F1729',
+                    border: '1px solid #2A3448',
+                    borderRadius: '10px',
+                    color: '#fff',
+                    fontSize: '15px',
+                    padding: '0 14px',
+                    outline: 'none'
+                  }}
                 >
-                  <option value="">Hasta seçiniz</option>
+                  <option value="">Hasta seçin</option>
                   {hastalar.map(h => (
-                    <option key={h.id} value={h.id}>{h.ad} {h.soyad} ({h.tcKimlik})</option>
+                    <option key={h.id} value={h.id}>
+                      {h.ad} {h.soyad} ({h.tcKimlik})
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Seans</label>
-                <select
-                  value={selectedSeansId}
-                  onChange={(e) => setSelectedSeansId(e.target.value)}
-                  disabled={!selectedHastaId}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100"
+              {/* Seans Select */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#A1A9BB', 
+                  fontSize: '13px', 
+                  marginBottom: '8px' 
+                }}>
+                  Seans
+                </label>
+                <select 
+                  value={seciliSeansId} 
+                  onChange={(e) => setSeciliSeansId(e.target.value)}
+                  disabled={!seciliHastaId || seansLoading}
+                  style={{
+                    width: '100%',
+                    height: '48px',
+                    backgroundColor: '#0F1729',
+                    border: '1px solid #2A3448',
+                    borderRadius: '10px',
+                    color: '#fff',
+                    fontSize: '15px',
+                    padding: '0 14px',
+                    outline: 'none'
+                  }}
                 >
-                  <option value="">Seans seçiniz</option>
-                  {sessions.map(s => (
-                    <option key={s.id} value={s.id}>{new Date(s.tarih).toLocaleDateString('tr-TR')} - {s.uzmanlik}</option>
+                  <option value="">Seans seçin</option>
+                  {seanslar.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.tarih} • {s.saat}
+                    </option>
                   ))}
                 </select>
+                {seansError && (
+                  <div style={{ color: '#EF4444', fontSize: '13px', marginTop: '6px' }}>
+                    {seansError}
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ek Bilgi</label>
+              {/* Ek Bilgi */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#A1A9BB', 
+                  fontSize: '13px', 
+                  marginBottom: '8px' 
+                }}>
+                  Ek Bilgi
+                </label>
                 <textarea
                   value={ekBilgi}
                   onChange={(e) => setEkBilgi(e.target.value)}
                   rows={4}
                   placeholder="Ek klinik bilgi veya notlar..."
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#0F1729',
+                    border: '1px solid #2A3448',
+                    borderRadius: '10px',
+                    color: '#fff',
+                    fontSize: '15px',
+                    padding: '14px',
+                    resize: 'vertical',
+                    outline: 'none'
+                  }}
                 />
               </div>
 
               <button
                 onClick={handleUret}
-                disabled={!selectedHastaId || !selectedSeansId || loading}
-                className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white font-medium py-3 rounded-lg transition-colors"
+                disabled={!seciliHastaId || !seciliSeansId || loading}
+                style={{
+                  width: '100%',
+                  height: '52px',
+                  backgroundColor: '#14B8A6',
+                  color: '#fff',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: loading || !seciliHastaId || !seciliSeansId ? 'not-allowed' : 'pointer',
+                  opacity: loading || !seciliHastaId || !seciliSeansId ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
               >
-                {loading ? 'Üretiliyor...' : 'Epikriz Üret'}
+                {loading && (
+                  <div style={{
+                    width: '18px',
+                    height: '18px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderTopColor: '#fff',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite'
+                  }} />
+                )}
+                Epikriz Uret
               </button>
             </div>
           </div>
 
-          {/* SAĞ ÖNİZLEME */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 print:shadow-none print:border-none">
-            {!result ? (
-              <div className="flex items-center justify-center h-96 text-center text-gray-500">
-                <div>
-                  <p className="text-lg">Epikriz oluşturmak için</p>
-                  <p className="text-lg">hasta ve seans seçin.</p>
-                </div>
+          {/* RIGHT - RESULT */}
+          <div>
+            {!sonuc ? (
+              <div style={{
+                height: '100%',
+                minHeight: '380px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '18px',
+                padding: '48px 32px'
+              }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <p style={{ 
+                  color: '#64748B', 
+                  fontSize: '15px', 
+                  marginTop: '20px',
+                  textAlign: 'center'
+                }}>
+                  Epikriz oluşturmak için hasta ve seans seçin
+                </p>
               </div>
             ) : (
-              <div id="epikriz-card" className="print:p-8">
-                <div className="text-center border-b pb-4 mb-6">
-                  <h1 className="text-3xl font-bold tracking-wider">EPIKRIZ</h1>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {new Date().toLocaleDateString('tr-TR')} • Özel Sağlık Merkezi
-                  </p>
+              <div style={{
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '18px',
+                padding: '28px',
+                color: '#fff'
+              }}>
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>Hasta Bilgileri</div>
+                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.5' }}>{sonuc.hastaBilgileri}</div>
                 </div>
 
-                {[
-                  { label: 'BASVURU SIKAYETI', value: result.basvuruSikayeti },
-                  { label: 'ANAMNESTIK BILGI', value: result.anamnestikBilgi },
-                  { label: 'FIZIK MUAYENE', value: result.fizikMuayene },
-                  { label: 'TANI', value: `${result.tani.kod} - ${result.tani.aciklama}` },
-                  { label: 'TEDAVI', value: result.tedavi },
-                  { label: 'TAKIP ONERISI', value: result.takipOnerisi },
-                ].map((section, idx) => (
-                  <div key={idx} className="mb-6">
-                    <div className="pl-4 border-l-4 border-teal-600">
-                      <div className="uppercase text-xs font-semibold tracking-widest text-teal-700 mb-1.5">
-                        {section.label}
-                      </div>
-                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{section.value}</p>
-                    </div>
-                  </div>
-                ))}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>Tanı ve Tedavi</div>
+                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.5' }}>{sonuc.taniVeTedavi}</div>
+                </div>
 
-                <div className="mt-8 flex gap-3 print:hidden">
-                  <button
-                    onClick={handleYazdir}
-                    className="flex-1 border border-gray-300 hover:bg-gray-50 py-2.5 rounded-lg font-medium text-sm"
-                  >
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>Taburcu Özeti</div>
+                  <div style={{ 
+                    color: '#CBD5E1', 
+                    fontSize: '15px', 
+                    lineHeight: '1.6',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {sonuc.taburcuOzeti}
+                  </div>
+                </div>
+
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '12px', 
+                  marginTop: '32px',
+                  flexWrap: 'wrap'
+                }}>
+                  <button onClick={handleKopyala} style={{
+                    flex: 1,
+                    height: '44px',
+                    backgroundColor: 'transparent',
+                    color: '#14B8A6',
+                    border: '1px solid #14B8A6',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}>
+                    Kopyala
+                  </button>
+                  <button onClick={handleYazdir} style={{
+                    flex: 1,
+                    height: '44px',
+                    backgroundColor: 'transparent',
+                    color: '#14B8A6',
+                    border: '1px solid #14B8A6',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}>
                     Yazdır
                   </button>
-                  <button
-                    onClick={handleKopyala}
-                    className="flex-1 bg-teal-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-teal-700"
-                  >
-                    Kopyala
+                  <button onClick={handlePDF} style={{
+                    flex: 1,
+                    height: '44px',
+                    backgroundColor: 'transparent',
+                    color: '#14B8A6',
+                    border: '1px solid #14B8A6',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}>
+                    PDF İndir
                   </button>
                 </div>
               </div>
@@ -256,12 +483,9 @@ ${result.takipOnerisi}
         </div>
       </div>
 
-      <style jsx global>{`
-        @media print {
-          body * { visibility: hidden; }
-          #epikriz-card, #epikriz-card * { visibility: visible; }
-          #epikriz-card { position: absolute; left: 0; top: 0; width: 100%; }
-          .print\\:hidden { display: none !important; }
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
