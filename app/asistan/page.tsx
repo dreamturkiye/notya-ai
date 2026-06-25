@@ -85,6 +85,16 @@ export default function AsistanPage() {
     setStatus("connecting")
     setErrorMsg("")
     setMessages([])
+    // Pre-flight: request mic permission explicitly on user gesture
+    // so the browser prompt fires before any async work
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.getTracks().forEach(t => t.stop())
+    } catch (micErr) {
+      setErrorMsg(micPermissionHelp())
+      setStatus("error")
+      return
+    }
     // Android: unlock AudioContext on user gesture before any async work
     if (isAndroid() && typeof window !== "undefined") {
       try { const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)(); await ctx.resume() } catch { /* non-fatal */ }
