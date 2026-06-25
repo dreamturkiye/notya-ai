@@ -147,27 +147,27 @@ export default function DoktorDashboard() {
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '0 24px',
+        padding: '12px 20px',
         animation: mounted ? 'fadeIn 300ms ease-out' : 'none'
       }}>
         {/* SECTION 1 - WELCOME BAR */}
         <div style={{
-          height: '72px',
+          minHeight: '72px',
           background: 'linear-gradient(135deg, #0F1E35 0%, #0A1628 100%)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'space-between', alignItems: 'flex-start',
           padding: '0 24px',
           borderBottom: '1px solid rgba(255,255,255,0.06)'
         }}>
           <div>
-            <div style={{ fontSize: '12px', color: '#94A3B8' }}>Hoşgeldiniz</div>
-            <div style={{ fontSize: '32px', fontWeight: 600 }}>Dr. {doktorAdi}</div>
+            <div style={{ fontSize: '11px', color: '#94A3B8', letterSpacing: '0.5px' }}>Hoşgeldiniz</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>Dr. {doktorAdi}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ fontSize: '12px', color: '#64748B' }}>{today}</div>
+            <div style={{ fontSize: '10px', color: '#64748B', whiteSpace: 'nowrap' }}>{today}</div>
             <div style={{ width: '8px', height: '8px', background: '#10B981', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
-            <div style={{ fontSize: '12px', color: '#14B8A6' }}>Sistem aktif</div>
+            <div style={{ fontSize: '11px', color: '#14B8A6' }}>Sistem aktif</div>
           </div>
         </div>
 
