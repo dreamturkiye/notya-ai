@@ -28,6 +28,13 @@ const PERSONAS: Record<string, Persona> = {
   elifsahin:   { fullName: "Prof. Dr. Elif Şahin",    name: "Prof. Elif Şahin",    title: "Nöroloji & Dahiliye", emoji: "👩‍⚕️", color: "#7C3AED", specialty: "genel",       template: "genel"       },
 }
 
+const DOCTOR_PHOTOS: Record<string,string> = {
+  aysekaya: '/doctors/dr_ayse.jpg',
+  mehmetdemir: '/doctors/dr_mehmet.jpg',
+  elifsahin: '/doctors/dr_elif.jpg',
+}
+
+
 type ActiveConversation = Awaited<ReturnType<typeof Conversation.startSession>>
 
 export default function AsistanPage() {
@@ -221,10 +228,12 @@ export default function AsistanPage() {
             <div style={{ width: 88, height: 88, borderRadius: '50%',
                           background: 'linear-gradient(135deg,' + persona.color + '33,' + persona.color + '11)',
                           border: '2px solid ' + persona.color + '55',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                           fontSize: '30px', fontWeight: 700, color: persona.color,
                           boxShadow: '0 0 32px ' + persona.color + '22' }}>
-              {persona.fullName.split(' ').filter((w: string) => /^[A-Z]/.test(w)).slice(-2).map((w: string) => w[0]).join('')}
+              {DOCTOR_PHOTOS[personaKey]
+                ? <img src={DOCTOR_PHOTOS[personaKey]} alt={persona.fullName} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}}/>
+                : persona.fullName.split(' ').filter((w:string)=>/^[A-Z]/.test(w)).slice(-2).map((w:string)=>w[0]).join('')}
             </div>
             <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{formatColleagueTabLabel(persona.fullName)}</div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,.4)" }}>{persona.title}</div>

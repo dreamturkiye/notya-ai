@@ -1,290 +1,233 @@
-'use client'
+'use client';
 
-export const dynamic = 'force-dynamic'
+import React, { useState, useEffect } from 'react';
+import DoktorNav from '@/components/doktor/DoktorNav';
 
-import React, { useState, useEffect } from 'react'
-import DoktorNav from '@/components/doktor/DoktorNav'
+export const dynamic = 'force-dynamic';
 
-interface Tanilar {
-  icd10: string
-  aciklama: string
-  count: number
+interface TanilarItem {
+  code: string;
+  name: string;
+  count: number;
 }
 
-interface Uzmanlik {
-  uzmanlik: string
-  count: number
+interface UzmanlikItem {
+  name: string;
+  count: number;
 }
 
-interface Stats {
-  bugunMuayene: number
-  buAyMuayene: number
-  toplamHasta: number
-  bekleyenOnay: number
-  topTanilar: Tanilar[]
-  topUzmanliklar: Uzmanlik[]
-}
-
-interface ActivityDay {
-  date: string
-  count: number
+interface HaftaItem {
+  seans: number;
+  onaylanan: number;
+  bekleyen: number;
 }
 
 interface RaporData {
-  stats: Stats
-  doktorAdi: string
-  activity: ActivityDay[]
+  muayene: number;
+  bekleyen: number;
+  aktifHasta: number;
+  tamamlananNot: number;
+  tanilar: TanilarItem[];
+  activity: number[];
+  uzmanlik: UzmanlikItem[];
+  hafta: HaftaItem;
 }
 
-export default function DoktorRaporlarPage() {
-  const [stats, setStats] = useState<Stats>({
-    bugunMuayene: 0,
-    buAyMuayene: 0,
-    toplamHasta: 0,
-    bekleyenOnay: 0,
-    topTanilar: [],
-    topUzmanliklar: [],
-  })
-  const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  })
-  const [doktorAdi, setDoktorAdi] = useState('')
-  const [activity, setActivity] = useState<ActivityDay[]>([])
+const Page: React.FC = () => {
+  const [currentMonth, setCurrentMonth] = useState('2025-12');
+  const [data, setData] = useState<RaporData>({
+    muayene: 0,
+    bekleyen: 0,
+    aktifHasta: 0,
+    tamamlananNot: 0,
+    tanilar: [],
+    activity: Array(35).fill(0),
+    uzmanlik: [],
+    hafta: { seans: 0, onaylanan: 0, bekleyen: 0 },
+  });
+  const [loading, setLoading] = useState(true);
 
-  const fetchRaporlar = async (month: string) => {
-    setLoading(true)
+  const monthNames = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'];
+  const [year, month] = currentMonth.split('-').map(Number);
+  const monthLabel = `${monthNames[month - 1]} ${year}`;
+
+  const fetchData = async (monthStr: string) => {
+    setLoading(true);
     try {
-      const res = await fetch(`/api/doktor/raporlar?month=${month}`, {
-        credentials: 'include',
-      })
-      if (!res.ok) throw new Error('Veri alınamadı')
-      const data: RaporData = await res.json()
-      setStats(data.stats)
-      setDoktorAdi(data.doktorAdi)
-      setActivity(data.activity || [])
-    } catch (error) {
-      console.error(error)
-      setStats({
-        bugunMuayene: 0,
-        buAyMuayene: 0,
-        toplamHasta: 0,
-        bekleyenOnay: 0,
-        topTanilar: [],
-        topUzmanliklar: [],
-      })
-      setActivity([])
-    } finally {
-      setLoading(false)
+      const token = localStorage.getItem('auth-token') || '';
+      const res = await fetch(`/api/doktor/raporlar?month=${monthStr}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const json: RaporData = await res.json();
+        setData({
+          muayene: json.muayene || 0,
+          bekleyen: json.bekleyen || 0,
+          aktifHasta: json.aktifHasta || 0,
+          tamamlananNot: json.tamamlananNot || 0,
+          tanilar: json.tanilar || [],
+          activity: json.activity?.length === 35 ? json.activity : Array(35).fill(0),
+          uzmanlik: json.uzmanlik || [],
+          hafta: json.hafta || { seans: 0, onaylanan: 0, bekleyen: 0 },
+        });
+      }
+    } catch {
+      // silent fail
     }
-  }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    fetchRaporlar(selectedMonth)
-  }, [selectedMonth])
+    fetchData(currentMonth);
+  }, [currentMonth]);
 
   const changeMonth = (delta: number) => {
-    const [year, month] = selectedMonth.split('-').map(Number)
-    const date = new Date(year, month - 1 + delta, 1)
-    const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    setSelectedMonth(newMonth)
-  }
+    const d = new Date(year, month - 1 + delta, 1);
+    const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    setCurrentMonth(newMonth);
+  };
 
-  const maxUzmanlik = Math.max(...stats.topUzmanliklar.map(u => u.count), 1)
-  const maxTanilar = Math.max(...stats.topTanilar.map(t => t.count), 1)
+  const maxTanilar = Math.max(...(data.tanilar.length ? data.tanilar.map(t => t.count) : [1]), 1);
+  const maxUzmanlik = Math.max(...(data.uzmanlik.length ? data.uzmanlik.map(u => u.count) : [1]), 1);
 
-  const getHeatmapColor = (count: number) => {
-    if (count === 0) return 'bg-zinc-800'
-    if (count <= 2) return 'bg-teal-700'
-    return 'bg-teal-500'
-  }
+  const getActivityColor = (val: number) => {
+    if (val === 0) return 'rgba(255,255,255,0.05)';
+    if (val <= 2) return 'rgba(15,155,142,0.6)';
+    return '#0F9B8E';
+  };
 
-  const renderHeatmap = () => {
-    const days = Array.from({ length: 35 }, (_, i) => {
-      const dayIndex = i
-      const dayData = activity[dayIndex] || { date: '', count: 0 }
-      return dayData
-    })
+  const printPDF = () => () => { if (typeof window !== 'undefined') window.print() };
 
-    return (
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((day, index) => (
-          <div
-            key={index}
-            className={`aspect-square rounded ${getHeatmapColor(day.count)} flex items-center justify-center text-[10px] text-white/70`}
-            title={`${day.date || ''} - ${day.count} seans`}
-          >
-            {day.count > 0 ? day.count : ''}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  const handlePrint = () => {
-    window.print()
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-white">
-        <DoktorNav />
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-zinc-400">Raporlar yükleniyor...</div>
-        </div>
-      </div>
-    )
-  }
+  const kpiCards = [
+    { label: 'Bu Ay Muayene', value: data.muayene, color: '#0F9B8E' },
+    { label: 'Bekleyen Onay', value: data.bekleyen, color: '#F59E0B' },
+    { label: 'Aktif Hasta', value: data.aktifHasta, color: '#3B82F6' },
+    { label: 'Tamamlanan Not', value: data.tamamlananNot, color: '#10B981' },
+  ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: 'white' }}>
+      <style>{`@media print { nav, button { display: none !important; } }`}</style>
+
       <DoktorNav />
-      
-      <div className="max-w-7xl mx-auto px-6 py-8 print:px-0 print:py-4">
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 60px' }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 print:mb-4">
-          <div>
-            <h1 className="text-3xl font-semibold">Aylık Klinik Rapor</h1>
-            <p className="text-zinc-400 mt-1">{doktorAdi}</p>
-          </div>
-          
-          <div className="flex items-center gap-4 print:hidden">
-            <div className="flex items-center bg-zinc-900 rounded-lg border border-zinc-800">
-              <button
-                onClick={() => changeMonth(-1)}
-                className="px-3 py-2 hover:bg-zinc-800 rounded-l-lg"
-              >
-                ←
-              </button>
-              <div className="px-4 py-2 font-mono text-sm border-x border-zinc-800">
-                {selectedMonth}
-              </div>
-              <button
-                onClick={() => changeMonth(1)}
-                className="px-3 py-2 hover:bg-zinc-800 rounded-r-lg"
-              >
-                →
-              </button>
-            </div>
-            
-            <button
-              onClick={handlePrint}
-              className="px-4 py-2 bg-white text-zinc-950 rounded-lg font-medium hover:bg-zinc-200 flex items-center gap-2"
-            >
-              PDF İndir
-            </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '32px', marginBottom: '32px' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700 }}>Aylık Klinik Raporu</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button onClick={() => changeMonth(-1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer' }}>←</button>
+            <div style={{ fontSize: '16px', fontWeight: 500 }}>{monthLabel}</div>
+            <button onClick={() => changeMonth(1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer' }}>→</button>
+            <button onClick={printPDF} style={{ marginLeft: '24px', background: '#0F9B8E', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}>PDF İndir</button>
           </div>
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <div className="text-sm text-zinc-400">Bu Ay Muayene</div>
-            <div className="text-4xl font-semibold mt-2">{stats.buAyMuayene}</div>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <div className="text-sm text-zinc-400">Toplam Aktif Hasta</div>
-            <div className="text-4xl font-semibold mt-2">{stats.toplamHasta}</div>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <div className="text-sm text-zinc-400">Bekleyen Onay</div>
-            <div className="text-4xl font-semibold mt-2">{stats.bekleyenOnay}</div>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <div className="text-sm text-zinc-400">Tamamlanan Notlar</div>
-            <div className="text-4xl font-semibold mt-2">{stats.bugunMuayene}</div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', margin: '24px 0' }}>
+          {kpiCards.map((card, idx) => (
+            <div key={idx} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderLeft: `4px solid ${card.color}`, borderRadius: '16px', padding: '20px' }}>
+              {loading ? (
+                <div style={{ height: '60px', background: 'rgba(255,255,255,0.06)', borderRadius: '8px' }} />
+              ) : (
+                <>
+                  <div style={{ fontSize: '32px', fontWeight: 700 }}>{card.value}</div>
+                  <div style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '4px' }}>{card.label}</div>
+                </>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-          {/* En Çok Konulan Tanılar */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <h3 className="font-semibold mb-4">En Çok Konulan Tanılar</h3>
-            {stats.topTanilar.length === 0 ? (
-              <div className="text-zinc-500 py-8 text-center">Bu ay tanı verisi bulunamadı.</div>
-            ) : (
-              <div className="space-y-3">
-                {stats.topTanilar.slice(0, 5).map((tani, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className="w-16 font-mono text-xs text-teal-400">{tani.icd10}</div>
-                    <div className="flex-1 text-sm">{tani.aciklama}</div>
-                    <div className="flex items-center gap-2 w-32">
-                      <div className="flex-1 bg-zinc-800 h-1.5 rounded">
-                        <div 
-                          className="bg-teal-500 h-1.5 rounded" 
-                          style={{ width: `${(tani.count / maxTanilar) * 100}%` }}
-                        />
-                      </div>
-                      <div className="text-xs w-6 text-right">{tani.count}</div>
+        {/* Two Column Layout */}
+        <div style={{ display: 'flex', gap: '20px', flexDirection: (typeof window !== 'undefined' ? window.innerWidth : 1024) < 900 ? 'column' : 'row' }}>
+          {/* LEFT 60% */}
+          <div style={{ flex: '0 0 60%' }}>
+            {/* Son Tanılar */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>EN ÇOK KONULAN TANILAR</div>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => <div key={i} style={{ height: '42px', background: 'rgba(255,255,255,0.06)', marginBottom: '8px', borderRadius: '6px' }} />)
+              ) : data.tanilar.length === 0 ? (
+                <div style={{ color: '#9CA3AF', fontSize: '14px' }}>Henüz tanı kaydedilmedi</div>
+              ) : (
+                data.tanilar.slice(0, 5).map((t, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ width: '70px', fontSize: '13px', fontWeight: 700, color: '#0F9B8E' }}>{t.code}</div>
+                    <div style={{ flex: 1, fontSize: '14px' }}>{t.name}</div>
+                    <div style={{ width: '40px', textAlign: 'right', fontSize: '13px', color: '#9CA3AF' }}>{t.count}</div>
+                    <div style={{ width: '120px', marginLeft: '12px', background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '3px' }}>
+                      <div style={{ width: `${(t.count / maxTanilar) * 100}%`, height: '100%', background: '#0F9B8E', borderRadius: '3px' }} />
                     </div>
                   </div>
+                ))
+              )}
+            </div>
+
+            {/* Aktivite Takvimi */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px' }}>
+              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>AKTİVİTE TAKVİMİ</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 20px)', gap: '4px' }}>
+                {data.activity.map((val, i) => (
+                  <div key={i} style={{ width: '20px', height: '20px', background: getActivityColor(val), borderRadius: '3px' }} />
                 ))}
               </div>
-            )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 20px)', gap: '4px', marginTop: '4px' }}>
+                {Array.from({ length: 35 }).map((_, i) => (
+                  <div key={i} style={{ fontSize: '9px', color: '#6B7280', textAlign: 'center' }}>{((i % 7) + 1)}</div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Uzmanlık Dağılımı */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <h3 className="font-semibold mb-4">Uzmanlık Dağılımı</h3>
-            {stats.topUzmanliklar.length === 0 ? (
-              <div className="text-zinc-500 py-8 text-center">Bu ay uzmanlık verisi bulunamadı.</div>
-            ) : (
-              <div className="space-y-4">
-                {stats.topUzmanliklar.map((uzm, idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span>{uzm.uzmanlik}</span>
-                      <span className="text-zinc-400">{uzm.count}</span>
-                    </div>
-                    <div className="bg-zinc-800 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-teal-500 h-2 rounded-full transition-all" 
-                        style={{ width: `${(uzm.count / maxUzmanlik) * 100}%` }}
-                      />
-                    </div>
+          {/* RIGHT 40% */}
+          <div style={{ flex: '0 0 40%' }}>
+            {/* Uzmanlık Dağılımı */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>UZMANLIK DAĞILIMI</div>
+              {loading ? Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ height: '32px', background: 'rgba(255,255,255,0.06)', marginBottom: '10px', borderRadius: '4px' }} />) : data.uzmanlik.map((u, idx) => (
+                <div key={idx} style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                    <span>{u.name}</span><span>{u.count}</span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px' }}>
+                    <div style={{ width: `${(u.count / maxUzmanlik) * 100}%`, height: '100%', background: '#0F9B8E', borderRadius: '3px' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
 
-        {/* Row 3 - Heatmap */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-          <h3 className="font-semibold mb-4">Son 30 Gün Aktivite</h3>
-          {activity.length === 0 ? (
-            <div className="text-zinc-500 py-8 text-center">Aktivite verisi bulunamadı.</div>
-          ) : (
-            renderHeatmap()
-          )}
-          <div className="flex gap-4 mt-4 text-xs text-zinc-500">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-zinc-800 rounded" /> 0</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-teal-700 rounded" /> 1-2</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-teal-500 rounded" /> 3+</div>
+            {/* Bu Hafta */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>BU HAFTA</div>
+              {[
+                { label: 'Seans', val: data.hafta.seans, color: '#0F9B8E' },
+                { label: 'Onaylanan', val: data.hafta.onaylanan, color: '#3B82F6' },
+                { label: 'Bekleyen', val: data.hafta.bekleyen, color: '#F59E0B' },
+              ].map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ width: '8px', height: '8px', background: s.color, borderRadius: '50%', marginRight: '10px' }} />
+                  <div style={{ flex: 1, fontSize: '14px' }}>{s.label}</div>
+                  <div style={{ fontWeight: 600 }}>{s.val}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Hızlı Erişim */}
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px' }}>
+              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>HIZLI ERİŞİM</div>
+              <a href="/doktor-tools/epikriz" style={{ display: 'flex', justifyContent: 'space-between', color: '#0F9B8E', fontSize: '14px', marginBottom: '12px', textDecoration: 'none' }}>
+                Epikriz Üret <span>→</span>
+              </a>
+              <a href="/doktor-tools/icd10" style={{ display: 'flex', justifyContent: 'space-between', color: '#0F9B8E', fontSize: '14px', textDecoration: 'none' }}>
+                ICD-10 Kodla <span>→</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @media print {
-          nav, button, .print\\:hidden {
-            display: none !important;
-          }
-          body {
-            background: white !important;
-            color: black !important;
-          }
-          .bg-zinc-950, .bg-zinc-900 {
-            background: white !important;
-            border-color: #e5e7eb !important;
-          }
-          .text-white, .text-zinc-400 {
-            color: black !important;
-          }
-        }
-      `}</style>
     </div>
-  )
-}
+  );
+};
+
+export default Page;

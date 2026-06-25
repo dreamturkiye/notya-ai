@@ -20,13 +20,13 @@ export default function HastalarPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '');
+    const _raw = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const token = _raw ? (() => { try { return JSON.parse(_raw).access_token || _raw } catch { return _raw } })() : null;
     fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
-      .then(setPatients);
+      .then(d => setPatients(d.patients || []));
   }, []);
 
-  const filtered = patients.filter(p => p.maskedName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = patients.filter(p => p.masked_name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
@@ -38,8 +38,8 @@ export default function HastalarPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(p => (
             <div key={p.id} onClick={() => router.push(`/dashboard/doktor/hastalar/${p.id}`)} style={{ background: '#1E2937', padding: 16, borderRadius: 12, display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}>
-              <div>{p.maskedName}</div>
-              <div style={{ color: '#94A3B8' }}>{p.lastVisit} • {p.specialty}</div>
+              <div>{p.masked_name}</div>
+              <div style={{ color: '#94A3B8' }}>{p.last_visit} • {p.specialty}</div>
               <div style={{ color: p.isActive ? '#10B981' : '#EF4444' }}>{p.isActive ? 'Aktif' : 'Pasif'}</div>
             </div>
           ))}

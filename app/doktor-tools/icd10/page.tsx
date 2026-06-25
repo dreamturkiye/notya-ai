@@ -1,238 +1,330 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-interface Icd10Result {
+interface ICDResult {
   code: string;
-  turkceAciklama: string;
-  ingilizceAciklama: string;
-  bolum: string;
-  confidence: number;
+  turkish: string;
+  english: string;
+  chapter: string;
 }
 
-interface ApiResponse {
-  results: Icd10Result[];
-}
-
-const Icd10Page: React.FC = () => {
+export default function ICD10Page() {
+  const router = useRouter();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Icd10Result[]>([]);
+  const [results, setResults] = useState<ICDResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [copiedToast, setCopiedToast] = useState(false);
+  const [toast, setToast] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
-  // Load recent searches from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('icd10_recent_searches');
-    if (stored) {
-      setRecentSearches(JSON.parse(stored));
+    const saved = localStorage.getItem('icd10_recent');
+    if (saved) {
+      setRecentSearches(JSON.parse(saved));
     }
   }, []);
 
-  // Save recent searches to localStorage
-  const saveRecentSearch = (searchTerm: string) => {
-    if (!searchTerm.trim()) return;
-
-    const updated = [searchTerm, ...recentSearches.filter(s => s !== searchTerm)].slice(0, 5);
+  const saveRecent = (term: string) => {
+    const updated = [term, ...recentSearches.filter(t => t !== term)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem('icd10_recent_searches', JSON.stringify(updated));
+    localStorage.setItem('icd10_recent', JSON.stringify(updated));
   };
 
-  const searchICD10 = async (searchQuery: string) => {
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(''), 2000);
+  };
+
+  const copyToClipboard = (code: string) => {
+    navigator.clipboard.writeText(code);
+    showToast('Kod kopyalandı');
+  };
+
+  const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
 
     setLoading(true);
-    setQuery(searchQuery);
+    setHasSearched(true);
+    setResults([]);
 
     try {
-      const token = localStorage.getItem('token') || '';
-      
-      const response = await fetch('/api/doktor/araclar/icd10', {
+      const authData = localStorage.getItem('auth-token');
+      const token = authData ? JSON.parse(authData).access_token : '';
+
+      const res = await fetch('/api/doktor/araclar/icd10', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({ query: searchQuery })
       });
 
-      if (!response.ok) {
-        throw new Error('Arama başarısız');
-      }
-
-      const data: ApiResponse = await response.json();
+      const data = await res.json();
       setResults(data.results || []);
-      saveRecentSearch(searchQuery);
+      saveRecent(searchQuery);
     } catch (error) {
-      console.error('ICD10 arama hatası:', error);
       setResults([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      searchICD10(query);
-    }
+  const handleSearch = () => {
+    performSearch(query);
   };
 
-  const handleCardClick = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedToast(true);
-      setTimeout(() => setCopiedToast(false), 2000);
-    } catch (err) {
-      console.error('Kopyalama hatası:', err);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
   const handleRecentClick = (term: string) => {
     setQuery(term);
-    searchICD10(term);
+    performSearch(term);
+  };
+
+  const containerStyle: React.CSSProperties = {
+    backgroundColor: '#0A1628',
+    minHeight: '100vh',
+    fontFamily: '-apple-system,BlinkMacSystemFont,system-ui',
+    color: 'white'
+  };
+
+  const contentStyle: React.CSSProperties = {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '24px',
+    animation: 'fadeIn 0.3s ease-out'
+  };
+
+  const headerStyle: React.CSSProperties = {
+    paddingTop: '40px'
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: '28px',
+    fontWeight: 700,
+    marginBottom: '8px'
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: '14px',
+    color: 'rgba(255,255,255,0.5)'
+  };
+
+  const searchWrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    marginTop: '32px',
+    marginBottom: '24px'
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    height: '56px',
+    fontSize: '18px',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    border: '1.5px solid rgba(255,255,255,0.12)',
+    borderRadius: '16px',
+    color: 'white',
+    padding: '0 160px 0 20px',
+    outline: 'none'
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    position: 'absolute',
+    right: '8px',
+    top: '8px',
+    height: '40px',
+    backgroundColor: '#0F9B8E',
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '0 24px',
+    fontSize: '14px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  };
+
+  const recentStyle: React.CSSProperties = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginTop: '16px'
+  };
+
+  const pillStyle: React.CSSProperties = {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: '20px',
+    padding: '8px 14px',
+    fontSize: '12px',
+    color: 'white',
+    cursor: 'pointer'
+  };
+
+  const resultCardStyle: React.CSSProperties = {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    padding: '20px',
+    marginBottom: '12px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+    cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s'
+  };
+
+  const codeStyle: React.CSSProperties = {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: '#0F9B8E'
+  };
+
+  const chapterLabelStyle: React.CSSProperties = {
+    fontSize: '10px',
+    textTransform: 'uppercase',
+    color: '#666',
+    letterSpacing: '0.5px'
+  };
+
+  const copyBtnStyle: React.CSSProperties = {
+    border: '1px solid #0F9B8E',
+    color: '#0F9B8E',
+    background: 'transparent',
+    padding: '6px 14px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    cursor: 'pointer'
+  };
+
+  const skeletonStyle: React.CSSProperties = {
+    backgroundColor: '#1a2a40',
+    height: '120px',
+    borderRadius: '16px',
+    marginBottom: '12px',
+    animation: 'pulse 1.5s infinite'
+  };
+
+  const emptyStyle: React.CSSProperties = {
+    textAlign: 'center',
+    padding: '60px 20px',
+    color: 'rgba(255,255,255,0.6)'
+  };
+
+  const toastStyle: React.CSSProperties = {
+    position: 'fixed',
+    bottom: '24px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: '#0F9B8E',
+    color: 'white',
+    padding: '12px 24px',
+    borderRadius: '12px',
+    fontSize: '14px'
   };
 
   return (
-    <div className="min-h-screen bg-[#0A1628] text-white">
+    <div style={containerStyle}>
       <DoktorNav />
-      
-      <div className="max-w-4xl mx-auto px-6 pt-12 pb-24">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-semibold mb-2">ICD-10 Arama</h1>
-          <p className="text-gray-400">Türkçe tanı kodlarını bulun ve kopyalayın</p>
+      <div style={contentStyle}>
+        <div style={headerStyle}>
+          <div style={titleStyle}>ICD-10 Kodlayici</div>
+          <div style={subtitleStyle}>Turkce tani girisi ile anlik ICD-10 kodu</div>
         </div>
 
-        {/* Large Centered Search */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-full max-w-2xl relative">
-            <div className="flex items-center bg-white rounded-2xl shadow-xl overflow-hidden">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Türkçe tanı yazın..."
-                className="flex-1 px-8 py-5 text-lg text-gray-900 placeholder-gray-400 focus:outline-none"
-                disabled={loading}
-              />
-              <button
-                onClick={() => searchICD10(query)}
-                disabled={loading || !query.trim()}
-                className="px-10 py-5 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-800 text-white font-medium transition-colors"
-              >
-                {loading ? 'Aranıyor...' : 'Ara'}
-              </button>
-            </div>
-          </div>
+        <div style={searchWrapperStyle}>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Tani giriniz..."
+            style={inputStyle}
+          />
+          <button onClick={handleSearch} style={buttonStyle}>Ara</button>
+        </div>
 
-          {/* Recent Searches Chips */}
-          {recentSearches.length > 0 && (
-            <div className="mt-6 w-full max-w-2xl">
-              <p className="text-sm text-gray-400 mb-3">Son aramalar</p>
-              <div className="flex flex-wrap gap-2">
-                {recentSearches.map((term, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleRecentClick(term)}
-                    className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-sm rounded-full transition-colors border border-white/10"
-                  >
-                    {term}
-                  </button>
-                ))}
+        {recentSearches.length > 0 && (
+          <div style={recentStyle}>
+            {recentSearches.map((term, idx) => (
+              <div key={idx} style={pillStyle} onClick={() => handleRecentClick(term)}>
+                {term}
               </div>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {/* Results */}
         {loading && (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500"></div>
+          <div style={{ marginTop: '32px' }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={skeletonStyle} />
+            ))}
           </div>
         )}
 
         {!loading && results.length > 0 && (
-          <div className="space-y-4">
+          <div style={{ marginTop: '32px' }}>
             {results.map((result, index) => (
               <div
                 key={index}
-                onClick={() => handleCardClick(result.code)}
-                className="bg-white text-gray-900 rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-xl transition-all active:scale-[0.995]"
+                style={resultCardStyle}
+                onClick={() => copyToClipboard(result.code)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.01)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.2)';
+                }}
               >
-                <div className="flex justify-between items-start mb-4">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className="text-3xl font-bold text-teal-600 tracking-tight">
-                      {result.code}
-                    </div>
-                    <div className="text-sm text-gray-500 mt-0.5">ICD-10 Kodu</div>
+                    <div style={codeStyle}>{result.code}</div>
+                    <div style={chapterLabelStyle}>{result.chapter}</div>
                   </div>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCardClick(result.code);
-                    }}
-                    className="px-5 py-2 text-sm bg-teal-100 hover:bg-teal-200 text-teal-700 rounded-xl font-medium transition-colors"
+                    style={copyBtnStyle}
+                    onClick={(e) => { e.stopPropagation(); copyToClipboard(result.code); }}
                   >
                     Kopyala
                   </button>
                 </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-widest text-gray-500 mb-1">Türkçe Açıklama</div>
-                    <div className="text-lg font-medium">{result.turkceAciklama}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs uppercase tracking-widest text-gray-500 mb-1">İngilizce Açıklama</div>
-                    <div className="text-gray-700">{result.ingilizceAciklama}</div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <div>
-                      <div className="text-xs uppercase tracking-widest text-gray-500 mb-1">Bölüm</div>
-                      <div className="font-medium">{result.bolum}</div>
-                    </div>
-
-                    {/* Confidence Meter */}
-                    <div className="w-48">
-                      <div className="flex justify-between text-xs mb-1 text-gray-500">
-                        <span>Güven</span>
-                        <span>{result.confidence}%</span>
-                      </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-teal-600 transition-all rounded-full" 
-                          style={{ width: `${result.confidence}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div style={{ marginTop: '12px', fontSize: '16px', fontWeight: 600, color: '#111' }}>
+                  {result.turkish}
+                </div>
+                <div style={{ marginTop: '4px', fontSize: '13px', color: '#666' }}>
+                  {result.english}
+                </div>
+                <div style={{ marginTop: '10px', display: 'inline-block', background: '#E6F7F5', color: '#0F9B8E', fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>
+                  {result.chapter}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {!loading && results.length === 0 && query && (
-          <div className="text-center py-12 text-gray-400">
-            Sonuç bulunamadı. Farklı bir arama terimi deneyin.
+        {!loading && hasSearched && results.length === 0 && (
+          <div style={emptyStyle}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 16px' }}>
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <div>Sonuc bulunamadi</div>
           </div>
         )}
       </div>
 
-      {/* Toast */}
-      {copiedToast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-teal-600 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-2">
-          <span>✓ Kod panoya kopyalandı</span>
-        </div>
-      )}
+      {toast && <div style={toastStyle}>{toast}</div>}
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+      `}</style>
     </div>
   );
-};
-
-export default Icd10Page;
+}

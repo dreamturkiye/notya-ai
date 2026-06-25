@@ -17,13 +17,13 @@ export default function IncelemePage() {
   const [notes, setNotes] = useState<PendingNote[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '');
+    const _raw = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const token = _raw ? (() => { try { return JSON.parse(_raw).access_token || _raw } catch { return _raw } })() : null;
     fetch('/api/notes?pending=true', { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json()).then(setNotes);
   }, []);
 
   const approve = async (id: string) => {
-    const token = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '');
+    const _raw = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const token = _raw ? (() => { try { return JSON.parse(_raw).access_token || _raw } catch { return _raw } })() : null;
     await fetch(`/api/notes/${id}/approve`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     setNotes(notes.filter(n => n.id !== id));
   };

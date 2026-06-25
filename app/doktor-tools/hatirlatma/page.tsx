@@ -42,7 +42,7 @@ export default function HatirlatmaPage() {
 
   // Auth kontrolü + hasta listesi
   useEffect(() => {
-    const token = localStorage.getItem('doktorToken');
+    const token = (() => { const _r = localStorage.getItem('auth-token'); return _r ? (() => { try { return JSON.parse(_r).access_token || _r } catch { return _r } })() : null })();
     if (!token) {
       router.push('/giris/doktor');
       return;
@@ -67,7 +67,7 @@ export default function HatirlatmaPage() {
 
   // Gönderilen hatırlatmaları getir
   const fetchGonderilenler = async () => {
-    const token = localStorage.getItem('doktorToken');
+    const token = (() => { const _r = localStorage.getItem('auth-token'); return _r ? (() => { try { return JSON.parse(_r).access_token || _r } catch { return _r } })() : null })();
     if (!token) return;
 
     try {
@@ -107,7 +107,7 @@ export default function HatirlatmaPage() {
     }
 
     setLoading(true);
-    const token = localStorage.getItem('doktorToken');
+    const token = (() => { const _r = localStorage.getItem('auth-token'); return _r ? (() => { try { return JSON.parse(_r).access_token || _r } catch { return _r } })() : null })();
 
     try {
       const res = await fetch('/api/doktor/hatirlatma', {

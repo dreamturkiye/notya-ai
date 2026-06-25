@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { encrypt } from '@/lib/security/encryption';
+import { encrypt, decrypt } from '@/lib/security/encryption';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   const { data: patients, error } = await supabase
     .from('patients')
-    .select('id, tc_hash, ad_soyad_encrypted, dogum_tarihi, cinsiyet, kan_grubu, created_at')
+    .select('id, tc_kimlik_hash, name_encrypted, is_active, created_at')
     .eq('doctor_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -43,10 +43,9 @@ export async function GET(req: NextRequest) {
 
   const maskedPatients = patients.map((p: any) => ({
     id: p.id,
-    masked_name: p.ad_soyad_encrypted ? 
-      (JSON.parse(decrypt(p.ad_soyad_encrypted)).ad || '??') + ' ***' : 'Bilinmiyor ***',
+    masked_name: p.name_encrypted ? 
+      (JSON.parse(decrypt(p.name_encrypted)).ad || '??') + ' ***' : 'Bilinmiyor ***',
     last_visit: p.created_at,
-    kan_grubu: p.kan_grubu,
     is_active: true
   }));
 
@@ -66,7 +65,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { tc, ad_soyad, dogum_tarihi, cinsiyet, kan_grubu } = body;
+  const { tc, ad_soyad } = body;
 
   if (!tc || tc.length !== 11) {
     return NextResponse.json({ error: 'Geçersiz TC Kimlik' }, { status: 400 });
@@ -80,11 +79,11 @@ export async function POST(req: NextRequest) {
     .from('patients')
     .insert({
       doctor_id: user.id,
-      tc_hash: tcHash,
-      ad_soyad_encrypted: encryptedAd,
-      dogum_tarihi,
-      cinsiyet,
-      kan_grubu,
+      tc_kimlik_hash: tcHash,
+      name_encrypted: encryptedAd,
+      
+      
+      
       is_active: true
     })
     .select()

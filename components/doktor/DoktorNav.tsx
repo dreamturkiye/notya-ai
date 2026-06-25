@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#8B5CF6" },
   { label: "İnceleme", route: "/dashboard/doktor/inceleme", color: "#F97316" },
   { label: "Araçlar", route: "/doktor-tools", color: "#166534" },
+  { label: "SGK", route: "/doktor-tools/sgk-medula", color: "#DC2626" },
 ];
 
 export default function DoktorNav() {
