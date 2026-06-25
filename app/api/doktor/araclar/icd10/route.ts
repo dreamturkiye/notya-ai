@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('ICD-10 API hatası:', error);
     return NextResponse.json(
-      { hata: 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.' },
+      { hata: error instanceof Error ? error.message : String(error), env: { xai: !!process.env.XAI_API_KEY, groq: !!process.env.GROQ_API_KEY } },
       { status: 500 }
     );
   }
