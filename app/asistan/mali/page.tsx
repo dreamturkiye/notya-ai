@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { Conversation } from '@/components/AsistanConversation'
+import { isAndroid } from '@/lib/asistan/platform'
 import MaliNav from '@/components/mali/MaliNav'
 
 // supabase: init inside async functions only
@@ -52,6 +53,10 @@ export default function MaliAsistanPage() {
       if (!r.ok) { const b = await r.json().catch(() => ({})); throw new Error((b as {error?:string}).error || 'Sunucu hatasi: ' + r.status) }
       const { signed_url } = await r.json()
       if (!signed_url) throw new Error('Baglanti adresi alinamadi')
+      // Android: unlock AudioContext on user gesture
+      if (isAndroid() && typeof window !== 'undefined') {
+        try { const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)(); await ctx.resume() } catch {}
+      }
       const conv = await Conversation.startSession({
         signedUrl: signed_url, connectionType: 'websocket',
         onConnect: () => { setStatus('listening'); setErrorMsg(''); addMsg('ai', 'Merhaba! Mali Musavir Uzm. Derya burada. Size nasil yardimci olabilirim?') },
