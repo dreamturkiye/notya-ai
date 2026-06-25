@@ -156,15 +156,15 @@ export default function DoktorDashboard() {
           background: 'linear-gradient(135deg, #0F1E35 0%, #0A1628 100%)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between', alignItems: 'flex-start',
+          flexDirection: 'column', alignItems: 'stretch', gap: '4px',
           padding: '12px 20px',
           borderBottom: '1px solid rgba(255,255,255,0.06)'
         }}>
-          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: '11px', color: '#94A3B8', letterSpacing: '0.5px' }}>Hoşgeldiniz</div>
             <div style={{ fontSize: '20px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Dr. {doktorAdi}</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
             <div style={{ fontSize: '10px', color: '#64748B', whiteSpace: 'nowrap' }}>{today}</div>
             <div style={{ width: '8px', height: '8px', background: '#10B981', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
             <div style={{ fontSize: '11px', color: '#14B8A6' }}>Sistem aktif</div>
