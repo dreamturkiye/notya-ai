@@ -79,7 +79,7 @@ export default function AsistanPage() {
   const startConversation = async () => {
     try {
       setStatus('connecting');
-      const raw_t = localStorage.getItem('auth-token'); const token = raw_t ? (() => { try { return JSON.parse(raw_t).access_token || raw_t } catch { return raw_t } })() : null;
+      const token = localStorage.getItem('auth-token');
       
       const res = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
