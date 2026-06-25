@@ -218,7 +218,14 @@ export default function AsistanPage() {
         {messages.length === 0 && status === "idle" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
                         justifyContent: "center", gap: "12px", opacity: .4 }}>
-            <div style={{ fontSize: "56px" }}>{persona.emoji}</div>
+            <div style={{ width: 88, height: 88, borderRadius: '50%',
+                          background: 'linear-gradient(135deg,' + persona.color + '33,' + persona.color + '11)',
+                          border: '2px solid ' + persona.color + '55',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '30px', fontWeight: 700, color: persona.color,
+                          boxShadow: '0 0 32px ' + persona.color + '22' }}>
+              {persona.fullName.split(' ').filter((w: string) => /^[A-Z]/.test(w)).slice(-2).map((w: string) => w[0]).join('')}
+            </div>
             <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{formatColleagueTabLabel(persona.fullName)}</div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,.4)" }}>{persona.title}</div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,.25)", marginTop: "8px",
@@ -234,7 +241,7 @@ export default function AsistanPage() {
             {msg.role === "ai" && (
               <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: persona.color,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: "14px", flexShrink: 0 }}>{persona.emoji}</div>
+                            fontSize: "14px", flexShrink: 0 }}>{persona.fullName.split(" ").filter(function(w){return w[0]===w[0].toUpperCase()}).slice(-2).map(function(w){return w[0]}).join("")}</div>
             )}
             <div style={{ maxWidth: "78%", padding: "10px 14px", fontSize: "14px", lineHeight: "1.55",
                           borderRadius: msg.role === "user" ? "16px 16px 3px 16px" : "16px 16px 16px 3px",
@@ -247,7 +254,7 @@ export default function AsistanPage() {
           <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
             <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: persona.color,
                           display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>
-              {persona.emoji}
+              {persona.fullName.split(" ").filter(function(w){return w.length>0 && w[0]===w[0].toUpperCase()}).slice(-2).map(function(w){return w[0]}).join("")}
             </div>
             <div style={{ padding: "12px 16px", background: "#1A2B40", borderRadius: "16px 16px 16px 3px",
                           display: "flex", gap: "5px", alignItems: "center" }}>
@@ -289,13 +296,36 @@ export default function AsistanPage() {
                    border: `2px solid ${isActive ? persona.color : "rgba(255,255,255,.2)"}`,
                    boxShadow: isActive ? `0 0 32px ${persona.color}55` : "none",
                    transition: "all .25s" }}>
-          {status === "connecting" ? "⏳" : status === "speaking" ? "🔊" : "🎙️"}
+          {status === 'idle' || status === 'error' ? (
+            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+              <rect x='9' y='2' width='6' height='11' rx='3'/>
+              <path d='M5 10a7 7 0 0 0 14 0'/>
+              <line x1='12' y1='21' x2='12' y2='17'/>
+              <line x1='8' y1='21' x2='16' y2='21'/>
+            </svg>
+          ) : status === 'speaking' ? (
+            <svg width='28' height='28' viewBox='0 0 30 24'>
+              <rect x='1' y='9' width='4' height='6' rx='2' fill='white' style={{animation:'wave1 0.7s ease-in-out infinite'}}/>
+              <rect x='8' y='5' width='4' height='14' rx='2' fill='white' style={{animation:'wave2 0.7s ease-in-out 0.1s infinite'}}/>
+              <rect x='15' y='3' width='4' height='18' rx='2' fill='white' style={{animation:'wave1 0.7s ease-in-out 0.2s infinite'}}/>
+              <rect x='22' y='6' width='4' height='12' rx='2' fill='white' style={{animation:'wave2 0.7s ease-in-out 0.15s infinite'}}/>
+            </svg>
+          ) : status === 'connecting' ? (
+            <div style={{width:26,height:26,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.15)',borderTopColor:'#F59E0B',animation:'spin 0.8s linear infinite'}}/>
+          ) : (
+            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.85)' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+              <rect x='9' y='2' width='6' height='11' rx='3'/>
+              <path d='M5 10a7 7 0 0 0 14 0'/>
+              <line x1='12' y1='21' x2='12' y2='17'/>
+              <line x1='8' y1='21' x2='16' y2='21'/>
+            </svg>
+          )}
         </div>
         <div style={{ fontSize: "11px", color: "rgba(255,255,255,.2)" }}>
           {isActive ? "Bitirmek için dokunun" : "Konuşmayı başlatmak için dokunun"}
         </div>
       </div>
-      <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}`}</style>
+      <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wave1{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}@keyframes wave2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.4)}}`}</style>
     </div>
   )
 }
