@@ -21,7 +21,7 @@ interface GroqResponse {
 async function groqChat(systemPrompt: string, userPrompt: string): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || ''
   const apiBase = process.env.GROQ_API_KEY ? 'https://api.groq.com/openai/v1' : 'https://api.x.ai/v1'
-  const modelId = process.env.GROQ_API_KEY ? modelId : 'grok-3-mini'
+  const modelId = process.env.GROQ_API_KEY ? 'llama-3.3-70b-versatile' : 'grok-3-mini'
   if (!apiKey) {
     throw new Error('GROQ_API_KEY tanımlı değil');
   }
@@ -40,7 +40,7 @@ async function groqChat(systemPrompt: string, userPrompt: string): Promise<strin
       ],
       temperature: 0.1,
       max_tokens: 2000,
-      response_format: { type: 'json_object' },
+      // response_format: removed for xAI compat
     }),
   });
 
