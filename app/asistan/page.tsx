@@ -41,6 +41,7 @@ export default function AsistanPage() {
   const router = useRouter()
   const [persona, setPersona] = useState<Persona>(PERSONAS.aysekaya)
   const [personaKey, setPersonaKey] = useState("aysekaya")
+  const [isMobile, setIsMobile] = useState(true)
   const [status, setStatus] = useState<ConvStatus>("idle")
   const [messages, setMessages] = useState<Message[]>([])
   const [errorMsg, setErrorMsg] = useState("")
@@ -49,6 +50,13 @@ export default function AsistanPage() {
   const conversationRef = useRef<ActiveConversation | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   // auth via localStorage
+
+  useEffect(() => {
+    const chk = () => setIsMobile(window.innerWidth < 768)
+    chk()
+    window.addEventListener('resize', chk)
+    return () => window.removeEventListener('resize', chk)
+  }, [])
 
   useEffect(() => {
     ;(async () => { const _r = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const session = _r ? JSON.parse(_r) : null;
@@ -195,9 +203,24 @@ export default function AsistanPage() {
   }[status]
 
   return (
-    <div style={{ height: "100dvh", background: "#080F1A", display: "flex", flexDirection: "column",
+    <div style={{ height: "100dvh", background: "#080F1A", display: "flex", flexDirection: isMobile ? "column" : "row",
                   fontFamily: "system-ui,sans-serif", overflow: "hidden", userSelect: "none" }}>
 
+      {!isMobile && DOCTOR_PHOTOS[personaKey] && (
+        <div style={{ width: "320px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRight: "1px solid rgba(255,255,255,.08)", background: "#0A1525", padding: "40px 28px", gap: "20px" }}>
+          <img src={DOCTOR_PHOTOS[personaKey]} alt={persona.fullName} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", border: "3px solid " + persona.color + "CC", boxShadow: "0 0 60px " + persona.color + "44" }} />
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>{formatColleagueTabLabel(persona.fullName)}</div>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,.5)", marginBottom: "16px" }}>{persona.title}</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: status === "speaking" ? "#10B981" : status === "listening" ? "#3B82F6" : "#6B7280" }} />
+              <span style={{ fontSize: "12px", color: "rgba(255,255,255,.4)" }}>{statusLabel}</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* chat col */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
       <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "12px",
                     borderBottom: "1px solid rgba(255,255,255,.08)", background: "#0A1525" }}>
         <div onClick={() => { void stopConversation(); router.push("/dashboard") }}
@@ -224,13 +247,13 @@ export default function AsistanPage() {
       <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
         {messages.length === 0 && status === "idle" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
-                        justifyContent: "center", gap: "12px", opacity: .4 }}>
-            <div style={{ width: 88, height: 88, borderRadius: '50%',
-                          background: 'linear-gradient(135deg,' + persona.color + '33,' + persona.color + '11)',
-                          border: '2px solid ' + persona.color + '55',
+                        justifyContent: "center", gap: "12px" }}>
+            <div style={{ width: 128, height: 128, borderRadius: '50%',
+                          background: '#060C18',
+                          border: '3px solid ' + persona.color + 'CC',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                           fontSize: '30px', fontWeight: 700, color: persona.color,
-                          boxShadow: '0 0 32px ' + persona.color + '22' }}>
+                          boxShadow: '0 0 48px ' + persona.color + '55' }}>
               {DOCTOR_PHOTOS[personaKey]
                 ? <img src={DOCTOR_PHOTOS[personaKey]} alt={persona.fullName} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}}/>
                 : persona.fullName.split(' ').filter((w:string)=>/^[A-Z]/.test(w)).slice(-2).map((w:string)=>w[0]).join('')}
@@ -336,5 +359,6 @@ export default function AsistanPage() {
       </div>
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wave1{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}@keyframes wave2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.4)}}`}</style>
     </div>
+      </div>
   )
 }

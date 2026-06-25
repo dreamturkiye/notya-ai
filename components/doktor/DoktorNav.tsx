@@ -10,7 +10,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Asistan", route: "/asistan", color: "linear-gradient(90deg, #3B82F6, #7C3AED)" },
-  { label: "Ana Sayfa", route: "/dashboard", color: "#0F9B8E" },
+  { label: "Ana Sayfa", route: "/dashboard", color: "#0F9B8E", hideOnMobile: true },
   { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6" },
   { label: "Hasta Ekle", route: "/dashboard/doktor/hasta-ekle", color: "#F59E0B" },
   { label: "Belgeler", route: "/dashboard/doktor/belgeler", color: "#EF4444" },
@@ -64,7 +64,7 @@ export default function DoktorNav() {
 
         {!isMobile && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {navItems.map((item, idx) => (
+            {navItems.filter(i => !(i.hideOnMobile && isMobile)).map((item, idx) => (
               <button
                 key={idx}
                 onClick={() => handleNav(item.route)}
@@ -111,7 +111,7 @@ export default function DoktorNav() {
 
       {isMobile && isOpen && (
         <div style={{ position: 'absolute', top: '60px', left: 0, right: 0, backgroundColor: '#0A1628', padding: '16px', zIndex: 50, borderBottom: '1px solid #1E3A5F' }}>
-          {navItems.map((item, idx) => (
+          {navItems.filter(i => !(i.hideOnMobile && isMobile)).map((item, idx) => (
             <button
               key={idx}
               onClick={() => handleNav(item.route)}

@@ -42,5 +42,6 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  return NextResponse.json({ success: true, data: profile })
+  const merged = { ...profile, full_name: profile.full_name || user.user_metadata?.full_name || (user.email||'').split('@')[0] || '', email: profile.email || user.email }
+  return NextResponse.json({ success: true, data: merged })
 }

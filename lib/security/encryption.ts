@@ -158,3 +158,6 @@ export function decryptPatientPII(encrypted: PatientPIIEncrypted): Partial<Patie
     notes: encrypted.notes_encrypted ? decryptPII(encrypted.notes_encrypted) : undefined,
   }
 }
+
+export const encrypt = encryptPII
+export const decrypt = decryptPII
