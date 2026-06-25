@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         )
       : [];
 
-    return NextResponse.json({ results: sonuclar, sonuclar }, { status: 200 });
+    const mapped = sonuclar.map((s) => ({ code: s.kod, turkish: s.turkceAciklama, english: s.ingilizceAciklama, chapter: s.bolum, confidence: s.guven, kod: s.kod, turkceAciklama: s.turkceAciklama })); return NextResponse.json({ results: mapped, sonuclar }, { status: 200 });
 
   } catch (error) {
     console.error('ICD-10 API hatası:', error);
