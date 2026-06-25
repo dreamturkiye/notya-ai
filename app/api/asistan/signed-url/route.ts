@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 
 const AGENT_MAP: Record<string, string> = {
@@ -15,31 +16,16 @@ const DEFAULT_AGENT = 'agent_3601ktc884ntf3dbdkjtyx6vdfwa';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
-interface AuthPayload {
-  userId?: string;
-  exp?: number;
-}
-
 async function verifyAuth(req: NextRequest): Promise<{ userId: string } | null> {
   const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null;
-  }
-
+  if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.substring(7);
-
   try {
-    const decoded = jwt.decode(token) as AuthPayload | null;
-    if (!decoded || !decoded.userId) {
-      return null;
-    }
-    if (decoded.exp && Date.now() >= decoded.exp * 1000) {
-      return null;
-    }
-    return { userId: decoded.userId };
-  } catch {
-    return null;
-  }
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: { user }, error } = await sb.auth.getUser(token);
+    if (error || !user) return null;
+    return { userId: user.id };
+  } catch { return null; }
 }
 
 async function getElevenLabsSignedUrl(agentId: string): Promise<string | null> {
@@ -69,16 +55,13 @@ async function getElevenLabsSignedUrl(agentId: string): Promise<string | null> {
     const data = await response.json();
     
     // JWT decode fix - extract real signed_url from JWT if needed
-    if (data.signed_url && data.signed_url.includes('.')) {
+    if (data.signed_url) {
       try {
-        const decoded = jwt.decode(data.signed_url) as { signed_url?: string } | null;
-        if (decoded?.signed_url) {
-          return decoded.signed_url;
-        }
-      } catch {
-        // If not a JWT, return as-is
+        const parts = data.signed_url.split('.');
+        const payload = parts[1] ? JSON.parse(Buffer.from(parts[1], 'base64').toString()) : null;
+        if (payload?.signed_url) return payload.signed_url;
         return data.signed_url;
-      }
+      } catch { return data.signed_url; }
     }
     
     return data.signed_url || null;
