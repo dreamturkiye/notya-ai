@@ -148,7 +148,7 @@ const ERecetePage: React.FC = () => {
     }}>
       <DoktorNav />
       
-      <div style={{ padding: '40px 24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ padding: '20px 16px', maxWidth: '1200px', margin: '0 auto' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{ 

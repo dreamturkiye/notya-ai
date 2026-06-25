@@ -165,7 +165,7 @@ export default function EpikrizPage() {
     }}>
       <DoktorNav />
       
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 24px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '20px 16px' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '40px' }}>
           <div style={{ 
@@ -197,7 +197,7 @@ export default function EpikrizPage() {
 
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '1fr 1fr', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
           gap: '32px' 
         }}>
           {/* LEFT - FORM */}

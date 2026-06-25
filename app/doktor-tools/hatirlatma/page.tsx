@@ -133,14 +133,14 @@ const Page: React.FC = () => {
   return (
     <div style={{ background: '#060C18', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
       <DoktorNav />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 16px' }}>
         <div style={{ marginBottom: 32 }}>
           <div style={{ color: '#14b8a6', fontSize: 12, letterSpacing: 2, fontWeight: 600 }}>HATIRLATMA</div>
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: '8px 0' }}>Hasta Hatırlatma</h1>
           <p style={{ color: '#94a3b8', fontSize: 15 }}>WhatsApp veya SMS ile hasta bildirimi gönderin</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
           {/* LEFT FORM */}
           <div style={{ ...glassStyle }}>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Yeni Hatırlatma</div>

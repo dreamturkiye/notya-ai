@@ -1,259 +1,306 @@
-'use client';
-
-export const dynamic = 'force-dynamic';
+"use client";
 
 import React, { useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 
-interface Interaksiyon {
-  ilacA: string;
-  ilacB: string;
-  siddet: 'Hafif' | 'Orta' | 'Ciddi' | 'Kritik';
-  mekanizma: string;
+export const dynamic = 'force-dynamic';
+
+interface Interaction {
+  ilac1: string;
+  ilac2: string;
+  siddet: 'Agir' | 'Orta' | 'Hafif';
   aciklama: string;
-  oneri: string;
+  oneriler: string;
 }
 
 interface ApiResponse {
-  risk: 'guvenli' | 'dikkat' | 'kontrendike';
-  interaksiyonlar: Interaksiyon[];
-  dozUyarilari: string[];
+  interaksiyonlar: Interaction[];
+  hastaOnerileri?: string[];
 }
 
-const riskConfig = {
-  guvenli: { label: 'GÜVENLİ', color: '#16a34a', bg: 'bg-[#16a34a]' },
-  dikkat: { label: 'DIKKAT', color: '#d97706', bg: 'bg-[#d97706]' },
-  kontrendike: { label: 'KONTRENDİKE', color: '#dc2626', bg: 'bg-[#dc2626]' },
-};
-
-const bobrekSecenekleri = [
-  'Normal',
-  'Hafif azalma',
-  'Orta azalma',
-  'Ağır azalma',
-] as const;
-
-type BobrekFonksiyonu = (typeof bobrekSecenekleri)[number];
-
-export default function IlacInteraksiyonPage() {
+const Page: React.FC = () => {
   const [ilaclar, setIlaclar] = useState<string[]>([]);
   const [yeniIlac, setYeniIlac] = useState('');
-  const [agirlik, setAgirlik] = useState('');
-  const [yas, setYas] = useState('');
-  const [bobrekFonksiyonu, setBobrekFonksiyonu] = useState<BobrekFonksiyonu>('Normal');
+  const [agirlik, setAgirlik] = useState(70);
+  const [yas, setYas] = useState(45);
+  const [bobrekFonksiyonu, setBobrekFonksiyonu] = useState('Normal');
   const [loading, setLoading] = useState(false);
-  const [sonuc, setSonuc] = useState<ApiResponse | null>(null);
-  const [hata, setHata] = useState('');
+  const [interaksiyonlar, setInteraksiyonlar] = useState<Interaction[]>([]);
+  const [hastaOnerileri, setHastaOnerileri] = useState<string[]>([]);
+  const [submitted, setSubmitted] = useState(false);
 
-  const maxIlac = 10;
+  const teal = '#14B8A6';
+  const bg = '#060C18';
+  const glass = 'rgba(255,255,255,0.035)';
+  const border = 'rgba(255,255,255,0.08)';
 
-  const ilacEkle = () => {
+  const addIlac = () => {
     const trimmed = yeniIlac.trim();
-    if (!trimmed) return;
-    if (ilaclar.length >= maxIlac) return;
-    if (ilaclar.includes(trimmed)) {
+    if (trimmed && !ilaclar.includes(trimmed)) {
+      setIlaclar([...ilaclar, trimmed]);
       setYeniIlac('');
-      return;
     }
-    setIlaclar([...ilaclar, trimmed]);
-    setYeniIlac('');
   };
 
-  const ilacSil = (index: number) => {
-    const yeniListe = ilaclar.filter((_, i) => i !== index);
-    setIlaclar(yeniListe);
-    if (yeniListe.length < 2) setSonuc(null);
+  const removeIlac = (index: number) => {
+    setIlaclar(ilaclar.filter((_, i) => i !== index));
   };
 
-  const handleKontrolEt = async () => {
+  const getSeverityColor = (siddet: string) => {
+    if (siddet === 'Agir') return '#EF4444';
+    if (siddet === 'Orta') return '#F59E0B';
+    return '#3B82F6';
+  };
+
+  const handleSubmit = async () => {
     if (ilaclar.length < 2) return;
 
     setLoading(true);
-    setHata('');
-    setSonuc(null);
+    setSubmitted(true);
 
     try {
-      const payload = {
-        ilaclar,
-        agirlik: agirlik ? parseFloat(agirlik) : undefined,
-        yas: yas ? parseInt(yas) : undefined,
-        bobrekFonksiyonu,
-      };
+      const tokenStr = localStorage.getItem('auth-token');
+      const token = tokenStr ? JSON.parse(tokenStr).access_token : '';
 
       const res = await fetch('/api/doktor/araclar/ilac-interaksiyon', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ilaclar,
+          agirlik,
+          yas,
+          bobrekFonksiyonu,
+        }),
       });
 
-      if (!res.ok) throw new Error('Sunucu hatası');
-
       const data: ApiResponse = await res.json();
-      setSonuc(data);
-    } catch (err) {
-      setHata('Analiz sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+      setInteraksiyonlar(data.interaksiyonlar || []);
+      setHastaOnerileri(data.hastaOnerileri || []);
+    } catch {
+      setInteraksiyonlar([]);
+      setHastaOnerileri([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const riskBilgi = sonuc ? riskConfig[sonuc.risk] : null;
-
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div style={{ background: bg, minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
       <DoktorNav />
 
-      <div className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-semibold mb-8">İlaç Etkileşim Kontrolü</h1>
+      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '48px 24px' }}>
+        {/* HEADER */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ color: teal, fontSize: 11, letterSpacing: 2, fontWeight: 600, marginBottom: 8 }}>
+            ILAC ETKILESIM
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 600, margin: 0, letterSpacing: -0.5 }}>
+            Ilac Etkilesim Kontrolu
+          </h1>
+          <p style={{ color: '#9CA3AF', marginTop: 8, fontSize: 15 }}>
+            Ilaclar arasindaki etkilesimleri aninda kontrol edin
+          </p>
+        </div>
 
-        {/* İlaç Girişi */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
-          <div className="flex gap-3 mb-4">
+        {/* SEARCH CARD */}
+        <div style={{
+          background: glass,
+          border: `1px solid ${border}`,
+          borderRadius: 18,
+          padding: 24,
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
+            Ilac Listesi
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
             <input
-              type="text"
               value={yeniIlac}
               onChange={(e) => setYeniIlac(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && ilacEkle()}
-              placeholder="İlaç adı yazın..."
-              className="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
-              disabled={ilaclar.length >= maxIlac}
+              onKeyDown={(e) => e.key === 'Enter' && addIlac()}
+              placeholder="Ilac adi girin"
+              style={{
+                flex: 1,
+                height: 44,
+                background: 'rgba(0,0,0,0.3)',
+                border: `1px solid ${border}`,
+                borderRadius: 10,
+                padding: '0 16px',
+                color: '#fff',
+                fontSize: 15,
+                outline: 'none',
+              }}
             />
             <button
-              onClick={ilacEkle}
-              disabled={!yeniIlac.trim() || ilaclar.length >= maxIlac}
-              className="px-8 rounded-xl bg-white text-zinc-950 font-medium disabled:opacity-40"
+              onClick={addIlac}
+              style={{
+                height: 44,
+                padding: '0 24px',
+                background: teal,
+                color: '#000',
+                border: 'none',
+                borderRadius: 10,
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: 'pointer',
+              }}
             >
               Ekle
             </button>
           </div>
 
-          {/* İlaç Pill'leri */}
           {ilaclar.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
               {ilaclar.map((ilac, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 bg-zinc-800 text-sm px-4 py-1.5 rounded-full"
-                >
+                <div key={index} style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '6px 14px',
+                  border: `1px solid ${teal}`,
+                  borderRadius: 999,
+                  fontSize: 13,
+                  gap: 8,
+                }}>
                   {ilac}
-                  <button
-                    onClick={() => ilacSil(index)}
-                    className="text-zinc-400 hover:text-red-400"
-                  >
-                    ×
-                  </button>
+                  <span onClick={() => removeIlac(index)} style={{ cursor: 'pointer', color: teal }}>×</span>
                 </div>
               ))}
-              <div className="text-xs text-zinc-500 self-center ml-2">
-                {ilaclar.length}/{maxIlac}
-              </div>
             </div>
           )}
+
+          {/* PATIENT PARAMS */}
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Agirlik (kg)</div>
+              <input type="number" value={agirlik} onChange={(e) => setAgirlik(Number(e.target.value))} style={{
+                width: 60, height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 8px', fontSize: 14,
+              }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Yas</div>
+              <input type="number" value={yas} onChange={(e) => setYas(Number(e.target.value))} style={{
+                width: 60, height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 8px', fontSize: 14,
+              }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Bobrek Fonksiyonu</div>
+              <select value={bobrekFonksiyonu} onChange={(e) => setBobrekFonksiyonu(e.target.value)} style={{
+                width: '100%', height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 12px', fontSize: 14,
+              }}>
+                <option>Normal</option>
+                <option>Hafif Bozuk</option>
+                <option>Orta Bozuk</option>
+                <option>Agir Bozuk</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={ilaclar.length < 2 || loading}
+            style={{
+              width: '100%',
+              height: 52,
+              background: teal,
+              color: '#000',
+              border: 'none',
+              borderRadius: 12,
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: ilaclar.length < 2 ? 'not-allowed' : 'pointer',
+              opacity: ilaclar.length < 2 ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            {loading ? (
+              <>
+                <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                Analiz ediliyor...
+              </>
+            ) : 'Kontrol Et'}
+          </button>
         </div>
 
-        {/* Opsiyonel Alanlar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div>
-            <label className="block text-sm text-zinc-400 mb-1.5">Ağırlık (kg)</label>
-            <input
-              type="number"
-              value={agirlik}
-              onChange={(e) => setAgirlik(e.target.value)}
-              placeholder="70"
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-zinc-400 mb-1.5">Yaş (yıl)</label>
-            <input
-              type="number"
-              value={yas}
-              onChange={(e) => setYas(e.target.value)}
-              placeholder="45"
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-zinc-400 mb-1.5">Böbrek Fonksiyonu</label>
-            <select
-              value={bobrekFonksiyonu}
-              onChange={(e) => setBobrekFonksiyonu(e.target.value as BobrekFonksiyonu)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
-            >
-              {bobrekSecenekleri.map((secenek) => (
-                <option key={secenek} value={secenek}>
-                  {secenek}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Kontrol Butonu */}
-        <button
-          onClick={handleKontrolEt}
-          disabled={ilaclar.length < 2 || loading}
-          className="w-full md:w-auto px-12 py-4 bg-white text-zinc-950 font-semibold rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Analiz yapılıyor...' : 'Kontrol Et'}
-        </button>
-
-        {hata && <p className="text-red-400 mt-4">{hata}</p>}
-
-        {/* Sonuçlar */}
-        {sonuc && riskBilgi && (
-          <div className="mt-12">
-            {/* Genel Risk Badge */}
-            <div className="flex justify-center mb-10">
-              <div
-                className={`${riskBilgi.bg} text-white text-2xl font-bold px-16 py-4 rounded-3xl tracking-wider`}
-              >
-                {riskBilgi.label}
-              </div>
+        {/* RESULTS */}
+        {submitted && !loading && (
+          <div style={{
+            background: glass,
+            border: `1px solid ${border}`,
+            borderRadius: 18,
+            padding: 24,
+          }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '4px 14px',
+              background: 'rgba(20,184,166,0.1)',
+              color: teal,
+              borderRadius: 999,
+              fontSize: 13,
+              fontWeight: 600,
+              marginBottom: 20,
+            }}>
+              {interaksiyonlar.length} etkilesim bulundu
             </div>
 
-            {/* Etkileşim Kartları */}
-            {sonuc.interaksiyonlar.length > 0 && (
-              <div className="mb-10">
-                <h3 className="text-xl font-semibold mb-4">İlaç Etkileşimleri</h3>
-                <div className="space-y-4">
-                  {sonuc.interaksiyonlar.map((item, idx) => (
-                    <div key={idx} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="font-medium">{item.ilacA}</span>
-                        <span className="text-zinc-500">↔</span>
-                        <span className="font-medium">{item.ilacB}</span>
-                        <span className="ml-auto text-xs px-3 py-1 rounded-full bg-zinc-800">
-                          {item.siddet}
-                        </span>
-                      </div>
-                      <div className="text-sm text-zinc-400 mb-2">
-                        <span className="font-medium text-zinc-300">Mekanizma:</span> {item.mekanizma}
-                      </div>
-                      <div className="text-sm mb-3">{item.aciklama}</div>
-                      <div className="text-sm text-emerald-400">
-                        <span className="font-medium">Öneri:</span> {item.oneri}
-                      </div>
-                    </div>
-                  ))}
+            {interaksiyonlar.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{ fontSize: 42, marginBottom: 12 }}>✅</div>
+                <div style={{ color: '#4ADE80', fontSize: 15, fontWeight: 500 }}>
+                  Kritik etkilesim tespit edilmedi
                 </div>
               </div>
+            ) : (
+              interaksiyonlar.map((item, idx) => (
+                <div key={idx} style={{
+                  background: 'rgba(0,0,0,0.25)',
+                  borderRadius: 14,
+                  padding: 18,
+                  marginBottom: 12,
+                  border: `1px solid ${border}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 9, height: 9, borderRadius: '50%', background: getSeverityColor(item.siddet) }} />
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>
+                      {item.ilac1} + {item.ilac2}
+                    </div>
+                    <div style={{
+                      marginLeft: 'auto',
+                      padding: '2px 10px',
+                      fontSize: 12,
+                      borderRadius: 999,
+                      background: getSeverityColor(item.siddet) + '22',
+                      color: getSeverityColor(item.siddet),
+                      fontWeight: 600,
+                    }}>
+                      {item.siddet}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.45, marginBottom: 6 }}>
+                    {item.aciklama}
+                  </div>
+                  <div style={{ fontSize: 12, color: teal, fontStyle: 'italic' }}>
+                    {item.oneriler}
+                  </div>
+                </div>
+              ))
             )}
 
-            {/* Doz Uyarıları */}
-            {sonuc.dozUyarilari.length > 0 && (
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Doz Ayarlama Uyarıları</h3>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                  <ul className="space-y-3 text-sm">
-                    {sonuc.dozUyarilari.map((uyari, idx) => (
-                      <li key={idx} className="flex gap-3">
-                        <span className="text-amber-400 mt-1">•</span>
-                        <span>{uyari}</span>
-                      </li>
-                    ))}
-                  </ul>
+            {hastaOnerileri.length > 0 && (
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${border}` }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: teal }}>
+                  Hasta Onerileri
                 </div>
+                {hastaOnerileri.map((o, i) => (
+                  <div key={i} style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 4 }}>• {o}</div>
+                ))}
               </div>
             )}
           </div>
@@ -261,4 +308,6 @@ export default function IlacInteraksiyonPage() {
       </div>
     </div>
   );
-}
+};
+
+export default Page;
