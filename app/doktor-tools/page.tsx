@@ -1,15 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import DoktorNav from '@/components/doktor/DoktorNav'
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-const DoktorNav = () => (
-  <div style={{ width: '100%', height: '64px', backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', padding: '0 24px', position: 'sticky', top: 0, zIndex: 100 }}>
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', fontSize: '17px', fontWeight: 600, color: '#fff', letterSpacing: '-0.3px' }}>Doktor Paneli</div>
-  </div>
-);
 
 interface Tool {
   circleColor: string;

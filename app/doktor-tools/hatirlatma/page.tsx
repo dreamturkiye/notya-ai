@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
+import DoktorNav from '@/components/doktor/DoktorNav'
 
 interface Hasta {
   id: string;
@@ -19,11 +20,7 @@ interface Hatirlatma {
   durum: 'gonderildi' | 'bekliyor' | 'hata';
 }
 
-const DoktorNav = () => (
-  <nav style={{ padding: '16px 24px', borderBottom: '1px solid #1a2233', background: '#060C18', display: 'flex', alignItems: 'center', gap: 12 }}>
-    <div style={{ color: '#fff', fontSize: 18, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>Doktor Paneli</div>
-  </nav>
-);
+
 
 const tok = () => {
   try {

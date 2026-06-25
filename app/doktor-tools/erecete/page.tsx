@@ -2,6 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
+import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react';
 
 interface Hasta {
@@ -26,19 +27,6 @@ interface ReceteSonuc {
   sgkUyum: boolean;
 }
 
-const DoktorNav: React.FC = () => (
-  <div style={{ 
-    height: '64px', 
-    backgroundColor: '#0A1328', 
-    borderBottom: '1px solid rgba(255,255,255,0.08)', 
-    display: 'flex', 
-    alignItems: 'center', 
-    padding: '0 24px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  }}>
-    <div style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>Doktor Paneli</div>
-  </div>
-);
 
 const ERecetePage: React.FC = () => {
   const [hastalar, setHastalar] = useState<Hasta[]>([]);

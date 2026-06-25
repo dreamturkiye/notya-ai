@@ -1,5 +1,6 @@
 'use client';
 
+import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react';
 
 export const dynamic = 'force-dynamic';
@@ -23,23 +24,6 @@ interface EpikrizSonuc {
   taburcuOzeti: string;
 }
 
-const DoktorNav = () => (
-  <nav style={{ 
-    height: '64px', 
-    backgroundColor: '#0A1428', 
-    borderBottom: '1px solid #1F2A44',
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0 24px',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100
-  }}>
-    <div style={{ fontSize: '17px', fontWeight: 600, color: '#fff', letterSpacing: '-0.3px' }}>
-      Doktor Paneli
-    </div>
-  </nav>
-);
 
 export default function EpikrizPage() {
   const [hastalar, setHastalar] = useState<Hasta[]>([]);
