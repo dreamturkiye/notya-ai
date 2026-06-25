@@ -45,3 +45,12 @@ export async function groqChat(
   if (!content) throw new Error('Empty Groq response')
   return content
 }
+
+// Default export: accepts (systemPrompt: string, userPrompt: string) for backward compat
+const groqChatDefault = async (systemPromptOrMessages: string | GroqMessage[], userPrompt?: string): Promise<string> => {
+  if (typeof systemPromptOrMessages === 'string') {
+    return groqChat([{role:'system',content:systemPromptOrMessages},{role:'user',content:userPrompt||''}])
+  }
+  return groqChat(systemPromptOrMessages as GroqMessage[])
+}
+export default groqChatDefault

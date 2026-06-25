@@ -32,8 +32,10 @@ interface RaporResponse {
 
 export async function GET(request: NextRequest) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const _authH = request.headers.get('authorization')
+  const _tok = _authH?.startsWith('Bearer ') ? _authH.slice(7) : undefined
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser(_tok);
   if (authError || !user) {
     return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
   }
