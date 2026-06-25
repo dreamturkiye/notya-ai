@@ -43,19 +43,27 @@ export default function DoktorDashboard() {
   useEffect(() => {
     setMounted(true)
     const initDashboard = async () => {
-      const rawToken = localStorage.getItem('auth-token')
-      if (!rawToken) {
-        router.push('/giris/doktor')
-        return
+      // Read token from auth-token (JSON blob) or Supabase sb- key
+      const getToken = (): string | null => {
+        try {
+          const raw = localStorage.getItem('auth-token')
+          if (raw) {
+            const p = JSON.parse(raw)
+            if (p.access_token) return p.access_token
+          }
+        } catch {}
+        // Fallback: Supabase sb- key
+        const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.includes('auth'))
+        if (sbKey) {
+          try {
+            const p = JSON.parse(localStorage.getItem(sbKey) || '{}')
+            return p.access_token || null
+          } catch {}
+        }
+        return null
       }
-      let token: string
-      try {
-        const p = JSON.parse(rawToken)
-        token = p.access_token || rawToken
-      } catch {
-        token = rawToken
-      }
-      if (!token || token === rawToken) {
+      const token = getToken()
+      if (!token) {
         router.push('/giris/doktor')
         return
       }
