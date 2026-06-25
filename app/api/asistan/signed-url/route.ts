@@ -42,7 +42,12 @@ export async function GET(req: NextRequest) {
     if (body.signed_url) {
       wssUrl = body.signed_url
     } else if (body.token) {
-      wssUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&conversation_signature=${body.token}`
+      // Decode JWT to extract real signed_url from metadata
+      try {
+        const p = JSON.parse(Buffer.from(body.token.split('.')[1], 'base64').toString('utf-8'))
+        const m = JSON.parse(p.metadata || '{}')
+        wssUrl = m.signed_url || `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&token=${body.token}`
+      } catch { wssUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&token=${body.token}` }
     } else {
       console.error("[signed-url] Unexpected ElevenLabs response:", body)
       return NextResponse.json({ error: "Unexpected ElevenLabs response" }, { status: 502 })

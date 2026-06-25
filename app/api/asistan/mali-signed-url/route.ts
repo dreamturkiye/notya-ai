@@ -38,7 +38,12 @@ export async function GET(req: NextRequest) {
     const body = await resp.json()
     let wssUrl: string
     if (body.signed_url) wssUrl = body.signed_url
-    else if (body.token) wssUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&conversation_signature=${body.token}`
+    else if (body.token)       // Decode JWT to extract real signed_url from ElevenLabs token metadata
+      try {
+        const p = JSON.parse(Buffer.from(body.token.split('.')[1], 'base64').toString('utf-8'))
+        const m = JSON.parse(p.metadata || '{}')
+        wssUrl = m.signed_url || `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&token=${body.token}`
+      } catch { wssUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&token=${body.token}` }
     else return NextResponse.json({ error: "Unexpected ElevenLabs response" }, { status: 502 })
 
     // Fetch recent ingested documents for context
