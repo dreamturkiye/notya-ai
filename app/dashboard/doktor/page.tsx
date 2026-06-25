@@ -42,11 +42,13 @@ export default function DoktorDashboard() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    if (!token) {
-      router.push('/giris/doktor');
-      return;
-    }
+    const rawToken = localStorage.getItem('auth-token')
+    if (!rawToken) { router.push('/giris/doktor'); return }
+    let token: string
+    try {
+      const parsed = JSON.parse(rawToken)
+      token = parsed.access_token || rawToken
+    } catch { token = rawToken }
 
     const loadData = async () => {
       try {
@@ -56,7 +58,7 @@ export default function DoktorDashboard() {
         });
         if (!meRes.ok) throw new Error();
         const me = await meRes.json();
-        setDoktorAdi(me.name || me.email.split('@')[0]);
+        setDoktorAdi((me.data?.full_name || me.data?.email?.split('@')[0]) || 'Doktor');
 
         // raporlar
         const raporRes = await fetch('/api/doktor/raporlar', {
@@ -82,7 +84,7 @@ export default function DoktorDashboard() {
         const { data } = await supabase
           .from('notes')
           .select('id,specialty,date,content_subjektif,approved_at')
-          .eq('doctor_id', me.id)
+          .eq('doctor_id', me.data?.id)
           .order('date', { ascending: false })
           .limit(5);
 

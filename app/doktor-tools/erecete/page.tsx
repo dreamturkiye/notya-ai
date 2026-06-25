@@ -57,7 +57,7 @@ export default function ERecetePage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('auth-token');
+    const raw_t = localStorage.getItem('auth-token'); const token = raw_t ? (() => { try { return JSON.parse(raw_t).access_token || raw_t } catch { return raw_t } })() : null;
     if (!token) {
       router.push('/giris/doktor');
       return;
@@ -98,7 +98,7 @@ export default function ERecetePage() {
   };
 
   const handleUret = async () => {
-    const token = localStorage.getItem('auth-token');
+    const raw_t = localStorage.getItem('auth-token'); const token = raw_t ? (() => { try { return JSON.parse(raw_t).access_token || raw_t } catch { return raw_t } })() : null;
     if (!token || !selectedHastaId || !tani || yeniIlaclar.length === 0) {
       setError('Hasta, tanı ve en az bir ilaç zorunludur');
       return;
