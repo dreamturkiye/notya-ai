@@ -1,309 +1,493 @@
-'use client';
 
-import React from 'react';
+import Link from "next/link"
 
-const colors = {
-  primary: '#00A89D',
-  primaryDark: '#008F85',
-  dark: '#0A1628',
-  light: '#FFFFFF',
-  gray: '#F9FAFB',
-  text: '#1F2937',
-  textLight: '#6B7280',
-  border: '#E5E7EB',
-};
+// Free Unsplash images - specific photo IDs for consistent display
+// All licensed under Unsplash License (free for commercial use)
+const PHOTOS = {
+  // Hero: doctor in dramatic dark lighting - confident pose
+  hero: "/doctors/dr_ayse.jpg",
+  // Doctor 1: female physician, warm confident portrait
+  ayse: "/doctors/dr_ayse.jpg",
+  // Doctor 2: male cardiologist, authoritative look
+  mehmet: "/doctors/dr_mehmet.jpg",
+  // Doctor 3: female neurologist, analytical expression
+  elif: "/doctors/dr_elif.jpg",
+  // Feature image: doctor with tablet/technology
+  feature: "/doctors/dr_mehmet.jpg",
+  // Safety: intensive care / focus
+  safety: "/doctors/dr_elif.jpg",
+}
 
 export default function HomePage() {
-  const scrollTo = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 60;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition - bodyRect - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-    }
-  };
-
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>
-      {/* NAV */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 100, height: 52,
-        background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center'
-      }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>N</span>
-            </div>
-            <span style={{ fontSize: 17, fontWeight: 600, letterSpacing: '-0.3px' }}>Notya AI</span>
-          </div>
+    <main style={{margin:0,padding:0,background:"#FFFAFA",color:"#0A1628",
+                  fontFamily:"'Georgia','Times New Roman',serif",minHeight:"100vh",overflowX:"hidden"}}>
 
-          <div style={{ display: 'none', gap: 32, fontSize: 14, color: '#374151' }} className="desktop-nav">
-            <a onClick={() => scrollTo('ozellikler')} style={{ cursor: 'pointer' }}>Özellikler</a>
-            <a onClick={() => scrollTo('uzmanlar')} style={{ cursor: 'pointer' }}>Uzmanlar</a>
-            <a onClick={() => scrollTo('fiyatlar')} style={{ cursor: 'pointer' }}>Fiyatlar</a>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
-            <button style={{ padding: '8px 18px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer' }}>Giriş</button>
-            <button onClick={() => scrollTo('fiyatlar')} style={{
-              padding: '8px 18px', background: colors.primary, color: 'white', border: 'none',
-              borderRadius: 6, fontWeight: 500, cursor: 'pointer'
-            }}>Ücretsiz Deneyin</button>
-          </div>
+      {/* ── NAV ──────────────────────────────────────────────── */}
+      <nav style={{position:"fixed",top:0,left:0,right:0,padding:"24px 48px",
+                   display:"flex",alignItems:"center",justifyContent:"space-between",
+                   zIndex:100,backdropFilter:"blur(20px)",
+                   background:"linear-gradient(to bottom,rgba(255,250,250,0.9),transparent)"}}>
+        <div style={{fontSize:"19px",fontWeight:"400",letterSpacing:"0.18em",color:"#0A1628"}}>
+          NOTYA<span style={{color:"#2563EB"}}>.</span>AI
+        </div>
+        <div style={{display:"flex",gap:"32px",alignItems:"center"}}>
+          {["Özellikler","Uzmanlar","Fiyatlar"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`}
+               style={{color:"rgba(10,22,40,0.55)",fontSize:"12px",letterSpacing:"0.1em",
+                       textDecoration:"none",textTransform:"uppercase",fontFamily:"system-ui"}}>
+              {item}
+            </a>
+          ))}
+          <Link href="/giris"
+                style={{padding:"9px 22px",border:"1px solid rgba(10,22,40,0.2)",borderRadius:"2px",
+                        color:"rgba(10,22,40,0.85)",fontSize:"12px",letterSpacing:"0.1em",
+                        textDecoration:"none",textTransform:"uppercase",fontFamily:"system-ui",
+                        backdropFilter:"blur(8px)",background:"rgba(10,22,40,0.06)"}}>
+            Giriş
+          </Link>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section style={{ background: colors.dark, minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '80px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
-          <div>
-            <div style={{
-              display: 'inline-block', background: 'rgba(0,168,157,0.15)', color: colors.primary,
-              padding: '4px 14px', borderRadius: 20, fontSize: 13, marginBottom: 24
-            }}>
-              Türkiye’nin İlk AI Tıp Uzmanı
-            </div>
-            <h1 style={{ fontSize: 'clamp(42px, 6vw, 58px)', lineHeight: 1.05, color: 'white', fontWeight: 400, margin: 0 }}>
-              Artık yalnız değilsin.<br />
-              <span style={{ color: colors.primary, fontWeight: 600 }}>Asistanınız burada.</span>
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 18, maxWidth: 420, margin: '28px 0 40px' }}>
-              Her seans için hazır, her zaman öğrenen.
-            </p>
-            <div style={{ display: 'flex', gap: 14 }}>
-              <button onClick={() => scrollTo('fiyatlar')} style={{
-                background: colors.primary, color: 'white', padding: '14px 32px', borderRadius: 8,
-                border: 'none', fontSize: 16, fontWeight: 500, cursor: 'pointer'
-              }}>Başla</button>
-              <button onClick={() => scrollTo('demo')} style={{
-                background: 'transparent', color: 'white', padding: '14px 32px', borderRadius: 8,
-                border: '1px solid rgba(255,255,255,0.3)', fontSize: 16, cursor: 'pointer'
-              }}>Canlı Demo</button>
-            </div>
-            <div style={{ marginTop: 60, display: 'flex', gap: 28, flexWrap: 'wrap', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-              <span>Nelson 22e</span><span>Braunwald 12e</span><span>Harrison 22e</span><span>KVKK</span><span>AES-256</span>
-            </div>
+      {/* ── HERO — Full bleed photo ───────────────────────────── */}
+      <section style={{position:"relative",height:"100vh",minHeight:"700px",overflow:"hidden"}}>
+
+        {/* The photo */}
+        <img src={PHOTOS.hero} alt="Uzman Doktor"
+             style={{position:"absolute",inset:0,width:"100%",height:"100%",
+                     objectFit:"cover",objectPosition:"center 20%",
+                     filter:"brightness(0.7) saturate(0.9)"}} />
+
+        {/* Overlay gradient — dark on left for text, photo shows on right */}
+        <div style={{position:"absolute",inset:0,
+                     background:"linear-gradient(105deg,rgba(255,250,250,0.97) 0%,rgba(255,250,250,0.75) 45%,rgba(255,250,250,0.25) 70%,rgba(255,250,250,0.45) 100%)"}} />
+
+        {/* Subtle blue glow bottom-left */}
+        <div style={{position:"absolute",bottom:"-10%",left:"-5%",width:"50vw",height:"50vw",
+                     borderRadius:"50%",
+                     background:"radial-gradient(ellipse,rgba(37,99,235,0.07) 0%,transparent 70%)",
+                     pointerEvents:"none"}} />
+
+        {/* Hero text */}
+        <div style={{position:"relative",zIndex:10,height:"100%",display:"flex",
+                     flexDirection:"column",justifyContent:"flex-end",
+                     padding:"0 48px 96px",maxWidth:"780px"}}>
+
+          <div style={{fontSize:"10px",letterSpacing:"0.35em",textTransform:"uppercase",
+                       color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui",
+                       display:"flex",alignItems:"center",gap:"12px"}}>
+            <span style={{width:"32px",height:"1px",background:"#2563EB",display:"inline-block"}}></span>
+            Türkiye'nin İlk AI Tıp Uzmanı
           </div>
 
-          {/* Chat Mockup */}
-          <div style={{ display: 'none' }} className="desktop-chat">
-            <div style={{ background: '#111827', borderRadius: 20, padding: 20, boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.4)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 36, height: 36, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 600 }}>AY</div>
-                <div>
-                  <div style={{ color: 'white', fontWeight: 500 }}>Prof. Dr. Ayşe Kaya</div>
-                  <div style={{ color: '#64748b', fontSize: 12 }}>Pediatri • Çevrimiçi</div>
-                </div>
-              </div>
-              <div style={{ background: '#1f2937', borderRadius: 16, padding: 14, marginBottom: 10, color: '#e5e7eb', fontSize: 14 }}>
-                4 yaşındaki hastada 39.2° ateş ve öksürük var. Öneriniz?
-              </div>
-              <div style={{ background: colors.primary, borderRadius: 16, padding: 14, color: 'white', fontSize: 14 }}>
-                Nelson 22e ve Harriet Lane 23e’ye göre ampirik tedavi önerisi...
-              </div>
-              <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ display: 'flex', gap: 3 }}>
-                  <div style={{ width: 4, height: 4, background: '#64748b', borderRadius: '50%', animation: 'typing 1.2s infinite' }}></div>
-                  <div style={{ width: 4, height: 4, background: '#64748b', borderRadius: '50%', animation: 'typing 1.2s infinite 0.2s' }}></div>
-                  <div style={{ width: 4, height: 4, background: '#64748b', borderRadius: '50%', animation: 'typing 1.2s infinite 0.4s' }}></div>
-                </div>
-                <span style={{ color: '#64748b', fontSize: 12 }}>Yazıyor...</span>
-              </div>
-            </div>
+          <h1 style={{fontSize:"clamp(52px,7.5vw,96px)",fontWeight:"400",lineHeight:"0.98",
+                      margin:"0 0 36px",letterSpacing:"-0.025em"}}>
+            Cebinizdeki<br/>
+            <em style={{color:"#2563EB",fontStyle:"italic"}}>Dünyaca Ünlü</em><br/>
+            Uzman Doktor.
+          </h1>
+
+          <p style={{fontSize:"17px",lineHeight:"1.75",color:"rgba(10,22,40,0.6)",
+                     maxWidth:"480px",margin:"0 0 52px",fontFamily:"system-ui",
+                     fontWeight:"300",letterSpacing:"0.005em"}}>
+            Nelson, Braunwald, Harrison — dünyanın en güvenilir tıp
+            kitaplarını bilen uzmanlar. Sesli konuşun, tanı alın,
+            reçete yazın. Her seans, sizi daha iyi tanır.
+          </p>
+
+          <div style={{display:"flex",gap:"16px",alignItems:"center"}}>
+            <Link href="/giris"
+                  style={{display:"inline-block",padding:"17px 42px",
+                          background:"#2563EB",color:"#0A1628",textDecoration:"none",
+                          fontSize:"13px",letterSpacing:"0.1em",textTransform:"uppercase",
+                          fontFamily:"system-ui",fontWeight:"500",borderRadius:"2px"}}>
+              Ücretsiz Başlayın
+            </Link>
+            <Link href="/asistan"
+                  style={{display:"inline-flex",alignItems:"center",gap:"10px",
+                          color:"rgba(10,22,40,0.5)",textDecoration:"none",
+                          fontSize:"12px",letterSpacing:"0.08em",fontFamily:"system-ui"}}>
+              <span style={{width:"28px",height:"1px",background:"rgba(10,22,40,0.3)",
+                            display:"inline-block"}}></span>
+              Asistanı Dene
+            </Link>
           </div>
         </div>
+
+        {/* Bottom fade to black */}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:"220px",
+                     background:"linear-gradient(to top,#FFFAFA,transparent)",zIndex:5}} />
       </section>
 
-      {/* STAT BAR */}
-      <div style={{ height: 80, background: 'white', display: 'flex', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '0 24px', display: 'flex', justifyContent: 'center', gap: 80, fontSize: 15 }}>
-          <div style={{ textAlign: 'center' }}><span style={{ fontWeight: 600 }}>Günlük +5 hasta daha</span></div>
-          <div style={{ width: 1, height: 18, background: '#e5e7eb' }}></div>
-          <div style={{ textAlign: 'center' }}><span style={{ fontWeight: 600 }}>Seans başına 18 → 2 dakika tasarruf</span></div>
-          <div style={{ width: 1, height: 18, background: '#e5e7eb' }}></div>
-          <div style={{ textAlign: 'center' }}><span style={{ fontWeight: 600 }}>%94 doktor memnuniyeti</span></div>
-        </div>
+      {/* ── TRUST STRIP ──────────────────────────────────────── */}
+      <div style={{borderTop:"1px solid rgba(10,22,40,0.08)",
+                   borderBottom:"1px solid rgba(10,22,40,0.08)",
+                   padding:"24px 48px",display:"flex",gap:"0",overflowX:"auto",
+                   background:"rgba(10,22,40,0.04)"}}>
+        {[
+          ["Nelson 22e","Pediatri"],["Braunwald 12e","Kardiyoloji"],
+          ["Harrison's 22e","Dahiliye"],["Adams & Victor 12e","Nöroloji"],
+          ["DSM-5-TR","Psikiyatri"],["KVKK Uyumlu","AB Merkezi"],
+        ].map(([title, sub], i) => (
+          <div key={title}
+               style={{flexShrink:0,padding:"0 40px",
+                       borderRight:i<5?"1px solid rgba(10,22,40,0.08)":"none"}}>
+            <div style={{fontSize:"13px",color:"rgba(10,22,40,0.65)",
+                         fontFamily:"system-ui",whiteSpace:"nowrap",fontWeight:"500"}}>{title}</div>
+            <div style={{fontSize:"10px",color:"rgba(10,22,40,0.3)",fontFamily:"system-ui",
+                         letterSpacing:"0.08em",textTransform:"uppercase",marginTop:"2px"}}>{sub}</div>
+          </div>
+        ))}
       </div>
 
-      {/* FEATURES */}
-      <section id="ozellikler" style={{ padding: '120px 0', background: 'white' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 60 }}>
-            <div style={{ color: colors.primary, fontSize: 12, letterSpacing: '1.5px', marginBottom: 12 }}>TEMEL ÖZELLİKLER</div>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 500, margin: 0 }}>Doktorun ihtiyacı olan her şey, tek yerde.</h2>
+      {/* ── FEATURE — Voice conversation with photo ───────────── */}
+      <section id="özellikler" style={{padding:"130px 48px",display:"grid",
+                                       gridTemplateColumns:"1fr 1fr",gap:"80px",
+                                       alignItems:"center",maxWidth:"1300px",margin:"0 auto"}}>
+        {/* Left text */}
+        <div>
+          <div style={{fontSize:"10px",letterSpacing:"0.3em",textTransform:"uppercase",
+                       color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui"}}>
+            Sesli Konuşma
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-            {[
-              { icon: '🎙️', title: 'Sesli ve Doğal', desc: 'Mikrofona bir kez dokunun. Doğal Türkçe konuşma ile anında kayıt.' },
-              { icon: '📚', title: 'Textbook Zekası', desc: 'Nelson, Braunwald ve Harrison referanslı tanı ve tedavi önerileri.' },
-              { icon: '🧠', title: 'Öğrenen Sistem', desc: 'Her seansla daha akıllı. Klinik pratiğinize göre uyarlanır.' },
-              { icon: '👥', title: 'Hasta Yönetimi', desc: 'TC kimlik doğrulama (MERNiS), şifreli hasta kaydı ve tıbbi geçmiş.' },
-              { icon: '📊', title: 'ICD-10 Kodlama', desc: 'Türkçe tanı girişiyle anlık otomatik kodlama ve HBYS entegrasyonu.' },
-              { icon: '📝', title: 'e-Reçete & Epikriz', desc: 'SGK Medula uyumlu elektronik reçete ve epikriz tek dokunuşta.' },
-              { icon: '📷', title: 'PACS/Görüntüleme', desc: 'DICOM, X-Ray, MRI ve BT görüntüleri merkezi yönetim.' },
-              { icon: '💊', title: 'İlaç Etkileşim', desc: 'Anlık ilaç etkileşim kontrolü, yaş ve böbrek uyum analizi.' },
-              { icon: '📅', title: 'Aylık Raporlar', desc: 'SGK analitik, ısı haritası ve 30 uzmanlık dalına özel SOAP şablonları.' }
-            ].map((f, i) => (
-              <div key={i} style={{ background: 'white', border: '1px solid #f0f0f0', borderRadius: 16, padding: 40, transition: 'all 0.2s' }}>
-                <div style={{ fontSize: 52, marginBottom: 24 }}>{f.icon}</div>
-                <div style={{ fontSize: 21, fontWeight: 600, marginBottom: 12 }}>{f.title}</div>
-                <div style={{ color: '#4B5563', lineHeight: 1.5 }}>{f.desc}</div>
-              </div>
-            ))}
-          </div>
+          <h2 style={{fontSize:"clamp(38px,4.5vw,58px)",fontWeight:"400",lineHeight:"1.08",
+                      margin:"0 0 28px",letterSpacing:"-0.025em"}}>
+            İki Meslektaş<br/>
+            <em style={{color:"rgba(10,22,40,0.4)",fontStyle:"italic"}}>Gibi Konuşun.</em>
+          </h2>
+          <p style={{fontSize:"16px",lineHeight:"1.85",color:"rgba(10,22,40,0.55)",
+                     margin:"0 0 40px",fontFamily:"system-ui",fontWeight:"300"}}>
+            Buton yok. Bekleme yok. Bir kez dokunun — Prof. Ayşe sizi
+            karşılar. Cümlenizin ortasında araya girseniz, anında durur.
+            Gerçek zamanlı. Tamamen doğal.
+          </p>
+          {[
+            ["🎙️","Push-to-talk yok — her an dinliyor"],
+            ["⚡","2 saniyede yanıt — sıfır gecikme"],
+            ["🧠","10 seanstan sonra yıllardır birliktesiniz gibi"],
+          ].map(([icon, text]) => (
+            <div key={text as string}
+                 style={{display:"flex",alignItems:"center",gap:"14px",
+                         fontSize:"14px",color:"rgba(10,22,40,0.6)",
+                         fontFamily:"system-ui",marginBottom:"14px"}}>
+              <span style={{fontSize:"20px"}}>{icon}</span>{text}
+            </div>
+          ))}
         </div>
-      </section>
 
-      {/* DEMO SECTION */}
-      <section id="demo" style={{ background: colors.dark, padding: '120px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 80, alignItems: 'center' }}>
-          <div>
-            <h2 style={{ color: 'white', fontSize: 'clamp(32px, 4.5vw, 42px)', fontWeight: 500, lineHeight: 1.1 }}>Gerçek bir pediatri konsültasyonu.</h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 18, margin: '24px 0 40px' }}>iPhone ekranında canlı klinik senaryo deneyimi.</p>
-            <button onClick={() => scrollTo('fiyatlar')} style={{ background: colors.primary, color: 'white', padding: '14px 36px', borderRadius: 8, border: 'none', fontSize: 16, fontWeight: 500 }}>Şimdi deneyin</button>
-          </div>
-          {/* iPhone Mockup */}
-          <div style={{ background: '#111827', borderRadius: 60, padding: 12, boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)' }}>
-            <div style={{ background: '#0f172a', borderRadius: 48, padding: 20, height: 520, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                <div style={{ width: 120, height: 6, background: '#334155', borderRadius: 3 }}></div>
+        {/* Right — photo with overlay */}
+        <div style={{position:"relative",borderRadius:"16px",overflow:"hidden",
+                     aspectRatio:"4/5"}}>
+          <img src={PHOTOS.feature} alt="Doktor teknoloji kullanıyor"
+               style={{width:"100%",height:"100%",objectFit:"cover",
+                       filter:"brightness(1.0) saturate(1.0)"}} />
+          {/* Conversation overlay at bottom */}
+          <div style={{position:"absolute",bottom:0,left:0,right:0,
+                       background:"linear-gradient(to top,rgba(255,250,250,0.97) 0%,rgba(255,250,250,0.6) 50%,transparent 100%)",
+                       padding:"32px 24px 24px"}}>
+            <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+              <div style={{alignSelf:"flex-end",background:"rgba(37,99,235,0.35)",
+                           backdropFilter:"blur(8px)",border:"1px solid rgba(37,99,235,0.3)",
+                           padding:"8px 14px",borderRadius:"12px 12px 2px 12px",
+                           fontSize:"12px",color:"rgba(10,22,40,0.9)",fontFamily:"system-ui",
+                           maxWidth:"80%"}}>
+                7 yaşında, 18 kilo. Ateş ve kulak ağrısı.
               </div>
-              <div style={{ color: '#64748b', fontSize: 13, marginBottom: 16, paddingLeft: 8 }}>Pediatri Konsültasyonu</div>
-              <div style={{ background: '#1e2937', borderRadius: 18, padding: 14, marginBottom: 10, fontSize: 14, color: '#e2e8f0' }}>
-                4 y.o. hasta, 39.2° ateş, prodüktif öksürük.
-              </div>
-              <div style={{ background: colors.primary, borderRadius: 18, padding: 14, fontSize: 14, color: 'white' }}>
-                Nelson 22e önerisi: Amoksisilin 80mg/kg/gün.
+              <div style={{alignSelf:"flex-start",display:"flex",gap:"8px",alignItems:"flex-end"}}>
+                <div style={{width:"26px",height:"26px",borderRadius:"50%",
+                             background:"#0F9B8E",display:"flex",alignItems:"center",
+                             justifyContent:"center",fontSize:"12px",flexShrink:0}}>👩‍⚕️</div>
+                <div style={{background:"rgba(10,22,40,0.1)",backdropFilter:"blur(8px)",
+                             border:"1px solid rgba(10,22,40,0.12)",
+                             padding:"8px 14px",borderRadius:"2px 12px 12px 12px",
+                             fontSize:"12px",color:"rgba(10,22,40,0.75)",fontFamily:"system-ui",
+                             maxWidth:"80%",lineHeight:"1.5"}}>
+                  Amoksisilin 40 mg/kg/gün yazayım mı doktor?
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* THREE ASSISTANTS */}
-      <section id="uzmanlar" style={{ padding: '120px 0', background: 'white' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ color: colors.primary, fontSize: 12, letterSpacing: '1px', marginBottom: 8 }}>UZMAN ASİSTANLARINIZ</div>
-            <h2 style={{ fontSize: 'clamp(26px, 3.8vw, 34px)', fontWeight: 500 }}>Size atanmış asistanınız sizi bekliyor.</h2>
-            <p style={{ maxWidth: 520, margin: '16px auto 0', color: '#4B5563' }}>
-              Uzmanlığınıza göre atanan birincil asistanın yanı sıra, konsültasyon için diğer uzmanlara her an erişebilirsiniz.
+      {/* ── LEARNING — Dark full-bleed section with photo ──────── */}
+      <section style={{position:"relative",overflow:"hidden",
+                       padding:"140px 48px"}}>
+        {/* Background photo */}
+        <img src={PHOTOS.safety} alt="Klinik ortam"
+             style={{position:"absolute",inset:0,width:"100%",height:"100%",
+                     objectFit:"cover",objectPosition:"center",
+                     filter:"brightness(1.0) saturate(1.05)"}} />
+        <div style={{position:"absolute",inset:0,
+                     background:"linear-gradient(to right,rgba(255,250,250,0.65) 0%,rgba(255,250,250,0.3) 50%,rgba(255,250,250,0.0) 100%)"}} />
+
+        <div style={{position:"relative",zIndex:1,maxWidth:"1100px",margin:"0 auto"}}>
+          <div style={{maxWidth:"580px",marginBottom:"72px"}}>
+            <div style={{fontSize:"10px",letterSpacing:"0.3em",textTransform:"uppercase",
+                         color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui"}}>
+              Öğrenen Sistem
+            </div>
+            <h2 style={{fontSize:"clamp(38px,5vw,64px)",fontWeight:"400",lineHeight:"1.05",
+                        letterSpacing:"-0.025em",margin:"0 0 24px"}}>
+              10 Seans Sonra<br/>
+              <em style={{color:"rgba(10,22,40,0.7)",fontStyle:"italic"}}>
+                Yıllardır Birliktesiniz.
+              </em>
+            </h2>
+            <p style={{fontSize:"16px",lineHeight:"1.85",color:"rgba(10,22,40,0.5)",
+                       fontFamily:"system-ui",fontWeight:"300"}}>
+              Her düzelttiğiniz ilaç, her değiştirdiğiniz doz, her tercih —
+              öğrenir. Sorulmadan hatırlar. Meslektaş gibi davranır.
             </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-            {/* Primary */}
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderLeft: `3px solid ${colors.primary}`, borderRadius: 20, padding: 32 }}>
-              <div style={{ width: 72, height: 72, background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24, fontWeight: 600, marginBottom: 20 }}>AY</div>
-              <div style={{ fontWeight: 600, fontSize: 19 }}>Prof. Dr. Ayşe Kaya</div>
-              <div style={{ color: '#64748b', marginBottom: 16 }}>Pediatri • Birincil Asistan</div>
-              <div style={{ fontSize: 13, color: '#475569' }}>Nelson 22e • Harriet Lane 23e</div>
-              <div style={{ marginTop: 20, display: 'inline-block', background: 'rgba(0,168,157,0.1)', color: colors.primary, padding: '2px 10px', borderRadius: 4, fontSize: 12 }}>Birincil Asistan</div>
-            </div>
-            {/* Konsültasyon */}
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 20, padding: 32 }}>
-              <div style={{ width: 72, height: 72, background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24, fontWeight: 600, marginBottom: 20 }}>MD</div>
-              <div style={{ fontWeight: 600, fontSize: 19 }}>Prof. Dr. Mehmet Demir</div>
-              <div style={{ color: '#64748b', marginBottom: 16 }}>Kardiyoloji • Konsültasyon</div>
-              <div style={{ fontSize: 13, color: '#475569' }}>Braunwald 12e</div>
-            </div>
-            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 20, padding: 32 }}>
-              <div style={{ width: 72, height: 72, background: '#8b5cf6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24, fontWeight: 600, marginBottom: 20 }}>ES</div>
-              <div style={{ fontWeight: 600, fontSize: 19 }}>Prof. Dr. Elif Şahin</div>
-              <div style={{ color: '#64748b', marginBottom: 16 }}>Nöroloji • Konsültasyon</div>
-              <div style={{ fontSize: 13, color: '#475569' }}>Adams &amp; Victor</div>
-            </div>
-          </div>
-          <div style={{ textAlign: 'center', marginTop: 32, fontSize: 13, color: '#64748b' }}>+ 27 uzmanlık alanı konsültasyon için hazır</div>
-        </div>
-      </section>
 
-      {/* HOW IT WORKS */}
-      <section style={{ background: '#F9FAFB', padding: '120px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <h2 style={{ textAlign: 'center', fontSize: 'clamp(26px, 3.8vw, 34px)', fontWeight: 500, marginBottom: 60 }}>Üç adımda başlayın.</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 40 }}>
-            {[
-              { num: '01', title: 'Kayıt Ol', desc: '2 dakikada hesabınızı oluşturun.' },
-              { num: '02', title: 'Asistanınıza Kavuşun', desc: 'Uzmanlığınıza göre atama yapılır.' },
-              { num: '03', title: 'Çalışın', desc: 'İlk seansınızı bugün başlatın.' }
-            ].map((step, index) => (
-              <div key={index} style={{ position: 'relative' }}>
-                <div style={{ width: 52, height: 52, border: `2px solid ${colors.primary}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 600, color: colors.primary, marginBottom: 20 }}>{step.num}</div>
-                <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>{step.title}</div>
-                <div style={{ color: '#4B5563' }}>{step.desc}</div>
+          {/* Before / After cards */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px",maxWidth:"820px"}}>
+            <div style={{background:"rgba(10,22,40,0.06)",border:"1px solid rgba(10,22,40,0.1)",
+                         borderRadius:"16px",padding:"32px",backdropFilter:"blur(12px)"}}>
+              <div style={{fontSize:"10px",letterSpacing:"0.2em",textTransform:"uppercase",
+                           color:"#0A1628",fontFamily:"system-ui",fontWeight:"700",marginBottom:"20px"}}>
+                1. Seans
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING */}
-      <section id="fiyatlar" style={{ padding: '120px 0', background: 'white' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 500 }}>Basit ve şeffaf fiyatlandırma.</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
-            {[
-              { name: 'Starter', price: '299', features: ['Tek asistan', '50 seans/ay', 'Temel destek'] },
-              { name: 'Pro', price: '799', features: ['Birincil + 2 konsültasyon', 'Sınırsız seans', 'Öncelikli destek'], featured: true },
-              { name: 'Klinik', price: '2499', features: ['Tüm uzmanlar', 'Sınırsız seans', 'Kurumsal entegrasyon'] }
-            ].map((tier, i) => (
-              <div key={i} style={{
-                border: tier.featured ? `2px solid ${colors.primary}` : '1px solid #e5e7eb',
-                borderRadius: 20, padding: 36, background: tier.featured ? '#fafafa' : 'white',
-                boxShadow: tier.featured ? '0 10px 15px -3px rgb(0 0 0 / 0.05)' : 'none'
-              }}>
-                <div style={{ fontSize: 21, fontWeight: 600 }}>{tier.name}</div>
-                <div style={{ margin: '20px 0' }}>
-                  <span style={{ fontSize: 42, fontWeight: 600 }}>{tier.price}</span>
-                  <span style={{ color: '#6B7280' }}> ₺/ay</span>
-                </div>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '24px 0' }}>
-                  {tier.features.map((f, idx) => (
-                    <li key={idx} style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: colors.primary }}>✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <button style={{
-                  width: '100%', padding: '14px', background: tier.featured ? colors.primary : '#111827',
-                  color: 'white', border: 'none', borderRadius: 8, fontWeight: 500, cursor: 'pointer'
-                }}>Başla</button>
+              <div style={{fontSize:"13px",color:"rgba(10,22,40,0.4)",fontFamily:"system-ui",
+                           fontStyle:"italic",marginBottom:"8px"}}>"Amoksisilin yaz."</div>
+              <div style={{fontSize:"13px",color:"rgba(10,22,40,0.8)",fontFamily:"system-ui",
+                           background:"rgba(10,22,40,0.06)",padding:"10px 14px",borderRadius:"8px",
+                           lineHeight:"1.6"}}>
+                Hangi dozu yazayım, doktor? Hangi markayı tercih edersiniz?
               </div>
-            ))}
+            </div>
+            <div style={{background:"rgba(37,99,235,.08)",border:"1px solid rgba(37,99,235,.3)",
+                         borderRadius:"16px",padding:"32px",backdropFilter:"blur(12px)",
+                         position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:0,left:"20px",right:"20px",height:"1px",
+                           background:"linear-gradient(90deg,transparent,#2563EB,transparent)"}} />
+              <div style={{fontSize:"10px",letterSpacing:"0.2em",textTransform:"uppercase",
+                           color:"#2563EB",fontFamily:"system-ui",marginBottom:"20px"}}>
+                10. Seans
+              </div>
+              <div style={{fontSize:"13px",color:"rgba(10,22,40,0.4)",fontFamily:"system-ui",
+                           fontStyle:"italic",marginBottom:"8px"}}>"Amoksisilin yaz."</div>
+              <div style={{fontSize:"13px",color:"rgba(10,22,40,0.85)",fontFamily:"system-ui",
+                           background:"rgba(37,99,235,.1)",padding:"12px 14px",borderRadius:"8px",
+                           lineHeight:"1.65"}}>
+                40 mg/kg/gün, bu kiloda 720 mg. Bildiğiniz gibi Amoksiklav
+                tercih ediyorsunuz — onu mu yazayım doktor?
+              </div>
+              <div style={{marginTop:"14px",fontSize:"11px",color:"rgba(37,99,235,.6)",
+                           fontFamily:"system-ui",fontStyle:"italic"}}>
+                ✦ Sormadınız — o hatırladı.
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section style={{ background: colors.dark, padding: '80px 0', textAlign: 'center' }}>
-        <div style={{ maxWidth: 620, margin: '0 auto', padding: '0 24px' }}>
-          <h2 style={{ color: 'white', fontSize: 'clamp(28px, 4vw, 38px)', fontWeight: 500, marginBottom: 32 }}>
-            Hemen bugün başlayın.
+      {/* ── SPECIALISTS — Photo cards ────────────────────────── */}
+      <section id="uzmanlar" style={{padding:"130px 48px",maxWidth:"1300px",margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:"80px"}}>
+          <div style={{fontSize:"10px",letterSpacing:"0.3em",textTransform:"uppercase",
+                       color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui"}}>
+            Uzman Kadromuz
+          </div>
+          <h2 style={{fontSize:"clamp(38px,4.5vw,58px)",fontWeight:"400",lineHeight:"1.08",
+                      letterSpacing:"-0.025em",margin:0}}>
+            Üç Uzman.<br/>
+            <em style={{color:"rgba(10,22,40,0.7)",fontStyle:"italic"}}>
+              Tek Uygulama.
+            </em>
           </h2>
-          <button onClick={() => scrollTo('fiyatlar')} style={{
-            background: colors.primary, color: 'white', padding: '16px 52px', borderRadius: 8,
-            border: 'none', fontSize: 17, fontWeight: 600, cursor: 'pointer'
-          }}>15 gün ücretsiz deneyin</button>
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 16 }}>Kredi kartı gerekmez</div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}}>
+          {[
+            {name:"Prof. Ayşe Kaya",    title:"Pediatri Uzmanı",      photo:PHOTOS.ayse,
+             color:"#0F9B8E",  char:"Sıcak · Sabırlı",    books:"Nelson 22e · Harriet Lane 23e"},
+            {name:"Prof. Mehmet Demir", title:"Kardiyoloji Uzmanı",   photo:PHOTOS.mehmet,
+             color:"#2563EB",  char:"Hızlı · Net",        books:"Braunwald 12e · ESC 2024"},
+            {name:"Prof. Elif Şahin",   title:"Nöroloji & Dahiliye",  photo:PHOTOS.elif,
+             color:"#7C3AED",  char:"Analitik · Dikkatli", books:"Harrison's 22e · Adams & Victor"},
+          ].map(spec => (
+            <div key={spec.name}
+                 style={{borderRadius:"16px",overflow:"hidden",position:"relative",
+                         aspectRatio:"3/4",cursor:"pointer"}}>
+              {/* Photo */}
+              <img src={spec.photo} alt={spec.name}
+                   style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"top center",
+                           filter:"brightness(1.0) saturate(1.0)",transition:"filter .4s"}} />
+
+              {/* Top color bar */}
+              <div style={{position:"absolute",top:0,left:0,right:0,height:"3px",
+                           background:`linear-gradient(90deg,transparent,${spec.color},transparent)`}} />
+
+              {/* Bottom overlay */}
+              <div style={{position:"absolute",bottom:0,left:0,right:0,
+                           background:"linear-gradient(to top,rgba(255,250,250,0.97) 0%,rgba(255,250,250,0.6) 60%,transparent 100%)",
+                           padding:"28px 24px 24px"}}>
+                <div style={{fontSize:"16px",fontWeight:"400",color:"#0A1628",
+                             fontFamily:"'Georgia',serif",marginBottom:"4px"}}>{spec.name}</div>
+                <div style={{fontSize:"11px",color:spec.color,fontFamily:"system-ui",
+                             letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:"10px"}}>
+                  {spec.title}
+                </div>
+                <div style={{fontSize:"11px",color:"rgba(10,22,40,0.4)",fontFamily:"system-ui",
+                             fontStyle:"italic",marginBottom:"8px"}}>{spec.char}</div>
+                <div style={{fontSize:"11px",color:"rgba(10,22,40,0.3)",fontFamily:"system-ui"}}>
+                  {spec.books}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      <style jsx>{`
-        @keyframes typing {
-          0%, 80%, 100% { transform: scale(0); }
-          40% { transform: scale(1); }
-        }
-        @media (min-width: 768px) {
-          .desktop-nav { display: flex !important; }
-          .desktop-chat { display: block !important; }
-        }
-      `}</style>
-    </div>
-  );
+      {/* ── SAFETY ───────────────────────────────────────────── */}
+      <section style={{background:"#F4F0F0",padding:"110px 48px",
+                       borderTop:"1px solid rgba(10,22,40,0.06)"}}>
+        <div style={{maxWidth:"680px",margin:"0 auto",textAlign:"center"}}>
+          <div style={{fontSize:"10px",letterSpacing:"0.3em",textTransform:"uppercase",
+                       color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui"}}>
+            Güvenlik Ağı
+          </div>
+          <h2 style={{fontSize:"clamp(34px,4.5vw,54px)",fontWeight:"400",lineHeight:"1.1",
+                      letterSpacing:"-0.025em",marginBottom:"24px"}}>
+            50 Hasta, Yorgun Bir Gün —<br/>
+            <em style={{color:"rgba(10,22,40,0.7)",fontStyle:"italic"}}>O Asla Susmaz.</em>
+          </h2>
+          <p style={{fontSize:"16px",color:"rgba(10,22,40,0.75)",lineHeight:"1.9",
+                     fontFamily:"system-ui",fontWeight:"300",marginBottom:"52px"}}>
+            Yanlış doz, tehlikeli kombinasyon, atlanmış SGK kısıtlaması —
+            sormadan söyler. Duraksatır. Doğrusunu önerir.
+          </p>
+          <div style={{background:"#080E1A",border:"1px solid rgba(10,22,40,0.1)",
+                       borderRadius:"14px",padding:"28px 32px",textAlign:"left",
+                       position:"relative"}}>
+            <div style={{position:"absolute",top:"-1px",left:"32px",right:"32px",height:"1px",
+                         background:"linear-gradient(90deg,transparent,rgba(239,68,68,.8),transparent)"}} />
+            <div style={{fontSize:"10px",letterSpacing:"0.15em",textTransform:"uppercase",
+                         color:"#FF5555",fontFamily:"system-ui",marginBottom:"12px"}}>
+              ⚠ Örnek Uyarı
+            </div>
+            <div style={{fontSize:"15px",color:"#FFFFFF",fontFamily:"system-ui",
+                         lineHeight:"1.75",fontStyle:"italic"}}>
+              "Doktor, bir saniye — bu doz yetişkin dozudur. Nelson'a göre
+              bu kiloda maksimum 250 mg olmalı. Düzelteyim mi?"
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ──────────────────────────────────────────── */}
+      <section id="fiyatlar" style={{padding:"130px 48px",maxWidth:"1100px",margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:"72px"}}>
+          <div style={{fontSize:"10px",letterSpacing:"0.3em",textTransform:"uppercase",
+                       color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui"}}>Fiyatlandırma</div>
+          <h2 style={{fontSize:"clamp(36px,4vw,52px)",fontWeight:"400",
+                      letterSpacing:"-0.025em",fontFamily:"'Georgia',serif"}}>
+            Sade. Şeffaf. Adil.
+          </h2>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"2px",borderRadius:"16px",overflow:"hidden"}}>
+          {[
+            {name:"Starter",price:"₺499",sub:"/ay",highlight:false,
+             items:["50 seans/ay","1 kullanıcı","SOAP notları","AI Uzman Asistan"]},
+            {name:"Pro",price:"₺1.299",sub:"/ay",highlight:true,
+             items:["Sınırsız seans","1 kullanıcı","Öğrenen sistem","Tüm uzmanlar","ICD-10 kodlama"]},
+            {name:"Klinik",price:"₺3.999",sub:"/ay",highlight:false,
+             items:["Sınırsız seans","5 kullanıcı","Klinik raporlar","Öncelikli destek"]},
+          ].map((plan, i) => (
+            <div key={plan.name}
+                 style={{background:plan.highlight?"#EEF4FF":"#FFFFFF",
+                         padding:"48px 36px",position:"relative",
+                         border:plan.highlight?"2px solid #2563EB":"1px solid rgba(10,22,40,0.1)"}}>
+              {plan.highlight && (
+                <div style={{position:"absolute",top:0,left:0,right:0,height:"3px",
+                             background:"linear-gradient(90deg,transparent,#2563EB,transparent)"}} />
+              )}
+              {plan.highlight && (
+                <div style={{position:"absolute",top:"16px",right:"16px",fontSize:"9px",
+                             letterSpacing:"0.1em",background:"#2563EB",color:"#0A1628",
+                             padding:"4px 10px",borderRadius:"20px",fontFamily:"system-ui"}}>
+                  EN POPÜLER
+                </div>
+              )}
+              <div style={{fontSize:"12px",color:"rgba(10,22,40,0.5)",fontFamily:"system-ui",
+                           letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"16px"}}>
+                {plan.name}
+              </div>
+              <div style={{marginBottom:"28px"}}>
+                <span style={{fontSize:"40px",fontWeight:"400",color:"#0A1628",
+                               fontFamily:"'Georgia',serif"}}>{plan.price}</span>
+                <span style={{fontSize:"14px",color:"rgba(10,22,40,0.25)",
+                               fontFamily:"system-ui"}}>{plan.sub}</span>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"36px"}}>
+                {plan.items.map(item => (
+                  <div key={item} style={{display:"flex",alignItems:"center",gap:"10px",
+                                          fontSize:"13px",color:"rgba(10,22,40,0.6)",
+                                          fontFamily:"system-ui"}}>
+                    <span style={{color:plan.highlight?"#2563EB":"#00A89D"}}>✓</span>
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <Link href="/giris"
+                    style={{display:"block",padding:"13px 24px",textAlign:"center",
+                            background:plan.highlight?"#2563EB":"transparent",
+                            border:`1px solid ${plan.highlight?"#2563EB":"rgba(10,22,40,0.15)"}`,
+                            color:"#0A1628",textDecoration:"none",fontSize:"12px",
+                            letterSpacing:"0.09em",textTransform:"uppercase",
+                            borderRadius:"2px",fontFamily:"system-ui"}}>
+                Başlayın
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FINAL CTA — Full bleed photo ─────────────────────── */}
+      <section style={{position:"relative",padding:"160px 48px",textAlign:"center",
+                       overflow:"hidden"}}>
+        <img src={PHOTOS.hero} alt=""
+             style={{position:"absolute",inset:0,width:"100%",height:"100%",
+                     objectFit:"cover",objectPosition:"center 30%",
+                     filter:"brightness(1.0) saturate(1.05)"}} />
+        <div style={{position:"absolute",inset:0,
+                     background:"rgba(255,250,250,0.7)"}} />
+        <div style={{position:"relative",zIndex:1}}>
+          <h2 style={{fontSize:"clamp(42px,6vw,78px)",fontWeight:"400",lineHeight:"1.05",
+                      letterSpacing:"-0.025em",marginBottom:"36px"}}>
+            Bugün Başlayın.<br/>
+            <em style={{color:"rgba(10,22,40,0.7)",fontStyle:"italic"}}>
+              İlk 15 Gün Ücretsiz.
+            </em>
+          </h2>
+          <Link href="/giris"
+                style={{display:"inline-block",padding:"19px 56px",background:"#2563EB",
+                        color:"#0A1628",textDecoration:"none",fontSize:"14px",
+                        letterSpacing:"0.1em",textTransform:"uppercase",
+                        fontFamily:"system-ui",fontWeight:"500",borderRadius:"2px"}}>
+            Ücretsiz Hesap Aç
+          </Link>
+          <div style={{marginTop:"18px",fontSize:"12px",color:"rgba(10,22,40,0.2)",
+                       fontFamily:"system-ui"}}>
+            Kredi kartı gerekmez · KVKK uyumlu · Türkçe destek
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer style={{padding:"36px 48px",borderTop:"1px solid rgba(10,22,40,0.08)",
+                      display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{fontSize:"17px",letterSpacing:"0.18em",color:"rgba(10,22,40,0.4)",
+                     fontFamily:"'Georgia',serif"}}>
+          NOTYA<span style={{color:"#2563EB"}}>.</span>AI
+        </div>
+        <div style={{fontSize:"11px",color:"rgba(10,22,40,0.45)",fontFamily:"system-ui"}}>
+          © 2026 Dream Türkiye · KVKK Uyumlu · Frankfurt, EU
+        </div>
+      </footer>
+
+    </main>
+  )
 }
