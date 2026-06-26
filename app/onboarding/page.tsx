@@ -12,6 +12,8 @@ interface Profession {
 
 const professions: Profession[] = [
   { id: 'doktor', label: 'Doktor/Hekim', emoji: '🏥', desc: 'Tıbbi uzmanlık alanınız' },
+  { id: 'klinik-uzman', label: 'Klinik Uzman', emoji: '💉', desc: 'Estetik, sac ekimi, dermatoloji' },
+  { id: 'saglik-uzmani', label: 'Saglik Uzmani', emoji: '🩺', desc: 'Fizyoterapi, psikoloji, diyetisyen' },
   { id: 'mali', label: 'Mali Müşavir/SMMM', emoji: '💰', desc: 'Finansal danışmanlık' },
   { id: 'avukat', label: 'Avukat', emoji: '⚖️', desc: 'Hukuki danışmanlık' },
   { id: 'psikolog', label: 'Psikolog/Terapist', emoji: '🧠', desc: 'Ruh sağlığı uzmanlığı' },
@@ -22,8 +24,10 @@ const unvanOptions = ['Dr.', 'Uzm.Dr.', 'Doç.Dr.', 'Prof.Dr.'];
 const doctorSpecialties = [
   'Kardiyoloji', 'Pediatri', 'Nöroloji', 'Dahiliye', 'Psikiyatri',
   'Genel Pratisyen', 'Ortopedi', 'Radyoloji', 'Anestezi', 'Dermatoloji',
-  'Göğüs Hastalıkları', 'Onkoloji', 'Üroloji', 'Göz Hastalıkları', 'Kulak Burun Boğaz', 'Diğer'
+  'Göğüs Hastalıkları', 'Onkoloji', 'Üroloji', 'Göz Hastalıkları', 'Kulak Burun Boğaz', 'Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Medikal Estetik', 'Longevity & Wellness', 'Diğer'
 ];
+const klinikUzmanSpecialties = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Dermatoloji', 'Medikal Estetik', 'Longevity & Wellness'];
+const saglikUzmaniSpecialties = ['Fizyoterapi', 'Klinik Psikoloji', 'Diyetisyen', 'Ergoterapi', 'Odyoloji'];
 
 const maliChips = ['Vergi Danışmanlığı', 'Bağımsız Denetim', 'Muhasebe', 'Mali Hukuk', 'KDV İadesi', 'Transfer Fiyatlandırması'];
 const avukatUzmanlik = ['Ceza Hukuku', 'Ticaret Hukuku', 'Aile Hukuku', 'İdare Hukuku', 'İş Hukuku', 'Gayrimenkul Hukuku', 'Fikri Mülkiyet'];
@@ -34,6 +38,16 @@ const agentMapping: Record<string, string> = {
   'Nöroloji': 'noroloji',
   'Dahiliye': 'dahiliye',
   'Psikiyatri': 'psikiyatri',
+  'Dermatoloji': 'dermatoloji',
+  'Estetik & Plastik Cerrahi': 'estetik-cerrahi',
+  'Sac Ekimi': 'sac-ekimi',
+  'Medikal Estetik': 'medikal-estetik',
+  'Longevity & Wellness': 'longevity',
+  'Fizyoterapi': 'fizyoterapi',
+  'Klinik Psikoloji': 'klinik-psikolog',
+  'Diyetisyen': 'diyetisyen',
+  'Ergoterapi': 'ergoterapi',
+  'Odyoloji': 'odyoloji',
 };
 
 export default function OnboardingPage() {

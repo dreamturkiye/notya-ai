@@ -1,4 +1,6 @@
+'use client'
 
+import React from 'react'
 import Link from "next/link"
 
 // Free Unsplash images - specific photo IDs for consistent display
@@ -18,6 +20,14 @@ const PHOTOS = {
   safety: "/doctors/dr_elif.jpg",
 }
 
+
+function PricingSection() {
+  const [tab,setTab]=React.useState('bireysel')
+  const bp=[{n:'Starter',p:'499',h:false,lbl:'',items:['50 seans/ay','1 kullanici','Tum uzmanlar','SOAP notlari','AI Asistan'],href:'/kayit'},{n:'Pro',p:'1.299',h:true,lbl:'',items:['Sinirsiz seans','1 kullanici','Pabau entegrasyon','ICD-10 kodlama','Ogrenen sistem'],href:'/kayit'},{n:'Uzman',p:'2.499',h:false,lbl:'',items:['Sinirsiz seans','1 kullanici','Pabau entegrasyon','Oncelikli destek','Ozel AI konfig'],href:'/kayit'}]
+  const kp=[{n:'Klinik 5',p:'3.999',h:false,lbl:'5 Koltuk',items:['5 kullanici','Admin paneli','Tum uzmanlar','Pabau'],href:'/kayit?plan=klinik'},{n:'Klinik 10',p:'6.999',h:true,lbl:'10 Koltuk',items:['10 kullanici','Admin paneli','Pabau entegrasyon','Marka ayarlari','Oncelikli destek'],href:'/kayit?plan=klinik'},{n:'Klinik 20',p:'11.999',h:false,lbl:'20 Koltuk',items:['20 kullanici','Her sey dahil','Dedicated destek'],href:'/kayit?plan=klinik'},{n:'Kurumsal',p:'Fiyat Alin',h:false,lbl:'Sinirsiz',items:['Sinirsiz kullanici','Ozel SLA','API erisimi'],href:'/kayit?plan=kurumsal'}]
+  const plans=tab==='bireysel'?bp:kp
+  return(<div><div style={{display:'flex',justifyContent:'center',gap:'8px',marginBottom:'48px'}}>{[['bireysel','Bireysel'],['klinik','Klinik']].map(([t,l])=>(<button key={t} onClick={()=>setTab(t)} style={{padding:'8px 24px',borderRadius:'20px',border:'1px solid rgba(10,22,40,0.15)',background:tab===t?'#0A1628':'transparent',color:tab===t?'#FFFAFA':'rgba(10,22,40,0.5)',fontSize:'13px',fontFamily:'system-ui',cursor:'pointer',fontWeight:tab===t?500:400}}>{l}</button>))}</div><div style={{display:'grid',gridTemplateColumns:tab==='bireysel'?'repeat(3,1fr)':'repeat(4,1fr)',gap:tab==='klinik'?'16px':'2px',borderRadius:'16px',overflow:'hidden'}}>{plans.map((plan:any)=>(<div key={plan.n} style={{background:plan.h?'#EEF4FF':'#FFF',padding:'44px 28px',position:'relative',border:plan.h?'2px solid #2563EB':'1px solid rgba(10,22,40,0.1)',borderRadius:tab==='klinik'?'12px':'0'}}>{plan.h&&<div style={{position:'absolute',top:0,left:0,right:0,height:'3px',background:'linear-gradient(90deg,transparent,#2563EB,transparent)'}}/>}{plan.h&&<div style={{position:'absolute',top:'16px',right:'16px',fontSize:'9px',background:'#2563EB',color:'#fff',padding:'4px 10px',borderRadius:'20px'}}>EN POPULER</div>}{plan.lbl&&<div style={{fontSize:'10px',color:'rgba(10,22,40,0.35)',letterSpacing:'0.1em',marginBottom:'8px'}}>{plan.lbl}</div>}<div style={{fontSize:'12px',color:'rgba(10,22,40,0.5)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:'16px'}}>{plan.n}</div><div style={{marginBottom:'22px'}}><span style={{fontSize:'36px',fontWeight:'400',color:'#0A1628',fontFamily:"'Georgia',serif"}}>{plan.p.includes('Fiyat')?'':'₺'}{plan.p}</span>{!plan.p.includes('Fiyat')&&<span style={{fontSize:'13px',color:'rgba(10,22,40,0.25)'}}>/ay</span>}</div><div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'24px'}}>{plan.items.map((item:string)=>(<div key={item} style={{display:'flex',alignItems:'center',gap:'10px',fontSize:'13px',color:'rgba(10,22,40,0.6)'}}><span style={{color:plan.h?'#2563EB':'#00A89D'}}>&#x2713;</span>{item}</div>))}</div><Link href={plan.href} style={{display:'block',padding:'12px',textAlign:'center',background:plan.h?'#2563EB':'transparent',border:`1px solid ${plan.h?'#2563EB':'rgba(10,22,40,0.15)'}`,color:plan.h?'#fff':'#0A1628',textDecoration:'none',fontSize:'12px',letterSpacing:'0.09em',textTransform:'uppercase',borderRadius:'4px',fontFamily:'system-ui'}}>{plan.p.includes('Fiyat')?'Iletisime Gecin':'Baslayin'}</Link></div>))}</div></div>)
+}
 export default function HomePage() {
   return (
     <main style={{margin:0,padding:0,background:"#FFFAFA",color:"#0A1628",
@@ -377,74 +387,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── PRICING ──────────────────────────────────────────── */}
-      <section id="fiyatlar" style={{padding:"130px 48px",maxWidth:"1100px",margin:"0 auto"}}>
-        <div style={{textAlign:"center",marginBottom:"72px"}}>
-          <div style={{fontSize:"10px",letterSpacing:"0.3em",textTransform:"uppercase",
-                       color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui"}}>Fiyatlandırma</div>
-          <h2 style={{fontSize:"clamp(36px,4vw,52px)",fontWeight:"400",
-                      letterSpacing:"-0.025em",fontFamily:"'Georgia',serif"}}>
-            Sade. Şeffaf. Adil.
+      {/* -- PRICING */}
+      <section id="fiyatlar" style={{padding:"130px 48px",maxWidth:"1200px",margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:"48px"}}>
+          <div style={{fontSize:"10px",letterSpacing:"0.3em",textTransform:"uppercase",color:"#2563EB",marginBottom:"20px",fontFamily:"system-ui"}}>Fiyatlandirma</div>
+          <h2 style={{fontSize:"clamp(36px,4vw,52px)",fontWeight:"400",letterSpacing:"-0.025em",fontFamily:"'Georgia',serif"}}>
+            Sade. Seffaf. Adil.
           </h2>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"2px",borderRadius:"16px",overflow:"hidden"}}>
-          {[
-            {name:"Starter",price:"₺499",sub:"/ay",highlight:false,
-             items:["50 seans/ay","1 kullanıcı","SOAP notları","AI Uzman Asistan"]},
-            {name:"Pro",price:"₺1.299",sub:"/ay",highlight:true,
-             items:["Sınırsız seans","1 kullanıcı","Öğrenen sistem","Tüm uzmanlar","ICD-10 kodlama"]},
-            {name:"Klinik",price:"₺3.999",sub:"/ay",highlight:false,
-             items:["Sınırsız seans","5 kullanıcı","Klinik raporlar","Öncelikli destek"]},
-          ].map((plan, i) => (
-            <div key={plan.name}
-                 style={{background:plan.highlight?"#EEF4FF":"#FFFFFF",
-                         padding:"48px 36px",position:"relative",
-                         border:plan.highlight?"2px solid #2563EB":"1px solid rgba(10,22,40,0.1)"}}>
-              {plan.highlight && (
-                <div style={{position:"absolute",top:0,left:0,right:0,height:"3px",
-                             background:"linear-gradient(90deg,transparent,#2563EB,transparent)"}} />
-              )}
-              {plan.highlight && (
-                <div style={{position:"absolute",top:"16px",right:"16px",fontSize:"9px",
-                             letterSpacing:"0.1em",background:"#2563EB",color:"#0A1628",
-                             padding:"4px 10px",borderRadius:"20px",fontFamily:"system-ui"}}>
-                  EN POPÜLER
-                </div>
-              )}
-              <div style={{fontSize:"12px",color:"rgba(10,22,40,0.5)",fontFamily:"system-ui",
-                           letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"16px"}}>
-                {plan.name}
-              </div>
-              <div style={{marginBottom:"28px"}}>
-                <span style={{fontSize:"40px",fontWeight:"400",color:"#0A1628",
-                               fontFamily:"'Georgia',serif"}}>{plan.price}</span>
-                <span style={{fontSize:"14px",color:"rgba(10,22,40,0.25)",
-                               fontFamily:"system-ui"}}>{plan.sub}</span>
-              </div>
-              <div style={{display:"flex",flexDirection:"column",gap:"10px",marginBottom:"36px"}}>
-                {plan.items.map(item => (
-                  <div key={item} style={{display:"flex",alignItems:"center",gap:"10px",
-                                          fontSize:"13px",color:"rgba(10,22,40,0.6)",
-                                          fontFamily:"system-ui"}}>
-                    <span style={{color:plan.highlight?"#2563EB":"#00A89D"}}>✓</span>
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <Link href="/giris"
-                    style={{display:"block",padding:"13px 24px",textAlign:"center",
-                            background:plan.highlight?"#2563EB":"transparent",
-                            border:`1px solid ${plan.highlight?"#2563EB":"rgba(10,22,40,0.15)"}`,
-                            color:"#0A1628",textDecoration:"none",fontSize:"12px",
-                            letterSpacing:"0.09em",textTransform:"uppercase",
-                            borderRadius:"2px",fontFamily:"system-ui"}}>
-                Başlayın
-              </Link>
-            </div>
-          ))}
-        </div>
+        <PricingSection />
       </section>
-
       {/* ── FINAL CTA — Full bleed photo ─────────────────────── */}
       <section style={{position:"relative",padding:"160px 48px",textAlign:"center",
                        overflow:"hidden"}}>
