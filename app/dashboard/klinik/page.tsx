@@ -107,7 +107,7 @@ export default function KlinikDashboard() {
           <div style={kpiStyle(!!clinic?.pabau_connected)}>
             <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(10,22,40,0.35)', marginBottom: '12px' }}>Pabau</div>
             <div style={{ fontSize: '14px', fontWeight: 600, color: clinic?.pabau_connected ? '#00A89D' : 'rgba(10,22,40,0.4)' }}>
-              {clinic?.pabau_connected ? 'Baglı' : 'Bagli Degil'}
+              {clinic?.pabau_connected ? 'Bagl√µ' : 'Bagli Degil'}
             </div>
           </div>
         </div>

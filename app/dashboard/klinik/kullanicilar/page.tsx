@@ -63,7 +63,7 @@ export default function KullanicilarPage() {
   }
 
   async function handleRemove(userId: string) {
-    if (!confirm('Bu kullanicıyı kaldiracaksınız. Emin misiniz?')) return
+    if (!confirm('Bu kullanic√µy√µ kaldiracaks√µn√µz. Emin misiniz?')) return
     await fetch('/api/klinik/members', {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

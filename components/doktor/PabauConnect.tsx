@@ -22,7 +22,7 @@ export default function PabauConnect({ pabauConnected, lastSynced, authToken }: 
       if (data.authUrl) {
         window.location.href = data.authUrl
       } else {
-        setError('Baglanti baslatılamadı. Lutfen tekrar deneyin.')
+        setError('Baglanti baslat√µlamad√µ. Lutfen tekrar deneyin.')
         setLoading(false)
       }
     } catch {
@@ -63,7 +63,7 @@ export default function PabauConnect({ pabauConnected, lastSynced, authToken }: 
             onClick={() => console.log('disconnect todo')}
             style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'rgba(10,22,40,0.3)', textDecoration: 'underline' }}
           >
-            Baglantıyı Kes
+            Baglant√µy√µ Kes
           </button>
         </div>
       </div>
