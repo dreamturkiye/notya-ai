@@ -95,9 +95,6 @@ const SURE_KURALLARI: Record<string, SureKurali> = {
     tur: 'IYUK'
   },
   // Add more rules as needed
-
-  nafaka_itiraz: { id: 'nafaka_itiraz', kanun: 'TMK', madde: '176', aciklama: 'Nafaka itiraz suresi', ay: 1, kritik: true, tur: 'TMK' },
-  idari_itiraz_sure: { id: 'idari_itiraz_sure', kanun: 'IYUK', madde: '7', aciklama: 'Idare mahkemesi itiraz', gun: 30, kritik: true, tur: 'IYUK' },
   bosanma_cevap: { id: 'bosanma_cevap', kanun: 'HMK', madde: '127', aciklama: 'Bosanma cevap suresi', hafta: 2, kritik: true, tur: 'HMK' },
   is_davasi_istinaf: { id: 'is_davasi_istinaf', kanun: 'HMK', madde: '345', aciklama: 'Is mahkemesi istinaf', hafta: 2, kritik: true, tur: 'HMK' },
   tuketici_itiraz: { id: 'tuketici_itiraz', kanun: 'IYUK', madde: '7', aciklama: 'Tuketici hakem itiraz', gun: 15, kritik: false, tur: 'IYUK' },
@@ -136,16 +133,16 @@ function calculateDeadlines(baslangicTarihi: Date, sureIds: string[]): DeadlineR
 }
 
 function getSurelerForBranch(branch: string): string[] {
-  const branchRules = {
-    ceza: ['cevap_suresi', 'itiraz_suresi'],
-    aile: ['istinaf', 'temyiz'],
-    ticaret: ['uzlasma_teklifi'],
-    is: ['delil_listesi'],
-    gayrimenkul: ['nafaka_itiraz'],
-    icra: ['idari_itiraz'],
-    idare: [],
-    tuketici: [],
-    bilisim: []
+  const branchRules: Record<string, string[]> = {
+    ceza: ['cevap_suresi', 'itiraz_suresi', 'uzlasma_teklifi', 'uzlasma_yanit'],
+    aile: ['istinaf', 'temyiz', 'nafaka_itiraz', 'bosanma_cevap'],
+    ticaret: ['ttk_itiraz', 'istinaf', 'temyiz'],
+    is: ['delil_listesi', 'is_davasi_istinaf'],
+    gayrimenkul: ['tapu_istinaf', 'istinaf'],
+    icra: ['itiraz_suresi', 'icra_itiraz_kaldirma', 'menfi_tespit'],
+    idare: ['idari_itiraz_sure'],
+    tuketici: ['tuketici_itiraz'],
+    bilişim: []
   };
 
   return branchRules[branch] || [];

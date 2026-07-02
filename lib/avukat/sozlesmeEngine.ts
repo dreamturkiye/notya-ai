@@ -1,4 +1,3 @@
-import { ClaudeClient } from 'anthropic';
 
 interface ChecklistItem {
   id: string;

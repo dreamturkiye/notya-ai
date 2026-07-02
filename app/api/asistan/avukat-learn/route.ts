@@ -15,12 +15,14 @@ export async function POST(req: NextRequest) {
     if (ae || !user) return NextResponse.json({ success: false }, { status: 401 })
 
     const { correctionType, original, corrected, persona, branch } = await req.json()
+    const personaId = persona || 'kemalbey'
 
     const { data: prefs } = await sb
       .from('avukat_preferences')
       .select('*')
       .eq('avukat_id', user.id)
-      .single()
+      .eq('persona_id', personaId)
+      .maybeSingle()
 
     const corrections = (prefs?.correction_history as Array<Record<string, unknown>>) || []
     const preferredKanunlar = (prefs?.preferred_kanunlar as Record<string, string>) || {}
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
       corrections[existing].count = ((corrections[existing].count as number) || 1) + 1
       corrections[existing].corrected = corrected
     } else {
-      corrections.push({ type: correctionType, original, corrected, persona, branch, count: 1 })
+      corrections.push({ type: correctionType, original, corrected, persona: personaId, branch, count: 1 })
     }
 
     if (correctionType === 'kanun') preferredKanunlar[String(original)] = String(corrected)
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
     if (!prefs) {
       await sb.from('avukat_preferences').insert({
         avukat_id: user.id,
+        persona_id: personaId,
         correction_history: corrections,
         preferred_kanunlar: preferredKanunlar,
         branch_style: branchStyle,
@@ -56,7 +59,19 @@ export async function POST(req: NextRequest) {
         sessions_completed: (prefs.sessions_completed as number || 0) + 1,
         last_session_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      }).eq('avukat_id', user.id)
+      }).eq('avukat_id', user.id).eq('persona_id', personaId)
+    }
+
+    // L4: office-wide citation preference layer, persona-independent.
+    if (correctionType === 'kanun') {
+      const { data: office } = await sb.from('avukat_office_patterns').select('*').eq('avukat_id', user.id).maybeSingle()
+      const citationPrefs = (office?.citation_preferences as Record<string, string>) || {}
+      citationPrefs[String(original)] = String(corrected)
+      await sb.from('avukat_office_patterns').upsert({
+        avukat_id: user.id,
+        citation_preferences: citationPrefs,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'avukat_id' })
     }
 
     return NextResponse.json({ success: true })

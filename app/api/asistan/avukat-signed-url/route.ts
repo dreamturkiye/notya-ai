@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
       try {
         const p = JSON.parse(Buffer.from(body.token.split('.')[1], 'base64').toString('utf-8'))
         const m = JSON.parse(p.metadata || '{}')
-        wssUrl = m.signed_url || `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&token=${body.token}`
-      } catch { wssUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}&token=${body.token}` }
+        wssUrl = m.signed_url || `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${agentId}&token=${body.token}`
+      } catch { wssUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${agentId}&token=${body.token}` }
     } else {
       return NextResponse.json({ error: 'Unexpected ElevenLabs response' }, { status: 502 })
     }
