@@ -167,7 +167,19 @@ export default function HastaEklePage() {
     }
   };
 
-  const nextStep = () => currentStep < 3 && setCurrentStep(currentStep + 1);
+  const nextStep = () => {
+    if (currentStep === 1) {
+      if (formData.tcKimlikNo.length !== 11 || !validateTC(formData.tcKimlikNo)) {
+        setTcError('TC Kimlik Numarası 11 hane olmalı ve geçerli olmalı');
+        return;
+      }
+      if (!formData.adSoyad.trim()) {
+        setTcError('Ad Soyad zorunlu');
+        return;
+      }
+    }
+    if (currentStep < 3) setCurrentStep(currentStep + 1);
+  };
   const prevStep = () => currentStep > 1 && setCurrentStep(currentStep - 1);
 
   const renderStepIndicator = () => {
