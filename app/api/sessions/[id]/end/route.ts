@@ -108,7 +108,7 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
 }`
 
     const response = await getAnthropic().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 2000,
       system: systemPrompt,
       messages: [{ role: "user", content: `Muayene transkripti:\n\n${transcript}` }]

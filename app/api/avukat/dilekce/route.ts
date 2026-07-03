@@ -17,7 +17,7 @@ export async function POST(req:NextRequest){
     const avukat={name:u?.full_name||'Avukat',baro:u?.baro_no||''}
     const system=buildDilekceSystemPrompt(turId,avukat,muvekkil_bilgileri||null)
     const ai=getAnthropic()
-    const resp=await ai.messages.create({model:'claude-sonnet-4-20250514',max_tokens:2000,system,messages:[{role:'user',content:ek_bilgiler||'Dilekceyi olustur.'}]})
+    const resp=await ai.messages.create({model:'claude-sonnet-4-6',max_tokens:2000,system,messages:[{role:'user',content:ek_bilgiler||'Dilekceyi olustur.'}]})
     const raw=resp.content[0].type==='text'?resp.content[0].text:''
     let parsed:{dilekce_metni:string;eksik_bilgiler:string[];uyarilar:string[]}
     try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim())}

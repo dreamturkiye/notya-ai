@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     const results = searchIctihat(query, branch);
 
-    // Mock call to Anthropic claude-sonnet-4-20250514
+    // Mock call to Anthropic claude-sonnet-4-6
     const prompt = buildIctihatSearchPrompt(query, results);
     const synthesizedResponse = {
       ozet: 'This is a synthetic summary of the search results.',

@@ -63,7 +63,7 @@ GÖREV: Transkripti analiz et ve aşağıdaki JSON yapısını döndür. Başka 
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
@@ -149,7 +149,7 @@ Avukat-müvekkil görüşmesini analiz et ve JSON döndür. Başka hiçbir şey 
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
@@ -221,7 +221,7 @@ Seans transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
@@ -288,7 +288,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
@@ -350,7 +350,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
@@ -409,7 +409,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
@@ -464,7 +464,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
@@ -522,7 +522,7 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
@@ -577,7 +577,7 @@ Toplantı transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 3000,
     temperature: 0.1,
     system: systemPrompt,

@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     )
     const ai = getAnthropic()
     const msgs = [...(history || []), { role: 'user' as const, content: message }]
-    const resp = await ai.messages.create({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system, messages: msgs })
+    const resp = await ai.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 800, system, messages: msgs })
     const reply = resp.content[0].type === 'text' ? resp.content[0].text : 'Yanit alinamadi.'
     return NextResponse.json({ success: true, data: { speech: reply } })
   } catch (e: unknown) {
