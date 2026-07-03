@@ -31,7 +31,7 @@ export default function AvukatDashboard() {
   const [chatMsg, setChatMsg] = useState('')
   const [chatHistory, setChatHistory] = useState<{role:string;content:string}[]>([])
   const [chatLoading, setChatLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'dashboard'|'chat'|'sure'|'muvekkiller'|'dilekce'|'ictihat'|'sozlesme'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard'|'chat'|'sure'|'muvekkiller'|'dilekce'|'ictihat'|'sozlesme'|'portal'>('dashboard')
   const [avukatToken, setAvukatToken] = useState('')
 
   const now = new Date()
@@ -97,7 +97,7 @@ export default function AvukatDashboard() {
       </div>
 
       <div style={{background:'#fff',borderBottom:'1px solid #E2E8F0',padding:'0 24px',display:'flex',gap:4}}>
-        {([['dashboard','Ozet'],['chat','Asistan'],['sure','Sure Takibi'],['muvekkiller','Muvekkillerim'],['dilekce','Dilekce'],['ictihat','Ictihat'],['sozlesme','Sozlesme']] as const).map(([tab,label]) => (
+        {([['dashboard','Ozet'],['chat','Asistan'],['sure','Sure Takibi'],['muvekkiller','Muvekkillerim'],['dilekce','Dilekce'],['ictihat','Ictihat'],['sozlesme','Sozlesme'],['portal','Portal']] as const).map(([tab,label]) => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{padding:'12px 20px',border:'none',borderBottom:activeTab===tab?'2px solid #2563EB':'2px solid transparent',background:'transparent',color:activeTab===tab?'#2563EB':'#64748B',cursor:'pointer',fontSize:14,fontWeight:500}}>{label}</button>
         ))}
       </div>
@@ -214,7 +214,7 @@ export default function AvukatDashboard() {
           </div>
         )}
 
-        {(activeTab==='dilekce'||activeTab==='ictihat'||activeTab==='sozlesme') && <GameChangerTabs token={avukatToken} activeTab={activeTab} />}
+        {(activeTab==='dilekce'||activeTab==='ictihat'||activeTab==='sozlesme'||activeTab==='portal') && <GameChangerTabs token={avukatToken} activeTab={activeTab} />}
       </div>
     </>
   )

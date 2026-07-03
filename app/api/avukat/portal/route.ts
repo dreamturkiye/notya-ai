@@ -44,9 +44,12 @@ export async function POST(req: NextRequest) {
       if (ae || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
       if (action === 'list') {
-        const { data, error } = await sb.from('avukat_portal_tokens').select('*').eq('avukat_id', user.id).is('revoked_at', null).order('created_at', { ascending: false })
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-        return NextResponse.json({ success: true, data })
+        const [{ data: tokens, error: te }, { data: muvekkiller, error: me }] = await Promise.all([
+          sb.from('avukat_portal_tokens').select('*').eq('avukat_id', user.id).is('revoked_at', null).order('created_at', { ascending: false }),
+          sb.from('musevvekiller').select('*').eq('avukat_id', user.id).order('ad')
+        ])
+        if (te || me) return NextResponse.json({ error: (te || me)?.message }, { status: 500 })
+        return NextResponse.json({ success: true, data: { tokens: tokens || [], muvekkiller: muvekkiller || [] } })
       }
 
       if (action === 'revoke') {

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 export default function AvukatGameChangerTabs({ token, activeTab }: { token: string; activeTab: string }) {
   const [dilekceOut, setDilekceOut] = useState('')
@@ -13,6 +13,53 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
   const [sozLoading, setSozLoading] = useState(false)
   const [sozMetin, setSozMetin] = useState('')
   const [sozTur, setSozTur] = useState('kira')
+  const [muvekkiller, setMuvekkiller] = useState<any[]>([])
+  const [portalTokens, setPortalTokens] = useState<any[]>([])
+  const [portalLoading, setPortalLoading] = useState(true)
+  const [generatingFor, setGeneratingFor] = useState<string | null>(null)
+  const [revokingId, setRevokingId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const loadPortal = useCallback(async () => {
+    setPortalLoading(true)
+    try {
+      const res = await fetch('/api/avukat/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ admin: true, action: 'list' }) })
+      const data = await res.json()
+      if (data.success) {
+        setMuvekkiller(data.data.muvekkiller || [])
+        setPortalTokens(data.data.tokens || [])
+      }
+    } catch {}
+    setPortalLoading(false)
+  }, [token])
+
+  useEffect(() => {
+    if (activeTab === 'portal' && token) loadPortal()
+  }, [activeTab, token, loadPortal])
+
+  async function generateLink(muvekkilId: string) {
+    setGeneratingFor(muvekkilId)
+    try {
+      const res = await fetch('/api/avukat/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ admin: true, muvekkilId }) })
+      const data = await res.json()
+      if (data.success) {
+        await navigator.clipboard.writeText(data.data.portalUrl)
+        setCopiedId(muvekkilId)
+        setTimeout(() => setCopiedId(null), 3000)
+        await loadPortal()
+      }
+    } catch {}
+    setGeneratingFor(null)
+  }
+
+  async function revokeLink(tokenId: string) {
+    setRevokingId(tokenId)
+    try {
+      await fetch('/api/avukat/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ admin: true, action: 'revoke', tokenId }) })
+      await loadPortal()
+    } catch {}
+    setRevokingId(null)
+  }
 
   async function genDilekce() {
     setDilekceLoading(true)
@@ -101,6 +148,51 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
       {sozOut && <pre style={pre}>{sozOut}</pre>}
     </div>
   )
+
+  if (activeTab === 'portal') {
+    const daysLeft = (expiresAt: string) => Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 86400000))
+    const tokenFor = (muvekkilId: string) => portalTokens.find((t: any) => t.muvekkil_id === muvekkilId)
+    return (
+      <div style={{ maxWidth: 800 }}>
+        <div style={{ background: 'linear-gradient(135deg,#1e3a5f,#6D28D9)', borderRadius: 10, padding: 16, marginBottom: 16, color: '#fff' }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Muvekkil Portali</div>
+          <div style={{ fontSize: 12, opacity: 0.85, lineHeight: 1.6 }}>Her muvekkil icin imzali, sureli link olusturun. Link istediginiz an iptal edilebilir.</div>
+        </div>
+        {portalLoading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Yukleniyor...</div>
+        ) : muvekkiller.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Henuz muvekkil eklemediniz.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {muvekkiller.map((m: any) => {
+              const t = tokenFor(m.id)
+              const active = !!t
+              const left = active ? daysLeft(t.expires_at) : 0
+              return (
+                <div key={m.id} style={{ background: '#1e293b', borderRadius: 10, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{m.ad} {m.soyad}</div>
+                    {m.dava_turu && <div style={{ fontSize: 12, color: '#94A3B8' }}>{m.dava_turu}</div>}
+                    {active && <div style={{ fontSize: 11, color: left <= 3 ? '#DC2626' : '#059669', marginTop: 2 }}>Aktif link — {left} gun kaldi | {t.access_count || 0} kullanim</div>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {active && (
+                      <button onClick={() => revokeLink(t.id)} disabled={revokingId === t.id} style={{ padding: '6px 12px', background: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                        {revokingId === t.id ? '...' : 'Iptal'}
+                      </button>
+                    )}
+                    <button onClick={() => generateLink(m.id)} disabled={generatingFor === m.id} style={{ padding: '6px 14px', background: copiedId === m.id ? '#059669' : '#6D28D9', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      {generatingFor === m.id ? 'Olusturuluyor...' : copiedId === m.id ? 'Kopyalandi!' : active ? 'Yenile & Kopyala' : 'Link Olustur'}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return null
 }
