@@ -77,6 +77,9 @@ function OnboardingInner() {
   // Avukat fields
   const [baro, setBaro] = useState('');
   const [avukatUzmanlikSec, setAvukatUzmanlikSec] = useState('');
+
+  // Klinik Uzman / Saglik Uzmani fields
+  const [uzmanlikSecimi, setUzmanlikSecimi] = useState('');
   
   // Step 3 fields
   const [firstName, setFirstName] = useState('');
@@ -95,6 +98,9 @@ function OnboardingInner() {
     }
     if (selectedProfession === 'avukat') {
       return !!baro && !!avukatUzmanlikSec;
+    }
+    if (selectedProfession === 'klinik-uzman' || selectedProfession === 'saglik-uzmani') {
+      return !!uzmanlikSecimi;
     }
     return true; // psikolog
   };
@@ -123,6 +129,8 @@ function OnboardingInner() {
     if (profession === 'doktor') return '/dashboard/doktor';
     if (profession === 'mali') return '/dashboard/mali';
     if (profession === 'avukat') return '/dashboard/avukat';
+    if (profession === 'klinik-uzman') return '/dashboard/klinik';
+    if (profession === 'saglik-uzmani') return '/dashboard/klinik';
     return '/dashboard';
   };
 
@@ -153,6 +161,8 @@ function OnboardingInner() {
       finalSpecialty = avukatUzmanlikSec;
     } else if (profession_type === 'psikolog') {
       finalSpecialty = 'Psikoloji';
+    } else if (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani') {
+      finalSpecialty = uzmanlikSecimi;
     }
 
     const agent = agentMapping[specialty] || 'default';
@@ -301,6 +311,38 @@ function OnboardingInner() {
               {avukatUzmanlik.map(u => <option key={u} value={u}>{u}</option>)}
             </select>
           </div>
+        </div>
+      );
+    }
+
+    if (selectedProfession === 'klinik-uzman') {
+      return (
+        <div>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanınız</label>
+          <select
+            value={uzmanlikSecimi}
+            onChange={(e) => setUzmanlikSecimi(e.target.value)}
+            style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+          >
+            <option value="">Seçiniz</option>
+            {klinikUzmanSpecialties.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+      );
+    }
+
+    if (selectedProfession === 'saglik-uzmani') {
+      return (
+        <div>
+          <label style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px', display: 'block' }}>Uzmanlık Alanınız</label>
+          <select
+            value={uzmanlikSecimi}
+            onChange={(e) => setUzmanlikSecimi(e.target.value)}
+            style={{ width: '100%', backgroundColor: '#0D1425', color: '#fff', border: '1px solid #374151', borderRadius: '8px', padding: '12px', fontSize: '15px' }}
+          >
+            <option value="">Seçiniz</option>
+            {saglikUzmaniSpecialties.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
       );
     }
