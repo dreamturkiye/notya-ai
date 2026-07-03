@@ -9,12 +9,12 @@ interface Profession {
 
 const PROFESSIONS: Profession[] = [
   {
-    id: 'mali', href: '/mali', label: 'Mali Müşavir', accent: '#0F7A5C',
-    img: '/avatars/mali.jpg', imgPosition: 'center 20%',
-    highlights: ['Bordro hesap motoru', 'MASAK uyum kontrolü', 'GIB e-Beyan entegrasyonu', 'Müşteri portalı'],
-    headline: 'Beyan takviminizi sizden önce hatırlar.',
-    body: '2026 vergi parametreleriyle güncel. Bordro hesap motoru, MASAK uyum kontrolü, GIB e-Beyan entegrasyonu, müşteri portalı.',
-    detail: ['Akıllı beyan takvimi', 'Telegram uyarıları', 'HMAC imzalı müşteri linki', 'E-Devlet rehberi'],
+    id: 'doktor', href: '/doktor', label: 'Doktor', accent: '#2563EB',
+    img: '/avatars/doktor.jpg', imgPosition: 'center 20%',
+    highlights: ['Sesli danışma, sınırsız süre', 'Otomatik SOAP notu', 'ICD-10 kodlama', 'İlaç etkileşim kontrolü'],
+    headline: "Nelson'ı, Braunwald'ı ezbere bilen bir asistan.",
+    body: '50 hastadan sonra yorgun olduğunuzda bile o hiç yorulmaz. Sesli danışma, otomatik SOAP notu, ICD-10 kodlama, ilaç etkileşim kontrolü.',
+    detail: ['9 uzmanlık dalı', 'e-Nabız rehberi', 'SGK Medula entegrasyonu', 'Aylık hasta raporları'],
   },
   {
     id: 'avukat', href: '/avukat', label: 'Avukat', accent: '#7C3AED',
@@ -25,12 +25,12 @@ const PROFESSIONS: Profession[] = [
     detail: ['Müvekkil portalı', 'KVKK dilekçe şablonları', 'Sözleşme risk analizi', 'Kritik süre uyarıları'],
   },
   {
-    id: 'doktor', href: '/doktor', label: 'Doktor', accent: '#2563EB',
-    img: '/doctors/dr_ayse.jpg', imgPosition: 'center 20%',
-    highlights: ['Sesli danışma, sınırsız süre', 'Otomatik SOAP notu', 'ICD-10 kodlama', 'İlaç etkileşim kontrolü'],
-    headline: "Nelson'ı, Braunwald'ı ezbere bilen bir asistan.",
-    body: '50 hastadan sonra yorgun olduğunuzda bile o hiç yorulmaz. Sesli danışma, otomatik SOAP notu, ICD-10 kodlama, ilaç etkileşim kontrolü.',
-    detail: ['9 uzmanlık dalı', 'e-Nabız rehberi', 'SGK Medula entegrasyonu', 'Aylık hasta raporları'],
+    id: 'mali', href: '/mali', label: 'Mali Müşavir', accent: '#0F7A5C',
+    img: '/avatars/mali.jpg', imgPosition: 'center 20%',
+    highlights: ['Bordro hesap motoru', 'MASAK uyum kontrolü', 'GIB e-Beyan entegrasyonu', 'Müşteri portalı'],
+    headline: 'Beyan takviminizi sizden önce hatırlar.',
+    body: '2026 vergi parametreleriyle güncel. Bordro hesap motoru, MASAK uyum kontrolü, GIB e-Beyan entegrasyonu, müşteri portalı.',
+    detail: ['Akıllı beyan takvimi', 'Telegram uyarıları', 'HMAC imzalı müşteri linki', 'E-Devlet rehberi'],
   },
 ]
 
