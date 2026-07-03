@@ -65,15 +65,23 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { tc, ad_soyad } = body;
+  const { tcKimlikNo, adSoyad, dogumTarihi, cinsiyet, telefon, sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol } = body;
 
-  if (!tc || tc.length !== 11) {
+  if (!tcKimlikNo || tcKimlikNo.length !== 11) {
     return NextResponse.json({ error: 'Geçersiz TC Kimlik' }, { status: 400 });
   }
+  if (!adSoyad || !adSoyad.trim()) {
+    return NextResponse.json({ error: 'Ad Soyad zorunlu' }, { status: 400 });
+  }
 
-  const tcHash = require('crypto').createHash('sha256').update(tc).digest('hex');
+  const tcHash = require('crypto').createHash('sha256').update(tcKimlikNo).digest('hex');
 
-  const encryptedAd = encrypt(JSON.stringify({ ad: ad_soyad }));
+  const encryptedAd = encrypt(JSON.stringify({ ad: adSoyad }));
+  const encryptedDob = dogumTarihi ? encrypt(dogumTarihi) : null;
+  const encryptedGender = cinsiyet ? encrypt(cinsiyet) : null;
+  const encryptedPhone = telefon ? encrypt(telefon) : null;
+  const notesPayload = { sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol };
+  const encryptedNotes = encrypt(JSON.stringify(notesPayload));
 
   const { data, error } = await supabase
     .from('patients')
@@ -81,16 +89,18 @@ export async function POST(req: NextRequest) {
       doctor_id: user.id,
       tc_kimlik_hash: tcHash,
       name_encrypted: encryptedAd,
-      
-      
-      
+      dob_encrypted: encryptedDob,
+      gender_encrypted: encryptedGender,
+      phone_encrypted: encryptedPhone,
+      notes_encrypted: encryptedNotes,
       is_active: true
     })
     .select()
     .single();
 
   if (error) {
-    return NextResponse.json({ error: 'Hasta oluşturulamadı' }, { status: 500 });
+    console.error('patients insert error:', error.message, error.details, error.hint);
+    return NextResponse.json({ error: 'Hasta oluşturulamadı: ' + error.message }, { status: 500 });
   }
 
   return NextResponse.json({ patient: data });
