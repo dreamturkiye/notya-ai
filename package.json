@@ -17,6 +17,7 @@
     "@anthropic-ai/sdk": "^0.27.0",
     "@deepgram/sdk": "^3.6.0",
     "@elevenlabs/client": "^1.12.0",
+    "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.45.4",
     "next": "^14.2.16",

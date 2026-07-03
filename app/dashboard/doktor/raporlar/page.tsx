@@ -34,7 +34,10 @@ interface RaporData {
 }
 
 const Page: React.FC = () => {
-  const [currentMonth, setCurrentMonth] = useState('2025-12');
+  const now = new Date();
+  const [currentMonth, setCurrentMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+  const [isNarrow, setIsNarrow] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [data, setData] = useState<RaporData>({
     muayene: 0,
     bekleyen: 0,
@@ -81,6 +84,13 @@ const Page: React.FC = () => {
     fetchData(currentMonth);
   }, [currentMonth]);
 
+  useEffect(() => {
+    const check = () => setIsNarrow(window.innerWidth < 900);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const changeMonth = (delta: number) => {
     const d = new Date(year, month - 1 + delta, 1);
     const newMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -96,7 +106,41 @@ const Page: React.FC = () => {
     return '#0F9B8E';
   };
 
-  const printPDF = () => { if (typeof window !== 'undefined') window.print() };
+  const printPDF = async () => {
+    setPdfLoading(true);
+    try {
+      const token = localStorage.getItem('auth-token') || '';
+      const res = await fetch('/api/doktor/raporlar/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          monthLabel,
+          doctorName: localStorage.getItem('notya_doktor_name') || 'Doktor',
+          muayene: data.muayene,
+          bekleyen: data.bekleyen,
+          aktifHasta: data.aktifHasta,
+          tamamlananNot: data.tamamlananNot,
+          tanilar: data.tanilar,
+          uzmanlik: data.uzmanlik,
+          hafta: data.hafta,
+        }),
+      });
+      if (!res.ok) throw new Error('PDF oluşturulamadı');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `aylik-rapor-${monthLabel.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('PDF indirilemedi, lütfen tekrar deneyin');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const kpiCards = [
     { label: 'Bu Ay Muayene', value: data.muayene, color: '#0F9B8E' },
@@ -119,7 +163,7 @@ const Page: React.FC = () => {
             <button onClick={() => changeMonth(-1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer', flexShrink: 0 }}>←</button>
             <div style={{ fontSize: '16px', fontWeight: 500, whiteSpace: 'nowrap' }}>{monthLabel}</div>
             <button onClick={() => changeMonth(1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer', flexShrink: 0 }}>→</button>
-            <button onClick={printPDF} style={{ background: '#0F9B8E', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>PDF İndir</button>
+            <button onClick={printPDF} disabled={pdfLoading} style={{ background: '#0F9B8E', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', cursor: pdfLoading ? 'not-allowed' : 'pointer', opacity: pdfLoading ? 0.6 : 1, flexShrink: 0, whiteSpace: 'nowrap' }}>{pdfLoading ? 'Hazırlanıyor...' : 'PDF İndir'}</button>
           </div>
         </div>
 
@@ -140,7 +184,7 @@ const Page: React.FC = () => {
         </div>
 
         {/* Two Column Layout */}
-        <div style={{ display: 'flex', gap: '20px', flexDirection: (typeof window !== 'undefined' ? window.innerWidth : 1024) < 900 ? 'column' : 'row' }}>
+        <div style={{ display: 'flex', gap: '20px', flexDirection: isNarrow ? 'column' : 'row' }}>
           {/* LEFT 60% */}
           <div style={{ flex: '0 0 60%' }}>
             {/* Son Tanılar */}
