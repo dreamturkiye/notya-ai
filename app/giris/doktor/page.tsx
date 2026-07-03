@@ -22,7 +22,7 @@ export default function Giris() {
     localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
     const meta = data.user?.user_metadata || {}
     if (!meta.onboarding_completed) {
-      router.replace('/onboarding')
+      router.replace('/onboarding?p=doktor')
     } else {
       router.replace('/dashboard/doktor')
     }

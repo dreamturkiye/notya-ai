@@ -101,6 +101,7 @@ export default function ICD10Page() {
     maxWidth: '800px',
     margin: '0 auto',
     padding: '24px',
+    boxSizing: 'border-box',
     animation: 'fadeIn 0.3s ease-out'
   };
 
@@ -127,13 +128,14 @@ export default function ICD10Page() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
+    boxSizing: 'border-box',
     height: '56px',
     fontSize: '18px',
     backgroundColor: 'rgba(255,255,255,0.06)',
     border: '1.5px solid rgba(255,255,255,0.12)',
     borderRadius: '16px',
     color: 'white',
-    padding: '0 160px 0 20px',
+    padding: '0 90px 0 20px',
     outline: 'none'
   };
 
@@ -146,7 +148,7 @@ export default function ICD10Page() {
     color: 'white',
     border: 'none',
     borderRadius: '12px',
-    padding: '0 24px',
+    padding: '0 16px',
     fontSize: '14px',
     fontWeight: 700,
     cursor: 'pointer'

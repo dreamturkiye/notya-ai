@@ -46,7 +46,7 @@ export default function KayitPage() {
 
       if (data.session) {
         localStorage.setItem('auth-token', JSON.stringify({ access_token: data.session.access_token }));
-        router.replace('/onboarding');
+        router.replace('/onboarding?p=doktor');
       } else {
         setError('Kayıt başarılı ancak oturum başlatılamadı. Lütfen giriş yapmayı deneyin.');
       }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface Profession {
   id: string;
@@ -51,9 +51,20 @@ const agentMapping: Record<string, string> = {
 };
 
 export default function OnboardingPage() {
+  return (
+    <React.Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#060C18' }} />}>
+      <OnboardingInner />
+    </React.Suspense>
+  );
+}
+
+function OnboardingInner() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [selectedProfession, setSelectedProfession] = useState<string>('');
+  const searchParams = useSearchParams();
+  const presetProfession = searchParams?.get('p') || '';
+  const validPreset = professions.some(p => p.id === presetProfession) ? presetProfession : '';
+  const [step, setStep] = useState(validPreset ? 2 : 1);
+  const [selectedProfession, setSelectedProfession] = useState<string>(validPreset);
   
   // Doctor fields
   const [unvan, setUnvan] = useState('');
@@ -301,7 +312,7 @@ export default function OnboardingPage() {
     <div style={{ minHeight: '100vh', backgroundColor: '#060C18', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#fff', padding: '40px 20px' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
         <div style={{ marginBottom: '40px' }}>
-          <div style={{ fontSize: '13px', color: '#14B8A6', marginBottom: '8px' }}>ONBOARDING</div>
+          <div style={{ fontSize: '13px', color: '#14B8A6', marginBottom: '8px' }}>KAYIT</div>
           <div style={{ fontSize: '28px', fontWeight: 600 }}>
             {step === 1 && 'Hangi alanda çalışıyorsunuz?'}
             {step === 2 && (selectedProfession === 'doktor' ? 'Uzmanlık alanı ve klinik bilgileriniz' : 'Uzmanlık bilgileriniz')}
@@ -310,7 +321,7 @@ export default function OnboardingPage() {
         </div>
 
         {step === 1 && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
             {professions.map((prof) => {
               const isSelected = selectedProfession === prof.id;
               return (
