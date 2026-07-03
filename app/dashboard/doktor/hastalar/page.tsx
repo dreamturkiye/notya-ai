@@ -8,10 +8,9 @@ export const dynamic = 'force-dynamic';
 
 interface Patient {
   id: string;
-  maskedName: string;
-  lastVisit: string;
-  specialty: string;
-  isActive: boolean;
+  masked_name: string;
+  last_visit: string;
+  is_active: boolean;
 }
 
 export default function HastalarPage() {
@@ -39,8 +38,8 @@ export default function HastalarPage() {
           {filtered.map(p => (
             <div key={p.id} onClick={() => router.push(`/dashboard/doktor/hastalar/${p.id}`)} style={{ background: '#1E2937', padding: 16, borderRadius: 12, display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}>
               <div>{p.masked_name}</div>
-              <div style={{ color: '#94A3B8' }}>{p.last_visit} • {p.specialty}</div>
-              <div style={{ color: p.isActive ? '#10B981' : '#EF4444' }}>{p.isActive ? 'Aktif' : 'Pasif'}</div>
+              <div style={{ color: '#94A3B8' }}>{new Date(p.last_visit).toLocaleDateString('tr-TR')}</div>
+              <div style={{ color: p.is_active ? '#10B981' : '#EF4444' }}>{p.is_active ? 'Aktif' : 'Pasif'}</div>
             </div>
           ))}
         </div>
