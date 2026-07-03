@@ -2,7 +2,7 @@
 import{useState,useEffect}from 'react'
 import{createClient}from '@supabase/supabase-js'
 const sb=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-const TURLER=[{id:'itiraz_dilekce',label:'Itiraz Dilekcesi'},{id:'dava_acilis',label:'Dava Acilis'},{id:'nafaka_talebi',label:'Nafaka Talebi'},{id:'bosanma_davasi',label:'Bosanma Davasi'},{id:'is_akdi_feshi',label:'Haksiz Fesih'},{id:'icra_itiraz',label:'Icra Itiraz'},{id:'idari_itiraz',label:'Idari Itiraz'},{id:'tespit_talebi',label:'Tespit Talebi'}]
+const TURLER=[{id:'itiraz_dilekce',label:'Itiraz Dilekcesi'},{id:'dava_acilis',label:'Dava Acilis'},{id:'nafaka_talebi',label:'Nafaka Talebi'},{id:'bosanma_davasi',label:'Bosanma Davasi'},{id:'is_akdi_feshi',label:'Haksiz Fesih'},{id:'icra_itiraz',label:'Icra Itiraz'},{id:'idari_itiraz',label:'Idari Itiraz'},{id:'tespit_talebi',label:'Tespit Talebi'},{id:'kvkk_veri_ihlali_bildirimi',label:'KVKK Veri Ihlali Bildirimi'},{id:'kvkk_kurula_sikayet',label:'KVKK Kurula Sikayet'}]
 export default function DilekceTab({avukatToken}:{avukatToken:string}){
   const[turId,setTurId]=useState('itiraz_dilekce')
   const[muvekkilBilgi,setMuvekkilBilgi]=useState('')

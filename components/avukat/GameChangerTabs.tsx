@@ -68,6 +68,8 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
           <option value='icra_itiraz'>Icra Itiraz</option>
           <option value='idari_itiraz'>Idari Itiraz</option>
           <option value='tespit_talebi'>Tespit Talebi</option>
+          <option value='kvkk_veri_ihlali_bildirimi'>KVKK Veri Ihlali Bildirimi</option>
+          <option value='kvkk_kurula_sikayet'>KVKK Kurula Sikayet</option>
         </select>
         <textarea value={dilekceInput} onChange={e => setDilekceInput(e.target.value)} rows={5} placeholder='Muvekkil adi, konu, taraflar, onemli tarihler...' style={{ ...inp, resize: 'vertical', marginBottom: 12 }} />
         <button onClick={genDilekce} disabled={dilekceLoading} style={btn('#2563EB')}>{dilekceLoading ? 'Olusturuluyor...' : 'Dilekce Olustur'}</button>
