@@ -95,13 +95,13 @@ const Page: React.FC = () => {
         {/* HEADER */}
         <div style={{ marginBottom: 40 }}>
           <div style={{ color: teal, fontSize: 11, letterSpacing: 2, fontWeight: 600, marginBottom: 8 }}>
-            ILAC ETKILESIM
+            İLAÇ ETKİLEŞİMİ
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 600, margin: 0, letterSpacing: -0.5 }}>
-            Ilac Etkilesim Kontrolu
+            İlaç Etkileşim Kontrolü
           </h1>
           <p style={{ color: '#9CA3AF', marginTop: 8, fontSize: 15 }}>
-            Ilaclar arasindaki etkilesimleri aninda kontrol edin
+            İlaçlar arasındaki etkileşimleri anında kontrol edin
           </p>
         </div>
 
@@ -114,7 +114,7 @@ const Page: React.FC = () => {
           marginBottom: 24,
         }}>
           <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
-            Ilac Listesi
+            İlaç Listesi
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
@@ -122,7 +122,7 @@ const Page: React.FC = () => {
               value={yeniIlac}
               onChange={(e) => setYeniIlac(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addIlac()}
-              placeholder="Ilac adi girin"
+              placeholder="İlaç adı girin"
               style={{
                 flex: 1,
                 height: 44,
@@ -175,26 +175,26 @@ const Page: React.FC = () => {
           {/* PATIENT PARAMS */}
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
             <div>
-              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Agirlik (kg)</div>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Ağırlık (kg)</div>
               <input type="number" value={agirlik} onChange={(e) => setAgirlik(Number(e.target.value))} style={{
                 width: 60, height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 8px', fontSize: 14,
               }} />
             </div>
             <div>
-              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Yas</div>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Yaş</div>
               <input type="number" value={yas} onChange={(e) => setYas(Number(e.target.value))} style={{
                 width: 60, height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 8px', fontSize: 14,
               }} />
             </div>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Bobrek Fonksiyonu</div>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Böbrek Fonksiyonu</div>
               <select value={bobrekFonksiyonu} onChange={(e) => setBobrekFonksiyonu(e.target.value)} style={{
                 width: '100%', height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 12px', fontSize: 14,
               }}>
                 <option>Normal</option>
                 <option>Hafif Bozuk</option>
                 <option>Orta Bozuk</option>
-                <option>Agir Bozuk</option>
+                <option>Ağır Bozuk</option>
               </select>
             </div>
           </div>
@@ -247,14 +247,14 @@ const Page: React.FC = () => {
               fontWeight: 600,
               marginBottom: 20,
             }}>
-              {interaksiyonlar.length} etkilesim bulundu
+              {interaksiyonlar.length} etkileşim bulundu
             </div>
 
             {interaksiyonlar.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <div style={{ fontSize: 42, marginBottom: 12 }}>✅</div>
                 <div style={{ color: '#4ADE80', fontSize: 15, fontWeight: 500 }}>
-                  Kritik etkilesim tespit edilmedi
+                  Kritik etkileşim tespit edilmedi
                 </div>
               </div>
             ) : (
@@ -296,7 +296,7 @@ const Page: React.FC = () => {
             {hastaOnerileri.length > 0 && (
               <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${border}` }}>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: teal }}>
-                  Hasta Onerileri
+                  Hasta Önerileri
                 </div>
                 {hastaOnerileri.map((o, i) => (
                   <div key={i} style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 4 }}>• {o}</div>

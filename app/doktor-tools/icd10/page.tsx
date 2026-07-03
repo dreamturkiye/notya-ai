@@ -232,8 +232,8 @@ export default function ICD10Page() {
       <DoktorNav />
       <div style={contentStyle}>
         <div style={headerStyle}>
-          <div style={titleStyle}>ICD-10 Kodlayici</div>
-          <div style={subtitleStyle}>Turkce tani girisi ile anlik ICD-10 kodu</div>
+          <div style={titleStyle}>ICD-10 Kodlayıcı</div>
+          <div style={subtitleStyle}>Türkçe tanı girişi ile anlık ICD-10 kodu</div>
         </div>
 
         <div style={searchWrapperStyle}>
@@ -242,7 +242,7 @@ export default function ICD10Page() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Tani giriniz..."
+            placeholder="Tanı giriniz..."
             style={inputStyle}
           />
           <button onClick={handleSearch} style={buttonStyle}>Ara</button>
@@ -314,7 +314,7 @@ export default function ICD10Page() {
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
-            <div>Sonuc bulunamadi</div>
+            <div>Sonuç bulunamadı</div>
           </div>
         )}
       </div>

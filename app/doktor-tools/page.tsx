@@ -16,15 +16,15 @@ interface Tool {
 }
 
 const tools: Tool[] = [
-  { circleColor: '#0F9B8E', icon: 'Rx', title: 'e-Recete Asistani', desc: 'Elektronik recete olustur ve SGK entegrasyonunu tamamla', route: '/doktor-tools/erecete' },
-  { circleColor: '#8B5CF6', icon: 'EP', title: 'Epikriz Uretici', desc: 'Hasta ozetlerini otomatik olustur ve profesyonel epikriz raporlari hazirla', route: '/doktor-tools/epikriz' },
-  { circleColor: '#F59E0B', icon: 'IK', title: 'ICD-10 Kodlayici', desc: 'Turkce tani girisiyle anlik ICD-10 kodlama', route: '/doktor-tools/icd10' },
-  { circleColor: '#EF4444', icon: 'II', title: 'Ilac Interaksiyon', desc: 'Recetedeki ilac etkilesimlerini kontrol et ve uyarilari goruntule', route: '/doktor-tools/ilac-interaksiyon' },
-  { circleColor: '#166534', icon: 'SR', title: 'SGK Rapor', desc: 'SGK uyumlu raporlari hizlica olustur', route: '/doktor-tools/sgk-rapor' },
-  { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portali', desc: 'Hastalara guvenli portal erisimi ver', route: '/doktor-tools/hasta-portali' },
-  { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-recete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
-  { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabiz Rehberi', desc: 'Hasta kaydi erisimi adim adim', route: '/doktor-tools/enabiz' },
-  { circleColor: '#7C3AED', icon: 'HT', title: 'Hatirlatma', desc: 'WhatsApp/SMS hasta bildirimleri gonder', route: '/doktor-tools/hatirlatma' },
+  { circleColor: '#0F9B8E', icon: 'Rx', title: 'e-Reçete Asistanı', desc: 'Elektronik reçete oluştur ve SGK entegrasyonunu tamamla', route: '/doktor-tools/erecete' },
+  { circleColor: '#8B5CF6', icon: 'EP', title: 'Epikriz Üretici', desc: 'Hasta özetlerini otomatik oluştur ve profesyonel epikriz raporları hazırla', route: '/doktor-tools/epikriz' },
+  { circleColor: '#F59E0B', icon: 'IK', title: 'ICD-10 Kodlayıcı', desc: 'Türkçe tanı girişiyle anlık ICD-10 kodlama', route: '/doktor-tools/icd10' },
+  { circleColor: '#EF4444', icon: 'II', title: 'İlaç Etkileşimi', desc: 'Reçetedeki ilaç etkileşimlerini kontrol et ve uyarıları görüntüle', route: '/doktor-tools/ilac-interaksiyon' },
+  { circleColor: '#166534', icon: 'SR', title: 'SGK Rapor', desc: 'SGK uyumlu raporları hızlıca oluştur', route: '/doktor-tools/sgk-rapor' },
+  { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali' },
+  { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
+  { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Rehberi', desc: 'Hasta kaydı erişimi adım adım', route: '/doktor-tools/enabiz' },
+  { circleColor: '#7C3AED', icon: 'HT', title: 'Hatırlatma', desc: 'WhatsApp/SMS hasta bildirimleri gönder', route: '/doktor-tools/hatirlatma' },
 ];
 
 export default function DoktorToolsPage() {
@@ -39,7 +39,7 @@ export default function DoktorToolsPage() {
         <div style={{ marginBottom: '32px' }}>
           <div style={{ fontSize: '11px', fontWeight: 600, color: '#14B8A6', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>ARAÇLAR</div>
           <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, letterSpacing: '-0.6px' }}>Doktor Araçları</h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '8px', marginBottom: 0 }}>Klinik is akisinizi hizlandiracak araçlara erisin</p>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '8px', marginBottom: 0 }}>Klinik iş akışınızı hızlandıracak araçlara erişin</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>

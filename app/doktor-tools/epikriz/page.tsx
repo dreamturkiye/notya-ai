@@ -92,7 +92,7 @@ export default function EpikrizPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 404) {
-        setSeansError('Seans bulunamadi');
+        setSeansError('Seans bulunamadı');
         setSeanslar([]);
       } else if (res.ok) {
         const data = await res.json();
@@ -109,7 +109,7 @@ export default function EpikrizPage() {
         setSeansError('');
       }
     } catch (e) {
-      setSeansError('Seans bulunamadi');
+      setSeansError('Seans bulunamadı');
     } finally {
       setSeansLoading(false);
     }
@@ -182,7 +182,7 @@ export default function EpikrizPage() {
             letterSpacing: '1.5px',
             marginBottom: '8px' 
           }}>
-            EPIKRIZ
+            EPIKRİZ
           </div>
           <h1 style={{ 
             fontSize: '28px', 
@@ -191,7 +191,7 @@ export default function EpikrizPage() {
             margin: 0,
             letterSpacing: '-0.6px'
           }}>
-            Epikriz Uretici
+            Epikriz Üretici
           </h1>
           <p style={{ 
             color: '#8A94A8', 
@@ -359,7 +359,7 @@ export default function EpikrizPage() {
                     animation: 'spin 0.8s linear infinite'
                   }} />
                 )}
-                Epikriz Uret
+                Epikriz Üret
               </button>
             </div>
           </div>
