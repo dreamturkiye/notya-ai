@@ -61,18 +61,18 @@ function FlipCard({ p }: { p: Profession }) {
           position: 'absolute', inset: 0, backfaceVisibility: 'hidden',
           transform: 'rotateY(180deg)', background: '#161616',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-          padding: '48px 40px', boxSizing: 'border-box',
+          padding: '52px 44px', boxSizing: 'border-box',
         }}>
           <div>
-            <div style={{ width: '32px', height: '2px', background: p.accent, marginBottom: '20px' }} />
-            <div style={{ fontSize: '28px', letterSpacing: '-0.01em', color: '#FAFAF9', fontFamily: 'Inter, system-ui', fontWeight: 300, marginBottom: '44px', lineHeight: 1.1 }}>
+            <div style={{ width: '40px', height: '3px', background: p.accent, marginBottom: '28px' }} />
+            <div style={{ fontSize: '38px', letterSpacing: '-0.01em', color: '#FAFAF9', fontFamily: 'Inter, system-ui', fontWeight: 300, marginBottom: '48px', lineHeight: 1.05 }}>
               {p.label}
             </div>
             <div>
               {p.highlights.map((h, i) => (
-                <div key={h} style={{ display: 'flex', gap: '16px', alignItems: 'baseline', padding: '16px 0', borderTop: i === 0 ? 'none' : '1px solid rgba(250,250,249,0.08)' }}>
-                  <span style={{ fontSize: '11px', color: p.accent, fontFamily: 'Inter, system-ui', fontWeight: 600, minWidth: '18px' }}>{String(i + 1).padStart(2, '0')}</span>
-                  <span style={{ fontSize: '15px', color: 'rgba(250,250,249,0.88)', fontFamily: 'Inter, system-ui', fontWeight: 300, lineHeight: 1.5 }}>{h}</span>
+                <div key={h} style={{ display: 'flex', gap: '18px', alignItems: 'baseline', padding: '20px 0', borderTop: i === 0 ? 'none' : '1px solid rgba(250,250,249,0.08)' }}>
+                  <span style={{ fontSize: '13px', color: p.accent, fontFamily: 'Inter, system-ui', fontWeight: 600, minWidth: '22px' }}>{String(i + 1).padStart(2, '0')}</span>
+                  <span style={{ fontSize: '19px', color: 'rgba(250,250,249,0.92)', fontFamily: 'Inter, system-ui', fontWeight: 300, lineHeight: 1.4 }}>{h}</span>
                 </div>
               ))}
             </div>
@@ -80,8 +80,8 @@ function FlipCard({ p }: { p: Profession }) {
           <Link href={p.href} onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
             background: p.accent, color: '#0A0A0A', textDecoration: 'none',
-            fontSize: '12px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
-            fontFamily: 'Inter, system-ui', padding: '14px 22px', alignSelf: 'flex-start',
+            fontSize: '14px', fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase',
+            fontFamily: 'Inter, system-ui', padding: '17px 28px', alignSelf: 'flex-start',
           }}>
             Devamını gör &rarr;
           </Link>
