@@ -18,7 +18,7 @@ const PROFESSIONS: Profession[] = [
   },
   {
     id: 'mali', href: '/mali', label: 'Mali Musavir', accent: '#0F7A5C',
-    img: 'https://images.unsplash.com/photo-1768055104895-e6185762f2a9?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    img: '/avatars/mali.jpg',
     highlights: ['Bordro hesap motoru', 'MASAK uyum kontrolu', 'GIB e-Beyan entegrasyonu', 'Musteri portali'],
     headline: 'Beyan takviminizi sizden once hatirlar.',
     body: '2026 vergi parametreleriyle guncel. Bordro hesap motoru, MASAK uyum kontrolu, GIB e-Beyan entegrasyonu, musteri portali.',
@@ -26,7 +26,7 @@ const PROFESSIONS: Profession[] = [
   },
   {
     id: 'avukat', href: '/avukat', label: 'Avukat', accent: '#7C3AED',
-    img: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    img: '/avatars/avukat.jpg',
     highlights: ['9 hukuk dalinda uzman persona', 'Otomatik dilekce olusturma', 'Sure takip motoru (HMK/CMK/IIK)', 'Yargitay ictihat aramasi'],
     headline: 'Bir sure kacirmak, bir daha olmaz.',
     body: '9 hukuk dalinda uzman persona, otomatik dilekce olusturma, HMK/CMK/IIK sure hesaplama, Yargitay ictihat aramasi.',
@@ -50,7 +50,7 @@ function FlipCard({ p }: { p: Profession }) {
         <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', overflow: 'hidden' }}>
           <img src={p.img} alt={p.label} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(0.15) contrast(1.05)' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.75) 0%, transparent 40%)' }} />
-          <div style={{ position: 'absolute', bottom: '24px', left: '24px', fontSize: '11px', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#FAFAF9', fontFamily: 'Inter, system-ui', fontWeight: 600 }}>
+          <div style={{ position: 'absolute', bottom: '28px', left: '28px', fontSize: '22px', letterSpacing: '0.02em', textTransform: 'none', color: '#FAFAF9', fontFamily: 'Inter, system-ui', fontWeight: 600, textShadow: '0 2px 12px rgba(0,0,0,0.35)' }}>
             {p.label}
           </div>
           <div style={{ position: 'absolute', top: '24px', right: '24px', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(250,250,249,0.65)', fontFamily: 'Inter, system-ui' }}>
@@ -63,7 +63,7 @@ function FlipCard({ p }: { p: Profession }) {
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
           padding: '40px 32px', boxSizing: 'border-box',
         }}>
-          <div style={{ fontSize: '11px', letterSpacing: '0.16em', textTransform: 'uppercase', color: p.accent, fontFamily: 'Inter, system-ui', fontWeight: 600, marginBottom: '24px' }}>
+          <div style={{ fontSize: '22px', letterSpacing: '0.02em', textTransform: 'none', color: p.accent, fontFamily: 'Inter, system-ui', fontWeight: 600, marginBottom: '28px' }}>
             {p.label}
           </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px' }}>
