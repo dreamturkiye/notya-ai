@@ -233,7 +233,7 @@ export default function DoktorDashboard() {
         <div style={{ padding: '28px 0', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           {/* LEFT: SON NOTLAR */}
           <div style={{ flex: '1.6', minWidth: '320px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', paddingRight: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', paddingRight: '12px' }}>
               <div style={{ fontSize: '10px', color: '#64748B', letterSpacing: '1px' }}>SON NOTLAR</div>
               <div onClick={() => router.push('/dashboard/doktor/inceleme')} style={{ fontSize: '12px', color: '#14B8A6', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>Tümünü Gör →</div>
             </div>
