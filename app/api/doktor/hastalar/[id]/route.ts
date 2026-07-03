@@ -42,19 +42,29 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 });
   }
 
-  let decryptedData = {};
-  if (patient.ad_soyad_encrypted) {
-    try {
-      decryptedData = JSON.parse(decrypt(patient.ad_soyad_encrypted));
-    } catch {}
-  }
+  let name = 'Bilinmiyor', dob = null, gender = null, phone = null, notesData: Record<string, unknown> = {};
+  try { if (patient.name_encrypted) name = JSON.parse(decrypt(patient.name_encrypted)).ad || 'Bilinmiyor'; } catch {}
+  try { if (patient.dob_encrypted) dob = decrypt(patient.dob_encrypted); } catch {}
+  try { if (patient.gender_encrypted) gender = decrypt(patient.gender_encrypted); } catch {}
+  try { if (patient.phone_encrypted) phone = decrypt(patient.phone_encrypted); } catch {}
+  try { if (patient.notes_encrypted) notesData = JSON.parse(decrypt(patient.notes_encrypted)); } catch {}
 
-  return NextResponse.json({ 
-    patient: { 
-      ...patient, 
-      ...decryptedData,
-      ad_soyad_encrypted: undefined 
-    } 
+  return NextResponse.json({
+    patient: {
+      id: patient.id,
+      ad_soyad: name,
+      dogum_tarihi: dob,
+      cinsiyet: gender,
+      telefon: phone,
+      sehir: notesData.sehir || null,
+      kan_grubu: notesData.kanGrubu || null,
+      kronik_hastaliklar: notesData.kronikHastaliklar || [],
+      alerjiler: notesData.alerjiler || null,
+      surekli_ilaclar: notesData.suregenIlaclar || null,
+      sigara_alkol: notesData.sigaraAlkol || null,
+      is_active: patient.is_active,
+      created_at: patient.created_at,
+    }
   });
 }
 
@@ -71,12 +81,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 
   const body = await req.json();
-  const updateData: any = { ...body };
+  const updateData: Record<string, unknown> = {};
 
-  if (body.ad_soyad) {
-    updateData.ad_soyad_encrypted = encrypt(JSON.stringify({ ad: body.ad_soyad }));
-    delete updateData.ad_soyad;
-  }
+  if (body.ad_soyad) updateData.name_encrypted = encrypt(JSON.stringify({ ad: body.ad_soyad }));
+  if (body.dogum_tarihi) updateData.dob_encrypted = encrypt(body.dogum_tarihi);
+  if (body.cinsiyet) updateData.gender_encrypted = encrypt(body.cinsiyet);
+  if (body.telefon) updateData.phone_encrypted = encrypt(body.telefon);
 
   const { data, error } = await supabase
     .from('patients')

@@ -1,8 +1,8 @@
 "use client"
 export const dynamic = "force-dynamic"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { createClient } from "@supabase/supabase-js"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 const SPECIALTIES = [
   {id:"genel",label:"Genel Pratisyen",emoji:"👨‍⚕️"},
@@ -38,7 +38,17 @@ interface SpeechRecognitionEvent extends Event {
 }
 
 export default function NewSession() {
+  return (
+    <Suspense fallback={<div style={{minHeight:"100vh",background:"#0A1628"}} />}>
+      <NewSessionInner />
+    </Suspense>
+  )
+}
+
+function NewSessionInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const patientId = searchParams?.get("patientId") || null
   const [specialty, setSpecialty] = useState("genel")
   const [sessionType, setSessionType] = useState("muayene")
   const [step, setStep] = useState<"setup"|"recording"|"processing"|"done">("setup")
@@ -114,7 +124,7 @@ export default function NewSession() {
       if (!user) { router.push("/giris"); return }
 
       const { data: session, error: se } = await supabase.from("sessions").insert({
-        doctor_id: user.id, specialty, session_type: sessionType,
+        doctor_id: user.id, patient_id: patientId, specialty, session_type: sessionType,
         status: "processing", duration_seconds: seconds,
         patient_consent_given: true, patient_consent_at: new Date().toISOString(),
       }).select().single()
