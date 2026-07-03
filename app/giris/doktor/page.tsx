@@ -18,7 +18,7 @@ export default function Giris() {
     setLoading(true); setError('')
     const supabase = createClient('https://anjayzospuurymjmmtim.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
-    if (ae || !data.session) { setError(ae?.message || 'Giriş başarısız'); setLoading(false); return }
+    if (ae || !data.session) { setError(ae?.message === 'Invalid login credentials' ? 'E-posta veya şifre hatalı' : (ae?.message || 'Giriş başarısız')); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
     const meta = data.user?.user_metadata || {}
     if (!meta.onboarding_completed) {
@@ -34,7 +34,7 @@ export default function Giris() {
     <div style={{minHeight:'100vh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px 16px',fontFamily:'system-ui,sans-serif'}}>
       <div style={{background:'#111827',borderRadius:'20px',padding:'40px',maxWidth:'420px',width:'100%',border:'1px solid rgba(255,255,255,0.08)'}}>
         <div style={{textAlign:'center',marginBottom:'28px'}}>
-          <div style={{fontSize:'36px',marginBottom:'8px'}}>&#127973;</div>
+          <div style={{fontSize:'36px',marginBottom:'8px'}}>&#129658;</div>
           <div style={{fontSize:'22px',fontWeight:700,color:'#fff'}}><span style={{color:'#2563EB'}}>Notya</span> AI</div>
           <div style={{fontSize:'13px',color:'#64748b',marginTop:'4px'}}>Klinik Asistan Modulu</div>
         </div>
@@ -52,10 +52,8 @@ export default function Giris() {
             {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
-        <div style={{textAlign:'center',marginTop:'20px',fontSize:'12px',color:'#64748b'}}>
-          <a href='/giris/avukat' style={{color:'#7C3AED'}}>Avukat</a>
-          <span style={{color:'#64748b',margin:'0 8px'}}>•</span>
-          <a href='/kayit' style={{color:'#0F9B8E',fontWeight:600}}>15 Gun Ucretsiz Baslat →</a>
+        <div style={{textAlign:'center',marginTop:'20px'}}>
+          <a href='/kayit' style={{display:'inline-block',color:'#fff',fontWeight:700,fontSize:'14px',background:'#0F9B8E',padding:'12px 28px',borderRadius:'10px',textDecoration:'none'}}>15 Gün Ücretsiz Başlayın →</a>
         </div>
       </div>
     </div>

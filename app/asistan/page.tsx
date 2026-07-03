@@ -80,6 +80,24 @@ export default function AsistanPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // iOS notification banners can suspend the mic mid-call without firing onDisconnect.
+  // Playback keeps working (separate audio pipe) but the mic input silently stays muted.
+  // On tab/app return, force-unmute so the doctor's voice input resumes.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      const conv = conversationRef.current as unknown as { setMuted?: (m: boolean) => void; isMuted?: boolean } | null
+      if (!conv) return
+      try {
+        if (typeof conv.setMuted === 'function') {
+          conv.setMuted(false)
+        }
+      } catch { /* non-fatal */ }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
+
   function addMsg(role: "user" | "ai", text: string) {
     if (!text?.trim()) return
     setMessages((prev) => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: text.trim() }])
