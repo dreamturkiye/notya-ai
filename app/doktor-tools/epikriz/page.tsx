@@ -7,9 +7,7 @@ export const dynamic = 'force-dynamic';
 
 interface Hasta {
   id: string;
-  ad: string;
-  soyad: string;
-  tcKimlik: string;
+  masked_name: string;
 }
 
 interface Seans {
@@ -61,7 +59,7 @@ export default function EpikrizPage() {
         });
         if (res.ok) {
           const data = await res.json();
-          setHastalar(data);
+          setHastalar(Array.isArray(data.patients) ? data.patients : []);
         }
       } catch (e) {
         console.error(e);
@@ -98,7 +96,16 @@ export default function EpikrizPage() {
         setSeanslar([]);
       } else if (res.ok) {
         const data = await res.json();
-        setSeanslar(data);
+        const raw = Array.isArray(data.sessions) ? data.sessions : [];
+        const mapped = raw.map((s: { id: string; created_at: string }) => {
+          const d = new Date(s.created_at);
+          return {
+            id: s.id,
+            tarih: d.toLocaleDateString('tr-TR'),
+            saat: d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+          };
+        });
+        setSeanslar(mapped);
         setSeansError('');
       }
     } catch (e) {
@@ -247,7 +254,7 @@ export default function EpikrizPage() {
                   <option value="">Hasta seçin</option>
                   {hastalar.map(h => (
                     <option key={h.id} value={h.id}>
-                      {h.ad} {h.soyad} ({h.tcKimlik})
+                      {h.masked_name}
                     </option>
                   ))}
                 </select>

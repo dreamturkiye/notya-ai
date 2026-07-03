@@ -10,20 +10,6 @@ interface EpikrizRequest {
   ekBilgi?: string;
 }
 
-interface EpikrizResponse {
-  epikriz: {
-    basvuruSikayeti: string;
-    anamnestiKBilgi: string;
-    fizikMuayene: string;
-    tani: { icd10: string; aciklama: string };
-    tedavi: string;
-    takipOnerisi: string;
-    ekNotlar: string;
-  };
-  tarih: string;
-  specialty: string;
-}
-
 
 
 export async function POST(request: NextRequest) {
@@ -81,37 +67,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında yaz. Sadece JSON: {basvuruSikayeti,anamnestiKBilgi,fizikMuayene,tani:{icd10,aciklama},tedavi,takipOnerisi,ekNotlar}`;
+    const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"hastaBilgileri":"...","taniVeTedavi":"...","taburcuOzeti":"..."}`;
 
     const userPrompt = `SOAP notu:
 Subjektif: ${note.content_subjektif || ''}
 Objektif: ${note.content_objektif || ''}
 Değerlendirme: ${note.content_degerlendirme || ''}
 Plan: ${note.content_plan || ''}
-İlaçlar: ${note.ilaclar || ''}
+İlaçlar: ${note.content_ilaclar || ''}
 ICD10: ${note.icd10_codes || ''}
 Ek bilgi: ${ekBilgi || ''}
-Hastanın specialty: ${session.specialty}`;
+Hastanın specialty: ${session.specialty || 'genel'}`;
 
-    const completion = await groq.chat.completions.create({
-      messages: [
+    const raw = await groqChat(
+      [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
+      { temperature: 0.2, jsonMode: true }
+    );
+
+    let parsed: { hastaBilgileri?: string; taniVeTedavi?: string; taburcuOzeti?: string };
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return NextResponse.json({ hata: 'AI yanıtı geçersiz format' }, { status: 502 });
+    }
+
+    return NextResponse.json({
+      hastaBilgileri: parsed.hastaBilgileri || '',
+      taniVeTedavi: parsed.taniVeTedavi || '',
+      taburcuOzeti: parsed.taburcuOzeti || '',
     });
-
-    const epikrizJson = JSON.parse(completion || '{}');
-
-    const response: EpikrizResponse = {
-      epikriz: epikrizJson,
-      tarih: session.started_at,
-      specialty: session.specialty,
-    };
-
-    return NextResponse.json(response);
   } catch (error) {
     console.error('Epikriz oluşturma hatası:', error);
     return NextResponse.json(
