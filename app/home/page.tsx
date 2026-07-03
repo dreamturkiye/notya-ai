@@ -26,7 +26,7 @@ const PROFESSIONS: Profession[] = [
   },
   {
     id: 'mali', href: '/mali', label: 'Mali Müşavir', accent: '#0F7A5C',
-    img: '/avatars/mali.jpg', imgPosition: 'center 20%',
+    img: '/avatars/malimus.jpg', imgPosition: 'center 20%',
     highlights: ['Bordro hesap motoru', 'MASAK uyum kontrolü', 'GIB e-Beyan entegrasyonu', 'Müşteri portalı'],
     headline: 'Beyan takviminizi sizden önce hatırlar.',
     body: '2026 vergi parametreleriyle güncel. Bordro hesap motoru, MASAK uyum kontrolü, GIB e-Beyan entegrasyonu, müşteri portalı.',
