@@ -148,6 +148,7 @@ export default function DoktorDashboard() {
         maxWidth: '1200px',
         margin: '0 auto',
         padding: '12px 20px',
+        overflowX: 'hidden',
         animation: mounted ? 'fadeIn 300ms ease-out' : 'none'
       }}>
         {/* SECTION 1 - WELCOME BAR */}
@@ -201,7 +202,7 @@ export default function DoktorDashboard() {
         {/* SECTION 3 - QUICK ACTIONS */}
         <div style={{ padding: '28px 0' }}>
           <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '12px', letterSpacing: '1px' }}>HIZLI ERİŞİM</div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', overflowX: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
             {[
               { emoji: '🎙', text: 'Asistanı Aç', path: '/asistan' },
               { emoji: '➕', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle' },
@@ -219,6 +220,7 @@ export default function DoktorDashboard() {
                 color: '#fff',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                textAlign: 'center',
                 transition: 'all 200ms'
               }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(15,155,142,0.15)'; e.currentTarget.style.borderColor = 'rgba(15,155,142,0.4)'; e.currentTarget.style.color = '#0F9B8E' }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff' }}>
                 {chip.emoji} {chip.text}
