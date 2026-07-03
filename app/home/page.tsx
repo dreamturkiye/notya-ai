@@ -2,7 +2,12 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
-const PROFESSIONS = [
+interface Profession {
+  id: string; href: string; label: string; accent: string; img: string;
+  highlights: string[]; headline: string; body: string; detail: string[];
+}
+
+const PROFESSIONS: Profession[] = [
   {
     id: 'doktor', href: '/doktor', label: 'Doktor', accent: '#2563EB',
     img: '/doctors/dr_ayse.jpg',
@@ -29,7 +34,7 @@ const PROFESSIONS = [
   },
 ]
 
-function FlipCard({ p }: { p: typeof PROFESSIONS[0] }) {
+function FlipCard({ p }: { p: Profession }) {
   const [flipped, setFlipped] = useState(false)
   return (
     <div
@@ -66,7 +71,7 @@ function FlipCard({ p }: { p: typeof PROFESSIONS[0] }) {
               <li key={h} style={{ fontSize: '15px', color: '#FAFAF9', fontFamily: 'Inter, system-ui', fontWeight: 300, lineHeight: 1.9, borderTop: '1px solid rgba(250,250,249,0.12)', padding: '12px 0' }}>{h}</li>
             ))}
           </ul>
-          <Link href={p.href} onClick={e => e.stopPropagation()} style={{ fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: p.accent, textDecoration: 'none', fontFamily: 'Inter, system-ui', fontWeight: 600, borderBottom: \`1px solid \${p.accent}\`, paddingBottom: '3px', alignSelf: 'flex-start' }}>
+          <Link href={p.href} onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: p.accent, textDecoration: 'none', fontFamily: 'Inter, system-ui', fontWeight: 600, borderBottom: '1px solid ' + p.accent, paddingBottom: '3px', alignSelf: 'flex-start' }}>
             Devamini gor &rarr;
           </Link>
         </div>
