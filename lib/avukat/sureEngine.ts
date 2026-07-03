@@ -8,6 +8,7 @@ export interface SureKurali {
   gun?: number;
   hafta?: number;
   ay?: number;
+  saat?: number;
   kritik: boolean;
   tur: 'HMK' | 'CMK' | 'IIK' | 'IYUK' | 'TMK' | 'TTK';
 }
@@ -103,6 +104,10 @@ const SURE_KURALLARI: Record<string, SureKurali> = {
   uzlasma_yanit: { id: 'uzlasma_yanit', kanun: 'CMK', madde: '253', aciklama: 'Uzlasma teklifi yaniti', gun: 3, kritik: false, tur: 'CMK' },
   tapu_istinaf: { id: 'tapu_istinaf', kanun: 'HMK', madde: '345', aciklama: 'Tapu iptali istinaf', hafta: 2, kritik: true, tur: 'HMK' },
   ttk_itiraz: { id: 'ttk_itiraz', kanun: 'TTK', madde: '123', aciklama: 'Ticaret sicili itiraz', gun: 30, kritik: false, tur: 'TTK' },
+  kvkk_veri_sorumlusu_cevap: { id: 'kvkk_veri_sorumlusu_cevap', kanun: 'HMK', madde: 'KVKK 13', aciklama: 'Veri sorumlusunun basvuruya cevap suresi', gun: 30, kritik: true, tur: 'HMK' },
+  kvkk_ihlal_bildirimi_kurul: { id: 'kvkk_ihlal_bildirimi_kurul', kanun: 'HMK', madde: 'KVKK 12, Kurul Karari 2019/10', aciklama: 'Veri ihlalinin Kurula bildirim suresi (ogrenmeden itibaren)', saat: 72, kritik: true, tur: 'HMK' },
+  kvkk_kurula_sikayet_ogrenme: { id: 'kvkk_kurula_sikayet_ogrenme', kanun: 'HMK', madde: 'KVKK 14', aciklama: 'Kurula sikayet suresi (sonucun ogrenilmesinden itibaren)', gun: 30, kritik: true, tur: 'HMK' },
+  kvkk_kurula_sikayet_azami: { id: 'kvkk_kurula_sikayet_azami', kanun: 'HMK', madde: 'KVKK 14', aciklama: 'Kurula sikayet azami suresi (ilk basvurudan itibaren)', gun: 60, kritik: true, tur: 'HMK' },
 };
 
 function calculateDeadlines(baslangicTarihi: Date, sureIds: string[]): DeadlineResult[] {
@@ -118,6 +123,7 @@ function calculateDeadlines(baslangicTarihi: Date, sureIds: string[]): DeadlineR
         sonGun.setMonth(sonGun.getMonth() + 1);
       }
     }
+    if (rule.saat) sonGun.setHours(sonGun.getHours() + rule.saat);
 
     const gunKaldi = Math.ceil((sonGun.getTime() - new Date().getTime()) / (24 * 60 * 60 * 1000));
 
@@ -140,9 +146,9 @@ function getSurelerForBranch(branch: string): string[] {
     is: ['delil_listesi', 'is_davasi_istinaf'],
     gayrimenkul: ['tapu_istinaf', 'istinaf'],
     icra: ['itiraz_suresi', 'icra_itiraz_kaldirma', 'menfi_tespit'],
-    idare: ['idari_itiraz_sure'],
+    idare: ['idari_itiraz'],
     tuketici: ['tuketici_itiraz'],
-    bilişim: []
+    bilisim: ['kvkk_veri_sorumlusu_cevap', 'kvkk_ihlal_bildirimi_kurul', 'kvkk_kurula_sikayet_ogrenme', 'kvkk_kurula_sikayet_azami']
   };
 
   return branchRules[branch] || [];
