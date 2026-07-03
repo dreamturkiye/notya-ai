@@ -64,6 +64,66 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note: maliNote } })
     }
 
+    // Allied health path: fizyoterapi, diyetisyen, ergoterapi, odyoloji, psikolog
+    // Bu meslek gruplari tani koyamaz - her kayit hekim tani referansi gerektirir (Yonetmelik 29 Mart 2025)
+    const alliedHealthProfessions = ['fizyoterapi', 'diyetisyen', 'ergoterapi', 'odyoloji', 'psikolog']
+    const alliedProfession = body.profession || context?.profession
+    if (alliedHealthProfessions.includes(alliedProfession)) {
+      const hekimTaniReferansi = context?.hekim_tani_referansi || null
+      const hekimTaniTarihi = context?.hekim_tani_tarihi || null
+      const hekimAdi = context?.hekim_adi || null
+      const tedaviPlaniOzet = context?.tedavi_plani_ozet || null
+
+      if (!hekimTaniReferansi || !hekimTaniReferansi.trim()) {
+        return NextResponse.json({ success: false, error: 'Hekim tanısı referansı zorunludur - bu meslek grubu için tedavi kaydı oluşturulamaz' }, { status: 400 })
+      }
+
+      const alliedSystemPrompt = `Sen Notya AI klinik not asistanısın. Türkiye'de faaliyet gösteren ${alliedProfession} meslek grubu için çalışıyorsun.
+SEN BİR HEKİM DEĞILSIN ve asla tanı koyamaz, tanı belirtemez veya tanı çağrışımı yapamazsın.
+Sadece verilen hekim tanısı ve tedavi planı doğrultusunda bu seansta yapılanları yapılandır.
+
+SADECE geçerli JSON döndür, başka hiçbir şey yazma:
+{
+  "seans_notu": "Bu seansta yapılan uygulama ve müdahaleler",
+  "ilerleme_notu": "Onceki seanslara göre hastanın ilerlemesi",
+  "sonraki_adimlar": "Bir sonraki seans için plan",
+  "ai_confidence": 0.9
+}`
+
+      const alliedUserMessage = `Seans transkripti:\n${transcript}\n\nMeslek: ${alliedProfession}\nHekim Tanısı: ${hekimTaniReferansi}\nHekim Adı: ${hekimAdi || 'Belirtilmedi'}\nTedavi Planı Özeti: ${tedaviPlaniOzet || 'Belirtilmedi'}`
+
+      const alliedResponse = await getAnthropic().messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system: alliedSystemPrompt,
+        messages: [{ role: 'user', content: alliedUserMessage }]
+      })
+
+      const alliedRawText = alliedResponse.content[0].type === 'text' ? alliedResponse.content[0].text : ''
+      const alliedCleanJson = alliedRawText.replace(/```json\n?|\n?```/g, '').trim()
+      const alliedNoteData = JSON.parse(alliedCleanJson)
+
+      const { data: alliedNote, error: alliedNoteError } = await getSupabase().from('notes').insert({
+        session_id: sessionId,
+        doctor_id: user.id,
+        note_type: alliedProfession,
+        content_subjektif: alliedNoteData?.seans_notu || null,
+        content_plan: alliedNoteData?.sonraki_adimlar || null,
+        hekim_tani_referansi: hekimTaniReferansi,
+        hekim_tani_tarihi: hekimTaniTarihi,
+        hekim_adi: hekimAdi,
+        tedavi_plani_ozet: tedaviPlaniOzet,
+        ai_model: 'claude-sonnet-4-6',
+        ai_confidence: alliedNoteData?.ai_confidence || 0.9,
+      }).select().single()
+
+      if (alliedNoteError) throw new Error('Seans notu kaydedilemedi: ' + alliedNoteError.message)
+
+      await getSupabase().from('sessions').update({ status: 'completed' }).eq('id', sessionId)
+
+      return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: alliedNote.id, note: alliedNoteData } })
+    }
+
     const specialty = context?.specialty || "genel"
 
     // Build specialty-aware system prompt
