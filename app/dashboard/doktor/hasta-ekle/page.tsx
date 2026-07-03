@@ -66,7 +66,10 @@ export default function HastaEklePage() {
     if (formatted.length === 11) {
       const isValid = validateTC(formatted);
       setTcValid(isValid);
-      setTcError(isValid ? '' : 'Geçersiz TC Kimlik Numarası');
+      setTcError(isValid ? '' : 'Bu TC Kimlik No geçerli değil — rakamları kontrol edin, bir hane yanlış olabilir 🙂');
+    } else if (formatted.length > 0) {
+      setTcValid(false);
+      setTcError(`${11 - formatted.length} hane daha girmelisiniz`);
     } else {
       setTcValid(false);
       setTcError('');
@@ -169,8 +172,12 @@ export default function HastaEklePage() {
 
   const nextStep = () => {
     if (currentStep === 1) {
-      if (formData.tcKimlikNo.length !== 11 || !validateTC(formData.tcKimlikNo)) {
-        setTcError('TC Kimlik Numarası 11 hane olmalı ve geçerli olmalı');
+      if (formData.tcKimlikNo.length !== 11) {
+        setTcError(`${11 - formData.tcKimlikNo.length} hane daha girmelisiniz`);
+        return;
+      }
+      if (!validateTC(formData.tcKimlikNo)) {
+        setTcError('Bu TC Kimlik No geçerli değil — rakamları kontrol edin, bir hane yanlış olabilir 🙂');
         return;
       }
       if (!formData.adSoyad.trim()) {
