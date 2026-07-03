@@ -96,7 +96,7 @@ const Page: React.FC = () => {
     return '#0F9B8E';
   };
 
-  const printPDF = () => () => { if (typeof window !== 'undefined') window.print() };
+  const printPDF = () => { if (typeof window !== 'undefined') window.print() };
 
   const kpiCards = [
     { label: 'Bu Ay Muayene', value: data.muayene, color: '#0F9B8E' },
@@ -113,13 +113,13 @@ const Page: React.FC = () => {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 60px' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '32px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', paddingTop: '32px', marginBottom: '32px' }}>
           <div style={{ fontSize: '24px', fontWeight: 700 }}>Aylık Klinik Raporu</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button onClick={() => changeMonth(-1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer' }}>←</button>
-            <div style={{ fontSize: '16px', fontWeight: 500 }}>{monthLabel}</div>
-            <button onClick={() => changeMonth(1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer' }}>→</button>
-            <button onClick={printPDF} style={{ marginLeft: '24px', background: '#0F9B8E', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}>PDF İndir</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button onClick={() => changeMonth(-1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer', flexShrink: 0 }}>←</button>
+            <div style={{ fontSize: '16px', fontWeight: 500, whiteSpace: 'nowrap' }}>{monthLabel}</div>
+            <button onClick={() => changeMonth(1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer', flexShrink: 0 }}>→</button>
+            <button onClick={printPDF} style={{ background: '#0F9B8E', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>PDF İndir</button>
           </div>
         </div>
 
