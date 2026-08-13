@@ -22,7 +22,7 @@ export default function HastalarPage() {
     const _raw = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const token = _raw ? (() => { try { return JSON.parse(_raw).access_token || _raw } catch { return _raw } })() : null;
     fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
-      .then(d => setPatients(d.patients || []));
+      .then(d => setPatients(Array.isArray(d?.patients) ? d.patients : []));
   }, []);
 
   const filtered = patients.filter(p => p.masked_name.toLowerCase().includes(search.toLowerCase()));

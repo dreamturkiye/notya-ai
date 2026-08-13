@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
   const { noteId } = await req.json()
   if (!noteId) return NextResponse.json({ success: false, error: 'noteId gerekli' }, { status: 400 })
 
+  const supabase = getSupabase()
+
   const { data: note } = await supabase
     .from('notes')
     .select('*')

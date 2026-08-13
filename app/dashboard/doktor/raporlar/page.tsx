@@ -57,21 +57,55 @@ const Page: React.FC = () => {
   const fetchData = async (monthStr: string) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('auth-token') || '';
+      let token = '';
+      try {
+        const raw = localStorage.getItem('auth-token') || '';
+        token = raw ? (JSON.parse(raw).access_token || '') : '';
+      } catch {
+        token = '';
+      }
       const res = await fetch(`/api/doktor/raporlar?month=${monthStr}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        const json: RaporData = await res.json();
+        const json = await res.json();
+        const tanilarRaw = Array.isArray(json.tanilar)
+          ? json.tanilar
+          : Array.isArray(json.topTanilar)
+            ? json.topTanilar
+            : [];
+        const uzmanlikRaw = Array.isArray(json.uzmanlik)
+          ? json.uzmanlik
+          : Array.isArray(json.uzmanlikDagilimi)
+            ? json.uzmanlikDagilimi
+            : [];
+        const activityRaw = Array.isArray(json.activity)
+          ? json.activity
+          : Array.isArray(json.gunlukAktivite)
+            ? json.gunlukAktivite.map((d: { sayi?: number }) => Number(d?.sayi || 0))
+            : [];
+        const padded = [...activityRaw];
+        while (padded.length < 35) padded.push(0);
         setData({
-          muayene: json.muayene || 0,
-          bekleyen: json.bekleyen || 0,
-          aktifHasta: json.aktifHasta || 0,
-          tamamlananNot: json.tamamlananNot || 0,
-          tanilar: json.tanilar || [],
-          activity: json.activity?.length === 35 ? json.activity : Array(35).fill(0),
-          uzmanlik: json.uzmanlik || [],
-          hafta: json.hafta || { seans: 0, onaylanan: 0, bekleyen: 0 },
+          muayene: Number(json.muayene ?? json.buAyMuayene ?? 0) || 0,
+          bekleyen: Number(json.bekleyen ?? json.bekleyenOnay ?? 0) || 0,
+          aktifHasta: Number(json.aktifHasta ?? 0) || 0,
+          tamamlananNot: Number(json.tamamlananNot ?? 0) || 0,
+          tanilar: tanilarRaw.map((t: Record<string, unknown>) => ({
+            code: String(t.code || t.kod || ''),
+            name: String(t.name || t.aciklama || t.code || t.kod || ''),
+            count: Number(t.count || t.sayi || 0) || 0,
+          })),
+          activity: padded.slice(0, 35),
+          uzmanlik: uzmanlikRaw.map((u: Record<string, unknown>) => ({
+            name: String(u.name || u.specialty || ''),
+            count: Number(u.count || u.sayi || 0) || 0,
+          })),
+          hafta: json.hafta || {
+            seans: Number(json.buAyMuayene ?? json.muayene ?? 0) || 0,
+            onaylanan: Number(json.tamamlananNot ?? 0) || 0,
+            bekleyen: Number(json.bekleyenOnay ?? json.bekleyen ?? 0) || 0,
+          },
         });
       }
     } catch {
@@ -109,7 +143,13 @@ const Page: React.FC = () => {
   const printPDF = async () => {
     setPdfLoading(true);
     try {
-      const token = localStorage.getItem('auth-token') || '';
+      let token = '';
+      try {
+        const raw = localStorage.getItem('auth-token') || '';
+        token = raw ? (JSON.parse(raw).access_token || '') : '';
+      } catch {
+        token = '';
+      }
       const res = await fetch('/api/doktor/raporlar/pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

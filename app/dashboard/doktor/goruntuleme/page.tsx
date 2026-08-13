@@ -4,12 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
-
-interface Patient {
-  id: string;
-  ad: string;
-  soyad: string;
-}
+import { getAccessToken, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 
 interface Goruntuleme {
   id: string;
@@ -35,7 +30,7 @@ const MODALITE_COLORS: { [key: string]: string } = {
 };
 
 const Page = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<HastaOption[]>([]);
   const [goruntulemeler, setGoruntulemeler] = useState<Goruntuleme[]>([]);
   const [selectedHastaId, setSelectedHastaId] = useState('');
   const [filterHastaId, setFilterHastaId] = useState('');
@@ -54,27 +49,19 @@ const Page = () => {
   const [rotation, setRotation] = useState(0);
   const [viewerRef, setViewerRef] = useState<HTMLDivElement | null>(null);
 
-  const tok = () => {
-    try {
-      return JSON.parse(localStorage.getItem('auth-token') || '{}').access_token || '';
-    } catch {
-      return '';
-    }
-  };
-
   const fetchPatients = async () => {
-    const token = tok();
+    const token = getAccessToken();
     const res = await fetch('/api/doktor/hastalar', {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       const data = await res.json();
-      setPatients(data);
+      setPatients(normalizeHastalar(data));
     }
   };
 
   const fetchGoruntulemeler = async (hastaId?: string) => {
-    const token = tok();
+    const token = getAccessToken();
     const url = hastaId
       ? `/api/doktor/goruntuleme?hastaId=${hastaId}`
       : '/api/doktor/goruntuleme';
@@ -83,7 +70,7 @@ const Page = () => {
     });
     if (res.ok) {
       const data = await res.json();
-      setGoruntulemeler(data);
+      setGoruntulemeler(Array.isArray(data) ? data : []);
     }
   };
 
@@ -122,7 +109,7 @@ const Page = () => {
     formData.append('rapor', uploadData.rapor);
     formData.append('file', uploadData.file);
 
-    const token = tok();
+    const token = getAccessToken();
 
     try {
       const xhr = new XMLHttpRequest();
@@ -152,7 +139,7 @@ const Page = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const token = tok();
+    const token = getAccessToken();
     await fetch(`/api/doktor/goruntuleme/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
@@ -220,7 +207,7 @@ const Page = () => {
               >
                 <option value="">Hasta secin</option>
                 {patients.map(p => (
-                  <option key={p.id} value={p.id}>{p.ad} {p.soyad}</option>
+                  <option key={p.id} value={p.id}>{p.label}</option>
                 ))}
               </select>
 
@@ -297,7 +284,7 @@ const Page = () => {
             style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '12px' }}
           >
             <option value="">Tum hastalar</option>
-            {patients.map(p => <option key={p.id} value={p.id}>{p.ad} {p.soyad}</option>)}
+            {patients.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
 
           <div style={{ flex: 1, overflowY: 'auto' }}>

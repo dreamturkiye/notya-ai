@@ -91,7 +91,13 @@ export default function DoktorDashboard() {
         })
         if (raporRes.ok) {
           const raporData = await raporRes.json()
-          setKpi(raporData.data || { bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
+          const src = raporData?.data && typeof raporData.data === 'object' ? raporData.data : raporData
+          setKpi({
+            bugunkuMuayene: Number(src.bugunkuMuayene ?? src.buAyMuayene ?? 0) || 0,
+            bekleyenOnay: Number(src.bekleyenOnay ?? src.bekleyen ?? 0) || 0,
+            buAyToplam: Number(src.buAyToplam ?? src.buAyMuayene ?? src.toplamMuayene ?? 0) || 0,
+            aktifHasta: Number(src.aktifHasta ?? 0) || 0,
+          })
         } else {
           setKpi({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
         }

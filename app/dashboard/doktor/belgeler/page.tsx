@@ -1,35 +1,192 @@
 'use client';
 
-import React, { useState } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
-
 export const dynamic = 'force-dynamic';
+
+import React, { useEffect, useState } from 'react';
+import DoktorNav from '@/components/doktor/DoktorNav';
+import {
+  getAccessToken,
+  normalizeHastalar,
+  toolsShell,
+  toolsCard,
+  toolsInput,
+  toolsLabel,
+  toolsPrimaryBtn,
+  toolsErrorBox,
+  type HastaOption,
+} from '@/lib/doktor/toolsUi';
+
+const BELGE_TURLERI = [
+  'Lab Sonucu',
+  'Görüntüleme Raporu',
+  'Epikriz',
+  'Reçete',
+  'Sevk',
+  'Diğer',
+];
 
 export default function BelgelerPage() {
   const [file, setFile] = useState<File | null>(null);
   const [hastaId, setHastaId] = useState('');
-  const [belgeType, setBelgeType] = useState('Lab Sonucu');
+  const [belgeType, setBelgeType] = useState(BELGE_TURLERI[0]);
+  const [hastalar, setHastalar] = useState<HastaOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadHastalar = async () => {
+      try {
+        const token = getAccessToken();
+        if (!token) {
+          if (!cancelled) setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+          return;
+        }
+
+        const res = await fetch('/api/doktor/hastalar', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          if (!cancelled) setError('Hasta listesi alınamadı.');
+          return;
+        }
+
+        const data = await res.json();
+        if (!cancelled) setHastalar(normalizeHastalar(data));
+      } catch {
+        if (!cancelled) setError('Hasta listesi alınamadı. Bağlantınızı kontrol edin.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadHastalar();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleUpload = async () => {
-    // Production upload logic with Groq vision would go here
-    alert('Belge yüklendi ve AI işleme alındı');
+    setError('');
+    setInfo('');
+
+    if (!hastaId) {
+      setError('Lütfen bir hasta seçin.');
+      return;
+    }
+    if (!file) {
+      setError('Lütfen yüklenecek bir dosya seçin.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Belge yükleme + AI işleme akışı henüz bağlanmadı.
+      setInfo(
+        `"${file.name}" (${belgeType}) alındı. Belge işleme altyapısı yakında devreye alınacak.`
+      );
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
+    <div style={toolsShell}>
       <DoktorNav />
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: 24 }}>
-        <h1 style={{ fontSize: 28, marginBottom: 24 }}>Belge Yükleme</h1>
-        
-        <div style={{ background: '#1E2937', padding: 24, borderRadius: 12 }}>
-          <select value={hastaId} onChange={e => setHastaId(e.target.value)} style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0F172A', color: 'white', borderRadius: 8 }}>
-            <option value="">Hasta Seç</option>
-          </select>
-          <select value={belgeType} onChange={e => setBelgeType(e.target.value)} style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0F172A', color: 'white', borderRadius: 8 }}>
-            <option>Lab Sonucu</option><option>Görüntüleme Raporu</option><option>Epikriz</option><option>Reçete</option><option>Sevk</option><option>Diğer</option>
-          </select>
-          <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} style={{ marginBottom: 16 }} />
-          <button onClick={handleUpload} style={{ background: '#0F9B8E', padding: '12px 24px', borderRadius: 8, color: 'white', border: 'none' }}>Yükle ve İşle</button>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 56px' }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Belge Yükleme</h1>
+        <p style={{ color: '#94A3B8', fontSize: 14, margin: '6px 0 20px' }}>
+          Hasta belgelerini yükleyin ve arşivleyin
+        </p>
+
+        <div style={toolsCard}>
+          <div style={{ marginBottom: 16 }}>
+            <label style={toolsLabel} htmlFor="belge-hasta">
+              Hasta
+            </label>
+            <select
+              id="belge-hasta"
+              value={hastaId}
+              onChange={(e) => setHastaId(e.target.value)}
+              disabled={loading || hastalar.length === 0}
+              style={toolsInput}
+            >
+              {loading && <option value="">Yükleniyor...</option>}
+              {!loading && hastalar.length === 0 && <option value="">Hasta bulunamadı</option>}
+              {!loading && hastalar.length > 0 && <option value="">Hasta seçin</option>}
+              {hastalar.map((h) => (
+                <option key={h.id} value={h.id} style={{ background: '#0A1628', color: '#fff' }}>
+                  {h.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={toolsLabel} htmlFor="belge-turu">
+              Belge Türü
+            </label>
+            <select
+              id="belge-turu"
+              value={belgeType}
+              onChange={(e) => setBelgeType(e.target.value)}
+              style={toolsInput}
+            >
+              {BELGE_TURLERI.map((t) => (
+                <option key={t} value={t} style={{ background: '#0A1628', color: '#fff' }}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: 18 }}>
+            <label style={toolsLabel} htmlFor="belge-dosya">
+              Dosya
+            </label>
+            <input
+              id="belge-dosya"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              style={{ ...toolsInput, padding: '10px 12px', fontSize: 13 }}
+            />
+            {file && (
+              <div style={{ marginTop: 8, fontSize: 12, color: '#94A3B8' }}>
+                Seçilen: {file.name}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleUpload}
+            disabled={uploading || !hastaId || !file}
+            style={toolsPrimaryBtn(uploading || !hastaId || !file)}
+          >
+            {uploading ? 'İşleniyor...' : 'Yükle ve İşle'}
+          </button>
+
+          {error && <div style={toolsErrorBox}>{error}</div>}
+          {info && !error && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: '12px 14px',
+                borderRadius: 12,
+                background: 'rgba(15,155,142,0.14)',
+                border: '1px solid rgba(94,234,212,0.32)',
+                color: '#99F6E4',
+                fontSize: 13,
+                lineHeight: 1.45,
+              }}
+            >
+              {info}
+            </div>
+          )}
         </div>
       </div>
     </div>
