@@ -61,7 +61,7 @@ export default function AvukatPage() {
           <div>
             <div style={{display:"inline-flex",alignItems:"center",gap:"8px",background:"var(--primary-light)",border:"1px solid rgba(30,58,95,.2)",borderRadius:"20px",padding:"6px 14px",marginBottom:"24px"}}>
               <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"var(--primary)"}}></div>
-              <span style={{fontSize:"12px",fontWeight:"700",color:"var(--primary)",letterSpacing:".06em",textTransform:"uppercase",fontFamily:"Lato,sans-serif"}}>Türkiye'nin Ilk AI Hukuk Asistani</span>
+              <span style={{fontSize:"12px",fontWeight:"700",color:"var(--primary)",letterSpacing:".06em",textTransform:"uppercase",fontFamily:"Lato,sans-serif"}}>Türkiye'nin İlk AI Hukuk Asistanı</span>
             </div>
             <h1 style={{fontSize:"clamp(36px,4.5vw,56px)",fontWeight:"700",lineHeight:"1.1",margin:"0 0 20px",color:"var(--text)",fontFamily:"Merriweather,serif",letterSpacing:"-0.02em"}}>
               Cebinizdeki<br/>
