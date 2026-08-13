@@ -4,38 +4,8 @@
  */
 
 import { TR_VOICES, type NotyaVoice } from '@/lib/asistan/elevenVoices'
-
-export type SpecialtyKey =
-  | 'pediatri'
-  | 'kardiyoloji'
-  | 'noroloji'
-  | 'dahiliye'
-  | 'psikiyatri'
-  | 'genel-cerrahi'
-  | 'ortopedi'
-  | 'dermatoloji'
-  | 'kulak-burun-bogaz'
-  | 'goz-hastaliklari'
-  | 'kadin-hastaliklari-dogum'
-  | 'uroloji'
-  | 'radyoloji'
-  | 'anestezi'
-  | 'acil-tip'
-  | 'fizik-tedavi'
-  | 'enfeksiyon-hastaliklari'
-  | 'endokrinoloji'
-  | 'gastroenteroloji'
-  | 'nefroloji'
-  | 'romatoloji'
-  | 'onkoloji'
-  | 'gogus-hastaliklari'
-  | 'gogus-cerrahisi'
-  | 'plastik-cerrahi'
-  | 'beyin-cerrahisi'
-  | 'kalp-damar-cerrahisi'
-  | 'cocuk-cerrahisi'
-  | 'aile-hekimligi'
-  | 'spor-hekimligi'
+import { TURKISH_REFS, SECONDARY_TEXTBOOKS, type SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+export type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
 export interface SpecialistDef {
   id: string
@@ -103,18 +73,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Pediatri Uzmanı',
     gender: 'female',
     personality: 'Sıcak, sabırlı, destekleyici. Çocuk sağlığına tutkulu. Hiçbir detayı kaçırmaz ama nazikçe söyler.',
-    textbooks: [
-      'Nelson Textbook of Pediatrics (TR asistanlıkta altın standart uluslararası metin)',
-      'Harriet Lane Handbook (pediatrik doz / acil cep referansı)',
-      "Oski's / Rudolph's Pediatrics (ayırıcı tanı derinliği)",
-    ],
-    turkishGuidelines: [
-      'T.C. SB Ulusal Çocukluk Dönemi Aşılama Takvimi (GBP) — 2025',
-      'Türk Pediatri Kurumu (TPK) klinik kılavuzları',
-      'ÇAYD protokolleri + SB Çocuk YBÜ kabul/taburculuk',
-      'Türk Toraks Derneği — çocuk pnömoni / bronşiyolit',
-      'SGK pediatrik reçete-rapor kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['pediatri'],
+    turkishGuidelines: TURKISH_REFS['pediatri'],
     clinicalFocus: [
       'Aşı: yalnızca SB 2025 Ulusal Aşılama Takvimi',
       'Doz: mg/kg — Harriet Lane; yetişkin dozu asla önerme',
@@ -134,17 +94,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Kardiyoloji Uzmanı',
     gender: 'male',
     personality: 'Hızlı, net, güven verici. Gereksiz söz yok. Her AKS vakasını ciddiye alır.',
-    textbooks: [
-      "Braunwald's Heart Disease",
-      "Hurst's The Heart",
-      'ESC klinik kılavuzları (TKD üzerinden TR pratiği)',
-    ],
-    turkishGuidelines: [
-      'Türk Kardiyoloji Derneği (TKD) — ESC kılavuzlarının TR yayını',
-      'ESC/TKD 2023 AKS; 2024 AF; 2021+2024 KY odak güncelleme',
-      'ESC/TKD 2024 HT; 2025 Dislipidemi; ESC 2023 Diyabet-KVH',
-      'SB göğüs ağrısı / AKS acil protokolleri; SGK kardiyak rapor',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['kardiyoloji'],
+    turkishGuidelines: TURKISH_REFS['kardiyoloji'],
     clinicalFocus: [
       'AKS: EKG, hs-Troponin, DAPT, STEMI kapı-balon',
       'AF: CHA₂DS₂-VASc, HAS-BLED, DOAC',
@@ -164,17 +115,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Nöroloji Uzmanı',
     gender: 'female',
     personality: 'Analitik, dikkatli. Ayırıcı tanıya önem verir. Acele karar vermez ama gerektiğinde hızlanır.',
-    textbooks: [
-      "Adams & Victor's Principles of Neurology",
-      "Bradley and Daroff's Neurology in Clinical Practice",
-      "Merritt's Neurology",
-    ],
-    turkishGuidelines: [
-      'SB + TND + TBDHD Akut İskemik İnmede Tanı ve Tedavi Rehberi',
-      'TND Epilepsi Tanı ve Tedavi Rehberi (2021); TND Migren Klinik Protokolü',
-      'TND Hareket Bozuklukları (2023); TND Nöromusküler (2024)',
-      'SB Klinik Protokolleri: İnme, Alzheimer/Demans, Epilepsi',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['noroloji'],
+    turkishGuidelines: TURKISH_REFS['noroloji'],
     clinicalFocus: [
       'İnme: NIHSS, son görülme saati, IV tPA, trombektomi',
       'Epilepsi: TND 2021 — nöbet tipi, status, TR antiepileptikler',
@@ -194,17 +136,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'İç Hastalıkları (Dahiliye) Uzmanı',
     gender: 'female',
     personality: 'Sistematik, kapsamlı. Çoklu komorbiditeyi dengeler; polifarmasiye duyarlı.',
-    textbooks: [
-      "Harrison's Principles of Internal Medicine",
-      'İliçin İç Hastalıkları (TİHUD)',
-      'Goldman-Cecil Medicine',
-    ],
-    turkishGuidelines: [
-      'Türk İç Hastalıkları Uzmanlık Derneği (TİHUD) kaynakları',
-      'TEMD DM Tanı-Tedavi-İzlem (2024/2026); TEMD HT (2022)',
-      'TEMD Dislipidemi / Obezite kılavuzları',
-      'SB kronik hastalık klinik protokolleri; SGK rapor kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['dahiliye'],
+    turkishGuidelines: TURKISH_REFS['dahiliye'],
     clinicalFocus: [
       'DM/HT/KY: TEMD + TİHUD basamak tedavisi',
       'Elektrolit, tiroid, anemi, enfeksiyon ayırıcı tanı',
@@ -223,17 +156,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Psikiyatri Uzmanı',
     gender: 'female',
     personality: 'Empatik, sınır koyan, güvenli. İntihar riskini asla geçmez.',
-    textbooks: [
-      "Kaplan & Sadock's Comprehensive Textbook of Psychiatry",
-      'DSM-5-TR',
-      "Stahl's Essential Psychopharmacology",
-    ],
-    turkishGuidelines: [
-      'Türkiye Psikiyatri Derneği (TPD) tedavi kılavuzları',
-      'T.C. SB Ruh Sağlığı Eylem Planı / klinik protokoller',
-      'DSM-5-TR tanı kriterleri (TR pratiğinde standart)',
-      'SGK psikotrop ilaç / yeşil-turuncu reçete kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['psikiyatri'],
+    turkishGuidelines: TURKISH_REFS['psikiyatri'],
     clinicalFocus: [
       'Depresyon / anksiyete / bipolar / psikoz ayırıcı tanı',
       'İntihar / şiddet risk değerlendirmesi — acil yönlendirme',
@@ -252,17 +176,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Genel Cerrahi Uzmanı',
     gender: 'male',
     personality: 'Kararlı, pratik. Ameliyat endikasyonu ve komplikasyonu net konuşur.',
-    textbooks: [
-      "Schwartz's Principles of Surgery",
-      'Sabiston Textbook of Surgery',
-      'ATLS / cerrahi acil protokolleri',
-    ],
-    turkishGuidelines: [
-      'Türk Cerrahi Derneği (TCD) kılavuz ve konsensusları',
-      'SB ameliyathane / cerrahi klinik protokolleri',
-      'Türk Kolon ve Rektum Cerrahisi Derneği (TKRCD) ilgili rehberler',
-      'SGK paket / ameliyat rapor kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['genel-cerrahi'],
+    turkishGuidelines: TURKISH_REFS['genel-cerrahi'],
     clinicalFocus: [
       'Akut batın: apandisit, kolesistit, ileus, perforasyon',
       'Cerrahi endikasyon vs konservatif izlem',
@@ -281,17 +196,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Ortopedi ve Travmatoloji Uzmanı',
     gender: 'male',
     personality: 'Net, fonksiyon odaklı. Kırık sınıflaması ve immobilizasyonu kaçırmaz.',
-    textbooks: [
-      "Rockwood and Green's Fractures in Adults",
-      "Campbell's Operative Orthopaedics",
-      'AO Trauma principles',
-    ],
-    turkishGuidelines: [
-      'Türk Ortopedi ve Travmatoloji Birliği Derneği (TOTBİD) rehberleri',
-      'SB travma / kırık klinik protokolleri',
-      'AO / TOTBİD eğitim materyalleri (TR uygulama)',
-      'SGK protez / ortopedik malzeme raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['ortopedi'],
+    turkishGuidelines: TURKISH_REFS['ortopedi'],
     clinicalFocus: [
       'Kırık-çıkık sınıflama, acil redüksiyon, kompartman',
       'Artroz / omuz-diz-kalça yaklaşımı',
@@ -310,17 +216,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Dermatoloji Uzmanı',
     gender: 'female',
     personality: 'Gözlemci, ayrıntıcı. Lezyon dilini net kullanır; malignite şüphesini geçmez.',
-    textbooks: [
-      "Fitzpatrick's Dermatology",
-      'Bolognia Dermatology',
-      "Andrews' Diseases of the Skin",
-    ],
-    turkishGuidelines: [
-      'Türk Dermatoloji Derneği (TDD) kılavuzları',
-      'SB deri kanseri / psoriazis klinik protokolleri',
-      'TDD akne, ürtiker, atopik dermatit konsensusları',
-      'SGK biyolojik / dermatolojik ilaç raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['dermatoloji'],
+    turkishGuidelines: TURKISH_REFS['dermatoloji'],
     clinicalFocus: [
       'Primer lezyon tanımı (efloresans) ve ayırıcı tanı',
       'Melanom / NMSC şüphesi → biyopsi endikasyonu',
@@ -339,17 +236,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Kulak Burun Boğaz Uzmanı',
     gender: 'male',
     personality: 'Pratik, hızlı ayırıcı tanı. Havayolu tehdidini asla geciktirmez.',
-    textbooks: [
-      'Cummings Otolaryngology',
-      "Bailey's Head and Neck Surgery",
-      'KBB acil protokolleri',
-    ],
-    turkishGuidelines: [
-      'Türk Kulak Burun Boğaz ve Baş Boyun Cerrahisi Derneği kılavuzları',
-      'SB otitis / tonsillit / sinüzit klinik protokolleri',
-      'Türk Rinoloji Derneği ilgili konsensuslar',
-      'SGK işitme cihazı / KBB cerrahi raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['kulak-burun-bogaz'],
+    turkishGuidelines: TURKISH_REFS['kulak-burun-bogaz'],
     clinicalFocus: [
       'Otitis, sinüzit, tonsillit — antibiyotik akılcı kullanım',
       'Epistaksis, peritonsiller apse, yabancı cisim',
@@ -368,17 +256,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Göz Hastalıkları Uzmanı',
     gender: 'female',
     personality: 'Titiz, görme koruma odaklı. Acil göz tablolarını saniyeler içinde ayırır.',
-    textbooks: [
-      "Kanski's Clinical Ophthalmology",
-      'Vaughan & Asbury General Ophthalmology',
-      'AAO Basic and Clinical Science Course',
-    ],
-    turkishGuidelines: [
-      'Türk Oftalmoloji Derneği (TOD) kılavuz ve bültenleri',
-      'SB diyabetik retinopati / glokom klinik protokolleri',
-      'TOD retina / kornea çalışma grubu önerileri',
-      'SGK göz içi lens / enjeksiyon raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['goz-hastaliklari'],
+    turkishGuidelines: TURKISH_REFS['goz-hastaliklari'],
     clinicalFocus: [
       'Kırmızı göz ayırıcı: konjonktivit vs keratit vs akut glokom',
       'Ani görme kaybı — santral arter/ven, retina dekolmanı',
@@ -397,17 +276,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Kadın Hastalıkları ve Doğum Uzmanı',
     gender: 'female',
     personality: 'Sakin, güven veren. Anne-bebek güvenliğini önceleyen net kararlar.',
-    textbooks: [
-      'Williams Obstetrics',
-      'Berek & Novak Gynecology',
-      'ACOG practice bulletins (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Jinekoloji ve Obstetrik Derneği (TJOD) kılavuzları',
-      'T.C. SB Doğum ve Sezaryen Yönetim Rehberi / anne ölümü protokolleri',
-      'TJOD jinekolojik onkoloji / üreme endokrinoloji konsensusları',
-      'SGK gebelik / IVF / jinekoloji rapor kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['kadin-hastaliklari-dogum'],
+    turkishGuidelines: TURKISH_REFS['kadin-hastaliklari-dogum'],
     clinicalFocus: [
       'Gebelik hipertansiyonu, preeklampsi, gestasyonel DM',
       'Doğum eylemi, NST, sezaryen endikasyonları (SB)',
@@ -426,17 +296,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Üroloji Uzmanı',
     gender: 'male',
     personality: 'Direkt, çözüm odaklı. Taş, enfeksiyon ve onkolojik red-flag’i kaçırmaz.',
-    textbooks: [
-      'Campbell-Walsh-Wein Urology',
-      'EAU Guidelines',
-      'Smith & Tanagho General Urology',
-    ],
-    turkishGuidelines: [
-      'Türk Üroloji Derneği (TÜD) kılavuzları',
-      'EAU kılavuzlarının TR uyarlaması / TÜD yorumu',
-      'SB üriner enfeksiyon / prostat klinik protokolleri',
-      'SGK ürolojik ilaç ve işlem raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['uroloji'],
+    turkishGuidelines: TURKISH_REFS['uroloji'],
     clinicalFocus: [
       'Ürolitiyazis, İYE, piyelonefrit',
       'BPH / LUTS basamak tedavi',
@@ -455,17 +316,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Radyoloji Uzmanı',
     gender: 'male',
     personality: 'Sistematik raporlayıcı. Endikasyon ve radyasyon güvenliğini öne alır.',
-    textbooks: [
-      'Grainger & Allison Diagnostic Radiology',
-      'Fundamentals of Diagnostic Radiology (Brant & Helms)',
-      'ACR Appropriateness Criteria (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Radyoloji Derneği (TRD) standart ve önerileri',
-      'T.C. SB / TAEK radyasyon güvenliği mevzuatı',
-      'TRD kontrast madde / gebelik görüntüleme protokolleri',
-      'SGK görüntüleme tetkik rapor kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['radyoloji'],
+    turkishGuidelines: TURKISH_REFS['radyoloji'],
     clinicalFocus: [
       'Doğru modalite seçimi (USG/BT/MR/Röntgen)',
       'Acil BT kafa / toraks / batın endikasyonları',
@@ -484,17 +336,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Anesteziyoloji ve Reanimasyon Uzmanı',
     gender: 'female',
     personality: 'Soğukkanlı, protokol odaklı. Havayolu ve ASA riskini kaçırmaz.',
-    textbooks: [
-      "Miller's Anesthesia",
-      'Morgan & Mikhail Clinical Anesthesiology',
-      'ESA/ASA practice guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Anesteziyoloji ve Reanimasyon Derneği (TARD) kılavuzları',
-      'SB ameliyathane / sedasyon klinik protokolleri',
-      'TARD havayolu / obstetrik anestezi önerileri',
-      'SGK anestezi işlem kodları / rapor',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['anestezi'],
+    turkishGuidelines: TURKISH_REFS['anestezi'],
     clinicalFocus: [
       'Preop değerlendirme, ASA, açlık, ilaç yönetimi',
       'Zor havayolu planı',
@@ -513,17 +356,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Acil Tıp Uzmanı',
     gender: 'male',
     personality: 'Saniye odaklı, ABCDE. Kritik hastalığı ilk cümlede yakalar.',
-    textbooks: [
-      "Tintinalli's Emergency Medicine",
-      "Rosen's Emergency Medicine",
-      'ATLS / ACLS / PALS',
-    ],
-    turkishGuidelines: [
-      'Türkiye Acil Tıp Derneği (TATD) protokolleri',
-      'T.C. SB Acil Servis klinik protokolleri',
-      'ATLS Türkiye uygulamaları; ERC/AHA resusitasyon (TR eğitim)',
-      'SB triaj ve kritik hasta yönlendirme',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['acil-tip'],
+    turkishGuidelines: TURKISH_REFS['acil-tip'],
     clinicalFocus: [
       'ABCDE, triaj, şok ayırıcı',
       'Göğüs ağrısı, nefes darlığı, inme, sepsis',
@@ -542,17 +376,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Fiziksel Tıp ve Rehabilitasyon Uzmanı',
     gender: 'female',
     personality: 'Fonksiyonel, sabırlı. Ağrı + engellilik dengesini kurar.',
-    textbooks: [
-      "Braddom's Physical Medicine and Rehabilitation",
-      "DeLisa's Physical Medicine & Rehabilitation",
-      'PM&R board review sources',
-    ],
-    turkishGuidelines: [
-      'Türkiye Fiziksel Tıp ve Rehabilitasyon Derneği kılavuzları',
-      'SB rehabilitasyon / engellilik klinik protokolleri',
-      'Türk Osteoporoz Derneği ilgili öneriler (TEMD ile örtüşen)',
-      'SGK fizik tedavi seans / rapor kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['fizik-tedavi'],
+    turkishGuidelines: TURKISH_REFS['fizik-tedavi'],
     clinicalFocus: [
       'Bel-boyun ağrısı, radikülopati, kas-iskelet',
       'İnme / spinal rehabilitasyon planı',
@@ -571,17 +396,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Enfeksiyon Hastalıkları ve Klinik Mikrobiyoloji Uzmanı',
     gender: 'male',
     personality: 'Kanıta dayalı, antibiyotik koruyucu. Direnç farkındalığı yüksek.',
-    textbooks: [
-      'Mandell, Douglas, and Bennett Principles of Infectious Diseases',
-      'Sanford Guide to Antimicrobial Therapy',
-      'IDSA guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'KLİMİK / Türk Klinik Mikrobiyoloji ve İnfeksiyon Hastalıkları Derneği kılavuzları',
-      'T.C. SB Akılcı Antibiyotik Kullanımı ve enfeksiyon kontrolü',
-      'SB HIV, tüberküloz, hepatit klinik protokolleri',
-      'SGK antibiyotik / antiviral kısıtları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['enfeksiyon-hastaliklari'],
+    turkishGuidelines: TURKISH_REFS['enfeksiyon-hastaliklari'],
     clinicalFocus: [
       'Sepsis, pnömoni, İYE, menenjit — kültür önce',
       'Antibiyotik de-eskalasyon',
@@ -600,17 +416,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Endokrinoloji ve Metabolizma Uzmanı',
     gender: 'female',
     personality: 'Laboratuvar + klinik bütünleştirici. Hedef değerlere bağlı kalır.',
-    textbooks: [
-      'Williams Textbook of Endocrinology',
-      "Greenspan's Basic & Clinical Endocrinology",
-      'Endocrine Society guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'TEMD Diyabetes Mellitus Kılavuzu (2024/2026)',
-      'TEMD Tiroid Hastalıkları Kılavuzu (2025)',
-      'TEMD Osteoporoz (2025); Adrenal-Gonadal (2025); HT (2022)',
-      'TEMD Obezite / Dislipidemi kılavuzları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['endokrinoloji'],
+    turkishGuidelines: TURKISH_REFS['endokrinoloji'],
     clinicalFocus: [
       'DM hedefleri, SGLT2i/GLP-1, hipoglisemi',
       'Tiroid nodül / hipertiroidi / hipotiroidi (TEMD 2025)',
@@ -629,17 +436,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Gastroenteroloji Uzmanı',
     gender: 'male',
     personality: 'Prosedür ve klinik dengesi iyi. GI kanamada hızlanır.',
-    textbooks: [
-      'Sleisenger and Fordtran Gastrointestinal Disease',
-      "Yamada's Textbook of Gastroenterology",
-      'ASGE/ACG guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Gastroenteroloji Derneği (TGD) kılavuzları',
-      'SB hepatit B/C, siroz, GIS kanama protokolleri',
-      'TGD IBD / H. pylori / karaciğer hastalıkları konsensusları',
-      'SGK biyolojik / endoskopi raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['gastroenteroloji'],
+    turkishGuidelines: TURKISH_REFS['gastroenteroloji'],
     clinicalFocus: [
       'Üst/alt GI kanama, karın ağrısı, dispepsi',
       'IBD, IBS, çölyak ayırıcı',
@@ -658,17 +456,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Nefroloji Uzmanı',
     gender: 'male',
     personality: 'Laboratuvar odaklı, dikkatli. Böbrek fonksiyonunu ve elektroliti korur.',
-    textbooks: [
-      "Brenner & Rector's The Kidney",
-      'Comprehensive Clinical Nephrology',
-      'KDIGO guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Nefroloji Derneği kılavuzları',
-      'SB kronik böbrek hastalığı / diyaliz protokolleri',
-      'KDIGO’nun TR nefrolog pratiğindeki uyarlamaları',
-      'SGK diyaliz / eritropoietin / fosfat bağlayıcı raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['nefroloji'],
+    turkishGuidelines: TURKISH_REFS['nefroloji'],
     clinicalFocus: [
       'AKB / KBH evreleme (eGFR, albüminüri)',
       'Elektrolit / asit-baz acilleri',
@@ -687,17 +476,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Romatoloji Uzmanı',
     gender: 'female',
     personality: 'Ayırıcı tanı ustası. Otoimmün tabloda acele etmez, organ tutulumunu kaçırmaz.',
-    textbooks: [
-      "Kelley and Firestein's Textbook of Rheumatology",
-      'Oxford Textbook of Rheumatology',
-      'ACR/EULAR criteria (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türkiye Romatoloji Derneği (TRD) kılavuzları',
-      'SB romatoid artrit / SLE klinik protokolleri',
-      'EULAR/ACR kriterlerinin TR uygulama yorumları',
-      'SGK biyolojik DMARD raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['romatoloji'],
+    turkishGuidelines: TURKISH_REFS['romatoloji'],
     clinicalFocus: [
       'RA, SpA, SLE, vaskülit ayırıcı',
       'Kristal artropati vs septik artrit acil',
@@ -716,17 +496,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Tıbbi Onkoloji Uzmanı',
     gender: 'female',
     personality: 'Dürüst, umut dengeli. Kanıta dayalı evreleme ve toksisite yönetimi.',
-    textbooks: [
-      'DeVita, Hellman, and Rosenberg Cancer',
-      'NCCN Guidelines',
-      'ESMO Clinical Practice Guidelines',
-    ],
-    turkishGuidelines: [
-      'Türk Tıbbi Onkoloji Derneği (TTOD) kılavuzları',
-      'SB kanser tarama ve tedavi protokolleri',
-      'NCCN/ESMO’nun TR onkoloji pratiğindeki uyarlamaları',
-      'SGK onkoloji ilaç / yeşil reçete / rapor',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['onkoloji'],
+    turkishGuidelines: TURKISH_REFS['onkoloji'],
     clinicalFocus: [
       'Evreleme, performans skoru (ECOG)',
       'Acil: febril nötropeni, SVCS, spinal kompresyon',
@@ -745,17 +516,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Göğüs Hastalıkları Uzmanı',
     gender: 'male',
     personality: 'Solunum fizyolojisi odaklı. Hipoksi ve astım atağını geciktirmez.',
-    textbooks: [
-      "Murray & Nadel's Textbook of Respiratory Medicine",
-      'Fishman’s Pulmonary Diseases',
-      'GINA / GOLD reports',
-    ],
-    turkishGuidelines: [
-      'Türk Toraks Derneği (TTD) kılavuzları',
-      'GINA/GOLD’un TTD uyarlamaları; TTD astım/KOAH',
-      'SB tüberküloz ve pnömoni klinik protokolleri',
-      'SGK inhaler / oksijen / NIV raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['gogus-hastaliklari'],
+    turkishGuidelines: TURKISH_REFS['gogus-hastaliklari'],
     clinicalFocus: [
       'Astım / KOAH alevlenme (GINA/GOLD + TTD)',
       'Pnömoni yatış kriterleri',
@@ -774,17 +536,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Göğüs Cerrahisi Uzmanı',
     gender: 'male',
     personality: 'Operatif netlik. Toraks travması ve pnömotoraksta hızlanır.',
-    textbooks: [
-      "Shields' General Thoracic Surgery",
-      'Pearson’s Thoracic & Esophageal Surgery',
-      'ESTS guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Göğüs Cerrahisi Derneği kılavuzları',
-      'SB toraks travması / tüp torakostomi protokolleri',
-      'TTD ile ortak akciğer kanseri cerrahi yaklaşımlar',
-      'SGK torasik cerrahi paket raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['gogus-cerrahisi'],
+    turkishGuidelines: TURKISH_REFS['gogus-cerrahisi'],
     clinicalFocus: [
       'Pnömotoraks, hemotoraks, tüp torakostomi',
       'Akciğer nodül / kanser cerrahi endikasyon',
@@ -803,17 +556,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Plastik, Rekonstrüktif ve Estetik Cerrahi Uzmanı',
     gender: 'female',
     personality: 'Estetik + fonksiyon dengesi. Yara ve flep komplikasyonunu erken görür.',
-    textbooks: [
-      "Grabb and Smith's Plastic Surgery",
-      'Plastic Surgery (Neligan)',
-      'ASPS guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Plastik Rekonstrüktif ve Estetik Cerrahi Derneği (TPRECD) kılavuzları',
-      'SB yanık ve yara bakımı protokolleri',
-      'TPRECD etik / estetik cerrahi güvenlik önerileri',
-      'SGK rekonstrüktif işlem raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['plastik-cerrahi'],
+    turkishGuidelines: TURKISH_REFS['plastik-cerrahi'],
     clinicalFocus: [
       'Yara iyileşmesi, bası yarası, yanık',
       'Travmatik yumuşak doku / flep planı',
@@ -832,17 +576,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Beyin ve Sinir Cerrahisi Uzmanı',
     gender: 'male',
     personality: 'Sakin ama acilde keskin. Nörolojik bozulmayı geciktirmez.',
-    textbooks: [
-      'Youmans and Winn Neurological Surgery',
-      'Handbook of Neurosurgery (Greenberg)',
-      'AANS/CNS guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Nöroşirürji Derneği kılavuzları',
-      'SB kafa travması / spinal travma protokolleri',
-      'TND (nöroloji) ile ortak inme/trombektomi cerrahi köprüsü',
-      'SGK nöroşirürji işlem raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['beyin-cerrahisi'],
+    turkishGuidelines: TURKISH_REFS['beyin-cerrahisi'],
     clinicalFocus: [
       'Kafa travması, GCS, herniasyon bulguları',
       'Akut subdural/epidural, SAH',
@@ -861,17 +596,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Kalp ve Damar Cerrahisi Uzmanı',
     gender: 'male',
     personality: 'Yüksek riskli kararlarda net. Kanama ve iskemi zamanını bilir.',
-    textbooks: [
-      'Kirklin/Barratt-Boyes Cardiac Surgery',
-      'Cardiac Surgery in the Adult (Cohn)',
-      'EACTS/AATS guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Kalp ve Damar Cerrahisi Derneği kılavuzları',
-      'TKD ile ortak kapak / CABG / aort yaklaşımları',
-      'SB kardiyak cerrahi klinik protokolleri',
-      'SGK kalp-damar cerrahi paket raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['kalp-damar-cerrahisi'],
+    turkishGuidelines: TURKISH_REFS['kalp-damar-cerrahisi'],
     clinicalFocus: [
       'CABG / kapak cerrahisi endikasyon',
       'Akut aort sendromu',
@@ -890,17 +616,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Çocuk Cerrahisi Uzmanı',
     gender: 'female',
     personality: 'Nazik ama kararlı. Pediatrik cerrahi acillerde hızlanır.',
-    textbooks: [
-      "Ashcraft's Pediatric Surgery",
-      'Pediatric Surgery (Coran)',
-      'APS A guidelines (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türk Çocuk Cerrahisi Derneği kılavuzları',
-      'SB yenidoğan / çocuk cerrahi acil protokolleri',
-      'ÇAYD ile ortak çocuk acil cerrahi yaklaşımlar',
-      'SGK çocuk cerrahi işlem raporları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['cocuk-cerrahisi'],
+    turkishGuidelines: TURKISH_REFS['cocuk-cerrahisi'],
     clinicalFocus: [
       'Akut apandisit, invajinasyon, herni inkanserasyonu',
       'Yenidoğan cerrahi acilleri (NEC, midgut volvulus)',
@@ -919,17 +636,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Aile Hekimliği Uzmanı',
     gender: 'male',
     personality: 'Bütüncül, erişilebilir. Koruyucu hekimlik ve sevk zamanını bilir.',
-    textbooks: [
-      'Textbook of Family Medicine (Rakel)',
-      'Current Medical Diagnosis & Treatment',
-      'ICPC-2',
-    ],
-    turkishGuidelines: [
-      'Türkiye Aile Hekimleri Uzmanlık Derneği (TAHUD) kaynakları',
-      'T.C. SB Aile Hekimliği uygulamaları / kronik hastalık protokolleri',
-      'SB Ulusal Aşılama Takvimi + erişkin bağışıklama',
-      'SGK aile hekimliği performans / reçete kuralları',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['aile-hekimligi'],
+    turkishGuidelines: TURKISH_REFS['aile-hekimligi'],
     clinicalFocus: [
       'Birinci basamak ayırıcı tanı ve sevk kriterleri',
       'Kronik hastalık izlem (HT, DM, KOAH)',
@@ -948,17 +656,8 @@ export const SPECIALISTS: SpecialistDef[] = [
     title: 'Spor Hekimliği Uzmanı',
     gender: 'female',
     personality: 'Performans + güvenlik. Dönüş-to-play kararını titizlikle verir.',
-    textbooks: [
-      "Brukner & Khan's Clinical Sports Medicine",
-      'ACSMs Sports Medicine',
-      'IOC consensus statements (ikincil)',
-    ],
-    turkishGuidelines: [
-      'Türkiye Spor Hekimliği Derneği kılavuzları',
-      'SB sporcu sağlık kurulu / doping mevzuatı farkındalığı',
-      'TOTBİD spor yaralanmaları ortak yaklaşımlar',
-      'FIFA/IOC konsensuslarının TR spor hekimliği uygulaması',
-    ],
+    textbooks: SECONDARY_TEXTBOOKS['spor-hekimligi'],
+    turkishGuidelines: TURKISH_REFS['spor-hekimligi'],
     clinicalFocus: [
       'Akut spor yaralanması (bağ, kas, kemik)',
       'Konküzyon / return-to-play',
