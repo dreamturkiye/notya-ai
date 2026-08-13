@@ -117,7 +117,7 @@ export default function AsistanPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       stream.getTracks().forEach(t => t.stop())
-    } catch (micErr) {
+    } catch {
       setErrorMsg(micPermissionHelp())
       setStatus("error")
       return
@@ -146,19 +146,50 @@ export default function AsistanPage() {
       const firstMessage = buildVoiceFirstMessage(p, doctor)
       const voicePrompt = buildVoiceSystemPrompt(p, doctor)
 
-      // ElevenLabs SDK: identity + distinct TR voice per persona (never share Jessica)
+      // Try personalized first_message (enabled on agents); auto-fallback without it.
+      await startConversationWithoutFirstMessage(
+        body.signed_url as string,
+        voicePrompt,
+        firstMessage,
+        body.voice_id || p.voiceId,
+        { tryFirstMessage: true }
+      )
+    } catch (e: unknown) {
+      const raw = e instanceof Error ? e.message : String(e)
+      setErrorMsg(
+        raw.includes("denied") || raw.includes("NotAllowed") || raw.includes("Permission")
+          ? micPermissionHelp()
+          : connectionErrorHelp(raw)
+      )
+      setStatus("error")
+      conversationRef.current = null
+    }
+  }
+
+  async function startConversationWithoutFirstMessage(
+    signedUrl: string,
+    voicePrompt: string,
+    firstMessage: string,
+    voiceId: string,
+    opts?: { tryFirstMessage?: boolean }
+  ) {
+    const tryFirst = Boolean(opts?.tryFirstMessage)
+    let usedFirstMessage = tryFirst
+    let retriedWithoutFirst = false
+
+    const begin = async (includeFirstMessage: boolean) => {
+      usedFirstMessage = includeFirstMessage
+      setStatus("connecting")
       const conversation = await Conversation.startSession({
-        signedUrl: body.signed_url,
+        signedUrl,
         connectionType: "websocket",
         overrides: {
           agent: {
             prompt: { prompt: voicePrompt },
-            firstMessage,
             language: "tr",
+            ...(includeFirstMessage ? { firstMessage } : {}),
           },
-          tts: {
-            voiceId: body.voice_id || p.voiceId,
-          },
+          tts: { voiceId },
         },
         onConnect: () => {
           setStatus("listening")
@@ -168,13 +199,24 @@ export default function AsistanPage() {
         onDisconnect: (details) => {
           conversationRef.current = null
           if (details.reason === "error") {
-            setErrorMsg(connectionErrorHelp(details.message))
+            const msg = details.message || ""
+            if (usedFirstMessage && !retriedWithoutFirst && /first_message|Override for field/i.test(msg)) {
+              retriedWithoutFirst = true
+              void begin(false)
+              return
+            }
+            setErrorMsg(connectionErrorHelp(msg))
             setStatus("error")
           } else {
             setStatus("idle")
           }
         },
         onError: (message) => {
+          if (usedFirstMessage && !retriedWithoutFirst && /first_message|Override for field/i.test(message || "")) {
+            retriedWithoutFirst = true
+            void begin(false)
+            return
+          }
           setErrorMsg(connectionErrorHelp(message))
           setStatus("error")
         },
@@ -189,15 +231,28 @@ export default function AsistanPage() {
           if (sdkStatus === "connected") setStatus("listening")
         },
       })
-
       conversationRef.current = conversation
+    }
+
+    try {
+      // Default path omits first_message so talk never depends on agent override flags.
+      // When tryFirstMessage is set, attempt personalized greeting then fall back.
+      await begin(tryFirst ? true : false)
     } catch (e: unknown) {
       const raw = e instanceof Error ? e.message : String(e)
-      setErrorMsg(
-        raw.includes("denied") || raw.includes("NotAllowed") || raw.includes("Permission")
-          ? micPermissionHelp()
-          : connectionErrorHelp(raw)
-      )
+      if (tryFirst && /first_message|Override for field/i.test(raw) && !retriedWithoutFirst) {
+        retriedWithoutFirst = true
+        try {
+          await begin(false)
+          return
+        } catch (e2: unknown) {
+          setErrorMsg(connectionErrorHelp(e2 instanceof Error ? e2.message : String(e2)))
+          setStatus("error")
+          conversationRef.current = null
+          return
+        }
+      }
+      setErrorMsg(connectionErrorHelp(raw))
       setStatus("error")
       conversationRef.current = null
     }
@@ -225,7 +280,7 @@ export default function AsistanPage() {
   }[status]
 
   return (
-    <div style={{ height: "calc(100dvh - var(--sat) - var(--sab))", minHeight: 0, background: "#080F1A", display: "flex", flexDirection: isMobile ? "column" : "row",
+    <div style={{ height: "100dvh", minHeight: 0, background: "#080F1A", display: "flex", flexDirection: isMobile ? "column" : "row",
                   fontFamily: "system-ui,sans-serif", overflow: "hidden", userSelect: "none" }}>
 
       {!isMobile && persona.photo && (
@@ -243,12 +298,12 @@ export default function AsistanPage() {
       )}
       {/* chat col */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,.08)", background: "#0A1525", flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px", paddingTop: "calc(16px + env(safe-area-inset-top, 0px))", borderBottom: "1px solid rgba(255,255,255,.08)", background: "#0A1525", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
           <div onClick={() => { void stopConversation(); router.push("/dashboard/doktor") }}
-            style={{ color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: "24px", padding: "4px 6px", flexShrink: 0, lineHeight: 1 }}>‹</div>
+            style={{ color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: "24px", padding: "6px 8px", flexShrink: 0, lineHeight: 1 }}>‹</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "15px", fontWeight: 600, color: "#fff", overflow: "hidden",
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "#fff", lineHeight: 1.35, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatColleagueTabLabel(persona.name)}</div>
             <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{persona.title}</div>
@@ -336,9 +391,10 @@ export default function AsistanPage() {
                     alignItems: "center", gap: "12px", borderTop: "1px solid rgba(255,255,255,.06)",
                     background: "#0A1525" }}>
         {errorMsg && (
-          <div style={{ fontSize: "12px", color: "#F87171", background: "rgba(239,68,68,.12)",
-                        padding: "10px 18px", borderRadius: "10px", textAlign: "center",
-                        maxWidth: "320px", lineHeight: "1.5" }}>{errorMsg}</div>
+          <div style={{ fontSize: "13px", color: "#FEE2E2", background: "#7F1D1D",
+                        border: "1px solid #FCA5A5", padding: "12px 16px", borderRadius: "10px",
+                        textAlign: "center", maxWidth: "340px", lineHeight: "1.5",
+                        fontWeight: 500 }}>{errorMsg}</div>
         )}
         <div style={{ fontSize: "13px", color: "rgba(255,255,255,.45)",
                       display: "flex", alignItems: "center", gap: "8px" }}>

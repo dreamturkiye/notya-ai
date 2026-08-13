@@ -25,5 +25,8 @@ export function connectionErrorHelp(detail?: string): string {
   const base = 'Bağlantı kurulamadı. Tekrar deneyin.'
   if (!detail) return base
   if (/denied|not-allowed|permission/i.test(detail)) return micPermissionHelp()
-  return `${base} (${detail.slice(0, 60)})`
+  if (/first_message|override.*not allowed/i.test(detail)) {
+    return 'Sesli asistan yapılandırması güncelleniyor. Lütfen birkaç saniye sonra tekrar deneyin.'
+  }
+  return `${base} (${detail.slice(0, 80)})`
 }

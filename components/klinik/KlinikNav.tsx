@@ -27,7 +27,8 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
     <nav style={{
       position: 'sticky', top: 0, zIndex: 100,
       background: '#FFFAFA', borderBottom: '1px solid rgba(10,22,40,0.08)',
-      padding: '0 48px', height: '60px',
+      paddingTop: 'env(safe-area-inset-top, 0px)', paddingLeft: '48px', paddingRight: '48px',
+      minHeight: '60px',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       fontFamily: 'system-ui, sans-serif'
     }}>

@@ -44,7 +44,7 @@ export default function MaliNav() {
 
   return (
     <>
-      <nav style={{background:'#0A1628',padding:'0 12px',height:56,display:'flex',
+      <nav style={{background:'#0A1628',paddingTop:'calc(8px + env(safe-area-inset-top, 0px))',paddingBottom:8,paddingLeft:12,paddingRight:12,minHeight:56,display:'flex',
                    alignItems:'center',justifyContent:'space-between',
                    position:'sticky',top:0,zIndex:100,boxShadow:'0 2px 8px rgba(0,0,0,0.4)',overflow:'hidden'}}>
 

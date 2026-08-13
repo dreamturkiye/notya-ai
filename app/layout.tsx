@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    // Opaque black status bar — iOS lays out the webview below the system UI.
-    statusBarStyle: "black",
+    // Translucent so content can use env(safe-area-inset-*) under notch/Dynamic Island.
+    statusBarStyle: "black-translucent",
     title: "Notya AI",
     startupImage: ["/splash.png"],
   },
@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
         <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Notya AI" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>

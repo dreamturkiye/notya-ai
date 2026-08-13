@@ -24,13 +24,12 @@ html, body {
 }
 
 /*
-  Global iOS safe-area — applies to every page:
-  - body padding clears the notch/status bar for normal flow content
-  - sticky/fixed top chrome sticks just below the status bar while scrolling
+  Global iOS safe-area:
+  - sticky/fixed top chrome owns safe-area via its own padding-top
+  - stick at top: 0 so content never slides under the nav into the notch
 */
 body {
   background: #0A1628;
-  padding-top: var(--sat);
   padding-right: var(--sar);
   padding-bottom: var(--sab);
   padding-left: var(--sal);
@@ -43,6 +42,6 @@ body {
   body nav[style*="fixed"],
   body header[style*="sticky"],
   body header[style*="fixed"] {
-    top: var(--sat) !important;
+    top: 0 !important;
   }
 }
