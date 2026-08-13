@@ -2,45 +2,30 @@
 export const dynamic = "force-dynamic"
 
 import { useState, useEffect, useRef } from "react"
-import { createClient } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
-import { connectionErrorHelp, micPermissionHelp, isAndroid, isIos } from "@/lib/asistan/platform"
+import { connectionErrorHelp, micPermissionHelp, isAndroid } from "@/lib/asistan/platform"
+import {
+  PERSONAS,
+  buildVoiceFirstMessage,
+  buildVoiceSystemPrompt,
+  type Persona,
+  type PersonaId,
+} from "@/lib/asistan/personaEngine"
 import { formatColleagueTabLabel } from "@/lib/colleagueAddress"
-import { buildPersonaFirstMessage } from "@/lib/greetings"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
-type Persona = {
-  name: string
-  fullName: string
-  title: string
-  emoji: string
-  color: string
-  specialty: string
-  template: "pediatri" | "kardiyoloji" | "genel"
-}
 
-const PERSONAS: Record<string, Persona> = {
-  aysekaya:    { fullName: "Prof. Dr. Ayşe Kaya",    name: "Prof. Ayşe Kaya",    title: "Pediatri Uzmanı",     emoji: "👩‍⚕️", color: "#0F9B8E", specialty: "pediatri",    template: "pediatri"    },
-  mehmetdemir: { fullName: "Prof. Dr. Mehmet Demir",  name: "Prof. Mehmet Demir",  title: "Kardiyoloji Uzmanı",  emoji: "👨‍⚕️", color: "#006699", specialty: "kardiyoloji", template: "kardiyoloji" },
-  elifsahin:   { fullName: "Prof. Dr. Elif Şahin",    name: "Prof. Elif Şahin",    title: "Nöroloji & Dahiliye", emoji: "👩‍⚕️", color: "#7C3AED", specialty: "genel",       template: "genel"       },
-}
-
-const DOCTOR_PHOTOS: Record<string,string> = {
-  aysekaya: '/doctors/dr_ayse.jpg',
-  mehmetdemir: '/doctors/dr_mehmet.jpg',
-  elifsahin: '/doctors/dr_elif.jpg',
-}
-
+const PERSONA_ORDER: PersonaId[] = ["aysekaya", "mehmetdemir", "elifsahin"]
 
 type ActiveConversation = Awaited<ReturnType<typeof Conversation.startSession>>
 
 export default function AsistanPage() {
   const router = useRouter()
   const [persona, setPersona] = useState<Persona>(PERSONAS.aysekaya)
-  const [personaKey, setPersonaKey] = useState("aysekaya")
+  const [personaKey, setPersonaKey] = useState<PersonaId>("aysekaya")
   const [isMobile, setIsMobile] = useState(true)
   const [status, setStatus] = useState<ConvStatus>("idle")
   const [messages, setMessages] = useState<Message[]>([])
@@ -134,9 +119,10 @@ export default function AsistanPage() {
     }
 
     try {
-      const resp = await fetch(`/api/asistan/signed-url?specialty=${persona.specialty}`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      })
+      const resp = await fetch(
+        `/api/asistan/signed-url?specialty=${persona.primarySpecialty}&persona=${persona.id}`,
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      )
 
       if (!resp.ok) {
         const errBody = await resp.json().catch(() => ({}))
@@ -146,20 +132,26 @@ export default function AsistanPage() {
       const body = await resp.json()
       if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
 
-      // ElevenLabs SDK: AudioWorklet + 3s Android AudioManager delay + iOS unlock listener
+      const doctor = doctorProfile || toAddressableUser(null)
+      const p = PERSONAS[personaKey]
+      const firstMessage = buildVoiceFirstMessage(p, doctor)
+      const voicePrompt = buildVoiceSystemPrompt(p, doctor)
+
+      // ElevenLabs SDK: identity locked via overrides (prevents shared-agent "I'm Ayşe" bleed)
       const conversation = await Conversation.startSession({
         signedUrl: body.signed_url,
         connectionType: "websocket",
+        overrides: {
+          agent: {
+            prompt: { prompt: voicePrompt },
+            firstMessage,
+            language: "tr",
+          },
+        },
         onConnect: () => {
           setStatus("listening")
           setErrorMsg("")
-          const p = PERSONAS[personaKey]
-          const doctor = doctorProfile || toAddressableUser(null)
-          addMsg("ai", buildPersonaFirstMessage(
-            formatColleagueTabLabel(p.fullName),
-            doctor,
-            p.template
-          ))
+          addMsg("ai", firstMessage)
         },
         onDisconnect: (details) => {
           conversationRef.current = null
@@ -203,7 +195,7 @@ export default function AsistanPage() {
     await endConversation()
   }
 
-  function switchPersona(key: string) {
+  function switchPersona(key: PersonaId) {
     void stopConversation()
     setPersonaKey(key)
     setPersona(PERSONAS[key])
@@ -216,7 +208,7 @@ export default function AsistanPage() {
     idle:       "Konuşmayı başlatmak için dokunun",
     connecting: "Bağlanıyor...",
     listening:  "Dinliyor — konuşabilirsiniz",
-    speaking:   `${formatColleagueTabLabel(persona.fullName)} konuşuyor...`,
+    speaking:   `${formatColleagueTabLabel(persona.name)} konuşuyor...`,
     error:      "Tekrar deneyin",
   }[status]
 
@@ -224,11 +216,11 @@ export default function AsistanPage() {
     <div style={{ height: "calc(100dvh - var(--sat) - var(--sab))", minHeight: 0, background: "#080F1A", display: "flex", flexDirection: isMobile ? "column" : "row",
                   fontFamily: "system-ui,sans-serif", overflow: "hidden", userSelect: "none" }}>
 
-      {!isMobile && DOCTOR_PHOTOS[personaKey] && (
+      {!isMobile && persona.photo && (
         <div style={{ width: "320px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRight: "1px solid rgba(255,255,255,.08)", background: "#0A1525", padding: "40px 28px", gap: "20px" }}>
-          <img src={DOCTOR_PHOTOS[personaKey]} alt={persona.fullName} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", border: "3px solid " + persona.color + "CC", boxShadow: "0 0 60px " + persona.color + "44" }} />
+          <img src={persona.photo} alt={persona.name} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", border: "3px solid " + persona.color + "CC", boxShadow: "0 0 60px " + persona.color + "44" }} />
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>{formatColleagueTabLabel(persona.fullName)}</div>
+            <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>{formatColleagueTabLabel(persona.name)}</div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,.5)", marginBottom: "16px" }}>{persona.title}</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: status === "speaking" ? "#10B981" : status === "listening" ? "#3B82F6" : "#6B7280" }} />
@@ -239,26 +231,32 @@ export default function AsistanPage() {
       )}
       {/* chat col */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
-      <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "12px",
-                    borderBottom: "1px solid rgba(255,255,255,.08)", background: "#0A1525" }}>
-        <div onClick={() => { void stopConversation(); router.push("/dashboard") }}
-          style={{ color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: "24px", padding: "4px" }}>‹</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: "15px", fontWeight: "600", color: "#fff", overflow: "hidden",
-                        textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatColleagueTabLabel(persona.fullName)}</div>
-          <div style={{ fontSize: "11px", color: "rgba(255,255,255,.4)" }}>{persona.title}</div>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,.08)", background: "#0A1525", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+          <div onClick={() => { void stopConversation(); router.push("/dashboard/doktor") }}
+            style={{ color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: "24px", padding: "4px 6px", flexShrink: 0, lineHeight: 1 }}>‹</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "#fff", overflow: "hidden",
+                          textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatColleagueTabLabel(persona.name)}</div>
+            <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", overflow: "hidden",
+                          textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{persona.title}</div>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-          {Object.entries(PERSONAS).map(([key, p]) => (
-            <div key={key} onClick={() => switchPersona(key)}
-              style={{ padding: "5px 10px", borderRadius: "16px", fontSize: "11px", cursor: "pointer",
-                       fontWeight: personaKey === key ? "700" : "400",
-                       background: personaKey === key ? p.color : "rgba(255,255,255,.08)",
-                       color: personaKey === key ? "#fff" : "rgba(255,255,255,.4)",
-                       border: `1px solid ${personaKey === key ? p.color : "rgba(255,255,255,.1)"}` }}>
-              {formatColleagueTabLabel(p.fullName)}
-            </div>
-          ))}
+        <div style={{ display: "flex", gap: "6px", marginTop: "10px", overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "2px" }}>
+          {PERSONA_ORDER.map((key) => {
+            const p = PERSONAS[key]
+            const active = personaKey === key
+            return (
+              <button key={key} type="button" onClick={() => switchPersona(key)}
+                style={{ padding: "7px 12px", borderRadius: "999px", fontSize: "12px", cursor: "pointer",
+                         fontWeight: active ? 700 : 500, flexShrink: 0, whiteSpace: "nowrap",
+                         background: active ? p.color : "rgba(255,255,255,.08)",
+                         color: active ? "#fff" : "rgba(255,255,255,.55)",
+                         border: `1px solid ${active ? p.color : "rgba(255,255,255,.12)"}` }}>
+                {p.shortName}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -272,11 +270,11 @@ export default function AsistanPage() {
                           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                           fontSize: '30px', fontWeight: 700, color: persona.color,
                           boxShadow: '0 0 48px ' + persona.color + '55' }}>
-              {DOCTOR_PHOTOS[personaKey]
-                ? <img src={DOCTOR_PHOTOS[personaKey]} alt={persona.fullName} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}}/>
-                : persona.fullName.split(' ').filter((w:string)=>/^[A-Z]/.test(w)).slice(-2).map((w:string)=>w[0]).join('')}
+              {persona.photo
+                ? <img src={persona.photo} alt={persona.name} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}}/>
+                : persona.shortName.slice(0, 2).toUpperCase()}
             </div>
-            <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{formatColleagueTabLabel(persona.fullName)}</div>
+            <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{formatColleagueTabLabel(persona.name)}</div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,.4)" }}>{persona.title}</div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,.25)", marginTop: "8px",
                           textAlign: "center", maxWidth: "260px", lineHeight: "1.6" }}>
@@ -291,7 +289,7 @@ export default function AsistanPage() {
             {msg.role === "ai" && (
               <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: persona.color,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: "14px", flexShrink: 0 }}>{persona.fullName.split(" ").filter(function(w){return w[0]===w[0].toUpperCase()}).slice(-2).map(function(w){return w[0]}).join("")}</div>
+                            fontSize: "14px", flexShrink: 0 }}>{persona.shortName.slice(0, 1)}</div>
             )}
             <div style={{ maxWidth: "78%", padding: "10px 14px", fontSize: "14px", lineHeight: "1.55",
                           borderRadius: msg.role === "user" ? "16px 16px 3px 16px" : "16px 16px 16px 3px",
@@ -304,7 +302,7 @@ export default function AsistanPage() {
           <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
             <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: persona.color,
                           display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>
-              {persona.fullName.split(" ").filter(function(w){return w.length>0 && w[0]===w[0].toUpperCase()}).slice(-2).map(function(w){return w[0]}).join("")}
+              {persona.shortName.slice(0, 1)}
             </div>
             <div style={{ padding: "12px 16px", background: "#1A2B40", borderRadius: "16px 16px 16px 3px",
                           display: "flex", gap: "5px", alignItems: "center" }}>

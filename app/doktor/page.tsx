@@ -315,7 +315,7 @@ export default function HomePage() {
              color:"#0F9B8E",  char:"Sıcak · Sabırlı",    books:"Nelson 22e · Harriet Lane 23e"},
             {name:"Prof. Mehmet Demir", title:"Kardiyoloji Uzmanı",   photo:PHOTOS.mehmet,
              color:"#2563EB",  char:"Hızlı · Net",        books:"Braunwald 12e · ESC 2024"},
-            {name:"Prof. Elif Şahin",   title:"Nöroloji & Dahiliye",  photo:PHOTOS.elif,
+            {name:"Prof. Elif Şahin",   title:"Nöroloji & Dahiliye Uzmanı",  photo:PHOTOS.elif,
              color:"#7C3AED",  char:"Analitik · Dikkatli", books:"Harrison's 22e · Adams & Victor"},
           ].map(spec => (
             <div key={spec.name}

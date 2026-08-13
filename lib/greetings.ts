@@ -56,18 +56,22 @@ export function buildAssistantGreeting(
   return `${timeGreeting(timeOfDay)} ${casual.toLowerCase()}`
 }
 
-const PERSONA_GREETINGS: Record<'pediatri' | 'kardiyoloji' | 'genel', string> = {
+const PERSONA_GREETINGS: Record<'pediatri' | 'kardiyoloji' | 'noroloji' | 'dahiliye' | 'genel', string> = {
   pediatri: 'Bugün hangi hastamıza bakıyoruz?',
   kardiyoloji: 'Dinliyorum. Ne var?',
+  noroloji: 'Vakayı dinliyorum.',
+  dahiliye: 'Vakayı dinliyorum.',
   genel: 'Vakayı dinliyorum.',
 }
 
 export function buildPersonaFirstMessage(
   colleagueName: string,
   doctor: AddressableUser,
-  template: 'pediatri' | 'kardiyoloji' | 'genel'
+  template: 'pediatri' | 'kardiyoloji' | 'noroloji' | 'dahiliye' | 'genel',
+  title?: string
 ): string {
   const named = address(doctor, 'named')
-  const intro = `Merhaba ${named}. Ben ${colleagueName}.`
-  return `${intro} ${PERSONA_GREETINGS[template]}`
+  const titleBit = title ? `, ${title}` : ''
+  const intro = `Merhaba ${named}. Ben ${colleagueName}${titleBit}.`
+  return `${intro} ${PERSONA_GREETINGS[template] || PERSONA_GREETINGS.genel}`
 }
