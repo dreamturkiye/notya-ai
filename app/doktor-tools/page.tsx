@@ -21,6 +21,7 @@ const tools: Tool[] = [
   { circleColor: '#F59E0B', icon: 'IK', title: 'ICD-10 Kodlayıcı', desc: 'Türkçe tanı girişiyle anlık ICD-10 kodlama', route: '/doktor-tools/icd10' },
   { circleColor: '#EF4444', icon: 'II', title: 'İlaç Etkileşimi', desc: 'Reçetedeki ilaç etkileşimlerini kontrol et ve uyarıları görüntüle', route: '/doktor-tools/ilac-interaksiyon' },
   { circleColor: '#166534', icon: 'SR', title: 'SGK Rapor', desc: 'SGK uyumlu raporları hızlıca oluştur', route: '/doktor-tools/sgk-rapor' },
+  { circleColor: '#EA580C', icon: 'TX', title: 'Tetkik İstek', desc: 'Lab ve görüntüleme istek formu oluştur', route: '/doktor-tools/tetkik' },
   { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali' },
   { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Rehberi', desc: 'Hasta kaydı erişimi adım adım', route: '/doktor-tools/enabiz' },
@@ -42,7 +43,7 @@ export default function DoktorToolsPage() {
           <p style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '8px', marginBottom: 0 }}>Klinik iş akışınızı hızlandıracak araçlara erişin</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
           {tools.map((tool, index) => {
             const isHovered = hoveredIndex === index;
             return (

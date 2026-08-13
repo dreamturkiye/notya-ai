@@ -226,7 +226,7 @@ export default function SGKMedulaPage() {
 
         {/* SGK TOOLS GRID */}
         {isConnected && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '16px', marginBottom: '32px' }}>
             {/* Card 1 */}
             <div style={{ backgroundColor: cardBg, border: `1px solid ${teal}`, borderRadius: '16px', padding: '20px' }}>
               <div style={{ marginBottom: '12px' }}>

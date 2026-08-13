@@ -117,7 +117,7 @@ const Page: React.FC = () => {
             İlaç Listesi
           </div>
 
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
             <input
               value={yeniIlac}
               onChange={(e) => setYeniIlac(e.target.value)}
@@ -266,9 +266,9 @@ const Page: React.FC = () => {
                   marginBottom: 12,
                   border: `1px solid ${border}`,
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
                     <div style={{ width: 9, height: 9, borderRadius: '50%', background: getSeverityColor(item.siddet) }} />
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15, minWidth: 0, wordBreak: 'break-word' }}>
                       {item.ilac1} + {item.ilac2}
                     </div>
                     <div style={{
@@ -306,6 +306,7 @@ const Page: React.FC = () => {
           </div>
         )}
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

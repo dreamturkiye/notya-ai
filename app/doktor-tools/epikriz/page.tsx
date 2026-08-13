@@ -253,7 +253,7 @@ export default function EpikrizPage() {
                 >
                   <option value="">Hasta seçin</option>
                   {hastalar.map(h => (
-                    <option key={h.id} value={h.id}>
+                    <option key={h.id} value={h.id} style={{ color: '#000', background: '#fff' }}>
                       {h.masked_name}
                     </option>
                   ))}
