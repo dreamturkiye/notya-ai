@@ -55,17 +55,29 @@ export default function DoktorNav() {
     checkAuth();
   }, []);
 
+  const mobileItems = navItems.filter(i => !(i.hideOnMobile && isMobile))
+
   return (
-    <nav style={{ backgroundColor: '#0A1628', padding: '12px 16px', borderBottom: '1px solid #1E3A5F' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', backgroundColor: '#0F9B8E', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '18px' }}>N</div>
-          <span style={{ color: 'white', fontSize: '20px', fontWeight: 600 }}>Notya AI</span>
+    <nav style={{
+      backgroundColor: '#0A1628',
+      paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
+      paddingBottom: '12px',
+      paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
+      paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
+      borderBottom: '1px solid #1E3A5F',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+    }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', minHeight: '40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, minWidth: 0 }}>
+          <div style={{ width: '32px', height: '32px', backgroundColor: '#0F9B8E', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>N</div>
+          <span style={{ color: 'white', fontSize: isMobile ? '17px' : '20px', fontWeight: 600, whiteSpace: 'nowrap' }}>Notya AI</span>
         </div>
 
         {!isMobile && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {navItems.filter(i => !(i.hideOnMobile && isMobile)).map((item, idx) => (
+            {mobileItems.map((item, idx) => (
               <button
                 key={idx}
                 onClick={() => handleNav(item.route)}
@@ -87,8 +99,8 @@ export default function DoktorNav() {
         )}
 
         {isMobile && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {navItems.filter(i => !(i.hideOnMobile && isMobile)).slice(0, 3).map((item, idx) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 1, minWidth: 0, justifyContent: 'flex-end' }}>
+            {mobileItems.slice(0, 2).map((item, idx) => (
               <button
                 key={idx}
                 onClick={() => handleNav(item.route)}
@@ -100,19 +112,26 @@ export default function DoktorNav() {
                   border: 'none',
                   fontSize: '12px',
                   cursor: 'pointer',
+                  flexShrink: 0,
                 }}
               >
                 {item.label}
               </button>
             ))}
-            <button onClick={() => setIsOpen(!isOpen)} style={{ color: 'white', background: 'none', border: 'none', fontSize: '20px' }}>☰</button>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Menü"
+              style={{ color: 'white', background: 'rgba(255,255,255,0.1)', border: 'none', fontSize: '18px', width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0, cursor: 'pointer' }}
+            >
+              {isOpen ? '✕' : '☰'}
+            </button>
           </div>
         )}
       </div>
 
       {isMobile && isOpen && (
-        <div style={{ position: 'absolute', top: '60px', left: 0, right: 0, backgroundColor: '#0A1628', padding: '16px', zIndex: 50, borderBottom: '1px solid #1E3A5F' }}>
-          {navItems.filter(i => !(i.hideOnMobile && isMobile)).map((item, idx) => (
+        <div style={{ marginTop: '12px', backgroundColor: '#0A1628', padding: '4px 0 8px', zIndex: 50 }}>
+          {mobileItems.map((item, idx) => (
             <button
               key={idx}
               onClick={() => handleNav(item.route)}

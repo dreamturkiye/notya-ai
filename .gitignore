@@ -148,3 +148,4 @@ vite.config.ts.timestamp-*
 *.key
 /audit-logs/
 .vercel
+.env*

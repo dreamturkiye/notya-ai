@@ -44,9 +44,14 @@ export default function MaliNav() {
 
   return (
     <>
-      <nav style={{background:'#0A1628',padding:'0 12px',height:56,display:'flex',
+      <nav style={{background:'#0A1628',
+                   paddingTop:'env(safe-area-inset-top, 0px)',
+                   paddingLeft:'max(12px, env(safe-area-inset-left, 0px))',
+                   paddingRight:'max(12px, env(safe-area-inset-right, 0px))',
+                   minHeight:56,display:'flex',
                    alignItems:'center',justifyContent:'space-between',
-                   position:'sticky',top:0,zIndex:100,boxShadow:'0 2px 8px rgba(0,0,0,0.4)',overflow:'hidden'}}>
+                   position:'sticky',top:0,zIndex:100,boxShadow:'0 2px 8px rgba(0,0,0,0.4)',overflow:'hidden',
+                   height:'calc(56px + env(safe-area-inset-top, 0px))'}}>
 
         {/* Logo */}
         <span style={{color:'white',fontWeight:800,fontSize:17,cursor:'pointer',flexShrink:0,marginRight:8}}
