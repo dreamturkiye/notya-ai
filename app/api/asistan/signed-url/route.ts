@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getPersona, getPersonaForSpecialty, type SpecialtyId } from '@/lib/asistan/personaEngine';
+import { voiceIdForDoktorPersona } from '@/lib/asistan/elevenVoices';
 
-// Voice agents: Ayşe (female pediatri), Mehmet (male kardiyoloji).
-// Elif uses a dedicated agent when configured; otherwise female default voice
-// with prompt/firstMessage overrides on the client (never Ayşe's identity).
+// Dedicated agents — each paired with a distinct Turkish voice (see elevenVoices.ts).
+// Elif defaults to her TR agent (Gülriz), not Ayşe's Jessica agent.
+const ELIF_AGENT =
+  process.env.ELEVENLABS_AGENT_ELIF ||
+  process.env.ELEVENLABS_AGENT_NOROLOJI ||
+  'agent_1301kwjdee1afajrqkdxmghna6sx';
+
 const AGENT_MAP: Record<string, string> = {
   pediatri: process.env.ELEVENLABS_AGENT_PEDIATRI || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
   kardiyoloji: process.env.ELEVENLABS_AGENT_KARDIYOLOJI || 'agent_6501ktc87nmyeca88wskfvr8dfxh',
-  noroloji: process.env.ELEVENLABS_AGENT_NOROLOJI || process.env.ELEVENLABS_AGENT_ELIF || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
-  dahiliye: process.env.ELEVENLABS_AGENT_DAHILIYE || process.env.ELEVENLABS_AGENT_ELIF || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
-  psikiyatri: process.env.ELEVENLABS_AGENT_PSIKIYATRI || process.env.ELEVENLABS_AGENT_ELIF || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
-  genel: process.env.ELEVENLABS_AGENT_ELIF || process.env.ELEVENLABS_AGENT_NOROLOJI || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
+  noroloji: ELIF_AGENT,
+  dahiliye: process.env.ELEVENLABS_AGENT_DAHILIYE || ELIF_AGENT,
+  psikiyatri: process.env.ELEVENLABS_AGENT_PSIKIYATRI || ELIF_AGENT,
+  genel: ELIF_AGENT,
   acil: process.env.ELEVENLABS_AGENT_ACIL || process.env.ELEVENLABS_AGENT_KARDIYOLOJI || 'agent_6501ktc87nmyeca88wskfvr8dfxh',
   default: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
 };
@@ -91,6 +96,7 @@ export async function GET(req: NextRequest) {
 
   const specialty = persona.primarySpecialty;
   const AGENT_ID = AGENT_MAP[specialty] || AGENT_MAP.default || DEFAULT_AGENT;
+  const voiceId = persona.voiceId || voiceIdForDoktorPersona(persona.id);
 
   const wssUrl = await getElevenLabsSignedUrl(AGENT_ID);
 
@@ -104,6 +110,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     signed_url: wssUrl,
     agent_id: AGENT_ID,
+    voice_id: voiceId,
     specialty,
     persona_id: persona.id,
     persona_name: persona.name,

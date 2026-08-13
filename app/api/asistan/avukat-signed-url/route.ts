@@ -1,22 +1,24 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { voiceIdForAvukatPersona } from '@/lib/asistan/elevenVoices'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+/** TR-voice agents (defaults). Env vars override when set. */
 const PERSONA_AGENTS: Record<string, string> = {
-  kemalbey:    process.env.AVUKAT_AGENT_KEMALBEY    || process.env.AVUKAT_AGENT_ID || '',
-  selinhanim:  process.env.AVUKAT_AGENT_SELINHANIM  || process.env.AVUKAT_AGENT_ID || '',
-  muratbey:    process.env.AVUKAT_AGENT_MURATBEY    || process.env.AVUKAT_AGENT_ID || '',
-  dilekhanim:  process.env.AVUKAT_AGENT_DILEKHANIM  || process.env.AVUKAT_AGENT_ID || '',
-  halukbey:    process.env.AVUKAT_AGENT_HALUKBEY    || process.env.AVUKAT_AGENT_ID || '',
-  aysehanim:   process.env.AVUKAT_AGENT_AYSEHANIM   || process.env.AVUKAT_AGENT_ID || '',
-  canbey:      process.env.AVUKAT_AGENT_CANBEY      || process.env.AVUKAT_AGENT_ID || '',
-  zeynephanim: process.env.AVUKAT_AGENT_ZEYNEPHANIM || process.env.AVUKAT_AGENT_ID || '',
-  borabey:     process.env.AVUKAT_AGENT_BORABEY     || process.env.AVUKAT_AGENT_ID || '',
+  kemalbey:    process.env.AVUKAT_AGENT_KEMALBEY    || 'agent_2301kwjc9vktfvy9kz0dz4j85tt0',
+  selinhanim:  process.env.AVUKAT_AGENT_SELINHANIM  || 'agent_8901kwjde92kf0gtcpfqena3x0qd',
+  muratbey:    process.env.AVUKAT_AGENT_MURATBEY    || 'agent_5501kwjc9y4zffa8pd0ac1s24e1j',
+  dilekhanim:  process.env.AVUKAT_AGENT_DILEKHANIM  || 'agent_7901kwjdecyxffb9rjbmz5b9rp7h',
+  halukbey:    process.env.AVUKAT_AGENT_HALUKBEY    || 'agent_3201kwjea551fpebwe99apj0d9ac',
+  aysehanim:   process.env.AVUKAT_AGENT_AYSEHANIM   || 'agent_9801kwjdeagee2kte1m3ma2wv5hq',
+  canbey:      process.env.AVUKAT_AGENT_CANBEY      || 'agent_0501kwjca1qaeymv4c34444feshb',
+  zeynephanim: process.env.AVUKAT_AGENT_ZEYNEPHANIM || 'agent_4901kwjdebrsf7xaqgwq4eegx54j',
+  borabey:     process.env.AVUKAT_AGENT_BORABEY     || 'agent_5701kwjca3z2engvx274gyx8qsfc',
 }
 
 export async function GET(req: NextRequest) {
@@ -47,7 +49,6 @@ export async function GET(req: NextRequest) {
     if (body.signed_url) {
       wssUrl = body.signed_url
     } else if (body.token) {
-            // Decode JWT to extract real signed_url from ElevenLabs token metadata
       try {
         const p = JSON.parse(Buffer.from(body.token.split('.')[1], 'base64').toString('utf-8'))
         const m = JSON.parse(p.metadata || '{}')
@@ -57,7 +58,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unexpected ElevenLabs response' }, { status: 502 })
     }
 
-    // Log session start
     await sb.from('avukat_sessions').insert({
       avukat_id: user.id,
       persona_id: persona,
@@ -65,9 +65,13 @@ export async function GET(req: NextRequest) {
       active_context: { persona, startedAt: new Date().toISOString() }
     }).select().single()
 
-    return NextResponse.json({ signed_url: wssUrl, agent_id: agentId, persona })
+    return NextResponse.json({
+      signed_url: wssUrl,
+      agent_id: agentId,
+      voice_id: voiceIdForAvukatPersona(persona),
+      persona,
+    })
   } catch (e: unknown) {
     return NextResponse.json({ error: String(e) }, { status: 500 })
   }
 }
-// v2

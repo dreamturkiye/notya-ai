@@ -9,6 +9,7 @@
 import type { AddressableUser } from '@/lib/address'
 import { address } from '@/lib/address'
 import { formatColleagueTabLabel } from '@/lib/colleagueAddress'
+import { DOKTOR_VOICE_BY_PERSONA } from '@/lib/asistan/elevenVoices'
 
 export type PersonaId = "aysekaya" | "mehmetdemir" | "elifsahin"
 export type SpecialtyId = "pediatri" | "kardiyoloji" | "noroloji" | "dahiliye" | "psikiyatri" | "genel" | "acil"
@@ -42,6 +43,8 @@ export interface Persona {
   turkishGuidelines: string[]
   clinicalFocus: string[]
   voiceDescription: string
+  /** ElevenLabs Turkish voice id — unique per persona */
+  voiceId: string
   greeting: string
   color: string
   photo: string
@@ -75,7 +78,8 @@ export const PERSONAS: Record<PersonaId, Persona> = {
       "Bronşiyolit/pnömoni: Türk Toraks Derneği çocuk sınıflaması ve yatış kriterleri",
       "AGE / ISPA: TPK kanıta dayalı kılavuzlar; TR'de sık antibiyotikler (amoksisilin vb.) + SGK kısıtı",
     ],
-    voiceDescription: "Yumuşak, net, sıcak Türkçe",
+    voiceDescription: "Yumuşak, net, sıcak Türkçe (Ege — Ayşe Hanım)",
+    voiceId: DOKTOR_VOICE_BY_PERSONA.aysekaya.voiceId,
     greeting: "Bugün hangi hastamıza bakıyoruz?",
     color: "#0F9B8E",
     photo: "/doctors/dr_ayse.jpg",
@@ -108,7 +112,8 @@ export const PERSONAS: Record<PersonaId, Persona> = {
       "HT / dislipidemi: ESC/TKD 2024–2025 hedefleri; SCORE2 risk",
       "Diyabetik KVH: ESC 2023 Diyabet-KVH + TEMD ile uyumlu ilaç seçimi (SGLT2i/GLP-1)",
     ],
-    voiceDescription: "Otoriter, hızlı, net Türkçe",
+    voiceDescription: "Otoriter, hızlı, net Türkçe (İstanbul — Abdulkadir)",
+    voiceId: DOKTOR_VOICE_BY_PERSONA.mehmetdemir.voiceId,
     greeting: "Dinliyorum. Ne var?",
     color: "#006699",
     photo: "/doctors/dr_mehmet.jpg",
@@ -143,7 +148,8 @@ export const PERSONAS: Record<PersonaId, Persona> = {
       "Parkinson / hareket: TND 2023 rehberi; demans: SB Alzheimer klinik protokolü",
       "Dahiliye köprüsü: TEMD DM/HT + İliçin/TİHUD — elektrolit, tiroid, enfeksiyon, polifarmasi (pediatri DEĞİL)",
     ],
-    voiceDescription: "Düşünceli, analitik, sakin Türkçe",
+    voiceDescription: "Düşünceli, analitik, sakin Türkçe (İstanbul — Gülriz)",
+    voiceId: DOKTOR_VOICE_BY_PERSONA.elifsahin.voiceId,
     greeting: "Vakayı dinliyorum.",
     color: "#7C3AED",
     photo: "/doctors/dr_elif.jpg",

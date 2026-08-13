@@ -137,7 +137,7 @@ export default function AsistanPage() {
       const firstMessage = buildVoiceFirstMessage(p, doctor)
       const voicePrompt = buildVoiceSystemPrompt(p, doctor)
 
-      // ElevenLabs SDK: identity locked via overrides (prevents shared-agent "I'm Ayşe" bleed)
+      // ElevenLabs SDK: identity + distinct TR voice per persona (never share Jessica)
       const conversation = await Conversation.startSession({
         signedUrl: body.signed_url,
         connectionType: "websocket",
@@ -146,6 +146,9 @@ export default function AsistanPage() {
             prompt: { prompt: voicePrompt },
             firstMessage,
             language: "tr",
+          },
+          tts: {
+            voiceId: body.voice_id || p.voiceId,
           },
         },
         onConnect: () => {

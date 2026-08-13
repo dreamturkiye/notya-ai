@@ -51,7 +51,8 @@ export default function MaliAsistanPage() {
     try {
       const r = await fetch('/api/asistan/mali-signed-url', { headers: { Authorization: 'Bearer ' + token } })
       if (!r.ok) { const b = await r.json().catch(() => ({})); throw new Error((b as {error?:string}).error || 'Sunucu hatasi: ' + r.status) }
-      const { signed_url } = await r.json()
+      const body = await r.json()
+      const signed_url = body.signed_url as string
       if (!signed_url) throw new Error('Baglanti adresi alinamadi')
       // Android: unlock AudioContext on user gesture
       if (isAndroid() && typeof window !== 'undefined') {
@@ -59,6 +60,10 @@ export default function MaliAsistanPage() {
       }
       const conv = await Conversation.startSession({
         signedUrl: signed_url, connectionType: 'websocket',
+        overrides: {
+          agent: { language: 'tr' },
+          tts: { voiceId: body.voice_id as string },
+        },
         onConnect: () => { setStatus('listening'); setErrorMsg(''); addMsg('ai', 'Merhaba! Mali Musavir Uzm. Derya burada. Size nasil yardimci olabilirim?') },
         onDisconnect: (d: {reason:string;message:string}) => {
           convRef.current = null

@@ -61,11 +61,16 @@ export default function AvukatAsistanPage() {
     try {
       const r = await fetch('/api/asistan/avukat-signed-url?persona=' + pk, { headers: { Authorization: 'Bearer ' + token } })
       if (!r.ok) { const b = await r.json().catch(() => ({})); throw new Error((b as {error?:string}).error || 'Sunucu hatasi: ' + r.status) }
-      const { signed_url } = await r.json()
+      const body = await r.json()
+      const signed_url = body.signed_url as string
       if (!signed_url) throw new Error('Baglanti adresi alinamadi')
       const p = PERSONAS[pk]
       const conv = await Conversation.startSession({
         signedUrl: signed_url, connectionType: 'websocket',
+        overrides: {
+          agent: { language: 'tr' },
+          tts: { voiceId: body.voice_id as string },
+        },
         onConnect: () => { setStatus('listening'); setErrorMsg(''); addMsg('ai', p.name + ' burada. ' + p.title + ' konusunda nasil yardimci olabilirim?') },
         onDisconnect: (d: {reason:string;message:string}) => { convRef.current=null; if(d.reason==='error'){setErrorMsg(d.message);setStatus('error')}else setStatus('idle') },
         onError: (m: string) => { setErrorMsg(m); setStatus('error') },

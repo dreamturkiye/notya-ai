@@ -1,4 +1,7 @@
-const DEFAULT_VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'
+import { TR_VOICES } from '@/lib/asistan/elevenVoices'
+
+/** Prefer TR Ayşe Hanım voice over English Sarah/Jessica defaults. */
+const DEFAULT_VOICE_ID = TR_VOICES.ayseHanim.voiceId
 
 export function getDrAyseVoiceId(): string {
   return process.env.DR_AYSE_VOICE_ID || DEFAULT_VOICE_ID

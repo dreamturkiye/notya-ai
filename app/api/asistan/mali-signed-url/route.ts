@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { voiceIdForMali } from "@/lib/asistan/elevenVoices"
 
 const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-const AGENT_ID = process.env.MALI_MUSAVIR_AGENT_ID || "agent_3601ktc884ntf3dbdkjtyx6vdfwa"
+const AGENT_ID = process.env.MALI_MUSAVIR_AGENT_ID || "agent_4301kvraprgwf5btftn0k836t55m"
 
 export async function GET(req: NextRequest) {
   try {
@@ -53,7 +54,14 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(5)
     const incelemeCount = belgeler?.filter(b => b.inceleme_bekliyor)?.length || 0
-    return NextResponse.json({ signed_url: wssUrl, agent_id: AGENT_ID, musteriContext, belgelerContext: belgeler || [], incelemeCount })
+    return NextResponse.json({
+      signed_url: wssUrl,
+      agent_id: AGENT_ID,
+      voice_id: voiceIdForMali(),
+      musteriContext,
+      belgelerContext: belgeler || [],
+      incelemeCount,
+    })
   } catch (e: unknown) {
     return NextResponse.json({ error: String(e) }, { status: 500 })
   }
