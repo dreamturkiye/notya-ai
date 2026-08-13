@@ -25,99 +25,99 @@ export interface TextbookReference {
 
 const TEXTBOOK_LIBRARY: Record<string, TextbookReference[]> = {
 
-  // ── PEDIATRICS ──────────────────────────────────────────────
+  // ── PEDIATRICS (TR practice: SB/TPK/ÇAYD first, Nelson/Harriet Lane support) ──
   pediatri: [
     {
-      title: "Nelson Textbook of Pediatrics",
-      authors: "Kliegman, St. Geme, Blum, Shah, Tasker, Wilson",
-      edition: "22nd Edition, 2025",
+      title: "T.C. Sağlık Bakanlığı Ulusal Çocukluk Dönemi Aşılama Takvimi (GBP)",
+      authors: "Halk Sağlığı Genel Müdürlüğü",
+      edition: "2025",
+      publisher: "T.C. Sağlık Bakanlığı",
+      why: "Türkiye'de aşı uygulamasının resmi kaynağı; klinik konuşmada bağlayıcıdır."
+    },
+    {
+      title: "Türk Pediatri Kurumu Klinik Kılavuzları",
+      authors: "Türk Pediatri Kurumu (TPK)",
+      edition: "Güncel",
+      publisher: "TPK",
+      why: "AGE, inek sütü proteini alerjisi, enürezis vb. ulusal pediatri kılavuzları."
+    },
+    {
+      title: "ÇAYD / SB Çocuk Acil ve Yoğun Bakım Protokolleri",
+      authors: "Türk Çocuk Acil Tıp ve Yoğun Bakım Derneği",
+      edition: "Güncel + SB 2025 YBÜ protokolü",
+      publisher: "ÇAYD / Sağlık Bakanlığı",
+      why: "Çocuk acil red-flag, YBÜ kabul-taburculuk ve acil yaklaşım standardı."
+    },
+    {
+      title: "Nelson Textbook of Pediatrics + Harriet Lane Handbook",
+      authors: "Kliegman et al. / Johns Hopkins",
+      edition: "Güncel baskılar",
       publisher: "Elsevier",
-      why: "Dünya çapında pediatristlerin birincil başvuru kaynağı. Her pediatrik hastalık için kapsamlı tanı ve tedavi protokolleri."
-    },
-    {
-      title: "Oski's Pediatrics: Principles & Practice",
-      authors: "McMillan, DeAngelis, Feigin, Warshaw",
-      edition: "4th Edition",
-      publisher: "Lippincott Williams & Wilkins",
-      why: "Pratik klinik yaklaşım ve pediatrik fizik muayene için vazgeçilmez başvuru."
-    },
-    {
-      title: "The Harriet Lane Handbook",
-      authors: "Johns Hopkins Hospital",
-      edition: "23rd Edition, 2024",
-      publisher: "Elsevier",
-      why: "Pediatrik doz hesaplamaları ve acil protokoller için altın standart el kitabı."
-    },
-    {
-      title: "Rudolph's Pediatrics",
-      authors: "Rudolph, Lister, First, Gershon",
-      edition: "23rd Edition",
-      publisher: "McGraw-Hill",
-      why: "Pediatrik hastalıkların patofizyolojisi ve ayırıcı tanısı için derin referans."
+      why: "TR asistanlıkta hâlâ kullanılan uluslararası metin + mg/kg doz cep kitabı."
     }
   ],
 
-  // ── KARDİYOLOJİ ─────────────────────────────────────────────
+  // ── KARDİYOLOJİ (TR practice: TKD publishes/adopts ESC) ──
   kardiyoloji: [
     {
-      title: "Braunwald's Heart Disease: A Textbook of Cardiovascular Medicine",
-      authors: "Libby, Bonow, Mann, Tomaselli, Bhatt, Solomon",
-      edition: "12th Edition, 2022",
+      title: "TKD / ESC Akut Koroner Sendrom Kılavuzu",
+      authors: "Türk Kardiyoloji Derneği / ESC",
+      edition: "2023",
+      publisher: "TKD",
+      why: "Türkiye'de AKS pratiğinin birincil kılavuzu (TKD üzerinden ESC)."
+    },
+    {
+      title: "TKD / ESC Atriyal Fibrilasyon Kılavuzu",
+      authors: "Türk Kardiyoloji Derneği / ESC",
+      edition: "2024",
+      publisher: "TKD",
+      why: "AF risk skorları, antikoagülan ve ritim/hız kontrolü için TR standardı."
+    },
+    {
+      title: "ESC Kalp Yetersizliği + 2024 Odak Güncelleme (TKD)",
+      authors: "ESC / TKD yorumu",
+      edition: "2021 + 2024 focused update",
+      publisher: "ESC / TKD",
+      why: "HFrEF dört ilaçlı tedavi, SGLT2i, HFpEF/HFmrEF güncellemeleri."
+    },
+    {
+      title: "Braunwald's Heart Disease",
+      authors: "Libby, Bonow, Mann et al.",
+      edition: "12th Edition",
       publisher: "Elsevier",
-      why: "Kardiyolojinin mutlak altın standardı. AHA, ACC ve ESC kılavuzlarını entegre eder."
-    },
-    {
-      title: "Hurst's The Heart",
-      authors: "Fuster, Harrington, Narula, Eapen",
-      edition: "14th Edition",
-      publisher: "McGraw-Hill",
-      why: "Kardiyolojinin en uzun süreli yayınlanan referans kitabı. Pratik hasta bakımı odaklı."
-    },
-    {
-      title: "ESC Textbook of Cardiovascular Medicine",
-      authors: "Camm, Lüscher, Maurer, Serruys",
-      edition: "3rd Edition",
-      publisher: "Oxford University Press",
-      why: "Avrupa Kardiyoloji Derneği'nin resmi referans kitabı. Türk kardiyologların tercih ettiği Avrupa kılavuzları."
-    },
-    {
-      title: "ACC/AHA Clinical Practice Guidelines",
-      authors: "American College of Cardiology / American Heart Association",
-      edition: "2024 Current",
-      publisher: "ACC/AHA",
-      why: "KAH, KY, AF, hipertansiyon için güncel klinik karar destek kılavuzları."
+      why: "Patofizyoloji ve derin referans; ulusal kılavuzla çakışmada TKD/ESC öncelikli."
     }
   ],
 
-  // ── NÖROLOJİ ────────────────────────────────────────────────
+  // ── NÖROLOJİ (TR: TND + SB klinik protokolleri) ──
   noroloji: [
+    {
+      title: "Akut İskemik İnmede Tanı ve Tedavi Rehberi",
+      authors: "T.C. SB + TND + Türk Beyin Damar Hastalıkları Derneği",
+      edition: "Güncel SB yayını",
+      publisher: "Sağlık Bakanlığı",
+      why: "Türkiye'de tPA/trombektomi ve inme zinciri için resmi ulusal rehber."
+    },
+    {
+      title: "TND Epilepsi Tanı ve Tedavi Rehberi",
+      authors: "Türk Nöroloji Derneği",
+      edition: "2021",
+      publisher: "TND",
+      why: "Epilepsi sınıflama ve antiepileptik seçiminde ulusal rehber."
+    },
+    {
+      title: "TND Migren Klinik Protokolü / Hareket Bozuklukları Rehberi",
+      authors: "Türk Nöroloji Derneği",
+      edition: "Migren protokolü + 2023 hareket bozuklukları",
+      publisher: "TND",
+      why: "Başağrısı ve Parkinson/hareket bozuklukları için TR klinik protokoller."
+    },
     {
       title: "Adams and Victor's Principles of Neurology",
       authors: "Ropper, Samuels, Klein, Prasad",
-      edition: "12th Edition, 2023",
+      edition: "12th Edition",
       publisher: "McGraw-Hill",
-      why: "Nörolojinin İncil'i. Klinik nöroloji muayenesi ve hastalık mekanizmaları için birincil kaynak."
-    },
-    {
-      title: "Bradley and Daroff's Neurology in Clinical Practice",
-      authors: "Daroff, Jankovic, Mazziotta, Pomeroy",
-      edition: "8th Edition",
-      publisher: "Elsevier",
-      why: "Pratik klinik nöroloji için kapsamlı referans. İnme, epilepsi, MS protokolleri."
-    },
-    {
-      title: "Merritt's Neurology",
-      authors: "Bhatt, Caplan",
-      edition: "14th Edition",
-      publisher: "Lippincott Williams & Wilkins",
-      why: "Nörolog başucu kitabı. Özlü ve klinisyen odaklı yaklaşım."
-    },
-    {
-      title: "ESO Stroke Guidelines",
-      authors: "European Stroke Organisation",
-      edition: "2024 Current",
-      publisher: "ESO",
-      why: "İnme tanı ve tedavisinde güncel Avrupa kılavuzları."
+      why: "Nöroloji muayene ve mekanizma derinliği; ulusal rehberle çakışmada TND/SB öncelikli."
     }
   ],
 
@@ -153,35 +153,35 @@ const TEXTBOOK_LIBRARY: Record<string, TextbookReference[]> = {
     }
   ],
 
-  // ── DAHİLİYE ────────────────────────────────────────────────
+  // ── DAHİLİYE (TR: İliçin/TİHUD + TEMD hastalık kılavuzları) ──
   dahiliye: [
     {
+      title: "İliçin İç Hastalıkları",
+      authors: "İliçin, Biberoğlu, Süleymanlar, Ünal et al.",
+      edition: "Güncel baskı",
+      publisher: "Türk İç Hastalıkları Uzmanlık Derneği (TİHUD)",
+      why: "Türkiye'de en çok okunan Türkçe iç hastalıkları kitabı; TİHUD yayını."
+    },
+    {
+      title: "TEMD Diyabetes Mellitus Tanı, Tedavi ve İzlem Kılavuzu",
+      authors: "Türkiye Endokrinoloji ve Metabolizma Derneği",
+      edition: "2024 / 2026 çevrim içi",
+      publisher: "TEMD",
+      why: "TR'de DM yönetimi için birincil ulusal kılavuz (hedefler, ilaç basamakları)."
+    },
+    {
+      title: "TEMD Hipertansiyon Tanı ve Tedavi Kılavuzu",
+      authors: "TEMD Obezite-Dislipidemi-HT Çalışma Grubu",
+      edition: "2022",
+      publisher: "TEMD",
+      why: "Dahiliye pratiğinde HT eşik/hedef ve özel durumlar için ulusal kılavuz."
+    },
+    {
       title: "Harrison's Principles of Internal Medicine",
-      authors: "Jameson, Fauci, Kasper, Hauser, Longo, Loscalzo",
-      edition: "22nd Edition, 2025",
+      authors: "Jameson, Fauci, Kasper et al.",
+      edition: "22nd Edition",
       publisher: "McGraw-Hill",
-      why: "Dahiliyenin kutsal kitabı. Tüm iç hastalıkları için patofizyoloji ve klinik yaklaşım standardı."
-    },
-    {
-      title: "Goldman-Cecil Medicine",
-      authors: "Goldman, Schafer",
-      edition: "27th Edition, 2024",
-      publisher: "Elsevier",
-      why: "Cecil'in mirası. Kanıta dayalı tedavi protokolleri ve hastalık yönetimi."
-    },
-    {
-      title: "Washington Manual of Medical Therapeutics",
-      authors: "Washington University",
-      edition: "37th Edition, 2024",
-      publisher: "Lippincott",
-      why: "Pratik tedavi kararları için hızlı başvuru. İntern ve asistanların el kitabı."
-    },
-    {
-      title: "UpToDate Clinical Decision Support",
-      authors: "Wolters Kluwer",
-      edition: "Continuously Updated",
-      publisher: "Wolters Kluwer",
-      why: "Güncel kanıta dayalı klinik karar desteği. Türk hekimlerinin en çok kullandığı dijital kaynak."
+      why: "Patofizyoloji desteği; ulusal TEMD/TİHUD ile çakışmada TR kılavuz öncelikli."
     }
   ],
 
