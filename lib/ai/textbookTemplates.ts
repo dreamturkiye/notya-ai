@@ -389,30 +389,116 @@ const TEXTBOOK_LIBRARY: Record<string, TextbookReference[]> = {
     }
   ],
 
-  // ── GENEL PRATİSYEN ─────────────────────────────────────────
+  // ── GENEL PRATİSYEN / AİLE ───────────────────────────────────
   genel: [
+    {
+      title: "T.C. SB Aile Hekimliği / TAHUD kaynakları",
+      authors: "Sağlık Bakanlığı / TAHUD",
+      edition: "Güncel",
+      publisher: "T.C. Sağlık Bakanlığı",
+      why: "Birinci basamak TR protokolleri, aşı ve kronik hastalık izlemi."
+    },
     {
       title: "Harrison's Principles of Internal Medicine",
       authors: "Jameson et al.",
-      edition: "22nd Edition, 2025",
+      edition: "22nd Edition",
       publisher: "McGraw-Hill",
       why: "Genel hekimlik için temel referans."
     },
     {
       title: "Oxford Handbook of Clinical Medicine",
-      authors: "Longmore, Wilkinson, Baldwin, Wallin",
-      edition: "10th Edition, 2021",
-      publisher: "Oxford University Press",
-      why: "Klinik pratikte hızlı başvuru için vazgeçilmez cep rehberi."
-    },
-    {
-      title: "Türkiye Halk Sağlığı Genel Müdürlüğü Kılavuzları",
-      authors: "T.C. Sağlık Bakanlığı",
-      edition: "2024 Güncel",
-      publisher: "Sağlık Bakanlığı",
-      why: "Türkiye'ye özgü birinci basamak protokolleri, aşı takvimleri ve sevk kriterleri."
+      authors: "Longmore et al.",
+      edition: "10th Edition",
+      publisher: "Oxford",
+      why: "Hızlı klinik başvuru."
     }
-  ]
+  ],
+
+  // Hyphen-key aliases matching lib/doktor/specialties.ts (30 branş)
+  "genel-cerrahi": [
+    { title: "Türk Cerrahi Derneği (TCD) kılavuzları", authors: "TCD", edition: "Güncel", publisher: "TCD", why: "TR genel cerrahi pratik standardı." },
+    { title: "Schwartz's Principles of Surgery", authors: "Brunicardi et al.", edition: "11e", publisher: "McGraw-Hill", why: "Uluslararası cerrahi metin." },
+  ],
+  "acil-tip": [
+    { title: "Türkiye Acil Tıp Derneği (TATD) protokolleri", authors: "TATD", edition: "Güncel", publisher: "TATD", why: "TR acil tıp protokolleri." },
+    { title: "Tintinalli's Emergency Medicine", authors: "Tintinalli et al.", edition: "9e", publisher: "McGraw-Hill", why: "Acil tıp uluslararası metin." },
+  ],
+  "kulak-burun-bogaz": [
+    { title: "Türk KBB-BBC Derneği kılavuzları", authors: "Türk KBB Derneği", edition: "Güncel", publisher: "KBB Derneği", why: "TR KBB standardı." },
+    { title: "Cummings Otolaryngology", authors: "Flint et al.", edition: "7e", publisher: "Elsevier", why: "KBB uluslararası metin." },
+  ],
+  "goz-hastaliklari": [
+    { title: "Türk Oftalmoloji Derneği (TOD) kılavuzları", authors: "TOD", edition: "Güncel", publisher: "TOD", why: "TR göz hastalıkları standardı." },
+    { title: "Kanski's Clinical Ophthalmology", authors: "Salmon", edition: "9e", publisher: "Elsevier", why: "Oftalmoloji klinik metin." },
+  ],
+  "kadin-hastaliklari-dogum": [
+    { title: "TJOD kılavuzları + SB Doğum Yönetim Rehberi", authors: "TJOD / SB", edition: "Güncel", publisher: "TJOD / SB", why: "TR obstetri-jinekoloji standardı." },
+    { title: "Williams Obstetrics", authors: "Cunningham et al.", edition: "26e", publisher: "McGraw-Hill", why: "Obstetri uluslararası metin." },
+  ],
+  "fizik-tedavi": [
+    { title: "Türkiye FTR Derneği kılavuzları", authors: "TFTRD", edition: "Güncel", publisher: "TFTRD", why: "TR FTR standardı." },
+    { title: "Braddom's Physical Medicine", authors: "Cifu", edition: "5e", publisher: "Elsevier", why: "PM&R uluslararası metin." },
+  ],
+  "enfeksiyon-hastaliklari": [
+    { title: "KLİMİK kılavuzları + SB akılcı antibiyotik", authors: "KLİMİK / SB", edition: "Güncel", publisher: "KLİMİK", why: "TR enfeksiyon hastalıkları standardı." },
+    { title: "Mandell Principles of Infectious Diseases", authors: "Bennett et al.", edition: "9e", publisher: "Elsevier", why: "Enfeksiyon uluslararası metin." },
+  ],
+  endokrinoloji: [
+    { title: "TEMD DM / Tiroid / Osteoporoz kılavuzları", authors: "TEMD", edition: "2024–2026", publisher: "TEMD", why: "TR endokrinoloji birincil kılavuzları." },
+    { title: "Williams Textbook of Endocrinology", authors: "Melmed et al.", edition: "14e", publisher: "Elsevier", why: "Endokrinoloji uluslararası metin." },
+  ],
+  gastroenteroloji: [
+    { title: "Türk Gastroenteroloji Derneği (TGD) kılavuzları", authors: "TGD", edition: "Güncel", publisher: "TGD", why: "TR gastroenteroloji standardı." },
+    { title: "Sleisenger and Fordtran", authors: "Feldman et al.", edition: "11e", publisher: "Elsevier", why: "GI uluslararası metin." },
+  ],
+  nefroloji: [
+    { title: "Türk Nefroloji Derneği kılavuzları + SB diyaliz", authors: "TND / SB", edition: "Güncel", publisher: "Türk Nefroloji Derneği", why: "TR nefroloji standardı." },
+    { title: "Brenner & Rector's The Kidney", authors: "Yu et al.", edition: "11e", publisher: "Elsevier", why: "Nefroloji uluslararası metin." },
+  ],
+  romatoloji: [
+    { title: "Türkiye Romatoloji Derneği kılavuzları", authors: "TRD", edition: "Güncel", publisher: "TRD", why: "TR romatoloji standardı." },
+    { title: "Kelley & Firestein's Rheumatology", authors: "Firestein et al.", edition: "10e", publisher: "Elsevier", why: "Romatoloji uluslararası metin." },
+  ],
+  "gogus-hastaliklari": [
+    { title: "Türk Toraks Derneği (TTD) + GINA/GOLD uyarlaması", authors: "TTD", edition: "Güncel", publisher: "TTD", why: "TR göğüs hastalıkları standardı." },
+    { title: "Murray & Nadel's Textbook of Respiratory Medicine", authors: "Broaddus et al.", edition: "7e", publisher: "Elsevier", why: "Solunum uluslararası metin." },
+  ],
+  "gogus-cerrahisi": [
+    { title: "Türk Göğüs Cerrahisi Derneği kılavuzları", authors: "TGCD", edition: "Güncel", publisher: "TGCD", why: "TR göğüs cerrahisi standardı." },
+    { title: "Shields' General Thoracic Surgery", authors: "LoCicero et al.", edition: "8e", publisher: "Wolters Kluwer", why: "Torasik cerrahi uluslararası metin." },
+  ],
+  "plastik-cerrahi": [
+    { title: "TPRECD kılavuzları + SB yanık protokolleri", authors: "TPRECD / SB", edition: "Güncel", publisher: "TPRECD", why: "TR plastik cerrahi standardı." },
+    { title: "Grabb and Smith's Plastic Surgery", authors: "Chung et al.", edition: "8e", publisher: "Wolters Kluwer", why: "Plastik cerrahi uluslararası metin." },
+  ],
+  "beyin-cerrahisi": [
+    { title: "Türk Nöroşirürji Derneği kılavuzları", authors: "TND", edition: "Güncel", publisher: "Türk Nöroşirürji Derneği", why: "TR beyin cerrahisi standardı." },
+    { title: "Youmans and Winn Neurological Surgery", authors: "Winn", edition: "8e", publisher: "Elsevier", why: "Nöroşirürji uluslararası metin." },
+  ],
+  "kalp-damar-cerrahisi": [
+    { title: "Türk Kalp ve Damar Cerrahisi Derneği + TKD", authors: "TKDCD / TKD", edition: "Güncel", publisher: "TKDCD", why: "TR KVC standardı." },
+    { title: "Kirklin/Barratt-Boyes Cardiac Surgery", authors: "Kouchoukos et al.", edition: "4e", publisher: "Elsevier", why: "Kardiyak cerrahi uluslararası metin." },
+  ],
+  "cocuk-cerrahisi": [
+    { title: "Türk Çocuk Cerrahisi Derneği + ÇAYD", authors: "TÇCD / ÇAYD", edition: "Güncel", publisher: "TÇCD", why: "TR çocuk cerrahisi standardı." },
+    { title: "Ashcraft's Pediatric Surgery", authors: "Holcomb et al.", edition: "6e", publisher: "Elsevier", why: "Pediatrik cerrahi uluslararası metin." },
+  ],
+  "aile-hekimligi": [
+    { title: "TAHUD + SB Aile Hekimliği protokolleri", authors: "TAHUD / SB", edition: "Güncel", publisher: "SB", why: "TR birinci basamak standardı." },
+    { title: "Current Medical Diagnosis & Treatment", authors: "Papadakis et al.", edition: "2024", publisher: "McGraw-Hill", why: "Aile hekimliği başvuru metni." },
+  ],
+  "spor-hekimligi": [
+    { title: "Türkiye Spor Hekimliği Derneği kılavuzları", authors: "TSHD", edition: "Güncel", publisher: "TSHD", why: "TR spor hekimliği standardı." },
+    { title: "Brukner & Khan's Clinical Sports Medicine", authors: "Brukner, Khan", edition: "5e", publisher: "McGraw-Hill", why: "Spor hekimliği uluslararası metin." },
+  ],
+  radyoloji: [
+    { title: "Türk Radyoloji Derneği (TRD) + SB/TAEK radyasyon güvenliği", authors: "TRD / SB", edition: "Güncel", publisher: "TRD", why: "TR radyoloji standardı." },
+    { title: "Grainger & Allison Diagnostic Radiology", authors: "Adam et al.", edition: "7e", publisher: "Elsevier", why: "Radyoloji uluslararası metin." },
+  ],
+  anestezi: [
+    { title: "TARD kılavuzları + SB ameliyathane protokolleri", authors: "TARD / SB", edition: "Güncel", publisher: "TARD", why: "TR anestezi standardı." },
+    { title: "Miller's Anesthesia", authors: "Gropper et al.", edition: "9e", publisher: "Elsevier", why: "Anesteziyoloji uluslararası metin." },
+  ],
 }
 
 // ============================================================
@@ -421,8 +507,9 @@ const TEXTBOOK_LIBRARY: Record<string, TextbookReference[]> = {
 // gold-standard textbooks
 // ============================================================
 
-export function getSpecialtyTemplate(specialty: MedicalSpecialty = "genel"): SpecialtyTemplate {
-  const books = TEXTBOOK_LIBRARY[specialty] || TEXTBOOK_LIBRARY["genel"]
+export function getSpecialtyTemplate(specialty: MedicalSpecialty | string = "genel"): SpecialtyTemplate {
+  const key = String(specialty)
+  const books = TEXTBOOK_LIBRARY[key] || TEXTBOOK_LIBRARY[key.replace(/_/g, "-")] || TEXTBOOK_LIBRARY["genel"]
   const bookList = books.map((b, i) => `${i+1}. ${b.title} (${b.authors}, ${b.edition}) — ${b.why}`).join("\n")
 
   const basePrompt = `Sen Notya AI'sın — Türkiye'nin en güvenilir klinik not asistanı.

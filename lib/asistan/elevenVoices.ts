@@ -146,7 +146,9 @@ export const MALI_VOICE = TR_VOICES.asli
 
 export function voiceIdForDoktorPersona(personaId: string): string {
   const v = DOKTOR_VOICE_BY_PERSONA[personaId as keyof typeof DOKTOR_VOICE_BY_PERSONA]
-  return v?.voiceId || TR_VOICES.ayseHanim.voiceId
+  if (v) return v.voiceId
+  // Full roster voices live on specialistsCatalog; callers should prefer persona.voiceId
+  return TR_VOICES.ayseHanim.voiceId
 }
 
 export function voiceIdForAvukatPersona(personaId: string): string {

@@ -7,18 +7,19 @@ import { Conversation } from "@/components/AsistanConversation"
 import { connectionErrorHelp, micPermissionHelp, isAndroid } from "@/lib/asistan/platform"
 import {
   PERSONAS,
+  PERSONA_ORDER,
   buildVoiceFirstMessage,
   buildVoiceSystemPrompt,
+  getPersonaForSpecialty,
   type Persona,
   type PersonaId,
 } from "@/lib/asistan/personaEngine"
+import { SPECIALTY_MAP } from "@/lib/doktor/specialties"
 import { formatColleagueTabLabel } from "@/lib/colleagueAddress"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
-
-const PERSONA_ORDER: PersonaId[] = ["aysekaya", "mehmetdemir", "elifsahin"]
 
 type ActiveConversation = Awaited<ReturnType<typeof Conversation.startSession>>
 
@@ -57,6 +58,14 @@ export default function AsistanPage() {
         return
       }
       setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
+      const profileSpecialty = (profileData.data as { specialty?: string } | undefined)?.specialty
+      if (profileSpecialty) {
+        const matchedId = getPersonaForSpecialty(profileSpecialty)
+        if (PERSONAS[matchedId]) {
+          setPersonaKey(matchedId)
+          setPersona(PERSONAS[matchedId])
+        }
+      }
     })()
     return () => { void endConversation() }
   }, [])
@@ -248,15 +257,18 @@ export default function AsistanPage() {
         <div style={{ display: "flex", gap: "6px", marginTop: "10px", overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "2px" }}>
           {PERSONA_ORDER.map((key) => {
             const p = PERSONAS[key]
+            if (!p) return null
             const active = personaKey === key
+            const branş = SPECIALTY_MAP[p.primarySpecialty]?.label || p.primarySpecialty
             return (
               <button key={key} type="button" onClick={() => switchPersona(key)}
-                style={{ padding: "7px 12px", borderRadius: "999px", fontSize: "12px", cursor: "pointer",
+                title={`${p.name} — ${branş}`}
+                style={{ padding: "6px 10px", borderRadius: "999px", fontSize: "11px", cursor: "pointer",
                          fontWeight: active ? 700 : 500, flexShrink: 0, whiteSpace: "nowrap",
                          background: active ? p.color : "rgba(255,255,255,.08)",
                          color: active ? "#fff" : "rgba(255,255,255,.55)",
                          border: `1px solid ${active ? p.color : "rgba(255,255,255,.12)"}` }}>
-                {p.shortName}
+                {p.shortName} · {branş}
               </button>
             )
           })}

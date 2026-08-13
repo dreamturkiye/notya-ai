@@ -79,8 +79,11 @@ export async function POST(req: NextRequest) {
       asistanSession = data
     }
 
-    const personaId = (asistanSession?.persona_id as PersonaId) || "elifsahin"
-    const persona = PERSONAS[personaId]
+    const personaId = (asistanSession?.persona_id as PersonaId) || getPersonaForSpecialty(specialty || "pediatri")
+    const persona = PERSONAS[personaId] || PERSONAS[getPersonaForSpecialty(specialty || "pediatri")]
+    if (!persona) {
+      return NextResponse.json({ error: "Uzman persona bulunamadı" }, { status: 500 })
+    }
 
     // Load current patient if any
     let currentPatient = null

@@ -21,10 +21,15 @@ const professions: Profession[] = [
 
 const unvanOptions = ['Dr.', 'Uzm.Dr.', 'Doç.Dr.', 'Prof.Dr.'];
 
+// Full 30 medical specialties (+ a few klinik aesthetic extras)
 const doctorSpecialties = [
-  'Kardiyoloji', 'Pediatri', 'Nöroloji', 'Dahiliye', 'Psikiyatri',
-  'Genel Pratisyen', 'Ortopedi', 'Radyoloji', 'Anestezi', 'Dermatoloji',
-  'Göğüs Hastalıkları', 'Onkoloji', 'Üroloji', 'Göz Hastalıkları', 'Kulak Burun Boğaz', 'Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Medikal Estetik', 'Longevity & Wellness', 'Diğer'
+  'Pediatri', 'Kardiyoloji', 'Nöroloji', 'Dahiliye', 'Psikiyatri',
+  'Genel Cerrahi', 'Ortopedi', 'Dermatoloji', 'Kulak Burun Boğaz', 'Göz Hastalıkları',
+  'Kadın Hastalıkları ve Doğum', 'Üroloji', 'Radyoloji', 'Anestezi', 'Acil Tıp',
+  'Fizik Tedavi', 'Enfeksiyon Hastalıkları', 'Endokrinoloji', 'Gastroenteroloji', 'Nefroloji',
+  'Romatoloji', 'Onkoloji', 'Göğüs Hastalıkları', 'Göğüs Cerrahisi', 'Plastik Cerrahi',
+  'Beyin Cerrahisi', 'Kalp Damar Cerrahisi', 'Çocuk Cerrahisi', 'Aile Hekimliği', 'Spor Hekimliği',
+  'Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Medikal Estetik', 'Longevity & Wellness', 'Diğer',
 ];
 const klinikUzmanSpecialties = ['Estetik & Plastik Cerrahi', 'Sac Ekimi', 'Dermatoloji', 'Medikal Estetik', 'Longevity & Wellness'];
 const saglikUzmaniSpecialties = ['Fizyoterapi', 'Klinik Psikoloji', 'Diyetisyen', 'Ergoterapi', 'Odyoloji'];
@@ -33,13 +38,38 @@ const maliChips = ['Vergi Danışmanlığı', 'Bağımsız Denetim', 'Muhasebe',
 const avukatUzmanlik = ['Ceza Hukuku', 'Ticaret Hukuku', 'Aile Hukuku', 'İdare Hukuku', 'İş Hukuku', 'Gayrimenkul Hukuku', 'Fikri Mülkiyet'];
 
 const agentMapping: Record<string, string> = {
-  'Kardiyoloji': 'kardiyoloji',
   'Pediatri': 'pediatri',
+  'Kardiyoloji': 'kardiyoloji',
   'Nöroloji': 'noroloji',
   'Dahiliye': 'dahiliye',
   'Psikiyatri': 'psikiyatri',
+  'Genel Cerrahi': 'genel-cerrahi',
+  'Ortopedi': 'ortopedi',
   'Dermatoloji': 'dermatoloji',
-  'Estetik & Plastik Cerrahi': 'estetik-cerrahi',
+  'Kulak Burun Boğaz': 'kulak-burun-bogaz',
+  'Göz Hastalıkları': 'goz-hastaliklari',
+  'Kadın Hastalıkları ve Doğum': 'kadin-hastaliklari-dogum',
+  'Üroloji': 'uroloji',
+  'Radyoloji': 'radyoloji',
+  'Anestezi': 'anestezi',
+  'Acil Tıp': 'acil-tip',
+  'Fizik Tedavi': 'fizik-tedavi',
+  'Enfeksiyon Hastalıkları': 'enfeksiyon-hastaliklari',
+  'Endokrinoloji': 'endokrinoloji',
+  'Gastroenteroloji': 'gastroenteroloji',
+  'Nefroloji': 'nefroloji',
+  'Romatoloji': 'romatoloji',
+  'Onkoloji': 'onkoloji',
+  'Göğüs Hastalıkları': 'gogus-hastaliklari',
+  'Göğüs Cerrahisi': 'gogus-cerrahisi',
+  'Plastik Cerrahi': 'plastik-cerrahi',
+  'Beyin Cerrahisi': 'beyin-cerrahisi',
+  'Kalp Damar Cerrahisi': 'kalp-damar-cerrahisi',
+  'Çocuk Cerrahisi': 'cocuk-cerrahisi',
+  'Aile Hekimliği': 'aile-hekimligi',
+  'Spor Hekimliği': 'spor-hekimligi',
+  'Genel Pratisyen': 'aile-hekimligi',
+  'Estetik & Plastik Cerrahi': 'plastik-cerrahi',
   'Sac Ekimi': 'sac-ekimi',
   'Medikal Estetik': 'medikal-estetik',
   'Longevity & Wellness': 'longevity',

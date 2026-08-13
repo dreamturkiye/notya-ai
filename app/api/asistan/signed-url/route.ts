@@ -1,27 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getPersona, getPersonaForSpecialty, type SpecialtyId } from '@/lib/asistan/personaEngine';
-import { voiceIdForDoktorPersona } from '@/lib/asistan/elevenVoices';
+import { getPersona, getPersonaForSpecialty } from '@/lib/asistan/personaEngine';
 
-// Dedicated agents — each paired with a distinct Turkish voice (see elevenVoices.ts).
-// Elif defaults to her TR agent (Gülriz), not Ayşe's Jessica agent.
+const AYSE_AGENT =
+  process.env.ELEVENLABS_AGENT_PEDIATRI ||
+  process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID ||
+  'agent_3601ktc884ntf3dbdkjtyx6vdfwa';
+const MEHMET_AGENT =
+  process.env.ELEVENLABS_AGENT_KARDIYOLOJI ||
+  'agent_6501ktc87nmyeca88wskfvr8dfxh';
 const ELIF_AGENT =
   process.env.ELEVENLABS_AGENT_ELIF ||
   process.env.ELEVENLABS_AGENT_NOROLOJI ||
   'agent_1301kwjdee1afajrqkdxmghna6sx';
 
-const AGENT_MAP: Record<string, string> = {
-  pediatri: process.env.ELEVENLABS_AGENT_PEDIATRI || process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
-  kardiyoloji: process.env.ELEVENLABS_AGENT_KARDIYOLOJI || 'agent_6501ktc87nmyeca88wskfvr8dfxh',
-  noroloji: ELIF_AGENT,
-  dahiliye: process.env.ELEVENLABS_AGENT_DAHILIYE || ELIF_AGENT,
-  psikiyatri: process.env.ELEVENLABS_AGENT_PSIKIYATRI || ELIF_AGENT,
-  genel: ELIF_AGENT,
-  acil: process.env.ELEVENLABS_AGENT_ACIL || process.env.ELEVENLABS_AGENT_KARDIYOLOJI || 'agent_6501ktc87nmyeca88wskfvr8dfxh',
-  default: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID || 'agent_3601ktc884ntf3dbdkjtyx6vdfwa',
-};
-
-const DEFAULT_AGENT = 'agent_3601ktc884ntf3dbdkjtyx6vdfwa';
+/** Base ConvAI agent by gender/specialty; identity+voice always overridden client-side. */
+function agentForPersona(persona: { id: string; gender: string; primarySpecialty: string }): string {
+  if (persona.id === 'aysekaya' || persona.primarySpecialty === 'pediatri') return AYSE_AGENT;
+  if (persona.id === 'mehmetdemir' || persona.primarySpecialty === 'kardiyoloji') return MEHMET_AGENT;
+  if (persona.id === 'elifsahin' || persona.primarySpecialty === 'noroloji') return ELIF_AGENT;
+  return persona.gender === 'male' ? MEHMET_AGENT : AYSE_AGENT;
+}
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
@@ -88,15 +87,14 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const specialtyParam = (req.nextUrl.searchParams.get('specialty') || 'pediatri') as SpecialtyId;
+  const specialtyParam = req.nextUrl.searchParams.get('specialty') || 'pediatri';
   const personaParam = req.nextUrl.searchParams.get('persona') || '';
   const persona = personaParam
     ? getPersona(personaParam)
     : getPersona(getPersonaForSpecialty(specialtyParam));
 
-  const specialty = persona.primarySpecialty;
-  const AGENT_ID = AGENT_MAP[specialty] || AGENT_MAP.default || DEFAULT_AGENT;
-  const voiceId = persona.voiceId || voiceIdForDoktorPersona(persona.id);
+  const AGENT_ID = agentForPersona(persona);
+  const voiceId = persona.voiceId;
 
   const wssUrl = await getElevenLabsSignedUrl(AGENT_ID);
 
@@ -111,9 +109,10 @@ export async function GET(req: NextRequest) {
     signed_url: wssUrl,
     agent_id: AGENT_ID,
     voice_id: voiceId,
-    specialty,
+    specialty: persona.primarySpecialty,
     persona_id: persona.id,
     persona_name: persona.name,
     persona_title: persona.title,
+    specialist_total: 30,
   });
 }
