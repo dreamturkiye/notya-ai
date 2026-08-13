@@ -221,7 +221,7 @@ export default function AsistanPage() {
   }[status]
 
   return (
-    <div style={{ height: "100dvh", background: "#080F1A", display: "flex", flexDirection: isMobile ? "column" : "row",
+    <div style={{ height: "calc(100dvh - var(--sat) - var(--sab))", minHeight: 0, background: "#080F1A", display: "flex", flexDirection: isMobile ? "column" : "row",
                   fontFamily: "system-ui,sans-serif", overflow: "hidden", userSelect: "none" }}>
 
       {!isMobile && DOCTOR_PHOTOS[personaKey] && (
@@ -319,7 +319,7 @@ export default function AsistanPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ padding: "16px 16px 44px", display: "flex", flexDirection: "column",
+      <div style={{ padding: "16px 16px 24px", display: "flex", flexDirection: "column",
                     alignItems: "center", gap: "12px", borderTop: "1px solid rgba(255,255,255,.06)",
                     background: "#0A1525" }}>
         {errorMsg && (

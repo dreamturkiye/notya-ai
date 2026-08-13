@@ -34,7 +34,7 @@ export default function HomePage() {
                   fontFamily:"'Georgia','Times New Roman',serif",minHeight:"100vh",overflowX:"hidden"}}>
 
       {/* ── NAV ──────────────────────────────────────────────── */}
-      <nav style={{position:"fixed",top:0,left:0,right:0,padding:"24px 48px",
+      <nav style={{position:"fixed",top:"var(--sat)",left:0,right:0,padding:"24px 48px",
                    display:"flex",alignItems:"center",justifyContent:"space-between",
                    zIndex:100,backdropFilter:"blur(20px)",
                    background:"linear-gradient(to bottom,rgba(255,250,250,0.9),transparent)"}}>

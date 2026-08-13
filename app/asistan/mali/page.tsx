@@ -82,7 +82,7 @@ export default function MaliAsistanPage() {
 
   return (
     <><MaliNav />
-      <div style={{height:'100dvh',background:'#080F1A',display:'flex',flexDirection:'column',fontFamily:'system-ui,sans-serif',overflow:'hidden',userSelect:'none'}}>
+      <div style={{height:'calc(100dvh - var(--sat) - var(--sab) - 56px)',minHeight:0,background:'#080F1A',display:'flex',flexDirection:'column',fontFamily:'system-ui,sans-serif',overflow:'hidden',userSelect:'none'}}>
       <style>{'@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}'}</style>
       <div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'12px',borderBottom:'1px solid rgba(255,255,255,.08)',background:'#0A1525'}}>
         <div onClick={() => { void endConv(); router.push('/dashboard/mali') }} style={{color:'rgba(255,255,255,.5)',cursor:'pointer',fontSize:'24px',padding:'4px'}}>&#8249;</div>
@@ -117,7 +117,7 @@ export default function MaliAsistanPage() {
         )}
         <div ref={endRef} />
       </div>
-      <div style={{padding:'16px 16px 44px',display:'flex',flexDirection:'column',alignItems:'center',gap:'12px',borderTop:'1px solid rgba(255,255,255,.06)',background:'#0A1525'}}>
+      <div style={{padding:'16px 16px 24px',display:'flex',flexDirection:'column',alignItems:'center',gap:'12px',borderTop:'1px solid rgba(255,255,255,.06)',background:'#0A1525'}}>
         {errorMsg && <div style={{fontSize:'12px',color:'#F87171',background:'rgba(239,68,68,.12)',padding:'10px 18px',borderRadius:'10px',textAlign:'center',maxWidth:'320px',lineHeight:'1.5'}}>{errorMsg}</div>}
         <div style={{fontSize:'13px',color:'rgba(255,255,255,.45)',display:'flex',alignItems:'center',gap:'8px'}}>
           {isActive && <div style={{width:'7px',height:'7px',borderRadius:'50%',background:status==='speaking'?'#10B981':status==='connecting'?'#F59E0B':'#22C55E',boxShadow:'0 0 8px '+(status==='speaking'?'#10B981':'#22C55E')}} />}

@@ -122,11 +122,11 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
           </div>
         </div>
       )}
-      <button onClick={toggleChat} style={{ position: 'fixed', bottom: '24px', right: '24px', width: '52px', height: '52px', backgroundColor: '#006699', color: '#fff', fontSize: '20px', fontWeight: '700', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+      <button onClick={toggleChat} style={{ position: 'fixed', bottom: 'calc(24px + var(--sab))', right: 'max(24px, var(--sar))', width: '52px', height: '52px', backgroundColor: '#006699', color: '#fff', fontSize: '20px', fontWeight: '700', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
         {showChat ? 'x' : '?'}
       </button>
       {showChat && (
-        <div style={{ position: 'fixed', bottom: '80px', right: '24px', width: '380px', height: '480px', backgroundColor: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', borderRadius: '16px', display: 'flex', flexDirection: 'column', zIndex: 999 }}>
+        <div style={{ position: 'fixed', bottom: 'calc(80px + var(--sab))', right: 'max(24px, var(--sar))', width: '380px', height: '480px', backgroundColor: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', borderRadius: '16px', display: 'flex', flexDirection: 'column', zIndex: 999 }}>
           <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', fontSize: '20px', fontWeight: '700', color: '#1F2937', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span>Notya AI Yardım</span>
             <div style={{ backgroundColor: '#e5e7eb', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#6B7280' }}>{professionType}</div>

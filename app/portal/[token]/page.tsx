@@ -98,7 +98,7 @@ export default function MüşteriPortal() {
         ))}
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, maxWidth: 480, width: '100%', padding: 16, background: '#0A1628', borderTop: '1px solid #1f2a44' }}>
+      <div style={{ position: 'fixed', bottom: 0, maxWidth: 480, width: '100%', padding: '16px 16px calc(16px + var(--sab))', background: '#0A1628', borderTop: '1px solid #1f2a44' }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <input
             value={input}

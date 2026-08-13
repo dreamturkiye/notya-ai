@@ -60,10 +60,7 @@ export default function DoktorNav() {
   return (
     <nav style={{
       backgroundColor: '#0A1628',
-      paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
-      paddingBottom: '12px',
-      paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
-      paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
+      padding: '12px 16px',
       borderBottom: '1px solid #1E3A5F',
       position: 'sticky',
       top: 0,
