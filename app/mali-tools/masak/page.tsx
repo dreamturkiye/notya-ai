@@ -13,6 +13,7 @@ export default function MasakPage() {
   const [tarih, setTarih] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }))
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function analiz() {
     if (!tutar || !müşteriAdi) return
@@ -20,13 +21,20 @@ export default function MasakPage() {
     const rawToken = typeof window !== 'undefined' ? localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '') : null
     const session = rawToken ? { access_token: JSON.parse(rawToken).access_token } : null
     if (!session) { router.push('/giris/mali'); return }
-    const res = await fetch('/api/mali/masak', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ islem: { musteriId: 'manual', müşteriAdi, islemTipi, tutar: Number(tutar), tarih, aciklama }, sendAlert: false })
-    })
-    const data = await res.json()
-    if (data.success) setResult(data.data[0])
+    try {
+      const res = await fetch('/api/mali/masak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ islem: { musteriId: 'manual', müşteriAdi, islemTipi, tutar: Number(tutar), tarih, aciklama }, sendAlert: false })
+      })
+      const data = await res.json()
+      const analiz = Array.isArray(data?.data) ? data.data[0] : data?.data
+      if (data?.success && analiz) { setResult(analiz); setError('') }
+      else { setResult(null); setError(String(data?.error || 'Analiz tamamlanamadi.')) }
+    } catch {
+      setResult(null)
+      setError('Bağlantı hatası. Analiz yapilamadi.')
+    }
     setLoading(false)
   }
 
@@ -73,25 +81,35 @@ export default function MasakPage() {
             {loading ? 'Analiz ediliyor...' : 'MASAK Riski Analiz Et'}
           </button>
         </div>
-        {result && (
-          <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: riskColors[result.riskSeviyesi], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12 }}>{result.riskSeviyesi.toUpperCase()}</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>Risk: {result.riskSeviyesi.toUpperCase()}</div>
-                <div style={{ fontSize: 13, color: result.bildirimGerekiyor ? '#DC2626' : '#16A34A' }}>{result.bildirimGerekiyor ? 'MASAK BILDIRIMI GEREKIYOR' : 'Bildirim gerekmiyor'}</div>
-              </div>
-            </div>
-            {result.nedenler.length > 0 && <div style={{ marginBottom: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Nedenler:</div>
-              {result.nedenler.map((n: string, i: number) => <div key={i} style={{ fontSize: 13, color: '#DC2626', padding: '4px 0' }}>• {n}</div>)}
-            </div>}
-            {result.yapilmasiGerekenler.length > 0 && <div>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Yapilmasi Gerekenler:</div>
-              {result.yapilmasiGerekenler.map((y: string, i: number) => <div key={i} style={{ fontSize: 13, color: '#1B4332', padding: '4px 0' }}>✓ {y}</div>)}
-            </div>}
+        {error && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', borderRadius: 10, padding: '12px 14px', fontSize: 13 }}>
+            {error}
           </div>
         )}
+        {result && (() => {
+          const seviye = String(result?.riskSeviyesi || 'yok')
+          const nedenler: string[] = Array.isArray(result?.nedenler) ? result.nedenler : []
+          const yapilmasi: string[] = Array.isArray(result?.yapilmasiGerekenler) ? result.yapilmasiGerekenler : []
+          return (
+            <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: riskColors[seviye] || '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{seviye.toUpperCase()}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Risk: {seviye.toUpperCase()}</div>
+                  <div style={{ fontSize: 13, color: result?.bildirimGerekiyor ? '#DC2626' : '#16A34A' }}>{result?.bildirimGerekiyor ? 'MASAK BILDIRIMI GEREKIYOR' : 'Bildirim gerekmiyor'}</div>
+                </div>
+              </div>
+              {nedenler.length > 0 && <div style={{ marginBottom: 12 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Nedenler:</div>
+                {nedenler.map((n, i) => <div key={i} style={{ fontSize: 13, color: '#DC2626', padding: '4px 0' }}>• {n}</div>)}
+              </div>}
+              {yapilmasi.length > 0 && <div>
+                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Yapilmasi Gerekenler:</div>
+                {yapilmasi.map((y, i) => <div key={i} style={{ fontSize: 13, color: '#1B4332', padding: '4px 0' }}>✓ {y}</div>)}
+              </div>}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

@@ -4,10 +4,10 @@ export const dynamic = "force-dynamic"
 // app/session/mali/page.tsx
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { AccountingNoteV2 } from '@/lib/ai/noteGenerator';
+import { AccountingNote } from '@/lib/ai/noteGenerator';
 
 const GORUSME_TYPES = [
   { value: 'müşteri_görüşmesi', label: 'Müşteri Görüşmesi' },
@@ -40,68 +40,88 @@ const SessionPage: React.FC = () => {
   const [vergiNo, setVergiNo] = useState<string>('');
   const [faaliyetAlani, setFaaliyetAlani] = useState<string>('');
   const [transcript, setTranscript] = useState<string>('');
-  const [note, setNote] = useState<AccountingNoteV2 | null>(null);
+  const [note, setNote] = useState<AccountingNote | null>(null);
   const [seconds, setSeconds] = useState<number>(0);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const recognitionRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const router = useRouter();
 
   useEffect(() => {
-    if (step === 'recording') {
-      startTimer();
-      startSpeechRecognition();
-    }
+    if (step !== 'recording') return;
+    startTimer();
+    startSpeechRecognition();
+    return () => stopRecording();
   }, [step]);
 
-  const startTimer = () => {
-    const intervalId = setInterval(() => {
-      setSeconds((prev) => prev + 1);
-    }, 1000);
+  useEffect(() => () => stopRecording(), []);
 
-    return () => clearInterval(intervalId);
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => setSeconds((prev) => prev + 1), 1000);
   };
 
-  const startSpeechRecognition = async () => {
-    if ('webkitSpeechRecognition' in window) {
-      const recognition = new (window as any).webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'tr-TR';
+  const stopRecording = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch { /* already stopped */ }
+      recognitionRef.current = null;
+    }
+  };
 
-      let finalTranscript = '';
+  const startSpeechRecognition = () => {
+    const SR = typeof window !== 'undefined'
+      ? (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+      : undefined;
+    if (!SR) {
+      setError('Bu tarayıcı sesli kayıt (Web Speech API) desteklemiyor. Notu elle yazabilirsiniz.');
+      return;
+    }
+
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'tr-TR';
+
+    let finalTranscript = '';
+
+    recognition.onresult = (event: any) => {
       let interimTranscript = '';
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
         }
-        setTranscript(finalTranscript + interimTranscript);
-      };
+      }
+      setTranscript(finalTranscript + interimTranscript);
+    };
 
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        setError(event.error);
-      };
+    recognition.onerror = (event: any) => {
+      setError(String(event?.error || 'Ses tanıma hatası'));
+    };
 
+    recognitionRef.current = recognition;
+    try {
       recognition.start();
-    } else {
-      setError('Web Speech API not supported');
+    } catch {
+      setError('Mikrofon başlatılamadı. Tarayıcı izinlerini kontrol edin.');
     }
   };
 
   const handleComplete = async () => {
-    if ('webkitSpeechRecognition' in window) {
-      (window as any).webkitSpeechRecognition().stop();
-    }
-
+    stopRecording();
+    setError(null);
     setStep('processing');
 
     try {
-      const { data: sessionData, error: sessionError } = await supabase
+      const sb = getSB();
+      const { data: sessionData, error: sessionError } = await sb
         .from('sessions')
         .insert([
           {
@@ -112,10 +132,11 @@ const SessionPage: React.FC = () => {
         .select();
 
       if (sessionError) throw sessionError;
+      if (!sessionData?.length) throw new Error('Görüşme kaydı oluşturulamadı.');
 
       const sessionId = sessionData[0].id;
 
-      const { data: noteData, error: noteError } = await supabase
+      const { data: noteData, error: noteError } = await sb
         .from('notes')
         .insert([
           {
@@ -132,19 +153,20 @@ const SessionPage: React.FC = () => {
         .select();
 
       if (noteError) throw noteError;
+      if (!noteData?.length) throw new Error('Not kaydedilemedi.');
 
-      setNote(noteData[0]);
-    } catch (err) {
-      setError(err.message);
+      setNote(noteData[0] as AccountingNote);
+      setStep('done');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Not kaydedilirken bir hata oluştu.');
+      setStep('recording');
     }
-
-    setStep('done');
   };
 
   return (
-    <div style={{ backgroundColor: '#F1F5F9', height: '100vh' }}>
+    <div style={{ backgroundColor: '#F1F5F9', minHeight: '100vh' }}>
       <nav style={{ backgroundColor: '#0A1628', color: 'white', padding: '10px 20px', display: 'flex', alignItems: 'center' }}>
-        <button onClick={() => router.push('/dashboard/mali')} style={{ background: 'none', border: 'none', color: 'white', marginRight: '10px' }}>
+        <button onClick={() => router.push('/dashboard/mali')} style={{ background: 'none', border: 'none', color: 'white', marginRight: '10px', cursor: 'pointer' }}>
           {'<'}
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: 'auto' }}>
@@ -156,13 +178,15 @@ const SessionPage: React.FC = () => {
       </nav>
 
       {step === 'setup' && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 64px)' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 64px)', padding: 16 }}>
           <form
+            onSubmit={(e) => e.preventDefault()}
             style={{
               backgroundColor: 'white',
               padding: '20px',
               borderRadius: '8px',
-              width: '300px',
+              width: '100%',
+              maxWidth: '360px',
               display: 'flex',
               flexDirection: 'column'
             }}
@@ -172,21 +196,20 @@ const SessionPage: React.FC = () => {
               placeholder="Şirket Adı"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              style={{ marginBottom: '10px', padding: '8px', borderRadius: '4px' }}
+              style={{ marginBottom: '10px', padding: '8px', borderRadius: '4px', border: '1px solid #E2E8F0', boxSizing: 'border-box' }}
             />
             <input
               type="text"
               placeholder="Vergi No"
               value={vergiNo}
               onChange={(e) => setVergiNo(e.target.value)}
-              style={{ marginBottom: '10px', padding: '8px', borderRadius: '4px' }}
+              style={{ marginBottom: '10px', padding: '8px', borderRadius: '4px', border: '1px solid #E2E8F0', boxSizing: 'border-box' }}
             />
             <select
               value={faaliyetAlani}
               onChange={(e) => setFaaliyetAlani(e.target.value)}
-              style={{ marginBottom: '20px', padding: '8px', borderRadius: '4px' }}
+              style={{ marginBottom: '20px', padding: '8px', borderRadius: '4px', border: '1px solid #E2E8F0', boxSizing: 'border-box' }}
             >
-              <option value="">Faaliyet Alanı</option>
               <option value=''>Faaliyet Alanı Secin</option>
               <option value='ticaret'>Ticaret</option>
               <option value='hizmet'>Hizmet</option>
@@ -210,10 +233,12 @@ const SessionPage: React.FC = () => {
               {GORUSME_TYPES.map((type) => (
                 <button
                   key={type.value}
+                  type="button"
                   onClick={() => setGörüşmeTuru(type.value)}
                   style={{
                     padding: '8px 16px',
                     borderRadius: '4px',
+                    cursor: 'pointer',
                     backgroundColor: görüşmeTuru === type.value ? '#2563EB' : 'white',
                     color: görüşmeTuru === type.value ? 'white' : '#0A1628',
                     border: görüşmeTuru === type.value ? 'none' : '1px solid #0A1628'
@@ -228,10 +253,12 @@ const SessionPage: React.FC = () => {
               {HIZMET_TYPES.map((type) => (
                 <button
                   key={type.value}
+                  type="button"
                   onClick={() => setHizmetTuru(type.value)}
                   style={{
                     padding: '8px 16px',
                     borderRadius: '4px',
+                    cursor: 'pointer',
                     backgroundColor: hizmetTuru === type.value ? '#2563EB' : 'white',
                     color: hizmetTuru === type.value ? 'white' : '#0A1628',
                     border: hizmetTuru === type.value ? 'none' : '1px solid #0A1628'
@@ -243,7 +270,8 @@ const SessionPage: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setStep('recording')}
+              type="button"
+              onClick={() => { setSeconds(0); setTranscript(''); setStep('recording'); }}
               disabled={!companyName}
               style={{
                 padding: '10px 20px',
@@ -251,7 +279,8 @@ const SessionPage: React.FC = () => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: companyName ? 'pointer' : 'not-allowed'
+                cursor: companyName ? 'pointer' : 'not-allowed',
+                opacity: companyName ? 1 : 0.6
               }}
             >
               Başla
@@ -261,24 +290,32 @@ const SessionPage: React.FC = () => {
       )}
 
       {step === 'recording' && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 64px)' }}>
-          <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', width: '500px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 64px)', padding: 16 }}>
+          <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '500px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '1.5em', fontWeight: 'bold' }}>Kayıt Devam Ediyor</span>
-              <span style={{ color: '#DC2626', fontSize: '1.5em' }}>{new Date(seconds * 1000).toISOString().substr(14, 5)}</span>
+              <span style={{ color: '#DC2626', fontSize: '1.5em' }}>{new Date(seconds * 1000).toISOString().substring(14, 19)}</span>
             </div>
 
-            <div style={{ position: 'relative', height: '300px', overflowY: 'auto', marginBottom: '20px' }}>
+            {error && (
+              <div style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', fontSize: 13 }}>
+                {error}
+              </div>
+            )}
+
+            <div style={{ position: 'relative', height: '300px', marginBottom: '20px' }}>
               <textarea
                 value={transcript}
-                readOnly
+                onChange={(e) => setTranscript(e.target.value)}
                 style={{
                   width: '100%',
                   height: '100%',
                   padding: '8px',
-                  border: 'none',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 6,
                   backgroundColor: '#F9FAFB',
-                  resize: 'none'
+                  resize: 'none',
+                  boxSizing: 'border-box'
                 }}
               />
               <div
@@ -289,8 +326,7 @@ const SessionPage: React.FC = () => {
                   width: '10px',
                   height: '10px',
                   borderRadius: '50%',
-                  backgroundColor: '#DC2626',
-                  animation: 'pulse 1s infinite'
+                  backgroundColor: '#DC2626'
                 }}
               />
             </div>
@@ -313,9 +349,9 @@ const SessionPage: React.FC = () => {
       )}
 
       {step === 'processing' && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 64px)' }}>
-          <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', width: '300px', textAlign: 'center' }}>
-            <span style={{ fontSize: '1.5em', fontWeight: 'bold', marginBottom: '20px' }}>Notlar Oluşturuluyor</span>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 64px)', padding: 16 }}>
+          <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '300px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: '1.3em', fontWeight: 'bold' }}>Notlar Oluşturuluyor</span>
             <div
               style={{
                 border: '4px solid #2563EB',
@@ -334,9 +370,32 @@ const SessionPage: React.FC = () => {
       )}
 
       {step === 'done' && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 64px)' }}>
-          <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', width: '500px' }}>
-            {/* Render the note details here */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 64px)', padding: 16 }}>
+          <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '500px' }}>
+            <div style={{ fontSize: '1.3em', fontWeight: 'bold', marginBottom: 8 }}>Görüşme Kaydedildi</div>
+            <div style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>
+              {companyName} — {GORUSME_TYPES.find(t => t.value === görüşmeTuru)?.label || görüşmeTuru}
+              {note ? ' — kayıt oluşturuldu' : ''}
+            </div>
+            {transcript && (
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: 12, fontSize: 13, color: '#334155', maxHeight: 220, overflowY: 'auto', whiteSpace: 'pre-wrap', marginBottom: 16 }}>
+                {transcript}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => router.push('/dashboard/mali')}
+                style={{ flex: 1, minWidth: 140, padding: '11px', background: '#2563EB', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
+              >
+                Panele Dön
+              </button>
+              <button
+                onClick={() => { setNote(null); setTranscript(''); setSeconds(0); setError(null); setStep('setup'); }}
+                style={{ flex: 1, minWidth: 140, padding: '11px', background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+              >
+                Yeni Görüşme
+              </button>
+            </div>
           </div>
         </div>
       )}

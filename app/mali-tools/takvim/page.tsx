@@ -19,11 +19,17 @@ export default function TakvimPage() {
     const session = rawToken ? { access_token: JSON.parse(rawToken).access_token } : null
     if (!session) { router.push('/giris/mali'); return }
     setLoading(true)
-    const res = await fetch('/api/mali/takvim' + (sendAlert ? '?sendAlert=true' : ''), {
-      headers: { 'Authorization': 'Bearer ' + session.access_token }
-    })
-    const data = await res.json()
-    if (data.success) { setItems(data.data.items); setMüşteriler(data.data.müşteriler); setKritikCount(data.data.kritikCount) }
+    try {
+      const res = await fetch('/api/mali/takvim' + (sendAlert ? '?sendAlert=true' : ''), {
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      })
+      const data = await res.json()
+      setItems(Array.isArray(data?.data?.items) ? data.data.items : Array.isArray(data?.items) ? data.items : [])
+      setMüşteriler(Number(data?.data?.müşteriler ?? data?.data?.musteriler ?? 0) || 0)
+      setKritikCount(Number(data?.data?.kritikCount ?? 0) || 0)
+    } catch {
+      setItems([])
+    }
     setLoading(false)
   }
 

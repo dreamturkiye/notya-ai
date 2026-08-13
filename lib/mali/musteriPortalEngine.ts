@@ -38,6 +38,11 @@ export function generateSecureToken(
   return { token, tokenHash, expiresAt: new Date(payload.expiresAt) }
 }
 
+/** Recomputes the stored hash for a plain token. Must match generateSecureToken. */
+export function hashPortalToken(token: string): string {
+  return createHmac('sha256', SECRET).update(token).digest('hex')
+}
+
 export function verifyToken(token: string): PortalTokenPayload | null {
   try {
     const parts = token.split('.')

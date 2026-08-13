@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import MaliNav from '@/components/mali/MaliNav'
+import { getAccessToken } from '@/lib/portal/toolsUi'
 
 
 const TOOLS = [
@@ -18,19 +19,16 @@ const TOOLS = [
 export default function MaliToolsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [hover, setHover] = useState<number | null>(null)
 
   useEffect(() => {
-    (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || ''); return raw ? { data: { session: { access_token: JSON.parse(raw).access_token } } } : { data: { session: null } } })().then(({ data: { session } }) => {
-      if (!session) router.push('/giris/mali')
-      else setLoading(false)
-    })
-  }, [])
+    if (!getAccessToken()) router.push('/giris/mali')
+    else setLoading(false)
+  }, [router])
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', background: '#F1F5F9' }}>
       <MaliNav />
-      <div style={{ color: '#fff', fontSize: 16 }}>Yükleniyor...</div>
+      <div style={{ padding: 60, textAlign: 'center', color: '#64748B', fontSize: 15 }}>Yükleniyor...</div>
     </div>
   )
 
@@ -45,18 +43,7 @@ export default function MaliToolsPage() {
         @media(max-width: 380px) { .tools-grid { grid-template-columns: 1fr !important; } }
       `}} />
 
-      <nav style={{ background: '#0A1628', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, background: '#1B4332', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>N</span>
-          </div>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Notya AI</span>
-        </div>
-        <button onClick={() => router.push('/dashboard/mali')}
-          style={{ color: 'rgba(255,255,255,0.7)', background: 'none', border: '1px solid rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
-          ← Ana Sayfa
-        </button>
-      </nav>
+      <MaliNav />
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px' }}>
         <div style={{ marginBottom: 24 }}>

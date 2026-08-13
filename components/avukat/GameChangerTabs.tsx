@@ -19,17 +19,26 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
   const [generatingFor, setGeneratingFor] = useState<string | null>(null)
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [portalError, setPortalError] = useState('')
+  const [portalLink, setPortalLink] = useState('')
 
   const loadPortal = useCallback(async () => {
     setPortalLoading(true)
+    setPortalError('')
     try {
       const res = await fetch('/api/avukat/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ admin: true, action: 'list' }) })
       const data = await res.json()
-      if (data.success) {
-        setMuvekkiller(data.data.muvekkiller || [])
-        setPortalTokens(data.data.tokens || [])
+      if (data?.success && data.data) {
+        setMuvekkiller(Array.isArray(data.data.muvekkiller) ? data.data.muvekkiller : [])
+        setPortalTokens(Array.isArray(data.data.tokens) ? data.data.tokens : [])
+      } else {
+        setMuvekkiller([])
+        setPortalTokens([])
+        setPortalError(String(data?.error || 'Portal verileri yüklenemedi.'))
       }
-    } catch {}
+    } catch {
+      setPortalError('Bağlantı hatası. Portal verileri yüklenemedi.')
+    }
     setPortalLoading(false)
   }, [token])
 
@@ -39,25 +48,42 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
 
   async function generateLink(muvekkilId: string) {
     setGeneratingFor(muvekkilId)
+    setPortalError('')
     try {
       const res = await fetch('/api/avukat/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ admin: true, muvekkilId }) })
       const data = await res.json()
-      if (data.success) {
-        await navigator.clipboard.writeText(data.data.portalUrl)
-        setCopiedId(muvekkilId)
-        setTimeout(() => setCopiedId(null), 3000)
+      const url = data?.data?.portalUrl || (data?.data?.token ? window.location.origin + '/portal/avukat/' + data.data.token : '')
+      if (data?.success && url) {
+        setPortalLink(String(url))
+        try {
+          await navigator.clipboard.writeText(String(url))
+          setCopiedId(muvekkilId)
+          setTimeout(() => setCopiedId(null), 3000)
+        } catch {
+          // Clipboard blocked; the link is shown below the list instead.
+        }
         await loadPortal()
+      } else {
+        setPortalError(String(data?.error || 'Link oluşturulamadı.'))
       }
-    } catch {}
+    } catch {
+      setPortalError('Bağlantı hatası. Link oluşturulamadı.')
+    }
     setGeneratingFor(null)
   }
 
   async function revokeLink(tokenId: string) {
     setRevokingId(tokenId)
+    setPortalError('')
     try {
-      await fetch('/api/avukat/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ admin: true, action: 'revoke', tokenId }) })
+      const res = await fetch('/api/avukat/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ admin: true, action: 'revoke', tokenId }) })
+      const data = await res.json()
+      if (!data?.success) setPortalError(String(data?.error || 'Link iptal edilemedi.'))
+      setPortalLink('')
       await loadPortal()
-    } catch {}
+    } catch {
+      setPortalError('Bağlantı hatası. Link iptal edilemedi.')
+    }
     setRevokingId(null)
   }
 
@@ -67,7 +93,11 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
     try {
       const res = await fetch('/api/avukat/dilekce', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ turId: dilektceTur, muvekkil_bilgileri: { aciklama: dilekceInput } }) })
       const data = await res.json()
-      setDilekceOut(data.success ? data.data.dilekce_metni : (data.error || 'Hata'))
+      setDilekceOut(
+        data?.success && data?.data?.dilekce_metni
+          ? String(data.data.dilekce_metni)
+          : String(data?.error || 'Dilekce olusturulamadi.')
+      )
     } catch { setDilekceOut('Bağlantı hatası') }
     setDilekceLoading(false)
   }
@@ -78,8 +108,10 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
     try {
       const res = await fetch('/api/avukat/ictihat-ara', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ query: ictihatQ }) })
       const data = await res.json()
-      if (data.success) setIctihatOut(data.data.ozet + ' ' + data.data.strateji_onerisi)
-      else setIctihatOut(data.error || 'Hata')
+      if (data?.success && data.data) {
+        const parts = [data.data.ozet, data.data.strateji_onerisi].filter(Boolean).map(String)
+        setIctihatOut(parts.length ? parts.join('\n\n') : 'Sonuc bulunamadi.')
+      } else setIctihatOut(String(data?.error || 'Arama basarisiz.'))
     } catch { setIctihatOut('Bağlantı hatası') }
     setIctihatLoading(false)
   }
@@ -90,11 +122,20 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
     try {
       const res = await fetch('/api/avukat/sozlesme-analiz', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ sozlesmeMetni: sozMetin, sozlesmeTuru: sozTur }) })
       const data = await res.json()
-      if (data.success) {
+      if (data?.success && data.data) {
         const d = data.data
-        const riskStr = (d.riskler || []).map((r: {ciddiyet: string; metin: string; oneri: string}) => r.ciddiyet.toUpperCase() + ': ' + r.metin + ' -> ' + r.oneri).join(', ')
-        setSozOut('PUAN: ' + d.genel_puan + '/100 | ' + d.ozet + ' | RISKLER: ' + riskStr)
-      } else setSozOut(data.error || 'Hata')
+        const riskler = Array.isArray(d.riskler) ? d.riskler : []
+        const riskStr = riskler
+          .map((r: Record<string, unknown>) =>
+            String(r?.ciddiyet || 'RISK').toUpperCase() + ': ' + String(r?.metin || '') + ' -> ' + String(r?.oneri || '')
+          )
+          .join('\n')
+        setSozOut(
+          'PUAN: ' + (d.genel_puan ?? '—') + '/100\n\n' +
+          String(d.ozet || 'Ozet yok.') +
+          (riskStr ? '\n\nRISKLER:\n' + riskStr : '')
+        )
+      } else setSozOut(String(data?.error || 'Analiz basarisiz.'))
     } catch { setSozOut('Bağlantı hatası') }
     setSozLoading(false)
   }
@@ -158,6 +199,17 @@ export default function AvukatGameChangerTabs({ token, activeTab }: { token: str
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Muvekkil Portali</div>
           <div style={{ fontSize: 12, opacity: 0.85, lineHeight: 1.6 }}>Her muvekkil icin imzali, sureli link olusturun. Link istediginiz an iptal edilebilir.</div>
         </div>
+        {portalError && (
+          <div style={{ background: '#7F1D1D', border: '1px solid #FCA5A5', color: '#FEE2E2', borderRadius: 8, padding: '11px 13px', marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
+            {portalError}
+          </div>
+        )}
+        {portalLink && (
+          <div style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 4 }}>Son olusturulan portal linki</div>
+            <div style={{ fontSize: 12, color: '#E2E8F0', wordBreak: 'break-all', fontFamily: 'ui-monospace,monospace' }}>{portalLink}</div>
+          </div>
+        )}
         {portalLoading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>Yukleniyor...</div>
         ) : muvekkiller.length === 0 ? (

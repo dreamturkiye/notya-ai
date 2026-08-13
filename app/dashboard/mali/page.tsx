@@ -52,7 +52,7 @@ export default function MaliDashboard() {
   useEffect(() => {
     const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
     sb.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { router.push('/giris'); return }
+      if (!session) { router.push('/giris/mali'); return }
       const tok = session.access_token
       setToken(tok)
 

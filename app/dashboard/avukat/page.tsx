@@ -96,9 +96,14 @@ export default function AvukatDashboard() {
         <button onClick={() => supabase.auth.signOut().then(() => router.push('/giris/avukat'))} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',padding:'8px 16px',borderRadius:8,cursor:'pointer'}}>Çıkış</button>
       </div>
 
-      <div style={{background:'#fff',borderBottom:'1px solid #E2E8F0',padding:'0 24px',display:'flex',gap:4}}>
+      <div style={{background:'#fff',borderBottom:'1px solid #E2E8F0',padding:'8px 12px',display:'flex',gap:6,overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'none'}}>
         {([['dashboard','Ozet'],['chat','Asistan'],['sure','Sure Takibi'],['muvekkiller','Muvekkillerim'],['dilekce','Dilekce'],['ictihat','Ictihat'],['sozlesme','Sozlesme'],['portal','Portal']] as const).map(([tab,label]) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} style={{padding:'12px 20px',border:'none',borderBottom:activeTab===tab?'2px solid #2563EB':'2px solid transparent',background:'transparent',color:activeTab===tab?'#2563EB':'#64748B',cursor:'pointer',fontSize:14,fontWeight:500}}>{label}</button>
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            style={{padding:'9px 16px',border:'1px solid '+(activeTab===tab?'#2563EB':'#E2E8F0'),borderRadius:20,
+                    background:activeTab===tab?'#2563EB':'#fff',color:activeTab===tab?'#fff':'#64748B',
+                    cursor:'pointer',fontSize:13,fontWeight:activeTab===tab?600:500,whiteSpace:'nowrap',flexShrink:0}}>
+            {label}
+          </button>
         ))}
       </div>
 

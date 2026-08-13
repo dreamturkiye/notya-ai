@@ -45,15 +45,20 @@ export default function AylikRaporPage() {
       fetch('/api/mali/aylik-rapor',        { headers:{Authorization:'Bearer '+token} }).then(r=>r.json()).catch(()=>null)
     ])
     if (kdvRes?.success) setKdv(kdvRes)
+    else setKdv(null)
     if (beyanRes?.success && beyanRes.data) {
-      setBeyanlar(beyanRes.data.beyanlar || [])
-      setWaLinks(beyanRes.data.whatsappLinks || [])
+      setBeyanlar(Array.isArray(beyanRes.data.beyanlar) ? beyanRes.data.beyanlar : [])
+      setWaLinks(Array.isArray(beyanRes.data.whatsappLinks) ? beyanRes.data.whatsappLinks : [])
       setBeyanOzet(beyanRes.data.ozet || null)
+    } else {
+      setBeyanlar([])
+      setWaLinks([])
+      setBeyanOzet(null)
     }
     setLoading(false)
   }
 
-  const fmt = (n:number) => n.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2})
+  const fmt = (n:unknown) => (Number(n) || 0).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2})
 
   if (loading) return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'center',
@@ -136,7 +141,7 @@ export default function AylikRaporPage() {
               ['Toplam Gider',  kdv.giderToplami,  RED],
               ['KDV Tahsilat',  kdv.kdvTahsilat,   BLUE],
               ['KDV İndirilen', kdv.kdvIndirilen,  AMBER],
-              ['Net KDV',       kdv.netKdv,        kdv.netKdv>0?RED:GREEN],
+              ['Net KDV',       kdv.netKdv,        Number(kdv.netKdv)>0?RED:GREEN],
               ['Stopaj',        kdv.stopajToplami, '#7C3AED'],
             ] as [string,number,string][]).map(([l,v,c])=>(
               <div key={l} style={{
@@ -155,10 +160,10 @@ export default function AylikRaporPage() {
               fontSize:12,color:'#0369A1',background:'#F0F9FF',
               borderRadius:7,padding:'7px 10px',marginTop:8
             }}>
-              {kdv.toplamIslem} işlem kayıtlı
+              {Number(kdv.toplamIslem) || 0} işlem kayıtlı
             </div>
 
-            {kdv.incelemeGereken>0 && (
+            {Number(kdv.incelemeGereken)>0 && (
               <div
                 onClick={()=>router.push('/dashboard/mali/review')}
                 style={{
@@ -170,22 +175,24 @@ export default function AylikRaporPage() {
               </div>
             )}
 
-            {kdv.uyarilar.length>0 && (
+            {(kdv.uyarilar || []).length>0 && (
               <div style={{borderTop:'1px solid #F1F5F9',marginTop:8,paddingTop:6}}>
-                {kdv.uyarilar.map((u,i)=>(
+                {(kdv.uyarilar || []).map((u,i)=>(
                   <div key={i} style={{fontSize:12,color:'#92400E',padding:'2px 0'}}>⚠️ {u}</div>
                 ))}
               </div>
             )}
 
-            <div style={{
-              marginTop:10,padding:'9px 10px',
-              background:kdv.netKdv>0?'#FEF2F2':'#F0FDF4',
-              borderRadius:8,fontSize:13,fontWeight:600,
-              color:kdv.netKdv>0?RED:GREEN,lineHeight:1.4
-            }}>
-              {kdv.tavsiye}
-            </div>
+            {!!kdv.tavsiye && (
+              <div style={{
+                marginTop:10,padding:'9px 10px',
+                background:Number(kdv.netKdv)>0?'#FEF2F2':'#F0FDF4',
+                borderRadius:8,fontSize:13,fontWeight:600,
+                color:Number(kdv.netKdv)>0?RED:GREEN,lineHeight:1.4
+              }}>
+                {kdv.tavsiye}
+              </div>
+            )}
           </div>
         ) : (
           <div style={{
@@ -263,7 +270,7 @@ export default function AylikRaporPage() {
                     <div style={{fontSize:13,fontWeight:600,color:G}}>
                       {String(b.beyan_turu)}
                     </div>
-                    {b.sirket_adi && (
+                    {!!b.sirket_adi && (
                       <div style={{
                         fontSize:11,color:'#64748B',marginTop:2,
                         overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'

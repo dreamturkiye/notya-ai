@@ -14,6 +14,7 @@ export default function MutabakatPage() {
   const [donem, setDonem] = useState(new Date().toISOString().slice(0,7))
   const [data,  setData]  = useState<{eslesme:EslesmeRow[];ozet:Ozet}|null>(null)
   const [loading, setLoad]= useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
@@ -25,6 +26,7 @@ export default function MutabakatPage() {
 
   async function calistir() {
     setLoad(true)
+    setError("")
     try {
       const res = await fetch("/api/mali/mutabakat", {
         method:"POST",
@@ -32,8 +34,29 @@ export default function MutabakatPage() {
         body: JSON.stringify({ donem })
       })
       const d = await res.json()
-      setData(d)
-    } catch(e) { alert(String(e)) }
+      if (d?.error) { setError(String(d.error)); setData(null); setLoad(false); return }
+
+      const rawEslesme = Array.isArray(d?.eslesme) ? d.eslesme : []
+      const eslesme: EslesmeRow[] = rawEslesme.map((e:Record<string,unknown>) => ({
+        date:       String(e?.date ?? "—"),
+        zTotal:     Number(e?.zTotal) || 0,
+        bankaTotal: Number(e?.bankaTotal) || 0,
+        fark:       Number(e?.fark) || 0,
+        durum:      String(e?.durum ?? "eslesme"),
+        notlar:     Array.isArray(e?.notlar) ? (e.notlar as unknown[]).map(String) : []
+      }))
+      const o = (d?.ozet && typeof d.ozet === "object" ? d.ozet : {}) as Record<string,unknown>
+      const ozet: Ozet = {
+        toplamSatis: Number(o.toplamSatis) || 0,
+        toplamGider: Number(o.toplamGider) || 0,
+        toplamKDV:   Number(o.toplamKDV)   || 0,
+        netKar:      Number(o.netKar)      || 0,
+        uyumsuzGun:  Number(o.uyumsuzGun)  || 0,
+        tavsiye:     String(o.tavsiye || "Bu donem icin islem kaydi bulunamadi. Belge yukleyin."),
+        uyumsuzBelge: []
+      }
+      setData({ eslesme, ozet })
+    } catch { setError("Bağlantı hatası. Mutabakat calistirilamadi.") }
     setLoad(false)
   }
 
@@ -55,6 +78,12 @@ export default function MutabakatPage() {
             {loading ? "Hesaplaniyor..." : "Mutabakat Calistir"}
           </button>
         </div>
+
+        {error && (
+          <div style={{background:"#FEF2F2",border:"1px solid #FCA5A5",color:"#991B1B",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13}}>
+            {error}
+          </div>
+        )}
 
         {data && (
           <>
@@ -81,6 +110,11 @@ export default function MutabakatPage() {
             {/* Day-by-day table */}
             <h2 style={{fontSize:15,fontWeight:600,color:"#1E293B",marginBottom:10}}>Gun Bazli Eslesme</h2>
             <div style={{background:"white",borderRadius:12,overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,.08)"}}>
+              {data.eslesme.length === 0 && (
+                <div style={{padding:"24px 16px",textAlign:"center",color:"#64748B",fontSize:13}}>
+                  Bu donem icin eslestirilecek Z raporu veya banka hareketi bulunamadi.
+                </div>
+              )}
               {data.eslesme.map((e,i) => (
                 <div key={e.date} style={{padding:"11px 16px",borderBottom:i<data.eslesme.length-1?"1px solid #F1F5F9":"none",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                   <div style={{flex:1}}>
@@ -103,7 +137,7 @@ export default function MutabakatPage() {
           </>
         )}
 
-        {!data && !loading && token && (
+        {!data && !loading && !error && token && (
           <div style={{background:"white",borderRadius:12,padding:"40px 20px",textAlign:"center",boxShadow:"0 1px 3px rgba(0,0,0,.08)"}}>
             <div style={{fontSize:14,color:"#64748B",marginBottom:8}}>Donemi secin ve mutabakat calistirin</div>
             <div style={{fontSize:12,color:"#94A3B8"}}>Z raporlari ile banka hareketleri karsilastirilacak</div>
