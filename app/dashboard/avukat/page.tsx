@@ -40,10 +40,16 @@ export default function AvukatDashboard() {
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { router.push('/giris/avukat'); return }
-      const { data: u } = await supabase.from('users').select('*').eq('id', session.user.id).single()
-      if (!u) { router.push('/giris/avukat'); return }
-      if (u.profession_type !== 'avukat') { router.push('/giris/avukat'); return }
+      if (!session) { router.replace('/giris/avukat'); return }
+      const { data: u } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
+      if (!u) {
+        // Session exists but no users row yet — still allow shell access for onboarding recovery
+        setUser({ id: session.user.id, full_name: session.user.email })
+        setLoading(false)
+        setAvukatToken(session.access_token || '')
+        return
+      }
+
       setUser(u)
       const [sessRes, sureRes, muvRes] = await Promise.all([
         supabase.from('avukat_sessions').select('*').eq('avukat_id', session.user.id).order('created_at', { ascending: false }).limit(10),
@@ -54,10 +60,9 @@ export default function AvukatDashboard() {
       setSureler(sureRes.data || [])
       setMuvekkilCount(muvRes.count || 0)
       setLoading(false)
-      const {data:{session:s2}} = await supabase.auth.getSession(); if(s2) setAvukatToken(s2.access_token||"")
-      supabase.auth.getSession().then(({data:{session}})=>{ if(session) setAvukatToken(session.access_token||"")})
+      setAvukatToken(session.access_token || '')
     })
-  }, [])
+  }, [router])
 
   async function sendChat() {
     if (!chatMsg.trim() || !activePersona || chatLoading) return

@@ -3,7 +3,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient('https://anjayzospuurymjmmtim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE')
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://anjayzospuurymjmmtim.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuamF5em9zcHV1cnltam1tdGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc5NzIsImV4cCI6MjA5NjIyMzk3Mn0.J4qRde2QJxxErFIWsO6Zb2TPN8GEIFXloLRpdac4GxE'
+)
 
 export default function Giris() {
   const router = useRouter()
@@ -17,7 +20,24 @@ export default function Giris() {
     if (!email.trim() || !password.trim()) { setError('E-posta ve şifre gereklidir'); return }
     setLoading(true); setError('')
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
-    if (ae || !data.session) { setError(ae?.message || 'Giriş başarısız'); setLoading(false); return }
+    if (ae || !data.session) {
+      setError(ae?.message === 'Invalid login credentials' ? 'E-posta veya şifre hatalı' : (ae?.message || 'Giriş başarısız'))
+      setLoading(false)
+      return
+    }
+    localStorage.setItem('auth-token', JSON.stringify({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_at: data.session.expires_at,
+    }))
+
+    const { data: u } = await supabase.from('users').select('profession_type,onboarding_completed').eq('id', data.user.id).maybeSingle()
+    if (u && !u.onboarding_completed && !u.profession_type) {
+      router.replace('/onboarding?p=avukat')
+      return
+    }
+    // Authenticated users may open the avukat module (same account across modules).
+    // Previously profession_type !== 'avukat' bounced back here → infinite login loop.
     router.replace('/dashboard/avukat')
   }
 
