@@ -6,6 +6,9 @@
  *
  * ConvAI sessions pass `overrides.tts.voiceId` so each persona sounds unique
  * even when agents temporarily share a base config.
+ *
+ * Ayşe (Sibel): keep speaker_boost OFF and prefer flash_v2_5 — her sample is hot;
+ * turbo + speaker_boost caused oversaturated / distorted playback vs Mehmet.
  */
 
 export type VoiceGender = 'female' | 'male'
@@ -17,10 +20,19 @@ export interface NotyaVoice {
   accent: string
 }
 
+/** Recommended ConvAI / TTS settings per flagship voice (apply on agent + voice edit). */
+export const AYSE_TTS_SETTINGS = {
+  model_id: 'eleven_flash_v2_5' as const,
+  stability: 0.5,
+  similarity_boost: 0.6,
+  speed: 0.96,
+  use_speaker_boost: false,
+}
+
 /** Workspace voices verified for Turkish (tr-TR) in ElevenLabs. */
 export const TR_VOICES = {
   // Females — verified tr-TR
-  /** Mature İstanbul TR — flagship Dr. Ayşe (replaces non-native "Wise Educator") */
+  /** Mature İstanbul TR — flagship Dr. Ayşe (Sibel; soft settings — see AYSE_TTS_SETTINGS) */
   ayseHanim: {
     voiceId: 'qLdPxFtPuffoxx5gieBJ',
     label: 'Sibel Malkoç — Ayşe Kaya (İstanbul, native TR)',
