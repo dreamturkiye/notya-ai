@@ -149,3 +149,4 @@ vite.config.ts.timestamp-*
 /audit-logs/
 .vercel
 .env*
+.gstack/
