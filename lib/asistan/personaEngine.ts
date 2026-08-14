@@ -6,7 +6,7 @@
 
 import type { AddressableUser } from '@/lib/address'
 import { address } from '@/lib/address'
-import { formatColleagueTabLabel } from '@/lib/colleagueAddress'
+import { formatColleagueDisplayName } from '@/lib/colleagueAddress'
 import {
   SPECIALISTS,
   SPECIALIST_BY_ID,
@@ -163,7 +163,7 @@ SEN BİR ASİSTAN DEĞİLSİN. Sen dünya çapında tanınan bir uzmansın. Dokt
 
 MUTLAK KURALLAR:
 1. Doktoru her zaman "${casualAddress}" diye hitap et (ör: "${namedAddress}") — asla "doktor" veya "siz" deme
-2. Kendini her zaman ${persona.shortName} Hocam / ${persona.name} olarak tanıt — başka persona adı kullanma
+2. Kendini her zaman ${formatColleagueDisplayName(persona.name)} olarak tanıt (kendi adının sonuna "Hocam" ekleme) — başka persona adı kullanma
 3. Her eylemi gerçekleştirdikten sonra teyit et: "Kaydettim", "Ekledim", "Yazıldı"
 4. Bir eylem bittikten sonra sor: "Başka bir şey var mı ${casualAddress}?"
 5. İlaç dozlarında ASLA hata yapma — dozu her zaman kontrol et
@@ -198,15 +198,16 @@ export function buildVoiceSystemPrompt(
 ): string {
   const casualAddress = address(doctor || { firstName: 'Hocam' }, 'casual')
   const namedAddress = address(doctor || { firstName: 'Hocam' }, 'named')
-  const colleague = formatColleagueTabLabel(persona.name)
+  const selfName = formatColleagueDisplayName(persona.name)
 
-  return `Sen ${persona.name} (${colleague}) — ${persona.title}.
+  return `Sen ${persona.name} (${selfName}) — ${persona.title}.
 ${specialtyKnowhowBlock(persona)}
 KİŞİLİK: ${persona.personality}
 
 Sesli görüşmedesin. Kısa, net, doğal Türkçe konuş. Uzun monolog yapma.
+İlk kelimeden itibaren net ve anlaşılır konuş — mırıldanma, kısık ses veya geveleme yok.
 Doktoru "${casualAddress}" / "${namedAddress}" diye hitap et.
-İlk cümlede ve gerektiğinde kendini ${colleague} olarak tanıt — ASLA başka bir uzman adı kullanma (sen ${persona.shortName}'sin).
+İlk cümlede ve gerektiğinde kendini "${selfName}" olarak tanıt — kendi adının sonuna "Hocam" EKLEME (Hocam yalnızca doktora hitap içindir). ASLA başka bir uzman adı kullanma (sen ${persona.shortName}'sin).
 Klinik akıl yürütmen Türkiye kılavuzları + referans kitaplarına dayansın.
 İlaç/doz/SGK konusunda proaktif uyar.
 Sen asistan değilsin; meslektaş uzmansın.`
@@ -217,8 +218,8 @@ export function buildVoiceFirstMessage(
   doctor?: AddressableUser | null
 ): string {
   const named = address(doctor || { firstName: 'Hocam' }, 'named')
-  const colleague = formatColleagueTabLabel(persona.name)
-  return `Merhaba ${named}. Ben ${colleague}, ${persona.title}. ${persona.greeting}`
+  const selfName = formatColleagueDisplayName(persona.name)
+  return `Merhaba ${named}. Ben ${selfName}, ${persona.title}. ${persona.greeting}`
 }
 
 export function getPersonaForSpecialty(specialty: string): PersonaId {

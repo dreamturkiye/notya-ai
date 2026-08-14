@@ -25,15 +25,14 @@ export interface SpecialistDef {
 }
 
 const F = [
-  TR_VOICES.ayseHanim,
   TR_VOICES.gulrizElif,
   TR_VOICES.gunnurDilek,
   TR_VOICES.pinarZeynep,
   TR_VOICES.tugbaSelin,
   TR_VOICES.asli,
   TR_VOICES.leyla,
-  TR_VOICES.sibel,
   TR_VOICES.ece,
+  TR_VOICES.ayseHanim,
 ] as const
 
 const M = [

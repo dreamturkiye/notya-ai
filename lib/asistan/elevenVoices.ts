@@ -1,7 +1,8 @@
 /**
  * Distinct Turkish ElevenLabs voices per Notya assistant.
- * Prefer Istanbul/Aegean TR voices already in the workspace; never share
- * Jessica/Bella (EN) across female doctors.
+ * ONLY use voices with verified language `tr` (tr-TR) in the ElevenLabs account.
+ * Never use English-native premades (Sarah/Jessica/Rachel/etc.) speaking Turkish —
+ * that causes slurred openings and weak first-syllable volume.
  *
  * ConvAI sessions pass `overrides.tts.voiceId` so each persona sounds unique
  * even when agents temporarily share a base config.
@@ -16,14 +17,15 @@ export interface NotyaVoice {
   accent: string
 }
 
-/** Workspace / library voice IDs (Turkish-first). */
+/** Workspace voices verified for Turkish (tr-TR) in ElevenLabs. */
 export const TR_VOICES = {
-  // Females — already in account or shared library
+  // Females — verified tr-TR
+  /** Mature İstanbul TR — flagship Dr. Ayşe (replaces non-native "Wise Educator") */
   ayseHanim: {
-    voiceId: 'sMFjOtbPhx5GdIeKUBDN',
-    label: 'Wise Educator — Ayşe Hanım (Ege)',
+    voiceId: 'qLdPxFtPuffoxx5gieBJ',
+    label: 'Sibel Malkoç — Ayşe Kaya (İstanbul, native TR)',
     gender: 'female',
-    accent: 'aegean',
+    accent: 'istanbul',
   },
   gulrizElif: {
     voiceId: '7i5J4Bl0THYWdNcoKRl6',
@@ -49,26 +51,21 @@ export const TR_VOICES = {
     gender: 'female',
     accent: 'istanbul',
   },
-  /** Warm native TR female (shared library) — Mali Derya */
+  /** Warm native TR female — Mali Derya */
   asli: {
     voiceId: 'HZh2tWL1clJO95e2qMt2',
     label: 'Aslı — Warm Native Turkish (İstanbul)',
     gender: 'female',
     accent: 'istanbul',
   },
-  /** Composed young TR female (shared library) — Avukat Ayşe (icra) distinct from Dr Ayşe */
+  /** Composed young TR female — Avukat Ayşe (icra), distinct from Dr Ayşe */
   leyla: {
     voiceId: 'ir8YO3t6kXwbDO3roXIT',
-    label: 'Leyla — Composed & Balanced',
+    label: 'Leyla — Composed & Balanced (native TR)',
     gender: 'female',
     accent: 'standard',
   },
-  sibel: {
-    voiceId: 'qLdPxFtPuffoxx5gieBJ',
-    label: 'Sibel Malkoç (İstanbul)',
-    gender: 'female',
-    accent: 'istanbul',
-  },
+  /** Extra mature TR female for specialty rotation (same ID as ayseHanim — keep one slot) */
   ece: {
     voiceId: '5MSp7yE6sGgawegWrMgt',
     label: 'Ece (İstanbul)',
@@ -76,7 +73,7 @@ export const TR_VOICES = {
     accent: 'istanbul',
   },
 
-  // Males — account voices
+  // Males — verified tr-TR
   abdulkadir: {
     voiceId: 'pGMp7Agf4sG0hyhiiGiw',
     label: 'Abdulkadir (İstanbul)',
