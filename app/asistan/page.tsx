@@ -10,7 +10,6 @@ import {
   PERSONA_ORDER,
   buildVoiceFirstMessage,
   buildVoiceSystemPrompt,
-  getPersonaForSpecialty,
   type Persona,
   type PersonaId,
 } from "@/lib/asistan/personaEngine"
@@ -43,6 +42,18 @@ export default function AsistanPage() {
     chk()
     window.addEventListener('resize', chk)
     return () => window.removeEventListener('resize', chk)
+  }, [])
+
+  // Restore last *manually* chosen colleague — never auto-jump from doctor specialty
+  // (that briefly showed Ayşe then flipped to Yusuf when specialty was Aile/genel).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('notya_asistan_persona')
+      if (saved && PERSONAS[saved]) {
+        setPersonaKey(saved)
+        setPersona(PERSONAS[saved])
+      }
+    } catch { /* ignore */ }
   }, [])
 
   useEffect(() => {
@@ -79,14 +90,8 @@ export default function AsistanPage() {
         return
       }
       setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
-      const profileSpecialty = (profileData.data as { specialty?: string } | undefined)?.specialty
-      if (profileSpecialty) {
-        const matchedId = getPersonaForSpecialty(profileSpecialty)
-        if (PERSONAS[matchedId]) {
-          setPersonaKey(matchedId)
-          setPersona(PERSONAS[matchedId])
-        }
-      }
+      // Do NOT remap persona from profile.specialty — Asistan always opens on Ayşe
+      // (or last tab the doctor picked). Specialty only informs clinical context.
     })()
     return () => { void endConversation() }
   }, [])
@@ -347,6 +352,9 @@ export default function AsistanPage() {
     setPersona(PERSONAS[key])
     setMessages([])
     setErrorMsg("")
+    try {
+      localStorage.setItem('notya_asistan_persona', key)
+    } catch { /* ignore */ }
   }
 
   const isActive = ["connecting", "listening", "speaking"].includes(status)

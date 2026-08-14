@@ -765,7 +765,7 @@ const LABEL_ALIASES: Record<string, SpecialtyKey> = {
   'aile-hekimligi': 'aile-hekimligi',
   'genel-pratisyen': 'aile-hekimligi',
   'spor-hekimligi': 'spor-hekimligi',
-  genel: 'aile-hekimligi',
+  genel: 'pediatri',
 }
 
 export function getSpecialistForSpecialty(key: string): SpecialistDef {
