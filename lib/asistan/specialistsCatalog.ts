@@ -399,6 +399,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Fonksiyonel hedefi dinliyorum.',
     color: '#22C55E',
+    photo: '/doctors/dr_aylin.jpg',
   },
   {
     id: 'serkangunes',
@@ -440,6 +441,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Endokrin tabloyu dinliyorum.',
     color: '#A855F7',
+    photo: '/doctors/dr_gulsah.jpg',
   },
   {
     id: 'volkanari',
@@ -481,6 +483,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Böbrek fonksiyonunu netleştirelim.',
     color: '#06B6D4',
+    photo: '/doctors/dr_mert.jpg',
   },
   {
     id: 'nazlikara',
@@ -501,6 +504,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Eklem ve sistemik bulguları dinliyorum.',
     color: '#D97706',
+    photo: '/doctors/dr_nazli.jpg',
   },
   {
     id: 'eceyurt',
@@ -521,6 +525,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Onkolojik tabloyu dinliyorum.',
     color: '#7C2D12',
+    photo: '/doctors/dr_ece.jpg',
   },
   {
     id: 'barisuysal',
@@ -541,6 +546,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Solunum şikayetini dinliyorum.',
     color: '#0D9488',
+    photo: '/doctors/dr_baris.jpg',
   },
   {
     id: 'tolgasimsek',
@@ -561,6 +567,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Torasik cerrahi tabloyu dinliyorum.',
     color: '#B91C1C',
+    photo: '/doctors/dr_tolga.jpg',
   },
   {
     id: 'melisorhan',
@@ -581,6 +588,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Rekonstrüktif ihtiyacı dinliyorum.',
     color: '#C026D3',
+    photo: '/doctors/dr_melis.jpg',
   },
   {
     id: 'keremersoy',
@@ -601,6 +609,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Nöroşirürjik aciliyeti dinliyorum.',
     color: '#581C87',
+    photo: '/doctors/dr_kerem.jpg',
   },
   {
     id: 'sinanacar',
@@ -621,6 +630,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Kardiyovasküler cerrahi tabloyu dinliyorum.',
     color: '#9F1239',
+    photo: '/doctors/dr_sinan.jpg',
   },
   {
     id: 'deryapolat',
@@ -641,6 +651,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Küçük hastanın cerrahi öyküsünü dinliyorum.',
     color: '#166534',
+    photo: '/doctors/dr_derya.jpg',
   },
   {
     id: 'yusufakin',
@@ -661,6 +672,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Birinci basamaktan dinliyorum.',
     color: '#15803D',
+    photo: '/doctors/dr_yusuf.jpg',
   },
   {
     id: 'cemretas',
@@ -681,6 +693,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Saha mı, klinik mi? Dinliyorum.',
     color: '#854D0E',
+    photo: '/doctors/dr_cemre.jpg',
   },
 ]
 
