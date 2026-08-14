@@ -22,8 +22,9 @@ const steps = [
   {
     number: 3,
     title: 'Sisteme Giriş',
-    content: 'nabiz.saglik.gov.tr/kurumsal adresine gidin. TC Kimlik No ve kurumsal şifreniz ile giriş yapın.',
-    tip: 'İlk girişte şifreyi değiştirin. 2FA açıksa SMS doğrulaması gerekir.',
+    content:
+      'www.enabiz.gov.tr adresine gidin. e-Devlet, e-İmza veya kurumsal kimlik bilgileriniz ile giriş yapın.',
+    tip: 'İlk kez kullanıyorsanız e-Devlet üzerinden e-Nabız hesabını etkinleştirin. 2FA açıksa SMS doğrulaması gerekir.',
   },
   {
     number: 4,
@@ -48,7 +49,7 @@ const steps = [
 
 export default function ENabizGuidePage() {
   const [copied, setCopied] = useState(false)
-  const link = 'https://nabiz.saglik.gov.tr/kurumsal'
+  const link = 'https://www.enabiz.gov.tr/'
 
   const copyLink = async () => {
     try {
