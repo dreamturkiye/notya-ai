@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -34,25 +35,39 @@ export default function HastalarPage() {
   const [search, setSearch] = useState('');
   const [tcHashQuery, setTcHashQuery] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    const _raw =
-      localStorage.getItem('auth-token') ||
-      localStorage.getItem(Object.keys(localStorage).find((k) => k.startsWith('sb-')) || '');
-    const token = _raw
-      ? (() => {
-          try {
-            return JSON.parse(_raw).access_token || _raw;
-          } catch {
-            return _raw;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const token = await ensureDoctorAccessToken();
+        if (!token) {
+          if (!cancelled) {
+            setPatients([]);
+            setLoadError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+            setLoading(false);
           }
-        })()
-      : null;
-
-    fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => res.json())
-      .then((d) => {
+          return;
+        }
+        const res = await fetch('/api/doktor/hastalar', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const d = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.status === 401) {
+          setPatients([]);
+          setLoadError('Oturum geçersiz. Lütfen tekrar giriş yapın.');
+          return;
+        }
+        if (!res.ok) {
+          setPatients([]);
+          setLoadError(String((d as { error?: string }).error || 'Hastalar alınamadı'));
+          return;
+        }
         const list = Array.isArray(d?.patients) ? d.patients : [];
         setPatients(
           list.map((p: Record<string, unknown>) => ({
@@ -64,8 +79,18 @@ export default function HastalarPage() {
             is_active: p.is_active !== false,
           }))
         );
-      })
-      .finally(() => setLoading(false));
+      } catch {
+        if (!cancelled) {
+          setPatients([]);
+          setLoadError('Hastalar yüklenirken bir hata oluştu.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // When the query looks like a TC, hash it and match against stored tc_kimlik_hash.
@@ -122,7 +147,10 @@ export default function HastalarPage() {
           {loading && (
             <div style={{ color: '#94A3B8', padding: '24px 4px' }}>Hastalar yükleniyor...</div>
           )}
-          {!loading && filtered.length === 0 && (
+          {!loading && loadError && (
+            <div style={{ color: '#FCA5A5', padding: '24px 4px' }}>{loadError}</div>
+          )}
+          {!loading && !loadError && filtered.length === 0 && (
             <div style={{ color: '#94A3B8', padding: '24px 4px' }}>
               {search.trim() ? 'Aramanızla eşleşen hasta bulunamadı.' : 'Henüz hasta kaydı yok.'}
             </div>
