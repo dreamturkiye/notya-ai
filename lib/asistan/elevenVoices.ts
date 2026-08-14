@@ -20,10 +20,11 @@ export interface NotyaVoice {
 export const TR_VOICES = {
   // Females — already in account or shared library
   ayseHanim: {
-    voiceId: 'sMFjOtbPhx5GdIeKUBDN',
-    label: 'Wise Educator — Ayşe Hanım (Ege)',
+    // Ece (İstanbul conversational) — Wise Educator slurry on Flash TR medical speech
+    voiceId: '5MSp7yE6sGgawegWrMgt',
+    label: 'Ece — Ayşe Hanım (İstanbul)',
     gender: 'female',
-    accent: 'aegean',
+    accent: 'istanbul',
   },
   gulrizElif: {
     voiceId: '7i5J4Bl0THYWdNcoKRl6',
