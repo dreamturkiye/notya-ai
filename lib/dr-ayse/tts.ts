@@ -1,16 +1,16 @@
 import { TR_VOICES } from '@/lib/asistan/elevenVoices'
 
 /**
- * ConvAI / sandbox TTS: Eleven Flash v2.5 (correct production model).
- * Baseline that worked before the Aug voice experiments:
- * optimize_streaming_latency: 3, turn eagerness normal (not eager/speculative).
- * Do not set latency to 1 (wavey/slow) or force eager turns without measuring.
+ * ConvAI / sandbox TTS: Eleven Flash v2.5 (official Agents defaults).
+ * Docs: stability 0.5, similarity_boost 0.8, speed 1.0, model eleven_flash_v2_5.
+ * optimize_streaming_latency: 3 (max opts with normalizer). Do not set to 1.
+ * style kept at 0 for Flash — style exaggeration can stretch/warp prosody.
  */
 export const AYSE_TTS_SETTINGS = {
   model_id: 'eleven_flash_v2_5' as const,
-  stability: 0.45,
-  similarity_boost: 0.75,
-  style: 0.3,
+  stability: 0.5,
+  similarity_boost: 0.8,
+  style: 0,
   speed: 1,
   optimize_streaming_latency: 3,
 }
