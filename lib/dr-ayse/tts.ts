@@ -1,5 +1,19 @@
 import { TR_VOICES } from '@/lib/asistan/elevenVoices'
 
+/**
+ * ConvAI / sandbox TTS: always Eleven Flash v2.5 (latest low-latency Flash, ~75ms).
+ * optimize_streaming_latency: 0 = quality, 4 = fastest stream — use 3–4 for voice agents.
+ * Never drop to 1 for “quality” — that buffers and sounds wavey/slow-then-normal.
+ */
+export const AYSE_TTS_SETTINGS = {
+  model_id: 'eleven_flash_v2_5' as const,
+  stability: 0.45,
+  similarity_boost: 0.75,
+  style: 0.3,
+  speed: 1,
+  optimize_streaming_latency: 4,
+}
+
 /** Prefer TR Ayşe Hanım voice over English Sarah/Jessica defaults. */
 const DEFAULT_VOICE_ID = TR_VOICES.ayseHanim.voiceId
 
@@ -23,11 +37,13 @@ export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
     },
     body: JSON.stringify({
       text,
-      model_id: 'eleven_flash_v2_5',
+      model_id: AYSE_TTS_SETTINGS.model_id,
+      optimize_streaming_latency: AYSE_TTS_SETTINGS.optimize_streaming_latency,
       voice_settings: {
-        stability: 0.45,
-        similarity_boost: 0.75,
-        style: 0.3,
+        stability: AYSE_TTS_SETTINGS.stability,
+        similarity_boost: AYSE_TTS_SETTINGS.similarity_boost,
+        style: AYSE_TTS_SETTINGS.style,
+        speed: AYSE_TTS_SETTINGS.speed,
       },
     }),
   })
