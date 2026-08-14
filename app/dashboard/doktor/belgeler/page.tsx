@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import {
   getAccessToken,
@@ -34,6 +34,7 @@ export default function BelgelerPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,16 +151,53 @@ export default function BelgelerPage() {
             </label>
             <input
               id="belge-dosya"
+              ref={fileInputRef}
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              style={{ ...toolsInput, padding: '10px 12px', fontSize: 13 }}
+              style={{ display: 'none' }}
             />
-            {file && (
-              <div style={{ marginTop: 8, fontSize: 12, color: '#94A3B8' }}>
-                Seçilen: {file.name}
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                ...toolsInput,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                padding: '10px 12px',
+                fontSize: 13,
+                cursor: 'pointer',
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
+              <span
+                style={{
+                  flexShrink: 0,
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  color: '#F8FAFC',
+                  fontWeight: 600,
+                }}
+              >
+                Dosya Seç
+              </span>
+              <span
+                style={{
+                  flex: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  color: file ? '#E2E8F0' : '#94A3B8',
+                }}
+              >
+                {file ? file.name : 'Dosya seçilmedi'}
+              </span>
+            </button>
           </div>
 
           <button
