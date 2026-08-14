@@ -124,15 +124,20 @@ async function refreshAccessToken(refreshToken: string): Promise<StoredSession |
  * Returns a valid access token, refreshing if needed.
  * Returns null when the doctor must sign in again.
  */
-export async function ensureDoctorAccessToken(): Promise<string | null> {
+export async function ensureDoctorAccessToken(opts?: {
+  forceRefresh?: boolean
+}): Promise<string | null> {
   const session = readRawSession()
   if (!session?.access_token) return null
 
-  if (!isExpired(session.expires_at)) {
+  const needsRefresh = opts?.forceRefresh || isExpired(session.expires_at)
+  if (!needsRefresh) {
     return session.access_token
   }
 
-  if (!session.refresh_token) return null
+  if (!session.refresh_token) {
+    return opts?.forceRefresh ? null : session.access_token
+  }
   const refreshed = await refreshAccessToken(session.refresh_token)
   return refreshed?.access_token || null
 }

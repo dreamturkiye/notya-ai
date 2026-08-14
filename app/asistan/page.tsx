@@ -47,19 +47,31 @@ export default function AsistanPage() {
 
   useEffect(() => {
     ;(async () => {
-      const token = await ensureDoctorAccessToken()
+      let token = await ensureDoctorAccessToken()
       if (!token) {
         router.replace("/giris/doktor")
         return
       }
       setAuthToken(token)
 
-      const resp = await fetch("/api/users/me", {
+      let resp = await fetch("/api/users/me", {
         headers: { Authorization: `Bearer ${token}` },
       })
+      // Expired access token without reliable expires_at — refresh once, then login.
       if (resp.status === 401) {
-        router.replace("/giris/doktor")
-        return
+        token = await ensureDoctorAccessToken({ forceRefresh: true })
+        if (!token) {
+          router.replace("/giris/doktor")
+          return
+        }
+        setAuthToken(token)
+        resp = await fetch("/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (resp.status === 401) {
+          router.replace("/giris/doktor")
+          return
+        }
       }
       const profileData = await resp.json().catch(() => ({} as { data?: DoctorProfile }))
       if (!isOnboardingDone(profileData.data)) {
@@ -127,7 +139,11 @@ export default function AsistanPage() {
     return /first[_ ]?message/i.test(msg || "")
   }
 
-  async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string }> {
+  async function fetchSignedUrl(p: Persona): Promise<{
+    signedUrl: string
+    voiceId: string
+    skipVoiceOverride: boolean
+  }> {
     if (!authToken) throw new Error("Oturum bulunamadı")
     const resp = await fetch(
       `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}`,
@@ -139,9 +155,17 @@ export default function AsistanPage() {
     }
     const body = await resp.json()
     if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
+    const voiceId = (body.voice_id as string) || p.voiceId
+    // Re-applying the same voice_id (or any tts override that glitches) caused
+    // Ayşe audio stutter / 1008 policy issues historically — skip when matched.
+    const agentVoice = (body.agent_voice_id as string | undefined) || ""
+    const skipVoiceOverride =
+      p.id === "aysekaya" ||
+      Boolean(agentVoice && agentVoice === voiceId)
     return {
       signedUrl: body.signed_url as string,
-      voiceId: (body.voice_id as string) || p.voiceId,
+      voiceId,
+      skipVoiceOverride,
     }
   }
 
@@ -171,16 +195,22 @@ export default function AsistanPage() {
       const p = PERSONAS[personaKey]
       const firstMessage = buildVoiceFirstMessage(p, doctor)
       const voicePrompt = buildVoiceSystemPrompt(p, doctor)
-      const { signedUrl, voiceId } = await fetchSignedUrl(p)
+      const { signedUrl, voiceId, skipVoiceOverride } = await fetchSignedUrl(p)
 
-      // Try personalized first_message; clean single-flight fallback if agent rejects it.
+      // Do NOT try first_message override first for Ayşe — override reject + retry
+      // restarted a second mic session and caused stuttering. Agent greeting speaks once;
+      // UI shows the personalized line.
+      const tryFirst =
+        p.id !== "aysekaya" && personaKey !== "aysekaya"
+
       await startConversationWithoutFirstMessage(
         signedUrl,
         voicePrompt,
         firstMessage,
         voiceId,
         {
-          tryFirstMessage: true,
+          tryFirstMessage: tryFirst,
+          skipVoiceOverride,
           refreshSignedUrl: () => fetchSignedUrl(p).then((r) => r.signedUrl),
         }
       )
@@ -203,6 +233,7 @@ export default function AsistanPage() {
     voiceId: string,
     opts?: {
       tryFirstMessage?: boolean
+      skipVoiceOverride?: boolean
       refreshSignedUrl?: () => Promise<string>
     }
   ) {
@@ -257,7 +288,8 @@ export default function AsistanPage() {
             language: "tr",
             ...(includeFirstMessage ? { firstMessage } : {}),
           },
-          tts: { voiceId },
+          // Skip tts.voiceId for Ayşe — duplicate override caused stutter / policy errors.
+          ...(opts?.skipVoiceOverride ? {} : { tts: { voiceId } }),
         },
         onConnect: () => {
           setStatus("listening")

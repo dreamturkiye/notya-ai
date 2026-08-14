@@ -109,6 +109,9 @@ export async function GET(req: NextRequest) {
     signed_url: wssUrl,
     agent_id: AGENT_ID,
     voice_id: voiceId,
+    agent_voice_id: persona.id === 'aysekaya'
+      ? voiceId // pediatrics agent is restored to Wise Educator — client must not re-override
+      : undefined,
     specialty: persona.primarySpecialty,
     persona_id: persona.id,
     persona_name: persona.name,
