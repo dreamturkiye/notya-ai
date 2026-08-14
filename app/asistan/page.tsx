@@ -139,11 +139,7 @@ export default function AsistanPage() {
     return /first[_ ]?message/i.test(msg || "")
   }
 
-  async function fetchSignedUrl(p: Persona): Promise<{
-    signedUrl: string
-    voiceId: string
-    skipVoiceOverride: boolean
-  }> {
+  async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string }> {
     if (!authToken) throw new Error("Oturum bulunamadı")
     const resp = await fetch(
       `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}`,
@@ -155,17 +151,9 @@ export default function AsistanPage() {
     }
     const body = await resp.json()
     if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
-    const voiceId = (body.voice_id as string) || p.voiceId
-    // Re-applying the same voice_id (or any tts override that glitches) caused
-    // Ayşe audio stutter / 1008 policy issues historically — skip when matched.
-    const agentVoice = (body.agent_voice_id as string | undefined) || ""
-    const skipVoiceOverride =
-      p.id === "aysekaya" ||
-      Boolean(agentVoice && agentVoice === voiceId)
     return {
       signedUrl: body.signed_url as string,
-      voiceId,
-      skipVoiceOverride,
+      voiceId: (body.voice_id as string) || p.voiceId,
     }
   }
 
@@ -195,22 +183,17 @@ export default function AsistanPage() {
       const p = PERSONAS[personaKey]
       const firstMessage = buildVoiceFirstMessage(p, doctor)
       const voicePrompt = buildVoiceSystemPrompt(p, doctor)
-      const { signedUrl, voiceId, skipVoiceOverride } = await fetchSignedUrl(p)
+      const { signedUrl, voiceId } = await fetchSignedUrl(p)
 
-      // Do NOT try first_message override first for Ayşe — override reject + retry
-      // restarted a second mic session and caused stuttering. Agent greeting speaks once;
-      // UI shows the personalized line.
-      const tryFirst =
-        p.id !== "aysekaya" && personaKey !== "aysekaya"
-
+      // Pre-regression path (c38e18e): same for all personas — personalized
+      // first_message with single-flight fallback; always pass tts.voiceId.
       await startConversationWithoutFirstMessage(
         signedUrl,
         voicePrompt,
         firstMessage,
         voiceId,
         {
-          tryFirstMessage: tryFirst,
-          skipVoiceOverride,
+          tryFirstMessage: true,
           refreshSignedUrl: () => fetchSignedUrl(p).then((r) => r.signedUrl),
         }
       )
@@ -233,7 +216,6 @@ export default function AsistanPage() {
     voiceId: string,
     opts?: {
       tryFirstMessage?: boolean
-      skipVoiceOverride?: boolean
       refreshSignedUrl?: () => Promise<string>
     }
   ) {
@@ -288,8 +270,7 @@ export default function AsistanPage() {
             language: "tr",
             ...(includeFirstMessage ? { firstMessage } : {}),
           },
-          // Skip tts.voiceId for Ayşe — duplicate override caused stutter / policy errors.
-          ...(opts?.skipVoiceOverride ? {} : { tts: { voiceId } }),
+          tts: { voiceId },
         },
         onConnect: () => {
           setStatus("listening")

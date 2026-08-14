@@ -1,9 +1,10 @@
 import { TR_VOICES } from '@/lib/asistan/elevenVoices'
 
 /**
- * ConvAI / sandbox TTS: always Eleven Flash v2.5 (latest low-latency Flash, ~75ms).
- * optimize_streaming_latency: 0 = quality, 4 = fastest stream — use 3–4 for voice agents.
- * Never drop to 1 for “quality” — that buffers and sounds wavey/slow-then-normal.
+ * ConvAI / sandbox TTS: Eleven Flash v2.5 (correct production model).
+ * Baseline that worked before the Aug voice experiments:
+ * optimize_streaming_latency: 3, turn eagerness normal (not eager/speculative).
+ * Do not set latency to 1 (wavey/slow) or force eager turns without measuring.
  */
 export const AYSE_TTS_SETTINGS = {
   model_id: 'eleven_flash_v2_5' as const,
@@ -11,7 +12,7 @@ export const AYSE_TTS_SETTINGS = {
   similarity_boost: 0.75,
   style: 0.3,
   speed: 1,
-  optimize_streaming_latency: 4,
+  optimize_streaming_latency: 3,
 }
 
 /** Prefer TR Ayşe Hanım voice over English Sarah/Jessica defaults. */
