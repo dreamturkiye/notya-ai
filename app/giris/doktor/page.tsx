@@ -20,11 +20,26 @@ export default function Giris() {
     const { data, error: ae } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password })
     if (ae || !data.session) { setError(ae?.message === 'Invalid login credentials' ? 'E-posta veya şifre hatalı' : (ae?.message || 'Giriş başarısız')); setLoading(false); return }
     localStorage.setItem('auth-token', JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token,expires_at:data.session.expires_at}))
-    const meta = data.user?.user_metadata || {}
-    if (!meta.onboarding_completed) {
-      router.replace('/onboarding?p=doktor')
-    } else {
-      router.replace('/dashboard/doktor')
+    // Prefer users table /me over auth metadata alone — metadata onboarding flag often never stuck.
+    try {
+      const meRes = await fetch('/api/users/me', {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+      })
+      const me = await meRes.json().catch(() => ({} as { data?: { onboarding_completed?: boolean; profession_type?: string; specialty?: string } }))
+      const profile = me.data
+      const done =
+        Boolean(profile?.onboarding_completed) ||
+        Boolean(profile?.profession_type) ||
+        Boolean(profile?.specialty) ||
+        Boolean(data.user?.user_metadata?.onboarding_completed)
+      if (!done) {
+        router.replace('/onboarding?p=doktor')
+      } else {
+        router.replace('/dashboard/doktor')
+      }
+    } catch {
+      const meta = data.user?.user_metadata || {}
+      router.replace(meta.onboarding_completed ? '/dashboard/doktor' : '/onboarding?p=doktor')
     }
   }
 

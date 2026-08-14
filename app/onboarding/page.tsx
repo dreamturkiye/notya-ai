@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ensureDoctorAccessToken, isOnboardingDone } from '@/lib/doktor/clientAuth';
 
 interface Profession {
   id: string;
@@ -95,6 +96,40 @@ function OnboardingInner() {
   const validPreset = professions.some(p => p.id === presetProfession) ? presetProfession : '';
   const [step, setStep] = useState(validPreset ? 2 : 1);
   const [selectedProfession, setSelectedProfession] = useState<string>(validPreset);
+  const [checking, setChecking] = useState(true);
+
+  // If already onboarded, never show this screen again (iPhone PWA reopen bug).
+  useEffect(() => {
+    ;(async () => {
+      const token = await ensureDoctorAccessToken()
+      if (!token) {
+        setChecking(false)
+        return
+      }
+      try {
+        const res = await fetch('/api/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.status === 401) {
+          setChecking(false)
+          return
+        }
+        const json = await res.json().catch(() => ({}))
+        const profile = (json as { data?: { profession_type?: string; onboarding_completed?: boolean; specialty?: string } }).data
+        if (isOnboardingDone(profile)) {
+          const type = profile?.profession_type || validPreset || 'doktor'
+          if (type === 'mali' || type === 'mali_musavirlik') router.replace('/dashboard/mali')
+          else if (type === 'avukat') router.replace('/dashboard/avukat')
+          else if (type === 'klinik-uzman' || type === 'saglik-uzmani') router.replace('/dashboard/klinik')
+          else router.replace('/dashboard/doktor')
+          return
+        }
+      } catch {
+        /* continue onboarding */
+      }
+      setChecking(false)
+    })()
+  }, [router, validPreset])
   
   // Doctor fields
   const [unvan, setUnvan] = useState('');
@@ -213,7 +248,7 @@ function OnboardingInner() {
 
     try {
       // POST profile
-      await fetch('/api/users/profile', {
+      const profileRes = await fetch('/api/users/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -221,6 +256,10 @@ function OnboardingInner() {
         },
         body: JSON.stringify(profilePayload),
       });
+      if (!profileRes.ok) {
+        const errBody = await profileRes.json().catch(() => ({}));
+        throw new Error(String((errBody as { error?: string }).error || 'Profil kaydedilemedi'));
+      }
 
       // Set asistan specialty
       await fetch('/api/asistan/set-specialty', {
@@ -379,6 +418,14 @@ function OnboardingInner() {
 
     return <div style={{ color: '#9CA3AF' }}>Kişisel bilgilerinize geçebilirsiniz.</div>;
   };
+
+  if (checking) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#060C18', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
+        Yükleniyor…
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#060C18', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#fff', padding: '40px 20px' }}>

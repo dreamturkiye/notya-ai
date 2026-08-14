@@ -12,10 +12,12 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('Authorization')
     let userId: string | null = null
     let userEmail: string | null = null
+    let existingMeta: Record<string, unknown> = {}
     if (authHeader?.startsWith('Bearer ')) {
       const { data: { user } } = await getSupabase().auth.getUser(authHeader.split(' ')[1])
       userId = user?.id || null
       userEmail = user?.email || null
+      existingMeta = (user?.user_metadata as Record<string, unknown>) || {}
     }
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -25,7 +27,10 @@ export async function POST(req: NextRequest) {
             firstName, lastName, addressingPreference } = body
 
     // Only write columns that exist in the DB users table
-    const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    const updatePayload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+      onboarding_completed: true,
+    }
     if (profession_type) updatePayload.profession_type = profession_type
     if (full_name) updatePayload.full_name = full_name
     if (firstName || lastName) updatePayload.full_name = [firstName, lastName].filter(Boolean).join(' ') || full_name
@@ -34,21 +39,32 @@ export async function POST(req: NextRequest) {
     if (sehir) updatePayload.sehir = sehir
     if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
     if (specialty && profession_type === 'doktor') updatePayload.specialty = specialty
+    if (specialty && (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'mali' || profession_type === 'psikolog')) {
+      updatePayload.specialty = specialty
+    }
     if (uzmanlik && profession_type === 'avukat') updatePayload.specialty = uzmanlik
     if (plan) updatePayload.plan = plan
     if (trial_start) updatePayload.trial_start = trial_start
 
-    // Store extra fields in auth metadata (no DB column needed)
-    if (gender || addressing_preference || addressingPreference || title || baro || yil) {
-      await getSupabase().auth.admin.updateUserById(userId, {
-        user_metadata: {
-          gender: gender || null,
-          addressing_preference: addressing_preference || addressingPreference || null,
-          title: title || null, baro: baro || null, yil: yil || null,
-          profession_type, onboarding_completed: true,
-        }
-      })
-    }
+    // Always stamp auth metadata so login redirects don't bounce to onboarding again.
+    await getSupabase().auth.admin.updateUserById(userId, {
+      user_metadata: {
+        ...existingMeta,
+        gender: gender || existingMeta.gender || null,
+        addressing_preference:
+          addressing_preference ||
+          addressingPreference ||
+          existingMeta.addressing_preference ||
+          null,
+        title: title || existingMeta.title || null,
+        baro: baro || existingMeta.baro || null,
+        yil: yil || existingMeta.yil || null,
+        hospital: hospital || existingMeta.hospital || null,
+        specialty: specialty || uzmanlik || existingMeta.specialty || null,
+        profession_type: profession_type || existingMeta.profession_type || null,
+        onboarding_completed: true,
+      },
+    })
 
     const { data: existing } = await getSupabase().from('users').select('id').eq('id', userId).single()
     let result

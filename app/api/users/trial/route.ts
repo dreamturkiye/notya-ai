@@ -33,6 +33,7 @@ export async function PUT(req: NextRequest) {
       email: user.email,
       plan: 'professional',
       trial_ends: trialEnd.toISOString(),
+      onboarding_completed: true,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id', ignoreDuplicates: false })
   } catch { /* column may not exist yet - metadata is source of truth */ }

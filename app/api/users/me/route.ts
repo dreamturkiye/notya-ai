@@ -14,11 +14,24 @@ async function getAuthUser(req: NextRequest) {
   return user
 }
 
+function deriveOnboardingCompleted(
+  profile: Record<string, unknown> | null,
+  meta: Record<string, unknown>
+): boolean {
+  if (meta.onboarding_completed === true) return true
+  if (profile?.onboarding_completed === true) return true
+  if (profile?.profession_type || meta.profession_type) return true
+  if (profile?.specialty || meta.specialty) return true
+  return false
+}
+
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user) {
     return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
   }
+
+  const meta = (user.user_metadata || {}) as Record<string, unknown>
 
   const { data: profile, error } = await getSupabase()
     .from('users')
@@ -31,17 +44,42 @@ export async function GET(req: NextRequest) {
   }
 
   if (!profile) {
+    const onboarding_completed = deriveOnboardingCompleted(null, meta)
     return NextResponse.json({
       success: true,
       data: {
         id: user.id,
         email: user.email,
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-        onboarding_completed: !!user.user_metadata?.onboarding_completed,
+        full_name: meta.full_name || user.email?.split('@')[0] || '',
+        profession_type: meta.profession_type || null,
+        specialty: meta.specialty || null,
+        onboarding_completed,
       },
     })
   }
 
-  const merged = { ...profile, full_name: profile.full_name || user.user_metadata?.full_name || (user.email||'').split('@')[0] || '', email: profile.email || user.email }
+  const onboarding_completed = deriveOnboardingCompleted(profile as Record<string, unknown>, meta)
+
+  // Self-heal: profile has profession but flag never stuck — stamp it for next login.
+  if (onboarding_completed && profile.onboarding_completed !== true) {
+    void getSupabase()
+      .from('users')
+      .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+    if (!meta.onboarding_completed) {
+      void getSupabase().auth.admin.updateUserById(user.id, {
+        user_metadata: { ...meta, onboarding_completed: true, profession_type: profile.profession_type || meta.profession_type },
+      })
+    }
+  }
+
+  const merged = {
+    ...profile,
+    full_name: profile.full_name || meta.full_name || (user.email || '').split('@')[0] || '',
+    email: profile.email || user.email,
+    profession_type: profile.profession_type || meta.profession_type || null,
+    specialty: profile.specialty || meta.specialty || null,
+    onboarding_completed,
+  }
   return NextResponse.json({ success: true, data: merged })
 }

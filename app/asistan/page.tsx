@@ -17,6 +17,7 @@ import {
 import { SPECIALTY_MAP } from "@/lib/doktor/specialties"
 import { formatColleagueTabLabel, formatColleagueDisplayName } from "@/lib/colleagueAddress"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
+import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAuth"
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
@@ -45,16 +46,24 @@ export default function AsistanPage() {
   }, [])
 
   useEffect(() => {
-    ;(async () => { const _r = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const session = _r ? JSON.parse(_r) : null;
-      if (!session) { router.push("/giris"); return }
-      setAuthToken(session.access_token)
+    ;(async () => {
+      const token = await ensureDoctorAccessToken()
+      if (!token) {
+        router.replace("/giris/doktor")
+        return
+      }
+      setAuthToken(token)
 
       const resp = await fetch("/api/users/me", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
-      const profileData = await resp.json()
-      if (!profileData.data?.onboarding_completed && !profileData.data?.profession_type) {
-        router.push("/onboarding")
+      if (resp.status === 401) {
+        router.replace("/giris/doktor")
+        return
+      }
+      const profileData = await resp.json().catch(() => ({} as { data?: DoctorProfile }))
+      if (!isOnboardingDone(profileData.data)) {
+        router.replace("/onboarding?p=doktor")
         return
       }
       setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
