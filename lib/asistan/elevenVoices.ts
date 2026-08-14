@@ -20,11 +20,11 @@ export interface NotyaVoice {
 export const TR_VOICES = {
   // Females — already in account or shared library
   ayseHanim: {
-    // Ece (İstanbul conversational) — Wise Educator slurry on Flash TR medical speech
-    voiceId: '5MSp7yE6sGgawegWrMgt',
-    label: 'Ece — Ayşe Hanım (İstanbul)',
+    // Same voice as Prof. Dr. Pınar Demir (Leyla) — Ece was too quiet vs Mehmet/Elif
+    voiceId: 'ir8YO3t6kXwbDO3roXIT',
+    label: 'Leyla — Ayşe Hanım (shared w/ Pınar Demir)',
     gender: 'female',
-    accent: 'istanbul',
+    accent: 'standard',
   },
   gulrizElif: {
     voiceId: '7i5J4Bl0THYWdNcoKRl6',
