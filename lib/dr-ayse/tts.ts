@@ -1,4 +1,4 @@
-import { AYSE_TTS_SETTINGS, TR_VOICES } from '@/lib/asistan/elevenVoices'
+import { TR_VOICES } from '@/lib/asistan/elevenVoices'
 
 /** Prefer TR Ayşe Hanım voice over English Sarah/Jessica defaults. */
 const DEFAULT_VOICE_ID = TR_VOICES.ayseHanim.voiceId
@@ -23,13 +23,11 @@ export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
     },
     body: JSON.stringify({
       text,
-      model_id: AYSE_TTS_SETTINGS.model_id,
+      model_id: 'eleven_flash_v2_5',
       voice_settings: {
-        stability: AYSE_TTS_SETTINGS.stability,
-        similarity_boost: AYSE_TTS_SETTINGS.similarity_boost,
-        style: 0,
-        use_speaker_boost: AYSE_TTS_SETTINGS.use_speaker_boost,
-        speed: AYSE_TTS_SETTINGS.speed,
+        stability: 0.45,
+        similarity_boost: 0.75,
+        style: 0.3,
       },
     }),
   })
