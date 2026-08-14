@@ -11,15 +11,15 @@ type Msg = { id: string; role: 'user'|'ai'; text: string }
 type AC = Awaited<ReturnType<typeof Conversation.startSession>>
 
 const PERSONAS = {
-  kemalbey:    { name: 'Kemal Celik',   title: 'Ceza Hukuku',     emoji: '⚖️',  color: '#DC2626', branch: 'ceza' },
+  kemalbey:    { name: 'Kemal Çelik',   title: 'Ceza Hukuku',     emoji: '⚖️',  color: '#DC2626', branch: 'ceza' },
   selinhanim:  { name: 'Selin Arslan',  title: 'Aile Hukuku',     emoji: '👪', color: '#EC4899', branch: 'aile' },
-  muratbey:    { name: 'Murat Ozturk',  title: 'Ticaret Hukuku',  emoji: '💼',  color: '#2563EB', branch: 'ticaret' },
-  dilekhanim:  { name: 'Dilek Sahin',   title: 'Is Hukuku',       emoji: '📝',  color: '#7C3AED', branch: 'is' },
+  muratbey:    { name: 'Murat Öztürk',  title: 'Ticaret Hukuku',  emoji: '💼',  color: '#2563EB', branch: 'ticaret' },
+  dilekhanim:  { name: 'Dilek Şahin',   title: 'İş Hukuku',       emoji: '📝',  color: '#7C3AED', branch: 'is' },
   halukbey:    { name: 'Haluk Demir',   title: 'Gayrimenkul',     emoji: '🏠',  color: '#D97706', branch: 'gayrimenkul' },
-  aysehanim:   { name: 'Ayse Kaya',     title: 'Icra & Iflas',    emoji: '💰',  color: '#059669', branch: 'icra' },
-  canbey:      { name: 'Can Yilmaz',    title: 'Idare Hukuku',    emoji: '🏛️', color: '#0891B2', branch: 'idare' },
-  zeynephanim: { name: 'Zeynep Aktay',  title: 'Tuketici Hukuku', emoji: '🛒',  color: '#BE185D', branch: 'tuketici' },
-  borabey:     { name: 'Bora Yildiz',   title: 'Bilisim & KVKK',  emoji: '💻',  color: '#6D28D9', branch: 'bilisim' },
+  aysehanim:   { name: 'Ayşe Kaya',     title: 'İcra & İflas',    emoji: '💰',  color: '#059669', branch: 'icra' },
+  canbey:      { name: 'Can Yılmaz',    title: 'İdare Hukuku',    emoji: '🏛️', color: '#0891B2', branch: 'idare' },
+  zeynephanim: { name: 'Zeynep Aktay',  title: 'Tüketici Hukuku', emoji: '🛒',  color: '#BE185D', branch: 'tuketici' },
+  borabey:     { name: 'Bora Yıldız',   title: 'Bilişim & KVKK',  emoji: '💻',  color: '#6D28D9', branch: 'bilisim' },
 }  as const
 type PKey = keyof typeof PERSONAS
 

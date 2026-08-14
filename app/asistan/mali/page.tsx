@@ -12,7 +12,7 @@ type CS = 'idle'|'connecting'|'listening'|'speaking'|'error'
 type Msg = { id: string; role: 'user'|'ai'; text: string }
 type AC = Awaited<ReturnType<typeof Conversation.startSession>>
 
-const DERYA = { name: 'Uzm. Derya Yilmaz', title: 'Mali Musavirlik AI Asistani', emoji: '💰', color: '#10B981' }
+const DERYA = { name: 'Uzm. Derya Yılmaz', title: 'Mali Müşavirlik AI Asistanı', emoji: '💰', color: '#10B981' }
 
 export default function MaliAsistanPage() {
   const router = useRouter()

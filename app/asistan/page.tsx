@@ -15,7 +15,7 @@ import {
   type PersonaId,
 } from "@/lib/asistan/personaEngine"
 import { SPECIALTY_MAP } from "@/lib/doktor/specialties"
-import { formatColleagueTabLabel } from "@/lib/colleagueAddress"
+import { formatColleagueTabLabel, formatColleagueDisplayName } from "@/lib/colleagueAddress"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
@@ -380,7 +380,7 @@ export default function AsistanPage() {
                          background: active ? p.color : "rgba(255,255,255,.08)",
                          color: active ? "#fff" : "rgba(255,255,255,.55)",
                          border: `1px solid ${active ? p.color : "rgba(255,255,255,.12)"}` }}>
-                {p.shortName} · {branş}
+                {formatColleagueDisplayName(p.name)} · {branş}
               </button>
             )
           })}

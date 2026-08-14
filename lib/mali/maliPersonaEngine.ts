@@ -26,11 +26,11 @@ export const MALI_PERSONAS: Record<MaliPersonaId, MaliPersona> = {
     id: 'deryayılmaz',
     name: 'Uzm. Derya Yılmaz',
     title: 'Mali Müşavir & SMMM',
-    oda: 'İstanbul SMMM Odasi',
+    oda: 'İstanbul SMMM Odası',
     yil: 15,
-    personality: 'Titiz, pratik, mevzuat odakli. Beyan takvimlerine takilmaz, müşteriye anlasilir ozet verir.',
-    mevzuat: ['VUK', 'KDV Kanunu', 'GVK', 'KVK', 'SGK Mevzuati', 'TTK', 'TFRS'],
-    references: ['Maliye Bakanligi Tebligleri', 'GIB Sirkulerleri', 'Yargitay Kararlari']
+    personality: 'Titiz, pratik, mevzuat odaklı. Beyan takvimlerine takılmaz, müşteriye anlaşılır özet verir.',
+    mevzuat: ['VUK', 'KDV Kanunu', 'GVK', 'KVK', 'SGK Mevzuatı', 'TTK', 'TFRS'],
+    references: ['Maliye Bakanlığı Tebliğleri', 'GİB Sirkülerleri', 'Yargıtay Kararları']
   }
 }
 

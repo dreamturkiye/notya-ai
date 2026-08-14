@@ -62,8 +62,8 @@ describe('buildAssistantGreeting', () => {
 })
 
 describe('formatColleagueName', () => {
-  it('strips title and adds Hocam', () => {
-    assert.equal(formatColleagueName('Prof. Dr. Ayşe Kaya'), 'Ayşe Hocam')
+  it('keeps Turkish last name and adds Hocam', () => {
+    assert.equal(formatColleagueName('Prof. Dr. Ayşe Kaya'), 'Ayşe Kaya Hocam')
   })
 })
 

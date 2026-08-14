@@ -96,7 +96,7 @@ export default function AvukatPage() {
               <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"10px"}}>
                 <div style={{width:"32px",height:"32px",borderRadius:"50%",background:"var(--primary-light)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px"}}>⚖️</div>
                 <div>
-                  <div style={{fontSize:"12px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Kemal Celik — Ceza Hukuku</div>
+                  <div style={{fontSize:"12px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Kemal Çelik — Ceza Hukuku</div>
                   <div style={{fontSize:"10px",color:"var(--secondary)",fontFamily:"Lato,sans-serif",display:"flex",alignItems:"center",gap:"4px"}}>
                     <span style={{width:"6px",height:"6px",borderRadius:"50%",background:"var(--secondary)",display:"inline-block"}}></span>Dinliyor
                   </div>
@@ -175,7 +175,7 @@ export default function AvukatPage() {
               <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"14px",paddingBottom:"12px",borderBottom:"1px solid var(--border)"}}>
                 <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"var(--primary-light)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px"}}>⚖️</div>
                 <div>
-                  <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Kemal Celik — İstanbul Barosu</div>
+                  <div style={{fontSize:"13px",fontWeight:"700",color:"var(--text)",fontFamily:"Lato,sans-serif"}}>Kemal Çelik — İstanbul Barosu</div>
                   <div style={{fontSize:"11px",color:"var(--secondary)",fontFamily:"Lato,sans-serif",display:"flex",alignItems:"center",gap:"4px"}}>
                     <span style={{width:"5px",height:"5px",borderRadius:"50%",background:"var(--secondary)",display:"inline-block"}}></span>Dinliyor
                   </div>

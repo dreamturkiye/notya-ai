@@ -147,6 +147,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Sistemik tabloyu dinliyorum.',
     color: '#0F9B8E',
+    photo: '/doctors/dr_zeynep.jpg',
   },
   {
     id: 'denizyilmaz',
@@ -167,6 +168,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Güvenli bir çerçevede dinliyorum.',
     color: '#6366F1',
+    photo: '/doctors/dr_deniz.jpg',
   },
   {
     id: 'hakanozturk',
@@ -187,6 +189,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Cerrahi tabloyu dinliyorum.',
     color: '#EF4444',
+    photo: '/doctors/dr_hakan.jpg',
   },
   {
     id: 'buraksen',
@@ -207,6 +210,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Travma mı, elektif mi?',
     color: '#F59E0B',
+    photo: '/doctors/dr_burak.jpg',
   },
   {
     id: 'selinaksoy',
@@ -227,6 +231,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Lezyonu tarif edin, dinliyorum.',
     color: '#EC4899',
+    photo: '/doctors/dr_selin.jpg',
   },
   {
     id: 'emreaydin',
@@ -247,6 +252,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'KBB şikayetini dinliyorum.',
     color: '#14B8A6',
+    photo: '/doctors/dr_emre.jpg',
   },
   {
     id: 'iremkaya',
@@ -267,6 +273,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Görme ve ağrı öyküsünü dinliyorum.',
     color: '#3B82F6',
+    photo: '/doctors/dr_irem.jpg',
   },
   {
     id: 'fatmacelik',
@@ -287,6 +294,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Anne ve bebek için dinliyorum.',
     color: '#BE185D',
+    photo: '/doctors/dr_fatma.jpg',
   },
   {
     id: 'muratyildiz',
@@ -307,6 +315,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Ürolojik yakınmayı dinliyorum.',
     color: '#0EA5E9',
+    photo: '/doctors/dr_murat.jpg',
   },
   {
     id: 'canerkoc',
@@ -327,6 +336,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Görüntüleme endikasyonunu dinliyorum.',
     color: '#64748B',
+    photo: '/doctors/dr_caner.jpg',
   },
   {
     id: 'pinardemir',
@@ -347,6 +357,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextF(),
     greeting: 'Anestezi riskini birlikte netleştirelim.',
     color: '#8B5CF6',
+    photo: '/doctors/dr_pinar.jpg',
   },
   {
     id: 'oguzkilic',
@@ -367,6 +378,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Acil mi? Hemen netleştirelim.',
     color: '#F97316',
+    photo: '/doctors/dr_oguz.jpg',
   },
   {
     id: 'aylinerdem',
@@ -407,6 +419,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Enfeksiyon odağını dinliyorum.',
     color: '#E11D48',
+    photo: '/doctors/dr_serkan.jpg',
   },
   {
     id: 'gulsahtekin',
@@ -447,6 +460,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     voice: nextM(),
     greeting: 'Gastro şikayeti dinliyorum.',
     color: '#F43F5E',
+    photo: '/doctors/dr_volkan.jpg',
   },
   {
     id: 'mertozkan',

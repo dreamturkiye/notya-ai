@@ -9,15 +9,15 @@ import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 const PERSONAS = [
-  { id: 'kemalbey', name: 'Kemal Celik', title: 'Ceza Hukuku', color: '#DC2626' },
+  { id: 'kemalbey', name: 'Kemal Çelik', title: 'Ceza Hukuku', color: '#DC2626' },
   { id: 'selinhanim', name: 'Selin Arslan', title: 'Aile Hukuku', color: '#EC4899' },
-  { id: 'muratbey', name: 'Murat Ozturk', title: 'Ticaret Hukuku', color: '#2563EB' },
-  { id: 'dilekhanim', name: 'Dilek Sahin', title: 'Is Hukuku', color: '#7C3AED' },
+  { id: 'muratbey', name: 'Murat Öztürk', title: 'Ticaret Hukuku', color: '#2563EB' },
+  { id: 'dilekhanim', name: 'Dilek Şahin', title: 'İş Hukuku', color: '#7C3AED' },
   { id: 'halukbey', name: 'Haluk Demir', title: 'Gayrimenkul', color: '#D97706' },
-  { id: 'aysehanim', name: 'Ayse Kaya', title: 'Icra ve Iflas', color: '#059669' },
-  { id: 'canbey', name: 'Can Yilmaz', title: 'Idare Hukuku', color: '#0891B2' },
-  { id: 'zeynephanim', name: 'Zeynep Aktay', title: 'Tuketici Hukuku', color: '#BE185D' },
-  { id: 'borabey', name: 'Bora Yildiz', title: 'Bilisim & KVKK', color: '#6D28D9' },
+  { id: 'aysehanim', name: 'Ayşe Kaya', title: 'İcra ve İflas', color: '#059669' },
+  { id: 'canbey', name: 'Can Yılmaz', title: 'İdare Hukuku', color: '#0891B2' },
+  { id: 'zeynephanim', name: 'Zeynep Aktay', title: 'Tüketici Hukuku', color: '#BE185D' },
+  { id: 'borabey', name: 'Bora Yıldız', title: 'Bilişim & KVKK', color: '#6D28D9' },
 ]
 
 export default function AvukatDashboard() {
