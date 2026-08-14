@@ -41,15 +41,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Hastalar alınamadı' }, { status: 500 });
   }
 
-  const maskedPatients = patients.map((p: any) => ({
-    id: p.id,
-    masked_name: p.name_encrypted ? 
-      (JSON.parse(decrypt(p.name_encrypted)).ad || '??') + ' ***' : 'Bilinmiyor ***',
-    last_visit: p.created_at,
-    is_active: true
-  }));
+  const maskedPatients = patients.map((p: {
+    id: string
+    tc_kimlik_hash: string | null
+    name_encrypted: string | null
+    is_active: boolean | null
+    created_at: string
+  }) => {
+    let fullName = 'Bilinmiyor'
+    try {
+      if (p.name_encrypted) {
+        const parsed = JSON.parse(decrypt(p.name_encrypted)) as { ad?: string }
+        fullName = (parsed.ad || '').trim() || 'Bilinmiyor'
+      }
+    } catch {
+      fullName = 'Bilinmiyor'
+    }
 
-  return NextResponse.json({ patients: maskedPatients });
+    return {
+      id: p.id,
+      // Doctor's own roster — full name for search/display (not a public list).
+      name: fullName,
+      masked_name: fullName, // backward-compatible for tool pages
+      tc_kimlik_hash: p.tc_kimlik_hash || '',
+      last_visit: p.created_at,
+      is_active: p.is_active !== false,
+    }
+  })
+
+  return NextResponse.json({ patients: maskedPatients })
 }
 
 export async function POST(req: NextRequest) {

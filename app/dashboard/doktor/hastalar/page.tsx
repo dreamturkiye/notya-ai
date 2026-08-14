@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { useRouter } from 'next/navigation';
 
@@ -8,38 +8,147 @@ export const dynamic = 'force-dynamic';
 
 interface Patient {
   id: string;
+  name: string;
   masked_name: string;
+  tc_kimlik_hash: string;
   last_visit: string;
   is_active: boolean;
+}
+
+function normalizeTr(value: string): string {
+  return value
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '');
+}
+
+async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 export default function HastalarPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
+  const [tcHashQuery, setTcHashQuery] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const _raw = localStorage.getItem('auth-token') || localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('sb-'))||''); const token = _raw ? (() => { try { return JSON.parse(_raw).access_token || _raw } catch { return _raw } })() : null;
+    const _raw =
+      localStorage.getItem('auth-token') ||
+      localStorage.getItem(Object.keys(localStorage).find((k) => k.startsWith('sb-')) || '');
+    const token = _raw
+      ? (() => {
+          try {
+            return JSON.parse(_raw).access_token || _raw;
+          } catch {
+            return _raw;
+          }
+        })()
+      : null;
+
     fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(d => setPatients(Array.isArray(d?.patients) ? d.patients : []));
+      .then((res) => res.json())
+      .then((d) => {
+        const list = Array.isArray(d?.patients) ? d.patients : [];
+        setPatients(
+          list.map((p: Record<string, unknown>) => ({
+            id: String(p.id || ''),
+            name: String(p.name || p.masked_name || 'Bilinmiyor'),
+            masked_name: String(p.masked_name || p.name || 'Bilinmiyor'),
+            tc_kimlik_hash: String(p.tc_kimlik_hash || ''),
+            last_visit: String(p.last_visit || ''),
+            is_active: p.is_active !== false,
+          }))
+        );
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const filtered = patients.filter(p => p.masked_name.toLowerCase().includes(search.toLowerCase()));
+  // When the query looks like a TC, hash it and match against stored tc_kimlik_hash.
+  useEffect(() => {
+    const digits = search.replace(/\D/g, '');
+    let cancelled = false;
+    if (digits.length === 11) {
+      void sha256Hex(digits).then((hash) => {
+        if (!cancelled) setTcHashQuery(hash);
+      });
+    } else {
+      setTcHashQuery(null);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [search]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    if (!q) return patients;
+    const qNorm = normalizeTr(q);
+    return patients.filter((p) => {
+      const nameHit = normalizeTr(p.name).includes(qNorm);
+      const tcHit = Boolean(tcHashQuery && p.tc_kimlik_hash && p.tc_kimlik_hash === tcHashQuery);
+      return nameHit || tcHit;
+    });
+  }, [patients, search, tcHashQuery]);
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
       <DoktorNav />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
         <h1 style={{ fontSize: 28, marginBottom: 24 }}>Hastalar</h1>
-        <input placeholder="TC hash ile ara..." value={search} onChange={e => setSearch(e.target.value)} style={{ padding: 12, background: '#1E2937', border: '1px solid #334155', borderRadius: 8, width: '100%', marginBottom: 24, color: 'white' }} />
-        
+        <input
+          placeholder="Ad, soyad veya TC Kimlik No ile ara..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          autoComplete="off"
+          inputMode="search"
+          style={{
+            padding: 12,
+            background: '#1E2937',
+            border: '1px solid #334155',
+            borderRadius: 8,
+            width: '100%',
+            marginBottom: 24,
+            color: 'white',
+            boxSizing: 'border-box',
+          }}
+        />
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {filtered.map(p => (
-            <div key={p.id} onClick={() => router.push(`/dashboard/doktor/hastalar/${p.id}`)} style={{ background: '#1E2937', padding: 16, borderRadius: 12, display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}>
-              <div>{p.masked_name}</div>
-              <div style={{ color: '#94A3B8' }}>{new Date(p.last_visit).toLocaleDateString('tr-TR')}</div>
-              <div style={{ color: p.is_active ? '#10B981' : '#EF4444' }}>{p.is_active ? 'Aktif' : 'Pasif'}</div>
+          {loading && (
+            <div style={{ color: '#94A3B8', padding: '24px 4px' }}>Hastalar yükleniyor...</div>
+          )}
+          {!loading && filtered.length === 0 && (
+            <div style={{ color: '#94A3B8', padding: '24px 4px' }}>
+              {search.trim() ? 'Aramanızla eşleşen hasta bulunamadı.' : 'Henüz hasta kaydı yok.'}
+            </div>
+          )}
+          {filtered.map((p) => (
+            <div
+              key={p.id}
+              onClick={() => router.push(`/dashboard/doktor/hastalar/${p.id}`)}
+              style={{
+                background: '#1E2937',
+                padding: 16,
+                borderRadius: 12,
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 12,
+                cursor: 'pointer',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ fontWeight: 600, flex: 1, minWidth: 0 }}>{p.name}</div>
+              <div style={{ color: '#94A3B8', flexShrink: 0 }}>
+                {p.last_visit ? new Date(p.last_visit).toLocaleDateString('tr-TR') : '—'}
+              </div>
+              <div style={{ color: p.is_active ? '#10B981' : '#EF4444', flexShrink: 0 }}>
+                {p.is_active ? 'Aktif' : 'Pasif'}
+              </div>
             </div>
           ))}
         </div>
