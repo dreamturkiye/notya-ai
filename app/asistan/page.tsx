@@ -94,7 +94,13 @@ export default function AsistanPage() {
 
   function addMsg(role: "user" | "ai", text: string) {
     if (!text?.trim()) return
-    setMessages((prev) => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: text.trim() }])
+    const trimmed = text.trim()
+    setMessages((prev) => {
+      // Guard against connect-seed + agent transcript of the same greeting.
+      const last = prev[prev.length - 1]
+      if (last && last.role === role && last.text === trimmed) return prev
+      return [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: trimmed }]
+    })
   }
 
   async function endConversation() {
@@ -104,6 +110,30 @@ export default function AsistanPage() {
       try { await conv.endSession() } catch { /* ignore */ }
     }
     setStatus("idle")
+  }
+
+  function isFirstMessageOverrideError(msg: string): boolean {
+    // Narrow match: the prior broad "Override for field" also caught voice/prompt
+    // failures and restarted a second session on the same mic → broken speech (Ayşe).
+    return /first[_ ]?message/i.test(msg || "")
+  }
+
+  async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string }> {
+    if (!authToken) throw new Error("Oturum bulunamadı")
+    const resp = await fetch(
+      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}`,
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    )
+    if (!resp.ok) {
+      const errBody = await resp.json().catch(() => ({}))
+      throw new Error((errBody as { error?: string }).error || `Sunucu hatası: ${resp.status}`)
+    }
+    const body = await resp.json()
+    if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
+    return {
+      signedUrl: body.signed_url as string,
+      voiceId: (body.voice_id as string) || p.voiceId,
+    }
   }
 
   async function startConversation() {
@@ -128,31 +158,22 @@ export default function AsistanPage() {
     }
 
     try {
-      const resp = await fetch(
-        `/api/asistan/signed-url?specialty=${persona.primarySpecialty}&persona=${persona.id}`,
-        { headers: { Authorization: `Bearer ${authToken}` } }
-      )
-
-      if (!resp.ok) {
-        const errBody = await resp.json().catch(() => ({}))
-        throw new Error((errBody as { error?: string }).error || `Sunucu hatası: ${resp.status}`)
-      }
-
-      const body = await resp.json()
-      if (!body.signed_url) throw new Error("Bağlantı adresi alınamadı")
-
       const doctor = doctorProfile || toAddressableUser(null)
       const p = PERSONAS[personaKey]
       const firstMessage = buildVoiceFirstMessage(p, doctor)
       const voicePrompt = buildVoiceSystemPrompt(p, doctor)
+      const { signedUrl, voiceId } = await fetchSignedUrl(p)
 
-      // Try personalized first_message (enabled on agents); auto-fallback without it.
+      // Try personalized first_message; clean single-flight fallback if agent rejects it.
       await startConversationWithoutFirstMessage(
-        body.signed_url as string,
+        signedUrl,
         voicePrompt,
         firstMessage,
-        body.voice_id || p.voiceId,
-        { tryFirstMessage: true }
+        voiceId,
+        {
+          tryFirstMessage: true,
+          refreshSignedUrl: () => fetchSignedUrl(p).then((r) => r.signedUrl),
+        }
       )
     } catch (e: unknown) {
       const raw = e instanceof Error ? e.message : String(e)
@@ -171,17 +192,55 @@ export default function AsistanPage() {
     voicePrompt: string,
     firstMessage: string,
     voiceId: string,
-    opts?: { tryFirstMessage?: boolean }
+    opts?: {
+      tryFirstMessage?: boolean
+      refreshSignedUrl?: () => Promise<string>
+    }
   ) {
     const tryFirst = Boolean(opts?.tryFirstMessage)
     let usedFirstMessage = tryFirst
     let retriedWithoutFirst = false
+    let retryInFlight = false
+    let activeSignedUrl = signedUrl
+
+    const endCurrentSession = async () => {
+      const old = conversationRef.current
+      conversationRef.current = null
+      if (old) {
+        try { await old.endSession() } catch { /* ignore */ }
+      }
+    }
+
+    const scheduleRetryWithoutFirst = async () => {
+      if (retriedWithoutFirst || retryInFlight) return
+      retriedWithoutFirst = true
+      retryInFlight = true
+      try {
+        await endCurrentSession()
+        if (opts?.refreshSignedUrl) {
+          try {
+            activeSignedUrl = await opts.refreshSignedUrl()
+          } catch {
+            // Keep prior URL if refresh fails; begin(false) may still succeed.
+          }
+        }
+        await begin(false)
+      } catch (e: unknown) {
+        setErrorMsg(connectionErrorHelp(e instanceof Error ? e.message : String(e)))
+        setStatus("error")
+        conversationRef.current = null
+      } finally {
+        retryInFlight = false
+      }
+    }
 
     const begin = async (includeFirstMessage: boolean) => {
       usedFirstMessage = includeFirstMessage
+      // Fallback seeds UI greeting; skip the agent's own default transcript once.
+      let skipNextAgentTranscript = !includeFirstMessage
       setStatus("connecting")
       const conversation = await Conversation.startSession({
-        signedUrl,
+        signedUrl: activeSignedUrl,
         connectionType: "websocket",
         overrides: {
           agent: {
@@ -194,33 +253,41 @@ export default function AsistanPage() {
         onConnect: () => {
           setStatus("listening")
           setErrorMsg("")
-          addMsg("ai", firstMessage)
+          // When first_message override is active the agent speaks it and onMessage
+          // adds the bubble once. Seeding here caused the doubled first text.
+          // Fallback path (no override): seed personalized greeting in UI only.
+          if (!includeFirstMessage) {
+            addMsg("ai", firstMessage)
+          }
         },
         onDisconnect: (details) => {
-          conversationRef.current = null
           if (details.reason === "error") {
             const msg = details.message || ""
-            if (usedFirstMessage && !retriedWithoutFirst && /first_message|Override for field/i.test(msg)) {
-              retriedWithoutFirst = true
-              void begin(false)
+            if (usedFirstMessage && !retriedWithoutFirst && isFirstMessageOverrideError(msg)) {
+              void scheduleRetryWithoutFirst()
               return
             }
+            conversationRef.current = null
             setErrorMsg(connectionErrorHelp(msg))
             setStatus("error")
           } else {
+            conversationRef.current = null
             setStatus("idle")
           }
         },
         onError: (message) => {
-          if (usedFirstMessage && !retriedWithoutFirst && /first_message|Override for field/i.test(message || "")) {
-            retriedWithoutFirst = true
-            void begin(false)
+          if (usedFirstMessage && !retriedWithoutFirst && isFirstMessageOverrideError(message || "")) {
+            void scheduleRetryWithoutFirst()
             return
           }
           setErrorMsg(connectionErrorHelp(message))
           setStatus("error")
         },
         onMessage: ({ message, role }) => {
+          if (role !== "user" && skipNextAgentTranscript) {
+            skipNextAgentTranscript = false
+            return
+          }
           addMsg(role === "user" ? "user" : "ai", message)
         },
         onModeChange: ({ mode }) => {
@@ -235,22 +302,12 @@ export default function AsistanPage() {
     }
 
     try {
-      // Default path omits first_message so talk never depends on agent override flags.
-      // When tryFirstMessage is set, attempt personalized greeting then fall back.
       await begin(tryFirst ? true : false)
     } catch (e: unknown) {
       const raw = e instanceof Error ? e.message : String(e)
-      if (tryFirst && /first_message|Override for field/i.test(raw) && !retriedWithoutFirst) {
-        retriedWithoutFirst = true
-        try {
-          await begin(false)
-          return
-        } catch (e2: unknown) {
-          setErrorMsg(connectionErrorHelp(e2 instanceof Error ? e2.message : String(e2)))
-          setStatus("error")
-          conversationRef.current = null
-          return
-        }
+      if (tryFirst && isFirstMessageOverrideError(raw) && !retriedWithoutFirst) {
+        await scheduleRetryWithoutFirst()
+        return
       }
       setErrorMsg(connectionErrorHelp(raw))
       setStatus("error")
