@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { label: "İlaçlar", route: "/dashboard/doktor/ilaclar", color: "#22C55E" },
   { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#8B5CF6" },
   { label: "İnceleme", route: "/dashboard/doktor/inceleme", color: "#F97316" },
+  { label: "Entegrasyonlar", route: "/dashboard/doktor/entegrasyonlar", color: "#0EA5E9" },
   { label: "Araçlar", route: "/doktor-tools", color: "#166534" },
   { label: "SGK", route: "/doktor-tools/sgk-medula", color: "#DC2626" },
 ];

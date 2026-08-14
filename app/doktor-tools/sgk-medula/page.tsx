@@ -3,16 +3,9 @@
 export const dynamic = 'force-dynamic';
 
 import DoktorNav from '@/components/doktor/DoktorNav';
-import { useState, useEffect } from 'react';
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface SGKCredentials {
-  tc: string;
-  password: string;
-  tesisKodu?: string;
-  sicilNo?: string;
-  lastVerified: string;
-}
 
 interface ProvizyonResult {
   maskedName: string;
@@ -25,7 +18,8 @@ interface ProvizyonResult {
 export default function SGKMedulaPage() {
   const router = useRouter();
   const [isConnected, setIsConnected] = useState(false);
-  const [credentials, setCredentials] = useState<SGKCredentials | null>(null);
+  const [meta, setMeta] = useState<Record<string, unknown>>({});
+  const [lastVerified, setLastVerified] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showProvizyonModal, setShowProvizyonModal] = useState(false);
@@ -52,18 +46,34 @@ export default function SGKMedulaPage() {
   const blue = '#3B82F6';
   const purple = '#8B5CF6';
 
-  useEffect(() => {
-    const saved = localStorage.getItem('sgk_credentials');
-    if (saved) {
+  const loadVault = useCallback(async () => {
+    const token = getDoctorAccessToken();
+    if (!token) return;
+    try {
+      const res = await fetch('/api/doktor/integrations/medula', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return;
+      const connected = Boolean((data as { connected?: boolean }).connected);
+      setIsConnected(connected);
+      setMeta(((data as { meta?: Record<string, unknown> }).meta) || {});
+      setLastVerified((data as { lastVerified?: string | null }).lastVerified || null);
+      // Clear legacy localStorage store once vault is the source of truth
       try {
-        const parsed = JSON.parse(atob(saved)) as SGKCredentials;
-        setCredentials(parsed);
-        setIsConnected(true);
-      } catch (e) {
         localStorage.removeItem('sgk_credentials');
+      } catch {
+        /* ignore */
       }
+      if (!connected) setShowForm(true);
+    } catch {
+      /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    void loadVault();
+  }, [loadVault]);
 
   const validateTcChecksum = (tc: string): boolean => {
     if (!/^\d{11}$/.test(tc)) return false;
@@ -86,29 +96,56 @@ export default function SGKMedulaPage() {
       return;
     }
 
+    const token = getDoctorAccessToken();
+    if (!token) {
+      setFormError('Oturum gerekli');
+      return;
+    }
+
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const creds: SGKCredentials = {
-      tc: formData.tc,
-      password: formData.password,
-      tesisKodu: formData.tesisKodu || undefined,
-      sicilNo: formData.sicilNo || undefined,
-      lastVerified: new Date().toISOString(),
-    };
-
-    localStorage.setItem('sgk_credentials', btoa(JSON.stringify(creds)));
-    setCredentials(creds);
-    setIsConnected(true);
-    setShowForm(false);
-    setLoading(false);
-    setFormData({ tc: '', password: '', tesisKodu: '', sicilNo: '' });
+    try {
+      const res = await fetch('/api/doktor/integrations/medula', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          hekimTc: formData.tc,
+          sifre: formData.password,
+          tesisKodu: formData.tesisKodu || undefined,
+          sicilNo: formData.sicilNo || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFormError(String((data as { error?: string }).error || 'Kaydedilemedi'));
+        return;
+      }
+      localStorage.removeItem('sgk_credentials');
+      setIsConnected(true);
+      setMeta(((data as { meta?: Record<string, unknown> }).meta) || {});
+      setLastVerified((data as { lastVerified?: string | null }).lastVerified || null);
+      setShowForm(false);
+      setFormData({ tc: '', password: '', tesisKodu: '', sicilNo: '' });
+    } catch {
+      setFormError('Bağlantı hatası');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
+    const token = getDoctorAccessToken();
+    if (!token) return;
+    await fetch('/api/doktor/integrations/medula', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
     localStorage.removeItem('sgk_credentials');
     setIsConnected(false);
-    setCredentials(null);
+    setMeta({});
+    setLastVerified(null);
     setShowForm(true);
   };
 
@@ -132,11 +169,12 @@ export default function SGKMedulaPage() {
     setProvizyonTc('');
   };
 
+  const maskedTc = String(meta.hekimTcMasked || '');
+
   return (
     <div style={{ backgroundColor: bgColor, minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
       <DoktorNav />
       <div style={{ maxWidth: '860px', margin: '0 auto', padding: '40px 20px' }}>
-        {/* HEADER */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{ fontSize: '11px', color: teal, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '8px' }}>
             SGK ENTEGRASYONU
@@ -145,27 +183,30 @@ export default function SGKMedulaPage() {
             SGK Medula Bağlantısı
           </h1>
           <p style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '8px' }}>
-            E-reçete ve provizyon sorgulama için SGK kimlik bilgileri
+            Kimlik bilgileri Entegrasyonlar kasasında şifreli saklanır.{' '}
+            <a href="/dashboard/doktor/entegrasyonlar" style={{ color: teal }}>Tüm entegrasyonlar</a>
           </p>
         </div>
 
-        {/* CONNECTION STATUS CARD */}
         <div style={{ backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderRadius: '16px', padding: '20px 24px', marginBottom: '32px' }}>
-          {isConnected && credentials ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {isConnected ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '10px', height: '10px', backgroundColor: green, borderRadius: '50%' }} />
                 <div>
                   <div style={{ color: green, fontWeight: 600 }}>Bağlı</div>
-                  <div style={{ fontSize: '13px', color: '#9CA3AF' }}>TC: {credentials.tc} • Son doğrulama: {new Date(credentials.lastVerified).toLocaleDateString('tr-TR')}</div>
+                  <div style={{ fontSize: '13px', color: '#9CA3AF' }}>
+                    TC: {maskedTc || '••••'} • Son doğrulama:{' '}
+                    {lastVerified ? new Date(lastVerified).toLocaleDateString('tr-TR') : '—'}
+                  </div>
                 </div>
               </div>
-              <button onClick={handleDisconnect} style={{ backgroundColor: 'transparent', border: `1px solid ${borderColor}`, color: '#fff', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+              <button onClick={() => void handleDisconnect()} style={{ backgroundColor: 'transparent', border: `1px solid ${borderColor}`, color: '#fff', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
                 Bağlantıyı Kes
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '10px', height: '10px', backgroundColor: amber, borderRadius: '50%' }} />
                 <div>
@@ -180,13 +221,12 @@ export default function SGKMedulaPage() {
           )}
         </div>
 
-        {/* CREDENTIAL FORM */}
         {(!isConnected || showForm) && (
           <div style={{ backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderRadius: '16px', padding: '24px', marginBottom: '32px' }}>
             <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>SGK Kurumsal Giriş Bilgileri</div>
             
-            <div style={{ backgroundColor: 'rgba(245,158,11,0.1)', border: `1px solid ${amber}`, borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px' }}>
-              SGK şifreniz cihazınızda AES-256 ile şifrelenip saklanır. Notya sunucularına gönderilmez.
+            <div style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: `1px solid ${teal}`, borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px' }}>
+              Şifreniz sunucuda şifreli saklanır; sorgular sizin yetkinizle yapılır. Kaydettikten sonra şifre tarayıcıya geri dönmez.
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -199,8 +239,8 @@ export default function SGKMedulaPage() {
                 <label style={{ fontSize: '13px', color: '#9CA3AF', display: 'block', marginBottom: '6px' }}>SGK Kurumsal Şifre</label>
                 <div style={{ position: 'relative' }}>
                   <input type={showPassword ? 'text' : 'password'} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={{ width: '100%', backgroundColor: '#0F172A', border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '12px 44px 12px 12px', color: '#fff', fontSize: '15px' }} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}>
+                    {showPassword ? 'Gizle' : 'Göster'}
                   </button>
                 </div>
               </div>
@@ -218,50 +258,33 @@ export default function SGKMedulaPage() {
 
             {formError && <div style={{ color: '#EF4444', fontSize: '13px', marginTop: '12px' }}>{formError}</div>}
 
-            <button onClick={handleConnect} disabled={loading} style={{ width: '100%', marginTop: '20px', backgroundColor: teal, color: '#000', border: 'none', padding: '14px', borderRadius: '10px', fontWeight: 600, fontSize: '15px', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {loading && <div style={{ width: '16px', height: '16px', border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />} Bağlan ve Doğrula
+            <button onClick={() => void handleConnect()} disabled={loading} style={{ width: '100%', marginTop: '20px', backgroundColor: teal, color: '#000', border: 'none', padding: '14px', borderRadius: '10px', fontWeight: 600, fontSize: '15px', cursor: loading ? 'wait' : 'pointer' }}>
+              {loading ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
           </div>
         )}
 
-        {/* SGK TOOLS GRID */}
         {isConnected && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '16px', marginBottom: '32px' }}>
-            {/* Card 1 */}
             <div style={{ backgroundColor: cardBg, border: `1px solid ${teal}`, borderRadius: '16px', padding: '20px' }}>
-              <div style={{ marginBottom: '12px' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={teal}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0016.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 002 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/></svg>
-              </div>
               <div style={{ fontWeight: 600, marginBottom: '4px' }}>E-Reçete Gönder</div>
-              <div style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '16px' }}>SGK Medula'ya e-reçete ilet</div>
+              <div style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '16px' }}>SGK Medula&apos;ya e-reçete ilet</div>
               <button onClick={() => router.push('/doktor-tools/erecete')} style={{ width: '100%', backgroundColor: teal, color: '#000', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>E-Reçete Oluştur</button>
             </div>
 
-            {/* Card 2 */}
             <div style={{ backgroundColor: cardBg, border: `1px solid ${blue}`, borderRadius: '16px', padding: '20px' }}>
-              <div style={{ marginBottom: '12px' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={blue}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-              </div>
               <div style={{ fontWeight: 600, marginBottom: '4px' }}>Provizyon Sorgula</div>
               <div style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '16px' }}>Hasta sigorta haklarını sorgula</div>
               <button onClick={openProvizyonModal} style={{ width: '100%', backgroundColor: blue, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Sorgula</button>
             </div>
 
-            {/* Card 3 */}
             <div style={{ backgroundColor: cardBg, border: `1px solid ${purple}`, borderRadius: '16px', padding: '20px' }}>
-              <div style={{ marginBottom: '12px' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={purple}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-              </div>
               <div style={{ fontWeight: 600, marginBottom: '4px' }}>SGK Uyum Kontrolü</div>
               <div style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '16px' }}>İlaç+tanı kombinasyonu kontrol</div>
               <button onClick={() => router.push('/doktor-tools/ilac-interaksiyon')} style={{ width: '100%', backgroundColor: purple, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Kontrol Et</button>
             </div>
 
-            {/* Card 4 */}
             <div style={{ backgroundColor: cardBg, border: `1px solid ${amber}`, borderRadius: '16px', padding: '20px' }}>
-              <div style={{ marginBottom: '12px' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={amber}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
               <div style={{ fontWeight: 600, marginBottom: '4px' }}>Başvuru Durumu</div>
               <div style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '16px' }}>Bekleyen rapor ve başvurular</div>
               <button onClick={() => setShowBasvuruModal(true)} style={{ width: '100%', backgroundColor: amber, color: '#000', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Görüntüle</button>
@@ -269,13 +292,11 @@ export default function SGKMedulaPage() {
           </div>
         )}
 
-        {/* BOTTOM NOTE */}
         <div style={{ backgroundColor: cardBg, borderLeft: `4px solid ${amber}`, borderRadius: '8px', padding: '16px 20px', fontSize: '13px', color: '#9CA3AF' }}>
           SGK Medula entegrasyonu kurumsal başvuru gerektirir. Mevcut entegrasyon simüle modunda çalışır. Tam entegrasyon için <a href="https://saglik.gov.tr/medula" target="_blank" style={{ color: teal, textDecoration: 'underline' }}>saglik.gov.tr/medula</a> üzerinden başvuru yapınız.
         </div>
       </div>
 
-      {/* PROVIZYON MODAL */}
       {showProvizyonModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ width: '440px', maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderRadius: '16px', padding: '24px' }}>
@@ -284,7 +305,7 @@ export default function SGKMedulaPage() {
             {!provizyonResult ? (
               <>
                 <input type="text" maxLength={11} placeholder="TC Kimlik No" value={provizyonTc} onChange={(e) => setProvizyonTc(e.target.value.replace(/\D/g, ''))} style={{ width: '100%', backgroundColor: '#0F172A', border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '12px', color: '#fff', marginBottom: '16px' }} />
-                <button onClick={handleProvizyonSorgula} disabled={provizyonLoading || provizyonTc.length !== 11} style={{ width: '100%', backgroundColor: teal, color: '#000', padding: '12px', borderRadius: '10px', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                <button onClick={() => void handleProvizyonSorgula()} disabled={provizyonLoading || provizyonTc.length !== 11} style={{ width: '100%', backgroundColor: teal, color: '#000', padding: '12px', borderRadius: '10px', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
                   {provizyonLoading ? 'Sorgulanıyor...' : 'Sorgula'}
                 </button>
               </>
@@ -305,7 +326,6 @@ export default function SGKMedulaPage() {
         </div>
       )}
 
-      {/* BASVURU MODAL */}
       {showBasvuruModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ width: '440px', maxWidth: 'calc(100vw - 32px)', boxSizing: 'border-box', backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderRadius: '16px', padding: '24px' }}>

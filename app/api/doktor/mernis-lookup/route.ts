@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import {
+  authDoctorFromBearer,
+  loadIntegrationSecrets,
+  type NviSecrets,
+} from '@/lib/doktor/integrations'
+import { lookupKimlikWithDoctorCreds } from '@/lib/nvi/kps'
 
 export const dynamic = 'force-dynamic'
-
-// MERNiS / e-Devlet TC lookup
-// PRODUCTION: Requires institutional NVI (KPS) access — not available in this environment.
-// CURRENT: Validates TC checksum only. Does NOT invent name/DOB/gender.
-// Real integration: SOAP to https://tckimlik.nvi.gov.tr/Service/KPSPublic.asmx
 
 function validateTC(tc: string): boolean {
   if (!/^[1-9][0-9]{10}$/.test(tc)) return false
@@ -24,16 +24,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
   }
   const token = auth.slice(7)
-
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-  const {
-    data: { user },
-    error,
-  } = await sb.auth.getUser(token)
-  if (error || !user) {
+  const doctor = await authDoctorFromBearer(token)
+  if (!doctor) {
     return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
   }
 
@@ -43,55 +35,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Geçersiz TC Kimlik' }, { status: 400 })
   }
 
-  // Optional: institutional NVI credentials (when Notya has gov partnership).
-  const mernisEnabled =
-    process.env.MERNIS_ENABLED === 'true' && Boolean(process.env.MERNIS_API_URL)
+  const vault = await loadIntegrationSecrets<NviSecrets>(doctor.userId, 'nvi_kps')
 
-  if (mernisEnabled) {
-    // Placeholder for future real integration — keep response shape stable for the client.
-    try {
-      const upstream = await fetch(process.env.MERNIS_API_URL!, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.MERNIS_API_KEY || ''}`,
-        },
-        body: JSON.stringify({ tc }),
-        cache: 'no-store',
+  if (vault) {
+    const result = await lookupKimlikWithDoctorCreds(tc, vault.secrets)
+    if (result.ok) {
+      return NextResponse.json({
+        success: true,
+        source: 'nvi_kps',
+        populated: true,
+        adSoyad: result.adSoyad,
+        dogumTarihi: result.dogumTarihi || undefined,
+        cinsiyet: result.cinsiyet || undefined,
+        message: "NVI'dan bilgiler getirildi",
+        nviConnected: true,
       })
-      if (upstream.ok) {
-        const raw = (await upstream.json()) as Record<string, unknown>
-        const ad = String(raw.ad || raw.firstName || '')
-        const soyad = String(raw.soyad || raw.lastName || '')
-        const adSoyad = String(raw.adSoyad || `${ad} ${soyad}`.trim())
-        const dogumTarihi = String(raw.dogumTarihi || raw.birthDate || '')
-        const cinsiyet = String(raw.cinsiyet || raw.gender || '')
-        if (adSoyad) {
-          return NextResponse.json({
-            success: true,
-            source: 'mernis',
-            populated: true,
-            adSoyad,
-            dogumTarihi: dogumTarihi || undefined,
-            cinsiyet: cinsiyet || undefined,
-            message: "MERNİS'ten bilgiler getirildi",
-          })
-        }
-      }
-    } catch (e) {
-      console.error('MERNIS upstream failed', e)
     }
+    return NextResponse.json({
+      success: true,
+      source: 'checksum',
+      populated: false,
+      verified: true,
+      tc,
+      nviConnected: true,
+      reason: result.reason,
+      message: result.message,
+    })
   }
 
-  // Demo / no institutional access: TC checksum OK, no personal data available.
+  // No doctor NVI credentials — checksum only.
   return NextResponse.json({
     success: true,
     source: 'checksum',
     populated: false,
     verified: true,
     tc,
-    // Explicitly omit adSoyad/dogumTarihi/cinsiyet so the client does not fake a fill.
+    nviConnected: false,
     message:
-      'TC Kimlik No doğrulandı. Ad Soyad, doğum tarihi ve cinsiyeti lütfen manuel girin. (MERNİS kişi sorgusu kurumsal NVI erişimi gerektirir)',
+      'TC Kimlik No doğrulandı. Ad Soyad için NVI hesabınızı Entegrasyonlar’dan bağlayın, kimlik kartı fotoğrafı çekin veya manuel girin.',
   })
 }
