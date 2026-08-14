@@ -96,28 +96,102 @@ export default function HastaEklePage() {
         body: JSON.stringify({ tc: formData.tcKimlikNo }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setFormData(prev => ({
+      const data = await response.json().catch(() => ({} as Record<string, unknown>));
+
+      if (!response.ok) {
+        setMernisBanner({
+          type: 'error',
+          message: String((data as { error?: string }).error || 'TC doğrulanamadı. Manuel doldurun.'),
+        });
+        return;
+      }
+
+      const adSoyad = String((data as { adSoyad?: string }).adSoyad || '').trim();
+      const dogumTarihi = String((data as { dogumTarihi?: string }).dogumTarihi || '').trim();
+      const cinsiyet = String((data as { cinsiyet?: string }).cinsiyet || '').trim();
+      const populated = Boolean((data as { populated?: boolean }).populated && adSoyad);
+
+      if (populated) {
+        setFormData((prev) => ({
           ...prev,
-          adSoyad: data.adSoyad || prev.adSoyad,
-          dogumTarihi: data.dogumTarihi || prev.dogumTarihi,
-          cinsiyet: data.cinsiyet || prev.cinsiyet,
+          adSoyad: adSoyad || prev.adSoyad,
+          dogumTarihi: dogumTarihi || prev.dogumTarihi,
+          cinsiyet: cinsiyet || prev.cinsiyet,
         }));
-        setMernisBanner({ type: 'success', message: "MERNiS'ten bilgiler getirildi" });
+        setMernisBanner({
+          type: 'success',
+          message: String((data as { message?: string }).message || "MERNİS'ten bilgiler getirildi"),
+        });
         setHighlightFields(true);
-        
         setTimeout(() => {
           setHighlightFields(false);
           setMernisBanner(null);
-        }, 3000);
+        }, 4000);
       } else {
-        setMernisBanner({ type: 'error', message: 'MERNiS bilgisi alınamadı. Manuel doldurun.' });
+        // TC checksum OK but no identity payload — do not pretend fields were filled.
+        setMernisBanner({
+          type: 'error',
+          message: String(
+            (data as { message?: string }).message ||
+              'TC doğrulandı. Ad Soyad ve diğer alanları manuel girin.'
+          ),
+        });
       }
     } catch {
-      setMernisBanner({ type: 'error', message: 'MERNiS bilgisi alınamadı. Manuel doldurun.' });
+      setMernisBanner({ type: 'error', message: 'TC sorgusu başarısız. Manuel doldurun.' });
     } finally {
       setMernisLoading(false);
+    }
+  };
+
+  const fillFromMyProfile = async () => {
+    try {
+      const authData = localStorage.getItem('auth-token');
+      const token = authData ? JSON.parse(authData).access_token : '';
+      if (!token) {
+        setMernisBanner({ type: 'error', message: 'Oturum bulunamadı.' });
+        return;
+      }
+      const resp = await fetch('/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await resp.json().catch(() => ({}));
+      const profile = (body as { data?: Record<string, unknown> }).data || body;
+      const fullName = String(
+        (profile as { full_name?: string }).full_name ||
+          [(profile as { firstName?: string }).firstName, (profile as { lastName?: string }).lastName]
+            .filter(Boolean)
+            .join(' ')
+      ).trim();
+      const genderRaw = String((profile as { gender?: string }).gender || '').toLowerCase();
+      const cinsiyet =
+        genderRaw === 'male' || genderRaw === 'erkek'
+          ? 'Erkek'
+          : genderRaw === 'female' || genderRaw === 'kadın' || genderRaw === 'kadin'
+            ? 'Kadın'
+            : '';
+
+      if (!fullName) {
+        setMernisBanner({
+          type: 'error',
+          message: 'Profilinizde ad soyad yok. Lütfen manuel girin.',
+        });
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        adSoyad: fullName,
+        cinsiyet: cinsiyet || prev.cinsiyet,
+      }));
+      setHighlightFields(true);
+      setMernisBanner({
+        type: 'success',
+        message: 'Profilinizdeki bilgiler forma aktarıldı. Eksikleri tamamlayıp kaydedin.',
+      });
+      setTimeout(() => setHighlightFields(false), 3000);
+    } catch {
+      setMernisBanner({ type: 'error', message: 'Profil bilgisi alınamadı.' });
     }
   };
 
@@ -255,17 +329,35 @@ export default function HastaEklePage() {
             </div>
 
             {tcValid && (
-              <button
-                onClick={handleMernisLookup}
-                disabled={mernisLoading}
-                style={{
-                  width: '100%', height: 40, border: '1.5px solid #14B8A6', color: '#14B8A6',
-                  backgroundColor: 'transparent', borderRadius: 10, fontSize: 15, fontWeight: 500,
-                  marginBottom: 24, cursor: mernisLoading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {mernisLoading ? '⏳ MERNiS sorgulanıyor...' : "MERNiS'ten Getir"}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                <button
+                  type="button"
+                  onClick={handleMernisLookup}
+                  disabled={mernisLoading}
+                  style={{
+                    width: '100%', height: 40, border: '1.5px solid #14B8A6', color: '#14B8A6',
+                    backgroundColor: 'transparent', borderRadius: 10, fontSize: 15, fontWeight: 500,
+                    cursor: mernisLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {mernisLoading ? 'TC doğrulanıyor...' : 'TC Doğrula'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { void fillFromMyProfile(); }}
+                  style={{
+                    width: '100%', height: 40, border: '1.5px solid rgba(255,255,255,0.25)', color: '#E2E8F0',
+                    backgroundColor: 'transparent', borderRadius: 10, fontSize: 14, fontWeight: 500,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Profilimden Doldur
+                </button>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.45 }}>
+                  MERNİS kişi bilgisi kurumsal NVI erişimi gerektirir. Şimdilik TC doğrulanır; ad soyadı
+                  manuel girin veya kendi kaydınız için profilinizden doldurun.
+                </div>
+              </div>
             )}
 
             {mernisBanner && (
