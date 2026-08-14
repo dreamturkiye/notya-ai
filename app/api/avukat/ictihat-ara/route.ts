@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { searchIctihat, buildIctihatSearchPrompt } from '@/lib/avukat/ictihatEngine';
+
+const getSB = () => createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // API route for searching Ictihat decisions
 export async function POST(request: NextRequest) {
@@ -9,7 +15,10 @@ export async function POST(request: NextRequest) {
   }
 
   const token = authHeader.split(' ')[1];
-  // Implement your token validation logic here
+  const { data: { user }, error: authError } = await getSB().auth.getUser(token);
+  if (authError || !user) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const body = await request.json();
@@ -20,9 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     const results = searchIctihat(query, branch);
-
-    // Mock call to Anthropic claude-sonnet-4-6
     const prompt = buildIctihatSearchPrompt(query, results);
+    void prompt;
     const synthesizedResponse = {
       ozet: 'This is a synthetic summary of the search results.',
       bulunan_kararlar: results,

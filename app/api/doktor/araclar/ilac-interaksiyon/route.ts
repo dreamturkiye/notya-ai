@@ -64,9 +64,22 @@ async function groqChat(systemPrompt: string, userPrompt: string): Promise<GroqI
 }
 
 export async function POST(request: NextRequest) {
-  // 1. Auth check
+  // 1. Auth check — validate JWT, not just Bearer presence
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json(
+      { hata: 'Yetkisiz erişim. Lütfen geçerli bir token sağlayın.' },
+      { status: 401 }
+    );
+  }
+  const token = authHeader.slice('Bearer '.length).trim();
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) {
     return NextResponse.json(
       { hata: 'Yetkisiz erişim. Lütfen geçerli bir token sağlayın.' },
       { status: 401 }

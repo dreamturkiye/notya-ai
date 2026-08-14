@@ -61,9 +61,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true })
       }
 
-      // default: generate
+      // default: generate — always bind to authenticated lawyer; verify müvekkil ownership
       if (!SECRET) return NextResponse.json({ error: 'Portal not configured' }, { status: 500 })
-      const ownerId = avukatId || user.id
+      if (!muvekkilId) return NextResponse.json({ error: 'muvekkilId required' }, { status: 400 })
+      const { data: muvOwn } = await sb
+        .from('musevvekiller')
+        .select('id')
+        .eq('id', muvekkilId)
+        .eq('avukat_id', user.id)
+        .maybeSingle()
+      if (!muvOwn) return NextResponse.json({ error: 'Muvekkil bulunamadi' }, { status: 404 })
+      const ownerId = user.id
+      void avukatId
       const portalToken = generatePortalToken(ownerId, muvekkilId, SECRET)
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       const registered = await registerPortalToken(sb, ownerId, muvekkilId, portalToken, expiresAt)

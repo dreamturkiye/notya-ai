@@ -24,7 +24,11 @@ export async function GET(req: NextRequest) {
     nonce: randomBytes(16).toString('hex')
   })).toString('base64')
 
-  const hmac = createHmac('sha256', process.env.PABAU_STATE_SECRET || 'dev-secret')
+  const stateSecret = process.env.PABAU_STATE_SECRET
+  if (!stateSecret) {
+    return NextResponse.json({ success: false, error: 'Pabau yapılandırılmamış' }, { status: 500 })
+  }
+  const hmac = createHmac('sha256', stateSecret)
     .update(state)
     .digest('hex')
 

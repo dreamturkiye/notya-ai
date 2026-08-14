@@ -52,10 +52,29 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
     setInput('')
 
     try {
+      let accessToken = ''
+      try {
+        const raw = localStorage.getItem('auth-token')
+        if (raw) accessToken = JSON.parse(raw)?.access_token || ''
+        if (!accessToken) {
+          const sbKey = Object.keys(localStorage).find((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
+          if (sbKey) {
+            const parsed = JSON.parse(localStorage.getItem(sbKey) || '{}')
+            accessToken = parsed?.access_token || parsed?.currentSession?.access_token || ''
+          }
+        }
+      } catch { /* ignore */ }
+
+      if (!accessToken) {
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Yardım için önce giriş yapmanız gerekir.' }])
+        return
+      }
+
       const response = await fetch('/api/help/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           message: input,
@@ -67,6 +86,8 @@ export default function HelpWidget({ professionType, userName, isFirstLogin }: H
       if (response.ok) {
         const data = await response.json()
         setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }])
+      } else if (response.status === 401) {
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Oturumunuz geçersiz. Lütfen tekrar giriş yapın.' }])
       }
     } finally {
       setLoading(false)

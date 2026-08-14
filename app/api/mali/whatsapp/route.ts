@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { detectAndExtract } from "@/lib/ingestion/pipeline"
@@ -16,18 +17,63 @@ async function replyWA(to: string, body: string) {
   })
 }
 
+/** Twilio request validation: HMAC-SHA1 over full URL + sorted POST params. */
+function validateTwilioSignature(req: NextRequest, params: Record<string, string>): boolean {
+  const signature = req.headers.get('x-twilio-signature')
+  const authToken = process.env.TWILIO_AUTH_TOKEN || process.env.TWILIO_API_SECRET
+  if (!signature || !authToken) return false
+
+  const url =
+    process.env.TWILIO_WEBHOOK_URL ||
+    `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/api/mali/whatsapp`
+
+  const data = Object.keys(params)
+    .sort()
+    .reduce((acc, key) => acc + key + params[key], url)
+
+  const expected = createHmac('sha1', authToken).update(Buffer.from(data, 'utf-8')).digest('base64')
+  try {
+    const a = Buffer.from(signature)
+    const b = Buffer.from(expected)
+    return a.length === b.length && timingSafeEqual(a, b)
+  } catch {
+    return false
+  }
+}
+
 export async function GET() {
   return NextResponse.json({ status: "Notya WhatsApp Webhook OK" })
 }
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.TWILIO_API_SECRET) return new NextResponse("Forbidden", { status: 403 })
-    const form     = await req.formData()
-    const from_num = (form.get("From") as string || "").replace("whatsapp:", "")
-    const body     = (form.get("Body") as string || "").trim()
-    const numMedia = parseInt(form.get("NumMedia") as string || "0")
-    const musavirId = process.env.DEFAULT_MUSAVIR_ID
+    if (!process.env.TWILIO_API_SECRET && !process.env.TWILIO_AUTH_TOKEN) {
+      return new NextResponse("Forbidden", { status: 403 })
+    }
+
+    const form = await req.formData()
+    const params: Record<string, string> = {}
+    form.forEach((value, key) => {
+      if (typeof value === 'string') params[key] = value
+    })
+
+    if (!validateTwilioSignature(req, params)) {
+      return new NextResponse("Invalid signature", { status: 403 })
+    }
+
+    const from_num = (params.From || "").replace("whatsapp:", "")
+    const body = (params.Body || "").trim()
+    const numMedia = parseInt(params.NumMedia || "0", 10)
+
+    // Bind sender to a musavir — no anonymous DEFAULT catch-all ingest.
+    const sb = getSB()
+    const { data: binding } = await sb
+      .from('mali_whatsapp_bindings')
+      .select('musavir_id')
+      .eq('phone', from_num)
+      .maybeSingle()
+
+    const musavirId = binding?.musavir_id || process.env.DEFAULT_MUSAVIR_ID
     if (!musavirId) {
       await replyWA(from_num, "Bu numara sisteme kayitli degil.")
       return new NextResponse("<Response></Response>", { headers: { "Content-Type": "text/xml" } })
@@ -36,11 +82,10 @@ export async function POST(req: NextRequest) {
       await replyWA(from_num, "Belge fotografini gonderin. Derya hemen isleyecek.")
       return new NextResponse("<Response></Response>", { headers: { "Content-Type": "text/xml" } })
     }
-    const sb = getSB()
     const results: Array<Record<string,unknown>> = []
     for (let i = 0; i < Math.min(numMedia, 5); i++) {
-      const mediaUrl  = form.get("MediaUrl" + i) as string
-      const mediaMime = form.get("MediaContentType" + i) as string || "image/jpeg"
+      const mediaUrl  = params["MediaUrl" + i]
+      const mediaMime = params["MediaContentType" + i] || "image/jpeg"
       if (!mediaUrl) continue
       try {
         const sid   = process.env.TWILIO_ACCOUNT_SID!
@@ -73,7 +118,7 @@ export async function POST(req: NextRequest) {
       ? "Belge islenemedi. Daha net fotograf gonderin.": ("Derya " + ok.length + " belgeyi isledi. Detay: notya-ai.vercel.app/dashboard/mali/belgeler")
     await replyWA(from_num, msg)
     return new NextResponse("<Response></Response>", { headers: { "Content-Type": "text/xml" } })
-  } catch(e) {
+  } catch {
     return new NextResponse("<Response></Response>", { headers: { "Content-Type": "text/xml" } })
   }
 }

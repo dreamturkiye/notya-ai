@@ -55,14 +55,17 @@ async function groqChat(systemPrompt: string, userPrompt: string): Promise<strin
 
 async function authCheck(request: NextRequest): Promise<boolean> {
   const authHeader = request.headers.get('authorization');
-  const sessionToken = request.cookies.get('next-auth.session-token')?.value;
-  
-  if (!authHeader && !sessionToken) {
-    return false;
-  }
-  
-  // Üretimde gerçek oturum doğrulama yapılmalı (NextAuth, JWT vb.)
-  return true;
+  if (!authHeader?.startsWith('Bearer ')) return false;
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token) return false;
+
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  return !error && !!user;
 }
 
 export async function POST(request: NextRequest) {

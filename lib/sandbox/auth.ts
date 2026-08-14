@@ -25,7 +25,10 @@ export function validateSandboxToken(token: string | null): { valid: boolean; er
     return { valid: false, error: 'Sandbox devre dışı' }
   }
 
-  const expected = process.env.SANDBOX_ACCESS_TOKEN || 'dr-gokhan-beta-2026'
+  const expected = process.env.SANDBOX_ACCESS_TOKEN
+  if (!expected) {
+    return { valid: false, error: 'Sandbox yapılandırılmamış' }
+  }
   if (!token || token !== expected) {
     return { valid: false, error: 'Geçersiz sandbox erişim tokeni' }
   }

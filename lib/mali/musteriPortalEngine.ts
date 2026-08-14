@@ -1,6 +1,12 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
 
-const SECRET = process.env.PORTAL_TOKEN_SECRET || 'notya-portal-secret-2026-change-in-prod'
+function getPortalSecret(): string {
+  const secret = process.env.PORTAL_TOKEN_SECRET
+  if (!secret) {
+    throw new Error('PORTAL_TOKEN_SECRET ortam değişkeni tanımlı değil')
+  }
+  return secret
+}
 
 export interface PortalTokenPayload {
   musteriId: string
@@ -31,24 +37,26 @@ export function generateSecureToken(
     expiresAt: Date.now() + daysValid * 86400000,
     jti,
   }
+  const secret = getPortalSecret()
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
-  const sig = createHmac('sha256', SECRET).update(payloadB64).digest('base64url')
+  const sig = createHmac('sha256', secret).update(payloadB64).digest('base64url')
   const token = payloadB64 + '.' + sig
-  const tokenHash = createHmac('sha256', SECRET).update(token).digest('hex')
+  const tokenHash = createHmac('sha256', secret).update(token).digest('hex')
   return { token, tokenHash, expiresAt: new Date(payload.expiresAt) }
 }
 
 /** Recomputes the stored hash for a plain token. Must match generateSecureToken. */
 export function hashPortalToken(token: string): string {
-  return createHmac('sha256', SECRET).update(token).digest('hex')
+  return createHmac('sha256', getPortalSecret()).update(token).digest('hex')
 }
 
 export function verifyToken(token: string): PortalTokenPayload | null {
   try {
+    const secret = getPortalSecret()
     const parts = token.split('.')
     if (parts.length !== 2) return null
     const [payloadB64, sig] = parts
-    const expected = createHmac('sha256', SECRET).update(payloadB64).digest('base64url')
+    const expected = createHmac('sha256', secret).update(payloadB64).digest('base64url')
     const sigBuf = Buffer.from(sig)
     const expBuf = Buffer.from(expected)
     if (sigBuf.length !== expBuf.length) return null

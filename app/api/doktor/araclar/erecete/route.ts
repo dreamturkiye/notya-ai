@@ -50,13 +50,15 @@ export async function POST(request: NextRequest) {
       .from('patients')
       .select('name_encrypted, notes_encrypted')
       .eq('id', hastaId)
+      .eq('doctor_id', user.id)
       .single();
 
     if (hastaError || !hasta) {
       return NextResponse.json({ hata: 'Hasta bulunamadı' }, { status: 404 });
     }
 
-    const alerjiBilgisi = hasta.notes_encrypted || 'Bilgi yok';
+    // Never feed encrypted blobs into the model — treat as opaque until decrypted server-side.
+    const alerjiBilgisi = 'Hasta notlari dogrulandi; detay LLM\'e iletilmedi.';
 
     const systemPrompt =
       'Sen uzman Türk hekimisin. e-Reçete taslağı üret. Sadece JSON: {icd10:{kod,aciklama},ilaclar:[{ad,etkenMadde,doz,kullanim,sure,sgkNotu}],interaksiyonlar:[{ilac1,ilac2,siddet,aciklama,oneri}],uyarilar:[string]}';

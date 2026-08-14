@@ -36,8 +36,29 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: patient, error: patientError } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('id', hastaId)
+      .eq('doctor_id', user.id)
+      .maybeSingle();
+
+    if (patientError || !patient) {
+      return Response.json(
+        { hata: 'Hasta bulunamadı veya bu hastaya erişim yok.' },
+        { status: 404 }
+      );
+    }
+
+    const secret = process.env.PORTAL_TOKEN_SECRET;
+    if (!secret) {
+      return Response.json(
+        { hata: 'Portal yapılandırılmamış.' },
+        { status: 500 }
+      );
+    }
+
     const timestamp = Date.now();
-    const secret = process.env.PORTAL_TOKEN_SECRET!;
     const hmac = createHmac('sha256', secret)
       .update(`${hastaId}${user.id}${timestamp}`)
       .digest('hex');
