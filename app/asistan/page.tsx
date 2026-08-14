@@ -342,7 +342,7 @@ export default function AsistanPage() {
 
       {!isMobile && persona.photo && (
         <div style={{ width: "320px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRight: "1px solid rgba(255,255,255,.08)", background: "#0A1525", padding: "40px 28px", gap: "20px" }}>
-          <img src={persona.photo} alt={persona.name} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", border: "3px solid " + persona.color + "CC", boxShadow: "0 0 60px " + persona.color + "44" }} />
+          <img src={persona.photo} alt={persona.name} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", objectPosition: "center top", border: "3px solid " + persona.color + "CC", boxShadow: "0 0 60px " + persona.color + "44" }} />
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>{formatColleagueTabLabel(persona.name)}</div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,.5)", marginBottom: "16px" }}>{persona.title}</div>
@@ -398,7 +398,7 @@ export default function AsistanPage() {
                           fontSize: '30px', fontWeight: 700, color: persona.color,
                           boxShadow: '0 0 48px ' + persona.color + '55' }}>
               {persona.photo
-                ? <img src={persona.photo} alt={persona.name} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}}/>
+                ? <img src={persona.photo} alt={persona.name} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',borderRadius:'50%'}}/>
                 : persona.shortName.slice(0, 2).toUpperCase()}
             </div>
             <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{formatColleagueTabLabel(persona.name)}</div>
