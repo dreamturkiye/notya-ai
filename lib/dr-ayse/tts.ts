@@ -1,18 +1,18 @@
 import { TR_VOICES } from '@/lib/asistan/elevenVoices'
 
 /**
- * ConvAI / sandbox TTS: Eleven Flash v2.5 (official Agents defaults).
- * Docs: stability 0.5, similarity_boost 0.8, speed 1.0, model eleven_flash_v2_5.
- * optimize_streaming_latency: 3 (max opts with normalizer). Do not set to 1.
- * style kept at 0 for Flash — style exaggeration can stretch/warp prosody.
+ * ConvAI / sandbox TTS: Eleven Flash v2.5.
+ * stability 0.55, similarity_boost 0.75, speed 1.0, style 0.
+ * optimize_streaming_latency: 1 — level 3 was causing slurry artifacts on Turkish
+ * (blended words, collapsed endings like “pediatre” instead of “pediatri”).
  */
 export const AYSE_TTS_SETTINGS = {
   model_id: 'eleven_flash_v2_5' as const,
-  stability: 0.5,
-  similarity_boost: 0.8,
+  stability: 0.55,
+  similarity_boost: 0.75,
   style: 0,
-  speed: 1,
-  optimize_streaming_latency: 3,
+  speed: 1.0,
+  optimize_streaming_latency: 1,
 }
 
 /** Prefer TR Ayşe Hanım voice over English Sarah/Jessica defaults. */
@@ -41,10 +41,11 @@ export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
       model_id: AYSE_TTS_SETTINGS.model_id,
       optimize_streaming_latency: AYSE_TTS_SETTINGS.optimize_streaming_latency,
       voice_settings: {
-        stability: AYSE_TTS_SETTINGS.stability,
-        similarity_boost: AYSE_TTS_SETTINGS.similarity_boost,
-        style: AYSE_TTS_SETTINGS.style,
-        speed: AYSE_TTS_SETTINGS.speed,
+        stability: 0.55,
+        similarity_boost: 0.75,
+        style: 0,
+        speed: 1.0,
+        use_speaker_boost: true,
       },
     }),
   })
