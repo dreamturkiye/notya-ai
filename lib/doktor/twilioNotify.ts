@@ -111,10 +111,23 @@ export async function sendTwilioMessage(opts: {
   }
 
   if (!resp.ok) {
+    const raw =
+      json.error_message || json.message || text.slice(0, 180) || `Twilio ${resp.status}`
+    const lower = raw.toLowerCase()
+    let error = raw
+    if (
+      lower.includes('region indicated') ||
+      lower.includes('geo') ||
+      lower.includes('21408') ||
+      lower.includes('permission to send an sms has not been enabled')
+    ) {
+      error =
+        'Twilio Türkiye SMS izni kapalı. Console → Messaging → Settings → Geo Permissions içinde Turkey’i açın. Şimdilik WhatsApp deneyin.'
+    }
     return {
       ok: false,
       channel: opts.channel,
-      error: json.error_message || json.message || text.slice(0, 180) || `Twilio ${resp.status}`,
+      error,
     }
   }
 
