@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { decrypt } from '@/lib/security/encryption';
+import { sendTwilioMessage } from '@/lib/doktor/twilioNotify';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +18,21 @@ async function getAuthenticatedUser(req: NextRequest) {
   }
   const token = authHeader.split(' ')[1];
   const supabase = getSB();
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
   if (error || !user) return null;
   return user;
+}
+
+function patientPhone(phoneEncrypted: string | null | undefined): string {
+  if (!phoneEncrypted) return '';
+  try {
+    return String(decrypt(phoneEncrypted) || '').trim();
+  } catch {
+    return '';
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -49,54 +63,78 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { hastaId, mesaj, tarih, kanal } = body;
+  const { hastaId, mesaj, tarih, kanal } = body as {
+    hastaId?: string;
+    mesaj?: string;
+    tarih?: string;
+    kanal?: string;
+  };
 
   if (!hastaId || !mesaj || !tarih || !kanal) {
     return NextResponse.json({ error: 'Eksik alanlar' }, { status: 400 });
   }
 
+  const channel = String(kanal).toLowerCase() === 'whatsapp' ? 'whatsapp' : 'sms';
   const supabase = getSB();
 
-  const insertData: any = {
-    doctor_id: user.id,
-    patient_id: hastaId,
-    mesaj,
-    gonder_tarih: tarih,
-    gonderildi: false,
-    kanal,
-  };
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id, phone_encrypted')
+    .eq('id', hastaId)
+    .eq('doctor_id', user.id)
+    .maybeSingle();
 
-  let gonderildi = false;
-
-  if (kanal === 'whatsapp') {
-    try {
-      const accountSid = process.env.TWILIO_ACCOUNT_SID;
-      const authToken = process.env.TWILIO_AUTH_TOKEN;
-      const from = process.env.TWILIO_WHATSAPP_FROM;
-
-      if (!accountSid || !authToken || !from) {
-        throw new Error('Twilio yapılandırması eksik');
-      }
-
-
-
-      gonderildi = true;
-    } catch (err) {
-      gonderildi = false;
-    }
+  if (patientError || !patient) {
+    return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 });
   }
 
-  insertData.gonderildi = gonderildi;
+  const telefon = patientPhone(patient.phone_encrypted);
+  if (!telefon) {
+    return NextResponse.json(
+      { error: 'Hastanın telefon numarası yok. Hasta kaydına telefon ekleyin.' },
+      { status: 400 }
+    );
+  }
+
+  const send = await sendTwilioMessage({
+    channel,
+    toPhone: telefon,
+    body: String(mesaj),
+  });
 
   const { data: hatirlatma, error } = await supabase
     .from('hasta_hatirlatma')
-    .insert(insertData)
+    .insert({
+      doctor_id: user.id,
+      patient_id: hastaId,
+      mesaj: String(mesaj),
+      gonder_tarih: tarih,
+      gonderildi: send.ok,
+      kanal: channel,
+    })
     .select()
     .single();
 
   if (error) {
+    console.error('hasta_hatirlatma insert error:', error.message);
     return NextResponse.json({ error: 'Kayıt oluşturulamadı' }, { status: 500 });
   }
 
-  return NextResponse.json({ hatirlatma, gonderildi });
+  if (!send.ok) {
+    return NextResponse.json(
+      {
+        hatirlatma,
+        gonderildi: false,
+        error: send.error,
+      },
+      { status: 502 }
+    );
+  }
+
+  return NextResponse.json({
+    hatirlatma,
+    gonderildi: true,
+    method: channel,
+    sid: send.sid,
+  });
 }

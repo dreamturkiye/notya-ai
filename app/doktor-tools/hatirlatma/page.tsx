@@ -2,7 +2,6 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import {
-  getAccessToken,
   normalizeHastalar,
   toolsCard,
   toolsErrorBox,
@@ -11,6 +10,7 @@ import {
   toolsShell,
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
+import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import React, { useEffect, useState } from 'react'
 
 type HatirlatmaItem = {
@@ -59,13 +59,20 @@ export default function HatirlatmaPage() {
   const [error, setError] = useState('')
 
   const fetchAll = async () => {
-    const token = getAccessToken()
-    if (!token) return
+    const token = await ensureDoctorAccessToken()
+    if (!token) {
+      setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
+      return
+    }
     try {
       const [hRes, listRes] = await Promise.all([
         fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/doktor/hatirlatma', { headers: { Authorization: `Bearer ${token}` } }),
       ])
+      if (hRes.status === 401 || listRes.status === 401) {
+        setError('Oturum geçersiz. Lütfen tekrar giriş yapın.')
+        return
+      }
       const patients = hRes.ok ? normalizeHastalar(await hRes.json()) : []
       setHastalar(patients)
       if (listRes.ok) {
@@ -97,7 +104,12 @@ export default function HatirlatmaPage() {
     setLoading(true)
     setError('')
     setSuccess(false)
-    const token = getAccessToken()
+    const token = await ensureDoctorAccessToken()
+    if (!token) {
+      setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
+      setLoading(false)
+      return
+    }
     try {
       const res = await fetch('/api/doktor/hatirlatma', {
         method: 'POST',
@@ -112,9 +124,12 @@ export default function HatirlatmaPage() {
           tarih: tarihSaat,
         }),
       })
+      const body = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
         throw new Error(String((body as { error?: string }).error || 'Gönderim başarısız'))
+      }
+      if ((body as { gonderildi?: boolean }).gonderildi === false) {
+        throw new Error(String((body as { error?: string }).error || 'Mesaj gönderilemedi'))
       }
       setSuccess(true)
       setMesaj('')
@@ -210,7 +225,7 @@ export default function HatirlatmaPage() {
             </button>
             {success && (
               <div style={{ marginTop: 12, padding: 12, background: '#166534', borderRadius: 12, color: '#4ade80', fontSize: 14 }}>
-                Başarıyla kaydedildi
+                {kanal} mesajı gönderildi
               </div>
             )}
             {error && <div style={toolsErrorBox}>{error}</div>}
