@@ -38,15 +38,14 @@ function whatsappFrom(): string | null {
 }
 
 function smsFrom(): string | null {
+  // Never reuse WhatsApp From for SMS — that number is often not an SMS-capable
+  // Twilio Incoming Phone Number and returns "not a Twilio phone number".
   const explicit = cleanEnv(
     process.env.TWILIO_SMS_FROM ||
       process.env.TWILIO_PHONE_NUMBER ||
       process.env.TWILIO_FROM_NUMBER
   )
-  if (explicit) return explicit
-  const wa = whatsappFrom()
-  if (!wa) return null
-  return wa.replace(/^whatsapp:/i, '')
+  return explicit || null
 }
 
 export type TwilioSendResult =
@@ -86,7 +85,10 @@ export async function sendTwilioMessage(opts: {
     return {
       ok: false,
       channel: opts.channel,
-      error: opts.channel === 'sms' ? 'SMS gönderici numarası yok' : 'WhatsApp gönderici numarası yok',
+      error:
+        opts.channel === 'sms'
+          ? 'SMS için Twilio telefon numarası yok. TWILIO_SMS_FROM ekleyin veya WhatsApp kullanın.'
+          : 'WhatsApp gönderici numarası yok',
     }
   }
 
@@ -123,6 +125,13 @@ export async function sendTwilioMessage(opts: {
     ) {
       error =
         'Twilio Türkiye SMS izni kapalı. Console → Messaging → Settings → Geo Permissions içinde Turkey’i açın. Şimdilik WhatsApp deneyin.'
+    } else if (
+      lower.includes('not a twilio phone number') ||
+      lower.includes('short code country mismatch') ||
+      lower.includes('is not a valid')
+    ) {
+      error =
+        'SMS gönderici numarası Twilio SMS numarası değil. Console’dan SMS özellikli numara alın, TWILIO_SMS_FROM olarak ekleyin; veya WhatsApp kullanın.'
     }
     return {
       ok: false,
