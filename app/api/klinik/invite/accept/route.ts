@@ -12,14 +12,14 @@ export async function POST(req: NextRequest) {
   if (error || !user) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
 
   const { token } = await req.json()
-  if (!token) return NextResponse.json({ success: false, error: 'Token zorunlu' }, { status: 400 })
+  if (!token) return NextResponse.json({ success: false, error: 'Erişim anahtarı zorunludur.' }, { status: 400 })
 
   const tokenHash = createHash('sha256').update(token).digest('hex')
   const { data: invitation } = await sb.from('clinic_invitations').select('*').eq('token_hash', tokenHash).maybeSingle()
 
-  if (!invitation) return NextResponse.json({ success: false, error: 'Davet bulunamadi' }, { status: 404 })
-  if (new Date(invitation.expires_at) < new Date()) return NextResponse.json({ success: false, error: 'Davet suresi dolmus' }, { status: 400 })
-  if (invitation.accepted_at) return NextResponse.json({ success: false, error: 'Davet zaten kullanildi' }, { status: 400 })
+  if (!invitation) return NextResponse.json({ success: false, error: 'Davet bulunamadı.' }, { status: 404 })
+  if (new Date(invitation.expires_at) < new Date()) return NextResponse.json({ success: false, error: 'Davetin süresi dolmuş.' }, { status: 400 })
+  if (invitation.accepted_at) return NextResponse.json({ success: false, error: 'Davet zaten kullanılmış.' }, { status: 400 })
 
   await sb.from('clinic_members').insert({
     clinic_id: invitation.clinic_id,

@@ -33,11 +33,11 @@ export async function POST(req: NextRequest) {
   const { user, clinicId, sb } = ctx
   const body = await req.json()
   const { email, specialty, role } = body
-  if (!email || !role) return NextResponse.json({ success: false, error: 'Email ve rol zorunlu' }, { status: 400 })
+  if (!email || !role) return NextResponse.json({ success: false, error: 'E-posta ve rol zorunludur.' }, { status: 400 })
 
   const { data: clinic } = await sb.from('clinics').select('seat_count, seats_used').eq('id', clinicId).maybeSingle()
   if (clinic && clinic.seats_used >= clinic.seat_count) {
-    return NextResponse.json({ success: false, error: 'Koltuk limiti doldu' }, { status: 403 })
+    return NextResponse.json({ success: false, error: 'Koltuk limiti doldu.' }, { status: 403 })
   }
 
   const token = randomBytes(32).toString('hex')
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
   await sb.from('clinic_invitations').insert({ clinic_id: clinicId, email, role, specialty, token_hash: tokenHash, invited_by: user.id, expires_at: expiresAt })
-  return NextResponse.json({ success: true, data: { token, message: 'Davet olusturuldu' } })
+  return NextResponse.json({ success: true, data: { token, message: 'Davet oluşturuldu.' } })
 }
 
 export async function DELETE(req: NextRequest) {
@@ -53,7 +53,7 @@ export async function DELETE(req: NextRequest) {
   if (!ctx) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 403 })
   const { clinicId, sb } = ctx
   const { user_id } = await req.json()
-  if (!user_id) return NextResponse.json({ success: false, error: 'user_id zorunlu' }, { status: 400 })
+  if (!user_id) return NextResponse.json({ success: false, error: 'Kullanıcı kimliği zorunludur.' }, { status: 400 })
   await sb.from('clinic_members').update({ is_active: false }).eq('clinic_id', clinicId).eq('user_id', user_id)
   await sb.rpc('decrement_seats', { clinic_id_param: clinicId }).maybeSingle().catch(() => {
     sb.from('clinics').update({ seats_used: 0 }).eq('id', clinicId)

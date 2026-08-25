@@ -9,10 +9,10 @@ const AGENT_ID = process.env.MALI_MUSAVIR_AGENT_ID || "agent_4301kvraprgwf5btftn
 export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get("Authorization")
-    if (!authHeader?.startsWith("Bearer ")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!authHeader?.startsWith("Bearer ")) return NextResponse.json({ error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." }, { status: 401 })
     const sb = getSupabase()
     const { data: { user }, error: ae } = await sb.auth.getUser(authHeader.split(" ")[1])
-    if (ae || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (ae || !user) return NextResponse.json({ error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." }, { status: 401 })
 
     const elKey = process.env.ELEVENLABS_API_KEY || process.env.NEXT_PUBLIC_ELEVENLABS_KEY
     if (!elKey) return NextResponse.json({ error: "ElevenLabs key missing" }, { status: 500 })

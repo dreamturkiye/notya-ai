@@ -6,10 +6,10 @@ const getSB = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.
 export async function GET(req: NextRequest) {
   try {
     const auth = req.headers.get("Authorization")?.replace("Bearer ", "")
-    if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!auth) return NextResponse.json({ error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." }, { status: 401 })
     const sb = getSB()
     const { data: { user } } = await sb.auth.getUser(auth)
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!user) return NextResponse.json({ error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." }, { status: 401 })
 
     const donem = req.nextUrl.searchParams.get("donem") || new Date().toISOString().slice(0,7)
     const musteriId = req.nextUrl.searchParams.get("musteriId")

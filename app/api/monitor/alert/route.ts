@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json()
     if (!message) {
-      return NextResponse.json({ error: "Message is required" }, { status: 400 })
+      return NextResponse.json({ error: "Mesaj alanı zorunludur." }, { status: 400 })
     }
 
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT}/sendMessage`, {

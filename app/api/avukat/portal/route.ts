@@ -11,11 +11,11 @@ if (!SECRET) console.error('PORTAL_TOKEN_SECRET env var not set — avukat porta
 export async function GET(req: NextRequest) {
   try {
     const token = req.nextUrl.searchParams.get('token')
-    if (!token) return NextResponse.json({ error: 'Token required' }, { status: 400 })
-    if (!SECRET) return NextResponse.json({ error: 'Portal not configured' }, { status: 500 })
+    if (!token) return NextResponse.json({ error: 'Erişim anahtarı zorunludur.' }, { status: 400 })
+    if (!SECRET) return NextResponse.json({ error: 'Portal yapılandırılmamış.' }, { status: 500 })
     const sb = getSupabase()
     const payload = await verifyPortalToken(token, SECRET, sb)
-    if (!payload) return NextResponse.json({ error: 'Gecersiz veya suresi dolmus token' }, { status: 401 })
+    if (!payload) return NextResponse.json({ error: 'Geçersiz veya süresi dolmuş erişim anahtarı.' }, { status: 401 })
     const [{ data: muv }, { data: avukat }, { data: sureler }] = await Promise.all([
       sb.from('musevvekiller').select('*').eq('id', payload.muvekkilId).single(),
       sb.from('users').select('full_name').eq('id', payload.avukatId).single(),
@@ -38,10 +38,10 @@ export async function POST(req: NextRequest) {
 
     if (admin) {
       const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '')
-      if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      if (!authHeader) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
       const sb = getSupabase()
       const { data: { user }, error: ae } = await sb.auth.getUser(authHeader)
-      if (ae || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      if (ae || !user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
       if (action === 'list') {
         const [{ data: tokens, error: te }, { data: muvekkiller, error: me }] = await Promise.all([
@@ -55,14 +55,14 @@ export async function POST(req: NextRequest) {
       if (action === 'revoke') {
         if (!tokenId) return NextResponse.json({ error: 'tokenId required' }, { status: 400 })
         const { data: row } = await sb.from('avukat_portal_tokens').select('avukat_id').eq('id', tokenId).single()
-        if (!row || row.avukat_id !== user.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!row || row.avukat_id !== user.id) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
         const { error } = await sb.from('avukat_portal_tokens').update({ revoked_at: new Date().toISOString() }).eq('id', tokenId)
         if (error) return NextResponse.json({ error: error.message }, { status: 500 })
         return NextResponse.json({ success: true })
       }
 
       // default: generate — always bind to authenticated lawyer; verify müvekkil ownership
-      if (!SECRET) return NextResponse.json({ error: 'Portal not configured' }, { status: 500 })
+      if (!SECRET) return NextResponse.json({ error: 'Portal yapılandırılmamış.' }, { status: 500 })
       if (!muvekkilId) return NextResponse.json({ error: 'muvekkilId required' }, { status: 400 })
       const { data: muvOwn } = await sb
         .from('musevvekiller')
@@ -70,22 +70,22 @@ export async function POST(req: NextRequest) {
         .eq('id', muvekkilId)
         .eq('avukat_id', user.id)
         .maybeSingle()
-      if (!muvOwn) return NextResponse.json({ error: 'Muvekkil bulunamadi' }, { status: 404 })
+      if (!muvOwn) return NextResponse.json({ error: 'Müvekkil bulunamadı.' }, { status: 404 })
       const ownerId = user.id
       void avukatId
       const portalToken = generatePortalToken(ownerId, muvekkilId, SECRET)
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       const registered = await registerPortalToken(sb, ownerId, muvekkilId, portalToken, expiresAt)
-      if (!registered) return NextResponse.json({ error: 'Token kaydedilemedi' }, { status: 500 })
+      if (!registered) return NextResponse.json({ error: 'Erişim anahtarı kaydedilemedi.' }, { status: 500 })
       const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/portal/avukat/${portalToken}`
       return NextResponse.json({ success: true, data: { portalUrl, token: portalToken } })
     }
 
-    if (!token) return NextResponse.json({ error: 'Token required' }, { status: 400 })
-    if (!SECRET) return NextResponse.json({ error: 'Portal not configured' }, { status: 500 })
+    if (!token) return NextResponse.json({ error: 'Erişim anahtarı zorunludur.' }, { status: 400 })
+    if (!SECRET) return NextResponse.json({ error: 'Portal yapılandırılmamış.' }, { status: 500 })
     const sb = getSupabase()
     const payload = await verifyPortalToken(token, SECRET, sb)
-    if (!payload) return NextResponse.json({ error: 'Gecersiz token' }, { status: 401 })
+    if (!payload) return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
     const [{ data: muv }, { data: avukat }, { data: sureler }] = await Promise.all([
       sb.from('musevvekiller').select('*').eq('id', payload.muvekkilId).single(),
       sb.from('users').select('full_name').eq('id', payload.avukatId).single(),

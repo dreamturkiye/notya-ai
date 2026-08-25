@@ -10,14 +10,14 @@ export async function GET(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser(_tok);
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
   const hastaId = searchParams.get('hastaId');
 
   if (!hastaId) {
-    return NextResponse.json({ error: 'hastaId is required' }, { status: 400 });
+    return NextResponse.json({ error: 'Hasta seçimi zorunludur.' }, { status: 400 });
   }
 
   const { data, error } = await supabase
@@ -42,14 +42,14 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser(_tok);
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 });
   }
 
   const body = await request.json();
   const { hastaId, ad, etkenMadde, doz, kullanim_sikli, baslangic_tarihi, bitis_tarihi, notlar } = body;
 
   if (!hastaId || !ad || !etkenMadde || !doz || !kullanim_sikli || !baslangic_tarihi) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    return NextResponse.json({ error: 'Zorunlu alanlar eksik.' }, { status: 400 });
   }
 
   const { data, error } = await supabase

@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Geçersiz TC Kimlik' }, { status: 400 });
   }
   if (!adSoyad || !adSoyad.trim()) {
-    return NextResponse.json({ error: 'Ad Soyad zorunlu' }, { status: 400 });
+    return NextResponse.json({ error: 'Ad Soyad zorunludur.' }, { status: 400 });
   }
 
   const tcHash = require('crypto').createHash('sha256').update(tcKimlikNo).digest('hex');

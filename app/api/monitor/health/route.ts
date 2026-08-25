@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = req.headers.get("Authorization")
     if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." }, { status: 401 })
     }
 
     const routes = [

@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
   const { data: { user }, error } = await sb.auth.getUser(auth.slice(7))
-  if (error || !user) return NextResponse.json({ error: 'Gecersiz token' }, { status: 401 })
+  if (error || !user) return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
 
   const body = await req.json()
   const { action, credentials, hastaTc, ilacBarkod, icd10 } = body
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     //   const xml = await callMedulaSOAP(`${SGK_MEDULA_BASE}/provizyon`, soap, 'medulaProvizyon')
     //   const parsed = parseMedulaResponse(xml)
     //   return NextResponse.json({ success: true, data: parsed })
-    // } catch(e) { return NextResponse.json({ error: 'SGK baglanti hatasi' }, { status: 502 }) }
+    // } catch(e) { return NextResponse.json({ error: 'SGK bağlantı hatası.' }, { status: 502 }) }
 
     // DEMO MODE: Simulate Medula response
     await new Promise(r => setTimeout(r, 1200))
