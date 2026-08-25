@@ -34,6 +34,13 @@ interface Ilac {
   notlar: string | null;
 }
 
+/** The brand in this drug's list that matches what the doctor typed, if any. */
+function markaEslesmesi(d: TürkishDrug, sorgu: string): string | undefined {
+  const q = sorgu.trim().toLocaleLowerCase('tr');
+  if (!q) return undefined;
+  return d.brand?.find((b) => b.toLocaleLowerCase('tr').includes(q));
+}
+
 const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Günde 1', 'Haftada 1', 'Gerektiğinde'];
 
 function token(): string | null {
@@ -81,9 +88,22 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
 
   useEffect(() => { listele(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [patientId]);
 
-  function ilacSec(d: TürkishDrug) {
+  /**
+   * NOTYA-ILAC-02: fill in the brand the doctor ACTUALLY SEARCHED FOR.
+   *
+   * The first version filled brand[0], so searching "Largopen" and selecting the result put
+   * "Amoksina" in the name field — the first brand in that drug's list, not the one just typed.
+   * The doctor sees a different medicine than the one they picked, which reads as the selection
+   * being broken, and worse, silently records the wrong brand name on the patient.
+   *
+   * The searched term wins when it matches a brand; otherwise the generic name is used, since
+   * arbitrarily choosing someone else's brand is never what was meant.
+   */
+  function ilacSec(d: TürkishDrug, sorgu: string) {
+    const q = sorgu.trim().toLocaleLowerCase('tr');
+    const eslesenMarka = q ? d.brand?.find((b) => b.toLocaleLowerCase('tr').includes(q)) : undefined;
     setSecili(d);
-    setAd(d.brand?.[0] || d.name);
+    setAd(eslesenMarka || d.name);
     setEtkenMadde(d.name);
     if (!doz) setDoz(d.dose || '');
     setArama('');
@@ -159,8 +179,12 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           {sonuclar.length > 0 && (
             <div className="ni-results">
               {sonuclar.map((d) => (
-                <button type="button" key={d.name} className="ni-result" onClick={() => ilacSec(d)}>
-                  <span className="ni-result-name">{d.name}</span>
+                <button type="button" key={d.name} className="ni-result" onClick={() => ilacSec(d, arama)}>
+                  <span className="ni-result-name">
+                    {/* Lead with the brand that matched what was typed — that is the name the
+                        doctor is looking for; the generic follows it. */}
+                    {markaEslesmesi(d, arama) ? `${markaEslesmesi(d, arama)} (${d.name})` : d.name}
+                  </span>
                   {d.brand?.length ? <span className="ni-result-brand">{d.brand.slice(0, 3).join(', ')}</span> : null}
                   <span className={d.sgkCovered ? 'ni-sgk ni-sgk-on' : 'ni-sgk ni-sgk-off'}>
                     {d.sgkCovered ? 'SGK ödüyor' : 'SGK ödemiyor'}
