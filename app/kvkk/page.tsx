@@ -21,7 +21,7 @@ export default function KvkkPage() {
     <div style={S.page}>
       <Link href="/doktor" style={{ fontSize: '13px', color: '#2563EB', textDecoration: 'none' }}>← Notya AI</Link>
       <h1 style={S.h1}>Kişisel Verilerin Korunması ve İşlenmesi Aydınlatma Metni</h1>
-      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 25 Ağustos 2026</p>
+      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 25 Ağustos 2026 (v2)</p>
 
       <div style={S.box}>
         Bu metin, Notya AI hizmetini kullanan sağlık profesyonellerini ve onların hastalarına ait
@@ -88,9 +88,21 @@ export default function KvkkPage() {
         <li style={S.li}><strong>Uygulama barındırma:</strong> Vercel</li>
       </ul>
       <p style={S.p}>
-        Yapay zekâ sağlayıcılarına gönderilen içerikte kimlik bilgilerinin asgariye indirilmesi
-        esastır; bu sağlayıcılarla verilerin model eğitiminde kullanılmamasını öngören sözleşmeler
-        yapılır.
+        <strong>Kimliksizleştirme (pseudonymisation).</strong> Yapay zekâ sağlayıcılarına gönderilen
+        içerikten, istek yurt dışına çıkmadan önce kimlik bilgileri otomatik olarak çıkarılır ve
+        yerlerine geçici etiketler konur. Bu kapsamda <strong>ad-soyad, T.C. kimlik numarası,
+        telefon numarası ve e-posta adresi</strong> sağlayıcıya hiçbir şekilde iletilmez; yalnızca
+        klinik içerik (şikâyet, bulgu, tanı, tedavi) işlenir. Sağlayıcıdan dönen yanıttaki etiketler,
+        yalnızca kendi sistemimizde gerçek değerlerle değiştirilir; hekim ekranında bilgiler eksiksiz
+        görünür.
+      </p>
+      <p style={S.p}>
+        Ek bir güvenlik önlemi olarak, gönderilecek metinde T.C. kimlik numarası tespit edilirse
+        istek hiç gönderilmez ve işlem durdurulur.
+      </p>
+      <p style={S.p}>
+        Bu sağlayıcılarla, verilerin model eğitiminde kullanılmamasını öngören sözleşmeler yapılır ve
+        aktarım KVKK madde 9 uyarınca standart sözleşmeler ile gerçekleştirilir.
       </p>
 
       <h2 style={S.h2}>6. Saklama Süresi</h2>
@@ -107,6 +119,8 @@ export default function KvkkPage() {
         <li style={S.li}>Veriler yalnızca ilgili hekim hesabına kapalı biçimde erişilebilir</li>
         <li style={S.li}>Aktarım sırasında TLS şifrelemesi kullanılır</li>
         <li style={S.li}>Erişim ve işlem kayıtları tutulur</li>
+        <li style={S.li}>Yapay zekâ sağlayıcılarına yapılan aktarımlarda kimlik bilgileri, istek yurt dışına çıkmadan önce otomatik olarak kaldırılır (kimliksizleştirme)</li>
+        <li style={S.li}>Saklama süresi dolan veriler için günlük çalışan otomatik imha süreci uygulanır</li>
       </ul>
 
       <h2 style={S.h2}>8. İlgili Kişinin Hakları (KVKK m.11)</h2>

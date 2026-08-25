@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import groqChat from '@/lib/dr-ayse/groq';
+import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize';
 
 interface IlacInput {
   ad: string;
@@ -65,7 +66,12 @@ export async function POST(request: NextRequest) {
 
     const userMessage = `Tanı: ${tani}. Notlar: ${notlar}. İstenen ilaçlar: ${JSON.stringify(ilaclar)}. Hasta alerjileri ve kronik hastalıklar: ${alerjiBilgisi}`;
 
-    const groqResponse = await groqChat(systemPrompt, userMessage);
+    // NOTYA-PSEUDO-01: `notlar` is doctor-entered free text and can carry names, T.C. kimlik
+    // numbers or contact details pasted from another system.
+    const { text: guvenliMesaj, map: receteMap } = pseudonymize(userMessage);
+    assertNoTckn(guvenliMesaj, 'erecete');
+
+    const groqResponse = restoreDeep(await groqChat(systemPrompt, guvenliMesaj), receteMap);
     const parsedRecete = JSON.parse(groqResponse);
 
     const recete = {

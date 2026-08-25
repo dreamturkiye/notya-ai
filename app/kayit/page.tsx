@@ -49,7 +49,7 @@ export default function KayitPage() {
           data: {
             kvkk_onay: true,
             kvkk_onay_tarihi: new Date().toISOString(),
-            kvkk_metin_versiyonu: '2026-08-25',
+            kvkk_metin_versiyonu: '2026-08-25-v2',
           },
         },
       });
