@@ -14,6 +14,7 @@ export default function KayitPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -35,10 +36,25 @@ export default function KayitPage() {
       });
 
       if (signUpError) {
-        if (signUpError.message.includes('already registered') || signUpError.message.includes('User already registered')) {
-          setError('Bu e-posta adresi zaten kayıtlı.');
+        // NOTYA-SIGNUP-01: every failure except "already registered" used to show
+        // "Kayıt başarısız. Lütfen bilgilerinizi kontrol edin." — it blamed the doctor for
+        // problems that are ours. The clearest case is the e-mail send limit: when the mail
+        // provider refuses, the doctor is told their own details are wrong, so they retype
+        // correct information, fail again, and leave. A user must never be blamed for a
+        // server-side fault.
+        const raw = (signUpError.message || '').toLowerCase();
+        if (raw.includes('already registered') || raw.includes('user already registered')) {
+          setError('Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.');
+        } else if (raw.includes('rate limit') || raw.includes('too many')) {
+          setError('Şu anda kayıt işlemi geçici olarak yapılamıyor. Lütfen birkaç dakika sonra tekrar deneyin. (Sorun sizde değil, sistemimizde.)');
+        } else if (raw.includes('password')) {
+          setError('Şifreniz yeterince güçlü değil. En az 8 karakter kullanın.');
+        } else if (raw.includes('email') && (raw.includes('invalid') || raw.includes('geçersiz'))) {
+          setError('E-posta adresi geçersiz görünüyor. Lütfen kontrol edin.');
+        } else if (raw.includes('fetch') || raw.includes('network')) {
+          setError('Bağlantı kurulamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.');
         } else {
-          setError('Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.');
+          setError('Kayıt tamamlanamadı. Lütfen birkaç dakika sonra tekrar deneyin.');
         }
         setLoading(false);
         return;
@@ -48,7 +64,11 @@ export default function KayitPage() {
         localStorage.setItem('auth-token', JSON.stringify({ access_token: data.session.access_token }));
         router.replace('/onboarding?p=doktor');
       } else {
-        setError('Kayıt başarılı ancak oturum başlatılamadı. Lütfen giriş yapmayı deneyin.');
+        // NOTYA-SIGNUP-02: no session here means the account was created and e-mail confirmation
+        // is pending — the expected path when confirmations are on. Telling the doctor to "try
+        // logging in" sends them to a login that cannot work until they confirm, and reads as a
+        // failure when in fact the registration succeeded.
+        setInfo('Kayıt alındı. E-posta adresinize bir onay bağlantısı gönderdik — hesabınızı etkinleştirmek için bağlantıya tıklayın. (Gelen kutunuzda yoksa spam klasörünü kontrol edin.)');
       }
     } catch (err) {
       setError('Bir hata oluştu. Lütfen tekrar deneyin.');
@@ -183,6 +203,25 @@ export default function KayitPage() {
               textAlign: 'center'
             }}>
               {error}
+            </div>
+          )}
+
+          {/* NOTYA-SIGNUP-02: a successful registration awaiting e-mail confirmation is NOT an
+              error and must not be styled as one — red text on a success path teaches doctors
+              that the product failed when it did not. */}
+          {info && (
+            <div style={{
+              color: '#0A1628',
+              background: '#EEF4FF',
+              border: '1px solid #2563EB',
+              borderRadius: '8px',
+              padding: '14px 16px',
+              fontSize: '14px',
+              lineHeight: 1.5,
+              marginBottom: '20px',
+              textAlign: 'center'
+            }}>
+              {info}
             </div>
           )}
 
