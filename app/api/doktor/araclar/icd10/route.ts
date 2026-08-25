@@ -89,7 +89,11 @@ export async function POST(request: NextRequest) {
     }
 
     const systemPrompt = 'ICD-10 kodlama uzmanısın. Verilen Türkçe tanı için en uygun ICD-10 kodlarını bul. SADECE JSON: {sonuclar:[{kod,turkceAciklama,ingilizceAciklama,bolum,guven}]} (max 5 results, guven 0-100)';
-    const userPrompt = `Tani: ${query.trim()}`;
+    // NOTYA-PSEUDO-01: defensive — a pasted diagnosis line sometimes brings a name or an
+    // identifier with it. Nothing clinical is lost by stripping those.
+    const { text: guvenliSorgu } = pseudonymize(query.trim());
+    const userPrompt = `Tani: ${guvenliSorgu}`;
+    assertNoTckn(userPrompt, 'icd10');
 
     const rawResult = await groqChat(systemPrompt, userPrompt);
     
