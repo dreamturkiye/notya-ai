@@ -52,6 +52,10 @@
     {
       "path": "/api/monitor/health",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/kvkk-imha",
+      "schedule": "0 3 * * *"
     }
   ]
 }
