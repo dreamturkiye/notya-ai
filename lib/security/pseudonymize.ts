@@ -68,8 +68,45 @@ export function pseudonymize(text: string, knownNames: string[] = []): Pseudonym
    * privacy one. Surnames and distinctive given names are unaffected.
    */
   const AMBIGUOUS = new Set([
-    'kan', 'can', 'ak', 'öz', 'su', 'ay', 'nur', 'ali', 'ege', 'deniz', 'baran', 'yaz',
-    'bal', 'gül', 'çiçek', 'derya', 'ışık', 'umut', 'onur', 'sevgi', 'barış', 'göz',
+    // Common Turkish given names that are ALSO everyday words. Only the FULL name is substituted
+    // for these; the bare word is left alone, because redacting it would strip meaning from the
+    // note. A corrupted clinical record is a patient-safety problem, while a lone common word
+    // identifies nobody.
+    //
+    // Note the length filter below already excludes every 3-letter name — Can, Nur, Su, Ay, Ege,
+    // Ece, Efe are never candidates for standalone substitution regardless of this list. So this
+    // list is only about names of four characters or more.
+    //
+    // Corrected 2026-08-25: an earlier version listed 'kan', 'göz', 'bal', 'ak' and 'öz'. Those are
+    // not Turkish given names — 'kan' got in because it appeared in a test case, which is backwards
+    // reasoning. Ak and Öz are surname components (Akgün, Öztürk), not standalone first names.
+    'deniz',   // sea
+    'umut',    // hope
+    'onur',    // honour / dignity
+    'barış',   // peace
+    'ışık',    // light — appears clinically: "ışık refleksi"
+    'sevgi',   // love
+    'derya',   // sea
+    'yağmur',  // rain
+    'bahar',   // spring
+    'çiçek',   // flower — also the folk term for smallpox/chickenpox in older Turkish
+    'bulut',   // cloud
+    'toprak',  // earth
+    'güneş',   // sun
+    'nehir',   // river
+    'yıldız',  // star
+    'melek',   // angel
+    'defne',   // laurel
+    'duru',    // clear — "duru idrar" in clinical notes
+    'doğa',    // nature
+    'özgür',   // free
+    'şafak',   // dawn
+    'neşe',    // joy
+    'sevda',   // love
+    'esen',    // healthy / well — clinically loaded
+    'gonca',   // bud
+    'ceylan',  // gazelle
+    'aslan',   // lion
   ])
 
   for (const name of names) {
