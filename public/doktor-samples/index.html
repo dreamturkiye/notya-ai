@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notya Doktor — Design Samples</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Syne:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a1014;
+      --card: #121a21;
+      --text: #e8f0ec;
+      --mute: rgba(232,240,236,0.62);
+      --a: #1ec8b0;
+      --b: #2f7a5f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 60% 40% at 10% 0%, rgba(30,200,176,0.12), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 90% 10%, rgba(47,122,95,0.14), transparent 50%),
+        var(--bg);
+      color: var(--text);
+      font-family: Manrope, system-ui, sans-serif;
+      padding: 48px 24px 64px;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; }
+    h1 {
+      font-family: Syne, system-ui, sans-serif;
+      font-size: clamp(32px, 5vw, 48px);
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+    .lead { color: var(--mute); max-width: 54ch; margin-bottom: 36px; line-height: 1.6; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    a.card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: var(--card);
+      border: 1px solid rgba(232,240,236,0.1);
+      border-radius: 22px;
+      overflow: hidden;
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+    a.card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(232,240,236,0.28);
+    }
+    .preview {
+      aspect-ratio: 16/10;
+      background-size: cover;
+      background-position: center top;
+      position: relative;
+    }
+    .a .preview {
+      background-image:
+        linear-gradient(180deg, rgba(5,12,18,0.15), rgba(5,12,18,0.85)),
+        url("/doctors/dr_ayse.jpg");
+    }
+    .b .preview {
+      background-image:
+        linear-gradient(105deg, rgba(237,242,239,0.7), rgba(21,33,28,0.35)),
+        url("/doctors/dr_elif.jpg");
+    }
+    .badge {
+      position: absolute; top: 14px; left: 14px;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      font-weight: 700; padding: 7px 12px; border-radius: 999px;
+    }
+    .a .badge { background: var(--a); color: #041018; }
+    .b .badge { background: var(--b); color: #edf2ef; }
+    .body { padding: 22px 22px 26px; }
+    .body h2 {
+      font-family: Syne, system-ui, sans-serif;
+      font-size: 22px;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .body p { color: var(--mute); font-size: 14px; line-height: 1.55; margin-bottom: 16px; }
+    .cta {
+      display: inline-flex;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .a .cta { color: var(--a); }
+    .b .cta { color: #8fcdb5; }
+    .note {
+      margin-top: 28px;
+      font-size: 13px;
+      color: var(--mute);
+    }
+    .note a { color: var(--a); }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Notya Doktor — 2 tasarım örneği</h1>
+    <p class="lead">
+      Mevcut <code>/doktor</code> sayfasının kopyasını koruyarak iki yeni yön hazırladım.
+      Beğendiğinizi söyleyin — onu production’a uygularım.
+    </p>
+    <div class="grid">
+      <a class="card a" href="./a-night-clinic.html">
+        <div class="preview"><span class="badge">Sample A</span></div>
+        <div class="body">
+          <h2>Night Clinic</h2>
+          <p>Karanlık klinik. Teal vurgu, Syne tipografi, marka hero’da büyük. Premium medtech hissi.</p>
+          <span class="cta">Örneği aç →</span>
+        </div>
+      </a>
+      <a class="card b" href="./b-daylight-rounds.html">
+        <div class="preview"><span class="badge">Sample B</span></div>
+        <div class="body">
+          <h2>Daylight Rounds</h2>
+          <p>Açık, sage–forest palet. Editorial fotoğraf düzlemi, Source Serif + Outfit. Sakin güven.</p>
+          <span class="cta">Örneği aç →</span>
+        </div>
+      </a>
+    </div>
+    <p class="note">
+      Canlı mevcut sayfa: <a href="/doktor">/doktor</a>
+    </p>
+  </div>
+</body>
+</html>

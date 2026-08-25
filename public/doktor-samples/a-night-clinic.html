@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sample A — Night Clinic · Notya Doktor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Syne:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #050c12;
+      --ink-2: #0b1822;
+      --mist: #e8f2f0;
+      --teal: #1ec8b0;
+      --teal-dim: rgba(30, 200, 176, 0.14);
+      --line: rgba(232, 242, 240, 0.12);
+      --mute: rgba(232, 242, 240, 0.62);
+      --font-display: "Syne", system-ui, sans-serif;
+      --font-body: "Manrope", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--ink);
+      color: var(--mist);
+      font-family: var(--font-body);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    .nav {
+      position: fixed; inset: 0 0 auto; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px clamp(20px, 4vw, 48px);
+      background: linear-gradient(to bottom, rgba(5,12,18,0.88), transparent);
+      backdrop-filter: blur(10px);
+    }
+    .brand {
+      font-family: var(--font-display);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      font-size: 15px;
+    }
+    .brand span { color: var(--teal); }
+    .nav-links { display: flex; gap: 28px; align-items: center; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+    .nav-links a:hover { color: var(--mist); }
+    .nav-cta {
+      border: 1px solid var(--line);
+      padding: 10px 18px;
+      border-radius: 999px;
+      color: var(--mist);
+    }
+
+    /* Hero: one composition, brand-first, full-bleed photo */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      align-items: end;
+      padding: 0 clamp(20px, 4vw, 48px) clamp(48px, 8vh, 88px);
+      isolation: isolate;
+    }
+    .hero-media {
+      position: absolute; inset: 0; z-index: -2;
+    }
+    .hero-media img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center 18%;
+      transform: scale(1.04);
+      animation: heroDrift 18s ease-in-out infinite alternate;
+    }
+    .hero-veil {
+      position: absolute; inset: 0; z-index: -1;
+      background:
+        linear-gradient(180deg, rgba(5,12,18,0.35) 0%, rgba(5,12,18,0.15) 35%, rgba(5,12,18,0.82) 78%, #050c12 100%),
+        radial-gradient(ellipse 70% 50% at 70% 30%, rgba(30,200,176,0.18), transparent 60%);
+    }
+    .hero-inner { max-width: 720px; }
+    .hero-brand {
+      font-family: var(--font-display);
+      font-size: clamp(42px, 9vw, 92px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 0.92;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: rise 0.9s ease forwards 0.15s;
+    }
+    .hero-brand span { color: var(--teal); }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4.4vw, 44px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      max-width: 16ch;
+      margin-bottom: 18px;
+      opacity: 0;
+      animation: rise 0.9s ease forwards 0.35s;
+    }
+    .hero p {
+      color: var(--mute);
+      font-size: 16px;
+      max-width: 42ch;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: rise 0.9s ease forwards 0.5s;
+    }
+    .cta-row {
+      display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+      opacity: 0;
+      animation: rise 0.9s ease forwards 0.65s;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--teal);
+      color: #041018;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 16px 28px;
+      border-radius: 999px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 0 0 rgba(30,200,176,0);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(30,200,176,0.28);
+    }
+    .btn-ghost {
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      color: var(--mute);
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+    }
+    .btn-ghost:hover { color: var(--mist); border-color: var(--teal); }
+
+    section { padding: clamp(72px, 12vh, 120px) clamp(20px, 4vw, 48px); }
+    .wrap { max-width: 1120px; margin: 0 auto; }
+    .eyebrow {
+      font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 16px; font-weight: 600;
+    }
+    .sec-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 18px;
+      max-width: 14ch;
+    }
+    .sec-copy {
+      color: var(--mute);
+      font-size: 16px;
+      max-width: 46ch;
+      margin-bottom: 40px;
+    }
+
+    .voice {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: clamp(32px, 6vw, 72px);
+      align-items: center;
+      border-top: 1px solid var(--line);
+    }
+    .voice-stage {
+      position: relative;
+      aspect-ratio: 4/5;
+      overflow: hidden;
+      border-radius: 28px;
+    }
+    .voice-stage img {
+      width: 100%; height: 100%; object-fit: cover; object-position: top center;
+    }
+    .voice-live {
+      position: absolute; left: 20px; right: 20px; bottom: 20px;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: rgba(5,12,18,0.72);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+    .pulse {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 12px; font-weight: 600;
+    }
+    .pulse i {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--teal);
+      box-shadow: 0 0 0 0 rgba(30,200,176,0.55);
+      animation: ping 1.8s ease infinite;
+    }
+    .bubble {
+      font-size: 14px;
+      color: rgba(232,242,240,0.88);
+      line-height: 1.5;
+    }
+
+    .learn {
+      background: linear-gradient(180deg, var(--ink-2), var(--ink));
+    }
+    .learn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      max-width: 760px;
+    }
+    .learn-item {
+      padding: 28px 26px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.02);
+    }
+    .learn-item strong {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 14px;
+    }
+    .learn-item q {
+      display: block;
+      font-style: normal;
+      color: rgba(232,242,240,0.45);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .learn-item p { font-size: 14px; color: var(--mist); }
+    .learn-item.hot {
+      border-color: rgba(30,200,176,0.35);
+      background: var(--teal-dim);
+    }
+
+    .experts { border-top: 1px solid var(--line); }
+    .expert-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .expert {
+      position: relative;
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      border-radius: 24px;
+    }
+    .expert img {
+      width: 100%; height: 100%; object-fit: cover; object-position: top center;
+      transition: transform 0.7s ease;
+    }
+    .expert:hover img { transform: scale(1.05); }
+    .expert figcaption {
+      position: absolute; inset: auto 0 0;
+      padding: 72px 20px 22px;
+      background: linear-gradient(to top, rgba(5,12,18,0.95), transparent);
+    }
+    .expert h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .expert p { font-size: 12px; color: var(--mute); letter-spacing: 0.04em; }
+
+    .pricing {
+      border-top: 1px solid var(--line);
+    }
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 40px;
+    }
+    .price {
+      padding: 32px 28px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.02);
+    }
+    .price.featured {
+      border-color: rgba(30,200,176,0.45);
+      background: linear-gradient(180deg, rgba(30,200,176,0.12), rgba(255,255,255,0.02));
+    }
+    .price .name {
+      font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--mute); margin-bottom: 18px;
+    }
+    .price .amount {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+    .price .amount small { font-size: 14px; color: var(--mute); font-weight: 500; }
+    .price ul {
+      list-style: none;
+      margin: 24px 0;
+      display: grid;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--mute);
+    }
+    .price ul li::before {
+      content: "";
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    .price .btn-primary { width: 100%; }
+
+    .final {
+      position: relative;
+      text-align: center;
+      padding-block: 140px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .final img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center 25%; z-index: -2;
+      filter: brightness(0.45) saturate(0.85);
+    }
+    .final::after {
+      content: "";
+      position: absolute; inset: 0; z-index: -1;
+      background: linear-gradient(180deg, rgba(5,12,18,0.55), rgba(5,12,18,0.88));
+    }
+    .final h2 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 28px;
+    }
+    .final .note { margin-top: 16px; font-size: 13px; color: var(--mute); }
+
+    footer {
+      display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      padding: 28px clamp(20px, 4vw, 48px);
+      border-top: 1px solid var(--line);
+      font-size: 12px; color: var(--mute);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes ping {
+      0% { box-shadow: 0 0 0 0 rgba(30,200,176,0.55); }
+      70% { box-shadow: 0 0 0 12px rgba(30,200,176,0); }
+      100% { box-shadow: 0 0 0 0 rgba(30,200,176,0); }
+    }
+    @keyframes heroDrift {
+      from { transform: scale(1.04) translate3d(0,0,0); }
+      to { transform: scale(1.08) translate3d(-1.5%, -1%, 0); }
+    }
+
+    @media (max-width: 900px) {
+      .nav-links a:not(.nav-cta) { display: none; }
+      .voice, .learn-grid, .expert-row, .price-grid { grid-template-columns: 1fr; }
+      .voice-stage { max-width: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="brand">NOTYA<span>.</span>AI</div>
+    <div class="nav-links">
+      <a href="#ozellik">Özellikler</a>
+      <a href="#uzmanlar">Uzmanlar</a>
+      <a href="#fiyat">Fiyatlar</a>
+      <a class="nav-cta" href="/giris/doktor">Giriş</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-media">
+      <img src="/doctors/dr_ayse.jpg" alt="Notya AI uzman doktor" />
+    </div>
+    <div class="hero-veil"></div>
+    <div class="hero-inner">
+      <div class="hero-brand">NOTYA<span>.</span>AI</div>
+      <h1>Cebinizdeki dünyaca ünlü uzman doktor.</h1>
+      <p>Nelson, Braunwald, Harrison bilen meslektaş. Sesli konuşun — tanı, reçete, SGK uyarısı aynı nefeste.</p>
+      <div class="cta-row">
+        <a class="btn-primary" href="/giris/doktor">Ücretsiz başlayın</a>
+        <a class="btn-ghost" href="/asistan">Asistanı dene</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="voice wrap" id="ozellik">
+    <div>
+      <div class="eyebrow">Sesli konuşma</div>
+      <h2 class="sec-title">İki meslektaş gibi konuşun.</h2>
+      <p class="sec-copy">Buton yok. Bekleme yok. Bir kez dokunun — Prof. Ayşe sizi karşılar. Cümlenizin ortasında araya girseniz, anında durur.</p>
+    </div>
+    <figure class="voice-stage">
+      <img src="/doctors/dr_mehmet.jpg" alt="Klinik görüşme" />
+      <div class="voice-live">
+        <div class="pulse"><i></i> Canlı seans</div>
+        <div class="bubble">7 yaşında, 18 kilo. Ateş ve kulak ağrısı — Amoksisilin 40 mg/kg/gün yazayım mı doktor?</div>
+      </div>
+    </figure>
+  </section>
+
+  <section class="learn">
+    <div class="wrap">
+      <div class="eyebrow">Öğrenen sistem</div>
+      <h2 class="sec-title">10 seans sonra yıllardır birliktesiniz.</h2>
+      <p class="sec-copy">Her düzelttiğiniz doz ve tercih öğrenilir. Sorulmadan hatırlar.</p>
+      <div class="learn-grid">
+        <article class="learn-item">
+          <strong>1. seans</strong>
+          <q>“Amoksisilin yaz.”</q>
+          <p>Hangi dozu yazayım, doktor? Hangi markayı tercih edersiniz?</p>
+        </article>
+        <article class="learn-item hot">
+          <strong>10. seans</strong>
+          <q>“Amoksisilin yaz.”</q>
+          <p>40 mg/kg/gün, bu kiloda 720 mg. Amoksiklav tercih ediyorsunuz — onu mu yazayım?</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="experts wrap" id="uzmanlar">
+    <div class="eyebrow">Uzman kadro</div>
+    <h2 class="sec-title">Üç uzman. Tek uygulama.</h2>
+    <div class="expert-row">
+      <figure class="expert">
+        <img src="/doctors/dr_ayse.jpg" alt="Prof. Ayşe Kaya" />
+        <figcaption>
+          <h3>Prof. Ayşe Kaya</h3>
+          <p>Pediatri · Nelson 22e</p>
+        </figcaption>
+      </figure>
+      <figure class="expert">
+        <img src="/doctors/dr_mehmet.jpg" alt="Prof. Mehmet Demir" />
+        <figcaption>
+          <h3>Prof. Mehmet Demir</h3>
+          <p>Kardiyoloji · Braunwald 12e</p>
+        </figcaption>
+      </figure>
+      <figure class="expert">
+        <img src="/doctors/dr_elif.jpg" alt="Prof. Elif Şahin" />
+        <figcaption>
+          <h3>Prof. Elif Şahin</h3>
+          <p>Nöroloji · Harrison’s 22e</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="pricing wrap" id="fiyat">
+    <div class="eyebrow">Fiyatlandırma</div>
+    <h2 class="sec-title">Sade. Şeffaf. Adil.</h2>
+    <div class="price-grid">
+      <div class="price">
+        <div class="name">Starter</div>
+        <div class="amount">₺499<small>/ay</small></div>
+        <ul>
+          <li>50 seans / ay</li>
+          <li>Tüm uzmanlar</li>
+          <li>SOAP notları</li>
+        </ul>
+        <a class="btn-primary" href="/kayit">Başlayın</a>
+      </div>
+      <div class="price featured">
+        <div class="name">Pro · En popüler</div>
+        <div class="amount">₺1.299<small>/ay</small></div>
+        <ul>
+          <li>Sınırsız seans</li>
+          <li>Pabau entegrasyon</li>
+          <li>Öğrenen sistem</li>
+        </ul>
+        <a class="btn-primary" href="/kayit">Başlayın</a>
+      </div>
+      <div class="price">
+        <div class="name">Uzman</div>
+        <div class="amount">₺2.499<small>/ay</small></div>
+        <ul>
+          <li>Öncelikli destek</li>
+          <li>Özel AI konfig</li>
+          <li>Pabau + ICD-10</li>
+        </ul>
+        <a class="btn-primary" href="/kayit">Başlayın</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <img src="/doctors/dr_ayse.jpg" alt="" />
+    <h2>Bugün başlayın.<br />İlk 15 gün ücretsiz.</h2>
+    <a class="btn-primary" href="/giris/doktor">Ücretsiz hesap aç</a>
+    <div class="note">Kredi kartı gerekmez · KVKK uyumlu · Türkçe destek</div>
+  </section>
+
+  <footer>
+    <div>NOTYA.AI · Sample A — Night Clinic</div>
+    <div>© 2026 Dream Türkiye · Frankfurt, EU</div>
+  </footer>
+</body>
+</html>
