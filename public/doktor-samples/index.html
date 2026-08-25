@@ -3,134 +3,132 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Notya Doktor — Design Samples</title>
+  <title>Notya Doktor — New Samples C · D · E</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Syne:wght@600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0a1014;
-      --card: #121a21;
-      --text: #e8f0ec;
-      --mute: rgba(232,240,236,0.62);
-      --a: #1ec8b0;
-      --b: #2f7a5f;
+      --bg: #0c0f12;
+      --card: #151a20;
+      --text: #eef2f0;
+      --mute: rgba(238,242,240,0.6);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       min-height: 100vh;
-      background:
-        radial-gradient(ellipse 60% 40% at 10% 0%, rgba(30,200,176,0.12), transparent 55%),
-        radial-gradient(ellipse 50% 40% at 90% 10%, rgba(47,122,95,0.14), transparent 50%),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
       font-family: Manrope, system-ui, sans-serif;
-      padding: 48px 24px 64px;
+      padding: 48px 24px 72px;
     }
-    .wrap { max-width: 1040px; margin: 0 auto; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
     h1 {
       font-family: Syne, system-ui, sans-serif;
-      font-size: clamp(32px, 5vw, 48px);
+      font-size: clamp(28px, 4.5vw, 42px);
       letter-spacing: -0.03em;
       margin-bottom: 10px;
     }
-    .lead { color: var(--mute); max-width: 54ch; margin-bottom: 36px; line-height: 1.6; }
+    .lead { color: var(--mute); max-width: 58ch; line-height: 1.6; margin-bottom: 36px; }
+    .note { font-size: 13px; color: var(--mute); margin-bottom: 28px; }
+    .note code { color: #9fd4c0; }
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
     }
     a.card {
       display: block;
       text-decoration: none;
       color: inherit;
       background: var(--card);
-      border: 1px solid rgba(232,240,236,0.1);
-      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
       overflow: hidden;
       transition: transform 0.25s ease, border-color 0.25s ease;
     }
     a.card:hover {
       transform: translateY(-4px);
-      border-color: rgba(232,240,236,0.28);
+      border-color: rgba(255,255,255,0.22);
     }
     .preview {
-      aspect-ratio: 16/10;
+      aspect-ratio: 16/11;
       background-size: cover;
       background-position: center top;
       position: relative;
     }
-    .a .preview {
+    .c .preview {
       background-image:
-        linear-gradient(180deg, rgba(5,12,18,0.15), rgba(5,12,18,0.85)),
+        linear-gradient(90deg, rgba(235,231,223,0.92) 0%, rgba(235,231,223,0.2) 55%, transparent 70%),
         url("/doctors/dr_ayse.jpg");
     }
-    .b .preview {
+    .d .preview {
       background-image:
-        linear-gradient(105deg, rgba(237,242,239,0.7), rgba(21,33,28,0.35)),
+        linear-gradient(180deg, transparent 30%, rgba(16,24,32,0.85)),
+        url("/doctors/dr_mehmet.jpg");
+    }
+    .e .preview {
+      background-image:
+        linear-gradient(120deg, rgba(250,249,246,0.95) 0%, rgba(250,249,246,0.4) 50%, transparent),
         url("/doctors/dr_elif.jpg");
     }
     .badge {
-      position: absolute; top: 14px; left: 14px;
-      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-      font-weight: 700; padding: 7px 12px; border-radius: 999px;
+      position: absolute; top: 12px; left: 12px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 6px 10px; background: #fff; color: #111;
     }
-    .a .badge { background: var(--a); color: #041018; }
-    .b .badge { background: var(--b); color: #edf2ef; }
-    .body { padding: 22px 22px 26px; }
-    .body h2 {
-      font-family: Syne, system-ui, sans-serif;
-      font-size: 22px;
-      margin-bottom: 8px;
-      letter-spacing: -0.02em;
+    .body { padding: 18px 18px 22px; }
+    .body h2 { font-family: Syne, system-ui, sans-serif; font-size: 20px; margin-bottom: 8px; }
+    .body p { font-size: 13px; color: var(--mute); line-height: 1.5; margin-bottom: 14px; }
+    .cta { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: #9fd4c0; }
+    .old {
+      margin-top: 40px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px; color: var(--mute);
     }
-    .body p { color: var(--mute); font-size: 14px; line-height: 1.55; margin-bottom: 16px; }
-    .cta {
-      display: inline-flex;
-      font-size: 12px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .a .cta { color: var(--a); }
-    .b .cta { color: #8fcdb5; }
-    .note {
-      margin-top: 28px;
-      font-size: 13px;
-      color: var(--mute);
-    }
-    .note a { color: var(--a); }
-    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    .old a { color: #9fd4c0; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Notya Doktor — 2 tasarım örneği</h1>
+    <h1>3 yeni tasarım — C · D · E</h1>
     <p class="lead">
-      Sample B agency-grade yükseltildi (önizleme). Production <code>/doktor</code> dokunulmadı —
-      seçiminizi söyleyin, sonra uygularız.
+      Hepsi sıfırdan. NOTYA.AI markası yalnızca sol üst header’da.
+      Hero’da ortalanmış logo yok. Production <code>/doktor</code>’a dokunulmadı.
     </p>
+    <p class="note">Kural: brand left · no centered logo · samples only</p>
+
     <div class="grid">
-      <a class="card a" href="./a-night-clinic.html">
-        <div class="preview"><span class="badge">Sample A</span></div>
+      <a class="card c" href="./c-split-atelier.html">
+        <div class="preview"><span class="badge">C</span></div>
         <div class="body">
-          <h2>Night Clinic</h2>
-          <p>Karanlık klinik. Teal vurgu, Syne tipografi, marka hero’da büyük. Premium medtech hissi.</p>
-          <span class="cta">Örneği aç →</span>
+          <h2>Split Atelier</h2>
+          <p>Sol panel tipografi, sağ full-bleed portre. Instrument Sans + Serif. Mimari klinik ayrımı.</p>
+          <span class="cta">Aç →</span>
         </div>
       </a>
-      <a class="card b" href="./b-daylight-rounds.html">
-        <div class="preview"><span class="badge">Sample B</span></div>
+      <a class="card d" href="./d-filmstrip-dawn.html">
+        <div class="preview"><span class="badge">D</span></div>
         <div class="body">
-          <h2>Daylight Rounds</h2>
-          <p>Açık, sage–forest palet. Editorial fotoğraf düzlemi, Source Serif + Outfit. Sakin güven.</p>
-          <span class="cta">Örneği aç →</span>
+          <h2>Filmstrip Dawn</h2>
+          <p>Sinematik full-bleed hero, metin sol altta. Yatay uzman film şeridi. Soğuk dawn paleti.</p>
+          <span class="cta">Aç →</span>
+        </div>
+      </a>
+      <a class="card e" href="./e-monument-type.html">
+        <div class="preview"><span class="badge">E</span></div>
+        <div class="body">
+          <h2>Monument Type</h2>
+          <p>Tipografi anıtı — Bodoni + Space Grotesk. Marka sadece nav’da; hero’da büyük başlık, yanında portre.</p>
+          <span class="cta">Aç →</span>
         </div>
       </a>
     </div>
-    <p class="note">
-      Canlı mevcut sayfa: <a href="/doktor">/doktor</a>
+
+    <p class="old">
+      Eski örnekler:
+      <a href="./a-night-clinic.html">A Night Clinic</a> ·
+      <a href="./b-daylight-rounds.html">B Daylight</a> ·
+      Canlı site: <a href="/doktor">/doktor</a>
     </p>
   </div>
 </body>

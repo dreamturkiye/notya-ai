@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sample D — Filmstrip Dawn · Notya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sky: #e7eef2;
+      --ink: #101820;
+      --mute: rgba(16,24,32,0.58);
+      --signal: #1d6b8a;
+      --line: rgba(16,24,32,0.1);
+      --sans: "Schibsted Grotesk", system-ui, sans-serif;
+      --serif: "Newsreader", Georgia, serif;
+      --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+    body { background: var(--sky); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; }
+
+    .nav {
+      position: fixed; z-index: 50; inset: 0 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; padding: 1.1rem clamp(1rem, 3vw, 2.25rem);
+      mix-blend-mode: difference; color: #fff;
+    }
+    .brand { font-weight: 700; letter-spacing: 0.18em; font-size: 0.88rem; margin-right: auto; }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .nav-links a { opacity: 0.8; }
+    .nav-links a:hover { opacity: 1; }
+    .nav-cta { border: 1px solid rgba(255,255,255,0.45); padding: 0.55rem 0.9rem; }
+
+    /* Full-bleed film — type anchored BOTTOM LEFT only */
+    .hero {
+      position: relative; height: 100vh; height: 100dvh; isolation: isolate; overflow: hidden;
+    }
+    .hero img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%;
+      z-index: -2; animation: slowZoom 26s var(--ease) infinite alternate;
+    }
+    .hero-veil {
+      position: absolute; inset: 0; z-index: -1;
+      background:
+        linear-gradient(180deg, rgba(16,24,32,0.25) 0%, transparent 35%, rgba(16,24,32,0.72) 100%),
+        linear-gradient(90deg, rgba(16,24,32,0.45) 0%, transparent 55%);
+    }
+    .hero-copy {
+      position: absolute; left: clamp(1rem, 3vw, 2.25rem); bottom: clamp(2rem, 6vh, 4rem);
+      max-width: 28rem; color: #f4f8fa;
+    }
+    .hero-copy h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+      font-weight: 400; line-height: 1.08; letter-spacing: -0.02em;
+      margin-bottom: 0.9rem;
+      opacity: 0; animation: up 1s var(--ease) 0.15s forwards;
+    }
+    .hero-copy p {
+      font-size: 1rem; opacity: 0.78; max-width: 34ch; line-height: 1.6; margin-bottom: 1.5rem;
+      opacity: 0; animation: up 1s var(--ease) 0.3s forwards;
+    }
+    .hero-copy .cta-row { display: flex; gap: 1rem; align-items: center; opacity: 0; animation: up 1s var(--ease) 0.45s forwards; }
+    .btn {
+      display: inline-flex; background: #f4f8fa; color: var(--ink);
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.95rem 1.25rem; transition: transform 0.3s var(--ease);
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .ghost { font-size: 0.88rem; border-bottom: 1px solid rgba(244,248,250,0.4); padding-bottom: 2px; opacity: 0.85; }
+
+    .rail {
+      display: flex; gap: 0; overflow: hidden; border-block: 1px solid var(--line); background: #fff;
+    }
+    .rail-inner {
+      display: flex; gap: 0; width: max-content; animation: slide 48s linear infinite;
+    }
+    .rail span {
+      padding: 1rem 2.2rem; white-space: nowrap; font-size: 0.82rem; color: var(--mute);
+      border-right: 1px solid var(--line);
+    }
+    .rail em { font-family: var(--serif); font-style: italic; color: var(--ink); margin-right: 0.4rem; }
+
+    section { padding: clamp(4rem, 10vh, 7rem) 0; }
+    .pad { padding-inline: clamp(1rem, 3vw, 2.25rem); width: min(1180px, 100%); margin-inline: auto; }
+    .idx { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--signal); font-weight: 600; margin-bottom: 0.85rem; }
+    .h2 { font-size: clamp(1.9rem, 3.8vw, 3rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; max-width: 14ch; margin-bottom: 0.9rem; }
+    .copy { color: var(--mute); max-width: 40ch; line-height: 1.65; }
+
+    /* Horizontal filmstrip experts */
+    .strip-label { padding-inline: clamp(1rem, 3vw, 2.25rem); margin-bottom: 1.25rem; }
+    .strip {
+      display: flex; gap: 0.65rem; overflow-x: auto; scroll-snap-type: x mandatory;
+      padding: 0 clamp(1rem, 3vw, 2.25rem) 0.5rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .strip::-webkit-scrollbar { height: 4px; }
+    .strip::-webkit-scrollbar-thumb { background: rgba(16,24,32,0.2); }
+    .frame {
+      flex: 0 0 min(72vw, 340px); scroll-snap-align: start;
+      position: relative; aspect-ratio: 3/4; overflow: hidden; background: #ccd6dc;
+    }
+    .frame img { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 1s var(--ease); }
+    .frame:hover img { transform: scale(1.04); }
+    .frame figcaption {
+      position: absolute; inset: auto 0 0; padding: 3rem 1rem 1rem;
+      background: linear-gradient(to top, rgba(16,24,32,0.88), transparent); color: #f4f8fa;
+    }
+    .frame h3 { font-size: 1.15rem; margin-bottom: 0.2rem; }
+    .frame p { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+
+    .memory {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    }
+    .memory article {
+      padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 3vw, 2.25rem);
+      border-right: 1px solid var(--line);
+    }
+    .memory article:last-child { border-right: 0; background: rgba(29,107,138,0.06); }
+    .memory strong { display: block; font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--signal); margin-bottom: 0.85rem; }
+    .memory q { display: block; font-family: var(--serif); font-style: italic; font-size: 1.25rem; margin-bottom: 0.65rem; }
+    .memory p { color: var(--mute); }
+
+    .price-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; margin-top: 2rem;
+    }
+    .plan { background: #fff; border: 1px solid var(--line); padding: 1.5rem 1.25rem; }
+    .plan.feat { background: var(--ink); color: #f4f8fa; border-color: var(--ink); }
+    .plan .n { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.55; margin-bottom: 0.75rem; }
+    .plan .amt { font-family: var(--serif); font-size: 2.35rem; margin-bottom: 1rem; }
+    .plan .amt small { font-family: var(--sans); font-size: 0.8rem; opacity: 0.55; }
+    .plan ul { list-style: none; display: grid; gap: 0.4rem; margin-bottom: 1.2rem; font-size: 0.9rem; opacity: 0.75; }
+    .plan .btn { width: 100%; justify-content: center; background: var(--signal); color: #fff; }
+    .plan.feat .btn { background: #f4f8fa; color: var(--ink); }
+
+    .final {
+      position: relative; padding: 7rem clamp(1rem, 3vw, 2.25rem); color: #f4f8fa; isolation: isolate;
+    }
+    .final img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; filter: brightness(0.4); }
+    .final::after { content: ""; position: absolute; inset: 0; z-index: -1; background: rgba(16,24,32,0.45); }
+    .final h2 { font-family: var(--serif); font-size: clamp(2.2rem, 5vw, 3.6rem); max-width: 14ch; margin-bottom: 1.4rem; }
+    .final .btn { background: #f4f8fa; color: var(--ink); }
+    .final .note { margin-top: 0.8rem; font-size: 0.8rem; opacity: 0.65; }
+
+    footer {
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+      padding: 1.25rem clamp(1rem, 3vw, 2.25rem); font-size: 0.75rem; color: var(--mute);
+      border-top: 1px solid var(--line);
+    }
+
+    .reveal { opacity: 0; transform: translateY(20px); transition: 0.8s var(--ease); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    @keyframes up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    @keyframes slowZoom { to { transform: scale(1.08); } }
+    @keyframes slide { to { transform: translateX(-50%); } }
+
+    @media (max-width: 860px) {
+      .nav-links a:not(.nav-cta) { display: none; }
+      .nav { mix-blend-mode: normal; color: var(--ink); background: rgba(231,238,242,0.85); backdrop-filter: blur(10px); }
+      .nav-cta { border-color: var(--line); }
+      .memory, .price-grid { grid-template-columns: 1fr; }
+      .memory article { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="/doktor">NOTYA.AI</a>
+    <div class="nav-links">
+      <a href="#ozellik">Özellikler</a>
+      <a href="#uzmanlar">Uzmanlar</a>
+      <a href="#fiyat">Fiyatlar</a>
+      <a class="nav-cta" href="/giris/doktor">Giriş</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <img src="/doctors/dr_mehmet.jpg" alt="Klinik portre" />
+    <div class="hero-veil"></div>
+    <div class="hero-copy">
+      <h1>Cebinizdeki dünyaca ünlü uzman doktor.</h1>
+      <p>Nelson, Braunwald, Harrison bilen meslektaş. Sesli konuşun — tanı ve reçete aynı nefeste.</p>
+      <div class="cta-row">
+        <a class="btn" href="/giris/doktor">Ücretsiz başlayın</a>
+        <a class="ghost" href="/asistan">Asistanı dene</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="rail" aria-hidden="true">
+    <div class="rail-inner">
+      <span><em>Nelson 22e</em> Pediatri</span><span><em>Braunwald 12e</em> Kardiyoloji</span>
+      <span><em>Harrison’s</em> Dahiliye</span><span><em>DSM-5-TR</em> Psikiyatri</span>
+      <span><em>KVKK</em> AB Merkezi</span>
+      <span><em>Nelson 22e</em> Pediatri</span><span><em>Braunwald 12e</em> Kardiyoloji</span>
+      <span><em>Harrison’s</em> Dahiliye</span><span><em>DSM-5-TR</em> Psikiyatri</span>
+      <span><em>KVKK</em> AB Merkezi</span>
+    </div>
+  </div>
+
+  <section id="ozellik">
+    <div class="pad">
+      <div class="idx reveal">01 — Sesli konuşma</div>
+      <h2 class="h2 reveal">İki meslektaş gibi konuşun.</h2>
+      <p class="copy reveal">Bir kez dokunun. Araya girseniz anında durur. Gerçek zamanlı.</p>
+    </div>
+  </section>
+
+  <section class="memory" id="bellek">
+    <article class="reveal">
+      <strong>1. seans</strong>
+      <q>“Amoksisilin yaz.”</q>
+      <p>Hangi dozu yazayım, doktor? Hangi markayı tercih edersiniz?</p>
+    </article>
+    <article class="reveal">
+      <strong>10. seans</strong>
+      <q>“Amoksisilin yaz.”</q>
+      <p>Amoksiklav tercih ediyorsunuz — onu mu yazayım?</p>
+    </article>
+  </section>
+
+  <section id="uzmanlar">
+    <div class="strip-label">
+      <div class="idx reveal">02 — Uzman kadro</div>
+      <h2 class="h2 reveal">Üç uzman. Kaydırın.</h2>
+    </div>
+    <div class="strip">
+      <figure class="frame"><img src="/doctors/dr_ayse.jpg" alt="" loading="lazy" /><figcaption><h3>Prof. Ayşe Kaya</h3><p>Pediatri · Nelson</p></figcaption></figure>
+      <figure class="frame"><img src="/doctors/dr_mehmet.jpg" alt="" loading="lazy" /><figcaption><h3>Prof. Mehmet Demir</h3><p>Kardiyoloji · Braunwald</p></figcaption></figure>
+      <figure class="frame"><img src="/doctors/dr_elif.jpg" alt="" loading="lazy" /><figcaption><h3>Prof. Elif Şahin</h3><p>Nöroloji · Harrison’s</p></figcaption></figure>
+      <figure class="frame"><img src="/doctors/dr_aylin.jpg" alt="" loading="lazy" /><figcaption><h3>Güvenlik ağı</h3><p>SGK · doz · etkileşim</p></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="fiyat">
+    <div class="pad">
+      <div class="idx reveal">03 — Fiyat</div>
+      <h2 class="h2 reveal">Sade. Şeffaf. Adil.</h2>
+      <div class="price-grid">
+        <article class="plan reveal"><div class="n">Starter</div><div class="amt">₺499<small>/ay</small></div><ul><li>50 seans</li><li>Tüm uzmanlar</li></ul><a class="btn" href="/kayit">Başlayın</a></article>
+        <article class="plan feat reveal"><div class="n">Pro</div><div class="amt">₺1.299<small>/ay</small></div><ul><li>Sınırsız</li><li>Öğrenen sistem</li></ul><a class="btn" href="/kayit">Başlayın</a></article>
+        <article class="plan reveal"><div class="n">Uzman</div><div class="amt">₺2.499<small>/ay</small></div><ul><li>Öncelikli destek</li><li>Özel konfig</li></ul><a class="btn" href="/kayit">Başlayın</a></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <img src="/doctors/dr_ayse.jpg" alt="" />
+    <h2 class="reveal">Bugün başlayın. İlk 15 gün ücretsiz.</h2>
+    <a class="btn reveal" href="/giris/doktor">Ücretsiz hesap aç</a>
+    <p class="note reveal">Kredi kartı gerekmez · KVKK uyumlu</p>
+  </section>
+
+  <footer>
+    <div>Sample D — Filmstrip Dawn</div>
+    <div>© 2026 Dream Türkiye</div>
+  </footer>
+
+  <script>
+    const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
+</body>
+</html>

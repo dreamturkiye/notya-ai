@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sample C — Split Atelier · Notya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f3f1ec;
+      --panel: #ebe7df;
+      --ink: #1a1a18;
+      --mute: rgba(26,26,24,0.58);
+      --accent: #0f4c3a;
+      --line: rgba(26,26,24,0.12);
+      --sans: "Instrument Sans", system-ui, sans-serif;
+      --serif: "Instrument Serif", Georgia, serif;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+    body { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+    /* Brand LEFT — never center */
+    .nav {
+      position: fixed; z-index: 40; inset: 0 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.15rem clamp(1.25rem, 3vw, 2.5rem);
+      background: rgba(243,241,236,0.72);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid transparent;
+    }
+    .nav.scrolled { border-bottom-color: var(--line); }
+    .brand {
+      font-size: 0.95rem; font-weight: 700; letter-spacing: 0.16em;
+      margin-right: auto;
+    }
+    .brand i { font-style: normal; color: var(--accent); }
+    .nav-right { display: flex; gap: 1.75rem; align-items: center; }
+    .nav-right a { font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); font-weight: 500; }
+    .nav-right a:hover { color: var(--ink); }
+    .nav-cta {
+      padding: 0.65rem 1rem; border: 1px solid var(--line); font-size: 0.7rem;
+      letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600;
+    }
+    .nav-cta:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+    /* Split hero — text LEFT, photo RIGHT (one composition) */
+    .hero {
+      min-height: 100vh; min-height: 100dvh;
+      display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    }
+    .hero-copy {
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 7rem clamp(1.25rem, 3.5vw, 3.5rem) 3.5rem;
+      background:
+        radial-gradient(ellipse 80% 50% at 0% 100%, rgba(15,76,58,0.08), transparent 60%),
+        var(--panel);
+    }
+    .kicker {
+      font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--accent); font-weight: 600; margin-bottom: 1.25rem;
+      opacity: 0; animation: up 0.9s var(--ease) 0.1s forwards;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.6rem, 5.2vw, 4.4rem);
+      font-weight: 400; line-height: 1.02; letter-spacing: -0.02em;
+      max-width: 11ch; margin-bottom: 1.25rem;
+      opacity: 0; animation: up 0.9s var(--ease) 0.22s forwards;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .lead {
+      font-size: 1.02rem; color: var(--mute); max-width: 34ch; line-height: 1.65;
+      margin-bottom: 2rem;
+      opacity: 0; animation: up 0.9s var(--ease) 0.36s forwards;
+    }
+    .cta-row {
+      display: flex; flex-wrap: wrap; gap: 0.85rem 1.25rem; align-items: center;
+      opacity: 0; animation: up 0.9s var(--ease) 0.48s forwards;
+    }
+    .btn {
+      display: inline-flex; align-items: center;
+      background: var(--accent); color: #f4f7f5;
+      font-size: 0.74rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 1rem 1.35rem;
+      transition: transform 0.35s var(--ease), background 0.35s var(--ease);
+    }
+    .btn:hover { transform: translateY(-2px); background: #0a3a2c; }
+    .link {
+      font-size: 0.88rem; color: var(--mute); border-bottom: 1px solid rgba(15,76,58,0.35);
+      padding-bottom: 2px;
+    }
+    .link:hover { color: var(--ink); }
+    .hero-photo { position: relative; overflow: hidden; min-height: 70vh; }
+    .hero-photo img {
+      transform: scale(1.04);
+      animation: drift 22s var(--ease) infinite alternate;
+    }
+    .hero-photo::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(235,231,223,0.35), transparent 28%);
+      pointer-events: none;
+    }
+
+    section { padding: clamp(4.5rem, 11vh, 7.5rem) clamp(1.25rem, 3.5vw, 3.5rem); }
+    .wrap { width: min(1120px, 100%); margin-inline: auto; }
+    .idx { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 1rem; }
+    .h2 {
+      font-family: var(--serif); font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 400; letter-spacing: -0.02em; line-height: 1.08; max-width: 12ch; margin-bottom: 1rem;
+    }
+    .copy { color: var(--mute); max-width: 38ch; line-height: 1.7; font-size: 1.02rem; }
+
+    .feature {
+      display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center;
+      border-top: 1px solid var(--line);
+    }
+    .chat {
+      background: var(--ink); color: #f3f1ec; padding: 1.75rem;
+      min-height: 280px; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.85rem;
+    }
+    .chat .tag { font-size: 0.65rem; letter-spacing: 0.16em; text-transform: uppercase; color: #8fbfab; }
+    .chat p { font-family: var(--serif); font-style: italic; font-size: 1.2rem; line-height: 1.4; max-width: 28ch; }
+
+    .learn { background: var(--panel); }
+    .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 2.5rem; max-width: 820px; }
+    .step { padding: 1.5rem 1.35rem; border-top: 2px solid var(--line); }
+    .step strong { display: block; font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; }
+    .step q { display: block; font-family: var(--serif); font-style: italic; color: var(--mute); margin-bottom: 0.5rem; }
+    .step.hot { border-top-color: var(--accent); background: rgba(15,76,58,0.05); }
+
+    .experts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 2.5rem; }
+    .expert { position: relative; aspect-ratio: 3/4; overflow: hidden; }
+    .expert figcaption {
+      position: absolute; inset: auto 0 0; padding: 3.5rem 1rem 1rem;
+      background: linear-gradient(to top, rgba(26,26,24,0.9), transparent); color: #f3f1ec;
+    }
+    .expert h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .expert p { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+
+    .prices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; margin-top: 2.25rem; }
+    .plan { border: 1px solid var(--line); padding: 1.5rem 1.25rem; background: rgba(255,255,255,0.35); }
+    .plan.feat { background: var(--ink); color: #f3f1ec; border-color: var(--ink); }
+    .plan .n { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.6; margin-bottom: 0.85rem; }
+    .plan .p { font-family: var(--serif); font-size: 2.4rem; margin-bottom: 1rem; }
+    .plan .p small { font-family: var(--sans); font-size: 0.85rem; opacity: 0.55; }
+    .plan ul { list-style: none; display: grid; gap: 0.45rem; margin-bottom: 1.25rem; font-size: 0.9rem; opacity: 0.75; }
+    .plan .btn { width: 100%; justify-content: center; }
+    .plan.feat .btn { background: #f3f1ec; color: var(--ink); }
+
+    .final {
+      position: relative; text-align: left; padding-block: 7rem; overflow: hidden; isolation: isolate;
+      color: #f3f1ec;
+    }
+    .final img { position: absolute; inset: 0; z-index: -2; filter: brightness(0.42) saturate(0.8); }
+    .final::after {
+      content: ""; position: absolute; inset: 0; z-index: -1;
+      background: linear-gradient(100deg, rgba(26,26,24,0.88), rgba(26,26,24,0.35));
+    }
+    .final .wrap { position: relative; }
+    .final h2 { font-family: var(--serif); font-size: clamp(2.4rem, 5vw, 3.8rem); max-width: 14ch; margin-bottom: 1.5rem; }
+    .final .btn { background: #f3f1ec; color: var(--ink); }
+    .final .note { margin-top: 0.85rem; font-size: 0.82rem; opacity: 0.65; }
+
+    footer {
+      display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      padding: 1.35rem clamp(1.25rem, 3.5vw, 3.5rem); border-top: 1px solid var(--line);
+      font-size: 0.75rem; color: var(--mute);
+    }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    @keyframes up { to { opacity: 1; transform: none; } }
+    @keyframes drift { to { transform: scale(1.09) translate(-1%, -0.5%); } }
+
+    @media (max-width: 900px) {
+      .nav-right a:not(.nav-cta) { display: none; }
+      .hero, .feature, .steps, .experts, .prices { grid-template-columns: 1fr; }
+      .hero-photo { min-height: 52vh; order: -1; }
+      .hero-photo::after { background: linear-gradient(180deg, transparent, var(--panel)); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <a class="brand" href="/doktor">NOTYA<i>.</i>AI</a>
+    <div class="nav-right">
+      <a href="#ozellik">Özellikler</a>
+      <a href="#uzmanlar">Uzmanlar</a>
+      <a href="#fiyat">Fiyatlar</a>
+      <a class="nav-cta" href="/giris/doktor">Giriş</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-copy">
+      <div class="kicker">Türkiye’nin AI tıp asistanı</div>
+      <h1>Cebinizdeki <em>dünyaca ünlü</em> uzman doktor.</h1>
+      <p class="lead">Nelson, Braunwald, Harrison bilen meslektaş. Sesli konuşun — tanı, reçete ve güvenlik ağı aynı anda.</p>
+      <div class="cta-row">
+        <a class="btn" href="/giris/doktor">Ücretsiz başlayın</a>
+        <a class="link" href="/asistan">Asistanı dene</a>
+      </div>
+    </div>
+    <div class="hero-photo">
+      <img src="/doctors/dr_ayse.jpg" alt="Uzman doktor" />
+    </div>
+  </header>
+
+  <section id="ozellik">
+    <div class="wrap feature">
+      <div>
+        <div class="idx reveal">01 — Ses</div>
+        <h2 class="h2 reveal">İki meslektaş gibi konuşun.</h2>
+        <p class="copy reveal">Buton yok. Bekleme yok. Araya girseniz anında durur.</p>
+      </div>
+      <div class="chat reveal">
+        <div class="tag">Canlı seans</div>
+        <p>7 yaşında, 18 kilo. Ateş ve kulak ağrısı — Amoksisilin 40 mg/kg/gün yazayım mı doktor?</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="learn">
+    <div class="wrap">
+      <div class="idx reveal">02 — Bellek</div>
+      <h2 class="h2 reveal">10 seans sonra yıllardır birliktesiniz.</h2>
+      <div class="steps">
+        <article class="step reveal">
+          <strong>1. seans</strong>
+          <q>“Amoksisilin yaz.”</q>
+          <p>Hangi dozu yazayım, doktor?</p>
+        </article>
+        <article class="step hot reveal">
+          <strong>10. seans</strong>
+          <q>“Amoksisilin yaz.”</q>
+          <p>Amoksiklav tercih ediyorsunuz — onu mu yazayım?</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="uzmanlar">
+    <div class="wrap">
+      <div class="idx reveal">03 — Kadro</div>
+      <h2 class="h2 reveal">Üç uzman. Tek uygulama.</h2>
+      <div class="experts">
+        <figure class="expert reveal"><img src="/doctors/dr_ayse.jpg" alt="" loading="lazy" /><figcaption><h3>Prof. Ayşe Kaya</h3><p>Pediatri</p></figcaption></figure>
+        <figure class="expert reveal"><img src="/doctors/dr_mehmet.jpg" alt="" loading="lazy" /><figcaption><h3>Prof. Mehmet Demir</h3><p>Kardiyoloji</p></figcaption></figure>
+        <figure class="expert reveal"><img src="/doctors/dr_elif.jpg" alt="" loading="lazy" /><figcaption><h3>Prof. Elif Şahin</h3><p>Nöroloji</p></figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="fiyat">
+    <div class="wrap">
+      <div class="idx reveal">04 — Fiyat</div>
+      <h2 class="h2 reveal">Sade. Şeffaf. Adil.</h2>
+      <div class="prices">
+        <article class="plan reveal"><div class="n">Starter</div><div class="p">₺499<small>/ay</small></div><ul><li>50 seans</li><li>Tüm uzmanlar</li></ul><a class="btn" href="/kayit">Başlayın</a></article>
+        <article class="plan feat reveal"><div class="n">Pro</div><div class="p">₺1.299<small>/ay</small></div><ul><li>Sınırsız seans</li><li>Öğrenen sistem</li></ul><a class="btn" href="/kayit">Başlayın</a></article>
+        <article class="plan reveal"><div class="n">Uzman</div><div class="p">₺2.499<small>/ay</small></div><ul><li>Öncelikli destek</li><li>Özel konfig</li></ul><a class="btn" href="/kayit">Başlayın</a></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <img src="/doctors/dr_elif.jpg" alt="" />
+    <div class="wrap">
+      <h2 class="reveal">Bugün başlayın. İlk 15 gün ücretsiz.</h2>
+      <a class="btn reveal" href="/giris/doktor">Ücretsiz hesap aç</a>
+      <p class="note reveal">Kredi kartı gerekmez · KVKK uyumlu</p>
+    </div>
+  </section>
+
+  <footer>
+    <div>Sample C — Split Atelier</div>
+    <div>© 2026 Dream Türkiye</div>
+  </footer>
+
+  <script>
+    const nav = document.getElementById('nav');
+    addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20), { passive: true });
+    const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
+</body>
+</html>
