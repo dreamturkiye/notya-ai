@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import HastaIlaclar from '@/components/doktor/HastaIlaclar';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import DoktorNav from '@/components/doktor/DoktorNav';
@@ -103,7 +104,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 2 && <div>Muayene ve SOAP notları timeline olarak listelenir.</div>}
         {!loading && !error && activeTab === 3 && <div>Belge listesi ve yükleme butonu.</div>}
         {!loading && !error && activeTab === 4 && <div>Görüntüleme kayıtları ve thumbnail'lar.</div>}
-        {!loading && !error && activeTab === 5 && <div>İlaç listesi ve yeni ilaç ekleme.</div>}
+        {!loading && !error && activeTab === 5 && <HastaIlaclar patientId={patientId} />}
       </div>
     </div>
   );
