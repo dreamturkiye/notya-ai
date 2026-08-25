@@ -28,8 +28,15 @@ export interface Pseudonymized {
 
 /** T.C. Kimlik: exactly 11 digits, not part of a longer number. */
 const TC_KIMLIK = /(?<!\d)([1-9]\d{10})(?!\d)/g
-/** Turkish mobile/landline in the common written forms. */
-const PHONE = /(?:\+90[\s-]?)?0?\s?\(?5\d{2}\)?[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}/g
+/**
+ * Turkish mobile in the common written forms.
+ *
+ * NOTYA-PSEUDO-04: anchored with digit lookarounds. Without them the pattern matched INSIDE longer
+ * numbers — a 14-digit barcode "98765432109876" became "9876[TEL_1]", and device serials and
+ * protokol numbers would have been mangled the same way. Clinical records are full of long digit
+ * strings, so an unanchored phone pattern is actively dangerous here.
+ */
+const PHONE = /(?<!\d)(?:\+90[\s-]?)?0?\s?\(?5\d{2}\)?[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}(?!\d)/g
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.]{2,}/g
 
 /**
@@ -49,12 +56,46 @@ export function pseudonymize(text: string, knownNames: string[] = []): Pseudonym
     .filter((x) => x && x.trim().length > 2)
     .sort((a, b) => b.length - a.length)
 
+  /**
+   * NOTYA-PSEUDO-03: Turkish first names that are also everyday or clinical words. Redacting these
+   * as standalone tokens destroys meaning: a patient named Kan turns "kan basıncı" into
+   * "[HASTA_1] basıncı" and every "tam kan sayımı" with it, and the model then reasons over notes
+   * with the clinical vocabulary removed.
+   *
+   * For these, only the FULL name is substituted — "Kan Yılmaz" is removed, the bare word "kan" is
+   * left alone. That is the right trade: the full name is the identifying form, while a lone
+   * common word identifies nobody, and a corrupted note is a patient-safety problem rather than a
+   * privacy one. Surnames and distinctive given names are unaffected.
+   */
+  const AMBIGUOUS = new Set([
+    'kan', 'can', 'ak', 'öz', 'su', 'ay', 'nur', 'ali', 'ege', 'deniz', 'baran', 'yaz',
+    'bal', 'gül', 'çiçek', 'derya', 'ışık', 'umut', 'onur', 'sevgi', 'barış', 'göz',
+  ])
+
   for (const name of names) {
     const full = name.trim()
-    const parts = [full, ...full.split(/\s+/).filter((p) => p.length > 2)]
+    const parts = [
+      full,
+      // Individual tokens only when they cannot be mistaken for ordinary Turkish: long enough to
+      // be distinctive, and not on the ambiguous list above.
+      ...full.split(/\s+/).filter((p) => p.length >= 4 && !AMBIGUOUS.has(p.toLocaleLowerCase('tr'))),
+    ]
     for (const part of parts) {
-      const re = new RegExp(part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+      const escaped = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // NOTYA-PSEUDO-02: match WHOLE WORDS only.
+      //
+      // Turkish given names are frequently ordinary words — Kan (blood), Can, Ali, Nur, Deniz, Su,
+      // Ege — and a substring match rewrites the medicine itself. Verified before this fix: a
+      // patient named Ali turned "kaliteli" into "k[HASTA_1]teli", Can turned "canlı" into
+      // "[HASTA_1]lı", Nur turned "Nurofen" into "[HASTA_1]ofen", and Kan would have eaten every
+      // "kan basıncı" and "tam kan sayımı" in the note. The model would then reason over mangled
+      // clinical text, which is far worse than the leak this function prevents.
+      //
+      // \b is ASCII-only in JavaScript and treats ı, ş, ğ, ç, ö, ü as non-word characters, so it
+      // breaks precisely on Turkish. Unicode letter/number lookarounds with the u flag are correct.
+      const re = new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'giu')
       if (!re.test(out)) continue
+      re.lastIndex = 0
       const ph = `[HASTA_${++n}]`
       map[ph] = part
       out = out.replace(re, ph)
