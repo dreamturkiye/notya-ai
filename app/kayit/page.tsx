@@ -15,6 +15,11 @@ export default function KayitPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [info, setInfo] = useState<string | null>(null);
+  // NOTYA-KVKK-01: explicit consent, captured before an account can exist. KVKK m.6 forbids
+  // processing özel nitelikli veri (patient health data) without açık rıza, and m.10 requires
+  // the aydınlatma metni at COLLECTION — not linked from a footer afterwards. Never
+  // pre-checked: consent must be 'özgür iradeyle açıklanan'.
+  const [kvkkOnay, setKvkkOnay] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -27,12 +32,26 @@ export default function KayitPage() {
       return;
     }
 
+    if (!kvkkOnay) {
+      setError('Devam edebilmek için KVKK Aydınlatma Metni\'ni okuyup onaylamanız gerekmektedir.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          // Consent must be PROVABLE, not merely collected: the moment and the text version mean a
+          // later dispute can be answered with what was actually agreed to.
+          data: {
+            kvkk_onay: true,
+            kvkk_onay_tarihi: new Date().toISOString(),
+            kvkk_metin_versiyonu: '2026-08-25',
+          },
+        },
       });
 
       if (signUpError) {
@@ -224,6 +243,27 @@ export default function KayitPage() {
               {info}
             </div>
           )}
+
+          <label style={{
+            display: 'flex', alignItems: 'flex-start', gap: '10px',
+            fontSize: '13px', lineHeight: 1.5, marginBottom: '18px',
+            color: 'rgba(10,22,40,0.75)', cursor: 'pointer'
+          }}>
+            <input
+              type="checkbox"
+              checked={kvkkOnay}
+              onChange={(e) => setKvkkOnay(e.target.checked)}
+              style={{ marginTop: '3px', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
+            />
+            <span>
+              <a href="/kvkk" target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB' }}>
+                KVKK Aydınlatma Metni
+              </a>
+              &apos;ni okudum. Kişisel verilerimin ve hastalarıma ait sağlık verilerinin metinde
+              açıklanan amaçlarla işlenmesini ve belirtilen hizmet sağlayıcılara aktarılmasını kabul
+              ediyorum.
+            </span>
+          </label>
 
           <button
             type="submit"
