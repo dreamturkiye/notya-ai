@@ -45,3 +45,55 @@ body {
     top: 0 !important;
   }
 }
+
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   NOTYA-MOBILE-01 (2026-08-25) — /doktor is the first page a Turkish doctor sees,
+   and it was not responsive. Its pricing and feature sections were built with
+   hardcoded inline grids (repeat(3,1fr), repeat(4,1fr), "1fr 1fr"). Inline styles
+   cannot hold a media query, so on a 390px iPhone four pricing columns were forced
+   into 390px — roughly 70px per card, with the price and the CTA unreadable. The
+   whole app contained only 8 media queries and none were on /doktor, /kayit or
+   /giris: the landing, signup and login pages.
+
+   !important is deliberate here. A stylesheet cannot otherwise beat an inline
+   style, and these rules are scoped inside a max-width query, so nothing above
+   768px changes at all.
+   ────────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .notya-grid-pricing,
+  .notya-grid-2,
+  .notya-grid-3 {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    max-width: 100% !important;
+  }
+
+  /* Cards carry 44px/28px padding built for a wide column; at phone width that
+     eats the content. */
+  .notya-grid-pricing > div {
+    padding: 28px 20px !important;
+  }
+
+  /* The plan toggle and any centred row must be allowed to wrap rather than
+     overflow the viewport. */
+  .notya-row-wrap {
+    flex-wrap: wrap !important;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  /* Tablet: four across is still too tight for the klinik tab. */
+  .notya-grid-pricing {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Desktop section rhythm (130px vertical, 48px horizontal) leaves very little
+     usable width on a 390px screen. */
+  .notya-section {
+    padding: 64px 20px !important;
+    gap: 32px !important;
+  }
+}

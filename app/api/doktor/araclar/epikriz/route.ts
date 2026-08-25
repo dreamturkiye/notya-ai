@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { groqChat } from '@/lib/dr-ayse/groq';
+import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,17 +80,23 @@ ICD10: ${note.icd10_codes || ''}
 Ek bilgi: ${ekBilgi || ''}
 Hastanın specialty: ${session.specialty || 'genel'}`;
 
+    // NOTYA-PSEUDO-01: a SOAP note is free text — the patient is frequently named in it, and
+    // identifiers are pasted in from other systems. Strip before the border, restore after.
+    const { text: guvenliPrompt, map: epikrizMap } = pseudonymize(userPrompt);
+    assertNoTckn(guvenliPrompt, 'epikriz');
+
     const raw = await groqChat(
       [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        { role: 'user', content: guvenliPrompt },
       ],
       { temperature: 0.2, jsonMode: true }
     );
 
     let parsed: { hastaBilgileri?: string; taniVeTedavi?: string; taburcuOzeti?: string };
     try {
-      parsed = JSON.parse(raw);
+      // Placeholders go out, real values come back in — the doctor never sees [HASTA_1].
+      parsed = restoreDeep(JSON.parse(raw), epikrizMap);
     } catch {
       return NextResponse.json({ hata: 'AI yanıtı geçersiz format' }, { status: 502 });
     }

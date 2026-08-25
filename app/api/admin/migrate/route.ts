@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret')
   if (secret !== process.env.MIGRATION_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
   }
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
   const results: string[] = []

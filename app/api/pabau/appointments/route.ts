@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     .eq('is_active', true)
     .maybeSingle()
 
-  if (!conn) return NextResponse.json({ success: false, error: 'Pabau baglantisi bulunamadi' }, { status: 404 })
+  if (!conn) return NextResponse.json({ success: false, error: 'Pabau bağlantısı bulunamadı.' }, { status: 404 })
 
   const secret = process.env.PABAU_TOKEN_SECRET || 'dev-token-secret'
   const accessToken = decrypt(conn.access_token_encrypted, secret)

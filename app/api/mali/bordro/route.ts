@@ -61,21 +61,21 @@ function hesaplaBordro(brutMaas: number, kidemYili = 0, engellilikDerecesi: numb
 export async function POST(req: NextRequest) {
   try {
     const auth = req.headers.get('Authorization') || req.headers.get('authorization')
-    if (!auth?.startsWith('Bearer ')) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    if (!auth?.startsWith('Bearer ')) return NextResponse.json({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const sb = getSupabase()
     const { data: { user }, error: ae } = await sb.auth.getUser(auth.split(' ')[1])
-    if (ae || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    if (ae || !user) return NextResponse.json({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const body = await req.json()
     const { brutMaas, engellilikDerecesi, kidemYili } = body
     if (typeof brutMaas !== 'number' || brutMaas <= 0) {
-      return NextResponse.json({ success: false, error: 'Gecersiz brut maas' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Geçersiz brut maas' }, { status: 400 })
     }
 
     const result = hesaplaBordro(brutMaas, kidemYili ?? 0, engellilikDerecesi ?? null)
     return NextResponse.json({ success: true, data: result })
   } catch (e: unknown) {
     console.error('[bordro]', e)
-    return NextResponse.json({ success: false, error: e instanceof Error ? e.message : 'Sunucu hatasi' }, { status: 500 })
+    return NextResponse.json({ success: false, error: e instanceof Error ? e.message : 'Sunucu hatası.' }, { status: 500 })
   }
 }

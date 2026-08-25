@@ -17,11 +17,11 @@ async function sendTelegram(text: string) {
 export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization')
-    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!authHeader) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
-    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (authError || !user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
     const musteriId = searchParams.get('musteriId')

@@ -7,10 +7,10 @@ const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, pr
 export async function POST(req: NextRequest) {
   try {
     const auth = req.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!auth) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const sb = getSupabase()
     const { data: { user }, error: ae } = await sb.auth.getUser(auth)
-    if (ae || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (ae || !user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const { sirket_adi, vergi_no, yetkili_kisi, telefon, email, faaliyet_alani, sirket_turu, calisan_sayisi, notlar, buyuksehirde } = await req.json()
     if (!sirket_adi?.trim()) return NextResponse.json({ error: 'Sirket adi gerekli' }, { status: 400 })

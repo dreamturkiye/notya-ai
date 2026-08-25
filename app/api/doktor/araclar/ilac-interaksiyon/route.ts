@@ -105,6 +105,9 @@ export async function POST(request: NextRequest) {
     const systemPrompt = 'Klinik farmakoloji uzmanısın. İlaç interaksiyon analizi yap. SADECE JSON: {genelRisk:guvenli|dikkat|kontrendike, interaksiyonlar:[{ilac1,ilac2,siddet:dusuk|orta|yuksek|kontrendike,mekanizma,aciklama,oneri}], dozUyarilari:[{ilac,uyari}]}';
     
     const userPrompt = `İlaçlar: ${body.ilaclar.join(', ')}. ${hastaBilgi}`;
+    // NOTYA-PSEUDO-01: this endpoint should never carry an identifier. The assertion is the
+    // tripwire for the day someone widens the payload.
+    assertNoTckn(userPrompt, 'ilac-interaksiyon');
 
     const sonuc = await groqChat(systemPrompt, userPrompt);
 

@@ -11,13 +11,13 @@ const getSB = () => createClient(
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ success: false, message: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 });
   }
 
   const token = authHeader.split(' ')[1];
   const { data: { user }, error: authError } = await getSB().auth.getUser(token);
   if (authError || !user) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ success: false, message: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 });
   }
 
   try {

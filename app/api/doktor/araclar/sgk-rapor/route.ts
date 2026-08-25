@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize'
 import { decrypt } from '@/lib/security/encryption'
 
 export const dynamic = 'force-dynamic'
@@ -122,9 +123,18 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt =
       'SGK resmi rapor yazma uzmanısın. SADECE JSON: {raporBasligi,hastaAdi,tcSon4,tani:{icd10,aciklama},anamnez,mevcutDurum,calismaKapasitesi:tam|kisitli|yok,onerilen_sure_ay:number,hekim_notu,zorunluTetkikler:[]}'
-    const userPrompt = `Rapor tipi: ${raporTipi}. Sure: ${sure} ay. Hasta: ${hastaAdi}. Hasta notlari: ${notMetinleri}`
+    // NOTYA-PSEUDO-01: the patient's real name and any identifiers inside the notes are replaced
+    // with placeholders BEFORE the request leaves Türkiye. The model reasons over [HASTA_1] and
+    // never receives a name, a T.C. kimlik number, a phone or an e-mail. Note that the real name
+    // was already being discarded from the response below — it was crossing the border for no
+    // purpose whatsoever.
+    const { text: guvenliNotlar, map } = pseudonymize(notMetinleri, [hastaAdi])
+    const userPrompt = `Rapor tipi: ${raporTipi}. Sure: ${sure} ay. Hasta: [HASTA]. Hasta notlari: ${guvenliNotlar}`
 
-    const rapor = await groqChat(systemPrompt, userPrompt)
+    // A silent leak is worse than a failed request.
+    assertNoTckn(userPrompt, 'sgk-rapor')
+
+    const rapor = restoreDeep(await groqChat(systemPrompt, userPrompt), map)
     if (!rapor.hastaAdi) rapor.hastaAdi = hastaAdi
 
     const tarih = new Date().toLocaleDateString('tr-TR')

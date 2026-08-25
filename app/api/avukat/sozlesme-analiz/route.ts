@@ -7,10 +7,10 @@ const getAnthropic=()=>new Anthropic({apiKey:process.env.ANTHROPIC_API_KEY!})
 export async function POST(req:NextRequest){
   try{
     const auth=req.headers.get('Authorization')?.replace('Bearer ','')
-    if(!auth) return NextResponse.json({error:'Unauthorized'},{status:401})
+    if(!auth) return NextResponse.json({error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.'},{status:401})
     const sb=getSupabase()
     const{data:{user},error:ae}=await sb.auth.getUser(auth)
-    if(ae||!user) return NextResponse.json({error:'Unauthorized'},{status:401})
+    if(ae||!user) return NextResponse.json({error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.'},{status:401})
     const{sozlesmeMetni,sozlesmeTuru}=await req.json()
     if(!sozlesmeMetni) return NextResponse.json({error:'sozlesmeMetni required'},{status:400})
     if(sozlesmeMetni.length>50000) return NextResponse.json({error:'Metin cok uzun (max 50000 karakter)'},{status:400})

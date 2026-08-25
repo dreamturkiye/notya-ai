@@ -16,7 +16,7 @@ export async function PUT(
   const { data: { user }, error: authError } = await supabase.auth.getUser(bearerToken(request));
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 });
   }
 
   const body = await request.json();
@@ -53,7 +53,7 @@ export async function DELETE(
   const { data: { user }, error: authError } = await supabase.auth.getUser(bearerToken(request));
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 });
   }
 
   const { error } = await supabase

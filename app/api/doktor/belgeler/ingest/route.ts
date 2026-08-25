@@ -14,14 +14,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
   const sb = getSB()
   const { data: { user }, error: ae } = await sb.auth.getUser(authHeader.split(' ')[1])
-  if (ae || !user) return NextResponse.json({ error: 'Gecersiz token' }, { status: 401 })
+  if (ae || !user) return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
   const { base64, mimeType, hastaId, belgeType } = await req.json()
   const ext = mimeType?.split('/')[1] || 'pdf'
   const { data: uploadData, error: uploadError } = await sb.storage
     .from('hasta-belgeler')
     .upload(user.id + '/' + hastaId + '/' + Date.now() + '.' + ext,
       Buffer.from(base64, 'base64'), { contentType: mimeType })
-  if (uploadError) return NextResponse.json({ error: 'Dosya yuklenemedi' }, { status: 500 })
+  if (uploadError) return NextResponse.json({ error: 'Dosya yüklenemedi.' }, { status: 500 })
   const dosya_url = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public/hasta-belgeler/' + uploadData.path
   const sysMap: Record<string,string> = {
     'Lab Sonucu': 'Tibbi lab belgesi. JSON: {"testler":[{"ad":"","deger":"","birim":"","referansAralik":"","anormal":false}],"labAdi":"","tarih":""}',

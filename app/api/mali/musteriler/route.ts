@@ -15,7 +15,7 @@ async function getUser(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const user = await getUser(req)
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const sb = getSupabase()
     const id = req.nextUrl.searchParams.get('id')
     let q = sb.from('mali_musteriler').select('*').eq('musavir_id', user.id).eq('is_active', true).order('sirket_adi')
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req)
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const body = await req.json()
     const { sirket_adi, vergi_no, yetkili_kisi, telefon, email, faaliyet_alani, sirket_turu, notlar } = body
     if (!sirket_adi?.trim()) return NextResponse.json({ error: 'Sirket adi gerekli' }, { status: 400 })
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const user = await getUser(req)
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const body = await req.json()
     const { id, ...updates } = body
     if (!id) return NextResponse.json({ error: 'ID gerekli' }, { status: 400 })
@@ -70,7 +70,7 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getUser(req)
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const id = req.nextUrl.searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'ID gerekli' }, { status: 400 })
     const sb = getSupabase()
