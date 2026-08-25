@@ -97,3 +97,142 @@ body {
     gap: 32px !important;
   }
 }
+
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   NOTYA-ILAC-01 — patient medication panel.
+
+   Mobile-first on purpose: this page is used on a phone between patients, so the
+   base layout is a single column and the two-column grid is the ENHANCEMENT at
+   640px and up — not a desktop grid squeezed down.
+
+   Target widths checked: 360px (Galaxy S8/S22 compact), 390px (iPhone 13/14/15),
+   412px (Galaxy S23/S24), 430px (iPhone Pro Max).
+
+   Inputs are 16px. Anything smaller makes iOS Safari zoom the page on focus,
+   which shifts the layout mid-typing and is the usual reason a form "feels
+   broken" on iPhone. The 44px min-height on tap targets is the iOS accessibility
+   minimum; Android Material asks for 48dp, so 44px with padding clears both.
+   ────────────────────────────────────────────────────────────────────────────── */
+.ni-wrap { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+
+.ni-card {
+  background: #fff;
+  border: 1px solid rgba(10, 22, 40, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ni-h3 { font-size: 16px; font-weight: 600; margin: 0 0 14px; color: #0A1628; display: flex; align-items: center; gap: 8px; }
+.ni-count { background: #EEF4FF; color: #2563EB; border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 500; }
+
+.ni-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; position: relative; }
+.ni-label { font-size: 13px; color: rgba(10, 22, 40, 0.6); }
+
+.ni-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 16px; /* iOS: do not go below 16px or Safari zooms on focus */
+  font-family: inherit;
+  color: #0A1628;
+  border: 1px solid rgba(10, 22, 40, 0.18);
+  border-radius: 8px;
+  background: #fff;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.ni-input:focus { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+
+/* Search results: a scrollable panel, so a long list never pushes the form off a
+   short phone screen. */
+.ni-results {
+  border: 1px solid rgba(10, 22, 40, 0.12);
+  border-radius: 8px;
+  overflow: hidden auto;
+  max-height: 260px;
+  margin-top: 4px;
+  background: #fff;
+}
+.ni-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(10, 22, 40, 0.07);
+  cursor: pointer;
+  font-family: inherit;
+}
+.ni-result:last-child { border-bottom: 0; }
+.ni-result:active, .ni-result:hover { background: #F5F8FF; }
+.ni-result-name { font-size: 15px; color: #0A1628; font-weight: 500; }
+/* Brand lists get long; clip rather than let them widen the row on a phone. */
+.ni-result-brand { font-size: 12px; color: rgba(10, 22, 40, 0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ni-sgk { font-size: 11px; }
+.ni-sgk-on { color: #00A89D; }
+.ni-sgk-off { color: #B45309; }
+
+.ni-grid { display: grid; grid-template-columns: 1fr; gap: 0 12px; }
+
+.ni-btn {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563EB;
+  color: #fff;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ni-btn:disabled { opacity: 0.6; cursor: default; }
+
+.ni-hint { font-size: 13px; color: rgba(10, 22, 40, 0.5); margin: 6px 0 0; }
+.ni-warn { background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+.ni-error { background: #FEE2E2; border: 1px solid #EF4444; color: #991B1B; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+
+/* Medication rows stack on a phone so the name is never truncated to fit a
+   right-aligned button. */
+.ni-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(10, 22, 40, 0.08);
+}
+.ni-item:last-child { border-bottom: 0; }
+.ni-item-main { min-width: 0; }
+.ni-item-name { font-size: 15px; font-weight: 500; color: #0A1628; overflow-wrap: anywhere; }
+.ni-item-meta { font-size: 13px; color: rgba(10, 22, 40, 0.65); overflow-wrap: anywhere; }
+.ni-item-date { font-size: 12px; color: rgba(10, 22, 40, 0.45); }
+
+.ni-remove {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #B91C1C;
+  background: #fff;
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .ni-card { padding: 20px; }
+  .ni-grid { grid-template-columns: 1fr 1fr; }
+  .ni-btn { width: auto; min-width: 200px; padding: 0 24px; }
+  /* With room, the row and its action sit side by side. */
+  .ni-item { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .ni-remove { align-self: center; flex-shrink: 0; }
+}
