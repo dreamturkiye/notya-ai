@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       userEmail = user?.email || null
       existingMeta = (user?.user_metadata as Record<string, unknown>) || {}
     }
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!userId) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const body = await req.json()
     const { profession_type, unvan, büro_adi, uzmanlik_alani, sehir, full_name, plan, trial_start,

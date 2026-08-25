@@ -13,12 +13,12 @@ export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
     const sb = getSupabase()
     const { data: { user }, error: authError } = await sb.auth.getUser(authHeader.split(' ')[1])
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
 
     const { action, musteriId, tokenId, daysValid } = await req.json()

@@ -24,10 +24,10 @@ const PERSONA_AGENTS: Record<string, string> = {
 export async function GET(req: NextRequest) {
   try {
     const auth = req.headers.get('Authorization')
-    if (!auth?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!auth?.startsWith('Bearer ')) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const sb = getSupabase()
     const { data: { user }, error: ae } = await sb.auth.getUser(auth.split(' ')[1])
-    if (ae || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (ae || !user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const persona = req.nextUrl.searchParams.get('persona') || 'kemalbey'
     const agentId = PERSONA_AGENTS[persona] || PERSONA_AGENTS.kemalbey

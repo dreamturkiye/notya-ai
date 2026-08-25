@@ -31,10 +31,10 @@ const STATIC_MEVZUAT = [
 export async function GET(req: NextRequest) {
   try {
     const auth = req.headers.get('Authorization')?.replace('Bearer ','')
-    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!auth) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const sb = getSupabase()
     const { data: { user }, error: ae } = await sb.auth.getUser(auth)
-    if (ae || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (ae || !user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     // Try live scrape, fall back to static
     let liveItems: { baslik: string; kaynak: string; oncelik: string }[] = []
     try {

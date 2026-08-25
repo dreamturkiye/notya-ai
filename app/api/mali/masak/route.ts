@@ -18,12 +18,12 @@ export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
     const token = authHeader.split(' ')[1]
     const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
     const body = await req.json()
     const { islem, islemler, sendAlert } = body
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     } else if (islemler) {
       results = kontrolEtAylikIslemler(islemler as MasakIslem[])
     } else {
-      return NextResponse.json({ success: false, error: 'islem veya islemler gerekli' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'İşlem veya işlemler zorunludur.' }, { status: 400 })
     }
 
     const anyBildirim = results.some(r => r.bildirimGerekiyor)
@@ -57,6 +57,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: results, alertGönderildi: sendAlert && anyBildirim })
   } catch (e) {
-    return NextResponse.json({ success: false, error: 'Sunucu hatasi' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Sunucu hatası.' }, { status: 500 })
   }
 }

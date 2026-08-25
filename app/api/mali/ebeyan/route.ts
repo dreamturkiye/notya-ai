@@ -14,12 +14,12 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
     if (!token) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
 
     const { data: { user }, error: authError } = await getSupabase().auth.getUser(token)
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
 
     const body = await req.json()
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       result = await gibTokenDogrula(gibApiKey)
     } else if (action === 'gönder') {
       if (!gibApiKey || !vergiNo || !donem || !beyan) {
-        return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
+        return NextResponse.json({ success: false, error: 'Zorunlu alanlar eksik.' }, { status: 400 })
       }
       const config: EBeyanConfig = { gibApiKey, vergiNo, donem }
       result = await kdvBeyanGönder(config, beyan as KdvBeyan)
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       }
     } else if (action === 'sorgula') {
       if (!gibApiKey || !referansNo) {
-        return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
+        return NextResponse.json({ success: false, error: 'Zorunlu alanlar eksik.' }, { status: 400 })
       }
       const config: EBeyanConfig = { gibApiKey, vergiNo: vergiNo || '', donem: donem || '' }
       result = await beyanSorgula(config, referansNo)

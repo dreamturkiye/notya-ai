@@ -27,7 +27,7 @@ async function getAdminClinic(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const admin = await getAdminClinic(req)
-  if (!admin) return NextResponse.json({ success: false, error: 'Klinik admin yetkisi gerekli' }, { status: 403 })
+  if (!admin) return NextResponse.json({ success: false, error: 'Klinik yönetici yetkisi gereklidir.' }, { status: 403 })
 
   const { user, clinicId, sb } = admin
 

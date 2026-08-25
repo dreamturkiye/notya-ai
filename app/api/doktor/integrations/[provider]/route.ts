@@ -75,7 +75,7 @@ export async function PUT(
         return NextResponse.json({ error: 'Geçerli hekim TC Kimlik No gerekli' }, { status: 400 })
       }
       if (!sifre) {
-        return NextResponse.json({ error: 'SGK kurumsal şifre zorunlu' }, { status: 400 })
+        return NextResponse.json({ error: 'SGK kurumsal şifre zorunludur.' }, { status: 400 })
       }
       const status = await upsertIntegrationSecrets(doctor.userId, 'medula', {
         hekimTc,
@@ -89,7 +89,7 @@ export async function PUT(
     const username = String((body as NviSecrets).username || '').trim()
     const password = String((body as NviSecrets).password || '')
     if (!username || !password) {
-      return NextResponse.json({ error: 'NVI kullanıcı adı ve şifre zorunlu' }, { status: 400 })
+      return NextResponse.json({ error: 'NVİ kullanıcı adı ve şifre zorunludur.' }, { status: 400 })
     }
     const status = await upsertIntegrationSecrets(doctor.userId, 'nvi_kps', {
       username,

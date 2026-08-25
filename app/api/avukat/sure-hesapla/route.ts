@@ -12,20 +12,20 @@ const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, pr
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
+    return new Response(JSON.stringify({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }), { status: 401 });
   }
 
   const token = authHeader.substring(7);
   const { data: user, error } = await supabase.auth.getUser(token);
 
   if (error || !user) {
-    return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
+    return new Response(JSON.stringify({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }), { status: 401 });
   }
 
   const { branch, baslangicTarihi, seciliSureler, muvekkilId, davaTanimi } = await req.json();
   
   if (!branch || !baslangicTarihi) {
-    return new Response(JSON.stringify({ success: false, error: 'Invalid input' }), { status: 400 });
+    return new Response(JSON.stringify({ success: false, error: 'Geçersiz giriş.' }), { status: 400 });
   }
 
   const baslangicTarihiDate = new Date(baslangicTarihi);

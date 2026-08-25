@@ -8,10 +8,10 @@ const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, pr
 export async function GET(req: NextRequest) {
   try {
     const auth = req.headers.get('Authorization')?.replace('Bearer ','')
-    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!auth) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const sb = getSupabase()
     const { data: { user }, error: ae } = await sb.auth.getUser(auth)
-    if (ae || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (ae || !user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const musteriId = req.nextUrl.searchParams.get('musteriId')
     const now = new Date()
