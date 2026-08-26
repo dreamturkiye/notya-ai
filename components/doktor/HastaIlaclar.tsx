@@ -20,7 +20,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { searchDrug, type TürkishDrug } from '@/lib/asistan/turkishDrugs';
+import type { GruplanmisIlac, SunumSecenegi } from '@/app/api/doktor/ilac-ara/route';
 
 interface Ilac {
   id: string;
@@ -32,13 +32,8 @@ interface Ilac {
   bitis_tarihi: string | null;
   aktif: boolean;
   notlar: string | null;
-}
-
-/** The brand in this drug's list that matches what the doctor typed, if any. */
-function markaEslesmesi(d: TürkishDrug, sorgu: string): string | undefined {
-  const q = sorgu.trim().toLocaleLowerCase('tr');
-  if (!q) return undefined;
-  return d.brand?.find((b) => b.toLocaleLowerCase('tr').includes(q));
+  barkod?: string | null;
+  kutu_adedi?: number | null;
 }
 
 const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Günde 1', 'Haftada 1', 'Gerektiğinde'];
@@ -73,7 +68,11 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   const [kaydediyor, setKaydediyor] = useState(false);
 
   const [arama, setArama] = useState('');
-  const [secili, setSecili] = useState<TürkishDrug | null>(null);
+  const [sonuclar, setSonuclar] = useState<GruplanmisIlac[]>([]);
+  const [araniyor, setAraniyor] = useState(false);
+  const [secili, setSecili] = useState<GruplanmisIlac | null>(null);
+  const [sunum, setSunum] = useState<SunumSecenegi | null>(null);
+  const [kutuAdedi, setKutuAdedi] = useState(1);
   const [ad, setAd] = useState('');
   const [etkenMadde, setEtkenMadde] = useState('');
   const [doz, setDoz] = useState('');
@@ -81,7 +80,29 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   const [baslangic, setBaslangic] = useState(() => new Date().toISOString().slice(0, 10));
   const [notlar, setNotlar] = useState('');
 
-  const sonuclar = useMemo(() => (arama.trim().length < 2 ? [] : searchDrug(arama.trim()).slice(0, 6)), [arama]);
+  // Debounced: a doctor types faster than a round trip, and one request per keystroke would both
+  // hammer the endpoint and deliver results out of order.
+  useEffect(() => {
+    const q = arama.trim();
+    if (q.length < 2) { setSonuclar([]); return; }
+    let iptal = false;
+    const zaman = setTimeout(async () => {
+      setAraniyor(true);
+      try {
+        const t = token();
+        if (!t) return;
+        const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${t}` } });
+        if (!r.ok || iptal) return;
+        const d = await r.json();
+        if (!iptal) setSonuclar(d.sonuclar || []);
+      } catch {
+        if (!iptal) setSonuclar([]);
+      } finally {
+        if (!iptal) setAraniyor(false);
+      }
+    }, 220);
+    return () => { iptal = true; clearTimeout(zaman); };
+  }, [arama]);
 
   async function listele() {
     setYukleniyor(true);
@@ -121,14 +142,30 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
    * The searched term wins when it matches a brand; otherwise the generic name is used, since
    * arbitrarily choosing someone else's brand is never what was meant.
    */
-  function ilacSec(d: TürkishDrug, sorgu: string) {
-    const q = sorgu.trim().toLocaleLowerCase('tr');
-    const eslesenMarka = q ? d.brand?.find((b) => b.toLocaleLowerCase('tr').includes(q)) : undefined;
-    setSecili(d);
-    setAd(eslesenMarka || d.name);
-    setEtkenMadde(d.name);
-    if (!doz) setDoz(d.dose || '');
+  function ilacSec(g: GruplanmisIlac) {
+    setSecili(g);
+    setEtkenMadde(g.etkenMadde || '');
     setArama('');
+    setSonuclar([]);
+    // One presentation means there is nothing to choose — pick it rather than making the doctor
+    // confirm the obvious.
+    if (g.sunumlar.length === 1) sunumSec(g.sunumlar[0], g);
+    else { setSunum(null); setAd(g.marka); }
+  }
+
+  /**
+   * NOTYA-ILAC-05: the presentation carries the BARCODE, and the barcode is what e-reçete records.
+   * "LARGOPEN 500 MG" alone is ambiguous across five packs (1 g tablet, three suspensions, 500 mg
+   * tablet), so the pack is not a detail — it is the thing being prescribed.
+   */
+  function sunumSec(su: SunumSecenegi, g?: GruplanmisIlac) {
+    setSunum(su);
+    setAd(su.ad);
+    const kaynak = g || secili;
+    if (kaynak?.etkenMadde) setEtkenMadde(kaynak.etkenMadde);
+    // SGK writes strength into the product name; lift it into the dose field as a starting point.
+    const m = su.ad.match(/(\d+[.,]?\d*\s?(?:MG|G|ML|MCG|IU)(?:\s?\/\s?\d+\s?ML)?)/i);
+    if (m && !doz) setDoz(m[1].trim());
   }
 
   async function ekle(e: React.FormEvent) {
@@ -154,6 +191,8 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           doz: doz.trim(),
           kullanim_sikli: siklik,
           baslangic_tarihi: baslangic,
+          barkod: sunum?.barkod || null,
+          kutu_adedi: kutuAdedi,
           notlar: notlar.trim() || null,
         }),
       });
@@ -162,7 +201,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
         setHata(j.error || 'İlaç eklenemedi. Lütfen tekrar deneyin.');
         return;
       }
-      setAd(''); setEtkenMadde(''); setDoz(''); setNotlar(''); setSecili(null); setSiklik('2x1');
+      setAd(''); setEtkenMadde(''); setDoz(''); setNotlar(''); setSecili(null); setSunum(null); setKutuAdedi(1); setSiklik('2x1');
       await listele();
     } catch {
       setHata('İlaç eklenemedi. Bağlantınızı kontrol edin.');
@@ -198,29 +237,55 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
             placeholder="Örn. Largopen, amoksisilin, antibiyotik"
             autoComplete="off"
           />
+          {araniyor && <p className="ni-hint">Aranıyor…</p>}
           {sonuclar.length > 0 && (
             <div className="ni-results">
-              {sonuclar.map((d) => (
-                <button type="button" key={d.name} className="ni-result" onClick={() => ilacSec(d, arama)}>
-                  <span className="ni-result-name">
-                    {/* Lead with the brand that matched what was typed — that is the name the
-                        doctor is looking for; the generic follows it. */}
-                    {markaEslesmesi(d, arama) ? `${markaEslesmesi(d, arama)} (${d.name})` : d.name}
+              {sonuclar.map((g) => (
+                <button type="button" key={g.marka} className="ni-result" onClick={() => ilacSec(g)}>
+                  <span className="ni-result-name">{g.marka}</span>
+                  <span className="ni-result-brand">
+                    {g.etkenMadde ? g.etkenMadde + ' · ' : ''}
+                    {g.sunumlar.length === 1 ? g.sunumlar[0].ad : `${g.sunumlar.length} farklı sunum`}
                   </span>
-                  {d.brand?.length ? <span className="ni-result-brand">{d.brand.slice(0, 3).join(', ')}</span> : null}
-                  <span className={d.sgkCovered ? 'ni-sgk ni-sgk-on' : 'ni-sgk ni-sgk-off'}>
-                    {d.sgkCovered ? 'SGK ödüyor' : 'SGK ödemiyor'}
+                  <span className={g.sgk ? 'ni-sgk ni-sgk-on' : 'ni-sgk ni-sgk-off'}>
+                    {g.sgk ? 'SGK ödüyor' : 'SGK ödemiyor'}
                   </span>
                 </button>
               ))}
             </div>
           )}
-          {arama.trim().length >= 2 && sonuclar.length === 0 && (
+          {!araniyor && arama.trim().length >= 2 && sonuclar.length === 0 && (
             <p className="ni-hint">Listede yok — aşağıya elle yazabilirsiniz.</p>
           )}
         </div>
 
-        {secili?.sgkRestriction && <div className="ni-warn">SGK kısıtlaması: {secili.sgkRestriction}</div>}
+        {/* NOTYA-ILAC-05: presentation picker. SGK lists each pack as its own product with its own
+            barcode, and e-reçete records THAT barcode — so the pack is the thing being prescribed,
+            not a detail. Shown only when there is a real choice to make. */}
+        {secili && secili.sunumlar.length > 1 && (
+          <div className="ni-field">
+            <label className="ni-label">Sunum / ambalaj * <span className="ni-hint-inline">({secili.marka} için {secili.sunumlar.length} seçenek)</span></label>
+            <select
+              className="ni-input"
+              value={sunum?.barkod || ''}
+              onChange={(e) => {
+                const su = secili.sunumlar.find((x) => x.barkod === e.target.value);
+                if (su) sunumSec(su);
+              }}
+            >
+              <option value="">— Sunum seçin —</option>
+              {secili.sunumlar.map((su) => (
+                <option key={su.barkod} value={su.barkod}>{su.ad}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {sunum?.barkod && (
+          <div className="ni-barkod">Barkod: <strong>{sunum.barkod}</strong> · e-reçetede bu ürün kaydedilir</div>
+        )}
+
+        {secili && !secili.sgk && <div className="ni-warn">Bu ürün SGK tarafından ödenmiyor.</div>}
 
         <div className="ni-grid">
           <div className="ni-field">
@@ -240,6 +305,18 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
             <select className="ni-input" value={siklik} onChange={(e) => setSiklik(e.target.value)}>
               {SIKLIK.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
+          </div>
+          <div className="ni-field">
+            <label className="ni-label">Kutu adedi</label>
+            <input
+              className="ni-input"
+              type="number"
+              min={1}
+              max={12}
+              inputMode="numeric"
+              value={kutuAdedi}
+              onChange={(e) => setKutuAdedi(Math.max(1, Number(e.target.value) || 1))}
+            />
           </div>
           <div className="ni-field">
             <label className="ni-label">Başlangıç *</label>
@@ -267,7 +344,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
             <div className="ni-item-main">
               <div className="ni-item-name">{i.ilac_adi}</div>
               <div className="ni-item-meta">
-                {[i.etken_madde, i.doz, i.kullanim_sikli].filter(Boolean).join(' · ')}
+                {[i.etken_madde, i.doz, i.kullanim_sikli, i.kutu_adedi ? `${i.kutu_adedi} kutu` : ''].filter(Boolean).join(' · ')}
               </div>
               {i.baslangic_tarihi && (
                 <div className="ni-item-date">

@@ -236,3 +236,16 @@ body {
   .ni-item { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 16px; }
   .ni-remove { align-self: center; flex-shrink: 0; }
 }
+
+/* NOTYA-ILAC-05: presentation picker helpers. */
+.ni-hint-inline { font-size: 12px; color: rgba(10, 22, 40, 0.45); font-weight: 400; }
+.ni-barkod {
+  font-size: 12px;
+  color: rgba(10, 22, 40, 0.6);
+  background: #F5F8FF;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
