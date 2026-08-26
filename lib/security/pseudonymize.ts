@@ -17,8 +17,38 @@
  * reversed locally. Nothing identifying leaves the database.
  */
 
+import sozlukListe from './tr-sozluk.json'
+
 export interface PseudonymMap {
   [placeholder: string]: string
+}
+
+/**
+ * NOTYA-PSEUDO-05: a name token that is also an ordinary Turkish word is never substituted on its
+ * own — only as part of the full name.
+ *
+ * This replaced a hand-maintained list of "ambiguous" given names. That list failed the way
+ * every enumerated exception list fails: it was only as complete as the last person's imagination.
+ * Checked on 2026-08-26 it was missing, among others, Demir ("demir eksikliği"), Sedef ("sedef
+ * hastalığı"), Ateş (fever), Şeker ("şeker hastalığı"), Uzun ("uzun süreli"), Küçük ("küçük lezyon"),
+ * Beyaz ("beyaz küre"), Yüksek ("yüksek tansiyon"), Damla ("göz damlası"), Sert ("sert kitle") — all
+ * common given names or surnames, all four letters or more, all of which would have had every
+ * clinical use of the word rewritten to [HASTA_n] for a patient who happened to carry that name.
+ *
+ * A dictionary is the right shape for this problem: 48.600 single-token Turkish words from
+ * Vikisözlük (scripts/build-tr-sozluk.mjs), loaded once, one Set lookup per token. Given names
+ * that are not words (Mehmet, Ayşe, Zeynep) are absent from it and stay fully redacted.
+ *
+ * The trade accepted: Yılmaz and Kaya are dictionary words, so a note that refers to the patient
+ * by bare surname alone leaves that word in the prompt. With TCKN, phone and the full name already
+ * stripped, a lone "Yılmaz" identifies roughly 1.5% of the country; a mangled clinical note is a
+ * patient-safety failure. That is the same trade the old list made, applied consistently.
+ */
+const SOZLUK: ReadonlySet<string> = new Set(sozlukListe as string[])
+
+/** True when a name token is an ordinary Turkish word and must not be substituted standalone. */
+export function sozlukteVar(token: string): boolean {
+  return SOZLUK.has(token.toLocaleLowerCase('tr'))
 }
 
 export interface Pseudonymized {
@@ -56,66 +86,14 @@ export function pseudonymize(text: string, knownNames: string[] = []): Pseudonym
     .filter((x) => x && x.trim().length > 2)
     .sort((a, b) => b.length - a.length)
 
-  /**
-   * NOTYA-PSEUDO-03: Turkish first names that are also everyday or clinical words. Redacting these
-   * as standalone tokens destroys meaning: a patient named Kan turns "kan basıncı" into
-   * "[HASTA_1] basıncı" and every "tam kan sayımı" with it, and the model then reasons over notes
-   * with the clinical vocabulary removed.
-   *
-   * For these, only the FULL name is substituted — "Kan Yılmaz" is removed, the bare word "kan" is
-   * left alone. That is the right trade: the full name is the identifying form, while a lone
-   * common word identifies nobody, and a corrupted note is a patient-safety problem rather than a
-   * privacy one. Surnames and distinctive given names are unaffected.
-   */
-  const AMBIGUOUS = new Set([
-    // Common Turkish given names that are ALSO everyday words. Only the FULL name is substituted
-    // for these; the bare word is left alone, because redacting it would strip meaning from the
-    // note. A corrupted clinical record is a patient-safety problem, while a lone common word
-    // identifies nobody.
-    //
-    // Note the length filter below already excludes every 3-letter name — Can, Nur, Su, Ay, Ege,
-    // Ece, Efe are never candidates for standalone substitution regardless of this list. So this
-    // list is only about names of four characters or more.
-    //
-    // Corrected 2026-08-25: an earlier version listed 'kan', 'göz', 'bal', 'ak' and 'öz'. Those are
-    // not Turkish given names — 'kan' got in because it appeared in a test case, which is backwards
-    // reasoning. Ak and Öz are surname components (Akgün, Öztürk), not standalone first names.
-    'deniz',   // sea
-    'umut',    // hope
-    'onur',    // honour / dignity
-    'barış',   // peace
-    'ışık',    // light — appears clinically: "ışık refleksi"
-    'sevgi',   // love
-    'derya',   // sea
-    'yağmur',  // rain
-    'bahar',   // spring
-    'çiçek',   // flower — also the folk term for smallpox/chickenpox in older Turkish
-    'bulut',   // cloud
-    'toprak',  // earth
-    'güneş',   // sun
-    'nehir',   // river
-    'yıldız',  // star
-    'melek',   // angel
-    'defne',   // laurel
-    'duru',    // clear — "duru idrar" in clinical notes
-    'doğa',    // nature
-    'özgür',   // free
-    'şafak',   // dawn
-    'neşe',    // joy
-    'sevda',   // love
-    'esen',    // healthy / well — clinically loaded
-    'gonca',   // bud
-    'ceylan',  // gazelle
-    'aslan',   // lion
-  ])
-
   for (const name of names) {
     const full = name.trim()
     const parts = [
       full,
-      // Individual tokens only when they cannot be mistaken for ordinary Turkish: long enough to
-      // be distinctive, and not on the ambiguous list above.
-      ...full.split(/\s+/).filter((p) => p.length >= 4 && !AMBIGUOUS.has(p.toLocaleLowerCase('tr'))),
+      // Individual tokens only when they cannot be mistaken for ordinary Turkish: four letters or
+      // more (Can, Nur, Su, Ege never qualify) and not a dictionary word (NOTYA-PSEUDO-05 above).
+      // The full name is always substituted; this only decides whether the bare token is too.
+      ...full.split(/\s+/).filter((p) => p.length >= 4 && !sozlukteVar(p)),
     ]
     for (const part of parts) {
       const escaped = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
