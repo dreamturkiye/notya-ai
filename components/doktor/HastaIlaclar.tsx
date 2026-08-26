@@ -84,7 +84,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   // hammer the endpoint and deliver results out of order.
   useEffect(() => {
     const q = arama.trim();
-    if (q.length < 2) { setSonuclar([]); return; }
+    if (q.length < 1) { setSonuclar([]); return; }
     let iptal = false;
     const zaman = setTimeout(async () => {
       setAraniyor(true);
@@ -254,7 +254,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
               ))}
             </div>
           )}
-          {!araniyor && arama.trim().length >= 2 && sonuclar.length === 0 && (
+          {!araniyor && arama.trim().length >= 1 && sonuclar.length === 0 && (
             <p className="ni-hint">Listede yok — aşağıya elle yazabilirsiniz.</p>
           )}
         </div>

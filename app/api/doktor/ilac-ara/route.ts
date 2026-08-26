@@ -56,10 +56,28 @@ export async function GET(request: NextRequest) {
   }
 
   const q = (new URL(request.url).searchParams.get('q') || '').trim()
-  if (q.length < 2) return NextResponse.json({ sonuclar: [] })
+  if (q.length < 1) return NextResponse.json({ sonuclar: [] })
 
-  // Search wide, then group — otherwise one brand with many packs crowds out every other drug.
-  const ham = ilacAra(veri(), q, 60)
+  /**
+   * NOTYA-ILAC-06: answer from the FIRST character and narrow as the doctor types.
+   *
+   * Previously the minimum was two characters, so typing "A" showed nothing — the doctor got a
+   * dead box and had to guess how much more to type before the tool would react. The list should
+   * respond immediately and narrow: A -> the well-known A drugs, AU -> the AU ones, AUG ->
+   * Augmentin and its neighbours.
+   *
+   * For one and two characters, fuzzy matching is switched off deliberately: at that length an
+   * edit distance of one matches most of the alphabet, and the result is noise dressed up as
+   * intelligence. Short queries are prefix-only, which is also what the doctor means — nobody
+   * types "A" hoping for a typo correction.
+   *
+   * Ranking for short queries uses presentation count as a stand-in for prevalence: a brand SGK
+   * reimburses in seven pack sizes is more widely prescribed than one sold in a single pack. It is
+   * a proxy, not prescription data — worth replacing later with the practice's own history, which
+   * is the only genuinely accurate signal.
+   */
+  const kisaSorgu = q.length <= 2
+  const ham = ilacAra(veri(), q, kisaSorgu ? 400 : 60, { prefixOnly: kisaSorgu })
 
   const gruplar = new Map<string, GruplanmisIlac>()
   for (const k of ham) {
@@ -74,9 +92,17 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const sonuclar = [...gruplar.values()]
+  let sonuclar = [...gruplar.values()]
     .map((g) => ({ ...g, sunumlar: g.sunumlar.sort((a, b) => a.ad.localeCompare(b.ad, 'tr')) }))
-    .slice(0, 8)
+
+  if (kisaSorgu) {
+    sonuclar = sonuclar.sort((a, b) =>
+      b.sunumlar.length - a.sunumlar.length ||       // more pack sizes ≈ more widely prescribed
+      a.marka.length - b.marka.length ||             // a short brand is usually the familiar one
+      a.marka.localeCompare(b.marka, 'tr'))
+  }
+
+  sonuclar = sonuclar.slice(0, 8)
 
   return NextResponse.json({ sonuclar, toplam: veri().length })
 }

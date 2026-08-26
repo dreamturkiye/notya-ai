@@ -82,11 +82,15 @@ function tolerans(q: string): number {
   return 3
 }
 
-function puanla(alan: string, q: string): number {
+function puanla(alan: string, q: string, prefixOnly = false): number {
   const a = normalize(alan)
   if (!a) return 0
   if (a === q) return 100
   if (a.startsWith(q)) return 90
+  if (prefixOnly) {
+    // Word-prefix still counts: "AUGMENTIN ES" should surface on "es" as well as on "au".
+    return a.split(/[\s,()\/-]+/).some((w) => w.startsWith(q)) ? 60 : 0
+  }
   if (a.includes(q)) return 75
   if (a.split(/[\s,()\/-]+/).some((w) => w.startsWith(q))) return 60
 
@@ -109,15 +113,29 @@ function puanla(alan: string, q: string): number {
  * Search brand, ingredient and full product name at once, ranked.
  * `limit` keeps the dropdown short — a doctor scans a handful, not a hundred.
  */
-export function ilacAra(kayitlar: IlacKaydi[], sorgu: string, limit = 8): AramaSonucu[] {
+export interface AramaSecenekleri {
+  /**
+   * NOTYA-ILAC-06: disable fuzzy matching. At one or two characters an edit distance of one
+   * matches most of the alphabet, so fuzzy results are noise. Prefix-only is also what a doctor
+   * means when they type a single letter.
+   */
+  prefixOnly?: boolean
+}
+
+export function ilacAra(
+  kayitlar: IlacKaydi[],
+  sorgu: string,
+  limit = 8,
+  secenekler: AramaSecenekleri = {},
+): AramaSonucu[] {
   const q = normalize(sorgu)
-  if (q.length < 2) return []
+  if (q.length < 1) return []
 
   const out: AramaSonucu[] = []
   for (const k of kayitlar) {
-    const sMarka = puanla(k.marka || '', q)
-    const sEtken = puanla(k.etkenMadde || '', q)
-    const sAd = puanla(k.ad || '', q)
+    const sMarka = puanla(k.marka || '', q, secenekler.prefixOnly)
+    const sEtken = puanla(k.etkenMadde || '', q, secenekler.prefixOnly)
+    const sAd = puanla(k.ad || '', q, secenekler.prefixOnly)
     const skor = Math.max(sMarka, sEtken, sAd)
     if (skor <= 0) continue
     const eslesenAlan: AramaSonucu['eslesenAlan'] =
