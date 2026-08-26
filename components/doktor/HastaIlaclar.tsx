@@ -43,10 +43,24 @@ function markaEslesmesi(d: TürkishDrug, sorgu: string): string | undefined {
 
 const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Günde 1', 'Haftada 1', 'Gerektiğinde'];
 
+/**
+ * NOTYA-ILAC-04: Supabase stores the session under a PROJECT-SCOPED key —
+ * `sb-<projectref>-auth-token` — not under the literal string 'auth-token'. The first version of
+ * this component read the literal key, found nothing, and sent `Bearer null`; the API answered 401
+ * and the tab showed "İlaç listesi alınamadı." on a perfectly healthy database.
+ *
+ * The rest of the app already resolves the key by searching localStorage, so this now matches it
+ * instead of inventing its own convention. The literal key is kept as a fallback because the signup
+ * flow writes it directly after registration.
+ */
 function token(): string | null {
   try {
-    const raw = localStorage.getItem('auth-token');
-    return raw ? JSON.parse(raw).access_token : null;
+    const key = Object.keys(localStorage).find((k) => k.includes('auth-token'));
+    const raw = key ? localStorage.getItem(key) : localStorage.getItem('auth-token');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Supabase has used both shapes across versions: the session at the root, or nested.
+    return parsed?.access_token || parsed?.currentSession?.access_token || null;
   } catch {
     return null;
   }
@@ -76,7 +90,15 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
       const t = token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
       const r = await fetch(`/api/doktor/ilaclar?hastaId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
-      if (!r.ok) { setHata('İlaç listesi alınamadı.'); return; }
+      if (!r.ok) {
+        // Distinguish an expired session from a real failure: telling a doctor "list could not be
+        // retrieved" when the fix is "log in again" sends them looking for a fault that is not there.
+        const j = await r.json().catch(() => ({} as { error?: string }));
+        setHata(r.status === 401
+          ? 'Oturumunuzun süresi dolmuş. Lütfen tekrar giriş yapın.'
+          : j.error || 'İlaç listesi alınamadı.');
+        return;
+      }
       const d = await r.json();
       setIlaclar(Array.isArray(d) ? d : d.ilaclar || d.data || []);
     } catch {
