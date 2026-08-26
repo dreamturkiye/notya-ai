@@ -161,8 +161,12 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   function sunumSec(su: SunumSecenegi, g?: GruplanmisIlac) {
     setSunum(su);
     setAd(su.ad);
+    // NOTYA-ILAC-07: the pack's own ingredient wins over the brand's. Same brand name can hide
+    // different molecules across packs (A-FERİN with and without kodein); the pack is what is
+    // prescribed, so the pack's ingredient is what is recorded.
     const kaynak = g || secili;
-    if (kaynak?.etkenMadde) setEtkenMadde(kaynak.etkenMadde);
+    const etken = su.etkenMadde || kaynak?.etkenMadde;
+    if (etken) setEtkenMadde(etken);
     // SGK writes strength into the product name; lift it into the dose field as a starting point.
     const m = su.ad.match(/(\d+[.,]?\d*\s?(?:MG|G|ML|MCG|IU)(?:\s?\/\s?\d+\s?ML)?)/i);
     if (m && !doz) setDoz(m[1].trim());
