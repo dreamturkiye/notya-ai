@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { hastaId, ad, etkenMadde, doz, kullanim_sikli, baslangic_tarihi, bitis_tarihi, notlar } = body;
+  const { hastaId, ad, etkenMadde, doz, kullanim_sikli, baslangic_tarihi, bitis_tarihi, notlar, barkod, kutu_adedi } = body;
 
   if (!hastaId || !ad || !etkenMadde || !doz || !kullanim_sikli || !baslangic_tarihi) {
     return NextResponse.json({ error: 'Zorunlu alanlar eksik.' }, { status: 400 });
@@ -58,6 +58,11 @@ export async function POST(request: NextRequest) {
       doctor_id: user.id,
       patient_id: hastaId,
       ilac_adi: ad,
+      // NOTYA-ILAC-05: the barcode identifies the exact presentation, which is what e-reçete
+      // records. Without it a saved "LARGOPEN 500 MG" cannot be turned into a prescription later
+      // without the doctor choosing the pack again.
+      barkod: barkod || null,
+      kutu_adedi: kutu_adedi || 1,
       etken_madde: etkenMadde,
       doz,
       kullanim_sikli,
