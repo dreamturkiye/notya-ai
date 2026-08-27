@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import DoktorNav from '@/components/doktor/DoktorNav';
 
 export const dynamic = 'force-dynamic';
@@ -59,8 +60,7 @@ const Page: React.FC = () => {
     setSubmitted(true);
 
     try {
-      const tokenStr = localStorage.getItem('auth-token');
-      const token = tokenStr ? JSON.parse(tokenStr).access_token : '';
+      const token = getDoctorAccessToken(); // NOTYA-AUTH-01
 
       const res = await fetch('/api/doktor/araclar/ilac-interaksiyon', {
         method: 'POST',

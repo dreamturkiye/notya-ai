@@ -2,6 +2,7 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useEffect, useState } from 'react'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface Hasta {
   id: string
@@ -27,15 +28,7 @@ function normalizeHastalar(payload: unknown): Hasta[] {
 }
 
 function getAccessToken(): string {
-  try {
-    const raw = localStorage.getItem('auth-token')
-      || localStorage.getItem(Object.keys(localStorage).find((k) => k.includes('auth-token') || k.startsWith('sb-')) || '')
-    if (!raw) return ''
-    const parsed = JSON.parse(raw)
-    return String(parsed.access_token || parsed?.currentSession?.access_token || '')
-  } catch {
-    return ''
-  }
+  return getDoctorAccessToken() // NOTYA-AUTH-01: one session reader
 }
 
 export default function HastaPortaliPage() {

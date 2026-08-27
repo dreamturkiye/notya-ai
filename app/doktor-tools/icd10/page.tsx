@@ -2,6 +2,7 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { useState, useEffect } from 'react';
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -53,8 +54,7 @@ export default function ICD10Page() {
     setResults([]);
 
     try {
-      const authData = localStorage.getItem('auth-token');
-      const token = authData ? JSON.parse(authData).access_token : '';
+      const token = getDoctorAccessToken(); // NOTYA-AUTH-01
 
       const res = await fetch('/api/doktor/araclar/icd10', {
         method: 'POST',

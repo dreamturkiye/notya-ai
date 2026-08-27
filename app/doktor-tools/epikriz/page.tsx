@@ -2,6 +2,7 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react';
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,16 +36,7 @@ export default function EpikrizPage() {
   const [seansError, setSeansError] = useState('');
   const [hastaLoading, setHastaLoading] = useState(true);
 
-  const getToken = () => {
-    if (typeof window === 'undefined') return null;
-    const tokenStr = localStorage.getItem('auth-token');
-    if (!tokenStr) return null;
-    try {
-      return JSON.parse(tokenStr).access_token;
-    } catch {
-      return null;
-    }
-  };
+  const getToken = () => getDoctorAccessToken() || null; // NOTYA-AUTH-01
 
   useEffect(() => {
     const fetchHastalar = async () => {

@@ -2,6 +2,7 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react'
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface Hasta {
   id: string
@@ -70,11 +71,9 @@ const ERecetePage: React.FC = () => {
 
   useEffect(() => {
     const fetchHastalar = async () => {
-      const tokenStr = localStorage.getItem('auth-token')
-      if (!tokenStr) return
-
+      const tokenData = { access_token: getDoctorAccessToken() } // NOTYA-AUTH-01
+      if (!tokenData.access_token) return
       try {
-        const tokenData = JSON.parse(tokenStr)
         const res = await fetch('/api/doktor/hastalar', {
           headers: {
             Authorization: `Bearer ${tokenData.access_token}`,
@@ -86,7 +85,7 @@ const ERecetePage: React.FC = () => {
           setHastalar(normalizeHastalar(data))
         }
       } catch {
-        setError('Hasta listesi alınamadı. Sayfayı yenileyip tekrar deneyin.')
+        setError('Hasta listesi alÄ±namadÄ±. SayfayÄ± yenileyip tekrar deneyin.')
       }
     }
     void fetchHastalar()
@@ -111,7 +110,7 @@ const ERecetePage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedHasta || !tani) {
-      setError('Hasta ve tanı alanları zorunludur.')
+      setError('Hasta ve tanÄ± alanlarÄ± zorunludur.')
       return
     }
 
@@ -119,18 +118,9 @@ const ERecetePage: React.FC = () => {
     setError('')
     setSonuc(null)
 
-    const tokenStr = localStorage.getItem('auth-token')
-    if (!tokenStr) {
+    const tokenData = { access_token: getDoctorAccessToken() } // NOTYA-AUTH-01
+    if (!tokenData.access_token) {
       setError('Oturum bulunamadı.')
-      setLoading(false)
-      return
-    }
-
-    let tokenData: { access_token?: string }
-    try {
-      tokenData = JSON.parse(tokenStr)
-    } catch {
-      setError('Oturum bilgisi okunamadı. Tekrar giriş yapın.')
       setLoading(false)
       return
     }
@@ -161,7 +151,7 @@ const ERecetePage: React.FC = () => {
           aciklama: String(icdRaw.aciklama || ''),
         }
         if (!icd10.code && !icd10.aciklama) {
-          setError('Reçete yanıtı beklenen formatta değil.')
+          setError('ReÃ§ete yanÄ±tÄ± beklenen formatta deÄil.')
         } else {
           setSonuc({
             icd10,
@@ -177,10 +167,10 @@ const ERecetePage: React.FC = () => {
         }
       } else {
         const errBody = await res.json().catch(() => ({}))
-        setError(String((errBody as { hata?: string }).hata || 'Reçete oluşturulamadı. Lütfen tekrar deneyin.'))
+        setError(String((errBody as { hata?: string }).hata || 'ReÃ§ete oluÅturulamadÄ±. LÃ¼tfen tekrar deneyin.'))
       }
     } catch {
-      setError('Sunucu hatası oluştu.')
+      setError('Sunucu hatasÄ± oluÅtu.')
     } finally {
       setLoading(false)
     }
@@ -211,10 +201,10 @@ const ERecetePage: React.FC = () => {
             E-RECETE
           </div>
           <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, marginBottom: '6px' }}>
-            Elektronik Reçete
+            Elektronik ReÃ§ete
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '15px', margin: 0 }}>
-            Elektronik reçete oluşturma ve SGK entegrasyonu
+            Elektronik reÃ§ete oluÅturma ve SGK entegrasyonu
           </p>
         </div>
 
@@ -236,7 +226,7 @@ const ERecetePage: React.FC = () => {
               }}
             >
               <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>
-                Reçete Oluştur
+                ReÃ§ete OluÅtur
               </div>
 
               <div style={{ marginBottom: '18px' }}>
@@ -257,7 +247,7 @@ const ERecetePage: React.FC = () => {
                     outline: 'none',
                   }}
                 >
-                  <option value="">Hasta seçin...</option>
+                  <option value="">Hasta seÃ§in...</option>
                   {hastalar.map((h) => (
                     <option key={h.id} value={h.id} style={{ color: '#000' }}>
                       {h.label}
@@ -268,12 +258,12 @@ const ERecetePage: React.FC = () => {
 
               <div style={{ marginBottom: '18px' }}>
                 <div style={{ fontSize: '13px', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>
-                  Tanı
+                  TanÄ±
                 </div>
                 <textarea
                   value={tani}
                   onChange={(e) => setTani(e.target.value)}
-                  placeholder="Tanı bilgisini girin..."
+                  placeholder="TanÄ± bilgisini girin..."
                   rows={3}
                   style={{
                     width: '100%',
@@ -320,7 +310,7 @@ const ERecetePage: React.FC = () => {
                     marginBottom: '12px',
                   }}
                 >
-                  <div style={{ fontSize: '14px', fontWeight: 600 }}>İlaçlar</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600 }}>Ä°laÃ§lar</div>
                   <button
                     type="button"
                     onClick={addIlac}
@@ -350,10 +340,10 @@ const ERecetePage: React.FC = () => {
                     }}
                   >
                     {([
-                      ['ad', 'İlaç adı', 2],
+                      ['ad', 'Ä°laÃ§ adÄ±', 2],
                       ['doz', 'Doz', 1],
-                      ['kullanim', 'Kullanım', 1.2],
-                      ['sure', 'Süre', 1],
+                      ['kullanim', 'KullanÄ±m', 1.2],
+                      ['sure', 'SÃ¼re', 1],
                     ] as const).map(([field, placeholder, flex]) => (
                       <input
                         key={field}
@@ -385,7 +375,7 @@ const ERecetePage: React.FC = () => {
                         fontSize: '16px',
                       }}
                     >
-                      ×
+                      Ã
                     </button>
                   </div>
                 ))}
@@ -408,7 +398,7 @@ const ERecetePage: React.FC = () => {
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? 'Üretiliyor...' : 'Reçete Üret'}
+                {loading ? 'Ãretiliyor...' : 'ReÃ§ete Ãret'}
               </button>
 
               {error && (
@@ -453,9 +443,9 @@ const ERecetePage: React.FC = () => {
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.4 }}>📋</div>
+                  <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.4 }}>ð</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
-                    Reçete önizlemesi burada görünecek
+                    ReÃ§ete Ã¶nizlemesi burada gÃ¶rÃ¼necek
                   </div>
                 </div>
               ) : (
@@ -468,7 +458,7 @@ const ERecetePage: React.FC = () => {
                       marginBottom: '20px',
                     }}
                   >
-                    <div style={{ fontSize: '16px', fontWeight: 600 }}>Reçete Taslağı</div>
+                    <div style={{ fontSize: '16px', fontWeight: 600 }}>ReÃ§ete TaslaÄÄ±</div>
                     <button
                       type="button"
                       onClick={() => window.print()}
@@ -482,7 +472,7 @@ const ERecetePage: React.FC = () => {
                         cursor: 'pointer',
                       }}
                     >
-                      Yazdır
+                      YazdÄ±r
                     </button>
                   </div>
 
@@ -497,12 +487,12 @@ const ERecetePage: React.FC = () => {
                       marginBottom: '18px',
                     }}
                   >
-                    {sonuc.icd10.code} — {sonuc.icd10.aciklama}
+                    {sonuc.icd10.code} â {sonuc.icd10.aciklama}
                   </div>
 
                   <div style={{ marginBottom: '20px' }}>
                     <div style={{ fontSize: '13px', marginBottom: '10px', color: 'rgba(255,255,255,0.6)' }}>
-                      İlaçlar
+                      Ä°laÃ§lar
                     </div>
                     {sonuc.ilaclar.map((ilac, idx) => (
                       <div
@@ -515,7 +505,7 @@ const ERecetePage: React.FC = () => {
                           fontSize: '13px',
                         }}
                       >
-                        {ilac.ad} • {ilac.doz} • {ilac.kullanim} • {ilac.sure}
+                        {ilac.ad} â¢ {ilac.doz} â¢ {ilac.kullanim} â¢ {ilac.sure}
                       </div>
                     ))}
                   </div>
@@ -533,7 +523,7 @@ const ERecetePage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    {sonuc.sgkUyum ? '✓ SGK Uyumlu' : '✕ SGK Uyumsuz'}
+                    {sonuc.sgkUyum ? 'â SGK Uyumlu' : 'â SGK Uyumsuz'}
                   </div>
                 </div>
               )}
