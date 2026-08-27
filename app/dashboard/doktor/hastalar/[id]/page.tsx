@@ -5,6 +5,7 @@ import HastaIlaclar from '@/components/doktor/HastaIlaclar';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,9 +32,10 @@ export default function HastaProfilPage() {
     (async () => {
       try {
         const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-        const raw = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '');
-        const token = raw ? JSON.parse(raw).access_token : '';
-        if (!token) { router.push('/giris'); return; }
+        // NOTYA-AUTH-01: one convention, with refresh. Also: this page sent doctors to '/giris'
+        // (the generic chooser) while every other doctor page uses '/giris/doktor'.
+        const token = await ensureDoctorAccessToken();
+        if (!token) { router.push(DOKTOR_GIRIS); return; }
 
         const resp = await fetch(`/api/doktor/hastalar/${patientId}`, {
           headers: { Authorization: `Bearer ${token}` },

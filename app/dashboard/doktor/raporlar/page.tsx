@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,13 +58,8 @@ const Page: React.FC = () => {
   const fetchData = async (monthStr: string) => {
     setLoading(true);
     try {
-      let token = '';
-      try {
-        const raw = localStorage.getItem('auth-token') || '';
-        token = raw ? (JSON.parse(raw).access_token || '') : '';
-      } catch {
-        token = '';
-      }
+      // NOTYA-AUTH-01: was a literal 'auth-token' read — the ILAC-04 bug class — with no refresh.
+      const token = (await ensureDoctorAccessToken()) || '';
       const res = await fetch(`/api/doktor/raporlar?month=${monthStr}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -143,13 +139,7 @@ const Page: React.FC = () => {
   const printPDF = async () => {
     setPdfLoading(true);
     try {
-      let token = '';
-      try {
-        const raw = localStorage.getItem('auth-token') || '';
-        token = raw ? (JSON.parse(raw).access_token || '') : '';
-      } catch {
-        token = '';
-      }
+      const token = (await ensureDoctorAccessToken()) || '';
       const res = await fetch('/api/doktor/raporlar/pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

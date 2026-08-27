@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface NavItem {
   label: string;
@@ -36,7 +37,7 @@ export default function DoktorNav() {
   }, []);
 
   const handleNav = (route: string) => {
-    const raw = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '');
+    const raw = getDoctorAccessToken(); // NOTYA-AUTH-01: presence check through the one session reader
     if (!raw) {
       window.location.href = '/giris/doktor';
       return;
@@ -46,7 +47,7 @@ export default function DoktorNav() {
   };
 
   const checkAuth = () => {
-    const raw = localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')) || '');
+    const raw = getDoctorAccessToken(); // NOTYA-AUTH-01: presence check through the one session reader
     if (!raw) {
       window.location.href = '/giris/doktor';
     }

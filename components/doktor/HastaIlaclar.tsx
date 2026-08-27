@@ -21,6 +21,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import type { GruplanmisIlac, SunumSecenegi } from '@/app/api/doktor/ilac-ara/route';
+import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface Ilac {
   id: string;
@@ -39,27 +40,14 @@ interface Ilac {
 const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Günde 1', 'Haftada 1', 'Gerektiğinde'];
 
 /**
- * NOTYA-ILAC-04: Supabase stores the session under a PROJECT-SCOPED key —
- * `sb-<projectref>-auth-token` — not under the literal string 'auth-token'. The first version of
- * this component read the literal key, found nothing, and sent `Bearer null`; the API answered 401
- * and the tab showed "İlaç listesi alınamadı." on a perfectly healthy database.
- *
- * The rest of the app already resolves the key by searching localStorage, so this now matches it
- * instead of inventing its own convention. The literal key is kept as a fallback because the signup
- * flow writes it directly after registration.
+ * NOTYA-ILAC-04 / NOTYA-AUTH-01: the first version of this component read the literal 'auth-token'
+ * key, Supabase had stored the session under `sb-<projectref>-auth-token`, and the API got
+ * `Bearer null` — "İlaç listesi alınamadı." on a healthy database. The fix was a second private
+ * localStorage reader, which was still the wrong shape: the app already had one in
+ * lib/doktor/clientAuth that knows every storage layout AND refreshes an expired token. This
+ * component now uses it like every other doctor surface.
  */
-function token(): string | null {
-  try {
-    const key = Object.keys(localStorage).find((k) => k.includes('auth-token'));
-    const raw = key ? localStorage.getItem(key) : localStorage.getItem('auth-token');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    // Supabase has used both shapes across versions: the session at the root, or nested.
-    return parsed?.access_token || parsed?.currentSession?.access_token || null;
-  } catch {
-    return null;
-  }
-}
+const token = ensureDoctorAccessToken;
 
 export default function HastaIlaclar({ patientId }: { patientId: string }) {
   const [ilaclar, setIlaclar] = useState<Ilac[]>([]);
@@ -89,7 +77,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     const zaman = setTimeout(async () => {
       setAraniyor(true);
       try {
-        const t = token();
+        const t = await token();
         if (!t) return;
         const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${t}` } });
         if (!r.ok || iptal) return;
@@ -108,7 +96,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     setYukleniyor(true);
     setHata('');
     try {
-      const t = token();
+      const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
       const r = await fetch(`/api/doktor/ilaclar?hastaId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
       if (!r.ok) {
@@ -183,7 +171,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     setKaydediyor(true);
     setHata('');
     try {
-      const t = token();
+      const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
       const r = await fetch('/api/doktor/ilaclar', {
         method: 'POST',
@@ -217,7 +205,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   async function sil(id: string) {
     if (!confirm('Bu ilacı listeden kaldırmak istiyor musunuz?')) return;
     try {
-      const t = token();
+      const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
       const r = await fetch(`/api/doktor/ilaclar/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
       if (!r.ok) { setHata('İlaç silinemedi.'); return; }

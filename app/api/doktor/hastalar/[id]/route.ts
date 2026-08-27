@@ -1,35 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { doktorOturum } from '@/lib/doktor/serverAuth';
 import { encrypt, decrypt } from '@/lib/security/encryption';
 
 export const dynamic = 'force-dynamic';
 
-async function getSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-function verifyAuthToken(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  return authHeader.replace('Bearer ', '');
-}
-
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const token = verifyAuthToken(req);
-  if (!token) {
-    return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
-  }
-
-  const supabase = await getSupabaseClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 });
-  }
+  // NOTYA-AUTH-01: one server-side convention, one honest 401.
+  const oturum = await doktorOturum(req);
+  if ('hata' in oturum) return oturum.hata;
+  const { user, supabase } = oturum;
 
   const { data: patient, error } = await supabase
     .from('patients')
@@ -69,16 +48,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const token = verifyAuthToken(req);
-  if (!token) {
-    return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
-  }
-
-  const supabase = await getSupabaseClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 });
-  }
+  // NOTYA-AUTH-01: one server-side convention, one honest 401.
+  const oturum = await doktorOturum(req);
+  if ('hata' in oturum) return oturum.hata;
+  const { user, supabase } = oturum;
 
   const body = await req.json();
   const updateData: Record<string, unknown> = {};

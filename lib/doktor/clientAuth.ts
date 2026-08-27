@@ -1,10 +1,22 @@
 /**
- * Doctor client auth helpers.
- * Persists session in localStorage (`auth-token`) and refreshes when access token expires
- * so iOS PWA reopen does not dump the doctor back into onboarding.
+ * Doctor client auth helpers — THE convention for reading the doctor's session in the browser.
+ *
+ * Persists session in localStorage (`auth-token`) and refreshes when the access token expires so
+ * an iOS PWA reopen does not dump the doctor back into onboarding.
+ *
+ * NOTYA-AUTH-01: every doctor page and component must get its token from
+ * `ensureDoctorAccessToken()` and nothing else. Two bugs came from pages inventing their own
+ * localStorage read instead: ILAC-04 (a component read the literal 'auth-token' key, Supabase had
+ * stored the session under 'sb-<ref>-auth-token', the API got `Bearer null`) and the dashboard
+ * itself, which read the token synchronously with no refresh and sent every doctor who reopened
+ * the app after an hour straight to the login screen — the exact failure this file exists to
+ * prevent. The helper below knows all the storage shapes and refreshes; callers should not.
  */
 
 const AUTH_KEY = 'auth-token'
+
+/** Where an unauthenticated doctor is sent. One string, so no page redirects to '/giris' by mistake. */
+export const DOKTOR_GIRIS = '/giris/doktor'
 
 type StoredSession = {
   access_token: string
@@ -39,20 +51,17 @@ function readRawSession(): StoredSession | null {
     if (!raw) return null
     const parsed = JSON.parse(raw) as StoredSession & {
       session?: StoredSession
+      currentSession?: StoredSession
       user?: unknown
     }
-    if (parsed.access_token) {
+    // Supabase has used three shapes across versions: at the root, under `session`, under
+    // `currentSession`. Accept all of them rather than depending on which client wrote the key.
+    const s = parsed.access_token ? parsed : parsed.session?.access_token ? parsed.session : parsed.currentSession
+    if (s?.access_token) {
       return {
-        access_token: parsed.access_token,
-        refresh_token: parsed.refresh_token,
-        expires_at: parsed.expires_at,
-      }
-    }
-    if (parsed.session?.access_token) {
-      return {
-        access_token: parsed.session.access_token,
-        refresh_token: parsed.session.refresh_token,
-        expires_at: parsed.session.expires_at,
+        access_token: s.access_token,
+        refresh_token: s.refresh_token,
+        expires_at: s.expires_at,
       }
     }
     return null

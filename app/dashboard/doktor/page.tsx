@@ -6,6 +6,7 @@ import DoktorNav from '@/components/doktor/DoktorNav'
 import { createClient } from '@supabase/supabase-js'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -43,28 +44,12 @@ export default function DoktorDashboard() {
   useEffect(() => {
     setMounted(true)
     const initDashboard = async () => {
-      // Read token from auth-token (JSON blob) or Supabase sb- key
-      const getToken = (): string | null => {
-        try {
-          const raw = localStorage.getItem('auth-token')
-          if (raw) {
-            const p = JSON.parse(raw)
-            if (p.access_token) return p.access_token
-          }
-        } catch {}
-        // Fallback: Supabase sb- key
-        const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.includes('auth'))
-        if (sbKey) {
-          try {
-            const p = JSON.parse(localStorage.getItem(sbKey) || '{}')
-            return p.access_token || null
-          } catch {}
-        }
-        return null
-      }
-      const token = getToken()
+      // NOTYA-AUTH-01: one convention. ensureDoctorAccessToken knows every storage shape Supabase
+      // has used AND refreshes an expired token. The previous inline read did neither, so a doctor
+      // reopening the app after an hour was sent to the login screen on a perfectly valid session.
+      const token = await ensureDoctorAccessToken()
       if (!token) {
-        router.push('/giris/doktor')
+        router.push(DOKTOR_GIRIS)
         return
       }
 
@@ -74,7 +59,7 @@ export default function DoktorDashboard() {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (meRes.status === 401) {
-          router.push('/giris/doktor')
+          router.push(DOKTOR_GIRIS)
           return
         }
         if (meRes.ok) {
