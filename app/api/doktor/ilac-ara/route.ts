@@ -11,6 +11,10 @@
  * them apart at a glance and has no reason to prefer one. Grouping gives the real workflow:
  * choose the drug, then choose the presentation — which is also how e-reçete works, where the
  * chosen product's BARCODE is what enters the system.
+ *
+ * NOTYA-ILAC-07: `etkenMadde` and `atc` come from TİTCK's licensed-products list, joined by
+ * barcode (scripts/import-titck-etken.mjs). The group carries the first pack's ingredient for
+ * display; each presentation carries its own, and the presentation's value is what gets recorded.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -38,6 +42,14 @@ export interface SunumSecenegi {
   ad: string
   barkod: string
   esdegerGrubu?: string
+  /**
+   * NOTYA-ILAC-07: the ingredient belongs to the PACK, not the brand. Brands are not molecules:
+   * A-FERİN sells a parasetamol + klorfeniramin pack and a parasetamol + klorfeniramin + kodein
+   * pack under the same name. Recording the group-level ingredient for the codeine pack would put
+   * the wrong molecule in the patient's record and blind the interaction check to an opioid.
+   */
+  etkenMadde?: string
+  atc?: string
 }
 export interface GruplanmisIlac {
   marka: string
@@ -88,7 +100,7 @@ export async function GET(request: NextRequest) {
       gruplar.set(anahtar, g)
     }
     if (!g.sunumlar.some((s) => s.barkod === k.barkod)) {
-      g.sunumlar.push({ ad: k.ad, barkod: k.barkod || '', esdegerGrubu: k.esdegerGrubu })
+      g.sunumlar.push({ ad: k.ad, barkod: k.barkod || '', esdegerGrubu: k.esdegerGrubu, etkenMadde: k.etkenMadde, atc: k.atc })
     }
   }
 

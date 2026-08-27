@@ -33,6 +33,12 @@ export interface IlacKaydi {
   sgk?: boolean
   form?: string
   doz?: string
+  /** NOTYA-ILAC-07: from TİTCK's licensed-products list, joined by barcode (scripts/import-titck-etken.mjs). */
+  atc?: string
+  /** 'titck' = direct barcode match; 'esdeger' = inherited from an eşdeğer grubu that shares one ATC. */
+  etkenKaynak?: 'titck' | 'esdeger'
+  /** TİTCK licence suspension code (1 = madde-23, 2 = farmakovijilans, 3 = madde-22). Absent when active. */
+  ruhsatAskida?: number
 }
 
 export interface AramaSonucu extends IlacKaydi {
