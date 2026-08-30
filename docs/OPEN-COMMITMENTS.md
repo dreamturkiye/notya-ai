@@ -4,7 +4,7 @@
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.
 
-Last reviewed: 2026-08-26
+Last reviewed: 2026-08-27
 
 ---
 
@@ -16,6 +16,8 @@ Last reviewed: 2026-08-26
 | 2026-08-25 | **Complete the signup end-to-end test** once SMTP is live | The flow genuinely stops at the confirmation e-mail, so register → confirm → login → 15-day trial → dashboard cannot be verified until the mail path works |
 | 2026-08-26 | **Decide the sender domain** (notya.ai vs alternative) | Undecided as of 2026-08-26. Does NOT need to block SMTP: Resend verifies any owned domain, and the Supabase sender is one config field — a subdomain of an already-owned domain unblocks the E2E today and the brand domain can be swapped in later |
 | 2026-08-26 | **Merge PR #17 (NOTYA-ILAC-07) and PR #18 (NOTYA-PSEUDO-05)** | Both verified locally; merging deploys to production, so it is a founder call |
+| 2026-08-27 | **Submit the two Pabau partner applications** (Claude drafts, founder submits under the Notya brand) | (1) Referral Partner Program — up to 20% recurring revenue up to 3 years per referred clinic; (2) App Marketplace listing — distribution into Pabau's 3,000+ practices and the right to show an official badge. Until approval the /klinik page says only "Pabau ile çalışır" with a trademark note — no partner claims |
+| 2026-08-27 | **Merge PR #19 (NOTYA-AUTH-01) and the /klinik landing PR** | Auth convention + the klinik front door; both deploy to production on merge |
 
 ## Operator work
 

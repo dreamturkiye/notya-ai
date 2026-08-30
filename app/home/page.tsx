@@ -32,6 +32,14 @@ const PROFESSIONS: Profession[] = [
     body: '2026 vergi parametreleriyle güncel. Bordro hesap motoru, MASAK uyum kontrolü, GIB e-Beyan entegrasyonu, müşteri portalı.',
     detail: ['Akıllı beyan takvimi', 'Telegram uyarıları', 'HMAC imzalı müşteri linki', 'E-Devlet rehberi'],
   },
+  {
+    id: 'klinik', href: '/klinik', label: 'Klinik', accent: '#E91E8C',
+    img: '/landing/corridor.jpg', imgPosition: 'center 60%',
+    highlights: ['10 klinik dalında uzman persona', 'Saç ekimi, estetik, fizyoterapi', 'Ekip koltukları ve yönetim paneli', 'Pabau entegrasyonu'],
+    headline: 'Her koltuğa bir uzman.',
+    body: 'Saç ekiminden fizyoterapiye 10 klinik dalında Türkçe yapay zekâ uzmanı. Ekip koltukları, müşteri portalı, KVKK\'ya uygun kayıt.',
+    detail: ['29.03.2025 yönetmeliği meslekleri', 'Takım yönetim paneli', 'Müşteri portalı', 'Pabau bağlantısı'],
+  },
 ]
 
 function FlipCard({ p }: { p: Profession }) {
