@@ -6,7 +6,7 @@ export function Specialists() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">03 — Uzmanlar</p>
         <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <h2 className="max-w-xl font-display text-display font-medium leading-display tracking-display">
+          <h2 className="max-w-3xl font-display text-display font-medium leading-display tracking-display">
             Üç uzman.
             <span className="block italic font-normal text-pine">Tek muayenehane.</span>
           </h2>

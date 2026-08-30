@@ -5,8 +5,8 @@ import { ArrowUpRight } from "./icons";
 export function Hero() {
   return (
     <section id="top" className="relative bg-paper">
-      <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 pb-10 pt-24 sm:px-8 lg:grid-cols-12 lg:gap-12 lg:pb-14 lg:pt-28">
-        <div className="lg:col-span-5">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-10 pt-24 sm:px-8 lg:grid-cols-2 lg:gap-14 lg:pb-14 lg:pt-28">
+        <div className="min-w-0">
           <p className="dl-reveal flex items-center gap-3 font-outfit text-xs uppercase tracking-[0.28em] text-ink-muted">
             <span className="inline-block size-1.5 bg-pine" aria-hidden="true" />
             Türkiye'nin ilk yapay zekâ tıp uzmanı · İstanbul
@@ -30,7 +30,7 @@ export function Hero() {
           </div>
         </div>
 
-        <figure className="order-first lg:order-none lg:col-span-7">
+        <figure className="order-first min-w-0 lg:order-none">
           <img
             src="/landing/hero-clinic.jpg"
             alt="Gün ışığında özel bir muayenehane: muayene yatağı, stetoskop, tansiyon aleti ve diplomalar"

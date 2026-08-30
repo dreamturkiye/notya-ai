@@ -3,7 +3,7 @@ import { BOOKS } from "./content";
 export function Ticker() {
   const row = [...BOOKS, ...BOOKS];
   return (
-    <section aria-label="Kaynak kitaplar" className="overflow-hidden border-y border-line bg-paper-2 py-4">
+    <section aria-label="Kaynak kitaplar" className="dl-ticker overflow-hidden border-y border-line bg-paper-2 py-4">
       <div className="dl-marquee flex w-max gap-10 pr-10">
         {row.map((book, i) => (
           <p

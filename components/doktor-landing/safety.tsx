@@ -8,7 +8,7 @@ export function Safety() {
           <p className="font-outfit text-xs uppercase tracking-[0.22em] text-ink-muted">04 — Güvenlik ağı</p>
           <h2 className="mt-4 font-display text-display font-medium leading-display tracking-display">
             Elli hasta, yorgun bir gün —
-            <span className="italic font-normal text-pine"> o asla susmaz.</span>
+            <span className="block italic font-normal text-pine">o asla susmaz.</span>
           </h2>
           <blockquote className="mt-8 max-w-xl border-l-2 border-pine pl-5">
             <p className="font-display text-title font-normal italic leading-snug text-ink">
