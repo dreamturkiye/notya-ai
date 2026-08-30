@@ -8,6 +8,48 @@
   -webkit-font-smoothing: antialiased;
 }
 
+.doktor-lp,
+.doktor-lp * {
+  box-sizing: border-box;
+}
+
+.doktor-lp a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.doktor-lp button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.doktor-lp img {
+  display: block;
+  max-width: 100%;
+}
+
+.doktor-lp h1,
+.doktor-lp h2,
+.doktor-lp h3,
+.doktor-lp p,
+.doktor-lp ul,
+.doktor-lp ol,
+.doktor-lp figure,
+.doktor-lp blockquote,
+.doktor-lp dl,
+.doktor-lp dd {
+  margin: 0;
+}
+
+.doktor-lp ul,
+.doktor-lp ol {
+  padding: 0;
+  list-style: none;
+}
+
 .doktor-lp ::selection {
   background: #0e6b66;
   color: #fff;
