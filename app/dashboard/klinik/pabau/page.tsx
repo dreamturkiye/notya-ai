@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
  * page) prefills the field — it is never auto-submitted: the clinic sees and confirms what is
  * being connected.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
@@ -22,6 +22,16 @@ interface Status { connected: boolean; keyHint: string | null; lastSyncedAt: str
 interface Randevu { id?: string; customer_name?: string; service?: string; staff_name?: string; start_date?: string; start_time?: string; appointment_status?: string }
 
 export default function KlinikPabauPage() {
+  // useSearchParams needs a Suspense boundary to prerender; `export const dynamic` does nothing
+  // in a "use client" file (this exact omission failed the first Vercel build).
+  return (
+    <Suspense fallback={null}>
+      <KlinikPabauInner />
+    </Suspense>
+  )
+}
+
+function KlinikPabauInner() {
   const router = useRouter()
   const search = useSearchParams()
   const [token, setToken] = useState<string | null>(null)

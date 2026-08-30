@@ -32,6 +32,14 @@ const PROFESSIONS: Profession[] = [
     body: '2026 vergi parametreleriyle güncel. Bordro hesap motoru, MASAK uyum kontrolü, GIB e-Beyan entegrasyonu, müşteri portalı.',
     detail: ['Akıllı beyan takvimi', 'Telegram uyarıları', 'HMAC imzalı müşteri linki', 'E-Devlet rehberi'],
   },
+  {
+    id: 'klinik', href: '/klinik', label: 'Klinik', accent: '#E91E8C',
+    img: '/landing/corridor.jpg', imgPosition: 'center 60%',
+    highlights: ['10 klinik dalında uzman persona', 'Saç ekimi, estetik, fizyoterapi', 'Ekip koltukları ve yönetim paneli', 'Pabau entegrasyonu'],
+    headline: 'Her koltuğa bir uzman.',
+    body: 'Saç ekiminden fizyoterapiye 10 klinik dalında Türkçe yapay zekâ uzmanı. Ekip koltukları, müşteri portalı, KVKK\'ya uygun kayıt.',
+    detail: ['29.03.2025 yönetmeliği meslekleri', 'Takım yönetim paneli', 'Müşteri portalı', 'Pabau bağlantısı'],
+  },
 ]
 
 function FlipCard({ p }: { p: Profession }) {
@@ -114,13 +122,19 @@ export default function HomePage() {
             Genel amaçlı bir asistan değil.
           </h1>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '2px', maxWidth: '1400px', margin: '0 auto' }}>
+        {/* NOTYA-KLINIK-01: four verticals now. 2×2, not 4-across — four columns shrink the flip
+            card back face below what its 19px type needs, and any auto-fit allowing 3 columns
+            orphans the fourth card at tablet widths. minmax floor 380px inside a 1120px container
+            can never fit 3 columns (3×380 > 1120), so this is 2×2 on desktop and a single column
+            on phones — which also fixes the old mobile rendering of three sliver columns. */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '2px', maxWidth: '1120px', margin: '0 auto' }}>
           {PROFESSIONS.map(p => <FlipCard key={p.id} p={p} />)}
         </div>
       </section>
 
-      <section style={{ padding: '140px 24px', maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '56px' }}>
+      <section style={{ padding: '140px 24px', maxWidth: '1120px', margin: '0 auto' }}>
+        {/* Same 2×2 logic as the cards above; 420px floor keeps these text columns readable. */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '56px' }}>
           {PROFESSIONS.map(p => (
             <div key={p.id}>
               <div style={{ fontSize: '11px', letterSpacing: '0.16em', textTransform: 'uppercase', color: p.accent, fontWeight: 600, marginBottom: '20px' }}>{p.label}</div>

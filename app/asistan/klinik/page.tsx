@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic"
  * Personas come from lib/ai/personas/klinik_uzmanlar; prompt/voice/first message are applied as
  * ConvAI overrides on the shared base agents, so no ElevenLabs setup is needed per persona.
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Conversation } from '@/components/AsistanConversation'
 import { isAndroid } from '@/lib/asistan/platform'
@@ -24,6 +24,17 @@ type AC = Awaited<ReturnType<typeof Conversation.startSession>>
 const SLUGS = Object.keys(KlinikUzmanPersonas)
 
 export default function KlinikAsistanPage() {
+  // Next cannot prerender a client page that calls useSearchParams at the top level; the
+  // Suspense boundary is the documented fix. `export const dynamic` is IGNORED in "use client"
+  // files — that mistake failed the first Vercel build of this branch.
+  return (
+    <Suspense fallback={null}>
+      <KlinikAsistanInner />
+    </Suspense>
+  )
+}
+
+function KlinikAsistanInner() {
   const router = useRouter()
   const search = useSearchParams()
   const istenen = search.get('uzman') || ''
