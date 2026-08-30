@@ -8,6 +8,7 @@ interface KlinikNavProps {
 
 const navItems = [
   { label: 'Genel Bakis', href: '/dashboard/klinik' },
+  { label: 'Uzmanlar', href: '/asistan/klinik' },
   { label: 'Kullanicilar', href: '/dashboard/klinik/kullanicilar' },
   { label: 'Klinik Ayarlari', href: '/dashboard/klinik/ayarlar' },
   { label: 'Fatura & Plan', href: '/dashboard/klinik/fatura' },

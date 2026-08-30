@@ -1,45 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { decrypt } from '@/lib/pabau/crypto'
+export const dynamic = "force-dynamic"
 
-const getSupabase = () => createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-async function getAuthUser(req: NextRequest) {
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) return null
-  const { data: { user }, error } = await getSupabase().auth.getUser(authHeader.split(' ')[1])
-  if (error || !user) return null
-  return user
-}
+/**
+ * NOTYA-PABAU-01 — the clinic's Pabau patients (clients), proxied.
+ * Documented endpoint: GET https://api.oauth.pabau.com/{api_key}/clients[?search=]
+ */
+import { NextRequest, NextResponse } from "next/server"
+import { doktorOturum } from "@/lib/doktor/serverAuth"
+import { decrypt } from "@/lib/pabau/crypto"
+import { pabauGet } from "@/lib/pabau/client"
 
 export async function GET(req: NextRequest) {
-  const user = await getAuthUser(req)
-  if (!user) return NextResponse.json({ success: false, error: 'Yetkisiz' }, { status: 401 })
+  const oturum = await doktorOturum(req)
+  if ("hata" in oturum) return oturum.hata
+  const { user, supabase } = oturum
 
-  const { searchParams } = new URL(req.url)
-  const search = searchParams.get('search') || ''
-
-  const sb = getSupabase()
-  const { data: conn } = await sb
-    .from('pabau_connections')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
+  const { data: conn } = await supabase
+    .from("pabau_connections")
+    .select("api_key_encrypted, is_active")
+    .eq("user_id", user.id)
+    .eq("is_active", true)
     .maybeSingle()
+  if (!conn) return NextResponse.json({ success: false, error: "Pabau bağlantısı bulunamadı." }, { status: 404 })
 
-  if (!conn) return NextResponse.json({ success: false, error: 'Pabau bağlantısı bulunamadı.' }, { status: 404 })
+  const apiKey = decrypt(conn.api_key_encrypted, process.env.PABAU_TOKEN_SECRET || "dev-token-secret")
+  const search = new URL(req.url).searchParams.get("search") || ""
+  const r = await pabauGet(apiKey, `clients${search ? `?search=${encodeURIComponent(search)}` : ""}`)
+  if (!r.ok) return NextResponse.json({ success: false, error: "Pabau hasta verisi alınamadı." }, { status: 502 })
 
-  const secret = process.env.PABAU_TOKEN_SECRET || 'dev-token-secret'
-  const accessToken = decrypt(conn.access_token_encrypted, secret)
-
-  const url = `https://api.oauth.pabau.com/${conn.pabau_account_id}/clients${search ? `?search=${encodeURIComponent(search)}` : ''}`
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
-
-  if (!res.ok) return NextResponse.json({ success: false, error: 'Pabau hasta verisi alinamadi' }, { status: 502 })
-
-  const data = await res.json()
-  return NextResponse.json({ success: true, data: data.data || data })
+  await supabase.from("pabau_connections").update({ last_synced_at: new Date().toISOString() }).eq("user_id", user.id)
+  return NextResponse.json({ success: true, data: r.data })
 }
