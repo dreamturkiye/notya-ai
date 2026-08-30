@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Fraunces, Outfit } from "next/font/google";
+import "./utilities.css";
 import "./landing.css";
 
 const fraunces = Fraunces({
