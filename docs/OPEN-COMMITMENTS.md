@@ -4,7 +4,7 @@
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.
 
-Last reviewed: 2026-08-30
+Last reviewed: 2026-09-01
 
 ---
 
@@ -24,13 +24,13 @@ Last reviewed: 2026-08-30
 
 | Since | Item | Note |
 |---|---|---|
-| 2026-09-01 | **Restore a working typecheck — 66 real errors** | `tsc` has been aborting on the TS5101 `baseUrl` deprecation and reporting NOTHING, and next.config sets `ignoreBuildErrors: true`, so undefined names ship (ICD-10 500ed on every search; KVKK audit writes silently failed). Adding `"ignoreDeprecations": "6.0"` reveals 66 errors incl. runtime bugs (ictihatEngine typo `anahtarKelimers`, bordroEngine import conflict, sandbox speech/audio types). Fix them, then flip `ignoreBuildErrors` off so Vercel enforces it |
+| 2026-09-01 | **Restore a working typecheck** — DONE (PR #42) | Dropped `baseUrl` + `ignoreDeprecations` from tsconfig; `moduleResolution: bundler` with `paths` doesn't need `baseUrl` on TS 6, and dropping it removes the TS5101 abort. Re-run is clean, 0 errors — the 66 predicted here were fixed incidentally by PRs #38–#41 in the interim. `next.config.mjs` already has `ignoreBuildErrors: false` |
 | 2026-08-25 | **Workflow verification (QA item 5)** | Not started: doctor workflows end-to-end — hasta ekle, belge yükleme, reçete, rapor, SGK |
 | 2026-08-25 | **True 390px visual verification** | Chrome's resize_window moves the window but not the viewport, so mobile layout was proved from the code rather than seen. NOTYA-MOBILE-01 fixed the grids; a real device pass is still worth doing |
 | 2026-08-25 | **Tailwind conversion for /doktor** | The page is built from ~102 inline style objects, which is why it could not hold a media query. The CSS-block fix is correct but the section is worth converting properly when the launch is not imminent |
 | 2026-08-25 | **Only 8 media queries in the whole app** | /doktor is fixed. Other surfaces (mali, avukat, dashboard sub-pages) have not been audited for mobile |
 | 2026-08-25 | **Auth guard convention fix** | The NOTYA-ILAC-04 session-key bug came from a route ignoring a pattern the app already had. One convention, applied to every doktor route, folded into whichever PR next touches them |
-| 2026-08-26 | **`ruhsatAskida` not surfaced in the UI** | 62 SGK-reimbursed products have a suspended TİTCK licence (codes 1/3). The data carries the flag since NOTYA-ILAC-07; the search result should show it so the doctor is not prescribing a suspended product unaware |
+| 2026-08-26 | **`ruhsatAskida` not surfaced in the UI** — DONE (PR #42) | Flagged per-pack in the search dropdown, sunum select, and a warning banner in HastaIlaclar + shared IlacSecici. Brand badge only fires when every pack of the brand is suspended (6 brands are partial: CLIACIL, ILARIS, KARVEA DUO, MINOSET, RIVOTRIL, +1) |
 | 2026-08-26 | **214 SGK barcodes with no TİTCK match** | 2.5% of records have no etken madde (no barcode match, no unambiguous eşdeğer grubu). Mostly allergen extracts and serums. Searchable by name; left blank rather than guessed. Re-check after the next TİTCK weekly list |
 | 2026-08-26 | **TİTCK / SGK refresh cadence** | Both lists change weekly. `scripts/import-sgk-ilac.mjs` then `scripts/import-titck-etken.mjs` — no schedule exists yet. A stale list means a withdrawn drug still shows as reimbursed |
-| 2026-08-26 | **tsconfig `baseUrl` deprecation (TS5101)** | `npm run typecheck` reports it on every run and will break on TypeScript 7. Migrate to `paths` without `baseUrl` |
+| 2026-08-26 | **tsconfig `baseUrl` deprecation (TS5101)** — DONE (PR #42) | `baseUrl` dropped, `paths` alone is enough under `moduleResolution: bundler` |
