@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route';
 import DoktorNav from '@/components/doktor/DoktorNav';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,29 @@ interface ApiResponse {
 const Page: React.FC = () => {
   const [ilaclar, setIlaclar] = useState<string[]>([]);
   const [yeniIlac, setYeniIlac] = useState('');
+  // NOTYA-ILAC-09: brand dropdown from the SGK list, like every other drug field. A pick adds
+  // "MARKA (etken madde)" so the interaction check sees the molecule, not just the box name.
+  const [oneriler, setOneriler] = useState<GruplanmisIlac[]>([]);
+  const [oneriAcik, setOneriAcik] = useState(false);
+  useEffect(() => {
+    const q = yeniIlac.trim();
+    if (q.length < 2) { setOneriler([]); return; }
+    let iptal = false;
+    const t = setTimeout(async () => {
+      try {
+        const token = getDoctorAccessToken();
+        const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } });
+        const d = await r.json();
+        if (!iptal) { setOneriler((d.sonuclar || []).slice(0, 8)); setOneriAcik(true); }
+      } catch { if (!iptal) setOneriler([]); }
+    }, 120);
+    return () => { iptal = true; clearTimeout(t); };
+  }, [yeniIlac]);
+  const oneriSec = (g: GruplanmisIlac) => {
+    const ad = g.etkenMadde ? `${g.marka} (${g.etkenMadde})` : g.marka;
+    if (!ilaclar.includes(ad)) setIlaclar([...ilaclar, ad]);
+    setYeniIlac(''); setOneriler([]); setOneriAcik(false);
+  };
   const [agirlik, setAgirlik] = useState(70);
   const [yas, setYas] = useState(45);
   const [bobrekFonksiyonu, setBobrekFonksiyonu] = useState('Normal');
@@ -118,13 +142,17 @@ const Page: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, position: 'relative' }}>
             <input
               value={yeniIlac}
               onChange={(e) => setYeniIlac(e.target.value)}
+              onFocus={() => oneriler.length && setOneriAcik(true)}
+              onBlur={() => setTimeout(() => setOneriAcik(false), 150)}
+              autoComplete="off"
               onKeyDown={(e) => e.key === 'Enter' && addIlac()}
-              placeholder="İlaç adı girin"
+              placeholder="Yazmaya başlayın: par… → Parol"
               style={{
-                flex: 1,
+                width: '100%',
                 height: 44,
                 background: 'rgba(0,0,0,0.3)',
                 border: `1px solid ${border}`,
@@ -135,6 +163,17 @@ const Page: React.FC = () => {
                 outline: 'none',
               }}
             />
+              {oneriAcik && oneriler.length > 0 && (
+                <div style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%', marginTop: 4, background: '#0F172A', border: `1px solid ${border}`, borderRadius: 10, boxShadow: '0 12px 30px -10px rgba(0,0,0,.6)', maxHeight: 280, overflowY: 'auto' }}>
+                  {oneriler.map((g, i) => (
+                    <div key={g.marka} onMouseDown={() => oneriSec(g)} style={{ padding: '10px 14px', cursor: 'pointer', borderTop: i === 0 ? 'none' : `1px solid ${border}` }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{g.marka}</div>
+                      {g.etkenMadde && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{g.etkenMadde}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               onClick={addIlac}
               style={{
