@@ -114,6 +114,7 @@ export default function RandevularPage() {
   const [gunlukRandevular, setGunlukRandevular] = useState<Randevu[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
+  const [basariMesaji, setBasariMesaji] = useState('');
   const [rol, setRol] = useState<'doktor' | 'sekreter' | null>(null);
 
   const [formAcik, setFormAcik] = useState(false);
@@ -283,6 +284,7 @@ export default function RandevularPage() {
     }
     setKaydediyor(true);
     setHata('');
+    setBasariMesaji('');
     try {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
@@ -313,6 +315,14 @@ export default function RandevularPage() {
         const j = await r.json().catch(() => ({}));
         setHata(j.error || 'Randevu kaydedilemedi.');
         return;
+      }
+      // NOTYA-RANDEVU-05: yeni hasta bu randevuyla birlikte otomatik olarak açıldıysa, sekreter/
+      // doktor bunu görmeli — sessizce geçersek hastalar listesinde yeni bir kayıt belirmesi
+      // şaşırtıcı olur.
+      const sonuc = await r.json().catch(() => ({}));
+      if (sonuc?.yeniHasta?.ad) {
+        setBasariMesaji(`${sonuc.yeniHasta.ad} yeni hasta olarak kaydedildi ve dosyası açıldı.`);
+        setTimeout(() => setBasariMesaji(''), 6000);
       }
       formuSifirla();
       setFormAcik(false);
@@ -432,6 +442,11 @@ export default function RandevularPage() {
         </div>
 
         {hata && <div className="ni-error" style={{ marginBottom: 12 }}>{hata}</div>}
+        {basariMesaji && (
+          <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid #22C55E', color: '#22C55E', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>
+            {basariMesaji}
+          </div>
+        )}
 
         {gorunum === 'ay' && (
           <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden' }}>
