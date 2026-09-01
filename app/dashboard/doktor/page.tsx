@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import { createClient } from '@supabase/supabase-js'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 
@@ -49,12 +49,31 @@ const DURUM_RENK: { [key: string]: { label: string; color: string; bg: string } 
   gelmedi: { label: 'Gelmedi', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
 }
 
+/** Yerel tarih anahtarı (yyyy-mm-dd) — toISOString() UTC'ye kayar, gece yarısına yakın
+ * randevuları yanlış güne yerleştirebilir. randevular/page.tsx'deki aynı fonksiyonun kopyası. */
+function yerelGunAnahtari(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const g = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${g}`
+}
+
+/** Pazartesi başlangıçlı bu haftanın Pzt–Paz tarihleri — takvim sayfasındaki ay ızgarasıyla
+ * aynı hafta başlangıcı konvansiyonu. */
+function buHaftaninGunleri(): Date[] {
+  const bugun = new Date()
+  const haftaIcindekiIndex = (bugun.getDay() + 6) % 7 // Pazartesi=0
+  const pazartesi = new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate() - haftaIcindekiIndex)
+  return Array.from({ length: 7 }, (_, i) => new Date(pazartesi.getFullYear(), pazartesi.getMonth(), pazartesi.getDate() + i))
+}
+
 export default function DoktorDashboard() {
   const router = useRouter()
   const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
   const [recentNotes, setRecentNotes] = useState<NoteItem[]>([])
-  const [bugunkuRandevular, setBugunkuRandevular] = useState<RandevuOzet[]>([])
+  const [haftalikRandevular, setHaftalikRandevular] = useState<RandevuOzet[]>([])
+  const [randevuGorunumu, setRandevuGorunumu] = useState<'bugun' | 'hafta'>('bugun')
   const [randevuYukleniyor, setRandevuYukleniyor] = useState(true)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -111,12 +130,15 @@ export default function DoktorDashboard() {
         setKpi({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
       }
 
-      // 2.5 NOTYA-RANDEVU-02: bugünkü randevular — dashboard'un en üstünde, doktorun günün ilk
-      // baktığı ekranda görmesi gereken tek şey "bugün kim var". KPI kartları geçmişe bakar
-      // (bu ay toplam vb.); bu widget yalnızca bugüne, ve şu an aksiyon alınabilecek şeye bakar.
+      // 2.5 NOTYA-RANDEVU-03: bugün + bu hafta randevuları TEK istekte — haftanın tamamını
+      // çekip bugünün altkümesini istemci tarafında filtreliyoruz, iki ayrı istek yerine.
+      // Dashboard'un en üstünde, doktorun günün ilk baktığı ekranda görmesi gereken tek şey
+      // "kim var, ne zaman". KPI kartları geçmişe bakar (bu ay toplam vb.); bu widget yalnızca
+      // öne bakar.
       try {
-        const bugun = new Date(); const baslangic = new Date(bugun); baslangic.setHours(0, 0, 0, 0)
-        const bitis = new Date(bugun); bitis.setHours(23, 59, 59, 999)
+        const haftaGunleri = buHaftaninGunleri()
+        const baslangic = new Date(haftaGunleri[0]); baslangic.setHours(0, 0, 0, 0)
+        const bitis = new Date(haftaGunleri[6]); bitis.setHours(23, 59, 59, 999)
         const rRes = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -125,10 +147,10 @@ export default function DoktorDashboard() {
           const siralı = (rData.randevular || [])
             .filter((r: any) => r.durum !== 'iptal')
             .sort((a: any, b: any) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime())
-          setBugunkuRandevular(siralı)
+          setHaftalikRandevular(siralı)
         }
       } catch {
-        setBugunkuRandevular([])
+        setHaftalikRandevular([])
       } finally {
         setRandevuYukleniyor(false)
       }
@@ -164,6 +186,12 @@ export default function DoktorDashboard() {
   }, [router])
 
   const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+  // NOTYA-RANDEVU-03: bugünün altkümesi, haftalık listeden türetiliyor — ayrı bir istek yok.
+  const bugunkuRandevular = useMemo(
+    () => haftalikRandevular.filter((rv) => yerelGunAnahtari(new Date(rv.baslangic)) === yerelGunAnahtari(new Date())),
+    [haftalikRandevular]
+  )
 
   const handleChipClick = (path: string) => router.push(path)
 
@@ -209,52 +237,114 @@ export default function DoktorDashboard() {
           </div>
         </div>
 
-        {/* SECTION 1.5 - BUGÜNKÜ RANDEVULAR: NOTYA-RANDEVU-02, karşılama şeridinden hemen sonra —
-            KPI kartlarından önce, çünkü "bugün kimler var" bir doktorun günlük özet sayısından
-            (KPI'lar) daha acil bir sorudur. */}
+        {/* SECTION 1.5 - RANDEVULAR: NOTYA-RANDEVU-03, karşılama şeridinden hemen sonra — KPI
+            kartlarından önce, çünkü "kim var, ne zaman" bir doktorun aylık özet sayılarından daha
+            acil bir sorudur. Bugün/Bu Hafta geçişi, takvim sayfasındaki Ay/Gün geçişiyle aynı
+            konvansiyon. */}
         <div style={{ marginTop: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <div style={{ fontSize: '10px', color: '#64748B', letterSpacing: '1px' }}>BUGÜNKÜ RANDEVULAR</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: '10px', padding: '3px' }}>
+              <button
+                type="button"
+                onClick={() => setRandevuGorunumu('bugun')}
+                style={{ background: randevuGorunumu === 'bugun' ? '#0F9B8E' : 'transparent', border: 'none', color: '#fff', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer', letterSpacing: '0.5px' }}
+              >BUGÜN</button>
+              <button
+                type="button"
+                onClick={() => setRandevuGorunumu('hafta')}
+                style={{ background: randevuGorunumu === 'hafta' ? '#0F9B8E' : 'transparent', border: 'none', color: '#fff', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', cursor: 'pointer', letterSpacing: '0.5px' }}
+              >BU HAFTA</button>
+            </div>
             <div onClick={() => router.push('/dashboard/doktor/randevular')} style={{ fontSize: '12px', color: '#14B8A6', cursor: 'pointer', whiteSpace: 'nowrap' }}>Takvimi Aç &rarr;</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: bugunkuRandevular.length > 0 || randevuYukleniyor ? '8px 20px' : '20px' }}>
-            {randevuYukleniyor ? (
-              <div style={{ padding: '12px 0' }}>
-                {Array.from({ length: 2 }).map((_, i) => <div key={i} style={{ height: '38px', background: '#334155', borderRadius: '8px', marginBottom: '8px', animation: 'pulse 1.5s infinite' }}></div>)}
-              </div>
-            ) : bugunkuRandevular.length > 0 ? (
-              <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '12px 0' }}>
-                {bugunkuRandevular.map((rv) => {
-                  const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
-                  const saat = new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-                  return (
-                    <div
-                      key={rv.id}
-                      onClick={() => router.push('/dashboard/doktor/randevular')}
-                      style={{
-                        flex: '0 0 auto',
-                        minWidth: '150px',
-                        background: 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${durumBilgi.color}33`,
-                        borderRadius: '12px',
-                        padding: '10px 14px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ fontSize: '15px', fontWeight: 700, color: durumBilgi.color }}>{saat}</div>
-                      <div style={{ fontSize: '13px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>{rv.hastaAdi}</div>
-                      <div style={{ fontSize: '10px', color: durumBilgi.color, marginTop: '2px' }}>{durumBilgi.label}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                <div style={{ fontSize: '14px', color: '#64748B' }}>Bugün için randevu yok</div>
-                <div onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', color: '#fff', padding: '8px 18px', borderRadius: '24px', cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap' }}>+ Randevu Ekle</div>
-              </div>
-            )}
-          </div>
+
+          {randevuGorunumu === 'bugun' ? (
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: bugunkuRandevular.length > 0 || randevuYukleniyor ? '8px 20px' : '20px' }}>
+              {randevuYukleniyor ? (
+                <div style={{ padding: '12px 0' }}>
+                  {Array.from({ length: 2 }).map((_, i) => <div key={i} style={{ height: '38px', background: '#334155', borderRadius: '8px', marginBottom: '8px', animation: 'pulse 1.5s infinite' }}></div>)}
+                </div>
+              ) : bugunkuRandevular.length > 0 ? (
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '12px 0' }}>
+                  {bugunkuRandevular.map((rv) => {
+                    const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
+                    const saat = new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                    return (
+                      <div
+                        key={rv.id}
+                        onClick={() => router.push('/dashboard/doktor/randevular')}
+                        style={{
+                          flex: '0 0 auto',
+                          minWidth: '150px',
+                          background: 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${durumBilgi.color}33`,
+                          borderRadius: '12px',
+                          padding: '10px 14px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: durumBilgi.color }}>{saat}</div>
+                        <div style={{ fontSize: '13px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>{rv.hastaAdi}</div>
+                        <div style={{ fontSize: '10px', color: durumBilgi.color, marginTop: '2px' }}>{durumBilgi.label}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '14px', color: '#64748B' }}>Bugün için randevu yok</div>
+                  <div onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', color: '#fff', padding: '8px 18px', borderRadius: '24px', cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap' }}>+ Randevu Ekle</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '8px 20px' }}>
+              {randevuYukleniyor ? (
+                <div style={{ padding: '12px 0' }}>
+                  {Array.from({ length: 3 }).map((_, i) => <div key={i} style={{ height: '38px', background: '#334155', borderRadius: '8px', marginBottom: '8px', animation: 'pulse 1.5s infinite' }}></div>)}
+                </div>
+              ) : haftalikRandevular.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '20px 0' }}>
+                  <div style={{ fontSize: '14px', color: '#64748B' }}>Bu hafta için randevu yok</div>
+                  <div onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', color: '#fff', padding: '8px 18px', borderRadius: '24px', cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap' }}>+ Randevu Ekle</div>
+                </div>
+              ) : (
+                <div style={{ padding: '10px 0' }}>
+                  {buHaftaninGunleri().map((gunTarihi) => {
+                    const anahtar = yerelGunAnahtari(gunTarihi)
+                    const guninRandevulari = haftalikRandevular.filter((rv) => yerelGunAnahtari(new Date(rv.baslangic)) === anahtar)
+                    if (guninRandevulari.length === 0) return null
+                    const bugunMu = anahtar === yerelGunAnahtari(new Date())
+                    const gunEtiketi = gunTarihi.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })
+                    return (
+                      <div key={anahtar} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: '11px', color: bugunMu ? '#0F9B8E' : '#64748B', fontWeight: 600, marginBottom: '8px', textTransform: 'capitalize' }}>
+                          {bugunMu ? `Bugün · ${gunEtiketi}` : gunEtiketi}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {guninRandevulari.map((rv) => {
+                            const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
+                            const saat = new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                            return (
+                              <div
+                                key={rv.id}
+                                onClick={() => router.push('/dashboard/doktor/randevular')}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px 0' }}
+                              >
+                                <div style={{ fontSize: '13px', fontWeight: 700, color: durumBilgi.color, minWidth: '46px' }}>{saat}</div>
+                                <div style={{ fontSize: '13px', color: '#fff', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rv.hastaAdi}</div>
+                                <div style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>{durumBilgi.label}</div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* SECTION 2 - KPI CARDS */}
