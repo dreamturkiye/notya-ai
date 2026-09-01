@@ -146,7 +146,7 @@ export async function logAudioDeletion(
 
 async function writeAuditLog(entry: AuditEntry): Promise<void> {
   try {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('audit_logs')
       .insert({
         user_id: entry.user_id || null,

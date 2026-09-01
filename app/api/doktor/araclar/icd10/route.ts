@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pseudonymize } from '@/lib/security/pseudonymize';
+import { pseudonymize, assertNoTckn } from '@/lib/security/pseudonymize';
 
 export const dynamic = 'force-dynamic';
 
