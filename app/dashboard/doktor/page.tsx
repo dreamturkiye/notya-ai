@@ -64,7 +64,10 @@ export default function DoktorDashboard() {
         }
         if (meRes.ok) {
           const meData = await meRes.json()
-          const name = meData.data?.full_name || meData.data?.email?.split('@')[0] || 'Doktor'
+          const ham = meData.data?.full_name || meData.data?.email?.split('@')[0] || 'Doktor'
+          // The greeting prepends "Dr."; names saved with their own title rendered "Dr. Dr. Gökhan".
+          // Strip leading academic/medical titles so the prefix is added exactly once.
+          const name = ham.replace(/^\s*(?:(?:Prof|Doç|Uzm|Op|Dr|Dt)\.?\s+)+/i, '').trim() || ham
           setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
         }
       } catch {}
