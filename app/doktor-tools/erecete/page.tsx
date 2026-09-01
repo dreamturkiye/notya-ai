@@ -1,6 +1,8 @@
 'use client';
 
 import DoktorNav from '@/components/doktor/DoktorNav'
+import { dozCikar } from '@/components/doktor/IlacSecici'
+import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route'
 import React, { useState, useEffect } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
@@ -57,6 +59,33 @@ const ERecetePage: React.FC = () => {
   const [sonuc, setSonuc] = useState<ReceteSonuc | null>(null)
   const [error, setError] = useState('')
   const [isMobile, setIsMobile] = useState(false)
+  // NOTYA-ILAC-10: SGK brand dropdown on the prescription rows. A pick writes the pack name into
+  // "İlaç adı" and parses the dose; the doctor never spells the box out on the one page where
+  // a spelling mistake ends up on a prescription.
+  const [oneriSatir, setOneriSatir] = useState<string | null>(null)
+  const [oneriler, setOneriler] = useState<GruplanmisIlac[]>([])
+  useEffect(() => {
+    if (!oneriSatir) return
+    const satir = ilaclar.find((i) => i.id === oneriSatir)
+    const q = (satir?.ad || '').trim()
+    if (q.length < 2) { setOneriler([]); return }
+    let iptal = false
+    const t = setTimeout(async () => {
+      try {
+        const token = getDoctorAccessToken()
+        const r = await fetch(`/api/doktor/ilac-ara?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } })
+        const d = await r.json()
+        if (!iptal) setOneriler((d.sonuclar || []).slice(0, 8))
+      } catch { if (!iptal) setOneriler([]) }
+    }, 120)
+    return () => { iptal = true; clearTimeout(t) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oneriSatir, ilaclar.find((i) => i.id === oneriSatir)?.ad])
+  const oneriSec = (rowId: string, g: GruplanmisIlac) => {
+    const su = g.sunumlar.length === 1 ? g.sunumlar[0] : null
+    setIlaclar(ilaclar.map((i) => i.id === rowId ? { ...i, ad: su ? su.ad : g.marka, doz: su ? (dozCikar(su.ad) || i.doz) : i.doz } : i))
+    setOneriSatir(null); setOneriler([])
+  }
 
   const teal = '#00D4AA'
   const glassBg = 'rgba(255,255,255,0.05)'
@@ -85,7 +114,7 @@ const ERecetePage: React.FC = () => {
           setHastalar(normalizeHastalar(data))
         }
       } catch {
-        setError('Hasta listesi alÄ±namadÄ±. SayfayÄ± yenileyip tekrar deneyin.')
+        setError('Hasta listesi alınamadı. Sayfayı yenileyip tekrar deneyin.')
       }
     }
     void fetchHastalar()
@@ -110,7 +139,7 @@ const ERecetePage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedHasta || !tani) {
-      setError('Hasta ve tanÄ± alanlarÄ± zorunludur.')
+      setError('Hasta ve tanı alanları zorunludur.')
       return
     }
 
@@ -151,7 +180,7 @@ const ERecetePage: React.FC = () => {
           aciklama: String(icdRaw.aciklama || ''),
         }
         if (!icd10.code && !icd10.aciklama) {
-          setError('ReÃ§ete yanÄ±tÄ± beklenen formatta deÄil.')
+          setError('Reçete yanıtı beklenen formatta değil.')
         } else {
           setSonuc({
             icd10,
@@ -167,10 +196,10 @@ const ERecetePage: React.FC = () => {
         }
       } else {
         const errBody = await res.json().catch(() => ({}))
-        setError(String((errBody as { hata?: string }).hata || 'ReÃ§ete oluÅturulamadÄ±. LÃ¼tfen tekrar deneyin.'))
+        setError(String((errBody as { hata?: string }).hata || 'Reçete oluşturulamadı. Lütfen tekrar deneyin.'))
       }
     } catch {
-      setError('Sunucu hatasÄ± oluÅtu.')
+      setError('Sunucu hatası oluştu.')
     } finally {
       setLoading(false)
     }
@@ -200,11 +229,11 @@ const ERecetePage: React.FC = () => {
           >
             E-RECETE
           </div>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, marginBottom: '6px' }}>
-            Elektronik ReÃ§ete
+          <h1 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, margin: 0, marginBottom: '6px' }}>
+            Elektronik Reçete
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '15px', margin: 0 }}>
-            Elektronik reÃ§ete oluÅturma ve SGK entegrasyonu
+            Elektronik reçete oluşturma ve SGK entegrasyonu
           </p>
         </div>
 
@@ -221,12 +250,12 @@ const ERecetePage: React.FC = () => {
                 backgroundColor: glassBg,
                 border: `1px solid ${glassBorder}`,
                 borderRadius: '18px',
-                padding: '24px',
+                padding: isMobile ? '16px' : '24px',
                 backdropFilter: 'blur(20px)',
               }}
             >
               <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>
-                ReÃ§ete OluÅtur
+                Reçete Oluştur
               </div>
 
               <div style={{ marginBottom: '18px' }}>
@@ -247,7 +276,7 @@ const ERecetePage: React.FC = () => {
                     outline: 'none',
                   }}
                 >
-                  <option value="">Hasta seÃ§in...</option>
+                  <option value="">Hasta seçin...</option>
                   {hastalar.map((h) => (
                     <option key={h.id} value={h.id} style={{ color: '#000' }}>
                       {h.label}
@@ -258,12 +287,12 @@ const ERecetePage: React.FC = () => {
 
               <div style={{ marginBottom: '18px' }}>
                 <div style={{ fontSize: '13px', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>
-                  TanÄ±
+                  Tanı
                 </div>
                 <textarea
                   value={tani}
                   onChange={(e) => setTani(e.target.value)}
-                  placeholder="TanÄ± bilgisini girin..."
+                  placeholder="Tanı bilgisini girin..."
                   rows={3}
                   style={{
                     width: '100%',
@@ -310,7 +339,7 @@ const ERecetePage: React.FC = () => {
                     marginBottom: '12px',
                   }}
                 >
-                  <div style={{ fontSize: '14px', fontWeight: 600 }}>Ä°laÃ§lar</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600 }}>İlaçlar</div>
                   <button
                     type="button"
                     onClick={addIlac}
@@ -340,19 +369,22 @@ const ERecetePage: React.FC = () => {
                     }}
                   >
                     {([
-                      ['ad', 'Ä°laÃ§ adÄ±', 2],
+                      ['ad', 'İlaç adı', 2],
                       ['doz', 'Doz', 1],
-                      ['kullanim', 'KullanÄ±m', 1.2],
-                      ['sure', 'SÃ¼re', 1],
+                      ['kullanim', 'Kullanım', 1.2],
+                      ['sure', 'Süre', 1],
                     ] as const).map(([field, placeholder, flex]) => (
+                      <div key={field} style={{ flex: field === 'ad' && isMobile ? '1 1 100%' : flex, minWidth: '90px', position: 'relative' }}>
                       <input
-                        key={field}
-                        placeholder={placeholder}
+                        placeholder={field === 'ad' ? 'İlaç adı — yazmaya başlayın' : placeholder}
                         value={ilac[field]}
-                        onChange={(e) => updateIlac(ilac.id, field, e.target.value)}
+                        autoComplete="off"
+                        onChange={(e) => { updateIlac(ilac.id, field, e.target.value); if (field === 'ad') setOneriSatir(ilac.id) }}
+                        onFocus={() => { if (field === 'ad') setOneriSatir(ilac.id) }}
+                        onBlur={() => setTimeout(() => setOneriSatir((cur) => (cur === ilac.id ? null : cur)), 150)}
                         style={{
-                          flex,
-                          minWidth: '90px',
+                          width: '100%',
+                          boxSizing: 'border-box',
                           backgroundColor: 'rgba(255,255,255,0.06)',
                           border: `1px solid ${glassBorder}`,
                           borderRadius: '14px',
@@ -362,6 +394,17 @@ const ERecetePage: React.FC = () => {
                           outline: 'none',
                         }}
                       />
+                      {field === 'ad' && oneriSatir === ilac.id && oneriler.length > 0 && (
+                        <div style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%', marginTop: 4, background: '#0F172A', border: `1px solid ${glassBorder}`, borderRadius: 12, boxShadow: '0 12px 30px -10px rgba(0,0,0,.6)', maxHeight: 260, overflowY: 'auto' }}>
+                          {oneriler.map((g, i) => (
+                            <div key={g.marka} onMouseDown={() => oneriSec(ilac.id, g)} style={{ padding: '10px 14px', cursor: 'pointer', borderTop: i === 0 ? 'none' : `1px solid ${glassBorder}` }}>
+                              <div style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{g.marka} <span style={{ fontWeight: 400, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>· {g.sunumlar.length} sunum</span></div>
+                              {g.etkenMadde && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{g.etkenMadde}</div>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      </div>
                     ))}
                     <button
                       type="button"
@@ -375,7 +418,7 @@ const ERecetePage: React.FC = () => {
                         fontSize: '16px',
                       }}
                     >
-                      Ã
+                      ×
                     </button>
                   </div>
                 ))}
@@ -398,7 +441,7 @@ const ERecetePage: React.FC = () => {
                   cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                {loading ? 'Ãretiliyor...' : 'ReÃ§ete Ãret'}
+                {loading ? 'Üretiliyor...' : 'Reçete Üret'}
               </button>
 
               {error && (
@@ -426,7 +469,7 @@ const ERecetePage: React.FC = () => {
                 backgroundColor: glassBg,
                 border: `1px solid ${glassBorder}`,
                 borderRadius: '18px',
-                padding: '24px',
+                padding: isMobile ? '16px' : '24px',
                 minHeight: '420px',
                 backdropFilter: 'blur(20px)',
               }}
@@ -443,9 +486,9 @@ const ERecetePage: React.FC = () => {
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.4 }}>ð</div>
+                  <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.4 }}>📋</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
-                    ReÃ§ete Ã¶nizlemesi burada gÃ¶rÃ¼necek
+                    Reçete önizlemesi burada görünecek
                   </div>
                 </div>
               ) : (
@@ -458,7 +501,7 @@ const ERecetePage: React.FC = () => {
                       marginBottom: '20px',
                     }}
                   >
-                    <div style={{ fontSize: '16px', fontWeight: 600 }}>ReÃ§ete TaslaÄÄ±</div>
+                    <div style={{ fontSize: '16px', fontWeight: 600 }}>Reçete Taslağı</div>
                     <button
                       type="button"
                       onClick={() => window.print()}
@@ -472,7 +515,7 @@ const ERecetePage: React.FC = () => {
                         cursor: 'pointer',
                       }}
                     >
-                      YazdÄ±r
+                      Yazdır
                     </button>
                   </div>
 
@@ -487,12 +530,12 @@ const ERecetePage: React.FC = () => {
                       marginBottom: '18px',
                     }}
                   >
-                    {sonuc.icd10.code} â {sonuc.icd10.aciklama}
+                    {sonuc.icd10.code} — {sonuc.icd10.aciklama}
                   </div>
 
                   <div style={{ marginBottom: '20px' }}>
                     <div style={{ fontSize: '13px', marginBottom: '10px', color: 'rgba(255,255,255,0.6)' }}>
-                      Ä°laÃ§lar
+                      İlaçlar
                     </div>
                     {sonuc.ilaclar.map((ilac, idx) => (
                       <div
@@ -505,7 +548,7 @@ const ERecetePage: React.FC = () => {
                           fontSize: '13px',
                         }}
                       >
-                        {ilac.ad} â¢ {ilac.doz} â¢ {ilac.kullanim} â¢ {ilac.sure}
+                        {ilac.ad} • {ilac.doz} • {ilac.kullanim} • {ilac.sure}
                       </div>
                     ))}
                   </div>
@@ -523,7 +566,7 @@ const ERecetePage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    {sonuc.sgkUyum ? 'â SGK Uyumlu' : 'â SGK Uyumsuz'}
+                    {sonuc.sgkUyum ? '✓ SGK Uyumlu' : '✕ SGK Uyumsuz'}
                   </div>
                 </div>
               )}
