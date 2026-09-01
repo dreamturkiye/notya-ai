@@ -9,10 +9,11 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - `"use client"` pages: `export const dynamic` is ignored; `useSearchParams` needs `<Suspense>`.
 - Migrations: `lib/db/migrations/*.sql`, applied with `node scripts/run-sql-migration.mjs <file>` (uses SUPABASE_DB_URL from .env.local).
 
-## Auth (one convention — NOTYA-AUTH-01)
-- Client: `lib/doktor/clientAuth.ts` → `ensureDoctorAccessToken()` (refreshes), `getDoctorAccessToken()` (sync), `DOKTOR_GIRIS='/giris/doktor'`. Session lives in localStorage `auth-token` or `sb-<ref>-auth-token`.
-- Server: `lib/doktor/serverAuth.ts` → `doktorOturum(req)` returns `{user, supabase(service-role)}` or `{hata}` (401 "Oturum bulunamadı. Lütfen tekrar giriş yapın."). Applied to hastalar, pabau, klinik-signed-url; ~20 older routes still inline the same check.
-- Login pages: `/giris` (chooser) → `/giris/doktor`, `/giris/avukat`, `/giris/mali`. Signup `/kayit` → `/onboarding` (profession picks vertical).
+## Auth (two conventions)
+- **NOTYA-AUTH-01, solo-doctor routes**: `lib/doktor/serverAuth.ts` → `doktorOturum(req)` returns `{user, supabase(service-role)}` or `{hata}` (401 "Oturum bulunamadı. Lütfen tekrar giriş yapın."). Assumes doctor_id === auth.uid() — use this for anything a sekreter must NEVER reach (clinical notes, e-reçete, SGK, billing).
+- **NOTYA-RANDEVU-01, shared doctor+staff routes**: `lib/doktor/pratikOturum.ts` → `pratikOturum(req)` returns `{user, supabase, doktorId, rol: 'doktor'|'sekreter', personelId?}`. Resolves doktorId via the `personel` table if the caller is a sekreter, else doktorId = caller's own id. ALWAYS scope by `doktorId`, never `user.id`, in routes using this convention. `sadeceDoktor(oturum)` guard rejects sekreter with 403.
+- Client: `lib/doktor/clientAuth.ts` → `ensureDoctorAccessToken()` (refreshes), `getDoctorAccessToken()` (sync), `DOKTOR_GIRIS='/giris/doktor'`. Session lives in localStorage `auth-token` or `sb-<ref>-auth-token`. Same login page/session works for both doktor and sekreter — role is resolved server-side via `/api/personel/me`, not by which page they logged in through.
+- Login pages: `/giris` (chooser) → `/giris/doktor`, `/giris/avukat`, `/giris/mali`. Signup `/kayit` → `/onboarding` (profession picks vertical). Sekreter accounts do NOT go through `/kayit` — they're created via `/api/personel/kabul` (admin.createUser, email_confirm:true) after accepting an invite at `/davet/personel/[token]`, bypassing the SMTP blocker entirely.
 
 ## Verticals → surfaces → files
 | Vertical | Landing | Dashboard | Voice/chat asistan | Nav component |
@@ -36,6 +37,8 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/inceleme` | `/api/notes`, `/api/notes/[id]/approve` | notes |
 | `/entegrasyonlar` | `/api/doktor/integrations[/provider]` | doctor_integrations |
 | `/doktor-tools/*` (icd10, erecete, epikriz, ilac-interaksiyon, sgk-rapor, hasta-portali, tetkik, enabiz, sgk-medula, hatirlatma) | `/api/doktor/araclar/*`, `/api/doktor/sgk`, `/api/doktor/hatirlatma` | notes, hasta_hatirlatma, hasta_portal_tokens |
+| `/randevular` (NOTYA-RANDEVU-01, day view, shared with sekreter) | `/api/doktor/randevular[/id]`, `/api/doktor/calisma-saatleri` | randevular, doktor_calisma_saatleri, patients |
+| `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |
 | Patient portal `/portal/hasta/[token]` | `/api/portal/hasta/[token]` | hasta_portal_tokens (HMAC, PORTAL_TOKEN_SECRET) |
 
 ## Voice/asistan wiring
@@ -43,7 +46,14 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - Klinik: `/api/asistan/klinik-signed-url?persona=<slug>`; 10 slugs = sac-ekimi, estetik-cerrahi, medikal-estetik, dermatoloji, longevity, fizyoterapi, klinik-psikolog, diyetisyen, ergoterapi, odyoloji.
 - Voice pool: `lib/asistan/elevenVoices.ts` (TR_VOICES).
 
+## Randevu + Personel (NOTYA-RANDEVU-01)
+- Public accept page: `/davet/personel/[token]` (no auth). Doctor generates the link from `/dashboard/doktor/personel`, shares it manually (WhatsApp/SMS) — no email is sent, sidesteps the SMTP blocker.
+- Reminder cron: `/api/cron/randevu-hatirlatma`, hourly (`vercel.json`), WhatsApp via existing `lib/doktor/twilioNotify.ts`, fires 2–3h before `randevular.baslangic`.
+- Overlap prevention is server-side in both POST (create) and PATCH (reschedule) on `/api/doktor/randevular`.
+- `DoktorNav.tsx` is role-aware: items tagged `sadeceDoktor: true` are hidden when `/api/personel/me` reports `rol: 'sekreter'`.
+
 ## Klinik (team) wiring
+- Separate multi-user model from the above — klinik uses `clinics`/`clinic_members`/`clinic_invitations` (Pabau-oriented, seat-based). Randevu/personel is unrelated infrastructure for the plain doktor vertical (solo muayenehane + one secretary), not the klinik team model.
 - Tables: clinics, clinic_members, clinic_invitations (seats/roles), pabau_connections (encrypted API key; `lib/pabau/{client,crypto}.ts`).
 - API: `/api/klinik/me|members|settings|invite/accept`, `/api/pabau/connect-key (GET/POST/DELETE) | patients | appointments` → `https://api.oauth.pabau.com/{api_key}/{clients|appointments}`.
 
