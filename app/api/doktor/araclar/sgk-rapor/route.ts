@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       (hasta.notes_encrypted ? 'Hasta notları mevcut.' : 'Hasta notu yok.')
 
     const systemPrompt =
-      'SGK resmi rapor yazma uzmanısın. SADECE JSON: {raporBasligi,hastaAdi,tcSon4,tani:{icd10,aciklama},anamnez,mevcutDurum,calismaKapasitesi:tam|kisitli|yok,onerilen_sure_ay:number,hekim_notu,zorunluTetkikler:[]}'
+      'Türkiye SGK sağlık raporu taslağı hazırlayan klinik asistansın. Rapor teşhisi ICD-10 ile, ilaç kullanım raporlarında etken maddeler INN (Türkçe yazım) ile yazılır; SUT kurallarına uygun süre öner (ilaç kullanım raporu en fazla 24 ay). Hasta adı, T.C. ve hekim notu SENİN alanın değildir. SADECE JSON: {raporBasligi,tani:{icd10,aciklama},anamnez,mevcutDurum,calismaKapasitesi:tam|kisitli|yok,onerilen_sure_ay:number,hekim_degerlendirmesi,zorunluTetkikler:[],etkenMaddeler:[]}'
     // NOTYA-PSEUDO-01: the patient's real name and any identifiers inside the notes are replaced
     // with placeholders BEFORE the request leaves Türkiye. The model reasons over [HASTA_1] and
     // never receives a name, a T.C. kimlik number, a phone or an e-mail. Note that the real name

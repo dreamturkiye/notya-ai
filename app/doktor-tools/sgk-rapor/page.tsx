@@ -15,9 +15,9 @@ import {
 import React, { useEffect, useState } from 'react'
 
 const raporTipleri = [
-  'Kronik Hastalık Raporu',
-  'Maluliyet Raporu',
-  'İş Göremezlik Belgesi',
+  'İlaç Kullanım Raporu',
+  'İş Göremezlik (İstirahat) Raporu',
+  'Sağlık Kurulu Raporu',
   'Sağlık Kurulu Raporu',
 ]
 
@@ -31,6 +31,8 @@ type RaporPayload = {
   calismaKapasitesi?: string
   onerilen_sure_ay?: number
   hekim_notu?: string
+  hekim_degerlendirmesi?: string
+  etkenMaddeler?: string[]
   zorunluTetkikler?: string[]
 }
 
@@ -38,6 +40,8 @@ export default function SgkRaporPage() {
   const [hastalar, setHastalar] = useState<HastaOption[]>([])
   const [hastaId, setHastaId] = useState('')
   const [raporTipi, setRaporTipi] = useState(raporTipleri[0])
+  const [hekimNotu, setHekimNotu] = useState('')
+  const [hekim, setHekim] = useState<{ adSoyad: string; uzmanlik: string; tesisKodu: string; sicilNo: string; medulaBagli: boolean } | null>(null)
   const [sure, setSure] = useState(1)
   const [rapor, setRapor] = useState<RaporPayload | null>(null)
   const [tarih, setTarih] = useState('')
@@ -83,7 +87,7 @@ export default function SgkRaporPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ hastaId, raporTipi, sure: Number(sure) || 1 }),
+        body: JSON.stringify({ hastaId, raporTipi, sure: Number(sure) || 1, hekimNotu }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -93,6 +97,7 @@ export default function SgkRaporPage() {
       const draft = (data?.rapor || data) as RaporPayload
       setRapor(draft)
       setTarih(String(data?.tarih || new Date().toLocaleDateString('tr-TR')))
+      setHekim(data?.hekim || null)
     } catch {
       setError('Sunucu hatası. Tekrar deneyin.')
     } finally {
@@ -154,11 +159,20 @@ export default function SgkRaporPage() {
             ))}
           </select>
 
+          <label style={toolsLabel}>Hekim Notu / Açıklama</label>
+          <textarea
+            value={hekimNotu}
+            onChange={(e) => setHekimNotu(e.target.value)}
+            rows={3}
+            maxLength={2000}
+            placeholder="Raporda hekim açıklaması olarak aynen yer alır; Medula'daki Açıklama alanına da bu metni girin."
+            style={{ ...toolsInput, width: '100%', boxSizing: 'border-box', minHeight: 84, resize: 'vertical', marginBottom: 14 }}
+          />
           <label style={toolsLabel}>Rapor Süresi (Ay)</label>
           <input
             type="number"
             min={1}
-            max={36}
+            max={24}
             value={sure}
             onChange={(e) => setSure(parseInt(e.target.value || '1', 10))}
             style={{ ...toolsInput, marginBottom: 18 }}
@@ -182,10 +196,11 @@ export default function SgkRaporPage() {
             }}
           >
             <div style={{ textAlign: 'center', borderBottom: '2px solid #0F172A', paddingBottom: 12, marginBottom: 16 }}>
-              <div style={{ fontWeight: 800, letterSpacing: 2 }}>T.C.</div>
-              <div style={{ fontWeight: 700 }}>SAĞLIK BAKANLIĞI</div>
-              <div style={{ fontSize: 13 }}>SGK Resmi Rapor Belgesi</div>
-              <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>{tarih}</div>
+              <div style={{ fontWeight: 800, letterSpacing: 2 }}>SAĞLIK RAPORU</div>
+              <div style={{ fontSize: 13 }}>Medula e-Rapor için hazırlanmış taslak</div>
+              <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                Tarih: {tarih}{hekim?.tesisKodu ? ` · Tesis Kodu: ${hekim.tesisKodu}` : ''} · Rapor No: Medula'da atanır
+              </div>
             </div>
 
             <h2 style={{ textAlign: 'center', fontSize: 18, margin: '0 0 18px' }}>
@@ -198,7 +213,7 @@ export default function SgkRaporPage() {
                 <strong>Ad Soyad:</strong> {rapor.hastaAdi || secili?.label || '—'}
               </div>
               <div>
-                <strong>T.C. (son 4):</strong> {rapor.tcSon4 || '****'}
+                <strong>T.C. Kimlik No:</strong> Medula kaydında (Notya T.C. numarasını saklamaz)
               </div>
             </section>
 
@@ -231,9 +246,21 @@ export default function SgkRaporPage() {
             </section>
 
             <section style={{ marginBottom: 14, fontSize: 14, lineHeight: 1.55 }}>
-              <div style={{ fontWeight: 700, borderBottom: '1px solid #CBD5E1', marginBottom: 6 }}>HEKİM NOTU</div>
-              <div>{rapor.hekim_notu || '—'}</div>
+              <div style={{ fontWeight: 700, borderBottom: '1px solid #CBD5E1', marginBottom: 6 }}>HEKİM AÇIKLAMASI</div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{rapor.hekim_notu || '—'}</div>
             </section>
+            {rapor.hekim_degerlendirmesi && (
+              <section style={{ marginBottom: 14, fontSize: 14, lineHeight: 1.55 }}>
+                <div style={{ fontWeight: 700, borderBottom: '1px solid #CBD5E1', marginBottom: 6 }}>KLİNİK DEĞERLENDİRME TASLAĞI <span style={{ fontWeight: 400, fontSize: 11, color: '#64748B' }}>(yapay zekâ önerisi — hekim onayı gerekir)</span></div>
+                <div>{rapor.hekim_degerlendirmesi}</div>
+              </section>
+            )}
+            {Array.isArray(rapor.etkenMaddeler) && rapor.etkenMaddeler.length > 0 && (
+              <section style={{ marginBottom: 14, fontSize: 14, lineHeight: 1.55 }}>
+                <div style={{ fontWeight: 700, borderBottom: '1px solid #CBD5E1', marginBottom: 6 }}>ETKEN MADDELER (Medula etken madde listesiyle eşleştirin)</div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>{rapor.etkenMaddeler.map((e) => <li key={e}>{e}</li>)}</ul>
+              </section>
+            )}
 
             {Array.isArray(rapor.zorunluTetkikler) && rapor.zorunluTetkikler.length > 0 && (
               <section style={{ marginBottom: 14, fontSize: 14, lineHeight: 1.55 }}>
@@ -246,6 +273,23 @@ export default function SgkRaporPage() {
               </section>
             )}
 
+            <section style={{ marginTop: 24, fontSize: 13, lineHeight: 1.5, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+              <div>
+                <div style={{ fontWeight: 700, borderBottom: '1px solid #CBD5E1', marginBottom: 6 }}>DÜZENLEYEN HEKİM</div>
+                <div>{hekim?.adSoyad || '—'}</div>
+                <div style={{ color: '#475569' }}>{hekim?.uzmanlik || 'Uzmanlık: —'}</div>
+                <div style={{ color: '#475569' }}>Sicil / Tescil No: {hekim?.sicilNo || '—'}</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, borderBottom: '1px solid #CBD5E1', marginBottom: 6 }}>İMZA / KAŞE</div>
+                <div style={{ height: 64, border: '1px dashed #CBD5E1', borderRadius: 6 }} />
+                <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>Hastaya verilen kâğıt nüsha için ıslak imza ve kaşe</div>
+              </div>
+            </section>
+            <section style={{ marginTop: 16, padding: '10px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 11, lineHeight: 1.55, color: '#475569' }}>
+              <strong>Yasal geçerlilik:</strong> SGK, 01.02.2019'dan beri kâğıt ilaç raporu kabul etmez. Bu belge Medula'ya girilecek verinin taslağıdır; rapor Medula'da <strong>e-Rapor</strong> olarak kaydedilip hekimin <strong>güvenli elektronik imzası</strong> (e-imza) ile imzalandığında, hastanelerde ayrıca başhekimlik onayından geçtiğinde geçerlilik kazanır. Rapor teşhis kodu ve etken maddeler SGK'nın Medula listelerinden seçilmelidir.
+              {hekim && !hekim.medulaBagli ? ' Medula hesabınız Notya\'ya bağlı değil — Entegrasyonlar sayfasından bağlayın.' : ''}
+            </section>
             <button
               type="button"
               className="no-print"
