@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import IlacSecici from '@/components/doktor/IlacSecici';
 import {
   getAccessToken,
   normalizeHastalar,
@@ -455,6 +456,14 @@ export default function DoktorIlaclarPage() {
         {showAddForm && selectedHastaId && (
           <div style={{ ...toolsCard, marginBottom: 16 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>Yeni İlaç Ekle</h2>
+            {/* Picker first: brand from the SGK list, then the pharmacy pack. Fills the fields below. */}
+            <div style={{ marginBottom: 14 }}>
+              <IlacSecici
+                inputStyle={toolsInput}
+                labelStyle={toolsLabel}
+                onSelect={(s) => setNewIlac((prev) => ({ ...prev, ad: s.ad, etkenMadde: s.etkenMadde || prev.etkenMadde, doz: s.doz || prev.doz }))}
+              />
+            </div>
 
             <div
               style={{
@@ -464,12 +473,12 @@ export default function DoktorIlaclarPage() {
               }}
             >
               <div>
-                <label style={toolsLabel}>İlaç Adı *</label>
+                <label style={toolsLabel}>Kayıt Adı *</label>
                 <input
                   type="text"
                   value={newIlac.ad}
                   onChange={(e) => handleInputChange('ad', e.target.value)}
-                  placeholder="Parol"
+                  placeholder="Seçimden dolar; düzenlenebilir"
                   style={toolsInput}
                 />
               </div>
