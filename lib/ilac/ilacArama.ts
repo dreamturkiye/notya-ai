@@ -142,14 +142,18 @@ export function ilacAra(
     const sMarka = puanla(k.marka || '', q, secenekler.prefixOnly)
     const sEtken = puanla(k.etkenMadde || '', q, secenekler.prefixOnly)
     const sAd = puanla(k.ad || '', q, secenekler.prefixOnly)
-    const skor = Math.max(sMarka, sEtken, sAd)
+    // NOTYA-ILAC-08: brand hits outrank etken hits on ties. Typing "par" must put PAROL first,
+    // not every parasetamol brand alphabetically — the doctor is spelling the box, not the molecule.
+    const skor = Math.max(sMarka + (sMarka > 0 ? 2 : 0), sEtken, sAd + (sAd > 0 ? 1 : 0))
     if (skor <= 0) continue
     const eslesenAlan: AramaSonucu['eslesenAlan'] =
-      skor === sMarka ? 'marka' : skor === sEtken ? 'etken' : 'ad'
+      sMarka > 0 && sMarka + 2 === skor ? 'marka' : skor === sEtken ? 'etken' : 'ad'
     out.push({ ...k, skor, eslesenAlan })
   }
 
   return out
-    .sort((a, b) => b.skor - a.skor || a.ad.length - b.ad.length || a.ad.localeCompare(b.ad, 'tr'))
+    // Tie-break by BRAND length before product-name length: "par" → PAROL before PAROL PLUS
+    // and PARLIN, because the shortest brand that starts with what was typed is the intended one.
+    .sort((a, b) => b.skor - a.skor || (a.marka || a.ad).length - (b.marka || b.ad).length || a.ad.length - b.ad.length || a.ad.localeCompare(b.ad, 'tr'))
     .slice(0, limit)
 }
