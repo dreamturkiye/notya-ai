@@ -14,8 +14,10 @@ interface SGKRapor {
   mevcutDurum: string
   calismaKapasitesi: 'tam' | 'kisitli' | 'yok'
   onerilen_sure_ay: number
+  hekim_degerlendirmesi: string
   hekim_notu: string
   zorunluTetkikler: string[]
+  etkenMaddeler: string[]
 }
 
 async function groqChat(system: string, user: string): Promise<SGKRapor> {
@@ -79,6 +81,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const hastaId = String(body?.hastaId || '')
+    const hekimNotu = String(body?.hekimNotu || '').trim().slice(0, 2000)
     const raporTipi = String(body?.raporTipi || '')
     const sure = Number(body?.sure)
     if (!hastaId || !raporTipi || !Number.isFinite(sure)) {
@@ -135,10 +138,26 @@ export async function POST(request: NextRequest) {
     assertNoTckn(userPrompt, 'sgk-rapor')
 
     const rapor = restoreDeep(await groqChat(systemPrompt, userPrompt), map)
-    if (!rapor.hastaAdi) rapor.hastaAdi = hastaAdi
-
+    // The model only ever saw [HASTA]; the real name is set here, unconditionally, on the server.
+    rapor.hastaAdi = hastaAdi
+    rapor.tcSon4 = ''
+    // Physician's own note is the physician's words — verbatim, never model output.
+    rapor.hekim_notu = hekimNotu
+    if (!Array.isArray(rapor.etkenMaddeler)) rapor.etkenMaddeler = []
+    const [{ data: profil }, { data: medula }] = await Promise.all([
+      sb.from('users').select('full_name, specialty').eq('id', user.id).maybeSingle(),
+      sb.from('doctor_integrations').select('meta').eq('user_id', user.id).eq('provider', 'medula').eq('is_active', true).maybeSingle(),
+    ])
+    const meta = (medula?.meta || {}) as { tesisKodu?: string; sicilNo?: string }
+    const hekim = {
+      adSoyad: profil?.full_name || user.user_metadata?.full_name || '',
+      uzmanlik: profil?.specialty || '',
+      tesisKodu: meta.tesisKodu || '',
+      sicilNo: meta.sicilNo || '',
+      medulaBagli: !!medula,
+    }
     const tarih = new Date().toLocaleDateString('tr-TR')
-    return NextResponse.json({ rapor, tarih })
+    return NextResponse.json({ rapor, tarih, hekim })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Sunucu hatası'
     return NextResponse.json({ hata: message }, { status: 500 })
