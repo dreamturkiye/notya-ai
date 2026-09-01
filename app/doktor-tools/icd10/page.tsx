@@ -18,6 +18,7 @@ export default function ICD10Page() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ICDResult[]>([]);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [toast, setToast] = useState('');
@@ -66,9 +67,17 @@ export default function ICD10Page() {
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        // A 500 used to read as "Sonuç bulunamadı" — a wrong answer. Say what actually happened.
+        setError(String(data.hata || data.error || `Sunucu hatası (${res.status})`));
+        setResults([]);
+        return;
+      }
+      setError('');
       setResults(data.results || []);
       saveRecent(searchQuery);
     } catch (error) {
+      setError('Bağlantı hatası. Tekrar deneyin.');
       setResults([]);
     } finally {
       setLoading(false);
@@ -316,7 +325,7 @@ export default function ICD10Page() {
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
-            <div>Sonuç bulunamadı</div>
+            <div>{error || 'Sonuç bulunamadı'}</div>
           </div>
         )}
       </div>
