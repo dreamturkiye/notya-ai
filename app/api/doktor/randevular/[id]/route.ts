@@ -80,25 +80,37 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (tur !== undefined) guncelleme.tur = tur
   if (notlar !== undefined) guncelleme.notlar = notlar?.trim() || null
 
-  // NOTYA-RANDEVU-05: hasta bağlantısını güncelleme. Üç durum:
+  // NOTYA-RANDEVU-06: hasta bağlantısını güncelleme.
+  //
   //   1. Bir kayıtlı hasta seçildi (patientId geldi) — doğrudan bağla, serbest metni temizle.
-  //   2. Henüz kayıtsız (mevcut.patient_id yok) ve yeni/değişen bir isim geldi — daha önce bu
-  //      alan tamamen göz ardı ediliyordu, yani modalde kayıtlı bir hasta seçilse bile kayıt
-  //      sessizce düşer, randevu kayıtsız kalırdı. Artık POST'taki gibi otomatik hasta kaydı
-  //      açılıyor.
-  //   3. Zaten kayıtlıysa (mevcut.patient_id var) ve patientId gönderilmediyse dokunma — form
+  //   2. Doktor onayladı / tamamladı / gelmedi olarak işaretledi VE henüz kayıtsız: bu, doktorun
+  //      randevuyla ilk kez GERÇEKTEN ilgilendiği an — dosyanın o anda kesin var olması gerekir.
+  //      ÖNEMLİ: hızlı "Onayla" aksiyonu (gün görünümü satırı ve düzenleme modalı, ikisi de)
+  //      yalnızca { durum } gönderir — hastaAdiSerbest'i YENİDEN GÖNDERMEZ. Bu yüzden isim/telefon
+  //      istekte yoksa VERİTABANINDAKİ mevcut satırdan (mevcut.hasta_adi_serbest) alınıyor —
+  //      istemcinin bu alanları tekrar göndermesine bağımlı kalmadan.
+  //   3. Henüz kayıtsız ve isim düzenleme formundan geldi (durum değişmeden bir yeniden planlama/
+  //      düzenleme) — aynı otomatik kayıt, isteğin kendisinden gelen isimle.
+  //   4. Zaten kayıtlıysa (mevcut.patient_id var) ve patientId gönderilmediyse dokunma — form
   //      her zaman aynı alanları gönderir, kayıtlı bir hastayı yanlışlıkla koparmamalı.
+  const doktorGercektenIlgilendi = !!durum && ['onaylandi', 'tamamlandi', 'gelmedi'].includes(durum);
+  const otomatikKayitGerekli =
+    !patientId && !mevcut.patient_id &&
+    (hastaAdiSerbest?.trim() || (doktorGercektenIlgilendi && mevcut.hasta_adi_serbest));
+
   if (patientId && patientId !== mevcut.patient_id) {
     guncelleme.patient_id = patientId
     guncelleme.hasta_adi_serbest = null
     guncelleme.hasta_telefon_serbest = null
-  } else if (!patientId && !mevcut.patient_id && hastaAdiSerbest?.trim()) {
-    const olusturulan = await otomatikHastaKaydiOlustur(supabase, doktorId, hastaAdiSerbest, hastaTelefonSerbest)
+  } else if (otomatikKayitGerekli) {
+    const ad = hastaAdiSerbest?.trim() || mevcut.hasta_adi_serbest
+    const telefon = hastaTelefonSerbest !== undefined ? hastaTelefonSerbest?.trim() : mevcut.hasta_telefon_serbest
+    const olusturulan = await otomatikHastaKaydiOlustur(supabase, doktorId, ad, telefon)
     if (olusturulan) {
       guncelleme.patient_id = olusturulan.id
       guncelleme.hasta_adi_serbest = null
       guncelleme.hasta_telefon_serbest = null
-    } else {
+    } else if (hastaAdiSerbest !== undefined) {
       // Hasta kaydı açılamadıysa serbest metni yine de güncel tut — randevu güncellemesini bu
       // yüzden engellemek yanlış taraf.
       guncelleme.hasta_adi_serbest = hastaAdiSerbest.trim()
