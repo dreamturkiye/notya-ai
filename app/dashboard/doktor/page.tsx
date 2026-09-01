@@ -15,6 +15,14 @@ interface KpiData {
   aktifHasta: number
 }
 
+interface RandevuOzet {
+  id: string
+  baslangic: string
+  hastaAdi: string
+  tur: string
+  durum: string
+}
+
 interface NoteItem {
   id: string
   specialty: string
@@ -33,11 +41,21 @@ const specialtyColors: { [key: string]: string } = {
   default: '#64748B'
 }
 
+const DURUM_RENK: { [key: string]: { label: string; color: string; bg: string } } = {
+  planlandi: { label: 'Planlandı', color: '#0F9B8E', bg: 'rgba(15,155,142,0.15)' },
+  onaylandi: { label: 'Onaylandı', color: '#22C55E', bg: 'rgba(34,197,94,0.15)' },
+  tamamlandi: { label: 'Tamamlandı', color: '#64748B', bg: 'rgba(100,116,139,0.15)' },
+  iptal: { label: 'İptal', color: '#EF4444', bg: 'rgba(239,68,68,0.15)' },
+  gelmedi: { label: 'Gelmedi', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
+}
+
 export default function DoktorDashboard() {
   const router = useRouter()
   const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
   const [recentNotes, setRecentNotes] = useState<NoteItem[]>([])
+  const [bugunkuRandevular, setBugunkuRandevular] = useState<RandevuOzet[]>([])
+  const [randevuYukleniyor, setRandevuYukleniyor] = useState(true)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
 
@@ -91,6 +109,28 @@ export default function DoktorDashboard() {
         }
       } catch {
         setKpi({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
+      }
+
+      // 2.5 NOTYA-RANDEVU-02: bugünkü randevular — dashboard'un en üstünde, doktorun günün ilk
+      // baktığı ekranda görmesi gereken tek şey "bugün kim var". KPI kartları geçmişe bakar
+      // (bu ay toplam vb.); bu widget yalnızca bugüne, ve şu an aksiyon alınabilecek şeye bakar.
+      try {
+        const bugun = new Date(); const baslangic = new Date(bugun); baslangic.setHours(0, 0, 0, 0)
+        const bitis = new Date(bugun); bitis.setHours(23, 59, 59, 999)
+        const rRes = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (rRes.ok) {
+          const rData = await rRes.json()
+          const siralı = (rData.randevular || [])
+            .filter((r: any) => r.durum !== 'iptal')
+            .sort((a: any, b: any) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime())
+          setBugunkuRandevular(siralı)
+        }
+      } catch {
+        setBugunkuRandevular([])
+      } finally {
+        setRandevuYukleniyor(false)
       }
 
       // 3. Supabase notes
@@ -169,6 +209,54 @@ export default function DoktorDashboard() {
           </div>
         </div>
 
+        {/* SECTION 1.5 - BUGÜNKÜ RANDEVULAR: NOTYA-RANDEVU-02, karşılama şeridinden hemen sonra —
+            KPI kartlarından önce, çünkü "bugün kimler var" bir doktorun günlük özet sayısından
+            (KPI'lar) daha acil bir sorudur. */}
+        <div style={{ marginTop: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{ fontSize: '10px', color: '#64748B', letterSpacing: '1px' }}>BUGÜNKÜ RANDEVULAR</div>
+            <div onClick={() => router.push('/dashboard/doktor/randevular')} style={{ fontSize: '12px', color: '#14B8A6', cursor: 'pointer', whiteSpace: 'nowrap' }}>Takvimi Aç &rarr;</div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: bugunkuRandevular.length > 0 || randevuYukleniyor ? '8px 20px' : '20px' }}>
+            {randevuYukleniyor ? (
+              <div style={{ padding: '12px 0' }}>
+                {Array.from({ length: 2 }).map((_, i) => <div key={i} style={{ height: '38px', background: '#334155', borderRadius: '8px', marginBottom: '8px', animation: 'pulse 1.5s infinite' }}></div>)}
+              </div>
+            ) : bugunkuRandevular.length > 0 ? (
+              <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '12px 0' }}>
+                {bugunkuRandevular.map((rv) => {
+                  const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
+                  const saat = new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                  return (
+                    <div
+                      key={rv.id}
+                      onClick={() => router.push('/dashboard/doktor/randevular')}
+                      style={{
+                        flex: '0 0 auto',
+                        minWidth: '150px',
+                        background: 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${durumBilgi.color}33`,
+                        borderRadius: '12px',
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ fontSize: '15px', fontWeight: 700, color: durumBilgi.color }}>{saat}</div>
+                      <div style={{ fontSize: '13px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>{rv.hastaAdi}</div>
+                      <div style={{ fontSize: '10px', color: durumBilgi.color, marginTop: '2px' }}>{durumBilgi.label}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '14px', color: '#64748B' }}>Bugün için randevu yok</div>
+                <div onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', color: '#fff', padding: '8px 18px', borderRadius: '24px', cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap' }}>+ Randevu Ekle</div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* SECTION 2 - KPI CARDS */}
         <div style={{ padding: '28px 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
           {[
@@ -201,6 +289,7 @@ export default function DoktorDashboard() {
           <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '12px', letterSpacing: '1px' }}>HIZLI ERİŞİM</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
             {[
+              { emoji: '📅', text: 'Randevular', path: '/dashboard/doktor/randevular' },
               { emoji: '🎙', text: 'Asistanı Aç', path: '/asistan' },
               { emoji: '➕', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle' },
               { emoji: '📁', text: 'Belge Yükle', path: '/dashboard/doktor/belgeler' },

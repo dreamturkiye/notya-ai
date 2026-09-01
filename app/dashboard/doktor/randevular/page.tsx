@@ -1,16 +1,17 @@
 'use client';
 
 /**
- * NOTYA-RANDEVU-01 — randevu takvimi: doktor ve sekreter aynı ekranı, aynı veriyi görür.
+ * NOTYA-RANDEVU-02 — takvim, Google Takvim'in ay görünümü gibi bir ızgara.
  *
- * Day view by default, not a month grid — a doctor or secretary between patients on a phone
- * wants "who's next and when", not a calendar to navigate. Every Turkish system researched
- * (Hipokrat, NBYS, Bulut Randevu, Dr.Plazma) puts the day list front and center for exactly
- * this reason; a month/week grid is offered as a secondary view there too, not the default.
+ * Önceki sürüm yalnızca gün listesiydi (bkz. git geçmişi, NOTYA-RANDEVU-01). O görünüm hâlâ
+ * burada — Google Takvim'de de bir güne tıklayınca ayrıntı listesi açılır, tam olarak aynı
+ * ilişki. Ay ızgarası "bu ay nasıl görünüyor" sorusuna, gün listesi "bugün ne var, ne
+ * yapacağım" sorusuna cevap verir; biri diğerinin yerini tutmuyor.
  *
- * Booking flow mirrors IlacSecici's two-step pattern (search → pick), reused here for hasta
- * search: type a name, pick from the existing roster, or fall through to a free-text walk-in
- * entry when the patient isn't registered yet.
+ * Ay verisini TEK istekte çekiyoruz (ızgarada görünen 42 günün tamamı, önceki/sonraki aydan
+ * taşan günler dahil) ve istemci tarafında tarihe göre grupluyoruz — 42 gün için 42 istek atmak
+ * hem yavaş hem gereksiz, randevu hacmi (bir doktor için ayda birkaç yüz kayıt) tek sorguya rahat
+ * sığar.
  */
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
@@ -53,6 +54,8 @@ const DURUM_ETIKET: Record<string, { label: string; color: string; bg: string }>
   gelmedi: { label: 'Gelmedi', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
 };
 
+const HAFTA_GUNLERI = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
 function gunBaslangicBitis(tarih: Date): { baslangic: string; bitis: string } {
   const b = new Date(tarih); b.setHours(0, 0, 0, 0);
   const s = new Date(tarih); s.setHours(23, 59, 59, 999);
@@ -78,9 +81,37 @@ function tarihInputStr(tarih: Date): string {
   return tarih.toISOString().slice(0, 10);
 }
 
+/** Yerel tarih anahtarı (yyyy-mm-dd) — toISOString() UTC'ye kayar, gece yarısına yakın randevuları
+ * yanlış güne yerleştirebilir. Bu yüzden local getFullYear/Month/Date kullanıyoruz. */
+function yerelGunAnahtari(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const g = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${g}`;
+}
+
+/** Pazartesi başlangıçlı, tam 6 haftalık (42 günlük) ızgara — Google Takvim'in ay görünümüyle
+ * aynı sabit yükseklik, ay ortasında satır sayısı değişip düzen zıplamıyor. */
+function ayIzgarasi(ay: Date): Date[] {
+  const yil = ay.getFullYear();
+  const ayIndex = ay.getMonth();
+  const ilkGun = new Date(yil, ayIndex, 1);
+  const haftaIcindekiIndex = (ilkGun.getDay() + 6) % 7; // Pazartesi=0 olacak şekilde kaydır
+  const izgaraBaslangic = new Date(yil, ayIndex, 1 - haftaIcindekiIndex);
+  return Array.from({ length: 42 }, (_, i) => new Date(izgaraBaslangic.getFullYear(), izgaraBaslangic.getMonth(), izgaraBaslangic.getDate() + i));
+}
+
+function ayBaslikStr(ay: Date): string {
+  return ay.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+}
+
 export default function RandevularPage() {
+  const [gorunum, setGorunum] = useState<'ay' | 'gun'>('ay');
+  const [ay, setAy] = useState(() => new Date());
   const [gun, setGun] = useState(() => new Date());
-  const [randevular, setRandevular] = useState<Randevu[]>([]);
+
+  const [aylikRandevular, setAylikRandevular] = useState<Record<string, Randevu[]>>({});
+  const [gunlukRandevular, setGunlukRandevular] = useState<Randevu[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
   const [rol, setRol] = useState<'doktor' | 'sekreter' | null>(null);
@@ -104,7 +135,36 @@ export default function RandevularPage() {
 
   const token = ensureDoctorAccessToken;
 
-  const yukle = useCallback(async () => {
+  const gridGunleri = useMemo(() => ayIzgarasi(ay), [ay]);
+
+  const ayVerisiYukle = useCallback(async () => {
+    setYukleniyor(true);
+    setHata('');
+    try {
+      const t = await token();
+      if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
+      const grid = ayIzgarasi(ay);
+      const baslangic = new Date(grid[0]); baslangic.setHours(0, 0, 0, 0);
+      const bitis = new Date(grid[grid.length - 1]); bitis.setHours(23, 59, 59, 999);
+      const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      if (!r.ok) { setHata('Randevular alınamadı.'); return; }
+      const d = await r.json();
+      const grup: Record<string, Randevu[]> = {};
+      for (const rv of (d.randevular || []) as Randevu[]) {
+        const anahtar = yerelGunAnahtari(new Date(rv.baslangic));
+        (grup[anahtar] ||= []).push(rv);
+      }
+      setAylikRandevular(grup);
+    } catch {
+      setHata('Randevular alınamadı. Bağlantınızı kontrol edin.');
+    } finally {
+      setYukleniyor(false);
+    }
+  }, [ay]);
+
+  const gunVerisiYukle = useCallback(async () => {
     setYukleniyor(true);
     setHata('');
     try {
@@ -116,7 +176,7 @@ export default function RandevularPage() {
       });
       if (!r.ok) { setHata('Randevular alınamadı.'); return; }
       const d = await r.json();
-      setRandevular(d.randevular || []);
+      setGunlukRandevular(d.randevular || []);
     } catch {
       setHata('Randevular alınamadı. Bağlantınızı kontrol edin.');
     } finally {
@@ -124,7 +184,12 @@ export default function RandevularPage() {
     }
   }, [gun]);
 
-  useEffect(() => { yukle(); }, [yukle]);
+  const yenile = useCallback(async () => {
+    if (gorunum === 'ay') await ayVerisiYukle();
+    else await gunVerisiYukle();
+  }, [gorunum, ayVerisiYukle, gunVerisiYukle]);
+
+  useEffect(() => { yenile(); }, [yenile]);
 
   useEffect(() => {
     (async () => {
@@ -137,7 +202,6 @@ export default function RandevularPage() {
     })();
   }, []);
 
-  // Hasta search, debounced — reuses /api/doktor/hastalar (client-side filter, roster is small).
   const [tumHastalar, setTumHastalar] = useState<{ id: string; name: string }[] | null>(null);
   useEffect(() => {
     const q = hastaArama.trim();
@@ -175,12 +239,24 @@ export default function RandevularPage() {
     setSerbestTelefon('');
   }
 
+  function gunHucresineTikla(d: Date) {
+    setGun(d);
+    setGorunum('gun');
+  }
+
+  function yeniRandevuAc(hedefGun?: Date) {
+    formuSifirla();
+    if (hedefGun) setGun(hedefGun);
+    setFormAcik(true);
+  }
+
   function duzenlemeyeAc(rv: Randevu) {
     setDuzenlenenId(rv.id);
     setSaat(saatStr(rv.baslangic));
     setSureDk(Math.round((new Date(rv.bitis).getTime() - new Date(rv.baslangic).getTime()) / 60000));
     setTur(rv.tur);
     setNotlar(rv.notlar || '');
+    setGun(new Date(rv.baslangic));
     if (rv.kayitliHasta && rv.patientId) {
       setSeciliHasta({ id: rv.patientId, name: rv.hastaAdi });
       setSerbestAd(''); setSerbestTelefon('');
@@ -233,7 +309,7 @@ export default function RandevularPage() {
       }
       formuSifirla();
       setFormAcik(false);
-      await yukle();
+      await yenile();
     } catch {
       setHata('Randevu kaydedilemedi. Bağlantınızı kontrol edin.');
     } finally {
@@ -250,8 +326,8 @@ export default function RandevularPage() {
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ durum, iptalNedeni: neden }),
       });
-      await yukle();
-    } catch { /* toast-free: yukle() re-fetch will reflect actual state either way */ }
+      await yenile();
+    } catch { /* re-fetch will reflect actual state either way */ }
   }
 
   async function sil(id: string) {
@@ -260,19 +336,21 @@ export default function RandevularPage() {
       const t = await token();
       if (!t) return;
       await fetch(`/api/doktor/randevular/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
-      await yukle();
+      await yenile();
     } catch { /* ignore */ }
   }
 
-  const siraliRandevular = useMemo(
-    () => [...randevular].sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime()),
-    [randevular]
+  const siraliGunlukRandevular = useMemo(
+    () => [...gunlukRandevular].sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime()),
+    [gunlukRandevular]
   );
+
+  const bugunAnahtari = yerelGunAnahtari(new Date());
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
       <DoktorNav />
-      <div style={{ maxWidth: 780, margin: '0 auto', padding: 24 }}>
+      <div style={{ maxWidth: 980, margin: '0 auto', padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <h1 style={{ fontSize: 26, margin: 0 }}>Randevular</h1>
           {rol === 'sekreter' && (
@@ -282,111 +360,202 @@ export default function RandevularPage() {
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          <button
-            type="button"
-            onClick={() => setGun((g) => new Date(g.getTime() - 86400000))}
-            style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: 'white', borderRadius: 8, width: 36, height: 36, cursor: 'pointer' }}
-          >‹</button>
-          <input
-            type="date"
-            value={tarihInputStr(gun)}
-            onChange={(e) => { if (e.target.value) setGun(new Date(e.target.value + 'T00:00:00')); }}
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 14 }}
-          />
-          <button
-            type="button"
-            onClick={() => setGun((g) => new Date(g.getTime() + 86400000))}
-            style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: 'white', borderRadius: 8, width: 36, height: 36, cursor: 'pointer' }}
-          >›</button>
-          <button
-            type="button"
-            onClick={() => setGun(new Date())}
-            style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#94A3B8', borderRadius: 8, padding: '0 12px', height: 36, cursor: 'pointer', fontSize: 13 }}
-          >Bugün</button>
-          <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            onClick={() => { formuSifirla(); setFormAcik(true); }}
-            className="ni-btn"
-            style={{ width: 'auto', padding: '0 16px', height: 36 }}
-          >+ Randevu</button>
-        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
+            <button
+              type="button"
+              onClick={() => setGorunum('ay')}
+              style={{ background: gorunum === 'ay' ? '#0F9B8E' : 'transparent', border: 'none', color: 'white', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: 'pointer' }}
+            >Ay</button>
+            <button
+              type="button"
+              onClick={() => setGorunum('gun')}
+              style={{ background: gorunum === 'gun' ? '#0F9B8E' : 'transparent', border: 'none', color: 'white', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: 'pointer' }}
+            >Gün</button>
+          </div>
 
-        <div style={{ color: '#94A3B8', fontSize: 14, marginBottom: 12 }}>{tarihBaslikStr(gun)}</div>
+          {gorunum === 'ay' ? (
+            <>
+              <button type="button" onClick={() => setAy((a) => new Date(a.getFullYear(), a.getMonth() - 1, 1))} style={navBtn}>‹</button>
+              <div style={{ fontSize: 15, fontWeight: 600, minWidth: 140, textAlign: 'center', textTransform: 'capitalize' }}>{ayBaslikStr(ay)}</div>
+              <button type="button" onClick={() => setAy((a) => new Date(a.getFullYear(), a.getMonth() + 1, 1))} style={navBtn}>›</button>
+              <button type="button" onClick={() => setAy(new Date())} style={{ ...navBtn, width: 'auto', padding: '0 12px', color: '#94A3B8' }}>Bu ay</button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => setGun((g) => new Date(g.getTime() - 86400000))} style={navBtn}>‹</button>
+              <input
+                type="date"
+                value={tarihInputStr(gun)}
+                onChange={(e) => { if (e.target.value) setGun(new Date(e.target.value + 'T00:00:00')); }}
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 14 }}
+              />
+              <button type="button" onClick={() => setGun((g) => new Date(g.getTime() + 86400000))} style={navBtn}>›</button>
+              <button type="button" onClick={() => setGun(new Date())} style={{ ...navBtn, width: 'auto', padding: '0 12px', color: '#94A3B8' }}>Bugün</button>
+            </>
+          )}
+
+          <div style={{ flex: 1 }} />
+          <button type="button" onClick={() => yeniRandevuAc(gorunum === 'gun' ? gun : new Date())} className="ni-btn" style={{ width: 'auto', padding: '0 16px', height: 36 }}>
+            + Randevu
+          </button>
+        </div>
 
         {hata && <div className="ni-error" style={{ marginBottom: 12 }}>{hata}</div>}
 
-        {yukleniyor && <p style={{ color: '#94A3B8' }}>Yükleniyor…</p>}
-        {!yukleniyor && siraliRandevular.length === 0 && (
-          <p style={{ color: '#94A3B8' }}>Bu güne ait randevu yok.</p>
+        {gorunum === 'ay' && (
+          <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: 'rgba(255,255,255,0.04)' }}>
+              {HAFTA_GUNLERI.map((g) => (
+                <div key={g} style={{ padding: '8px 6px', fontSize: 11, color: '#94A3B8', textAlign: 'center', fontWeight: 600 }}>{g}</div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+              {gridGunleri.map((d, i) => {
+                const anahtar = yerelGunAnahtari(d);
+                const buAyIcinde = d.getMonth() === ay.getMonth();
+                const bugunMu = anahtar === bugunAnahtari;
+                const gunRandevulari = (aylikRandevular[anahtar] || []).sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime());
+                const gosterilen = gunRandevulari.slice(0, 3);
+                const fazlaSayisi = gunRandevulari.length - gosterilen.length;
+                return (
+                  <div
+                    key={i}
+                    onClick={() => gunHucresineTikla(d)}
+                    style={{
+                      minHeight: 92,
+                      padding: 6,
+                      borderRight: (i + 1) % 7 !== 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                      borderTop: '1px solid rgba(255,255,255,0.06)',
+                      background: bugunMu ? 'rgba(15,155,142,0.08)' : 'transparent',
+                      opacity: buAyIcinde ? 1 : 0.35,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{
+                      fontSize: 12,
+                      color: bugunMu ? '#0A1628' : '#CBD5E1',
+                      background: bugunMu ? '#0F9B8E' : 'transparent',
+                      width: bugunMu ? 20 : 'auto',
+                      height: bugunMu ? 20 : 'auto',
+                      borderRadius: bugunMu ? '50%' : 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: bugunMu ? 700 : 400,
+                      marginBottom: 4,
+                    }}>{d.getDate()}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {gosterilen.map((rv) => {
+                        const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
+                        return (
+                          <div
+                            key={rv.id}
+                            onClick={(e) => { e.stopPropagation(); duzenlemeyeAc(rv); }}
+                            title={`${saatStr(rv.baslangic)} ${rv.hastaAdi}`}
+                            style={{
+                              fontSize: 10,
+                              padding: '2px 5px',
+                              borderRadius: 4,
+                              background: durumBilgi.bg,
+                              color: durumBilgi.color,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              borderLeft: `2px solid ${durumBilgi.color}`,
+                            }}
+                          >
+                            {saatStr(rv.baslangic)} {rv.hastaAdi}
+                          </div>
+                        );
+                      })}
+                      {fazlaSayisi > 0 && (
+                        <div style={{ fontSize: 10, color: '#94A3B8', paddingLeft: 5 }}>+{fazlaSayisi} daha</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {siraliRandevular.map((rv) => {
-            const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
-            const gecmis = new Date(rv.bitis) < new Date();
-            return (
-              <div
-                key={rv.id}
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 12,
-                  padding: 14,
-                  opacity: rv.durum === 'iptal' ? 0.55 : 1,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600 }}>{saatStr(rv.baslangic)} – {saatStr(rv.bitis)}</div>
-                    <div style={{ fontSize: 15, marginTop: 2 }}>{rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 11, color: '#F59E0B', marginLeft: 6 }}>kayıtsız</span>}</div>
-                    <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{TUR_ETIKET[rv.tur] || rv.tur}{rv.hastaTelefon ? ` · ${rv.hastaTelefon}` : ''}</div>
-                    {rv.notlar && <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>{rv.notlar}</div>}
-                    {rv.durum === 'iptal' && rv.iptalNedeni && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>İptal: {rv.iptalNedeni}</div>}
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>
-                    {durumBilgi.label}
-                  </span>
-                </div>
+        {gorunum === 'gun' && (
+          <>
+            <div style={{ color: '#94A3B8', fontSize: 14, marginBottom: 12 }}>{tarihBaslikStr(gun)}</div>
 
-                {rv.durum !== 'iptal' && (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-                    <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
-                    {rv.durum === 'planlandi' && (
-                      <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={aksiyonBtn}>Onayla</button>
-                    )}
-                    {gecmis && rv.durum !== 'tamamlandi' && rv.durum !== 'gelmedi' && (
-                      <>
-                        <button type="button" onClick={() => durumDegistir(rv.id, 'tamamlandi')} style={aksiyonBtn}>Tamamlandı</button>
-                        <button type="button" onClick={() => durumDegistir(rv.id, 'gelmedi')} style={{ ...aksiyonBtn, color: '#F59E0B' }}>Gelmedi</button>
-                      </>
-                    )}
-                    <button type="button" onClick={() => setIptalId(rv.id)} style={{ ...aksiyonBtn, color: '#EF4444' }}>İptal Et</button>
-                    <button type="button" onClick={() => sil(rv.id)} style={{ ...aksiyonBtn, color: '#64748B' }}>Sil</button>
-                  </div>
-                )}
+            {yukleniyor && <p style={{ color: '#94A3B8' }}>Yükleniyor…</p>}
+            {!yukleniyor && siraliGunlukRandevular.length === 0 && (
+              <p style={{ color: '#94A3B8' }}>Bu güne ait randevu yok.</p>
+            )}
 
-                {iptalId === rv.id && (
-                  <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-                    <input
-                      value={iptalNedeni}
-                      onChange={(e) => setIptalNedeni(e.target.value)}
-                      placeholder="İptal nedeni (isteğe bağlı)"
-                      style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '6px 10px', fontSize: 13 }}
-                    />
-                    <button
-                      type="button"
-                      onClick={async () => { await durumDegistir(rv.id, 'iptal', iptalNedeni); setIptalId(null); setIptalNedeni(''); }}
-                      style={{ ...aksiyonBtn, background: '#EF4444', color: 'white' }}
-                    >Onayla</button>
-                    <button type="button" onClick={() => { setIptalId(null); setIptalNedeni(''); }} style={aksiyonBtn}>Vazgeç</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {siraliGunlukRandevular.map((rv) => {
+                const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
+                const gecmis = new Date(rv.bitis) < new Date();
+                return (
+                  <div
+                    key={rv.id}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 12,
+                      padding: 14,
+                      opacity: rv.durum === 'iptal' ? 0.55 : 1,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>{saatStr(rv.baslangic)} – {saatStr(rv.bitis)}</div>
+                        <div style={{ fontSize: 15, marginTop: 2 }}>{rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 11, color: '#F59E0B', marginLeft: 6 }}>kayıtsız</span>}</div>
+                        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{TUR_ETIKET[rv.tur] || rv.tur}{rv.hastaTelefon ? ` · ${rv.hastaTelefon}` : ''}</div>
+                        {rv.notlar && <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>{rv.notlar}</div>}
+                        {rv.durum === 'iptal' && rv.iptalNedeni && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>İptal: {rv.iptalNedeni}</div>}
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>
+                        {durumBilgi.label}
+                      </span>
+                    </div>
+
+                    {rv.durum !== 'iptal' && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                        <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
+                        {rv.durum === 'planlandi' && (
+                          <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={aksiyonBtn}>Onayla</button>
+                        )}
+                        {gecmis && rv.durum !== 'tamamlandi' && rv.durum !== 'gelmedi' && (
+                          <>
+                            <button type="button" onClick={() => durumDegistir(rv.id, 'tamamlandi')} style={aksiyonBtn}>Tamamlandı</button>
+                            <button type="button" onClick={() => durumDegistir(rv.id, 'gelmedi')} style={{ ...aksiyonBtn, color: '#F59E0B' }}>Gelmedi</button>
+                          </>
+                        )}
+                        <button type="button" onClick={() => setIptalId(rv.id)} style={{ ...aksiyonBtn, color: '#EF4444' }}>İptal Et</button>
+                        <button type="button" onClick={() => sil(rv.id)} style={{ ...aksiyonBtn, color: '#64748B' }}>Sil</button>
+                      </div>
+                    )}
+
+                    {iptalId === rv.id && (
+                      <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+                        <input
+                          value={iptalNedeni}
+                          onChange={(e) => setIptalNedeni(e.target.value)}
+                          placeholder="İptal nedeni (isteğe bağlı)"
+                          style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '6px 10px', fontSize: 13 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => { await durumDegistir(rv.id, 'iptal', iptalNedeni); setIptalId(null); setIptalNedeni(''); }}
+                          style={{ ...aksiyonBtn, background: '#EF4444', color: 'white' }}
+                        >Onayla</button>
+                        <button type="button" onClick={() => { setIptalId(null); setIptalNedeni(''); }} style={aksiyonBtn}>Vazgeç</button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         {formAcik && (
           <div
@@ -400,7 +569,7 @@ export default function RandevularPage() {
               className="ni-card"
               style={{ width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', borderRadius: '16px 16px 0 0', margin: 0 }}
             >
-              <h3 className="ni-h3">{duzenlenenId ? 'Randevuyu Düzenle' : 'Yeni Randevu'}</h3>
+              <h3 className="ni-h3">{duzenlenenId ? 'Randevuyu Düzenle' : 'Yeni Randevu'} — {tarihBaslikStr(gun)}</h3>
 
               <div className="ni-field">
                 <label className="ni-label">Hasta ara</label>
@@ -451,6 +620,10 @@ export default function RandevularPage() {
 
               <div className="ni-grid">
                 <div className="ni-field">
+                  <label className="ni-label">Tarih *</label>
+                  <input className="ni-input" type="date" value={tarihInputStr(gun)} onChange={(e) => { if (e.target.value) setGun(new Date(e.target.value + 'T00:00:00')); }} />
+                </div>
+                <div className="ni-field">
                   <label className="ni-label">Saat *</label>
                   <input className="ni-input" type="time" value={saat} onChange={(e) => setSaat(e.target.value)} />
                 </div>
@@ -464,10 +637,11 @@ export default function RandevularPage() {
                     {Object.entries(TUR_ETIKET).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
-                <div className="ni-field">
-                  <label className="ni-label">Not</label>
-                  <input className="ni-input" value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="İsteğe bağlı" />
-                </div>
+              </div>
+
+              <div className="ni-field">
+                <label className="ni-label">Not</label>
+                <input className="ni-input" value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="İsteğe bağlı" />
               </div>
 
               {hata && <div className="ni-error">{hata}</div>}
@@ -489,6 +663,16 @@ export default function RandevularPage() {
     </div>
   );
 }
+
+const navBtn: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.08)',
+  border: 'none',
+  color: 'white',
+  borderRadius: 8,
+  width: 36,
+  height: 36,
+  cursor: 'pointer',
+};
 
 const aksiyonBtn: React.CSSProperties = {
   background: 'rgba(255,255,255,0.08)',
