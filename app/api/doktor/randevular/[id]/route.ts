@@ -11,6 +11,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
+import { otomatikHastaKaydiOlustur } from '@/lib/doktor/otomatikHastaKaydi'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,20 +22,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const { data: mevcut } = await supabase
     .from('randevular')
-    .select('id, baslangic, bitis')
+    .select('id, baslangic, bitis, patient_id, hasta_adi_serbest, hasta_telefon_serbest')
     .eq('id', params.id)
     .eq('doktor_id', doktorId)
     .maybeSingle()
   if (!mevcut) return NextResponse.json({ error: 'Randevu bulunamadı.' }, { status: 404 })
 
   const body = await req.json().catch(() => ({}))
-  const { baslangic, bitis, durum, iptalNedeni, tur, notlar } = body as {
+  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaTelefonSerbest } = body as {
     baslangic?: string
     bitis?: string
     durum?: string
     iptalNedeni?: string
     tur?: string
     notlar?: string
+    patientId?: string
+    hastaAdiSerbest?: string
+    hastaTelefonSerbest?: string
   }
 
   const guncelleme: Record<string, unknown> = {}
@@ -75,6 +79,35 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   if (tur !== undefined) guncelleme.tur = tur
   if (notlar !== undefined) guncelleme.notlar = notlar?.trim() || null
+
+  // NOTYA-RANDEVU-05: hasta bağlantısını güncelleme. Üç durum:
+  //   1. Bir kayıtlı hasta seçildi (patientId geldi) — doğrudan bağla, serbest metni temizle.
+  //   2. Henüz kayıtsız (mevcut.patient_id yok) ve yeni/değişen bir isim geldi — daha önce bu
+  //      alan tamamen göz ardı ediliyordu, yani modalde kayıtlı bir hasta seçilse bile kayıt
+  //      sessizce düşer, randevu kayıtsız kalırdı. Artık POST'taki gibi otomatik hasta kaydı
+  //      açılıyor.
+  //   3. Zaten kayıtlıysa (mevcut.patient_id var) ve patientId gönderilmediyse dokunma — form
+  //      her zaman aynı alanları gönderir, kayıtlı bir hastayı yanlışlıkla koparmamalı.
+  if (patientId && patientId !== mevcut.patient_id) {
+    guncelleme.patient_id = patientId
+    guncelleme.hasta_adi_serbest = null
+    guncelleme.hasta_telefon_serbest = null
+  } else if (!patientId && !mevcut.patient_id && hastaAdiSerbest?.trim()) {
+    const olusturulan = await otomatikHastaKaydiOlustur(supabase, doktorId, hastaAdiSerbest, hastaTelefonSerbest)
+    if (olusturulan) {
+      guncelleme.patient_id = olusturulan.id
+      guncelleme.hasta_adi_serbest = null
+      guncelleme.hasta_telefon_serbest = null
+    } else {
+      // Hasta kaydı açılamadıysa serbest metni yine de güncel tut — randevu güncellemesini bu
+      // yüzden engellemek yanlış taraf.
+      guncelleme.hasta_adi_serbest = hastaAdiSerbest.trim()
+      guncelleme.hasta_telefon_serbest = hastaTelefonSerbest?.trim() || null
+    }
+  } else if (!patientId && !mevcut.patient_id && hastaAdiSerbest !== undefined) {
+    guncelleme.hasta_adi_serbest = hastaAdiSerbest?.trim() || null
+    guncelleme.hasta_telefon_serbest = hastaTelefonSerbest?.trim() || null
+  }
 
   if (Object.keys(guncelleme).length === 0) {
     return NextResponse.json({ error: 'Güncellenecek alan yok.' }, { status: 400 })
