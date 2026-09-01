@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
-import { getAccessToken, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { getAccessToken, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 
 interface Goruntuleme {
   id: string;
@@ -50,7 +50,7 @@ const Page = () => {
   const [viewerRef, setViewerRef] = useState<HTMLDivElement | null>(null);
 
   const fetchPatients = async () => {
-    const token = getAccessToken();
+    const token = await getAccessTokenAsync();
     const res = await fetch('/api/doktor/hastalar', {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -61,7 +61,7 @@ const Page = () => {
   };
 
   const fetchGoruntulemeler = async (hastaId?: string) => {
-    const token = getAccessToken();
+    const token = await getAccessTokenAsync();
     const url = hastaId
       ? `/api/doktor/goruntuleme?hastaId=${hastaId}`
       : '/api/doktor/goruntuleme';
@@ -109,7 +109,7 @@ const Page = () => {
     formData.append('rapor', uploadData.rapor);
     formData.append('file', uploadData.file);
 
-    const token = getAccessToken();
+    const token = await getAccessTokenAsync();
 
     try {
       const xhr = new XMLHttpRequest();
@@ -139,7 +139,7 @@ const Page = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const token = getAccessToken();
+    const token = await getAccessTokenAsync();
     await fetch(`/api/doktor/goruntuleme/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },

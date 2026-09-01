@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import IlacSecici from '@/components/doktor/IlacSecici';
 import {
-  getAccessToken,
+  getAccessToken, getAccessTokenAsync,
   normalizeHastalar,
   toolsShell,
   toolsCard,
@@ -118,7 +118,7 @@ export default function DoktorIlaclarPage() {
 
     const loadHastalar = async () => {
       try {
-        const token = getAccessToken();
+        const token = await getAccessTokenAsync();
         if (!token) {
           if (!cancelled) setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
           return;
@@ -159,7 +159,7 @@ export default function DoktorIlaclarPage() {
     }
 
     try {
-      const token = getAccessToken();
+      const token = await getAccessTokenAsync();
       const res = await fetch(`/api/doktor/ilaclar?hastaId=${encodeURIComponent(hastaId)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -202,7 +202,7 @@ export default function DoktorIlaclarPage() {
 
     setSaving(true);
     try {
-      const token = getAccessToken();
+      const token = await getAccessTokenAsync();
       const res = await fetch('/api/doktor/ilaclar', {
         method: 'POST',
         headers: {
@@ -252,7 +252,7 @@ export default function DoktorIlaclarPage() {
     setError('');
     setInfo('');
     try {
-      const token = getAccessToken();
+      const token = await getAccessTokenAsync();
       const res = await fetch(`/api/doktor/ilaclar/${id}`, {
         method: 'PUT',
         headers: {
@@ -280,7 +280,7 @@ export default function DoktorIlaclarPage() {
     setError('');
     setInfo('');
     try {
-      const token = getAccessToken();
+      const token = await getAccessTokenAsync();
       const res = await fetch(`/api/doktor/ilaclar/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
