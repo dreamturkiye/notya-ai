@@ -12,15 +12,9 @@ import {
   toolsShell,
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { TETKIK_KATALOGU, TETKIK_PANELLERI, TETKIK_BOLUMU, NUMUNE_ADI, TUM_TETKIKLER, tetkikAra } from '@/lib/doktor/tetkikKatalogu'
 
-const labTestGroups: Record<string, string[]> = {
-  Hematoloji: ['Tam Kan Sayımı', 'PT/INR', 'APTT', 'Periferik Yayma'],
-  Biyokimya: ['Glikoz', 'HbA1c', 'BUN', 'Kreatinin', 'ALT', 'AST', 'GGT', 'ALP', 'Total Protein', 'Albumin', 'Ürik Asit', 'CRP', 'ESR'],
-  Hormon: ['TSH', 'sT3', 'sT4', 'İnsülin', 'Kortizol', 'Prolaktin'],
-  Mikrobiyoloji: ['Tam İdrar Tetkiki', 'İdrar Kültürü', 'Boğaz Kültürü', 'Kan Kültürü'],
-  Lipid: ['Total Kolesterol', 'LDL', 'HDL', 'Trigliserid'],
-}
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
 const modaliteler = ['X-Ray', 'USG', 'MRI', 'BT', 'PET-BT', 'EKO', 'EEG', 'EMG']
@@ -32,6 +26,9 @@ export default function TetkikPage() {
   const [klinikEndikasyon, setKlinikEndikasyon] = useState('')
   const [selectedLabTests, setSelectedLabTests] = useState<Record<string, boolean>>({})
   const [customTests, setCustomTests] = useState('')
+  const [bolum, setBolum] = useState<string>('')
+  const [arama, setArama] = useState('')
+  const gorunen = useMemo(() => tetkikAra(arama, bolum || undefined), [arama, bolum])
   const [vucutBolgesi, setVucutBolgesi] = useState('')
   const [modalite, setModalite] = useState('')
   const [showPrintable, setShowPrintable] = useState(false)
@@ -147,28 +144,68 @@ export default function TetkikPage() {
 
           {activeTab === 'lab' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {Object.entries(labTestGroups).map(([groupName, tests]) => (
-                <div key={groupName}>
-                  <div style={{ fontWeight: 700, color: '#E2E8F0', marginBottom: 8 }}>{groupName}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
-                    {tests.map((test) => (
-                      <label key={test} style={choiceStyle(!!selectedLabTests[test])}>
-                        <input
-                          type="checkbox"
-                          checked={!!selectedLabTests[test]}
-                          onChange={() =>
-                            setSelectedLabTests((prev) => ({ ...prev, [test]: !prev[test] }))
-                          }
-                          style={{ marginTop: 2, accentColor: '#0F9B8E', flexShrink: 0 }}
-                        />
-                        <span style={{ color: '#F8FAFC', fontSize: 13, lineHeight: 1.35, wordBreak: 'break-word' }}>
-                          {test}
-                        </span>
-                      </label>
+              {/* Hazır paneller — tek tıkla ekle, sonra düzenle */}
+              <div>
+                <label style={toolsLabel}>Hazır Paneller</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {Object.entries(TETKIK_PANELLERI).map(([ad, liste]) => (
+                    <button key={ad} type="button" onClick={() => setSelectedLabTests((prev) => { const n = { ...prev }; liste.forEach((t) => { n[t] = true }); return n })}
+                      style={{ background: 'rgba(15,155,142,0.12)', border: '1px solid rgba(15,155,142,0.45)', color: '#5EEAD4', borderRadius: 999, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>
+                      + {ad} <span style={{ opacity: 0.6 }}>({liste.length})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bölüm + arama */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                <div>
+                  <label style={toolsLabel}>Laboratuvar Bölümü</label>
+                  <select value={bolum} onChange={(e) => setBolum(e.target.value)} style={toolsInput}>
+                    <option value="">Tüm bölümler ({TUM_TETKIKLER.length} test)</option>
+                    {TETKIK_KATALOGU.map((b) => (
+                      <option key={b.bolum} value={b.bolum} style={{ color: '#000' }}>{b.bolum} ({b.testler.length})</option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={toolsLabel}>Tetkik Ara</label>
+                  <input type="text" value={arama} onChange={(e) => setArama(e.target.value)} placeholder="hba1c, ferritin, anti-tpo, kültür…" autoComplete="off" style={toolsInput} />
+                </div>
+              </div>
+
+              {/* Sonuçlar */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 8, maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
+                {gorunen.map((x) => (
+                  <label key={x.ad} style={choiceStyle(!!selectedLabTests[x.ad])}>
+                    <input type="checkbox" checked={!!selectedLabTests[x.ad]} onChange={() => setSelectedLabTests((prev) => ({ ...prev, [x.ad]: !prev[x.ad] }))} style={{ marginTop: 2, accentColor: '#0F9B8E', flexShrink: 0 }} />
+                    <span style={{ color: '#F8FAFC', fontSize: 13, lineHeight: 1.35, wordBreak: 'break-word' }}>
+                      {x.ad}
+                      <span style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                        {!bolum ? `${TETKIK_BOLUMU.get(x.ad)} · ` : ''}{NUMUNE_ADI[x.n]}{x.aclik ? ' · açlık' : ''}{x.not ? ` · ${x.not}` : ''}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+                {gorunen.length === 0 && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Eşleşen tetkik yok — Ekstra Tetkikler alanına yazabilirsiniz.</div>}
+              </div>
+
+              {/* Seçilenler */}
+              {selectedTests.length > 0 && (
+                <div>
+                  <label style={toolsLabel}>Seçilen Tetkikler ({selectedTests.length})</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {selectedTests.map((t) => (
+                      <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, padding: '4px 10px', fontSize: 12, color: '#F8FAFC' }}>
+                        {t}
+                        <button type="button" onClick={() => setSelectedLabTests((prev) => ({ ...prev, [t]: false }))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }} aria-label={`${t} kaldır`}>×</button>
+                      </span>
+                    ))}
+                    <button type="button" onClick={() => setSelectedLabTests({})} style={{ background: 'none', border: 'none', color: '#F87171', cursor: 'pointer', fontSize: 12 }}>Tümünü temizle</button>
                   </div>
                 </div>
-              ))}
+              )}
+
               <div>
                 <label style={toolsLabel}>Ekstra Tetkikler</label>
                 <input
@@ -277,7 +314,15 @@ export default function TetkikPage() {
               {activeTab === 'lab' ? (
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
                   {[...selectedTests, ...(customTests ? [customTests] : [])].length ? (
-                    [...selectedTests, ...(customTests ? [customTests] : [])].map((t) => <li key={t}>{t}</li>)
+                    [...selectedTests, ...(customTests ? [customTests] : [])].map((t) => {
+                      const k = TUM_TETKIKLER.find((x) => x.ad === t)
+                      return (
+                        <li key={t}>
+                          {t}
+                          {k ? <span style={{ color: '#64748B', fontSize: 12 }}> — {NUMUNE_ADI[k.n]}{k.aclik ? ', açlık gerekir' : ''}{k.not ? `, ${k.not}` : ''}</span> : null}
+                        </li>
+                      )
+                    })
                   ) : (
                     <li>Seçili tetkik yok</li>
                   )}
