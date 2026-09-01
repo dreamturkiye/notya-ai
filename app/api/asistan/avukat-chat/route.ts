@@ -66,13 +66,13 @@ export async function POST(req: NextRequest) {
       muvekkel = muvekkelData;
     }
 
-    const systemPrompt = buildAvukatSystemPrompt(persona, prefs, muvekkel || null, toAddressableUser(userRow), officePattern || null);
+    const systemPrompt = buildAvukatSystemPrompt(persona, prefs, muvekkel || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null), officePattern || null);
 
     const aiResponse = await anthropic.messages.create({
       model: "claude-sonnet-5",
       max_tokens: 1500,
       system: systemPrompt,
-      messages: (session.messages as { role: string, content: string }[]).slice(-20).concat([{ role: "user", content: message }])
+      messages: (session.messages as { role: 'user' | 'assistant', content: string }[]).slice(-20).concat([{ role: "user", content: message }])
     });
 
     const rawText = aiResponse.content[0].type === "text" ? aiResponse.content[0].text : "{}";

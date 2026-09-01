@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Kullanıcı ve abonelik kontrolü
-    const { data: userData } = await supabase
+    const { data: userData } = await getSupabase()
       .from('users')
       .select('subscription_tier, subscription_status, monthly_session_count')
       .eq('id', user.id)
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     const { patient_id, session_type, specialty } = body
 
     // Seans oluştur
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await getSupabase()
       .from('sessions')
       .insert({
         doctor_id: user.id,
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     const { token: deepgramToken, expires_at } = await createDeepgramToken(session.id, 7200)
 
     // Aylık seans sayısını güncelle
-    await supabase
+    await getSupabase()
       .from('users')
       .update({ monthly_session_count: (userData.monthly_session_count || 0) + 1 })
       .eq('id', user.id)

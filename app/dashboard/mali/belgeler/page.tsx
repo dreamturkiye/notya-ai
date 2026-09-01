@@ -109,7 +109,7 @@ export default function BelgelerPage() {
                           </div>
                         ))}
                       </div>
-                      {b.analiz_json?.ozet&&<div style={{marginTop:10,padding:"10px 14px",background:"#F0FDF4",borderRadius:8,fontSize:12,color:"#065F46",borderLeft:"3px solid #10B981"}}><strong>Derya:</strong> {String(b.analiz_json.ozet)}</div>}
+                      {!!b.analiz_json?.ozet&&<div style={{marginTop:10,padding:"10px 14px",background:"#F0FDF4",borderRadius:8,fontSize:12,color:"#065F46",borderLeft:"3px solid #10B981"}}><strong>Derya:</strong> {String(b.analiz_json.ozet)}</div>}
                     </div>
                   )}
                 </div>

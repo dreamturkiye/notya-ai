@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Update doctor preferences learning
-    const { data: prefs } = await supabase
+    const { data: prefs } = await getSupabase()
       .from("doctor_preferences")
       .select("*")
       .eq("doctor_id", user.id)

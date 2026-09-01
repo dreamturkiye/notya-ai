@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   await sb.from('clinic_invitations').update({ accepted_at: new Date().toISOString() }).eq('id', invitation.id)
   await sb.from('users').update({ clinic_id: invitation.clinic_id, account_type: 'clinic_member', updated_at: new Date().toISOString() }).eq('id', user.id)
-  await sb.rpc('increment_seats', { clinic_id_param: invitation.clinic_id }).maybeSingle().catch(() => null)
+  await sb.rpc('increment_seats', { clinic_id_param: invitation.clinic_id }).maybeSingle().then(undefined, () => null)
 
   return NextResponse.json({ success: true, data: { clinicId: invitation.clinic_id } })
 }

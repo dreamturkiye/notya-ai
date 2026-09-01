@@ -14,7 +14,6 @@ export function isAndroid(): boolean {
 export async function unlockAudioSession(): Promise<void> {
   if (typeof window === 'undefined') return
   const audio = sharedAudio || new Audio(SILENT_WAV)
-  audio.playsInline = true
   ;(audio as HTMLAudioElement & { playsInline?: boolean }).playsInline = true
   audio.muted = false
   audio.setAttribute('playsinline', 'true')
@@ -45,7 +44,7 @@ export async function playBase64Mp3(b64: string | null): Promise<void> {
   const url = URL.createObjectURL(blob)
 
   const audio = sharedAudio || new Audio()
-  audio.playsInline = true
+  ;(audio as HTMLAudioElement & { playsInline?: boolean }).playsInline = true
   audio.setAttribute('playsinline', 'true')
   audio.setAttribute('webkit-playsinline', 'true')
   sharedAudio = audio

@@ -90,9 +90,9 @@ export default function VergiCezasiPage() {
           <div style={{background:'#fff',borderRadius:12,padding:24,border:'1px solid #E2E8F0'}}>
             <div style={{fontWeight:700,fontSize:16,marginBottom:16,color:'#1E293B'}}>Hesaplama Sonucu</div>
             {[
-              result.asl > 0 && ['Vergi Asli', fmt(Number(result.asl)) + ' TL', false],
-              result.ceza > 0 && ['Vergi Cezasi', fmt(Number(result.ceza)) + ' TL', false],
-              result.gecikme > 0 && ['Gecikme Faizi (%2.36/ay)', fmt(Number(result.gecikme)) + ' TL', false],
+              Number(result.asl) > 0 && ['Vergi Asli', fmt(Number(result.asl)) + ' TL', false],
+              Number(result.ceza) > 0 && ['Vergi Cezasi', fmt(Number(result.ceza)) + ' TL', false],
+              Number(result.gecikme) > 0 && ['Gecikme Faizi (%2.36/ay)', fmt(Number(result.gecikme)) + ' TL', false],
               ['TOPLAM ODEME', fmt(Number(result.toplam)) + ' TL', true],
             ].filter(Boolean).map((row) => {
               const [l,v,bold] = row as [string,string,boolean]

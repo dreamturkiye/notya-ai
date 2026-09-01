@@ -101,9 +101,9 @@ function KlinikAsistanInner() {
           tts: { voiceId: body.voice_id as string },
         },
         onConnect: () => { setStatus('listening'); setErrorMsg('') },
-        onDisconnect: (d: {reason:string;message:string}) => {
+        onDisconnect: (d: { reason: string; message?: string }) => {
           convRef.current = null
-          if (d.reason === 'error') { setErrorMsg(d.message); setStatus('error') }
+          if (d.reason === 'error') { setErrorMsg(d.message || 'Bağlantı kesildi'); setStatus('error') }
           else setStatus('idle')
         },
         onError: (m: string) => { setErrorMsg(m); setStatus('error') },

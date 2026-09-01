@@ -595,7 +595,7 @@ ORTOPEDİ ÖZEL KURALLAR (Campbell's + Rockwood):
     name: specialty,
     goldStandardTextbooks: books,
     clinicalGuidelines: [],
-    systemPrompt: specialtyPrompts[specialty] || basePrompt,
+    systemPrompt: specialtyPrompts[specialty as MedicalSpecialty] || basePrompt,
     criticalKeywords: [],
     icd10Focus: []
   }

@@ -55,8 +55,8 @@ export async function DELETE(req: NextRequest) {
   const { user_id } = await req.json()
   if (!user_id) return NextResponse.json({ success: false, error: 'Kullanıcı kimliği zorunludur.' }, { status: 400 })
   await sb.from('clinic_members').update({ is_active: false }).eq('clinic_id', clinicId).eq('user_id', user_id)
-  await sb.rpc('decrement_seats', { clinic_id_param: clinicId }).maybeSingle().catch(() => {
-    sb.from('clinics').update({ seats_used: 0 }).eq('id', clinicId)
+  await sb.rpc('decrement_seats', { clinic_id_param: clinicId }).maybeSingle().then(undefined, async () => {
+    await sb.from('clinics').update({ seats_used: 0 }).eq('id', clinicId)
   })
   return NextResponse.json({ success: true })
 }

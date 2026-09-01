@@ -300,6 +300,89 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
 }
 
 // ============================================================
+// MALİ MÜŞAVİRLİK - GÖRÜŞME NOTU V2
+// ============================================================
+// The session-end route and the PDF route have consumed this shape since the mali müşavirlik
+// commit, but the generator itself was never written — every muhasebeci session end threw
+// "generateAccountingNoteV2 is not a function". Hidden by the non-functional typecheck.
+
+export interface AccountingNoteV2 {
+  konu: string
+  görüşme_turu: string
+  müşteri_ozeti: string
+  tespitler: string[]
+  yasal_dayanak: Array<{ kanun: string; madde: string; aciklama: string }>
+  tavsiyeler: string[]
+  eylem_maddeleri: ActionItem[]
+  beyan_tarihleri: Array<{ beyan: string; tarih: string }>
+  riskler: Array<{ risk: string; oneri: string; seviye: 'düşük' | 'orta' | 'yüksek' }>
+  onemli_uyarilar: string[]
+  vergi_risk_skoru: number
+  vergi_risk_aciklama: string
+  ai_confidence: number
+}
+
+export async function generateAccountingNoteV2(
+  transcript: string,
+  serviceType: string,
+  gorusmeTuru: string,
+  context: { company_name?: string; vergi_no?: string; faaliyet_alani?: string; tax_period?: string }
+): Promise<AccountingNoteV2> {
+  const systemPrompt = `Sen deneyimli bir Türk mali müşavirisin (SMMM/YMM). ${serviceType} alanında uzmanlaşmışsın.
+Görüşme türü: ${gorusmeTuru}.
+
+Türk vergi mevzuatına göre not oluştur: VUK, KVK, GVK, KDVK, TTK, SGK mevzuatı, 2026 beyan takvimi.
+
+MÜŞTERİ BİLGİLERİ:
+- Şirket: ${context.company_name || 'Belirtilmemiş'}
+- Faaliyet: ${context.faaliyet_alani || 'Belirtilmemiş'}
+- Dönem: ${context.tax_period || 'Güncel dönem'}
+
+Transkripti analiz et ve YALNIZCA şu JSON'u döndür:
+{
+  "konu": "Görüşmenin tek cümlelik konusu",
+  "görüşme_turu": "${gorusmeTuru}",
+  "müşteri_ozeti": "Müşteri ve görüşme özeti",
+  "tespitler": ["Mali/vergisel tespitler"],
+  "yasal_dayanak": [{"kanun": "VUK", "madde": "Md. 353", "aciklama": "Neden ilgili"}],
+  "tavsiyeler": ["Somut tavsiyeler"],
+  "eylem_maddeleri": [{"gorev": "Yapılacak iş", "sorumlu": "Müşavir", "son_tarih": "GG.AA.YYYY", "oncelik": "yüksek"}],
+  "beyan_tarihleri": [{"beyan": "KDV Beyannamesi", "tarih": "GG.AA.YYYY"}],
+  "riskler": [{"risk": "Tespit edilen risk", "oneri": "Ne yapılmalı", "seviye": "orta"}],
+  "onemli_uyarilar": ["Acil dikkat gerektiren uyarılar"],
+  "vergi_risk_skoru": 35,
+  "vergi_risk_aciklama": "Skorun kısa gerekçesi (0 = risksiz, 100 = acil)",
+  "ai_confidence": 0.9
+}`
+
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 4000,
+    temperature: 0.1,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: `Müşteri görüşmesi transkripti:\n\n${transcript}` }]
+  })
+
+  const text = (response.content[0] as { text: string }).text
+  const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim()) as Partial<AccountingNoteV2>
+  return {
+    konu: parsed.konu || '',
+    görüşme_turu: parsed.görüşme_turu || gorusmeTuru,
+    müşteri_ozeti: parsed.müşteri_ozeti || '',
+    tespitler: parsed.tespitler || [],
+    yasal_dayanak: parsed.yasal_dayanak || [],
+    tavsiyeler: parsed.tavsiyeler || [],
+    eylem_maddeleri: parsed.eylem_maddeleri || [],
+    beyan_tarihleri: parsed.beyan_tarihleri || [],
+    riskler: parsed.riskler || [],
+    onemli_uyarilar: parsed.onemli_uyarilar || [],
+    vergi_risk_skoru: Number(parsed.vergi_risk_skoru ?? 0),
+    vergi_risk_aciklama: parsed.vergi_risk_aciklama || '',
+    ai_confidence: Number(parsed.ai_confidence ?? 0),
+  }
+}
+
+// ============================================================
 // İNSAN KAYNAKLARI - GÖRÜŞME NOTU
 // ============================================================
 

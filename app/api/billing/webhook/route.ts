@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   switch (iyziEventType) {
     case 'SUBSCRIPTION_RENEWED':
-      await supabase
+      await getSupabase()
         .from('subscriptions')
         .update({
           status: 'active',
@@ -43,19 +43,19 @@ export async function POST(req: NextRequest) {
       break
 
     case 'SUBSCRIPTION_CANCELLED':
-      await supabase
+      await getSupabase()
         .from('subscriptions')
         .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
         .eq('iyzico_subscription_id', subscriptionReferenceCode)
 
-      await supabase
+      await getSupabase()
         .from('users')
         .update({ subscription_status: 'cancelled', subscription_tier: 'free' })
         .eq('email', customerEmail)
       break
 
     case 'PAYMENT_FAILED': {
-      await supabase
+      await getSupabase()
         .from('subscriptions')
         .update({ status: 'past_due' })
         .eq('iyzico_subscription_id', subscriptionReferenceCode)

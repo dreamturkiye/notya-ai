@@ -101,7 +101,7 @@ export default function PatientInterview({ token, appointmentId, onComplete, com
       setError("Tarayıcınız ses tanımayı desteklemiyor — yazarak devam edin.")
       return
     }
-    recognitionRef.current = rec
+    recognitionRef.current = rec as unknown as SpeechRecognition
     ;(rec as { start?: () => void }).start?.()
   }
 

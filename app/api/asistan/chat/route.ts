@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     } = body
 
     // Load doctor profile for Hocam addressing
-    const { data: doctorRow } = await supabase
+    const { data: doctorRow } = await getSupabase()
       .from("users")
       .select("*")
       .eq("id", user.id)
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const doctorProfile = toAddressableUser(doctorRow as DoctorProfile | null)
 
     // Load doctor preferences
-    const { data: prefs } = await supabase
+    const { data: prefs } = await getSupabase()
       .from("doctor_preferences")
       .select("*")
       .eq("doctor_id", user.id)
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     // Load or create asistan session
     let asistanSession: Record<string, unknown> | null = null
     if (asistanSessionId) {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("asistan_sessions")
         .select("*")
         .eq("id", asistanSessionId)
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       const personaId: PersonaId = requestedPersona ||
         prefs?.preferred_persona ||
         getPersonaForSpecialty(specialty as SpecialtyId)
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("asistan_sessions")
         .insert({
           doctor_id: user.id,
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     let currentPatient = null
     const contextPatientId = (asistanSession?.active_context as Record<string, unknown>)?.currentPatientId || patientId
     if (contextPatientId) {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("patients")
         .select("*")
         .eq("id", contextPatientId)

@@ -72,7 +72,7 @@ export default function AvukatAsistanPage() {
           tts: { voiceId: body.voice_id as string },
         },
         onConnect: () => { setStatus('listening'); setErrorMsg(''); addMsg('ai', p.name + ' burada. ' + p.title + ' konusunda nasil yardimci olabilirim?') },
-        onDisconnect: (d: {reason:string;message:string}) => { convRef.current=null; if(d.reason==='error'){setErrorMsg(d.message);setStatus('error')}else setStatus('idle') },
+        onDisconnect: (d: { reason: string; message?: string }) => { convRef.current=null; if(d.reason==='error'){setErrorMsg(d.message || 'Bağlantı kesildi');setStatus('error')}else setStatus('idle') },
         onError: (m: string) => { setErrorMsg(m); setStatus('error') },
         onMessage: ({ message, role }: {message:string;role:string}) => { addMsg(role==='user'?'user':'ai', message) },
         onModeChange: ({ mode }: {mode:string}) => { setStatus(mode==='speaking'?'speaking':'listening') },

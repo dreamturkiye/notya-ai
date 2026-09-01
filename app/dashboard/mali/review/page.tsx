@@ -141,7 +141,7 @@ export default function ReviewPage() {
                 </div>
 
                 {/* Uyarilar */}
-                {b.analiz_json?.uyarilar && Array.isArray(b.analiz_json.uyarilar) && (b.analiz_json.uyarilar as string[]).length > 0 && (
+                {!!b.analiz_json?.uyarilar && Array.isArray(b.analiz_json.uyarilar) && (b.analiz_json.uyarilar as string[]).length > 0 && (
                   <div style={{marginBottom:12,padding:"8px 12px",background:"#FEF3C7",borderRadius:8,fontSize:12,color:"#D97706"}}>
                     {(b.analiz_json.uyarilar as string[]).map((u,i) => <div key={i}>• {u}</div>)}
                   </div>

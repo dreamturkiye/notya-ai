@@ -127,9 +127,9 @@ export default function SGKMedulaPage() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => void handleDisconnect()} style={{ backgroundColor: 'transparent', border: `1px solid ${borderColor}`, color: '#fff', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
-                Bağlantıyı Kes
-              </button>
+              <a href="/dashboard/doktor/entegrasyonlar" style={{ border: `1px solid ${borderColor}`, color: '#fff', textDecoration: 'none', padding: '8px 16px', borderRadius: '8px' }}>
+                Bağlantıyı yönet
+              </a>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>

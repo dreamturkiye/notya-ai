@@ -72,7 +72,7 @@ export default function DoctorChartView({ bundle }: Props) {
         ))}
       </div>
 
-      {chart?.dr_ayse_notes && (
+      {!!chart?.dr_ayse_notes && (
         <div style={{ ...card, borderLeft: "3px solid #0F9B8E" }}>
           <h4 style={h4}>Dr. Ayşe Notu (Gökhan Hocam)</h4>
           <p style={{ color: "rgba(255,255,255,.85)", lineHeight: 1.6, fontSize: 14 }}>{chart.dr_ayse_notes as string}</p>
