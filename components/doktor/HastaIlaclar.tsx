@@ -241,6 +241,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
                   </span>
                   <span className={g.sgk ? 'ni-sgk ni-sgk-on' : 'ni-sgk ni-sgk-off'}>
                     {g.sgk ? 'SGK ödüyor' : 'SGK ödemiyor'}
+                    {g.ruhsatAskida ? ' · RUHSAT ASKIDA' : ''}
                   </span>
                 </button>
               ))}
@@ -267,7 +268,7 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
             >
               <option value="">— Sunum seçin —</option>
               {secili.sunumlar.map((su) => (
-                <option key={su.barkod} value={su.barkod}>{su.ad}</option>
+                <option key={su.barkod} value={su.barkod}>{su.ad}{su.ruhsatAskida ? ' — RUHSAT ASKIDA' : ''}</option>
               ))}
             </select>
           </div>
@@ -278,6 +279,15 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
         )}
 
         {secili && !secili.sgk && <div className="ni-warn">Bu ürün SGK tarafından ödenmiyor.</div>}
+
+        {/* NOTYA-ILAC-09: 62 SGK-reimbursed products have a suspended TİTCK licence (madde-22/23) —
+            among them fentanyl. The flag rides the PACK (barcode), so the warning fires on the
+            chosen sunum, exactly where the prescription decision is made. */}
+        {sunum?.ruhsatAskida && (
+          <div className="ni-warn">
+            Bu ürünün TİTCK ruhsatı <strong>askıda</strong>. Reçete etmeden önce güncel ruhsat durumunu kontrol edin.
+          </div>
+        )}
 
         <div className="ni-grid">
           <div className="ni-field">

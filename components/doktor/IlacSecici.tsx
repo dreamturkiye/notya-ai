@@ -108,7 +108,7 @@ export default function IlacSecici({ onSelect, inputStyle, labelStyle }: Props) 
               <div key={g.marka} onMouseDown={() => markaSec(g)} style={{ ...satir, borderTop: i === 0 ? 'none' : '1px solid #F1F5F9' }}>
                 <div style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <span>{g.marka}</span>
-                  <span style={{ fontSize: 11, color: g.sgk ? '#059669' : '#94A3B8', fontWeight: 500 }}>{g.sgk ? 'SGK' : ''} · {g.sunumlar.length} sunum</span>
+                  <span style={{ fontSize: 11, color: g.ruhsatAskida ? '#DC2626' : g.sgk ? '#059669' : '#94A3B8', fontWeight: g.ruhsatAskida ? 700 : 500 }}>{g.ruhsatAskida ? 'RUHSAT ASKIDA · ' : ''}{g.sgk ? 'SGK' : ''} · {g.sunumlar.length} sunum</span>
                 </div>
                 {g.etkenMadde && <div style={{ fontSize: 12, color: '#64748B' }}>{g.etkenMadde}</div>}
               </div>
@@ -127,9 +127,16 @@ export default function IlacSecici({ onSelect, inputStyle, labelStyle }: Props) 
         >
           <option value="">{secili ? 'Eczanedeki sunumu seçin' : 'Önce ilacı seçin'}</option>
           {secili?.sunumlar.map((su) => (
-            <option key={su.barkod} value={su.barkod}>{su.ad}</option>
+            <option key={su.barkod} value={su.barkod}>{su.ad}{su.ruhsatAskida ? ' — RUHSAT ASKIDA' : ''}</option>
           ))}
         </select>
+        {/* NOTYA-ILAC-09: suspension is a property of the chosen PACK. Warn at the moment of
+            choice, in the one shared picker, so every form (reçete, interaksiyon) gets it free. */}
+        {sunum?.ruhsatAskida && (
+          <div style={{ marginTop: 6, fontSize: 12, color: '#DC2626', fontWeight: 600 }}>
+            TİTCK ruhsatı askıda — reçete etmeden önce güncel durumu kontrol edin.
+          </div>
+        )}
       </div>
     </div>
   );

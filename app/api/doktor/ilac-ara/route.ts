@@ -50,11 +50,22 @@ export interface SunumSecenegi {
    */
   etkenMadde?: string
   atc?: string
+  /**
+   * NOTYA-ILAC-09: TİTCK licence suspension code (1 = madde-23, 3 = madde-22). 62 SGK-reimbursed
+   * products carry it — including fentanyl (ABSTRAL) and common OTC brands (ACTIFED). The flag
+   * has been in the data since NOTYA-ILAC-07 but was never surfaced, so a doctor could pick a
+   * suspended product with no indication anything was wrong. Suspension is per PACK (per barcode),
+   * like the ingredient — it travels on the sunum, not the brand.
+   */
+  ruhsatAskida?: number
 }
 export interface GruplanmisIlac {
   marka: string
   etkenMadde?: string
   sgk: boolean
+  /** NOTYA-ILAC-09: true only when EVERY pack of the brand is suspended — a partial suspension
+   * badge on the brand row would wrongly taint the packs that are still licensed. */
+  ruhsatAskida?: boolean
   sunumlar: SunumSecenegi[]
 }
 
@@ -100,12 +111,16 @@ export async function GET(request: NextRequest) {
       gruplar.set(anahtar, g)
     }
     if (!g.sunumlar.some((s) => s.barkod === k.barkod)) {
-      g.sunumlar.push({ ad: k.ad, barkod: k.barkod || '', esdegerGrubu: k.esdegerGrubu, etkenMadde: k.etkenMadde, atc: k.atc })
+      g.sunumlar.push({ ad: k.ad, barkod: k.barkod || '', esdegerGrubu: k.esdegerGrubu, etkenMadde: k.etkenMadde, atc: k.atc, ruhsatAskida: k.ruhsatAskida })
     }
   }
 
   let sonuclar = [...gruplar.values()]
-    .map((g) => ({ ...g, sunumlar: g.sunumlar.sort((a, b) => a.ad.localeCompare(b.ad, 'tr')) }))
+    .map((g) => ({
+      ...g,
+      ruhsatAskida: g.sunumlar.length > 0 && g.sunumlar.every((s) => !!s.ruhsatAskida),
+      sunumlar: g.sunumlar.sort((a, b) => a.ad.localeCompare(b.ad, 'tr')),
+    }))
 
   if (kisaSorgu) {
     sonuclar = sonuclar.sort((a, b) =>
