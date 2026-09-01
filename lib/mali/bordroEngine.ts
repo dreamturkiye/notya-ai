@@ -122,11 +122,3 @@ export function formatBordroText(result: BordroResult): string {
   const m = result.isverenToplamMaliyet.toLocaleString('tr-TR')
   return `Brüt: ${b} TL | Net: ${n} TL | SGK İşçi: ${s} TL | İşveren Maliyeti: ${m} TL`
 }
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { hesaplaBordro, formatBordroText } from '@/lib/mali/bordroEngine'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)

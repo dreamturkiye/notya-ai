@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = authHeader.substring(7);
-  const { data: user, error } = await supabase.auth.getUser(token);
+  const { data: user, error } = await getSupabase().auth.getUser(token);
 
   if (error || !user) {
     return new Response(JSON.stringify({ success: false, error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }), { status: 401 });
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   try {
     deadlines = calculateDeadlines(baslangicTarihiDate, sureIds);
   } catch (e) {
-    return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ success: false, error: e instanceof Error ? e.message : String(e) }), { status: 500 });
   }
 
   if (!muvekkilId || !davaTanimi) {

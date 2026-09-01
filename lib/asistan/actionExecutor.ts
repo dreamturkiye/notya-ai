@@ -98,6 +98,7 @@ export async function executeAction(
         if (error) return { success: false, message: "Not oluşturulamadı" }
         note = newNote
       }
+      if (!note) return { success: false, message: "Not oluşturulamadı" }
 
       const updateData: Record<string, unknown> = {}
       updateData[String(field)] = content
@@ -124,6 +125,7 @@ export async function executeAction(
           .select().single()
         note = newNote
       }
+      if (!note) return { success: false, message: "Not oluşturulamadı" }
 
       const medications = (note?.content_ilaclar as unknown[]) || []
       medications.push({ ad: drug, doz: dose, kullanim: frequency, sure: duration })
@@ -151,6 +153,7 @@ export async function executeAction(
           .select().single()
         note = newNote
       }
+      if (!note) return { success: false, message: "Not oluşturulamadı" }
 
       const codes = (note?.icd10_codes as unknown[]) || []
       codes.push({ code: icd10, description: diagnosis, description_tr: diagnosis, is_primary: isPrimary !== false })

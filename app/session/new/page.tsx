@@ -20,12 +20,6 @@ const SPECIALTIES = [
   {id:"acil",label:"Acil Tıp",emoji:"🚨"},
 ]
 
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognitionInstance
-    webkitSpeechRecognition: new () => SpeechRecognitionInstance
-  }
-}
 interface SpeechRecognitionInstance extends EventTarget {
   continuous: boolean; interimResults: boolean; lang: string
   start(): void; stop(): void
@@ -80,7 +74,8 @@ function NewSessionInner() {
       setIsRecordingVoice(false)
       return
     }
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance; webkitSpeechRecognition?: new () => SpeechRecognitionInstance }
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition
     if (!SR) { setError("Tarayıcınız ses tanımayı desteklemiyor. Chrome veya Safari kullanın."); return }
 
     const r = new SR()
@@ -269,7 +264,7 @@ function NewSessionInner() {
                 {(note.kritik_bulgular as string[]).map((b,i)=><div key={i} style={S({fontSize:"12px",color:"#991B1B"})}>• {b}</div>)}
               </div>
             )}
-            {note.takip_suresi && (
+            {!!note.takip_suresi && (
               <div style={S({fontSize:"13px",color:"#374151",background:"#EFF6FF",borderRadius:"8px",padding:"10px 12px",marginBottom:"14px"})}>
                 📅 <strong>Takip:</strong> {String(note.takip_suresi)}
               </div>

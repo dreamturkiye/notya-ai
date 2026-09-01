@@ -49,13 +49,13 @@ export async function POST(req: NextRequest) {
     }
 
     const persona = MALI_PERSONAS[getMaliPersona()]
-    const systemPrompt = buildMaliSystemPrompt(persona, prefs, musteri || null, toAddressableUser(userRow))
+    const systemPrompt = buildMaliSystemPrompt(persona, prefs, musteri || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null))
 
     const aiResponse = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 800,
       system: systemPrompt,
-      messages: (session.messages as { role: string, content: string }[]).slice(-20).concat([{ role: "user", content: message }])
+      messages: (session.messages as { role: 'user' | 'assistant', content: string }[]).slice(-20).concat([{ role: "user", content: message }])
     })
 
     const rawText = aiResponse.content[0].type === "text" ? aiResponse.content[0].text : "{}"

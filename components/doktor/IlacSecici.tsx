@@ -105,7 +105,7 @@ export default function IlacSecici({ onSelect, inputStyle, labelStyle }: Props) 
           <div style={dd}>
             {araniyor && sonuclar.length === 0 && <div style={{ ...satir, color: '#64748B', cursor: 'default', borderTop: 'none' }}>Aranıyor…</div>}
             {sonuclar.map((g, i) => (
-              <div key={g.marka} onMouseDown={() => markaSec(g)} style={{ ...satir, borderTop: i === 0 ? 'none' : satir.borderTop }}>
+              <div key={g.marka} onMouseDown={() => markaSec(g)} style={{ ...satir, borderTop: i === 0 ? 'none' : '1px solid #F1F5F9' }}>
                 <div style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <span>{g.marka}</span>
                   <span style={{ fontSize: 11, color: g.sgk ? '#059669' : '#94A3B8', fontWeight: 500 }}>{g.sgk ? 'SGK' : ''} · {g.sunumlar.length} sunum</span>

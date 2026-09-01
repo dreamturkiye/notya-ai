@@ -25,7 +25,7 @@ export const ICTIHAT_DATABASE: Record<string, IctihatRecord[]> = {
     // Add 39 more decisions here
   ],
   idare: [
-    { id: 'E.2023/4568', mahkeme: 'Danistay', daire: '-', esas: 'Article 10 of Administrative Law', karar: 'Administrative decision upheld', tarih: '2023-07-10', ozet: 'Admininstrative decision was upheld by Danistay.', anahtarKelimers: ['administrative law'], oncekiKarar: 'E.2021/7890', sonuc: 'Bozma' },
+    { id: 'E.2023/4568', mahkeme: 'Danistay', daire: '-', esas: 'Article 10 of Administrative Law', karar: 'Administrative decision upheld', tarih: '2023-07-10', ozet: 'Admininstrative decision was upheld by Danistay.', anahtarKelimeler: ['administrative law'], oncekiKarar: 'E.2021/7890', sonuc: 'Bozma' },
     // Add 39 more decisions here
   ],
   tuketici: [

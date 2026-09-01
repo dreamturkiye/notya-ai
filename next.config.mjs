@@ -7,7 +7,9 @@ const nextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
-  typescript: { ignoreBuildErrors: true },
+  // NOTYA-TC-01: type errors fail the build again. They were ignored here AND tsc was aborting on
+  // a deprecation warning, so undefined names shipped to production (ICD-10, audit log, mali notes).
+  typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
 
   async headers() {

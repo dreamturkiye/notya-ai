@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
     "apple-touch-fullscreen": "yes",
-  },
+  } as Record<string, string>,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

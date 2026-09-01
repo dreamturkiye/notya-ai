@@ -4,6 +4,13 @@ export type SpeechCallbacks = {
   onListeningChange?: (listening: boolean) => void
 }
 
+type RecLike = {
+  lang: string; interimResults: boolean; continuous: boolean; maxAlternatives: number
+  onstart: (() => void) | null; onresult: ((ev: SpeechRecognitionEvent) => void) | null
+  onerror: ((ev: Event & { error?: string }) => void) | null; onend: (() => void) | null
+  start: () => void; stop: () => void; abort?: () => void
+}
+
 export type SpeechController = {
   stop: () => void
   isListening: () => boolean
@@ -34,7 +41,7 @@ export function createSpeechRecognizer(callbacks: SpeechCallbacks): SpeechContro
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition
   if (!SR) return null
 
-  let rec: SpeechRecognition | null = null
+  let rec: RecLike | null = null
   let listening = false
   let shouldRestart = false
 
@@ -52,7 +59,7 @@ export function createSpeechRecognizer(callbacks: SpeechCallbacks): SpeechContro
 
   const startOnce = () => {
     if (listening) return
-    rec = new SR()
+    rec = new SR() as unknown as RecLike
     rec.lang = 'tr-TR'
     rec.interimResults = false
     rec.continuous = false

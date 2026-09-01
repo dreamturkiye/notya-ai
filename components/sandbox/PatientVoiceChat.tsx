@@ -140,7 +140,7 @@ export default function PatientVoiceChat({ token, appointmentId, onComplete }: P
       speechRef.current = rec
       setPhase("listening")
       setStatusHint("Dinliyor — konuşabilirsiniz")
-      rec.start?.()
+      ;(rec as { start?: () => void }).start?.()
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Bağlantı kurulamadı"
       setError(`Bağlantı kurulamadı. ${msg}`)

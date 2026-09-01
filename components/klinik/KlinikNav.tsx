@@ -2,8 +2,8 @@
 import { useRouter, usePathname } from 'next/navigation'
 
 interface KlinikNavProps {
-  clinicName: string
-  adminName: string
+  clinicName?: string
+  adminName?: string
 }
 
 const navItems = [
@@ -41,7 +41,7 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
           const active = pathname === item.href
           return (
             <button key={item.href} onClick={() => router.push(item.href)} style={{
-              background: 'none', border: 'none', cursor: 'pointer',
+              border: 'none', cursor: 'pointer',
               padding: '6px 14px', borderRadius: '6px', fontSize: '13px',
               color: active ? '#0A1628' : 'rgba(10,22,40,0.45)',
               fontWeight: active ? 500 : 400,
