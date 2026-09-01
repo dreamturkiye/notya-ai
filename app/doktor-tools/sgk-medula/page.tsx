@@ -20,7 +20,6 @@ export default function SGKMedulaPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [meta, setMeta] = useState<Record<string, unknown>>({});
   const [lastVerified, setLastVerified] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showProvizyonModal, setShowProvizyonModal] = useState(false);
   const [showBasvuruModal, setShowBasvuruModal] = useState(false);
@@ -28,14 +27,6 @@ export default function SGKMedulaPage() {
   const [provizyonResult, setProvizyonResult] = useState<ProvizyonResult | null>(null);
   const [provizyonTc, setProvizyonTc] = useState('');
 
-  const [formData, setFormData] = useState({
-    tc: '',
-    password: '',
-    tesisKodu: '',
-    sicilNo: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [formError, setFormError] = useState('');
 
   const bgColor = '#060C18';
   const cardBg = 'rgba(255,255,255,0.04)';
@@ -65,7 +56,6 @@ export default function SGKMedulaPage() {
       } catch {
         /* ignore */
       }
-      if (!connected) setShowForm(true);
     } catch {
       /* ignore */
     }
@@ -83,70 +73,6 @@ export default function SGKMedulaPage() {
     const checksum1 = (sumOdd * 7 - sumEven) % 10;
     const checksum2 = (sumOdd + sumEven + digits[9]) % 10;
     return checksum1 === digits[9] && checksum2 === digits[10];
-  };
-
-  const handleConnect = async () => {
-    setFormError('');
-    if (!validateTcChecksum(formData.tc)) {
-      setFormError('Geçerli bir TC Kimlik No giriniz (checksum doğrulaması başarısız).');
-      return;
-    }
-    if (!formData.password) {
-      setFormError('SGK Kurumsal Şifre zorunludur.');
-      return;
-    }
-
-    const token = getDoctorAccessToken();
-    if (!token) {
-      setFormError('Oturum gerekli');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch('/api/doktor/integrations/medula', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          hekimTc: formData.tc,
-          sifre: formData.password,
-          tesisKodu: formData.tesisKodu || undefined,
-          sicilNo: formData.sicilNo || undefined,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setFormError(String((data as { error?: string }).error || 'Kaydedilemedi'));
-        return;
-      }
-      localStorage.removeItem('sgk_credentials');
-      setIsConnected(true);
-      setMeta(((data as { meta?: Record<string, unknown> }).meta) || {});
-      setLastVerified((data as { lastVerified?: string | null }).lastVerified || null);
-      setShowForm(false);
-      setFormData({ tc: '', password: '', tesisKodu: '', sicilNo: '' });
-    } catch {
-      setFormError('Bağlantı hatası');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDisconnect = async () => {
-    const token = getDoctorAccessToken();
-    if (!token) return;
-    await fetch('/api/doktor/integrations/medula', {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    localStorage.removeItem('sgk_credentials');
-    setIsConnected(false);
-    setMeta({});
-    setLastVerified(null);
-    setShowForm(true);
   };
 
   const handleProvizyonSorgula = async () => {
@@ -211,59 +137,19 @@ export default function SGKMedulaPage() {
                 <div style={{ width: '10px', height: '10px', backgroundColor: amber, borderRadius: '50%' }} />
                 <div>
                   <div style={{ color: amber, fontWeight: 600 }}>Bağlı değil</div>
-                  <div style={{ fontSize: '13px', color: '#9CA3AF' }}>SGK kimlik bilgilerinizi girin</div>
+                  <div style={{ fontSize: '13px', color: '#9CA3AF' }}>Medula bağlantısı Entegrasyonlar sayfasında kurulur</div>
                 </div>
               </div>
-              <button onClick={() => setShowForm(true)} style={{ backgroundColor: teal, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
-                Bağlan
-              </button>
+              <a href="/dashboard/doktor/entegrasyonlar" style={{ backgroundColor: teal, color: '#000', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600 }}>
+                Entegrasyonlar&apos;da bağlan
+              </a>
             </div>
           )}
         </div>
 
-        {(!isConnected || showForm) && (
-          <div style={{ backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderRadius: '16px', padding: '24px', marginBottom: '32px' }}>
-            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>SGK Kurumsal Giriş Bilgileri</div>
-            
-            <div style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: `1px solid ${teal}`, borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px' }}>
-              Şifreniz sunucuda şifreli saklanır; sorgular sizin yetkinizle yapılır. Kaydettikten sonra şifre tarayıcıya geri dönmez.
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '13px', color: '#9CA3AF', display: 'block', marginBottom: '6px' }}>TC Kimlik No</label>
-                <input type="text" maxLength={11} value={formData.tc} onChange={(e) => setFormData({ ...formData, tc: e.target.value.replace(/\D/g, '') })} style={{ width: '100%', backgroundColor: '#0F172A', border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '12px', color: '#fff', fontSize: '15px' }} placeholder="12345678901" />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', color: '#9CA3AF', display: 'block', marginBottom: '6px' }}>SGK Kurumsal Şifre</label>
-                <div style={{ position: 'relative' }}>
-                  <input type={showPassword ? 'text' : 'password'} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={{ width: '100%', backgroundColor: '#0F172A', border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '12px 44px 12px 12px', color: '#fff', fontSize: '15px' }} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}>
-                    {showPassword ? 'Gizle' : 'Göster'}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', color: '#9CA3AF', display: 'block', marginBottom: '6px' }}>Tesis Kodu (opsiyonel)</label>
-                <input type="text" maxLength={10} value={formData.tesisKodu} onChange={(e) => setFormData({ ...formData, tesisKodu: e.target.value })} style={{ width: '100%', backgroundColor: '#0F172A', border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '12px', color: '#fff', fontSize: '15px' }} placeholder="örn. 1134001234" />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '13px', color: '#9CA3AF', display: 'block', marginBottom: '6px' }}>Hekim Sicil No (opsiyonel)</label>
-                <input type="text" value={formData.sicilNo} onChange={(e) => setFormData({ ...formData, sicilNo: e.target.value })} style={{ width: '100%', backgroundColor: '#0F172A', border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '12px', color: '#fff', fontSize: '15px' }} />
-              </div>
-            </div>
-
-            {formError && <div style={{ color: '#EF4444', fontSize: '13px', marginTop: '12px' }}>{formError}</div>}
-
-            <button onClick={() => void handleConnect()} disabled={loading} style={{ width: '100%', marginTop: '20px', backgroundColor: teal, color: '#000', border: 'none', padding: '14px', borderRadius: '10px', fontWeight: 600, fontSize: '15px', cursor: loading ? 'wait' : 'pointer' }}>
-              {loading ? 'Kaydediliyor…' : 'Kaydet'}
-            </button>
-          </div>
-        )}
-
+        {/* NOTYA-INT-01: credentials are entered ONCE, in Entegrasyonlar. This page only uses the
+            connection. A second form here was the same PUT to /api/doktor/integrations/medula
+            with different field names — two places to be wrong about one secret. */}
         {isConnected && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '16px', marginBottom: '32px' }}>
             <div style={{ backgroundColor: cardBg, border: `1px solid ${teal}`, borderRadius: '16px', padding: '20px' }}>
