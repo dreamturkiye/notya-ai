@@ -118,6 +118,7 @@ export default function RandevularPage() {
 
   const [formAcik, setFormAcik] = useState(false);
   const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null);
+  const [duzenlenenRandevu, setDuzenlenenRandevu] = useState<Randevu | null>(null);
   const [saat, setSaat] = useState('09:00');
   const [sureDk, setSureDk] = useState(20);
   const [tur, setTur] = useState('muayene');
@@ -132,6 +133,8 @@ export default function RandevularPage() {
   const [kaydediliyor, setKaydediyor] = useState(false);
   const [iptalId, setIptalId] = useState<string | null>(null);
   const [iptalNedeni, setIptalNedeni] = useState('');
+  const [modalIptalAcik, setModalIptalAcik] = useState(false);
+  const [modalIptalNedeni, setModalIptalNedeni] = useState('');
 
   const token = ensureDoctorAccessToken;
 
@@ -228,6 +231,7 @@ export default function RandevularPage() {
 
   function formuSifirla() {
     setDuzenlenenId(null);
+    setDuzenlenenRandevu(null);
     setSaat('09:00');
     setSureDk(20);
     setTur('muayene');
@@ -237,6 +241,8 @@ export default function RandevularPage() {
     setSeciliHasta(null);
     setSerbestAd('');
     setSerbestTelefon('');
+    setModalIptalAcik(false);
+    setModalIptalNedeni('');
   }
 
   function gunHucresineTikla(d: Date) {
@@ -252,6 +258,7 @@ export default function RandevularPage() {
 
   function duzenlemeyeAc(rv: Randevu) {
     setDuzenlenenId(rv.id);
+    setDuzenlenenRandevu(rv);
     setSaat(saatStr(rv.baslangic));
     setSureDk(Math.round((new Date(rv.bitis).getTime() - new Date(rv.baslangic).getTime()) / 60000));
     setTur(rv.tur);
@@ -330,14 +337,37 @@ export default function RandevularPage() {
     } catch { /* re-fetch will reflect actual state either way */ }
   }
 
-  async function sil(id: string) {
+  /** Modal içinden durum değiştirme — randevuyu "açıp" onaylamak/tamamlamak/iptal etmek için
+   * ayrıca gün görünümüne geçmeye gerek kalmasın diye. Aynı randevu; ay ızgarasındaki bir
+   * chip'e tıklayıp doğrudan buradan onaylayabilmek gerekiyordu — daha önce bu modalde sadece
+   * yeniden planlama alanları vardı, durum kontrolü yoktu. */
+  async function modalDurumDegistir(durum: string, neden?: string) {
+    if (!duzenlenenId) return;
+    await durumDegistir(duzenlenenId, durum, neden);
+    setFormAcik(false);
+    formuSifirla();
+  }
+
+  async function modalSil() {
+    if (!duzenlenenId) return;
     if (!confirm('Bu randevuyu tamamen silmek istiyor musunuz? (Gerçek bir iptal için "İptal Et" kullanın.)')) return;
+    await silIslemi(duzenlenenId);
+    setFormAcik(false);
+    formuSifirla();
+  }
+
+  async function silIslemi(id: string) {
     try {
       const t = await token();
       if (!t) return;
       await fetch(`/api/doktor/randevular/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
       await yenile();
     } catch { /* ignore */ }
+  }
+
+  async function sil(id: string) {
+    if (!confirm('Bu randevuyu tamamen silmek istiyor musunuz? (Gerçek bir iptal için "İptal Et" kullanın.)')) return;
+    await silIslemi(id);
   }
 
   const siraliGunlukRandevular = useMemo(
@@ -571,6 +601,53 @@ export default function RandevularPage() {
             >
               <h3 className="ni-h3">{duzenlenenId ? 'Randevuyu Düzenle' : 'Yeni Randevu'} — {tarihBaslikStr(gun)}</h3>
 
+              {duzenlenenId && duzenlenenRandevu && (
+                <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid rgba(10,22,40,0.08)' }}>
+                  {(() => {
+                    const durumBilgi = DURUM_ETIKET[duzenlenenRandevu.durum] || DURUM_ETIKET.planlandi;
+                    const gecmis = new Date(duzenlenenRandevu.bitis) < new Date();
+                    return (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                          <span style={{ fontSize: 12, color: 'rgba(10,22,40,0.5)' }}>Mevcut durum:</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg }}>
+                            {durumBilgi.label}
+                          </span>
+                        </div>
+                        {duzenlenenRandevu.durum !== 'iptal' && !modalIptalAcik && (
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {duzenlenenRandevu.durum === 'planlandi' && (
+                              <button type="button" onClick={() => modalDurumDegistir('onaylandi')} style={modalAksiyonBtn}>Onayla</button>
+                            )}
+                            {gecmis && duzenlenenRandevu.durum !== 'tamamlandi' && duzenlenenRandevu.durum !== 'gelmedi' && (
+                              <>
+                                <button type="button" onClick={() => modalDurumDegistir('tamamlandi')} style={modalAksiyonBtn}>Tamamlandı</button>
+                                <button type="button" onClick={() => modalDurumDegistir('gelmedi')} style={{ ...modalAksiyonBtn, color: '#F59E0B', borderColor: '#F59E0B' }}>Gelmedi</button>
+                              </>
+                            )}
+                            <button type="button" onClick={() => setModalIptalAcik(true)} style={{ ...modalAksiyonBtn, color: '#EF4444', borderColor: '#EF4444' }}>İptal Et</button>
+                            <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: '#64748B' }}>Sil</button>
+                          </div>
+                        )}
+                        {modalIptalAcik && (
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <input
+                              className="ni-input"
+                              value={modalIptalNedeni}
+                              onChange={(e) => setModalIptalNedeni(e.target.value)}
+                              placeholder="İptal nedeni (isteğe bağlı)"
+                              style={{ flex: 1 }}
+                            />
+                            <button type="button" onClick={() => modalDurumDegistir('iptal', modalIptalNedeni)} style={{ ...modalAksiyonBtn, background: '#EF4444', color: 'white', borderColor: '#EF4444' }}>Onayla</button>
+                            <button type="button" onClick={() => { setModalIptalAcik(false); setModalIptalNedeni(''); }} style={modalAksiyonBtn}>Vazgeç</button>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
               <div className="ni-field">
                 <label className="ni-label">Hasta ara</label>
                 <input
@@ -678,6 +755,16 @@ const aksiyonBtn: React.CSSProperties = {
   background: 'rgba(255,255,255,0.08)',
   border: 'none',
   color: '#CBD5E1',
+  borderRadius: 8,
+  padding: '6px 12px',
+  fontSize: 12,
+  cursor: 'pointer',
+};
+
+const modalAksiyonBtn: React.CSSProperties = {
+  background: 'white',
+  border: '1px solid rgba(10,22,40,0.15)',
+  color: '#0A1628',
   borderRadius: 8,
   padding: '6px 12px',
   fontSize: 12,
