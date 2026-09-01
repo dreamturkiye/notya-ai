@@ -1,39 +1,61 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface NavItem {
   label: string;
   route: string;
   color: string;
   hideOnMobile?: boolean;
+  /** Clinical/staff-only items a sekreter account must never see, even by direct link. */
+  sadeceDoktor?: boolean;
 }
 
+// NOTYA-RANDEVU-01: Randevular is shared (doktor + sekreter both see it — one calendar).
+// Everything marked sadeceDoktor is hidden for a sekreter session; Personel manages who has
+// that access at all, so it is doctor-only by the same rule.
 const navItems: NavItem[] = [
-  { label: "Asistan", route: "/asistan", color: "linear-gradient(90deg, #3B82F6, #7C3AED)" },
+  { label: "Asistan", route: "/asistan", color: "linear-gradient(90deg, #3B82F6, #7C3AED)", sadeceDoktor: true },
   { label: "Ana Sayfa", route: "/dashboard", color: "#0F9B8E", hideOnMobile: true },
+  { label: "Randevular", route: "/dashboard/doktor/randevular", color: "#0F9B8E" },
   { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6" },
   { label: "Hasta Ekle", route: "/dashboard/doktor/hasta-ekle", color: "#F59E0B" },
-  { label: "Belgeler", route: "/dashboard/doktor/belgeler", color: "#EF4444" },
-  { label: "Görüntüleme", route: "/dashboard/doktor/goruntuleme", color: "#6366F1" },
-  { label: "İlaçlar", route: "/dashboard/doktor/ilaclar", color: "#22C55E" },
-  { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#8B5CF6" },
-  { label: "İnceleme", route: "/dashboard/doktor/inceleme", color: "#F97316" },
-  { label: "Entegrasyonlar", route: "/dashboard/doktor/entegrasyonlar", color: "#0EA5E9" },
-  { label: "Araçlar", route: "/doktor-tools", color: "#166534" },
-  { label: "SGK", route: "/doktor-tools/sgk-medula", color: "#DC2626" },
+  { label: "Belgeler", route: "/dashboard/doktor/belgeler", color: "#EF4444", sadeceDoktor: true },
+  { label: "Görüntüleme", route: "/dashboard/doktor/goruntuleme", color: "#6366F1", sadeceDoktor: true },
+  { label: "İlaçlar", route: "/dashboard/doktor/ilaclar", color: "#22C55E", sadeceDoktor: true },
+  { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#8B5CF6", sadeceDoktor: true },
+  { label: "İnceleme", route: "/dashboard/doktor/inceleme", color: "#F97316", sadeceDoktor: true },
+  { label: "Entegrasyonlar", route: "/dashboard/doktor/entegrasyonlar", color: "#0EA5E9", sadeceDoktor: true },
+  { label: "Personel", route: "/dashboard/doktor/personel", color: "#334155", sadeceDoktor: true },
+  { label: "Araçlar", route: "/doktor-tools", color: "#166534", sadeceDoktor: true },
+  { label: "SGK", route: "/doktor-tools/sgk-medula", color: "#DC2626", sadeceDoktor: true },
 ];
 
 export default function DoktorNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // NOTYA-RANDEVU-01: default to 'doktor' so the nav renders immediately and only narrows once
+  // /api/personel/me confirms a sekreter session — never the other way around, which would
+  // flash clinical items before hiding them.
+  const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const t = await ensureDoctorAccessToken();
+      if (!t) return;
+      try {
+        const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
+        if (r.ok) { const d = await r.json(); if (d.rol === 'sekreter') setRol('sekreter'); }
+      } catch { /* stays 'doktor' on failure — least surprising default */ }
+    })();
   }, []);
 
   const handleNav = (route: string) => {
@@ -57,7 +79,8 @@ export default function DoktorNav() {
     checkAuth();
   }, []);
 
-  const mobileItems = navItems.filter(i => !(i.hideOnMobile && isMobile))
+  const gorunurItems = navItems.filter(i => !(i.sadeceDoktor && rol === 'sekreter'))
+  const mobileItems = gorunurItems.filter(i => !(i.hideOnMobile && isMobile))
 
   return (
     <nav style={{
