@@ -56,6 +56,10 @@
     {
       "path": "/api/cron/kvkk-imha",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/randevu-hatirlatma",
+      "schedule": "0 * * * *"
     }
   ]
 }
