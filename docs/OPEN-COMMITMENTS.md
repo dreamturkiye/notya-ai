@@ -24,6 +24,7 @@ Last reviewed: 2026-08-30
 
 | Since | Item | Note |
 |---|---|---|
+| 2026-09-01 | **Restore a working typecheck — 66 real errors** | `tsc` has been aborting on the TS5101 `baseUrl` deprecation and reporting NOTHING, and next.config sets `ignoreBuildErrors: true`, so undefined names ship (ICD-10 500ed on every search; KVKK audit writes silently failed). Adding `"ignoreDeprecations": "6.0"` reveals 66 errors incl. runtime bugs (ictihatEngine typo `anahtarKelimers`, bordroEngine import conflict, sandbox speech/audio types). Fix them, then flip `ignoreBuildErrors` off so Vercel enforces it |
 | 2026-08-25 | **Workflow verification (QA item 5)** | Not started: doctor workflows end-to-end — hasta ekle, belge yükleme, reçete, rapor, SGK |
 | 2026-08-25 | **True 390px visual verification** | Chrome's resize_window moves the window but not the viewport, so mobile layout was proved from the code rather than seen. NOTYA-MOBILE-01 fixed the grids; a real device pass is still worth doing |
 | 2026-08-25 | **Tailwind conversion for /doktor** | The page is built from ~102 inline style objects, which is why it could not hold a media query. The CSS-block fix is correct but the section is worth converting properly when the launch is not imminent |
