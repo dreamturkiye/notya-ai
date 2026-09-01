@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import {
-  getAccessToken,
+  getAccessToken, getAccessTokenAsync,
   toolsShell,
   toolsCard,
   toolsErrorBox,
@@ -51,7 +51,7 @@ export default function IncelemePage() {
 
     const load = async () => {
       try {
-        const token = getAccessToken();
+        const token = await getAccessTokenAsync();
         if (!token) {
           if (!cancelled) {
             setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
@@ -99,7 +99,7 @@ export default function IncelemePage() {
     setError('');
     setBusyId(id);
     try {
-      const token = getAccessToken();
+      const token = await getAccessTokenAsync();
       const res = await fetch(`/api/notes/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },

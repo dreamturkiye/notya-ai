@@ -1,6 +1,7 @@
 /** Shared helpers for doktor-tools pages (dark theme + patients API). */
 
 import type { CSSProperties } from 'react'
+import { ensureDoctorAccessToken, getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export type HastaOption = {
   id: string
@@ -12,18 +13,16 @@ export type HastaOption = {
 
 export function getAccessToken(): string {
   if (typeof window === 'undefined') return ''
-  try {
-    const raw =
-      localStorage.getItem('auth-token') ||
-      localStorage.getItem(
-        Object.keys(localStorage).find((k) => k.includes('auth-token') || k.startsWith('sb-')) || ''
-      )
-    if (!raw) return ''
-    const parsed = JSON.parse(raw)
-    return String(parsed.access_token || parsed?.currentSession?.access_token || '')
-  } catch {
-    return ''
-  }
+  // NOTYA-AUTH-01: kick a refresh in the background so an expired session heals itself for the
+  // next call; prefer getAccessTokenAsync() in async handlers, which waits for that refresh.
+  void ensureDoctorAccessToken()
+  return getDoctorAccessToken()
+}
+
+/** Refreshes an expired session before returning the token. Use in async handlers. */
+export async function getAccessTokenAsync(): Promise<string> {
+  if (typeof window === 'undefined') return ''
+  return (await ensureDoctorAccessToken()) || ''
 }
 
 export function normalizeHastalar(payload: unknown): HastaOption[] {

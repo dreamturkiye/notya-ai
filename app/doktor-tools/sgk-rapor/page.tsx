@@ -2,7 +2,7 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import {
-  getAccessToken,
+  getAccessToken, getAccessTokenAsync,
   normalizeHastalar,
   toolsCard,
   toolsErrorBox,
@@ -50,7 +50,7 @@ export default function SgkRaporPage() {
 
   useEffect(() => {
     const load = async () => {
-      const token = getAccessToken()
+      const token = await getAccessTokenAsync()
       if (!token) return
       try {
         const res = await fetch('/api/doktor/hastalar', {
@@ -76,7 +76,7 @@ export default function SgkRaporPage() {
     setError('')
     setRapor(null)
     try {
-      const token = getAccessToken()
+      const token = await getAccessTokenAsync()
       if (!token) {
         setError('Oturum bulunamadı. Tekrar giriş yapın.')
         return

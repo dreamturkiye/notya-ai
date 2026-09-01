@@ -2,7 +2,7 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import {
-  getAccessToken,
+  getAccessToken, getAccessTokenAsync,
   normalizeHastalar,
   toolsCard,
   toolsErrorBox,
@@ -45,7 +45,7 @@ export default function TetkikPage() {
       /* ignore */
     }
     const load = async () => {
-      const token = getAccessToken()
+      const token = await getAccessTokenAsync()
       if (!token) return
       try {
         const res = await fetch('/api/doktor/hastalar', {

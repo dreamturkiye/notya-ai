@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useRef, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import {
-  getAccessToken,
+  getAccessToken, getAccessTokenAsync,
   normalizeHastalar,
   toolsShell,
   toolsCard,
@@ -41,7 +41,7 @@ export default function BelgelerPage() {
 
     const loadHastalar = async () => {
       try {
-        const token = getAccessToken();
+        const token = await getAccessTokenAsync();
         if (!token) {
           if (!cancelled) setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
           return;
