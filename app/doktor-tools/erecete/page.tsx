@@ -227,7 +227,7 @@ const ERecetePage: React.FC = () => {
               marginBottom: '8px',
             }}
           >
-            E-RECETE
+            E-REÇETE
           </div>
           <h1 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, margin: 0, marginBottom: '6px' }}>
             Elektronik Reçete
@@ -267,6 +267,7 @@ const ERecetePage: React.FC = () => {
                   onChange={(e) => setSelectedHasta(e.target.value)}
                   style={{
                     width: '100%',
+                    boxSizing: 'border-box',
                     backgroundColor: 'rgba(255,255,255,0.06)',
                     border: `1px solid ${glassBorder}`,
                     borderRadius: '14px',
@@ -296,6 +297,7 @@ const ERecetePage: React.FC = () => {
                   rows={3}
                   style={{
                     width: '100%',
+                    boxSizing: 'border-box',
                     backgroundColor: 'rgba(255,255,255,0.06)',
                     border: `1px solid ${glassBorder}`,
                     borderRadius: '14px',
@@ -318,6 +320,7 @@ const ERecetePage: React.FC = () => {
                   rows={2}
                   style={{
                     width: '100%',
+                    boxSizing: 'border-box',
                     backgroundColor: 'rgba(255,255,255,0.06)',
                     border: `1px solid ${glassBorder}`,
                     borderRadius: '14px',
