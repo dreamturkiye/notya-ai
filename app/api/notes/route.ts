@@ -29,6 +29,10 @@ type NoteRow = {
   icd10_codes?: unknown
   kritik_bulgular?: unknown
   hasta_ozeti?: string | null
+  basvuru_yakinmasi?: string | null
+  vitaller?: unknown
+  recete_onerisi?: unknown
+  alarm_bulgulari?: unknown
   session_id?: string | null
   sessions?: SessionRel | SessionRel[] | null
 }
@@ -87,7 +91,7 @@ export async function GET(req: NextRequest) {
 
   const joined = await supabase
     .from('notes')
-    .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, session_id, sessions(specialty, patient_id)')
+    .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, session_id, sessions(specialty, patient_id)')
     .eq('doctor_id', user.id)
     .is('approved_at', null)
     .order('created_at', { ascending: false })
@@ -96,7 +100,7 @@ export async function GET(req: NextRequest) {
   if (joined.error) {
     const plain = await supabase
       .from('notes')
-      .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, session_id')
+      .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, session_id')
       .eq('doctor_id', user.id)
       .is('approved_at', null)
       .order('created_at', { ascending: false })
@@ -126,6 +130,10 @@ export async function GET(req: NextRequest) {
       icdKodlari: Array.isArray(row.icd10_codes) ? row.icd10_codes : [],
       kritikBulgular: Array.isArray(row.kritik_bulgular) ? row.kritik_bulgular : [],
       hastaOzeti: String(row.hasta_ozeti || ''),
+      basvuruYakinmasi: String(row.basvuru_yakinmasi || ''),
+      vitaller: (row.vitaller && typeof row.vitaller === 'object') ? row.vitaller : null,
+      receteOnerisi: Array.isArray(row.recete_onerisi) ? row.recete_onerisi : [],
+      alarmBulgulari: Array.isArray(row.alarm_bulgulari) ? (row.alarm_bulgulari as string[]).map(String) : [],
     }
   })
 
