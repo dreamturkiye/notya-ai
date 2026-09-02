@@ -9,6 +9,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { ULUSAL_TAKVIM, OZEL_ASILAR, PEDIATRIK_ASI_ADLARI, TAKVIM_SURUM } from '@/lib/asi/ulusalAsiTakvimi';
 
 interface Asi {
   id: string;
@@ -21,7 +22,6 @@ interface Asi {
   notlar: string | null;
 }
 
-const YAYGIN_PEDIATRIK = ['Hepatit B', 'BCG', 'DaBT-İPA-Hib', 'KPA', 'OPA', 'KKK', 'Suçiçeği', 'Hepatit A'];
 const YAYGIN_YETISKIN = ['Tetanoz-Difteri (Td)', 'Grip', 'KOVID-19', 'Zona (Herpes Zoster)', 'Pnömokok'];
 
 export default function HastaAsilar({ patientId }: { patientId: string }) {
@@ -36,6 +36,7 @@ export default function HastaAsilar({ patientId }: { patientId: string }) {
   const [sonrakiDozTarihi, setSonrakiDozTarihi] = useState('');
   const [kaynak, setKaynak] = useState<'kayit' | 'beyan'>('kayit');
   const [kaydediyor, setKaydediyor] = useState(false);
+  const [takvimAcik, setTakvimAcik] = useState(false);
 
   const token = ensureDoctorAccessToken;
 
@@ -60,6 +61,15 @@ export default function HastaAsilar({ patientId }: { patientId: string }) {
 
   function formuSifirla() {
     setAsiAdi(''); setDozNo(''); setUygulamaTarihi(''); setSonrakiDozTarihi(''); setKaynak('kayit');
+  }
+
+  /** NOTYA-ASI-01: takvimden tek tıkla ön dolu ekleme — doktor adı/dozu elle yazmaz. */
+  function takvimdenEkle(ad: string, doz: number | null) {
+    setAsiAdi(ad);
+    setDozNo(doz ? String(doz) : '');
+    setKategori('pediatrik');
+    setKaynak('kayit');
+    setFormAcik(true);
   }
 
   async function kaydet(e: React.FormEvent) {
@@ -137,12 +147,52 @@ export default function HastaAsilar({ patientId }: { patientId: string }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aşılar</div>
-        <button type="button" onClick={() => setFormAcik((v) => !v)} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}>
-          + Aşı Ekle
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
+            {takvimAcik ? 'Takvimi Gizle' : '📋 Ulusal Aşı Takvimi'}
+          </button>
+          <button type="button" onClick={() => setFormAcik((v) => !v)} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}>
+            + Aşı Ekle
+          </button>
+        </div>
       </div>
 
       {hata && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#EF4444', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
+
+      {takvimAcik && (
+        <div style={{ background: '#111C33', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{TAKVIM_SURUM}</div>
+          <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 12 }}>
+            2025 GBP güncellemesi: Hepatit B artık 6’lı karmanın içinde — 1. aydaki tekil doz kaldırıldı (istisna: anne HBsAg+). “Ekle” formatı doldurur, tarih seçip kaydedersiniz.
+          </div>
+          {ULUSAL_TAKVIM.map((d) => (
+            <div key={d.donem} style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{d.donem}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {d.asilar.map((a) => (
+                  <div key={d.donem + a.ad} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 150 }}>{a.ad}</span>
+                    <span style={{ fontSize: 11, color: '#94A3B8' }}>{a.dozEtiket}</span>
+                    {a.not && <span style={{ fontSize: 10, color: '#F59E0B', width: '100%' }}>{a.not}</span>}
+                    <button type="button" onClick={() => takvimdenEkle(a.ad, a.doz)} style={{ background: 'rgba(15,155,142,0.2)', color: '#0F9B8E', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Ekle</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6, marginTop: 14 }}>Takvim dışı — özel aşılar</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {OZEL_ASILAR.map((a) => (
+              <div key={a.ad} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8, background: 'rgba(245,158,11,0.06)', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 150 }}>{a.ad}</span>
+                <span style={{ fontSize: 11, color: '#94A3B8' }}>{a.onerilenDonem}</span>
+                <span style={{ fontSize: 10, color: '#94A3B8', width: '100%' }}>{a.not}</span>
+                <button type="button" onClick={() => takvimdenEkle(a.ad, null)} style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Ekle</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {formAcik && (
         <form onSubmit={kaydet} style={{ background: '#111C33', borderRadius: 12, padding: 16, marginBottom: 16 }}>
@@ -157,7 +207,7 @@ export default function HastaAsilar({ patientId }: { patientId: string }) {
                 style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
               />
               <datalist id="yaygin-asilar">
-                {[...YAYGIN_PEDIATRIK, ...YAYGIN_YETISKIN].map((a) => <option key={a} value={a} />)}
+                {[...PEDIATRIK_ASI_ADLARI, ...YAYGIN_YETISKIN].map((a) => <option key={a} value={a} />)}
               </datalist>
             </div>
             <div>
