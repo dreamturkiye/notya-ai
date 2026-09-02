@@ -18,6 +18,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { resmiTatilMi } from '@/lib/randevu/resmiTatiller';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,6 +111,13 @@ function ayBaslikStr(ay: Date): string {
 export default function RandevularPage() {
   const router = useRouter();
   const [gorunum, setGorunum] = useState<'ay' | 'gun'>('ay');
+
+  // NOTYA-RANDEVU-10: 640px altı (iPhone dahil tüm telefonlar) için ay ızgarası yerine gün
+  // görünümü varsayılan — 7 sütunlu bir ızgara telefon genişliğinde okunaklı olamaz, kullanıcı
+  // yine de Ay'a manuel geçebilir (o zaman yatay kaydırma devreye girer).
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) setGorunum('gun');
+  }, []);
   const [ay, setAy] = useState(() => new Date());
   const [gun, setGun] = useState(() => new Date());
 
@@ -449,6 +457,12 @@ export default function RandevularPage() {
         </div>
 
         {hata && <div className="ni-error" style={{ marginBottom: 12 }}>{hata}</div>}
+
+        {resmiTatilMi(new Date()) && (
+          <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 12px', fontSize: 13, marginBottom: 12 }}>
+            🔔 Bugün resmi tatil: <strong>{resmiTatilMi(new Date())?.ad}</strong> — randevu planlarken dikkat edin.
+          </div>
+        )}
         {basariMesaji && (
           <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid #22C55E', color: '#22C55E', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>
             {basariMesaji}
@@ -456,7 +470,8 @@ export default function RandevularPage() {
         )}
 
         {gorunum === 'ay' && (
-          <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'auto' }}>
+            <div style={{ minWidth: 560 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: 'rgba(255,255,255,0.04)' }}>
               {HAFTA_GUNLERI.map((g) => (
                 <div key={g} style={{ padding: '8px 6px', fontSize: 11, color: '#94A3B8', textAlign: 'center', fontWeight: 600 }}>{g}</div>
@@ -467,6 +482,7 @@ export default function RandevularPage() {
                 const anahtar = yerelGunAnahtari(d);
                 const buAyIcinde = d.getMonth() === ay.getMonth();
                 const bugunMu = anahtar === bugunAnahtari;
+                const tatil = resmiTatilMi(d);
                 const gunRandevulari = (aylikRandevular[anahtar] || []).sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime());
                 const gosterilen = gunRandevulari.slice(0, 3);
                 const fazlaSayisi = gunRandevulari.length - gosterilen.length;
@@ -474,29 +490,33 @@ export default function RandevularPage() {
                   <div
                     key={i}
                     onClick={() => gunHucresineTikla(d)}
+                    title={tatil ? tatil.ad : undefined}
                     style={{
                       minHeight: 92,
                       padding: 6,
                       borderRight: (i + 1) % 7 !== 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
                       borderTop: '1px solid rgba(255,255,255,0.06)',
-                      background: bugunMu ? 'rgba(15,155,142,0.08)' : 'transparent',
+                      background: bugunMu ? 'rgba(15,155,142,0.08)' : tatil ? 'rgba(239,68,68,0.06)' : 'transparent',
                       opacity: buAyIcinde ? 1 : 0.35,
                       cursor: 'pointer',
                     }}
                   >
-                    <div style={{
-                      fontSize: 12,
-                      color: bugunMu ? '#0A1628' : '#CBD5E1',
-                      background: bugunMu ? '#0F9B8E' : 'transparent',
-                      width: bugunMu ? 20 : 'auto',
-                      height: bugunMu ? 20 : 'auto',
-                      borderRadius: bugunMu ? '50%' : 0,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: bugunMu ? 700 : 400,
-                      marginBottom: 4,
-                    }}>{d.getDate()}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                      <div style={{
+                        fontSize: 12,
+                        color: bugunMu ? '#0A1628' : '#CBD5E1',
+                        background: bugunMu ? '#0F9B8E' : 'transparent',
+                        width: bugunMu ? 20 : 'auto',
+                        height: bugunMu ? 20 : 'auto',
+                        borderRadius: bugunMu ? '50%' : 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: bugunMu ? 700 : 400,
+                      }}>{d.getDate()}</div>
+                      {tatil && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EF4444', flexShrink: 0 }} />}
+                    </div>
+                    {tatil && <div style={{ fontSize: 9, color: '#EF4444', marginBottom: 3, lineHeight: 1.2 }}>{tatil.ad}</div>}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {gosterilen.map((rv) => {
                         const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
@@ -528,6 +548,7 @@ export default function RandevularPage() {
                   </div>
                 );
               })}
+            </div>
             </div>
           </div>
         )}
@@ -628,6 +649,12 @@ export default function RandevularPage() {
               style={{ width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', borderRadius: '16px 16px 0 0', margin: 0 }}
             >
               <h3 className="ni-h3">{duzenlenenId ? 'Randevuyu Düzenle' : 'Yeni Randevu'} — {tarihBaslikStr(gun)}</h3>
+
+              {resmiTatilMi(gun) && (
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #EF4444', color: '#B91C1C', borderRadius: 8, padding: '8px 12px', fontSize: 13, marginBottom: 14 }}>
+                  Bu tarih resmi tatile denk geliyor: <strong>{resmiTatilMi(gun)?.ad}</strong>
+                </div>
+              )}
 
               {duzenlenenId && duzenlenenRandevu && (
                 <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid rgba(10,22,40,0.08)' }}>
