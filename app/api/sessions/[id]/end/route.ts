@@ -208,7 +208,17 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
 
   } catch (error: unknown) {
     console.error("[sessions/end]", error)
-    const msg = error instanceof Error ? error.message : "Bilinmeyen hata"
+    // NOTYA-SEANS-05: ham API hataları (özellikle Anthropic kredi/limit JSON'u) doktora
+    // asla gösterilmez — loglanır, kullanıcıya Türkçe ve eyleme dönük mesaj gider.
+    const ham = error instanceof Error ? error.message : ""
+    let msg = "Not oluşturulamadı. Lütfen tekrar deneyin — notlarınız kaybolmadı."
+    if (/credit balance|billing|invalid_request_error.*credit/i.test(ham)) {
+      msg = "Yapay zekâ servisi geçici olarak kullanılamıyor (hesap bakiyesi). Yönetici bilgilendirildi — notlarınız ekranda duruyor, kısa süre sonra 'Seansı Bitir'e tekrar basın."
+    } else if (/rate_limit|429/i.test(ham)) {
+      msg = "Sistem şu an yoğun. 30 saniye sonra 'Seansı Bitir'e tekrar basın — notlarınız kaybolmadı."
+    } else if (/overloaded|529|503/i.test(ham)) {
+      msg = "Yapay zekâ servisi geçici olarak yoğun. Birkaç dakika sonra tekrar deneyin — notlarınız kaybolmadı."
+    }
     return NextResponse.json({ success: false, error: msg }, { status: 500 })
   }
 }
