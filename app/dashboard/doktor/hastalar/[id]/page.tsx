@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import HastaIlaclar from '@/components/doktor/HastaIlaclar';
 import HastaIntake from '@/components/doktor/HastaIntake';
 import HastaAsilar from '@/components/doktor/HastaAsilar';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
@@ -21,8 +21,13 @@ interface PatientData {
 export default function HastaProfilPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const patientId = params?.id as string;
-  const [activeTab, setActiveTab] = useState(1);
+  // NOTYA-RANDEVU-09: randevu takviminden "Hasta Formunu Görüntüle" gibi hedefli linkler
+  // özellikle Hasta Formu (7) veya Aşılar (8) sekmesine ?tab=formu / ?tab=asilar ile atlar.
+  const tabParam = searchParams?.get('tab');
+  const baslangicTab = tabParam === 'formu' ? 6 : tabParam === 'asilar' ? 7 : 1;
+  const [activeTab, setActiveTab] = useState(baslangicTab);
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

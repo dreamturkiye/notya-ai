@@ -15,6 +15,7 @@
  */
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
@@ -107,6 +108,7 @@ function ayBaslikStr(ay: Date): string {
 }
 
 export default function RandevularPage() {
+  const router = useRouter();
   const [gorunum, setGorunum] = useState<'ay' | 'gun'>('ay');
   const [ay, setAy] = useState(() => new Date());
   const [gun, setGun] = useState(() => new Date());
@@ -559,7 +561,7 @@ export default function RandevularPage() {
                         <div style={{ fontSize: 15, fontWeight: 600 }}>{saatStr(rv.baslangic)} – {saatStr(rv.bitis)}</div>
                         <div style={{ fontSize: 15, marginTop: 2 }}>{rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 11, color: '#F59E0B', marginLeft: 6 }}>kayıtsız</span>}</div>
                         <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{TUR_ETIKET[rv.tur] || rv.tur}{rv.hastaTelefon ? ` · ${rv.hastaTelefon}` : ''}</div>
-                        {rv.notlar && <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>{rv.notlar}</div>}
+                        {rv.notlar && <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4, whiteSpace: 'pre-wrap' }}>{rv.notlar}</div>}
                         {rv.durum === 'iptal' && rv.iptalNedeni && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>İptal: {rv.iptalNedeni}</div>}
                       </div>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>
@@ -569,6 +571,12 @@ export default function RandevularPage() {
 
                     {rv.durum !== 'iptal' && (
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                        {rv.patientId && (
+                          <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}`)} style={{ ...aksiyonBtn, color: '#0F9B8E', fontWeight: 600 }}>Hasta Dosyasını Aç</button>
+                        )}
+                        {rv.patientId && (
+                          <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}?tab=formu`)} style={{ ...aksiyonBtn, color: '#0F9B8E' }}>Hasta Formu</button>
+                        )}
                         <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
                         {rv.durum === 'planlandi' && (
                           <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={aksiyonBtn}>Onayla</button>
@@ -636,6 +644,12 @@ export default function RandevularPage() {
                         </div>
                         {duzenlenenRandevu.durum !== 'iptal' && !modalIptalAcik && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {duzenlenenRandevu.patientId && (
+                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, color: '#0F9B8E', fontWeight: 600, borderColor: '#0F9B8E' }}>Hasta Dosyasını Aç</button>
+                            )}
+                            {duzenlenenRandevu.patientId && (
+                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}?tab=formu`)} style={{ ...modalAksiyonBtn, color: '#0F9B8E', borderColor: '#0F9B8E' }}>Hasta Formu</button>
+                            )}
                             {duzenlenenRandevu.durum === 'planlandi' && (
                               <button type="button" onClick={() => modalDurumDegistir('onaylandi')} style={modalAksiyonBtn}>Onayla</button>
                             )}
