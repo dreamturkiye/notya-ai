@@ -8,11 +8,24 @@
  * küçük ek modül bakımı — aynı bilgiyi iki kez tanımlamamak, gelecekte bir alan eklenince 30
  * yerde değil 1 yerde değişmek için.
  *
+ * NOTYA-INTAKE-03 — tasarım prensipleri (Acıbadem/Medicana/Amerikan Hastanesi karşılaştırması +
+ * Apple HIG sadelik ilkesi üzerinden gözden geçirildi):
+ *   - 'checkbox-grup' ve 'radio' alanları render katmanında (web + PDF) 2-3 sütunlu ızgarada,
+ *     serbest metin yerine işaretlenerek dolduruluyor — "15-20 seçenek tek sütunda" anti-pattern'i
+ *     yok. Yatay Evet/Hayır tercih ediliyor, dikey liste değil.
+ *   - 'bolum-basligi' tipi: bir branş bölümü içinde alt başlık (örn. pediatri "Doğum ve Gelişim")
+ *     — input almaz, yalnızca tarama hızını artıran görsel ayraç.
+ *   - Her branşın ilk sorusu artık "Bugünkü başvuru nedeniniz nedir?" (bkz. bransSorulari.ts) —
+ *     Acıbadem/Medicana formlarında bile sıkça atlanan, ama bir doktorun 30 saniyede hastayı
+ *     anlaması için en kritik tek alan.
+ *   - Hedef: Acıbadem'in klinik kapsamı + Apple'ın 3-5 dakikalık doldurma deneyimi. Daha fazla
+ *     soru değil, daha akıllı soru.
+ *
  * Alan şeması TÜRKÇE, çünkü form doğrudan hastaya gösteriliyor — İngilizce id/type dışında her
  * şey hastanın göreceği metin.
  */
 
-export type IntakeAlanTuru = 'text' | 'tel' | 'email' | 'date' | 'select' | 'textarea' | 'radio' | 'checkbox-grup'
+export type IntakeAlanTuru = 'text' | 'tel' | 'email' | 'date' | 'select' | 'textarea' | 'radio' | 'checkbox-grup' | 'bolum-basligi'
 
 export interface IntakeAlan {
   id: string
@@ -55,7 +68,7 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
   {
     baslik: 'Sağlık Güvencesi',
     alanlar: [
-      { id: 'sigortaTuru', etiket: 'Sağlık Güvenceniz', tur: 'radio', zorunlu: true, secenekler: ['SGK', 'Özel Sağlık Sigortası', 'Kurumsal Anlaşma (İşveren)', 'Güvencem Yok / Kendim Ödeyeceğim'] },
+      { id: 'sigortaTuru', etiket: 'Sağlık Güvenceniz', tur: 'radio', zorunlu: true, secenekler: ['SGK', 'Özel Sağlık Sigortası', 'Tamamlayıcı Sağlık Sigortası', 'Kurumsal Anlaşma', 'Ücretli Hasta'] },
       { id: 'sigortaSirketi', etiket: 'Özel Sigorta Şirketi', tur: 'text', yardim: 'Yalnızca özel sağlık sigortanız varsa doldurun.' },
       { id: 'policeNo', etiket: 'Poliçe / Üyelik Numarası', tur: 'text' },
       { id: 'kurumAdi', etiket: 'Kurum / İşveren Adı', tur: 'text', yardim: 'Yalnızca kurumsal anlaşmanız varsa doldurun.' },
@@ -64,11 +77,12 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
   {
     baslik: 'Sağlık Geçmişi',
     alanlar: [
-      { id: 'kanGrubu', etiket: 'Kan Grubu', tur: 'select', secenekler: ['0 Rh+', '0 Rh-', 'A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', 'Bilmiyorum'] },
+      { id: 'kanGrubu', etiket: 'Kan Grubu', tur: 'radio', secenekler: ['Bilmiyorum', 'A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', '0 Rh+', '0 Rh-'] },
       { id: 'kronikHastaliklar', etiket: 'Bilinen Kronik Hastalıklarınız', tur: 'checkbox-grup', secenekler: ['Diyabet', 'Hipertansiyon', 'Astım / KOAH', 'Kalp Hastalığı', 'Böbrek Hastalığı', 'Tiroid Hastalığı', 'Kanser', 'Yok'] },
       { id: 'gecirilmisAmeliyatlar', etiket: 'Geçirdiğiniz Ameliyatlar', tur: 'textarea', placeholder: 'Ameliyat adı ve yılı' },
-      { id: 'kullanilanIlaclar', etiket: 'Düzenli Kullandığınız İlaçlar', tur: 'textarea', placeholder: 'İlaç adı ve dozu' },
-      { id: 'alerjiler', etiket: 'Bilinen İlaç / Gıda Alerjileriniz', tur: 'textarea' },
+      { id: 'kullaniyorMu', etiket: 'Düzenli ilaç kullanıyor musunuz?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
+      { id: 'kullanilanIlaclar', etiket: 'İlaç Adı ve Dozu', tur: 'textarea', yardim: 'Yalnızca "Evet" ise doldurun.' },
+      { id: 'alerjiler', etiket: 'Bilinen Alerjileriniz', tur: 'checkbox-grup', secenekler: ['Yok', 'İlaç', 'Gıda', 'Polen', 'Ev Tozu', 'Hayvan', 'Lateks', 'Diğer'] },
       { id: 'aileOykusu', etiket: 'Aile Sağlık Öyküsü', tur: 'textarea', placeholder: 'Anne/baba/kardeşte bilinen ciddi hastalıklar' },
       { id: 'sigara', etiket: 'Sigara Kullanımı', tur: 'radio', secenekler: ['Kullanmıyorum', 'Kullanıyorum', 'Bıraktım'] },
       { id: 'alkol', etiket: 'Alkol Kullanımı', tur: 'radio', secenekler: ['Kullanmıyorum', 'Ara sıra', 'Düzenli kullanıyorum'] },
@@ -77,8 +91,9 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
   {
     baslik: 'Onay',
     alanlar: [
-      { id: 'kvkkOnay', etiket: 'KVKK Aydınlatma Metni\'ni okudum, kişisel verilerimin işlenmesini kabul ediyorum.', tur: 'radio', zorunlu: true, secenekler: ['Kabul ediyorum'] },
-      { id: 'tedaviOnay', etiket: 'Verdiğim bilgilerin doğru olduğunu ve tedavi sürecinde kullanılmasını onaylıyorum.', tur: 'radio', zorunlu: true, secenekler: ['Onaylıyorum'] },
+      { id: 'dogruBeyan', etiket: 'Verdiğim bilgilerin doğru olduğunu beyan ederim.', tur: 'radio', zorunlu: true, secenekler: ['Beyan ediyorum'] },
+      { id: 'kvkkOnay', etiket: 'KVKK Aydınlatma Metni\'ni okudum, kişisel verilerimin ilgili mevzuat kapsamında işlenmesini kabul ediyorum.', tur: 'radio', zorunlu: true, secenekler: ['Kabul ediyorum'] },
+      { id: 'iletisimOnay', etiket: 'Gerekli durumlarda tarafımla telefon veya SMS yoluyla iletişime geçilmesini kabul ediyorum.', tur: 'radio', secenekler: ['Kabul ediyorum'] },
     ],
   },
 ]
