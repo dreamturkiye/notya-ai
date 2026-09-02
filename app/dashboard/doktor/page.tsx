@@ -312,9 +312,9 @@ export default function DoktorDashboard() {
                 <div style={{ padding: '10px 0' }}>
                   {buHaftaninGunleri().map((gunTarihi) => {
                     const anahtar = yerelGunAnahtari(gunTarihi)
-                    const guninRandevulari = haftalikRandevular.filter((rv) => yerelGunAnahtari(new Date(rv.baslangic)) === anahtar)
+                    const guninRandevulari = haftalikRandevular.filter((rv) => trtGunAnahtari(rv.baslangic) === anahtar)
                     if (guninRandevulari.length === 0) return null
-                    const bugunMu = anahtar === yerelGunAnahtari(new Date())
+                    const bugunMu = anahtar === trtGunAnahtari(new Date())
                     const gunEtiketi = gunTarihi.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })
                     return (
                       <div key={anahtar} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>

@@ -23,9 +23,11 @@ interface NavItem {
 // that access at all, so it is doctor-only by the same rule.
 const navItems: NavItem[] = [
   { label: "Asistan", route: "/asistan", color: "linear-gradient(90deg, #3B82F6, #7C3AED)", sadeceDoktor: true },
+  { label: "Ana Sayfa", route: "/dashboard/doktor", color: "#0F9B8E", hideOnMobile: true, sadeceDoktor: true },
   { label: "Randevular", route: "/dashboard/doktor/randevular", color: "#0F9B8E" },
   { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6" },
   { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#334155", sadeceDoktor: true },
+  { label: "Araçlar", route: "/doktor-tools", color: "#166534", sadeceDoktor: true },
   { label: "⚙ Ayarlar", route: "/dashboard/doktor/ayarlar", color: "rgba(255,255,255,0.12)", sadeceDoktor: true },
 ];
 
@@ -92,7 +94,7 @@ export default function DoktorNav() {
       zIndex: 100,
     }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', minHeight: '40px' }}>
-        <div onClick={() => handleNav('/dashboard/doktor/randevular')} title="Ana sayfa: Randevular" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, minWidth: 0, cursor: 'pointer' }}>
+        <div onClick={() => handleNav('/dashboard/doktor')} title="Ana Sayfa" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, minWidth: 0, cursor: 'pointer' }}>
           <div style={{ width: '32px', height: '32px', backgroundColor: '#0F9B8E', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>N</div>
           <span style={{ color: 'white', fontSize: isMobile ? '17px' : '20px', fontWeight: 600, whiteSpace: 'nowrap' }}>Notya AI</span>
         </div>
