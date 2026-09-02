@@ -28,12 +28,15 @@ interface FormSemasi {
   bransEtiket: string | null;
 }
 
-/** Kaç sütun: uzun etiketli seçenekler (>14 karakter) 2 sütuna, kısa olanlar 3 sütuna sığar —
- * Apple HIG "içerik taşmasın" ilkesi, sabit sütun sayısı yerine. */
-function sutunSayisi(secenekler: string[]): number {
+/** Kaç sütun VE minimum sütun genişliği: uzun etiketli seçenekler (>14 karakter) 2 sütuna, kısa
+ * olanlar 3 sütuna sığar — ama bu üst sınır, alt sınır değil. auto-fit/minmax kullanıyoruz ki
+ * dar bir telefon ekranında (📱 mobil uyumluluk gereksinimi) grid otomatik olarak 1 sütuna
+ * düşsün — sabit repeat(3,1fr) telefon genişliğinde metni sıkıştırıp okunmaz hale getirirdi. */
+function gridSablonu(secenekler: string[]): string {
   const uzunEnUzun = Math.max(...secenekler.map((s) => s.length));
-  if (secenekler.length <= 2) return secenekler.length;
-  return uzunEnUzun > 14 ? 2 : 3;
+  if (secenekler.length <= 2) return `repeat(${secenekler.length}, 1fr)`;
+  const minGenislik = uzunEnUzun > 14 ? 190 : 150;
+  return `repeat(auto-fit, minmax(${minGenislik}px, 1fr))`;
 }
 
 function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unknown; onChange: (v: unknown) => void }) {
@@ -54,9 +57,9 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
     );
   }
   if (alan.tur === 'radio' && alan.secenekler) {
-    const cols = sutunSayisi(alan.secenekler);
+    const grid = gridSablonu(alan.secenekler);
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '8px 12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: grid, gap: '8px 12px' }}>
         {alan.secenekler.map((s) => (
           <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, cursor: 'pointer' }}>
             <input type="radio" name={alan.id} checked={deger === s} onChange={() => onChange(s)} />
@@ -68,9 +71,9 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
   }
   if (alan.tur === 'checkbox-grup' && alan.secenekler) {
     const secililer = (deger as string[]) || [];
-    const cols = sutunSayisi(alan.secenekler);
+    const grid = gridSablonu(alan.secenekler);
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '8px 12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: grid, gap: '8px 12px' }}>
         {alan.secenekler.map((s) => (
           <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, cursor: 'pointer' }}>
             <input
