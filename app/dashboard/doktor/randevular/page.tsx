@@ -316,14 +316,6 @@ export default function RandevularPage() {
         setHata(j.error || 'Randevu kaydedilemedi.');
         return;
       }
-      // NOTYA-RANDEVU-05: yeni hasta bu randevuyla birlikte otomatik olarak açıldıysa, sekreter/
-      // doktor bunu görmeli — sessizce geçersek hastalar listesinde yeni bir kayıt belirmesi
-      // şaşırtıcı olur.
-      const sonuc = await r.json().catch(() => ({}));
-      if (sonuc?.yeniHasta?.ad) {
-        setBasariMesaji(`${sonuc.yeniHasta.ad} yeni hasta olarak kaydedildi ve dosyası açıldı.`);
-        setTimeout(() => setBasariMesaji(''), 6000);
-      }
       formuSifirla();
       setFormAcik(false);
       await yenile();
@@ -334,15 +326,23 @@ export default function RandevularPage() {
     }
   }
 
+  // NOTYA-RANDEVU-07: dosya açılışı yalnızca onaylandi/tamamlandi/gelmedi geçişinde olur (bkz.
+  // API route yorumu). Server bunu yeniHasta olarak döndürünce burada görünür kılıyoruz —
+  // "onayla" tıklayıp dosyanın sessizce açılması doktora/sekretere bildirilmeden geçmemeli.
   async function durumDegistir(id: string, durum: string, neden?: string) {
     try {
       const t = await token();
       if (!t) return;
-      await fetch(`/api/doktor/randevular/${id}`, {
+      const r = await fetch(`/api/doktor/randevular/${id}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ durum, iptalNedeni: neden }),
       });
+      const sonuc = await r.json().catch(() => ({}));
+      if (sonuc?.yeniHasta?.ad) {
+        setBasariMesaji(`${sonuc.yeniHasta.ad} için hasta dosyası açıldı.`);
+        setTimeout(() => setBasariMesaji(''), 6000);
+      }
       await yenile();
     } catch { /* re-fetch will reflect actual state either way */ }
   }
