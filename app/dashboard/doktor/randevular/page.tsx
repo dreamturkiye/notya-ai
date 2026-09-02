@@ -27,6 +27,7 @@ interface Randevu {
   tur: string;
   durum: string;
   notlar: string | null;
+  hastaDurumu: string | null;
   iptalNedeni: string | null;
   patientId: string | null;
   hastaAdi: string;
@@ -124,6 +125,7 @@ export default function RandevularPage() {
   const [sureDk, setSureDk] = useState(20);
   const [tur, setTur] = useState('muayene');
   const [notlar, setNotlar] = useState('');
+  const [hastaDurumu, setHastaDurumu] = useState<'saglikli' | 'sikayetli' | ''>('');
 
   const [hastaArama, setHastaArama] = useState('');
   const [hastaSonuclari, setHastaSonuclari] = useState<HastaAramaSonucu[]>([]);
@@ -237,6 +239,7 @@ export default function RandevularPage() {
     setSureDk(20);
     setTur('muayene');
     setNotlar('');
+    setHastaDurumu('');
     setHastaArama('');
     setHastaSonuclari([]);
     setSeciliHasta(null);
@@ -264,6 +267,7 @@ export default function RandevularPage() {
     setSureDk(Math.round((new Date(rv.bitis).getTime() - new Date(rv.baslangic).getTime()) / 60000));
     setTur(rv.tur);
     setNotlar(rv.notlar || '');
+    setHastaDurumu((rv.hastaDurumu as 'saglikli' | 'sikayetli') || '');
     setGun(new Date(rv.baslangic));
     if (rv.kayitliHasta && rv.patientId) {
       setSeciliHasta({ id: rv.patientId, name: rv.hastaAdi });
@@ -302,6 +306,7 @@ export default function RandevularPage() {
         bitis: bitisTarihi.toISOString(),
         tur,
         notlar: notlar.trim() || null,
+        hastaDurumu: hastaDurumu || null,
       };
 
       const url = duzenlenenId ? `/api/doktor/randevular/${duzenlenenId}` : '/api/doktor/randevular';
@@ -732,7 +737,29 @@ export default function RandevularPage() {
               </div>
 
               <div className="ni-field">
-                <label className="ni-label">Not</label>
+                <label className="ni-label">Hasta Durumu</label>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={hastaDurumu === 'saglikli'}
+                      onChange={() => setHastaDurumu(hastaDurumu === 'saglikli' ? '' : 'saglikli')}
+                    />
+                    Sağlıklı Hasta
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={hastaDurumu === 'sikayetli'}
+                      onChange={() => setHastaDurumu(hastaDurumu === 'sikayetli' ? '' : 'sikayetli')}
+                    />
+                    Hasta Olan Bir Hasta
+                  </label>
+                </div>
+              </div>
+
+              <div className="ni-field">
+                <label className="ni-label">Not / Şikayet</label>
                 <input className="ni-input" value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="İsteğe bağlı" />
               </div>
 

@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
         tur: r.tur,
         durum: r.durum,
         notlar: r.notlar,
+        hastaDurumu: r.hasta_durumu,
         iptalNedeni: r.iptal_nedeni,
         patientId: r.patient_id,
         hastaAdi: hasta?.ad || r.hasta_adi_serbest || 'İsimsiz',
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
   const { supabase, doktorId, user } = oturum
 
   const body = await req.json().catch(() => ({}))
-  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, baslangic, bitis, tur, notlar } = body as {
+  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, baslangic, bitis, tur, notlar, hastaDurumu } = body as {
     patientId?: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
     bitis?: string
     tur?: string
     notlar?: string
+    hastaDurumu?: string
   }
 
   if (!baslangic || !bitis) {
@@ -142,6 +144,7 @@ export async function POST(req: NextRequest) {
       bitis,
       tur: tur || 'muayene',
       notlar: notlar?.trim() || null,
+      hasta_durumu: hastaDurumu === 'saglikli' || hastaDurumu === 'sikayetli' ? hastaDurumu : null,
       olusturan_id: user.id,
     })
     .select()
