@@ -12,7 +12,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
-import { otomatikHastaKaydiOlustur } from '@/lib/doktor/otomatikHastaKaydi'
 
 export const dynamic = 'force-dynamic'
 
@@ -127,27 +126,18 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // NOTYA-RANDEVU-05: kayıtsız bir isim için ayırılıyorsa, gerçek bir hasta kaydı (ve dosyası)
-  // burada açılır — çakışma kontrolü geçtikten SONRA, başarısız bir rezervasyon denemesinde
-  // sahipsiz hasta kaydı oluşmasın diye. Hasta kaydı oluşturma başarısız olursa randevu yine
-  // de serbest metinle oluşturulur — rezervasyonu bu yüzden engellemek yanlış taraf.
-  let etkinPatientId = patientId || null
-  let yeniHasta: { id: string; ad: string } | null = null
-  if (!etkinPatientId && hastaAdiSerbest?.trim()) {
-    const olusturulan = await otomatikHastaKaydiOlustur(supabase, doktorId, hastaAdiSerbest, hastaTelefonSerbest)
-    if (olusturulan) {
-      etkinPatientId = olusturulan.id
-      yeniHasta = { id: olusturulan.id, ad: hastaAdiSerbest.trim() }
-    }
-  }
-
+  // NOTYA-RANDEVU-07: kayıt sırasında hasta kaydı AÇILMAZ, kasten. Dosya yalnızca doktor
+  // randevuyu ONAYLADIğINDA açılır (bkz. [id]/route.ts PATCH, durum='onaylandi') — sekreterin
+  // telefonla aldığı bir randevu tek başına gerçek bir hasta dosyası açma yetkisine sahip
+  // değil; bu, doktorun randevuyu GÖRÜP onayladığı an. NOTYA-RANDEVU-05'te burada eager
+  // oluşturuluyordu — kasten geri alındı.
   const { data, error } = await supabase
     .from('randevular')
     .insert({
       doktor_id: doktorId,
-      patient_id: etkinPatientId,
-      hasta_adi_serbest: etkinPatientId ? null : hastaAdiSerbest?.trim() || null,
-      hasta_telefon_serbest: etkinPatientId ? null : hastaTelefonSerbest?.trim() || null,
+      patient_id: patientId || null,
+      hasta_adi_serbest: patientId ? null : hastaAdiSerbest?.trim() || null,
+      hasta_telefon_serbest: patientId ? null : hastaTelefonSerbest?.trim() || null,
       baslangic,
       bitis,
       tur: tur || 'muayene',
@@ -158,5 +148,5 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: 'Randevu oluşturulamadı.' }, { status: 500 })
-  return NextResponse.json({ randevu: data, yeniHasta })
+  return NextResponse.json({ randevu: data })
 }

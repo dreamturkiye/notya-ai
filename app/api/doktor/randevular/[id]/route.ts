@@ -80,29 +80,31 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (tur !== undefined) guncelleme.tur = tur
   if (notlar !== undefined) guncelleme.notlar = notlar?.trim() || null
 
-  // NOTYA-RANDEVU-06: hasta bağlantısını güncelleme.
+  // NOTYA-RANDEVU-07: hasta bağlantısını güncelleme.
   //
-  //   1. Bir kayıtlı hasta seçildi (patientId geldi) — doğrudan bağla, serbest metni temizle.
-  //   2. Doktor onayladı / tamamladı / gelmedi olarak işaretledi VE henüz kayıtsız: bu, doktorun
-  //      randevuyla ilk kez GERÇEKTEN ilgilendiği an — dosyanın o anda kesin var olması gerekir.
-  //      ÖNEMLİ: hızlı "Onayla" aksiyonu (gün görünümü satırı ve düzenleme modalı, ikisi de)
-  //      yalnızca { durum } gönderir — hastaAdiSerbest'i YENİDEN GÖNDERMEZ. Bu yüzden isim/telefon
-  //      istekte yoksa VERİTABANINDAKİ mevcut satırdan (mevcut.hasta_adi_serbest) alınıyor —
-  //      istemcinin bu alanları tekrar göndermesine bağımlı kalmadan.
-  //   3. Henüz kayıtsız ve isim düzenleme formundan geldi (durum değişmeden bir yeniden planlama/
-  //      düzenleme) — aynı otomatik kayıt, isteğin kendisinden gelen isimle.
-  //   4. Zaten kayıtlıysa (mevcut.patient_id var) ve patientId gönderilmediyse dokunma — form
-  //      her zaman aynı alanları gönderir, kayıtlı bir hastayı yanlışlıkla koparmamalı.
+  //   1. Bir kayıtlı hasta seçildi (patientId geldi) — bu her zaman izinli: var olan gerçek
+  //      bir hastaya bağlamak, yoktan yeni bir dosya açmak değildir. Durumdan bağımsız.
+  //   2. YENİ bir hasta kaydı (serbest isimden) yalnızca doktor randevuyu ONAYLADIğında /
+  //      tamamladığında / gelmedi olarak işaretlediğinde açılır — bu, doktorun randevuyu
+  //      GÖRÜP onayladığı an. Sadece yeniden planlama/not düzenleme (durum değişmeden) BiR
+  //      hasta dosyası AÇMAZ — dosya sekreterin randevu almasıyla değil, doktorun onayıyla
+  //      başlar. ÖNEMLİ: hızlı "Onayla" aksiyonu yalnızca { durum } gönderir — isim/telefon
+  //      istekte yoksa VERİTABANINDAKI mevcut satırdan (mevcut.hasta_adi_serbest) alınır.
+  //   3. Zaten kayıtlıysa (mevcut.patient_id var) ve patientId gönderilmediyse dokunma.
+  //   4. Hiçbir yaratım koşulu oluşmadıysa (hala planlandi, serbest isim düzenleniyor) sadece
+  //      serbest metni güncel tut — henüz dosya yok, olmamalı.
   const doktorGercektenIlgilendi = !!durum && ['onaylandi', 'tamamlandi', 'gelmedi'].includes(durum);
-  const otomatikKayitGerekli =
-    !patientId && !mevcut.patient_id &&
-    (hastaAdiSerbest?.trim() || (doktorGercektenIlgilendi && mevcut.hasta_adi_serbest));
+  const yeniKayitGerekli =
+    !patientId && !mevcut.patient_id && doktorGercektenIlgilendi &&
+    (hastaAdiSerbest?.trim() || mevcut.hasta_adi_serbest);
+
+  let yeniHasta: { id: string; ad: string } | null = null
 
   if (patientId && patientId !== mevcut.patient_id) {
     guncelleme.patient_id = patientId
     guncelleme.hasta_adi_serbest = null
     guncelleme.hasta_telefon_serbest = null
-  } else if (otomatikKayitGerekli) {
+  } else if (yeniKayitGerekli) {
     const ad = hastaAdiSerbest?.trim() || mevcut.hasta_adi_serbest
     const telefon = hastaTelefonSerbest !== undefined ? hastaTelefonSerbest?.trim() : mevcut.hasta_telefon_serbest
     const olusturulan = await otomatikHastaKaydiOlustur(supabase, doktorId, ad, telefon)
@@ -110,6 +112,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       guncelleme.patient_id = olusturulan.id
       guncelleme.hasta_adi_serbest = null
       guncelleme.hasta_telefon_serbest = null
+      yeniHasta = { id: olusturulan.id, ad }
     } else if (hastaAdiSerbest !== undefined) {
       // Hasta kaydı açılamadıysa serbest metni yine de güncel tut — randevu güncellemesini bu
       // yüzden engellemek yanlış taraf.
@@ -134,7 +137,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single()
 
   if (error) return NextResponse.json({ error: 'Randevu güncellenemedi.' }, { status: 500 })
-  return NextResponse.json({ randevu: data })
+  return NextResponse.json({ randevu: data, yeniHasta })
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
