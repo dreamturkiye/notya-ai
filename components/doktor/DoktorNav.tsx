@@ -12,24 +12,21 @@ interface NavItem {
   sadeceDoktor?: boolean;
 }
 
+// NOTYA-SADE-01 (Ö1-Ö5, Kaan onayı "hepsi" 2026-09-02): üst menü 14 → 5 kaleme indi.
+// İlke: yakınsak fazlalık kalır (tüm rotalar yaşıyor, derin linkler çalışır), ıraksak
+// kavramlar gider. Belgeler/Görüntüleme/İlaçlar → hasta dosyası sekmeleri; Hasta Ekle →
+// Hastalar sayfasındaki buton + randevu modalı + asistan; Ana Sayfa → logo tıkı Randevular'a;
+// İnceleme → Raporlar üstündeki "Onay Bekleyen Notlar" kısayolu; Entegrasyonlar/Personel/
+// SGK/Araçlar → tek Ayarlar sayfası. Detay: docs/SIMPLICITY-AUDIT.md
 // NOTYA-RANDEVU-01: Randevular is shared (doktor + sekreter both see it — one calendar).
 // Everything marked sadeceDoktor is hidden for a sekreter session; Personel manages who has
 // that access at all, so it is doctor-only by the same rule.
 const navItems: NavItem[] = [
   { label: "Asistan", route: "/asistan", color: "linear-gradient(90deg, #3B82F6, #7C3AED)", sadeceDoktor: true },
-  { label: "Ana Sayfa", route: "/dashboard", color: "#0F9B8E", hideOnMobile: true },
   { label: "Randevular", route: "/dashboard/doktor/randevular", color: "#0F9B8E" },
   { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6" },
-  { label: "Hasta Ekle", route: "/dashboard/doktor/hasta-ekle", color: "#F59E0B" },
-  { label: "Belgeler", route: "/dashboard/doktor/belgeler", color: "#EF4444", sadeceDoktor: true },
-  { label: "Görüntüleme", route: "/dashboard/doktor/goruntuleme", color: "#6366F1", sadeceDoktor: true },
-  { label: "İlaçlar", route: "/dashboard/doktor/ilaclar", color: "#22C55E", sadeceDoktor: true },
-  { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#8B5CF6", sadeceDoktor: true },
-  { label: "İnceleme", route: "/dashboard/doktor/inceleme", color: "#F97316", sadeceDoktor: true },
-  { label: "Entegrasyonlar", route: "/dashboard/doktor/entegrasyonlar", color: "#0EA5E9", sadeceDoktor: true },
-  { label: "Personel", route: "/dashboard/doktor/personel", color: "#334155", sadeceDoktor: true },
-  { label: "Araçlar", route: "/doktor-tools", color: "#166534", sadeceDoktor: true },
-  { label: "SGK", route: "/doktor-tools/sgk-medula", color: "#DC2626", sadeceDoktor: true },
+  { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#334155", sadeceDoktor: true },
+  { label: "⚙ Ayarlar", route: "/dashboard/doktor/ayarlar", color: "rgba(255,255,255,0.12)", sadeceDoktor: true },
 ];
 
 export default function DoktorNav() {
@@ -95,7 +92,7 @@ export default function DoktorNav() {
       zIndex: 100,
     }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', minHeight: '40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, minWidth: 0 }}>
+        <div onClick={() => handleNav('/dashboard/doktor/randevular')} title="Ana sayfa: Randevular" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, minWidth: 0, cursor: 'pointer' }}>
           <div style={{ width: '32px', height: '32px', backgroundColor: '#0F9B8E', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>N</div>
           <span style={{ color: 'white', fontSize: isMobile ? '17px' : '20px', fontWeight: 600, whiteSpace: 'nowrap' }}>Notya AI</span>
         </div>

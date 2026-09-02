@@ -124,7 +124,11 @@ export default function HastalarPage() {
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
       <DoktorNav />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-        <h1 style={{ fontSize: 28, marginBottom: 24 }}>Hastalar</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+          <h1 style={{ fontSize: 28, margin: 0 }}>Hastalar</h1>
+          {/* NOTYA-SADE-01 (Ö2): üst menüden kalkan "Hasta Ekle" buraya buton olarak geldi */}
+          <button type="button" onClick={() => router.push('/dashboard/doktor/hasta-ekle')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>+ Hasta Ekle</button>
+        </div>
         <input
           placeholder="Ad, soyad veya TC Kimlik No ile ara..."
           value={search}

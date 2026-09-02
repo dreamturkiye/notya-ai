@@ -186,6 +186,10 @@ const Page: React.FC = () => {
       <DoktorNav />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 60px' }}>
+        {/* NOTYA-SADE-01 (Ö5): İnceleme üst menüden kalktı — onay kuyruğuna buradan tek tık */}
+        <a href="/dashboard/doktor/inceleme" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.4)', color: '#FDBA74', borderRadius: 12, padding: '12px 16px', marginTop: 24, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+          🟠 Onay Bekleyen Notlar (İnceleme) <span style={{ marginLeft: 'auto', fontSize: 16 }}>›</span>
+        </a>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', paddingTop: '32px', marginBottom: '32px' }}>
           <div style={{ fontSize: '24px', fontWeight: 700 }}>Aylık Klinik Raporu</div>
