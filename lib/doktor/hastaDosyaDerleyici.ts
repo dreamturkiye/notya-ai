@@ -119,6 +119,11 @@ export async function hastaDosyasiniDerle(
     if (n.content_objektif) b.push(`O (Objektif): ${n.content_objektif}`)
     if (n.content_degerlendirme) b.push(`A (Değerlendirme): ${n.content_degerlendirme}`)
     if (n.content_plan) b.push(`P (Plan): ${n.content_plan}`)
+    if (n.content_tani) b.push(`Tanı: ${n.content_tani}`)
+    const icd = n.icd10_codes as { code?: string; description_tr?: string }[] | null
+    if (Array.isArray(icd) && icd.length) b.push(`ICD-10 (doktor onaylı not içinden): ${icd.map((k) => [k.code, k.description_tr].filter(Boolean).join(' ')).join('; ')}`)
+    const vIlac = n.content_ilaclar as { ad?: string; doz?: string; kullanim?: string }[] | null
+    if (Array.isArray(vIlac) && vIlac.length) b.push(`Verilen ilaçlar: ${vIlac.map((x) => [x.ad, x.doz, x.kullanim].filter(Boolean).join(' ')).join('; ')}`)
     if (n.kritik_bulgular) b.push(`KRİTİK: ${Array.isArray(n.kritik_bulgular) ? (n.kritik_bulgular as string[]).join('; ') : n.kritik_bulgular}`)
   })
 

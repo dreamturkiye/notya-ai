@@ -11,12 +11,23 @@ import {
   toolsErrorBox,
 } from '@/lib/doktor/toolsUi';
 
+interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
+interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
+
 interface PendingNote {
   id: string;
   maskedPatient: string;
   specialty: string;
   date: string;
   subjektif: string;
+  objektif: string;
+  degerlendirme: string;
+  plan: string;
+  tani: string;
+  ilaclar: IlacOner[];
+  icdKodlari: IcdOner[];
+  kritikBulgular: string[];
+  hastaOzeti: string;
 }
 
 function normalizeNotes(payload: unknown): PendingNote[] {
@@ -30,6 +41,14 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       specialty: String(n.specialty ?? 'Genel'),
       date: String(n.date ?? ''),
       subjektif: String(n.subjektif ?? ''),
+      objektif: String(n.objektif ?? ''),
+      degerlendirme: String(n.degerlendirme ?? ''),
+      plan: String(n.plan ?? ''),
+      tani: String(n.tani ?? ''),
+      ilaclar: Array.isArray(n.ilaclar) ? (n.ilaclar as IlacOner[]) : [],
+      icdKodlari: Array.isArray(n.icdKodlari) ? (n.icdKodlari as IcdOner[]) : [],
+      kritikBulgular: Array.isArray(n.kritikBulgular) ? (n.kritikBulgular as string[]).map(String) : [],
+      hastaOzeti: String(n.hastaOzeti ?? ''),
     };
   });
 }
@@ -45,6 +64,7 @@ export default function IncelemePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [acikId, setAcikId] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -176,8 +196,64 @@ export default function IncelemePage() {
                   </div>
                 </div>
 
-                <div style={{ marginTop: 12, color: '#94A3B8', fontSize: 13, lineHeight: 1.55 }}>
-                  {snippet(note.subjektif)}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setAcikId(acikId === note.id ? '' : note.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(acikId === note.id ? '' : note.id); }}
+                  style={{ marginTop: 12, color: '#94A3B8', fontSize: 13, lineHeight: 1.55, cursor: 'pointer' }}
+                >
+                  {acikId === note.id ? (
+                    <div onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
+                      {/* NOTYA-SOAP-01: tam not incelemesi — doktor neyi onayladığını görerek onaylar */}
+                      {[['S — Subjektif', note.subjektif], ['O — Objektif', note.objektif], ['A — Değerlendirme', note.degerlendirme], ['P — Plan', note.plan]].map(([baslik, icerik]) => (
+                        icerik ? (
+                          <div key={baslik} style={{ marginBottom: 10 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>{baslik}</div>
+                            <div style={{ fontSize: 13, color: '#CBD5E1', whiteSpace: 'pre-wrap' }}>{icerik}</div>
+                          </div>
+                        ) : null
+                      ))}
+                      {note.icdKodlari.length > 0 && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 5 }}>Tanı / ICD-10 önerileri <span style={{ fontWeight: 400, color: '#64748B' }}>(onayınıza tabi — otomatik yazılmaz)</span></div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {note.icdKodlari.map((k, i2) => (
+                              <span key={i2} style={{ fontSize: 12, fontWeight: k.is_primary ? 700 : 500, padding: '4px 10px', borderRadius: 999, background: 'rgba(15,155,142,0.15)', color: '#2DD4BF', border: k.is_primary ? '1px solid #0F9B8E' : '1px solid transparent' }}>
+                                {k.code} · {k.description_tr || k.description || ''}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {note.ilaclar.length > 0 && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 5 }}>İlaçlar</div>
+                          {note.ilaclar.map((il, i2) => (
+                            <div key={i2} style={{ fontSize: 13, color: '#CBD5E1' }}>• {[il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')}</div>
+                          ))}
+                        </div>
+                      )}
+                      {note.kritikBulgular.length > 0 && (
+                        <div style={{ marginBottom: 10, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 3 }}>Kritik bulgular</div>
+                          {note.kritikBulgular.map((kb, i2) => <div key={i2} style={{ fontSize: 13, color: '#FDBA74' }}>• {kb}</div>)}
+                        </div>
+                      )}
+                      {note.hastaOzeti && (
+                        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 3 }}>Hasta/veli özeti (sade dil)</div>
+                          <div style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.55 }}>{note.hastaOzeti}</div>
+                        </div>
+                      )}
+                      <div role="button" tabIndex={0} onClick={() => setAcikId('')} onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(''); }} style={{ marginTop: 10, fontSize: 12, color: '#14B8A6', cursor: 'pointer' }}>Daralt ▴</div>
+                    </div>
+                  ) : (
+                    <>
+                      {snippet(note.subjektif)}
+                      <span style={{ color: '#14B8A6', marginLeft: 8 }}>Notu incele ▾</span>
+                    </>
+                  )}
                 </div>
               </div>
             );

@@ -164,6 +164,7 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
   "icd10_codes": [{"code": "X00", "description": "Description", "description_tr": "Türkçe", "is_primary": true}],
   "kritik_bulgular": [],
   "takip_suresi": "Takip süresi",
+  "hasta_ozeti": "Hastaya/veliye yönelik SADE DİLDE özet: tıbbi jargon olmadan 3-5 cümle — ne bulundu, ne yapılacak, ilaçlar nasıl kullanılacak, hangi durumda geri gelinmeli. Pediatride veliye hitap et.",
   "ai_confidence": 0.92
 }`
 
@@ -195,7 +196,8 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
       icd10_codes: noteData?.icd10_codes || null,
       kritik_bulgular: noteData?.kritik_bulgular || null,
       takip_suresi: noteData?.takip_suresi || null,
-      ai_model: "claude-sonnet-4",
+      hasta_ozeti: noteData?.hasta_ozeti || null,
+      ai_model: "claude-sonnet-4-6",
       ai_confidence: noteData?.ai_confidence || 0.9,
     }).select().single()
 
