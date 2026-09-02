@@ -760,7 +760,7 @@ export default function RandevularPage() {
 
               <div className="ni-field">
                 <label className="ni-label">Not / Şikayet</label>
-                <input className="ni-input" value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="İsteğe bağlı" />
+                <textarea className="ni-input" value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="İsteğe bağlı" rows={3} style={{ resize: 'vertical', minHeight: 64 }} />
               </div>
 
               {hata && <div className="ni-error">{hata}</div>}
