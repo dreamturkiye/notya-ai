@@ -258,7 +258,7 @@ export default function DoktorDashboard() {
                 >{v}</button>
               ))}
             </div>
-            <span onClick={() => router.push('/dashboard/doktor/randevular')} style={{ fontSize: 13, color: '#14B8A6', cursor: 'pointer' }}>Takvimi aç ›</span>
+            <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Takvimi aç</button>
           </div>
 
           <div style={{ ...panel, padding: '6px 18px' }}>
