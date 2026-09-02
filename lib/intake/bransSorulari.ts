@@ -33,36 +33,18 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Çocuğunuz Hakkında',
     alanlar: [
       { id: 'basvuruNedeniPed', etiket: 'Bugünkü geliş sebebiniz nedir?', tur: 'textarea', zorunlu: true, placeholder: 'Sizi bugün kliniğimize getiren en önemli nedeni yazınız.' },
-      { id: 'sikayetSuresiPed', etiket: 'Bu şikayet ne zamandır devam ediyor?', tur: 'radio', secenekler: ['Bugün başladı', '2-3 gündür', '1 haftadır', '1 aydan uzun'] },
 
       { id: 'baslikVeli', etiket: 'Veli / Yasal Vasi', tur: 'bolum-basligi' },
       { id: 'veliYakinligi', etiket: 'Yakınlığı', tur: 'radio', zorunlu: true, secenekler: ['Anne', 'Baba', 'Yasal Vasi'] },
-
-      { id: 'baslikSaglikOzeti', etiket: 'Sağlık Özeti', tur: 'bolum-basligi' },
-      { id: 'oncekiYatisAmeliyatPed', etiket: 'Daha önce…', tur: 'checkbox-grup', secenekler: ['Hastaneye Yattı', 'Ameliyat Oldu', 'Yenidoğan Yoğun Bakımda Kaldı', 'Kan Transfüzyonu Aldı', 'Hiçbiri'] },
 
       { id: 'baslikDogumGelisim', etiket: 'Doğum ve Gelişim', tur: 'bolum-basligi' },
       { id: 'gebelikKomplikasyonuPed', etiket: 'Gebelik sürecinde aşağıdakilerden biri yaşandı mı?', tur: 'checkbox-grup', secenekler: ['Diyabet', 'Hipertansiyon', 'Erken Doğum Riski', 'Enfeksiyon', 'Çoğul Gebelik', 'Tüp Bebek (IVF)', 'Sorun Yaşanmadı'] },
       { id: 'gebelikHaftasiPed', etiket: 'Gebelik Haftası', tur: 'radio', secenekler: ['37 hafta ve üzeri', '37 haftadan önce', 'Bilmiyorum'] },
       { id: 'dogumKilosuPed', etiket: 'Doğum Kilosu (gram)', tur: 'text' },
+      { id: 'dogumBoyuPed', etiket: 'Doğum Boyu (cm)', tur: 'text' },
+      { id: 'basCevresiPed', etiket: 'Baş Çevresi (cm)', tur: 'text' },
       { id: 'dogumSekliPed', etiket: 'Doğum Şekli', tur: 'radio', secenekler: ['Normal Doğum', 'Sezaryen'] },
       { id: 'dogumSonrasiPed', etiket: 'Doğum Sonrası', tur: 'checkbox-grup', secenekler: ['Yenidoğan Yoğun Bakım', 'Sarılık Nedeniyle Fototerapi', 'Solunum Desteği Aldı', 'Sorun Yaşanmadı'] },
-      { id: 'gelisimUygunMuPed', etiket: 'Yaşına uygun gelişim gösteriyor mu?', tur: 'radio', secenekler: ['Evet', 'Hayır', 'Emin değilim'] },
-      { id: 'gelisimDetayPed', etiket: 'Varsa işaretleyiniz', tur: 'checkbox-grup', secenekler: ['Konuşma Gecikmesi', 'Yürüme Gecikmesi', 'Öğrenme Güçlüğü', 'Fizik Tedavi Alıyor', 'Konuşma Terapisi Alıyor', 'Ergoterapi Alıyor'] },
-
-      { id: 'baslikBeslenmeAsi', etiket: 'Beslenme ve Aşılar', tur: 'bolum-basligi' },
-      { id: 'beslenmePed', etiket: 'Beslenme', tur: 'checkbox-grup', secenekler: ['Anne Sütü', 'Mama', 'Karışık', 'Yaşına Uygun Normal Beslenme'] },
-      { id: 'istahPed', etiket: 'İştah', tur: 'radio', secenekler: ['Çok iyi', 'Normal', 'Az', 'Çok az'] },
-      { id: 'vitaminDPed', etiket: 'Vitamin D', tur: 'radio', secenekler: ['Kullanıyor', 'Kullanmıyor', 'Bilmiyorum'] },
-      { id: 'demirDestegiPed', etiket: 'Demir Desteği', tur: 'radio', secenekler: ['Kullanıyor', 'Kullanmıyor'] },
-      { id: 'asiTakvimiPed', etiket: 'Aşılar', tur: 'radio', zorunlu: true, secenekler: ['Ulusal aşı takvimi tam', 'Eksik aşı var', 'Emin değilim'] },
-      { id: 'ekAsilarPed', etiket: 'Ek Aşılar', tur: 'checkbox-grup', secenekler: ['Rotavirüs', 'Menenjit', 'HPV (uygunsa)', 'Grip', 'Hiçbiri'] },
-
-      { id: 'baslikAileYasam', etiket: 'Aile ve Yaşam', tur: 'bolum-basligi' },
-      { id: 'aileOykusuPed', etiket: 'Ailede aşağıdaki hastalıklardan biri var mı?', tur: 'checkbox-grup', secenekler: ['Astım', 'Alerji', 'Diyabet', 'Hipertansiyon', 'Kalp Hastalığı', 'Epilepsi', 'Tiroid Hastalığı', 'Kanser', 'Genetik Hastalık', 'Akraba Evliliği', 'Yok'] },
-      { id: 'evOrtamiPed', etiket: 'Ev Ortamı', tur: 'checkbox-grup', secenekler: ['Evcil Hayvan Var', 'Kreşe Gidiyor', 'Okula Gidiyor'] },
-      { id: 'ekranSuresiPed', etiket: 'Günlük Ekran Süresi', tur: 'radio', secenekler: ['1 saatten az', '1-2 saat', '2-4 saat', '4 saatten fazla'] },
-      { id: 'uykuPed', etiket: 'Uyku', tur: 'radio', secenekler: ['Yaşına uygun', 'Uyku problemi var'] },
     ],
   },
 

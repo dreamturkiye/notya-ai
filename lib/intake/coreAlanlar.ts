@@ -106,6 +106,11 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
 export function coreBolumlerIcin(brans: string): IntakeBolum[] {
   if (brans !== 'pediatri') return CORE_BOLUMLER
   return CORE_BOLUMLER.map((bolum) => {
+    if (bolum.baslik === 'Onay') {
+      // #13 (2026-09-02): "doğru beyan" onayı yasal zorunluluk DEĞİL — pediatride kaldırıldı.
+      // KVKK açık rıza (kvkkOnay) ise KVKK m.6 özel nitelikli veri (sağlık) için ZORUNLU ve kalıyor.
+      return { ...bolum, alanlar: bolum.alanlar.filter((a) => a.id !== 'dogruBeyan') }
+    }
     if (bolum.baslik !== 'Sağlık Geçmişi') return bolum
     return {
       ...bolum,
