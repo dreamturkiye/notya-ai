@@ -21,6 +21,14 @@ type NoteRow = {
   id: string
   created_at?: string | null
   content_subjektif?: string | null
+  content_objektif?: string | null
+  content_degerlendirme?: string | null
+  content_plan?: string | null
+  content_tani?: string | null
+  content_ilaclar?: unknown
+  icd10_codes?: unknown
+  kritik_bulgular?: unknown
+  hasta_ozeti?: string | null
   session_id?: string | null
   sessions?: SessionRel | SessionRel[] | null
 }
@@ -79,7 +87,7 @@ export async function GET(req: NextRequest) {
 
   const joined = await supabase
     .from('notes')
-    .select('id, created_at, content_subjektif, session_id, sessions(specialty, patient_id)')
+    .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, session_id, sessions(specialty, patient_id)')
     .eq('doctor_id', user.id)
     .is('approved_at', null)
     .order('created_at', { ascending: false })
@@ -88,7 +96,7 @@ export async function GET(req: NextRequest) {
   if (joined.error) {
     const plain = await supabase
       .from('notes')
-      .select('id, created_at, content_subjektif, session_id')
+      .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, session_id')
       .eq('doctor_id', user.id)
       .is('approved_at', null)
       .order('created_at', { ascending: false })
@@ -110,6 +118,14 @@ export async function GET(req: NextRequest) {
       specialty: String(session.specialty || 'Genel'),
       date: formatDate(row.created_at),
       subjektif: String(row.content_subjektif || ''),
+      objektif: String(row.content_objektif || ''),
+      degerlendirme: String(row.content_degerlendirme || ''),
+      plan: String(row.content_plan || ''),
+      tani: String(row.content_tani || ''),
+      ilaclar: Array.isArray(row.content_ilaclar) ? row.content_ilaclar : [],
+      icdKodlari: Array.isArray(row.icd10_codes) ? row.icd10_codes : [],
+      kritikBulgular: Array.isArray(row.kritik_bulgular) ? row.kritik_bulgular : [],
+      hastaOzeti: String(row.hasta_ozeti || ''),
     }
   })
 
