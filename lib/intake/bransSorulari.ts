@@ -39,11 +39,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'veliYakinligi', etiket: 'Yakınlığı', tur: 'radio', zorunlu: true, secenekler: ['Anne', 'Baba', 'Yasal Vasi'] },
 
       { id: 'baslikSaglikOzeti', etiket: 'Sağlık Özeti', tur: 'bolum-basligi' },
-      { id: 'kronikHastaliklarPed', etiket: 'Çocuğunuzda aşağıdakilerden biri var mı?', tur: 'checkbox-grup', secenekler: ['Astım', 'Diyabet', 'Epilepsi', 'Doğuştan Kalp Hastalığı', 'Böbrek Hastalığı', 'Genetik Hastalık', 'Gelişim Geriliği', 'Otizm Spektrum Bozukluğu', 'DEHB', 'Yok'] },
       { id: 'oncekiYatisAmeliyatPed', etiket: 'Daha önce…', tur: 'checkbox-grup', secenekler: ['Hastaneye Yattı', 'Ameliyat Oldu', 'Yenidoğan Yoğun Bakımda Kaldı', 'Kan Transfüzyonu Aldı', 'Hiçbiri'] },
-      { id: 'duzenliIlacPed', etiket: 'Düzenli ilaç kullanıyor mu?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
-      { id: 'ilacAdiPed', etiket: 'İlaç Adı', tur: 'text', yardim: 'Yalnızca "Evet" ise doldurun.' },
-      { id: 'alerjiPed', etiket: 'Alerji', tur: 'checkbox-grup', secenekler: ['Yok', 'İlaç', 'Gıda', 'Polen', 'Ev Tozu', 'Hayvan', 'Lateks', 'Diğer'] },
 
       { id: 'baslikDogumGelisim', etiket: 'Doğum ve Gelişim', tur: 'bolum-basligi' },
       { id: 'gebelikKomplikasyonuPed', etiket: 'Gebelik sürecinde aşağıdakilerden biri yaşandı mı?', tur: 'checkbox-grup', secenekler: ['Diyabet', 'Hipertansiyon', 'Erken Doğum Riski', 'Enfeksiyon', 'Çoğul Gebelik', 'Tüp Bebek (IVF)', 'Sorun Yaşanmadı'] },
@@ -64,7 +60,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
 
       { id: 'baslikAileYasam', etiket: 'Aile ve Yaşam', tur: 'bolum-basligi' },
       { id: 'aileOykusuPed', etiket: 'Ailede aşağıdaki hastalıklardan biri var mı?', tur: 'checkbox-grup', secenekler: ['Astım', 'Alerji', 'Diyabet', 'Hipertansiyon', 'Kalp Hastalığı', 'Epilepsi', 'Tiroid Hastalığı', 'Kanser', 'Genetik Hastalık', 'Akraba Evliliği', 'Yok'] },
-      { id: 'evOrtamiPed', etiket: 'Ev Ortamı', tur: 'checkbox-grup', secenekler: ['Evde Sigara İçiliyor', 'Evcil Hayvan Var', 'Kreşe Gidiyor', 'Okula Gidiyor'] },
+      { id: 'evOrtamiPed', etiket: 'Ev Ortamı', tur: 'checkbox-grup', secenekler: ['Evcil Hayvan Var', 'Kreşe Gidiyor', 'Okula Gidiyor'] },
       { id: 'ekranSuresiPed', etiket: 'Günlük Ekran Süresi', tur: 'radio', secenekler: ['1 saatten az', '1-2 saat', '2-4 saat', '4 saatten fazla'] },
       { id: 'uykuPed', etiket: 'Uyku', tur: 'radio', secenekler: ['Yaşına uygun', 'Uyku problemi var'] },
     ],
