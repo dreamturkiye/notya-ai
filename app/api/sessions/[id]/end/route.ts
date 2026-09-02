@@ -126,58 +126,35 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     const specialty = context?.specialty || "genel"
 
-    // Build specialty-aware system prompt
-    const specialtyBooks: Record<string, string> = {
-      pediatri: "Nelson Textbook of Pediatrics 22e + Harriet Lane Handbook 23e",
-      kardiyoloji: "Braunwald\'s Heart Disease 12e + ESC Guidelines 2023",
-      noroloji: "Adams & Victor\'s Principles of Neurology 12e + ESO Guidelines",
-      psikiyatri: "Kaplan & Sadock 11e + DSM-5-TR + Stahl\'s Psychopharmacology",
-      dahiliye: "Harrison\'s Principles of Internal Medicine 22e + Goldman-Cecil",
-      ortopedi: "Campbell\'s Operative Orthopaedics + Rockwood & Green\'s Fractures",
-      kadin_hastaliklari: "Williams Obstetrics 26e + Berek & Novak\'s Gynecology",
-      genel_cerrahi: "Sabiston Textbook of Surgery 21e + Schwartz\'s Surgery",
-      dermatoloji: "Fitzpatrick\'s Dermatology + Bologna Dermatology 5e",
-      uroloji: "Campbell-Walsh-Wein Urology 12e + EAU Guidelines",
-      onkoloji: "DeVita\'s Cancer 12e + NCCN Guidelines 2024",
-      acil: "Tintinalli\'s Emergency Medicine 9e + Rosen\'s Emergency Medicine",
-      genel: "Harrison\'s Principles 22e + Oxford Handbook of Clinical Medicine",
-    }
-    const books = specialtyBooks[specialty] || specialtyBooks["genel"]
+    // NOTYA-SOAP-02: dünya standardı üretici — Ayşe Kaya personası + gürültü filtresi +
+    // SGK doğrulamalı reçete önerisi + onaylı notlardan stil öğrenmesi, tek modülde
+    // (lib/doktor/soapUret). Hastanın kimliği (TC/ad) modele ASLA gitmez; yalnız kimliksiz
+    // klinik bağlam (yaş, alerji, sürekli ilaçlar) gider — alerji çelişkili öneri engellenir.
+    const { soapNotuUret, stilOrnekleriDerle } = await import('@/lib/doktor/soapUret')
 
-    const systemPrompt = `Sen Notya AI klinik not asistanısın. ${specialty.toUpperCase()} uzmanısın.
-Klinik akıl yürütmen şu altın standart kaynaklara dayanır: ${books}
+    let klinikBaglam = ''
+    try {
+      const { data: seansSatiri } = await getSupabase().from('sessions').select('patient_id').eq('id', sessionId).single()
+      if (seansSatiri?.patient_id) {
+        const { hastaDosyasiniDerle } = await import('@/lib/doktor/hastaDosyaDerleyici')
+        const dosya = await hastaDosyasiniDerle(getSupabase(), user.id, String(seansSatiri.patient_id))
+        if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
+      }
+    } catch { /* bağlam kritik değil — bağlamsız da not üretilir */ }
 
-Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hiçbir şey yazma:
+    let stilOrnekleri = ''
+    try {
+      const { data: oncekiNotlar } = await getSupabase()
+        .from('notes')
+        .select('content_subjektif, content_plan')
+        .eq('doctor_id', user.id)
+        .not('approved_at', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(2)
+      if (oncekiNotlar?.length) stilOrnekleri = stilOrnekleriDerle(oncekiNotlar)
+    } catch { /* stil örneği kritik değil */ }
 
-{
-  "soap": {
-    "subjektif": "Hastanın şikayetleri",
-    "objektif": "Fizik muayene bulguları",
-    "degerlendirme": "Tanı ve değerlendirme",
-    "plan": "Tedavi planı"
-  },
-  "anamnez": "Detaylı anamnez",
-  "fizik_muayene": "Fizik muayene bulguları",
-  "tani": "Ön tanı",
-  "tedavi": "Tedavi planı",
-  "ilaclar": [{"ad": "İlaç", "doz": "Doz", "kullanim": "Kullanım", "sure": "Süre"}],
-  "icd10_codes": [{"code": "X00", "description": "Description", "description_tr": "Türkçe", "is_primary": true}],
-  "kritik_bulgular": [],
-  "takip_suresi": "Takip süresi",
-  "hasta_ozeti": "Hastaya/veliye yönelik SADE DİLDE özet: tıbbi jargon olmadan 3-5 cümle — ne bulundu, ne yapılacak, ilaçlar nasıl kullanılacak, hangi durumda geri gelinmeli. Pediatride veliye hitap et.",
-  "ai_confidence": 0.92
-}`
-
-    const response = await getAnthropic().messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: `Muayene transkripti:\n\n${transcript}` }]
-    })
-
-    const rawText = response.content[0].type === "text" ? response.content[0].text : ""
-    const cleanJson = rawText.replace(/```json\n?|\n?```/g, "").trim()
-    const noteData = JSON.parse(cleanJson)
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri })
 
     // Save note
     const { data: note, error: noteError } = await getSupabase().from("notes").insert({
@@ -197,6 +174,10 @@ Verilen transkripten SOAP notu çıkar. SADECE geçerli JSON döndür, başka hi
       kritik_bulgular: noteData?.kritik_bulgular || null,
       takip_suresi: noteData?.takip_suresi || null,
       hasta_ozeti: noteData?.hasta_ozeti || null,
+      basvuru_yakinmasi: noteData?.basvuruYakinmasi || null,
+      vitaller: noteData?.vitaller || null,
+      recete_onerisi: noteData?.receteOnerisi || null,
+      alarm_bulgulari: noteData?.alarmBulgulari || null,
       ai_model: "claude-sonnet-4-6",
       ai_confidence: noteData?.ai_confidence || 0.9,
     }).select().single()

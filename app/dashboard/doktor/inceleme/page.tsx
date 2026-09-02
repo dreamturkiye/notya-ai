@@ -13,6 +13,9 @@ import {
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
+interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
+interface Vitaller { kilo?: number | null; boy?: number | null; ates?: number | null; nabiz?: number | null; spo2?: number | null; tansiyon?: string | null }
+interface Taslak { subjektif: string; objektif: string; degerlendirme: string; plan: string }
 
 interface PendingNote {
   id: string;
@@ -28,6 +31,10 @@ interface PendingNote {
   icdKodlari: IcdOner[];
   kritikBulgular: string[];
   hastaOzeti: string;
+  basvuruYakinmasi: string;
+  vitaller: Vitaller | null;
+  receteOnerisi: ReceteOner[];
+  alarmBulgulari: string[];
 }
 
 function normalizeNotes(payload: unknown): PendingNote[] {
@@ -49,6 +56,10 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       icdKodlari: Array.isArray(n.icdKodlari) ? (n.icdKodlari as IcdOner[]) : [],
       kritikBulgular: Array.isArray(n.kritikBulgular) ? (n.kritikBulgular as string[]).map(String) : [],
       hastaOzeti: String(n.hastaOzeti ?? ''),
+      basvuruYakinmasi: String(n.basvuruYakinmasi ?? ''),
+      vitaller: (n.vitaller && typeof n.vitaller === 'object') ? (n.vitaller as Vitaller) : null,
+      receteOnerisi: Array.isArray(n.receteOnerisi) ? (n.receteOnerisi as ReceteOner[]) : [],
+      alarmBulgulari: Array.isArray(n.alarmBulgulari) ? (n.alarmBulgulari as string[]).map(String) : [],
     };
   });
 }
@@ -65,6 +76,12 @@ export default function IncelemePage() {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [acikId, setAcikId] = useState('');
+  const [taslak, setTaslak] = useState<Taslak>({ subjektif: '', objektif: '', degerlendirme: '', plan: '' });
+
+  const notuAc = (note: PendingNote) => {
+    setAcikId(note.id);
+    setTaslak({ subjektif: note.subjektif, objektif: note.objektif, degerlendirme: note.degerlendirme, plan: note.plan });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +139,8 @@ export default function IncelemePage() {
       const token = await getAccessTokenAsync();
       const res = await fetch(`/api/notes/${id}/approve`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(acikId === id ? { duzenlemeler: taslak } : {}),
       });
 
       if (!res.ok) {
@@ -199,20 +217,39 @@ export default function IncelemePage() {
                 <div
                   role="button"
                   tabIndex={0}
-                  onClick={() => setAcikId(acikId === note.id ? '' : note.id)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(acikId === note.id ? '' : note.id); }}
+                  onClick={() => (acikId === note.id ? setAcikId('') : notuAc(note))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (acikId === note.id ? setAcikId('') : notuAc(note)); }}
                   style={{ marginTop: 12, color: '#94A3B8', fontSize: 13, lineHeight: 1.55, cursor: 'pointer' }}
                 >
                   {acikId === note.id ? (
                     <div onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
-                      {/* NOTYA-SOAP-01: tam not incelemesi — doktor neyi onayladığını görerek onaylar */}
-                      {[['S — Subjektif', note.subjektif], ['O — Objektif', note.objektif], ['A — Değerlendirme', note.degerlendirme], ['P — Plan', note.plan]].map(([baslik, icerik]) => (
-                        icerik ? (
-                          <div key={baslik} style={{ marginBottom: 10 }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>{baslik}</div>
-                            <div style={{ fontSize: 13, color: '#CBD5E1', whiteSpace: 'pre-wrap' }}>{icerik}</div>
+                      {/* NOTYA-SOAP-02: tam not incelemesi — doktor DÜZENLEYEREK onaylar; düzenlemeler Ayşe'nin öğrenme verisidir */}
+                      {note.basvuruYakinmasi && (
+                        <div style={{ marginBottom: 10, fontSize: 13, color: '#EDF1F7', fontStyle: 'italic' }}>Başvuru yakınması: “{note.basvuruYakinmasi}”</div>
+                      )}
+                      {note.vitaller && Object.values(note.vitaller).some((v) => v != null && v !== '') && (
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 10, fontSize: 12, color: '#8FA0B5' }}>
+                          {note.vitaller.kilo != null && <span>Kilo: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.kilo} kg</strong></span>}
+                          {note.vitaller.boy != null && <span>Boy: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.boy} cm</strong></span>}
+                          {note.vitaller.ates != null && <span>Ateş: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.ates} °C</strong></span>}
+                          {note.vitaller.nabiz != null && <span>Nabız: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.nabiz}</strong></span>}
+                          {note.vitaller.spo2 != null && <span>SpO2: <strong style={{ color: '#EDF1F7' }}>%{note.vitaller.spo2}</strong></span>}
+                          {note.vitaller.tansiyon && <span>TA: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.tansiyon}</strong></span>}
+                        </div>
+                      )}
+                      {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
+                        <div key={alan} style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>
+                            {alan === 'subjektif' ? 'S — Subjektif' : alan === 'objektif' ? 'O — Objektif' : alan === 'degerlendirme' ? 'A — Değerlendirme' : 'P — Plan'}
+                            <span style={{ fontWeight: 400, color: '#64748B' }}> · düzenlenebilir</span>
                           </div>
-                        ) : null
+                          <textarea
+                            value={taslak[alan]}
+                            onChange={(e) => setTaslak({ ...taslak, [alan]: e.target.value })}
+                            rows={Math.min(8, Math.max(2, Math.ceil(taslak[alan].length / 90)))}
+                            style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#CBD5E1', fontSize: 13, lineHeight: 1.5, padding: '8px 10px', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                          />
+                        </div>
                       ))}
                       {note.icdKodlari.length > 0 && (
                         <div style={{ marginBottom: 10 }}>
@@ -232,6 +269,24 @@ export default function IncelemePage() {
                           {note.ilaclar.map((il, i2) => (
                             <div key={i2} style={{ fontSize: 13, color: '#CBD5E1' }}>• {[il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')}</div>
                           ))}
+                        </div>
+                      )}
+                      {note.receteOnerisi.length > 0 && (
+                        <div style={{ marginBottom: 10, background: 'rgba(15,155,142,0.07)', border: '1px solid rgba(15,155,142,0.3)', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 5 }}>Ayşe'nin reçete önerisi <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — reçeteyi doktor yazar)</span></div>
+                          {note.receteOnerisi.map((r, i2) => (
+                            <div key={i2} style={{ fontSize: 13, color: '#CBD5E1', marginBottom: 3 }}>
+                              • {[r.ticariOrnek, r.etkenMadde ? `(${r.etkenMadde})` : '', r.doz, r.kullanim, r.sure].filter(Boolean).join(' — ')}
+                              {r.sgkListesinde && <span style={{ marginLeft: 6, fontSize: 11, color: '#22C55E' }}>SGK ✓</span>}
+                              {r.not && <div style={{ fontSize: 12, color: '#F59E0B', marginLeft: 12 }}>⚠ {r.not}</div>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {note.alarmBulgulari.length > 0 && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Alarm bulguları (veliye/hastaya anlatılacak)</div>
+                          {note.alarmBulgulari.map((a, i2) => <div key={i2} style={{ fontSize: 13, color: '#CBD5E1' }}>• {a}</div>)}
                         </div>
                       )}
                       {note.kritikBulgular.length > 0 && (
