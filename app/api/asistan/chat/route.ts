@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, type SpecialtyId } from "@/lib/asistan/personaEngine"
+import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
+import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
 import { executeAction } from "@/lib/asistan/actionExecutor"
 import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
@@ -117,8 +119,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // NOTYA-KONSULT-02: "klinik meslektaş" tek asistanda — doktor sohbette bir hastadan
+    // bahsettiğinde (adıyla ya da "son hastam" diyerek) hastanın TAM dosyası bağlama eklenir;
+    // ayrı ekran/buton gerekmez. Çözülen hasta oturum bağlamına yazılır ki takip soruları
+    // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
+    let dosyaEk = ""
+    let cozulenHasta: { id: string; ad: string } | null = null
+    try {
+      const cozum = await hastaninSozunuCoz(getSupabase(), user.id, message)
+      if (cozum.tur === "coklu") {
+        dosyaEk = `\n\n[SİSTEM: Doktorun bahsettiği isim birden çok hastayla eşleşiyor: ${cozum.adaylar.join(", ")}. Hangisini kastettiğini kibarca sor; tahmin etme.]`
+      } else {
+        const aktifId = cozum.tur === "tek" ? cozum.patientId : (contextPatientId ? String(contextPatientId) : null)
+        if (aktifId) {
+          const dosya = await hastaDosyasiniDerle(getSupabase(), user.id, aktifId)
+          if (dosya) {
+            if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
+            const aktifAd = cozum.tur === "tek" ? cozum.ad : "aktif hasta"
+            dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${dosya}\n=== DOSYA SONU ===\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya dayan; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
+          }
+        }
+      }
+    } catch { /* dosya bağlamı kritik değil — normal akış sürer */ }
+
     // Build system prompt with learning context
-    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile)
+    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile) + dosyaEk
 
     // Call Claude with full conversation history
     const response = await getAnthropic().messages.create({
@@ -182,7 +207,17 @@ export async function POST(req: NextRequest) {
     ].slice(-20) // Keep last 20 messages (10 exchanges)
 
     await getSupabase().from("asistan_sessions")
-      .update({ messages: updatedMessages })
+      .update({
+        messages: updatedMessages,
+        ...(cozulenHasta ? {
+          patient_id: cozulenHasta.id,
+          active_context: {
+            ...(asistanSession?.active_context as Record<string, unknown> || {}),
+            currentPatientId: cozulenHasta.id,
+            patientName: cozulenHasta.ad,
+          },
+        } : {}),
+      })
       .eq("id", asistanSession?.id)
 
     // Log action for learning
@@ -217,6 +252,7 @@ export async function POST(req: NextRequest) {
         action: aiData.action,
         actionResult,
         asistanSessionId: asistanSession?.id,
+        aktifHasta: cozulenHasta?.ad || null,
         personaId,
         personaName: persona.name,
       }
