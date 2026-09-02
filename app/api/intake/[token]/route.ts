@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { encrypt, decrypt } from '@/lib/security/encryption'
-import { CORE_BOLUMLER } from '@/lib/intake/coreAlanlar'
+import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar'
 import { BRANS_SORULARI, BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
@@ -56,7 +56,7 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
   return NextResponse.json({
     hastaAdi,
     doktorAdi,
-    coreBolumler: CORE_BOLUMLER,
+    coreBolumler: coreBolumlerIcin(form.brans),
     bransBolumu,
     bransEtiket,
   })

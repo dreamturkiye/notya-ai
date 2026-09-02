@@ -97,3 +97,38 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
     ],
   },
 ]
+
+/** NOTYA-INTAKE-05: branşa göre çekirdek alan uyarlaması (Dr. Gökhan Mamur canlı test
+ * geri bildirimi, 2026-09-02). Pediatride sağlık geçmişi ebeveynin serbest metinle
+ * anlatacağı şekilde sadeleştirildi; sigara sorusu "ailede" bağlamına çevrildi, alkol
+ * sorusu kaldırıldı. Diğer branşlar çekirdeği olduğu gibi kullanır. Alan id'leri
+ * DEĞİŞMEDİ — eski gönderimlerle veri uyumluluğu korunur. */
+export function coreBolumlerIcin(brans: string): IntakeBolum[] {
+  if (brans !== 'pediatri') return CORE_BOLUMLER
+  return CORE_BOLUMLER.map((bolum) => {
+    if (bolum.baslik !== 'Sağlık Geçmişi') return bolum
+    return {
+      ...bolum,
+      alanlar: bolum.alanlar.flatMap((alan): IntakeAlan[] => {
+        switch (alan.id) {
+          case 'kronikHastaliklar':
+            return [{ id: 'kronikHastaliklar', etiket: 'Özgeçmiş — Hastalık / Ameliyat', tur: 'textarea', placeholder: 'Çocuğunuzun geçirdiği hastalıklar, ameliyatlar ve yılları — yoksa "Yok" yazın' }]
+          case 'gecirilmisAmeliyatlar':
+            return [] // Özgeçmiş alanına birleştirildi
+          case 'kullaniyorMu':
+            return [] // Evet/Hayır ara sorusu kaldırıldı — doğrudan serbest metin
+          case 'kullanilanIlaclar':
+            return [{ id: 'kullanilanIlaclar', etiket: 'Kullanılan İlaç / Takviyeler', tur: 'textarea', placeholder: 'Düzenli kullanılan ilaç ve takviyeler (adı, dozu) — yoksa "Yok" yazın' }]
+          case 'alerjiler':
+            return [{ id: 'alerjiler', etiket: 'Bilinen Alerjiler', tur: 'textarea', placeholder: 'İlaç, gıda veya diğer bilinen alerjiler — yoksa "Yok" yazın' }]
+          case 'sigara':
+            return [{ id: 'sigara', etiket: 'Ailede Sigara Kullanımı', tur: 'radio', secenekler: ['Evet', 'Hayır'] }]
+          case 'alkol':
+            return [] // pediatrik formda anlamsız
+          default:
+            return [alan]
+        }
+      }),
+    }
+  })
+}
