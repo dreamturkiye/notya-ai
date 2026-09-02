@@ -718,13 +718,13 @@ export default function RandevularPage() {
                 <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.5)', color: '#4ADE80', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 10 }}>{basariMesaji}</div>
               )}
               {gorunum === 'ay' && (
-                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
                   {Object.entries(TUR_ETIKET).map(([k, v]) => (
-                    <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#8FA0B5' }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: TUR_RENK[k] }} /> {v}
+                    <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 600, color: '#C9D4E3' }}>
+                      <span style={{ width: 12, height: 12, borderRadius: '50%', background: TUR_RENK[k] }} /> {v}
                     </span>
                   ))}
-                  <span style={{ fontSize: 11, color: '#5F7189' }}>· içi boş nokta = onay bekliyor · sürükleyip bırakarak taşıyın</span>
+                  <span style={{ fontSize: 13, color: '#8FA0B5' }}>· içi boş nokta = onay bekliyor · sürükleyip bırakarak taşıyın</span>
                 </div>
               )}
             </div>
