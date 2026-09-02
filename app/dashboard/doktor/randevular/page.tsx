@@ -49,6 +49,16 @@ const TUR_ETIKET: Record<string, string> = {
   diger: 'Diğer',
 };
 
+/** NOTYA-RANDEVU-11: tür bazlı renk kodlaması — referans tasarımlardaki (Google Takvim /
+ * Business Calendar 2 tarzı) "güçlü renkler, temiz çizgiler" yaklaşımı. Ay ızgarasındaki
+ * chip'in DOLGUSU türün rengi, SOL KENARLIĞI durumun rengi — tek bakışta iki boyut. */
+const TUR_RENK: Record<string, string> = {
+  ilk_muayene: '#8B5CF6',
+  muayene: '#0F9B8E',
+  kontrol: '#3B82F6',
+  diger: '#64748B',
+};
+
 const DURUM_ETIKET: Record<string, { label: string; color: string; bg: string }> = {
   planlandi: { label: 'Planlandı', color: '#0F9B8E', bg: 'rgba(15,155,142,0.15)' },
   onaylandi: { label: 'Onaylandı', color: '#22C55E', bg: 'rgba(34,197,94,0.15)' },
@@ -110,7 +120,7 @@ function ayBaslikStr(ay: Date): string {
 
 export default function RandevularPage() {
   const router = useRouter();
-  const [gorunum, setGorunum] = useState<'ay' | 'gun'>('ay');
+  const [gorunum, setGorunum] = useState<'ay' | 'gun' | 'ajanda' | 'liste'>('ay');
 
   // NOTYA-RANDEVU-10: 640px altı (iPhone dahil tüm telefonlar) için ay ızgarası yerine gün
   // görünümü varsayılan — 7 sütunlu bir ızgara telefon genişliğinde okunaklı olamaz, kullanıcı
@@ -123,6 +133,10 @@ export default function RandevularPage() {
 
   const [aylikRandevular, setAylikRandevular] = useState<Record<string, Randevu[]>>({});
   const [gunlukRandevular, setGunlukRandevular] = useState<Randevu[]>([]);
+  const [ajandaRandevular, setAjandaRandevular] = useState<Randevu[]>([]);
+  const [listeRandevular, setListeRandevular] = useState<Randevu[]>([]);
+  const [surukleId, setSurukleId] = useState<string | null>(null);
+  const [surukleHedef, setSurukleHedef] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
   const [basariMesaji, setBasariMesaji] = useState('');
@@ -200,10 +214,48 @@ export default function RandevularPage() {
     }
   }, [gun]);
 
+  /** NOTYA-RANDEVU-11: ajanda ve liste görünümleri için ortak aralık çekici. Ajanda
+   * "önümüzdeki 30 gün" sabit penceresine bakar (Google Takvim'in Program görünümü gibi),
+   * liste ise mevcut `ay` state'inin tamamına bakar ve ay gezinme oklarını paylaşır. */
+  const araligiCek = useCallback(async (baslangic: Date, bitis: Date): Promise<Randevu[] | null> => {
+    const t = await token();
+    if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return null; }
+    const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    if (!r.ok) { setHata('Randevular alınamadı.'); return null; }
+    const d = await r.json();
+    return (d.randevular || []) as Randevu[];
+  }, []);
+
+  const ajandaYukle = useCallback(async () => {
+    setYukleniyor(true); setHata('');
+    try {
+      const b = new Date(); b.setHours(0, 0, 0, 0);
+      const s = new Date(b.getTime() + 30 * 86400000); s.setHours(23, 59, 59, 999);
+      const liste = await araligiCek(b, s);
+      if (liste) setAjandaRandevular(liste);
+    } catch { setHata('Randevular alınamadı. Bağlantınızı kontrol edin.'); }
+    finally { setYukleniyor(false); }
+  }, [araligiCek]);
+
+  const listeYukle = useCallback(async () => {
+    setYukleniyor(true); setHata('');
+    try {
+      const b = new Date(ay.getFullYear(), ay.getMonth(), 1);
+      const s = new Date(ay.getFullYear(), ay.getMonth() + 1, 0); s.setHours(23, 59, 59, 999);
+      const liste = await araligiCek(b, s);
+      if (liste) setListeRandevular(liste);
+    } catch { setHata('Randevular alınamadı. Bağlantınızı kontrol edin.'); }
+    finally { setYukleniyor(false); }
+  }, [ay, araligiCek]);
+
   const yenile = useCallback(async () => {
     if (gorunum === 'ay') await ayVerisiYukle();
-    else await gunVerisiYukle();
-  }, [gorunum, ayVerisiYukle, gunVerisiYukle]);
+    else if (gorunum === 'gun') await gunVerisiYukle();
+    else if (gorunum === 'ajanda') await ajandaYukle();
+    else await listeYukle();
+  }, [gorunum, ayVerisiYukle, gunVerisiYukle, ajandaYukle, listeYukle]);
 
   useEffect(() => { yenile(); }, [yenile]);
 
@@ -400,6 +452,60 @@ export default function RandevularPage() {
     [gunlukRandevular]
   );
 
+  const ajandaGunleri = useMemo(() => {
+    const grup: Record<string, Randevu[]> = {};
+    for (const rv of ajandaRandevular) {
+      (grup[yerelGunAnahtari(new Date(rv.baslangic))] ||= []).push(rv);
+    }
+    return Object.entries(grup)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([anahtar, liste]) => ({
+        anahtar,
+        tarih: new Date(anahtar + 'T00:00:00'),
+        liste: [...liste].sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime()),
+      }));
+  }, [ajandaRandevular]);
+
+  const siraliListe = useMemo(
+    () => [...listeRandevular].sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime()),
+    [listeRandevular]
+  );
+
+  /** NOTYA-RANDEVU-11: sürükle-bırak ile yeniden planlama (yalnız ay ızgarası, masaüstü).
+   * Saat ve süre korunur, yalnız gün değişir — saat değiştirmek için modal zaten var.
+   * PATCH kısmi gövdeyi destekliyor ve çakışma penceresini yeniden kontrol ediyor; çakışma
+   * varsa sunucunun hatası aynen gösterilir, hiçbir şey taşınmaz. HTML5 DnD dokunmatikte
+   * çalışmaz — mobil zaten Gün görünümünde açılıyor, oradaki Yeniden Planla akışı geçerli. */
+  async function tasiRandevu(id: string, hedefGun: Date) {
+    setSurukleId(null); setSurukleHedef(null);
+    const rv = Object.values(aylikRandevular).flat().find((r) => r.id === id);
+    if (!rv) return;
+    const eskiB = new Date(rv.baslangic);
+    if (yerelGunAnahtari(eskiB) === yerelGunAnahtari(hedefGun)) return;
+    const sure = new Date(rv.bitis).getTime() - eskiB.getTime();
+    const yeniB = new Date(hedefGun);
+    yeniB.setHours(eskiB.getHours(), eskiB.getMinutes(), 0, 0);
+    const yeniS = new Date(yeniB.getTime() + sure);
+    try {
+      const t = await token();
+      if (!t) return;
+      const r = await fetch(`/api/doktor/randevular/${id}`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baslangic: yeniB.toISOString(), bitis: yeniS.toISOString() }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        setHata(j.error || 'Randevu taşınamadı.');
+      } else {
+        setHata('');
+        setBasariMesaji(`${rv.hastaAdi} — ${yeniB.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} ${saatStr(yeniB.toISOString())} olarak taşındı.`);
+        setTimeout(() => setBasariMesaji(''), 5000);
+      }
+    } catch { setHata('Randevu taşınamadı. Bağlantınızı kontrol edin.'); }
+    await ayVerisiYukle();
+  }
+
   const bugunAnahtari = yerelGunAnahtari(new Date());
 
   return (
@@ -427,16 +533,26 @@ export default function RandevularPage() {
               onClick={() => setGorunum('gun')}
               style={{ background: gorunum === 'gun' ? '#0F9B8E' : 'transparent', border: 'none', color: 'white', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: 'pointer' }}
             >Gün</button>
+            <button
+              type="button"
+              onClick={() => setGorunum('ajanda')}
+              style={{ background: gorunum === 'ajanda' ? '#0F9B8E' : 'transparent', border: 'none', color: 'white', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: 'pointer' }}
+            >Ajanda</button>
+            <button
+              type="button"
+              onClick={() => setGorunum('liste')}
+              style={{ background: gorunum === 'liste' ? '#0F9B8E' : 'transparent', border: 'none', color: 'white', borderRadius: 8, padding: '6px 14px', fontSize: 13, cursor: 'pointer' }}
+            >Liste</button>
           </div>
 
-          {gorunum === 'ay' ? (
+          {(gorunum === 'ay' || gorunum === 'liste') ? (
             <>
               <button type="button" onClick={() => setAy((a) => new Date(a.getFullYear(), a.getMonth() - 1, 1))} style={navBtn}>‹</button>
               <div style={{ fontSize: 15, fontWeight: 600, minWidth: 140, textAlign: 'center', textTransform: 'capitalize' }}>{ayBaslikStr(ay)}</div>
               <button type="button" onClick={() => setAy((a) => new Date(a.getFullYear(), a.getMonth() + 1, 1))} style={navBtn}>›</button>
               <button type="button" onClick={() => setAy(new Date())} style={{ ...navBtn, width: 'auto', padding: '0 12px', color: '#94A3B8' }}>Bu ay</button>
             </>
-          ) : (
+          ) : gorunum === 'gun' ? (
             <>
               <button type="button" onClick={() => setGun((g) => new Date(g.getTime() - 86400000))} style={navBtn}>‹</button>
               <input
@@ -448,7 +564,7 @@ export default function RandevularPage() {
               <button type="button" onClick={() => setGun((g) => new Date(g.getTime() + 86400000))} style={navBtn}>›</button>
               <button type="button" onClick={() => setGun(new Date())} style={{ ...navBtn, width: 'auto', padding: '0 12px', color: '#94A3B8' }}>Bugün</button>
             </>
-          )}
+          ) : null}
 
           <div style={{ flex: 1 }} />
           <button type="button" onClick={() => yeniRandevuAc(gorunum === 'gun' ? gun : new Date())} className="ni-btn" style={{ width: 'auto', padding: '0 16px', height: 36 }}>
@@ -470,6 +586,15 @@ export default function RandevularPage() {
         )}
 
         {gorunum === 'ay' && (
+          <>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+            {Object.entries(TUR_ETIKET).map(([k, v]) => (
+              <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#CBD5E1' }}>
+                <span style={{ width: 10, height: 10, borderRadius: 3, background: TUR_RENK[k] }} /> {v}
+              </span>
+            ))}
+            <span style={{ fontSize: 11, color: '#64748B' }}>· Randevuları sürükleyip bırakarak başka güne taşıyabilirsiniz</span>
+          </div>
           <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'auto' }}>
             <div style={{ minWidth: 560 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: 'rgba(255,255,255,0.04)' }}>
@@ -490,13 +615,16 @@ export default function RandevularPage() {
                   <div
                     key={i}
                     onClick={() => gunHucresineTikla(d)}
+                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                    onDragEnter={() => { if (surukleId) setSurukleHedef(anahtar); }}
+                    onDrop={(e) => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (id) tasiRandevu(id, d); }}
                     title={tatil ? tatil.ad : undefined}
                     style={{
                       minHeight: 92,
                       padding: 6,
                       borderRight: (i + 1) % 7 !== 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
                       borderTop: '1px solid rgba(255,255,255,0.06)',
-                      background: bugunMu ? 'rgba(15,155,142,0.08)' : tatil ? 'rgba(239,68,68,0.06)' : 'transparent',
+                      background: surukleId && surukleHedef === anahtar ? 'rgba(139,92,246,0.18)' : bugunMu ? 'rgba(15,155,142,0.08)' : tatil ? 'rgba(239,68,68,0.06)' : 'transparent',
                       opacity: buAyIcinde ? 1 : 0.35,
                       cursor: 'pointer',
                     }}
@@ -520,21 +648,29 @@ export default function RandevularPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {gosterilen.map((rv) => {
                         const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
+                        const surukleyebilir = rv.durum === 'planlandi' || rv.durum === 'onaylandi';
                         return (
                           <div
                             key={rv.id}
+                            draggable={surukleyebilir}
+                            onDragStart={(e) => { e.stopPropagation(); setSurukleId(rv.id); e.dataTransfer.setData('text/plain', rv.id); e.dataTransfer.effectAllowed = 'move'; }}
+                            onDragEnd={() => { setSurukleId(null); setSurukleHedef(null); }}
                             onClick={(e) => { e.stopPropagation(); duzenlemeyeAc(rv); }}
-                            title={`${saatStr(rv.baslangic)} ${rv.hastaAdi}`}
+                            title={`${saatStr(rv.baslangic)} ${rv.hastaAdi} · ${TUR_ETIKET[rv.tur] || rv.tur} · ${durumBilgi.label}`}
                             style={{
                               fontSize: 10,
+                              fontWeight: 600,
                               padding: '2px 5px',
                               borderRadius: 4,
-                              background: durumBilgi.bg,
-                              color: durumBilgi.color,
+                              background: TUR_RENK[rv.tur] || TUR_RENK.diger,
+                              color: 'white',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
-                              borderLeft: `2px solid ${durumBilgi.color}`,
+                              borderLeft: `3px solid ${durumBilgi.color}`,
+                              opacity: rv.durum === 'iptal' ? 0.45 : rv.id === surukleId ? 0.5 : 1,
+                              textDecoration: rv.durum === 'iptal' ? 'line-through' : 'none',
+                              cursor: surukleyebilir ? 'grab' : 'pointer',
                             }}
                           >
                             {saatStr(rv.baslangic)} {rv.hastaAdi}
@@ -551,6 +687,7 @@ export default function RandevularPage() {
             </div>
             </div>
           </div>
+          </>
         )}
 
         {gorunum === 'gun' && (
@@ -633,6 +770,78 @@ export default function RandevularPage() {
                 );
               })}
             </div>
+          </>
+        )}
+
+        {gorunum === 'ajanda' && (
+          <>
+            <div style={{ color: '#94A3B8', fontSize: 13, marginBottom: 12 }}>Önümüzdeki 30 gün</div>
+            {yukleniyor && <p style={{ color: '#94A3B8' }}>Yükleniyor…</p>}
+            {!yukleniyor && ajandaGunleri.length === 0 && <p style={{ color: '#94A3B8' }}>Önümüzdeki 30 günde randevu yok.</p>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {ajandaGunleri.map(({ anahtar, tarih, liste }) => {
+                const tatil = resmiTatilMi(tarih);
+                const bugunMu = anahtar === bugunAnahtari;
+                return (
+                  <div key={anahtar}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: bugunMu ? '#0F9B8E' : 'white', textTransform: 'capitalize' }}>{tarihBaslikStr(tarih)}</span>
+                      {tatil && <span style={{ fontSize: 11, color: '#EF4444' }}>· {tatil.ad}</span>}
+                      <span style={{ fontSize: 11, color: '#64748B' }}>· {liste.length} randevu</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {liste.map((rv) => {
+                        const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
+                        return (
+                          <div
+                            key={rv.id}
+                            onClick={() => duzenlemeyeAc(rv)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', cursor: 'pointer', opacity: rv.durum === 'iptal' ? 0.5 : 1, flexWrap: 'wrap' }}
+                          >
+                            <span style={{ width: 10, height: 10, borderRadius: 3, background: TUR_RENK[rv.tur] || TUR_RENK.diger, flexShrink: 0 }} title={TUR_ETIKET[rv.tur] || rv.tur} />
+                            <span style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums', color: '#CBD5E1', minWidth: 92 }}>{saatStr(rv.baslangic)}–{saatStr(rv.bitis)}</span>
+                            <span style={{ fontSize: 14, flex: 1, minWidth: 120, textDecoration: rv.durum === 'iptal' ? 'line-through' : 'none' }}>{rv.hastaAdi}</span>
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>{durumBilgi.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {gorunum === 'liste' && (
+          <>
+            {yukleniyor && <p style={{ color: '#94A3B8' }}>Yükleniyor…</p>}
+            {!yukleniyor && siraliListe.length === 0 && <p style={{ color: '#94A3B8' }}>Bu ayda randevu yok.</p>}
+            {siraliListe.length > 0 && (
+              <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden' }}>
+                {siraliListe.map((rv, idx) => {
+                  const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
+                  const b = new Date(rv.baslangic);
+                  return (
+                    <div
+                      key={rv.id}
+                      onClick={() => duzenlemeyeAc(rv)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderTop: idx ? '1px solid rgba(255,255,255,0.06)' : 'none', cursor: 'pointer', opacity: rv.durum === 'iptal' ? 0.5 : 1, flexWrap: 'wrap' }}
+                    >
+                      <span style={{ width: 10, height: 10, borderRadius: 3, background: TUR_RENK[rv.tur] || TUR_RENK.diger, flexShrink: 0 }} title={TUR_ETIKET[rv.tur] || rv.tur} />
+                      <span style={{ fontSize: 12, fontVariantNumeric: 'tabular-nums', color: '#94A3B8', minWidth: 104 }}>
+                        {b.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })} {HAFTA_GUNLERI[(b.getDay() + 6) % 7]} {saatStr(rv.baslangic)}
+                      </span>
+                      <span style={{ fontSize: 14, flex: 1, minWidth: 120, textDecoration: rv.durum === 'iptal' ? 'line-through' : 'none' }}>
+                        {rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 10, color: '#F59E0B', marginLeft: 6 }}>kayıtsız</span>}
+                      </span>
+                      <span style={{ fontSize: 11, color: '#94A3B8' }}>{TUR_ETIKET[rv.tur] || rv.tur}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>{durumBilgi.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </>
         )}
 
