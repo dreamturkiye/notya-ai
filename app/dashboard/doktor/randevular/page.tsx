@@ -136,6 +136,7 @@ export default function RandevularPage() {
   const [ajandaRandevular, setAjandaRandevular] = useState<Randevu[]>([]);
   const [listeRandevular, setListeRandevular] = useState<Randevu[]>([]);
   const [kenarRandevular, setKenarRandevular] = useState<Randevu[]>([]);
+  const [haftaRandevular, setHaftaRandevular] = useState<Record<string, number>>({});
   const [surukleId, setSurukleId] = useState<string | null>(null);
   const [surukleHedef, setSurukleHedef] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -262,13 +263,33 @@ export default function RandevularPage() {
     } catch { /* kenar çubuğu kritik değil */ }
   }, [araligiCek]);
 
+  /** NOTYA-RANDEVU-13: Gün görünümündeki hafta şeridi için gün başına randevu sayısı —
+   * mobil takvim deseninin (Timepage / Fantastical iOS) üst şerit noktalarını besler. */
+  const haftaYukle = useCallback(async () => {
+    try {
+      const pzt = new Date(gun);
+      const idx = (pzt.getDay() + 6) % 7;
+      pzt.setDate(pzt.getDate() - idx); pzt.setHours(0, 0, 0, 0);
+      const paz = new Date(pzt.getTime() + 6 * 86400000); paz.setHours(23, 59, 59, 999);
+      const liste = await araligiCek(pzt, paz);
+      if (liste) {
+        const g: Record<string, number> = {};
+        for (const rv of liste) {
+          const k = yerelGunAnahtari(new Date(rv.baslangic));
+          g[k] = (g[k] || 0) + 1;
+        }
+        setHaftaRandevular(g);
+      }
+    } catch { /* şerit noktaları kritik değil */ }
+  }, [gun, araligiCek]);
+
   const yenile = useCallback(async () => {
     if (gorunum === 'ay') await ayVerisiYukle();
-    else if (gorunum === 'gun') await gunVerisiYukle();
+    else if (gorunum === 'gun') { await gunVerisiYukle(); await haftaYukle(); }
     else if (gorunum === 'ajanda') await ajandaYukle();
     else await listeYukle();
     await kenarYukle();
-  }, [gorunum, ayVerisiYukle, gunVerisiYukle, ajandaYukle, listeYukle, kenarYukle]);
+  }, [gorunum, ayVerisiYukle, gunVerisiYukle, haftaYukle, ajandaYukle, listeYukle, kenarYukle]);
 
   useEffect(() => { yenile(); }, [yenile]);
 
@@ -494,6 +515,13 @@ export default function RandevularPage() {
     };
   }, [kenarRandevular]);
 
+  const haftaGunleri = useMemo(() => {
+    const pzt = new Date(gun);
+    const idx = (pzt.getDay() + 6) % 7;
+    pzt.setDate(pzt.getDate() - idx); pzt.setHours(0, 0, 0, 0);
+    return Array.from({ length: 7 }, (_, i) => new Date(pzt.getFullYear(), pzt.getMonth(), pzt.getDate() + i));
+  }, [gun]);
+
   /** Ortak araç çubuğu gezinmesi — Fantastical'daki tek ‹ Bugün › grubu. Gün görünümünde
    * gün, diğerlerinde ay kaydırır (ajandada ay kaydırmak kenar çubuğu mini ayını gezdirir). */
   function geri() {
@@ -551,12 +579,19 @@ export default function RandevularPage() {
       <DoktorNav />
       <style>{`
         @media (max-width: 1023px) { .fv-aside { display: none !important; } }
-        .fv-cell:hover { background: #F5F6F7; }
-        .fv-hrow:hover { background: #F0F1F3 !important; }
-        .fv-ev:hover { background: #EFF1F3; }
-        .fv-mini:hover { background: rgba(255,255,255,0.14) !important; }
+        @media (max-width: 639px) {
+          .fv-wrap { padding: 10px !important; }
+          .fv-toolbar { padding: 10px !important; gap: 8px !important; }
+          .fv-title { font-size: 14px !important; min-width: 0 !important; }
+          .fv-dateinput { display: none !important; }
+          .fv-seg-btn { padding: 5px 10px !important; font-size: 12px !important; }
+        }
+        .fv-cell:hover { background: rgba(255,255,255,0.04); }
+        .fv-hrow:hover { background: rgba(255,255,255,0.09) !important; }
+        .fv-ev:hover { background: rgba(255,255,255,0.08); }
+        .fv-mini:hover { background: rgba(255,255,255,0.12) !important; }
       `}</style>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: 24 }}>
+      <div className="fv-wrap" style={{ maxWidth: 1280, margin: '0 auto', padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>Randevular</h1>
           {rol === 'sekreter' && (
@@ -566,12 +601,12 @@ export default function RandevularPage() {
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'stretch', borderRadius: 16, overflow: 'hidden', boxShadow: '0 10px 44px rgba(0,0,0,0.4)' }}>
+        <div style={{ display: 'flex', alignItems: 'stretch', borderRadius: 16, overflow: 'hidden', boxShadow: '0 10px 44px rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}>
 
-          {/* ——— Kenar çubuğu — Fantastical tarzı: koyu panel, mini ay, Bugün/Yarın ajandası ——— */}
-          <aside className="fv-aside" style={{ width: 264, flexShrink: 0, background: '#141519', padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* ——— Kenar çubuğu — koyu iki tonun koyusu: mini ay + Bugün/Yarın ajandası ——— */}
+          <aside className="fv-aside" style={{ width: 264, flexShrink: 0, background: '#08111F', padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ flex: 1, fontSize: 22, fontWeight: 800, lineHeight: 1.1, textTransform: 'capitalize' }}>
+              <div style={{ flex: 1, fontSize: 22, fontWeight: 800, lineHeight: 1.1, textTransform: 'capitalize', color: '#EDF1F7' }}>
                 {ay.toLocaleDateString('tr-TR', { month: 'long' })} <span style={{ color: '#0F9B8E' }}>{ay.getFullYear()}</span>
               </div>
               <button type="button" onClick={() => setAy((a) => new Date(a.getFullYear(), a.getMonth() - 1, 1))} style={miniNavBtn}>‹</button>
@@ -581,7 +616,7 @@ export default function RandevularPage() {
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
                 {['P', 'S', 'Ç', 'P', 'C', 'C', 'P'].map((g, i2) => (
-                  <div key={i2} style={{ fontSize: 9, color: '#6E7076', textAlign: 'center', fontWeight: 700 }}>{g}</div>
+                  <div key={i2} style={{ fontSize: 9, color: '#5F7189', textAlign: 'center', fontWeight: 700 }}>{g}</div>
                 ))}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: 2 }}>
@@ -598,7 +633,7 @@ export default function RandevularPage() {
                       onClick={() => { setGun(d); setGorunum('gun'); }}
                       style={{ background: bugunMu ? '#0F9B8E' : 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8, padding: '3px 0 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
                     >
-                      <span style={{ fontSize: 11, fontWeight: bugunMu ? 700 : 500, color: bugunMu ? 'white' : buAy ? '#E5E5EA' : '#5B5D63' }}>{d.getDate()}</span>
+                      <span style={{ fontSize: 11, fontWeight: bugunMu ? 700 : 500, color: bugunMu ? 'white' : buAy ? '#DCE4EE' : '#4A5A70' }}>{d.getDate()}</span>
                       <span style={{ width: 4, height: 4, borderRadius: '50%', background: dolu ? (bugunMu ? 'white' : '#0F9B8E') : 'transparent' }} />
                     </button>
                   );
@@ -609,11 +644,11 @@ export default function RandevularPage() {
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
                 { etiket: `BUGÜN ${new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'numeric' })}`, renk: '#0F9B8E', liste: kenarGrup.bugun, bos: 'Bugün randevu yok' },
-                { etiket: 'YARIN', renk: '#9A9CA3', liste: kenarGrup.yarin, bos: 'Yarın randevu yok' },
+                { etiket: 'YARIN', renk: '#8FA0B5', liste: kenarGrup.yarin, bos: 'Yarın randevu yok' },
               ].map((grup) => (
                 <div key={grup.etiket}>
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.6, color: grup.renk, marginBottom: 8 }}>{grup.etiket}</div>
-                  {grup.liste.length === 0 && <div style={{ fontSize: 12, color: '#5B5D63' }}>{grup.bos}</div>}
+                  {grup.liste.length === 0 && <div style={{ fontSize: 12, color: '#4A5A70' }}>{grup.bos}</div>}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {grup.liste.map((rv) => {
                       const turRenk = TUR_RENK[rv.tur] || TUR_RENK.diger;
@@ -622,8 +657,8 @@ export default function RandevularPage() {
                         <div key={rv.id} onClick={() => duzenlemeyeAc(rv)} style={{ display: 'flex', gap: 8, cursor: 'pointer', opacity: iptalMi ? 0.45 : 1 }}>
                           <span style={{ width: 9, height: 9, borderRadius: '50%', marginTop: 4, flexShrink: 0, boxSizing: 'border-box', background: rv.durum === 'planlandi' ? 'transparent' : turRenk, border: `2px solid ${turRenk}` }} />
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 11, color: '#9A9CA3', fontVariantNumeric: 'tabular-nums' }}>{saatStr(rv.baslangic)} – {saatStr(rv.bitis)}</div>
-                            <div style={{ fontSize: 13, color: '#F2F2F4', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: iptalMi ? 'line-through' : 'none' }}>{rv.hastaAdi}</div>
+                            <div style={{ fontSize: 11, color: '#8FA0B5', fontVariantNumeric: 'tabular-nums' }}>{saatStr(rv.baslangic)} – {saatStr(rv.bitis)}</div>
+                            <div style={{ fontSize: 13, color: '#EDF1F7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: iptalMi ? 'line-through' : 'none' }}>{rv.hastaAdi}</div>
                           </div>
                         </div>
                       );
@@ -634,34 +669,36 @@ export default function RandevularPage() {
             </div>
           </aside>
 
-          {/* ——— Ana panel — açık tema ——— */}
-          <div style={{ flex: 1, minWidth: 0, background: 'white', color: '#1C1C1E', display: 'flex', flexDirection: 'column' }}>
+          {/* ——— Ana panel — koyu iki tonun açığı ——— */}
+          <div style={{ flex: 1, minWidth: 0, background: '#0D1C33', color: '#EDF1F7', display: 'flex', flexDirection: 'column' }}>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid #ECECEE', flexWrap: 'wrap' }}>
+            <div className="fv-toolbar" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <button type="button" onClick={geri} style={lightNavBtn}>‹</button>
-                <button type="button" onClick={bugune} style={{ ...lightNavBtn, width: 'auto', padding: '0 12px', fontWeight: 600, fontSize: 13 }}>Bugün</button>
-                <button type="button" onClick={ileri} style={lightNavBtn}>›</button>
+                <button type="button" onClick={geri} style={panelNavBtn}>‹</button>
+                <button type="button" onClick={bugune} style={{ ...panelNavBtn, width: 'auto', padding: '0 12px', fontWeight: 600, fontSize: 13 }}>Bugün</button>
+                <button type="button" onClick={ileri} style={panelNavBtn}>›</button>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, textTransform: 'capitalize', minWidth: 130 }}>
+              <div className="fv-title" style={{ fontSize: 16, fontWeight: 700, textTransform: 'capitalize', minWidth: 130 }}>
                 {gorunum === 'gun' ? tarihBaslikStr(gun) : gorunum === 'ajanda' ? 'Önümüzdeki 30 gün' : ayBaslikStr(ay)}
               </div>
               {gorunum === 'gun' && (
                 <input
+                  className="fv-dateinput"
                   type="date"
                   value={tarihInputStr(gun)}
                   onChange={(e) => { if (e.target.value) setGun(new Date(e.target.value + 'T00:00:00')); }}
-                  style={{ background: '#F2F2F4', border: '1px solid #E3E3E6', color: '#1C1C1E', borderRadius: 8, padding: '6px 8px', fontSize: 13 }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '6px 8px', fontSize: 13 }}
                 />
               )}
               <div style={{ flex: 1 }} />
-              <div style={{ display: 'flex', background: '#E9E9EB', borderRadius: 9, padding: 2 }}>
+              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: 9, padding: 2 }}>
                 {([['ay', 'Ay'], ['gun', 'Gün'], ['ajanda', 'Ajanda'], ['liste', 'Liste']] as const).map(([k, v]) => (
                   <button
                     key={k}
                     type="button"
+                    className="fv-seg-btn"
                     onClick={() => setGorunum(k)}
-                    style={{ background: gorunum === k ? 'white' : 'transparent', boxShadow: gorunum === k ? '0 1px 4px rgba(0,0,0,0.14)' : 'none', border: 'none', color: '#1C1C1E', fontWeight: gorunum === k ? 700 : 500, borderRadius: 7, padding: '5px 14px', fontSize: 13, cursor: 'pointer', transition: 'background .15s ease, box-shadow .15s ease' }}
+                    style={{ background: gorunum === k ? '#0F9B8E' : 'transparent', boxShadow: gorunum === k ? '0 1px 5px rgba(0,0,0,0.35)' : 'none', border: 'none', color: 'white', fontWeight: gorunum === k ? 700 : 500, borderRadius: 7, padding: '5px 14px', fontSize: 13, cursor: 'pointer', transition: 'background .15s ease, box-shadow .15s ease' }}
                   >{v}</button>
                 ))}
               </div>
@@ -671,23 +708,23 @@ export default function RandevularPage() {
             </div>
 
             <div style={{ padding: '12px 16px 0' }}>
-              {hata && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 10 }}>{hata}</div>}
+              {hata && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: '#FCA5A5', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 10 }}>{hata}</div>}
               {resmiTatilMi(new Date()) && (
-                <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', color: '#C2410C', borderRadius: 10, padding: '8px 12px', fontSize: 13, marginBottom: 10 }}>
+                <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: '#FCA5A5', borderRadius: 10, padding: '8px 12px', fontSize: 13, marginBottom: 10 }}>
                   🔔 Bugün resmi tatil: <strong>{resmiTatilMi(new Date())?.ad}</strong> — randevu planlarken dikkat edin.
                 </div>
               )}
               {basariMesaji && (
-                <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 10 }}>{basariMesaji}</div>
+                <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.5)', color: '#4ADE80', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 10 }}>{basariMesaji}</div>
               )}
               {gorunum === 'ay' && (
                 <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
                   {Object.entries(TUR_ETIKET).map(([k, v]) => (
-                    <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280' }}>
+                    <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#8FA0B5' }}>
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: TUR_RENK[k] }} /> {v}
                     </span>
                   ))}
-                  <span style={{ fontSize: 11, color: '#9CA3AF' }}>· içi boş nokta = onay bekliyor · sürükleyip bırakarak taşıyın</span>
+                  <span style={{ fontSize: 11, color: '#5F7189' }}>· içi boş nokta = onay bekliyor · sürükleyip bırakarak taşıyın</span>
                 </div>
               )}
             </div>
@@ -695,9 +732,9 @@ export default function RandevularPage() {
             {gorunum === 'ay' && (
               <div style={{ overflow: 'auto' }}>
                 <div style={{ minWidth: 560 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: '1px solid #ECECEE' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     {HAFTA_GUNLERI.map((g) => (
-                      <div key={g} style={{ padding: '7px 6px', fontSize: 10, color: '#8E8E93', textAlign: 'center', fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase' }}>{g}</div>
+                      <div key={g} style={{ padding: '7px 6px', fontSize: 10, color: '#5F7189', textAlign: 'center', fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase' }}>{g}</div>
                     ))}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
@@ -722,17 +759,17 @@ export default function RandevularPage() {
                           style={{
                             minHeight: 104,
                             padding: '5px 5px 6px',
-                            borderRight: (i + 1) % 7 !== 0 ? '1px solid #ECECEE' : 'none',
-                            borderTop: '1px solid #ECECEE',
-                            background: hedefMi ? '#E6F4F2' : buAyIcinde ? 'white' : '#FAFAFB',
+                            borderRight: (i + 1) % 7 !== 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                            borderTop: '1px solid rgba(255,255,255,0.07)',
+                            background: hedefMi ? 'rgba(15,155,142,0.16)' : buAyIcinde ? 'transparent' : 'rgba(0,0,0,0.18)',
                             cursor: 'pointer',
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 3 }}>
-                            <span style={{ fontSize: 12, fontWeight: bugunMu ? 700 : 500, color: bugunMu ? 'white' : buAyIcinde ? '#3C3C43' : '#C7C7CC', background: bugunMu ? '#0F9B8E' : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{d.getDate()}</span>
+                            <span style={{ fontSize: 12, fontWeight: bugunMu ? 700 : 500, color: bugunMu ? 'white' : buAyIcinde ? '#C9D4E3' : '#4A5A70', background: bugunMu ? '#0F9B8E' : 'transparent', width: 22, height: 22, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{d.getDate()}</span>
                           </div>
                           {tatil && (
-                            <div style={{ fontSize: 10, fontWeight: 600, color: '#D92D20', background: '#FEECEB', borderRadius: 4, padding: '1px 5px', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tatil.ad}</div>
+                            <div style={{ fontSize: 10, fontWeight: 600, color: '#FCA5A5', background: 'rgba(239,68,68,0.16)', borderRadius: 4, padding: '1px 5px', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tatil.ad}</div>
                           )}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {gosterilen.map((rv) => {
@@ -749,15 +786,15 @@ export default function RandevularPage() {
                                   onDragEnd={() => { setSurukleId(null); setSurukleHedef(null); }}
                                   onClick={(e) => { e.stopPropagation(); duzenlemeyeAc(rv); }}
                                   title={`${saatStr(rv.baslangic)} ${rv.hastaAdi} · ${TUR_ETIKET[rv.tur] || rv.tur} · ${durumBilgi.label}`}
-                                  style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, lineHeight: '15px', color: iptalMi ? '#9CA3AF' : '#1C1C1E', padding: '1px 3px', borderRadius: 4, opacity: rv.id === surukleId ? 0.45 : 1, textDecoration: iptalMi ? 'line-through' : 'none', cursor: surukleyebilir ? 'grab' : 'pointer' }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, lineHeight: '15px', color: iptalMi ? '#5F7189' : '#E7ECF3', padding: '1px 3px', borderRadius: 4, opacity: rv.id === surukleId ? 0.45 : 1, textDecoration: iptalMi ? 'line-through' : 'none', cursor: surukleyebilir ? 'grab' : 'pointer' }}
                                 >
-                                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, boxSizing: 'border-box', background: rv.durum === 'planlandi' ? 'white' : iptalMi ? '#C7C7CC' : turRenk, border: `2px solid ${iptalMi ? '#C7C7CC' : turRenk}` }} />
-                                  <span style={{ color: '#8E8E93', fontVariantNumeric: 'tabular-nums', flexShrink: 0, fontSize: 10 }}>{saatStr(rv.baslangic)}</span>
+                                  <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, boxSizing: 'border-box', background: rv.durum === 'planlandi' ? 'transparent' : iptalMi ? '#4A5A70' : turRenk, border: `2px solid ${iptalMi ? '#4A5A70' : turRenk}` }} />
+                                  <span style={{ color: '#7C8AA0', fontVariantNumeric: 'tabular-nums', flexShrink: 0, fontSize: 10 }}>{saatStr(rv.baslangic)}</span>
                                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rv.hastaAdi}</span>
                                 </div>
                               );
                             })}
-                            {fazlaSayisi > 0 && <div style={{ fontSize: 10, color: '#8E8E93', paddingLeft: 15 }}>+{fazlaSayisi} daha</div>}
+                            {fazlaSayisi > 0 && <div style={{ fontSize: 10, color: '#7C8AA0', paddingLeft: 15 }}>+{fazlaSayisi} daha</div>}
                           </div>
                         </div>
                       );
@@ -769,9 +806,31 @@ export default function RandevularPage() {
 
             {gorunum === 'gun' && (
               <div style={{ padding: '4px 16px 20px' }}>
-                {yukleniyor && <p style={{ color: '#8E8E93', fontSize: 14 }}>Yükleniyor…</p>}
+                {/* NOTYA-RANDEVU-13: hafta şeridi — mobil takvim deseni (tüm genişliklerde) */}
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '2px 0 12px', WebkitOverflowScrolling: 'touch' }}>
+                  {haftaGunleri.map((d, i) => {
+                    const k = yerelGunAnahtari(d);
+                    const secili = k === yerelGunAnahtari(gun);
+                    const bugunMu = k === bugunAnahtari;
+                    const dolu = (haftaRandevular[k] || 0) > 0;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => setGun(new Date(d))}
+                        style={{ minWidth: 46, flex: 1, background: secili ? '#0F9B8E' : 'rgba(255,255,255,0.05)', border: bugunMu && !secili ? '1px solid #0F9B8E' : '1px solid transparent', borderRadius: 12, padding: '8px 0 7px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer' }}
+                      >
+                        <span style={{ fontSize: 10, fontWeight: 600, color: secili ? 'rgba(255,255,255,0.85)' : '#7C8AA0' }}>{HAFTA_GUNLERI[i]}</span>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{d.getDate()}</span>
+                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: dolu ? (secili ? 'white' : '#0F9B8E') : 'transparent' }} />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {yukleniyor && <p style={{ color: '#7C8AA0', fontSize: 14 }}>Yükleniyor…</p>}
                 {!yukleniyor && siraliGunlukRandevular.length === 0 && (
-                  <p style={{ color: '#8E8E93', fontSize: 14 }}>Bu güne ait randevu yok.</p>
+                  <p style={{ color: '#7C8AA0', fontSize: 14 }}>Bu güne ait randevu yok.</p>
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {siraliGunlukRandevular.map((rv) => {
@@ -781,15 +840,15 @@ export default function RandevularPage() {
                     return (
                       <div
                         key={rv.id}
-                        style={{ background: 'white', border: '1px solid #ECECEE', borderLeft: `3px solid ${turRenk}`, borderRadius: 12, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', opacity: rv.durum === 'iptal' ? 0.55 : 1 }}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderLeft: `3px solid ${turRenk}`, borderRadius: 12, padding: 14, opacity: rv.durum === 'iptal' ? 0.55 : 1 }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{saatStr(rv.baslangic)} – {saatStr(rv.bitis)}</div>
-                            <div style={{ fontSize: 15, marginTop: 2 }}>{rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 11, color: '#D97706', marginLeft: 6 }}>kayıtsız</span>}</div>
-                            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{TUR_ETIKET[rv.tur] || rv.tur}{rv.hastaTelefon ? ` · ${rv.hastaTelefon}` : ''}</div>
-                            {rv.notlar && <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4, whiteSpace: 'pre-wrap' }}>{rv.notlar}</div>}
-                            {rv.durum === 'iptal' && rv.iptalNedeni && <div style={{ fontSize: 12, color: '#DC2626', marginTop: 4 }}>İptal: {rv.iptalNedeni}</div>}
+                            <div style={{ fontSize: 15, marginTop: 2 }}>{rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 11, color: '#F59E0B', marginLeft: 6 }}>kayıtsız</span>}</div>
+                            <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>{TUR_ETIKET[rv.tur] || rv.tur}{rv.hastaTelefon ? ` · ${rv.hastaTelefon}` : ''}</div>
+                            {rv.notlar && <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 4, whiteSpace: 'pre-wrap' }}>{rv.notlar}</div>}
+                            {rv.durum === 'iptal' && rv.iptalNedeni && <div style={{ fontSize: 12, color: '#FCA5A5', marginTop: 4 }}>İptal: {rv.iptalNedeni}</div>}
                           </div>
                           <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>
                             {durumBilgi.label}
@@ -806,16 +865,16 @@ export default function RandevularPage() {
                             )}
                             <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
                             {rv.durum === 'planlandi' && (
-                              <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={{ ...aksiyonBtn, color: '#059669', fontWeight: 600 }}>Onayla</button>
+                              <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={{ ...aksiyonBtn, color: '#4ADE80', fontWeight: 600 }}>Onayla</button>
                             )}
                             {gecmis && rv.durum !== 'tamamlandi' && rv.durum !== 'gelmedi' && (
                               <>
                                 <button type="button" onClick={() => durumDegistir(rv.id, 'tamamlandi')} style={aksiyonBtn}>Tamamlandı</button>
-                                <button type="button" onClick={() => durumDegistir(rv.id, 'gelmedi')} style={{ ...aksiyonBtn, color: '#D97706' }}>Gelmedi</button>
+                                <button type="button" onClick={() => durumDegistir(rv.id, 'gelmedi')} style={{ ...aksiyonBtn, color: '#F59E0B' }}>Gelmedi</button>
                               </>
                             )}
-                            <button type="button" onClick={() => setIptalId(rv.id)} style={{ ...aksiyonBtn, color: '#DC2626' }}>İptal Et</button>
-                            <button type="button" onClick={() => sil(rv.id)} style={{ ...aksiyonBtn, color: '#8E8E93' }}>Sil</button>
+                            <button type="button" onClick={() => setIptalId(rv.id)} style={{ ...aksiyonBtn, color: '#F87171' }}>İptal Et</button>
+                            <button type="button" onClick={() => sil(rv.id)} style={{ ...aksiyonBtn, color: '#7C8AA0' }}>Sil</button>
                           </div>
                         )}
 
@@ -825,7 +884,7 @@ export default function RandevularPage() {
                               value={iptalNedeni}
                               onChange={(e) => setIptalNedeni(e.target.value)}
                               placeholder="İptal nedeni (isteğe bağlı)"
-                              style={{ flex: 1, background: '#F2F2F4', border: '1px solid #E3E3E6', color: '#1C1C1E', borderRadius: 8, padding: '6px 10px', fontSize: 13 }}
+                              style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '6px 10px', fontSize: 13 }}
                             />
                             <button
                               type="button"
@@ -844,18 +903,18 @@ export default function RandevularPage() {
 
             {gorunum === 'ajanda' && (
               <div style={{ padding: '4px 16px 20px' }}>
-                {yukleniyor && <p style={{ color: '#8E8E93', fontSize: 14 }}>Yükleniyor…</p>}
-                {!yukleniyor && ajandaGunleri.length === 0 && <p style={{ color: '#8E8E93', fontSize: 14 }}>Önümüzdeki 30 günde randevu yok.</p>}
+                {yukleniyor && <p style={{ color: '#7C8AA0', fontSize: 14 }}>Yükleniyor…</p>}
+                {!yukleniyor && ajandaGunleri.length === 0 && <p style={{ color: '#7C8AA0', fontSize: 14 }}>Önümüzdeki 30 günde randevu yok.</p>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                   {ajandaGunleri.map(({ anahtar, tarih, liste }) => {
                     const tatil = resmiTatilMi(tarih);
                     const bugunMu = anahtar === bugunAnahtari;
                     return (
                       <div key={anahtar}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #ECECEE', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: bugunMu ? '#0F9B8E' : '#1C1C1E', textTransform: 'capitalize' }}>{tarihBaslikStr(tarih)}</span>
-                          {tatil && <span style={{ fontSize: 11, color: '#D92D20' }}>· {tatil.ad}</span>}
-                          <span style={{ fontSize: 11, color: '#8E8E93' }}>· {liste.length} randevu</span>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: bugunMu ? '#0F9B8E' : '#EDF1F7', textTransform: 'capitalize' }}>{tarihBaslikStr(tarih)}</span>
+                          {tatil && <span style={{ fontSize: 11, color: '#FCA5A5' }}>· {tatil.ad}</span>}
+                          <span style={{ fontSize: 11, color: '#5F7189' }}>· {liste.length} randevu</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           {liste.map((rv) => {
@@ -866,10 +925,10 @@ export default function RandevularPage() {
                                 key={rv.id}
                                 className="fv-hrow"
                                 onClick={() => duzenlemeyeAc(rv)}
-                                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: '#F7F7F8', cursor: 'pointer', opacity: rv.durum === 'iptal' ? 0.5 : 1, flexWrap: 'wrap' }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', cursor: 'pointer', opacity: rv.durum === 'iptal' ? 0.5 : 1, flexWrap: 'wrap' }}
                               >
                                 <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, boxSizing: 'border-box', background: rv.durum === 'planlandi' ? 'transparent' : turRenk, border: `2px solid ${turRenk}` }} title={TUR_ETIKET[rv.tur] || rv.tur} />
-                                <span style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums', color: '#6B7280', minWidth: 92 }}>{saatStr(rv.baslangic)}–{saatStr(rv.bitis)}</span>
+                                <span style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums', color: '#8FA0B5', minWidth: 92 }}>{saatStr(rv.baslangic)}–{saatStr(rv.bitis)}</span>
                                 <span style={{ fontSize: 14, flex: 1, minWidth: 120, textDecoration: rv.durum === 'iptal' ? 'line-through' : 'none' }}>{rv.hastaAdi}</span>
                                 <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>{durumBilgi.label}</span>
                               </div>
@@ -885,10 +944,10 @@ export default function RandevularPage() {
 
             {gorunum === 'liste' && (
               <div style={{ padding: '4px 16px 20px' }}>
-                {yukleniyor && <p style={{ color: '#8E8E93', fontSize: 14 }}>Yükleniyor…</p>}
-                {!yukleniyor && siraliListe.length === 0 && <p style={{ color: '#8E8E93', fontSize: 14 }}>Bu ayda randevu yok.</p>}
+                {yukleniyor && <p style={{ color: '#7C8AA0', fontSize: 14 }}>Yükleniyor…</p>}
+                {!yukleniyor && siraliListe.length === 0 && <p style={{ color: '#7C8AA0', fontSize: 14 }}>Bu ayda randevu yok.</p>}
                 {siraliListe.length > 0 && (
-                  <div style={{ border: '1px solid #ECECEE', borderRadius: 12, overflow: 'hidden' }}>
+                  <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden' }}>
                     {siraliListe.map((rv, idx) => {
                       const durumBilgi = DURUM_ETIKET[rv.durum] || DURUM_ETIKET.planlandi;
                       const turRenk = TUR_RENK[rv.tur] || TUR_RENK.diger;
@@ -898,16 +957,16 @@ export default function RandevularPage() {
                           key={rv.id}
                           className="fv-hrow"
                           onClick={() => duzenlemeyeAc(rv)}
-                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'white', borderTop: idx ? '1px solid #ECECEE' : 'none', cursor: 'pointer', opacity: rv.durum === 'iptal' ? 0.5 : 1, flexWrap: 'wrap' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'transparent', borderTop: idx ? '1px solid rgba(255,255,255,0.06)' : 'none', cursor: 'pointer', opacity: rv.durum === 'iptal' ? 0.5 : 1, flexWrap: 'wrap' }}
                         >
                           <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, boxSizing: 'border-box', background: rv.durum === 'planlandi' ? 'transparent' : turRenk, border: `2px solid ${turRenk}` }} title={TUR_ETIKET[rv.tur] || rv.tur} />
-                          <span style={{ fontSize: 12, fontVariantNumeric: 'tabular-nums', color: '#6B7280', minWidth: 108 }}>
+                          <span style={{ fontSize: 12, fontVariantNumeric: 'tabular-nums', color: '#8FA0B5', minWidth: 108 }}>
                             {b.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })} {HAFTA_GUNLERI[(b.getDay() + 6) % 7]} {saatStr(rv.baslangic)}
                           </span>
                           <span style={{ fontSize: 14, flex: 1, minWidth: 120, textDecoration: rv.durum === 'iptal' ? 'line-through' : 'none' }}>
-                            {rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 10, color: '#D97706', marginLeft: 6 }}>kayıtsız</span>}
+                            {rv.hastaAdi}{!rv.kayitliHasta && <span style={{ fontSize: 10, color: '#F59E0B', marginLeft: 6 }}>kayıtsız</span>}
                           </span>
-                          <span style={{ fontSize: 11, color: '#8E8E93' }}>{TUR_ETIKET[rv.tur] || rv.tur}</span>
+                          <span style={{ fontSize: 11, color: '#7C8AA0' }}>{TUR_ETIKET[rv.tur] || rv.tur}</span>
                           <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>{durumBilgi.label}</span>
                         </div>
                       );
@@ -1118,10 +1177,10 @@ const miniNavBtn: React.CSSProperties = {
   fontSize: 14,
 };
 
-const lightNavBtn: React.CSSProperties = {
-  background: '#F2F2F4',
-  border: '1px solid #E3E3E6',
-  color: '#1C1C1E',
+const panelNavBtn: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.08)',
+  border: 'none',
+  color: 'white',
   borderRadius: 8,
   width: 32,
   height: 32,
@@ -1130,9 +1189,9 @@ const lightNavBtn: React.CSSProperties = {
 };
 
 const aksiyonBtn: React.CSSProperties = {
-  background: '#F2F2F4',
-  border: '1px solid #E7E7EA',
-  color: '#3C3C43',
+  background: 'rgba(255,255,255,0.08)',
+  border: 'none',
+  color: '#C9D4E3',
   borderRadius: 8,
   padding: '6px 12px',
   fontSize: 12,
