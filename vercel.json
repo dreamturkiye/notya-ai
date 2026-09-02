@@ -60,6 +60,10 @@
     {
       "path": "/api/cron/randevu-hatirlatma",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/asi-hatirlatma",
+      "schedule": "0 8 * * *"
     }
   ]
 }
