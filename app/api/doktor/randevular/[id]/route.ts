@@ -29,13 +29,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!mevcut) return NextResponse.json({ error: 'Randevu bulunamadı.' }, { status: 404 })
 
   const body = await req.json().catch(() => ({}))
-  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaTelefonSerbest } = body as {
+  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaDurumu } = body as {
     baslangic?: string
     bitis?: string
     durum?: string
     iptalNedeni?: string
     tur?: string
     notlar?: string
+    hastaDurumu?: string
     patientId?: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
@@ -79,6 +80,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   if (tur !== undefined) guncelleme.tur = tur
   if (notlar !== undefined) guncelleme.notlar = notlar?.trim() || null
+  if (hastaDurumu !== undefined) guncelleme.hasta_durumu = (hastaDurumu === 'saglikli' || hastaDurumu === 'sikayetli') ? hastaDurumu : null
 
   // NOTYA-RANDEVU-07: hasta bağlantısını güncelleme.
   //
