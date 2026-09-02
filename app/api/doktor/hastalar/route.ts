@@ -58,13 +58,17 @@ export async function POST(req: NextRequest) {
   const { user, supabase } = oturum;
 
   const body = await req.json();
-  const { tcKimlikNo, adSoyad, dogumTarihi, cinsiyet, telefon, sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol } = body;
+  const { tcKimlikNo, adSoyad, dogumTarihi, cinsiyet, telefon, eposta, sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol } = body;
 
   if (!tcKimlikNo || tcKimlikNo.length !== 11) {
     return NextResponse.json({ error: 'Geçersiz TC Kimlik' }, { status: 400 });
   }
   if (!adSoyad || !adSoyad.trim()) {
     return NextResponse.json({ error: 'Ad Soyad zorunludur.' }, { status: 400 });
+  }
+  // NOTYA-OPS-02: yeni hasta kaydında e-posta zorunlu (karşılama e-postası + hasta formu bu adrese gidecek)
+  if (!eposta || !String(eposta).includes('@')) {
+    return NextResponse.json({ error: 'E-posta adresi zorunludur.' }, { status: 400 });
   }
 
   const tcHash = require('crypto').createHash('sha256').update(tcKimlikNo).digest('hex');
@@ -73,6 +77,7 @@ export async function POST(req: NextRequest) {
   const encryptedDob = dogumTarihi ? encrypt(dogumTarihi) : null;
   const encryptedGender = cinsiyet ? encrypt(cinsiyet) : null;
   const encryptedPhone = telefon ? encrypt(telefon) : null;
+  const encryptedEmail = eposta ? encrypt(String(eposta).trim()) : null;
   const notesPayload = { sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol };
   const encryptedNotes = encrypt(JSON.stringify(notesPayload));
 
@@ -85,6 +90,7 @@ export async function POST(req: NextRequest) {
       dob_encrypted: encryptedDob,
       gender_encrypted: encryptedGender,
       phone_encrypted: encryptedPhone,
+      email_encrypted: encryptedEmail,
       notes_encrypted: encryptedNotes,
       is_active: true
     })

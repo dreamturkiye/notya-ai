@@ -70,17 +70,32 @@ const DURUM_ETIKET: Record<string, { label: string; color: string; bg: string }>
 const HAFTA_GUNLERI = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
 function gunBaslangicBitis(tarih: Date): { baslangic: string; bitis: string } {
-  const b = new Date(tarih); b.setHours(0, 0, 0, 0);
-  const s = new Date(tarih); s.setHours(23, 59, 59, 999);
+  const b = new Date(yerelGunAnahtari(tarih) + 'T00:00:00+03:00');
+  const s = new Date(yerelGunAnahtari(tarih) + 'T23:59:59+03:00');
   return { baslangic: b.toISOString(), bitis: s.toISOString() };
 }
 
+/** NOTYA-TRT-01: Randevu sistemi TÜRKİYE SAATİ (Europe/Istanbul, sabit UTC+3) üzerinden
+ * çalışır — doktor/sekreter dünyanın neresinden bakarsa baksın aynı saatleri görür.
+ * Izgara hücreleri "yapısal" tarih anahtarı (yerelGunAnahtari) kullanır; randevular ise
+ * ISO anlarının TRT günü (trtGunAnahtari) ile hücrelere dağıtılır. Türkiye 2016'dan beri
+ * yaz saati uygulamadığı için +03:00 sabittir. */
+const TRT = 'Europe/Istanbul';
+
+function trtGunAnahtari(iso: string | Date): string {
+  return new Date(iso).toLocaleDateString('en-CA', { timeZone: TRT });
+}
+
+function trtBugunTarihi(): Date {
+  return new Date(trtGunAnahtari(new Date()) + 'T00:00:00');
+}
+
 function saatStr(iso: string): string {
-  return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: TRT });
 }
 
 function tarihBaslikStr(tarih: Date): string {
-  const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+  const bugun = trtBugunTarihi();
   const secilen = new Date(tarih); secilen.setHours(0, 0, 0, 0);
   const fark = Math.round((secilen.getTime() - bugun.getTime()) / 86400000);
   const temel = tarih.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -158,6 +173,7 @@ export default function RandevularPage() {
   const [seciliHasta, setSeciliHasta] = useState<HastaAramaSonucu | null>(null);
   const [serbestAd, setSerbestAd] = useState('');
   const [serbestTelefon, setSerbestTelefon] = useState('');
+  const [serbestEmail, setSerbestEmail] = useState('');
 
   const [kaydediliyor, setKaydediyor] = useState(false);
   const [iptalId, setIptalId] = useState<string | null>(null);
@@ -176,8 +192,8 @@ export default function RandevularPage() {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
       const grid = ayIzgarasi(ay);
-      const baslangic = new Date(grid[0]); baslangic.setHours(0, 0, 0, 0);
-      const bitis = new Date(grid[grid.length - 1]); bitis.setHours(23, 59, 59, 999);
+      const baslangic = new Date(yerelGunAnahtari(grid[0]) + 'T00:00:00+03:00');
+      const bitis = new Date(yerelGunAnahtari(grid[grid.length - 1]) + 'T23:59:59+03:00');
       const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
@@ -185,7 +201,7 @@ export default function RandevularPage() {
       const d = await r.json();
       const grup: Record<string, Randevu[]> = {};
       for (const rv of (d.randevular || []) as Randevu[]) {
-        const anahtar = yerelGunAnahtari(new Date(rv.baslangic));
+        const anahtar = trtGunAnahtari(rv.baslangic);
         (grup[anahtar] ||= []).push(rv);
       }
       setAylikRandevular(grup);
@@ -233,8 +249,8 @@ export default function RandevularPage() {
   const ajandaYukle = useCallback(async () => {
     setYukleniyor(true); setHata('');
     try {
-      const b = new Date(); b.setHours(0, 0, 0, 0);
-      const s = new Date(b.getTime() + 30 * 86400000); s.setHours(23, 59, 59, 999);
+      const b = new Date(trtGunAnahtari(new Date()) + 'T00:00:00+03:00');
+      const s = new Date(b.getTime() + 31 * 86400000 - 1000);
       const liste = await araligiCek(b, s);
       if (liste) setAjandaRandevular(liste);
     } catch { setHata('Randevular alınamadı. Bağlantınızı kontrol edin.'); }
@@ -244,8 +260,10 @@ export default function RandevularPage() {
   const listeYukle = useCallback(async () => {
     setYukleniyor(true); setHata('');
     try {
-      const b = new Date(ay.getFullYear(), ay.getMonth(), 1);
-      const s = new Date(ay.getFullYear(), ay.getMonth() + 1, 0); s.setHours(23, 59, 59, 999);
+      const ilkKey = yerelGunAnahtari(new Date(ay.getFullYear(), ay.getMonth(), 1));
+      const sonKey = yerelGunAnahtari(new Date(ay.getFullYear(), ay.getMonth() + 1, 0));
+      const b = new Date(ilkKey + 'T00:00:00+03:00');
+      const s = new Date(sonKey + 'T23:59:59+03:00');
       const liste = await araligiCek(b, s);
       if (liste) setListeRandevular(liste);
     } catch { setHata('Randevular alınamadı. Bağlantınızı kontrol edin.'); }
@@ -256,8 +274,8 @@ export default function RandevularPage() {
    * olsun beslenmesi gerektiği için kendi 2 günlük penceresini çeker (ucuz sorgu). */
   const kenarYukle = useCallback(async () => {
     try {
-      const b = new Date(); b.setHours(0, 0, 0, 0);
-      const s = new Date(b.getTime() + 86400000); s.setHours(23, 59, 59, 999);
+      const b = new Date(trtGunAnahtari(new Date()) + 'T00:00:00+03:00');
+      const s = new Date(b.getTime() + 2 * 86400000 - 1000);
       const liste = await araligiCek(b, s);
       if (liste) setKenarRandevular(liste);
     } catch { /* kenar çubuğu kritik değil */ }
@@ -270,12 +288,13 @@ export default function RandevularPage() {
       const pzt = new Date(gun);
       const idx = (pzt.getDay() + 6) % 7;
       pzt.setDate(pzt.getDate() - idx); pzt.setHours(0, 0, 0, 0);
-      const paz = new Date(pzt.getTime() + 6 * 86400000); paz.setHours(23, 59, 59, 999);
-      const liste = await araligiCek(pzt, paz);
+      const pztTrt = new Date(yerelGunAnahtari(pzt) + 'T00:00:00+03:00');
+      const paz = new Date(pztTrt.getTime() + 7 * 86400000 - 1000);
+      const liste = await araligiCek(pztTrt, paz);
       if (liste) {
         const g: Record<string, number> = {};
         for (const rv of liste) {
-          const k = yerelGunAnahtari(new Date(rv.baslangic));
+          const k = trtGunAnahtari(rv.baslangic);
           g[k] = (g[k] || 0) + 1;
         }
         setHaftaRandevular(g);
@@ -341,6 +360,7 @@ export default function RandevularPage() {
     setSeciliHasta(null);
     setSerbestAd('');
     setSerbestTelefon('');
+    setSerbestEmail('');
     setModalIptalAcik(false);
     setModalIptalNedeni('');
   }
@@ -382,6 +402,10 @@ export default function RandevularPage() {
       setHata('Kayıtlı hasta seçin veya hasta adı girin.');
       return;
     }
+    if (!seciliHasta && !serbestEmail.trim().includes('@')) {
+      setHata('Hasta e-posta adresi zorunludur.');
+      return;
+    }
     setKaydediyor(true);
     setHata('');
     setBasariMesaji('');
@@ -389,15 +413,15 @@ export default function RandevularPage() {
       const t = await token();
       if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
 
-      const [saatH, saatM] = saat.split(':').map(Number);
-      const baslangicTarihi = new Date(gun);
-      baslangicTarihi.setHours(saatH, saatM, 0, 0);
+      // NOTYA-TRT-01: girilen saat Türkiye saati olarak yorumlanır (sabit +03:00)
+      const baslangicTarihi = new Date(`${yerelGunAnahtari(gun)}T${saat}:00+03:00`);
       const bitisTarihi = new Date(baslangicTarihi.getTime() + sureDk * 60000);
 
       const govde = {
         patientId: seciliHasta?.id || null,
         hastaAdiSerbest: seciliHasta ? null : serbestAd.trim(),
         hastaTelefonSerbest: seciliHasta ? null : serbestTelefon.trim(),
+        hastaEmailSerbest: seciliHasta ? null : serbestEmail.trim(),
         baslangic: baslangicTarihi.toISOString(),
         bitis: bitisTarihi.toISOString(),
         tur,
@@ -489,7 +513,7 @@ export default function RandevularPage() {
   const ajandaGunleri = useMemo(() => {
     const grup: Record<string, Randevu[]> = {};
     for (const rv of ajandaRandevular) {
-      (grup[yerelGunAnahtari(new Date(rv.baslangic))] ||= []).push(rv);
+      (grup[trtGunAnahtari(rv.baslangic)] ||= []).push(rv);
     }
     return Object.entries(grup)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -506,12 +530,12 @@ export default function RandevularPage() {
   );
 
   const kenarGrup = useMemo(() => {
-    const bugunK = yerelGunAnahtari(new Date());
-    const yarinK = yerelGunAnahtari(new Date(Date.now() + 86400000));
+    const bugunK = trtGunAnahtari(new Date());
+    const yarinK = trtGunAnahtari(new Date(Date.now() + 86400000));
     const sirala = (l: Randevu[]) => l.sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime());
     return {
-      bugun: sirala(kenarRandevular.filter((r) => yerelGunAnahtari(new Date(r.baslangic)) === bugunK)),
-      yarin: sirala(kenarRandevular.filter((r) => yerelGunAnahtari(new Date(r.baslangic)) === yarinK)),
+      bugun: sirala(kenarRandevular.filter((r) => trtGunAnahtari(r.baslangic) === bugunK)),
+      yarin: sirala(kenarRandevular.filter((r) => trtGunAnahtari(r.baslangic) === yarinK)),
     };
   }, [kenarRandevular]);
 
@@ -547,10 +571,10 @@ export default function RandevularPage() {
     const rv = Object.values(aylikRandevular).flat().find((r) => r.id === id);
     if (!rv) return;
     const eskiB = new Date(rv.baslangic);
-    if (yerelGunAnahtari(eskiB) === yerelGunAnahtari(hedefGun)) return;
+    if (trtGunAnahtari(eskiB) === yerelGunAnahtari(hedefGun)) return;
     const sure = new Date(rv.bitis).getTime() - eskiB.getTime();
-    const yeniB = new Date(hedefGun);
-    yeniB.setHours(eskiB.getHours(), eskiB.getMinutes(), 0, 0);
+    const eskiSaatTrt = eskiB.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: TRT });
+    const yeniB = new Date(`${yerelGunAnahtari(hedefGun)}T${eskiSaatTrt}:00+03:00`);
     const yeniS = new Date(yeniB.getTime() + sure);
     try {
       const t = await token();
@@ -572,7 +596,7 @@ export default function RandevularPage() {
     await ayVerisiYukle();
   }
 
-  const bugunAnahtari = yerelGunAnahtari(new Date());
+  const bugunAnahtari = trtGunAnahtari(new Date());
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
@@ -681,6 +705,7 @@ export default function RandevularPage() {
               <div className="fv-title" style={{ fontSize: 16, fontWeight: 700, textTransform: 'capitalize', minWidth: 130 }}>
                 {gorunum === 'gun' ? tarihBaslikStr(gun) : gorunum === 'ajanda' ? 'Önümüzdeki 30 gün' : ayBaslikStr(ay)}
               </div>
+              <span title="Tüm saatler Türkiye saatidir" style={{ fontSize: 10, fontWeight: 700, color: '#5F7189', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 5, padding: '2px 6px' }}>TRT</span>
               {gorunum === 'gun' && (
                 <input
                   className="fv-dateinput"
@@ -858,6 +883,9 @@ export default function RandevularPage() {
                         {rv.durum !== 'iptal' && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
                             {rv.patientId && (
+                              <button type="button" onClick={() => router.push(`/session/new?patientId=${rv.patientId}`)} style={{ ...aksiyonBtn, background: '#0F9B8E', color: 'white', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                            )}
+                            {rv.patientId && (
                               <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}`)} style={{ ...aksiyonBtn, color: '#0F9B8E', fontWeight: 600 }}>Hasta Dosyasını Aç</button>
                             )}
                             {rv.patientId && (
@@ -1014,6 +1042,9 @@ export default function RandevularPage() {
                         {duzenlenenRandevu.durum !== 'iptal' && !modalIptalAcik && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {duzenlenenRandevu.patientId && (
+                              <button type="button" onClick={() => router.push(`/session/new?patientId=${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, background: '#0F9B8E', color: 'white', borderColor: '#0F9B8E', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                            )}
+                            {duzenlenenRandevu.patientId && (
                               <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, color: '#0F9B8E', fontWeight: 600, borderColor: '#0F9B8E' }}>Hasta Dosyasını Aç</button>
                             )}
                             {duzenlenenRandevu.patientId && (
@@ -1094,6 +1125,10 @@ export default function RandevularPage() {
                   <div className="ni-field">
                     <label className="ni-label">Telefon</label>
                     <input className="ni-input" value={serbestTelefon} onChange={(e) => setSerbestTelefon(e.target.value)} placeholder="05xx xxx xx xx" />
+                  </div>
+                  <div className="ni-field">
+                    <label className="ni-label">E-posta *</label>
+                    <input className="ni-input" type="email" value={serbestEmail} onChange={(e) => setSerbestEmail(e.target.value)} placeholder="ornek@eposta.com" />
                   </div>
                 </div>
               )}

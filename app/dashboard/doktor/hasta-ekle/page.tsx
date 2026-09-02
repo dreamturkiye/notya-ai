@@ -29,6 +29,7 @@ interface FormData {
   suregenIlaclar: string;
   sigaraAlkol: string;
   telefon: string;
+  eposta: string;
   sehir: string;
   kvkkOnay: boolean;
 }
@@ -65,6 +66,7 @@ export default function HastaEklePage() {
     suregenIlaclar: '',
     sigaraAlkol: '',
     telefon: '',
+    eposta: '',
     sehir: '',
     kvkkOnay: false,
   });
@@ -206,6 +208,10 @@ export default function HastaEklePage() {
     }
     if (!formData.adSoyad.trim()) {
       setBanner({ type: 'error', message: 'Ad Soyad zorunlu' });
+      return;
+    }
+    if (!formData.eposta.trim().includes('@')) {
+      setBanner({ type: 'error', message: 'E-posta adresi zorunlu' });
       return;
     }
     setIdentitySource((s) => s || 'manuel');
@@ -739,6 +745,14 @@ export default function HastaEklePage() {
               placeholder="Telefon"
               value={formData.telefon}
               onChange={(e) => updateFormData('telefon', e.target.value)}
+              style={inputStyle()}
+            />
+            <input
+              className="ni-input"
+              type="email"
+              placeholder="E-posta *"
+              value={formData.eposta}
+              onChange={(e) => updateFormData('eposta', e.target.value)}
               style={inputStyle()}
             />
             <div style={{ height: 16 }} />
