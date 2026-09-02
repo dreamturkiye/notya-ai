@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import HastaIlaclar from '@/components/doktor/HastaIlaclar';
 import HastaIntake from '@/components/doktor/HastaIntake';
 import HastaAsilar from '@/components/doktor/HastaAsilar';
+import HastaKonsult from '@/components/doktor/HastaKonsult';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import DoktorNav from '@/components/doktor/DoktorNav';
@@ -32,7 +33,7 @@ export default function HastaProfilPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const tabs = ['Özet', 'Muayene Geçmişi', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar'];
+  const tabs = ['Özet', 'Muayene Geçmişi', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', "Ayşe'ye Danış"];
 
   useEffect(() => {
     if (!patientId) return;
@@ -116,6 +117,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 5 && <HastaIlaclar patientId={patientId} />}
         {!loading && !error && activeTab === 6 && <HastaIntake patientId={patientId} />}
         {!loading && !error && activeTab === 7 && <HastaAsilar patientId={patientId} />}
+        {!loading && !error && activeTab === 8 && <HastaKonsult patientId={patientId} />}
       </div>
     </div>
   );

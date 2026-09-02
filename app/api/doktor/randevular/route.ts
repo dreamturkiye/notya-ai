@@ -87,10 +87,11 @@ export async function POST(req: NextRequest) {
   const { supabase, doktorId, user } = oturum
 
   const body = await req.json().catch(() => ({}))
-  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, baslangic, bitis, tur, notlar, hastaDurumu } = body as {
+  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaEmailSerbest, baslangic, bitis, tur, notlar, hastaDurumu } = body as {
     patientId?: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
+    hastaEmailSerbest?: string
     baslangic?: string
     bitis?: string
     tur?: string
@@ -140,6 +141,8 @@ export async function POST(req: NextRequest) {
       patient_id: patientId || null,
       hasta_adi_serbest: patientId ? null : hastaAdiSerbest?.trim() || null,
       hasta_telefon_serbest: patientId ? null : hastaTelefonSerbest?.trim() || null,
+      // NOTYA-OPS-02: yeni randevuda e-posta zorunlu (karşılama e-postası + form linki bu adrese gidecek)
+      hasta_email_serbest: patientId ? null : hastaEmailSerbest?.trim() || null,
       baslangic,
       bitis,
       tur: tur || 'muayene',
