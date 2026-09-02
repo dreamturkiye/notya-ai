@@ -739,7 +739,7 @@ export default function RandevularPage() {
               <div className="ni-field">
                 <label className="ni-label">Hasta Durumu</label>
                 <div style={{ display: 'flex', gap: 16 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', color: '#0A1628' }}>
                     <input
                       type="checkbox"
                       checked={hastaDurumu === 'saglikli'}
@@ -747,7 +747,7 @@ export default function RandevularPage() {
                     />
                     Sağlıklı Hasta
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', color: '#0A1628' }}>
                     <input
                       type="checkbox"
                       checked={hastaDurumu === 'sikayetli'}
