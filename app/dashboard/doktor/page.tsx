@@ -258,7 +258,10 @@ export default function DoktorDashboard() {
                 >{v}</button>
               ))}
             </div>
-            <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Takvimi aç</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Randevu ekle</button>
+              <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Takvimi aç</button>
+            </div>
           </div>
 
           <div style={{ ...panel, padding: '6px 18px' }}>
@@ -287,16 +290,10 @@ export default function DoktorDashboard() {
                   })}
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 14, flexWrap: 'wrap', padding: '16px 0' }}>
-                  <span style={{ fontSize: 14, color: '#5F7189' }}>Bugün için randevu yok</span>
-                  <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Randevu ekle</button>
-                </div>
+                <div style={{ padding: '16px 0', fontSize: 14, color: '#5F7189' }}>Bugün için randevu yok</div>
               )
             ) : haftalikRandevular.length === 0 ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 14, flexWrap: 'wrap', padding: '16px 0' }}>
-                <span style={{ fontSize: 14, color: '#5F7189' }}>Bu hafta için randevu yok</span>
-                <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Randevu ekle</button>
-              </div>
+              <div style={{ padding: '16px 0', fontSize: 14, color: '#5F7189' }}>Bu hafta için randevu yok</div>
             ) : (
               <div style={{ padding: '10px 0' }}>
                 {buHaftaninGunleri().map((gunTarihi) => {
