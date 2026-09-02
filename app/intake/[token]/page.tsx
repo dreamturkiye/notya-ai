@@ -1,11 +1,17 @@
 'use client';
 
 /**
- * NOTYA-INTAKE-01 — hasta bilgi formu, hastanın kendisinin dolduracağı public sayfa. Oturum
- * gerektirmez, token kimlik doğrulamadır (/davet/personel/[token] ile aynı desen).
+ * NOTYA-INTAKE-01 / NOTYA-INTAKE-03 — hasta bilgi formu, hastanın kendisinin dolduracağı public
+ * sayfa. Oturum gerektirmez, token kimlik doğrulamadır (/davet/personel/[token] ile aynı desen).
  *
  * Alanlar CORE_BOLUMLER + bransBolumu şemasından dinamik render edilir — 30 branş için 30 ayrı
- * sayfa yazmak yerine tek render motoru, tek bakım noktası.
+ * sayfa yazmak yerine tek render motoru, tek bakım noktası; PDF baskı sürümüyle (lib/intake
+ * içeriğinden Python'a elle taşınan) aynı kaynak şemayı paylaşır.
+ *
+ * Tasarım prensipleri (Acıbadem/Medicana/Amerikan Hastanesi karşılaştırması + Apple HIG sadelik
+ * ilkesi): checkbox ve radio gruplar organik flex-wrap yerine EXPLICIT 2-3 sütunlu grid'de —
+ * "15-20 seçenek tek sütunda" anti-pattern'inden kaçınmak için. Bölüm başlıkları numaralı,
+ * yuvarlak rozetli — doktorun/hastanın gözü 30 saniyede tarayabilsin diye.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -22,6 +28,14 @@ interface FormSemasi {
   bransEtiket: string | null;
 }
 
+/** Kaç sütun: uzun etiketli seçenekler (>14 karakter) 2 sütuna, kısa olanlar 3 sütuna sığar —
+ * Apple HIG "içerik taşmasın" ilkesi, sabit sütun sayısı yerine. */
+function sutunSayisi(secenekler: string[]): number {
+  const uzunEnUzun = Math.max(...secenekler.map((s) => s.length));
+  if (secenekler.length <= 2) return secenekler.length;
+  return uzunEnUzun > 14 ? 2 : 3;
+}
+
 function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unknown; onChange: (v: unknown) => void }) {
   const ortakStil: React.CSSProperties = {
     width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(10,22,40,0.15)',
@@ -29,7 +43,7 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
   };
 
   if (alan.tur === 'textarea') {
-    return <textarea style={{ ...ortakStil, minHeight: 70, resize: 'vertical' }} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} />;
+    return <textarea style={{ ...ortakStil, minHeight: 64, resize: 'vertical' }} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} />;
   }
   if (alan.tur === 'select') {
     return (
@@ -39,11 +53,12 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
       </select>
     );
   }
-  if (alan.tur === 'radio') {
+  if (alan.tur === 'radio' && alan.secenekler) {
+    const cols = sutunSayisi(alan.secenekler);
     return (
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        {alan.secenekler?.map((s) => (
-          <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '8px 12px' }}>
+        {alan.secenekler.map((s) => (
+          <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, cursor: 'pointer' }}>
             <input type="radio" name={alan.id} checked={deger === s} onChange={() => onChange(s)} />
             {s}
           </label>
@@ -51,12 +66,13 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
       </div>
     );
   }
-  if (alan.tur === 'checkbox-grup') {
+  if (alan.tur === 'checkbox-grup' && alan.secenekler) {
     const secililer = (deger as string[]) || [];
+    const cols = sutunSayisi(alan.secenekler);
     return (
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        {alan.secenekler?.map((s) => (
-          <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '8px 12px' }}>
+        {alan.secenekler.map((s) => (
+          <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={secililer.includes(s)}
@@ -113,6 +129,7 @@ export default function IntakeFormPage() {
     const tumBolumler = [...(sema?.coreBolumler || []), ...(sema?.bransBolumu ? [sema.bransBolumu] : [])];
     for (const bolum of tumBolumler) {
       for (const alan of bolum.alanlar) {
+        if (alan.tur === 'bolum-basligi') continue;
         if (alan.zorunlu && !yanitlar[alan.id]) {
           setFormHata(`Lütfen "${alan.etiket}" alanını doldurun.`);
           return;
@@ -141,7 +158,9 @@ export default function IntakeFormPage() {
     }
   }
 
-  const kutu: React.CSSProperties = { background: 'white', borderRadius: 16, padding: 24, maxWidth: 560, width: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
+  const kutu: React.CSSProperties = { background: 'white', borderRadius: 16, padding: 24, maxWidth: 600, width: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
+
+  const tumBolumler = sema ? [...sema.coreBolumler, ...(sema.bransBolumu ? [sema.bransBolumu] : [])] : [];
 
   return (
     <div style={{ minHeight: '100vh', background: '#F4F6F9', display: 'flex', alignItems: durum === 'gecerli' ? 'flex-start' : 'center', justifyContent: 'center', padding: '32px 16px' }}>
@@ -156,28 +175,50 @@ export default function IntakeFormPage() {
 
       {durum === 'gecerli' && sema && (
         <form onSubmit={gonder} style={kutu}>
-          <h2 style={{ fontSize: 22, marginBottom: 4, color: '#0A1628' }}>Hasta Bilgi Formu</h2>
-          <p style={{ color: 'rgba(10,22,40,0.6)', fontSize: 14, marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
+            <h2 style={{ fontSize: 22, margin: 0, color: '#0A1628' }}>Hasta Bilgi Formu</h2>
+            <span style={{ fontSize: 11, color: '#0F9B8E', background: 'rgba(15,155,142,0.1)', padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', fontWeight: 600 }}>
+              ~3-5 dakika
+            </span>
+          </div>
+          <p style={{ color: 'rgba(10,22,40,0.6)', fontSize: 14, marginBottom: 24 }}>
             {sema.hastaAdi ? `Merhaba ${sema.hastaAdi}, ` : ''}
             {sema.doktorAdi ? `${sema.doktorAdi} ile ` : ''}
             randevunuz öncesinde bu kısa formu doldurmanız muayene sürenizi daha verimli kılar.
           </p>
 
-          {[...sema.coreBolumler, ...(sema.bransBolumu ? [sema.bransBolumu] : [])].map((bolum) => (
-            <div key={bolum.baslik} style={{ marginBottom: 24 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F9B8E', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 12 }}>
-                {bolum.baslik}
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {bolum.alanlar.map((alan) => (
-                  <div key={alan.id}>
-                    <label style={{ display: 'block', fontSize: 13, color: '#0A1628', marginBottom: 6, fontWeight: 500 }}>
-                      {alan.etiket}{alan.zorunlu && <span style={{ color: '#EF4444' }}> *</span>}
-                    </label>
-                    <AlanGirdisi alan={alan} deger={yanitlar[alan.id]} onChange={(v) => alanDegistir(alan.id, v)} />
-                    {alan.yardim && <p style={{ fontSize: 12, color: 'rgba(10,22,40,0.5)', marginTop: 4 }}>{alan.yardim}</p>}
-                  </div>
-                ))}
+          {tumBolumler.map((bolum, bolumIndex) => (
+            <div key={bolum.baslik} style={{ marginBottom: 26 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: '50%', background: '#0F9B8E', color: 'white',
+                  fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  {bolumIndex + 1}
+                </span>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0A1628', margin: 0, letterSpacing: '0.01em' }}>
+                  {bolum.baslik}
+                </h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingLeft: 30 }}>
+                {bolum.alanlar.map((alan) => {
+                  if (alan.tur === 'bolum-basligi') {
+                    return (
+                      <div key={alan.id} style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 6, borderTop: '1px solid rgba(15,155,142,0.15)', paddingTop: 12 }}>
+                        {alan.etiket}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={alan.id}>
+                      <label style={{ display: 'block', fontSize: 13, color: '#0A1628', marginBottom: 6, fontWeight: 500 }}>
+                        {alan.etiket}{alan.zorunlu && <span style={{ color: '#EF4444' }}> *</span>}
+                      </label>
+                      <AlanGirdisi alan={alan} deger={yanitlar[alan.id]} onChange={(v) => alanDegistir(alan.id, v)} />
+                      {alan.yardim && <p style={{ fontSize: 11.5, color: 'rgba(10,22,40,0.5)', marginTop: 4 }}>{alan.yardim}</p>}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
