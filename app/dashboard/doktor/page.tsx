@@ -58,6 +58,11 @@ function yerelGunAnahtari(d: Date): string {
   return `${y}-${m}-${g}`
 }
 
+/** NOTYA-TRT-01: randevu anları Türkiye gününe göre kovalanır — randevular/page.tsx ile aynı kural. */
+function trtGunAnahtari(iso: string | Date): string {
+  return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+}
+
 /** Pazartesi başlangıçlı bu haftanın Pzt–Paz tarihleri — takvim sayfasındaki ay ızgarasıyla
  * aynı hafta başlangıcı konvansiyonu. */
 function buHaftaninGunleri(): Date[] {
@@ -137,8 +142,8 @@ export default function DoktorDashboard() {
       // öne bakar.
       try {
         const haftaGunleri = buHaftaninGunleri()
-        const baslangic = new Date(haftaGunleri[0]); baslangic.setHours(0, 0, 0, 0)
-        const bitis = new Date(haftaGunleri[6]); bitis.setHours(23, 59, 59, 999)
+        const baslangic = new Date(yerelGunAnahtari(haftaGunleri[0]) + 'T00:00:00+03:00')
+        const bitis = new Date(yerelGunAnahtari(haftaGunleri[6]) + 'T23:59:59+03:00')
         const rRes = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic.toISOString())}&bitis=${encodeURIComponent(bitis.toISOString())}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -189,7 +194,7 @@ export default function DoktorDashboard() {
 
   // NOTYA-RANDEVU-03: bugünün altkümesi, haftalık listeden türetiliyor — ayrı bir istek yok.
   const bugunkuRandevular = useMemo(
-    () => haftalikRandevular.filter((rv) => yerelGunAnahtari(new Date(rv.baslangic)) === yerelGunAnahtari(new Date())),
+    () => haftalikRandevular.filter((rv) => trtGunAnahtari(rv.baslangic) === trtGunAnahtari(new Date())),
     [haftalikRandevular]
   )
 
