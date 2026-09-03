@@ -172,9 +172,14 @@ function NewSessionInner() {
         })
       })
 
-      const result = await resp.json()
+      // AUDIT-2026-09-03: 504/Vercel çökmesi düz metin döner — resp.json() ham hatayı gösteriyordu.
+      const hamMetin = await resp.text()
+      let result: { success?: boolean; error?: string; data?: { note: Record<string, unknown> } }
+      try { result = JSON.parse(hamMetin) } catch {
+        throw new Error("Sunucu geçici bir sorun yaşadı. Notlarınız güvende — birkaç saniye bekleyip 'Seansı Bitir'e yeniden basın.")
+      }
       if (!resp.ok || !result.success) throw new Error(result.error || "Not oluşturulamadı")
-      setNote(result.data.note)
+      setNote((result.data as { note: Record<string, unknown> }).note)
       setStep("done")
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Bir hata oluştu")
