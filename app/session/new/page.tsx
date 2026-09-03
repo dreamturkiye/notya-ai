@@ -310,7 +310,7 @@ function NewSessionInner() {
           <div style={S({background:"#fff",borderRadius:"20px",padding:"48px",textAlign:"center"})}>
             <div style={S({fontSize:"48px",marginBottom:"16px"})}>⚙️</div>
             <div style={S({fontSize:"18px",fontWeight:"600",color:"#0A1628",marginBottom:"8px"})}>AI Not Oluşturuyor</div>
-            <div style={S({fontSize:"13px",color:"#94A3B8"})}>SOAP notu hazırlanıyor, 30-60 saniye...</div>
+            <div style={S({fontSize:"13px",color:"#94A3B8"})}>30-60 saniye...</div>
           </div>
         )}
 
