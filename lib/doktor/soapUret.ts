@@ -150,13 +150,22 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
 
   const yanit = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+    max_tokens: 4000,
     system: sistem,
     messages: [{ role: 'user', content: `Muayene transkripti:\n\n${girdi.transcript}` }],
   })
   const ham = yanit.content[0].type === 'text' ? yanit.content[0].text : ''
   const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
-  const veri = JSON.parse(temiz) as SoapNotu
+  // Uzun çıktılarda model JSON'un çevresine metin ekleyebilir — toleranslı ayrıştırma:
+  let veri: SoapNotu
+  try {
+    veri = JSON.parse(temiz) as SoapNotu
+  } catch {
+    const bas = temiz.indexOf('{')
+    const son = temiz.lastIndexOf('}')
+    if (bas === -1 || son <= bas) throw new Error('SOAP çıktısı ayrıştırılamadı')
+    veri = JSON.parse(temiz.slice(bas, son + 1)) as SoapNotu
+  }
   if (Array.isArray(veri.receteOnerisi)) {
     veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
   }

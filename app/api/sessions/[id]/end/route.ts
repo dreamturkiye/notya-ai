@@ -5,6 +5,11 @@ import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { kritikAlarm } from "@/lib/alarm"
 import Anthropic from "@anthropic-ai/sdk"
 
+// AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
+// aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
+export const maxDuration = 300
+export const dynamic = "force-dynamic"
+
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
