@@ -318,7 +318,7 @@ export default function IncelemePage() {
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
                         <div key={alan} style={{ marginBottom: 10 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>
-                            {alan === 'subjektif' ? 'S — Subjektif' : alan === 'objektif' ? 'O — Objektif' : alan === 'degerlendirme' ? 'A — Değerlendirme' : 'P — Plan'}
+                            {alan === 'subjektif' ? 'Anamnez' : alan === 'objektif' ? 'Fizik Muayene' : alan === 'degerlendirme' ? 'Değerlendirme / Tanı' : 'Tedavi ve Plan'}
                             <span style={{ fontWeight: 400, color: '#64748B' }}> · düzenlenebilir</span>
                           </div>
                           <textarea
