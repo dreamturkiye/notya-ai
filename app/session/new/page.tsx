@@ -147,12 +147,14 @@ function NewSessionInner() {
       }
     }
 
-    r.onerror = () => setIsRecordingVoice(false)
-    r.onend = () => setIsRecordingVoice(false)
+    r.onerror = () => { setIsRecordingVoice(false); stopTimer() }
+    r.onend = () => { setIsRecordingVoice(false); stopTimer() }
 
     recognitionRef.current = r
     r.start()
     setIsRecordingVoice(true)
+    // NOTYA-KAYIT-01 (canlı defter): sayaç ve "devam ediyor" ancak gerçek kayıtla başlar.
+    startTimer()
   }
 
   async function processSession() {
@@ -246,7 +248,7 @@ function NewSessionInner() {
                 </div>
               ))}
             </div>
-            <button onClick={()=>{setStep("recording");startTimer()}}
+            <button onClick={()=>{setStep("recording")}}
               style={S({width:"100%",padding:"16px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
@@ -267,7 +269,7 @@ function NewSessionInner() {
             <div style={S({textAlign:"center",marginBottom:"20px"})}>
               <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#EFF6FF",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
               <div style={S({fontSize:"32px",fontWeight:"600",color:"#0A1628",fontFamily:"monospace",marginBottom:"4px"})}>{fmt(seconds)}</div>
-              <div style={S({fontSize:"13px",color:"#64748B"})}>Kayıt devam ediyor · {SPECIALTIES.find(s=>s.id===specialty)?.label}</div>
+              <div style={S({fontSize:"13px",color:"#64748B"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label}</div>
             </div>
 
             {/* Voice recording button */}
