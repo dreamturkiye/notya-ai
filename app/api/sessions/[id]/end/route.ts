@@ -1,6 +1,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
+import { kritikAlarm } from "@/lib/alarm"
 import Anthropic from "@anthropic-ai/sdk"
 
 const getSupabase = () => createClient(
@@ -126,6 +128,10 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     const specialty = context?.specialty || "genel"
 
+    // NOTYA-KOTA-01: not üretimi günlük kotaya tabi
+    const kota = await aiKotaKullan(getSupabase(), user.id, 'soap')
+    if (!kota.izin) return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
+
     // NOTYA-SOAP-02: dünya standardı üretici — Ayşe Kaya personası + gürültü filtresi +
     // SGK doğrulamalı reçete önerisi + onaylı notlardan stil öğrenmesi, tek modülde
     // (lib/doktor/soapUret). Hastanın kimliği (TC/ad) modele ASLA gitmez; yalnız kimliksiz
@@ -212,6 +218,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
   } catch (error: unknown) {
     console.error("[sessions/end]", error)
+    await kritikAlarm('SOAP uretim hatasi (sessions/end)', error instanceof Error ? error.message : String(error))
     // NOTYA-SEANS-05: ham API hataları (özellikle Anthropic kredi/limit JSON'u) doktora
     // asla gösterilmez — loglanır, kullanıcıya Türkçe ve eyleme dönük mesaj gider.
     const ham = error instanceof Error ? error.message : ""

@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
+import YaziliSohbet from "@/components/asistan/YaziliSohbet"
 import { connectionErrorHelp, micPermissionHelp, isAndroid } from "@/lib/asistan/platform"
 import {
   PERSONAS,
@@ -531,6 +532,8 @@ export default function AsistanPage() {
           {isActive ? "Bitirmek için dokunun" : "Konuşmayı başlatmak için dokunun"}
         </div>
       </div>
+      {/* NOTYA-KADEME-01: temel kademe yüzeyi — sesli sor (tarayıcı STT), yazılı cevap; dosya bilinçli */}
+      <YaziliSohbet personaId={personaKey} />
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wave1{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}@keyframes wave2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.4)}}`}</style>
     </div>
       </div>

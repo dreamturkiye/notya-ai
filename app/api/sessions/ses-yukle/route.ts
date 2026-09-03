@@ -12,6 +12,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { soapNotuUret, stilOrnekleriDerle } from '@/lib/doktor/soapUret'
+import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
+import { kritikAlarm } from '@/lib/alarm'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -26,6 +28,10 @@ export async function POST(req: NextRequest) {
   if (!path || !path.startsWith(`${doktorId}/`)) {
     return NextResponse.json({ error: 'Geçersiz dosya yolu.' }, { status: 400 })
   }
+
+  // NOTYA-KOTA-01
+  const kota = await aiKotaKullan(supabase, doktorId, 'soap')
+  if (!kota.izin) return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
 
   // 1) Sesi depodan al
   const { data: sesBlob, error: sesHata } = await supabase.storage.from('ses-kayitlari').download(path)
@@ -153,6 +159,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, noteId: note.id, sessionId: seans.id })
   } catch (e) {
     console.error('[ses-yukle] uretim', e)
+    await kritikAlarm('ses-yukle uretim hatasi', e instanceof Error ? e.message : String(e))
     return NextResponse.json({ error: 'Not üretilemedi. Ses işlendi; İnceleme yerine tekrar deneyin ya da yöneticinize bildirin.' }, { status: 502 })
   }
 }

@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, type SpecialtyId } from "@/lib/asistan/personaEngine"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
+import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
 import { executeAction } from "@/lib/asistan/actionExecutor"
 import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
@@ -118,6 +119,10 @@ export async function POST(req: NextRequest) {
         }
       }
     }
+
+    // NOTYA-KOTA-01: yazılı sohbet günlük kotaya tabi
+    const kota = await aiKotaKullan(getSupabase(), user.id, 'sohbet')
+    if (!kota.izin) return NextResponse.json({ success: false, error: KOTA_MESAJI }, { status: 429 })
 
     // NOTYA-KONSULT-02: "klinik meslektaş" tek asistanda — doktor sohbette bir hastadan
     // bahsettiğinde (adıyla ya da "son hastam" diyerek) hastanın TAM dosyası bağlama eklenir;
