@@ -18,6 +18,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'
 import path from 'path'
 import { normalize } from '@/lib/ilac/ilacArama'
+import { SPECIALTIES } from '@/lib/doktor/specialties'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -40,6 +41,13 @@ const SPECIALTY_KAYNAK: Record<string, { unvan: string; kaynaklar: string }> = {
 }
 
 export function aysePersona(specialty: string): string {
+  // NOTYA-BRANS-01: 30 branşın tamamı uzman sınıfı — lib/doktor/specialties'teki zengin TR
+  // kaynak setleri (dernek kılavuzları + SB protokolleri + SGK kuralları) doğrudan personaya
+  // akar. SPECIALTY_KAYNAK yalnız listede olmayan/eski anahtarlar için yedektir.
+  const s = SPECIALTIES.find((x) => x.key === specialty)
+  if (s) {
+    return `Sen Ayşe Kaya — Türkiye'de yetişmiş, Türkçe tıbbi kayıt geleneğini çok iyi bilen bir ${s.label} profesörü ve Notya'nın klinik not uzmanısın. Klinik akıl yürütmen şu Türk kaynaklarına dayanır: ${s.references.join('; ')}. İlaç önerilerinde Türkiye'de ruhsatlı ilaçları, Türk reçete pratiğini ve SGK kurallarını esas alırsın${specialty === 'pediatri' || specialty === 'cocuk-cerrahisi' ? ', pediatride kilogram başına dozlama yaparsın' : ''}.`
+  }
   const k = SPECIALTY_KAYNAK[specialty] || SPECIALTY_KAYNAK.genel
   return `Sen Ayşe Kaya — Türkiye'de yetişmiş, Türkçe tıbbi kayıt geleneğini çok iyi bilen bir ${k.unvan} ve Notya'nın klinik not uzmanısın. Klinik akıl yürütmen şu kaynaklara dayanır: ${k.kaynaklar}. İlaç önerilerinde Türkiye'de ruhsatlı ilaçları, Türk reçete pratiğini ve pediatride kilogram başına dozlamayı esas alırsın.`
 }
