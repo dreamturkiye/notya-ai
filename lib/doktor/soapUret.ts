@@ -156,6 +156,45 @@ export interface SoapGirdi {
   stilProfili?: string // NOTYA-OGRENME-02: düzeltme geçmişinden damıtılmış doktor tercihleri
 }
 
+/** AUDIT-2026-09-03 (canlı olay, 16:27): uzun muayenelerde model çıktısı token tavanında
+ * DİZİ ORTASINDA kesilebiliyor — düz parse da köşeli-dilim de patlıyordu. Bu onarıcı:
+ * (1) düz dener, (2) ilk '{'dan gövdeyi alıp dener, (3) kesik çıktıyı son tam öğede kırkıp
+ * açık string'i ve parantez YĨĞININI doğru sırayla kapatarak dener. Başarısızsa açık hata. */
+function jsonKurtar(metin: string): SoapNotu {
+  const dene = (s: string): SoapNotu | null => { try { return JSON.parse(s) as SoapNotu } catch { return null } }
+  let v = dene(metin)
+  if (v) return v
+  const bas = metin.indexOf('{')
+  if (bas === -1) throw new Error('SOAP çıktısı ayrıştırılamadı (JSON yok)')
+  const govde = metin.slice(bas)
+  v = dene(govde)
+  if (v) return v
+  const adaylar = [govde]
+  for (const kesici of ['},', '],', '",', '}']) {
+    const i = govde.lastIndexOf(kesici)
+    if (i > 0) adaylar.push(govde.slice(0, i + 1))
+  }
+  for (const parca of adaylar) {
+    let str = false, esc = false
+    const yigin: string[] = []
+    for (const ch of parca) {
+      if (esc) { esc = false; continue }
+      if (ch === '\\') { esc = true; continue }
+      if (ch === '"') { str = !str; continue }
+      if (str) continue
+      if (ch === '{') yigin.push('}')
+      else if (ch === '[') yigin.push(']')
+      else if (ch === '}' || ch === ']') yigin.pop()
+    }
+    let aday = parca
+    if (str) aday += '"'
+    aday = aday.replace(/,\s*$/, '') + yigin.reverse().join('')
+    v = dene(aday)
+    if (v) return v
+  }
+  throw new Error('SOAP çıktısı ayrıştırılamadı (onarılamadı)')
+}
+
 export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Promise<SoapNotu> {
   const sistem = [
     aysePersona(girdi.specialty),
@@ -167,22 +206,13 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
 
   const yanit = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+    max_tokens: 8000,
     system: sistem,
     messages: [{ role: 'user', content: `Muayene transkripti:\n\n${girdi.transcript}` }],
   })
   const ham = yanit.content[0].type === 'text' ? yanit.content[0].text : ''
   const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
-  // Uzun çıktılarda model JSON'un çevresine metin ekleyebilir — toleranslı ayrıştırma:
-  let veri: SoapNotu
-  try {
-    veri = JSON.parse(temiz) as SoapNotu
-  } catch {
-    const bas = temiz.indexOf('{')
-    const son = temiz.lastIndexOf('}')
-    if (bas === -1 || son <= bas) throw new Error('SOAP çıktısı ayrıştırılamadı')
-    veri = JSON.parse(temiz.slice(bas, son + 1)) as SoapNotu
-  }
+  const veri = jsonKurtar(temiz)
   if (Array.isArray(veri.receteOnerisi)) {
     veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
   }
