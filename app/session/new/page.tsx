@@ -111,7 +111,8 @@ function NewSessionInner() {
   useEffect(() => { transcriptRef.current = transcript }, [transcript])
 
   function startTimer() {
-    setSeconds(0)
+    // Duraklat/devam doğru toplansın diye sayaç burada SIFIRLANMAZ; sıfırlama seans girişinde.
+    if (timerRef.current) return
     timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
   }
 
@@ -248,7 +249,7 @@ function NewSessionInner() {
                 </div>
               ))}
             </div>
-            <button onClick={()=>{setStep("recording")}}
+            <button onClick={()=>{setSeconds(0);setStep("recording")}}
               style={S({width:"100%",padding:"16px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
