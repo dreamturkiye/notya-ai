@@ -63,6 +63,7 @@ BİÇİM KURALLARI:
 - plan: numaralı; tedavi, öneriler/eğitim, kontrol zamanı.
 - receteOnerisi: önerdiğin her ilaç için etkenMadde + Türkiye'den ticariOrnek + doz (pediatride mg/kg hesabıyla, kilo transkriptte varsa hesapla) + kullanim + sure + gerekirse not. Bu bir ÖNERİDİR; reçeteyi doktor yazar. Hastanın bilinen alerjisi/sürekli ilacıyla çelişen öneri YAPMA, gerekirse not alanında uyar.
 - alarmBulgulari: veliye/hastaya anlatılacak "şu olursa hemen gelin" maddeleri.
+- PLAN SÜREKLİLİĞİ: bağlamda ÖNCEKİ VİZİT PLANI verilmişse, değerlendirmede önceki plan maddelerinin akıbetine kısaca değin (yapıldı/yapılmadı/etkisi ne oldu) ve yeni planı bunun üzerine kur — her vizit bir öncekinin devamıdır, izole not yazma.
 - kritik_bulgular: doktorun gözünden kaçmaması gereken kırmızı bayraklar (yoksa boş).
 - hasta_ozeti: veliye/hastaya SADE DİLDE 3-5 cümle — ne bulundu, ne yapılacak, ilaç nasıl kullanılacak, ne zaman geri gelinmeli.
 

@@ -403,7 +403,10 @@ export default function IncelemePage() {
                           <button type="submit" disabled={kBekliyor || !kGirdi.trim()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 9, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: kBekliyor || !kGirdi.trim() ? 0.5 : 1 }}>Sor</button>
                         </form>
                       </div>
-                      <div role="button" tabIndex={0} onClick={() => setAcikId('')} onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(''); }} style={{ marginTop: 10, fontSize: 12, color: '#14B8A6', cursor: 'pointer' }}>Daralt ▴</div>
+                      <div style={{ marginTop: 10, display: 'flex', gap: 16, alignItems: 'center' }}>
+                        <span role="button" tabIndex={0} onClick={() => setAcikId('')} onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(''); }} style={{ fontSize: 12, color: '#14B8A6', cursor: 'pointer' }}>Daralt ▴</span>
+                        <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank'); }} style={{ fontSize: 12, color: '#8FA0B5', cursor: 'pointer' }}>🖨️ Yazdır / PDF</span>
+                      </div>
                     </div>
                   ) : (
                     <>

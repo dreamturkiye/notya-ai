@@ -50,10 +50,43 @@ function NewSessionInner() {
   const [transcript, setTranscript] = useState("")
   const [isRecordingVoice, setIsRecordingVoice] = useState(false)
   const [note, setNote] = useState<Record<string,unknown>|null>(null)
+  const [sesYukleniyor, setSesYukleniyor] = useState(false)
+  const [sesHata, setSesHata] = useState("")
   const [error, setError] = useState("")
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
+
+  // NOTYA-SES-01: hazır ses dosyasını doğrudan Storage'a yükle (Vercel gövde limiti aşılır),
+  // sunucu transkript + SOAP üretir, not İnceleme kuyruğuna düşer. Ham ses sunucuda silinir.
+  async function sesDosyasiIsle(dosya: File) {
+    setSesHata("")
+    if (dosya.size > 60 * 1024 * 1024) { setSesHata("Dosya 60 MB'ı aşıyor. Daha kısa bir kayıt deneyin."); return }
+    setSesYukleniyor(true)
+    try {
+      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+      const { data: { session: authSession } } = await sb.auth.getSession()
+      const authToken = authSession?.access_token
+      const userId = authSession?.user?.id
+      if (!authToken || !userId) throw new Error("Oturum bulunamadı. Yeniden giriş yapın.")
+      const guvenliAd = dosya.name.replace(/[^a-zA-Z0-9_.-]/g, "_").slice(-60) || "kayit"
+      const yol = `${userId}/${Date.now()}-${guvenliAd}`
+      const { error: yuklemeHatasi } = await sb.storage.from("ses-kayitlari").upload(yol, dosya, { contentType: dosya.type || "audio/mpeg" })
+      if (yuklemeHatasi) throw new Error("Yükleme başarısız: " + yuklemeHatasi.message)
+      const resp = await fetch("/api/sessions/ses-yukle", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ path: yol, patientId: patientId || null, specialty }),
+      })
+      const d = await resp.json()
+      if (!resp.ok) throw new Error(d.error || "Not üretilemedi.")
+      router.push("/dashboard/doktor/inceleme")
+    } catch (e) {
+      setSesHata(e instanceof Error ? e.message : "Yükleme başarısız oldu.")
+    } finally {
+      setSesYukleniyor(false)
+    }
+  }
   const getSB = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   // Keep ref in sync with state
@@ -186,6 +219,15 @@ function NewSessionInner() {
               style={S({width:"100%",padding:"16px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
+            {/* NOTYA-SES-01: hazır ses kaydı yükle — telefonda kaydedilen ya da kayıt başlatılmayı
+                unutulan muayeneler için aynı Ayşe Kaya SOAP motoru. Ses, transkript sonrası silinir. */}
+            <div style={S({textAlign:"center",margin:"14px 0 6px",color:"#9CA3AF",fontSize:"12px"})}>ya da</div>
+            <label style={S({display:"block",width:"100%",padding:"13px",background:sesYukleniyor?"#EFF6FF":"#F9FAFB",color:"#374151",border:"1.5px dashed #D1D5DB",borderRadius:"12px",fontSize:"14px",fontWeight:"600",cursor:sesYukleniyor?"default":"pointer",textAlign:"center",boxSizing:"border-box"})}>
+              {sesYukleniyor ? "⏳ Ses çözümlüyor ve not üretiliyor… birkaç dakika sürebilir, sayfayı kapatmayın" : "📁 Ses dosyası yükle → SOAP üret (m4a / mp3 / wav)"}
+              <input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg" style={{display:"none"}} disabled={sesYukleniyor}
+                onChange={(e)=>{const f=e.target.files?.[0]; if(f) sesDosyasiIsle(f); e.target.value=""}} />
+            </label>
+            {sesHata && <div style={S({marginTop:"8px",color:"#DC2626",fontSize:"13px"})}>{sesHata}</div>}
           </div>
         )}
 
