@@ -16,6 +16,7 @@ import HastaKonsult from '@/components/doktor/HastaKonsult';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
+import { yasHesapla } from '@/lib/doktor/yas';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,14 +101,13 @@ export default function HastaProfilPage() {
 
   useEffect(() => { if (activeTab === 2) seansYukle(); }, [activeTab, seansYukle]);
 
-  // Doğum tarihi her yerde Gün.Ay.Yıl (TR biçimi) + yaş olarak gösterilir — ham YYYY-MM-DD asla
+  // Doğum tarihi her yerde Gün.Ay.Yıl + yaş; bebeklerde gün hassasiyeti ("8 ay 3 günlük")
   const dogumGoster = (() => {
     if (!patient?.dogum_tarihi) return null;
     const d = new Date(patient.dogum_tarihi);
     if (isNaN(d.getTime())) return patient.dogum_tarihi;
-    const ay = Math.floor((Date.now() - d.getTime()) / (30.44 * 86400000));
-    const yas = ay < 24 ? `${ay} aylık` : `${Math.floor(ay / 12)} yaşında`;
-    return `${d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Istanbul' })} (${yas})`;
+    const yas = yasHesapla(patient.dogum_tarihi);
+    return `${d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Istanbul' })}${yas ? ` (${yas})` : ''}`;
   })();
 
   const kimlikCipleri = patient
