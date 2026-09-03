@@ -179,7 +179,9 @@ export default function DoktorDashboard() {
       }
 
       try {
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+        // AUDIT-2026-09-03: RLS notes tablosunda açık — anon istemci token'sız sorguda BOŞ döner.
+        // Kullanıcı token'ı bağlanınca RLS politikası doktorun kendi notlarını geçirir.
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { global: { headers: { Authorization: `Bearer ${token}` } } })
         const { data: notesData } = await supabase
           .from('notes')
           .select('id, specialty, created_at, content_subjektif, approved_at')
