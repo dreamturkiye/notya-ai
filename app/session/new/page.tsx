@@ -44,6 +44,23 @@ function NewSessionInner() {
   const searchParams = useSearchParams()
   const patientId = searchParams?.get("patientId") || null
   const [specialty, setSpecialty] = useState("genel")
+  const [bransKilitli, setBransKilitli] = useState(false)
+
+  // NOTYA-BRANS-02: branş onboarding'de alınıyor — her muayenede TEKRAR SORULMAZ.
+  // Profilde branş varsa otomatik seçilir ve seçici gizlenir; yoksa seçici yedeğe düşer.
+  useEffect(() => {
+    (async () => {
+      try {
+        const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+        const { data: { session: as } } = await sb.auth.getSession()
+        if (!as?.access_token) return
+        const r = await fetch("/api/users/me", { headers: { Authorization: `Bearer ${as.access_token}` } })
+        const d = await r.json()
+        const b = d?.specialty || d?.profile?.specialty
+        if (b && SPECIALTIES.some((s) => s.id === b)) { setSpecialty(b); setBransKilitli(true) }
+      } catch { /* sessiz — seçici görünür kalır */ }
+    })()
+  }, [])
   const [sessionType, setSessionType] = useState("muayene")
   const [step, setStep] = useState<"setup"|"recording"|"processing"|"done">("setup")
   const [seconds, setSeconds] = useState(0)
@@ -202,6 +219,13 @@ function NewSessionInner() {
 
         {step === "setup" && (
           <div style={S({background:"#fff",borderRadius:"20px",padding:"24px"})}>
+            {bransKilitli ? (
+              <div style={S({display:"flex",alignItems:"center",gap:"8px",marginBottom:"20px",padding:"10px 12px",background:"#F0FDFA",border:"1px solid #99F6E4",borderRadius:"10px",fontSize:"13px",color:"#0F766E",fontWeight:"600"})}>
+                <span>{SPECIALTIES.find(s=>s.id===specialty)?.emoji}</span>
+                <span>Branş: {SPECIALTIES.find(s=>s.id===specialty)?.label}</span>
+                <span style={S({fontWeight:"400",color:"#64748B"})}>· profilinizden</span>
+              </div>
+            ) : (<>
             <div style={S({fontSize:"15px",fontWeight:"600",color:"#0A1628",marginBottom:"16px"})}>Uzmanlık Seçin</div>
             <div style={S({display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"20px"})}>
               {SPECIALTIES.map(s => (
@@ -211,6 +235,7 @@ function NewSessionInner() {
                 </div>
               ))}
             </div>
+            </>)}
             <div style={S({fontSize:"15px",fontWeight:"600",color:"#0A1628",marginBottom:"12px"})}>Seans Türü</div>
             <div style={S({display:"flex",gap:"8px",marginBottom:"20px"})}>
               {["muayene","kontrol","konsültasyon"].map(t=>(
