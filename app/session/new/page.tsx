@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { createClient } from "@supabase/supabase-js"
-import { anamnezParcala } from "@/lib/doktor/anamnezBolumleri"
+import { anamnezParcala, fizikParcala } from "@/lib/doktor/anamnezBolumleri"
 import { useRouter, useSearchParams } from "next/navigation"
 
 const SPECIALTIES = [
@@ -331,10 +331,15 @@ function NewSessionInner() {
                 <div style={S({fontSize:"13px",color:"#374151",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F8FAFC",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
               </div>
             ))}
+            {fizikParcala(String((note as Record<string, unknown>).content_objektif || '')).map((b, bi) => (
+              <div key={'fm' + bi} style={S({marginBottom:"14px"})}>
+                <div style={S({fontSize:"10px",fontWeight:"600",color:"#059669",textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{b.baslik}</div>
+                <div style={S({fontSize:"13px",color:"#374151",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F8FAFC",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
+              </div>
+            ))}
             {([
-              {label:"Fizik Muayene",key:"content_objektif",color:"#059669"},
-              {label:"Değerlendirme / Tanı",key:"content_degerlendirme",color:"#D97706"},
-              {label:"Tedavi ve Plan",key:"content_plan",color:"#7C3AED"},
+              {label:"Tanı",key:"content_degerlendirme",color:"#D97706"},
+              {label:"Tedavi",key:"content_plan",color:"#7C3AED"},
             ] as {label:string;key:string;color:string}[]).filter(s=>(note as Record<string,unknown>)[s.key]).map(section=>(
               <div key={section.key} style={S({marginBottom:"14px"})}>
                 <div style={S({fontSize:"10px",fontWeight:"600",color:section.color,textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{section.label}</div>

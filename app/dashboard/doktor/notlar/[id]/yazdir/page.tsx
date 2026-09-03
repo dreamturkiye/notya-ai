@@ -10,7 +10,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
-import { anamnezParcala } from '@/lib/doktor/anamnezBolumleri';
+import { anamnezParcala, fizikParcala } from '@/lib/doktor/anamnezBolumleri';
 
 interface NotVeri {
   not: {
@@ -110,14 +110,16 @@ export default function NotYazdir() {
         {not.subjektif && anamnezParcala(not.subjektif).map((b, bi) => (
           <div key={'anm' + bi} className="not-bolum"><div className="not-etiket">{b.baslik}</div><div className="not-metin">{b.metin}</div></div>
         ))}
-        {not.objektif && <div className="not-bolum"><div className="not-etiket">Fizik Muayene</div><div className="not-metin">{not.objektif}</div></div>}
-        {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">Değerlendirme / Tanı</div><div className="not-metin">{not.degerlendirme}</div></div>}
+        {not.objektif && fizikParcala(not.objektif).map((b, bi) => (
+          <div key={'fm' + bi} className="not-bolum"><div className="not-etiket">{b.baslik}</div><div className="not-metin">{b.metin}</div></div>
+        ))}
+        {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">Tanı</div><div className="not-metin">{not.degerlendirme}</div></div>}
         {Array.isArray(not.icdKodlari) && not.icdKodlari.length > 0 && (
           <div className="not-bolum"><div className="not-etiket">Tanı / ICD-10</div>
             <div className="not-metin">{not.icdKodlari.map((k) => `${k.code} — ${k.description_tr || k.description || ''}${k.is_primary ? ' (birincil)' : ''}`).join('; ')}</div>
           </div>
         )}
-        {not.plan && <div className="not-bolum"><div className="not-etiket">Tedavi ve Plan</div><div className="not-metin">{not.plan}</div></div>}
+        {not.plan && <div className="not-bolum"><div className="not-etiket">Tedavi</div><div className="not-metin">{not.plan}</div></div>}
         {Array.isArray(not.receteOnerisi) && not.receteOnerisi.length > 0 && (
           <div className="not-bolum"><div className="not-etiket">İlaç Önerileri (reçete doktor tarafından yazılır)</div>
             <div className="not-metin">{not.receteOnerisi.map((r, i) => `${i + 1}. ${[r.ticariOrnek, r.etkenMadde ? `(${r.etkenMadde})` : '', r.doz, r.kullanim, r.sure].filter(Boolean).join(' — ')}${r.sgkListesinde ? ' [SGK]' : ''}${r.not ? ` — Not: ${r.not}` : ''}`).join('\n')}</div>
