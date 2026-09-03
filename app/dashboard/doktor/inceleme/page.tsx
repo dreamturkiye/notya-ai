@@ -16,10 +16,13 @@ interface IcdOner { code?: string; description_tr?: string; description?: string
 interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
 interface Vitaller { kilo?: number | null; boy?: number | null; ates?: number | null; nabiz?: number | null; spo2?: number | null; tansiyon?: string | null }
 interface Taslak { subjektif: string; objektif: string; degerlendirme: string; plan: string }
+interface Eylem { tur?: string; tarih?: string; saat?: string; kim?: string; aciklama?: string; durum?: 'oneri' | 'eklendi' | 'hata' }
+interface KMesaj { rol: 'doktor' | 'asistan'; icerik: string }
 
 interface PendingNote {
   id: string;
   maskedPatient: string;
+  patientId: string | null;
   specialty: string;
   date: string;
   subjektif: string;
@@ -45,6 +48,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
     return {
       id: String(n.id ?? idx),
       maskedPatient: String(n.maskedPatient ?? 'Hasta'),
+      patientId: n.patientId ? String(n.patientId) : null,
       specialty: String(n.specialty ?? 'Genel'),
       date: String(n.date ?? ''),
       subjektif: String(n.subjektif ?? ''),
@@ -77,10 +81,84 @@ export default function IncelemePage() {
   const [busyId, setBusyId] = useState('');
   const [acikId, setAcikId] = useState('');
   const [taslak, setTaslak] = useState<Taslak>({ subjektif: '', objektif: '', degerlendirme: '', plan: '' });
+  const [kMesajlar, setKMesajlar] = useState<KMesaj[]>([]);
+  const [kGirdi, setKGirdi] = useState('');
+  const [kBekliyor, setKBekliyor] = useState(false);
+  const [eylemler, setEylemler] = useState<Eylem[]>([]);
 
   const notuAc = (note: PendingNote) => {
     setAcikId(note.id);
     setTaslak({ subjektif: note.subjektif, objektif: note.objektif, degerlendirme: note.degerlendirme, plan: note.plan });
+    setKMesajlar([]);
+    setKGirdi('');
+    setEylemler([]);
+  };
+
+  // NOTYA-KONSULT-03: not üzerinde Ayşe ile konsult + sözle düzenleme. Ayşe'nin döndürdüğü
+  // düzenlemeler ekrandaki taslağa işlenir — kalıcı kayıt ve öğrenme logu doktor Onayla
+  // dediğinde olur. Eylem önerileri (kontrol randevusu / takip araması) tek dokunuşla
+  // ortak takvime yazılır; sekreter aramaları 📞 önekiyle takvimde görür, arama notunu
+  // randevunun not alanına yazar.
+  const konsultGonder = async (note: PendingNote) => {
+    const soru = kGirdi.trim();
+    if (!soru || kBekliyor) return;
+    const yeni: KMesaj[] = [...kMesajlar, { rol: 'doktor', icerik: soru }];
+    setKMesajlar(yeni);
+    setKGirdi('');
+    setKBekliyor(true);
+    try {
+      const token = await getAccessTokenAsync();
+      const res = await fetch('/api/doktor/not-konsult', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ noteId: note.id, taslak, mesajlar: yeni }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
+      setKMesajlar([...yeni, { rol: 'asistan', icerik: String(d.cevap || '') }]);
+      const dz = (d.duzenlemeler || {}) as Record<string, string>;
+      const g: Taslak = { ...taslak };
+      (['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).forEach((a) => {
+        if (typeof dz[a] === 'string' && dz[a].trim()) g[a] = dz[a];
+      });
+      setTaslak(g);
+      if (Array.isArray(d.eylemler) && d.eylemler.length) {
+        setEylemler((prev) => [...prev, ...(d.eylemler as Eylem[]).map((e) => ({ ...e, durum: 'oneri' as const }))]);
+      }
+    } catch (e) {
+      setKMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : 'Ayşe yanıt veremedi.' }]);
+    } finally {
+      setKBekliyor(false);
+    }
+  };
+
+  const eylemOnayla = async (note: PendingNote, idx: number) => {
+    const e = eylemler[idx];
+    if (!e || e.durum !== 'oneri') return;
+    if (!note.patientId) {
+      setEylemler((prev) => prev.map((x, i) => (i === idx ? { ...x, durum: 'hata' } : x)));
+      return;
+    }
+    try {
+      const token = await getAccessTokenAsync();
+      const saat = e.saat || '10:00';
+      const baslangic = new Date(`${e.tarih}T${saat}:00+03:00`);
+      const sureDk = e.tur === 'takip_aramasi' ? 15 : 20;
+      const bitis = new Date(baslangic.getTime() + sureDk * 60000);
+      const tur = e.tur === 'takip_aramasi' ? 'diger' : 'kontrol';
+      const notlar = e.tur === 'takip_aramasi'
+        ? `📞 Takip araması (${e.kim === 'sekreter' ? 'sekreter/hemşire arayacak' : 'doktor arayacak'})${e.aciklama ? `: ${e.aciklama}` : ''} — arama notunu buraya yazın.`
+        : `Kontrol muayenesi${e.aciklama ? `: ${e.aciklama}` : ''}`;
+      const res = await fetch('/api/doktor/randevular', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patientId: note.patientId, baslangic: baslangic.toISOString(), bitis: bitis.toISOString(), tur, notlar }),
+      });
+      if (!res.ok) throw new Error();
+      setEylemler((prev) => prev.map((x, i) => (i === idx ? { ...x, durum: 'eklendi' } : x)));
+    } catch {
+      setEylemler((prev) => prev.map((x, i) => (i === idx ? { ...x, durum: 'hata' } : x)));
+    }
   };
 
   useEffect(() => {
@@ -301,6 +379,30 @@ export default function IncelemePage() {
                           <div style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.55 }}>{note.hastaOzeti}</div>
                         </div>
                       )}
+                      {/* NOTYA-KONSULT-03: Ayşe ile not üzerinde konsult, sözle düzenleme, tek-dokunuş takip eylemleri */}
+                      <div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 6 }}>🩺 Ayşe ile bu notu konuşun <span style={{ fontWeight: 400, color: '#64748B' }}>— soru sorun ya da “planı kısalt” gibi düzenleme isteyin</span></div>
+                        {kMesajlar.length > 0 && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto', marginBottom: 8 }}>
+                            {kMesajlar.map((m, i2) => (
+                              <div key={i2} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '92%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 10, padding: '7px 10px', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.icerik}</div>
+                            ))}
+                            {kBekliyor && <div style={{ fontSize: 12, color: '#64748B' }}>Ayşe düşünüyor…</div>}
+                          </div>
+                        )}
+                        {eylemler.map((e, i2) => (
+                          <div key={i2} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', background: e.durum === 'eklendi' ? 'rgba(34,197,94,0.1)' : 'rgba(15,155,142,0.08)', border: `1px solid ${e.durum === 'eklendi' ? 'rgba(34,197,94,0.4)' : 'rgba(15,155,142,0.35)'}`, borderRadius: 9, padding: '7px 10px', marginBottom: 6, fontSize: 12, color: '#CBD5E1' }}>
+                            <span>{e.tur === 'takip_aramasi' ? '📞' : '📅'} {e.tur === 'takip_aramasi' ? `Takip araması (${e.kim === 'sekreter' ? 'sekreter/hemşire' : 'doktor'})` : 'Kontrol randevusu'} — {e.tarih} {e.saat || '10:00'}</span>
+                            {e.durum === 'oneri' && <button type="button" onClick={() => eylemOnayla(note, i2)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Takvime ekle</button>}
+                            {e.durum === 'eklendi' && <span style={{ color: '#22C55E', fontWeight: 700 }}>✓ Takvime eklendi</span>}
+                            {e.durum === 'hata' && <span style={{ color: '#FCA5A5' }}>Eklenemedi — takvimden elle ekleyin</span>}
+                          </div>
+                        ))}
+                        <form onSubmit={(ev) => { ev.preventDefault(); konsultGonder(note); }} style={{ display: 'flex', gap: 6 }}>
+                          <input value={kGirdi} onChange={(ev) => setKGirdi(ev.target.value)} placeholder="Örn. prognoz? / kontrolü 5 gün sonraya planla / planı kısalt" style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#EDF1F7', borderRadius: 9, padding: '8px 10px', fontSize: 13, minWidth: 0 }} />
+                          <button type="submit" disabled={kBekliyor || !kGirdi.trim()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 9, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: kBekliyor || !kGirdi.trim() ? 0.5 : 1 }}>Sor</button>
+                        </form>
+                      </div>
                       <div role="button" tabIndex={0} onClick={() => setAcikId('')} onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(''); }} style={{ marginTop: 10, fontSize: 12, color: '#14B8A6', cursor: 'pointer' }}>Daralt ▴</div>
                     </div>
                   ) : (

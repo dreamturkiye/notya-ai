@@ -119,6 +119,7 @@ export async function GET(req: NextRequest) {
     return {
       id: String(row.id),
       maskedPatient: maskPatient(session.patient_id),
+      patientId: session.patient_id ? String(session.patient_id) : null,
       specialty: String(session.specialty || 'Genel'),
       date: formatDate(row.created_at),
       subjektif: String(row.content_subjektif || ''),
