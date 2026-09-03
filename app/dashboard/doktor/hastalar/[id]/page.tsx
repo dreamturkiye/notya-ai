@@ -110,11 +110,29 @@ export default function HastaProfilPage() {
       ].filter(Boolean) as string[]
     : [];
 
-  const bilgiSatiri = (etiket: string, deger: string | null | undefined) => (
-    <div style={{ display: 'flex', gap: 10, padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 14 }}>
-      <span style={{ color: '#8FA0B5', minWidth: 128, flexShrink: 0 }}>{etiket}</span>
-      <span style={{ color: '#EDF1F7' }}>{deger || '—'}</span>
+  const bilgiSatiri = (etiket: string, deger: React.ReactNode) => (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: '#14B8A6', letterSpacing: '0.03em', minWidth: 132, flexShrink: 0 }}>{etiket}</span>
+      <span style={{ fontSize: 15, fontWeight: 600, color: '#F4F7FB', lineHeight: 1.45, minWidth: 0 }}>{deger || '—'}</span>
     </div>
+  );
+
+  // Doğum tarihi ham 'YYYY-MM-DD' yerine Türkçe tarih + yaş olarak okunur
+  const dogumGoster = (() => {
+    if (!patient?.dogum_tarihi) return null;
+    const d = new Date(patient.dogum_tarihi);
+    if (isNaN(d.getTime())) return patient.dogum_tarihi;
+    const ay = Math.floor((Date.now() - d.getTime()) / (30.44 * 86400000));
+    const yas = ay < 24 ? `${ay} aylık` : `${Math.floor(ay / 12)} yaşında`;
+    return `${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' })} (${yas})`;
+  })();
+
+  const cipListesi = (degerler: string[], renk: string, kenar: string) => (
+    <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {degerler.map((k, i) => (
+        <span key={i} style={{ fontSize: 12.5, fontWeight: 600, color: renk, background: `${kenar}1A`, border: `1px solid ${kenar}55`, borderRadius: 999, padding: '3px 11px' }}>{k}</span>
+      ))}
+    </span>
   );
 
   const notCek = (s: Seans): SeansNotu | null => {
@@ -198,17 +216,17 @@ export default function HastaProfilPage() {
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #0F9B8E, transparent)' }} />
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Demografik bilgiler</div>
               {bilgiSatiri('Ad Soyad', patient.ad_soyad)}
-              {bilgiSatiri('Doğum tarihi', patient.dogum_tarihi)}
+              {bilgiSatiri('Doğum tarihi', dogumGoster)}
               {bilgiSatiri('Cinsiyet', patient.cinsiyet)}
               {bilgiSatiri('Telefon', patient.telefon)}
               {bilgiSatiri('Şehir', patient.sehir)}
-              {bilgiSatiri('Kan grubu', patient.kan_grubu)}
+              {bilgiSatiri('Kan grubu', patient.kan_grubu ? cipListesi([patient.kan_grubu], '#FCA5A5', '#EF4444') : null)}
             </div>
             <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #F59E0B, transparent)' }} />
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Sağlık geçmişi</div>
-              {bilgiSatiri('Kronik hastalıklar', patient.kronik_hastaliklar?.length ? patient.kronik_hastaliklar.join(', ') : null)}
-              {bilgiSatiri('Alerjiler', patient.alerjiler)}
+              {bilgiSatiri('Kronik hastalıklar', patient.kronik_hastaliklar?.length ? cipListesi(patient.kronik_hastaliklar, '#FDBA74', '#F59E0B') : null)}
+              {bilgiSatiri('Alerjiler', patient.alerjiler ? cipListesi(patient.alerjiler.split(',').map((a) => a.trim()).filter(Boolean), '#FCA5A5', '#EF4444') : null)}
               {bilgiSatiri('Sürekli ilaçlar', patient.surekli_ilaclar)}
               {bilgiSatiri('Sigara / Alkol', patient.sigara_alkol)}
             </div>
