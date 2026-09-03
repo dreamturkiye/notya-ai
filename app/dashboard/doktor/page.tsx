@@ -258,7 +258,7 @@ export default function DoktorDashboard() {
                 >{v}</button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Randevu ekle</button>
               <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Takvimi aç</button>
             </div>
