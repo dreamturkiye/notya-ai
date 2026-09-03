@@ -136,6 +136,7 @@ export interface SoapGirdi {
   specialty: string
   klinikBaglam?: string // yaş/cinsiyet/alerji/sürekli ilaç — KİMLİKSİZ
   stilOrnekleri?: string // doktorun onayladığı önceki notlardan üslup örnekleri
+  stilProfili?: string // NOTYA-OGRENME-02: düzeltme geçmişinden damıtılmış doktor tercihleri
 }
 
 export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Promise<SoapNotu> {
@@ -144,6 +145,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
     soapKurallari(),
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
     girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
+    girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',
   ].join('\n')
 
   const yanit = await anthropic.messages.create({
@@ -171,4 +173,27 @@ export function stilOrnekleriDerle(notlar: { content_subjektif?: string | null; 
     if (s || p) parcalar.push(`--- Onaylı not örneği ---\nS: ${s}\nP: ${p}`)
   }
   return parcalar.join('\n')
+}
+
+/** NOTYA-OGRENME-02 — düzeltme farklarını kompakt doktor stil profiline damıtır (Haiku, ucuz).
+ * Onay rotası, düzeltme içeren her onayda çağırır; profil sonraki TÜM not üretimlerine gider.
+ * Veri çarkı (flywheel): doktor düzelttıkçe Ayşe o doktora özgü keskinleşir — birikim,
+ * kopyalanamayan doktor-başına rekabet avantajıdır. */
+export async function stilProfiliDamit(
+  anthropic: Anthropic,
+  mevcutProfil: string,
+  duzeltmeler: { alan?: string | null; onceki?: string | null; sonraki?: string | null }[]
+): Promise<string> {
+  const ornekler = duzeltmeler.slice(0, 20).map((d, i) =>
+    `${i + 1}. [${d.alan || '?'}]\nÖNCE: ${String(d.onceki || '').slice(0, 400)}\nSONRA: ${String(d.sonraki || '').slice(0, 400)}`
+  ).join('\n\n')
+  if (!ornekler) return mevcutProfil
+  const yanit = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 800,
+    system: `Bir doktorun yapay zekâ taslak notlarına yaptığı düzeltmelerden, gelecekteki not üretimine rehber olacak KOMPAKT bir tercih profili çıkar. En fazla 12 madde; her madde GENELLENEBİLİR bir kural olsun (terminoloji tercihi, uzunluk/ayrıntı düzeyi, yapı, sildiği/eklediği öğe türleri). Hastaya özgü klinik içerikten kural üretme. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.`,
+    messages: [{ role: 'user', content: `MEVCUT PROFİL:\n${mevcutProfil || '(yok)'}\n\nYENİ DÜZELTMELER:\n${ornekler}` }],
+  })
+  const metin = yanit.content[0]?.type === 'text' ? yanit.content[0].text.trim() : ''
+  return metin || mevcutProfil
 }
