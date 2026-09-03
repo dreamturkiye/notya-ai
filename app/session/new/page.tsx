@@ -56,7 +56,8 @@ function NewSessionInner() {
         if (!as?.access_token) return
         const r = await fetch("/api/users/me", { headers: { Authorization: `Bearer ${as.access_token}` } })
         const d = await r.json()
-        const b = d?.specialty || d?.profile?.specialty
+        // users/me yanıtı { success, data: {...} } sarmalında döner — ilk sürüm bunu ıskaladı.
+        const b = d?.data?.specialty || d?.specialty
         if (b && SPECIALTIES.some((s) => s.id === b)) { setSpecialty(b); setBransKilitli(true) }
       } catch { /* sessiz — seçici görünür kalır */ }
     })()
