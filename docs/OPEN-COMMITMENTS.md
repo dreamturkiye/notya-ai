@@ -45,3 +45,11 @@ Last reviewed: 2026-09-01 (randevu sistemi #44 merged)
 | 2026-09-03 | **Sesli-Ayse (ElevenLabs) dosya bilinci + kademe zorlamasi** | (a) ElevenLabs ajanina webhook tool eklenip dosya sorgulari sunucudan cevaplanacak (endpoint + kisa omurlu token mimarisi hazir degil; ajan konfigurasyon oturumu gerekli - Kaan ile birlikte). (b) Abonelik lansmaninda kademe zorlamasi: temel=yazili sohbet, orta/pro=sesli 1:1 + seans limitleri (ai_kullanim tablosu altyapi olarak hazir). Claude yapar |
 | 2026-09-03 | **Klinik = Doktor aynalama karari** | Klinik vertikali bugun hasta/seans/not altyapisindan yoksun (Pabau + 10 sesli persona). Onerilen mimari: klinik hekimlerine doktor-vertikal hesabi acip klinige baglamak (personel modeli genisletmesi) - boylece SOAP motoru, Inceleme, dosya, ogrenme AYNEN gecerli olur; ayri kod tabani kopyalanmaz. Kaan karari bekliyor; karar sonrasi 1-2 odakli oturum. |
 | 2026-09-03 | **SIRALAMA NOTU (Kaan)** | Yukaridaki acik kalemler (klinik aynalama karari, sesli-Ayse webhook tool, kademe zorlamasi, ogrenme/PDF kalanlari, epikriz-ingest sertlestirme) Dr. Gokhan ile yapilacak CANLI oturumdan SONRA ele alinacak. Canli oturum onceliklidir; bulgulari bu listeyi yeniden siralayabilir. |
+
+## CANLI OTURUM TO-DO (Dr. Gökhan) — 2026-09-03 itibarıyla açık defter
+Kural: canlı oturum sırasında gözlemlenen HER şey (hata, sürtünme, istek, fikir) anında buraya işlenir; oturum sonrası önceliklendirilir. Çözülen kalemin durumuna [x] konur.
+
+| Zaman (TRT) | Gözlem | Tür | Durum |
+|---|---|---|---|
+| 2026-09-03 14:15–14:28 | Seansı Bitir 2x500+504 — maxDuration + toleranslı parse ile çözüldü (PR #89) | hata | [x] |
+| 2026-09-03 ~15:00 | e-Reçete "Sunucu hatası" — Groq ölü anahtar; Anthropic geçişi (PR #90, #91) | hata | [x] |
