@@ -100,10 +100,20 @@ export default function HastaProfilPage() {
 
   useEffect(() => { if (activeTab === 2) seansYukle(); }, [activeTab, seansYukle]);
 
+  // Doğum tarihi her yerde Gün.Ay.Yıl (TR biçimi) + yaş olarak gösterilir — ham YYYY-MM-DD asla
+  const dogumGoster = (() => {
+    if (!patient?.dogum_tarihi) return null;
+    const d = new Date(patient.dogum_tarihi);
+    if (isNaN(d.getTime())) return patient.dogum_tarihi;
+    const ay = Math.floor((Date.now() - d.getTime()) / (30.44 * 86400000));
+    const yas = ay < 24 ? `${ay} aylık` : `${Math.floor(ay / 12)} yaşında`;
+    return `${d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Istanbul' })} (${yas})`;
+  })();
+
   const kimlikCipleri = patient
     ? [
         patient.cinsiyet,
-        patient.dogum_tarihi,
+        dogumGoster,
         patient.telefon,
         patient.sehir,
         patient.kan_grubu ? `Kan: ${patient.kan_grubu}` : null,
@@ -116,16 +126,6 @@ export default function HastaProfilPage() {
       <span style={{ fontSize: 15, fontWeight: 600, color: '#F4F7FB', lineHeight: 1.45, minWidth: 0 }}>{deger || '—'}</span>
     </div>
   );
-
-  // Doğum tarihi ham 'YYYY-MM-DD' yerine Türkçe tarih + yaş olarak okunur
-  const dogumGoster = (() => {
-    if (!patient?.dogum_tarihi) return null;
-    const d = new Date(patient.dogum_tarihi);
-    if (isNaN(d.getTime())) return patient.dogum_tarihi;
-    const ay = Math.floor((Date.now() - d.getTime()) / (30.44 * 86400000));
-    const yas = ay < 24 ? `${ay} aylık` : `${Math.floor(ay / 12)} yaşında`;
-    return `${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' })} (${yas})`;
-  })();
 
   const cipListesi = (degerler: string[], renk: string, kenar: string) => (
     <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
