@@ -96,7 +96,7 @@ export default function DoktorNav() {
       <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', minHeight: '40px' }}>
         <div onClick={() => handleNav('/dashboard/doktor')} title="Ana Sayfa" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, minWidth: 0, cursor: 'pointer' }}>
           <div style={{ width: '32px', height: '32px', backgroundColor: '#0F9B8E', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>N</div>
-          <span style={{ color: 'white', fontSize: isMobile ? '17px' : '20px', fontWeight: 600, whiteSpace: 'nowrap' }}>Notya AI</span>
+          <span style={{ color: 'white', fontSize: isMobile ? '17px' : '20px', fontWeight: 600, whiteSpace: 'nowrap' }}>Notya AI<span style={{ fontSize: '10px', verticalAlign: 'super', opacity: 0.55 }}>™</span></span>
         </div>
 
         {!isMobile && (

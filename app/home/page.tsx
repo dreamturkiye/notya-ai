@@ -111,7 +111,7 @@ export default function HomePage() {
     <main style={{ margin: 0, padding: 0, background: '#FAFAF9', color: '#0A0A0A', fontFamily: 'Inter, system-ui, sans-serif', minHeight: '100vh', overflowX: 'hidden' }}>
 
       <nav style={{ position: 'fixed', top: 'var(--sat)', left: 0, right: 0, zIndex: 100, padding: '20px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: scrolled ? 'rgba(250,250,249,0.92)' : 'transparent', backdropFilter: scrolled ? 'blur(10px)' : 'none', borderBottom: scrolled ? '1px solid rgba(10,10,10,0.08)' : '1px solid transparent', transition: 'all .3s ease' }}>
-        <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.02em' }}>NOTYA</div>
+        <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.02em' }}>NOTYA<span style={{ fontSize: '9px', verticalAlign: 'super', opacity: 0.5 }}>™</span></div>
         <Link href='/giris' style={{ fontSize: '12px', fontWeight: 600, color: '#0A0A0A', textDecoration: 'none', letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: '1px solid #0A0A0A', paddingBottom: '2px' }}>Giriş</Link>
       </nav>
 
@@ -183,7 +183,7 @@ export default function HomePage() {
       </section>
 
       <footer style={{ padding: '36px 40px', borderTop: '1px solid rgba(10,10,10,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: '13px', fontWeight: 700 }}>NOTYA</div>
+        <div style={{ fontSize: '13px', fontWeight: 700 }}>NOTYA<span style={{ fontSize: '9px', verticalAlign: 'super', opacity: 0.5 }}>™</span></div>
         <div style={{ fontSize: '11px', color: 'rgba(10,10,10,0.4)', textAlign: 'right', lineHeight: 1.6 }}>&copy; 2026 Dream Türkiye — Notya AI. Tüm hakları saklıdır. All rights reserved.<br />Bu yazılım 5846 sayılı FSEK ve ABD telif hukuku (17 U.S.C.) kapsamında korunmaktadır. İzinsiz kopyalanamaz ve tersine mühendislik yapılamaz. &middot; KVKK Uyumlu</div>
       </footer>
 
