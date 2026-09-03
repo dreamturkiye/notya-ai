@@ -12,6 +12,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
+import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
+import { kritikAlarm } from '@/lib/alarm'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -42,6 +44,10 @@ export async function POST(req: NextRequest) {
   if (!not) return NextResponse.json({ error: 'Not bulunamadı.' }, { status: 404 })
 
   const seans = Array.isArray(not.sessions) ? not.sessions[0] : not.sessions
+
+  // NOTYA-KOTA-01
+  const kota = await aiKotaKullan(supabase, doktorId, 'konsult')
+  if (!kota.izin) return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
   let klinikBaglam = ''
   try {
     if (seans?.patient_id) {
@@ -105,6 +111,7 @@ duzenlemeler yalnız değişen alanları içerir ({"plan":"..."} gibi); eylemler
     })
   } catch (e) {
     console.error('[not-konsult]', e)
+    await kritikAlarm('not-konsult 502', e instanceof Error ? e.message : String(e))
     return NextResponse.json({ error: 'Ayşe şu an yanıt veremiyor. Lütfen tekrar deneyin.' }, { status: 502 })
   }
 }

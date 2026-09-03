@@ -10,6 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
+import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
+import { kritikAlarm } from '@/lib/alarm'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -47,6 +49,10 @@ export async function POST(req: NextRequest) {
   const dosya = await hastaDosyasiniDerle(supabase, doktorId, patientId)
   if (!dosya) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
+  // NOTYA-KOTA-01
+  const kota = await aiKotaKullan(supabase, doktorId, 'konsult')
+  if (!kota.izin) return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
+
   const gecmis = mesajlar.slice(-20).map((m) => ({
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
     content: String(m.icerik || '').slice(0, 4000),
@@ -80,6 +86,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ cevap })
   } catch (e) {
     console.error('[konsult]', e)
+    await kritikAlarm('konsult 502', e instanceof Error ? e.message : String(e))
     return NextResponse.json({ error: 'Asistan şu an yanıt veremiyor. Lütfen tekrar deneyin.' }, { status: 502 })
   }
 }
