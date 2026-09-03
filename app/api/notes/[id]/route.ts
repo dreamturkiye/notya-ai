@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
+import { yasHesapla } from '@/lib/doktor/yas'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,8 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         const d = new Date(dogum)
         if (!isNaN(d.getTime())) {
           hasta.dogum = d.toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })
-          const ay = Math.floor((Date.now() - d.getTime()) / (30.44 * 86400000))
-          hasta.yas = ay < 24 ? `${ay} aylık` : `${Math.floor(ay / 12)} yaşında`
+          hasta.yas = yasHesapla(dogum)
         }
       }
       hasta.cinsiyet = coz(p.gender_encrypted)

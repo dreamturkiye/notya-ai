@@ -12,6 +12,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
+import { yasHesapla } from '@/lib/doktor/yas'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -21,15 +22,6 @@ function coz(v: string | null | undefined): string {
 function trTarih(d: string | null | undefined): string {
   if (!d) return '?'
   try { return new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' }) } catch { return '?' }
-}
-
-function yasHesapla(dogum: string): string {
-  const d = new Date(dogum)
-  if (isNaN(d.getTime())) return ''
-  const ms = Date.now() - d.getTime()
-  const ay = Math.floor(ms / (30.44 * 86400000))
-  if (ay < 24) return `${ay} aylık`
-  return `${Math.floor(ay / 12)} yaşında`
 }
 
 export async function hastaDosyasiniDerle(
