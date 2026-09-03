@@ -82,6 +82,7 @@ export default function NotYazdir() {
           <div>
             <div style={{ fontSize: 20, fontWeight: 700 }}>MUAYENE NOTU</div>
             <div style={{ font: '12px system-ui', color: '#444', textTransform: 'capitalize' }}>{not.specialty} · {trTarih(not.createdAt)} (TRT)</div>
+            {/* Akış: Anamnez → Fizik Muayene → Tanı → Tedavi (Dr. Gökhan referansları) */}
           </div>
           <div style={{ font: '12px system-ui', color: '#444' }}>Dr. {doktor.ad}</div>
         </div>
@@ -105,15 +106,15 @@ export default function NotYazdir() {
         {not.basvuruYakinmasi && (
           <div className="not-bolum"><div className="not-etiket">Başvuru Yakınması</div><div className="not-metin" style={{ fontStyle: 'italic' }}>&ldquo;{not.basvuruYakinmasi}&rdquo;</div></div>
         )}
-        {not.subjektif && <div className="not-bolum"><div className="not-etiket">S — Subjektif</div><div className="not-metin">{not.subjektif}</div></div>}
-        {not.objektif && <div className="not-bolum"><div className="not-etiket">O — Objektif</div><div className="not-metin">{not.objektif}</div></div>}
-        {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">A — Değerlendirme</div><div className="not-metin">{not.degerlendirme}</div></div>}
+        {not.subjektif && <div className="not-bolum"><div className="not-etiket">Anamnez</div><div className="not-metin">{not.subjektif}</div></div>}
+        {not.objektif && <div className="not-bolum"><div className="not-etiket">Fizik Muayene</div><div className="not-metin">{not.objektif}</div></div>}
+        {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">Değerlendirme / Tanı</div><div className="not-metin">{not.degerlendirme}</div></div>}
         {Array.isArray(not.icdKodlari) && not.icdKodlari.length > 0 && (
           <div className="not-bolum"><div className="not-etiket">Tanı / ICD-10</div>
             <div className="not-metin">{not.icdKodlari.map((k) => `${k.code} — ${k.description_tr || k.description || ''}${k.is_primary ? ' (birincil)' : ''}`).join('; ')}</div>
           </div>
         )}
-        {not.plan && <div className="not-bolum"><div className="not-etiket">P — Plan</div><div className="not-metin">{not.plan}</div></div>}
+        {not.plan && <div className="not-bolum"><div className="not-etiket">Tedavi ve Plan</div><div className="not-metin">{not.plan}</div></div>}
         {Array.isArray(not.receteOnerisi) && not.receteOnerisi.length > 0 && (
           <div className="not-bolum"><div className="not-etiket">İlaç Önerileri (reçete doktor tarafından yazılır)</div>
             <div className="not-metin">{not.receteOnerisi.map((r, i) => `${i + 1}. ${[r.ticariOrnek, r.etkenMadde ? `(${r.etkenMadde})` : '', r.doz, r.kullanim, r.sure].filter(Boolean).join(' — ')}${r.sgkListesinde ? ' [SGK]' : ''}${r.not ? ` — Not: ${r.not}` : ''}`).join('\n')}</div>
