@@ -139,6 +139,20 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
         const { hastaDosyasiniDerle } = await import('@/lib/doktor/hastaDosyaDerleyici')
         const dosya = await hastaDosyasiniDerle(getSupabase(), user.id, String(seansSatiri.patient_id))
         if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
+        // NOTYA-SOAP-03: plan sürekliliği — son onaylı vizitin planı/tanısı bağlama eklenir,
+        // yeni not önceki planın akıbetini değerlendirerek yazılır (izole not yerine devamlılık).
+        const { data: oncekiVizit } = await getSupabase()
+          .from('notes')
+          .select('content_plan, content_tani, created_at, sessions!inner(patient_id)')
+          .eq('sessions.patient_id', seansSatiri.patient_id)
+          .not('approved_at', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+        const ov = oncekiVizit?.[0]
+        if (ov?.content_plan) {
+          const ovTarih = new Date(String(ov.created_at)).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })
+          klinikBaglam += `\n\nÖNCEKİ VİZİT PLANI (${ovTarih}${ov.content_tani ? ` — tanı: ${String(ov.content_tani).slice(0, 200)}` : ''}):\n${String(ov.content_plan).slice(0, 1200)}`
+        }
       }
     } catch { /* bağlam kritik değil — bağlamsız da not üretilir */ }
 
