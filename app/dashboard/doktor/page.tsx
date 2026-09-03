@@ -438,7 +438,7 @@ export default function DoktorDashboard() {
       </div>
 
       <div style={{ padding: 20, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
-        Notya AI 2026 • KVKK uyumlu • Saat dilimi: Türkiye (TRT)
+        © 2026 Dream Türkiye — Notya AI. Tüm hakları saklıdır / All rights reserved (5846 FSEK · 17 U.S.C.) • KVKK uyumlu • Saat dilimi: Türkiye (TRT)
       </div>
     </div>
   )

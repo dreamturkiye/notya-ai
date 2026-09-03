@@ -168,7 +168,14 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       if (oncekiNotlar?.length) stilOrnekleri = stilOrnekleriDerle(oncekiNotlar)
     } catch { /* stil örneği kritik değil */ }
 
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri })
+    // NOTYA-OGRENME-02: damıtılmış doktor tercihleri (düzeltme geçmişinden) üretime girer
+    let stilProfili = ''
+    try {
+      const { data: sp } = await getSupabase().from('doktor_stil_profilleri').select('profil').eq('doctor_id', user.id).maybeSingle()
+      stilProfili = String(sp?.profil || '')
+    } catch { /* profil kritik değil */ }
+
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili })
 
     // Save note
     const { data: note, error: noteError } = await getSupabase().from("notes").insert({

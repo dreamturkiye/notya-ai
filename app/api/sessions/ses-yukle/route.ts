@@ -112,9 +112,16 @@ export async function POST(req: NextRequest) {
     if (oncekiNotlar?.length) stilOrnekleri = stilOrnekleriDerle(oncekiNotlar)
   } catch { /* stil kritik değil */ }
 
+  // NOTYA-OGRENME-02: damıtılmış doktor tercihleri üretime girer
+  let stilProfili = ''
+  try {
+    const { data: sp } = await supabase.from('doktor_stil_profilleri').select('profil').eq('doctor_id', doktorId).maybeSingle()
+    stilProfili = String(sp?.profil || '')
+  } catch { /* profil kritik değil */ }
+
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri })
+    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili })
 
     const { data: note, error: noteError } = await supabase.from('notes').insert({
       session_id: seans.id,

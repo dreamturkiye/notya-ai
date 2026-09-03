@@ -89,6 +89,36 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   if (loglar.length > 0) {
     try { await supabase.from('not_duzenlemeleri').insert(loglar) } catch { /* öğrenme logu kritik değil */ }
+    // NOTYA-OGRENME-02: düzeltme içeren her onayda profil damıtılır (Haiku — ucuz, ~1sn).
+    // Damıtılan profil sonraki tüm not üretimlerine "öğrenilmiş tercihler" olarak gider.
+    try {
+      const { data: gecmis } = await supabase
+        .from('not_duzenlemeleri')
+        .select('alan, onceki, sonraki')
+        .eq('doctor_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      const { data: profilSatiri } = await supabase
+        .from('doktor_stil_profilleri')
+        .select('profil, ornek_sayisi')
+        .eq('doctor_id', user.id)
+        .maybeSingle()
+      const Anthropic = (await import('@anthropic-ai/sdk')).default
+      const { stilProfiliDamit } = await import('@/lib/doktor/soapUret')
+      const yeniProfil = await stilProfiliDamit(
+        new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }),
+        String(profilSatiri?.profil || ''),
+        gecmis || []
+      )
+      if (yeniProfil) {
+        await supabase.from('doktor_stil_profilleri').upsert({
+          doctor_id: user.id,
+          profil: yeniProfil,
+          ornek_sayisi: (profilSatiri?.ornek_sayisi || 0) + loglar.length,
+          guncelleme: new Date().toISOString(),
+        })
+      }
+    } catch (e) { console.error('[ogrenme] damitma', e) }
   }
 
   return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length })
