@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { anamnezParcala } from '@/lib/doktor/anamnezBolumleri';
 
 interface NotVeri {
   not: {
@@ -106,7 +107,9 @@ export default function NotYazdir() {
         {not.basvuruYakinmasi && (
           <div className="not-bolum"><div className="not-etiket">Başvuru Yakınması</div><div className="not-metin" style={{ fontStyle: 'italic' }}>&ldquo;{not.basvuruYakinmasi}&rdquo;</div></div>
         )}
-        {not.subjektif && <div className="not-bolum"><div className="not-etiket">Anamnez</div><div className="not-metin">{not.subjektif}</div></div>}
+        {not.subjektif && anamnezParcala(not.subjektif).map((b, bi) => (
+          <div key={'anm' + bi} className="not-bolum"><div className="not-etiket">{b.baslik}</div><div className="not-metin">{b.metin}</div></div>
+        ))}
         {not.objektif && <div className="not-bolum"><div className="not-etiket">Fizik Muayene</div><div className="not-metin">{not.objektif}</div></div>}
         {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">Değerlendirme / Tanı</div><div className="not-metin">{not.degerlendirme}</div></div>}
         {Array.isArray(not.icdKodlari) && not.icdKodlari.length > 0 && (

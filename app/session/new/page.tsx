@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { createClient } from "@supabase/supabase-js"
+import { anamnezParcala } from "@/lib/doktor/anamnezBolumleri"
 import { useRouter, useSearchParams } from "next/navigation"
 
 const SPECIALTIES = [
@@ -323,11 +324,17 @@ function NewSessionInner() {
                 <div style={S({fontSize:"12px",color:"#64748B"})}>AI güveni: {Math.round(((note.ai_confidence as number)||0.9)*100)}%</div>
               </div>
             </div>
+            {/* NOTYA-BASLIK-01: Anamnez bölümleri kendi başlıklarıyla (Şikayet, Şikayetin Hikayesi, Özgeçmiş...) */}
+            {anamnezParcala(String((note as Record<string, unknown>).content_subjektif || '')).map((b, bi) => (
+              <div key={'anm' + bi} style={S({marginBottom:"14px"})}>
+                <div style={S({fontSize:"10px",fontWeight:"600",color:"#2563EB",textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{b.baslik}</div>
+                <div style={S({fontSize:"13px",color:"#374151",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F8FAFC",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
+              </div>
+            ))}
             {([
-              {label:"S — Subjektif",key:"content_subjektif",color:"#2563EB"},
-              {label:"O — Objektif",key:"content_objektif",color:"#059669"},
-              {label:"A — Değerlendirme",key:"content_degerlendirme",color:"#D97706"},
-              {label:"P — Plan",key:"content_plan",color:"#7C3AED"},
+              {label:"Fizik Muayene",key:"content_objektif",color:"#059669"},
+              {label:"Değerlendirme / Tanı",key:"content_degerlendirme",color:"#D97706"},
+              {label:"Tedavi ve Plan",key:"content_plan",color:"#7C3AED"},
             ] as {label:string;key:string;color:string}[]).filter(s=>(note as Record<string,unknown>)[s.key]).map(section=>(
               <div key={section.key} style={S({marginBottom:"14px"})}>
                 <div style={S({fontSize:"10px",fontWeight:"600",color:section.color,textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{section.label}</div>

@@ -67,7 +67,7 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
 - basvuruYakinmasi: hastanın/velinin kendi ifadesiyle tek cümle başvuru yakınması.
 - subjektif: Türk anamnez düzeninde ETIKETLI alt bölümlerle yaz (yalnız içeriği olanları):
   "Şikayet: ..." (ana yakınma ve süresi)
-  "Hikaye: ..." (yakınmanın öyküsü: başlangıç, seyir, eşlik edenler, denenmiş tedaviler)
+  "Şikayetin Hikayesi: ..." (yakınmanın öyküsü: başlangıç, seyir, eşlik edenler, denenmiş tedaviler)
   "Özgeçmiş: ..." (pediatride prenatal/natal/postnatal öykü, geçirilmiş hastalıklar/ameliyatlar, alerji, sürekli ilaçlar, aşı durumu)
   "Soygeçmiş: ..." (ailede benzer/önemli hastalıklar, akrabalık)
   "Alışkanlıklar: ..." (beslenme; erişkinde sigara/alkol)
