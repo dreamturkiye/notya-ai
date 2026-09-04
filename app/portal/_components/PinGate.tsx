@@ -51,11 +51,10 @@ export function PinGate({ token, onUnlocked }: Props) {
 
   return (
     <div className="sg-fade sg-pin-gate">
-      <h1 className="sg-display" style={{ fontSize: 28, margin: '0 0 8px' }}>
-        Giriş
-      </h1>
-      <p style={{ margin: '0 0 24px', color: 'var(--sg-muted)', lineHeight: 1.55, maxWidth: 360 }}>
-        Sağlığım alanınızı açmak için doktorunuzun size verdiği 6 haneli PIN&apos;i girin.
+      <p className="sg-pin-brand">Notya</p>
+      <p className="sg-pin-product">Sağlığım</p>
+      <p style={{ margin: '0 0 28px', color: 'var(--sg-muted)', lineHeight: 1.55, maxWidth: 340, fontSize: 15 }}>
+        Alanınızı açmak için doktorunuzun verdiği 6 haneli PIN&apos;i girin.
       </p>
 
       {legacy ? (
@@ -83,7 +82,7 @@ export function PinGate({ token, onUnlocked }: Props) {
             maxLength={6}
             value={pin}
             disabled={busy}
-            placeholder="••••••"
+            placeholder="······"
             aria-invalid={Boolean(error)}
             onChange={(e) => {
               const next = e.target.value.replace(/\D/g, '').slice(0, 6)

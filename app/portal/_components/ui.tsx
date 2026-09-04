@@ -25,12 +25,12 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
   return (
     <div className="sg-fade sg-empty">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/sagligim/calm-empty.jpg" alt="" className="sg-empty-img" />
+      <img src="/sagligim/empty-cool.jpg" alt="" className="sg-empty-img" />
       <div className="sg-empty-copy">
-        <h2 className="sg-display" style={{ margin: 0, fontSize: 'clamp(1.2rem, 5vw, 1.4rem)' }}>
+        <h2 className="sg-display" style={{ margin: 0, fontSize: 'clamp(1.25rem, 5vw, 1.5rem)' }}>
           {title}
         </h2>
-        <p style={{ margin: '8px 0 0', color: 'var(--sg-muted)', lineHeight: 1.5, fontSize: 15 }}>{body}</p>
+        <p style={{ margin: '10px 0 0', color: 'var(--sg-muted)', lineHeight: 1.5, fontSize: 15 }}>{body}</p>
       </div>
     </div>
   )
@@ -79,16 +79,7 @@ export function SoftPanel({
   className?: string
 }) {
   return (
-    <div
-      className={['sg-panel', className].filter(Boolean).join(' ')}
-      style={{
-        background: 'var(--sg-surface)',
-        border: '1px solid var(--sg-line)',
-        borderRadius: 'var(--sg-radius)',
-        padding: '16px',
-        ...style,
-      }}
-    >
+    <div className={['sg-panel', className].filter(Boolean).join(' ')} style={style}>
       {children}
     </div>
   )

@@ -35,11 +35,9 @@ export function PortalShell({
       <header className="sg-header">
         <div className="sg-header-inner">
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-            <Link href={basePath} style={{ display: 'flex', alignItems: 'baseline', gap: 8, minHeight: 40 }}>
-              <span className="sg-display" style={{ fontSize: 22, color: 'var(--sg-accent)' }}>
-                Notya
-              </span>
-              <span style={{ color: 'var(--sg-muted)', fontSize: 14, fontWeight: 600 }}>· Sağlığım</span>
+            <Link href={basePath} className="sg-brand-lockup">
+              <span className="sg-brand-mark">Notya</span>
+              <span className="sg-brand-product">Sağlığım</span>
             </Link>
             <span className="sg-header-tag">Hasta alanı</span>
           </div>
@@ -70,14 +68,9 @@ export function PortalShell({
           (sekreter / asistan / hemşire) arasında, yalnızca görevleri gereği ve KVKK sınırları
           içinde paylaşılabilir; gerekli hallerde sizinle ilgili diğer hekimlere de aktarılabilir.
           Detay:{' '}
-          <a href="/kvkk" style={{ color: 'var(--sg-accent)', fontWeight: 700, textDecoration: 'underline' }}>
-            KVKK Aydınlatma Metni
-          </a>
-          .
+          <a href="/kvkk">KVKK Aydınlatma Metni</a>.
         </p>
-        <p style={{ margin: 0, opacity: 0.85 }}>
-          Bu bağlantı size özeldir; başkalarıyla paylaşmayın.
-        </p>
+        <p style={{ margin: 0, opacity: 0.85 }}>Bu bağlantı size özeldir; başkalarıyla paylaşmayın.</p>
       </footer>
     </div>
   )

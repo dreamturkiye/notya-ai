@@ -6,7 +6,7 @@ import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <SoftPanel style={{ marginBottom: 10 }}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-accent)', marginBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 11, fontWeight: 650, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sg-accent)', marginBottom: 8 }}>{title}</div>
       {children}
     </SoftPanel>
   )

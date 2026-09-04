@@ -1,17 +1,17 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { Fraunces, Nunito_Sans } from 'next/font/google'
+import { Newsreader, Outfit } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './sagligim.css'
 
-const fraunces = Fraunces({
+const newsreader = Newsreader({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-fraunces',
+  variable: '--font-newsreader',
   display: 'swap',
 })
 
-const nunito = Nunito_Sans({
+const outfit = Outfit({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-nunito',
+  variable: '--font-outfit',
   display: 'swap',
 })
 
@@ -24,17 +24,17 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#f4f1ea',
+  themeColor: '#E8EEF2',
 }
 
 export default function PortalLayout({ children }: { children: ReactNode }) {
   const fontVars = {
-    ['--sg-font-display']: 'var(--font-fraunces), Georgia, serif',
-    ['--sg-font-ui']: 'var(--font-nunito), system-ui, sans-serif',
+    ['--sg-font-display']: 'var(--font-newsreader), Georgia, "Times New Roman", serif',
+    ['--sg-font-ui']: 'var(--font-outfit), "Segoe UI", sans-serif',
   } as CSSProperties
 
   return (
-    <div className={`sagligim-root ${fraunces.variable} ${nunito.variable}`} style={fontVars}>
+    <div className={`sagligim-root ${newsreader.variable} ${outfit.variable}`} style={fontVars}>
       {children}
     </div>
   )

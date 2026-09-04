@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { CSSProperties } from 'react'
 import type { MessageFolder, PortalBundle, PortalMessage } from '@/lib/portal/types'
 import { COMPOSE_DISCLAIMER } from '@/lib/portal/messageCopy'
 import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
@@ -103,19 +102,20 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
 
       {composeOpen && canSend ? (
         <SoftPanel style={{ marginBottom: 14 }}>
-          <div style={{ fontWeight: 800, marginBottom: 10 }}>Yeni mesaj</div>
+          <div style={{ fontWeight: 650, marginBottom: 10 }}>Yeni mesaj</div>
           <input
             value={draftKonu}
             onChange={(e) => setDraftKonu(e.target.value)}
             placeholder="Konu"
-            style={inputStyle}
+            className="sg-field"
           />
           <textarea
             value={draftMetin}
             onChange={(e) => setDraftMetin(e.target.value)}
             placeholder="Mesajınız…"
             rows={4}
-            style={{ ...inputStyle, marginTop: 8, resize: 'vertical', minHeight: 96 }}
+            className="sg-field"
+            style={{ marginTop: 8, resize: 'vertical', minHeight: 96 }}
           />
           <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--sg-muted)', lineHeight: 1.45 }}>
             {COMPOSE_DISCLAIMER}
@@ -246,18 +246,12 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
                     {shown.mesajlar.map((msg) => (
                       <div
                         key={msg.id}
-                        style={{
-                          alignSelf: msg.taraf === 'hasta' ? 'flex-end' : 'flex-start',
-                          maxWidth: '92%',
-                          padding: '12px 14px',
-                          borderRadius: 14,
-                          background: msg.taraf === 'hasta' ? 'var(--sg-accent-soft)' : 'rgba(28,43,36,0.04)',
-                        }}
+                        className={`sg-bubble ${msg.taraf === 'hasta' ? 'sg-bubble-hasta' : 'sg-bubble-klinik'}`}
                       >
-                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--sg-accent)', marginBottom: 4 }}>
+                        <div style={{ fontSize: 12, fontWeight: 650, color: 'var(--sg-accent)', marginBottom: 4 }}>
                           {msg.kimden}
                         </div>
-                        <div style={{ fontSize: 15, lineHeight: 1.5 }}>{msg.metin}</div>
+                        <div>{msg.metin}</div>
                         <div style={{ fontSize: 11, color: 'var(--sg-muted)', marginTop: 6 }}>
                           {formatTrDate(msg.tarih, true)}
                         </div>
@@ -272,7 +266,8 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
                         onChange={(e) => setReplyMetin(e.target.value)}
                         placeholder="Yanıt yazın…"
                         rows={3}
-                        style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
+                        className="sg-field"
+                        style={{ resize: 'vertical' }}
                       />
                       <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--sg-muted)' }}>{COMPOSE_DISCLAIMER}</p>
                       {sendError ? (
@@ -312,17 +307,4 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
       ) : null}
     </div>
   )
-}
-
-const inputStyle: CSSProperties = {
-  width: '100%',
-  display: 'block',
-  boxSizing: 'border-box',
-  border: '1px solid var(--sg-line)',
-  borderRadius: 12,
-  padding: '12px 14px',
-  fontSize: 16,
-  fontFamily: 'inherit',
-  background: '#fff',
-  color: 'var(--sg-ink)',
 }
