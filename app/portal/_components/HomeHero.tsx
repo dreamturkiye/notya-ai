@@ -86,8 +86,8 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
         </section>
 
         <section className="sg-home-section sg-fade sg-fade-delay-3">
+          <h2 className="sg-display sg-home-section-title">Son aktivite</h2>
           <SoftPanel className="sg-activity-panel">
-            <h2 className="sg-display sg-activity-heading">Son aktivite</h2>
             {data.summary.sonAktivite.length === 0 ? (
               <p className="sg-activity-empty">Henüz paylaşılmış aktivite yok.</p>
             ) : (
