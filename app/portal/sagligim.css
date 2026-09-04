@@ -809,6 +809,12 @@ body:has(.sagligim-root) {
   margin-right: 0;
 }
 
+/* Compose box — same horizontal inset as Son aktivite / list panels */
+.sg-compose-panel {
+  margin-left: 20px !important;
+  margin-right: 20px !important;
+}
+
 .sg-list-panel {
   padding: 2px 12px !important;
   margin-left: 20px;
@@ -1071,9 +1077,15 @@ body:has(.sagligim-root) {
   .sg-list-panel,
   .sg-empty,
   .sg-stack,
+  .sg-compose-panel,
   .sg-fade > .sg-panel {
     margin-left: 28px;
     margin-right: 28px;
+  }
+
+  .sg-compose-panel {
+    margin-left: 28px !important;
+    margin-right: 28px !important;
   }
 
   .sg-subhead {

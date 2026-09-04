@@ -101,7 +101,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
       />
 
       {composeOpen && canSend ? (
-        <SoftPanel style={{ marginBottom: 14 }}>
+        <SoftPanel className="sg-compose-panel" style={{ marginBottom: 14 }}>
           <div style={{ fontWeight: 650, marginBottom: 10 }}>Yeni mesaj</div>
           <input
             value={draftKonu}

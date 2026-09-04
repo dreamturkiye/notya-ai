@@ -49,16 +49,16 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
           </div>
         </div>
 
-        <div className="sg-hero-side" aria-label="Sağlıklı yaşam">
+        <div className="sg-hero-side" aria-label="Koruyucu sağlık">
           <figure className="sg-hero-tile">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/sagligim/wellness-cycle.jpg" alt="" />
-            <figcaption className="sg-hero-tile-caption">Hareket</figcaption>
+            <img src="/sagligim/preventive-care.jpg" alt="" />
+            <figcaption className="sg-hero-tile-caption">Koruyucu tıp</figcaption>
           </figure>
           <figure className="sg-hero-tile">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/sagligim/wellness-kitchen.jpg" alt="" />
-            <figcaption className="sg-hero-tile-caption">Beslenme</figcaption>
+            <img src="/sagligim/baby-health.jpg" alt="" />
+            <figcaption className="sg-hero-tile-caption">Bebek sağlığı</figcaption>
           </figure>
         </div>
       </section>
