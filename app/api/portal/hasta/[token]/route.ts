@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 import { loadPortalMessages } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
+import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModalities'
 import type {
   PortalBundle,
   PortalMedication,
@@ -234,23 +235,18 @@ export async function GET(
     .limit(15)
 
   for (const row of imgRaw || []) {
-    const tip = String(row.modalite || '').toLowerCase()
-    const tur = /ekg/.test(tip)
-      ? 'ekg'
-      : /x-?ray|us|mri|bt|tomo|graf|usg|ultrason|mr|rontgen|röntgen/.test(tip)
-        ? 'goruntuleme'
-        : tip
-          ? 'goruntuleme'
-          : 'diger'
+    const tip = String(row.modalite || '')
+    const tur = imagingPortalKind(tip)
     const tarih = String(row.goruntuleme_tarihi || row.created_at)
+    const modaliteLabel = imagingDisplayLabel(tip, 'patient')
     results.push({
       id: row.id,
       tur,
-      baslik: [row.modalite, row.vucut_bolgesi].filter(Boolean).join(' · ') || 'Görüntüleme',
+      baslik: [modaliteLabel, row.vucut_bolgesi].filter(Boolean).join(' · ') || 'Görüntüleme',
       tarih,
       ozet: String(row.rapor_metni || 'Rapor paylaşıldı').slice(0, 140),
       durum: 'raporlandi',
-      modalite: String(row.modalite || ''),
+      modalite: modaliteLabel,
       gorselUrl: row.dosya_url || '/sagligim/imaging-placeholder.jpg',
       raporMetni: row.rapor_metni ? String(row.rapor_metni) : undefined,
     })

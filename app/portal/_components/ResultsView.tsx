@@ -3,7 +3,13 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { PortalBundle, PortalResult, ResultKind } from '@/lib/portal/types'
+import { imagingDisplayLabel } from '@/lib/doktor/imagingModalities'
 import { EmptyState, ListRow, SectionHeader, SoftPanel, formatTrDate } from './ui'
+
+function modalityLabel(raw?: string | null) {
+  if (!raw) return 'Görüntüleme'
+  return imagingDisplayLabel(raw, 'patient')
+}
 
 const FILTERS: Array<{ key: ResultKind | 'hepsi'; label: string }> = [
   { key: 'hepsi', label: 'Hepsi' },
@@ -160,17 +166,40 @@ export function ResultDetailView({
       {(result.gorselUrl || result.raporMetni) && (
         <SoftPanel style={{ marginTop: 12, padding: 0, overflow: 'hidden' }}>
           {result.gorselUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={result.gorselUrl}
-              alt={result.modalite || 'Görüntüleme'}
-              style={{ width: '100%', height: 'clamp(160px, 45vw, 220px)', objectFit: 'cover', display: 'block' }}
-            />
+            <div className="sg-imaging-frame">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={result.gorselUrl}
+                alt={modalityLabel(result.modalite)}
+                className="sg-imaging-img"
+              />
+              <div className="sg-imaging-actions">
+                <a
+                  href={result.gorselUrl}
+                  download={`${(result.baslik || 'goruntuleme').replace(/\s+/g, '-').toLowerCase()}.jpg`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sg-chip-btn is-active"
+                  style={{ textDecoration: 'none' }}
+                >
+                  İndir
+                </a>
+                <a
+                  href={result.gorselUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sg-chip-btn"
+                  style={{ textDecoration: 'none' }}
+                >
+                  Tam ekran
+                </a>
+              </div>
+            </div>
           ) : null}
           {result.raporMetni ? (
             <div style={{ padding: '16px' }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-muted)', marginBottom: 8 }}>
-                {result.modalite || 'Rapor'}
+                {modalityLabel(result.modalite)}
               </div>
               <p className="sg-prose">{result.raporMetni}</p>
             </div>

@@ -1057,6 +1057,33 @@ body:has(.sagligim-root) {
   color: var(--sg-muted);
 }
 
+.sg-imaging-frame {
+  position: relative;
+  background: #0a0f14;
+  min-height: clamp(240px, 55vw, 520px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.sg-imaging-img {
+  width: 100%;
+  flex: 1 1 auto;
+  max-height: min(70vh, 640px);
+  object-fit: contain;
+  display: block;
+  background: #0a0f14;
+}
+
+.sg-imaging-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(10, 15, 20, 0.92);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .sg-lab-desktop {
   display: none;
 }

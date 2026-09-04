@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { getAccessToken, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { IMAGING_MODALITIES, imagingDisplayLabel, imagingModalityMeta } from '@/lib/doktor/imagingModalities';
 
 interface Goruntuleme {
   id: string;
@@ -18,16 +19,15 @@ interface Goruntuleme {
   tur: 'dicom' | 'jpg' | 'png' | 'pdf';
 }
 
-const MODALITELER = ['X-Ray', 'MRI', 'BT', 'Ultrason', 'EKO', 'PET-BT'];
+const MODALITELER = IMAGING_MODALITIES.filter((m) => m.code !== 'diger').map((m) => m.label);
 
-const MODALITE_COLORS: { [key: string]: string } = {
-  'X-Ray': '#3b82f6',
-  'MRI': '#a855f7',
-  'BT': '#f59e0b',
-  'Ultrason': '#22c55e',
-  'EKO': '#6b7280',
-  'PET-BT': '#6b7280',
-};
+const MODALITE_COLORS: { [key: string]: string } = Object.fromEntries(
+  IMAGING_MODALITIES.map((m) => [m.label, m.color])
+);
+// Also key by canonical code for rows stored as xray/ekg/...
+for (const m of IMAGING_MODALITIES) {
+  MODALITE_COLORS[m.code] = m.color;
+}
 
 const Page = () => {
   const [patients, setPatients] = useState<HastaOption[]>([]);
@@ -303,7 +303,7 @@ const Page = () => {
                   marginBottom: '4px'
                 }}
               >
-                <div style={{ background: MODALITE_COLORS[g.modalite] || '#6b7280', color: '#fff', fontSize: '10px', padding: '2px 8px', borderRadius: '9999px' }}>{g.modalite}</div>
+                <div style={{ background: imagingModalityMeta(g.modalite).color || '#6b7280', color: '#fff', fontSize: '10px', padding: '2px 8px', borderRadius: '9999px' }}>{imagingDisplayLabel(g.modalite)}</div>
                 <div style={{ flex: 1 }}>
                   <div>{g.vucut_bolgesi}</div>
                   <div style={{ fontSize: '12px', color: '#9ca3af' }}>{g.tarih}</div>

@@ -17,7 +17,7 @@ import { TETKIK_KATALOGU, TETKIK_PANELLERI, TETKIK_BOLUMU, NUMUNE_ADI, TUM_TETKI
 
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
-const modaliteler = ['X-Ray', 'USG', 'MRI', 'BT', 'PET-BT', 'EKO', 'EEG', 'EMG']
+const modaliteler = ['X-Ray', 'USG', 'MRI', 'BT', 'PET-BT', 'EKO', 'EKG', 'Mamografi', 'EEG', 'EMG']
 
 export default function TetkikPage() {
   const [activeTab, setActiveTab] = useState<'lab' | 'goruntuleme'>('lab')
