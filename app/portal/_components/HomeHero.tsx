@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { CSSProperties } from 'react'
 import type { PortalBundle } from '@/lib/portal/types'
 import { SoftPanel, formatTrDate } from './ui'
 
@@ -136,28 +137,39 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
         {data.summary.sonAktivite.length === 0 ? (
           <p style={{ margin: 0, color: 'var(--sg-muted)' }}>Henüz paylaşılmış aktivite yok.</p>
         ) : (
-          data.summary.sonAktivite.map((a, i) => (
-            <div
-              key={a.id}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: 12,
-                padding: '12px 0',
-                borderTop: i === 0 ? 'none' : '1px solid var(--sg-line)',
-              }}
-            >
-              <div>
-                <div style={{ fontWeight: 700 }}>{a.baslik}</div>
-                <div style={{ fontSize: 12, color: 'var(--sg-muted)', marginTop: 2 }}>{formatTrDate(a.tarih, true)}</div>
-              </div>
-              {a.href ? (
-                <Link href={`${basePath}/${a.href}`} style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-accent)' }}>
-                  Aç
+          data.summary.sonAktivite.map((a, i) => {
+            const rowStyle: CSSProperties = {
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '12px 0',
+              borderTop: i === 0 ? 'none' : '1px solid var(--sg-line)',
+              alignItems: 'center',
+            }
+            const body = (
+              <>
+                <div>
+                  <div style={{ fontWeight: 700 }}>{a.baslik}</div>
+                  <div style={{ fontSize: 12, color: 'var(--sg-muted)', marginTop: 2 }}>{formatTrDate(a.tarih, true)}</div>
+                </div>
+                {a.href ? (
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-accent)' }}>Aç</span>
+                ) : null}
+              </>
+            )
+            if (a.href) {
+              return (
+                <Link key={a.id} href={`${basePath}/${a.href}`} style={rowStyle}>
+                  {body}
                 </Link>
-              ) : null}
-            </div>
-          ))
+              )
+            }
+            return (
+              <div key={a.id} style={rowStyle}>
+                {body}
+              </div>
+            )
+          })
         )}
       </SoftPanel>
     </div>
