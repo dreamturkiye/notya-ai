@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { portal } from '../portalStyles'
+import { portal } from '../../portalStyles'
 
 interface Session {
   id: string
