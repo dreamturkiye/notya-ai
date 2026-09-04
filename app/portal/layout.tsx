@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Fraunces, Nunito_Sans } from 'next/font/google'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './sagligim.css'
 
 const fraunces = Fraunces({
@@ -18,6 +18,13 @@ const nunito = Nunito_Sans({
 export const metadata: Metadata = {
   title: 'Notya · Sağlığım',
   description: 'Sağlık kayıtlarınız, sonuçlarınız ve mesajlarınız tek yerde.',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#f4f1ea',
 }
 
 export default function PortalLayout({ children }: { children: ReactNode }) {

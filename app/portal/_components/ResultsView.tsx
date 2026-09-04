@@ -36,22 +36,13 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
   return (
     <div className="sg-fade">
       <SectionHeader title="Test sonuçları" subtitle="Laboratuvar, görüntüleme ve diğer tetkikler." />
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+      <div className="sg-filter-row">
         {FILTERS.map((f) => (
           <button
             key={f.key}
             type="button"
+            className={`sg-chip-btn${filter === f.key ? ' is-active' : ''}`}
             onClick={() => setFilter(f.key)}
-            style={{
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px 14px',
-              borderRadius: 999,
-              fontWeight: 700,
-              fontSize: 13,
-              background: filter === f.key ? 'var(--sg-accent)' : 'var(--sg-surface)',
-              color: filter === f.key ? '#fff' : 'var(--sg-muted)',
-            }}
           >
             {f.label}
           </button>
@@ -98,39 +89,42 @@ export function ResultDetailView({
 
   return (
     <div className="sg-fade">
-      <Link href={`${basePath}/sonuclar`} style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-accent)' }}>
+      <Link href={`${basePath}/sonuclar`} className="sg-back-link">
         ← Sonuçlar
       </Link>
       <SectionHeader title={result.baslik} subtitle={`${formatTrDate(result.tarih)} · ${result.tur}`} />
 
       {result.labSatirlari && result.labSatirlari.length > 0 ? (
-        <SoftPanel style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead>
-              <tr style={{ textAlign: 'left', color: 'var(--sg-muted)', fontSize: 12 }}>
-                <th style={{ padding: '8px 6px' }}>Test</th>
-                <th style={{ padding: '8px 6px' }}>Değer</th>
-                <th style={{ padding: '8px 6px' }}>Referans</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.labSatirlari.map((row) => (
-                <tr key={row.test} style={{ borderTop: '1px solid var(--sg-line)' }}>
-                  <td style={{ padding: '10px 6px', fontWeight: 700 }}>{row.test}</td>
-                  <td
-                    style={{
-                      padding: '10px 6px',
-                      color: row.anormal ? 'var(--sg-warn)' : 'inherit',
-                      fontWeight: row.anormal ? 800 : 600,
-                    }}
-                  >
-                    {row.deger} {row.birim}
-                  </td>
-                  <td style={{ padding: '10px 6px', color: 'var(--sg-muted)' }}>{row.referans}</td>
+        <SoftPanel>
+          <div className="sg-lab-table-wrap">
+            <table className="sg-lab-table">
+              <thead>
+                <tr style={{ textAlign: 'left', color: 'var(--sg-muted)', fontSize: 12 }}>
+                  <th style={{ padding: '10px 8px' }}>Test</th>
+                  <th style={{ padding: '10px 8px' }}>Değer</th>
+                  <th style={{ padding: '10px 8px' }}>Referans</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {result.labSatirlari.map((row) => (
+                  <tr key={row.test} style={{ borderTop: '1px solid var(--sg-line)' }}>
+                    <td style={{ padding: '12px 8px', fontWeight: 700 }}>{row.test}</td>
+                    <td
+                      style={{
+                        padding: '12px 8px',
+                        color: row.anormal ? 'var(--sg-warn)' : 'inherit',
+                        fontWeight: row.anormal ? 800 : 600,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {row.deger} {row.birim}
+                    </td>
+                    <td style={{ padding: '12px 8px', color: 'var(--sg-muted)', whiteSpace: 'nowrap' }}>{row.referans}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </SoftPanel>
       ) : null}
 
@@ -141,7 +135,7 @@ export function ResultDetailView({
             <img
               src={result.gorselUrl}
               alt={result.modalite || 'Görüntüleme'}
-              style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: 'clamp(160px, 45vw, 220px)', objectFit: 'cover', display: 'block' }}
             />
           ) : null}
           {result.raporMetni ? (

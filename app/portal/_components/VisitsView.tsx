@@ -40,7 +40,7 @@ export function VisitDetailView({
       <>
         <SectionHeader title="Ziyaret özeti" />
         <EmptyState title="Ziyaret bulunamadı" body="Bu kayda erişilemiyor veya süresi dolmuş olabilir." />
-        <Link href={`${basePath}/ziyaretler`} style={{ display: 'inline-block', marginTop: 16, color: 'var(--sg-accent)', fontWeight: 700 }}>
+        <Link href={`${basePath}/ziyaretler`} className="sg-back-link" style={{ marginTop: 16 }}>
           ← Ziyaretlere dön
         </Link>
       </>
@@ -58,7 +58,7 @@ export function VisitDetailView({
 
   return (
     <div className="sg-fade">
-      <Link href={`${basePath}/ziyaretler`} style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-accent)' }}>
+      <Link href={`${basePath}/ziyaretler`} className="sg-back-link">
         ← Ziyaretler
       </Link>
       <SectionHeader

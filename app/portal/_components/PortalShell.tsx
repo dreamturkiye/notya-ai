@@ -24,46 +24,19 @@ export function PortalShell({
   const pathname = usePathname() || ''
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          backdropFilter: 'blur(14px)',
-          background: 'rgba(244, 241, 234, 0.88)',
-          borderBottom: '1px solid var(--sg-line)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 960,
-            margin: '0 auto',
-            padding: '14px 20px 0',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-          }}
-        >
+    <div className="sg-shell">
+      <header className="sg-header">
+        <div className="sg-header-inner">
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-            <Link href={basePath} style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <Link href={basePath} style={{ display: 'flex', alignItems: 'baseline', gap: 8, minHeight: 40 }}>
               <span className="sg-display" style={{ fontSize: 22, color: 'var(--sg-accent)' }}>
                 Notya
               </span>
               <span style={{ color: 'var(--sg-muted)', fontSize: 14, fontWeight: 600 }}>· Sağlığım</span>
             </Link>
-            <span style={{ fontSize: 12, color: 'var(--sg-muted)' }}>Hasta alanı</span>
+            <span style={{ fontSize: 12, color: 'var(--sg-muted)', flexShrink: 0 }}>Hasta alanı</span>
           </div>
-          <nav
-            style={{
-              display: 'flex',
-              gap: 4,
-              overflowX: 'auto',
-              paddingBottom: 10,
-              WebkitOverflowScrolling: 'touch',
-            }}
-            aria-label="Sağlığım bölümleri"
-          >
+          <nav className="sg-nav" aria-label="Sağlığım bölümleri">
             {NAV.map((item) => {
               const href = `${basePath}${item.path}`
               const active =
@@ -71,21 +44,7 @@ export function PortalShell({
                   ? pathname === basePath || pathname === `${basePath}/`
                   : pathname === href || pathname.startsWith(`${href}/`)
               return (
-                <Link
-                  key={item.key}
-                  href={href}
-                  style={{
-                    flex: '0 0 auto',
-                    padding: '8px 14px',
-                    borderRadius: 999,
-                    fontSize: 13,
-                    fontWeight: 700,
-                    letterSpacing: '0.01em',
-                    color: active ? 'var(--sg-accent-ink)' : 'var(--sg-muted)',
-                    background: active ? 'var(--sg-accent-soft)' : 'transparent',
-                    transition: 'background 0.2s ease, color 0.2s ease',
-                  }}
-                >
+                <Link key={item.key} href={href} className={`sg-nav-link${active ? ' is-active' : ''}`}>
                   {item.label}
                 </Link>
               )
@@ -93,18 +52,8 @@ export function PortalShell({
           </nav>
         </div>
       </header>
-      <main style={{ flex: 1, maxWidth: 960, width: '100%', margin: '0 auto', padding: '8px 20px 48px' }}>
-        {children}
-      </main>
-      <footer
-        style={{
-          borderTop: '1px solid var(--sg-line)',
-          padding: '18px 20px 28px',
-          textAlign: 'center',
-          fontSize: 12,
-          color: 'var(--sg-muted)',
-        }}
-      >
+      <main className="sg-main">{children}</main>
+      <footer className="sg-footer">
         Notya · Sağlığım — kayıtlarınız doktorunuzla paylaşılır. Acil durumda 112&apos;yi arayın.
       </footer>
     </div>

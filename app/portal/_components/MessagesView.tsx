@@ -7,14 +7,15 @@ import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
 export function MessagesView({ data }: { data: PortalBundle }) {
   const [folder, setFolder] = useState<MessageFolder>('gelen')
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [threadOpen, setThreadOpen] = useState(false)
 
   const list = useMemo(
     () => data.messages.filter((m) => m.klasor === folder),
     [data.messages, folder]
   )
   const active: PortalMessage | null = useMemo(
-    () => data.messages.find((m) => m.id === activeId) || list[0] || null,
-    [data.messages, activeId, list]
+    () => data.messages.find((m) => m.id === activeId) || (!threadOpen ? null : list[0]) || null,
+    [data.messages, activeId, list, threadOpen]
   )
 
   if (!data.messages.length) {
@@ -35,27 +36,23 @@ export function MessagesView({ data }: { data: PortalBundle }) {
     { key: 'arsiv', label: 'Arşiv' },
   ]
 
+  // Desktop: keep a selected thread; mobile list-first until tapped
+  const desktopActive = active || list[0] || null
+  const shown = threadOpen ? active || list[0] : desktopActive
+
   return (
     <div className="sg-fade">
       <SectionHeader title="Mesajlar" subtitle="Doktorunuz ve klinik ekibinizle güvenli yazışmalar." />
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div className="sg-filter-row">
         {folders.map((f) => (
           <button
             key={f.key}
             type="button"
+            className={`sg-chip-btn${folder === f.key ? ' is-active' : ''}`}
             onClick={() => {
               setFolder(f.key)
               setActiveId(null)
-            }}
-            style={{
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px 14px',
-              borderRadius: 999,
-              fontWeight: 700,
-              fontSize: 13,
-              background: folder === f.key ? 'var(--sg-accent)' : 'var(--sg-surface)',
-              color: folder === f.key ? '#fff' : 'var(--sg-muted)',
+              setThreadOpen(false)
             }}
           >
             {f.label}
@@ -63,18 +60,21 @@ export function MessagesView({ data }: { data: PortalBundle }) {
         ))}
       </div>
 
-      <div className="sg-msg-grid">
-        <SoftPanel style={{ padding: 0, overflow: 'hidden' }}>
+      <div className={`sg-msg-grid${threadOpen ? ' is-thread-open' : ''}`}>
+        <SoftPanel className="sg-msg-list" style={{ padding: 0, overflow: 'hidden' }}>
           {list.length === 0 ? (
             <p style={{ margin: 0, padding: 18, color: 'var(--sg-muted)' }}>Bu klasör boş.</p>
           ) : (
             list.map((m) => {
-              const selected = active?.id === m.id
+              const selected = (activeId || (!threadOpen && desktopActive?.id)) === m.id
               return (
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => setActiveId(m.id)}
+                  onClick={() => {
+                    setActiveId(m.id)
+                    setThreadOpen(true)
+                  }}
                   style={{
                     display: 'block',
                     width: '100%',
@@ -82,12 +82,13 @@ export function MessagesView({ data }: { data: PortalBundle }) {
                     border: 'none',
                     borderBottom: '1px solid var(--sg-line)',
                     background: selected ? 'var(--sg-accent-soft)' : 'transparent',
-                    padding: '14px 16px',
+                    padding: '16px',
+                    minHeight: 64,
                     cursor: 'pointer',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <strong style={{ fontSize: 14 }}>{m.konu}</strong>
+                    <strong style={{ fontSize: 15, lineHeight: 1.35 }}>{m.konu}</strong>
                     {!m.okundu ? (
                       <span
                         style={{
@@ -95,31 +96,45 @@ export function MessagesView({ data }: { data: PortalBundle }) {
                           height: 8,
                           borderRadius: 99,
                           background: 'var(--sg-accent)',
-                          marginTop: 5,
+                          marginTop: 6,
                           flex: '0 0 auto',
                         }}
                       />
                     ) : null}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--sg-muted)', marginTop: 4 }}>{m.gonderen}</div>
-                  <div style={{ fontSize: 13, color: 'var(--sg-muted)', marginTop: 4 }}>{m.ozet}</div>
+                  <div style={{ fontSize: 13, color: 'var(--sg-muted)', marginTop: 4, lineHeight: 1.4 }}>{m.ozet}</div>
                 </button>
               )
             })
           )}
         </SoftPanel>
 
-        <SoftPanel>
-          {active ? (
+        <SoftPanel className="sg-msg-thread">
+          {shown ? (
             <>
-              <h2 className="sg-display" style={{ margin: '0 0 4px', fontSize: 22 }}>
-                {active.konu}
+              <button
+                type="button"
+                className="sg-msg-mobile-back sg-back-link"
+                onClick={() => setThreadOpen(false)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  marginBottom: 8,
+                  cursor: 'pointer',
+                }}
+              >
+                ← Gelen kutusu
+              </button>
+              <h2 className="sg-display" style={{ margin: '0 0 4px', fontSize: 'clamp(1.2rem, 4vw, 1.4rem)' }}>
+                {shown.konu}
               </h2>
               <p style={{ margin: 0, color: 'var(--sg-muted)', fontSize: 13 }}>
-                {active.gonderen} · {formatTrDate(active.tarih, true)}
+                {shown.gonderen} · {formatTrDate(shown.tarih, true)}
               </p>
               <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {active.mesajlar.map((msg) => (
+                {shown.mesajlar.map((msg) => (
                   <div
                     key={msg.id}
                     style={{
@@ -133,7 +148,7 @@ export function MessagesView({ data }: { data: PortalBundle }) {
                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--sg-accent)', marginBottom: 4 }}>
                       {msg.kimden}
                     </div>
-                    <div style={{ fontSize: 14, lineHeight: 1.5 }}>{msg.metin}</div>
+                    <div style={{ fontSize: 15, lineHeight: 1.5 }}>{msg.metin}</div>
                     <div style={{ fontSize: 11, color: 'var(--sg-muted)', marginTop: 6 }}>
                       {formatTrDate(msg.tarih, true)}
                     </div>
@@ -147,6 +162,7 @@ export function MessagesView({ data }: { data: PortalBundle }) {
                   borderTop: '1px solid var(--sg-line)',
                   color: 'var(--sg-muted)',
                   fontSize: 13,
+                  lineHeight: 1.45,
                 }}
               >
                 Yanıt yazma (demo): mesajlaşma API’si sonraki sürümde bağlanacak.

@@ -42,7 +42,7 @@ export function TrackingView({ data }: { data: PortalBundle }) {
           body="Son muayene vitalleri paylaşıldığında trendler burada oluşur."
         />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
+        <div className="sg-track-grid">
           <SoftPanel>
             <div style={{ fontWeight: 800, marginBottom: 8 }}>Tansiyon</div>
             <Sparkline values={t.tansiyon.map((x) => x.sistolik)} color="var(--sg-accent)" />

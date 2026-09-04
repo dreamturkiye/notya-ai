@@ -15,7 +15,9 @@ export function SectionHeader({
         alignItems: 'flex-end',
         justifyContent: 'space-between',
         gap: 16,
-        margin: '28px 0 16px',
+        margin: '20px 0 14px',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
       }}
     >
       <div>
@@ -49,7 +51,13 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
       <img
         src="/sagligim/calm-empty.jpg"
         alt=""
-        style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block', opacity: 0.92 }}
+        style={{
+          width: '100%',
+          height: 'clamp(120px, 28vw, 160px)',
+          objectFit: 'cover',
+          display: 'block',
+          opacity: 0.92,
+        }}
       />
       <div style={{ padding: '20px 22px 24px' }}>
         <h2 className="sg-display" style={{ margin: 0, fontSize: 22 }}>
@@ -83,7 +91,8 @@ export function ListRow({
         gap: 14,
         alignItems: 'flex-start',
         justifyContent: 'space-between',
-        padding: '16px 4px',
+        padding: '16px 2px',
+        minHeight: 56,
         borderBottom: '1px solid var(--sg-line)',
         transition: 'background 0.15s ease',
       }}
@@ -110,14 +119,23 @@ export function ListRow({
   return inner
 }
 
-export function SoftPanel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+export function SoftPanel({
+  children,
+  style,
+  className,
+}: {
+  children: React.ReactNode
+  style?: React.CSSProperties
+  className?: string
+}) {
   return (
     <div
+      className={className}
       style={{
         background: 'var(--sg-surface)',
         border: '1px solid var(--sg-line)',
         borderRadius: 'var(--sg-radius)',
-        padding: '18px 20px',
+        padding: '18px 16px',
         ...style,
       }}
     >
