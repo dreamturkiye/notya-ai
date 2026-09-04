@@ -478,7 +478,7 @@ body:has(.sagligim-root) {
   min-height: 46px;
   padding: 0 20px;
   background: #fff;
-  color: var(--sg-ink);
+  color: var(--sg-ink) !important;
   font-weight: 650;
   font-size: 14px;
   letter-spacing: 0.02em;
@@ -489,7 +489,7 @@ body:has(.sagligim-root) {
 
 .sg-hero-cta:hover {
   background: var(--sg-coral-soft);
-  color: var(--sg-coral-ink);
+  color: var(--sg-coral-ink) !important;
 }
 
 .sg-hero-cta-arrow {
