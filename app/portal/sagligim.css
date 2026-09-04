@@ -178,6 +178,68 @@ body:has(.sagligim-root) {
   -webkit-tap-highlight-color: rgba(47, 107, 93, 0.12);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sg-pin-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 20px 48px;
+  min-height: 50vh;
+}
+
+.sg-pin-input {
+  width: min(280px, 100%);
+  height: var(--sg-touch);
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--sg-line);
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--sg-font-ui);
+}
+
+.sg-pin-input:focus {
+  outline: 2px solid var(--sg-accent);
+  outline-offset: 2px;
+}
+
+.sg-pin-btn {
+  min-height: var(--sg-touch);
+  min-width: 160px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 14px;
+  background: var(--sg-accent);
+  color: #f7fffb;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: var(--sg-font-ui);
+  cursor: pointer;
+}
+
+.sg-pin-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Home */
 .sg-hero {
   position: relative;

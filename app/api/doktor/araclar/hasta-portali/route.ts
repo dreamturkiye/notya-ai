@@ -1,5 +1,6 @@
 import { createHmac } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { generatePortalPin, hashPortalPin, isValidPortalPin } from '@/lib/portal/pinAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,10 +29,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const { hastaId } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const hastaId = String((body as { hastaId?: string }).hastaId || '');
+    const customPin = String((body as { pin?: string }).pin || '').trim();
+
     if (!hastaId) {
       return Response.json(
         { hata: 'Hasta ID gereklidir.' },
+        { status: 400 }
+      );
+    }
+
+    if (customPin && !isValidPortalPin(customPin)) {
+      return Response.json(
+        { hata: 'PIN 6 haneli rakam olmalıdır.' },
         { status: 400 }
       );
     }
@@ -58,6 +69,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const plainPin = customPin || generatePortalPin();
+    let pinHash: string;
+    try {
+      pinHash = hashPortalPin(plainPin);
+    } catch {
+      return Response.json(
+        { hata: 'Portal yapılandırılmamış.' },
+        { status: 500 }
+      );
+    }
+
     const timestamp = Date.now();
     const hmac = createHmac('sha256', secret)
       .update(`${hastaId}${user.id}${timestamp}`)
@@ -74,6 +96,7 @@ export async function POST(request: Request) {
         patient_id: hastaId,
         expires_at: expiresAt,
         created_at: createdAt,
+        pin_hash: pinHash,
       }, {
         onConflict: 'token_hash'
       });
@@ -87,7 +110,12 @@ export async function POST(request: Request) {
 
     const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/portal/hasta/${hmac}`;
 
-    return Response.json({ portalUrl });
+    return Response.json({
+      portalUrl,
+      pin: plainPin,
+      expiresAt,
+      note: 'PIN yalnızca bir kez gösterilir. Hastaya link ile birlikte iletin.',
+    });
   } catch (err) {
     return Response.json(
       { hata: 'Beklenmeyen bir hata oluştu.' },

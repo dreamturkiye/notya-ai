@@ -7,6 +7,7 @@ export type PortalTokenRow = {
   patient_id: string
   doctor_id: string
   expires_at: string
+  pin_hash: string | null
 }
 
 export async function resolvePortalToken(
@@ -16,7 +17,7 @@ export async function resolvePortalToken(
   if (!token) return null
   const { data, error } = await sb
     .from('hasta_portal_tokens')
-    .select('patient_id, doctor_id, expires_at')
+    .select('patient_id, doctor_id, expires_at, pin_hash')
     .eq('token_hash', token)
     .gt('expires_at', new Date().toISOString())
     .maybeSingle()

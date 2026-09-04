@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 import { loadPortalMessages } from '@/lib/portal/messages'
+import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import type {
   PortalBundle,
   PortalMedication,
@@ -56,7 +57,7 @@ function parseBp(tansiyon: unknown): { sistolik: number; diastolik: number } | n
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { token: string } }
 ) {
   const token = params.token
@@ -76,7 +77,7 @@ export async function GET(
 
   const { data: tokenData, error: tokenError } = await sb
     .from('hasta_portal_tokens')
-    .select('patient_id, doctor_id, expires_at')
+    .select('patient_id, doctor_id, expires_at, pin_hash')
     .eq('token_hash', token)
     .gt('expires_at', new Date().toISOString())
     .maybeSingle()
@@ -84,6 +85,14 @@ export async function GET(
   if (tokenError || !tokenData) {
     return NextResponse.json({ error: 'Token bulunamadı veya süresi dolmuş' }, { status: 404 })
   }
+
+  const locked = requirePortalUnlock(request, token, {
+    patient_id: tokenData.patient_id as string,
+    doctor_id: tokenData.doctor_id as string,
+    expires_at: tokenData.expires_at as string,
+    pin_hash: (tokenData.pin_hash as string | null) ?? null,
+  })
+  if (locked) return locked
 
   const patientId = tokenData.patient_id as string
   const bundle: PortalBundle = emptyPortalBundle()

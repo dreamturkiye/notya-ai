@@ -1,4 +1,3 @@
-import { createHmac } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { sendResendEmail } from '@/lib/mail/resend'
@@ -24,8 +23,9 @@ async function patientEmail(sb: SupabaseClient, patientId: string): Promise<stri
 }
 
 /**
- * Prefer an existing unexpired portal token for this patient; otherwise mint a fresh 30-day link
- * (same HMAC scheme as /api/doktor/araclar/hasta-portali).
+ * Prefer an existing unexpired PIN-gated portal token for this patient.
+ * Does not auto-mint: a new link would create a PIN the patient never received.
+ * Doctor must create the link (and share PIN) via Hasta Portalı first.
  */
 export async function ensurePatientPortalUrl(
   sb: SupabaseClient,
@@ -34,10 +34,11 @@ export async function ensurePatientPortalUrl(
 ): Promise<string | null> {
   const { data: existing } = await sb
     .from('hasta_portal_tokens')
-    .select('token_hash, expires_at')
+    .select('token_hash, expires_at, pin_hash')
     .eq('doctor_id', doctorId)
     .eq('patient_id', patientId)
     .gt('expires_at', new Date().toISOString())
+    .not('pin_hash', 'is', null)
     .order('expires_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -46,27 +47,7 @@ export async function ensurePatientPortalUrl(
     return `${appBaseUrl()}/portal/hasta/${existing.token_hash}/mesajlar`
   }
 
-  const secret = process.env.PORTAL_TOKEN_SECRET
-  if (!secret) return null
-
-  const timestamp = Date.now()
-  const hmac = createHmac('sha256', secret)
-    .update(`${patientId}${doctorId}${timestamp}`)
-    .digest('hex')
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-
-  const { error } = await sb.from('hasta_portal_tokens').upsert(
-    {
-      token_hash: hmac,
-      doctor_id: doctorId,
-      patient_id: patientId,
-      expires_at: expiresAt,
-      created_at: new Date().toISOString(),
-    },
-    { onConflict: 'token_hash' }
-  )
-  if (error) return null
-  return `${appBaseUrl()}/portal/hasta/${hmac}/mesajlar`
+  return null
 }
 
 /**
@@ -88,7 +69,7 @@ export async function notifyPatientNewPracticeMessage(
     'Doktorunuz / klinik ekibiniz Sağlığım üzerinden size bir mesaj gönderdi.',
     '',
     'Mesaj içeriği güvenlik nedeniyle e-postada gösterilmez.',
-    'Okumak ve yanıtlamak için portalınıza girin:',
+    'Okumak ve yanıtlamak için portalınıza girin (doktorunuzun verdiği 6 haneli PIN gerekir):',
     portalUrl,
     '',
     'Acil durumda 112’yi veya muayenehaneyi arayın — portal mesajları acil değildir.',
@@ -99,7 +80,7 @@ export async function notifyPatientNewPracticeMessage(
   const html = `
     <p>Doktorunuz / klinik ekibiniz <strong>Sağlığım</strong> üzerinden size bir mesaj gönderdi.</p>
     <p>Mesaj içeriği güvenlik nedeniyle e-postada gösterilmez.</p>
-    <p><a href="${portalUrl}">Portalınıza girip mesajı okuyun</a></p>
+    <p><a href="${portalUrl}">Portalınıza girip mesajı okuyun</a> — doktorunuzun verdiği 6 haneli PIN gerekir.</p>
     <p style="color:#666;font-size:13px">Acil durumda 112’yi veya muayenehaneyi arayın — portal mesajları acil değildir.</p>
   `
 

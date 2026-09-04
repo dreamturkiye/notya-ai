@@ -40,7 +40,7 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/randevular` (NOTYA-RANDEVU-01, day view, shared with sekreter) | `/api/doktor/randevular[/id]`, `/api/doktor/calisma-saatleri` | randevular, doktor_calisma_saatleri, patients |
 | `/mesajlar` (Sağlığım practice inbox — doktor + sekreter) | `/api/doktor/mesajlar`, `/api/doktor/mesajlar/[konuId]`, `/api/doktor/mesajlar/unread-count` | hasta_mesaj_konulari, hasta_mesajlar |
 | `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |
-| Patient portal **Sağlığım** `/portal/hasta/[token]` (+ `/mesajlar`, `/ziyaretler[/id]`, `/sonuclar[/id]`, `/ilaclar`, `/gecmis`, `/takip`) | `/api/portal/hasta/[token]`, `/api/portal/hasta/[token]/mesajlar` → `PortalBundle` + send/reply | sessions/notes, hasta_ilaclar, labs/imaging, **hasta_mesaj_*** |
+| Patient portal **Sağlığım** `/portal/hasta/[token]` (+ `/mesajlar`, `/ziyaretler[/id]`, `/sonuclar[/id]`, `/ilaclar`, `/gecmis`, `/takip`) | `/api/portal/hasta/[token]`, `/unlock`, `/mesajlar` → PIN gate + `PortalBundle` + send/reply | sessions/notes, hasta_ilaclar, labs/imaging, **hasta_mesaj_***, **pin_hash** |
 | Patient portal **DEMO** `/portal/demo` (+ same section paths) | static `lib/portal/demoData.ts` (no PHI) | Reference UI — compose is demo-only |
 
 ### Sağlığım messaging + notifications

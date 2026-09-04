@@ -46,7 +46,7 @@ Last reviewed: 2026-09-01 (randevu sistemi #44 merged)
 | 2026-09-03 | **Klinik = Doktor aynalama karari** | Klinik vertikali bugun hasta/seans/not altyapisindan yoksun (Pabau + 10 sesli persona). Onerilen mimari: klinik hekimlerine doktor-vertikal hesabi acip klinige baglamak (personel modeli genisletmesi) - boylece SOAP motoru, Inceleme, dosya, ogrenme AYNEN gecerli olur; ayri kod tabani kopyalanmaz. Kaan karari bekliyor; karar sonrasi 1-2 odakli oturum. |
 | 2026-09-04 | **Resend + sender domain for Sağlığım patient mail** | Code is live (`lib/mail/resend.ts`, notify on practice reply). Needs `RESEND_API_KEY` + verified `RESEND_FROM_EMAIL` on Vercel **after domain is fixed**. Without it, patient e-mail notifies silently skip. |
 | 2026-09-04 | **Sağlığım portal visual redesign (agency-grade)** | Current UI is functional IA + calm shell, not a paid design system. Founder feedback: not $3k-caliber. Needs a deliberate redesign pass (references, typography/layout craft) before selling as premium patient experience. |
-| 2026-09-04 | **Sağlığım portal access gate (PIN/OTP)** | Today: bearer link only (30-day token). Health data warrants a second factor — recommend SMS/e-posta OTP or doctor-set PIN at link creation. Awaiting product choice before build. |
+| 2026-09-04 | **Sağlığım SMS/e-posta OTP (stronger access gate)** | 6-digit doctor PIN shipped. OTP each session (Epic-like) waits on domain + Resend/SMS. Build after domain is fixed. |
 
 ## CANLI OTURUM TO-DO (Dr. Gökhan) — 2026-09-03 itibarıyla açık defter
 Kural: canlı oturum sırasında gözlemlenen HER şey (hata, sürtünme, istek, fikir) anında buraya işlenir; oturum sonrası önceliklendirilir. Çözülen kalemin durumuna [x] konur.

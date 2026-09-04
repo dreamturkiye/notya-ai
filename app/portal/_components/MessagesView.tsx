@@ -54,6 +54,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
       const res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       })
       const json = await res.json()

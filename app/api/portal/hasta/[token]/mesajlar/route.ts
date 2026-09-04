@@ -6,6 +6,7 @@ import {
   resolvePortalToken,
 } from '@/lib/portal/messages'
 import { pingDoctorNewMessage } from '@/lib/portal/notifyPractice'
+import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ function sb() {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { token: string } }
 ) {
   const client = sb()
@@ -25,6 +26,9 @@ export async function GET(
 
   const tok = await resolvePortalToken(client, params.token)
   if (!tok) return NextResponse.json({ error: 'Token bulunamadı veya süresi dolmuş' }, { status: 404 })
+
+  const locked = requirePortalUnlock(req, params.token, tok)
+  if (locked) return locked
 
   const messages = await loadPortalMessages(client, tok.patient_id)
   return NextResponse.json({ messages })
@@ -39,6 +43,9 @@ export async function POST(
 
   const tok = await resolvePortalToken(client, params.token)
   if (!tok) return NextResponse.json({ error: 'Token bulunamadı veya süresi dolmuş' }, { status: 404 })
+
+  const locked = requirePortalUnlock(req, params.token, tok)
+  if (locked) return locked
 
   let body: { konuId?: string; konu?: string; metin?: string }
   try {
