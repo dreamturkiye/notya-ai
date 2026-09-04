@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { PortalBundle } from '@/lib/portal/types'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 
@@ -9,6 +9,9 @@ type LiveState = {
   error: string | null
   data: PortalBundle
   basePath: string
+  token: string
+  refresh: () => Promise<void>
+  setData: (data: PortalBundle) => void
 }
 
 const Ctx = createContext<LiveState | null>(null)
@@ -31,16 +34,20 @@ export function PortalLiveProvider({
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<PortalBundle>(emptyPortalBundle())
 
+  const refresh = useCallback(async () => {
+    const res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}`)
+    const json = await res.json()
+    if (!res.ok) throw new Error(json?.error || 'Portal yüklenemedi')
+    setData(json as PortalBundle)
+  }, [token])
+
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}`)
-        const json = await res.json()
-        if (!res.ok) throw new Error(json?.error || 'Portal yüklenemedi')
-        if (!cancelled) setData(json as PortalBundle)
+        await refresh()
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Portal yüklenemedi')
       } finally {
@@ -50,9 +57,11 @@ export function PortalLiveProvider({
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [refresh])
 
-  return <Ctx.Provider value={{ loading, error, data, basePath }}>{children}</Ctx.Provider>
+  return (
+    <Ctx.Provider value={{ loading, error, data, basePath, token, refresh, setData }}>{children}</Ctx.Provider>
+  )
 }
 
 export function LiveGate({ children }: { children: React.ReactNode }) {

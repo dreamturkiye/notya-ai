@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
+import { loadPortalMessages } from '@/lib/portal/messages'
 import type {
   PortalBundle,
   PortalMedication,
@@ -274,19 +275,28 @@ export async function GET(
       .join(' · ')
   }
 
-  // Messages / history remain empty until backends exist
-  bundle.messages = []
+  // Messages from DB
+  const messages = await loadPortalMessages(sb, patientId)
+  bundle.messages = messages
   bundle.history = emptyPortalBundle().history
 
   // Summary chips
   const aktifIlac = medications.filter((m) => m.aktif).length
   const lastLab = results.find((r) => r.tur === 'laboratuvar')
+  const unreadMsgs = messages.filter((m) => !m.okundu).length
   bundle.summary = {
     aktifIlac,
-    bekleyenMesaj: 0,
+    bekleyenMesaj: unreadMsgs,
     sonLabOzet: lastLab?.ozet || 'Henüz lab sonucu yok',
     yaklasanKontrol: null,
     sonAktivite: [
+      ...messages.slice(0, 2).map((m) => ({
+        id: `m-${m.id}`,
+        tur: 'mesaj' as const,
+        baslik: `Mesaj: ${m.konu}`,
+        tarih: m.tarih,
+        href: 'mesajlar',
+      })),
       ...visits.slice(0, 2).map((v) => ({
         id: `v-${v.id}`,
         tur: 'ziyaret' as const,

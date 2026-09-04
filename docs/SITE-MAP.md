@@ -38,15 +38,16 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/entegrasyonlar` | `/api/doktor/integrations[/provider]` | doctor_integrations |
 | `/doktor-tools/*` (icd10, erecete, epikriz, ilac-interaksiyon, sgk-rapor, hasta-portali, tetkik, enabiz, sgk-medula, hatirlatma) | `/api/doktor/araclar/*`, `/api/doktor/sgk`, `/api/doktor/hatirlatma` | notes, hasta_hatirlatma, hasta_portal_tokens |
 | `/randevular` (NOTYA-RANDEVU-01, day view, shared with sekreter) | `/api/doktor/randevular[/id]`, `/api/doktor/calisma-saatleri` | randevular, doktor_calisma_saatleri, patients |
+| `/mesajlar` (Sağlığım practice inbox — doktor + sekreter) | `/api/doktor/mesajlar`, `/api/doktor/mesajlar/[konuId]`, `/api/doktor/mesajlar/unread-count` | hasta_mesaj_konulari, hasta_mesajlar |
 | `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |
-| Patient portal **Sağlığım** `/portal/hasta/[token]` (+ `/mesajlar`, `/ziyaretler[/id]`, `/sonuclar[/id]`, `/ilaclar`, `/gecmis`, `/takip`) | `/api/portal/hasta/[token]` → `PortalBundle` JSON | sessions/notes, hasta_ilaclar, hasta_lab_sonuclari, hasta_goruntulemeler; messages/history empty until backends ship |
-| Patient portal **DEMO** `/portal/demo` (+ same section paths) | static `lib/portal/demoData.ts` (no PHI) | Reference-grade Sağlığım UI — Safari: https://notya-ai.vercel.app/portal/demo |
+| Patient portal **Sağlığım** `/portal/hasta/[token]` (+ `/mesajlar`, `/ziyaretler[/id]`, `/sonuclar[/id]`, `/ilaclar`, `/gecmis`, `/takip`) | `/api/portal/hasta/[token]`, `/api/portal/hasta/[token]/mesajlar` → `PortalBundle` + send/reply | sessions/notes, hasta_ilaclar, labs/imaging, **hasta_mesaj_*** |
+| Patient portal **DEMO** `/portal/demo` (+ same section paths) | static `lib/portal/demoData.ts` (no PHI) | Reference UI — compose is demo-only |
 
-### Sağlığım (patient shell)
-- Product name: **Sağlığım**; greeting (no first name): “Sağlık alanınıza hoş geldiniz.”
-- Light sage/paper shell overrides root dark body via `app/portal/layout.tsx` + `sagligim.css`.
-- Demo is the full IA reference; live token reuses the same components and wires visits/meds/labs/imaging where data exists.
-- Out of scope this ship: billing, scheduling, proxy accounts, real messaging persistence, DICOM viewer.
+### Sağlığım messaging + notifications
+- Shared practice inbox (Option D): doktor + sekreter see the same queue via `pratikOturum`.
+- Patient send → auto-ack klinik message + `okundu_pratik=false` → optional WhatsApp ping to doctor (`users.whatsapp_number` if enabled), **no PHI**, throttled 30 min via `users.mesaj_ping_at`.
+- In-app badge: DoktorNav → Mesajlar `(n)` from `/api/doktor/mesajlar/unread-count`.
+- Patient copy: non-urgent disclaimer; acil → 112.
 
 ### Env gotcha — Hasta Portalı “Portal yapılandırılmamış.”
 - `PORTAL_TOKEN_SECRET` must exist on the **same Vercel environment** as the deploy you are testing.

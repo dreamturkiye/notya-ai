@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
   { label: "Ana Sayfa", route: "/dashboard/doktor", color: "#0F9B8E", hideOnMobile: true, sadeceDoktor: true },
   { label: "Randevular", route: "/dashboard/doktor/randevular", color: "#0F9B8E" },
   { label: "Hastalar", route: "/dashboard/doktor/hastalar", color: "#14B8A6" },
+  { label: "Mesajlar", route: "/dashboard/doktor/mesajlar", color: "#0D9488" },
   { label: "Raporlar", route: "/dashboard/doktor/raporlar", color: "#334155", sadeceDoktor: true },
   { label: "Araçlar", route: "/doktor-tools", color: "#166534", sadeceDoktor: true },
   { label: "⚙ Ayarlar", route: "/dashboard/doktor/ayarlar", color: "rgba(255,255,255,0.12)", sadeceDoktor: true },
@@ -38,6 +39,7 @@ export default function DoktorNav() {
   // /api/personel/me confirms a sekreter session — never the other way around, which would
   // flash clinical items before hiding them.
   const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
+  const [mesajUnread, setMesajUnread] = useState(0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -54,6 +56,13 @@ export default function DoktorNav() {
         const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
         if (r.ok) { const d = await r.json(); if (d.rol === 'sekreter') setRol('sekreter'); }
       } catch { /* stays 'doktor' on failure — least surprising default */ }
+      try {
+        const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
+        if (r.ok) {
+          const d = await r.json();
+          setMesajUnread(Number(d.unreadCount) || 0);
+        }
+      } catch { /* badge stays 0 */ }
     })();
   }, []);
 
@@ -117,6 +126,7 @@ export default function DoktorNav() {
                 }}
               >
                 {item.label}
+                {item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? ` (${mesajUnread})` : ''}
               </button>
             ))}
           </div>
@@ -140,6 +150,7 @@ export default function DoktorNav() {
                 }}
               >
                 {item.label}
+                {item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? ` (${mesajUnread})` : ''}
               </button>
             ))}
             <button
@@ -172,6 +183,7 @@ export default function DoktorNav() {
               }}
             >
               {item.label}
+              {item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? ` (${mesajUnread})` : ''}
             </button>
           ))}
         </div>

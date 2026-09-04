@@ -1,34 +1,41 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
 import type { MessageFolder, PortalBundle, PortalMessage } from '@/lib/portal/types'
+import { COMPOSE_DISCLAIMER } from '@/lib/portal/messageCopy'
 import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
 
-export function MessagesView({ data }: { data: PortalBundle }) {
+type Props = {
+  data: PortalBundle
+  /** Live portal token — enables real compose/send. Demo omits this. */
+  token?: string
+  onMessagesUpdated?: (messages: PortalMessage[]) => void
+}
+
+export function MessagesView({ data, token, onMessagesUpdated }: Props) {
   const [folder, setFolder] = useState<MessageFolder>('gelen')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [threadOpen, setThreadOpen] = useState(false)
+  const [composeOpen, setComposeOpen] = useState(false)
+  const [draftKonu, setDraftKonu] = useState('')
+  const [draftMetin, setDraftMetin] = useState('')
+  const [replyMetin, setReplyMetin] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [localMessages, setLocalMessages] = useState<PortalMessage[] | null>(null)
+
+  const messages = localMessages || data.messages
+  const canSend = Boolean(token)
 
   const list = useMemo(
-    () => data.messages.filter((m) => m.klasor === folder),
-    [data.messages, folder]
+    () => messages.filter((m) => m.klasor === folder),
+    [messages, folder]
   )
   const active: PortalMessage | null = useMemo(
-    () => data.messages.find((m) => m.id === activeId) || (!threadOpen ? null : list[0]) || null,
-    [data.messages, activeId, list, threadOpen]
+    () => messages.find((m) => m.id === activeId) || (!threadOpen ? null : list[0]) || null,
+    [messages, activeId, list, threadOpen]
   )
-
-  if (!data.messages.length) {
-    return (
-      <>
-        <SectionHeader title="Mesajlar" subtitle="Doktorunuz ve klinik ekibinizle güvenli yazışmalar." />
-        <EmptyState
-          title="Henüz mesaj yok"
-          body="Doktorunuz bir not paylaştığında veya size yazdığında burada görünecek."
-        />
-      </>
-    )
-  }
 
   const folders: Array<{ key: MessageFolder; label: string }> = [
     { key: 'gelen', label: 'Gelen' },
@@ -36,143 +43,285 @@ export function MessagesView({ data }: { data: PortalBundle }) {
     { key: 'arsiv', label: 'Arşiv' },
   ]
 
-  // Desktop: keep a selected thread; mobile list-first until tapped
   const desktopActive = active || list[0] || null
   const shown = threadOpen ? active || list[0] : desktopActive
 
+  async function postMessage(payload: { konuId?: string; konu?: string; metin: string }) {
+    if (!token) return
+    setSending(true)
+    setSendError(null)
+    try {
+      const res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || 'Gönderilemedi')
+      const next = (json.messages || []) as PortalMessage[]
+      setLocalMessages(next)
+      onMessagesUpdated?.(next)
+      if (json.konuId) {
+        setActiveId(json.konuId)
+        setThreadOpen(true)
+        setFolder('gonderilen')
+      }
+      setDraftKonu('')
+      setDraftMetin('')
+      setReplyMetin('')
+      setComposeOpen(false)
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : 'Gönderilemedi')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const empty = !messages.length
+
   return (
     <div className="sg-fade">
-      <SectionHeader title="Mesajlar" subtitle="Doktorunuz ve klinik ekibinizle güvenli yazışmalar." />
-      <div className="sg-filter-row">
-        {folders.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            className={`sg-chip-btn${folder === f.key ? ' is-active' : ''}`}
-            onClick={() => {
-              setFolder(f.key)
-              setActiveId(null)
-              setThreadOpen(false)
-            }}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <SectionHeader
+        title="Mesajlar"
+        subtitle="Doktorunuz ve klinik ekibinizle güvenli yazışmalar."
+        action={
+          canSend ? (
+            <button
+              type="button"
+              className="sg-chip-btn is-active"
+              onClick={() => {
+                setComposeOpen(true)
+                setThreadOpen(false)
+              }}
+            >
+              Yeni mesaj
+            </button>
+          ) : null
+        }
+      />
 
-      <div className={`sg-msg-grid${threadOpen ? ' is-thread-open' : ''}`}>
-        <SoftPanel className="sg-msg-list" style={{ padding: 0, overflow: 'hidden' }}>
-          {list.length === 0 ? (
-            <p style={{ margin: 0, padding: 18, color: 'var(--sg-muted)' }}>Bu klasör boş.</p>
-          ) : (
-            list.map((m) => {
-              const selected = (activeId || (!threadOpen && desktopActive?.id)) === m.id
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveId(m.id)
-                    setThreadOpen(true)
-                  }}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    textAlign: 'left',
-                    border: 'none',
-                    borderBottom: '1px solid var(--sg-line)',
-                    background: selected ? 'var(--sg-accent-soft)' : 'transparent',
-                    padding: '16px',
-                    minHeight: 64,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
-                    <strong style={{ fontSize: 15, lineHeight: 1.35, overflowWrap: 'anywhere' }}>{m.konu}</strong>
-                    {!m.okundu ? (
-                      <span
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: 99,
-                          background: 'var(--sg-accent)',
-                          marginTop: 6,
-                          flex: '0 0 auto',
-                        }}
-                      />
-                    ) : null}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--sg-muted)', marginTop: 4 }}>{m.gonderen}</div>
-                  <div style={{ fontSize: 13, color: 'var(--sg-muted)', marginTop: 4, lineHeight: 1.4 }}>{m.ozet}</div>
-                </button>
-              )
-            })
-          )}
+      {composeOpen && canSend ? (
+        <SoftPanel style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 800, marginBottom: 10 }}>Yeni mesaj</div>
+          <input
+            value={draftKonu}
+            onChange={(e) => setDraftKonu(e.target.value)}
+            placeholder="Konu"
+            style={inputStyle}
+          />
+          <textarea
+            value={draftMetin}
+            onChange={(e) => setDraftMetin(e.target.value)}
+            placeholder="Mesajınız…"
+            rows={4}
+            style={{ ...inputStyle, marginTop: 8, resize: 'vertical', minHeight: 96 }}
+          />
+          <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--sg-muted)', lineHeight: 1.45 }}>
+            {COMPOSE_DISCLAIMER}
+          </p>
+          {sendError ? (
+            <p style={{ margin: '8px 0 0', color: 'var(--sg-warn)', fontSize: 13 }}>{sendError}</p>
+          ) : null}
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="sg-chip-btn is-active"
+              disabled={sending || !draftMetin.trim()}
+              onClick={() => postMessage({ konu: draftKonu.trim() || undefined, metin: draftMetin.trim() })}
+            >
+              {sending ? 'Gönderiliyor…' : 'Gönder'}
+            </button>
+            <button type="button" className="sg-chip-btn" onClick={() => setComposeOpen(false)}>
+              Vazgeç
+            </button>
+          </div>
         </SoftPanel>
+      ) : null}
 
-        <SoftPanel className="sg-msg-thread">
-          {shown ? (
-            <>
+      {empty && !composeOpen ? (
+        <EmptyState
+          title="Henüz mesaj yok"
+          body={
+            canSend
+              ? 'Doktorunuza güvenli bir mesaj göndererek başlayabilirsiniz.'
+              : 'Doktorunuz bir not paylaştığında veya size yazdığında burada görünecek.'
+          }
+        />
+      ) : null}
+
+      {!empty ? (
+        <>
+          <div className="sg-filter-row">
+            {folders.map((f) => (
               <button
+                key={f.key}
                 type="button"
-                className="sg-msg-mobile-back sg-back-link"
-                onClick={() => setThreadOpen(false)}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  padding: 0,
-                  marginBottom: 8,
-                  cursor: 'pointer',
+                className={`sg-chip-btn${folder === f.key ? ' is-active' : ''}`}
+                onClick={() => {
+                  setFolder(f.key)
+                  setActiveId(null)
+                  setThreadOpen(false)
                 }}
               >
-                ← Gelen kutusu
+                {f.label}
               </button>
-              <h2 className="sg-display" style={{ margin: '0 0 4px', fontSize: 'clamp(1.2rem, 4vw, 1.4rem)' }}>
-                {shown.konu}
-              </h2>
-              <p style={{ margin: 0, color: 'var(--sg-muted)', fontSize: 13 }}>
-                {shown.gonderen} · {formatTrDate(shown.tarih, true)}
-              </p>
-              <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {shown.mesajlar.map((msg) => (
-                  <div
-                    key={msg.id}
+            ))}
+          </div>
+
+          <div className={`sg-msg-grid${threadOpen ? ' is-thread-open' : ''}`}>
+            <SoftPanel className="sg-msg-list" style={{ padding: 0, overflow: 'hidden' }}>
+              {list.length === 0 ? (
+                <p style={{ margin: 0, padding: 18, color: 'var(--sg-muted)' }}>Bu klasör boş.</p>
+              ) : (
+                list.map((m) => {
+                  const selected = (activeId || (!threadOpen && desktopActive?.id)) === m.id
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveId(m.id)
+                        setThreadOpen(true)
+                      }}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        textAlign: 'left',
+                        border: 'none',
+                        borderBottom: '1px solid var(--sg-line)',
+                        background: selected ? 'var(--sg-accent-soft)' : 'transparent',
+                        padding: '16px',
+                        minHeight: 64,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                        <strong style={{ fontSize: 15, lineHeight: 1.35, overflowWrap: 'anywhere' }}>{m.konu}</strong>
+                        {!m.okundu ? (
+                          <span
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: 99,
+                              background: 'var(--sg-accent)',
+                              marginTop: 6,
+                              flex: '0 0 auto',
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--sg-muted)', marginTop: 4 }}>{m.gonderen}</div>
+                      <div style={{ fontSize: 13, color: 'var(--sg-muted)', marginTop: 4, lineHeight: 1.4 }}>{m.ozet}</div>
+                    </button>
+                  )
+                })
+              )}
+            </SoftPanel>
+
+            <SoftPanel className="sg-msg-thread">
+              {shown ? (
+                <>
+                  <button
+                    type="button"
+                    className="sg-msg-mobile-back sg-back-link"
+                    onClick={() => setThreadOpen(false)}
                     style={{
-                      alignSelf: msg.taraf === 'hasta' ? 'flex-end' : 'flex-start',
-                      maxWidth: '92%',
-                      padding: '12px 14px',
-                      borderRadius: 14,
-                      background: msg.taraf === 'hasta' ? 'var(--sg-accent-soft)' : 'rgba(28,43,36,0.04)',
+                      border: 'none',
+                      background: 'transparent',
+                      padding: 0,
+                      marginBottom: 8,
+                      cursor: 'pointer',
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--sg-accent)', marginBottom: 4 }}>
-                      {msg.kimden}
-                    </div>
-                    <div style={{ fontSize: 15, lineHeight: 1.5 }}>{msg.metin}</div>
-                    <div style={{ fontSize: 11, color: 'var(--sg-muted)', marginTop: 6 }}>
-                      {formatTrDate(msg.tarih, true)}
-                    </div>
+                    ← Gelen kutusu
+                  </button>
+                  <h2 className="sg-display" style={{ margin: '0 0 4px', fontSize: 'clamp(1.2rem, 4vw, 1.4rem)' }}>
+                    {shown.konu}
+                  </h2>
+                  <p style={{ margin: 0, color: 'var(--sg-muted)', fontSize: 13 }}>
+                    {shown.gonderen} · {formatTrDate(shown.tarih, true)}
+                  </p>
+                  <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {shown.mesajlar.map((msg) => (
+                      <div
+                        key={msg.id}
+                        style={{
+                          alignSelf: msg.taraf === 'hasta' ? 'flex-end' : 'flex-start',
+                          maxWidth: '92%',
+                          padding: '12px 14px',
+                          borderRadius: 14,
+                          background: msg.taraf === 'hasta' ? 'var(--sg-accent-soft)' : 'rgba(28,43,36,0.04)',
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--sg-accent)', marginBottom: 4 }}>
+                          {msg.kimden}
+                        </div>
+                        <div style={{ fontSize: 15, lineHeight: 1.5 }}>{msg.metin}</div>
+                        <div style={{ fontSize: 11, color: 'var(--sg-muted)', marginTop: 6 }}>
+                          {formatTrDate(msg.tarih, true)}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div
-                style={{
-                  marginTop: 18,
-                  paddingTop: 14,
-                  borderTop: '1px solid var(--sg-line)',
-                  color: 'var(--sg-muted)',
-                  fontSize: 13,
-                  lineHeight: 1.45,
-                }}
-              >
-                Yanıt yazma (demo): mesajlaşma API’si sonraki sürümde bağlanacak.
-              </div>
-            </>
-          ) : (
-            <p style={{ margin: 0, color: 'var(--sg-muted)' }}>Bir konuşma seçin.</p>
-          )}
-        </SoftPanel>
-      </div>
+
+                  {canSend ? (
+                    <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--sg-line)' }}>
+                      <textarea
+                        value={replyMetin}
+                        onChange={(e) => setReplyMetin(e.target.value)}
+                        placeholder="Yanıt yazın…"
+                        rows={3}
+                        style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
+                      />
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--sg-muted)' }}>{COMPOSE_DISCLAIMER}</p>
+                      {sendError ? (
+                        <p style={{ margin: '8px 0 0', color: 'var(--sg-warn)', fontSize: 13 }}>{sendError}</p>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="sg-chip-btn is-active"
+                        style={{ marginTop: 10 }}
+                        disabled={sending || !replyMetin.trim()}
+                        onClick={() => postMessage({ konuId: shown.id, metin: replyMetin.trim() })}
+                      >
+                        {sending ? 'Gönderiliyor…' : 'Yanıtla'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        marginTop: 18,
+                        paddingTop: 14,
+                        borderTop: '1px solid var(--sg-line)',
+                        color: 'var(--sg-muted)',
+                        fontSize: 13,
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      Demo önizleme — gerçek gönderim için hasta portal linkinizi kullanın.
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p style={{ margin: 0, color: 'var(--sg-muted)' }}>Bir konuşma seçin.</p>
+              )}
+            </SoftPanel>
+          </div>
+        </>
+      ) : null}
     </div>
   )
+}
+
+const inputStyle: CSSProperties = {
+  width: '100%',
+  display: 'block',
+  boxSizing: 'border-box',
+  border: '1px solid var(--sg-line)',
+  borderRadius: 12,
+  padding: '12px 14px',
+  fontSize: 16,
+  fontFamily: 'inherit',
+  background: '#fff',
+  color: 'var(--sg-ink)',
 }
