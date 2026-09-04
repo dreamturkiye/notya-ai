@@ -49,8 +49,8 @@ export function VisitDetailView({
 
   const blocks: Array<{ label: string; text?: string }> = [
     { label: 'Başvuru nedeni', text: visit.basvuruNedeni },
-    { label: 'Subjektif', text: visit.subjektif },
-    { label: 'Objektif', text: visit.objektif },
+    { label: 'Anamnez', text: visit.subjektif },
+    { label: 'Fizik muayene', text: visit.objektif },
     { label: 'Değerlendirme', text: visit.degerlendirme },
     { label: 'Plan', text: visit.plan },
     { label: 'Takip', text: visit.takip },
