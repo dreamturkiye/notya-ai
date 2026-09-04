@@ -649,14 +649,21 @@ body:has(.sagligim-root) {
 }
 
 .sg-activity-panel {
-  padding: 4px 16px !important;
+  padding: 16px !important;
   background: var(--sg-surface);
   border: 1px solid var(--sg-line);
+  text-align: left;
+}
+
+.sg-activity-heading {
+  margin: 0 0 4px;
+  font-size: clamp(1.25rem, 4vw, 1.45rem);
+  text-align: left;
 }
 
 .sg-activity-empty {
   margin: 0;
-  padding: 12px 0;
+  padding: 12px 0 0;
   color: var(--sg-muted);
   text-align: left;
 }
@@ -672,8 +679,9 @@ body:has(.sagligim-root) {
   text-align: left;
 }
 
-.sg-activity-row:first-child {
-  border-top: none;
+.sg-activity-row:first-of-type {
+  border-top: 1px solid var(--sg-line);
+  margin-top: 8px;
 }
 
 .sg-activity-main {
