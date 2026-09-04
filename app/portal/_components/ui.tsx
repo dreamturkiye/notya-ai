@@ -12,12 +12,11 @@ export function SectionHeader({
       className="sg-fade"
       style={{
         display: 'flex',
-        alignItems: 'flex-end',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         gap: 16,
         margin: '20px 0 14px',
         flexWrap: 'wrap',
-        alignItems: 'flex-start',
       }}
     >
       <div>
