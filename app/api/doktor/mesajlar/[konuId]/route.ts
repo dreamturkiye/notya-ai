@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
+import { notifyPatientNewPracticeMessage } from '@/lib/portal/notifyPatientEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,7 +95,7 @@ export async function POST(
 
   const { data: konu } = await supabase
     .from('hasta_mesaj_konulari')
-    .select('id')
+    .select('id, patient_id')
     .eq('id', params.konuId)
     .eq('doctor_id', doktorId)
     .maybeSingle()
@@ -119,6 +120,15 @@ export async function POST(
       pratik_arsiv: false,
     })
     .eq('id', konu.id)
+
+  try {
+    await notifyPatientNewPracticeMessage(supabase, {
+      doctorId: doktorId,
+      patientId: konu.patient_id,
+    })
+  } catch {
+    /* never fail the reply on mail errors */
+  }
 
   return NextResponse.json({ ok: true })
 }

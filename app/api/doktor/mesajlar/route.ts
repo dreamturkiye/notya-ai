@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
+import { notifyPatientNewPracticeMessage } from '@/lib/portal/notifyPatientEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -133,6 +134,15 @@ export async function POST(req: NextRequest) {
     yazar_user_id: user.id,
     metin,
   })
+
+  try {
+    await notifyPatientNewPracticeMessage(supabase, {
+      doctorId: doktorId,
+      patientId,
+    })
+  } catch {
+    /* never fail send on mail errors */
+  }
 
   return NextResponse.json({ ok: true, konuId: created.id })
 }

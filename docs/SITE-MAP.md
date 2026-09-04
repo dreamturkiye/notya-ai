@@ -44,8 +44,9 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | Patient portal **DEMO** `/portal/demo` (+ same section paths) | static `lib/portal/demoData.ts` (no PHI) | Reference UI — compose is demo-only |
 
 ### Sağlığım messaging + notifications
-- Shared practice inbox (Option D): doktor + sekreter see the same queue via `pratikOturum`.
-- Patient send → auto-ack klinik message + `okundu_pratik=false` → optional WhatsApp ping to doctor (`users.whatsapp_number` if enabled), **no PHI**, throttled 30 min via `users.mesaj_ping_at`.
+- Shared practice inbox (Option D): doktor + sekreter see the same queue via `pratikOturum` (**in-app only** for practice).
+- Patient send → auto-ack klinik message + `okundu_pratik=false` → optional WhatsApp ping to doctor if `whatsapp_enabled` (no PHI, 30 min throttle).
+- Practice reply / new thread → **patient e-mail** via Resend (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`) — link to portal Mesajlar, **no message body**; skips if patient has no `email_encrypted` or Resend unset.
 - In-app badge: DoktorNav → Mesajlar `(n)` from `/api/doktor/mesajlar/unread-count`.
 - Patient copy: non-urgent disclaimer; acil → 112.
 
