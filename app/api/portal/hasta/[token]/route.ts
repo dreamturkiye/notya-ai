@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { decrypt } from '@/lib/security/encryption'
+import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
+import type {
+  PortalBundle,
+  PortalMedication,
+  PortalMedChange,
+  PortalResult,
+  PortalVisit,
+} from '@/lib/portal/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,53 +26,32 @@ type LabTest = {
   flag?: string
 }
 
-function firstNameFromEncrypted(nameEncrypted: string | null | undefined): string {
-  if (!nameEncrypted) return 'Hasta'
-  try {
-    const raw = decrypt(nameEncrypted)
-    const parsed = JSON.parse(raw) as { ad?: string }
-    const full = (parsed.ad || raw || '').trim()
-    if (!full) return 'Hasta'
-    return full.split(/\s+/)[0] || 'Hasta'
-  } catch {
-    return 'Hasta'
+function parseLabTests(testler: unknown): LabTest[] {
+  if (Array.isArray(testler)) return testler as LabTest[]
+  if (testler && typeof testler === 'object' && Array.isArray((testler as { tests?: unknown }).tests)) {
+    return (testler as { tests: LabTest[] }).tests
   }
+  return []
 }
 
-function flattenLabs(rows: Array<{ id: string; testler: unknown }> | null): Array<{
-  id: string
-  testName: string
-  deger: string
-  birim: string
-  referans: string
-  anormal: boolean
-}> {
-  const out: Array<{
-    id: string
-    testName: string
-    deger: string
-    birim: string
-    referans: string
-    anormal: boolean
-  }> = []
-  for (const row of rows || []) {
-    const tests = Array.isArray(row.testler)
-      ? (row.testler as LabTest[])
-      : row.testler && typeof row.testler === 'object' && Array.isArray((row.testler as { tests?: unknown }).tests)
-        ? ((row.testler as { tests: LabTest[] }).tests)
-        : []
-    tests.forEach((t, idx) => {
-      const testName = String(t.testName || t.ad || t.name || `Test ${idx + 1}`)
-      const deger = String(t.deger ?? t.value ?? '—')
-      const birim = String(t.birim || t.unit || '')
-      const referans = String(t.referans || t.ref || '')
-      const anormal = Boolean(
-        t.anormal ?? t.abnormal ?? (typeof t.flag === 'string' && /abnormal|yüksek|dusuk|düşük|h/i.test(t.flag))
-      )
-      out.push({ id: `${row.id}-${idx}`, testName, deger, birim, referans, anormal })
-    })
-  }
-  return out
+function labRowsFromTests(tests: LabTest[]) {
+  return tests.map((t, idx) => {
+    const test = String(t.testName || t.ad || t.name || `Test ${idx + 1}`)
+    const deger = String(t.deger ?? t.value ?? '—')
+    const birim = String(t.birim || t.unit || '')
+    const referans = String(t.referans || t.ref || '')
+    const anormal = Boolean(
+      t.anormal ?? t.abnormal ?? (typeof t.flag === 'string' && /abnormal|yüksek|dusuk|düşük|h/i.test(t.flag))
+    )
+    return { test, deger, birim, referans, anormal }
+  })
+}
+
+function parseBp(tansiyon: unknown): { sistolik: number; diastolik: number } | null {
+  if (typeof tansiyon !== 'string') return null
+  const m = tansiyon.match(/(\d+)\s*[/]\s*(\d+)/)
+  if (!m) return null
+  return { sistolik: Number(m[1]), diastolik: Number(m[2]) }
 }
 
 export async function GET(
@@ -99,95 +85,227 @@ export async function GET(
   }
 
   const patientId = tokenData.patient_id as string
+  const bundle: PortalBundle = emptyPortalBundle()
 
-  const { data: patientRow } = await sb
-    .from('patients')
-    .select('id, name_encrypted, doctor_id')
-    .eq('id', patientId)
-    .maybeSingle()
-
-  const firstName = firstNameFromEncrypted(patientRow?.name_encrypted)
-
-  // Recent sessions (prefer approved when column exists / is set)
+  // Sessions + notes → visits
   const { data: sessionsRaw } = await sb
     .from('sessions')
     .select('id, created_at, specialty, approved_at')
     .eq('patient_id', patientId)
     .order('created_at', { ascending: false })
-    .limit(10)
+    .limit(20)
 
   const sessionIds = (sessionsRaw || []).map((s) => s.id)
-  let notesBySession = new Map<string, { degerlendirme: string; plan: string }>()
+  type NoteRow = {
+    session_id: string
+    content_subjektif?: string | null
+    content_objektif?: string | null
+    content_degerlendirme?: string | null
+    content_plan?: string | null
+    basvuru_yakinmasi?: string | null
+    vitaller?: Record<string, string | number | null> | null
+    specialty?: string | null
+    created_at?: string | null
+  }
+  const notesBySession = new Map<string, NoteRow>()
   if (sessionIds.length) {
     const { data: notes } = await sb
       .from('notes')
-      .select('session_id, content_degerlendirme, content_plan, approved_at')
+      .select(
+        'session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, specialty, created_at'
+      )
       .in('session_id', sessionIds)
     for (const n of notes || []) {
       const sid = String(n.session_id || '')
       if (!sid || notesBySession.has(sid)) continue
-      notesBySession.set(sid, {
-        degerlendirme: String(n.content_degerlendirme || '').trim(),
-        plan: String(n.content_plan || '').trim(),
+      notesBySession.set(sid, n as NoteRow)
+    }
+  }
+
+  const visits: PortalVisit[] = (sessionsRaw || []).map((s) => {
+    const note = notesBySession.get(s.id)
+    const vitaller = note?.vitaller && typeof note.vitaller === 'object' ? note.vitaller : undefined
+    return {
+      id: s.id,
+      tarih: s.created_at,
+      brans: String(s.specialty || note?.specialty || 'Genel'),
+      basvuruNedeni: String(note?.basvuru_yakinmasi || 'Muayene').trim() || 'Muayene',
+      hekim: 'Doktorunuz',
+      ozetKisa: String(note?.content_degerlendirme || note?.content_plan || 'Ziyaret kaydı').slice(0, 160),
+      subjektif: note?.content_subjektif ? String(note.content_subjektif) : undefined,
+      objektif: note?.content_objektif ? String(note.content_objektif) : undefined,
+      degerlendirme: note?.content_degerlendirme ? String(note.content_degerlendirme) : undefined,
+      plan: note?.content_plan ? String(note.content_plan) : undefined,
+      vitaller,
+      takip: note?.content_plan ? String(note.content_plan).slice(0, 120) : undefined,
+    }
+  })
+  bundle.visits = visits
+
+  // Medications + history
+  const { data: medsRaw } = await sb
+    .from('hasta_ilaclar')
+    .select('id, ilac_adi, doz, kullanim_sikli, notlar, aktif, baslangic_tarihi, bitis_tarihi, yazan_doktor')
+    .eq('patient_id', patientId)
+    .order('baslangic_tarihi', { ascending: false })
+    .limit(60)
+
+  const medications: PortalMedication[] = (medsRaw || []).map((m) => ({
+    id: m.id,
+    ad: String(m.ilac_adi || 'İlaç'),
+    doz: String(m.doz || '—'),
+    siklik: String(m.kullanim_sikli || '—'),
+    baslangic: String(m.baslangic_tarihi || '').slice(0, 10) || '—',
+    bitis: m.bitis_tarihi ? String(m.bitis_tarihi).slice(0, 10) : null,
+    aktif: Boolean(m.aktif),
+    not: m.notlar ? String(m.notlar) : undefined,
+    yazan: m.yazan_doktor ? String(m.yazan_doktor) : undefined,
+  }))
+  bundle.medications = medications
+
+  const medicationHistory: PortalMedChange[] = []
+  for (const m of medsRaw || []) {
+    const ad = String(m.ilac_adi || 'İlaç')
+    if (m.baslangic_tarihi) {
+      medicationHistory.push({
+        id: `${m.id}-start`,
+        tarih: String(m.baslangic_tarihi).slice(0, 10),
+        tip: 'baslandi',
+        ilacAdi: ad,
+        aciklama: `${ad} başlandı${m.doz ? ` (${m.doz})` : ''}.`,
+      })
+    }
+    if (m.bitis_tarihi || m.aktif === false) {
+      medicationHistory.push({
+        id: `${m.id}-stop`,
+        tarih: String(m.bitis_tarihi || m.baslangic_tarihi || '').slice(0, 10) || '—',
+        tip: 'durduruldu',
+        ilacAdi: ad,
+        aciklama: `${ad} sonlandırıldı.`,
       })
     }
   }
+  medicationHistory.sort((a, b) => (a.tarih < b.tarih ? 1 : -1))
+  bundle.medicationHistory = medicationHistory
 
-  const sessions = (sessionsRaw || []).map((s) => {
-    const note = notesBySession.get(s.id)
-    return {
-      id: s.id,
-      date: s.created_at,
-      specialty: String(s.specialty || 'Genel'),
-      degerlendirme: note?.degerlendirme || note?.plan || 'Ziyaret kaydı',
-    }
-  })
-
-  const { data: medsRaw } = await sb
-    .from('hasta_ilaclar')
-    .select('id, ilac_adi, doz, kullanim_sikli, notlar, aktif')
-    .eq('patient_id', patientId)
-    .eq('aktif', true)
-    .limit(40)
-
-  const medications = (medsRaw || []).map((m) => ({
-    id: m.id,
-    drugName: String(m.ilac_adi || 'İlaç'),
-    dose: String(m.doz || '—'),
-    frequency: String(m.kullanim_sikli || '—'),
-    doctorNote: String(m.notlar || ''),
-  }))
-
+  // Labs → results
   const { data: labRaw } = await sb
     .from('hasta_lab_sonuclari')
-    .select('id, testler, created_at')
+    .select('id, testler, created_at, lab_adi, sonuc_tarihi')
     .eq('patient_id', patientId)
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(15)
 
-  const labs = flattenLabs(labRaw)
-
-  // Latest doctor note / follow-up from most recent note plan
-  let doctorNote = {
-    takipSuresi: '—',
-    note: 'Doktorunuz henüz paylaşılmış bir takip notu eklemedi.',
-    nextAppointment: undefined as string | undefined,
+  const results: PortalResult[] = []
+  for (const row of labRaw || []) {
+    const labs = labRowsFromTests(parseLabTests(row.testler))
+    const anyAbnormal = labs.some((l) => l.anormal)
+    results.push({
+      id: row.id,
+      tur: 'laboratuvar',
+      baslik: String(row.lab_adi || 'Laboratuvar sonucu'),
+      tarih: String(row.sonuc_tarihi || row.created_at),
+      ozet:
+        labs
+          .slice(0, 3)
+          .map((l) => `${l.test}: ${l.deger}${l.birim ? ` ${l.birim}` : ''}`)
+          .join(' · ') || 'Lab sonucu',
+      durum: anyAbnormal ? 'anormal' : 'normal',
+      labSatirlari: labs,
+    })
   }
-  const latestNote = [...notesBySession.values()].find((n) => n.plan || n.degerlendirme)
-  if (latestNote) {
-    doctorNote = {
-      takipSuresi: 'Kontrol planına göre',
-      note: latestNote.plan || latestNote.degerlendirme,
-      nextAppointment: undefined,
-    }
+
+  // Imaging — columns from hasta_goruntulemeler schema
+  const { data: imgRaw } = await sb
+    .from('hasta_goruntulemeler')
+    .select('id, created_at, modalite, vucut_bolgesi, rapor_metni, goruntuleme_tarihi, dosya_url')
+    .eq('patient_id', patientId)
+    .order('created_at', { ascending: false })
+    .limit(15)
+
+  for (const row of imgRaw || []) {
+    const tip = String(row.modalite || '').toLowerCase()
+    const tur = /ekg/.test(tip)
+      ? 'ekg'
+      : /x-?ray|us|mri|bt|tomo|graf|usg|ultrason|mr|rontgen|röntgen/.test(tip)
+        ? 'goruntuleme'
+        : tip
+          ? 'goruntuleme'
+          : 'diger'
+    const tarih = String(row.goruntuleme_tarihi || row.created_at)
+    results.push({
+      id: row.id,
+      tur,
+      baslik: [row.modalite, row.vucut_bolgesi].filter(Boolean).join(' · ') || 'Görüntüleme',
+      tarih,
+      ozet: String(row.rapor_metni || 'Rapor paylaşıldı').slice(0, 140),
+      durum: 'raporlandi',
+      modalite: String(row.modalite || ''),
+      gorselUrl: row.dosya_url || '/sagligim/imaging-placeholder.jpg',
+      raporMetni: row.rapor_metni ? String(row.rapor_metni) : undefined,
+    })
   }
 
-  // Shape matches app/portal/hasta/[token]/page.tsx
-  return NextResponse.json({
-    patient: { firstName },
-    sessions,
-    medications,
-    labs,
-    doctorNote,
-  })
+  results.sort((a, b) => (a.tarih < b.tarih ? 1 : -1))
+  bundle.results = results
+
+  // Tracking from latest notes with vitals
+  for (const note of notesBySession.values()) {
+    const v = note.vitaller
+    if (!v || typeof v !== 'object') continue
+    const tarih = String(note.created_at || '').slice(0, 10)
+    if (!tarih) continue
+    const bp = parseBp(v.tansiyon)
+    if (bp) bundle.tracking.tansiyon.push({ tarih, ...bp })
+    if (typeof v.kilo === 'number') bundle.tracking.kilo.push({ tarih, deger: v.kilo })
+    if (typeof v.nabiz === 'number') bundle.tracking.nabiz.push({ tarih, deger: Number(v.nabiz) })
+    if (typeof v.spo2 === 'number') bundle.tracking.spo2.push({ tarih, deger: Number(v.spo2) })
+  }
+  if (bundle.tracking.tansiyon.length || bundle.tracking.kilo.length) {
+    const lastBp = bundle.tracking.tansiyon[bundle.tracking.tansiyon.length - 1]
+    const lastKilo = bundle.tracking.kilo[bundle.tracking.kilo.length - 1]
+    const lastNabiz = bundle.tracking.nabiz[bundle.tracking.nabiz.length - 1]
+    bundle.tracking.sonVitalOzet = [
+      lastBp ? `TA ${lastBp.sistolik}/${lastBp.diastolik}` : null,
+      lastNabiz ? `Nabız ${lastNabiz.deger}` : null,
+      lastKilo ? `Kilo ${lastKilo.deger} kg` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ')
+  }
+
+  // Messages / history remain empty until backends exist
+  bundle.messages = []
+  bundle.history = emptyPortalBundle().history
+
+  // Summary chips
+  const aktifIlac = medications.filter((m) => m.aktif).length
+  const lastLab = results.find((r) => r.tur === 'laboratuvar')
+  bundle.summary = {
+    aktifIlac,
+    bekleyenMesaj: 0,
+    sonLabOzet: lastLab?.ozet || 'Henüz lab sonucu yok',
+    yaklasanKontrol: null,
+    sonAktivite: [
+      ...visits.slice(0, 2).map((v) => ({
+        id: `v-${v.id}`,
+        tur: 'ziyaret' as const,
+        baslik: `${v.brans} ziyareti`,
+        tarih: v.tarih,
+        href: 'ziyaretler',
+      })),
+      ...results.slice(0, 2).map((r) => ({
+        id: `r-${r.id}`,
+        tur: 'sonuc' as const,
+        baslik: r.baslik,
+        tarih: r.tarih,
+        href: 'sonuclar',
+      })),
+    ]
+      .sort((a, b) => (a.tarih < b.tarih ? 1 : -1))
+      .slice(0, 6),
+  }
+
+  // Intentionally omit first name from greeting payload
+  return NextResponse.json(bundle)
 }

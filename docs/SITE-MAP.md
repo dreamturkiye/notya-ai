@@ -39,8 +39,14 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/doktor-tools/*` (icd10, erecete, epikriz, ilac-interaksiyon, sgk-rapor, hasta-portali, tetkik, enabiz, sgk-medula, hatirlatma) | `/api/doktor/araclar/*`, `/api/doktor/sgk`, `/api/doktor/hatirlatma` | notes, hasta_hatirlatma, hasta_portal_tokens |
 | `/randevular` (NOTYA-RANDEVU-01, day view, shared with sekreter) | `/api/doktor/randevular[/id]`, `/api/doktor/calisma-saatleri` | randevular, doktor_calisma_saatleri, patients |
 | `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |
-| Patient portal `/portal/hasta/[token]` | `/api/portal/hasta/[token]` | hasta_portal_tokens (HMAC, PORTAL_TOKEN_SECRET) |
-| Patient portal **DEMO** `/portal/demo` | (static sample UI, no PHI) | — Safari preview of patient-facing tabs |
+| Patient portal **Sağlığım** `/portal/hasta/[token]` (+ `/mesajlar`, `/ziyaretler[/id]`, `/sonuclar[/id]`, `/ilaclar`, `/gecmis`, `/takip`) | `/api/portal/hasta/[token]` → `PortalBundle` JSON | sessions/notes, hasta_ilaclar, hasta_lab_sonuclari, hasta_goruntulemeler; messages/history empty until backends ship |
+| Patient portal **DEMO** `/portal/demo` (+ same section paths) | static `lib/portal/demoData.ts` (no PHI) | Reference-grade Sağlığım UI — Safari: https://notya-ai.vercel.app/portal/demo |
+
+### Sağlığım (patient shell)
+- Product name: **Sağlığım**; greeting (no first name): “Sağlık alanınıza hoş geldiniz.”
+- Light sage/paper shell overrides root dark body via `app/portal/layout.tsx` + `sagligim.css`.
+- Demo is the full IA reference; live token reuses the same components and wires visits/meds/labs/imaging where data exists.
+- Out of scope this ship: billing, scheduling, proxy accounts, real messaging persistence, DICOM viewer.
 
 ### Env gotcha — Hasta Portalı “Portal yapılandırılmamış.”
 - `PORTAL_TOKEN_SECRET` must exist on the **same Vercel environment** as the deploy you are testing.
