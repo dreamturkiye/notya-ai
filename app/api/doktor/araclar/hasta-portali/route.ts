@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL}/portal/hasta/${hmac}`;
+    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/portal/hasta/${hmac}`;
 
     return Response.json({ portalUrl });
   } catch (err) {

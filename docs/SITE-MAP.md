@@ -40,11 +40,13 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/randevular` (NOTYA-RANDEVU-01, day view, shared with sekreter) | `/api/doktor/randevular[/id]`, `/api/doktor/calisma-saatleri` | randevular, doktor_calisma_saatleri, patients |
 | `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |
 | Patient portal `/portal/hasta/[token]` | `/api/portal/hasta/[token]` | hasta_portal_tokens (HMAC, PORTAL_TOKEN_SECRET) |
+| Patient portal **DEMO** `/portal/demo` | (static sample UI, no PHI) | — Safari preview of patient-facing tabs |
 
 ### Env gotcha — Hasta Portalı “Portal yapılandırılmamış.”
 - `PORTAL_TOKEN_SECRET` must exist on the **same Vercel environment** as the deploy you are testing.
 - Historically it was **Production-only**. Preview URLs like `notya-ai-git-design-*-getvelacom.vercel.app` return `Portal yapılandırılmamış.` until Preview also has the secret.
 - Production test URL: https://notya-ai.vercel.app/doktor-tools/hasta-portali (has the secret).
+- Patient-facing DEMO (no login): https://notya-ai.vercel.app/portal/demo
 - Do **not** invent a code fallback for a missing secret (CSO). Fix the env, then redeploy the Preview if needed.
 
 ## Voice/asistan wiring
