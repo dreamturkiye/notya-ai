@@ -61,7 +61,23 @@ export function PortalShell({
       </header>
       <main className="sg-main">{children}</main>
       <footer className="sg-footer">
-        Notya · Sağlığım — kayıtlarınız doktorunuzla paylaşılır. Acil durumda 112&apos;yi arayın.
+        <p style={{ margin: '0 0 10px' }}>
+          Notya · Sağlığım — acil durumda 112&apos;yi veya muayenehaneyi arayın. Portal mesajları acil değildir.
+        </p>
+        <p style={{ margin: '0 0 10px', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
+          Kişisel sağlık verileriniz 6698 sayılı KVKK kapsamında işlenir. Verileriniz, tedavi ve
+          iletişim süreçleri için doktorunuz ile aynı muayenehanedeki yetkili personel
+          (sekreter / asistan / hemşire) arasında, yalnızca görevleri gereği ve KVKK sınırları
+          içinde paylaşılabilir; gerekli hallerde sizinle ilgili diğer hekimlere de aktarılabilir.
+          Detay:{' '}
+          <a href="/kvkk" style={{ color: 'var(--sg-accent)', fontWeight: 700, textDecoration: 'underline' }}>
+            KVKK Aydınlatma Metni
+          </a>
+          .
+        </p>
+        <p style={{ margin: 0, opacity: 0.85 }}>
+          Bu bağlantı size özeldir; başkalarıyla paylaşmayın.
+        </p>
       </footer>
     </div>
   )

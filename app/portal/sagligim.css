@@ -171,7 +171,11 @@ body:has(.sagligim-root) {
   text-align: center;
   font-size: 12px;
   color: var(--sg-muted);
-  line-height: 1.45;
+  line-height: 1.5;
+}
+
+.sg-footer a {
+  -webkit-tap-highlight-color: rgba(47, 107, 93, 0.12);
 }
 
 /* Home */
