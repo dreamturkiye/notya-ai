@@ -41,6 +41,12 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |
 | Patient portal `/portal/hasta/[token]` | `/api/portal/hasta/[token]` | hasta_portal_tokens (HMAC, PORTAL_TOKEN_SECRET) |
 
+### Env gotcha — Hasta Portalı “Portal yapılandırılmamış.”
+- `PORTAL_TOKEN_SECRET` must exist on the **same Vercel environment** as the deploy you are testing.
+- Historically it was **Production-only**. Preview URLs like `notya-ai-git-design-*-getvelacom.vercel.app` return `Portal yapılandırılmamış.` until Preview also has the secret.
+- Production test URL: https://notya-ai.vercel.app/doktor-tools/hasta-portali (has the secret).
+- Do **not** invent a code fallback for a missing secret (CSO). Fix the env, then redeploy the Preview if needed.
+
 ## Voice/asistan wiring
 - `/asistan` → `/api/asistan/signed-url?specialty&persona` → ElevenLabs base agent per gender (`ELEVENLABS_AGENT_*`, fallbacks hardcoded) → client overrides prompt + `tts.voiceId` + firstMessage. Text chat `/api/asistan/chat` (Anthropic, pseudonymised via `lib/security/pseudonymize.ts`). Sessions: asistan_sessions, asistan_actions, sessions/notes via `/api/sessions/start|[id]/end`.
 - Klinik: `/api/asistan/klinik-signed-url?persona=<slug>`; 10 slugs = sac-ekimi, estetik-cerrahi, medikal-estetik, dermatoloji, longevity, fizyoterapi, klinik-psikolog, diyetisyen, ergoterapi, odyoloji.
