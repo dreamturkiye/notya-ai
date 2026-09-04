@@ -37,15 +37,15 @@ export function normalizeHastalar(payload: unknown): HastaOption[] {
   return raw.map((item, idx) => {
     const p = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>
     const id = String(p.id || idx)
-    const masked = String(p.masked_name || '')
+    const masked = String(p.masked_name || p.name || '')
     const ad = String(
-      p.ad || p.first_name || p.adi || (masked ? masked.split(' ')[0] : '') || 'Hasta'
+      p.ad || p.first_name || p.adi || (masked ? masked.split(/\s+/)[0] : '') || 'Hasta'
     )
     const soyad = String(
       p.soyad ||
         p.last_name ||
         p.soyadi ||
-        (masked.includes(' ') ? masked.split(' ').slice(1).join(' ') : '') ||
+        (masked.includes(' ') ? masked.split(/\s+/).slice(1).join(' ') : '') ||
         ''
     )
     const tcKimlikNo = String(p.tcKimlikNo || p.tc_kimlik || p.masked_tc || '')
