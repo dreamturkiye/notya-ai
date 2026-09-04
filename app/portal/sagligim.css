@@ -649,8 +649,9 @@ body:has(.sagligim-root) {
 }
 
 .sg-activity-panel {
-  /* Keep box + surface; no left inset so rows line up with section title */
-  padding: 2px 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 4px 16px !important;
   background: var(--sg-surface);
   border: 1px solid var(--sg-line);
   text-align: left;
@@ -667,7 +668,7 @@ body:has(.sagligim-root) {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px 14px 0;
+  padding: 14px 0;
   min-height: var(--sg-touch);
   align-items: center;
   border-top: 1px solid var(--sg-line);
@@ -1135,6 +1136,13 @@ body:has(.sagligim-root) {
   .sg-fade > .sg-panel {
     margin-left: 28px;
     margin-right: 28px;
+  }
+
+  /* Home activity table stays flush with Kısayollar / Son aktivite headings */
+  .sg-home-body .sg-panel,
+  .sg-home-body .sg-activity-panel {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
 
   .sg-compose-panel {
