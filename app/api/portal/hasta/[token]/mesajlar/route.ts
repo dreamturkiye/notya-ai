@@ -34,6 +34,51 @@ export async function GET(
   return NextResponse.json({ messages })
 }
 
+/** Mark a thread as read by the patient (clears bekleyen mesaj on home). */
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { token: string } }
+) {
+  const client = sb()
+  if (!client) return NextResponse.json({ error: 'Portal yapılandırılmamış.' }, { status: 500 })
+
+  const tok = await resolvePortalToken(client, params.token)
+  if (!tok) return NextResponse.json({ error: 'Token bulunamadı veya süresi dolmuş' }, { status: 404 })
+
+  const locked = requirePortalUnlock(req, params.token, tok)
+  if (locked) return locked
+
+  let body: { konuId?: string; action?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Geçersiz istek' }, { status: 400 })
+  }
+
+  const konuId = String(body.konuId || '').trim()
+  if (!konuId || body.action !== 'read') {
+    return NextResponse.json({ error: 'konuId ve action=read gerekli' }, { status: 400 })
+  }
+
+  const { data: konu } = await client
+    .from('hasta_mesaj_konulari')
+    .select('id')
+    .eq('id', konuId)
+    .eq('patient_id', tok.patient_id)
+    .eq('doctor_id', tok.doctor_id)
+    .maybeSingle()
+
+  if (!konu) return NextResponse.json({ error: 'Konu bulunamadı' }, { status: 404 })
+
+  await client
+    .from('hasta_mesaj_konulari')
+    .update({ okundu_hasta: true })
+    .eq('id', konuId)
+
+  const messages = await loadPortalMessages(client, tok.patient_id)
+  return NextResponse.json({ ok: true, messages })
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { token: string } }

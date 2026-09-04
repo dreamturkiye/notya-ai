@@ -10,14 +10,14 @@ export default function HastaMessagesPage() {
       data={data}
       token={token}
       onMessagesUpdated={(messages) =>
-        setData({
-          ...data,
+        setData((prev) => ({
+          ...prev,
           messages,
           summary: {
-            ...data.summary,
+            ...prev.summary,
             bekleyenMesaj: messages.filter((m) => !m.okundu).length,
           },
-        })
+        }))
       }
     />
   )

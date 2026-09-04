@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { MessageFolder, PortalBundle, PortalMessage } from '@/lib/portal/types'
 import { COMPOSE_DISCLAIMER } from '@/lib/portal/messageCopy'
 import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
@@ -45,6 +45,46 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
   const desktopActive = active || list[0] || null
   const shown = threadOpen ? active || list[0] : desktopActive
 
+  function applyMessages(next: PortalMessage[]) {
+    setLocalMessages(next)
+    onMessagesUpdated?.(next)
+  }
+
+  async function markRead(konuId: string) {
+    const current = (localMessages || data.messages).find((m) => m.id === konuId)
+    if (!current || current.okundu) return
+
+    const optimistic = (localMessages || data.messages).map((m) =>
+      m.id === konuId ? { ...m, okundu: true } : m
+    )
+    applyMessages(optimistic)
+
+    if (!token) return
+    try {
+      const res = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/mesajlar`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ konuId, action: 'read' }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (res.ok && Array.isArray((json as { messages?: unknown }).messages)) {
+        applyMessages((json as { messages: PortalMessage[] }).messages)
+      }
+    } catch {
+      /* keep optimistic */
+    }
+  }
+
+  useEffect(() => {
+    if (!shown?.id || shown.okundu) return
+    const mobileListOnly =
+      typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches && !threadOpen
+    if (mobileListOnly) return
+    void markRead(shown.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown?.id, shown?.okundu, threadOpen])
+
   async function postMessage(payload: { konuId?: string; konu?: string; metin: string }) {
     if (!token) return
     setSending(true)
@@ -59,8 +99,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
       const json = await res.json()
       if (!res.ok) throw new Error(json?.error || 'Gönderilemedi')
       const next = (json.messages || []) as PortalMessage[]
-      setLocalMessages(next)
-      onMessagesUpdated?.(next)
+      applyMessages(next)
       if (json.konuId) {
         setActiveId(json.konuId)
         setThreadOpen(true)
@@ -183,6 +222,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
                       onClick={() => {
                         setActiveId(m.id)
                         setThreadOpen(true)
+                        void markRead(m.id)
                       }}
                       style={{
                         display: 'block',

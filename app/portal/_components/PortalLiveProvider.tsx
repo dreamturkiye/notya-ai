@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type Dispatch, type SetStateAction } from 'react'
 import type { PortalBundle } from '@/lib/portal/types'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 import { PinGate } from './PinGate'
@@ -12,7 +12,7 @@ type LiveState = {
   basePath: string
   token: string
   refresh: () => Promise<void>
-  setData: (data: PortalBundle) => void
+  setData: Dispatch<SetStateAction<PortalBundle>>
 }
 
 const Ctx = createContext<LiveState | null>(null)
