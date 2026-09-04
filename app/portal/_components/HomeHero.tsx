@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { PortalBundle } from '@/lib/portal/types'
-import { formatTrDate } from './ui'
+import { SoftPanel, formatTrDate } from './ui'
 
 export function HomeHero({ basePath, data }: { basePath: string; data: PortalBundle }) {
   const chips = [
@@ -87,7 +87,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
 
         <section className="sg-home-section sg-fade sg-fade-delay-3">
           <h2 className="sg-display sg-home-section-title">Son aktivite</h2>
-          <div className="sg-activity-list">
+          <SoftPanel className="sg-activity-panel">
             {data.summary.sonAktivite.length === 0 ? (
               <p className="sg-activity-empty">Henüz paylaşılmış aktivite yok.</p>
             ) : (
@@ -115,7 +115,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
                 )
               })
             )}
-          </div>
+          </SoftPanel>
         </section>
       </div>
     </div>

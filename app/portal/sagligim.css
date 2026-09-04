@@ -648,16 +648,17 @@ body:has(.sagligim-root) {
   line-height: 1.35;
 }
 
-.sg-activity-list {
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--sg-line);
+.sg-activity-panel {
+  padding: 4px 16px !important;
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-line);
 }
 
 .sg-activity-empty {
   margin: 0;
-  padding: 14px 0;
+  padding: 12px 0;
   color: var(--sg-muted);
+  text-align: left;
 }
 
 .sg-activity-row {
@@ -667,13 +668,18 @@ body:has(.sagligim-root) {
   padding: 14px 0;
   min-height: var(--sg-touch);
   align-items: center;
-  border-bottom: 1px solid var(--sg-line);
+  border-top: 1px solid var(--sg-line);
   text-align: left;
+}
+
+.sg-activity-row:first-child {
+  border-top: none;
 }
 
 .sg-activity-main {
   min-width: 0;
   flex: 1 1 auto;
+  text-align: left;
 }
 
 .sg-activity-title {
