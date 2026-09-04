@@ -291,10 +291,224 @@ body:has(.sagligim-root) {
 .sg-back-link {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 44px;
   font-size: 14px;
   font-weight: 700;
   color: var(--sg-accent);
+}
+
+.sg-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 14px;
+  flex-wrap: wrap;
+}
+
+.sg-section-title {
+  margin: 0;
+  font-size: clamp(1.45rem, 6.2vw, 2.1rem);
+  overflow-wrap: anywhere;
+}
+
+.sg-section-sub {
+  margin: 8px 0 0;
+  color: var(--sg-muted);
+  font-size: 14px;
+  max-width: 520px;
+  line-height: 1.45;
+}
+
+.sg-empty {
+  margin-top: 12px;
+  border-radius: var(--sg-radius);
+  overflow: hidden;
+  border: 1px solid var(--sg-line);
+  background: var(--sg-surface);
+}
+
+.sg-empty-img {
+  width: 100%;
+  height: clamp(110px, 28vw, 160px);
+  object-fit: cover;
+  display: block;
+  opacity: 0.92;
+}
+
+.sg-empty-copy {
+  padding: 18px 16px 22px;
+}
+
+.sg-list-panel {
+  padding: 2px 12px !important;
+}
+
+.sg-list-row-link {
+  display: block;
+}
+
+.sg-list-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 2px;
+  min-height: 56px;
+  border-bottom: 1px solid var(--sg-line);
+}
+
+.sg-list-row-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sg-list-row-meta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sg-accent);
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+
+.sg-list-row-title {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.sg-list-row-detail {
+  margin-top: 4px;
+  color: var(--sg-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.sg-list-row-badge {
+  flex: 0 0 auto;
+  max-width: 38%;
+  text-align: right;
+  font-size: 12px;
+  line-height: 1.3;
+  padding-top: 2px;
+}
+
+.sg-vital-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sg-vital-chip {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--sg-accent-soft);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.sg-prose {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+}
+
+.sg-subhead {
+  font-family: var(--sg-font-display);
+  font-size: clamp(1.15rem, 4.5vw, 1.25rem);
+  margin: 22px 0 10px;
+  font-weight: 560;
+}
+
+.sg-med-name {
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.sg-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sg-history-list {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.5;
+}
+
+.sg-history-list li {
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+
+.sg-header-tag {
+  font-size: 12px;
+  color: var(--sg-muted);
+  flex-shrink: 0;
+}
+
+/* Lab: cards on phone, table on wider */
+.sg-lab-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sg-lab-card {
+  padding: 12px 0;
+  border-top: 1px solid var(--sg-line);
+}
+
+.sg-lab-card:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.sg-lab-card-name {
+  font-weight: 800;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.sg-lab-card-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.sg-lab-desktop {
+  display: none;
+}
+
+.sg-lab-mobile {
+  display: block;
+}
+
+@media (max-width: 380px) {
+  .sg-header-tag {
+    display: none;
+  }
+
+  .sg-list-row {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .sg-list-row-badge {
+    max-width: none;
+    text-align: left;
+  }
 }
 
 @media (min-width: 640px) {
@@ -302,6 +516,18 @@ body:has(.sagligim-root) {
   .sg-main {
     padding-left: 20px;
     padding-right: 20px;
+  }
+
+  .sg-section-sub {
+    font-size: 15px;
+  }
+
+  .sg-list-panel {
+    padding: 4px 16px !important;
+  }
+
+  .sg-list-row-title {
+    font-size: 16px;
   }
 
   .sg-hero {
@@ -329,6 +555,14 @@ body:has(.sagligim-root) {
   .sg-filter-row {
     flex-wrap: wrap;
     overflow: visible;
+  }
+
+  .sg-lab-desktop {
+    display: block;
+  }
+
+  .sg-lab-mobile {
+    display: none;
   }
 }
 

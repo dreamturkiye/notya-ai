@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import type { PortalNavKey } from '@/lib/portal/types'
 
@@ -22,6 +23,12 @@ export function PortalShell({
   children: React.ReactNode
 }) {
   const pathname = usePathname() || ''
+  const navRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>('.sg-nav-link.is-active')
+    active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  }, [pathname])
 
   return (
     <div className="sg-shell">
@@ -34,9 +41,9 @@ export function PortalShell({
               </span>
               <span style={{ color: 'var(--sg-muted)', fontSize: 14, fontWeight: 600 }}>· Sağlığım</span>
             </Link>
-            <span style={{ fontSize: 12, color: 'var(--sg-muted)', flexShrink: 0 }}>Hasta alanı</span>
+            <span className="sg-header-tag">Hasta alanı</span>
           </div>
-          <nav className="sg-nav" aria-label="Sağlığım bölümleri">
+          <nav ref={navRef} className="sg-nav" aria-label="Sağlığım bölümleri">
             {NAV.map((item) => {
               const href = `${basePath}${item.path}`
               const active =

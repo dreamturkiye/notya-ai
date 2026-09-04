@@ -87,8 +87,8 @@ export function MessagesView({ data }: { data: PortalBundle }) {
                     cursor: 'pointer',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <strong style={{ fontSize: 15, lineHeight: 1.35 }}>{m.konu}</strong>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                    <strong style={{ fontSize: 15, lineHeight: 1.35, overflowWrap: 'anywhere' }}>{m.konu}</strong>
                     {!m.okundu ? (
                       <span
                         style={{

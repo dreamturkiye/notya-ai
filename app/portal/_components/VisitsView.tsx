@@ -11,7 +11,7 @@ export function VisitsListView({ basePath, data }: { basePath: string; data: Por
       {!data.visits.length ? (
         <EmptyState title="Ziyaret bulunamadı" body="Doktorunuz paylaştığında ziyaretleriniz burada listelenir." />
       ) : (
-        <SoftPanel style={{ padding: '4px 16px' }}>
+        <SoftPanel className="sg-list-panel">
           {data.visits.map((v) => (
             <ListRow
               key={v.id}
@@ -19,7 +19,7 @@ export function VisitsListView({ basePath, data }: { basePath: string; data: Por
               meta={formatTrDate(v.tarih)}
               title={`${v.brans} · ${v.hekim}`}
               detail={v.basvuruNedeni}
-              badge={<span style={{ color: 'var(--sg-accent)', fontWeight: 700, fontSize: 13 }}>Özet →</span>}
+              badge={<span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>Özet →</span>}
             />
           ))}
         </SoftPanel>
@@ -66,21 +66,12 @@ export function VisitDetailView({
         subtitle={`${formatTrDate(visit.tarih, true)} · ${visit.brans} · ${visit.hekim}`}
       />
       {visit.vitaller && Object.values(visit.vitaller).some((v) => v != null && v !== '') ? (
-        <SoftPanel style={{ marginBottom: 14 }}>
+        <SoftPanel style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-muted)', marginBottom: 10 }}>VİTALLER</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          <div className="sg-vital-chips">
             {Object.entries(visit.vitaller).map(([k, val]) =>
               val == null || val === '' ? null : (
-                <span
-                  key={k}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 12,
-                    background: 'var(--sg-accent-soft)',
-                    fontSize: 13,
-                    fontWeight: 700,
-                  }}
-                >
+                <span key={k} className="sg-vital-chip">
                   {k}: {String(val)}
                 </span>
               )
@@ -92,20 +83,18 @@ export function VisitDetailView({
       {blocks
         .filter((b) => b.text)
         .map((b) => (
-          <SoftPanel key={b.label} style={{ marginBottom: 12 }}>
+          <SoftPanel key={b.label} style={{ marginBottom: 10 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-accent)', marginBottom: 6 }}>{b.label}</div>
-            <p style={{ margin: 0, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{b.text}</p>
+            <p className="sg-prose">{b.text}</p>
           </SoftPanel>
         ))}
 
       {visit.ilacDegisiklikleri && visit.ilacDegisiklikleri.length > 0 ? (
         <SoftPanel>
           <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-muted)', marginBottom: 8 }}>İLAÇ DEĞİŞİKLİKLERİ</div>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <ul className="sg-history-list">
             {visit.ilacDegisiklikleri.map((x) => (
-              <li key={x} style={{ marginBottom: 4, lineHeight: 1.45 }}>
-                {x}
-              </li>
+              <li key={x}>{x}</li>
             ))}
           </ul>
         </SoftPanel>

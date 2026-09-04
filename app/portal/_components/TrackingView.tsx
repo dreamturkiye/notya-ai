@@ -34,7 +34,9 @@ export function TrackingView({ data }: { data: PortalBundle }) {
     <div className="sg-fade">
       <SectionHeader title="Sağlığımı takip et" subtitle="Tansiyon, kilo, nabız ve SpO2 trendleri." />
       {t.sonVitalOzet ? (
-        <p style={{ margin: '0 0 16px', color: 'var(--sg-muted)', fontSize: 14 }}>{t.sonVitalOzet}</p>
+        <p style={{ margin: '0 0 16px', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
+          {t.sonVitalOzet}
+        </p>
       ) : null}
       {empty ? (
         <EmptyState

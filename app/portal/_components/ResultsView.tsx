@@ -51,7 +51,7 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
       {!list.length ? (
         <EmptyState title="Sonuç yok" body="Bu filtrede yayınlanmış sonuç bulunmuyor." />
       ) : (
-        <SoftPanel style={{ padding: '4px 16px' }}>
+        <SoftPanel className="sg-list-panel">
           {list.map((r) => {
             const d = durumLabel(r.durum)
             return (
@@ -61,7 +61,7 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
                 meta={`${formatTrDate(r.tarih)} · ${r.tur}`}
                 title={r.baslik}
                 detail={r.ozet}
-                badge={<span style={{ color: d.color, fontWeight: 800, fontSize: 12 }}>{d.text}</span>}
+                badge={<span style={{ color: d.color, fontWeight: 800 }}>{d.text}</span>}
               />
             )
           })}
@@ -83,6 +83,9 @@ export function ResultDetailView({
       <>
         <SectionHeader title="Sonuç detayı" />
         <EmptyState title="Sonuç bulunamadı" body="Bu kayda erişilemiyor." />
+        <Link href={`${basePath}/sonuclar`} className="sg-back-link" style={{ marginTop: 12 }}>
+          ← Sonuçlara dön
+        </Link>
       </>
     )
   }
@@ -96,7 +99,27 @@ export function ResultDetailView({
 
       {result.labSatirlari && result.labSatirlari.length > 0 ? (
         <SoftPanel>
-          <div className="sg-lab-table-wrap">
+          <div className="sg-lab-mobile">
+            <div className="sg-lab-cards">
+              {result.labSatirlari.map((row) => (
+                <div key={row.test} className="sg-lab-card">
+                  <div className="sg-lab-card-name">{row.test}</div>
+                  <div className="sg-lab-card-row">
+                    <span
+                      style={{
+                        color: row.anormal ? 'var(--sg-warn)' : 'inherit',
+                        fontWeight: row.anormal ? 800 : 700,
+                      }}
+                    >
+                      {row.deger} {row.birim}
+                    </span>
+                    <span style={{ color: 'var(--sg-muted)', textAlign: 'right' }}>Ref: {row.referans}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="sg-lab-desktop sg-lab-table-wrap">
             <table className="sg-lab-table">
               <thead>
                 <tr style={{ textAlign: 'left', color: 'var(--sg-muted)', fontSize: 12 }}>
@@ -119,7 +142,9 @@ export function ResultDetailView({
                     >
                       {row.deger} {row.birim}
                     </td>
-                    <td style={{ padding: '12px 8px', color: 'var(--sg-muted)', whiteSpace: 'nowrap' }}>{row.referans}</td>
+                    <td style={{ padding: '12px 8px', color: 'var(--sg-muted)', whiteSpace: 'nowrap' }}>
+                      {row.referans}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -129,7 +154,7 @@ export function ResultDetailView({
       ) : null}
 
       {(result.gorselUrl || result.raporMetni) && (
-        <SoftPanel style={{ marginTop: 14, padding: 0, overflow: 'hidden' }}>
+        <SoftPanel style={{ marginTop: 12, padding: 0, overflow: 'hidden' }}>
           {result.gorselUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -139,11 +164,11 @@ export function ResultDetailView({
             />
           ) : null}
           {result.raporMetni ? (
-            <div style={{ padding: '16px 18px 20px' }}>
+            <div style={{ padding: '16px' }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-muted)', marginBottom: 8 }}>
                 {result.modalite || 'Rapor'}
               </div>
-              <p style={{ margin: 0, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{result.raporMetni}</p>
+              <p className="sg-prose">{result.raporMetni}</p>
             </div>
           ) : null}
         </SoftPanel>

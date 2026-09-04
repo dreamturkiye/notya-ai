@@ -5,7 +5,7 @@ import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
 
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <SoftPanel style={{ marginBottom: 12 }}>
+    <SoftPanel style={{ marginBottom: 10 }}>
       <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-accent)', marginBottom: 8 }}>{title}</div>
       {children}
     </SoftPanel>
@@ -33,7 +33,7 @@ export function HistoryView({ data }: { data: PortalBundle }) {
         <>
           <Block title="Kronik hastalıklar">
             {h.kronikHastaliklar.length ? (
-              <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <ul className="sg-history-list">
                 {h.kronikHastaliklar.map((x) => (
                   <li key={x}>{x}</li>
                 ))}
@@ -44,7 +44,7 @@ export function HistoryView({ data }: { data: PortalBundle }) {
           </Block>
           <Block title="Alerjiler">
             {h.alerjiler.length ? (
-              <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <ul className="sg-history-list">
                 {h.alerjiler.map((x) => (
                   <li key={x} style={{ color: 'var(--sg-warn)', fontWeight: 700 }}>
                     {x}
@@ -57,7 +57,7 @@ export function HistoryView({ data }: { data: PortalBundle }) {
           </Block>
           <Block title="Ameliyatlar">
             {h.ameliyatlar.length ? (
-              <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <ul className="sg-history-list">
                 {h.ameliyatlar.map((x) => (
                   <li key={`${x.yil}-${x.aciklama}`}>
                     <strong>{x.yil}</strong> — {x.aciklama}
@@ -70,7 +70,7 @@ export function HistoryView({ data }: { data: PortalBundle }) {
           </Block>
           <Block title="Aile öyküsü">
             {h.aileOykusu.length ? (
-              <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <ul className="sg-history-list">
                 {h.aileOykusu.map((x) => (
                   <li key={`${x.yakinlik}-${x.durum}`}>
                     <strong>{x.yakinlik}</strong>: {x.durum}
@@ -83,7 +83,7 @@ export function HistoryView({ data }: { data: PortalBundle }) {
           </Block>
           <Block title="Aşılar">
             {h.asilar.length ? (
-              <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <ul className="sg-history-list">
                 {h.asilar.map((x) => (
                   <li key={`${x.ad}-${x.tarih}`}>
                     {x.ad} · {formatTrDate(x.tarih)}
