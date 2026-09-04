@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { PortalBundle } from '@/lib/portal/types'
-import { SoftPanel, formatTrDate } from './ui'
+import { formatTrDate } from './ui'
 
 export function HomeHero({ basePath, data }: { basePath: string; data: PortalBundle }) {
   const chips = [
@@ -87,18 +87,16 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
 
         <section className="sg-home-section sg-fade sg-fade-delay-3">
           <h2 className="sg-display sg-home-section-title">Son aktivite</h2>
-          <SoftPanel>
+          <div className="sg-activity-list">
             {data.summary.sonAktivite.length === 0 ? (
-              <p style={{ margin: 0, color: 'var(--sg-muted)' }}>Henüz paylaşılmış aktivite yok.</p>
+              <p className="sg-activity-empty">Henüz paylaşılmış aktivite yok.</p>
             ) : (
               data.summary.sonAktivite.map((a) => {
                 const body = (
                   <>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, lineHeight: 1.35 }}>{a.baslik}</div>
-                      <div style={{ fontSize: 12, color: 'var(--sg-muted)', marginTop: 2 }}>
-                        {formatTrDate(a.tarih, true)}
-                      </div>
+                    <div className="sg-activity-main">
+                      <div className="sg-activity-title">{a.baslik}</div>
+                      <div className="sg-activity-meta">{formatTrDate(a.tarih, true)}</div>
                     </div>
                     {a.href ? <span className="sg-activity-open">Aç</span> : null}
                   </>
@@ -117,7 +115,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
                 )
               })
             )}
-          </SoftPanel>
+          </div>
         </section>
       </div>
     </div>

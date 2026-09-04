@@ -648,6 +648,18 @@ body:has(.sagligim-root) {
   line-height: 1.35;
 }
 
+.sg-activity-list {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--sg-line);
+}
+
+.sg-activity-empty {
+  margin: 0;
+  padding: 14px 0;
+  color: var(--sg-muted);
+}
+
 .sg-activity-row {
   display: flex;
   justify-content: space-between;
@@ -655,12 +667,24 @@ body:has(.sagligim-root) {
   padding: 14px 0;
   min-height: var(--sg-touch);
   align-items: center;
-  border-top: 1px solid var(--sg-line);
+  border-bottom: 1px solid var(--sg-line);
+  text-align: left;
 }
 
-.sg-activity-row:first-child {
-  border-top: none;
-  padding-top: 4px;
+.sg-activity-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sg-activity-title {
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.sg-activity-meta {
+  font-size: 12px;
+  color: var(--sg-muted);
+  margin-top: 2px;
 }
 
 .sg-activity-open {
