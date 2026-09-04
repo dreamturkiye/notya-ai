@@ -5,7 +5,7 @@ import type { PortalBundle } from '@/lib/portal/types'
 import { SoftPanel, formatTrDate } from './ui'
 
 export function HomeHero({ basePath, data }: { basePath: string; data: PortalBundle }) {
-  const stats = [
+  const chips = [
     { label: 'Aktif ilaç', value: String(data.summary.aktifIlac), href: `${basePath}/ilaclar` },
     { label: 'Bekleyen mesaj', value: String(data.summary.bekleyenMesaj), href: `${basePath}/mesajlar` },
     { label: 'Son lab', value: data.summary.sonLabOzet, href: `${basePath}/sonuclar` },
@@ -28,36 +28,53 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
   return (
     <div className="sg-home">
       <section className="sg-hero" aria-label="Sağlığım karşılama">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sagligim/hero-atelier.jpg" alt="" className="sg-hero-media" />
-        <div className="sg-hero-veil" aria-hidden />
-        <div className="sg-hero-copy">
-          <div className="sg-hero-brand">
-            <p className="sg-hero-brand-name">Notya</p>
-            <span className="sg-hero-brand-sub">Sağlığım</span>
+        <div className="sg-hero-main">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/sagligim/hero-walk.jpg" alt="" className="sg-hero-media" />
+          <div className="sg-hero-veil" aria-hidden />
+          <div className="sg-hero-copy">
+            <div className="sg-hero-brand">
+              <p className="sg-hero-brand-name">Notya</p>
+              <span className="sg-hero-brand-sub">Sağlığım</span>
+            </div>
+            <span className="sg-hero-rule" aria-hidden />
+            <p className="sg-hero-lede">
+              Sağlıklı yaşamınızı takip edin — kayıtlar, sonuçlar ve mesajlar tek yerde.
+            </p>
+            <Link href={`${basePath}/mesajlar`} className="sg-hero-cta">
+              Mesajlara git <span className="sg-hero-cta-arrow" aria-hidden>
+                →
+              </span>
+            </Link>
           </div>
-          <span className="sg-hero-rule" aria-hidden />
-          <p className="sg-hero-lede">Kayıtlarınız, sonuçlarınız ve mesajlarınız — tek, size özel alan.</p>
-          <Link href={`${basePath}/mesajlar`} className="sg-hero-cta">
-            Mesajlara git <span className="sg-hero-cta-arrow" aria-hidden>
-              →
-            </span>
-          </Link>
+        </div>
+
+        <div className="sg-hero-side" aria-label="Sağlıklı yaşam">
+          <figure className="sg-hero-tile">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/sagligim/wellness-cycle.jpg" alt="" />
+            <figcaption className="sg-hero-tile-caption">Hareket</figcaption>
+          </figure>
+          <figure className="sg-hero-tile">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/sagligim/wellness-kitchen.jpg" alt="" />
+            <figcaption className="sg-hero-tile-caption">Beslenme</figcaption>
+          </figure>
         </div>
       </section>
 
       <div className="sg-home-body">
-        <div className="sg-stat-rail sg-fade sg-fade-delay-1">
-          {stats.map((s) => (
-            <Link key={s.label} href={s.href} className="sg-stat">
-              <div className="sg-stat-label">{s.label}</div>
-              <div className="sg-stat-value">{s.value}</div>
+        <div className="sg-chip-grid sg-fade sg-fade-delay-1">
+          {chips.map((c) => (
+            <Link key={c.label} href={c.href} className="sg-chip">
+              <div className="sg-chip-label">{c.label}</div>
+              <div className="sg-chip-value">{c.value}</div>
             </Link>
           ))}
         </div>
 
         <section className="sg-home-section sg-fade sg-fade-delay-2">
-          <h2 className="sg-display sg-home-section-title">Bölümler</h2>
+          <h2 className="sg-display sg-home-section-title">Kısayollar</h2>
           <div className="sg-shortcut-grid">
             {shortcuts.map((s) => (
               <Link key={s.label} href={s.href} className="sg-shortcut">
@@ -78,7 +95,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
                 const body = (
                   <>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 650, lineHeight: 1.35 }}>{a.baslik}</div>
+                      <div style={{ fontWeight: 700, lineHeight: 1.35 }}>{a.baslik}</div>
                       <div style={{ fontSize: 12, color: 'var(--sg-muted)', marginTop: 2 }}>
                         {formatTrDate(a.tarih, true)}
                       </div>
