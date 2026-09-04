@@ -5,7 +5,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   summary: {
     aktifIlac: 3,
     bekleyenMesaj: 2,
-    sonLabOzet: 'HbA1c %6.4 — hafif yüksek',
+    sonLabOzet: 'HbA1c  ·  %6.4 — hafif yüksek',
     yaklasanKontrol: '28 Kasım 2026 · 10:30',
     sonAktivite: [
       {

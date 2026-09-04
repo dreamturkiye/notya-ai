@@ -106,12 +106,14 @@ export function ResultDetailView({
                   <div className="sg-lab-card-name">{row.test}</div>
                   <div className="sg-lab-card-row">
                     <span
+                      className="sg-lab-value"
                       style={{
                         color: row.anormal ? 'var(--sg-warn)' : 'inherit',
                         fontWeight: row.anormal ? 800 : 700,
                       }}
                     >
-                      {row.deger} {row.birim}
+                      {row.deger}
+                      {row.birim ? <span className="sg-lab-unit">{row.birim}</span> : null}
                     </span>
                     <span style={{ color: 'var(--sg-muted)', textAlign: 'right' }}>Ref: {row.referans}</span>
                   </div>
@@ -133,14 +135,16 @@ export function ResultDetailView({
                   <tr key={row.test} style={{ borderTop: '1px solid var(--sg-line)' }}>
                     <td style={{ padding: '12px 8px', fontWeight: 700 }}>{row.test}</td>
                     <td
+                      className="sg-lab-value"
                       style={{
-                        padding: '12px 8px',
+                        padding: '12px 8px 12px 20px',
                         color: row.anormal ? 'var(--sg-warn)' : 'inherit',
                         fontWeight: row.anormal ? 800 : 600,
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {row.deger} {row.birim}
+                      {row.deger}
+                      {row.birim ? <span className="sg-lab-unit">{row.birim}</span> : null}
                     </td>
                     <td style={{ padding: '12px 8px', color: 'var(--sg-muted)', whiteSpace: 'nowrap' }}>
                       {row.referans}

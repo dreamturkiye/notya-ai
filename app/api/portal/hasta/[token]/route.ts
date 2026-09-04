@@ -218,7 +218,7 @@ export async function GET(
       ozet:
         labs
           .slice(0, 3)
-          .map((l) => `${l.test}: ${l.deger}${l.birim ? ` ${l.birim}` : ''}`)
+          .map((l) => `${l.test}  ·  ${l.deger}${l.birim ? ` ${l.birim}` : ''}`)
           .join(' · ') || 'Lab sonucu',
       durum: anyAbnormal ? 'anormal' : 'normal',
       labSatirlari: labs,
