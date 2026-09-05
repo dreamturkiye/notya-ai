@@ -180,7 +180,6 @@ export function ResultDetailView({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="sg-chip-btn is-active"
-                  style={{ textDecoration: 'none' }}
                 >
                   İndir
                 </a>
@@ -189,7 +188,6 @@ export function ResultDetailView({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="sg-chip-btn"
-                  style={{ textDecoration: 'none' }}
                 >
                   Tam ekran
                 </a>

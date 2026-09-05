@@ -711,15 +711,22 @@ body:has(.sagligim-root) {
 }
 
 .sg-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--sg-line);
   cursor: pointer;
   min-height: 40px;
-  padding: 0 14px;
+  padding: 10px 16px;
   border-radius: 999px;
   font-weight: 650;
   font-size: 13px;
+  line-height: 1.2;
+  font-family: inherit;
   background: var(--sg-surface);
   color: var(--sg-muted);
+  text-decoration: none;
+  box-sizing: border-box;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -1078,10 +1085,24 @@ body:has(.sagligim-root) {
 .sg-imaging-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   padding: 12px 14px;
   background: rgba(10, 15, 20, 0.92);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sg-imaging-actions .sg-chip-btn {
+  min-height: 36px;
+  padding: 8px 16px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sg-imaging-actions .sg-chip-btn:not(.is-active) {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #0a0f14;
 }
 
 .sg-lab-desktop {
