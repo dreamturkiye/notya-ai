@@ -134,24 +134,42 @@ async function calistir() {
       // Türkiye sahası: HBYS'lerin büyük çoğunluğu v2 konuşur; FHIR pilotlarda. Taşıma: HTTPS
       // (Mirth-sınıfı motorlar kabul eder); MLLP ısrarı onboarding'de ince relay ile çözülür.
       const hl7Mi = kurum.hedef === 'hl7v2-http'
+      // NOTYA-REST-01: modern/özel sistemler için üçüncü lehçe — temiz JSON webhook.
+      const jsonMu = kurum.hedef === 'webhook-json'
       const hl7Mesaj = hl7Mi ? notuHl7Yap(girdi, {
         aliciUygulama: kurum.hl7_alici_uygulama || 'HBYS',
         aliciKurum: kurum.hl7_alici_kurum || kurum.ad,
         mesajTipi: (kurum.hl7_mesaj_tipi === 'ORU' ? 'ORU' : 'MDM'),
       }) : null
+      const jsonYuk = jsonMu ? {
+        tur: 'notya.muayene_notu', surum: 1, notId: girdi.noteId, tarih: girdi.createdAt,
+        hasta: { notyaId: girdi.hasta.id, adSoyad: girdi.hasta.adSoyad, dogumTarihi: girdi.hasta.dogumTarihi, cinsiyet: girdi.hasta.cinsiyet },
+        doktor: { notyaId: girdi.doktor.id, adSoyad: girdi.doktor.adSoyad, brans: girdi.doktor.brans },
+        bolumler: {
+          basvuruYakinmasi: girdi.basvuruYakinmasi || null,
+          anamnez: girdi.anamnez || girdi.subjektif || null,
+          fizikMuayene: girdi.fizikMuayene || girdi.objektif || null,
+          tani: girdi.tani || girdi.degerlendirme || null,
+          tedavi: girdi.tedavi || girdi.plan || null,
+        },
+        icd10: girdi.icd10 || [], vitaller: girdi.vitaller || null,
+        receteOnerisi: (girdi.receteOnerisi || []).map((r) => ({ ...r, nitelik: 'oneri' })),
+        belgeHtmlBase64: girdi.belgeHtmlBase64 || null,
+      } : null
 
       const { data: kayit } = await sb.from('fhir_export_kuyruk')
-        .insert({ note_id: not.id, kurum_id: kurum.id, durum: 'pending', fhir_bundle: hl7Mi ? { hl7: hl7Mesaj } : bundle })
+        .insert({ note_id: not.id, kurum_id: kurum.id, durum: 'pending', fhir_bundle: hl7Mi ? { hl7: hl7Mesaj } : jsonMu ? (jsonYuk as Record<string, unknown>) : bundle })
         .select('id').single()
 
       try {
         const r = await fetch(kurum.fhir_base_url.replace(/\/$/, ''), {
           method: 'POST',
           headers: {
-            'Content-Type': hl7Mi ? 'x-application/hl7-v2+er7; charset=utf-8' : 'application/fhir+json',
+            'Content-Type': hl7Mi ? 'x-application/hl7-v2+er7; charset=utf-8' : jsonMu ? 'application/json' : 'application/fhir+json',
+            ...(jsonMu && kurum.inbound_anahtar ? { 'x-notya-anahtar': kurum.inbound_anahtar } : {}),
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: hl7Mi ? (hl7Mesaj as string) : JSON.stringify(bundle),
+          body: hl7Mi ? (hl7Mesaj as string) : JSON.stringify(jsonMu ? jsonYuk : bundle),
         })
         const yanit = (await r.text()).slice(0, 800)
         const basarili = r.status >= 200 && r.status < 300

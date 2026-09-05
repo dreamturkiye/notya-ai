@@ -35,8 +35,8 @@ Bundle içeriği:
 
 ## 4. HL7 v2 hattı (yaygın HBYS kurulumları için) — EN YÜKSEK KAPSAMA
 Türkiye'deki HBYS'lerin büyük çoğunluğu (Sisoft, Fonet, Probel, Enlil sınıfı; devlet/şehir/
-üniversite hastaneleri ve büyük özel zincirler) kurum içi akışta **HL7 v2** konuşur. Notya her
-iki lehçeyi de üretir — kurum kaydında hedef seçilir:
+üniversite hastaneleri ve büyük özel zincirler) kurum içi akışta **HL7 v2** konuşur. Notya üç
+lehçeyi de üretir — kurum kaydında hedef seçilir (fhir-r4 / hl7v2-http / webhook-json):
 - **MDM^T02** (varsayılan): klinik doküman bildirimi — TXA (doküman üstverisi, AU=hekim
   onaylı) + bölüm başına OBX/TX (Başvuru Yakınması, Anamnez, Fizik Muayene, Tanı, Tedavi).
 - **ORU^R01** (alternatif): OBR (11488-4 Consult note, LOINC) + metin OBX'ler + **kodlu vital
@@ -47,6 +47,32 @@ iki lehçeyi de üretir — kurum kaydında hedef seçilir:
   ince bir relay ile sağlanır — parametre alışverişinde belirtin.
 - ADT/SIU gibi HASTANEDEN NOTYA'ya akışlar (hasta kabul/randevu beslemesi) ileri faz — talep
   halinde planlanır.
+
+### 4a. Inbound ADT — hastaneden Notya'ya hasta beslemesi (CANLI)
+Entegrasyon motorunuz **ADT^A04/A05/A08/A28/A31** mesajını `POST /api/entegrasyon/hl7/al`
+adresine HTTPS ile iletir (başlık: `x-notya-anahtar` = size verilen kurum anahtarı). PID-3 (MRN)
+ve PID-5 (ad) zorunlu; PV1-7'deki hekim kodu, onboarding'de eşlenen Notya hekimine bağlanır —
+hekim eşleşmeyen mesaj kabul edilmez (KVKK: veri sorumlusu hekimdir). Yanıt standart HL7
+ACK'tir (MSA|AA/AE/AR). Sonuç: hekim muayeneye oturduğunda hasta Notya'da hazırdır.
+
+### 4b. REST / Webhook (modern ve özel sistemler)
+Hedef `webhook-json` seçilirse onaylı not, temiz bir JSON yükü olarak uç noktanıza POST edilir:
+`{ tur: "notya.muayene_notu", hasta, doktor, bolumler{basvuruYakinmasi, anamnez, fizikMuayene,
+tani, tedavi}, icd10[], vitaller, receteOnerisi[nitelik:"oneri"], belgeHtmlBase64 }`.
+Doğrulama: `x-notya-anahtar` başlığı + isteğe bağlı OAuth.
+
+### 4c. Standart kapsama matrisi
+| Standart | Durum |
+|---|---|
+| HL7 v2 MDM^T02 (doküman) | ✅ Canlı |
+| HL7 v2 ORU^R01 (sonuç + kodlu vital) | ✅ Canlı |
+| HL7 v2 ADT (inbound hasta beslemesi) | ✅ Canlı |
+| HL7 FHIR R4 (transaction Bundle) | ✅ Canlı, halka açık sunucuda doğrulandı |
+| REST/Webhook JSON | ✅ Canlı |
+| HL7 v2 ORM (tetkik istemi) | Kapsam dışı — tasarım gereği: Notya öneri üretir, order vermez |
+| DICOM | Kapsam dışı — Notya görüntü üretmez/işlemez |
+| SOAP (MEDULA / Bakanlık servisleri) | Yol haritasında (USS/MBYS kaydıyla birlikte) |
+| SB HBYS.API standart spesifikasyonları | Onboarding'de benimsenir — spesifikasyon paylaşımı yeterli |
 
 ## 5. e-Nabız / Sağlık.Net hizası
 Bundle **FHIR R4**'tür — e-Nabız'ın kendi standardı. Kurum HBYS'i, aldığı veriyi mevcut
