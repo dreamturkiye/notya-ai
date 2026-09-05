@@ -32,6 +32,8 @@ export interface FhirNotGirdisi {
   vitaller?: Record<string, unknown> | null
   receteOnerisi?: { ad?: string; doz?: string; kullanim?: string; sure?: string }[] | null
   hasta: { id: string; adSoyad: string; tcKimlik?: string | null; dogumTarihi?: string | null; cinsiyet?: string | null; mrn?: string | null }
+  /** P3: kurumun kendi MRN identifier system URI'si (onboarding parametresi). */
+  mrnSistemUri?: string | null
   doktor: { id: string; adSoyad: string; brans?: string | null }
   kurumAd: string
   /** P2: onaylı notun kendi kendine yeten HTML belgesi (base64) — DocumentReference olarak eklenir. */
@@ -78,7 +80,7 @@ export function notuFhirBundleYap(g: FhirNotGirdisi): Record<string, unknown> {
   // Patient — TC kimlik as national identifier (e-Nabız keys patients on TC)
   const kimlikler: Record<string, unknown>[] = [{ system: 'https://notya.ai/fhir/sid/hasta-id', value: g.hasta.id }]
   if (g.hasta.tcKimlik) kimlikler.push({ system: SIS.tc, value: g.hasta.tcKimlik })
-  if (g.hasta.mrn) kimlikler.push({ system: SIS.mrn, value: g.hasta.mrn })
+  if (g.hasta.mrn) kimlikler.push({ system: g.mrnSistemUri || SIS.mrn, value: g.hasta.mrn })
   entries.push({
     fullUrl: patientUrn,
     resource: {
