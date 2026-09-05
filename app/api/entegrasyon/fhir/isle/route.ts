@@ -18,6 +18,7 @@ export const maxDuration = 120
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { notuFhirBundleYap, type FhirNotGirdisi } from '@/lib/entegrasyon/fhirMapper'
+import { notuHl7Yap } from '@/lib/entegrasyon/hl7v2Mapper'
 import { htmlBelgeYap } from '@/lib/entegrasyon/belgeHtml'
 import { decryptPII } from '@/lib/security/encryption'
 import { kritikAlarm } from '@/lib/alarm'
@@ -129,15 +130,28 @@ async function calistir() {
       }
       const bundle = notuFhirBundleYap(girdi)
 
+      // NOTYA-HL7-01: kurum hedefi HL7 v2 ise aynı girdiden v2 mesajı üret (MDM^T02 / ORU^R01).
+      // Türkiye sahası: HBYS'lerin büyük çoğunluğu v2 konuşur; FHIR pilotlarda. Taşıma: HTTPS
+      // (Mirth-sınıfı motorlar kabul eder); MLLP ısrarı onboarding'de ince relay ile çözülür.
+      const hl7Mi = kurum.hedef === 'hl7v2-http'
+      const hl7Mesaj = hl7Mi ? notuHl7Yap(girdi, {
+        aliciUygulama: kurum.hl7_alici_uygulama || 'HBYS',
+        aliciKurum: kurum.hl7_alici_kurum || kurum.ad,
+        mesajTipi: (kurum.hl7_mesaj_tipi === 'ORU' ? 'ORU' : 'MDM'),
+      }) : null
+
       const { data: kayit } = await sb.from('fhir_export_kuyruk')
-        .insert({ note_id: not.id, kurum_id: kurum.id, durum: 'pending', fhir_bundle: bundle })
+        .insert({ note_id: not.id, kurum_id: kurum.id, durum: 'pending', fhir_bundle: hl7Mi ? { hl7: hl7Mesaj } : bundle })
         .select('id').single()
 
       try {
         const r = await fetch(kurum.fhir_base_url.replace(/\/$/, ''), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/fhir+json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify(bundle),
+          headers: {
+            'Content-Type': hl7Mi ? 'x-application/hl7-v2+er7; charset=utf-8' : 'application/fhir+json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: hl7Mi ? (hl7Mesaj as string) : JSON.stringify(bundle),
         })
         const yanit = (await r.text()).slice(0, 800)
         const basarili = r.status >= 200 && r.status < 300
