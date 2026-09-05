@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { anamnezParcala, fizikParcala } from '@/lib/doktor/anamnezBolumleri';
+import { htmlBelgeYap, metinBelgeYap, type BelgeGirdisi } from '@/lib/entegrasyon/belgeHtml';
 import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
 
 interface NotVeri {
@@ -38,6 +39,7 @@ export default function NotYazdir() {
   const params = useParams<{ id: string }>();
   const [veri, setVeri] = useState<NotVeri | null>(null);
   const [hata, setHata] = useState('');
+  const [kopyalandi, setKopyalandi] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -55,6 +57,36 @@ export default function NotYazdir() {
   if (!veri) return <div style={{ padding: 40, fontFamily: 'system-ui', color: '#666' }}>Not hazırlanıyor…</div>;
 
   const { not, hasta, doktor, duzenlemeSayisi } = veri;
+
+  // NOTYA-KOPRU-01: manuel HBYS köprüsü — resmî entegrasyon öncesi başlangıç. Doktor hastane
+  // sistemine girişliyken notu yapıştırır (kopyala) ya da HTML belgesini dosya olarak ekler (indir).
+  const belgeGirdisi = (): BelgeGirdisi => ({
+    kurumAd: 'Notya',
+    hastaAd: hasta.ad,
+    doktorAd: doktor.ad,
+    tarih: not.createdAt || new Date().toISOString(),
+    bolumler: [
+      ['Başvuru Yakınması', not.basvuruYakinmasi || ''],
+      ['Anamnez', not.subjektif || ''],
+      ['Fizik Muayene', not.objektif || ''],
+      ['Tanı', not.tani || not.degerlendirme || ''],
+      ['Tedavi', not.plan || ''],
+    ],
+  });
+  function hbysKopyala() {
+    navigator.clipboard.writeText(metinBelgeYap(belgeGirdisi())).then(() => {
+      setKopyalandi(true);
+      setTimeout(() => setKopyalandi(false), 2500);
+    }).catch(() => { /* pano erişimi reddedildiyse sessiz */ });
+  }
+  function htmlIndir() {
+    const blob = new Blob([htmlBelgeYap(belgeGirdisi())], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `muayene-notu-${(hasta.ad || 'hasta').replace(/\s+/g, '-').toLocaleLowerCase('tr')}.html`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
   const v = not.vitaller;
   const vitalParcalar = yasamsalBulguSatirlari(v).map((l) => `${l.label}: ${l.value}`);
 
@@ -69,7 +101,11 @@ export default function NotYazdir() {
 
       <div className="yazdirma-gizle" style={{ background: '#0A1628', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Muayene Notu — Yazdır / PDF</span>
-        <button type="button" onClick={() => window.print()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF kaydet</button>
+        <span style={{ display: 'flex', gap: 8 }}>
+          <button type="button" onClick={hbysKopyala} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{kopyalandi ? '✓ Kopyalandı' : '📋 HBYS için kopyala'}</button>
+          <button type="button" onClick={htmlIndir} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>⬇ HTML indir</button>
+          <button type="button" onClick={() => window.print()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF kaydet</button>
+        </span>
       </div>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 24px 40px' }}>
