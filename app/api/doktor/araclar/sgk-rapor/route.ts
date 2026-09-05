@@ -2,25 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize'
 import { decrypt } from '@/lib/security/encryption'
+import {
+  addDaysTr,
+  resolveRaporTipi,
+  systemPromptFor,
+  type HekimKimlik,
+  type SgkRaporDraft,
+} from '@/lib/sgk/raporTipleri'
 
 export const dynamic = 'force-dynamic'
 
-interface SGKRapor {
-  raporBasligi: string
-  hastaAdi: string
-  tcSon4: string
-  tani: { icd10: string; aciklama: string }
-  anamnez: string
-  mevcutDurum: string
-  calismaKapasitesi: 'tam' | 'kisitli' | 'yok'
-  onerilen_sure_ay: number
-  hekim_degerlendirmesi: string
-  hekim_notu: string
-  zorunluTetkikler: string[]
-  etkenMaddeler: string[]
-}
-
-async function groqChat(system: string, user: string): Promise<SGKRapor> {
+async function groqChat(system: string, user: string): Promise<SgkRaporDraft> {
   const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.GROK_API_KEY || ''
   if (!apiKey) throw new Error('GROQ_API_KEY tanımlı değil')
 
@@ -41,14 +33,14 @@ async function groqChat(system: string, user: string): Promise<SGKRapor> {
           { role: 'user', content: user },
         ],
         temperature: 0.2,
-        max_tokens: 2000,
+        max_tokens: 2200,
       }),
     }
   )
 
   if (!response.ok) throw new Error('LLM API hatası')
   const data = await response.json()
-  const content = data.choices[0]?.message?.content
+  const content = data.choices?.[0]?.message?.content
   if (!content) throw new Error('Yanıt boş')
 
   const cleaned = String(content)
@@ -56,7 +48,7 @@ async function groqChat(system: string, user: string): Promise<SGKRapor> {
     .replace(/^```\s*/i, '')
     .replace(/\s*```$/i, '')
     .trim()
-  return JSON.parse(cleaned) as SGKRapor
+  return JSON.parse(cleaned) as SgkRaporDraft
 }
 
 export async function POST(request: NextRequest) {
@@ -82,11 +74,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const hastaId = String(body?.hastaId || '')
     const hekimNotu = String(body?.hekimNotu || '').trim().slice(0, 2000)
-    const raporTipi = String(body?.raporTipi || '')
-    const sure = Number(body?.sure)
-    if (!hastaId || !raporTipi || !Number.isFinite(sure)) {
+    const tip = resolveRaporTipi(String(body?.raporTipi || body?.raporTipiId || ''))
+    const sureRaw = Number(body?.sure)
+    if (!hastaId || !Number.isFinite(sureRaw)) {
       return NextResponse.json({ hata: 'Eksik parametreler' }, { status: 400 })
     }
+    const sure = Math.min(tip.sureMax, Math.max(tip.sureMin, Math.round(sureRaw)))
 
     const { data: hasta, error: hastaError } = await sb
       .from('patients')
@@ -111,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     const { data: notes } = await sb
       .from('notes')
-      .select('content_degerlendirme, content_plan')
+      .select('content_degerlendirme, content_plan, content_objektif')
       .eq('patient_id', hastaId)
       .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })
@@ -119,45 +112,83 @@ export async function POST(request: NextRequest) {
 
     const notMetinleri =
       (notes || [])
-        .map((n) => `${n.content_degerlendirme || ''} ${n.content_plan || ''}`.trim())
+        .map((n) =>
+          `${n.content_objektif || ''} ${n.content_degerlendirme || ''} ${n.content_plan || ''}`.trim()
+        )
         .filter(Boolean)
         .join('\n') ||
       (hasta.notes_encrypted ? 'Hasta notları mevcut.' : 'Hasta notu yok.')
 
-    const systemPrompt =
-      'Türkiye SGK sağlık raporu taslağı hazırlayan klinik asistansın. Rapor teşhisi ICD-10 ile, ilaç kullanım raporlarında etken maddeler INN (Türkçe yazım) ile yazılır; SUT kurallarına uygun süre öner (ilaç kullanım raporu en fazla 24 ay). Hasta adı, T.C. ve hekim notu SENİN alanın değildir. SADECE JSON: {raporBasligi,tani:{icd10,aciklama},anamnez,mevcutDurum,calismaKapasitesi:tam|kisitli|yok,onerilen_sure_ay:number,hekim_degerlendirmesi,zorunluTetkikler:[],etkenMaddeler:[]}'
-    // NOTYA-PSEUDO-01: the patient's real name and any identifiers inside the notes are replaced
-    // with placeholders BEFORE the request leaves Türkiye. The model reasons over [HASTA_1] and
-    // never receives a name, a T.C. kimlik number, a phone or an e-mail. Note that the real name
-    // was already being discarded from the response below — it was crossing the border for no
-    // purpose whatsoever.
     const { text: guvenliNotlar, map } = pseudonymize(notMetinleri, [hastaAdi])
-    const userPrompt = `Rapor tipi: ${raporTipi}. Sure: ${sure} ay. Hasta: [HASTA]. Hasta notlari: ${guvenliNotlar}`
-
-    // A silent leak is worse than a failed request.
+    const sureLabel = tip.sureBirimi === 'gun' ? `${sure} gün` : `${sure} ay`
+    const userPrompt = `Rapor tipi: ${tip.label} (${tip.id}). Süre: ${sureLabel}. Hasta: [HASTA]. Hasta notları: ${guvenliNotlar}`
     assertNoTckn(userPrompt, 'sgk-rapor')
 
-    const rapor = restoreDeep(await groqChat(systemPrompt, userPrompt), map)
-    // The model only ever saw [HASTA]; the real name is set here, unconditionally, on the server.
+    const rapor = restoreDeep(await groqChat(systemPromptFor(tip), userPrompt), map) as SgkRaporDraft
     rapor.hastaAdi = hastaAdi
     rapor.tcSon4 = ''
-    // Physician's own note is the physician's words — verbatim, never model output.
     rapor.hekim_notu = hekimNotu
+    rapor.raporBasligi = rapor.raporBasligi || tip.label
+    if (!rapor.tani || typeof rapor.tani !== 'object') {
+      rapor.tani = { icd10: '', aciklama: '' }
+    }
     if (!Array.isArray(rapor.etkenMaddeler)) rapor.etkenMaddeler = []
+    if (!Array.isArray(rapor.malzemeOnerileri)) rapor.malzemeOnerileri = []
+    if (!Array.isArray(rapor.zorunluTetkikler)) rapor.zorunluTetkikler = []
+
+    // Strip legacy non-SGK field if model still emits it
+    delete (rapor as { calismaKapasitesi?: unknown }).calismaKapasitesi
+
+    const bugun = new Date()
+    const tarih = bugun.toLocaleDateString('tr-TR')
+    rapor.baslangicTarihi = rapor.baslangicTarihi || tarih
+
+    if (tip.sureBirimi === 'gun') {
+      const gun = Math.min(tip.sureMax, Math.max(tip.sureMin, Number(rapor.istirahat_suresi_gun) || sure))
+      rapor.istirahat_suresi_gun = gun
+      rapor.bitisTarihi = addDaysTr(bugun, gun)
+      delete rapor.onerilen_sure_ay
+    } else {
+      const ay = Math.min(tip.sureMax, Math.max(tip.sureMin, Number(rapor.onerilen_sure_ay) || sure))
+      rapor.onerilen_sure_ay = ay
+      delete rapor.istirahat_suresi_gun
+    }
+
+    if (tip.id === 'is_goremezlik' && !rapor.raporTuru) rapor.raporTuru = 'Ilk'
+
     const [{ data: profil }, { data: medula }] = await Promise.all([
       sb.from('users').select('full_name, specialty').eq('id', user.id).maybeSingle(),
-      sb.from('doctor_integrations').select('meta').eq('user_id', user.id).eq('provider', 'medula').eq('is_active', true).maybeSingle(),
+      sb
+        .from('doctor_integrations')
+        .select('meta')
+        .eq('user_id', user.id)
+        .eq('provider', 'medula')
+        .eq('is_active', true)
+        .maybeSingle(),
     ])
-    const meta = (medula?.meta || {}) as { tesisKodu?: string; sicilNo?: string }
-    const hekim = {
+    const meta = (medula?.meta || {}) as {
+      tesisKodu?: string
+      sicilNo?: string
+      diplomaTescilNo?: string
+      saglikKurumu?: string
+      kurumAdi?: string
+    }
+
+    const hekim: HekimKimlik = {
       adSoyad: profil?.full_name || user.user_metadata?.full_name || '',
-      uzmanlik: profil?.specialty || '',
+      uzmanlik: profil?.specialty || user.user_metadata?.specialty || '',
+      diplomaTescilNo: meta.diplomaTescilNo || meta.sicilNo || '',
+      saglikKurumu: meta.saglikKurumu || meta.kurumAdi || '',
       tesisKodu: meta.tesisKodu || '',
-      sicilNo: meta.sicilNo || '',
       medulaBagli: !!medula,
     }
-    const tarih = new Date().toLocaleDateString('tr-TR')
-    return NextResponse.json({ rapor, tarih, hekim })
+
+    return NextResponse.json({
+      rapor,
+      tarih,
+      hekim,
+      raporTipi: tip,
+    })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Sunucu hatası'
     return NextResponse.json({ hata: message }, { status: 500 })
