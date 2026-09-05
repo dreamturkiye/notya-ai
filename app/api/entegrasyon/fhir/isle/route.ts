@@ -28,6 +28,19 @@ const getSupabase = () => createClient(
 
 const PARTI_BOYU = 5
 
+// P2 — onaylı notun kendi kendine yeten HTML belgesi (DocumentReference içeriği).
+function htmlBelgeYap(b: { kurumAd: string; hastaAd: string; doktorAd: string; tarih: string; bolumler: [string, string][] }): string {
+  const kacir = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br/>')
+  const govde = b.bolumler.filter(([, m]) => m && m.trim()).map(([baslik, metin]) =>
+    `<h2 style="font:600 13px system-ui;color:#0F9B8E;border-bottom:1px solid #ddd;padding-bottom:4px;margin:18px 0 6px">${baslik}</h2><p style="font:12px/1.6 system-ui;color:#111;white-space:normal">${kacir(metin)}</p>`
+  ).join('')
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Muayene Notu</title></head><body style="max-width:720px;margin:24px auto;padding:0 16px">` +
+    `<div style="font:700 18px system-ui;color:#0A1628">MUAYENE NOTU</div>` +
+    `<div style="font:11px system-ui;color:#555;margin:4px 0 14px">${kacir(b.hastaAd)} · ${kacir(b.doktorAd)} · ${new Date(b.tarih).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })} (TRT) · ${kacir(b.kurumAd)}</div>` +
+    govde +
+    `<div style="font:10px system-ui;color:#888;margin-top:22px">Bu belge Notya™ tarafından üretilmiş, doktor tarafından incelenip onaylanmış muayene notudur.</div></body></html>`
+}
+
 async function oauthToken(tokenUrl: string, clientId: string, clientSecret: string): Promise<string | null> {
   try {
     const r = await fetch(tokenUrl, {
@@ -44,6 +57,20 @@ export async function POST(req: NextRequest) {
   if (req.headers.get('x-entegrasyon-anahtar') !== process.env.ENTEGRASYON_CRON_SECRET) {
     return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
   }
+  return calistir()
+}
+
+// P2 — Vercel cron girişi (evin deseni: x-vercel-cron ya da ?secret=CRON_SECRET).
+export async function GET(req: NextRequest) {
+  const secret = new URL(req.url).searchParams.get('secret')
+  const isCron = req.headers.get('x-vercel-cron') === '1'
+  if (!isCron && secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 })
+  }
+  return calistir()
+}
+
+async function calistir() {
   const sb = getSupabase()
   const rapor: Record<string, unknown>[] = []
 
@@ -101,6 +128,16 @@ export async function POST(req: NextRequest) {
         hasta,
         doktor: { id: not.doctor_id, adSoyad: dr?.full_name || 'Doktor', brans: dr?.specialty },
         kurumAd: kurum.ad,
+        belgeHtmlBase64: Buffer.from(htmlBelgeYap({
+          kurumAd: kurum.ad, hastaAd: hasta.adSoyad, doktorAd: dr?.full_name || 'Doktor', tarih: not.created_at,
+          bolumler: [
+            ['Başvuru Yakınması', not.basvuru_yakinmasi || ''],
+            ['Anamnez', not.content_anamnez || not.content_subjektif || ''],
+            ['Fizik Muayene', not.content_fizik_muayene || not.content_objektif || ''],
+            ['Tanı', not.content_tani || not.content_degerlendirme || ''],
+            ['Tedavi', not.content_tedavi || not.content_plan || ''],
+          ],
+        }), 'utf8').toString('base64'),
       }
       const bundle = notuFhirBundleYap(girdi)
 

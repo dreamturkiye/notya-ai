@@ -34,6 +34,8 @@ export interface FhirNotGirdisi {
   hasta: { id: string; adSoyad: string; tcKimlik?: string | null; dogumTarihi?: string | null; cinsiyet?: string | null; mrn?: string | null }
   doktor: { id: string; adSoyad: string; brans?: string | null }
   kurumAd: string
+  /** P2: onaylı notun kendi kendine yeten HTML belgesi (base64) — DocumentReference olarak eklenir. */
+  belgeHtmlBase64?: string | null
 }
 
 // Turkish national + international system URIs
@@ -194,6 +196,24 @@ export function notuFhirBundleYap(g: FhirNotGirdisi): Record<string, unknown> {
     },
     request: { method: 'POST', url: 'Composition' },
   })
+
+  // P2 — DocumentReference: onaylı notun okunabilir belgesi (text/html, base64).
+  // Hastane tarafında "resmî çıktı" ihtiyacını karşılar; PDF yükseltmesi P3 onboarding'e göre.
+  if (g.belgeHtmlBase64) {
+    entries.push({
+      fullUrl: `urn:uuid:doc-${g.noteId}`,
+      resource: {
+        resourceType: 'DocumentReference', id: `doc-${g.noteId}`, status: 'current', docStatus: 'final',
+        type: { coding: [{ system: SIS.loinc, code: '11488-4', display: 'Consult note' }], text: 'Muayene Notu Belgesi' },
+        subject: { reference: patientUrn },
+        date: tarih,
+        author: [ref('Practitioner', did)],
+        content: [{ attachment: { contentType: 'text/html', data: g.belgeHtmlBase64, title: `Muayene Notu — ${g.kurumAd}` } }],
+        context: { encounter: [{ reference: encUrn }] },
+      },
+      request: { method: 'POST', url: 'DocumentReference' },
+    })
+  }
 
   return { resourceType: 'Bundle', type: 'transaction', entry: entries }
 }

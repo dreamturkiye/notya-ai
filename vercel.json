@@ -50,6 +50,10 @@
   ],
   "crons": [
     {
+      "path": "/api/entegrasyon/fhir/isle",
+      "schedule": "30 * * * *"
+    },
+    {
       "path": "/api/monitor/health",
       "schedule": "0 7 * * *"
     },
