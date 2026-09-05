@@ -13,6 +13,7 @@ import HastaIlaclar from '@/components/doktor/HastaIlaclar';
 import HastaIntake from '@/components/doktor/HastaIntake';
 import HastaAsilar from '@/components/doktor/HastaAsilar';
 import HastaKonsult from '@/components/doktor/HastaKonsult';
+import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
@@ -266,10 +267,7 @@ export default function HastaProfilPage() {
         )}
 
         {!loading && !error && activeTab === 3 && (
-          <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 14, color: '#8FA0B5' }}>Hastanın belgeleri, belge merkezinde görüntülenir ve yüklenir.</span>
-            <button type="button" onClick={() => router.push('/dashboard/doktor/belgeler')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Belgeleri aç ›</button>
-          </div>
+          <PatientDocumentVault patientId={patientId} />
         )}
         {!loading && !error && activeTab === 4 && (
           <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>

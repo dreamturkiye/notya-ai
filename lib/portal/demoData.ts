@@ -222,7 +222,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
       ozet: 'Sinüs ritmi, normal eksen.',
       durum: 'normal',
       modalite: 'ekg',
-      gorselUrl: '/sagligim/imaging-placeholder.jpg',
+      gorselUrl: '/sagligim/ekg-sinus.jpg',
       raporMetni: 'Sinüs ritmi, 88/dk. PR, QRS, QT süreleri normal. ST-T değişikliği yok.',
     },
     {
