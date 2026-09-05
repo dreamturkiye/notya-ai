@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { PortalBundle, PortalResult, ResultKind } from '@/lib/portal/types'
 import { imagingDisplayLabel } from '@/lib/doktor/imagingModalities'
@@ -84,6 +84,22 @@ export function ResultDetailView({
   basePath: string
   result: PortalResult | null
 }) {
+  const [fullscreen, setFullscreen] = useState(false)
+
+  useEffect(() => {
+    if (!fullscreen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFullscreen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [fullscreen])
+
   if (!result) {
     return (
       <>
@@ -183,14 +199,9 @@ export function ResultDetailView({
                 >
                   İndir
                 </a>
-                <a
-                  href={result.gorselUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="sg-chip-btn"
-                >
+                <button type="button" className="sg-chip-btn" onClick={() => setFullscreen(true)}>
                   Tam ekran
-                </a>
+                </button>
               </div>
             </div>
           ) : null}
@@ -204,6 +215,39 @@ export function ResultDetailView({
           ) : null}
         </SoftPanel>
       )}
+
+      {fullscreen && result.gorselUrl ? (
+        <div
+          className="sg-imaging-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${result.baslik} — tam ekran`}
+          onClick={() => setFullscreen(false)}
+        >
+          <div className="sg-imaging-lightbox-bar" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="sg-chip-btn is-active" onClick={() => setFullscreen(false)}>
+              ← Sonuca dön
+            </button>
+            <span className="sg-imaging-lightbox-title">{result.baslik}</span>
+            <button
+              type="button"
+              className="sg-chip-btn sg-imaging-lightbox-close"
+              aria-label="Kapat"
+              onClick={() => setFullscreen(false)}
+            >
+              Kapat
+            </button>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={result.gorselUrl}
+            alt={modalityLabel(result.modalite)}
+            className="sg-imaging-lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <p className="sg-imaging-lightbox-hint">Çıkmak için «Sonuca dön», «Kapat» veya Esc</p>
+        </div>
+      ) : null}
     </div>
   )
 }
