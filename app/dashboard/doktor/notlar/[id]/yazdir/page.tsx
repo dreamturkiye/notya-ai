@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { anamnezParcala, fizikParcala } from '@/lib/doktor/anamnezBolumleri';
+import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
 
 interface NotVeri {
   not: {
@@ -55,14 +56,7 @@ export default function NotYazdir() {
 
   const { not, hasta, doktor, duzenlemeSayisi } = veri;
   const v = not.vitaller;
-  const vitalParcalar = [
-    v?.kilo != null ? `Kilo: ${v.kilo} kg` : '',
-    v?.boy != null ? `Boy: ${v.boy} cm` : '',
-    v?.ates != null ? `Ateş: ${v.ates} °C` : '',
-    v?.nabiz != null ? `Nabız: ${v.nabiz}/dk` : '',
-    v?.spo2 != null ? `SpO2: %${v.spo2}` : '',
-    v?.tansiyon ? `TA: ${v.tansiyon}` : '',
-  ].filter(Boolean);
+  const vitalParcalar = yasamsalBulguSatirlari(v).map((l) => `${l.label}: ${l.value}`);
 
   return (
     <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif' }}>
@@ -99,7 +93,7 @@ export default function NotYazdir() {
               <td style={{ padding: '3px 0' }}><strong>Cinsiyet:</strong> {hasta.cinsiyet || '—'}</td>
             </tr>
             {vitalParcalar.length > 0 && (
-              <tr><td colSpan={2} style={{ padding: '3px 0' }}><strong>Vitaller:</strong> {vitalParcalar.join(' · ')}</td></tr>
+              <tr><td colSpan={2} style={{ padding: '3px 0' }}><strong>{YASAMSAL_BULGULAR_BASLIK}:</strong> {vitalParcalar.join(' · ')}</td></tr>
             )}
           </tbody>
         </table>

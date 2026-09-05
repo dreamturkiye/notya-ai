@@ -2,6 +2,11 @@
 
 import Link from 'next/link'
 import type { PortalBundle, PortalVisit } from '@/lib/portal/types'
+import {
+  YASAMSAL_BULGULAR_BASLIK,
+  hasYasamsalBulgular,
+  yasamsalBulguSatirlari,
+} from '@/lib/clinical/yasamsalBulgular'
 import { EmptyState, ListRow, SectionHeader, SoftPanel, formatTrDate } from './ui'
 
 export function VisitsListView({ basePath, data }: { basePath: string; data: PortalBundle }) {
@@ -56,6 +61,8 @@ export function VisitDetailView({
     { label: 'Takip', text: visit.takip },
   ]
 
+  const vitalLines = yasamsalBulguSatirlari(visit.vitaller)
+
   return (
     <div className="sg-fade">
       <Link href={`${basePath}/ziyaretler`} className="sg-back-link">
@@ -65,17 +72,17 @@ export function VisitDetailView({
         title="Ziyaret özeti"
         subtitle={`${formatTrDate(visit.tarih, true)} · ${visit.brans} · ${visit.hekim}`}
       />
-      {visit.vitaller && Object.values(visit.vitaller).some((v) => v != null && v !== '') ? (
+      {hasYasamsalBulgular(visit.vitaller) ? (
         <SoftPanel style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-muted)', marginBottom: 10 }}>VİTALLER</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-muted)', marginBottom: 10 }}>
+            {YASAMSAL_BULGULAR_BASLIK}
+          </div>
           <div className="sg-vital-chips">
-            {Object.entries(visit.vitaller).map(([k, val]) =>
-              val == null || val === '' ? null : (
-                <span key={k} className="sg-vital-chip">
-                  {k}: {String(val)}
-                </span>
-              )
-            )}
+            {vitalLines.map((line) => (
+              <span key={line.key} className="sg-vital-chip">
+                {line.label}: {line.value}
+              </span>
+            ))}
           </div>
         </SoftPanel>
       ) : null}

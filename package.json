@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "npx --yes tsx --test lib/address.test.ts lib/vault/vault.test.ts lib/vault/service.acl.test.ts",
+    "test": "npx --yes tsx --test lib/address.test.ts lib/vault/vault.test.ts lib/vault/service.acl.test.ts lib/clinical/yasamsalBulgular.test.ts",
     "migrate:supabase": "node scripts/run-supabase-migration.mjs",
     "migrate:tidb": "node scripts/run-tidb-migration.mjs",
     "typecheck": "tsc --noEmit"

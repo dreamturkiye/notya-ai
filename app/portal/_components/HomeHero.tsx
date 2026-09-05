@@ -22,7 +22,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
     { label: 'Sonuçlar', href: `${basePath}/sonuclar`, hint: 'Lab ve görüntüleme' },
     { label: 'İlaçlarım', href: `${basePath}/ilaclar`, hint: 'Aktif reçeteler' },
     { label: 'Öykü', href: `${basePath}/gecmis`, hint: 'Alerji ve geçmiş' },
-    { label: 'Takip', href: `${basePath}/takip`, hint: 'Vital trendler' },
+    { label: 'Takip', href: `${basePath}/takip`, hint: 'Yaşamsal bulgular' },
   ]
 
   return (

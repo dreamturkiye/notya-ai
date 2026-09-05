@@ -4,6 +4,7 @@ import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 import { loadPortalMessages } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModalities'
+import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import type {
   PortalBundle,
   PortalMedication,
@@ -271,13 +272,14 @@ export async function GET(
     const lastBp = bundle.tracking.tansiyon[bundle.tracking.tansiyon.length - 1]
     const lastKilo = bundle.tracking.kilo[bundle.tracking.kilo.length - 1]
     const lastNabiz = bundle.tracking.nabiz[bundle.tracking.nabiz.length - 1]
-    bundle.tracking.sonVitalOzet = [
-      lastBp ? `TA ${lastBp.sistolik}/${lastBp.diastolik}` : null,
-      lastNabiz ? `Nabız ${lastNabiz.deger}` : null,
-      lastKilo ? `Kilo ${lastKilo.deger} kg` : null,
-    ]
-      .filter(Boolean)
-      .join(' · ')
+    const lastSpo2 = bundle.tracking.spo2[bundle.tracking.spo2.length - 1]
+    const ozet = yasamsalBulguOzeti({
+      tansiyon: lastBp ? `${lastBp.sistolik}/${lastBp.diastolik}` : null,
+      nabiz: lastNabiz?.deger ?? null,
+      spo2: lastSpo2?.deger ?? null,
+      kilo: lastKilo?.deger ?? null,
+    })
+    if (ozet) bundle.tracking.sonVitalOzet = ozet
   }
 
   // Messages from DB

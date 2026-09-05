@@ -147,7 +147,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
       subjektif:
         'Hasta genel durumunun iyi olduğunu, düzenli yürüyüş yaptığını belirtti. Göğüs ağrısı, nefes darlığı tanımlamadı.',
       objektif:
-        'TA 128/78 mmHg, nabız 72/dk, SpO2 %98. Kardiyopulmoner muayene doğal. Ödem yok.',
+        'Tansiyon 128/78 mmHg, nabız 72/dk, SpO₂ %98. Kardiyopulmoner muayene doğal. Ödem yok.',
       degerlendirme:
         'Esansiyel hipertansiyon ve tip 2 diyabet regülasyonu iyi-orta. HbA1c hedefe yakın.',
       plan: 'Mevcut antihipertansif ve antidiabetik tedaviye devam. Diyet + 30 dk yürüyüş. 3 ay sonra kontrol + HbA1c.',
@@ -163,7 +163,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
       hekim: 'Uzm. Dr. Elif Yılmaz',
       ozetKisa: 'HbA1c hafif yüksek; metformin dozu ayarlandı.',
       subjektif: '2 haftadır halsizlik ve ara ara çarpıntı. Gece terlemesi yok.',
-      objektif: 'TA 134/82, nabız 88, ritim düzenli. Tiroid loju doğal.',
+      objektif: 'Tansiyon 134/82 mmHg, nabız 88/dk, ritim düzenli. Tiroid loju doğal.',
       degerlendirme: 'Olası glisemik dalgalanma. Tiroid paneli normal sınırlarda.',
       plan: 'Glucophage 1000 mg günde 2 kez. Kan paneli tekrarı. 6 hafta kontrol.',
       vitaller: { tansiyon: '134/82', nabiz: 88, spo2: 97, kilo: 72.1 },
@@ -335,7 +335,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
     ],
   },
   tracking: {
-    sonVitalOzet: 'Son ölçüm: 28 Ağu 2026 · TA 128/78 · Nabız 72 · Kilo 71.4 kg',
+    sonVitalOzet: 'Tansiyon: 128/78 mmHg · Nabız: 72/dk · SpO₂: %98 · Kilo: 71,4 kg',
     tansiyon: [
       { tarih: '2026-05-03', sistolik: 126, diastolik: 76 },
       { tarih: '2026-07-12', sistolik: 134, diastolik: 82 },

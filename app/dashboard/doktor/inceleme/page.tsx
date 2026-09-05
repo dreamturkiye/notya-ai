@@ -10,6 +10,7 @@ import {
   toolsCard,
   toolsErrorBox,
 } from '@/lib/doktor/toolsUi';
+import { yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
@@ -307,12 +308,10 @@ export default function IncelemePage() {
                       )}
                       {note.vitaller && Object.values(note.vitaller).some((v) => v != null && v !== '') && (
                         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 10, fontSize: 12, color: '#8FA0B5' }}>
-                          {note.vitaller.kilo != null && <span>Kilo: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.kilo} kg</strong></span>}
-                          {note.vitaller.boy != null && <span>Boy: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.boy} cm</strong></span>}
-                          {note.vitaller.ates != null && <span>Ateş: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.ates} °C</strong></span>}
-                          {note.vitaller.nabiz != null && <span>Nabız: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.nabiz}</strong></span>}
-                          {note.vitaller.spo2 != null && <span>SpO2: <strong style={{ color: '#EDF1F7' }}>%{note.vitaller.spo2}</strong></span>}
-                          {note.vitaller.tansiyon && <span>TA: <strong style={{ color: '#EDF1F7' }}>{note.vitaller.tansiyon}</strong></span>}
+                          <span style={{ fontWeight: 700, color: '#94A3B8', width: '100%' }}>Yaşamsal Bulgular</span>
+                          {yasamsalBulguSatirlari(note.vitaller).map((l) => (
+                            <span key={l.key}>{l.label}: <strong style={{ color: '#EDF1F7' }}>{l.value}</strong></span>
+                          ))}
                         </div>
                       )}
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
