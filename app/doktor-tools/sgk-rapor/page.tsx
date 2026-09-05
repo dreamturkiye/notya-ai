@@ -97,17 +97,21 @@ export default function SgkRaporPage() {
         <div style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', letterSpacing: 1.2, marginBottom: 8 }}>
           ARAÇLAR
         </div>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#FFFFFF' }}>SGK Rapor Oluştur</h1>
+        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#FFFFFF' }}>Hasta Raporu Oluştur</h1>
         <p style={{ marginTop: 8, color: '#94A3B8', fontSize: 14, lineHeight: 1.5 }}>
-          Medula e-Rapor / e-İstirahat veri girişi için klinik taslak. Canlı Medula gönderimi değildir.
+          SGK Medula taslakları ile özel muayenehane belgelerini ayrı tutun. Canlı Medula gönderimi değildir.
         </p>
 
         {error && <div style={toolsErrorBox}>{error}</div>}
 
         <div style={{ ...toolsCard, marginTop: 20 }} className="no-print">
           <label style={toolsLabel}>Rapor Tipi</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-            {RAPOR_TIPLERI.map((tip) => (
+
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#5EEAD4', letterSpacing: 0.6, margin: '4px 0 8px' }}>
+            SGK / MEDULA
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+            {RAPOR_TIPLERI.filter((t) => t.kanal === 'sgk_medula').map((tip) => (
               <label
                 key={tip.id}
                 style={{
@@ -132,11 +136,44 @@ export default function SgkRaporPage() {
                 <span>
                   <span style={{ display: 'block', color: '#F8FAFC', fontSize: 14, fontWeight: 650, lineHeight: 1.35 }}>
                     {tip.label}
-                    {tip.kanal === 'ozel_muayenehane' ? (
-                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#FBBF24' }}>ÖZEL</span>
-                    ) : (
-                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#5EEAD4' }}>SGK</span>
-                    )}
+                  </span>
+                  <span style={{ display: 'block', marginTop: 4, color: '#94A3B8', fontSize: 12, lineHeight: 1.4 }}>
+                    {tip.aciklama}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#FBBF24', letterSpacing: 0.6, margin: '4px 0 8px' }}>
+            ÖZEL MUAYENEHANE / PRIVATE PRACTICE
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+            {RAPOR_TIPLERI.filter((t) => t.kanal === 'ozel_muayenehane').map((tip) => (
+              <label
+                key={tip.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  padding: '10px 12px',
+                  borderRadius: 12,
+                  border: `1px solid ${raporTipiId === tip.id ? 'rgba(245,158,11,0.55)' : 'rgba(255,255,255,0.12)'}`,
+                  background: raporTipiId === tip.id ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.03)',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="raporTipi"
+                  value={tip.id}
+                  checked={raporTipiId === tip.id}
+                  onChange={() => onTipChange(tip.id)}
+                  style={{ marginTop: 3, accentColor: '#F59E0B', flexShrink: 0 }}
+                />
+                <span>
+                  <span style={{ display: 'block', color: '#F8FAFC', fontSize: 14, fontWeight: 650, lineHeight: 1.35 }}>
+                    {tip.label}
                   </span>
                   <span style={{ display: 'block', marginTop: 4, color: '#94A3B8', fontSize: 12, lineHeight: 1.4 }}>
                     {tip.aciklama}

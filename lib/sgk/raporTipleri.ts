@@ -45,7 +45,7 @@ export type RaporTipiMeta = {
   >
 }
 
-/** Canonical list shown in SGK Rapor Oluştur (order = UI order). */
+/** Canonical list shown in Hasta Raporu Oluştur (order = UI order). */
 export const RAPOR_TIPLERI: RaporTipiMeta[] = [
   {
     id: 'is_goremezlik',
