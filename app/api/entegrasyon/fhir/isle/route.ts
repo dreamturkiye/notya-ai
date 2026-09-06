@@ -70,11 +70,13 @@ async function calistir() {
     if (doktorIdler.length === 0) continue
 
     // Approved notes by linked doctors, not yet queued for this kurum
+    // QA-2026-09-06: notes tablosunda 'status' kolonu YOK — onay gerçeği approved_at'tir.
+    // (İlk sürüm status='approved' filtreliyordu → sorgu hiç eşleşmezdi.)
     const { data: notlar } = await sb
       .from('notes')
-      .select('id, created_at, doctor_id, status, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, icd10_codes, vitaller, basvuru_yakinmasi, recete_onerisi, sessions!inner(patient_id, context)')
+      .select('id, created_at, doctor_id, approved_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, icd10_codes, vitaller, basvuru_yakinmasi, recete_onerisi, sessions!inner(patient_id, context)')
       .in('doctor_id', doktorIdler)
-      .eq('status', 'approved')
+      .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })
       .limit(40)
     if (!notlar?.length) continue
