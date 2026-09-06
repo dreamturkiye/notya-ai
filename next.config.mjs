@@ -12,6 +12,14 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
 
+  // QA-2026-09-06 bulgu #1: /login 404'tı — alışkanlıkla yazılan yolları gerçek girişe yönlendir.
+  async redirects() {
+    return [
+      { source: '/login', destination: '/giris', permanent: true },
+      { source: '/signin', destination: '/giris', permanent: true },
+    ]
+  },
+
   async headers() {
     return [
       {
