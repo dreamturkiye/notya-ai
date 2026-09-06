@@ -60,18 +60,21 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { tcKimlikNo, adSoyad, dogumTarihi, cinsiyet, telefon, eposta, sehir, kanGrubu, kronikHastaliklar, alerjiler, suregenIlaclar, sigaraAlkol } = body;
 
-  if (!tcKimlikNo || tcKimlikNo.length !== 11) {
+  // QA-2026-09-06 (bot bulgusu): manuel formda e-posta ve TC alanları yokken API ikisini de
+  // ZORUNLU sayıyordu — manuel hasta eklemek imkansızdı. Ürün felsefesiyle hizalandı:
+  // zorunlu olan yalnız Ad Soyad (seans akışı da yalnız adla hasta yaratır); TC verilirse
+  // doğrulanır, e-posta verilirse karşılama akışlarında kullanılır.
+  if (tcKimlikNo && String(tcKimlikNo).length !== 11) {
     return NextResponse.json({ error: 'Geçersiz TC Kimlik' }, { status: 400 });
   }
   if (!adSoyad || !adSoyad.trim()) {
     return NextResponse.json({ error: 'Ad Soyad zorunludur.' }, { status: 400 });
   }
-  // NOTYA-OPS-02: yeni hasta kaydında e-posta zorunlu (karşılama e-postası + hasta formu bu adrese gidecek)
-  if (!eposta || !String(eposta).includes('@')) {
-    return NextResponse.json({ error: 'E-posta adresi zorunludur.' }, { status: 400 });
+  if (eposta && !String(eposta).includes('@')) {
+    return NextResponse.json({ error: 'E-posta adresi geçersiz.' }, { status: 400 });
   }
 
-  const tcHash = require('crypto').createHash('sha256').update(tcKimlikNo).digest('hex');
+  const tcHash = tcKimlikNo ? require('crypto').createHash('sha256').update(String(tcKimlikNo)).digest('hex') : null;
 
   const encryptedAd = encrypt(JSON.stringify({ ad: adSoyad }));
   const encryptedDob = dogumTarihi ? encrypt(dogumTarihi) : null;

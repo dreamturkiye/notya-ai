@@ -210,10 +210,7 @@ export default function HastaEklePage() {
       setBanner({ type: 'error', message: 'Ad Soyad zorunlu' });
       return;
     }
-    if (!formData.eposta.trim().includes('@')) {
-      setBanner({ type: 'error', message: 'E-posta adresi zorunlu' });
-      return;
-    }
+    // QA-2026-09-06: formda e-posta alanı yok — zorunluluk kaldırıldı (varsa API doğrular).
     setIdentitySource((s) => s || 'manuel');
     setPhase('review');
   };
