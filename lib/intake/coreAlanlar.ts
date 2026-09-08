@@ -126,7 +126,14 @@ export function coreBolumlerIcin(brans: string): IntakeBolum[] {
           case 'kullanilanIlaclar':
             return [{ id: 'kullanilanIlaclar', etiket: 'Kullanılan İlaç / Takviyeler', tur: 'textarea', placeholder: 'Düzenli kullanılan ilaç ve takviyeler (adı, dozu) — yoksa "Yok" yazın' }]
           case 'alerjiler':
-            return [{ id: 'alerjiler', etiket: 'Bilinen Alerjiler', tur: 'textarea', placeholder: 'İlaç, gıda veya diğer bilinen alerjiler — yoksa "Yok" yazın' }]
+          case 'alerjiVarMi':
+            // Core ile hizalı (2026-09-08): checkbox yerine yok/var + açıklama.
+            return [
+              { id: 'alerjiVarMi', etiket: 'Bilinen Alerjiler', tur: 'radio', zorunlu: true, secenekler: ['Bilinen alerjisi yok', 'Bilinen alerjisi var'] },
+              { id: 'alerjiAciklama', etiket: 'Alerji açıklaması', tur: 'textarea', placeholder: 'İlaç, gıda veya diğer bilinen alerjileri yazın', yardim: 'Yalnız "Bilinen alerjisi var" seçildiyse doldurun.' },
+            ]
+          case 'alerjiAciklama':
+            return [] // yukarıda alerjiVarMi ile birlikte üretildi
           case 'sigara':
             return [{ id: 'sigara', etiket: 'Ailede Sigara Kullanımı', tur: 'radio', secenekler: ['Evet', 'Hayır'] }]
           case 'alkol':
