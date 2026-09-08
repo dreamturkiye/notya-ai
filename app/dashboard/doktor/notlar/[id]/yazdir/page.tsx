@@ -30,6 +30,12 @@ interface NotVeri {
   duzenlemeSayisi: number;
 }
 
+/** "Dr. Dr. Gökhan" tekrarını önler — ad zaten unvanla başlıyorsa dokunmaz (Gökhan, 2026-09-08). */
+function doktorUnvanli(ad: string): string {
+  const t = String(ad || '').trim()
+  return /^(dr|doç|doc|prof|uzm|op)\.?\s/i.test(t) ? t : `Dr. ${t}`
+}
+
 function trTarih(iso?: string | null): string {
   if (!iso) return '';
   try { return new Date(iso).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }) } catch { return '' }
@@ -115,7 +121,7 @@ export default function NotYazdir() {
             <div style={{ font: '12px system-ui', color: '#444', textTransform: 'capitalize' }}>{not.specialty} · {trTarih(not.createdAt)} (TRT)</div>
             {/* Akış: Anamnez → Fizik Muayene → Tanı → Tedavi (Dr. Gökhan referansları) */}
           </div>
-          <div style={{ font: '12px system-ui', color: '#444' }}>Dr. {doktor.ad}</div>
+          <div style={{ font: '12px system-ui', color: '#444' }}>{doktorUnvanli(doktor.ad)}</div>
         </div>
 
         <table style={{ width: '100%', font: '12.5px system-ui', borderCollapse: 'collapse', marginBottom: 14 }}>
@@ -162,19 +168,22 @@ export default function NotYazdir() {
             resmî yazdır çıktısına / dosyaya GİRMEZ. Yalnız İnceleme ekranında doktora gösterilir. */}
         {not.hastaOzeti && (
           <div className="not-bolum" style={{ background: '#F5F5F0', border: '1px solid #DDD', borderRadius: 6, padding: '10px 12px' }}>
-            <div className="not-etiket">Hasta / Veli Özeti (sade dil)</div><div className="not-metin">{not.hastaOzeti}</div>
+            <div className="not-etiket">Hasta / Veli Özeti</div><div className="not-metin">{not.hastaOzeti}</div>
+            <div style={{ fontSize: 10.5, color: '#777', marginTop: 6, lineHeight: 1.45 }}>
+              Bu özet, muayene sırasında yapılan sözlü bilgilendirmeyi hatırlatmak amacıyla hazırlanmış genel bir bilgilendirmedir; tıbbi rapor, reçete veya kesin tanı belgesi yerine geçmez. Tedavi kararı hekimin muayene bulgularına dayanır; belirtilerde değişiklik olursa hekiminize danışınız.
+            </div>
           </div>
         )}
 
         <div style={{ borderTop: '1px solid #999', marginTop: 22, paddingTop: 10, font: '11px system-ui', color: '#555', lineHeight: 1.6 }}>
           Bu not, muayene kaydından yapay zekâ (Notya — Ayşe) desteğiyle oluşturulmuştur.
           {not.approvedAt
-            ? ` Dr. ${doktor.ad} tarafından incelenmiş${duzenlemeSayisi > 0 ? `, ${duzenlemeSayisi} alanda düzenlenmiş` : ''} ve ${trTarih(not.approvedAt)} (TRT) tarihinde onaylanmıştır.`
+            ? ` ${doktorUnvanli(doktor.ad)} tarafından incelenmiş${duzenlemeSayisi > 0 ? `, ${duzenlemeSayisi} alanda düzenlenmiş` : ''} ve ${trTarih(not.approvedAt)} (TRT) tarihinde onaylanmıştır.`
             : ' Henüz doktor onayından geçmemiştir — TASLAK.'}
           {' '}Nihai klinik karar ve sorumluluk hekime aittir. Düzenleme geçmişi sistemde saklanır (KVKK).
           <div style={{ marginTop: 26, display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #333', width: 220, paddingTop: 4 }}>Dr. {doktor.ad} — İmza / Kaşe</div>
+              <div style={{ borderTop: '1px solid #333', width: 220, paddingTop: 4 }}>{doktorUnvanli(doktor.ad)} — İmza / Kaşe</div>
             </div>
           </div>
         </div>
