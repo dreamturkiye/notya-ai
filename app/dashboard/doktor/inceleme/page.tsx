@@ -376,7 +376,7 @@ export default function IncelemePage() {
                       )}
                       {note.kritikBulgular.length > 0 && (
                         <div style={{ marginBottom: 10, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '8px 10px' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 3 }}>Kritik bulgular</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 3 }}>Dikkate almayı düşünür müsünüz? <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — nota ve hastaya yansımaz)</span></div>
                           {note.kritikBulgular.map((kb, i2) => <div key={i2} style={{ fontSize: 13, color: '#FDBA74' }}>• {kb}</div>)}
                         </div>
                       )}
