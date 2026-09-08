@@ -35,11 +35,12 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'basvuruNedeniPed', etiket: 'Bugünkü geliş sebebiniz nedir?', tur: 'textarea', zorunlu: true, placeholder: 'Sizi bugün kliniğimize getiren en önemli nedeni yazınız.' },
 
       { id: 'baslikVeli', etiket: 'Veli / Yasal Vasi', tur: 'bolum-basligi' },
-      { id: 'veliYakinligi', etiket: 'Yakınlığı', tur: 'radio', zorunlu: true, secenekler: ['Anne', 'Baba', 'Yasal Vasi'] },
+      { id: 'veliYakinligi', etiket: 'Yakınlığı', tur: 'radio', zorunlu: true, secenekler: ['Anne', 'Baba', 'Diğer'] },
+      { id: 'veliDigerAdSoyad', etiket: 'Getiren kişinin Adı Soyadı ve yakınlığı', tur: 'text', placeholder: 'Örn. Ayşe Yılmaz — bakıcı / anneanne', yardim: 'Yalnız "Diğer" seçildiyse doldurun.' },
 
       { id: 'baslikDogumGelisim', etiket: 'Doğum ve Gelişim', tur: 'bolum-basligi' },
       { id: 'gebelikKomplikasyonuPed', etiket: 'Gebelik sürecinde aşağıdakilerden biri yaşandı mı?', tur: 'checkbox-grup', secenekler: ['Diyabet', 'Hipertansiyon', 'Erken Doğum Riski', 'Enfeksiyon', 'Çoğul Gebelik', 'Tüp Bebek (IVF)', 'Sorun Yaşanmadı'] },
-      { id: 'gebelikHaftasiPed', etiket: 'Gebelik Haftası', tur: 'radio', secenekler: ['37 hafta ve üzeri', '37 haftadan önce', 'Bilmiyorum'] },
+      { id: 'gebelikHaftasiPed', etiket: 'Gebelik Haftası', tur: 'radio', secenekler: ['37 haftadan önce', '37-38 hafta', '39 hafta ve üstü', 'Hatırlamıyorum'] },
       { id: 'dogumKilosuPed', etiket: 'Doğum Kilosu (gram)', tur: 'text' },
       { id: 'dogumBoyuPed', etiket: 'Doğum Boyu (cm)', tur: 'text' },
       { id: 'basCevresiPed', etiket: 'Baş Çevresi (cm)', tur: 'text' },
