@@ -100,8 +100,10 @@ export default function NotYazdir() {
     <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif' }}>
       <style>{`
         @media print { .yazdirma-gizle { display: none !important; } body { -webkit-print-color-adjust: exact; } }
-        .not-bolum { margin-bottom: 14px; }
-        .not-etiket { font: 700 11px/1.4 system-ui; letter-spacing: 0.06em; color: #0B6B62; text-transform: uppercase; margin-bottom: 3px; }
+        /* NOTYA-PDF-01 (Gökhan): sayfalandırma — başlık sayfa sonunda yetim kalmasın,
+           başlık+içerik blokları mümkünse bölünmeden birlikte taşınsın. */
+        .not-bolum { margin-bottom: 14px; break-inside: avoid; page-break-inside: avoid; }
+        .not-etiket { font: 700 11px/1.4 system-ui; letter-spacing: 0.06em; color: #0B6B62; text-transform: uppercase; margin-bottom: 3px; break-after: avoid; page-break-after: avoid; }
         .not-metin { font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; }
       `}</style>
 
