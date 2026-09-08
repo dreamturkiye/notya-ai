@@ -370,7 +370,7 @@ export default function IncelemePage() {
                       )}
                       {note.alarmBulgulari.length > 0 && (
                         <div style={{ marginBottom: 10 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Alarm bulguları (veliye/hastaya anlatılacak)</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>(veliye/hastaya anlatılacak)</span></div>
                           {note.alarmBulgulari.map((a, i2) => <div key={i2} style={{ fontSize: 13, color: '#CBD5E1' }}>• {a}</div>)}
                         </div>
                       )}
