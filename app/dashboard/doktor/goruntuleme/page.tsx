@@ -139,11 +139,17 @@ const Page = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!window.confirm('Bu görüntüyü arşivden silmek istediğinize emin misiniz?')) return
     const token = await getAccessTokenAsync();
-    await fetch(`/api/doktor/goruntuleme/${id}`, {
+    const res = await fetch(`/api/doktor/goruntuleme/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      alert(j.error || 'Görüntü silinemedi.');
+      return;
+    }
     fetchGoruntulemeler(filterHastaId || undefined);
     if (selectedGoruntuleme?.id === id) setSelectedGoruntuleme(null);
   };
