@@ -1140,7 +1140,7 @@ export default function RandevularPage() {
                 </div>
                 <div className="ni-field">
                   <label className="ni-label">Saat *</label>
-                  <input className="ni-input" type="time" value={saat} onChange={(e) => setSaat(e.target.value)} />
+                  <input className="ni-input" type="time" step={900} value={saat} onChange={(e) => setSaat(e.target.value)} />
                 </div>
                 <div className="ni-field">
                   <label className="ni-label">Süre (dk) *</label>
