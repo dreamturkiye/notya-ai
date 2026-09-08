@@ -69,6 +69,8 @@ function NewSessionInner() {
   const [transcript, setTranscript] = useState("")
   const [isRecordingVoice, setIsRecordingVoice] = useState(false)
   const [note, setNote] = useState<Record<string,unknown>|null>(null)
+  const [onayDurumu, setOnayDurumu] = useState<"beklemede"|"gonderiliyor"|"onaylandi">("beklemede")
+  const [onayHata, setOnayHata] = useState("")
   const [sesYukleniyor, setSesYukleniyor] = useState(false)
   const [sesHata, setSesHata] = useState("")
   const [error, setError] = useState("")
@@ -210,6 +212,27 @@ function NewSessionInner() {
   }
 
   function fmt(s: number) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}` }
+
+  async function notuOnayla() {
+    const noteId = note?.id ? String(note.id) : ""
+    if (!noteId) { setOnayHata("Not kimliği bulunamadı — Not Revizyonu'ndan onaylayabilirsiniz."); return }
+    setOnayDurumu("gonderiliyor"); setOnayHata("")
+    try {
+      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+      const { data: { session: authSession } } = await sb.auth.getSession()
+      const authToken = authSession?.access_token
+      if (!authToken) throw new Error("Oturum bulunamadı")
+      const r = await fetch(`/api/notes/${noteId}/approve`, { method: "POST", headers: { Authorization: `Bearer ${authToken}` } })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok || d.success === false) throw new Error(d.error || "Onaylanamadı")
+      setOnayDurumu("onaylandi")
+      setTimeout(() => router.push("/dashboard/doktor"), 900)
+    } catch (e: unknown) {
+      setOnayDurumu("beklemede")
+      setOnayHata(e instanceof Error ? e.message : "Onaylanamadı — Not Revizyonu'ndan deneyin.")
+    }
+  }
+
   const S = (s: Record<string,unknown>) => s as React.CSSProperties
 
   return (
@@ -358,15 +381,16 @@ function NewSessionInner() {
               </div>
             )}
             <div style={S({display:"flex",gap:"10px",marginTop:"8px"})}>
-              <button onClick={()=>router.push("/dashboard")}
-                style={S({flex:1,padding:"14px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:"600",cursor:"pointer"})}>
-                Dashboard
-              </button>
-              <button onClick={()=>{setStep("setup");setNote(null);setTranscript("");setSeconds(0)}}
+              <button onClick={()=>router.push("/dashboard/doktor/inceleme")}
                 style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#374151",border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:"600",cursor:"pointer"})}>
-                Yeni Seans
+                Not Revizyonu
+              </button>
+              <button onClick={notuOnayla} disabled={onayDurumu==="gonderiliyor"}
+                style={S({flex:1,padding:"14px",background:onayDurumu==="onaylandi"?"#16A34A":"#0F9B8E",color:"#fff",border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:"600",cursor:onayDurumu==="gonderiliyor"?"default":"pointer",opacity:onayDurumu==="gonderiliyor"?0.7:1})}>
+                {onayDurumu==="gonderiliyor"?"Onaylanıyor…":onayDurumu==="onaylandi"?"✓ Onaylandı":"Notu Onayla"}
               </button>
             </div>
+            {onayHata && <div style={S({marginTop:"8px",color:"#DC2626",fontSize:"13px",textAlign:"center"})}>{onayHata}</div>}
           </div>
         )}
       </div>
