@@ -54,6 +54,7 @@ export default function BelgelerPage() {
   const [hastalar, setHastalar] = useState<HastaOption[]>([])
   const [docs, setDocs] = useState<VaultDoc[]>([])
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
+  const [silinen, setSilinen] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -161,6 +162,31 @@ export default function BelgelerPage() {
   const dosyayiKaldir = () => {
     setFile(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const belgeSil = async (d: VaultDoc) => {
+    if (!window.confirm(`“${d.fileName}” belgesini kasadan silmek istediğinize emin misiniz?`)) return
+    setSilinen(d.id)
+    setError('')
+    try {
+      const token = await getAccessTokenAsync()
+      if (!token) throw new Error('Oturum bulunamadı.')
+      const res = await fetch(`/api/doktor/documents/${d.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || 'Belge silinemedi')
+      }
+      setDocs((prev) => prev.filter((x) => x.id !== d.id))
+      if (viewer?.id === d.id) setViewer(null)
+      setInfo(`“${d.fileName}” silindi.`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Belge silinemedi')
+    } finally {
+      setSilinen(null)
+    }
   }
 
   const handleUpload = async () => {
@@ -453,10 +479,8 @@ export default function BelgelerPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {docs.map((d) => (
-                  <button
+                  <div
                     key={d.id}
-                    type="button"
-                    onClick={() => setViewer(d)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -465,17 +489,38 @@ export default function BelgelerPage() {
                       background: viewer?.id === d.id ? 'rgba(45,212,191,0.1)' : 'rgba(255,255,255,0.03)',
                       border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: 12,
-                      cursor: 'pointer',
-                      textAlign: 'left',
                       color: '#E2E8F0',
                     }}
                   >
-                    <span style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span
+                      onClick={() => setViewer(d)}
+                      style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                    >
                       {d.fileName}
                     </span>
                     <span style={{ fontSize: 11, color: '#94A3B8' }}>{d.category || d.fileType}</span>
                     <span style={{ fontSize: 11, color: '#64748B' }}>{Math.max(1, Math.round(d.fileSize / 1024))} KB</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => belgeSil(d)}
+                      disabled={silinen === d.id}
+                      title="Belgeyi sil"
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(248,113,113,0.35)',
+                        color: '#F87171',
+                        borderRadius: 8,
+                        padding: '4px 10px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: silinen === d.id ? 'default' : 'pointer',
+                        opacity: silinen === d.id ? 0.5 : 1,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {silinen === d.id ? 'Siliniyor…' : 'Sil'}
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
