@@ -197,6 +197,9 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       content_objektif: noteData?.soap?.objektif || null,
       content_degerlendirme: noteData?.soap?.degerlendirme || null,
       content_plan: noteData?.soap?.plan || null,
+      // NOTYA-AI-AYRIM-01: AI'ın kendi klinik yorumu/önerisi — DOKTORA ÖZEL, portala GİTMEZ.
+      // Not gövdesi (degerlendirme/plan) yalnız doktorun söylediğini içerir; AI çıkarımı burada.
+      ai_degerlendirme: noteData?.aiDegerlendirme || null,
       content_anamnez: noteData?.anamnez || null,
       content_fizik_muayene: noteData?.fizik_muayene || null,
       content_tani: noteData?.tani || null,

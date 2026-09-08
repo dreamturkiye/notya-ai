@@ -137,6 +137,8 @@ export async function POST(req: NextRequest) {
       content_objektif: noteData?.soap?.objektif || null,
       content_degerlendirme: noteData?.soap?.degerlendirme || null,
       content_plan: noteData?.soap?.plan || null,
+      // NOTYA-AI-AYRIM-01: AI çıkarımı doktora özel, portala gitmez.
+      ai_degerlendirme: noteData?.aiDegerlendirme || null,
       content_anamnez: noteData?.anamnez || null,
       content_fizik_muayene: noteData?.fizik_muayene || null,
       content_tani: noteData?.tani || null,

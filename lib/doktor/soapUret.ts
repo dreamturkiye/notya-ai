@@ -61,6 +61,21 @@ GÜRÜLTÜ FİLTRESİ (kritik):
 - Transkriptte OLMAYAN hiçbir bulguyu üretme; muayene edilmemiş sistemler için "değerlendirilmedi" deme, hiç yazma.
 - Not, kayıttan kısa, yoğun ve klinik olarak eksiksiz olmalı.
 
+╔══ EN ÖNEMLİ KURAL — NOT GÖVDESİ vs AI ÖNERİSİ (hukuki) ══╗
+Notun GÖVDESİ (basvuruYakinmasi, subjektif, objektif, degerlendirme, plan, anamnez,
+fizik_muayene, tani, tedavi, vitaller) YALNIZ doktorun/velinin DEDİĞİNİ içerir. Bu
+alanlar hastanın kendi portalinde GÖRÜNÜR ve resmî kayıttır.
+- degerlendirme: doktorun söylediği/koyduğu tanıları yaz. Doktorun AĞZINDAN ÇIKMAYAN
+  ayırıcı tanı, dışlanan tanı, "olasılık", "düşünülmeli" gibi KENDİ ÇIKARIMINI EKLEME.
+- plan: doktorun söylediği tedavi/tetkik/kontrolü yaz. Doktorun söylemediği öneri/eğitim/
+  ilaç EKLEME.
+- Doktorun söylemediği HER TÜRLÜ kendi klinik yorumun, önerin, ayırıcı tanın, ek tetkik
+  fikrin YALNIZ şu ayrı alanlara gider (bunlar hastaya GÖRÜNMEZ, yalnız doktora):
+  aiDegerlendirme, receteOnerisi, alarmBulgulari, kritik_bulgular, icd10_codes.
+- İlke: not gövdesini bir sekreter gibi yaz (ne söylendiyse o); öneriyi bir danışman gibi
+  AYRI ver. İkisini ASLA karıştırma. Şüphedeysen gövdeye DEĞİL öneri alanına koy.
+╚════════════════════════════════════════════════════╝
+
 BİÇİM KURALLARI — Türk tıp geleneği (Dr. Gökhan referansları, 2026-09-03):
 Not, Türk tıp fakültesi anamnez geleneğine ve klinik akışa sadık yazılır:
 ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıklar → sistem sorgusu) → FİZİK MUAYENE → LABORATUVAR/GÖRÜNTÜLEME → TANI → TEDAVİ.
@@ -74,9 +89,16 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
   Veli beyanı olduğu belirtilerek; transkriptte olmayan alt bölümü HİÇ yazma.
 - objektif: FİZİK MUAYENE sistematiğinde yaz: "Genel durum: ..." ile başla (bilinç/koopere-oryante, distres, cilt-mukoza: solukluk/ikter/siyanoz, hidrasyon). Sonra YALNIZ muayene edilen sistemler, klasik düzen ve terminolojiyle — solunum (dinlemekle ral/ronküs/wheezing, eşit katılım), kardiyovasküler (S1-S2, üfürüm, periferik nabızlar, ödem), batın (inspeksiyon→oskültasyon→perküsyon→palpasyon sırasına saygılı: bağırsak sesleri, hassasiyet, defans/rebound, organomegali), KBB/baş-boyun, cilt, nörolojik (bilinç/GKS, kranyal sinirler, motor-duyu, DTR/Babinski, serebellar), kas-iskelet (ROM, şişlik/ısı artışı), GÜS (KVAH). Dikte edilen bulguyu uygun sistem başlığı altına, uygun terimle yerleştir; muayene edilmeyen sistemi HİÇ yazma. Varsa laboratuvar ve görüntüleme sonuçlarını "Laboratuvar: / Görüntüleme: ..." satırlarıyla en sona ekle.
 - vitaller: transkriptte GEÇEN değerleri çıkar (kilo kg, boy cm, ateş °C, nabız, SpO2, tansiyon); geçmeyeni null bırak.
-- degerlendirme: Türk klinik akışıyla ÖN TANI/AYIRICI TANI düşünüşü: numaralı problem listesi, her problem için kısa gerekçe; gerekirse dışlanan ayırıcı tanıları bir cümleyle belirt.
+- degerlendirme: doktorun söylediği/koyduğu TANILARI yaz (numaralı problem listesi). YALNIZ
+  doktorun ifade ettiği tanılar — kendi ayırıcı tanını, dışladığın tanıları, olasılık
+  yorumunu BURAYA YAZMA (onlar aiDegerlendirme'ye gider).
 - icd10_codes: değerlendirmedeki problemlere karşılık ICD-10 önerileri (Türkçe açıklamayla, birincil işaretli). Bunlar ÖNERİDİR — doktor onaylar.
-- plan: numaralı, TEDAVİ başta: 1) tedavi/ilaçlar, 2) istenecek tetkik/görüntüleme (varsa), 3) öneriler/eğitim, 4) kontrol zamanı.
+- plan: doktorun SÖYLEDİĞİ tedavi/tetkik/kontrolü numaralı yaz (TEDAVİ başta): 1) doktorun
+  söylediği tedavi/ilaç, 2) doktorun istediği tetkik/görüntüleme, 3) kontrol zamanı. Doktorun
+  söylemediği öneri/eğitim/ilaç EKLEME (onlar aiDegerlendirme/receteOnerisi'ne gider).
+- aiDegerlendirme: SENİN klinik yorumun — hastaya GÖRÜNMEZ, yalnız doktora. Ayırıcı tanı
+  düşünüşü, dışlanan tanılar, doktorun atlamış olabileceği noktalar, ek tetkik/tedavi önerisi.
+  "Öneri (doktor onayına tabi):" diye başla. Doktorun kesin dediğini burada tekrar etme.
 - receteOnerisi: önerdiğin her ilaç için etkenMadde + Türkiye'den ticariOrnek + doz (pediatride mg/kg hesabıyla, kilo transkriptte varsa hesapla) + kullanim + sure + gerekirse not. Bu bir ÖNERİDİR; reçeteyi doktor yazar. Hastanın bilinen alerjisi/sürekli ilacıyla çelişen öneri YAPMA, gerekirse not alanında uyar.
 - alarmBulgulari: veliye/hastaya anlatılacak "şu olursa hemen gelin" maddeleri.
 - anamnez: tam anamnez metni — şikayet→hikaye→özgeçmiş→soygeçmiş→alışkanlıklar akışını tek parça düzyazı olarak da doldur (epikriz ve resmî kayıt için).
@@ -88,6 +110,7 @@ SADECE geçerli JSON döndür:
 {
   "basvuruYakinmasi": "",
   "soap": { "subjektif": "", "objektif": "", "degerlendirme": "", "plan": "" },
+  "aiDegerlendirme": "",
   "vitaller": { "kilo": null, "boy": null, "ates": null, "nabiz": null, "spo2": null, "tansiyon": null },
   "anamnez": "",
   "fizik_muayene": "",
@@ -133,6 +156,7 @@ export function sgkDogrula(oneriler: ReceteOnerisi[]): ReceteOnerisi[] {
 export interface SoapNotu {
   basvuruYakinmasi?: string
   soap?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string }
+  aiDegerlendirme?: string
   vitaller?: Record<string, unknown>
   anamnez?: string
   fizik_muayene?: string

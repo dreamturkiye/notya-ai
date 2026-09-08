@@ -39,6 +39,7 @@ interface PendingNote {
   vitaller: Vitaller | null;
   receteOnerisi: ReceteOner[];
   alarmBulgulari: string[];
+  aiDegerlendirme: string;
 }
 
 function normalizeNotes(payload: unknown): PendingNote[] {
@@ -65,6 +66,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       vitaller: (n.vitaller && typeof n.vitaller === 'object') ? (n.vitaller as Vitaller) : null,
       receteOnerisi: Array.isArray(n.receteOnerisi) ? (n.receteOnerisi as ReceteOner[]) : [],
       alarmBulgulari: Array.isArray(n.alarmBulgulari) ? (n.alarmBulgulari as string[]).map(String) : [],
+      aiDegerlendirme: String(n.aiDegerlendirme ?? ''),
     };
   });
 }
@@ -346,6 +348,12 @@ export default function IncelemePage() {
                           {note.ilaclar.map((il, i2) => (
                             <div key={i2} style={{ fontSize: 13, color: '#CBD5E1' }}>• {[il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')}</div>
                           ))}
+                        </div>
+                      )}
+                      {note.aiDegerlendirme && note.aiDegerlendirme.trim() && (
+                        <div style={{ marginBottom: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 5 }}>Ayşe'nin değerlendirmesi <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — nota ve hastaya yansımaz, yalnız size)</span></div>
+                          <div style={{ fontSize: 13, color: '#CBD5E1', whiteSpace: 'pre-wrap' }}>{note.aiDegerlendirme}</div>
                         </div>
                       )}
                       {note.receteOnerisi.length > 0 && (
