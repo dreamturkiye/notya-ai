@@ -32,6 +32,14 @@ interface FormSemasi {
  * olanlar 3 sütuna sığar — ama bu üst sınır, alt sınır değil. auto-fit/minmax kullanıyoruz ki
  * dar bir telefon ekranında (📱 mobil uyumluluk gereksinimi) grid otomatik olarak 1 sütuna
  * düşsün — sabit repeat(3,1fr) telefon genişliğinde metni sıkıştırıp okunmaz hale getirirdi. */
+/** NOTYA-FORM-ONAY-SON (Gökhan): Onay (KVKK) bölümü her zaman formun EN SONUNDA olmalı —
+ * core'un sonundaydı ama branş soruları (pediatride veli/doğum) sonradan eklenince ortada kalıyordu. */
+function siralaOnaySonda(bolumler: IntakeBolum[]): IntakeBolum[] {
+  const onaylar = bolumler.filter((b) => b.baslik === 'Onay');
+  const digerleri = bolumler.filter((b) => b.baslik !== 'Onay');
+  return [...digerleri, ...onaylar];
+}
+
 function gridSablonu(secenekler: string[]): string {
   const uzunEnUzun = Math.max(...secenekler.map((s) => s.length));
   if (secenekler.length <= 2) return `repeat(${secenekler.length}, 1fr)`;
@@ -129,7 +137,7 @@ export default function IntakeFormPage() {
     e.preventDefault();
     setFormHata('');
 
-    const tumBolumler = [...(sema?.coreBolumler || []), ...(sema?.bransBolumu ? [sema.bransBolumu] : [])];
+    const tumBolumler = siralaOnaySonda([...(sema?.coreBolumler || []), ...(sema?.bransBolumu ? [sema.bransBolumu] : [])]);
     for (const bolum of tumBolumler) {
       for (const alan of bolum.alanlar) {
         if (alan.tur === 'bolum-basligi') continue;
@@ -163,7 +171,7 @@ export default function IntakeFormPage() {
 
   const kutu: React.CSSProperties = { background: 'white', borderRadius: 16, padding: 24, maxWidth: 600, width: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
 
-  const tumBolumler = sema ? [...sema.coreBolumler, ...(sema.bransBolumu ? [sema.bransBolumu] : [])] : [];
+  const tumBolumler = sema ? siralaOnaySonda([...sema.coreBolumler, ...(sema.bransBolumu ? [sema.bransBolumu] : [])]) : [];
 
   return (
     <div style={{ minHeight: '100vh', background: '#F4F6F9', display: 'flex', alignItems: durum === 'gecerli' ? 'flex-start' : 'center', justifyContent: 'center', padding: '32px 16px' }}>
