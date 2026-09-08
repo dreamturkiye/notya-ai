@@ -228,6 +228,49 @@ body {
   cursor: pointer;
 }
 
+/* NOTYA-RECETE-01: nottan aktarılan reçetelerin onay kuyruğu. Amber çerçeve,
+   "karar bekliyor" durumunu ilaç listesinden ayırmak için — bu satırlar hastanın
+   portalında henüz görünmüyor. */
+.ni-pending-card { border-color: rgba(245, 158, 11, 0.45); background: #FFFBF2; }
+.ni-pending-note {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #92400E;
+  background: #FEF3C7;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+}
+.ni-item-pending { border-bottom-color: rgba(245, 158, 11, 0.25); }
+
+/* Decisions sit together; 44px targets because this is used on a phone. */
+.ni-pending-actions { display: flex; flex-wrap: wrap; gap: 8px; align-self: flex-start; }
+.ni-btn-yes,
+.ni-btn-no {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.ni-btn-yes { color: #065F46; background: #ECFDF5; border: 1px solid rgba(6, 95, 70, 0.35); }
+.ni-btn-no { color: #92400E; background: #FFFBEB; border: 1px solid rgba(146, 64, 14, 0.3); }
+
+.ni-tag-passive {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(10, 22, 40, 0.55);
+  background: rgba(10, 22, 40, 0.06);
+  vertical-align: middle;
+}
+
 @media (min-width: 640px) {
   .ni-card { padding: 20px; }
   .ni-grid { grid-template-columns: 1fr 1fr; }
@@ -235,6 +278,7 @@ body {
   /* With room, the row and its action sit side by side. */
   .ni-item { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 16px; }
   .ni-remove { align-self: center; flex-shrink: 0; }
+  .ni-pending-actions { align-self: center; flex-shrink: 0; }
 }
 
 /* NOTYA-ILAC-05: presentation picker helpers. */

@@ -16,6 +16,7 @@ type PortalPaylasim = {
   onayliZiyaret: number
   onaysizNot: number
   aktifIlac: number
+  bekleyenRecete: number
   labSonuc: number
   goruntuleme: number
   portalBos: boolean
@@ -202,6 +203,12 @@ export default function HastaPortaliPage() {
             <div style={{ marginTop: 10, fontSize: 12, color: '#94A3B8', lineHeight: 1.6 }}>
               Hastanın göreceği: {paylasim.onayliZiyaret} ziyaret · {paylasim.aktifIlac} aktif ilaç ·{' '}
               {paylasim.labSonuc} lab · {paylasim.goruntuleme} görüntüleme
+              {paylasim.bekleyenRecete > 0 ? (
+                <>
+                  <br />
+                  Kararınızı bekleyen: {paylasim.bekleyenRecete} reçete (hastaya görünmüyor)
+                </>
+              ) : null}
             </div>
           </div>
         )}

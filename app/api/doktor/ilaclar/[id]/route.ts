@@ -20,11 +20,26 @@ export async function PUT(
   }
 
   const body = await request.json();
-  const { aktif, notlar } = body;
+  const { aktif, notlar, onay_durumu, bitis_tarihi } = body;
 
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
   if (typeof aktif === 'boolean') updateData.aktif = aktif;
   if (notlar !== undefined) updateData.notlar = notlar;
+
+  // NOTYA-RECETE-01: nottan aktarılan reçete 'beklemede' gelir ve hastaya
+  // görünmez. Doktor burada karar verir: 'onayli' + aktif=true (kullanmaya devam
+  // ediyor) ya da 'onayli' + aktif=false + bitiş tarihi (kür bitti). Karar
+  // verilene kadar satır portalda çıkmaz.
+  if (onay_durumu !== undefined) {
+    if (onay_durumu !== 'beklemede' && onay_durumu !== 'onayli') {
+      return NextResponse.json(
+        { error: "onay_durumu yalnızca 'beklemede' veya 'onayli' olabilir." },
+        { status: 400 }
+      );
+    }
+    updateData.onay_durumu = onay_durumu;
+  }
+  if (bitis_tarihi !== undefined) updateData.bitis_tarihi = bitis_tarihi || null;
 
   if (Object.keys(updateData).length === 0) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 });

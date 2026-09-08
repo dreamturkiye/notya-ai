@@ -172,11 +172,16 @@ export async function GET(
   })
   bundle.visits = visits
 
-  // Medications + history
+  // Medications + history.
+  // NOTYA-RECETE-01: nottan aktarılan reçeteler 'beklemede' durumunda gelir ve
+  // hastaya GÖSTERİLMEZ — hangisinin aktif olduğuna doktor panelden karar verir
+  // (Dr. Mamur, 2026-09-08 — Seçenek C). Biten bir antibiyotik kürünü aylar sonra
+  // "Aktif" diye göstermek zararlı olacağı için karar tahmin edilmez.
   const { data: medsRaw } = await sb
     .from('hasta_ilaclar')
     .select('id, ilac_adi, doz, kullanim_sikli, notlar, aktif, baslangic_tarihi, bitis_tarihi, yazan_doktor')
     .eq('patient_id', patientId)
+    .eq('onay_durumu', 'onayli')
     .order('baslangic_tarihi', { ascending: false })
     .limit(60)
 

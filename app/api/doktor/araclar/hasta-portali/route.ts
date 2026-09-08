@@ -15,6 +15,8 @@ export type PortalPaylasimOzeti = {
   /** Notes written but never approved — invisible to the patient. */
   onaysizNot: number;
   aktifIlac: number;
+  /** NOTYA-RECETE-01: nottan aktarıldı, hekim kararı bekliyor — hastaya görünmez. */
+  bekleyenRecete: number;
   labSonuc: number;
   goruntuleme: number;
   /** True when the patient would open the portal and find every section empty. */
@@ -53,7 +55,12 @@ async function portalPaylasimOzeti(patientId: string): Promise<PortalPaylasimOze
     return count ?? 0;
   };
 
-  const aktifIlac = await countFor('hasta_ilaclar', (q) => q.eq('aktif', true));
+  // Hastanın gerçekten göreceği ilaç sayısı: yalnızca hekimin onayladığı aktif
+  // satırlar. 'beklemede' olanlar nottan aktarılmıştır ve portalda çıkmaz.
+  const aktifIlac = await countFor('hasta_ilaclar', (q) =>
+    q.eq('aktif', true).eq('onay_durumu', 'onayli')
+  );
+  const bekleyenRecete = await countFor('hasta_ilaclar', (q) => q.eq('onay_durumu', 'beklemede'));
   const labSonuc = await countFor('hasta_lab_sonuclari');
   const goruntuleme = await countFor('hasta_goruntulemeler');
 
@@ -69,7 +76,12 @@ async function portalPaylasimOzeti(patientId: string): Promise<PortalPaylasimOze
       'Bu hastada paylaşılacak veri yok (onaylı ziyaret, aktif ilaç, lab veya görüntüleme). Hasta boş bir portal görecek.';
   }
 
-  return { onayliZiyaret, onaysizNot, aktifIlac, labSonuc, goruntuleme, portalBos, uyari };
+  if (bekleyenRecete > 0) {
+    const receteUyarisi = `${bekleyenRecete} reçete nottan aktarıldı ve kararınızı bekliyor — karar verilene kadar hastanın İlaçlarım bölümünde görünmez. Hasta dosyasındaki "Nottan gelen reçeteler" bölümünden onaylayın.`;
+    uyari = uyari ? `${uyari} ${receteUyarisi}` : receteUyarisi;
+  }
+
+  return { onayliZiyaret, onaysizNot, aktifIlac, bekleyenRecete, labSonuc, goruntuleme, portalBos, uyari };
 }
 
 export async function POST(request: Request) {

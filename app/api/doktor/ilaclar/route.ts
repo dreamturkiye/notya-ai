@@ -20,11 +20,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Hasta seçimi zorunludur.' }, { status: 400 });
   }
 
+  // NOTYA-RECETE-01: 'beklemede' satırlar nottan aktarılmış, doktorun kararını
+  // bekleyen reçeteler. Doktora hepsi döner (kuyruk burada gösterilir); hastaya
+  // yalnızca 'onayli' olanlar gider — bkz. app/api/portal/hasta/[token]/route.ts
   const { data, error } = await supabase
     .from('hasta_ilaclar')
     .select('*')
     .eq('doctor_id', user.id)
     .eq('patient_id', hastaId)
+    .order('onay_durumu', { ascending: true })
     .order('aktif', { ascending: false })
     .order('baslangic_tarihi', { ascending: false });
 

@@ -35,6 +35,9 @@ interface Ilac {
   notlar: string | null;
   barkod?: string | null;
   kutu_adedi?: number | null;
+  /** NOTYA-RECETE-01: 'beklemede' = nottan aktarıldı, hekim kararı bekliyor. */
+  onay_durumu?: 'beklemede' | 'onayli' | null;
+  kaynak_note_id?: string | null;
 }
 
 const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Günde 1', 'Haftada 1', 'Gerektiğinde'];
@@ -232,6 +235,39 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     }
   }
 
+  /**
+   * NOTYA-RECETE-01: nottan aktarılan reçete için hekim kararı.
+   *
+   * Aktarılan satır hastaya GÖRÜNMEZ; burada karar verilene kadar portalda
+   * çıkmaz. "Kullanmaya devam ediyor" → onaylı + aktif. "Kür bitti" → onaylı +
+   * pasif + bitiş tarihi. Kür bitip bitmediği tahmin edilmez, çünkü biten bir
+   * antibiyotiği aylar sonra "Aktif" göstermek zararlı olur.
+   */
+  async function receteKarar(id: string, karar: 'aktif' | 'bitti') {
+    setHata('');
+    try {
+      const t = await token();
+      if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
+      const r = await fetch(`/api/doktor/ilaclar/${id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          karar === 'aktif'
+            ? { onay_durumu: 'onayli', aktif: true }
+            : { onay_durumu: 'onayli', aktif: false, bitis_tarihi: new Date().toISOString().slice(0, 10) }
+        ),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({} as { error?: string }));
+        setHata(j.error || 'Reçete kararı kaydedilemedi.');
+        return;
+      }
+      await listele();
+    } catch {
+      setHata('Reçete kararı kaydedilemedi. Bağlantınızı kontrol edin.');
+    }
+  }
+
   async function sil(id: string) {
     if (!confirm('Bu ilacı listeden kaldırmak istiyor musunuz?')) return;
     try {
@@ -245,8 +281,53 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     }
   }
 
+  const bekleyen = useMemo(() => ilaclar.filter((i) => i.onay_durumu === 'beklemede'), [ilaclar]);
+  const onayli = useMemo(() => ilaclar.filter((i) => i.onay_durumu !== 'beklemede'), [ilaclar]);
+
   return (
     <div className="ni-wrap">
+      {/* NOTYA-RECETE-01: nottan aktarılan reçetelerin onay kuyruğu. Karar
+          verilmeden hastanın portalında görünmezler. */}
+      {bekleyen.length > 0 && (
+        <div className="ni-card ni-pending-card">
+          <h3 className="ni-h3">
+            Nottan gelen reçeteler <span className="ni-count">{bekleyen.length}</span>
+          </h3>
+          <p className="ni-pending-note">
+            Bu ilaçlar muayene notundan aktarıldı. <strong>Siz karar verene kadar hastanın
+            portalında görünmezler.</strong> Hasta hâlâ kullanıyorsa “Kullanıyor”, kür bittiyse
+            “Kürü bitti” seçin.
+          </p>
+          {bekleyen.map((i) => (
+            <div key={i.id} className="ni-item ni-item-pending">
+              <div className="ni-item-main">
+                <div className="ni-item-name">{i.ilac_adi}</div>
+                <div className="ni-item-meta">
+                  {[i.etken_madde, i.doz, i.kullanim_sikli].filter(Boolean).join(' · ')}
+                </div>
+                {i.baslangic_tarihi && (
+                  <div className="ni-item-date">
+                    Reçete tarihi: {new Date(i.baslangic_tarihi).toLocaleDateString('tr-TR')}
+                  </div>
+                )}
+                {i.notlar && <div className="ni-item-date">{i.notlar}</div>}
+              </div>
+              <div className="ni-pending-actions">
+                <button type="button" className="ni-btn-yes" onClick={() => receteKarar(i.id, 'aktif')}>
+                  Kullanıyor
+                </button>
+                <button type="button" className="ni-btn-no" onClick={() => receteKarar(i.id, 'bitti')}>
+                  Kürü bitti
+                </button>
+                <button type="button" className="ni-remove" onClick={() => sil(i.id)} aria-label="Reçeteyi kaldır">
+                  Kaldır
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <form onSubmit={ekle} className="ni-card">
         <h3 className="ni-h3">Yeni İlaç Ekle</h3>
 
@@ -371,13 +452,16 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
       </form>
 
       <div className="ni-card">
-        <h3 className="ni-h3">Kullandığı İlaçlar {ilaclar.length > 0 && <span className="ni-count">{ilaclar.length}</span>}</h3>
+        <h3 className="ni-h3">Kullandığı İlaçlar {onayli.length > 0 && <span className="ni-count">{onayli.length}</span>}</h3>
         {yukleniyor && <p className="ni-hint">İlaçlar yükleniyor…</p>}
-        {!yukleniyor && ilaclar.length === 0 && <p className="ni-hint">Bu hasta için kayıtlı ilaç yok.</p>}
-        {!yukleniyor && ilaclar.map((i) => (
+        {!yukleniyor && onayli.length === 0 && <p className="ni-hint">Bu hasta için kayıtlı ilaç yok.</p>}
+        {!yukleniyor && onayli.map((i) => (
           <div key={i.id} className="ni-item">
             <div className="ni-item-main">
-              <div className="ni-item-name">{i.ilac_adi}</div>
+              <div className="ni-item-name">
+                {i.ilac_adi}
+                {!i.aktif && <span className="ni-tag-passive">Sonlandırıldı</span>}
+              </div>
               <div className="ni-item-meta">
                 {[i.etken_madde, i.doz, i.kullanim_sikli, i.kutu_adedi ? `${i.kutu_adedi} kutu` : ''].filter(Boolean).join(' · ')}
               </div>
@@ -389,7 +473,18 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
               )}
               {i.notlar && <div className="ni-item-date">{i.notlar}</div>}
             </div>
-            <button type="button" className="ni-remove" onClick={() => sil(i.id)} aria-label="İlacı kaldır">Kaldır</button>
+            <div className="ni-pending-actions">
+              {i.aktif ? (
+                <button type="button" className="ni-btn-no" onClick={() => receteKarar(i.id, 'bitti')}>
+                  Sonlandır
+                </button>
+              ) : (
+                <button type="button" className="ni-btn-yes" onClick={() => receteKarar(i.id, 'aktif')}>
+                  Yeniden aktif
+                </button>
+              )}
+              <button type="button" className="ni-remove" onClick={() => sil(i.id)} aria-label="İlacı kaldır">Kaldır</button>
+            </div>
           </div>
         ))}
       </div>

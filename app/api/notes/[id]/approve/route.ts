@@ -41,7 +41,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Notun bu doktora ait olduğunu doğrula
   const { data: existing } = await supabase
     .from('notes')
-    .select('id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan')
+    .select(
+      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, created_at, sessions(patient_id)'
+    )
     .eq('id', noteId)
     .eq('doctor_id', user.id)
     .maybeSingle()
@@ -87,6 +89,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ success: false, error: updateError.message }, { status: 500 })
   }
 
+  // NOTYA-RECETE-01: onay aynı zamanda paylaşım kapısı. Nottaki reçeteler burada
+  // doktorun ilaç listesine 'beklemede' olarak aktarılır; aktif/sonlandırıldı
+  // kararını doktor panelden verir ve portal yalnızca onaylı satırları gösterir
+  // (Dr. Mamur, 2026-09-08 — Seçenek C). Aktarım başarısız olursa onay yine
+  // geçerlidir; reçete aktarımı onayı bloklamamalı.
+  let receteAktarim: { aktarilan: number; atlanan: number } | null = null
+  try {
+    const seans = Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions
+    const patientId = (seans as { patient_id?: string } | null)?.patient_id
+    if (patientId) {
+      const { nottanIlacAktar } = await import('@/lib/doktor/receteAktarim')
+      const sonuc = await nottanIlacAktar(supabase, {
+        noteId,
+        doctorId: user.id,
+        patientId,
+        tarih: existing.created_at as string | null,
+      })
+      if (sonuc.hata) console.error('[recete-aktarim]', sonuc.hata)
+      receteAktarim = { aktarilan: sonuc.aktarilan, atlanan: sonuc.atlanan }
+    }
+  } catch (e) {
+    console.error('[recete-aktarim]', e)
+  }
+
   if (loglar.length > 0) {
     try { await supabase.from('not_duzenlemeleri').insert(loglar) } catch { /* öğrenme logu kritik değil */ }
     // NOTYA-OGRENME-02: düzeltme içeren her onayda profil damıtılır (Haiku — ucuz, ~1sn).
@@ -121,5 +147,5 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (e) { console.error('[ogrenme] damitma', e) }
   }
 
-  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length })
+  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim })
 }
