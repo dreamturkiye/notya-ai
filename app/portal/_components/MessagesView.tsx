@@ -180,6 +180,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
 
       {empty && !composeOpen ? (
         <EmptyState
+          art="mesajlar"
           title="Henüz mesaj yok"
           body={
             canSend

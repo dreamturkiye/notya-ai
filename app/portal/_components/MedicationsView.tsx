@@ -11,7 +11,11 @@ export function MedicationsView({ data }: { data: PortalBundle }) {
     <div className="sg-fade">
       <SectionHeader title="İlaçlarım" subtitle="Aktif reçeteler ve değişiklik geçmişi." />
       {!data.medications.length ? (
-        <EmptyState title="İlaç kaydı yok" body="Doktorunuz paylaştığında aktif ilaçlarınız burada görünür." />
+        <EmptyState
+          art="ilaclar"
+          title="İlaç kaydı yok"
+          body="Doktorunuz paylaştığında aktif ilaçlarınız burada görünür."
+        />
       ) : (
         <>
           <h2 className="sg-subhead">Aktif</h2>
@@ -54,7 +58,11 @@ export function MedicationsView({ data }: { data: PortalBundle }) {
 
       <h2 className="sg-subhead">Değişiklik geçmişi</h2>
       {!data.medicationHistory.length ? (
-        <EmptyState title="Geçmiş boş" body="Doz değişiklikleri ve başlangıç/bitiş olayları burada listelenir." />
+        <EmptyState
+          art={false}
+          title="Geçmiş boş"
+          body="Doz değişiklikleri ve başlangıç/bitiş olayları burada listelenir."
+        />
       ) : (
         <SoftPanel>
           {data.medicationHistory.map((h, i) => (

@@ -122,18 +122,26 @@ export async function GET(
     content_plan?: string | null
     basvuru_yakinmasi?: string | null
     vitaller?: Record<string, string | number | null> | null
-    specialty?: string | null
     created_at?: string | null
   }
   const notesBySession = new Map<string, NoteRow>()
   if (sessionIds.length) {
-    const { data: notes } = await sb
+    // QA 2026-09-08: this select used to request `specialty`, which does not
+    // exist on notes (it lives on sessions). Postgres rejected the whole query
+    // with 42703, the error was discarded, and every patient's Ziyaretler and
+    // Takip rendered empty — even for approved notes. Branch comes from the
+    // session row instead, and query errors are no longer swallowed silently.
+    const { data: notes, error: notesError } = await sb
       .from('notes')
       .select(
-        'session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, specialty, created_at, approved_at'
+        'session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, created_at, approved_at'
       )
       .in('session_id', sessionIds)
       .not('approved_at', 'is', null)
+    if (notesError) {
+      console.error('[portal] notes query failed', notesError)
+      return NextResponse.json({ error: 'Portal verileri yüklenemedi.' }, { status: 500 })
+    }
     for (const n of notes || []) {
       const sid = String(n.session_id || '')
       if (!sid || notesBySession.has(sid)) continue
@@ -150,7 +158,7 @@ export async function GET(
     return {
       id: s.id,
       tarih: s.created_at,
-      brans: String(s.specialty || note?.specialty || 'Genel'),
+      brans: String(s.specialty || 'Genel'),
       basvuruNedeni: String(note?.basvuru_yakinmasi || 'Muayene').trim() || 'Muayene',
       hekim: 'Doktorunuz',
       ozetKisa: String(note?.content_degerlendirme || note?.content_plan || 'Ziyaret kaydı').slice(0, 160),
@@ -258,7 +266,11 @@ export async function GET(
       ozet: String(row.rapor_metni || 'Rapor paylaşıldı').slice(0, 140),
       durum: 'raporlandi',
       modalite: modaliteLabel,
-      gorselUrl: row.dosya_url || '/sagligim/imaging-placeholder.jpg',
+      // KVKK/QA 2026-09-08: this used to fall back to a decorative stock photo
+      // (/sagligim/imaging-placeholder.jpg) when no file was uploaded, and the
+      // portal rendered it with "İndir" + "Tam ekran" — presenting a stock
+      // image as the patient's own scan. No file means no image, full stop.
+      gorselUrl: row.dosya_url ? String(row.dosya_url) : null,
       raporMetni: row.rapor_metni ? String(row.rapor_metni) : undefined,
     })
   }

@@ -14,7 +14,11 @@ export function VisitsListView({ basePath, data }: { basePath: string; data: Por
     <div className="sg-fade">
       <SectionHeader title="Ziyaretler" subtitle="Muayene kayıtları ve ziyaret özetleri." />
       {!data.visits.length ? (
-        <EmptyState title="Ziyaret bulunamadı" body="Doktorunuz paylaştığında ziyaretleriniz burada listelenir." />
+        <EmptyState
+          art="ziyaretler"
+          title="Ziyaret bulunamadı"
+          body="Doktorunuz paylaştığında ziyaretleriniz burada listelenir."
+        />
       ) : (
         <SoftPanel className="sg-list-panel">
           {data.visits.map((v) => (
@@ -44,7 +48,7 @@ export function VisitDetailView({
     return (
       <>
         <SectionHeader title="Ziyaret özeti" />
-        <EmptyState title="Ziyaret bulunamadı" body="Bu kayda erişilemiyor veya süresi dolmuş olabilir." />
+        <EmptyState art={false} title="Ziyaret bulunamadı" body="Bu kayda erişilemiyor veya süresi dolmuş olabilir." />
         <Link href={`${basePath}/ziyaretler`} className="sg-back-link" style={{ marginTop: 16 }}>
           ← Ziyaretlere dön
         </Link>

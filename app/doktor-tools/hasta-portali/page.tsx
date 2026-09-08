@@ -12,6 +12,16 @@ import {
 } from '@/lib/doktor/toolsUi'
 import React, { useState } from 'react'
 
+type PortalPaylasim = {
+  onayliZiyaret: number
+  onaysizNot: number
+  aktifIlac: number
+  labSonuc: number
+  goruntuleme: number
+  portalBos: boolean
+  uyari: string | null
+}
+
 export default function HastaPortaliPage() {
   const [selectedHasta, setSelectedHasta] = useState('')
   const [customPin, setCustomPin] = useState('')
@@ -20,6 +30,7 @@ export default function HastaPortaliPage() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<'link' | 'both' | null>(null)
+  const [paylasim, setPaylasim] = useState<PortalPaylasim | null>(null)
 
   const createLink = async () => {
     if (!selectedHasta) {
@@ -36,6 +47,7 @@ export default function HastaPortaliPage() {
     setPortalUrl('')
     setPin('')
     setCopied(null)
+    setPaylasim(null)
     try {
       const token = await ensureDoctorAccessToken()
       if (!token) {
@@ -64,6 +76,8 @@ export default function HastaPortaliPage() {
       }
       setPortalUrl(String((data as { portalUrl: string }).portalUrl))
       setPin(String((data as { pin: string }).pin))
+      const p = (data as { paylasim?: PortalPaylasim }).paylasim
+      if (p) setPaylasim(p)
     } catch {
       setError('Bağlantı hatası. Tekrar deneyin.')
     } finally {
@@ -124,6 +138,7 @@ export default function HastaPortaliPage() {
               setPortalUrl('')
               setPin('')
               setCopied(null)
+              setPaylasim(null)
             }}
           />
 
@@ -162,6 +177,34 @@ export default function HastaPortaliPage() {
             {loading ? 'Oluşturuluyor...' : 'Portal Linki + PIN Oluştur'}
           </button>
         </div>
+
+        {paylasim?.uyari && (
+          <div
+            style={{
+              marginTop: 16,
+              padding: 16,
+              borderRadius: 16,
+              background: paylasim.portalBos ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)',
+              border: `1px solid ${paylasim.portalBos ? 'rgba(239,68,68,0.4)' : 'rgba(245,158,11,0.4)'}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: paylasim.portalBos ? '#FCA5A5' : '#FCD34D',
+                marginBottom: 6,
+              }}
+            >
+              {paylasim.portalBos ? 'Hasta boş portal görecek' : 'Onaylanmamış notlar var'}
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: '#E2E8F0', lineHeight: 1.5 }}>{paylasim.uyari}</p>
+            <div style={{ marginTop: 10, fontSize: 12, color: '#94A3B8', lineHeight: 1.6 }}>
+              Hastanın göreceği: {paylasim.onayliZiyaret} ziyaret · {paylasim.aktifIlac} aktif ilaç ·{' '}
+              {paylasim.labSonuc} lab · {paylasim.goruntuleme} görüntüleme
+            </div>
+          </div>
+        )}
 
         {portalUrl && pin && (
           <div

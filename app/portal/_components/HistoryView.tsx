@@ -26,6 +26,7 @@ export function HistoryView({ data }: { data: PortalBundle }) {
       <SectionHeader title="Tıbbi ve aile öyküsü" subtitle="Kronik hastalıklar, alerjiler, ameliyatlar ve aşılar." />
       {empty ? (
         <EmptyState
+          art="gecmis"
           title="Öykü henüz paylaşılmadı"
           body="Doktorunuz notlarından çıkarılabilen bilgiler burada görünecek."
         />

@@ -233,7 +233,8 @@ export const SAGLIGIM_DEMO: PortalBundle = {
       ozet: 'Karaciğer, safra yolları ve böbrekler doğal.',
       durum: 'raporlandi',
       modalite: 'us',
-      gorselUrl: '/sagligim/imaging-placeholder.jpg',
+      // Demoes the report-only case: US reported, no image file shared.
+      gorselUrl: null,
       raporMetni: 'Karaciğer parankimi homojen. Safra kesesi ve pankreas doğal. Bilateral böbrek boyutları normal.',
     },
     {

@@ -21,11 +21,42 @@ export function SectionHeader({
   )
 }
 
-export function EmptyState({ title, body }: { title: string; body: string }) {
+/**
+ * Empty-state artwork per section.
+ *
+ * QA 2026-09-08: every EmptyState hardcoded `empty-cool.jpg`, so a patient with
+ * no shared data saw the SAME stock photo on Ziyaretler, Sonuçlar, İlaçlar,
+ * Mesajlar, Takip and Geçmiş — and twice on one page where a section has two
+ * empty blocks. One image per section, and secondary blocks get `art={false}`.
+ */
+const EMPTY_ART = {
+  ziyaretler: '/sagligim/calm-empty.jpg',
+  sonuclar: '/sagligim/empty-cool.jpg',
+  ilaclar: '/sagligim/wellness-kitchen.jpg',
+  mesajlar: '/sagligim/hero-atelier.jpg',
+  takip: '/sagligim/wellness-cycle.jpg',
+  gecmis: '/sagligim/preventive-care.jpg',
+} as const
+
+export type EmptyArt = keyof typeof EMPTY_ART
+
+export function EmptyState({
+  title,
+  body,
+  art,
+}: {
+  title: string
+  body: string
+  /** Section art. Omit or pass `false` for secondary empty blocks on a page. */
+  art?: EmptyArt | false
+}) {
+  const src = art ? EMPTY_ART[art] : null
   return (
     <div className="sg-fade sg-empty">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/sagligim/empty-cool.jpg" alt="" className="sg-empty-img" />
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="sg-empty-img" />
+      ) : null}
       <div className="sg-empty-copy">
         <h2 className="sg-display" style={{ margin: 0, fontSize: 'clamp(1.25rem, 5vw, 1.5rem)' }}>
           {title}

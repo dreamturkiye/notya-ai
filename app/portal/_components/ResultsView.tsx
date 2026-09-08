@@ -11,6 +11,11 @@ function modalityLabel(raw?: string | null) {
   return imagingDisplayLabel(raw, 'patient')
 }
 
+/** Imaging-style results (anything that isn't a lab panel) may carry a file. */
+function isImagingKind(tur: ResultKind) {
+  return tur !== 'laboratuvar'
+}
+
 const FILTERS: Array<{ key: ResultKind | 'hepsi'; label: string }> = [
   { key: 'hepsi', label: 'Hepsi' },
   { key: 'laboratuvar', label: 'Laboratuvar' },
@@ -55,7 +60,7 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
         ))}
       </div>
       {!list.length ? (
-        <EmptyState title="Sonuç yok" body="Bu filtrede yayınlanmış sonuç bulunmuyor." />
+        <EmptyState art="sonuclar" title="Sonuç yok" body="Bu filtrede yayınlanmış sonuç bulunmuyor." />
       ) : (
         <SoftPanel className="sg-list-panel">
           {list.map((r) => {
@@ -104,7 +109,7 @@ export function ResultDetailView({
     return (
       <>
         <SectionHeader title="Sonuç detayı" />
-        <EmptyState title="Sonuç bulunamadı" body="Bu kayda erişilemiyor." />
+        <EmptyState art={false} title="Sonuç bulunamadı" body="Bu kayda erişilemiyor." />
         <Link href={`${basePath}/sonuclar`} className="sg-back-link" style={{ marginTop: 12 }}>
           ← Sonuçlara dön
         </Link>
@@ -179,7 +184,7 @@ export function ResultDetailView({
         </SoftPanel>
       ) : null}
 
-      {(result.gorselUrl || result.raporMetni) && (
+      {(result.gorselUrl || result.raporMetni || isImagingKind(result.tur)) && (
         <SoftPanel style={{ marginTop: 12, padding: 0, overflow: 'hidden' }}>
           {result.gorselUrl ? (
             <div className="sg-imaging-frame">
@@ -211,6 +216,11 @@ export function ResultDetailView({
                 {modalityLabel(result.modalite)}
               </div>
               <p className="sg-prose">{result.raporMetni}</p>
+            </div>
+          ) : null}
+          {!result.gorselUrl && isImagingKind(result.tur) ? (
+            <div style={{ padding: '16px', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.5 }}>
+              Görüntü dosyası paylaşılmadı. Görüntülerinizi istemek için doktorunuza yazabilirsiniz.
             </div>
           ) : null}
         </SoftPanel>

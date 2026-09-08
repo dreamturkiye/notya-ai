@@ -78,6 +78,7 @@ export function TrackingView({ data }: { data: PortalBundle }) {
       ) : null}
       {empty ? (
         <EmptyState
+          art="takip"
           title="Henüz takip verisi yok"
           body="Son muayenede yaşamsal bulgular paylaşıldığında trendler burada oluşur."
         />
