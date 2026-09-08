@@ -156,7 +156,7 @@ export default function NotYazdir() {
           </div>
         )}
         {Array.isArray(not.alarmBulgulari) && not.alarmBulgulari.length > 0 && (
-          <div className="not-bolum"><div className="not-etiket">Alarm Bulguları</div><div className="not-metin">{not.alarmBulgulari.map((a) => `• ${a}`).join('\n')}</div></div>
+          <div className="not-bolum"><div className="not-etiket">Evde Dikkat Edilmesi Gerekenler</div><div className="not-metin">{not.alarmBulgulari.map((a) => `• ${a}`).join('\n')}</div></div>
         )}
         {/* NOTYA-AI-AYRIM-02 (Gokhan): kritik_bulgular AI'ın doktora özel önerisidir —
             resmî yazdır çıktısına / dosyaya GİRMEZ. Yalnız İnceleme ekranında doktora gösterilir. */}

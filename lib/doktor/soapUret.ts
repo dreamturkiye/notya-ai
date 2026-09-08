@@ -100,7 +100,7 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
   düşünüşü, dışlanan tanılar, doktorun atlamış olabileceği noktalar, ek tetkik/tedavi önerisi.
   "Öneri (doktor onayına tabi):" diye başla. Doktorun kesin dediğini burada tekrar etme.
 - receteOnerisi: önerdiğin her ilaç için etkenMadde + Türkiye'den ticariOrnek + doz (pediatride mg/kg hesabıyla, kilo transkriptte varsa hesapla) + kullanim + sure + gerekirse not. Bu bir ÖNERİDİR; reçeteyi doktor yazar. Hastanın bilinen alerjisi/sürekli ilacıyla çelişen öneri YAPMA, gerekirse not alanında uyar.
-- alarmBulgulari: veliye/hastaya anlatılacak "şu olursa hemen gelin" maddeleri.
+- alarmBulgulari: "Evde dikkat edilmesi gerekenler" — veliye/hastaya sakin dille anlatılacak izlem maddeleri. Üslup ASLA alarmcı olmasın ("hemen gelin", "derhal başvurun" YAZMA). Kalıp: önce izlenecek durumları listele, sonra tek yönlendirme cümlesi: "Şu durumlarda doktorunuz ile temas kurun: ..." ve en sonda "Acil bir durumda acil servise başvurun."
 - anamnez: tam anamnez metni — şikayet→hikaye→özgeçmiş→soygeçmiş→alışkanlıklar akışını tek parça düzyazı olarak da doldur (epikriz ve resmî kayıt için).
 - PLAN SÜREKLİLİĞİ: bağlamda ÖNCEKİ VİZİT PLANI verilmişse, değerlendirmede önceki plan maddelerinin akıbetine kısaca değin (yapıldı/yapılmadı/etkisi ne oldu) ve yeni planı bunun üzerine kur — her vizit bir öncekinin devamıdır, izole not yazma.
 - kritik_bulgular: doktorun gözünden kaçmaması gereken kırmızı bayraklar (yoksa boş).
