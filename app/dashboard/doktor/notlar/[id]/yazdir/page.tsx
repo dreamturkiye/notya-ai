@@ -158,9 +158,8 @@ export default function NotYazdir() {
         {Array.isArray(not.alarmBulgulari) && not.alarmBulgulari.length > 0 && (
           <div className="not-bolum"><div className="not-etiket">Alarm Bulguları</div><div className="not-metin">{not.alarmBulgulari.map((a) => `• ${a}`).join('\n')}</div></div>
         )}
-        {Array.isArray(not.kritikBulgular) && not.kritikBulgular.length > 0 && (
-          <div className="not-bolum"><div className="not-etiket">Kritik Bulgular</div><div className="not-metin">{not.kritikBulgular.map((a) => `• ${a}`).join('\n')}</div></div>
-        )}
+        {/* NOTYA-AI-AYRIM-02 (Gokhan): kritik_bulgular AI'ın doktora özel önerisidir —
+            resmî yazdır çıktısına / dosyaya GİRMEZ. Yalnız İnceleme ekranında doktora gösterilir. */}
         {not.hastaOzeti && (
           <div className="not-bolum" style={{ background: '#F5F5F0', border: '1px solid #DDD', borderRadius: 6, padding: '10px 12px' }}>
             <div className="not-etiket">Hasta / Veli Özeti (sade dil)</div><div className="not-metin">{not.hastaOzeti}</div>

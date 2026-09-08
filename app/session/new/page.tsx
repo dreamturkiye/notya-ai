@@ -370,9 +370,9 @@ function NewSessionInner() {
               </div>
             ))}
             {Array.isArray(note.kritik_bulgular) && (note.kritik_bulgular as string[]).length > 0 && (
-              <div style={S({background:"#FCEBEB",borderRadius:"10px",padding:"12px",marginBottom:"14px"})}>
-                <div style={S({fontSize:"12px",fontWeight:"600",color:"#A32D2D",marginBottom:"4px"})}>⚠️ KRİTİK BULGULAR</div>
-                {(note.kritik_bulgular as string[]).map((b,i)=><div key={i} style={S({fontSize:"12px",color:"#991B1B"})}>• {b}</div>)}
+              <div style={S({background:"#FEF9E7",borderRadius:"10px",padding:"12px",marginBottom:"14px",border:"1px solid #F5D97E"})}>
+                <div style={S({fontSize:"12px",fontWeight:"600",color:"#92700A",marginBottom:"4px"})}>💡 Dikkate almayı düşünür müsünüz?</div>
+                {(note.kritik_bulgular as string[]).map((b,i)=><div key={i} style={S({fontSize:"12px",color:"#6B5306"})}>• {b}</div>)}
               </div>
             )}
             {!!note.takip_suresi && (
