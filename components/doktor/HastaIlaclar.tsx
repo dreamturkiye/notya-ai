@@ -67,6 +67,9 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
   const [siklik, setSiklik] = useState('2x1');
   const [baslangic, setBaslangic] = useState(() => new Date().toISOString().slice(0, 10));
   const [notlar, setNotlar] = useState('');
+  const [dozOnerisi, setDozOnerisi] = useState<{ doz: string; kullanim: string; aciklama: string } | null>(null);
+  const [dozOneriYukleniyor, setDozOneriYukleniyor] = useState(false);
+  const [dozOneriNot, setDozOneriNot] = useState('');
 
   // Debounced: a doctor types faster than a round trip, and one request per keystroke would both
   // hammer the endpoint and deliver results out of order.
@@ -91,6 +94,31 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     }, 220);
     return () => { iptal = true; clearTimeout(zaman); };
   }, [arama]);
+
+  async function dozOneriIste(ilacAdi: string, etken: string) {
+    setDozOnerisi(null);
+    setDozOneriNot('');
+    if (!patientId || (!ilacAdi && !etken)) return;
+    setDozOneriYukleniyor(true);
+    try {
+      const t = await token();
+      const r = await fetch('/api/doktor/ilaclar/doz-oner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ patientId, ilacAdi, etkenMadde: etken }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (d.oneri && (d.oneri.doz || d.oneri.kullanim)) {
+        setDozOnerisi(d.oneri);
+      } else if (d.neden) {
+        setDozOneriNot(d.neden);
+      }
+    } catch {
+      // sessiz — öneri isteğe bağlıdır, doktor elle yazabilir
+    } finally {
+      setDozOneriYukleniyor(false);
+    }
+  }
 
   async function listele() {
     setYukleniyor(true);
@@ -158,6 +186,8 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
     // SGK writes strength into the product name; lift it into the dose field as a starting point.
     const m = su.ad.match(/(\d+[.,]?\d*\s?(?:MG|G|ML|MCG|IU)(?:\s?\/\s?\d+\s?ML)?)/i);
     if (m && !doz) setDoz(m[1].trim());
+    // NOTYA-DOZ-ONER-01: ilaç seçilince AI'dan kilo/yaşa göre doz önerisi iste (yalnız öneri).
+    void dozOneriIste(su.ad, etken || '');
   }
 
   async function ekle(e: React.FormEvent) {
@@ -289,6 +319,9 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           </div>
         )}
 
+        {dozOneriYukleniyor && (<div style={{ margin: '4px 0 10px', padding: '8px 12px', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.25)', borderRadius: 10, fontSize: 13, color: '#64748B' }}>Ayşe doz önerisi hazırlıyor…</div>)}
+        {!dozOneriYukleniyor && dozOnerisi && (dozOnerisi.doz || dozOnerisi.kullanim) && (<div style={{ margin: '4px 0 10px', padding: '10px 12px', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: 10 }}><div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Ayşe’nin doz önerisi <span style={{ fontWeight: 400, color: '#94A3B8' }}>(öneridir — doz kararı hekimindir)</span></div><div style={{ fontSize: 13, color: '#334155', marginBottom: 8 }}><strong>{dozOnerisi.doz || '—'}</strong>{dozOnerisi.kullanim ? ` · ${dozOnerisi.kullanim}` : ''}{dozOnerisi.aciklama ? <span style={{ color: '#64748B' }}> — {dozOnerisi.aciklama}</span> : null}</div><button type="button" onClick={() => { if (dozOnerisi.doz) setDoz(dozOnerisi.doz); if (dozOnerisi.kullanim) setSiklik(dozOnerisi.kullanim); setDozOnerisi(null); }} style={{ background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Öneriyi kullan</button></div>)}
+        {!dozOneriYukleniyor && dozOneriNot && (<div style={{ margin: '4px 0 10px', padding: '8px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, fontSize: 12.5, color: '#92700A' }}>{dozOneriNot}</div>)}
         <div className="ni-grid">
           <div className="ni-field">
             <label className="ni-label">İlaç adı *</label>
