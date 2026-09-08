@@ -258,7 +258,7 @@ function NewSessionInner() {
                 unutulan muayeneler için aynı Ayşe Kaya SOAP motoru. Ses, transkript sonrası silinir. */}
             <div style={S({textAlign:"center",margin:"14px 0 6px",color:"#9CA3AF",fontSize:"12px"})}>ya da</div>
             <label style={S({display:"block",width:"100%",padding:"13px",background:sesYukleniyor?"#EFF6FF":"#F9FAFB",color:"#374151",border:"1.5px dashed #D1D5DB",borderRadius:"12px",fontSize:"14px",fontWeight:"600",cursor:sesYukleniyor?"default":"pointer",textAlign:"center",boxSizing:"border-box"})}>
-              {sesYukleniyor ? "⏳ Ses çözümlüyor ve not üretiliyor… birkaç dakika sürebilir, sayfayı kapatmayın" : "📁 Ses dosyası yükle → SOAP üret (m4a / mp3 / wav)"}
+              {sesYukleniyor ? "⏳ Ses çözümlüyor ve not üretiliyor… birkaç dakika sürebilir, sayfayı kapatmayın" : "📁 Ses dosyası yükle (m4a / mp3 / wav)"}
               <input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg" style={{display:"none"}} disabled={sesYukleniyor}
                 onChange={(e)=>{const f=e.target.files?.[0]; if(f) sesDosyasiIsle(f); e.target.value=""}} />
             </label>
