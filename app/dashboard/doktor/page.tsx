@@ -182,19 +182,33 @@ export default function DoktorDashboard() {
         // AUDIT-2026-09-03: RLS notes tablosunda açık — anon istemci token'sız sorguda BOŞ döner.
         // Kullanıcı token'ı bağlanınca RLS politikası doktorun kendi notlarını geçirir.
         const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { global: { headers: { Authorization: `Bearer ${token}` } } })
-        const { data: notesData } = await supabase
+        // QA-2026-09-08: bu select `notes.specialty` istiyordu — böyle bir kolon YOK
+        // (branş sessions'ta). Postgres sorguyu 42703 ile reddediyor, hata yutuluyor
+        // ve "Son notlar" paneli HER doktorda boş kalıyordu. Doğrusu ilişki gömme.
+        const { data: notesData, error: notesError } = await supabase
           .from('notes')
-          .select('id, specialty, created_at, content_subjektif, approved_at')
+          .select('id, created_at, content_subjektif, approved_at, sessions(specialty)')
           .order('created_at', { ascending: false })
           .limit(5)
+        if (notesError) console.error('[dashboard] son notlar sorgusu', notesError)
         if (notesData) {
-          setRecentNotes(notesData.map((n: { id: string; specialty: string; created_at: string; content_subjektif: string; approved_at?: string }) => ({
-            id: n.id,
-            specialty: n.specialty || 'genel',
-            date: new Date(n.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }),
-            content_subjektif: n.content_subjektif || '',
-            approved_at: n.approved_at,
-          })))
+          type NotSatiri = {
+            id: string
+            created_at: string
+            content_subjektif: string | null
+            approved_at?: string
+            sessions?: { specialty?: string | null } | { specialty?: string | null }[] | null
+          }
+          setRecentNotes((notesData as NotSatiri[]).map((n) => {
+            const seans = Array.isArray(n.sessions) ? n.sessions[0] : n.sessions
+            return {
+              id: n.id,
+              specialty: seans?.specialty || 'genel',
+              date: new Date(n.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }),
+              content_subjektif: n.content_subjektif || '',
+              approved_at: n.approved_at,
+            }
+          }))
         }
       } catch {
         setRecentNotes([])

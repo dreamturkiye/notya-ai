@@ -151,3 +151,4 @@ vite.config.ts.timestamp-*
 .env*
 .gstack/
 .git-commit-msg.txt
+scripts/.approve-mamur-rollback.json
