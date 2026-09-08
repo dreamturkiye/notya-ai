@@ -47,7 +47,7 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
         setObjectUrl(url)
 
         if (fileType === 'application/pdf') {
-          await renderPdf(url, 1)
+          // PDF artık iframe ile açılıyor — render/CDN gerekmiyor.
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Görüntüleyici açılamadı')
@@ -166,8 +166,12 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
           // eslint-disable-next-line @next/next/no-img-element
           <img src={objectUrl} alt={fileName} style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} />
         )}
-        {!loading && !error && isPdf && (
-          <canvas ref={canvasRef} style={{ maxWidth: '100%', height: 'auto' }} />
+        {!loading && !error && isPdf && objectUrl && (
+          <iframe
+            src={objectUrl}
+            title={fileName}
+            style={{ width: '100%', height: '75vh', border: 'none', background: '#fff', borderRadius: 8 }}
+          />
         )}
         {!loading && !error && !isImage && !isPdf && (
           <span style={{ color: '#94A3B8', fontSize: 13 }}>Bu dosya türü tarayıcıda önizlenemez. İndirin.</span>
