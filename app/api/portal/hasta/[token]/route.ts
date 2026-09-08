@@ -99,13 +99,19 @@ export async function GET(
   const patientId = tokenData.patient_id as string
   const bundle: PortalBundle = emptyPortalBundle()
 
-  // Sessions + notes → visits
+  // Sessions + notes → visits.
+  // KVKK/QA 2026-09-08: the portal must show ONLY notes the doctor has APPROVED. Approval is the
+  // share gate — an unapproved note is a draft (provisional wording, possible errors, reasoning
+  // the doctor never meant to share). Approval lives on notes.approved_at (sessions has no such
+  // column). Previously every session mapped to a patient-visible visit regardless, leaking
+  // drafts and even sessions whose note was unapproved/absent. Now: pull sessions, then keep only
+  // those whose note is approved.
   const { data: sessionsRaw } = await sb
     .from('sessions')
-    .select('id, created_at, specialty, approved_at')
+    .select('id, created_at, specialty')
     .eq('patient_id', patientId)
     .order('created_at', { ascending: false })
-    .limit(20)
+    .limit(40)
 
   const sessionIds = (sessionsRaw || []).map((s) => s.id)
   type NoteRow = {
@@ -124,9 +130,10 @@ export async function GET(
     const { data: notes } = await sb
       .from('notes')
       .select(
-        'session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, specialty, created_at'
+        'session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, specialty, created_at, approved_at'
       )
       .in('session_id', sessionIds)
+      .not('approved_at', 'is', null)
     for (const n of notes || []) {
       const sid = String(n.session_id || '')
       if (!sid || notesBySession.has(sid)) continue
@@ -134,7 +141,10 @@ export async function GET(
     }
   }
 
-  const visits: PortalVisit[] = (sessionsRaw || []).map((s) => {
+  // Keep only sessions that have an APPROVED note (the share gate).
+  const visibleSessions = (sessionsRaw || []).filter((s) => notesBySession.has(s.id)).slice(0, 20)
+
+  const visits: PortalVisit[] = visibleSessions.map((s) => {
     const note = notesBySession.get(s.id)
     const vitaller = note?.vitaller && typeof note.vitaller === 'object' ? note.vitaller : undefined
     return {
