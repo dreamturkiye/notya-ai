@@ -1163,7 +1163,7 @@ export default function RandevularPage() {
                       checked={hastaDurumu === 'saglikli'}
                       onChange={() => setHastaDurumu(hastaDurumu === 'saglikli' ? '' : 'saglikli')}
                     />
-                    Sağlıklı Hasta
+                    Sağlam
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', color: '#0A1628' }}>
                     <input
@@ -1171,7 +1171,7 @@ export default function RandevularPage() {
                       checked={hastaDurumu === 'sikayetli'}
                       onChange={() => setHastaDurumu(hastaDurumu === 'sikayetli' ? '' : 'sikayetli')}
                     />
-                    Hasta Olan Bir Hasta
+                    Hasta
                   </label>
                 </div>
               </div>
