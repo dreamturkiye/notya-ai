@@ -1,27 +1,32 @@
 'use client';
 /**
- * NOTYA-MEDULA P1b — Kâğıt reçete (yazdır).
+ * NOTYA-MEDULA P1b — Reçete sayfası (kâğıt / MBYS), doktor için tek büyük düğme.
  *
- * Kaan direktifi (2026-09-09): Gökhan ne kullanırsa kullansın, tüm doktorlara en iyi işlev —
- * kimi kâğıt yazar, kimi MBYS kullanır; ikisi de bugün çalışmalı. Bu sayfa kâğıt yolunu kapatır:
- * Türk reçete geleneğinde A5/A4 çıktı — hekim başlığı, hasta, tarih, Rp: satırları, S: kullanım
- * talimatı, kutu adedi, tanı (ICD-10), kaşe/imza alanı. Ayşe'nin SUT/güvenlik uyarıları ekranda
- * görünür, kâğıda basılmaz. Aynı veri MBYS yolunda "Medula için kopyala" ve e-Reçete XML'e gider.
+ * Kaan direktifi (2026-09-09): tüm doktorlara en iyi işlev — kimi kâğıt yazar, kimi MBYS kullanır.
+ * Sadelik kuralı: doktor ilk açılışta Ayşe'ye bir kez "nasıl yazıyorsunuz?" der; cevap meslektaş
+ * hafızasına (kategori uygulama, anahtar recete-yolu) yazılır ve ondan sonra bu sayfa TEK büyük
+ * düğmeyle açılır (kâğıt → Yazdır, MBYS → Kopyala). Diğer yollar küçük bağlantı olarak kalır
+ * (yakınsak fazlalık: yol değişirse hiçbir şey öğrenmesi gerekmez).
+ *
+ * Kutu adedi ekranda düzenlenebilir (Notya kutu içeriğini bilmez; doktor bir dokunuşla düzeltir),
+ * kâğıt boyu A5/A4 seçilebilir ve hatırlanır. Ayşe'nin SUT/güvenlik uyarıları ekranda, kâğıtta değil.
  */
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
+type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
 interface Veri {
   satirlar: Satir[]
   tanilar: { taniKodu: string; taniAdi?: string }[]
   uyarilar: string[]
+  metin: string
   baslik: { doktor: { unvan: string; ad: string; brans: string; klinik: string }; hasta: { ad: string; dogum: string | null; cinsiyet: string | null }; tarih: string }
   xml: string
 }
 
-const BRANS_AD: Record<string, string> = { pediatri: 'Çocuk Sağlığı ve Hastalıkları', 'dahiliye': 'İç Hastalıkları', 'kbb': 'Kulak Burun Boğaz', 'dermatoloji': 'Deri ve Zührevi Hastalıkları', 'kadin-dogum': 'Kadın Hastalıkları ve Doğum', 'aile-hekimligi': 'Aile Hekimliği' };
+const BRANS_AD: Record<string, string> = { pediatri: 'Çocuk Sağlığı ve Hastalıkları', dahiliye: 'İç Hastalıkları', kbb: 'Kulak Burun Boğaz', dermatoloji: 'Deri ve Zührevi Hastalıkları', 'kadin-dogum': 'Kadın Hastalıkları ve Doğum', 'aile-hekimligi': 'Aile Hekimliği' };
 
 function yas(dogum: string | null): string {
   if (!dogum) return '';
@@ -31,66 +36,134 @@ function yas(dogum: string | null): string {
 }
 function trTarih(iso: string): string { return new Date(iso).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' }); }
 
+const buyukDugme: React.CSSProperties = { background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '12px 22px', fontFamily: 'system-ui', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 10px rgba(15,155,142,0.35)' };
+const kucukBaglanti: React.CSSProperties = { background: 'transparent', border: 'none', color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 12, textDecoration: 'underline', cursor: 'pointer', padding: '6px 4px' };
+
 export default function ReceteYazdirPage() {
   const params = useParams<{ id: string }>();
   const [veri, setVeri] = useState<Veri | null>(null);
   const [hata, setHata] = useState('');
+  const [yol, setYol] = useState<Yol | null>(null);          // null = henüz sorulmadı
+  const [yolYukleniyor, setYolYukleniyor] = useState(true);
+  const [kagit, setKagit] = useState<'A5' | 'A4'>('A5');
+  const [kutular, setKutular] = useState<number[]>([]);
   const [kopya, setKopya] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/medula/recete?noteId=${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+        const [r, h] = await Promise.all([
+          fetch(`/api/doktor/medula/recete?noteId=${params.id}`, { headers: { Authorization: `Bearer ${t}` } }),
+          fetch('/api/doktor/hafiza', { headers: { Authorization: `Bearer ${t}` } }),
+        ]);
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Reçete alınamadı');
         setVeri(j);
+        setKutular((j.satirlar || []).map((s: Satir) => s.kutu || 1));
+        if (h.ok) {
+          const hj = await h.json();
+          const kayitlar = (hj.kayitlar || []) as { kategori: string; anahtar: string; deger: string }[];
+          const y = kayitlar.find((k) => k.anahtar === 'recete-yolu');
+          if (y) setYol(/mbys|medula|program|yazılım|bilgisayar/i.test(y.deger) ? 'mbys' : 'kagit');
+          const b = kayitlar.find((k) => k.anahtar === 'recete-kagit-boyu');
+          if (b && /a4/i.test(b.deger)) setKagit('A4');
+        }
       } catch (e) { setHata(e instanceof Error ? e.message : 'Hata'); }
+      finally { setYolYukleniyor(false); }
     })();
   }, [params.id]);
 
+  /** Ayşe'nin bir kez sorduğu tercih — meslektaş hafızasına yazılır (doktor söyledi → anında kesin). */
+  const yolSec = async (secim: Yol) => {
+    setYol(secim);
+    try {
+      const t = await ensureDoctorAccessToken();
+      await fetch('/api/doktor/hafiza', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ kategori: 'uygulama', anahtar: 'recete-yolu', deger: secim === 'kagit' ? 'Reçeteyi kâğıda yazdırır (kâğıt reçete)' : 'Reçeteyi MBYS/Medula programına girer (kopyala-yapıştır)' }) });
+    } catch { /* tercih kritik değil */ }
+  };
+  const kagitSec = async (b: 'A5' | 'A4') => {
+    setKagit(b);
+    try {
+      const t = await ensureDoctorAccessToken();
+      await fetch('/api/doktor/hafiza', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ kategori: 'uygulama', anahtar: 'recete-kagit-boyu', deger: `Reçeteyi ${b} kâğıda basar` }) });
+    } catch { /* tercih kritik değil */ }
+  };
+
+  const kutuMetni = () => {
+    if (!veri) return '';
+    // Ekranda düzenlenen kutu adetleri kopyalanan metne de yansır
+    let m = veri.metin;
+    veri.satirlar.forEach((s, i) => { m = m.replace(`Adet: ${s.kutu} kutu`, `Adet: ${kutular[i] ?? s.kutu} kutu`); });
+    return m;
+  };
+  const kopyala = async () => {
+    await navigator.clipboard.writeText(kutuMetni());
+    setKopya(true); setTimeout(() => setKopya(false), 3000);
+  };
   const xmlIndir = () => {
     if (!veri) return;
     const blob = new Blob([veri.xml], { type: 'application/xml' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `erecete-${params.id.slice(0, 8)}.xml`; a.click();
   };
-  const medulaKopyala = async () => {
-    if (!veri) return;
-    const t = await ensureDoctorAccessToken();
-    const r = await fetch(`/api/doktor/medula/recete?noteId=${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
-    const j = await r.json();
-    await navigator.clipboard.writeText(j.metin || '');
-    setKopya(true); setTimeout(() => setKopya(false), 3000);
-  };
 
   if (hata) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>{hata}</div>;
-  if (!veri) return <div style={{ padding: 40, fontFamily: 'system-ui', color: '#666' }}>Reçete hazırlanıyor…</div>;
+  if (!veri || yolYukleniyor) return <div style={{ padding: 40, fontFamily: 'system-ui', color: '#666' }}>Reçete hazırlanıyor…</div>;
   const { baslik, satirlar, tanilar, uyarilar } = veri;
   const bransAd = BRANS_AD[baslik.doktor.brans] || baslik.doktor.brans;
+  const mm = (v: number) => v * 3.78;
+  const en = kagit === 'A5' ? mm(148) : mm(210);
+  const boy = kagit === 'A5' ? mm(210) : mm(297);
 
   return (
     <div style={{ background: '#E5E7EB', minHeight: '100vh' }}>
       <style>{`
-        @media print { .yazdirma-gizle { display: none !important; } body, .sayfa-zemin { background: white !important; } .recete-kagit { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: auto !important; } @page { size: A5 portrait; margin: 12mm; } }
+        @media print { .yazdirma-gizle { display: none !important; } body { background: white !important; } .recete-kagit { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: auto !important; } .kutu-giris { border: none !important; background: transparent !important; width: 2.2em !important; text-align: right; padding: 0 !important; } .kutu-eksi, .kutu-arti { display: none !important; } @page { size: ${kagit} portrait; margin: 12mm; } }
       `}</style>
-      <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-        <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete — Kâğıt / MBYS</span>
-        <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="button" onClick={medulaKopyala} style={{ background: 'rgba(45,212,191,0.18)', border: '1px solid rgba(45,212,191,0.45)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{kopya ? '✓ Kopyalandı' : '📋 MBYS / Medula için kopyala'}</button>
-          <button type="button" onClick={xmlIndir} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>⬇ e-Reçete XML</button>
-          <button type="button" onClick={() => window.print()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Kâğıt reçete yazdır</button>
-        </span>
+
+      {/* Üst çubuk: tek büyük düğme (doktorun yolu) + küçük diğerleri */}
+      <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
+        {yol === null ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ color: '#C9D4E3', fontFamily: 'system-ui', fontSize: 13 }}><b style={{ color: '#2DD4BF' }}>Ayşe:</b> Reçeteyi nasıl yazıyorsunuz? Bir kez söyleyin, aklımda tutayım.</span>
+            <button type="button" onClick={() => yolSec('kagit')} style={buyukDugme}>🖨️ Kâğıda yazdırıyorum</button>
+            <button type="button" onClick={() => yolSec('mbys')} style={{ ...buyukDugme, background: '#1F5F8B' }}>💻 Programa giriyorum (MBYS / Medula)</button>
+          </span>
+        ) : (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {yol === 'kagit' ? (
+              <>
+                <button type="button" onClick={() => window.print()} style={buyukDugme}>🖨️ Reçeteyi yazdır ({kagit})</button>
+                <button type="button" onClick={() => kagitSec(kagit === 'A5' ? 'A4' : 'A5')} style={kucukBaglanti}>{kagit === 'A5' ? 'A4 kâğıt' : 'A5 kâğıt'}</button>
+                <button type="button" onClick={kopyala} style={kucukBaglanti}>{kopya ? '✓ Kopyalandı' : 'Programa kopyala'}</button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={kopyala} style={buyukDugme}>{kopya ? '✓ Kopyalandı — programa yapıştırın' : '📋 Programa kopyala (MBYS / Medula)'}</button>
+                <button type="button" onClick={xmlIndir} style={kucukBaglanti}>e-Reçete XML</button>
+                <button type="button" onClick={() => window.print()} style={kucukBaglanti}>Kâğıda yazdır</button>
+              </>
+            )}
+            <button type="button" onClick={() => setYol(null)} title="Reçete yolunu değiştir" style={{ ...kucukBaglanti, color: '#6B7F95' }}>değiştir</button>
+          </span>
+        )}
       </div>
 
       {uyarilar.length > 0 && (
-        <div className="yazdirma-gizle" style={{ maxWidth: 620, margin: '12px auto 0', padding: '10px 14px', background: '#FFF7E6', border: '1px solid #F5C36A', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#5C3D00' }}>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>Ayşe — reçeteyi imzalamadan önce:</div>
+        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '10px 14px', background: '#FFF7E6', border: '1px solid #F5C36A', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#5C3D00' }}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>Ayşe — imzalamadan önce:</div>
           {uyarilar.map((u, i) => <div key={i}>• {u}</div>)}
         </div>
       )}
+      {satirlar.length > 0 && (
+        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '8px auto 0', fontFamily: 'system-ui', fontSize: 12, color: '#4B5563' }}>Kutu adedini satırın sağından düzeltebilirsiniz; yazdırılan ve kopyalanan reçeteye yansır.</div>
+      )}
 
-      {/* A5 kâğıt */}
-      <div className="recete-kagit" style={{ width: 148 * 3.78, minHeight: 210 * 3.78, background: 'white', margin: '16px auto 32px', padding: '28px 32px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box' }}>
+      {/* Kâğıt */}
+      <div className="recete-kagit" style={{ width: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 12 }}>
           <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 0.3 }}>{baslik.doktor.unvan} {baslik.doktor.ad}</div>
           {bransAd && <div style={{ fontSize: 12 }}>{bransAd} Uzmanı</div>}
@@ -113,8 +186,16 @@ export default function ReceteYazdirPage() {
         <ol style={{ margin: 0, paddingLeft: 22, fontSize: 13, lineHeight: 1.55 }}>
           {satirlar.map((s, i) => (
             <li key={i} style={{ marginBottom: 10 }}>
-              <div><b>{s.ilacAdi}</b>{s.dozMetni ? ` ${s.dozMetni}` : ''} <span style={{ float: 'right' }}>{s.kutu} kutu</span></div>
-              <div style={{ paddingLeft: 10, fontStyle: 'italic' }}>S: {s.kullanimOzeti}{s.gunSayisi ? '' : ''}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <span><b>{s.ilacAdi}</b>{s.dozMetni ? ` ${s.dozMetni}` : ''}</span>
+                <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <button type="button" className="kutu-eksi" onClick={() => setKutular((k) => k.map((v, j) => (j === i ? Math.max(1, v - 1) : v)))} style={{ border: '1px solid #ccc', background: '#f7f7f7', borderRadius: 4, width: 20, height: 20, cursor: 'pointer', fontSize: 12 }}>−</button>
+                  <input className="kutu-giris" type="number" min={1} max={20} value={kutular[i] ?? 1} onChange={(e) => setKutular((k) => k.map((v, j) => (j === i ? Math.max(1, Number(e.target.value) || 1) : v)))} style={{ width: 36, textAlign: 'right', fontFamily: 'inherit', fontSize: 13, border: '1px solid #ddd', borderRadius: 4, padding: '1px 4px' }} />
+                  <span>kutu</span>
+                  <button type="button" className="kutu-arti" onClick={() => setKutular((k) => k.map((v, j) => (j === i ? Math.min(20, v + 1) : v)))} style={{ border: '1px solid #ccc', background: '#f7f7f7', borderRadius: 4, width: 20, height: 20, cursor: 'pointer', fontSize: 12 }}>+</button>
+                </span>
+              </div>
+              <div style={{ paddingLeft: 10, fontStyle: 'italic' }}>S: {s.kullanimOzeti}</div>
             </li>
           ))}
         </ol>
