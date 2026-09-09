@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
         patientId: r.patient_id,
         hastaAdi: hasta?.ad || r.hasta_adi_serbest || 'İsimsiz',
         hastaTelefon: hasta?.telefon || r.hasta_telefon_serbest || '',
+        hastaEmail: r.hasta_email_serbest || '',
         kayitliHasta: !!hasta,
       }
     })
