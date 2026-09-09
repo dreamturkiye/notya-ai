@@ -34,6 +34,7 @@ interface Randevu {
   patientId: string | null;
   hastaAdi: string;
   hastaTelefon: string;
+  hastaEmail?: string;
   kayitliHasta: boolean;
 }
 
@@ -390,7 +391,7 @@ export default function RandevularPage() {
       setSerbestAd(''); setSerbestTelefon('');
     } else {
       setSeciliHasta(null);
-      setSerbestAd(rv.hastaAdi); setSerbestTelefon(rv.hastaTelefon);
+      setSerbestAd(rv.hastaAdi); setSerbestTelefon(rv.hastaTelefon); setSerbestEmail(rv.hastaEmail || '');
     }
     setHastaArama('');
     setFormAcik(true);
@@ -402,8 +403,9 @@ export default function RandevularPage() {
       setHata('Kayıtlı hasta seçin veya hasta adı girin.');
       return;
     }
-    if (!seciliHasta && !serbestEmail.trim().includes('@')) {
-      setHata('Hasta e-posta adresi zorunludur.');
+    // Kaan (2026-09-10): e-posta ISTEGE BAGLI (PR #114 karari ile tutarli) — verildiyse gecerli olsun.
+    if (!seciliHasta && serbestEmail.trim() && !serbestEmail.trim().includes('@')) {
+      setHata('E-posta adresi geçersiz görünüyor.');
       return;
     }
     setKaydediyor(true);
@@ -1127,7 +1129,7 @@ export default function RandevularPage() {
                     <input className="ni-input" value={serbestTelefon} onChange={(e) => setSerbestTelefon(e.target.value)} placeholder="05xx xxx xx xx" />
                   </div>
                   <div className="ni-field">
-                    <label className="ni-label">E-posta *</label>
+                    <label className="ni-label">E-posta <span style={{ color: '#8FA0B5', fontWeight: 400 }}>(isteğe bağlı — portal daveti için)</span></label>
                     <input className="ni-input" type="email" value={serbestEmail} onChange={(e) => setSerbestEmail(e.target.value)} placeholder="ornek@eposta.com" />
                   </div>
                 </div>

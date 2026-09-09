@@ -22,14 +22,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const { data: mevcut } = await supabase
     .from('randevular')
-    .select('id, baslangic, bitis, patient_id, hasta_adi_serbest, hasta_telefon_serbest')
+    .select('id, baslangic, bitis, patient_id, hasta_adi_serbest, hasta_telefon_serbest, hasta_email_serbest')
     .eq('id', params.id)
     .eq('doktor_id', doktorId)
     .maybeSingle()
   if (!mevcut) return NextResponse.json({ error: 'Randevu bulunamadı.' }, { status: 404 })
 
   const body = await req.json().catch(() => ({}))
-  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaDurumu } = body as {
+  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaEmailSerbest, hastaDurumu } = body as {
     baslangic?: string
     bitis?: string
     durum?: string
@@ -40,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     patientId?: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
+    hastaEmailSerbest?: string
   }
 
   const guncelleme: Record<string, unknown> = {}
@@ -120,10 +121,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       // yüzden engellemek yanlış taraf.
       guncelleme.hasta_adi_serbest = hastaAdiSerbest.trim()
       guncelleme.hasta_telefon_serbest = hastaTelefonSerbest?.trim() || null
+      if (hastaEmailSerbest !== undefined) guncelleme.hasta_email_serbest = hastaEmailSerbest?.trim() || null
     }
   } else if (!patientId && !mevcut.patient_id && hastaAdiSerbest !== undefined) {
     guncelleme.hasta_adi_serbest = hastaAdiSerbest?.trim() || null
     guncelleme.hasta_telefon_serbest = hastaTelefonSerbest?.trim() || null
+    // Kaan (2026-09-10): düzenlemede yazılan e-posta kaybolmasın — artık kaydediliyor (isteğe bağlı)
+    if (hastaEmailSerbest !== undefined) guncelleme.hasta_email_serbest = hastaEmailSerbest?.trim() || null
   }
 
   if (Object.keys(guncelleme).length === 0) {
