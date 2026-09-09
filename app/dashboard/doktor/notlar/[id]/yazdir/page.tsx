@@ -46,6 +46,22 @@ export default function NotYazdir() {
   const [veri, setVeri] = useState<NotVeri | null>(null);
   const [hata, setHata] = useState('');
   const [kopyalandi, setKopyalandi] = useState(false);
+  // NOTYA-MEDULA P1: Medula'ya hazır reçete — kopyala + Ayşe'nin SUT/güvenlik uyarıları
+  const [medulaDurum, setMedulaDurum] = useState<'bos' | 'yukleniyor' | 'kopyalandi' | 'hata'>('bos');
+  const [medulaUyarilar, setMedulaUyarilar] = useState<string[]>([]);
+  const medulaKopyala = async () => {
+    setMedulaDurum('yukleniyor');
+    try {
+      const t = await ensureDoctorAccessToken();
+      const r = await fetch(`/api/doktor/medula/recete?noteId=${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
+      const j = await r.json();
+      if (!r.ok || !j.metin) throw new Error(j.error || 'Reçete hazırlanamadı');
+      await navigator.clipboard.writeText(j.metin);
+      setMedulaUyarilar([...(j.uyarilar || []), ...(j.eksikler || [])]);
+      setMedulaDurum('kopyalandi');
+      setTimeout(() => setMedulaDurum('bos'), 4000);
+    } catch { setMedulaDurum('hata'); setTimeout(() => setMedulaDurum('bos'), 3000); }
+  };
 
   useEffect(() => {
     (async () => {
@@ -112,9 +128,16 @@ export default function NotYazdir() {
         <span style={{ display: 'flex', gap: 8 }}>
           <button type="button" onClick={hbysKopyala} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{kopyalandi ? '✓ Kopyalandı' : '📋 HBYS için kopyala'}</button>
           <button type="button" onClick={htmlIndir} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>⬇ HTML indir</button>
+          <button type="button" onClick={medulaKopyala} disabled={medulaDurum === 'yukleniyor'} style={{ background: 'rgba(45,212,191,0.18)', border: '1px solid rgba(45,212,191,0.45)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{medulaDurum === 'kopyalandi' ? '✓ Medula için kopyalandı' : medulaDurum === 'yukleniyor' ? 'Hazırlanıyor…' : medulaDurum === 'hata' ? 'Reçete yok' : '📋 Medula için kopyala'}</button>
           <button type="button" onClick={() => window.print()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF kaydet</button>
         </span>
       </div>
+      {medulaUyarilar.length > 0 && (
+        <div className="no-print" style={{ maxWidth: 760, margin: '12px auto 0', padding: '10px 14px', background: '#FFF7E6', border: '1px solid #F5C36A', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#5C3D00' }}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>Ayşe — Medula'ya girmeden önce:</div>
+          {medulaUyarilar.map((u, i) => <div key={i}>• {u}</div>)}
+        </div>
+      )}
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 24px 40px' }}>
         <div style={{ borderBottom: '2px solid #111', paddingBottom: 10, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
