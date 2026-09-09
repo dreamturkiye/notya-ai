@@ -24,13 +24,13 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
   const [{ data: ilaclar }, { data: hasta }, { data: doktor }] = await Promise.all([
     sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, doz, kullanim_sikli, notlar, baslangic_tarihi, bitis_tarihi').eq('kaynak_note_id', noteId).eq('onay_durumu', 'onayli'),
     pid ? sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', pid).maybeSingle() : Promise.resolve({ data: null }),
-    sb.from('users').select('first_name, last_name, specialty').eq('id', doktorId).maybeSingle(),
+    sb.from('users').select('first_name, last_name, specialty, title, clinic_name').eq('id', doktorId).maybeSingle(),
   ])
   let ad = '', soyad = ''
   try { const n = JSON.parse(coz(hasta?.name_encrypted)); ad = n.ad || ''; soyad = n.soyad || '' } catch { /* ad yok */ }
   const cins = coz(hasta?.gender_encrypted)
   const kodlar = Array.isArray(not.icd10_codes) ? not.icd10_codes : []
-  return medulaTaslagiHazirla({
+  const taslak = medulaTaslagiHazirla({
     ilaclar: ilaclar || [],
     tanilar: kodlar,
     hasta: { ad, soyad, dogumTarihi: coz(hasta?.dob_encrypted) || null, cinsiyet: cins === 'male' || cins === 'female' ? cins : null },
@@ -38,6 +38,13 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
     protokolNo: `NOTYA-${String(noteId).slice(0, 8).toUpperCase()}`,
     receteTarihi: new Date(not.created_at),
   })
+  // Kâğıt reçete başlığı için (NOTYA-MEDULA P1b)
+  const baslik = {
+    doktor: { unvan: doktor?.title || 'Dr.', ad: `${doktor?.first_name || ''} ${doktor?.last_name || ''}`.trim(), brans: doktor?.specialty || '', klinik: doktor?.clinic_name || '' },
+    hasta: { ad: `${ad} ${soyad}`.trim(), dogum: coz(hasta?.dob_encrypted) || null, cinsiyet: cins || null },
+    tarih: not.created_at,
+  }
+  return { ...taslak, baslik }
 }
 
 export async function GET(req: NextRequest) {
@@ -49,7 +56,7 @@ export async function GET(req: NextRequest) {
   if (!noteId) return NextResponse.json({ error: 'noteId zorunludur.' }, { status: 400 })
   const t = await taslakUret(oturum.supabase, oturum.doktorId, noteId)
   if (!t) return NextResponse.json({ error: 'Not bulunamadı.' }, { status: 404 })
-  return NextResponse.json({ metin: t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, xml: ereceteXml(t.erecete), ortam: medulaOrtami() })
+  return NextResponse.json({ metin: t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, tanilar: t.erecete.ereceteTaniBilgisi, baslik: t.baslik, xml: ereceteXml(t.erecete), ortam: medulaOrtami() })
 }
 
 export async function POST(req: NextRequest) {
