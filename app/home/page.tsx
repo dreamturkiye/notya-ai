@@ -11,10 +11,10 @@ const PROFESSIONS: Profession[] = [
   {
     id: 'doktor', href: '/doktor', label: 'Doktor', accent: '#2563EB',
     img: '/avatars/doktor.jpg', imgPosition: 'center 20%',
-    highlights: ['Sesli danışma, sınırsız süre', 'Otomatik SOAP notu', 'ICD-10 kodlama', 'İlaç etkileşim kontrolü'],
+    highlights: ['Sesli danışma, sınırsız süre', 'Sesle kayıt, otomatik muayene notu', 'ICD-10 kodlama', 'İlaç etkileşim kontrolü'],
     headline: "Nelson'ı, Braunwald'ı ezbere bilen bir asistan.",
-    body: '50 hastadan sonra yorgun olduğunuzda bile o hiç yorulmaz. Sesli danışma, otomatik SOAP notu, ICD-10 kodlama, ilaç etkileşim kontrolü.',
-    detail: ['9 uzmanlık dalı', 'e-Nabız rehberi', 'SGK Medula entegrasyonu', 'Aylık hasta raporları'],
+    body: '50 hastadan sonra yorgun olduğunuzda bile o hiç yorulmaz. Sesli danışma, sesle kayıttan otomatik muayene notu, ICD-10 kodlama, ilaç etkileşim kontrolü.',
+    detail: ['9 uzmanlık dalı', 'e-Nabız rehberi', "Medula'ya hazır reçete", 'Aylık hasta raporları'],
   },
   {
     id: 'avukat', href: '/avukat', label: 'Avukat', accent: '#7C3AED',

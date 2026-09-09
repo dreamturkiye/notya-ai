@@ -21,6 +21,7 @@ interface GunlukAktivite {
 
 interface RaporResponse {
   buAyMuayene: number;
+  bugunkuMuayene: number;
   toplamMuayene: number;
   aktifHasta: number;
   bekleyenOnay: number;
@@ -69,6 +70,18 @@ export async function GET(request: NextRequest) {
       .eq('doctor_id', doctor_id)
       .gte('started_at', startISO)
       .lte('started_at', endISO);
+    // 1b. BUGÜNKÜ muayene — TRT gün sınırı. (Kaan 2026-09-10: kart "hasta bugün" derken ay toplamını
+    // gösteriyordu; dashboard bugunkuMuayene yoksa buAyMuayene'ye düşüyordu.)
+    const simdi = new Date();
+    const trtBugun = simdi.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+    const trtOffsetMs = new Date(simdi.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })).getTime() - new Date(simdi.toLocaleString('en-US', { timeZone: 'UTC' })).getTime();
+    const gunBas = new Date(new Date(`${trtBugun}T00:00:00Z`).getTime() - trtOffsetMs);
+    const { count: bugunkuMuayene } = await supabase
+      .from('sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('doctor_id', doctor_id)
+      .gte('started_at', gunBas.toISOString())
+      .lt('started_at', new Date(gunBas.getTime() + 86400000).toISOString());
 
     // 2. Toplam muayene sayısı
     const { count: toplamMuayene } = await supabase
@@ -162,6 +175,7 @@ export async function GET(request: NextRequest) {
 
     const response: RaporResponse = {
       buAyMuayene: buAyMuayene || 0,
+      bugunkuMuayene: bugunkuMuayene || 0,
       toplamMuayene: toplamMuayene || 0,
       aktifHasta: aktifHasta || 0,
       bekleyenOnay: bekleyenOnay || 0,

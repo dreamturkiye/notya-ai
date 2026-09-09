@@ -13,10 +13,11 @@ export type DoctorProfile = Partial<User> & {
 }
 
 export function toAddressableUser(user: Partial<User> | null | undefined): AddressableUser {
-  const firstName =
-    user?.first_name?.trim() ||
-    user?.full_name?.split(/\s+/)[0] ||
-    'Hocam'
+  // Unvan önekini at ("Dr. Gökhan Mamur" → "Gökhan"); ad yoksa 'Hocam'. (Kaan 2026-09-10: "Dr. Hocam" çıkıyordu.)
+  const UNVAN = /^(?:prof|doç|doc|uzm|op|dr|dt|dr\.\s*öğr\.\s*üyesi)\.?$/i
+  const fullParcalar = (user?.full_name || '').trim().split(/\s+/).filter((p) => p && !UNVAN.test(p))
+  const hamIlk = user?.first_name?.trim() || fullParcalar[0] || ''
+  const firstName = hamIlk && !UNVAN.test(hamIlk) ? hamIlk : 'Hocam'
 
   return {
     firstName,
