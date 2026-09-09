@@ -10,6 +10,7 @@ import { quickClassify, extractPatientData, extractPrescriptionData } from "@/li
 import { executeAction } from "@/lib/asistan/actionExecutor"
 import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
+import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -147,8 +148,12 @@ export async function POST(req: NextRequest) {
       }
     } catch { /* dosya bağlamı kritik değil — normal akış sürer */ }
 
+    // NOTYA-OGRENME-03: meslektaş hafızası — tek kaynak, tüm yüzeyler aynı bloğu okur
+    let hafizaBlogu = ""
+    try { hafizaBlogu = hafizaBloguSohbet(await hafizaYukle(getSupabase(), user.id)) } catch { /* hafıza kritik değil */ }
+
     // Build system prompt with learning context
-    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile) + dosyaEk
+    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + dosyaEk
 
     // Call Claude with full conversation history
     const response = await getAnthropic().messages.create({
@@ -235,18 +240,27 @@ export async function POST(req: NextRequest) {
       action_data: aiData.action || {}
     })
 
-    // Update session count in preferences
+    // NOTYA-OGRENME-03: ilişki sayacı (seans = farklı gün, mesaj başına değil) + öğrenme.
+    // Haiku yalnız doktor kendinden/tercihinden bahsettiğinde çağrılır (regex kapısı — ekonomi).
+    try {
+      const iliski = await seansIsle(getSupabase(), user.id, "sohbet")
+      if (ogrenmeyeDeger(String(message || ""))) {
+        await sohbettenOgren(getAnthropic(), getSupabase(), user.id, [
+          ...messages.slice(-4).map((m: { role: string; content: string }) => ({ role: m.role, content: m.content })),
+          { role: "user", content: String(message) },
+          { role: "assistant", content: aiData.speech },
+        ])
+      }
+      if (iliski.seans_sayisi >= 5 && iliski.seans_sayisi - iliski.ozet_seans >= 5) {
+        await ozetGerekirseGuncelle(getAnthropic(), getSupabase(), user.id)
+      }
+    } catch (e) { console.error("[hafiza] sohbet", e) }
+
+    // Miras sayaç (doctor_preferences) — preferred_persona okuması için satır kalsın
     if (!prefs) {
-      await getSupabase().from("doctor_preferences").insert({
-        doctor_id: user.id,
-        sessions_completed: 1,
-        last_session_at: new Date().toISOString()
-      })
+      await getSupabase().from("doctor_preferences").insert({ doctor_id: user.id, sessions_completed: 1, last_session_at: new Date().toISOString() })
     } else {
-      await getSupabase().from("doctor_preferences").update({
-        sessions_completed: (prefs.sessions_completed || 0) + 1,
-        last_session_at: new Date().toISOString()
-      }).eq("doctor_id", user.id)
+      await getSupabase().from("doctor_preferences").update({ last_session_at: new Date().toISOString() }).eq("doctor_id", user.id)
     }
 
     return NextResponse.json({

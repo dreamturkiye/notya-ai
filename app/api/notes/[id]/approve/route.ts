@@ -113,6 +113,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     console.error('[recete-aktarim]', e)
   }
 
+  // NOTYA-OGRENME-03: her onay ilişki sayacına işler (not + düzeltme adedi)
+  try {
+    const { seansIsle } = await import('@/lib/doktor/hafiza')
+    await seansIsle(supabase, user.id, 'not')
+    if (loglar.length > 0) await seansIsle(supabase, user.id, 'duzeltme', loglar.length)
+  } catch (e) { console.error('[hafiza] onay', e) }
+
   if (loglar.length > 0) {
     try { await supabase.from('not_duzenlemeleri').insert(loglar) } catch { /* öğrenme logu kritik değil */ }
     // NOTYA-OGRENME-02: düzeltme içeren her onayda profil damıtılır (Haiku — ucuz, ~1sn).

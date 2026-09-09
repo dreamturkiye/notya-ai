@@ -14,6 +14,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
+import { hafizaYukle, hafizaBloguSohbet } from '@/lib/doktor/hafiza'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -56,6 +57,10 @@ export async function POST(req: NextRequest) {
     }
   } catch { /* bağlam kritik değil */ }
 
+  // NOTYA-OGRENME-03: Ayşe'ye Danış da aynı meslektaş hafızasını okur
+  let hafizaBlogu = ''
+  try { hafizaBlogu = hafizaBloguSohbet(await hafizaYukle(supabase, doktorId)) } catch { /* hafıza kritik değil */ }
+
   const trtBugun = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   const sistem = `Sen Ayşe Kaya — Notya'nın klinik uzmanı. Doktor, AZ ÖNCE üretilen SOAP notunu seninle birlikte gözden geçiriyor. Türkçe, meslektaş tonunda ("Hocam"), kısa ve öz konuş.
 
@@ -77,7 +82,7 @@ ${klinikBaglam ? `\nHASTANIN KİMLİKSİZ DOSYA BAĞLAMI:\n${klinikBaglam}` : ''
 
 SADECE geçerli JSON döndür:
 {"cevap":"...","duzenlemeler":{},"eylemler":[]}
-duzenlemeler yalnız değişen alanları içerir ({"plan":"..."} gibi); eylemler öğeleri {"tur":"kontrol_randevu"|"takip_aramasi","tarih":"YYYY-MM-DD","saat":"HH:MM","kim":"doktor"|"sekreter","aciklama":"..."} biçimindedir.`
+duzenlemeler yalnız değişen alanları içerir ({"plan":"..."} gibi); eylemler öğeleri {"tur":"kontrol_randevu"|"takip_aramasi","tarih":"YYYY-MM-DD","saat":"HH:MM","kim":"doktor"|"sekreter","aciklama":"..."} biçimindedir.${hafizaBlogu ? `\n\n${hafizaBlogu}` : ''}`
 
   const gecmis = mesajlar.slice(-16).map((m) => ({
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),

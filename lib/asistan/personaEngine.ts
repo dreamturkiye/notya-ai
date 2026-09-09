@@ -133,14 +133,16 @@ export function buildSystemPrompt(
   persona: Persona,
   prefs: Partial<DoctorPreferences> | null,
   currentPatient: Record<string, unknown> | null,
-  doctor?: AddressableUser | null
+  doctor?: AddressableUser | null,
+  hafiza?: string
 ): string {
   const sessionsCount = prefs?.sessionsCompleted || 0
   const hasLearned = sessionsCount >= 5
   const casualAddress = address(doctor || { firstName: 'Hocam' }, 'casual')
   const namedAddress = address(doctor || { firstName: 'Hocam' }, 'named')
 
-  const learningContext = hasLearned && prefs ? `
+  // NOTYA-OGRENME-03: hafiza verildiyse tek kaynak odur (doctor_preferences bloğu miras).
+  const learningContext = hafiza ? `\n${hafiza}` : hasLearned && prefs ? `
 === DOKTOR HAKKINDA ÖĞRENDİKLERİM ===
 Tamamlanan seans: ${sessionsCount}
 Not stili: ${prefs.noteStyle || "orta"}
@@ -162,7 +164,7 @@ KİŞİLİK: ${persona.personality}
 SEN BİR ASİSTAN DEĞİLSİN. Sen dünya çapında tanınan bir uzmansın. Doktorla EŞİT düzeyde çalışıyorsun. Doktor bir şey atlasa veya hata yapsa, bunu açıkça ve saygıyla söylersin.
 
 MUTLAK KURALLAR:
-1. Doktoru her zaman "${casualAddress}" diye hitap et (ör: "${namedAddress}") — asla "doktor" veya "siz" deme
+1. Doktoru her zaman "${casualAddress}" diye hitap et (ör: "${namedAddress}") — asla "doktor" veya "siz" deme. MESLEKTAŞ HAFIZASI'nda farklı bir hitap tercihi varsa (ör. "Hocam deme, adımla hitap et") O geçerlidir
 2. Kendini her zaman ${formatColleagueDisplayName(persona.name)} olarak tanıt (kendi adının sonuna "Hocam" ekleme) — başka persona adı kullanma
 3. Her eylemi gerçekleştirdikten sonra teyit et: "Kaydettim", "Ekledim", "Yazıldı"
 4. Bir eylem bittikten sonra sor: "Başka bir şey var mı ${casualAddress}?"
@@ -194,7 +196,8 @@ ${patientContext}`
 
 export function buildVoiceSystemPrompt(
   persona: Persona,
-  doctor?: AddressableUser | null
+  doctor?: AddressableUser | null,
+  hafiza?: string
 ): string {
   const casualAddress = address(doctor || { firstName: 'Hocam' }, 'casual')
   const namedAddress = address(doctor || { firstName: 'Hocam' }, 'named')
@@ -212,19 +215,26 @@ ${focus}
 
 Sesli görüşmedesin. Kısa, net, doğal Türkçe konuş. Uzun monolog yapma.
 İlk kelimeden itibaren net ve anlaşılır konuş — mırıldanma, kısık ses veya geveleme yok.
-Doktoru "${casualAddress}" / "${namedAddress}" diye hitap et.
+Doktoru "${casualAddress}" / "${namedAddress}" diye hitap et (hafızada farklı hitap tercihi varsa o geçerli).
 İlk cümlede ve gerektiğinde kendini "${selfName}" olarak tanıt — kendi adının sonuna "Hocam" EKLEME (Hocam yalnızca doktora hitap içindir).
 İlaç/doz/SGK konusunda proaktif uyar.
-Sen asistan değilsin; meslektaş uzmansın.`
+Sen asistan değilsin; meslektaş uzmansın.${hafiza ? `\n\n=== MESLEKTAŞ HAFIZASI ===\n${hafiza}\nBunları ilan etmeden, ilişki gibi doğal kullan.` : ''}`
 }
 
 export function buildVoiceFirstMessage(
   persona: Persona,
-  doctor?: AddressableUser | null
+  doctor?: AddressableUser | null,
+  karsilama?: { tanit: boolean; onSoz: string } | null
 ): string {
   const named = address(doctor || { firstName: 'Hocam' }, 'named')
   const selfName = formatColleagueDisplayName(persona.name)
-  return `Merhaba ${named}. Ben ${selfName}, ${persona.title}. ${persona.greeting}`
+  // NOTYA-OGRENME-03: tanışmada kendini tanıtır; 5+ seansta doğrudan işe girer
+  // (aynı berbere 10. gidişte "ben berberim" denmez).
+  if (karsilama && !karsilama.tanit) {
+    return `Merhaba ${named}. ${karsilama.onSoz ? `${karsilama.onSoz} ` : ''}${persona.greeting}`
+  }
+  const onSoz = karsilama?.onSoz ? `${karsilama.onSoz} ` : ''
+  return `Merhaba ${named}. ${onSoz}Ben ${selfName}, ${persona.title}. ${persona.greeting}`
 }
 
 export function getPersonaForSpecialty(specialty: string): PersonaId {

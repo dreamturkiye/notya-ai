@@ -62,6 +62,14 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - Klinik: `/api/asistan/klinik-signed-url?persona=<slug>`; 10 slugs = sac-ekimi, estetik-cerrahi, medikal-estetik, dermatoloji, longevity, fizyoterapi, klinik-psikolog, diyetisyen, ergoterapi, odyoloji.
 - Voice pool: `lib/asistan/elevenVoices.ts` (TR_VOICES).
 
+## Meslektaş hafızası (NOTYA-OGRENME-03) — the "personal chef" layer
+- ONE memory, every surface reads it: `lib/doktor/hafiza.ts`. Tables `doktor_hafiza` (facts: kategori klinik|uslup|rutin|iletisim|kisisel|uygulama, kaynak doktor_soyledi|duzeltme|gozlem, kanit_sayisi, kesin, aktif), `doktor_iliski` (seans_sayisi = distinct TRT days, totals, rutin JSON, ozet), `doktor_stil_profilleri` (OGRENME-02 note-edit distillation, unchanged). Migration `016_meslektas_hafizasi.sql`.
+- Confidence: `doktor_soyledi` → kesin immediately; klinik from gozlem/duzeltme needs 2 evidences (Kaan/Gökhan rule); other categories 1. Belirsiz klinik facts are shown to the model as "do not apply, confirm with one question".
+- Stages by seans: tanisma <5, alisma 5–9, meslektas 10–29, ortak 30+ → `asamaKurali()` drives tone (ask → anticipate → apply without asking) and `karsilamaSecimi()` drops the self-introduction from 5+.
+- Readers: `/api/asistan/chat` (`hafizaBloguSohbet`), `/api/doktor/not-konsult` (same block), note generation `sessions/[id]/end` + `ses-yukle` (`hafizaBloguNot` = stil profili + kesin klinik/uslup), voice `/asistan` page via `GET /api/doktor/hafiza` (`hafizaBloguSes`, short).
+- Writers: chat route → `seansIsle('sohbet')` + `sohbettenOgren` (Haiku, only when `ogrenmeyeDeger(message)` regex gate fires — doctor talks about himself) + `ozetGerekirseGuncelle` every 5 seans; approve route → `seansIsle('not'|'duzeltme')`; `rutinHesapla` (LLM-free, last 30 days of sessions) once per new day; `POST /api/doktor/hafiza` for manual save/`unut`.
+- Legacy `doctor_preferences` kept only for `preferred_persona`; its per-message session counter is retired.
+
 ## Randevu + Personel (NOTYA-RANDEVU-01)
 - Public accept page: `/davet/personel/[token]` (no auth). Doctor generates the link from `/dashboard/doktor/personel`, shares it manually (WhatsApp/SMS) — no email is sent, sidesteps the SMTP blocker.
 - Reminder cron: `/api/cron/randevu-hatirlatma`, hourly (`vercel.json`), WhatsApp via existing `lib/doktor/twilioNotify.ts`, fires 2–3h before `randevular.baslangic`.
