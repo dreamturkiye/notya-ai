@@ -74,7 +74,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Eksik alanlar' }, { status: 400 });
   }
 
-  const channel = String(kanal).toLowerCase() === 'whatsapp' ? 'whatsapp' : 'sms';
+  const kanalStr = String(kanal).toLowerCase();
+  const channel = kanalStr === 'whatsapp' ? 'whatsapp' : 'sms';
+  // Kaan (2026-09-10): Twilio yerine DOKTORUN KENDİ WhatsApp hesabı. wa.me tek tıkla, mesaj doktorun
+  // numarasından gider (ilişki tezi), sıfır maliyet, Meta/Twilio yok. Teslimat teyidi yok; log "açıldı".
+  const kisiselWhatsApp = kanalStr === 'whatsapp_kisisel';
   const supabase = getSB();
 
   const { data: patient, error: patientError } = await supabase
@@ -94,6 +98,19 @@ export async function POST(req: NextRequest) {
       { error: 'Hastanın telefon numarası yok. Hasta kaydına telefon ekleyin.' },
       { status: 400 }
     );
+  }
+
+  if (kisiselWhatsApp) {
+    const rakam = telefon.replace(/\D/g, '');
+    const uluslararasi = rakam.startsWith('90') && rakam.length === 12 ? rakam : rakam.startsWith('0') && rakam.length === 11 ? `9${rakam}` : rakam.length === 10 ? `90${rakam}` : rakam;
+    const waLink = `https://wa.me/${uluslararasi}?text=${encodeURIComponent(String(mesaj))}`;
+    const { data: hatirlatma, error } = await supabase
+      .from('hasta_hatirlatma')
+      .insert({ doctor_id: user.id, patient_id: hastaId, mesaj: String(mesaj), gonder_tarih: tarih, gonderildi: true, kanal: 'whatsapp_kisisel' })
+      .select()
+      .single();
+    if (error) return NextResponse.json({ error: 'Kayıt oluşturulamadı' }, { status: 500 });
+    return NextResponse.json({ hatirlatma, gonderildi: true, waLink });
   }
 
   const send = await sendTwilioMessage({
