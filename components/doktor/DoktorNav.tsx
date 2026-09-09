@@ -165,27 +165,37 @@ export default function DoktorNav() {
       </div>
 
       {isMobile && isOpen && (
-        <div style={{ marginTop: '12px', backgroundColor: '#0A1628', padding: '4px 0 8px', zIndex: 50 }}>
-          {mobileItems.map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleNav(item.route)}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '12px',
-                color: 'white',
-                background: typeof item.color === 'string' && item.color.startsWith('linear') ? item.color : item.color,
-                marginBottom: '4px',
-                borderRadius: '8px',
-                border: 'none',
-              }}
-            >
-              {item.label}
-              {item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? ` (${mesajUnread})` : ''}
-            </button>
-          ))}
+        /* Kaan (2026-09-10): tam-renkli bloklar gözü yoruyordu. Tek sakin yüzey, her satırda
+           bölümün kendi renginde küçük bir işaret; açık olan sayfa ince teal çerçeveyle belli. */
+        <div style={{ marginTop: '10px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '6px', zIndex: 50 }}>
+          {mobileItems.map((item, idx) => {
+            const aktif = typeof window !== 'undefined' && window.location.pathname === item.route
+            const NOKTA: Record<string, string> = { '/asistan': '#8B5CF6', '/dashboard/doktor/randevular': '#2DD4BF', '/dashboard/doktor/hastalar': '#38BDF8', '/dashboard/doktor/mesajlar': '#F59E0B', '/dashboard/doktor/raporlar': '#60A5FA', '/doktor-tools': '#4ADE80', '/dashboard/doktor/ayarlar': '#94A3B8' }
+            const isaret = NOKTA[item.route] || '#8FA0B5'
+            const etiket = item.label.replace(/^⚙\s*/, '')
+            const okunmamis = item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? mesajUnread : 0
+            return (
+              <button
+                key={idx}
+                onClick={() => handleNav(item.route)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  width: '100%', textAlign: 'left', padding: '13px 14px',
+                  color: aktif ? '#FFFFFF' : '#DCE4EE', fontSize: '15px', fontWeight: aktif ? 700 : 500,
+                  background: aktif ? 'rgba(15,155,142,0.14)' : 'transparent',
+                  border: aktif ? '1px solid rgba(45,212,191,0.35)' : '1px solid transparent',
+                  borderRadius: '10px', marginBottom: idx < mobileItems.length - 1 ? '2px' : 0, cursor: 'pointer',
+                }}
+              >
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: isaret, flexShrink: 0, boxShadow: aktif ? `0 0 0 3px ${isaret}33` : 'none' }} />
+                <span style={{ flex: 1 }}>{etiket}</span>
+                {okunmamis > 0 && (
+                  <span style={{ background: '#F59E0B', color: '#0A1628', fontSize: '11px', fontWeight: 800, borderRadius: 999, padding: '2px 8px' }}>{okunmamis}</span>
+                )}
+                <span style={{ color: '#5F7189', fontSize: '16px' }}>›</span>
+              </button>
+            )
+          })}
         </div>
       )}
     </nav>
