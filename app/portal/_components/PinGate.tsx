@@ -78,6 +78,7 @@ export function PinGate({ token, onUnlocked }: Props) {
             className="sg-pin-input"
             inputMode="numeric"
             autoComplete="one-time-code"
+            enterKeyHint="done"
             pattern="[0-9]*"
             maxLength={6}
             value={pin}

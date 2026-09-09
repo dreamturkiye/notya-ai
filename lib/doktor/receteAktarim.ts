@@ -6,10 +6,12 @@
  * kaldığı için doktor ilacı reçete etmiş olsa bile hasta "İlaç kaydı yok"
  * görüyordu.
  *
- * Dr. Gökhan Mamur'un kararı (Seçenek C): reçeteler doktorun listesine aktarılır,
- * aktif/sonlandırıldı kararını DOKTOR panelden verir, portal yalnızca onaylı
- * satırları gösterir. Bu yüzden aktarılan satırlar `onay_durumu = 'beklemede'`
- * ve `aktif = false` ile açılır — hastaya hiç görünmezler.
+ * Dr. Gökhan Mamur'un kararı (Seçenek C, 2026-09-08): reçeteler doktorun listesine aktarılır,
+ * portal yalnız onaylı satırları gösterir; sonlandırma kararı DOKTORUN.
+ * Kaan direktifi (2026-09-09) ile güncellendi: NOT ONAYI = İLAÇ ONAYI. Doktor İnceleme'de ilaç
+ * listesini görüp notu onayladığında satırlar `onayli` + `aktif` açılır ve hem hasta dosyasında
+ * hem hasta portalında (Sağlığım › İlaçlarım) ANINDA görünür. Değişen doz/kullanım mevcut
+ * satırı günceller. Ayrı bir "ilaç onayla" adımı yoktur; sonlandırma yine hekimin panelinden.
  *
  * Klinik güvenlik: kürün bitip bitmediğini tahmin ETMİYORUZ. Süre bilgisi yalnızca
  * doktorun okuyacağı nota yazılır; kararı o verir.
@@ -219,7 +221,7 @@ export async function nottanIlacAktar(
   // Bu hastada hâlihazırda kayıtlı ilaçlar — elle eklenmişi ezmeyelim.
   const { data: mevcut } = await sb
     .from('hasta_ilaclar')
-    .select('ilac_adi, aktif, onay_durumu, baslangic_tarihi')
+    .select('id, ilac_adi, aktif, onay_durumu, baslangic_tarihi, doz, kullanim_sikli, kaynak_note_id')
     .eq('patient_id', opts.patientId)
 
   const baslangic = String(opts.tarih || not.created_at || new Date().toISOString()).slice(0, 10)
@@ -232,26 +234,38 @@ export async function nottanIlacAktar(
    * "hâlâ güncel" bir kayıt varsa atlanır — aktif, hekim kararı bekleyen ya da
    * bu reçeteye 30 günden yakın bir kayıt. Bitmiş ve eski bir kür tekrarı engellemez.
    */
-  const guncelKayitVar = (ad: string): boolean => {
-    for (const m of mevcut || []) {
+  type Mevcut = { id: string; ilac_adi: string | null; aktif: boolean | null; onay_durumu: string | null; baslangic_tarihi: string | null; doz: string | null; kullanim_sikli: string | null; kaynak_note_id: string | null }
+  const guncelKayit = (ad: string): Mevcut | null => {
+    for (const m of (mevcut || []) as Mevcut[]) {
       if (!ayniIlac(String(m.ilac_adi || ''), ad)) continue
-      if (m.aktif) return true
-      if (m.onay_durumu === 'beklemede') return true
+      if (m.aktif) return m
+      if (m.onay_durumu === 'beklemede') return m
       const eski = String(m.baslangic_tarihi || '').slice(0, 10)
       if (eski) {
         const fark = Math.abs(new Date(baslangic).getTime() - new Date(eski).getTime())
-        if (fark <= 30 * 86400000) return true
+        if (fark <= 30 * 86400000) return m
       }
     }
-    return false
+    return null
   }
 
   let aktarilan = 0
   let atlanan = 0
 
   for (const ilac of ilaclar) {
-    if (guncelKayitVar(ilac.ilac_adi)) {
-      atlanan += 1
+    // Kaan direktifi (2026-09-09): yeni yazılan VEYA değiştirilen ilaç hem hasta dosyasına hem
+    // portala anında intikal etmeli. Not onayı = ilaç onayı (doktor İnceleme'de listeyi görüp
+    // onayladı); güncel kayıtta doz/kullanım değiştiyse satır GÜNCELLENİR, eski doz portalda kalmaz.
+    const g = guncelKayit(ilac.ilac_adi)
+    if (g) {
+      const degisti = (g.doz || '') !== (ilac.doz || '') || (g.kullanim_sikli || '') !== (ilac.kullanim_sikli || '') || g.onay_durumu === 'beklemede' || !g.aktif
+      if (!degisti) { atlanan += 1; continue }
+      const { error: gErr } = await sb.from('hasta_ilaclar').update({
+        doz: ilac.doz, kullanim_sikli: ilac.kullanim_sikli, notlar: ilac.notlar,
+        aktif: true, onay_durumu: 'onayli', kaynak_note_id: opts.noteId, baslangic_tarihi: baslangic,
+      }).eq('id', g.id)
+      if (gErr) return { aktarilan, atlanan, hata: gErr.message }
+      aktarilan += 1
       continue
     }
     const { error } = await sb.from('hasta_ilaclar').insert({
@@ -262,9 +276,9 @@ export async function nottanIlacAktar(
       doz: ilac.doz,
       kullanim_sikli: ilac.kullanim_sikli,
       baslangic_tarihi: baslangic,
-      // Karar hekimin: aktarılan satır hastaya görünmez, aktif de sayılmaz.
-      aktif: false,
-      onay_durumu: 'beklemede',
+      // Not onayı = ilaç onayı: dosyada ve portalda hemen görünür; sonlandırma yine hekimde.
+      aktif: true,
+      onay_durumu: 'onayli',
       kaynak_note_id: opts.noteId,
       notlar: ilac.notlar,
     })

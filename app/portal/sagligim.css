@@ -38,6 +38,7 @@ body:has(.sagligim-root) {
 }
 
 .sagligim-root {
+  color-scheme: light;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
   background:
@@ -278,10 +279,15 @@ body:has(.sagligim-root) {
 }
 
 .sg-footer a {
+  display: inline-block;
   color: var(--sg-accent-ink);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
+  padding: 6px 2px;
+  margin: -6px -2px;
+  min-height: var(--sg-touch);
+  line-height: 1.4;
 }
 
 .sr-only {
@@ -302,8 +308,9 @@ body:has(.sagligim-root) {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 72px 24px 56px;
-  min-height: 70vh;
+  padding: max(48px, env(safe-area-inset-top)) 24px calc(40px + env(safe-area-inset-bottom));
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   justify-content: center;
 }
 
@@ -716,7 +723,8 @@ body:has(.sagligim-root) {
   justify-content: center;
   border: 1px solid var(--sg-line);
   cursor: pointer;
-  min-height: 40px;
+  flex: 0 0 auto;
+  min-height: var(--sg-touch);
   padding: 10px 16px;
   border-radius: 999px;
   font-weight: 650;
@@ -744,7 +752,14 @@ body:has(.sagligim-root) {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--sg-pad-x);
   padding-bottom: 2px;
+}
+
+.sg-filter-row .sg-chip-btn {
+  scroll-snap-align: start;
 }
 
 .sg-filter-row::-webkit-scrollbar {
@@ -825,10 +840,33 @@ body:has(.sagligim-root) {
 
 .sg-empty-img {
   width: 100%;
-  height: clamp(120px, 28vw, 180px);
+  height: clamp(132px, 34vw, 196px);
   object-fit: cover;
+  object-position: center;
   display: block;
-  filter: saturate(0.85) contrast(1.02);
+  filter: saturate(0.88) contrast(1.03);
+  /* Crisp downscale on Retina without halos (iPhone Safari). */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Banner crops tuned per section — short letterbox strip on iPhone. */
+.sg-empty-img--sonuclar {
+  object-position: 50% 42%;
+}
+.sg-empty-img--mesajlar {
+  object-position: 52% 48%;
+}
+.sg-empty-img--ilaclar {
+  object-position: 48% 52%;
+}
+.sg-empty-img--ziyaretler {
+  object-position: 50% 55%;
+}
+.sg-empty-img--takip {
+  object-position: 50% 50%;
+}
+.sg-empty-img--gecmis {
+  object-position: 50% 45%;
 }
 
 .sg-empty-copy {
@@ -993,7 +1031,8 @@ body:has(.sagligim-root) {
   background: #f7fafb;
   color: var(--sg-ink);
   font: inherit;
-  font-size: 15px;
+  /* 16px floor — iOS Safari zooms focused inputs below this. */
+  font-size: max(16px, 1rem);
 }
 
 .sg-field:focus {
@@ -1338,5 +1377,75 @@ body:has(.sagligim-root) {
 @media (min-width: 721px) {
   .sg-msg-mobile-back {
     display: none !important;
+  }
+}
+
+/*
+ * iPhone-first polish — most Turkish doctors open patient links on Safari.
+ * Targets iPhone 12–16 widths (390–430 CSS px) and SE (375).
+ */
+@media (max-width: 430px) {
+  .sg-header-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .sg-empty-img {
+    height: clamp(152px, 40vw, 212px);
+  }
+
+  .sg-section-header,
+  .sg-empty,
+  .sg-stack,
+  .sg-list-panel,
+  .sg-fade > .sg-panel,
+  .sg-subhead {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .sg-compose-panel {
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+  }
+
+  .sg-filter-row,
+  .sg-track-grid,
+  .sg-msg-grid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .sg-home {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sg-hero-copy {
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-bottom: 24px;
+  }
+
+  .sg-hero-main {
+    min-height: min(52vh, 420px);
+  }
+
+  .sg-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+    font-size: 13px;
+  }
+
+  .sg-nav {
+    margin-left: -2px;
+    margin-right: -2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    scroll-padding-inline: 16px;
+  }
+
+  .sg-filter-row {
+    scroll-padding-inline: 16px;
   }
 }
