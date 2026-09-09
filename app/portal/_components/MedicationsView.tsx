@@ -3,6 +3,16 @@
 import type { PortalBundle } from '@/lib/portal/types'
 import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
 
+/**
+ * `tip` is an ASCII slug. It used to reach patients as `slug.replace('_',' ')`,
+ * which printed "doz degisti" / "baslandi" — Turkish with the diacritics lost.
+ */
+const HISTORY_LABEL: Record<PortalBundle['medicationHistory'][number]['tip'], string> = {
+  baslandi: 'başlandı',
+  durduruldu: 'durduruldu',
+  doz_degisti: 'doz değişti',
+}
+
 export function MedicationsView({ data }: { data: PortalBundle }) {
   const aktif = data.medications.filter((m) => m.aktif)
   const pasif = data.medications.filter((m) => !m.aktif)
@@ -45,8 +55,8 @@ export function MedicationsView({ data }: { data: PortalBundle }) {
                       {m.ad}
                     </div>
                     <div style={{ fontSize: 13, color: 'var(--sg-muted)', marginTop: 4 }}>
-                      {m.baslangic}
-                      {m.bitis ? ` → ${m.bitis}` : ''}
+                      {formatTrDate(m.baslangic)}
+                      {m.bitis ? ` → ${formatTrDate(m.bitis)}` : ''}
                     </div>
                   </SoftPanel>
                 ))}
@@ -74,7 +84,7 @@ export function MedicationsView({ data }: { data: PortalBundle }) {
               }}
             >
               <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sg-accent)', lineHeight: 1.35 }}>
-                {formatTrDate(h.tarih)} · {h.tip.replace('_', ' ')}
+                {formatTrDate(h.tarih)} · {HISTORY_LABEL[h.tip] || 'güncellendi'}
               </div>
               <div className="sg-med-name" style={{ fontSize: 15, marginTop: 4 }}>
                 {h.ilacAdi}

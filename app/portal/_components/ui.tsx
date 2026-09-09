@@ -33,7 +33,7 @@ const EMPTY_ART = {
   ziyaretler: '/sagligim/calm-empty.jpg',
   sonuclar: '/sagligim/sonuclar-care.jpg',
   ilaclar: '/sagligim/wellness-kitchen.jpg',
-  mesajlar: '/sagligim/hero-atelier.jpg',
+  mesajlar: '/sagligim/mesajlar-care.jpg',
   takip: '/sagligim/wellness-cycle.jpg',
   gecmis: '/sagligim/preventive-care.jpg',
 } as const

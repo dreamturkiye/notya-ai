@@ -16,6 +16,22 @@ function isImagingKind(tur: ResultKind) {
   return tur !== 'laboratuvar'
 }
 
+/**
+ * `tur` is stored as an ASCII slug ('goruntuleme', 'diger'). Rendering it raw and
+ * letting CSS uppercase it printed "GORUNTULEME" / "DIGER" to patients, i.e.
+ * Turkish words with the diacritics filed off. Always label through this map.
+ */
+const KIND_LABEL: Record<ResultKind, string> = {
+  laboratuvar: 'Laboratuvar',
+  goruntuleme: 'Görüntüleme',
+  ekg: 'EKG',
+  diger: 'Diğer',
+}
+
+function kindLabel(tur: ResultKind) {
+  return KIND_LABEL[tur] || 'Tetkik'
+}
+
 const FILTERS: Array<{ key: ResultKind | 'hepsi'; label: string }> = [
   { key: 'hepsi', label: 'Hepsi' },
   { key: 'laboratuvar', label: 'Laboratuvar' },
@@ -69,7 +85,7 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
               <ListRow
                 key={r.id}
                 href={`${basePath}/sonuclar/${r.id}`}
-                meta={`${formatTrDate(r.tarih)} · ${r.tur}`}
+                meta={`${formatTrDate(r.tarih)} · ${kindLabel(r.tur)}`}
                 title={r.baslik}
                 detail={r.ozet}
                 badge={<span style={{ color: d.color, fontWeight: 800 }}>{d.text}</span>}
@@ -122,7 +138,7 @@ export function ResultDetailView({
       <Link href={`${basePath}/sonuclar`} className="sg-back-link">
         ← Sonuçlar
       </Link>
-      <SectionHeader title={result.baslik} subtitle={`${formatTrDate(result.tarih)} · ${result.tur}`} />
+      <SectionHeader title={result.baslik} subtitle={`${formatTrDate(result.tarih)} · ${kindLabel(result.tur)}`} />
 
       {result.labSatirlari && result.labSatirlari.length > 0 ? (
         <SoftPanel>

@@ -5,6 +5,7 @@ import { loadPortalMessages } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModalities'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
+import { SPECIALTY_MAP } from '@/lib/doktor/specialties'
 import type {
   PortalBundle,
   PortalMedication,
@@ -14,6 +15,22 @@ import type {
 } from '@/lib/portal/types'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * `sessions.specialty` holds a slug ('pediatri'), and the portal was showing it
+ * to patients verbatim — "pediatri · Doktorunuz". Resolve through the canonical
+ * specialty table so they read "Pediatri · Doktorunuz" instead.
+ */
+function bransEtiketi(slug?: string | null): string {
+  const key = String(slug || '').trim().toLowerCase()
+  if (!key) return 'Genel'
+  const known = SPECIALTY_MAP[key]
+  if (known) return known.label
+  // Unknown slug: make it presentable rather than leaking raw snake_case.
+  return key
+    .replace(/[_-]+/g, ' ')
+    .replace(/\S/u, (c) => c.toLocaleUpperCase('tr-TR'))
+}
 
 type LabTest = {
   testName?: string
@@ -158,7 +175,7 @@ export async function GET(
     return {
       id: s.id,
       tarih: s.created_at,
-      brans: String(s.specialty || 'Genel'),
+      brans: bransEtiketi(s.specialty),
       basvuruNedeni: String(note?.basvuru_yakinmasi || 'Muayene').trim() || 'Muayene',
       hekim: 'Doktorunuz',
       ozetKisa: String(note?.content_degerlendirme || note?.content_plan || 'Ziyaret kaydı').slice(0, 160),
