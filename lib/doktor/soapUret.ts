@@ -271,7 +271,13 @@ export async function stilProfiliDamit(
   const yanit = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 800,
-    system: `Bir doktorun yapay zekâ taslak notlarına yaptığı düzeltmelerden, gelecekteki not üretimine rehber olacak KOMPAKT bir tercih profili çıkar. En fazla 12 madde; her madde GENELLENEBİLİR bir kural olsun (terminoloji tercihi, uzunluk/ayrıntı düzeyi, yapı, sildiği/eklediği öğe türleri). Hastaya özgü klinik içerikten kural üretme. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.`,
+    system: `Bir doktorun yapay zekâ taslak notlarına yaptığı düzeltmelerden, gelecekteki not üretimine rehber olacak KOMPAKT bir tercih profili çıkar. En fazla 12 madde.
+
+ÇOK ÖNEMLİ — GÜVEN EŞİĞİ (Kaan/Gökhan, 2026-09-09): bu profil "MUTLAKA uy" talimatıyla her yeni nota enjekte edilir, yani buraya giren HER madde bir sonraki hastada otomatik uygulanır. İki tercih türünü AYRI EŞİKLE değerlendir:
+- ÜSLÜP tercihleri (terminoloji, format, uzunluk/ayrıntı düzeyi, yapı, hangi öğe türlerini siler/ekler): DÜŞÜK RİSK, tek örnekten bile kural çıkarabilirsin.
+- KLİNİK tercihler (belirli bir ilaç seçimi, doz şeması, tedavi planı değişikliği): YÜKSEK RİSK — hastaya özgü bir sebep olabilir (başka ilaç kullanımı, alerji, tolerans). SADECE aynı veya açıkça benzer değişikliğin aşağıdaki YENİ DÜZELTMELER listesinde EN AZ 2 FARKLI ÖRNEKTE tekrarlandığını gördüğünde bir klinik kural olarak yaz. Tek örnekte gördüğün bir ilaç/doz değişikliğini profile YAZMA (ne mevcut listeye ekle ne yeni madde aç) — profil "MUTLAKA uy" olduğu için tek vakadan genelleme riskli; o vakada başka bir klinik sebep olabilir. Liste son 20 düzeltmeyi içerir, yani aynı tercih birden fazla vizitte tekrarlanmışsa hepsi burada görünür — sayıp karar ver.
+
+Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.`,
     messages: [{ role: 'user', content: `MEVCUT PROFİL:\n${mevcutProfil || '(yok)'}\n\nYENİ DÜZELTMELER:\n${ornekler}` }],
   })
   const metin = yanit.content[0]?.type === 'text' ? yanit.content[0].text.trim() : ''
