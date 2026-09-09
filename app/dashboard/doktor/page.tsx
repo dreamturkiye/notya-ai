@@ -109,6 +109,7 @@ function Ikon({ ad, boyut = 26 }: { ad: string; boyut?: number }) {
 export default function DoktorDashboard() {
   const router = useRouter()
   const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
+  const [ayseAcilis, setAyseAcilis] = useState<string>('')
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
   const [recentNotes, setRecentNotes] = useState<NoteItem[]>([])
   const [haftalikRandevular, setHaftalikRandevular] = useState<RandevuOzet[]>([])
@@ -130,6 +131,11 @@ export default function DoktorDashboard() {
 
       try {
         const meRes = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } })
+        // NOTYA-GUN-01: Ayşe günü açar — başlığın altında tek satır, başka bir şey bloklamaz
+        fetch('/api/doktor/hafiza', { headers: { Authorization: `Bearer ${token}` } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((j) => { if (j?.gun?.metin) setAyseAcilis(String(j.gun.metin)) })
+          .catch(() => { /* açılış kritik değil */ })
         if (meRes.status === 401) { router.push(DOKTOR_GIRIS); return }
         if (meRes.ok) {
           const meData = await meRes.json()
@@ -254,6 +260,11 @@ export default function DoktorDashboard() {
           <div>
             <div style={{ fontSize: 13, color: '#5F7189', textTransform: 'capitalize' }}>{today}</div>
             <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: -0.4, marginTop: 4 }}>Hoş geldiniz, Dr. {doktorAdi}</div>
+            {ayseAcilis && (
+              <div style={{ marginTop: 10, fontSize: 14, color: '#C9D4E3', lineHeight: 1.55, maxWidth: 720 }}>
+                <span style={{ color: '#2DD4BF', fontWeight: 700 }}>Ayşe:</span> {ayseAcilis}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#14B8A6', paddingBottom: 4 }}>
             <span style={{ width: 8, height: 8, background: '#10B981', borderRadius: '50%', animation: 'nabiz 1.6s infinite' }} />

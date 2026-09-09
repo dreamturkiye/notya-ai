@@ -9,6 +9,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { hafizaYukle, hafizaBloguSes, karsilamaSecimi, hafizaKaydet, hafizaUnut, type HafizaKategori } from '@/lib/doktor/hafiza'
+import { gunVerisiDerle, gunFazi, gunOzetiMetni, gunBlogu } from '@/lib/doktor/gunOzeti'
+import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +21,15 @@ export async function GET(req: NextRequest) {
   if (engel) return engel
   const { supabase, doktorId } = oturum
   try {
-    const h = await hafizaYukle(supabase, doktorId)
+    const [h, gunVerisi, doktorRow] = await Promise.all([
+      hafizaYukle(supabase, doktorId),
+      gunVerisiDerle(supabase, doktorId).catch(() => null),
+      supabase.from('users').select('*').eq('id', doktorId).maybeSingle().then((r) => r.data),
+    ])
+    // NOTYA-GUN-01: Ayşe günü açar/kapatır — aynı uçtan, yeni ekran yok
+    const doctor = toAddressableUser((doktorRow as DoctorProfile | null) || null)
+    const faz = gunVerisi ? gunFazi(gunVerisi.saatTRT, h.iliski.rutin) : 'basi'
+    const gun = gunVerisi ? { faz, metin: gunOzetiMetni(gunVerisi, doctor, h.iliski, faz), blok: gunBlogu(gunVerisi, faz), veri: gunVerisi } : null
     return NextResponse.json({
       iliski: {
         seans: h.iliski.seans_sayisi,
@@ -32,11 +42,12 @@ export async function GET(req: NextRequest) {
       },
       karsilama: karsilamaSecimi(h.iliski),
       sesBlogu: hafizaBloguSes(h),
+      gun,
       kayitlar: [...h.kesinKayitlar, ...h.belirsizKayitlar],
     })
   } catch (e) {
     console.error('[hafiza] get', e)
-    return NextResponse.json({ iliski: { seans: 0, asama: 'tanisma' }, karsilama: { tanit: true, onSoz: '' }, sesBlogu: '', kayitlar: [] })
+    return NextResponse.json({ iliski: { seans: 0, asama: 'tanisma' }, karsilama: { tanit: true, onSoz: '' }, sesBlogu: '', gun: null, kayitlar: [] })
   }
 }
 

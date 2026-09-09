@@ -151,6 +151,14 @@ export async function POST(req: NextRequest) {
     // NOTYA-OGRENME-03: meslektaş hafızası — tek kaynak, tüm yüzeyler aynı bloğu okur
     let hafizaBlogu = ""
     try { hafizaBlogu = hafizaBloguSohbet(await hafizaYukle(getSupabase(), user.id)) } catch { /* hafıza kritik değil */ }
+    // NOTYA-GUN-01: oturumun ilk turlarında günün durumu da promptta (açılış baloncuğuyla tutarlı olsun)
+    if (messages.length < 2) {
+      try {
+        const { gunVerisiDerle, gunFazi, gunBlogu } = await import("@/lib/doktor/gunOzeti")
+        const gv = await gunVerisiDerle(getSupabase(), user.id)
+        hafizaBlogu += `\n\n${gunBlogu(gv, gunFazi(gv.saatTRT))}`
+      } catch { /* gün kritik değil */ }
+    }
 
     // Build system prompt with learning context
     const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + dosyaEk
