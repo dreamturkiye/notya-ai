@@ -1140,7 +1140,17 @@ export default function RandevularPage() {
                 </div>
                 <div className="ni-field">
                   <label className="ni-label">Saat *</label>
-                  <input className="ni-input" type="time" step={900} value={saat} onChange={(e) => setSaat(e.target.value)} />
+                  {/* NOTYA-RANDEVU: native <input type="time" step=900> Safari/iOS'ta step'i yok sayıp dakika çarkı açıyordu
+                      (Kaan, 2026-09-09: "YINE dakikalık"). Her tarayıcıda aynı davranan 15 dk'lık liste: 07:00–21:45.
+                      Düzenlemede 15'e bölünmeyen eski bir saat varsa listeye o tek değer de eklenir. */}
+                  <select className="ni-input" value={saat} onChange={(e) => setSaat(e.target.value)}>
+                    {(() => {
+                      const slotlar: string[] = []
+                      for (let h = 7; h <= 21; h++) for (const m of [0, 15, 30, 45]) slotlar.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+                      if (saat && !slotlar.includes(saat)) slotlar.push(saat)
+                      return slotlar.sort().map((s) => <option key={s} value={s}>{s}</option>)
+                    })()}
+                  </select>
                 </div>
                 <div className="ni-field">
                   <label className="ni-label">Süre (dk) *</label>
