@@ -14,7 +14,6 @@ export const dynamic = 'force-dynamic'
  */
 
 import DoktorNav from '@/components/doktor/DoktorNav'
-import { createClient } from '@supabase/supabase-js'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
@@ -52,6 +51,7 @@ interface NoteItem {
   id: string
   specialty: string
   date: string
+  hastaAdi?: string
   content_subjektif: string
   approved_at?: string
 }
@@ -205,36 +205,19 @@ export default function DoktorDashboard() {
       }
 
       try {
-        // AUDIT-2026-09-03: RLS notes tablosunda açık — anon istemci token'sız sorguda BOŞ döner.
-        // Kullanıcı token'ı bağlanınca RLS politikası doktorun kendi notlarını geçirir.
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { global: { headers: { Authorization: `Bearer ${token}` } } })
-        // QA-2026-09-08: bu select `notes.specialty` istiyordu — böyle bir kolon YOK
-        // (branş sessions'ta). Postgres sorguyu 42703 ile reddediyor, hata yutuluyor
-        // ve "Son notlar" paneli HER doktorda boş kalıyordu. Doğrusu ilişki gömme.
-        const { data: notesData, error: notesError } = await supabase
-          .from('notes')
-          .select('id, created_at, content_subjektif, approved_at, sessions(specialty)')
-          .order('created_at', { ascending: false })
-          .limit(5)
-        if (notesError) console.error('[dashboard] son notlar sorgusu', notesError)
-        if (notesData) {
-          type NotSatiri = {
-            id: string
-            created_at: string
-            content_subjektif: string | null
-            approved_at?: string
-            sessions?: { specialty?: string | null } | { specialty?: string | null }[] | null
-          }
-          setRecentNotes((notesData as NotSatiri[]).map((n) => {
-            const seans = Array.isArray(n.sessions) ? n.sessions[0] : n.sessions
-            return {
-              id: n.id,
-              specialty: seans?.specialty || 'genel',
-              date: new Date(n.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }),
-              content_subjektif: n.content_subjektif || '',
-              approved_at: n.approved_at,
-            }
-          }))
+        // NOTYA-DASHBOARD (Kaan 2026-09-10): hasta adi notun basinda — ad sifreli oldugundan sunucu ucu cozer.
+        const snRes = await fetch('/api/doktor/son-notlar', { headers: { Authorization: `Bearer ${token}` } })
+        if (snRes.ok) {
+          const sn = await snRes.json()
+          type SnSatir = { id: string; created_at: string; specialty: string; hastaAdi: string; ozet: string; approved_at?: string | null }
+          setRecentNotes(((sn.notlar || []) as SnSatir[]).map((n) => ({
+            id: n.id,
+            specialty: n.specialty || 'genel',
+            date: new Date(n.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }),
+            hastaAdi: n.hastaAdi || '',
+            content_subjektif: n.ozet || '',
+            approved_at: n.approved_at || undefined,
+          })))
         }
       } catch {
         setRecentNotes([])
@@ -480,7 +463,7 @@ export default function DoktorDashboard() {
                     <span style={{ background: `${getSpecialtyColor(note.specialty)}26`, color: getSpecialtyColor(note.specialty), fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, textTransform: 'capitalize', flexShrink: 0 }}>{note.specialty}</span>
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: 11, color: '#5F7189' }}>{note.date}</span>
-                      <span style={{ display: 'block', fontSize: 13, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.content_subjektif.slice(0, 70) || 'Not'}</span>
+                      <span style={{ display: 'block', fontSize: 13, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.hastaAdi ? <b style={{ color: '#EDF1F7' }}>{note.hastaAdi} — </b> : null}{note.content_subjektif.slice(0, 70) || 'Not'}</span>
                     </span>
                     <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: note.approved_at ? '#22C55E' : '#F59E0B' }} title={note.approved_at ? 'Onaylı' : 'Onay bekliyor'} />
                   </div>

@@ -22,7 +22,7 @@ export function address(user: AddressableUser, context: AddressContext): string 
 
     case 'named':
       if (pref === 'first_name_only') return firstName
-      if (pref === 'hocam') return 'Hocam'
+      if (pref === 'hocam' || firstName === 'Hocam') return 'Hocam'
       return `${firstName} Hocam`
 
     case 'formal': {
