@@ -34,6 +34,20 @@ interface RandevuOzet {
   durum: string
 }
 
+// NOTYA-GUN-02: günün programı — randevu başına Ayşe brifingi
+interface ProgramSatiri {
+  id: string
+  baslangic: string
+  tur: string
+  durum: string
+  hastaAdi: string
+  patientId: string | null
+  yeniHasta: boolean
+  brifing: string
+  isaretler: string[]
+}
+const TUR_ETIKET: Record<string, string> = { ilk_muayene: 'İlk muayene', muayene: 'Muayene', kontrol: 'Kontrol', diger: 'Diğer' }
+
 interface NoteItem {
   id: string
   specialty: string
@@ -113,6 +127,7 @@ export default function DoktorDashboard() {
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
   const [recentNotes, setRecentNotes] = useState<NoteItem[]>([])
   const [haftalikRandevular, setHaftalikRandevular] = useState<RandevuOzet[]>([])
+  const [gunProgrami, setGunProgrami] = useState<ProgramSatiri[] | null>(null)
   const [randevuGorunumu, setRandevuGorunumu] = useState<'bugun' | 'hafta'>('bugun')
   const [randevuYukleniyor, setRandevuYukleniyor] = useState(true)
   const [loading, setLoading] = useState(true)
@@ -164,6 +179,11 @@ export default function DoktorDashboard() {
       }
 
       // NOTYA-RANDEVU-03: bugün + bu hafta TEK istekte; aralıklar TRT.
+      // NOTYA-GUN-02: günün programı (brifingli) ayrı ve paralel — haftalık listeyi bloklamaz
+      fetch('/api/doktor/gun-programi', { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => { if (j?.program) setGunProgrami(j.program as ProgramSatiri[]) })
+        .catch(() => { /* program kritik değil — eski kartlar görünür */ })
       try {
         const haftaGunleri = buHaftaninGunleri()
         const baslangic = new Date(yerelGunAnahtari(haftaGunleri[0]) + 'T00:00:00+03:00')
@@ -297,7 +317,41 @@ export default function DoktorDashboard() {
                 {Array.from({ length: 2 }).map((_, i) => <div key={i} style={{ height: 44, background: 'rgba(255,255,255,0.05)', borderRadius: 10, marginBottom: 8, animation: 'nabiz 1.5s infinite' }} />)}
               </div>
             ) : randevuGorunumu === 'bugun' ? (
-              bugunkuRandevular.length > 0 ? (
+              gunProgrami && gunProgrami.length > 0 ? (
+                /* NOTYA-GUN-02: kahve + takvim — kim, kaçta, neden geliyor */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 0' }}>
+                  {gunProgrami.map((p) => {
+                    const durumBilgi = DURUM_RENK[p.durum] || DURUM_RENK.planlandi
+                    const gecti = new Date(p.baslangic).getTime() < Date.now()
+                    const hedef = p.patientId ? `/dashboard/doktor/hastalar/${p.patientId}` : '/dashboard/doktor/randevular'
+                    return (
+                      <div
+                        key={p.id}
+                        className="ev-rv"
+                        onClick={() => router.push(hedef)}
+                        style={{ display: 'grid', gridTemplateColumns: '64px 1fr', gap: 12, alignItems: 'start', background: 'rgba(255,255,255,0.04)', borderLeft: `3px solid ${durumBilgi.color}`, borderRadius: 12, padding: '10px 14px', cursor: 'pointer', opacity: gecti && p.durum === 'tamamlandi' ? 0.55 : 1 }}
+                      >
+                        <div style={{ fontSize: 17, fontWeight: 800, fontVariantNumeric: 'tabular-nums', paddingTop: 2 }}>{trtSaatStr(p.baslangic)}</div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: '#EDF1F7' }}>{p.hastaAdi}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: p.yeniHasta ? '#FBBF24' : '#93C5FD', background: p.yeniHasta ? 'rgba(251,191,36,0.12)' : 'rgba(147,197,253,0.12)' }}>{p.yeniHasta ? 'Yeni hasta' : TUR_ETIKET[p.tur] || p.tur}</span>
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg }}>{durumBilgi.label}</span>
+                          </div>
+                          {p.brifing && <div style={{ fontSize: 13, color: '#C9D4E3', lineHeight: 1.5, marginTop: 4 }}>{p.brifing}</div>}
+                          {p.isaretler.length > 0 && (
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                              {p.isaretler.map((i) => (
+                                <span key={i} style={{ fontSize: 11, color: i.startsWith('alerji') ? '#F87171' : '#8FA0B5', background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '2px 7px' }}>{i}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : bugunkuRandevular.length > 0 ? (
                 <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '14px 0', WebkitOverflowScrolling: 'touch' }}>
                   {bugunkuRandevular.map((rv) => {
                     const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
