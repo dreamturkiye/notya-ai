@@ -34,7 +34,7 @@ function normalizeHatirlatmalar(payload: unknown, hastalar: HastaOption[]): Hati
     const patientId = String(row.patient_id || row.hastaId || '')
     const matched = hastalar.find((h) => h.id === patientId)
     const kanalRaw = String(row.kanal || 'SMS').toLowerCase()
-    const kanal = kanalRaw.includes('whats') ? 'WhatsApp' : 'SMS'
+    const kanal = kanalRaw.includes('kisisel') ? 'WhatsApp (kendi)' : kanalRaw.includes('whats') ? 'WhatsApp' : 'SMS'
     const gonderildi = Boolean(row.gonderildi)
     return {
       id: String(row.id || idx),
@@ -104,6 +104,8 @@ export default function HatirlatmaPage() {
     setLoading(true)
     setError('')
     setSuccess(false)
+    // iOS Safari: pencere yalnız dokunuş anında açılabilir — önce boş aç, cevap gelince wa.me'ye yönlendir
+    const waPencere = kanal === 'WhatsApp' ? window.open('about:blank', '_blank') : null
     const token = await ensureDoctorAccessToken()
     if (!token) {
       setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
@@ -120,7 +122,7 @@ export default function HatirlatmaPage() {
         body: JSON.stringify({
           hastaId: selectedHasta,
           mesaj,
-          kanal: kanal === 'WhatsApp' ? 'whatsapp' : 'sms',
+          kanal: kanal === 'WhatsApp' ? 'whatsapp_kisisel' : 'sms',
           tarih: tarihSaat,
         }),
       })
@@ -131,12 +133,18 @@ export default function HatirlatmaPage() {
       if ((body as { gonderildi?: boolean }).gonderildi === false) {
         throw new Error(String((body as { error?: string }).error || 'Mesaj gönderilemedi'))
       }
+      // Kaan (2026-09-10): WhatsApp = doktorun kendi hesabı. wa.me bağlantısı mesajı hazır açar;
+      // doktor WhatsApp'ta tek dokunuşla gönderir. Twilio/Meta yok, mesaj onun numarasından gider.
+      const waLink = (body as { waLink?: string }).waLink
+      if (waLink) { if (waPencere) waPencere.location.href = waLink; else window.open(waLink, '_blank') }
+      else waPencere?.close()
       setSuccess(true)
       setMesaj('')
       setTarihSaat('')
       setSelectedHasta('')
       await fetchAll()
     } catch (e: unknown) {
+      waPencere?.close()
       setError(e instanceof Error ? e.message : 'Gönderim başarısız')
     } finally {
       setLoading(false)
@@ -196,7 +204,7 @@ export default function HatirlatmaPage() {
                     fontSize: 14,
                   }}
                 >
-                  {k}
+                  {k === 'WhatsApp' ? 'WhatsApp (kendi numaranız)' : k}
                 </button>
               ))}
             </div>
@@ -225,7 +233,7 @@ export default function HatirlatmaPage() {
             </button>
             {success && (
               <div style={{ marginTop: 12, padding: 12, background: '#166534', borderRadius: 12, color: '#4ade80', fontSize: 14 }}>
-                {kanal} mesajı gönderildi
+                {kanal === 'WhatsApp' ? 'WhatsApp açıldı — mesaj hazır, Gönder\'e dokunmanız yeterli' : `${kanal} mesajı gönderildi`}
               </div>
             )}
             {error && <div style={toolsErrorBox}>{error}</div>}
