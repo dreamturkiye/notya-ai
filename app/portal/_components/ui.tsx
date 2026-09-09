@@ -53,9 +53,16 @@ export function EmptyState({
   const src = art ? EMPTY_ART[art] : null
   return (
     <div className="sg-fade sg-empty">
-      {src ? (
+      {src && art ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="sg-empty-img" />
+        <img
+          src={src}
+          alt=""
+          className={`sg-empty-img sg-empty-img--${art}`}
+          width={1280}
+          height={720}
+          decoding="async"
+        />
       ) : null}
       <div className="sg-empty-copy">
         <h2 className="sg-display" style={{ margin: 0, fontSize: 'clamp(1.25rem, 5vw, 1.5rem)' }}>
