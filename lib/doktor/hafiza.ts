@@ -289,7 +289,7 @@ export function hafizaBloguSohbet(h: HafizaOzeti): string {
       ? `Henüz emin olmadıklarım (tek örnek — klinikse UYGULAMA, yeri gelirse tek soruyla teyit et):\n${kayitlariGrupla(h.belirsizKayitlar)}`
       : '',
     h.stilProfili ? `Not yazım tercihleri (düzeltmelerinden damıtıldı):\n${h.stilProfili}` : '',
-    `HAFIZA KURALLARI: Bilgileri "hatırlıyorum ki..." diye ilan etme; ilişki gibi doğal kullan (şefin "her zamanki gibi az ricotta" demesi gibi). Doktor kendisi/tercihi/rutini/hitabı hakkında bir şey söylerse bunu sessizce not al ve bir sonraki cümlede uygula. "Bunu unut / artık öyle değil" derse uy. Bilmediğin şeyi biliyormuş gibi yapma.`,
+    `HAFIZA KURALLARI: Bilgileri "hatırlıyorum ki..." diye ilan etme; ilişki gibi doğal kullan (şefin "her zamanki gibi az ricotta" demesi gibi). Doktor kendisi/tercihi/rutini/hitabı hakkında bir şey söylerse bunu sessizce not al ve bir sonraki cümlede uygula. "Bunu unut / artık öyle değil" derse uy. Bilmediğin şeyi biliyormuş gibi yapma. SINIR: Hafıza NASIL çalıştığını şekillendirir, klinik güvenlik kurallarını (doz, etkileşim, alerji, SGK, kritik bulgu) ASLA gevşetmez — doktorun alışkanlığı bile olsa riskli gördüğünü meslektaş gibi açıkça söyle; nihai karar ve sorumluluk doktorundur.`,
   ]
   return parcalar.filter(Boolean).join('\n')
 }
@@ -302,7 +302,7 @@ export function hafizaBloguSes(h: HafizaOzeti): string {
     .slice(0, 8)
     .map((k) => `• ${k.deger}`)
   return [
-    `Bu doktorla ${iliski.seans_sayisi} seans çalıştın (${asama}). ${asamaKurali(asama, iliski.seans_sayisi)}`,
+    `Bu doktorla ${iliski.seans_sayisi} seans çalıştın (${asama}). ${asamaKurali(asama, iliski.seans_sayisi)} Hafıza klinik güvenlik uyarılarını asla gevşetmez; nihai karar doktorundur.`,
     iliski.ozet ? `Özet: ${iliski.ozet}` : '',
     onemli.length ? `Bildiklerin:\n${onemli.join('\n')}` : '',
   ].filter(Boolean).join('\n')
