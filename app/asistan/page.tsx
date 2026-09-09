@@ -189,13 +189,18 @@ export default function AsistanPage() {
       const p = PERSONAS[personaKey]
       // NOTYA-OGRENME-03: sesli Ayşe de meslektaş hafızasını okur — 5+ seansta kendini
       // tanıtmayı bırakır, bildiklerini promptta taşır. Başarısızlıkta eski davranış.
-      let hafiza: { karsilama?: { tanit: boolean; onSoz: string }; sesBlogu?: string } = {}
+      let hafiza: { karsilama?: { tanit: boolean; onSoz: string }; sesBlogu?: string; gun?: { metin: string; blok: string } | null } = {}
       try {
         const hr = await fetch("/api/doktor/hafiza", { headers: { Authorization: `Bearer ${authToken}` } })
         if (hr.ok) hafiza = await hr.json()
       } catch { /* hafıza kritik değil */ }
-      const firstMessage = buildVoiceFirstMessage(p, doctor, hafiza.karsilama || null)
-      const voicePrompt = buildVoiceSystemPrompt(p, doctor, hafiza.sesBlogu || undefined)
+      // NOTYA-GUN-01: günün durumu varsa Ayşe'nin ilk sözü odur ("Günaydın Hocam, bugün 14 randevu...")
+      const firstMessage = hafiza.gun?.metin
+        ? (hafiza.karsilama && hafiza.karsilama.tanit
+            ? hafiza.gun.metin.replace(/\.\s/, `. Ben ${p.name}, ${p.title}. `)
+            : hafiza.gun.metin)
+        : buildVoiceFirstMessage(p, doctor, hafiza.karsilama || null)
+      const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
       const { signedUrl, voiceId } = await fetchSignedUrl(p)
 
       // Pre-regression path (c38e18e): same for all personas — personalized

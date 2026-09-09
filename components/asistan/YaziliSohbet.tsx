@@ -34,6 +34,25 @@ export default function YaziliSohbet({ personaId, specialty }: { personaId?: str
 
   useEffect(() => () => { try { tanimaRef.current?.stop(); } catch { /* sessiz */ } }, []);
 
+  // NOTYA-GUN-01: panel açılınca Ayşe ilk sözü söyler — günün durumu (randevu, onaysız not, mesaj).
+  // Sohbet geçmişine 'asistan' baloncuğu olarak girer; sunucuya gönderilmez (prompt zaten biliyor).
+  useEffect(() => {
+    if (!acik || mesajlar.length > 0) return;
+    let iptal = false;
+    (async () => {
+      try {
+        const token = await ensureDoctorAccessToken();
+        const r = await fetch('/api/doktor/hafiza', { headers: { Authorization: `Bearer ${token}` } });
+        if (!r.ok) return;
+        const j = await r.json();
+        const metin = j?.gun?.metin as string | undefined;
+        if (metin && !iptal) setMesajlar((m) => (m.length === 0 ? [{ rol: 'asistan', icerik: metin }] : m));
+      } catch { /* açılış kritik değil */ }
+    })();
+    return () => { iptal = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acik]);
+
   function mikrofon() {
     if (dinliyor) { try { tanimaRef.current?.stop(); } catch { /* sessiz */ } setDinliyor(false); return; }
     const w = window as unknown as { webkitSpeechRecognition?: new () => Tanima; SpeechRecognition?: new () => Tanima };
