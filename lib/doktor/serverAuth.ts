@@ -22,7 +22,11 @@ export const OTURUM_YOK = 'Oturum bulunamadı. Lütfen tekrar giriş yapın.'
 
 /** Service-role client. Bypasses RLS — every query MUST scope by user.id or patient ownership. */
 export function servisSupabase(): SupabaseClient {
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  // Next 14 route handler'larında global fetch yamalıdır; PostgREST GET'leri sessizce önbelleğe
+  // girebilir (NOTYA-GUN-02'de bayat randevu listesi görüldü). Her Supabase isteği no-store.
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    global: { fetch: (url, opts) => fetch(url, { ...opts, cache: 'no-store' }) },
+  })
 }
 
 export async function doktorOturum(

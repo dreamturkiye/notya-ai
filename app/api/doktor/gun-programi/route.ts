@@ -14,6 +14,8 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 const TZ = 'Europe/Istanbul'
 
