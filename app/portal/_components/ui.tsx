@@ -32,7 +32,7 @@ export function SectionHeader({
 const EMPTY_ART = {
   ziyaretler: '/sagligim/calm-empty.jpg',
   sonuclar: '/sagligim/sonuclar-care.jpg',
-  ilaclar: '/sagligim/wellness-kitchen.jpg',
+  ilaclar: '/sagligim/ilaclar-care.jpg',
   mesajlar: '/sagligim/mesajlar-care.jpg',
   takip: '/sagligim/wellness-cycle.jpg',
   gecmis: '/sagligim/preventive-care.jpg',
