@@ -252,6 +252,8 @@ export default function DoktorDashboard() {
         .ev-karo:hover .ev-ikon { background: rgba(15,155,142,0.22) !important; color: #2DD4BF !important; }
         .ev-rv:hover { background: rgba(255,255,255,0.08) !important; }
         .ev-satir:hover { background: rgba(255,255,255,0.04); }
+        /* Kaan (2026-09-10): telefonda Randevu ekle / Takvimi aç, Bugün ile aynı sütunda (sola dayalı) */
+        @media (max-width: 640px) { .rv-aksiyon { margin-left: 0 !important; width: 100%; justify-content: flex-start !important; } }
       `}</style>
 
       <DoktorNav />
@@ -288,7 +290,8 @@ export default function DoktorDashboard() {
                 >{v}</button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {/* Kaan (2026-09-10): telefonda düğmeler Bugün/Bu Hafta ile aynı sütundan başlasın — sağa itme yok */}
+            <div className="rv-aksiyon" style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Randevu ekle</button>
               <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Takvimi aç</button>
             </div>
