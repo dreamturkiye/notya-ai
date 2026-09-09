@@ -413,6 +413,9 @@ export default function IncelemePage() {
                       <div style={{ marginTop: 10, display: 'flex', gap: 16, alignItems: 'center' }}>
                         <span role="button" tabIndex={0} onClick={() => setAcikId('')} onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(''); }} style={{ fontSize: 12, color: '#14B8A6', cursor: 'pointer' }}>Daralt ▴</span>
                         <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank'); }} style={{ fontSize: 12, color: '#8FA0B5', cursor: 'pointer' }}>🖨️ Yazdır / PDF</span>
+                        {note.ilaclar.length > 0 && (
+                          <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank'); }} style={{ fontSize: 12, color: '#2DD4BF', cursor: 'pointer', fontWeight: 600 }}>🧾 Reçete ({note.ilaclar.length} ilaç)</span>
+                        )}
                       </div>
                     </div>
                   ) : (
