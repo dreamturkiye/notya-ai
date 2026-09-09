@@ -118,11 +118,11 @@ export async function POST(req: NextRequest) {
     if (oncekiNotlar?.length) stilOrnekleri = stilOrnekleriDerle(oncekiNotlar)
   } catch { /* stil kritik değil */ }
 
-  // NOTYA-OGRENME-02: damıtılmış doktor tercihleri üretime girer
+  // NOTYA-OGRENME-03: meslektaş hafızası — stil profili + kesin klinik/üslup kayıtları
   let stilProfili = ''
   try {
-    const { data: sp } = await supabase.from('doktor_stil_profilleri').select('profil').eq('doctor_id', doktorId).maybeSingle()
-    stilProfili = String(sp?.profil || '')
+    const { hafizaYukle, hafizaBloguNot } = await import('@/lib/doktor/hafiza')
+    stilProfili = hafizaBloguNot(await hafizaYukle(supabase, doktorId))
   } catch { /* profil kritik değil */ }
 
   try {

@@ -187,8 +187,15 @@ export default function AsistanPage() {
     try {
       const doctor = doctorProfile || toAddressableUser(null)
       const p = PERSONAS[personaKey]
-      const firstMessage = buildVoiceFirstMessage(p, doctor)
-      const voicePrompt = buildVoiceSystemPrompt(p, doctor)
+      // NOTYA-OGRENME-03: sesli Ayşe de meslektaş hafızasını okur — 5+ seansta kendini
+      // tanıtmayı bırakır, bildiklerini promptta taşır. Başarısızlıkta eski davranış.
+      let hafiza: { karsilama?: { tanit: boolean; onSoz: string }; sesBlogu?: string } = {}
+      try {
+        const hr = await fetch("/api/doktor/hafiza", { headers: { Authorization: `Bearer ${authToken}` } })
+        if (hr.ok) hafiza = await hr.json()
+      } catch { /* hafıza kritik değil */ }
+      const firstMessage = buildVoiceFirstMessage(p, doctor, hafiza.karsilama || null)
+      const voicePrompt = buildVoiceSystemPrompt(p, doctor, hafiza.sesBlogu || undefined)
       const { signedUrl, voiceId } = await fetchSignedUrl(p)
 
       // Pre-regression path (c38e18e): same for all personas — personalized

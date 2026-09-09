@@ -179,11 +179,11 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       if (oncekiNotlar?.length) stilOrnekleri = stilOrnekleriDerle(oncekiNotlar)
     } catch { /* stil örneği kritik değil */ }
 
-    // NOTYA-OGRENME-02: damıtılmış doktor tercihleri (düzeltme geçmişinden) üretime girer
+    // NOTYA-OGRENME-03: meslektaş hafızası — stil profili + kesin klinik/üslup kayıtları tek metinde
     let stilProfili = ''
     try {
-      const { data: sp } = await getSupabase().from('doktor_stil_profilleri').select('profil').eq('doctor_id', user.id).maybeSingle()
-      stilProfili = String(sp?.profil || '')
+      const { hafizaYukle, hafizaBloguNot } = await import('@/lib/doktor/hafiza')
+      stilProfili = hafizaBloguNot(await hafizaYukle(getSupabase(), user.id))
     } catch { /* profil kritik değil */ }
 
     const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili })
