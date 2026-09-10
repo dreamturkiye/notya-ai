@@ -59,7 +59,7 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
   })
   // Kâğıt reçete başlığı için (NOTYA-MEDULA P1b)
   const UNVAN = /^(?:prof|doç|doc|uzm|op|dr|dt)\.?$/i
-  const adSoyad = `${doktor?.first_name || ''} ${doktor?.last_name || ''}`.trim()
+  const adSoyad = [doktor?.first_name, doktor?.last_name].map((x: unknown) => String(x || '').trim()).filter((x: string) => x && !UNVAN.test(x)).join(' ')
     || String(doktor?.full_name || '').trim().split(/\s+/).filter((x: string) => !UNVAN.test(x)).join(' ')
   const rb = (doktor?.recete_baslik && typeof doktor.recete_baslik === 'object' ? doktor.recete_baslik : {}) as { satirlar?: string[]; diplomaNo?: string; logoDataUrl?: string }
   const baslik = {
