@@ -1,3 +1,4 @@
+import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 /**
  * NOTYA-KONSULT-01 — "Ayşe'ye Danış" sekmesi: doktorun hasta dosyası üzerinde asistanla
  * 1:1 klinik konsültasyonu. Hazır soru çipleri en sık kullanım senaryolarını tek tıka indirir.
@@ -73,8 +74,8 @@ export default function HastaKonsult({ patientId }: { patientId: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12, maxHeight: 460, overflowY: 'auto' }}>
         {mesajlar.map((m, i) => (
-          <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '85%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', border: m.rol === 'doktor' ? 'none' : '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: 14, padding: '10px 14px', fontSize: 14, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
-            {m.icerik}
+          <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '85%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', border: m.rol === 'doktor' ? 'none' : '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: 14, padding: '10px 14px', fontSize: 14, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal' }}>
+            {m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}
           </div>
         ))}
         {bekliyor && <div style={{ alignSelf: 'flex-start', color: '#94A3B8', fontSize: 13 }}>Ayşe dosyayı inceliyor…</div>}

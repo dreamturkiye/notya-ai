@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 interface Mesaj { rol: 'doktor' | 'asistan'; icerik: string }
 
@@ -130,7 +131,7 @@ export default function YaziliSohbet({ personaId, specialty }: { personaId?: str
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
             {mesajlar.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '90%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{m.icerik}</div>
+              <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '90%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
             ))}
             {bekliyor && <div style={{ fontSize: 12, color: '#5F7189' }}>Ayşe dosyaya bakıyor…</div>}
             <div ref={altRef} />
