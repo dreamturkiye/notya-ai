@@ -1,9 +1,9 @@
-import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 /**
  * NOTYA-KONSULT-01 — "Ayşe'ye Danış" sekmesi: doktorun hasta dosyası üzerinde asistanla
  * 1:1 klinik konsültasyonu. Hazır soru çipleri en sık kullanım senaryolarını tek tıka indirir.
  */
 'use client';
+import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 import { useRef, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
