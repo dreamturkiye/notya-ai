@@ -35,7 +35,12 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, patientI
 
   const kan = metin(y.kanGrubu)
   yaz('kanGrubu', kan && kan !== 'Bilmiyorum' ? kan : '')
-  yaz('kronikHastaliklar', metin(y.kronikHastaliklar))
+  // kronikHastaliklar hasta kaydında DİZİ tutulur (checkbox-grup); pediatri formunda serbest metin gelir → diziye çevir
+  if (bos('kronikHastaliklar')) {
+    const kh = Array.isArray(y.kronikHastaliklar) ? (y.kronikHastaliklar as unknown[]).map(String) : String(y.kronikHastaliklar || '').split(/[,;\n]+/).map((x) => x.trim())
+    const temiz = kh.filter((x) => x && x.toLowerCase() !== 'yok')
+    if (temiz.length) { notlar.kronikHastaliklar = temiz; doldurulan.push('kronikHastaliklar') }
+  }
   const alerji = metin(y.alerjiVarMi)
   yaz('alerjiler', alerji.includes('var') ? (metin(y.alerjiAciklama) || 'Bilinen alerjisi var') : alerji ? 'Bilinen alerjisi yok' : '')
   yaz('suregenIlaclar', metin(y.kullanilanIlaclar) || (metin(y.kullaniyorMu) === 'Hayır' ? 'Yok' : ''))

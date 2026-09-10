@@ -38,7 +38,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       telefon: phone,
       sehir: notesData.sehir || null,
       kan_grubu: notesData.kanGrubu || null,
-      kronik_hastaliklar: notesData.kronikHastaliklar || [],
+      // Kaan (2026-09-10): "e.map is not a function" — intake aktarımı metin yazmıştı, sayfa dizi bekliyor. Her iki biçimi de kabul et.
+      kronik_hastaliklar: Array.isArray(notesData.kronikHastaliklar)
+        ? notesData.kronikHastaliklar
+        : String(notesData.kronikHastaliklar || '').split(/[,;\n]+/).map((x: string) => x.trim()).filter(Boolean),
       alerjiler: notesData.alerjiler || null,
       surekli_ilaclar: notesData.suregenIlaclar || null,
       sigara_alkol: notesData.sigaraAlkol || null,
