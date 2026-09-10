@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { kritikAlarm } from "@/lib/alarm"
 import Anthropic from "@anthropic-ai/sdk"
+import { hekimAdi } from '@/lib/doktor/hekimAdi'
 
 // AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
 // aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
@@ -186,7 +187,8 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       stilProfili = hafizaBloguNot(await hafizaYukle(getSupabase(), user.id))
     } catch { /* profil kritik değil */ }
 
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili })
+    const doktorAdi = await hekimAdi(getSupabase(), user.id)
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi })
 
     // Save note
     const { data: note, error: noteError } = await getSupabase().from("notes").insert({
