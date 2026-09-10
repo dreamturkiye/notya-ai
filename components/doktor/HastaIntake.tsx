@@ -8,7 +8,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
-import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari';
+import { BRANS_ETIKETLERI, BRANS_SORULARI } from '@/lib/intake/bransSorulari';
+import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar';
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs';
 
 interface IntakeFormOzet {
@@ -26,6 +27,22 @@ const DURUM_ETIKET: Record<string, { label: string; color: string; bg: string }>
   dolduruldu: { label: 'Dolduruldu — incelenmedi', color: '#0F9B8E', bg: 'rgba(15,155,142,0.15)' },
   incelendi: { label: 'İncelendi', color: '#22C55E', bg: 'rgba(34,197,94,0.15)' },
 };
+
+// Kaan (2026-09-10): doktor inceleme görünümünde ham alan kimliği (tcKimlik, dogumTarihi) değil,
+// formdaki Türkçe etiket ve dd.mm.yyyy tarih gösterilir.
+function etiketHaritasi(brans: string): Record<string, string> {
+  const h: Record<string, string> = {};
+  for (const b of coreBolumlerIcin(brans)) for (const a of b.alanlar) h[a.id] = a.etiket;
+  const bs = (BRANS_SORULARI as Record<string, { alanlar: { id: string; etiket: string; tur?: string }[] }>)[brans];
+  if (bs) for (const a of bs.alanlar) if (a.tur !== 'bolum-basligi') h[a.id] = a.etiket;
+  return h;
+}
+function degerGoster(v: unknown): string {
+  if (Array.isArray(v)) return v.join(', ');
+  const t = String(v ?? '—');
+  const m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : t;
+}
 
 export default function HastaIntake({ patientId }: { patientId: string }) {
   const [formlar, setFormlar] = useState<IntakeFormOzet[]>([]);
@@ -232,12 +249,12 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
                   {acikFormDetay && (
                     <>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
-                        {Object.entries(acikFormDetay.yanitlar).map(([k, v]) => (
+                        {(() => { const etk = etiketHaritasi(f.brans); return Object.entries(acikFormDetay.yanitlar).map(([k, v]) => (
                           <div key={k} style={{ fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
-                            <span style={{ color: '#64748B' }}>{k}:</span>{' '}
-                            <span style={{ color: 'white' }}>{Array.isArray(v) ? v.join(', ') : String(v ?? '—')}</span>
+                            <span style={{ color: '#64748B' }}>{etk[k] || k}:</span>{' '}
+                            <span style={{ color: 'white' }}>{degerGoster(v)}</span>
                           </div>
-                        ))}
+                        )); })()}
                       </div>
                       {f.durum === 'dolduruldu' && (
                         <button
