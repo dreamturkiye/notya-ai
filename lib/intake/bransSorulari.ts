@@ -43,7 +43,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'gebelikHaftasiPed', etiket: 'Gebelik Haftası', tur: 'radio', zorunlu: true, secenekler: ['37 haftadan önce', '37-38 hafta', '39 hafta ve üstü', 'Hatırlamıyorum'] },
       { id: 'dogumKilosuPed', etiket: 'Doğum Kilosu (gram)', tur: 'text', zorunlu: true },
       { id: 'dogumBoyuPed', etiket: 'Doğum Boyu (cm)', tur: 'text', zorunlu: true },
-      { id: 'basCevresiPed', etiket: 'Baş Çevresi (cm)', tur: 'text', zorunlu: true },
+      { id: 'basCevresiPed', etiket: 'Baş Çevresi (cm)', tur: 'text', placeholder: 'Hatırladığınız kadarıyla' },
       { id: 'dogumSekliPed', etiket: 'Doğum Şekli', tur: 'radio', zorunlu: true, secenekler: ['Normal Doğum', 'Sezaryen'] },
       { id: 'dogumSonrasiPed', etiket: 'Doğum Sonrası', tur: 'radio', zorunlu: true, secenekler: ['Sorun Yaşanmadı', 'Sorun Yaşandı'] },
       { id: 'dogumSonrasiAciklamaPed', etiket: 'Doğum sonrası yaşanan sorun (açıklama)', tur: 'textarea', placeholder: 'Örn. sarılık nedeniyle fototerapi, yenidoğan yoğun bakım, solunum desteği…', yardim: 'Yalnız "Sorun Yaşandı" seçildiyse doldurun.' },
