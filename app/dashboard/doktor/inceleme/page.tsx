@@ -85,6 +85,9 @@ export default function IncelemePage() {
   const [busyId, setBusyId] = useState('');
   const [acikId, setAcikId] = useState('');
   const [taslak, setTaslak] = useState<Taslak>({ subjektif: '', objektif: '', degerlendirme: '', plan: '' });
+  // Kaan/Gökhan (2026-09-10): başlık (hasta, branş, tarih) dışında her şey düzenlenebilir
+  const [basvuruTaslak, setBasvuruTaslak] = useState('');
+  const [vitalTaslak, setVitalTaslak] = useState<Record<string, string>>({});
   const [kMesajlar, setKMesajlar] = useState<KMesaj[]>([]);
   const [kGirdi, setKGirdi] = useState('');
   const [kBekliyor, setKBekliyor] = useState(false);
@@ -93,6 +96,8 @@ export default function IncelemePage() {
   const notuAc = (note: PendingNote) => {
     setAcikId(note.id);
     setTaslak({ subjektif: note.subjektif, objektif: note.objektif, degerlendirme: note.degerlendirme, plan: note.plan });
+    setBasvuruTaslak(note.basvuruYakinmasi || '');
+    setVitalTaslak(Object.fromEntries(Object.entries((note.vitaller || {}) as Record<string, unknown>).map(([k, v]) => [k, v == null ? '' : String(v)])));
     setKMesajlar([]);
     setKGirdi('');
     setEylemler([]);
@@ -222,7 +227,7 @@ export default function IncelemePage() {
       const res = await fetch(`/api/notes/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(acikId === id ? { duzenlemeler: taslak } : {}),
+        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak } } : {}),
       });
 
       if (!res.ok) {
@@ -306,17 +311,26 @@ export default function IncelemePage() {
                   {acikId === note.id ? (
                     <div onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
                       {/* NOTYA-SOAP-02: tam not incelemesi — doktor DÜZENLEYEREK onaylar; düzenlemeler Ayşe'nin öğrenme verisidir */}
-                      {note.basvuruYakinmasi && (
-                        <div style={{ marginBottom: 10, fontSize: 13, color: '#EDF1F7', fontStyle: 'italic' }}>Başvuru yakınması: “{note.basvuruYakinmasi}”</div>
-                      )}
-                      {note.vitaller && Object.values(note.vitaller).some((v) => v != null && v !== '') && (
-                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 10, fontSize: 12, color: '#8FA0B5' }}>
-                          <span style={{ fontWeight: 700, color: '#94A3B8', width: '100%' }}>Yaşamsal Bulgular</span>
-                          {yasamsalBulguSatirlari(note.vitaller).map((l) => (
-                            <span key={l.key}>{l.label}: <strong style={{ color: '#EDF1F7' }}>{l.value}</strong></span>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Başvuru Yakınması <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></div>
+                        <input value={basvuruTaslak} onChange={(e) => setBasvuruTaslak(e.target.value)} placeholder="Hastanın geliş nedeni"
+                          style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 13, padding: '8px 10px', fontStyle: 'italic', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                      </div>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></div>
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                          {([['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['spo2', 'SpO₂', '%'], ['ates', 'Ateş', '°C'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm']] as const).map(([k, etiket, birim]) => (
+                            <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>
+                              {etiket}
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <input value={vitalTaslak[k] ?? ''} onChange={(e) => setVitalTaslak({ ...vitalTaslak, [k]: e.target.value })} placeholder="—"
+                                  style={{ width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
+                                <span style={{ color: '#64748B' }}>{birim}</span>
+                              </span>
+                            </label>
                           ))}
                         </div>
-                      )}
+                      </div>
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
                         <div key={alan} style={{ marginBottom: 10 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>
