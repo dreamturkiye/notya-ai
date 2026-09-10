@@ -13,6 +13,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
+import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -53,7 +54,7 @@ export async function hastaDosyasiniDerle(
 
   const b: string[] = []
   const dogum = coz(hasta.dob_encrypted)
-  const cinsiyet = coz(hasta.gender_encrypted)
+  const cinsiyet = cinsiyetTr(coz(hasta.gender_encrypted))
   const doktorNotu = coz(hasta.notes_encrypted)
 
   b.push('## HASTA KİMLİK ÖZETİ')
