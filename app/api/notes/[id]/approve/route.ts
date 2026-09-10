@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: existing } = await supabase
     .from('notes')
     .select(
-      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, created_at, sessions(patient_id)'
+      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, created_at, sessions(patient_id)'
     )
     .eq('id', noteId)
     .eq('doctor_id', user.id)
@@ -57,12 +57,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // keskinleşmesinin" veri tabanı (v2'de bu farklar prompta damitılacak). Stil öğrenmesinin
   // v1'i zaten aktif: onaylı notlar sonraki üretimlere üslup örneği olarak gider.
   const body = await req.json().catch(() => ({}))
-  const duzenlemeler = (body?.duzenlemeler || {}) as Record<string, string>
+  const duzenlemeler = (body?.duzenlemeler || {}) as Record<string, unknown>
   const alanEsleme: Record<string, keyof typeof existing> = {
     subjektif: 'content_subjektif',
     objektif: 'content_objektif',
     degerlendirme: 'content_degerlendirme',
     plan: 'content_plan',
+    basvuruYakinmasi: 'basvuru_yakinmasi',   // Kaan/Gökhan 2026-09-10: başlık dışı her şey düzenlenebilir
   }
   const guncelleme: Record<string, unknown> = {
     approved_at: new Date().toISOString(),
@@ -79,6 +80,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   }
 
+  // Yaşamsal bulgular (JSON) — doktor İnceleme'de değiştirebilir; değişiklik öğrenme loguna da girer
+  const yeniVital = duzenlemeler.vitaller
+  if (yeniVital && typeof yeniVital === 'object' && !Array.isArray(yeniVital)) {
+    const temiz: Record<string, string> = {}
+    for (const [k, v] of Object.entries(yeniVital as Record<string, unknown>)) { const t = String(v ?? '').trim(); if (t) temiz[k] = t.slice(0, 40) }
+    const eskiStr = JSON.stringify(existing.vitaller || {})
+    const yeniStr = JSON.stringify(temiz)
+    if (eskiStr !== yeniStr) {
+      guncelleme.vitaller = temiz
+      loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'vitaller', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
+    }
+  }
   const { error: updateError } = await supabase
     .from('notes')
     .update(guncelleme)
