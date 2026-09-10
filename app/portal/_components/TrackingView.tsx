@@ -180,11 +180,11 @@ export function TrackingView({ data }: { data: PortalBundle }) {
             </SoftPanel>
           )}
 
-          <div className="sg-track-grid" style={{ marginTop: 14 }}>
+          <div className="sg-track-grid sg-track-grid--genis" style={{ marginTop: 14 }}>
             <SoftPanel>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                 <div style={{ fontWeight: 800 }}>Tansiyon</div>
-                <div style={{ fontSize: 11.5, color: 'var(--sg-muted)' }}><span style={{ color: 'var(--sg-accent)' }}>━</span> büyük · <span style={{ color: '#9a5b3a' }}>┄</span> küçük · normal {ARALIK.sistolik.etiket}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--sg-muted)', whiteSpace: 'nowrap' }}><span style={{ color: 'var(--sg-accent)' }}>━</span> büyük <span style={{ color: '#9a5b3a' }}>┄</span> küçük · normal {ARALIK.sistolik.etiket}</div>
               </div>
               <Grafik seriler={[{ ad: 'Büyük (sistolik)', renk: 'var(--sg-accent)', noktalar: sistolik }, { ad: 'Küçük (diyastolik)', renk: '#9a5b3a', noktalar: diastolik }]} aralik={ARALIK.sistolik} birim="mmHg" />
             </SoftPanel>

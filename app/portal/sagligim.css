@@ -1449,3 +1449,8 @@ body:has(.sagligim-root) {
     scroll-padding-inline: 16px;
   }
 }
+
+/* Takip: grafik kartları geniş (2 sütun) — Kaan 2026-09-10 */
+@media (min-width: 900px) {
+  .sg-track-grid--genis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
