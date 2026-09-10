@@ -123,17 +123,22 @@ export default function IncelemePage() {
       const res = await fetch('/api/doktor/not-konsult', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ noteId: note.id, taslak, mesajlar: yeni }),
+        body: JSON.stringify({ noteId: note.id, taslak: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak }, mesajlar: yeni }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
       setKMesajlar([...yeni, { rol: 'asistan', icerik: String(d.cevap || '') }]);
-      const dz = (d.duzenlemeler || {}) as Record<string, string>;
+      const dz = (d.duzenlemeler || {}) as Record<string, unknown>;
       const g: Taslak = { ...taslak };
       (['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).forEach((a) => {
-        if (typeof dz[a] === 'string' && dz[a].trim()) g[a] = dz[a];
+        if (typeof dz[a] === 'string' && (dz[a] as string).trim()) g[a] = dz[a] as string;
       });
       setTaslak(g);
+      // Kaan/Gökhan (2026-09-10): Ayşe'nin düzenlemeleri artık vitaller / başvuru / evde dikkat / veli özetine de işler
+      if (typeof dz.basvuruYakinmasi === 'string') setBasvuruTaslak(dz.basvuruYakinmasi as string);
+      if (dz.vitaller && typeof dz.vitaller === 'object' && !Array.isArray(dz.vitaller)) setVitalTaslak((v) => ({ ...v, ...Object.fromEntries(Object.entries(dz.vitaller as Record<string, unknown>).map(([k, x]) => [k, String(x ?? '')])) }));
+      if (Array.isArray(dz.alarmBulgulari)) setAlarmTaslak((dz.alarmBulgulari as unknown[]).map(String).join('\n'));
+      if (typeof dz.hastaOzeti === 'string') setOzetTaslak(dz.hastaOzeti as string);
       if (Array.isArray(d.eylemler) && d.eylemler.length) {
         setEylemler((prev) => [...prev, ...(d.eylemler as Eylem[]).map((e) => ({ ...e, durum: 'oneri' as const }))]);
       }

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { noteId, taslak, mesajlar } = body as {
     noteId?: string
-    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string }
+    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string }
     mesajlar?: Mesaj[]
   }
   if (!noteId || !Array.isArray(mesajlar) || mesajlar.length === 0) {
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   const { data: not } = await supabase
     .from('notes')
-    .select('id, session_id, icd10_codes, recete_onerisi, alarm_bulgulari, kritik_bulgular, vitaller, basvuru_yakinmasi, sessions(specialty, patient_id)')
+    .select('id, session_id, icd10_codes, recete_onerisi, alarm_bulgulari, kritik_bulgular, vitaller, basvuru_yakinmasi, hasta_ozeti, sessions(specialty, patient_id)')
     .eq('id', noteId)
     .eq('doctor_id', doktorId)
     .maybeSingle()
@@ -71,11 +71,23 @@ YETENEKLERİN:
 
 Bugün (TRT): ${trtBugun}. Nihai klinik karar ve sorumluluk her zaman doktorundur.
 
+DÜZENLEYEBİLECEĞİN ALANLAR ve TAM ANAHTARLARI (başka anahtar KULLANMA; İngilizce anahtar yazma):
+- "subjektif", "objektif", "degerlendirme", "plan" → metin (bölümün yeni tam metni)
+- "basvuruYakinmasi" → metin
+- "vitaller" → nesne, anahtarlar: tansiyon, nabiz, spo2, ates, kilo, boy (değerler metin, örn. {"nabiz":"100"})
+- "alarmBulgulari" → dizi (evde dikkat edilmesi gerekenler, her öğe bir madde)
+- "hastaOzeti" → metin (veliye giden özet)
+Nabız/ateş gibi vital değişikliklerini HEM "vitaller" HEM de objektif metninde geçiyorsa objektif'te yap. "Doktorunuz" ifadesini hekim adıyla değiştirme isteği hastaOzeti ve alarmBulgulari alanlarını ilgilendirir.
+Bir düzenleme yaptığında cevap metninde JSON gösterme; JSON yalnız zarfın kendisidir.
+
 MEVCUT SOAP TASLAĞI (doktorun ekranındaki güncel hali):
 S: ${taslak?.subjektif || ''}
 O: ${taslak?.objektif || ''}
 A: ${taslak?.degerlendirme || ''}
 P: ${taslak?.plan || ''}
+Başvuru yakınması: ${taslak?.basvuruYakinmasi || not.basvuru_yakinmasi || ''}
+Evde dikkat (taslak): ${JSON.stringify(taslak?.alarmBulgulari || not.alarm_bulgulari || [])}
+Veli özeti (taslak): ${taslak?.hastaOzeti || not.hasta_ozeti || ''}
 
 NOT EKLERİ: Vitaller: ${JSON.stringify(not.vitaller || {})} | ICD önerileri: ${JSON.stringify(not.icd10_codes || [])} | Reçete önerisi: ${JSON.stringify(not.recete_onerisi || [])} | Alarm bulguları: ${JSON.stringify(not.alarm_bulgulari || [])}
 ${klinikBaglam ? `\nHASTANIN KİMLİKSİZ DOSYA BAĞLAMI:\n${klinikBaglam}` : ''}
@@ -106,8 +118,19 @@ duzenlemeler yalnız değişen alanları içerir ({"plan":"..."} gibi); eylemler
     }
     const ham = (veri.content || []).filter((c: { type: string }) => c.type === 'text').map((c: { text: string }) => c.text).join('')
     const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
-    let sonuc: { cevap?: string; duzenlemeler?: Record<string, string>; eylemler?: unknown[] }
-    try { sonuc = JSON.parse(temiz) } catch { sonuc = { cevap: temiz } }
+    let sonuc: { cevap?: string; duzenlemeler?: Record<string, unknown>; eylemler?: unknown[] }
+    // Kaan/Gökhan (2026-09-10): model bazen JSON'u düz metnin içine gömüyor → ilk {...} bloğunu çıkar
+    try { sonuc = JSON.parse(temiz) } catch {
+      const m = temiz.match(/\{[\s\S]*\}/)
+      try { sonuc = m ? JSON.parse(m[0]) : { cevap: temiz } } catch { sonuc = { cevap: temiz } }
+    }
+    // Anahtar normalizasyonu: İngilizce/varyant anahtarlar → beklenen Türkçe anahtarlar
+    const ESLE: Record<string, string> = { subjective: 'subjektif', s: 'subjektif', objective: 'objektif', o: 'objektif', assessment: 'degerlendirme', a: 'degerlendirme', degerlendirme: 'degerlendirme', plan: 'plan', p: 'plan', vitals: 'vitaller', vitaller: 'vitaller', alarm: 'alarmBulgulari', alarm_bulgulari: 'alarmBulgulari', alarmbulgulari: 'alarmBulgulari', hasta_ozeti: 'hastaOzeti', hastaozeti: 'hastaOzeti', veliOzeti: 'hastaOzeti', basvuru_yakinmasi: 'basvuruYakinmasi', basvuruyakinmasi: 'basvuruYakinmasi' }
+    const dzHam = (sonuc.duzenlemeler && typeof sonuc.duzenlemeler === 'object' ? sonuc.duzenlemeler : {}) as Record<string, unknown>
+    const dz: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(dzHam)) { const hedef = ESLE[k] || ESLE[k.toLowerCase()] || k; dz[hedef] = v }
+    sonuc.duzenlemeler = dz
+    if (typeof sonuc.cevap === 'string' && sonuc.cevap.trim().startsWith('{')) sonuc.cevap = 'Düzenlemeyi ekrana işledim Hocam.'
     return NextResponse.json({
       cevap: String(sonuc.cevap || ''),
       duzenlemeler: sonuc.duzenlemeler && typeof sonuc.duzenlemeler === 'object' ? sonuc.duzenlemeler : {},
