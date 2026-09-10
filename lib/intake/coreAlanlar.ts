@@ -35,6 +35,7 @@ export interface IntakeAlan {
   secenekler?: string[]
   placeholder?: string
   yardim?: string
+  dikey?: boolean   // seçenekler alt alta (Kaan 2026-09-10: alerji yok/var + açıklama)
 }
 
 export interface IntakeBolum {
@@ -51,27 +52,27 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       { id: 'soyad', etiket: 'Soyadı', tur: 'text', zorunlu: true },
       { id: 'dogumTarihi', etiket: 'Doğum Tarihi', tur: 'date', zorunlu: true },
       { id: 'cinsiyet', etiket: 'Cinsiyet', tur: 'radio', zorunlu: true, secenekler: ['Kadın', 'Erkek'] },
-      { id: 'dogumYeri', etiket: 'Doğum Yeri', tur: 'text' },
+      { id: 'dogumYeri', etiket: 'Doğum Yeri', tur: 'text', zorunlu: true },
     ],
   },
   {
     baslik: 'İletişim Bilgileri',
     alanlar: [
       { id: 'telefon', etiket: 'Cep Telefonu', tur: 'tel', zorunlu: true, placeholder: '05xx xxx xx xx' },
-      { id: 'eposta', etiket: 'E-posta', tur: 'email' },
-      { id: 'adres', etiket: 'Adres', tur: 'textarea' },
+      { id: 'eposta', etiket: 'E-posta', tur: 'email', zorunlu: true },
+      { id: 'adres', etiket: 'Adres', tur: 'textarea', zorunlu: true },
       { id: 'acilKisiAdi', etiket: 'Acil Durumda Aranacak Kişi (Ad Soyad)', tur: 'text', zorunlu: true },
       { id: 'acilKisiTelefon', etiket: 'Acil Durum Kişisi Telefonu', tur: 'tel', zorunlu: true },
-      { id: 'acilKisiYakinlik', etiket: 'Yakınlık Derecesi', tur: 'text', placeholder: 'Örn. eş, anne, kardeş' },
+      { id: 'acilKisiYakinlik', etiket: 'Yakınlık Derecesi', tur: 'text', zorunlu: true, placeholder: 'Örn. eş, anne, kardeş' },
     ],
   },
   {
     baslik: 'Sağlık Güvencesi',
     alanlar: [
-      { id: 'sigortaTuru', etiket: 'Sağlık Güvenceniz', tur: 'radio', zorunlu: true, secenekler: ['SGK', 'Özel Sağlık Sigortası', 'Tamamlayıcı Sağlık Sigortası', 'Kurumsal Anlaşma', 'Ücretli Hasta'] },
-      { id: 'sigortaSirketi', etiket: 'Özel Sigorta Şirketi', tur: 'text', yardim: 'Yalnızca özel sağlık sigortanız varsa doldurun.' },
-      { id: 'policeNo', etiket: 'Poliçe / Üyelik Numarası', tur: 'text' },
-      { id: 'kurumAdi', etiket: 'Kurum / İşveren Adı', tur: 'text', yardim: 'Yalnızca kurumsal anlaşmanız varsa doldurun.' },
+      { id: 'sigortaTuru', etiket: 'Sağlık Güvenceniz', tur: 'radio', zorunlu: true, secenekler: ['Ücretli Hasta', 'Özel Sağlık Sigortası', 'Tamamlayıcı Sağlık Sigortası', 'Kurumsal Anlaşma', 'SGK'] },
+      { id: 'sigortaSirketi', etiket: 'Özel Sigorta Şirketi', tur: 'text', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
+      { id: 'policeNo', etiket: 'Poliçe / Üyelik Numarası', tur: 'text', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
+      { id: 'kurumAdi', etiket: 'Kurum / İşveren Adı', tur: 'text', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
     ],
   },
   {
@@ -79,14 +80,14 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
     alanlar: [
       { id: 'kanGrubu', etiket: 'Kan Grubu', tur: 'radio', zorunlu: true, secenekler: ['Bilmiyorum', 'A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', '0 Rh+', '0 Rh-'] },
       { id: 'kronikHastaliklar', etiket: 'Bilinen Kronik Hastalıklarınız', tur: 'checkbox-grup', zorunlu: true, secenekler: ['Diyabet', 'Hipertansiyon', 'Astım / KOAH', 'Kalp Hastalığı', 'Böbrek Hastalığı', 'Tiroid Hastalığı', 'Kanser', 'Yok'] },
-      { id: 'gecirilmisAmeliyatlar', etiket: 'Geçirdiğiniz Ameliyatlar', tur: 'textarea', placeholder: 'Ameliyat adı ve yılı' },
+      { id: 'gecirilmisAmeliyatlar', etiket: 'Geçirdiğiniz Ameliyatlar', tur: 'textarea', zorunlu: true, placeholder: 'Ameliyat adı ve yılı — yoksa "Yok" yazın' },
       { id: 'kullaniyorMu', etiket: 'Düzenli ilaç kullanıyor musunuz?', tur: 'radio', zorunlu: true, secenekler: ['Hayır', 'Evet'] },
-      { id: 'kullanilanIlaclar', etiket: 'İlaç Adı ve Dozu', tur: 'textarea', yardim: 'Yalnızca "Evet" ise doldurun.' },
-      { id: 'alerjiVarMi', etiket: 'Bilinen Alerjileriniz', tur: 'radio', zorunlu: true, secenekler: ['Bilinen alerjisi yok', 'Bilinen alerjisi var'] },
+      { id: 'kullanilanIlaclar', etiket: 'İlaç Adı ve Dozu', tur: 'textarea', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
+      { id: 'alerjiVarMi', etiket: 'Bilinen Alerjileriniz', tur: 'radio', zorunlu: true, dikey: true, secenekler: ['Bilinen alerjisi yok', 'Bilinen alerjisi var'] },
       { id: 'alerjiAciklama', etiket: 'Alerji açıklaması', tur: 'textarea', placeholder: 'İlaç, gıda veya diğer bilinen alerjileri yazın', yardim: 'Yalnız "Bilinen alerjisi var" seçildiyse doldurun.' },
       { id: 'aileOykusu', etiket: 'Aile Sağlık Öyküsü', tur: 'textarea', zorunlu: true, placeholder: 'Anne/baba/kardeşte bilinen ciddi hastalıklar' },
       { id: 'sigara', etiket: 'Sigara Kullanımı', tur: 'radio', zorunlu: true, secenekler: ['Kullanmıyorum', 'Kullanıyorum', 'Bıraktım'] },
-      { id: 'alkol', etiket: 'Alkol Kullanımı', tur: 'radio', secenekler: ['Kullanmıyorum', 'Ara sıra', 'Düzenli kullanıyorum'] },
+      { id: 'alkol', etiket: 'Alkol Kullanımı', tur: 'radio', zorunlu: true, secenekler: ['Kullanmıyorum', 'Ara sıra', 'Düzenli kullanıyorum'] },
     ],
   },
   {
@@ -118,24 +119,24 @@ export function coreBolumlerIcin(brans: string): IntakeBolum[] {
       alanlar: bolum.alanlar.flatMap((alan): IntakeAlan[] => {
         switch (alan.id) {
           case 'kronikHastaliklar':
-            return [{ id: 'kronikHastaliklar', etiket: 'Özgeçmiş — Hastalık / Ameliyat', tur: 'textarea', placeholder: 'Çocuğunuzun geçirdiği hastalıklar, ameliyatlar ve yılları — yoksa "Yok" yazın' }]
+            return [{ id: 'kronikHastaliklar', etiket: 'Özgeçmiş — Hastalık / Ameliyat', tur: 'textarea', zorunlu: true, placeholder: 'Çocuğunuzun geçirdiği hastalıklar, ameliyatlar ve yılları — yoksa "Yok" yazın' }]
           case 'gecirilmisAmeliyatlar':
             return [] // Özgeçmiş alanına birleştirildi
           case 'kullaniyorMu':
             return [] // Evet/Hayır ara sorusu kaldırıldı — doğrudan serbest metin
           case 'kullanilanIlaclar':
-            return [{ id: 'kullanilanIlaclar', etiket: 'Kullanılan İlaç / Takviyeler', tur: 'textarea', placeholder: 'Düzenli kullanılan ilaç ve takviyeler (adı, dozu) — yoksa "Yok" yazın' }]
+            return [{ id: 'kullanilanIlaclar', etiket: 'Kullanılan İlaç / Takviyeler', tur: 'textarea', zorunlu: true, placeholder: 'Düzenli kullanılan ilaç ve takviyeler (adı, dozu) — yoksa "Yok" yazın' }]
           case 'alerjiler':
           case 'alerjiVarMi':
             // Core ile hizalı (2026-09-08): checkbox yerine yok/var + açıklama.
             return [
-              { id: 'alerjiVarMi', etiket: 'Bilinen Alerjiler', tur: 'radio', zorunlu: true, secenekler: ['Bilinen alerjisi yok', 'Bilinen alerjisi var'] },
+              { id: 'alerjiVarMi', etiket: 'Bilinen Alerjiler', tur: 'radio', zorunlu: true, dikey: true, secenekler: ['Bilinen alerjisi yok', 'Bilinen alerjisi var'] },
               { id: 'alerjiAciklama', etiket: 'Alerji açıklaması', tur: 'textarea', placeholder: 'İlaç, gıda veya diğer bilinen alerjileri yazın', yardim: 'Yalnız "Bilinen alerjisi var" seçildiyse doldurun.' },
             ]
           case 'alerjiAciklama':
             return [] // yukarıda alerjiVarMi ile birlikte üretildi
           case 'sigara':
-            return [{ id: 'sigara', etiket: 'Ailede Sigara Kullanımı', tur: 'radio', secenekler: ['Evet', 'Hayır'] }]
+            return [{ id: 'sigara', etiket: 'Ailede Sigara Kullanımı', tur: 'radio', zorunlu: true, secenekler: ['Evet', 'Hayır'] }]
           case 'alkol':
             return [] // pediatrik formda anlamsız
           default:

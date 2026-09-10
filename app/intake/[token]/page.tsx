@@ -65,7 +65,7 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
     );
   }
   if (alan.tur === 'radio' && alan.secenekler) {
-    const grid = gridSablonu(alan.secenekler);
+    const grid = alan.dikey ? '1fr' : gridSablonu(alan.secenekler);
     return (
       <div style={{ display: 'grid', gridTemplateColumns: grid, gap: '8px 12px' }}>
         {alan.secenekler.map((s) => (
@@ -79,7 +79,7 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
   }
   if (alan.tur === 'checkbox-grup' && alan.secenekler) {
     const secililer = (deger as string[]) || [];
-    const grid = gridSablonu(alan.secenekler);
+    const grid = alan.dikey ? '1fr' : gridSablonu(alan.secenekler);
     return (
       <div style={{ display: 'grid', gridTemplateColumns: grid, gap: '8px 12px' }}>
         {alan.secenekler.map((s) => (
@@ -99,7 +99,9 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
     );
   }
   const inputTur = alan.tur === 'tel' ? 'tel' : alan.tur === 'email' ? 'email' : alan.tur === 'date' ? 'date' : 'text';
-  return <input style={ortakStil} type={inputTur} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} />;
+  // Kaan (2026-09-10): doğum tarihi gelecekte olamaz — takvim bugünle sınırlı
+  const tarihSinir = alan.tur === 'date' ? { max: new Date().toISOString().slice(0, 10), min: '1900-01-01' } : {};
+  return <input style={ortakStil} type={inputTur} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} {...tarihSinir} />;
 }
 
 export default function IntakeFormPage() {

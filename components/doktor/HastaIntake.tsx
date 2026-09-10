@@ -33,6 +33,19 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
   const [hata, setHata] = useState('');
   const [gonderPaneliAcik, setGonderPaneliAcik] = useState(false);
   const [secilenBrans, setSecilenBrans] = useState<string>('genel');
+  // Kaan (2026-09-10): varsayılan branş = doktorun kendi branşı (pediatristte Pediatri), 'Genel' değil
+  useEffect(() => {
+    (async () => {
+      try {
+        const t = await ensureDoctorAccessToken();
+        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
+        const j = await r.json();
+        const sp = String(j?.data?.specialty || '');
+        if (sp && Object.prototype.hasOwnProperty.call(BRANS_ETIKETLERI, sp)) setSecilenBrans(sp);
+      } catch { /* varsayılan genel kalır */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [secilenKanal, setSecilenKanal] = useState<'whatsapp' | 'elden'>('whatsapp');
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [olusturulanLink, setOlusturulanLink] = useState<{ link: string; whatsappGonderildi: boolean } | null>(null);
