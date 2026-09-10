@@ -247,7 +247,11 @@ export default function HastaProfilPage() {
               return (
                 <div key={s.id} className="dosya-satir" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 6px', borderBottom: idx < (seanslar?.length || 0) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', borderRadius: 8 }}>
                   <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: onaylandi ? '#22C55E' : '#F59E0B' }} title={onaylandi ? 'Onaylı not' : 'Onay bekliyor'} />
-                  <span style={{ minWidth: 0, flex: 1 }}>
+                  <span role={n?.id ? 'button' : undefined} tabIndex={n?.id ? 0 : undefined}
+                    onClick={() => { if (n?.id) router.push(`/dashboard/doktor/notlar/${n.id}`); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && n?.id) router.push(`/dashboard/doktor/notlar/${n.id}`); }}
+                    title={n?.id ? 'Notu aç — tamamını gör, düzelt, yeniden onayla' : undefined}
+                    style={{ minWidth: 0, flex: 1, cursor: n?.id ? 'pointer' : 'default' }}>
                     <span style={{ display: 'block', fontSize: 12, color: '#5F7189' }}>{trTarih(s.created_at)}</span>
                     <span style={{ display: 'block', fontSize: 13.5, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
                   </span>
