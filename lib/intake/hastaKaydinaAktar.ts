@@ -43,7 +43,7 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, patientI
   // Pediatride "Ailede Sigara Kullanımı" Evet/Hayır; erişkinde Kullanmıyorum/Kullanıyorum/Bıraktım + alkol
   const sigaraMetni = sigara === 'Evet' || sigara === 'Hayır' ? `Ailede sigara: ${sigara}` : sigara ? `Sigara: ${sigara}` : ''
   yaz('sigaraAlkol', [sigaraMetni, alkol ? `Alkol: ${alkol}` : ''].filter(Boolean).join(' · '))
-  // Şehir: formda ayrı alan yok; adres varsa son satırı/kelimesi şehir olarak yeterli değil — doktor elle girer.
+  yaz('sehir', metin(y.il))
 
   if (doldurulan.some((k) => !['dogumTarihi', 'cinsiyet', 'eposta'].includes(k))) guncelleme.notes_encrypted = encrypt(JSON.stringify(notlar))
   if (Object.keys(guncelleme).length === 0) return []
