@@ -16,6 +16,15 @@ export const fetchCache = 'force-no-store'
 
 function coz(v: string | null | undefined): string { if (!v) return ''; try { return decrypt(v) } catch { return '' } }
 
+// Kaan (2026-09-10): 30 branş — SGK kodu kılavuzda doğrulanmış olanlar; diğerleri null → Medula'da doktor seçer
+const BRANS_SGK: Record<string, number> = {
+  pediatri: SGK_BRANS_KODU['cocuk-sagligi'],
+  'aile-hekimligi': SGK_BRANS_KODU['aile-hekimligi'],
+  dermatoloji: SGK_BRANS_KODU['deri-zuhrevi'],
+  psikiyatri: SGK_BRANS_KODU['ruh-sagligi'],
+  'enfeksiyon-hastaliklari': SGK_BRANS_KODU['enfeksiyon'],
+}
+
 async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string, noteId: string) {
   const sb = supabase as any
   const { data: not } = await sb.from('notes').select('id, icd10_codes, created_at, approved_at, content_ilaclar, recete_onerisi, sessions!inner(patient_id)').eq('id', noteId).eq('doctor_id', doktorId).maybeSingle()
@@ -44,7 +53,7 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
     ilaclar: ilacKaynagi,
     tanilar: kodlar,
     hasta: { ad, soyad, dogumTarihi: coz(hasta?.dob_encrypted) || null, cinsiyet: cins === 'male' || cins === 'female' ? cins : null },
-    doktor: { ad: doktor?.first_name || '', soyad: doktor?.last_name || '', bransKodu: doktor?.specialty === 'pediatri' ? SGK_BRANS_KODU['cocuk-sagligi'] : null },
+    doktor: { ad: doktor?.first_name || '', soyad: doktor?.last_name || '', bransKodu: BRANS_SGK[String(doktor?.specialty || '')] ?? null },
     protokolNo: `NOTYA-${String(noteId).slice(0, 8).toUpperCase()}`,
     receteTarihi: new Date(not.created_at),
   })
