@@ -250,9 +250,9 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
                     <>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
                         {(() => { const etk = etiketHaritasi(f.brans); return Object.entries(acikFormDetay.yanitlar).map(([k, v]) => (
-                          <div key={k} style={{ fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
-                            <span style={{ color: '#64748B' }}>{etk[k] || k}:</span>{' '}
-                            <span style={{ color: 'white' }}>{degerGoster(v)}</span>
+                          <div key={k} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', columnGap: 16, alignItems: 'start', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '6px 0' }}>
+                            <span style={{ color: '#64748B' }}>{etk[k] || k}</span>
+                            <span style={{ color: 'white', wordBreak: 'break-word' }}>{degerGoster(v)}</span>
                           </div>
                         )); })()}
                       </div>
