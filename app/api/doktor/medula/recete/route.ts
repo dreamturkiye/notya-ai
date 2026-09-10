@@ -18,20 +18,30 @@ function coz(v: string | null | undefined): string { if (!v) return ''; try { re
 
 async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string, noteId: string) {
   const sb = supabase as any
-  const { data: not } = await sb.from('notes').select('id, icd10_codes, created_at, sessions!inner(patient_id)').eq('id', noteId).eq('doctor_id', doktorId).maybeSingle()
+  const { data: not } = await sb.from('notes').select('id, icd10_codes, created_at, approved_at, content_ilaclar, recete_onerisi, sessions!inner(patient_id)').eq('id', noteId).eq('doctor_id', doktorId).maybeSingle()
   if (!not) return null
   const pid = Array.isArray(not.sessions) ? not.sessions[0]?.patient_id : not.sessions?.patient_id
   const [{ data: ilaclar }, { data: hasta }, { data: doktor }] = await Promise.all([
     sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, doz, kullanim_sikli, notlar, baslangic_tarihi, bitis_tarihi').eq('kaynak_note_id', noteId).eq('onay_durumu', 'onayli'),
     pid ? sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', pid).maybeSingle() : Promise.resolve({ data: null }),
-    sb.from('users').select('first_name, last_name, specialty, title, clinic_name').eq('id', doktorId).maybeSingle(),
+    sb.from('users').select('first_name, last_name, full_name, specialty, title, clinic_name, recete_baslik').eq('id', doktorId).maybeSingle(),
   ])
+  // Kaan (2026-09-10): not henüz onaylanmadıysa ilaç satırları hasta_ilaclar'da yoktur → nottaki
+  // reçete taslağını (content_ilaclar + recete_onerisi) göster; onaylanınca gerçek satırlar gelir.
+  const onayli = !!not.approved_at && Array.isArray(ilaclar) && ilaclar.length > 0
+  let ilacKaynagi: typeof ilaclar = ilaclar || []
+  let taslakMi = false
+  if (!onayli) {
+    const { nottanIlaclariCikar } = await import('@/lib/doktor/receteAktarim')
+    const cikan = nottanIlaclariCikar({ content_ilaclar: not.content_ilaclar, recete_onerisi: not.recete_onerisi })
+    if (cikan.length) { ilacKaynagi = cikan.map((c) => ({ ilac_adi: c.ilac_adi, etken_madde: c.etken_madde, doz: c.doz, kullanim_sikli: c.kullanim_sikli, notlar: c.notlar, baslangic_tarihi: null, bitis_tarihi: null })); taslakMi = true }
+  }
   let ad = '', soyad = ''
   try { const n = JSON.parse(coz(hasta?.name_encrypted)); ad = n.ad || ''; soyad = n.soyad || '' } catch { /* ad yok */ }
   const cins = coz(hasta?.gender_encrypted)
   const kodlar = Array.isArray(not.icd10_codes) ? not.icd10_codes : []
   const taslak = medulaTaslagiHazirla({
-    ilaclar: ilaclar || [],
+    ilaclar: ilacKaynagi,
     tanilar: kodlar,
     hasta: { ad, soyad, dogumTarihi: coz(hasta?.dob_encrypted) || null, cinsiyet: cins === 'male' || cins === 'female' ? cins : null },
     doktor: { ad: doktor?.first_name || '', soyad: doktor?.last_name || '', bransKodu: doktor?.specialty === 'pediatri' ? SGK_BRANS_KODU['cocuk-sagligi'] : null },
@@ -39,8 +49,14 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
     receteTarihi: new Date(not.created_at),
   })
   // Kâğıt reçete başlığı için (NOTYA-MEDULA P1b)
+  const UNVAN = /^(?:prof|doç|doc|uzm|op|dr|dt)\.?$/i
+  const adSoyad = `${doktor?.first_name || ''} ${doktor?.last_name || ''}`.trim()
+    || String(doktor?.full_name || '').trim().split(/\s+/).filter((x: string) => !UNVAN.test(x)).join(' ')
+  const rb = (doktor?.recete_baslik && typeof doktor.recete_baslik === 'object' ? doktor.recete_baslik : {}) as { satirlar?: string[]; diplomaNo?: string; logoDataUrl?: string }
   const baslik = {
-    doktor: { unvan: doktor?.title || 'Dr.', ad: `${doktor?.first_name || ''} ${doktor?.last_name || ''}`.trim(), brans: doktor?.specialty || '', klinik: doktor?.clinic_name || '' },
+    doktor: { unvan: doktor?.title || 'Dr.', ad: adSoyad, brans: doktor?.specialty || '', klinik: doktor?.clinic_name || '' },
+    ozel: { satirlar: Array.isArray(rb.satirlar) ? rb.satirlar.map(String) : [], diplomaNo: String(rb.diplomaNo || ''), logoDataUrl: String(rb.logoDataUrl || '') },
+    taslakMi,
     hasta: { ad: `${ad} ${soyad}`.trim(), dogum: coz(hasta?.dob_encrypted) || null, cinsiyet: cins || null },
     tarih: not.created_at,
   }
