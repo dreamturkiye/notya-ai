@@ -22,7 +22,7 @@ interface Veri {
   tanilar: { taniKodu: string; taniAdi?: string }[]
   uyarilar: string[]
   metin: string
-  baslik: { doktor: { unvan: string; ad: string; brans: string; klinik: string }; hasta: { ad: string; dogum: string | null; cinsiyet: string | null }; tarih: string }
+  baslik: { doktor: { unvan: string; ad: string; brans: string; klinik: string }; ozel?: { satirlar: string[]; diplomaNo: string; logoDataUrl: string }; taslakMi?: boolean; hasta: { ad: string; dogum: string | null; cinsiyet: string | null }; tarih: string }
   xml: string
 }
 
@@ -48,6 +48,12 @@ export default function ReceteYazdirPage() {
   const [kagit, setKagit] = useState<'A5' | 'A4'>('A5');
   const [kutular, setKutular] = useState<number[]>([]);
   const [kopya, setKopya] = useState(false);
+  // NOTYA-RECETE-03 (Kaan 2026-09-10): başlığı doktor kendisi yazar — satırlar, diploma no, logo
+  const [baslikDuzenle, setBaslikDuzenle] = useState(false);
+  const [bSatirlar, setBSatirlar] = useState('');
+  const [bDiploma, setBDiploma] = useState('');
+  const [bLogo, setBLogo] = useState('');
+  const [bKaydediyor, setBKaydediyor] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -61,6 +67,9 @@ export default function ReceteYazdirPage() {
         if (!r.ok) throw new Error(j.error || 'Reçete alınamadı');
         setVeri(j);
         setKutular((j.satirlar || []).map((s: Satir) => s.kutu || 1));
+        setBSatirlar((j.baslik?.ozel?.satirlar || []).join('\n'));
+        setBDiploma(j.baslik?.ozel?.diplomaNo || '');
+        setBLogo(j.baslik?.ozel?.logoDataUrl || '');
         if (h.ok) {
           const hj = await h.json();
           const kayitlar = (hj.kayitlar || []) as { kategori: string; anahtar: string; deger: string }[];
@@ -92,6 +101,32 @@ export default function ReceteYazdirPage() {
     } catch { /* tercih kritik değil */ }
   };
 
+  const logoSec = (f: File | null) => {
+    if (!f) return;
+    const img = new Image();
+    const url = URL.createObjectURL(f);
+    img.onload = () => {
+      const maks = 320; const oran = Math.min(1, maks / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * oran); c.height = Math.round(img.height * oran);
+      c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height);
+      setBLogo(c.toDataURL('image/png'));
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  };
+  const baslikKaydet = async () => {
+    setBKaydediyor(true);
+    try {
+      const t = await ensureDoctorAccessToken();
+      const r = await fetch('/api/doktor/recete-baslik', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ satirlar: bSatirlar.split('\n'), diplomaNo: bDiploma, logoDataUrl: bLogo }) });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Kaydedilemedi');
+      setVeri((v) => v ? { ...v, baslik: { ...v.baslik, ozel: { satirlar: bSatirlar.split('\n').map((x) => x.trim()).filter(Boolean), diplomaNo: bDiploma, logoDataUrl: bLogo } } } : v);
+      setBaslikDuzenle(false);
+    } catch (e) { alert(e instanceof Error ? e.message : 'Kaydedilemedi'); }
+    finally { setBKaydediyor(false); }
+  };
   const kutuMetni = () => {
     if (!veri) return '';
     // Ekranda düzenlenen kutu adetleri kopyalanan metne de yansır
@@ -158,16 +193,50 @@ export default function ReceteYazdirPage() {
           {uyarilar.map((u, i) => <div key={i}>• {u}</div>)}
         </div>
       )}
+      {baslik.taslakMi && (
+        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '10px 14px', background: '#EEF2FF', border: '1px solid #A5B4FC', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#3730A3' }}>
+          Bu not henüz onaylanmadı — aşağıdaki ilaçlar nottaki <b>öneri</b>dir. Notu onayladığınızda ilaçlar hasta dosyasına ve portala işlenir; reçete o kayıtlardan üretilir.
+        </div>
+      )}
       {satirlar.length > 0 && (
         <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '8px auto 0', fontFamily: 'system-ui', fontSize: 12, color: '#4B5563' }}>Kutu adedini satırın sağından düzeltebilirsiniz; yazdırılan ve kopyalanan reçeteye yansır.</div>
       )}
+      <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '8px auto 0', fontFamily: 'system-ui', fontSize: 12 }}>
+        {!baslikDuzenle ? (
+          <button type="button" onClick={() => setBaslikDuzenle(true)} style={{ background: 'transparent', border: 'none', color: '#0F766E', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 12 }}>✎ Reçete başlığını düzenle (adres, telefon, diploma no, logo)</button>
+        ) : (
+          <div style={{ background: 'white', border: '1px solid #D1D5DB', borderRadius: 8, padding: 12, display: 'grid', gap: 8 }}>
+            <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Başlık satırları (her satır ayrı — ör. uzmanlık, adres, telefon)
+              <textarea value={bSatirlar} onChange={(e) => setBSatirlar(e.target.value)} rows={3} placeholder={'Çocuk Sağlığı ve Hastalıkları Uzmanı\nBağdat Cad. No:12 Kadıköy / İstanbul\n0216 000 00 00'} style={{ fontFamily: 'inherit', fontSize: 13, padding: 8, border: '1px solid #D1D5DB', borderRadius: 6 }} />
+            </label>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
+              <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Diploma No
+                <input value={bDiploma} onChange={(e) => setBDiploma(e.target.value)} style={{ fontFamily: 'inherit', fontSize: 13, padding: 8, border: '1px solid #D1D5DB', borderRadius: 6, width: 160 }} />
+              </label>
+              <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Logo (PNG/JPG)
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => logoSec(e.target.files?.[0] || null)} style={{ fontSize: 12 }} />
+              </label>
+              {bLogo && <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><img src={bLogo} alt="logo" style={{ height: 36 }} /><button type="button" onClick={() => setBLogo('')} style={{ background: 'transparent', border: 'none', color: '#B91C1C', cursor: 'pointer', fontSize: 12 }}>kaldır</button></span>}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={baslikKaydet} disabled={bKaydediyor} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}>{bKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>
+              <button type="button" onClick={() => setBaslikDuzenle(false)} style={{ background: 'transparent', border: '1px solid #D1D5DB', borderRadius: 6, padding: '8px 14px', cursor: 'pointer' }}>Vazgeç</button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Kâğıt */}
       <div className="recete-kagit" style={{ width: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 12 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 0.3 }}>{baslik.doktor.unvan} {baslik.doktor.ad}</div>
-          {bransAd && <div style={{ fontSize: 12 }}>{bransAd} Uzmanı</div>}
-          {baslik.doktor.klinik && <div style={{ fontSize: 11, color: '#333' }}>{baslik.doktor.klinik}</div>}
+          {baslik.ozel?.logoDataUrl && <img src={baslik.ozel.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
+          <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 0.3 }}>{baslik.doktor.unvan} {baslik.doktor.ad || '________________'}</div>
+          {baslik.ozel && baslik.ozel.satirlar.length > 0
+            ? baslik.ozel.satirlar.map((s, i) => <div key={i} style={{ fontSize: i === 0 ? 12 : 11, color: i === 0 ? '#111' : '#333' }}>{s}</div>)
+            : (<>
+                {bransAd && <div style={{ fontSize: 12 }}>{bransAd} Uzmanı</div>}
+                {baslik.doktor.klinik && <div style={{ fontSize: 11, color: '#333' }}>{baslik.doktor.klinik}</div>}
+              </>)}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 14, gap: 12 }}>
@@ -182,7 +251,7 @@ export default function ReceteYazdirPage() {
         </div>
 
         <div style={{ fontSize: 20, fontWeight: 700, fontStyle: 'italic', marginBottom: 8 }}>Rp.</div>
-        {satirlar.length === 0 && <div style={{ fontSize: 12, color: '#666' }}>Bu nota bağlı onaylı ilaç yok.</div>}
+        {satirlar.length === 0 && <div style={{ fontSize: 12, color: '#666' }}>Bu notta ilaç yok.</div>}
         <ol style={{ margin: 0, paddingLeft: 22, fontSize: 13, lineHeight: 1.55 }}>
           {satirlar.map((s, i) => (
             <li key={i} style={{ marginBottom: 10 }}>
@@ -203,7 +272,7 @@ export default function ReceteYazdirPage() {
         <div style={{ marginTop: 'auto', paddingTop: 48, display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ textAlign: 'center', fontSize: 11, color: '#333', borderTop: '1px solid #111', paddingTop: 6, minWidth: 180 }}>
             Kaşe / İmza<br />
-            <span style={{ color: '#666' }}>Diploma No: ____________</span>
+            <span style={{ color: '#666' }}>Diploma No: {baslik.ozel?.diplomaNo || '____________'}</span>
           </div>
         </div>
         <div style={{ marginTop: 18, fontSize: 9, color: '#777', textAlign: 'center' }}>Notya AI ile hazırlandı · Hekim onayı ile geçerlidir</div>
