@@ -1,4 +1,5 @@
 'use client';
+import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 export const dynamic = 'force-dynamic';
 
@@ -353,7 +354,7 @@ export default function IncelemePage() {
                       {note.aiDegerlendirme && note.aiDegerlendirme.trim() && (
                         <div style={{ marginBottom: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 5 }}>Ayşe'nin değerlendirmesi <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — nota ve hastaya yansımaz, yalnız size)</span></div>
-                          <div style={{ fontSize: 13, color: '#CBD5E1', whiteSpace: 'pre-wrap' }}>{note.aiDegerlendirme}</div>
+                          <div style={{ fontSize: 13, color: '#CBD5E1' }}><HafifMarkdown metin={note.aiDegerlendirme} /></div>
                         </div>
                       )}
                       {note.receteOnerisi.length > 0 && (
@@ -392,7 +393,7 @@ export default function IncelemePage() {
                         {kMesajlar.length > 0 && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto', marginBottom: 8 }}>
                             {kMesajlar.map((m, i2) => (
-                              <div key={i2} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '92%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 10, padding: '7px 10px', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.icerik}</div>
+                              <div key={i2} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '92%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 10, padding: '7px 10px', fontSize: 13, lineHeight: 1.5, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
                             ))}
                             {kBekliyor && <div style={{ fontSize: 12, color: '#64748B' }}>Ayşe düşünüyor…</div>}
                           </div>

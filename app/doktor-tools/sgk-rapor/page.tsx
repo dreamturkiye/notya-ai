@@ -1,4 +1,5 @@
 'use client'
+import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import HastaTypeahead from '@/components/doktor/HastaTypeahead'
@@ -331,9 +332,7 @@ export default function SgkRaporPage() {
             {show('gerekce') && (
               <section style={sec}>
                 <div style={secHead}>İŞ GÖREMEZLİK GEREKÇESİ</div>
-                <div style={{ whiteSpace: 'pre-wrap' }}>
-                  {rapor.isGoremezlikGerekcesi || rapor.mevcutDurum || '—'}
-                </div>
+                <div><HafifMarkdown metin={rapor.isGoremezlikGerekcesi || rapor.mevcutDurum || '—'} /></div>
               </section>
             )}
 
@@ -351,9 +350,7 @@ export default function SgkRaporPage() {
                       ? 'MUAYENE BULGULARI / KLİNİK DEĞERLENDİRME'
                       : 'MEVCUT DURUM / KLİNİK DEĞERLENDİRME'}
                   </div>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>
-                    {rapor.hekim_degerlendirmesi || rapor.mevcutDurum || '—'}
-                  </div>
+                  <div><HafifMarkdown metin={rapor.hekim_degerlendirmesi || rapor.mevcutDurum || '—'} /></div>
                 </section>
               </>
             )}
