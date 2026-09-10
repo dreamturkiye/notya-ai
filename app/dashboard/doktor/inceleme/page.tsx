@@ -313,11 +313,12 @@ export default function IncelemePage() {
                   role="button"
                   tabIndex={0}
                   onClick={() => (acikId === note.id ? setAcikId('') : notuAc(note))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') (acikId === note.id ? setAcikId('') : notuAc(note)); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) (acikId === note.id ? setAcikId('') : notuAc(note)); }}
                   style={{ marginTop: 12, color: '#94A3B8', fontSize: 13, lineHeight: 1.55, cursor: 'pointer' }}
                 >
                   {acikId === note.id ? (
-                    <div onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
+                    {/* Kaan (2026-09-10): Ayşe kutusunda Enter notu daraltıyordu — klavye olayı kartın başlığına yükselmesin */}
+                    <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
                       {/* NOTYA-SOAP-02: tam not incelemesi — doktor DÜZENLEYEREK onaylar; düzenlemeler Ayşe'nin öğrenme verisidir */}
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Başvuru Yakınması <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></div>
