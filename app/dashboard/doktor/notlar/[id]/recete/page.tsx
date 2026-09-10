@@ -172,7 +172,8 @@ export default function ReceteYazdirPage() {
             {yol === 'kagit' ? (
               <>
                 <button type="button" onClick={() => window.print()} style={buyukDugme}>🖨️ Reçeteyi yazdır ({kagit})</button>
-                <button type="button" onClick={() => kagitSec(kagit === 'A5' ? 'A4' : 'A5')} style={kucukBaglanti}>{kagit === 'A5' ? 'A4 kâğıt' : 'A5 kâğıt'}</button>
+                {/* Kaan (2026-09-10): Türkiye'de reçete kâğıdı standardı A5 — A5 varsayılan, A4 seçenek */}
+                <button type="button" onClick={() => kagitSec(kagit === 'A5' ? 'A4' : 'A5')} style={kucukBaglanti}>{kagit === 'A5' ? 'A4 kâğıda geç' : 'A5 standarda dön'}</button>
                 <button type="button" onClick={kopyala} style={kucukBaglanti}>{kopya ? '✓ Kopyalandı' : 'Programa kopyala'}</button>
               </>
             ) : (
