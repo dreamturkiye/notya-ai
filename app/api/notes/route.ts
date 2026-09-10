@@ -114,11 +114,25 @@ export async function GET(req: NextRequest) {
     rows = Array.isArray(joined.data) ? (joined.data as NoteRow[]) : []
   }
 
+  // Kaan/Gökhan (2026-09-10): kuyrukta "Hasta da5141bb" yerine hastanın adı. Ad şifreli → sunucuda çöz (Ad S.).
+  const pidler = [...new Set(rows.map((r) => firstSession(r.sessions).patient_id).filter(Boolean))] as string[]
+  const adlar = new Map<string, string>()
+  if (pidler.length) {
+    const { decrypt } = await import('@/lib/security/encryption')
+    const { data: hastalar } = await supabase.from('patients').select('id, name_encrypted').in('id', pidler)
+    for (const h of (hastalar || []) as { id: string; name_encrypted: string | null }[]) {
+      try {
+        const n = JSON.parse(decrypt(String(h.name_encrypted || ''))) as { ad?: string; soyad?: string }
+        const ad = (n.ad || '').trim(); const soyad = (n.soyad || '').trim()
+        adlar.set(h.id, soyad ? `${ad} ${soyad}` : ad)
+      } catch { /* ad çözülemedi → maske */ }
+    }
+  }
   const notes = rows.map((row) => {
     const session = firstSession(row.sessions)
     return {
       id: String(row.id),
-      maskedPatient: maskPatient(session.patient_id),
+      maskedPatient: (session.patient_id && adlar.get(String(session.patient_id))) || maskPatient(session.patient_id),
       patientId: session.patient_id ? String(session.patient_id) : null,
       specialty: String(session.specialty || 'Genel'),
       date: formatDate(row.created_at),
