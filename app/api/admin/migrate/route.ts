@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   if (secret !== process.env.MIGRATION_SECRET) {
     return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
   }
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
   const results: string[] = []
   const sqls = [
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS profession_type TEXT DEFAULT 'doktor'",

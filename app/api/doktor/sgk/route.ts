@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const auth = req.headers.get('authorization')
   if (!auth?.startsWith('Bearer ')) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
 
-  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
   const { data: { user }, error } = await sb.auth.getUser(auth.slice(7))
   if (error || !user) return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
 

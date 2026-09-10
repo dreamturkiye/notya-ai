@@ -29,7 +29,7 @@ async function verifyAuth(req: NextRequest): Promise<{ userId: string } | null> 
   if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.substring(7);
   try {
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } });
     const { data: { user }, error } = await sb.auth.getUser(token);
     if (error || !user) return null;
     return { userId: user.id };

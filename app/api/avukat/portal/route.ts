@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyPortalToken, generatePortalToken, registerPortalToken, buildMuvekkilSystemPrompt } from '@/lib/avukat/avukatPortalEngine'
 
-const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 const SECRET = process.env.PORTAL_TOKEN_SECRET
 if (!SECRET) console.error('PORTAL_TOKEN_SECRET env var not set — avukat portal tokens are NOT being issued')
