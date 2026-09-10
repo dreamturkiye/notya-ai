@@ -68,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const { data: form } = await supabase
     .from('hasta_intake_formlari')
-    .select('id, durum, token_expires_at')
+    .select('id, durum, token_expires_at, patient_id')
     .eq('token_hash', tokenHash)
     .maybeSingle()
 
@@ -100,5 +100,12 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     .eq('id', form.id)
 
   if (error) return NextResponse.json({ error: 'Form kaydedilemedi.' }, { status: 500 })
+  // NOTYA-INTAKE-06 (Kaan 2026-09-10): form cevapları hasta kaydındaki boş alanlara da yazılsın — Özet sekmesi dolsun.
+  if (form.patient_id) {
+    try {
+      const { intakeYanitlariniHastayaAktar } = await import('@/lib/intake/hastaKaydinaAktar')
+      await intakeYanitlariniHastayaAktar(supabase, form.patient_id, yanitlar)
+    } catch (e) { console.error('[intake→hasta]', e) }
+  }
   return NextResponse.json({ basarili: true })
 }
