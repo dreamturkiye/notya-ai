@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari';
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -26,7 +27,7 @@ interface Veri {
   xml: string
 }
 
-const BRANS_AD: Record<string, string> = { pediatri: 'Çocuk Sağlığı ve Hastalıkları', dahiliye: 'İç Hastalıkları', kbb: 'Kulak Burun Boğaz', dermatoloji: 'Deri ve Zührevi Hastalıkları', 'kadin-dogum': 'Kadın Hastalıkları ve Doğum', 'aile-hekimligi': 'Aile Hekimliği' };
+const BRANS_AD: Record<string, string> = BRANS_ETIKETLERI as Record<string, string>; // 30 branş (Kaan 2026-09-10)
 
 function yas(dogum: string | null): string {
   if (!dogum) return '';
@@ -147,7 +148,7 @@ export default function ReceteYazdirPage() {
   if (hata) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>{hata}</div>;
   if (!veri || yolYukleniyor) return <div style={{ padding: 40, fontFamily: 'system-ui', color: '#666' }}>Reçete hazırlanıyor…</div>;
   const { baslik, satirlar, tanilar, uyarilar } = veri;
-  const bransAd = BRANS_AD[baslik.doktor.brans] || baslik.doktor.brans;
+  const bransAd = (BRANS_AD[baslik.doktor.brans] || baslik.doktor.brans || '').replace(/\s*\(.*\)\s*$/, ''); // "Pediatri (Çocuk Sağlığı)" → "Pediatri"
   const mm = (v: number) => v * 3.78;
   const en = kagit === 'A5' ? mm(148) : mm(210);
   const boy = kagit === 'A5' ? mm(210) : mm(297);

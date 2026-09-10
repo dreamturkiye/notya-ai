@@ -4,21 +4,15 @@ import { useState, useRef, useEffect, Suspense } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { anamnezParcala, fizikParcala } from "@/lib/doktor/anamnezBolumleri"
 import { useRouter, useSearchParams } from "next/navigation"
+import { BRANS_ETIKETLERI } from "@/lib/intake/bransSorulari"
 
+// Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
+// böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
+const BRANS_EMOJI: Record<string, string> = { genel: "👨‍⚕️", pediatri: "🧒", kardiyoloji: "❤️", noroloji: "🧠", psikiyatri: "💭", dahiliye: "🩺", ortopedi: "🦴", "kadin-hastaliklari-dogum": "👶", "genel-cerrahi": "🔪", dermatoloji: "🌿", uroloji: "💊", onkoloji: "🎗️", "acil-tip": "🚨", "kulak-burun-bogaz": "👂", "goz-hastaliklari": "👁️", radyoloji: "🩻", anestezi: "😴", "fizik-tedavi": "🏃", "enfeksiyon-hastaliklari": "🦠", endokrinoloji: "🧪", gastroenteroloji: "🫁", nefroloji: "🫘", romatoloji: "🦵", "gogus-hastaliklari": "🫁", "gogus-cerrahisi": "🔬", "plastik-cerrahi": "✂️", "beyin-cerrahisi": "🧠", "kalp-damar-cerrahisi": "❤️‍🩹", "cocuk-cerrahisi": "🧸", "aile-hekimligi": "🏠", "spor-hekimligi": "⚽" }
+const ESKI_ANAHTAR: Record<string, string> = { kadin_hastaliklari: "kadin-hastaliklari-dogum", genel_cerrahi: "genel-cerrahi", acil: "acil-tip" }
 const SPECIALTIES = [
-  {id:"genel",label:"Genel Pratisyen",emoji:"👨‍⚕️"},
-  {id:"pediatri",label:"Pediatri",emoji:"🧒"},
-  {id:"kardiyoloji",label:"Kardiyoloji",emoji:"❤️"},
-  {id:"noroloji",label:"Nöroloji",emoji:"🧠"},
-  {id:"psikiyatri",label:"Psikiyatri",emoji:"💭"},
-  {id:"dahiliye",label:"Dahiliye",emoji:"🩺"},
-  {id:"ortopedi",label:"Ortopedi",emoji:"🦴"},
-  {id:"kadin_hastaliklari",label:"Kadın Doğum",emoji:"👶"},
-  {id:"genel_cerrahi",label:"Genel Cerrahi",emoji:"🔪"},
-  {id:"dermatoloji",label:"Dermatoloji",emoji:"🌿"},
-  {id:"uroloji",label:"Üroloji",emoji:"💊"},
-  {id:"onkoloji",label:"Onkoloji",emoji:"🎗️"},
-  {id:"acil",label:"Acil Tıp",emoji:"🚨"},
+  { id: "genel", label: "Genel Pratisyen", emoji: BRANS_EMOJI.genel },
+  ...(Object.entries(BRANS_ETIKETLERI) as [string, string][]).map(([id, label]) => ({ id, label, emoji: BRANS_EMOJI[id] || "🩺" })),
 ]
 
 interface SpeechRecognitionInstance extends EventTarget {
@@ -54,7 +48,8 @@ function NewSessionInner() {
       // Kaan/Gökhan (2026-09-10): "Muayeneyi Başlat"tan sonra seçici yine çıktı, Pediatri seçilmedi.
       // Sebep: bu sayfa süresi dolmuş token'la /api/users/me'ye gidiyordu (401 → seçici). Şimdi
       // (1) yenilenen token ile sorulur, (2) sonuç önbelleğe alınır, (3) ağ/oturum hatasında önbellek kullanılır.
-      const uygula = (b: string | null | undefined) => {
+      const uygula = (bHam: string | null | undefined) => {
+        const b = bHam ? (ESKI_ANAHTAR[bHam] || bHam) : bHam
         if (b && SPECIALTIES.some((s) => s.id === b)) { setSpecialty(b); setBransKilitli(true); return true }
         return false
       }
