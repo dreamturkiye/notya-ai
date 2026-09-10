@@ -61,6 +61,7 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       { id: 'telefon', etiket: 'Cep Telefonu', tur: 'tel', zorunlu: true, placeholder: '05xx xxx xx xx' },
       { id: 'eposta', etiket: 'E-posta', tur: 'email', zorunlu: true },
       { id: 'adres', etiket: 'Adres', tur: 'textarea', zorunlu: true },
+      { id: 'il', etiket: 'İl', tur: 'text', placeholder: 'Örn. İstanbul' },  // Kaan 2026-09-10: isteğe bağlı; Özet › Şehir buradan dolar
       { id: 'acilKisiAdi', etiket: 'Acil Durumda Aranacak Kişi (Ad Soyad)', tur: 'text', zorunlu: true },
       { id: 'acilKisiTelefon', etiket: 'Acil Durum Kişisi Telefonu', tur: 'tel', zorunlu: true },
       { id: 'acilKisiYakinlik', etiket: 'Yakınlık Derecesi', tur: 'text', zorunlu: true, placeholder: 'Örn. eş, anne, kardeş' },
