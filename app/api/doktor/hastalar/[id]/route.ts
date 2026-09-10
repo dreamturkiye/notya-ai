@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doktorOturum } from '@/lib/doktor/serverAuth';
 import { encrypt, decrypt } from '@/lib/security/encryption';
+import { cinsiyetTr } from '@/lib/utils/cinsiyet';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       id: patient.id,
       ad_soyad: name,
       dogum_tarihi: dob,
-      cinsiyet: gender,
+      cinsiyet: cinsiyetTr(gender),
       telefon: phone,
       sehir: notesData.sehir || null,
       kan_grubu: notesData.kanGrubu || null,

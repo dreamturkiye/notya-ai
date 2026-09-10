@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
+import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           hasta.yas = yasHesapla(dogum)
         }
       }
-      hasta.cinsiyet = coz(p.gender_encrypted)
+      hasta.cinsiyet = cinsiyetTr(coz(p.gender_encrypted))
     }
     // TC yalnız intake formunda (şifreli) tutuluyor — varsa oradan çöz
     try {
