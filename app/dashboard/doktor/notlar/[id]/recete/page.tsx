@@ -275,7 +275,6 @@ export default function ReceteYazdirPage() {
             <span style={{ color: '#666' }}>Diploma No: {baslik.ozel?.diplomaNo || '____________'}</span>
           </div>
         </div>
-        <div style={{ marginTop: 18, fontSize: 9, color: '#777', textAlign: 'center' }}>Notya AI ile hazırlandı · Hekim onayı ile geçerlidir</div>
       </div>
     </div>
   );

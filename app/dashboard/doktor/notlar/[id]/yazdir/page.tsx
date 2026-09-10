@@ -26,7 +26,7 @@ interface NotVeri {
     hastaOzeti?: string; takipSuresi?: string;
   };
   hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string };
-  doktor: { ad: string };
+  doktor: { ad: string; diplomaNo?: string };
   duzenlemeSayisi: number;
 }
 
@@ -210,6 +210,7 @@ export default function NotYazdir() {
           <div style={{ marginTop: 26, display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ borderTop: '1px solid #333', width: 220, paddingTop: 4 }}>{doktorUnvanli(doktor.ad)} — İmza / Kaşe</div>
+              <div style={{ font: '11px system-ui', color: '#555', marginTop: 2 }}>Diploma No: {doktor.diplomaNo || '____________'}</div>
             </div>
           </div>
         </div>
