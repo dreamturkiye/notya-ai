@@ -69,9 +69,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   let doktorAd = ''
+  let diplomaNo = ''
   try {
-    const { data: u } = await supabase.from('users').select('full_name, email').eq('id', doktorId).maybeSingle()
+    const { data: u } = await supabase.from('users').select('full_name, email, recete_baslik').eq('id', doktorId).maybeSingle()
     doktorAd = String(u?.full_name || u?.email?.split('@')[0] || '')
+    // Kaan (2026-09-10): diploma no bir kez girilir (reçete başlığı), muayene notu çıktısında da imzanın altında basılır
+    const rb = (u?.recete_baslik && typeof u.recete_baslik === 'object' ? u.recete_baslik : {}) as { diplomaNo?: string }
+    diplomaNo = String(rb.diplomaNo || '')
   } catch { /* boş kalır */ }
 
   let duzenlemeSayisi = 0
@@ -105,7 +109,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       takipSuresi: not.takip_suresi || '',
     },
     hasta,
-    doktor: { ad: doktorAd },
+    doktor: { ad: doktorAd, diplomaNo },
     duzenlemeSayisi,
   })
 }
