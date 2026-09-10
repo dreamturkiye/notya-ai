@@ -51,16 +51,27 @@ function NewSessionInner() {
   // Profilde branş varsa otomatik seçilir ve seçici gizlenir; yoksa seçici yedeğe düşer.
   useEffect(() => {
     (async () => {
+      // Kaan/Gökhan (2026-09-10): "Muayeneyi Başlat"tan sonra seçici yine çıktı, Pediatri seçilmedi.
+      // Sebep: bu sayfa süresi dolmuş token'la /api/users/me'ye gidiyordu (401 → seçici). Şimdi
+      // (1) yenilenen token ile sorulur, (2) sonuç önbelleğe alınır, (3) ağ/oturum hatasında önbellek kullanılır.
+      const uygula = (b: string | null | undefined) => {
+        if (b && SPECIALTIES.some((s) => s.id === b)) { setSpecialty(b); setBransKilitli(true); return true }
+        return false
+      }
       try {
-        const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-        const { data: { session: as } } = await sb.auth.getSession()
-        if (!as?.access_token) return
-        const r = await fetch("/api/users/me", { headers: { Authorization: `Bearer ${as.access_token}` } })
+        const onbellek = localStorage.getItem('notya_doktor_specialty')
+        if (onbellek) uygula(onbellek)
+      } catch { /* önbellek yok */ }
+      try {
+        const { ensureDoctorAccessToken } = await import('@/lib/doktor/clientAuth')
+        const token = await ensureDoctorAccessToken()
+        if (!token) return
+        const r = await fetch("/api/users/me", { headers: { Authorization: `Bearer ${token}` } })
+        if (!r.ok) return
         const d = await r.json()
-        // users/me yanıtı { success, data: {...} } sarmalında döner — ilk sürüm bunu ıskaladı.
         const b = d?.data?.specialty || d?.specialty
-        if (b && SPECIALTIES.some((s) => s.id === b)) { setSpecialty(b); setBransKilitli(true) }
-      } catch { /* sessiz — seçici görünür kalır */ }
+        if (uygula(b)) { try { localStorage.setItem('notya_doktor_specialty', String(b)) } catch { /* yok */ } }
+      } catch { /* sessiz — önbellek ya da seçici */ }
     })()
   }, [])
   const [sessionType, setSessionType] = useState("muayene")
