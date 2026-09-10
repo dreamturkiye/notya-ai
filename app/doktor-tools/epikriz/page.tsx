@@ -1,4 +1,5 @@
 'use client';
+import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react';
@@ -408,9 +409,8 @@ export default function EpikrizPage() {
                     color: '#CBD5E1', 
                     fontSize: '15px', 
                     lineHeight: '1.6',
-                    whiteSpace: 'pre-wrap'
                   }}>
-                    {sonuc.taburcuOzeti}
+                    <HafifMarkdown metin={sonuc.taburcuOzeti} />
                   </div>
                 </div>
 
