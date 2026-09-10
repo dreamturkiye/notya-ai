@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { voiceIdForMali } from "@/lib/asistan/elevenVoices"
 
-const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
 const AGENT_ID = process.env.MALI_MUSAVIR_AGENT_ID || "agent_4301kvraprgwf5btftn0k836t55m"
 
 export async function GET(req: NextRequest) {

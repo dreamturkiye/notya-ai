@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 const sb = () =>
-  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
 
 /** Retention windows, in days. These MUST match what the aydınlatma metni promises. */
 const RETENTION = {

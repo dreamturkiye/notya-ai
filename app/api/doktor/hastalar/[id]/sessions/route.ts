@@ -6,7 +6,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const auth = req.headers.get('authorization')
   if (!auth?.startsWith('Bearer ')) return NextResponse.json({ sessions: [] })
   const tok = auth.slice(7)
-  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
   const { data: { user }, error } = await sb.auth.getUser(tok)
   if (error || !user) return NextResponse.json({ sessions: [] })
   try {

@@ -70,7 +70,7 @@ export interface GruplanmisIlac {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
   const auth = request.headers.get('authorization')
   const tok = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined
   const { data: { user }, error } = await supabase.auth.getUser(tok)

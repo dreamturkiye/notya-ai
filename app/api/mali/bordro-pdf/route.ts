@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
 interface BordroData { brutMaas:number;netMaas:number;sgkIsciBrut:number;sgkIsveren:number;issizlikIsci:number;issizlikIsveren:number;gelirVergisi:number;damgaVergisi:number;isverenToplamMaliyet:number;kidemTazminatiTavan:number }
 function fmt(n:number){return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function generateHTML(b:BordroData,musteriAdi:string,donem:string):string{
