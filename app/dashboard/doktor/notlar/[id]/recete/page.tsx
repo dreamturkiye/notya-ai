@@ -208,8 +208,8 @@ export default function ReceteYazdirPage() {
           <button type="button" onClick={() => setBaslikDuzenle(true)} style={{ background: 'transparent', border: 'none', color: '#0F766E', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 12 }}>✎ Reçete başlığını düzenle (adres, telefon, diploma no, logo)</button>
         ) : (
           <div style={{ background: 'white', border: '1px solid #D1D5DB', borderRadius: 8, padding: 12, display: 'grid', gap: 8 }}>
-            <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Başlık satırları (her satır ayrı — ör. uzmanlık, adres, telefon)
-              <textarea value={bSatirlar} onChange={(e) => setBSatirlar(e.target.value)} rows={3} placeholder={'Çocuk Sağlığı ve Hastalıkları Uzmanı\nBağdat Cad. No:12 Kadıköy / İstanbul\n0216 000 00 00'} style={{ fontFamily: 'inherit', fontSize: 13, padding: 8, border: '1px solid #D1D5DB', borderRadius: 6 }} />
+            <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Başlık satırları (ilk satır adınız; sonra uzmanlık, adres, telefon)
+              <textarea value={bSatirlar} onChange={(e) => setBSatirlar(e.target.value)} rows={3} placeholder={'Dr. Gökhan Mamur\nÇocuk Sağlığı ve Hastalıkları Uzmanı\nBağdat Cad. No:12 Kadıköy / İstanbul\n0216 000 00 00'} style={{ fontFamily: 'inherit', fontSize: 13, padding: 8, border: '1px solid #D1D5DB', borderRadius: 6 }} />
             </label>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
               <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Diploma No
@@ -232,10 +232,11 @@ export default function ReceteYazdirPage() {
       <div className="recete-kagit" style={{ width: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 12 }}>
           {baslik.ozel?.logoDataUrl && <img src={baslik.ozel.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
-          <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 0.3 }}>{baslik.doktor.unvan} {baslik.doktor.ad || '________________'}</div>
+          {/* Kaan (2026-09-10): doktor kendi başlığını yazdıysa İLK SATIR ad satırıdır — otomatik "Dr. ____" basılmaz */}
           {baslik.ozel && baslik.ozel.satirlar.length > 0
-            ? baslik.ozel.satirlar.map((s, i) => <div key={i} style={{ fontSize: i === 0 ? 12 : 11, color: i === 0 ? '#111' : '#333' }}>{s}</div>)
+            ? baslik.ozel.satirlar.map((s, i) => <div key={i} style={i === 0 ? { fontSize: 16, fontWeight: 700, letterSpacing: 0.3 } : { fontSize: i === 1 ? 12 : 11, color: i === 1 ? '#111' : '#333' }}>{s}</div>)
             : (<>
+                <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 0.3 }}>{baslik.doktor.unvan} {baslik.doktor.ad || '________________'}</div>
                 {bransAd && <div style={{ fontSize: 12 }}>{bransAd} Uzmanı</div>}
                 {baslik.doktor.klinik && <div style={{ fontSize: 11, color: '#333' }}>{baslik.doktor.klinik}</div>}
               </>)}
