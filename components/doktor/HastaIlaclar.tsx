@@ -40,7 +40,7 @@ interface Ilac {
   kaynak_note_id?: string | null;
 }
 
-const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Günde 1', 'Haftada 1', 'Gerektiğinde'];
+const SIKLIK = ['1x1', '2x1', '3x1', '4x1', 'Lüzumlu halde']; // Kaan 2026-09-10: Günde 1 / Haftada 1 kaldırıldı, Gerektiğinde → Lüzumlu halde
 
 /**
  * NOTYA-ILAC-04 / NOTYA-AUTH-01: the first version of this component read the literal 'auth-token'
