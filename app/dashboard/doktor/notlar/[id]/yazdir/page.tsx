@@ -78,7 +78,7 @@ export default function NotYazdir() {
   if (hata) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>{hata}</div>;
   if (!veri) return <div style={{ padding: 40, fontFamily: 'system-ui', color: '#666' }}>Not hazırlanıyor…</div>;
 
-  const { not, hasta, doktor, duzenlemeSayisi } = veri;
+  const { not, hasta, doktor } = veri;
 
   // NOTYA-KOPRU-01: manuel HBYS köprüsü — resmî entegrasyon öncesi başlangıç. Doktor hastane
   // sistemine girişliyken notu yapıştırır (kopyala) ya da HTML belgesini dosya olarak ekler (indir).
@@ -201,12 +201,9 @@ export default function NotYazdir() {
           </div>
         )}
 
-        <div style={{ borderTop: '1px solid #999', marginTop: 22, paddingTop: 10, font: '11px system-ui', color: '#555', lineHeight: 1.6 }}>
-          Bu not, muayene kaydından yapay zekâ (Notya — Ayşe) desteğiyle oluşturulmuştur.
-          {not.approvedAt
-            ? ` ${doktorUnvanli(doktor.ad)} tarafından incelenmiş${duzenlemeSayisi > 0 ? `, ${duzenlemeSayisi} alanda düzenlenmiş` : ''} ve ${trTarih(not.approvedAt)} (TRT) tarihinde onaylanmıştır.`
-            : ' Henüz doktor onayından geçmemiştir — TASLAK.'}
-          {' '}Nihai klinik karar ve sorumluluk hekime aittir. Düzenleme geçmişi sistemde saklanır (KVKK).
+        {/* Kaan (2026-09-10): yapay zekâ/onay ibaresi çıktıdan kaldırıldı — rapor doktorun belgesidir */}
+        <div style={{ borderTop: '1px solid #999', marginTop: 22, paddingTop: 10 }}>
+          {!not.approvedAt && <div style={{ font: '11px system-ui', color: '#B45309' }}>TASLAK — henüz doktor onayından geçmemiştir.</div>}
           <div style={{ marginTop: 26, display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ borderTop: '1px solid #333', width: 220, paddingTop: 4 }}>{doktorUnvanli(doktor.ad)} — İmza / Kaşe</div>
