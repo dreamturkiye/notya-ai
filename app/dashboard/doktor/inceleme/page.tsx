@@ -87,6 +87,8 @@ export default function IncelemePage() {
   // Kaan/Gökhan (2026-09-10): başlık (hasta, branş, tarih) dışında her şey düzenlenebilir
   const [basvuruTaslak, setBasvuruTaslak] = useState('');
   const [vitalTaslak, setVitalTaslak] = useState<Record<string, string>>({});
+  const [alarmTaslak, setAlarmTaslak] = useState('');   // satır başına bir madde
+  const [ozetTaslak, setOzetTaslak] = useState('');
   const [kMesajlar, setKMesajlar] = useState<KMesaj[]>([]);
   const [kGirdi, setKGirdi] = useState('');
   const [kBekliyor, setKBekliyor] = useState(false);
@@ -96,6 +98,8 @@ export default function IncelemePage() {
     setAcikId(note.id);
     setTaslak({ subjektif: note.subjektif, objektif: note.objektif, degerlendirme: note.degerlendirme, plan: note.plan });
     setBasvuruTaslak(note.basvuruYakinmasi || '');
+    setAlarmTaslak((note.alarmBulgulari || []).join('\n'));
+    setOzetTaslak(note.hastaOzeti || '');
     setVitalTaslak(Object.fromEntries(Object.entries((note.vitaller || {}) as Record<string, unknown>).map(([k, v]) => [k, v == null ? '' : String(v)])));
     setKMesajlar([]);
     setKGirdi('');
@@ -226,7 +230,7 @@ export default function IncelemePage() {
       const res = await fetch(`/api/notes/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak } } : {}),
+        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak } } : {}),
       });
 
       if (!res.ok) {
@@ -382,24 +386,24 @@ export default function IncelemePage() {
                           ))}
                         </div>
                       )}
-                      {note.alarmBulgulari.length > 0 && (
-                        <div style={{ marginBottom: 10 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>(veliye/hastaya anlatılacak)</span></div>
-                          {note.alarmBulgulari.map((a, i2) => <div key={i2} style={{ fontSize: 13, color: '#CBD5E1' }}>• {a}</div>)}
-                        </div>
-                      )}
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>(veliye/hastaya anlatılacak · her satır bir madde · düzenlenebilir)</span></div>
+                        <textarea value={alarmTaslak} onChange={(e) => setAlarmTaslak(e.target.value)} rows={Math.max(3, alarmTaslak.split('\n').length)}
+                          placeholder="Her satıra bir uyarı yazın"
+                          style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#CBD5E1', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                      </div>
                       {note.kritikBulgular.length > 0 && (
                         <div style={{ marginBottom: 10, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 3 }}>Dikkate almayı düşünür müsünüz? <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — nota ve hastaya yansımaz)</span></div>
                           {note.kritikBulgular.map((kb, i2) => <div key={i2} style={{ fontSize: 13, color: '#FDBA74' }}>• {kb}</div>)}
                         </div>
                       )}
-                      {note.hastaOzeti && (
-                        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 10px' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 3 }}>Hasta/veli özeti</div>
-                          <div style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.55 }}>{note.hastaOzeti}</div>
-                        </div>
-                      )}
+                      <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 10px' }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 3 }}>Hasta/veli özeti <span style={{ fontWeight: 400, color: '#64748B' }}>· portala gider · düzenlenebilir</span></div>
+                        <textarea value={ozetTaslak} onChange={(e) => setOzetTaslak(e.target.value)} rows={Math.max(3, Math.ceil(ozetTaslak.length / 110))}
+                          placeholder="Veliye anne-babaya anlatır gibi kısa özet"
+                          style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#CBD5E1', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                      </div>
                       {/* NOTYA-KONSULT-03: Ayşe ile not üzerinde konsult, sözle düzenleme, tek-dokunuş takip eylemleri */}
                       <div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 6 }}>🩺 Ayşe ile bu notu konuşun <span style={{ fontWeight: 400, color: '#64748B' }}>— soru sorun ya da “planı kısalt” gibi düzenleme isteyin</span></div>
