@@ -11,7 +11,6 @@ import {
   toolsCard,
   toolsErrorBox,
 } from '@/lib/doktor/toolsUi';
-import { yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
