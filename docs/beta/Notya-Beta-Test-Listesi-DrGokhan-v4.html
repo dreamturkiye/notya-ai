@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notya — Beta Öncesi Test Listesi (v4, 11 Eylül 2026)</title>
+<style>
+  body{font-family:system-ui,-apple-system,sans-serif;background:#F4F7FA;color:#0A1628;margin:0;padding:24px 14px 60px}
+  .kap{max-width:820px;margin:0 auto}
+  h1{font-size:24px;margin:0}
+  .alt{color:#5A6B80;font-size:13.5px;margin:6px 0 4px;line-height:1.5}
+  .cizgi{height:3px;background:#0F9B8E;border-radius:2px;margin:12px 0 6px}
+  .ilerleme{position:sticky;top:0;background:#F4F7FAee;backdrop-filter:blur(4px);padding:10px 0;z-index:5;font-size:14px;font-weight:700;color:#0F766E}
+  .madde{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 1px 3px rgba(10,22,40,.05)}
+  .baslik{display:flex;align-items:flex-start;gap:10px;font-size:16.5px;font-weight:700}
+  .baslik input{width:20px;height:20px;margin-top:2px;accent-color:#0F9B8E}
+  .etiket{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;margin-left:auto}
+  .e1{background:#FEF3C7;color:#B45309}.e2{background:#CCFBF1;color:#0F766E}.e3{background:#EDE9FE;color:#6D28D9}
+  .gecti{color:#0F766E;font-size:12.5px;margin:7px 0 9px 30px;line-height:1.5}
+  .altgorev{display:flex;align-items:flex-start;gap:9px;margin:7px 0 7px 30px;font-size:14.5px;line-height:1.55}
+  .altgorev input{width:17px;height:17px;margin-top:2px;accent-color:#0F9B8E;flex-shrink:0}
+  .notb{font-size:12px;font-weight:700;color:#5A6B80;margin:12px 0 5px 30px}
+  textarea{width:calc(100% - 30px);margin-left:30px;box-sizing:border-box;min-height:105px;border:1px solid #CBD5E1;border-radius:10px;padding:10px 12px;font:14px/1.5 system-ui;color:#0A1628;resize:vertical}
+  textarea:focus{outline:2px solid #0F9B8E33;border-color:#0F9B8E}
+  .disa{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0F9B8E;color:#fff;border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(15,155,142,.35)}
+  .disa:hover{background:#0D8478}
+  .ipucu{font-size:12px;color:#8FA0B5;text-align:center;margin-top:26px}
+  @media print{.disa,.ilerleme{display:none}}
+</style>
+</head>
+<body>
+<div class="kap">
+  <h1>NOTYA™ — Beta Öncesi Test Listesi <span style="font-size:14px;color:#0F766E">v4 · 11 Eylül 2026</span></h1>
+  <div class="alt">Dr. Gökhan Mamur için · Her maddeyi tamamladıkça kutuları işaretleyin; görüş, talep ve hataları not alanlarına yazın. <b>1–5 numaralı maddeler geçmeden yeni doktor alınmayacak.</b> v4 (11 Eylül): Bugüne kadar yaptıklarınıza göre listenin %46'sı tamam. Her maddede ✅ yapılanlar ve ⬜ KALANLAR adım adım yazıldı — yalnız ⬜ olanları yapmanız yeterli. En önemli iki eksik: 3 (Ayşe ile yazılı sohbet — hafızası henüz boş) ve 11 (sesli ↔ yazılı).</div>
+  <div class="cizgi"></div>
+  <div class="ilerleme" id="ilerleme">İlerleme: 0 / 12 madde</div>
+  <div id="liste"></div>
+  <div class="ipucu">Bittiğinde alttaki yeşil düğmeye basın — rapor panoya kopyalanır ve dosya olarak iner; Kaan'a WhatsApp/e-posta ile gönderebilirsiniz.</div>
+</div>
+<button class="disa" onclick="disaAktar()">📤 Raporu Kaan'a Gönderilecek Şekilde Dışa Aktar</button>
+<script>
+const MADDELER = [
+ {b:"Çekirdek döngü: Muayene → Not → Onay  (%70 — kalan: uzun ve gürültülü muayene)", s:1, g:"Kısa seans, kuyruk ve onay tamam. Eksik: uzun ve gürültülü kayıtta notun kalitesi.", a:[
+  "✅ Yapıldı — Kısa muayene (4 dk, Ayşe Çelik) → Not Revizyonu → İnceleme Kuyruğu → Onayla",
+  "⬜ 8–10 dakikalık, bol konuşmalı bir muayene yapın (gerçek hasta ya da veliyle prova). Seans sonunda Not Revizyonu'na basın; anamnezin Şikayet → Hikayesi → Özgeçmiş → Soygeçmiş → FM → Tanı → Tedavi sırasında geldiğini kontrol edin",
+  "⬜ Aynı şeyi gürültülü ortamda / araya sekreter girerken bir kez daha yapın; nota konuşma dışı şey karışıyor mu?",
+  "⬜ Her iki muayenenin süresini not alanına yazın"]},
+ {b:"Notun doğruluğu + her alanı düzeltebilme  (%50 — kalan: yeni düzenlenebilir alanlar)", s:1, g:"Vitalleri düzeltip onayladınız. Eksik: 10 Eylül'de açılan diğer alanlar hiç denenmedi.", a:[
+  "✅ Yapıldı — Yaşamsal bulguları (nabız) kutucukta düzeltip onayladınız",
+  "⬜ İnceleme Kuyruğu'nda (veya Muayene Geçmişi'nden açtığınız bir notta) şu üç kutuyu değiştirin: Başvuru Yakınması · Evde dikkat edilmesi gerekenler (bir satır silin, bir satır ekleyin) · Hasta/veli özeti → Onayla",
+  "⬜ 🖨️ Yazdır / PDF'e basın; üç değişikliğin de çıktıda göründüğünü doğrulayın; imzanın altında Diploma No'nuzun basıldığını görün",
+  "⬜ Yeni bir muayene notunda veli özetinde 'Doktorunuz' yerine 'Dr. Gökhan Mamur' yazdığını kontrol edin (eski notlarda yazmaz, yalnız yeni üretilenlerde)"]},
+ {b:"Ayşe'nin sizi öğrenmesi + notu Ayşe ile düzeltme  (%30 — kalan: yazılı sohbet hiç yapılmadı)", s:1, g:"Ayşe'nin hafızasında şu an tek bilgi var (kâğıt reçete yazdığınız). İlişki bu maddeyle başlar.", a:[
+  "✅ Yapıldı — İnceleme'de 'Ayşe ile bu notu konuşun' kutusunu kullandınız (o gün düzeltmeler ekrana inmiyordu, düzeltildi)",
+  "⬜ TEKRAR: İnceleme'de bir notta Ayşe kutusuna 'nabzı 100 yap' yazıp ENTER'a basın — sayfa daralmamalı, Yaşamsal Bulgular kutusu ve fizik muayene metni değişmeli; sonra 'Doktorunuz yerine adımı yaz' deyin — veli özeti ve evde dikkat kutuları değişmeli",
+  "⬜ Ana sayfadan Asistan → 💬 Yazılı sohbet'i açın. Ayşe'ye kendinizle ilgili en az 3 şey söyleyin, örn.: 'Bana Hocam deme, Gökhan de' · 'Öğlen 12:30–13:30 arası hasta almam' · 'Cevapları kısa tut' · 'Otitte ilk tercihim amoksisilin-klavulanat'",
+  "⬜ Sohbeti kapatıp yeniden açın; Ayşe'nin hitabı, cevap uzunluğu ve saat tercihinizi SORMADAN uyguladığını doğrulayın",
+  "⬜ Söylediklerinizden birini 'bunu unut' diyerek geri alın; bir sonraki cevapta uyduğunu görün",
+  "⬜ Bunu 3 farklı günde tekrarlayın — 5. seanstan sonra kendini tanıtmayı bırakması, 10.'da meslektaş gibi konuşması beklenir; fark ettiğiniz değişimi not alın"]},
+ {b:"Hasta dosyası: Özet / Muayene Geçmişi → tam not / Ayşe'ye Danış  (%60 — kalan: tam not sayfası)", s:1, g:"Dosya ve Ayşe'ye Danış kullanıldı. Eksik: geçmiş vizite tıklayıp notu orada düzeltip yeniden onaylamak.", a:[
+  "✅ Yapıldı — Ayşe Çelik'in dosyasını açtınız (hata düzeltildi), Ayşe'ye Danış'a 'Özgeçmişini özetle' dediniz",
+  "⬜ Ayşe Çelik'in Özet sekmesini yeniden açın: doğum tarihi, cinsiyet 'Kadın', kan grubu, alerji, ilaç, aile öyküsü dolu mu? (formdan otomatik geldi)",
+  "⬜ Muayene Geçmişi'nde bir vizite TIKLAYIN (Yazdır'a değil, satırın kendisine) → notun tamamı açılmalı; bir alanı değiştirip 'Kaydet ve yeniden onayla'ya basın; Yazdır'da değişikliği görün",
+  "⬜ Ayşe'ye Danış'ta bir soru daha sorun ('bu hastaya en son ne vermiştim?'); cevabın hizalı, ** işaretsiz geldiğini görün",
+  "⬜ Aynı hastayla 2. vizit yapın; yeni notun önceki plana atıf yaptığını kontrol edin"]},
+ {b:"İlaçlar → hasta dosyası + Sağlığım portalı  (%50 — kalan: portal ve doz değişikliği)", s:1, g:"Onayla ilaçlar dosyaya düştü. Eksik: portalda görünüm, doz değişince güncelleme, sonlandırma.", a:[
+  "✅ Yapıldı — Not onayıyla ilaçlar hasta dosyasına işlendi (ayrı onay adımı yok)",
+  "⬜ Ayşe Çelik'in Sağlığım portalını açın (dosyadaki portal linki) → İlaçlarım'da aynı ilaçları görün",
+  "⬜ Aynı hastaya aynı ilacı FARKLI dozla yazıp yeni notu onaylayın → dosyada ve portalda eski dozun güncellendiğini, ikinci satır AÇILMADIĞINI görün",
+  "⬜ Dosyadan elle bir ilaç ekleyin; kullanım listesi 1x1 · 2x1 · 3x1 · 4x1 · Lüzumlu halde olmalı",
+  "⬜ Bir ilacı Sonlandır'ın → portaldan düştüğünü kontrol edin"]},
+ {b:"Reçete: kâğıt A5, başlık, diploma, logo  (%60 — kalan: yazdırıp elinize almak)", s:2, g:"Kâğıt yazdığınızı söylediniz, başlığı doldurdunuz. Eksik: gerçek çıktı ve Medula soruları.", a:[
+  "✅ Yapıldı — Ayşe'nin 'Reçeteyi nasıl yazıyorsunuz?' sorusuna 'kâğıt' dediniz; başlığı (4 satır + diploma no) kaydettiniz",
+  "⬜ Onaylı bir notta 🧾 Reçete'ye basın; başlıkta 'Dr. ____' OLMAMALI, ilk satırınız büyük yazılmalı; Diploma No altta otomatik",
+  "⬜ Büyük düğme 'Reçeteyi yazdır (A5)' — basıp gerçekten A5 kâğıda yazdırın; Rp./S: satırları, kutu adedi, kaşe alanı elinizde nasıl duruyor? Alt köşede 'Notya AI' yazısı OLMAMALI",
+  "⬜ Bir ilacın kutu adedini +/− ile 2 yapıp tekrar yazdırın; kâğıda yansımalı",
+  "⬜ İsterseniz logo ekleyin (✎ Reçete başlığını düzenle → Logo) ve yeniden yazdırın",
+  "⬜ MUTLAKA not alanına yazın: Medula Doktor şifreniz var mı? E-imzanız (kart / mobil imza) var mı, hangi bilgisayarda? SGK tesis kodunuz nedir? (kâğıt yazdığınızı biliyoruz — bu üçü SGK'ya doğrudan gönderim için gerekli)"]},
+ {b:"Ayşe günü açıyor + Günün programı  (%40 — kalan: randevulu bir sabah)", s:2, g:"Açılış cümlesini gördünüz. Eksik: gerçek randevularla program listesi ve akşam kapanışı.", a:[
+  "✅ Yapıldı — Ana sayfada Ayşe'nin açılış cümlesini gördünüz (hitap düzeltildi: 'Gökhan Hocam')",
+  "⬜ Bugün için en az 3 randevu girin (1'i kontrol, 1'i yeni hasta) → sayfayı yenileyin: Ayşe'nin cümlesindeki sayılar doğru mu? 'Bugünkü muayene' kartı bugünün sayısını mı gösteriyor?",
+  "⬜ Ana sayfa › Bugün sekmesi: her randevuda kim / kaçta / neden — kontrol hastasında son vizit tanısı ve planı, yeni hastada form durumu görünüyor mu? Bir satıra dokunun, dosya açılmalı",
+  "⬜ Saat 16:00'dan sonra sayfayı yenileyin — akşam cümlesi (bugün kaç hasta, yarın kaç randevu) doğru mu?",
+  "⬜ Sesli seansı başlatın — Ayşe'nin ilk cümlesi günün durumu mu?"]},
+ {b:"Hasta Bilgi Formu  (%60 — kalan: yeni kurallarla bir form)", s:2, g:"5 form gönderdiniz, 1'i doldu ve incelediniz. Eksik: 10 Eylül kurallarıyla yeni bir form.", a:[
+  "✅ Yapıldı — Form gönderdiniz, Ayşe Çelik'inki dolduruldu, inceleme ekranını gördünüz (etiketler Türkçeleşti, iki sütun oldu)",
+  "⬜ Yeni bir hastaya form gönderin (Hasta Formu sekmesi → branş Pediatri hazır gelmeli → Formu Oluştur → WhatsApp)",
+  "⬜ Formu veli gözüyle doldurun: doğum tarihinde 2027 seçilememeli · E-posta yıldızlı · Sağlık Güvencesi sırası Ücretli → Özel → Tamamlayıcı → Kurumsal → SGK · Alerji yok/var alt alta · Baş çevresi 'Hatırladığınız kadarıyla' · Şehir alanı var · boş bırakılan zorunlu alan gönderime izin vermemeli",
+  "⬜ Doldurulunca dosyanın Özet sekmesine geçtiğini (doğum, cinsiyet, kan grubu, alerji, şehir) kontrol edin"]},
+ {b:"Randevu + hatırlatma (kendi WhatsApp'ınız)  (%50 — kalan: hatırlatma hiç denenmedi)", s:2, g:"Randevu girdiniz, düzenleme hatasını yakaladınız. Eksik: 15 dk saat listesi ve kendi WhatsApp'ınızdan hatırlatma.", a:[
+  "✅ Yapıldı — 2 randevu girdiniz; düzenlemede e-posta hatası düzeltildi",
+  "⬜ + Randevu: saat alanı 07:00–21:45 arası :00/:15/:30/:45 listesi mi? (telefonda da bakın)",
+  "⬜ Bir randevuyu düzenleyin, e-posta yazmadan Güncelle → hata vermemeli; e-posta yazarsanız kaydedilmeli",
+  "⬜ Araçlar › Hatırlatma: bir hastayı seçin, 'WhatsApp (kendi numaranız)' → Hatırlatmayı Gönder → telefonunuzda WhatsApp mesaj hazır açılmalı; siz Gönder'e dokunun. Listede 'WhatsApp (kendi)' görünmeli",
+  "⬜ Not onayında kontrol randevusu verin → ertesi sabah Ayşe'nin açılış cümlesinde sayılsın"]},
+ {b:"HBYS köprüsü + Yazdır / PDF  (%50 — kalan: HBYS yapıştırma)", s:2, g:"Yazdır'ı kullandınız. Eksik: hastane sisteminize yapıştırma.", a:[
+  "✅ Yapıldı — Yazdır / PDF'i gördünüz (alttaki yapay zekâ paragrafı kaldırıldı)",
+  "⬜ Onaylı notta 📋 'HBYS için kopyala' → hastanedeki sisteminizin muayene alanına yapıştırın; Türkçe karakterler ve satır yapısı bozuluyor mu? HANGİ HBYS olduğunu not alın",
+  "⬜ Yazdır / PDF'i yeniden açın: anamnez alt başlıkları ayrı, imzanın altında Diploma No var mı?"]},
+ {b:"Sesli Ayşe ↔ Yazılı Sohbet  (%0 — hiç denenmedi)", s:3, g:"İki kanalı da kullanmadınız. En kısa madde, 5 dakika.", a:[
+  "⬜ Asistan sayfasında mikrofona basıp Ayşe ile sesli konuşun: 'Ayşe Çelik'e en son ne vermiştim?' diye sorun",
+  "⬜ Aynı soruyu 💬 Yazılı sohbete yazın; ilk baloncuk günün durumu mu? Cevap ** işaretsiz, düzgün mü?",
+  "⬜ İki cevabın farkını not alanına yazın"]},
+ {b:"Telefonda kullanım (iPhone / Samsung)  (%30 — kalan: kendi telefonunuzdan tam tur)", s:3, g:"Telefon görüntüleri Kaan'ın cihazından geldi. Eksik: sizin telefonunuz.", a:[
+  "⬜ Kendi telefonunuzdan girin: Ana sayfa (menü, Ayşe cümlesi, Bugün listesi, '+ Randevu ekle' solda), Yazılı sohbet, Reçete sayfası, Hasta dosyası — taşan, kesilen, basılamayan bir şey var mı?",
+  "⬜ Telefon modelinizi ve gün boyu 'limit' mesajı görüp görmediğinizi not alın"]},
+];
+const ETK = {1:["OLMAZSA OLMAZ","e1"],2:["LANSMAN KALİTESİ","e2"],3:["CİLA","e3"]};
+const AN = 'notyaBetaTest_v4';
+let durum = {};
+try { durum = JSON.parse(localStorage.getItem(AN) || '{}'); } catch(e) { durum = {}; }
+
+const liste = document.getElementById('liste');
+MADDELER.forEach((m, i) => {
+  const d = durum[i] || {ana:false, alt:Array(m.a.length).fill(false), not:''};
+  durum[i] = d;
+  const kart = document.createElement('div'); kart.className = 'madde';
+  const [etkAd, etkSinif] = ETK[m.s];
+  kart.innerHTML = `
+    <div class="baslik"><input type="checkbox" id="ana${i}" ${d.ana?'checked':''}><label for="ana${i}" style="cursor:pointer">${i+1}. ${m.b}</label><span class="etiket ${etkSinif}">${etkAd}</span></div>
+    <div class="gecti">✅ Geçti sayılır: ${m.g}</div>
+    ${m.a.map((a,j)=>`<div class="altgorev"><input type="checkbox" id="alt${i}_${j}" ${d.alt[j]?'checked':''}><label for="alt${i}_${j}" style="cursor:pointer">${a}</label></div>`).join('')}
+    <div class="notb">📝 Notlar / Talepler / Hatalar:</div>
+    <textarea id="not${i}" placeholder="Gözlemlerinizi, taleplerinizi ve hataları buraya yazın...">${d.not||''}</textarea>`;
+  liste.appendChild(kart);
+  document.getElementById('ana'+i).addEventListener('change', e => { durum[i].ana = e.target.checked; kaydet(); });
+  m.a.forEach((_,j)=>document.getElementById(`alt${i}_${j}`).addEventListener('change', e => { durum[i].alt[j] = e.target.checked; kaydet(); }));
+  document.getElementById('not'+i).addEventListener('input', e => { durum[i].not = e.target.value; kaydet(); });
+});
+
+function kaydet(){
+  try { localStorage.setItem(AN, JSON.stringify(durum)); } catch(e){}
+  const tamam = MADDELER.filter((_,i)=>durum[i].ana).length;
+  document.getElementById('ilerleme').textContent = `İlerleme: ${tamam} / ${MADDELER.length} madde`;
+}
+kaydet();
+
+function disaAktar(){
+  const st = [`NOTYA BETA TEST RAPORU — Dr. Gökhan Mamur`, new Date().toLocaleString('tr-TR'), ''];
+  MADDELER.forEach((m,i)=>{
+    const d = durum[i];
+    st.push(`${d.ana?'[X]':'[ ]'} ${i+1}. ${m.b}`);
+    m.a.forEach((a,j)=>st.push(`   ${d.alt[j]?'[x]':'[ ]'} ${a}`));
+    if((d.not||'').trim()) st.push(`   >> NOT: ${d.not.trim().replace(/\n/g, '\n   >> ')}`);
+    st.push('');
+  });
+  const metin = st.join('\n');
+  navigator.clipboard && navigator.clipboard.writeText(metin).catch(()=>{});
+  const blob = new Blob([metin], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'notya-beta-test-raporu.txt';
+  a.click(); URL.revokeObjectURL(a.href);
+  alert('Rapor panoya kopyalandı ve dosya olarak indirildi. Kaan\'a WhatsApp ya da e-posta ile gönderebilirsiniz. 🙏');
+}
+</script>
+</body>
+</html>
