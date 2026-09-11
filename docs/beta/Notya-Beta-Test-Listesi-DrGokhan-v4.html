@@ -25,7 +25,15 @@
   .disa{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0F9B8E;color:#fff;border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(15,155,142,.35)}
   .disa:hover{background:#0D8478}
   .ipucu{font-size:12px;color:#8FA0B5;text-align:center;margin-top:26px}
-  @media print{.disa,.ilerleme{display:none}}
+  @media print{
+    .disa,.ilerleme,.ipucu{display:none}
+    @page{size:A4;margin:14mm 14mm 16mm}
+    .madde{break-inside:avoid;page-break-inside:avoid;margin-bottom:10px}
+    .baslik{break-after:avoid;page-break-after:avoid}
+    .etiket{break-after:avoid}
+    textarea{min-height:56px!important;height:56px!important;resize:none}
+    body{font-size:12.5px}
+  }
 </style>
 </head>
 <body>
@@ -118,7 +126,7 @@ MADDELER.forEach((m, i) => {
   const [etkAd, etkSinif] = ETK[m.s];
   kart.innerHTML = `
     <div class="baslik"><input type="checkbox" id="ana${i}" ${d.ana?'checked':''}><label for="ana${i}" style="cursor:pointer">${i+1}. ${m.b}</label><span class="etiket ${etkSinif}">${etkAd}</span></div>
-    <div class="gecti">✅ Geçti sayılır: ${m.g}</div>
+    <div class="gecti">Durum: ${m.g}</div>
     ${m.a.map((a,j)=>`<div class="altgorev"><input type="checkbox" id="alt${i}_${j}" ${d.alt[j]?'checked':''}><label for="alt${i}_${j}" style="cursor:pointer">${a}</label></div>`).join('')}
     <div class="notb">📝 Notlar / Talepler / Hatalar:</div>
     <textarea id="not${i}" placeholder="Gözlemlerinizi, taleplerinizi ve hataları buraya yazın...">${d.not||''}</textarea>`;
