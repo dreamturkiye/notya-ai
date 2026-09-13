@@ -3,7 +3,7 @@ import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react';
-import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,12 +30,14 @@ export default function EpikrizPage() {
   const [seciliHastaId, setSeciliHastaId] = useState('');
   const [seanslar, setSeanslar] = useState<Seans[]>([]);
   const [seciliSeansId, setSeciliSeansId] = useState('');
+  const [mod, setMod] = useState<'tekSeans' | 'tumSeanslar'>('tekSeans'); // Kaan (2026-09-13): kapsamlı özet seçeneği
   const [ekBilgi, setEkBilgi] = useState('');
   const [sonuc, setSonuc] = useState<EpikrizSonuc | null>(null);
   const [loading, setLoading] = useState(false);
   const [seansLoading, setSeansLoading] = useState(false);
   const [seansError, setSeansError] = useState('');
   const [hastaLoading, setHastaLoading] = useState(true);
+  const [uretHata, setUretHata] = useState('');
 
   const getToken = () => getDoctorAccessToken() || null; // NOTYA-AUTH-01
 
@@ -109,12 +111,17 @@ export default function EpikrizPage() {
   };
 
   const handleUret = async () => {
-    if (!seciliHastaId || !seciliSeansId) return;
+    if (!seciliHastaId || (mod === 'tekSeans' && !seciliSeansId)) return;
 
     setLoading(true);
-    const token = getToken();
+    setUretHata('');
+    // Kaan (2026-09-13): "Epikriz Üret'e bastığımda ekran ilerlemiyor" — kök sebep iki katlı:
+    // (1) getToken() yenilenmeyen token döndürüyordu, süresi dolunca 401; (2) res.ok değilse
+    // hiçbir hata gösterilmiyordu, sayfa sessizce hiçbir şey olmamış gibi kalıyordu.
+    const token = await ensureDoctorAccessToken();
     if (!token) {
       setLoading(false);
+      setUretHata('Oturum doğrulanamadı — sayfayı yenileyip tekrar deneyin.');
       return;
     }
 
@@ -125,19 +132,23 @@ export default function EpikrizPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          hastaId: seciliHastaId,
-          seansId: seciliSeansId,
-          ekBilgi,
-        }),
+        body: JSON.stringify(
+          mod === 'tumSeanslar'
+            ? { hastaId: seciliHastaId, tumSeanslar: true, ekBilgi }
+            : { hastaId: seciliHastaId, seansId: seciliSeansId, ekBilgi }
+        ),
       });
 
       if (res.ok) {
         const data: EpikrizSonuc = await res.json();
         setSonuc(data);
+      } else {
+        const j = await res.json().catch(() => ({}));
+        setUretHata(j.hata || j.error || `Epikriz oluşturulamadı (${res.status}).`);
       }
     } catch (e) {
       console.error(e);
+      setUretHata('Bağlantı hatası — tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -253,8 +264,27 @@ export default function EpikrizPage() {
                 </select>
               </div>
 
+              {/* Kaan (2026-09-13): "tüm seansları özetleyecek şekilde de bir seçenek olmalı" */}
+              <div style={{ marginBottom: '20px', display: 'flex', gap: 8 }}>
+                {([['tekSeans', 'Tek Seans'], ['tumSeanslar', 'Tüm Seanslar (Kapsamlı Özet)']] as const).map(([m, etiket]) => (
+                  <button key={m} type="button" onClick={() => setMod(m)}
+                    style={{
+                      flex: 1, padding: '10px 12px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                      border: mod === m ? '1px solid #14B8A6' : '1px solid #2A3448',
+                      background: mod === m ? 'rgba(20,184,166,0.15)' : '#0F1729',
+                      color: mod === m ? '#5EEAD4' : '#A1A9BB',
+                    }}>
+                    {etiket}
+                  </button>
+                ))}
+              </div>
+              {mod === 'tumSeanslar' && (
+                <div style={{ marginBottom: '16px', fontSize: 13, color: '#A1A9BB', lineHeight: 1.5 }}>
+                  Hastanın ilk geldiğinden son gelişine kadar tüm muayeneleri, geliş tanıları (sağlam çocuk kontrolleri ve geçirdiği hastalıklar ayrı, tarihli), aşı karnesi ve kullanılan ilaç/takviyeler tek özette birleştirilir.
+                </div>
+              )}
               {/* Seans Select */}
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '20px', display: mod === 'tumSeanslar' ? 'none' : 'block' }}>
                 <label style={{ 
                   display: 'block', 
                   color: '#A1A9BB', 
@@ -324,7 +354,7 @@ export default function EpikrizPage() {
 
               <button
                 onClick={handleUret}
-                disabled={!seciliHastaId || !seciliSeansId || loading}
+                disabled={!seciliHastaId || (mod === 'tekSeans' && !seciliSeansId) || loading}
                 style={{
                   width: '100%',
                   height: '52px',
@@ -334,8 +364,8 @@ export default function EpikrizPage() {
                   fontWeight: 600,
                   border: 'none',
                   borderRadius: '10px',
-                  cursor: loading || !seciliHastaId || !seciliSeansId ? 'not-allowed' : 'pointer',
-                  opacity: loading || !seciliHastaId || !seciliSeansId ? 0.6 : 1,
+                  cursor: loading || !seciliHastaId || (mod === 'tekSeans' && !seciliSeansId) ? 'not-allowed' : 'pointer',
+                  opacity: loading || !seciliHastaId || (mod === 'tekSeans' && !seciliSeansId) ? 0.6 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -354,6 +384,7 @@ export default function EpikrizPage() {
                 )}
                 Epikriz Üret
               </button>
+              {uretHata && <div style={{ marginTop: 10, fontSize: 13, color: '#F87171' }}>{uretHata}</div>}
             </div>
           </div>
 
