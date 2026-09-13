@@ -8,6 +8,22 @@ Last reviewed: 2026-09-01 (randevu sistemi #44 merged)
 
 ---
 
+## Standing rule — mobile check on every change (Kaan, 2026-09-13)
+
+Every new feature, UI change, or fix Claude ships to Notya from now on must be verified to
+display and work correctly on mobile devices (iPhone and Samsung/Android web) before being
+considered done — not just typechecked. This applies going forward to all surfaces: doktor
+dashboard, İnceleme, not sayfası, reçete, Sağlığım portal, intake forms, everything.
+
+Practical check for each PR that touches UI, before calling it finished:
+- Screenshot or render at a real mobile width (390px iPhone, 360px Galaxy) — claude-in-chrome
+  navigate + screenshot at that viewport, or the visualizer mockup tool when no live page exists yet.
+- Confirm: no horizontal overflow, buttons/inputs reachable and not cut off, text wraps instead of
+  truncating silently, touch targets aren't so small they're unusable, modals/panels fit the screen.
+- If a change is desktop-only by nature (e.g. a purely server-side calc with no new UI), no mobile
+  check is needed — but any new button, form, panel, badge, or page does need one.
+- Record what was checked (and any gap found) in the PR description / ledger, same as other work.
+
 ## Waiting on the founder
 
 | Since | Item | Why it matters |
