@@ -266,7 +266,7 @@ export default function IntakeFormPage() {
         <div style={kutu}>
           <h2 style={{ fontSize: 20, marginBottom: 8, color: '#0A1628' }}>Teşekkürler ✓</h2>
           <p style={{ color: 'rgba(10,22,40,0.6)', fontSize: 14 }}>
-            Formunuz başarıyla iletildi. Doktorunuz randevunuzdan önce inceleyecek. Sizi görmek için sabırsızlanıyoruz.
+            Formunuz başarıyla iletildi. {sema?.doktorAdi ? `${sema.doktorAdi} randevunuzdan önce inceleyecek` : 'Doktorunuz randevunuzdan önce inceleyecek'}. Sizi görmek için sabırsızlanıyoruz.
           </p>
         </div>
       )}
