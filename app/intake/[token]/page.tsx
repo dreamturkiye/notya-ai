@@ -101,7 +101,17 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
   const inputTur = alan.tur === 'tel' ? 'tel' : alan.tur === 'email' ? 'email' : alan.tur === 'date' ? 'date' : 'text';
   // Kaan (2026-09-10): doğum tarihi gelecekte olamaz — takvim bugünle sınırlı
   const tarihSinir = alan.tur === 'date' ? { max: new Date().toISOString().slice(0, 10), min: '1900-01-01' } : {};
-  return <input style={ortakStil} type={inputTur} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} {...tarihSinir} />;
+  // Kaan (2026-09-13): TC kimlik gibi desen tanımlı alanlarda tam uzunluk + yalnız rakam zorlanır ("ne az ne de fazla")
+  const desenSinir = alan.desen === '^[0-9]{11}$'
+    ? { inputMode: 'numeric' as const, pattern: '[0-9]*', maxLength: 11, onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9]/.test(e.key)) e.preventDefault() } }
+    : {};
+  const desenGecersiz = !!alan.desen && !!(deger as string) && !new RegExp(alan.desen).test(String(deger))
+  return (
+    <>
+      <input style={ortakStil} type={inputTur} value={(deger as string) || ''} onChange={(e) => onChange(alan.desen ? e.target.value.replace(/\D/g, '') : e.target.value)} placeholder={alan.placeholder} {...tarihSinir} {...desenSinir} />
+      {desenGecersiz && alan.desenHata && <div style={{ fontSize: 12, color: '#DC2626', marginTop: 4 }}>{alan.desenHata}</div>}
+    </>
+  );
 }
 
 export default function IntakeFormPage() {
