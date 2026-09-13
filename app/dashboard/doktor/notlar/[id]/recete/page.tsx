@@ -234,7 +234,7 @@ export default function ReceteYazdirPage() {
       </div>
 
       {/* Kâğıt */}
-      <div className="recete-kagit" style={{ width: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+      <div className="recete-kagit" style={{ width: '100%', maxWidth: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 12 }}>
           {baslik.ozel?.logoDataUrl && <img src={baslik.ozel.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
           {/* Kaan (2026-09-10): doktor kendi başlığını yazdıysa İLK SATIR ad satırıdır — otomatik "Dr. ____" basılmaz */}
