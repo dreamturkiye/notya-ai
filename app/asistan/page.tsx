@@ -290,6 +290,26 @@ export default function AsistanPage() {
           },
           tts: { voiceId },
         },
+        // Kaan (2026-09-14): "Ayşe Hocam bana fırça attı, dosyalara giremiyorum diyor" —
+        // sesli Ayşe'nin gerçekten hasta dosyasına erişimi yoktu (yazılı sohbette vardı).
+        // ElevenLabs client tool: doktor bir hasta adı söylediğinde agent bunu çağırır,
+        // tarayıcı doktorun kendi oturum belirtecinle /api/asistan/hasta-bul'u sorgular.
+        clientTools: {
+          hasta_bul: async (params: { isim?: string }) => {
+            try {
+              const t = await ensureDoctorAccessToken()
+              const r = await fetch("/api/asistan/hasta-bul", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+                body: JSON.stringify({ isim: params?.isim || "" }),
+              })
+              const j = await r.json()
+              return String(j.sonuc || "Dosyaya şu an ulaşamadım.")
+            } catch {
+              return "Dosyaya şu an ulaşamadım, bağlantı sorunu olabilir."
+            }
+          },
+        },
         onConnect: () => {
           setStatus("listening")
           setErrorMsg("")
