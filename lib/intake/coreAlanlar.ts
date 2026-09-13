@@ -56,6 +56,10 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       { id: 'dogumTarihi', etiket: 'Doğum Tarihi', tur: 'date', zorunlu: true },
       { id: 'cinsiyet', etiket: 'Cinsiyet', tur: 'radio', zorunlu: true, secenekler: ['Kadın', 'Erkek'] },
       { id: 'dogumYeri', etiket: 'Doğum Yeri', tur: 'text', zorunlu: true },
+      // Kaan (2026-09-13): anne/baba adı ve medeni durum eksikti — Türk sağlık formu geleneği
+      { id: 'babaAdi', etiket: 'Baba Adı', tur: 'text', zorunlu: true },
+      { id: 'anneAdi', etiket: 'Ana Adı', tur: 'text', zorunlu: true },
+      { id: 'medeniDurum', etiket: 'Medeni Durum', tur: 'radio', zorunlu: true, secenekler: ['Bekâr', 'Evli', 'Boşanmış', 'Dul'] },
     ],
   },
   {
