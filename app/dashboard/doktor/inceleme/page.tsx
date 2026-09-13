@@ -37,6 +37,7 @@ interface PendingNote {
   hastaOzeti: string;
   basvuruYakinmasi: string;
   vitaller: Vitaller | null;
+  buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null;
   receteOnerisi: ReceteOner[];
   alarmBulgulari: string[];
   aiDegerlendirme: string;
@@ -64,6 +65,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       hastaOzeti: String(n.hastaOzeti ?? ''),
       basvuruYakinmasi: String(n.basvuruYakinmasi ?? ''),
       vitaller: (n.vitaller && typeof n.vitaller === 'object') ? (n.vitaller as Vitaller) : null,
+      buyumePersentilleri: (n.buyumePersentilleri && typeof n.buyumePersentilleri === 'object') ? (n.buyumePersentilleri as PendingNote['buyumePersentilleri']) : null,
       receteOnerisi: Array.isArray(n.receteOnerisi) ? (n.receteOnerisi as ReceteOner[]) : [],
       alarmBulgulari: Array.isArray(n.alarmBulgulari) ? (n.alarmBulgulari as string[]).map(String) : [],
       aiDegerlendirme: String(n.aiDegerlendirme ?? ''),
@@ -328,17 +330,28 @@ export default function IncelemePage() {
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></div>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                          {([['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['spo2', 'SpO₂', '%'], ['ates', 'Ateş', '°C'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const).map(([k, etiket, birim]) => (
-                            <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>
-                              {etiket}
-                              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <input value={vitalTaslak[k] ?? ''} onChange={(e) => setVitalTaslak({ ...vitalTaslak, [k]: e.target.value })} placeholder="—"
-                                  style={{ width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
-                                <span style={{ color: '#64748B' }}>{birim}</span>
-                              </span>
-                            </label>
-                          ))}
+                          {([['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['spo2', 'SpO₂', '%'], ['ates', 'Ateş', '°C'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const).map(([k, etiket, birim]) => {
+                            // Kaan (2026-09-13): Neyzi büyüme persentili — yalnız kilo/boy/baş çevresinde, sunucudan hazır gelir
+                            const bp = note.buyumePersentilleri
+                            const persentil = k === 'kilo' ? bp?.kilo : k === 'boy' ? bp?.boy : k === 'basCevresi' ? bp?.basCevresi : undefined
+                            return (
+                              <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>
+                                {etiket}
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <input value={vitalTaslak[k] ?? ''} onChange={(e) => setVitalTaslak({ ...vitalTaslak, [k]: e.target.value })} placeholder="—"
+                                    style={{ width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
+                                  <span style={{ color: '#64748B' }}>{birim}</span>
+                                </span>
+                                {persentil && <span style={{ fontSize: 10, color: '#2DD4BF' }}>{persentil}</span>}
+                              </label>
+                            )
+                          })}
                         </div>
+                        {note.buyumePersentilleri?.vki && (
+                          <div style={{ marginTop: 6, fontSize: 11, color: '#2DD4BF' }}>
+                            VKİ: {note.buyumePersentilleri.vki}{note.buyumePersentilleri.vkiSinif ? ` — ${note.buyumePersentilleri.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
+                          </div>
+                        )}
                       </div>
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
                         <div key={alan} style={{ marginBottom: 10 }}>

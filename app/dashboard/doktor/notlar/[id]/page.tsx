@@ -12,7 +12,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface NotVeri {
-  not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
+  not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
   hasta: { ad: string };
   doktor: { ad: string };
   duzenlemeSayisi: number;
@@ -100,15 +100,26 @@ export default function NotSayfasi() {
         <div>
           <div style={etiket}>Yaşamsal Bulgular</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {VITAL.map(([k, ad, birim]) => (
-              <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>{ad}
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <input value={vital[k] ?? ''} onChange={(e) => isaretle((v: string) => setVital({ ...vital, [k]: v }))(e.target.value)} placeholder="—" style={{ ...kutu, width: 76, padding: '6px 8px' }} />
-                  <span style={{ color: '#64748B' }}>{birim}</span>
-                </span>
-              </label>
-            ))}
+            {VITAL.map(([k, ad, birim]) => {
+              // Kaan (2026-09-13): Neyzi büyüme persentili — sunucudan hazır gelir
+              const bp = veri.not.buyumePersentilleri
+              const persentil = k === 'kilo' ? bp?.kilo : k === 'boy' ? bp?.boy : k === 'basCevresi' ? bp?.basCevresi : undefined
+              return (
+                <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>{ad}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input value={vital[k] ?? ''} onChange={(e) => isaretle((v: string) => setVital({ ...vital, [k]: v }))(e.target.value)} placeholder="—" style={{ ...kutu, width: 76, padding: '6px 8px' }} />
+                    <span style={{ color: '#64748B' }}>{birim}</span>
+                  </span>
+                  {persentil && <span style={{ fontSize: 10, color: '#0F9B8E' }}>{persentil}</span>}
+                </label>
+              )
+            })}
           </div>
+          {veri.not.buyumePersentilleri?.vki && (
+            <div style={{ marginTop: 6, fontSize: 11, color: '#0F9B8E' }}>
+              VKİ: {veri.not.buyumePersentilleri.vki}{veri.not.buyumePersentilleri.vkiSinif ? ` — ${veri.not.buyumePersentilleri.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
+            </div>
+          )}
         </div>
         {BOLUM.map(([k, ad]) => (
           <div key={k}>

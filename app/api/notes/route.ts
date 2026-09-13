@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { persentilHesapla, vkiSiniflandir, vkiSinifEtiket, ayFarki, persentilMetni, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,31 @@ function formatDate(createdAt?: string | null): string {
   } catch {
     return d.toISOString().slice(0, 10)
   }
+}
+
+/** Kaan (2026-09-13): İnceleme Kuyruğu'nda da büyüme persentili — /api/notes/[id] ile aynı mantık. */
+function buyumePersentilleriniHesapla(
+  vitaller: unknown,
+  dogumIso: string | null,
+  cinsiyet: Cinsiyet | null,
+  olcumIso: string | null,
+): { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null {
+  if (!vitaller || typeof vitaller !== 'object' || !dogumIso || !cinsiyet) return null
+  const ayYas = ayFarki(dogumIso, olcumIso || undefined)
+  if (ayYas === null || ayYas > 216) return null
+  const v = vitaller as Record<string, unknown>
+  const say = (x: unknown): number | null => { const n = parseFloat(String(x ?? '').replace(',', '.').replace(/[^0-9.]/g, '')); return Number.isFinite(n) && n > 0 ? n : null }
+  const out: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } = {}
+  const kilo = say(v.kilo), boy = say(v.boy), bas = say(v.basCevresi)
+  if (kilo != null) { const r = persentilHesapla('kilo', cinsiyet, ayYas, kilo); if (r) out.kilo = persentilMetni(r.persentil) }
+  if (boy != null) { const r = persentilHesapla('boy', cinsiyet, ayYas, boy); if (r) out.boy = persentilMetni(r.persentil) }
+  if (bas != null) { const r = persentilHesapla('basCevresi', cinsiyet, ayYas, bas); if (r) out.basCevresi = persentilMetni(r.persentil) }
+  if (kilo != null && boy != null && ayYas >= 24) {
+    const vki = kilo / Math.pow(boy / 100, 2)
+    const r = persentilHesapla('vki', cinsiyet, ayYas, vki)
+    if (r) { out.vki = persentilMetni(r.persentil); out.vkiSinif = vkiSinifEtiket(vkiSiniflandir(r.persentil)) }
+  }
+  return Object.keys(out).length ? out : null
 }
 
 export async function GET(req: NextRequest) {
@@ -116,16 +142,24 @@ export async function GET(req: NextRequest) {
 
   // Kaan/Gökhan (2026-09-10): kuyrukta "Hasta da5141bb" yerine hastanın adı. Ad şifreli → sunucuda çöz (Ad S.).
   const pidler = [...new Set(rows.map((r) => firstSession(r.sessions).patient_id).filter(Boolean))] as string[]
+  const dogumlar = new Map<string, string>()
+  const cinsiyetler = new Map<string, 'male' | 'female'>()
   const adlar = new Map<string, string>()
   if (pidler.length) {
     const { decrypt } = await import('@/lib/security/encryption')
-    const { data: hastalar } = await supabase.from('patients').select('id, name_encrypted').in('id', pidler)
-    for (const h of (hastalar || []) as { id: string; name_encrypted: string | null }[]) {
+    const { data: hastalar } = await supabase.from('patients').select('id, name_encrypted, dob_encrypted, gender_encrypted').in('id', pidler)
+    for (const h of (hastalar || []) as { id: string; name_encrypted: string | null; dob_encrypted: string | null; gender_encrypted: string | null }[]) {
       try {
         const n = JSON.parse(decrypt(String(h.name_encrypted || ''))) as { ad?: string; soyad?: string }
         const ad = (n.ad || '').trim(); const soyad = (n.soyad || '').trim()
         adlar.set(h.id, soyad ? `${ad} ${soyad}` : ad)
       } catch { /* ad çözülemedi → maske */ }
+      try {
+        const dob = decrypt(String(h.dob_encrypted || ''))
+        const gnd = decrypt(String(h.gender_encrypted || ''))
+        if (dob) dogumlar.set(h.id, dob)
+        if (gnd === 'male' || gnd === 'female') cinsiyetler.set(h.id, gnd)
+      } catch { /* doğum/cinsiyet çözülemedi — persentil hesaplanmaz */ }
     }
   }
   const notes = rows.map((row) => {
@@ -147,6 +181,9 @@ export async function GET(req: NextRequest) {
       hastaOzeti: String(row.hasta_ozeti || ''),
       basvuruYakinmasi: String(row.basvuru_yakinmasi || ''),
       vitaller: (row.vitaller && typeof row.vitaller === 'object') ? row.vitaller : null,
+      buyumePersentilleri: session.patient_id
+        ? buyumePersentilleriniHesapla(row.vitaller, dogumlar.get(String(session.patient_id)) || null, cinsiyetler.get(String(session.patient_id)) || null, row.created_at || null)
+        : null,
       receteOnerisi: Array.isArray(row.recete_onerisi) ? row.recete_onerisi : [],
       aiDegerlendirme: (row as { ai_degerlendirme?: string }).ai_degerlendirme || null,
       alarmBulgulari: Array.isArray(row.alarm_bulgulari) ? (row.alarm_bulgulari as string[]).map(String) : [],
