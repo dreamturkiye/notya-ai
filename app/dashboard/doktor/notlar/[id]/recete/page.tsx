@@ -162,13 +162,7 @@ export default function ReceteYazdirPage() {
       {/* Üst çubuk: tek büyük düğme (doktorun yolu) + küçük diğerleri */}
       <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
-        {yol === null ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ color: '#C9D4E3', fontFamily: 'system-ui', fontSize: 13 }}><b style={{ color: '#2DD4BF' }}>Ayşe:</b> Reçeteyi nasıl yazıyorsunuz? Bir kez söyleyin, aklımda tutayım.</span>
-            <button type="button" onClick={() => yolSec('kagit')} style={buyukDugme}>🖨️ Kâğıda yazdırıyorum</button>
-            <button type="button" onClick={() => yolSec('mbys')} style={{ ...buyukDugme, background: '#1F5F8B' }}>💻 Programa giriyorum (MBYS / Medula)</button>
-          </span>
-        ) : (
+        {yol !== null && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {yol === 'kagit' ? (
               <>
@@ -193,6 +187,17 @@ export default function ReceteYazdirPage() {
         <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '10px 14px', background: '#FFF7E6', border: '1px solid #F5C36A', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#5C3D00' }}>
           <div style={{ fontWeight: 700, marginBottom: 4 }}>Ayşe — imzalamadan önce:</div>
           {uyarilar.map((u, i) => <div key={i}>• {u}</div>)}
+        </div>
+      )}
+      {/* Kaan (2026-09-13): "buton yok" şikâyeti — iki büyük düğme üst çubukta başlıkla aynı satıra
+          sıkışıyor, ikincisi ekran dışında kalabiliyordu. Kendi tam genişlikte panelinde, net görünür. */}
+      {yol === null && (
+        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '14px 16px', background: '#0F1E33', border: '1px solid rgba(45,212,191,0.35)', borderRadius: 8, fontFamily: 'system-ui' }}>
+          <div style={{ color: '#C9D4E3', fontSize: 13, marginBottom: 10 }}><b style={{ color: '#2DD4BF' }}>Ayşe:</b> Reçeteyi nasıl yazıyorsunuz? Aşağıdan seçin, bir daha sormayayım.</div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => yolSec('kagit')} style={buyukDugme}>🖨️ Kâğıda yazdırıyorum</button>
+            <button type="button" onClick={() => yolSec('mbys')} style={{ ...buyukDugme, background: '#1F5F8B' }}>💻 Programa giriyorum (MBYS / Medula)</button>
+          </div>
         </div>
       )}
       {baslik.taslakMi && (

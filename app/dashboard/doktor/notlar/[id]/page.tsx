@@ -13,7 +13,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface NotVeri {
   not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
-  hasta: { ad: string };
+  hasta: { ad: string ; patientId: string | null };
   doktor: { ad: string };
   duzenlemeSayisi: number;
 }
@@ -80,7 +80,7 @@ export default function NotSayfasi() {
   return (
     <div style={{ minHeight: '100vh', background: '#0B1628', color: '#EDF1F7', fontFamily: 'system-ui' }}>
       <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0B1628', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <button type="button" onClick={() => router.back()} style={{ background: 'transparent', border: 'none', color: '#9FB3C8', cursor: 'pointer', fontSize: 14 }}>← Geri</button>
+        <button type="button" onClick={() => router.push(veri?.hasta.patientId ? `/dashboard/doktor/hastalar/${veri.hasta.patientId}` : '/dashboard/doktor')} style={{ background: 'transparent', border: 'none', color: '#9FB3C8', cursor: 'pointer', fontSize: 14 }}>← Geri</button>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: '#8FA0B5', fontWeight: 500 }}>· {not.specialty} · {trTarih(not.createdAt)}</span></div>
           <div style={{ fontSize: 12, color: onayli ? '#22C55E' : '#F59E0B' }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}{degisti ? ' · kaydedilmemiş değişiklik var' : ''}</div>

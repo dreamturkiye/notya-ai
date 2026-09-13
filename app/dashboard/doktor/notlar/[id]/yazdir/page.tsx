@@ -27,7 +27,7 @@ interface NotVeri {
     buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null;
   };
   hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string };
-  doktor: { ad: string; diplomaNo?: string };
+  doktor: { ad: string; diplomaNo?: string; ozelBaslikSatirlari?: string[]; ozelLogo?: string };
   duzenlemeSayisi: number;
 }
 
@@ -155,7 +155,12 @@ export default function NotYazdir() {
             <div style={{ font: '12px system-ui', color: '#444', textTransform: 'capitalize' }}>{not.specialty} · {trTarih(not.createdAt)} (TRT)</div>
             {/* Akış: Anamnez → Fizik Muayene → Tanı → Tedavi (Dr. Gökhan referansları) */}
           </div>
-          <div style={{ font: '12px system-ui', color: '#444' }}>{doktorUnvanli(doktor.ad)}</div>
+          <div style={{ textAlign: 'right' }}>
+            {doktor.ozelLogo && <img src={doktor.ozelLogo} alt="" style={{ height: 32, marginBottom: 4 }} />}
+            {doktor.ozelBaslikSatirlari && doktor.ozelBaslikSatirlari.length > 0
+              ? doktor.ozelBaslikSatirlari.map((s, i) => <div key={i} style={{ font: i === 0 ? '13px system-ui' : '11px system-ui', fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#111' : '#444' }}>{s}</div>)
+              : <div style={{ font: '12px system-ui', color: '#444' }}>{doktorUnvanli(doktor.ad)}</div>}
+          </div>
         </div>
 
         <table style={{ width: '100%', font: '12.5px system-ui', borderCollapse: 'collapse', marginBottom: 14 }}>
