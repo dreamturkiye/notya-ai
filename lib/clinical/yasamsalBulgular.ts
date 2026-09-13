@@ -10,6 +10,7 @@ export type VitalBag = {
   kilo?: string | number | null
   boy?: string | number | null
   ates?: string | number | null
+  basCevresi?: string | number | null // Kaan (2026-09-13): boyun yanına baş çevresi (pediatri sağlam çocuk muayenesi)
 }
 
 export type VitalLine = {
@@ -18,7 +19,7 @@ export type VitalLine = {
   value: string
 }
 
-const ORDER = ['tansiyon', 'nabiz', 'spo2', 'kilo', 'boy', 'ates'] as const
+const ORDER = ['tansiyon', 'nabiz', 'spo2', 'kilo', 'boy', 'basCevresi', 'ates'] as const
 
 function trNumber(n: number, maxFrac = 1): string {
   return n.toLocaleString('tr-TR', {
@@ -61,6 +62,12 @@ function formatOne(key: string, raw: string | number): VitalLine | null {
         key,
         label: 'Boy',
         value: typeof raw === 'number' ? `${trNumber(raw, 0)} cm` : /cm/i.test(String(raw)) ? String(raw) : `${raw} cm`,
+      }
+    case 'basCevresi':
+      return {
+        key,
+        label: 'Baş Çevresi',
+        value: typeof raw === 'number' ? `${trNumber(raw, 1)} cm` : /cm/i.test(String(raw)) ? String(raw) : `${raw} cm`,
       }
     case 'ates':
       return {
