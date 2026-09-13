@@ -68,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const { data: form } = await supabase
     .from('hasta_intake_formlari')
-    .select('id, durum, token_expires_at, patient_id')
+    .select('id, durum, token_expires_at, patient_id, brans')
     .eq('token_hash', tokenHash)
     .maybeSingle()
 
@@ -88,6 +88,24 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const dogruBeyanGerekli = Object.prototype.hasOwnProperty.call(yanitlar, 'dogruBeyan')
   if (yanitlar.kvkkOnay !== 'Kabul ediyorum' || (dogruBeyanGerekli && yanitlar.dogruBeyan !== 'Beyan ediyorum')) {
     return NextResponse.json({ error: 'KVKK onay\u0131 ve do\u011fru beyan i\u015faretlemesi olmadan form g\u00f6nderilemez.' }, { status: 400 })
+  }
+
+  // Kaan (2026-09-13): istemci dogrulamasi atlanabilir (dogrudan API cagrisi) - zorunlu ve desen
+  // kurallari sunucuda da uygulanir. TC kimlik: tam 11 hane.
+  {
+    const bolumler = coreBolumlerIcin(form.brans)
+    for (const bolum of bolumler) {
+      for (const alan of bolum.alanlar) {
+        if (alan.tur === 'bolum-basligi') continue
+        const deger = yanitlar[alan.id]
+        if (alan.zorunlu && (deger === undefined || deger === null || String(deger).trim() === '')) {
+          return NextResponse.json({ error: `"${alan.etiket}" alani zorunludur.` }, { status: 400 })
+        }
+        if (alan.desen && deger !== undefined && deger !== null && String(deger).trim() !== '' && !new RegExp(alan.desen).test(String(deger))) {
+          return NextResponse.json({ error: alan.desenHata || `"${alan.etiket}" alani gecersiz.` }, { status: 400 })
+        }
+      }
+    }
   }
 
   const { error } = await supabase

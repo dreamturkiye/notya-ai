@@ -35,6 +35,8 @@ export interface IntakeAlan {
   secenekler?: string[]
   placeholder?: string
   yardim?: string
+  desen?: string
+  desenHata?: string
   dikey?: boolean   // seçenekler alt alta (Kaan 2026-09-10: alerji yok/var + açıklama)
 }
 
@@ -47,7 +49,8 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
   {
     baslik: 'Kimlik Bilgileri',
     alanlar: [
-      { id: 'tcKimlik', etiket: 'T.C. Kimlik Numarası', tur: 'text', zorunlu: true, placeholder: '11 haneli T.C. Kimlik No', yardim: 'Yalnızca doktorunuzla paylaşılır, KVKK kapsamında şifrelenerek saklanır.' },
+      // Kaan (2026-09-13): "ne az ne de fazla" — tam 11 hane zorunlu. desen istemci+sunucuda uygulanır.
+      { id: 'tcKimlik', etiket: 'T.C. Kimlik Numarası', tur: 'text', zorunlu: true, placeholder: '11 haneli T.C. Kimlik No', desen: '^[0-9]{11}$', desenHata: 'T.C. Kimlik Numarası tam 11 haneli rakam olmalıdır.', yardim: 'Yalnızca doktorunuzla paylaşılır, KVKK kapsamında şifrelenerek saklanır.' },
       { id: 'ad', etiket: 'Adı', tur: 'text', zorunlu: true },
       { id: 'soyad', etiket: 'Soyadı', tur: 'text', zorunlu: true },
       { id: 'dogumTarihi', etiket: 'Doğum Tarihi', tur: 'date', zorunlu: true },
