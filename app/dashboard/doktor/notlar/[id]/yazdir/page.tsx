@@ -24,6 +24,7 @@ interface NotVeri {
     kritikBulgular?: string[]; alarmBulgulari?: string[];
     vitaller?: { kilo?: number | null; boy?: number | null; ates?: number | null; nabiz?: number | null; spo2?: number | null; tansiyon?: string | null } | null;
     hastaOzeti?: string; takipSuresi?: string;
+    buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null;
   };
   hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string };
   doktor: { ad: string; diplomaNo?: string };
@@ -111,6 +112,13 @@ export default function NotYazdir() {
   }
   const v = not.vitaller;
   const vitalParcalar = yasamsalBulguSatirlari(v).map((l) => `${l.label}: ${l.value}`);
+  // Kaan (2026-09-13): Neyzi persentilleri — API'den hazır gelir (türetilmiş, saklanmaz)
+  const bp = not.buyumePersentilleri;
+  const persentilParcalar: string[] = [];
+  if (bp?.kilo) persentilParcalar.push(`Kilo ${bp.kilo}`);
+  if (bp?.boy) persentilParcalar.push(`Boy ${bp.boy}`);
+  if (bp?.basCevresi) persentilParcalar.push(`Baş çevresi ${bp.basCevresi}`);
+  if (bp?.vki) persentilParcalar.push(`VKİ ${bp.vki}${bp.vkiSinif ? ` (${bp.vkiSinif})` : ''}`);
 
   return (
     <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif' }}>
@@ -162,6 +170,9 @@ export default function NotYazdir() {
             </tr>
             {vitalParcalar.length > 0 && (
               <tr><td colSpan={2} style={{ padding: '3px 0' }}><strong>{YASAMSAL_BULGULAR_BASLIK}:</strong> {vitalParcalar.join(' · ')}</td></tr>
+            )}
+            {persentilParcalar.length > 0 && (
+              <tr><td colSpan={2} style={{ padding: '3px 0', color: '#0F766E' }}><strong>Büyüme Persentili (Neyzi standartları):</strong> {persentilParcalar.join(' · ')}</td></tr>
             )}
           </tbody>
         </table>
