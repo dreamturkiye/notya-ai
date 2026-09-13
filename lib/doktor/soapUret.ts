@@ -88,7 +88,7 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
   "Alışkanlıklar: ..." (beslenme; erişkinde sigara/alkol)
   Veli beyanı olduğu belirtilerek; transkriptte olmayan alt bölümü HİÇ yazma.
 - objektif: FİZİK MUAYENE sistematiğinde yaz: "Genel durum: ..." ile başla (bilinç/koopere-oryante, distres, cilt-mukoza: solukluk/ikter/siyanoz, hidrasyon). Sonra YALNIZ muayene edilen sistemler, klasik düzen ve terminolojiyle — solunum (dinlemekle ral/ronküs/wheezing, eşit katılım), kardiyovasküler (S1-S2, üfürüm, periferik nabızlar, ödem), batın (inspeksiyon→oskültasyon→perküsyon→palpasyon sırasına saygılı: bağırsak sesleri, hassasiyet, defans/rebound, organomegali), KBB/baş-boyun, cilt, nörolojik (bilinç/GKS, kranyal sinirler, motor-duyu, DTR/Babinski, serebellar), kas-iskelet (ROM, şişlik/ısı artışı), GÜS (KVAH). Dikte edilen bulguyu uygun sistem başlığı altına, uygun terimle yerleştir; muayene edilmeyen sistemi HİÇ yazma. Varsa laboratuvar ve görüntüleme sonuçlarını "Laboratuvar: / Görüntüleme: ..." satırlarıyla en sona ekle.
-- vitaller: transkriptte GEÇEN değerleri çıkar (kilo kg, boy cm, ateş °C, nabız, SpO2, tansiyon); geçmeyeni null bırak.
+- vitaller: transkriptte GEÇEN değerleri çıkar (kilo kg, boy cm, baş çevresi cm — pediatri sağlam çocuk muayenesinde, ateş °C, nabız, SpO2, tansiyon); geçmeyeni null bırak.
 - degerlendirme: doktorun söylediği/koyduğu TANILARI yaz (numaralı problem listesi). YALNIZ
   doktorun ifade ettiği tanılar — kendi ayırıcı tanını, dışladığın tanıları, olasılık
   yorumunu BURAYA YAZMA (onlar aiDegerlendirme'ye gider).
@@ -111,7 +111,7 @@ SADECE geçerli JSON döndür:
   "basvuruYakinmasi": "",
   "soap": { "subjektif": "", "objektif": "", "degerlendirme": "", "plan": "" },
   "aiDegerlendirme": "",
-  "vitaller": { "kilo": null, "boy": null, "ates": null, "nabiz": null, "spo2": null, "tansiyon": null },
+  "vitaller": { "kilo": null, "boy": null, "basCevresi": null, "ates": null, "nabiz": null, "spo2": null, "tansiyon": null },
   "anamnez": "",
   "fizik_muayene": "",
   "tani": "",
