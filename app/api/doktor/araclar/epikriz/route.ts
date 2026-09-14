@@ -1,113 +1,153 @@
+/**
+ * NOTYA-EPIKRIZ-02 (Kaan 2026-09-14): "PDF tamamen hatalı — database adlarını gösteriyor."
+ * Kök sebep: hasta adı, doğum tarihi, tarihler, hekim adı hiç modele verilmiyordu — model
+ * standart epikriz başlığını doldururken bilmediği alanlara [HASTA ADI SOYADI] gibi yer
+ * tutucu yazıyordu. Çözüm: başlık ve imza artık AI'DAN GELMİYOR — gerçek veriden sunucuda
+ * deterministik kuruluyor (reçete başlığı/yazdır sayfasıyla aynı ilke). AI yalnız Tanı ve
+ * Tedavi + Taburcu Özeti'nin KLİNİK içeriğini üretiyor.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { groqChat } from '@/lib/dr-ayse/groq';
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize';
+import { decrypt } from '@/lib/security/encryption';
+import { hekimAdi } from '@/lib/doktor/hekimAdi';
 
 export const dynamic = 'force-dynamic';
 
 interface EpikrizRequest {
   hastaId: string;
   seansId?: string;
-  tumSeanslar?: boolean; // Kaan (2026-09-13): hastanın tüm geçmişini özetleyen kapsamlı epikriz
+  tumSeanslar?: boolean;
   ekBilgi?: string;
 }
 
+function coz(v: string | null | undefined): string {
+  if (!v) return '';
+  try { return decrypt(v); } catch { return ''; }
+}
+function trTarih(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? '' : d.toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
+}
+function yasHesapla(dogumIso: string | null): string {
+  if (!dogumIso) return '';
+  const d = new Date(dogumIso);
+  if (isNaN(d.getTime())) return '';
+  const simdi = new Date();
+  let ay = (simdi.getFullYear() - d.getFullYear()) * 12 + (simdi.getMonth() - d.getMonth());
+  if (simdi.getDate() < d.getDate()) ay -= 1;
+  return ay < 24 ? `${Math.max(0, ay)} aylık` : `${Math.floor(ay / 12)} yaşında`;
+}
+function cinsiyetTr(ham: string): string {
+  return ham === 'female' ? 'Kız/Kadın' : ham === 'male' ? 'Erkek' : 'Belirtilmemiş';
+}
 
+/** Ad/doğum/cinsiyet/branş/hekim — gerçek veriden, AI'ya hiç sormadan kurulan başlık. */
+async function baslikKur(
+  supabase: SupabaseClient, doktorId: string, patientId: string, branş: string, tarihIso: string,
+): Promise<string> {
+  const [{ data: hasta }, hekim] = await Promise.all([
+    supabase.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', patientId).maybeSingle(),
+    hekimAdi(supabase, doktorId),
+  ]);
+  let adSoyad = '';
+  try { const n = JSON.parse(coz(hasta?.name_encrypted)); adSoyad = [n.ad, n.soyad].filter(Boolean).join(' '); } catch { /* ad çözülemedi */ }
+  const dogumIso = coz(hasta?.dob_encrypted) || null;
+  const cinsiyet = cinsiyetTr(coz(hasta?.gender_encrypted));
+  const tarih = trTarih(tarihIso) || trTarih(new Date().toISOString());
+
+  const satirlar = [
+    adSoyad ? `Ad Soyad: ${adSoyad}` : null,
+    dogumIso ? `Doğum Tarihi: ${trTarih(dogumIso)} (${yasHesapla(dogumIso)})` : null,
+    `Cinsiyet: ${cinsiyet}`,
+    `Müracaat / Taburcu Tarihi: ${tarih}`,
+    `Kliniği: ${branş || 'Pediatri'}`,
+    hekim ? `Hekim: ${hekim}` : null,
+  ].filter(Boolean);
+  return satirlar.join('\n');
+}
+
+function imzaKur(hekim: string, branş: string, tarihIso: string): string {
+  const satirlar = [
+    hekim || 'Uzm. Dr.',
+    branş ? `${branş} Uzmanı` : '',
+    `Tarih: ${trTarih(tarihIso) || trTarih(new Date().toISOString())}`,
+  ].filter(Boolean);
+  return satirlar.join('\n');
+}
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { global: { fetch: (u: RequestInfo | URL, o?: RequestInit) => fetch(u, { ...o, cache: 'no-store' }) } }
     );
-
     const body: EpikrizRequest = await request.json();
     const { hastaId, seansId, tumSeanslar, ekBilgi } = body;
-
     if (!hastaId || (!seansId && !tumSeanslar)) {
-      return NextResponse.json(
-        { hata: 'Hasta ID ve seans ID (veya tüm seanslar seçeneği) zorunludur.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ hata: 'Hasta ID ve seans ID (veya tüm seanslar seçeneği) zorunludur.' }, { status: 400 });
     }
-
     const { data: { user }, error: authError } = await supabase.auth.getUser(
       request.headers.get('Authorization')?.replace('Bearer ', '') || ''
     );
-
     if (authError || !user) {
-      return NextResponse.json(
-        { hata: 'Yetkilendirme başarısız.' },
-        { status: 401 }
-      );
+      return NextResponse.json({ hata: 'Yetkilendirme başarısız.' }, { status: 401 });
     }
 
-    // Kaan (2026-09-13): "tüm seansları özetleyecek şekilde bir seçenek olmalı" — hastanın ilk
-    // geldiğinden bu yana tüm vizitleri, tanıları (sağlam çocuk + geçirdiği hastalıklar, tarihli),
-    // aşı karnesi, kullanılan ilaç/takviyeler. hastaDosyasiniDerle zaten bunu derliyor (Ayşe'ye
-    // Danış'ta kullanılan aynı fonksiyon) — burada epikriz formatına dönüştürülüyor.
     if (tumSeanslar) {
-      const { hastaDosyasiniDerle } = await import('@/lib/doktor/hastaDosyaDerleyici')
-      const dosya = await hastaDosyasiniDerle(supabase, user.id, hastaId)
-      if (!dosya) return NextResponse.json({ hata: 'Hasta dosyası bulunamadı.' }, { status: 404 })
+      const { hastaDosyasiniDerle } = await import('@/lib/doktor/hastaDosyaDerleyici');
+      const dosya = await hastaDosyasiniDerle(supabase, user.id, hastaId);
+      if (!dosya) return NextResponse.json({ hata: 'Hasta dosyası bulunamadı.' }, { status: 404 });
 
-      const kapsamliSystem = `Türkiye Sağlık Bakanlığı standart epikriz formatında, hastanın İLK GELİŞİNDEN BU YANA TÜM İZLEMİNİ özetleyen kapsamlı bir epikriz yaz. Sadece JSON döndür: {"hastaBilgileri":"...","taniVeTedavi":"...","taburcuOzeti":"..."}
-"hastaBilgileri" içinde: takip süresi (ilk-son vizit tarihi), toplam vizit sayısı.
+      const hekim = await hekimAdi(supabase, user.id);
+      const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, 'Pediatri', new Date().toISOString());
+      const kapsamliSystem = `Türkiye Sağlık Bakanlığı standart epikriz formatında, hastanın İLK GELİŞİNDEN BU YANA TÜM İZLEMİNİ özetleyen kapsamlı bir epikriz yaz. Sadece JSON döndür: {"taniVeTedavi":"...","taburcuOzeti":"..."}
+BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor.
 "taniVeTedavi" içinde SIRAYLA: (1) Geliş tanıları ve tarihleri — sağlam çocuk/rutin kontroller ile geçirilen hastalıkları AYRI listele; (2) Aşı karnesi — uygulanan aşılar ve tarihleri; (3) Kullanılan ilaç/takviyeler (geçmiş ve güncel, tarihleriyle).
-"taburcuOzeti" içinde: genel klinik seyir, 3-5 cümlelik özet.
-Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok" yaz.`
-      const kapsamliUser = `${dosya}\n\nEk bilgi: ${ekBilgi || ''}`
-      const { text: guvenliKapsamli, map: kapsamliMap } = pseudonymize(kapsamliUser)
-      assertNoTckn(guvenliKapsamli, 'epikriz-kapsamli')
+"taburcuOzeti" içinde: genel klinik seyir, takip süresi, toplam vizit sayısı, 3-5 cümlelik özet.
+Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok" yaz.`;
+      const kapsamliUser = `${dosya}\n\nEk bilgi: ${ekBilgi || ''}`;
+      const { text: guvenliKapsamli, map: kapsamliMap } = pseudonymize(kapsamliUser);
+      assertNoTckn(guvenliKapsamli, 'epikriz-kapsamli');
       const rawKapsamli = await groqChat(
-        [
-          { role: 'system', content: kapsamliSystem },
-          { role: 'user', content: guvenliKapsamli },
-        ],
+        [{ role: 'system', content: kapsamliSystem }, { role: 'user', content: guvenliKapsamli }],
         { temperature: 0.2, jsonMode: true, maxTokens: 3000 }
-      )
-      let parsedKapsamli: { hastaBilgileri?: string; taniVeTedavi?: string; taburcuOzeti?: string }
+      );
+      let parsedKapsamli: { taniVeTedavi?: string; taburcuOzeti?: string };
       try {
-        parsedKapsamli = restoreDeep(JSON.parse(rawKapsamli), kapsamliMap)
+        const temiz = rawKapsamli.replace(/```json\n?|\n?```/g, '').trim();
+        parsedKapsamli = restoreDeep(JSON.parse(temiz), kapsamliMap);
       } catch {
-        return NextResponse.json({ hata: 'AI yanıtı geçersiz format' }, { status: 502 })
+        console.error('[epikriz-kapsamli] JSON parse başarısız, ham metin:', rawKapsamli.slice(0, 500));
+        return NextResponse.json({ hata: 'Epikriz taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
       }
       return NextResponse.json({
-        hastaBilgileri: parsedKapsamli.hastaBilgileri || '',
+        hastaBilgileri,
         taniVeTedavi: parsedKapsamli.taniVeTedavi || '',
         taburcuOzeti: parsedKapsamli.taburcuOzeti || '',
-      })
+        imza: imzaKur(hekim, 'Pediatri', new Date().toISOString()),
+      });
     }
 
     const { data: note, error: noteError } = await supabase
-      .from('notes')
-      .select('*')
-      .eq('session_id', seansId)
-      .eq('doctor_id', user.id)
-      .single();
-
+      .from('notes').select('*, sessions!inner(patient_id, specialty, started_at)')
+      .eq('session_id', seansId).eq('doctor_id', user.id).single();
     if (noteError || !note) {
-      return NextResponse.json(
-        { hata: 'SOAP notu bulunamadı.' },
-        { status: 404 }
-      );
+      return NextResponse.json({ hata: 'SOAP notu bulunamadı.' }, { status: 404 });
     }
+    const seansBilgi = Array.isArray(note.sessions) ? note.sessions[0] : note.sessions;
+    const branş = seansBilgi?.specialty || 'Pediatri';
+    const tarihIso = seansBilgi?.started_at || note.created_at;
 
-    const { data: session, error: sessionError } = await supabase
-      .from('sessions')
-      .select('specialty,started_at')
-      .eq('id', seansId)
-      .single();
+    const hekim = await hekimAdi(supabase, user.id);
+    const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, branş, tarihIso);
 
-    if (sessionError || !session) {
-      return NextResponse.json(
-        { hata: 'Seans bilgisi bulunamadı.' },
-        { status: 404 }
-      );
-    }
-
-    const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"hastaBilgileri":"...","taniVeTedavi":"...","taburcuOzeti":"..."}`;
-
+    const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"taniVeTedavi":"...","taburcuOzeti":"..."}
+BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor. Bilmediğin bir alan için ASLA köşeli parantez içinde yer tutucu ([...]) yazma.`;
     const userPrompt = `SOAP notu:
 Subjektif: ${note.content_subjektif || ''}
 Objektif: ${note.content_objektif || ''}
@@ -116,39 +156,29 @@ Plan: ${note.content_plan || ''}
 İlaçlar: ${note.content_ilaclar || ''}
 ICD10: ${note.icd10_codes || ''}
 Ek bilgi: ${ekBilgi || ''}
-Hastanın specialty: ${session.specialty || 'genel'}`;
-
-    // NOTYA-PSEUDO-01: a SOAP note is free text — the patient is frequently named in it, and
-    // identifiers are pasted in from other systems. Strip before the border, restore after.
+Hastanın specialty: ${branş}`;
     const { text: guvenliPrompt, map: epikrizMap } = pseudonymize(userPrompt);
     assertNoTckn(guvenliPrompt, 'epikriz');
-
     const raw = await groqChat(
-      [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: guvenliPrompt },
-      ],
+      [{ role: 'system', content: systemPrompt }, { role: 'user', content: guvenliPrompt }],
       { temperature: 0.2, jsonMode: true, maxTokens: 3000 }
     );
-
-    let parsed: { hastaBilgileri?: string; taniVeTedavi?: string; taburcuOzeti?: string };
+    let parsed: { taniVeTedavi?: string; taburcuOzeti?: string };
     try {
-      // Placeholders go out, real values come back in — the doctor never sees [HASTA_1].
-      parsed = restoreDeep(JSON.parse(raw), epikrizMap);
+      const temiz = raw.replace(/```json\n?|\n?```/g, '').trim();
+      parsed = restoreDeep(JSON.parse(temiz), epikrizMap);
     } catch {
-      return NextResponse.json({ hata: 'AI yanıtı geçersiz format' }, { status: 502 });
+      console.error('[epikriz] JSON parse başarısız, ham metin:', raw.slice(0, 500));
+      return NextResponse.json({ hata: 'Epikriz taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
     }
-
     return NextResponse.json({
-      hastaBilgileri: parsed.hastaBilgileri || '',
+      hastaBilgileri,
       taniVeTedavi: parsed.taniVeTedavi || '',
       taburcuOzeti: parsed.taburcuOzeti || '',
+      imza: imzaKur(hekim, branş, tarihIso),
     });
   } catch (error) {
     console.error('Epikriz oluşturma hatası:', error);
-    return NextResponse.json(
-      { hata: 'Epikriz oluşturulurken bir hata oluştu.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ hata: 'Epikriz oluşturulurken bir hata oluştu.' }, { status: 500 });
   }
 }

@@ -1,18 +1,21 @@
 /**
  * Hekimin görünen adı — veli özeti/uyarılarda "Doktorunuz" yerine (Kaan 2026-09-10: "çok şık olur").
- * Unvan varsa onunla ("Dr. Gökhan Mamur"); ad yoksa boş döner ve model "doktorunuz" der.
+ *
+ * NOTYA-EPIKRIZ-02 (Kaan 2026-09-14) düzeltmesi: bu fonksiyon var olmayan sütunlar
+ * (first_name, last_name, title) sorguluyordu — PostgREST "column does not exist" hatası
+ * veriyordu, try/catch bunu yutup HER ZAMAN boş string döndürüyordu. Sessizce kırıktı;
+ * epikriz imza bloğunu kurarken fark edildi. Gerçek şema: users.full_name zaten "Dr. Ad
+ * Soyad" biçiminde tam isim tutuyor (unvan dahil), ayrı first/last_name yok.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export async function hekimAdi(sb: SupabaseClient, doctorId: string): Promise<string> {
   try {
-    const { data } = await sb.from('users').select('first_name, last_name, title, full_name').eq('id', doctorId).maybeSingle()
+    const { data } = await sb.from('users').select('full_name, unvan').eq('id', doctorId).maybeSingle()
     if (!data) return ''
-    const UNVAN = /^(?:prof|doç|doc|uzm|op|dr|dt)\.?$/i
-    const ad = [data.first_name, data.last_name].map((x) => String(x || '').trim()).filter(Boolean).join(' ')
-      || String(data.full_name || '').trim().split(/\s+/).filter((p) => !UNVAN.test(p)).join(' ')
-    if (!ad) return ''
-    const unvan = String(data.title || 'Dr.').trim()
-    return `${unvan} ${ad}`.replace(/\s+/g, ' ')
+    const tamAd = String(data.full_name || '').trim()
+    if (tamAd) return tamAd
+    const unvan = String(data.unvan || 'Dr.').trim()
+    return unvan
   } catch { return '' }
 }
