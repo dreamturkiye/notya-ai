@@ -120,6 +120,16 @@ export interface PortalTracking {
   sonVitalOzet?: string
 }
 
+export interface PortalBuyumeNoktasi { ay: number; deger: number; tarih: string }
+export interface PortalBuyumeSerisi { persentil: number; noktalar: { ay: number; deger: number }[] }
+export interface PortalBuyumeParametre { birim: string; egriler: PortalBuyumeSerisi[]; noktalar: PortalBuyumeNoktasi[] }
+export interface PortalBuyume {
+  dogumBilinmiyor: boolean
+  mevcutYasAy: number | null
+  cinsiyet: 'male' | 'female' | null
+  parametreler: { kilo?: PortalBuyumeParametre; boy?: PortalBuyumeParametre; basCevresi?: PortalBuyumeParametre; vki?: PortalBuyumeParametre | null }
+}
+
 export interface PortalBundle {
   summary: PortalSummary
   messages: PortalMessage[]
@@ -129,4 +139,5 @@ export interface PortalBundle {
   medicationHistory: PortalMedChange[]
   history: PortalHistory
   tracking: PortalTracking
+  buyume: PortalBuyume | null
 }

@@ -27,5 +27,6 @@ export function emptyPortalBundle(): PortalBundle {
       nabiz: [],
       spo2: [],
     },
+    buyume: null,
   }
 }
