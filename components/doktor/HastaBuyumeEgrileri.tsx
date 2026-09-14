@@ -1,10 +1,9 @@
 'use client';
 /**
- * NOTYA-BUYUME-EGRISI-02 — Büyüme Eğrileri sekmesi (Kaan 2026-09-14).
- * Neyzi standart persentil çizgileri (3/10/25/50/75/90/97) + hastanın kendi ölçümleri aynı
- * SVG grafikte. 0-2 yaş aylık, 2 yaş sonrası yıllık eksen etiketleri (tek sürekli ay ekseni
- * üzerinde, yoğunluk yaşa göre uyarlanır — iki ayrı grafik yerine tek okunaklı eksen).
- * VKİ yalnız 2 yaş ve üzeri. Kaynak: lib/clinical/buyumeEgrisi.ts (Neyzi 2015, doğrulanmış).
+ * NOTYA-BUYUME-EGRISI-02/03 — Büyüme Eğrileri sekmesi (Kaan 2026-09-14).
+ * Küçük kart görünümü + tıklayınca tam sayfa büyük görünüm (Geri + Önceki/Sonraki ile
+ * ebeveyne gösterim için gezinme). Neyzi standart persentil çizgileri + hastanın kendi
+ * ölçümleri. Kaynak: lib/clinical/buyumeEgrisi.ts (Neyzi 2015, doğrulanmış).
  */
 import { useEffect, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
@@ -26,9 +25,30 @@ function yasEtiketi(ay: number): string {
   const yil = Math.round(ay / 12);
   return `${yil}y`;
 }
+function yasMetniUzun(ay: number): string {
+  if (ay <= 0) return 'doğumda';
+  if (ay < 24) return `${Math.round(ay)} aylıkken`;
+  const yil = Math.floor(ay / 12); const kalanAy = Math.round(ay % 12);
+  return kalanAy > 0 ? `${yil} yaş ${kalanAy} aylıkken` : `${yil} yaşındayken`;
+}
 
-function Grafik({ veri, baslik, birim }: { veri: ParamVeri; baslik: string; birim: string }) {
-  const W = 640, H = 300, L = 46, R = 16, T = 16, B = 30;
+const RENK_50 = '#2DD4BF';
+const RENK_BAND_DIS = 'rgba(148,163,184,0.55)'; // 3/97
+const RENK_BAND_ORTA = 'rgba(94,234,212,0.55)'; // 10/90
+const RENK_BAND_IC = 'rgba(45,212,191,0.75)';   // 25/75
+const RENK_NOKTA = '#F59E0B';
+
+function bandRenk(persentil: number): string {
+  if (persentil === 50) return RENK_50;
+  if (persentil === 25 || persentil === 75) return RENK_BAND_IC;
+  if (persentil === 10 || persentil === 90) return RENK_BAND_ORTA;
+  return RENK_BAND_DIS;
+}
+
+/** Tek bir eğri — küçük kart (buyuk=false) veya tam sayfa (buyuk=true) aynı bileşenle. */
+function Grafik({ veri, birim, buyuk }: { veri: ParamVeri; birim: string; buyuk?: boolean }) {
+  const W = buyuk ? 1000 : 320, H = buyuk ? 520 : 190;
+  const L = buyuk ? 64 : 34, R = buyuk ? 28 : 10, T = buyuk ? 24 : 10, B = buyuk ? 52 : 22;
   const maxAy = Math.max(...veri.egriler.flatMap((s) => s.noktalar.map((n) => n.ay)), ...veri.noktalar.map((n) => n.ay), 6);
   const tumDegerler = [...veri.egriler.flatMap((s) => s.noktalar.map((n) => n.deger)), ...veri.noktalar.map((n) => n.deger)];
   let min = Math.min(...tumDegerler), max = Math.max(...tumDegerler);
@@ -37,55 +57,68 @@ function Grafik({ veri, baslik, birim }: { veri: ParamVeri; baslik: string; biri
   const x = (ay: number) => L + (ay / maxAy) * (W - L - R);
   const y = (v: number) => T + (1 - (v - min) / (max - min || 1)) * (H - T - B);
 
-  // Eksen etiketleri: 24 aya kadar 3 ayda bir, sonrası yıllık — 0-2 yaş aylık, 2 yaş sonrası yıllık
   const etiketler: number[] = [];
-  for (let a = 0; a <= Math.min(24, maxAy); a += 6) etiketler.push(a);
+  for (let a = 0; a <= Math.min(24, maxAy); a += (buyuk ? 3 : 6)) etiketler.push(a);
   for (let yil = 3; yil * 12 <= maxAy; yil++) etiketler.push(yil * 12);
   if (etiketler[etiketler.length - 1] < maxAy - 3) etiketler.push(Math.round(maxAy));
 
   const path = (n: EgriNoktasi[]) => n.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(p.ay).toFixed(1)},${y(p.deger).toFixed(1)}`).join(' ');
-  const renk50 = '#2DD4BF';
-  const bantRenk = 'rgba(45,212,191,0.35)';
+  const p50 = veri.egriler.find((s) => s.persentil === 50);
+  const alanYolu = p50 ? `${path(p50.noktalar)} L${x(p50.noktalar[p50.noktalar.length - 1].ay).toFixed(1)},${y(min).toFixed(1)} L${x(0).toFixed(1)},${y(min).toFixed(1)} Z` : '';
+  const uid = veri.birim.replace(/[^a-z]/gi, '');
 
   return (
-    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 14 }}>
-      <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8, fontSize: 14 }}>{baslik} <span style={{ fontWeight: 400, color: '#64748B', fontSize: 12 }}>({birim})</span></div>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={baslik} style={{ display: 'block' }}>
-        {[0, 0.25, 0.5, 0.75, 1].map((f, i) => {
-          const v = min + (max - min) * (1 - f);
-          return (
-            <g key={i}>
-              <line x1={L} x2={W - R} y1={T + f * (H - T - B)} y2={T + f * (H - T - B)} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-              <text x={L - 6} y={T + f * (H - T - B) + 3.5} textAnchor="end" fontSize="9.5" fill="#64748B">{Math.round(v * 10) / 10}</text>
-            </g>
-          );
-        })}
-        {etiketler.map((ay, i) => (
-          <text key={i} x={x(ay)} y={H - 8} textAnchor="middle" fontSize="9.5" fill="#64748B">{yasEtiketi(ay)}</text>
-        ))}
-        {veri.egriler.map((s) => (
-          <g key={s.persentil}>
-            <path d={path(s.noktalar)} fill="none" stroke={s.persentil === 50 ? renk50 : bantRenk} strokeWidth={s.persentil === 50 ? 2.4 : 1.2} strokeDasharray={s.persentil === 50 ? undefined : '3 3'} />
-            {s.noktalar.length > 0 && (
-              <text x={x(s.noktalar[s.noktalar.length - 1].ay) + 3} y={y(s.noktalar[s.noktalar.length - 1].deger) + 3} fontSize="9" fill={s.persentil === 50 ? renk50 : '#64748B'}>{s.persentil}.</text>
-            )}
-          </g>
-        ))}
-        {veri.noktalar.map((n, i) => (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} role="img" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id={`fill-${uid}${buyuk ? '-b' : ''}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={RENK_50} stopOpacity="0.16" />
+          <stop offset="100%" stopColor={RENK_50} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[0, 0.25, 0.5, 0.75, 1].map((f, i) => {
+        const v = min + (max - min) * (1 - f);
+        return (
           <g key={i}>
-            <circle cx={x(n.ay)} cy={y(n.deger)} r="4.5" fill="#F59E0B" stroke="#0B1628" strokeWidth="1.5">
-              <title>{`${yasEtiketi(n.ay)} — ${n.deger} ${birim} (${new Date(n.tarih).toLocaleDateString('tr-TR')})`}</title>
-            </circle>
+            <line x1={L} x2={W - R} y1={T + f * (H - T - B)} y2={T + f * (H - T - B)} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+            <text x={L - (buyuk ? 10 : 6)} y={T + f * (H - T - B) + 3.5} textAnchor="end" fontSize={buyuk ? 13 : 9.5} fill="#8FA0B5">{Math.round(v * 10) / 10}</text>
           </g>
-        ))}
-      </svg>
-    </div>
+        );
+      })}
+      {etiketler.map((ay, i) => (
+        <g key={i}>
+          <line x1={x(ay)} x2={x(ay)} y1={T} y2={H - B} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+          <text x={x(ay)} y={H - B + (buyuk ? 20 : 12)} textAnchor="middle" fontSize={buyuk ? 12.5 : 9} fill="#8FA0B5">{yasEtiketi(ay)}</text>
+        </g>
+      ))}
+      {alanYolu && <path d={alanYolu} fill={`url(#fill-${uid}${buyuk ? '-b' : ''})`} />}
+      {veri.egriler.map((s) => (
+        <g key={s.persentil}>
+          <path d={path(s.noktalar)} fill="none" stroke={bandRenk(s.persentil)} strokeWidth={s.persentil === 50 ? (buyuk ? 3.4 : 2.2) : (buyuk ? 1.8 : 1.1)} strokeDasharray={s.persentil === 50 ? undefined : (buyuk ? '5 4' : '3 3')} strokeLinecap="round" />
+          {s.noktalar.length > 0 && (
+            <text x={x(s.noktalar[s.noktalar.length - 1].ay) + 4} y={y(s.noktalar[s.noktalar.length - 1].deger) + 3} fontSize={buyuk ? 12 : 8.5} fontWeight={s.persentil === 50 ? 700 : 400} fill={bandRenk(s.persentil)}>{s.persentil}.</text>
+          )}
+        </g>
+      ))}
+      {veri.noktalar.map((n, i) => (
+        <g key={i}>
+          <circle cx={x(n.ay)} cy={y(n.deger)} r={buyuk ? 7 : 4} fill={RENK_NOKTA} stroke="#0B1628" strokeWidth={buyuk ? 2.5 : 1.5}>
+            <title>{`${yasEtiketi(n.ay)} — ${n.deger} ${birim} (${new Date(n.tarih).toLocaleDateString('tr-TR')})`}</title>
+          </circle>
+          {buyuk && (
+            <text x={x(n.ay)} y={y(n.deger) - 14} textAnchor="middle" fontSize={12} fontWeight={700} fill={RENK_NOKTA}>{n.deger}</text>
+          )}
+        </g>
+      ))}
+    </svg>
   );
 }
+
+const PARAM_BASLIK: Record<string, string> = { kilo: 'Kilo', boy: 'Boy', basCevresi: 'Baş Çevresi', vki: 'Vücut Kitle İndeksi' };
 
 export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }) {
   const [veri, setVeri] = useState<Yanit | null>(null);
   const [hata, setHata] = useState('');
+  const [buyukIndex, setBuyukIndex] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -104,23 +137,76 @@ export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }
   if (veri.dogumBilinmiyor) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Doğum tarihi veya cinsiyet kayıtlı değil — büyüme eğrisi çizilemiyor.</div>;
 
   const { kilo, boy, basCevresi, vki } = veri.parametreler;
+  const paramlar = ([['kilo', kilo], ['boy', boy], ['basCevresi', basCevresi], ['vki', vki]] as const).filter(([, v]) => !!v) as [string, ParamVeri][];
   const yasMetni = veri.mevcutYasAy != null ? (veri.mevcutYasAy < 24 ? `${Math.round(veri.mevcutYasAy)} aylık` : `${Math.floor(veri.mevcutYasAy / 12)} yaşında`) : '';
+
+  if (buyukIndex !== null && paramlar[buyukIndex]) {
+    const [anahtar, pVeri] = paramlar[buyukIndex];
+    const sonOlcum = pVeri.noktalar[pVeri.noktalar.length - 1];
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#080F1A', zIndex: 200, display: 'flex', flexDirection: 'column' }}>
+        <div className="buyume-buyuk-bas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: 10 }}>
+          <button type="button" onClick={() => setBuyukIndex(null)} style={{ background: 'transparent', border: 'none', color: '#9FB3C8', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>← Geri</button>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#EDF1F7' }}>{PARAM_BASLIK[anahtar]} Büyüme Eğrisi <span style={{ fontWeight: 400, color: '#64748B', fontSize: 14 }}>({pVeri.birim})</span></div>
+            <div style={{ fontSize: 13, color: '#8FA0B5', marginTop: 2 }}>{veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni} · Neyzi Türk çocukları standartları</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="button" disabled={buyukIndex === 0} onClick={() => setBuyukIndex((i) => (i! - 1 + paramlar.length) % paramlar.length)} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: buyukIndex === 0 ? '#475569' : '#EDF1F7', borderRadius: 8, padding: '8px 14px', cursor: buyukIndex === 0 ? 'default' : 'pointer', fontSize: 14 }}>‹ Önceki</button>
+            <button type="button" onClick={() => setBuyukIndex((i) => (i! + 1) % paramlar.length)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>Sonraki ›</button>
+          </div>
+        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, minHeight: 0 }}>
+          <div style={{ width: '100%', maxWidth: 1040 }}>
+            <Grafik veri={pVeri} birim={pVeri.birim} buyuk />
+          </div>
+        </div>
+        <div style={{ padding: '10px 24px 20px', textAlign: 'center', fontSize: 13, color: '#8FA0B5' }}>
+          <span style={{ color: RENK_NOKTA, fontWeight: 700 }}>●</span> Hastanın ölçümleri
+          <span style={{ margin: '0 10px', color: '#334155' }}>·</span>
+          <span style={{ color: RENK_50, fontWeight: 700 }}>—</span> 50. persentil
+          <span style={{ margin: '0 10px', color: '#334155' }}>·</span>
+          kesikli çizgiler 3 / 10 / 25 / 75 / 90 / 97. persentil bantları
+          {sonOlcum && <div style={{ marginTop: 6, color: '#64748B' }}>Son ölçüm: {sonOlcum.deger} {pVeri.birim}, {yasMetniUzun(sonOlcum.ay)} ({new Date(sonOlcum.tarih).toLocaleDateString('tr-TR')})</div>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ fontSize: 13, color: '#8FA0B5' }}>
-        Neyzi Türk çocukları büyüme standartları · {veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni}
-        {' · '}turuncu noktalar hastanın kendi muayene kayıtları, yeşil çizgi 50. persentil, kesikli çizgiler 3/10/25/75/90/97. persentil bantları.
+      <div style={{ fontSize: 13, color: '#8FA0B5', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <span>Neyzi Türk çocukları büyüme standartları · {veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
+          <span><span style={{ color: RENK_NOKTA, fontWeight: 700 }}>●</span> ölçüm</span>
+          <span><span style={{ color: RENK_50, fontWeight: 700 }}>—</span> 50p</span>
+          <span style={{ color: '#64748B' }}>┄ 3/10/25/75/90/97p</span>
+        </span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-        {kilo && <Grafik veri={kilo} baslik="Kilo" birim={kilo.birim} />}
-        {boy && <Grafik veri={boy} baslik="Boy" birim={boy.birim} />}
-        {basCevresi && <Grafik veri={basCevresi} baslik="Baş Çevresi" birim={basCevresi.birim} />}
-        {vki && <Grafik veri={vki} baslik="Vücut Kitle İndeksi" birim={vki.birim} />}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+        {paramlar.map(([anahtar, pVeri], i) => (
+          <button
+            key={anahtar}
+            type="button"
+            onClick={() => setBuyukIndex(i)}
+            className="buyume-karti"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: 16, textAlign: 'left', cursor: 'pointer', transition: 'transform .15s, border-color .15s, background .15s' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span style={{ fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>{PARAM_BASLIK[anahtar]} <span style={{ fontWeight: 400, color: '#64748B', fontSize: 12 }}>({pVeri.birim})</span></span>
+              <span style={{ fontSize: 11, color: '#2DD4BF' }}>Büyüt ⤢</span>
+            </div>
+            <Grafik veri={pVeri} birim={pVeri.birim} />
+          </button>
+        ))}
       </div>
       {!vki && (
         <div style={{ fontSize: 12, color: '#64748B' }}>Vücut Kitle İndeksi eğrisi 2 yaşından itibaren gösterilir.</div>
       )}
+      <style>{`
+        .buyume-karti:hover { border-color: rgba(45,212,191,0.4) !important; background: rgba(45,212,191,0.05) !important; transform: translateY(-2px); }
+        @media (max-width: 640px) { .buyume-buyuk-bas { justify-content: center !important; text-align: center; padding: 12px 14px !important; } }
+      `}</style>
     </div>
   );
 }
