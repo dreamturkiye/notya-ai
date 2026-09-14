@@ -81,6 +81,7 @@ DÜZENLEYEBİLECEĞİN ALANLAR ve TAM ANAHTARLARI (başka anahtar KULLANMA; İng
 - "icdKodlari" → dizi, her öğe {"code","description_tr","is_primary"} (ICD-10 önerileri)
 - "receteOnerisi" → dizi, her öğe {"ticariOrnek","etkenMadde","doz","kullanim","sure","sgkListesinde","not"} (Ayşe'nin reçete önerisi — doktorun kendi "ilaclar" listesinden AYRI)
 - "aiDegerlendirme" → metin (ayırıcı tanı/öneri yorumun — hastaya görünmez)
+BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, WHO referansı verme — bu hesap ayrı, doğrulanmış bir bölümde (Neyzi standartları) gösteriliyor. Doktor açıkça söylemediyse persentile dayalı bir tanı (ör. "obezite") yazma/ekleme.
 
 DOKTOR "notu yeniden değerlendir", "tanıya göre güncelle" gibi KAPSAMLI bir istek yaparsa ya da tanıyı/değerlendirmeyi değiştirdiyse: mevcut subjektif/objektif/degerlendirme/plan'ı SABİT kabul edip, buna göre icdKodlari, receteOnerisi, aiDegerlendirme, alarmBulgulari ve hastaOzeti'ni BAŞTAN, TUTARLI biçimde yeniden üret — eski tanıya göre kalmış ICD kodu veya öneri bırakma.
 Nabız/ateş gibi vital değişikliklerini HEM "vitaller" HEM de objektif metninde geçiyorsa objektif'te yap. "Doktorunuz" ifadesini hekim adıyla değiştirme isteği hastaOzeti ve alarmBulgulari alanlarını ilgilendirir.
