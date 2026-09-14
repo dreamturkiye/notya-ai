@@ -9,7 +9,6 @@ import { connectionErrorHelp, micPermissionHelp, isAndroid } from "@/lib/asistan
 import {
   PERSONAS,
   PERSONA_ORDER,
-  buildVoiceFirstMessage,
   buildVoiceSystemPrompt,
   type Persona,
   type PersonaId,
@@ -18,6 +17,7 @@ import { SPECIALTY_MAP } from "@/lib/doktor/specialties"
 import { formatColleagueTabLabel, formatColleagueDisplayName } from "@/lib/colleagueAddress"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAuth"
+import { address } from '@/lib/address'
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
@@ -194,12 +194,7 @@ export default function AsistanPage() {
         const hr = await fetch("/api/doktor/hafiza", { headers: { Authorization: `Bearer ${authToken}` } })
         if (hr.ok) hafiza = await hr.json()
       } catch { /* hafıza kritik değil */ }
-      // NOTYA-GUN-01: günün durumu varsa Ayşe'nin ilk sözü odur ("Günaydın Hocam, bugün 14 randevu...")
-      const firstMessage = hafiza.gun?.metin
-        ? (hafiza.karsilama && hafiza.karsilama.tanit
-            ? hafiza.gun.metin.replace(/\.\s/, `. Ben ${p.name}, ${p.title}. `)
-            : hafiza.gun.metin)
-        : buildVoiceFirstMessage(p, doctor, hafiza.karsilama || null)
+      const firstMessage = `Merhaba ${address(doctor || { firstName: 'Hocam' }, 'named')}. Nasıl yardımcı olabilirim?`
       const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
       const { signedUrl, voiceId } = await fetchSignedUrl(p)
 
