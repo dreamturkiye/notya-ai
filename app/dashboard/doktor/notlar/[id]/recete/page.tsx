@@ -161,7 +161,10 @@ export default function ReceteYazdirPage() {
 
       {/* Üst çubuk: tek büyük düğme (doktorun yolu) + küçük diğerleri */}
       <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-        <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <a href={`/dashboard/doktor/notlar/${params.id}/yazdir`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Geri</a>
+          <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
+        </span>
         {yol !== null && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {yol === 'kagit' ? (
