@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: existing } = await supabase
     .from('notes')
     .select(
-      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, created_at, sessions(patient_id)'
+      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, icd10_codes, recete_onerisi, ai_degerlendirme, created_at, sessions(patient_id)'
     )
     .eq('id', noteId)
     .eq('doctor_id', user.id)
@@ -106,6 +106,37 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       guncelleme.content_ilaclar = temiz
       loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'content_ilaclar', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
     }
+  }
+
+  // ICD-10 önerileri (dizi) — Ayşe tanı değişince yeniden üretebilir, doktor onaylar
+  const yeniIcd = duzenlemeler.icdKodlari
+  if (Array.isArray(yeniIcd)) {
+    const temiz = yeniIcd.map((it) => { const o = (it || {}) as Record<string, unknown>; return { code: String(o.code || '').trim(), description_tr: String(o.description_tr || o.description || '').trim(), is_primary: !!o.is_primary } }).filter((i) => i.code).slice(0, 15)
+    const eskiStr = JSON.stringify(existing.icd10_codes || [])
+    const yeniStr = JSON.stringify(temiz)
+    if (eskiStr !== yeniStr) {
+      guncelleme.icd10_codes = temiz
+      loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'icd10_codes', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
+    }
+  }
+
+  // Ayşe'nin reçete önerisi (dizi) — doktorun kendi "ilaclar" listesinden AYRI, yalnız öneri
+  const yeniOneri = duzenlemeler.receteOnerisi
+  if (Array.isArray(yeniOneri)) {
+    const temiz = yeniOneri.map((it) => { const o = (it || {}) as Record<string, unknown>; return { ticariOrnek: String(o.ticariOrnek || '').trim(), etkenMadde: String(o.etkenMadde || '').trim(), doz: String(o.doz || '').trim(), kullanim: String(o.kullanim || '').trim(), sure: String(o.sure || '').trim(), sgkListesinde: !!o.sgkListesinde, not: String(o.not || '').trim() } }).filter((i) => i.ticariOrnek).slice(0, 15)
+    const eskiStr = JSON.stringify(existing.recete_onerisi || [])
+    const yeniStr = JSON.stringify(temiz)
+    if (eskiStr !== yeniStr) {
+      guncelleme.recete_onerisi = temiz
+      loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'recete_onerisi', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
+    }
+  }
+
+  // Ayşe'nin değerlendirmesi (metin, hastaya görünmez) — tanı değişince yeniden üretilebilir
+  const yeniAiDeg = duzenlemeler.aiDegerlendirme
+  if (typeof yeniAiDeg === 'string' && yeniAiDeg.trim() && yeniAiDeg.trim() !== String(existing.ai_degerlendirme || '').trim()) {
+    guncelleme.ai_degerlendirme = yeniAiDeg.trim().slice(0, 4000)
+    loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'ai_degerlendirme', onceki: String(existing.ai_degerlendirme || '').slice(0, 2000), sonraki: yeniAiDeg.trim().slice(0, 2000) })
   }
 
   // Yaşamsal bulgular (JSON) — doktor İnceleme'de değiştirebilir; değişiklik öğrenme loguna da girer
