@@ -37,27 +37,53 @@ export default function AsistanPage() {
   const conversationRef = useRef<ActiveConversation | null>(null)
   const sureUyariRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sureSonRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sureBaslangicRef = useRef<number>(0)
+  const sureHedefDkRef = useRef<number>(60)
+  const sureHitapRef = useRef<string>("Hocam")
+  const [sureUzatmaGoster, setSureUzatmaGoster] = useState(false)
+  const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
+
   const sureTimerlariTemizle = () => {
     if (sureUyariRef.current) { clearTimeout(sureUyariRef.current); sureUyariRef.current = null }
     if (sureSonRef.current) { clearTimeout(sureSonRef.current); sureSonRef.current = null }
   }
-  const sureTimerlariBaslat = (named: string) => {
+  const sureUyariSesli = (named: string) => {
+    const uyari = `${named}, kayıt 5 dakika içinde otomatik olarak sonlanacak. Uzatmak isterseniz ekrandaki düğmeye basabilirsiniz.`
+    addMsg("ai", `⏱️ ${uyari}`)
+    try {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        const u = new SpeechSynthesisUtterance(uyari)
+        u.lang = "tr-TR"
+        window.speechSynthesis.speak(u)
+      }
+    } catch { /* sesli uyarı olmazsa yazılı uyarı yeterli */ }
+    setSureUzatmaGoster(true)
+  }
+  /** hedefDk: konuşma başından itibaren toplam dakika. Uyarı hedef-5'te, kapanış hedefte. */
+  const sureTimerlariKur = (hedefDk: number) => {
     sureTimerlariTemizle()
-    sureUyariRef.current = setTimeout(() => {
-      const uyari = `${named}, kayıt 5 dakika içinde otomatik olarak sonlanacak.`
-      addMsg("ai", `⏱️ ${uyari}`)
-      try {
-        if (typeof window !== "undefined" && "speechSynthesis" in window) {
-          const u = new SpeechSynthesisUtterance(uyari)
-          u.lang = "tr-TR"
-          window.speechSynthesis.speak(u)
-        }
-      } catch { /* sesli uyarı olmazsa yazılı uyarı yeterli */ }
-    }, 55 * 60 * 1000)
+    sureHedefDkRef.current = hedefDk
+    const gecenMs = Date.now() - sureBaslangicRef.current
+    const uyariMs = Math.max(0, (hedefDk - 5) * 60 * 1000 - gecenMs)
+    const sonMs = Math.max(0, hedefDk * 60 * 1000 - gecenMs)
+    sureUyariRef.current = setTimeout(() => sureUyariSesli(sureHitapRef.current), uyariMs)
     sureSonRef.current = setTimeout(() => {
-      addMsg("ai", "⏱️ 60 dakikalık süre doldu, görüşme otomatik olarak sonlandırıldı.")
+      setSureUzatmaGoster(false)
+      addMsg("ai", `⏱️ ${hedefDk} dakikalık süre doldu, görüşme otomatik olarak sonlandırıldı.`)
       conversationRef.current?.endSession().catch(() => { /* zaten kapanıyor olabilir */ })
-    }, 60 * 60 * 1000)
+    }, sonMs)
+  }
+  const sureTimerlariBaslat = (named: string) => {
+    sureHitapRef.current = named
+    sureBaslangicRef.current = Date.now()
+    setSureUzatmaGoster(false)
+    sureTimerlariKur(60)
+  }
+  const sureUzat = (dk: number) => {
+    const yeniHedef = Math.min(SURE_TAVAN_DK, sureHedefDkRef.current + dk)
+    sureTimerlariKur(yeniHedef)
+    setSureUzatmaGoster(false)
+    addMsg("ai", `⏱️ Süre ${yeniHedef} dakikaya uzatıldı.`)
   }
   const messagesEndRef = useRef<HTMLDivElement>(null)
   // auth via localStorage
@@ -342,6 +368,7 @@ export default function AsistanPage() {
         },
         onDisconnect: (details) => {
           sureTimerlariTemizle()
+          setSureUzatmaGoster(false)
           if (details.reason === "error") {
             const msg = details.message || ""
             if (usedFirstMessage && !retriedWithoutFirst && isFirstMessageOverrideError(msg)) {
@@ -547,6 +574,12 @@ export default function AsistanPage() {
           )}
           {statusLabel}
         </div>
+        {sureUzatmaGoster && (
+          <div style={{ padding: "10px 14px", background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 10, textAlign: "center", maxWidth: 280 }}>
+            <div style={{ fontSize: 12, color: "#FCD34D", marginBottom: 8 }}>Süre 5 dakika içinde dolacak</div>
+            <button type="button" onClick={() => sureUzat(30)} style={{ background: "#F59E0B", border: "none", color: "#1F2937", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+30 dakika uzat</button>
+          </div>
+        )}
         <div onClick={isActive ? () => void stopConversation() : () => void startConversation()}
           style={{ width: "80px", height: "80px", borderRadius: "50%", cursor: "pointer",
                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px",
