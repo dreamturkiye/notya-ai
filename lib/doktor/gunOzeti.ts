@@ -152,7 +152,7 @@ export function gunOzetiMetni(
     if (yakin && yogunGunler.includes(v.haftaGunu)) c.push(`${v.haftaGunu} — sizin yoğun gününüz, tempoyu ona göre tutarız.`)
     if (v.dunHasta > 0 && yakin) c.push(`Dün ${v.dunHasta} hasta baktık.`)
   } else if (faz === 'orta') {
-    c.push(`${named}, şu ana kadar ${v.bugunHasta} hasta${v.randevu.kalan ? `, kalan ${v.randevu.kalan} randevu` : ''}.`)
+    c.push(`${selamla(v.saatTRT)} ${named}. Şu ana kadar ${v.bugunHasta} hasta${v.randevu.kalan ? `, kalan ${v.randevu.kalan} randevu` : ''}.`)
   } else {
     c.push(`${selamla(v.saatTRT)} ${named}.`)
     c.push(v.bugunHasta > 0 ? `Bugün ${v.bugunHasta} hasta baktık.` : 'Bugün seans olmadı.')
