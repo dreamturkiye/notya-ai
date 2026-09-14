@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+        max_tokens: 2500,
         system: systemPrompt,
         messages: [{ role: 'user', content: guvenliMesaj }],
       }),
@@ -112,8 +112,13 @@ export async function POST(request: NextRequest) {
     try {
       parsedRecete = JSON.parse(temiz);
     } catch {
-      const bas = temiz.indexOf('{'); const son = temiz.lastIndexOf('}');
-      parsedRecete = JSON.parse(temiz.slice(bas, son + 1));
+      try {
+        const bas = temiz.indexOf('{'); const son = temiz.lastIndexOf('}');
+        parsedRecete = JSON.parse(temiz.slice(bas, son + 1));
+      } catch {
+        console.error('[erecete] JSON parse başarısız, ham metin:', temiz.slice(0, 500));
+        return NextResponse.json({ hata: 'Reçete taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
+      }
     }
     parsedRecete = restoreDeep(parsedRecete, receteMap) as Record<string, unknown>;
 
