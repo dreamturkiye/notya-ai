@@ -92,6 +92,9 @@ export default function IncelemePage() {
   const [alarmTaslak, setAlarmTaslak] = useState('');   // satır başına bir madde
   const [ozetTaslak, setOzetTaslak] = useState('');
   const [ilacTaslak, setIlacTaslak] = useState('');   // "Ad — doz — kullanım — süre", satır başına bir ilaç
+  const [icdTaslak, setIcdTaslak] = useState<IcdOner[]>([]);
+  const [receteTaslak, setReceteTaslak] = useState<ReceteOner[]>([]);
+  const [aiDegTaslak, setAiDegTaslak] = useState('');
   const [kMesajlar, setKMesajlar] = useState<KMesaj[]>([]);
   const [kGirdi, setKGirdi] = useState('');
   const [kBekliyor, setKBekliyor] = useState(false);
@@ -111,6 +114,9 @@ export default function IncelemePage() {
     setAlarmTaslak((note.alarmBulgulari || []).join('\n'));
     setOzetTaslak(note.hastaOzeti || '');
     setIlacTaslak((note.ilaclar || []).map((il) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
+    setIcdTaslak(note.icdKodlari || []);
+    setReceteTaslak(note.receteOnerisi || []);
+    setAiDegTaslak(note.aiDegerlendirme || '');
     setVitalTaslak(Object.fromEntries(Object.entries((note.vitaller || {}) as Record<string, unknown>).map(([k, v]) => [k, v == null ? '' : String(v)])));
     setKMesajlar([]);
     setKGirdi('');
@@ -134,7 +140,7 @@ export default function IncelemePage() {
       const res = await fetch('/api/doktor/not-konsult', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ noteId: note.id, taslak: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak) }, mesajlar: yeni }),
+        body: JSON.stringify({ noteId: note.id, taslak: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak), icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak }, mesajlar: yeni }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
@@ -151,6 +157,9 @@ export default function IncelemePage() {
       if (Array.isArray(dz.alarmBulgulari)) setAlarmTaslak((dz.alarmBulgulari as unknown[]).map(String).join('\n'));
       if (typeof dz.hastaOzeti === 'string') setOzetTaslak(dz.hastaOzeti as string);
       if (Array.isArray(dz.ilaclar)) setIlacTaslak((dz.ilaclar as unknown[]).map((it) => { const o = it as Record<string, unknown>; return [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' — ') }).join('\n'));
+      if (Array.isArray(dz.icdKodlari)) setIcdTaslak((dz.icdKodlari as unknown[]).map((it) => { const o = it as Record<string, unknown>; return { code: String(o.code || ''), description_tr: String(o.description_tr || o.description || ''), is_primary: !!o.is_primary } }).filter((k) => k.code));
+      if (Array.isArray(dz.receteOnerisi)) setReceteTaslak((dz.receteOnerisi as unknown[]).map((it) => { const o = it as Record<string, unknown>; return { ticariOrnek: String(o.ticariOrnek || ''), etkenMadde: String(o.etkenMadde || ''), doz: String(o.doz || ''), kullanim: String(o.kullanim || ''), sure: String(o.sure || ''), sgkListesinde: !!o.sgkListesinde, not: String(o.not || '') } }).filter((r) => r.ticariOrnek));
+      if (typeof dz.aiDegerlendirme === 'string' && dz.aiDegerlendirme.trim()) setAiDegTaslak(dz.aiDegerlendirme as string);
       if (Array.isArray(d.eylemler) && d.eylemler.length) {
         setEylemler((prev) => [...prev, ...(d.eylemler as Eylem[]).map((e) => ({ ...e, durum: 'oneri' as const }))]);
       }
@@ -247,7 +256,7 @@ export default function IncelemePage() {
       const res = await fetch(`/api/notes/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak) } } : {}),
+        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak), icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak } } : {}),
       });
 
       if (!res.ok) {
@@ -377,34 +386,38 @@ export default function IncelemePage() {
                           />
                         </div>
                       ))}
-                      {note.icdKodlari.length > 0 && (
-                        <div style={{ marginBottom: 10 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 5 }}>Tanı / ICD-10 önerileri <span style={{ fontWeight: 400, color: '#64748B' }}>(onayınıza tabi — otomatik yazılmaz)</span></div>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span>Tanı / ICD-10 önerileri <span style={{ fontWeight: 400, color: '#64748B' }}>(onayınıza tabi — otomatik yazılmaz)</span></span>
+                          {/* Kaan (2026-09-14): "tanı değişince ICD-10 ve öneriler de değişmeli, AI tüm notu yeniden değerlendirmeli" */}
+                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, 'Notu yeniden değerlendir: mevcut tanı/değerlendirmeye göre ICD-10 kodlarını, reçete önerini, klinik değerlendirmeni, evde dikkat maddelerini ve hasta özetini baştan, tutarlı biçimde güncelle.')} style={{ background: 'transparent', border: '1px solid rgba(245,158,11,0.4)', color: '#F59E0B', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>🔄 Notu AI ile yeniden değerlendir</button>
+                        </div>
+                        {icdTaslak.length > 0 ? (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            {note.icdKodlari.map((k, i2) => (
+                            {icdTaslak.map((k, i2) => (
                               <span key={i2} style={{ fontSize: 12, fontWeight: k.is_primary ? 700 : 500, padding: '4px 10px', borderRadius: 999, background: 'rgba(15,155,142,0.15)', color: '#2DD4BF', border: k.is_primary ? '1px solid #0F9B8E' : '1px solid transparent' }}>
                                 {k.code} · {k.description_tr || k.description || ''}
                               </span>
                             ))}
                           </div>
-                        </div>
-                      )}
+                        ) : <div style={{ fontSize: 12, color: '#64748B' }}>ICD-10 önerisi yok</div>}
+                      </div>
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>İlaçlar <span style={{ fontWeight: 400, color: '#64748B' }}>(her satır bir ilaç: Ad — doz — kullanım — süre · düzenlenebilir)</span></div>
                         <textarea value={ilacTaslak} onChange={(e) => setIlacTaslak(e.target.value)} rows={Math.max(2, ilacTaslak.split('\n').length)}
                           placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam"
                           style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#CBD5E1', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
                       </div>
-                      {note.aiDegerlendirme && note.aiDegerlendirme.trim() && (
+                      {aiDegTaslak.trim() && (
                         <div style={{ marginBottom: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 5 }}>Ayşe'nin değerlendirmesi <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — nota ve hastaya yansımaz, yalnız size)</span></div>
-                          <div style={{ fontSize: 13, color: '#CBD5E1' }}><HafifMarkdown metin={note.aiDegerlendirme} /></div>
+                          <div style={{ fontSize: 13, color: '#CBD5E1' }}><HafifMarkdown metin={aiDegTaslak} /></div>
                         </div>
                       )}
-                      {note.receteOnerisi.length > 0 && (
+                      {receteTaslak.length > 0 && (
                         <div style={{ marginBottom: 10, background: 'rgba(15,155,142,0.07)', border: '1px solid rgba(15,155,142,0.3)', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 5 }}>Ayşe'nin reçete önerisi <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — reçeteyi doktor yazar)</span></div>
-                          {note.receteOnerisi.map((r, i2) => (
+                          {receteTaslak.map((r, i2) => (
                             <div key={i2} style={{ fontSize: 13, color: '#CBD5E1', marginBottom: 3 }}>
                               • {[r.ticariOrnek, r.etkenMadde ? `(${r.etkenMadde})` : '', r.doz, r.kullanim, r.sure].filter(Boolean).join(' — ')}
                               {r.sgkListesinde && <span style={{ marginLeft: 6, fontSize: 11, color: '#22C55E' }}>SGK ✓</span>}

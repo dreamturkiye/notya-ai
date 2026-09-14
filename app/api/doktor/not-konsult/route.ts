@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { noteId, taslak, mesajlar } = body as {
     noteId?: string
-    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string }
+    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
     mesajlar?: Mesaj[]
   }
   if (!noteId || !Array.isArray(mesajlar) || mesajlar.length === 0) {
@@ -78,6 +78,11 @@ DÜZENLEYEBİLECEĞİN ALANLAR ve TAM ANAHTARLARI (başka anahtar KULLANMA; İng
 - "alarmBulgulari" → dizi (evde dikkat edilmesi gerekenler, her öğe bir madde)
 - "ilaclar" → dizi, her öğe {"ad","doz","kullanim","sure"} (doktorun ilaç listesi)
 - "hastaOzeti" → metin (veliye giden özet)
+- "icdKodlari" → dizi, her öğe {"code","description_tr","is_primary"} (ICD-10 önerileri)
+- "receteOnerisi" → dizi, her öğe {"ticariOrnek","etkenMadde","doz","kullanim","sure","sgkListesinde","not"} (Ayşe'nin reçete önerisi — doktorun kendi "ilaclar" listesinden AYRI)
+- "aiDegerlendirme" → metin (ayırıcı tanı/öneri yorumun — hastaya görünmez)
+
+DOKTOR "notu yeniden değerlendir", "tanıya göre güncelle" gibi KAPSAMLI bir istek yaparsa ya da tanıyı/değerlendirmeyi değiştirdiyse: mevcut subjektif/objektif/degerlendirme/plan'ı SABİT kabul edip, buna göre icdKodlari, receteOnerisi, aiDegerlendirme, alarmBulgulari ve hastaOzeti'ni BAŞTAN, TUTARLI biçimde yeniden üret — eski tanıya göre kalmış ICD kodu veya öneri bırakma.
 Nabız/ateş gibi vital değişikliklerini HEM "vitaller" HEM de objektif metninde geçiyorsa objektif'te yap. "Doktorunuz" ifadesini hekim adıyla değiştirme isteği hastaOzeti ve alarmBulgulari alanlarını ilgilendirir.
 Bir düzenleme yaptığında cevap metninde JSON gösterme; JSON yalnız zarfın kendisidir.
 
@@ -89,6 +94,9 @@ P: ${taslak?.plan || ''}
 Başvuru yakınması: ${taslak?.basvuruYakinmasi || not.basvuru_yakinmasi || ''}
 Evde dikkat (taslak): ${JSON.stringify(taslak?.alarmBulgulari || not.alarm_bulgulari || [])}
 Veli özeti (taslak): ${taslak?.hastaOzeti || not.hasta_ozeti || ''}
+İlaçlar (doktorun listesi, taslak): ${JSON.stringify(taslak?.ilaclar || [])}
+ICD-10 önerileri (taslak): ${JSON.stringify(taslak?.icdKodlari || not.icd10_codes || [])}
+Reçete önerisi (taslak): ${JSON.stringify(taslak?.receteOnerisi || not.recete_onerisi || [])}
 
 NOT EKLERİ: Vitaller: ${JSON.stringify(not.vitaller || {})} | ICD önerileri: ${JSON.stringify(not.icd10_codes || [])} | Reçete önerisi: ${JSON.stringify(not.recete_onerisi || [])} | Alarm bulguları: ${JSON.stringify(not.alarm_bulgulari || [])}
 ${klinikBaglam ? `\nHASTANIN KİMLİKSİZ DOSYA BAĞLAMI:\n${klinikBaglam}` : ''}
