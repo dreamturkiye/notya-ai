@@ -22,6 +22,7 @@ interface EpikrizSonuc {
   hastaBilgileri: string;
   taniVeTedavi: string;
   taburcuOzeti: string;
+  imza: string;
 }
 
 
@@ -156,7 +157,7 @@ export default function EpikrizPage() {
 
   const handleKopyala = () => {
     if (!sonuc) return;
-    const text = `${sonuc.hastaBilgileri}\n\n${sonuc.taniVeTedavi}\n\n${sonuc.taburcuOzeti}`;
+    const text = `${sonuc.hastaBilgileri}\n\n${sonuc.taniVeTedavi}\n\n${sonuc.taburcuOzeti}\n\n${sonuc.imza}`;
     navigator.clipboard.writeText(text);
   };
 
@@ -424,18 +425,20 @@ export default function EpikrizPage() {
                 padding: '28px',
                 color: '#fff'
               }}>
-                <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>Hasta Bilgileri</div>
-                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.5' }}>{sonuc.hastaBilgileri}</div>
+                <div style={{ marginBottom: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '16px 18px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: '#2DD4BF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hasta Bilgileri</div>
+                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{sonuc.hastaBilgileri}</div>
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>Tanı ve Tedavi</div>
-                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.5' }}>{sonuc.taniVeTedavi}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: '#2DD4BF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tanı ve Tedavi</div>
+                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.6' }}>
+                    <HafifMarkdown metin={sonuc.taniVeTedavi} />
+                  </div>
                 </div>
 
-                <div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>Taburcu Özeti</div>
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: '#2DD4BF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Taburcu Özeti</div>
                   <div style={{ 
                     color: '#CBD5E1', 
                     fontSize: '15px', 
@@ -443,6 +446,10 @@ export default function EpikrizPage() {
                   }}>
                     <HafifMarkdown metin={sonuc.taburcuOzeti} />
                   </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '18px' }}>
+                  <div style={{ color: '#8FA0B5', fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-line', textAlign: 'right' }}>{sonuc.imza}</div>
                 </div>
 
                 <div style={{ 
