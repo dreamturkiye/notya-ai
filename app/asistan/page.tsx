@@ -35,6 +35,30 @@ export default function AsistanPage() {
   const [authToken, setAuthToken] = useState<string | null>(null)
   const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
   const conversationRef = useRef<ActiveConversation | null>(null)
+  const sureUyariRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sureSonRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sureTimerlariTemizle = () => {
+    if (sureUyariRef.current) { clearTimeout(sureUyariRef.current); sureUyariRef.current = null }
+    if (sureSonRef.current) { clearTimeout(sureSonRef.current); sureSonRef.current = null }
+  }
+  const sureTimerlariBaslat = (named: string) => {
+    sureTimerlariTemizle()
+    sureUyariRef.current = setTimeout(() => {
+      const uyari = `${named}, kayıt 5 dakika içinde otomatik olarak sonlanacak.`
+      addMsg("ai", `⏱️ ${uyari}`)
+      try {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          const u = new SpeechSynthesisUtterance(uyari)
+          u.lang = "tr-TR"
+          window.speechSynthesis.speak(u)
+        }
+      } catch { /* sesli uyarı olmazsa yazılı uyarı yeterli */ }
+    }, 55 * 60 * 1000)
+    sureSonRef.current = setTimeout(() => {
+      addMsg("ai", "⏱️ 60 dakikalık süre doldu, görüşme otomatik olarak sonlandırıldı.")
+      conversationRef.current?.endSession().catch(() => { /* zaten kapanıyor olabilir */ })
+    }, 60 * 60 * 1000)
+  }
   const messagesEndRef = useRef<HTMLDivElement>(null)
   // auth via localStorage
 
@@ -308,6 +332,7 @@ export default function AsistanPage() {
         onConnect: () => {
           setStatus("listening")
           setErrorMsg("")
+          sureTimerlariBaslat(address(doctorProfile || { firstName: 'Hocam' }, 'named'))
           // When first_message override is active the agent speaks it and onMessage
           // adds the bubble once. Seeding here caused the doubled first text.
           // Fallback path (no override): seed personalized greeting in UI only.
@@ -316,6 +341,7 @@ export default function AsistanPage() {
           }
         },
         onDisconnect: (details) => {
+          sureTimerlariTemizle()
           if (details.reason === "error") {
             const msg = details.message || ""
             if (usedFirstMessage && !retriedWithoutFirst && isFirstMessageOverrideError(msg)) {
