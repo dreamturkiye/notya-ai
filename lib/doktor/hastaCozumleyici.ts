@@ -8,27 +8,35 @@
  * asistan hangisi olduğunu sorar; eşleşme yoksa normal sohbet sürer.
  *
  * Türkçe karakter düzleştirme ile "Cigdem" yazımı "Çiğdem" kaydını bulur.
+ *
+ * Kaan/Gökhan (2026-09-14): "doğum tarihini hatırlamak zor" — aynı isimli adaylar artık
+ * doğum tarihi + son geliş nedeniyle birlikte listelenir (sesBul route bunu okur); doktor
+ * doğum tarihiyle, SIRAYLA ("ikincisi"/"birinci hasta") veya son şikayetle seçebilir.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 
+export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
+
 export type HastaCozumu =
   | { tur: 'tek'; patientId: string; ad: string }
-  | { tur: 'coklu'; adaylar: string[] }
+  | { tur: 'coklu'; adaylar: CozumAday[] }
   | { tur: 'yok' }
 
 const TR_MAP: Record<string, string> = { 'ç': 'c', 'Ç': 'c', 'ğ': 'g', 'Ğ': 'g', 'ı': 'i', 'I': 'i', 'İ': 'i', 'ö': 'o', 'Ö': 'o', 'ş': 's', 'Ş': 's', 'ü': 'u', 'Ü': 'u' }
-
 function duzle(s: string): string {
   return s.replace(/[çÇğĞıIİöÖşŞüÜ]/g, (c) => TR_MAP[c] || c).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim()
 }
-
 function adCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
   try {
     const ham = decrypt(nameEncrypted)
     try { return String(JSON.parse(ham).ad || '') } catch { return ham }
   } catch { return '' }
+}
+function guvenliCoz(v: string | null | undefined): string {
+  if (!v) return ''
+  try { return decrypt(v) } catch { return '' }
 }
 
 /** dd.mm.yyyy / dd/mm/yyyy / dd-mm-yyyy — mesajda geçen bir doğum tarihini yakalar. */
@@ -39,13 +47,65 @@ function tarihCoz(mesaj: string): string | null {
   return `${yyyy}-${aa.padStart(2, '0')}-${gg.padStart(2, '0')}`
 }
 
+// Kaan/Gökhan (2026-09-14) düzeltmesi: "ikincisi" gibi ek almış hâller \b...\b tam kelime
+// eşleşmesini geçmiyordu. Ayrıca çıplak "bir"/"iki" gibi son derece yaygın kelimeleri sıra
+// göstergesi saymak tehlikeliydi ("bir tane hastam var" gibi cümlelerde yanlış tetiklenirdi).
+// Yalnız ORDINAL gövdelerle (önek eşleşmesi, ek toleranslı) veya tek başına rakamla eşleşir.
+const ORDINAL_GOVDE: [string, number][] = [
+  ['birinci', 0], ['ilk', 0],
+  ['ikinci', 1],
+  ['ucuncu', 2],
+  ['dorduncu', 3],
+  ['besinci', 4],
+]
+function siraCoz(mesaj: string): number | null {
+  const kelimeler = duzle(mesaj).split(' ')
+  for (const kelime of kelimeler) {
+    if (/^[1-5]$/.test(kelime)) return Number(kelime) - 1
+    for (const [govde, idx] of ORDINAL_GOVDE) {
+      if (kelime.startsWith(govde)) return idx
+    }
+  }
+  return null
+}
+
+function trTarih(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return isNaN(d.getTime()) ? '' : d.toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+/** Adayın son onaylı notundan kısa, sesli okunacak bir özet — "son şikayetle ayırt et" için. */
+async function sonZiyaretOzeti(supabase: SupabaseClient, patientId: string): Promise<string> {
+  const { data } = await supabase
+    .from('notes').select('basvuru_yakinmasi, content_degerlendirme, sessions!inner(patient_id)')
+    .eq('sessions.patient_id', patientId).not('approved_at', 'is', null)
+    .order('created_at', { ascending: false }).limit(1)
+  const n = data?.[0] as { basvuru_yakinmasi?: string | null; content_degerlendirme?: string | null } | undefined
+  const t = (n?.basvuru_yakinmasi || n?.content_degerlendirme || '').trim()
+  if (!t) return 'henüz muayene kaydı yok'
+  const ilkCumle = t.split(/(?<=[.!?])\s/)[0] || t
+  return ilkCumle.length > 90 ? `${ilkCumle.slice(0, 89)}…` : ilkCumle
+}
+
+async function adaylariZenginlestir(supabase: SupabaseClient, adaylar: { id: string; ad: string }[]): Promise<CozumAday[]> {
+  const { data: hastalar } = await supabase.from('patients').select('id, dob_encrypted').in('id', adaylar.map((a) => a.id))
+  const dobMap = new Map((hastalar || []).map((h) => [h.id, guvenliCoz(h.dob_encrypted)]))
+  const zengin = await Promise.all(adaylar.map(async (a) => ({
+    id: a.id, ad: a.ad,
+    dobMetin: trTarih(dobMap.get(a.id) || null),
+    ozet: await sonZiyaretOzeti(supabase, a.id),
+  })))
+  // Sıralı ve KARARLI: her çağrıda aynı sırada döner ki "ikincisi" tutarlı olsun
+  return zengin.sort((a, b) => a.id.localeCompare(b.id))
+}
+
 export async function hastaninSozunuCoz(
   supabase: SupabaseClient,
   doctorId: string,
   mesaj: string
 ): Promise<HastaCozumu> {
   const m = ' ' + duzle(mesaj) + ' '
-
   // "son hastam" / "az önceki hasta" / "en son gelen hasta"
   if (/ (son|az onceki|en son)( gelen| muayene ettigim)? hasta/.test(m)) {
     const { data } = await supabase
@@ -57,11 +117,9 @@ export async function hastaninSozunuCoz(
       if (p) return { tur: 'tek', patientId: p.id, ad: adCoz(p.name_encrypted) || 'son hasta' }
     }
   }
-
   const { data: hastalar } = await supabase
     .from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true).limit(500)
   if (!hastalar || hastalar.length === 0) return { tur: 'yok' }
-
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
   for (const h of hastalar) {
@@ -74,35 +132,34 @@ export async function hastaninSozunuCoz(
     if (parcalar.some((p) => m.includes(' ' + p + ' '))) kismi.push({ id: h.id, ad })
   }
 
-  if (tam.length === 1) return { tur: 'tek', patientId: tam[0].id, ad: tam[0].ad }
-  if (tam.length > 1) {
-    const daralan = await tarihleDaralt(supabase, tam, mesaj)
-    if (daralan) return daralan
-    return { tur: 'coklu', adaylar: tam.map((x) => x.ad) }
+  const cozAdaylar = async (adaylar: { id: string; ad: string }[]): Promise<HastaCozumu> => {
+    if (adaylar.length === 1) return { tur: 'tek', patientId: adaylar[0].id, ad: adaylar[0].ad }
+    if (adaylar.length === 0 || adaylar.length > 5) return { tur: 'yok' }
+    const zengin = await adaylariZenginlestir(supabase, adaylar)
+    // 1) Doğum tarihiyle daraltma
+    const tarih = tarihCoz(mesaj)
+    if (tarih) {
+      const { data: dobHam } = await supabase.from('patients').select('id, dob_encrypted').in('id', zengin.map((z) => z.id))
+      const eslesen = (dobHam || []).filter((h) => guvenliCoz(h.dob_encrypted).slice(0, 10) === tarih)
+      if (eslesen.length === 1) {
+        const aday = zengin.find((z) => z.id === eslesen[0].id)
+        if (aday) return { tur: 'tek', patientId: aday.id, ad: aday.ad }
+      }
+    }
+    // 2) Sırayla daraltma ("ikincisi", "2. hasta")
+    const sira = siraCoz(mesaj)
+    if (sira !== null && zengin[sira]) return { tur: 'tek', patientId: zengin[sira].id, ad: zengin[sira].ad }
+    // 3) Son ziyaret özetindeki bir kelimeyle daraltma (ör. "öksürük olan")
+    const mDuz = duzle(mesaj)
+    const kelimeEslesen = zengin.filter((z) => {
+      const ozetKelime = duzle(z.ozet).split(' ').filter((k) => k.length >= 4)
+      return ozetKelime.some((k) => mDuz.includes(k))
+    })
+    if (kelimeEslesen.length === 1) return { tur: 'tek', patientId: kelimeEslesen[0].id, ad: kelimeEslesen[0].ad }
+    return { tur: 'coklu', adaylar: zengin }
   }
-  if (kismi.length === 1) return { tur: 'tek', patientId: kismi[0].id, ad: kismi[0].ad }
-  if (kismi.length > 1 && kismi.length <= 5) {
-    const daralan = await tarihleDaralt(supabase, kismi, mesaj)
-    if (daralan) return daralan
-    return { tur: 'coklu', adaylar: kismi.map((x) => x.ad) }
-  }
-  return { tur: 'yok' }
-}
 
-async function tarihleDaralt(
-  supabase: SupabaseClient,
-  adaylar: { id: string; ad: string }[],
-  mesaj: string,
-): Promise<HastaCozumu | null> {
-  const tarih = tarihCoz(mesaj)
-  if (!tarih) return null
-  const { data: hastalar } = await supabase.from('patients').select('id, dob_encrypted').in('id', adaylar.map((a) => a.id))
-  const eslesen = (hastalar || []).filter((h) => {
-    try { return decrypt(String(h.dob_encrypted || '')).slice(0, 10) === tarih } catch { return false }
-  })
-  if (eslesen.length === 1) {
-    const aday = adaylar.find((a) => a.id === eslesen[0].id)
-    if (aday) return { tur: 'tek', patientId: aday.id, ad: aday.ad }
-  }
-  return null
+  if (tam.length > 0) return cozAdaylar(tam)
+  if (kismi.length > 0) return cozAdaylar(kismi)
+  return { tur: 'yok' }
 }
