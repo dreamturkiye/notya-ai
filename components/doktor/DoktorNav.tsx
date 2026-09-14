@@ -76,6 +76,15 @@ export default function DoktorNav() {
     setIsOpen(false);
   };
 
+  // Kaan/Gökhan (2026-09-14): "Uygulamadan nasıl çıkış yapılır?" — hiçbir yerde çıkış yoktu.
+  const handleCikis = () => {
+    if (typeof window !== 'undefined') {
+      const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || '';
+      if (key) localStorage.removeItem(key);
+    }
+    window.location.href = '/giris/doktor';
+  };
+
   const checkAuth = () => {
     const raw = getDoctorAccessToken(); // NOTYA-AUTH-01: presence check through the one session reader
     if (!raw) {
@@ -196,6 +205,19 @@ export default function DoktorNav() {
               </button>
             )
           })}
+          <button
+            onClick={handleCikis}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              width: '100%', textAlign: 'left', padding: '13px 14px',
+              color: '#F87171', fontSize: '15px', fontWeight: 500,
+              background: 'transparent', border: '1px solid transparent', borderTop: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: '10px', marginTop: 4, cursor: 'pointer',
+            }}
+          >
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#F87171', flexShrink: 0 }} />
+            <span style={{ flex: 1 }}>Çıkış Yap</span>
+          </button>
         </div>
       )}
     </nav>
