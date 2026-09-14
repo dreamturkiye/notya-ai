@@ -64,7 +64,7 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
           { role: 'system', content: kapsamliSystem },
           { role: 'user', content: guvenliKapsamli },
         ],
-        { temperature: 0.2, jsonMode: true }
+        { temperature: 0.2, jsonMode: true, maxTokens: 3000 }
       )
       let parsedKapsamli: { hastaBilgileri?: string; taniVeTedavi?: string; taburcuOzeti?: string }
       try {
@@ -128,7 +128,7 @@ Hastanın specialty: ${session.specialty || 'genel'}`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: guvenliPrompt },
       ],
-      { temperature: 0.2, jsonMode: true }
+      { temperature: 0.2, jsonMode: true, maxTokens: 3000 }
     );
 
     let parsed: { hastaBilgileri?: string; taniVeTedavi?: string; taburcuOzeti?: string };
