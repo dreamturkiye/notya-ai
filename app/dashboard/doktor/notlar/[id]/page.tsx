@@ -12,7 +12,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface NotVeri {
-  not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
+  not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
   hasta: { ad: string ; patientId: string | null };
   doktor: { ad: string };
   duzenlemeSayisi: number;
@@ -21,6 +21,12 @@ interface NotVeri {
 const VITAL = [['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['ates', 'Ateş', '°C'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const;
 const BOLUM = [['subjektif', 'Anamnez — Şikayet · Şikayetin Hikayesi · Özgeçmiş · Soygeçmiş'], ['objektif', 'Fizik Muayene / Bulgular'], ['degerlendirme', 'Değerlendirme — Ön Tanı / Ayırıcı Tanı'], ['plan', 'Tedavi · Tetkik · Kontrol']] as const;
 
+function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: string; sure: string }[] {
+  return metin.split('\n').map((satir) => satir.trim()).filter(Boolean).map((satir) => {
+    const p = satir.split(' — ').map((x) => x.trim())
+    return { ad: p[0] || '', doz: p[1] || '', kullanim: p[2] || '', sure: p[3] || '' }
+  }).filter((i) => i.ad)
+}
 function trTarih(iso: string | null): string { if (!iso) return ''; return new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
 const kutu: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 13.5, lineHeight: 1.6, padding: '10px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' };
@@ -36,6 +42,7 @@ export default function NotSayfasi() {
   const [taslak, setTaslak] = useState<Record<string, string>>({ subjektif: '', objektif: '', degerlendirme: '', plan: '' });
   const [alarm, setAlarm] = useState('');
   const [ozet, setOzet] = useState('');
+  const [ilac, setIlac] = useState('');   // "Ad — doz — kullanım — süre", satır başına bir ilaç
   const [durum, setDurum] = useState<'bos' | 'kaydediyor' | 'kaydedildi' | 'hata'>('bos');
   const [degisti, setDegisti] = useState(false);
 
@@ -52,6 +59,7 @@ export default function NotSayfasi() {
         setTaslak({ subjektif: j.not.subjektif || '', objektif: j.not.objektif || '', degerlendirme: j.not.degerlendirme || '', plan: j.not.plan || '' });
         setAlarm((j.not.alarmBulgulari || []).join('\n'));
         setOzet(j.not.hastaOzeti || '');
+        setIlac((j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
       } catch (e) { setHata(e instanceof Error ? e.message : 'Hata'); }
     })();
   }, [params.id]);
@@ -63,7 +71,7 @@ export default function NotSayfasi() {
     try {
       const t = await ensureDoctorAccessToken();
       const r = await fetch(`/api/notes/${params.id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ duzenlemeler: { ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozet } }) });
+        body: JSON.stringify({ duzenlemeler: { ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozet, ilaclar: ilacMetniniCoz(ilac) } }) });
       const j = await r.json();
       if (!r.ok || j.success === false) throw new Error(j.error || 'Onaylanamadı');
       setDurum('kaydedildi'); setDegisti(false);
@@ -133,6 +141,10 @@ export default function NotSayfasi() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{not.icdKodlari.map((c, i) => <span key={i} style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px' }}>{c.code}{c.description ? ` — ${c.description}` : ''}</span>)}</div>
           </div>
         )}
+        <div>
+          <div style={etiket}>İlaçlar <span style={{ fontWeight: 400, color: '#64748B' }}>(her satır bir ilaç: Ad — doz — kullanım — süre)</span></div>
+          <textarea value={ilac} onChange={(e) => isaretle(setIlac)(e.target.value)} rows={Math.max(2, ilac.split('\n').length)} placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam" style={kutu} />
+        </div>
         <div>
           <div style={etiket}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>(veliye/hastaya · her satır bir madde)</span></div>
           <textarea value={alarm} onChange={(e) => isaretle(setAlarm)(e.target.value)} rows={Math.max(3, alarm.split('\n').length)} style={kutu} />

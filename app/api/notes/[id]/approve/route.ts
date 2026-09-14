@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: existing } = await supabase
     .from('notes')
     .select(
-      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, created_at, sessions(patient_id)'
+      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, created_at, sessions(patient_id)'
     )
     .eq('id', noteId)
     .eq('doctor_id', user.id)
@@ -92,6 +92,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'alarm_bulgulari', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
     }
   }
+  // İlaçlar (dizi) — doktor İnceleme'de tamamen düzenleyebilir; onayda hasta dosyasına/portala
+  // bu liste aktarılır (nottanIlacAktar aşağıda content_ilaclar'ı yeniden okur).
+  const yeniIlaclar = duzenlemeler.ilaclar
+  if (Array.isArray(yeniIlaclar)) {
+    const temiz = yeniIlaclar
+      .map((it) => { const o = (it || {}) as Record<string, unknown>; return { ad: String(o.ad || '').trim(), doz: String(o.doz || '').trim(), kullanim: String(o.kullanim || '').trim(), sure: String(o.sure || '').trim() } })
+      .filter((i) => i.ad)
+      .slice(0, 30)
+    const eskiStr = JSON.stringify(existing.content_ilaclar || [])
+    const yeniStr = JSON.stringify(temiz)
+    if (eskiStr !== yeniStr) {
+      guncelleme.content_ilaclar = temiz
+      loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'content_ilaclar', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
+    }
+  }
+
   // Yaşamsal bulgular (JSON) — doktor İnceleme'de değiştirebilir; değişiklik öğrenme loguna da girer
   const yeniVital = duzenlemeler.vitaller
   if (yeniVital && typeof yeniVital === 'object' && !Array.isArray(yeniVital)) {

@@ -76,6 +76,7 @@ DÜZENLEYEBİLECEĞİN ALANLAR ve TAM ANAHTARLARI (başka anahtar KULLANMA; İng
 - "basvuruYakinmasi" → metin
 - "vitaller" → nesne, anahtarlar: tansiyon, nabiz, spo2, ates, kilo, boy (değerler metin, örn. {"nabiz":"100"})
 - "alarmBulgulari" → dizi (evde dikkat edilmesi gerekenler, her öğe bir madde)
+- "ilaclar" → dizi, her öğe {"ad","doz","kullanim","sure"} (doktorun ilaç listesi)
 - "hastaOzeti" → metin (veliye giden özet)
 Nabız/ateş gibi vital değişikliklerini HEM "vitaller" HEM de objektif metninde geçiyorsa objektif'te yap. "Doktorunuz" ifadesini hekim adıyla değiştirme isteği hastaOzeti ve alarmBulgulari alanlarını ilgilendirir.
 Bir düzenleme yaptığında cevap metninde JSON gösterme; JSON yalnız zarfın kendisidir.
