@@ -45,6 +45,17 @@ function cinsiyetTr(ham: string): string {
   return ham === 'female' ? 'Kız/Kadın' : ham === 'male' ? 'Erkek' : 'Belirtilmemiş';
 }
 
+/** Reçete sayfasında kaydedilen başlık (logo/adres/telefon/diploma no) — epikriz PDF'inde de aynı. */
+async function letterheadGetir(supabase: SupabaseClient, doktorId: string) {
+  const { data } = await supabase.from('users').select('recete_baslik').eq('id', doktorId).maybeSingle();
+  const rb = (data?.recete_baslik && typeof data.recete_baslik === 'object' ? data.recete_baslik : {}) as { satirlar?: string[]; logoDataUrl?: string; diplomaNo?: string };
+  return {
+    satirlar: Array.isArray(rb.satirlar) ? rb.satirlar.map(String).filter(Boolean) : [],
+    logoDataUrl: String(rb.logoDataUrl || ''),
+    diplomaNo: String(rb.diplomaNo || ''),
+  };
+}
+
 /** Ad/doğum/cinsiyet/branş/hekim — gerçek veriden, AI'ya hiç sormadan kurulan başlık. */
 async function baslikKur(
   supabase: SupabaseClient, doktorId: string, patientId: string, branş: string, tarihIso: string,
@@ -105,6 +116,7 @@ export async function POST(request: NextRequest) {
 
       const hekim = await hekimAdi(supabase, user.id);
       const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, 'Pediatri', new Date().toISOString());
+      const letterhead = await letterheadGetir(supabase, user.id);
       const kapsamliSystem = `Türkiye Sağlık Bakanlığı standart epikriz formatında, hastanın İLK GELİŞİNDEN BU YANA TÜM İZLEMİNİ özetleyen kapsamlı bir epikriz yaz. Sadece JSON döndür: {"taniVeTedavi":"...","taburcuOzeti":"..."}
 BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor.
 "taniVeTedavi" içinde SIRAYLA: (1) Geliş tanıları ve tarihleri — sağlam çocuk/rutin kontroller ile geçirilen hastalıkları AYRI listele; (2) Aşı karnesi — uygulanan aşılar ve tarihleri; (3) Kullanılan ilaç/takviyeler (geçmiş ve güncel, tarihleriyle).
@@ -130,6 +142,7 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
         taniVeTedavi: parsedKapsamli.taniVeTedavi || '',
         taburcuOzeti: parsedKapsamli.taburcuOzeti || '',
         imza: imzaKur(hekim, 'Pediatri', new Date().toISOString()),
+              letterhead,
       });
     }
 
@@ -145,6 +158,7 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
 
     const hekim = await hekimAdi(supabase, user.id);
     const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, branş, tarihIso);
+    const letterhead = await letterheadGetir(supabase, user.id);
 
     const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"taniVeTedavi":"...","taburcuOzeti":"..."}
 BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor. Bilmediğin bir alan için ASLA köşeli parantez içinde yer tutucu ([...]) yazma.`;
@@ -176,6 +190,7 @@ Hastanın specialty: ${branş}`;
       taniVeTedavi: parsed.taniVeTedavi || '',
       taburcuOzeti: parsed.taburcuOzeti || '',
       imza: imzaKur(hekim, branş, tarihIso),
+          letterhead,
     });
   } catch (error) {
     console.error('Epikriz oluşturma hatası:', error);
