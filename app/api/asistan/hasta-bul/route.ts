@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   try {
     const cozum = await hastaninSozunuCoz(supabase, doktorId, soz)
     if (cozum.tur === 'coklu') {
-      return NextResponse.json({ sonuc: `"${soz}" ismiyle birden fazla hasta var: ${cozum.adaylar.join(', ')}. Hangisini kastettiğinizi söyler misiniz?` })
+      return NextResponse.json({ sonuc: `"${soz}" ismiyle birden fazla hasta var: ${cozum.adaylar.join(', ')}. Doğum tarihini (gün.ay.yıl) söyler misiniz?` })
     }
     if (cozum.tur === 'yok') {
       return NextResponse.json({ sonuc: `Kayıtlarımda "${soz}" adında bir hasta bulamadım. Hasta adını kontrol eder misiniz?` })
