@@ -91,10 +91,18 @@ export default function IncelemePage() {
   const [vitalTaslak, setVitalTaslak] = useState<Record<string, string>>({});
   const [alarmTaslak, setAlarmTaslak] = useState('');   // satır başına bir madde
   const [ozetTaslak, setOzetTaslak] = useState('');
+  const [ilacTaslak, setIlacTaslak] = useState('');   // "Ad — doz — kullanım — süre", satır başına bir ilaç
   const [kMesajlar, setKMesajlar] = useState<KMesaj[]>([]);
   const [kGirdi, setKGirdi] = useState('');
   const [kBekliyor, setKBekliyor] = useState(false);
   const [eylemler, setEylemler] = useState<Eylem[]>([]);
+
+  function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: string; sure: string }[] {
+    return metin.split('\n').map((satir) => satir.trim()).filter(Boolean).map((satir) => {
+      const p = satir.split(' — ').map((x) => x.trim())
+      return { ad: p[0] || '', doz: p[1] || '', kullanim: p[2] || '', sure: p[3] || '' }
+    }).filter((i) => i.ad)
+  }
 
   const notuAc = (note: PendingNote) => {
     setAcikId(note.id);
@@ -102,6 +110,7 @@ export default function IncelemePage() {
     setBasvuruTaslak(note.basvuruYakinmasi || '');
     setAlarmTaslak((note.alarmBulgulari || []).join('\n'));
     setOzetTaslak(note.hastaOzeti || '');
+    setIlacTaslak((note.ilaclar || []).map((il) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
     setVitalTaslak(Object.fromEntries(Object.entries((note.vitaller || {}) as Record<string, unknown>).map(([k, v]) => [k, v == null ? '' : String(v)])));
     setKMesajlar([]);
     setKGirdi('');
@@ -125,7 +134,7 @@ export default function IncelemePage() {
       const res = await fetch('/api/doktor/not-konsult', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ noteId: note.id, taslak: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak }, mesajlar: yeni }),
+        body: JSON.stringify({ noteId: note.id, taslak: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak) }, mesajlar: yeni }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
@@ -141,6 +150,7 @@ export default function IncelemePage() {
       if (dz.vitaller && typeof dz.vitaller === 'object' && !Array.isArray(dz.vitaller)) setVitalTaslak((v) => ({ ...v, ...Object.fromEntries(Object.entries(dz.vitaller as Record<string, unknown>).map(([k, x]) => [k, String(x ?? '')])) }));
       if (Array.isArray(dz.alarmBulgulari)) setAlarmTaslak((dz.alarmBulgulari as unknown[]).map(String).join('\n'));
       if (typeof dz.hastaOzeti === 'string') setOzetTaslak(dz.hastaOzeti as string);
+      if (Array.isArray(dz.ilaclar)) setIlacTaslak((dz.ilaclar as unknown[]).map((it) => { const o = it as Record<string, unknown>; return [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' — ') }).join('\n'));
       if (Array.isArray(d.eylemler) && d.eylemler.length) {
         setEylemler((prev) => [...prev, ...(d.eylemler as Eylem[]).map((e) => ({ ...e, durum: 'oneri' as const }))]);
       }
@@ -237,7 +247,7 @@ export default function IncelemePage() {
       const res = await fetch(`/api/notes/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak } } : {}),
+        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak) } } : {}),
       });
 
       if (!res.ok) {
@@ -379,14 +389,12 @@ export default function IncelemePage() {
                           </div>
                         </div>
                       )}
-                      {note.ilaclar.length > 0 && (
-                        <div style={{ marginBottom: 10 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 5 }}>İlaçlar</div>
-                          {note.ilaclar.map((il, i2) => (
-                            <div key={i2} style={{ fontSize: 13, color: '#CBD5E1' }}>• {[il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')}</div>
-                          ))}
-                        </div>
-                      )}
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>İlaçlar <span style={{ fontWeight: 400, color: '#64748B' }}>(her satır bir ilaç: Ad — doz — kullanım — süre · düzenlenebilir)</span></div>
+                        <textarea value={ilacTaslak} onChange={(e) => setIlacTaslak(e.target.value)} rows={Math.max(2, ilacTaslak.split('\n').length)}
+                          placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam"
+                          style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#CBD5E1', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                      </div>
                       {note.aiDegerlendirme && note.aiDegerlendirme.trim() && (
                         <div style={{ marginBottom: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 5 }}>Ayşe'nin değerlendirmesi <span style={{ fontWeight: 400, color: '#64748B' }}>(öneridir — nota ve hastaya yansımaz, yalnız size)</span></div>
