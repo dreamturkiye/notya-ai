@@ -6,6 +6,8 @@ import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModalities'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { SPECIALTY_MAP } from '@/lib/doktor/specialties'
+import { persentilEgrileri, ayFarki } from '@/lib/clinical/buyumeEgrisi'
+import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
   PortalMedication,
@@ -300,6 +302,7 @@ export async function GET(
   results.sort((a, b) => (a.tarih < b.tarih ? 1 : -1))
   bundle.results = results
 
+  const buyumeHamNoktalar: { tarihIso: string; kilo: number | null; boy: number | null; basCevresi: number | null }[] = []
   // Tracking from latest notes with vitals
   for (const note of notesBySession.values()) {
     const v = note.vitaller
@@ -311,6 +314,10 @@ export async function GET(
     if (typeof v.kilo === 'number') bundle.tracking.kilo.push({ tarih, deger: v.kilo })
     if (typeof v.nabiz === 'number') bundle.tracking.nabiz.push({ tarih, deger: Number(v.nabiz) })
     if (typeof v.spo2 === 'number') bundle.tracking.spo2.push({ tarih, deger: Number(v.spo2) })
+    const boyN = typeof v.boy === 'number' ? v.boy : parseFloat(String(v.boy ?? '')) || null
+    const basN = typeof v.basCevresi === 'number' ? v.basCevresi : parseFloat(String(v.basCevresi ?? '')) || null
+    const kiloN = typeof v.kilo === 'number' ? v.kilo : null
+    if (kiloN || boyN || basN) buyumeHamNoktalar.push({ tarihIso: String(note.created_at || ''), kilo: kiloN, boy: boyN, basCevresi: basN })
   }
   if (bundle.tracking.tansiyon.length || bundle.tracking.kilo.length) {
     const lastBp = bundle.tracking.tansiyon[bundle.tracking.tansiyon.length - 1]
@@ -324,6 +331,40 @@ export async function GET(
       kilo: lastKilo?.deger ?? null,
     })
     if (ozet) bundle.tracking.sonVitalOzet = ozet
+  }
+
+  // Büyüme Eğrileri (Neyzi standartları) — doktor tarafındakiyle aynı hesap, hasta portalında da
+  {
+    const { data: hastaBuyume } = await sb.from('patients').select('dob_encrypted, gender_encrypted').eq('id', patientId).maybeSingle()
+    const dogumIso = hastaBuyume?.dob_encrypted ? (() => { try { return decrypt(String(hastaBuyume.dob_encrypted)) } catch { return null } })() : null
+    const cinsiyetHam = hastaBuyume?.gender_encrypted ? (() => { try { return decrypt(String(hastaBuyume.gender_encrypted)) } catch { return '' } })() : ''
+    const cinsiyet = cinsiyetHam === 'male' || cinsiyetHam === 'female' ? cinsiyetHam : null
+    if (dogumIso && cinsiyet) {
+      const mevcutYasAy = ayFarki(dogumIso) ?? 0
+      const ustSinir = Math.max(24, mevcutYasAy + 6)
+      const noktalar: Record<'kilo' | 'boy' | 'basCevresi' | 'vki', { ay: number; deger: number; tarih: string }[]> = { kilo: [], boy: [], basCevresi: [], vki: [] }
+      for (const n of buyumeHamNoktalar) {
+        const ay = ayFarki(dogumIso, n.tarihIso)
+        if (ay === null) continue
+        if (n.kilo != null) noktalar.kilo.push({ ay, deger: n.kilo, tarih: n.tarihIso })
+        if (n.boy != null) noktalar.boy.push({ ay, deger: n.boy, tarih: n.tarihIso })
+        if (n.basCevresi != null) noktalar.basCevresi.push({ ay, deger: n.basCevresi, tarih: n.tarihIso })
+        if (n.kilo != null && n.boy != null && ay >= 24) noktalar.vki.push({ ay, deger: Math.round((n.kilo / Math.pow(n.boy / 100, 2)) * 100) / 100, tarih: n.tarihIso })
+      }
+      bundle.buyume = {
+        dogumBilinmiyor: false,
+        mevcutYasAy,
+        cinsiyet,
+        parametreler: {
+          kilo: { birim: 'kg', egriler: persentilEgrileri('kilo', cinsiyet, ustSinir), noktalar: noktalar.kilo },
+          boy: { birim: 'cm', egriler: persentilEgrileri('boy', cinsiyet, ustSinir), noktalar: noktalar.boy },
+          basCevresi: { birim: 'cm', egriler: persentilEgrileri('basCevresi', cinsiyet, ustSinir), noktalar: noktalar.basCevresi },
+          vki: mevcutYasAy >= 24 || noktalar.vki.length > 0
+            ? { birim: 'kg/m²', egriler: persentilEgrileri('vki', cinsiyet, ustSinir).map((s) => ({ ...s, noktalar: s.noktalar.filter((n) => n.ay >= 24) })), noktalar: noktalar.vki }
+            : null,
+        },
+      }
+    }
   }
 
   // Messages from DB

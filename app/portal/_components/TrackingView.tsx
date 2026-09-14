@@ -9,6 +9,7 @@
  */
 import type { PortalBundle } from '@/lib/portal/types'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
+import { BuyumeEgrileriView } from './BuyumeEgrileriView'
 
 type Nokta = { tarih: string; deger: number }
 type Seri = { ad: string; renk: string; noktalar: Nokta[] }
@@ -241,6 +242,7 @@ export function TrackingView({ data }: { data: PortalBundle }) {
               </table>
             </div>
           </SoftPanel>
+          {data.buyume && <BuyumeEgrileriView buyume={data.buyume} />}
         </>
       )}
     </div>
