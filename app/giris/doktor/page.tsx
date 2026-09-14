@@ -11,6 +11,7 @@ export default function Giris() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [sifremiUnuttum, setSifremiUnuttum] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -61,6 +62,12 @@ export default function Giris() {
           <div>
             <label style={{fontSize:'13px',color:'#94a3b8',marginBottom:'6px',display:'block'}}>Şifre</label>
             <input type='password' value={password} onChange={e=>setPassword(e.target.value)} placeholder='Şifrenizi girin' autoComplete='current-password' style={inp} />
+            <button type='button' onClick={() => setSifremiUnuttum((v) => !v)} style={{ background: 'transparent', border: 'none', color: '#60A5FA', fontSize: '12.5px', cursor: 'pointer', padding: '6px 0 0', textAlign: 'left' }}>Şifremi unuttum</button>
+            {sifremiUnuttum && (
+              <div style={{ marginTop: 6, fontSize: 12.5, color: '#94A3B8', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 12px' }}>
+                Şifre sıfırlama şu an otomatik değil — Notya ekibinizle iletişime geçin, sizin için sıfırlansın.
+              </div>
+            )}
           </div>
           {error && <div style={{background:'rgba(220,38,38,0.1)',border:'1px solid rgba(220,38,38,0.3)',borderRadius:'8px',padding:'10px',color:'#fca5a5',fontSize:'13px'}}>{error}</div>}
           <button type='submit' disabled={loading} style={{padding:'13px',background:'#2563EB',border:'none',borderRadius:'10px',color:'#fff',fontSize:'15px',fontWeight:600,cursor:'pointer',opacity:loading?0.7:1}}>

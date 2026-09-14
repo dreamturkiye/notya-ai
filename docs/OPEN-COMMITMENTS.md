@@ -24,6 +24,21 @@ Practical check for each PR that touches UI, before calling it finished:
   check is needed — but any new button, form, panel, badge, or page does need one.
 - Record what was checked (and any gap found) in the PR description / ledger, same as other work.
 
+## Open — self-serve şifre sıfırlama (2026-09-14)
+
+Login sayfasına "Şifremi unuttum" linki eklendi (PR pending) ama gerçek self-servis akış DEĞİL —
+tıklayınca "Notya ekibiyle iletişime geçin" diyor. Gerçek e-postalı sıfırlama şu an mümkün değil,
+iki bağımsız blokaj var:
+1. RESEND_API_KEY tanımlı değil — e-posta gönderme altyapısı (lib/mail/resend.ts) zaten var ve
+   hasta portalı bildirimlerinde kullanılıyor, yalnız anahtar eksik olduğu için no-op çalışıyor.
+2. Supabase projesinin Redirect URL allow-list'i yalnız localhost'a izin veriyor — production
+   domaini eklenmemiş; bu proje-seviyesi bir ayar (Supabase dashboard veya Management API personal
+   access token gerekir, servis anahtarıyla değiştirilemez).
+
+Kaan RESEND_API_KEY sağlarsa (Resend ücretsiz katmanı yeterli) ve/veya Supabase Redirect URL'lerine
+https://notya-ai.vercel.app eklerse, gerçek self-servis "şifremi unuttum → e-posta → link → yeni
+şifre" akışı bir oturumda kurulabilir.
+
 ## Waiting on the founder
 
 | Since | Item | Why it matters |
