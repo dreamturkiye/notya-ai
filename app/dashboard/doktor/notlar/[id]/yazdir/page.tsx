@@ -223,7 +223,7 @@ export default function NotYazdir() {
           <div className="not-bolum" style={{ background: '#F5F5F0', border: '1px solid #DDD', borderRadius: 6, padding: '10px 12px' }}>
             <div className="not-etiket">Hasta / Veli Özeti</div><div className="not-metin">{not.hastaOzeti}</div>
             <div style={{ fontSize: 10.5, color: '#777', marginTop: 6, lineHeight: 1.45 }}>
-              Bu özet, muayene sırasında yapılan sözlü bilgilendirmeyi hatırlatmak amacıyla hazırlanmış genel bir bilgilendirmedir; tıbbi rapor, reçete veya kesin tanı belgesi yerine geçmez. Tedavi kararı hekimin muayene bulgularına dayanır; belirtilerde değişiklik olursa hekiminize danışınız.
+              Bu özet, muayene sırasında yapılan sözlü bilgilendirmeyi hatırlatmak amacıyla hazırlanmış genel bir bilgilendirmedir; tıbbi rapor, reçete veya kesin tanı belgesi yerine geçmez. Teşhis ve tedavi kararı hastanın seyrine göre değişebilir. Bu tür durumlarda doktorunuza yeniden danışınız ve gerekirse acil servise gidiniz.
             </div>
           </div>
         )}
