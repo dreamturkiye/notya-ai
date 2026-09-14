@@ -13,6 +13,7 @@ import { groqChat } from '@/lib/dr-ayse/groq';
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize';
 import { decrypt } from '@/lib/security/encryption';
 import { hekimAdi } from '@/lib/doktor/hekimAdi';
+import { klinikAdi, resmiUzmanlikAdi } from '@/lib/doktor/bransAdlari';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +76,7 @@ async function baslikKur(
     dogumIso ? `Doğum Tarihi: ${trTarih(dogumIso)} (${yasHesapla(dogumIso)})` : null,
     `Cinsiyet: ${cinsiyet}`,
     `Müracaat / Taburcu Tarihi: ${tarih}`,
-    `Kliniği: ${branş || 'Pediatri'}`,
+    `Kliniği: ${klinikAdi(branş || 'pediatri')}`,
     hekim ? `Hekim: ${hekim}` : null,
   ].filter(Boolean);
   return satirlar.join('\n');
@@ -84,7 +85,7 @@ async function baslikKur(
 function imzaKur(hekim: string, branş: string, tarihIso: string): string {
   const satirlar = [
     hekim || 'Uzm. Dr.',
-    branş ? `${branş} Uzmanı` : '',
+    branş ? `${resmiUzmanlikAdi(branş)} Uzmanı` : '',
     `Tarih: ${trTarih(tarihIso) || trTarih(new Date().toISOString())}`,
   ].filter(Boolean);
   return satirlar.join('\n');
@@ -115,12 +116,12 @@ export async function POST(request: NextRequest) {
       if (!dosya) return NextResponse.json({ hata: 'Hasta dosyası bulunamadı.' }, { status: 404 });
 
       const hekim = await hekimAdi(supabase, user.id);
-      const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, 'Pediatri', new Date().toISOString());
+      const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, 'pediatri', new Date().toISOString());
       const letterhead = await letterheadGetir(supabase, user.id);
-      const kapsamliSystem = `Türkiye Sağlık Bakanlığı standart epikriz formatında, hastanın İLK GELİŞİNDEN BU YANA TÜM İZLEMİNİ özetleyen kapsamlı bir epikriz yaz. Sadece JSON döndür: {"taniVeTedavi":"...","taburcuOzeti":"..."}
+      const kapsamliSystem = `Türkiye Sağlık Bakanlığı standart epikriz formatında, PROFESYONEL ve ÖZLÜ, hastanın İLK GELİŞİNDEN BU YANA TÜM İZLEMİNİ özetleyen kapsamlı bir epikriz yaz. Sadece JSON döndür: {"taniVeTedavi":"...","taburcuOzeti":"..."}
 BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor.
-"taniVeTedavi" içinde SIRAYLA: (1) Geliş tanıları ve tarihleri — sağlam çocuk/rutin kontroller ile geçirilen hastalıkları AYRI listele; (2) Aşı karnesi — uygulanan aşılar ve tarihleri; (3) Kullanılan ilaç/takviyeler (geçmiş ve güncel, tarihleriyle).
-"taburcuOzeti" içinde: genel klinik seyir, takip süresi, toplam vizit sayısı, 3-5 cümlelik özet.
+ÜSLUP — anlatısal düzyazı DEĞİL, BÜYÜK HARF alt başlıklarla telegrafik: "taniVeTedavi" içinde SIRAYLA: TANI VE TARİHLER (sağlam çocuk/rutin kontroller ile geçirilen hastalıkları AYRI listele), AŞI KARNESİ (uygulanan aşılar ve tarihleri), İLAÇ VE TAKVİYELER (geçmiş ve güncel, tarihleriyle). Ölçüm/vital tekrarı yapma, yalnız klinik önemi olanı an.
+"taburcuOzeti" 3-4 cümleyi geçmesin: genel klinik seyir, takip süresi, toplam vizit sayısı — telegrafik.
 Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok" yaz.`;
       const kapsamliUser = `${dosya}\n\nEk bilgi: ${ekBilgi || ''}`;
       const { text: guvenliKapsamli, map: kapsamliMap } = pseudonymize(kapsamliUser);
@@ -141,7 +142,7 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
         hastaBilgileri,
         taniVeTedavi: parsedKapsamli.taniVeTedavi || '',
         taburcuOzeti: parsedKapsamli.taburcuOzeti || '',
-        imza: imzaKur(hekim, 'Pediatri', new Date().toISOString()),
+        imza: imzaKur(hekim, 'pediatri', new Date().toISOString()),
               letterhead,
       });
     }
@@ -153,15 +154,21 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
       return NextResponse.json({ hata: 'SOAP notu bulunamadı.' }, { status: 404 });
     }
     const seansBilgi = Array.isArray(note.sessions) ? note.sessions[0] : note.sessions;
-    const branş = seansBilgi?.specialty || 'Pediatri';
+    const branş = seansBilgi?.specialty || 'pediatri';
     const tarihIso = seansBilgi?.started_at || note.created_at;
 
     const hekim = await hekimAdi(supabase, user.id);
     const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, branş, tarihIso);
     const letterhead = await letterheadGetir(supabase, user.id);
 
-    const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"taniVeTedavi":"...","taburcuOzeti":"..."}
-BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor. Bilmediğin bir alan için ASLA köşeli parantez içinde yer tutucu ([...]) yazma.`;
+    const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında, PROFESYONEL ve ÖZLÜ yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"taniVeTedavi":"...","taburcuOzeti":"..."}
+BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor. Bilmediğin bir alan için ASLA köşeli parantez içinde yer tutucu ([...]) yazma.
+ÜSLUP — standart Türk epikriz belgesi gibi, anlatısal/gevşek düzyazı DEĞİL:
+- "taniVeTedavi" içinde BÜYÜK HARF alt başlıklar kullan: TANI (ICD-10 kodlarıyla, numaralı), ÖZGEÇMİŞ (yalnız klinik açıdan anlamlıysa — doğum bilgileri gibi rutin veriyi tek cümleyle geç), FİZİK MUAYENE (yalnız ANORMAL/dikkat çekici bulgular; "her sistem normal" tek satır yeterli), UYGULANAN TARAMA/AŞI, TEDAVİ VE TAKVİYELER (numaralı, ilaç adı+doz+kullanım), YÖNLENDİRMELER.
+- Kilo/boy/vital gibi ölçümleri BURADA TEKRAR ETME — bunlar zaten Hasta Bilgileri'nde/notta kayıtlı; yalnız KLİNİK ÖNEMİ olan değeri (ör. anormal VKİ, ateş yüksekliği) bir kez, kısaca an.
+- "Anne beyanına göre çocuğun genel sağlık durumu iyi olup..." gibi dolgu cümleler kurma; doğrudan bulguyu yaz.
+- "taburcuOzeti" 3-4 cümleyi geçmesin: klinik seyir + kontrol planı, telegrafik.
+Kısacası: bir meslektaşın hızlı okuyup anlayacağı, laf kalabalığı olmayan bir belge — dergi makalesi değil.`;
     const userPrompt = `SOAP notu:
 Subjektif: ${note.content_subjektif || ''}
 Objektif: ${note.content_objektif || ''}
