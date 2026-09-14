@@ -14,6 +14,8 @@ import HastaIntake from '@/components/doktor/HastaIntake';
 import HastaAsilar from '@/components/doktor/HastaAsilar';
 import HastaKonsult from '@/components/doktor/HastaKonsult';
 import HastaBuyumeEgrileri from '@/components/doktor/HastaBuyumeEgrileri';
+import HastaMchat from '@/components/doktor/HastaMchat';
+import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
@@ -61,7 +63,7 @@ export default function HastaProfilPage() {
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
 
-  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', "Ayşe'ye Danış"];
+  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış"];
 
   useEffect(() => {
     if (!patientId) return;
@@ -286,7 +288,9 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 6 && <HastaIlaclar patientId={patientId} />}
         {!loading && !error && activeTab === 7 && <HastaIntake patientId={patientId} />}
         {!loading && !error && activeTab === 8 && <HastaAsilar patientId={patientId} />}
-        {!loading && !error && activeTab === 9 && <HastaKonsult patientId={patientId} />}
+        {!loading && !error && activeTab === 9 && <HastaMchat patientId={patientId} />}
+        {!loading && !error && activeTab === 10 && <HastaGelisimTaramasi patientId={patientId} />}
+        {!loading && !error && activeTab === 11 && <HastaKonsult patientId={patientId} />}
       </div>
     </div>
   );
