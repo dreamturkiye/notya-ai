@@ -31,6 +31,14 @@ function adCoz(nameEncrypted: string | null): string {
   } catch { return '' }
 }
 
+/** dd.mm.yyyy / dd/mm/yyyy / dd-mm-yyyy — mesajda geçen bir doğum tarihini yakalar. */
+function tarihCoz(mesaj: string): string | null {
+  const m = mesaj.match(/\b(\d{1,2})[.\/\-](\d{1,2})[.\/\-](\d{4})\b/)
+  if (!m) return null
+  const [, gg, aa, yyyy] = m
+  return `${yyyy}-${aa.padStart(2, '0')}-${gg.padStart(2, '0')}`
+}
+
 export async function hastaninSozunuCoz(
   supabase: SupabaseClient,
   doctorId: string,
@@ -67,8 +75,34 @@ export async function hastaninSozunuCoz(
   }
 
   if (tam.length === 1) return { tur: 'tek', patientId: tam[0].id, ad: tam[0].ad }
-  if (tam.length > 1) return { tur: 'coklu', adaylar: tam.map((x) => x.ad) }
+  if (tam.length > 1) {
+    const daralan = await tarihleDaralt(supabase, tam, mesaj)
+    if (daralan) return daralan
+    return { tur: 'coklu', adaylar: tam.map((x) => x.ad) }
+  }
   if (kismi.length === 1) return { tur: 'tek', patientId: kismi[0].id, ad: kismi[0].ad }
-  if (kismi.length > 1 && kismi.length <= 5) return { tur: 'coklu', adaylar: kismi.map((x) => x.ad) }
+  if (kismi.length > 1 && kismi.length <= 5) {
+    const daralan = await tarihleDaralt(supabase, kismi, mesaj)
+    if (daralan) return daralan
+    return { tur: 'coklu', adaylar: kismi.map((x) => x.ad) }
+  }
   return { tur: 'yok' }
+}
+
+async function tarihleDaralt(
+  supabase: SupabaseClient,
+  adaylar: { id: string; ad: string }[],
+  mesaj: string,
+): Promise<HastaCozumu | null> {
+  const tarih = tarihCoz(mesaj)
+  if (!tarih) return null
+  const { data: hastalar } = await supabase.from('patients').select('id, dob_encrypted').in('id', adaylar.map((a) => a.id))
+  const eslesen = (hastalar || []).filter((h) => {
+    try { return decrypt(String(h.dob_encrypted || '')).slice(0, 10) === tarih } catch { return false }
+  })
+  if (eslesen.length === 1) {
+    const aday = adaylar.find((a) => a.id === eslesen[0].id)
+    if (aday) return { tur: 'tek', patientId: aday.id, ad: aday.ad }
+  }
+  return null
 }
