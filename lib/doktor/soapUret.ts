@@ -96,6 +96,7 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
 - plan: doktorun SÖYLEDİĞİ tedavi/tetkik/kontrolü numaralı yaz (TEDAVİ başta): 1) doktorun
   söylediği tedavi/ilaç, 2) doktorun istediği tetkik/görüntüleme, 3) kontrol zamanı. Doktorun
   söylemediği öneri/eğitim/ilaç EKLEME (onlar aiDegerlendirme/receteOnerisi'ne gider).
+- ilaclar: plan'daki TEDAVİ satırlarının (ilaç/takviye kalemleri) YAPILANDIRILMIŞ hâlidir — AYRI BİR KAYNAK DEĞİL. Her kalem için ad/doz/kullanım/süre plan'da yazdığınla BİREBİR AYNI ürün adı ve dozu taşımalı (ör. plan'da "Wellcare D vitamini damlası 1000ü/damla haftada 5 damla" yazdıysan, ilaclar'da da aynı ürün adı ve aynı doz olmalı — farklı bir marka/doz uydurma). Reçete doğrudan bu alandan üretilir; tutarsızlık yanlış ilaç yazılmasına yol açar.
 - aiDegerlendirme: SENİN klinik yorumun — hastaya GÖRÜNMEZ, yalnız doktora. Ayırıcı tanı
   düşünüşü, dışlanan tanılar, doktorun atlamış olabileceği noktalar, ek tetkik/tedavi önerisi.
   "Öneri (doktor onayına tabi):" diye başla. Doktorun kesin dediğini burada tekrar etme.
