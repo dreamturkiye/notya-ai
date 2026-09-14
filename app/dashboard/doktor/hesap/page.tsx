@@ -73,6 +73,19 @@ export default function HesabimPage() {
             {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Şifre değiştirildi' : 'Şifreyi Kaydet'}
           </button>
         </div>
+
+        {/* Kaan/Gökhan (2026-09-14): masaüstünde hamburger menüsü yok — çıkış burada da olsun */}
+        <button
+          type="button"
+          onClick={() => {
+            const key = Object.keys(localStorage).find((k) => k.includes('auth-token')) || '';
+            if (key) localStorage.removeItem(key);
+            window.location.href = '/giris/doktor';
+          }}
+          style={{ marginTop: 24, background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', color: '#F87171', borderRadius: 8, padding: '10px 18px', fontWeight: 600, cursor: 'pointer', width: '100%' }}
+        >
+          Çıkış Yap
+        </button>
       </div>
     </div>
   );
