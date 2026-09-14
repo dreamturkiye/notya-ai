@@ -23,6 +23,7 @@ interface EpikrizSonuc {
   taniVeTedavi: string;
   taburcuOzeti: string;
   imza: string;
+  letterhead?: { satirlar: string[]; logoDataUrl: string; diplomaNo: string };
 }
 
 
@@ -166,11 +167,12 @@ export default function EpikrizPage() {
   };
 
   const handlePDF = () => {
-    alert('PDF indirme başlatıldı (demo)');
+    window.print();
   };
 
   return (
-    <div style={{ 
+    <>
+    <div className="yazdirma-gizle" style={{ 
       minHeight: '100vh', 
       backgroundColor: '#060C18', 
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
@@ -510,5 +512,61 @@ export default function EpikrizPage() {
         }
       `}</style>
     </div>
+
+    {/* NOTYA-EPIKRIZ-03 (Kaan 2026-09-14): "cila = exceptional" — koyu uygulama arayüzü değil,
+        reçete/yazdır sayfalarıyla aynı kalitede ayrı bir beyaz kağıt belgesi yazdırılır/PDF olur.
+        Ekranda görünmez; yalnız @media print'te. */}
+    {sonuc && (
+      <div className="epikriz-kagit" style={{ display: 'none', background: 'white', color: '#111', fontFamily: 'Georgia, "Times New Roman", serif', maxWidth: 760, margin: '0 auto', padding: '36px 40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #111', paddingBottom: 14, marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '0.02em' }}>EPİKRİZ</div>
+            <div style={{ fontSize: 12, color: '#555' }}>Türkiye Sağlık Bakanlığı standart formatı</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            {sonuc.letterhead?.logoDataUrl && <img src={sonuc.letterhead.logoDataUrl} alt="" style={{ height: 40, marginBottom: 4 }} />}
+            {sonuc.letterhead?.satirlar && sonuc.letterhead.satirlar.length > 0 ? (
+              sonuc.letterhead.satirlar.map((satir, i) => (
+                <div key={i} style={{ font: i === 0 ? '14px Georgia, serif' : '11.5px Georgia, serif', fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#111' : '#555' }}>{satir}</div>
+              ))
+            ) : null}
+            {sonuc.letterhead?.diplomaNo && <div style={{ fontSize: 10.5, color: '#777', marginTop: 2 }}>Diploma No: {sonuc.letterhead.diplomaNo}</div>}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#111', borderBottom: '1px solid #ccc', paddingBottom: 4, marginBottom: 8 }}>Hasta Bilgileri</div>
+          <div style={{ fontSize: 13.5, lineHeight: 1.8, whiteSpace: 'pre-line' }}>{sonuc.hastaBilgileri}</div>
+        </div>
+
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#111', borderBottom: '1px solid #ccc', paddingBottom: 4, marginBottom: 8 }}>Tanı ve Tedavi</div>
+          <div style={{ fontSize: 13.5, lineHeight: 1.7 }}><HafifMarkdown metin={sonuc.taniVeTedavi} karanlik={false} /></div>
+        </div>
+
+        <div style={{ marginBottom: 30 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#111', borderBottom: '1px solid #ccc', paddingBottom: 4, marginBottom: 8 }}>Taburcu Özeti</div>
+          <div style={{ fontSize: 13.5, lineHeight: 1.7 }}><HafifMarkdown metin={sonuc.taburcuOzeti} karanlik={false} /></div>
+        </div>
+
+        <div style={{ borderTop: '1px solid #333', paddingTop: 14, marginTop: 40 }}>
+          <div style={{ fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-line', textAlign: 'right' }}>{sonuc.imza}</div>
+        </div>
+
+        <div style={{ fontSize: 10, color: '#999', marginTop: 30, borderTop: '1px solid #eee', paddingTop: 10 }}>
+          Bu epikriz, Notya AI klinik asistanı tarafından oluşturulan bir taslaktır; hekimin muayene bulgularına ve onayına tabidir.
+        </div>
+
+        <style>{`
+          @media print {
+            .yazdirma-gizle { display: none !important; }
+            .epikriz-kagit { display: block !important; }
+            body { -webkit-print-color-adjust: exact; background: white !important; }
+            @page { size: A4; margin: 16mm; }
+          }
+        `}</style>
+      </div>
+    )}
+    </>
   );
 }
