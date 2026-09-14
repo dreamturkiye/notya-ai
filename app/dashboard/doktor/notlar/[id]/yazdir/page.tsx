@@ -37,6 +37,12 @@ function doktorUnvanli(ad: string): string {
   return /^(dr|doç|doc|prof|uzm|op)\.?\s/i.test(t) ? t : `Dr. ${t}`
 }
 
+function satirBasiNumarala(metin: string): string {
+  return metin.replace(/(^|[^\n])(\d+)\.\s+(?=[A-ZÇĞİÖŞÜ])/g, (esleme, onceki, sayi) =>
+    onceki === '' ? `${sayi}. ` : `${onceki}\n${sayi}. `
+  )
+}
+
 function trTarih(iso?: string | null): string {
   if (!iso) return '';
   try { return new Date(iso).toLocaleString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }) } catch { return '' }
@@ -196,13 +202,13 @@ export default function NotYazdir() {
         {not.objektif && fizikParcala(not.objektif).map((b, bi) => (
           <div key={'fm' + bi} className="not-bolum"><div className="not-etiket">{b.baslik}</div><div className="not-metin">{b.metin}</div></div>
         ))}
-        {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">Tanı</div><div className="not-metin">{not.degerlendirme}</div></div>}
+        {not.degerlendirme && <div className="not-bolum"><div className="not-etiket">Tanı</div><div className="not-metin">{satirBasiNumarala(not.degerlendirme)}</div></div>}
         {Array.isArray(not.icdKodlari) && not.icdKodlari.length > 0 && (
           <div className="not-bolum"><div className="not-etiket">Tanı / ICD-10</div>
             <div className="not-metin">{not.icdKodlari.map((k) => `${k.code} — ${k.description_tr || k.description || ''}${k.is_primary ? ' (birincil)' : ''}`).join('; ')}</div>
           </div>
         )}
-        {not.plan && <div className="not-bolum"><div className="not-etiket">Tedavi</div><div className="not-metin">{not.plan}</div></div>}
+        {not.plan && <div className="not-bolum"><div className="not-etiket">Tedavi</div><div className="not-metin">{satirBasiNumarala(not.plan)}</div></div>}
         {Array.isArray(not.receteOnerisi) && not.receteOnerisi.length > 0 && (
           <div className="not-bolum"><div className="not-etiket">İlaç Önerileri (reçete doktor tarafından yazılır)</div>
             <div className="not-metin">{not.receteOnerisi.map((r, i) => `${i + 1}. ${[r.ticariOrnek, r.etkenMadde ? `(${r.etkenMadde})` : '', r.doz, r.kullanim, r.sure].filter(Boolean).join(' — ')}${r.sgkListesinde ? ' [SGK]' : ''}${r.not ? ` — Not: ${r.not}` : ''}`).join('\n')}</div>
