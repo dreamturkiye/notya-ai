@@ -138,6 +138,21 @@ export default function DoktorNav() {
                 {item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? ` (${mesajUnread})` : ''}
               </button>
             ))}
+            <button
+              onClick={handleCikis}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '9999px',
+                background: 'transparent',
+                border: '1px solid rgba(248,113,113,0.4)',
+                color: '#F87171',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              Çıkış Yap
+            </button>
           </div>
         )}
 
