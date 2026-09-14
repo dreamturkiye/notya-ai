@@ -18,7 +18,7 @@ interface NotVeri {
   duzenlemeSayisi: number;
 }
 
-const VITAL = [['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['ates', 'Ateş', '°C'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const;
+const VITAL = [['ates', 'Ateş', '°C'], ['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const;
 const BOLUM = [['subjektif', 'Anamnez — Şikayet · Şikayetin Hikayesi · Özgeçmiş · Soygeçmiş'], ['objektif', 'Fizik Muayene / Bulgular'], ['degerlendirme', 'Değerlendirme — Ön Tanı / Ayırıcı Tanı'], ['plan', 'Tedavi · Tetkik · Kontrol']] as const;
 
 function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: string; sure: string }[] {

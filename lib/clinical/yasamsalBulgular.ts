@@ -20,7 +20,7 @@ export type VitalLine = {
   value: string
 }
 
-const ORDER = ['tansiyon', 'nabiz', 'solunum', 'spo2', 'kilo', 'boy', 'basCevresi', 'ates'] as const
+const ORDER = ['ates', 'tansiyon', 'nabiz', 'solunum', 'spo2', 'kilo', 'boy', 'basCevresi'] as const
 
 function trNumber(n: number, maxFrac = 1): string {
   return n.toLocaleString('tr-TR', {

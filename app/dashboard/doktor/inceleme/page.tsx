@@ -349,7 +349,7 @@ export default function IncelemePage() {
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></div>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                          {([['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['ates', 'Ateş', '°C'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const).map(([k, etiket, birim]) => {
+                          {([['ates', 'Ateş', '°C'], ['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const).map(([k, etiket, birim]) => {
                             // Kaan (2026-09-13): Neyzi büyüme persentili — yalnız kilo/boy/baş çevresinde, sunucudan hazır gelir
                             const bp = note.buyumePersentilleri
                             const persentil = k === 'kilo' ? bp?.kilo : k === 'boy' ? bp?.boy : k === 'basCevresi' ? bp?.basCevresi : undefined
