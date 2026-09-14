@@ -122,8 +122,8 @@ export default function IncelemePage() {
   // dediğinde olur. Eylem önerileri (kontrol randevusu / takip araması) tek dokunuşla
   // ortak takvime yazılır; sekreter aramaları 📞 önekiyle takvimde görür, arama notunu
   // randevunun not alanına yazar.
-  const konsultGonder = async (note: PendingNote) => {
-    const soru = kGirdi.trim();
+  const konsultGonder = async (note: PendingNote, override?: string) => {
+    const soru = (override ?? kGirdi).trim();
     if (!soru || kBekliyor) return;
     const yeni: KMesaj[] = [...kMesajlar, { rol: 'doktor', icerik: soru }];
     setKMesajlar(yeni);
@@ -426,7 +426,10 @@ export default function IncelemePage() {
                         </div>
                       )}
                       <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 10px' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 3 }}>Hasta/veli özeti <span style={{ fontWeight: 400, color: '#64748B' }}>· portala gider · düzenlenebilir</span></div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span>Hasta/veli özeti <span style={{ fontWeight: 400, color: '#64748B' }}>· portala gider · düzenlenebilir</span></span>
+                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, 'Notun güncel haline göre hasta/veli özetini yeniden yaz.')} style={{ background: 'transparent', border: '1px solid rgba(45,212,191,0.35)', color: '#2DD4BF', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>↻ Notuma göre yenile</button>
+                        </div>
                         <textarea value={ozetTaslak} onChange={(e) => setOzetTaslak(e.target.value)} rows={Math.max(3, Math.ceil(ozetTaslak.length / 110))}
                           placeholder="Veliye anne-babaya anlatır gibi kısa özet"
                           style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#CBD5E1', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
