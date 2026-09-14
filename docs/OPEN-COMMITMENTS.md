@@ -39,6 +39,31 @@ Kaan RESEND_API_KEY sağlarsa (Resend ücretsiz katmanı yeterli) ve/veya Supaba
 https://notya-ai.vercel.app eklerse, gerçek self-servis "şifremi unuttum → e-posta → link → yeni
 şifre" akışı bir oturumda kurulabilir.
 
+## Open — bayat Supabase fetch taraması eksik kalmış (2026-09-14, canlı testte bulundu)
+
+PR #170 (2026-09-10) 34 dosyada ham `createClient(...)` çağrılarına `cache: 'no-store'` sardı,
+ama arama deseni yalnız `createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, ...)` şeklindeki
+satırları yakalıyordu. Bugün hasta portalının Büyüme Eğrileri verisinin sessizce `null` döndüğü
+bulundu — kök sebep `app/api/portal/hasta/[token]/route.ts`'nin URL/anahtarı yerel değişkenlerde
+(`supabaseUrl`, `serviceRoleKey`) tutması, deseni kaçırması. O dosya düzeltildi (PR bu oturumda).
+
+Aynı taramayla (`createClient(` var ama `no-store` yok ve `servisSupabase()` da kullanmıyor)
+~40 başka dosya çıktı — hepsi doğrulanmadı, bazıları POST-only/webhook olduğu için muhtemelen
+risksiz. Adaylar: portal/hasta alt-rotaları (mesajlar, unlock), klinik/me, klinik/members,
+entegrasyon/* (yonetim, hl7/al, fhir/isle), avukat/* (dilekce, sozlesme-analiz, ictihat-ara),
+mali/ebeyan, mali/portal-admin, sessions/start, sessions/[id]/end, notes/whatsapp,
+users/profile, users/me, doktor/belgeler/ingest, doktor/ilaclar/doz-oner, doktor/goruntuleme
+(ve alt rotaları), doktor/hatirlatma, doktor/araclar/* (icd10, erecete, epikriz, sgk-rapor,
+ilac-interaksiyon, hasta-portali), asistan/learn, asistan/chat, asistan/avukat-*, asistan/mali-chat,
+billing/webhook, help/chat, lib/portal/toolsUi.ts, lib/transcription/deepgramClient.ts,
+lib/security/auditLogger.ts, lib/sandbox/supabase.ts, lib/doktor/integrations.ts,
+lib/asistan/actionExecutor.ts.
+
+Öncelik: GET rotaları (okuma sonucu bayat servis edebilenler) — users/me, users/profile,
+doktor/goruntuleme, portal/hasta/[token]/mesajlar, klinik/me, klinik/members. POST/webhook
+rotalarının riski daha düşük ama gözden geçirilmeli. Ayrı bir oturumda dosya dosya doğrulanıp
+düzeltilmeli — bugünkü gibi kör bir toplu regex yerine.
+
 ## Waiting on the founder
 
 | Since | Item | Why it matters |

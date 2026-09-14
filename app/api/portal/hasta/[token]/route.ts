@@ -93,6 +93,7 @@ export async function GET(
   }
 
   const sb = createClient(supabaseUrl, serviceRoleKey, {
+    global: { fetch: (u: RequestInfo | URL, o?: RequestInit) => fetch(u, { ...o, cache: 'no-store' }) },
     auth: { persistSession: false },
   })
 
