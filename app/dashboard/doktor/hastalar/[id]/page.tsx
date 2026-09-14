@@ -13,6 +13,7 @@ import HastaIlaclar from '@/components/doktor/HastaIlaclar';
 import HastaIntake from '@/components/doktor/HastaIntake';
 import HastaAsilar from '@/components/doktor/HastaAsilar';
 import HastaKonsult from '@/components/doktor/HastaKonsult';
+import HastaBuyumeEgrileri from '@/components/doktor/HastaBuyumeEgrileri';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
@@ -60,7 +61,7 @@ export default function HastaProfilPage() {
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
 
-  const tabs = ['Özet', 'Muayene Geçmişi', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', "Ayşe'ye Danış"];
+  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', "Ayşe'ye Danış"];
 
   useEffect(() => {
     if (!patientId) return;
@@ -271,18 +272,21 @@ export default function HastaProfilPage() {
         )}
 
         {!loading && !error && activeTab === 3 && (
-          <PatientDocumentVault patientId={patientId} />
+          <HastaBuyumeEgrileri patientId={patientId} />
         )}
         {!loading && !error && activeTab === 4 && (
+          <PatientDocumentVault patientId={patientId} />
+        )}
+        {!loading && !error && activeTab === 5 && (
           <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 14, color: '#8FA0B5' }}>Röntgen, EKG ve diğer görüntüleme kayıtları görüntüleme merkezinde.</span>
             <button type="button" onClick={() => router.push('/dashboard/doktor/goruntuleme')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Görüntülemeyi aç ›</button>
           </div>
         )}
-        {!loading && !error && activeTab === 5 && <HastaIlaclar patientId={patientId} />}
-        {!loading && !error && activeTab === 6 && <HastaIntake patientId={patientId} />}
-        {!loading && !error && activeTab === 7 && <HastaAsilar patientId={patientId} />}
-        {!loading && !error && activeTab === 8 && <HastaKonsult patientId={patientId} />}
+        {!loading && !error && activeTab === 6 && <HastaIlaclar patientId={patientId} />}
+        {!loading && !error && activeTab === 7 && <HastaIntake patientId={patientId} />}
+        {!loading && !error && activeTab === 8 && <HastaAsilar patientId={patientId} />}
+        {!loading && !error && activeTab === 9 && <HastaKonsult patientId={patientId} />}
       </div>
     </div>
   );
