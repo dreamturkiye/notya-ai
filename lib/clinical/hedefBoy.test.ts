@@ -1,10 +1,13 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   parseBoyGirdi,
   hesaplaHedefBoy,
   formatBoyCm,
   cinsiyetHedefBoy,
+  pediatriHedefBoyBransi,
 } from './hedefBoy'
 
 function cmOf(raw: string | number) {
@@ -62,5 +65,28 @@ describe('hedefBoy (mid-parental height)', () => {
     assert.equal(cinsiyetHedefBoy('kız'), 'kiz')
     assert.equal(cinsiyetHedefBoy('Erkek'), 'erkek')
     assert.equal(formatBoyCm(182), '182 cm (1,82 m)')
+  })
+
+  it('is a pediatrics-only tool — KD / derm / empty specialty stay out', () => {
+    assert.equal(pediatriHedefBoyBransi('pediatri'), true)
+    assert.equal(pediatriHedefBoyBransi('Pediatri'), true)
+    assert.equal(pediatriHedefBoyBransi('Çocuk Sağlığı ve Hastalıkları'), true)
+    assert.equal(pediatriHedefBoyBransi('kadin-hastaliklari-dogum'), false)
+    assert.equal(pediatriHedefBoyBransi('dermatoloji'), false)
+    assert.equal(pediatriHedefBoyBransi('dahiliye'), false)
+    assert.equal(pediatriHedefBoyBransi('cocuk-cerrahisi'), false)
+    assert.equal(pediatriHedefBoyBransi(null), false)
+  })
+
+  it('Araçlar / dashboard / Ayarlar do not mount Hedef Boy for every doctor', () => {
+    const root = join(import.meta.dirname, '../..')
+    const tools = readFileSync(join(root, 'app/doktor-tools/page.tsx'), 'utf8')
+    const dash = readFileSync(join(root, 'app/dashboard/doktor/page.tsx'), 'utf8')
+    const ayar = readFileSync(join(root, 'app/dashboard/doktor/ayarlar/page.tsx'), 'utf8')
+    const demo = readFileSync(join(root, 'lib/portal/demoData.ts'), 'utf8')
+    assert.match(tools, /usePediatriHedefBoy/)
+    assert.match(dash, /pediatriHedefBoyBransi/)
+    assert.doesNotMatch(ayar, /Hedef Boy/)
+    assert.match(demo, /hedefBoy:\s*null/)
   })
 })

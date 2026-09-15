@@ -8,6 +8,7 @@ import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { SPECIALTY_MAP } from '@/lib/doktor/specialties'
 import { persentilEgrileri, ayFarki } from '@/lib/clinical/buyumeEgrisi'
 import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
+import { pediatriSekmesiUygun } from '@/lib/doktor/hastaDosyaSekmeleri'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -368,12 +369,14 @@ export async function GET(
       }
     }
     try {
-      const notlar = hastaBuyume?.notes_encrypted ? (() => { try { return JSON.parse(decrypt(String(hastaBuyume.notes_encrypted))) as Record<string, unknown> } catch { return {} } })() : {}
-      const anne = notlar.anneBoyCm
-      const baba = notlar.babaBoyCm
-      if (anne != null && baba != null) {
-        const h = hesaplaHedefBoy({ anneBoy: Number(anne), babaBoy: Number(baba), cinsiyet: cinsiyetHam || cinsiyet })
-        if (h.ok) bundle.hedefBoy = h.sonuc
+      if (pediatriSekmesiUygun(dogumIso)) {
+        const notlar = hastaBuyume?.notes_encrypted ? (() => { try { return JSON.parse(decrypt(String(hastaBuyume.notes_encrypted))) as Record<string, unknown> } catch { return {} } })() : {}
+        const anne = notlar.anneBoyCm
+        const baba = notlar.babaBoyCm
+        if (anne != null && baba != null) {
+          const h = hesaplaHedefBoy({ anneBoy: Number(anne), babaBoy: Number(baba), cinsiyet: cinsiyetHam || cinsiyet })
+          if (h.ok) bundle.hedefBoy = h.sonuc
+        }
       }
     } catch (e) { console.error('[portal] hedefBoy:', e) }
   }

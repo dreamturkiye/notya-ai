@@ -20,7 +20,7 @@ import HastaGebelik from '@/components/doktor/HastaGebelik';
 import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
-import { hesaplaHedefBoy, formatBoyCm } from '@/lib/clinical/hedefBoy';
+import { hesaplaHedefBoy, formatBoyCm, pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
@@ -77,6 +77,7 @@ export default function HastaProfilPage() {
   const [error, setError] = useState('');
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
+  const [pediatriAraci, setPediatriAraci] = useState(false);
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
   const pediatriUygun = patient ? pediatriSekmesiUygun(patient.dogum_tarihi) : false;
@@ -89,12 +90,19 @@ export default function HastaProfilPage() {
         // NOTYA-AUTH-01: one convention, with refresh.
         const token = await ensureDoctorAccessToken();
         if (!token) { router.push(DOKTOR_GIRIS); return; }
-        const resp = await fetch(`/api/doktor/hastalar/${patientId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [resp, meRes] = await Promise.all([
+          fetch(`/api/doktor/hastalar/${patientId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
         const data = await resp.json();
         if (!resp.ok) { setError(data.error || 'Hasta bilgisi alınamadı'); return; }
         setPatient(data.patient);
+        if (meRes.ok) {
+          const me = await meRes.json();
+          setPediatriAraci(pediatriHedefBoyBransi(me?.data?.specialty));
+        }
       } catch {
         setError('Bir hata oluştu');
       } finally {
@@ -251,7 +259,7 @@ export default function HastaProfilPage() {
               {bilgiSatiri('Sürekli ilaçlar', patient.surekli_ilaclar)}
               {bilgiSatiri('Sigara / Alkol', patient.sigara_alkol)}
             </div>
-            {pediatriUygun && (() => {
+            {pediatriAraci && pediatriUygun && (() => {
               const hedef = (patient.anne_boy_cm != null && patient.baba_boy_cm != null)
                 ? hesaplaHedefBoy({ anneBoy: patient.anne_boy_cm, babaBoy: patient.baba_boy_cm, cinsiyet: patient.cinsiyet })
                 : null
@@ -326,7 +334,7 @@ export default function HastaProfilPage() {
         )}
 
         {!loading && !error && pediatriUygun && activeTab === 'buyume' && (
-          <HastaBuyumeEgrileri patientId={patientId} />
+          <HastaBuyumeEgrileri patientId={patientId} hedefBoyGoster={pediatriAraci} />
         )}
         {!loading && !error && activeTab === 'belgeler' && (
           <PatientDocumentVault patientId={patientId} />

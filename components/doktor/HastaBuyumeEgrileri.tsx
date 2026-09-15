@@ -117,7 +117,7 @@ function Grafik({ veri, birim, buyuk }: { veri: ParamVeri; birim: string; buyuk?
 
 const PARAM_BASLIK: Record<string, string> = { kilo: 'Kilo', boy: 'Boy', basCevresi: 'Baş Çevresi', vki: 'Vücut Kitle İndeksi' };
 
-export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }) {
+export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false }: { patientId: string; hedefBoyGoster?: boolean }) {
   const [veri, setVeri] = useState<Yanit | null>(null);
   const [hata, setHata] = useState('');
   const [buyukIndex, setBuyukIndex] = useState<number | null>(null);
@@ -128,13 +128,13 @@ export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const [r, hr] = await Promise.all([
-          fetch(`/api/doktor/hastalar/${patientId}/buyume-egrileri`, { headers: { Authorization: `Bearer ${t}` } }),
-          fetch(`/api/doktor/hastalar/${patientId}/hedef-boy`, { headers: { Authorization: `Bearer ${t}` } }),
-        ]);
-        if (hr.ok) {
-          const hd = await hr.json();
-          setHedef(hd.sonuc || null);
+        const r = await fetch(`/api/doktor/hastalar/${patientId}/buyume-egrileri`, { headers: { Authorization: `Bearer ${t}` } });
+        if (hedefBoyGoster) {
+          const hr = await fetch(`/api/doktor/hastalar/${patientId}/hedef-boy`, { headers: { Authorization: `Bearer ${t}` } });
+          if (hr.ok) {
+            const hd = await hr.json();
+            if (hd.arac !== false) setHedef(hd.sonuc || null);
+          }
         }
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Büyüme eğrileri alınamadı');
@@ -142,9 +142,9 @@ export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }
       } catch (e) { setHata(e instanceof Error ? e.message : 'Hata'); }
       finally { setHedefYuklendi(true); }
     })();
-  }, [patientId]);
+  }, [patientId, hedefBoyGoster]);
 
-  const hedefKart = (
+  const hedefKart = hedefBoyGoster ? (
     <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 14, padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>Anne-Baba Boylarına Göre Hedef Boy</div>
@@ -160,7 +160,7 @@ export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }
         <p style={{ margin: '10px 0 0', fontSize: 13, color: '#64748B' }}>Hedef boy yükleniyor…</p>
       )}
     </div>
-  );
+  ) : null;
 
   if (hata) {
     return (

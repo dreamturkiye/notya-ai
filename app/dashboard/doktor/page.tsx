@@ -17,6 +17,7 @@ import DoktorNav from '@/components/doktor/DoktorNav'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
+import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -132,6 +133,7 @@ export default function DoktorDashboard() {
   const [randevuYukleniyor, setRandevuYukleniyor] = useState(true)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [pediatriAraci, setPediatriAraci] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -157,6 +159,7 @@ export default function DoktorDashboard() {
           const ham = meData.data?.full_name || meData.data?.email?.split('@')[0] || 'Doktor'
           const name = ham.replace(/^\s*(?:(?:Prof|Doç|Uzm|Op|Dr|Dt)\.?\s+)+/i, '').trim() || ham
           setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
+          setPediatriAraci(pediatriHedefBoyBransi(meData.data?.specialty))
         }
       } catch {}
 
@@ -427,7 +430,9 @@ export default function DoktorDashboard() {
               { ikon: 'takvim', text: 'Randevular', path: '/dashboard/doktor/randevular', renk: '#0F9B8E' },
               { ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan', renk: '#7C8CF8' },
               { ikon: 'hastaEkle', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle', renk: '#14B8A6' },
-              { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools', renk: '#E8C547' },
+              pediatriAraci
+                ? { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools', renk: '#E8C547' }
+                : { ikon: 'araclar', text: 'Araçlar', path: '/doktor-tools', renk: '#4ADE80' },
               { ikon: 'belge', text: 'Belge Yükle', path: '/dashboard/doktor/belgeler', renk: '#38BDF8' },
               { ikon: 'inceleme', text: 'İnceleme', path: '/dashboard/doktor/inceleme', renk: '#F59E0B' },
               { ikon: 'raporlar', text: 'Raporlar', path: '/dashboard/doktor/raporlar', renk: '#8FA0B5' },
@@ -498,7 +503,9 @@ export default function DoktorDashboard() {
               <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <span onClick={() => router.push('/doktor-tools/epikriz')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>Epikriz üret ›</span>
                 <span onClick={() => router.push('/doktor-tools/icd10')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>ICD-10 kodla ›</span>
-                <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>Hedef boy ›</span>
+                {pediatriAraci && (
+                  <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>Hedef boy ›</span>
+                )}
               </div>
             </div>
           </div>

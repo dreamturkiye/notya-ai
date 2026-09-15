@@ -103,3 +103,21 @@ export function hesaplaHedefBoy(input: {
     },
   }
 }
+
+/**
+ * Hedef boy is a pediatrics-only Araç. Match the onboarding slug plus common TR labels
+ * so a KD/derm dashboard never shows the studio.
+ */
+export function pediatriHedefBoyBransi(specialty: string | null | undefined): boolean {
+  const k = String(specialty || '')
+    .toLocaleLowerCase('tr-TR')
+    .replace(/ı/g, 'i')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+  if (!k) return false
+  if (k === 'pediatri' || k === 'pediatrics' || k.startsWith('pediatri ')) return true
+  if (k.includes('cocuk sagligi')) return true
+  return false
+}

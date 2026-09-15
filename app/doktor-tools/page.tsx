@@ -4,6 +4,7 @@ import React, { Suspense, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav'
 import { useRouter } from 'next/navigation';
 import { HedefBoyAracPaneli } from '@/components/hedefBoy/HedefBoyAracPaneli'
+import { usePediatriHedefBoy } from '@/components/hedefBoy/usePediatriHedefBoy'
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,7 @@ export default function DoktorToolsPage() {
   const router = useRouter();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [aile, setAile] = useState(false);
+  const pediatriAraci = usePediatriHedefBoy();
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#060C18', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
@@ -44,13 +46,17 @@ export default function DoktorToolsPage() {
           </div>
         )}
 
-        <Suspense fallback={<div style={{ padding: 32, color: '#8FA0B5' }}>Hedef boy yükleniyor…</div>}>
-          <HedefBoyAracPaneli onAileModu={setAile} />
-        </Suspense>
+        {pediatriAraci && (
+          <Suspense fallback={<div style={{ padding: 32, color: '#8FA0B5' }}>Hedef boy yükleniyor…</div>}>
+            <HedefBoyAracPaneli onAileModu={setAile} />
+          </Suspense>
+        )}
 
         {!aile && (
           <>
-            <div style={{ fontSize: 14, fontWeight: 700, margin: '36px 0 14px', color: '#C9D4E3' }}>Diğer araçlar</div>
+            {pediatriAraci ? (
+              <div style={{ fontSize: 14, fontWeight: 700, margin: '36px 0 14px', color: '#C9D4E3' }}>Diğer araçlar</div>
+            ) : null}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
               {tools.map((tool, index) => {
                 const isHovered = hoveredIndex === index;

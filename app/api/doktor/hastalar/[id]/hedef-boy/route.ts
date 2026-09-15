@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
-import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
+import { hesaplaHedefBoy, pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy'
 
 export const dynamic = 'force-dynamic'
+
+async function pediatriDoktorMu(user: User, supabase: SupabaseClient): Promise<boolean> {
+  const { data: profil } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
+  const meta = (user.user_metadata || {}) as Record<string, unknown>
+  return pediatriHedefBoyBransi(
+    (profil as { specialty?: string | null } | null)?.specialty
+    || (typeof meta.specialty === 'string' ? meta.specialty : null),
+  )
+}
 
 function notlariCoz(notesEncrypted: string | null | undefined): Record<string, unknown> {
   if (!notesEncrypted) return {}
@@ -31,6 +41,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
   }
 
+  if (!(await pediatriDoktorMu(user, supabase))) {
+    return NextResponse.json({ arac: false, sonuc: null }, { status: 200 })
+  }
+
   let ad = 'Hasta'
   try {
     if (patient.name_encrypted) ad = JSON.parse(decrypt(patient.name_encrypted)).ad || 'Hasta'
@@ -48,6 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     : null
 
   return NextResponse.json({
+    arac: true,
     hastaId: patient.id,
     ad,
     cinsiyet: cinsiyetTr(cinsiyetHam),
@@ -74,6 +89,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   if (error || !patient) {
     return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
+  }
+
+  if (!(await pediatriDoktorMu(user, supabase))) {
+    return NextResponse.json({ error: 'Bu araç yalnız pediatri için.' }, { status: 403 })
   }
 
   let cinsiyetHam: string | null = null
