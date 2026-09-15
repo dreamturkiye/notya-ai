@@ -368,6 +368,30 @@ export async function GET(
     }
   }
 
+  // NOTYA-KHD-05 — aktif gebelik varsa anne için "Gebeliğim"
+  try {
+    const { data: geb } = await sb.from('gebelikler').select('id, sat, tdt').eq('patient_id', patientId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle()
+    if (geb) {
+      const { gebelikYasi, izlemDurumlari } = await import('@/lib/clinical/gebelik')
+      const y = gebelikYasi(geb.sat, geb.tdt)
+      if (y) {
+        const { data: izl } = await sb.from('gebelik_izlemleri').select('tarih, hafta, kilo, fetal_kalp_atimi').eq('gebelik_id', geb.id).order('tarih', { ascending: false }).limit(20)
+        const son = izl?.[0] || null
+        const takvim = izlemDurumlari(y.hafta, (izl || []).map((i) => i.hafta))
+        const buHafta: string[] = []
+        if (y.hafta >= 11 && y.hafta <= 14) buHafta.push('11-14. hafta: ense saydamlığı ultrasonu dönemi.')
+        if (y.hafta >= 18 && y.hafta <= 22) buHafta.push('18-22. hafta: ayrıntılı ultrason dönemi.')
+        if (y.hafta >= 24 && y.hafta <= 28) buHafta.push('24-28. hafta: şeker tarama testi dönemi.')
+        if (y.hafta >= 36) buHafta.push('Doğum belirtilerini ve ne zaman başvuracağınızı doktorunuzla konuşun.')
+        const z = takvim.find((t) => t.durum === 'zamani' || t.durum === 'gecikmis')
+        if (z) buHafta.push(`${z.etiket} (${z.haftaBas}-${z.haftaSon}. hafta) için randevunuzu planlayın.`)
+        bundle.gebelik = { hafta: y.hafta, gun: y.gun, trimester: y.trimester, metin: y.metin, toplamGun: y.toplamGun, tdt: geb.tdt,
+          takvim: takvim.map((t) => ({ no: t.no, etiket: t.etiket, haftaBas: t.haftaBas, haftaSon: t.haftaSon, durum: t.durum, maddeler: t.maddeler })),
+          sonIzlem: son ? { tarih: son.tarih, hafta: son.hafta, kilo: son.kilo, fetalKalpAtimi: son.fetal_kalp_atimi } : null, buHafta }
+      }
+    }
+  } catch (e) { console.error('[portal] gebelik:', e) }
+
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId)
   bundle.messages = messages

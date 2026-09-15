@@ -23,10 +23,14 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
     { id: 'sb-izlem-takvimi', ad: 'SB dört izlem takvimi + tarama/takviye maddeleri', kaynak: 'T.C. SB HSGM, Doğum Öncesi Bakım Yönetim Rehberi, 2018', motor: 'lib/clinical/gebelik', deterministik: true },
     { id: 'gebelik-uyarilari', ad: 'Rehber eşikli uyarılar (TA, proteinüri, FKA, Rh, postterm, gecikmiş izlem)', kaynak: 'SB DÖB + Riskli Gebelikler Yönetim Rehberi', motor: 'lib/clinical/gebelik', deterministik: true },
     { id: 'kilo-alim-hedefi', ad: 'Gebelik öncesi VKİ\'ye göre kilo alım hedefi', kaynak: 'SB/MEB DÖB modülü (IOM ile uyumlu)', motor: 'lib/clinical/gebelik', deterministik: true },
+    { id: 'fetal-biyometri', ad: 'Fetal biyometri persentilleri (HC/BPD/AC/FL) + Hadlock EFW', kaynak: 'INTERGROWTH-21st (Papageorghiou ve ark., Lancet 2014) resmi tablolar, birebir gömülü; Hadlock 1985', motor: 'lib/clinical/fetalBiyometri', deterministik: true },
+    { id: 'lohusa-takvimi', ad: 'SB lohusa izlem takvimi (24 saat → 42. gün)', kaynak: 'T.C. SB Doğum Sonu Bakım Yönetim Rehberi (2014/2018)', motor: 'lib/clinical/lohusaVeJinekoloji', deterministik: true },
+    { id: 'ketem-taramalari', ad: 'KETEM tarama durumu (serviks HPV 30-65/5y, mamografi 40-69/2y, kolorektal 50-70/2y)', kaynak: 'T.C. SB Kanser Tarama Standartları', motor: 'lib/clinical/lohusaVeJinekoloji', deterministik: true },
+    { id: 'genetik-tarama-kayit', ad: 'Genetik/kromozomal tarama kaydı (ikili/üçlü-dörtlü/NIPT/invaziv) — RİSK HESAPLAMAZ, yalnız laboratuvar sonucunu kaydeder', kaynak: 'FMF Türkçe eğitim materyali (terminoloji/pencere), SB DÖB Rehberi, TJOD/Perinatoloji pratiği', motor: 'lib/clinical/genetikTarama', deterministik: true },
   ],
 
   sekmeler: [
-    { id: 'gebelik-takibi', etiket: 'Gebelik Takibi', bilesen: 'HastaGebelik', sira: 12 },
+    { id: 'gebelik-takibi', etiket: 'Kadın Sağlığı & Gebelik', bilesen: 'HastaGebelik', sira: 12 },
   ],
 
   goruntu: {
@@ -57,11 +61,13 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
   ],
 
   specialistReview: [
-    { konu: 'Fetal biyometri persentilleri', neden: 'Doğrulanmış açık referans tablosu gömülmeden hesaplanmıyor — hangi referans (Hadlock / INTERGROWTH-21st / TR serisi) kullanılacak?' },
+    { konu: 'Fetal biyometri referansı', neden: 'INTERGROWTH-21st seçildi (açık, resmi tablolar birebir). Türk ulusal referans yok; TMFTP pratiğinde Hadlock da yaygın — hangisi kalacak, hekim kararı. EFW için persentil tablosu gömülmedi (yalnız gram).' },
+    { konu: 'Lohusa izlem gün pencereleri', neden: '2-5 / 13-17 / 30-42 gün pencereleri rehberin 2018 baskısıyla birebir doğrulanmalı; 24 saat ve 42. gün kesin.' },
     { konu: 'Anti-D zamanlaması ve dozu', neden: 'Rehber uyarısı var; klinik pratik ve SUT karşılığı doğrulanmalı.' },
-    { konu: 'Gebe İzlem Kartı ve USG raporu formatları', neden: 'Belge tanımları var, basılı şablonlar henüz üretilmedi.' },
-    { konu: 'Lohusa izlem ve jinekoloji (KETEM HPV/smear, menstrüel/kontrasepsiyon, menopoz)', neden: 'Henüz kurulmadı; kapsam ve öncelik hekimle belirlenecek.' },
-    { konu: 'Sağlığım portalında "Gebeliğim" görünümü', neden: 'Planlandı, kurulmadı.' },
+    { konu: 'Obstetrik USG raporu ve doğum raporu', neden: 'Gebe İzlem Kartı içinde bölüm olarak var; ayrı resmi şablon gerekiyorsa hekimle biçim belirlenecek.' },
+    { konu: 'Menopoz / kontrasepsiyon', neden: 'Danışmanlık çerçevesi ve yöntem kataloğu var (SB AP); klinik karar desteği (HT endikasyonu, yöntem seçimi algoritması) kurulmadı.' },
+    { konu: 'Down sendromu/aneuploidi RİSK HESAPLAMASI (kasıtlı olarak kurulmadı)', neden: 'FMF/Astraia sertifikalı, laboratuvara özgü MoM kalibrasyonu gerektirir — bu uygulama yalnız laboratuvarın bildirdiği sonucu kaydeder. Hekim, kurumun kullandığı sertifikalı yazılımı (varsa) entegrasyon için belirtebilir.' },
+    { konu: 'Ayşe gebelik haftası farkındalığı', neden: 'promptNotlari tanımlı, SOAP/persona katmanına henüz bağlanmadı (Wave 0 kablolaması ile).' },
   ],
 
   olgunluk: 'arastirma',

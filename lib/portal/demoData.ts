@@ -3,6 +3,7 @@ import type { PortalBundle } from './types'
 /** Rich Turkish fixture for /portal/demo — reference-grade Sağlığım experience. */
 export const SAGLIGIM_DEMO: PortalBundle = {
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
+  gebelik: null,
   summary: {
     aktifIlac: 3,
     bekleyenMesaj: 2,
