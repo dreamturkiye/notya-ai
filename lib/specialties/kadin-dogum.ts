@@ -68,6 +68,25 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
     { konu: 'Menopoz / kontrasepsiyon', neden: 'Danışmanlık çerçevesi ve yöntem kataloğu var (SB AP); klinik karar desteği (HT endikasyonu, yöntem seçimi algoritması) kurulmadı.' },
     { konu: 'Down sendromu/aneuploidi RİSK HESAPLAMASI (kasıtlı olarak kurulmadı)', neden: 'FMF/Astraia sertifikalı, laboratuvara özgü MoM kalibrasyonu gerektirir — bu uygulama yalnız laboratuvarın bildirdiği sonucu kaydeder. Hekim, kurumun kullandığı sertifikalı yazılımı (varsa) entegrasyon için belirtebilir.' },
     { konu: 'Ayşe gebelik haftası farkındalığı', neden: 'promptNotlari tanımlı, SOAP/persona katmanına henüz bağlanmadı (Wave 0 kablolaması ile).' },
+
+    // Kaan'ın 2026-09-14 gece referans listesine (Williams/Berek&Novak/Temel KHD Bilgisi +
+    // DÖBYR 2026) göre denetim — bölüm harfleri o listeyle eşleşir. Veri modeli genişletildi
+    // (migration 023: D/E/sezaryen geçmişi/çoğul gebelik/risk sınıfı/ilk vizit lab/servikal
+    // uzunluk/OGTT/GBS/tehlike işaretleri sütunları var) ama çoğu HENÜZ FORM ALANI OLARAK
+    // BAĞLANMADI — bu gece zaman yetmedi, uydurmak yerine dürüstçe işaretlendi.
+    { konu: 'A. Hasta modeli — veri sütunları var, form alanları eksik', neden: 'D (ölü doğum)/E (ektopik), önceki sezaryen sayısı/kesi tipi, çoğul gebelik tipi (dikoryonik/monokoryonik), risk sınıfı (düşük/orta/yüksek) migration 023 ile eklendi; başlangıç formuna henüz bağlanmadı.' },
+    { konu: 'B. SB Risk Değerlendirme Formu', neden: 'risk_sinifi alanı var (doktor elle seçiyor) ama SB\'nin kendi resmi formunun kriterleri doğrulanıp kod haline getirilmedi.' },
+    { konu: 'C. İlk vizit laboratuvar paneli', neden: 'ilk_vizit_lab jsonb sütunu var (hemogram/ferritin/TSH/HBsAg/HIV/VDRL/HCV/idrar kültür/açlık glukoz); form alanı yok.' },
+    { konu: 'C. Eksik test alanları', neden: 'Nazal kemik (ikili test), servikal uzunluk (18-22hf USG), OGTT (24-28hf, yapılandırılmış), GBS kültür (35-37hf), Anti-D doz kaydı — veri modelinde/motorda var (nazalKemik, servikalUzunluk, ogtt, gbsKultur, antiDUygulamalari), form alanı yok. Kordosentez ve fetal eko invaziif test seçeneklerine eklendi.' },
+    { konu: 'C. Erken gebelik (4-8 hf) takibi', neden: 'β-hCG seri + TVUSG ile canlılık/ektopik/abortus takibi kurulmadı — gebelik kaydı şu an yalnız SAT girilince başlıyor.' },
+    { konu: 'C. Geç gebelik fetal iyilik testleri (28+ hf)', neden: 'NST, BPP, umbilikal/MCA Doppler kurulmadı.' },
+    { konu: 'C. SUT kodları', neden: 'İkili (P.901.120) ve üçlü (P.904.090) kodları sabit olarak eklendi (lib/clinical/genetikTarama.ts SUT_KODLARI); belgelere henüz basılmıyor.' },
+    { konu: 'D. USG görüntü/DICOM depolama', neden: 'Yalnız ölçüm JSON\'u kaydediliyor; gerçek görüntü galerisi, DICOM, e-Nabız/PACS gönderimi, çoğul gebelikte fetus A/B ayrı seri KURULMADI — uygulamanın genel hasta_goruntulemeler tablosu bu amaçla genişletilebilir, henüz yapılmadı.' },
+    { konu: 'E. Gebelik aşı şeması (Td doz-sırası, Tdap 27-36hf, grip Eylül-Nisan) ve teratojen uyarı motoru', neden: 'Pediatri Aşılar modülünün gebelik karşılığı henüz yok; şu an yalnız izlem checklist metninde geçiyor, doz-sırası mantığı/hatırlatıcı kurulmadı.' },
+    { konu: 'F. Obstetrik acil/risk modülleri (partograf, Bishop skoru, VTE risk skoru, HELLP/eklampsi algoritmaları, IUGR Doppler evreleme, omuz distosisi)', neden: 'KASITLI OLARAK KURULMADI — bunlar doğrulanmış klinik karar algoritmaları gerektirir, bu gece güvenle kaynaklanamadı. Denver II ile aynı ilke: doğrulanmış kaynak yoksa kod yazılmaz.' },
+    { konu: 'G. Jinekoloji suiti (PCOS/infertilite/IVF sevk, ürojinekoloji/POP-Q, jinekolojik onkoloji triyaj CA-125/IOTA, cerrahi şablonlar, adölesan jinekoloji, gebe okulu kaydı)', neden: 'KETEM taraması + kontrasepsiyon + menopoz çerçevesi dışında bu bölüm hiç kurulmadı — kapsamı ve önceliği hekimle belirlenecek, muhtemelen ayrı bir "Jinekoloji Vizit" akışı gerektirir.' },
+    { konu: 'H. Yasal/sistem entegrasyonu (e-Nabız gebe bildirimi, e-Doğum/Doğum Bildirim Sistemi, küretaj yasal evrak, iş göremezlik raporu)', neden: 'Gerçek devlet sistemi entegrasyonu gerektirir — API erişimimiz yok, taklit edilmedi.' },
+    { konu: 'J. Pediatri köprüsü — YAPILDI, doğrulandı', neden: '"Doğum Gerçekleşti" artık APGAR/kilo/boy/baş çevresi/cinsiyet alıyor ve isteğe bağlı olarak bebek için pediatri kaydı otomatik açıyor (gebelikler.yenidogan_patient_id ile bağlı). Gerçek veriyle uçtan uca test edildi.' },
   ],
 
   olgunluk: 'arastirma',

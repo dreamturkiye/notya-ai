@@ -12,7 +12,7 @@ import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { biyometriPersentil, hadlockEfw, type BiyometriParametre } from '@/lib/clinical/fetalBiyometri'
 import { lohusaDurumlari } from '@/lib/clinical/lohusaVeJinekoloji'
 import { ntDegerlendir, ileriAnneYasi } from '@/lib/clinical/genetikTarama'
-import { decrypt } from '@/lib/security/encryption'
+import { decrypt, encrypt } from '@/lib/security/encryption'
 import { hekimAdi } from '@/lib/doktor/hekimAdi'
 
 export const dynamic = 'force-dynamic'
@@ -166,13 +166,40 @@ export async function POST(req: NextRequest) {
 
   if (action === 'sonlandir') {
     const gebelikId = String(body.gebelikId || '')
+    const canliDogum = body.durum !== 'sonlandi' && body.dogumTarihi
+    const { data: gebelikOnce } = await supabase.from('gebelikler').select('patient_id').eq('id', gebelikId).eq('doctor_id', doktorId).maybeSingle()
+
+    let yenidoganPatientId: string | null = null
+    if (canliDogum && body.yenidoganOlustur && gebelikOnce) {
+      const { data: anne } = await supabase.from('patients').select('name_encrypted').eq('id', gebelikOnce.patient_id).maybeSingle()
+      let anneAd = ''
+      try { const n = JSON.parse(decrypt(anne?.name_encrypted || '')); anneAd = String(n.ad || n.soyad || '').split(' ').slice(-1)[0] || '' } catch { /* ad çözülemedi */ }
+      const bebekAdi = String(body.yenidoganAdi || '').trim() || `Yenidoğan${anneAd ? ' ' + anneAd : ''}`
+      const notlar = {
+        dogumBilgisi: true, apgar1: body.apgar1 ?? null, apgar5: body.apgar5 ?? null,
+        dogumKilosuGram: body.yenidoganKiloGram ?? null, dogumBoyuCm: body.yenidoganBoyCm ?? null,
+        dogumBasCevresiCm: body.yenidoganBasCevresiCm ?? null, dogumSekli: body.dogumSekli ?? null,
+        anneGebelikId: gebelikId,
+      }
+      const { data: yeni, error: yeniHata } = await supabase.from('patients').insert({
+        doctor_id: doktorId,
+        name_encrypted: encrypt(JSON.stringify({ ad: bebekAdi })),
+        dob_encrypted: encrypt(String(body.dogumTarihi)),
+        gender_encrypted: body.yenidoganCinsiyet ? encrypt(String(body.yenidoganCinsiyet)) : null,
+        notes_encrypted: encrypt(JSON.stringify(notlar)),
+        is_active: true,
+      }).select('id').single()
+      if (!yeniHata && yeni) yenidoganPatientId = yeni.id
+    }
+
     const { error } = await supabase.from('gebelikler').update({
       durum: body.durum === 'sonlandi' ? 'sonlandi' : 'tamamlandi',
       dogum_tarihi: body.dogumTarihi ?? null, dogum_sekli: body.dogumSekli ?? null, dogum_notu: body.dogumNotu ?? null,
+      yenidogan_patient_id: yenidoganPatientId,
       updated_at: new Date().toISOString(),
     }).eq('id', gebelikId).eq('doctor_id', doktorId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, yenidoganPatientId })
   }
 
   if (action === 'lohusa-izlem') {
