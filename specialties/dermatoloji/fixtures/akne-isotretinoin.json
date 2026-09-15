@@ -1,0 +1,66 @@
+{
+  "specialty": "dermatoloji",
+  "episode_id": "ep-akne-1",
+  "patient_id": "p-deri-2",
+  "visit_type": "genel-poliklinik",
+  "unit": "genel",
+  "patient_derm": {
+    "fitzpatrick": "II",
+    "occupation": "öğrenci",
+    "phototype": "II",
+    "atopic": false,
+    "family_atopy": false
+  },
+  "lesions": [{ "id": "L-face", "region": "face", "morphology": "nodulocystic" }],
+  "photos": [
+    {
+      "id": "ph-m0",
+      "coreImageId": "goruntu-akne-m0",
+      "kind": "tedavi_hafta_n",
+      "lesionId": "L-face",
+      "capturedAt": "2026-01-05",
+      "region": "face",
+      "genital_consent": false,
+      "pediatric_consent": false,
+      "education_anonymized": false,
+      "patient_share": false
+    },
+    {
+      "id": "ph-m3",
+      "coreImageId": "goruntu-akne-m3",
+      "kind": "tedavi_hafta_n",
+      "lesionId": "L-face",
+      "capturedAt": "2026-04-05",
+      "region": "face",
+      "genital_consent": false,
+      "pediatric_consent": false,
+      "education_anonymized": false,
+      "patient_share": false
+    }
+  ],
+  "image_series": [{
+    "id": "series-akne",
+    "lesionId": "L-face",
+    "timepoints": [
+      { "at": "2026-01-05", "label": "month-0", "photoIds": ["ph-m0"] },
+      { "at": "2026-04-05", "label": "month-3", "photoIds": ["ph-m3"] }
+    ]
+  }],
+  "before_after": [],
+  "vision_reads": [],
+  "total_body_map": null,
+  "bedside_tests": [],
+  "patch_courses": [],
+  "hair_workup": null,
+  "bullous_workup": null,
+  "behcet_card": null,
+  "admission": null,
+  "gop": {
+    "two_contraception": true,
+    "hcg_iso": "2026-01-03",
+    "hcg_negative": true,
+    "cycle_day": 2,
+    "rx_days": 30,
+    "start_iso": "2026-01-05"
+  }
+}
