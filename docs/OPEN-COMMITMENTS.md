@@ -102,7 +102,31 @@ deterministic), migration 020 (gebelikler, gebelik_izlemleri — APPLIED), /api/
 HastaGebelik.tsx tab (visible for female patients ≥12y; tab #12, appended so no renumbering),
 registry chapter lib/specialties/kadin-dogum.ts (olgunluk: arastirma), beta list v7 item 10.
 
-Not built yet (in the chapter's specialistReview — decide WITH Gökhan, not before):
+Second slice, same night (Kaan: "build the rest with the 3 references"): fetal biyometri persentilleri
+(INTERGROWTH-21st official tables embedded verbatim from intergrowth21.com + Hadlock EFW —
+lib/clinical/fetalBiyometri.ts), lohusa izlemi (SB DSBYR, migration 021 lohusa_izlemleri),
+kadın sağlığı (KETEM tarama motoru, kontrasepsiyon kataloğu, menopoz çerçevesi — kadin_sagligi
+table, /api/doktor/kadin-sagligi), printed Gebe İzlem Kartı (…/gebelik/yazdir, letterhead, A4,
+USG + doğum + lohusa sections), portal "Gebeliğim" (PortalBundle.gebelik, GebeligimView).
+References used for KHD (the "3" + SB): SB DÖB Yönetim Rehberi 2018, SB Doğum Sonu Bakım
+Yönetim Rehberi, SB Kanser Tarama Standartları (KETEM), TJOD kılavuzları; TMFTP for USG practice.
+
+Third slice, same night (Kaan: "make sure genetic/non-genetic disease tests like Down
+syndrome are included"): genetik/kromozomal tarama — İkili test (NT+PAPP-A+free β-hCG),
+üçlü/dörtlü test (AFP/hCG/estriol/inhibin A), NIPT (T21/T18/T13), invaziv test (CVS/amniyosentez)
+— lib/clinical/genetikTarama.ts, migration 022 genetik_taramalar (APPLIED), wired into
+/api/doktor/gebelik + HastaGebelik.tsx panel + printed Gebe İzlem Kartı.
+
+CRITICAL BOUNDARY HELD: this module records lab-reported results only — it does NOT calculate
+a combined aneuploidy risk ratio (e.g. "1/250"). That requires FMF/Astraia-certified,
+lab-calibrated MoM software; computing it ourselves would repeat the Denver II/WHO-percentile
+mistake at higher stakes (drives invasive-testing/termination decisions). NT gets only a
+conservative ABSOLUTE flag (≥3.5mm), not a CRL-specific percentile curve — verified terminology
+against FMF's own Turkish teaching material and current Turkish practice literature before
+building. İleri anne yaşı (≥35) computed as a simple deterministic threshold — uncontroversial.
+Verified: threshold logic tested at boundary (3.5mm exactly flags, 16hf correctly out-of-window).
+
+Still open (chapter specialistReview):
 - Fetal biyometri persentilleri (needs a chosen open reference: Hadlock / INTERGROWTH-21st / TR)
 - Gebe İzlem Kartı + Obstetrik USG raporu + Doğum raporu printed templates (letterhead pattern)
 - Lohusa izlem (SB protokolü), jinekoloji (KETEM HPV/smear takvimi, kontrasepsiyon, menopoz)

@@ -28,5 +28,6 @@ export function emptyPortalBundle(): PortalBundle {
       spo2: [],
     },
     buyume: null,
+    gebelik: null,
   }
 }

@@ -70,7 +70,7 @@ export default function HastaProfilPage() {
     const d = new Date(patient.dogum_tarihi); if (isNaN(d.getTime())) return true;
     return (Date.now() - d.getTime()) / (365.25 * 86400000) >= 12;
   })();
-  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış", ...(gebelikUygun ? ['Gebelik Takibi'] : [])];
+  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış", ...(gebelikUygun ? ['Kadın Sağlığı & Gebelik'] : [])];
 
   useEffect(() => {
     if (!patientId) return;

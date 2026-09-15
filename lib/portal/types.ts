@@ -140,4 +140,14 @@ export interface PortalBundle {
   history: PortalHistory
   tracking: PortalTracking
   buyume: PortalBuyume | null
+  gebelik: PortalGebelik | null
+}
+
+/** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
+export interface PortalGebelik {
+  hafta: number; gun: number; trimester: number; metin: string; toplamGun: number
+  tdt: string
+  takvim: Array<{ no: number; etiket: string; haftaBas: number; haftaSon: number; durum: string; maddeler: string[] }>
+  sonIzlem: { tarih: string; hafta: number; kilo: number | null; fetalKalpAtimi: number | null } | null
+  buHafta: string[]
 }
