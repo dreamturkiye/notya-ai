@@ -1,0 +1,20 @@
+{
+  "specialty": "kadin-dogum",
+  "episode_id": "ep-dusuk-1",
+  "mother_patient_id": "p-anne-1",
+  "fetuses": [{ "label": "A", "status": "delivered", "linked_newborn_patient_id": "p-bebek-1" }],
+  "obstetric_score": { "G": 1, "P": 1, "A": 0, "Y": 1, "D": 0, "E": 0, "prior_cs_count": 0, "prior_cs_incision": "none" },
+  "sat": "2026-01-15",
+  "edd_naegele": "2026-10-22",
+  "edd_crl": null,
+  "ga_locked": "sat",
+  "plurality": "singleton",
+  "chorionicity": null,
+  "ttts": false,
+  "rh": "D+",
+  "idc_history": "not_tested",
+  "anti_d": [],
+  "risk_class": "dusuk",
+  "episode_status": "lohusa",
+  "lohusa_day": 3
+}
