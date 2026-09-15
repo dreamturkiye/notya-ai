@@ -3,6 +3,7 @@
  * SAT / EDD / Anti-D stay on this payload — never on core patient/visit types.
  */
 import { kadinDogumPayloadSchema, type KadinDogumPayload, type UsgStudyPayload } from '../../specialties/kadin-dogum/schema'
+import { aktifGebelikDurumu } from '../clinical/gebelikDurum'
 import { naegeleEdd } from '../../specialties/kadin-dogum/engines/sat-edd'
 import { buildIzlemCalendar } from '../../specialties/kadin-dogum/engines/izlem-calendar'
 import { evaluateWindowsAtWeeks } from '../../specialties/kadin-dogum/engines/test-windows'
@@ -98,7 +99,7 @@ export function payloadFromGebelikApi(patientId: string, veri: LiveGebelikVeri):
   const usgDating = g.tdt_kaynak === 'usg'
   const dating: 'sat' | 'crl' = usgDating ? 'crl' : 'sat'
   const episode_status: KadinDogumPayload['episode_status'] =
-    g.durum === 'aktif' ? 'gebe' : veri.lohusa ? 'lohusa' : 'kapandi'
+    aktifGebelikDurumu(g.durum) ? 'gebe' : veri.lohusa || g.durum === 'lohusa' ? 'lohusa' : 'kapandi'
   const studies = usgStudiesFromIzlemler(veri.izlemler, dating)
   const raw = {
     specialty: 'kadin-dogum' as const,

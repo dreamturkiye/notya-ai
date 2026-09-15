@@ -45,7 +45,7 @@ export const DERMATOLOJI_PROFILE: SpecialtyProfile = {
     modaliteler: ['foto', 'dermatoskopi'],
     zamanCizgisi: true,
     ayseSinir: DERMATOLOJI_MANIFEST.imagingCapabilities.asistanVision
-      ? 'Tarama destegi, tani degildir. Doktor onayi gerekir. Asistan taslak okur, uzman onaylar.'
+      ? 'Tarama desteği, tanı değildir. Doktor onayı gerekir. Asistan taslak okur, uzman onaylar.'
       : 'Görüntü yorumu hekimindir.',
   },
 

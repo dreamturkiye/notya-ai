@@ -111,7 +111,7 @@ export const visionReadSchema = z.object({
   drafted_by: z.enum(ACTOR),
   approved_by: z.enum(ACTOR).nullable(),
   findings: z.string(),
-  disclaimer: z.literal('Ölçüm ve tarama destegi, tani degildir. Uzman onayi gerekir.'),
+  disclaimer: z.literal('Ölçüm ve tarama desteği, tanı değildir. Uzman onayı gerekir.'),
 })
 
 export const colpoImageSchema = z.object({

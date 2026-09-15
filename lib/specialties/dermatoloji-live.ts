@@ -5,7 +5,7 @@
  */
 import { dermatolojiPayloadSchema, type DermatolojiPayload, type PhotoAsset } from '../../specialties/dermatoloji/schema'
 import { pairBeforeAfter } from '../../specialties/dermatoloji/imaging/before-after'
-import { gopIsotretinoin, type GopInput, type GopResult } from '../../specialties/dermatoloji/engines/gop-isotretinoin'
+import { gopIsotretinoin, type GopInput, type GopResult, type GopSex } from '../../specialties/dermatoloji/engines/gop-isotretinoin'
 
 export type LiveGoruntuRow = {
   id: string
@@ -36,9 +36,13 @@ function missingGop(todayIso: string): NonNullable<DermatolojiPayload['gop']> {
   }
 }
 
-export function gopBlockFromPayload(payload: DermatolojiPayload, todayIso: string): GopResult {
+export function gopBlockFromPayload(
+  payload: DermatolojiPayload,
+  todayIso: string,
+  sex: GopSex = 'unknown',
+): GopResult {
   const g = payload.gop ?? missingGop(todayIso)
-  const input: GopInput = { ...g, today_iso: todayIso }
+  const input: GopInput = { ...g, today_iso: todayIso, sex }
   return gopIsotretinoin(input)
 }
 
