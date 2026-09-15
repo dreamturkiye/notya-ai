@@ -112,6 +112,7 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
 
   const isImage = fileType.startsWith('image/')
   const isPdf = fileType === 'application/pdf'
+  const isAudio = fileType.startsWith('audio/') // NOTYA-BLE-02: steteskop kaydı
 
   return (
     <div style={{ background: '#020812', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }}>
@@ -173,7 +174,10 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
             style={{ width: '100%', height: '75vh', border: 'none', background: '#fff', borderRadius: 8 }}
           />
         )}
-        {!loading && !error && !isImage && !isPdf && (
+        {!loading && !error && isAudio && objectUrl && (
+          <audio controls src={objectUrl} style={{ width: '100%' }} />
+        )}
+        {!loading && !error && !isImage && !isPdf && !isAudio && (
           <span style={{ color: '#94A3B8', fontSize: 13 }}>Bu dosya türü tarayıcıda önizlenemez. İndirin.</span>
         )}
       </div>

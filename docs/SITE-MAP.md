@@ -91,4 +91,5 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - WhatsApp (Twilio): `/api/notes/whatsapp`, `/api/mali/whatsapp`, `lib/notifications.ts`.
 - Monitoring: `/api/monitor/health`, `/api/monitor/alert`. Help widget: `components/HelpWidget.tsx` → `/api/help/chat`.
 - Data files: `data/sgk-ilaclar.json` (refresh: `scripts/import-sgk-ilac.mjs` then `scripts/import-titck-etken.mjs <xlsx>`).
+- Cihaz Köprüsü (NOTYA-BLE, core, all branşlar): `core/bluetooth/*` (standard GATT medical profiles + IEEE 11073), `components/core/CihazdanAl.tsx` (📶 Cihazdan al · 🎧 Cihazdan gelen dosya — used in İnceleme vitaller and `/dashboard/doktor/notlar/[id]`), `/api/doktor/cihaz-olcum` (audit rows, GET history) + `/api/doktor/cihaz-olcum/dosya` (→ vault category `cihaz-kaydi`), `/cihaz/paylas` (Android Web Share Target landing via `public/sw.js` POST intercept + manual file page); tables `cihaz_olcumleri`, `doktor_cihazlar`, `cihaz_uyumsuzluk_raporlari` (migration 024). Docs: `docs/CIHAZ-KOPRUSU-MIMARI.md`, `docs/CIHAZ-UYUMLULUK.md` (field-only list).
 - Deferred work: `docs/OPEN-COMMITMENTS.md`.
