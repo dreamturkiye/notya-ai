@@ -25,6 +25,15 @@ function deriveOnboardingCompleted(
   return false
 }
 
+/** `users.specialty = genel` is a leftover default and must not hide a real branş in auth metadata. */
+function effectiveSpecialty(profileSpecialty: unknown, metaSpecialty: unknown): string | null {
+  const profile = typeof profileSpecialty === 'string' ? profileSpecialty.trim() : ''
+  const meta = typeof metaSpecialty === 'string' ? metaSpecialty.trim() : ''
+  if (profile && profile !== 'genel') return profile
+  if (meta) return meta
+  return profile || null
+}
+
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user) {
@@ -78,8 +87,17 @@ export async function GET(req: NextRequest) {
     full_name: profile.full_name || meta.full_name || (user.email || '').split('@')[0] || '',
     email: profile.email || user.email,
     profession_type: profile.profession_type || meta.profession_type || null,
-    specialty: profile.specialty || meta.specialty || null,
+    specialty: effectiveSpecialty(profile.specialty, meta.specialty),
     onboarding_completed,
   }
+
+  // Self-heal: placeholder `genel` on the users row hid pediatri for kaanari@mac.com.
+  if (profile.specialty === 'genel' && merged.specialty && merged.specialty !== 'genel') {
+    void getSupabase()
+      .from('users')
+      .update({ specialty: merged.specialty, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+  }
+
   return NextResponse.json({ success: true, data: merged })
 }
