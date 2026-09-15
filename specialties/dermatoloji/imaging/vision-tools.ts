@@ -42,7 +42,8 @@ export function analyzeImage(input: {
     status: 'draft',
     drafted_by: input.actor,
     approved_by: null,
-    observations: input.observations,
+    observations: input.observations.trim()
+      || 'Taslak gozlem: tarama destegi. Melanoma tanisi konulmaz. Doktor onayi gerekir.',
     differentials: input.differentials ?? [],
     next_step: input.next_step ?? '',
     disclaimer: VISION_DISCLAIMER,

@@ -33,12 +33,12 @@ The hasta dosyası **Deri & Lezyon** tab is `components/doktor/HastaDermatoloji.
 ## Tests
 
 ```
-pnpm test specialties/pediatri
-pnpm test specialties/kadin-dogum
-pnpm test specialties/dermatoloji
+npm run test:derm
+npm run test:specialties
+npm test
 ```
 
-tsx treats a directory argument as an import of `index.ts`. `NODE_TEST_CONTEXT` loads `tests/load.ts` via `createRequire` so chapter tests actually run.
+Chapter files are listed in `package.json`. `index.ts` does not side-load `tests/load.ts`.
 
 ## UI tabs (mounted)
 

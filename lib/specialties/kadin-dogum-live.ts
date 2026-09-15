@@ -2,11 +2,10 @@
  * Map live gebelikler API rows into the Kadın-Doğum specialty payload.
  * SAT / EDD / Anti-D stay on this payload — never on core patient/visit types.
  */
-import { kadinDogumPayloadSchema, type KadinDogumPayload } from '../../specialties/kadin-dogum/schema'
+import { kadinDogumPayloadSchema, type KadinDogumPayload, type UsgStudyPayload } from '../../specialties/kadin-dogum/schema'
 import { naegeleEdd } from '../../specialties/kadin-dogum/engines/sat-edd'
 import { buildIzlemCalendar } from '../../specialties/kadin-dogum/engines/izlem-calendar'
 import { evaluateWindowsAtWeeks } from '../../specialties/kadin-dogum/engines/test-windows'
-import type { UsgStudy } from '../../specialties/kadin-dogum/protocols/usg'
 
 export type LiveGebelikRow = {
   id: string
@@ -26,6 +25,7 @@ export type LiveIzlemRow = {
   id: string
   hafta: number
   usg: Record<string, string | number> | null
+  goruntu_id?: string | null
 }
 
 export type LiveGebelikVeri = {
@@ -35,13 +35,71 @@ export type LiveGebelikVeri = {
   izlemler?: LiveIzlemRow[]
 }
 
+function num(v: string | number | undefined): number | undefined {
+  if (v == null || v === '') return undefined
+  const n = Number(v)
+  return Number.isFinite(n) && n > 0 ? n : undefined
+}
+
+function usgKind(hafta: number, usg: Record<string, string | number>): UsgStudyPayload['kind'] {
+  const token = String(usg.kind || usg.modalite || '').toLowerCase()
+  if (token.includes('3d') || token.includes('4d') || token.includes('hatira')) return '3d4d_hatira'
+  if (token.includes('doppler')) return 'doppler'
+  if (num(usg.crl)) return 'nt_11_14'
+  if (hafta >= 18 && hafta <= 22) return 'ayrintili_18_22'
+  if (hafta < 11) return 'erken_tv'
+  return 'buyume'
+}
+
+export function usgStudiesFromIzlemler(
+  izlemler: LiveIzlemRow[] | undefined,
+  dating: 'sat' | 'crl',
+): UsgStudyPayload[] {
+  return (izlemler || []).flatMap((i) => {
+    const u = i.usg
+    if (!u || Object.keys(u).length === 0) return []
+    const kind = usgKind(i.hafta, u)
+    const weeks = Math.floor(i.hafta)
+    const days = Math.min(6, Math.max(0, Math.round((i.hafta % 1) * 7)))
+    return [{
+      id: i.id,
+      coreImageId: i.goruntu_id || i.id,
+      kind,
+      gaWeeksDays: { weeks, days },
+      datingMethod: dating,
+      fetusId: 'A' as const,
+      measurements: {
+        crl: num(u.crl),
+        nt: num(u.nt),
+        nb: num(u.nb),
+        bpd: num(u.bpd),
+        hc: num(u.hc),
+        ac: num(u.ac),
+        fl: num(u.fl),
+        efw: num(u.efw),
+        afi: num(u.afi),
+        cervixMm: num(u.cervixMm) ?? num(u.cervix_mm),
+        pi: num(u.pi),
+        ri: num(u.ri),
+        dv: num(u.dv),
+      },
+      nonDiagnostic: kind === '3d4d_hatira',
+      kvkk_fetal_image_consent: false,
+      dicomId: undefined,
+      kvkk_nipt_karyotype_consent: undefined,
+    }]
+  })
+}
+
 export function payloadFromGebelikApi(patientId: string, veri: LiveGebelikVeri): KadinDogumPayload | null {
   const g = veri.gebelik
   if (!g) return null
   const sat = g.sat && g.sat.length >= 8 ? g.sat.slice(0, 10) : null
   const usgDating = g.tdt_kaynak === 'usg'
+  const dating: 'sat' | 'crl' = usgDating ? 'crl' : 'sat'
   const episode_status: KadinDogumPayload['episode_status'] =
     g.durum === 'aktif' ? 'gebe' : veri.lohusa ? 'lohusa' : 'kapandi'
+  const studies = usgStudiesFromIzlemler(veri.izlemler, dating)
   const raw = {
     specialty: 'kadin-dogum' as const,
     episode_id: g.id,
@@ -60,7 +118,7 @@ export function payloadFromGebelikApi(patientId: string, veri: LiveGebelikVeri):
     sat,
     edd_naegele: sat ? naegeleEdd(sat) : g.tdt?.slice(0, 10) ?? null,
     edd_crl: usgDating ? g.tdt.slice(0, 10) : null,
-    ga_locked: usgDating ? 'crl' as const : 'sat' as const,
+    ga_locked: dating,
     plurality: 'singleton' as const,
     chorionicity: null,
     ttts: false,
@@ -70,6 +128,13 @@ export function payloadFromGebelikApi(patientId: string, veri: LiveGebelikVeri):
     risk_class: 'dusuk' as const,
     episode_status,
     lohusa_day: veri.lohusa ? Math.min(42, Math.max(0, veri.lohusa.dogumSonrasiGun)) : null,
+    usg_series: {
+      episodeId: g.id,
+      datingMethod: dating,
+      studies,
+    },
+    nst_studies: [],
+    vision_reads: [],
   }
   const parsed = kadinDogumPayloadSchema.safeParse(raw)
   return parsed.success ? parsed.data : null
@@ -85,34 +150,4 @@ export function chapterCalendar(payload: KadinDogumPayload, bookingGaWeeks: numb
 
 export function chapterWindows(hafta: number, gun: number) {
   return evaluateWindowsAtWeeks(hafta, gun)
-}
-
-export function usgStudiesFromIzlemler(izlemler: LiveIzlemRow[] | undefined, dating: 'sat' | 'crl'): UsgStudy[] {
-  return (izlemler || []).flatMap((i) => {
-    const u = i.usg
-    if (!u || Object.keys(u).length === 0) return []
-    const crl = Number(u.crl)
-    const modality = Number.isFinite(crl) && crl > 0 ? 'nt' as const : 'growth' as const
-    return [{
-      id: i.id,
-      blob_handle: `gebelik-izlem:${i.id}`,
-      mime: 'image/jpeg' as const,
-      ga_weeks: Math.floor(i.hafta),
-      ga_days: Math.round((i.hafta % 1) * 7),
-      dating_method: dating,
-      fetus: 'A' as const,
-      modality,
-      measurements: {
-        CRL: Number.isFinite(crl) ? crl : undefined,
-        BPD: Number(u.bpd) || undefined,
-        HC: Number(u.hc) || undefined,
-        AC: Number(u.ac) || undefined,
-        FL: Number(u.fl) || undefined,
-        EFW: Number(u.efw) || undefined,
-      },
-      non_diagnostic: false,
-      kvkk_fetal_image_consent: false,
-      report_template: modality === 'nt' ? 't1_nt' as const : 'growth' as const,
-    }]
-  })
 }

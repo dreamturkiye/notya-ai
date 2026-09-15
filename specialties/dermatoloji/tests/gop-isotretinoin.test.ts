@@ -16,6 +16,20 @@ describe('gop-isotretinoin', () => {
     assert.equal(blocked.allowed, false)
   })
 
+  it('blocks missing pregnancy test', () => {
+    const blocked = gopIsotretinoin({
+      two_contraception: true,
+      hcg_iso: null,
+      hcg_negative: false,
+      cycle_day: 2,
+      rx_days: 30,
+      start_iso: '2026-01-05',
+      today_iso: '2026-01-05',
+    })
+    assert.equal(blocked.allowed, false)
+    if (!blocked.allowed) assert.ok(blocked.blocks.some((b) => b.toLowerCase().includes('hcg')))
+  })
+
   it('blocks stale beta-hCG (≥14 days)', () => {
     const blocked = gopIsotretinoin({
       two_contraception: true,

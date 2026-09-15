@@ -172,6 +172,16 @@ export const admissionSchema = z.object({
   wardConsult: z.boolean(),
 })
 
+/** GÖP pack lives on the specialty payload — never on core patient types. */
+export const gopPackSchema = z.object({
+  two_contraception: z.boolean(),
+  hcg_iso: z.string().min(8).nullable(),
+  hcg_negative: z.boolean(),
+  cycle_day: z.number().nullable(),
+  rx_days: z.number(),
+  start_iso: z.string().min(8),
+})
+
 /**
  * Dermatology episode payload. Stored in specialty_records.payload.
  * PASI, Fitzpatrick, MED, GÖP, dermoscopy, ImageSeries live here only — never on core types.
@@ -196,6 +206,7 @@ export const dermatolojiPayloadSchema = z.object({
   bullous_workup: bullousWorkupSchema.nullable(),
   behcet_card: behcetCardSchema.nullable(),
   admission: admissionSchema.nullable(),
+  gop: gopPackSchema.optional(),
 })
 
 export type DermatolojiPayload = Infer<typeof dermatolojiPayloadSchema>
@@ -212,6 +223,7 @@ export type HairWorkup = Infer<typeof hairWorkupSchema>
 export type BullousWorkup = Infer<typeof bullousWorkupSchema>
 export type BehcetCard = Infer<typeof behcetCardSchema>
 export type Admission = Infer<typeof admissionSchema>
+export type GopPack = Infer<typeof gopPackSchema>
 
 /** Isolation probes — do not import other specialty folders into production code. */
 export const pediatriProbeSchema = z.object({

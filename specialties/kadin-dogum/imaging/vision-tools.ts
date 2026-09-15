@@ -39,7 +39,8 @@ export function analyzeUsg(input: {
     status: 'draft',
     drafted_by: input.actor,
     approved_by: null,
-    findings: input.findings,
+    findings: input.findings.trim()
+      || 'Taslak USG okuma: olcum ve tarama destegi. Fetal anomali tanisi konulmaz. Uzman onayi gerekir.',
     disclaimer: VISION_DISCLAIMER,
   }
 }
@@ -52,7 +53,8 @@ export function analyzeNst(input: { nst: NstStudyPayload; actor: Actor; findings
     status: 'draft',
     drafted_by: input.actor,
     approved_by: null,
-    findings: input.findings ?? `NST cat ${input.nst.category}; ${nstAction(input.nst.category).join('; ')}`,
+    findings: (input.findings ?? '').trim()
+      || `NST cat ${input.nst.category}; ${nstAction(input.nst.category).join('; ')}. Fetal iyilik taslagi, tani degildir.`,
     disclaimer: VISION_DISCLAIMER,
   }
 }

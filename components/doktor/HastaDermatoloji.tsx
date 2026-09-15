@@ -6,13 +6,18 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
-import { payloadFromGoruntuleme, type LiveGoruntuRow } from '@/lib/specialties/dermatoloji-live'
+import {
+  displayUrlsFromGoruntuleme,
+  payloadFromGoruntuleme,
+  type LiveGoruntuRow,
+} from '@/lib/specialties/dermatoloji-live'
 import LezyonKarti from '@/specialties/dermatoloji/ui/LezyonKarti'
 import VucutHaritasi from '@/specialties/dermatoloji/ui/VucutHaritasi'
 import FotoDermoskopiGaleri from '@/specialties/dermatoloji/ui/FotoDermoskopiGaleri'
 import BeforeAfterCompare from '@/specialties/dermatoloji/ui/BeforeAfterCompare'
 import AsistanGorselPanel from '@/specialties/dermatoloji/ui/AsistanGorselPanel'
 import SkorPaneli from '@/specialties/dermatoloji/ui/SkorPaneli'
+import GopBlok from '@/specialties/dermatoloji/ui/GopBlok'
 import YamaTakvimi from '@/specialties/dermatoloji/ui/YamaTakvimi'
 import FototerapiDefteri from '@/specialties/dermatoloji/ui/FototerapiDefteri'
 
@@ -45,8 +50,9 @@ export default function HastaDermatoloji({ patientId }: { patientId: string }) {
 
   useEffect(() => { yukle() }, [yukle])
 
-  const payload = payloadFromGoruntuleme(patientId, rows || [])
   const today = new Date().toISOString().slice(0, 10)
+  const payload = payloadFromGoruntuleme(patientId, rows || [], today)
+  const urls = displayUrlsFromGoruntuleme(rows || [])
 
   return (
     <div style={{ display: 'grid', gap: 12 }} data-chapter="dermatoloji">
@@ -62,10 +68,11 @@ export default function HastaDermatoloji({ patientId }: { patientId: string }) {
         <>
           <LezyonKarti lesions={payload.lesions} />
           <VucutHaritasi map={payload.total_body_map} />
-          <FotoDermoskopiGaleri photos={payload.photos} />
-          <BeforeAfterCompare pairs={payload.before_after} />
-          <AsistanGorselPanel reads={payload.vision_reads} />
+          <FotoDermoskopiGaleri photos={payload.photos} urls={urls} />
+          <BeforeAfterCompare pairs={payload.before_after} photos={payload.photos} urls={urls} />
+          <AsistanGorselPanel reads={payload.vision_reads} photos={payload.photos} />
           <SkorPaneli />
+          <GopBlok pack={payload.gop ?? null} today={today} />
           <YamaTakvimi course={payload.patch_courses[0] ?? null} today={today} />
           <FototerapiDefteri sessions={[]} />
         </>

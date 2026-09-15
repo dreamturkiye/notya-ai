@@ -28,6 +28,7 @@ export function validDerm(over: Partial<DermatolojiPayload> = {}): DermatolojiPa
     bullous_workup: null,
     behcet_card: null,
     admission: null,
+    gop: undefined,
     ...over,
   }
 }

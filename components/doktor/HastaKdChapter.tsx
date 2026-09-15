@@ -15,7 +15,6 @@ import {
   chapterCalendar,
   chapterWindows,
   payloadFromGebelikApi,
-  usgStudiesFromIzlemler,
   type LiveGebelikVeri,
 } from '@/lib/specialties/kadin-dogum-live'
 
@@ -25,7 +24,6 @@ export default function HastaKdChapter({ patientId, veri }: { patientId: string;
   const booking = veri.yas?.hafta ?? 10
   const visits = chapterCalendar(payload, Math.min(booking, 16))
   const windows = veri.yas ? chapterWindows(veri.yas.hafta, veri.yas.gun) : []
-  const studies = usgStudiesFromIzlemler(veri.izlemler, payload.ga_locked)
   const series = payload.usg_series ?? {
     episodeId: payload.episode_id,
     datingMethod: payload.ga_locked,
@@ -40,9 +38,13 @@ export default function HastaKdChapter({ patientId, veri }: { patientId: string;
       <GebeKarti payload={payload} />
       <IzlemTimeline visits={visits} />
       {windows.length > 0 && <TaramaPencereleri windows={windows} />}
-      <UsgGallery studies={studies} />
+      <UsgGallery studies={series.studies} />
       <UsgCompare series={series} />
-      <AsistanGorselPanel reads={payload.vision_reads ?? []} />
+      <AsistanGorselPanel
+        reads={payload.vision_reads ?? []}
+        studies={series.studies}
+        nst={payload.nst_studies?.[0] ?? null}
+      />
       <JinekolojiKart lmp={payload.sat} today={new Date().toISOString().slice(0, 10)} />
     </div>
   )

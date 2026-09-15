@@ -1,24 +1,91 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import type { VisionRead } from '../schema'
+import type { PhotoAsset, VisionRead } from '../schema'
+import { analyzeImage, uzmanOnay, VISION_DISCLAIMER, type Actor } from '../imaging/vision-tools'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.09)',
+  border: '1px solid rgba(255,255,255,0.12)',
   borderRadius: 12,
   padding: 16,
 }
 
-export function AsistanGorselPanel({ reads }: { reads: VisionRead[] }) {
+const btn: CSSProperties = {
+  background: '#7C3AED',
+  border: 'none',
+  color: 'white',
+  borderRadius: 8,
+  padding: '8px 12px',
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: 'pointer',
+}
+
+export function AsistanGorselPanel({
+  reads,
+  photos = [],
+  actor = 'asistan',
+}: {
+  reads: VisionRead[]
+  photos?: PhotoAsset[]
+  actor?: Actor
+}) {
+  const [local, setLocal] = useState<VisionRead[]>(reads)
+
+  const rows = useMemo(() => {
+    const byId = new Map(local.map((r) => [r.id, r]))
+    for (const r of reads) if (!byId.has(r.id)) byId.set(r.id, r)
+    return [...byId.values()]
+  }, [local, reads])
+
+  function draftPhoto() {
+    const ids = photos.map((p) => p.coreImageId)
+    if (!ids.length) return
+    const kind = photos.some((p) => p.kind.startsWith('dermoskopi')) ? 'dermoskopi_ipucu' : 'morfoloji'
+    const drafted = analyzeImage({
+      assetIds: ids.slice(0, 3),
+      task: kind,
+      actor,
+      observations: '',
+    })
+    setLocal((prev) => [...prev, drafted])
+  }
+
+  function approve(read: VisionRead) {
+    const result = uzmanOnay(read, actor)
+    if (!result.ok) return
+    setLocal((prev) => prev.map((r) => r.id === read.id ? result.read : r))
+  }
+
   return (
-    <section style={box} data-tab="AsistanGorselPanel">
-      <h2 style={{ margin: 0, fontSize: 16 }}>Asistan görsel panel</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>Draft → uzman onay. Asistan finalize edemez.</p>
+    <section style={box} data-tab="AsistanGorselPanel" data-specialty="dermatoloji" data-disclaimer={VISION_DISCLAIMER}>
+      <h2 style={{ margin: 0, fontSize: 16 }}>Asistan foto / dermoskopi taslağı</h2>
+      <p style={{ fontSize: 12, color: '#C4B5FD', margin: '8px 0' }}>
+        Tarama destegi, tani degildir. Doktor onayi gerekir.
+      </p>
+      <button type="button" style={btn} onClick={draftPhoto} disabled={!photos.length}>
+        derm.analyze_image taslak
+      </button>
       <ul style={{ fontSize: 13, paddingLeft: 18 }}>
-        {reads.map((r) => (
-          <li key={r.id}>{r.task} · {r.status} · {r.drafted_by}</li>
+        {rows.map((r) => (
+          <li key={r.id} style={{ marginBottom: 8 }}>
+            {r.task} · {r.status} · {r.drafted_by}
+            <div style={{ color: '#8FA0B5', fontSize: 12 }}>{r.observations}</div>
+            {r.status === 'draft' && (
+              <button
+                type="button"
+                style={{ ...btn, marginTop: 6, background: '#0F9B8E', opacity: actor === 'uzman' ? 1 : 0.45 }}
+                disabled={actor !== 'uzman'}
+                onClick={() => approve(r)}
+              >
+                Doktor onay
+              </button>
+            )}
+          </li>
         ))}
+        {rows.length === 0 && <li style={{ color: '#8FA0B5' }}>Taslak yok — Asistan kendi kaydını onaylayamaz.</li>}
       </ul>
     </section>
   )

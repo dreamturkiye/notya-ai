@@ -1,10 +1,7 @@
 /**
- * tsx --test <directory> resolves the folder to this barrel (index.ts).
- * Root package.json is a shared file we cannot edit; until it lists chapter test files,
- * NODE_TEST_CONTEXT loads tests/load.ts so the specialty tests actually run.
+ * Kadın-Doğum chapter barrel. Tests run via package.json globs (test:kd / test),
+ * not via NODE_TEST_CONTEXT side-load of tests/load.ts.
  */
-import { createRequire } from 'node:module'
-
 export { KADIN_DOGUM_MANIFEST } from './manifest'
 export {
   kadinDogumPayloadSchema,
@@ -26,7 +23,3 @@ export { evaluateWindows, antiDIndicated, souvenir3d4d } from './engines/test-wi
 export { KADIN_DOGUM_TOOLS } from './prompts/tools'
 export { lockSeriesToDating } from './imaging/usg-series'
 export { analyzeUsg, analyzeNst } from './imaging/vision-tools'
-
-if (process.env.NODE_TEST_CONTEXT) {
-  createRequire(import.meta.url)('./tests/load.ts')
-}

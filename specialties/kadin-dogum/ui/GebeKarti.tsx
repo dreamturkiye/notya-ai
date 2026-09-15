@@ -19,7 +19,7 @@ export function GebeKarti({ payload }: { payload: KadinDogumPayload }) {
         Episode {payload.episode_id} · {payload.episode_status} · risk {payload.risk_class}
       </p>
       <dl style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
-        <dt>SAT</dt><dd>{payload.sat ?? '—'}</dd>
+        <dt>SAT (payload)</dt><dd>{payload.sat ?? '—'}</dd>
         <dt>EDD Naegele</dt><dd>{payload.edd_naegele ?? '—'}</dd>
         <dt>EDD CRL</dt><dd>{payload.edd_crl ?? '—'}</dd>
         <dt>GA kilit</dt><dd>{payload.ga_locked}</dd>

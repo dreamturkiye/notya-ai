@@ -41,17 +41,13 @@ This sandbox no longer leaves the chapter unmounted.
 ## Tests
 
 ```
-pnpm test specialties/pediatri
-pnpm test specialties/kadin-dogum
+npm run test:kd
+npm run test:derm
+npm run test:specialties
+npm test
 ```
 
-`pnpm test <path>` currently **appends** the path to the existing `tsx --test` file list in `package.json` (shared, not edited). Pediatrics tests therefore still run from `lib/clinical/mchatR.test.ts` (and siblings).
-
-tsx treats a directory argument as an ESM import of `specialties/kadin-dogum/index.ts`. Until `package.json` can list `specialties/kadin-dogum/tests/*.test.ts`, `index.ts` loads `tests/load.ts` when `NODE_TEST_CONTEXT` is set so `pnpm test specialties/kadin-dogum` actually executes chapter tests. Direct glob also works:
-
-```
-npx tsx --test specialties/kadin-dogum/tests/schema-isolation.test.ts specialties/kadin-dogum/tests/pediatri-no-bleed.test.ts specialties/kadin-dogum/tests/sat-edd.test.ts specialties/kadin-dogum/tests/izlem-calendar.test.ts specialties/kadin-dogum/tests/test-windows.test.ts
-```
+Chapter files are listed in `package.json` (`test:kd` / `test`). `index.ts` does not side-load `tests/load.ts`.
 
 ## UI tabs (mounted)
 

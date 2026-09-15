@@ -13,7 +13,7 @@ function validKd(over: Partial<KadinDogumPayload> = {}): KadinDogumPayload {
     specialty: 'kadin-dogum',
     episode_id: 'ep-1',
     mother_patient_id: 'p-anne',
-    fetuses: [{ label: 'A', status: 'ongoing' }],
+    fetuses: [{ label: 'A', status: 'ongoing', linked_newborn_patient_id: undefined }],
     obstetric_score: { G: 1, P: 0, A: 0, Y: 0, D: 0, E: 0, prior_cs_count: 0, prior_cs_incision: 'none' },
     sat: '2026-01-15',
     edd_naegele: '2026-10-22',
@@ -28,6 +28,13 @@ function validKd(over: Partial<KadinDogumPayload> = {}): KadinDogumPayload {
     risk_class: 'dusuk',
     episode_status: 'gebe',
     lohusa_day: null,
+    visit_type: undefined,
+    unit: undefined,
+    usg_series: undefined,
+    nst_studies: undefined,
+    vision_reads: undefined,
+    colpo_images: undefined,
+    hsg_images: undefined,
     ...over,
   }
 }

@@ -14,9 +14,13 @@ export function LezyonKarti({ lesions }: { lesions: Lesion[] }) {
   return (
     <section style={box} data-tab="LezyonKarti">
       <h2 style={{ margin: 0, fontSize: 16 }}>Lezyon kartı</h2>
+      {lesions.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Henüz lezyon yok — görüntüleme satırlarından türetilir.</p>}
       <ul style={{ fontSize: 13, paddingLeft: 18 }}>
         {lesions.map((l) => (
-          <li key={l.id}>{l.id} · {l.region} · {l.morphology}</li>
+          <li key={l.id}>
+            {l.id} · {l.region} · {l.morphology}
+            {l.body_map_node ? ` · pin ${l.body_map_node}` : ''}
+          </li>
         ))}
       </ul>
     </section>

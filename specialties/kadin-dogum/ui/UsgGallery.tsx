@@ -1,7 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
-import { galleryKey, type UsgStudy } from '../protocols/usg'
+import type { UsgStudyPayload } from '../schema'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -10,17 +10,34 @@ const box: CSSProperties = {
   padding: 16,
 }
 
-export function UsgGallery({ studies }: { studies: UsgStudy[] }) {
+export function UsgGallery({
+  studies,
+  urls = {},
+}: {
+  studies: UsgStudyPayload[]
+  urls?: Record<string, string>
+}) {
   return (
     <section style={box} data-tab="UsgGallery">
       <h2 style={{ margin: 0, fontSize: 16 }}>USG galeri</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>Core blob handle — ikinci bir store yok. 3D/4D non-diagnostic. Silinmez.</p>
-      <ul style={{ fontSize: 13, paddingLeft: 18 }}>
+      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+        coreImageId from live mapper — ikinci store yok. 3D/4D non-diagnostic. Silinmez.
+      </p>
+      {studies.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Bu gebelikte USG kaydı yok.</p>}
+      <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 10 }}>
         {studies.map((s) => (
-          <li key={s.id}>
-            {galleryKey(s)} · {s.modality}
-            {s.non_diagnostic ? ' · non-diagnostic' : ''}
-            {s.kvkk_fetal_image_consent ? '' : ' · KVKK consent missing'}
+          <li key={s.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {urls[s.coreImageId] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={urls[s.coreImageId]} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8 }} />
+            ) : (
+              <code style={{ fontSize: 11, color: '#38BDF8' }}>{s.coreImageId}</code>
+            )}
+            <div style={{ fontSize: 13 }}>
+              {s.kind} · {s.gaWeeksDays.weeks}+{s.gaWeeksDays.days} · {s.datingMethod}
+              {s.nonDiagnostic ? ' · non-diagnostic' : ''}
+              {s.kvkk_fetal_image_consent ? '' : ' · KVKK consent missing'}
+            </div>
           </li>
         ))}
       </ul>

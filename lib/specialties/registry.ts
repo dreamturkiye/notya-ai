@@ -18,7 +18,9 @@ const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
 }
 
 export function specialtyProfile(keyHam: string | null | undefined): SpecialtyProfile {
-  const key = (keyHam || 'pediatri') as SpecialtyKey
+  const raw = (keyHam || 'pediatri').trim()
+  if (raw === 'kadin-dogum' || raw === 'kadin-hastaliklari-dogum') return KADIN_DOGUM_PROFILE
+  const key = raw as SpecialtyKey
   const chapter = CHAPTERS[key]
   if (chapter) return chapter
   return baselineProfile(key, BRANS_ETIKETLERI[key] || key, resmiUzmanlikAdi(key))

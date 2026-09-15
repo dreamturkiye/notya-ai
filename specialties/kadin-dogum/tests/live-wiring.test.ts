@@ -1,9 +1,13 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { specialtyProfile } from '../../../lib/specialties/registry'
-import { payloadFromGebelikApi } from '../../../lib/specialties/kadin-dogum-live'
-import { payloadFromGoruntuleme } from '../../../lib/specialties/dermatoloji-live'
+import { chapterCalendar, payloadFromGebelikApi, usgStudiesFromIzlemler } from '../../../lib/specialties/kadin-dogum-live'
+import { gopBlockFromPayload, payloadFromGoruntuleme } from '../../../lib/specialties/dermatoloji-live'
 import { kadinDogumPayloadSchema } from '../schema'
+
+const ROOT = join(import.meta.dirname, '..')
 
 describe('live chapter wiring', () => {
   it('registry serves kadin-dogum and dermatoloji chapters, not baseline', () => {
@@ -13,10 +17,32 @@ describe('live chapter wiring', () => {
     assert.ok(kd.sekmeler.some((s) => s.bilesen === 'GebeKarti'))
     assert.ok(kd.ekKaynaklar.some((k) => k.includes('ACOG')))
 
+    const alias = specialtyProfile('kadin-dogum')
+    assert.equal(alias.key, 'kadin-hastaliklari-dogum')
+
     const derm = specialtyProfile('dermatoloji')
     assert.notEqual(derm.olgunluk, 'baseline')
     assert.ok(derm.sekmeler.some((s) => s.bilesen === 'HastaDermatoloji'))
     assert.ok(derm.goruntu?.modaliteler.includes('dermatoskopi'))
+  })
+
+  it('HastaKdChapter mounts GebeKarti and dual-calendar IzlemTimeline', () => {
+    const src = readFileSync(join(ROOT, '..', '..', 'components', 'doktor', 'HastaKdChapter.tsx'), 'utf8')
+    assert.match(src, /GebeKarti/)
+    assert.match(src, /IzlemTimeline/)
+    assert.match(src, /UsgGallery/)
+    assert.match(src, /AsistanGorselPanel/)
+  })
+
+  it('Asistan panels are not identical files', () => {
+    const kd = readFileSync(join(ROOT, 'ui', 'AsistanGorselPanel.tsx'), 'utf8')
+    const derm = readFileSync(join(ROOT, '..', 'dermatoloji', 'ui', 'AsistanGorselPanel.tsx'), 'utf8')
+    assert.notEqual(kd, derm)
+    assert.match(kd, /Ölçüm ve tarama destegi, tani degildir\. Uzman onayi gerekir\./)
+    assert.match(derm, /Tarama destegi, tani degildir\. Doktor onayi gerekir\./)
+    const timeline = readFileSync(join(ROOT, 'ui', 'IzlemTimeline.tsx'), 'utf8')
+    assert.match(timeline, /Yasal \(DÖBYR\)/)
+    assert.match(timeline, /Klinik \(ACOG\)/)
   })
 
   it('gebelik API adapter keeps SAT on the specialty payload', () => {
@@ -35,20 +61,67 @@ describe('live chapter wiring', () => {
         dogum_tarihi: null,
       },
       yas: { hafta: 12, gun: 0 },
+      izlemler: [{
+        id: 'iz-20',
+        hafta: 20,
+        usg: { bpd: 48, hc: 175, ac: 150, fl: 33 },
+      }],
     })
     assert.ok(payload)
     assert.equal(payload?.sat, '2026-01-15')
     assert.equal(payload?.specialty, 'kadin-dogum')
     assert.equal(kadinDogumPayloadSchema.safeParse(payload).success, true)
     assert.equal(Object.prototype.hasOwnProperty.call(payload, 'child_patient_id'), false)
+    assert.equal(payload?.usg_series?.studies[0]?.coreImageId, 'iz-20')
+    assert.equal(payload?.usg_series?.studies[0]?.kind, 'ayrintili_18_22')
   })
 
-  it('görüntüleme adapter stores coreImageId only', () => {
+  it('live dual calendar at 30w keeps sb_required and acog_recommended uncollapsed', () => {
+    const payload = payloadFromGebelikApi('p-anne', {
+      gebelik: {
+        id: 'g-1',
+        sat: '2026-01-15',
+        tdt: '2026-10-22',
+        tdt_kaynak: 'sat',
+        gravida: 1,
+        para: 0,
+        abortus: 0,
+        yasayan: 0,
+        rh_negatif: false,
+        durum: 'aktif',
+        dogum_tarihi: null,
+      },
+      yas: { hafta: 30, gun: 0 },
+    })
+    assert.ok(payload)
+    const cal = chapterCalendar(payload!, 10)
+    const at30 = cal.filter((v) => Math.abs(v.ga_or_pp_day - 30) <= 1)
+    assert.ok(at30.some((v) => v.sb_required))
+    assert.ok(at30.some((v) => v.acog_recommended && v.sb_required === false))
+  })
+
+  it('görüntüleme adapter stores coreImageId only and builds series + GÖP block', () => {
     const payload = payloadFromGoruntuleme('p-deri', [
-      { id: 'img-1', modalite: 'diger', vucut_bolgesi: 'elbow-L', goruntuleme_tarihi: '2026-09-01' },
-    ])
+      { id: 'img-1', modalite: 'diger', vucut_bolgesi: 'elbow-L', goruntuleme_tarihi: '2026-01-10' },
+      { id: 'img-2', modalite: 'dermatoskopi', vucut_bolgesi: 'elbow-L', goruntuleme_tarihi: '2026-04-10' },
+    ], '2026-04-10')
     assert.equal(payload.specialty, 'dermatoloji')
     assert.equal(payload.photos[0]?.coreImageId, 'img-1')
     assert.equal(payload.lesions.length, 1)
+    assert.equal(payload.image_series.length, 1)
+    assert.equal(payload.before_after.length, 1)
+    assert.equal(payload.before_after[0]?.intervalDays, 90)
+    const gop = gopBlockFromPayload(payload, '2026-04-10')
+    assert.equal(gop.allowed, false)
+    if (!gop.allowed) assert.ok(gop.blocks.some((b) => b.toLowerCase().includes('hcg')))
+  })
+
+  it('usg mapper never invents a second blob store', () => {
+    const studies = usgStudiesFromIzlemler([
+      { id: 'iz-1', hafta: 32, usg: { efw: 1800, kind: '3d4d' } },
+    ], 'sat')
+    assert.equal(studies[0]?.coreImageId, 'iz-1')
+    assert.equal(studies[0]?.kind, '3d4d_hatira')
+    assert.equal(studies[0]?.nonDiagnostic, true)
   })
 })
