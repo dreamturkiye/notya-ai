@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { PhotoAsset, VisionRead } from '../schema'
 import { analyzeImage, uzmanOnay, VISION_DISCLAIMER, type Actor } from '../imaging/vision-tools'
+import { DERM_ACTOR, DERM_VISION_STATUS, DERM_VISION_TASK, dermLabel } from './labels'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -63,15 +64,15 @@ export function AsistanGorselPanel({
     <section style={box} data-tab="AsistanGorselPanel" data-specialty="dermatoloji" data-disclaimer={VISION_DISCLAIMER}>
       <h2 style={{ margin: 0, fontSize: 16 }}>Asistan foto / dermoskopi taslağı</h2>
       <p style={{ fontSize: 12, color: '#C4B5FD', margin: '8px 0' }}>
-        Tarama destegi, tani degildir. Doktor onayi gerekir.
+        Tarama desteği, tanı değildir. Doktor onayı gerekir.
       </p>
       <button type="button" style={btn} onClick={draftPhoto} disabled={!photos.length}>
-        derm.analyze_image taslak
+        Görüntü taslağı oluştur
       </button>
       <ul style={{ fontSize: 13, paddingLeft: 18 }}>
         {rows.map((r) => (
           <li key={r.id} style={{ marginBottom: 8 }}>
-            {r.task} · {r.status} · {r.drafted_by}
+            {dermLabel(DERM_VISION_TASK, r.task)} · {dermLabel(DERM_VISION_STATUS, r.status)} · {dermLabel(DERM_ACTOR, r.drafted_by)}
             <div style={{ color: '#8FA0B5', fontSize: 12 }}>{r.observations}</div>
             {r.status === 'draft' && (
               <button

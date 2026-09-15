@@ -34,15 +34,35 @@ describe('live chapter wiring', () => {
     assert.match(src, /AsistanGorselPanel/)
   })
 
+  it('HastaGebelik keeps active episodes out of Önceki Gebelikler and uses controlled start/izlem forms', () => {
+    const src = readFileSync(join(ROOT, '..', '..', 'components', 'doktor', 'HastaGebelik.tsx'), 'utf8')
+    assert.match(src, /oncekiGebelikleriFiltrele/)
+    assert.match(src, /yerelIsoTarih/)
+    assert.match(src, /set\(\(prev\) =>/)
+    assert.doesNotMatch(src, /: 'Sonlandı'/)
+  })
+
+  it('hasta dosyası gates pediatric tabs by age like KD is gated by sex', () => {
+    const src = readFileSync(join(ROOT, '..', '..', 'app', 'dashboard', 'doktor', 'hastalar', '[id]', 'page.tsx'), 'utf8')
+    assert.match(src, /pediatriSekmesiUygun/)
+    assert.match(src, /hastaDosyaSekmeleri/)
+    assert.match(src, /cinsiyet=\{patient\?\.cinsiyet\}/)
+  })
+
   it('Asistan panels are not identical files', () => {
     const kd = readFileSync(join(ROOT, 'ui', 'AsistanGorselPanel.tsx'), 'utf8')
     const derm = readFileSync(join(ROOT, '..', 'dermatoloji', 'ui', 'AsistanGorselPanel.tsx'), 'utf8')
     assert.notEqual(kd, derm)
-    assert.match(kd, /Ölçüm ve tarama destegi, tani degildir\. Uzman onayi gerekir\./)
-    assert.match(derm, /Tarama destegi, tani degildir\. Doktor onayi gerekir\./)
+    assert.match(kd, /Ölçüm ve tarama desteği, tanı değildir\. Uzman onayı gerekir\./)
+    assert.match(derm, /Tarama desteği, tanı değildir\. Doktor onayı gerekir\./)
     const timeline = readFileSync(join(ROOT, 'ui', 'IzlemTimeline.tsx'), 'utf8')
     assert.match(timeline, /Yasal \(DÖBYR\)/)
     assert.match(timeline, /Klinik \(ACOG\)/)
+    assert.match(timeline, /Yasal asgari \(DÖBYR\)/)
+    assert.match(timeline, /Klinik öneri \(ACOG\)/)
+    const gebe = readFileSync(join(ROOT, 'ui', 'GebeKarti.tsx'), 'utf8')
+    assert.doesNotMatch(gebe, /SAT \(payload\)/)
+    assert.doesNotMatch(gebe, /Episode \{payload\.episode_id\}/)
   })
 
   it('gebelik API adapter keeps SAT on the specialty payload', () => {
@@ -74,6 +94,29 @@ describe('live chapter wiring', () => {
     assert.equal(Object.prototype.hasOwnProperty.call(payload, 'child_patient_id'), false)
     assert.equal(payload?.usg_series?.studies[0]?.coreImageId, 'iz-20')
     assert.equal(payload?.usg_series?.studies[0]?.kind, 'ayrintili_18_22')
+    assert.equal(payload?.episode_status, 'gebe')
+  })
+
+  it('maps specialty status gebe as an active episode, not kapandi', () => {
+    const payload = payloadFromGebelikApi('p-anne', {
+      gebelik: {
+        id: 'g-live',
+        sat: '2026-04-28',
+        tdt: '2027-02-02',
+        tdt_kaynak: 'sat',
+        gravida: 1,
+        para: 0,
+        abortus: 0,
+        yasayan: 0,
+        rh_negatif: false,
+        durum: 'gebe',
+        dogum_tarihi: null,
+      },
+      yas: { hafta: 20, gun: 0 },
+    })
+    assert.ok(payload)
+    assert.equal(payload?.episode_status, 'gebe')
+    assert.notEqual(payload?.episode_status, 'kapandi')
   })
 
   it('live dual calendar at 30w keeps sb_required and acog_recommended uncollapsed', () => {
@@ -113,7 +156,11 @@ describe('live chapter wiring', () => {
     assert.equal(payload.before_after[0]?.intervalDays, 90)
     const gop = gopBlockFromPayload(payload, '2026-04-10')
     assert.equal(gop.allowed, false)
-    if (!gop.allowed) assert.ok(gop.blocks.some((b) => b.toLowerCase().includes('hcg')))
+    if (!gop.allowed) assert.ok(gop.blocks.some((b) => /hcg|β-hcg/i.test(b)))
+    const maleGop = gopBlockFromPayload(payload, '2026-04-10', 'male')
+    assert.equal(maleGop.allowed, true)
+    assert.ok(maleGop.notApplicable?.some((s) => /kontrasepsiyon/i.test(s)))
+    assert.equal(JSON.stringify(maleGop).toLowerCase().includes('two contraception'), false)
   })
 
   it('usg mapper never invents a second blob store', () => {

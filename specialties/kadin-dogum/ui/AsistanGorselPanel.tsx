@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react'
 import type { NstStudyPayload, UsgStudyPayload, VisionRead } from '../schema'
 import { analyzeNst, analyzeUsg, uzmanOnay, VISION_DISCLAIMER, type Actor } from '../imaging/vision-tools'
 import { NstStrip } from './NstStrip'
+import { KD_ACTOR, KD_VISION_STATUS, KD_VISION_TASK, kdLabel } from './labels'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -70,20 +71,20 @@ export function AsistanGorselPanel({
     <section style={box} data-tab="AsistanGorselPanel" data-specialty="kadin-dogum" data-disclaimer={VISION_DISCLAIMER}>
       <h2 style={{ margin: 0, fontSize: 16 }}>Asistan USG / NST taslağı</h2>
       <p style={{ fontSize: 12, color: '#FBBF24', margin: '8px 0' }}>
-        Ölçüm ve tarama destegi, tani degildir. Uzman onayi gerekir.
+        Ölçüm ve tarama desteği, tanı değildir. Uzman onayı gerekir.
       </p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
         <button type="button" style={btn} onClick={draftUsg} disabled={!studies.length}>
-          kd.analyze_usg taslak
+          USG taslağı oluştur
         </button>
         <button type="button" style={{ ...btn, background: '#1E3A5F' }} onClick={draftNst} disabled={!nst}>
-          kd.analyze_nst taslak
+          NST taslağı oluştur
         </button>
       </div>
       <ul style={{ fontSize: 13, paddingLeft: 18 }}>
         {rows.map((r) => (
           <li key={r.id} style={{ marginBottom: 8 }}>
-            {r.task} · {r.status} · {r.drafted_by}
+            {kdLabel(KD_VISION_TASK, r.task)} · {kdLabel(KD_VISION_STATUS, r.status)} · {kdLabel(KD_ACTOR, r.drafted_by)}
             <div style={{ color: '#8FA0B5', fontSize: 12 }}>{r.findings}</div>
             {r.status === 'draft' && (
               <button

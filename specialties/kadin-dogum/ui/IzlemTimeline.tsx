@@ -46,7 +46,7 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={col} data-column="yasal">
           <span style={badge('Yasal (DÖBYR)', 'yasal')} data-badge="yasal">Yasal (DÖBYR)</span>
-          <p style={{ fontSize: 11, color: '#8FA0B5' }}>sb_required</p>
+          <p style={{ fontSize: 11, color: '#8FA0B5' }}>Yasal asgari (DÖBYR)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {yasal.map((v, i) => (
               <li key={`sb-${v.kind}-${v.ga_or_pp_day}-${i}`}>
@@ -58,12 +58,12 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
         </div>
         <div style={col} data-column="klinik">
           <span style={badge('Klinik (ACOG)', 'klinik')} data-badge="klinik">Klinik (ACOG)</span>
-          <p style={{ fontSize: 11, color: '#8FA0B5' }}>acog_recommended</p>
+          <p style={{ fontSize: 11, color: '#8FA0B5' }}>Klinik öneri (ACOG)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {klinik.map((v, i) => (
               <li key={`acog-${v.kind}-${v.ga_or_pp_day}-${i}`}>
                 {rowLabel(v)}
-                {v.sb_required ? '' : ' · overlay'}
+                {v.sb_required ? '' : ' · klinik ek izlem'}
               </li>
             ))}
           </ol>

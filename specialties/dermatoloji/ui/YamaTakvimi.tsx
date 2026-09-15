@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import type { PatchCourse } from '../schema'
 import { patchStatus, plannedReads } from '../engines/patch-calendar'
+import { DERM_PATCH_STATUS, dermLabel } from './labels'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -12,7 +13,7 @@ const box: CSSProperties = {
 }
 
 export function YamaTakvimi({ course, today }: { course: PatchCourse | null; today: string }) {
-  const status = course ? patchStatus(course, today) : '—'
+  const status = course ? patchStatus(course, today) : null
   const plan = course ? plannedReads(course.appliedAt) : null
   return (
     <section style={box} data-tab="YamaTakvimi">
@@ -20,7 +21,7 @@ export function YamaTakvimi({ course, today }: { course: PatchCourse | null; tod
       {!course && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Aktif yama serisi yok.</p>}
       {course && (
         <>
-          <p style={{ fontSize: 13 }}>Durum: {String(status)}</p>
+          <p style={{ fontSize: 13 }}>Durum: {status ? dermLabel(DERM_PATCH_STATUS, status) : '—'}</p>
           <p style={{ fontSize: 12, color: '#8FA0B5' }}>
             Uygulama {course.appliedAt} · D2 {plan?.d2} · D4 {plan?.d4}
           </p>

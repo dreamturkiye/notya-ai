@@ -7,7 +7,7 @@ import type { BeforeAfterPair, ImageSeries, PhotoAsset, TotalBodyMap, VisionRead
 import { pinNode } from './total-body-map'
 import { pairBeforeAfter } from './before-after'
 
-export const VISION_DISCLAIMER = 'Tarama destegi, tani degildir. Doktor onayi gerekir.' as const
+export const VISION_DISCLAIMER = 'Tarama desteği, tanı değildir. Doktor onayı gerekir.' as const
 
 export const CORE_GORUNTULEME_PATH = '/api/doktor/goruntuleme'
 
@@ -43,7 +43,7 @@ export function analyzeImage(input: {
     drafted_by: input.actor,
     approved_by: null,
     observations: input.observations.trim()
-      || 'Taslak gozlem: tarama destegi. Melanoma tanisi konulmaz. Doktor onayi gerekir.',
+      || 'Taslak gözlem: tarama desteği. Melanom tanısı konulmaz. Doktor onayı gerekir.',
     differentials: input.differentials ?? [],
     next_step: input.next_step ?? '',
     disclaimer: VISION_DISCLAIMER,

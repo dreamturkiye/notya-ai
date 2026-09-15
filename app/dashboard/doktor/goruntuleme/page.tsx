@@ -75,8 +75,14 @@ const Page = () => {
   };
 
   useEffect(() => {
+    const hid = new URLSearchParams(window.location.search).get('hastaId') || '';
     fetchPatients();
-    fetchGoruntulemeler();
+    if (hid) {
+      setSelectedHastaId(hid);
+      setFilterHastaId(hid);
+    } else {
+      fetchGoruntulemeler();
+    }
   }, []);
 
   useEffect(() => {

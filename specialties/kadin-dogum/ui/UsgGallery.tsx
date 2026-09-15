@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react'
 import type { UsgStudyPayload } from '../schema'
+import { KD_GA_LOCK, KD_USG_KIND, kdLabel } from './labels'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -21,7 +22,7 @@ export function UsgGallery({
     <section style={box} data-tab="UsgGallery">
       <h2 style={{ margin: 0, fontSize: 16 }}>USG galeri</h2>
       <p style={{ fontSize: 12, color: '#8FA0B5' }}>
-        coreImageId from live mapper — ikinci store yok. 3D/4D non-diagnostic. Silinmez.
+        Görüntüler mevcut görüntüleme kaydına bağlıdır; ayrı bir arşiv yok. 3D/4D tanısal değildir ve silinmez.
       </p>
       {studies.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Bu gebelikte USG kaydı yok.</p>}
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 10 }}>
@@ -31,12 +32,14 @@ export function UsgGallery({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={urls[s.coreImageId]} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8 }} />
             ) : (
-              <code style={{ fontSize: 11, color: '#38BDF8' }}>{s.coreImageId}</code>
+              <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#8FA0B5', textAlign: 'center', padding: 6 }}>
+                Görüntü yok
+              </div>
             )}
             <div style={{ fontSize: 13 }}>
-              {s.kind} · {s.gaWeeksDays.weeks}+{s.gaWeeksDays.days} · {s.datingMethod}
-              {s.nonDiagnostic ? ' · non-diagnostic' : ''}
-              {s.kvkk_fetal_image_consent ? '' : ' · KVKK consent missing'}
+              {kdLabel(KD_USG_KIND, s.kind)} · {s.gaWeeksDays.weeks}+{s.gaWeeksDays.days} · {kdLabel(KD_GA_LOCK, s.datingMethod)}
+              {s.nonDiagnostic ? ' · tanısal değil' : ''}
+              {s.kvkk_fetal_image_consent ? '' : ' · KVKK fetal görüntü onamı yok'}
             </div>
           </li>
         ))}
