@@ -18,6 +18,8 @@ export type {
   ObstetricScore,
   AntiDDose,
 } from './types'
+export { currentGa, naegeleEdd, crlToGa, crlToEdd } from './engines/sat-edd'
+export { buildIzlemCalendar, sbMinimumFour, privateOverlay, lohusaCalendar } from './engines/izlem-calendar'
 
 if (process.env.NODE_TEST_CONTEXT) {
   await import('./tests/load')
