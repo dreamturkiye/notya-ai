@@ -89,4 +89,18 @@ describe('hedefBoy (mid-parental height)', () => {
     assert.doesNotMatch(ayar, /Hedef Boy/)
     assert.match(demo, /hedefBoy:\s*null/)
   })
+
+  it('ships 3D cartoon family cutouts for the Araçlar studio', () => {
+    const root = join(import.meta.dirname, '../..')
+    const manken = readFileSync(join(root, 'components/hedefBoy/HedefBoyManken.tsx'), 'utf8')
+    assert.match(manken, /\/hedef-boy\/baba\.png/)
+    assert.match(manken, /\/hedef-boy\/anne\.png/)
+    assert.match(manken, /\/hedef-boy\/cocuk-erkek\.png/)
+    assert.match(manken, /\/hedef-boy\/cocuk-kiz\.png/)
+    for (const ad of ['baba', 'anne', 'cocuk-erkek', 'cocuk-kiz']) {
+      const buf = readFileSync(join(root, `public/hedef-boy/${ad}.png`))
+      assert.ok(buf.length > 50_000, ad)
+      assert.equal(buf.subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
+    }
+  })
 })
