@@ -427,9 +427,9 @@ export default function DoktorDashboard() {
               { ikon: 'takvim', text: 'Randevular', path: '/dashboard/doktor/randevular', renk: '#0F9B8E' },
               { ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan', renk: '#7C8CF8' },
               { ikon: 'hastaEkle', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle', renk: '#14B8A6' },
+              { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools', renk: '#E8C547' },
               { ikon: 'belge', text: 'Belge Yükle', path: '/dashboard/doktor/belgeler', renk: '#38BDF8' },
               { ikon: 'inceleme', text: 'İnceleme', path: '/dashboard/doktor/inceleme', renk: '#F59E0B' },
-              { ikon: 'araclar', text: 'Araçlar', path: '/doktor-tools', renk: '#A78BFA' },
               { ikon: 'raporlar', text: 'Raporlar', path: '/dashboard/doktor/raporlar', renk: '#8FA0B5' },
             ].map((karo) => (
               <button

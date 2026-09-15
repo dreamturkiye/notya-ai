@@ -8,11 +8,12 @@
 import DoktorNav from '@/components/doktor/DoktorNav';
 
 const BOLUMLER = [
+  { baslik: 'Hedef Boy', aciklama: 'Anne ve baba boyunu girin — aile stüdyosu Araçlar’da açılır', rota: '/doktor-tools', ikon: '📏' },
   { baslik: 'Entegrasyonlar', aciklama: 'Takvim, e-posta ve dış sistem bağlantıları', rota: '/dashboard/doktor/entegrasyonlar', ikon: '🔌' },
   { baslik: 'Hesabım', aciklama: 'E-posta ve şifre', rota: '/dashboard/doktor/hesap', ikon: '🔑' },
   { baslik: 'Personel', aciklama: 'Çalışanların hesapları ve erişim yetkileri', rota: '/dashboard/doktor/personel', ikon: '👥' },
   { baslik: 'SGK Medula', aciklama: 'SGK Medula işlemleri', rota: '/doktor-tools/sgk-medula', ikon: '🏥' },
-  { baslik: 'Araçlar', aciklama: 'ICD-10, e-reçete, epikriz ve diğer yardımcı araçlar', rota: '/doktor-tools', ikon: '🧰' },
+  { baslik: 'Araçlar', aciklama: 'Hedef boy, ICD-10, e-reçete, epikriz ve diğer yardımcı araçlar', rota: '/doktor-tools', ikon: '🧰' },
 ];
 
 export default function AyarlarPage() {
