@@ -1,0 +1,42 @@
+{
+  "specialty": "dermatoloji",
+  "episode_id": "ep-behcet-1",
+  "patient_id": "p-deri-4",
+  "visit_type": "yandal",
+  "unit": "behcet-bagdokusu",
+  "patient_derm": {
+    "fitzpatrick": "IV",
+    "occupation": "çiftçi",
+    "phototype": "IV",
+    "atopic": false,
+    "family_atopy": false,
+    "hla_b51": true,
+    "behcet_history": true
+  },
+  "lesions": [{ "id": "L-oral", "region": "oral-mucosa", "morphology": "aphthous-ulcer" }],
+  "photos": [],
+  "image_series": [],
+  "before_after": [],
+  "vision_reads": [],
+  "total_body_map": null,
+  "bedside_tests": [{
+    "koh": "not_done",
+    "wood": "not_done",
+    "tzanck": "not_done",
+    "pathergy": "pos",
+    "demodex": "not_done",
+    "darkfield": "not_done",
+    "nativeFungus": "not_done"
+  }],
+  "patch_courses": [],
+  "hair_workup": null,
+  "bullous_workup": null,
+  "behcet_card": {
+    "oral": true,
+    "genital": true,
+    "eye": false,
+    "pathergy": true,
+    "isgCriteriaMet": true
+  },
+  "admission": null
+}
