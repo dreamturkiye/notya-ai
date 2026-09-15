@@ -1,0 +1,31 @@
+{
+  "specialty": "dermatoloji",
+  "episode_id": "ep-nbuvb-1",
+  "patient_id": "p-deri-3",
+  "visit_type": "fototerapi",
+  "unit": "fototerapi",
+  "patient_derm": {
+    "fitzpatrick": "III",
+    "occupation": "memur",
+    "phototype": "III",
+    "atopic": false,
+    "family_atopy": false
+  },
+  "lesions": [{ "id": "L-trunk", "region": "trunk", "morphology": "plaque" }],
+  "photos": [],
+  "image_series": [],
+  "before_after": [],
+  "vision_reads": [],
+  "total_body_map": null,
+  "bedside_tests": [],
+  "patch_courses": [],
+  "hair_workup": null,
+  "bullous_workup": null,
+  "behcet_card": null,
+  "admission": null,
+  "sessions": [
+    { "date": "2026-02-01", "device": "nb-uvb-311", "j_cm2": 0.3 },
+    { "date": "2026-02-03", "device": "nb-uvb-311", "j_cm2": 0.35 },
+    { "date": "2026-02-05", "device": "nb-uvb-311", "j_cm2": 0.4 }
+  ]
+}
