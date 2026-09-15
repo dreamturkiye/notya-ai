@@ -1,0 +1,32 @@
+{
+  "specialty": "dermatoloji",
+  "episode_id": "ep-pso-1",
+  "patient_id": "p-deri-1",
+  "visit_type": "yandal",
+  "unit": "psoriasis",
+  "patient_derm": {
+    "fitzpatrick": "III",
+    "occupation": "öğretmen",
+    "phototype": "III",
+    "atopic": false,
+    "family_atopy": false
+  },
+  "lesions": [{ "id": "L1", "region": "extensor-elbow-L", "morphology": "plaque" }],
+  "photos": [],
+  "image_series": [],
+  "before_after": [],
+  "vision_reads": [],
+  "total_body_map": null,
+  "bedside_tests": [],
+  "patch_courses": [],
+  "hair_workup": null,
+  "bullous_workup": null,
+  "behcet_card": null,
+  "admission": null,
+  "pasi_regions": {
+    "head": { "e": 1, "i": 1, "d": 1, "a": 1 },
+    "upper": { "e": 2, "i": 2, "d": 2, "a": 2 },
+    "trunk": { "e": 2, "i": 2, "d": 2, "a": 3 },
+    "lower": { "e": 2, "i": 2, "d": 2, "a": 2 }
+  }
+}
