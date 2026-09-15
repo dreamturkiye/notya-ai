@@ -16,6 +16,7 @@ import HastaKonsult from '@/components/doktor/HastaKonsult';
 import HastaBuyumeEgrileri from '@/components/doktor/HastaBuyumeEgrileri';
 import HastaMchat from '@/components/doktor/HastaMchat';
 import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
+import HastaGebelik from '@/components/doktor/HastaGebelik';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
@@ -63,7 +64,13 @@ export default function HastaProfilPage() {
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
 
-  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış"];
+  const gebelikUygun = (() => {
+    if (!patient?.cinsiyet || patient.cinsiyet !== 'Kadın') return false;
+    if (!patient.dogum_tarihi) return true;
+    const d = new Date(patient.dogum_tarihi); if (isNaN(d.getTime())) return true;
+    return (Date.now() - d.getTime()) / (365.25 * 86400000) >= 12;
+  })();
+  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış", ...(gebelikUygun ? ['Gebelik Takibi'] : [])];
 
   useEffect(() => {
     if (!patientId) return;
@@ -291,6 +298,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 9 && <HastaMchat patientId={patientId} />}
         {!loading && !error && activeTab === 10 && <HastaGelisimTaramasi patientId={patientId} />}
         {!loading && !error && activeTab === 11 && <HastaKonsult patientId={patientId} />}
+        {!loading && !error && activeTab === 12 && gebelikUygun && <HastaGebelik patientId={patientId} />}
       </div>
     </div>
   );
