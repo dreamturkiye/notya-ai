@@ -1,0 +1,8 @@
+{
+  "id": "series-L1",
+  "lesionId": "L1",
+  "timepoints": [
+    { "at": "2026-01-10", "label": "month-0", "photoIds": ["ph-m0-genel", "ph-m0-yakin"] },
+    { "at": "2026-04-10", "label": "month-3", "photoIds": ["ph-m3-yakin"] }
+  ]
+}
