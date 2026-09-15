@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 import {
   getAccessToken, getAccessTokenAsync,
   toolsShell,
@@ -347,7 +348,12 @@ export default function IncelemePage() {
                           style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 13, padding: '8px 10px', fontStyle: 'italic', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                       </div>
                       <div style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 3 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E' }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></span>
+                          {/* NOTYA-BLE-01/02 (Kaan 2026-09-15): Bluetooth cihazdan ölçüm + cihaz uygulamasından dosya — core, tüm branşlar */}
+                          <CihazdanAl hastaId={note.patientId} notId={note.id} onOlcum={(v) => setVitalTaslak({ ...vitalTaslak, ...v })} />
+                          <CihazDosyasi hastaId={note.patientId} notId={note.id} />
+                        </div>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                           {([['ates', 'Ateş', '°C'], ['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const).map(([k, etiket, birim]) => {
                             // Kaan (2026-09-13): Neyzi büyüme persentili — yalnız kilo/boy/baş çevresinde, sunucudan hazır gelir

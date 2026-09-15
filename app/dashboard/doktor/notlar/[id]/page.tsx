@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 
 interface NotVeri {
   not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
@@ -106,7 +107,12 @@ export default function NotSayfasi() {
           <input value={basvuru} onChange={(e) => isaretle(setBasvuru)(e.target.value)} style={{ ...kutu, fontStyle: 'italic' }} />
         </div>
         <div>
-          <div style={etiket}>Yaşamsal Bulgular</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={etiket}>Yaşamsal Bulgular</div>
+            {/* NOTYA-BLE-01/02: cihazdan ölçüm / dosya — sonradan da eklenebilir; Kaydet ve yeniden onayla ile nota işlenir */}
+            <CihazdanAl hastaId={veri.hasta.patientId} notId={veri.not.id} onOlcum={(v) => isaretle((x: Record<string, string>) => setVital({ ...vital, ...x }))(v)} />
+            <CihazDosyasi hastaId={veri.hasta.patientId} notId={veri.not.id} />
+          </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {VITAL.map(([k, ad, birim]) => {
               // Kaan (2026-09-13): Neyzi büyüme persentili — sunucudan hazır gelir
