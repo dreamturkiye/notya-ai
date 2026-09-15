@@ -12,6 +12,7 @@ export {
   kadinDogumProbeSchema,
 } from './schema'
 export type { VisitType, ClinicUnit, DermatolojiPayload } from './types'
+export { DERMATOLOJI_TOOLS } from './prompts/tools'
 
 if (process.env.NODE_TEST_CONTEXT) {
   createRequire(import.meta.url)('./tests/load.ts')
