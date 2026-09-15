@@ -6,16 +6,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HastaKdChapter from '@/components/doktor/HastaKdChapter';
+import { oncekiGebelikDurumMetni, oncekiGebelikEtiketTuru, oncekiGebelikleriFiltrele } from '@/lib/clinical/gebelikDurum';
 
 type Uyari = { seviye: 'kritik' | 'dikkat' | 'bilgi'; metin: string };
 type Pencere = { no: number; etiket: string; haftaBas: number; haftaSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' };
 type Izlem = { id: string; tarih: string; hafta: number; kilo: number | null; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; fundus_yuksekligi: number | null; fetal_kalp_atimi: number | null; proteinuri: string | null; usg: Record<string, string | number> | null; not_metni: string | null };
 type Veri = {
   gebelik: { id: string; sat: string | null; tdt: string; tdt_kaynak: string; gravida: number | null; para: number | null; abortus: number | null; yasayan: number | null; kan_grubu: string | null; rh_negatif: boolean; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null } | null;
-  izlemler: Izlem[]; gecmis: Array<{ id: string; tdt: string; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null }>;
+  izlemler: Izlem[]; gecmis: Array<{ id: string; sat?: string | null; tdt: string; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null }>;
   yas: { hafta: number; gun: number; trimester: number; metin: string; toplamGun: number } | null;
   takvim: Pencere[]; uyarilar: Uyari[]; kiloHedefi: { alt: number; ust: number; etiket: string } | null; gebelikOncesiVki: number | null;
-  biyometri?: Array<{ izlemId: string; hafta: number; hc: Bio | null; bpd: Bio | null; ac: Bio | null; fl: Bio | null; efw: number | null }>;
+  biyometri?: Array<{ izlemId: string; hafta: number; hc: Bio | null; bpd: Bio | null; ac: Bio | null; fl: Bio | null; efw: number | null; efwGirilen?: number | null; efwKaynak?: 'hadlock' | 'girilen' | null }>;
   lohusa?: { dogumSonrasiGun: number; izlemler: LohusaIzlem[]; takvim: Array<{ no: number; etiket: string; gunBas: number; gunSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' }> } | null;
   genetikTaramalar?: Array<{ id: string; tur: string; tarih: string; hafta: number | null; veri: Record<string, string | number | null>; ntDegerlendirme?: { bayrak: boolean; not: string } | null }>;
   ileriAnneYasi?: boolean | null;
@@ -33,6 +34,14 @@ const etiketS: React.CSSProperties = { fontSize: 11.5, color: '#8FA0B5', marginB
 const btn = (birincil = false): React.CSSProperties => ({ background: birincil ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: birincil ? 'white' : '#EDF1F7', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' });
 
 function trTarih(iso: string | null) { return iso ? new Date(iso).toLocaleDateString('tr-TR') : '—'; }
+
+function yerelIsoTarih() {
+  const n = new Date();
+  const y = n.getFullYear();
+  const m = String(n.getMonth() + 1).padStart(2, '0');
+  const d = String(n.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 export default function HastaGebelik({ patientId }: { patientId: string }) {
   const [veri, setVeri] = useState<Veri | null>(null);
@@ -142,10 +151,12 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
   if (yukleniyor) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Yükleniyor…</div>;
 
-  const alan = (key: string, label: string, state: Record<string, string>, set: (s: Record<string, string>) => void, tip = 'text', ph = '') => (
+  const onceki = veri ? oncekiGebelikleriFiltrele(veri.gecmis, veri.gebelik) : [];
+
+  const alan = (key: string, label: string, state: Record<string, string>, set: React.Dispatch<React.SetStateAction<Record<string, string>>>, tip = 'text', ph = '') => (
     <label style={{ display: 'block' }}>
       <span style={etiketS}>{label}</span>
-      <input type={tip} value={state[key] || ''} placeholder={ph} onChange={(e) => set({ ...state, [key]: e.target.value })} style={giris} />
+      <input type={tip} name={key} value={state[key] || ''} placeholder={ph} onChange={(e) => { const v = e.target.value; set((prev) => ({ ...prev, [key]: v })); }} style={giris} />
     </label>
   );
 
@@ -161,7 +172,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         <div style={kutu}>
           <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 6 }}>Aktif gebelik kaydı yok</div>
           {!baslatAcik ? <button type="button" style={btn(true)} onClick={() => setBaslatAcik(true)}>+ Gebelik Takibi Başlat</button> : (
-            <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
+            <form onSubmit={(e) => { e.preventDefault(); baslat(); }} style={{ display: 'grid', gap: 10, marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
                 {alan('sat', 'Son adet tarihi (SAT)', f, setF, 'date')}
                 {alan('tdt', 'Tahmini doğum tarihi (USG ile — isteğe bağlı)', f, setF, 'date')}
@@ -170,10 +181,10 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 {alan('gebelikOncesiKilo', 'Gebelik öncesi kilo (kg)', f, setF, 'number')}{alan('boy', 'Boy (cm)', f, setF, 'number')}
                 {alan('kanGrubu', 'Kan grubu', f, setF, 'text', 'A, B, AB, 0')}
                 <label style={{ display: 'block' }}><span style={etiketS}>Rh</span>
-                  <select value={f.rh || ''} onChange={(e) => setF({ ...f, rh: e.target.value })} style={giris}><option value="">—</option><option value="pozitif">Rh (+)</option><option value="negatif">Rh (−)</option></select></label>
+                  <select value={f.rh || ''} onChange={(e) => { const v = e.target.value; setF((prev) => ({ ...prev, rh: v })); }} style={giris}><option value="">—</option><option value="pozitif">Rh (+)</option><option value="negatif">Rh (−)</option></select></label>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn(true)} onClick={baslat}>Kaydet</button><button type="button" style={btn()} onClick={() => setBaslatAcik(false)}>Vazgeç</button></div>
-            </div>
+              <div style={{ display: 'flex', gap: 8 }}><button type="submit" style={btn(true)}>Kaydet</button><button type="button" style={btn()} onClick={() => setBaslatAcik(false)}>Vazgeç</button></div>
+            </form>
           )}
         </div>
       )}
@@ -195,10 +206,16 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {veri.lohusa ? (
-                  <button type="button" style={btn(true)} onClick={() => setLohusaAcik((v) => !v)}>+ Lohusa İzlemi Ekle</button>
+                  <button type="button" style={btn(true)} onClick={() => {
+                    setL((prev) => ({ ...prev, tarih: prev.tarih || yerelIsoTarih() }));
+                    setLohusaAcik((v) => !v);
+                  }}>+ Lohusa İzlemi Ekle</button>
                 ) : (
                   <>
-                    <button type="button" style={btn(true)} onClick={() => setIzlemAcik((v) => !v)}>+ İzlem Ekle</button>
+                    <button type="button" style={btn(true)} onClick={() => {
+                      setG((prev) => ({ ...prev, tarih: prev.tarih || yerelIsoTarih() }));
+                      setIzlemAcik((v) => !v);
+                    }}>+ İzlem Ekle</button>
                     <button type="button" style={btn()} onClick={() => sonlandir('tamamlandi')}>Doğum Gerçekleşti</button>
                   </>
                 )}
@@ -251,14 +268,14 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 {alan('ts', 'TA sistolik', g, setG, 'number')}{alan('td', 'TA diastolik', g, setG, 'number')}
                 {alan('fundus', 'Fundus yüksekliği (cm)', g, setG, 'number')}{alan('fka', 'Fetal kalp atımı (/dk)', g, setG, 'number')}
                 <label style={{ display: 'block' }}><span style={etiketS}>İdrar proteinüri</span>
-                  <select value={g.proteinuri || ''} onChange={(e) => setG({ ...g, proteinuri: e.target.value })} style={giris}><option value="">—</option><option>Negatif</option><option>Eser</option><option>+</option><option>++</option><option>+++</option></select></label>
+                  <select value={g.proteinuri || ''} onChange={(e) => { const v = e.target.value; setG((prev) => ({ ...prev, proteinuri: v })); }} style={giris}><option value="">—</option><option>Negatif</option><option>Eser</option><option>+</option><option>++</option><option>+++</option></select></label>
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', margin: '14px 0 6px' }}>USG (isteğe bağlı — ölçümler kaydedilir; persentil yorumu hekimindir)</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
                 {alan('crl', 'CRL (mm)', g, setG)}{alan('bpd', 'BPD (mm)', g, setG)}{alan('hc', 'HC (mm)', g, setG)}{alan('ac', 'AC (mm)', g, setG)}{alan('fl', 'FL (mm)', g, setG)}{alan('efw', 'EFW (g)', g, setG)}
                 {alan('amnion', 'Amnion (AFI/normal)', g, setG)}{alan('plasenta', 'Plasenta', g, setG)}{alan('prezentasyon', 'Prezentasyon', g, setG, 'text', 'Sefalik / Makat')}
               </div>
-              <label style={{ display: 'block', marginTop: 10 }}><span style={etiketS}>Not</span><textarea value={g.not || ''} onChange={(e) => setG({ ...g, not: e.target.value })} style={{ ...giris, minHeight: 60 }} /></label>
+              <label style={{ display: 'block', marginTop: 10 }}><span style={etiketS}>Not</span><textarea value={g.not || ''} onChange={(e) => { const v = e.target.value; setG((prev) => ({ ...prev, not: v })); }} style={{ ...giris, minHeight: 60 }} /></label>
               <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                 <button type="button" style={btn()} onClick={() => izlemKaydet(false)}>Sadece Kaydet</button>
                 <button type="button" style={btn(true)} onClick={() => izlemKaydet(true)}>Kaydet ve Bugünkü Muayene Formuna Ekle</button>
@@ -300,7 +317,11 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                           const b = veri.biyometri?.find((x) => x.izlemId === i.id);
                           if (!b) return i.usg ? Object.entries(i.usg).map(([k, v]) => `${k.toUpperCase()} ${v}`).join(' · ') : '—';
                           const r = (ad: string, x: Bio | null) => x ? <span key={ad} style={{ color: x.durum === 'normal' ? '#C9D4E3' : '#F59E0B', marginRight: 8 }}>{ad} {x.deger} <b>p{x.persentil}</b></span> : null;
-                          return <>{r('HC', b.hc)}{r('BPD', b.bpd)}{r('AC', b.ac)}{r('FL', b.fl)}{b.efw ? <span style={{ color: '#2DD4BF' }}>EFW {b.efw} g</span> : null}</>;
+                          return <>{r('HC', b.hc)}{r('BPD', b.bpd)}{r('AC', b.ac)}{r('FL', b.fl)}{b.efw ? (
+                            <span style={{ color: '#2DD4BF' }} title={b.efwKaynak === 'hadlock' ? 'Hadlock 1985 (HC-AC-FL)' : undefined}>
+                              EFW {b.efw} g{b.efwKaynak === 'hadlock' ? ` (Hadlock${b.efwGirilen && b.efwGirilen !== b.efw ? `; girilen ${b.efwGirilen} g` : ''})` : ''}
+                            </span>
+                          ) : null}</>;
                         })()}</td>
                       </tr>
                     ))}
@@ -435,12 +456,20 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       <KadinSagligiPaneli patientId={patientId} />
 
-      {veri && veri.gecmis.length > 0 && (
+      {veri && (
         <div style={kutu}>
           <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>Önceki Gebelikler</div>
-          {veri.gecmis.map((p) => (
-            <div key={p.id} style={{ fontSize: 13, color: '#C9D4E3', padding: '4px 0' }}>TDT {trTarih(p.tdt)} · {p.durum === 'tamamlandi' ? `Doğum ${trTarih(p.dogum_tarihi)}${p.dogum_sekli ? ` (${p.dogum_sekli})` : ''}` : 'Sonlandı'}</div>
-          ))}
+          {onceki.length === 0 ? (
+            <div style={{ fontSize: 13, color: '#8FA0B5' }}>Yok</div>
+          ) : onceki.map((p) => {
+            const tur = oncekiGebelikEtiketTuru(p.durum);
+            const durumYazi = tur === 'dogum'
+              ? `Doğum ${trTarih(p.dogum_tarihi)}${p.dogum_sekli ? ` (${p.dogum_sekli})` : ''}`
+              : oncekiGebelikDurumMetni(p.durum);
+            return (
+              <div key={p.id} style={{ fontSize: 13, color: '#C9D4E3', padding: '4px 0' }}>TDT {trTarih(p.tdt)} · {durumYazi}</div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -471,7 +500,7 @@ function KadinSagligiPaneli({ patientId }: { patientId: string }) {
   if (!d) return null;
   const TR: Record<string, string> = { gerekli: 'Gerekli', guncel: 'Güncel', yakinda: 'Yakında', 'kapsam-disi': 'Yaş dışı' };
   const RK: Record<string, string> = { gerekli: '#EF4444', guncel: '#22C55E', yakinda: '#F59E0B', 'kapsam-disi': '#475569' };
-  const inp = (k: string, label: string, tip = 'text') => <label style={{ display: 'block' }}><span style={etiketS}>{label}</span><input type={tip} value={f[k] || ''} onChange={(e) => setF({ ...f, [k]: e.target.value })} style={giris} /></label>;
+  const inp = (k: string, label: string, tip = 'text') => <label style={{ display: 'block' }}><span style={etiketS}>{label}</span><input type={tip} name={k} value={f[k] || ''} onChange={(e) => { const v = e.target.value; setF((prev) => ({ ...prev, [k]: v })); }} style={giris} /></label>;
   return (
     <div style={kutu}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>

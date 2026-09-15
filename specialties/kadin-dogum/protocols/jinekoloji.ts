@@ -10,8 +10,8 @@ export type JinekolojiReminder = {
 }
 
 export const CERVIX_SCREENING: JinekolojiReminder[] = [
-  { id: 'hpv-dna-national', label: 'Ulusal HPV-DNA', interval: '30–65 q5y', notes: 'KETEM/ASM ücretsiz' },
-  { id: 'clinic-pap', label: 'Klinik Pap', interval: '21+ q3y or co-test', notes: 'colposcopy image archive type' },
+  { id: 'hpv-dna-national', label: 'Ulusal HPV-DNA', interval: '30–65 yaş, 5 yılda bir', notes: 'KETEM/ASM ücretsiz' },
+  { id: 'clinic-pap', label: 'Klinik Pap', interval: '21+ her 3 yıl veya ko-test', notes: 'kolposkopi görüntü arşivi' },
 ]
 
 export const BREAST_SCREENING: JinekolojiReminder[] = [
@@ -19,11 +19,11 @@ export const BREAST_SCREENING: JinekolojiReminder[] = [
 ]
 
 export const CONTRACEPTION = [
-  'IUD insert/remove',
+  'RİA takma/çıkarma',
   'implant',
-  'OCP interactions',
-  'EC',
-  'postpartum timing',
+  'OKS etkileşimleri',
+  'Acil kontrasepsiyon',
+  'Lohusalık zamanlaması',
 ] as const
 
 export const REI_PACK = [
@@ -69,9 +69,9 @@ export function dueMammo(input: { age: number; last_mammo_year?: number; now_yea
 }
 
 export function cycleNote(lmpIso: string | null, todayIso: string): { day: number | null; label: string } {
-  if (!lmpIso) return { day: null, label: 'LMP unknown' }
+  if (!lmpIso) return { day: null, label: 'SAT bilinmiyor' }
   const a = Date.parse(todayIso + 'T00:00:00Z')
   const b = Date.parse(lmpIso + 'T00:00:00Z')
   const day = Math.floor((a - b) / 86_400_000) + 1
-  return { day, label: `cycle day ${day}` }
+  return { day, label: `Siklusun ${day}. günü` }
 }

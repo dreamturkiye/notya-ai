@@ -98,9 +98,9 @@ function range(start: number, end: number, step: number): number[] {
  * These rows are never sb_required.
  */
 export function acogOverlay(risk: KadinDogumPayload['risk_class']): PlannedVisit[] {
-  const checklist = ['KB', 'kilo', 'SF', 'FKA', 'clinic USG as indicated']
+  const checklist = ['KB', 'kilo', 'SF', 'FKA', 'klinik USG (endikasyon varsa)']
   const high = risk === 'yuksek'
-  const nst = high ? ['NST', 'Doppler as indicated'] : []
+  const nst = high ? ['NST', 'Doppler (endikasyon varsa)'] : []
   const weeks = high
     ? [...range(8, 28, 2), ...range(30, 42, 1)]
     : [...range(8, 28, 4), ...range(30, 36, 2), ...range(37, 40, 1)]

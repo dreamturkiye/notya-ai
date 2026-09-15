@@ -1,7 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
-import { gopIsotretinoin, type GopInput } from '../engines/gop-isotretinoin'
+import { gopIsotretinoin, type GopInput, type GopSex } from '../engines/gop-isotretinoin'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -13,12 +13,14 @@ const box: CSSProperties = {
 export function GopBlok({
   pack,
   today,
+  sex = 'unknown',
 }: {
-  pack: Omit<GopInput, 'today_iso'> | null
+  pack: Omit<GopInput, 'today_iso' | 'sex'> | null
   today: string
+  sex?: GopSex
 }) {
   const input: GopInput = pack
-    ? { ...pack, today_iso: today }
+    ? { ...pack, today_iso: today, sex }
     : {
         two_contraception: false,
         hcg_iso: null,
@@ -27,13 +29,26 @@ export function GopBlok({
         rx_days: 30,
         start_iso: today,
         today_iso: today,
+        sex,
       }
   const result = gopIsotretinoin(input)
+  const maleNa = sex === 'male'
+  const boxStyle: CSSProperties = {
+    ...box,
+    border: maleNa || result.allowed ? '1px solid rgba(255,255,255,0.09)' : box.border,
+  }
   return (
-    <section style={box} data-tab="GopBlok" data-gop={result.allowed ? 'ok' : 'blocked'}>
-      <h2 style={{ margin: 0, fontSize: 16 }}>GÖP isotretinoin</h2>
+    <section style={boxStyle} data-tab="GopBlok" data-gop={result.allowed ? 'ok' : 'blocked'} data-sex={sex}>
+      <h2 style={{ margin: 0, fontSize: 16 }}>GÖP izotretinoin</h2>
+      {maleNa && (
+        <p style={{ fontSize: 13, color: '#8FA0B5' }}>
+          Gebelik önleme maddeleri (çift kontrasepsiyon, negatif β-hCG, siklus 2–3. gün) erkek hasta için geçerli değildir.
+        </p>
+      )}
       {result.allowed ? (
-        <p style={{ fontSize: 13, color: '#22C55E' }}>Paket tam — yine de uzman kararı gerekir.</p>
+        <p style={{ fontSize: 13, color: '#22C55E' }}>
+          {maleNa ? 'Gebelik GÖP kapısı bu hasta için uygulanmaz. Reçete süresi kuralı ayrıca izlenir.' : 'Paket tam — yine de uzman kararı gerekir.'}
+        </p>
       ) : (
         <div>
           <p style={{ fontSize: 13, color: '#FCA5A5', marginBottom: 6 }}>Paket eksik — reçete bloke.</p>

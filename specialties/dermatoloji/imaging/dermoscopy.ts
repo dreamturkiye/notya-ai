@@ -7,4 +7,4 @@ export function linkClinicalDermoscopy(clinicalPhotoId: string, dermoscopyPhotoI
   return { lesionId, clinicalPhotoId, dermoscopyPhotoId, support_only: true as const }
 }
 
-export const DERMOSCOPY_DISCLAIMER = 'Tarama destegi, tani degildir. Doktor onayi gerekir.'
+export const DERMOSCOPY_DISCLAIMER = 'Tarama desteği, tanı değildir. Doktor onayı gerekir.'

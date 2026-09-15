@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react'
 import type { PhotoAsset } from '../schema'
+import { DERM_PHOTO_KIND, bolgeEtiketi, dermLabel } from './labels'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -20,7 +21,9 @@ export function FotoDermoskopiGaleri({
   return (
     <section style={box} data-tab="FotoDermoskopiGaleri">
       <h2 style={{ margin: 0, fontSize: 16 }}>Foto / dermoskopi serisi</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>coreImageId only — ikinci store yok. Silinmez.</p>
+      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+        Görüntüler mevcut görüntüleme kaydına bağlıdır; ayrı bir arşiv yok. Kayıtlar silinmez.
+      </p>
       {photos.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Görüntüleme kaydı yok.</p>}
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
         {photos.map((p) => (
@@ -29,10 +32,12 @@ export function FotoDermoskopiGaleri({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={urls[p.coreImageId]} alt="" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 8 }} />
             ) : (
-              <code style={{ fontSize: 11, color: '#C4B5FD' }}>{p.coreImageId}</code>
+              <div style={{ height: 110, borderRadius: 8, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#8FA0B5' }}>
+                Önizleme yok
+              </div>
             )}
-            <div style={{ fontSize: 12, marginTop: 6 }}>{p.kind}</div>
-            <div style={{ fontSize: 11, color: '#8FA0B5' }}>{p.region} · {p.capturedAt}</div>
+            <div style={{ fontSize: 12, marginTop: 6 }}>{dermLabel(DERM_PHOTO_KIND, p.kind)}</div>
+            <div style={{ fontSize: 11, color: '#8FA0B5' }}>{bolgeEtiketi(p.region)} · {p.capturedAt}</div>
           </li>
         ))}
       </ul>

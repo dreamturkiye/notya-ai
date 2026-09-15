@@ -115,7 +115,7 @@ export const visionReadSchema = z.object({
   observations: z.string(),
   differentials: z.array(z.string()),
   next_step: z.string(),
-  disclaimer: z.literal('Tarama destegi, tani degildir. Doktor onayi gerekir.'),
+  disclaimer: z.literal('Tarama desteği, tanı değildir. Doktor onayı gerekir.'),
 })
 
 export const totalBodyMapSchema = z.object({

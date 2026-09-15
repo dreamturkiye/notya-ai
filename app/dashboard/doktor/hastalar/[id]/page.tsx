@@ -23,6 +23,12 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { yasHesapla } from '@/lib/doktor/yas';
+import {
+  gebelikSekmesiUygun,
+  hastaDosyaSekmeleri,
+  pediatriSekmesiUygun,
+  type HastaDosyaSekmeId,
+} from '@/lib/doktor/hastaDosyaSekmeleri';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,21 +63,20 @@ export default function HastaProfilPage() {
   const patientId = params?.id as string;
   // NOTYA-RANDEVU-09: randevu takviminden hedefli linkler ?tab=formu / ?tab=asilar ile atlar.
   const tabParam = searchParams?.get('tab');
-  const baslangicTab = tabParam === 'formu' ? 6 : tabParam === 'asilar' ? 7 : 1;
-  const [activeTab, setActiveTab] = useState(baslangicTab);
+  const [activeTab, setActiveTab] = useState<HastaDosyaSekmeId>(
+    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'gebelik'
+      ? tabParam
+      : 'ozet',
+  );
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
 
-  const gebelikUygun = (() => {
-    if (!patient?.cinsiyet || patient.cinsiyet !== 'Kadın') return false;
-    if (!patient.dogum_tarihi) return true;
-    const d = new Date(patient.dogum_tarihi); if (isNaN(d.getTime())) return true;
-    return (Date.now() - d.getTime()) / (365.25 * 86400000) >= 12;
-  })();
-  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış", ...(gebelikUygun ? ['Kadın Sağlığı & Gebelik'] : []), 'Deri & Lezyon'];
+  const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
+  const pediatriUygun = patient ? pediatriSekmesiUygun(patient.dogum_tarihi) : false;
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun });
 
   useEffect(() => {
     if (!patientId) return;
@@ -111,7 +116,7 @@ export default function HastaProfilPage() {
     }
   }, [patientId, seanslar, seansYukleniyor]);
 
-  useEffect(() => { if (activeTab === 2) seansYukle(); }, [activeTab, seansYukle]);
+  useEffect(() => { if (activeTab === 'muayene') seansYukle(); }, [activeTab, seansYukle]);
 
   // Doğum tarihi her yerde Gün.Ay.Yıl + yaş; bebeklerde gün hassasiyeti ("8 ay 3 günlük")
   const dogumGoster = (() => {
@@ -185,7 +190,7 @@ export default function HastaProfilPage() {
                 🩺 Muayeneyi Başlat
               </button>
               <button
-                onClick={() => setActiveTab(8)}
+                onClick={() => setActiveTab('ayse')}
                 style={{ padding: '10px 18px', background: 'rgba(255,255,255,0.07)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
               >
                 Ayşe&apos;ye Danış
@@ -196,17 +201,17 @@ export default function HastaProfilPage() {
 
         {/* Hap sekmeler — mobilde yatay kaydırma */}
         <div className="dosya-sekmeler" style={{ display: 'flex', gap: 6, margin: '16px 0 18px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
-          {tabs.map((tab, i) => (
+          {tabs.map((tab) => (
             <button
-              key={i}
-              onClick={() => setActiveTab(i + 1)}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               style={{
                 flexShrink: 0,
                 padding: '8px 16px',
-                background: activeTab === i + 1 ? '#0F9B8E' : 'rgba(255,255,255,0.06)',
-                border: activeTab === i + 1 ? '1px solid #0F9B8E' : '1px solid rgba(255,255,255,0.1)',
-                color: activeTab === i + 1 ? 'white' : '#C9D4E3',
-                fontWeight: activeTab === i + 1 ? 700 : 500,
+                background: activeTab === tab.id ? '#0F9B8E' : 'rgba(255,255,255,0.06)',
+                border: activeTab === tab.id ? '1px solid #0F9B8E' : '1px solid rgba(255,255,255,0.1)',
+                color: activeTab === tab.id ? 'white' : '#C9D4E3',
+                fontWeight: activeTab === tab.id ? 700 : 500,
                 borderRadius: 999,
                 fontSize: 13,
                 cursor: 'pointer',
@@ -214,7 +219,7 @@ export default function HastaProfilPage() {
                 transition: 'background .15s ease',
               }}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -222,7 +227,7 @@ export default function HastaProfilPage() {
         {loading && <div style={{ ...panel, padding: 18, color: '#8FA0B5', fontSize: 14 }}>Dosya yükleniyor…</div>}
         {error && <div style={{ ...panel, padding: 18, color: '#FCA5A5', fontSize: 14, borderColor: 'rgba(239,68,68,0.4)' }}>{error}</div>}
 
-        {!loading && !error && patient && activeTab === 1 && (
+        {!loading && !error && patient && activeTab === 'ozet' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #0F9B8E, transparent)' }} />
@@ -245,7 +250,7 @@ export default function HastaProfilPage() {
           </div>
         )}
 
-        {!loading && !error && activeTab === 2 && (
+        {!loading && !error && activeTab === 'muayene' && (
           <div style={{ ...panel, padding: '10px 20px' }}>
             {seansYukleniyor && <div style={{ padding: '14px 0', color: '#8FA0B5', fontSize: 14 }}>Vizitler yükleniyor…</div>}
             {!seansYukleniyor && seanslar !== null && seanslar.length === 0 && (
@@ -281,27 +286,27 @@ export default function HastaProfilPage() {
           </div>
         )}
 
-        {!loading && !error && activeTab === 3 && (
+        {!loading && !error && pediatriUygun && activeTab === 'buyume' && (
           <HastaBuyumeEgrileri patientId={patientId} />
         )}
-        {!loading && !error && activeTab === 4 && (
+        {!loading && !error && activeTab === 'belgeler' && (
           <PatientDocumentVault patientId={patientId} />
         )}
-        {!loading && !error && activeTab === 5 && (
+        {!loading && !error && activeTab === 'goruntuleme' && (
           <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 14, color: '#8FA0B5' }}>Röntgen, EKG ve diğer görüntüleme kayıtları görüntüleme merkezinde.</span>
-            <button type="button" onClick={() => router.push('/dashboard/doktor/goruntuleme')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Görüntülemeyi aç ›</button>
+            <button type="button" onClick={() => router.push(`/dashboard/doktor/goruntuleme?hastaId=${patientId}`)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Görüntülemeyi aç ›</button>
           </div>
         )}
-        {!loading && !error && activeTab === 6 && <HastaIlaclar patientId={patientId} />}
-        {!loading && !error && activeTab === 7 && <HastaIntake patientId={patientId} />}
-        {!loading && !error && activeTab === 8 && <HastaAsilar patientId={patientId} />}
-        {!loading && !error && activeTab === 9 && <HastaMchat patientId={patientId} />}
-        {!loading && !error && activeTab === 10 && <HastaGelisimTaramasi patientId={patientId} />}
-        {!loading && !error && activeTab === 11 && <HastaKonsult patientId={patientId} />}
-        {!loading && !error && activeTab === 12 && gebelikUygun && <HastaGebelik patientId={patientId} />}
-        {!loading && !error && ((gebelikUygun && activeTab === 13) || (!gebelikUygun && activeTab === 12)) && (
-          <HastaDermatoloji patientId={patientId} />
+        {!loading && !error && activeTab === 'ilaclar' && <HastaIlaclar patientId={patientId} />}
+        {!loading && !error && activeTab === 'formu' && <HastaIntake patientId={patientId} />}
+        {!loading && !error && activeTab === 'asilar' && <HastaAsilar patientId={patientId} />}
+        {!loading && !error && pediatriUygun && activeTab === 'mchat' && <HastaMchat patientId={patientId} />}
+        {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
+        {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
+        {!loading && !error && activeTab === 'gebelik' && gebelikUygun && <HastaGebelik patientId={patientId} />}
+        {!loading && !error && activeTab === 'deri' && (
+          <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} />
         )}
       </div>
     </div>

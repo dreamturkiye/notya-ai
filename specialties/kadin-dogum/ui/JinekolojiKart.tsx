@@ -15,8 +15,8 @@ export function JinekolojiKart({ lmp, today }: { lmp: string | null; today: stri
   return (
     <section style={box} data-tab="JinekolojiKart">
       <h2 style={{ margin: 0, fontSize: 16 }}>Jinekoloji kartı</h2>
-      <p style={{ fontSize: 13 }}>LMP {lmp ?? '—'} · {cycle.label}</p>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{CERVIX_SCREENING.map((c) => c.label).join(' · ')}</p>
+      <p style={{ fontSize: 13 }}>SAT {lmp ?? '—'} · {cycle.label}</p>
+      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{CERVIX_SCREENING.map((c) => `${c.label} (${c.interval})`).join(' · ')}</p>
       <p style={{ fontSize: 12 }}>Kontrasepsiyon: {CONTRACEPTION.join(', ')}</p>
     </section>
   )

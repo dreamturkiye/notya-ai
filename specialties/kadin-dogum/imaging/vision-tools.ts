@@ -7,7 +7,7 @@ import type { NstStudyPayload, UsgSeriesPayload, UsgStudyPayload, VisionRead } f
 import { compareGrowth } from './usg-series'
 import { nstAction } from './nst-ctg'
 
-export const VISION_DISCLAIMER = 'Ölçüm ve tarama destegi, tani degildir. Uzman onayi gerekir.' as const
+export const VISION_DISCLAIMER = 'Ölçüm ve tarama desteği, tanı değildir. Uzman onayı gerekir.' as const
 export const CORE_GORUNTULEME_PATH = '/api/doktor/goruntuleme'
 
 export type Actor = 'asistan' | 'uzman'
@@ -40,7 +40,7 @@ export function analyzeUsg(input: {
     drafted_by: input.actor,
     approved_by: null,
     findings: input.findings.trim()
-      || 'Taslak USG okuma: olcum ve tarama destegi. Fetal anomali tanisi konulmaz. Uzman onayi gerekir.',
+      || 'Taslak USG okuma: ölçüm ve tarama desteği. Fetal anomali tanısı konulmaz. Uzman onayı gerekir.',
     disclaimer: VISION_DISCLAIMER,
   }
 }
@@ -54,7 +54,7 @@ export function analyzeNst(input: { nst: NstStudyPayload; actor: Actor; findings
     drafted_by: input.actor,
     approved_by: null,
     findings: (input.findings ?? '').trim()
-      || `NST cat ${input.nst.category}; ${nstAction(input.nst.category).join('; ')}. Fetal iyilik taslagi, tani degildir.`,
+      || `NST kategori ${input.nst.category}; ${nstAction(input.nst.category).join('; ')}. Fetal iyilik taslağı, tanı değildir.`,
     disclaimer: VISION_DISCLAIMER,
   }
 }

@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react'
 import type { EvaluatedWindow } from '../engines/test-windows'
+import { KD_WINDOW_STATUS, kdLabel } from './labels'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -25,8 +26,8 @@ export function TaramaPencereleri({ windows }: { windows: EvaluatedWindow[] }) {
       <ul style={{ listStyle: 'none', padding: 0, fontSize: 13 }}>
         {windows.map((w) => (
           <li key={w.id} style={{ color: color[w.status], marginBottom: 6 }}>
-            {w.label} · {w.open}–{w.close} · {w.status}
-            {w.non_diagnostic ? ' · non-diagnostic' : ''}
+            {w.label} · {w.open}–{w.close} · {kdLabel(KD_WINDOW_STATUS, w.status)}
+            {w.non_diagnostic ? ' · tanısal değil' : ''}
             {w.sut_code ? ` · ${w.sut_code}` : ''}
             {w.out_of_pocket ? ' · cepte' : ''}
           </li>
