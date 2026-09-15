@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notya — Beta Öncesi Test Listesi (v7, 15 Eylül 2026)</title>
+<style>
+  body{font-family:system-ui,-apple-system,sans-serif;background:#F4F7FA;color:#0A1628;margin:0;padding:24px 14px 60px}
+  .kap{max-width:820px;margin:0 auto}
+  h1{font-size:24px;margin:0}
+  .alt{color:#5A6B80;font-size:13.5px;margin:6px 0 4px;line-height:1.5}
+  .cizgi{height:3px;background:#0F9B8E;border-radius:2px;margin:12px 0 6px}
+  .ilerleme{position:sticky;top:0;background:#F4F7FAee;backdrop-filter:blur(4px);padding:10px 0;z-index:5;font-size:14px;font-weight:700;color:#0F766E}
+  .madde{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 1px 3px rgba(10,22,40,.05)}
+  .baslik{display:flex;align-items:flex-start;gap:10px;font-size:16.5px;font-weight:700}
+  .baslik input{width:20px;height:20px;margin-top:2px;accent-color:#0F9B8E}
+  .etiket{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;margin-left:auto}
+  .e1{background:#FEF3C7;color:#B45309}.e2{background:#CCFBF1;color:#0F766E}.e3{background:#EDE9FE;color:#6D28D9}
+  .gecti{color:#0F766E;font-size:12.5px;margin:7px 0 9px 30px;line-height:1.5}
+  .altgorev{display:flex;align-items:flex-start;gap:9px;margin:7px 0 7px 30px;font-size:14.5px;line-height:1.55}
+  .altgorev input{width:17px;height:17px;margin-top:2px;accent-color:#0F9B8E;flex-shrink:0}
+  .notb{font-size:12px;font-weight:700;color:#5A6B80;margin:12px 0 5px 30px}
+  textarea{width:calc(100% - 30px);margin-left:30px;box-sizing:border-box;min-height:105px;border:1px solid #CBD5E1;border-radius:10px;padding:10px 12px;font:14px/1.5 system-ui;color:#0A1628;resize:vertical}
+  textarea:focus{outline:2px solid #0F9B8E33;border-color:#0F9B8E}
+  .disa{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0F9B8E;color:#fff;border:none;border-radius:99px;padding:13px 26px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(15,155,142,.35)}
+  .disa:hover{background:#0D8478}
+  .ipucu{font-size:12px;color:#8FA0B5;text-align:center;margin-top:26px}
+  @media print{
+    .disa,.ilerleme,.ipucu{display:none}
+    @page{size:A4;margin:14mm 14mm 16mm}
+    .madde{break-inside:avoid;page-break-inside:avoid;margin-bottom:10px}
+    .baslik{break-after:avoid;page-break-after:avoid}
+    .etiket{break-after:avoid}
+    textarea{min-height:56px!important;height:56px!important;resize:none}
+    body{font-size:12.5px}
+  }
+</style>
+</head>
+<body>
+<div class="kap">
+  <h1>NOTYA™ — Beta Öncesi Test Listesi <span style="font-size:14px;color:#0F766E">v7 · 15 Eylül 2026</span></h1>
+  <div class="alt">Dr. Gökhan Mamur için · Her maddeyi tamamladıkça kutuları işaretleyin; görüş, talep ve hataları not alanlarına yazın. <b>1–5 numaralı maddeler geçmeden yeni doktor alınmayacak.</b> v7 (15 Eylül): Kadın Doğum bölümünün ilk parçası — Gebelik Takibi — eklendi (madde 10). Bu bölümü sizin 3000+ doğum tecrübenizle birlikte kuracağız; önce görün, sonra düzeltin. Diğer maddeler v6 ile aynı.</div>
+  <div class="cizgi"></div>
+  <div class="ilerleme" id="ilerleme">İlerleme: 0 / 12 madde</div>
+  <div id="liste"></div>
+  <div class="ipucu">Bittiğinde alttaki yeşil düğmeye basın — rapor panoya kopyalanır ve dosya olarak iner; Kaan'a WhatsApp/e-posta ile gönderebilirsiniz.</div>
+</div>
+<button class="disa" onclick="disaAktar()">📤 Raporu Kaan'a Gönderilecek Şekilde Dışa Aktar</button>
+<script>
+const MADDELER = [
+ {b:"✅ Giriş — güncel", s:1, g:"Bugün gözden geçirildi. Ayarlar'da artık Hesabım (şifre değiştir) ve Çıkış Yap her yerde.", a:[
+  "E-posta ile giriş yapın",
+  "Sağ üstte (masaüstü) veya ☰ menüde (telefon) 'Çıkış Yap' görünüyor mu kontrol edin",
+  "Ayarlar → Hesabım'dan şifrenizi kendiniz değiştirebiliyor musunuz görün"]},
+ {b:"✅ Sesli Ayşe — hasta dosyası + süre uzatma (bugün genişledi)", s:1, g:"Aynı isimli hastaları artık doğum tarihi/sırayla ayırt ediyor; kayıt süresi 1 saate çıktı.", a:[
+  "Bir hasta adı söyleyip dosyasına baktırın",
+  "Aynı isimde iki hasta varsa: Ayşe artık ikisini de doğum tarihi + son geliş nedeniyle sayıp soruyor — 'ikincisi' veya doğum tarihiyle seçin",
+  "55. dakikada sesli+yazılı uyarı çıkıyor mu, '+30 dakika uzat' düğmesi çalışıyor mu görün",
+  "İlk söz artık sade: 'Merhaba Hocam, nasıl yardımcı olabilirim?' — eskisi gibi randevu sayısı okumuyor"]},
+ {b:"✅ Büyüme Eğrileri — artık grafik + hasta portalında da var (bugün genişledi)", s:1, g:"Persentil metni değil, gerçek eğri grafiği; büyütülmüş görünüm; ebeveyn de kendi portalinde görüyor.", a:[
+  "Hasta dosyası → 'Büyüme Eğrileri' sekmesi: Kilo/Boy/Baş Çevresi/VKİ grafikleri var mı",
+  "Bir grafiğe tıklayıp tam sayfa büyük görünümü, Önceki/Sonraki gezinmeyi deneyin",
+  "Aynı hastanın Sağlığım portal bağlantısını açıp 'Takip' sekmesinde aynı eğrilerin göründüğünü kontrol edin"]},
+ {b:"✅ Solunum Sayısı — aynı, Ateş artık ilk sırada", s:1, g:"Nabız ile SpO₂ arasında; Ateş artık yaşamsal bulguların ilk satırı.", a:[
+  "İnceleme veya not sayfasında Solunum Sayısı'nı girip yazdırılan raporda göründüğünü kontrol edin",
+  "Ateş'in listede ilk sırada olduğunu doğrulayın"]},
+ {b:"✅ Epikriz Üretici — büyük yenileme (bugün 3 kez düzeltildi)", s:1, g:"Artık gerçek hasta adı/tarih/hekim adı (yer tutucu yok), resmi unvan, profesyonel özlü format, gerçek PDF.", a:[
+  "Bir epikriz üretin — başlıkta GERÇEK hasta adınız, doğum tarihiniz, 'Dr. Gökhan Mamur' görünüyor mu (köşeli parantez YOK)",
+  "İmza satırında 'Çocuk Sağlığı ve Hastalıkları Uzmanı' yazıyor mu (eskiden 'pediatri Uzmanı' idi)",
+  "Metin BÜYÜK HARF alt başlıklarla mı (TANI, ÖZGEÇMİŞ, FİZİK MUAYENE...) yoksa hâlâ uzun düzyazı mı — kısa ve klinik olmalı",
+  "'PDF İndir'e basın — artık gerçek bir kağıt belge (logo/başlığınızla) çıkıyor mu, eskisi gibi koyu ekran görüntüsü değil",
+  "'Tüm Seanslar (Kapsamlı Özet)' modunu bir de öyle deneyin"]},
+ {b:"✅ Reçete sayfası — dördüncü düzeltme: Geri linki", s:2, g:"Artık yazdırmadan da muayene raporuna dönebiliyorsunuz.", a:[
+  "Bir reçete açın, sol üstte '← Geri' var mı, muayene raporuna dönüyor mu"]},
+ {b:"✅ Hasta Bilgi Formu — aynı", s:2, g:"Kimlik Bilgileri bölümüne üç alan eklendi; TC kimlik tam 11 hane zorunlu.", a:[
+  "Formu bir kez daha gönderip TC kimlik/anne-baba adı/medeni durum alanlarını kontrol edin"]},
+ {b:"M-CHAT-R/F sekmesi (YENİ)", s:1, g:"Hasta dosyasında, Aşılar'ın yanında — 20 soru, Testi Değerlendir, sonucu bugünkü forma ekleyebiliyorsunuz.", a:[
+  "Bir hasta dosyasında 'M-CHAT-R/F' sekmesini açın, 20 soruyu yanıtlayın",
+  "'Testi Değerlendir' anında sonuç veriyor mu (Otizm özelliği yok / İleri araştırma gerekir)",
+  "'Bugünkü Muayene Formuna Ekle' ile o günkü nota satır eklendiğini kontrol edin"]},
+ {b:"Gelişim Taraması sekmesi (YENİ)", s:1, g:"Sağlık Bakanlığı'nın gelişim rehberine (GİDR) dayalı — 'Denver' değil. AI, işaretlediklerinizi yorumluyor, sahte bir skor üretmiyor.", a:[
+  "Hasta dosyasında 'Gelişim Taraması' sekmesini açın — hastanın yaşına uygun maddeler otomatik geliyor mu",
+  "Yapıyor/Yapmıyor işaretleyip 'Testi Değerlendir'e basın — AI'nin yorumu ve sevk önerisi mantıklı mı",
+  "'Bugünkü Muayene Formuna Ekle'yi deneyin"]},
+ {b:"Gebelik Takibi sekmesi (YENİ — Kadın Doğum bölümünün ilk parçası)", s:1, g:"Sağlık Bakanlığı Doğum Öncesi Bakım Yönetim Rehberi'nin 4 izlem takvimi üzerine kuruldu. 3000+ doğum tecrübenizle bunu siz şekillendireceksiniz — eksik/yanlış gördüğünüz her şeyi yazın.", a:[
+  "Yetişkin bir kadın hastanın dosyasını açın — en sağda 'Gebelik Takibi' sekmesi var mı",
+  "'Gebelik Takibi Başlat': SAT girin (isterseniz USG ile düzeltilmiş TDT de) — hafta/trimester/TDT doğru mu",
+  "'+ İzlem Ekle': kilo, TA, fundus, FKA, proteinüri, USG ölçümleri girin; 'Kaydet ve Bugünkü Muayene Formuna Ekle' nota satır ekliyor mu",
+  "SB İzlem Takvimi (1.-4. izlem) durumları (Yapıldı/Zamanı/Gecikmiş) mantıklı mı; her izlemin madde listesi sizin pratiğinizle uyuşuyor mu",
+  "Uyarılar: TA 140/90 üstü, proteinüri, Rh(−) 28. hafta, 24-28 hf GDM — doğru zamanda mı çıkıyor, eksik uyarı var mı",
+  "Eksik gördüğünüz büyük parçalar için not yazın: fetal biyometri persentili, lohusa izlemi, jinekoloji (smear/HPV, kontrasepsiyon, menopoz), Gebe İzlem Kartı çıktısı"]},
+ {b:"Çekirdek döngü: Muayene → Not → Onay", s:1, g:"Kısa ve uzun/gürültülü kayıtta not kalitesi. Artık İlaçlar listesi de İnceleme'de doğrudan düzenlenebiliyor.", a:[
+  "8-10 dakikalık, bol konuşmalı bir muayene yapın (gerçek hasta ya da prova)",
+  "Aynısını gürültülü ortamda / araya sekreter girerken bir kez daha deneyin",
+  "İnceleme'de İlaçlar kutusuna doğrudan yazabildiğinizi kontrol edin (eskiden salt okunurdu)",
+  "'🔄 Notu AI ile yeniden değerlendir' düğmesini deneyin — tanı değiştiğinde ICD-10/reçete önerisi/ilaçlar tutarlı güncelleniyor mu"]},
+ {b:"Ayşe'nin sizi öğrenmesi + yazılı sohbet", s:1, g:"Hafızası hâlâ neredeyse boş — bu maddeyi mutlaka yapın.", a:[
+  "Asistan → 💬 Yazılı sohbet'i açın. Ayşe'ye en az 3 şey söyleyin: 'Bana Hocam deme, Gökhan de' · 'Öğlen 12:30-13:30 hasta almam' · 'Cevapları kısa tut'",
+  "Sohbeti kapatıp açın — sormadan uyguladığını doğrulayın",
+  "İnceleme'de Ayşe kutusuna 'nabzı 100 yap' yazıp Enter'a basın — ekran daralmamalı, değer değişmeli"]},
+ {b:"İlaçlar → hasta dosyası + Sağlığım portalı", s:1, g:"Onayla ilaçlar dosyaya ve portala aynı anda düşüyor; reçetedeki ilaç artık Tedavi metniyle birebir tutarlı.", a:[
+  "İlaçlı bir notu onaylayın → dosyada hemen görünmeli",
+  "Hastanın Sağlığım portalını açın → İlaçlarım'da aynı ilaçlar olmalı",
+  "Reçeteye yazılan ilaç adı/dozun, notun Tedavi bölümünde yazanla birebir aynı olduğunu kontrol edin (eskiden farklı çıkabiliyordu)"]},
+ {b:"Ayşe günü açıyor + Günün programı", s:2, g:"Sabah/akşam cümleleri ve Bugün listesi — yazılı tarafta değişmedi.", a:[
+  "Sabah ve akşam açılış cümlelerindeki sayıları gerçek randevularla karşılaştırın",
+  "Ana sayfa › Bugün: her randevuda kim/kaçta/neden bilgisi olmalı, satıra dokununca dosya açılmalı"]},
+ {b:"Randevu + hatırlatma (kendi WhatsApp'ınız) + HBYS", s:2, g:"Saat listesi, e-posta isteğe bağlı, kendi numaranızdan hatırlatma, HBYS yapıştırma.", a:[
+  "+ Randevu: saat 07:00-21:45 arası 15 dakikalık liste mi?",
+  "Araçlar › Hatırlatma: 'WhatsApp (kendi numaranız)' ile bir hatırlatma gönderin",
+  "Onaylı bir notta 'HBYS için kopyala' ile hastanedeki sisteminize yapıştırın"]},
+ {b:"Telefonda kullanım (iPhone / Samsung)", s:3, g:"Kendi telefonunuzdan tam bir tur.", a:[
+  "Ana sayfa, Bugün listesi, reçete sayfası, hasta dosyası, İnceleme, Büyüme Eğrileri'ni kendi telefonunuzdan açın",
+  "Taşan, kesilen veya basılamayan bir şey var mı not alın; telefon modelinizi yazın"]},
+];
+const ETK = {1:["OLMAZSA OLMAZ","e1"],2:["LANSMAN KALİTESİ","e2"],3:["CİLA","e3"]};
+const AN = 'notyaBetaTest_v7';
+let durum = {};
+try { durum = JSON.parse(localStorage.getItem(AN) || '{}'); } catch(e) { durum = {}; }
+
+const liste = document.getElementById('liste');
+MADDELER.forEach((m, i) => {
+  const d = durum[i] || {ana:false, alt:Array(m.a.length).fill(false), not:''};
+  durum[i] = d;
+  const kart = document.createElement('div'); kart.className = 'madde';
+  const [etkAd, etkSinif] = ETK[m.s];
+  kart.innerHTML = `
+    <div class="baslik"><input type="checkbox" id="ana${i}" ${d.ana?'checked':''}><label for="ana${i}" style="cursor:pointer">${i+1}. ${m.b}</label><span class="etiket ${etkSinif}">${etkAd}</span></div>
+    <div class="gecti">Durum: ${m.g}</div>
+    ${m.a.map((a,j)=>`<div class="altgorev"><input type="checkbox" id="alt${i}_${j}" ${d.alt[j]?'checked':''}><label for="alt${i}_${j}" style="cursor:pointer">${a}</label></div>`).join('')}
+    <div class="notb">📝 Notlar / Talepler / Hatalar:</div>
+    <textarea id="not${i}" placeholder="Gözlemlerinizi, taleplerinizi ve hataları buraya yazın...">${d.not||''}</textarea>`;
+  liste.appendChild(kart);
+  document.getElementById('ana'+i).addEventListener('change', e => { durum[i].ana = e.target.checked; kaydet(); });
+  m.a.forEach((_,j)=>document.getElementById(`alt${i}_${j}`).addEventListener('change', e => { durum[i].alt[j] = e.target.checked; kaydet(); }));
+  document.getElementById('not'+i).addEventListener('input', e => { durum[i].not = e.target.value; kaydet(); });
+});
+
+function kaydet(){
+  try { localStorage.setItem(AN, JSON.stringify(durum)); } catch(e){}
+  const tamam = MADDELER.filter((_,i)=>durum[i].ana).length;
+  document.getElementById('ilerleme').textContent = `İlerleme: ${tamam} / ${MADDELER.length} madde`;
+}
+kaydet();
+
+function disaAktar(){
+  const st = [`NOTYA BETA TEST RAPORU — Dr. Gökhan Mamur`, new Date().toLocaleString('tr-TR'), ''];
+  MADDELER.forEach((m,i)=>{
+    const d = durum[i];
+    st.push(`${d.ana?'[X]':'[ ]'} ${i+1}. ${m.b}`);
+    m.a.forEach((a,j)=>st.push(`   ${d.alt[j]?'[x]':'[ ]'} ${a}`));
+    if((d.not||'').trim()) st.push(`   >> NOT: ${d.not.trim().replace(/\n/g, '\n   >> ')}`);
+    st.push('');
+  });
+  const metin = st.join('\n');
+  navigator.clipboard && navigator.clipboard.writeText(metin).catch(()=>{});
+  const blob = new Blob([metin], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'notya-beta-test-raporu.txt';
+  a.click(); URL.revokeObjectURL(a.href);
+  alert('Rapor panoya kopyalandı ve dosya olarak indirildi. Kaan\'a WhatsApp ya da e-posta ile gönderebilirsiniz. 🙏');
+}
+</script>
+</body>
+</html>

@@ -94,6 +94,23 @@ and surgical branches last (hospital-based / lower muayenehane volume).
 
 Assumption: customer = Turkish private-practice physicians (muayenehane/poliklinik).
 
+## Kadın Hastalıkları ve Doğum — Wave 1, first slice shipped 2026-09-14 (night)
+
+Shipped for Dr. Gökhan's morning review: lib/clinical/gebelik.ts (Naegele/USG dating, SB DÖB
+4-izlem takvimi with per-visit items, guideline-threshold alerts, kilo alım hedefi — all
+deterministic), migration 020 (gebelikler, gebelik_izlemleri — APPLIED), /api/doktor/gebelik,
+HastaGebelik.tsx tab (visible for female patients ≥12y; tab #12, appended so no renumbering),
+registry chapter lib/specialties/kadin-dogum.ts (olgunluk: arastirma), beta list v7 item 10.
+
+Not built yet (in the chapter's specialistReview — decide WITH Gökhan, not before):
+- Fetal biyometri persentilleri (needs a chosen open reference: Hadlock / INTERGROWTH-21st / TR)
+- Gebe İzlem Kartı + Obstetrik USG raporu + Doğum raporu printed templates (letterhead pattern)
+- Lohusa izlem (SB protokolü), jinekoloji (KETEM HPV/smear takvimi, kontrasepsiyon, menopoz)
+- Sağlığım portal "Gebeliğim" week-by-week view
+- Ayşe gestational-week-aware SOAP/persona overlay (profile.promptNotlari exists, not wired)
+- Wave 0 wiring still pending: hasta dosyası tabs / ölçüm order / epikriz unvan should read the
+  registry (today's tab is still hardcoded + gated by patient sex/age)
+
 ## Waiting on the founder
 
 | Since | Item | Why it matters |

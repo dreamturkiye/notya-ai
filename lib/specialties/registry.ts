@@ -8,9 +8,11 @@ import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import { resmiUzmanlikAdi } from '@/lib/doktor/bransAdlari'
 import { baselineProfile, type SpecialtyProfile } from './profile'
 import { PEDIATRI_PROFILE } from './pediatri'
+import { KADIN_DOGUM_PROFILE } from './kadin-dogum'
 
 const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   pediatri: PEDIATRI_PROFILE,
+  'kadin-hastaliklari-dogum': KADIN_DOGUM_PROFILE,
 }
 
 export function specialtyProfile(keyHam: string | null | undefined): SpecialtyProfile {
