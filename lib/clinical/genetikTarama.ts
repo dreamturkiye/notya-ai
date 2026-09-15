@@ -22,6 +22,7 @@
 export interface IkiliTestSonucu {
   tarih: string; hafta: number
   ntMm: number | null
+  nazalKemik: 'mevcut' | 'yok' | 'degerlendirilmedi' | null
   papA: string | null; freeBhcg: string | null     // MoM değeri, laboratuvardan — burada hesaplanmaz
   kombineRisk: string | null                        // "1/1250" gibi, laboratuvarın/yazılımın bildirdiği
   riskKategorisi: 'dusuk' | 'orta' | 'yuksek' | null // laboratuvarın kendi sınıflaması, biz üretmiyoruz
@@ -44,7 +45,7 @@ export interface NiptSonucu {
 }
 
 export interface InvazifTest {
-  tarih: string; tur: 'cvs' | 'amniyosentez'
+  tarih: string; tur: 'cvs' | 'amniyosentez' | 'kordosentez' | 'fetal-eko'
   endikasyon: string; sonuc: string | null; karyotip: string | null
 }
 
@@ -77,3 +78,36 @@ export const GENETIK_TARAMA_TAKVIMI = [
   { etiket: 'Ayrıntılı (anomali) USG', haftaBas: 18, haftaSon: 22 },
   { etiket: 'NIPT (istenirse, ikili test sonrası orta/yüksek riskte veya tercihen)', haftaBas: 10, haftaSon: 40 },
 ]
+
+/** Kaan'ın referans listesinden (SUT kod listesi) — bilgilendirme amaçlı, ödeme kararı SGK/klinik. */
+export const SUT_KODLARI = {
+  ikiliTest: 'P.901.120',
+  ucluTest: 'P.904.090',
+}
+
+/** Standart obstetrik tehlike işaretleri — SB DÖB Rehberi ve ACOG post-birth warning signs ile
+ *  uyumlu; hasta/aileye anlatılacak, hekim tarafından işaretlenebilecek liste. */
+export const TEHLIKE_ISARETLERI = [
+  { id: 'kanama', etiket: 'Vajinal kanama' },
+  { id: 'siddetli-bas-agrisi', etiket: 'Şiddetli baş ağrısı' },
+  { id: 'gorme-bozuklugu', etiket: 'Görme bozukluğu / bulanık görme' },
+  { id: 'epigastrik-agri', etiket: 'Epigastrik / sağ üst kadran ağrısı' },
+  { id: 'ani-sislik', etiket: 'Ani el-yüz şişliği' },
+  { id: 'ates', etiket: 'Ateş' },
+  { id: 'su-gelmesi', etiket: 'Erken su gelmesi (membran rüptürü)' },
+  { id: 'hareket-azalmasi', etiket: 'Fetal hareketlerde azalma' },
+  { id: 'siddetli-kasilma', etiket: 'Düzenli/şiddetli kasılmalar (preterm eylem şüphesi)' },
+  { id: 'nefes-darligi', etiket: 'Nefes darlığı / göğüs ağrısı' },
+]
+
+/**
+ * "Özel pratik overlay" — Kaan'ın referans listesinden: SB'nin asgari 4 izlem takviminin
+ * ÜSTÜNE, Williams/TR klinik pratiğinde uygulanan daha sık kontrol aralığı. Bilgilendirme
+ * amaçlıdır, SB asgari takvimin yerine geçmez — ikisi birlikte gösterilir.
+ */
+export function ozelPratikAralik(hafta: number, riskYuksek: boolean): string {
+  if (riskYuksek) return 'Yüksek riskli gebelik: haftalık veya 2 haftada bir + NST/Doppler (hekim kararı)'
+  if (hafta < 28) return '~4 haftada bir'
+  if (hafta < 36) return '2 haftada bir'
+  return 'Haftalık'
+}

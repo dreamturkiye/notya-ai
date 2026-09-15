@@ -126,6 +126,35 @@ against FMF's own Turkish teaching material and current Turkish practice literat
 building. İleri anne yaşı (≥35) computed as a simple deterministic threshold — uncontroversial.
 Verified: threshold logic tested at boundary (3.5mm exactly flags, 16hf correctly out-of-window).
 
+Fourth slice, same night (Kaan supplied a detailed 10-section KHD reference doc — Williams
+Obstetrik/Berek&Novak/Temel KHD Bilgisi + SB DÖBYR 2026 — and asked to audit built vs. spec):
+
+Built tonight in response: pediatri köprüsü (canlı doğumda "Doğum Gerçekleşti" now takes
+APGAR/kilo/boy/baş çevresi/cinsiyet and optionally auto-creates the newborn's pediatri patient
+record, linked via gebelikler.yenidogan_patient_id — verified end-to-end with real encrypt/decrypt,
+not just typechecked). Migration 023: gebelikler gained olu_dogum/ektopik (D/E), önceki sezaryen
+sayısı/kesi tipi, çoğul gebelik tipi, risk_sinifi, ilk_vizit_lab, indirekt_coombs, anti_d_uygulamalari;
+gebelik_izlemleri gained servikal_uzunluk, ogtt, gbs_kultur, tehlike_isaretleri. genetikTarama.ts
+gained nazalKemik field, kordosentez/fetal-eko invaziif options, SUT_KODLARI, TEHLIKE_ISARETLERI
+list, ozelPratikAralik() (private-practice overlay schedule, informational only, SB minimum stays
+primary).
+
+Explicitly NOT built, and why (full list is now in kadin-dogum.ts specialistReview, organized by
+the reference doc's own A-J section letters so review is fast):
+- Most of the new migration-023 fields have DB columns but no form UI yet (ran out of time, not
+  hidden — every one is named in specialistReview)
+- Erken gebelik (4-8hf) viability tracking, late-pregnancy fetal well-being tests (NST/BPP/Doppler)
+- F. Obstetric emergency/decision algorithms (partograf, Bishop score, VTE risk score, HELLP/
+  eclampsia, IUGR Doppler staging) — KASITLI: needs verified clinical algorithms, same Denver-II
+  discipline, not attempted without a source
+- G. Full separate gynecology suite (PCOS/infertility-IVF referral, urogynecology/POP-Q,
+  gynecologic oncology triage, surgical templates, adolescent gyn, gebe okulu) — essentially
+  untouched beyond KETEM/kontrasepsiyon/menopoz; likely needs its own "Jinekoloji Vizit" flow
+- D. Real USG image/DICOM storage, e-Nabız/PACS integration — only measurement JSON is stored
+- H. e-Doğum/e-Nabız/legal-document government system integration — no API access, not faked
+- E. Gebelik aşı şeması (Td dose-sequence, Tdap window, flu-season reminder) as a real reminder
+  engine — pediatri's Aşılar module has no pregnancy equivalent yet
+
 Still open (chapter specialistReview):
 - Fetal biyometri persentilleri (needs a chosen open reference: Hadlock / INTERGROWTH-21st / TR)
 - Gebe İzlem Kartı + Obstetrik USG raporu + Doğum raporu printed templates (letterhead pattern)
