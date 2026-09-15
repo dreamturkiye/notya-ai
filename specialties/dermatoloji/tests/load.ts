@@ -2,3 +2,5 @@
 import './schema-isolation.test'
 import './no-bleed.test'
 import './imaging-series.test'
+import './vision-tools.test'
+
