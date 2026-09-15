@@ -74,17 +74,17 @@ function Figür({
   kind: 'erkek' | 'kiz'
   highlight?: boolean
 }) {
-  const scale = (cm / maxCm) * 1.05
+  const scale = (cm / maxCm) * 0.95
   return (
-    <g transform={`translate(${x} 268)`}>
+    <g transform={`translate(${x} 252)`}>
       {highlight && (
-        <ellipse cx="0" cy="8" rx="48" ry="10" fill={fill} opacity="0.22" />
+        <ellipse cx="0" cy="6" rx="48" ry="10" fill={fill} opacity="0.22" />
       )}
-      <g transform={`scale(${scale})`}>
+      <g transform={`scale(${scale}) translate(0 -92)`}>
         {kind === 'erkek' ? <ErkekGovde fill={fill} /> : <KizGovde fill={fill} />}
       </g>
-      <text textAnchor="middle" y="28" fill={fill} fontSize="12" fontWeight="800">{label}</text>
-      <text textAnchor="middle" y="44" fill={fill} fontSize="11" fontWeight="600">{boyYazi}</text>
+      <text textAnchor="middle" y="24" fill={fill} fontSize="13" fontWeight="800">{label}</text>
+      <text textAnchor="middle" y="42" fill={fill} fontSize="12" fontWeight="600">{boyYazi}</text>
     </g>
   )
 }
@@ -114,31 +114,31 @@ export function HedefBoyManken({
 
   return (
     <figure style={{ margin: 0, ...kutu, ...style }} data-hedef-boy="manken">
-      <svg viewBox="0 0 480 330" width="100%" role="img" aria-label="Anne, çocuk ve baba boy karşılaştırması">
+      <svg viewBox="0 0 480 360" width="100%" role="img" aria-label="Anne, çocuk ve baba boy karşılaştırması">
         <defs>
           <linearGradient id={zeminId} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor={t.zemin} stopOpacity="0" />
             <stop offset="100%" stopColor={t.zemin} stopOpacity="1" />
           </linearGradient>
         </defs>
-        <rect x="24" y="268" width="432" height="14" rx="7" fill={`url(#${zeminId})`} />
-        <line x1="40" x2="440" y1="272" y2="272" stroke={t.zemin} strokeWidth="2" />
+        <rect x="24" y="246" width="432" height="12" rx="6" fill={`url(#${zeminId})`} />
+        <line x1="40" x2="440" y1="252" y2="252" stroke={t.zemin} strokeWidth="2" />
 
-        <Figür x={88} cm={sonuc.babaCm} maxCm={maxCm} fill={t.baba} label="Baba" boyYazi={formatBoyCm(sonuc.babaCm)} kind="erkek" />
+        <Figür x={88} cm={sonuc.babaCm} maxCm={maxCm} fill={t.baba} label="Baba" boyYazi={`${Math.round(sonuc.babaCm)} cm`} kind="erkek" />
         <Figür
           x={240}
           cm={sonuc.cocukCm}
           maxCm={maxCm}
           fill={t.cocuk}
           label={sonuc.cinsiyet === 'erkek' ? 'Çocuk (E)' : 'Çocuk (K)'}
-          boyYazi={formatBoyCm(sonuc.cocukCm)}
+          boyYazi={`${Math.round(sonuc.cocukCm)} cm`}
           kind={cocukKind}
           highlight
         />
         <g transform="translate(240 48)">
           <polygon points="0,-10 2.4,-2.4 10,-2.2 4,2.4 6.2,10 0,5.4 -6.2,10 -4,2.4 -10,-2.2 -2.4,-2.4" fill={t.yildiz} />
         </g>
-        <Figür x={392} cm={sonuc.anneCm} maxCm={maxCm} fill={t.anne} label="Anne" boyYazi={formatBoyCm(sonuc.anneCm)} kind="kiz" />
+        <Figür x={392} cm={sonuc.anneCm} maxCm={maxCm} fill={t.anne} label="Anne" boyYazi={`${Math.round(sonuc.anneCm)} cm`} kind="kiz" />
       </svg>
       <figcaption style={{ textAlign: 'center', padding: '0 12px 12px', color: t.yazi }}>
         <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em' }}>
