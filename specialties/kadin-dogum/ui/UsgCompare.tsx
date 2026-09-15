@@ -12,7 +12,7 @@ const box: CSSProperties = {
   padding: 16,
 }
 
-function studyCaption(study: UsgSeriesPayload['studies'][number] | undefined) {
+function studyCaption(study: UsgSeriesPayload['studies'][number] | null | undefined) {
   if (!study) return 'Kayıt yok'
   return `${kdLabel(KD_USG_KIND, study.kind)} · ${study.gaWeeksDays.weeks}+${study.gaWeeksDays.days}`
 }
