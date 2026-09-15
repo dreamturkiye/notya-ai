@@ -82,9 +82,13 @@ societies, SUT/TİTCK); deterministic code calculators only from validated PUBLI
 Order: Wave 0 = registry (DONE: profile.ts, pediatri.ts, registry.ts — declarative, unwired) →
 wire hasta dosyası tabs, ölçüm sırası, epikriz unvan to read the profile → Ayşe vision + shared
 photo/media timeline (Claude Sonnet 4.6 is already multimodal; `hasta_goruntulemeler` exists as
-storage-only). Wave 1 = Dermatoloji (image-native, aesthetic clinics), Aile Hekimliği. Wave 2 =
-Kadın Hastalıkları ve Doğum (SB gebe izlem protokolü, same pattern as GİDR), Dahiliye, Göz
-Hastalıkları (NOT "optometri" — optisyen is a separate, non-diagnosing profession in Turkey).
+storage-only). Wave 1 = Kadın Hastalıkları ve Doğum FIRST (Kaan 2026-09-14: Dr. Gökhan has delivered 3000+
+babies and can guide — fastest path to a second specialist-validated chapter; SB Doğum Öncesi
+Bakım Yönetim Rehberi + lohusa izlem protokolü, same public-source pattern as GİDR; fetal
+biometry reuses the Neyzi percentile engine + chart; tetanoz reuses aşılar; expectant-mother
+portal reuses Sağlığım). Then Dermatoloji (image-native, own breadth like pediatri), then Aile
+Hekimliği. Wave 2 = Dahiliye, Göz Hastalıkları (NOT "optometri" — optisyen is a separate,
+non-diagnosing profession in Turkey).
 Wave 3 = Psikiyatri (TR-validated scales, deterministic), Kardiyoloji (EKG on vision). Acil Tıp
 and surgical branches last (hospital-based / lower muayenehane volume).
 
