@@ -64,6 +64,32 @@ doktor/goruntuleme, portal/hasta/[token]/mesajlar, klinik/me, klinik/members. PO
 rotalarının riski daha düşük ama gözden geçirilmeli. Ayrı bir oturumda dosya dosya doğrulanıp
 düzeltilmeli — bugünkü gibi kör bir toplu regex yerine.
 
+## Program — specialty chapters on one spine (2026-09-14, Kaan)
+
+Decision: the baseline (SOAP, İnceleme/onay, reçete/Medula, epikriz, randevu+hatırlatma, Sağlığım
+portal, aşılar, intake, Ayşe sesli+yazılı, 1 saat+30 dk kayıt) is universal. Each specialty is a
+"chapter" declared once in `lib/specialties/<key>.ts` via `SpecialtyProfile` and resolved through
+`specialtyProfile(key)` (`lib/specialties/registry.ts`). Unbuilt specialties fall back to the
+baseline automatically.
+
+Build method (Kaan's direction, accepted): research-build each chapter to 80-90% BEFORE a
+specialist sees it (specialists react to what's in front of them — immunization lesson), then a
+real doctor revises. Guardrails that do not move: official Turkish sources only (SB, TUK
+societies, SUT/TİTCK); deterministic code calculators only from validated PUBLIC instruments
+(Neyzi/M-CHAT/GİDR pattern — Denver II lesson); Ayşe image review is decision support, never
+"tanı"; every chapter ships with its `specialistReview` checklist.
+
+Order: Wave 0 = registry (DONE: profile.ts, pediatri.ts, registry.ts — declarative, unwired) →
+wire hasta dosyası tabs, ölçüm sırası, epikriz unvan to read the profile → Ayşe vision + shared
+photo/media timeline (Claude Sonnet 4.6 is already multimodal; `hasta_goruntulemeler` exists as
+storage-only). Wave 1 = Dermatoloji (image-native, aesthetic clinics), Aile Hekimliği. Wave 2 =
+Kadın Hastalıkları ve Doğum (SB gebe izlem protokolü, same pattern as GİDR), Dahiliye, Göz
+Hastalıkları (NOT "optometri" — optisyen is a separate, non-diagnosing profession in Turkey).
+Wave 3 = Psikiyatri (TR-validated scales, deterministic), Kardiyoloji (EKG on vision). Acil Tıp
+and surgical branches last (hospital-based / lower muayenehane volume).
+
+Assumption: customer = Turkish private-practice physicians (muayenehane/poliklinik).
+
 ## Waiting on the founder
 
 | Since | Item | Why it matters |
