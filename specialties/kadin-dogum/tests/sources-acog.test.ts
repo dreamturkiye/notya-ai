@@ -20,11 +20,14 @@ describe('acog citations', () => {
     assert.ok(cites.includes('temel-kd-4'))
   })
 
-  it('ACOG map rows use needsLookup and do not invent bulletin numbers', () => {
+  it('ACOG map rows use verified September 2026 titles-list numbers', () => {
     assert.ok(ACOG_MAP.length >= 10)
-    assert.ok(ACOG_MAP.every((row) => row.pbNumber === null && row.needsLookup === true))
-    assert.ok(ACOG_MAP.some((row) => row.topic === 'izlem_sikligi'))
-    assert.ok(ACOG_MAP.some((row) => row.topic === 'aneuploidy_screening'))
+    assert.ok(ACOG_MAP.every((row) => row.needsLookup === false && Number.isInteger(row.pbNumber)))
+    assert.equal(ACOG_MAP.find((row) => row.topic === 'izlem_sikligi')?.pbNumber, 8)
+    assert.equal(ACOG_MAP.find((row) => row.topic === 'gdm_ogtt')?.pbNumber, 190)
+    assert.equal(ACOG_MAP.find((row) => row.topic === 'preeclampsia_hypertension')?.pbNumber, 222)
+    assert.equal(ACOG_MAP.find((row) => row.topic === 'gbs')?.pbNumber, 797)
+    assert.equal(ACOG_MAP.find((row) => row.topic === 'fetal_surveillance_nst_bpp_doppler')?.pbNumber, 229)
   })
 
   it('NIPT vs SUT ikili/üçlü is a dual recommendation, not a collapse', () => {

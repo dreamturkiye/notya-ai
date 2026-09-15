@@ -17,6 +17,7 @@ import HastaBuyumeEgrileri from '@/components/doktor/HastaBuyumeEgrileri';
 import HastaMchat from '@/components/doktor/HastaMchat';
 import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
 import HastaGebelik from '@/components/doktor/HastaGebelik';
+import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
@@ -70,7 +71,7 @@ export default function HastaProfilPage() {
     const d = new Date(patient.dogum_tarihi); if (isNaN(d.getTime())) return true;
     return (Date.now() - d.getTime()) / (365.25 * 86400000) >= 12;
   })();
-  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış", ...(gebelikUygun ? ['Kadın Sağlığı & Gebelik'] : [])];
+  const tabs = ['Özet', 'Muayene Geçmişi', 'Büyüme Eğrileri', 'Belgeler', 'Görüntüleme', 'İlaçlar', 'Hasta Formu', 'Aşılar', 'M-CHAT-R/F', 'Gelişim Taraması', "Ayşe'ye Danış", ...(gebelikUygun ? ['Kadın Sağlığı & Gebelik'] : []), 'Deri & Lezyon'];
 
   useEffect(() => {
     if (!patientId) return;
@@ -299,6 +300,9 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 10 && <HastaGelisimTaramasi patientId={patientId} />}
         {!loading && !error && activeTab === 11 && <HastaKonsult patientId={patientId} />}
         {!loading && !error && activeTab === 12 && gebelikUygun && <HastaGebelik patientId={patientId} />}
+        {!loading && !error && ((gebelikUygun && activeTab === 13) || (!gebelikUygun && activeTab === 12)) && (
+          <HastaDermatoloji patientId={patientId} />
+        )}
       </div>
     </div>
   );

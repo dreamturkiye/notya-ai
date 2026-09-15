@@ -10,15 +10,11 @@ Asistan vision path: core görüntüleme + `specialties/dermatoloji/imaging/visi
 
 Citation: cite **role**, never dump book text. Gold = Bolognia 5 (2024). Clinic/atlas = Andrews 14 TR. Ulusal = Temel Dermatoloji. Society = PSOKİD 2025, TDD AD 2018, TDD Akne, Behçet Alpsoy. Training = TUKMOS 2019. State = SUT 2026, GÖP KÜB, Ayakta Teşhis, solaryum yasağı, BZBH Form 014. KETEM is **not** skin cancer (breast/cervix/colon hints only).
 
-## How to register this manifest in the shell (not done here)
+## How this manifest is registered in the shell
 
-`lib/specialties/registry.ts` currently returns `baselineProfile` for `dermatoloji`. To mount this folder:
+`lib/specialties/dermatoloji.ts` wraps `DERMATOLOJI_MANIFEST`. `specialtyProfile('dermatoloji')` is no longer `baselineProfile`.
 
-1. Import `DERMATOLOJI_MANIFEST` from `specialties/dermatoloji` into a new `lib/specialties/dermatoloji.ts` (or a thin wrapper) and add it to `CHAPTERS`.
-2. Mount tabs from the manifest (`LezyonKarti`, `VucutHaritasi`, `FotoDermoskopiGaleri`, …) in the doktor shell.
-3. Wrap `app/api/doktor/goruntuleme` — do not invent a second store. Do not put PASI / Fitzpatrick / MED / GÖP / dermoscopy / ImageSeries onto core patient/visit types.
-
-This sandbox does **not** edit those shared files.
+The hasta dosyası **Deri & Lezyon** tab is `components/doktor/HastaDermatoloji.tsx`. It loads `app/api/doktor/goruntuleme?hastaId=` and maps rows to `coreImageId` + derm metadata (LezyonKarti, VucutHaritasi, FotoDermoskopiGaleri, BeforeAfterCompare, AsistanGorselPanel, SkorPaneli, YamaTakvimi, FototerapiDefteri). No second blob store. No PASI/Fitzpatrick on core patient types.
 
 ## Shared files that would need a change (listed, not edited)
 
@@ -26,12 +22,10 @@ This sandbox does **not** edit those shared files.
 |---|---|
 | `package.json` | npm `zod`; test script mapping `pnpm test specialties/dermatoloji`. Schema uses in-tree `z` until allowed. |
 | `package-lock.json` | Lockfile if zod is added. |
-| `lib/specialties/registry.ts` | Wire `DERMATOLOJI_MANIFEST` into `specialtyProfile('dermatoloji')`. |
-| `lib/specialties/dermatoloji.ts` | Does not exist yet — would be the live chapter wrapper. |
-| `lib/specialties/profile.ts` | Do not add PASI/Fitzpatrick/MED/GÖP there. |
-| `lib/doktor/imagingModalities.ts` | Dermoscopy/clinical photo codes if the core modality list should name them. Wrap, don't fork. |
-| `app/api/doktor/goruntuleme/route.ts` | Thin wrap only. |
-| `components/doktor/DoktorNav.tsx` | Mount tabs. |
+| `lib/specialties/registry.ts` | Wired: `specialtyProfile('dermatoloji')` → `DERMATOLOJI_PROFILE`. |
+| `lib/specialties/dermatoloji.ts` | Live chapter wrapper (created). |
+| `components/doktor/HastaDermatoloji.tsx` | Hasta dosyası Deri & Lezyon tab. |
+| `app/dashboard/doktor/hastalar/[id]/page.tsx` | Mounts the Deri & Lezyon tab. |
 | Core patient/visit schema | Nullable `specialty_id` only if required — **stop and list the file**. |
 | `specialties/pediatri/**` | Frozen. |
 | `specialties/kadin-dogum/**` | Frozen for this sprint. |
@@ -46,6 +40,6 @@ pnpm test specialties/dermatoloji
 
 tsx treats a directory argument as an import of `index.ts`. `NODE_TEST_CONTEXT` loads `tests/load.ts` via `createRequire` so chapter tests actually run.
 
-## UI tabs (exported, not mounted)
+## UI tabs (mounted)
 
-`ui/*.tsx` export LezyonKarti, VucutHaritasi, FotoDermoskopiGaleri, BeforeAfterCompare, AsistanGorselPanel, SkorPaneli, FototerapiDefteri, YamaTakvimi. Mounting them would require `lib/specialties/registry.ts` / DoktorNav — listed, not edited.
+`ui/*.tsx` export LezyonKarti, VucutHaritasi, FotoDermoskopiGaleri, BeforeAfterCompare, AsistanGorselPanel, SkorPaneli, FototerapiDefteri, YamaTakvimi. They render on the hasta dosyası **Deri & Lezyon** tab via `HastaDermatoloji`.

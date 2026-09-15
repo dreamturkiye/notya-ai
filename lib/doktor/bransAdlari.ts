@@ -15,6 +15,7 @@ const RESMI_UZMANLIK_ADI: Partial<Record<SpecialtyKey, string>> = {
   'kulak-burun-bogaz': 'Kulak Burun Boğaz Hastalıkları',
   'genel-cerrahi': 'Genel Cerrahi',
   'kadin-hastaliklari-dogum': 'Kadın Hastalıkları ve Doğum',
+  dermatoloji: 'Deri ve Zührevi Hastalıklar',
   'aile-hekimligi': 'Aile Hekimliği',
 }
 

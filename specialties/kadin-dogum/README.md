@@ -6,34 +6,37 @@ Citation policy: cite **role**, never dump copyrighted book text.
 
 Dr. Gokhan Mamur ranking (Notya): TR kadın doğum hekimi pratik gold standard is **ACOG** (Practice Bulletin / Committee Opinion / OCC). Legal floor is **DÖBYR 2026** / Doğum Sonu Bakım / Riskli Gebelikler. Textbook depth is **Williams Obstetrik 26** (TR Tıraş/Çakıroğlu). Jinekoloji stays **Berek & Novak**. TR wording stays **Temel KD**. If ACOG and DÖBYR differ, show both columns (`sb_required` vs `acog_recommended`) with `conflict: true` and uiHint `yasal asgari vs klinik öneri` — never collapse.
 
-## Dual calendar in the UI (shell not edited)
+## Dual calendar in the UI
 
-`engines/izlem-calendar.ts` emits every planned visit with `sb_required`, `acog_recommended`, and `source: 'sb'|'acog'|'both'`. Overlay rows are `acog_overlay` (never `sb_required`). To render two columns in the doktor shell, wire `IzlemTimeline` (exported from `ui/IzlemTimeline.tsx`) through `lib/specialties/kadin-dogum.ts` (`sekmeler`) and/or `components/doktor/HastaGebelik.tsx`. Those shared files are listed below and **not edited**. Until then, the tab shows SB 4-izlem vs ACOG q4w/q2w/weekly as two lists.
+`engines/izlem-calendar.ts` emits every planned visit with `sb_required`, `acog_recommended`, and `source: 'sb'|'acog'|'both'`. Overlay rows are `acog_overlay` (never `sb_required`). `ui/IzlemTimeline.tsx` is mounted on the gebelik tab via `HastaKdChapter`.
 
 e-Nabız / MBYS / e-Doğum remain adapters only.
 
-## How to register this manifest in the shell (not done here)
+ACOG document numbers (PB/CO/CC) live in `protocols/acog-map.ts`, verified against the ACOG Combined List of Titles (September 2026). They are not on core types.
 
-The live chapter registry is `lib/specialties/registry.ts` (`specialtyProfile('kadin-hastaliklari-dogum')` → `lib/specialties/kadin-dogum.ts`). To mount this folder:
+## How this manifest is registered in the shell
 
-1. Import `KADIN_DOGUM_MANIFEST` from `specialties/kadin-dogum` inside `lib/specialties/kadin-dogum.ts` (or a thin wrapper) and expose tabs/tools from the manifest.
-2. Keep `app/api/doktor/gebelik/route.ts` a thin wrap — new KD logic stays in this folder.
-3. Do not put SAT/NT/OGTT/Anti-D/G/P/A/CRL/EDD onto core patient/visit types.
+`lib/specialties/kadin-dogum.ts` imports `KADIN_DOGUM_MANIFEST` and `lib/specialties/registry.ts` serves it as `specialtyProfile('kadin-hastaliklari-dogum')`.
 
-This sandbox does **not** edit those shared files.
+The hasta dosyası **Kadın Sağlığı & Gebelik** tab (`components/doktor/HastaGebelik.tsx`) mounts GebeKarti, IzlemTimeline, TaramaPencereleri, UsgGallery, UsgCompare, AsistanGorselPanel, and JinekolojiKart via `HastaKdChapter`. Live SAT/EDD are mapped from `/api/doktor/gebelik` into the specialty payload — they are not added to core patient/visit types.
 
-## Shared files that would need a change (listed, not edited)
+`Deri & Lezyon` is a separate tab (`HastaDermatoloji`) for the dermatoloji chapter.
+
+This sandbox no longer leaves the chapter unmounted.
+
+## Shared files that were wired (this pass)
 
 | Path | Why |
 |---|---|
-| `package.json` | Add npm `zod`; optionally a test script that maps `pnpm test specialties/pediatri` to this folder. Schema uses an in-tree Zod-shaped `z` until that is allowed. |
-| `package-lock.json` | Lockfile if zod is added. |
-| `lib/specialties/registry.ts` | Wire `KADIN_DOGUM_MANIFEST` into `specialtyProfile`. |
-| `lib/specialties/kadin-dogum.ts` | Existing research chapter (olgunluk: arastirma). Should eventually re-export this folder. |
-| `lib/specialties/profile.ts` | Already has `sonAdetTarihi` / `fundusYuksekligi` as display keys — do not add SAT/CRL/EDD there. |
-| `app/api/doktor/gebelik/route.ts` | Thin wrap only; do not grow. |
-| Core patient/visit schema | Nullable `specialty_id` only if required — **stop and list the file** before touching. |
-| `specialties/pediatri/**` | Frozen. No pediatrics Zod schema exists in that folder. Isolation uses `pediatriProbeSchema` in this specialty (GİDR/M-CHAT shaped) plus a grep guard. |
+| `lib/specialties/registry.ts` | Serves KD + dermatoloji chapters. |
+| `lib/specialties/kadin-dogum.ts` | Imports `KADIN_DOGUM_MANIFEST`; ACOG-first sources. |
+| `lib/specialties/kadin-dogum-live.ts` | Maps `/api/doktor/gebelik` → specialty payload. |
+| `components/doktor/HastaGebelik.tsx` | Mounts `HastaKdChapter`. |
+| `app/dashboard/doktor/hastalar/[id]/page.tsx` | Deri & Lezyon tab. |
+| `lib/doktor/bransAdlari.ts` | Dermatoloji resmi unvan. |
+| `lib/specialties/profile.ts` | Unchanged — `sonAdetTarihi` stays a display key; SAT/CRL/EDD stay in specialty payload. |
+| `app/api/doktor/gebelik/route.ts` | Unchanged thin wrap. |
+| `specialties/pediatri/**` | Frozen. |
 
 ## Tests
 
@@ -50,9 +53,9 @@ tsx treats a directory argument as an ESM import of `specialties/kadin-dogum/ind
 npx tsx --test specialties/kadin-dogum/tests/schema-isolation.test.ts specialties/kadin-dogum/tests/pediatri-no-bleed.test.ts specialties/kadin-dogum/tests/sat-edd.test.ts specialties/kadin-dogum/tests/izlem-calendar.test.ts specialties/kadin-dogum/tests/test-windows.test.ts
 ```
 
-## UI tabs (exported, not mounted)
+## UI tabs (mounted)
 
-`ui/*.tsx` export GebeKarti, IzlemTimeline, UsgGallery, UsgCompare, TaramaPencereleri, JinekolojiKart, AsistanGorselPanel, NstStrip. Mounting them in the doktor shell would require editing `lib/specialties/kadin-dogum.ts` (`sekmeler`) and/or `components/doktor/DoktorNav.tsx` / `components/doktor/HastaGebelik.tsx`. Those shared files are listed here and **not edited**.
+`ui/*.tsx` export GebeKarti, IzlemTimeline, UsgGallery, UsgCompare, TaramaPencereleri, JinekolojiKart, AsistanGorselPanel, NstStrip. They render on **Kadın Sağlığı & Gebelik** via `components/doktor/HastaKdChapter.tsx`.
 
 ## Asistan USG
 

@@ -5,6 +5,7 @@
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import HastaKdChapter from '@/components/doktor/HastaKdChapter';
 
 type Uyari = { seviye: 'kritik' | 'dikkat' | 'bilgi'; metin: string };
 type Pencere = { no: number; etiket: string; haftaBas: number; haftaSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' };
@@ -151,7 +152,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 13, color: '#8FA0B5' }}>
-        Gebelik Takibi — T.C. Sağlık Bakanlığı <i>Doğum Öncesi Bakım Yönetim Rehberi</i> (4 izlem) esaslı. Hafta/tarih/uyarı hesapları deterministik; nihai karar hekimindir.
+        Gebelik Takibi — ACOG pratik gold + DÖBYR 2026 yasal asgari (4 izlem). Hafta/tarih/uyarı hesapları deterministik; nihai karar hekimindir. ACOG ile DÖBYR çelişirse iki sütun gösterilir.
       </div>
       {hata && <div style={{ color: '#F87171', fontSize: 13 }}>{hata}</div>}
       {mesaj && <div style={{ color: '#22C55E', fontSize: 13 }}>{mesaj}</div>}
@@ -179,6 +180,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       {veri?.gebelik && (
         <>
+          <HastaKdChapter patientId={patientId} veri={veri} />
           <div style={{ ...kutu, background: 'linear-gradient(135deg, rgba(15,155,142,0.18), rgba(15,155,142,0.04))', borderColor: 'rgba(15,155,142,0.35)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
               <div>

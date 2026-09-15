@@ -1,11 +1,11 @@
 /**
- * NOTYA-KHD-01 — Kadın Hastalıkları ve Doğum chapter (research-built 2026-09-14, to be revised
- * with Dr. Gökhan Mamur, 3000+ deliveries). Sources: SB Doğum Öncesi Bakım Yönetim Rehberi
- * (2018), SB Lohusa İzlem Protokolü, SB Riskli Gebelikler Yönetim Rehberi, SB serviks kanseri
- * HPV bazlı tarama programı; TJOD (Türk Jinekoloji ve Obstetrik Derneği) kılavuzları (depth).
+ * NOTYA-KHD-01 — Kadın Hastalıkları ve Doğum live chapter.
+ * Clinic engines live in specialties/kadin-dogum (SAT/EDD in specialty payload only).
+ * Ranking confirmed by Dr. Gökhan Mamur: ACOG pratik gold, DÖBYR yasal taban, Williams ders kitabı.
  */
 import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
+import { KADIN_DOGUM_MANIFEST } from '../../specialties/kadin-dogum/manifest'
 
 export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
   key: 'kadin-hastaliklari-dogum',
@@ -31,12 +31,18 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
 
   sekmeler: [
     { id: 'gebelik-takibi', etiket: 'Kadın Sağlığı & Gebelik', bilesen: 'HastaGebelik', sira: 12 },
+    ...KADIN_DOGUM_MANIFEST.tabs.map((ad, i) => ({
+      id: `kd-${ad.toLowerCase()}`,
+      etiket: ad,
+      bilesen: ad,
+      sira: 20 + i,
+    })),
   ],
 
   goruntu: {
     modaliteler: ['us', 'foto'],
     zamanCizgisi: true,
-    ayseSinir: 'Obstetrik USG görüntüsünde yalnız görünen yapıları ve ölçüm değerlerini tarif edersin; gebelik yaşı, persentil veya anomali YORUMU yapmazsın — bunlar hekimindir.',
+    ayseSinir: 'Obstetrik USG/NST taslağı ölçüm ve tarama destegidir, tanı değildir. Uzman onayı gerekir. ACOG fetal surveillance dili kullanılabilir.',
   },
 
   belgeler: [
@@ -47,16 +53,21 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
   ],
 
   ekKaynaklar: [
-    'T.C. SB HSGM — Doğum Öncesi Bakım Yönetim Rehberi (2018)',
-    'T.C. SB — Lohusa İzlem Protokolü',
-    'T.C. SB — Riskli Gebelikler Yönetim Rehberi',
-    'T.C. SB — Serviks Kanseri Taramaları HPV Bazlı Program (KETEM)',
-    'TJOD kılavuzları (derinlik)',
+    'ACOG Practice Bulletin / Committee Opinion / Clinical Consensus — TR hekim pratik gold (Dr. Gökhan Mamur)',
+    'T.C. SB HSGM — Doğum Öncesi Bakım Yönetim Rehberi DÖBYR 2026 (Yayın No. 1402) — yasal taban',
+    'Doğum Sonu Bakım Yönetim Rehberi',
+    'Riskli Gebelikler Yönetim Rehberi',
+    'Williams Obstetrik 26 (TR Tıraş/Çakıroğlu) — ders kitabı derinliği',
+    'Berek & Novak 16–17 — jinekoloji',
+    'Temel Kadın Hastalıkları ve Doğum Bilgisi 4 — TR wording',
+    'specialties/kadin-dogum (SAT/EDD/USG/NST payload + dual calendar)',
   ],
 
   promptNotlari: [
+    'TR kadın doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.',
     'Gebelik haftası, TDT ve trimester sunucuda hesaplanır — kendin hesaplama, verilen değeri kullan.',
-    'Gebelikte ilaç güvenliği: her reçete önerisinde gebelik/emzirme uyumunu belirt.',
+    'ACOG ile DÖBYR çelişirse iki sütun göster: sb_required vs acog_recommended; birleştirme.',
+    'SAT, NT, OGTT, Anti-D, CRL, EDD specialty payload içindedir — çekirdek hasta/vizit tipine yazma.',
     'Tehlike işaretleri (kanama, şiddetli baş ağrısı, görme bozukluğu, epigastrik ağrı, ödem, fetal hareket azalması) hastaya/aileye açıkça yazılır.',
   ],
 
