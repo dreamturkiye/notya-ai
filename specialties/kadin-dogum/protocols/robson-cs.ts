@@ -2,6 +2,8 @@
  * Robson group fields at birth. VBAC counseling checklist + consent.
  * SB cesarean-rate pressure is a counseling note, not a clinical veto.
  */
+import { citeProtocol } from './sources'
+
 export type RobsonFields = {
   group: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
   nulliparous: boolean
@@ -18,10 +20,11 @@ export const VBAC_COUNSELING = [
   'SB CS-rate note is counseling not a veto',
 ] as const
 
-export function robsonNote(fields: RobsonFields): { group: number; vbac: boolean; counseling: readonly string[] } {
+export function robsonNote(fields: RobsonFields): { group: number; vbac: boolean; counseling: readonly string[]; citations: string[] } {
   return {
     group: fields.group,
     vbac: fields.prior_cs,
     counseling: fields.prior_cs ? VBAC_COUNSELING : ['primary CS indication'],
+    citations: citeProtocol('obstetrik'),
   }
 }

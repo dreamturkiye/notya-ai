@@ -2,7 +2,15 @@
 
 Specialty chapter for Notya. Core `patients` / `visits` stay generic. Every SAT, NT, OGTT, Anti-D, G/P/A/Y/D/E, CRL, and EDD field lives in `specialty_records.payload` and is validated by `schema.ts`.
 
-Citation policy: cite **role**, never dump copyrighted book text. Obstetrik gold = Williams 26. Jinekoloji gold = Berek & Novak 16–17. Ulusal TR muayenehane language = Temel KD 4 (Hacettepe). Zorunlu kamu = DÖBYR 2026 (HSGM Yayın No. 1402), Doğum Sonu Bakım, Riskli Gebelikler. e-Nabız / MBYS / e-Doğum are adapters only.
+Citation policy: cite **role**, never dump copyrighted book text.
+
+Dr. Gokhan Mamur ranking (Notya): TR kadın doğum hekimi pratik gold standard is **ACOG** (Practice Bulletin / Committee Opinion / OCC). Legal floor is **DÖBYR 2026** / Doğum Sonu Bakım / Riskli Gebelikler. Textbook depth is **Williams Obstetrik 26** (TR Tıraş/Çakıroğlu). Jinekoloji stays **Berek & Novak**. TR wording stays **Temel KD**. If ACOG and DÖBYR differ, show both columns (`sb_required` vs `acog_recommended`) with `conflict: true` and uiHint `yasal asgari vs klinik öneri` — never collapse.
+
+## Dual calendar in the UI (shell not edited)
+
+`engines/izlem-calendar.ts` emits every planned visit with `sb_required`, `acog_recommended`, and `source: 'sb'|'acog'|'both'`. Overlay rows are `acog_overlay` (never `sb_required`). To render two columns in the doktor shell, wire `IzlemTimeline` (exported from `ui/IzlemTimeline.tsx`) through `lib/specialties/kadin-dogum.ts` (`sekmeler`) and/or `components/doktor/HastaGebelik.tsx`. Those shared files are listed below and **not edited**. Until then, the tab shows SB 4-izlem vs ACOG q4w/q2w/weekly as two lists.
+
+e-Nabız / MBYS / e-Doğum remain adapters only.
 
 ## How to register this manifest in the shell (not done here)
 

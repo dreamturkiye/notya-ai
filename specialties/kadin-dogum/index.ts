@@ -21,7 +21,7 @@ export type {
   AntiDDose,
 } from './types'
 export { currentGa, naegeleEdd, crlToGa, crlToEdd } from './engines/sat-edd'
-export { buildIzlemCalendar, sbMinimumFour, privateOverlay, lohusaCalendar } from './engines/izlem-calendar'
+export { buildIzlemCalendar, sbMinimumFour, privateOverlay, acogOverlay, lohusaCalendar, evaluateCadence, visitCountAdequacy } from './engines/izlem-calendar'
 export { evaluateWindows, antiDIndicated, souvenir3d4d } from './engines/test-windows'
 export { KADIN_DOGUM_TOOLS } from './prompts/tools'
 export { lockSeriesToDating } from './imaging/usg-series'

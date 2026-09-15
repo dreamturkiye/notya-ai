@@ -1,5 +1,7 @@
 SOAP — gebe visit.
 
+TR kadın doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.
+
 Subjective: movements, bleeding, ROM, headache/vision, supplements adherence, danger signs.
 
 Objective:
@@ -12,6 +14,6 @@ Objective:
 
 Assessment: risk_class dusuk|orta|yuksek; plurality; Rh/IDC.
 
-Plan: next visit week; overdue windows; high-risk consent (NIPT / amnio / CS / VBAC) if indicated.
+Plan: next visit week — show sb_required and acog_recommended as two columns (4 SB izlem vs ACOG q4w/q2w/weekly). Overdue windows; high-risk consent (NIPT / amnio / CS / VBAC) if indicated.
 
-Cite Williams / DÖBYR by role. Do not compute secret risk ratios.
+If ACOG and DÖBYR differ, conflict: true, uiHint 'yasal asgari vs klinik öneri'. Do not compute secret risk ratios.

@@ -1,26 +1,33 @@
 /**
- * Dual calendar: SB DÖBYR legal minimum (4 izlem) + private Williams/TR clinic overlay + lohusa.
- * Cite DÖBYR 2026 / Doğum Sonu Bakım by role; do not dump book text.
+ * Dual calendar: SB DÖBYR legal minimum (4 izlem) + ACOG overlay + lohusa.
+ * Cite ACOG (pratik gold) then DÖBYR / Doğum Sonu Bakım (yasal taban) then Williams (ders kitabı).
+ * Never put ACOG-only cadence in the sb_required column. Never collapse a conflict.
  */
 import type { KadinDogumPayload } from '../schema'
+import { citeProtocol, dualWhenConflict, UI_HINT_YASAL_VS_KLINIK, type DualRecommendation } from '../protocols/sources'
 
 export type VisitKind =
   | 'sb_izlem'
+  | 'acog_overlay'
   | 'clinic_overlay'
   | 'lohusa_hastane'
   | 'lohusa_asm'
   | 'asm_kadin_15_49'
   | 'clinic_annual_gyn'
 
+export type VisitSource = 'sb' | 'acog' | 'both'
+
 export type PlannedVisit = {
   kind: VisitKind
   /** Pregnancy: GA weeks (may be fractional). Lohusa: postpartum day. */
   ga_or_pp_day: number
   sb_required: boolean
+  acog_recommended: boolean
+  source: VisitSource
   duration_min: number
   checklist: string[]
   izlem_no?: 1 | 2 | 3 | 4
-  layer: 'sb' | 'private' | 'lohusa' | 'jinekoloji'
+  layer: 'sb' | 'acog' | 'private' | 'lohusa' | 'jinekoloji'
   /** Late booking still counts as izlem 1. */
   late_booking?: boolean
 }
@@ -57,6 +64,8 @@ function sbIzlem(n: 1 | 2 | 3 | 4, over: Partial<PlannedVisit> = {}): PlannedVis
     kind: 'sb_izlem',
     ga_or_pp_day: w.ga_or_pp_day,
     sb_required: true,
+    acog_recommended: true,
+    source: 'both',
     duration_min: w.duration_min,
     checklist: w.checklist,
     izlem_no: n,
@@ -84,11 +93,11 @@ function range(start: number, end: number, step: number): number[] {
 }
 
 /**
- * Private overlay (Williams / TR clinic cadence):
- * ≤28w every ~4 weeks; 28–36w every 2 weeks; ≥36w weekly.
- * High risk: weekly or q2w + NST/Doppler.
+ * ACOG overlay (not Williams-only): to 28w q4 weeks; 28–36w q2 weeks; ≥36w weekly.
+ * High risk: more frequent + NST/Doppler.
+ * These rows are never sb_required.
  */
-export function privateOverlay(risk: KadinDogumPayload['risk_class']): PlannedVisit[] {
+export function acogOverlay(risk: KadinDogumPayload['risk_class']): PlannedVisit[] {
   const checklist = ['KB', 'kilo', 'SF', 'FKA', 'clinic USG as indicated']
   const high = risk === 'yuksek'
   const nst = high ? ['NST', 'Doppler as indicated'] : []
@@ -97,14 +106,19 @@ export function privateOverlay(risk: KadinDogumPayload['risk_class']): PlannedVi
     : [...range(8, 28, 4), ...range(30, 36, 2), ...range(37, 40, 1)]
 
   return weeks.map((w) => ({
-    kind: 'clinic_overlay' as const,
+    kind: 'acog_overlay' as const,
     ga_or_pp_day: w,
     sb_required: false,
+    acog_recommended: true,
+    source: 'acog' as const,
     duration_min: high ? 20 : 15,
     checklist: [...checklist, ...nst],
-    layer: 'private' as const,
+    layer: 'acog' as const,
   }))
 }
+
+/** Alias kept so existing tests and barrels keep working. Overlay is ACOG cadence. */
+export const privateOverlay = acogOverlay
 
 export const LOHUSA_DISCHARGE = {
   nsd_min_hours: 24,
@@ -114,22 +128,22 @@ export const LOHUSA_DISCHARGE = {
 /** 6 lohusa visits: hospital 3 + ASM/home 3. Clinic windows days 2–5, 13–17, 30–40. */
 export function lohusaCalendar(): PlannedVisit[] {
   const hastane: PlannedVisit[] = [
-    { kind: 'lohusa_hastane', ga_or_pp_day: 0, sb_required: true, duration_min: 20, checklist: ['doğum notu', 'kanama', 'KB', 'emzirme', `NSD ≥${LOHUSA_DISCHARGE.nsd_min_hours}s / CS ≥${LOHUSA_DISCHARGE.cs_min_hours}s taburcu`], layer: 'lohusa' },
-    { kind: 'lohusa_hastane', ga_or_pp_day: 1, sb_required: true, duration_min: 15, checklist: ['uterus involüsyon', 'loşi', 'ağrı', 'DVT işaretleri'], layer: 'lohusa' },
-    { kind: 'lohusa_hastane', ga_or_pp_day: 2, sb_required: true, duration_min: 15, checklist: ['taburculuk eğitimi', 'tehlike işaretleri', 'Anti-D lojistik'], layer: 'lohusa' },
+    { kind: 'lohusa_hastane', ga_or_pp_day: 0, sb_required: true, acog_recommended: true, source: 'both', duration_min: 20, checklist: ['doğum notu', 'kanama', 'KB', 'emzirme', `NSD ≥${LOHUSA_DISCHARGE.nsd_min_hours}s / CS ≥${LOHUSA_DISCHARGE.cs_min_hours}s taburcu`], layer: 'lohusa' },
+    { kind: 'lohusa_hastane', ga_or_pp_day: 1, sb_required: true, acog_recommended: true, source: 'both', duration_min: 15, checklist: ['uterus involüsyon', 'loşi', 'ağrı', 'DVT işaretleri'], layer: 'lohusa' },
+    { kind: 'lohusa_hastane', ga_or_pp_day: 2, sb_required: true, acog_recommended: true, source: 'both', duration_min: 15, checklist: ['taburculuk eğitimi', 'tehlike işaretleri', 'Anti-D lojistik'], layer: 'lohusa' },
   ]
   const asm: PlannedVisit[] = [
-    { kind: 'lohusa_asm', ga_or_pp_day: 3, sb_required: true, duration_min: 20, checklist: ['ASM/ev ziyareti', 'pencere 2–5 gün', 'emzirme', 'yenidoğan'], layer: 'lohusa' },
-    { kind: 'lohusa_asm', ga_or_pp_day: 15, sb_required: true, duration_min: 20, checklist: ['pencere 13–17 gün', 'epizyotomi/kesi', 'duygu durum'], layer: 'lohusa' },
-    { kind: 'lohusa_asm', ga_or_pp_day: 35, sb_required: true, duration_min: 20, checklist: ['pencere 30–40 gün', 'aile planlaması', '6. hafta kapanış'], layer: 'lohusa' },
+    { kind: 'lohusa_asm', ga_or_pp_day: 3, sb_required: true, acog_recommended: true, source: 'both', duration_min: 20, checklist: ['ASM/ev ziyareti', 'pencere 2–5 gün', 'emzirme', 'yenidoğan'], layer: 'lohusa' },
+    { kind: 'lohusa_asm', ga_or_pp_day: 15, sb_required: true, acog_recommended: true, source: 'both', duration_min: 20, checklist: ['pencere 13–17 gün', 'epizyotomi/kesi', 'duygu durum'], layer: 'lohusa' },
+    { kind: 'lohusa_asm', ga_or_pp_day: 35, sb_required: true, acog_recommended: true, source: 'both', duration_min: 20, checklist: ['pencere 30–40 gün', 'aile planlaması', '6. hafta kapanış'], layer: 'lohusa' },
   ]
   return [...hastane, ...asm]
 }
 
 export function jinekolojiReminders(): PlannedVisit[] {
   return [
-    { kind: 'asm_kadin_15_49', ga_or_pp_day: 0, sb_required: false, duration_min: 15, checklist: ['ASM 15–49 kadın 2/yıl hatırlatma'], layer: 'jinekoloji' },
-    { kind: 'clinic_annual_gyn', ga_or_pp_day: 0, sb_required: false, duration_min: 20, checklist: ['yıllık jinekoloji', 'HPV/Pap tarama hatırlatma'], layer: 'jinekoloji' },
+    { kind: 'asm_kadin_15_49', ga_or_pp_day: 0, sb_required: false, acog_recommended: false, source: 'sb', duration_min: 15, checklist: ['ASM 15–49 kadın 2/yıl hatırlatma'], layer: 'jinekoloji' },
+    { kind: 'clinic_annual_gyn', ga_or_pp_day: 0, sb_required: false, acog_recommended: true, source: 'acog', duration_min: 20, checklist: ['yıllık jinekoloji', 'HPV/Pap tarama hatırlatma'], layer: 'jinekoloji' },
   ]
 }
 
@@ -142,6 +156,64 @@ export function buildIzlemCalendar(input: {
   if (input.episode_status === 'kapandi') return []
   return [
     ...sbMinimumFour(input.booking_ga_weeks),
-    ...privateOverlay(input.risk_class),
+    ...acogOverlay(input.risk_class),
   ]
+}
+
+export type CadenceDue = { due: boolean; detail: string }
+
+/**
+ * At a given GA, SB due only if an incomplete DÖBYR izlem window is open.
+ * ACOG due on q4w / q2w / weekly overlay. Do not collapse when they differ.
+ */
+export function evaluateCadence(input: {
+  ga_weeks: number
+  completed_sb_izlem: Array<1 | 2 | 3 | 4>
+  risk_class: KadinDogumPayload['risk_class']
+}): DualRecommendation<CadenceDue> {
+  const sbOpen = SB_IZLEM_WINDOWS.find((w) =>
+    !input.completed_sb_izlem.includes(w.izlem_no)
+    && input.ga_weeks >= w.week_lo
+    && input.ga_weeks <= w.week_hi,
+  )
+  const interval =
+    input.ga_weeks >= 36 ? 'weekly' : input.ga_weeks >= 28 ? 'q2w' : 'q4w'
+  const overlay = acogOverlay(input.risk_class)
+  const acogHit = overlay.some((v) => Math.abs(v.ga_or_pp_day - input.ga_weeks) <= 1)
+  const sb: CadenceDue = {
+    due: Boolean(sbOpen),
+    detail: sbOpen ? `izlem ${sbOpen.izlem_no} window ${sbOpen.week_lo}–${sbOpen.week_hi}` : 'no open DÖBYR izlem window',
+  }
+  const acog: CadenceDue = {
+    due: acogHit,
+    detail: `ACOG ${interval}`,
+  }
+  return dualWhenConflict(sb, acog, sb.due !== acog.due)
+}
+
+export type VisitCountSlice = { enough: boolean; count: number; min: number }
+
+/** 4 SB visits can satisfy sb_required while ACOG still wants the denser overlay. */
+export function visitCountAdequacy(input: {
+  completed_sb_izlem: number
+  completed_acog_visits: number
+  risk_class: KadinDogumPayload['risk_class']
+}): DualRecommendation<VisitCountSlice> {
+  const sbMin = 4
+  const acogMin = acogOverlay(input.risk_class).length
+  const sb: VisitCountSlice = {
+    enough: input.completed_sb_izlem >= sbMin,
+    count: input.completed_sb_izlem,
+    min: sbMin,
+  }
+  const acog: VisitCountSlice = {
+    enough: input.completed_acog_visits >= acogMin,
+    count: input.completed_acog_visits,
+    min: acogMin,
+  }
+  return {
+    ...dualWhenConflict(sb, acog, sb.enough && !acog.enough),
+    uiHint: UI_HINT_YASAL_VS_KLINIK,
+    citations: citeProtocol('obstetrik'),
+  }
 }

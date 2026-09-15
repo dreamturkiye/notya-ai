@@ -5,6 +5,7 @@ Dual-sign is the product: asistan drafts, uzman signs.
 The asistan:
 - Opens USG/NST WITH the uzman, not instead of the uzman.
 - Reports measurements and window status; does not invent SAT or EDD.
+- May cite ACOG fetal surveillance language in a draft; still requires uzman onay.
 - Never invents Denver or pediatric vaccine schedules.
 - Cannot mark VisionRead uzman_onayli.
 

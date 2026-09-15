@@ -1,6 +1,9 @@
 /**
  * Emergency packs with timestamps. Checklists, not standing orders.
+ * Citations: ACOG → DÖBYR → Williams → Temel KD.
  */
+import { citeProtocol } from './sources'
+
 export type PackResult = {
   triage: 'emergency' | 'urgent'
   next: string[]
@@ -8,7 +11,7 @@ export type PackResult = {
   at: string
 }
 
-const W = ['williams-26']
+const CITE = citeProtocol('acil')
 
 export function mgso4Pack(input: { at: string; loading?: boolean; maintenance?: boolean }): PackResult & { loading: boolean; maintenance: boolean } {
   return {
@@ -20,13 +23,13 @@ export function mgso4Pack(input: { at: string; loading?: boolean; maintenance?: 
       input.maintenance ? 'MgSO4 maintenance flag' : 'plan maintenance',
       'reflexes / urine output / respiratory rate',
     ],
-    citations: W,
+    citations: CITE,
     at: input.at,
   }
 }
 
 export function eclampsiaSeizurePack(at: string): PackResult {
-  return { triage: 'emergency', next: ['airway', 'MgSO4', 'delivery after stabilize'], citations: W, at }
+  return { triage: 'emergency', next: ['airway', 'MgSO4', 'delivery after stabilize'], citations: CITE, at }
 }
 
 export function pphPack(input: { at: string; ebl_ml: number; atony?: boolean; trauma?: boolean; tissue?: boolean; thrombin?: boolean }): PackResult & { ebl_ml: number } {
@@ -37,17 +40,17 @@ export function pphPack(input: { at: string; ebl_ml: number; atony?: boolean; tr
     triage: 'emergency',
     ebl_ml: input.ebl_ml,
     next: ['4T', 'uterotonic sequence stub', `EBL ${input.ebl_ml} ml`],
-    citations: W,
+    citations: CITE,
     at: input.at,
   }
 }
 
 export function previaAbruptionPack(at: string): PackResult {
-  return { triage: 'emergency', next: ['ABC', 'no PV if previa suspected', 'crossmatch'], citations: W, at }
+  return { triage: 'emergency', next: ['ABC', 'no PV if previa suspected', 'crossmatch'], citations: CITE, at }
 }
 
 export function shoulderDystociaPack(at: string): PackResult {
-  return { triage: 'emergency', next: ['McRoberts', 'suprapubic', 'HELPERR', 'head-to-body interval'], citations: W, at }
+  return { triage: 'emergency', next: ['McRoberts', 'suprapubic', 'HELPERR', 'head-to-body interval'], citations: CITE, at }
 }
 
 export function ppromPack(input: { at: string; ga_weeks: number }): PackResult {
@@ -55,7 +58,7 @@ export function ppromPack(input: { at: string; ga_weeks: number }): PackResult {
   return {
     triage: 'urgent',
     next: ['latency antibiotics', acs ? 'ACS betamethasone window' : 'ACS not in window'],
-    citations: W,
+    citations: CITE,
     at: input.at,
   }
 }
@@ -65,11 +68,11 @@ export function ptlTocolysisPack(input: { at: string; ga_weeks: number }): PackR
   return {
     triage: 'urgent',
     next: ['tocolysis checklist', acs ? 'ACS betamethasone window' : 'ACS not in window'],
-    citations: W,
+    citations: CITE,
     at: input.at,
   }
 }
 
 export function rupturedEctopicPack(at: string): PackResult {
-  return { triage: 'emergency', next: ['ABC', 'surgical path', 'β-hCG + TVUSG if stable enough'], citations: W, at }
+  return { triage: 'emergency', next: ['ABC', 'surgical path', 'β-hCG + TVUSG if stable enough'], citations: CITE, at }
 }

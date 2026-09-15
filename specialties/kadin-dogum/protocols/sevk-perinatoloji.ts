@@ -1,12 +1,13 @@
 /**
  * Perinatology referral suggestion — not an order.
- * Cite Riskli Gebelikler / Williams by role.
+ * Cite ACOG then Riskli Gebelikler / DÖBYR then Williams. Not an order.
  */
 import type { KadinDogumPayload } from '../schema'
+import { citeProtocol } from './sources'
 
 export type SevkResult = { sevk: boolean; reason: string[]; citations: string[] }
 
-const CITE = ['riskli-gebelikler', 'williams-26']
+const CITE = citeProtocol('risk')
 
 export function suggestPerinatology(input: {
   chorionicity?: KadinDogumPayload['chorionicity']

@@ -9,12 +9,13 @@ export const KADIN_DOGUM_MANIFEST = {
   id: 'kadin-dogum' as const,
   displayName: 'Kadın Hastalıkları ve Doğum',
   books: [
-    { id: 'williams-26', role: 'obstetrik-gold', title: 'Williams Obstetrik 26', year: 2025 },
+    { id: 'acog', role: 'pratik_altin_standart_tr_hekim', title: 'ACOG Practice Bulletin / Committee Opinion / Obstetric Care Consensus', year: 2024 },
+    { id: 'dobyr-2026', role: 'yasal_taban_sb', title: 'T.C. Sağlık Bakanlığı Doğum Öncesi Bakım Yönetim Rehberi', year: 2026 },
+    { id: 'dsbyr', role: 'yasal_taban_sb', title: 'Doğum Sonu Bakım Yönetim Rehberi', year: 2018 },
+    { id: 'riskli-gebelikler', role: 'yasal_taban_sb', title: 'Riskli Gebelikler Yönetim Rehberi', year: 2014 },
+    { id: 'williams-26', role: 'obstetrik_ders_kitabi', title: 'Williams Obstetrik 26', year: 2025 },
     { id: 'berek-novak-16-17', role: 'jinekoloji-gold', title: 'Berek & Novak Jinekoloji 16–17', year: 2020 },
     { id: 'temel-kd-4', role: 'ulusal-tr', title: 'Temel Kadın Hastalıkları ve Doğum Bilgisi 4. baskı (Hacettepe)', year: 2020 },
-    { id: 'dobyr-2026', role: 'zorunlu-kamu', title: 'T.C. Sağlık Bakanlığı Doğum Öncesi Bakım Yönetim Rehberi', year: 2026 },
-    { id: 'dsbyr', role: 'zorunlu-kamu', title: 'Doğum Sonu Bakım Yönetim Rehberi', year: 2018 },
-    { id: 'riskli-gebelikler', role: 'zorunlu-kamu', title: 'Riskli Gebelikler Yönetim Rehberi', year: 2014 },
   ],
   visitTypes: [
     'gebe',

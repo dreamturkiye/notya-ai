@@ -1,12 +1,24 @@
 /**
  * Risk / emergency checklists — not full EHRs.
  * evaluateX(input) => { triage, next, citations }
+ * Citations: ACOG → DÖBYR/Riskli → Williams → Temel KD. Never collapse ACOG vs DÖBYR.
  */
-export type Triage = 'routine' | 'urgent' | 'emergency'
-export type EvalResult = { triage: Triage; next: string[]; citations: string[] }
+import { citeProtocol, UI_HINT_YASAL_VS_KLINIK } from './sources'
 
-const W = ['williams-26']
-const RG = ['riskli-gebelikler', 'williams-26']
+export type Triage = 'routine' | 'urgent' | 'emergency'
+export type EvalResult = {
+  triage: Triage
+  next: string[]
+  citations: string[]
+  conflict?: boolean
+  sb_required?: { next: string[] }
+  acog_recommended?: { next: string[] }
+  uiHint?: typeof UI_HINT_YASAL_VS_KLINIK
+}
+
+const CITE = citeProtocol('obstetrik')
+const CITE_RISK = citeProtocol('risk')
+const CITE_GYN = citeProtocol('jinekoloji')
 
 export function evaluatePE(input: {
   sbp: number
@@ -22,20 +34,20 @@ export function evaluatePE(input: {
   const hellp = Boolean(input.platelets_low && input.ast_alt_high)
   const symptoms = Boolean(input.headache || input.visual || input.epigastric)
   if (hellp || (severe && symptoms)) {
-    return { triage: 'emergency', next: ['MgSO4 flag', 'delivery flags', 'stabilize BP', 'sevk'], citations: RG }
+    return { triage: 'emergency', next: ['MgSO4 flag', 'delivery flags', 'stabilize BP', 'sevk'], citations: CITE_RISK }
   }
   if (input.sbp >= 140 || input.dbp >= 90 || input.proteinuria) {
-    return { triage: 'urgent', next: ['repeat BP', 'spot/24h protein', 'labs', 'fetal surveillance'], citations: RG }
+    return { triage: 'urgent', next: ['repeat BP', 'spot/24h protein', 'labs', 'fetal surveillance'], citations: CITE_RISK }
   }
-  return { triage: 'routine', next: ['routine BP each visit'], citations: ['dobyr-2026'] }
+  return { triage: 'routine', next: ['routine BP each visit'], citations: CITE_RISK }
 }
 
 export function evaluateAPH(input: { previa?: boolean; accreta?: boolean; abruption?: boolean; bleeding: boolean }): EvalResult {
   if (input.bleeding && (input.previa || input.accreta || input.abruption)) {
-    return { triage: 'emergency', next: ['ABC', 'Rh/IDC', 'crossmatch', 'do not PV if previa suspected'], citations: W }
+    return { triage: 'emergency', next: ['ABC', 'Rh/IDC', 'crossmatch', 'do not PV if previa suspected'], citations: CITE }
   }
-  if (input.bleeding) return { triage: 'urgent', next: ['localize placenta', 'vital signs', 'FHR'], citations: W }
-  return { triage: 'routine', next: ['previa follow if known'], citations: W }
+  if (input.bleeding) return { triage: 'urgent', next: ['localize placenta', 'vital signs', 'FHR'], citations: CITE }
+  return { triage: 'routine', next: ['previa follow if known'], citations: CITE }
 }
 
 export function evaluatePPH(input: { atony?: boolean; trauma?: boolean; tissue?: boolean; thrombin?: boolean }): EvalResult {
@@ -44,7 +56,7 @@ export function evaluatePPH(input: { atony?: boolean; trauma?: boolean; tissue?:
   return {
     triage: hit ? 'emergency' : 'urgent',
     next: ['4T checklist', ...fours, 'uterotonics', 'balloon/surgery path'],
-    citations: W,
+    citations: CITE,
   }
 }
 
@@ -53,10 +65,10 @@ export function evaluateEctopic(input: { bhcg_trend: 'rising' | 'plateau' | 'fal
     return {
       triage: 'urgent',
       next: input.mtx_candidate ? ['MTX criteria checklist', 'consent'] : ['diagnostic laparoscopy path', 'serial β-hCG + TVUSG'],
-      citations: W,
+      citations: CITE,
     }
   }
-  return { triage: 'routine', next: ['continue viability follow'], citations: W }
+  return { triage: 'routine', next: ['continue viability follow'], citations: CITE }
 }
 
 export function evaluateAbortus(input: { type: 'threatened' | 'incomplete' | 'missed' | 'septic'; ga_weeks: number }): EvalResult {
@@ -67,7 +79,7 @@ export function evaluateAbortus(input: { type: 'threatened' | 'incomplete' | 'mi
       'misoprostol protocol if indicated',
       legal ? 'küretaj legal packet ≤10w' : 'indicated board / tahliye path',
     ],
-    citations: ['temel-kd-4', 'williams-26'],
+    citations: CITE_GYN,
   }
 }
 
@@ -80,16 +92,26 @@ export function evaluatePTL(input: { contractions: boolean; pprom: boolean; ga_w
       acsWindow ? 'ACS betamethasone window' : 'ACS not in window',
       'tocolysis checklist',
     ],
-    citations: W,
+    citations: CITE,
   }
 }
 
 export function evaluateGDM(input: { ogtt_positive: boolean; on_insulin?: boolean; macrosomia?: boolean }): EvalResult {
-  if (!input.ogtt_positive) return { triage: 'routine', next: ['diet counseling if screen pending'], citations: W }
+  if (!input.ogtt_positive) {
+    return {
+      triage: 'routine',
+      next: ['diet counseling if screen pending'],
+      citations: CITE,
+      conflict: true,
+      sb_required: { next: ['75g OGTT or 50+100 at 24–28w (DÖBYR/SUT)'] },
+      acog_recommended: { next: ['GDM screening per current ACOG PB (verify number at implement time)'] },
+      uiHint: UI_HINT_YASAL_VS_KLINIK,
+    }
+  }
   return {
     triage: input.on_insulin || input.macrosomia ? 'urgent' : 'routine',
     next: ['diet', input.on_insulin ? 'insulin titration' : 'trial of diet', input.macrosomia ? 'growth USG / delivery plan' : 'fetal growth watch'],
-    citations: W,
+    citations: CITE,
   }
 }
 
@@ -99,31 +121,31 @@ export function evaluateIUGR(input: { stage: 'ua' | 'mca' | 'dv' }): EvalResult 
     mca: ['MCA after UA', 'surveillance intensify'],
     dv: ['DV stage — delivery decision'],
   }[input.stage]
-  return { triage: input.stage === 'dv' ? 'emergency' : 'urgent', next, citations: W }
+  return { triage: input.stage === 'dv' ? 'emergency' : 'urgent', next, citations: CITE }
 }
 
 export function evaluateRh(input: { rh: 'D+' | 'D-' | 'unknown'; idc: 'positive' | 'negative' | 'unknown' | 'not_tested'; ga_weeks: number }): EvalResult {
   if (input.rh !== 'D-' || input.idc !== 'negative') {
-    return { triage: 'routine', next: ['Anti-D not indicated on this Rh/IDC pair'], citations: W }
+    return { triage: 'routine', next: ['Anti-D not indicated on this Rh/IDC pair'], citations: CITE }
   }
   return {
     triage: 'routine',
     next: input.ga_weeks >= 27 && input.ga_weeks <= 29 ? ['Anti-D 300 µg now'] : ['plan Anti-D ~28w', 'postpartum if neonate Rh+'],
-    citations: W,
+    citations: CITE,
   }
 }
 
 export function evaluateICP(input: { bile_acids_umol: number }): EvalResult {
-  if (input.bile_acids_umol >= 40) return { triage: 'urgent', next: ['ursodeoxycholic acid path', 'delivery timing'], citations: W }
-  if (input.bile_acids_umol >= 10) return { triage: 'routine', next: ['repeat bile acids', 'pruritus care'], citations: W }
-  return { triage: 'routine', next: ['ICP unlikely'], citations: W }
+  if (input.bile_acids_umol >= 40) return { triage: 'urgent', next: ['ursodeoxycholic acid path', 'delivery timing'], citations: CITE }
+  if (input.bile_acids_umol >= 10) return { triage: 'routine', next: ['repeat bile acids', 'pruritus care'], citations: CITE }
+  return { triage: 'routine', next: ['ICP unlikely'], citations: CITE }
 }
 
 export function evaluateVTE(input: { score: number }): EvalResult {
   return {
     triage: input.score >= 3 ? 'urgent' : 'routine',
     next: input.score >= 3 ? ['enoxaparin pregnancy note', 'anesthesia plan'] : ['mobility / hydration'],
-    citations: W,
+    citations: CITE,
   }
 }
 
@@ -131,7 +153,7 @@ export function evaluateTTTS(input: { stage: 1 | 2 | 3 | 4 | 5 }): EvalResult {
   return {
     triage: input.stage >= 2 ? 'emergency' : 'urgent',
     next: ['monochorionic surveillance', `Quintero stage ${input.stage}`, 'laser/sevk path if ≥2'],
-    citations: W,
+    citations: CITE,
   }
 }
 
@@ -139,7 +161,7 @@ export function evaluateLabor(input: { bishop: number; nst: 'I' | 'II' | 'III'; 
   return {
     triage: input.nst === 'III' ? 'emergency' : input.nst === 'II' ? 'urgent' : 'routine',
     next: ['partogram', `Bishop ${input.bishop}`, `NST cat ${input.nst}`, input.oxytocin ? 'oxytocin running' : 'oxytocin not started'],
-    citations: W,
+    citations: CITE,
   }
 }
 
@@ -147,14 +169,14 @@ export function evaluateCS(input: { indication: string; prior_cs?: boolean }): E
   return {
     triage: 'urgent',
     next: input.prior_cs ? ['VBAC counseling', 'uterine rupture signs', input.indication] : ['CS indication note', input.indication],
-    citations: W,
+    citations: CITE,
   }
 }
 
 export function evaluateShoulderDystocia(): EvalResult {
-  return { triage: 'emergency', next: ['HELPERR / McRoberts', 'suprapubic', 'document head-to-body interval'], citations: W }
+  return { triage: 'emergency', next: ['HELPERR / McRoberts', 'suprapubic', 'document head-to-body interval'], citations: CITE }
 }
 
 export function evaluateEclampsia(): EvalResult {
-  return { triage: 'emergency', next: ['seizure algorithm', 'airway', 'MgSO4', 'delivery after stabilize'], citations: W }
+  return { triage: 'emergency', next: ['seizure algorithm', 'airway', 'MgSO4', 'delivery after stabilize'], citations: CITE }
 }

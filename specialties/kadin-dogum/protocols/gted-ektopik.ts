@@ -1,6 +1,8 @@
 /**
  * GTD / ectopic. Protocol references only — do not invent standing MTX doses.
  */
+import { citeProtocol } from './sources'
+
 export type BhcgPoint = { at: string; value: number }
 
 export function bhcgSeriesTrend(points: BhcgPoint[]): 'rising' | 'plateau' | 'falling' | 'insufficient' {
@@ -20,7 +22,7 @@ export function mtxCriteriaFlags(input: {
   bhcg_below_threshold: boolean
   no_fetal_cardiac?: boolean
   follow_titers_plan: boolean
-}): { eligible_flags: string[]; blocked: string[] } {
+}): { eligible_flags: string[]; blocked: string[]; citations: string[] } {
   const eligible_flags: string[] = []
   const blocked: string[] = []
   if (input.stable) eligible_flags.push('hemodynamically stable')
@@ -32,5 +34,5 @@ export function mtxCriteriaFlags(input: {
   if (input.no_fetal_cardiac !== false) eligible_flags.push('no fetal cardiac activity')
   if (input.follow_titers_plan) eligible_flags.push('follow titers planned')
   else blocked.push('titers follow missing')
-  return { eligible_flags, blocked }
+  return { eligible_flags, blocked, citations: citeProtocol('jinekoloji') }
 }

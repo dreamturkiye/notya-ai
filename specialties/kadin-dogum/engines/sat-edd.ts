@@ -1,6 +1,6 @@
 /**
  * SAT / EDD / current GA. Cite Naegele (role) and Robinson 1975 CRL dating (public formula).
- * Williams Obstetrik 26 is obstetrik-gold for locking policy — not copied.
+ * Williams Obstetrik 26 is obstetrik_ders_kitabi for locking policy — not copied.
  */
 import type { KadinDogumPayload } from '../schema'
 import { addDays, daysToGa, diffDays, type GaWeeksDays } from './dates'

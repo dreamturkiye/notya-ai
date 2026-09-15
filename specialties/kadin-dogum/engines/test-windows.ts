@@ -5,6 +5,7 @@
  */
 import { gaToDays, parseGaToken, type GaWeeksDays } from './dates'
 import type { KadinDogumPayload } from '../schema'
+import { dualWhenConflict, type DualRecommendation } from '../protocols/sources'
 
 export type WindowId =
   | 'serial_bhcg_tvusg'
@@ -36,6 +37,9 @@ export type TestWindow = {
   sut_code?: string
   out_of_pocket?: boolean
   non_diagnostic?: boolean
+  /** false when ACOG would not use this as the primary path (e.g. triple vs NIPT). */
+  acog_aligned: boolean
+  acog_note?: string
   notes: string[]
 }
 
@@ -45,6 +49,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     label: 'Seri β-hCG + TVUSG canlılık / ektopik / abortus',
     open: '4+0',
     close: '8+6',
+    acog_aligned: true,
     notes: ['4–8w'],
   },
   {
@@ -52,6 +57,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     label: 'İlk vizit panel',
     open: '0+0',
     close: '14+0',
+    acog_aligned: true,
     notes: ['kan grubu', 'Rh', 'IDC', 'CBC', 'ferritin', 'TSH', 'HBsAg', 'HIV/VDRL/HCV per protocol', 'U/A+culture', 'glucose'],
   },
   {
@@ -60,6 +66,8 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '11+0',
     close: '13+6',
     sut_code: 'P.901.120',
+    acog_aligned: true,
+    acog_note: 'Combined first-trimester screen remains valid; ACOG also allows NIPT as primary. SUT still pays ikili.',
     notes: ['11+0 to 13+6'],
   },
   {
@@ -68,6 +76,8 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '11+0',
     close: '14+0',
     out_of_pocket: true,
+    acog_aligned: true,
+    acog_note: 'ACOG allows NIPT as primary screen; SUT still pays ikili/üçlü and NIPT is usually out of pocket. Do not collapse.',
     notes: ['11–14 optional NIPT; usually out of pocket; high risk opens consent path'],
   },
   {
@@ -76,6 +86,8 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '16+0',
     close: '20+0',
     sut_code: 'P.904.090',
+    acog_aligned: false,
+    acog_note: 'SUT pays üçlü/dörtlü; ACOG does not treat triple/quad as primary aneuploidy screen when NIPT is available. AFP for NTD still relevant if no detailed USG.',
     notes: ['16–20'],
   },
   {
@@ -83,6 +95,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     label: 'Ayrıntılı / 2. düzey USG + servikal uzunluk',
     open: '18+0',
     close: '22+0',
+    acog_aligned: true,
     notes: ['18–22'],
   },
   {
@@ -91,6 +104,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '20+0',
     close: '24+0',
     indicated_only: true,
+    acog_aligned: true,
     notes: ['20–24 if indicated PE/IUGR'],
   },
   {
@@ -98,6 +112,8 @@ export const TEST_WINDOWS: TestWindow[] = [
     label: '75g OGTT veya 50+100, CBC, IDC if Rh−',
     open: '24+0',
     close: '28+0',
+    acog_aligned: true,
+    acog_note: 'Window aligns; screening method (75g vs 2-step) may differ — return dual, do not collapse.',
     notes: ['24–28'],
   },
   {
@@ -105,6 +121,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     label: 'Anti-D 300 µg ~28w',
     open: '27+0',
     close: '29+0',
+    acog_aligned: true,
     notes: ['Rh− IDC− only'],
   },
   {
@@ -113,6 +130,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '28+0',
     close: '42+0',
     indicated_only: true,
+    acog_aligned: true,
     notes: ['28+'],
   },
   {
@@ -120,6 +138,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     label: 'GBS if protocol + prezentasyon USG',
     open: '35+0',
     close: '37+0',
+    acog_aligned: true,
     notes: ['35–37'],
   },
   {
@@ -128,6 +147,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '10+0',
     close: '13+6',
     indicated_only: true,
+    acog_aligned: true,
     notes: ['diagnosis not screening'],
   },
   {
@@ -136,6 +156,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '16+0',
     close: '22+6',
     indicated_only: true,
+    acog_aligned: true,
     notes: ['16+; diagnosis not screening'],
   },
   {
@@ -144,6 +165,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '18+0',
     close: '34+0',
     indicated_only: true,
+    acog_aligned: true,
     notes: ['indicated only'],
   },
   {
@@ -152,6 +174,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '18+0',
     close: '24+0',
     indicated_only: true,
+    acog_aligned: true,
     notes: ['diagnosis not screening'],
   },
   {
@@ -160,6 +183,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '24+0',
     close: '32+0',
     non_diagnostic: true,
+    acog_aligned: false,
     notes: ['non_diagnostic true; optional monthly clinic USG is separate'],
   },
 ]
@@ -197,4 +221,13 @@ export function antiDIndicated(rh: KadinDogumPayload['rh'], idc: KadinDogumPaylo
 
 export function souvenir3d4d(gaWeeks: number): { eligible: boolean; non_diagnostic: true } {
   return { eligible: gaWeeks >= 24 && gaWeeks <= 32, non_diagnostic: true }
+}
+
+/** ACOG allows NIPT as primary; SUT still pays ikili/üçlü. Never collapse. */
+export function aneuploidyScreenDual(): DualRecommendation<{ tests: string[]; sut?: string }> {
+  return dualWhenConflict(
+    { tests: ['ikili P.901.120', 'üçlü P.904.090'] },
+    { tests: ['NIPT as primary screen (verify current ACOG PB)'], sut: 'usually out of pocket' },
+    true,
+  )
 }
