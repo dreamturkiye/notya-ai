@@ -63,9 +63,13 @@ export function requestDualReview(read: VisionRead): VisionRead {
 }
 
 export function uzmanOnay(read: VisionRead, actor: Actor): { ok: true; read: VisionRead } | { ok: false; reason: string } {
-  if (actor !== 'uzman') return { ok: false, reason: 'asistan cannot finalize a VisionRead' }
-  if (read.drafted_by === 'asistan' && actor === 'asistan') {
-    return { ok: false, reason: 'dual-sign cannot self-approve as asistan' }
+  if (actor !== 'uzman') {
+    return {
+      ok: false,
+      reason: asistanSelfApproveBlocked(read, actor)
+        ? 'dual-sign cannot self-approve as asistan'
+        : 'asistan cannot finalize a VisionRead',
+    }
   }
   return {
     ok: true,
