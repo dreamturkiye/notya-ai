@@ -16,6 +16,7 @@ interface Tool {
 }
 
 const tools: Tool[] = [
+  { circleColor: '#E8C547', icon: 'HB', title: 'Hedef Boy', desc: 'Anne ve baba boyunu girin — aileye gösterilen stüdyo burada açılır', route: '/doktor-tools/hedef-boy' },
   { circleColor: '#0F9B8E', icon: 'Rx', title: 'e-Reçete Asistanı', desc: 'Elektronik reçete oluştur ve SGK entegrasyonunu tamamla', route: '/doktor-tools/erecete' },
   { circleColor: '#8B5CF6', icon: 'EP', title: 'Epikriz Üretici', desc: 'Hasta özetlerini otomatik oluştur ve profesyonel epikriz raporları hazırla', route: '/doktor-tools/epikriz' },
   { circleColor: '#F59E0B', icon: 'IK', title: 'ICD-10 Kodlayıcı', desc: 'Türkçe tanı girişiyle anlık ICD-10 kodlama', route: '/doktor-tools/icd10' },
@@ -25,7 +26,6 @@ const tools: Tool[] = [
   { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali' },
   { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Rehberi', desc: 'Hasta kaydı erişimi adım adım', route: '/doktor-tools/enabiz' },
-  { circleColor: '#0EA5E9', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boylarına göre tahmini erişkin boy — aileye gösterilen Tanner hesabı', route: '/doktor-tools/hedef-boy' },
 ];
 
 export default function DoktorToolsPage() {
@@ -41,6 +41,34 @@ export default function DoktorToolsPage() {
           <div style={{ fontSize: '11px', fontWeight: 600, color: '#14B8A6', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>ARAÇLAR</div>
           <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, letterSpacing: '-0.6px' }}>Doktor Araçları</h1>
           <p style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '8px', marginBottom: 0 }}>Klinik iş akışınızı hızlandıracak araçlara erişin</p>
+        </div>
+
+        <div
+          onClick={() => router.push('/doktor-tools/hedef-boy')}
+          onMouseEnter={() => setHoveredIndex(-1)}
+          onMouseLeave={() => setHoveredIndex(null)}
+          style={{
+            marginBottom: 18,
+            cursor: 'pointer',
+            borderRadius: 20,
+            padding: '22px 24px',
+            background: 'radial-gradient(ellipse 80% 120% at 90% 0%, rgba(232,197,71,0.22), transparent 55%), rgba(255,255,255,0.04)',
+            border: `1px solid ${hoveredIndex === -1 ? 'rgba(232,197,71,0.55)' : 'rgba(232,197,71,0.28)'}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', color: '#E8C547' }}>PEDİATRİ · AİLEYE GÖSTER</div>
+            <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6, letterSpacing: '-0.03em' }}>Anne-Baba Boylarına Göre Hedef Boy</div>
+            <div style={{ fontSize: 14, color: '#9CA3AF', marginTop: 6, maxWidth: 560, lineHeight: 1.45 }}>
+              Baba ve anne boyunu girin. Stüdyo bu ekranda açılır — laptop veya telefonu ebeveyne çevirin.
+            </div>
+          </div>
+          <div style={{ background: '#E8C547', color: '#1A1404', fontWeight: 800, borderRadius: 999, padding: '10px 18px', fontSize: 14 }}>Aç ›</div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
