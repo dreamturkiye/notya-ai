@@ -39,7 +39,7 @@ Next standard slot when a device appears: **Generic Health Sensor** (GHS, Blueto
 
 | Tarih | Marka / Model | Tür | Profil | Sonuç | Kim | Not |
 |---|---|---|---|---|---|---|
-| — | — | — | — | — | — | Waiting for the first device (NOTYA-BLE-03: which device does Dr. Gökhan own?). |
+| 2026-09-16 (planned) | — | — | — | — | Dr. Gökhan — Samsung Android (Chrome / Samsung Internet, native Web Bluetooth) | Live test in the 2026-09-16 session; device brand/model to be recorded here. |
 
 ## Devices that never reach Notya over Bluetooth (by design — file path instead)
 
