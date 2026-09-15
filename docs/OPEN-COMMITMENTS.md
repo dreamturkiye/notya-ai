@@ -164,6 +164,36 @@ Still open (chapter specialistReview):
 - Wave 0 wiring still pending: hasta dosyası tabs / ölçüm order / epikriz unvan should read the
   registry (today's tab is still hardcoded + gated by patient sex/age)
 
+## Architecture decision (Kaan 2026-09-14 gece): core/ vs specialties/*/{manifest,schema,protocols,ui,prompts,tests}
+
+Direction accepted. Mapping from what exists today, so migration is a checklist not a guess:
+- manifest.ts  = lib/specialties/<key>.ts (SpecialtyProfile) — already basically this shape.
+- schema.ts + protocols/ = lib/clinical/<engine>.ts per specialty (buyumeEgrisi/mchatR/
+  gelisimTaramasi for pediatri; gebelik/fetalBiyometri/lohusaVeJinekoloji/genetikTarama for
+  kadin-dogum) — currently flat under lib/clinical/, needs splitting by specialty.
+- ui/ = components/doktor/Hasta*.tsx (HastaBuyumeEgrileri, HastaMchat, HastaGelisimTaramasi,
+  HastaGebelik) — free to move, plain imports, no URL constraint.
+- prompts/ = personaEngine.ts specialty overlays + the inline system prompts in route.ts files
+  (gebelik's genetik-tarama AI call, epikriz's system prompts) — currently the most tangled,
+  needs care, not a fast move.
+- API routes stay physically under app/api/** (Next.js app-router ties URL to file location);
+  route files become thin imports from specialties/*/ once the logic moves there — route.ts
+  itself never becomes the home of the logic.
+- tests/ was the real gap — no persisted tests existed before tonight; verification was all
+  throwaway scripts deleted after each check. FIXED for tonight's code: lib/clinical/mchatR.test.ts,
+  fetalBiyometri.test.ts, gebelik.test.ts, genetikTarama.test.ts added and wired into the existing
+  `npm test` script (tsx --test, node:test/node:assert — matches lib/clinical/yasamsalBulgular.test.ts
+  convention). 53/53 pass including the 19 new ones.
+
+Sequencing decision: did NOT mass-move tonight's live, just-shipped pediatri/KHD code into the
+new folder shape — no test-suite-backed refactor of working production code at this hour, hours
+before Dr. Gökhan's review. Instead: (1) tests are the one piece that's genuinely done and safe
+to do immediately — done above; (2) the NEXT specialty (Dermatoloji, Wave 1) starts directly in
+the new shape from a blank slate — zero migration risk since nothing exists yet to break;
+(3) migrating pediatri/kadin-dogum's existing files into specialties/* is a deliberate, tracked,
+one-file-at-a-time task for a future session, each move verified by the test suite above, not a
+bulk rename.
+
 ## Waiting on the founder
 
 | Since | Item | Why it matters |
