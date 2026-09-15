@@ -12,6 +12,7 @@ import {
   looksLikeRecordId,
 } from '../ui/labels'
 import { oncekiGebelikDurumMetni } from '../../../lib/clinical/gebelikDurum'
+import { TEST_WINDOWS } from '../engines/test-windows'
 
 describe('kd clinician labels', () => {
   it('maps internal enums to Turkish clinician copy', () => {
@@ -26,6 +27,14 @@ describe('kd clinician labels', () => {
     assert.equal(kdLabel(KD_USG_KIND, 'ayrintili_18_22'), '18–22. hafta ayrıntılı USG')
     assert.equal(oncekiGebelikDurumMetni('gebe'), 'Aktif gebelik')
     assert.notEqual(oncekiGebelikDurumMetni('gebe'), 'Sonlandı')
+  })
+
+  it('tarama penceresi titles keep abbreviations but not English fragments', () => {
+    for (const w of TEST_WINDOWS) {
+      assert.equal(/\bindicated\b/i.test(w.label), false, w.label)
+      assert.equal(/\bif protocol\b/i.test(w.label), false, w.label)
+      assert.equal(/\bif Rh/i.test(w.label), false, w.label)
+    }
   })
 
   it('does not use raw UUIDs as primary labels', () => {

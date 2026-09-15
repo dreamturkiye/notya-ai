@@ -36,10 +36,15 @@ describe('live chapter wiring', () => {
 
   it('HastaGebelik keeps active episodes out of Önceki Gebelikler and uses controlled start/izlem forms', () => {
     const src = readFileSync(join(ROOT, '..', '..', 'components', 'doktor', 'HastaGebelik.tsx'), 'utf8')
-    assert.match(src, /oncekiGebelikleriFiltrele/)
+    assert.match(src, /oncekiGebelikleriFiltrele\(veri\.gecmis,\s*veri\.gebelik\)/)
+    assert.match(src, /Yok/)
     assert.match(src, /yerelIsoTarih/)
     assert.match(src, /set\(\(prev\) =>/)
     assert.doesNotMatch(src, /: 'Sonlandı'/)
+    const api = readFileSync(join(ROOT, '..', '..', 'app', 'api', 'doktor', 'gebelik', 'route.ts'), 'utf8')
+    assert.match(api, /oncekiGebelikleriFiltrele\(gecmisHam,\s*gebelik\)/)
+    assert.match(api, /ayniGebelikBolumu/)
+    assert.doesNotMatch(api, /\.in\('durum', \['aktif', 'gebe'\]\)/)
   })
 
   it('hasta dosyası gates pediatric tabs by age like KD is gated by sex', () => {
