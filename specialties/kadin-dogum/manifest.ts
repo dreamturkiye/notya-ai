@@ -3,6 +3,7 @@
  * Registration in the shell is documented in README.md — this file is not imported by the app yet.
  */
 import type { VisitType } from './types'
+import { CLINIC_UNITS } from './schema'
 
 export const KADIN_DOGUM_MANIFEST = {
   id: 'kadin-dogum' as const,
@@ -15,7 +16,31 @@ export const KADIN_DOGUM_MANIFEST = {
     { id: 'dsbyr', role: 'zorunlu-kamu', title: 'Doğum Sonu Bakım Yönetim Rehberi', year: 2018 },
     { id: 'riskli-gebelikler', role: 'zorunlu-kamu', title: 'Riskli Gebelikler Yönetim Rehberi', year: 2014 },
   ],
-  visitTypes: ['gebe', 'jinekoloji', 'usg', 'dogum', 'lohusa'] as const satisfies readonly VisitType[],
+  visitTypes: [
+    'gebe',
+    'jinekoloji',
+    'usg',
+    'nst',
+    'kolposkopi',
+    'infertilite',
+    'perinatoloji-sevk',
+    'travay',
+    'dogum',
+    'lohusa',
+    'acil',
+    'gebe-okulu',
+    'gorsel-analiz',
+    'asistan-gozden-gecirme',
+  ] as const satisfies readonly VisitType[],
+  units: CLINIC_UNITS,
+  imagingCapabilities: {
+    usg: true,
+    nstCtg: true,
+    kolposkopi: true,
+    hsg: true,
+    asistanVision: true,
+    dualSignAsistanUzman: true,
+  },
   toolsWhitelist: [
     'current_ga',
     'izlem_calendar',
@@ -25,8 +50,23 @@ export const KADIN_DOGUM_MANIFEST = {
     'evaluate_pe',
     'evaluate_gdm',
     'evaluate_rh',
+    'kd.list_usg_series',
+    'kd.get_usg',
+    'kd.compare_growth',
+    'kd.analyze_usg',
+    'kd.analyze_nst',
+    'kd.request_dual_review',
   ],
-  tabs: ['GebeKarti', 'IzlemTimeline', 'UsgGallery', 'TaramaPencereleri', 'JinekolojiKart'],
+  tabs: [
+    'GebeKarti',
+    'IzlemTimeline',
+    'UsgGallery',
+    'UsgCompare',
+    'TaramaPencereleri',
+    'JinekolojiKart',
+    'AsistanGorselPanel',
+    'NstStrip',
+  ],
   bridges: ['dogum-yenidogan'] as const,
 }
 

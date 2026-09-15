@@ -8,6 +8,12 @@ export const KADIN_DOGUM_TOOLS = [
   { name: 'evaluate_pe', description: 'PE/HELLP checklist' },
   { name: 'evaluate_gdm', description: 'GDM diet/insulin path' },
   { name: 'evaluate_rh', description: 'Rh/IDC Anti-D path' },
+  { name: 'kd.list_usg_series', description: 'List SAT/EDD-locked USG series' },
+  { name: 'kd.get_usg', description: 'Resolve USG studies by id / coreImageId' },
+  { name: 'kd.compare_growth', description: 'Plot measurements over GA per fetus A/B' },
+  { name: 'kd.analyze_usg', description: 'Draft USG VisionRead only' },
+  { name: 'kd.analyze_nst', description: 'Draft NST VisionRead only' },
+  { name: 'kd.request_dual_review', description: 'Asistan draft → uzman onay' },
 ] as const
 
 export type KadinDogumToolName = (typeof KADIN_DOGUM_TOOLS)[number]['name']

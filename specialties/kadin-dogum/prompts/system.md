@@ -11,3 +11,7 @@ Do not invent Denver or pediatric vaccine schedules. Do not call aşılar or gel
 Screens (ikili, üçlü, NIPT) are not diagnoses. High risk opens a consent path for NIPT / invasive tests.
 
 Danger signs to surface: bleeding, ROM, reduced movement, headache/vision, fever.
+
+Imaging is first-class. Open USG/NST WITH the uzman. Vision drafts are not diagnoses.
+Disclaimer: "Ölçüm ve tarama destegi, tani degildir. Uzman onayi gerekir."
+

@@ -94,3 +94,5 @@ export function mapIzlemToEnabiz(input: {
     live_write: false,
   }
 }
+
+export { eDogumRequired } from './olu-dogum'

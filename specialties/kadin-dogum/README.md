@@ -44,7 +44,11 @@ npx tsx --test specialties/kadin-dogum/tests/schema-isolation.test.ts specialtie
 
 ## UI tabs (exported, not mounted)
 
-`ui/*.tsx` export GebeKarti, IzlemTimeline, UsgGallery, TaramaPencereleri, JinekolojiKart. Mounting them in the doktor shell would require editing `lib/specialties/kadin-dogum.ts` (`sekmeler`) and/or `components/doktor/DoktorNav.tsx` / `components/doktor/HastaGebelik.tsx`. Those shared files are listed here and **not edited**.
+`ui/*.tsx` export GebeKarti, IzlemTimeline, UsgGallery, UsgCompare, TaramaPencereleri, JinekolojiKart, AsistanGorselPanel, NstStrip. Mounting them in the doktor shell would require editing `lib/specialties/kadin-dogum.ts` (`sekmeler`) and/or `components/doktor/DoktorNav.tsx` / `components/doktor/HastaGebelik.tsx`. Those shared files are listed here and **not edited**.
+
+## Asistan USG
+
+Asistan USG uses core görüntüleme + `specialties/kadin-dogum/imaging/vision-tools.ts`. An 18–22w detailed scan and a later growth scan can be compared (`kd.compare_growth` / `UsgCompare`). A draft VisionRead needs uzman onay; asistan cannot self-approve. Disclaimer: "Ölçüm ve tarama destegi, tani degildir. Uzman onayi gerekir."
 
 ## Bridge
 
