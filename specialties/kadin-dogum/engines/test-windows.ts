@@ -50,7 +50,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '4+0',
     close: '8+6',
     acog_aligned: true,
-    notes: ['4–8w'],
+    notes: ['4–8. hafta'],
   },
   {
     id: 'first_visit_labs',
@@ -58,17 +58,17 @@ export const TEST_WINDOWS: TestWindow[] = [
     open: '0+0',
     close: '14+0',
     acog_aligned: true,
-    notes: ['kan grubu', 'Rh', 'IDC', 'CBC', 'ferritin', 'TSH', 'HBsAg', 'HIV/VDRL/HCV per protocol', 'U/A+culture', 'glucose'],
+    notes: ['kan grubu', 'Rh', 'IDC', 'CBC', 'ferritin', 'TSH', 'HBsAg', 'HIV/VDRL/HCV (protokole göre)', 'idrar + kültür', 'glukoz'],
   },
   {
     id: 'ikili_nt',
-    label: 'Kombine / ikili NT + nazal kemik + PAPP-A + free β-hCG (T21/T18)',
+    label: 'Kombine / ikili NT + nazal kemik + PAPP-A + serbest β-hCG (T21/T18)',
     open: '11+0',
     close: '13+6',
     sut_code: 'P.901.120',
     acog_aligned: true,
-    acog_note: 'Combined first-trimester screen remains valid; ACOG also allows NIPT as primary. SUT still pays ikili.',
-    notes: ['11+0 to 13+6'],
+    acog_note: 'Kombine birinci trimester tarama geçerlidir; ACOG NIPT\'yi birincil tarama olarak da kabul eder. SUT hâlâ ikiliyi öder.',
+    notes: ['11+0–13+6'],
   },
   {
     id: 'nipt_optional',
@@ -77,8 +77,8 @@ export const TEST_WINDOWS: TestWindow[] = [
     close: '14+0',
     out_of_pocket: true,
     acog_aligned: true,
-    acog_note: 'ACOG allows NIPT as primary screen; SUT still pays ikili/üçlü and NIPT is usually out of pocket. Do not collapse.',
-    notes: ['11–14 optional NIPT; usually out of pocket; high risk opens consent path'],
+    acog_note: 'ACOG NIPT\'yi birincil tarama olarak kabul eder; SUT hâlâ ikili/üçlüyü öder, NIPT genellikle cepte. Birleştirilmez.',
+    notes: ['11–14. hafta opsiyonel NIPT; genellikle cepte; yüksek riskte onam yolu açılır'],
   },
   {
     id: 'triple_quad_afp',
@@ -87,7 +87,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     close: '20+0',
     sut_code: 'P.904.090',
     acog_aligned: false,
-    acog_note: 'SUT pays üçlü/dörtlü; ACOG does not treat triple/quad as primary aneuploidy screen when NIPT is available. AFP for NTD still relevant if no detailed USG.',
+    acog_note: 'SUT üçlü/dörtlüyü öder; NIPT varken ACOG üçlü/dörtlüyü birincil anöploidi taraması saymaz. Ayrıntılı USG yoksa NTD için AFP hâlâ anlamlıdır.',
     notes: ['16–20'],
   },
   {
@@ -100,33 +100,33 @@ export const TEST_WINDOWS: TestWindow[] = [
   },
   {
     id: 'uterin_doppler',
-    label: 'Uterin arter Doppler (PE/IUGR indicated)',
+    label: 'Uterin arter Doppler (PE/IUGR endikasyonu varsa)',
     open: '20+0',
     close: '24+0',
     indicated_only: true,
     acog_aligned: true,
-    notes: ['20–24 if indicated PE/IUGR'],
+    notes: ['20–24. hafta, PE/IUGR endikasyonu varsa'],
   },
   {
     id: 'ogtt_gdm',
-    label: '75g OGTT veya 50+100, CBC, IDC if Rh−',
+    label: '75g OGTT veya 50+100, CBC, IDC (Rh− ise)',
     open: '24+0',
     close: '28+0',
     acog_aligned: true,
-    acog_note: 'Window aligns; screening method (75g vs 2-step) may differ — return dual, do not collapse.',
+    acog_note: 'Pencere örtüşür; tarama yöntemi (75g vs iki basamak) farklı olabilir — iki sütun, birleştirilmez.',
     notes: ['24–28'],
   },
   {
     id: 'anti_d_28',
-    label: 'Anti-D 300 µg ~28w',
+    label: 'Anti-D 300 µg ~28. hafta',
     open: '27+0',
     close: '29+0',
     acog_aligned: true,
-    notes: ['Rh− IDC− only'],
+    notes: ['yalnız Rh− IDC−'],
   },
   {
     id: 'nst_bpp_growth',
-    label: 'NST / BPP / büyüme USG / UA–MCA Doppler as indicated',
+    label: 'NST / BPP / büyüme USG / UA–MCA Doppler (endikasyon varsa)',
     open: '28+0',
     close: '42+0',
     indicated_only: true,
@@ -135,7 +135,7 @@ export const TEST_WINDOWS: TestWindow[] = [
   },
   {
     id: 'gbs_prezentasyon',
-    label: 'GBS if protocol + prezentasyon USG',
+    label: 'GBS (protokole göre) + prezentasyon USG',
     open: '35+0',
     close: '37+0',
     acog_aligned: true,
@@ -148,7 +148,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     close: '13+6',
     indicated_only: true,
     acog_aligned: true,
-    notes: ['diagnosis not screening'],
+    notes: ['tanı, tarama değil'],
   },
   {
     id: 'amnio',
@@ -157,7 +157,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     close: '22+6',
     indicated_only: true,
     acog_aligned: true,
-    notes: ['16+; diagnosis not screening'],
+    notes: ['16+; tanı, tarama değil'],
   },
   {
     id: 'kordosentez',
@@ -166,7 +166,7 @@ export const TEST_WINDOWS: TestWindow[] = [
     close: '34+0',
     indicated_only: true,
     acog_aligned: true,
-    notes: ['indicated only'],
+    notes: ['yalnız endikasyon varsa'],
   },
   {
     id: 'fetal_echo',
@@ -175,16 +175,16 @@ export const TEST_WINDOWS: TestWindow[] = [
     close: '24+0',
     indicated_only: true,
     acog_aligned: true,
-    notes: ['diagnosis not screening'],
+    notes: ['tanı, tarama değil'],
   },
   {
     id: 'souvenir_3d4d',
-    label: '24–32w 3D/4D hatıra',
+    label: '24–32. hafta 3D/4D hatıra',
     open: '24+0',
     close: '32+0',
     non_diagnostic: true,
     acog_aligned: false,
-    notes: ['non_diagnostic true; optional monthly clinic USG is separate'],
+    notes: ['tanısal değil; isteğe bağlı aylık klinik USG ayrıdır'],
   },
 ]
 
@@ -227,7 +227,7 @@ export function souvenir3d4d(gaWeeks: number): { eligible: boolean; non_diagnost
 export function aneuploidyScreenDual(): DualRecommendation<{ tests: string[]; sut?: string }> {
   return dualWhenConflict(
     { tests: ['ikili P.901.120', 'üçlü P.904.090'] },
-    { tests: ['NIPT as primary screen (verify current ACOG PB)'], sut: 'usually out of pocket' },
+    { tests: ['NIPT birincil tarama (güncel ACOG PB doğrula)'], sut: 'genellikle cepte' },
     true,
   )
 }
