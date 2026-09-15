@@ -4,6 +4,16 @@ import type { PortalBundle } from './types'
 export const SAGLIGIM_DEMO: PortalBundle = {
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
   gebelik: null,
+  // Pediatri vitrini: baba 1.82 m / anne 1.79 m (TR klinik giriş örneği), erkek Tanner MPH
+  hedefBoy: {
+    anneCm: 179,
+    babaCm: 182,
+    cocukCm: 187,
+    altCm: 178.5,
+    ustCm: 195.5,
+    cinsiyet: 'erkek',
+    formul: '(baba + anne + 13) / 2',
+  },
   summary: {
     aktifIlac: 3,
     bekleyenMesaj: 2,

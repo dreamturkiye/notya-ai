@@ -9,6 +9,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { encrypt, decrypt } from '@/lib/security/encryption'
+import { parseBoyGirdi } from '@/lib/clinical/hedefBoy'
 
 function coz(v: string | null | undefined): string { if (!v) return ''; try { return decrypt(v) } catch { return '' } }
 function metin(v: unknown): string { return Array.isArray(v) ? v.filter(Boolean).join(', ') : String(v ?? '').trim() }
@@ -49,6 +50,10 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, patientI
   const sigaraMetni = sigara === 'Evet' || sigara === 'Hayır' ? `Ailede sigara: ${sigara}` : sigara ? `Sigara: ${sigara}` : ''
   yaz('sigaraAlkol', [sigaraMetni, alkol ? `Alkol: ${alkol}` : ''].filter(Boolean).join(' · '))
   yaz('sehir', metin(y.il))
+  const anneBoy = parseBoyGirdi(metin(y.anneBoyPed) || metin(y.anneBoy))
+  const babaBoy = parseBoyGirdi(metin(y.babaBoyPed) || metin(y.babaBoy))
+  if (bos('anneBoyCm') && anneBoy.ok) { notlar.anneBoyCm = anneBoy.cm; doldurulan.push('anneBoyCm') }
+  if (bos('babaBoyCm') && babaBoy.ok) { notlar.babaBoyCm = babaBoy.cm; doldurulan.push('babaBoyCm') }
 
   if (doldurulan.some((k) => !['dogumTarihi', 'cinsiyet', 'eposta'].includes(k))) guncelleme.notes_encrypted = encrypt(JSON.stringify(notlar))
   if (Object.keys(guncelleme).length === 0) return []

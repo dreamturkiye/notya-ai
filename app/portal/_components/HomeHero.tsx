@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { PortalBundle } from '@/lib/portal/types'
 import { SoftPanel, formatTrDate } from './ui'
+import { HedefBoyAileKart } from '@/components/hedefBoy/HedefBoyManken'
 
 export function HomeHero({ basePath, data }: { basePath: string; data: PortalBundle }) {
   const chips = [
@@ -72,6 +73,18 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
             </Link>
           ))}
         </div>
+
+        {data.hedefBoy && (
+          <section className="sg-home-section sg-fade sg-fade-delay-2">
+            <h2 className="sg-display sg-home-section-title">Hedef boy</h2>
+            <SoftPanel>
+              <HedefBoyAileKart sonuc={data.hedefBoy} tema="portal" />
+              <Link href={`${basePath}/takip`} className="sg-hero-cta" style={{ marginTop: 12, display: 'inline-flex' }}>
+                Takipte gör <span className="sg-hero-cta-arrow" aria-hidden>→</span>
+              </Link>
+            </SoftPanel>
+          </section>
+        )}
 
         <section className="sg-home-section sg-fade sg-fade-delay-2">
           <h2 className="sg-display sg-home-section-title">Kısayollar</h2>

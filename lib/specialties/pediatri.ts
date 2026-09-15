@@ -34,6 +34,11 @@ export const PEDIATRI_PROFILE: SpecialtyProfile = {
       kaynak: 'T.C. Sağlık Bakanlığı, Bebek ve Çocuk İzlem Protokolleri, Akış Şeması 11a',
       motor: 'lib/clinical/gelisimTaramasi', deterministik: true, yasAraligiAy: [1, 24],
     },
+    {
+      id: 'tanner-hedef-boy', ad: 'Anne-baba boylarına göre hedef boy (Tanner MPH)',
+      kaynak: 'Tanner JM, Goldstein H, Whitehouse RH, 1970 — TR çocuk endokrinolojisi pratiği',
+      motor: 'lib/clinical/hedefBoy', deterministik: true,
+    },
   ],
 
   sekmeler: [
@@ -58,6 +63,7 @@ export const PEDIATRI_PROFILE: SpecialtyProfile = {
 
   promptNotlari: [
     'Büyüme/VKİ persentilini KENDİN hesaplama, WHO referansı verme — Neyzi motoru gösteriyor.',
+    'Anne-baba boylarından hedef boy Tanner formülüdür; aileye tahmin olarak sun, tanı koyma.',
     'Doktor açıkça söylemediyse persentile dayalı tanı (ör. obezite) ekleme.',
     'Yaşamsal bulgular sırası: Ateş, Tansiyon, Nabız, Solunum, SpO₂, Kilo, Boy, Baş çevresi.',
   ],

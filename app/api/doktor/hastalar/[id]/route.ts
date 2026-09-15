@@ -45,6 +45,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       alerjiler: notesData.alerjiler || null,
       surekli_ilaclar: notesData.suregenIlaclar || null,
       sigara_alkol: notesData.sigaraAlkol || null,
+      anne_boy_cm: typeof notesData.anneBoyCm === 'number' ? notesData.anneBoyCm : (notesData.anneBoyCm != null ? Number(notesData.anneBoyCm) || null : null),
+      baba_boy_cm: typeof notesData.babaBoyCm === 'number' ? notesData.babaBoyCm : (notesData.babaBoyCm != null ? Number(notesData.babaBoyCm) || null : null),
       is_active: patient.is_active,
       created_at: patient.created_at,
     }

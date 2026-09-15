@@ -11,6 +11,7 @@ import type { PortalBundle } from '@/lib/portal/types'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
 import { BuyumeEgrileriView } from './BuyumeEgrileriView'
 import { GebeligimView } from './GebeligimView'
+import { HedefBoyAileKart } from '@/components/hedefBoy/HedefBoyManken'
 
 type Nokta = { tarih: string; deger: number }
 type Seri = { ad: string; renk: string; noktalar: Nokta[] }
@@ -161,9 +162,15 @@ export function TrackingView({ data }: { data: PortalBundle }) {
     <div className="sg-fade">
       <SectionHeader title="Sağlığımı takip et" subtitle="Muayenelerde ölçülen değerlerinizin zaman içindeki seyri. Yeşil bant genel normal aralığı gösterir; sizin için hedefi doktorunuz belirler." />
 
-      {empty ? (
+      {data.hedefBoy && (
+        <SoftPanel style={{ marginBottom: 14 }}>
+          <HedefBoyAileKart sonuc={data.hedefBoy} tema="portal" />
+        </SoftPanel>
+      )}
+
+      {empty && !data.hedefBoy ? (
         <EmptyState art="takip" title="Henüz takip verisi yok" body="Son muayenede yaşamsal bulgular paylaşıldığında trendler burada oluşur." />
-      ) : (
+      ) : !empty ? (
         <>
           <div className="sg-track-grid" style={{ marginBottom: 14 }}>
             <OzetKart baslik="Tansiyon" deger={lastBp ? lastBp.sistolik : null} birim={lastBp ? `/ ${lastBp.diastolik} mmHg` : 'mmHg'} degisim={fark(sistolik)} ondalik={0} aralik={ARALIK.sistolik} />
@@ -243,10 +250,10 @@ export function TrackingView({ data }: { data: PortalBundle }) {
               </table>
             </div>
           </SoftPanel>
-          {data.gebelik && <GebeligimView gebelik={data.gebelik} />}
-          {data.buyume && <BuyumeEgrileriView buyume={data.buyume} />}
         </>
-      )}
+      ) : null}
+      {data.gebelik && <GebeligimView gebelik={data.gebelik} />}
+      {data.buyume && <BuyumeEgrileriView buyume={data.buyume} />}
     </div>
   )
 }

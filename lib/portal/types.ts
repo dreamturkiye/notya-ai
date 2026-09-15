@@ -130,6 +130,16 @@ export interface PortalBuyume {
   parametreler: { kilo?: PortalBuyumeParametre; boy?: PortalBuyumeParametre; basCevresi?: PortalBuyumeParametre; vki?: PortalBuyumeParametre | null }
 }
 
+export interface PortalHedefBoy {
+  anneCm: number
+  babaCm: number
+  cocukCm: number
+  altCm: number
+  ustCm: number
+  cinsiyet: 'erkek' | 'kiz'
+  formul?: string
+}
+
 export interface PortalBundle {
   summary: PortalSummary
   messages: PortalMessage[]
@@ -141,6 +151,7 @@ export interface PortalBundle {
   tracking: PortalTracking
   buyume: PortalBuyume | null
   gebelik: PortalGebelik | null
+  hedefBoy: PortalHedefBoy | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */

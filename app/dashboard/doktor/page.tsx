@@ -498,6 +498,7 @@ export default function DoktorDashboard() {
               <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <span onClick={() => router.push('/doktor-tools/epikriz')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>Epikriz üret ›</span>
                 <span onClick={() => router.push('/doktor-tools/icd10')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>ICD-10 kodla ›</span>
+                <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>Hedef boy ›</span>
               </div>
             </div>
           </div>

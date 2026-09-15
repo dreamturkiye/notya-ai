@@ -29,5 +29,6 @@ export function emptyPortalBundle(): PortalBundle {
     },
     buyume: null,
     gebelik: null,
+    hedefBoy: null,
   }
 }

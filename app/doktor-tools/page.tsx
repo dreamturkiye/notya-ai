@@ -25,7 +25,7 @@ const tools: Tool[] = [
   { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali' },
   { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Rehberi', desc: 'Hasta kaydı erişimi adım adım', route: '/doktor-tools/enabiz' },
-  { circleColor: '#7C3AED', icon: 'HT', title: 'Hatırlatma', desc: 'WhatsApp/SMS hasta bildirimleri gönder', route: '/doktor-tools/hatirlatma' },
+  { circleColor: '#0EA5E9', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boylarına göre tahmini erişkin boy — aileye gösterilen Tanner hesabı', route: '/doktor-tools/hedef-boy' },
 ];
 
 export default function DoktorToolsPage() {

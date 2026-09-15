@@ -44,6 +44,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'dogumKilosuPed', etiket: 'Doğum Kilosu (gram)', tur: 'text', zorunlu: true },
       { id: 'dogumBoyuPed', etiket: 'Doğum Boyu (cm)', tur: 'text', zorunlu: true },
       { id: 'basCevresiPed', etiket: 'Baş Çevresi (cm)', tur: 'text', placeholder: 'Hatırladığınız kadarıyla' },
+      { id: 'anneBoyPed', etiket: 'Anne boyu (isteğe bağlı)', tur: 'text', placeholder: 'Örn. 165 veya 1.65', yardim: 'Hedef boy hesabı için. Zorunlu değil — doktor Araçlar › Hedef Boy’dan da girebilir.' },
+      { id: 'babaBoyPed', etiket: 'Baba boyu (isteğe bağlı)', tur: 'text', placeholder: 'Örn. 182 veya 1.82', yardim: 'Hedef boy hesabı için. Zorunlu değil.' },
       { id: 'dogumSekliPed', etiket: 'Doğum Şekli', tur: 'radio', zorunlu: true, secenekler: ['Normal Doğum', 'Sezaryen'] },
       { id: 'dogumSonrasiPed', etiket: 'Doğum Sonrası', tur: 'radio', zorunlu: true, secenekler: ['Sorun Yaşanmadı', 'Sorun Yaşandı'] },
       { id: 'dogumSonrasiAciklamaPed', etiket: 'Doğum sonrası yaşanan sorun (açıklama)', tur: 'textarea', placeholder: 'Örn. sarılık nedeniyle fototerapi, yenidoğan yoğun bakım, solunum desteği…', yardim: 'Yalnız "Sorun Yaşandı" seçildiyse doldurun.' },

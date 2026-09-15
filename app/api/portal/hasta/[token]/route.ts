@@ -7,6 +7,7 @@ import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModa
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { SPECIALTY_MAP } from '@/lib/doktor/specialties'
 import { persentilEgrileri, ayFarki } from '@/lib/clinical/buyumeEgrisi'
+import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -336,7 +337,7 @@ export async function GET(
 
   // Büyüme Eğrileri (Neyzi standartları) — doktor tarafındakiyle aynı hesap, hasta portalında da
   {
-    const { data: hastaBuyume } = await sb.from('patients').select('dob_encrypted, gender_encrypted').eq('id', patientId).maybeSingle()
+    const { data: hastaBuyume } = await sb.from('patients').select('dob_encrypted, gender_encrypted, notes_encrypted').eq('id', patientId).maybeSingle()
     const dogumIso = hastaBuyume?.dob_encrypted ? (() => { try { return decrypt(String(hastaBuyume.dob_encrypted)) } catch { return null } })() : null
     const cinsiyetHam = hastaBuyume?.gender_encrypted ? (() => { try { return decrypt(String(hastaBuyume.gender_encrypted)) } catch { return '' } })() : ''
     const cinsiyet = cinsiyetHam === 'male' || cinsiyetHam === 'female' ? cinsiyetHam : null
@@ -366,6 +367,15 @@ export async function GET(
         },
       }
     }
+    try {
+      const notlar = hastaBuyume?.notes_encrypted ? (() => { try { return JSON.parse(decrypt(String(hastaBuyume.notes_encrypted))) as Record<string, unknown> } catch { return {} } })() : {}
+      const anne = notlar.anneBoyCm
+      const baba = notlar.babaBoyCm
+      if (anne != null && baba != null) {
+        const h = hesaplaHedefBoy({ anneBoy: Number(anne), babaBoy: Number(baba), cinsiyet: cinsiyetHam || cinsiyet })
+        if (h.ok) bundle.hedefBoy = h.sonuc
+      }
+    } catch (e) { console.error('[portal] hedefBoy:', e) }
   }
 
   // NOTYA-KHD-05 — aktif gebelik varsa anne için "Gebeliğim"

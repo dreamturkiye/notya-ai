@@ -19,6 +19,8 @@ import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
 import HastaGebelik from '@/components/doktor/HastaGebelik';
 import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
+import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
+import { hesaplaHedefBoy, formatBoyCm } from '@/lib/clinical/hedefBoy';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
@@ -37,6 +39,8 @@ interface PatientData {
   telefon: string | null; sehir: string | null; kan_grubu: string | null;
   kronik_hastaliklar: string[]; alerjiler: string | null; surekli_ilaclar: string | null;
   sigara_alkol: string | null;
+  anne_boy_cm?: number | null;
+  baba_boy_cm?: number | null;
 }
 
 interface SeansNotu { id?: string; content_tani?: string | null; content_subjektif?: string | null; approved_at?: string | null }
@@ -247,6 +251,41 @@ export default function HastaProfilPage() {
               {bilgiSatiri('Sürekli ilaçlar', patient.surekli_ilaclar)}
               {bilgiSatiri('Sigara / Alkol', patient.sigara_alkol)}
             </div>
+            {pediatriUygun && (() => {
+              const hedef = (patient.anne_boy_cm != null && patient.baba_boy_cm != null)
+                ? hesaplaHedefBoy({ anneBoy: patient.anne_boy_cm, babaBoy: patient.baba_boy_cm, cinsiyet: patient.cinsiyet })
+                : null
+              return (
+                <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden', gridColumn: '1 / -1' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #FBBF24, transparent)' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>Anne-Baba Boylarına Göre Hedef Boy</div>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/doktor-tools/hedef-boy?patientId=${patient.id}`)}
+                      style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.35)', color: '#FDE68A', borderRadius: 999, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Araçlar › Hedef Boy
+                    </button>
+                  </div>
+                  {hedef && hedef.ok ? (
+                    <>
+                      {bilgiSatiri('Baba', formatBoyCm(hedef.sonuc.babaCm))}
+                      {bilgiSatiri('Anne', formatBoyCm(hedef.sonuc.anneCm))}
+                      {bilgiSatiri('Tahmini erişkin boy', formatBoyCm(hedef.sonuc.cocukCm))}
+                      <HedefBoyManken sonuc={hedef.sonuc} tema="doktor" style={{ marginTop: 8 }} />
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#8FA0B5' }}>
+                        Tanner tahmini (±8,5 cm). Tanı değildir — aileye gösterilen cici bir bakış.
+                      </p>
+                    </>
+                  ) : (
+                    <p style={{ margin: '10px 0 0', fontSize: 13.5, color: '#8FA0B5', lineHeight: 1.5 }}>
+                      Çekirdek veri; intake zorunlu değil. Anne ve baba boyunu Araçlar’dan girin — sonuç burada ve hasta portalında mankenlerle görünür.
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         )}
 

@@ -7,6 +7,8 @@
  */
 import { useEffect, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
+import type { HedefBoySonuc } from '@/lib/clinical/hedefBoy';
 
 interface EgriNoktasi { ay: number; deger: number }
 interface EgriSerisi { persentil: number; noktalar: EgriNoktasi[] }
@@ -119,22 +121,64 @@ export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }
   const [veri, setVeri] = useState<Yanit | null>(null);
   const [hata, setHata] = useState('');
   const [buyukIndex, setBuyukIndex] = useState<number | null>(null);
+  const [hedef, setHedef] = useState<HedefBoySonuc | null>(null);
+  const [hedefYuklendi, setHedefYuklendi] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         const t = await ensureDoctorAccessToken();
-        const r = await fetch(`/api/doktor/hastalar/${patientId}/buyume-egrileri`, { headers: { Authorization: `Bearer ${t}` } });
+        const [r, hr] = await Promise.all([
+          fetch(`/api/doktor/hastalar/${patientId}/buyume-egrileri`, { headers: { Authorization: `Bearer ${t}` } }),
+          fetch(`/api/doktor/hastalar/${patientId}/hedef-boy`, { headers: { Authorization: `Bearer ${t}` } }),
+        ]);
+        if (hr.ok) {
+          const hd = await hr.json();
+          setHedef(hd.sonuc || null);
+        }
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Büyüme eğrileri alınamadı');
         setVeri(j);
       } catch (e) { setHata(e instanceof Error ? e.message : 'Hata'); }
+      finally { setHedefYuklendi(true); }
     })();
   }, [patientId]);
 
-  if (hata) return <div style={{ padding: 20, color: '#F87171', fontSize: 13 }}>{hata}</div>;
+  const hedefKart = (
+    <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 14, padding: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>Anne-Baba Boylarına Göre Hedef Boy</div>
+        <a href={`/doktor-tools/hedef-boy?patientId=${patientId}`} style={{ color: '#FDE68A', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hedef Boy</a>
+      </div>
+      {hedef ? (
+        <HedefBoyManken sonuc={hedef} tema="doktor" style={{ marginTop: 8 }} />
+      ) : hedefYuklendi ? (
+        <p style={{ margin: '10px 0 0', fontSize: 13, color: '#8FA0B5', lineHeight: 1.5 }}>
+          Intake zorunlu değil. Anne ve baba boyunu Araçlar’dan girin — sonuç aileye mankenlerle gösterilir.
+        </p>
+      ) : (
+        <p style={{ margin: '10px 0 0', fontSize: 13, color: '#64748B' }}>Hedef boy yükleniyor…</p>
+      )}
+    </div>
+  );
+
+  if (hata) {
+    return (
+      <div style={{ display: 'grid', gap: 16, padding: 4 }}>
+        <div style={{ padding: '8px 4px', color: '#F87171', fontSize: 13 }}>{hata}</div>
+        {hedefKart}
+      </div>
+    );
+  }
   if (!veri) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Büyüme eğrileri hazırlanıyor…</div>;
-  if (veri.dogumBilinmiyor) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Doğum tarihi veya cinsiyet kayıtlı değil — büyüme eğrisi çizilemiyor.</div>;
+  if (veri.dogumBilinmiyor) {
+    return (
+      <div style={{ display: 'grid', gap: 16, padding: 4 }}>
+        <div style={{ padding: '8px 4px', color: '#8FA0B5', fontSize: 13 }}>Doğum tarihi veya cinsiyet kayıtlı değil — büyüme eğrisi çizilemiyor.</div>
+        {hedefKart}
+      </div>
+    );
+  }
 
   const { kilo, boy, basCevresi, vki } = veri.parametreler;
   const paramlar = ([['kilo', kilo], ['boy', boy], ['basCevresi', basCevresi], ['vki', vki]] as const).filter(([, v]) => !!v) as [string, ParamVeri][];
@@ -203,6 +247,7 @@ export default function HastaBuyumeEgrileri({ patientId }: { patientId: string }
       {!vki && (
         <div style={{ fontSize: 12, color: '#64748B' }}>Vücut Kitle İndeksi eğrisi 2 yaşından itibaren gösterilir.</div>
       )}
+      {hedefKart}
       <style>{`
         .buyume-karti:hover { border-color: rgba(45,212,191,0.4) !important; background: rgba(45,212,191,0.05) !important; transform: translateY(-2px); }
         @media (max-width: 640px) { .buyume-buyuk-bas { justify-content: center !important; text-align: center; padding: 12px 14px !important; } }
