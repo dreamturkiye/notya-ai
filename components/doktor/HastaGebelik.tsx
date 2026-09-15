@@ -13,7 +13,7 @@ type Pencere = { no: number; etiket: string; haftaBas: number; haftaSon: number;
 type Izlem = { id: string; tarih: string; hafta: number; kilo: number | null; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; fundus_yuksekligi: number | null; fetal_kalp_atimi: number | null; proteinuri: string | null; usg: Record<string, string | number> | null; not_metni: string | null };
 type Veri = {
   gebelik: { id: string; sat: string | null; tdt: string; tdt_kaynak: string; gravida: number | null; para: number | null; abortus: number | null; yasayan: number | null; kan_grubu: string | null; rh_negatif: boolean; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null } | null;
-  izlemler: Izlem[]; gecmis: Array<{ id: string; tdt: string; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null }>;
+  izlemler: Izlem[]; gecmis: Array<{ id: string; sat?: string | null; tdt: string; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null }>;
   yas: { hafta: number; gun: number; trimester: number; metin: string; toplamGun: number } | null;
   takvim: Pencere[]; uyarilar: Uyari[]; kiloHedefi: { alt: number; ust: number; etiket: string } | null; gebelikOncesiVki: number | null;
   biyometri?: Array<{ izlemId: string; hafta: number; hc: Bio | null; bpd: Bio | null; ac: Bio | null; fl: Bio | null; efw: number | null; efwGirilen?: number | null; efwKaynak?: 'hadlock' | 'girilen' | null }>;
@@ -151,7 +151,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
   if (yukleniyor) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Yükleniyor…</div>;
 
-  const onceki = veri ? oncekiGebelikleriFiltrele(veri.gecmis, veri.gebelik?.id) : [];
+  const onceki = veri ? oncekiGebelikleriFiltrele(veri.gecmis, veri.gebelik) : [];
 
   const alan = (key: string, label: string, state: Record<string, string>, set: React.Dispatch<React.SetStateAction<Record<string, string>>>, tip = 'text', ph = '') => (
     <label style={{ display: 'block' }}>
@@ -456,10 +456,12 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       <KadinSagligiPaneli patientId={patientId} />
 
-      {onceki.length > 0 && (
+      {veri && (
         <div style={kutu}>
           <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>Önceki Gebelikler</div>
-          {onceki.map((p) => {
+          {onceki.length === 0 ? (
+            <div style={{ fontSize: 13, color: '#8FA0B5' }}>Yok</div>
+          ) : onceki.map((p) => {
             const tur = oncekiGebelikEtiketTuru(p.durum);
             const durumYazi = tur === 'dogum'
               ? `Doğum ${trTarih(p.dogum_tarihi)}${p.dogum_sekli ? ` (${p.dogum_sekli})` : ''}`

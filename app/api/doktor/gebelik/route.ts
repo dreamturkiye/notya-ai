@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { gebelikYasi, naegeleTahminiDogum, izlemDurumlari, gebelikUyarilari, kiloAlimHedefi, gebelikOzetSatiri, type IzlemGirdisi } from '@/lib/clinical/gebelik'
-import { aktifGebelikDurumu, oncekiGebelikleriFiltrele } from '@/lib/clinical/gebelikDurum'
+import { aktifGebelikDurumu, ayniGebelikBolumu, oncekiGebelikleriFiltrele } from '@/lib/clinical/gebelikDurum'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { biyometriPersentil, hadlockEfw, type BiyometriParametre } from '@/lib/clinical/fetalBiyometri'
 import { lohusaDurumlari } from '@/lib/clinical/lohusaVeJinekoloji'
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
   const gecmisHam = (tumGebelikler || []).map((g) => ({
     id: g.id, sat: g.sat, tdt: g.tdt, durum: g.durum, dogum_tarihi: g.dogum_tarihi, dogum_sekli: g.dogum_sekli,
   }))
-  const gecmis = oncekiGebelikleriFiltrele(gecmisHam, gebelik?.id || null)
+  const gecmis = oncekiGebelikleriFiltrele(gecmisHam, gebelik)
   if (!gebelik) return NextResponse.json({ gebelik: null, gecmis })
 
   const { data: izlemler } = await supabase.from('gebelik_izlemleri').select('*').eq('gebelik_id', gebelik.id).order('tarih', { ascending: true })
@@ -130,8 +130,26 @@ export async function POST(req: NextRequest) {
     const tdtGirilen = body.tdt ? String(body.tdt) : null
     if (!sat && !tdtGirilen) return NextResponse.json({ error: 'Son adet tarihi veya tahmini doğum tarihi gerekli.' }, { status: 400 })
     const tdt = tdtGirilen || naegeleTahminiDogum(sat!)
-    // aynı hastada aktif gebelik varsa tamamlanmış say (tek aktif gebelik)
-    await supabase.from('gebelikler').update({ durum: 'sonlandi' }).eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['aktif', 'gebe'])
+    const { data: mevcutlar } = await supabase.from('gebelikler').select('id, sat, tdt, durum, dogum_tarihi')
+      .eq('patient_id', patientId).eq('doctor_id', doktorId)
+    const ayniBolum = (mevcutlar || []).find((g) => ayniGebelikBolumu(g, { sat, tdt }) && !g.dogum_tarihi)
+    if (ayniBolum) {
+      const { error } = await supabase.from('gebelikler').update({
+        sat, tdt, tdt_kaynak: tdtGirilen ? 'usg' : 'sat',
+        gravida: body.gravida ?? null, para: body.para ?? null, abortus: body.abortus ?? null, yasayan: body.yasayan ?? null,
+        gebelik_oncesi_kilo: body.gebelikOncesiKilo ?? null, boy: body.boy ?? null,
+        kan_grubu: body.kanGrubu ?? null, rh_negatif: !!body.rhNegatif,
+        risk_faktorleri: Array.isArray(body.riskFaktorleri) ? body.riskFaktorleri : [],
+        durum: 'aktif',
+        updated_at: new Date().toISOString(),
+      }).eq('id', ayniBolum.id).eq('doctor_id', doktorId)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ gebelikId: ayniBolum.id, tdt })
+    }
+    const kapanacak = (mevcutlar || []).filter((g) => aktifGebelikDurumu(g.durum) && !ayniGebelikBolumu(g, { sat, tdt })).map((g) => g.id)
+    if (kapanacak.length) {
+      await supabase.from('gebelikler').update({ durum: 'sonlandi' }).eq('doctor_id', doktorId).in('id', kapanacak)
+    }
     const { data, error } = await supabase.from('gebelikler').insert({
       patient_id: patientId, doctor_id: doktorId, sat, tdt, tdt_kaynak: tdtGirilen ? 'usg' : 'sat',
       gravida: body.gravida ?? null, para: body.para ?? null, abortus: body.abortus ?? null, yasayan: body.yasayan ?? null,
