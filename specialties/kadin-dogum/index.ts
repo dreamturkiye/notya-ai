@@ -1,8 +1,10 @@
 /**
  * tsx --test <directory> resolves the folder to this barrel (index.ts).
- * Root package.json is a shared file we cannot edit; until it globs
- * specialties/kadin-dogum/**/*.test.ts, NODE_TEST_CONTEXT loads chapter tests here.
+ * Root package.json is a shared file we cannot edit; until it lists chapter test files,
+ * NODE_TEST_CONTEXT loads tests/load.ts so the specialty tests actually run.
  */
+import { createRequire } from 'node:module'
+
 export { KADIN_DOGUM_MANIFEST } from './manifest'
 export {
   kadinDogumPayloadSchema,
@@ -24,5 +26,5 @@ export { evaluateWindows, antiDIndicated, souvenir3d4d } from './engines/test-wi
 export { KADIN_DOGUM_TOOLS } from './prompts/tools'
 
 if (process.env.NODE_TEST_CONTEXT) {
-  await import('./tests/load')
+  createRequire(import.meta.url)('./tests/load.ts')
 }
