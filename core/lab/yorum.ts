@@ -15,7 +15,7 @@ export const LAB_ROUTER: Record<string, LabVurgu> = {
   anestezi: { anahtarlar: ['Hb', 'Plt', 'INR', 'aPTT', 'Kre', 'Glu', 'K', 'Na'], not: 'Preop risk notu; tanı değil.' },
   beyin_cerrahisi: { anahtarlar: ['Na', 'INR', 'aPTT', 'Plt', 'Hb', 'Glu'], not: 'Na trendi varsa SIADH/DI dili; aksi halde yalnız değerler.' },
   cocuk_cerrahisi: { anahtarlar: ['Hb', 'WBC', 'CRP', 'Plt', 'Na', 'K', 'Kre'], not: 'Pediatrik: yalnız basılı referans; erişkin aralığı uygulama.' },
-  pediatri: { anahtarlar: ['Hb', 'MCV', 'WBC', 'Neu', 'Lym', 'Plt', 'CRP', 'Ferritin', 'Glu', 'TSH', 'VitD', 'B12', 'ALT', 'Na', 'K'], not: 'Ayşe: yaşa/cinsiyete özgü basılı referans; erişkin lipid/glukoz hedefi uygulama; demir eksikliği ve enfeksiyon ayrımı.' },
+  pediatri: { anahtarlar: ['Hb', 'MCV', 'WBC', 'Neu', 'Lym', 'Plt', 'CRP', 'Ferritin', 'Glu', 'TSH', 'VitD', 'B12', 'ALT', 'Na', 'K', 'ntp_pku', 'ntp_tsh', 'ntp_sma'], not: 'Ayşe: yaşa/cinsiyete özgü basılı referans; erişkin lipid/glukoz hedefi uygulama; demir eksikliği ve enfeksiyon ayrımı. NTP: tarama≠tanı.' },
   dermatoloji: { anahtarlar: ['IgE', 'Eo', 'EoPct', 'CRP', 'ALT', 'AST'], not: 'Nadiren birincil; IgE/eozinofil varsa yorumla, aksi halde tarif.' },
   enfeksiyon: { anahtarlar: ['CRP', 'PCT', 'WBC', 'Neu', 'Lym', 'Plt', 'ALT', 'Kre'], not: 'Kültür metni olduğu gibi; ampirik ilaç yazma.' },
   ftr: { anahtarlar: ['CK', 'VitD', 'CRP', 'ESR', 'Ca'], not: 'Tarif; kas/kemik bağlamı.' },
