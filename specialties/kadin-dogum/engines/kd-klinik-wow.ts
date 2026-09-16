@@ -181,7 +181,7 @@ export function eDogumSihirbaz(payload: Record<string, unknown>): { alanlar: { k
   const kilo = Number(payload.kilo || 0)
   const hf = Number(payload.gebelik_haftasi || 0)
   const canli = payload.canli_olu === 'canli' || payload.canli_dogum === true
-  const filled = {
+  const filled: Record<string, unknown> = {
     ...payload,
     olu_dogum_esik: !canli && (hf >= 22 || kilo >= 500) ? 'bildirim_zorunlu' : canli ? 'canli_dogum' : 'esik_alti',
   }
