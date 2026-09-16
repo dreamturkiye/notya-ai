@@ -18,5 +18,18 @@
 ## Files
 `specialties/kadin-dogum/engines/dogum-spine.ts` (+ `tests/dogum-spine.test.ts`, 9 tests) · `app/api/doktor/gebelik/dogum/route.ts` (adim: gorevleri_olustur, gorev, onam, dogum_baslat, partograf, fetal_distres, cs_karar, preop/intraop/postop/ssvd/preterm, pph, komplikasyon, dogum_kaydet, lohusa_ziyaret, taburcu, bebek_tarama; GET ?gebelikId=) · `specialties/kadin-dogum/ui/DogumSpine.tsx` (tabs Takip | Onam | Travay | Doğum | Lohusa & Taburcu | Bebek) mounted in `components/doktor/HastaKdChapter.tsx` for pregnant patients · migration `029_kd_dogum_spine.sql` (gebelik_gorevleri, onamlar, dogum_olaylari, travay_partograf, komplikasyonlar, bebek_kartlari, taburcu_checklist).
 
+## Jinekoloji spine (NOTYA-JINE-01, 2026-09-16) — part H, built beyond "minimal"
+
+The spec asked for smear/HPV due date + stubs. Built as an office-gynecology home that renders for every female patient, pregnant or not (mounted in `HastaGebelik` next to Kadın Sağlığı):
+- **Due engine** (`dueHesapla`): Pap 21–29 q3y (ofis), HPV-DNA/ko-test 30–65 q5y (SB KETEM + ofis), mamografi 40–69 q2y (yıllık on HRT), GGK 50–70, DXA 65+, RİA son kullanım by type, HRT yıllık güvenlik, HPV aşısı 9–26 (öneri, never mandatory). Histerektomi → no cervix screening.
+- **Serviks action tree** (HSGM/ASCCP): Pap × HPV × age → taslak aksiyon with confidence + kolposkopi görevi; **the doctor writes/locks the resmi plan**; kolposkopi/biyopsi result recorded on the same row.
+- **CYBH**: office findings (pH, whiff, clue cell, hif, trichomonas) → ön tanı; **partner treatment rule** for bacterial STIs; **first genital ulcer → HIV/RPR/HSV checklist**; HSV card with pregnancy hooks (36 hf supresyon görevi, C/S değerlendir — hekim onaylar).
+- **PCOS** Rotterdam counter with **TJOD 2023 rule** (no diagnosis within a year of menarche), exclusion labs (TSH/PRL/17-OHP) required, PCOM alone ≠ PCOS, amenore ≥90 gün → endometrium protection task. Doctor types the tanı.
+- **Kontrasepsiyon**: RİA insertion **blocked without STI screening**; ip kontrol (35 g), PID window (20 g), son kullanım by type (Cu 5/10, LNG 5/8) → görevler.
+- **Menopoz/HRT**: pre-check (VTE, meme Ca, tanısız kanama, karaciğer = hard blocks; ET >4 mm, sigara, ≥60 yaş, >10 yıl = warnings; MG/TVUS = eksik). **HRT start is refused on a hard block**; annual safety task.
+- **Lezyon** (myom/kist/polip) with FIGO tip, size, sonraki US görevi. **İnfertilite** step 1 only — Notya stops at IVF referral.
+- **Kırmızı bayraklar** on every yıllık kontrol: β-hCG+ with pain/bleeding → ektopik dışla; ateş + servikal hassasiyet → PID; postmenopozal kanama → endometrium.
+Tables (migration 030): `jine_vizitler`, `serviks_taramalari`, `cybh_episodlari`, `pcos_kartlari`, `lezyon_myom_kist`, `kontrasepsiyon`, `menopoz_hrt`, `jine_gorevleri`; `kadin_sagligi` gains son_pap/son_hpv/son_dxa/histerektomi/hrt. API `/api/doktor/jinekoloji` (adim-based). UI `specialties/kadin-dogum/ui/JinekolojiSpine.tsx`. 7 tests.
+
 ## Not in V1 (by spec)
 IVF (placeholder in Jinekoloji), national registry integration, e-imza, anestezi cross-view of C/S preop (data is there; visibility rule later), genel cerrahi reuse of the PPH shell.
