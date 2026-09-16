@@ -15,6 +15,9 @@ import { lohusaDurumlari } from '@/lib/clinical/lohusaVeJinekoloji'
 import { ntDegerlendir, ileriAnneYasi } from '@/lib/clinical/genetikTarama'
 import { decrypt, encrypt } from '@/lib/security/encryption'
 import { hekimAdi } from '@/lib/doktor/hekimAdi'
+import { onerilenSonrakiTarih } from '@/specialties/kadin-dogum/engines/clinic-fit'
+import { riskClassFromForm } from '@/specialties/kadin-dogum/protocols/risk-formu'
+import { vteScoreFromForm } from '@/specialties/kadin-dogum/protocols/vte-formu'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +46,12 @@ export async function GET(req: NextRequest) {
     id: g.id, sat: g.sat, tdt: g.tdt, durum: g.durum, dogum_tarihi: g.dogum_tarihi, dogum_sekli: g.dogum_sekli,
   }))
   const gecmis = oncekiGebelikleriFiltrele(gecmisHam, gebelik)
-  if (!gebelik) return NextResponse.json({ gebelik: null, gecmis })
+  if (!gebelik) {
+    const { data: kadinSagligi } = await supabase.from('kadin_sagligi').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).maybeSingle()
+    const { data: goruntulemeler } = await supabase.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi, rapor_metni, goruntuleme_tarihi, created_at, dosya_url')
+      .eq('patient_id', patientId).eq('doctor_id', doktorId).order('goruntuleme_tarihi', { ascending: false }).limit(40)
+    return NextResponse.json({ gebelik: null, gecmis, kadinSagligi: kadinSagligi || null, goruntulemeler: goruntulemeler || [] })
+  }
 
   const { data: izlemler } = await supabase.from('gebelik_izlemleri').select('*').eq('gebelik_id', gebelik.id).order('tarih', { ascending: true })
   const izlemGirdileri: IzlemGirdisi[] = (izlemler || []).map((i) => ({
@@ -87,10 +95,16 @@ export async function GET(req: NextRequest) {
   })
 
   // Yazdırma (Gebe İzlem Kartı) için başlık — gerçek veriden, reçete/epikriz ile aynı ilke
-  const [{ data: hastaRow }, { data: userRow }, hekim] = await Promise.all([
+  const [{ data: hastaRow }, { data: userRow }, hekim, { data: kadinSagligi }, { data: sonrakiRandevular }, { data: goruntulemeler }] = await Promise.all([
     supabase.from('patients').select('name_encrypted, dob_encrypted').eq('id', patientId).maybeSingle(),
     supabase.from('users').select('recete_baslik').eq('id', doktorId).maybeSingle(),
     hekimAdi(supabase, doktorId),
+    supabase.from('kadin_sagligi').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).maybeSingle(),
+    supabase.from('randevular').select('id, baslangic, bitis, tur, durum')
+      .eq('doktor_id', doktorId).eq('patient_id', patientId).neq('durum', 'iptal')
+      .gte('baslangic', new Date().toISOString()).order('baslangic', { ascending: true }).limit(1),
+    supabase.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi, rapor_metni, goruntuleme_tarihi, created_at, dosya_url')
+      .eq('patient_id', patientId).eq('doctor_id', doktorId).order('goruntuleme_tarihi', { ascending: false }).limit(40),
   ])
   const coz = (v: string | null | undefined) => { try { return v ? decrypt(v) : '' } catch { return '' } }
   let hastaAd = ''
@@ -98,8 +112,19 @@ export async function GET(req: NextRequest) {
   const rb = (userRow?.recete_baslik && typeof userRow.recete_baslik === 'object' ? userRow.recete_baslik : {}) as { satirlar?: string[]; logoDataUrl?: string; diplomaNo?: string }
   const baslik = { hastaAd, dogumTarihi: coz(hastaRow?.dob_encrypted) || null, hekim, satirlar: Array.isArray(rb.satirlar) ? rb.satirlar : [], logoDataUrl: rb.logoDataUrl || '', diplomaNo: rb.diplomaNo || '' }
 
+  const riskSinifi = (gebelik.risk_sinifi === 'orta' || gebelik.risk_sinifi === 'yuksek') ? gebelik.risk_sinifi : 'dusuk'
+  const onerilen = yas ? onerilenSonrakiTarih({
+    bugunIso: new Date().toISOString().slice(0, 10),
+    gaWeeks: yas.hafta,
+    risk: riskSinifi,
+  }) : null
+
   return NextResponse.json({
     gebelik, izlemler: izlemler || [], gecmis: gecmis || [], biyometri, lohusa, baslik, genetikTaramalar,
+    kadinSagligi: kadinSagligi || null,
+    sonrakiRandevu: (sonrakiRandevular && sonrakiRandevular[0]) || null,
+    goruntulemeler: goruntulemeler || [],
+    onerilenSonrakiTarih: onerilen,
     ileriAnneYasi: (() => {
       const dob = coz(hastaRow?.dob_encrypted)
       if (!dob) return null
@@ -137,6 +162,10 @@ export async function POST(req: NextRequest) {
       const { error } = await supabase.from('gebelikler').update({
         sat, tdt, tdt_kaynak: tdtGirilen ? 'usg' : 'sat',
         gravida: body.gravida ?? null, para: body.para ?? null, abortus: body.abortus ?? null, yasayan: body.yasayan ?? null,
+        olu_dogum: body.oluDogum ?? null, ektopik: body.ektopik ?? null,
+        onceki_sezaryen_sayisi: body.oncekiSezaryenSayisi ?? null,
+        onceki_sezaryen_kesi_tipi: body.oncekiSezaryenKesiTipi ?? null,
+        cogul_gebelik_tipi: body.cogulGebelikTipi ?? null,
         gebelik_oncesi_kilo: body.gebelikOncesiKilo ?? null, boy: body.boy ?? null,
         kan_grubu: body.kanGrubu ?? null, rh_negatif: !!body.rhNegatif,
         risk_faktorleri: Array.isArray(body.riskFaktorleri) ? body.riskFaktorleri : [],
@@ -153,6 +182,10 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('gebelikler').insert({
       patient_id: patientId, doctor_id: doktorId, sat, tdt, tdt_kaynak: tdtGirilen ? 'usg' : 'sat',
       gravida: body.gravida ?? null, para: body.para ?? null, abortus: body.abortus ?? null, yasayan: body.yasayan ?? null,
+      olu_dogum: body.oluDogum ?? null, ektopik: body.ektopik ?? null,
+      onceki_sezaryen_sayisi: body.oncekiSezaryenSayisi ?? null,
+      onceki_sezaryen_kesi_tipi: body.oncekiSezaryenKesiTipi ?? null,
+      cogul_gebelik_tipi: body.cogulGebelikTipi ?? null,
       gebelik_oncesi_kilo: body.gebelikOncesiKilo ?? null, boy: body.boy ?? null,
       kan_grubu: body.kanGrubu ?? null, rh_negatif: !!body.rhNegatif,
       risk_faktorleri: Array.isArray(body.riskFaktorleri) ? body.riskFaktorleri : [],
@@ -164,7 +197,7 @@ export async function POST(req: NextRequest) {
 
   if (action === 'izlem') {
     const gebelikId = String(body.gebelikId || '')
-    const { data: gebelik } = await supabase.from('gebelikler').select('id, sat, tdt').eq('id', gebelikId).eq('doctor_id', doktorId).maybeSingle()
+    const { data: gebelik } = await supabase.from('gebelikler').select('id, sat, tdt, risk_sinifi').eq('id', gebelikId).eq('doctor_id', doktorId).maybeSingle()
     if (!gebelik) return NextResponse.json({ error: 'Aktif gebelik bulunamadı.' }, { status: 404 })
     const tarih = body.tarih ? String(body.tarih) : new Date().toISOString().slice(0, 10)
     const yas = gebelikYasi(gebelik.sat, gebelik.tdt, new Date(tarih))
@@ -174,6 +207,11 @@ export async function POST(req: NextRequest) {
       kilo: body.kilo ?? null, tansiyon_sistolik: body.tansiyonSistolik ?? null, tansiyon_diastolik: body.tansiyonDiastolik ?? null,
       fundus_yuksekligi: body.fundusYuksekligi ?? null, fetal_kalp_atimi: body.fetalKalpAtimi ?? null, proteinuri: body.proteinuri ?? null,
       usg: body.usg ?? null, not_metni: body.notMetni ?? null,
+      checklist: body.checklist && typeof body.checklist === 'object' ? body.checklist : {},
+      ogtt: body.ogtt ?? null,
+      gbs_kultur: body.gbsKultur ?? null,
+      servikal_uzunluk: body.servikalUzunluk ?? null,
+      tehlike_isaretleri: Array.isArray(body.tehlikeIsaretleri) ? body.tehlikeIsaretleri : [],
     }).select('id').single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -190,7 +228,16 @@ export async function POST(req: NextRequest) {
       notEkleme = await gununNotunaEkle(supabase, doktorId, patientId, parcalar.join(' '))
       if (notEkleme.notId) await supabase.from('gebelik_izlemleri').update({ not_id: notEkleme.notId }).eq('id', kayit.id).then(() => {}, () => {})
     }
-    return NextResponse.json({ izlemId: kayit.id, hafta, notEkleme })
+    return NextResponse.json({
+      izlemId: kayit.id,
+      hafta,
+      notEkleme,
+      onerilenSonrakiTarih: yas ? onerilenSonrakiTarih({
+        bugunIso: tarih,
+        gaWeeks: yas.hafta,
+        risk: gebelik.risk_sinifi === 'orta' || gebelik.risk_sinifi === 'yuksek' ? gebelik.risk_sinifi : 'dusuk',
+      }) : null,
+    })
   }
 
   if (action === 'sonlandir') {
@@ -279,6 +326,45 @@ export async function POST(req: NextRequest) {
       if (notEkleme.notId) await supabase.from('genetik_taramalar').update({ not_id: notEkleme.notId }).eq('id', kayit.id).then(() => {}, () => {})
     }
     return NextResponse.json({ taramaId: kayit.id, notEkleme })
+  }
+
+  if (action === 'klinik') {
+    const gebelikId = String(body.gebelikId || '')
+    const { data: gebelik } = await supabase.from('gebelikler').select('id').eq('id', gebelikId).eq('doctor_id', doktorId).maybeSingle()
+    if (!gebelik) return NextResponse.json({ error: 'Gebelik bulunamadı.' }, { status: 404 })
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    if (body.riskFormu && typeof body.riskFormu === 'object') {
+      const maddeler = Array.isArray((body.riskFormu as { maddeler?: string[] }).maddeler)
+        ? (body.riskFormu as { maddeler: string[] }).maddeler
+        : []
+      patch.risk_formu = body.riskFormu
+      patch.risk_sinifi = riskClassFromForm(maddeler)
+    }
+    if (body.vteFormu && typeof body.vteFormu === 'object') {
+      const maddeler = Array.isArray((body.vteFormu as { maddeler?: string[] }).maddeler)
+        ? (body.vteFormu as { maddeler: string[] }).maddeler
+        : []
+      patch.vte_formu = { ...(body.vteFormu as object), puan: vteScoreFromForm(maddeler) }
+    }
+    if (body.destekAsi && typeof body.destekAsi === 'object') patch.destek_asi = body.destekAsi
+    if (body.labPanel && typeof body.labPanel === 'object') {
+      patch.lab_panel = body.labPanel
+      const lab = body.labPanel as { idc?: { sonuc?: string; tarih?: string }; kan_grubu?: { sonuc?: string } }
+      if (lab.idc?.sonuc) {
+        patch.indirekt_coombs = [{ tarih: lab.idc.tarih || new Date().toISOString().slice(0, 10), sonuc: lab.idc.sonuc }]
+      }
+      if (lab.kan_grubu?.sonuc) patch.kan_grubu = lab.kan_grubu.sonuc
+    }
+    if (Array.isArray(body.nstKayitlari)) patch.nst_kayitlari = body.nstKayitlari
+    if (body.oluDogum !== undefined) patch.olu_dogum = body.oluDogum
+    if (body.ektopik !== undefined) patch.ektopik = body.ektopik
+    if (body.cogulGebelikTipi !== undefined) patch.cogul_gebelik_tipi = body.cogulGebelikTipi
+    if (body.oncekiSezaryenSayisi !== undefined) patch.onceki_sezaryen_sayisi = body.oncekiSezaryenSayisi
+    if (body.oncekiSezaryenKesiTipi !== undefined) patch.onceki_sezaryen_kesi_tipi = body.oncekiSezaryenKesiTipi
+    if (body.antiDUygulamalari !== undefined) patch.anti_d_uygulamalari = body.antiDUygulamalari
+    const { error } = await supabase.from('gebelikler').update(patch).eq('id', gebelikId).eq('doctor_id', doktorId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true, riskSinifi: patch.risk_sinifi ?? null })
   }
 
   return NextResponse.json({ error: 'Geçersiz action.' }, { status: 400 })

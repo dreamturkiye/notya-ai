@@ -2,7 +2,6 @@
 
 import type { CSSProperties } from 'react'
 import type { NstStudyPayload } from '../schema'
-import { nstAction } from '../imaging/nst-ctg'
 import { KD_NST_CATEGORY, kdLabel } from './labels'
 
 const box: CSSProperties = {
@@ -12,6 +11,12 @@ const box: CSSProperties = {
   padding: 16,
 }
 
+const NST_AKSIYON_TR: Record<NstStudyPayload['category'], string> = {
+  I: 'Aralıklı veya rutin izleme devam',
+  II: 'Tekrarlayın, resüsitatif önlemler, uzman değerlendirmesi',
+  III: 'Doğumu hızlandırma yolu — kategori III, acil',
+}
+
 export function NstStrip({ nst }: { nst: NstStudyPayload }) {
   return (
     <section style={box} data-tab="NstStrip">
@@ -19,7 +24,7 @@ export function NstStrip({ nst }: { nst: NstStudyPayload }) {
       <p style={{ fontSize: 13 }}>
         {kdLabel(KD_NST_CATEGORY, nst.category)} · {nst.durationMin} dk
       </p>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{nstAction(nst.category).join(' · ')}</p>
+      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{NST_AKSIYON_TR[nst.category]}</p>
     </section>
   )
 }

@@ -30,6 +30,8 @@ export type PlannedVisit = {
   layer: 'sb' | 'acog' | 'private' | 'lohusa' | 'jinekoloji'
   /** Late booking still counts as izlem 1. */
   late_booking?: boolean
+  /** Recorded izlem week/day marks this planned visit Yapıldı. */
+  done?: boolean
 }
 
 const IZLEM1_CHECKLIST = [
@@ -192,6 +194,53 @@ export function evaluateCadence(input: {
 }
 
 export type VisitCountSlice = { enough: boolean; count: number; min: number }
+
+export function completedSbIzlemNos(yapilanHaftalar: readonly number[]): Array<1 | 2 | 3 | 4> {
+  return SB_IZLEM_WINDOWS
+    .filter((w) => yapilanHaftalar.some((h) => h >= w.week_lo && h <= w.week_hi))
+    .map((w) => w.izlem_no)
+}
+
+/** Match a recorded GA week to the DÖBYR checklist that should be ticked on + İzlem Ekle. */
+export function aktifIzlemPenceresi(hafta: number, completed: readonly (1 | 2 | 3 | 4)[] = []) {
+  const open = SB_IZLEM_WINDOWS.find((w) =>
+    !completed.includes(w.izlem_no) && hafta >= w.week_lo && hafta <= w.week_hi)
+  if (open) return open
+  const overdue = [...SB_IZLEM_WINDOWS].reverse().find((w) =>
+    !completed.includes(w.izlem_no) && hafta > w.week_hi)
+  if (overdue) return overdue
+  return SB_IZLEM_WINDOWS.find((w) => !completed.includes(w.izlem_no)) ?? SB_IZLEM_WINDOWS[3]
+}
+
+/**
+ * Mark planned visits Yapıldı from recorded izlem weeks (pregnancy) or postpartum days (lohusa).
+ * One calendar — live CRUD weeks are the truth; chapter overlay does not keep a second done store.
+ */
+export function markVisitsDone(
+  visits: PlannedVisit[],
+  input: { completedWeeks?: readonly number[]; completedPpDays?: readonly number[] },
+): PlannedVisit[] {
+  const weeks = input.completedWeeks ?? []
+  const pp = input.completedPpDays ?? []
+  const sbDone = new Set(completedSbIzlemNos(weeks))
+  return visits.map((v) => {
+    if (v.layer === 'sb' && v.izlem_no) return { ...v, done: sbDone.has(v.izlem_no) }
+    if (v.layer === 'acog' || v.kind === 'acog_overlay' || v.kind === 'clinic_overlay') {
+      return { ...v, done: weeks.some((h) => Math.abs(h - v.ga_or_pp_day) <= 1) }
+    }
+    if (v.layer === 'lohusa') {
+      if (v.kind === 'lohusa_hastane') {
+        const lo = v.ga_or_pp_day
+        const hi = v.ga_or_pp_day
+        return { ...v, done: pp.some((d) => d >= lo && d <= hi) }
+      }
+      // ASM windows: 2–5, 13–17, 30–40 (anchors 3 / 15 / 35)
+      const window = v.ga_or_pp_day <= 5 ? [2, 5] : v.ga_or_pp_day <= 17 ? [13, 17] : [30, 40]
+      return { ...v, done: pp.some((d) => d >= window[0] && d <= window[1]) }
+    }
+    return { ...v, done: false }
+  })
+}
 
 /** 4 SB visits can satisfy sb_required while ACOG still wants the denser overlay. */
 export function visitCountAdequacy(input: {

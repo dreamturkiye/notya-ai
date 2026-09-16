@@ -49,9 +49,10 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
           <p style={{ fontSize: 11, color: '#8FA0B5' }}>Yasal asgari (DÖBYR)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {yasal.map((v, i) => (
-              <li key={`sb-${v.kind}-${v.ga_or_pp_day}-${i}`}>
+              <li key={`sb-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>
                 {rowLabel(v)}
                 {v.acog_recommended ? ' · her iki sütun' : ''}
+                {v.done ? ' · Yapıldı' : ''}
               </li>
             ))}
           </ol>
@@ -61,9 +62,10 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
           <p style={{ fontSize: 11, color: '#8FA0B5' }}>Klinik öneri (ACOG)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {klinik.map((v, i) => (
-              <li key={`acog-${v.kind}-${v.ga_or_pp_day}-${i}`}>
+              <li key={`acog-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>
                 {rowLabel(v)}
                 {v.sb_required ? '' : ' · klinik ek izlem'}
+                {v.done ? ' · Yapıldı' : ''}
               </li>
             ))}
           </ol>

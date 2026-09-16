@@ -69,9 +69,12 @@ export function dueMammo(input: { age: number; last_mammo_year?: number; now_yea
 }
 
 export function cycleNote(lmpIso: string | null, todayIso: string): { day: number | null; label: string } {
-  if (!lmpIso) return { day: null, label: 'SAT bilinmiyor' }
+  if (!lmpIso) return { day: null, label: 'Jinekoloji son adet tarihi girilmedi' }
   const a = Date.parse(todayIso + 'T00:00:00Z')
   const b = Date.parse(lmpIso + 'T00:00:00Z')
   const day = Math.floor((a - b) / 86_400_000) + 1
+  if (!Number.isFinite(day) || day < 1) return { day: null, label: 'Son adet tarihi geçersiz' }
+  // Pregnancy SAT is often 10–40 weeks old — never present that as cycle day.
+  if (day > 45) return { day: null, label: 'Siklus günü hesaplanamadı — jinekoloji son adet tarihini girin (gebelik SAT kullanılmaz)' }
   return { day, label: `Siklusun ${day}. günü` }
 }

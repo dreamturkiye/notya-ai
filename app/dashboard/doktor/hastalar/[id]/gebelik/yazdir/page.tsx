@@ -10,8 +10,8 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 type Bio = { deger: number; persentil: number };
 type Veri = {
-  gebelik: { sat: string | null; tdt: string; tdt_kaynak: string; gravida: number | null; para: number | null; abortus: number | null; yasayan: number | null; kan_grubu: string | null; rh_negatif: boolean; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null; dogum_notu: string | null; gebelik_oncesi_kilo: number | null; boy: number | null } | null;
-  izlemler: Array<{ id: string; tarih: string; hafta: number; kilo: number | null; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; fundus_yuksekligi: number | null; fetal_kalp_atimi: number | null; proteinuri: string | null; usg: Record<string, string | number> | null; not_metni: string | null }>;
+  gebelik: { sat: string | null; tdt: string; tdt_kaynak: string; gravida: number | null; para: number | null; abortus: number | null; yasayan: number | null; olu_dogum?: number | null; ektopik?: number | null; risk_sinifi?: string | null; kan_grubu: string | null; rh_negatif: boolean; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null; dogum_notu: string | null; gebelik_oncesi_kilo: number | null; boy: number | null; lab_panel?: Record<string, { tarih?: string; sonuc?: string; deger?: string }> | null } | null;
+  izlemler: Array<{ id: string; tarih: string; hafta: number; kilo: number | null; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; fundus_yuksekligi: number | null; fetal_kalp_atimi: number | null; proteinuri: string | null; usg: Record<string, string | number> | null; not_metni: string | null; checklist?: Record<string, { durum?: string; neden?: string }> | null }>;
   biyometri?: Array<{ izlemId: string; hafta: number; hc: Bio | null; bpd: Bio | null; ac: Bio | null; fl: Bio | null; efw: number | null }>;
   yas: { metin: string; trimester: number } | null;
   takvim: Array<{ no: number; etiket: string; haftaBas: number; haftaSon: number; durum: string }>;
@@ -75,7 +75,8 @@ export default function GebeIzlemKartiYazdir() {
           <div><b>Ad Soyad:</b> {b.hastaAd || '—'}</div><div><b>Doğum Tarihi:</b> {tr(b.dogumTarihi)}</div>
           <div><b>SAT:</b> {tr(g.sat)}</div><div><b>Tahmini Doğum Tarihi:</b> {tr(g.tdt)} ({g.tdt_kaynak === 'usg' ? 'USG' : 'Naegele'})</div>
           <div><b>Gebelik yaşı (bugün):</b> {v.yas ? `${v.yas.metin}, ${v.yas.trimester}. trimester` : '—'}</div>
-          <div><b>Obstetrik öykü:</b> G{g.gravida ?? '—'} P{g.para ?? '—'} A{g.abortus ?? '—'} Y{g.yasayan ?? '—'}</div>
+          <div><b>Obstetrik öykü:</b> G{g.gravida ?? '—'} P{g.para ?? '—'} A{g.abortus ?? '—'} Y{g.yasayan ?? '—'} D{g.olu_dogum ?? '—'} E{g.ektopik ?? '—'}</div>
+          <div><b>Risk sınıfı:</b> {g.risk_sinifi === 'yuksek' ? 'Yüksek' : g.risk_sinifi === 'orta' ? 'Orta' : 'Düşük'}</div>
           <div><b>Kan grubu / Rh:</b> {g.kan_grubu ? `${g.kan_grubu} Rh(${g.rh_negatif ? '−' : '+'})` : '—'}</div>
           <div><b>Gebelik öncesi kilo / boy / VKİ:</b> {g.gebelik_oncesi_kilo ?? '—'} kg / {g.boy ?? '—'} cm / {v.gebelikOncesiVki ?? '—'}{v.kiloHedefi ? ` (hedef +${v.kiloHedefi.alt}-${v.kiloHedefi.ust} kg)` : ''}</div>
           <div style={{ gridColumn: '1 / -1' }}><b>Hekim:</b> {b.hekim || '—'}</div>
@@ -86,6 +87,32 @@ export default function GebeIzlemKartiYazdir() {
           <thead><tr>{['İzlem', 'Hafta', 'Durum'].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
           <tbody>{v.takvim.map((p) => <tr key={p.no}><td style={TD}>{p.etiket}</td><td style={TD}>{p.haftaBas}-{p.haftaSon}</td><td style={TD}>{DURUM[p.durum]}</td></tr>)}</tbody>
         </table>
+
+        {g.lab_panel && Object.keys(g.lab_panel).length > 0 && (
+          <>
+            <div style={H}>Laboratuvar</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr>{['Test', 'Tarih', 'Sonuç'].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>
+                {Object.entries(g.lab_panel).filter(([, row]) => row && (row.sonuc || row.deger || row.tarih)).map(([k, row]) => (
+                  <tr key={k}><td style={TD}>{k}</td><td style={TD}>{tr(row.tarih)}</td><td style={TD}>{row.sonuc || row.deger || '—'}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        {v.izlemler.some((i) => i.checklist && Object.keys(i.checklist).length > 0) && (
+          <>
+            <div style={H}>DÖBYR İzlem Kontrol Listesi</div>
+            {v.izlemler.map((i) => i.checklist && Object.keys(i.checklist).length > 0 ? (
+              <div key={i.id} style={{ fontSize: 11.5, marginBottom: 8 }}>
+                <b>{tr(i.tarih)} · {i.hafta}. hafta:</b>{' '}
+                {Object.entries(i.checklist).map(([madde, st]) => `${madde}: ${st.durum === 'yapildi' ? 'yapıldı' : st.durum === 'reddedildi' ? `reddedildi${st.neden ? ` (${st.neden})` : ''}` : 'bekliyor'}`).join('; ')}
+              </div>
+            ) : null)}
+          </>
+        )}
 
         <div style={H}>İzlemler</div>
         {v.izlemler.length === 0 ? <div style={{ fontSize: 12, color: '#666' }}>Henüz izlem kaydı yok.</div> : (
