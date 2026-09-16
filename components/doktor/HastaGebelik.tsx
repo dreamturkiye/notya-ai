@@ -315,15 +315,16 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
       ? `önerilen ${trTarih(veri.onerilenSonrakiTarih)}`
       : '—';
   const sonIzlem = veri?.izlemler?.length ? veri.izlemler[veri.izlemler.length - 1] : null;
-  const kartlar = veri?.gebelik && veri.yas ? [
+  const gaHafta = veri?.yas?.hafta ?? 0;
+  const kartlar = veri?.gebelik ? [
     gdmKarti({ ogtt_positive: Boolean(veri.gebelik.lab_panel?.ogtt?.sonuc || sonIzlem?.ogtt) }),
     peKarti({
       sbp: sonIzlem?.tansiyon_sistolik ?? 0,
       dbp: sonIzlem?.tansiyon_diastolik ?? 0,
       proteinuria: Boolean(sonIzlem?.proteinuri && /(\+|pozitif)/i.test(sonIzlem.proteinuri)),
     }),
-    rhKarti({ rh: veri.gebelik.rh_negatif ? 'D-' : 'D+', idc: mapIdc(veri.gebelik.indirekt_coombs), ga_weeks: veri.yas.hafta }),
-    gbsKarti({ ga_weeks: veri.yas.hafta, kultur: (sonIzlem?.gbs_kultur as 'pozitif' | 'negatif' | 'bekleniyor' | null) ?? null }),
+    rhKarti({ rh: veri.gebelik.rh_negatif ? 'D-' : 'D+', idc: mapIdc(veri.gebelik.indirekt_coombs), ga_weeks: gaHafta }),
+    gbsKarti({ ga_weeks: gaHafta, kultur: (sonIzlem?.gbs_kultur as 'pozitif' | 'negatif' | 'bekleniyor' | null) ?? null }),
   ] : [];
   const plurality = mapPlurality(veri?.gebelik?.cogul_gebelik_tipi);
   const sevk = veri?.gebelik ? sevkFromClinic({
@@ -352,7 +353,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   });
   const jineLmp = veri?.kadinSagligi?.son_adet_tarihi ? String(veri.kadinSagligi.son_adet_tarihi) : null;
   const goruntuUrl = Object.fromEntries((veri?.goruntulemeler || []).filter((x) => x.dosya_url).map((x) => [x.id, x.dosya_url as string]));
-  const etkinMod: Mod = veri?.lohusa ? 'lohusa' : mod;
+  const etkinMod: Mod = mod;
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
@@ -561,33 +562,41 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           <KlinikTakvim visits={visits} sbYapildi={sbDone.length} />
           <DualTakvimAccordion visits={visits} />
 
+          <KararKartlari kartlar={kartlar} />
+          <SevkCta sevk={sevk.sevk} nedenler={sevk.reason} />
+
+          <div style={kutu} data-kd="nst-panel">
+            <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>NST kaydı</div>
+            {showNst ? (
+              <p style={{ fontSize: 12.5, color: '#FDE68A', margin: '0 0 8px' }}>
+                NST izlemi endike (28. hafta, yüksek risk veya kayıt var).
+              </p>
+            ) : (
+              <p style={{ fontSize: 12.5, color: '#8FA0B5', margin: '0 0 8px' }}>
+                NST henüz rutin endike değil (28. hafta veya yüksek risk). Kayıt yine de eklenebilir.
+              </p>
+            )}
+            {nstList[0] && payload?.nst_studies?.[0] && <NstStrip nst={payload.nst_studies[0]} />}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginTop: 8 }}>
+              <label><span style={etiketS}>Tarih</span><input type="date" value={nstForm.tarih} onChange={(e) => setNstForm({ ...nstForm, tarih: e.target.value })} style={giris} /></label>
+              <label><span style={etiketS}>Kategori</span>
+                <select value={nstForm.category} onChange={(e) => setNstForm({ ...nstForm, category: e.target.value })} style={giris}>
+                  <option value="I">Kategori I</option><option value="II">Kategori II</option><option value="III">Kategori III</option>
+                </select>
+              </label>
+              <label><span style={etiketS}>Süre (dk)</span><input type="number" value={nstForm.sure} onChange={(e) => setNstForm({ ...nstForm, sure: e.target.value })} style={giris} /></label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 18, color: '#C9D4E3', fontSize: 13 }}>
+                <input type="checkbox" checked={nstForm.toco} onChange={(e) => setNstForm({ ...nstForm, toco: e.target.checked })} /> Toko
+              </label>
+            </div>
+            <button type="button" style={{ ...btn(true), marginTop: 10 }} onClick={nstKaydet}>NST kaydet</button>
+          </div>
+
           <RiskFormu maddeler={riskMaddeler} onChange={setRiskMaddeler} onKaydet={() => klinikKaydet({ riskFormu: { maddeler: riskMaddeler } }, 'Risk formu kaydedildi.')} />
           <VtePaneli maddeler={vteMaddeler} onChange={setVteMaddeler} onKaydet={() => klinikKaydet({ vteFormu: { maddeler: vteMaddeler } }, 'VTE formu kaydedildi.')} />
           <DestekAsiPaneli state={destekAsi} onChange={setDestekAsi} onKaydet={() => klinikKaydet({ destekAsi }, 'Destek ve aşı kaydedildi.')} />
           <LabPaneli state={labPanel} onChange={setLabPanel} onKaydet={() => klinikKaydet({ labPanel }, 'Laboratuvar kaydedildi.')} />
-          <KararKartlari kartlar={kartlar} />
-          <SevkCta sevk={sevk.sevk} nedenler={sevk.reason} />
           <TehlikeIsaretleri onKopyala={() => setMesaj('Tehlike işaretleri kopyalandı.')} />
-
-          {showNst && (
-            <div style={kutu} data-kd="nst-panel">
-              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>NST kaydı</div>
-              {nstList[0] && payload?.nst_studies?.[0] && <NstStrip nst={payload.nst_studies[0]} />}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginTop: 8 }}>
-                <label><span style={etiketS}>Tarih</span><input type="date" value={nstForm.tarih} onChange={(e) => setNstForm({ ...nstForm, tarih: e.target.value })} style={giris} /></label>
-                <label><span style={etiketS}>Kategori</span>
-                  <select value={nstForm.category} onChange={(e) => setNstForm({ ...nstForm, category: e.target.value })} style={giris}>
-                    <option value="I">Kategori I</option><option value="II">Kategori II</option><option value="III">Kategori III</option>
-                  </select>
-                </label>
-                <label><span style={etiketS}>Süre (dk)</span><input type="number" value={nstForm.sure} onChange={(e) => setNstForm({ ...nstForm, sure: e.target.value })} style={giris} /></label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 18, color: '#C9D4E3', fontSize: 13 }}>
-                  <input type="checkbox" checked={nstForm.toco} onChange={(e) => setNstForm({ ...nstForm, toco: e.target.checked })} /> Toco
-                </label>
-              </div>
-              <button type="button" style={{ ...btn(true), marginTop: 10 }} onClick={nstKaydet}>NST kaydet</button>
-            </div>
-          )}
 
           {veri.izlemler.length > 0 && (
             <div style={kutu}>

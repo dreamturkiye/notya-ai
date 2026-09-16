@@ -73,7 +73,19 @@ export function AsistanGorselPanel({
   return (
     <section style={box} data-tab="AsistanGorselPanel" data-specialty="dermatoloji" data-disclaimer={VISION_DISCLAIMER}>
       <h2 style={{ margin: 0, fontSize: 16 }}>Asistan foto / dermoskopi taslağı</h2>
-      <p style={{ fontSize: 12, color: '#C4B5FD', margin: '8px 0' }}>
+      <p
+        data-derm="asistan-disclaimer"
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: '#FDE68A',
+          background: 'rgba(245,158,11,0.14)',
+          border: '1px solid rgba(245,158,11,0.4)',
+          borderRadius: 8,
+          padding: '8px 10px',
+          margin: '8px 0 10px',
+        }}
+      >
         Tarama desteği, tanı değildir. Doktor onayı gerekir.
       </p>
       <button type="button" style={btn} onClick={draftPhoto} disabled={!photos.length}>

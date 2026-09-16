@@ -183,6 +183,15 @@ describe('derm clinic-fit', () => {
     const ok = uzmanOnay(draft, 'uzman')
     assert.equal(ok.ok, true)
     if (ok.ok) assert.equal(ok.read.status, 'onayli')
+    const resilient = payloadFromDermApi('p-deri', {
+      kayit: { id: 'ep-bad', unit: 'not-a-unit', visit_type: 'nope' },
+      vision: [{ id: 'bad', task: 'not-a-task', status: 'draft', drafted_by: 'asistan' } as never],
+      goruntulemeler: [{ id: 'img-x', modalite: 'dermatoskopi', vucut_bolgesi: 'back', goruntuleme_tarihi: '2026-04-10' }],
+    }, '2026-04-10')
+    assert.equal(resilient.unit, 'genel')
+    assert.equal(resilient.vision_reads.length, 0)
+    assert.equal(resilient.photos.length, 1)
+    assert.equal(dermatolojiPayloadSchema.safeParse(resilient).success, true)
   })
 
   it('genital photo without consent is blocked; belge deep-links carry modality', () => {
@@ -242,6 +251,14 @@ describe('derm clinic-fit', () => {
     assert.match(shell, /action: 'yama'/)
     assert.match(shell, /action: 'vision'/)
     assert.match(shell, /actor="uzman"/)
+    assert.match(shell, /Tarama desteği, tanı değildir\. Doktor onayı gerekir\./)
+    assert.match(shell, /<AsistanGorselPanel/)
+    const asistanIdx = shell.indexOf('<AsistanGorselPanel')
+    const payloadGateIdx = shell.indexOf('{payload && (')
+    assert.ok(asistanIdx >= 0 && payloadGateIdx >= 0 && asistanIdx < payloadGateIdx, 'Asistan panel must mount even when payload is empty')
+    const panel = readFileSync(join(ROOT, 'ui', 'AsistanGorselPanel.tsx'), 'utf8')
+    assert.match(panel, /Tarama desteği, tanı değildir\. Doktor onayı gerekir\./)
+    assert.match(panel, /data-derm="asistan-disclaimer"/)
     assert.match(api, /action === 'klinik'/)
     assert.match(api, /fototerapi-seans/)
     assert.match(api, /Solaryum yasaktır/)

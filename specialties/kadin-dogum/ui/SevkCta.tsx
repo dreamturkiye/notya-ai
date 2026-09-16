@@ -3,7 +3,6 @@
 import { kutu, btn } from './clinic-styles'
 
 export function SevkCta({ sevk, nedenler }: { sevk: boolean; nedenler: string[] }) {
-  if (!sevk) return null
   const tr: Record<string, string> = {
     'monochorionic twins': 'Monokoryonik ikiz',
     'TTTS concern': 'TTTS şüphesi',
@@ -16,8 +15,18 @@ export function SevkCta({ sevk, nedenler }: { sevk: boolean; nedenler: string[] 
     'stillbirth history': 'Ölü doğum öyküsü',
     'risk_class yuksek': 'Yüksek risk sınıfı',
   }
+  if (!sevk) {
+    return (
+      <section style={kutu} data-kd="sevk-cta" data-sevk="yok">
+        <h2 style={{ margin: 0, fontSize: 16 }}>Perinatoloji sevk</h2>
+        <p style={{ fontSize: 13, color: '#8FA0B5', margin: '8px 0 0' }}>
+          Şu an sevk önerisi yok. Yüksek risk, previa, mo-di ikiz veya Riskli Gebelikler tetikleyince burada görünür. Sipariş değildir.
+        </p>
+      </section>
+    )
+  }
   return (
-    <section style={{ ...kutu, borderColor: 'rgba(239,68,68,0.45)' }} data-kd="sevk-cta">
+    <section style={{ ...kutu, borderColor: 'rgba(239,68,68,0.45)' }} data-kd="sevk-cta" data-sevk="aktif">
       <h2 style={{ margin: 0, fontSize: 16, color: '#FCA5A5' }}>Perinatoloji sevk önerisi</h2>
       <p style={{ fontSize: 12, color: '#8FA0B5' }}>Sipariş değildir. Risk formu / Riskli Gebelikler tetikledi.</p>
       <ul style={{ fontSize: 13, color: '#EDF1F7' }}>
