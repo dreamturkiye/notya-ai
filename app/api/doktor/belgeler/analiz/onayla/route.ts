@@ -14,6 +14,21 @@ import type { BelgeRaporu } from '@/core/belgeler/types'
 
 export const dynamic = 'force-dynamic'
 
+function labBlogu(a: { sonuc: BelgeRaporu & { lab?: { kritik?: string[]; yeni_bozulanlar?: string[]; duzelenler?: string[] } }; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; olusturuldu: string }, panel: { lab_adi: string | null; numune_tarihi: string | null } | null, satirlar: { raw_name: string; canonical_key: string | null; value_num: number | null; value_text: string | null; unit: string | null; flag: string; kritik: boolean }[]): string {
+  // Locked format (Kaan spec): [Lab] {lab_adi} — numune {date} — onay {ts} / Özet (hekim) / Resmi tanı / Anormal / AI taslağı arşivde
+  const r = a.sonuc
+  const anormal = satirlar.filter((s) => s.flag === 'H' || s.flag === 'L' || s.flag === 'critical').map((s) => `${s.raw_name} ${s.value_num ?? s.value_text ?? ''} ${s.unit || ''}${s.flag === 'critical' ? ' KRİTİK' : s.flag === 'H' ? ' ↑' : ' ↓'}`.trim())
+  const satirlarMetin = [
+    `[Lab] ${panel?.lab_adi || 'Laboratuvar'} — numune ${panel?.numune_tarihi ? new Date(panel.numune_tarihi).toLocaleDateString('tr-TR') : '—'} — onay ${new Date().toLocaleString('tr-TR')}`,
+    `Özet (hekim): ${(a.hekim_ozet || r.ozet || '').trim()}`,
+    `Resmi tanı: ${(a.hekim_tanisi || []).map((t) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join(', ') || '—'}`,
+    `Anormal: ${anormal.length ? anormal.join('; ') : 'yok'}`,
+  ]
+  if (r.acil_bayrak) satirlarMetin.push('⚠ Kritik değer işaretlendi — hekim değerlendirdi.')
+  satirlarMetin.push(`AI taslağı arşivde. ${UYARI_SERIDI}`)
+  return satirlarMetin.join('\n')
+}
+
 function raporBlogu(a: { sonuc: BelgeRaporu; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; modality_final: string; olusturuldu: string }): string {
   const r = a.sonuc
   const tarih = new Date(a.olusturuldu).toLocaleDateString('tr-TR')
@@ -50,7 +65,17 @@ export async function POST(req: NextRequest) {
     if (!noteId) return NextResponse.json({ error: 'Bu hastanın muayene notu yok. Önce bir muayene notu oluşturun.' }, { status: 409 })
     const { data: not } = await supabase.from('notes').select('id, content_objektif').eq('id', noteId).eq('doctor_id', user.id).maybeSingle()
     if (!not) return NextResponse.json({ error: 'Muayene notu bulunamadı' }, { status: 404 })
-    const blok = raporBlogu(a as never)
+    let blok: string
+    if (a.modality_final === 'lab') {
+      const { data: panel } = await supabase.from('lab_paneller').select('id, lab_adi, numune_tarihi').eq('analiz_id', a.id).maybeSingle()
+      const { data: satirlar } = panel ? await supabase.from('lab_satirlar').select('raw_name, canonical_key, value_num, value_text, unit, flag, kritik').eq('panel_id', panel.id).order('sira') : { data: [] }
+      blok = labBlogu(a as never, panel, (satirlar || []).map((s) => ({ ...s, value_num: s.value_num == null ? null : Number(s.value_num) })))
+      // Approved rows become this patient's priors for future trend comparison (only APPROVED labs are ever compared)
+      if (panel) await Promise.all([
+        supabase.from('lab_satirlar').update({ onayli: true }).eq('panel_id', panel.id),
+        supabase.from('lab_paneller').update({ durum: 'onaylandi', updated_at: new Date().toISOString() }).eq('id', panel.id),
+      ])
+    } else blok = raporBlogu(a as never)
     const onceki = not.content_objektif || ''
     if (onceki.includes(blok.split('\n')[0])) return NextResponse.json({ ok: true, noteId, zaten: true })
     const sonraki = onceki ? `${onceki.trimEnd()}\n\n${blok}` : blok
@@ -82,6 +107,7 @@ export async function POST(req: NextRequest) {
   await Promise.all([
     supabase.from('belge_revizyonlar').insert({ analiz_id: a.id, doctor_id: user.id, alan: 'muayene_onay', onceki: null, sonraki: { noteId } }),
     supabase.from('belge_analizleri').update({ durum: 'muayene_onaylandi', guncellendi: new Date().toISOString() }).eq('id', a.id),
+    a.modality_final === 'lab' ? supabase.from('lab_paneller').update({ durum: 'muayene_onaylandi', updated_at: new Date().toISOString() }).eq('analiz_id', a.id) : Promise.resolve(),
   ])
   return NextResponse.json({ ok: true, noteId })
 }
