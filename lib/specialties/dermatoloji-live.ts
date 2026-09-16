@@ -5,7 +5,13 @@
  * Stored clinic state wins; görüntüleme overlays photos (no second blob store).
  */
 import {
+  CLINIC_UNITS,
+  VISIT_TYPES,
   dermatolojiPayloadSchema,
+  visionReadSchema,
+  photoSessionSchema,
+  scoreSnapshotSchema,
+  patchCourseSchema,
   type DermatolojiPayload,
   type Lesion,
   type PhotoAsset,
@@ -15,7 +21,7 @@ import {
 } from '../../specialties/dermatoloji/schema'
 import { pairBeforeAfter } from '../../specialties/dermatoloji/imaging/before-after'
 import { gopIsotretinoin, type GopInput, type GopResult, type GopSex } from '../../specialties/dermatoloji/engines/gop-isotretinoin'
-import { timepointLabel } from '../../specialties/dermatoloji/engines/clinic-fit'
+import { defaultVisitType, timepointLabel } from '../../specialties/dermatoloji/engines/clinic-fit'
 import { diffDays } from '../../specialties/dermatoloji/engines/dates'
 import type { PhotoSession } from '../../specialties/dermatoloji/engines/phototherapy-log'
 import type { ClinicUnit, VisitType } from '../../specialties/dermatoloji/types'
@@ -103,6 +109,49 @@ const PHOTO_KIND_SET = new Set([
   'dijital_harita', 'islem_oncesi', 'islem_sonrasi', 'tedavi_hafta_n',
   'yama_d2', 'yama_d4', 'wood', 'trichoscopy', 'patoloji_makro',
 ])
+
+function asClinicUnit(raw: unknown): ClinicUnit {
+  return typeof raw === 'string' && (CLINIC_UNITS as readonly string[]).includes(raw)
+    ? raw as ClinicUnit
+    : 'genel'
+}
+
+function asVisitType(raw: unknown, unit: ClinicUnit): VisitType {
+  return typeof raw === 'string' && (VISIT_TYPES as readonly string[]).includes(raw)
+    ? raw as VisitType
+    : defaultVisitType(unit)
+}
+
+function keepParsed<T>(schema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false } }, rows: unknown[]): T[] {
+  return rows.flatMap((row) => {
+    const p = schema.safeParse(row)
+    return p.success ? [p.data] : []
+  })
+}
+
+function emptyDermPayload(patientId: string, episodeId: string): DermatolojiPayload {
+  return {
+    specialty: 'dermatoloji',
+    episode_id: episodeId,
+    patient_id: patientId,
+    visit_type: 'genel-poliklinik',
+    unit: 'genel',
+    patient_derm: asPatientDerm(null),
+    lesions: [],
+    photos: [],
+    image_series: [],
+    before_after: [],
+    vision_reads: [],
+    total_body_map: null,
+    bedside_tests: [],
+    patch_courses: [],
+    hair_workup: null,
+    bullous_workup: null,
+    behcet_card: null,
+    admission: null,
+    last_tbse_iso: null,
+  }
+}
 
 function photoKind(modalite: string | null | undefined, metaKind?: string | null): PhotoAsset['kind'] {
   if (metaKind && PHOTO_KIND_SET.has(metaKind)) return metaKind as PhotoAsset['kind']
@@ -277,12 +326,13 @@ export function payloadFromDermApi(
       ? { deviceHint: 'manual' as const, nodeIds: lesions.map((l) => l.body_map_node || l.id), followUpMonths: 6 }
       : null)
 
-  const unit = (kayit?.unit || 'genel') as ClinicUnit
-  const visit_type = (kayit?.visit_type || 'genel-poliklinik') as VisitType
+  const unit = asClinicUnit(kayit?.unit)
+  const visit_type = asVisitType(kayit?.visit_type, unit)
+  const episodeId = kayit?.id || `derm-${patientId}`
 
   const raw = {
     specialty: 'dermatoloji' as const,
-    episode_id: kayit?.id || `derm-${patientId}`,
+    episode_id: episodeId,
     patient_id: patientId,
     visit_type,
     unit,
@@ -291,17 +341,17 @@ export function payloadFromDermApi(
     photos,
     image_series,
     before_after,
-    vision_reads: veri.vision || [],
+    vision_reads: keepParsed(visionReadSchema, veri.vision || []),
     total_body_map: tbm,
     bedside_tests: kayit?.bedside_tests || [],
-    patch_courses: (veri.yama || []) as PatchCourse[],
+    patch_courses: keepParsed(patchCourseSchema, (veri.yama || []) as unknown[]),
     hair_workup: kayit?.hair_workup ?? null,
     bullous_workup: kayit?.bullous_workup ?? null,
     behcet_card: kayit?.behcet_card ?? null,
     admission: null,
     gop: asGop(kayit?.gop, todayIso),
-    score_snapshots: veri.skorlar || [],
-    phototherapy_sessions: veri.fototerapi || [],
+    score_snapshots: keepParsed(scoreSnapshotSchema, veri.skorlar || []),
+    phototherapy_sessions: keepParsed(photoSessionSchema, veri.fototerapi || []),
     last_tbse_iso: (typeof kayit?.last_tbse_iso === 'string' && kayit.last_tbse_iso.length >= 8)
       ? kayit.last_tbse_iso.slice(0, 10)
       : null,
@@ -314,7 +364,19 @@ export function payloadFromDermApi(
   }
   const parsed = dermatolojiPayloadSchema.safeParse(raw)
   if (!parsed.success) {
-    throw new Error('dermatoloji live payload failed schema')
+    const fallback = emptyDermPayload(patientId, episodeId)
+    const withPhotos = dermatolojiPayloadSchema.safeParse({
+      ...fallback,
+      unit,
+      visit_type,
+      patient_derm: asPatientDerm(kayit?.patient_derm),
+      lesions,
+      photos,
+      image_series,
+      before_after,
+      vision_reads: keepParsed(visionReadSchema, veri.vision || []),
+    })
+    return withPhotos.success ? withPhotos.data : fallback
   }
   return parsed.data
 }

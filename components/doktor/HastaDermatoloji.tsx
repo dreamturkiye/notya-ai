@@ -176,16 +176,20 @@ export default function HastaDermatoloji({
   const visitType = veri?.kayit?.visit_type || defaultVisitType(unit)
   const payload = useMemo(() => {
     if (!veri) return null
-    return payloadFromDermApi(patientId, {
-      kayit: veri.kayit,
-      lezyonlar: veri.lezyonlar,
-      skorlar: veri.skorlar,
-      fototerapi: veri.fototerapi,
-      yama: veri.yama,
-      vision: veri.vision,
-      fotoMeta: veri.fotoMeta,
-      goruntulemeler: (veri.goruntulemeler || []) as LiveGoruntuRow[],
-    }, today)
+    try {
+      return payloadFromDermApi(patientId, {
+        kayit: veri.kayit,
+        lezyonlar: veri.lezyonlar,
+        skorlar: veri.skorlar,
+        fototerapi: veri.fototerapi,
+        yama: veri.yama,
+        vision: veri.vision,
+        fotoMeta: veri.fotoMeta,
+        goruntulemeler: (veri.goruntulemeler || []) as LiveGoruntuRow[],
+      }, today)
+    } catch {
+      return null
+    }
   }, [veri, patientId, today])
 
   const urls = displayUrlsFromGoruntuleme((veri?.goruntulemeler || []) as LiveGoruntuRow[])
@@ -277,7 +281,7 @@ export default function HastaDermatoloji({
         <div style={{ fontWeight: 700, fontSize: 15 }}>Deri & Lezyon</div>
         <p style={{ margin: '6px 0 0', fontSize: 12, color: '#8FA0B5' }}>
           Ziyaret-önce klinik yüzey. Lezyonlar görüntülemeden türetilir; ayrı fotoğraf deposu yoktur.
-          Asistan taslağı tanı değildir; uzman onayı gerekir. KETEM deri kanseri taraması değildir.
+          Tarama desteği, tanı değildir. Doktor onayı gerekir. KETEM deri kanseri taraması değildir.
         </p>
         {empty && nextActions}
       </div>
@@ -290,6 +294,15 @@ export default function HastaDermatoloji({
       {hata && <div style={{ color: '#FCA5A5', fontSize: 13 }}>{hata}</div>}
       {mesaj && <div style={{ color: '#86EFAC', fontSize: 13 }}>{mesaj}</div>}
       {yukleniyor && <div style={{ color: '#8FA0B5', fontSize: 13 }}>Yükleniyor…</div>}
+
+      <AsistanGorselPanel
+        reads={payload?.vision_reads ?? []}
+        photos={payload?.photos ?? []}
+        actor="uzman"
+        belgeOzet={belgeOzet}
+        onDraft={(r) => kaydet({ action: 'vision', assetIds: r.assetIds, task: r.task, observations: r.observations, drafted_by: r.drafted_by }, 'Taslak kaydedildi.')}
+        onOnay={(r) => kaydet({ action: 'vision', id: r.id, onay: true }, 'Uzman onaylandı.')}
+      />
 
       {payload && (
         <>
@@ -430,14 +443,6 @@ export default function HastaDermatoloji({
             onKaydet={(p) => kaydet({ action: 'foto-meta', ...p }, 'Onam kaydedildi.')}
           />
           <BelgeAnalizOzet patientId={patientId} analizler={belgeOzet} fitzpatrick={payload.patient_derm.fitzpatrick} />
-          <AsistanGorselPanel
-            reads={payload.vision_reads}
-            photos={payload.photos}
-            actor="uzman"
-            belgeOzet={belgeOzet}
-            onDraft={(r) => kaydet({ action: 'vision', assetIds: r.assetIds, task: r.task, observations: r.observations, drafted_by: r.drafted_by }, 'Taslak kaydedildi.')}
-            onOnay={(r) => kaydet({ action: 'vision', id: r.id, onay: true }, 'Uzman onaylandı.')}
-          />
           <SkorPaneli
             pasi={sonSkor?.pasi}
             easi={sonSkor?.easi}

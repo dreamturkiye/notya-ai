@@ -12,6 +12,12 @@ const TRIAGE: Record<string, string> = {
 export function KararKartlari({ kartlar }: { kartlar: KararKart[] }) {
   return (
     <section style={{ display: 'grid', gap: 10 }} data-kd="karar-kartlari">
+      <h2 style={{ margin: 0, fontSize: 16 }}>Karar kartları — GDM / PE / Rh / GBS</h2>
+      {kartlar.length === 0 && (
+        <p style={{ fontSize: 13, color: '#8FA0B5', margin: 0 }}>
+          Gebelik kaydı açılınca GDM, preeklampsi, Rh/Anti-D ve GBS kartları burada durur.
+        </p>
+      )}
       {kartlar.map((k) => (
         <article key={k.id} style={kutu} data-kart={k.id}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
