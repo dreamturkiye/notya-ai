@@ -17,6 +17,7 @@ export type HastaDosyaSekmeId =
   | 'ayse'
   | 'gebelik'
   | 'deri'
+  | 'dahiliye'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -47,6 +48,7 @@ export function gebelikSekmesiUygun(input: {
 }
 
 export function hastaDosyaSekmeleri(opts: {
+  dahiliyeUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -68,6 +70,7 @@ export function hastaDosyaSekmeleri(opts: {
   tabs.push({ id: 'ayse', label: "Ayşe'ye Danış" })
   if (opts.gebelikUygun) tabs.push({ id: 'gebelik', label: 'Kadın Sağlığı & Gebelik' })
   tabs.push({ id: 'deri', label: 'Deri & Lezyon' })
+  if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' }) // NOTYA-DAH-01
   return tabs
 }
 
