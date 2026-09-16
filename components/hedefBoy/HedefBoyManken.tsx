@@ -6,7 +6,7 @@
  */
 import type { CSSProperties } from 'react'
 import type { HedefBoySonuc } from '@/lib/clinical/hedefBoy'
-import { formatBoyCm } from '@/lib/clinical/hedefBoy'
+import { formatBoyCm, cinsiyetHedefBoy, hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
 
 export type HedefBoyGorsel = Pick<HedefBoySonuc, 'anneCm' | 'babaCm' | 'cocukCm' | 'altCm' | 'ustCm' | 'cinsiyet'>
 type Tema = 'doktor' | 'portal'
@@ -23,12 +23,12 @@ const T: Record<Tema, {
   olcer: string; olcerCizgi: string; zemin: string
 }> = {
   doktor: {
-    yazi: '#F4F1E8', soluk: '#A8B4C4', cocuk: '#E8C547',
-    olcer: '#E8D9C0', olcerCizgi: '#5C4A32', zemin: 'rgba(232,197,71,0.22)',
+    yazi: '#F4F1E8', soluk: '#C5D0DC', cocuk: '#E8C547',
+    olcer: '#F3E6CF', olcerCizgi: '#3D2C18', zemin: 'rgba(232,197,71,0.22)',
   },
   portal: {
-    yazi: '#0A1628', soluk: '#6B7385', cocuk: '#C9A227',
-    olcer: '#F3E6CF', olcerCizgi: '#6B5438', zemin: 'rgba(201,162,39,0.22)',
+    yazi: '#0A1628', soluk: '#5C6578', cocuk: '#C9A227',
+    olcer: '#F6EBDA', olcerCizgi: '#3D2C18', zemin: 'rgba(201,162,39,0.22)',
   },
 }
 
@@ -47,6 +47,14 @@ const SAHNE: Record<Tema, CSSProperties> = {
 
 const MAX_FIGUR_PX = 340
 
+function yCm(cm: number, cmMin: number, cmMax: number, plotH: number) {
+  return ((cmMax - cm) / (cmMax - cmMin)) * plotH
+}
+
+function hCm(cm: number, cmMin: number, cmMax: number, plotH: number) {
+  return Math.max(96, ((cm - cmMin) / (cmMax - cmMin)) * plotH)
+}
+
 function Olcer({
   cmMin, cmMax, plotH, alt, ust, hedef, tema,
 }: {
@@ -59,39 +67,59 @@ function Olcer({
   tema: Tema
 }) {
   const pal = T[tema]
-  const y = (cm: number) => plotH - (cm / cmMax) * plotH
-  const ticks: number[] = []
-  for (let c = Math.ceil(cmMin / 10) * 10; c <= cmMax; c += 10) ticks.push(c)
+  const pad = 24
+  const y = (cm: number) => pad + yCm(cm, cmMin, cmMax, plotH)
+  const majors: number[] = []
+  const minors: number[] = []
+  for (let c = Math.ceil(cmMin / 5) * 5; c <= cmMax; c += 5) {
+    if (c % 10 === 0) majors.push(c)
+    else minors.push(c)
+  }
   const yAlt = y(alt)
   const yUst = y(ust)
+  const yHedef = y(hedef)
+  const sayi = tema === 'doktor' ? '#F4F1E8' : '#2A1C10'
   return (
-    <svg width="72" height={plotH + 8} viewBox={`0 0 72 ${plotH + 8}`} aria-hidden>
-      <rect x="8" y="0" width="36" height={plotH} rx="8" fill={pal.olcer} stroke={pal.olcerCizgi} strokeWidth="1.2" />
-      <rect x="8" y={Math.min(yAlt, yUst)} width="36" height={Math.max(8, Math.abs(yAlt - yUst))} fill={pal.cocuk} opacity="0.32" />
-      {ticks.map((c) => (
+    <svg width="128" height={plotH + pad + 8} viewBox={`0 0 128 ${plotH + pad + 8}`} aria-hidden>
+      <text x="39" y="16" textAnchor="middle" fill={pal.cocuk} fontSize="13" fontWeight="800" letterSpacing="0.14em">cm</text>
+      <rect x="10" y={pad} width="52" height={plotH} rx="10" fill={pal.olcer} stroke={pal.olcerCizgi} strokeWidth="1.6" />
+      <rect
+        x="10"
+        y={Math.min(yAlt, yUst)}
+        width="52"
+        height={Math.max(10, Math.abs(yAlt - yUst))}
+        fill={pal.cocuk}
+        opacity="0.38"
+      />
+      {minors.map((c) => (
+        <line key={c} x1="10" x2="30" y1={y(c)} y2={y(c)} stroke={pal.olcerCizgi} strokeWidth="1.2" opacity="0.4" />
+      ))}
+      {majors.map((c) => (
         <g key={c}>
-          <line x1="8" x2="36" y1={y(c)} y2={y(c)} stroke={pal.olcerCizgi} strokeWidth="1.3" />
-          <text x="50" y={y(c) + 4} fill={pal.soluk} fontSize="10" fontWeight="700">{c}</text>
+          <line x1="10" x2="62" y1={y(c)} y2={y(c)} stroke={pal.olcerCizgi} strokeWidth="2" />
+          <text x="70" y={y(c) + 6} fill={sayi} fontSize="17" fontWeight="800">{c}</text>
         </g>
       ))}
-      <line x1="8" x2="48" y1={y(hedef)} y2={y(hedef)} stroke={pal.cocuk} strokeWidth="2.4" />
-      <polygon points={`48,${y(hedef)} 60,${y(hedef) - 6} 60,${y(hedef) + 6}`} fill={pal.cocuk} />
+      <line x1="10" x2="64" y1={yHedef} y2={yHedef} stroke={pal.cocuk} strokeWidth="3.2" />
+      <polygon points={`64,${yHedef} 78,${yHedef - 8} 78,${yHedef + 8}`} fill={pal.cocuk} />
+      <text x="82" y={yHedef - 10} fill={pal.cocuk} fontSize="12" fontWeight="800">hedef</text>
     </svg>
   )
 }
 
 function Figur({
-  src, cm, cmMax, label, accent, highlight, soluk,
+  src, cm, cmMin, cmMax, label, accent, highlight, soluk,
 }: {
   src: string
   cm: number
+  cmMin: number
   cmMax: number
   label: string
   accent: string
   highlight?: boolean
   soluk: string
 }) {
-  const h = Math.max(120, (cm / cmMax) * MAX_FIGUR_PX)
+  const h = hCm(cm, cmMin, cmMax, MAX_FIGUR_PX)
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32%', minWidth: 90 }}>
       {highlight && (
@@ -102,6 +130,7 @@ function Figur({
         }} />
       )}
       <img
+        key={src}
         src={src}
         alt={label}
         style={{
@@ -117,8 +146,8 @@ function Figur({
         }}
       />
       <div style={{ marginTop: 8, textAlign: 'center' }}>
-        <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.04em', color: accent }}>{label}</div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: soluk, marginTop: 1 }}>{Math.round(cm)} cm</div>
+        <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '0.04em', color: accent }}>{label}</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: soluk, marginTop: 1 }}>{Math.round(cm)} cm</div>
       </div>
     </div>
   )
@@ -136,22 +165,24 @@ export function HedefBoyManken({
   ornek?: boolean
 }) {
   const pal = T[tema]
+  const minGercek = Math.min(sonuc.anneCm, sonuc.babaCm, sonuc.cocukCm)
   const maxCm = Math.max(sonuc.anneCm, sonuc.babaCm, sonuc.cocukCm, sonuc.ustCm)
-  const cmMax = Math.max(190, Math.ceil((maxCm + 6) / 5) * 5)
-  const cmMin = 140
-  const cocukSrc = sonuc.cinsiyet === 'kiz' ? KARAKTER.kiz : KARAKTER.erkek
-  const cocukLabel = sonuc.cinsiyet === 'kiz' ? 'Kız' : 'Erkek'
+  const cmMin = Math.min(140, Math.floor(minGercek / 5) * 5 - 5)
+  const cmMax = Math.max(190, Math.ceil((maxCm + 8) / 5) * 5)
+  const kiz = sonuc.cinsiyet === 'kiz'
+  const cocukSrc = kiz ? KARAKTER.kiz : KARAKTER.erkek
+  const cocukLabel = kiz ? 'Kız' : 'Erkek'
 
   return (
-    <figure style={{ margin: 0, borderRadius: 22, overflow: 'hidden', ...SAHNE[tema], ...style, position: 'relative' }} data-hedef-boy="manken">
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, padding: '28px 16px 8px 8px', minHeight: 420 }}>
-        <div style={{ flexShrink: 0, paddingBottom: 52 }}>
+    <figure style={{ margin: 0, borderRadius: 22, overflow: 'hidden', ...SAHNE[tema], ...style, position: 'relative' }} data-hedef-boy="manken" data-cinsiyet={sonuc.cinsiyet}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, padding: '22px 14px 8px 4px', minHeight: 420 }}>
+        <div style={{ flexShrink: 0, paddingBottom: 54 }}>
           <Olcer cmMin={cmMin} cmMax={cmMax} plotH={MAX_FIGUR_PX} alt={sonuc.altCm} ust={sonuc.ustCm} hedef={sonuc.cocukCm} tema={tema} />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', minWidth: 0 }}>
-          <Figur src={KARAKTER.baba} cm={sonuc.babaCm} cmMax={cmMax} label="Baba" accent="#8EC8EA" soluk={pal.soluk} />
-          <Figur src={cocukSrc} cm={sonuc.cocukCm} cmMax={cmMax} label={cocukLabel} accent={pal.cocuk} soluk={pal.soluk} highlight />
-          <Figur src={KARAKTER.anne} cm={sonuc.anneCm} cmMax={cmMax} label="Anne" accent="#E7A4B0" soluk={pal.soluk} />
+          <Figur src={KARAKTER.baba} cm={sonuc.babaCm} cmMin={cmMin} cmMax={cmMax} label="Baba" accent="#8EC8EA" soluk={pal.soluk} />
+          <Figur src={cocukSrc} cm={sonuc.cocukCm} cmMin={cmMin} cmMax={cmMax} label={cocukLabel} accent={pal.cocuk} soluk={pal.soluk} highlight />
+          <Figur src={KARAKTER.anne} cm={sonuc.anneCm} cmMin={cmMin} cmMax={cmMax} label="Anne" accent="#E7A4B0" soluk={pal.soluk} />
         </div>
       </div>
       <div aria-hidden style={{
@@ -168,7 +199,9 @@ export function HedefBoyManken({
           </>
         ) : (
           <>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', color: pal.cocuk, textTransform: 'uppercase' }}>Tahmini erişkin boy</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', color: pal.cocuk, textTransform: 'uppercase' }}>
+              Tahmini erişkin boy · {kiz ? 'Kız' : 'Erkek'}
+            </div>
             <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 2 }}>{formatBoyCm(sonuc.cocukCm)}</div>
             <div style={{ fontSize: 13.5, color: pal.soluk, marginTop: 4 }}>
               Beklenen aralık {formatBoyCm(sonuc.altCm)} – {formatBoyCm(sonuc.ustCm)}
@@ -180,14 +213,19 @@ export function HedefBoyManken({
   )
 }
 
-export function HedefBoySahneBos({ tema = 'doktor' }: { tema?: Tema }) {
-  return (
-    <HedefBoyManken
-      tema={tema}
-      ornek
-      sonuc={{ anneCm: 168, babaCm: 180, cocukCm: 174, altCm: 165.5, ustCm: 182.5, cinsiyet: 'erkek' }}
-    />
-  )
+export function HedefBoySahneBos({
+  tema = 'doktor',
+  cinsiyet = 'Erkek',
+}: {
+  tema?: Tema
+  cinsiyet?: string
+}) {
+  const c = cinsiyetHedefBoy(cinsiyet) || 'erkek'
+  const ornek = hesaplaHedefBoy({ anneBoy: 168, babaBoy: 180, cinsiyet: c })
+  const sonuc: HedefBoyGorsel = ornek.ok
+    ? ornek.sonuc
+    : { anneCm: 168, babaCm: 180, cocukCm: c === 'kiz' ? 167.5 : 180.5, altCm: 159, ustCm: 176, cinsiyet: c }
+  return <HedefBoyManken tema={tema} ornek sonuc={sonuc} />
 }
 
 export function HedefBoyAileKart({

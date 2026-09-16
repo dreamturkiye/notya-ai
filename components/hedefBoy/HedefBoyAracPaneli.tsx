@@ -12,7 +12,7 @@ import {
   toolsLabel,
   toolsPrimaryBtn,
 } from '@/lib/doktor/toolsUi'
-import { hesaplaHedefBoy, parseBoyGirdi, formatBoyCm, type HedefBoySonuc } from '@/lib/clinical/hedefBoy'
+import { hesaplaHedefBoy, parseBoyGirdi, formatBoyCm, cinsiyetHedefBoy, type HedefBoySonuc } from '@/lib/clinical/hedefBoy'
 
 function ipucu(raw: string): string {
   const p = parseBoyGirdi(raw)
@@ -28,7 +28,7 @@ export function HedefBoyAracPaneli({
   const sahneRef = useRef<HTMLDivElement>(null)
   const [hastaId, setHastaId] = useState(search?.get('patientId') || '')
   const [hastaAd, setHastaAd] = useState('')
-  const [cinsiyet, setCinsiyet] = useState('')
+  const [cinsiyet, setCinsiyet] = useState('Erkek')
   const [anne, setAnne] = useState('')
   const [baba, setBaba] = useState('')
   const [sonuc, setSonuc] = useState<HedefBoySonuc | null>(null)
@@ -43,15 +43,9 @@ export function HedefBoyAracPaneli({
   }, [aileGoster, onAileModu])
 
   const canli = useMemo(
-    () => hesaplaHedefBoy({ anneBoy: anne, babaBoy: baba, cinsiyet: cinsiyet || 'Erkek' }),
+    () => hesaplaHedefBoy({ anneBoy: anne, babaBoy: baba, cinsiyet }),
     [anne, baba, cinsiyet],
   )
-
-  useEffect(() => {
-    const a = parseBoyGirdi(anne)
-    const b = parseBoyGirdi(baba)
-    if (a.ok && b.ok && !cinsiyet) setCinsiyet('Erkek')
-  }, [anne, baba, cinsiyet])
 
   useEffect(() => {
     if (canli.ok) setSonuc(canli.sonuc)
@@ -82,7 +76,7 @@ export function HedefBoyAracPaneli({
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Hasta yüklenemedi')
       setHastaAd(d.ad || '')
-      setCinsiyet(d.cinsiyet || '')
+      setCinsiyet(cinsiyetHedefBoy(d.cinsiyet) === 'kiz' ? 'Kadın' : 'Erkek')
       setAnne(d.anneBoyCm != null ? String(d.anneBoyCm) : '')
       setBaba(d.babaBoyCm != null ? String(d.babaBoyCm) : '')
       setSonuc(d.sonuc || null)
@@ -264,7 +258,7 @@ export function HedefBoyAracPaneli({
               style={aileGoster ? { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' } : undefined}
             />
           ) : (
-            <HedefBoySahneBos tema="doktor" />
+            <HedefBoySahneBos tema="doktor" cinsiyet={cinsiyet} />
           )}
           {aileGoster && (
             <p style={{ textAlign: 'center', color: '#8FA0B5', fontSize: 13, margin: '8px 12px 0', lineHeight: 1.5 }}>
