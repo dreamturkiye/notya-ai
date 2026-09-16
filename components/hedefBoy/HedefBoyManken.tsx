@@ -45,7 +45,12 @@ const SAHNE: Record<Tema, CSSProperties> = {
   },
 }
 
-const MAX_FIGUR_PX = 340
+const CM_TICK = 10
+const PX_PER_TICK = 34
+
+function plotHFor(cmMax: number) {
+  return Math.max(520, Math.round((cmMax / CM_TICK) * PX_PER_TICK))
+}
 
 /** Scale from the floor. Mapping 140→0px made a 165 cm mother look like a child. */
 function yCm(cm: number, cmMax: number, plotH: number) {
@@ -81,45 +86,46 @@ function Olcer({
   const yHedef = y(hedef)
   const sayi = tema === 'doktor' ? '#F4F1E8' : '#2A1C10'
   return (
-    <svg width="128" height={plotH + pad + 8} viewBox={`0 0 128 ${plotH + pad + 8}`} aria-hidden>
-      <text x="39" y="16" textAnchor="middle" fill={pal.cocuk} fontSize="13" fontWeight="800" letterSpacing="0.14em">cm</text>
-      <rect x="10" y={pad} width="52" height={plotH} rx="10" fill={pal.olcer} stroke={pal.olcerCizgi} strokeWidth="1.6" />
+    <svg width="150" height={plotH + pad + 8} viewBox={`0 0 150 ${plotH + pad + 8}`} aria-hidden>
+      <text x="36" y="16" textAnchor="middle" fill={pal.cocuk} fontSize="13" fontWeight="800" letterSpacing="0.14em">cm</text>
+      <rect x="10" y={pad} width="48" height={plotH} rx="10" fill={pal.olcer} stroke={pal.olcerCizgi} strokeWidth="1.6" />
       <rect
         x="10"
         y={Math.min(yAlt, yUst)}
-        width="52"
+        width="48"
         height={Math.max(10, Math.abs(yAlt - yUst))}
         fill={pal.cocuk}
         opacity="0.38"
       />
       {minors.map((c) => (
-        <line key={c} x1="10" x2="30" y1={y(c)} y2={y(c)} stroke={pal.olcerCizgi} strokeWidth="1.2" opacity="0.4" />
+        <line key={c} x1="10" x2="28" y1={y(c)} y2={y(c)} stroke={pal.olcerCizgi} strokeWidth="1.2" opacity="0.4" />
       ))}
       {majors.map((c) => (
         <g key={c}>
-          <line x1="10" x2="62" y1={y(c)} y2={y(c)} stroke={pal.olcerCizgi} strokeWidth="2" />
-          <text x="70" y={y(c) + 6} fill={sayi} fontSize="17" fontWeight="800">{c}</text>
+          <line x1="10" x2="58" y1={y(c)} y2={y(c)} stroke={pal.olcerCizgi} strokeWidth="2" />
+          <text x="64" y={y(c) + 6} fill={sayi} fontSize="16" fontWeight="800">{c}</text>
         </g>
       ))}
-      <line x1="10" x2="64" y1={yHedef} y2={yHedef} stroke={pal.cocuk} strokeWidth="3.2" />
-      <polygon points={`64,${yHedef} 78,${yHedef - 8} 78,${yHedef + 8}`} fill={pal.cocuk} />
-      <text x="82" y={yHedef - 10} fill={pal.cocuk} fontSize="12" fontWeight="800">hedef</text>
+      <line x1="10" x2="58" y1={yHedef} y2={yHedef} stroke={pal.cocuk} strokeWidth="3.2" />
+      <polygon points={`58,${yHedef} 72,${yHedef - 7} 72,${yHedef + 7}`} fill={pal.cocuk} />
+      <text x="100" y={yHedef + 5} fill={pal.cocuk} fontSize="12" fontWeight="800">hedef</text>
     </svg>
   )
 }
 
 function Figur({
-  src, cm, cmMax, label, accent, highlight, soluk,
+  src, cm, cmMax, plotH, label, accent, highlight, soluk,
 }: {
   src: string
   cm: number
   cmMax: number
+  plotH: number
   label: string
   accent: string
   highlight?: boolean
   soluk: string
 }) {
-  const h = hCm(cm, cmMax, MAX_FIGUR_PX)
+  const h = hCm(cm, cmMax, plotH)
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32%', minWidth: 90 }}>
       {highlight && (
@@ -168,20 +174,21 @@ export function HedefBoyManken({
   const maxCm = Math.max(sonuc.anneCm, sonuc.babaCm, sonuc.cocukCm, sonuc.ustCm)
   const cmMin = 140
   const cmMax = Math.max(190, Math.ceil((maxCm + 8) / 5) * 5)
+  const plotH = plotHFor(cmMax)
   const kiz = sonuc.cinsiyet === 'kiz'
   const cocukSrc = kiz ? KARAKTER.kiz : KARAKTER.erkek
   const cocukLabel = kiz ? 'Kız' : 'Erkek'
 
   return (
     <figure style={{ margin: 0, borderRadius: 22, overflow: 'hidden', ...SAHNE[tema], ...style, position: 'relative' }} data-hedef-boy="manken" data-cinsiyet={sonuc.cinsiyet}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, padding: '22px 14px 8px 4px', minHeight: 420 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, padding: '22px 14px 8px 4px', minHeight: plotH + 88 }}>
         <div style={{ flexShrink: 0, paddingBottom: 54 }}>
-          <Olcer cmMin={cmMin} cmMax={cmMax} plotH={MAX_FIGUR_PX} alt={sonuc.altCm} ust={sonuc.ustCm} hedef={sonuc.cocukCm} tema={tema} />
+          <Olcer cmMin={cmMin} cmMax={cmMax} plotH={plotH} alt={sonuc.altCm} ust={sonuc.ustCm} hedef={sonuc.cocukCm} tema={tema} />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', minWidth: 0 }}>
-          <Figur src={KARAKTER.baba} cm={sonuc.babaCm} cmMax={cmMax} label="Baba" accent="#8EC8EA" soluk={pal.soluk} />
-          <Figur src={cocukSrc} cm={sonuc.cocukCm} cmMax={cmMax} label={cocukLabel} accent={pal.cocuk} soluk={pal.soluk} highlight />
-          <Figur src={KARAKTER.anne} cm={sonuc.anneCm} cmMax={cmMax} label="Anne" accent="#E7A4B0" soluk={pal.soluk} />
+          <Figur src={KARAKTER.baba} cm={sonuc.babaCm} cmMax={cmMax} plotH={plotH} label="Baba" accent="#8EC8EA" soluk={pal.soluk} />
+          <Figur src={cocukSrc} cm={sonuc.cocukCm} cmMax={cmMax} plotH={plotH} label={cocukLabel} accent={pal.cocuk} soluk={pal.soluk} highlight />
+          <Figur src={KARAKTER.anne} cm={sonuc.anneCm} cmMax={cmMax} plotH={plotH} label="Anne" accent="#E7A4B0" soluk={pal.soluk} />
         </div>
       </div>
       <div aria-hidden style={{
