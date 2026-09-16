@@ -5,6 +5,7 @@
  * Photos from core görüntüleme (coreImageId only). Dual-sign drafts are not diagnoses.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { DermSpine } from '@/specialties/dermatoloji/ui/DermSpine'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { cinsiyetGop } from '@/lib/utils/cinsiyet'
 import { yasYilKesir } from '@/lib/doktor/hastaDosyaSekmeleri'
@@ -304,6 +305,8 @@ export default function HastaDermatoloji({
         onOnay={(r) => kaydet({ action: 'vision', id: r.id, onay: true }, 'Uzman onaylandı.')}
       />
 
+      {/* NOTYA-DERM-02: eksik paket — ABCDE/resmi tanı, işlemler, ilaç güvenliği, pediatrik, kozmetik (kapalı) */}
+      <DermSpine patientId={patientId} />
       {payload && (
         <>
           <StickyDermStrip

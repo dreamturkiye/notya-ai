@@ -98,6 +98,14 @@ export const KANONIK = {
   antiCCP: { tr: 'Anti-CCP', loinc: '33935-8', birim: 'U/mL', aliases: a('anti-ccp', 'anti ccp', 'ccp') },
   IgE: { tr: 'Total IgE', loinc: '19113-0', birim: 'IU/mL', aliases: a('ige', 'total ige') },
   Li: { tr: 'Lityum', loinc: '14334-7', birim: 'mmol/L', donusum: { 'mEq/L': 1 }, kritik: { yuksek: 1.5 }, aliases: a('lityum', 'lithium') },
+  // NOTYA-DERM-02: biyolojik başlama taraması (metin sonuçlar; kritik değil)
+  IGRA: { tr: 'IGRA (Quantiferon)', loinc: '71773-6', birim: 'metin', aliases: a('igra', 'quantiferon', 'quantiferon-tb', 'tb gold', 't-spot', 'interferon gama') },
+  HBsAg: { tr: 'HBsAg', loinc: '5195-3', birim: 'metin', aliases: a('hbsag', 'hbs ag', 'hepatit b yüzey antijeni') },
+  AntiHBs: { tr: 'Anti-HBs', loinc: '10900-9', birim: 'mIU/mL', aliases: a('anti-hbs', 'anti hbs', 'antihbs', 'hbs antikor') },
+  AntiHBc: { tr: 'Anti-HBc total', loinc: '13952-7', birim: 'metin', aliases: a('anti-hbc', 'anti hbc', 'antihbc', 'anti-hbc total', 'hbc total') },
+  AntiHCV: { tr: 'Anti-HCV', loinc: '13955-0', birim: 'metin', aliases: a('anti-hcv', 'anti hcv', 'antihcv', 'hcv antikor') },
+  HIV: { tr: 'HIV Ag/Ab', loinc: '56888-1', birim: 'metin', aliases: a('hiv', 'anti-hiv', 'hiv ag/ab', 'hiv 1/2', 'hiv combo') },
+  PPD: { tr: 'PPD (tüberkülin)', loinc: '10402-6', birim: 'mm', aliases: a('ppd', 'tüberkülin', 'mantoux') },
   VPA: { tr: 'Valproat düzeyi', loinc: '4086-5', birim: 'µg/mL', donusum: { 'mg/L': 1 }, aliases: a('valproat', 'valproik asit', 'vpa') },
 } as const satisfies Record<string, KanonikTanim>
 
