@@ -9,7 +9,7 @@ export function getSandboxSupabase(): SupabaseClient {
     if (!url || !key) {
       throw new Error('Supabase credentials missing')
     }
-    client = createClient(url, key)
+    client = createClient(url, key, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
   }
   return client
 }

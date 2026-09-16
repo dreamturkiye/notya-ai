@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
     }
     const token = auth.slice(7)
-    const sb = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
+    const sb = createClient(supabaseUrl, serviceKey, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) }, auth: { persistSession: false } })
     const { data: { user }, error: authErr } = await sb.auth.getUser(token)
     if (authErr || !user) {
       return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })

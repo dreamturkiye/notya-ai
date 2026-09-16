@@ -39,7 +39,10 @@ Kaan RESEND_API_KEY sağlarsa (Resend ücretsiz katmanı yeterli) ve/veya Supaba
 https://notya-ai.vercel.app eklerse, gerçek self-servis "şifremi unuttum → e-posta → link → yeni
 şifre" akışı bir oturumda kurulabilir.
 
-## Open — bayat Supabase fetch taraması eksik kalmış (2026-09-14, canlı testte bulundu)
+## CLOSED — bayat Supabase fetch taraması (opened 2026-09-14, closed 2026-09-16)
+
+**CLOSED 2026-09-16 (PR fix/no-store-sweep-2):** `scripts/codemod-no-store.mjs` (bracket-matching codemod, idempotent) wrapped the remaining 41 raw `createClient(...)` calls under app/api + lib with `cache: 'no-store'` (merged into existing `global`/`auth` option objects where present, 0 manual). Its `--check` mode runs in `npm test` as `lib/supabase/noStore.test.ts`, so any future raw client without no-store fails CI. Rule stands: prefer the shared no-store client; if a raw client is unavoidable the guard forces the option.
+
 
 PR #170 (2026-09-10) 34 dosyada ham `createClient(...)` çağrılarına `cache: 'no-store'` sardı,
 ama arama deseni yalnız `createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, ...)` şeklindeki

@@ -35,7 +35,7 @@ export async function executeAction(
 ): Promise<ActionResult> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey
+    serviceKey, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
   )
 
   switch (action.type) {

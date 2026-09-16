@@ -20,7 +20,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
     }
     const token = authHeader.split(' ')[1]
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
+      global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }), headers: { Authorization: `Bearer ${token}` } },
     })
 
     const {
