@@ -164,7 +164,7 @@ export function JinekolojiWowSekmeler({
           </select>
           <input value={s('crl')} onChange={(e) => set('crl', e.target.value)} placeholder="CRL/biyometri" style={{ ...toolsInput, width: 120 }} />
           <input value={s('not')} onChange={(e) => set('not', e.target.value)} placeholder="hekim notu" style={{ ...toolsInput, minWidth: 180 }} />
-          <button type="button" disabled={!s('usg')} onClick={() => calistir({ adim: 'usg_rapor', sablon: s('usg') as UsgSablonKod, olcumler: { CRL: s('crl'), 'CRL': s('crl') }, hekimNotu: s('not') }, 'Rapor taslağı kaydedildi.')} style={btn}>Rapor üret</button>
+          <button type="button" disabled={!s('usg')} onClick={() => calistir({ adim: 'usg_rapor', sablon: s('usg') as UsgSablonKod, olcumler: { CRL: s('crl') }, hekimNotu: s('not') }, 'Rapor taslağı kaydedildi.')} style={btn}>Rapor üret</button>
         </div>
         {son?.baslik && (
           <div style={{ marginTop: 8, fontSize: 12, color: '#EDF1F7' }}>
