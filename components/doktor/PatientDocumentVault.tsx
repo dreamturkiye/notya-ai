@@ -96,6 +96,8 @@ export default function PatientDocumentVault({ patientId }: { patientId: string 
               <span style={{ fontSize: 11, color: '#8FA0B5' }}>{d.category || d.fileType}</span>
               {/* NOTYA-BELGE-01: multi-engine AI draft report for this document */}
               <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Asistana raporla</a>
+              {/* NOTYA-LAB-01: lab table → trend → report */}
+              {(d.fileType === 'application/pdf' || d.fileType.startsWith('image/') || /csv|excel|spreadsheet/.test(d.fileType)) && <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}/lab`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Lab</a>}
             </button>
           ))}
         </div>

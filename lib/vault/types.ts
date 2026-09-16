@@ -49,6 +49,10 @@ export const VAULT_ALLOWED_MIME = [
   'audio/aac',
   'audio/webm',
   'audio/ogg',
+  // NOTYA-LAB-01: laboratuvar tabloları (CSV/XLSX)
+  'text/csv',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ] as const
 
 export type VaultAllowedMime = (typeof VAULT_ALLOWED_MIME)[number]
