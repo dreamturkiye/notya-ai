@@ -151,6 +151,7 @@ export interface PortalBundle {
   tracking: PortalTracking
   buyume: PortalBuyume | null
   gebelik: PortalGebelik | null
+  jinekoloji: PortalJinekoloji | null
   hedefBoy: PortalHedefBoy | null
 }
 
@@ -161,4 +162,11 @@ export interface PortalGebelik {
   takvim: Array<{ no: number; etiket: string; haftaBas: number; haftaSon: number; durum: string; maddeler: string[] }>
   sonIzlem: { tarih: string; hafta: number; kilo: number | null; fetalKalpAtimi: number | null } | null
   buHafta: string[]
+}
+
+/** NOTYA-JINE-04 — hasta portalı jinekoloji hatırlatmaları (tanı/yorum yok). */
+export interface PortalJinekoloji {
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  riaIpKontrol: string | null
+  not: string
 }

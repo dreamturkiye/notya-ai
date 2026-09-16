@@ -99,7 +99,16 @@ export function hrtOnDegerlendirme(h: HrtOnKontrol): { engeller: string[]; uyari
 export const HRT_YILLIK_GOREVLER = ['Mamografi', 'TVUS endometriyum', 'Tansiyon', 'VTE semptom sorgusu', 'Meme muayenesi', 'Lipid/glukoz']
 
 // ---------- Infertility step 1 (stop at sevk) ----------
-export const INFERTILITE_ADIM1 = ['Deneme süresi (≥12 ay; ≥35 yaş için 6 ay)', 'AMH', 'TSH, PRL', 'Semen analizi (sevk)', 'HSG (stub)', 'Siklus takibi / ovulasyon', 'IVF merkeze sevk (Notya burada durur)']
+export const INFERTILITE_ADIM1 = [
+  'Deneme süresi (≥12 ay; ≥35 yaş için 6 ay)',
+  'AMH',
+  'TSH, PRL',
+  'Semen analizi (partner sevk)',
+  'HSG / SIS / 3D kavite + sonuç kaydı',
+  'Siklus takibi / ovulasyon',
+  'Bazal TVUS (AFC, endometrioma)',
+  'ÜYTE/IVF merkezine sevk paketi (Notya burada durur)',
+]
 
 // ---------- Red flags ----------
 export function kirmiziBayraklar(g: { bhcgPozitif?: boolean; agri?: boolean; kanama?: boolean; ates?: boolean; servikalHassasiyet?: boolean; postmenopozKanama?: boolean }): { kod: string; mesaj: string }[] {

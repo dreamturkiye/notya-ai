@@ -29,6 +29,7 @@ export function emptyPortalBundle(): PortalBundle {
     },
     buyume: null,
     gebelik: null,
+    jinekoloji: null,
     hedefBoy: null,
   }
 }

@@ -405,6 +405,38 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] gebelik:', e) }
 
+  // NOTYA-JINE-04 — Pap/HPV/RİA due reminders (no diagnosis)
+  try {
+    const { dueHesapla } = await import('@/specialties/kadin-dogum/engines/jinekoloji-spine')
+    const { data: ks } = await sb.from('kadin_sagligi').select('son_pap, son_hpv, son_mamografi, son_dxa, son_kolorektal, hrt, hrt_baslangic, histerektomi').eq('patient_id', patientId).maybeSingle()
+    const { data: kontr } = await sb.from('kontrasepsiyon').select('yontem, baslangic, ria_notu, aktif').eq('patient_id', patientId).eq('aktif', true).maybeSingle()
+    const { data: hastaRow } = await sb.from('patients').select('dob_encrypted, gender').eq('id', patientId).maybeSingle()
+    let dob: string | null = null
+    try { dob = hastaRow?.dob_encrypted ? decrypt(String(hastaRow.dob_encrypted)).slice(0, 10) : null } catch { dob = null }
+    const gender = String(hastaRow?.gender || '').toLowerCase()
+    if (gender.includes('kadın') || gender.includes('kadin') || gender.includes('female') || gender === 'f' || ks) {
+      const bugun = new Date().toISOString().slice(0, 10)
+      const ria = kontr && String(kontr.yontem).startsWith('ria_') ? (String(kontr.yontem).slice(4) as 'cu5' | 'cu10' | 'lng5' | 'lng8') : null
+      const due = dueHesapla({
+        dob, bugun,
+        sonPap: ks?.son_pap || null, sonHpv: ks?.son_hpv || null, sonMamografi: ks?.son_mamografi || null,
+        sonDxa: ks?.son_dxa || null, sonGgk: ks?.son_kolorektal || null, hrt: !!ks?.hrt, hrtBaslangic: ks?.hrt_baslangic || null,
+        riaTakildi: ria && kontr?.baslangic ? String(kontr.baslangic) : null, riaTipi: ria, histerektomi: !!ks?.histerektomi, gebe: !!bundle.gebelik,
+      })
+      const hat = due.filter((d) => d.kod === 'pap' || d.kod === 'hpv' || d.kod === 'ria' || d.kod === 'mamografi').map((d) => ({
+        ad: d.ad, due: d.due, durum: d.durum === 'gecikti' || d.durum === 'yaklasiyor' || d.durum === 'planli' ? d.durum : 'planli' as const,
+      }))
+      const riaIp = kontr?.ria_notu && typeof kontr.ria_notu === 'object' ? String((kontr.ria_notu as { ip_kontrol_tarihi?: string }).ip_kontrol_tarihi || '') || null : null
+      if (hat.length || riaIp) {
+        bundle.jinekoloji = {
+          hatirlatmalar: hat,
+          riaIpKontrol: riaIp,
+          not: 'Bu hatırlatmalar bilgilendirme amaçlıdır; sonuç ve plan doktorunuzdadır.',
+        }
+      }
+    }
+  } catch (e) { console.error('[portal] jinekoloji:', e) }
+
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId)
   bundle.messages = messages

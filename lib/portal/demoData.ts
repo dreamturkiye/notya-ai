@@ -4,6 +4,7 @@ import type { PortalBundle } from './types'
 export const SAGLIGIM_DEMO: PortalBundle = {
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
   gebelik: null,
+  jinekoloji: null,
   hedefBoy: null, // pediatri aracı — yetişkin demo portalında gösterilmez
   summary: {
     aktifIlac: 3,

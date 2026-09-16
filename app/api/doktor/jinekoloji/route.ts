@@ -24,7 +24,9 @@ import { bhcgSeriesTrend } from '@/specialties/kadin-dogum/protocols/gted-ektopi
 import { aubDegerlendir, pmpKapatilabilir, kokDegerlendir, endometriozisDegerlendir, rmDegerlendir, egkDegerlendir, REF_ACIKLAMA, type AubGirdi, type KokGirdi, type EndoGirdi, type RmGirdi, type EgkGirdi } from '@/specialties/kadin-dogum/engines/jinekoloji-v2'
 import { dueHesapla, serviksAksiyonu, partnerTedaviGerekli, ilkUlserKontrolListesi, akintiOnTani, hsvGebelikGorevleri, pcosDegerlendir, riaTakvimi, hrtOnDegerlendirme, HRT_YILLIK_GOREVLER, INFERTILITE_ADIM1, kirmiziBayraklar, YILLIK_KONTROL_ALANLARI, CYBH_ETKENLERI, type Etken, type PapSonuc, type HpvSonuc, type HsvKarti, type HrtOnKontrol } from '@/specialties/kadin-dogum/engines/jinekoloji-spine'
 import { flattenSoapAlanlar, jineSticky, normalizeSoap, ofisVizitOzet, soapFromVizitRow, taslakBugunkuVizit } from '@/specialties/kadin-dogum/engines/jine-ofis-vizit'
-
+import { cybhTedaviPlani, hsvSupresyon36hf } from '@/specialties/kadin-dogum/engines/cybh-tedavi'
+import { acilKontrasepsiyon, yontemMec, postpartumKontrasepsiyonBaslangic, type YontemKod } from '@/specialties/kadin-dogum/engines/kontrasepsiyon-mec'
+import { menorajiTedaviBasamagi, antiDKapaliDongu, usgRaporTaslagi, eDogumSihirbaz, csSavunmaPaketi, paketDurum, VARSAYILAN_PAKET, infertiliteSevkPaketi, urojinePopqHizli, onkolojiIotaTriyaj, siddetTarama, kokYillikGuvenlik, type AntiDTetik, type UsgSablonKod } from '@/specialties/kadin-dogum/engines/kd-klinik-wow'
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
 const ekleAy = (t: string, ay: number) => { const [y, m, d] = t.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + ay, d)).toISOString().slice(0, 10) }
@@ -296,6 +298,128 @@ export async function POST(req: NextRequest) {
     if (b.secenek) await gununNotunaEkle(sb, user.id, hasta.id, `Erken gebelik kaybı yönetimi (hekim): ${String(b.secenek)}`)
     return NextResponse.json({ ok: true })
   }
+
+  // ---------- JINE-04 / KD-05 wow sprint ----------
+  const wowKaydet = async (tur: string, veri: object) => {
+    await sb.from('kd_wow_kayitlari').insert({ patient_id: hasta.id, doctor_id: user.id, tur, veri })
+  }
+
+  if (adim === 'cybh_tedavi') {
+    const etkenler = (Array.isArray(b.etkenler) ? b.etkenler : []).map(String).filter((e) => (CYBH_ETKENLERI as readonly string[]).includes(e)) as Etken[]
+    const plan = cybhTedaviPlani(etkenler, { gebe: !!b.gebe })
+    await wowKaydet('cybh_tedavi', plan)
+    await gorevEkle(sb, user.id, hasta.id, [
+      ...plan.tocGorevleri.map((t) => ({ kod: `toc_${kisaKod(t)}`, ad: t, due: bugun(), kaynak: 'cybh' })),
+      ...(plan.partnerGerekli ? [{ kod: 'partner_rx', ad: 'Partner tedavi notu / bilgilendirme', due: bugun(), kaynak: 'partner' }] : []),
+      ...plan.naatOner.map((n) => ({ kod: `naat_${n.kod}`, ad: `NAAT: ${n.ad} (${n.ornek})`, due: bugun(), kaynak: 'cybh' })),
+    ])
+    if (b.partnerYazdir) await gununNotunaEkle(sb, user.id, hasta.id, plan.yazdirilabilirPartner.slice(0, 1500))
+    return NextResponse.json({ ok: true, plan })
+  }
+  if (adim === 'acil_kb') {
+    const plan = acilKontrasepsiyon({ iliskiSaatOnce: b.iliskiSaatOnce == null || b.iliskiSaatOnce === '' ? null : Number(b.iliskiSaatOnce), emziriyor: !!b.emziriyor, kokKullanıyor: !!b.kokKullanıyor })
+    await wowKaydet('acil_kb', plan)
+    await gorevEkle(sb, user.id, hasta.id, plan.sonrasi.map((s) => ({ kod: `ecil_${kisaKod(s)}`, ad: s, due: bugun(), kaynak: 'acil_kb' })))
+    return NextResponse.json({ ok: true, plan })
+  }
+  if (adim === 'yontem_mec') {
+    const k = (b.kontrol || {}) as Record<string, unknown>
+    const num = (v: unknown) => (v == null || v === '' ? null : Number(v))
+    const sonuc = yontemMec(String(b.yontem || 'kok') as YontemKod, {
+      yas: yasHesap(), sigaraGunluk: num(k.sigaraGunluk), vteOykusu: !!k.vteOykusu, migrenAura: !!k.migrenAura,
+      taSistolik: num(k.taSistolik), taDiastolik: num(k.taDiastolik), memeCa: !!k.memeCa, karacigerAgir: !!k.karacigerAgir,
+      postpartumGun: num(k.postpartumGun), emziriyor: !!k.emziriyor, pidAktif: !!k.pidAktif, aciklanmamisKanama: !!k.aciklanmamisKanama,
+      bmi: num(k.bmi), gebelikSupheli: !!k.gebelikSupheli,
+    })
+    await wowKaydet('yontem_mec', sonuc)
+    return NextResponse.json({ ok: true, sonuc })
+  }
+  if (adim === 'postpartum_kb') {
+    const liste = postpartumKontrasepsiyonBaslangic(Number(b.postpartumGun) || 42, !!b.emziriyor)
+    await wowKaydet('postpartum_kb', { liste })
+    return NextResponse.json({ ok: true, liste })
+  }
+  if (adim === 'menoraji_tedavi') {
+    const g = (b.girdi || {}) as Record<string, unknown>
+    const plan = menorajiTedaviBasamagi({
+      menoraji: !!g.menoraji, anemi: (String(g.anemi || 'bilinmiyor') as 'yok' | 'hafif' | 'orta' | 'agir' | 'bilinmiyor'),
+      gebelikIstegi: !!g.gebelikIstegi, myomBozucu: !!g.myomBozucu, adenomyozis: !!g.adenomyozis,
+      medikalBasarisiz: !!g.medikalBasarisiz, orneklemeSonucRiskli: !!g.orneklemeSonucRiskli,
+    })
+    await wowKaydet('menoraji', plan)
+    await gorevEkle(sb, user.id, hasta.id, plan.basamaklar.filter((x) => x.uygun && x.sira <= 2).map((x) => ({ kod: `hmb_${x.sira}`, ad: `HMB: ${x.baslik}`, due: bugun(), kaynak: 'aub' })))
+    return NextResponse.json({ ok: true, plan })
+  }
+  if (adim === 'usg_rapor') {
+    const rapor = usgRaporTaslagi(String(b.sablon || 'dating') as UsgSablonKod, (b.olcumler || {}) as Record<string, string>, b.hekimNotu ? String(b.hekimNotu) : undefined)
+    await wowKaydet('usg', rapor)
+    await gununNotunaEkle(sb, user.id, hasta.id, `${rapor.baslik}\n${rapor.govde}`.slice(0, 2000))
+    return NextResponse.json({ ok: true, rapor })
+  }
+  if (adim === 'anti_d_loop') {
+    const plan = antiDKapaliDongu({
+      rhNegatif: !!b.rhNegatif, partnerRhPozitifVeyaBilinmiyor: !!b.partnerRhPozitifVeyaBilinmiyor,
+      indirektCoombsNegatif: b.indirektCoombsNegatif !== false, tetikler: (Array.isArray(b.tetikler) ? b.tetikler : []) as AntiDTetik[],
+      antenatalYapildi: !!b.antenatalYapildi, postpartumYapildi: !!b.postpartumYapildi,
+    })
+    await wowKaydet('anti_d', plan)
+    await gorevEkle(sb, user.id, hasta.id, plan.gorevler.map((g) => ({ kod: g.kod, ad: g.ad, due: bugun(), kaynak: 'anti_d' })))
+    return NextResponse.json({ ok: true, plan })
+  }
+  if (adim === 'e_dogum') {
+    const paket = eDogumSihirbaz((b.payload || {}) as Record<string, unknown>)
+    await wowKaydet('e_dogum', paket)
+    return NextResponse.json({ ok: true, paket })
+  }
+  if (adim === 'paket') {
+    const kul = (b.kullanilan || {}) as Record<string, number>
+    const kotalar = VARSAYILAN_PAKET.map((k) => ({ ...k, kullanilan: Number(kul[k.kod] || 0) }))
+    const durum = paketDurum(kotalar)
+    await wowKaydet('paket', durum)
+    return NextResponse.json({ ok: true, durum })
+  }
+  if (adim === 'cs_savunma') {
+    const paket = csSavunmaPaketi(Array.isArray(b.endikasyonlar) ? b.endikasyonlar.map(String) : [], b.kararAt ? String(b.kararAt) : null, !!b.fetalDistres)
+    await wowKaydet('cs', paket)
+    if (paket.metin) await gununNotunaEkle(sb, user.id, hasta.id, paket.metin.slice(0, 1500))
+    return NextResponse.json({ ok: true, paket })
+  }
+  if (adim === 'urojine') {
+    const kart = urojinePopqHizli({ stresInkontinans: !!b.stresInkontinans, sikilik: !!b.sikilik, prolapsusSikayet: !!b.prolapsusSikayet, residual: b.residual == null || b.residual === '' ? null : Number(b.residual) })
+    await wowKaydet('urojine', kart)
+    await gorevEkle(sb, user.id, hasta.id, kart.gorevler.map((g) => ({ kod: `uro_${kisaKod(g)}`, ad: g, due: bugun(), kaynak: 'urojine' })))
+    return NextResponse.json({ ok: true, kart })
+  }
+  if (adim === 'onkoloji_iota') {
+    const kart = onkolojiIotaTriyaj({ kistSolid: !!b.kistSolid, asit: !!b.asit, papiller: !!b.papiller, dopplerGuclu: !!b.dopplerGuclu, ca125: b.ca125 == null || b.ca125 === '' ? null : Number(b.ca125), menopoz: !!b.menopoz })
+    await wowKaydet('onkoloji', kart)
+    if (kart.sevk) await gorevEkle(sb, user.id, hasta.id, [{ kod: 'onk_sevk', ad: `Over kitle IOTA ${kart.risk} — onkolojik jinekoloji sevk`, due: bugun(), kaynak: 'onkoloji' }])
+    return NextResponse.json({ ok: true, kart })
+  }
+  if (adim === 'infertilite_sevk') {
+    const paket = infertiliteSevkPaketi(Array.isArray(b.tamamlanan) ? b.tamamlanan.map(String) : [])
+    await wowKaydet('infertilite', paket)
+    return NextResponse.json({ ok: true, paket })
+  }
+  if (adim === 'siddet') {
+    const kart = siddetTarama(b.evet === true ? true : b.evet === false ? false : null)
+    await wowKaydet('siddet', kart)
+    await gorevEkle(sb, user.id, hasta.id, kart.gorevler.map((g) => ({ kod: `sid_${kisaKod(g)}`, ad: g, due: bugun(), kaynak: 'siddet' })))
+    return NextResponse.json({ ok: true, kart })
+  }
+  if (adim === 'kok_yillik') {
+    const bas = String(b.baslangic || bugun()).slice(0, 10)
+    const kart = kokYillikGuvenlik(bas, bugun())
+    await wowKaydet('kok_yillik', kart)
+    await gorevEkle(sb, user.id, hasta.id, [{ kod: 'kok_yillik', ad: `KOK yıllık güvenlik: ${kart.maddeler.join(', ')}`, due: kart.due, kaynak: 'kok' }])
+    return NextResponse.json({ ok: true, kart })
+  }
+  if (adim === 'hsv_36') {
+    const gorevler = hsvSupresyon36hf(b.tip === 'hsv1' || b.tip === 'hsv2' ? b.tip : null)
+    await gorevEkle(sb, user.id, hasta.id, gorevler.map((g) => ({ kod: `hsv36_${kisaKod(g)}`, ad: g, due: null, kaynak: 'hsv' })))
+    return NextResponse.json({ ok: true, gorevler })
+  }
+
   return NextResponse.json({ error: 'Geçersiz adim' }, { status: 400 })
 }
 
@@ -319,17 +443,24 @@ export async function GET(req: NextRequest) {
     sb.from('jine_vizitler').select('id, tur, alanlar, soap, kontrol_tarihi, kontrol_neden, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(8),
     aktifGebeMi(sb, hasta.id),
   ])
-  const [aub, kok, endo, rm, egk] = await Promise.all([
+  const [aub, kok, endo, rm, egk, wowRows] = await Promise.all([
     sb.from('jine_aub').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
     sb.from('jine_kok').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
     sb.from('jine_endometriozis').select('*').eq('patient_id', hasta.id).maybeSingle(),
     sb.from('jine_rm').select('*').eq('patient_id', hasta.id).maybeSingle(),
     sb.from('jine_egk').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
+    sb.from('kd_wow_kayitlari').select('tur, veri, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(40),
   ])
   let vizitSatirlari: Array<{ id?: string; tur?: string; alanlar?: Record<string, unknown> | null; soap?: unknown; kontrol_tarihi?: string | null; kontrol_neden?: string | null; created_at?: string }> = vizitler.data || []
   if (vizitler.error) {
     const tekrar = await sb.from('jine_vizitler').select('id, tur, alanlar, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(8)
     vizitSatirlari = tekrar.data || []
+  }
+  const wowMap: Record<string, unknown> = {}
+  const usg: unknown[] = []
+  for (const row of wowRows.data || []) {
+    if (row.tur === 'usg') usg.push(row.veri)
+    else if (!(row.tur in wowMap)) wowMap[row.tur] = row.veri
   }
   const k = ks.data as Record<string, unknown> | null
   const aktifKontr = (kontr.data || []).find((x) => x.aktif) || null
@@ -339,5 +470,30 @@ export async function GET(req: NextRequest) {
   const sonSoap = soapFromVizitRow(vizitSatirlari[0] as { soap?: unknown; alanlar?: Record<string, unknown> | null; kontrol_tarihi?: string | null; kontrol_neden?: string | null } | undefined)
   const taslak = taslakBugunkuVizit({ sonSoap, kadinSagligi: k, due, kontrasepsiyon: aktifKontr ? String(aktifKontr.yontem) : (k?.kontrasepsiyon_yontemi as string) || null })
   const sticky = jineSticky({ lmp: taslak.hikaye.lmp, yas, kontrasepsiyon: taslak.hikaye.kontrasepsiyon, due, sonrakiKontrol: taslak.kontrol.tarih, gebe })
-  return NextResponse.json({ kadinSagligi: k, due, serviks: serviks.data || [], cybh: cybh.data || [], pcos: pcos.data, lezyonlar: lezyonlar.data || [], kontrasepsiyon: kontr.data || [], hrt: hrt.data, gorevler: gorevler.data || [], vizitler: vizitSatirlari, gebe, yas, taslak, sticky, v2: { aub: aub.data || [], kok: kok.data || [], endo: endo.data, rm: rm.data, egk: egk.data || [] }, kutuphane: { etkenler: CYBH_ETKENLERI, hrtYillik: HRT_YILLIK_GOREVLER, infertilite: INFERTILITE_ADIM1, vizitAlanlari: YILLIK_KONTROL_ALANLARI, refler: REF_ACIKLAMA } })
+  const acilBundle = {
+    ...(typeof wowMap.acil_kb === 'object' && wowMap.acil_kb ? wowMap.acil_kb as object : {}),
+    mec: wowMap.yontem_mec || null,
+    postpartum: (wowMap.postpartum_kb as { liste?: unknown })?.liste || null,
+  }
+  return NextResponse.json({
+    kadinSagligi: k, due, serviks: serviks.data || [], cybh: cybh.data || [], pcos: pcos.data, lezyonlar: lezyonlar.data || [],
+    kontrasepsiyon: kontr.data || [], hrt: hrt.data, gorevler: gorevler.data || [], vizitler: vizitSatirlari, gebe, yas, taslak, sticky,
+    v2: { aub: aub.data || [], kok: kok.data || [], endo: endo.data, rm: rm.data, egk: egk.data || [] },
+    wow: {
+      cybhTedavi: wowMap.cybh_tedavi || null,
+      acil: Object.keys(acilBundle).length ? acilBundle : null,
+      menoraji: wowMap.menoraji || null,
+      usg,
+      antiD: wowMap.anti_d || null,
+      eDogum: wowMap.e_dogum || null,
+      paket: wowMap.paket || null,
+      cs: wowMap.cs || null,
+      urojine: wowMap.urojine || null,
+      onkoloji: wowMap.onkoloji || null,
+      infertilite: wowMap.infertilite || null,
+      siddet: wowMap.siddet || null,
+      kokYillik: wowMap.kok_yillik || null,
+    },
+    kutuphane: { etkenler: CYBH_ETKENLERI, hrtYillik: HRT_YILLIK_GOREVLER, infertilite: INFERTILITE_ADIM1, vizitAlanlari: YILLIK_KONTROL_ALANLARI, refler: REF_ACIKLAMA },
+  })
 }

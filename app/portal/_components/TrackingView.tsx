@@ -11,6 +11,7 @@ import type { PortalBundle } from '@/lib/portal/types'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
 import { BuyumeEgrileriView } from './BuyumeEgrileriView'
 import { GebeligimView } from './GebeligimView'
+import { JinekolojiPortalView } from './JinekolojiPortalView'
 import { HedefBoyAileKart } from '@/components/hedefBoy/HedefBoyManken'
 
 type Nokta = { tarih: string; deger: number }
@@ -253,6 +254,7 @@ export function TrackingView({ data }: { data: PortalBundle }) {
         </>
       ) : null}
       {data.gebelik && <GebeligimView gebelik={data.gebelik} />}
+      {data.jinekoloji && <JinekolojiPortalView jine={data.jinekoloji} />}
       {data.buyume && <BuyumeEgrileriView buyume={data.buyume} />}
     </div>
   )
