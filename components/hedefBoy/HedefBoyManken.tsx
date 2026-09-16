@@ -47,12 +47,13 @@ const SAHNE: Record<Tema, CSSProperties> = {
 
 const MAX_FIGUR_PX = 340
 
-function yCm(cm: number, cmMin: number, cmMax: number, plotH: number) {
-  return ((cmMax - cm) / (cmMax - cmMin)) * plotH
+/** Scale from the floor. Mapping 140→0px made a 165 cm mother look like a child. */
+function yCm(cm: number, cmMax: number, plotH: number) {
+  return plotH * (1 - cm / cmMax)
 }
 
-function hCm(cm: number, cmMin: number, cmMax: number, plotH: number) {
-  return Math.max(96, ((cm - cmMin) / (cmMax - cmMin)) * plotH)
+function hCm(cm: number, cmMax: number, plotH: number) {
+  return plotH * (cm / cmMax)
 }
 
 function Olcer({
@@ -68,7 +69,7 @@ function Olcer({
 }) {
   const pal = T[tema]
   const pad = 24
-  const y = (cm: number) => pad + yCm(cm, cmMin, cmMax, plotH)
+  const y = (cm: number) => pad + yCm(cm, cmMax, plotH)
   const majors: number[] = []
   const minors: number[] = []
   for (let c = Math.ceil(cmMin / 5) * 5; c <= cmMax; c += 5) {
@@ -108,18 +109,17 @@ function Olcer({
 }
 
 function Figur({
-  src, cm, cmMin, cmMax, label, accent, highlight, soluk,
+  src, cm, cmMax, label, accent, highlight, soluk,
 }: {
   src: string
   cm: number
-  cmMin: number
   cmMax: number
   label: string
   accent: string
   highlight?: boolean
   soluk: string
 }) {
-  const h = hCm(cm, cmMin, cmMax, MAX_FIGUR_PX)
+  const h = hCm(cm, cmMax, MAX_FIGUR_PX)
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32%', minWidth: 90 }}>
       {highlight && (
@@ -165,9 +165,8 @@ export function HedefBoyManken({
   ornek?: boolean
 }) {
   const pal = T[tema]
-  const minGercek = Math.min(sonuc.anneCm, sonuc.babaCm, sonuc.cocukCm)
   const maxCm = Math.max(sonuc.anneCm, sonuc.babaCm, sonuc.cocukCm, sonuc.ustCm)
-  const cmMin = Math.min(140, Math.floor(minGercek / 5) * 5 - 5)
+  const cmMin = 140
   const cmMax = Math.max(190, Math.ceil((maxCm + 8) / 5) * 5)
   const kiz = sonuc.cinsiyet === 'kiz'
   const cocukSrc = kiz ? KARAKTER.kiz : KARAKTER.erkek
@@ -180,9 +179,9 @@ export function HedefBoyManken({
           <Olcer cmMin={cmMin} cmMax={cmMax} plotH={MAX_FIGUR_PX} alt={sonuc.altCm} ust={sonuc.ustCm} hedef={sonuc.cocukCm} tema={tema} />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', minWidth: 0 }}>
-          <Figur src={KARAKTER.baba} cm={sonuc.babaCm} cmMin={cmMin} cmMax={cmMax} label="Baba" accent="#8EC8EA" soluk={pal.soluk} />
-          <Figur src={cocukSrc} cm={sonuc.cocukCm} cmMin={cmMin} cmMax={cmMax} label={cocukLabel} accent={pal.cocuk} soluk={pal.soluk} highlight />
-          <Figur src={KARAKTER.anne} cm={sonuc.anneCm} cmMin={cmMin} cmMax={cmMax} label="Anne" accent="#E7A4B0" soluk={pal.soluk} />
+          <Figur src={KARAKTER.baba} cm={sonuc.babaCm} cmMax={cmMax} label="Baba" accent="#8EC8EA" soluk={pal.soluk} />
+          <Figur src={cocukSrc} cm={sonuc.cocukCm} cmMax={cmMax} label={cocukLabel} accent={pal.cocuk} soluk={pal.soluk} highlight />
+          <Figur src={KARAKTER.anne} cm={sonuc.anneCm} cmMax={cmMax} label="Anne" accent="#E7A4B0" soluk={pal.soluk} />
         </div>
       </div>
       <div aria-hidden style={{

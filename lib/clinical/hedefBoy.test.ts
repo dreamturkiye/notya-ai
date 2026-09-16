@@ -98,6 +98,8 @@ describe('hedefBoy (mid-parental height)', () => {
     assert.match(manken, /\/hedef-boy\/cocuk-erkek\.png/)
     assert.match(manken, /\/hedef-boy\/cocuk-kiz\.png/)
     assert.match(manken, /sonuc\.cinsiyet === 'kiz'/)
+    assert.match(manken, /cm \/ cmMax/)
+    assert.doesNotMatch(manken, /cm - cmMin/)
     const panel = readFileSync(join(root, 'components/hedefBoy/HedefBoyAracPaneli.tsx'), 'utf8')
     assert.match(panel, /HedefBoySahneBos tema="doktor" cinsiyet=\{cinsiyet\}/)
     for (const ad of ['baba', 'anne', 'cocuk-erkek', 'cocuk-kiz']) {
