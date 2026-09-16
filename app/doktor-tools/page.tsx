@@ -26,6 +26,7 @@ const tools: Tool[] = [
   { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali' },
   { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Format', desc: 'FHIR/Medula/USS paketleri — canlı bağlantı yok, format-hazır çıktı', route: '/doktor-tools/enabiz' },
+  { circleColor: '#7C3AED', icon: 'KD', title: 'KD / Jine Audit', desc: 'Post-sprint coverage board (Gökhan paylaşımı)', route: '/kd-jine-post-sprint-audit.html' },
 ];
 
 export default function DoktorToolsPage() {
