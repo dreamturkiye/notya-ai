@@ -1,18 +1,70 @@
 'use client';
 /**
- * NOTYA-KHD-01 (Kaan 2026-09-14) — Gebelik Takibi sekmesi. SB Doğum Öncesi Bakım Yönetim
- * Rehberi'nin 4 izlem takvimi üzerine; hesaplar sunucuda deterministik. Aşılar/M-CHAT ile aynı desen.
+ * NOTYA-KHD-01 + clinic-fit — visit-first Kadın Sağlığı & Gebelik.
+ * Live gebelik_* CRUD is truth; chapter engines consume recorded izlemler.
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HastaKdChapter from '@/components/doktor/HastaKdChapter';
 import { oncekiGebelikDurumMetni, oncekiGebelikEtiketTuru, oncekiGebelikleriFiltrele } from '@/lib/clinical/gebelikDurum';
+import StickyGebeStrip from '@/specialties/kadin-dogum/ui/StickyGebeStrip';
+import AktifIsler from '@/specialties/kadin-dogum/ui/AktifIsler';
+import IzlemChecklist from '@/specialties/kadin-dogum/ui/IzlemChecklist';
+import { KlinikTakvim, DualTakvimAccordion } from '@/specialties/kadin-dogum/ui/KlinikTakvim';
+import RiskFormu from '@/specialties/kadin-dogum/ui/RiskFormu';
+import VtePaneli from '@/specialties/kadin-dogum/ui/VtePaneli';
+import DestekAsiPaneli from '@/specialties/kadin-dogum/ui/DestekAsiPaneli';
+import LabPaneli from '@/specialties/kadin-dogum/ui/LabPaneli';
+import KararKartlari from '@/specialties/kadin-dogum/ui/KararKartlari';
+import SevkCta from '@/specialties/kadin-dogum/ui/SevkCta';
+import TehlikeIsaretleri from '@/specialties/kadin-dogum/ui/TehlikeIsaretleri';
+import InfertiliteStub from '@/specialties/kadin-dogum/ui/InfertiliteStub';
+import DualUyarilar from '@/specialties/kadin-dogum/ui/DualUyarilar';
+import NstStrip from '@/specialties/kadin-dogum/ui/NstStrip';
+import JinekolojiKart from '@/specialties/kadin-dogum/ui/JinekolojiKart';
+import KolposkopiGaleri from '@/specialties/kadin-dogum/ui/KolposkopiGaleri';
+import { kutu, giris, etiketS, btn, DURUM_RENK, DURUM_ETIKET } from '@/specialties/kadin-dogum/ui/clinic-styles';
+import {
+  aktifIzlemPenceresi,
+  buildIzlemCalendar,
+  completedSbIzlemNos,
+  markVisitsDone,
+} from '@/specialties/kadin-dogum/engines/izlem-calendar';
+import {
+  chapterCalendar,
+  chapterDoneIds,
+  chapterWindows,
+  colpoFromGoruntuleme,
+  payloadFromGebelikApi,
+  type LiveGebelikVeri,
+} from '@/lib/specialties/kadin-dogum-live';
+import {
+  dualClinicWarnings,
+  eksikLabKalemleri,
+  mapIdc,
+  mapPlurality,
+  nstShouldMount,
+  sevkFromClinic,
+  type ChecklistState,
+  type DestekAsiPanel,
+  type LabPanel,
+} from '@/specialties/kadin-dogum/engines/clinic-fit';
+import { gdmKarti, gbsKarti, peKarti, rhKarti } from '@/specialties/kadin-dogum/protocols/karar-kartlari';
+import { tehlikeDanismanlikMetni } from '@/specialties/kadin-dogum/protocols/tehlike';
 
 type Uyari = { seviye: 'kritik' | 'dikkat' | 'bilgi'; metin: string };
 type Pencere = { no: number; etiket: string; haftaBas: number; haftaSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' };
-type Izlem = { id: string; tarih: string; hafta: number; kilo: number | null; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; fundus_yuksekligi: number | null; fetal_kalp_atimi: number | null; proteinuri: string | null; usg: Record<string, string | number> | null; not_metni: string | null };
+type Izlem = { id: string; tarih: string; hafta: number; kilo: number | null; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; fundus_yuksekligi: number | null; fetal_kalp_atimi: number | null; proteinuri: string | null; usg: Record<string, string | number> | null; not_metni: string | null; checklist?: ChecklistState | null; ogtt?: unknown; gbs_kultur?: string | null };
+type Gebelik = {
+  id: string; sat: string | null; tdt: string; tdt_kaynak: string; gravida: number | null; para: number | null; abortus: number | null; yasayan: number | null;
+  olu_dogum?: number | null; ektopik?: number | null; cogul_gebelik_tipi?: string | null; risk_sinifi?: string | null;
+  risk_formu?: { maddeler?: string[] } | null; vte_formu?: { maddeler?: string[] } | null;
+  destek_asi?: DestekAsiPanel | null; lab_panel?: LabPanel | null; nst_kayitlari?: unknown;
+  indirekt_coombs?: unknown; anti_d_uygulamalari?: unknown;
+  kan_grubu: string | null; rh_negatif: boolean; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null;
+};
 type Veri = {
-  gebelik: { id: string; sat: string | null; tdt: string; tdt_kaynak: string; gravida: number | null; para: number | null; abortus: number | null; yasayan: number | null; kan_grubu: string | null; rh_negatif: boolean; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null } | null;
+  gebelik: Gebelik | null;
   izlemler: Izlem[]; gecmis: Array<{ id: string; sat?: string | null; tdt: string; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null }>;
   yas: { hafta: number; gun: number; trimester: number; metin: string; toplamGun: number } | null;
   takvim: Pencere[]; uyarilar: Uyari[]; kiloHedefi: { alt: number; ust: number; etiket: string } | null; gebelikOncesiVki: number | null;
@@ -20,20 +72,18 @@ type Veri = {
   lohusa?: { dogumSonrasiGun: number; izlemler: LohusaIzlem[]; takvim: Array<{ no: number; etiket: string; gunBas: number; gunSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' }> } | null;
   genetikTaramalar?: Array<{ id: string; tur: string; tarih: string; hafta: number | null; veri: Record<string, string | number | null>; ntDegerlendirme?: { bayrak: boolean; not: string } | null }>;
   ileriAnneYasi?: boolean | null;
+  kadinSagligi?: Record<string, string | number | null> | null;
+  sonrakiRandevu?: { id: string; baslangic: string; bitis: string } | null;
+  goruntulemeler?: Array<{ id: string; dosya_url?: string | null; vucut_bolgesi?: string | null; rapor_metni?: string | null; modalite?: string | null; goruntuleme_tarihi?: string | null }>;
+  onerilenSonrakiTarih?: string | null;
 };
 type Bio = { deger: number; p50: number; persentil: number; z: number; durum: 'dusuk' | 'normal' | 'yuksek' };
 type LohusaIzlem = { id: string; tarih: string; dogum_sonrasi_gun: number; tansiyon_sistolik: number | null; tansiyon_diastolik: number | null; kanama: string | null; emzirme: string | null; duygu_durumu: string | null; epds_puan: number | null };
+type Mod = 'klinik' | 'jinekoloji' | 'lohusa' | 'infertilite';
 
 const RENK = { kritik: '#EF4444', dikkat: '#F59E0B', bilgi: '#38BDF8' } as const;
-const DURUM_RENK = { tamamlandi: '#22C55E', zamani: '#F59E0B', gecikmis: '#EF4444', ileride: '#475569' } as const;
-const DURUM_ETIKET = { tamamlandi: 'Yapıldı', zamani: 'Zamanı', gecikmis: 'Gecikmiş', ileride: 'İleride' } as const;
 
-const kutu: React.CSSProperties = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: 16 };
-const giris: React.CSSProperties = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#EDF1F7', borderRadius: 8, padding: '8px 10px', fontSize: 13, width: '100%' };
-const etiketS: React.CSSProperties = { fontSize: 11.5, color: '#8FA0B5', marginBottom: 4, display: 'block' };
-const btn = (birincil = false): React.CSSProperties => ({ background: birincil ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: birincil ? 'white' : '#EDF1F7', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' });
-
-function trTarih(iso: string | null) { return iso ? new Date(iso).toLocaleDateString('tr-TR') : '—'; }
+function trTarih(iso: string | null | undefined) { return iso ? new Date(iso).toLocaleDateString('tr-TR') : '—'; }
 
 function yerelIsoTarih() {
   const n = new Date();
@@ -56,6 +106,15 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   const [lohusaAcik, setLohusaAcik] = useState(false);
   const [n, setN] = useState<Record<string, string>>({});
   const [genetikTurAcik, setGenetikTurAcik] = useState<'' | 'ikili' | 'uclu-dortlu' | 'nipt' | 'invazif'>('');
+  const [mod, setMod] = useState<Mod>('klinik');
+  const [checklist, setChecklist] = useState<ChecklistState>({});
+  const [riskMaddeler, setRiskMaddeler] = useState<string[]>([]);
+  const [vteMaddeler, setVteMaddeler] = useState<string[]>([]);
+  const [destekAsi, setDestekAsi] = useState<DestekAsiPanel>({});
+  const [labPanel, setLabPanel] = useState<LabPanel>({});
+  const [randevuOneri, setRandevuOneri] = useState<string | null>(null);
+  const [randevuSaat, setRandevuSaat] = useState('10:00');
+  const [nstForm, setNstForm] = useState({ tarih: yerelIsoTarih(), category: 'I', sure: '20', toco: false });
 
   const yukle = useCallback(async () => {
     setYukleniyor(true); setHata('');
@@ -65,6 +124,13 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Yüklenemedi');
       setVeri(d);
+      const geb = d.gebelik as Gebelik | null;
+      setRiskMaddeler(geb?.risk_formu?.maddeler || []);
+      setVteMaddeler(geb?.vte_formu?.maddeler || []);
+      setDestekAsi(geb?.destek_asi || {});
+      setLabPanel(geb?.lab_panel || {});
+      if (d.lohusa) setMod('lohusa');
+      else if (!geb) setMod('jinekoloji');
     } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); } finally { setYukleniyor(false); }
   }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
@@ -81,8 +147,15 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   const baslat = async () => {
     setMesaj(''); setHata('');
     try {
-      await post({ action: 'baslat', sat: f.sat || null, tdt: f.tdt || null, gravida: sayi(f.gravida), para: sayi(f.para), abortus: sayi(f.abortus), yasayan: sayi(f.yasayan), gebelikOncesiKilo: sayi(f.gebelikOncesiKilo), boy: sayi(f.boy), kanGrubu: f.kanGrubu || null, rhNegatif: f.rh === 'negatif' });
-      setBaslatAcik(false); setF({}); yukle();
+      await post({
+        action: 'baslat', sat: f.sat || null, tdt: f.tdt || null,
+        gravida: sayi(f.gravida), para: sayi(f.para), abortus: sayi(f.abortus), yasayan: sayi(f.yasayan),
+        oluDogum: sayi(f.oluDogum), ektopik: sayi(f.ektopik),
+        cogulGebelikTipi: f.cogul || null,
+        oncekiSezaryenSayisi: sayi(f.csSayisi), oncekiSezaryenKesiTipi: f.csKesi || null,
+        gebelikOncesiKilo: sayi(f.gebelikOncesiKilo), boy: sayi(f.boy), kanGrubu: f.kanGrubu || null, rhNegatif: f.rh === 'negatif',
+      });
+      setBaslatAcik(false); setF({}); setMod('klinik'); yukle();
     } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
   };
 
@@ -92,10 +165,17 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
     try {
       const usg: Record<string, string | number> = {};
       for (const k of ['crl', 'bpd', 'hc', 'ac', 'fl', 'efw', 'amnion', 'plasenta', 'prezentasyon']) if (g[k]) usg[k] = g[k];
-      const d = await post({ action: 'izlem', gebelikId: veri.gebelik.id, tarih: g.tarih || undefined, kilo: sayi(g.kilo), tansiyonSistolik: sayi(g.ts), tansiyonDiastolik: sayi(g.td), fundusYuksekligi: sayi(g.fundus), fetalKalpAtimi: sayi(g.fka), proteinuri: g.proteinuri || null, usg: Object.keys(usg).length ? usg : null, notMetni: g.not || null, muayeneFormunaEkle });
+      const d = await post({
+        action: 'izlem', gebelikId: veri.gebelik.id, tarih: g.tarih || undefined,
+        kilo: sayi(g.kilo), tansiyonSistolik: sayi(g.ts), tansiyonDiastolik: sayi(g.td),
+        fundusYuksekligi: sayi(g.fundus), fetalKalpAtimi: sayi(g.fka), proteinuri: g.proteinuri || null,
+        usg: Object.keys(usg).length ? usg : null, notMetni: g.not || null, muayeneFormunaEkle,
+        checklist, gbsKultur: g.gbs || null,
+      });
       if (muayeneFormunaEkle) setMesaj(d.notEkleme?.eklendi ? 'İzlem kaydedildi ve bugünkü muayene formuna eklendi.' : `İzlem kaydedildi. ${d.notEkleme?.sebep || ''}`);
       else setMesaj('İzlem kaydedildi.');
-      setIzlemAcik(false); setG({}); yukle();
+      setRandevuOneri(d.onerilenSonrakiTarih || veri.onerilenSonrakiTarih || null);
+      setIzlemAcik(false); setG({}); setChecklist({}); yukle();
     } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
   };
 
@@ -140,7 +220,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         yenidoganKiloGram: sayi(d.yenidoganKilo), yenidoganBoyCm: sayi(d.yenidoganBoy), yenidoganBasCevresiCm: sayi(d.yenidoganBasCevresi),
       });
       setMesaj(r.yenidoganPatientId ? 'Doğum kaydedildi — bebek için pediatri kaydı açıldı.' : 'Doğum kaydedildi.');
-      setDogumAcik(false); yukle();
+      setDogumAcik(false); setMod('lohusa'); yukle();
     } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
   };
   const sonlandir = async (durum: 'tamamlandi' | 'sonlandi') => {
@@ -149,10 +229,61 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
     try { await post({ action: 'sonlandir', gebelikId: veri.gebelik.id, durum }); yukle(); } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
   };
 
+  const klinikKaydet = async (patch: Record<string, unknown>, ok = 'Kaydedildi.') => {
+    if (!veri?.gebelik) return;
+    setMesaj(''); setHata('');
+    try {
+      await post({ action: 'klinik', gebelikId: veri.gebelik.id, ...patch });
+      setMesaj(ok); yukle();
+    } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
+  };
+
+  const randevuOlustur = async () => {
+    const tarih = randevuOneri || veri?.onerilenSonrakiTarih;
+    if (!tarih) return;
+    setHata('');
+    try {
+      const t = await ensureDoctorAccessToken();
+      const baslangic = `${tarih}T${randevuSaat}:00`;
+      const [hh, mm] = randevuSaat.split(':').map(Number);
+      const bitisD = new Date(`${tarih}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:00`);
+      bitisD.setMinutes(bitisD.getMinutes() + 20);
+      const bitis = `${tarih}T${String(bitisD.getHours()).padStart(2, '0')}:${String(bitisD.getMinutes()).padStart(2, '0')}:00`;
+      const r = await fetch('/api/doktor/randevular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ patientId, baslangic, bitis, tur: 'muayene', notlar: 'Gebelik izlemi' }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Randevu oluşturulamadı');
+      setMesaj('Randevu oluşturuldu.'); setRandevuOneri(null); yukle();
+    } catch (e) { setHata(e instanceof Error ? e.message : 'Randevu oluşturulamadı'); }
+  };
+
+  const nstKaydet = async () => {
+    if (!veri?.gebelik) return;
+    const mevcut = Array.isArray(veri.gebelik.nst_kayitlari) ? veri.gebelik.nst_kayitlari as object[] : [];
+    await klinikKaydet({
+      nstKayitlari: [...mevcut, {
+        id: `nst-${Date.now()}`,
+        tarih: nstForm.tarih,
+        recordedAt: nstForm.tarih,
+        category: nstForm.category,
+        durationMin: Number(nstForm.sure) || 20,
+        toco: nstForm.toco,
+        coreTraceId: `nst-${Date.now()}`,
+      }],
+    }, 'NST kaydedildi.');
+  };
+
+  const kopyalaTehlike = async () => {
+    const metin = tehlikeDanismanlikMetni();
+    try { await navigator.clipboard.writeText(metin); setMesaj('Tehlike işaretleri kopyalandı.'); } catch { setMesaj(metin); }
+  };
+
   if (yukleniyor) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Yükleniyor…</div>;
 
   const onceki = veri ? oncekiGebelikleriFiltrele(veri.gecmis, veri.gebelik) : [];
-
   const alan = (key: string, label: string, state: Record<string, string>, set: React.Dispatch<React.SetStateAction<Record<string, string>>>, tip = 'text', ph = '') => (
     <label style={{ display: 'block' }}>
       <span style={etiketS}>{label}</span>
@@ -160,17 +291,99 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
     </label>
   );
 
+  const liveVeri: LiveGebelikVeri | null = veri ? {
+    gebelik: veri.gebelik,
+    yas: veri.yas,
+    lohusa: veri.lohusa,
+    izlemler: veri.izlemler,
+    genetikTaramalar: veri.genetikTaramalar,
+    goruntulemeler: veri.goruntulemeler,
+  } : null;
+  const payload = liveVeri && veri?.gebelik ? payloadFromGebelikApi(patientId, liveVeri) : null;
+  const completedWeeks = (veri?.izlemler || []).map((i) => i.hafta);
+  const sbDone = completedSbIzlemNos(completedWeeks);
+  const pencere = aktifIzlemPenceresi(veri?.yas?.hafta ?? 10, sbDone);
+  const doneIds = liveVeri ? chapterDoneIds(liveVeri) : [];
+  const windows = veri?.yas ? chapterWindows(veri.yas.hafta, veri.yas.gun, doneIds) : [];
+  const visits = payload
+    ? chapterCalendar(payload, Math.min(veri?.yas?.hafta ?? 10, 16), completedWeeks, (veri?.lohusa?.izlemler || []).map((x) => x.dogum_sonrasi_gun))
+    : markVisitsDone(buildIzlemCalendar({ risk_class: 'dusuk', booking_ga_weeks: 10, episode_status: 'gebe' }), { completedWeeks });
+  const rhLabel = veri?.gebelik ? (veri.gebelik.kan_grubu ? `${veri.gebelik.kan_grubu} Rh(${veri.gebelik.rh_negatif ? '−' : '+'})` : `Rh(${veri.gebelik.rh_negatif ? '−' : '+'})`) : '—';
+  const sonrakiMetin = veri?.sonrakiRandevu
+    ? trTarih(veri.sonrakiRandevu.baslangic)
+    : veri?.onerilenSonrakiTarih
+      ? `önerilen ${trTarih(veri.onerilenSonrakiTarih)}`
+      : '—';
+  const sonIzlem = veri?.izlemler?.length ? veri.izlemler[veri.izlemler.length - 1] : null;
+  const kartlar = veri?.gebelik && veri.yas ? [
+    gdmKarti({ ogtt_positive: Boolean(veri.gebelik.lab_panel?.ogtt?.sonuc || sonIzlem?.ogtt) }),
+    peKarti({
+      sbp: sonIzlem?.tansiyon_sistolik ?? 0,
+      dbp: sonIzlem?.tansiyon_diastolik ?? 0,
+      proteinuria: Boolean(sonIzlem?.proteinuri && /(\+|pozitif)/i.test(sonIzlem.proteinuri)),
+    }),
+    rhKarti({ rh: veri.gebelik.rh_negatif ? 'D-' : 'D+', idc: mapIdc(veri.gebelik.indirekt_coombs), ga_weeks: veri.yas.hafta }),
+    gbsKarti({ ga_weeks: veri.yas.hafta, kultur: (sonIzlem?.gbs_kultur as 'pozitif' | 'negatif' | 'bekleniyor' | null) ?? null }),
+  ] : [];
+  const plurality = mapPlurality(veri?.gebelik?.cogul_gebelik_tipi);
+  const sevk = veri?.gebelik ? sevkFromClinic({
+    risk: (veri.gebelik.risk_sinifi === 'orta' || veri.gebelik.risk_sinifi === 'yuksek') ? veri.gebelik.risk_sinifi : 'dusuk',
+    riskMaddeler,
+    plurality: plurality.plurality,
+    chorionicity: plurality.chorionicity,
+  }) : { sevk: false, reason: [] as string[] };
+  const dual = veri?.gebelik && veri.yas ? dualClinicWarnings({
+    gaWeeks: veri.yas.hafta,
+    completedSb: sbDone,
+    risk: (veri.gebelik.risk_sinifi === 'orta' || veri.gebelik.risk_sinifi === 'yuksek') ? veri.gebelik.risk_sinifi : 'dusuk',
+    sbp: sonIzlem?.tansiyon_sistolik,
+    dbp: sonIzlem?.tansiyon_diastolik,
+    proteinuria: Boolean(sonIzlem?.proteinuri && /(\+|pozitif)/i.test(sonIzlem.proteinuri)),
+    ogttPositive: Boolean(veri.gebelik.lab_panel?.ogtt?.sonuc),
+    rh: veri.gebelik.rh_negatif ? 'D-' : 'D+',
+    idc: mapIdc(veri.gebelik.indirekt_coombs),
+    gbsKultur: sonIzlem?.gbs_kultur,
+  }) : [];
+  const nstList = Array.isArray(veri?.gebelik?.nst_kayitlari) ? veri!.gebelik!.nst_kayitlari as Array<{ category?: string; durationMin?: number; recordedAt?: string; tarih?: string; toco?: boolean; id?: string; coreTraceId?: string }> : [];
+  const showNst = nstShouldMount({
+    gaWeeks: veri?.yas?.hafta ?? null,
+    risk: (veri?.gebelik?.risk_sinifi === 'yuksek' ? 'yuksek' : 'dusuk'),
+    nstCount: nstList.length,
+  });
+  const jineLmp = veri?.kadinSagligi?.son_adet_tarihi ? String(veri.kadinSagligi.son_adet_tarihi) : null;
+  const goruntuUrl = Object.fromEntries((veri?.goruntulemeler || []).filter((x) => x.dosya_url).map((x) => [x.id, x.dosya_url as string]));
+  const etkinMod: Mod = veri?.lohusa ? 'lohusa' : mod;
+
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 13, color: '#8FA0B5' }}>
         Gebelik Takibi — ACOG pratik gold + DÖBYR 2026 yasal asgari (4 izlem). Hafta/tarih/uyarı hesapları deterministik; nihai karar hekimindir. ACOG ile DÖBYR çelişirse iki sütun gösterilir.
       </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} data-kd="mod-toggle">
+        {([
+          ['klinik', 'Klinik (gebe)'],
+          ['jinekoloji', 'Jinekoloji'],
+          ['lohusa', 'Lohusa'],
+          ['infertilite', 'İnfertilite'],
+        ] as const).map(([id, et]) => (
+          <button
+            key={id}
+            type="button"
+            style={btn(etkinMod === id)}
+            onClick={() => setMod(id)}
+            disabled={id === 'lohusa' && !veri?.lohusa && id !== etkinMod}
+          >
+            {et}
+          </button>
+        ))}
+      </div>
       {hata && <div style={{ color: '#F87171', fontSize: 13 }}>{hata}</div>}
       {mesaj && <div style={{ color: '#22C55E', fontSize: 13 }}>{mesaj}</div>}
 
       {!veri?.gebelik && (
-        <div style={kutu}>
+        <div style={kutu} data-kd="empty-start">
           <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 6 }}>Aktif gebelik kaydı yok</div>
+          <p style={{ fontSize: 13, color: '#8FA0B5' }}>Jinekoloji kaydı aşağıda. Gebelik başlatınca izlem yüzeyi açılır.</p>
           {!baslatAcik ? <button type="button" style={btn(true)} onClick={() => setBaslatAcik(true)}>+ Gebelik Takibi Başlat</button> : (
             <form onSubmit={(e) => { e.preventDefault(); baslat(); }} style={{ display: 'grid', gap: 10, marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
@@ -178,6 +391,15 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 {alan('tdt', 'Tahmini doğum tarihi (USG ile — isteğe bağlı)', f, setF, 'date')}
                 {alan('gravida', 'Gravida', f, setF, 'number')}{alan('para', 'Para', f, setF, 'number')}
                 {alan('abortus', 'Abortus', f, setF, 'number')}{alan('yasayan', 'Yaşayan', f, setF, 'number')}
+                {alan('oluDogum', 'Ölü doğum (D)', f, setF, 'number')}{alan('ektopik', 'Ektopik (E)', f, setF, 'number')}
+                <label style={{ display: 'block' }}><span style={etiketS}>Çoğul</span>
+                  <select value={f.cogul || ''} onChange={(e) => setF((prev) => ({ ...prev, cogul: e.target.value }))} style={giris}>
+                    <option value="">Tekil</option>
+                    <option value="dikoryonik">İkiz — dikoryonik</option>
+                    <option value="monokoryonik-diamniyotik">İkiz — monokoryonik diamniyotik</option>
+                    <option value="monokoryonik-monoamniyotik">İkiz — monokoryonik monoamniyotik</option>
+                  </select>
+                </label>
                 {alan('gebelikOncesiKilo', 'Gebelik öncesi kilo (kg)', f, setF, 'number')}{alan('boy', 'Boy (cm)', f, setF, 'number')}
                 {alan('kanGrubu', 'Kan grubu', f, setF, 'text', 'A, B, AB, 0')}
                 <label style={{ display: 'block' }}><span style={etiketS}>Rh</span>
@@ -189,40 +411,115 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         </div>
       )}
 
-      {veri?.gebelik && (
+      {veri?.gebelik && etkinMod !== 'jinekoloji' && etkinMod !== 'infertilite' && (
+        <StickyGebeStrip
+          mod={etkinMod === 'lohusa' ? 'lohusa' : 'gebe'}
+          haftaMetin={veri.lohusa ? `Lohusa · ${veri.lohusa.dogumSonrasiGun}. gün` : (veri.yas?.metin || 'Hafta hesaplanamadı')}
+          tdt={trTarih(veri.gebelik.tdt)}
+          risk={veri.gebelik.risk_sinifi || 'dusuk'}
+          rh={rhLabel}
+          sonrakiRandevu={sonrakiMetin}
+          tehlikeOzeti={tehlikeDanismanlikMetni()}
+          onTehlikeKopyala={kopyalaTehlike}
+          onBugunkuIzlem={() => {
+            if (etkinMod === 'lohusa') {
+              setL((prev) => ({ ...prev, tarih: prev.tarih || yerelIsoTarih() }));
+              setLohusaAcik(true);
+            } else {
+              setG((prev) => ({ ...prev, tarih: prev.tarih || yerelIsoTarih() }));
+              setIzlemAcik(true);
+            }
+          }}
+          dobyrBadge={`${sbDone.length}/4`}
+        />
+      )}
+
+      {etkinMod === 'jinekoloji' && (
         <>
-          <HastaKdChapter patientId={patientId} veri={veri} />
-          <div style={{ ...kutu, background: 'linear-gradient(135deg, rgba(15,155,142,0.18), rgba(15,155,142,0.04))', borderColor: 'rgba(15,155,142,0.35)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
-              <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#EDF1F7' }}>{veri.lohusa ? `Lohusa · doğum sonrası ${veri.lohusa.dogumSonrasiGun}. gün` : veri.yas ? veri.yas.metin : 'Hafta hesaplanamadı'}</div>
-                <div style={{ fontSize: 13, color: '#9FB3C8' }}>{veri.yas ? `${veri.yas.trimester}. trimester` : ''} · Tahmini doğum: <b style={{ color: '#EDF1F7' }}>{trTarih(veri.gebelik.tdt)}</b> ({veri.gebelik.tdt_kaynak === 'usg' ? 'USG' : 'SAT/Naegele'})</div>
-                <div style={{ fontSize: 12.5, color: '#8FA0B5', marginTop: 4 }}>
-                  SAT {trTarih(veri.gebelik.sat)} · G{veri.gebelik.gravida ?? '—'} P{veri.gebelik.para ?? '—'} A{veri.gebelik.abortus ?? '—'} Y{veri.gebelik.yasayan ?? '—'}
-                  {veri.gebelik.kan_grubu ? ` · ${veri.gebelik.kan_grubu} Rh(${veri.gebelik.rh_negatif ? '−' : '+'})` : ''}
-                  {veri.gebelikOncesiVki ? ` · Gebelik öncesi VKİ ${veri.gebelikOncesiVki}` : ''}
-                  {veri.kiloHedefi ? ` · Hedef kilo alımı ${veri.kiloHedefi.alt}-${veri.kiloHedefi.ust} kg (${veri.kiloHedefi.etiket})` : ''}
-                </div>
+          <JinekolojiKart
+            lmp={jineLmp}
+            today={yerelIsoTarih()}
+            sonServiks={veri?.kadinSagligi?.son_serviks_tarama ? String(veri.kadinSagligi.son_serviks_tarama) : null}
+            sonServiksSonuc={veri?.kadinSagligi?.son_serviks_sonuc ? String(veri.kadinSagligi.son_serviks_sonuc) : null}
+            kontrasepsiyon={veri?.kadinSagligi?.kontrasepsiyon_yontemi ? String(veri.kadinSagligi.kontrasepsiyon_yontemi) : null}
+          />
+          <KolposkopiGaleri images={colpoFromGoruntuleme(veri?.goruntulemeler)} urls={goruntuUrl} />
+          <KadinSagligiPaneli patientId={patientId} />
+          {liveVeri && (
+            <HastaKdChapter
+              patientId={patientId}
+              veri={liveVeri}
+              jineLmp={jineLmp}
+              sonServiks={veri?.kadinSagligi?.son_serviks_tarama ? String(veri.kadinSagligi.son_serviks_tarama) : null}
+              sonServiksSonuc={veri?.kadinSagligi?.son_serviks_sonuc ? String(veri.kadinSagligi.son_serviks_sonuc) : null}
+              kontrasepsiyon={veri?.kadinSagligi?.kontrasepsiyon_yontemi ? String(veri.kadinSagligi.kontrasepsiyon_yontemi) : null}
+              goruntuUrl={goruntuUrl}
+              showJine
+            />
+          )}
+        </>
+      )}
+
+      {etkinMod === 'infertilite' && <InfertiliteStub />}
+
+      {veri?.gebelik && etkinMod === 'klinik' && (
+        <>
+          <AktifIsler
+            gecikmisIzlem={veri.takvim.filter((p) => p.durum === 'gecikmis')}
+            acikPencereler={windows.filter((w) => w.status === 'open' || w.status === 'overdue')}
+            eksikLab={eksikLabKalemleri(labPanel, veri.gebelik.kan_grubu)}
+          />
+
+          {izlemAcik && (
+            <div style={kutu} data-kd="izlem-form">
+              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 10 }}>Yeni İzlem</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+                {alan('tarih', 'Tarih', g, setG, 'date')}{alan('kilo', 'Kilo (kg)', g, setG, 'number')}
+                {alan('ts', 'TA sistolik', g, setG, 'number')}{alan('td', 'TA diastolik', g, setG, 'number')}
+                {alan('fundus', 'Fundus yüksekliği (cm)', g, setG, 'number')}{alan('fka', 'Fetal kalp atımı (/dk)', g, setG, 'number')}
+                <label style={{ display: 'block' }}><span style={etiketS}>İdrar proteinüri</span>
+                  <select value={g.proteinuri || ''} onChange={(e) => { const v = e.target.value; setG((prev) => ({ ...prev, proteinuri: v })); }} style={giris}><option value="">—</option><option>Negatif</option><option>Eser</option><option>+</option><option>++</option><option>+++</option></select></label>
+                <label style={{ display: 'block' }}><span style={etiketS}>GBS kültürü</span>
+                  <select value={g.gbs || ''} onChange={(e) => setG((prev) => ({ ...prev, gbs: e.target.value }))} style={giris}>
+                    <option value="">—</option><option value="negatif">Negatif</option><option value="pozitif">Pozitif</option><option value="bekleniyor">Bekleniyor</option>
+                  </select>
+                </label>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {veri.lohusa ? (
-                  <button type="button" style={btn(true)} onClick={() => {
-                    setL((prev) => ({ ...prev, tarih: prev.tarih || yerelIsoTarih() }));
-                    setLohusaAcik((v) => !v);
-                  }}>+ Lohusa İzlemi Ekle</button>
-                ) : (
-                  <>
-                    <button type="button" style={btn(true)} onClick={() => {
-                      setG((prev) => ({ ...prev, tarih: prev.tarih || yerelIsoTarih() }));
-                      setIzlemAcik((v) => !v);
-                    }}>+ İzlem Ekle</button>
-                    <button type="button" style={btn()} onClick={() => sonlandir('tamamlandi')}>Doğum Gerçekleşti</button>
-                  </>
-                )}
-                <a href={`/dashboard/doktor/hastalar/${patientId}/gebelik/yazdir`} style={{ ...btn(), textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>🖨️ Gebe İzlem Kartı</a>
+              <IzlemChecklist izlemNo={pencere.izlem_no} maddeler={pencere.checklist} state={checklist} onChange={setChecklist} />
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', margin: '14px 0 6px' }}>USG (isteğe bağlı — ölçümler kaydedilir; persentil yorumu hekimindir)</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
+                {alan('crl', 'CRL (mm)', g, setG)}{alan('bpd', 'BPD (mm)', g, setG)}{alan('hc', 'HC (mm)', g, setG)}{alan('ac', 'AC (mm)', g, setG)}{alan('fl', 'FL (mm)', g, setG)}{alan('efw', 'EFW (g)', g, setG)}
+                {alan('amnion', 'Amnion (AFI/normal)', g, setG)}{alan('plasenta', 'Plasenta', g, setG)}{alan('prezentasyon', 'Prezentasyon', g, setG, 'text', 'Sefalik / Makat')}
+              </div>
+              <label style={{ display: 'block', marginTop: 10 }}><span style={etiketS}>Not</span><textarea value={g.not || ''} onChange={(e) => { const v = e.target.value; setG((prev) => ({ ...prev, not: v })); }} style={{ ...giris, minHeight: 60 }} /></label>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <button type="button" style={btn()} onClick={() => izlemKaydet(false)}>Sadece Kaydet</button>
+                <button type="button" style={btn(true)} onClick={() => izlemKaydet(true)}>Kaydet ve Bugünkü Muayene Formuna Ekle</button>
+                <button type="button" style={btn()} onClick={() => setIzlemAcik(false)}>Vazgeç</button>
               </div>
             </div>
-            {veri.yas && <div style={{ marginTop: 12, height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3 }}><div style={{ width: `${Math.min(100, (veri.yas.toplamGun / 280) * 100)}%`, height: '100%', background: '#0F9B8E', borderRadius: 3 }} /></div>}
+          )}
+
+          {(randevuOneri || (veri.onerilenSonrakiTarih && !veri.sonrakiRandevu)) && (
+            <div style={kutu} data-kd="randevu-onerisi">
+              <div style={{ fontWeight: 700, color: '#EDF1F7' }}>Sonraki randevu</div>
+              {veri.sonrakiRandevu ? (
+                <p style={{ fontSize: 13, color: '#C9D4E3' }}>Kayıtlı randevu: {trTarih(veri.sonrakiRandevu.baslangic)}</p>
+              ) : (
+                <>
+                  <p style={{ fontSize: 13, color: '#C9D4E3' }}>Önerilen sonraki tarih: {trTarih(randevuOneri || veri.onerilenSonrakiTarih)}</p>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input type="time" value={randevuSaat} onChange={(e) => setRandevuSaat(e.target.value)} style={{ ...giris, width: 120 }} />
+                    <button type="button" style={btn(true)} onClick={randevuOlustur}>Randevu oluştur</button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" style={btn()} onClick={() => sonlandir('tamamlandi')}>Doğum Gerçekleşti</button>
+            <a href={`/dashboard/doktor/hastalar/${patientId}/gebelik/yazdir`} style={{ ...btn(), textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>🖨️ Gebe İzlem Kartı</a>
           </div>
 
           {dogumAcik && (
@@ -252,6 +549,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             </div>
           )}
 
+          <DualUyarilar uyarilar={dual} />
           {veri.uyarilar.length > 0 && (
             <div style={{ display: 'grid', gap: 6 }}>
               {veri.uyarilar.map((u, i) => (
@@ -260,46 +558,36 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             </div>
           )}
 
-          {izlemAcik && (
-            <div style={kutu}>
-              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 10 }}>Yeni İzlem</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
-                {alan('tarih', 'Tarih', g, setG, 'date')}{alan('kilo', 'Kilo (kg)', g, setG, 'number')}
-                {alan('ts', 'TA sistolik', g, setG, 'number')}{alan('td', 'TA diastolik', g, setG, 'number')}
-                {alan('fundus', 'Fundus yüksekliği (cm)', g, setG, 'number')}{alan('fka', 'Fetal kalp atımı (/dk)', g, setG, 'number')}
-                <label style={{ display: 'block' }}><span style={etiketS}>İdrar proteinüri</span>
-                  <select value={g.proteinuri || ''} onChange={(e) => { const v = e.target.value; setG((prev) => ({ ...prev, proteinuri: v })); }} style={giris}><option value="">—</option><option>Negatif</option><option>Eser</option><option>+</option><option>++</option><option>+++</option></select></label>
+          <KlinikTakvim visits={visits} sbYapildi={sbDone.length} />
+          <DualTakvimAccordion visits={visits} />
+
+          <RiskFormu maddeler={riskMaddeler} onChange={setRiskMaddeler} onKaydet={() => klinikKaydet({ riskFormu: { maddeler: riskMaddeler } }, 'Risk formu kaydedildi.')} />
+          <VtePaneli maddeler={vteMaddeler} onChange={setVteMaddeler} onKaydet={() => klinikKaydet({ vteFormu: { maddeler: vteMaddeler } }, 'VTE formu kaydedildi.')} />
+          <DestekAsiPaneli state={destekAsi} onChange={setDestekAsi} onKaydet={() => klinikKaydet({ destekAsi }, 'Destek ve aşı kaydedildi.')} />
+          <LabPaneli state={labPanel} onChange={setLabPanel} onKaydet={() => klinikKaydet({ labPanel }, 'Laboratuvar kaydedildi.')} />
+          <KararKartlari kartlar={kartlar} />
+          <SevkCta sevk={sevk.sevk} nedenler={sevk.reason} />
+          <TehlikeIsaretleri onKopyala={() => setMesaj('Tehlike işaretleri kopyalandı.')} />
+
+          {showNst && (
+            <div style={kutu} data-kd="nst-panel">
+              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>NST kaydı</div>
+              {nstList[0] && payload?.nst_studies?.[0] && <NstStrip nst={payload.nst_studies[0]} />}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginTop: 8 }}>
+                <label><span style={etiketS}>Tarih</span><input type="date" value={nstForm.tarih} onChange={(e) => setNstForm({ ...nstForm, tarih: e.target.value })} style={giris} /></label>
+                <label><span style={etiketS}>Kategori</span>
+                  <select value={nstForm.category} onChange={(e) => setNstForm({ ...nstForm, category: e.target.value })} style={giris}>
+                    <option value="I">Kategori I</option><option value="II">Kategori II</option><option value="III">Kategori III</option>
+                  </select>
+                </label>
+                <label><span style={etiketS}>Süre (dk)</span><input type="number" value={nstForm.sure} onChange={(e) => setNstForm({ ...nstForm, sure: e.target.value })} style={giris} /></label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 18, color: '#C9D4E3', fontSize: 13 }}>
+                  <input type="checkbox" checked={nstForm.toco} onChange={(e) => setNstForm({ ...nstForm, toco: e.target.checked })} /> Toco
+                </label>
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', margin: '14px 0 6px' }}>USG (isteğe bağlı — ölçümler kaydedilir; persentil yorumu hekimindir)</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
-                {alan('crl', 'CRL (mm)', g, setG)}{alan('bpd', 'BPD (mm)', g, setG)}{alan('hc', 'HC (mm)', g, setG)}{alan('ac', 'AC (mm)', g, setG)}{alan('fl', 'FL (mm)', g, setG)}{alan('efw', 'EFW (g)', g, setG)}
-                {alan('amnion', 'Amnion (AFI/normal)', g, setG)}{alan('plasenta', 'Plasenta', g, setG)}{alan('prezentasyon', 'Prezentasyon', g, setG, 'text', 'Sefalik / Makat')}
-              </div>
-              <label style={{ display: 'block', marginTop: 10 }}><span style={etiketS}>Not</span><textarea value={g.not || ''} onChange={(e) => { const v = e.target.value; setG((prev) => ({ ...prev, not: v })); }} style={{ ...giris, minHeight: 60 }} /></label>
-              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                <button type="button" style={btn()} onClick={() => izlemKaydet(false)}>Sadece Kaydet</button>
-                <button type="button" style={btn(true)} onClick={() => izlemKaydet(true)}>Kaydet ve Bugünkü Muayene Formuna Ekle</button>
-                <button type="button" style={btn()} onClick={() => setIzlemAcik(false)}>Vazgeç</button>
-              </div>
+              <button type="button" style={{ ...btn(true), marginTop: 10 }} onClick={nstKaydet}>NST kaydet</button>
             </div>
           )}
-
-          <div style={kutu}>
-            <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 10 }}>SB İzlem Takvimi</div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {veri.takvim.map((p) => (
-                <details key={p.no} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px' }}>
-                  <summary style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5, color: '#EDF1F7' }}>
-                    <span><b>{p.etiket}</b> · {p.haftaBas}-{p.haftaSon}. hafta</span>
-                    <span style={{ color: DURUM_RENK[p.durum], fontWeight: 700, fontSize: 12 }}>{DURUM_ETIKET[p.durum]}</span>
-                  </summary>
-                  <ul style={{ margin: '8px 0 4px', paddingLeft: 18, color: '#C9D4E3', fontSize: 12.5, lineHeight: 1.6 }}>
-                    {p.maddeler.map((m, i) => <li key={i}>{m}</li>)}
-                  </ul>
-                </details>
-              ))}
-            </div>
-          </div>
 
           {veri.izlemler.length > 0 && (
             <div style={kutu}>
@@ -330,83 +618,88 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </div>
             </div>
           )}
+
+          <div style={kutu}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <div style={{ fontWeight: 700, color: '#EDF1F7' }}>Genetik / Kromozomal Tarama</div>
+              {veri.ileriAnneYasi && <span style={{ fontSize: 11.5, color: '#F59E0B', fontWeight: 700 }}>İleri anne yaşı (≥35)</span>}
+            </div>
+            <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>
+              Bu bölüm yalnız laboratuvarın/sertifikalı yazılımın (FMF/Astraia vb.) bildirdiği sonucu kaydeder — <b>risk oranını burada hesaplamıyoruz</b>. NT için yalnız mutlak bir eşik (≥3.5mm) bayrak kaldırır; kombine risk her zaman sertifikalı yazılımınızdan gelir.
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+              {(['ikili', 'uclu-dortlu', 'nipt', 'invazif'] as const).map((t) => (
+                <button key={t} type="button" style={btn(genetikTurAcik === t)} onClick={() => setGenetikTurAcik(genetikTurAcik === t ? '' : t)}>
+                  {{ ikili: '+ İkili Test', 'uclu-dortlu': '+ Üçlü/Dörtlü Test', nipt: '+ NIPT', invazif: '+ İnvaziv Test' }[t]}
+                </button>
+              ))}
+            </div>
+            {genetikTurAcik === 'ikili' && (
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+                  {alan('ntMm', 'NT (mm)', n, setN, 'number')}{alan('papA', 'PAPP-A (MoM)', n, setN)}{alan('freeBhcg', 'Serbest β-hCG (MoM)', n, setN)}
+                  {alan('kombineRisk', 'Kombine risk (laboratuvar sonucu, ör. 1/1250)', n, setN)}
+                  <label style={{ display: 'block' }}><span style={etiketS}>Risk kategorisi (laboratuvarın bildirdiği)</span><select value={n.riskKategorisi || ''} onChange={(e) => setN({ ...n, riskKategorisi: e.target.value })} style={giris}><option value="">—</option><option value="dusuk">Düşük</option><option value="orta">Orta</option><option value="yuksek">Yüksek</option></select></label>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('ikili', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('ikili', true)}>Kaydet ve Forma Ekle</button></div>
+              </div>
+            )}
+            {genetikTurAcik === 'uclu-dortlu' && (
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+                  {alan('afp', 'AFP (MoM)', n, setN)}{alan('hcg2', 'hCG (MoM)', n, setN)}{alan('estriol', 'Estriol (MoM)', n, setN)}{alan('inhibinA', 'İnhibin A (MoM, dörtlü)', n, setN)}
+                  {alan('kombineRisk2', 'Kombine risk (laboratuvar sonucu)', n, setN)}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('uclu-dortlu', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('uclu-dortlu', true)}>Kaydet ve Forma Ekle</button></div>
+              </div>
+            )}
+            {genetikTurAcik === 'nipt' && (
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+                  <label style={{ display: 'block' }}><span style={etiketS}>Durum</span><select value={n.niptDurum || ''} onChange={(e) => setN({ ...n, niptDurum: e.target.value })} style={giris}><option value="istendi">İstendi</option><option value="sonuclandi">Sonuçlandı</option><option value="basarisiz-tekrar">Başarısız / tekrar gerekti</option></select></label>
+                  {(['t21', 't18', 't13'] as const).map((k) => (
+                    <label key={k} style={{ display: 'block' }}><span style={etiketS}>{k.toUpperCase()}</span><select value={n[k] || ''} onChange={(e) => setN({ ...n, [k]: e.target.value })} style={giris}><option value="">—</option><option value="dusuk-risk">Düşük risk</option><option value="yuksek-risk">Yüksek risk</option></select></label>
+                  ))}
+                  {alan('cinsiyetK', 'Cinsiyet kromozomu (istenirse)', n, setN)}{alan('fetalFraksiyon', 'Fetal fraksiyon (%)', n, setN)}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('nipt', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('nipt', true)}>Kaydet ve Forma Ekle</button></div>
+              </div>
+            )}
+            {genetikTurAcik === 'invazif' && (
+              <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+                  <label style={{ display: 'block' }}><span style={etiketS}>Tür</span><select value={n.invazifTur || 'amniyosentez'} onChange={(e) => setN({ ...n, invazifTur: e.target.value })} style={giris}><option value="cvs">CVS (koryon villus örneklemesi)</option><option value="amniyosentez">Amniyosentez</option></select></label>
+                  {alan('endikasyon', 'Endikasyon', n, setN)}{alan('invazifSonuc', 'Sonuç', n, setN)}{alan('karyotip', 'Karyotip', n, setN)}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('invazif', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('invazif', true)}>Kaydet ve Forma Ekle</button></div>
+              </div>
+            )}
+            {veri.genetikTaramalar && veri.genetikTaramalar.length > 0 && (
+              <div style={{ display: 'grid', gap: 6 }}>
+                {[...veri.genetikTaramalar].reverse().map((gRow) => (
+                  <div key={gRow.id} style={{ fontSize: 12.5, color: '#C9D4E3', borderLeft: gRow.ntDegerlendirme?.bayrak ? '3px solid #F59E0B' : '3px solid rgba(255,255,255,0.1)', padding: '6px 10px', background: gRow.ntDegerlendirme?.bayrak ? '#F59E0B10' : 'transparent', borderRadius: 6 }}>
+                    <b style={{ color: '#EDF1F7' }}>{{ ikili: 'İkili Test', 'uclu-dortlu': 'Üçlü/Dörtlü Test', nipt: 'NIPT', invazif: 'İnvaziv Test', 'risk-sorgu': 'Risk Sorgusu' }[gRow.tur] || gRow.tur}</b>
+                    {' · '}{trTarih(gRow.tarih)}{gRow.hafta ? ` · ${gRow.hafta}. hafta` : ''}
+                    {' — '}{Object.entries(gRow.veri).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                    {gRow.ntDegerlendirme && <div style={{ color: gRow.ntDegerlendirme.bayrak ? '#F59E0B' : '#64748B', marginTop: 2 }}>{gRow.ntDegerlendirme.not}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {liveVeri && (
+            <HastaKdChapter
+              patientId={patientId}
+              veri={liveVeri}
+              jineLmp={jineLmp}
+              goruntuUrl={goruntuUrl}
+            />
+          )}
         </>
       )}
 
-      {veri?.gebelik && !veri.lohusa && (
-        <div style={kutu}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <div style={{ fontWeight: 700, color: '#EDF1F7' }}>Genetik / Kromozomal Tarama</div>
-            {veri.ileriAnneYasi && <span style={{ fontSize: 11.5, color: '#F59E0B', fontWeight: 700 }}>İleri anne yaşı (≥35)</span>}
-          </div>
-          <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>
-            Bu bölüm yalnız laboratuvarın/sertifikalı yazılımın (FMF/Astraia vb.) bildirdiği sonucu kaydeder — <b>risk oranını burada hesaplamıyoruz</b>. NT için yalnız mutlak bir eşik (≥3.5mm) bayrak kaldırır; kombine risk her zaman sertifikalı yazılımınızdan gelir.
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-            {(['ikili', 'uclu-dortlu', 'nipt', 'invazif'] as const).map((t) => (
-              <button key={t} type="button" style={btn(genetikTurAcik === t)} onClick={() => setGenetikTurAcik(genetikTurAcik === t ? '' : t)}>
-                {{ ikili: '+ İkili Test', 'uclu-dortlu': '+ Üçlü/Dörtlü Test', nipt: '+ NIPT', invazif: '+ İnvaziv Test' }[t]}
-              </button>
-            ))}
-          </div>
-
-          {genetikTurAcik === 'ikili' && (
-            <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
-                {alan('ntMm', 'NT (mm)', n, setN, 'number')}{alan('papA', 'PAPP-A (MoM)', n, setN)}{alan('freeBhcg', 'Serbest β-hCG (MoM)', n, setN)}
-                {alan('kombineRisk', 'Kombine risk (laboratuvar sonucu, ör. 1/1250)', n, setN)}
-                <label style={{ display: 'block' }}><span style={etiketS}>Risk kategorisi (laboratuvarın bildirdiği)</span><select value={n.riskKategorisi || ''} onChange={(e) => setN({ ...n, riskKategorisi: e.target.value })} style={giris}><option value="">—</option><option value="dusuk">Düşük</option><option value="orta">Orta</option><option value="yuksek">Yüksek</option></select></label>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('ikili', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('ikili', true)}>Kaydet ve Forma Ekle</button></div>
-            </div>
-          )}
-          {genetikTurAcik === 'uclu-dortlu' && (
-            <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
-                {alan('afp', 'AFP (MoM)', n, setN)}{alan('hcg2', 'hCG (MoM)', n, setN)}{alan('estriol', 'Estriol (MoM)', n, setN)}{alan('inhibinA', 'İnhibin A (MoM, dörtlü)', n, setN)}
-                {alan('kombineRisk2', 'Kombine risk (laboratuvar sonucu)', n, setN)}
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('uclu-dortlu', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('uclu-dortlu', true)}>Kaydet ve Forma Ekle</button></div>
-            </div>
-          )}
-          {genetikTurAcik === 'nipt' && (
-            <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
-                <label style={{ display: 'block' }}><span style={etiketS}>Durum</span><select value={n.niptDurum || ''} onChange={(e) => setN({ ...n, niptDurum: e.target.value })} style={giris}><option value="istendi">İstendi</option><option value="sonuclandi">Sonuçlandı</option><option value="basarisiz-tekrar">Başarısız / tekrar gerekti</option></select></label>
-                {(['t21', 't18', 't13'] as const).map((k) => (
-                  <label key={k} style={{ display: 'block' }}><span style={etiketS}>{k.toUpperCase()}</span><select value={n[k] || ''} onChange={(e) => setN({ ...n, [k]: e.target.value })} style={giris}><option value="">—</option><option value="dusuk-risk">Düşük risk</option><option value="yuksek-risk">Yüksek risk</option></select></label>
-                ))}
-                {alan('cinsiyetK', 'Cinsiyet kromozomu (istenirse)', n, setN)}{alan('fetalFraksiyon', 'Fetal fraksiyon (%)', n, setN)}
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('nipt', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('nipt', true)}>Kaydet ve Forma Ekle</button></div>
-            </div>
-          )}
-          {genetikTurAcik === 'invazif' && (
-            <div style={{ display: 'grid', gap: 10, marginBottom: 10, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
-                <label style={{ display: 'block' }}><span style={etiketS}>Tür</span><select value={n.invazifTur || 'amniyosentez'} onChange={(e) => setN({ ...n, invazifTur: e.target.value })} style={giris}><option value="cvs">CVS (koryon villus örneklemesi)</option><option value="amniyosentez">Amniyosentez</option></select></label>
-                {alan('endikasyon', 'Endikasyon', n, setN)}{alan('invazifSonuc', 'Sonuç', n, setN)}{alan('karyotip', 'Karyotip', n, setN)}
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}><button type="button" style={btn()} onClick={() => genetikKaydet('invazif', false)}>Kaydet</button><button type="button" style={btn(true)} onClick={() => genetikKaydet('invazif', true)}>Kaydet ve Forma Ekle</button></div>
-            </div>
-          )}
-
-          {veri.genetikTaramalar && veri.genetikTaramalar.length > 0 && (
-            <div style={{ display: 'grid', gap: 6 }}>
-              {[...veri.genetikTaramalar].reverse().map((g) => (
-                <div key={g.id} style={{ fontSize: 12.5, color: '#C9D4E3', borderLeft: g.ntDegerlendirme?.bayrak ? '3px solid #F59E0B' : '3px solid rgba(255,255,255,0.1)', padding: '6px 10px', background: g.ntDegerlendirme?.bayrak ? '#F59E0B10' : 'transparent', borderRadius: 6 }}>
-                  <b style={{ color: '#EDF1F7' }}>{{ ikili: 'İkili Test', 'uclu-dortlu': 'Üçlü/Dörtlü Test', nipt: 'NIPT', invazif: 'İnvaziv Test', 'risk-sorgu': 'Risk Sorgusu' }[g.tur] || g.tur}</b>
-                  {' · '}{trTarih(g.tarih)}{g.hafta ? ` · ${g.hafta}. hafta` : ''}
-                  {' — '}{Object.entries(g.veri).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(', ')}
-                  {g.ntDegerlendirme && <div style={{ color: g.ntDegerlendirme.bayrak ? '#F59E0B' : '#64748B', marginTop: 2 }}>{g.ntDegerlendirme.not}</div>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {veri?.gebelik && veri.lohusa && (
+      {veri?.gebelik && etkinMod === 'lohusa' && (
         <>
           {lohusaAcik && (
             <div style={kutu}>
@@ -429,10 +722,10 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             </div>
           )}
           <div style={kutu}>
-            <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 4 }}>SB Lohusa İzlem Takvimi</div>
-            <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>Doğum Sonu Bakım Yönetim Rehberi — ilk 24 saat hastane, sonrası 42. güne kadar.</div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {veri.lohusa.takvim.map((p) => (
+            <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 4 }}>Lohusa izlem takvimi (DSBYR + hastane/ASM)</div>
+            <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>Doğum Sonu Bakım Yönetim Rehberi — ilk 24 saat hastane, sonrası 42. güne kadar. EPDS, emzirme ve postpartum kontrasepsiyon bu izlemde.</div>
+            <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
+              {(veri.lohusa?.takvim || []).map((p) => (
                 <details key={p.no} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px' }}>
                   <summary style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5, color: '#EDF1F7' }}>
                     <span><b>{p.etiket}</b></span>
@@ -442,7 +735,16 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 </details>
               ))}
             </div>
-            {veri.lohusa.izlemler.length > 0 && (
+            {visits.filter((v) => v.layer === 'lohusa').length > 0 && (
+              <ul style={{ fontSize: 12.5, color: '#C9D4E3' }}>
+                {visits.filter((v) => v.layer === 'lohusa').map((v, i) => (
+                  <li key={i} style={{ color: v.done ? '#86EFAC' : undefined }}>
+                    {v.kind === 'lohusa_hastane' ? 'Hastane' : 'ASM'} · PP {v.ga_or_pp_day}. gün{v.done ? ' · Yapıldı' : ''} · {v.checklist.join(', ')}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {veri.lohusa && veri.lohusa.izlemler.length > 0 && (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, color: '#C9D4E3', marginTop: 12 }}>
                 <thead><tr style={{ color: '#8FA0B5', textAlign: 'left' }}><th style={{ padding: 6 }}>Tarih</th><th>Gün</th><th>TA</th><th>Loşi</th><th>Emzirme</th><th>Duygu</th><th>EPDS</th></tr></thead>
                 <tbody>{[...veri.lohusa.izlemler].reverse().map((x) => (
@@ -451,10 +753,11 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </table>
             )}
           </div>
+          {liveVeri && <HastaKdChapter patientId={patientId} veri={liveVeri} goruntuUrl={goruntuUrl} />}
         </>
       )}
 
-      <KadinSagligiPaneli patientId={patientId} />
+      {etkinMod !== 'jinekoloji' && <KadinSagligiPaneli patientId={patientId} />}
 
       {veri && (
         <div style={kutu}>

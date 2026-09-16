@@ -149,6 +149,28 @@ export function evaluateVTE(input: { score: number }): EvalResult {
   }
 }
 
+/** GBS: ACOG universal culture ~36–37w vs DÖBYR 35–37w if protocol. Never collapse. */
+export function evaluateGBS(input: {
+  ga_weeks: number
+  kultur?: 'pozitif' | 'negatif' | 'bekleniyor' | null
+}): EvalResult {
+  const inWindow = input.ga_weeks >= 35 && input.ga_weeks <= 37
+  const pozitif = input.kultur === 'pozitif'
+  return {
+    triage: pozitif ? 'urgent' : 'routine',
+    next: pozitif
+      ? ['intrapartum penicillin path', 'newborn handoff GBS+']
+      : inWindow
+        ? ['GBS culture this window']
+        : ['plan GBS culture 35–37w'],
+    citations: CITE,
+    conflict: true,
+    sb_required: { next: ['35–37w GBS if protocol (DÖBYR)'] },
+    acog_recommended: { next: ['universal culture-based screen ~36–37w (ACOG CO 797)'] },
+    uiHint: UI_HINT_YASAL_VS_KLINIK,
+  }
+}
+
 export function evaluateTTTS(input: { stage: 1 | 2 | 3 | 4 | 5 }): EvalResult {
   return {
     triage: input.stage >= 2 ? 'emergency' : 'urgent',
