@@ -28,6 +28,7 @@ const tools: Tool[] = [
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Format', desc: 'FHIR/Medula/USS paketleri — canlı bağlantı yok, format-hazır çıktı', route: '/doktor-tools/enabiz' },
   { circleColor: '#F59E0B', icon: 'KD', title: 'KD Audit (pre-sprint)', desc: 'Gaps + comments before wow sprint — Gökhan paylaşımı', route: '/kd-jine-presprint-audit.html' },
   { circleColor: '#7C3AED', icon: 'KD+', title: 'KD Audit (post-sprint)', desc: 'After JINE-04: all domains Strong', route: '/kd-jine-post-sprint-audit.html' },
+  { circleColor: '#0F9B8E', icon: 'DAH', title: 'Dahiliye Audit (pre-wow)', desc: 'DAH-01 vs TR private wow bar — TİHUD/Harrison/TEMD + HYP', route: '/dahiliye-presprint-audit.html' },
 ];
 
 export default function DoktorToolsPage() {

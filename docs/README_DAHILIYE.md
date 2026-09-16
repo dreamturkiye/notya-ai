@@ -32,3 +32,6 @@ Lab/EKG/CXR → Belgeler (existing) → Asistana raporla → doctor edits → On
 
 ## Out of V1 (by ticket)
 ICU/sepsis bundles, chemo, dialysis prescription, coronary protocol, full SCORE2, CGM, GLP-1 prior-auth, bariatric pathway, executive check-up sales package.
+
+## Pre-wow audit
+Shareable depth/gap report (before dahiliye wow sprint): [docs/README_DAHILIYE_AUDIT.md](./README_DAHILIYE_AUDIT.md) · https://notya-ai.vercel.app/dahiliye-presprint-audit.html

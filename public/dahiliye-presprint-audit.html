@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>İç Hastalıkları / Dahiliye — Specialty Audit (pre-wow) · Notya</title>
+  <meta name="description" content="Pre-wow dahiliye specialty audit: V1 vs Turkish private-clinic bar, MoH/HYP matrix, golden refs, game changers." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    h3 { margin:20px 0 8px; font-size:15px; font-weight:700; color:var(--muted); }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:900px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .pill.neutral { background:rgba(255,255,255,.06); color:var(--muted); border-color:var(--stroke); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.info { color:var(--blue); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout.danger { background:var(--red-soft); border-color:rgba(248,113,113,.32); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); } .callout.danger h2 { color:var(--red); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(140px,260px) 1fr 36px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-val { font-size:12px; font-weight:700; color:var(--text); text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; margin-bottom:8px; }
+    .card .title { font-size:14px; font-weight:650; }
+    .card .sub { font-size:11px; font-weight:700; color:var(--text); margin-top:6px; }
+    .card .sub.muted { color:var(--dim); font-weight:500; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya · Pre-wow specialty audit</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="https://notya-ai.vercel.app/kd-jine-presprint-audit.html">KD/Jine audit twin →</a>
+        <a href="https://notya-ai.vercel.app/dashboard/doktor">Doktor paneli →</a>
+      </div>
+    </div>
+
+    <div class="banner">Snapshot <b>after</b> NOTYA-DAH-01 V1 ship, <b>before</b> dahiliye wow sprint / DAH-02 — depth pills, MoH–HYP matrix, private-clinic game changers as audited 2026-09-16.</div>
+
+    <h1>İç Hastalıkları / Dahiliye — Specialty Audit</h1>
+    <p class="lede">Notya AI codebase × TİHUD / Harrison / TEMD goldens × Türk Hipertansiyon Uzlaşı 2025 × Sağlık Bakanlığı HYP (HT–DM–KVR–obezite) × Turkish private muayenehane pain. Goal bar = same depth &amp; wow as Kadın Doğum / Jinekoloji after JINE-04.</p>
+    <div class="pills">
+      <span class="pill success">DAH-01 V1: chronic cards live</span>
+      <span class="pill warning">Breadth ~1/30 of KD chapter</span>
+      <span class="pill danger">Wow gaps: SCORE2, check-up ledger, Rx↔ilaç, office GI/pulm, portal</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v danger">3</div><div class="l">Dahiliye specialty files (KD ≈108)</div></div>
+      <div class="stat"><div class="v success">DAH-01</div><div class="l">Shipped 2026-09-16 (#260)</div></div>
+      <div class="stat"><div class="v warning">DAH-02 open</div><div class="l">Rx sync · SCORE2 · real patient</div></div>
+      <div class="stat"><div class="v info">Wow ≠ enough</div><div class="l">Bar for Turkish dahiliye MDs</div></div>
+    </div>
+
+    <div class="callout warning">
+      <h2>Executive verdict</h2>
+      <p>DAH-01 is a credible <b>chronic-disease card skeleton</b>: Uzlaşı 2025 HT classes/targets, TEMD DM cadence + annual tasks, lipid/tiroid mini, lab-grounded header chips, eGFR drug text warnings, red-flag gate, sevk with last panel. A Turkish internist will respect the safety posture (no fake SCORE2, no insulin titration, doctor locks). They will <b>not</b> say “ulan bu başka” yet. Versus KD/jine wow depth we are early: no SCORE2/KVR engine, no check-up package business ledger, no treatment dosing cards, no office GI/pulm/HF/CKD spines, no SGK rapor speed, no patient portal home-BP/glucose, no <code>prompts/</code> persona lock. Closing that gap is the dahiliye wow sprint — not rewriting V1.</p>
+    </div>
+
+    <h2>Three golden references (TR dahiliye desk)</h2>
+    <p class="cap">Same trio locked in code as <code>ref_code</code> behind the clinician Kaynak toggle. Society guidelines hang off TEMD + Uzlaşı; MoH HYP is the public-sector twin.</p>
+    <div class="cards three">
+      <div class="card"><div class="title">1. TİHUD İç Hastalıkları (4. baskı)</div>
+        <div class="body">Turkish specialty textbook. Defines the internist as chronic-disease manager + care coordinator — not hospitalist/ICU. Anchors check-up intervals, start-workups, sevk judgment.</div></div>
+      <div class="card"><div class="title">2. Harrison İç Hastalıkları Prensipleri (TR)</div>
+        <div class="body">Global gold standard used in TR teaching hospitals. Differential frameworks, red-flag thinking, comorbidity reasoning when TEMD is silent.</div></div>
+      <div class="card"><div class="title">3. TEMD kılavuz ailesi + Uzlaşı 2025</div>
+        <div class="body">TEMD DM 2026, Lipid 2021, Tiroid 2025, Obezite 2024, Osteo 2025 + <b>Türk Hipertansiyon Uzlaşı Raporu 2025</b> (TİHUD+TEMD+TKD+TND+TAHUD+…). Office metabolic spine for private practice.</div></div>
+    </div>
+
+    <h2>Coverage depth by domain</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">HT (Uzlaşı 2025 office)</td><td><span class="pill success">Strong</span></td><td class="note">Classes, age/kırılgan targets, confirmed-HT rule, combo class suggest, dirençli→nefro; no home-BP graph / ABPM / dose cards</td></tr>
+        <tr><td class="domain">DM (TEMD 2026)</td><td><span class="pill warning">Partial</span></td><td class="note">HbA1c cadence, UACR/göz/ayak/lipid tasks, eGFR class warnings; no insulin titration, thin ayak ülser, no vaccine pack, no FIB-4</td></tr>
+        <tr><td class="domain">Lipid (TEMD 2021)</td><td><span class="pill warning">Partial</span></td><td class="note">Doctor LDL target, statin ALT/CK/TG guards; no very-high-risk auto LDL 55/70 lock from SCORE2/ASKDH</td></tr>
+        <tr><td class="domain">Tiroid (TEMD 2025)</td><td><span class="pill warning">Partial</span></td><td class="note">TSH thresholds + nodül→US/sevk mini; no TI-RADS engine, no ablasyon pathway</td></tr>
+        <tr><td class="domain">Check-up template</td><td><span class="pill danger">Thin</span></td><td class="note">Panel list + interval + DXA reminder; no package ledger, no final “merge report”, no sales SKUs</td></tr>
+        <tr><td class="domain">İlaç güvenliği / polifarmasi</td><td><span class="pill warning">Partial</span></td><td class="note">hasta_ilaclar reuse + eGFR&lt;30 text; no Beers/START-STOPP, no Rx→list auto-update (DAH-02)</td></tr>
+        <tr><td class="domain">Lab / Belgeler spine (shared)</td><td><span class="pill success">Strong</span></td><td class="note">Canonical keys, trends, Onayla→SOAP — dahiliye’s real power today</td></tr>
+        <tr><td class="domain">Kırmızı bayrak + sevk</td><td><span class="pill warning">Partial</span></td><td class="note">ACS/K/Hb/eGFR/ateş rules + checkbox; narrow specialty list; no printable sevk pack</td></tr>
+        <tr><td class="domain">SCORE2 / KVR (HYP + ESC)</td><td><span class="pill danger">Missing</span></td><td class="note">Inputs blocked on purpose in V1 — no reviewed formula; MoH expects SCORE2 ≥40y</td></tr>
+        <tr><td class="domain">CKD staging (eGFR+UACR)</td><td><span class="pill danger">Missing</span></td><td class="note">eGFR chip only; no KDIGO stage card / nephro pack</td></tr>
+        <tr><td class="domain">Anemi workup ladder</td><td><span class="pill danger">Thin</span></td><td class="note">Ferritin/B12/folat via lab paragraphs; no stepwise next-test engine</td></tr>
+        <tr><td class="domain">Obezite / GLP-1 (TEMD 2024)</td><td><span class="pill danger">Missing</span></td><td class="note">Checkbox on lipid only; no BMI path, no prior-auth narrative</td></tr>
+        <tr><td class="domain">HF / GDMT office</td><td><span class="pill danger">Missing</span></td><td class="note">Out of V1; private dahiliye still sees KY follow-ups</td></tr>
+        <tr><td class="domain">Office GI (GERD/IBS/NAFLD)</td><td><span class="pill danger">Missing</span></td><td class="note">HYP FIB-4→dahiliye/gastro sevk not productized</td></tr>
+        <tr><td class="domain">COPD / astım / spirometri</td><td><span class="pill danger">Missing</span></td><td class="note">Belge reuse only; no inhaler / exacerbation card</td></tr>
+        <tr><td class="domain">Kanser tarama due (KETEM)</td><td><span class="pill danger">Thin</span></td><td class="note">Women’s Pap/mamografi via jine chips; no kolon/gaita gizli kan / erkek paket</td></tr>
+        <tr><td class="domain">SGK rapor / e-reçete / Medula</td><td><span class="pill danger">Thin</span></td><td class="note">Shared Tools/adapters; not dahiliye-native; Rx↔ilaç open</td></tr>
+        <tr><td class="domain">Portal (hasta home logs)</td><td><span class="pill danger">Missing</span></td><td class="note">No home KB / glukoz / ilaç adherence surface</td></tr>
+        <tr><td class="domain">prompts/ system lock</td><td><span class="pill danger">Missing</span></td><td class="note">Derm/jine have system.md+tools; dahiliye has none</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>How complete vs “wow bar”</h2>
+    <p class="cap">Score = product completeness vs what would impress a busy Turkish private dahiliye (0–100). Cross-check: repo inventory × Uzlaşı/TEMD/HYP/clinic blogs.</p>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-label">HT Uzlaşı rules</div><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><div class="bar-val">78</div></div>
+      <div class="bar-row"><div class="bar-label">DM TEMD izlem tasks</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-val">62</div></div>
+      <div class="bar-row"><div class="bar-label">Lipid safety (ALT/CK/TG)</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">55</div></div>
+      <div class="bar-row"><div class="bar-label">Lab trend → karar (shared)</div><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><div class="bar-val">85</div></div>
+      <div class="bar-row"><div class="bar-label">Tiroid mini</div><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><div class="bar-val">40</div></div>
+      <div class="bar-row"><div class="bar-label">Check-up package ops</div><div class="bar-track"><div class="bar-fill" style="width:18%"></div></div><div class="bar-val">18</div></div>
+      <div class="bar-row"><div class="bar-label">SCORE2 / KVR</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">5</div></div>
+      <div class="bar-row"><div class="bar-label">CKD / anemi / obezite spines</div><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><div class="bar-val">12</div></div>
+      <div class="bar-row"><div class="bar-label">Office GI / pulm / HF</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">5</div></div>
+      <div class="bar-row"><div class="bar-label">Rx → hasta_ilaclar</div><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><div class="bar-val">15</div></div>
+      <div class="bar-row"><div class="bar-label">SGK rapor speed</div><div class="bar-track"><div class="bar-fill" style="width:25%"></div></div><div class="bar-val">25</div></div>
+      <div class="bar-row"><div class="bar-label">Portal home BP/glukoz</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+      <div class="bar-row"><div class="bar-label">Chapter breadth vs KD</div><div class="bar-track"><div class="bar-fill" style="width:8%"></div></div><div class="bar-val">8</div></div>
+    </div>
+
+    <h2>Sağlık Bakanlığı &amp; practice matrix</h2>
+    <p class="cap">MoH = HSGM HYP (HT / DM / KVR / obezite / yaşlı) + HT Tarama-İzlem 2025. BP = TİHUD/TEMD/Uzlaşı office. Law = SGK SUT / e-reçete / check-up fatura yasağı.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Mandate / expectation</th><th>Level</th><th>In product today</th><th>Gap to wow</th></tr></thead>
+      <tbody>
+        <tr><td>HT ofis sınıflama + yaş/kırılgan hedefler</td><td><span class="pill info">MoH + Uzlaşı</span></td><td class="note">kbSinifla / kbHedefi shipped</td><td class="gap">Ev KB / ABPM trend UI; ilaç doz kartı (hekim yazar)</td></tr>
+        <tr><td>HT başlangıç panel: eGFR, UACR, lipid, glukoz, TSH, Na/K, ALT, EKG</td><td><span class="pill info">MoH HT kılavuz</span></td><td class="note">baslangicTetkik checklist → görev</td><td class="gap">One-click panel order + missed-lab chase</td></tr>
+        <tr><td>DM: HbA1c 3/6 ay; yıllık UACR, eGFR, lipid, ayak, göz</td><td><span class="pill info">MoH HYP + TEMD</span></td><td class="note">dmDegerlendir görevler + göz sevk</td><td class="gap">Ayak ülser triage; aşı (grip/pnömokok/HBV); FIB-4 yıllık</td></tr>
+        <tr><td>SCORE2 (≥40y) / SCORE2-OP (≥70); ASKDH/DM/CKD → çok yüksek risk bucket</td><td><span class="pill info">MoH HYP KVR</span></td><td class="note">Explicitly not computed in V1</td><td class="gap">Reviewed SCORE2 table in code + LDL target suggest</td></tr>
+        <tr><td>FIB-4 ≥1.3 → dahiliye; ≥2.67 → gastro</td><td><span class="pill info">MoH DM HYP</span></td><td class="note">Absent</td><td class="gap">Compute from approved ALT/AST/Plt/yaş → sevk</td></tr>
+        <tr><td>Obezite tarama / izlem</td><td><span class="pill info">MoH HYP</span></td><td class="note">Lipid checkbox only</td><td class="gap">BMI/VKİ card + TEMD ladder + GLP-1 narrative</td></tr>
+        <tr><td>Kanser taramaları (meme/serviks/kolon)</td><td><span class="pill info">MoH KETEM</span></td><td class="note">Jine due chips for women</td><td class="gap">Kolon/FOBT + erkek paket due engine</td></tr>
+        <tr><td>Check-up / kampanya SGK’ya fatura edilemez</td><td><span class="pill neutral">Law (SGK)</span></td><td class="note">No billing engine</td><td class="gap">Private package ledger marked self-pay (compliance UX)</td></tr>
+        <tr><td>e-reçete / Medula doktor kaydı</td><td><span class="pill neutral">Law</span></td><td class="note">Shared adapters</td><td class="gap">Rx write → hasta_ilaclar on muayene (DAH-02)</td></tr>
+        <tr><td>İlaç raporu / istirahat hızı</td><td><span class="pill neutral">BP private</span></td><td class="note">Tools SGK rapor (ped ref)</td><td class="gap">Dahiliye-native HT/DM/statin rapor şablonları</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Typical private dahiliye day — pain points</h2>
+    <div class="cards">
+      <div class="card"><div class="top"><span class="title">Check-up sonuç birleştirme</span><span class="pill neutral">Highest private revenue + time sink</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Package ledger (yaş/cinsiyet SKU) → lab/EKG/US upload → one final dahiliye raporu + hasta PDF</div>
+        <div class="sub muted">Now: Template list only; merge report Missing</div></div>
+      <div class="card"><div class="top"><span class="title">Kronik vizit hızı (HT+DM+lipid aynı 15 dk)</span><span class="pill neutral">Every afternoon polyclinic</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Sticky strip: KB/HbA1cΔ/LDL/eGFR + overdue tasks + 1-tap “bugünkü vizit planı”</div>
+        <div class="sub muted">Now: Chips + tabs exist; visit choreography thin</div></div>
+      <div class="card"><div class="top"><span class="title">SCORE2 anlatıp LDL hedefi yazmak</span><span class="pill neutral">Check-up + primary prevention</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Reviewed SCORE2/OP + very-high-risk auto-bucket → LDL hedef önerisi (hekim kilitler)</div>
+        <div class="sub muted">Now: Intentionally blocked — biggest clinical gap</div></div>
+      <div class="card"><div class="top"><span class="title">Reçete yazıldı, ilaç listesi eski kaldı</span><span class="pill neutral">Safety + polifarmasi</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Muayene reçete → hasta_ilaclar auto-update + eGFR warnings refresh</div>
+        <div class="sub muted">Now: DAH-02 open</div></div>
+      <div class="card"><div class="top"><span class="title">SGK ilaç raporu / istirahat</span><span class="pill neutral">Morning phone queue</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">HT/DM/statin/DOAK rapor şablonları from active cards (Tools ped pattern)</div>
+        <div class="sub muted">Now: Shared Tools only</div></div>
+      <div class="card"><div class="top"><span class="title">Ev tansiyon / glukoz kağıt karmaşası</span><span class="pill neutral">Compliance visits</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Portal home KB + glukoz logs → chart on HT/DM cards</div>
+        <div class="sub muted">Now: Missing</div></div>
+    </div>
+
+    <h2>Deep dive — SCORE2 / lipid / check-up</h2>
+    <div class="callout danger">
+      <h2>Highest clinical + business gap cluster</h2>
+      <p>HYP mandates SCORE2 for ≥40y (SCORE2-OP ≥70); TEMD lipid targets hang off risk category; private clinics sell check-up packages that SGK will not reimburse. V1 correctly refused a fake SCORE2 number — but without a reviewed formula + package ledger, dahiliye cannot match KD’s “thinks like my clinic” bar.</p>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Slice</th><th>TR practice</th><th>Coverage</th><th>Gap</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">SCORE2 inputs</td><td class="note">Yaş, cinsiyet, sigara, SKB, non-HDL</td><td><span class="pill danger">Missing</span></td><td class="gap">Capture fields + chart UI</td></tr>
+        <tr><td class="domain">Very-high-risk bucket</td><td class="note">ASKDH / DM+TOD / severe CKD — no SCORE needed</td><td><span class="pill danger">Missing</span></td><td class="gap">Auto from diagnosis + eGFR/UACR</td></tr>
+        <tr><td class="domain">LDL target suggest</td><td class="note">TEMD/ESC categories</td><td><span class="pill warning">Partial</span></td><td class="gap">Suggest only; keep hekim lock</td></tr>
+        <tr><td class="domain">Check-up SKU</td><td class="note">Özel paketler yaş/cinsiyet; self-pay</td><td><span class="pill danger">Thin</span></td><td class="gap">Ledger + self-pay flag</td></tr>
+        <tr><td class="domain">Final merge report</td><td class="note">Dahiliye “sonuç birleştirme” viziti</td><td><span class="pill danger">Missing</span></td><td class="gap">1-tap PDF from approved labs + EKG + US</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Deep dive — chronic metabolic office (HT/DM)</h2>
+    <div class="callout warning">
+      <h2>Rules strong — closed loops thin</h2>
+      <p>Uzlaşı combo-start and TEMD annual tasks are encoded. What impresses in clinic is the chase: missed göz dibi, stale UACR, home BP not entered, vaccine due, FIB-4 NAFLD sevk — plus printable patient sheets.</p>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Loop</th><th>Guideline</th><th>In Notya</th><th>Gap</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Confirmed HT ≥2 ofis / evre 2</td><td class="note">Uzlaşı 2025</td><td class="note">Shipped</td><td class="gap">Ev KB diary + white-coat rule</td></tr>
+        <tr><td class="domain">Combo ACEi/ARB+KKB/diüretik</td><td class="note">Uzlaşı</td><td class="note">Class suggest only</td><td class="gap">Single-pill brand hint library (optional)</td></tr>
+        <tr><td class="domain">Dirençli HT ≥3 + diüretik</td><td class="note">Uzlaşı</td><td class="note">Detect + nefro sevk</td><td class="gap">Sekonder HT wizard (V2)</td></tr>
+        <tr><td class="domain">DM göz / ayak / UACR</td><td class="note">TEMD + HYP</td><td class="note">Tasks + göz sevk</td><td class="gap">Ayak ülser photo→Belge; monofilament UI</td></tr>
+        <tr><td class="domain">DM aşıları</td><td class="note">TEMD / HYP</td><td class="note">Absent</td><td class="gap">Grip / pnömokok / HBV due</td></tr>
+        <tr><td class="domain">FIB-4 NAFLD</td><td class="note">HYP DM</td><td class="note">Absent</td><td class="gap">Yearly compute → sevk thresholds</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Forms &amp; tests — gap list</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Form / test</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Ofis KB kayıt + evre kilidi</td><td class="note">Exists</td><td class="gap">Add home-BP series chart</td></tr>
+        <tr><td class="domain">HT başlangıç tetkik checklist</td><td class="note">Exists as tasks</td><td class="gap">One-click lab panel order set</td></tr>
+        <tr><td class="domain">DM yıllık görev paketi</td><td class="note">Exists</td><td class="gap">Vaccine + FIB-4 + ayak foto</td></tr>
+        <tr><td class="domain">SCORE2 / SCORE2-OP kartı</td><td class="note">Absent</td><td class="gap">Reviewed formula + Kaynak dipnot</td></tr>
+        <tr><td class="domain">CKD KDIGO kartı</td><td class="note">Absent</td><td class="gap">eGFR×UACR stage + nefro pack</td></tr>
+        <tr><td class="domain">Anemi basamak formu</td><td class="note">Lab prose only</td><td class="gap">Ferritin→next tests engine</td></tr>
+        <tr><td class="domain">Check-up paket defteri</td><td class="note">Absent</td><td class="gap">SKU + self-pay + merge PDF</td></tr>
+        <tr><td class="domain">EKG 1-tap TR rapor</td><td class="note">Belge vision general</td><td class="gap">Dahiliye EKG template + acil flags</td></tr>
+        <tr><td class="domain">SGK HT/DM/statin ilaç raporu</td><td class="note">Tools generic</td><td class="gap">Card→rapor şablon</td></tr>
+        <tr><td class="domain">Portal KB / glukoz günlüğü</td><td class="note">Absent</td><td class="gap">New portal surfaces</td></tr>
+        <tr><td class="domain">specialties/dahiliye/prompts/</td><td class="note">Absent</td><td class="gap">system.md + tools.ts + soap (derm twin)</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Game changers (priority)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Move</th><th>Why Turkish dahiliye will care</th><th>Size</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">Check-up package ledger + final merge report PDF</td><td class="note">Private-clinic business model (self-pay; SGK won’t reimburse campaigns)</td><td><span class="pill neutral">L</span></td></tr>
+        <tr><td>2</td><td class="domain">Reviewed SCORE2 / SCORE2-OP + very-high-risk bucket → LDL suggest</td><td class="note">MoH HYP mandate + TEMD lipid targets — biggest clinical hole</td><td><span class="pill neutral">L</span></td></tr>
+        <tr><td>3</td><td class="domain">Reçete → hasta_ilaclar auto-update (DAH-02)</td><td class="note">Safety; polifarmasi; eGFR warnings stay true</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>4</td><td class="domain">HT home-BP diary + white-coat / uyum pack</td><td class="note">Uzlaşı confirmation reality in TR offices</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>5</td><td class="domain">DM closed loop: ayak foto + aşılar + FIB-4 sevk</td><td class="note">HYP/TEMD annuals that currently stop at görev chips</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>6</td><td class="domain">CKD KDIGO card (eGFR×UACR) + nefro pack</td><td class="note">Every HT/DM patient; malpractice-adjacent</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>7</td><td class="domain">Anemi workup ladder</td><td class="note">Top office complaint after metabolic</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>8</td><td class="domain">Obezite / TEMD GLP-1 pathway</td><td class="note">Explosive private demand; prior-auth narrative</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>9</td><td class="domain">SGK ilaç raporu şablonları from HT/DM/lipid cards</td><td class="note">Morning phone queue killer (Tools ped twin)</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>10</td><td class="domain">Portal: home KB + glukoz + ilaç hatırlatma</td><td class="note">Retention + adherence; e-Nabız-style expectation</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>11</td><td class="domain">Office GI mini (GERD/IBS) + NAFLD FIB-4</td><td class="note">Volume visits; HYP already routes FIB-4 to dahiliye</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>12</td><td class="domain">HF NYHA + GDMT checklist (office)</td><td class="note">SGLT2/ARNI era — impress kardiyoloji-adjacent internists</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>13</td><td class="domain">COPD/astım inhaler + spirometri belge</td><td class="note">Winter volume; exacerbation plan sheet</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>14</td><td class="domain">EKG 1-tap TR rapor templates</td><td class="note">Check-up + göğüs ağrısı speed (USG twin from KD)</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>15</td><td class="domain">prompts/ system lock (TİHUD/Harrison/TEMD)</td><td class="note">Parity with derm/jine asistan quality</td><td><span class="pill success">S</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Recommended next ships</h2>
+    <div class="cards three">
+      <div class="card"><div class="title">Sprint A — impress this week</div>
+        <div class="body">
+          <div>1. DAH-02: reçete → hasta_ilaclar</div>
+          <div>2. prompts/ system.md + tools.ts</div>
+          <div>3. Anemi workup ladder</div>
+          <div>4. SGK HT/DM/statin rapor şablonları</div>
+          <div>5. EKG 1-tap rapor templates</div>
+        </div></div>
+      <div class="card"><div class="title">Sprint B — clinic velocity</div>
+        <div class="body">
+          <div>1. Check-up package ledger + merge PDF</div>
+          <div>2. HT home-BP diary</div>
+          <div>3. DM ayak/aşı/FIB-4 closed loop</div>
+          <div>4. CKD KDIGO card</div>
+          <div>5. Sticky “bugünkü vizit” choreography</div>
+        </div></div>
+      <div class="card"><div class="title">Sprint C — MoH + wow breadth</div>
+        <div class="body">
+          <div>1. Reviewed SCORE2/OP + risk buckets</div>
+          <div>2. Obezite / GLP-1 pathway</div>
+          <div>3. Portal home KB/glukoz</div>
+          <div>4. Office GI + HF GDMT + COPD cards</div>
+          <div>5. KETEM kolon due + first real patient beta</div>
+        </div></div>
+    </div>
+
+    <h3>Sources baked into this audit</h3>
+    <p class="cap">Code: <code>specialties/dahiliye/</code> (3 files, ~406 LOC) + API route + migration 033; shared lab/Belgeler; docs/README_DAHILIYE.md, OPEN-COMMITMENTS (DAH-01/02). KD twin: ~108 specialty files / JINE-04 wow. External: TİHUD İç Hastalıkları; Harrison TR; TEMD DM 2026 / Lipid / Tiroid / Obezite / Osteo; Türk Hipertansiyon Uzlaşı Raporu 2025 (TİHUD·TEMD·TKD·TND·TAHUD·THBHD·AGD); HSGM HT Tarama-İzlem 2025; HYP kılavuzları (HT, DM, KVR/SCORE2, obezite); SGK sözleşme check-up fatura yasağı; private check-up ops (merge-report pattern); TKD SCORETürkiye history / ESC SCORE2.</p>
+    <p class="cap">Intentionally out of “wow now”: ICU/sepsis bundles, chemo, dializ reçetesi, coronary cath protocol, CGM device robotics, bariatric OR pathway — keep sevk-quality, don’t fake hospitalist depth.</p>
+
+    <div class="foot">
+      <span>Pre-wow canvas snapshot · notya-ai · İç Hastalıkları / Dahiliye · 2026-09-16</span>
+      <span>No patient data · internal product audit</span>
+    </div>
+  </div>
+</body>
+</html>
