@@ -19,7 +19,7 @@ import { encryptPII } from '@/lib/security/encryption'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
 )
 
 /** HL7 v2 kaçışlarını çöz (gelen yönde). */

@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   const { createClient } = await import('@supabase/supabase-js');
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
   );
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) {
