@@ -34,13 +34,16 @@ export async function hastaDosyasiniDerle(
     .from('patients').select('*').eq('id', patientId).eq('doctor_id', doktorId).single()
   if (!hasta) return null
 
-  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ] = await Promise.all([
+  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ] = await Promise.all([
     supabase.from('sessions').select('id, created_at, status, specialty, session_type').eq('patient_id', patientId).order('created_at', { ascending: true }),
     supabase.from('hasta_ilaclar').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
     supabase.from('asilar').select('*').eq('patient_id', patientId).order('uygulama_tarihi', { ascending: false }),
     supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }).limit(1),
     supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }).limit(20),
     supabase.from('hasta_belgeler').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }).limit(20),
+    // NOTYA-BLE-06 + NOTYA-BELGE-05: cihazdan gelen ölçümler/dosyalar ve onaylı belge değerlendirmeleri Ayşe'nin bağlamına girer
+    supabase.from('cihaz_olcumleri').select('tur, deger, birim, cihaz, profil, kaynak, alindi, onaylandi').eq('patient_id', patientId).eq('onaylandi', true).order('alindi', { ascending: false }).limit(12),
+    supabase.from('belge_analizleri').select('modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
   ])
 
   const seanslar = seanslarQ.data || []
@@ -95,6 +98,24 @@ export async function hastaDosyasiniDerle(
     b.push(`- ${a.asi_adi || '?'}${a.doz_no ? ` (${a.doz_no}. doz)` : ''} — ${trTarih(a.uygulama_tarihi)}`)
   }
 
+  // NOTYA-BLE-06 / NOTYA-BELGE-05 — cihaz kaynaklı ölçümler ve onaylı belge değerlendirmeleri (VİZİT GEÇMİŞİ'nden önce: SOAP bağlam dilimine girsin)
+  const cihazOlcumleri = (cihazQ?.data || []) as { tur: string; deger: string | null; birim: string | null; cihaz: { ad?: string; uretici?: string; model?: string } | null; profil: string | null; kaynak: string; alindi: string }[]
+  const analizler = (analizQ?.data || []) as { modality_final: string; durum: string; sonuc: { ozet?: string; acil_bayrak?: boolean; engines_used?: string[] } | null; hekim_tanisi: { ad: string; icd10?: string | null }[] | null; hekim_ozet: string | null; onaylandi_at: string | null }[]
+  if (cihazOlcumleri.length || analizler.length) {
+    b.push('\n## CİHAZ VE BELGE DEĞERLENDİRMELERİ (en yeni üstte)')
+    const TUR: Record<string, string> = { ates: 'Ateş', tansiyon: 'Tansiyon', nabiz: 'Nabız', spo2: 'SpO₂', kilo: 'Kilo', glukoz: 'Glukoz', steteskop: 'Steteskop kaydı', ekg: 'EKG dosyası', usg: 'USG görüntüsü', diger: 'Cihaz çıktısı' }
+    for (const o of cihazOlcumleri) {
+      const c = o.cihaz || {}
+      const cihazAd = [c.uretici, c.model].filter(Boolean).join(' ') || c.ad || o.profil || 'cihaz'
+      b.push(o.deger ? `- ${TUR[o.tur] || o.tur}: ${o.deger} ${o.birim || ''} (cihazdan: ${cihazAd}, ${trTarih(o.alindi)})` : `- ${TUR[o.tur] || o.tur} mevcut (cihazdan: ${cihazAd}, ${trTarih(o.alindi)}) — ses/dosya yorumlanmadı`)
+    }
+    for (const a of analizler) {
+      const tani = (a.hekim_tanisi || []).map((t) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join(', ')
+      const ozet = (a.hekim_ozet || a.sonuc?.ozet || '').replace(/\s+/g, ' ').slice(0, 400)
+      b.push(`- Belge değerlendirmesi [${a.modality_final}, ${a.onaylandi_at ? trTarih(a.onaylandi_at) : 'onaylı'}]${a.sonuc?.acil_bayrak ? ' ⚠ acil bayrak' : ''}: ${ozet}${tani ? ` — Hekim tanısı: ${tani}` : ''} (motorlar: ${(a.sonuc?.engines_used || []).join(', ')})`)
+    }
+    b.push('- Not: bu değerlendirmeler yapay zekâ taslağı üzerinden hekim onayıyla kaydedilmiştir; klinik karar hekime aittir.')
+  }
   b.push(`\n## VİZİT GEÇMİŞİ — toplam ${seanslar.length} vizit`)
   const tamNotSayisi = 10
   seanslar.forEach((s, idx) => {

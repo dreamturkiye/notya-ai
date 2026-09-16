@@ -13,6 +13,8 @@ import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji';
 import { bransKurali, tierBMotorlari, SES_MODALITELERI } from '@/core/belgeler/router';
 import { gorseliKimliksizlestir, sesiHazirla, type DeIdGorsel } from '@/core/belgeler/deid';
 import { tierBCalistir, tarayiciYetenek } from '@/core/belgeler/tarayiciMotor';
+import { dicomMi, dicomCoz } from '@/core/belgeler/dicom';
+import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser CXR engine
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import type { BelgeRaporu, MotorCiktisi } from '@/core/belgeler/types';
 
@@ -75,7 +77,13 @@ export default function BelgeAnalizPage() {
       if (!pdfMi) {
         const r = await fetch(`/api/doktor/documents/${doc.id}/download`, { headers: { Authorization: `Bearer ${token}` } });
         if (!r.ok) throw new Error('Belge indirilemedi');
-        const blob = await r.blob();
+        let blob: Blob = await r.blob();
+        let dicomNotu = '';
+        if (dicomMi(blob, doc.fileName)) { // NOTYA-BELGE-04: DICOM → windowed grayscale canvas (tags never leave the device)
+          const d = await dicomCoz(blob); dicomNotu = d.not;
+          blob = await new Promise<Blob>((res, rej) => d.canvas.toBlob((b) => (b ? res(b) : rej(new Error('DICOM dönüştürülemedi'))), 'image/png'));
+        }
+        if (dicomNotu) setMesaj(dicomNotu);
         if (sesMi) {
           const s = await sesiHazirla(blob); deid = s.spektrogram; sesMetrikleri = { ...s.metrikler, ...(s.kaliteDusuk ? { kalite_notu: s.neden || '' } : {}) };
         } else {
@@ -90,7 +98,7 @@ export default function BelgeAnalizPage() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Taslak üretilemedi');
       if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${j.analiz?.sonuc?.modalite}" olarak gördü; siz "${j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
-      setDurum('hazir'); await yukle();
+      setDurum('hazir'); setMesaj(''); await yukle();
     } catch (e) { setDurum('hata'); setMesaj(e instanceof Error ? e.message : 'Hata'); }
   };
 

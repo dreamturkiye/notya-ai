@@ -33,6 +33,8 @@ export const BULGULAR = {
   'CXR.DEV': { tr: 'Cihaz / hat / tüp', modalite: ['cxr', 'xr_batin'] },
   'CXR.HYPER': { tr: 'Hiperinflasyon', modalite: ['cxr'] },
   'CXR.FRACT': { tr: 'Kot kırığı', icd10: 'S22.3', modalite: ['cxr'] },
+  'CXR.FIB': { tr: 'Fibrotik değişiklik', icd10: 'J84', modalite: ['cxr', 'ct'] },
+  'CXR.PLTHICK': { tr: 'Plevral kalınlaşma', icd10: 'J92', modalite: ['cxr'] },
   'CXR.NORM': { tr: 'Belirgin patoloji izlenmedi', modalite: ['cxr'] },
   // Fundus / OCT
   'FUN.DR0': { tr: 'Diyabetik retinopati yok', modalite: ['fundus'] },

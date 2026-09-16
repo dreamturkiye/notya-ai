@@ -127,11 +127,11 @@ function Figur({
 }) {
   const h = hCm(cm, cmMax, plotH)
   return (
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32%', minWidth: 90 }}>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 0 auto', minWidth: 'auto', overflow: 'visible' }}>
       {highlight && (
         <div aria-hidden style={{
-          position: 'absolute', bottom: 52, width: '78%', height: h * 0.72,
-          background: 'radial-gradient(ellipse at 50% 70%, rgba(232,197,71,0.45), transparent 70%)',
+          position: 'absolute', bottom: 52, left: '50%', transform: 'translateX(-50%)', width: '78%', height: h * 0.55,
+          background: 'radial-gradient(ellipse at 50% 70%, rgba(232,197,71,0.4), transparent 70%)',
           filter: 'blur(6px)', pointerEvents: 'none',
         }} />
       )}
@@ -139,14 +139,18 @@ function Figur({
         key={src}
         src={src}
         alt={label}
+        className="hedef-boy-figur"
         style={{
+          ['--hedef-boy-h' as string]: `${h}px`,
           height: h,
           width: 'auto',
-          maxWidth: '100%',
+          maxWidth: 'none',
+          maxHeight: 'none',
+          flexShrink: 0,
           objectFit: 'contain',
           objectPosition: 'bottom',
           filter: highlight
-            ? 'drop-shadow(0 18px 18px rgba(0,0,0,0.35)) drop-shadow(0 0 18px rgba(232,197,71,0.35))'
+            ? 'drop-shadow(0 18px 18px rgba(0,0,0,0.35)) drop-shadow(0 0 12px rgba(232,197,71,0.28))'
             : 'drop-shadow(0 16px 14px rgba(0,0,0,0.32))',
           position: 'relative',
         }}
@@ -185,7 +189,7 @@ export function HedefBoyManken({
         <div style={{ flexShrink: 0, paddingBottom: 54 }}>
           <Olcer cmMin={cmMin} cmMax={cmMax} plotH={plotH} alt={sonuc.altCm} ust={sonuc.ustCm} hedef={sonuc.cocukCm} tema={tema} />
         </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', minWidth: 0 }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', minWidth: 0, overflow: 'visible' }}>
           <Figur src={KARAKTER.baba} cm={sonuc.babaCm} cmMax={cmMax} plotH={plotH} label="Baba" accent="#8EC8EA" soluk={pal.soluk} />
           <Figur src={cocukSrc} cm={sonuc.cocukCm} cmMax={cmMax} plotH={plotH} label={cocukLabel} accent={pal.cocuk} soluk={pal.soluk} highlight />
           <Figur src={KARAKTER.anne} cm={sonuc.anneCm} cmMax={cmMax} plotH={plotH} label="Anne" accent="#E7A4B0" soluk={pal.soluk} />
