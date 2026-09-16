@@ -94,6 +94,8 @@ export default function PatientDocumentVault({ patientId }: { patientId: string 
             >
               <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}</span>
               <span style={{ fontSize: 11, color: '#8FA0B5' }}>{d.category || d.fileType}</span>
+              {/* NOTYA-BELGE-01: multi-engine AI draft report for this document */}
+              <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Asistana raporla</a>
             </button>
           ))}
         </div>
