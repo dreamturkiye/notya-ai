@@ -22,6 +22,8 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { encrypt, decrypt } from '@/lib/security/encryption'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { gorevleriUret, gorevDurumu, ONAM_KUTUPHANESI, CS_ENDIKASYONLARI, taburcuKurali, bebekGorevleri, pphKarti, partografUyari, LOHUSA_ZIYARETLERI, type Gorev, type TaburcuChecklist, type TaburcuIstisna } from '@/specialties/kadin-dogum/engines/dogum-spine'
+import { baglaLohusaVeTakvim } from '@/lib/doktor/yenidoganKayit'
+import { pretermOrLbw } from '@/lib/clinical/yenidogan'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -144,6 +146,18 @@ export async function POST(req: NextRequest) {
       const gorevler = bebekGorevleri({ hafta, kiloGram: kilo, cinsiyet: cins, komplikasyonlar: komp, canli }).map((g) => ({ ...g, tamam: false }))
       const { data: bk } = await sb.from('bebek_kartlari').insert({ dogum_id: d!.id, gebelik_id: d!.gebelik_id, anne_patient_id: d!.patient_id, bebek_patient_id: bebekPatientId, doctor_id: user.id, sira: i + 1, cinsiyet: cins, dogum_zamani: dogumZamani, gebelik_haftasi: hafta, kilo_gram: kilo, apgar1: bb.apgar1 == null || bb.apgar1 === '' ? null : Number(bb.apgar1), apgar5: bb.apgar5 == null || bb.apgar5 === '' ? null : Number(bb.apgar5), canli, gorevler, komplikasyonlar: komp, erkek_ek: cins === 'E' ? { sunnet_onam_id: null, uroloji_gorevi: komp.some((k) => /hipospadias|inmemiş/i.test(k)) } : null }).select('id').single()
       if (bk) { olusan.push(bk.id); if (canli) await sb.from('taburcu_checklist').insert({ dogum_id: d!.id, bebek_id: bk.id, doctor_id: user.id, maddeler: {} }) }
+      if (canli && bebekPatientId && bk) {
+        await sb.from('gebelikler').update({ yenidogan_patient_id: bebekPatientId }).eq('id', d!.gebelik_id)
+        await baglaLohusaVeTakvim(sb, {
+          doktorId: user.id,
+          bebekId: bebekPatientId,
+          anneId: d!.patient_id,
+          dogumId: d!.id,
+          dogumAt: dogumZamani,
+          preterm: pretermOrLbw({ gestHafta: hafta, kiloGram: kilo }),
+          gkdRisk: false,
+        })
+      }
       for (const k of komp) await sb.from('komplikasyonlar').insert({ dogum_id: d!.id, patient_id: d!.patient_id, doctor_id: user.id, kime: 'bebek', ad: k, acil: /asfiksi|distosi/i.test(k) })
     }
     await gununNotunaEkle(sb, user.id, d!.patient_id, `Doğum: ${sekil.toUpperCase()} — ${new Date(dogumZamani).toLocaleString('tr-TR')} — ${canli ? `${bebekler.length} canlı bebek` : 'ölü doğum'}${d!.cs_endikasyon?.length ? ` — C/S endikasyon (hekim): ${d!.cs_endikasyon.join(', ')}` : ''}`)
