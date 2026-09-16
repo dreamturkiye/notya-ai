@@ -54,9 +54,9 @@ export const BEDSIDE_RESULT = ['pos', 'neg', 'not_done'] as const
 export const ADMISSION_REASONS = ['sjs_ten', 'eritrodermi', 'pemfigus', 'selulit', 'diger'] as const
 
 export const patientDermSchema = z.object({
-  fitzpatrick: z.enum(FITZPATRICK),
+  fitzpatrick: z.enum(FITZPATRICK).optional(),
   occupation: z.string(),
-  phototype: z.enum(FITZPATRICK),
+  phototype: z.enum(FITZPATRICK).optional(),
   atopic: z.boolean(),
   family_atopy: z.boolean(),
   hla_b51: z.boolean().optional(),
@@ -68,6 +68,8 @@ export const lesionSchema = z.object({
   region: z.string().min(1),
   morphology: z.string().min(1),
   body_map_node: z.string().optional(),
+  notes: z.string().optional(),
+  documentId: z.string().optional(),
 })
 
 /** Pixels never live here — only the core hasta_goruntulemeler id. */
@@ -82,6 +84,36 @@ export const photoAssetSchema = z.object({
   pediatric_consent: z.boolean(),
   education_anonymized: z.boolean(),
   patient_share: z.boolean(),
+  documentId: z.string().optional(),
+})
+
+export const PHOTO_DEVICES_SCHEMA = [
+  'nb-uvb-311',
+  'bb-uvb',
+  'puva-oral',
+  'puva-bath',
+  'local-puva',
+  'excimer-308',
+  'uva1',
+] as const
+
+export const scoreSnapshotSchema = z.object({
+  recorded_at: z.string().min(8),
+  pasi: z.number().optional(),
+  easi: z.number().optional(),
+  dlqi: z.number().int().min(0).max(30).optional(),
+  uas7: z.number().int().min(0).max(42).optional(),
+  salt: z.number().min(0).max(100).optional(),
+  pdai: z.number().optional(),
+})
+
+export const photoSessionSchema = z.object({
+  date: z.string().min(8),
+  device: z.enum(PHOTO_DEVICES_SCHEMA),
+  j_cm2: z.number(),
+  med_test: z.boolean().optional(),
+  burn: z.boolean().optional(),
+  sessionPhotoCoreImageId: z.string().optional(),
 })
 
 export const seriesTimepointSchema = z.object({
@@ -207,6 +239,15 @@ export const dermatolojiPayloadSchema = z.object({
   behcet_card: behcetCardSchema.nullable(),
   admission: admissionSchema.nullable(),
   gop: gopPackSchema.optional(),
+  score_snapshots: z.array(scoreSnapshotSchema).optional(),
+  phototherapy_sessions: z.array(photoSessionSchema).optional(),
+  last_tbse_iso: z.string().min(8).nullable().optional(),
+  acitretin_ban: z.boolean().optional(),
+  tb_screen: z.boolean().optional(),
+  hbv_screen: z.boolean().optional(),
+  bzbh_kind: z.string().optional(),
+  ugly_duckling: z.boolean().optional(),
+  psa_joint: z.boolean().optional(),
 })
 
 export type DermatolojiPayload = Infer<typeof dermatolojiPayloadSchema>
@@ -224,6 +265,8 @@ export type BullousWorkup = Infer<typeof bullousWorkupSchema>
 export type BehcetCard = Infer<typeof behcetCardSchema>
 export type Admission = Infer<typeof admissionSchema>
 export type GopPack = Infer<typeof gopPackSchema>
+export type ScoreSnapshot = Infer<typeof scoreSnapshotSchema>
+export type PhotoSessionPayload = Infer<typeof photoSessionSchema>
 
 /** Isolation probes — do not import other specialty folders into production code. */
 export const pediatriProbeSchema = z.object({
