@@ -16,6 +16,7 @@ import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari';
 import { receteGruplari, belirsizKontrol, RENK_ETIKET } from '@/lib/doktor/receteRengi';
+import RrsPaneli from '@/components/doktor/RrsPaneli';
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -278,6 +279,10 @@ export default function ReceteYazdirPage() {
           <div style={{ border: `2px solid ${g.renk === 'kirmizi' ? '#B91C1C' : '#15803D'}`, color: g.renk === 'kirmizi' ? '#B91C1C' : '#15803D', textAlign: 'center', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, padding: '4px 8px', marginBottom: 10 }}>
             {RENK_ETIKET[g.renk]} — Renkli Reçete Sistemi (RRS) üzerinden düzenlenir
           </div>
+        )}
+        {g.renk !== 'normal' && (
+          <RrsPaneli noteId={params.id} renk={g.renk as 'kirmizi' | 'yesil'} hastaAd={baslik.hasta.ad || ''} tarih={baslik.tarih} tanilar={tanilar.map((t) => t.taniKodu)} taslakMi={!!baslik.taslakMi}
+            satirlar={g.satirlar.map(({ s, i }) => ({ ilacAdi: s.ilacAdi, etkenMadde: s.etkenMadde, dozMetni: s.dozMetni, kullanimOzeti: s.kullanimOzeti, kutu: kutular[i] ?? s.kutu ?? 1 }))} />
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 14, gap: 12 }}>
           <div>
