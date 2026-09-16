@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { kanonikBul, kanonikBirimeCevir, kritikMi } from './kanonik'
-import { sayiCoz, bayrakHesapla, trendHesapla, satirKur, trendCumlesi, uzlastir, panelOzeti } from './trend'
+import { sayiCoz, bayrakHesapla, trendHesapla, satirKur, trendCumlesi, uzlastir, panelOzeti, ozelHesaplar } from './trend'
 
 describe('kanonik', () => {
   it('Turkish and English aliases map; short keys do not over-match', () => {
@@ -71,5 +71,15 @@ describe('reconciliation', () => {
     assert.equal(r.satirlar.length, 3); assert.equal(r.uyusmazlik.length, 1); assert.equal(r.uyusmazlik[0].raw_name, 'ALT')
     assert.equal(r.satirlar.find((s) => s.raw_name === 'CRP')?.kaynak, 'gorsel')
     const oz = panelOzeti(r.satirlar.map((h) => satirKur(h, []))); assert.equal(oz.toplam, 3)
+  })
+})
+
+describe('specialty computed lines', () => {
+  it('Kre slope for nefroloji with ≥2 priors; Δ HbA1c for endokrin; nothing for unrelated branş', () => {
+    const kre = satirKur({ raw_name: 'Kreatinin', value: '1,8', unit: 'mg/dL', ref_low: '0,6', ref_high: '1,2', flag_printed: null, page: 1 }, [{ canonical_key: 'Kre', kanonik_deger: 1.2, flag: 'normal', numune_tarihi: '2026-03-15' }, { canonical_key: 'Kre', kanonik_deger: 1.5, flag: 'H', numune_tarihi: '2026-06-15' }])
+    const l = ozelHesaplar([kre], 'nefroloji'); assert.equal(l.length, 1); assert.ok(l[0].startsWith('Kreatinin eğimi')); assert.ok(l[0].includes('1.2 → 1.8'))
+    const a1c = satirKur({ raw_name: 'HbA1c', value: '7,9', unit: '%', ref_low: '4', ref_high: '6', flag_printed: null, page: 1 }, [{ canonical_key: 'HbA1c', kanonik_deger: 7.1, flag: 'H', numune_tarihi: '2026-05-01' }])
+    const e = ozelHesaplar([a1c], 'endokrinoloji'); assert.equal(e.length, 1); assert.ok(e[0].includes('+0.8 puan'))
+    assert.equal(ozelHesaplar([kre, a1c], 'kbb').length, 0)
   })
 })

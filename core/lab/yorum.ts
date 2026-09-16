@@ -85,7 +85,7 @@ KURALLAR
 {"ozet": string, "kritik": string[], "yeni_bozulanlar": string[], "duzelenler": string[], "kronik": string[], "tanilar": [{"ad": string, "icd10": string|null, "guven_pct": number, "guven_bant": "yüksek"|"orta"|"düşük", "destek": string[]}], "klinik_iliski": string, "oneri": string, "recete_ipucu": string|null, "sinirlar": string[], "acil_bayrak": boolean}`
 }
 
-export function labKullaniciPromptu(satirlar: LabSatir[], baglam: { yasAy: number | null; cinsiyet: string | null; ilaclar: string[]; labAdi: string | null; numuneTarihi: string | null; kritik: string[]; oncekiVar: boolean }): string {
+export function labKullaniciPromptu(satirlar: LabSatir[], baglam: { yasAy: number | null; cinsiyet: string | null; ilaclar: string[]; labAdi: string | null; numuneTarihi: string | null; kritik: string[]; oncekiVar: boolean; ozelSatirlar?: string[] }): string {
   const tablo = satirlar.map((s) => ({ test: s.canonical_key ? kanonikTr(s.canonical_key) : s.raw_name, deger: s.value_num ?? s.value_text, birim: s.unit, ref: s.ref_low != null || s.ref_high != null ? `${s.ref_low ?? '—'}–${s.ref_high ?? '—'}` : null, bayrak: s.flag, onceki: s.prior_value, onceki_tarih: s.prior_date, delta_pct: s.delta_pct, trend: s.trend, dogrulanacak: s.dogrulanacak || undefined }))
   const cumleler = satirlar.filter((s) => s.flag !== 'normal' && s.flag !== 'unknown' || s.trend === 'new_normal').map(trendCumlesi).filter(Boolean)
   return [
@@ -94,6 +94,7 @@ export function labKullaniciPromptu(satirlar: LabSatir[], baglam: { yasAy: numbe
     `KRİTİK (sistem): ${baglam.kritik.length ? baglam.kritik.join(' | ') : 'yok'}`,
     `TABLO (sistem hesapladı): ${JSON.stringify(tablo)}`,
     cumleler.length ? `TREND CÜMLELERİ (aynen kullan): ${cumleler.join(' ')}` : '',
+    baglam.ozelSatirlar?.length ? `BRANŞ HESAPLARI (sistem hesapladı, özete aynen işle): ${baglam.ozelSatirlar.join(' ')}` : '',
     'Yalnızca JSON döndür.',
   ].filter(Boolean).join('\n')
 }
