@@ -19,6 +19,8 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
+import { bhcgSeriesTrend } from '@/specialties/kadin-dogum/protocols/gted-ektopik'
+import { aubDegerlendir, pmpKapatilabilir, kokDegerlendir, endometriozisDegerlendir, rmDegerlendir, egkDegerlendir, REF_ACIKLAMA, type AubGirdi, type KokGirdi, type EndoGirdi, type RmGirdi, type EgkGirdi } from '@/specialties/kadin-dogum/engines/jinekoloji-v2'
 import { dueHesapla, serviksAksiyonu, partnerTedaviGerekli, ilkUlserKontrolListesi, akintiOnTani, hsvGebelikGorevleri, pcosDegerlendir, riaTakvimi, hrtOnDegerlendirme, HRT_YILLIK_GOREVLER, INFERTILITE_ADIM1, kirmiziBayraklar, YILLIK_KONTROL_ALANLARI, CYBH_ETKENLERI, type Etken, type PapSonuc, type HpvSonuc, type HsvKarti, type HrtOnKontrol } from '@/specialties/kadin-dogum/engines/jinekoloji-spine'
 
 export const dynamic = 'force-dynamic'
@@ -166,6 +168,107 @@ export async function POST(req: NextRequest) {
     if (basladi && hrtBaslangic) await gorevEkle(sb, user.id, hasta.id, [{ kod: 'hrt_yillik', ad: 'HRT yıllık güvenlik kontrolü (MG, TVUS ET, TA, VTE)', due: ekleAy(hrtBaslangic, 12), kaynak: 'hrt' }])
     return NextResponse.json({ ok: true, degerlendirme: deg })
   }
+
+  // ---------- V2 (NOTYA-JINE-02) ----------
+  if (adim === 'aub') {
+    const g = (b.girdi || {}) as Record<string, unknown>
+    // latest APPROVED Hb / ferritin from the lab engine (never invented)
+    const { data: labs } = await sb.from('lab_satirlar').select('canonical_key, kanonik_deger, numune_tarihi').eq('patient_id', hasta.id).eq('onayli', true).in('canonical_key', ['Hb', 'Ferritin']).order('numune_tarihi', { ascending: false }).limit(10)
+    const hbLab = (labs || []).find((l) => l.canonical_key === 'Hb'), ferLab = (labs || []).find((l) => l.canonical_key === 'Ferritin')
+    const hb = g.hb != null && g.hb !== '' ? Number(g.hb) : hbLab?.kanonik_deger != null ? Number(hbLab.kanonik_deger) : null
+    const ferritin = g.ferritin != null && g.ferritin !== '' ? Number(g.ferritin) : ferLab?.kanonik_deger != null ? Number(ferLab.kanonik_deger) : null
+    const girdi: AubGirdi = { yas: yasHesap(), postmenopoz: !!g.postmenopoz, palm: (g.palm || {}) as Record<string, boolean>, coein: (g.coein || {}) as Record<string, boolean>, sureGun: g.sureGun == null || g.sureGun === '' ? null : Number(g.sureGun), pedAdet: g.pedAdet == null || g.pedAdet === '' ? null : Number(g.pedAdet), pihti: !!g.pihti, hb, ferritin, obezite: !!g.obezite, anovulasyonOykusu: !!g.anovulasyon, kronikAub: !!g.kronik }
+    const taslak = aubDegerlendir(girdi)
+    const { data, error } = await sb.from('jine_aub').insert({ patient_id: hasta.id, doctor_id: user.id, palm: girdi.palm, coein: girdi.coein, menoraji: { sureGun: girdi.sureGun, pedAdet: girdi.pedAdet, pihti: girdi.pihti, hb, ferritin, hbKaynak: g.hb != null && g.hb !== '' ? 'elle' : hbLab ? `lab ${hbLab.numune_tarihi}` : null, anemi: taslak.anemi }, postmenopoz: girdi.postmenopoz, taslak, tvus_et: g.tvusEt == null || g.tvusEt === '' ? null : Number(g.tvusEt) }).select('id').single()
+    if (error || !data) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    const gorevler: { kod: string; ad: string; due?: string | null; kaynak: string }[] = []
+    if (taslak.endometrialOrnekZorunlu) gorevler.push({ kod: 'endometrial_ornek', ad: girdi.postmenopoz ? 'PMP: TVUS ET + endometriyal örnekleme (pipelle/D&C) — sitoloji kapatmaz' : 'Endometriyal örnekleme (pipelle; başarısızsa D&C)', due: bugun(), kaynak: 'aub' })
+    if (taslak.anemi === 'agir') gorevler.push({ kod: 'aub_agir_anemi', ad: 'Ağır anemi (Hb <8): acil değerlendirme', due: bugun(), kaynak: 'aub' })
+    await gorevEkle(sb, user.id, hasta.id, gorevler)
+    if (girdi.postmenopoz) await gununNotunaEkle(sb, user.id, hasta.id, 'Postmenopozal kanama: TVUS ET + endometriyal örnekleme görevi açıldı (sitoloji yeterli değil).')
+    return NextResponse.json({ ok: true, aubId: data.id, taslak })
+  }
+  if (adim === 'aub_guncelle') {
+    const { data: a } = await sb.from('jine_aub').select('id, postmenopoz, ornekleme, tvus_et').eq('id', String(b.aubId || '')).eq('doctor_id', user.id).maybeSingle()
+    if (!a) return NextResponse.json({ error: 'AUB kaydı bulunamadı' }, { status: 404 })
+    const ornekleme = b.ornekleme ? { ...((a.ornekleme as object) || {}), ...(b.ornekleme as object) } : a.ornekleme
+    const tvusEt = b.tvusEt == null || b.tvusEt === '' ? a.tvus_et : Number(b.tvusEt)
+    const alanlar: Record<string, unknown> = { ornekleme, tvus_et: tvusEt, hekim_plani: b.hekimPlani != null ? String(b.hekimPlani).slice(0, 1000) : undefined, updated_at: new Date().toISOString() }
+    if (alanlar.hekim_plani === undefined) delete alanlar.hekim_plani
+    if (b.pmpKapat === true) {
+      const gate = pmpKapatilabilir({ tvusEt: tvusEt == null ? null : Number(tvusEt), ornekleme: { tur: (ornekleme as { tur?: 'pipelle' | 'dc' | 'histeroskopi' } | null)?.tur || null, sonuc: (ornekleme as { sonuc?: string } | null)?.sonuc || null }, sitolojiVar: !!b.sitolojiVar })
+      if (!gate.kapatilabilir) return NextResponse.json({ error: `PMP yolu kapatılamaz — eksik: ${gate.eksik.join(', ')}. ${gate.not.join(' ')}`, gate }, { status: 409 })
+      alanlar.pmp_kapatildi = true; alanlar.pmp_kapatildi_at = new Date().toISOString()
+      await sb.from('jine_gorevleri').update({ durum: 'tamam', tamam_at: new Date().toISOString() }).eq('patient_id', hasta.id).eq('kod', 'endometrial_ornek').eq('durum', 'acik')
+    }
+    const { error } = await sb.from('jine_aub').update(alanlar).eq('id', a.id)
+    if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    if (b.hekimPlani) await gununNotunaEkle(sb, user.id, hasta.id, `AUB planı (hekim): ${String(b.hekimPlani).slice(0, 300)}`)
+    return NextResponse.json({ ok: true })
+  }
+  if (adim === 'kok') {
+    const k = (b.kontrol || {}) as Record<string, unknown>
+    const num = (v: unknown) => (v == null || v === '' ? null : Number(v))
+    const girdi: KokGirdi = { yas: yasHesap(), sigaraGunluk: num(k.sigaraGunluk), vteOykusu: !!k.vteOykusu, migrenAura: !!k.migrenAura, migrenAurasiz35Ustu: !!k.migrenAurasiz, taSistolik: num(k.taSistolik), taDiastolik: num(k.taDiastolik), vaskulerHastalik: !!k.vaskulerHastalik, memeCa: !!k.memeCa, memeCaGecmis5YilUstu: !!k.memeCaGecmis, karacigerAgir: !!k.karacigerAgir, karacigerTumor: !!k.karacigerTumor, postpartumGun: num(k.postpartumGun), emziriyor: !!k.emziriyor, slePozitifApl: !!k.sleApl, dmVaskuler: !!k.dmVaskuler, buyukCerrahiImmobil: !!k.cerrahiImmobil, bilinmeyenKanama: !!k.bilinmeyenKanama, hiperlipidemi: !!k.hiperlipidemi, obeziteBmi: num(k.bmi) }
+    const sonuc = kokDegerlendir(girdi)
+    const karar = String(b.karar || 'beklemede')
+    const override = karar === 'baslandi' && sonuc.kategori === 4
+    if (override && !(b.overrideGerekce && String(b.overrideGerekce).trim().length >= 15)) return NextResponse.json({ error: `KOK başlatılamaz (MEC 4): ${sonuc.engeller.join('; ')}. Hekim override için ≥15 karakter gerekçe zorunlu; kayda geçer.`, sonuc }, { status: 409 })
+    const { error } = await sb.from('jine_kok').insert({ patient_id: hasta.id, doctor_id: user.id, kontrol: girdi, sonuc, karar, override, override_gerekce: override ? String(b.overrideGerekce).slice(0, 500) : null, preparat: b.preparat ? String(b.preparat).slice(0, 120) : null })
+    if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    if (karar === 'baslandi') await gununNotunaEkle(sb, user.id, hasta.id, `KOK başlandı (hekim) — MEC kategori ${sonuc.kategori}${override ? ` — OVERRIDE: ${String(b.overrideGerekce).slice(0, 200)}` : ''}${b.preparat ? ` — ${String(b.preparat)}` : ''}`)
+    return NextResponse.json({ ok: true, sonuc, override })
+  }
+  if (adim === 'endometriozis') {
+    const g = (b.girdi || {}) as Record<string, unknown>
+    const girdi: EndoGirdi = { dismenore: !!g.dismenore, disparoni: !!g.disparoni, kronikPelvikAgri: !!g.kronikPelvikAgri, infertilite: !!g.infertilite, diskezi: !!g.diskezi, endometriomaCm: g.endometriomaCm == null || g.endometriomaCm === '' ? null : Number(g.endometriomaCm), ca125: g.ca125 == null || g.ca125 === '' ? null : Number(g.ca125), gebelikIstegi: !!g.gebelikIstegi, tedaviyeDirenc: !!g.tedaviyeDirenc }
+    const taslak = endometriozisDegerlendir(girdi)
+    const { data: mevcut } = await sb.from('jine_endometriozis').select('id').eq('patient_id', hasta.id).maybeSingle()
+    const satir = { patient_id: hasta.id, doctor_id: user.id, girdi, taslak, hekim_plani: b.hekimPlani ? String(b.hekimPlani).slice(0, 1000) : null, sevk: taslak.sevk.length ? { maddeler: taslak.sevk } : null, updated_at: new Date().toISOString() }
+    const { error } = mevcut ? await sb.from('jine_endometriozis').update(satir).eq('id', mevcut.id) : await sb.from('jine_endometriozis').insert(satir)
+    if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    await gorevEkle(sb, user.id, hasta.id, taslak.sevk.map((sv, i) => ({ kod: `endo_sevk_${i}`, ad: sv, due: bugun(), kaynak: 'endometriozis' })))
+    return NextResponse.json({ ok: true, taslak })
+  }
+  if (adim === 'rm') {
+    const g = (b.girdi || {}) as Record<string, unknown>
+    const girdi: RmGirdi = { klinikKayipSayisi: Number(g.klinikKayipSayisi) || 0, hekimEsigi3: !!g.hekimEsigi3, anneYas: yasHesap(), ardisik: !!g.ardisik }
+    const taslak = rmDegerlendir(girdi)
+    const { data: mevcut } = await sb.from('jine_rm').select('id, tetkik_durumu').eq('patient_id', hasta.id).maybeSingle()
+    const tetkikDurumu = { ...((mevcut?.tetkik_durumu as object) || {}), ...((b.tetkikDurumu as object) || {}) }
+    const satir = { patient_id: hasta.id, doctor_id: user.id, girdi, taslak, tetkik_durumu: tetkikDurumu, hekim_plani: b.hekimPlani ? String(b.hekimPlani).slice(0, 1000) : null, updated_at: new Date().toISOString() }
+    const { error } = mevcut ? await sb.from('jine_rm').update(satir).eq('id', mevcut.id) : await sb.from('jine_rm').insert(satir)
+    if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    if (taslak.kriterKarsilandi) await gorevEkle(sb, user.id, hasta.id, taslak.tetkikler.filter((t) => t.oneri === 'rutin').map((t) => ({ kod: `rm_${kisaKod(t.ad)}`, ad: t.ad, due: bugun(), kaynak: 'rm' })))
+    return NextResponse.json({ ok: true, taslak })
+  }
+  if (adim === 'egk') {
+    const g = (b.girdi || {}) as Record<string, unknown>
+    const num = (v: unknown) => (v == null || v === '' ? null : Number(v))
+    const bool = (v: unknown) => (v === true ? true : v === false ? false : null)
+    const seri = (Array.isArray(b.bhcg) ? b.bhcg : []).map((x: { at?: string; value?: unknown }) => ({ at: String(x.at || bugun()), value: Number(x.value) })).filter((x) => Number.isFinite(x.value))
+    // pull approved β-hCG from the lab engine too
+    const { data: labs } = await sb.from('lab_satirlar').select('kanonik_deger, numune_tarihi').eq('patient_id', hasta.id).eq('onayli', true).eq('canonical_key', 'bHCG').order('numune_tarihi', { ascending: true }).limit(10)
+    for (const l of labs || []) if (l.kanonik_deger != null && l.numune_tarihi && !seri.some((x) => x.at === String(l.numune_tarihi))) seri.push({ at: String(l.numune_tarihi), value: Number(l.kanonik_deger) })
+    const trend = bhcgSeriesTrend(seri)
+    const { data: ks } = await sb.from('kadin_sagligi').select('notlar').eq('patient_id', hasta.id).maybeSingle()
+    const { data: gebQ } = await sb.from('gebelikler').select('id, kan_grubu, durum').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    const rhNeg = g.rhNegatif === true || /-|neg/i.test(String(gebQ?.kan_grubu || ''))
+    const girdi: EgkGirdi = { crlMm: num(g.crlMm), fhrVar: bool(g.fhrVar), msdMm: num(g.msdMm), embriyoVar: bool(g.embriyoVar), bhcg: seri, rhNegatif: rhNeg, hafta: num(g.hafta) }
+    const taslak = egkDegerlendir(girdi, trend)
+    const gebelikId = gebQ && aktifGebelikDurumu(gebQ.durum) && (girdi.hafta == null || girdi.hafta < 20) ? gebQ.id : null
+    const { data, error } = await sb.from('jine_egk').insert({ patient_id: hasta.id, doctor_id: user.id, gebelik_id: gebelikId, girdi, bhcg_serisi: seri, taslak: { ...taslak, bhcgTrend: trend }, secenek: b.secenek ? String(b.secenek) : null }).select('id').single()
+    if (error || !data) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    await gorevEkle(sb, user.id, hasta.id, taslak.gorevler.map((gv) => ({ kod: `egk_${kisaKod(gv)}`, ad: gv, due: bugun(), kaynak: 'egk' })))
+    void ks
+    return NextResponse.json({ ok: true, egkId: data.id, taslak, bhcgTrend: trend })
+  }
+  if (adim === 'egk_guncelle') {
+    const { error } = await sb.from('jine_egk').update({ secenek: b.secenek ? String(b.secenek) : null, anti_d_uygulandi: b.antiD === true ? true : b.antiD === false ? false : null, kapali: b.kapali === true, updated_at: new Date().toISOString() }).eq('id', String(b.egkId || '')).eq('doctor_id', user.id)
+    if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    if (b.secenek) await gununNotunaEkle(sb, user.id, hasta.id, `Erken gebelik kaybı yönetimi (hekim): ${String(b.secenek)}`)
+    return NextResponse.json({ ok: true })
+  }
   return NextResponse.json({ error: 'Geçersiz adim' }, { status: 400 })
 }
 
@@ -189,9 +292,16 @@ export async function GET(req: NextRequest) {
     sb.from('jine_vizitler').select('id, tur, alanlar, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
     aktifGebeMi(sb, hasta.id),
   ])
+  const [aub, kok, endo, rm, egk] = await Promise.all([
+    sb.from('jine_aub').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
+    sb.from('jine_kok').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
+    sb.from('jine_endometriozis').select('*').eq('patient_id', hasta.id).maybeSingle(),
+    sb.from('jine_rm').select('*').eq('patient_id', hasta.id).maybeSingle(),
+    sb.from('jine_egk').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
+  ])
   const k = ks.data as Record<string, unknown> | null
   const aktifKontr = (kontr.data || []).find((x) => x.aktif) || null
   const ria = aktifKontr && String(aktifKontr.yontem).startsWith('ria_') ? (String(aktifKontr.yontem).slice(4) as 'cu5' | 'cu10' | 'lng5' | 'lng8') : null
   const due = dueHesapla({ dob: hasta.dob, bugun: bugun(), sonPap: (k?.son_pap as string) || null, sonHpv: (k?.son_hpv as string) || null, sonMamografi: (k?.son_mamografi as string) || null, sonDxa: (k?.son_dxa as string) || null, sonGgk: (k?.son_kolorektal as string) || null, hrt: !!k?.hrt, hrtBaslangic: (k?.hrt_baslangic as string) || null, riaTakildi: ria ? String(aktifKontr!.baslangic) : null, riaTipi: ria, histerektomi: !!k?.histerektomi, gebe })
-  return NextResponse.json({ kadinSagligi: k, due, serviks: serviks.data || [], cybh: cybh.data || [], pcos: pcos.data, lezyonlar: lezyonlar.data || [], kontrasepsiyon: kontr.data || [], hrt: hrt.data, gorevler: gorevler.data || [], vizitler: vizitler.data || [], gebe, kutuphane: { etkenler: CYBH_ETKENLERI, hrtYillik: HRT_YILLIK_GOREVLER, infertilite: INFERTILITE_ADIM1, vizitAlanlari: YILLIK_KONTROL_ALANLARI } })
+  return NextResponse.json({ kadinSagligi: k, due, serviks: serviks.data || [], cybh: cybh.data || [], pcos: pcos.data, lezyonlar: lezyonlar.data || [], kontrasepsiyon: kontr.data || [], hrt: hrt.data, gorevler: gorevler.data || [], vizitler: vizitler.data || [], gebe, v2: { aub: aub.data || [], kok: kok.data || [], endo: endo.data, rm: rm.data, egk: egk.data || [] }, kutuphane: { etkenler: CYBH_ETKENLERI, hrtYillik: HRT_YILLIK_GOREVLER, infertilite: INFERTILITE_ADIM1, vizitAlanlari: YILLIK_KONTROL_ALANLARI, refler: REF_ACIKLAMA } })
 }

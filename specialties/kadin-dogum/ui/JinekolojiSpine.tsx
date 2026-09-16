@@ -6,11 +6,12 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
+import { JinekolojiV2Sekmeler } from './JinekolojiV2Sekmeler';
 
 type Due = { kod: string; ad: string; due: string | null; durum: string; not: string; takvim: string };
 type Gorev = { id: string; kod: string; ad: string; due: string | null; kaynak: string };
 type Serviks = { id: string; tarih: string; pap_sonuc: string | null; hpv: string | null; taslak_aksiyon: { adim: string; sonrakiAy: number | null; guven: number; gerekce: string; kolposkopi: boolean } | null; resmi_plan: string | null; sonraki_due: string | null; hekim_onayladi: boolean; kolposkopi: Record<string, unknown> | null };
-type Veri = { kadinSagligi: Record<string, unknown> | null; due: Due[]; serviks: Serviks[]; cybh: { id: string; tarih: string; etkenler: string[]; on_tani: { etken: string | null; guven: number; gerekce: string } | null; partner: { gerekli: boolean } | null; ilk_genital_ulser: boolean }[]; pcos: { kriterler: Record<string, unknown>; dislama: Record<string, boolean>; degerlendirme: { kriterSayisi: number; rotterdamKarsilar: boolean; dislamaTam: boolean; not: string[] } | null; hekim_tanisi: string | null; amenore_gun: number | null } | null; lezyonlar: { id: string; tur: string; boyut_mm: number | null; figo_tip: string | null; yer: string | null; semptom: string | null; sonraki_us: string | null; created_at: string }[]; kontrasepsiyon: { id: string; yontem: string; baslangic: string | null; son_kullanim: string | null; aktif: boolean; ria_notu: { ip_kontrol_tarihi?: string; pid_uyari_bitis?: string } | null }[]; hrt: { hrt_basladi: boolean; hrt_baslangic: string | null; rejim: string | null; degerlendirme: { engeller: string[]; uyarilar: string[]; eksikler: string[] } | null } | null; gorevler: Gorev[]; gebe: boolean; kutuphane: { etkenler: readonly string[]; hrtYillik: string[]; infertilite: string[] } };
+type Veri = { kadinSagligi: Record<string, unknown> | null; due: Due[]; serviks: Serviks[]; cybh: { id: string; tarih: string; etkenler: string[]; on_tani: { etken: string | null; guven: number; gerekce: string } | null; partner: { gerekli: boolean } | null; ilk_genital_ulser: boolean }[]; pcos: { kriterler: Record<string, unknown>; dislama: Record<string, boolean>; degerlendirme: { kriterSayisi: number; rotterdamKarsilar: boolean; dislamaTam: boolean; not: string[] } | null; hekim_tanisi: string | null; amenore_gun: number | null } | null; lezyonlar: { id: string; tur: string; boyut_mm: number | null; figo_tip: string | null; yer: string | null; semptom: string | null; sonraki_us: string | null; created_at: string }[]; kontrasepsiyon: { id: string; yontem: string; baslangic: string | null; son_kullanim: string | null; aktif: boolean; ria_notu: { ip_kontrol_tarihi?: string; pid_uyari_bitis?: string } | null }[]; hrt: { hrt_basladi: boolean; hrt_baslangic: string | null; rejim: string | null; degerlendirme: { engeller: string[]; uyarilar: string[]; eksikler: string[] } | null } | null; gorevler: Gorev[]; gebe: boolean; v2?: { aub: Record<string, unknown>[]; kok: Record<string, unknown>[]; endo: Record<string, unknown> | null; rm: Record<string, unknown> | null; egk: Record<string, unknown>[] }; kutuphane: { etkenler: readonly string[]; hrtYillik: string[]; infertilite: string[]; refler?: Record<string, string> } };
 
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
@@ -18,7 +19,7 @@ const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F
 const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5' };
 const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : '#8FA0B5' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const dueRenk: Record<string, string> = { gecikti: '#F87171', yaklasiyor: '#FBBF24', planli: '#2DD4BF', uygun_degil: '#64748B' };
-const SEKME = ['Tarama & Görevler', 'Serviks', 'CYBH', 'PCOS', 'Kontrasepsiyon', 'Menopoz / HRT', 'Lezyon', 'İnfertilite'] as const;
+const SEKME = ['Tarama & Görevler', 'Serviks', 'CYBH', 'PCOS', 'Kontrasepsiyon', 'Menopoz / HRT', 'Lezyon', 'İnfertilite', 'AUB / PMP', 'KOK kapısı', 'Endometriozis', 'Tekrarlayan kayıp', 'Erken gebelik kaybı'] as const;
 const PAP = ['NILM', 'ASC-US', 'ASC-H', 'LSIL', 'HSIL', 'AGC', 'CA', 'yetersiz'], HPV = [['neg', 'Negatif'], ['16', 'HPV 16'], ['18', 'HPV 18'], ['other_hr', 'Diğer HR'], ['low_risk', 'Düşük risk']];
 
 export function JinekolojiSpine({ patientId }: { patientId: string }) {
@@ -26,6 +27,7 @@ export function JinekolojiSpine({ patientId }: { patientId: string }) {
   const [sekme, setSekme] = useState<(typeof SEKME)[number]>('Tarama & Görevler');
   const [mesaj, setMesaj] = useState('');
   const [f, setF] = useState<Record<string, unknown>>({});
+  const [kaynakAcik, setKaynakAcik] = useState(false); // NOTYA-JINE-02: clinician-only reference toggle
   const s = (k: string) => (f[k] as string) ?? '';
   const b = (k: string) => !!f[k];
   const set = (k: string, x: unknown) => setF((p) => ({ ...p, [k]: x }));
@@ -41,6 +43,7 @@ export function JinekolojiSpine({ patientId }: { patientId: string }) {
   return (
     <div style={{ ...toolsCard, marginBottom: 12 }} data-chapter="jinekoloji-spine">
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>{SEKME.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999 }}>{x}{x === 'Tarama & Görevler' && v.due.some((d) => d.durum === 'gecikti') ? ' ⚠' : ''}</button>)}</div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -4, marginBottom: 6 }}><button type="button" onClick={() => setKaynakAcik(!kaynakAcik)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynakAcik ? '#2DD4BF' : '#64748B' }}>{kaynakAcik ? 'Kaynak: açık (yalnız hekim)' : 'Kaynak'}</button></div>
       {v.gebe && <div style={{ ...kucuk, color: '#FBBF24', marginBottom: 6 }}>Aktif gebelik var — gebelik akışı Doğum spine'da; burada yalnız gebelik dışı ofis jinekolojisi.</div>}
       {mesaj && <div style={{ fontSize: 12, color: /amadı|gerek|geçersiz|Hata|engel|onaylanmalı/.test(mesaj) ? '#F87171' : '#2DD4BF', marginBottom: 8 }}>{mesaj}</div>}
 
@@ -151,6 +154,8 @@ export function JinekolojiSpine({ patientId }: { patientId: string }) {
         <div style={etiket}>İnfertilite — 1. basamak <span style={kucuk}>· Notya sevkte durur; IVF laboratuvarı kapsam dışı</span></div>
         <ol style={{ fontSize: 12, color: '#EDF1F7', margin: 0, paddingLeft: 18 }}>{v.kutuphane.infertilite.map((a) => <li key={a}>{a}</li>)}</ol>
       </div>)}
+      {/* NOTYA-JINE-02 */}
+      <JinekolojiV2Sekmeler sekme={sekme} v2={v.v2 || { aub: [], kok: [], endo: null, rm: null, egk: [] }} refler={v.kutuphane.refler || {}} calistir={calistir} kaynakAcik={kaynakAcik} />
     </div>
   );
 }
