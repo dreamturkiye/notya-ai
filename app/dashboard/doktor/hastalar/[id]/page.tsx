@@ -18,6 +18,7 @@ import HastaMchat from '@/components/doktor/HastaMchat';
 import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
 import HastaGebelik from '@/components/doktor/HastaGebelik';
 import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
+import DahiliyeHome from '@/specialties/dahiliye/ui/DahiliyeHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
 import { hesaplaHedefBoy, formatBoyCm, pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
@@ -68,7 +69,7 @@ export default function HastaProfilPage() {
   // NOTYA-RANDEVU-09: randevu takviminden hedefli linkler ?tab=formu / ?tab=asilar ile atlar.
   const tabParam = searchParams?.get('tab');
   const [activeTab, setActiveTab] = useState<HastaDosyaSekmeId>(
-    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'gebelik' || tabParam === 'belgeler' || tabParam === 'goruntuleme'
+    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'dahiliye' || tabParam === 'gebelik' || tabParam === 'belgeler' || tabParam === 'goruntuleme'
       ? tabParam
       : 'ozet',
   );
@@ -78,10 +79,12 @@ export default function HastaProfilPage() {
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
   const [pediatriAraci, setPediatriAraci] = useState(false);
+  const [dahiliyeAraci, setDahiliyeAraci] = useState(false); // NOTYA-DAH-01: iç hastalıkları / aile / genel dahiliye
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
   const pediatriUygun = patient ? pediatriSekmesiUygun(patient.dogum_tarihi) : false;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun });
+  const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun });
 
   useEffect(() => {
     if (!patientId) return;
@@ -102,6 +105,7 @@ export default function HastaProfilPage() {
         if (meRes.ok) {
           const me = await meRes.json();
           setPediatriAraci(pediatriHedefBoyBransi(me?.data?.specialty));
+          setDahiliyeAraci(/dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|kardiyo|gastro|romato|hemato|onkolo|göğüs|gogus/i.test(String(me?.data?.specialty || '')));
         }
       } catch {
         setError('Bir hata oluştu');
@@ -352,6 +356,7 @@ export default function HastaProfilPage() {
         {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
         {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
         {!loading && !error && activeTab === 'gebelik' && gebelikUygun && <HastaGebelik patientId={patientId} />}
+        {!loading && !error && activeTab === 'dahiliye' && <DahiliyeHome patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && (
           <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} />
         )}
