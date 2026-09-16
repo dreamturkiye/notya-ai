@@ -5,6 +5,7 @@ import { dozCikar } from '@/components/doktor/IlacSecici'
 import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route'
 import React, { useState, useEffect } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import RrsBekleyenler from '@/components/doktor/RrsBekleyenler'
 
 interface Hasta {
   id: string
@@ -236,6 +237,8 @@ const ERecetePage: React.FC = () => {
             Elektronik reçete oluşturma ve SGK entegrasyonu
           </p>
         </div>
+
+        <RrsBekleyenler ilacAdlari={ilaclar.map((i) => String((i as unknown as { ad?: string }).ad || ''))} />
 
         <div
           style={{

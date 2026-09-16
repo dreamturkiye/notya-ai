@@ -101,3 +101,12 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - Dermatoloji spine (NOTYA-DERM-02): `specialties/dermatoloji/engines/derm-spine.ts`, API `/api/doktor/dermatoloji/spine`, UI `specialties/dermatoloji/ui/DermSpine.tsx` in `components/doktor/HastaDermatoloji.tsx`; tables derm_islemler, derm_ilac_guvenlik, derm_gorevleri (+ derm_lezyonlar ABCDE/resmi_tani columns; migration 032). Docs: `docs/README_DERMATOLOJI.md`.
 - Dahiliye (NOTYA-DAH-01): `specialties/dahiliye/engines/dahiliye.ts`, API `/api/doktor/dahiliye`, UI `specialties/dahiliye/ui/DahiliyeHome.tsx` (tab 'dahiliye' in hasta dosyası); tables dahiliye_ht/dm/lipid/tiroid/checkup/gorevleri/kirmizi, sevkler (migration 033). Docs: `docs/README_DAHILIYE.md`.
 - Deferred work: `docs/OPEN-COMMITMENTS.md`.
+
+## Renkli Reçete Sistemi (RRS) — 2026-09-16
+- `lib/doktor/receteRengi.ts` — etken maddeden reçete rengi (kirmizi/yesil/normal), gruplama; test `receteRengi.test.ts`
+- `lib/doktor/rrs.ts` — RRS metni, adımlar, adres; test `rrs.test.ts`
+- `app/api/doktor/rrs/route.ts` — GET (nota göre / bekleyenler), POST (kayıt aç), PATCH (RRS no) → tablo `rrs_receteler` (migration 037)
+- `components/doktor/RrsPaneli.tsx` — reçete sayfasındaki KIRMIZI/YEŞİL sayfada iş akışı paneli
+- `components/doktor/RrsBekleyenler.tsx` — `/doktor-tools/erecete` üst kartı (bekleyenler + kontrole tabi uyarısı)
+- Reçete sayfası `/dashboard/doktor/notlar/[id]/recete`: kontrole tabi ilaçlar ayrı sayfada basılır (normal → yeşil → kırmızı)
+
