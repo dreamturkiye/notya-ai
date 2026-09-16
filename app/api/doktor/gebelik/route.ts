@@ -3,7 +3,8 @@
  * GET  ?patientId=…            → aktif gebelik + izlemler + hesaplanmış yaş/takvim/uyarılar
  * POST { action:'baslat', … } → yeni gebelik kaydı (SAT/TDT, G/P/A/Y, Rh, kilo/boy)
  * POST { action:'izlem', … }  → izlem ekle; muayeneFormunaEkle:true ise bugünkü nota özet satırı
- * POST { action:'sonlandir', … } → doğum/sonlanma kaydı
+ * POST { action:'klinik', … }  → risk/VTE/lab/NST blobs
+ * POST { action:'sevk', … }    → sevkler + günün notu (öneri olmasa da hekim notu)
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
@@ -365,6 +366,18 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.from('gebelikler').update(patch).eq('id', gebelikId).eq('doctor_id', doktorId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true, riskSinifi: patch.risk_sinifi ?? null })
+  }
+
+  if (action === 'sevk') {
+    const hedef = String(body.hedef || 'perinatoloji').slice(0, 80)
+    const notMetni = String(body.notMetni || '').trim().slice(0, 1000)
+    if (!notMetni) return NextResponse.json({ error: 'Sevk notu gerekli.' }, { status: 400 })
+    const { error } = await supabase.from('sevkler').insert({
+      patient_id: patientId, doctor_id: doktorId, hedef, not_metni: notMetni, kaynak: 'kd-klinik',
+    })
+    const notEkleme = await gununNotunaEkle(supabase, doktorId, patientId, `Sevk (${hedef}): ${notMetni}`)
+    if (error && !notEkleme.eklendi) return NextResponse.json({ error: error.message || 'Sevk yazılamadı' }, { status: 500 })
+    return NextResponse.json({ ok: true, notEkleme, uyar: error ? 'Sevk notu güne eklendi (sevkler tablosu yoksa yalnız not).' : null })
   }
 
   return NextResponse.json({ error: 'Geçersiz action.' }, { status: 400 })

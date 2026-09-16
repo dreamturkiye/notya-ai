@@ -5,6 +5,8 @@
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import { JinekolojiSpine } from '@/specialties/kadin-dogum/ui/JinekolojiSpine'
+import { BugunkuJineMuayene } from '@/specialties/kadin-dogum/ui/BugunkuJineMuayene'
+import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HastaKdChapter from '@/components/doktor/HastaKdChapter';
 import { oncekiGebelikDurumMetni, oncekiGebelikEtiketTuru, oncekiGebelikleriFiltrele } from '@/lib/clinical/gebelikDurum';
@@ -22,8 +24,6 @@ import TehlikeIsaretleri from '@/specialties/kadin-dogum/ui/TehlikeIsaretleri';
 import InfertiliteStub from '@/specialties/kadin-dogum/ui/InfertiliteStub';
 import DualUyarilar from '@/specialties/kadin-dogum/ui/DualUyarilar';
 import NstStrip from '@/specialties/kadin-dogum/ui/NstStrip';
-import JinekolojiKart from '@/specialties/kadin-dogum/ui/JinekolojiKart';
-import KolposkopiGaleri from '@/specialties/kadin-dogum/ui/KolposkopiGaleri';
 import { kutu, giris, etiketS, btn, DURUM_RENK, DURUM_ETIKET } from '@/specialties/kadin-dogum/ui/clinic-styles';
 import {
   aktifIzlemPenceresi,
@@ -286,10 +286,19 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
   const onceki = veri ? oncekiGebelikleriFiltrele(veri.gecmis, veri.gebelik) : [];
   const alan = (key: string, label: string, state: Record<string, string>, set: React.Dispatch<React.SetStateAction<Record<string, string>>>, tip = 'text', ph = '') => (
+    tip === 'date' ? (
+      <TrTarihAlan
+        name={key}
+        label={label}
+        value={state[key] || ''}
+        onChange={(iso) => set((prev) => ({ ...prev, [key]: iso }))}
+      />
+    ) : (
     <label style={{ display: 'block' }}>
       <span style={etiketS}>{label}</span>
       <input type={tip} name={key} value={state[key] || ''} placeholder={ph} onChange={(e) => { const v = e.target.value; set((prev) => ({ ...prev, [key]: v })); }} style={giris} />
     </label>
+    )
   );
 
   const liveVeri: LiveGebelikVeri | null = veri ? {
@@ -438,17 +447,24 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       {etkinMod === 'jinekoloji' && (
         <>
-          <JinekolojiKart
-            lmp={jineLmp}
-            today={yerelIsoTarih()}
-            sonServiks={veri?.kadinSagligi?.son_serviks_tarama ? String(veri.kadinSagligi.son_serviks_tarama) : null}
-            sonServiksSonuc={veri?.kadinSagligi?.son_serviks_sonuc ? String(veri.kadinSagligi.son_serviks_sonuc) : null}
-            kontrasepsiyon={veri?.kadinSagligi?.kontrasepsiyon_yontemi ? String(veri.kadinSagligi.kontrasepsiyon_yontemi) : null}
+          <BugunkuJineMuayene
+            patientId={patientId}
+            onKlinikMod={() => setMod('klinik')}
+            colpoImages={colpoFromGoruntuleme(veri?.goruntulemeler)}
+            goruntuUrl={goruntuUrl}
           />
-          <KolposkopiGaleri images={colpoFromGoruntuleme(veri?.goruntulemeler)} urls={goruntuUrl} />
-          <KadinSagligiPaneli patientId={patientId} />
-          {/* NOTYA-JINE-01: office gynecology spine — renders for every female patient, pregnant or not (non-pregnant home) */}
-          <JinekolojiSpine patientId={patientId} />
+          <details style={kutu} data-kd="jine-moduller">
+            <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7' }}>Modül kartları (isteğe bağlı) — CYBH, PCOS, AUB, serviks, HRT…</summary>
+            <div style={{ marginTop: 10 }}>
+              <JinekolojiSpine patientId={patientId} ofisModulleri />
+            </div>
+          </details>
+          <details style={kutu} data-kd="jine-ketem">
+            <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7' }}>Kadın sağlığı / KETEM paneli</summary>
+            <div style={{ marginTop: 10 }}>
+              <KadinSagligiPaneli patientId={patientId} />
+            </div>
+          </details>
           {liveVeri && (
             <HastaKdChapter
               patientId={patientId}
@@ -566,7 +582,14 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           <DualTakvimAccordion visits={visits} />
 
           <KararKartlari kartlar={kartlar} />
-          <SevkCta sevk={sevk.sevk} nedenler={sevk.reason} />
+          <SevkCta
+            sevk={sevk.sevk}
+            nedenler={sevk.reason}
+            onSevkOlustur={async (notMetni) => {
+              await post({ action: 'sevk', hedef: 'perinatoloji', notMetni })
+              setMesaj('Sevk notu kaydedildi.')
+            }}
+          />
 
           <div style={kutu} data-kd="nst-panel">
             <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>NST kaydı</div>
@@ -581,7 +604,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             )}
             {nstList[0] && payload?.nst_studies?.[0] && <NstStrip nst={payload.nst_studies[0]} />}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginTop: 8 }}>
-              <label><span style={etiketS}>Tarih</span><input type="date" value={nstForm.tarih} onChange={(e) => setNstForm({ ...nstForm, tarih: e.target.value })} style={giris} /></label>
+              <TrTarihAlan label="Tarih" value={nstForm.tarih} onChange={(iso) => setNstForm({ ...nstForm, tarih: iso })} />
               <label><span style={etiketS}>Kategori</span>
                 <select value={nstForm.category} onChange={(e) => setNstForm({ ...nstForm, category: e.target.value })} style={giris}>
                   <option value="I">Kategori I</option><option value="II">Kategori II</option><option value="III">Kategori III</option>
@@ -815,7 +838,9 @@ function KadinSagligiPaneli({ patientId }: { patientId: string }) {
   if (!d) return null;
   const TR: Record<string, string> = { gerekli: 'Gerekli', guncel: 'Güncel', yakinda: 'Yakında', 'kapsam-disi': 'Yaş dışı' };
   const RK: Record<string, string> = { gerekli: '#EF4444', guncel: '#22C55E', yakinda: '#F59E0B', 'kapsam-disi': '#475569' };
-  const inp = (k: string, label: string, tip = 'text') => <label style={{ display: 'block' }}><span style={etiketS}>{label}</span><input type={tip} name={k} value={f[k] || ''} onChange={(e) => { const v = e.target.value; setF((prev) => ({ ...prev, [k]: v })); }} style={giris} /></label>;
+  const inp = (k: string, label: string, tip = 'text') => tip === 'date'
+    ? <TrTarihAlan label={label} value={f[k] || ''} onChange={(iso) => setF((prev) => ({ ...prev, [k]: iso }))} />
+    : <label style={{ display: 'block' }}><span style={etiketS}>{label}</span><input type={tip} name={k} value={f[k] || ''} onChange={(e) => { const v = e.target.value; setF((prev) => ({ ...prev, [k]: v })); }} style={giris} /></label>;
   return (
     <div style={kutu}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
