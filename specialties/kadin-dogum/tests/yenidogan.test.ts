@@ -21,6 +21,10 @@ describe('yenidogan taburcu gate', () => {
   const dogumAt = '2026-09-10'
   const checks = { ntp1: false, hepb1: false, vitk: false, isitme: false }
 
+  it('uses the exact screening disclaimer', () => {
+    assert.equal(NTP_DISCLAIMER, 'Tarama pozitif tanı değildir. Konfirmasyon ve klinik değerlendirme gerekir.')
+  })
+
   it('blocks finalize when NTP-1 HepB-1 VitK işitme are unchecked', () => {
     const g = taburcuGate({ checks, dogumAt })
     assert.equal(g.ok, false)

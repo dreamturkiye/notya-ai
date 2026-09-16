@@ -227,6 +227,7 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
     if (dogumHata || !dogum) throw new Error(dogumHata?.message || 'Doğum olayı kaydedilemedi')
     dogumId = dogum.id
   }
+  if (!dogumId) throw new Error('Doğum olayı kaydedilemedi')
 
   const { data: mevcutKart } = await sb.from('bebek_kartlari')
     .select('id, bebek_patient_id')
@@ -286,6 +287,7 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
     if (yeniHata || !yeni) throw new Error(yeniHata?.message || 'Bebek kaydı oluşturulamadı')
     bebekPatientId = yeni.id
   }
+  if (!bebekPatientId) throw new Error('Bebek kaydı oluşturulamadı')
 
   const preterm = pretermOrLbw({ gestHafta: g.gestHafta ?? null, kiloGram: g.kiloGram ?? null })
   const lbw = g.kiloGram != null && g.kiloGram < 2500
@@ -325,6 +327,7 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
       kan_grubu: g.kanGrubu ?? null,
     }).eq('id', kartId)
   }
+  if (!kartId) throw new Error('Bebek kartı oluşturulamadı')
 
   const { data: cl } = await sb.from('taburcu_checklist').select('id').eq('dogum_id', dogumId).eq('bebek_id', kartId).maybeSingle()
   if (!cl) {
