@@ -23,6 +23,15 @@ html, body {
   margin: 0;
 }
 
+/* Hedef boy studio: equal-cm figures must keep CSS height. Tailwind preflight
+   sets img { max-width:100%; height:auto } which squeezes the wider baba.png. */
+img.hedef-boy-figur {
+  max-width: none !important;
+  max-height: none !important;
+  height: var(--hedef-boy-h) !important;
+  width: auto !important;
+}
+
 /*
   Global iOS safe-area:
   - sticky/fixed top chrome owns safe-area via its own padding-top
