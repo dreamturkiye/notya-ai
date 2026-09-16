@@ -1,0 +1,28 @@
+{
+  "motor": "txrv-densenet121",
+  "surum": "xrv1.5.4-all",
+  "modelUrl": "https://anjayzospuurymjmmtim.supabase.co/storage/v1/object/public/motorlar/txrv-densenet121-all-6bb26f6b3246.onnx",
+  "sha256": "6bb26f6b3246417b208ee0dbf9c3c4b6ea7ec7d70f441dfe41cd0e2023d2186c",
+  "bytes": 28233008,
+  "pathologies": [
+    "Atelectasis",
+    "Consolidation",
+    "Infiltration",
+    "Pneumothorax",
+    "Edema",
+    "Emphysema",
+    "Fibrosis",
+    "Effusion",
+    "Pneumonia",
+    "Pleural_Thickening",
+    "Cardiomegaly",
+    "Nodule",
+    "Mass",
+    "Hernia",
+    "Lung Lesion",
+    "Fracture",
+    "Lung Opacity",
+    "Enlarged Cardiomediastinum"
+  ],
+  "license": "Apache-2.0 (torchxrayvision, Cohen et al. 2022)"
+}

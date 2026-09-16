@@ -9,7 +9,7 @@ Every engine — Claude vision (A), browser ONNX engines (B), a future GPU worke
 | Tier | Runs on | V1 status | Cost |
 |---|---|---|---|
 | **A** Claude vision | Vercel route `POST /api/doktor/belgeler/analiz` (maxDuration 120) → Anthropic Sonnet | **LIVE, all 30 branşlar** — describe + tanı ≤ %70 (serbest ≤ %55) | tokens only |
-| **B** browser engines | doctor's device, ONNX Runtime Web (WebGPU → WASM), models sha256-pinned + cached by `sw.js` | contract + runner shipped (`core/belgeler/tarayiciMotor.ts`); engine modules land one by one with ONNX export + golden set (see README_BELGELER.md); registry rows exist with `aktif=false` | €0 |
+| **B** browser engines | doctor's device, ONNX Runtime Web (self-hosted `/public/ort`, WebGPU → WASM), models sha256-pinned on Supabase Storage `motorlar/` + cached by `sw.js` | **txrv-densenet121 LIVE** (CXR, 18 labels → ontology, registry active; own golden-set eval pending); contract + runner in `core/belgeler/tarayiciMotor.ts`; DICOM import in `core/belgeler/dicom.ts`; next modules per README_BELGELER.md | €0 |
 | **C** GPU worker | EU secure GPU, `analiz_isleri` polled queue | **not built** — trigger: paying doctor needs CT/MR volumes / WSI / echo EF, >500 analyses/month, or latency complaints from ≥3 practices. Never SaladCloud for patient images. | later |
 
 ## 2. Pipeline (as built)

@@ -51,11 +51,26 @@ export async function tierBCalistir(istenen: string[], modalite: Modalite, girdi
   return out
 }
 
+export type OrtModul = {
+  env: { wasm: { wasmPaths: string; numThreads: number } }
+  InferenceSession: { create: (url: string, opts: unknown) => Promise<unknown> }
+  Tensor: new (type: string, data: Float32Array, dims: number[]) => unknown
+}
+let ortSoz: Promise<OrtModul> | null = null
+export function ortYukle(): Promise<OrtModul> {
+  // @ts-expect-error runtime URL import — served from /public/ort, not resolved by TypeScript/webpack
+  if (!ortSoz) ortSoz = import(/* webpackIgnore: true */ '/ort/ort.webgpu.min.mjs') as Promise<OrtModul>
+  return ortSoz
+}
+
 const oturumlar = new Map<string, unknown>()
 async function oturumAc(m: TarayiciMotor, webgpu: boolean): Promise<unknown> {
   if (oturumlar.has(m.motor)) return oturumlar.get(m.motor)
-  // onnxruntime-web is loaded lazily from our own origin (CSP-safe); the package is added with the first engine.
-  const ort = await (new Function('return import("onnxruntime-web")')() as Promise<{ InferenceSession: { create: (u: string, o: unknown) => Promise<unknown> } }>)
+  // onnxruntime-web is NOT bundled (Next/Terser cannot process its ESM). It is served from our own origin
+  // (/public/ort, copied from node_modules/onnxruntime-web/dist) and loaded at runtime — no third-party CDN, CSP-safe.
+  const ort = await ortYukle()
+  ort.env.wasm.wasmPaths = '/ort/'
+  ort.env.wasm.numThreads = 1 // no cross-origin isolation headers → single thread
   const session = await ort.InferenceSession.create(m.modelUrl, { executionProviders: webgpu ? ['webgpu', 'wasm'] : ['wasm'] })
   oturumlar.set(m.motor, session)
   return session
