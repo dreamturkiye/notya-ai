@@ -75,7 +75,10 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const hid = new URLSearchParams(window.location.search).get('hastaId') || '';
+    const q = new URLSearchParams(window.location.search)
+    const hid = q.get('hastaId') || ''
+    const modaliteQ = q.get('modalite') || ''
+    const upload = q.get('upload') === '1'
     fetchPatients();
     if (hid) {
       setSelectedHastaId(hid);
@@ -83,6 +86,11 @@ const Page = () => {
     } else {
       fetchGoruntulemeler();
     }
+    if (modaliteQ) {
+      const meta = imagingModalityMeta(modaliteQ)
+      setUploadData((prev) => ({ ...prev, modalite: meta.label }))
+    }
+    if (upload) setShowUpload(true)
   }, []);
 
   useEffect(() => {

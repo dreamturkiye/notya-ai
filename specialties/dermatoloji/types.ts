@@ -43,4 +43,6 @@ export type {
   BullousWorkup,
   BehcetCard,
   Admission,
+  GopPack,
+  ScoreSnapshot,
 } from './schema'

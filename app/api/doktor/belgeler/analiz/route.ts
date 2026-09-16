@@ -129,10 +129,16 @@ export async function GET(req: NextRequest) {
   if ('hata' in oturum) return oturum.hata
   const { user, supabase } = oturum
   const documentId = req.nextUrl.searchParams.get('documentId')
+  const patientId = req.nextUrl.searchParams.get('patientId')
+  const { data: doktor } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
+  const bransKey = bransAnahtari(doktor?.specialty)
+  if (patientId && !documentId) {
+    const { data } = await supabase.from('belge_analizleri').select('id, durum, sonuc, fusion, motor_ciktilari, hekim_tanisi, hekim_ozet, note_id, onaylandi_at, olusturuldu, brans, modality_final, yas_ay, belge_id').eq('doctor_id', user.id).eq('patient_id', patientId).order('olusturuldu', { ascending: false }).limit(20)
+    return NextResponse.json({ analizler: data || [], bransKey })
+  }
   if (!documentId) return NextResponse.json({ error: 'documentId gerekli' }, { status: 400 })
   const { data } = await supabase.from('belge_analizleri').select('id, durum, sonuc, fusion, motor_ciktilari, hekim_tanisi, hekim_ozet, note_id, onaylandi_at, olusturuldu, brans, modality_final, yas_ay').eq('doctor_id', user.id).eq('belge_id', documentId).order('olusturuldu', { ascending: false }).limit(1).maybeSingle()
-  const { data: doktor } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
-  return NextResponse.json({ analiz: data || null, bransKey: bransAnahtari(doktor?.specialty) })
+  return NextResponse.json({ analiz: data || null, bransKey })
 }
 
 export async function PATCH(req: NextRequest) {

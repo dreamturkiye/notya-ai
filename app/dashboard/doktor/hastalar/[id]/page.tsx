@@ -68,7 +68,7 @@ export default function HastaProfilPage() {
   // NOTYA-RANDEVU-09: randevu takviminden hedefli linkler ?tab=formu / ?tab=asilar ile atlar.
   const tabParam = searchParams?.get('tab');
   const [activeTab, setActiveTab] = useState<HastaDosyaSekmeId>(
-    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'gebelik'
+    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'gebelik' || tabParam === 'belgeler' || tabParam === 'goruntuleme'
       ? tabParam
       : 'ozet',
   );
@@ -353,7 +353,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
         {!loading && !error && activeTab === 'gebelik' && gebelikUygun && <HastaGebelik patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && (
-          <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} />
+          <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} />
         )}
       </div>
     </div>

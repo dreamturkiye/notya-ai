@@ -13,6 +13,9 @@ export type ImagingModalityCode =
   | 'eko'
   | 'mamografi'
   | 'diger'
+  | 'dermatoskopi'
+  | 'derm'
+  | 'yara'
 
 export type ImagingPortalKind = 'goruntuleme' | 'ekg' | 'diger'
 
@@ -36,6 +39,9 @@ export const IMAGING_MODALITIES: ImagingModality[] = [
   { code: 'pet', label: 'PET-BT', patientLabel: 'PET-BT', portalKind: 'goruntuleme', color: '#64748b' },
   { code: 'ekg', label: 'EKG', patientLabel: 'EKG', portalKind: 'ekg', color: '#ef4444' },
   { code: 'mamografi', label: 'Mamografi', patientLabel: 'Mamografi', portalKind: 'goruntuleme', color: '#ec4899' },
+  { code: 'dermatoskopi', label: 'Dermatoskopi', patientLabel: 'Dermatoskopi', portalKind: 'goruntuleme', color: '#0f766e' },
+  { code: 'derm', label: 'Deri fotoğrafı', patientLabel: 'Deri fotoğrafı', portalKind: 'goruntuleme', color: '#14b8a6' },
+  { code: 'yara', label: 'Yara / yanık', patientLabel: 'Yara fotoğrafı', portalKind: 'goruntuleme', color: '#f97316' },
   { code: 'diger', label: 'Diğer', patientLabel: 'Diğer görüntüleme', portalKind: 'diger', color: '#6b7280' },
 ]
 
@@ -60,6 +66,9 @@ export function normalizeImagingModality(raw: string | null | undefined): Imagin
   if (/^(ekg|ecg)/.test(t)) return 'ekg'
   if (/^(eko|echo|ekokardiy)/.test(t)) return 'eko'
   if (/^(mamografi|mammo)/.test(t)) return 'mamografi'
+  if (/dermatoskopi|dermoskopi/.test(t)) return 'dermatoskopi'
+  if (/^derm$|deri foto|deri lezyon|klinik foto/.test(t)) return 'derm'
+  if (/^yara|yanik|yanık/.test(t)) return 'yara'
   if (BY_CODE.has(t as ImagingModalityCode)) return t as ImagingModalityCode
   return 'diger'
 }

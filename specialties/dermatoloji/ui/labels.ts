@@ -67,6 +67,48 @@ export const DERM_MORPHOLOGY: Record<string, string> = {
   macule: 'Makül',
 }
 
+export const DERM_UNIT: Record<string, string> = {
+  genel: 'Genel poliklinik',
+  psoriasis: 'Psoriasis ünitesi',
+  fototerapi: 'Fototerapi',
+  pediatrik: 'Pediatrik dermatoloji',
+  sac: 'Saç ünitesi',
+  'kontakt-yama': 'Kontakt / yama',
+  urtiker: 'Ürtiker',
+  'behcet-bagdokusu': 'Behçet / bağ dokusu',
+  bullu: 'Büllü hastalıklar',
+  cerrahi: 'Dermatoşirürji',
+  kozmetik: 'Kozmetik',
+  'nevus-tumor': 'Nevüs / tümör',
+  psikoderm: 'Psikodermatoloji',
+}
+
+export const DERM_PHOTO_DEVICE: Record<string, string> = {
+  'nb-uvb-311': 'NB-UVB 311 nm',
+  'bb-uvb': 'BB-UVB',
+  'puva-oral': 'Oral PUVA',
+  'puva-bath': 'Banyo PUVA',
+  'local-puva': 'Lokal PUVA',
+  'excimer-308': 'Eksimer 308 nm',
+  uva1: 'UVA1',
+}
+
+export const DERM_FITZ: Record<string, string> = {
+  I: 'I',
+  II: 'II',
+  III: 'III',
+  IV: 'IV',
+  V: 'V',
+  VI: 'VI',
+}
+
+export const DERM_CONSENT: Record<string, string> = {
+  genital: 'Genital bölge onamı',
+  pediatric: '18 yaş altı onamı',
+  education: 'Eğitim için anonim paylaşım',
+  share: 'Hasta ile paylaşım',
+}
+
 export function looksLikeRecordId(value: string): boolean {
   return UUID_RE.test(value) || /^[0-9a-f]{32}$/i.test(value)
 }

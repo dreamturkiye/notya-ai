@@ -5,7 +5,7 @@
  * + Plan düzenle → Muayeneyi onayla (revizyon). Disclaimer strip always visible (locked).
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
@@ -28,6 +28,7 @@ const bantRenk: Record<string, string> = { 'yüksek': '#2DD4BF', 'orta': '#FBBF2
 
 export default function BelgeAnalizPage() {
   const { id: patientId, belgeId } = useParams<{ id: string; belgeId: string }>();
+  const searchParams = useSearchParams();
   const [doc, setDoc] = useState<Doc | null>(null);
   const [analiz, setAnaliz] = useState<Analiz | null>(null);
   const [bransKey, setBransKey] = useState('genel');
@@ -59,13 +60,19 @@ export default function BelgeAnalizPage() {
   }, [patientId, belgeId]);
   useEffect(() => { yukle(); }, [yukle]);
 
-  // default modality guess from file type / category
+  // default modality: query (Deri tab deep-link) then file type / category
   useEffect(() => {
-    if (!doc || modalite) return;
+    if (modalite) return;
+    const q = searchParams?.get('modalityFinal') || searchParams?.get('dermModality') || '';
+    if (q && (kural.modaliteler as string[]).includes(q)) {
+      setModalite(q as Modalite);
+      return;
+    }
+    if (!doc) return;
     if (doc.fileType.startsWith('audio/')) setModalite(kural.modaliteler.includes('ses_kalp') && doc.category === 'cihaz-kaydi' ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp');
     else if (doc.fileType === 'application/pdf') setModalite('pdf_rapor');
     else setModalite(kural.modaliteler.find((m) => !m.startsWith('ses') && m !== 'pdf_rapor') || 'serbest');
-  }, [doc, kural, modalite]);
+  }, [doc, kural, modalite, searchParams]);
 
   const raporla = async () => {
     if (!doc || !modalite) return;
@@ -94,7 +101,8 @@ export default function BelgeAnalizPage() {
         if (istenen.length && !sesMi) { try { tierB = await tierBCalistir(istenen, modalite as Modalite, { bitmap: await createImageBitmap(blob) }); } catch { tierB = []; } }
       }
       setDurum('yaziyor');
-      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: true }) });
+      const fitzQ = searchParams?.get('fitzpatrick');
+      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Taslak üretilemedi');
       if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${j.analiz?.sonuc?.modalite}" olarak gördü; siz "${j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);

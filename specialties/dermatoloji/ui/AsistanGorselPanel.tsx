@@ -5,6 +5,8 @@ import type { CSSProperties } from 'react'
 import type { PhotoAsset, VisionRead } from '../schema'
 import { analyzeImage, uzmanOnay, VISION_DISCLAIMER, type Actor } from '../imaging/vision-tools'
 import { DERM_ACTOR, DERM_VISION_STATUS, DERM_VISION_TASK, dermLabel } from './labels'
+import type { DermBelgeOzet } from '../engines/clinic-fit'
+import { belgeDurumEtiket, belgeHekimOnayli } from '../engines/clinic-fit'
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -28,10 +30,16 @@ export function AsistanGorselPanel({
   reads,
   photos = [],
   actor = 'asistan',
+  belgeOzet = [],
+  onDraft,
+  onOnay,
 }: {
   reads: VisionRead[]
   photos?: PhotoAsset[]
   actor?: Actor
+  belgeOzet?: DermBelgeOzet[]
+  onDraft?: (r: VisionRead) => void
+  onOnay?: (r: VisionRead) => void
 }) {
   const [local, setLocal] = useState<VisionRead[]>(reads)
 
@@ -52,12 +60,14 @@ export function AsistanGorselPanel({
       observations: '',
     })
     setLocal((prev) => [...prev, drafted])
+    onDraft?.(drafted)
   }
 
   function approve(read: VisionRead) {
     const result = uzmanOnay(read, actor)
     if (!result.ok) return
     setLocal((prev) => prev.map((r) => r.id === read.id ? result.read : r))
+    onOnay?.(result.read)
   }
 
   return (
@@ -69,6 +79,18 @@ export function AsistanGorselPanel({
       <button type="button" style={btn} onClick={draftPhoto} disabled={!photos.length}>
         Görüntü taslağı oluştur
       </button>
+      {belgeOzet.length > 0 && (
+        <div style={{ marginTop: 10, fontSize: 12.5 }}>
+          <div style={{ color: '#8FA0B5', marginBottom: 4 }}>Belgeler AI özeti (tanı değildir)</div>
+          {belgeOzet.slice(0, 3).map((a) => (
+            <div key={a.id} style={{ marginBottom: 4 }}>
+              {belgeDurumEtiket(a.durum)}
+              {belgeHekimOnayli(a.durum) ? ' · hekim onaylı' : ' · taslak'}
+              {' — '}{a.ozet || 'Özet yok'}
+            </div>
+          ))}
+        </div>
+      )}
       <ul style={{ fontSize: 13, paddingLeft: 18 }}>
         {rows.map((r) => (
           <li key={r.id} style={{ marginBottom: 8 }}>

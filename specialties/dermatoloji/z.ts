@@ -123,6 +123,7 @@ class ZodArray<T> extends ZodType<T[]> {
 }
 
 class ZodOptional<T> extends ZodType<T | undefined> {
+  readonly _optional = true as const
   constructor(private readonly inner: ZodType<T>) { super() }
   _parse(data: unknown, ctx: ParseCtx) {
     if (data === undefined) return undefined
@@ -139,7 +140,11 @@ class ZodNullable<T> extends ZodType<T | null> {
 }
 
 type Shape = Record<string, ZodType<unknown>>
-type InferShape<S extends Shape> = { [K in keyof S]: S[K]['_type'] }
+type InferShape<S extends Shape> = {
+  [K in keyof S as S[K] extends { _optional: true } ? never : K]: S[K]['_type']
+} & {
+  [K in keyof S as S[K] extends { _optional: true } ? K : never]?: S[K]['_type']
+}
 
 class ZodObject<S extends Shape> extends ZodType<InferShape<S>> {
   constructor(private readonly shape: S) { super() }

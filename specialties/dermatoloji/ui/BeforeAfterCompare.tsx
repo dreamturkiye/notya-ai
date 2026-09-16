@@ -21,14 +21,20 @@ export function BeforeAfterCompare({
   pairs,
   photos = [],
   urls = {},
+  captureHref,
 }: {
   pairs: BeforeAfterPair[]
   photos?: PhotoAsset[]
   urls?: Record<string, string>
+  captureHref?: string
 }) {
   return (
     <section style={box} data-tab="BeforeAfterCompare">
       <h2 style={{ margin: 0, fontSize: 16 }}>Önce / sonra</h2>
+      <p style={{ fontSize: 12, color: '#8FA0B5' }}>Günlük işlem: aynı bölgede iki zaman noktası. Ay-0 / ay-3 izotretinoin serisi.</p>
+      {captureHref && (
+        <a href={captureHref} style={{ fontSize: 12, color: '#2DD4BF', display: 'inline-block', marginBottom: 8 }}>Kontrol fotoğrafı ekle</a>
+      )}
       {pairs.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Aynı bölgede iki zaman noktası yok.</p>}
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 12 }}>
         {pairs.map((p) => {

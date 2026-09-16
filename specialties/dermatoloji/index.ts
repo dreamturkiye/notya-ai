@@ -10,3 +10,4 @@ export {
 } from './schema'
 export type { VisitType, ClinicUnit, DermatolojiPayload } from './types'
 export { DERMATOLOJI_TOOLS } from './prompts/tools'
+export { kararKartlariFromClinic } from './protocols/karar-kartlari'
