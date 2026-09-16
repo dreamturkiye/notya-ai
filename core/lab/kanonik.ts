@@ -98,6 +98,12 @@ export const KANONIK = {
   antiCCP: { tr: 'Anti-CCP', loinc: '33935-8', birim: 'U/mL', aliases: a('anti-ccp', 'anti ccp', 'ccp') },
   IgE: { tr: 'Total IgE', loinc: '19113-0', birim: 'IU/mL', aliases: a('ige', 'total ige') },
   Li: { tr: 'Lityum', loinc: '14334-7', birim: 'mmol/L', donusum: { 'mEq/L': 1 }, kritik: { yuksek: 1.5 }, aliases: a('lityum', 'lithium') },
+  ntp_pku: { tr: 'NTP FKU (fenilketonüri)', loinc: '29571-7', birim: 'metin', aliases: a('pku', 'fku', 'fenilketonüri', 'fenilketonuri', 'phenylalanine', 'phe', 'yenidoğan pku', 'ntp pku') },
+  ntp_tsh: { tr: 'NTP KHT (yenidoğan TSH)', loinc: '3016-3', birim: 'mIU/L', donusum: { 'µIU/mL': 1, 'uIU/mL': 1, 'mU/L': 1 }, aliases: a('ntp tsh', 'yenidoğan tsh', 'kht', 'konjenital hipotiroidi', 'topuk tsh', 'newborn tsh') },
+  ntp_biotinidaz: { tr: 'NTP biotinidaz', birim: 'metin', aliases: a('biotinidaz', 'biotinidase', 'btd', 'ntp biotinidaz') },
+  ntp_irt: { tr: 'NTP KF (IRT)', birim: 'metin', aliases: a('irt', 'immunoreactive trypsinogen', 'kistik fibroz', 'kf tarama', 'cf screen', 'ntp irt') },
+  ntp_17ohp: { tr: 'NTP KAH (17-OHP)', birim: 'metin', aliases: a('17-ohp', '17 ohp', '17ohp', 'kah', 'cah', 'konjenital adrenal', 'ntp 17ohp') },
+  ntp_sma: { tr: 'NTP SMA', birim: 'metin', aliases: a('sma', 'spinal müsküler atrofi', 'spinal muskular', 'smn1', 'ntp sma') },
   // NOTYA-DERM-02: biyolojik başlama taraması (metin sonuçlar; kritik değil)
   IGRA: { tr: 'IGRA (Quantiferon)', loinc: '71773-6', birim: 'metin', aliases: a('igra', 'quantiferon', 'quantiferon-tb', 'tb gold', 't-spot', 'interferon gama') },
   HBsAg: { tr: 'HBsAg', loinc: '5195-3', birim: 'metin', aliases: a('hbsag', 'hbs ag', 'hepatit b yüzey antijeni') },

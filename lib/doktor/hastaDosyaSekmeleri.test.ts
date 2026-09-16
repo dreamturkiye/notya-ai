@@ -30,5 +30,6 @@ describe('hastaDosyaSekmeleri', () => {
     assert.ok(child.some((t) => t.id === 'mchat'))
     assert.ok(child.some((t) => t.id === 'gelisim'))
     assert.ok(child.some((t) => t.id === 'buyume'))
+    assert.ok(child.some((t) => t.id === 'bebek'))
   })
 })

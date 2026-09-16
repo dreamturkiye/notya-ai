@@ -97,7 +97,7 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
     { konu: 'F. Obstetrik acil/risk modülleri (partograf, Bishop skoru, VTE risk skoru, HELLP/eklampsi algoritmaları, IUGR Doppler evreleme, omuz distosisi)', neden: 'KASITLI OLARAK KURULMADI — bunlar doğrulanmış klinik karar algoritmaları gerektirir, bu gece güvenle kaynaklanamadı. Denver II ile aynı ilke: doğrulanmış kaynak yoksa kod yazılmaz.' },
     { konu: 'G. Jinekoloji suiti (PCOS/infertilite/IVF sevk, ürojinekoloji/POP-Q, jinekolojik onkoloji triyaj CA-125/IOTA, cerrahi şablonlar, adölesan jinekoloji, gebe okulu kaydı)', neden: 'KETEM taraması + kontrasepsiyon + menopoz çerçevesi dışında bu bölüm hiç kurulmadı — kapsamı ve önceliği hekimle belirlenecek, muhtemelen ayrı bir "Jinekoloji Vizit" akışı gerektirir.' },
     { konu: 'H. Yasal/sistem entegrasyonu (e-Nabız gebe bildirimi, e-Doğum/Doğum Bildirim Sistemi, küretaj yasal evrak, iş göremezlik raporu)', neden: 'Gerçek devlet sistemi entegrasyonu gerektirir — API erişimimiz yok, taklit edilmedi.' },
-    { konu: 'J. Pediatri köprüsü — YAPILDI, doğrulandı', neden: '"Doğum Gerçekleşti" artık APGAR/kilo/boy/baş çevresi/cinsiyet alıyor ve isteğe bağlı olarak bebek için pediatri kaydı otomatik açıyor (gebelikler.yenidogan_patient_id ile bağlı). Gerçek veriyle uçtan uca test edildi.' },
+    { konu: 'J. Pediatri köprüsü — YAPILDI, doğrulandı', neden: 'Canlı doğum zorunlu bebek kartı açar (029 dogum_olaylari + bebek_kartlari, anne_patient_id bağlı; gebelikler.yenidogan_patient_id). Taburcu paketi + NTP + izlem: lib/clinical/yenidogan, migration 036 (reuses 029 maddeler/yenidogan_tarama jsonb). specialties/pediatri donuk — Bebek kartı surface components/doktor/HastaBebekKarti.' },
   ],
 
   olgunluk: 'arastirma',

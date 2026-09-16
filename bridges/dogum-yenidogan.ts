@@ -1,7 +1,8 @@
 /**
  * Birth-note → newborn draft. Pediatrics consumes this object.
  * No public newborn contract existed under specialties/pediatri (frozen, not modified),
- * so this file exports NewbornHandoff and stops.
+ * so this file exports NewbornHandoff and the calendar/gate are in lib/clinical/yenidogan.
+ * Live birth still creates bebek_kartlari (migration 029) without modifying specialties/pediatri.
  */
 export type NewbornHandoff = {
   source: 'dogum-yenidogan'

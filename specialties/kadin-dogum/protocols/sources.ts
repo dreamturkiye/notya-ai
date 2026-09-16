@@ -41,6 +41,20 @@ export const PROTOCOL_SOURCES: ProtocolSource[] = [
     when_to_cite: 'what is legally required in Türkiye — yasal izlem asgari, tarama pencereleri, gebe bildirimi',
   },
   {
+    id: 'ntp-hsgm',
+    title: 'T.C. SB HSGM Ulusal Yenidoğan Tarama Programı (FKU, KHT, biotinidaz, KF, KAH, SMA)',
+    year: 2025,
+    role: 'yasal_taban_sb',
+    when_to_cite: 'taburcu NTP-1/NTP-2, tarama≠tanı disclaimer, topuk sonuçları bebek belgelerinde',
+  },
+  {
+    id: 'bebek-izlem',
+    title: 'T.C. SB Bebek İzlem Protokolü',
+    year: 2018,
+    role: 'yasal_taban_sb',
+    when_to_cite: 'bebek izlem pencereleri (doğum, 1–10. gün, 15, 41, 2/3/4/6/9. ay), D vit, demir',
+  },
+  {
     id: 'dsbyr',
     title: 'Doğum Sonu Bakım Yönetim Rehberi',
     year: 2018,
