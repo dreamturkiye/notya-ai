@@ -63,3 +63,9 @@ Muğla İSM "Özel hekimlerin dikkatine — e-Reçete Medula kayıt işlemi".
 - **Gökhan'dan gereken artık ekran DEĞİL:** (1) bugün e-reçeteyi nasıl yazdığı (MBYS mi, kâğıt mı), (2) Medula Doktor
   kullanıcı adı/şifresi olup olmadığı, (3) NES kartı + hangi PC'de, (4) tesis kodu (ilaç listesi sorgusu için).
 - Sözcük kuralı aynı: P3 canlı olana kadar "Medula'ya hazırlama"; sonrasında "Medula e-reçete gönderimi".
+
+## Ek (2026-09-16) — Hekim kimliği Ayarlar'da, gönderim Notya'dan
+- Ayarlar › e-Reçete: TC + SGK hekim şifresi (şifreli), tesis kodu, SGK branş kodu, e-imza yöntemi, ortam. "Bağlantıyı test et" gerçek ortamda salt-okunur `ereceteSorgula('0')` çağırır — kimlik doğruysa SGK "reçete bulunamadı", yanlışsa yetki hatası.
+- Canlı kayıt (`imzaliEreceteGiris`) e-imza aracı (NOTYA-ERECETE-02) kurulana kadar pasif; PIN işlem bazlı, saklanmaz.
+- Renkli/beyaz reçete: RRS, Sağlık Bakanlığı **Reçetem** (recetem.enabiz.gov.tr) altına taşındı; hekim girişi yalnız e-imza, ilk girişte Doktor Bilgi Bankası kontrolü. Entegre MBYS'ler token ile imzasız yönlendirme alabilir (vendor kimliği = KTS/SBSGM kaydı, P4).
+
