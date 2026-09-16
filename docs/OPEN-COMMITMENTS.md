@@ -130,9 +130,10 @@ Fourth slice, same night (Kaan supplied a detailed 10-section KHD reference doc 
 Obstetrik/Berek&Novak/Temel KHD Bilgisi + SB DÖBYR 2026 — and asked to audit built vs. spec):
 
 Built tonight in response: pediatri köprüsü (canlı doğumda "Doğum Gerçekleşti" now takes
-APGAR/kilo/boy/baş çevresi/cinsiyet and optionally auto-creates the newborn's pediatri patient
-record, linked via gebelikler.yenidogan_patient_id — verified end-to-end with real encrypt/decrypt,
-not just typechecked). Migration 023: gebelikler gained olu_dogum/ektopik (D/E), önceki sezaryen
+APGAR/kilo/boy/baş çevresi/cinsiyet and **must** create the newborn's Bebek kartı —
+029 dogum_olaylari + bebek_kartlari linked to anne, plus gebelikler.yenidogan_patient_id.
+Taburcu paketi / NTP / izlem extras: migration 036 (reuses 029 maddeler/yenidogan_tarama jsonb). Optional skip is gone.
+Migration 023: gebelikler gained olu_dogum/ektopik (D/E), önceki sezaryen
 sayısı/kesi tipi, çoğul gebelik tipi, risk_sinifi, ilk_vizit_lab, indirekt_coombs, anti_d_uygulamalari;
 gebelik_izlemleri gained servikal_uzunluk, ogtt, gbs_kultur, tehlike_isaretleri. genetikTarama.ts
 gained nazalKemik field, kordosentez/fetal-eko invaziif options, SUT_KODLARI, TEHLIKE_ISARETLERI

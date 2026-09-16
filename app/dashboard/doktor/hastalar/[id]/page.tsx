@@ -17,6 +17,7 @@ import HastaBuyumeEgrileri from '@/components/doktor/HastaBuyumeEgrileri';
 import HastaMchat from '@/components/doktor/HastaMchat';
 import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
 import HastaGebelik from '@/components/doktor/HastaGebelik';
+import HastaBebekKarti from '@/components/doktor/HastaBebekKarti';
 import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
 import DahiliyeHome from '@/specialties/dahiliye/ui/DahiliyeHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
@@ -69,7 +70,7 @@ export default function HastaProfilPage() {
   // NOTYA-RANDEVU-09: randevu takviminden hedefli linkler ?tab=formu / ?tab=asilar ile atlar.
   const tabParam = searchParams?.get('tab');
   const [activeTab, setActiveTab] = useState<HastaDosyaSekmeId>(
-    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'dahiliye' || tabParam === 'gebelik' || tabParam === 'belgeler' || tabParam === 'goruntuleme'
+    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'dahiliye' || tabParam === 'gebelik' || tabParam === 'belgeler' || tabParam === 'goruntuleme' || tabParam === 'bebek'
       ? tabParam
       : 'ozet',
   );
@@ -354,6 +355,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'asilar' && <HastaAsilar patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'mchat' && <HastaMchat patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
+        {!loading && !error && pediatriUygun && activeTab === 'bebek' && <HastaBebekKarti patientId={patientId} />}
         {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
         {!loading && !error && activeTab === 'gebelik' && gebelikUygun && <HastaGebelik patientId={patientId} />}
         {!loading && !error && activeTab === 'dahiliye' && <DahiliyeHome patientId={patientId} />}

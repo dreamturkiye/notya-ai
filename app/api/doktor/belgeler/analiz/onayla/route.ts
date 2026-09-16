@@ -14,16 +14,20 @@ import type { BelgeRaporu } from '@/core/belgeler/types'
 
 export const dynamic = 'force-dynamic'
 
-function labBlogu(a: { sonuc: BelgeRaporu & { lab?: { kritik?: string[]; yeni_bozulanlar?: string[]; duzelenler?: string[] } }; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; olusturuldu: string }, panel: { lab_adi: string | null; numune_tarihi: string | null } | null, satirlar: { raw_name: string; canonical_key: string | null; value_num: number | null; value_text: string | null; unit: string | null; flag: string; kritik: boolean }[]): string {
-  // Locked format (Kaan spec): [Lab] {lab_adi} — numune {date} — onay {ts} / Özet (hekim) / Resmi tanı / Anormal / AI taslağı arşivde
+function labBlogu(a: { sonuc: BelgeRaporu & { lab?: { kritik?: string[]; yeni_bozulanlar?: string[]; duzelenler?: string[]; ntp?: { sample_no?: string; sevk?: string; yorum?: string } } }; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; olusturuldu: string }, panel: { lab_adi: string | null; numune_tarihi: string | null; panel_type?: string | null; sample_no?: string | null } | null, satirlar: { raw_name: string; canonical_key: string | null; value_num: number | null; value_text: string | null; unit: string | null; flag: string; kritik: boolean }[]): string {
   const r = a.sonuc
-  const anormal = satirlar.filter((s) => s.flag === 'H' || s.flag === 'L' || s.flag === 'critical').map((s) => `${s.raw_name} ${s.value_num ?? s.value_text ?? ''} ${s.unit || ''}${s.flag === 'critical' ? ' KRİTİK' : s.flag === 'H' ? ' ↑' : ' ↓'}`.trim())
+  const ntp = panel?.panel_type === 'yenidogan_tarama' || r.lab?.ntp
+  const baslik = ntp
+    ? `[Lab][Yenidoğan tarama NTP-${panel?.sample_no || r.lab?.ntp?.sample_no || '?'}] ${panel?.lab_adi || 'Ulusal Yenidoğan Tarama'} — numune ${panel?.numune_tarihi ? new Date(panel.numune_tarihi).toLocaleDateString('tr-TR') : '—'} — onay ${new Date().toLocaleString('tr-TR')}`
+    : `[Lab] ${panel?.lab_adi || 'Laboratuvar'} — numune ${panel?.numune_tarihi ? new Date(panel.numune_tarihi).toLocaleDateString('tr-TR') : '—'} — onay ${new Date().toLocaleString('tr-TR')}`
+  const anormal = satirlar.filter((s) => s.flag === 'H' || s.flag === 'L' || s.flag === 'critical' || s.flag === 'pozitif_suphe' || s.flag === 'sinir').map((s) => `${s.raw_name} ${s.value_num ?? s.value_text ?? ''} ${s.unit || ''} ${s.flag}`.trim())
   const satirlarMetin = [
-    `[Lab] ${panel?.lab_adi || 'Laboratuvar'} — numune ${panel?.numune_tarihi ? new Date(panel.numune_tarihi).toLocaleDateString('tr-TR') : '—'} — onay ${new Date().toLocaleString('tr-TR')}`,
+    baslik,
     `Özet (hekim): ${(a.hekim_ozet || r.ozet || '').trim()}`,
     `Resmi tanı: ${(a.hekim_tanisi || []).map((t) => t.icd10 ? `${t.ad} (${t.icd10})` : t.ad).join(', ') || '—'}`,
     `Anormal: ${anormal.length ? anormal.join('; ') : 'yok'}`,
   ]
+  if (ntp) satirlarMetin.push('Tarama pozitif tanı değildir. Konfirmasyon ve klinik değerlendirme gerekir.')
   if (r.acil_bayrak) satirlarMetin.push('⚠ Kritik değer işaretlendi — hekim değerlendirdi.')
   satirlarMetin.push(`AI taslağı arşivde. ${UYARI_SERIDI}`)
   return satirlarMetin.join('\n')
@@ -75,7 +79,7 @@ export async function POST(req: NextRequest) {
     if (!not) return NextResponse.json({ error: 'Muayene notu bulunamadı' }, { status: 404 })
     let blok: string
     if (a.modality_final === 'lab') {
-      const { data: panel } = await supabase.from('lab_paneller').select('id, lab_adi, numune_tarihi').eq('analiz_id', a.id).maybeSingle()
+      const { data: panel } = await supabase.from('lab_paneller').select('id, lab_adi, numune_tarihi, panel_type, sample_no').eq('analiz_id', a.id).maybeSingle()
       const { data: satirlar } = panel ? await supabase.from('lab_satirlar').select('raw_name, canonical_key, value_num, value_text, unit, flag, kritik').eq('panel_id', panel.id).order('sira') : { data: [] }
       blok = labBlogu(a as never, panel, (satirlar || []).map((s) => ({ ...s, value_num: s.value_num == null ? null : Number(s.value_num) })))
       // Approved rows become this patient's priors for future trend comparison (only APPROVED labs are ever compared)

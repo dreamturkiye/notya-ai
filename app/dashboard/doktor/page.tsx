@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
  */
 
 import DoktorNav from '@/components/doktor/DoktorNav'
+import YeniBebekIsleri from '@/components/doktor/YeniBebekIsleri'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
@@ -279,6 +280,8 @@ export default function DoktorDashboard() {
             Sistem aktif · TRT
           </div>
         </div>
+
+        <YeniBebekIsleri />
 
         {/* Randevular — Bugün / Bu Hafta */}
         <div style={{ marginTop: 18 }}>
