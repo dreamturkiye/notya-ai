@@ -25,7 +25,7 @@ const tools: Tool[] = [
   { circleColor: '#EA580C', icon: 'TX', title: 'Tetkik İstek', desc: 'Lab ve görüntüleme istek formu oluştur', route: '/doktor-tools/tetkik' },
   { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali' },
   { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
-  { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Rehberi', desc: 'Hasta kaydı erişimi adım adım', route: '/doktor-tools/enabiz' },
+  { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Format', desc: 'FHIR/Medula/USS paketleri — canlı bağlantı yok, format-hazır çıktı', route: '/doktor-tools/enabiz' },
 ];
 
 export default function DoktorToolsPage() {

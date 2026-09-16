@@ -34,6 +34,7 @@ export default function SgkRaporPage() {
   const [hekim, setHekim] = useState<HekimKimlik | null>(null)
   const [aktifTip, setAktifTip] = useState<RaporTipiMeta | null>(null)
   const [tarih, setTarih] = useState('')
+  const [enabiz, setEnabiz] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -42,6 +43,7 @@ export default function SgkRaporPage() {
     setRaporTipiId(t.id)
     setSure(t.sureVarsayilan)
     setRapor(null)
+    setEnabiz(null)
   }
 
   const handleUret = async () => {
@@ -52,6 +54,7 @@ export default function SgkRaporPage() {
     setLoading(true)
     setError('')
     setRapor(null)
+    setEnabiz(null)
     try {
       const token = await getAccessTokenAsync()
       if (!token) {
@@ -81,6 +84,7 @@ export default function SgkRaporPage() {
       setTarih(String((data as { tarih?: string }).tarih || new Date().toLocaleDateString('tr-TR')))
       setHekim((data as { hekim?: HekimKimlik }).hekim || null)
       setAktifTip((data as { raporTipi?: RaporTipiMeta }).raporTipi || tipMeta)
+      setEnabiz((data as { enabiz?: Record<string, unknown> }).enabiz || null)
     } catch {
       setError('Sunucu hatası. Tekrar deneyin.')
     } finally {
@@ -471,14 +475,43 @@ export default function SgkRaporPage() {
               </section>
             )}
 
-            <button
-              type="button"
-              className="no-print"
-              onClick={() => window.print()}
-              style={{ ...toolsPrimaryBtn(false), marginTop: 8 }}
-            >
-              Yazdır
-            </button>
+            <div className="no-print" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                style={toolsPrimaryBtn(false)}
+              >
+                Yazdır
+              </button>
+              {enabiz && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const blob = new Blob([JSON.stringify(enabiz, null, 2)], { type: 'application/json;charset=utf-8' })
+                      const a = document.createElement('a')
+                      a.href = URL.createObjectURL(blob)
+                      a.download = `enabiz-sgk_rapor-${new Date().toISOString().slice(0, 10)}.json`
+                      a.click()
+                      URL.revokeObjectURL(a.href)
+                    }}
+                    style={{ ...toolsPrimaryBtn(false), background: '#1F5F8B' }}
+                  >
+                    ⬇ Medula e-Rapor JSON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = String((enabiz as { kopya_metin?: string }).kopya_metin || '')
+                      if (t) void navigator.clipboard.writeText(t)
+                    }}
+                    style={{ ...toolsPrimaryBtn(false), background: 'transparent', border: '1px solid #14B8A6', color: '#14B8A6' }}
+                  >
+                    📋 Medula alanlarını kopyala
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>

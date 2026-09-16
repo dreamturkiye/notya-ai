@@ -2,6 +2,7 @@
 
 import DoktorNav from '@/components/doktor/DoktorNav'
 import { toolsCard, toolsPrimaryBtn, toolsShell } from '@/lib/doktor/toolsUi'
+import { ENABIZ_ARTEFAKTLAR } from '@/lib/enabiz/paket'
 import { useState } from 'react'
 
 const steps = [
@@ -69,84 +70,86 @@ export default function ENabizGuidePage() {
           ARAÇLAR
         </div>
         <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#FFFFFF', lineHeight: 1.25 }}>
-          e-Nabız Kurumsal Erişim Rehberi
+          e-Nabız format hazırlığı
         </h1>
         <p style={{ marginTop: 8, color: '#94A3B8', fontSize: 14, lineHeight: 1.5 }}>
-          Türk doktorları için adım adım hasta kayıtlarına erişim kılavuzu
+          Canlı e-Nabız / USS bağlantısı yok. Reçete, rapor, epikriz, USG ve gebe/e-Doğum çıktıları yine de
+          doğru kanal formatında üretilir (FHIR R4, Medula XML, USS form JSON) — kopyala / indir hazır.
         </p>
+
+        <div style={{ ...toolsCard, marginTop: 20, padding: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#14B8A6', marginBottom: 10 }}>
+            Notya’da üretilen e-Nabız artefaktları
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, color: '#E2E8F0', fontSize: 13, lineHeight: 1.55 }}>
+            {ENABIZ_ARTEFAKTLAR.map((a) => (
+              <li key={a.tur} style={{ marginBottom: 8 }}>
+                <span style={{ color: '#2DD4BF', fontWeight: 600 }}>{a.ad}</span>
+                <span style={{ color: '#94A3B8' }}> · {a.kanal}</span>
+                <div style={{ color: '#64748B', fontSize: 12 }}>{a.ornek}</div>
+              </li>
+            ))}
+          </ul>
+          <p style={{ margin: '12px 0 0', color: '#FBBF24', fontSize: 12, lineHeight: 1.45 }}>
+            live_write her zaman false. P4 (USS üretici kaydı + hekim şifresi) gelene kadar hekim MBYS/Medula/e-Nabız
+            ekranına kendisi aktarır.
+          </p>
+        </div>
 
         <div
           style={{
             ...toolsCard,
             marginTop: 16,
-            background: 'rgba(15,155,142,0.14)',
-            border: '1px solid rgba(15,155,142,0.4)',
+            display: 'flex',
+            gap: 12,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: 6, color: '#99F6E4' }}>Hızlı Erişim</div>
-          <div style={{ fontSize: 13, color: '#E2E8F0', wordBreak: 'break-all', marginBottom: 12 }}>{link}</div>
-          <button type="button" onClick={() => void copyLink()} style={{ ...toolsPrimaryBtn(false), maxWidth: 220 }}>
-            {copied ? 'Kopyalandı' : 'Linki Kopyala'}
-          </button>
+          <div>
+            <div style={{ color: '#FFFFFF', fontWeight: 600, fontSize: 14 }}>Resmi e-Nabız portalı</div>
+            <div style={{ color: '#64748B', fontSize: 12, marginTop: 4 }}>{link}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="button" onClick={copyLink} style={toolsPrimaryBtn(false)}>
+              {copied ? '✓ Kopyalandı' : 'Bağlantıyı kopyala'}
+            </button>
+            <a href={link} target="_blank" rel="noreferrer" style={{ ...toolsPrimaryBtn(false), textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+              Aç
+            </a>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 18 }}>
-          {steps.map((step) => (
-            <div key={step.number} style={toolsCard}>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    background: '#0F9B8E',
-                    color: '#041016',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    flexShrink: 0,
-                  }}
-                >
-                  {step.number}
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <h3 style={{ margin: '0 0 8px', fontSize: 17, color: '#FFFFFF' }}>{step.title}</h3>
-                  <p style={{ margin: '0 0 12px', fontSize: 14, color: '#CBD5E1', lineHeight: 1.55 }}>{step.content}</p>
-                  <div
-                    style={{
-                      background: 'rgba(59,130,246,0.12)',
-                      border: '1px solid rgba(96,165,250,0.35)',
-                      borderRadius: 12,
-                      padding: '10px 12px',
-                      color: '#BFDBFE',
-                      fontSize: 13,
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    İpucu: {step.tip}
-                  </div>
-                </div>
+        <h2 style={{ margin: '28px 0 12px', fontSize: 16, color: '#E2E8F0' }}>Kurumsal erişim rehberi</h2>
+        {steps.map((s) => (
+          <div key={s.number} style={{ ...toolsCard, marginBottom: 10, padding: 14 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: 'rgba(20,184,166,0.15)',
+                  color: '#14B8A6',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {s.number}
+              </div>
+              <div>
+                <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: 14 }}>{s.title}</div>
+                <div style={{ color: '#94A3B8', fontSize: 13, marginTop: 4, lineHeight: 1.5 }}>{s.content}</div>
+                <div style={{ color: '#64748B', fontSize: 12, marginTop: 6 }}>İpucu: {s.tip}</div>
               </div>
             </div>
-          ))}
-        </div>
-
-        <div
-          style={{
-            marginTop: 18,
-            borderRadius: 16,
-            padding: 16,
-            background: 'rgba(245,158,11,0.12)',
-            border: '1px solid rgba(251,191,36,0.4)',
-          }}
-        >
-          <div style={{ fontWeight: 700, color: '#FDE68A', marginBottom: 6 }}>KVKK ve Yasal Uyarı</div>
-          <p style={{ margin: 0, fontSize: 13, color: '#FDE68A', lineHeight: 1.5 }}>
-            Hasta verilerine erişim yalnızca tıbbi gereklilik ve hasta rızası ile mümkündür. Yetkisiz erişim cezai
-            yaptırımlara tabidir. Tüm işlemler loglanır.
-          </p>
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   )

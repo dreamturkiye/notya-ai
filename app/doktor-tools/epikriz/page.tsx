@@ -24,6 +24,13 @@ interface EpikrizSonuc {
   taburcuOzeti: string;
   imza: string;
   letterhead?: { satirlar: string[]; logoDataUrl: string; diplomaNo: string };
+  enabiz?: {
+    tur?: string
+    kanal?: string
+    live_write?: boolean
+    kopya_metin?: string
+    uretildi_at?: string
+  };
 }
 
 
@@ -160,6 +167,16 @@ export default function EpikrizPage() {
     if (!sonuc) return;
     const text = `${sonuc.hastaBilgileri}\n\n${sonuc.taniVeTedavi}\n\n${sonuc.taburcuOzeti}\n\n${sonuc.imza}`;
     navigator.clipboard.writeText(text);
+  };
+
+  const handleEnabizIndir = () => {
+    if (!sonuc?.enabiz) return;
+    const blob = new Blob([JSON.stringify(sonuc.enabiz, null, 2)], { type: 'application/json;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `enabiz-epikriz-${(sonuc.enabiz.uretildi_at || '').slice(0, 10) || 'paket'}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   const handleYazdir = () => {
@@ -473,6 +490,21 @@ export default function EpikrizPage() {
                   }}>
                     Kopyala
                   </button>
+                  {sonuc.enabiz && (
+                    <button onClick={handleEnabizIndir} style={{
+                      flex: 1,
+                      height: '44px',
+                      backgroundColor: 'transparent',
+                      color: '#94A3B8',
+                      border: '1px solid rgba(148,163,184,0.5)',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}>
+                      e-Nabız FHIR JSON
+                    </button>
+                  )}
                   <button onClick={handleYazdir} style={{
                     flex: 1,
                     height: '44px',

@@ -25,6 +25,7 @@ interface Veri {
   metin: string
   baslik: { doktor: { unvan: string; ad: string; brans: string; klinik: string }; ozel?: { satirlar: string[]; diplomaNo: string; logoDataUrl: string }; taslakMi?: boolean; hasta: { ad: string; dogum: string | null; cinsiyet: string | null }; tarih: string }
   xml: string
+  enabiz?: Record<string, unknown>
 }
 
 const BRANS_AD: Record<string, string> = BRANS_ETIKETLERI as Record<string, string>; // 30 branş (Kaan 2026-09-10)
@@ -144,6 +145,11 @@ export default function ReceteYazdirPage() {
     const blob = new Blob([veri.xml], { type: 'application/xml' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `erecete-${params.id.slice(0, 8)}.xml`; a.click();
   };
+  const enabizJsonIndir = () => {
+    if (!veri?.enabiz) return;
+    const blob = new Blob([JSON.stringify(veri.enabiz, null, 2)], { type: 'application/json;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `enabiz-erecete-${params.id.slice(0, 8)}.json`; a.click();
+  };
 
   if (hata) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>{hata}</div>;
   if (!veri || yolYukleniyor) return <div style={{ padding: 40, fontFamily: 'system-ui', color: '#666' }}>Reçete hazırlanıyor…</div>;
@@ -178,6 +184,7 @@ export default function ReceteYazdirPage() {
               <>
                 <button type="button" onClick={kopyala} style={buyukDugme}>{kopya ? '✓ Kopyalandı — programa yapıştırın' : '📋 Programa kopyala (MBYS / Medula)'}</button>
                 <button type="button" onClick={xmlIndir} style={kucukBaglanti}>e-Reçete XML</button>
+                {veri.enabiz ? <button type="button" onClick={enabizJsonIndir} style={kucukBaglanti}>e-Nabız paket JSON</button> : null}
                 <button type="button" onClick={() => window.print()} style={kucukBaglanti}>Kâğıda yazdır</button>
               </>
             )}

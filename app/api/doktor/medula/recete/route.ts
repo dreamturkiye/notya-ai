@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { medulaTaslagiHazirla, ereceteXml } from '@/lib/medula/receteHazirla'
+import { enabizErecete } from '@/lib/enabiz/paket'
 import { medulaOrtami, ereceteGiris } from '@/lib/medula/soapIstemci'
 import { TEST_ORTAMI, SGK_BRANS_KODU } from '@/lib/medula/tipler'
 
@@ -81,7 +82,9 @@ export async function GET(req: NextRequest) {
   if (!noteId) return NextResponse.json({ error: 'noteId zorunludur.' }, { status: 400 })
   const t = await taslakUret(oturum.supabase, oturum.doktorId, noteId)
   if (!t) return NextResponse.json({ error: 'Not bulunamadı.' }, { status: 404 })
-  return NextResponse.json({ metin: t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, tanilar: t.erecete.ereceteTaniBilgisi, baslik: t.baslik, xml: ereceteXml(t.erecete), ortam: medulaOrtami() })
+  const xml = ereceteXml(t.erecete)
+  const enabiz = enabizErecete({ xml, metin: t.metin, eksikler: t.eksikler, erecete: t.erecete as unknown as Record<string, unknown> })
+  return NextResponse.json({ metin: t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, tanilar: t.erecete.ereceteTaniBilgisi, baslik: t.baslik, xml, enabiz, ortam: medulaOrtami() })
 }
 
 export async function POST(req: NextRequest) {

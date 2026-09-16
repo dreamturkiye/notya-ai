@@ -91,6 +91,28 @@ function imzaKur(hekim: string, branş: string, tarihIso: string): string {
   return satirlar.join('\n');
 }
 
+function adSoyadBasliktan(baslik: string): string {
+  const m = baslik.match(/Ad Soyad:\s*(.+)/);
+  return (m?.[1] || '').trim() || 'Hasta';
+}
+
+async function enabizEpikrizPaket(opts: {
+  hastaId: string
+  hastaBilgileri: string
+  taniVeTedavi: string
+  taburcuOzeti: string
+  hekim: string
+}) {
+  const { enabizEpikriz } = await import('@/lib/enabiz/paket');
+  return enabizEpikriz({
+    hastaAd: adSoyadBasliktan(opts.hastaBilgileri),
+    hastaId: opts.hastaId,
+    taniVeTedavi: opts.taniVeTedavi,
+    taburcuOzeti: opts.taburcuOzeti,
+    hekimAd: opts.hekim,
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient(
@@ -138,12 +160,18 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
         console.error('[epikriz-kapsamli] JSON parse başarısız, ham metin:', rawKapsamli.slice(0, 500));
         return NextResponse.json({ hata: 'Epikriz taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
       }
+      const taniVeTedavi = parsedKapsamli.taniVeTedavi || '';
+      const taburcuOzeti = parsedKapsamli.taburcuOzeti || '';
+      const enabiz = await enabizEpikrizPaket({
+        hastaId, hastaBilgileri, taniVeTedavi, taburcuOzeti, hekim,
+      });
       return NextResponse.json({
         hastaBilgileri,
-        taniVeTedavi: parsedKapsamli.taniVeTedavi || '',
-        taburcuOzeti: parsedKapsamli.taburcuOzeti || '',
+        taniVeTedavi,
+        taburcuOzeti,
         imza: imzaKur(hekim, 'pediatri', new Date().toISOString()),
-              letterhead,
+        letterhead,
+        enabiz,
       });
     }
 
@@ -192,12 +220,18 @@ Hastanın specialty: ${branş}`;
       console.error('[epikriz] JSON parse başarısız, ham metin:', raw.slice(0, 500));
       return NextResponse.json({ hata: 'Epikriz taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
     }
+    const taniVeTedavi = parsed.taniVeTedavi || '';
+    const taburcuOzeti = parsed.taburcuOzeti || '';
+    const enabiz = await enabizEpikrizPaket({
+      hastaId, hastaBilgileri, taniVeTedavi, taburcuOzeti, hekim,
+    });
     return NextResponse.json({
       hastaBilgileri,
-      taniVeTedavi: parsed.taniVeTedavi || '',
-      taburcuOzeti: parsed.taburcuOzeti || '',
+      taniVeTedavi,
+      taburcuOzeti,
       imza: imzaKur(hekim, branş, tarihIso),
-          letterhead,
+      letterhead,
+      enabiz,
     });
   } catch (error) {
     console.error('Epikriz oluşturma hatası:', error);

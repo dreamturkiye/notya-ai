@@ -17,4 +17,4 @@ Closes the specialty audit “wow bar”: CYBH treatment, full contraception/EC,
 Migration `035_kd_jine_wow_sprint.sql` — `kd_wow_kayitlari` + tedavi jsonb columns.
 
 ## Still adapter-only (by design)
-Live e-Nabız / e-Doğum HTTP write, e-imza hardware, IVF lab robotics — field maps and wizards ship; wire adapters separately (KD-03).
+Live e-Nabız / e-Doğum HTTP write, e-imza hardware, IVF lab robotics — field maps and format packets ship (`lib/enabiz`, `docs/README_ENABIZ_FORMAT.md`); wire adapters separately (KD-03 / USS P4).

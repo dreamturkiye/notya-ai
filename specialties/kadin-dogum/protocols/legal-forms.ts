@@ -1,7 +1,14 @@
 /**
- * Legal / public-system field map. Adapters only — do not fake live e-Nabız writes
- * unless a client already exists (none is wired from this folder).
+ * Legal / public-system field map + e-Nabız format paketleri.
+ * Adapters only — do not fake live e-Nabız writes (live_write always false).
  */
+import {
+  enabizEDogumFromWizard,
+  enabizGebeIzlem,
+  enabizUssForm,
+  type EnabizPaket,
+} from '@/lib/enabiz/paket'
+
 export type LegalForm = {
   id: string
   system: 'e-nabiz' | 'e-dogum' | 'mbys' | 'sut' | 'kvkk' | 'istirahat' | 'adli'
@@ -71,6 +78,7 @@ export function formsForEvent(event: string): LegalForm[] {
   return LEGAL_FORMS.filter((f) => f.event.toLowerCase().includes(needle) || f.id.includes(needle))
 }
 
+/** @deprecated Prefer mapIzlemToEnabizPaket — keeps field names for callers. */
 export function mapIzlemToEnabiz(input: {
   izlem_no: 1 | 2 | 3 | 4
   bp: string
@@ -93,6 +101,66 @@ export function mapIzlemToEnabiz(input: {
     danger_signs: input.danger_signs,
     live_write: false,
   }
+}
+
+export function mapIzlemToEnabizPaket(input: {
+  izlem_no: 1 | 2 | 3 | 4
+  bp: string
+  weight: number
+  hb?: number
+  urine_protein: boolean
+  fhr?: number
+  risk: string
+  danger_signs: string[]
+  mother_patient_id?: string
+  sat?: string
+  edd?: string
+}): EnabizPaket {
+  return enabizGebeIzlem(input)
+}
+
+export function mapGebeBildirimToEnabizPaket(input: {
+  mother_patient_id: string
+  sat: string
+  edd: string
+  episode_id?: string
+}): EnabizPaket {
+  return enabizUssForm(
+    'gebe_bildirimi',
+    {
+      mother_patient_id: input.mother_patient_id,
+      sat: input.sat,
+      edd: input.edd,
+      episode_id: input.episode_id ?? null,
+    },
+    ['mother_patient_id', 'sat', 'edd'],
+  )
+}
+
+export function mapLohusaToEnabizPaket(input: {
+  lohusa_day: number
+  bp: string
+  bleeding: string
+  breastfeeding: boolean
+}): EnabizPaket {
+  return enabizUssForm(
+    'lohusa_izlem',
+    {
+      lohusa_day: input.lohusa_day,
+      BP: input.bp,
+      bleeding: input.bleeding,
+      breastfeeding: input.breastfeeding,
+    },
+    ['lohusa_day', 'BP', 'bleeding'],
+  )
+}
+
+export function mapEDogumWizardToEnabizPaket(sihirbaz: {
+  alanlar: { kod: string; etiket: string; deger: string; eksik: boolean }[]
+  tamam: boolean
+  uyari: string[]
+}): EnabizPaket {
+  return enabizEDogumFromWizard(sihirbaz)
 }
 
 export { eDogumRequired } from './olu-dogum'

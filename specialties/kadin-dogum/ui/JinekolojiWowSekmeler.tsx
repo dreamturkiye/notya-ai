@@ -12,6 +12,31 @@ import type { Dipnot } from '../engines/jinekoloji-v2'
 
 type Calistir = (body: Record<string, unknown>, ok?: string) => Promise<unknown>
 
+type EnabizPaketUi = {
+  tur?: string
+  kanal?: string
+  live_write?: boolean
+  kopya_metin?: string
+  eksikler?: string[]
+  uretildi_at?: string
+}
+
+function enabizIndir(paket: unknown, ad: string) {
+  if (!paket || typeof paket !== 'object') return
+  const blob = new Blob([JSON.stringify(paket, null, 2)], { type: 'application/json;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = ad
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
+async function enabizKopyala(paket: EnabizPaketUi | null | undefined) {
+  const t = paket?.kopya_metin
+  if (!t) return
+  try { await navigator.clipboard.writeText(t) } catch { /* ignore */ }
+}
+
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }
 const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' }
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 }
@@ -153,10 +178,10 @@ export function JinekolojiWowSekmeler({
   }
 
   if (sekme === 'USG rapor') {
-    const son = (wow.usg || [])[0] as { baslik?: string; govde?: string; sutOneri?: string; bayraklar?: string[] } | undefined
+    const son = (wow.usg || [])[0] as { baslik?: string; govde?: string; sutOneri?: string; bayraklar?: string[]; enabiz?: EnabizPaketUi } | undefined
     return (
       <div>
-        <div style={etiket}>1-tap USG rapor + SUT önerisi</div>
+        <div style={etiket}>1-tap USG rapor + SUT önerisi <span style={kucuk}>· e-Nabız FHIR DiagnosticReport (canlı yazım yok)</span></div>
         <div style={satir}>
           <select value={s('usg')} onChange={(e) => set('usg', e.target.value)} style={{ ...toolsInput, width: 'auto' }}>
             <option value="">şablon</option>
@@ -164,7 +189,7 @@ export function JinekolojiWowSekmeler({
           </select>
           <input value={s('crl')} onChange={(e) => set('crl', e.target.value)} placeholder="CRL/biyometri" style={{ ...toolsInput, width: 120 }} />
           <input value={s('not')} onChange={(e) => set('not', e.target.value)} placeholder="hekim notu" style={{ ...toolsInput, minWidth: 180 }} />
-          <button type="button" disabled={!s('usg')} onClick={() => calistir({ adim: 'usg_rapor', sablon: s('usg') as UsgSablonKod, olcumler: { CRL: s('crl') }, hekimNotu: s('not') }, 'Rapor taslağı kaydedildi.')} style={btn}>Rapor üret</button>
+          <button type="button" disabled={!s('usg')} onClick={() => calistir({ adim: 'usg_rapor', sablon: s('usg') as UsgSablonKod, olcumler: { CRL: s('crl') }, hekimNotu: s('not') }, 'Rapor taslağı + e-Nabız FHIR paket kaydedildi.')} style={btn}>Rapor üret</button>
         </div>
         {son?.baslik && (
           <div style={{ marginTop: 8, fontSize: 12, color: '#EDF1F7' }}>
@@ -172,6 +197,13 @@ export function JinekolojiWowSekmeler({
             <div style={{ color: '#FBBF24' }}>SUT: {son.sutOneri}</div>
             {son.bayraklar?.map((x) => <div key={x} style={{ color: '#F87171' }}>⚠ {x}</div>)}
             <pre style={{ ...kucuk, whiteSpace: 'pre-wrap', background: 'rgba(0,0,0,0.25)', padding: 8, borderRadius: 8 }}>{son.govde}</pre>
+            {son.enabiz && (
+              <div style={satir}>
+                <button type="button" onClick={() => enabizIndir(son.enabiz, `enabiz-usg-${(son.enabiz?.uretildi_at || '').slice(0, 10) || 'paket'}.json`)} style={ghost}>⬇ e-Nabız FHIR JSON</button>
+                <button type="button" onClick={() => enabizKopyala(son.enabiz)} style={ghost}>📋 MBYS için kopyala</button>
+                <span style={kucuk}>{son.enabiz.kanal} · live_write={String(son.enabiz.live_write)}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -198,10 +230,10 @@ export function JinekolojiWowSekmeler({
   }
 
   if (sekme === 'e-Doğum') {
-    const e = wow.eDogum as { alanlar?: { etiket: string; deger: string; eksik: boolean }[]; tamam?: boolean; uyari?: string[] } | null
+    const e = wow.eDogum as { alanlar?: { etiket: string; deger: string; eksik: boolean }[]; tamam?: boolean; uyari?: string[]; enabiz?: EnabizPaketUi } | null
     return (
       <div>
-        <div style={etiket}>e-Doğum sihirbazı (MoH DBS alanları — canlı yazım adaptörü)</div>
+        <div style={etiket}>e-Doğum sihirbazı <span style={kucuk}>· MoH DBS / USS alanları — canlı yazım yok, format-hazır JSON</span></div>
         <div style={satir}>
           <input value={s('dz')} onChange={(e) => set('dz', e.target.value)} placeholder="doğum tarih-saat" style={{ ...toolsInput, width: 160 }} />
           <select value={s('sekil')} onChange={(e) => set('sekil', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="">şekil</option><option value="vajinal" style={{ color: '#000' }}>vajinal</option><option value="cs" style={{ color: '#000' }}>C/S</option></select>
@@ -209,11 +241,18 @@ export function JinekolojiWowSekmeler({
           <input value={s('kilo')} onChange={(e) => set('kilo', e.target.value)} placeholder="g" style={{ ...toolsInput, width: 70 }} />
           <select value={s('canli')} onChange={(e) => set('canli', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="canli" style={{ color: '#000' }}>canlı</option><option value="olu" style={{ color: '#000' }}>ölü</option></select>
           <input value={s('cin')} onChange={(e) => set('cin', e.target.value)} placeholder="cinsiyet" style={{ ...toolsInput, width: 90 }} />
-          <button type="button" onClick={() => calistir({ adim: 'e_dogum', payload: { dogum_tarih_saat: s('dz'), dogum_sekli: s('sekil'), gebelik_haftasi: s('hf'), kilo: s('kilo'), canli_olu: s('canli') || 'canli', cinsiyet: s('cin'), dogum_yeri: 'klinik', anne_tc: 'hasta' } }, 'e-Doğum paketı hazır.')} style={btn}>Paket oluştur</button>
+          <button type="button" onClick={() => calistir({ adim: 'e_dogum', payload: { dogum_tarih_saat: s('dz'), dogum_sekli: s('sekil'), gebelik_haftasi: s('hf'), kilo: s('kilo'), canli_olu: s('canli') || 'canli', cinsiyet: s('cin'), dogum_yeri: 'klinik', anne_tc: 'hasta' } }, 'e-Doğum USS paketı hazır.')} style={btn}>Paket oluştur</button>
         </div>
         {e?.tamam === false && <div style={{ color: '#FBBF24', fontSize: 12 }}>Eksik zorunlu alanlar var</div>}
         {e?.uyari?.map((u) => <div key={u} style={{ color: '#F87171', fontSize: 12 }}>⚠ {u}</div>)}
         {e?.alanlar?.map((a) => <div key={a.etiket} style={{ fontSize: 12, color: a.eksik ? '#F87171' : '#EDF1F7' }}>{a.eksik ? '✖' : '✓'} {a.etiket}: {a.deger || '—'}</div>)}
+        {e?.enabiz && (
+          <div style={satir}>
+            <button type="button" onClick={() => enabizIndir(e.enabiz, `enabiz-e_dogum-${(e.enabiz?.uretildi_at || '').slice(0, 10) || 'paket'}.json`)} style={ghost}>⬇ e-Nabız / e-Doğum JSON</button>
+            <button type="button" onClick={() => enabizKopyala(e.enabiz)} style={ghost}>📋 Forma kopyala</button>
+            <span style={kucuk}>{e.enabiz.kanal} · eksik {e.enabiz.eksikler?.length || 0}</span>
+          </div>
+        )}
       </div>
     )
   }

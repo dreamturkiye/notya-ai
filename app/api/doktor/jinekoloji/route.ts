@@ -27,6 +27,8 @@ import { flattenSoapAlanlar, jineSticky, normalizeSoap, ofisVizitOzet, soapFromV
 import { cybhTedaviPlani, hsvSupresyon36hf } from '@/specialties/kadin-dogum/engines/cybh-tedavi'
 import { acilKontrasepsiyon, yontemMec, postpartumKontrasepsiyonBaslangic, type YontemKod } from '@/specialties/kadin-dogum/engines/kontrasepsiyon-mec'
 import { menorajiTedaviBasamagi, antiDKapaliDongu, usgRaporTaslagi, eDogumSihirbaz, csSavunmaPaketi, paketDurum, VARSAYILAN_PAKET, infertiliteSevkPaketi, urojinePopqHizli, onkolojiIotaTriyaj, siddetTarama, kokYillikGuvenlik, type AntiDTetik, type UsgSablonKod } from '@/specialties/kadin-dogum/engines/kd-klinik-wow'
+import { enabizUsgRapor } from '@/lib/enabiz/paket'
+import { mapEDogumWizardToEnabizPaket } from '@/specialties/kadin-dogum/protocols/legal-forms'
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
 const ekleAy = (t: string, ay: number) => { const [y, m, d] = t.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + ay, d)).toISOString().slice(0, 10) }
@@ -351,10 +353,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, plan })
   }
   if (adim === 'usg_rapor') {
-    const rapor = usgRaporTaslagi(String(b.sablon || 'dating') as UsgSablonKod, (b.olcumler || {}) as Record<string, string>, b.hekimNotu ? String(b.hekimNotu) : undefined)
-    await wowKaydet('usg', rapor)
+    const sablon = String(b.sablon || 'dating') as UsgSablonKod
+    const rapor = usgRaporTaslagi(sablon, (b.olcumler || {}) as Record<string, string>, b.hekimNotu ? String(b.hekimNotu) : undefined)
+    const enabiz = enabizUsgRapor({
+      baslik: rapor.baslik,
+      govde: rapor.govde,
+      sutOneri: rapor.sutOneri,
+      bayraklar: rapor.bayraklar,
+      sablonKod: sablon,
+      hastaId: hasta.id,
+    })
+    const kayit = { ...rapor, enabiz }
+    await wowKaydet('usg', kayit)
     await gununNotunaEkle(sb, user.id, hasta.id, `${rapor.baslik}\n${rapor.govde}`.slice(0, 2000))
-    return NextResponse.json({ ok: true, rapor })
+    return NextResponse.json({ ok: true, rapor: kayit, enabiz })
   }
   if (adim === 'anti_d_loop') {
     const plan = antiDKapaliDongu({
@@ -368,8 +380,10 @@ export async function POST(req: NextRequest) {
   }
   if (adim === 'e_dogum') {
     const paket = eDogumSihirbaz((b.payload || {}) as Record<string, unknown>)
-    await wowKaydet('e_dogum', paket)
-    return NextResponse.json({ ok: true, paket })
+    const enabiz = mapEDogumWizardToEnabizPaket(paket)
+    const kayit = { ...paket, enabiz }
+    await wowKaydet('e_dogum', kayit)
+    return NextResponse.json({ ok: true, paket: kayit, enabiz })
   }
   if (adim === 'paket') {
     const kul = (b.kullanilan || {}) as Record<string, number>

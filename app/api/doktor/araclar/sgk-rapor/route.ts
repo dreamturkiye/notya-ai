@@ -183,11 +183,20 @@ export async function POST(request: NextRequest) {
       medulaBagli: !!medula,
     }
 
+    const { enabizSgkRapor } = await import('@/lib/enabiz/paket')
+    const enabiz = enabizSgkRapor({
+      raporTipiId: tip.id,
+      raporTipiLabel: tip.label,
+      draft: rapor,
+      hekim,
+    })
+
     return NextResponse.json({
       rapor,
       tarih,
       hekim,
       raporTipi: tip,
+      enabiz,
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Sunucu hatası'
