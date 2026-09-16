@@ -8,7 +8,7 @@ gebe/e-Doğum ve ileride USS’ye gidecek her çıktı **şimdiden doğru format
 | Onaylı muayene notu | FHIR R4 Bundle | `lib/entegrasyon/fhirMapper.ts` |
 | e-Reçete | Medula `erecete.s1.xsd` XML | `lib/medula/receteHazirla.ts` + `lib/enabiz/paket.ts` |
 | Epikriz | FHIR Composition LOINC 18842-5 | `enabizEpikriz` |
-| SGK e-Rapor / e-İstirahat | Medula e-rapor alan JSON | `enabizSgkRapor` |
+| SGK e-Rapor / e-İstirahat | Medula e-rapor alan JSON | **Kanoni UI:** `/doktor-tools/sgk-rapor` (pediatri, Dr. Gökhan revizyonları). Paket: `enabizSgkRapor` yalnızca o taslağın Medula alan zarfı — ayrı rapor motoru yok. |
 | USG raporu | FHIR DiagnosticReport LOINC 18748-4 | `enabizUsgRapor` |
 | Gebe / lohusa / e-Doğum | USS form JSON | `legal-forms.ts` + `enabizUssForm` |
 

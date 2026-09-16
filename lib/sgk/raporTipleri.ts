@@ -3,7 +3,10 @@
  * Sources: SGK e-Rapor (ilaç), Medula İş Göremezlik (e-İstirahat), tıbbi malzeme
  * e-rapor web servisleri, Sağlık Bakanlığı Diploma Tescil No practice.
  *
- * This is a Medula data-entry DRAFT — not a live Medula submission.
+ * Canonical UI: /doktor-tools/sgk-rapor (branş-agnostik; pediatride Dr. Gökhan
+ * ile revize — "çalışma kapasitesi" yok, e-İstirahat/e-Rapor bölümleri, yazdırılabilir
+ * letterhead). This is a Medula data-entry DRAFT — not a live Medula submission.
+ * e-Nabız format zarfı: lib/enabiz/paket.enabizSgkRapor (aynı draft alanları).
  */
 
 export type RaporKanal = 'sgk_medula' | 'ozel_muayenehane'

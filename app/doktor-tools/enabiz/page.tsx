@@ -87,6 +87,11 @@ export default function ENabizGuidePage() {
                 <span style={{ color: '#2DD4BF', fontWeight: 600 }}>{a.ad}</span>
                 <span style={{ color: '#94A3B8' }}> · {a.kanal}</span>
                 <div style={{ color: '#64748B', fontSize: 12 }}>{a.ornek}</div>
+                {a.tur === 'sgk_rapor' && (
+                  <a href="/doktor-tools/sgk-rapor" style={{ color: '#14B8A6', fontSize: 12, display: 'inline-block', marginTop: 4 }}>
+                    Araçlar → Hasta Raporları (kanon) ›
+                  </a>
+                )}
               </li>
             ))}
           </ul>

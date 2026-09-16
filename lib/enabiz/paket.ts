@@ -6,6 +6,9 @@
  * doğru kanal formatında (FHIR R4 Bundle, Medula erecete.s1.xsd XML,
  * Medula e-Rapor alanları, USS form JSON) üretilmesi — kopyala/indir hazır.
  *
+ * SGK rapor kanonu: /doktor-tools/sgk-rapor (pediatri + Dr. Gökhan revizyonları;
+ * lib/sgk/raporTipleri). enabizSgkRapor yalnız o draft’ı Medula alan zarfına çevirir.
+ *
  * Kaynak hizası: docs/ENTEGRASYON-KILAVUZU.md §5, docs/USS-P4-YOLHARITASI.md,
  * lib/medula (erecete.s1.xsd), lib/entegrasyon/fhirMapper.ts.
  */
@@ -97,7 +100,7 @@ export const ENABIZ_ARTEFAKTLAR: {
   { tur: 'muayene_notu', ad: 'Onaylı muayene notu', kanal: 'fhir_r4', ornek: 'Composition + Condition + Observation Bundle' },
   { tur: 'erecete', ad: 'e-Reçete', kanal: 'medula_erecete_xml', ornek: 'erecete.s1.xsd XML + Medula kopya metni' },
   { tur: 'epikriz', ad: 'Epikriz', kanal: 'fhir_r4', ornek: 'Composition (LOINC 18842-5) + DocumentReference' },
-  { tur: 'sgk_rapor', ad: 'SGK e-Rapor / e-İstirahat', kanal: 'medula_erapor_json', ornek: 'Medula rapor alanları + ICD-10' },
+  { tur: 'sgk_rapor', ad: 'SGK e-Rapor / e-İstirahat', kanal: 'medula_erapor_json', ornek: 'Araçlar → Hasta Raporları (Gökhan pediatri); Medula alan JSON' },
   { tur: 'usg_rapor', ad: 'USG / görüntüleme raporu', kanal: 'fhir_r4', ornek: 'DiagnosticReport (LOINC 18748-4)' },
   { tur: 'gebe_bildirimi', ad: 'Gebe bildirimi', kanal: 'uss_form_json', ornek: 'USS gebe bildirim alanları' },
   { tur: 'gebe_izlem', ad: 'Gebe izlem', kanal: 'uss_form_json', ornek: 'İzlem 1–4 + vital/risk alanları' },
