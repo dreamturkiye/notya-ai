@@ -4,6 +4,7 @@
  * Live gebelik_* CRUD is truth; chapter engines consume recorded izlemler.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { JinekolojiSpine } from '@/specialties/kadin-dogum/ui/JinekolojiSpine'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HastaKdChapter from '@/components/doktor/HastaKdChapter';
 import { oncekiGebelikDurumMetni, oncekiGebelikEtiketTuru, oncekiGebelikleriFiltrele } from '@/lib/clinical/gebelikDurum';
@@ -446,6 +447,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           />
           <KolposkopiGaleri images={colpoFromGoruntuleme(veri?.goruntulemeler)} urls={goruntuUrl} />
           <KadinSagligiPaneli patientId={patientId} />
+          {/* NOTYA-JINE-01: office gynecology spine — renders for every female patient, pregnant or not (non-pregnant home) */}
+          <JinekolojiSpine patientId={patientId} />
           {liveVeri && (
             <HastaKdChapter
               patientId={patientId}
