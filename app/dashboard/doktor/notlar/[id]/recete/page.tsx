@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari';
+import { receteGruplari, belirsizKontrol, RENK_ETIKET } from '@/lib/doktor/receteRengi';
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -154,6 +155,10 @@ export default function ReceteYazdirPage() {
   if (hata) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>{hata}</div>;
   if (!veri || yolYukleniyor) return <div style={{ padding: 40, fontFamily: 'system-ui', color: '#666' }}>Reçete hazırlanıyor…</div>;
   const { baslik, satirlar, tanilar, uyarilar } = veri;
+  // Kaan (2026-09-16): kontrole tabi ilaçlar normal reçeteye yazılamaz — ayrı KIRMIZI/YEŞİL sayfa
+  const gruplar = receteGruplari(satirlar);
+  const renkliler = gruplar.filter((g) => g.renk !== 'normal');
+  const belirsizler = satirlar.filter((r) => belirsizKontrol(r.etkenMadde, r.ilacAdi)).map((r) => r.ilacAdi);
   const bransAd = (BRANS_AD[baslik.doktor.brans] || baslik.doktor.brans || '').replace(/\s*\(.*\)\s*$/, ''); // "Pediatri (Çocuk Sağlığı)" → "Pediatri"
   const mm = (v: number) => v * 3.78;
   const en = kagit === 'A5' ? mm(148) : mm(210);
@@ -243,8 +248,20 @@ export default function ReceteYazdirPage() {
         )}
       </div>
 
+      {renkliler.length > 0 && (
+        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#7F1D1D' }}>
+          <b>Kontrole tabi ilaç var:</b> {renkliler.map((g) => `${RENK_ETIKET[g.renk]} → ${g.satirlar.map((x) => x.s.ilacAdi).join(', ')}`).join(' · ')}.
+          {' '}Türkiye'de bu ilaçlar normal reçeteye yazılamaz; <b>Renkli Reçete Sistemi (RRS)</b> üzerinden düzenlenir. Aşağıda ayrı sayfada, renk etiketiyle basılır — diğer ilaçlar normal reçetede kalır.
+        </div>
+      )}
+      {belirsizler.length > 0 && (
+        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '8px auto 0', padding: '8px 14px', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 8, fontFamily: 'system-ui', fontSize: 12, color: '#78350F' }}>
+          Reçete türünü doğrulayın: {belirsizler.join(', ')} — forma/doza göre kontrole tabi olabilir (TİTCK listesi).
+        </div>
+      )}
       {/* Kâğıt */}
-      <div className="recete-kagit" style={{ width: '100%', maxWidth: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+      {gruplar.map((g, gi) => (
+      <div key={g.renk} className="recete-kagit" style={{ pageBreakAfter: gi < gruplar.length - 1 ? 'always' : 'auto', width: '100%', maxWidth: en, minHeight: boy, background: 'white', margin: '12px auto 32px', padding: kagit === 'A5' ? '28px 32px' : '40px 48px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', fontFamily: 'Georgia, "Times New Roman", serif', color: '#111', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 12 }}>
           {baslik.ozel?.logoDataUrl && <img src={baslik.ozel.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
           {/* Kaan (2026-09-10): doktor kendi başlığını yazdıysa İLK SATIR ad satırıdır — otomatik "Dr. ____" basılmaz */}
@@ -257,6 +274,11 @@ export default function ReceteYazdirPage() {
               </>)}
         </div>
 
+        {g.renk !== 'normal' && (
+          <div style={{ border: `2px solid ${g.renk === 'kirmizi' ? '#B91C1C' : '#15803D'}`, color: g.renk === 'kirmizi' ? '#B91C1C' : '#15803D', textAlign: 'center', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, padding: '4px 8px', marginBottom: 10 }}>
+            {RENK_ETIKET[g.renk]} — Renkli Reçete Sistemi (RRS) üzerinden düzenlenir
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 14, gap: 12 }}>
           <div>
             <div><b>Hasta:</b> {baslik.hasta.ad || '________________'}</div>
@@ -269,9 +291,9 @@ export default function ReceteYazdirPage() {
         </div>
 
         <div style={{ fontSize: 20, fontWeight: 700, fontStyle: 'italic', marginBottom: 8 }}>Rp.</div>
-        {satirlar.length === 0 && <div style={{ fontSize: 12, color: '#666' }}>Bu notta ilaç yok.</div>}
+        {g.satirlar.length === 0 && <div style={{ fontSize: 12, color: '#666' }}>Bu notta ilaç yok.</div>}
         <ol style={{ margin: 0, paddingLeft: 22, fontSize: 13, lineHeight: 1.55 }}>
-          {satirlar.map((s, i) => (
+          {g.satirlar.map(({ s, i }) => (
             <li key={i} style={{ marginBottom: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                 <span><b>{s.ilacAdi}</b>{s.dozMetni ? ` ${s.dozMetni}` : ''}</span>
@@ -294,6 +316,7 @@ export default function ReceteYazdirPage() {
           </div>
         </div>
       </div>
+      ))}
     </div>
   );
 }
