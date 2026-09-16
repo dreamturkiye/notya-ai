@@ -1,9 +1,16 @@
-# KD / Jinekoloji — Post-Sprint Audit (shareable)
+# KD / Jinekoloji — Specialty Audits (shareable)
 
-**Live page (same graphics as the Cursor canvas):**  
-https://notya-ai.vercel.app/kd-jine-post-sprint-audit.html
+## Pre-sprint (what Gökhan should see first)
 
-Send that link to Dr. Gökhan — no login required; no patient data.
+Full audit **before** JINE-04/KD-05 wow sprint — Partial/Thin/Missing domains, MoH matrix, pain points, CYBH/KB/HMB comments, forms gap list, game changers:
 
-Source file: `public/kd-jine-post-sprint-audit.html`  
-Canvas original: Cursor canvases `kadin-dogum-specialty-audit.canvas.tsx`
+**https://notya-ai.vercel.app/kd-jine-presprint-audit.html**
+
+File: `public/kd-jine-presprint-audit.html`  
+Canvas: `kadin-dogum-specialty-audit.canvas.tsx` (restored to pre-sprint)
+
+## Post-sprint (after gap close)
+
+**https://notya-ai.vercel.app/kd-jine-post-sprint-audit.html**
+
+No login · no patient data · internal product audits.

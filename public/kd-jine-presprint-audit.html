@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kadın Doğum &amp; Jinekoloji — Specialty Audit (pre-sprint) · Notya</title>
+  <meta name="description" content="Pre-sprint KD/Jine specialty audit with gaps, comments, MoH matrix — snapshot before JINE-04 wow sprint." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    h3 { margin:20px 0 8px; font-size:15px; font-weight:700; color:var(--muted); }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:860px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .pill.neutral { background:rgba(255,255,255,.06); color:var(--muted); border-color:var(--stroke); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout.danger { background:var(--red-soft); border-color:rgba(248,113,113,.32); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); } .callout.danger h2 { color:var(--red); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(140px,240px) 1fr 36px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-val { font-size:12px; font-weight:700; color:var(--text); text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; margin-bottom:8px; }
+    .card .title { font-size:14px; font-weight:650; }
+    .card .sub { font-size:11px; font-weight:700; color:var(--text); margin-top:6px; }
+    .card .sub.muted { color:var(--dim); font-weight:500; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya · Pre-sprint specialty audit</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="https://notya-ai.vercel.app/kd-jine-post-sprint-audit.html">Post-sprint (after work) →</a>
+        <a href="https://notya-ai.vercel.app/dashboard/doktor">Doktor paneli →</a>
+      </div>
+    </div>
+
+    <div class="banner">Snapshot <b>before</b> JINE-04 / KD-05 wow sprint — all comments, Partial/Thin/Missing ratings, MoH gaps, and game-changer backlog as audited 2026-09-16 morning.</div>
+
+    <h1>Kadın Doğum &amp; Jinekoloji — Specialty Audit</h1>
+    <p class="lede">Notya AI codebase × Sağlık Bakanlığı DÖB/DSB 2026 × TJOD practice × Turkish clinic pain points. Snapshot 2026-09-16 (JINE-01/02 + KD-02 shipped).</p>
+    <div class="pills">
+      <span class="pill success">Obstetrics spine: strong</span>
+      <span class="pill warning">Jine V2: strong tanı, thin tedavi</span>
+      <span class="pill danger">Wow gaps: USG rapor, STI Rx, HMB ladder, e-Doğum</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v">~95</div><div class="l">KD specialty files</div></div>
+      <div class="stat"><div class="v success">JINE-01/02</div><div class="l">Shipped 2026-09-16</div></div>
+      <div class="stat"><div class="v warning">3 open</div><div class="l">KD-03/04 · JINE-03 tickets</div></div>
+      <div class="stat"><div class="v info">Wow ≠ enough</div><div class="l">Audit bar for Turkish KD MDs</div></div>
+    </div>
+
+    <div class="callout info">
+      <h2>Executive verdict</h2>
+      <p>Obstetrics depth is already impressive for a Turkish EMR chapter (DÖB calendar, Anti-D, doğum spine, lohusa→bebek). Jinekoloji V1/V2 nails diagnosis frameworks (HPV tree, CYBH ön tanı, AUB/PALM-COEIN, KOK MEC). What will not make a jinekolog say “ulan bu başka” yet: treatment engines (STI regimens, menoraji ladder, EC), USG report+SUT speed, and live e-Doğum/e-rapor. Those three are the game-changers.</p>
+    </div>
+
+    <h2>Coverage depth by domain</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>Note</th></tr></thead>
+      <tbody><tr><td class="domain">Gebelik izlem (DÖB calendar)</td><td><span class="pill success">Strong</span></td><td class="note">Dual SB/ACOG windows, labs, Anti-D, OGTT, anomaly US</td></tr><tr><td class="domain">Doğum spine (travay→taburcu→bebek)</td><td><span class="pill success">Strong</span></td><td class="note">Partograf, C/S, PPH, lohusa, NTP gate, bebek handoff</td></tr><tr><td class="domain">USG / NST imaging UX</td><td><span class="pill warning">Partial</span></td><td class="note">Series + NST strip exist; 1-tap TR report + SUT coding thin</td></tr><tr><td class="domain">Serviks Pap/HPV/kolposkopi</td><td><span class="pill success">Strong</span></td><td class="note">HSGM tree, due engine, doctor-locked plan</td></tr><tr><td class="domain">CYBH / STI</td><td><span class="pill warning">Partial</span></td><td class="note">Ön tanı + partner flag + ulcer list; no NAAT orders or drug regimens</td></tr><tr><td class="domain">Kontrasepsiyon</td><td><span class="pill warning">Partial</span></td><td class="note">RİA schedule + KOK WHO-MEC; implant/injection/EC catalog-only</td></tr><tr><td class="domain">Menoraji / AUB</td><td><span class="pill warning">Partial</span></td><td class="note">PALM-COEIN + sampling rules; no TXA/LNG-IUS treatment ladder</td></tr><tr><td class="domain">PCOS / endometriozis / RM / EGK</td><td><span class="pill success">Strong</span></td><td class="note">JINE-02 cards with TJOD/Berek/Speroff refs</td></tr><tr><td class="domain">e-Doğum / e-Nabız / e-imza</td><td><span class="pill danger">Thin</span></td><td class="note">Adapters + field maps only; live write/sync open</td></tr><tr><td class="domain">İnfertilite / ÜYTE</td><td><span class="pill danger">Thin</span></td><td class="note">Step-1 checklist + HSG stub; stops at IVF sevk</td></tr><tr><td class="domain">Ürojine / onkoloji / IVF lab</td><td><span class="pill danger">Missing</span></td><td class="note">Explicitly out of V1/V2 scope</td></tr><tr><td class="domain">Portal (hasta)</td><td><span class="pill warning">Partial</span></td><td class="note">Gebeliğim live; no jine/STI/kontrasepsiyon/Pap surfaces</td></tr></tbody>
+    </table></div>
+
+    <h2>How complete vs “wow bar”</h2>
+    <p class="cap">Score = product completeness vs what would impress a busy Turkish KD (0–100). Source: repo inventory cross-checked with MoH/BP research.</p>
+    <div class="bars"><div class="bar-row"><div class="bar-label">Obstetrics (DÖB + doğum)</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-val">88</div></div><div class="bar-row"><div class="bar-label">Serviks / KETEM pathway</div><div class="bar-track"><div class="bar-fill" style="width:82%"></div></div><div class="bar-val">82</div></div><div class="bar-row"><div class="bar-label">AUB tanı (PALM-COEIN)</div><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><div class="bar-val">75</div></div><div class="bar-row"><div class="bar-label">KOK güvenlik (WHO-MEC)</div><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><div class="bar-val">80</div></div><div class="bar-row"><div class="bar-label">CYBH tanı / partner</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">55</div></div><div class="bar-row"><div class="bar-label">CYBH tedavi rejimi</div><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><div class="bar-val">15</div></div><div class="bar-row"><div class="bar-label">Menoraji tedavi basamağı</div><div class="bar-track"><div class="bar-fill" style="width:25%"></div></div><div class="bar-val">25</div></div><div class="bar-row"><div class="bar-label">Kontrasepsiyon (non-KOK/EC)</div><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><div class="bar-val">35</div></div><div class="bar-row"><div class="bar-label">USG rapor + SUT</div><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><div class="bar-val">40</div></div><div class="bar-row"><div class="bar-label">e-Doğum / e-rapor live</div><div class="bar-track"><div class="bar-fill" style="width:20%"></div></div><div class="bar-val">20</div></div><div class="bar-row"><div class="bar-label">Portal jinekoloji</div><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><div class="bar-val">10</div></div></div>
+
+    <h2>Sağlık Bakanlığı &amp; practice matrix</h2>
+    <p class="cap">MoH = DÖB_2026 / DSB_2026 / DBS / kanser taramaları. BP = TJOD teaching / ACOG-style TR use.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Mandate / expectation</th><th>Level</th><th>In product today</th><th>Gap to wow</th></tr></thead>
+      <tbody><tr><td>DÖB ≥4 izlem (≤14 / 18–24 / 28–32 / 36–38 hf)</td><td><span class="pill info">MoH</span></td><td class="note">Izlem calendar + TaramaPencereleri</td><td class="gap">ASM/e-Nabız export; visit-minute UX for 20–30 dk MoH budget</td></tr><tr><td>İlk izlem: CBC, UA, HBsAg, kan grubu, Coombs, sifilis, HIV±, TSH, Rubella IgG</td><td><span class="pill info">MoH</span></td><td class="note">Test windows + Lab paneli</td><td class="gap">One-click “ilk izlem paneli” order set + missed-lab chase</td></tr><tr><td>Anti-D ~28 hf + postpartum if Rh+ bebek</td><td><span class="pill info">MoH</span></td><td class="note">antiDIndicated + dogum spine rhogam</td><td class="gap">Abortus/ectopic/bleeding closed-loop trigger UI</td></tr><tr><td>e-Doğum (≥22w / ≥500g stillbirth too)</td><td><span class="pill info">MoH</span></td><td class="note">Protocol awareness + legal-forms maps</td><td class="gap">Live e-Doğum wizard from delivery note</td></tr><tr><td>Lohusa ≥3 ASM visit; NTP heel + hearing</td><td><span class="pill info">MoH</span></td><td class="note">Lohusa visits + taburcu NTP gate</td><td class="gap">Hospital staff reminder pack; e-Nabız sync status</td></tr><tr><td>Serviks HPV 30–65 / 5 yıl; meme 40–69 / 2 yıl</td><td><span class="pill info">MoH</span></td><td class="note">dueHesapla + KETEM counseling</td><td class="gap">KETEM handoff SMS + national vs private recall dual mode</td></tr><tr><td>GBS 36+0–37+6 culture + IAP</td><td><span class="pill neutral">BP (TR teaching)</span></td><td class="note">Test window present</td><td class="gap">Facility toggle + IAP checklist at travay</td></tr><tr><td>KVKK özel nitelikli (STI/HIV/cinsel sağlık)</td><td><span class="pill neutral">Law</span></td><td class="note">Consent/onam + role ACL elsewhere</td><td class="gap">STI episode disclosure UX; partner note without leaking to aile</td></tr></tbody>
+    </table></div>
+
+    <h2>Doctor pain points (typical day)</h2>
+    <div class="cards"><div class="card"><div class="top"><span class="title">USG rapor yazımı + SUT kodu</span><span class="pill neutral">Highest private-clinic time sink</span></div>
+  <div class="sub"><b>Wow move</b></div><div class="body">1-tap TR template library (dating/biyometri/anomali/Doppler/accreta flags) + SUT suggest</div>
+  <div class="sub muted">Now: Gallery/compare/NST strip — report builder thin</div></div><div class="card"><div class="top"><span class="title">DÖB pencere kaçırma (Coombs, OGTT, Anti-D, anomaly)</span><span class="pill neutral">Every polyclinic morning</span></div>
+  <div class="sub"><b>Wow move</b></div><div class="body">GA clock that auto-queues labs/vits/Tdab with chase list</div>
+  <div class="sub muted">Now: Strong calendar — chase/export weaker</div></div><div class="card"><div class="top"><span class="title">e-rapor / e-Doğum / analık SGK görünürlük</span><span class="pill neutral">Delivery day + next morning calls</span></div>
+  <div class="sub"><b>Wow move</b></div><div class="body">Fill once from doğum note → e-Doğum/analık fields + status sync</div>
+  <div class="sub muted">Now: Adapters only</div></div><div class="card"><div class="top"><span class="title">Sezaryen endikasyon savunulabilirlik (GÖREN baskısı)</span><span class="pill neutral">Every C/S</span></div>
+  <div class="sub"><b>Wow move</b></div><div class="body">SB endikasyon picker + timestamped decision + printable defense note</div>
+  <div class="sub muted">Now: C/S decision + SB list in spine — deepen defensibility pack</div></div><div class="card"><div class="top"><span class="title">Özel gebelik paketi (çok NST/US kotası)</span><span class="pill neutral">Private practice ops</span></div>
+  <div class="sub"><b>Wow move</b></div><div class="body">Package ledger: visits/NST/US vs contract</div>
+  <div class="sub muted">Now: Missing</div></div><div class="card"><div class="top"><span class="title">Akıntı / CYBH poliklinik hızı</span><span class="pill neutral">High gyn visit volume</span></div>
+  <div class="sub"><b>Wow move</b></div><div class="body">Findings → ön tanı → CDC-TR dosing card → partner script</div>
+  <div class="sub muted">Now: Ön tanı + partner flag; regimens missing</div></div></div>
+
+    <h2>CYBH / women’s STIs</h2>
+    <div class="callout warning">
+      <h2>Covered for office triage — not for treatment excellence</h2>
+      <p>Spine lists candida, BV, trich, chlamydia, gonorrhea, M.genitalium, HSV1/2, HPV wart, syphilis, HIV, HBV with ön tanı, partner rule, and first-ulcer HIV/RPR/HSV checklist. Missing: NAAT order sets, CDC-TR dosing cards, partner printable Rx, TOC, syphilis staging.</p>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Infection</th><th>TR practice</th><th>Coverage</th><th>Gap</th></tr></thead>
+      <tbody><tr><td class="domain">HPV / CIN</td><td class="note">MoH HPV-DNA 30–65/5y; clinic co-test common</td><td><span class="pill success">Strong</span></td><td class="gap">KETEM recall SMS; psychosexual counseling sheet</td></tr><tr><td class="domain">Kandidiyaz / BV / Trikomonas</td><td class="note">Most common office visits; empiric Rx</td><td><span class="pill warning">Partial</span></td><td class="gap">Ampirik doz kartları (metro/clinda/azole)</td></tr><tr><td class="domain">Klamidya / Gonore</td><td class="note">Risk-based NAAT; doxy / CTX regimens</td><td><span class="pill warning">Partial</span></td><td class="gap">NAAT order + partner Rx text + TOC</td></tr><tr><td class="domain">Sifilis / HIV / HBV</td><td class="note">MoH prenatal screen</td><td><span class="pill warning">Partial</span></td><td class="gap">Staging pathway; ID sevk pack; PrEP/PEP out of scope OK</td></tr><tr><td class="domain">HSV</td><td class="note">Lesion PCR; suppress near term</td><td><span class="pill warning">Partial</span></td><td class="gap">36 hf suppress dosing card (today: görev hook only)</td></tr><tr><td class="domain">M. genitalium</td><td class="note">Emerging; resistance-aware</td><td><span class="pill neutral">Listed as etken</span></td><td class="gap">Resistance-aware regimen + when to test</td></tr></tbody>
+    </table></div>
+
+    <h2>Doğum kontrol</h2>
+    <p class="cap">TNSA 2018: any method ~70%, modern ~49%; withdrawal still ~20%; unmet need ~12%. Product must beat withdrawal culture with MEC + EC + postpartum start — not just list methods.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>TR use reality</th><th>Coverage</th><th>Gap</th></tr></thead>
+      <tbody><tr><td class="domain">Withdrawal / kondom</td><td class="note">TNSA: çekilme ~20%, kondom ~19%</td><td class="note">Counseling catalog</td><td class="gap">Myth-busting + switch counseling after EC</td></tr><tr><td class="domain">RİA (Cu / LNG)</td><td class="note">~14% modern share; LNG dual HMB use</td><td class="note">Strong schedule + STI gate</td><td class="gap">LNG-IUD as HMB first-line pathway link</td></tr><tr><td class="domain">KOK / OKS</td><td class="note">Pill ~5%; private heavy</td><td class="note">Strong WHO-MEC gate</td><td class="gap">Yıllık TA/kilo görevi (JINE-03 open)</td></tr><tr><td class="domain">Implant / enjeksiyon</td><td class="note">Public sector strength</td><td class="note">Catalog only</td><td class="gap">Insertion workflow + MEC engine</td></tr><tr><td class="domain">Acil kontrasepsiyon</td><td class="note">LNG ≤72h; UPA ≤120h; Cu-IUD ≤5g</td><td class="note">Missing module</td><td class="gap">EC decision card + postpartum timing</td></tr><tr><td class="domain">Tüp ligasyonu</td><td class="note">~10%; C/S box</td><td class="note">Onam box in C/S</td><td class="gap">Standalone counseling + regret risk sheet</td></tr></tbody>
+    </table></div>
+
+    <h2>Ağır adet / menoraji</h2>
+    <div class="callout danger">
+      <h2>Tanı güçlü, tedavi zayıf — highest clinical gap in jine V2</h2>
+      <p>aubDegerlendir ships menoraji criteria, anemia banding, sampling gates, PMP pathway. NICE/TJOD first-line LNG-IUS and TXA/NSAID ladder are not productized. That is the difference between “good EMR” and “this thinks like my clinic.”</p>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Step</th><th>Guideline anchor</th><th>In Notya</th></tr></thead>
+      <tbody><tr><td class="domain">Tanı: >7g / ≥20 ped / pıhtı + anemi</td><td class="note">TJOD menoraji + FIGO</td><td class="note">Shipped in aubDegerlendir</td></tr><tr><td class="domain">Tetkik: TVUS, Hb/ferritin, TSH, βhCG, ±koag</td><td class="note">TJOD / Berek</td><td class="note">Shipped</td></tr><tr><td class="domain">Örnekleme gate (≥45, PMP, risk <45)</td><td class="note">ACOG/Berek</td><td class="note">Shipped + PMP pathway</td></tr><tr><td class="domain">1. basamak tedavi: LNG-IUS</td><td class="note">NICE NG88 / TJOD teaching</td><td class="note">Missing as treatment ladder</td></tr><tr><td class="domain">2. basamak: TXA / NSAİİ / CHC / progestin</td><td class="note">NICE / TR comparative data</td><td class="note">Missing dosing cards</td></tr><tr><td class="domain">Cerrahi: ablasyon / histerektomi</td><td class="note">After medical fail</td><td class="note">Sevk narrative only</td></tr></tbody>
+    </table></div>
+
+    <h2>Forms &amp; tests — gap list</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Form / test</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody><tr><td class="domain">Gebe İzlem Kartı (print)</td><td class="note">Exists</td><td class="gap">Keep; add ASM-friendly PDF export</td></tr><tr><td class="domain">Risk formu / VTE formu</td><td class="note">Protocol + UI panels</td><td class="gap">Wire aspirin eligibility dashboard to MoH major/minor</td></tr><tr><td class="domain">13 TJOD-style onam</td><td class="note">Spine shipped</td><td class="gap">e-imza (KD-03)</td></tr><tr><td class="domain">Partograf</td><td class="note">WHO alert/action</td><td class="gap">Field beta with real travay (KD-04)</td></tr><tr><td class="domain">NST seri / strip</td><td class="note">UI exists</td><td class="gap">Package quota + interpretation note templates</td></tr><tr><td class="domain">Pap/HPV / kolposkopi kayıt</td><td class="note">Strong</td><td class="gap">Pathology → Belgeler bridge (JINE-03)</td></tr><tr><td class="domain">CYBH episode form</td><td class="note">Office findings</td><td class="gap">Add regimen + partner Rx printable</td></tr><tr><td class="domain">Menoraji tedavi formu</td><td class="note">Eval only</td><td class="gap">NICE-aligned ladder with Turkish patient sheet</td></tr><tr><td class="domain">EC / postpartum start card</td><td class="note">Absent</td><td class="gap">New small module</td></tr><tr><td class="domain">e-Doğum / yenidoğan tarama kartı</td><td class="note">Awareness/stub</td><td class="gap">Live wizard + NTP reminders</td></tr><tr><td class="domain">Şiddet tarama checkbox</td><td class="note">Open JINE-03</td><td class="gap">Ship with sevk</td></tr><tr><td class="domain">İnfertilite HSG / step-1</td><td class="note">Stub</td><td class="gap">Decide: deepen or keep sevk-only</td></tr></tbody>
+    </table></div>
+
+    <h2>Game changers (priority)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Move</th><th>Why Turkish KD will care</th><th>Size</th></tr></thead>
+      <tbody><tr><td>1</td><td class="domain">1-tap Obstetrik USG rapor + SUT önerisi</td><td class="note">Daily time sink + TMFTP coding pain — instant “wow” in private KD</td><td><span class="pill neutral">L</span></td></tr><tr><td>2</td><td class="domain">CYBH tedavi motoru (CDC-TR doz + partner script)</td><td class="note">Tanı var; rejim yok — closes the most common gyn visit</td><td><span class="pill warning">M</span></td></tr><tr><td>3</td><td class="domain">Menoraji tedavi basamağı (LNG-IUS → TXA → cerrahi)</td><td class="note">AUB tanı strong; treatment is what impresses patients+MDs</td><td><span class="pill warning">M</span></td></tr><tr><td>4</td><td class="domain">e-Doğum / analık wizard from doğum note</td><td class="note">MoH mandate + morning-after SGK calls</td><td><span class="pill neutral">L</span></td></tr><tr><td>5</td><td class="domain">Acil kontrasepsiyon + postpartum MEC start</td><td class="note">High withdrawal use / unmet need ~12% in TR</td><td><span class="pill success">S</span></td></tr><tr><td>6</td><td class="domain">Özel gebelik paketi defteri (NST/US kota)</td><td class="note">Business model of Turkish private KD</td><td><span class="pill warning">M</span></td></tr><tr><td>7</td><td class="domain">Anti-D closed loop (abortus/bleeding/postpartum)</td><td class="note">Never-miss safety; MoH + malpractice</td><td><span class="pill success">S</span></td></tr><tr><td>8</td><td class="domain">CS endikasyon savunma paketi</td><td class="note">GÖREN / performance pressure is real</td><td><span class="pill success">S</span></td></tr><tr><td>9</td><td class="domain">Portal jine: Pap due + RİA ip + ilaç hatırlatma</td><td class="note">Retention + KETEM compliance</td><td><span class="pill warning">M</span></td></tr><tr><td>10</td><td class="domain">Şiddet tarama + KOK yıllık TA/kilo (JINE-03)</td><td class="note">Already ticketed; completes V2 polish</td><td><span class="pill success">S</span></td></tr></tbody>
+    </table></div>
+
+    <h2>Recommended next ships</h2>
+    <div class="cards three">
+      <div class="card"><div class="title">Sprint A — impress this week</div>
+        <div class="body"><div>1. CYBH dosing + partner printable</div><div>2. Menoraji treatment ladder (LNG-IUS/TXA)</div><div>3. Acil kontrasepsiyon card</div><div>4. JINE-03 (şiddet + KOK TA/kilo + örnekleme bridge)</div></div></div>
+      <div class="card"><div class="title">Sprint B — clinic velocity</div>
+        <div class="body"><div>1. Obstetrik USG report templates + SUT hints</div><div>2. Anti-D closed loop (bleeding/abortus)</div><div>3. CS defensibility pack polish</div><div>4. Private package ledger (NST/US)</div></div></div>
+      <div class="card"><div class="title">Sprint C — MoH spine</div>
+        <div class="body"><div>1. e-Doğum wizard from doğum note</div><div>2. e-imza onam (KD-03)</div><div>3. Real KD beta (KD-04)</div><div>4. Portal Pap/RİA reminders</div></div></div>
+    </div>
+
+    <h3>Sources baked into this audit</h3>
+    <p class="cap">Code: specialties/kadin-dogum (~95 files), JINE-01/02 + KD-02, docs/OPEN-COMMITMENTS, README_JINEKOLOJI_V2. External: HSGM DÖB_2026 / DSB_2026 / DBS / kanser taramaları; TNSA 2018; TJOD journal themes; NICE NG88; CDC STI pocket used in TR teaching; TMFTP SUT advocacy; GÖREN performance pressure reporting.</p>
+    <p class="cap">Intentionally out of “wow now”: IVF lab robotics, genital aesthetics, full ürojine POP-Q, gyn-onc IOTA — keep sevk-quality, don’t fake depth.</p>
+
+    <div class="foot">
+      <span>Pre-sprint canvas snapshot · notya-ai · Kadın Doğum / Jinekoloji · 2026-09-16</span>
+      <span>No patient data · internal product audit</span>
+    </div>
+  </div>
+</body>
+</html>
