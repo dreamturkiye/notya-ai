@@ -96,7 +96,7 @@ export function satirKur(ham: HamSatir, oncekiler: OncekiSatir[], doktorAliaslar
   const prior = priors[0] ? { deger: priors[0].kanonik_deger as number, flag: priors[0].flag } : null
   const t = trendHesapla(kanonik_deger, flag, prior, unitMismatch && priors.length > 0)
   return {
-    raw_name: ham.raw_name.trim(), canonical_key: key, loinc: key ? (KANONIK[key].loinc ?? null) : null,
+    raw_name: ham.raw_name.trim(), canonical_key: key, loinc: key ? ((KANONIK[key] as { loinc?: string }).loinc ?? null) : null,
     value_num: num, value_text: text ?? (num == null ? ham.value : null), unit: ham.unit,
     kanonik_deger, kanonik_birim, ref_low: refLow, ref_high: refHigh, flag,
     kritik: kr.kritik, kritik_neden: kr.kritik ? kr.neden || null : null,

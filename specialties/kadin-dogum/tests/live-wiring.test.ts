@@ -36,6 +36,8 @@ describe('live chapter wiring', () => {
 
   it('HastaGebelik keeps active episodes out of Önceki Gebelikler and uses controlled start/izlem forms', () => {
     const src = readFileSync(join(ROOT, '..', '..', 'components', 'doktor', 'HastaGebelik.tsx'), 'utf8')
+    assert.match(src, /TaburcuPaketi/)
+    assert.match(src, /LohusaPaketi/)
     assert.match(src, /oncekiGebelikleriFiltrele\(veri\.gecmis,\s*veri\.gebelik\)/)
     assert.match(src, /Yok/)
     assert.match(src, /yerelIsoTarih/)

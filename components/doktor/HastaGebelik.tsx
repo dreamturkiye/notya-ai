@@ -51,6 +51,8 @@ import {
 } from '@/specialties/kadin-dogum/engines/clinic-fit';
 import { gdmKarti, gbsKarti, peKarti, rhKarti } from '@/specialties/kadin-dogum/protocols/karar-kartlari';
 import { tehlikeDanismanlikMetni } from '@/specialties/kadin-dogum/protocols/tehlike';
+import TaburcuPaketi from '@/specialties/kadin-dogum/ui/TaburcuPaketi';
+import LohusaPaketi from '@/specialties/kadin-dogum/ui/LohusaPaketi';
 
 type Uyari = { seviye: 'kritik' | 'dikkat' | 'bilgi'; metin: string };
 type Pencere = { no: number; etiket: string; haftaBas: number; haftaSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' };
@@ -62,6 +64,7 @@ type Gebelik = {
   destek_asi?: DestekAsiPanel | null; lab_panel?: LabPanel | null; nst_kayitlari?: unknown;
   indirekt_coombs?: unknown; anti_d_uygulamalari?: unknown;
   kan_grubu: string | null; rh_negatif: boolean; durum: string; dogum_tarihi: string | null; dogum_sekli: string | null;
+  yenidogan_patient_id?: string | null;
 };
 type Veri = {
   gebelik: Gebelik | null;
@@ -115,6 +118,15 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   const [randevuOneri, setRandevuOneri] = useState<string | null>(null);
   const [randevuSaat, setRandevuSaat] = useState('10:00');
   const [nstForm, setNstForm] = useState({ tarih: yerelIsoTarih(), category: 'I', sure: '20', toco: false });
+  const [yn, setYn] = useState<{
+    dogum?: { id: string }
+    taburcu?: Parameters<typeof TaburcuPaketi>[0]['taburcu']
+    lohusa?: Parameters<typeof LohusaPaketi>[0]['lohusa']
+    gate?: { ok: boolean; eksik: string[]; neden: string; tamamlandi?: boolean }
+    smsNtp2?: string | null
+    bebek?: { patientId: string }
+  } | null>(null);
+  const [yuz, setYuz] = useState<'anne' | 'bebek'>('anne');
 
   const yukle = useCallback(async () => {
     setYukleniyor(true); setHata('');
@@ -131,6 +143,10 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
       setLabPanel(geb?.lab_panel || {});
       if (d.lohusa) setMod('lohusa');
       else if (!geb) setMod('jinekoloji');
+      if (d.lohusa || geb?.yenidogan_patient_id) {
+        const yr = await fetch(`/api/doktor/yenidogan?patientId=${patientId}`, { headers: { Authorization: `Bearer ${t}` } });
+        if (yr.ok) setYn(await yr.json());
+      } else setYn(null);
     } catch (e) { setHata(e instanceof Error ? e.message : 'Yüklenemedi'); } finally { setYukleniyor(false); }
   }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
@@ -138,6 +154,14 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   const post = async (body: Record<string, unknown>) => {
     const t = await ensureDoctorAccessToken();
     const r = await fetch('/api/doktor/gebelik', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify({ patientId, ...body }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'İşlem başarısız');
+    return d;
+  };
+
+  const ynPost = async (body: Record<string, unknown>) => {
+    const t = await ensureDoctorAccessToken();
+    const r = await fetch('/api/doktor/yenidogan', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: JSON.stringify(body) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'İşlem başarısız');
     return d;
@@ -219,8 +243,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         apgar1: sayi(d.apgar1), apgar5: sayi(d.apgar5),
         yenidoganKiloGram: sayi(d.yenidoganKilo), yenidoganBoyCm: sayi(d.yenidoganBoy), yenidoganBasCevresiCm: sayi(d.yenidoganBasCevresi),
       });
-      setMesaj(r.yenidoganPatientId ? 'Doğum kaydedildi — bebek için pediatri kaydı açıldı.' : 'Doğum kaydedildi.');
-      setDogumAcik(false); setMod('lohusa'); yukle();
+      setMesaj(r.yenidoganPatientId ? 'Doğum kaydedildi — bebek kartı açıldı. Taburcu paketini tamamlayın.' : 'Doğum kaydedildi.');
+      setDogumAcik(false); setMod('lohusa'); setYuz('bebek'); yukle();
     } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
   };
   const sonlandir = async (durum: 'tamamlandi' | 'sonlandi') => {
@@ -372,7 +396,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             type="button"
             style={btn(etkinMod === id)}
             onClick={() => setMod(id)}
-            disabled={id === 'lohusa' && !veri?.lohusa && id !== etkinMod}
+            disabled={id === 'lohusa' && !veri?.lohusa && !veri?.gebelik?.yenidogan_patient_id && id !== etkinMod}
           >
             {et}
           </button>
@@ -525,26 +549,22 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
           {dogumAcik && (
             <div style={kutu}>
-              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 4 }}>Doğum Kaydı</div>
-              <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>Canlı doğum bilgisi + isterseniz bebek için pediatri kaydı otomatik açılır (aşı/büyüme takibi hazır bekler).</div>
+              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 4 }}>Doğum kaydı — Anne | Bebek</div>
+              <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>Canlı doğum bebek kartını zorunlu açar (anneye bağlı). Kadın-doğum ilk örnek ve taburcu paketini; Ayşe sonrası izlemi sahiplenir.</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 6 }}>Anne</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('dogumTarihi', 'Doğum tarihi', d, setD, 'date')}
-                <label style={{ display: 'block' }}><span style={etiketS}>Doğum şekli</span><select value={d.dogumSekli || 'NSD'} onChange={(e) => setD({ ...d, dogumSekli: e.target.value })} style={giris}><option value="NSD">NSD (normal)</option><option value="Sezaryen">Sezaryen</option></select></label>
+                <label style={{ display: 'block' }}><span style={etiketS}>Doğum şekli</span><select value={d.dogumSekli || 'NSD'} onChange={(e) => setD({ ...d, dogumSekli: e.target.value })} style={giris}><option value="NSD">NSD (normal)</option><option value="Sezaryen">C/S (sezaryen)</option></select></label>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', margin: '14px 0 6px' }}>Bebek</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('apgar1', 'APGAR (1 dk)', d, setD, 'number')}{alan('apgar5', 'APGAR (5 dk)', d, setD, 'number')}
+                {alan('yenidoganAdi', 'Bebeğin adı (isterseniz sonra girin)', d, setD)}
+                <label style={{ display: 'block' }}><span style={etiketS}>Cinsiyet</span><select value={d.yenidoganCinsiyet || ''} onChange={(e) => setD({ ...d, yenidoganCinsiyet: e.target.value })} style={giris}><option value="">—</option><option value="male">Erkek</option><option value="female">Kız</option></select></label>
+                {alan('yenidoganKilo', 'Doğum kilosu (g)', d, setD, 'number')}{alan('yenidoganBoy', 'Doğum boyu (cm)', d, setD, 'number')}{alan('yenidoganBasCevresi', 'Baş çevresi (cm)', d, setD, 'number')}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0 6px' }}>
-                <input type="checkbox" id="yenidoganOlustur" checked={d.yenidoganOlustur === 'evet'} onChange={(e) => setD({ ...d, yenidoganOlustur: e.target.checked ? 'evet' : 'hayir' })} />
-                <label htmlFor="yenidoganOlustur" style={{ fontSize: 13, color: '#EDF1F7' }}>Bebek için pediatri kaydı oluştur</label>
-              </div>
-              {d.yenidoganOlustur === 'evet' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
-                  {alan('yenidoganAdi', 'Bebeğin adı (isterseniz sonra girin)', d, setD)}
-                  <label style={{ display: 'block' }}><span style={etiketS}>Cinsiyet</span><select value={d.yenidoganCinsiyet || ''} onChange={(e) => setD({ ...d, yenidoganCinsiyet: e.target.value })} style={giris}><option value="">—</option><option value="male">Erkek</option><option value="female">Kız</option></select></label>
-                  {alan('yenidoganKilo', 'Doğum kilosu (g)', d, setD, 'number')}{alan('yenidoganBoy', 'Doğum boyu (cm)', d, setD, 'number')}{alan('yenidoganBasCevresi', 'Baş çevresi (cm)', d, setD, 'number')}
-                </div>
-              )}
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button type="button" style={btn(true)} onClick={dogumKaydet}>Kaydet</button>
+                <button type="button" style={btn(true)} onClick={dogumKaydet}>Kaydet — bebek kartı aç</button>
                 <button type="button" style={btn()} onClick={() => setDogumAcik(false)}>Vazgeç</button>
               </div>
             </div>
@@ -710,6 +730,34 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       {veri?.gebelik && etkinMod === 'lohusa' && (
         <>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} data-kd="anne-bebek">
+            <button type="button" style={btn(yuz === 'anne')} onClick={() => setYuz('anne')}>Anne</button>
+            <button type="button" style={btn(yuz === 'bebek')} onClick={() => setYuz('bebek')}>Bebek — Taburcu paketi</button>
+          </div>
+          {yuz === 'bebek' && yn?.dogum && (
+            <TaburcuPaketi
+              dogumId={yn.dogum.id}
+              bebekPatientId={yn.bebek?.patientId}
+              taburcu={yn.taburcu || null}
+              gate={yn.gate || { ok: false, eksik: ['ntp1', 'hepb1', 'vitk', 'isitme'], neden: 'Yükleniyor' }}
+              sms={yn.smsNtp2}
+              onKaydet={async (patch) => { await ynPost({ action: 'taburcu-kaydet', dogumId: yn.dogum!.id, ...patch }); yukle(); }}
+              onTamamla={async (istisna) => {
+                const r = await ynPost({ action: 'taburcu-tamamla', dogumId: yn.dogum!.id, istisna: istisna || undefined });
+                setMesaj(r.sms ? 'Taburcu tamamlandı. NTP-2 aile metni kopyalanabilir.' : 'Taburcu tamamlandı.');
+                yukle();
+              }}
+              onRed={async (kalem, neden) => { await ynPost({ action: 'red-kaydet', dogumId: yn.dogum!.id, bebekId: yn.bebek?.patientId, kalem, neden }); yukle(); }}
+            />
+          )}
+          {yuz === 'anne' && (
+            <>
+              {yn?.dogum && (
+                <LohusaPaketi
+                  lohusa={yn.lohusa || null}
+                  onKaydet={async (patch) => { await ynPost({ action: 'lohusa-paket', dogumId: yn.dogum!.id, ...patch }); yukle(); }}
+                />
+              )}
           {lohusaAcik && (
             <div style={kutu}>
               <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 10 }}>Yeni Lohusa İzlemi</div>
@@ -763,6 +811,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             )}
           </div>
           {liveVeri && <HastaKdChapter patientId={patientId} veri={liveVeri} goruntuUrl={goruntuUrl} />}
+            </>
+          )}
         </>
       )}
 

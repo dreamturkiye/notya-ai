@@ -17,6 +17,7 @@ export type HastaDosyaSekmeId =
   | 'ayse'
   | 'gebelik'
   | 'deri'
+  | 'bebek'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -63,7 +64,7 @@ export function hastaDosyaSekmeleri(opts: {
     { id: 'asilar', label: 'Aşılar' },
   )
   if (opts.pediatriUygun) {
-    tabs.push({ id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
+    tabs.push({ id: 'bebek', label: 'Bebek kartı' }, { id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
   }
   tabs.push({ id: 'ayse', label: "Ayşe'ye Danış" })
   if (opts.gebelikUygun) tabs.push({ id: 'gebelik', label: 'Kadın Sağlığı & Gebelik' })

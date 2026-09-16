@@ -20,6 +20,7 @@ import { csvXlsxCoz, pdfMetinCoz, gorselCikar, type CikarimSonucu } from '@/core
 import { satirKur, uzlastir, panelOzeti, ozelHesaplar, type HamSatir, type LabSatir, type OncekiSatir } from '@/core/lab/trend'
 import { KANONIK, normalizeAd, type KanonikAnahtar } from '@/core/lab/kanonik'
 import { labRaporYaz, labRaporuDogrula } from '@/core/lab/yorum'
+import { muhtemelNtpPanel, ntpBelgeSahibi, ntpKeyFromRaw, yorumNtp, NTP_DISCLAIMER } from '@/lib/clinical/yenidogan'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -86,10 +87,40 @@ export async function POST(req: NextRequest) {
     }
     const oz = panelOzeti(satirlar)
     const kalite = satirlar.length === 0 ? 'dusuk' : oz.dogrulanacak > satirlar.length / 3 ? 'orta' : 'iyi'
-    const { data: panel, error } = await sb.from('lab_paneller').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, lab_adi: gorsel?.lab_adi || null, numune_tarihi: numune, rapor_tarihi: gorsel?.rapor_tarihi || yapi?.rapor_tarihi || null, kaynaklar, extract_json: { yapi: yapi ? { ...yapi, metin: undefined } : null, gorsel, uyusmazlik }, kalite, kimlik_uyari: kimlikUyari, durum: 'cikarildi' }).select('id').single()
+    const ntpMi = muhtemelNtpPanel({ labAdi: gorsel?.lab_adi || yapi?.lab_adi || null, satirlar: satirlar.map((s) => ({ raw_name: s.raw_name, canonical_key: s.canonical_key })) })
+    if (ntpMi) {
+      const { data: bebekKart } = await sb.from('bebek_kartlari').select('patient_id, anne_id').eq('patient_id', meta.patientId).maybeSingle()
+      const { data: anneOlarak } = await sb.from('bebek_kartlari').select('id').eq('anne_id', meta.patientId).limit(1).maybeSingle()
+      const sahip = ntpBelgeSahibi({
+        belgePatientId: meta.patientId,
+        bebekPatientId: bebekKart?.patient_id || (anneOlarak ? null : meta.patientId),
+        annePatientId: bebekKart?.anne_id || meta.patientId,
+      })
+      if (anneOlarak && !bebekKart) {
+        return NextResponse.json({ error: 'Yenidoğan tarama belgesi bebek kartına kaydedilir, anne belgelerine değil.' }, { status: 409 })
+      }
+      if (bebekKart && !sahip.ok) return NextResponse.json({ error: sahip.neden }, { status: 409 })
+    }
+    const { data: onceNtp } = ntpMi
+      ? await sb.from('lab_paneller').select('sample_no').eq('patient_id', meta.patientId).eq('panel_type', 'yenidogan_tarama')
+      : { data: [] as { sample_no: string | null }[] }
+    const ad = String(gorsel?.lab_adi || yapi?.lab_adi || '').toLocaleLowerCase('tr-TR')
+    const sampleNo = !ntpMi ? null : /tekrar/.test(ad) ? 'tekrar' : /ntp[\s-]*2|2\.?\s*(örnek|ornek|topuk)/.test(ad) ? '2' : (onceNtp || []).some((p) => p.sample_no === '1') ? '2' : '1'
+    const ntpSatirlar: LabSatir[] = ntpMi
+      ? satirlar.map((s) => {
+        let k: KanonikAnahtar | null = s.canonical_key
+        if (s.canonical_key === 'TSH') k = 'ntp_tsh'
+        else if (!s.canonical_key || !String(s.canonical_key).startsWith('ntp_')) {
+          const ntpK = ntpKeyFromRaw(s.raw_name)
+          if (ntpK) k = ntpK
+        }
+        return k && k !== s.canonical_key ? { ...s, canonical_key: k } : s
+      })
+      : satirlar
+    const { data: panel, error } = await sb.from('lab_paneller').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, lab_adi: gorsel?.lab_adi || null, numune_tarihi: numune, rapor_tarihi: gorsel?.rapor_tarihi || yapi?.rapor_tarihi || null, kaynaklar, extract_json: { yapi: yapi ? { ...yapi, metin: undefined } : null, gorsel, uyusmazlik }, kalite, kimlik_uyari: kimlikUyari, durum: 'cikarildi', panel_type: ntpMi ? 'yenidogan_tarama' : 'genel', sample_no: sampleNo }).select('id').single()
     if (error || !panel) return NextResponse.json({ error: 'Panel kaydedilemedi' }, { status: 500 })
-    if (satirlar.length) { const { error: e2 } = await sb.from('lab_satirlar').insert(satirlar.map((s, i) => satirDb(s, panel.id, meta.patientId, user.id, i, numune))); if (e2) return NextResponse.json({ error: 'Satırlar kaydedilemedi' }, { status: 500 }) }
-    return NextResponse.json({ ok: true, panelId: panel.id, ozet: oz, kaynaklar, kimlikUyari, uyusmazlik: uyusmazlik.length })
+    if (ntpSatirlar.length) { const { error: e2 } = await sb.from('lab_satirlar').insert(ntpSatirlar.map((s, i) => satirDb(s, panel.id, meta.patientId, user.id, i, numune))); if (e2) return NextResponse.json({ error: 'Satırlar kaydedilemedi' }, { status: 500 }) }
+    return NextResponse.json({ ok: true, panelId: panel.id, ozet: oz, kaynaklar, kimlikUyari, uyusmazlik: uyusmazlik.length, panel_type: ntpMi ? 'yenidogan_tarama' : 'genel' })
   }
 
   // ---- row-level operations
@@ -147,12 +178,34 @@ export async function POST(req: NextRequest) {
     const oncekiVar = onc.length > 0
     const kritik = satirlar.filter((s) => s.kritik).map((s) => s.kritik_neden || s.raw_name)
     const ozelSatirlar = ozelHesaplar(satirlar, bransKey) // NOTYA-LAB-04
+    const ntpMi = panel.panel_type === 'yenidogan_tarama' || muhtemelNtpPanel({ labAdi: panel.lab_adi, satirlar })
+    const ntp = ntpMi ? yorumNtp({
+      satirlar: satirlar.flatMap((s) => {
+        const k = String(s.canonical_key || '').startsWith('ntp_') ? s.canonical_key : ntpKeyFromRaw(s.raw_name)
+        if (!k) return []
+        return [{ canonical_key: k as 'ntp_pku' | 'ntp_tsh' | 'ntp_biotinidaz' | 'ntp_irt' | 'ntp_17ohp' | 'ntp_sma', flag: s.flag, raw: String(s.value_text ?? s.value_num ?? '') }]
+      }),
+      sample_no: panel.sample_no,
+    }) : null
+    if (ntp) ozelSatirlar.unshift(`NTP yorum (kural): ${ntp.yorum}`, NTP_DISCLAIMER, ntp.sevk !== 'yok' ? `Sevk: ${ntp.sevk}` : 'Sevk yok', ...ntp.plan.map((p) => `Plan önerisi: ${p}`))
     let yazim
-    try { yazim = await labRaporYaz(getAnthropic(), kural.persona, bransKey, satirlar, { yasAy, cinsiyet, ilaclar, labAdi: panel.lab_adi, numuneTarihi: panel.numune_tarihi, kritik, oncekiVar, ozelSatirlar }) }
-    catch (e) { console.error('lab yorum', e); return NextResponse.json({ error: 'Taslak üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 }) }
+    try { yazim = await labRaporYaz(getAnthropic(), ntpMi ? 'ayse' : kural.persona, ntpMi ? 'pediatri' : bransKey, satirlar, { yasAy, cinsiyet, ilaclar, labAdi: panel.lab_adi, numuneTarihi: panel.numune_tarihi, kritik, oncekiVar, ozelSatirlar }) }
+    catch (e) {
+      console.error('lab yorum', e)
+      if (!ntp) return NextResponse.json({ error: 'Taslak üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 })
+      yazim = { rapor: { ozet: ntp.yorum, kritik: [], yeni_bozulanlar: [], duzelenler: [], kronik: [], tanilar: [], klinik_iliski: NTP_DISCLAIMER, oneri: ntp.plan.join(' '), recete_ipucu: null, sinirlar: [NTP_DISCLAIMER], acil_bayrak: ntp.sevk !== 'yok' }, ham: ntp.yorum }
+    }
     const { rapor, duzeltmeler } = labRaporuDogrula(yazim.rapor, satirlar, oncekiVar)
-    const sonuc = { modalite: 'lab', kalite: panel.kalite, ozet: rapor.ozet, bulgular: [...ozelSatirlar.map((k) => `Hesap: ${k}`), ...rapor.kritik.map((k) => `KRİTİK: ${k}`), ...rapor.yeni_bozulanlar.map((k) => `Yeni bozulan: ${k}`), ...rapor.duzelenler.map((k) => `Düzelen: ${k}`), ...rapor.kronik.map((k) => `Kronik: ${k}`)], tanilar: rapor.tanilar.map((t) => ({ ...t, karsi: [] })), acil_bayrak: rapor.acil_bayrak, oneri: [rapor.klinik_iliski, rapor.oneri, rapor.recete_ipucu ? `Reçete ipucu (öneri): ${rapor.recete_ipucu}` : ''].filter(Boolean).join('\n'), sinirlar: rapor.sinirlar, hekim_tanisi: [], engines_used: ['lab-trend-engine', 'claude-writer'], lab: { ...rapor, ozel: ozelSatirlar } }
-    const { data: analiz, error } = await sb.from('belge_analizleri').insert({ belge_id: panel.belge_id, doctor_id: user.id, patient_id: panel.patient_id, brans: bransKey, modality_final: 'lab', yas_ay: yasAy, cinsiyet: cinsiyet ? cinsiyet[0]?.toUpperCase() : null, de_id_hash: `lab:${panel.id}`, engine_set: `lab-v1(${(panel.kaynaklar || []).join('+')})`, durum: 'taslak', sonuc, motor_ciktilari: [{ motor: 'lab-trend-engine', surum: '1', tier: 'A', dogrulanmis: true, labels: [] }], fusion: { capPct: oncekiVar ? 85 : 70, acilNedenler: kritik, duzeltmeler, ham: yazim.ham.slice(0, 4000) } }).select('id').single()
+    if (ntp) {
+      rapor.ozet = ntp.yorum
+      rapor.tanilar = []
+      rapor.oneri = [ntp.yorum, ...ntp.plan, NTP_DISCLAIMER].join('\n')
+      rapor.recete_ipucu = null
+      if (!rapor.sinirlar.includes(NTP_DISCLAIMER)) rapor.sinirlar = [NTP_DISCLAIMER, ...rapor.sinirlar]
+      if (ntp.sevk !== 'yok') rapor.acil_bayrak = true
+    }
+    const sonuc = { modalite: 'lab', kalite: panel.kalite, ozet: rapor.ozet, bulgular: [...ozelSatirlar.map((k) => `Hesap: ${k}`), ...rapor.kritik.map((k) => `KRİTİK: ${k}`), ...rapor.yeni_bozulanlar.map((k) => `Yeni bozulan: ${k}`), ...rapor.duzelenler.map((k) => `Düzelen: ${k}`), ...rapor.kronik.map((k) => `Kronik: ${k}`)], tanilar: rapor.tanilar.map((t) => ({ ...t, karsi: [] })), acil_bayrak: rapor.acil_bayrak, oneri: [rapor.klinik_iliski, rapor.oneri, rapor.recete_ipucu ? `Reçete ipucu (öneri): ${rapor.recete_ipucu}` : ''].filter(Boolean).join('\n'), sinirlar: rapor.sinirlar, hekim_tanisi: [], engines_used: ntp ? ['lab-trend-engine', 'ntp-kural', 'claude-writer'] : ['lab-trend-engine', 'claude-writer'], lab: { ...rapor, ozel: ozelSatirlar, ntp: ntp || undefined } }
+    const { data: analiz, error } = await sb.from('belge_analizleri').insert({ belge_id: panel.belge_id, doctor_id: user.id, patient_id: panel.patient_id, brans: ntpMi ? 'pediatri' : bransKey, modality_final: 'lab', yas_ay: yasAy, cinsiyet: cinsiyet ? cinsiyet[0]?.toUpperCase() : null, de_id_hash: `lab:${panel.id}`, engine_set: `lab-v1(${(panel.kaynaklar || []).join('+')}${ntp ? '+ntp' : ''})`, durum: 'taslak', sonuc, motor_ciktilari: [{ motor: 'lab-trend-engine', surum: '1', tier: 'A', dogrulanmis: true, labels: [] }], fusion: { capPct: oncekiVar ? 85 : 70, acilNedenler: kritik, duzeltmeler, ham: yazim.ham.slice(0, 4000) } }).select('id').single()
     if (error || !analiz) return NextResponse.json({ error: 'Rapor kaydedilemedi' }, { status: 500 })
     await sb.from('lab_paneller').update({ analiz_id: analiz.id, durum: 'raporlandi', updated_at: new Date().toISOString() }).eq('id', panel.id)
     return NextResponse.json({ ok: true, analizId: analiz.id, acil: rapor.acil_bayrak })
@@ -166,15 +219,15 @@ export async function GET(req: NextRequest) {
   const { user, supabase: sb } = oturum
   const patientId = req.nextUrl.searchParams.get('patientId')
   if (patientId) { // NOTYA-LAB-03: per-document summaries for the Belgeler list card
-    const { data: paneller } = await sb.from('lab_paneller').select('id, belge_id, lab_adi, numune_tarihi, durum, created_at').eq('doctor_id', user.id).eq('patient_id', patientId).order('created_at', { ascending: false }).limit(60)
+    const { data: paneller } = await sb.from('lab_paneller').select('id, belge_id, lab_adi, numune_tarihi, durum, created_at, panel_type, sample_no').eq('doctor_id', user.id).eq('patient_id', patientId).order('created_at', { ascending: false }).limit(60)
     const ids = (paneller || []).map((p) => p.id)
     const { data: rows } = ids.length ? await sb.from('lab_satirlar').select('panel_id, raw_name, canonical_key, flag, kritik, delta_pct, trend').in('panel_id', ids) : { data: [] }
     const ozet: Record<string, unknown> = {}
     for (const p of paneller || []) {
       if (ozet[p.belge_id]) continue // latest panel per document
       const rs = (rows || []).filter((x) => x.panel_id === p.id)
-      const onemli = rs.filter((x) => x.flag === 'critical' || x.flag === 'H' || x.flag === 'L').sort((a, b) => Number(b.kritik) - Number(a.kritik) || Math.abs(Number(b.delta_pct) || 0) - Math.abs(Number(a.delta_pct) || 0)).slice(0, 3).map((x) => `${x.canonical_key ? KANONIK[x.canonical_key as KanonikAnahtar]?.tr?.split(' ')[0] || x.canonical_key : x.raw_name} ${x.flag === 'L' ? '↓' : '↑'}`)
-      ozet[p.belge_id] = { toplam: rs.length, yuksek: rs.filter((x) => x.flag === 'H').length, dusuk: rs.filter((x) => x.flag === 'L').length, kritik: rs.filter((x) => x.kritik).length, onemli, durum: p.durum, lab_adi: p.lab_adi, numune_tarihi: p.numune_tarihi }
+      const onemli = rs.filter((x) => x.flag === 'critical' || x.flag === 'H' || x.flag === 'L' || x.flag === 'pozitif_suphe' || x.flag === 'sinir' || x.flag === 'yetersiz_ornek').sort((a, b) => Number(b.kritik) - Number(a.kritik) || Math.abs(Number(b.delta_pct) || 0) - Math.abs(Number(a.delta_pct) || 0)).slice(0, 3).map((x) => `${x.canonical_key ? KANONIK[x.canonical_key as KanonikAnahtar]?.tr?.split(' ')[0] || x.canonical_key : x.raw_name} ${x.flag === 'L' || x.flag === 'yetersiz_ornek' ? '↓' : '↑'}`)
+      ozet[p.belge_id] = { toplam: rs.length, yuksek: rs.filter((x) => x.flag === 'H' || x.flag === 'pozitif_suphe').length, dusuk: rs.filter((x) => x.flag === 'L').length, kritik: rs.filter((x) => x.kritik).length, onemli, durum: p.durum, lab_adi: p.lab_adi, numune_tarihi: p.numune_tarihi, panel_type: (p as { panel_type?: string }).panel_type || 'genel', sample_no: (p as { sample_no?: string | null }).sample_no || null }
     }
     return NextResponse.json({ ozet })
   }
