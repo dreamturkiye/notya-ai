@@ -6,6 +6,7 @@
  * SAT/EDD stay in the specialty payload mapped from /api/doktor/gebelik.
  */
 import GebeKarti from '@/specialties/kadin-dogum/ui/GebeKarti'
+import { DogumSpine } from '@/specialties/kadin-dogum/ui/DogumSpine'
 import IzlemTimeline from '@/specialties/kadin-dogum/ui/IzlemTimeline'
 import TaramaPencereleri from '@/specialties/kadin-dogum/ui/TaramaPencereleri'
 import UsgGallery from '@/specialties/kadin-dogum/ui/UsgGallery'
@@ -63,6 +64,9 @@ export default function HastaKdChapter({
   })
 
   return (
+    <>
+    {/* NOTYA-KD-02: obstetrics spine — görevler · onam · travay/partograf · doğum & C/S · lohusa/taburcu · bebek kartı (kadın-doğum only) */}
+    {veri.gebelik?.id && <DogumSpine gebelikId={veri.gebelik.id} patientId={patientId} />}
     <details style={{ border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '10px 14px' }} data-chapter="kadin-dogum">
       <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>
         Bölüm derinliği (ACOG / DÖBYR / Williams)
@@ -108,5 +112,6 @@ export default function HastaKdChapter({
         <KolposkopiGaleri images={payload.colpo_images ?? []} urls={goruntuUrl} />
       </div>
     </details>
+    </>
   )
 }
