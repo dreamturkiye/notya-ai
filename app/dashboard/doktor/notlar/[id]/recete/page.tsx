@@ -17,6 +17,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari';
 import { receteGruplari, belirsizKontrol, RENK_ETIKET } from '@/lib/doktor/receteRengi';
 import RrsPaneli from '@/components/doktor/RrsPaneli';
+import EReceteDurum from '@/components/doktor/EReceteDurum';
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -249,10 +250,11 @@ export default function ReceteYazdirPage() {
         )}
       </div>
 
+      <EReceteDurum en={en} />
       {renkliler.length > 0 && (
         <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#7F1D1D' }}>
           <b>Kontrole tabi ilaç var:</b> {renkliler.map((g) => `${RENK_ETIKET[g.renk]} → ${g.satirlar.map((x) => x.s.ilacAdi).join(', ')}`).join(' · ')}.
-          {' '}Türkiye'de bu ilaçlar normal reçeteye yazılamaz; <b>Renkli Reçete Sistemi (RRS)</b> üzerinden düzenlenir. Aşağıda ayrı sayfada, renk etiketiyle basılır — diğer ilaçlar normal reçetede kalır.
+          {' '}Türkiye'de bu ilaçlar normal reçeteye yazılamaz; Sağlık Bakanlığı <b>Reçetem</b> (Renkli Reçete) sisteminde e-imzayla düzenlenir. Aşağıda ayrı sayfada, renk etiketiyle basılır — diğer ilaçlar normal reçetede kalır.
         </div>
       )}
       {belirsizler.length > 0 && (
@@ -277,7 +279,7 @@ export default function ReceteYazdirPage() {
 
         {g.renk !== 'normal' && (
           <div style={{ border: `2px solid ${g.renk === 'kirmizi' ? '#B91C1C' : '#15803D'}`, color: g.renk === 'kirmizi' ? '#B91C1C' : '#15803D', textAlign: 'center', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, padding: '4px 8px', marginBottom: 10 }}>
-            {RENK_ETIKET[g.renk]} — Renkli Reçete Sistemi (RRS) üzerinden düzenlenir
+            {RENK_ETIKET[g.renk]} — Sağlık Bakanlığı Reçetem (Renkli Reçete) üzerinden düzenlenir
           </div>
         )}
         {g.renk !== 'normal' && (

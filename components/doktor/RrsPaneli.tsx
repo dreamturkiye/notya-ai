@@ -52,21 +52,21 @@ export default function RrsPaneli(props: { noteId: string; renk: RrsRenk; satirl
         </ol>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <button type="button" onClick={kopyala} style={{ border: `1px solid ${renkHex}`, background: 'white', color: renkHex, borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>📋 RRS için kopyala</button>
-          <a href={RRS_URL} target="_blank" rel="noopener noreferrer" style={{ border: `1px solid ${renkHex}`, background: renkHex, color: 'white', borderRadius: 6, padding: '5px 10px', textDecoration: 'none', fontWeight: 600 }}>↗ RRS&apos;yi aç</a>
+          <a href={RRS_URL} target="_blank" rel="noopener noreferrer" style={{ border: `1px solid ${renkHex}`, background: renkHex, color: 'white', borderRadius: 6, padding: '5px 10px', textDecoration: 'none', fontWeight: 600 }}>↗ Reçetem&apos;i aç</a>
           {props.taslakMi ? (
             <span style={{ color: '#6B7280' }}>Not onaylanınca RRS kaydı açılır.</span>
           ) : (
             <>
-              <input value={no} onChange={(e) => setNo(e.target.value)} placeholder="RRS reçete no" style={{ border: '1px solid #9CA3AF', borderRadius: 6, padding: '5px 8px', width: 150 }} />
+              <input value={no} onChange={(e) => setNo(e.target.value)} placeholder="Reçetem reçete no" style={{ border: '1px solid #9CA3AF', borderRadius: 6, padding: '5px 8px', width: 150 }} />
               <button type="button" onClick={kaydet} disabled={!kayit} style={{ border: '1px solid #111', background: '#111', color: 'white', borderRadius: 6, padding: '5px 10px', cursor: kayit ? 'pointer' : 'not-allowed' }}>Kaydet</button>
-              {kayit && <span style={{ color: kayit.durum === 'duzenlendi' ? '#15803D' : '#92400E' }}>{kayit.durum === 'duzenlendi' ? '✅ RRS\'de düzenlendi' : '⏳ RRS bekliyor'}</span>}
+              {kayit && <span style={{ color: kayit.durum === 'duzenlendi' ? '#15803D' : '#92400E' }}>{kayit.durum === 'duzenlendi' ? '✅ Reçetem\'de düzenlendi' : '⏳ Reçetem bekliyor'}</span>}
             </>
           )}
         </div>
         {mesaj && <div style={{ marginTop: 6, color: '#374151' }}>{mesaj}</div>}
       </div>
       {kayit?.rrs_recete_no && (
-        <div style={{ fontSize: 11, marginBottom: 8, color: '#111' }}>RRS Reçete No: <b>{kayit.rrs_recete_no}</b></div>
+        <div style={{ fontSize: 11, marginBottom: 8, color: '#111' }}>Reçetem Reçete No: <b>{kayit.rrs_recete_no}</b></div>
       )}
     </>
   )

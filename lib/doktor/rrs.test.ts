@@ -9,7 +9,7 @@ const satirlar = [
 
 test('rrsMetni: başlık, alan sırası, numaralama, adet', () => {
   const m = rrsMetni({ renk: 'yesil', hastaAd: 'Ali Veli', tarih: '2026-09-16T10:00:00Z', tanilar: ['F41.1'], satirlar })
-  assert.match(m, /^RENKLİ REÇETE SİSTEMİ — YEŞİL REÇETE/)
+  assert.match(m, /^REÇETEM \(RENKLİ REÇETE\) — YEŞİL REÇETE/)
   assert.match(m, /Hasta: Ali Veli/)
   assert.match(m, /Tarih: 16\.09\.2026/)
   assert.match(m, /Tanı \(ICD-10\): F41\.1/)
@@ -22,12 +22,12 @@ test('rrsMetni: başlık, alan sırası, numaralama, adet', () => {
 test('rrsMetni: TC asla yer almaz, kutu en az 1', () => {
   const m = rrsMetni({ renk: 'kirmizi', hastaAd: 'X', tarih: 'bozuk', tanilar: [], satirlar: [{ ...satirlar[0], kutu: 0 }] })
   assert.doesNotMatch(m, /\b\d{11}\b/)
-  assert.match(m, /TC kimlik no RRS'de girilir/)
+  assert.match(m, /TC kimlik no Reçetem'de girilir/)
   assert.match(m, /Adet: 1 kutu/)
   assert.match(m, /KIRMIZI REÇETE/)
 })
 
 test('adımlar ve adres', () => {
   assert.equal(RRS_ADIMLARI.length, 4)
-  assert.match(RRS_URL, /^https:\/\/renklirecete\.saglik\.gov\.tr/)
+  assert.match(RRS_URL, /^https:\/\/recetem\.enabiz\.gov\.tr/)
 })

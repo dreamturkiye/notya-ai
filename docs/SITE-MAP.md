@@ -110,3 +110,11 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - `components/doktor/RrsBekleyenler.tsx` — `/doktor-tools/erecete` üst kartı (bekleyenler + kontrole tabi uyarısı)
 - Reçete sayfası `/dashboard/doktor/notlar/[id]/recete`: kontrole tabi ilaçlar ayrı sayfada basılır (normal → yeşil → kırmızı)
 
+## e-Reçete ayarları — 2026-09-16
+- `lib/medula/ayar.ts` — users.erecete_ayar şifreleme/çözme, doğrulama, test yorumu; `ayar.test.ts`
+- `lib/medula/brans.ts` — BRANS_SGK (route'tan taşındı)
+- `app/api/doktor/erecete-ayar/route.ts` — GET/PUT/POST(test)
+- `app/dashboard/doktor/ayarlar/erecete/page.tsx` — Ayarlar › e-Reçete (Ayarlar listesine eklendi)
+- `components/doktor/EReceteDurum.tsx` — reçete sayfası Medula durum şeridi
+- Reçetem: `lib/doktor/rrs.ts` RRS_URL → recetem.enabiz.gov.tr (renkli + beyaz reçete)
+

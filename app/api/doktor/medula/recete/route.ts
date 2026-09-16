@@ -10,6 +10,8 @@ import { decrypt } from '@/lib/security/encryption'
 import { medulaTaslagiHazirla, ereceteXml } from '@/lib/medula/receteHazirla'
 import { enabizErecete } from '@/lib/enabiz/paket'
 import { medulaOrtami, ereceteGiris } from '@/lib/medula/soapIstemci'
+import { BRANS_SGK } from '@/lib/medula/brans'
+import { ayarBransKodu } from '@/lib/medula/ayar'
 import { TEST_ORTAMI, SGK_BRANS_KODU } from '@/lib/medula/tipler'
 
 export const dynamic = 'force-dynamic'
@@ -18,13 +20,6 @@ export const fetchCache = 'force-no-store'
 function coz(v: string | null | undefined): string { if (!v) return ''; try { return decrypt(v) } catch { return '' } }
 
 // Kaan (2026-09-10): 30 branş — SGK kodu kılavuzda doğrulanmış olanlar; diğerleri null → Medula'da doktor seçer
-const BRANS_SGK: Record<string, number> = {
-  pediatri: SGK_BRANS_KODU['cocuk-sagligi'],
-  'aile-hekimligi': SGK_BRANS_KODU['aile-hekimligi'],
-  dermatoloji: SGK_BRANS_KODU['deri-zuhrevi'],
-  psikiyatri: SGK_BRANS_KODU['ruh-sagligi'],
-  'enfeksiyon-hastaliklari': SGK_BRANS_KODU['enfeksiyon'],
-}
 
 async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string, noteId: string) {
   const sb = supabase as any
@@ -34,7 +29,7 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
   const [{ data: ilaclar }, { data: hasta }, { data: doktor }] = await Promise.all([
     sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, doz, kullanim_sikli, notlar, baslangic_tarihi, bitis_tarihi').eq('kaynak_note_id', noteId).eq('onay_durumu', 'onayli'),
     pid ? sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', pid).maybeSingle() : Promise.resolve({ data: null }),
-    sb.from('users').select('first_name, last_name, full_name, specialty, title, clinic_name, recete_baslik').eq('id', doktorId).maybeSingle(),
+    sb.from('users').select('first_name, last_name, full_name, specialty, title, clinic_name, recete_baslik, erecete_ayar').eq('id', doktorId).maybeSingle(),
   ])
   // Kaan (2026-09-10): not henüz onaylanmadıysa ilaç satırları hasta_ilaclar'da yoktur → nottaki
   // reçete taslağını (content_ilaclar + recete_onerisi) göster; onaylanınca gerçek satırlar gelir.
@@ -54,7 +49,7 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
     ilaclar: ilacKaynagi,
     tanilar: kodlar,
     hasta: { ad, soyad, dogumTarihi: coz(hasta?.dob_encrypted) || null, cinsiyet: cins === 'male' || cins === 'female' ? cins : null },
-    doktor: { ad: doktor?.first_name || '', soyad: doktor?.last_name || '', bransKodu: BRANS_SGK[String(doktor?.specialty || '')] ?? null },
+    doktor: { ad: doktor?.first_name || '', soyad: doktor?.last_name || '', bransKodu: ayarBransKodu(doktor?.erecete_ayar) ?? BRANS_SGK[String(doktor?.specialty || '')] ?? null },
     protokolNo: `NOTYA-${String(noteId).slice(0, 8).toUpperCase()}`,
     receteTarihi: new Date(not.created_at),
   })
