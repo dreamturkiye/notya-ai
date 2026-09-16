@@ -3,6 +3,7 @@
 import type { DestekAsiPanel, DestekAsiDurum } from '../engines/clinic-fit'
 import { DESTEK_ASI_KALEMLERI } from '../engines/clinic-fit'
 import { kutu, btn, giris, etiketS } from './clinic-styles'
+import { TrTarihAlan } from './TrTarihAlan'
 
 const DURUM_TR: Record<DestekAsiDurum, string> = {
   yapildi: 'Yapıldı',
@@ -43,15 +44,11 @@ export function DestekAsiPaneli({
                     {Object.entries(DURUM_TR).map(([v, et]) => <option key={v} value={v}>{et}</option>)}
                   </select>
                 </label>
-                <label>
-                  <span style={etiketS}>Tarih</span>
-                  <input
-                    type="date"
-                    value={row.tarih || ''}
-                    onChange={(e) => onChange({ ...state, [k.id]: { ...row, tarih: e.target.value } })}
-                    style={giris}
-                  />
-                </label>
+                <TrTarihAlan
+                  label="Tarih"
+                  value={row.tarih || ''}
+                  onChange={(iso) => onChange({ ...state, [k.id]: { ...row, tarih: iso } })}
+                />
               </div>
             </div>
           )

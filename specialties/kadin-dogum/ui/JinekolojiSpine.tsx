@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { JinekolojiV2Sekmeler } from './JinekolojiV2Sekmeler';
+import { TrTarihAlan } from './TrTarihAlan';
 
 type Due = { kod: string; ad: string; due: string | null; durum: string; not: string; takvim: string };
 type Gorev = { id: string; kod: string; ad: string; due: string | null; kaynak: string };
@@ -22,7 +23,7 @@ const dueRenk: Record<string, string> = { gecikti: '#F87171', yaklasiyor: '#FBBF
 const SEKME = ['Tarama & Görevler', 'Serviks', 'CYBH', 'PCOS', 'Kontrasepsiyon', 'Menopoz / HRT', 'Lezyon', 'İnfertilite', 'AUB / PMP', 'KOK kapısı', 'Endometriozis', 'Tekrarlayan kayıp', 'Erken gebelik kaybı'] as const;
 const PAP = ['NILM', 'ASC-US', 'ASC-H', 'LSIL', 'HSIL', 'AGC', 'CA', 'yetersiz'], HPV = [['neg', 'Negatif'], ['16', 'HPV 16'], ['18', 'HPV 18'], ['other_hr', 'Diğer HR'], ['low_risk', 'Düşük risk']];
 
-export function JinekolojiSpine({ patientId }: { patientId: string }) {
+export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: string; ofisModulleri?: boolean }) {
   const [v, setV] = useState<Veri | null>(null);
   const [sekme, setSekme] = useState<(typeof SEKME)[number]>('Tarama & Görevler');
   const [mesaj, setMesaj] = useState('');
@@ -52,34 +53,34 @@ export function JinekolojiSpine({ patientId }: { patientId: string }) {
         {v.due.map((d) => <div key={d.kod} style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 12, color: '#EDF1F7', borderTop: '1px solid rgba(255,255,255,0.06)' }}><span style={{ minWidth: 90, color: dueRenk[d.durum], fontWeight: 800 }}>{d.durum === 'gecikti' ? '✖ gecikti' : d.durum === 'yaklasiyor' ? '● yaklaşıyor' : d.durum === 'planli' ? '○ planlı' : '— uygun değil'}</span><span style={{ flex: 1 }}>{d.ad} <span style={kucuk}>{d.due ? `· ${d.due}` : ''} · {d.takvim} · {d.not}</span></span></div>)}
         <div style={{ ...etiket, marginTop: 10 }}>Son tarama tarihleri (düzenle)</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          {[['son_pap', 'Son Pap'], ['son_hpv', 'Son HPV'], ['son_mamografi', 'Son mamografi'], ['son_dxa', 'Son DXA'], ['son_kolorektal', 'Son GGK']].map(([k, ad]) => <label key={k} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center' }}>{ad}<input type="date" defaultValue={String(ks[k] || '')} onBlur={(e) => e.target.value !== String(ks[k] || '') && calistir({ adim: 'kadin_sagligi', alanlar: { [k]: e.target.value } })} style={{ ...toolsInput, width: 140 }} /></label>)}
+          {[['son_pap', 'Son Pap'], ['son_hpv', 'Son HPV'], ['son_mamografi', 'Son mamografi'], ['son_dxa', 'Son DXA'], ['son_kolorektal', 'Son GGK']].map(([k, ad]) => <div key={k} style={{ width: 160 }}><TrTarihAlan label={ad} value={String(ks[k] || s(k))} onChange={(iso) => { set(k, iso); if (iso !== String(ks[k] || '')) calistir({ adim: 'kadin_sagligi', alanlar: { [k]: iso } }); }} /></div>)}
           {chk('Histerektomi (serviks taraması yok)', !!ks.histerektomi, (x) => calistir({ adim: 'kadin_sagligi', alanlar: { histerektomi: x } }))}
         </div>
         <div style={{ ...etiket, marginTop: 10 }}>Açık görevler ({v.gorevler.length})</div>
         {!v.gorevler.length && <div style={kucuk}>Açık görev yok.</div>}
         {v.gorevler.map((g) => <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '3px 0', fontSize: 12, color: '#EDF1F7' }}><span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due ? `· ${g.due}` : ''} · {g.kaynak}</span></span><button type="button" onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })} style={{ ...ghost, padding: '2px 8px', fontSize: 11 }}>Tamam</button></div>)}
-        <div style={{ ...etiket, marginTop: 10 }}>Yıllık kontrol kaydı</div>
+        {!ofisModulleri && <><div style={{ ...etiket, marginTop: 10 }}>Yıllık kontrol kaydı</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input type="date" value={s('lmp')} onChange={(e) => set('lmp', e.target.value)} title="SAT" style={{ ...toolsInput, width: 140 }} />
+          <div style={{ width: 160 }}><TrTarihAlan label="Jine SAT" value={s('lmp')} onChange={(iso) => set('lmp', iso)} /></div>
           <input value={s('gp')} onChange={(e) => set('gp', e.target.value)} placeholder="G/P" style={{ ...toolsInput, width: 70 }} />
           <input value={s('tvus_et')} onChange={(e) => set('tvus_et', e.target.value)} placeholder="TVUS ET mm" style={{ ...toolsInput, width: 110 }} />
           <input value={s('bulgu')} onChange={(e) => set('bulgu', e.target.value)} placeholder="Spekulum / bimanuel / meme" style={{ ...toolsInput, minWidth: 220 }} />
           {chk('β-hCG +', b('k_bhcg'), (x) => set('k_bhcg', x))}{chk('ağrı', b('k_agri'), (x) => set('k_agri', x))}{chk('kanama', b('k_kanama'), (x) => set('k_kanama', x))}{chk('ateş', b('k_ates'), (x) => set('k_ates', x))}{chk('servikal hassasiyet', b('k_sh'), (x) => set('k_sh', x))}{chk('postmenopozal kanama', b('k_pmp'), (x) => set('k_pmp', x))}
           <button type="button" onClick={() => calistir({ adim: 'vizit', tur: 'yillik', alanlar: { lmp: s('lmp') || null, gravida_para: s('gp') || null, tvus_et_mm: s('tvus_et') || null, spekulum: s('bulgu') || null, kirmizi: { bhcgPozitif: b('k_bhcg'), agri: b('k_agri'), kanama: b('k_kanama'), ates: b('k_ates'), servikalHassasiyet: b('k_sh'), postmenopozKanama: b('k_pmp') } } }, 'Kontrol kaydedildi; kırmızı bayraklar görevlere düştü.')} style={btn}>Kaydet</button>
-        </div>
+        </div></>}
       </div>)}
 
       {sekme === 'Serviks' && (<div>
         <div style={etiket}>Serviks tarama sonucu <span style={kucuk}>· HSGM/ASCCP ağacı taslak yazar, planı hekim kilitler</span></div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input type="date" value={s('sv_tarih')} onChange={(e) => set('sv_tarih', e.target.value)} style={{ ...toolsInput, width: 140 }} />
+          <div style={{ width: 160 }}><TrTarihAlan label="Tarih" value={s('sv_tarih')} onChange={(iso) => set('sv_tarih', iso)} /></div>
           <select value={s('pap')} onChange={(e) => set('pap', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="">Pap</option>{PAP.map((p) => <option key={p} value={p} style={{ color: '#000' }}>{p}</option>)}</select>
           <select value={s('hpv')} onChange={(e) => set('hpv', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="">HPV</option>{HPV.map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}</select>
           <button type="button" onClick={() => calistir({ adim: 'serviks', tarih: s('sv_tarih') || undefined, pap: s('pap') || null, hpv: s('hpv') || null }, 'Sonuç kaydedildi; taslak aksiyon üretildi.')} style={btn}>Kaydet</button>
         </div>
         {v.serviks.map((k) => <div key={k.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 0', fontSize: 12, color: '#EDF1F7' }}>
           <div><b>{k.tarih}</b> · Pap {k.pap_sonuc || '—'} · HPV {k.hpv || '—'}{k.taslak_aksiyon && <span style={kucuk}> · taslak: {k.taslak_aksiyon.adim} (%{k.taslak_aksiyon.guven}, {k.taslak_aksiyon.gerekce}){k.taslak_aksiyon.kolposkopi ? ' · kolposkopi görevi' : ''}</span>}</div>
-          {k.hekim_onayladi ? <div style={{ ...kucuk, color: '#2DD4BF' }}>✓ Resmi plan (hekim): {k.resmi_plan}{k.sonraki_due ? ` · sonraki ${k.sonraki_due}` : ''}</div> : <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}><input value={s('rp_' + k.id) || k.taslak_aksiyon?.adim || ''} onChange={(e) => set('rp_' + k.id, e.target.value)} style={{ ...toolsInput, minWidth: 260 }} /><input type="date" value={s('rd_' + k.id) || k.sonraki_due || ''} onChange={(e) => set('rd_' + k.id, e.target.value)} style={{ ...toolsInput, width: 140 }} /><button type="button" onClick={() => calistir({ adim: 'serviks_onayla', kayitId: k.id, resmiPlan: s('rp_' + k.id) || k.taslak_aksiyon?.adim, sonrakiDue: s('rd_' + k.id) || k.sonraki_due }, 'Plan kilitlendi.')} style={btn}>Planı kilitle</button></div>}
+          {k.hekim_onayladi ? <div style={{ ...kucuk, color: '#2DD4BF' }}>✓ Resmi plan (hekim): {k.resmi_plan}{k.sonraki_due ? ` · sonraki ${k.sonraki_due}` : ''}</div> : <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}><input value={s('rp_' + k.id) || k.taslak_aksiyon?.adim || ''} onChange={(e) => set('rp_' + k.id, e.target.value)} style={{ ...toolsInput, minWidth: 260 }} /><div style={{ width: 160 }}><TrTarihAlan label="Sonraki" value={s('rd_' + k.id) || k.sonraki_due || ''} onChange={(iso) => set('rd_' + k.id, iso)} /></div><button type="button" onClick={() => calistir({ adim: 'serviks_onayla', kayitId: k.id, resmiPlan: s('rp_' + k.id) || k.taslak_aksiyon?.adim, sonrakiDue: s('rd_' + k.id) || k.sonraki_due }, 'Plan kilitlendi.')} style={btn}>Planı kilitle</button></div>}
           {k.taslak_aksiyon?.kolposkopi && !k.kolposkopi && <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}><input value={s('kb_' + k.id)} onChange={(e) => set('kb_' + k.id, e.target.value)} placeholder="Kolposkopi bulgu / biyopsi sonucu (CIN?)" style={{ ...toolsInput, minWidth: 260 }} /><button type="button" onClick={() => calistir({ adim: 'kolposkopi', kayitId: k.id, veri: { tarih: new Date().toISOString().slice(0, 10), bulgu: s('kb_' + k.id) } })} style={ghost}>Kolposkopi kaydet</button></div>}
           {k.kolposkopi && <div style={kucuk}>Kolposkopi: {String(k.kolposkopi.bulgu || '')} ({String(k.kolposkopi.tarih || '')})</div>}
         </div>)}
@@ -116,7 +117,7 @@ export function JinekolojiSpine({ patientId }: { patientId: string }) {
         <div style={etiket}>Kontrasepsiyon <span style={kucuk}>· RİA: CYBH taraması onayı zorunlu; ip kontrolü 4–6 hf; son kullanım görevi</span></div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={s('yontem')} onChange={(e) => set('yontem', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="">yöntem</option>{[['ria_cu5', 'Cu RİA 5 yıl'], ['ria_cu10', 'Cu RİA 10 yıl'], ['ria_lng5', 'LNG RİA 5 yıl'], ['ria_lng8', 'LNG RİA 8 yıl'], ['okp', 'OKP'], ['implant', 'İmplant'], ['enjeksiyon', 'Enjeksiyon'], ['kondom', 'Kondom'], ['diger', 'Diğer']].map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}</select>
-          <input type="date" value={s('kb')} onChange={(e) => set('kb', e.target.value)} style={{ ...toolsInput, width: 140 }} />
+          <div style={{ width: 160 }}><TrTarihAlan label="Başlangıç" value={s('kb')} onChange={(iso) => set('kb', iso)} /></div>
           {s('yontem').startsWith('ria_') && chk('CYBH taraması (klamidya/gonore) yapıldı', b('sti'), (x) => set('sti', x))}
           <button type="button" disabled={!s('yontem')} onClick={() => calistir({ adim: 'kontrasepsiyon', yontem: s('yontem'), baslangic: s('kb') || undefined, stiTaramaOnaylandi: b('sti') })} style={btn}>Kaydet</button>
         </div>
@@ -143,7 +144,7 @@ export function JinekolojiSpine({ patientId }: { patientId: string }) {
           <input value={s('lb')} onChange={(e) => set('lb', e.target.value)} placeholder="boyut mm" style={{ ...toolsInput, width: 90 }} />
           <input value={s('lf')} onChange={(e) => set('lf', e.target.value)} placeholder="FIGO tip / yer" style={{ ...toolsInput, width: 130 }} />
           <input value={s('ls')} onChange={(e) => set('ls', e.target.value)} placeholder="semptom" style={{ ...toolsInput, minWidth: 160 }} />
-          <input type="date" value={s('lu')} onChange={(e) => set('lu', e.target.value)} title="sonraki US" style={{ ...toolsInput, width: 140 }} />
+          <div style={{ width: 160 }}><TrTarihAlan label="Sonraki US" value={s('lu')} onChange={(iso) => set('lu', iso)} /></div>
           <button type="button" onClick={() => calistir({ adim: 'lezyon', tur: s('lt') || 'myom', boyutMm: s('lb') || null, figoTip: s('lf') || null, semptom: s('ls') || null, sonrakiUs: s('lu') || null })} style={btn}>Kaydet</button>
         </div>
         {v.lezyonlar.map((l) => <div key={l.id} style={{ fontSize: 12, color: '#EDF1F7', padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>{l.tur} {l.boyut_mm ? `${l.boyut_mm} mm` : ''} {l.figo_tip || l.yer || ''} <span style={kucuk}>{l.semptom || ''}{l.sonraki_us ? ` · kontrol US ${l.sonraki_us}` : ''} · {new Date(l.created_at).toLocaleDateString('tr-TR')}</span></div>)}

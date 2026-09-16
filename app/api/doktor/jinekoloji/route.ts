@@ -3,6 +3,7 @@
  * GET ?patientId= → due list (engine), serviks history, cybh, pcos, lezyonlar, kontrasepsiyon, hrt, açık görevler, vizitler
  * POST adim (every write is a doctor action; AI drafts only):
  *   kadin_sagligi {patientId, alanlar}                      → screening dates (son_pap/son_hpv/son_mamografi/son_dxa/son_kolorektal/histerektomi/hrt…)
+ *   ofis_vizit {patientId, soap, muayeneFormunaEkle?}      → jine_vizitler SOAP (clinic-fit jsonb) + kontrol görevi
  *   vizit {patientId, tur, alanlar}                          → jine_vizitler (+ kırmızı bayrak görevleri)
  *   serviks {patientId, tarih, pap, hpv, belgeId?}           → taslak aksiyon (engine) + kolposkopi görevi if needed
  *   serviks_onayla {kayitId, resmiPlan, sonrakiDue?}         → doctor locks the plan
@@ -22,6 +23,7 @@ import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
 import { bhcgSeriesTrend } from '@/specialties/kadin-dogum/protocols/gted-ektopik'
 import { aubDegerlendir, pmpKapatilabilir, kokDegerlendir, endometriozisDegerlendir, rmDegerlendir, egkDegerlendir, REF_ACIKLAMA, type AubGirdi, type KokGirdi, type EndoGirdi, type RmGirdi, type EgkGirdi } from '@/specialties/kadin-dogum/engines/jinekoloji-v2'
 import { dueHesapla, serviksAksiyonu, partnerTedaviGerekli, ilkUlserKontrolListesi, akintiOnTani, hsvGebelikGorevleri, pcosDegerlendir, riaTakvimi, hrtOnDegerlendirme, HRT_YILLIK_GOREVLER, INFERTILITE_ADIM1, kirmiziBayraklar, YILLIK_KONTROL_ALANLARI, CYBH_ETKENLERI, type Etken, type PapSonuc, type HpvSonuc, type HsvKarti, type HrtOnKontrol } from '@/specialties/kadin-dogum/engines/jinekoloji-spine'
+import { flattenSoapAlanlar, jineSticky, normalizeSoap, ofisVizitOzet, soapFromVizitRow, taslakBugunkuVizit } from '@/specialties/kadin-dogum/engines/jine-ofis-vizit'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -84,6 +86,31 @@ export async function POST(req: NextRequest) {
     for (const k of izinli) if (k in a) guncel[k] = a[k] === '' ? null : a[k]
     const { error } = await sb.from('kadin_sagligi').upsert(guncel, { onConflict: 'patient_id' })
     return error ? NextResponse.json({ error: 'Yazılamadı' }, { status: 500 }) : NextResponse.json({ ok: true })
+  }
+  if (adim === 'ofis_vizit') {
+    const soap = normalizeSoap(b.soap)
+    const alanlar = flattenSoapAlanlar(soap)
+    const kb = kirmiziBayraklar((b.kirmizi || {}) as Parameters<typeof kirmiziBayraklar>[0])
+    const satir: Record<string, unknown> = {
+      patient_id: hasta.id, doctor_id: user.id, tur: String(b.tur || 'ofis'),
+      alanlar, soap, kontrol_tarihi: soap.kontrol.tarih, kontrol_neden: soap.kontrol.neden || null,
+    }
+    let { data, error } = await sb.from('jine_vizitler').insert(satir).select('id').single()
+    if (error) {
+      const fallback = await sb.from('jine_vizitler').insert({ patient_id: hasta.id, doctor_id: user.id, tur: String(b.tur || 'ofis'), alanlar }).select('id').single()
+      data = fallback.data; error = fallback.error
+    }
+    if (error || !data) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
+    const ksPatch: Record<string, unknown> = { patient_id: hasta.id, doctor_id: user.id, updated_at: new Date().toISOString() }
+    if (soap.hikaye.lmp) ksPatch.son_adet_tarihi = soap.hikaye.lmp
+    if (soap.hikaye.kontrasepsiyon) ksPatch.kontrasepsiyon_yontemi = soap.hikaye.kontrasepsiyon
+    await sb.from('kadin_sagligi').upsert(ksPatch, { onConflict: 'patient_id' })
+    const gorevler: { kod: string; ad: string; due?: string | null; kaynak: string }[] = kb.map((k) => ({ kod: `kb_${k.kod}`, ad: k.mesaj, due: bugun(), kaynak: 'vizit' }))
+    if (soap.kontrol.tarih) gorevler.push({ kod: 'jine_kontrol', ad: soap.kontrol.neden ? `Kontrol: ${soap.kontrol.neden}` : 'Jinekoloji kontrol randevusu', due: soap.kontrol.tarih, kaynak: 'ofis' })
+    await gorevEkle(sb, user.id, hasta.id, gorevler)
+    let notEkleme = null
+    if (b.muayeneFormunaEkle) notEkleme = await gununNotunaEkle(sb, user.id, hasta.id, ofisVizitOzet(soap))
+    return NextResponse.json({ ok: true, vizitId: data.id, kirmiziBayraklar: kb, notEkleme, ozet: ofisVizitOzet(soap) })
   }
   if (adim === 'vizit') {
     const alanlar = (b.alanlar || {}) as Record<string, unknown>
@@ -289,7 +316,7 @@ export async function GET(req: NextRequest) {
     sb.from('kontrasepsiyon').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
     sb.from('menopoz_hrt').select('*').eq('patient_id', hasta.id).maybeSingle(),
     sb.from('jine_gorevleri').select('*').eq('patient_id', hasta.id).eq('durum', 'acik').order('due'),
-    sb.from('jine_vizitler').select('id, tur, alanlar, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
+    sb.from('jine_vizitler').select('id, tur, alanlar, soap, kontrol_tarihi, kontrol_neden, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(8),
     aktifGebeMi(sb, hasta.id),
   ])
   const [aub, kok, endo, rm, egk] = await Promise.all([
@@ -299,9 +326,18 @@ export async function GET(req: NextRequest) {
     sb.from('jine_rm').select('*').eq('patient_id', hasta.id).maybeSingle(),
     sb.from('jine_egk').select('*').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(5),
   ])
+  let vizitSatirlari: Array<{ id?: string; tur?: string; alanlar?: Record<string, unknown> | null; soap?: unknown; kontrol_tarihi?: string | null; kontrol_neden?: string | null; created_at?: string }> = vizitler.data || []
+  if (vizitler.error) {
+    const tekrar = await sb.from('jine_vizitler').select('id, tur, alanlar, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(8)
+    vizitSatirlari = tekrar.data || []
+  }
   const k = ks.data as Record<string, unknown> | null
   const aktifKontr = (kontr.data || []).find((x) => x.aktif) || null
   const ria = aktifKontr && String(aktifKontr.yontem).startsWith('ria_') ? (String(aktifKontr.yontem).slice(4) as 'cu5' | 'cu10' | 'lng5' | 'lng8') : null
   const due = dueHesapla({ dob: hasta.dob, bugun: bugun(), sonPap: (k?.son_pap as string) || null, sonHpv: (k?.son_hpv as string) || null, sonMamografi: (k?.son_mamografi as string) || null, sonDxa: (k?.son_dxa as string) || null, sonGgk: (k?.son_kolorektal as string) || null, hrt: !!k?.hrt, hrtBaslangic: (k?.hrt_baslangic as string) || null, riaTakildi: ria ? String(aktifKontr!.baslangic) : null, riaTipi: ria, histerektomi: !!k?.histerektomi, gebe })
-  return NextResponse.json({ kadinSagligi: k, due, serviks: serviks.data || [], cybh: cybh.data || [], pcos: pcos.data, lezyonlar: lezyonlar.data || [], kontrasepsiyon: kontr.data || [], hrt: hrt.data, gorevler: gorevler.data || [], vizitler: vizitler.data || [], gebe, v2: { aub: aub.data || [], kok: kok.data || [], endo: endo.data, rm: rm.data, egk: egk.data || [] }, kutuphane: { etkenler: CYBH_ETKENLERI, hrtYillik: HRT_YILLIK_GOREVLER, infertilite: INFERTILITE_ADIM1, vizitAlanlari: YILLIK_KONTROL_ALANLARI, refler: REF_ACIKLAMA } })
+  const yas = (() => { if (!hasta.dob) return null; const a = new Date(), d = new Date(hasta.dob); let y = a.getFullYear() - d.getFullYear(); if (a.getMonth() < d.getMonth() || (a.getMonth() === d.getMonth() && a.getDate() < d.getDate())) y--; return y })()
+  const sonSoap = soapFromVizitRow(vizitSatirlari[0] as { soap?: unknown; alanlar?: Record<string, unknown> | null; kontrol_tarihi?: string | null; kontrol_neden?: string | null } | undefined)
+  const taslak = taslakBugunkuVizit({ sonSoap, kadinSagligi: k, due, kontrasepsiyon: aktifKontr ? String(aktifKontr.yontem) : (k?.kontrasepsiyon_yontemi as string) || null })
+  const sticky = jineSticky({ lmp: taslak.hikaye.lmp, yas, kontrasepsiyon: taslak.hikaye.kontrasepsiyon, due, sonrakiKontrol: taslak.kontrol.tarih, gebe })
+  return NextResponse.json({ kadinSagligi: k, due, serviks: serviks.data || [], cybh: cybh.data || [], pcos: pcos.data, lezyonlar: lezyonlar.data || [], kontrasepsiyon: kontr.data || [], hrt: hrt.data, gorevler: gorevler.data || [], vizitler: vizitSatirlari, gebe, yas, taslak, sticky, v2: { aub: aub.data || [], kok: kok.data || [], endo: endo.data, rm: rm.data, egk: egk.data || [] }, kutuphane: { etkenler: CYBH_ETKENLERI, hrtYillik: HRT_YILLIK_GOREVLER, infertilite: INFERTILITE_ADIM1, vizitAlanlari: YILLIK_KONTROL_ALANLARI, refler: REF_ACIKLAMA } })
 }

@@ -2,6 +2,7 @@
 
 import type { LabPanel, LabSonuc } from '../engines/clinic-fit'
 import { kutu, btn, giris, etiketS } from './clinic-styles'
+import { TrTarihAlan } from './TrTarihAlan'
 
 const KALEMLER: Array<{ id: keyof LabPanel; etiket: string; pencere: string; onamli?: boolean }> = [
   { id: 'hemogram', etiket: 'Hemogram', pencere: 'İlk vizit' },
@@ -43,10 +44,7 @@ export function LabPaneli({
               <div style={{ fontSize: 13, color: '#EDF1F7', fontWeight: 600 }}>{k.etiket}</div>
               <div style={{ fontSize: 11.5, color: '#8FA0B5' }}>{k.pencere}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, marginTop: 8 }}>
-                <label>
-                  <span style={etiketS}>Tarih</span>
-                  <input type="date" value={row.tarih || ''} onChange={(e) => set(k.id, { tarih: e.target.value })} style={giris} />
-                </label>
+                <TrTarihAlan label="Tarih" value={row.tarih || ''} onChange={(iso) => set(k.id, { tarih: iso })} />
                 <label>
                   <span style={etiketS}>Sonuç / değer</span>
                   <input value={row.sonuc || row.deger || ''} onChange={(e) => set(k.id, { sonuc: e.target.value, deger: e.target.value })} style={giris} />

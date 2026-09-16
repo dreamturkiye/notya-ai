@@ -17,7 +17,11 @@ export function KolposkopiGaleri({
         Görüntüler mevcut Görüntüleme kaydına bağlıdır; ayrı depo yok.
       </p>
       {images.length === 0 ? (
-        <p style={{ fontSize: 13, color: '#8FA0B5' }}>Kolposkopi görüntüsü yok. Görüntüleme sekmesinden yükleyin (bölge/not: kolposkopi).</p>
+        <p style={{ fontSize: 13, color: '#8FA0B5' }}>
+          Kolposkopi görüntüsü yok.{' '}
+          <span style={{ color: '#FDE68A' }}>Kolposkopi görüntüsü ekle</span>
+          {' — Görüntüleme sekmesinden yükleyin (bölge/not: kolposkopi).'}
+        </p>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 10 }}>
           {images.map((img) => (
