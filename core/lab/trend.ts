@@ -151,3 +151,43 @@ export function panelOzeti(satirlar: LabSatir[]): { toplam: number; yuksek: numb
     eslesmeyen: satirlar.filter((s) => !s.canonical_key).length,
   }
 }
+
+/**
+ * NOTYA-LAB-04 — specialty computed lines. Arithmetic only; the writer must quote them verbatim.
+ *  - Kre slope (nefroloji/dahiliye/uroloji/onkoloji): ≥2 priors → mg/dL per month over the series incl. current
+ *  - Δ HbA1c (endokrin/aile/dahiliye/goz): prior HbA1c → absolute Δ in %-points
+ *  - serial troponin (kardiyoloji/acil): all values with dates, rising/falling
+ *  - Δ Hb / Δ Plt (hematoloji/onkoloji): vs last approved
+ */
+export function ozelHesaplar(satirlar: LabSatir[], bransKey: string): string[] {
+  const out: string[] = []
+  const bul = (k: string) => satirlar.find((s) => s.canonical_key === k)
+  const ay = (a: string, b: string) => Math.max(1 / 30, (new Date(b).getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24 * 30.44))
+  if (['nefroloji', 'dahiliye', 'uroloji', 'onkoloji', 'aile'].includes(bransKey)) {
+    const k = bul('Kre')
+    if (k && k.kanonik_deger != null && k.prior_series.length >= 2) {
+      const first = k.prior_series[0]
+      const months = ay(first.tarih, new Date().toISOString())
+      const slope = Math.round(((k.kanonik_deger - first.deger) / months) * 1000) / 1000
+      out.push(`Kreatinin eğimi: ${k.prior_series.length + 1} ölçümde ${first.deger} → ${k.kanonik_deger} mg/dL (${slope > 0 ? '+' : ''}${slope} mg/dL/ay, ${Math.round(months)} ay).`)
+    }
+  }
+  if (['endokrinoloji', 'aile', 'dahiliye', 'goz'].includes(bransKey)) {
+    const h = bul('HbA1c')
+    if (h && h.kanonik_deger != null && h.prior_value != null) out.push(`Δ HbA1c: ${h.prior_value}% (${h.prior_date ? new Date(h.prior_date).toLocaleDateString('tr-TR') : 'önceki'}) → ${h.kanonik_deger}% (${h.kanonik_deger - h.prior_value > 0 ? '+' : ''}${Math.round((h.kanonik_deger - h.prior_value) * 10) / 10} puan).`)
+  }
+  if (['kardiyoloji', 'acil'].includes(bransKey)) {
+    const tr = bul('Troponin')
+    if (tr && tr.kanonik_deger != null && tr.prior_series.length >= 1) {
+      const seri = [...tr.prior_series.map((p) => `${p.deger} (${new Date(p.tarih).toLocaleDateString('tr-TR')})`), `${tr.kanonik_deger} (bu panel)`]
+      out.push(`Seri troponin: ${seri.join(' → ')} ${tr.kanonik_birim || ''} — ${tr.trend === 'rising' || tr.trend === 'new_abn' ? 'yükseliyor' : tr.trend === 'falling' || tr.trend === 'new_normal' ? 'düşüyor' : 'stabil'}.`)
+    }
+  }
+  if (['hematoloji', 'onkoloji'].includes(bransKey)) {
+    for (const key of ['Hb', 'Plt', 'Neu'] as const) {
+      const s = bul(key)
+      if (s && s.kanonik_deger != null && s.prior_value != null) out.push(`Δ ${kanonikTr(key)}: ${s.prior_value} → ${s.kanonik_deger} ${s.kanonik_birim || ''} (${s.delta_pct != null ? (s.delta_pct > 0 ? '+' : '') + s.delta_pct + '%' : ''}).`)
+    }
+  }
+  return out
+}

@@ -62,7 +62,15 @@ export async function POST(req: NextRequest) {
       const { data: son } = await supabase.from('notes').select('id, sessions!inner(patient_id)').eq('doctor_id', user.id).eq('sessions.patient_id', a.patient_id).order('created_at', { ascending: false }).limit(1).maybeSingle()
       noteId = son?.id || null
     }
-    if (!noteId) return NextResponse.json({ error: 'Bu hastanın muayene notu yok. Önce bir muayene notu oluşturun.' }, { status: 409 })
+    if (!noteId) {
+      // NOTYA-LAB-02 (spec): no encounter → create a "Lab değerlendirme" muayene (session + empty SOAP note), then attach
+      const { data: doktor } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
+      const { data: seans, error: e1 } = await supabase.from('sessions').insert({ doctor_id: user.id, patient_id: a.patient_id, status: 'completed', session_type: 'kontrol', specialty: doktor?.specialty || null, ended_at: new Date().toISOString(), duration_seconds: 0, transcript_cleaned: a.modality_final === 'lab' ? '[Lab değerlendirme — belge üzerinden oluşturuldu]' : '[Belge değerlendirme — belge üzerinden oluşturuldu]' }).select('id').single()
+      if (e1 || !seans) return NextResponse.json({ error: 'Muayene oluşturulamadı' }, { status: 500 })
+      const { data: yeniNot, error: e2 } = await supabase.from('notes').insert({ session_id: seans.id, doctor_id: user.id, note_type: 'soap', specialty: doktor?.specialty || null, content_subjektif: a.modality_final === 'lab' ? 'Lab değerlendirme (belge).' : 'Belge değerlendirme.', content_objektif: null, content_degerlendirme: null, content_plan: null }).select('id').single()
+      if (e2 || !yeniNot) return NextResponse.json({ error: 'Muayene notu oluşturulamadı' }, { status: 500 })
+      noteId = yeniNot.id
+    }
     const { data: not } = await supabase.from('notes').select('id, content_objektif').eq('id', noteId).eq('doctor_id', user.id).maybeSingle()
     if (!not) return NextResponse.json({ error: 'Muayene notu bulunamadı' }, { status: 404 })
     let blok: string

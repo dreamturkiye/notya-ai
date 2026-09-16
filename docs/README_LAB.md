@@ -30,7 +30,7 @@ belge (vault: pdf/jpg/png/webp/csv/xlsx)
         → lab_satirlar.onayli = true  ⇒ this panel becomes a PRIOR for the patient's future trends
   → [Plan düzenle] → [Muayeneyi onayla] {adim:'muayene_onayla'}              → content_plan revision; analysis + panel locked
 ```
-No note for the patient yet → the approve endpoint refuses with "önce bir muayene notu oluşturun" (the spec's "create Lab değerlendirme muayene" is NOTYA-LAB-02).
+No note for the patient yet → Onayla creates a completed `kontrol` session + empty SOAP note titled "Lab değerlendirme (belge)." and attaches to it (NOTYA-LAB-02). Specialty computed lines (Kre slope, Δ HbA1c, serial troponin, Δ Hb/Plt/Neu) are calculated in `ozelHesaplar()` and quoted verbatim by the writer (NOTYA-LAB-04). The Belgeler list shows a per-document lab summary card and a Lab filter (NOTYA-LAB-03).
 
 Objective block (locked format):
 ```

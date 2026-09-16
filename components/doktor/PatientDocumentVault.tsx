@@ -17,6 +17,9 @@ type VaultDoc = {
 export default function PatientDocumentVault({ patientId }: { patientId: string }) {
   const [docs, setDocs] = useState<VaultDoc[]>([])
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
+  // NOTYA-LAB-03: lab summaries per document + Lab filter
+  const [labOzet, setLabOzet] = useState<Record<string, { toplam: number; yuksek: number; dusuk: number; kritik: number; onemli: string[]; durum: string }>>({})
+  const [filtre, setFiltre] = useState<'hepsi' | 'lab'>('hepsi')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -31,6 +34,7 @@ export default function PatientDocumentVault({ patientId }: { patientId: string 
       })
       if (!res.ok) throw new Error('Belgeler yüklenemedi')
       const data = await res.json()
+      fetch(`/api/doktor/belgeler/lab?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }).then((r) => (r.ok ? r.json() : { ozet: {} })).then((j) => setLabOzet(j.ozet || {})).catch(() => {})
       setDocs(
         (data.documents || []).map((d: VaultDoc & { fileName: string }) => ({
           id: d.id,
@@ -73,8 +77,13 @@ export default function PatientDocumentVault({ patientId }: { patientId: string 
         <div style={{ fontSize: 13, color: '#8FA0B5' }}>Bu hasta için kasa boş. Belge merkezinden yükleyin.</div>
       )}
       {!loading && !error && docs.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+          {(['hepsi', 'lab'] as const).map((f) => <button key={f} type="button" onClick={() => setFiltre(f)} style={{ background: filtre === f ? 'rgba(15,155,142,0.2)' : 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: filtre === f ? '#2DD4BF' : '#8FA0B5', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{f === 'hepsi' ? 'Tümü' : `Lab (${Object.keys(labOzet).length})`}</button>)}
+        </div>
+      )}
+      {!loading && !error && docs.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {docs.map((d) => (
+          {docs.filter((d) => filtre === 'hepsi' || labOzet[d.id]).map((d) => (
             <button
               key={d.id}
               type="button"
@@ -92,7 +101,7 @@ export default function PatientDocumentVault({ patientId }: { patientId: string 
                 textAlign: 'left',
               }}
             >
-              <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}</span>
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: '#8FA0B5', marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(96,165,250,0.5)' : 'rgba(248,113,113,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#60A5FA' : '#F87171', fontWeight: 700 }}>{o}</span>)}</span>}</span>
               <span style={{ fontSize: 11, color: '#8FA0B5' }}>{d.category || d.fileType}</span>
               {/* NOTYA-BELGE-01: multi-engine AI draft report for this document */}
               <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Asistana raporla</a>
