@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dahiliye — Remaining Gaps Audit (post 22/22) · Notya</title>
+  <meta name="description" content="Fresh dahiliye gap audit after DAH-WOW Strong 22/22 — open ledger, clinical holes, intentional outs." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:900px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .pill.neutral { background:rgba(255,255,255,.06); color:var(--muted); border-color:var(--stroke); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.info { color:var(--blue); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(140px,280px) 1fr 36px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; margin-bottom:8px; }
+    .card .title { font-size:14px; font-weight:650; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(45,212,191,.08); border:1px solid rgba(45,212,191,.35); color:var(--green); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya · Remaining gaps audit</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="https://notya-ai.vercel.app/dahiliye-post-sprint-audit.html">Post-sprint 22/22 →</a>
+        <a href="https://notya-ai.vercel.app/dahiliye-presprint-audit.html">Pre-wow →</a>
+      </div>
+    </div>
+
+    <div class="banner">Snapshot <b>after</b> DAH-WOW Waves 0–4 + SCORE2-VERIFY + Lab/Belgeler + prompts lock — rubric <b>22/22 Strong</b> on production. This audit lists what is <b>still open</b>, not what was already shipped.</div>
+
+    <h1>Dahiliye — Remaining Gaps</h1>
+    <p class="lede">Fresh pass 2026-09-17 against code on <code>origin/main</code> @ fef01f1, OPEN-COMMITMENTS, post-sprint audit caveats, and MoH/clinic expectations beyond the Strong rubric. Goal: honest backlog for the next Claude prompts — not a re-grade of shipped domains.</p>
+    <div class="pills">
+      <span class="pill success">Wow rubric: 22/22 Strong</span>
+      <span class="pill warning">4 Claude-ready opens</span>
+      <span class="pill danger">7 NEXT clinical cards Missing</span>
+      <span class="pill info">Field beta still QA-only</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v success">58</div><div class="l">Dahiliye specialty files (was 3)</div></div>
+      <div class="stat"><div class="v success">22/22</div><div class="l">Post-sprint Strong (closed)</div></div>
+      <div class="stat"><div class="v warning">4</div><div class="l">Open Claude tickets now</div></div>
+      <div class="stat"><div class="v danger">7</div><div class="l">DAH-WOW-NEXT cards (Kaan go)</div></div>
+    </div>
+
+    <div class="callout info">
+      <h2>Executive verdict</h2>
+      <p>The wow sprint bar is met. Remaining work is <b>risk-math completion</b> (SCORE2-OP / SCORE2-Diabetes), one <b>shared SOAP bleed</b> (pediatri growth wording on adult notes), a <b>next clinical breadth pack</b> (STOPP/START, eğitim, sigara, Vit D/B12, gut, DXA T-skoru, e-Nabız PDF import), plus <b>real-doctor field beta</b> and intentional outs (live Medula, ICU, CGM…). Do not reopen Waves 0–4.</p>
+    </div>
+
+    <h2>Open ledger (ship next)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Ticket</th><th>Depth</th><th>Gap</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">DAH-SCORE2-OP</td><td><span class="pill danger">Missing</span></td><td class="gap">≥70: KVR shows note only; no OP engine / ONAYLI gate</td><td class="note">Build from ehab312 zip already on ledger; ≥3 worked examples; smoke ≥70 patient</td></tr>
+        <tr><td class="domain">DAH-SCORE2-DIABETES</td><td><span class="pill danger">Missing</span></td><td class="gap">DM 40–69: TEMD “en az yüksek” fallback, no ehad260 engine</td><td class="note">Separate engine + ONAYLI; keep rule buckets for DM+TOD</td></tr>
+        <tr><td class="domain">DAH-PROMPTS-FU</td><td><span class="pill warning">Thin</span></td><td class="gap"><code>soapKurallari()</code> still tells every branch to point at “büyüme persentili”; adult dahiliye smoke hit it</td><td class="note">Scope growth/Neyzi wording to pediatri/çocuk only; dahiliye lock already mitigates but shared rules bleed</td></tr>
+        <tr><td class="domain">KD/derm prompts runtime</td><td><span class="pill warning">Thin</span></td><td class="gap">Same unused-folder bug dahiliye had — noted in DAH-PROMPTS-FU, not dahiliye-owned</td><td class="note">Wire or explicit “N/A” per specialty (feat/kd-prompts-lock in flight)</td></tr>
+        <tr><td class="domain">NOTYA-DAH-WOW-NEXT</td><td><span class="pill danger">Missing</span></td><td class="gap">Seven clinical cards recorded, not started</td><td class="note">Needs Kaan go — see table below</td></tr>
+        <tr><td class="domain">First real dahiliye MD beta</td><td><span class="pill warning">Thin</span></td><td class="gap">Evidence is <code>qa.dahiliye</code> + synthetics, not a live muayenehane doctor</td><td class="note">Field day: KB→lab PDF→cards→SCORE→check-up merge with a beta internist</td></tr>
+        <tr><td class="domain">Ledger hygiene</td><td><span class="pill warning">Thin</span></td><td class="gap">DAH-02 / DAH-WOW-v2 rows still read “waits” though shipped</td><td class="note">Mark SHIPPED / archive to cut operator confusion</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>How complete vs remaining wow (narrow holes)</h2>
+    <p class="cap">Score = completeness of the <b>remaining</b> clinical hole (0 = absent, 100 = closed). Shipped Strong domains are omitted.</p>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-label">SCORE2 40–69 (verified)</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="bar-val">95</div></div>
+      <div class="bar-row"><div class="bar-label">SCORE2-OP ≥70</div><div class="bar-track"><div class="bar-fill" style="width:8%"></div></div><div class="bar-val">8</div></div>
+      <div class="bar-row"><div class="bar-label">SCORE2-Diabetes</div><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><div class="bar-val">15</div></div>
+      <div class="bar-row"><div class="bar-label">SOAP ped-bleed fix</div><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><div class="bar-val">35</div></div>
+      <div class="bar-row"><div class="bar-label">STOPP/START deprescribing</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">5</div></div>
+      <div class="bar-row"><div class="bar-label">Hasta hedef + eğitim yaprağı</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">5</div></div>
+      <div class="bar-row"><div class="bar-label">Sigara paketi (ALO 171 + rapor)</div><div class="bar-track"><div class="bar-fill" style="width:20%"></div></div><div class="bar-val">20</div></div>
+      <div class="bar-row"><div class="bar-label">Vit D / B12 + SGK rapor</div><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><div class="bar-val">10</div></div>
+      <div class="bar-row"><div class="bar-label">e-Nabız geçmiş → Belgeler</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+      <div class="bar-row"><div class="bar-label">Gut / ürik asit card</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+      <div class="bar-row"><div class="bar-label">DXA T-skoru card</div><div class="bar-track"><div class="bar-fill" style="width:25%"></div></div><div class="bar-val">25</div></div>
+      <div class="bar-row"><div class="bar-label">Live Medula send</div><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><div class="bar-val">30</div></div>
+      <div class="bar-row"><div class="bar-label">Real MD field beta</div><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><div class="bar-val">40</div></div>
+    </div>
+
+    <h2>DAH-WOW-NEXT pack (needs Kaan go)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Card</th><th>Depth</th><th>Today</th><th>Gap to ship</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Yaşlı polifarmasi (STOPP/START)</td><td><span class="pill danger">Missing</span></td><td class="note">eGFR text warnings + ≥5 polifarmasi chip</td><td class="gap">STOPP/START rules engine + hekim override log</td></tr>
+        <tr><td class="domain">Hasta hedef kartı + eğitim yaprakları</td><td><span class="pill danger">Missing</span></td><td class="note">Goals exist on HT/DM/lipid cards as fields</td><td class="gap">Patient-facing hedef sheet + TR education one-pagers</td></tr>
+        <tr><td class="domain">Sigara bırakma paketi</td><td><span class="pill danger">Thin</span></td><td class="note">Pulm warning mentions ALO 171</td><td class="gap">Structured counseling + SGK rapor hook + follow-up görev</td></tr>
+        <tr><td class="domain">Vit D / B12 + SGK rapor</td><td><span class="pill danger">Thin</span></td><td class="note">Anemi ladder may surface B12; no Vit D card</td><td class="gap">Deficiency cards + rapor şablon rules</td></tr>
+        <tr><td class="domain">e-Nabız geçmiş PDF → Belgeler</td><td><span class="pill danger">Missing</span></td><td class="note">e-Nabız format export exists (outbound)</td><td class="gap">Inbound PDF import into vault + lab path</td></tr>
+        <tr><td class="domain">Gut / ürik asit</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">Office card + flare vs urate-lowering ladder</td></tr>
+        <tr><td class="domain">Osteoporoz DXA T-skoru</td><td><span class="pill warning">Thin</span></td><td class="note">DXA reminder / check-up kalem only</td><td class="gap">T-skoru card from belge/lab + TEMD_OSTEO plan</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Caveats on “Strong” (honest footnotes)</h2>
+    <div class="cards">
+      <div class="card"><div class="top"><span class="title">SGK rapor “native”</span><span class="pill warning">Partial depth beyond rubric</span></div>
+        <div class="body">Drafts + e-Nabız/Medula envelope Strong for rubric. <b>Live Medula submission</b> still out (NOTYA-ERECETE-02 / imza aracı).</div></div>
+      <div class="card"><div class="top"><span class="title">Lab PDF preview</span><span class="pill neutral">Cosmetic</span></div>
+        <div class="body">CSP <code>frame-src blob:</code> fixed; headless Chromium has no PDF viewer so smoke screenshots show blank preview — not a prod doctor bug.</div></div>
+      <div class="card"><div class="top"><span class="title">Home BP vs ABPM</span><span class="pill warning">Thin clinical</span></div>
+        <div class="body">Ev KB diary + white-coat rules shipped; formal ABPM series/protocol still sevk/clinic judgment.</div></div>
+      <div class="card"><div class="top"><span class="title">Insulin / CGM / ICU</span><span class="pill neutral">Intentional out</span></div>
+        <div class="body">No titration, no CGM stack, no hospitalist bundles — sevk-quality only (correct for muayenehane).</div></div>
+    </div>
+
+    <h2>Recommended next Claude prompts (priority)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Move</th><th>Why</th><th>Size</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">DAH-PROMPTS-FU — scope soapKurallari growth text to pediatri</td><td class="note">Adult note pollution; S fix; already seen in smoke</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>2</td><td class="domain">DAH-SCORE2-OP (≥70)</td><td class="note">MoH/HYP elderly path; source zip in hand</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>3</td><td class="domain">DAH-SCORE2-DIABETES</td><td class="note">Stops over-calling every DM as high without TOD</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>4</td><td class="domain">Ledger hygiene (DAH-02 / WOW-v2 → SHIPPED)</td><td class="note">Operator clarity</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>5</td><td class="domain">DAH-WOW-NEXT pack (after Kaan go)</td><td class="note">Clinic breadth beyond metabolic spine</td><td><span class="pill neutral">L</span></td></tr>
+        <tr><td>6</td><td class="domain">Real dahiliye MD beta day</td><td class="note">Synthetic QA ≠ muayenehane trust</td><td><span class="pill warning">M</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Recommended next ships</h2>
+    <div class="cards three">
+      <div class="card"><div class="title">Sprint A — this week</div>
+        <div class="body"><div>1. DAH-PROMPTS-FU (soapKurallari ped scope)</div><div>2. DAH-SCORE2-OP</div><div>3. Ledger hygiene</div></div></div>
+      <div class="card"><div class="title">Sprint B — risk math done</div>
+        <div class="body"><div>1. DAH-SCORE2-DIABETES</div><div>2. Extend smoke ≥70 + DM patients</div><div>3. Re-note post-sprint audit</div></div></div>
+      <div class="card"><div class="title">Sprint C — NEXT / field</div>
+        <div class="body"><div>1. Kaan go on DAH-WOW-NEXT</div><div>2. STOPP/START + eğitim + sigara first</div><div>3. Real internist beta</div></div></div>
+    </div>
+
+    <h3>Sources</h3>
+    <p class="cap">Code: specialties/dahiliye (~58 files), engines/score2.ts (OP/Diabetes deferred notes), lib/doktor/soapUret.ts soapKurallari bleed, OPEN-COMMITMENTS DAH-SCORE2-OP/DIABETES · DAH-PROMPTS-FU · DAH-WOW-NEXT. Proof of closed wow: https://notya-ai.vercel.app/dahiliye-post-sprint-audit.html (22/22).</p>
+    <p class="cap">Intentionally not gaps: ICU/sepsis, chemo, dializ Rx, coronary protocol, CGM robotics, bariatric OR, FRAX license, live Medula without imza aracı.</p>
+
+    <div class="foot">
+      <span>Remaining-gaps audit · notya-ai · Dahiliye · 2026-09-17</span>
+      <span>No patient data · internal product audit</span>
+    </div>
+  </div>
+</body>
+</html>

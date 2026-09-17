@@ -30,6 +30,7 @@ const tools: Tool[] = [
   { circleColor: '#7C3AED', icon: 'KD+', title: 'KD Audit (post-sprint)', desc: 'After JINE-04: all domains Strong', route: '/kd-jine-post-sprint-audit.html' },
   { circleColor: '#0F9B8E', icon: 'DAH', title: 'Dahiliye Audit (pre-wow)', desc: 'DAH-01 vs TR private wow bar — TİHUD/Harrison/TEMD + HYP', route: '/dahiliye-presprint-audit.html' },
   { circleColor: '#7C3AED', icon: 'DAH+', title: 'Dahiliye Audit (post-sprint)', desc: 'DAH-WOW Waves 0–4 — domain rating by the Strong rubric', route: '/dahiliye-post-sprint-audit.html' },
+  { circleColor: '#F59E0B', icon: 'DAH!', title: 'Dahiliye Gaps (remaining)', desc: 'After 22/22 Strong — OP/Diabetes, PROMPTS-FU, WOW-NEXT, field beta', route: '/dahiliye-gaps-audit.html' },
   { circleColor: '#0891B2', icon: 'KH', title: 'Dahiliye Kohort Paneli', desc: 'HbA1c >9 · KB/LDL hedef dışı · eGFR <45 · gecikmiş görevler · 1-tap hatırlatma', route: '/doktor-tools/dahiliye-kohort' },
 ];
 
