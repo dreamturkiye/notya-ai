@@ -143,8 +143,8 @@ export default function NotYazdir() {
         <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {/* NOTYA-ONAY-DONUS-01: dönüş bağlantısı KOŞULSUZ — hastaya bağlı olmayan notta
               (seansa hasta seçilmeden üretilen not) bu sayfanın hiçbir çıkışı kalmıyordu. */}
-          <a href={hastaDosyasiYolu(hasta.patientId)} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', marginRight: 4 }}>
-            {hasta.patientId ? '← Hasta Dosyası' : '← Hastalar'}
+          <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', marginRight: 4 }}>
+            {hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}
           </a>
           {/* Kaan (2026-09-13): Muayene Geçmişi artık bu raporu açar; düzenleme buradan başlar */}
           <a href={`/dashboard/doktor/notlar/${params.id}`} style={{ background: '#1F5F8B', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>✏️ Yeniden Düzenle</a>

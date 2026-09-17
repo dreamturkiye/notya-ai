@@ -9,10 +9,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import { REF_ACIKLAMA } from '@/specialties/dahiliye/engines/dahiliye';
+import { hastaBelgelerHref } from '@/lib/doktor/geriNavigasyon';
 
 type Doc = { id: string; fileName: string; fileType: string };
 type Satir = { id: string; numune_tarihi?: string | null; raw_name: string; canonical_key: string | null; value_num: number | null; value_text: string | null; unit: string | null; ref_low: number | null; ref_high: number | null; flag: string; kritik: boolean; kritik_neden: string | null; prior_value: number | null; prior_date: string | null; delta_pct: number | null; trend: string; dogrulanacak: boolean; dogrulama_notu: string | null; doctor_corrected: boolean; page: number | null };
@@ -147,9 +149,9 @@ export default function LabPage() {
             <div style={toolsCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#EDF1F7' }}>{doc?.fileName || 'Laboratuvar belgesi'}</div>
-                <a href={`/dashboard/doktor/hastalar/${patientId}`} style={{ color: '#2DD4BF', fontSize: 12 }}>← Hasta dosyası</a>
+                <DoktorGeriLink href={hastaBelgelerHref(patientId)}>← Belgeler</DoktorGeriLink>
               </div>
-              {doc && !/csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ marginTop: 8 }}><DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} onClose={() => {}} /></div>}
+              {doc && !/csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ marginTop: 8 }}><DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} /></div>}
               {doc && /csv|excel|spreadsheet/.test(doc.fileType) && <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 8 }}>Tablo dosyası — satırlar sağda.</div>}
               <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={cikar} disabled={durum !== 'hazir' || kilitli} style={{ ...btn, opacity: durum !== 'hazir' ? 0.6 : 1 }}>{durum === 'cikariyor' ? 'Tablo çıkarılıyor…' : panel ? 'Tabloyu yeniden çıkar' : 'Tabloyu çıkar'}</button>

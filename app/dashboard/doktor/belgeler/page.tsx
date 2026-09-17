@@ -23,10 +23,7 @@ import {
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
 import { VAULT_MAX_BYTES } from '@/lib/vault/types'
-import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur'
-
-/** NOTYA-LAB-01 tablo çıkarımının okuyabildiği türler (hasta dosyası › Belgeler ile aynı). */
-const LAB_TURLERI = /^application\/pdf$|^image\/|csv|excel|spreadsheet/
+import { belgeDegerlendirmeCtalari, belgeKategoriEtiket } from '@/lib/doktor/belgeTur'
 
 const BELGE_TURLERI = [
   'Lab Sonucu',
@@ -479,7 +476,7 @@ export default function BelgelerPage() {
               Kasa ({docs.length})
             </div>
             <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
-              Belge adına tıklayın: önizleme açılır. Röntgen/görüntüde “Asistana raporla” (veya “Röntgenü değerlendir”) taslak yazar;
+              Belge adına tıklayın: önizleme açılır. Röntgen/görüntüde “Röntgeni değerlendir” veya “Asistana raporla” taslak yazar;
               lab PDF’lerinde “Laboratuvarı değerlendir” tabloyu çıkarır. Resmi tanı onayıyla Objektif’e eklenir.
             </div>
             {!docs.length ? (
@@ -509,37 +506,27 @@ export default function BelgelerPage() {
                     >
                       {d.fileName}
                     </span>
-                    <span style={{ fontSize: 11, color: '#94A3B8' }}>{d.category || d.fileType}</span>
+                    <span style={{ fontSize: 11, color: '#94A3B8' }}>{belgeKategoriEtiket(d)}</span>
                     <span style={{ fontSize: 11, color: '#64748B' }}>{Math.max(1, Math.round(d.fileSize / 1024))} KB</span>
-                    {/* KASA-BELGE-01: değerlendirme boru hattı (NOTYA-BELGE-01 / NOTYA-LAB-01) vardı ama
-                        yalnız hasta dosyası › Belgeler sekmesinden görünüyordu; yükleme yapılan bu sayfa
-                        çıkışsız bir arşiv gibi duruyordu. Aynı iki bağlantı burada da. */}
-                    {belgeLabMi(d) ? (
-                      <a
-                        href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}/lab`}
-                        title="Lab tablosunu çıkar, düzelt ve asistan raporunu üret"
-                        style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
-                      >
-                        Laboratuvarı değerlendir
-                      </a>
-                    ) : (
-                      <a
-                        href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}`}
-                        title="Asistan taslak rapor yazsın; hekim onayıyla son muayenenin Objektif bölümüne eklenir"
-                        style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
-                      >
-                        {belgeRontgenMi(d) ? 'Röntgenü değerlendir' : 'Asistana raporla'}
-                      </a>
-                    )}
-                    {!belgeLabMi(d) && LAB_TURLERI.test(d.fileType) && (
-                      <a
-                        href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}/lab`}
-                        title="Lab tablosunu çıkar, düzelt ve onayla"
-                        style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
-                      >
-                        Laboratuvarı değerlendir
-                      </a>
-                    )}
+                    {/* KASA-BELGE-01: lab → /lab; röntgen → analiz; asla röntgende lab CTA */}
+                    {belgeDegerlendirmeCtalari(d).map((cta) => {
+                      const href =
+                        cta.yol === 'lab'
+                          ? `/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}/lab`
+                          : `/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}`
+                      const color = cta.tur === 'lab' ? '#FBBF24' : '#2DD4BF'
+                      const border = cta.tur === 'lab' ? 'rgba(251,191,36,0.4)' : 'rgba(45,212,191,0.4)'
+                      return (
+                        <a
+                          key={cta.tur}
+                          href={href}
+                          title={cta.tur === 'lab' ? 'Lab tablosunu çıkar, düzelt ve asistan raporunu üret' : 'Asistan taslak rapor yazsın; hekim onayıyla Objektif’e eklenir'}
+                          style={{ fontSize: 11, fontWeight: 700, color, border: `1px solid ${border}`, borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        >
+                          {cta.label}
+                        </a>
+                      )
+                    })}
                     <button
                       type="button"
                       onClick={() => belgeSil(d)}

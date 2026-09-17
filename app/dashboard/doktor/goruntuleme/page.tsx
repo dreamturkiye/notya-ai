@@ -455,6 +455,13 @@ const Page = () => {
           ) : (
             <>
               <div style={{ height: '44px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: '16px', fontSize: '14px' }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGoruntuleme(null)}
+                  style={{ background: 'transparent', border: 'none', color: '#2DD4BF', cursor: 'pointer', fontWeight: 600, padding: 0 }}
+                >
+                  ← Geri
+                </button>
                 <div style={{ flex: 1 }}>{selectedGoruntuleme.dosya_adi}</div>
                 <button type="button" onClick={() => handleZoom(0.2)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>+</button>
                 <button type="button" onClick={() => handleZoom(-0.2)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>-</button>

@@ -34,6 +34,8 @@ import {
   pediatriAracSekmesiUygun,
   type HastaDosyaSekmeId,
 } from '@/lib/doktor/hastaDosyaSekmeleri';
+import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
+import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,11 +72,7 @@ export default function HastaProfilPage() {
   const patientId = params?.id as string;
   // NOTYA-RANDEVU-09: randevu takviminden hedefli linkler ?tab=formu / ?tab=asilar ile atlar.
   const tabParam = searchParams?.get('tab');
-  const [activeTab, setActiveTab] = useState<HastaDosyaSekmeId>(
-    tabParam === 'formu' || tabParam === 'asilar' || tabParam === 'deri' || tabParam === 'dahiliye' || tabParam === 'gebelik' || tabParam === 'belgeler' || tabParam === 'goruntuleme' || tabParam === 'bebek'
-      ? tabParam
-      : 'ozet',
-  );
+  const [activeTab, setActiveTab] = useState<HastaDosyaSekmeId>('ozet');
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -92,6 +90,25 @@ export default function HastaProfilPage() {
     : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
   const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci });
+
+  /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet). */
+  const secSekme = useCallback((id: HastaDosyaSekmeId) => {
+    setActiveTab(id);
+    router.replace(hastaDosyaHref(patientId, id), { scroll: false });
+  }, [patientId, router]);
+
+  useEffect(() => {
+    if (!tabParam) {
+      setActiveTab('ozet');
+      return;
+    }
+    // Accept any known sekme id from URL (even before specialty gates finish loading).
+    const bilinen: HastaDosyaSekmeId[] = [
+      'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
+      'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'bebek', 'goz',
+    ];
+    if (bilinen.includes(tabParam as HastaDosyaSekmeId)) setActiveTab(tabParam as HastaDosyaSekmeId);
+  }, [tabParam]);
 
   useEffect(() => {
     if (!patientId) return;
@@ -217,7 +234,7 @@ export default function HastaProfilPage() {
                 🩺 Muayeneyi Başlat
               </button>
               <button
-                onClick={() => setActiveTab('ayse')}
+                onClick={() => secSekme('ayse')}
                 style={{ padding: '10px 18px', background: 'rgba(255,255,255,0.07)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
               >
                 Ayşe&apos;ye Danış
@@ -226,12 +243,16 @@ export default function HastaProfilPage() {
           )}
         </div>
 
+        <div style={{ margin: '10px 0 0' }}>
+          <DoktorGeriLink href="/dashboard/doktor/hastalar">← Hastalar</DoktorGeriLink>
+        </div>
+
         {/* Hap sekmeler — mobilde yatay kaydırma */}
         <div className="dosya-sekmeler" style={{ display: 'flex', gap: 6, margin: '16px 0 18px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => secSekme(tab.id)}
               style={{
                 flexShrink: 0,
                 padding: '8px 16px',

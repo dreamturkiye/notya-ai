@@ -36,10 +36,14 @@ export function onaylananNotYolu(notId: string): string {
 /**
  * Hasta dosyası yolu. Hasta bağlı olmayan not (seansa hasta seçilmeden üretilen not) için
  * hasta listesine düşer — ölü bağlantı ya da bağlantısız ekran üretmemek için.
+ * Optional tab deep-link (e.g. muayene) so Geri lands on the right section.
  */
-export function hastaDosyasiYolu(patientId?: string | null): string {
+export function hastaDosyasiYolu(patientId?: string | null, tab?: string | null): string {
   const id = String(patientId ?? '').trim()
-  return id ? `${HASTA_LISTESI_YOLU}/${encodeURIComponent(id)}` : HASTA_LISTESI_YOLU
+  if (!id) return HASTA_LISTESI_YOLU
+  const base = `${HASTA_LISTESI_YOLU}/${encodeURIComponent(id)}`
+  const t = String(tab ?? '').trim()
+  return t && t !== 'ozet' ? `${base}?tab=${encodeURIComponent(t)}` : base
 }
 
 /** Onaydan sonra nereye gidileceği. 'kuyrukta-kal' = sayfa değişmez, sıradaki nota devam. */

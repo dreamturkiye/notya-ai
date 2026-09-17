@@ -43,7 +43,7 @@ export default function GebeIzlemKartiYazdir() {
 
   if (hata) return <div style={{ padding: 24, fontFamily: 'system-ui' }}>{hata}</div>;
   if (!v) return <div style={{ padding: 24, fontFamily: 'system-ui', color: '#666' }}>Yükleniyor…</div>;
-  if (!v.gebelik) return <div style={{ padding: 24, fontFamily: 'system-ui' }}>Bu hastada gebelik kaydı yok. <a href={`/dashboard/doktor/hastalar/${params.id}`}>← Hasta dosyası</a></div>;
+  if (!v.gebelik) return <div style={{ padding: 24, fontFamily: 'system-ui' }}>Bu hastada gebelik kaydı yok. <a href={`/dashboard/doktor/hastalar/${params.id}?tab=gebelik`}>← Gebelik</a></div>;
   const g = v.gebelik, b = v.baslik;
 
   return (
@@ -51,7 +51,7 @@ export default function GebeIzlemKartiYazdir() {
       <style>{`@media print { .yazdirma-gizle { display: none !important; } body { -webkit-print-color-adjust: exact; } @page { size: A4; margin: 14mm; } }`}</style>
       <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href={`/dashboard/doktor/hastalar/${params.id}`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Hasta Dosyası</a>
+          <a href={`/dashboard/doktor/hastalar/${params.id}?tab=gebelik`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Gebelik</a>
           <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Gebe İzlem Kartı · {b.hastaAd || 'Hasta'}</span>
         </span>
         <button type="button" onClick={() => window.print()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '10px 18px', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF (A4)</button>

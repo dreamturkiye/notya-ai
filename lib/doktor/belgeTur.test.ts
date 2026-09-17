@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { belgeLabMi, belgeRontgenMi } from './belgeTur'
+import { belgeLabMi, belgeRontgenMi, belgeDegerlendirmeCtalari, belgeKategoriEtiket } from './belgeTur'
 
 describe('belgeTur', () => {
   it('detects mock lab PDF by filename', () => {
@@ -18,5 +18,24 @@ describe('belgeTur', () => {
   })
   it('does not treat lab PDF as röntgen', () => {
     assert.equal(belgeRontgenMi({ fileName: 'Elif_Celik_Mock_Lab_Results.pdf', category: 'Lab Sonucu' }), false)
+  })
+  it('röntgen CTA is only Röntgeni değerlendir (no lab button)', () => {
+    const ctas = belgeDegerlendirmeCtalari({
+      fileName: 'Elif_Celik_Mock_Chest_Xray_PA.jpg',
+      category: 'X-Ray',
+      fileType: 'image/jpeg',
+    })
+    assert.deepEqual(ctas.map((c) => c.label), ['Röntgeni değerlendir'])
+  })
+  it('lab CTA is only Laboratuvarı değerlendir', () => {
+    const ctas = belgeDegerlendirmeCtalari({
+      fileName: 'Elif_Celik_Mock_Lab_Results.pdf',
+      category: 'Lab Sonucu',
+      fileType: 'application/pdf',
+    })
+    assert.deepEqual(ctas.map((c) => c.label), ['Laboratuvarı değerlendir'])
+  })
+  it('maps X-Ray category label to Röntgen', () => {
+    assert.equal(belgeKategoriEtiket({ fileName: 'chest.jpg', category: 'X-Ray' }), 'Röntgen')
   })
 })

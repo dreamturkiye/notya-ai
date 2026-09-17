@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
+import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji';
@@ -18,6 +19,7 @@ import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import type { BelgeRaporu, MotorCiktisi } from '@/core/belgeler/types';
 import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur';
+import { hastaBelgelerHref } from '@/lib/doktor/geriNavigasyon';
 
 type Doc = { id: string; fileName: string; fileType: string; fileSize: number; category: string | null; createdAt: string };
 type Analiz = { id: string; durum: string; sonuc: BelgeRaporu | null; fusion: { fused: { kod: string; label_tr: string; p: number; sources: string[]; karsi: string[] }[]; capPct: number; acilNedenler: string[]; duzeltmeler: string[] } | null; motor_ciktilari: MotorCiktisi[]; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; note_id: string | null; onaylandi_at: string | null; olusturuldu: string; modality_final: string };
@@ -210,7 +212,7 @@ export default function BelgeAnalizPage() {
             <div style={{ ...toolsCard, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#EDF1F7' }}>{doc?.fileName || 'Belge'}</div>
-                <a href={`/dashboard/doktor/hastalar/${patientId}`} style={{ color: '#2DD4BF', fontSize: 12 }}>← Hasta dosyası</a>
+                <DoktorGeriLink href={hastaBelgelerHref(patientId)}>← Belgeler</DoktorGeriLink>
               </div>
               <div style={etiket}>{personaAd} ile değerlendir · {kural.ad}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -229,9 +231,9 @@ export default function BelgeAnalizPage() {
               {yetenek && <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>{yetenek.not} Tarayıcı motorları: {tierBMotorlari(bransKey, (modalite || 'serbest') as Modalite).join(', ') || 'bu modalite için yok (yalnız asistan)'}.</div>}
               <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={raporla} disabled={durum !== 'hazir' && durum !== 'hata' || !modalite} style={{ ...btn, opacity: durum === 'hazir' || durum === 'hata' ? 1 : 0.6 }}>
-                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Motorlar çalışıyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgenü değerlendir` : `${personaAd} ile değerlendir`}
+                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Motorlar çalışıyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
                 </button>
-                {(pdfMi || (doc && belgeLabMi(doc))) && (
+                {doc && belgeLabMi(doc) && (
                   <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab`} style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24' }}>Laboratuvarı değerlendir →</a>
                 )}
                 {mesaj && <span style={{ fontSize: 12, color: durum === 'hata' ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>}
@@ -311,7 +313,7 @@ export default function BelgeAnalizPage() {
                     </div>
                   )}
                   {analiz.durum === 'muayene_onaylandi' && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>Muayene onaylandı — rapor kilitli. {analiz.note_id && <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a>}</div>}
-                  {analiz.durum === 'onaylandi' && analiz.note_id && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>Objektif'e eklendi. <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a> · <a href={`/dashboard/doktor/hastalar/${patientId}`} style={{ color: '#2DD4BF' }}>Hasta dosyası →</a></div>}
+                  {analiz.durum === 'onaylandi' && analiz.note_id && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>Objektif&apos;e eklendi. <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a> · <a href={hastaBelgelerHref(patientId)} style={{ color: '#2DD4BF' }}>← Belgeler</a></div>}
                 </div>
 
                 {rapor.oneri && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: '#EDF1F7' }}><div style={etiket}>Öneri</div>{rapor.oneri}</div>}

@@ -43,6 +43,7 @@ test('bozuk kalan sayısı kuyrukta tutmaz — hekim yine nota gider', () => {
 
 test('hastaDosyasiYolu: hasta varsa dosyasına, yoksa listeye — ölü bağlantı yok', () => {
   assert.equal(hastaDosyasiYolu('p1'), '/dashboard/doktor/hastalar/p1')
+  assert.equal(hastaDosyasiYolu('p1', 'muayene'), '/dashboard/doktor/hastalar/p1?tab=muayene')
   assert.equal(hastaDosyasiYolu(null), HASTA_LISTESI_YOLU)
   assert.equal(hastaDosyasiYolu(undefined), HASTA_LISTESI_YOLU)
   assert.equal(hastaDosyasiYolu('  '), HASTA_LISTESI_YOLU)
