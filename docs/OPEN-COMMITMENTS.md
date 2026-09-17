@@ -964,3 +964,58 @@ Genel `POST /api/users/profile` rotası, oturum açmış **herhangi bir** hekimi
 teknik olarak yeni bir yetenek vermiyor; yaptığı şey o işi **arayüzde** yalnız o iki kişiye
 açmak. Yeni rotanın kendi bağımsız 403 kontrolü yine de var (istendiği gibi). Profil
 rotasının bu davranışı daraltılmalı mı, ayrı bir karar — **Kaan'a açık madde.**
+
+---
+
+## NOTYA-AVATAR-01 — karşılama ekranında hekim avatarı (Kaan + Dr. Gökhan, canlı, 2026-09-17)
+
+**Ne istendi.** Karşılama ekranındaki "Hoş geldiniz, Dr. …" yanında küçük bir avatar: hekimin
+Ayarlar'dan yüklediği fotoğrafın **karikatürleştirilmiş** hâli, Hedef Boy sayfasındaki karakter
+görselinin ruhuna yakın. Kaan'ın gerekçesi: duygusal bağ.
+
+### Önce araştırıldı: bu depoda görsel üretme yeteneği VAR MI? — HAYIR.
+
+Karikatürleştirme iddiasında bulunmadan önce Hedef Boy'un o görseli nasıl ürettiği uçtan uca
+okundu. Bulgu net:
+
+| Bakılan yer | Gerçekte ne var |
+|---|---|
+| `components/hedefBoy/HedefBoyManken.tsx` | `KARAKTER` sabiti → `public/hedef-boy/{baba,anne,cocuk-erkek,cocuk-kiz}.png` — **önceden çizilmiş dört sabit PNG**. Cinsiyete göre seçilir, boya göre ölçeklenip konumlandırılır. Üretim yok. |
+| `app/api/doktor/hastalar/[id]/hedef-boy/route.ts` | Saf Tanner aritmetiği (`hesaplaHedefBoy`) + şifreli not okuma/yazma. Tek bir görsel çağrısı bile yok. |
+| `package.json` | `@anthropic-ai/sdk` (metin), `@deepgram/sdk` (ses), `@elevenlabs/client` (ses), `tesseract.js` (OCR). **Görsel üreten hiçbir paket yok.** |
+| Depo geneli arama (`dall-e`, `stability`, `replicate`, `images.generate`, `fal.ai` …) | Sıfır isabet. `openai` geçen üç dosya var ama hepsi Groq/xAI'nin **`/chat/completions`** taban URL'si — yalnız metin. |
+
+Yani Hedef Boy'daki "3D cartoon aile" bir sanatçı çıktısıdır, bir model çıktısı değil.
+**Sonuç: gerçek karikatürleştirme bu depoda bugün mümkün değil.**
+
+### Bu yüzden ne YAPILMADI
+
+CSS filtresiyle (posterize/kontrast/`filter: saturate()` vb.) "karikatür" taklidi
+**yapılmadı**. Bu bir fotoğrafı karikatür yapmaz; yalnız karikatürleştirilmiş gibi görünen bir
+etiketle hekimi yanıltır. Kaan'a yanlış bilgi vermektense eksik özellik vermek yeğdir.
+
+### Ne SHIPPED
+
+| Tarih | Madde | Durum |
+|---|---|---|
+| 2026-09-17 | **Ayarlar › Profil fotoğrafı** (`/dashboard/doktor/ayarlar/profil`) — yükle / değiştir / kaldır, canlı önizleme. Ayarlar hub'ına ilk sıraya kart eklendi. Mevcut `ayarlar/erecete` alt sayfa desenine birebir uyar. | SHIPPED |
+| 2026-09-17 | **Saklama:** yeni `doctor_avatars` tablosu (migration `050_doktor_profil_fotografi.sql`), hekim başına tek satır, `doctor_id` PK. Baytlar kasadakiyle **aynı** AES-256-GCM zarfıyla (`lib/vault/crypto`) şifrelenir. RLS: kasa blob'larıyla aynı duruş — yalnız service-role rotası okur/yazar. Herkese açık URL üretilmez. | SHIPPED |
+| 2026-09-17 | **Rota** `app/api/doktor/profil/avatar` (GET/POST/DELETE), `doktorOturum` + `servisSupabase` (no-store) üzerinden, her sorgu `doctor_id = user.id` kapsamında. Kapılar: yalnız JPEG/PNG/WebP, en fazla 2 MB. | SHIPPED |
+| 2026-09-17 | **Karşılama ekranı** (`app/dashboard/doktor/page.tsx`): adın solunda 52px yuvarlak avatar. Fotoğraf varsa **gerçek fotoğraf**; yoksa **baş harfli avatar** (hasta dosyası kimlik başlığıyla aynı teal halka). Avatar, ad gibi `localStorage`'dan ilk boyamada gelir — her girişte baş harften fotoğrafa atlama olmaz. | SHIPPED |
+| 2026-09-17 | **Baş harf Türkçe doğru.** Mevcut `basHarfler` (hasta dosyası) `toUpperCase()` kullanıyor; o "ismail" → **"I"** verir. Yeni `doktorBasHarfleri` `toLocaleUpperCase('tr-TR')` kullanır → **"İ"**, ayrıca unvanı eler ("Prof. Dr. Ayşe Yılmaz" → "AY", "PD" değil). | SHIPPED |
+
+**Doğrulama (sentetik, PHI yok).** `scripts/qa-doktor-avatar.mts` — GERÇEK rota handler'larını ve
+GERÇEK AES-GCM şifrelemesini çalıştırır; yalnız oturum ve Supabase istemcisi bellek içi sahtedir.
+Fotoğraf, betiğin ürettiği damalı bir PNG'dir (gerçek kişi değil). 17/17 kontrol geçti: yükleme
+201 → satır **şifreli** yazıldı (düz PNG imzası veritabanında yok) → GET baytları **birebir**
+geri verdi (150/150) → 2 MB üstü ve PDF **400** → oturumsuz **401** → reddedilen yüklemeler
+mevcut fotoğrafı bozmadı → DELETE sonrası yeniden baş harfli avatar.
+Mobil (zorunlu 390px kontrolü): karşılama paneli gerçek `DoktorAvatar` bileşeniyle 390px
+çerçevede ölçüldü — metin kutusu 299px → 233px'e daralıyor, **yatay taşma yok**, başlık düzgün
+sarıyor; fotoğraflı, baş harfli ve Türkçe ("İÇ") üç durum da temiz (`smoke-out/avatar-390.png`).
+
+### AÇIK — Kaan'ın kararı bekleniyor
+
+| Tarih | Madde | Durum |
+|---|---|---|
+| 2026-09-17 | **Gerçek karikatürleştirme ertelendi.** Bugün gönderilen avatar hekimin **gerçek fotoğrafıdır**, stilize edilmiş hâli değil. Yapılabilmesi için **yeni bir dış görsel-üretme entegrasyonu** gerekir; bu bir kod işi değil, önce bir **sağlayıcı kararı**: (a) hangi sağlayıcı (görselden-görsele stilize eden bir servis), (b) API anahtarı + Vercel ortam değişkeni, (c) maliyet/hekim (tek seferlik üretim, sonuç önbelleğe alınır — her sayfa açılışında değil), (d) **KVKK**: hekimin yüzü Türkiye dışındaki yeni bir işleyene gider; `app/kvkk/page.tsx`'teki işleyen listesi ("Anthropic, OpenAI") ve `lib/security/pseudonymize.ts` notu güncellenmeli, hekimden ayrı açık rıza alınmalı. Altyapı buna hazır: `doctor_avatars` satırına stilize edilmiş ikinci bir görsel eklemek şema açısından küçük bir iştir. | OPEN (Kaan: sağlayıcı seçimi) |
