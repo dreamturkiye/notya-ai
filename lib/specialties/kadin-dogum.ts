@@ -64,7 +64,8 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
   ],
 
   promptNotlari: [
-    'TR kadın doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.',
+    'Kaynak gösterirken Türk kaynağı önce (SB rehberleri, SUT/SGK, TJOD); ACOG TR hekimin pratikte izlediği klinik öneri. Yasal taban: DÖBYR. Ders kitabı: Williams.',
+    'Kılavuz doküman numarası / yayın yılı hafızadan yazılmaz (Kaynak kilidi — specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar).',
     'Gebelik haftası, TDT ve trimester sunucuda hesaplanır — kendin hesaplama, verilen değeri kullan.',
     'ACOG ile DÖBYR çelişirse iki sütun göster: sb_required vs acog_recommended; birleştirme.',
     'SAT, NT, OGTT, Anti-D, CRL, EDD specialty payload içindedir — çekirdek hasta/vizit tipine yazma.',
