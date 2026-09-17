@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dahiliye — Post-Sprint Audit (DAH-WOW) · Notya</title>
+  <meta name="description" content="NOTYA-DAH-WOW Waves 0–4 post-sprint audit — Strong rubric (brief §2) per domain." />
+  <style>
+    :root {
+      --bg: #060C18;
+      --surface: #0D1526;
+      --surface2: #121C30;
+      --stroke: rgba(255,255,255,0.10);
+      --text: #EDF1F7;
+      --muted: #8FA0B5;
+      --dim: #64748B;
+      --teal: #14B8A6;
+      --teal-soft: rgba(20,184,166,0.14);
+      --blue: #60A5FA;
+      --blue-soft: rgba(96,165,250,0.14);
+      --amber: #F59E0B;
+      --amber-soft: rgba(245,158,11,0.14);
+      --green: #2DD4BF;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .brand a {
+      color: var(--teal);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .brand .tag {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dim);
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .lede {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 720px;
+    }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .pill.success { background: var(--teal-soft); color: var(--green); border-color: rgba(45,212,191,0.25); }
+    .pill.info { background: var(--blue-soft); color: var(--blue); border-color: rgba(96,165,250,0.25); }
+    .pill.warn { background: var(--amber-soft); color: var(--amber); border-color: rgba(245,158,11,0.28); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 800px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      h1 { font-size: 22px; }
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 16px 14px;
+    }
+    .stat .v {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+    .stat .v.success { color: var(--green); }
+    .stat .v.info { color: var(--blue); }
+    .stat .v.warn { color: var(--amber); }
+    .stat .l { font-size: 12px; color: var(--muted); }
+
+    .callout {
+      background: var(--teal-soft);
+      border: 1px solid rgba(45,212,191,0.28);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 28px;
+    }
+    .callout h2 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .callout p { margin: 0; font-size: 14px; color: var(--text); }
+
+    h2.sec {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      text-align: left;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--stroke);
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    tr:last-child td { border-bottom: none; }
+    td.domain { font-weight: 600; color: var(--text); white-space: nowrap; }
+    td.note { color: var(--muted); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 640px) {
+      .cards { grid-template-columns: 1fr; }
+      td.domain { white-space: normal; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+    }
+    .card .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .card .title { font-size: 14px; font-weight: 650; }
+    .card .body { font-size: 12px; color: var(--muted); }
+
+    .where {
+      font-size: 13px;
+      color: var(--muted);
+      max-width: 820px;
+    }
+    .foot {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid var(--stroke);
+      font-size: 12px;
+      color: var(--dim);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      justify-content: space-between;
+    }
+  
+    .pill.fail { background: rgba(248,113,113,0.12); color: #F87171; border-color: rgba(248,113,113,0.3); }
+    td.c { text-align: center; white-space: nowrap; font-weight: 700; }
+    td.c.y { color: var(--green); } td.c.n { color: #F87171; } td.c.na { color: var(--dim); }
+    ol.steps { color: var(--text); font-size: 13px; padding-left: 20px; margin: 0 0 28px; }
+    ol.steps li { margin-bottom: 4px; }
+    .shot { border: 1px dashed rgba(245,158,11,0.4); border-radius: 12px; padding: 16px; color: var(--muted); font-size: 13px; margin-bottom: 28px; background: var(--surface); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya · Internal audit</span>
+      <a href="https://notya-ai.vercel.app/doktor-tools">Araçlar'a dön →</a>
+    </div>
+
+    <h1>Dahiliye — Post-Sprint Audit (DAH-WOW)</h1>
+    <p class="lede">NOTYA-DAH-WOW v2, Waves 0–4 shipped 2026-09-16 (PR #268–#272). Each domain is scored against the Strong rubric in <code>docs/DAH-WOW-BRIEF-v2.md</code> §2. A domain is <b>Strong only when all six criteria hold</b>; nothing is rounded up.</p>
+    <div class="pills">
+      <span class="pill success">65 dahiliye unit tests (npm test green)</span>
+      <span class="pill info">Migrations 039–043</span>
+      <span class="pill warn">Smoke screenshots pending</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v warn">0/22</div><div class="l">Strong (strict rubric)</div></div>
+      <div class="stat"><div class="v success">19/22</div><div class="l">5 of 6 criteria — only smoke screenshot missing</div></div>
+      <div class="stat"><div class="v warn">3/22</div><div class="l">Partial</div></div>
+      <div class="stat"><div class="v info">2·6·5·11</div><div class="l">Pre-wow: Strong · Partial · Thin · Missing</div></div>
+    </div>
+
+    <div class="callout">
+      <h2>Verdict</h2>
+      <p>Every care loop and breadth card in the brief is live: pure engine + tests, migration-backed tables scoped to doctor/patient, a Dahiliye tab ≤2 taps from the patient file, a ref_code on each suggestion, and a clinician lock before anything reaches the note. No domain is marked Strong yet because criterion 5 (one smoke-path screenshot on real qa.test data) could not be captured: the only QA account (qa.test@notya.ai) is a pediatri account, so the Dahiliye tab does not render for it, and the database has no approved lab rows. Creating a dahiliye QA account or switching the shared QA account was left for Kaan to decide (ledger DAH-WOW-SMOKE). Once the screenshots exist, 19 domains flip to Strong with no code changes. SCORE2/KVR stays Partial until the coefficient verification (DAH-SCORE2-VERIFY) and the SCORE2-OP/Diabetes engines land.</p>
+    </div>
+
+    <h2 class="sec">Strong rubric by domain</h2>
+    <p class="where" style="margin:-4px 0 10px">1 engine + tests · 2 table (doctor_id/patient_id, approved labs only) · 3 UI ≤2 taps · 4 Kaynak ref_code · 5 smoke screenshot · 6 hekim lock, no auto-commit</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Domain</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>Rating</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="domain">HT (Uzlaşı 2025)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">V1 kart + ev KB beyaz önlük/maskeli + başlangıç paneli + 14 gün lab takibi + KB ölçüm tekniği kapısı; SGK HT raporu</td></tr>
+          <tr><td class="domain">DM (TEMD 2026)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">V1 kart + DM döngü: FIB-4, SGLT2/GLP-1 kardiyo-renal bayrak, hipoglisemi riski, ayak foto, aşılar; Ramazan</td></tr>
+          <tr><td class="domain">Lipid (TEMD)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">LDL hedefi hekim alanı + KVR kilidi; statin yoğunluk açığı; SGK statin raporu</td></tr>
+          <tr><td class="domain">Tiroid (TEMD 2025)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">TSH kartı + tanı kilidi + nodül TI-RADS tarzı tarif, US izlem görevleri, İİAB = endokrin sevki</td></tr>
+          <tr><td class="domain">Check-up</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Paket defteri (kendi ödemeli, DB kısıtı), kalem = onaylı lab/belge, birleşik rapor + hekim kilidi</td></tr>
+          <tr><td class="domain">İlaç güvenliği + izlem takvimi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">eGFR uyarıları + polifarmasi; 13 izlem kuralı → görevler (her görev ref_code)</td></tr>
+          <tr><td class="domain">Lab / Belgeler (paylaşılan)</td><td class="c n">~</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">~</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Ortak lab motoru (core/lab) bu sprintte yeniden denetlenmedi; dahiliye yalnız onaylı satır okur</td></tr>
+          <tr><td class="domain">Kırmızı bayrak + sevk</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">V1 kapı + EKG acil bulguları aynı kapıya bağlı; anemi/antikoagülan/ön anket alarmları şeritte ⚑</td></tr>
+          <tr><td class="domain">SCORE2 / KVR</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Kural kovası + LDL hedef + statin açığı canlı; SCORE2 sayısal hesap SCORE2_ONAYLI=false; SCORE2-OP / Diabetes ledgered (brief W1.2 spec tamam değil)</td></tr>
+          <tr><td class="domain">CKD (KDIGO)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">G×A ısı haritası, kreatininsiz evre yok, nefro sevk paketi</td></tr>
+          <tr><td class="domain">Anemi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Morfoloji → sonraki test merdiveni; plan hekim kilidi</td></tr>
+          <tr><td class="domain">Obezite / GLP-1</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">TEMD basamakları, bariatrik = sevk, 3. ay %5, gerekçe metni</td></tr>
+          <tr><td class="domain">HF / GDMT</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">EF kategorisi, 4 sütun, güvenlik uyarıları, kardiyoloji tetikleyicileri</td></tr>
+          <tr><td class="domain">Antikoagülan</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">TTR, INR aralığı, DOAK uygunluk (mg yok), HAS-BLED kontrol listesi</td></tr>
+          <tr><td class="domain">Office GI</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">GÖRH, İBS Roma IV, MASLD FIB-4, H. pylori + kontrol testi</td></tr>
+          <tr><td class="domain">KOAH / astım</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Spirometri, GOLD + ABE, astım kontrolü, inhaler sınıfı + teknik</td></tr>
+          <tr><td class="domain">Kanser tarama (KETEM)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Kolon/meme/serviks, jine tarihleri ortak, GGK+ → sevk</td></tr>
+          <tr><td class="domain">Aşı takvimi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Grip, pnömokok dizisi, zona, Td, HBV seroloji, COVID-19 (HYP)</td></tr>
+          <tr><td class="domain">SGK rapor / e-reçete native</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">HT/DM/statin/DOAK ilaç raporu taslağı + e-Nabız/Medula zarfı; canlı Medula gönderimi kapsam dışı</td></tr>
+          <tr><td class="domain">Portal home logs + ön anket</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c na">n/a</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">PIN sonrası anket → ev kayıtları (portal) + Subjektif taslağı; hekim ekler</td></tr>
+          <tr><td class="domain">Kohort paneli</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c na">n/a</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Araçlar › Dahiliye Kohort; kart tabloları + onaylı lab; klinik değersiz hatırlatma</td></tr>
+          <tr><td class="domain">prompts/ system lock</td><td class="c n">✗</td><td class="c na">n/a</td><td class="c na">n/a</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">system.md + tools.ts kilidi; rubrik 1–2 (engine/tablo) bu alan için uygulanamaz</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="sec">Six new game changers</h2>
+    <div class="cards">
+      <div class="card"><div class="top"><span class="title">İlaç izlem takvimi (W1.6)</span><span class="pill success">Shipped</span></div><div class="body">engines/ilacIzlem.ts · İzlem tab · tasks → strip "gecikmiş"</div></div>
+      <div class="card"><div class="top"><span class="title">Erişkin aşı takvimi (W2.6)</span><span class="pill success">Shipped</span></div><div class="body">engines/asi.ts · Tarama/Aşı tab · HYP</div></div>
+      <div class="card"><div class="top"><span class="title">Muayene öncesi hasta anketi (W2.7)</span><span class="pill success">Shipped</span></div><div class="body">Sağlığım › Takip › Ön anket (PIN) → Ön anket tab → Subjektif</div></div>
+      <div class="card"><div class="top"><span class="title">Antikoagülan kartı (W3.2)</span><span class="pill success">Shipped</span></div><div class="body">engines/antikoagulan.ts · TTR · DOAK uygunluk · HAS-BLED listesi</div></div>
+      <div class="card"><div class="top"><span class="title">Ramazan DM/HT rehberi (W3.7)</span><span class="pill success">Shipped</span></div><div class="body">engines/ramazan.ts · TEMD_RAMAZAN · no insulin titration</div></div>
+      <div class="card"><div class="top"><span class="title">Kronik kohort paneli (W4.1)</span><span class="pill success">Shipped</span></div><div class="body">Araçlar › Dahiliye Kohort · 1-tap hatırlatma (Sağlığım mesajı)</div></div>
+    </div>
+
+    <h2 class="sec">Quality nudges (W4.2)</h2>
+    <p class="where" style="margin-bottom:28px">A "Bakım kalitesi" bar above every tab: KB measurement-technique checklist before "kontrolsüz" is shown (the strip shows KB as "dikkat · ölçüm tekniğini doğrula" until confirmed), FRAIL and 3-question falls screen for patients ≥65, and PHQ-2 on chronic cards (all yearly). Results are saved and reach the note only through the clinician's "Nota ekle" button.</p>
+
+    <h2 class="sec">First real patient smoke path (to capture for criterion 5)</h2>
+    <ol class="steps">
+      <li>Hasta dosyası (erişkin, dahiliye/aile/genel hekim) › <b>Dahiliye</b> › Özet: KB gir → şerit KB çipi; hedef dışıysa "Bakım kalitesi › KB ölçüm tekniği".</li>
+      <li>Belgeler › lab PDF yükle › <b>Asistana raporla</b> › düzenle › <b>Onayla</b> (lab_satirlar onayli=true).</li>
+      <li>Dahiliye yenile: şerit HbA1c Δ / LDL / eGFR dolar; DM › Değerlendir; Lipid › Değerlendir.</li>
+      <li>KVR: ASKVH/DM+TOD işaretle → kova + LDL hedefi → <b>Kilitle</b>. KBH: G×A ısı haritası → evre <b>Kilitle</b>.</li>
+      <li>Check-up › paket başlat → kalemler onaylı lab ile yeşil → <b>Birleşik rapor</b> → Hekim onayı → Yazdır/PDF.</li>
+      <li>1-tap bugünkü plan → kopyala → SOAP P.</li>
+    </ol>
+    <div class="shot">Screenshot slots (criterion 5) — pending DAH-WOW-SMOKE: needs a dahiliye-specialty QA login with synthetic, non-PHI data. No screenshots are faked or rendered from fixtures.</div>
+
+    <h2 class="sec">Out of scope (sevk only, never faked)</h2>
+    <p class="where">ICU/sepsis bundles · chemotherapy · dialysis prescription · coronary cath protocol · CGM device stack · bariatric OR pathway (obezite card sends a referral) · FRAX (licensed) · live Medula submission (SGK drafts + e-Nabız envelope only). Next sprint: DAH-WOW-NEXT ledger.</p>
+
+    <div class="foot">
+      <span>Source: docs/DAH-WOW-PROGRESS.md · NOTYA-DAH-WOW v2 · 2026-09-16</span>
+      <span>No patient data · internal product audit</span>
+    </div>
+  </div>
+</body>
+</html>

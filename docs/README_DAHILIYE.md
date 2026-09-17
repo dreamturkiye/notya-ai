@@ -69,3 +69,18 @@ Yeni sekme grubu **Kartlar**: KY · Antikoagülan · Solunum · GI · EKG · Ram
 - **Ramazan**: risk kademesi, oruç önerisi, ilaç zamanlaması (doz/insülin titrasyonu yok), oruç bozma kuralları, hasta yaprağı; sezonluk aç/kapat.
 - **Check-up paket defteri**: yaş/cinsiyete uygun paket (kendi ödemeli, DB kısıtı), kalemler onaylı lab/belge ile otomatik, birleşik rapor (onaylı lab + belge + kart kilitleri), hekim onayına kadar TASLAK, yazdır/PDF.
 Migration 042. Server: `app/api/doktor/dahiliye/_wow3.ts`.
+
+## DAH-WOW Wave 4 — kapanış (2026-09-16)
+- **Kohort paneli** (Araçlar › Dahiliye Kohort Paneli): hekimin dahiliye hastaları; bayraklar HbA1c >9 · KB hedef dışı (ölçüm tekniği doğrulanmışsa) · LDL > kilitli hedef · eGFR <45 · gecikmiş lab/aşı/tarama/ilaç izlem · vizit >6 ay. Seçili hastalara 1-tap hatırlatma Sağlığım mesajı olarak gider (klinik değer yok, 7 günde bir).
+- **Bakım kalitesi çubuğu** (her sekmenin üstünde): KB ölçüm tekniği listesi — doğrulanmadan şerit KB'yi "kontrolsüz" göstermez; ≥65 FRAIL + düşme; kronik kartlarda PHQ-2; yıllık. Sonuç nota yalnız "Nota ekle" ile.
+- **Kaynak**: izlem görevleri, kırmızı bayrak ve ilaç güvenliği uyarıları artık ref_code dipnotu taşır. Tiroid sekmesinde tanı kilidi.
+- **Post-sprint audit**: https://notya-ai.vercel.app/dahiliye-post-sprint-audit.html — katı rubrik: 19/22 alan 5/6 (yalnız smoke ekran görüntüsü eksik, ledger DAH-WOW-SMOKE), 3 Partial.
+
+### İlk gerçek hasta smoke yolu
+1. Hasta dosyası › Dahiliye › Özet: KB gir (şerit KB çipi; hedef dışıysa Bakım kalitesi › KB ölçüm tekniği).
+2. Belgeler › lab yükle › Asistana raporla › Onayla (lab_satirlar onayli=true).
+3. Dahiliye yenile → şerit HbA1c Δ / LDL / eGFR; DM ve Lipid › Değerlendir.
+4. KVR: kova + LDL hedefi → Kilitle. KBH: G×A → evre Kilitle.
+5. Check-up › paket başlat → kalemler onaylı lab ile tamam → Birleşik rapor → Hekim onayı → Yazdır/PDF.
+6. Şerit › 1-tap bugünkü plan → kopyala → SOAP P.
+Migration 043. Server `app/api/doktor/dahiliye/_wow4.ts`, `_kohort.ts`, `kohort/route.ts`; UI `specialties/dahiliye/ui/DahiliyeWow4.tsx`.

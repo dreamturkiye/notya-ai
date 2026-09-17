@@ -9,16 +9,18 @@ import type { EvKbOzet } from '../engines/evKayit';
 import type { SgkRaporDraft } from '@/lib/sgk/raporTipleri';
 import type { Wow2Veri } from '@/app/api/doktor/dahiliye/_wow2';
 import type { Wow3Veri } from '@/app/api/doktor/dahiliye/_wow3';
+import type { Wow4Veri } from '@/app/api/doktor/dahiliye/_wow4';
 
 export type WowVeri = {
   kvr: { sigara: boolean; askvh: boolean; dm_tod: boolean; dm_sure_10y: boolean; statin_yogunluk: string; ezetimib: boolean; sonuc: KvrSonuc; kilitKategori: string | null; kilitHedefLdl: number | null } | null;
   ckd: { uacr_manual: number | null; uacr_tarih: string | null; ras_blokeri: boolean; sglt2: boolean; nsaii: boolean; sonuc: CkdSonuc; egfr: number | null; uacr: number | null; uacrKaynak: string; kilitEvre: string | null } | null;
   ev: { kb: EvKbOzet; glukoz: { n: number; aclikOrt: number | null; hipo: number; yuksek: number; not: string }; kayitlar: { id: string; tip: string; sbp: number | null; dbp: number | null; deger: number | null; olcum_at: string; kaynak: string }[] };
-  izlem: { kod: string; ad: string; due: string; labs: string[]; ilac: string; kaynak: string }[];
+  izlem: { kod: string; ad: string; due: string; labs: string[]; ilac: string; kaynak: string; dipnot?: Dip }[];
   sgkRaporlar?: { id: string; sablon: string; draft: SgkRaporDraft; sut_kontrol: { madde: string; tamam: boolean | null }[] | null; eksikler: string[]; durum: string; kilit_at: string | null; created_at: string }[];
   sgkSablonlar?: { id: string; ad: string }[];
   w2?: Wow2Veri;
   w3?: Wow3Veri;
+  w4?: Wow4Veri;
 };
 type SgkCevap = { raporId: string | null; draft: SgkRaporDraft; sutKontrol: { madde: string; tamam: boolean | null }[]; eksikler: string[]; chaVascSkor: number | null; dipnotlar: Dip[]; hekim: { adSoyad: string; uzmanlik: string; diplomaTescilNo: string; saglikKurumu: string; tesisKodu: string; medulaBagli: boolean }; enabiz: unknown };
 type Dip = { ref: string; not: string };
@@ -142,7 +144,7 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
       <div style={etiket}>İlaç izlem takvimi <span style={kucuk}>· hasta_ilaclar → lab izlem görevleri · kural tabanlı, doz yok</span></div>
       <div style={satir}><button type="button" style={btn} onClick={() => calistir({ adim: 'ilacizlem' }, 'İzlem görevleri açık görevlere eklendi.')}>Görevleri oluştur / yenile</button></div>
       {wow.izlem.length === 0 && <div style={{ ...kucuk, marginTop: 6 }}>Aktif ilaçlar için bekleyen izlem yok (veya son lablar taze).</div>}
-      {wow.izlem.map((g) => <div key={g.kod} style={{ fontSize: 12, color: g.due < new Date().toISOString().slice(0, 10) ? '#F87171' : '#EDF1F7', marginTop: 4 }}>{g.ad} <span style={kucuk}>· {g.ilac} · {g.labs.join('/')} · due {g.due}</span>{kaynak && <div style={kucuk}>{g.kaynak}</div>}</div>)}
+      {wow.izlem.map((g) => <div key={g.kod} style={{ fontSize: 12, color: g.due < new Date().toISOString().slice(0, 10) ? '#F87171' : '#EDF1F7', marginTop: 4 }}>{g.ad} <span style={kucuk}>· {g.ilac} · {g.labs.join('/')} · due {g.due}</span><Kaynak d={g.dipnot ? [g.dipnot] : null} acik={kaynak} refler={refler} /></div>)}
     </div>);
   }
   if (sekme === 'SGK rapor') {

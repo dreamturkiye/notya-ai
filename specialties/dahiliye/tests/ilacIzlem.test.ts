@@ -19,3 +19,8 @@ test('levotiroksin doz değişimi 7 hafta TSH; warfarin INR aylık; sıralama du
   assert.deepEqual(g.map((x) => x.kod), ['izlem_warfarin', 'izlem_levo'])
   assert.equal(g[1].due, '2026-10-20')
 })
+
+test('her izlem görevinde ref_code dipnotu', () => {
+  const g = ilacIzlemGorevleri([{ ad: 'Glifor', etken: 'Metformin', aktif: true }, { ad: 'Lipitor', etken: 'Atorvastatin', aktif: true }], {}, '2026-09-16')
+  assert.deepEqual(g.map((x) => x.dipnot.ref).sort(), ['TEMD_DM2026', 'TEMD_LIPID'])
+})

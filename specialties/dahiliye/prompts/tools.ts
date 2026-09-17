@@ -25,6 +25,8 @@ export const DAHILIYE_TOOLS = [
   { name: 'dahiliye.nodul', description: 'Tiroid nodül TI-RADS tarzı tarif, izlem görevi, endokrin sevki' },
   { name: 'dahiliye.ramazan', description: 'Ramazan DM/HT risk kademesi, ilaç zamanlaması (doz yok), hasta yaprağı' },
   { name: 'dahiliye.checkup', description: 'Check-up paket defteri (kendi ödemeli) + birleşik rapor' },
+  { name: 'dahiliye.kohort', description: 'Kronik kohort paneli: bayraklı hastalar + klinik değer içermeyen hatırlatma mesajı' },
+  { name: 'dahiliye.nudge', description: 'Bakım kalitesi: KB ölçüm tekniği, FRAIL, düşme, PHQ-2 taramaları' },
   { name: 'dahiliye.sevk', description: 'Sevk oluştur (son onaylı panel eklenir)' },
 ] as const
 export type DahiliyeToolName = (typeof DAHILIYE_TOOLS)[number]['name']
