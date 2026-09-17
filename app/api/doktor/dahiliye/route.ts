@@ -171,8 +171,8 @@ export async function POST(req: NextRequest) {
     const draft = { ...(r.draft as Record<string, unknown>), ...(typeof duzen.hekim_degerlendirmesi === 'string' ? { hekim_degerlendirmesi: String(duzen.hekim_degerlendirmesi).slice(0, 3000) } : {}), hastaAdi: '', tcSon4: '' }
     const { error } = await sb.from('dahiliye_sgk_raporlari').update({ durum: 'kilitli', kilit_at: new Date().toISOString(), draft }).eq('id', raporId).eq('doctor_id', user.id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    await gununNotunaEkle(sb, user.id, hasta.id, `SGK ilaç kullanım raporu taslağı hekim tarafından onaylandı (${String((r.draft as { tani?: { icd10?: string } })?.tani?.icd10 || '')}) — Medula'ya e-imza ile girilir.`)
-    return NextResponse.json({ ok: true })
+    const rn = await gununNotunaEkle(sb, user.id, hasta.id, `SGK ilaç kullanım raporu taslağı hekim tarafından onaylandı (${String((r.draft as { tani?: { icd10?: string } })?.tani?.icd10 || '')}) — Medula'ya e-imza ile girilir.`)
+    return NextResponse.json({ ok: true, notId: rn.eklendi ? rn.notId : null }) // NOTYA-MUAYENEYE-DON-01
   }
   if (adim === 'kb') {
     const sbp = num(b.sbp), dbp = num(b.dbp)

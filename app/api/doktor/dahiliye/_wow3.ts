@@ -159,8 +159,8 @@ export async function wow3Post(adim: string, b: Record<string, unknown>, sb: Sb,
     const rapor = typeof b.rapor === 'string' && b.rapor.trim() ? b.rapor.slice(0, 2000) : String(e.rapor)
     const { error } = await sb.from('dahiliye_ekg').update({ durum: 'onayli', rapor }).eq('id', e.id)
     if (error) return hata(error)
-    await gununNotunaEkle(sb, userId, hasta.id, `EKG: ${rapor.replace(' (taslak — hekim onaylar)', '')}`)
-    return ok()
+    const rn = await gununNotunaEkle(sb, userId, hasta.id, `EKG: ${rapor.replace(' (taslak — hekim onaylar)', '')}`)
+    return ok({ notId: rn.eklendi ? rn.notId : null }) // NOTYA-MUAYENEYE-DON-01
   }
   if (adim === 'nodul') {
     const g = (b.girdi || {}) as Record<string, unknown>

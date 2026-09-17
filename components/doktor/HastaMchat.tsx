@@ -8,6 +8,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { MCHAT_R_SORULARI, mchatPuanla, type MchatSonuc } from '@/lib/clinical/mchatR';
+import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
+import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 
 interface GecmisTest { id: string; toplam_puan: number; risk_seviyesi: string; sonuc_metni: string; created_at: string }
 
@@ -22,6 +24,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
   const [sonuc, setSonuc] = useState<MchatSonuc | null>(null);
   const [kaydediyor, setKaydediyor] = useState(false);
   const [notEklendi, setNotEklendi] = useState<string | null>(null);
+  const [eklenenNot, setEklenenNot] = useState<string | null>(null);
   const [gecmis, setGecmis] = useState<GecmisTest[]>([]);
   const [hata, setHata] = useState('');
 
@@ -42,6 +45,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
     MCHAT_R_SORULARI.forEach((s) => { cevaplarNo[s.no] = !!cevaplar[s.no]; });
     setSonuc(mchatPuanla(cevaplarNo));
     setNotEklendi(null);
+    setEklenenNot(null);
   };
 
   const kaydetVeEkle = async (muayeneFormunaEkle: boolean) => {
@@ -58,6 +62,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
       if (!r.ok) throw new Error(d.error || 'Kaydedilemedi');
       if (muayeneFormunaEkle) {
         setNotEklendi(d.notEkleme?.eklendi ? 'Bugünkü muayene formuna eklendi.' : (d.notEkleme?.sebep || 'Nota eklenemedi.'));
+        setEklenenNot(eklenenNotId(d)); // NOTYA-MUAYENEYE-DON-01 — onayın yanındaki dönüş bağlantısı
       }
       yukle();
     } catch (e) {
@@ -116,7 +121,12 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
             <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#EDF1F7', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>Sadece Kaydet</button>
             <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(true)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{kaydediyor ? 'Kaydediliyor…' : 'Bugünkü Muayene Formuna Ekle'}</button>
           </div>
-          {notEklendi && <div style={{ fontSize: 12, color: notEklendi.includes('eklendi') ? '#22C55E' : '#F59E0B', marginTop: 8 }}>{notEklendi}</div>}
+          {notEklendi && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
+              <span style={{ fontSize: 12, color: notEklendi.includes('eklendi') ? '#22C55E' : '#F59E0B' }}>{notEklendi}</span>
+              <MuayeneFormunaDon notId={eklenenNot} />
+            </div>
+          )}
           {hata && <div style={{ fontSize: 12, color: '#F87171', marginTop: 8 }}>{hata}</div>}
         </div>
       )}
