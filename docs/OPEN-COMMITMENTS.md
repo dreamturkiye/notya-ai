@@ -120,18 +120,13 @@ Pap/HPV only for KD); Gebeliğim follows an active pregnancy for any practice (m
 (aile hekimi, endokrin…) get chart-data modules only when the data exists. Assumption (recorded): unknown
 `users.specialty` = baseline branch, not pediatri. Tests: `lib/portal/moduller.test.ts` (10, in `npm test`).
 
-### Göz Hastalıkları — next full chapter (queued 2026-09-17)
+### Göz Hastalıkları — chapter (SHIPPED 2026-09-17; was queued)
 
-No `specialties/goz-*` yet; registry = baseline only. Catalog/intake/SOAP stub + VA/GİB measurement
-keys exist. Golden refs: TOD + SB DR/glokom + TOD birimler + SGK GİL/anti-VEGF first; Kanski/
-Vaughan/AAO BCSC secondary (çakışmada TOD/SB). Method = KD/dahiliye depth: pre-sprint audit →
-engines/UI/prompts lock → specialty portal “Gözlerim” → ship. Pain focus: 8-hour poliklinik
-speed (bilateral VA/GİB, glokom/DR/katarakt loops, enjeksiyon takvim, SGK rapor).
-
-**Pre-sprint audit shipped 2026-09-17 (before Claude chapter build):**
-`public/goz-presprint-audit.html` → https://notya-ai.vercel.app/goz-presprint-audit.html
-Verdict: chapter Missing; overall ~8% vs wow bar; top gaps = VA/GİB strip, glokom, DR loop, Gözlerim.
-Post-sprint twin: `public/goz-post-sprint-audit.html` → https://notya-ai.vercel.app/goz-post-sprint-audit.html (11/18 Strong, ~77% vs wow bar).
+**Pre-sprint:** `public/goz-presprint-audit.html` → ~8% wow bar (chapter Missing).
+**Post-sprint:** `public/goz-post-sprint-audit.html` → 11/18 Strong, ~77% wow bar (#292/#293).
+**Remaining-gaps re-audit (independent, 2026-09-17):** `public/goz-remaining-gaps-audit.html`
+→ https://notya-ai.vercel.app/goz-remaining-gaps-audit.html — Claude Strong ratings verified
+(`test:goz` 61/61); 7 Partial domains + chart-tab chrome leak + MD beta still open.
 
 **GOZ-CHAPTER — SHIPPED 2026-09-17 (#292, Claude).** `specialties/goz-hastaliklari/**` + `lib/specialties/goz-hastaliklari.ts`
 (VA/GİB first-class olcumler, Gözlerim module Strong) + migration `048_goz_chapter.sql` (goz_* tables, oct/fundus/on_segment
@@ -544,6 +539,188 @@ oluştur → iptal (üstü çizili) → saati değiştir + Güncelle (hâlâ ipt
 (Planlandı). Regresyon testi `lib/randevu/randevuDurum.test.ts` (12 test) `npm test`'e eklendi;
 596/596 yeşil, `npx tsc --noEmit` temiz. Mobil (standing rule): modalın yeni iptal bloğu 360px ve
 390px'te gerçek CSS ile render edildi — yatay taşma yok, metin sarıyor, düğmeler 123×36.
+
+---
+
+## CLOSED — onaydan muayene formuna dönüş yolu yoktu (NOTYA-MUAYENEYE-DON-01, 2026-09-17)
+
+**Şikayet (Dr. Gökhan, canlı).** Hasta dosyasında M-CHAT-R/F'i uyguladı, puanladı,
+"Bugünkü Muayene Formuna Ekle"ye bastı. Her şey doğru çalıştı: yeşil onay paneli sonucu
+("Otizm özelliği yok", puan, risk) ve "Bugünkü muayene formuna eklendi." mesajını gösterdi.
+Tek eksik: oradan sonucu yazdığı muayene formuna dönecek bir bağlantı yoktu — formu menüden
+elle bulmak zorunda kalıyordu.
+
+**Paylaşılan mı, kopyalanmış mı (tarama sonucu).** İkisi birden — ve ayrım tam da düzeltmenin
+şeklini belirledi:
+- **Sunucu tarafı PAYLAŞILMIŞ.** `lib/doktor/gununNotunaEkle.ts` tek bir yardımcı ve ~10 rota
+  onu çağırıyor (mchat, gelişim-taraması, gebelik, jinekoloji, dahiliye, göz, dermatoloji).
+  Önemlisi: zaten hangi nota yazdığını (`notId`) döndürüyordu — veri hep oradaydı, kimse
+  arayüze taşımıyordu.
+- **Arayüz tarafı KOPYALANMIŞ (forked).** Ortak bir "eklendi" onay bileşeni YOKTU. Her tüketici
+  onayı kendi yerel string state'inde tutuyordu (`setNotEklendi` / `setMesaj`) ve kendi
+  `<div>`'inde çiziyordu; `calistir(body, ok)` yardımcısı 5 branş kabuğunda birbirinin kopyası.
+  Yani "tek yerde düzelt, herkes kazansın" diye bir yer mevcut değildi — önce yaratmak gerekti.
+
+**Ne yapıldı.**
+- Yeni **`lib/doktor/muayeneFormuYolu.ts`** (saf, test edilebilir): `muayeneFormuYolu(notId)`
+  (hekimin düzenleyip yeniden onaylayabildiği `/dashboard/doktor/notlar/[id]` sayfası),
+  `MUAYENE_FORMUNA_DON` etiketi tek kaynakta, ve `eklenenNotId(yanit)` — iki farklı API yanıt
+  şeklini (`{notEkleme:{eklendi,notId}}` ve düz `{ok,notId}`) tek kurala indiriyor.
+- Yeni **`components/doktor/MuayeneFormunaDon.tsx`** — eksik olan ortak bileşen. Kasıtlı olarak
+  ikincil: düz bağlantı, dolgu yok, 12px, uygulamadaki mevcut "Notu aç →" deseniyle aynı teal
+  (#2DD4BF) — birincil yeşil onayla yarışmıyor. `notId` yoksa hiç çizilmiyor, yani not
+  gerçekten eklenemediyse hekim ölü bir bağlantıya tıklayamıyor.
+- Bağlanan tüketiciler (her biri kendi kopyalanmış onay kutusunda): `HastaMchat` (şikayetin
+  kendisi), `HastaGelisimTaramasi`, `HastaGebelik` (izlem / lohusa / genetik tarama),
+  `BugunkuJineMuayene`, `DahiliyeHome` ve `GozHome` kabukları.
+- `notId`'yi zaten atan rotalara geri koyduk: göz (`olcum_nota`, `intake_nota`), dahiliye
+  (`notaekle`, `kart_nota`, `polifarmasi_nota`, `anketsoap`, `htpanel`, `ekgonay`, `sgkkilit`).
+- Bayat bağlantı koruması: mesaj başına bir bağlantı. `GozHome`/`HastaGebelik`'te `setMesaj`
+  sarmalandı, yeni her mesaj bağlantıyı düşürüyor; yalnız gerçekten nota yazan akışlar geri
+  koyuyor. Böylece alakasız bir onayın altında bir önceki notun bağlantısı asılı kalmıyor.
+
+**Etiket.** "Muayene Formuna Dön →" — Dr. Gökhan'ın istediği sözcükler. Uygulamadaki mevcut
+yakın kural "Notu aç →" (belge/lab analizi onayları); görsel dil ondan alındı ama metin
+korunmadı: oradaki eylem "başka bir yerden notu aç", buradaki "az önce çalıştığın forma dön".
+
+**Doğrulama.** `scripts/qa-muayene-formuna-don.mts` GERÇEK `POST /api/doktor/mchat` handler'ını
+ve GERÇEK `wow4Post` (dahiliye "Nota ekle") fonksiyonunu sahte oturum + bellek içi tablolarla
+çalıştırıyor (SENTETİK QA doktoru/hastası — gerçek hesaba, gerçek hastaya, production
+veritabanına dokunmuyor, PHI yok). Dr. Gökhan'ın senaryosu birebir: 20 soru normal yanıtlandı →
+0/20 "Otizm özelliği yok" → forma eklendi → bağlantı çıkıyor ve **tam olarak** satırın yazıldığı
+nota gidiyor (genel not listesine değil), önceki not içeriği korunuyor. İkinci tüketici (dahiliye
+taraması, ayrı/kopyalanmış onay arayüzü) aynı şekilde doğrulandı. Negatif durum: bugün muayene
+yoksa onay da bağlantı da çıkmıyor. Regresyon testi `lib/doktor/muayeneFormuYolu.test.ts`
+(8 test) `npm test`'e eklendi; **607/607 yeşil, `tsc --noEmit` temiz**.
+
+**Mobil (standing rule).** Yeni onay satırı gerçek inline stilleriyle 360px ve 390px'te render
+edildi: yatay taşma yok (ölçüldü, taşan öğe listesi boş), bağlantı mesajın altına sarıyor,
+dokunma hedefi 149×36 (12px metin korunarak `minHeight: 36` ile büyütüldü — repo'nun 36px
+dokunma hedefi kuralı).
+
+**Açık kalan (kapsam dışı bırakıldı, kasıtlı).** Göz rotasının `olcum_nota`/`intake_nota`
+adımları not eklenemediğinde HTTP 200 + `{ok:false}` dönüyor; kabuktaki `calistir` yalnız HTTP
+durumuna baktığı için bu halde yine de başarı mesajı yazıyor. Bu ÖNCEDEN VAR OLAN bir etiketleme
+hatası, bu iş onu yaratmadı ve büyütmedi (bağlantı o durumda doğru şekilde çıkmıyor). Ayrı bir
+düzeltme hak ediyor.
+
+**Branş kapsamı (cross-specialty-parity).** Bu dal açıldığında
+`.cursor/skills/cross-specialty-parity/SKILL.md` henüz yoktu; #296 ile main'e indi ve merge
+sırasında alındı, sözleşme geriye dönük uygulandı. Kapsam bloğu PR gövdesinde.
+## CROSS-SPECIALTY-PARITY — standing rule + retroactive sweep of 2026-09-17 (Kaan)
+
+**Standing rule, now a skill.** `.cursor/skills/cross-specialty-parity/SKILL.md` (new; sits beside
+`specialty-audit-report` and `specialty-hasta-portali`, neither touched). It says: a fix is reported
+from one branş's screen but is not finished until you can name which of Notya's 30 registry branches
+(`lib/doktor/specialties.ts`) it reaches and why. Before closing any change to the shared spine
+(SOAP, İnceleme/onay, reçete/Medula, Belge Kasası, randevu/takvim, epikriz, Asistan sohbet, Sağlığım
+kabuğu, intake, lab çıkarım, doz/kaynak kilidi), name the shared files you touched; for the ~26
+baseline-only branches a properly-scoped shared fix covers them **by construction** with no
+per-branş verification — the single exception being behavior gated by specialty (`users.specialty`,
+`SpecialtyKey`, `specialtyProfile`, persona id, eligibility rule), which must be walked; and for each
+chapter that owns a `specialties/<slug>/` folder, check individually whether it forked the thing you
+fixed (its own `prompts/system.md` wording, its own copy of a UI component or guard) and would
+therefore miss it. The chapter list is **read live** (`ls specialties/` + the `CHAPTERS` map in
+`lib/specialties/registry.ts`), never hardcoded, because it grows every sprint. Every shared-spine PR
+must carry a **"Branş kapsamı"** block naming what was checked; "fixed X" alone is not enough, and
+"no fork found, nothing to do" is an expected, valid result — inventing chapter changes to have
+something to show is listed as an anti-pattern.
+
+**Retroactive sweep — today's shared-spine fixes, what was checked.** Commits reviewed by diff (not
+title): F1 doz kilidi (#280), F2 varsayılan persona (#281), F3 ham JSON yanıt (#282), F4 iç alan /
+uydurma form adı (#283), KD-KAYNAK-KILIDI + MD-TABLO (#286), PPH doz-kilidi FP (07ef910),
+MOBILE-REVIEW 1–3 (#288/#289/#290), DAH-LAB-BELGELER ortak lab motoru (#276),
+RANDEVU-IPTAL-REAKTIVASYON (#294), KASA-BELGE-01 (#295). Chapters checked individually: dahiliye,
+dermatoloji, kadın-doğum (göz-hastaliklari excluded — another agent was mid-build on it).
+
+*Correctly shared, no fork anywhere, nothing to do:* F3 `lib/asistan/yanitCoz.ts` and F4
+`lib/doktor/klinikMetin.ts` run ungated on both the chat and SOAP paths. F2 `varsayilanPersonaId`
+resolves through `findSpecialistForSpecialty` over the whole 30-specialist catalog. The MD-TABLO
+renderer (`lib/asistan/markdownTablo.ts` + `components/asistan/HafifMarkdown.tsx`) has no forked copy
+— every consumer (İnceleme, epikriz, SGK rapor, konsült, sohbet) imports the shared one. Kasa
+(`lib/vault/validation.ts`, `components/doktor/DocumentViewer.tsx`), randevu (`lib/randevu/randevuDurum.ts`,
+`app/api/doktor/randevular/`) and the lab engine (`core/lab/cikarim.ts`) likewise have no chapter
+copy. The MOBILE-REVIEW work split cleanly: `.notya-grid-yigin` and the portal pages are shared, the
+rest were dahiliye-only components with no derm/KD counterpart to mirror.
+
+*Found and fixed — the dose-invention guard reached 4 branches out of 30.* F1 built the guard in
+shared files (`lib/doktor/dozKilidi.ts`, `lib/doktor/soapUret.ts`, `app/api/asistan/chat/route.ts`)
+but gated it behind `dozKilitliBrans` — dahiliye, kadın doğum, dermatoloji, göz. The other ~26
+branches ran the same SOAP and chat code with **no backstop at all**: a kardiyoloji note carrying
+"metoprolol 50 mg" the hekim never said, or a pediatri note with an invented mg/kg, shipped as
+written. Split into two strengths rather than widening the gate, because the guard does two different
+jobs: `soapDozKilidi` (unchanged, chapters only) is the full lock and also strips `doz`/`kullanim`
+from `receteOnerisi` — that is a **product policy** their prompts promise, and forcing it on pediatri
+would delete the kg/doz reçete önerisi that NOTYA-SOAP-02 §3 designs for. New `soapDozUydurmaKilidi`
+applies the **safety backstop only** (invented dose → `[doz hekim tarafından belirlenir]` + a
+"⚠ Doz kontrolü (hekim onayı)" line in aiDegerlendirme) and now runs for every other branch; a dose
+the hekim actually dictated is still passed through untouched, and receteOnerisi doses survive. The
+chat cleaner was hoisted out of the `dozKilitliBrans` block so it runs for all branches, with the
+chapters additionally told in-bubble why a number disappeared (matching how KD's kaynak kilidi
+already behaves there).
+
+*Found and fixed — dahiliye's own prompt had drifted behind KD/derm.* F1 wrote a full
+`## Doz kilidi (kırılmaz)` block into `specialties/{kadin-dogum,dermatoloji}/prompts/system.md` but
+gave dahiliye only the code refactor, leaving its terser rule #2 without the three clauses that stop
+the model writing a number in the first place: don't invent from memory/guideline, pass a dictated
+dose through unchanged instead of "correcting" it, and give no number when asked for a dose in chat.
+Added those to dahiliye's `Kırılmaz kurallar` #2 (so they reach the compact voice lock too) plus a
+full `## Doz kilidi (kırılmaz)` section with dahiliye's own drug scope (antihipertansif, statin, OAD,
+SGLT2i/GLP-1, insülin titrasyonu, antikoagülan, levotiroksin, allopürinol/kolşisin, D vit/B12,
+bifosfonat, demir, PPİ, antibiyotik), matching the KD/derm pattern. Asserted in
+`specialties/dahiliye/tests/promptsLock.test.ts`.
+
+*Checked, correctly NOT generalized.* The citation lock (`lib/doktor/kaynakKilidi.ts`) stays KD-only
+by construction: it needs a per-chapter verified-source list to compare against
+(`specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar.ts`), and running it without one would
+strip every citation as unverified. Extending it is a **chapter build** (each chapter authors its own
+verified list), not a missing parity fix — noted here so the next chapter sprint picks it up rather
+than assuming the guard already covers them.
+
+Ship bar: `npx tsc --noEmit` clean, `npm test` 605/605 (was 600 — 5 new parity tests).
+
+## HASTA-FORMU-SIGORTA-OPSIYONEL — Dr. Gökhan, canlı, 2026-09-17
+
+**Nasıl geldi.** Dr. Gökhan ekran görüntüsüyle bildirdi: Hasta Bilgi Formu'nun 4. bölümünde
+(**Sağlık Güvencesi**) üç alan kırmızı yıldızla zorunlu işaretliydi — **Özel Sigorta Şirketi**,
+**Poliçe / Üyelik Numarası**, **Kurum / İşveren Adı** — oysa üçünün de ipucu metni zaten
+`Yoksa "Yok" yazın` diyordu. Hastaların çoğunun özel sigortası yok; alan zorunlu kaldığı için
+hasta formu gönderebilmek adına kutuya **"Yok" yazmak zorunda** kalıyordu. Talep: alanlar kalsın,
+ipucu kalsın, **zorunluluk kalksın**.
+
+**Kök sebep — şema ile ipucu metni ayrışmıştı.** `lib/intake/coreAlanlar.ts` alan başına tek bir
+`zorunlu` bayrağı tutuyor; hem formun kırmızı yıldızı, hem istemci doğrulaması, hem sunucu
+doğrulaması bu bayraktan okuyor. Üç alanda bayrak `true` bırakılmış ama placeholder "yoksa boş
+geçebilirsin" diyordu. Tek satırlık bir çelişki, ama hastaya "Yok" yazdırdığı için veriyi de
+kirletiyordu: "Yok" dizesi ile boş alan aynı bilgiyi taşır, ikincisi dürüst olanı.
+
+**Ne yapıldı.**
+
+| Tarih | Kalem | Durum |
+|---|---|---|
+| 2026-09-17 | **Üç sigorta alanından `zorunlu: true` kaldırıldı** (`lib/intake/coreAlanlar.ts`). Alanlar da ipucu metinleri de aynen duruyor — yalnız kırmızı yıldız ve doğrulama gitti. `sigortaTuru` (Sağlık Güvenceniz: SGK / özel / ücretli) **zorunlu kaldı**: onda "Yok" ipucu yok ve hangi güvenceyle geldiği klinik/mali olarak gerçekten gerekli. | SHIPPED |
+| 2026-09-17 | **Aynı desen dört yerde daha vardı, hepsi düzeltildi.** Dr. Gökhan üçünü bildirdi ama `yoksa "Yok" yazın` ipucu taşıyan başka zorunlu alanlar da vardı: çekirdekte **Geçirdiğiniz Ameliyatlar** ve **İlaç Adı ve Dozu**, pediatri uyarlamasında **Özgeçmiş — Hastalık / Ameliyat** ve **Kullanılan İlaç / Takviyeler**. Kural: ipucu metni "yoksa boş bırakabilirsin" diyorsa alan zorunlu olamaz — nerede geçerse geçsin. Toplam **7 alan** isteğe bağlı oldu. | SHIPPED |
+| 2026-09-17 | **Zorunluluk/desen kuralı tek gövdeye indirildi** (`lib/intake/dogrula.ts`). Kural aynı anda iki yerde yaşıyordu: `app/intake/[token]/page.tsx` içindeki gönder döngüsü ve `app/api/intake/[token]/route.ts` içindeki sunucu döngüsü. İkisi de artık `intakeIlkHata()` çağırıyor, yalnız hastaya gösterilen metni kendileri biçimlendiriyor (sunucu mesajları birebir korundu). İstemcideki elle yazılmış TC kontrolü de kalktı — şemadaki `desen`/`desenHata` zaten aynı kuralı, aynı Türkçe mesajla taşıyor. Ayrıca boş + isteğe bağlı bir alan artık desen kontrolüne takılmıyor. **Birleştirirken çıkan yan bulgu:** istemcinin boşluk testi `!yanitlar[id]` idi ve `[]` (hiç seçim yapılmamış checkbox-grup) JavaScript'te truthy olduğu için istemci bunu DOLU sayıyordu; sunucu ise boş sayıp 400 dönüyordu. Yani zorunlu bir checkbox grubunu hiç işaretlemeyen hasta, istemciden geçip sunucudan geri çeviriliyordu. Ortak gövdede `[]` artık iki tarafta da boş. | SHIPPED |
+| 2026-09-17 | **Downstream: bağımlılık yok, tek pürüz düzeltildi.** `sigortaSirketi` hiçbir yerde okunmuyor; `policeNo`/`kurumAdi` yalnızca `lib/doktor/hastaDosyaDerleyici.ts`'in **gizli** listesinde (AI'ya hiç gönderilmiyorlar) ve derleyici zaten `v == null \|\| v === ''` olanı atlıyor. `hastaKaydinaAktar.ts` boş değer yazmıyor (`yaz()` boşu eler, `kronikHastaliklar` "yok"u süzer), `kullanilanIlaclar` boşken `kullaniyorMu='Hayır'` yedeği devrede. SGK rapor şablonlarındaki `kurumAdi` **başka bir alan** (doktorun Medula tesis bilgisi), intake formuyla ilgisi yok. Tek gerçek pürüz: doktorun inceleme görünümünde (`components/doktor/HastaIntake.tsx`) boş dize satırı bomboş bırakıyordu — `degerGoster()` yalnız `null/undefined` için `—` basıyordu. Boş dize ve boş dizi de artık `—` basıyor. | SHIPPED |
+
+**Doğrulama.** `scripts/qa-intake-sigorta-opsiyonel.mts` **gerçek** `POST /api/intake/[token]`
+route handler'ını, PostgREST'i fetch seviyesinde taklit ederek çalıştırıyor — **sentetik** hasta,
+sentetik token, sentetik şifreleme anahtarı; production veritabanına, Dr. Gökhan'ın hesabına veya
+gerçek bir hastaya dokunmuyor, PHI yok. Üç sigorta alanı (ve "Yok" ipuçlu diğerleri) **boş**
+gönderildi: **HTTP 200**, `durum='dolduruldu'`, kayıtta değerler `["","",""]`, hasta kaydına
+aktarım boşlarla sorunsuz çalıştı. Karşı kontrol: `ad` boşken hâlâ **400** — zorunlu alan koruması
+duruyor. Regresyon testi `lib/intake/coreAlanlar.test.ts` (4 test) `npm test`'e eklendi; içinde
+şemayı tarayıp `yoksa "Yok" yazın` ipuçlu **hiçbir** alanın zorunlu olmadığını doğrulayan bir test
+var, yani ipucu ile bayrak bir daha ayrışamaz. Testin gerilemeyi gerçekten yakaladığı, bayrak
+geçici olarak geri konularak ölçüldü (3 test kırmızıya döndü). main ile birleştirildikten sonra **616/616 yeşil,
+`npx tsc --noEmit` temiz.**
+
+**Mobil kontrol (standing rule) — YAPILMADI, gerekçesi:** bu hotfix worktree'sinde Supabase
+kimlik bilgisi yok, dolayısıyla geçerli bir intake token'ı üretilemiyor ve form sayfası canlı
+render edilemiyor (token'sız sayfa yalnız hata dalını gösterir). Görsel delta yalnızca **karakter
+çıkarıyor**: etiketten satır içi ` *` kalkıyor, doktor görünümünde boş hücre `—` oluyor. Yeni
+düğme/panel/rozet/sayfa yok, hiçbir kutu genişlemiyor. Yine de gerçek cihazda göz gezdirilmesi
+gerekirse Kaan'ın bir sonraki oturumunda 15 saniyelik bir kontrol yeter.
 
 ## RANDEVU-HASTA-ARAMA-TR — canlı hata, Dr. Gökhan (2026-09-17)
 

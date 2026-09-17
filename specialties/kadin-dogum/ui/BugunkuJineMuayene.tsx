@@ -10,6 +10,8 @@ import { kutu, giris, etiketS, btn } from './clinic-styles'
 import { TrTarihAlan } from './TrTarihAlan'
 import KolposkopiGaleri from './KolposkopiGaleri'
 import StickyJineStrip from './StickyJineStrip'
+import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon'
+import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu'
 import {
   taslakBugunkuVizit,
   jineSticky,
@@ -64,6 +66,7 @@ export function BugunkuJineMuayene({
   const [v, setV] = useState<Veri | null>(null)
   const [soap, setSoap] = useState<JineOfisSoap | null>(null)
   const [mesaj, setMesaj] = useState('')
+  const [eklenenNot, setEklenenNot] = useState<string | null>(null) // NOTYA-MUAYENEYE-DON-01
   const [hata, setHata] = useState('')
   const [planYazi, setPlanYazi] = useState('')
   const [randevuSaat, setRandevuSaat] = useState('10:00')
@@ -97,7 +100,7 @@ export function BugunkuJineMuayene({
 
   const kaydet = async (muayeneFormunaEkle: boolean) => {
     if (!soap) return
-    setMesaj(''); setHata('')
+    setMesaj(''); setHata(''); setEklenenNot(null)
     const plan = planYazi.split(/\n+/).map((s) => s.replace(/^[-•]\s*/, '').trim()).filter(Boolean)
     const govde = { ...soap, degerlendirme: { ...soap.degerlendirme, plan } }
     try {
@@ -112,6 +115,7 @@ export function BugunkuJineMuayene({
       setMesaj(muayeneFormunaEkle
         ? (j.notEkleme?.eklendi ? 'Muayene kaydedildi ve bugünkü forma eklendi.' : `Muayene kaydedildi. ${j.notEkleme?.sebep || ''}`)
         : 'Muayene kaydedildi.')
+      setEklenenNot(muayeneFormunaEkle ? eklenenNotId(j) : null)
       setSoap(null)
       await yukle()
     } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi') }
@@ -139,7 +143,7 @@ export function BugunkuJineMuayene({
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error(j.error || 'Randevu oluşturulamadı')
-      setMesaj('Kontrol randevusu oluşturuldu.')
+      setMesaj('Kontrol randevusu oluşturuldu.'); setEklenenNot(null)
     } catch (e) { setHata(e instanceof Error ? e.message : 'Randevu oluşturulamadı') }
   }
 
@@ -184,7 +188,12 @@ export function BugunkuJineMuayene({
           <button type="button" style={btn()} onClick={() => setFormAcik((x) => !x)}>{formAcik ? 'Küçült' : 'Aç'}</button>
         </div>
         {hata && <div style={{ color: '#F87171', fontSize: 13, marginTop: 8 }}>{hata}</div>}
-        {mesaj && <div style={{ color: '#22C55E', fontSize: 13, marginTop: 8 }}>{mesaj}</div>}
+        {mesaj && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
+            <span style={{ color: '#22C55E', fontSize: 13 }}>{mesaj}</span>
+            <MuayeneFormunaDon notId={eklenenNot} />
+          </div>
+        )}
 
         {formAcik && (
           <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>

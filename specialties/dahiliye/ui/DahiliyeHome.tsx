@@ -8,6 +8,8 @@ import DahiliyeWow3 from './DahiliyeWow3';
 import { NudgeBar } from './DahiliyeWow4';
 import DahiliyeWow5 from './DahiliyeWow5';
 import { gosterimSayi, type VizitSeridi } from '../engines/serit';
+import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
+import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 
 type L = { kanonik_deger: number | null; numune_tarihi: string | null } | null;
 type Dip = { ref: string; not: string };
@@ -40,12 +42,15 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
   const [sekme, setSekme] = useState<string>('Özet');
   const [kaynak, setKaynak] = useState(false);
   const [mesaj, setMesaj] = useState('');
+  const [eklenenNot, setEklenenNot] = useState<string | null>(null); // NOTYA-MUAYENEYE-DON-01
   const [f, setF] = useState<Record<string, unknown>>({});
   const s = (k: string) => (f[k] as string) ?? ''; const b = (k: string) => !!f[k]; const set = (k: string, x: unknown) => setF((p) => ({ ...p, [k]: x }));
   const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await fetch('/api/doktor/dahiliye', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
   const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await fetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
-  const calistir = async (body: Record<string, unknown>, ok?: string): Promise<Record<string, unknown> | null> => { setMesaj(''); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
+  // NOTYA-MUAYENEYE-DON-01: nota yazan adımlar yanıtta notId döndürüyor; her çağrıda sıfırlanır,
+  // yalnız gerçekten nota eklenmişse "Muayene Formuna Dön" bağlantısı çıkar.
+  const calistir = async (body: Record<string, unknown>, ok?: string): Promise<Record<string, unknown> | null> => { setMesaj(''); setEklenenNot(null); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); setEklenenNot(eklenenNotId(j)); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
   if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Dahiliye yükleniyor…</div>;
   const c = v.chips; const fmt = (l: L, u = '') => (l?.kanonik_deger != null ? `${gosterimSayi(l.kanonik_deger)}${u}` : '—');
   const sonHt = v.ht[0] || null;
@@ -60,7 +65,12 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
         <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#2DD4BF' : '#64748B', marginLeft: 'auto' }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
       </div>
       {GRUPLAR.map((g) => <div key={g.ad} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6, alignItems: 'center' }}><span style={{ ...kucuk, width: 62 }}>{g.ad}</span>{g.sekmeler.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999 }}>{x}{x === 'Ön anket' && v.wow?.w2?.anket && !v.wow.w2.anket.okundu ? ' •' : ''}</button>)}</div>)}
-      {mesaj && <div style={{ fontSize: 12, color: /amadı|zorunlu|Kırmızı|geçersiz|Hata/.test(mesaj) ? '#F87171' : '#2DD4BF', marginBottom: 8 }}>{mesaj}</div>}
+      {mesaj && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+          <span style={{ fontSize: 12, color: /amadı|zorunlu|Kırmızı|geçersiz|Hata/.test(mesaj) ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>
+          <MuayeneFormunaDon notId={eklenenNot} />
+        </div>
+      )}
 
       {sekme === 'Özet' && (<div>
         <div style={etiket}>Bugünkü KB gir <span style={kucuk}>· her vizit zorunlu · Uzlaşı 2025 evre taslak, hekim kilitler</span></div>

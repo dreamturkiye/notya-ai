@@ -11,6 +11,7 @@ import { createHash } from 'crypto'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { encrypt, decrypt } from '@/lib/security/encryption'
 import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar'
+import { intakeSunucuHataMetni } from '@/lib/intake/dogrula'
 import { BRANS_SORULARI, BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
@@ -92,20 +93,10 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   // Kaan (2026-09-13): istemci dogrulamasi atlanabilir (dogrudan API cagrisi) - zorunlu ve desen
   // kurallari sunucuda da uygulanir. TC kimlik: tam 11 hane.
+  // NOTYA-INTAKE-08: kural govdesi lib/intake/dogrula.ts'e tasindi - testler ayni kodu kosuyor.
   {
-    const bolumler = coreBolumlerIcin(form.brans)
-    for (const bolum of bolumler) {
-      for (const alan of bolum.alanlar) {
-        if (alan.tur === 'bolum-basligi') continue
-        const deger = yanitlar[alan.id]
-        if (alan.zorunlu && (deger === undefined || deger === null || String(deger).trim() === '')) {
-          return NextResponse.json({ error: `"${alan.etiket}" alani zorunludur.` }, { status: 400 })
-        }
-        if (alan.desen && deger !== undefined && deger !== null && String(deger).trim() !== '' && !new RegExp(alan.desen).test(String(deger))) {
-          return NextResponse.json({ error: alan.desenHata || `"${alan.etiket}" alani gecersiz.` }, { status: 400 })
-        }
-      }
-    }
+    const hata = intakeSunucuHataMetni(coreBolumlerIcin(form.brans), yanitlar)
+    if (hata) return NextResponse.json({ error: hata }, { status: 400 })
   }
 
   const { error } = await supabase

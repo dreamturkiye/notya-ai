@@ -127,7 +127,7 @@ export async function wow5Post(adim: string, b: Record<string, unknown>, sb: Sb,
     if (!satirlar.length) return NextResponse.json({ error: 'Önce öneriler için hekim kararı verin (kabul / gerekçeli override)' }, { status: 409 })
     const metin = `Yaşlı polifarmasi gözden geçirme (≥65 yaş, STOPP/START v3 esinli kural taslağı; hekim kararları): ${satirlar.map(({ o, k }) => `${o.baslik} → ${k!.karar === 'kabul' ? 'hekim kabul etti' : `hekim uygulamadı (gerekçe: ${k!.gerekce || '—'})`}`).join('; ')}. İlaç değişikliği yalnız hekim reçetesiyle; ilaç listesi otomatik değiştirilmedi.`
     const r = await gununNotunaEkle(sb, userId, hasta.id, metin)
-    return r.eklendi ? NextResponse.json({ ok: true }) : NextResponse.json({ error: `Nota eklenemedi: ${r.sebep || ''}` }, { status: 409 })
+    return r.eklendi ? NextResponse.json({ ok: true, notId: r.notId }) : NextResponse.json({ error: `Nota eklenemedi: ${r.sebep || ''}` }, { status: 409 })
   }
   if (adim === 'hedefkart') {
     // Hekim onayı = bu adım: kart anlık görüntüsü kaydedilir + kilit (hedef/kart); yazdırma HTML'i ancak bundan sonra döner.
@@ -191,7 +191,7 @@ export async function wow5Post(adim: string, b: Record<string, unknown>, sb: Sb,
     const { data: k } = await sb.from('dahiliye_kart_kilitleri').select('deger, created_at').eq('patient_id', hasta.id).eq('kart', kart).eq('alan', 'plan').order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (!k?.deger) return NextResponse.json({ error: 'Önce planı kilitleyin (hekim)' }, { status: 409 })
     const r = await gununNotunaEkle(sb, userId, hasta.id, `${KART_NOTA[kart]} (hekim kilitli): ${String(k.deger).slice(0, 1500)}`)
-    return r.eklendi ? NextResponse.json({ ok: true }) : NextResponse.json({ error: `Nota eklenemedi: ${r.sebep || ''}` }, { status: 409 })
+    return r.eklendi ? NextResponse.json({ ok: true, notId: r.notId }) : NextResponse.json({ error: `Nota eklenemedi: ${r.sebep || ''}` }, { status: 409 })
   }
   return null
 }

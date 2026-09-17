@@ -126,8 +126,8 @@ export async function wow2Post(adim: string, b: Record<string, unknown>, sb: Sb,
     const kalemler = HT_BASLANGIC_PANELI.filter((k) => !secili || secili.includes(k.ad))
     const { data, error } = await sb.from('dahiliye_lab_istemleri').insert({ patient_id: hasta.id, doctor_id: userId, panel: 'ht_baslangic', kalemler, istem_tarihi: T }).select('id').maybeSingle()
     if (error) return hata(error)
-    await gununNotunaEkle(sb, userId, hasta.id, `HT başlangıç paneli istendi: ${kalemler.map((k) => k.ad).join(', ')} (Uzlaşı 2025). Sonuç 14 gün içinde gelmezse takip görevi açılır.`)
-    return ok({ istemId: data?.id })
+    const rn = await gununNotunaEkle(sb, userId, hasta.id, `HT başlangıç paneli istendi: ${kalemler.map((k) => k.ad).join(', ')} (Uzlaşı 2025). Sonuç 14 gün içinde gelmezse takip görevi açılır.`)
+    return ok({ istemId: data?.id, notId: rn.eklendi ? rn.notId : null })
   }
   if (adim === 'htpanelkapat') {
     const { error } = await sb.from('dahiliye_lab_istemleri').update({ durum: b.iptal ? 'iptal' : 'tamam' }).eq('id', String(b.istemId || '')).eq('doctor_id', userId)
@@ -155,7 +155,7 @@ export async function wow2Post(adim: string, b: Record<string, unknown>, sb: Sb,
     if (!a) return NextResponse.json({ error: 'Anket bulunamadı' }, { status: 404 })
     const r = await gununNotunaEkle(sb, userId, hasta.id, String(a.soap_metni || ''), 'content_subjektif')
     await sb.from('dahiliye_anketler').update({ okundu_at: new Date().toISOString() }).eq('id', a.id)
-    return r.eklendi ? ok() : NextResponse.json({ error: `Subjektif'e eklenemedi: ${r.sebep || ''} — metni kopyalayın.` }, { status: 409 })
+    return r.eklendi ? ok({ notId: r.notId }) : NextResponse.json({ error: `Subjektif'e eklenemedi: ${r.sebep || ''} — metni kopyalayın.` }, { status: 409 })
   }
   return null
 }

@@ -1,6 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { DOZ_YER_TUTUCU, kaynakSayilari, receteDozsuz, soapDozKilidi, uydurmaDozTemizle } from './dozKilidi'
+import { DOZ_YER_TUTUCU, kaynakSayilari, receteDozsuz, soapDozKilidi, soapDozUydurmaKilidi, uydurmaDozTemizle } from './dozKilidi'
+import fs from 'node:fs'
+import path from 'node:path'
 import { dozKilitliBrans } from './soapUret'
 
 // KD-DERM-SAFETY-FINDINGS F1 — the three doses seen in KD-PROMPTS-LOCK / DERM-PROMPTS-LOCK test notes, none said by the hekim.
@@ -77,8 +79,49 @@ test('receteDozsuz (was dahiliyeReceteDozsuz) unchanged', () => {
   assert.deepEqual(r[0], { etkenMadde: 'metformin', ticariOrnek: 'Glifor', not: 'yemekle · Doz hekim yazar' })
 })
 
-test('dose lock applies to dahiliye / kadın doğum / dermatoloji only (pediatri keeps mg/kg dosing)', () => {
+test('the FULL lock (dose-free receteOnerisi) is the prompt-locked chapters only — pediatri keeps its mg/kg reçete', () => {
   for (const b of ['dahiliye', 'kadin-dogum', 'kadin-hastaliklari-dogum', 'dermatoloji', 'Deri ve Zührevi Hastalıklar']) assert.ok(dozKilitliBrans(b), b)
   for (const b of ['pediatri', 'genel', 'kardiyoloji', null]) assert.ok(!dozKilitliBrans(b), String(b))
   assert.ok(dozKilitliBrans('genel', 'kadin-dogum'))
+})
+
+// CROSS-SPECIALTY-PARITY (2026-09-17) — dose invention was fixed where it was noticed (KD / derm). The ~26 branches with no
+// specialties/<slug>/ folder ran the same shared SOAP + chat path with no backstop at all. They get it now.
+const KARDIYO_TRANSKRIPT = 'Altmış iki yaşında erkek, efor dispnesi. EF %45 ölçüldü. Metoprolol başlayalım, ramipril ekleyelim. Tansiyon 150/95.'
+
+test('baseline branch (kardiyoloji): an invented dose is removed and flagged, exactly like a chapter branch', () => {
+  const r = soapDozUydurmaKilidi({ soap: { plan: 'Metoprolol süksinat 50 mg 1x1, ramipril 5 mg 1x1 başlandı.' } }, KARDIYO_TRANSKRIPT)
+  const plan = r.soap!.plan as string
+  assert.ok(!/50 mg|5 mg/.test(plan), plan)
+  assert.equal(plan, `Metoprolol süksinat ${DOZ_YER_TUTUCU} 1x1, ramipril ${DOZ_YER_TUTUCU} 1x1 başlandı.`)
+  assert.match(r.aiDegerlendirme!, /⚠ Doz kontrolü \(hekim onayı\)/)
+  assert.ok(plan.includes('1x1'), 'kullanım sıklığı is not a dose token')
+})
+
+test('baseline branch keeps its receteOnerisi doses (pediatrik mg/kg is by design, NOTYA-SOAP-02 §3)', () => {
+  const girdi = { receteOnerisi: [{ etkenMadde: 'amoksisilin', ticariOrnek: 'Largopen 400 mg', doz: '50 mg/kg/gün', kullanim: '2x1' }] }
+  const baseline = soapDozUydurmaKilidi(structuredClone(girdi), 'Yedi yaşında, otit. Kilo 24.')
+  assert.equal(baseline.receteOnerisi![0].doz, '50 mg/kg/gün')
+  assert.equal(baseline.receteOnerisi![0].kullanim, '2x1')
+  // the same note through the chapter lock loses them
+  const kilitli = soapDozKilidi(structuredClone(girdi), 'Yedi yaşında, otit. Kilo 24.')
+  assert.equal(kilitli.receteOnerisi![0].doz, undefined)
+})
+
+test('a dose the baseline-branch hekim dictated is kept, and a clean note is untouched', () => {
+  const tr = 'Metoprolol 50 mg başlayalım.'
+  const r = soapDozUydurmaKilidi({ soap: { plan: 'Metoprolol 50 mg 1x1.' } }, tr)
+  assert.equal(r.soap!.plan, 'Metoprolol 50 mg 1x1.')
+  assert.equal(r.aiDegerlendirme, undefined)
+})
+
+test('both call paths are wired for every branch, not only dozKilitliBrans', () => {
+  const kok = path.join(import.meta.dirname, '..', '..')
+  const oku = (p: string) => fs.readFileSync(path.join(kok, p), 'utf8')
+  // SOAP: the ternary has no bare `: veri` escape hatch left
+  assert.ok(oku('lib/doktor/soapUret.ts').includes('? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : soapDozUydurmaKilidi(veri, girdi.transcript, girdi.klinikBaglam)'))
+  // chat: the cleaner runs before the chapter-only branch, so no `if (dozKilitliBrans(...))` gates it
+  const chat = oku('app/api/asistan/chat/route.ts')
+  assert.ok(chat.indexOf('const dozTemiz = uydurmaDozTemizle(') < chat.indexOf('if (dozKilitliBrans(hekimBransi, specialty))'))
+  assert.ok(chat.includes('aiData.speech = dozTemiz.metin'))
 })
