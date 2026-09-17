@@ -8,7 +8,7 @@
  */
 import { KANONIK, kanonikBirimeCevir, kanonikBul, kanonikTr, kritikMi, type KanonikAnahtar } from './kanonik'
 
-export type HamSatir = { raw_name: string; value: string; unit: string | null; ref_low: string | null; ref_high: string | null; flag_printed: string | null; page: number | null; kaynak?: 'yapi' | 'gorsel' }
+export type HamSatir = { raw_name: string; value: string; unit: string | null; ref_low: string | null; ref_high: string | null; flag_printed: string | null; page: number | null; kaynak?: 'yapi' | 'gorsel'; numune_tarihi?: string | null /* e-Nabız geçmiş: satır başına basılı tarih */ }
 
 export type Bayrak = 'H' | 'L' | 'critical' | 'normal' | 'unknown'
 export type Trend = 'rising' | 'falling' | 'stable' | 'new_abn' | 'new_normal' | 'unit_mismatch' | 'no_prior'

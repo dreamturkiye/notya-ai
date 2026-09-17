@@ -51,7 +51,7 @@ const { encrypt, decrypt } = await import('../lib/security/encryption')
 const { generatePortalPin, hashPortalPin } = await import('../lib/portal/pinAuth')
 const { KB_TEKNIK } = await import('../specialties/dahiliye/engines/nudge')
 const { score2DmOlasilik } = await import('../specialties/dahiliye/engines/score2diabetes')
-const { sentetikLabPdf, SENTETIK_SATIRLAR } = await import('../core/lab/fixtures/sentetikLabPdf')
+const { sentetikLabPdf, SENTETIK_SATIRLAR, sentetikEnabizPdf, SENTETIK_ENABIZ } = await import('../core/lab/fixtures/sentetikLabPdf')
 
 const BASE = (process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
 const QA_EMAIL = 'qa.dahiliye@notya.ai'
@@ -61,6 +61,7 @@ const HASTA_AD_SCORE2 = 'TEST — Dahiliye Smoke SCORE2 (sentetik)'
 const HASTA_AD_LAB = 'TEST — Dahiliye Lab Yukleme Smoke (sentetik)'
 const HASTA_AD_OP = 'TEST — Dahiliye Smoke SCORE2-OP (sentetik)'
 const HASTA_AD_DM = 'TEST — Dahiliye Smoke SCORE2-Diabetes (sentetik)'
+const HASTA_AD_NEXT = 'TEST Dahiliye Smoke NEXT'
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(URL_, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 const anon = createClient(URL_, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
@@ -98,14 +99,14 @@ async function qaDoktor(): Promise<{ id: string; token: string; refresh: string;
 }
 
 // ── 2. Synthetic patient (reset + seed) ──────────────────────────────────────
-const DAHILIYE_TABLOLARI = ['dahiliye_sgk_raporlari', 'dahiliye_anemi', 'dahiliye_obezite', 'dahiliye_tarama', 'dahiliye_lab_istemleri', 'dahiliye_asilar', 'dahiliye_asi_profil', 'dahiliye_anketler', 'dahiliye_kart_kilitleri', 'dahiliye_ev_kayitlari', 'dahiliye_kvr', 'dahiliye_ckd', 'dahiliye_ht', 'dahiliye_dm', 'dahiliye_lipid', 'dahiliye_tiroid', 'dahiliye_checkup', 'dahiliye_gorevleri', 'sevkler', 'dahiliye_kirmizi', 'dahiliye_taramalar', 'dahiliye_hf', 'dahiliye_antikoagulan', 'dahiliye_pulm', 'dahiliye_gi', 'dahiliye_ekg', 'dahiliye_tiroid_nodul', 'dahiliye_ramazan', 'dahiliye_checkup_paketleri']
+const DAHILIYE_TABLOLARI = ['dahiliye_polifarmasi_kararlari', 'dahiliye_sigara', 'dahiliye_gut', 'dahiliye_osteoporoz', 'dahiliye_vitamin', 'dahiliye_hedef_kartlari', 'dahiliye_sgk_raporlari', 'dahiliye_anemi', 'dahiliye_obezite', 'dahiliye_tarama', 'dahiliye_lab_istemleri', 'dahiliye_asilar', 'dahiliye_asi_profil', 'dahiliye_anketler', 'dahiliye_kart_kilitleri', 'dahiliye_ev_kayitlari', 'dahiliye_kvr', 'dahiliye_ckd', 'dahiliye_ht', 'dahiliye_dm', 'dahiliye_lipid', 'dahiliye_tiroid', 'dahiliye_checkup', 'dahiliye_gorevleri', 'sevkler', 'dahiliye_kirmizi', 'dahiliye_taramalar', 'dahiliye_hf', 'dahiliye_antikoagulan', 'dahiliye_pulm', 'dahiliye_gi', 'dahiliye_ekg', 'dahiliye_tiroid_nodul', 'dahiliye_ramazan', 'dahiliye_checkup_paketleri']
 
 async function hastaSil(doctorId: string) {
   const { data } = await sb.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId)
   for (const p of data || []) {
     let ad = ''
     try { ad = JSON.parse(decrypt(String(p.name_encrypted))).ad || '' } catch { ad = '' }
-    if (![HASTA_AD, HASTA_AD_SCORE2, HASTA_AD_LAB, HASTA_AD_OP, HASTA_AD_DM].includes(ad)) continue
+    if (![HASTA_AD, HASTA_AD_SCORE2, HASTA_AD_LAB, HASTA_AD_OP, HASTA_AD_DM, HASTA_AD_NEXT].includes(ad)) continue
     const pid = String(p.id)
     for (const t of DAHILIYE_TABLOLARI) await sb.from(t).delete().eq('patient_id', pid)
     const { data: kon } = await sb.from('hasta_mesaj_konulari').select('id').eq('patient_id', pid)
@@ -458,6 +459,92 @@ kontrol('Şerit HbA1c yüklenen PDF\'ten (7.9, onaylı satır)', labOnayli.chips
 const notL = await sb.from('notes').select('content_objektif').eq('id', noteL).single()
 kontrol('Lab bloğu nota yalnız Onayla ile yazıldı (Objektif [Lab])', /\[Lab\]/.test(String(notL.data?.content_objektif || '')), String(notL.data?.content_objektif || '').slice(0, 120))
 
+// ── NOTYA-DAH-WOW-NEXT (7 kart) — ayrı sentetik hasta: 78 y K, polifarmasi + Vit D/B12 eksikliği + hiperürisemi + DXA belgesi + e-Nabız PDF ──
+const pidN = await yasliHasta(HASTA_AD_NEXT, 78, 'DAH-WOW-NEXT sentetik QA hastası. Gerçek kişi değildir.')
+await sb.from('patients').update({ gender_encrypted: encrypt('K') }).eq('id', pidN)
+const noteN = await muayeneOlustur(doktor.id, pidN)
+const ilacN = (ilac_adi: string, etken_madde: string, baslangic: string) => ({ doctor_id: doktor.id, patient_id: pidN, ilac_adi, etken_madde, baslangic_tarihi: baslangic, aktif: true, onay_durumu: 'onayli' })
+await sb.from('hasta_ilaclar').insert([ilacN('Xanax', 'alprazolam', gun(400)), ilacN('Voltaren', 'diklofenak', gun(30)), ilacN('Hidroklorotiyazid', 'hidroklorotiyazid', gun(700)), ilacN('Coumadin', 'warfarin', gun(900)), ilacN('Pantoprazol', 'pantoprazol', gun(200)), ilacN('Metformin', 'metformin', gun(1500))])
+const ilacOnce = (await sb.from('hasta_ilaclar').select('id, aktif').eq('patient_id', pidN)).data || []
+const labN = await labPaneliTohumla(doktor.id, pidN, gun(5), [['eGFR', 'eGFR', 42, 'mL/dk/1.73m²', 90, null], ['Kreatinin', 'Kre', 1.3, 'mg/dL', 0.5, 1.1], ['Sodyum', 'Na', 128, 'mmol/L', 136, 145], ['Potasyum', 'K', 4.6, 'mmol/L', 3.5, 5.1], ['25-OH D vitamini', 'VitD', 9, 'ng/mL', 30, 100], ['Vitamin B12', 'B12', 170, 'pg/mL', 197, 771], ['Hemoglobin', 'Hb', 11.2, 'g/dL', 12, 16], ['MCV', 'MCV', 98, 'fL', 80, 100], ['Kalsiyum', 'Ca', 9.2, 'mg/dL', 8.5, 10.5], ['Ürik asit', 'Uric', 9.4, 'mg/dL', 2.4, 5.7], ['HbA1c', 'HbA1c', 7.2, '%', 4, 6], ['LDL kolesterol', 'LDL', 118, 'mg/dL', null, 130]])
+await istek('NEXT hasta: lab paneli onayla', 'POST', '/api/doktor/belgeler/analiz/onayla', { analizId: labN.analizId, adim: 'onayla', noteId: noteN })
+await post('NEXT hasta: DM kartı (T2, hedef HbA1c 7)', pidN, { adim: 'dm', tip: 'T2', hedefHba1c: 7 })
+await post('NEXT hasta: KB kaydet', pidN, { adim: 'kb', sbp: 136, dbp: 78, nabiz: 70 })
+const nV = (await istek('GET dahiliye (NEXT hasta)', 'GET', dah(pidN))).json as V
+const w5 = nV.wow?.w5
+const oneriler = (w5?.polifarmasi?.sonuc?.oneriler || []) as V[]
+const kodlar = oneriler.map((o) => o.kod)
+kontrol('C1 polifarmasi: ≥65 + onaylı eGFR 42/Na 128 → NSAİİ-böbrek, NSAİİ-warfarin, tiyazid-hiponatremi engelleyici; benzo + PPI gözden geçir', ['stopp_nsaii_bobrek', 'stopp_nsaii_oak', 'stopp_tiyazid_hiponatremi'].every((k) => oneriler.find((o) => o.kod === k)?.engelleyici === true) && kodlar.includes('stopp_benzo') && kodlar.includes('stopp_ppi_uzun'), kodlar)
+kontrol('C1 öneri metinlerinde doz yok', !/\d+\s*(mg|mcg|µg|ünite|IU)\b/i.test(JSON.stringify(oneriler.map((o) => [o.baslik, o.gerekce, o.oneri]))), 'ok')
+await post('C1 engelleyici öneriyi kısa gerekçeyle override → 409', pidN, { adim: 'polifarmasi_karar', kuralKod: 'stopp_nsaii_oak', karar: 'override', gerekce: 'kısa' }, 409)
+await post('C1 engelleyici öneriyi ≥15 karakter gerekçeyle override', pidN, { adim: 'polifarmasi_karar', kuralKod: 'stopp_nsaii_oak', karar: 'override', gerekce: 'Romatoloji önerisi, 5 gün kısa kür ve INR yakın izlem' })
+await post('C1 NSAİİ-böbrek önerisini kabul', pidN, { adim: 'polifarmasi_karar', kuralKod: 'stopp_nsaii_bobrek', karar: 'kabul' })
+const ilacSonra = (await sb.from('hasta_ilaclar').select('id, aktif').eq('patient_id', pidN)).data || []
+kontrol('C1 hiçbir ilaç otomatik kesilmedi (hasta_ilaclar aynı, hepsi aktif)', ilacSonra.length === ilacOnce.length && ilacSonra.every((i) => i.aktif === true), ilacSonra.length)
+await post('C1 kararları nota ekle (hekim)', pidN, { adim: 'polifarmasi_nota' })
+const notN = async () => String((await sb.from('notes').select('content_degerlendirme').eq('id', noteN).single()).data?.content_degerlendirme || '')
+kontrol('C1 nota yalnız hekim kararlarıyla, "otomatik değiştirilmedi" ibaresi', /Yaşlı polifarmasi gözden geçirme/.test(await notN()) && /otomatik değiştirilmedi/.test(await notN()), (await notN()).slice(0, 200))
+
+kontrol('C2 hedef kartı: KB hedefi kilitsiz → "Hekiminiz belirleyecek", HbA1c hedefi DM kartından (%7)', (w5?.hedef?.sonuc?.satirlar || []).some((x: V) => x.kod === 'kb' && x.durum === 'hekim_belirleyecek') && (w5?.hedef?.sonuc?.satirlar || []).some((x: V) => x.kod === 'hba1c' && x.hedef === '%7 ve altı'), w5?.hedef?.sonuc?.satirlar)
+await post('C2 KB hedefi hekim kilidi', pidN, { adim: 'kilit', kart: 'ht', alan: 'hedef', deger: { sbpUst: 140, dbpUst: 90 } })
+const kart = await post('C2 hedef kartı hekim onayı + yazdırma HTML', pidN, { adim: 'hedefkart', yapraklar: ['yasam', 'ht', 'dm_ayak_goz'], notaEkle: true })
+const html = String((kart.json as V).html || '')
+kontrol('C2 yazdırma: kilitli hedefler + yapraklar, Kaynak ref_code hastaya basılmaz', /Sağlık hedeflerim/.test(html) && /140\/90 mmHg altı/.test(html) && /Diyabette ayak ve göz bakımı/.test(html) && !/TEMD_DM2026|HT_UZLASI2025/.test(html), html.length)
+kontrol('C2 kart kilidi (hedef/kart) kaydedildi', !!(await sb.from('dahiliye_kart_kilitleri').select('id').eq('patient_id', pidN).eq('kart', 'hedef').eq('alan', 'kart').maybeSingle()).data, 'kilit')
+
+const sig = await post('C3 sigara: içiyor 20/gün × 40 yıl, ilk sigara 5 dk, hazırlık, bırakma +7 gün, görevler', pidN, { adim: 'sigara', durum: 'iciyor', gunlukAdet: 20, yil: 40, ilkSigaraDk: 5, evre: 'hazirlik', birakmaTarihi: gun(-7), danisma: ['sor', 'oner', 'degerlendir'], gorevAc: true })
+const sigV = ((await istek('GET dahiliye (NEXT sigara)', 'GET', dah(pidN))).json as V).wow?.w5?.sigara
+kontrol('C3 paket-yıl 40, HSI 4 (orta), ALO 171, farmakoterapi sınıfı doz yok, 4 izlem görevi', sigV?.sonuc?.paketYil === 40 && sigV?.sonuc?.hsi === 4 && (sigV?.sonuc?.kaynaklar || []).some((k: string) => /ALO 171/.test(k)) && (sigV?.sonuc?.farmakoterapiSinifi || []).length >= 1 && !/\d+\s*mg\b/i.test(JSON.stringify(sigV?.sonuc)) && (sig.json as V).gorev === 4, sigV?.sonuc)
+await post('C3 plan kilitlenmeden nota → 409', pidN, { adim: 'kart_nota', kart: 'sigara' }, 409)
+await post('C3 sigara planı hekim kilidi', pidN, { adim: 'kilit', kart: 'sigara', alan: 'plan', deger: 'Bırakma tarihi belirlendi; vareniklin sınıfı hekim; 1 hafta/1 ay/3 ay/6 ay izlem; ALO 171' })
+await post('C3 kilitli plan nota', pidN, { adim: 'kart_nota', kart: 'sigara' })
+
+const vit = sigV && ((await istek('GET dahiliye (NEXT vitamin)', 'GET', dah(pidN))).json as V).wow?.w5?.vitamin
+kontrol('C4 Vit D 9 → eksik, B12 170 → eksik (onaylı lab); SGK şablon önerisi vitd + b12', vit?.sonuc?.d?.durum === 'eksik' && vit?.sonuc?.b12?.durum === 'eksik' && JSON.stringify(vit?.sonuc?.sgkSablonlari) === '["vitd","b12"]', vit?.sonuc)
+const sgkV = await post('C4 SGK D vitamini rapor taslağı', pidN, { adim: 'sgkrapor', sablon: 'vitd', sureAy: 3 })
+kontrol('C4 SGK vitd: ICD E55.9, lab kanıtı onaylı satırdan, etken madde yoksa eksik', (sgkV.json as V).draft?.tani?.icd10 === 'E55.9' && ((sgkV.json as V).sutKontrol || [])[0]?.tamam === true && ((sgkV.json as V).eksikler || []).some((e: string) => /Etken madde/.test(e)), sgkV.json)
+
+await post('C6 gut: aktif atak, 12 ayda 2 atak', pidN, { adim: 'gut', atakAktif: true, ates: false, atakSayisi12Ay: 2, gorevAc: true })
+const gutV = ((await istek('GET dahiliye (NEXT gut)', 'GET', dah(pidN))).json as V).wow?.w5?.gut
+kontrol('C6 gut: ULT güçlü endikasyon, hedef <6, warfarin → NSAİİ atak sınıfından çıkar, diyet danışmanlığı', gutV?.sonuc?.ultEndikasyon === 'guclu' && gutV?.sonuc?.hedefUrik === 6 && !(gutV?.sonuc?.atakSinif || []).some((x: string) => /NSAİİ/.test(x)) && (gutV?.sonuc?.diyet || []).length > 0, gutV?.sonuc)
+await post('C6 gut ateş + atak → septik artrit kırmızı bayrak', pidN, { adim: 'gut', atakAktif: true, ates: true, atakSayisi12Ay: 2 })
+kontrol('C6 kırmızı bayrak şeritte', ((await istek('GET dahiliye (NEXT gut kırmızı)', 'GET', dah(pidN))).json as V).serit?.kirmizi?.some((k: string) => /septik/i.test(k)), 'serit')
+
+const { data: dxaA } = await sb.from('belge_analizleri').insert({ belge_id: randomUUID(), doctor_id: doktor.id, patient_id: pidN, brans: 'dahiliye', modality_final: 'pdf_rapor', de_id_hash: createHash('sha256').update(`dah-smoke-dxa-${T}`).digest('hex'), engine_set: 'dah-smoke-seed', durum: 'onaylandi', onaylandi_at: new Date().toISOString(), sonuc: { ozet: 'DXA raporu (sentetik QA).', bulgular: ['Lomber omurga (L1-L4) T-skoru: -2,8', 'Femur boynu T-skoru: -2,1'] }, motor_ciktilari: [], hekim_tanisi: [], hekim_ozet: 'Sentetik DXA — hekim kontrol etti.' }).select('id').single()
+const osV = ((await istek('GET dahiliye (NEXT osteo öneri)', 'GET', dah(pidN))).json as V).wow?.w5?.osteo
+kontrol('C7 onaylı DXA belgesinden T-skoru önerisi (lomber −2.8, femur boyun −2.1), hekim almadan kaydedilmez', osV?.dxaOneri?.analizId === dxaA?.id && osV?.dxaOneri?.t?.lomber === -2.8 && osV?.kayit == null, osV?.dxaOneri)
+await post('C7 T-skorunu belgeden al (hekim)', pidN, { adim: 'osteo_belge', analizId: dxaA?.id })
+await post('C7 risk bayrakları (kırılganlık kırığı) + DXA görevi', pidN, { adim: 'osteo', riskler: { kirilganlikKirigi: true }, gorevAc: true })
+const os2 = ((await istek('GET dahiliye (NEXT osteo)', 'GET', dah(pidN))).json as V).wow?.w5?.osteo
+kontrol('C7 T −2.8 + kırılganlık kırığı → ağır osteoporoz taslak; kaynak belge; FRAX hesaplanmaz; eGFR 42 bisfosfonat engeli yok; D vit <20 uyarısı', os2?.sonuc?.sinif === 'agir_osteoporoz' && os2?.kayit?.t_kaynak === 'belge' && /lisanslı/.test(os2?.sonuc?.fraxNotu || '') && (os2?.sonuc?.uyarilar || []).some((u: string) => /25-OH D/.test(u)) && !/%\s*\d|\d\s*%/.test(JSON.stringify([os2?.sonuc?.plan, os2?.sonuc?.tedaviSinifi])), os2?.sonuc)
+
+// C5 e-Nabız geçmiş PDF → Belgeler (yalnız yükleme; canlı API yok): sentetik iki tarihli çıktı → cikar kaynak=enabiz → satır başına tarih → onaysız → Onayla.
+const enPdf = sentetikEnabizPdf(gun(380), gun(20), HASTA_AD_NEXT)
+const enForm = new FormData()
+enForm.append('file', new Blob([new Uint8Array(enPdf)], { type: 'application/pdf' }), 'sentetik-enabiz-gecmis.pdf')
+enForm.append('patientId', pidN); enForm.append('category', 'lab')
+const enUp = await fetch(`${BASE}/api/doktor/documents`, { method: 'POST', headers: { Authorization: `Bearer ${TOKEN}` }, body: enForm })
+const enUpJ = (await enUp.json().catch(() => ({}))) as V
+kayit.push({ adim: 'C5 e-Nabız PDF yükle (vault)', durum: enUp.status, beklenen: 201, ok: enUp.status === 201, ms: 0, ozet: enUpJ })
+console.log(`${enUp.status === 201 ? '✓' : '✗'} C5 e-Nabız PDF yükle (vault) → ${enUp.status}`)
+const enDoc = String(enUpJ.document?.id || '')
+const enCikar = await istek('C5 e-Nabız çıkar (kaynak=enabiz, satır başına tarih)', 'POST', '/api/doktor/belgeler/lab', { adim: 'cikar', documentId: enDoc, kaynak: 'enabiz' })
+const enPanel = String((enCikar.json as V).panelId || '')
+const enSatir = (await sb.from('lab_satirlar').select('canonical_key, kanonik_deger, numune_tarihi, onayli').eq('panel_id', enPanel)).data || []
+const enTarihler = [...new Set(enSatir.map((r) => r.numune_tarihi))].sort()
+kontrol('C5 panel_type enabiz_gecmis; iki basılı tarih satırlara ayrı ayrı; hepsi onayli=false', (enCikar.json as V).panel_type === 'enabiz_gecmis' && JSON.stringify(enTarihler) === JSON.stringify([gun(380), gun(20)]) && enSatir.length >= SENTETIK_ENABIZ.length * 2 && enSatir.every((r) => r.onayli === false), { tarihler: enTarihler, n: enSatir.length })
+const enPanelRow = (await sb.from('lab_paneller').select('kimlik_uyari, numune_tarihi').eq('id', enPanel).single()).data
+kontrol('C5 kimlik koruması aynı (ad eşleşti), panel tarihi en yeni satır', enPanelRow?.kimlik_uyari?.eslesme !== false && enPanelRow?.numune_tarihi === gun(20), enPanelRow)
+const enOnaysiz = (await istek('C5 GET dahiliye (e-Nabız onaysız)', 'GET', dah(pidN))).json as V
+kontrol('C5 onaysız e-Nabız satırı şeride girmez (HbA1c hâlâ onaylı panelden 7.2)', enOnaysiz.chips?.hba1c?.deger === 7.2, enOnaysiz.chips?.hba1c)
+await istek('C5 tablo onayla (hekim)', 'POST', '/api/doktor/belgeler/lab', { adim: 'tablo_onayla', panelId: enPanel })
+const enRap = await istek('C5 raporla', 'POST', '/api/doktor/belgeler/lab', { adim: 'raporla', panelId: enPanel })
+const enAnaliz = String((enRap.json as V).analizId || '')
+await istek('C5 hekim tanısı', 'PATCH', '/api/doktor/belgeler/analiz', { analizId: enAnaliz, alan: 'hekim_tanisi', sonraki: [{ ad: 'Tip 2 diabetes mellitus', icd10: 'E11' }] })
+await istek('C5 Onayla (aynı onay kapısı)', 'POST', '/api/doktor/belgeler/analiz/onayla', { analizId: enAnaliz, adim: 'onayla', noteId: noteN })
+const hbaSeri = ((await sb.from('lab_satirlar').select('kanonik_deger, numune_tarihi').eq('patient_id', pidN).eq('canonical_key', 'HbA1c').eq('onayli', true).order('numune_tarihi', { ascending: false })).data || [])
+kontrol('C5 Onayla sonrası HbA1c serisi e-Nabız tarihleriyle (en eski 8.1 geçmiş tarihte, trend verisi)', hbaSeri.some((r) => Number(r.kanonik_deger) === 8.1 && r.numune_tarihi === gun(380)) && hbaSeri.some((r) => Number(r.kanonik_deger) === 7.4 && r.numune_tarihi === gun(20)), hbaSeri)
+
 const sonra = (await istek('GET dahiliye (sonra)', 'GET', dah(pid))).json as V
 
 // ── 5. Output ────────────────────────────────────────────────────────────────
@@ -475,11 +562,12 @@ const ozet = {
   score2: { sonuc: kvrS, kilitKategori: kvrKilitV.wow?.kvr?.kilitKategori },
   score2Op: { sonuc: opS, kilitKategori: opKilitV.wow?.kvr?.kilitKategori },
   score2Diabetes: { sonuc: dmS, beklenen: dmBeklenen, kilitKategori: dmKilitV.wow?.kvr?.kilitKategori },
+  wowNext: { polifarmasi: kodlar, hedefKartHtmlUzunluk: html.length, sigara: sigV?.sonuc, vitamin: vit?.sonuc, gut: gutV?.sonuc, osteo: os2?.sonuc, enabiz: { panelId: enPanel, tarihler: enTarihler, satir: enSatir.length } },
   labYukleme: { belgeId, panelId: labPanelId, analizId: labAnalizId, cikar: cikar.json, raporKaynak: labRapor?.kaynak, raporTanilar: labRapor?.tanilar?.map((t: V) => ({ ad: t.ad, icd10: t.icd10, guven_pct: t.guven_pct })), satirlarCikarimSonrasi: cikanSatirlar, tablo: { panel: labTablo.panel && { kaynaklar: labTablo.panel.kaynaklar, kalite: labTablo.panel.kalite, durum: labTablo.panel.durum, numune_tarihi: labTablo.panel.numune_tarihi, kimlik_uyari: labTablo.panel.kimlik_uyari } }, onaysizChips: { hba1c: labOnaysiz.chips?.hba1c ?? null, ldl: labOnaysiz.chips?.ldl ?? null }, onayla: labOnayla.json, onayliSatirSayisi: onayliSatirlar.length, onayliChips: { hba1c: labOnayli.chips?.hba1c, ldl: labOnayli.chips?.ldl, k: labOnayli.chips?.k } },
 }
 fs.writeFileSync(path.join(cikti, 'dahiliye-smoke.json'), JSON.stringify(ozet, null, 2))
 // Browser session for screenshots (local only, gitignored).
-fs.writeFileSync(path.join(cikti, 'session.json'), JSON.stringify({ patientId: pid, score2PatientId: pidS, score2OpPatientId: pidOp, score2DmPatientId: pidDm, labPatientId: pidL, labDocumentId: belgeId, portalToken: portalLink, auth: { access_token: doktor.token, refresh_token: doktor.refresh, expires_at: doktor.expiresAt } }))
+fs.writeFileSync(path.join(cikti, 'session.json'), JSON.stringify({ patientId: pid, score2PatientId: pidS, score2OpPatientId: pidOp, score2DmPatientId: pidDm, nextPatientId: pidN, enabizDocumentId: enDoc, labPatientId: pidL, labDocumentId: belgeId, portalToken: portalLink, auth: { access_token: doktor.token, refresh_token: doktor.refresh, expires_at: doktor.expiresAt } }))
 const hatali = kayit.filter((k) => !k.ok).length + kontroller.filter((k) => !k.ok).length
 console.log(`\n${kayit.length} istek, ${kontroller.length} kontrol, ${hatali} hata → smoke-out/dahiliye-smoke.json`)
 process.exit(hatali ? 1 : 0)

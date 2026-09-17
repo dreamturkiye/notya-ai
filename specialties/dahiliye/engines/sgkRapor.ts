@@ -1,5 +1,5 @@
 /**
- * NOTYA-DAH-WOW W1.4 — SGK ilaç kullanım raporu şablonları (HT / DM / statin / DOAK), aktif kartlardan ön dolu.
+ * NOTYA-DAH-WOW W1.4 — SGK ilaç kullanım raporu şablonları (HT / DM / statin / DOAK; WOW-NEXT C4: D vitamini / B12), aktif kartlardan ön dolu.
  * Tools › Hasta Raporları (pediatri) kabuğunun ikizi: aynı SgkRaporDraft şekli + aynı e-Nabız/Medula zarfı (lib/enabiz/paket).
  * Kurallar: etken madde YALNIZ hasta_ilaclar satırlarından (uydurma yok, doz yok); lab kanıtı YALNIZ onaylı lab satırından;
  * T.C. kimlik no hiç yazılmaz (tcSon4 boş). SUT koşulları kontrol listesi olarak — güncel madde metni hekim doğrular.
@@ -8,12 +8,14 @@
 import type { Dipnot } from './dahiliye'
 import type { SgkRaporDraft } from '@/lib/sgk/raporTipleri'
 
-export type SgkSablon = 'ht' | 'dm' | 'statin' | 'doak'
+export type SgkSablon = 'ht' | 'dm' | 'statin' | 'doak' | 'vitd' | 'b12'
 export const SGK_SABLONLARI: { id: SgkSablon; ad: string }[] = [
   { id: 'ht', ad: 'Hipertansiyon — antihipertansif ilaç raporu' },
   { id: 'dm', ad: 'Diyabet — oral antidiyabetik / GLP-1 / insülin raporu' },
   { id: 'statin', ad: 'Dislipidemi — lipid düşürücü ilaç raporu' },
   { id: 'doak', ad: 'Antikoagülan — DOAK / warfarin raporu' },
+  { id: 'vitd', ad: 'D vitamini eksikliği — replasman raporu' },
+  { id: 'b12', ad: 'Vitamin B12 eksikliği — replasman raporu' },
 ]
 
 const SINIF_RE: Record<SgkSablon, RegExp> = {
@@ -21,6 +23,8 @@ const SINIF_RE: Record<SgkSablon, RegExp> = {
   dm: /metformin|gliflozin|gliptin|glutid|tirzepatid|gliklazid|glimepirid|glibenklamid|pioglitazon|akarboz|insülin|insulin|repaglinid/i,
   statin: /statin|ezetimib|fenofibrat|gemfibrozil|evolokumab|alirokumab/i,
   doak: /apiksaban|rivaroksaban|dabigatran|edoksaban|warfarin/i,
+  vitd: /kolekalsiferol|kalsitriol|alfakalsidol|d3 vitamini|d vitamini/i,
+  b12: /siyanokobalamin|hidroksokobalamin|metilkobalamin|kobalamin|b12/i,
 }
 
 export interface SgkLab { ad: string; deger: number; tarih: string }
@@ -50,6 +54,9 @@ const ICD: Record<string, { icd10: string; aciklama: string }> = {
   doak_af: { icd10: 'I48', aciklama: 'Atriyal fibrilasyon ve flutter' },
   doak_dvt: { icd10: 'I82.4', aciklama: 'Alt ekstremite derin ven trombozu' },
   doak_pe: { icd10: 'I26.9', aciklama: 'Pulmoner emboli, akut kor pulmonale olmadan' },
+  vitd: { icd10: 'E55.9', aciklama: 'D vitamini eksikliği, tanımlanmamış' },
+  b12_anemi: { icd10: 'D51.9', aciklama: 'Vitamin B12 eksikliği anemisi, tanımlanmamış' },
+  b12: { icd10: 'E53.8', aciklama: 'B grubu diğer vitaminlerin eksikliği (B12)' },
 }
 
 const fmtLab = (l: SgkLab) => `${l.ad} ${String(l.deger).replace('.', ',')} (${l.tarih})`
@@ -99,6 +106,19 @@ export function sgkRaporTaslagi(g: SgkRaporGirdi): SgkRaporSonuc {
     sutKontrol.push({ madde: 'Güncel lipid profili (son 6 ay) rapora ekli', tamam: ldlSon ? ldlSon >= ekleAy(g.bugun, -6) : false })
     sutKontrol.push({ madde: 'LDL eşiği / risk durumu (KVH, DM vb.) SUT lipid düşürücü ilaç ilkelerine göre hekim tarafından doğrulandı', tamam: null })
     dip.push({ ref: 'TEMD_LIPID', not: 'Risk kategorisi ve LDL hedefi hekim kilidi; rapor kanıtı onaylı lipid paneli' })
+  } else if (g.sablon === 'vitd' || g.sablon === 'b12') {
+    const vd = g.sablon === 'vitd'
+    const seri = (g.labs[vd ? 'VitD' : 'B12'] || []).slice(0, 2)
+    const esik = vd ? 20 : 200
+    const hb = sonLab(g, 'Hb')
+    tani = vd ? ICD.vitd : hb && hb.deger < (g.hasta.kadin ? 12 : 13) ? ICD.b12_anemi : ICD.b12
+    if (seri.length) klinik.push(`${vd ? '25-OH D' : 'B12'}: ${seri.map((x) => `${String(x.deger).replace('.', ',')} ${vd ? 'ng/mL' : 'pg/mL'} (${x.tarih})`).join('; ')}`)
+    else eksikler.push(`Onaylı ${vd ? '25-OH D vitamini' : 'B12'} lab satırı`)
+    for (const k of vd ? ['Ca', 'P', 'ALP', 'Kre'] : ['Hb', 'MCV', 'Folate']) { const l = sonLab(g, k); if (l) tetkik.push(fmtLab({ ...l, ad: k })) }
+    sutKontrol.push({ madde: `Eksikliği gösteren tarihli onaylı lab sonucu (${vd ? '25-OH D <20 ng/mL' : 'B12 <200 pg/mL'}) rapora ekli`, tamam: seri.length ? seri[0].deger < esik : false })
+    sutKontrol.push({ madde: 'Raporla/raporsuz reçetelenebilirlik ve ilgili SUT maddesi hekim tarafından güncel metinle doğrulandı', tamam: null })
+    if (vd && !sonLab(g, 'Ca')) eksikler.push('Onaylı kalsiyum (replasman öncesi)')
+    dip.push(vd ? { ref: 'TEMD_OSTEO2025', not: '25-OH D <20 ng/mL eksiklik; replasman sonrası düzey ve Ca izlemi' } : { ref: 'HARRISON', not: 'B12 eksikliği: düzey + hemogram; nörolojik bulguda parenteral yol' })
   } else {
     const end = g.doakEndikasyon || null
     tani = end === 'dvt' ? ICD.doak_dvt : end === 'pe' ? ICD.doak_pe : ICD.doak_af

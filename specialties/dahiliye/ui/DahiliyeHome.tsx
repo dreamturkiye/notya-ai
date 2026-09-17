@@ -6,6 +6,7 @@ import DahiliyeWow, { VizitSeridiBar, type WowVeri } from './DahiliyeWow';
 import DahiliyeWow2 from './DahiliyeWow2';
 import DahiliyeWow3 from './DahiliyeWow3';
 import { NudgeBar } from './DahiliyeWow4';
+import DahiliyeWow5 from './DahiliyeWow5';
 import { gosterimSayi, type VizitSeridi } from '../engines/serit';
 
 type L = { kanonik_deger: number | null; numune_tarihi: string | null } | null;
@@ -25,10 +26,12 @@ const GRUPLAR: { ad: string; sekmeler: readonly string[] }[] = [
   { ad: 'Kronik', sekmeler: ['Özet', 'HT', 'DM', 'DM döngü', 'Lipid', 'KVR', 'KBH', 'Tiroid'] },
   { ad: 'Döngüler', sekmeler: ['Anemi', 'Obezite', 'Tarama/Aşı', 'İzlem', 'Ev kayıt', 'Ön anket'] },
   { ad: 'Kartlar', sekmeler: ['KY', 'Antikoagülan', 'Solunum', 'GI', 'EKG', 'Ramazan'] },
-  { ad: 'Belge', sekmeler: ['Check-up', 'İlaçlar', 'SGK rapor', 'Sevk'] },
+  { ad: 'Bakım+', sekmeler: ['Polifarmasi', 'Hedef kartı', 'Sigara', 'Vit D/B12', 'Gut', 'Osteoporoz'] },
+  { ad: 'Belge', sekmeler: ['Check-up', 'İlaçlar', 'SGK rapor', 'e-Nabız', 'Sevk'] },
 ];
 const WOW2_SEKME: readonly string[] = ['DM döngü', 'Anemi', 'Obezite', 'Tarama/Aşı', 'Ön anket'];
 const WOW3_SEKME: readonly string[] = ['KY', 'Antikoagülan', 'Solunum', 'GI', 'EKG', 'Ramazan'];
+const WOW5_SEKME: readonly string[] = ['Polifarmasi', 'Hedef kartı', 'Sigara', 'Vit D/B12', 'e-Nabız', 'Gut', 'Osteoporoz'];
 
 const WOW_SEKME: readonly string[] = ['KVR', 'KBH', 'İzlem', 'Ev kayıt', 'SGK rapor'];
 
@@ -122,6 +125,7 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
       {sekme === 'Tiroid' && v.wow?.w3 && <DahiliyeWow3 sekme="Tiroid nodül" w3={v.wow.w3} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {sekme === 'Check-up' && v.wow?.w3 && <DahiliyeWow3 sekme="Check-up paket" w3={v.wow.w3} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {sekme === 'HT' && v.wow?.w2 && <DahiliyeWow2 sekme="HT panel" w2={v.wow.w2} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
+      {WOW5_SEKME.includes(sekme) && v.wow?.w5 && <DahiliyeWow5 sekme={sekme} w5={v.wow.w5} patientId={patientId} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {WOW_SEKME.includes(sekme) && v.wow && <DahiliyeWow sekme={sekme} wow={v.wow} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {sekme === 'Sevk' && (<div>
         <div style={etiket}>Kırmızı bayrak + sevk <span style={kucuk}>· K {fmt(c.k)} · Hb {fmt(c.hb)} · eGFR {fmt(c.egfr)}</span></div>
