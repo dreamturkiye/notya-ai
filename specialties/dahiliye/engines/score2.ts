@@ -15,8 +15,8 @@
  *
  * GÜVENLİK: SCORE2_ONAYLI=true yalnız yukarıdaki doğrulamadan sonra. Sayısal skor yalnız 40–69 yaş + diyabet yok +
  * kural kovası yokken hesaplanır ve "kova taslak" olarak döner; kategori ve LDL hedefi yalnız hekim kilidiyle
- * (dahiliye_kart_kilitleri) kesinleşir — hiçbir koşulda nota otomatik yazılmaz. SCORE2-OP (≥70, engines/score2op.ts — kapı kapalı)
- * ve SCORE2-Diabetes (DM 40–69, engines/score2diabetes.ts — doğrulandı) ayrı modüllerdir, kendi ONAYLI bayraklarıyla.
+ * (dahiliye_kart_kilitleri) kesinleşir — hiçbir koşulda nota otomatik yazılmaz. SCORE2-OP (≥70, engines/score2op.ts — ONAYLI=true,
+ * ehab312 Suppl. Methods Table 1 ölçekleri) ve SCORE2-Diabetes (DM 40–69, engines/score2diabetes.ts) ayrı modüllerdir.
  */
 import type { Dipnot } from './dahiliye'
 import { score2Diabetes, SCORE2_DIABETES_ONAYLI, type DmRiskSinif } from './score2diabetes'

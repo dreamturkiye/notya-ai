@@ -368,7 +368,7 @@ await post('SCORE2 hasta: KVR kategori hekim kilidi', pidS, { adim: 'kilit', kar
 const kvrKilitV = (await istek('GET dahiliye (SCORE2 kilit sonrası)', 'GET', dah(pidS))).json as V
 kontrol('SCORE2 kategori hekim kilidiyle kesinleşti', kvrKilitV.wow?.kvr?.kilitKategori === 'yuksek', kvrKilitV.wow?.kvr?.kilitKategori)
 
-// SCORE2-OP (DAH-SCORE2-OP, SCORE2_OP_ONAYLI=false) — ≥70 yaş sentetik hasta: KVR kartı OP yoluna gider, sayı YOK, hekim kategori kilitler.
+// SCORE2-OP (DAH-SCORE2-OP, SCORE2_OP_ONAYLI=true) — ≥70 yaş: Suppl. Table 3 profili (erkek, sigara, SBP 140, TChol 5.5, HDL 1.3) → yüksek risk bölgesi %27.8, kova çok yüksek; hekim kilitler.
 async function yasliHasta(ad: string, yil: number, not: string) {
   const dob = new Date(Date.now() - (yil * 365.25 + 120) * 86400000).toISOString().slice(0, 10)
   const { data, error } = await sb.from('patients').insert({ doctor_id: doktor.id, name_encrypted: encrypt(JSON.stringify({ ad })), dob_encrypted: encrypt(dob), gender_encrypted: encrypt('E'), notes_encrypted: encrypt(JSON.stringify({ not })), is_active: true }).select('id').single()
@@ -383,11 +383,11 @@ await post('SCORE2-OP hasta: KB kaydet (SBP 140)', pidOp, { adim: 'kb', sbp: 140
 await post('SCORE2-OP hasta: KVR girdileri (75 yaş, sigara, ASKVH/DM yok)', pidOp, { adim: 'kvr', sigara: true, askvh: false, dmTod: false, statinYogunluk: 'yok' })
 const opV = (await istek('GET dahiliye (SCORE2-OP hasta)', 'GET', dah(pidOp))).json as V
 const opS = opV.wow?.kvr?.sonuc
-kontrol('≥70 yaş KVR: SCORE2-OP yolu, doğrulama kapısı kapalı → sayısal skor yok (SCORE2 de yok)', opS?.score2Op == null && opS?.score2 == null && /SCORE2-OP/.test(String(opS?.score2Notu || '')), { score2Op: opS?.score2Op, not: opS?.score2Notu })
-kontrol('≥70 yaş KVR: uydurma kova yok, nota yazılmadı', opS?.kova == null && !/SCORE2/.test(String((await sb.from('notes').select('content_degerlendirme').eq('id', noteOp).single()).data?.content_degerlendirme || '')), { kova: opS?.kova })
-await post('SCORE2-OP hasta: KVR kategori hekim kilidi (klinik karar)', pidOp, { adim: 'kilit', kart: 'kvr', alan: 'kategori', deger: 'yuksek', kaynak: 'dah-smoke-score2op' })
+kontrol('≥70 yaş KVR: SCORE2-OP %27.8 (Table 1 yüksek risk; Table 3 profili erkek)', opS?.score2Op === 27.8 && opS?.score2 == null, { score2Op: opS?.score2Op, not: opS?.score2Notu })
+kontrol('SCORE2-OP kova taslak "çok yüksek" (≥%15) + ESC_SCORE2_OP Kaynak; nota yazılmadı', opS?.kova === 'cok_yuksek' && (opS?.dipnotlar || []).some((d: V) => d.ref === 'ESC_SCORE2_OP') && !/SCORE2/.test(String((await sb.from('notes').select('content_degerlendirme').eq('id', noteOp).single()).data?.content_degerlendirme || '')), { kova: opS?.kova, neden: opS?.kovaNedeni })
+await post('SCORE2-OP hasta: KVR kategori hekim kilidi', pidOp, { adim: 'kilit', kart: 'kvr', alan: 'kategori', deger: 'cok_yuksek', kaynak: 'dah-smoke-score2op' })
 const opKilitV = (await istek('GET dahiliye (SCORE2-OP kilit sonrası)', 'GET', dah(pidOp))).json as V
-kontrol('≥70 yaş KVR kategori yalnız hekim kilidiyle', opKilitV.wow?.kvr?.kilitKategori === 'yuksek', opKilitV.wow?.kvr?.kilitKategori)
+kontrol('≥70 yaş KVR kategori hekim kilidiyle kesinleşti', opKilitV.wow?.kvr?.kilitKategori === 'cok_yuksek', opKilitV.wow?.kvr?.kilitKategori)
 
 // SCORE2-Diabetes (DAH-SCORE2-DIABETES, ONAYLI=true) — DM 60 yaş erkek: ehad260 örnek profili (SBP 140, TChol 5.5, HDL 1.3, HbA1c 50 mmol/mol, eGFR 90, tanı yaşı 60).
 const pidDm = await yasliHasta(HASTA_AD_DM, 60, 'DAH-SCORE2-DIABETES sentetik QA hastası. Gerçek kişi değildir.')

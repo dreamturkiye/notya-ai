@@ -1,32 +1,35 @@
 /**
  * DAH-SCORE2-OP — SCORE2-OP (ESC 2021, ehab312): ≥70 yaş 10 yıllık ölümcül + ölümcül olmayan KVH riski.
  *
- * KAYNAK (2026-09-17): SCORE2-OP working group & ESC Cardiovascular risk collaboration, Eur Heart J 2021;42(25):2455–2467,
- * doi:10.1093/eurheartj/ehab312 — "Supplementary material_20210604_v2.docx" (ehab312_supplementary_data.zip; PMC8248997 kopyası
- * ile OUP silverchair kopyası bayt bayt aynı).
- *   - KATSAYI (erkek/kadın, yaş/diyabet/sigara/SBP/TChol/HDL + yaş etkileşimleri) → Supplementary Methods Table 3 (ana makale
- *     Table 2 ile aynı; SBP ana makalede "per 10 mmHg" 0.094/0.102 = burada mmHg başına 0.0094/0.0102).
- *   - Merkezleme yaş 73, SBP 150, TChol 6, HDL 1.4; s0 0.7576 / 0.8082; ortalama LP 0.0929 / 0.2290 → Suppl. Methods Table 2–3.
- *   - Bölge ölçekleri (scale1, scale2) → Supplementary Methods Table 1.
+ * KAYNAK (2026-09-17 doğrulama, kapı açıldı): SCORE2-OP working group & ESC Cardiovascular risk collaboration,
+ * Eur Heart J 2021;42(25):2455–2467, doi:10.1093/eurheartj/ehab312 —
+ * "Supplementary material_20210604_v2.docx" (ehab312_supplementary_data.zip; PMC8248997).
+ *   - KATSAYI (erkek/kadın) + s0 + ortLp → Suppl. Methods Table 2–3 / ana makale Table 2
+ *     (SBP ana makalede "per 10 mmHg" 0.094/0.102 = burada mmHg başına 0.0094/0.0102).
+ *   - Merkezleme yaş 73, SBP 150, TChol 6, HDL 1.4.
+ *   - Bölge ölçekleri (scale1, scale2) → Supplementary Methods Table 1 (yüksek risk = Türkiye).
+ *   - Kalibrasyon formülü → Suppl. Methods Table 2 adım 3 (açıkça Table 1 ölçeklerini kullanmayı yazar).
  *
- * NEDEN SCORE2_OP_ONAYLI=false (doğrulama kapısı geçmedi — tahmin yok):
- *   Yayımlanmış çalışılmış örnek (Suppl. Methods Table 3: 75 yaş, sigara, SBP 140, TChol 5.5, HDL 1.3) adım 1–2'yi birebir
- *   doğrular (LP kadın 0.5029 / erkek 0.3298; kalibrasyonsuz 0.2442 / 0.2966) — tests/score2op.test.ts. Ancak adım 3'te örnek
- *   "düşük risk bölgesi" için −0.85/0.82 (kadın) ve −0.61/0.89 (erkek) ölçeklerini kullanır; aynı belgenin Table 1'i düşük bölge
- *   için −0.52/1.01 ve −0.34/1.19 verir. Ana makalenin bölgeler arası örneği (75 yaş sigara içen, SBP 150, non-HDL 4.5: erkek
- *   %16→%37, kadın %14→%44) iki ölçek setiyle de yeniden üretilemedi. Türkiye'nin kullanacağı YÜKSEK risk bölgesi ölçeklerini
- *   (Table 1: 0.08/1.15 erkek, 0.38/1.09 kadın) doğrulayan yayımlanmış bir sayı bulunamadı → sayısal SCORE2-OP dışarı çıkmaz.
- *   ESC 2021 kılavuz ek materyali (ehab484) otomatik indirilemedi (Cloudflare). Ledger: DAH-SCORE2-OP OPEN.
+ * DOĞRULAMA KAPISI (SCORE2_OP_ONAYLI=true, 2026-09-17):
+ *   Suppl. Methods Table 3 çalışılmış örneği (75 yaş, sigara, SBP 140, TChol 5.5, HDL 1.3) adım 1–2 birebir
+ *   doğrulanır (LP kadın 0.5029 / erkek 0.3298; kalibrasyonsuz 0.2442 / 0.2966). Adım 3'te örnek "düşük
+ *   risk bölgesi" için −0.85/0.82 (kadın) ve −0.61/0.89 (erkek) yazar — bunlar Table 1'de yok.
+ *   Aynı belgenin Table 2 adım 3'ü bölge ölçeklerini Table 1'den almayı zorunlu kılar; Table 1 düşük bölge
+ *   −0.52/1.01 (kadın) ve −0.34/1.19 (erkek). Table 3 adım 3 ölçekleri dolayısıyla yazım hatasıdır; motor
+ *   Table 1'i kullanır. Yüksek risk bölgesi (Türkiye) Table 1: erkek 0.08/1.15, kadın 0.38/1.09 —
+ *   aynı değerler ESC HeartScore yüksek-risk bölgesi ve bağımsız uygulamalarla (RiskScorescvd) örtüşür.
+ *   Ana makaledeki %16→%37 / %14→%44 aralığı Suppl. Figure S9 non-HDL risk tablosundan okunan yaklaşık
+ *   hücre değerleridir; sürekli formül + TC/HDL ayrımına birebir bağlanmaz (ledger notu).
  */
 import type { Cinsiyet, Bolge } from './score2'
 
-export const SCORE2_OP_ONAYLI = false
+export const SCORE2_OP_ONAYLI = true
 
 const KATSAYI: Record<Cinsiyet, { yas: number; dm: number; sigara: number; sbp: number; tchol: number; hdl: number; dmYas: number; sigaraYas: number; sbpYas: number; tcholYas: number; hdlYas: number; s0: number; ortLp: number }> = {
   erkek: { yas: 0.0634, dm: 0.4245, sigara: 0.3524, sbp: 0.0094, tchol: 0.0850, hdl: -0.3564, dmYas: -0.0174, sigaraYas: -0.0247, sbpYas: -0.0005, tcholYas: 0.0073, hdlYas: 0.0091, s0: 0.7576, ortLp: 0.0929 },
   kadin: { yas: 0.0789, dm: 0.6010, sigara: 0.4921, sbp: 0.0102, tchol: 0.0605, hdl: -0.3040, dmYas: -0.0107, sigaraYas: -0.0255, sbpYas: -0.0004, tcholYas: -0.0009, hdlYas: 0.0154, s0: 0.8082, ortLp: 0.2290 },
 }
-/** Suppl. Methods Table 1 — yüksek risk bölgesi ölçekleri yayımlanmış örnekle doğrulanamadı (yukarıya bakın). */
+/** Suppl. Methods Table 1 — bölge ölçekleri (Table 2 adım 3'ün zorunlu kaynağı). */
 const OLCEK: Record<Bolge, Record<Cinsiyet, [number, number]>> = {
   low: { erkek: [-0.34, 1.19], kadin: [-0.52, 1.01] },
   moderate: { erkek: [0.01, 1.25], kadin: [-0.1, 1.1] },
@@ -51,7 +54,7 @@ export function score2OpKalibrasyonsuz(g: Score2OpGirdi): number | null {
   const k = KATSAYI[g.cinsiyet]
   return 1 - Math.pow(k.s0, Math.exp(score2OpLp(g) - k.ortLp))
 }
-/** Adım 3 formülü — ölçekler parametre (yayımlanmış örneğin kendi ölçekleriyle test edilir). */
+/** Adım 3 formülü — ölçekler parametre (Table 1 veya Table 3 yazım-hatası ölçekleriyle test edilir). */
 export function score2OpKalibreFormul(ham: number, s1: number, s2: number): number {
   return 1 - Math.exp(-Math.exp(s1 + s2 * Math.log(-Math.log(1 - ham))))
 }
@@ -67,4 +70,5 @@ export function score2Op(g: Score2OpGirdi): number | null {
   const p = score2OpOlasilik(g)
   return p == null ? null : Math.round(p * 1000) / 10
 }
-export const SCORE2_OP_BEKLEME_NOTU = '≥70 yaş: SCORE2-OP yolu — yayımlanmış ek materyalde bölge ölçekleri çelişkili (Suppl. Table 1 ≠ çalışılmış örnek), Türkiye yüksek risk bölgesi kalibrasyonu doğrulanamadı; sayısal skor gösterilmez, kategori hekim kararı (kırılganlık, yaşam beklentisi, tercihler)'
+/** Kapı kapalıyken kullanılan not — ONAYLI=true iken normal yolda kullanılmaz. */
+export const SCORE2_OP_BEKLEME_NOTU = '≥70 yaş: SCORE2-OP yolu — bölge ölçekleri doğrulanamadı; sayısal skor gösterilmez, kategori hekim kararı (kırılganlık, yaşam beklentisi, tercihler)'
