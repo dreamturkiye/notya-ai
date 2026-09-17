@@ -45,13 +45,14 @@ export default function HafifMarkdown({ metin, karanlik = true }: { metin: strin
   const maddeyiBos = (key: string) => {
     if (!madde.length) return;
     cikti.push(
-      <div key={key} style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: 10, rowGap: 5, margin: '4px 0 6px' }}>
+      // fit-content(45%) + wrapping label: a long "**Label:** value" label (max-content + nowrap) set the chat panel's min width (445px panel on a 360px screen, left edge cut).
+      <div key={key} style={{ display: 'grid', gridTemplateColumns: 'fit-content(45%) minmax(0, 1fr)', columnGap: 10, rowGap: 5, margin: '4px 0 6px' }}>
         {madde.map((m, i) => {
           const es = m.match(/^\*\*([^*]+?):?\*\*:?\s*(.*)$/);
           if (es) {
             return (
               <React.Fragment key={i}>
-                <span style={{ color: etiketRenk, fontWeight: 600, whiteSpace: 'nowrap' }}>{es[1].replace(/:$/, '')}</span>
+                <span style={{ color: etiketRenk, fontWeight: 600, overflowWrap: 'anywhere' }}>{es[1].replace(/:$/, '')}</span>
                 <span>{kalin(es[2], karanlik)}</span>
               </React.Fragment>
             );
@@ -89,5 +90,6 @@ export default function HafifMarkdown({ metin, karanlik = true }: { metin: strin
     cikti.push(<div key={`p${i}`} style={karanlik ? undefined : { color: '#222' }}>{kalin(t, karanlik)}</div>);
   }
   maddeyiBos('son');
-  return <div style={{ lineHeight: 1.55 }}>{cikti}</div>;
+  // overflowWrap on the root: hosts without it (HastaKonsult, epikriz, SGK rapor) let an unbroken token (URL, code) run past the bubble.
+  return <div style={{ lineHeight: 1.55, overflowWrap: 'anywhere' }}>{cikti}</div>;
 }

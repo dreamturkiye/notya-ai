@@ -97,6 +97,23 @@ and surgical branches last (hospital-based / lower muayenehane volume).
 
 Assumption: customer = Turkish private-practice physicians (muayenehane/poliklinik).
 
+### Sağlığım — specialty-specific portal modules (DECIDED 2026-09-17, Kaan)
+
+Core Sağlığım shell stays universal (PIN, mesajlar, ziyaretler, sonuçlar, ilaçlar, öykü, KVKK/112).
+**Beyond core, portals are specialty-specific** — pediatri ≠ göz ≠ KD ≠ dahiliye ≠ derm. Same
+core values; section UI/data via registry modules, not one identical Takip for every branş.
+Skill: `.cursor/skills/specialty-hasta-portali/SKILL.md`. Audits must score a **Hasta portalı**
+depth row (`specialty-audit-report`). Today’s gebelik/büyüme/dahiliye-anket bolt-ons are Partial;
+new chapters (Göz first next) ship doctor chapter + portal module in the same program.
+
+### Göz Hastalıkları — next full chapter (queued 2026-09-17)
+
+No `specialties/goz-*` yet; registry = baseline only. Catalog/intake/SOAP stub + VA/GİB measurement
+keys exist. Golden refs: TOD + SB DR/glokom + TOD birimler + SGK GİL/anti-VEGF first; Kanski/
+Vaughan/AAO BCSC secondary (çakışmada TOD/SB). Method = KD/dahiliye depth: pre-sprint audit →
+engines/UI/prompts lock → specialty portal “Gözlerim” → ship. Pain focus: 8-hour poliklinik
+speed (bilateral VA/GİB, glokom/DR/katarakt loops, enjeksiyon takvim, SGK rapor).
+
 ## Kadın Hastalıkları ve Doğum — Wave 1, first slice shipped 2026-09-14 (night)
 
 Shipped for Dr. Gökhan's morning review: lib/clinical/gebelik.ts (Naegele/USG dating, SB DÖB
@@ -368,3 +385,17 @@ Three known non-urgent items from the KD-PROMPTS-LOCK (#278) and F3/F4 (#282/#28
 
 | 2026-09-17 | **F1 dose-lock false positive — PPH ≥500 mL** — `uydurmaDozTemizle` no longer treats blood-loss volume thresholds (mL with ≥/≤/PPH/kan kaybı context) as invented drug doses; real mg/mcg/IU doses still locked. Regression in `lib/doktor/dozKilidi.test.ts`. | SHIPPED |
 | 2026-09-17 | **citeProtocol TR-first** — citation display order SB/national TR → Temel KD → ACOG → Williams (overrides prior ACOG-first ranking for Notya display). Test updated in `sources-acog.test.ts`. | SHIPPED |
+
+## MOBILE-REVIEW — two-day build, phone widths (2026-09-17)
+
+Scope: everything shipped in the dahiliye wow sprint, the e-reçete / renkli reçete work, and the KD/derm prompt-lock work. Layout/rendering only; clinical logic, locks, Kaynak content and the dose guard were not touched. **Method:** real app (`next dev`, `qa.dahiliye@notya.ai`, synthetic smoke patients from `scripts/dahiliye-smoke.mts`), gstack browse (headless Chromium) at **360 / 390 / 412 / 428px** (+1280 regression). Per surface: body/document scrollWidth vs viewport; elements past their card or the viewport, including ones the global `overflow-x: hidden` silently cuts; controls under 24px; sticky behaviour when scrolled; a visual read of every screenshot. Evidence: `smoke-out/mobile-review/*-{once,sonra}.png` (gitignored, same as MD-TABLO). Temporary fixtures: synthetic `hasta_ilaclar` rows (Pantoprazol/Alprazolam/Morfin QA, no dose) on the smoke note for the split sheets, and a known PIN on the smoke portal token. Removed afterwards; the next smoke run reseeds the token.
+
+| Tarih | Kalem | Durum |
+|---|---|---|
+| 2026-09-17 | **Checked, already fine.** All 31 dahiliye sections (Özet, HT, DM, DM döngü, Lipid, KVR, KBH, Tiroid, Anemi, Obezite, Tarama/Aşı, İzlem, Ev kayıt, Ön anket, KY, Antikoagülan, Solunum, GI, EKG, Ramazan, the 7 WOW-NEXT cards: Polifarmasi, Hedef kartı, Sigara, Vit D/B12, e-Nabız, Gut, Osteoporoz; plus Check-up, İlaçlar, SGK rapor, Sevk): no page-level side-scroll at any width. Also fine: the expanded 1-tap plan, the check-up ledger and birleşik rapor, the nefro sevk text, the Hedef kartı table (fits at 282px), the e-Nabız upload card, the EReceteDurum strip, the RrsPaneli on the kırmızı/yeşil sheets (each color on its own sheet), and chat tables at 360–428 on /asistan, hasta konsult and not-konsult. No KD/derm UI file changed in the window (only prompts/safety), so none was re-rendered. | CHECKED |
+| 2026-09-17 | **#288 (1/3):** SGK rapor select, fixed at 380px, ran past the card at all widths → `maxWidth 100%`. Görev ✓ 27×19 → 36×28; "Nota ekle" 63×19 and two lines → 28px, one line. Kohort rows didn't wrap (3-line badge ovals, 4-line button) → wrap. **Belge/lab page** 2-column grid never stacked (report in a 188px column, body 393–629px) → new `.notya-grid-yigin` (≤768px `minmax(0,1fr)`; a plain `1fr` let the lab table push the column to 629px). Lab table scrolls in its own wrapper, and "Resmi tanıya al" drops under the text. **Portal takip + ön anket:** white hero CTA on a white panel ("Gönder", "Anketi doldur" read as text), panels flush to the screen edge → `sg-pin-btn` + `.sg-fade` inset. | SHIPPED |
+| 2026-09-17 | **#289 (2/3):** Ayarlar › e-Reçete 2-column inputs cut placeholders at 360 → stack. Reçete page kutu −/+ 20×20 → 28×28 (still hidden in print); "← Geri" nowrap. **Reçetem bekleyenler showed the patient name as raw JSON** `{"ad":"…"}` for every patient (`name_encrypted` is `{ad,soyad}` JSON) → `/api/doktor/rrs` GET decodes it; plain-text HL7 names pass through. | SHIPPED |
+| 2026-09-17 | **3/3 — chat markdown (verifies #286 across the full answer):** the table fix held, but a long `**Label:** value` row (label track `max-content` + `nowrap`) pushed the chat panel to 445px on a 360px screen and cut the left edge, table included. Fix: `fit-content(45%) minmax(0,1fr)` with a wrapping label, plus `overflowWrap: anywhere` on the HafifMarkdown root (HastaKonsult's bubble let an unbroken token spill). Verified with a stubbed answer (wide 4-column table, long label, 90-character unbroken token, long URL, headings, rule) in the real /asistan chat, hasta konsult and inceleme not-konsult at 360/390/412/428: body = viewport, no content past the bubble, table scrolls inside; 1280 unchanged. Epikriz / SGK rapor use the same component, but their answers need a live LLM run, so they weren't rendered. Guard test in `lib/asistan/markdownTablo.test.ts`. | SHIPPED |
+| 2026-09-17 | **MOBILE-STICKY-GLOBAL — no `position: sticky` in the app actually sticks** (desktop too): the vizit şeridi, DoktorNav, KD/derm strips, note header, klinik/mali/avukat navs. Cause: `app/globals.css` `html, body { overflow-x: hidden }` makes `body` a scroll container while the window scrolls. Verified: with `overflow-x: clip` sticky works (`smoke-out/mobile-review/sticky-serit-360x640-clip-deneme.png`), but then (a) the nav becomes sticky on every page, taking 65px of a 640px phone screen, and (b) the dahiliye şerit (136px tall at 360) and the KD/derm strips park at `top: 0` **under** the nav (z 100). Today the şerit simply scrolls away and covers nothing. **Not changed:** app-wide chrome behaviour beyond this review. If wanted: `overflow-x: clip` on html/body (keep `hidden` as the fallback line), strips `top: <nav height>`, and a one-line collapsed şerit under 480px. | OPEN (Kaan decision) |
+| 2026-09-17 | **HEDEF-KARTI-KB-UNDEFINED** (found in the review, not layout): Hedef kartı shows "Tansiyon **undefined mmHg altı**" and the KB lock input shows "undefi". `specialties/dahiliye/engines/hedefKart.ts` reads `kbHedef.sbpUst/dbpUst`, but the HT target is stored as `{sbp, dbp}` (check-up report prints `HT: hedef: {"dbp":80,"sbp":130}`), so the status is also computed against `undefined` (always hedef dışı). Clinical logic, left for a separate ticket. | OPEN |
+| 2026-09-17 | Minor, not changed: placeholders cut in narrow fixed-width dahiliye inputs ("hedef INR aralığı", "T total kalça", "uyanınca ilk sigara (dk)"); the value is still typed and shown normally. Headless caveat: native `<select>` / date pickers and the iOS 16px-focus zoom can't be judged in headless Chromium, so they need a real iPhone/Galaxy pass. | NOTED |

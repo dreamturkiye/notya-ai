@@ -49,3 +49,12 @@ test('HafifMarkdown renders tables (scroll wrapper, no page overflow), headings 
   assert.ok(src.includes('<table') && src.includes("overflowX: 'auto'"))
   assert.ok(/#{1,3}/.test(src) && src.includes('<hr'))
 })
+
+test('HafifMarkdown label rows cannot widen the chat panel on a phone (MOBILE-REVIEW)', () => {
+  const src = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'components', 'asistan', 'HafifMarkdown.tsx'), 'utf8')
+  // A max-content label track with nowrap made a long "**Label:** value" row the panel's min width (445px on a 360px screen).
+  assert.ok(src.includes("gridTemplateColumns: 'fit-content(45%) minmax(0, 1fr)'"))
+  assert.ok(!src.includes("gridTemplateColumns: 'max-content 1fr'"))
+  assert.ok(!/etiketRenk, fontWeight: 600, whiteSpace: 'nowrap'/.test(src))
+  assert.ok(src.includes("lineHeight: 1.55, overflowWrap: 'anywhere'"), 'unbroken tokens wrap inside every host bubble')
+})
