@@ -19,6 +19,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy'
+import { PERSONAS, varsayilanPersonaId } from '@/lib/asistan/personaEngine'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -126,6 +127,7 @@ export default function DoktorDashboard() {
   const router = useRouter()
   const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
   const [ayseAcilis, setAyseAcilis] = useState<string>('')
+  const [asistanKisaAd, setAsistanKisaAd] = useState('Ayşe')
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
   const [recentNotes, setRecentNotes] = useState<NoteItem[]>([])
   const [haftalikRandevular, setHaftalikRandevular] = useState<RandevuOzet[]>([])
@@ -161,6 +163,8 @@ export default function DoktorDashboard() {
           const name = ham.replace(/^\s*(?:(?:Prof|Doç|Uzm|Op|Dr|Dt)\.?\s+)+/i, '').trim() || ham
           setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
           setPediatriAraci(pediatriHedefBoyBransi(meData.data?.specialty))
+          const personaId = varsayilanPersonaId(meData.data?.specialty)
+          setAsistanKisaAd(PERSONAS[personaId]?.shortName || 'Ayşe')
         }
       } catch {}
 
@@ -271,7 +275,7 @@ export default function DoktorDashboard() {
             <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: -0.4, marginTop: 4 }}>Hoş geldiniz, Dr. {doktorAdi}</div>
             {ayseAcilis && (
               <div style={{ marginTop: 10, fontSize: 14, color: '#C9D4E3', lineHeight: 1.55, maxWidth: 720 }}>
-                <span style={{ color: '#2DD4BF', fontWeight: 700 }}>Ayşe:</span> {ayseAcilis}
+                <span style={{ color: '#2DD4BF', fontWeight: 700 }}>{asistanKisaAd}:</span> {ayseAcilis}
               </div>
             )}
           </div>

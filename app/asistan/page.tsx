@@ -10,8 +10,7 @@ import {
   PERSONAS,
   PERSONA_ORDER,
   buildVoiceSystemPrompt,
-  varsayilanPersonaId,
-  VARSAYILAN_PERSONA,
+  resolveOpeningPersonaId,
   type Persona,
   type PersonaId,
 } from "@/lib/asistan/personaEngine"
@@ -97,18 +96,7 @@ export default function AsistanPage() {
     return () => window.removeEventListener('resize', chk)
   }, [])
 
-  // Restore last *manually* chosen colleague — never auto-jump from doctor specialty
-  // (that briefly showed Ayşe then flipped to Yusuf when specialty was Aile/genel).
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('notya_asistan_persona')
-      if (saved && PERSONAS[saved]) {
-        setPersonaKey(saved)
-        setPersona(PERSONAS[saved])
-      }
-    } catch { /* ignore */ }
-  }, [])
-
+  // Opening colleague: branch doctors (KD → Fatma) ignore stale localStorage Ayşe.
   useEffect(() => {
     ;(async () => {
       let token = await ensureDoctorAccessToken()
@@ -143,15 +131,17 @@ export default function AsistanPage() {
         return
       }
       setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
-      // Opens on the last tab the doctor picked, else Ayşe — except a branch doctor (kadın doğum, dermatoloji, …) who has
-      // never picked one: they get their branch colleague, not the pediatri one (ASISTAN-PERSONA-BRANS). genel / aile stay on Ayşe.
       let secili: string | null = null
       try { secili = localStorage.getItem('notya_asistan_persona') } catch { /* ignore */ }
-      const brans = varsayilanPersonaId((profileData.data as { specialty?: string } | undefined)?.specialty)
-      if (!(secili && PERSONAS[secili]) && brans !== VARSAYILAN_PERSONA && PERSONAS[brans]) {
-        setPersonaKey(brans)
-        setPersona(PERSONAS[brans])
-      }
+      const acilis = resolveOpeningPersonaId(
+        (profileData.data as { specialty?: string } | undefined)?.specialty,
+        secili,
+      )
+      setPersonaKey(acilis)
+      setPersona(PERSONAS[acilis])
+      try {
+        if (secili !== acilis) localStorage.setItem('notya_asistan_persona', acilis)
+      } catch { /* ignore */ }
     })()
     return () => { void endConversation() }
   }, [])

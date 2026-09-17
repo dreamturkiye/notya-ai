@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
-import { PERSONAS, VARSAYILAN_PERSONA, getPersonaForSpecialty, varsayilanPersonaId } from './personaEngine'
+import { PERSONAS, VARSAYILAN_PERSONA, getPersonaForSpecialty, varsayilanPersonaId, resolveOpeningPersonaId } from './personaEngine'
 
 // ASISTAN-PERSONA-BRANS (KD-DERM-SAFETY-FINDINGS F2): a KD doctor with no persona picked was introduced as the pediatri colleague.
 test('no persona picked: branch doctors get their branch colleague from users.specialty', () => {
@@ -24,10 +24,21 @@ test('genel / aile hekimliği / pediatri / unknown keep the flagship Ayşe (b940
   for (const b of [null, undefined, '', 'genel', 'aile-hekimligi', 'Aile Hekimliği', 'pediatri', 'bilinmeyen-brans']) assert.equal(varsayilanPersonaId('genel', b), VARSAYILAN_PERSONA, String(b))
 })
 
+test('KD / derm ignore stale localStorage Ayşe after branş switch', () => {
+  assert.equal(resolveOpeningPersonaId('kadin-hastaliklari-dogum', 'aysekaya'), 'fatmacelik')
+  assert.equal(resolveOpeningPersonaId('kadin-dogum', null), 'fatmacelik')
+  assert.equal(resolveOpeningPersonaId('dermatoloji', 'aysekaya'), PERSONAS[varsayilanPersonaId('dermatoloji')].id)
+  // Explicit non-Ayşe pick still honored
+  assert.equal(resolveOpeningPersonaId('kadin-hastaliklari-dogum', 'mehmetdemir'), 'mehmetdemir')
+  // Pediatri / genel keep saved Ayşe
+  assert.equal(resolveOpeningPersonaId('pediatri', 'aysekaya'), 'aysekaya')
+  assert.equal(resolveOpeningPersonaId('aile-hekimligi', 'aysekaya'), 'aysekaya')
+})
+
 test('chat route and asistan page use the branch-aware default, not a hardcoded pediatri fallback', () => {
   const kok = path.join(import.meta.dirname, '..', '..')
   const rota = fs.readFileSync(path.join(kok, 'app/api/asistan/chat/route.ts'), 'utf8')
   assert.ok(rota.includes('varsayilanPersonaId(specialty, hekimBransi)')); assert.ok(!rota.includes('getPersonaForSpecialty(specialty || "pediatri")'))
   assert.ok(!rota.includes('prefs?.preferred_persona'), 'schema default elifsahin (nöroloji) is never a doctor pick')
-  assert.ok(fs.readFileSync(path.join(kok, 'app/asistan/page.tsx'), 'utf8').includes('varsayilanPersonaId('))
+  assert.ok(fs.readFileSync(path.join(kok, 'app/asistan/page.tsx'), 'utf8').includes('resolveOpeningPersonaId('))
 })

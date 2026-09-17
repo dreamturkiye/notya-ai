@@ -59,7 +59,11 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
       setBrans(yeni)
       // Muayene sayfası branşı localStorage'dan önbellekli okuyor (NOTYA-BRANS-02) —
       // güncellemezsek yeni branşa geçtikten sonra eski branşa kilitlenirdi.
-      try { localStorage.setItem('notya_doktor_specialty', yeni) } catch { /* önbellek yoksa sorun değil */ }
+      try {
+        localStorage.setItem('notya_doktor_specialty', yeni)
+        // Drop stale Ayşe tab after KD/derm/… switch — asistan opens on branch colleague.
+        localStorage.removeItem('notya_asistan_persona')
+      } catch { /* önbellek yoksa sorun değil */ }
       // Branşa bağlı durum panodan portala kadar dağınık; tek temiz yeniden yükleme
       // sayfa sayfa elle yenilemekten hem basit hem güvenilir.
       window.location.reload()

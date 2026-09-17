@@ -258,6 +258,26 @@ export function varsayilanPersonaId(...branslar: (string | null | undefined)[]):
   return VARSAYILAN_PERSONA
 }
 
+/**
+ * Opening tab for /asistan (and dashboard label).
+ * Branch doctors (KD → Fatma, derm → …): ignore stale localStorage `aysekaya` left from pediatri /
+ * superuser branş switch. An explicit non-Ayşe tab pick is kept. genel/aile/pediatri: honor saved or Ayşe.
+ */
+export function resolveOpeningPersonaId(
+  hekimBransi: string | null | undefined,
+  savedPersonaId: string | null | undefined,
+): PersonaId {
+  const branchDefault = varsayilanPersonaId(hekimBransi)
+  const saved =
+    savedPersonaId && PERSONAS[savedPersonaId as PersonaId] ? (savedPersonaId as PersonaId) : null
+
+  if (branchDefault !== VARSAYILAN_PERSONA) {
+    if (!saved || saved === VARSAYILAN_PERSONA) return branchDefault
+    return saved
+  }
+  return saved || VARSAYILAN_PERSONA
+}
+
 export function getPersona(id: string): Persona {
   const fromId = SPECIALIST_BY_ID[id]
   if (fromId) return toPersona(fromId)
