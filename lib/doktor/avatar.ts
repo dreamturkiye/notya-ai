@@ -19,7 +19,7 @@ export type AvatarMime = (typeof AVATAR_IZINLI_MIME)[number]
  * Kasa 4 MB'a kadar çıkıyor ama avatar her karşılama ekranında data URL olarak taşınıyor;
  * 2 MB profil fotoğrafı için fazlasıyla yeterli ve sayfayı şişirmez.
  */
-export const AVATAR_MAX_BYTES = 2 * 1024 * 1024
+export const AVATAR_MAX_BYTES = 4 * 1024 * 1024
 
 export class AvatarGecersizError extends Error {
   constructor(message: string) {
