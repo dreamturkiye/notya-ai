@@ -15,9 +15,10 @@ Boss standing rule (commercial app, not one clinic’s private toolbox):
 1. Most tools built via pediatri are already **base** and must stay **the same** across all ~30 specialties (ilaç etkileşimi, epikriz, e-reçete, ICD-10, …).
 2. Every new Araçlar entry is exactly one of:
    - **Base** — multi-specialty, identical → `ORTAK_DOKTOR_ARACLARI`
-   - **Specialty-only** — one branş → `BRANS_DOKTOR_ARACLARI` + `branslar` + deep-link guard
+   - **Specialty-only** — named branş(lar) only → `BRANS_…` + `branslar` + deep-link guard + test that foreign branşlar omit it
    - **New universal** — new tool for everyone → `ORTAK_DOKTOR_ARACLARI`
-3. Never put sprint audits, gap HTML, ticket jargon, or named people (`Gökhan …`) on the Araçlar grid. Never embed full studios (e.g. Hedef Boy) on the landing — specialty tools are **cards you open**.
-4. No cross-leak: göz must not see dahiliye tools; KD must not see göz tools.
+3. **Always analyze visibility:** which specialties should see this tool? Child tools (e.g. Hedef Boy / anne-baba boyu) must **never** appear in kardiyoloji or other non-pediatri branşlar — showing them there makes no sense.
+4. Never put sprint audits, gap HTML, ticket jargon, or named people (`Gökhan …`) on the Araçlar grid. Never embed full studios on the landing — specialty tools are **cards you open**.
+5. No cross-leak: göz ≠ dahiliye tools; KD ≠ göz tools; kardiyoloji ≠ Hedef Boy.
 
 Name the bucket in the commit/PR before implementing. Catalog: `lib/doktor/doktorAraclari.ts`.

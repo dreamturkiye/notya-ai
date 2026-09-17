@@ -29,17 +29,30 @@ Boss rules (verbatim intent):
 
 > Bundan boyle her araci boyle degerlendirmemiz ve ona gore eklememiz lazim.
 
+> Ve mesela bu cocuk veya hicbir specialty'de gosterilmemeli. Such as Kardiolojide
+> bunu bir arac olarak gostermek makes no sense. So boyle araclari yaparken hangi
+> specialtyde gosterilmesi her zaman analiz edilmeli.
+
 ## Gate (before any Araçlar / tool change)
 
-**Stop. Classify the araç. Then implement.** Do not add a tile until one bucket is named in the PR/commit body.
+**Stop. Classify the araç. Name which specialties see it. Then implement.**
+
+Do not add a tile until (1) the bucket is named and (2) the **visibility set** is explicit — either “all ~30” or a listed `SpecialtyKey[]`. “Built during pediatri sprint” is not a visibility answer.
 
 | Bucket | Meaning | Catalog | Who sees it |
 |--------|---------|---------|-------------|
 | **Base (shared spine)** | Same tool for every specialty — does not change by branş. Built historically via pediatri, but product is universal. Examples: ilaç etkileşimi, epikriz, e-reçete, ICD-10, tetkik, hasta portalı link, SGK Medula, e-Nabız, hasta raporları. | `ORTAK_DOKTOR_ARACLARI` (`branslar: null`) | All ~30 specialties |
-| **Specialty-only** | Clinical tool for one branş. Examples: Dahiliye Kohort; Pediatri Hedef Boy (**card that opens its own page** — never embed the studio on Araçlar landing). | `BRANS_DOKTOR_ARACLARI` + `branslar: […]` | Only that branş |
+| **Specialty-only** | Clinical tool for **named** branş(lar) only. Ask: *does this make sense in kardiyoloji / göz / KD / …?* If no → keep it out. Examples: Pediatri Hedef Boy (anne-baba → çocuk boyu — **never** kardiyoloji); Dahiliye Kohort. | `BRANS_DOKTOR_ARACLARI` + `branslar: […]` | Only those branşlar |
 | **New universal** | A brand-new tool that every specialty will use the same way. | Add to `ORTAK_DOKTOR_ARACLARI` | All ~30 specialties |
 
-If unsure: default to **base** when the workflow is branş-agnostik (reçete, epikriz, etkileşim, kodlama). Do **not** fork a base tool into `specialties/<slug>/` just because the bug was reported from pediatri.
+**Visibility analysis (required for specialty-only and for anything child-/chapter-clinical):**
+
+1. What clinical question does this tool answer?
+2. Which branş(lar) ask that question every day?
+3. Name ≥2 branşlar that must **not** see it (e.g. Hedef Boy → not kardiyoloji, not göz, not KD).
+4. Encode that in `branslar` + deep-link guard + a test that foreign branş lists omit the route.
+
+If unsure: default to **base** when the workflow is branş-agnostik (reçete, epikriz, etkileşim, kodlama). Do **not** fork a base tool into `specialties/<slug>/` just because the bug was reported from pediatri. Do **not** put a child/pediatri calculator on every specialty “just in case”.
 
 ## One-line product rule
 
@@ -91,6 +104,8 @@ Free-text `users.specialty` → `doktorAracBransi` / `portalBransAnahtari`.
 ## Anti-patterns
 
 - Treating a base tool as “pediatri-only” because it was built during a pediatri sprint.
+- Showing a **child / pediatri** tool (Hedef Boy, büyüme studio, …) in kardiyoloji or any non-owning branş.
+- Skipping visibility analysis (“which specialties see this?”) when adding a specialty-only tile.
 - Showing another branş’s clinical tile (göz≠dahiliye, KD≠göz).
 - Linking audit HTML “only for KD” — still wrong for commercial UI.
 - Forking epikriz / ilaç etkileşimi / ICD-10 per specialty.
@@ -100,10 +115,11 @@ Free-text `users.specialty` → `doktorAracBransi` / `portalBransAnahtari`.
 
 ```
 - [ ] Bucket named: base | specialty-only | new-universal
+- [ ] Visibility named: all ~30 OR explicit SpecialtyKey[] + ≥2 branşlar that must NOT see it
 - [ ] If base/universal: ORTAK_…; identical for all ~30
 - [ ] If specialty-only: BRANS_… + branslar + deep-link guard + foreign-branş absence test
 - [ ] Commercial copy: no person names, no sprint/audit jargon, no .html audit links
-- [ ] Page still uses doktorAraclariListesi only
+- [ ] Page still uses doktorAraclariListesi only; no embedded studios on landing
 ```
 
 ## Related

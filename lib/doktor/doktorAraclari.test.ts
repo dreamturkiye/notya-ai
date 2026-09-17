@@ -58,6 +58,18 @@ test('deep-link guard: chapter tools only for owning branş', () => {
   assert.equal(doktorAraciBransaUygun('/doktor-tools/erecete', 'goz-hastaliklari'), true)
 })
 
+test('Hedef Boy is pediatri-only — never kardiyoloji / göz / KD / dahiliye', () => {
+  for (const b of ['kardiyoloji', 'goz-hastaliklari', 'kadin-dogum', 'dahiliye', 'ortopedi', 'aile-hekimligi']) {
+    assert.ok(
+      !doktorAraclariListesi(b).some((a) => a.route === '/doktor-tools/hedef-boy'),
+      `${b} must not see Hedef Boy`,
+    )
+    assert.equal(doktorAraciBransaUygun('/doktor-tools/hedef-boy', b), false, b)
+  }
+  assert.ok(doktorAraclariListesi('pediatri').some((a) => a.route === '/doktor-tools/hedef-boy'))
+  assert.equal(doktorAraciBransaUygun('/doktor-tools/hedef-boy', 'pediatri'), true)
+})
+
 test('Araçlar landing is a card grid only — Hedef Boy opens as its own page', () => {
   const kok = path.join(import.meta.dirname, '../..')
   const page = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')

@@ -20,10 +20,10 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 
 ## Doktor Araçları (short)
 
-Most tools built during pediatri sprints are **base** and must remain identical for every specialty. Before adding anything to Araçlar, classify:
+Most tools built during pediatri sprints are **base** and must remain identical for every specialty. Before adding anything to Araçlar, classify **and** name which specialties see it:
 
 1. **Base** — same for all branşlar → `ORTAK_DOKTOR_ARACLARI`
-2. **Specialty-only** → `BRANS_DOKTOR_ARACLARI` + gate
+2. **Specialty-only** → `BRANS_DOKTOR_ARACLARI` + gate (e.g. Hedef Boy = pediatri only — never kardiyoloji)
 3. **New universal** → `ORTAK_DOKTOR_ARACLARI`
 
 Commercial UI only — no internal audits or named beta-doctor copy on `/doktor-tools`. Full text: the skill above.
