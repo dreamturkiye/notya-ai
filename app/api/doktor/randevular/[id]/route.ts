@@ -5,6 +5,10 @@
  *   - reschedule: { baslangic, bitis } — re-checks the overlap window, excluding itself
  *   - status change: { durum, iptalNedeni? } — planlandi/onaylandi/tamamlandi/iptal/gelmedi
  *   - edit details: { tur, notlar }
+ * Which columns each body touches is decided by randevuGuncellemePlani() (lib/randevu/randevuDurum.ts),
+ * a pure function shared with the UI's action gating and covered by tests — a reschedule NEVER
+ * touches `durum`, and re-activating a cancelled appointment is an explicit durum change that
+ * has to pass the overlap check (the slot may have been re-booked while it was cancelled).
  * DELETE removes the row outright — for a genuine mis-entry, not a real cancellation. A real
  * cancellation is PATCH durum=iptal, which keeps the record (and the reason) instead of erasing
  * it; deleting it would throw away exactly the history a doctor's day-to-day defense depends on.
@@ -12,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { otomatikHastaKaydiOlustur } from '@/lib/doktor/otomatikHastaKaydi'
+import { randevuGuncellemePlani } from '@/lib/randevu/randevuDurum'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const { data: mevcut } = await supabase
     .from('randevular')
-    .select('id, baslangic, bitis, patient_id, hasta_adi_serbest, hasta_telefon_serbest, hasta_email_serbest')
+    .select('id, baslangic, bitis, durum, patient_id, hasta_adi_serbest, hasta_telefon_serbest, hasta_email_serbest')
     .eq('id', params.id)
     .eq('doktor_id', doktorId)
     .maybeSingle()
@@ -43,45 +48,36 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     hastaEmailSerbest?: string
   }
 
-  const guncelleme: Record<string, unknown> = {}
+  const plan = randevuGuncellemePlani(
+    { baslangic: mevcut.baslangic, bitis: mevcut.bitis, durum: mevcut.durum },
+    { baslangic, bitis, durum, iptalNedeni, tur, notlar, hastaDurumu }
+  )
+  if (plan.hata) return NextResponse.json({ error: plan.hata }, { status: 400 })
 
-  if (baslangic || bitis) {
-    const yeniBaslangic = baslangic || mevcut.baslangic
-    const yeniBitis = bitis || mevcut.bitis
-    if (new Date(yeniBitis) <= new Date(yeniBaslangic)) {
-      return NextResponse.json({ error: 'Bitiş saati başlangıçtan sonra olmalıdır.' }, { status: 400 })
-    }
+  if (plan.cakismaKontrolu) {
     const { data: cakisan, error: cakismaHata } = await supabase
       .from('randevular')
       .select('id')
       .eq('doktor_id', doktorId)
       .neq('id', params.id)
       .neq('durum', 'iptal')
-      .lt('baslangic', yeniBitis)
-      .gt('bitis', yeniBaslangic)
+      .lt('baslangic', plan.cakismaKontrolu.bitis)
+      .gt('bitis', plan.cakismaKontrolu.baslangic)
       .limit(1)
     if (cakismaHata) return NextResponse.json({ error: 'Çakışma kontrolü yapılamadı.' }, { status: 500 })
     if (cakisan && cakisan.length > 0) {
       return NextResponse.json(
-        { error: 'Bu saat aralığında zaten bir randevu var. Lütfen başka bir saat seçin.' },
+        {
+          error: plan.reaktivasyon
+            ? 'Bu saat aralığı iptalden sonra başka bir randevuya verilmiş. Önce saati değiştirin, sonra aktif hale getirin.'
+            : 'Bu saat aralığında zaten bir randevu var. Lütfen başka bir saat seçin.',
+        },
         { status: 409 }
       )
     }
-    guncelleme.baslangic = yeniBaslangic
-    guncelleme.bitis = yeniBitis
-    // A reschedule invalidates any reminder already sent for the old time.
-    guncelleme.hatirlatma_gonderildi = false
   }
 
-  if (durum) {
-    const gecerli = ['planlandi', 'onaylandi', 'tamamlandi', 'iptal', 'gelmedi']
-    if (!gecerli.includes(durum)) return NextResponse.json({ error: 'Geçersiz durum.' }, { status: 400 })
-    guncelleme.durum = durum
-    guncelleme.iptal_nedeni = durum === 'iptal' ? iptalNedeni?.trim() || null : null
-  }
-  if (tur !== undefined) guncelleme.tur = tur
-  if (notlar !== undefined) guncelleme.notlar = notlar?.trim() || null
-  if (hastaDurumu !== undefined) guncelleme.hasta_durumu = (hastaDurumu === 'saglikli' || hastaDurumu === 'sikayetli') ? hastaDurumu : null
+  const guncelleme: Record<string, unknown> = { ...plan.alanlar }
 
   // NOTYA-RANDEVU-07: hasta bağlantısını güncelleme.
   //
@@ -143,7 +139,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single()
 
   if (error) return NextResponse.json({ error: 'Randevu güncellenemedi.' }, { status: 500 })
-  return NextResponse.json({ randevu: data, yeniHasta })
+  return NextResponse.json({ randevu: data, yeniHasta, reaktivasyon: plan.reaktivasyon })
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {

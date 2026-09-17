@@ -131,7 +131,43 @@ speed (bilateral VA/GİB, glokom/DR/katarakt loops, enjeksiyon takvim, SGK rapor
 **Pre-sprint audit shipped 2026-09-17 (before Claude chapter build):**
 `public/goz-presprint-audit.html` → https://notya-ai.vercel.app/goz-presprint-audit.html
 Verdict: chapter Missing; overall ~8% vs wow bar; top gaps = VA/GİB strip, glokom, DR loop, Gözlerim.
-Post-sprint twin TBD after build: `goz-post-sprint-audit.html`.
+Post-sprint twin: `public/goz-post-sprint-audit.html` → https://notya-ai.vercel.app/goz-post-sprint-audit.html (11/18 Strong, ~77% vs wow bar).
+
+**GOZ-CHAPTER — SHIPPED 2026-09-17 (#292, Claude).** `specialties/goz-hastaliklari/**` + `lib/specialties/goz-hastaliklari.ts`
+(VA/GİB first-class olcumler, Gözlerim module Strong) + migration `048_goz_chapter.sql` (goz_* tables, oct/fundus/on_segment
+modalities; applied) + `/api/doktor/goz` + hasta dosyası › **Göz** (only for göz doctors). Engines: VA (logMAR/letters, PS/EH/IH
+non-numeric), glokom (hekim target/intervals, no titration), DR (TEMD 2026 screening + TEMD vs ICO 2017 dual column,
+`catisma`), anti-VEGF (SUT 4.2.33 verified line by line: basamak, rapor type/duration, loading, implant spacing, switch rule,
+8 mg, response class), SGK rapor drafts, acil red flags, katarakt checklist, ön segment cards (SUT 4.2.33.D), pediatric bridge,
+strip + intake→Subjektif, dual-sign OCT/fundus reads. Prompts lock wired (SOAP/chat/ses/stil). Dahiliye bridge: closing an open
+`sevkler(hedef=goz)` writes `dahiliye_dm.son_goz_dibi` and closes `dm_goz`. Sağlığım › Gözlerim + `/portal/demo-goz`.
+Tests: `npm run test:goz` (61), npm test 584/584. Smoke: `scripts/goz-smoke.mts` 48 steps/checks 0 failures (QA doctor
+`qa.goz@notya.ai`, password only in .env.local); `scripts/goz-prompts-smoke.mts` 7/0 (real SOAP + chat). Screenshots 360/390px,
+no horizontal overflow (smoke-out/goz, gitignored).
+
+**Assumptions recorded (low-risk, made without asking):** TEMD "minimal retinopati" = hafif NPDR and "ileri evre" = orta NPDR+
+or any DMÖ (TEMD gives no ICDR table) — shown next to ICO, hekim locks the date; glaucoma and pediatric intervals are hekim
+fields because TOD birim texts are members-only; ICD-10 suggestions on SGK drafts (H35.3/H36.0/H34.8/H44.2/H25.9) are marked
+"hekim doğrular"; `rapor_metni` on OCT/fundus rows stays visible in Sağlığım › Sonuçlar because it is doctor-typed at upload
+(same as every modality); a GİL draft is an info note because the SUT text has no GİL rapor rule.
+
+**Open / intentional outs (Göz):**
+- GOZ-AYSE-VISION — Ayşe OCT/fundus draft into `goz_goruntu_okumalari` (dual-sign record exists; auto-draft not wired). M.
+- GOZ-EK3G — verify SUT EK-3/G lens items (monofokal/torik/multifokal) with the clinic's billing; list could not be fetched. S.
+- GOZ-TOD-TEXTS — TOD Glokom / Retina / Pediatrik birim guidelines are members-only; read with a member login and replace hekim
+  interval fields with verified defaults. M.
+- GOZ-SB-GORME — SB görme taraması referral cut-offs (Lea/Snellen) unverified (hsgm PDFs refused connection); not embedded. S.
+- GOZ-INTAKE-SMOKE — intake → Subjektif path has unit tests but no smoke with a filled göz ön formu. S.
+- GOZ-COMPARE — side-by-side OCT compare for the same eye. M.
+- Real ophthalmologist beta — synthetic QA ≠ muayenehane; needs a göz hekimi field day.
+
+**SAGLIGIM PART C — portal honesty pass (2026-09-17):** pediatri büyüme Partial (gated, still Takip bolt-on), KD Gebeliğim + jine
+Partial (gated), dahiliye ön anket Partial (gated in bundle and API), dermatoloji **Missing** (declared, mounts nothing), göz
+Gözlerim Strong. Smoke proves a göz practice gets no büyüme/gebelik/jine/anket, including a 6-year-old with kilo/boy.
+**Waits on Kaan (doctor side, not changed):** hasta dosyası shows "Deri & Lezyon" to every branch (#244 made it universal) and
+pediatric tabs (M-CHAT, gelişim, büyüme, bebek kartı) follow patient age, not doctor branch — so göz/KD doctors see them for
+children. Proposal: same registry rule as the portal (own-chapter doctors don't get other chapters' tabs). Needs a yes because
+Dr. Gökhan's pediatri workflow may use the Deri tab.
 
 ## Kadın Hastalıkları ve Doğum — Wave 1, first slice shipped 2026-09-14 (night)
 
@@ -443,6 +479,68 @@ Tarayıcı doğrulaması gerçek Google Chrome ile (headless shell'de PDF eklent
 | 2026-09-17 | **Temizlik:** `DocumentViewer` içinde ölü PDF.js CDN yükleyicisi (`ensurePdfJs` / `renderPdf` / canvas + sayfa okları) duruyordu — `pdfPages` hiç set edilmediği için o kod hiç çalışmıyordu, ama "belge açılmıyor" hatasını araştıran herkesi yanlış yere bakmaya itiyordu. Kaldırıldı; PDF önizleme tek yoldan, blob iframe ile. | SHIPPED |
 | 2026-09-17 | **Değişmedi, bilerek:** CSP'de `object-src` yok (→ `default-src 'self'`). Gerçek Chrome'da blob iframe PDF'i sorunsuz render ediyor (`frame-src 'self' blob:` yeterli), bu yüzden politika genişletilmedi. Ayrıca `next.config.mjs` ile `middleware.ts` iki ayrı CSP tanımlıyor; pratikte middleware'inki kazanıyor (tek başlık ölçüldü) ama **ikisi ayrışmış durumda** — `next.config.mjs`'deki kopyada `frame-src` yok. Bugün zararsız; ileride Next davranışı değişirse ya da biri yalnız birini güncellerse sessizce belge önizlemesini kırar. Tek kaynağa indirmek ayrı, küçük bir iş. | OPEN (Kaan kararı) |
 
-**Mobil kontrol (standing rule):** Kasa listesine iki bağlantı eklendi; 360 / 390 / 428px'te satırın
-taşmadığı doğrulandı (satır zaten `flex` + `gap`, düğmeler `whiteSpace: nowrap` ve son sütun Sil).
-Ekran görüntüleri `smoke-out/kasa-mobil-*.png` (gitignored).
+**Mobil kontrol (standing rule):** 360 / 390 / 428 / 1280px, gerçek Chrome. İki bağlantı eklenince
+satır 360px'te **kendi kutusunu 29px aşıyordu** (satır genişliği 290, scrollWidth 319) — sayfa
+yan kaymıyordu ama içerik kesiliyordu. Düzeltme: satıra `flexWrap: 'wrap'`, dosya adına
+`flex: '1 1 140px'` + `minWidth: 0`. Sonrası: her genişlikte `scrollWidth ≤ width`, 360'ta ad üstte,
+üç eylem altta; 1280 tek satır, değişmedi. Ekran görüntüleri `smoke-out/kasa-mobil-*.png` (gitignored).
+
+## RANDEVU-IPTAL-REAKTIVASYON — canlı hata, Dr. Gökhan (2026-09-17)
+
+**Nasıl geldi.** Dr. Gökhan uygulamayı kullanırken bildirdi: bir randevuyu iptal etti, takvimde
+üstü çizili göründü, sonra üstüne tıklayıp saatini değiştirdi ve Güncelle'ye bastı — randevu HÂLÂ
+iptal görünüyordu. Sorusu: *"Bu randevu nasıl yeniden aktif oluyor?"* Ayrıca aynı modaldeki
+doğrudan iptal düğmesinin "hiç tepki vermediğini" söyledi.
+
+**Kök sebep 1 — iptal tek yönlü bir kapıydı (asıl hata).** Takvimin üstü çizili göstermesi BAYAT
+ARAYÜZ DEĞİLDİ; veri gerçekten `durum='iptal'` kalıyordu. Saat düzenlemesinin `durum`'a dokunmaması
+doğru davranış (kaydetmek bir randevuyu sessizce aktifleştirmemeli) — asıl eksik, geri dönüş
+yolunun HİÇ OLMAMASIYDI. `app/dashboard/doktor/randevular/page.tsx` içinde durum değiştiren her
+düğme iki kapının arkasındaydı: gün kartında `rv.durum !== 'iptal'`, modalda
+`duzenlenenRandevu.durum !== 'iptal'`. Yani randevu iptal olur olmaz Onayla/Tamamlandı/Gelmedi/
+Yeniden Planla/Sil dahil TÜM aksiyonlar gizleniyordu; modal "Mevcut durum: İptal" rozetinden
+ibaret kalıyordu. Kodda iptal edilmiş bir randevuya başka bir durum gönderebilen tek bir tıklama
+yolu yoktu — iptal kalıcıydı. Dr. Gökhan'ın sorusunun cevabı gerçekten "olmuyor"du.
+
+**Kök sebep 2 — modaldeki İptal Et düğmesi bayat bayrak yüzünden kayboluyordu.** `duzenlemeyeAc()`
+`modalIptalAcik`/`modalIptalNedeni`'yi sıfırlamıyordu ve modalı ARKA PLANA dokunarak kapatmak
+(`formuSifirla()` çağırmadan sadece `setFormAcik(false)`) bayrağı açık bırakıyordu. Sonraki açılışta
+aksiyon satırının tamamı (İptal Et dahil) gizli geliyor, üstelik önceki iptal nedeni metni de
+duruyordu — kullanıcı gözünden "düğme tepki vermiyor".
+
+**Kök sebep 3 — hatalar yutuluyordu.** `durumDegistir()` oturum yoksa sessizce `return` ediyor,
+PATCH 4xx/5xx dönerse yanıtı hiç kontrol etmeden `yenile()` çağırıyordu; `silIslemi()` de aynı.
+Her iki durumda doktor için sonuç: düğmeye bas, hiçbir şey olmasın, hiçbir açıklama çıkmasın.
+
+**Kök sebep 4 — reaktivasyonda çift kayıt açığı (düzeltirken bulundu).** `durum` değişimi
+çakışma kontrolünü hiç tetiklemiyordu. İptalden sonra o saat başka bir hastaya verilmiş olabilir;
+kontrolsüz bir reaktivasyon iki randevuyu aynı saate koyardı — çift kayıt engelleme bu üründe
+opsiyonel değil.
+
+**Ne yapıldı.**
+- Yeni `lib/randevu/randevuDurum.ts`: `randevuGuncellemePlani()` (bir PATCH gövdesinin hangi
+  sütunlara dokunduğunu hesaplayan saf fonksiyon) + `randevuAksiyonlari()` (duruma göre hangi
+  düğmelerin görüneceği). API rotası ile arayüz artık aynı cümleyi kuruyor; aksiyon listesinin iki
+  ayrı yerde, iptal dalı eksik biçimde tekrarlanması hatanın ta kendisiydi.
+- **"↺ Aktif Hale Getir"** aksiyonu: hem düzenleme modalında (iptal nedeni + neden Güncelle'nin
+  yetmediğini anlatan açıklama ile birlikte) hem gün görünümü kartında. `durum='planlandi'` yazar,
+  `iptal_nedeni`'ni temizler, `hatirlatma_gonderildi`'yi sıfırlar (hasta yeniden hatırlatma alsın).
+  Modal KAPANMAZ, rozet anında "Planlandı"ya döner — Dr. Gökhan'ın yapmak istediği "aktif et +
+  saatini değiştir" tek akışta bitsin diye.
+- Reaktivasyon artık çakışma kontrolünden geçiyor; slot dolmuşsa 409 + "Önce saati değiştirin,
+  sonra aktif hale getirin". Buna karşılık İPTAL durumundaki bir randevunun saatini değiştirmek
+  artık çakışma kontrolü İSTEMİYOR (iptal satırı kimsenin önünü kesmiyor, kesilmemeli de).
+- İptal edilmiş randevu gün görünümünde artık Yeniden Planla ve Sil'e de erişebiliyor (eskiden
+  tek bir düğmesi yoktu).
+- `duzenlemeyeAc()` ve arka plana dokunarak kapatma artık modal durumunu sıfırlıyor; `durumDegistir()`
+  ve `silIslemi()` başarı/başarısızlık döndürüyor ve hatayı ekranda gösteriyor (modal açık kalıyor).
+- Dokunma hedefi: `aksiyonBtn` / `modalAksiyonBtn` 28px → 36px (`minHeight` + inline-flex).
+
+**Doğrulama.** `scripts/qa-randevu-iptal-reaktivasyon.mts` GERÇEK PATCH route handler'ını sahte
+oturum + bellek içi tablo ile çalıştırıp Dr. Gökhan'ın adımlarını birebir tekrarlıyor (SENTETİK
+QA doktoru/hastası — gerçek hesaba, gerçek hastaya, production veritabanına dokunmuyor, PHI yok):
+oluştur → iptal (üstü çizili) → saati değiştir + Güncelle (hâlâ iptal, doğru) → Aktif Hale Getir
+(Planlandı, iptal nedeni temiz) → slot dolmuşken reaktivasyon (409) → boş saate taşıyıp aktif et
+(Planlandı). Regresyon testi `lib/randevu/randevuDurum.test.ts` (12 test) `npm test`'e eklendi;
+596/596 yeşil, `npx tsc --noEmit` temiz. Mobil (standing rule): modalın yeni iptal bloğu 360px ve
+390px'te gerçek CSS ile render edildi — yatay taşma yok, metin sarıyor, düğmeler 123×36.

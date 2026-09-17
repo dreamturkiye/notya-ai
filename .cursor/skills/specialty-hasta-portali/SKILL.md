@@ -37,7 +37,23 @@ Do **not** duplicate these per specialty. Do **not** invent a second portal prod
 
 Each specialty that is more than `baseline` **must** declare a portal module. Prefer extending `SpecialtyProfile` (see `lib/specialties/profile.ts`) rather than hardcoding `if (brans === …)` in `PortalShell` / `TrackingView` / the portal API.
 
-### Contract shape (target)
+### Contract shape (implemented 2026-09-17 — SAGLIGIM-PORTAL-REGISTRY #291)
+
+Live code: `PortalModulu` in `lib/specialties/profile.ts` (`SpecialtyProfile.portal?: PortalModulu[]` — one chapter may own
+several modules, e.g. KD `gebelik` + `jinekoloji`), resolver `lib/portal/moduller.ts` (`portalModulleri`, `portalModulAktif`),
+bundle state `PortalBundle.portal = { moduller, nav }`. Resolver rules that go beyond the table below:
+
+- A doctor whose chapter declares its **own** portal module never receives another chapter's *chart-data* modules
+  (büyüme age rule, jine reminders, dahiliye ön anket). Baseline-branch doctors (aile hekimi, endokrin…) receive them only
+  when that data exists.
+- Gebeliğim follows an **active pregnancy record** for any practice (mixed care).
+- Unknown `users.specialty` = baseline branch (not pediatri).
+- `derinlik: 'Missing'` modules (derm today) are declared for audits but mount nothing.
+
+Tests to copy for a new chapter: `lib/portal/moduller.test.ts` (eligibility matrix), `lib/portal/gozlerim.test.ts`
+(no diagnosis words, route gated by `modulAktif`), and a smoke that opens the portal bundle through the PIN gate.
+
+Original target sketch:
 
 ```ts
 portal: {
@@ -91,8 +107,8 @@ Today Sağlığım is mostly one shell with **bolt-ons**:
 | Types | `lib/portal/types.ts` | Core bundle + optional specialty slices |
 | API | `app/api/portal/hasta/[token]/route.ts` | Load core always; load specialty slices via registry eligibility |
 | Shell | `app/portal/_components/PortalShell.tsx` | Core nav + **registry-driven** extra nav |
-| Views | `app/portal/_components/<Specialty>Portal*.tsx` **or** `specialties/<slug>/ui/portal/*` | Section UI |
-| Demo | `lib/portal/demoData.ts` + `/portal/demo` | Per-specialty demo fixtures when chapter ships |
+| Views | `app/portal/_components/<Specialty>Portal*.tsx` **or** `specialties/<slug>/ui/portal/*` | Section UI (Göz reference: `GozlerimView.tsx` + `/portal/hasta/[token]/gozlerim`) |
+| Demo | `lib/portal/demoData.ts` + `/portal/demo` | Per-specialty demo fixtures when chapter ships (Göz: `SAGLIGIM_DEMO_GOZ` + `/portal/demo-goz`) |
 
 Doctor tools mint link stays `/doktor-tools/hasta-portali` — one mint flow; content follows doctor specialty + patient records.
 
