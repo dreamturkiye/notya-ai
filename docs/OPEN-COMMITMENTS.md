@@ -882,3 +882,85 @@ tekrar onaylanıp içeriği güncelleniyor); (4) kuyrukta başka bekleyen not va
 **Kapsam dışı bırakılan.** "Reddet" düğmesi hâlâ notu yalnız ekrandan düşürüyor (sunucuya bir şey
 yazmıyor) — bu ayrı ve daha eski bir konu, bu PR'da değiştirilmedi. Reddetme de kuyruğu
 boşaltabildiği için artık en azından çıkışlı boş ekrana düşüyor.
+
+---
+
+## NOTYA-SUPERUSER-BRANS-01 — iki kişiye özel branş değiştirici (Kaan, 2026-09-17)
+
+**Ne istendi.** Kaan ve Dr. Gökhan Mamur kendi TEK hesapları üzerinde aktif branşı hızlıca
+değiştirebilsin (Gökhan: Kadın Doğum'u kontrol et → Pediatri'ye dön), onboarding'i baştan
+çalıştırmadan ve kimse veritabanını elle düzenlemeden. Notya'daki diğer HER hekim bundan
+hiç etkilenmeyecek: yeni arayüz yok, görünür değişiklik yok.
+
+**Doğrulanan hesaplar (production `users` + `auth.users`, 2026-09-17 — tahmin edilmedi).**
+Yalnız bu iki kimlik izin listesinde:
+
+| Kimlik (user id) | E-posta | O günkü branş |
+|---|---|---|
+| `c4989e29-a219-45b6-bf17-18e260e3c7f9` | kaanari@mac.com | pediatri |
+| `94c4db57-8b89-4880-80be-143f88f4bcc1` | dr.gokhanmamur@gmail.com | pediatri |
+
+**⚠️ KAAN'IN ONAYINI BEKLEYEN AÇIK MADDE — Dr. Gökhan'ın İKİNCİ hesabı.**
+Sorgu, Gökhan adına iki hesap buldu:
+
+- `94c4db57-…` / **dr.gokhanmamur@gmail.com** — ekran görüntüsündeki adres; son giriş **2026-07-27**.
+- `9030fe09-0a5f-484b-9cc9-3e1e1b0b5178` / **dr.gokhan@notya.ai** — son giriş **2026-09-17** (bugün).
+
+İkisi de "Dr. Gökhan Mamur", ikisi de `is_superadmin`, ikisi de `specialty=pediatri`. Talep
+"tam olarak iki hesap" dediği ve isim olarak gmail adresi verildiği için **gmail hesabı**
+listeye alındı. Ama son giriş tarihine bakılırsa Gökhan fiilen **dr.gokhan@notya.ai** ile
+çalışıyor olabilir — o zaman seçiciyi göremez. **Kaan: hangisi Gökhan'ın günlük hesabı?**
+`@notya.ai` ise `lib/auth/superuserBranslar.ts` içine tek satır eklemek yeterli (kimlik
+yukarıda yazılı); gmail ise yapılacak bir şey yok.
+
+**Kontrol nerede duruyor.**
+- `lib/auth/superuserBranslar.ts` — izin listesi + `bransDegistirebilir()`. Tek karar noktası.
+- `app/api/users/superuser-brans/route.ts` — **sunucu tarafı, bağımsız ve açık** kontrol.
+  `GET` yetkisiz oturuma sadece `{ yetkili: false }` döner (liste içeriği sızmaz);
+  `POST` izin listesinde olmayanı **403** ile reddeder. Arayüzdeki gizleme kozmetiktir.
+- `components/doktor/BransDegistir.tsx` — üst menüdeki kompakt "Branş: [seçici]".
+  Yetkisiz her oturumda `null` döner. Değişimde `users.specialty` + `auth` metadata birlikte
+  yazılır (yarım geçiş yok), `notya_doktor_specialty` önbelleği güncellenir, sonra tek temiz
+  `location.reload()`.
+
+**Yeniden kullanılan branş kaydı (yeni liste AÇILMADI).** Doğrulama `BRANS_ETIKETLERI`
+(`lib/intake/bransSorulari.ts`) üzerinden — 30 branş, `SpecialtyKey` birliğiyle ve
+`lib/doktor/specialties.ts` içindeki `SPECIALTIES` anahtarlarıyla **birebir aynı** (test bunu
+da doğruluyor). Açılır liste de aynı kayıttan, Türkçe etiketleriyle geliyor.
+
+**Doğrulama.**
+- `lib/auth/superuserBranslar.test.ts` (8 test, `npm test`e eklendi) — listenin **tam olarak
+  iki kimlik** olduğunu, büyük/küçük harf ya da parça eşleşmesinin geçmediğini, `__proto__`
+  gibi değerlerin branş sayılmadığını doğruluyor.
+- `scripts/qa-superuser-brans.mts` — GERÇEK route handler'ları (`GET/POST
+  /api/users/superuser-brans`, `GET /api/users/me`) sahte oturum + bellek içi tablolarla:
+  Pediatri → Kadın Doğum → Pediatri gidiş-dönüşü, panonun yeni branşı göstermesi, yetkisiz
+  hesabın 403 alması ve branşının DEĞİŞMEMESİ, 401 ve geçersiz branşta 400.
+  **Production veritabanına yazmaz.**
+- **Canlı tarayıcı kontrolü (gerçek dev sunucu + gerçek Supabase).** Sentetik, izin listesinde
+  OLMAYAN bir hekim hesabı (`qa.superuser.brans@notya.ai`) açıldı: panoda `#superuser-brans`
+  **yok**, üst menü değişmemiş, `GET` → `{"yetkili":false}`, doğrudan `POST` → **403**, branşı
+  `kardiyoloji` olarak kaldı. Pozitif taraf için izin listesi **yalnız yerelde, commit
+  edilmeden** o sentetik kimliğe çevrildi: seçici 30 branşla göründü, Kadın Doğum'a geçiş
+  sayfayı yeniledi, `/api/users/me` yeni branşı döndü; sonra yama geri alındı (`diff` ile
+  temiz olduğu doğrulandı) ve sentetik hesap **silindi**. Kaan'ın ve Gökhan'ın gerçek
+  hesaplarına dokunulmadı.
+- **Mobil (standing rule).** 390px'te üst menü: yatay taşma 0, seçici 124×36px (36px dokunma
+  hedefi kuralı), "Çıkış Yap"ın üstünde kendi satırında. 1280px'te tek satıra sığıyor
+  (seçici 148px'e daraltıldı, geniş hâli "Çıkış Yap"ı alt satıra itiyordu).
+- `npx tsc --noEmit` temiz, `npm test` **651/651** yeşil.
+
+**Bu PR'da onarılan, ALAKASIZ ve ÖNCEDEN VAR OLAN kırık test.**
+`specialties/kadin-dogum/tests/live-wiring.test.ts` kırmızıydı: `c82402f` (evrensel branş
+kapıları) hasta dosyasındaki `pediatriSekmesiUygun` çağrısını `pediatriAracSekmesiUygun`
+olarak yeniden adlandırdı ama testteki ad bayat kaldı. Kapının kendisi yerinde — yalnız
+testteki ad güncellendi. Bu PR'ın konusuyla ilgisi yok; "tüm testler yeşil" çıtası için
+onarıldı.
+
+**Ayrı ve ÖNCEDEN VAR OLAN açık (bu PR kapsamı dışı, bilerek dokunulmadı).**
+Genel `POST /api/users/profile` rotası, oturum açmış **herhangi bir** hekimin kendi
+`specialty` alanını serbestçe yazmasına zaten izin veriyor (`profession_type: 'doktor'` +
+`specialty` gönderilmesi yeterli) — izin listesi yok. Yani bu yeni rota bir hekime
+teknik olarak yeni bir yetenek vermiyor; yaptığı şey o işi **arayüzde** yalnız o iki kişiye
+açmak. Yeni rotanın kendi bağımsız 403 kontrolü yine de var (istendiği gibi). Profil
+rotasının bu davranışı daraltılmalı mı, ayrı bir karar — **Kaan'a açık madde.**

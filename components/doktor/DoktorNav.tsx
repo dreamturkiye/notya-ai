@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import BransDegistir from './BransDegistir';
 
 interface NavItem {
   label: string;
@@ -138,6 +139,8 @@ export default function DoktorNav() {
                 {item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? ` (${mesajUnread})` : ''}
               </button>
             ))}
+            {/* NOTYA-SUPERUSER-BRANS-01: yalnız iki doğrulanmış hesapta çizilir, diğer herkeste null. */}
+            <BransDegistir />
             <button
               onClick={handleCikis}
               style={{
@@ -220,14 +223,18 @@ export default function DoktorNav() {
               </button>
             )
           })}
+          {/* NOTYA-SUPERUSER-BRANS-01: yalnız iki doğrulanmış hesapta çizilir, diğer herkeste null. */}
+          <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
+            <BransDegistir mobil />
+          </div>
           <button
             onClick={handleCikis}
             style={{
               display: 'flex', alignItems: 'center', gap: '12px',
               width: '100%', textAlign: 'left', padding: '13px 14px',
               color: '#F87171', fontSize: '15px', fontWeight: 500,
-              background: 'transparent', border: '1px solid transparent', borderTop: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: '10px', marginTop: 4, cursor: 'pointer',
+              background: 'transparent', border: '1px solid transparent',
+              borderRadius: '10px', cursor: 'pointer',
             }}
           >
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#F87171', flexShrink: 0 }} />

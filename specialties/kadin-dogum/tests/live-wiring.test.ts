@@ -51,7 +51,9 @@ describe('live chapter wiring', () => {
 
   it('hasta dosyası gates pediatric tabs by age like KD is gated by sex', () => {
     const src = readFileSync(join(ROOT, '..', '..', 'app', 'dashboard', 'doktor', 'hastalar', '[id]', 'page.tsx'), 'utf8')
-    assert.match(src, /pediatriSekmesiUygun/)
+    // c82402f (evrensel branş kapıları) `pediatriSekmesiUygun` → `pediatriAracSekmesiUygun`
+    // olarak yeniden adlandırdı; kapı duruyor, bu satırdaki ad bayat kalmıştı.
+    assert.match(src, /pediatriAracSekmesiUygun/)
     assert.match(src, /hastaDosyaSekmeleri/)
     assert.match(src, /cinsiyet=\{patient\?\.cinsiyet\}/)
   })
