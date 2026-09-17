@@ -35,3 +35,12 @@ ICU/sepsis bundles, chemo, dialysis prescription, coronary protocol, full SCORE2
 
 ## Pre-wow audit
 Shareable depth/gap report (before dahiliye wow sprint): [docs/README_DAHILIYE_AUDIT.md](./README_DAHILIYE_AUDIT.md) · https://notya-ai.vercel.app/dahiliye-presprint-audit.html
+
+## DAH-WOW Wave 0–1 (2026-09-16)
+- **Şerit**: sayfa üstünde sticky "BUGÜNKÜ VİZİT" (KB · HbA1c Δ · LDL · eGFR · gecikmiş) + 1-tap plan taslağı (kartlardan + gecikmiş görevlerden; nota yazmaz, kopyalanır).
+- **KVR sekmesi**: ASKVH / DM+TOD / KBH kural kovası → LDL hedef önerisi → statin yoğunluk açığı; SCORE2 sayısal hesap `SCORE2_ONAYLI` doğrulamasına kadar kapalı. Kategori ve LDL hedefi hekim kilidi (`dahiliye_kart_kilitleri`).
+- **KBH sekmesi**: KDIGO G×A (yalnız onaylı lab; UACR lab satırı yoksa hekim girişi), kronisite, hızlı düşüş, plan (RAS/SGLT2 sınıf), nefro sevk paketi (son panel eklenir).
+- **Ev kayıt**: ev KB/glukoz/kilo; beyaz önlük / maskeli fenotip; hipoglisemi sayacı.
+- **İzlem**: hasta_ilaclar → ilaç izlem görevleri (metformin B12/eGFR, ACEi/ARB K/Kre, statin ALT, levotiroksin TSH, warfarin INR, …).
+- Prompts: `specialties/dahiliye/prompts/` (system lock, SOAP, tools).
+

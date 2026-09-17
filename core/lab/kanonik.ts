@@ -40,6 +40,8 @@ export const KANONIK = {
   BUN: { tr: 'BUN', loinc: '3094-0', birim: 'mg/dL', donusum: { 'mmol/L': 2.801 }, aliases: a('bun', 'kan üre azotu', 'urea nitrogen') },
   Kre: { tr: 'Kreatinin', loinc: '2160-0', birim: 'mg/dL', donusum: { 'µmol/L': 0.01131, 'umol/L': 0.01131 }, kritik: { yuksek: 10 }, aliases: a('kreatinin', 'creatinine', 'kre', 'crea', 'krea') },
   eGFR: { tr: 'eGFR', loinc: '62238-1', birim: 'mL/dk/1.73m²', aliases: a('egfr', 'gfr', 'tahmini gfr', 'glomerüler filtrasyon') },
+  UACR: { tr: 'İdrar albümin/kreatinin (UACR)', loinc: '9318-7', birim: 'mg/g', donusum: { 'mg/mmol': 8.84 }, aliases: a('uacr', 'albümin/kreatinin', 'albumin/kreatinin', 'acr', 'mikroalbümin/kreatinin', 'idrar albümin kreatinin', 'spot idrar albumin/kreatinin') },
+  Retic: { tr: 'Retikülosit', loinc: '4679-7', birim: '%', aliases: a('retikülosit', 'retikulosit', 'reticulocyte', 'retic') },
   Na: { tr: 'Sodyum', loinc: '2951-2', birim: 'mmol/L', donusum: { 'mEq/L': 1 }, kritik: { dusuk: 120, yuksek: 160 }, aliases: a('na', 'sodyum', 'sodium', 'na+') },
   K: { tr: 'Potasyum', loinc: '2823-3', birim: 'mmol/L', donusum: { 'mEq/L': 1 }, kritik: { dusuk: 2.5, yuksek: 6.5 }, aliases: a('k', 'potasyum', 'potassium', 'k+') },
   Cl: { tr: 'Klor', loinc: '2075-0', birim: 'mmol/L', donusum: { 'mEq/L': 1 }, aliases: a('cl', 'klor', 'klorür', 'chloride') },
