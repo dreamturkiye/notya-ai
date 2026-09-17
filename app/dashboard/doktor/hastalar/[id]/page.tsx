@@ -20,6 +20,7 @@ import HastaGebelik from '@/components/doktor/HastaGebelik';
 import HastaBebekKarti from '@/components/doktor/HastaBebekKarti';
 import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
 import DahiliyeHome from '@/specialties/dahiliye/ui/DahiliyeHome';
+import GozHome from '@/specialties/goz-hastaliklari/ui/GozHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
 import { hesaplaHedefBoy, formatBoyCm, pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
@@ -81,11 +82,12 @@ export default function HastaProfilPage() {
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
   const [pediatriAraci, setPediatriAraci] = useState(false);
   const [dahiliyeAraci, setDahiliyeAraci] = useState(false); // NOTYA-DAH-01: iç hastalıkları / aile / genel dahiliye
+  const [gozAraci, setGozAraci] = useState(false); // GOZ-CHAPTER: göz hastalıkları hekimi
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
   const pediatriUygun = patient ? pediatriSekmesiUygun(patient.dogum_tarihi) : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun });
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci });
 
   useEffect(() => {
     if (!patientId) return;
@@ -106,6 +108,7 @@ export default function HastaProfilPage() {
         if (meRes.ok) {
           const me = await meRes.json();
           setPediatriAraci(pediatriHedefBoyBransi(me?.data?.specialty));
+          setGozAraci(/göz|goz|oftalm/i.test(String(me?.data?.specialty || '')));
           setDahiliyeAraci(/dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|kardiyo|gastro|romato|hemato|onkolo|göğüs|gogus/i.test(String(me?.data?.specialty || '')));
         }
       } catch {
@@ -359,6 +362,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
         {!loading && !error && activeTab === 'gebelik' && gebelikUygun && <HastaGebelik patientId={patientId} />}
         {!loading && !error && activeTab === 'dahiliye' && <DahiliyeHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'goz' && gozAraci && <GozHome patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && (
           <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} />
         )}

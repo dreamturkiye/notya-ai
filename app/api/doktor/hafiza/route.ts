@@ -14,6 +14,7 @@ import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
+import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +22,7 @@ function sesKilidi(brans: string | null | undefined): string {
   if (dahiliyeMi(brans)) return dahiliyeKilidi('ses')
   if (kadinDogumMi(brans)) return kadinDogumKilidi('ses')
   if (dermatolojiMi(brans)) return dermatolojiKilidi('ses')
+  if (gozMi(brans)) return gozKilidi('ses')
   return ''
 }
 

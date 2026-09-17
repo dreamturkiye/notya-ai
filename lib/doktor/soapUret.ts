@@ -26,6 +26,7 @@ import { kdDogrulanmisKaynaklar } from '@/specialties/kadin-dogum/protocols/dogr
 import { notMetinleriniTemizle } from '@/lib/doktor/klinikMetin'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
+import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -44,6 +45,7 @@ const SPECIALTY_KAYNAK: Record<string, { unvan: string; kaynaklar: string }> = {
   psikiyatri: { unvan: 'psikiyatri profesörü', kaynaklar: 'Türkiye Psikiyatri Derneği kılavuzları; DSM-5-TR, Stahl' },
   dahiliye: { unvan: 'iç hastalıkları profesörü', kaynaklar: 'Sağlık Bakanlığı birinci basamak tanı-tedavi rehberleri; Harrison 22e' },
   dermatoloji: { unvan: 'dermatoloji profesörü', kaynaklar: 'Türk Dermatoloji Derneği rehberleri; Fitzpatrick' },
+  'goz-hastaliklari': { unvan: 'göz hastalıkları profesörü', kaynaklar: 'Türk Oftalmoloji Derneği (TOD) önerileri, Sağlık Bakanlığı protokolleri, SGK SUT 4.2.33 göz ilaç kuralları; ikincil derinlik: Kanski, AAO BCSC' },
   genel: { unvan: 'klinik tıp profesörü', kaynaklar: 'Sağlık Bakanlığı tanı-tedavi rehberleri; Harrison 22e, Oxford Handbook' },
 }
 
@@ -245,16 +247,17 @@ export function soapPersonaAnahtari(girdi: Pick<SoapGirdi, 'specialty' | 'doktor
   if (SPECIALTIES.some((x) => x.key === girdi.specialty)) return girdi.specialty
   if (kadinDogumMi(girdi.doktorBransi)) return 'kadin-hastaliklari-dogum'
   if (dermatolojiMi(girdi.doktorBransi)) return 'dermatoloji'
+  if (gozMi(girdi.doktorBransi)) return 'goz-hastaliklari'
   if (girdi.doktorBransi && SPECIALTIES.some((x) => x.key === girdi.doktorBransi)) return girdi.doktorBransi
   return girdi.specialty
 }
 
-/** Branches whose prompts/ lock says "Doz yazma" (dahiliye, kadın doğum, dermatoloji) — the code-level dose lock applies. */
+/** Branches whose prompts/ lock says "Doz yazma" (dahiliye, kadın doğum, dermatoloji, göz) — the code-level dose lock applies. */
 export function dozKilitliBrans(...branslar: (string | null | undefined)[]): boolean {
-  return dahiliyeMi(...branslar) || kadinDogumMi(...branslar) || dermatolojiMi(...branslar)
+  return dahiliyeMi(...branslar) || kadinDogumMi(...branslar) || dermatolojiMi(...branslar) || gozMi(...branslar)
 }
 
-/** System prompt for SOAP generation. Dahiliye / kadın doğum / dermatoloji doctors get their prompts/ lock appended. */
+/** System prompt for SOAP generation. Dahiliye / kadın doğum / dermatoloji / göz doctors get their prompts/ lock appended. */
 export function soapSistemPromptu(girdi: SoapGirdi): string {
   const personaAnahtari = soapPersonaAnahtari(girdi)
   return [
@@ -264,7 +267,7 @@ export function soapSistemPromptu(girdi: SoapGirdi): string {
     girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
     girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',,
     girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
-    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : '',
+    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : gozMi(girdi.specialty, girdi.doktorBransi) ? gozKilidi('soap') : '',
   ].join('\n')
 }
 
@@ -323,7 +326,7 @@ export async function stilProfiliDamit(
 - ÜSLÜP tercihleri (terminoloji, format, uzunluk/ayrıntı düzeyi, yapı, hangi öğe türlerini siler/ekler): DÜŞÜK RİSK, tek örnekten bile kural çıkarabilirsin.
 - KLİNİK tercihler (belirli bir ilaç seçimi, doz şeması, tedavi planı değişikliği): YÜKSEK RİSK — hastaya özgü bir sebep olabilir (başka ilaç kullanımı, alerji, tolerans). SADECE aynı veya açıkça benzer değişikliğin aşağıdaki YENİ DÜZELTMELER listesinde EN AZ 2 FARKLI ÖRNEKTE tekrarlandığını gördüğünde bir klinik kural olarak yaz. Tek örnekte gördüğün bir ilaç/doz değişikliğini profile YAZMA (ne mevcut listeye ekle ne yeni madde aç) — profil "MUTLAKA uy" olduğu için tek vakadan genelleme riskli; o vakada başka bir klinik sebep olabilir. Liste son 20 düzeltmeyi içerir, yani aynı tercih birden fazla vizitte tekrarlanmışsa hepsi burada görünür — sayıp karar ver.
 
-Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.${dahiliyeMi(doktorBransi) ? dahiliyeKilidi('ogrenme') : kadinDogumMi(doktorBransi) ? kadinDogumKilidi('ogrenme') : dermatolojiMi(doktorBransi) ? dermatolojiKilidi('ogrenme') : ''}`,
+Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.${dahiliyeMi(doktorBransi) ? dahiliyeKilidi('ogrenme') : kadinDogumMi(doktorBransi) ? kadinDogumKilidi('ogrenme') : dermatolojiMi(doktorBransi) ? dermatolojiKilidi('ogrenme') : gozMi(doktorBransi) ? gozKilidi('ogrenme') : ''}`,
     messages: [{ role: 'user', content: `MEVCUT PROFİL:\n${mevcutProfil || '(yok)'}\n\nYENİ DÜZELTMELER:\n${ornekler}` }],
   })
   const metin = yanit.content[0]?.type === 'text' ? yanit.content[0].text.trim() : ''

@@ -1,0 +1,137 @@
+'use client';
+/**
+ * GOZ-CHAPTER — Hasta dosyası › Göz. 8 saatlik poliklinik için: yapışkan şerit (OD/OS VA + Δ harf, GİB × hedef, DR evresi,
+ * sıradaki enjeksiyon, geciken görev) + acil bandı + saniyeler içinde bilateral VA/GİB girişi (son vizitten kopyala → onay) +
+ * kartlar (Glokom · DR · Enjeksiyon · SGK rapor · Katarakt · Görüntü · Ön segment · Pediatrik · Kontrol). Hekim kilitleri:
+ * tanı/evre/hedef/rejim/aralık yalnız hekim girişi. Sekreter salt okur (API sadeceDoktor).
+ */
+import React, { useCallback, useEffect, useState } from 'react';
+import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
+import { GozKartlar, type GozVeri, stil } from './GozKartlar';
+
+const { btn, ghost, etiket, kucuk, satir } = stil;
+const ALANLAR = [['uzak_sc', 'Uzak sc'], ['uzak_cc', 'Uzak cc'], ['yakin', 'Yakın']] as const;
+const SEKMELER = ['Özet', 'Glokom', 'DR', 'Enjeksiyon', 'SGK rapor', 'Katarakt', 'Görüntü', 'Ön segment', 'Pediatrik', 'Kontrol'] as const;
+export type GozSekme = (typeof SEKMELER)[number];
+
+type Form = { sag: Record<string, string>; sol: Record<string, string>; gibSag: string; gibSol: string; gibYontem: string; kopya: boolean };
+const bosForm = (): Form => ({ sag: {}, sol: {}, gibSag: '', gibSol: '', gibYontem: 'nct', kopya: false });
+
+export default function GozHome({ patientId }: { patientId: string }) {
+  const [v, setV] = useState<GozVeri | null>(null);
+  const [sekme, setSekme] = useState<GozSekme>('Özet');
+  const [kaynak, setKaynak] = useState(false);
+  const [mesaj, setMesaj] = useState('');
+  const [form, setForm] = useState<Form>(bosForm());
+  const [kopyaOnay, setKopyaOnay] = useState(false);
+
+  const yukle = useCallback(async () => {
+    const token = await getAccessTokenAsync();
+    const r = await fetch(`/api/doktor/goz?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) setV(j); else setMesaj(j.error || 'Göz verisi yüklenemedi');
+  }, [patientId]);
+  useEffect(() => { yukle(); }, [yukle]);
+
+  const calistir = useCallback(async (body: Record<string, unknown>, ok?: string): Promise<Record<string, unknown> | null> => {
+    setMesaj('');
+    try {
+      const token = await getAccessTokenAsync();
+      const r = await fetch('/api/doktor/goz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Hata');
+      setMesaj(ok || 'Kaydedildi.'); await yukle(); return j;
+    } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; }
+  }, [patientId, yukle]);
+
+  if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>{mesaj || 'Göz yükleniyor…'}</div>;
+  const s = v.serit;
+  const salt = v.rol !== 'doktor';
+
+  const kopyala = () => {
+    if (!v.kopya) return;
+    const t = v.kopya.taslak;
+    setForm({ sag: { ...(t.va.sag || {}) } as Record<string, string>, sol: { ...(t.va.sol || {}) } as Record<string, string>, gibSag: t.gibSag == null ? '' : String(t.gibSag), gibSol: t.gibSol == null ? '' : String(t.gibSol), gibYontem: t.gibYontem || 'nct', kopya: true });
+    setKopyaOnay(false);
+    setMesaj(`${v.kopya.kaynakTarih} değerleri forma kopyalandı — bugün ölçüp onaylayın.`);
+  };
+  const kaydet = async () => {
+    if (form.kopya && !kopyaOnay) { setMesaj('Kopyalanan değerleri bugün kontrol ettiğinizi onaylayın.'); return; }
+    const temiz = (x: Record<string, string>) => Object.fromEntries(Object.entries(x).filter(([, y]) => String(y || '').trim()));
+    const n = (x: string) => (x.trim() === '' ? undefined : Number(x.replace(',', '.')));
+    const va: Record<string, Record<string, string>> = {};
+    if (Object.keys(temiz(form.sag)).length) va.sag = temiz(form.sag);
+    if (Object.keys(temiz(form.sol)).length) va.sol = temiz(form.sol);
+    const j = await calistir({ adim: 'olcum', olcum: { va, gibSag: n(form.gibSag), gibSol: n(form.gibSol), gibYontem: form.gibYontem, kopyaOnayli: form.kopya } }, 'OD/OS ölçüm kaydedildi.');
+    if (j) { setForm(bosForm()); setKopyaOnay(false); }
+  };
+
+  const chip = (ad: string, deger: string, renk = '#EDF1F7') => <span style={{ border: `1px solid ${renk === '#EDF1F7' ? 'rgba(255,255,255,0.12)' : renk}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: renk, whiteSpace: 'nowrap' }}><span style={{ color: '#8FA0B5' }}>{ad} </span>{deger}</span>;
+  const harf = (x: number | null) => (x == null ? '' : ` (${x > 0 ? '+' : ''}${x} harf)`);
+
+  return (
+    <div style={{ ...toolsCard }} data-chapter="goz-hastaliklari">
+      {/* Acil bandı — gecikme yok */}
+      {v.acil.length > 0 && (
+        <div role="alert" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.6)', color: '#FCA5A5', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12 }}>
+          {v.acil.map((a) => <div key={a.kod}><b style={{ color: '#F87171' }}>{a.oncelik === 'hemen' ? 'HEMEN' : 'AYNI GÜN'} · {a.ad}:</b> {a.eylem}</div>)}
+          <div style={{ ...kucuk, marginTop: 4 }}>Şikâyet metninden otomatik eşleşme — klinik karar hekimin; 112 / acil yönlendirmesini geciktirmeyin.</div>
+        </div>
+      )}
+
+      {/* Yapışkan şerit */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0D1526', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '6px 0 8px', marginBottom: 8, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {chip('VA OD', `${s.va.sag}${harf(s.va.harfSag)}`, s.va.harfSag != null && s.va.harfSag <= -5 ? '#FBBF24' : '#EDF1F7')}
+        {chip('VA OS', `${s.va.sol}${harf(s.va.harfSol)}`, s.va.harfSol != null && s.va.harfSol <= -5 ? '#FBBF24' : '#EDF1F7')}
+        {chip('GİB OD', `${s.gib.sag ?? '—'}${s.gib.hedefSag != null ? ` / hedef ${s.gib.hedefSag}` : ''}`, s.gib.ustSag ? '#F87171' : '#EDF1F7')}
+        {chip('GİB OS', `${s.gib.sol ?? '—'}${s.gib.hedefSol != null ? ` / hedef ${s.gib.hedefSol}` : ''}`, s.gib.ustSol ? '#F87171' : '#EDF1F7')}
+        {s.drEvre && chip('DR', s.drEvre)}
+        {s.sonrakiEnjeksiyon && chip('Enjeksiyon', s.sonrakiEnjeksiyon, '#2DD4BF')}
+        {s.gecikenGorev > 0 && chip('Geciken görev', String(s.gecikenGorev), '#F87171')}
+        {!s.bugunOlcumVar && chip('Bugün', 'VA/GİB girilmedi', '#FBBF24')}
+        <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#2DD4BF' : '#64748B', marginLeft: 'auto' }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
+      </div>
+
+      {/* Bilateral hızlı giriş */}
+      {!salt && (
+        <div style={{ border: '1px solid rgba(15,155,142,0.35)', borderRadius: 10, padding: 10, marginBottom: 10 }}>
+          <div style={{ ...etiket, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span>Görme keskinliği + GİB</span><span style={kucuk}>0,8 · 6/12 · 20/40 · PS 1m · EH · IH · IHY — yazıldığı gibi saklanır</span>
+            {v.kopya && <button type="button" onClick={kopyala} style={{ ...ghost, marginLeft: 'auto' }}>Son vizitten kopyala ({v.kopya.kaynakTarih})</button>}
+          </div>
+          <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12 }}>
+            <span />
+            <b style={{ color: '#2DD4BF' }}>OD (sağ)</b>
+            <b style={{ color: '#60A5FA' }}>OS (sol)</b>
+            {ALANLAR.map(([k, ad]) => (
+              <React.Fragment key={k}>
+                <span style={kucuk}>{ad}</span>
+                <input aria-label={`Sağ ${ad}`} value={form.sag[k] || ''} onChange={(e) => setForm({ ...form, sag: { ...form.sag, [k]: e.target.value } })} style={{ ...toolsInput, minWidth: 0 }} inputMode="decimal" />
+                <input aria-label={`Sol ${ad}`} value={form.sol[k] || ''} onChange={(e) => setForm({ ...form, sol: { ...form.sol, [k]: e.target.value } })} style={{ ...toolsInput, minWidth: 0 }} inputMode="decimal" />
+              </React.Fragment>
+            ))}
+            <span style={kucuk}>GİB mmHg</span>
+            <input aria-label="Sağ GİB" value={form.gibSag} onChange={(e) => setForm({ ...form, gibSag: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} inputMode="decimal" />
+            <input aria-label="Sol GİB" value={form.gibSol} onChange={(e) => setForm({ ...form, gibSol: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} inputMode="decimal" />
+          </div>
+          <div style={satir}>
+            <select value={form.gibYontem} onChange={(e) => setForm({ ...form, gibYontem: e.target.value })} style={{ ...toolsInput, width: 'auto' }}>
+              {[['nct', 'NCT (hava)'], ['applanasyon', 'Aplanasyon'], ['tonopen', 'Tono-Pen'], ['icare', 'iCare'], ['diger', 'Diğer']].map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}
+            </select>
+            {form.kopya && <label style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', color: kopyaOnay ? '#2DD4BF' : '#FBBF24' }}><input type="checkbox" checked={kopyaOnay} onChange={(e) => setKopyaOnay(e.target.checked)} />Kopyalanan değerleri bugün ölçtüm / onaylıyorum</label>}
+            <button type="button" onClick={kaydet} style={btn}>Kaydet</button>
+            <button type="button" onClick={() => calistir({ adim: 'olcum_nota' }, 'Son VA/GİB bugünkü notun Objektif bölümüne eklendi.')} style={ghost}>Nota ekle (O)</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+        {SEKMELER.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999, minHeight: 30 }}>{x}{x === 'DR' && v.acikGozSevkleri.length ? ' •' : ''}</button>)}
+      </div>
+      {mesaj && <div style={{ fontSize: 12, color: /okunamadı|Hata|hatalı|yok|girin|onaylayın|Eksik|bulunamadı|seçin|olamaz|Asistan/.test(mesaj) ? '#F87171' : '#2DD4BF', marginBottom: 8 }}>{mesaj}</div>}
+
+      <GozKartlar v={v} sekme={sekme} kaynak={kaynak} salt={salt} calistir={calistir} />
+      <style>{`@media (max-width: 420px) { .goz-giris input { padding: 6px 6px !important; font-size: 14px !important; } }`}</style>
+    </div>
+  );
+}
