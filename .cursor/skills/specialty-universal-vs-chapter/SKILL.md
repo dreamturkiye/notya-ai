@@ -26,7 +26,7 @@ Apply via registry / shared libs — never hardcode only `goz-hastaliklari`:
 | Hasta dosyası **tab chrome** | `lib/doktor/hastaDosyaSekmeleri.ts` | Exclusive chapter tabs only for that doctor’s specialty; baseline/aile may use age/sex mixed-care rules |
 | Imaging modality catalog | `lib/doktor/imagingModalities.ts` | Add codes once (oct/fundus/dermatoskopi…); chapters opt in via `goruntu.modaliteler` |
 | Baseline SOAP / İnceleme / reçete / epikriz / randevu | core doctor app | Never fork per branş |
-| Doktor Araçları **shared** tiles | `lib/doktor/doktorAraclari.ts` (`ORTAK_…`) | e-reçete / ICD-10 / … for every branş |
+| Doktor Araçları **shared** tiles | `lib/doktor/doktorAraclari.ts` (`ORTAK_…`) | e-reçete / ICD-10 / epikriz / ilaç etkileşimi / … identical for all ~30 branşlar — classify before add (`specialty-doktor-araclari`) |
 | Dose-lock / no invented form names / no internal field leak | `lib/doktor/*` | Specialty locks may extend; universal guards stay global |
 | Audit vocabulary | `specialty-audit-report` | Strong/Partial/Thin/Missing + **Hasta portalı** row on every chapter audit |
 

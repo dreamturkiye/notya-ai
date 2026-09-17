@@ -1,0 +1,23 @@
+---
+description: >-
+  Before any Notya section work — especially Doktor Araçları — classify tools as
+  base (all ~30 specialties, identical), specialty-only, or new-universal.
+  Commercial product; no audit HTML / named beta-doctor copy on /doktor-tools.
+alwaysApply: true
+---
+
+# Doktor Araçları — classify before add
+
+**Read and follow** `.cursor/skills/specialty-doktor-araclari/SKILL.md` before starting work on Araçlar, `/doktor-tools`, chapter tools, or any change that adds/edits a doctor-facing tool.
+
+Boss standing rule (commercial app, not one clinic’s private toolbox):
+
+1. Most tools built via pediatri are already **base** and must stay **the same** across all ~30 specialties (ilaç etkileşimi, epikriz, e-reçete, ICD-10, …).
+2. Every new Araçlar entry is exactly one of:
+   - **Base** — multi-specialty, identical → `ORTAK_DOKTOR_ARACLARI`
+   - **Specialty-only** — one branş → `BRANS_DOKTOR_ARACLARI` + `branslar` + deep-link guard
+   - **New universal** — new tool for everyone → `ORTAK_DOKTOR_ARACLARI`
+3. Never put sprint audits, gap HTML, ticket jargon, or named people (`Gökhan …`) on the Araçlar grid.
+4. No cross-leak: göz must not see dahiliye tools; KD must not see göz tools.
+
+Name the bucket in the commit/PR before implementing. Catalog: `lib/doktor/doktorAraclari.ts`.
