@@ -174,7 +174,8 @@ export async function POST(req: NextRequest) {
     const yontem = m.gib_yontem ? ` (${m.gib_yontem === 'nct' ? 'NCT' : m.gib_yontem === 'applanasyon' ? 'aplanasyon' : m.gib_yontem})` : ''
     const satir = `Görme keskinliği — OD: ${vaSatir('sag')}; OS: ${vaSatir('sol')}. GİB${yontem} — OD: ${m.gib_sag ?? '—'} mmHg; OS: ${m.gib_sol ?? '—'} mmHg.`
     const r = await gununNotunaEkle(sb, doktorId, h.id, satir, 'content_objektif')
-    return NextResponse.json({ ok: r.eklendi, sebep: r.sebep, satir })
+    // NOTYA-MUAYENEYE-DON-01: notId'yi geri veriyoruz ki kart onayında "Muayene Formuna Dön" çıksın.
+    return NextResponse.json({ ok: r.eklendi, sebep: r.sebep, satir, notId: r.eklendi ? r.notId : null })
   }
 
   if (adim === 'glokom') {
@@ -319,7 +320,7 @@ export async function POST(req: NextRequest) {
     const { subjektif } = intakeSubjektif(y)
     if (!subjektif) return hata('Formda aktarılacak yanıt yok.')
     const r = await gununNotunaEkle(sb, doktorId, h.id, subjektif, 'content_subjektif')
-    return NextResponse.json({ ok: r.eklendi, sebep: r.sebep })
+    return NextResponse.json({ ok: r.eklendi, sebep: r.sebep, notId: r.eklendi ? r.notId : null }) // NOTYA-MUAYENEYE-DON-01
   }
 
   if (adim === 'acil') {

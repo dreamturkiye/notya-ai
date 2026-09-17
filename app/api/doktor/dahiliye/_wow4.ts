@@ -39,7 +39,7 @@ export async function wow4Post(adim: string, b: Record<string, unknown>, sb: Sb,
     // Yalnız bu sonuç işaretlenir: NudgeBar "Nota ekle" CTA'sını gizler; yeni tarama kaydı yine CTA ile gelir.
     const simdi = new Date().toISOString()
     await sb.from('dahiliye_taramalar').update({ nota_eklendi_at: simdi }).eq('id', t.id)
-    return NextResponse.json({ ok: true, notaEklendiAt: simdi })
+    return NextResponse.json({ ok: true, notaEklendiAt: simdi, notId: r.notId }) // NOTYA-MUAYENEYE-DON-01
   }
   if (adim === 'kbteknik') {
     const liste = (Array.isArray(b.liste) ? b.liste : []).map(String).filter((x) => KB_TEKNIK.includes(x))

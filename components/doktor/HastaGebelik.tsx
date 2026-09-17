@@ -18,6 +18,8 @@ import RiskFormu from '@/specialties/kadin-dogum/ui/RiskFormu';
 import VtePaneli from '@/specialties/kadin-dogum/ui/VtePaneli';
 import DestekAsiPaneli from '@/specialties/kadin-dogum/ui/DestekAsiPaneli';
 import LabPaneli from '@/specialties/kadin-dogum/ui/LabPaneli';
+import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
+import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import KararKartlari from '@/specialties/kadin-dogum/ui/KararKartlari';
 import SevkCta from '@/specialties/kadin-dogum/ui/SevkCta';
 import TehlikeIsaretleri from '@/specialties/kadin-dogum/ui/TehlikeIsaretleri';
@@ -101,7 +103,14 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   const [veri, setVeri] = useState<Veri | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
-  const [mesaj, setMesaj] = useState('');
+  const [mesajHam, setMesajHam] = useState('');
+  // NOTYA-MUAYENEYE-DON-01 — onay mesajının yanındaki "Muayene Formuna Dön" bağlantısı.
+  // setMesaj her yeni mesajda bağlantıyı sıfırlar; yalnız nota yazan akışlar setMesajVeNot ile geri koyar,
+  // böylece alakasız bir mesajın altında eski notun bağlantısı asılı kalmaz.
+  const [eklenenNot, setEklenenNot] = useState<string | null>(null);
+  const mesaj = mesajHam;
+  const setMesaj = useCallback((m: string) => { setMesajHam(m); setEklenenNot(null); }, []);
+  const setMesajVeNot = useCallback((m: string, yanit: unknown) => { setMesajHam(m); setEklenenNot(eklenenNotId(yanit)); }, []);
   const [baslatAcik, setBaslatAcik] = useState(false);
   const [izlemAcik, setIzlemAcik] = useState(false);
   const [f, setF] = useState<Record<string, string>>({});
@@ -197,7 +206,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         usg: Object.keys(usg).length ? usg : null, notMetni: g.not || null, muayeneFormunaEkle,
         checklist, gbsKultur: g.gbs || null,
       });
-      if (muayeneFormunaEkle) setMesaj(d.notEkleme?.eklendi ? 'İzlem kaydedildi ve bugünkü muayene formuna eklendi.' : `İzlem kaydedildi. ${d.notEkleme?.sebep || ''}`);
+      if (muayeneFormunaEkle) setMesajVeNot(d.notEkleme?.eklendi ? 'İzlem kaydedildi ve bugünkü muayene formuna eklendi.' : `İzlem kaydedildi. ${d.notEkleme?.sebep || ''}`, d);
       else setMesaj('İzlem kaydedildi.');
       setRandevuOneri(d.onerilenSonrakiTarih || veri.onerilenSonrakiTarih || null);
       setIzlemAcik(false); setG({}); setChecklist({}); yukle();
@@ -209,7 +218,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
     setMesaj(''); setHata('');
     try {
       const d = await post({ action: 'lohusa-izlem', gebelikId: veri.gebelik.id, tarih: l.tarih || undefined, tansiyonSistolik: sayi(l.ts), tansiyonDiastolik: sayi(l.td), ates: sayi(l.ates), kanama: l.kanama || null, uterusInvolusyon: l.uterus || null, perineInsizyon: l.perine || null, emzirme: l.emzirme || null, duyguDurumu: l.duygu || null, epdsPuan: sayi(l.epds), notMetni: l.not || null, muayeneFormunaEkle });
-      setMesaj(muayeneFormunaEkle ? (d.notEkleme?.eklendi ? 'Lohusa izlemi kaydedildi ve bugünkü muayene formuna eklendi.' : `Lohusa izlemi kaydedildi. ${d.notEkleme?.sebep || ''}`) : 'Lohusa izlemi kaydedildi.');
+      if (muayeneFormunaEkle) setMesajVeNot(d.notEkleme?.eklendi ? 'Lohusa izlemi kaydedildi ve bugünkü muayene formuna eklendi.' : `Lohusa izlemi kaydedildi. ${d.notEkleme?.sebep || ''}`, d);
+      else setMesaj('Lohusa izlemi kaydedildi.');
       setLohusaAcik(false); setL({}); yukle();
     } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
   };
@@ -224,7 +234,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
       if (tur === 'nipt') veriObj = { durum: n.niptDurum || 'istendi', t21: n.t21 || null, t18: n.t18 || null, t13: n.t13 || null, cinsiyetKromozomu: n.cinsiyetK || null, fetalFraksiyon: n.fetalFraksiyon || null };
       if (tur === 'invazif') veriObj = { tur: n.invazifTur || 'amniyosentez', endikasyon: n.endikasyon || '', sonuc: n.invazifSonuc || null, karyotip: n.karyotip || null };
       const d = await post({ action: 'genetik-tarama', gebelikId: veri.gebelik.id, tur, hafta: n.hafta2 ? Number(n.hafta2) : (veri.yas?.hafta ?? null), veri: veriObj, muayeneFormunaEkle });
-      setMesaj(muayeneFormunaEkle ? (d.notEkleme?.eklendi ? 'Kaydedildi ve bugünkü muayene formuna eklendi.' : `Kaydedildi. ${d.notEkleme?.sebep || ''}`) : 'Kaydedildi.');
+      if (muayeneFormunaEkle) setMesajVeNot(d.notEkleme?.eklendi ? 'Kaydedildi ve bugünkü muayene formuna eklendi.' : `Kaydedildi. ${d.notEkleme?.sebep || ''}`, d);
+      else setMesaj('Kaydedildi.');
       setGenetikTurAcik(''); setN({}); yukle();
     } catch (e) { setHata(e instanceof Error ? e.message : 'Kaydedilemedi'); }
   };
@@ -412,7 +423,12 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         ))}
       </div>
       {hata && <div style={{ color: '#F87171', fontSize: 13 }}>{hata}</div>}
-      {mesaj && <div style={{ color: '#22C55E', fontSize: 13 }}>{mesaj}</div>}
+      {mesaj && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ color: '#22C55E', fontSize: 13 }}>{mesaj}</span>
+          <MuayeneFormunaDon notId={eklenenNot} />
+        </div>
+      )}
 
       {!veri?.gebelik && (
         <div style={kutu} data-kd="empty-start">

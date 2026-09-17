@@ -8,6 +8,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { GozKartlar, type GozVeri, stil } from './GozKartlar';
+import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
+import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 
 const { btn, ghost, etiket, kucuk, satir } = stil;
 const ALANLAR = [['uzak_sc', 'Uzak sc'], ['uzak_cc', 'Uzak cc'], ['yakin', 'Yakın']] as const;
@@ -21,7 +23,10 @@ export default function GozHome({ patientId }: { patientId: string }) {
   const [v, setV] = useState<GozVeri | null>(null);
   const [sekme, setSekme] = useState<GozSekme>('Özet');
   const [kaynak, setKaynak] = useState(false);
-  const [mesaj, setMesaj] = useState('');
+  const [mesaj, setMesajHam] = useState('');
+  // NOTYA-MUAYENEYE-DON-01 — "Nota ekle (O/S)" onayının yanındaki dönüş bağlantısı.
+  const [eklenenNot, setEklenenNot] = useState<string | null>(null);
+  const setMesaj = useCallback((m: string) => { setMesajHam(m); setEklenenNot(null); }, []);
   const [form, setForm] = useState<Form>(bosForm());
   const [kopyaOnay, setKopyaOnay] = useState(false);
 
@@ -30,7 +35,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
     const r = await fetch(`/api/doktor/goz?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
     const j = await r.json().catch(() => ({}));
     if (r.ok) setV(j); else setMesaj(j.error || 'Göz verisi yüklenemedi');
-  }, [patientId]);
+  }, [patientId, setMesaj]);
   useEffect(() => { yukle(); }, [yukle]);
 
   const calistir = useCallback(async (body: Record<string, unknown>, ok?: string): Promise<Record<string, unknown> | null> => {
@@ -40,9 +45,9 @@ export default function GozHome({ patientId }: { patientId: string }) {
       const r = await fetch('/api/doktor/goz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Hata');
-      setMesaj(ok || 'Kaydedildi.'); await yukle(); return j;
+      setMesaj(ok || 'Kaydedildi.'); setEklenenNot(eklenenNotId(j)); await yukle(); return j;
     } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; }
-  }, [patientId, yukle]);
+  }, [patientId, yukle, setMesaj]);
 
   if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>{mesaj || 'Göz yükleniyor…'}</div>;
   const s = v.serit;
@@ -128,7 +133,12 @@ export default function GozHome({ patientId }: { patientId: string }) {
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {SEKMELER.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999, minHeight: 30 }}>{x}{x === 'DR' && v.acikGozSevkleri.length ? ' •' : ''}</button>)}
       </div>
-      {mesaj && <div style={{ fontSize: 12, color: /okunamadı|Hata|hatalı|yok|girin|onaylayın|Eksik|bulunamadı|seçin|olamaz|Asistan/.test(mesaj) ? '#F87171' : '#2DD4BF', marginBottom: 8 }}>{mesaj}</div>}
+      {mesaj && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+          <span style={{ fontSize: 12, color: /okunamadı|Hata|hatalı|yok|girin|onaylayın|Eksik|bulunamadı|seçin|olamaz|Asistan/.test(mesaj) ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>
+          <MuayeneFormunaDon notId={eklenenNot} />
+        </div>
+      )}
 
       <GozKartlar v={v} sekme={sekme} kaynak={kaynak} salt={salt} calistir={calistir} />
       <style>{`@media (max-width: 420px) { .goz-giris input { padding: 6px 6px !important; font-size: 14px !important; } }`}</style>
