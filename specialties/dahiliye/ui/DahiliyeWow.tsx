@@ -163,7 +163,7 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
     return (<div>
       <div style={etiket}>SGK ilaç kullanım raporu <span style={kucuk}>· kartlardan ön dolu · Tools › Hasta Raporları ile aynı taslak + e-Nabız/Medula zarfı · T.C. yazılmaz</span></div>
       <div style={satir}>
-        <select value={sab} onChange={(e) => { set('sab', e.target.value); setSgk(null); }} style={{ ...toolsInput, width: 'auto' }}>{(wow.sgkSablonlar || []).map((x) => <option key={x.id} value={x.id} style={{ color: '#000' }}>{x.ad}</option>)}</select>
+        <select value={sab} onChange={(e) => { set('sab', e.target.value); setSgk(null); }} style={{ ...toolsInput, width: 'auto', maxWidth: '100%' }}>{(wow.sgkSablonlar || []).map((x) => <option key={x.id} value={x.id} style={{ color: '#000' }}>{x.ad}</option>)}</select>
         <input value={s('sure')} onChange={(e) => set('sure', e.target.value)} placeholder="süre ay (≤24)" style={{ ...toolsInput, width: 110 }} />
         {sab === 'doak' && (<>
           <select value={s('end')} onChange={(e) => set('end', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="">endikasyon</option><option value="af" style={{ color: '#000' }}>AF</option><option value="dvt" style={{ color: '#000' }}>DVT</option><option value="pe" style={{ color: '#000' }}>PE</option></select>

@@ -137,7 +137,7 @@ export default function BelgeAnalizPage() {
       <DoktorNav />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '14px 12px' }}>
         <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.35)', color: '#FBBF24', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 700, marginBottom: 12 }}>{UYARI_SERIDI}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 14 }}>
+        <div className="notya-grid-yigin" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 14 }}>
           {/* LEFT: media + controls */}
           <div>
             <div style={{ ...toolsCard, marginBottom: 12 }}>

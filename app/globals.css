@@ -91,6 +91,16 @@ body {
   }
 }
 
+/* MOBILE-REVIEW (2026-09-17): same stacking for app grids whose columns hold wide
+   content that scrolls inside its own wrapper (lab table, document preview).
+   A plain 1fr track has an auto minimum, so the table's width would stretch the
+   single column past the screen; minmax(0, 1fr) keeps it at viewport width. */
+@media (max-width: 768px) {
+  .notya-grid-yigin {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 @media (max-width: 1024px) and (min-width: 769px) {
   /* Tablet: four across is still too tight for the klinik tab. */
   .notya-grid-pricing {
