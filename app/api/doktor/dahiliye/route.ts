@@ -6,7 +6,6 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
-import { decrypt } from '@/lib/security/encryption'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
 import { htDegerlendir, dmDegerlendir, lipidDegerlendir, tiroidDegerlendir, checkupAraligi, dxaGorevi, ilacGuvenlik, kirmiziBayraklar, CHECKUP_SABLONU, SEVK_HEDEFLERI, REF_ACIKLAMA } from '@/specialties/dahiliye/engines/dahiliye'
@@ -19,44 +18,11 @@ import { kilitDogrula, kilitDegeri, type HekimKilit } from '@/specialties/dahili
 import { sgkRaporTaslagi, SGK_SABLONLARI, type SgkSablon, type SgkLab } from '@/specialties/dahiliye/engines/sgkRapor'
 import { enabizSgkRapor } from '@/lib/enabiz/paket'
 import { RAPOR_TIPLERI } from '@/lib/sgk/raporTipleri'
+import { wow2Verisi, wow2Post } from './_wow2'
+import { type Sb, type LabSatir, labSerisi, son, sonDeger, gorevEkle, hastaBilgi, hastaAdi, hekimKimlik, labKayit } from './_ortak'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
-type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
-type LabSatir = { canonical_key: string; kanonik_deger: number | null; value_text: string | null; numune_tarihi: string | null }
-
-async function labSerisi(sb: Sb, patientId: string): Promise<Map<string, LabSatir[]>> {
-  const { data } = await sb.from('lab_satirlar').select('canonical_key, kanonik_deger, value_text, numune_tarihi').eq('patient_id', patientId).eq('onayli', true).in('canonical_key', ['HbA1c', 'Glu', 'LDL', 'HDL', 'TG', 'TChol', 'Kre', 'eGFR', 'UACR', 'TSH', 'FT4', 'K', 'Na', 'Hb', 'WBC', 'Plt', 'MCV', 'ALT', 'AST', 'CK', 'Ferritin', 'B12', 'Folate', 'Retic', 'INR', 'Uric', 'Li', 'UA_protein']).not('numune_tarihi', 'is', null).order('numune_tarihi', { ascending: false }).limit(400)
-  const m = new Map<string, LabSatir[]>()
-  for (const r of data || []) { const k = String(r.canonical_key); if (!m.has(k)) m.set(k, []); m.get(k)!.push({ canonical_key: k, kanonik_deger: r.kanonik_deger == null ? null : Number(r.kanonik_deger), value_text: r.value_text, numune_tarihi: r.numune_tarihi ? String(r.numune_tarihi) : null }) }
-  return m
-}
-const son = (m: Map<string, LabSatir[]>, k: string) => m.get(k)?.[0] ?? null
-const sonDeger = (m: Map<string, LabSatir[]>, k: string) => son(m, k)?.kanonik_deger ?? null
-async function gorevEkle(sb: Sb, doctorId: string, patientId: string, g: { kod: string; ad: string; due?: string | null; kaynak: string }[]) {
-  for (const x of g) { const { data } = await sb.from('dahiliye_gorevleri').select('id').eq('patient_id', patientId).eq('kod', x.kod).eq('durum', 'acik').maybeSingle(); if (!data) await sb.from('dahiliye_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak }) }
-}
-async function hastaBilgi(sb: Sb, doctorId: string, patientId: string) {
-  const { data } = await sb.from('patients').select('id, dob_encrypted, gender_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
-  if (!data) return null
-  let yas: number | null = null, kadin = false
-  try { if (data.dob_encrypted) { const d = new Date(decrypt(String(data.dob_encrypted))); const a = new Date(); yas = a.getFullYear() - d.getFullYear() - (a.getMonth() < d.getMonth() || (a.getMonth() === d.getMonth() && a.getDate() < d.getDate()) ? 1 : 0) } } catch { yas = null }
-  try { kadin = data.gender_encrypted ? /^k|^f/i.test(decrypt(String(data.gender_encrypted))) : false } catch { kadin = false }
-  return { id: data.id, yas, kadin }
-}
-
-async function hastaAdi(sb: Sb, doctorId: string, patientId: string): Promise<string> {
-  const { data } = await sb.from('patients').select('name_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
-  try { if (data?.name_encrypted) { const p = JSON.parse(decrypt(String(data.name_encrypted))); return `${p.ad || ''} ${p.soyad || ''}`.trim() || 'Hasta' } } catch { /* varsayılan */ }
-  return 'Hasta'
-}
-async function hekimKimlik(sb: Sb, user: { id: string; user_metadata?: Record<string, unknown> }) {
-  const [{ data: profil }, { data: medula }] = await Promise.all([sb.from('users').select('full_name, specialty').eq('id', user.id).maybeSingle(), sb.from('doctor_integrations').select('meta').eq('user_id', user.id).eq('provider', 'medula').eq('is_active', true).maybeSingle()])
-  const meta = (medula?.meta || {}) as { tesisKodu?: string; sicilNo?: string; diplomaTescilNo?: string; saglikKurumu?: string; kurumAdi?: string }
-  return { adSoyad: String(profil?.full_name || user.user_metadata?.full_name || ''), uzmanlik: String(profil?.specialty || user.user_metadata?.specialty || ''), diplomaTescilNo: meta.diplomaTescilNo || meta.sicilNo || '', saglikKurumu: meta.saglikKurumu || meta.kurumAdi || '', tesisKodu: meta.tesisKodu || '', medulaBagli: !!medula }
-}
-const labKayit = (m: Map<string, LabSatir[]>): Record<string, SgkLab[]> => { const o: Record<string, SgkLab[]> = {}; for (const [k, arr] of m) o[k] = arr.filter((x) => x.kanonik_deger != null && x.numune_tarihi).map((x) => ({ ad: k, deger: x.kanonik_deger as number, tarih: x.numune_tarihi as string })); return o }
-
 // ---------- NOTYA-DAH-WOW W0/W1: kilitler, KVR, KBH, ev kayıt, ilaç izlem, şerit ----------
 type IlacRow = { id: string; ilac_adi: string; etken_madde: string | null; doz: string | null; kullanim_sikli: string | null; baslangic_tarihi: string | null; aktif: boolean | null }
 async function wowVerisi(sb: Sb, doctorId: string, hasta: { id: string; yas: number | null; kadin: boolean }, labs: Map<string, LabSatir[]>, ilaclar: IlacRow[], dm: Record<string, unknown> | null, ht: Record<string, unknown> | null, lipid: Record<string, unknown> | null, T: string) {
@@ -108,6 +74,8 @@ export async function POST(req: NextRequest) {
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
   const num = (v: unknown) => (v == null || v === '' ? null : Number(v))
   const T = bugun()
+
+  const w2 = await wow2Post(adim, b, sb, user.id, hasta, T); if (w2) return w2
 
   if (adim === 'gorev') { const { error } = await sb.from('dahiliye_gorevleri').update({ durum: String(b.durum || 'tamam'), tamam_at: b.durum === 'tamam' ? new Date().toISOString() : null }).eq('id', String(b.gorevId || '')).eq('doctor_id', user.id); return error ? NextResponse.json({ error: 'Yazılamadı' }, { status: 500 }) : NextResponse.json({ ok: true }) }
 
@@ -295,7 +263,7 @@ export async function GET(req: NextRequest) {
     sb.from('dahiliye_sgk_raporlari').select('id, sablon, draft, sut_kontrol, eksikler, durum, kilit_at, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(6),
   ])
   const sonKb = ht.data?.[0] || null
-  const wow = await wowVerisi(sb, user.id, hasta, labs, (ilaclar.data || []) as IlacRow[], dm.data, sonKb, lipid.data, T)
+  const [wow, wow2] = await Promise.all([wowVerisi(sb, user.id, hasta, labs, (ilaclar.data || []) as IlacRow[], dm.data, sonKb, lipid.data, T), wow2Verisi(sb, hasta, labs, (ilaclar.data || []) as IlacRow[], T)])
   const hba1c = (labs.get('HbA1c') || []).filter((x) => x.kanonik_deger != null)
   const ilacListe = (ilaclar.data || []).map((i) => ({ ad: `${i.ilac_adi} ${i.etken_madde || ''}`, aktif: i.aktif !== false }))
   const guvenlik = ilacGuvenlik(ilacListe, sonDeger(labs, 'eGFR'))
@@ -310,14 +278,21 @@ export async function GET(req: NextRequest) {
   for (const p of ((lipid.data?.degerlendirme as { plan?: string[] } | null)?.plan) || []) planlar.push({ kaynak: 'Lipid', madde: p })
   for (const p of wow.ckdSonuc.plan) planlar.push({ kaynak: 'KBH', madde: p })
   for (const p of wow.kvrSonuc.statinAcigi) planlar.push({ kaynak: 'KVR', madde: p })
+  for (const p of [...(wow2.dm?.sonuc?.plan || []), ...(wow2.dm?.sonuc?.sevk || [])]) planlar.push({ kaynak: 'DM döngü', madde: p })
+  if (wow2.anemi.sonuc.anemi) for (const p of [...wow2.anemi.sonuc.olasiNeden, ...wow2.anemi.sonuc.sonrakiTestler.map((t) => `sonraki test: ${t}`)]) planlar.push({ kaynak: 'Anemi', madde: p })
+  for (const d of [...wow2.tarama.due, ...wow2.asi.due].filter((x) => x.durum === 'gecikti' || x.durum === 'zamani' || x.durum === 'sevk' || x.durum === 'seroloji')) planlar.push({ kaynak: 'Tarama/Aşı', madde: `${d.ad}: ${d.not}` })
+  for (const i of wow2.htPanel.istemler.filter((x) => x.durum.gecikti)) planlar.push({ kaynak: 'Lab takip', madde: i.durum.takipGorevi!.ad })
+  if (wow2.anket && !wow2.anket.okundu) planlar.unshift({ kaynak: 'Ön anket', madde: `${wow2.anket.tarih} yanıtı var — Subjektif'e ekle` })
   const kirmizi: string[] = []
   const kSon = sonDeger(labs, 'K'); if (kSon != null && kSon > 6) kirmizi.push(`K ${kSon} >6,0 — EKG + acil`)
   if (wow.ckdSonuc.hizliDusus) kirmizi.push('eGFR 1 yılda >%25 düşüş — nefroloji')
+  for (const k of wow2.anemi.sonuc.kirmizi) kirmizi.push(k)
+  if (wow2.anket && !wow2.anket.okundu) for (const a of wow2.anket.alarmlar) kirmizi.push(`Ön anket: ${a}`)
   const serit = vizitSeridi({ bugun: T, kb: sonKb ? { sbp: sonKb.sbp, dbp: sonKb.dbp, tarih: sonKb.tarih, hedefteMi: htDeg?.hedefteMi ?? null } : null,
     hba1c: hba1c[0] ? { deger: hba1c[0].kanonik_deger as number, delta: hba1c[1] ? Math.round(((hba1c[0].kanonik_deger as number) - (hba1c[1].kanonik_deger as number)) * 10) / 10 : null, tarih: hba1c[0].numune_tarihi, hedef: dm.data?.hedef_hba1c != null ? Number(dm.data.hedef_hba1c) : null } : null,
     ldl: ldlSon?.kanonik_deger != null ? { deger: ldlSon.kanonik_deger, tarih: ldlSon.numune_tarihi, hedef: wow.kvr.kilitHedefLdl } : null,
     egfr: egfrSon?.kanonik_deger != null ? { deger: egfrSon.kanonik_deger, tarih: egfrSon.numune_tarihi, evre: wow.ckdSonuc.g, renk: wow.ckdSonuc.renk } : null,
     gorevler: (gorevler.data || []).map((g) => ({ kod: g.kod, ad: g.ad, due: g.due })), planlar, kirmizi })
   const { ckdSonuc: _c, kvrSonuc: _k, kilitler: _kl, ...wowOut } = wow
-  return NextResponse.json({ wow: { ...wowOut, sgkRaporlar: sgkRaporlar.data || [], sgkSablonlar: SGK_SABLONLARI }, serit, hasta: { yas: hasta.yas, kadin: hasta.kadin, gebe: (gebe.data || []).some((g) => aktifGebelikDurumu(g.durum)) }, chips, ht: ht.data || [], dm: dm.data, lipid: lipid.data, tiroid: tiroid.data, checkup: checkup.data || [], gorevler: gorevler.data || [], sevkler: sevkler.data || [], ilaclar: ilaclar.data || [], ilacUyari: guvenlik.uyarilar, jineDue: jineDue.data || [], checkupAralik: checkupAraligi(hasta.yas), kutuphane: { checkup: CHECKUP_SABLONU, sevk: SEVK_HEDEFLERI, refler: REF_ACIKLAMA } })
+  return NextResponse.json({ wow: { ...wowOut, w2: wow2, sgkRaporlar: sgkRaporlar.data || [], sgkSablonlar: SGK_SABLONLARI }, serit, hasta: { yas: hasta.yas, kadin: hasta.kadin, gebe: (gebe.data || []).some((g) => aktifGebelikDurumu(g.durum)) }, chips, ht: ht.data || [], dm: dm.data, lipid: lipid.data, tiroid: tiroid.data, checkup: checkup.data || [], gorevler: gorevler.data || [], sevkler: sevkler.data || [], ilaclar: ilaclar.data || [], ilacUyari: guvenlik.uyarilar, jineDue: jineDue.data || [], checkupAralik: checkupAraligi(hasta.yas), kutuphane: { checkup: CHECKUP_SABLONU, sevk: SEVK_HEDEFLERI, refler: REF_ACIKLAMA } })
 }
