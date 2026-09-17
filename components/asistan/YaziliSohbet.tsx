@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
+import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz';
 
 interface Mesaj { rol: 'doktor' | 'asistan'; icerik: string }
 
@@ -96,7 +97,9 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || `${personaAdi} yanıt veremedi.`);
       const veri = d.data && typeof d.data === 'object' ? d.data : d;
-      const cevap = String(veri.response || veri.message || veri.cevap || '');
+      // The route answers in data.speech (F3: the panel read response/message and showed "Yanıt alınamadı." for every answer).
+      // Parsed once more as a guard so a JSON-shaped text can never reach the bubble.
+      const cevap = asistanYanitiCoz(String(veri.speech || veri.response || veri.message || veri.cevap || '')).speech;
       if (veri.asistanSessionId) setOturumId(String(veri.asistanSessionId));
       if (veri.aktifHasta) setAktifHasta(String(veri.aktifHasta));
       setMesajlar([...yeni, { rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.' }]);
@@ -131,7 +134,7 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
             {mesajlar.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '90%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
+              <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '90%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal', overflowWrap: 'anywhere', minWidth: 0 }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
             ))}
             {bekliyor && <div style={{ fontSize: 12, color: '#5F7189' }}>{personaAdi} dosyaya bakıyor…</div>}
             <div ref={altRef} />
