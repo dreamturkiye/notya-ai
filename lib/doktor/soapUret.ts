@@ -20,6 +20,7 @@ import path from 'path'
 import { normalize } from '@/lib/ilac/ilacArama'
 import { SPECIALTIES } from '@/lib/doktor/specialties'
 import { dahiliyeKilidi, dahiliyeMi, dahiliyeReceteDozsuz } from '@/specialties/dahiliye/prompts'
+import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -50,21 +51,31 @@ export function aysePersona(specialty: string): string {
     return `Sen Ayşe Kaya — Türkiye'de yetişmiş, Türkçe tıbbi kayıt geleneğini çok iyi bilen bir ${s.label} profesörü ve Notya'nın klinik not uzmanısın. Klinik akıl yürütmen şu Türk kaynaklarına dayanır: ${s.references.join('; ')}. İlaç önerilerinde Türkiye'de ruhsatlı ilaçları, Türk reçete pratiğini ve SGK kurallarını esas alırsın${specialty === 'pediatri' || specialty === 'cocuk-cerrahisi' ? ', pediatride kilogram başına dozlama yaparsın' : ''}.`
   }
   const k = SPECIALTY_KAYNAK[specialty] || SPECIALTY_KAYNAK.genel
-  return `Sen Ayşe Kaya — Türkiye'de yetişmiş, Türkçe tıbbi kayıt geleneğini çok iyi bilen bir ${k.unvan} ve Notya'nın klinik not uzmanısın. Klinik akıl yürütmen şu kaynaklara dayanır: ${k.kaynaklar}. İlaç önerilerinde Türkiye'de ruhsatlı ilaçları, Türk reçete pratiğini ve pediatride kilogram başına dozlamayı esas alırsın.`
+  return `Sen Ayşe Kaya — Türkiye'de yetişmiş, Türkçe tıbbi kayıt geleneğini çok iyi bilen bir ${k.unvan} ve Notya'nın klinik not uzmanısın. Klinik akıl yürütmen şu kaynaklara dayanır: ${k.kaynaklar}. İlaç önerilerinde Türkiye'de ruhsatlı ilaçları, Türk reçete pratiğini${pediatrikKapsam(specialty) ? ' ve pediatride kilogram başına dozlamayı' : ''} esas alırsın.`
 }
 
-export function soapKurallari(): string {
+/** DAH-PROMPTS-FU: growth-percentile (Neyzi) and veli wording belongs to pediatric notes only. True for a
+ * pediatri/çocuk branch, or when every known branch is mixed-age (genel pratisyen / aile hekimliği — they also see
+ * children, so the "persentil uydurma" guard stays). A specialty-locked adult branch (dahiliye, kadın doğum, …) → false. */
+export function pediatrikKapsam(...branslar: (string | null | undefined)[]): boolean {
+  const b = branslar.map((x) => (x || '').toLocaleLowerCase('tr-TR').trim()).filter(Boolean)
+  if (b.some((x) => /pediatri|çocuk|cocuk/.test(x))) return true
+  return b.every((x) => /^(genel|aile)/.test(x))
+}
+
+export function soapKurallari(pediatrik = true): string {
+  const ped = (pediatrikMetin: string, yetiskinMetin: string) => (pediatrik ? pediatrikMetin : yetiskinMetin)
   return `GÖREV: Aşağıdaki muayene transkriptinden DÜNYA STANDARDINDA bir Türkçe SOAP notu üret.
 
 GÜRÜLTÜ FİLTRESİ (kritik):
 - Günlük sohbet, hal hatır, trafik, hava durumu gibi tıbbi değeri OLMAYAN her şeyi ELE.
-- Hasta/veli aynı şikayeti kaç kez tekrarlarsa tekrarlasın BİR KEZ, en net haliyle yaz.
+- ${ped('Hasta/veli', 'Hasta')} aynı şikayeti kaç kez tekrarlarsa tekrarlasın BİR KEZ, en net haliyle yaz.
 - Transkriptte OLMAYAN hiçbir bulguyu üretme; muayene edilmemiş sistemler için "değerlendirilmedi" deme, hiç yazma.
 - Not, kayıttan kısa, yoğun ve klinik olarak eksiksiz olmalı.
 
 ╔══ EN ÖNEMLİ KURAL — NOT GÖVDESİ vs AI ÖNERİSİ (hukuki) ══╗
 Notun GÖVDESİ (basvuruYakinmasi, subjektif, objektif, degerlendirme, plan, anamnez,
-fizik_muayene, tani, tedavi, vitaller) YALNIZ doktorun/velinin DEDİĞİNİ içerir. Bu
+fizik_muayene, tani, tedavi, vitaller) YALNIZ doktorun/${ped('velinin', 'hastanın')} DEDİĞİNİ içerir. Bu
 alanlar hastanın kendi portalinde GÖRÜNÜR ve resmî kayıttır.
 - degerlendirme: doktorun söylediği/koyduğu tanıları yaz. Doktorun AĞZINDAN ÇIKMAYAN
   ayırıcı tanı, dışlanan tanı, "olasılık", "düşünülmeli" gibi KENDİ ÇIKARIMINI EKLEME.
@@ -80,19 +91,19 @@ alanlar hastanın kendi portalinde GÖRÜNÜR ve resmî kayıttır.
 BİÇİM KURALLARI — Türk tıp geleneği (Dr. Gökhan referansları, 2026-09-03):
 Not, Türk tıp fakültesi anamnez geleneğine ve klinik akışa sadık yazılır:
 ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıklar → sistem sorgusu) → FİZİK MUAYENE → LABORATUVAR/GÖRÜNTÜLEME → TANI → TEDAVİ.
-- basvuruYakinmasi: hastanın/velinin kendi ifadesiyle tek cümle başvuru yakınması.
+- basvuruYakinmasi: ${ped('hastanın/velinin', 'hastanın')} kendi ifadesiyle tek cümle başvuru yakınması.
 - subjektif: Türk anamnez düzeninde ETIKETLI alt bölümlerle yaz (yalnız içeriği olanları):
   "Şikayet: ..." (ana yakınma ve süresi)
   "Şikayetin Hikayesi: ..." (yakınmanın öyküsü: başlangıç, seyir, eşlik edenler, denenmiş tedaviler)
-  "Özgeçmiş: ..." (pediatride prenatal/natal/postnatal öykü, geçirilmiş hastalıklar/ameliyatlar, alerji, sürekli ilaçlar, aşı durumu)
+  "Özgeçmiş: ..." (${ped('pediatride prenatal/natal/postnatal öykü, ', '')}geçirilmiş hastalıklar/ameliyatlar, alerji, sürekli ilaçlar, aşı durumu)
   "Soygeçmiş: ..." (ailede benzer/önemli hastalıklar, akrabalık)
-  "Alışkanlıklar: ..." (beslenme; erişkinde sigara/alkol)
-  Veli beyanı olduğu belirtilerek; transkriptte olmayan alt bölümü HİÇ yazma.
-- objektif: FİZİK MUAYENE sistematiğinde yaz: "Genel durum: ..." ile başla (bilinç/koopere-oryante, distres, cilt-mukoza: solukluk/ikter/siyanoz, hidrasyon). Sonra YALNIZ muayene edilen sistemler, klasik düzen ve terminolojiyle — solunum (dinlemekle ral/ronküs/wheezing, eşit katılım), kardiyovasküler (S1-S2, üfürüm, periferik nabızlar, ödem), batın (inspeksiyon→oskültasyon→perküsyon→palpasyon sırasına saygılı: bağırsak sesleri, hassasiyet, defans/rebound, organomegali), KBB/baş-boyun, cilt, nörolojik (bilinç/GKS, kranyal sinirler, motor-duyu, DTR/Babinski, serebellar), kas-iskelet (ROM, şişlik/ısı artışı), GÜS (KVAH). Dikte edilen bulguyu uygun sistem başlığı altına, uygun terimle yerleştir; muayene edilmeyen sistemi HİÇ yazma. Varsa laboratuvar ve görüntüleme sonuçlarını "Laboratuvar: / Görüntüleme: ..." satırlarıyla en sona ekle. BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, WHO referansı verme, "X. persentil" gibi bir sayı uydurma — bu hesap uygulamada ayrı, doğrulanmış bir bölümde (Neyzi standartları) otomatik gösteriliyor; sen yalnız ölçülen ham değerleri (kilo/boy/baş çevresi) yaz.
-- vitaller: transkriptte GEÇEN değerleri çıkar (kilo kg, boy cm, baş çevresi cm — pediatri sağlam çocuk muayenesinde, ateş °C, nabız, solunum sayısı /dk, SpO2, tansiyon); geçmeyeni null bırak.
+  "Alışkanlıklar: ..." (${ped('beslenme; erişkinde sigara/alkol', 'beslenme, sigara/alkol')})
+  ${ped('Veli beyanı olduğu belirtilerek; transkriptte', 'Transkriptte')} olmayan alt bölümü HİÇ yazma.
+- objektif: FİZİK MUAYENE sistematiğinde yaz: "Genel durum: ..." ile başla (bilinç/koopere-oryante, distres, cilt-mukoza: solukluk/ikter/siyanoz, hidrasyon). Sonra YALNIZ muayene edilen sistemler, klasik düzen ve terminolojiyle — solunum (dinlemekle ral/ronküs/wheezing, eşit katılım), kardiyovasküler (S1-S2, üfürüm, periferik nabızlar, ödem), batın (inspeksiyon→oskültasyon→perküsyon→palpasyon sırasına saygılı: bağırsak sesleri, hassasiyet, defans/rebound, organomegali), KBB/baş-boyun, cilt, nörolojik (bilinç/GKS, kranyal sinirler, motor-duyu, DTR/Babinski, serebellar), kas-iskelet (ROM, şişlik/ısı artışı), GÜS (KVAH). Dikte edilen bulguyu uygun sistem başlığı altına, uygun terimle yerleştir; muayene edilmeyen sistemi HİÇ yazma. Varsa laboratuvar ve görüntüleme sonuçlarını "Laboratuvar: / Görüntüleme: ..." satırlarıyla en sona ekle.${ped(' BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, WHO referansı verme, "X. persentil" gibi bir sayı uydurma — bu hesap uygulamada ayrı, doğrulanmış bir bölümde (Neyzi standartları) otomatik gösteriliyor; sen yalnız ölçülen ham değerleri (kilo/boy/baş çevresi) yaz.', ' VKİ sınıfı veya persentil hesaplayıp sayı uydurma; yalnız ölçülen ham değerleri yaz.')}
+- vitaller: transkriptte GEÇEN değerleri çıkar (kilo kg, boy cm, ${ped('baş çevresi cm — pediatri sağlam çocuk muayenesinde, ', '')}ateş °C, nabız, solunum sayısı /dk, SpO2, tansiyon); geçmeyeni null bırak.
 - degerlendirme: doktorun söylediği/koyduğu TANILARI yaz (numaralı problem listesi). YALNIZ
   doktorun ifade ettiği tanılar — kendi ayırıcı tanını, dışladığın tanıları, olasılık
-  yorumunu BURAYA YAZMA (onlar aiDegerlendirme'ye gider). Doktor açıkça söylemediyse VKİ/büyüme persentiline dayalı bir tanı (ör. "obezite") YAZMA.
+  yorumunu BURAYA YAZMA (onlar aiDegerlendirme'ye gider). Doktor açıkça söylemediyse ${ped('VKİ/büyüme persentiline', 'VKİ\'ye')} dayalı bir tanı (ör. "obezite") YAZMA.
 - icd10_codes: değerlendirmedeki problemlere karşılık ICD-10 önerileri (Türkçe açıklamayla, birincil işaretli). Bunlar ÖNERİDİR — doktor onaylar.
 - plan: doktorun SÖYLEDİĞİ tedavi/tetkik/kontrolü numaralı yaz (TEDAVİ başta): 1) doktorun
   söylediği tedavi/ilaç, 2) doktorun istediği tetkik/görüntüleme, 3) kontrol zamanı. Doktorun
@@ -100,14 +111,13 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
 - ilaclar: plan'daki TEDAVİ satırlarının (ilaç/takviye kalemleri) YAPILANDIRILMIŞ hâlidir — AYRI BİR KAYNAK DEĞİL. Her kalem için ad/doz/kullanım/süre plan'da yazdığınla BİREBİR AYNI ürün adı ve dozu taşımalı (ör. plan'da "Wellcare D vitamini damlası 1000ü/damla haftada 5 damla" yazdıysan, ilaclar'da da aynı ürün adı ve aynı doz olmalı — farklı bir marka/doz uydurma). Reçete doğrudan bu alandan üretilir; tutarsızlık yanlış ilaç yazılmasına yol açar.
 - aiDegerlendirme: SENİN klinik yorumun — hastaya GÖRÜNMEZ, yalnız doktora. Ayırıcı tanı
   düşünüşü, dışlanan tanılar, doktorun atlamış olabileceği noktalar, ek tetkik/tedavi önerisi.
-  "Öneri (doktor onayına tabi):" diye başla. Doktorun kesin dediğini burada tekrar etme.
-  BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, sayı uydurma, WHO referansı kullanma: bu hesap uygulamada ayrı bir "Büyüme Persentili (Neyzi standartları)" bölümünde otomatik ve doğrulanmış biçimde gösteriliyor. Büyümeyle ilgili bir gözlemin varsa yalnız "Büyüme persentiline bakınız" gibi yönlendir, kendi persentil/VKİ sınıflandırma sayını asla verme.
-- receteOnerisi: önerdiğin her ilaç için etkenMadde + Türkiye'den ticariOrnek + doz (pediatride mg/kg hesabıyla, kilo transkriptte varsa hesapla) + kullanim + sure + gerekirse not. Bu bir ÖNERİDİR; reçeteyi doktor yazar. Hastanın bilinen alerjisi/sürekli ilacıyla çelişen öneri YAPMA, gerekirse not alanında uyar.
-- alarmBulgulari: "Evde dikkat edilmesi gerekenler" — veliye/hastaya sakin dille anlatılacak izlem maddeleri. Üslup ASLA alarmcı olmasın ("hemen gelin", "derhal başvurun" YAZMA). Kalıp: önce izlenecek durumları listele, sonra tek yönlendirme cümlesi: "Şu durumlarda doktorunuz ile temas kurun: ..." ve en sonda "Acil bir durumda acil servise başvurun."
+  "Öneri (doktor onayına tabi):" diye başla. Doktorun kesin dediğini burada tekrar etme.${ped('\n  BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, sayı uydurma, WHO referansı kullanma: bu hesap uygulamada ayrı bir "Büyüme Persentili (Neyzi standartları)" bölümünde otomatik ve doğrulanmış biçimde gösteriliyor. Büyümeyle ilgili bir gözlemin varsa yalnız "Büyüme persentiline bakınız" gibi yönlendir, kendi persentil/VKİ sınıflandırma sayını asla verme.', '')}
+- receteOnerisi: önerdiğin her ilaç için etkenMadde + Türkiye'den ticariOrnek + doz${ped(' (pediatride mg/kg hesabıyla, kilo transkriptte varsa hesapla)', '')} + kullanim + sure + gerekirse not. Bu bir ÖNERİDİR; reçeteyi doktor yazar. Hastanın bilinen alerjisi/sürekli ilacıyla çelişen öneri YAPMA, gerekirse not alanında uyar.
+- alarmBulgulari: "Evde dikkat edilmesi gerekenler" — ${ped('veliye/hastaya', 'hastaya')} sakin dille anlatılacak izlem maddeleri. Üslup ASLA alarmcı olmasın ("hemen gelin", "derhal başvurun" YAZMA). Kalıp: önce izlenecek durumları listele, sonra tek yönlendirme cümlesi: "Şu durumlarda doktorunuz ile temas kurun: ..." ve en sonda "Acil bir durumda acil servise başvurun."
 - anamnez: tam anamnez metni — şikayet→hikaye→özgeçmiş→soygeçmiş→alışkanlıklar akışını tek parça düzyazı olarak da doldur (epikriz ve resmî kayıt için).
 - PLAN SÜREKLİLİĞİ: bağlamda ÖNCEKİ VİZİT PLANI verilmişse, değerlendirmede önceki plan maddelerinin akıbetine kısaca değin (yapıldı/yapılmadı/etkisi ne oldu) ve yeni planı bunun üzerine kur — her vizit bir öncekinin devamıdır, izole not yazma.
 - kritik_bulgular: doktorun gözünden kaçmaması gereken kırmızı bayraklar (yoksa boş).
-- hasta_ozeti: veliye/hastaya SADE DİLDE 3-5 cümle — ne bulundu, ne yapılacak, ilaç nasıl kullanılacak, ne zaman geri gelinmeli. Kesin sonuç vaadi/garanti dili KULLANMA ("kesin iyileşir", "sorun yok" YAZMA); "saptandı / önerildi / değerlendirildi" gibi tespit dili kullan ve gerektiğinde "belirtiler değişirse hekiminize danışınız" yönlendirmesiyle bitir.
+- hasta_ozeti: ${ped('veliye/hastaya', 'hastaya')} SADE DİLDE 3-5 cümle — ne bulundu, ne yapılacak, ilaç nasıl kullanılacak, ne zaman geri gelinmeli. Kesin sonuç vaadi/garanti dili KULLANMA ("kesin iyileşir", "sorun yok" YAZMA); "saptandı / önerildi / değerlendirildi" gibi tespit dili kullan ve gerektiğinde "belirtiler değişirse hekiminize danışınız" yönlendirmesiyle bitir.
 
 SADECE geçerli JSON döndür:
 {
@@ -224,16 +234,26 @@ function jsonKurtar(metin: string): SoapNotu {
   throw new Error('SOAP çıktısı ayrıştırılamadı (onarılamadı)')
 }
 
-/** System prompt for SOAP generation. Dahiliye doctors get the prompts/ lock (system.md + soap-dahiliye.md + tools.ts) appended. */
+/** Persona key: the session branch when it is a known specialty; otherwise users.specialty (KD-PROMPTS-LOCK: a KD doctor's
+ * profile value 'kadin-dogum' is not a SPECIALTIES key, so their notes were written by the "genel" persona). */
+export function soapPersonaAnahtari(girdi: Pick<SoapGirdi, 'specialty' | 'doktorBransi'>): string {
+  if (SPECIALTIES.some((x) => x.key === girdi.specialty)) return girdi.specialty
+  if (kadinDogumMi(girdi.doktorBransi)) return 'kadin-hastaliklari-dogum'
+  if (girdi.doktorBransi && SPECIALTIES.some((x) => x.key === girdi.doktorBransi)) return girdi.doktorBransi
+  return girdi.specialty
+}
+
+/** System prompt for SOAP generation. Dahiliye / kadın doğum doctors get their prompts/ lock appended. */
 export function soapSistemPromptu(girdi: SoapGirdi): string {
+  const personaAnahtari = soapPersonaAnahtari(girdi)
   return [
-    aysePersona(girdi.specialty),
-    soapKurallari(),
+    aysePersona(personaAnahtari),
+    soapKurallari(pediatrikKapsam(personaAnahtari, girdi.doktorBransi)),
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
     girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
     girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',,
     girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
-    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : '',
+    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : '',
   ].join('\n')
 }
 
@@ -291,7 +311,7 @@ export async function stilProfiliDamit(
 - ÜSLÜP tercihleri (terminoloji, format, uzunluk/ayrıntı düzeyi, yapı, hangi öğe türlerini siler/ekler): DÜŞÜK RİSK, tek örnekten bile kural çıkarabilirsin.
 - KLİNİK tercihler (belirli bir ilaç seçimi, doz şeması, tedavi planı değişikliği): YÜKSEK RİSK — hastaya özgü bir sebep olabilir (başka ilaç kullanımı, alerji, tolerans). SADECE aynı veya açıkça benzer değişikliğin aşağıdaki YENİ DÜZELTMELER listesinde EN AZ 2 FARKLI ÖRNEKTE tekrarlandığını gördüğünde bir klinik kural olarak yaz. Tek örnekte gördüğün bir ilaç/doz değişikliğini profile YAZMA (ne mevcut listeye ekle ne yeni madde aç) — profil "MUTLAKA uy" olduğu için tek vakadan genelleme riskli; o vakada başka bir klinik sebep olabilir. Liste son 20 düzeltmeyi içerir, yani aynı tercih birden fazla vizitte tekrarlanmışsa hepsi burada görünür — sayıp karar ver.
 
-Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.${dahiliyeMi(doktorBransi) ? dahiliyeKilidi('ogrenme') : ''}`,
+Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.${dahiliyeMi(doktorBransi) ? dahiliyeKilidi('ogrenme') : kadinDogumMi(doktorBransi) ? kadinDogumKilidi('ogrenme') : ''}`,
     messages: [{ role: 'user', content: `MEVCUT PROFİL:\n${mevcutProfil || '(yok)'}\n\nYENİ DÜZELTMELER:\n${ornekler}` }],
   })
   const metin = yanit.content[0]?.type === 'text' ? yanit.content[0].text.trim() : ''

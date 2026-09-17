@@ -12,8 +12,15 @@ import { hafizaYukle, hafizaBloguSes, karsilamaSecimi, hafizaKaydet, hafizaUnut,
 import { gunVerisiDerle, gunFazi, gunOzetiMetni, gunBlogu } from '@/lib/doktor/gunOzeti'
 import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
 import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
+import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 
 export const dynamic = 'force-dynamic'
+
+function sesKilidi(brans: string | null | undefined): string {
+  if (dahiliyeMi(brans)) return dahiliyeKilidi('ses')
+  if (kadinDogumMi(brans)) return kadinDogumKilidi('ses')
+  return ''
+}
 
 export async function GET(req: NextRequest) {
   const oturum = await pratikOturum(req)
@@ -42,8 +49,8 @@ export async function GET(req: NextRequest) {
         rutin: h.iliski.rutin,
       },
       karsilama: karsilamaSecimi(h.iliski),
-      // DAH-PROMPTS-LOCK: sesli Ayşe için dahiliye kilidinin kısa hali (rol + kırılmaz kurallar)
-      sesBlogu: [hafizaBloguSes(h), dahiliyeMi((doktorRow as { specialty?: string } | null)?.specialty) ? dahiliyeKilidi('ses') : ''].filter(Boolean).join('\n\n'),
+      // DAH-PROMPTS-LOCK / KD-PROMPTS-LOCK: sesli Ayşe için branş kilidinin kısa hali
+      sesBlogu: [hafizaBloguSes(h), sesKilidi((doktorRow as { specialty?: string } | null)?.specialty)].filter(Boolean).join('\n\n'),
       gun,
       kayitlar: [...h.kesinKayitlar, ...h.belirsizKayitlar],
     })
