@@ -9,6 +9,7 @@ import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prom
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
 import { asistanYanitiCoz } from "@/lib/asistan/yanitCoz"
+import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
@@ -194,6 +195,9 @@ export async function POST(req: NextRequest) {
     // "yanıt kesildi" note) and a half-written action is dropped.
     const aiData = asistanYanitiCoz(rawResponse, response.stop_reason)
     if (aiData.kesildi) console.warn("[asistan/chat] yanıt kesildi", { stop_reason: response.stop_reason, uzunluk: rawResponse.length })
+    // KD-DERM-SAFETY-FINDINGS F4: no internal field names / invented consent form numbers in the bubble
+    aiData.speech = doktorMetniTemizle(aiData.speech)
+    if (aiData.proactiveWarning) aiData.proactiveWarning = doktorMetniTemizle(aiData.proactiveWarning)
 
     // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches — a dose the doctor did not type (and that is not in the patient file /
     // verified drug context) never reaches the chat bubble.

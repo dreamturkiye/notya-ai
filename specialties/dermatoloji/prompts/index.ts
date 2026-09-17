@@ -48,6 +48,8 @@ export function dermatolojiAracHaritasi(): string {
 }
 
 const ONCELIK = 'Bu kilit, yukarıdaki genel talimatlarla çeliştiğinde ÖNCELİKLİDİR (özellikle: doz yazma — doz hekim tarafından belirlenir, görüntü okuması karar desteğidir, tanı değildir; taslak uzman onayı ister; Denver / SAT / EDD / pediatrik aşı takvimi yok; KETEM deri kanseri taraması değildir). Kilit metni İngilizce olabilir; çıktın her zaman Türkçedir.'
+/** KD-DERM-SAFETY-FINDINGS F4: prompts name storage fields; the model echoed "(coreImageId)" into notes. */
+const IC_ALAN_NOTU = 'Doktora giden metinde (not alanları, aiDegerlendirme, hasta özeti, sohbet) iç alan veya araç adı yazma (ör. coreImageId, dicomId, pathologyId, VisionRead, analyze_image, uzman_onayli): "fotoğraf", "dermoskopi görüntüsü", "patoloji raporu", "görüntü okuması taslağı", "uzman onaylı" gibi klinik kelimeyi kullan.'
 const ARAC_NOTU = 'Buradaki "Use only tools listed in prompts/tools.ts" kuralı branş adımları içindir; uygulamanın genel araçları (ör. hasta_bul) geçerliliğini korur.'
 
 export function dermatolojiKilidi(yuzey: 'soap' | 'asistan' | 'ogrenme' | 'ses'): string {
@@ -58,9 +60,9 @@ export function dermatolojiKilidi(yuzey: 'soap' | 'asistan' | 'ogrenme' | 'ses')
     return `=== DERMATOLOJİ KİLİDİ (kısa) ===\n${kisa}`
   }
   if (yuzey === 'ogrenme') return `\n=== DERMATOLOJİ ÖĞRENME KİLİDİ ===\n${p.ogrenme}\nÖğrenilen profil bu sınırları aşamaz: biyopsi / tedavi kararı ve görüntü onayı uzmanda kalır; profil görüntüden tanı koymayı öğretmez.`
-  const araclar = `## Dermatoloji adımları (uygulamada hekim çalıştırır; sen kendiliğinden çalıştırmaz veya sonucunu uydurmazsın — yalnız ilgili kartı/adımı önerirsin)\n${dermatolojiAracHaritasi()}\n${ARAC_NOTU}`
+  const araclar = `## Dermatoloji adımları (uygulamada hekim çalıştırır; sen kendiliğinden çalıştırmaz veya sonucunu uydurmazsın — yalnız ilgili kartı/adımı önerirsin)\n${dermatolojiAracHaritasi()}\n${ARAC_NOTU}\n${IC_ALAN_NOTU}`
   const soap = yuzey === 'soap'
-    ? `\n\n## SOAP şablonları (vizit türüne uyanı uygula: genel poliklinik-yandal / fototerapi / işlem; birden çoğu uyuyorsa birleştir)\n\n${p.soapDerm}\n\n${p.soapFototerapi}\n\n${p.soapIslem}\nSOAP JSON alanlarına eşleme: Subjective → subjektif, Objective → objektif, Assessment → degerlendirme, Plan → plan. Not gövdesi kuralı (yalnız hekimin dediği) geçerliliğini korur; şablonun istediği ama hekimin söylemediği her şey (eksik dermoskopi/biyopsi/yama, sonraki foto tarihi, eksik J/cm2 veya kümülatif doz, SUT dışı işlem bayrağı) aiDegerlendirme alanına gider. receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA. Fotoğraf/dermoskopi kimliği (coreImageId) transkriptte yoksa uydurma.`
+    ? `\n\n## SOAP şablonları (vizit türüne uyanı uygula: genel poliklinik-yandal / fototerapi / işlem; birden çoğu uyuyorsa birleştir)\n\n${p.soapDerm}\n\n${p.soapFototerapi}\n\n${p.soapIslem}\nSOAP JSON alanlarına eşleme: Subjective → subjektif, Objective → objektif, Assessment → degerlendirme, Plan → plan. Not gövdesi kuralı (yalnız hekimin dediği) geçerliliğini korur; şablonun istediği ama hekimin söylemediği her şey (eksik dermoskopi/biyopsi/yama, sonraki foto tarihi, eksik J/cm2 veya kümülatif doz, SUT dışı işlem bayrağı) aiDegerlendirme alanına gider. receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA. Transkriptte fotoğraf / dermoskopi kaydı geçmiyorsa var sayma; gerekiyorsa "fotoğraf kaydı alınmamış" diye yaz.`
     : `\n\n## Görsel istekleri (klinik foto / dermoskopi / önce-sonra)\n${p.vision}`
   return `\n=== DERMATOLOJİ SİSTEM KİLİDİ (specialties/dermatoloji/prompts) ===\n${ONCELIK}\n\n${p.system}${soap}\n\n${araclar}\n=== KİLİT SONU ===`
 }
