@@ -10,6 +10,8 @@ import {
   PERSONAS,
   PERSONA_ORDER,
   buildVoiceSystemPrompt,
+  varsayilanPersonaId,
+  VARSAYILAN_PERSONA,
   type Persona,
   type PersonaId,
 } from "@/lib/asistan/personaEngine"
@@ -141,8 +143,15 @@ export default function AsistanPage() {
         return
       }
       setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
-      // Do NOT remap persona from profile.specialty — Asistan always opens on Ayşe
-      // (or last tab the doctor picked). Specialty only informs clinical context.
+      // Opens on the last tab the doctor picked, else Ayşe — except a branch doctor (kadın doğum, dermatoloji, …) who has
+      // never picked one: they get their branch colleague, not the pediatri one (ASISTAN-PERSONA-BRANS). genel / aile stay on Ayşe.
+      let secili: string | null = null
+      try { secili = localStorage.getItem('notya_asistan_persona') } catch { /* ignore */ }
+      const brans = varsayilanPersonaId((profileData.data as { specialty?: string } | undefined)?.specialty)
+      if (!(secili && PERSONAS[secili]) && brans !== VARSAYILAN_PERSONA && PERSONAS[brans]) {
+        setPersonaKey(brans)
+        setPersona(PERSONAS[brans])
+      }
     })()
     return () => { void endConversation() }
   }, [])
@@ -619,7 +628,7 @@ export default function AsistanPage() {
         </div>
       </div>
       {/* NOTYA-KADEME-01: temel kademe yüzeyi — sesli sor (tarayıcı STT), yazılı cevap; dosya bilinçli */}
-      <YaziliSohbet personaId={personaKey} />
+      <YaziliSohbet personaId={personaKey} personaAdi={persona.shortName} />
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wave1{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}@keyframes wave2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.4)}}`}</style>
     </div>
       </div>

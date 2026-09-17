@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
-import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, type SpecialtyId } from "@/lib/asistan/personaEngine"
+import { PERSONAS, varsayilanPersonaId, buildSystemPrompt, type PersonaId } from "@/lib/asistan/personaEngine"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
       .maybeSingle()
     const doctorProfile = toAddressableUser(doctorRow as DoctorProfile | null)
+    // DAH-/KD-/DERM-PROMPTS-LOCK + ASISTAN-PERSONA-BRANS: users.specialty drives the branch lock and the default colleague
+    const hekimBransi = (doctorRow as { specialty?: string } | null)?.specialty
 
     // Load doctor preferences
     const { data: prefs } = await getSupabase()
@@ -71,9 +73,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!asistanSession) {
-      const personaId: PersonaId = requestedPersona ||
-        prefs?.preferred_persona ||
-        getPersonaForSpecialty(specialty as SpecialtyId)
+      // doctor_preferences.preferred_persona is not read: nothing ever writes it, every row holds the schema default
+      // 'elifsahin' (nöroloji), so from their 2nd chat every doctor got the neurology colleague (ASISTAN-PERSONA-BRANS).
+      // The doctor's real pick arrives as personaId (asistan page tab, localStorage).
+      const personaId: PersonaId = requestedPersona || varsayilanPersonaId(specialty, hekimBransi)
       const { data } = await getSupabase()
         .from("asistan_sessions")
         .insert({
@@ -88,8 +91,8 @@ export async function POST(req: NextRequest) {
       asistanSession = data
     }
 
-    const personaId = (asistanSession?.persona_id as PersonaId) || getPersonaForSpecialty(specialty || "pediatri")
-    const persona = PERSONAS[personaId] || PERSONAS[getPersonaForSpecialty(specialty || "pediatri")]
+    const personaId = (asistanSession?.persona_id as PersonaId) || varsayilanPersonaId(specialty, hekimBransi)
+    const persona = PERSONAS[personaId] || PERSONAS[varsayilanPersonaId(specialty, hekimBransi)]
     if (!persona) {
       return NextResponse.json({ error: "Uzman persona bulunamadı" }, { status: 500 })
     }
@@ -167,7 +170,6 @@ export async function POST(req: NextRequest) {
 
     // Build system prompt with learning context
     // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
-    const hekimBransi = (doctorRow as { specialty?: string } | null)?.specialty
     const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : ""
     const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + bransKilidi + dosyaEk
 
@@ -280,7 +282,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (e) { console.error("[hafiza] sohbet", e) }
 
-    // Miras sayaç (doctor_preferences) — preferred_persona okuması için satır kalsın
+    // Miras sayaç (doctor_preferences) — last_session_at
     if (!prefs) {
       await getSupabase().from("doctor_preferences").insert({ doctor_id: user.id, sessions_completed: 1, last_session_at: new Date().toISOString() })
     } else {

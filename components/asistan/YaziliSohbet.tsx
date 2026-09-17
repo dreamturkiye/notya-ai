@@ -22,7 +22,7 @@ interface Tanima {
   start: () => void; stop: () => void;
 }
 
-export default function YaziliSohbet({ personaId, specialty }: { personaId?: string; specialty?: string }) {
+export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe' }: { personaId?: string; specialty?: string; personaAdi?: string }) {
   const [acik, setAcik] = useState(false);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);
   const [girdi, setGirdi] = useState('');
@@ -94,14 +94,14 @@ export default function YaziliSohbet({ personaId, specialty }: { personaId?: str
         body: JSON.stringify({ message: metin, personaId, specialty, asistanSessionId: oturumId }),
       });
       const d = await r.json();
-      if (!r.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
+      if (!r.ok) throw new Error(d.error || `${personaAdi} yanıt veremedi.`);
       const veri = d.data && typeof d.data === 'object' ? d.data : d;
       const cevap = String(veri.response || veri.message || veri.cevap || '');
       if (veri.asistanSessionId) setOturumId(String(veri.asistanSessionId));
       if (veri.aktifHasta) setAktifHasta(String(veri.aktifHasta));
       setMesajlar([...yeni, { rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.' }]);
     } catch (e) {
-      setMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : 'Ayşe yanıt veremedi.' }]);
+      setMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : `${personaAdi} yanıt veremedi.` }]);
     } finally {
       setBekliyor(false);
       setTimeout(() => altRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
@@ -116,7 +116,7 @@ export default function YaziliSohbet({ personaId, specialty }: { personaId?: str
           onClick={() => setAcik(true)}
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#C9D4E3', borderRadius: 14, padding: '13px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
         >
-          💬 Yazılı sohbet — sesli sorun, Ayşe yazsın <span style={{ fontSize: 11, color: '#5F7189' }}>(hasta dosyası bilinciyle)</span>
+          💬 Yazılı sohbet — sesli sorun, {personaAdi} yazsın <span style={{ fontSize: 11, color: '#5F7189' }}>(hasta dosyası bilinciyle)</span>
         </button>
       ) : (
         <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16 }}>
@@ -126,14 +126,14 @@ export default function YaziliSohbet({ personaId, specialty }: { personaId?: str
           </div>
           {mesajlar.length === 0 && (
             <div style={{ fontSize: 12.5, color: '#8FA0B5', lineHeight: 1.6, marginBottom: 10 }}>
-              Hastanın adını söylemeniz yeterli: &ldquo;Mehmet Yılmaz kaç kez geldi?&rdquo;, &ldquo;son hastamın ilaçları neydi?&rdquo; — Ayşe dosyadan cevaplar, ilaç etkileşimlerinde kendiliğinden uyarır.
+              Hastanın adını söylemeniz yeterli: &ldquo;Mehmet Yılmaz kaç kez geldi?&rdquo;, &ldquo;son hastamın ilaçları neydi?&rdquo; — {personaAdi} dosyadan cevaplar, ilaç etkileşimlerinde kendiliğinden uyarır.
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
             {mesajlar.map((m, i) => (
               <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '90%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
             ))}
-            {bekliyor && <div style={{ fontSize: 12, color: '#5F7189' }}>Ayşe dosyaya bakıyor…</div>}
+            {bekliyor && <div style={{ fontSize: 12, color: '#5F7189' }}>{personaAdi} dosyaya bakıyor…</div>}
             <div ref={altRef} />
           </div>
           <form onSubmit={(e) => { e.preventDefault(); gonder(); }} style={{ display: 'flex', gap: 6 }}>
