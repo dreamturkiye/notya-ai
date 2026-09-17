@@ -64,7 +64,7 @@ test('avatarDogrula boş dosyayı reddeder', () => {
   assert.throws(() => avatarDogrula('image/png', 0), AvatarGecersizError)
 })
 
-test('avatarDogrula 2 MB sınırını uygular', () => {
+test('avatarDogrula 4 MB sınırını uygular', () => {
   assert.doesNotThrow(() => avatarDogrula('image/png', AVATAR_MAX_BYTES))
   assert.throws(() => avatarDogrula('image/png', AVATAR_MAX_BYTES + 1), AvatarGecersizError)
 })
