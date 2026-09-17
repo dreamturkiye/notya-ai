@@ -347,7 +347,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             <button type="button" onClick={async () => { const j = await calistir({ adim: 'goruntu_okuma', eylem: 'kiyas', aId: kiyasA, bId: kiyasB }, 'Karşılaştırma hazır.'); if (j?.baslik) setSonuc(j); }} style={ghost}>Yan yana karşılaştır</button>
           </div>
         )}
-        {typeof sonuc?.baslik === 'string' && sonuc.a && sonuc.b && (
+        {typeof sonuc?.baslik === 'string' && !!sonuc.a && !!sonuc.b ? (
           <div style={{ marginTop: 10 }}>
             <div style={etiket}>{String(sonuc.baslik)}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -359,7 +359,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
               ))}
             </div>
           </div>
-        )}
+        ) : null}
         {!v.goruntuler.length && <div style={{ ...kucuk, marginTop: 6 }}>Göz görüntüsü yok.</div>}
         {v.goruntuler.map((g) => (
           <div key={g.id} style={{ borderLeft: '2px solid rgba(99,102,241,0.6)', paddingLeft: 10, margin: '10px 0', ...metin }}>

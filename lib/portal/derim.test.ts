@@ -22,7 +22,7 @@ describe('Derim portal — patient-safe + registry gated', () => {
   it('route gated by dermatoloji module', () => {
     const page = oku('app/portal/hasta/[token]/derim/page.tsx')
     assert.ok(/portalModulAktif\(data, 'dermatoloji'\)/.test(page))
-    assert.equal(portalModulAktif({ portal: { moduller: ['dermatoloji'], nav: [] } }, 'dermatoloji'), true)
-    assert.equal(portalModulAktif({ portal: { moduller: ['gozlerim'], nav: [] } }, 'dermatoloji'), false)
+    assert.equal(portalModulAktif({ portal: { moduller: ['dermatoloji'] } }, 'dermatoloji'), true)
+    assert.equal(portalModulAktif({ portal: { moduller: ['gozlerim'] } }, 'dermatoloji'), false)
   })
 })

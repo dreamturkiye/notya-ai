@@ -5,6 +5,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   // Demo hastası yetişkin iç hastalıkları hastası; demo form gönderemediği için ön anket modülü de bağlanmaz.
   portal: { moduller: [], nav: [] },
   goz: null,
+  deri: null,
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
   gebelik: null,
   jinekoloji: null,
