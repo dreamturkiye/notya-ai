@@ -191,6 +191,7 @@ JSON YANIT FORMATINI KULLAN:
   "action": null veya { "type": "ACTION_TYPE", "data": {} },
   "proactiveWarning": null veya "Uyarı metni"
 }
+Yanıtın TAMAMI (liste ve tablolar dahil) "speech" alanının İÇİNDE olsun; JSON'dan önce veya sonra metin yazma. Kapsamlı bir konu sorulursa en önemli maddeleri özlü ver, ayrıntı için "devam edeyim mi" diye sor.
 ${learningContext}
 ${patientContext}`
 }

@@ -8,6 +8,7 @@ import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompt
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
+import { asistanYanitiCoz } from "@/lib/asistan/yanitCoz"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest) {
     // Call Claude with full conversation history
     const response = await getAnthropic().messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 800,
+      max_tokens: 1600, // 800 cut long clinical answers mid-JSON (F3)
       system: systemPrompt,
       messages: [
         ...messages.map((m: { role: string; content: string }) => ({
@@ -187,17 +188,12 @@ export async function POST(req: NextRequest) {
       ]
     })
 
-    const rawResponse = response.content[0].type === "text" ? response.content[0].text : ""
+    const rawResponse = response.content[0]?.type === "text" ? response.content[0].text : ""
 
-    // Parse AI response
-    let aiData: { speech: string; action: Record<string, unknown> | null; proactiveWarning: string | null }
-    try {
-      const cleanJson = rawResponse.replace(/```[a-z]*/g, "").replace(/```/g, "").trim()
-      aiData = JSON.parse(cleanJson)
-    } catch {
-      // If not JSON, treat as plain speech
-      aiData = { speech: rawResponse, action: null, proactiveWarning: null }
-    }
+    // KD-DERM-SAFETY-FINDINGS F3: never raw JSON to the doctor — a max_tokens cut is salvaged (speech up to the cut +
+    // "yanıt kesildi" note) and a half-written action is dropped.
+    const aiData = asistanYanitiCoz(rawResponse, response.stop_reason)
+    if (aiData.kesildi) console.warn("[asistan/chat] yanıt kesildi", { stop_reason: response.stop_reason, uzunluk: rawResponse.length })
 
     // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches — a dose the doctor did not type (and that is not in the patient file /
     // verified drug context) never reaches the chat bubble.
