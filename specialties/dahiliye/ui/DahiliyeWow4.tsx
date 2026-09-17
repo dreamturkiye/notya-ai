@@ -1,7 +1,7 @@
 'use client';
 /** NOTYA-DAH-WOW Wave 4 UI — NudgeBar (her sekmenin üstünde: KB ölçüm tekniği, FRAIL, düşme, PHQ-2) + KohortPanel (Araçlar › Dahiliye kohort). */
 import React, { useCallback, useEffect, useState } from 'react';
-import { getAccessTokenAsync, toolsCard } from '@/lib/doktor/toolsUi';
+import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import type { Wow4Veri } from '@/app/api/doktor/dahiliye/_wow4';
 import type { KohortSatir, KohortBayrak } from '../engines/kohort';
 import { BAYRAK_AD } from '../engines/kohort';
@@ -40,6 +40,36 @@ export function NudgeBar({ w4, kaynak, refler, calistir }: { w4: Wow4Veri; kayna
 
 const BAYRAKLAR = Object.keys(BAYRAK_AD) as KohortBayrak[];
 
+const kohortKutu: React.CSSProperties = {
+  background: 'linear-gradient(165deg, #10223D 0%, #0C1830 55%, #0A1528 100%)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 18,
+  padding: '22px 24px 26px',
+  boxShadow: '0 12px 40px rgba(0,0,0,0.28)',
+}
+const kohortMuted: React.CSSProperties = { fontSize: 14, color: '#9BB0C7', lineHeight: 1.5 }
+const kohortChip = (on: boolean): React.CSSProperties => ({
+  background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)',
+  color: on ? '#5EEAD4' : '#C9D4E3',
+  border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`,
+  borderRadius: 999,
+  padding: '10px 16px',
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: 'pointer',
+  lineHeight: 1.3,
+})
+const kohortBtn: React.CSSProperties = {
+  background: '#0F9B8E',
+  color: '#041016',
+  border: 'none',
+  borderRadius: 12,
+  padding: '12px 18px',
+  fontSize: 15,
+  fontWeight: 700,
+  cursor: 'pointer',
+}
+
 export function KohortPanel() {
   const [v, setV] = useState<{ satirlar: KohortSatir[]; toplamHasta: number } | null>(null);
   const [filtre, setFiltre] = useState<KohortBayrak[]>([]);
@@ -57,24 +87,97 @@ export function KohortPanel() {
     setMesaj(r.ok ? `${j.gonderilen} hastaya hatırlatma gönderildi (Sağlığım › Mesajlar)${j.atlanan ? `; ${j.atlanan} atlandı (son 7 günde gönderilmiş)` : ''}.` : j.error || 'Gönderilemedi');
     setSecili([]);
   };
+  const bayrakli = v?.satirlar.length ?? 0;
   return (
-    <div style={{ ...toolsCard }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: '#0F9B8E' }}>Kronik kohort paneli <span style={kucuk}>· {v ? `${v.toplamHasta} dahiliye hastası · ${v.satirlar.length} bayraklı` : 'yükleniyor…'} · yalnız kart tabloları ve onaylı lab</span></div>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>{BAYRAKLAR.map((b) => { const n = (v?.satirlar || []).filter((s) => s.bayraklar.includes(b)).length; const on = filtre.includes(b); return <button key={b} type="button" onClick={() => setFiltre(on ? filtre.filter((x) => x !== b) : [...filtre, b])} style={{ ...ghost, color: on ? '#2DD4BF' : '#8FA0B5', background: on ? 'rgba(15,155,142,0.2)' : 'transparent', borderRadius: 999 }}>{BAYRAK_AD[b]} ({n})</button>; })}</div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
-        <label style={kucuk}><input type="checkbox" checked={gorunen.length > 0 && gorunen.every((s) => secili.includes(s.patientId))} onChange={(e) => setSecili(e.target.checked ? gorunen.map((s) => s.patientId) : [])} /> görünenleri seç</label>
-        <button type="button" style={btn} disabled={!secili.length} onClick={gonder}>1-tap hatırlatma gönder ({secili.length})</button>
-        <span style={kucuk}>Mesaj klinik değer içermez: “kontrol / tahlil / aşı-tarama zamanınız geldi”.</span>
+    <div style={kohortKutu}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#2DD4BF', marginBottom: 6 }}>Kronik kohort</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#EDF1F7', letterSpacing: -0.3 }}>Takip bayrakları</div>
+          <div style={{ ...kohortMuted, marginTop: 6, maxWidth: 520 }}>
+            {v
+              ? `${v.toplamHasta} dahiliye hastası · ${bayrakli} bayraklı · yalnız kart tabloları ve onaylı lab`
+              : 'Yükleniyor…'}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ background: 'rgba(15,155,142,0.12)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#5EEAD4', fontVariantNumeric: 'tabular-nums' }}>{v?.toplamHasta ?? '—'}</div>
+            <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>hasta</div>
+          </div>
+          <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.28)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#FCA5A5', fontVariantNumeric: 'tabular-nums' }}>{bayrakli || '—'}</div>
+            <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>bayraklı</div>
+          </div>
+        </div>
       </div>
-      {mesaj && <div style={{ fontSize: 12, color: '#2DD4BF', marginBottom: 6 }}>{mesaj}</div>}
-      <div style={{ display: 'grid', gap: 4 }}>
-        {gorunen.map((s) => (<div key={s.patientId} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', fontSize: 12, color: '#EDF1F7', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}>
-          <input type="checkbox" checked={secili.includes(s.patientId)} onChange={(e) => setSecili(e.target.checked ? [...secili, s.patientId] : secili.filter((x) => x !== s.patientId))} />
-          <a href={`/dashboard/doktor/hastalar/${s.patientId}`} style={{ color: '#EDF1F7', minWidth: 160, fontWeight: 600 }}>{s.ad}</a>
-          <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: '1 1 160px' }}>{s.bayraklar.map((b) => <span key={b} style={{ border: '1px solid rgba(248,113,113,0.5)', borderRadius: 999, padding: '0 6px', fontSize: 11, color: '#FCA5A5', whiteSpace: 'nowrap' }}>{BAYRAK_AD[b]}</span>)}</span>
-          <span style={kucuk}>son vizit {s.sonVizit || '—'}{s.portalVar ? '' : ' · portal yok'}</span>
-        </div>))}
-        {v && !gorunen.length && <div style={kucuk}>Bu filtrede hasta yok.</div>}
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+        {BAYRAKLAR.map((b) => {
+          const n = (v?.satirlar || []).filter((s) => s.bayraklar.includes(b)).length
+          const on = filtre.includes(b)
+          return (
+            <button key={b} type="button" onClick={() => setFiltre(on ? filtre.filter((x) => x !== b) : [...filtre, b])} style={kohortChip(on)}>
+              {BAYRAK_AD[b]} <span style={{ opacity: 0.85, fontWeight: 700 }}>({n})</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div style={{
+        display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap',
+        background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '14px 16px', marginBottom: 16,
+      }}>
+        <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15, color: '#C9D4E3', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            style={{ width: 18, height: 18 }}
+            checked={gorunen.length > 0 && gorunen.every((s) => secili.includes(s.patientId))}
+            onChange={(e) => setSecili(e.target.checked ? gorunen.map((s) => s.patientId) : [])}
+          />
+          Görünenleri seç
+        </label>
+        <button type="button" style={{ ...kohortBtn, opacity: secili.length ? 1 : 0.45, cursor: secili.length ? 'pointer' : 'not-allowed' }} disabled={!secili.length} onClick={gonder}>
+          1-tap hatırlatma gönder ({secili.length})
+        </button>
+        <span style={{ ...kohortMuted, flex: '1 1 220px' }}>Mesaj klinik değer içermez — kontrol / tahlil / aşı-tarama hatırlatması.</span>
+      </div>
+
+      {mesaj && <div style={{ fontSize: 15, color: '#5EEAD4', marginBottom: 14, lineHeight: 1.45 }}>{mesaj}</div>}
+
+      <div style={{ display: 'grid', gap: 0, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {gorunen.map((s, i) => (
+          <div
+            key={s.patientId}
+            style={{
+              display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center',
+              fontSize: 15, color: '#EDF1F7',
+              background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)',
+              padding: '14px 16px',
+              borderBottom: i === gorunen.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <input
+              type="checkbox"
+              style={{ width: 18, height: 18 }}
+              checked={secili.includes(s.patientId)}
+              onChange={(e) => setSecili(e.target.checked ? [...secili, s.patientId] : secili.filter((x) => x !== s.patientId))}
+            />
+            <a href={`/dashboard/doktor/hastalar/${s.patientId}`} style={{ color: '#F1F5F9', minWidth: 170, fontWeight: 700, fontSize: 16, textDecoration: 'none' }}>{s.ad}</a>
+            <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: '1 1 180px' }}>
+              {s.bayraklar.map((b) => (
+                <span key={b} style={{ border: '1px solid rgba(248,113,113,0.45)', borderRadius: 999, padding: '5px 12px', fontSize: 13, fontWeight: 600, color: '#FCA5A5', whiteSpace: 'nowrap', background: 'rgba(248,113,113,0.08)' }}>{BAYRAK_AD[b]}</span>
+              ))}
+            </span>
+            <span style={{ fontSize: 14, color: '#8FA0B5' }}>son vizit {s.sonVizit || '—'}{s.portalVar ? '' : ' · portal yok'}</span>
+          </div>
+        ))}
+        {v && !gorunen.length && (
+          <div style={{ padding: '36px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 17, fontWeight: 700, color: '#C9D4E3', marginBottom: 8 }}>Bu filtrede hasta yok</div>
+            <div style={kohortMuted}>Başka bir bayrak seçin veya tüm kohortu görmek için filtreleri temizleyin.</div>
+          </div>
+        )}
       </div>
     </div>
   );

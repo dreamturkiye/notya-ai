@@ -39,7 +39,7 @@ export default function DahiliyeKohortPage() {
     return (
       <div style={toolsShell}>
         <DoktorNav />
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px', color: '#8FA0B5' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 20px', color: '#9BB0C7', fontSize: 16 }}>
           {izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca dahiliye için.'}
         </div>
       </div>
@@ -47,10 +47,16 @@ export default function DahiliyeKohortPage() {
   }
 
   return (
-    <div style={toolsShell}>
+    <div style={{ ...toolsShell, background: 'linear-gradient(180deg, #0A1628 0%, #060C18 40%)' }}>
       <DoktorNav />
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#EDF1F7', margin: '0 0 12px' }}>Dahiliye kohort paneli</h1>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 20px 56px' }}>
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#14B8A6', letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>ARAÇLAR · DAHİLİYE</div>
+          <h1 style={{ fontSize: 30, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.5px', lineHeight: 1.2 }}>Dahiliye kohort paneli</h1>
+          <p style={{ margin: '10px 0 0', fontSize: 16, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 640 }}>
+            HbA1c, tansiyon, lipid ve takip gecikmelerini tek bakışta görün; seçtiğiniz hastalara 1-tap hatırlatma gönderin.
+          </p>
+        </div>
         <KohortPanel />
       </div>
     </div>
