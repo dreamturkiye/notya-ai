@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
-import { htDegerlendir, dmDegerlendir, lipidDegerlendir, tiroidDegerlendir, checkupAraligi, dxaGorevi, ilacGuvenlik, kirmiziBayraklar, CHECKUP_SABLONU, SEVK_HEDEFLERI, REF_ACIKLAMA } from '@/specialties/dahiliye/engines/dahiliye'
+import { htDegerlendir, dmDegerlendir, lipidDegerlendir, tiroidDegerlendir, checkupAraligi, dxaGorevi, ilacGuvenlik, kirmiziBayraklar, CHECKUP_SABLONU, SEVK_HEDEFLERI, REF_ACIKLAMA, KIRMIZI_DIPNOT, ILAC_GUVENLIK_DIPNOT } from '@/specialties/dahiliye/engines/dahiliye'
 import { kvrDegerlendir } from '@/specialties/dahiliye/engines/score2'
 import { ckdDegerlendir, nefroSevkPaketi } from '@/specialties/dahiliye/engines/ckd'
 import { ilacIzlemGorevleri } from '@/specialties/dahiliye/engines/ilacIzlem'
@@ -20,6 +20,7 @@ import { enabizSgkRapor } from '@/lib/enabiz/paket'
 import { RAPOR_TIPLERI } from '@/lib/sgk/raporTipleri'
 import { wow2Verisi, wow2Post } from './_wow2'
 import { wow3Verisi, wow3Post } from './_wow3'
+import { wow4Verisi, wow4Post } from './_wow4'
 import { type Sb, type LabSatir, labSerisi, son, sonDeger, gorevEkle, hastaBilgi, hastaAdi, hekimKimlik, labKayit } from './_ortak'
 
 export const dynamic = 'force-dynamic'
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
   const T = bugun()
 
   const w2 = await wow2Post(adim, b, sb, user.id, hasta, T); if (w2) return w2
+  const w4 = await wow4Post(adim, b, sb, user.id, hasta); if (w4) return w4
   const w3 = await wow3Post(adim, b, sb, user.id, hasta, T, () => labSerisi(sb, hasta.id)); if (w3) return w3
 
   if (adim === 'gorev') { const { error } = await sb.from('dahiliye_gorevleri').update({ durum: String(b.durum || 'tamam'), tamam_at: b.durum === 'tamam' ? new Date().toISOString() : null }).eq('id', String(b.gorevId || '')).eq('doctor_id', user.id); return error ? NextResponse.json({ error: 'Yazılamadı' }, { status: 500 }) : NextResponse.json({ ok: true }) }
@@ -175,12 +177,12 @@ export async function POST(req: NextRequest) {
     const anti = (ilaclar || []).filter((i) => /ramipril|lisinopril|enalapril|perindopril|valsartan|losartan|telmisartan|kandesartan|irbesartan|olmesartan|amlodipin|nifedipin|lerkanidipin|hidroklorotiyazid|indapamid|klortalidon|spironolakton|bisoprolol|metoprolol|nebivolol|doksazosin|pril|sartan|dipin/i.test(`${i.ilac_adi} ${i.etken_madde || ''}`))
     const diuretik = anti.some((i) => /hidroklorotiyazid|indapamid|klortalidon|spironolakton|furosemid/i.test(`${i.ilac_adi} ${i.etken_madde || ''}`))
     const d = htDegerlendir({ sbp, dbp, yas: hasta.yas, kirilgan: !!b.kirilgan, onceki: (onceki || []).map((o) => ({ sbp: Number(o.sbp), dbp: Number(o.dbp), tarih: String(o.tarih) })), aktifAntihipertansif: anti.length, diuretikVar: diuretik, sekonderSuphe: !!b.sekonderSuphe })
-    const { error } = await sb.from('dahiliye_ht').insert({ patient_id: hasta.id, doctor_id: user.id, sbp, dbp, nabiz: num(b.nabiz), ev_kb: (b.evKb || null) as object | null, kirilgan: !!b.kirilgan, evre_taslak: d.sinif, evre_hekim: b.evreHekim ? String(b.evreHekim) : null, hedef_hekim: (b.hedefHekim || null) as object | null, sekonder_suphe: !!b.sekonderSuphe, degerlendirme: d })
+    const { error } = await sb.from('dahiliye_ht').insert({ patient_id: hasta.id, doctor_id: user.id, sbp, dbp, nabiz: num(b.nabiz), ev_kb: (b.evKb || null) as object | null, kirilgan: !!b.kirilgan, evre_taslak: d.sinif, evre_hekim: b.evreHekim ? String(b.evreHekim) : null, hedef_hekim: (b.hedefHekim || null) as object | null, sekonder_suphe: !!b.sekonderSuphe, degerlendirme: d, teknik_onay: b.teknikOnay === undefined ? false : !!b.teknikOnay, teknik_liste: Array.isArray(b.teknikListe) ? b.teknikListe : null })
     if (error) return NextResponse.json({ error: 'KB yazılamadı' }, { status: 500 })
     if (d.dogrulanmisHt) await gorevEkle(sb, user.id, hasta.id, d.baslangicTetkik.map((t, i) => ({ kod: `ht_tetkik_${i}`, ad: `HT başlangıç: ${t}`, due: T, kaynak: 'ht' })))
     if (d.sinif === 'artmis') await gorevEkle(sb, user.id, hasta.id, [{ kod: 'ht_kontrol_3ay', ad: 'Artmış KB: 3 ay yaşam tarzı → kontrol KB', due: new Date(Date.UTC(+T.slice(0, 4), +T.slice(5, 7) + 2, +T.slice(8, 10))).toISOString().slice(0, 10), kaynak: 'ht' }])
     for (const s of d.sevk) await sb.from('sevkler').insert({ patient_id: hasta.id, doctor_id: user.id, hedef: /nefro/i.test(s) ? 'nefroloji' : 'endokrinoloji', not_metni: s, kaynak: 'ht' })
-    await gununNotunaEkle(sb, user.id, hasta.id, `KB ${sbp}/${dbp}${b.nabiz ? ` nabız ${b.nabiz}` : ''} — ${d.sinif} (Uzlaşı 2025 taslak)${b.evreHekim ? `; hekim evre: ${b.evreHekim}` : ''}${d.hedefteMi ? '; hedefte' : '; hedef dışı'}`)
+    await gununNotunaEkle(sb, user.id, hasta.id, `KB ${sbp}/${dbp}${b.nabiz ? ` nabız ${b.nabiz}` : ''} — ${d.sinif} (Uzlaşı 2025 taslak)${b.evreHekim ? `; hekim evre: ${b.evreHekim}` : ''}${d.hedefteMi ? '; hedefte' : b.teknikOnay ? '; hedef dışı' : '; hedef dışı (ölçüm tekniği doğrulanmadı — kontrolsüz denmeden önce doğrulayın)'}`)
     return NextResponse.json({ ok: true, degerlendirme: d })
   }
   const labs = await labSerisi(sb, hasta.id)
@@ -265,7 +267,8 @@ export async function GET(req: NextRequest) {
     sb.from('dahiliye_sgk_raporlari').select('id, sablon, draft, sut_kontrol, eksikler, durum, kilit_at, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(6),
   ])
   const sonKb = ht.data?.[0] || null
-  const [wow, wow2, wow3] = await Promise.all([wowVerisi(sb, user.id, hasta, labs, (ilaclar.data || []) as IlacRow[], dm.data, sonKb, lipid.data, T), wow2Verisi(sb, hasta, labs, (ilaclar.data || []) as IlacRow[], T), wow3Verisi(sb, hasta, labs, (ilaclar.data || []) as IlacRow[], T)])
+  const kronikKart = !!(sonKb || dm.data || lipid.data || tiroid.data)
+  const [wow, wow2, wow3, wow4] = await Promise.all([wowVerisi(sb, user.id, hasta, labs, (ilaclar.data || []) as IlacRow[], dm.data, sonKb, lipid.data, T), wow2Verisi(sb, hasta, labs, (ilaclar.data || []) as IlacRow[], T), wow3Verisi(sb, hasta, labs, (ilaclar.data || []) as IlacRow[], T), wow4Verisi(sb, hasta, sonKb ? { hedefteMi: (sonKb.degerlendirme as { hedefteMi?: boolean } | null)?.hedefteMi, teknik_onay: sonKb.teknik_onay } : null, kronikKart, T)])
   const hba1c = (labs.get('HbA1c') || []).filter((x) => x.kanonik_deger != null)
   const ilacListe = (ilaclar.data || []).map((i) => ({ ad: `${i.ilac_adi} ${i.etken_madde || ''}`, aktif: i.aktif !== false }))
   const guvenlik = ilacGuvenlik(ilacListe, sonDeger(labs, 'eGFR'))
@@ -291,6 +294,7 @@ export async function GET(req: NextRequest) {
   for (const p of [...(wow3.gi?.sonuc?.sevk || []), ...(wow3.gi?.sonuc?.hp.plan || [])]) planlar.push({ kaynak: 'GI', madde: p })
   for (const n of wow3.noduller) for (const p of n.sonuc.sevk) planlar.push({ kaynak: 'Tiroid nodül', madde: p })
   if (wow3.ramazan?.sonuc) planlar.push({ kaynak: 'Ramazan', madde: `Risk: ${wow3.ramazan.sonuc.risk.replace('_', ' ')} — ${wow3.ramazan.sonuc.oruc}` })
+  for (const n of wow4.nudgeler) planlar.push({ kaynak: 'Kalite', madde: `${n.ad}: ${n.neden}` })
   if (wow2.anket && !wow2.anket.okundu) planlar.unshift({ kaynak: 'Ön anket', madde: `${wow2.anket.tarih} yanıtı var — Subjektif'e ekle` })
   const kirmizi: string[] = []
   const kSon = sonDeger(labs, 'K'); if (kSon != null && kSon > 6) kirmizi.push(`K ${kSon} >6,0 — EKG + acil`)
@@ -298,11 +302,11 @@ export async function GET(req: NextRequest) {
   for (const k of wow2.anemi.sonuc.kirmizi) kirmizi.push(k)
   for (const k of wow3.antikoagulan?.sonuc?.kirmizi || []) kirmizi.push(k)
   if (wow2.anket && !wow2.anket.okundu) for (const a of wow2.anket.alarmlar) kirmizi.push(`Ön anket: ${a}`)
-  const serit = vizitSeridi({ bugun: T, kb: sonKb ? { sbp: sonKb.sbp, dbp: sonKb.dbp, tarih: sonKb.tarih, hedefteMi: htDeg?.hedefteMi ?? null } : null,
+  const serit = vizitSeridi({ bugun: T, kb: sonKb ? { sbp: sonKb.sbp, dbp: sonKb.dbp, tarih: sonKb.tarih, hedefteMi: htDeg?.hedefteMi ?? null, teknikOnay: sonKb.teknik_onay == null ? undefined : !!sonKb.teknik_onay } : null,
     hba1c: hba1c[0] ? { deger: hba1c[0].kanonik_deger as number, delta: hba1c[1] ? Math.round(((hba1c[0].kanonik_deger as number) - (hba1c[1].kanonik_deger as number)) * 10) / 10 : null, tarih: hba1c[0].numune_tarihi, hedef: dm.data?.hedef_hba1c != null ? Number(dm.data.hedef_hba1c) : null } : null,
     ldl: ldlSon?.kanonik_deger != null ? { deger: ldlSon.kanonik_deger, tarih: ldlSon.numune_tarihi, hedef: wow.kvr.kilitHedefLdl } : null,
     egfr: egfrSon?.kanonik_deger != null ? { deger: egfrSon.kanonik_deger, tarih: egfrSon.numune_tarihi, evre: wow.ckdSonuc.g, renk: wow.ckdSonuc.renk } : null,
     gorevler: (gorevler.data || []).map((g) => ({ kod: g.kod, ad: g.ad, due: g.due })), planlar, kirmizi })
   const { ckdSonuc: _c, kvrSonuc: _k, kilitler: _kl, ...wowOut } = wow
-  return NextResponse.json({ wow: { ...wowOut, w2: wow2, w3: wow3, sgkRaporlar: sgkRaporlar.data || [], sgkSablonlar: SGK_SABLONLARI }, serit, hasta: { yas: hasta.yas, kadin: hasta.kadin, gebe: (gebe.data || []).some((g) => aktifGebelikDurumu(g.durum)) }, chips, ht: ht.data || [], dm: dm.data, lipid: lipid.data, tiroid: tiroid.data, checkup: checkup.data || [], gorevler: gorevler.data || [], sevkler: sevkler.data || [], ilaclar: ilaclar.data || [], ilacUyari: guvenlik.uyarilar, jineDue: jineDue.data || [], checkupAralik: checkupAraligi(hasta.yas), kutuphane: { checkup: CHECKUP_SABLONU, sevk: SEVK_HEDEFLERI, refler: REF_ACIKLAMA } })
+  return NextResponse.json({ wow: { ...wowOut, w2: wow2, w3: wow3, w4: wow4, sgkRaporlar: sgkRaporlar.data || [], sgkSablonlar: SGK_SABLONLARI }, serit, hasta: { yas: hasta.yas, kadin: hasta.kadin, gebe: (gebe.data || []).some((g) => aktifGebelikDurumu(g.durum)) }, chips, ht: ht.data || [], dm: dm.data, lipid: lipid.data, tiroid: tiroid.data, checkup: checkup.data || [], gorevler: gorevler.data || [], sevkler: sevkler.data || [], ilaclar: ilaclar.data || [], ilacUyari: guvenlik.uyarilar, jineDue: jineDue.data || [], checkupAralik: checkupAraligi(hasta.yas), kutuphane: { checkup: CHECKUP_SABLONU, sevk: SEVK_HEDEFLERI, refler: REF_ACIKLAMA, kirmiziDipnot: KIRMIZI_DIPNOT, ilacDipnot: ILAC_GUVENLIK_DIPNOT } })
 }

@@ -118,6 +118,7 @@ export function dxaGorevi(kadin: boolean, yas: number | null, erkenRisk: boolean
 }
 
 // ---------- 6. İlaç güvenliği (eGFR / polifarmasi) ----------
+export const ILAC_GUVENLIK_DIPNOT: Dipnot[] = [{ ref: 'TEMD_DM2026', not: 'eGFR <30: metformin kontrendike; sülfonilürede hipoglisemi riski' }, { ref: 'TIHUD2023', not: 'KBH\'de NSAİİ\'den kaçınma; MRA ile hiperkalemi; DOAK böbrek fonksiyonuna göre değerlendirilir; ≥5 ilaç polifarmasi' }]
 const EGFR30_UYARI: [RegExp, string][] = [[/metformin/i, 'metformin kontrendike (eGFR <30)'], [/ibuprofen|naproksen|diklofenak|nsaii|nsaid|etodolak|meloksikam/i, 'NSAİİ kaçın (eGFR <30)'], [/rivaroksaban|dabigatran|apiksaban|edoksaban/i, 'DOAK doz/uygunluk gözden geçir (eGFR <30)'], [/spironolakton|eplerenon/i, 'MRA + eGFR <30: hiperkalemi riski'], [/gliburid|glibenklamid/i, 'sülfonilüre hipoglisemi riski (eGFR <30)']]
 export function ilacGuvenlik(ilaclar: { ad: string; aktif: boolean }[], eGFR: number | null): { uyarilar: string[]; polifarmasi: boolean; aktifSayi: number } {
   const aktif = ilaclar.filter((i) => i.aktif)
@@ -127,6 +128,7 @@ export function ilacGuvenlik(ilaclar: { ad: string; aktif: boolean }[], eGFR: nu
 }
 
 // ---------- 8. Red flags ----------
+export const KIRMIZI_DIPNOT: Dipnot[] = [{ ref: 'TIHUD2023', not: 'Ofiste acil sevk gerektiren bulgular: akut koroner sendrom şüphesi, K >6,0, Hb <7, akut böbrek hasarı (eGFR >%30 düşüş), ateş + lökositoz (sepsis değerlendirmesi)' }, { ref: 'HARRISON', not: 'Hiperkalemi ve akut koroner sendromda EKG ve acil değerlendirme' }]
 export function kirmiziBayraklar(g: { gogusAgrisi: boolean; yeniEkg: boolean; k: number | null; hb: number | null; eGFR: number | null; oncekiEGFR: number | null; ates: boolean; wbc: number | null }): string[] {
   const out: string[] = []
   if (g.gogusAgrisi && g.yeniEkg) out.push('Göğüs ağrısı + yeni EKG: akut koroner sendrom dışlanmalı — acil/kardiyoloji')

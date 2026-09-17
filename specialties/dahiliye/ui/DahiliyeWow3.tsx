@@ -177,6 +177,7 @@ export default function DahiliyeWow3({ sekme, w3, kaynak, refler, calistir }: Pr
 
   if (sekme === 'Tiroid nodül') {
     return (<div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8 }}>
+      <div style={satir}>{sec(s('ttani'), (x) => set('ttani', x), [['otiroid', 'ötiroid'], ['subklinik_hipotiroidi', 'subklinik hipotiroidi'], ['asikar_hipotiroidi', 'aşikâr hipotiroidi'], ['hipertiroidi', 'hipertiroidi'], ['nodul', 'nodüler guatr']], 'tiroid tanısı kilitle (hekim)')}<button type="button" style={btn} disabled={!s('ttani')} onClick={() => calistir({ adim: 'kilit', kart: 'tiroid', alan: 'tani', deger: s('ttani') }, 'Tiroid tanısı kilitlendi.')}>Kilitle</button></div>
       <div style={etiket}>Tiroid nodül tarifi <span style={kucuk}>· US belgesi Belgeler'de · TI-RADS tarzı puan · İİAB/ablasyon = endokrin sevki · izlem görevleri · TSH {w3.tsh ?? '—'}</span></div>
       <div style={satir}>
         <input value={s('nlok')} onChange={(e) => set('nlok', e.target.value)} placeholder="lokasyon (sağ lob alt)" style={{ ...toolsInput, width: 150 }} />
