@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import DahiliyeWow, { VizitSeridiBar, type WowVeri } from './DahiliyeWow';
+import DahiliyeWow2 from './DahiliyeWow2';
 import type { VizitSeridi } from '../engines/serit';
 
 type L = { kanonik_deger: number | null; numune_tarihi: string | null } | null;
@@ -17,13 +18,19 @@ const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', 
 const chip = (ad: string, v: string, kirmizi = false) => <span key={ad} style={{ border: `1px solid ${kirmizi ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: kirmizi ? '#F87171' : '#EDF1F7' }}><span style={{ color: '#8FA0B5' }}>{ad} </span>{v}</span>;
 const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : '#8FA0B5' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const Kaynak = ({ d, acik, refler }: { d?: Dip[] | null; acik: boolean; refler: Record<string, string> }) => (!acik || !d?.length ? null : <div style={{ ...kucuk, marginTop: 4, borderLeft: '2px solid rgba(15,155,142,0.5)', paddingLeft: 8 }}>{d.map((x, i) => <div key={i}><b>{x.ref}</b> — {x.not} <span style={{ opacity: 0.7 }}>({refler[x.ref] || x.ref})</span></div>)}</div>);
-const SEKME = ['Özet', 'HT', 'DM', 'Lipid', 'KVR', 'KBH', 'Tiroid', 'Check-up', 'İlaçlar', 'İzlem', 'Ev kayıt', 'SGK rapor', 'Sevk'] as const;
+/** Sekme grupları (DAH-WOW): hepsi görünür — hasta dosyası › Dahiliye › sekme = 2 dokunuş. */
+const GRUPLAR: { ad: string; sekmeler: readonly string[] }[] = [
+  { ad: 'Kronik', sekmeler: ['Özet', 'HT', 'DM', 'DM döngü', 'Lipid', 'KVR', 'KBH', 'Tiroid'] },
+  { ad: 'Döngüler', sekmeler: ['Anemi', 'Obezite', 'Tarama/Aşı', 'İzlem', 'Ev kayıt', 'Ön anket'] },
+  { ad: 'Belge', sekmeler: ['Check-up', 'İlaçlar', 'SGK rapor', 'Sevk'] },
+];
+const WOW2_SEKME: readonly string[] = ['DM döngü', 'Anemi', 'Obezite', 'Tarama/Aşı', 'Ön anket'];
 
 const WOW_SEKME: readonly string[] = ['KVR', 'KBH', 'İzlem', 'Ev kayıt', 'SGK rapor'];
 
 export default function DahiliyeHome({ patientId }: { patientId: string }) {
   const [v, setV] = useState<Veri | null>(null);
-  const [sekme, setSekme] = useState<(typeof SEKME)[number]>('Özet');
+  const [sekme, setSekme] = useState<string>('Özet');
   const [kaynak, setKaynak] = useState(false);
   const [mesaj, setMesaj] = useState('');
   const [f, setF] = useState<Record<string, unknown>>({});
@@ -44,7 +51,7 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
         {chip('KB', c.kb ? `${c.kb.sbp}/${c.kb.dbp}` : 'yok', !c.kb?.bugun)}{chip('HbA1c', c.hba1c ? `${c.hba1c.deger}%${c.hba1c.delta != null ? ` (${c.hba1c.delta > 0 ? '+' : ''}${c.hba1c.delta})` : ''}` : '—')}{chip('LDL', fmt(c.ldl))}{chip('eGFR', fmt(c.egfr))}{chip('TSH', fmt(c.tsh))}{chip('İlaç', String(c.ilacSayi), c.polifarmasi)}{c.kirmizi && chip('!', 'geciken görev / bugün KB yok', true)}
         <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#2DD4BF' : '#64748B', marginLeft: 'auto' }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
       </div>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>{SEKME.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999 }}>{x}</button>)}</div>
+      {GRUPLAR.map((g) => <div key={g.ad} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6, alignItems: 'center' }}><span style={{ ...kucuk, width: 62 }}>{g.ad}</span>{g.sekmeler.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999 }}>{x}{x === 'Ön anket' && v.wow?.w2?.anket && !v.wow.w2.anket.okundu ? ' •' : ''}</button>)}</div>)}
       {mesaj && <div style={{ fontSize: 12, color: /amadı|zorunlu|Kırmızı|geçersiz|Hata/.test(mesaj) ? '#F87171' : '#2DD4BF', marginBottom: 8 }}>{mesaj}</div>}
 
       {sekme === 'Özet' && (<div>
@@ -104,6 +111,8 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
         <div style={kucuk}>Yeni reçete muayenede yazılır ve bu listeyi günceller (İlaçlar sekmesi).</div>
       </div>)}
 
+      {WOW2_SEKME.includes(sekme) && v.wow?.w2 && <DahiliyeWow2 sekme={sekme} w2={v.wow.w2} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
+      {sekme === 'HT' && v.wow?.w2 && <DahiliyeWow2 sekme="HT panel" w2={v.wow.w2} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {WOW_SEKME.includes(sekme) && v.wow && <DahiliyeWow sekme={sekme} wow={v.wow} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {sekme === 'Sevk' && (<div>
         <div style={etiket}>Kırmızı bayrak + sevk <span style={kucuk}>· K {fmt(c.k)} · Hb {fmt(c.hb)} · eGFR {fmt(c.egfr)}</span></div>

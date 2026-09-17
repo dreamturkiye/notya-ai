@@ -47,3 +47,13 @@ Shareable depth/gap report (before dahiliye wow sprint): [docs/README_DAHILIYE_A
 
 ## DAH-WOW Wave 1 kapanış — W1.4 (2026-09-16)
 - **SGK rapor sekmesi**: HT / DM / statin / DOAK ilaç kullanım raporu taslağı aktif kartlardan (ofis KB serisi + hekim evresi; HbA1c serisi; LDL + KVR kilidi; endikasyon + CHA₂DS₂-VASc bileşenleri + INR geçmişi). Etken madde yalnız hasta_ilaclar'dan; eksik kanıt listesi + SUT kontrol listesi (hekim güncel metinle doğrular). Hekim onayı → `dahiliye_sgk_raporlari.durum=kilitli` + bugünkü nota satır. Yazdır/PDF ve e-Nabız/Medula zarfı (Tools › Hasta Raporları ile aynı `enabizSgkRapor`). Hasta adı ve T.C. saklanmaz. Migration 040.
+
+## DAH-WOW Wave 2 — bakım döngüleri (2026-09-16)
+Sekmeler artık gruplu: **Kronik** (Özet · HT · DM · DM döngü · Lipid · KVR · KBH · Tiroid) · **Döngüler** (Anemi · Obezite · Tarama/Aşı · İzlem · Ev kayıt · Ön anket) · **Belge** (Check-up · İlaçlar · SGK rapor · Sevk).
+- **DM döngü**: yıllık FIB-4 (onaylı ALT/AST/Plt + yaş; ≥1,3 not, ≥2,67 gastro sevk), ayak foto → Belgeler görevi, SGLT2 / GLP-1 RA kardiyo-renal endikasyon bayrakları (KY, KBH, ASKVH, obezite), hipoglisemi riski (SU/insülin + ≥65 veya eGFR <45). Sınıf önerisi; doz/titrasyon yok.
+- **Anemi**: Hb eşiği → MCV → ferritin / B12 / folat / retikülosit merdiveni; eksik test "sonraki test" olarak şeride; Hb <7 kırmızı; plan hekim kilidi.
+- **Obezite**: VKİ + bel, TEMD basamağı, farmakoterapi sınıfları, bariatrik değerlendirme yalnız sevk, 3. ay %5 yanıt, ödeme onayı gerekçe metni.
+- **Tarama/Aşı**: KETEM kolon/meme/serviks (kadında jine tarihleriyle ortak) + erişkin aşı takvimi (grip, pnömokok, zona, Td, HBV seroloji, COVID-19); due olanlar tek tıkla görevlere.
+- **HT sekmesi**: 1-tık başlangıç paneli istemi; 14 günde onaylı sonuç gelmezse takip görevi.
+- **Ön anket**: hasta Sağlığım › Takip › Muayene öncesi anket (PIN sonrası) — ev KB/glukoz/kilo `dahiliye_ev_kayitlari` (portal), uyum + semptom + sorular; alarm semptomu şeritte ⚑; "Subjektif'e ekle".
+Migration 041. Server: `app/api/doktor/dahiliye/_wow2.ts`.

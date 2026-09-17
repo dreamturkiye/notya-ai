@@ -10,6 +10,13 @@ export const DAHILIYE_TOOLS = [
   { name: 'dahiliye.ilacizlem', description: 'İlaç izlem takvimi: hasta_ilaclar → lab izlem görevleri' },
   { name: 'dahiliye.kilit', description: 'Hekim kilidi: kart alanını kilitle (tanı/evre/hedef/kategori)' },
   { name: 'dahiliye.sgkrapor', description: 'SGK ilaç kullanım raporu taslağı (HT/DM/statin/DOAK) kartlardan; hekim kilitler, Medula e-imza ile' },
+  { name: 'dahiliye.dmdongu', description: 'DM kapalı döngü: FIB-4, ayak foto görevi, SGLT2/GLP-1 kardiyo-renal bayrak, hipoglisemi riski' },
+  { name: 'dahiliye.anemi', description: 'Anemi merdiveni: morfoloji → sonraki test → olası neden (onaylı lab)' },
+  { name: 'dahiliye.obezite', description: 'VKİ + TEMD basamakları, farmakoterapi sınıfı, bariatrik değerlendirme sevki, gerekçe metni' },
+  { name: 'dahiliye.tarama', description: 'KETEM kolon/meme/serviks due; GGK pozitif → gastro sevk' },
+  { name: 'dahiliye.asi', description: 'Erişkin aşı takvimi (HYP): grip, pnömokok, zona, Td, HBV, COVID-19' },
+  { name: 'dahiliye.htpanel', description: 'HT başlangıç paneli istemi + 14 gün sonuçlanmayan lab takibi' },
+  { name: 'dahiliye.anketsoap', description: 'Portal ön anketini bugünkü muayenenin Subjektif bölümüne ekle' },
   { name: 'dahiliye.sevk', description: 'Sevk oluştur (son onaylı panel eklenir)' },
 ] as const
 export type DahiliyeToolName = (typeof DAHILIYE_TOOLS)[number]['name']
