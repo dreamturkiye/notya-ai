@@ -20,20 +20,26 @@ export type KanonikTanim = {
 const a = (...x: string[]) => x
 
 export const KANONIK = {
-  WBC: { tr: 'Lökosit (WBC)', loinc: '6690-2', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001, '/mm³': 0.001, 'K/uL': 1 }, kritik: { dusuk: 1.0, yuksek: 50 }, aliases: a('wbc', 'lökosit', 'lokosit', 'beyaz küre', 'leukocyte', 'leucocyte', 'akyuvar') },
-  RBC: { tr: 'Eritrosit (RBC)', loinc: '789-8', birim: '10⁶/µL', donusum: { '10^12/L': 1, '10¹²/L': 1, 'M/uL': 1 }, aliases: a('rbc', 'eritrosit', 'alyuvar', 'erythrocyte') },
+  WBC: { tr: 'Lökosit (WBC)', loinc: '6690-2', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001, '/mm³': 0.001, 'K/uL': 1 }, kritik: { dusuk: 1.0, yuksek: 50 }, aliases: a('wbc', 'lökosit', 'lokosit', 'beyaz küre', 'leukocyte', 'leucocyte', 'leukocytes', 'akyuvar', 'white blood cell', 'white blood cells') },
+  RBC: { tr: 'Eritrosit (RBC)', loinc: '789-8', birim: '10⁶/µL', donusum: { '10^12/L': 1, '10¹²/L': 1, 'M/uL': 1 }, aliases: a('rbc', 'eritrosit', 'alyuvar', 'erythrocyte', 'erythrocytes', 'red blood cell', 'red blood cells') },
   Hb: { tr: 'Hemoglobin', loinc: '718-7', birim: 'g/dL', donusum: { 'g/L': 0.1, 'mmol/L': 1.611 }, kritik: { dusuk: 7, yuksek: 20 }, aliases: a('hb', 'hgb', 'hemoglobin', 'haemoglobin') },
-  Hct: { tr: 'Hematokrit', loinc: '4544-3', birim: '%', donusum: { 'L/L': 100 }, kritik: { dusuk: 20, yuksek: 60 }, aliases: a('hct', 'htc', 'hematokrit', 'haematocrit') },
-  MCV: { tr: 'MCV', loinc: '787-2', birim: 'fL', aliases: a('mcv', 'ortalama eritrosit hacmi') },
-  Plt: { tr: 'Trombosit (PLT)', loinc: '777-3', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001, 'K/uL': 1 }, kritik: { dusuk: 20, yuksek: 1000 }, aliases: a('plt', 'trombosit', 'platelet', 'thrombocyte') },
-  Neu: { tr: 'Nötrofil', loinc: '751-8', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001 }, kritik: { dusuk: 0.5 }, aliases: a('neu', 'neut', 'nötrofil', 'notrofil', 'neutrophil', 'neu#', 'nötrofil sayısı') },
-  NeuPct: { tr: 'Nötrofil %', loinc: '770-8', birim: '%', aliases: a('neu%', 'nötrofil %', 'nötrofil yüzdesi', 'neutrophil %') },
-  Lym: { tr: 'Lenfosit', loinc: '731-0', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001 }, aliases: a('lym', 'lenfosit', 'lymphocyte', 'lym#') },
-  LymPct: { tr: 'Lenfosit %', loinc: '736-9', birim: '%', aliases: a('lym%', 'lenfosit %', 'lenfosit yüzdesi') },
-  Eo: { tr: 'Eozinofil', loinc: '711-2', birim: '10³/µL', donusum: { '10^9/L': 1, '/µL': 0.001 }, aliases: a('eo', 'eos', 'eozinofil', 'eosinophil', 'eo#') },
-  EoPct: { tr: 'Eozinofil %', loinc: '713-8', birim: '%', aliases: a('eo%', 'eozinofil %') },
-  MPV: { tr: 'MPV', loinc: '32623-1', birim: 'fL', aliases: a('mpv') },
-  RDW: { tr: 'RDW', loinc: '788-0', birim: '%', aliases: a('rdw', 'rdw-cv') },
+  Hct: { tr: 'Hematokrit', loinc: '4544-3', birim: '%', donusum: { 'L/L': 100 }, kritik: { dusuk: 20, yuksek: 60 }, aliases: a('hct', 'htc', 'hematokrit', 'haematocrit', 'hematocrit', 'packed cell volume', 'pcv') },
+  MCV: { tr: 'MCV', loinc: '787-2', birim: 'fL', aliases: a('mcv', 'ortalama eritrosit hacmi', 'mean corpuscular volume', 'mean cell volume') },
+  MCH: { tr: 'MCH', loinc: '785-6', birim: 'pg', aliases: a('mch', 'ortalama eritrosit hemoglobini', 'mean corpuscular hemoglobin', 'mean cell hemoglobin') },
+  MCHC: { tr: 'MCHC', loinc: '786-4', birim: 'g/dL', aliases: a('mchc', 'ortalama eritrosit hemoglobin konsantrasyonu', 'mean corpuscular hemoglobin concentration') },
+  Plt: { tr: 'Trombosit (PLT)', loinc: '777-3', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001, 'K/uL': 1 }, kritik: { dusuk: 20, yuksek: 1000 }, aliases: a('plt', 'trombosit', 'platelet', 'platelets', 'thrombocyte', 'thrombocytes') },
+  Neu: { tr: 'Nötrofil', loinc: '751-8', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001 }, kritik: { dusuk: 0.5 }, aliases: a('neu', 'neut', 'nötrofil', 'notrofil', 'neutrophil', 'neutrophils', 'neu#', 'nötrofil sayısı', 'abs neutrophils') },
+  NeuPct: { tr: 'Nötrofil %', loinc: '770-8', birim: '%', aliases: a('neu%', 'nötrofil %', 'nötrofil yüzdesi', 'neutrophil %', 'neutrophils %', '% neutrophils') },
+  Lym: { tr: 'Lenfosit', loinc: '731-0', birim: '10³/µL', donusum: { '10^9/L': 1, '10⁹/L': 1, '/µL': 0.001 }, aliases: a('lym', 'lenfosit', 'lymphocyte', 'lymphocytes', 'lym#') },
+  LymPct: { tr: 'Lenfosit %', loinc: '736-9', birim: '%', aliases: a('lym%', 'lenfosit %', 'lenfosit yüzdesi', 'lymphocyte %', 'lymphocytes %') },
+  Eo: { tr: 'Eozinofil', loinc: '711-2', birim: '10³/µL', donusum: { '10^9/L': 1, '/µL': 0.001 }, aliases: a('eo', 'eos', 'eozinofil', 'eosinophil', 'eosinophils', 'eo#') },
+  EoPct: { tr: 'Eozinofil %', loinc: '713-8', birim: '%', aliases: a('eo%', 'eozinofil %', 'eosinophil %', 'eosinophils %') },
+  Mono: { tr: 'Monosit', loinc: '742-7', birim: '10³/µL', donusum: { '10^9/L': 1, '/µL': 0.001 }, aliases: a('mono', 'monosit', 'monocyte', 'monocytes', 'mono#') },
+  MonoPct: { tr: 'Monosit %', loinc: '5905-5', birim: '%', aliases: a('mono%', 'monosit %', 'monocyte %', 'monocytes %') },
+  Baso: { tr: 'Bazofil', loinc: '704-7', birim: '10³/µL', donusum: { '10^9/L': 1, '/µL': 0.001 }, aliases: a('baso', 'bazofil', 'basophil', 'basophils') },
+  BasoPct: { tr: 'Bazofil %', loinc: '706-2', birim: '%', aliases: a('baso%', 'bazofil %', 'basophil %') },
+  MPV: { tr: 'MPV', loinc: '32623-1', birim: 'fL', aliases: a('mpv', 'mean platelet volume') },
+  RDW: { tr: 'RDW', loinc: '788-0', birim: '%', aliases: a('rdw', 'rdw-cv', 'rdw cv', 'red cell distribution width') },
   Glu: { tr: 'Glukoz', loinc: '2345-7', birim: 'mg/dL', donusum: { 'mmol/L': 18.016 }, kritik: { dusuk: 50, yuksek: 400 }, aliases: a('glukoz', 'glucose', 'açlık kan şekeri', 'aks', 'kan şekeri', 'glu', 'açlık glukozu', 'tokluk kan şekeri') },
   HbA1c: { tr: 'HbA1c', loinc: '4548-4', birim: '%', donusum: { 'mmol/mol': 0.0915 }, aliases: a('hba1c', 'a1c', 'glikozile hemoglobin', 'glikohemoglobin', 'hb a1c') },
   Ure: { tr: 'Üre', loinc: '3091-6', birim: 'mg/dL', donusum: { 'mmol/L': 6.006 }, aliases: a('üre', 'ure', 'urea', 'kan üresi') },
@@ -86,10 +92,18 @@ export const KANONIK = {
   NTproBNP: { tr: 'NT-proBNP', loinc: '33762-6', birim: 'pg/mL', aliases: a('nt-probnp', 'ntprobnp', 'nt probnp', 'pro-bnp', 'probnp') },
   Lactate: { tr: 'Laktat', loinc: '2524-7', birim: 'mmol/L', donusum: { 'mg/dL': 0.111 }, kritik: { yuksek: 4 }, aliases: a('laktat', 'lactate', 'laktik asit') },
   UA_protein: { tr: 'İdrar protein', loinc: '5804-0', birim: 'metin', aliases: a('idrar protein', 'protein idrar', 'urine protein', 'tit protein') },
-  UA_blood: { tr: 'İdrar kan', loinc: '5794-3', birim: 'metin', aliases: a('idrar kan', 'idrar eritrosit', 'urine blood', 'hemoglobin idrar') },
-  UA_leu: { tr: 'İdrar lökosit', loinc: '5799-2', birim: 'metin', aliases: a('idrar lökosit', 'lökosit esteraz', 'urine leukocyte') },
+  UA_blood: { tr: 'İdrar kan', loinc: '5794-3', birim: 'metin', aliases: a('idrar kan', 'idrar eritrosit', 'urine blood', 'blood', 'hemoglobin idrar') },
+  UA_leu: { tr: 'İdrar lökosit', loinc: '5799-2', birim: 'metin', aliases: a('idrar lökosit', 'lökosit esteraz', 'urine leukocyte', 'leukocyte esterase') },
   UA_nit: { tr: 'İdrar nitrit', loinc: '5802-4', birim: 'metin', aliases: a('idrar nitrit', 'nitrit', 'nitrite') },
   UA_glu: { tr: 'İdrar glukoz', loinc: '5792-7', birim: 'metin', aliases: a('idrar glukoz', 'urine glucose') },
+  UA_sg: { tr: 'İdrar densitesi (SG)', loinc: '5811-5', birim: '', aliases: a('specific gravity', 'idrar densitesi', 'idrar dansitesi', 'dansite', 'urine sg', 'yoğunluk') },
+  UA_ph: { tr: 'İdrar pH', loinc: '5803-2', birim: '', aliases: a('ph', 'idrar ph', 'urine ph', 'ph idrar') },
+  UA_bil: { tr: 'İdrar bilirubin', loinc: '5770-3', birim: 'metin', aliases: a('bilirubin', 'idrar bilirubin', 'urine bilirubin') },
+  UA_ket: { tr: 'İdrar keton', loinc: '5797-6', birim: 'metin', aliases: a('keton', 'ketones', 'idrar keton', 'urine ketone', 'urine ketones') },
+  UA_uro: { tr: 'Ürobilinojen', loinc: '5818-0', birim: 'metin', aliases: a('urobilinogen', 'ürobilinojen') },
+  UA_rbc: { tr: 'İdrar RBC (mikroskopi)', loinc: '5808-1', birim: '/HPF', aliases: a('rbc urine', 'idrar rbc', 'urine rbc', 'erythrocytes urine') },
+  UA_wbc: { tr: 'İdrar WBC (mikroskopi)', loinc: '5821-4', birim: '/HPF', aliases: a('wbc urine', 'idrar wbc', 'urine wbc', 'leukocytes urine') },
+  UA_culture: { tr: 'İdrar kültürü', loinc: '630-4', birim: 'metin', aliases: a('culture result', 'urine culture', 'idrar kültürü', 'no growth', 'üreme yok') },
   PSA: { tr: 'PSA', loinc: '2857-1', birim: 'ng/mL', donusum: { 'µg/L': 1 }, aliases: a('psa', 'total psa', 'prostat spesifik antijen') },
   CEA: { tr: 'CEA', loinc: '2039-6', birim: 'ng/mL', aliases: a('cea') },
   AFP: { tr: 'AFP', loinc: '1834-1', birim: 'ng/mL', aliases: a('afp', 'alfa fetoprotein') },
@@ -119,20 +133,59 @@ export const KANONIK = {
 
 export const KANONIK_ANAHTARLAR = Object.keys(KANONIK) as KanonikAnahtar[]
 
-export function normalizeAd(s: string): string {
-  return s.toLocaleLowerCase('tr-TR').replace(/[()*:]/g, ' ').replace(/\s+/g, ' ').trim()
+/** Display / report order: hemogram → biyokimya → idrar → kültür → diğer. */
+const PANEL_SIRA: Record<string, number> = {
+  WBC: 10, RBC: 11, Hb: 12, Hct: 13, MCV: 14, MCH: 15, MCHC: 16, RDW: 17, Plt: 18, MPV: 19,
+  Neu: 20, NeuPct: 21, Lym: 22, LymPct: 23, Mono: 24, MonoPct: 25, Eo: 26, EoPct: 27, Baso: 28, BasoPct: 29, Retic: 30,
+  Glu: 40, HbA1c: 41, Ure: 42, BUN: 43, Kre: 44, eGFR: 45, UACR: 46, Na: 50, K: 51, Cl: 52, Ca: 53, Mg: 54, P: 55,
+  AST: 60, ALT: 61, GGT: 62, ALP: 63, TBil: 64, DBil: 65, LDH: 66, CK: 67, Alb: 68, TP: 69, Uric: 70, Amy: 71, Lip: 72,
+  TChol: 80, LDL: 81, HDL: 82, TG: 83, TSH: 90, FT4: 91, FT3: 92, Ferritin: 93, Fe: 94, TIBC: 95, B12: 96, Folate: 97, VitD: 98,
+  CRP: 100, ESR: 101, PCT: 102, INR: 110, PT: 111, aPTT: 112, DDimer: 113, Troponin: 114, BNP: 115, NTproBNP: 116, Lactate: 117,
+  UA_sg: 200, UA_ph: 201, UA_leu: 202, UA_nit: 203, UA_protein: 204, UA_glu: 205, UA_ket: 206, UA_bil: 207, UA_uro: 208, UA_blood: 209, UA_rbc: 210, UA_wbc: 211, UA_culture: 220,
 }
 
-/** Map a raw test name to a canonical key. Doctor aliases (per doctor) take precedence. Exact alias first, then bounded prefix/suffix. */
+export function panelSirasi(key: string | null | undefined): number {
+  if (!key) return 900
+  return PANEL_SIRA[key] ?? (String(key).startsWith('ntp_') ? 300 : String(key).startsWith('UA_') ? 205 : 500)
+}
+
+export function normalizeAd(s: string): string {
+  return s.toLocaleLowerCase('tr-TR').replace(/[()*:×x]/gi, ' ').replace(/\s+/g, ' ').trim()
+}
+
+/** Map a raw test name to a canonical key. Doctor aliases (per doctor) take precedence. Exact alias first, then token / plural / contains. */
 export function kanonikBul(rawName: string, doktorAliaslari?: Record<string, string>): KanonikAnahtar | null {
   const n = normalizeAd(rawName)
   if (!n) return null
   if (doktorAliaslari) { const hit = doktorAliaslari[n]; if (hit && hit in KANONIK) return hit as KanonikAnahtar }
-  for (const k of KANONIK_ANAHTARLAR) for (const al of KANONIK[k].aliases) if (n === al) return k
+
+  const adaylar = new Set<string>([n])
+  // "Culture result No growth at 48 hours" → try progressive prefixes
+  const parcalar = n.split(' ')
+  for (let i = parcalar.length; i >= 1; i--) adaylar.add(parcalar.slice(0, i).join(' '))
+  // English plurals: platelets → platelet
+  if (n.endsWith('s') && n.length > 3) adaylar.add(n.slice(0, -1))
+  if (n.endsWith('ies') && n.length > 4) adaylar.add(n.slice(0, -3) + 'y')
+  // first token (WBC, pH, Hematocrit)
+  if (parcalar[0]) adaylar.add(parcalar[0])
+
+  for (const aday of adaylar) {
+    for (const k of KANONIK_ANAHTARLAR) for (const al of KANONIK[k].aliases) if (aday === al) return k
+  }
+
   let best: { k: KanonikAnahtar; len: number } | null = null
   for (const k of KANONIK_ANAHTARLAR) for (const al of KANONIK[k].aliases) {
     if (al.length < 3) continue
-    if (n.startsWith(al + ' ') || n.startsWith(al + '-') || n.endsWith(' ' + al)) if (!best || al.length > best.len) best = { k, len: al.length }
+    if (n.startsWith(al + ' ') || n.startsWith(al + '-') || n.endsWith(' ' + al) || n.includes(' ' + al + ' ')) {
+      if (!best || al.length > best.len) best = { k, len: al.length }
+    }
+  }
+  // Multi-word English labels (specific gravity, mean corpuscular …)
+  if (!best) {
+    for (const k of KANONIK_ANAHTARLAR) for (const al of KANONIK[k].aliases) {
+      if (al.length < 5 || !al.includes(' ')) continue
+      if (n.includes(al) && (!best || al.length > best.len)) best = { k, len: al.length }
+    }
   }
   return best?.k || null
 }

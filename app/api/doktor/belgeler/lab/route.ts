@@ -19,7 +19,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { bransAnahtari, bransKurali } from '@/core/belgeler/router'
 import { csvXlsxCoz, pdfMetinCoz, gorselCikar, type CikarimSonucu } from '@/core/lab/cikarim'
 import { satirKur, uzlastir, panelOzeti, ozelHesaplar, type HamSatir, type LabSatir, type OncekiSatir } from '@/core/lab/trend'
-import { KANONIK, normalizeAd, type KanonikAnahtar } from '@/core/lab/kanonik'
+import { KANONIK, normalizeAd, panelSirasi, type KanonikAnahtar } from '@/core/lab/kanonik'
 import { labRaporYaz, labRaporuDogrula } from '@/core/lab/yorum'
 import { labRaporKaynaklari } from '@/specialties/dahiliye/engines/labKaynak'
 import { ENABIZ_TALIMAT, satirTarihiDogrula, tekrarAyikla, panelTarihi } from '@/core/lab/enabiz'
@@ -133,9 +133,21 @@ export async function POST(req: NextRequest) {
         return k && k !== s.canonical_key ? { ...s, canonical_key: k } : s
       })
       : satirlar
+    // Replace prior extract for this document so "yeniden çıkar" picks up alias/order fixes.
+    const { data: eskiPaneller } = await sb.from('lab_paneller').select('id').eq('belge_id', body.documentId).eq('doctor_id', user.id)
+    if (eskiPaneller?.length) {
+      const ids = eskiPaneller.map((p) => p.id)
+      await sb.from('lab_satirlar').delete().in('panel_id', ids)
+      await sb.from('lab_paneller').delete().in('id', ids)
+    }
     const { data: panel, error } = await sb.from('lab_paneller').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, lab_adi: enabiz ? 'e-Nabız geçmiş' : gorsel?.lab_adi || null, numune_tarihi: numune, rapor_tarihi: gorsel?.rapor_tarihi || yapi?.rapor_tarihi || null, kaynaklar, extract_json: { yapi: yapi ? { ...yapi, metin: undefined } : null, gorsel, uyusmazlik }, kalite, kimlik_uyari: kimlikUyari, durum: 'cikarildi', panel_type: ntpMi ? 'yenidogan_tarama' : enabiz ? 'enabiz_gecmis' : 'genel', sample_no: sampleNo }).select('id').single()
     if (error || !panel) return NextResponse.json({ error: 'Panel kaydedilemedi' }, { status: 500 })
-    if (ntpSatirlar.length) { const { error: e2 } = await sb.from('lab_satirlar').insert(ntpSatirlar.map((s, i) => satirDb(s, panel.id, meta.patientId, user.id, i, enabiz ? satirTarih[i] : numune))); if (e2) return NextResponse.json({ error: 'Satırlar kaydedilemedi' }, { status: 500 }) }
+    if (ntpSatirlar.length) {
+      const paired = ntpSatirlar.map((s, i) => ({ s, tarih: enabiz ? satirTarih[i] : numune }))
+      paired.sort((a, b) => panelSirasi(a.s.canonical_key) - panelSirasi(b.s.canonical_key) || a.s.raw_name.localeCompare(b.s.raw_name, 'tr'))
+      const { error: e2 } = await sb.from('lab_satirlar').insert(paired.map((p, i) => satirDb(p.s, panel.id, meta.patientId, user.id, i, p.tarih)))
+      if (e2) return NextResponse.json({ error: 'Satırlar kaydedilemedi' }, { status: 500 })
+    }
     return NextResponse.json({ ok: true, panelId: panel.id, ozet: oz, kaynaklar, kimlikUyari, uyusmazlik: uyusmazlik.length, panel_type: ntpMi ? 'yenidogan_tarama' : enabiz ? 'enabiz_gecmis' : 'genel', ...(enabiz ? { tarihler: Array.from(new Set(satirTarih.filter(Boolean))).sort(), tarihsiz: satirTarih.filter((t) => !t).length } : {}) })
   }
 
@@ -265,9 +277,10 @@ export async function GET(req: NextRequest) {
   if (!documentId) return NextResponse.json({ error: 'documentId gerekli' }, { status: 400 })
   const { data: panel } = await sb.from('lab_paneller').select('*').eq('doctor_id', user.id).eq('belge_id', documentId).order('created_at', { ascending: false }).limit(1).maybeSingle()
   if (!panel) return NextResponse.json({ panel: null })
-  const [{ data: rows }, { data: analiz }] = await Promise.all([
+  const [{ data: rowsRaw }, { data: analiz }] = await Promise.all([
     sb.from('lab_satirlar').select('*').eq('panel_id', panel.id).order('sira'),
     panel.analiz_id ? sb.from('belge_analizleri').select('id, durum, sonuc, fusion, hekim_tanisi, hekim_ozet, note_id, onaylandi_at').eq('id', panel.analiz_id).maybeSingle() : Promise.resolve({ data: null }),
   ])
-  return NextResponse.json({ panel: { ...panel, extract_json: undefined }, satirlar: rows || [], analiz: analiz || null, kanonik: Object.fromEntries(Object.entries(KANONIK).map(([k, v]) => [k, v.tr])) })
+  const rows = [...(rowsRaw || [])].sort((a, b) => panelSirasi(a.canonical_key) - panelSirasi(b.canonical_key) || Number(a.sira) - Number(b.sira))
+  return NextResponse.json({ panel: { ...panel, extract_json: undefined }, satirlar: rows, analiz: analiz || null, kanonik: Object.fromEntries(Object.entries(KANONIK).map(([k, v]) => [k, v.tr])) })
 }

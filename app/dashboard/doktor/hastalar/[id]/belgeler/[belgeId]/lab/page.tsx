@@ -83,6 +83,23 @@ export default function LabPage() {
   const kimlikOnayla = async () => { if (!panel) return; try { await api({ adim: 'kimlik_onayla', panelId: panel.id }); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
   const raporla = async () => { if (!panel) return; setDurum('raporluyor'); setMesaj(`${persona} raporluyor…`); try { await api({ adim: 'raporla', panelId: panel.id }); setMesaj('Taslak rapor hazır. Resmi tanıyı siz kilitlersiniz.'); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } setDurum('hazir'); };
 
+  /** One click: approve table + generate Ayşe/Elif draft — was stuck after extract with no report. */
+  const onaylaVeDegerlendir = async () => {
+    if (!panel || kilitli) return;
+    setDurum('raporluyor');
+    setMesaj('Tablo onaylanıyor…');
+    try {
+      if (!panel.tablo_onayli) await api({ adim: 'tablo_onayla', panelId: panel.id });
+      setMesaj(`${persona} değerlendiriyor…`);
+      await api({ adim: 'raporla', panelId: panel.id });
+      setMesaj('Taslak rapor hazır — aşağıda özet ve olası tanılar.');
+      await yukle();
+    } catch (e) {
+      setMesaj(e instanceof Error ? e.message : 'Hata');
+    }
+    setDurum('hazir');
+  };
+
   const kaydet = async (alan: 'ozet' | 'hekim_tanisi') => {
     if (!analiz) return false;
     const token = await getAccessTokenAsync();
@@ -113,6 +130,7 @@ export default function LabPage() {
   const kilitli = analiz?.durum === 'muayene_onaylandi';
   const kritikSatirlar = satirlar.filter((s) => s.kritik);
   const yuksek = satirlar.filter((s) => s.flag === 'H').length, dusuk = satirlar.filter((s) => s.flag === 'L').length;
+  const eslesmeyen = satirlar.filter((s) => !s.canonical_key).length;
 
   return (
     <div style={toolsShell}>
@@ -146,11 +164,23 @@ export default function LabPage() {
             {panel && (
               <div style={{ ...toolsCard, marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
-                  <div style={etiket}>Tablo <span style={{ fontWeight: 400, color: '#64748B' }}>· {satirlar.length} parametre · {yuksek} yüksek · {dusuk} düşük{kritikSatirlar.length ? ` · ${kritikSatirlar.length} kritik` : ''} · hücreye tıklayıp düzeltin</span></div>
-                  {!panel.tablo_onayli && !kilitli && <button type="button" onClick={tabloOnayla} style={btn}>Tabloyu onayla</button>}
-                  {panel.tablo_onayli && !analiz && <button type="button" onClick={raporla} disabled={durum !== 'hazir'} style={btn}>{durum === 'raporluyor' ? `${persona} raporluyor…` : `${persona} ile değerlendir`}</button>}
-                  {panel.tablo_onayli && analiz && !kilitli && <button type="button" onClick={raporla} disabled={durum !== 'hazir'} style={btnGhost}>Yeniden raporla</button>}
+                  <div style={etiket}>Tablo <span style={{ fontWeight: 400, color: '#64748B' }}>· {satirlar.length} parametre · {yuksek} yüksek · {dusuk} düşük{kritikSatirlar.length ? ` · ${kritikSatirlar.length} kritik` : ''}{eslesmeyen ? ` · ${eslesmeyen} eşleşmedi` : ''} · hücreye tıklayıp düzeltin</span></div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {!analiz && !kilitli && (
+                      <button type="button" onClick={() => void onaylaVeDegerlendir()} disabled={durum !== 'hazir'} style={{ ...btn, opacity: durum !== 'hazir' ? 0.6 : 1 }}>
+                        {durum === 'raporluyor' ? `${persona} değerlendiriyor…` : panel.tablo_onayli ? `${persona} ile değerlendir` : 'Tabloyu onayla ve değerlendir'}
+                      </button>
+                    )}
+                    {!panel.tablo_onayli && !kilitli && <button type="button" onClick={() => void tabloOnayla()} style={btnGhost}>Yalnız tabloyu onayla</button>}
+                    {panel.tablo_onayli && analiz && !kilitli && <button type="button" onClick={() => void raporla()} disabled={durum !== 'hazir'} style={btnGhost}>Yeniden raporla</button>}
+                  </div>
                 </div>
+                {!analiz && (
+                  <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.35)', fontSize: 12, color: '#99F6E4', lineHeight: 1.45 }}>
+                    Bu adım yalnızca tabloyu çıkarır. Klinik özet için <b>Tabloyu onayla ve değerlendir</b>e basın
+                    {eslesmeyen > 0 ? ` · ${eslesmeyen} satır sarı “eşleşmedi” — gerekirse soldan “Tabloyu yeniden çıkar” (İngilizce mock lab eşlemesi güncellendi)` : ''}.
+                  </div>
+                )}
                 <div style={{ overflowX: 'auto', marginTop: 6 }}>
                   <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse' }}>
                     <thead><tr style={{ color: '#8FA0B5', fontSize: 11 }}>{['Test', 'Sonuç', 'Birim', 'Ref', 'Flag', 'Önceki', 'Δ', 'Trend'].map((h) => <th key={h} style={{ ...hücre, textAlign: 'left', fontWeight: 600 }}>{h}</th>)}</tr></thead>

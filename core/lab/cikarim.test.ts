@@ -62,6 +62,18 @@ describe('alias matching on printed names', () => {
     assert.equal(kanonikBul('Serbest T4'), 'FT4'); assert.equal(kanonikBul('Kreatinin'), 'Kre')
     assert.equal(kanonikBul('Sentetik Parametre X'), null)
   })
+  it('English mock CBC / urinalysis names map (Elif mock lab PDF)', () => {
+    assert.equal(kanonikBul('Hematocrit'), 'Hct')
+    assert.equal(kanonikBul('Platelets'), 'Plt')
+    assert.equal(kanonikBul('Neutrophils'), 'Neu')
+    assert.equal(kanonikBul('Specific gravity'), 'UA_sg')
+    assert.equal(kanonikBul('pH'), 'UA_ph')
+    assert.equal(kanonikBul('MCH'), 'MCH')
+    assert.equal(kanonikBul('MCHC'), 'MCHC')
+    assert.equal(kanonikBul('Culture result No growth at 48 hours'), 'UA_culture')
+    assert.equal(kanonikBul('Total bilirubin'), 'TBil')
+    assert.equal(kanonikBul('Bilirubin'), 'UA_bil')
+  })
 })
 
 describe('trTarihIso', () => {
