@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { vizitSeridi } from '../engines/serit'
+import { gosterimSayi, vizitSeridi } from '../engines/serit'
 
 test('şerit: chip durumları, gecikmiş sıralaması, plan taslağı', () => {
   const s = vizitSeridi({ bugun: '2026-09-16', kb: { sbp: 150, dbp: 95, tarih: '2026-09-16', hedefteMi: false }, hba1c: { deger: 8.2, delta: 0.4, tarih: '2026-01-10', hedef: 7 }, ldl: { deger: 140, tarih: '2026-08-01', hedef: 70 }, egfr: { deger: 52, tarih: '2026-08-01', evre: 'G3a', renk: 'sari' },
@@ -9,4 +9,9 @@ test('şerit: chip durumları, gecikmiş sıralaması, plan taslağı', () => {
   assert.equal(s.overdue.length, 2); assert.equal(s.overdue[0].ad, 'UACR')
   assert.equal(s.planTaslagi[0], '⚑ K 6.2'); assert.match(s.planTaslagi[1], /HT: Basamak/); assert.match(s.planTaslagi[2], /Gecikmiş: UACR/)
   assert.equal(vizitSeridi({ bugun: '2026-09-16', kb: null, hba1c: null, ldl: null, egfr: null, gorevler: [], planlar: [], kirmizi: [] }).chips[0].alt, 'bugün ölç')
+})
+
+test('gosterimSayi: birim dönüşümü artığı gösterimde yuvarlanır (LDL 3.1 mmol/L → 119.877 → 120)', () => {
+  assert.equal(gosterimSayi(119.877), '120'); assert.equal(gosterimSayi(44), '44'); assert.equal(gosterimSayi(7.9), '7.9')
+  assert.equal(gosterimSayi(0.995), '1'); assert.equal(gosterimSayi(4.63), '4.63'); assert.equal(gosterimSayi(12.34), '12.3')
 })

@@ -20,6 +20,7 @@ import { csvXlsxCoz, pdfMetinCoz, gorselCikar, type CikarimSonucu } from '@/core
 import { satirKur, uzlastir, panelOzeti, ozelHesaplar, type HamSatir, type LabSatir, type OncekiSatir } from '@/core/lab/trend'
 import { KANONIK, normalizeAd, type KanonikAnahtar } from '@/core/lab/kanonik'
 import { labRaporYaz, labRaporuDogrula } from '@/core/lab/yorum'
+import { labRaporKaynaklari } from '@/specialties/dahiliye/engines/labKaynak'
 import { muhtemelNtpPanel, ntpBelgeSahibi, ntpKeyFromRaw, yorumNtp, NTP_DISCLAIMER } from '@/lib/clinical/yenidogan'
 
 export const dynamic = 'force-dynamic'
@@ -204,7 +205,9 @@ export async function POST(req: NextRequest) {
       if (!rapor.sinirlar.includes(NTP_DISCLAIMER)) rapor.sinirlar = [NTP_DISCLAIMER, ...rapor.sinirlar]
       if (ntp.sevk !== 'yok') rapor.acil_bayrak = true
     }
-    const sonuc = { modalite: 'lab', kalite: panel.kalite, ozet: rapor.ozet, bulgular: [...ozelSatirlar.map((k) => `Hesap: ${k}`), ...rapor.kritik.map((k) => `KRİTİK: ${k}`), ...rapor.yeni_bozulanlar.map((k) => `Yeni bozulan: ${k}`), ...rapor.duzelenler.map((k) => `Düzelen: ${k}`), ...rapor.kronik.map((k) => `Kronik: ${k}`)], tanilar: rapor.tanilar.map((t) => ({ ...t, karsi: [] })), acil_bayrak: rapor.acil_bayrak, oneri: [rapor.klinik_iliski, rapor.oneri, rapor.recete_ipucu ? `Reçete ipucu (öneri): ${rapor.recete_ipucu}` : ''].filter(Boolean).join('\n'), sinirlar: rapor.sinirlar, hekim_tanisi: [], engines_used: ntp ? ['lab-trend-engine', 'ntp-kural', 'claude-writer'] : ['lab-trend-engine', 'claude-writer'], lab: { ...rapor, ozel: ozelSatirlar, ntp: ntp || undefined } }
+    // DAH-LAB-BELGELER (rubric C4): dahiliye — every suggested tanı and the öneri carry a golden ref_code (Kaynak toggle).
+    const kaynak = bransKey === 'dahiliye' && !ntp ? labRaporKaynaklari(satirlar, rapor.tanilar) : undefined
+    const sonuc = { modalite: 'lab', kalite: panel.kalite, ozet: rapor.ozet, bulgular: [...ozelSatirlar.map((k) => `Hesap: ${k}`), ...rapor.kritik.map((k) => `KRİTİK: ${k}`), ...rapor.yeni_bozulanlar.map((k) => `Yeni bozulan: ${k}`), ...rapor.duzelenler.map((k) => `Düzelen: ${k}`), ...rapor.kronik.map((k) => `Kronik: ${k}`)], tanilar: rapor.tanilar.map((t) => ({ ...t, karsi: [] })), acil_bayrak: rapor.acil_bayrak, oneri: [rapor.klinik_iliski, rapor.oneri, rapor.recete_ipucu ? `Reçete ipucu (öneri): ${rapor.recete_ipucu}` : ''].filter(Boolean).join('\n'), sinirlar: rapor.sinirlar, hekim_tanisi: [], engines_used: ntp ? ['lab-trend-engine', 'ntp-kural', 'claude-writer'] : ['lab-trend-engine', 'claude-writer'], lab: { ...rapor, ozel: ozelSatirlar, ntp: ntp || undefined, kaynak } }
     const { data: analiz, error } = await sb.from('belge_analizleri').insert({ belge_id: panel.belge_id, doctor_id: user.id, patient_id: panel.patient_id, brans: ntpMi ? 'pediatri' : bransKey, modality_final: 'lab', yas_ay: yasAy, cinsiyet: cinsiyet ? cinsiyet[0]?.toUpperCase() : null, de_id_hash: `lab:${panel.id}`, engine_set: `lab-v1(${(panel.kaynaklar || []).join('+')}${ntp ? '+ntp' : ''})`, durum: 'taslak', sonuc, motor_ciktilari: [{ motor: 'lab-trend-engine', surum: '1', tier: 'A', dogrulanmis: true, labels: [] }], fusion: { capPct: oncekiVar ? 85 : 70, acilNedenler: kritik, duzeltmeler, ham: yazim.ham.slice(0, 4000) } }).select('id').single()
     if (error || !analiz) return NextResponse.json({ error: 'Rapor kaydedilemedi' }, { status: 500 })
     await sb.from('lab_paneller').update({ analiz_id: analiz.id, durum: 'raporlandi', updated_at: new Date().toISOString() }).eq('id', panel.id)

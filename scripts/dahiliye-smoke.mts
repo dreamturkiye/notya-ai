@@ -10,11 +10,16 @@
  * Patient: one SYNTHETIC patient "TEST — Dahiliye Smoke (sentetik)" (67 y, E, no T.C., no phone,
  * no e-mail). Every run deletes the previous synthetic patient of this QA doctor and re-seeds it.
  *
- * Lab rows: two panels (≈200 days ago and 4 days ago) are inserted exactly as the extractor would
- * leave them (onayli=false, panel 'raporlandi', belge_analizleri modality 'lab' with a hekim tanısı)
- * and then approved through the REAL route POST /api/doktor/belgeler/analiz/onayla. The Claude
- * vision extraction step (`cikar`) is skipped on purpose: it needs an uploaded PDF + Anthropic call
- * and is not part of the dahiliye domains under audit.
+ * Lab rows (main patient): two panels (≈200 days ago and 4 days ago) are inserted exactly as the extractor
+ * would leave them (onayli=false, panel 'raporlandi', belge_analizleri modality 'lab' with a hekim tanısı)
+ * and then approved through the REAL route POST /api/doktor/belgeler/analiz/onayla — fast and deterministic
+ * for the 22 dahiliye cards.
+ *
+ * Lab upload path (DAH-LAB-BELGELER, third synthetic patient): a SYNTHETIC digital PDF
+ * (core/lab/fixtures/sentetikLabPdf.ts) goes through the whole real pipeline — POST /api/doktor/documents
+ * (vault upload) → belgeler/lab 'cikar' (pdfjs structural pass + Claude vision pass, reconciled) → rows land
+ * onayli=false and the dahiliye şerit ignores them → 'tablo_onayla' → 'raporla' (Claude writer) → Onayla
+ * without a hekim tanısı → 400 → PATCH hekim tanısı → Onayla → rows onayli=true → şerit HbA1c shows 7.9.
  *
  * Smoke path (post-sprint audit): KB kaydet → lab onayla → dahiliye adımları → her kartın hekim
  * kilidi → check-up birleşik rapor → portal ön anket → kohort paneli.
@@ -45,12 +50,14 @@ for (const f of ['.env.local', '.env']) {
 const { encrypt, decrypt } = await import('../lib/security/encryption')
 const { generatePortalPin, hashPortalPin } = await import('../lib/portal/pinAuth')
 const { KB_TEKNIK } = await import('../specialties/dahiliye/engines/nudge')
+const { sentetikLabPdf, SENTETIK_SATIRLAR } = await import('../core/lab/fixtures/sentetikLabPdf')
 
 const BASE = (process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
 const QA_EMAIL = 'qa.dahiliye@notya.ai'
 const QA_AD = 'QA Dahiliye (TEST hesabı)'
 const HASTA_AD = 'TEST — Dahiliye Smoke (sentetik)'
 const HASTA_AD_SCORE2 = 'TEST — Dahiliye Smoke SCORE2 (sentetik)'
+const HASTA_AD_LAB = 'TEST — Dahiliye Lab Yukleme Smoke (sentetik)'
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(URL_, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 const anon = createClient(URL_, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
@@ -95,7 +102,7 @@ async function hastaSil(doctorId: string) {
   for (const p of data || []) {
     let ad = ''
     try { ad = JSON.parse(decrypt(String(p.name_encrypted))).ad || '' } catch { ad = '' }
-    if (ad !== HASTA_AD && ad !== HASTA_AD_SCORE2) continue
+    if (ad !== HASTA_AD && ad !== HASTA_AD_SCORE2 && ad !== HASTA_AD_LAB) continue
     const pid = String(p.id)
     for (const t of DAHILIYE_TABLOLARI) await sb.from(t).delete().eq('patient_id', pid)
     const { data: kon } = await sb.from('hasta_mesaj_konulari').select('id').eq('patient_id', pid)
@@ -106,6 +113,7 @@ async function hastaSil(doctorId: string) {
     const { data: an } = await sb.from('belge_analizleri').select('id').eq('patient_id', pid)
     if (an?.length) await sb.from('belge_revizyonlar').delete().in('analiz_id', an.map((a) => a.id))
     await sb.from('belge_analizleri').delete().eq('patient_id', pid)
+    await sb.from('medical_documents').delete().eq('patient_id', pid) // blobs cascade
     const { data: ses } = await sb.from('sessions').select('id').eq('patient_id', pid)
     const sesIds = (ses || []).map((s) => s.id)
     if (sesIds.length) {
@@ -182,7 +190,7 @@ async function labPaneliTohumla(doctorId: string, pid: string, numune: string, s
 type Adim = { adim: string; durum: number; beklenen: number; ok: boolean; ms: number; ozet: unknown }
 const kayit: Adim[] = []
 let TOKEN = ''
-async function istek(ad: string, method: 'GET' | 'POST', yol: string, body?: unknown, beklenen = 200, ekBaslik: Record<string, string> = {}) {
+async function istek(ad: string, method: 'GET' | 'POST' | 'PATCH', yol: string, body?: unknown, beklenen = 200, ekBaslik: Record<string, string> = {}) {
   const t0 = Date.now()
   const r = await fetch(`${BASE}${yol}`, { method, headers: { 'Content-Type': 'application/json', ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}), ...ekBaslik }, body: body ? JSON.stringify(body) : undefined })
   const metin = await r.text()
@@ -356,6 +364,54 @@ await post('SCORE2 hasta: KVR kategori hekim kilidi', pidS, { adim: 'kilit', kar
 const kvrKilitV = (await istek('GET dahiliye (SCORE2 kilit sonrası)', 'GET', dah(pidS))).json as V
 kontrol('SCORE2 kategori hekim kilidiyle kesinleşti', kvrKilitV.wow?.kvr?.kilitKategori === 'yuksek', kvrKilitV.wow?.kvr?.kilitKategori)
 
+// Lab upload path (DAH-LAB-BELGELER) — third synthetic patient, real upload → extraction → onayla.
+const { data: labHasta, error: lhErr } = await sb.from('patients').insert({ doctor_id: doktor.id, name_encrypted: encrypt(JSON.stringify({ ad: HASTA_AD_LAB })), dob_encrypted: encrypt('1966-06-02'), gender_encrypted: encrypt('K'), notes_encrypted: encrypt(JSON.stringify({ not: 'DAH-LAB-BELGELER sentetik QA hastası. Gerçek kişi değildir.' })), is_active: true }).select('id').single()
+if (lhErr || !labHasta) throw new Error(`patients (lab yükleme): ${lhErr?.message}`)
+const pidL = String(labHasta.id)
+const noteL = await muayeneOlustur(doktor.id, pidL)
+const labOnce = (await istek('Lab yükleme hasta: GET dahiliye (lab yok)', 'GET', dah(pidL))).json as V
+kontrol('Lab yükleme hasta: yüklemeden önce şeritte HbA1c yok', labOnce.chips?.hba1c == null, labOnce.chips?.hba1c)
+const pdf = sentetikLabPdf(gun(2), gun(1), 'TEST Dahiliye Lab Yukleme Smoke')
+const form = new FormData()
+form.append('file', new Blob([new Uint8Array(pdf)], { type: 'application/pdf' }), 'sentetik-lab-dah-smoke.pdf')
+form.append('patientId', pidL); form.append('category', 'lab')
+const t0Up = Date.now()
+const upR = await fetch(`${BASE}/api/doktor/documents`, { method: 'POST', headers: { Authorization: `Bearer ${TOKEN}` }, body: form })
+const upJ = (await upR.json().catch(() => ({}))) as V
+kayit.push({ adim: 'Lab PDF yükle (vault, multipart)', durum: upR.status, beklenen: 201, ok: upR.status === 201, ms: Date.now() - t0Up, ozet: upJ })
+console.log(`${upR.status === 201 ? '✓' : '✗'} Lab PDF yükle (vault, multipart) → ${upR.status}`)
+const belgeId = String(upJ.document?.id || '')
+const cikar = await istek('Lab çıkar (pdfjs yapı + Claude görsel, uzlaştır)', 'POST', '/api/doktor/belgeler/lab', { adim: 'cikar', documentId: belgeId })
+const labPanelId = String((cikar.json as V).panelId || '')
+kontrol('Çıkarım: tüm sentetik satırlar, yapı kaynağı dahil', Number((cikar.json as V).ozet?.toplam) >= SENTETIK_SATIRLAR.length && ((cikar.json as V).kaynaklar || []).includes('yapi'), cikar.json)
+const cikanSatirlar = (await sb.from('lab_satirlar').select('raw_name, canonical_key, value_num, unit, kanonik_deger, kanonik_birim, flag, onayli, numune_tarihi, dogrulanacak').eq('panel_id', labPanelId).order('sira')).data || []
+const anahtarlar = new Set(cikanSatirlar.map((r) => r.canonical_key))
+kontrol('Çıkarım: canonical_key eşleşmesi (HbA1c, Glu, Kre, LDL, K, ALT)', SENTETIK_SATIRLAR.every((s) => anahtarlar.has(s.beklenenKey)), [...anahtarlar])
+const a1cSatir = cikanSatirlar.find((r) => r.canonical_key === 'HbA1c')
+const kreSatir = cikanSatirlar.find((r) => r.canonical_key === 'Kre')
+kontrol('Çıkarım: HbA1c 7.9 %, numune tarihi basılı tarihten', Number(a1cSatir?.kanonik_deger) === 7.9 && a1cSatir?.numune_tarihi === gun(2), a1cSatir)
+kontrol('Çıkarım: Kreatinin 88 µmol/L → mg/dL kanonik birim', kreSatir?.kanonik_birim === 'mg/dL' && Math.abs(Number(kreSatir?.kanonik_deger) - 0.995) < 0.01, kreSatir)
+kontrol('Çıkarım sonrası tüm satırlar onayli=false', cikanSatirlar.length > 0 && cikanSatirlar.every((r) => r.onayli === false), cikanSatirlar.map((r) => r.onayli))
+const labOnaysiz = (await istek('Lab yükleme hasta: GET dahiliye (çıkarıldı, onaysız)', 'GET', dah(pidL))).json as V
+kontrol('Onaysız çıkarılmış satır şeride/kartlara girmez (HbA1c, LDL)', labOnaysiz.chips?.hba1c == null && labOnaysiz.chips?.ldl == null, { hba1c: labOnaysiz.chips?.hba1c, ldl: labOnaysiz.chips?.ldl })
+const labTablo = (await istek('Lab tablo GET (hekim ekranı verisi)', 'GET', `/api/doktor/belgeler/lab?documentId=${belgeId}`)).json as V
+await istek('Lab raporla tablo onayı olmadan → 409', 'POST', '/api/doktor/belgeler/lab', { adim: 'raporla', panelId: labPanelId }, 409)
+await istek('Lab tablo onayla (hekim)', 'POST', '/api/doktor/belgeler/lab', { adim: 'tablo_onayla', panelId: labPanelId })
+const raporla = await istek('Lab raporla (Claude yazar, taslak)', 'POST', '/api/doktor/belgeler/lab', { adim: 'raporla', panelId: labPanelId })
+const labAnalizId = String((raporla.json as V).analizId || '')
+const labRapor = ((await istek('Lab rapor GET (Kaynak dipnotları)', 'GET', `/api/doktor/belgeler/lab?documentId=${belgeId}`)).json as V).analiz?.sonuc?.lab
+kontrol('Lab raporu: her olası tanı + öneri Kaynak ref_code taşır (dahiliye, C4)', !!labRapor?.kaynak && labRapor.kaynak.tanilar.length === labRapor.tanilar.length && labRapor.kaynak.oneri.length > 0 && labRapor.kaynak.oneri.some((d: V) => d.ref === 'TEMD_DM2026'), { tanilar: labRapor?.tanilar?.map((t: V) => t.icd10), kaynak: labRapor?.kaynak })
+kontrol('Lab raporu reçete ipucunda doz yok', !/\d+\s*(mg|mcg|µg|ünite|tablet)/i.test(String(labRapor?.recete_ipucu || '')), labRapor?.recete_ipucu)
+await istek('Onayla hekim tanısı olmadan → 400 (hekim kilidi)', 'POST', '/api/doktor/belgeler/analiz/onayla', { analizId: labAnalizId, adim: 'onayla', noteId: noteL }, 400)
+await istek('Resmi tanıyı kilitle (hekim)', 'PATCH', '/api/doktor/belgeler/analiz', { analizId: labAnalizId, alan: 'hekim_tanisi', sonraki: [{ ad: 'Tip 2 diabetes mellitus', icd10: 'E11' }] })
+const labOnayla = await istek('Lab onayla (yüklenen PDF paneli)', 'POST', '/api/doktor/belgeler/analiz/onayla', { analizId: labAnalizId, adim: 'onayla', noteId: noteL })
+const onayliSatirlar = (await sb.from('lab_satirlar').select('onayli').eq('panel_id', labPanelId)).data || []
+kontrol('Onayla sonrası panelin tüm satırları onayli=true', onayliSatirlar.length === cikanSatirlar.length && onayliSatirlar.every((r) => r.onayli === true), onayliSatirlar.length)
+const labOnayli = (await istek('Lab yükleme hasta: GET dahiliye (onaylı)', 'GET', dah(pidL))).json as V
+kontrol('Şerit HbA1c yüklenen PDF\'ten (7.9, onaylı satır)', labOnayli.chips?.hba1c?.deger === 7.9 && labOnayli.chips?.hba1c?.tarih === gun(2), labOnayli.chips?.hba1c)
+const notL = await sb.from('notes').select('content_objektif').eq('id', noteL).single()
+kontrol('Lab bloğu nota yalnız Onayla ile yazıldı (Objektif [Lab])', /\[Lab\]/.test(String(notL.data?.content_objektif || '')), String(notL.data?.content_objektif || '').slice(0, 120))
+
 const sonra = (await istek('GET dahiliye (sonra)', 'GET', dah(pid))).json as V
 
 // ── 5. Output ────────────────────────────────────────────────────────────────
@@ -371,10 +427,11 @@ const ozet = {
   kohort: satir ? { bayraklar: satir.bayraklar, gecikmisSayi: satir.gecikmisSayi, oncelik: satir.oncelik, portalVar: satir.portalVar } : null,
   kbTeknikKapi: kbTeknikEksik.json,
   score2: { sonuc: kvrS, kilitKategori: kvrKilitV.wow?.kvr?.kilitKategori },
+  labYukleme: { belgeId, panelId: labPanelId, analizId: labAnalizId, cikar: cikar.json, raporKaynak: labRapor?.kaynak, raporTanilar: labRapor?.tanilar?.map((t: V) => ({ ad: t.ad, icd10: t.icd10, guven_pct: t.guven_pct })), satirlarCikarimSonrasi: cikanSatirlar, tablo: { panel: labTablo.panel && { kaynaklar: labTablo.panel.kaynaklar, kalite: labTablo.panel.kalite, durum: labTablo.panel.durum, numune_tarihi: labTablo.panel.numune_tarihi, kimlik_uyari: labTablo.panel.kimlik_uyari } }, onaysizChips: { hba1c: labOnaysiz.chips?.hba1c ?? null, ldl: labOnaysiz.chips?.ldl ?? null }, onayla: labOnayla.json, onayliSatirSayisi: onayliSatirlar.length, onayliChips: { hba1c: labOnayli.chips?.hba1c, ldl: labOnayli.chips?.ldl, k: labOnayli.chips?.k } },
 }
 fs.writeFileSync(path.join(cikti, 'dahiliye-smoke.json'), JSON.stringify(ozet, null, 2))
 // Browser session for screenshots (local only, gitignored).
-fs.writeFileSync(path.join(cikti, 'session.json'), JSON.stringify({ patientId: pid, score2PatientId: pidS, portalToken: portalLink, auth: { access_token: doktor.token, refresh_token: doktor.refresh, expires_at: doktor.expiresAt } }))
+fs.writeFileSync(path.join(cikti, 'session.json'), JSON.stringify({ patientId: pid, score2PatientId: pidS, labPatientId: pidL, labDocumentId: belgeId, portalToken: portalLink, auth: { access_token: doktor.token, refresh_token: doktor.refresh, expires_at: doktor.expiresAt } }))
 const hatali = kayit.filter((k) => !k.ok).length + kontroller.filter((k) => !k.ok).length
 console.log(`\n${kayit.length} istek, ${kontroller.length} kontrol, ${hatali} hata → smoke-out/dahiliye-smoke.json`)
 process.exit(hatali ? 1 : 0)

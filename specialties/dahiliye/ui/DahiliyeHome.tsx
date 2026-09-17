@@ -6,7 +6,7 @@ import DahiliyeWow, { VizitSeridiBar, type WowVeri } from './DahiliyeWow';
 import DahiliyeWow2 from './DahiliyeWow2';
 import DahiliyeWow3 from './DahiliyeWow3';
 import { NudgeBar } from './DahiliyeWow4';
-import type { VizitSeridi } from '../engines/serit';
+import { gosterimSayi, type VizitSeridi } from '../engines/serit';
 
 type L = { kanonik_deger: number | null; numune_tarihi: string | null } | null;
 type Dip = { ref: string; not: string };
@@ -44,7 +44,7 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
   useEffect(() => { yukle(); }, [yukle]);
   const calistir = async (body: Record<string, unknown>, ok?: string): Promise<Record<string, unknown> | null> => { setMesaj(''); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
   if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Dahiliye yükleniyor…</div>;
-  const c = v.chips; const fmt = (l: L, u = '') => (l?.kanonik_deger != null ? `${l.kanonik_deger}${u}` : '—');
+  const c = v.chips; const fmt = (l: L, u = '') => (l?.kanonik_deger != null ? `${gosterimSayi(l.kanonik_deger)}${u}` : '—');
   const sonHt = v.ht[0] || null;
 
   return (

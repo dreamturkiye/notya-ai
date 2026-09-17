@@ -12,11 +12,13 @@ import DoktorNav from '@/components/doktor/DoktorNav';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
+import { REF_ACIKLAMA } from '@/specialties/dahiliye/engines/dahiliye';
 
 type Doc = { id: string; fileName: string; fileType: string };
 type Satir = { id: string; raw_name: string; canonical_key: string | null; value_num: number | null; value_text: string | null; unit: string | null; ref_low: number | null; ref_high: number | null; flag: string; kritik: boolean; kritik_neden: string | null; prior_value: number | null; prior_date: string | null; delta_pct: number | null; trend: string; dogrulanacak: boolean; dogrulama_notu: string | null; doctor_corrected: boolean; page: number | null };
 type Panel = { id: string; lab_adi: string | null; numune_tarihi: string | null; kaynaklar: string[]; kalite: string; kimlik_uyari: { eslesme: boolean | null; ipucu: string | null } | null; tablo_onayli: boolean; durum: string; panel_type?: string | null; sample_no?: string | null };
-type LabR = { ozet: string; kritik: string[]; yeni_bozulanlar: string[]; duzelenler: string[]; kronik: string[]; tanilar: { ad: string; icd10: string | null; guven_pct: number; guven_bant: string; destek: string[] }[]; klinik_iliski: string; oneri: string; recete_ipucu: string | null; sinirlar: string[]; acil_bayrak: boolean };
+type LabR = { ozet: string; kritik: string[]; yeni_bozulanlar: string[]; duzelenler: string[]; kronik: string[]; tanilar: { ad: string; icd10: string | null; guven_pct: number; guven_bant: string; destek: string[] }[]; klinik_iliski: string; oneri: string; recete_ipucu: string | null; sinirlar: string[]; acil_bayrak: boolean; kaynak?: { tanilar: Dip[]; oneri: Dip[] } };
+type Dip = { ref: string; not: string };
 type Analiz = { id: string; durum: string; sonuc: { lab?: LabR; ozet: string; acil_bayrak: boolean; sinirlar: string[] } | null; fusion: { capPct?: number; duzeltmeler?: string[] } | null; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; note_id: string | null };
 
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 4 };
@@ -24,6 +26,7 @@ const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border:
 const btnGhost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
 const flagRenk: Record<string, string> = { H: '#F87171', L: '#60A5FA', critical: '#EF4444', normal: '#2DD4BF', unknown: '#64748B', sinir: '#FBBF24', pozitif_suphe: '#F87171', yetersiz_ornek: '#FB923C', tekrar: '#FB923C' };
 const trendTr: Record<string, string> = { rising: '↗ yükseliyor', falling: '↘ düşüyor', stable: '→ stabil', new_abn: '● yeni bozulan', new_normal: '○ normale döndü', unit_mismatch: '⚠ birim uyuşmuyor', no_prior: '— ilk' };
+const KaynakDip = ({ d, acik }: { d?: Dip[] | null; acik: boolean }) => (!acik || !d?.length ? null : <div style={{ fontSize: 11, color: '#8FA0B5', marginTop: 4, borderLeft: '2px solid rgba(45,212,191,0.4)', paddingLeft: 6 }}>{d.map((x, i) => <div key={i}><b>{x.ref}</b> — {x.not} <span style={{ opacity: 0.7 }}>({(REF_ACIKLAMA as Record<string, string>)[x.ref] || x.ref})</span></div>)}</div>);
 const hücre: React.CSSProperties = { padding: '4px 6px', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', verticalAlign: 'top' };
 const girdi: React.CSSProperties = { width: '100%', background: 'transparent', border: '1px solid transparent', color: '#EDF1F7', fontSize: 12, padding: '2px 4px', borderRadius: 4 };
 
@@ -41,6 +44,7 @@ export default function LabPage() {
   const [plan, setPlan] = useState('');
   const [planAcik, setPlanAcik] = useState(false);
   const [persona, setPersona] = useState('Asistan');
+  const [kaynakAcik, setKaynakAcik] = useState(false);
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync();
@@ -167,12 +171,12 @@ export default function LabPage() {
                   <div key={String(baslik)} style={{ ...toolsCard, marginBottom: 10 }}><div style={{ ...etiket, color: String(renk) }}>{String(baslik)}</div><ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#EDF1F7' }}>{(liste as string[]).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
                 ) : null)}
                 <div style={{ ...toolsCard, marginBottom: 10 }}>
-                  <div style={etiket}>Olası tanılar <span style={{ fontWeight: 400, color: '#64748B' }}>· güven üst sınırı %{analiz.fusion?.capPct ?? 70}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}><div style={etiket}>Olası tanılar <span style={{ fontWeight: 400, color: '#64748B' }}>· güven üst sınırı %{analiz.fusion?.capPct ?? 70}</span></div>{lab.kaynak && <button type="button" onClick={() => setKaynakAcik((x) => !x)} style={{ ...btnGhost, padding: '3px 9px', fontSize: 11, color: kaynakAcik ? '#2DD4BF' : '#8FA0B5' }}>Kaynak</button>}</div>
                   {lab.tanilar.length === 0 && <div style={{ fontSize: 12, color: '#64748B' }}>Tanı önerisi yok.</div>}
                   {lab.tanilar.map((t, i) => (
                     <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '6px 0', borderTop: i ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                       <div style={{ minWidth: 60, textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 800, color: t.guven_bant === 'yüksek' ? '#2DD4BF' : t.guven_bant === 'orta' ? '#FBBF24' : '#94A3B8' }}>%{t.guven_pct}</div><div style={{ fontSize: 10, color: '#8FA0B5' }}>{t.guven_bant}</div></div>
-                      <div style={{ flex: 1, fontSize: 13, color: '#EDF1F7' }}><div style={{ fontWeight: 700 }}>{t.ad} {t.icd10 && <span style={{ color: '#8FA0B5', fontWeight: 400 }}>({t.icd10})</span>}</div>{t.destek.length > 0 && <div style={{ fontSize: 11, color: '#2DD4BF' }}>destek: {t.destek.join(', ')}</div>}</div>
+                      <div style={{ flex: 1, fontSize: 13, color: '#EDF1F7' }}><div style={{ fontWeight: 700 }}>{t.ad} {t.icd10 && <span style={{ color: '#8FA0B5', fontWeight: 400 }}>({t.icd10})</span>}</div>{t.destek.length > 0 && <div style={{ fontSize: 11, color: '#2DD4BF' }}>destek: {t.destek.join(', ')}</div>}<KaynakDip d={lab.kaynak?.tanilar[i] ? [lab.kaynak.tanilar[i]] : null} acik={kaynakAcik} /></div>
                       <button type="button" onClick={() => setTaniTaslak((x) => (x ? x + '\n' : '') + (t.icd10 ? `${t.ad} (${t.icd10})` : t.ad))} disabled={kilitli} style={{ ...btnGhost, padding: '4px 8px', fontSize: 11 }}>Resmi tanıya al</button>
                     </div>
                   ))}
@@ -183,7 +187,7 @@ export default function LabPage() {
                   {lab.klinik_iliski && <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 6 }}>Asistan: {lab.klinik_iliski}</div>}
                   <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button type="button" onClick={() => kaydet('hekim_tanisi')} disabled={kilitli} style={btnGhost}>Resmi tanıyı kilitle</button>
-                    <button type="button" onClick={() => onayla('onayla')} disabled={!analiz.hekim_tanisi?.length || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir'} style={btn} title="Son muayenenin Objektif bölümüne yazar; panel onaylı geçmişe girer">Onayla ve son muayeneye ekle</button>
+                    <button type="button" onClick={() => onayla('onayla')} disabled={!analiz.hekim_tanisi?.length || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir'} style={{ ...btn, opacity: !analiz.hekim_tanisi?.length || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir' ? 0.45 : 1, cursor: !analiz.hekim_tanisi?.length ? 'not-allowed' : 'pointer' }} title={analiz.hekim_tanisi?.length ? 'Son muayenenin Objektif bölümüne yazar; panel onaylı geçmişe girer' : 'Önce resmi tanıyı kilitleyin'}>Onayla ve son muayeneye ekle</button>
                     {analiz.durum === 'onaylandi' && <button type="button" onClick={() => setPlanAcik(!planAcik)} style={btnGhost}>Plan düzenle</button>}
                   </div>
                   {planAcik && analiz.durum === 'onaylandi' && (
@@ -195,7 +199,7 @@ export default function LabPage() {
                   )}
                   {analiz.note_id && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>{kilitli ? 'Muayene onaylandı — kilitli.' : "Objektif'e eklendi."} <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a></div>}
                 </div>
-                {(lab.oneri || lab.recete_ipucu) && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: '#EDF1F7', whiteSpace: 'pre-wrap' }}><div style={etiket}>Öneri</div>{lab.oneri}{lab.recete_ipucu ? `\nReçete ipucu (yalnız öneri): ${lab.recete_ipucu}` : ''}</div>}
+                {(lab.oneri || lab.recete_ipucu) && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: '#EDF1F7', whiteSpace: 'pre-wrap' }}><div style={etiket}>Öneri</div>{lab.oneri}{lab.recete_ipucu ? `\nReçete ipucu (yalnız öneri): ${lab.recete_ipucu}` : ''}<KaynakDip d={lab.kaynak?.oneri} acik={kaynakAcik} /></div>}
                 {lab.sinirlar.length > 0 && <div style={{ ...toolsCard, fontSize: 12, color: '#8FA0B5' }}><div style={etiket}>Sınırlar</div><ul style={{ margin: 0, paddingLeft: 18 }}>{lab.sinirlar.map((s, i) => <li key={i}>{s}</li>)}</ul>{analiz.fusion?.duzeltmeler?.length ? <div style={{ marginTop: 6, color: '#64748B' }}>Sistem düzeltmeleri: {analiz.fusion.duzeltmeler.join('; ')}</div> : null}</div>}
               </>
             )}

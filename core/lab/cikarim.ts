@@ -25,7 +25,8 @@ function satirCoz(line: string, page: number): HamSatir | null {
 }
 
 export function csvXlsxCoz(bytes: Buffer, fileType: string): CikarimSonucu {
-  const wb = XLSX.read(bytes, { type: 'buffer', raw: false })
+  // CSV: decode as UTF-8 (Turkish names) and keep cells as printed text; SheetJS number parsing would read "8,2" as 82.
+  const wb = /csv/.test(fileType) ? XLSX.read(bytes.toString('utf8').replace(/^\uFEFF/, ''), { type: 'string', raw: true }) : XLSX.read(bytes, { type: 'buffer', raw: false })
   const ws = wb.Sheets[wb.SheetNames[0]]
   const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, blankrows: false, defval: '' })
   const satirlar: HamSatir[] = []
@@ -51,6 +52,10 @@ export function csvXlsxCoz(bytes: Buffer, fileType: string): CikarimSonucu {
 /** Digital PDF text pass. Returns [] rows for scanned PDFs (no text layer) — vision handles those. */
 export async function pdfMetinCoz(bytes: Buffer): Promise<CikarimSonucu & { metin: string }> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
+  // Next bundles pdfjs into a server vendor chunk; its fake worker then imports ./pdf.worker.mjs next to that chunk and fails,
+  // silently dropping this pass (only vision ran). Load the worker in-process so the bundler includes it.
+  const g = globalThis as { pdfjsWorker?: unknown }
+  if (!g.pdfjsWorker) g.pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.mjs')
   const doc = await pdfjs.getDocument({ data: new Uint8Array(bytes), useSystemFonts: true, disableFontFace: true }).promise
   const satirlar: HamSatir[] = []
   let metin = ''
