@@ -86,7 +86,7 @@
     <p class="lede">Fresh pass 2026-09-17 against code on <code>origin/main</code> @ fef01f1, OPEN-COMMITMENTS, post-sprint audit caveats, and MoH/clinic expectations beyond the Strong rubric. Goal: honest backlog for the next Claude prompts — not a re-grade of shipped domains.</p>
     <div class="pills">
       <span class="pill success">Wow rubric: 22/22 Strong</span>
-      <span class="pill warning">4 Claude-ready opens</span>
+      <span class="pill warning">3 Claude-ready opens</span>
       <span class="pill danger">7 NEXT clinical cards Missing</span>
       <span class="pill info">Field beta still QA-only</span>
     </div>
@@ -109,8 +109,8 @@
       <tbody>
         <tr><td class="domain">DAH-SCORE2-OP</td><td><span class="pill danger">Missing</span></td><td class="gap">≥70: KVR shows note only; no OP engine / ONAYLI gate</td><td class="note">Build from ehab312 zip already on ledger; ≥3 worked examples; smoke ≥70 patient</td></tr>
         <tr><td class="domain">DAH-SCORE2-DIABETES</td><td><span class="pill danger">Missing</span></td><td class="gap">DM 40–69: TEMD “en az yüksek” fallback, no ehad260 engine</td><td class="note">Separate engine + ONAYLI; keep rule buckets for DM+TOD</td></tr>
-        <tr><td class="domain">DAH-PROMPTS-FU</td><td><span class="pill warning">Thin</span></td><td class="gap"><code>soapKurallari()</code> still tells every branch to point at “büyüme persentili”; adult dahiliye smoke hit it</td><td class="note">Scope growth/Neyzi wording to pediatri/çocuk only; dahiliye lock already mitigates but shared rules bleed</td></tr>
-        <tr><td class="domain">KD/derm prompts runtime</td><td><span class="pill warning">Thin</span></td><td class="gap">Same unused-folder bug dahiliye had — noted in DAH-PROMPTS-FU, not dahiliye-owned</td><td class="note">Wire or explicit “N/A” per specialty (feat/kd-prompts-lock in flight)</td></tr>
+        <tr><td class="domain">DAH-PROMPTS-FU</td><td><span class="pill success">Shipped</span></td><td class="gap">Was: <code>soapKurallari()</code> told every branch to point at “büyüme persentili”; hit in adult dahiliye, KD and derm notes</td><td class="note">2026-09-17 (#278): growth/Neyzi/veli wording scoped with <code>pediatrikKapsam()</code> (pediatri/çocuk + mixed-age genel/aile); pediatric prompt byte-identical</td></tr>
+        <tr><td class="domain">KD/derm prompts runtime</td><td><span class="pill success">Shipped</span></td><td class="gap">Was: same unused-folder bug dahiliye had</td><td class="note">KD-PROMPTS-LOCK (#278) + DERM-PROMPTS-LOCK: loaded in SOAP, chat, hafıza voice, stil damıtma; runtime smokes 4/4 + 5/5</td></tr>
         <tr><td class="domain">NOTYA-DAH-WOW-NEXT</td><td><span class="pill danger">Missing</span></td><td class="gap">Seven clinical cards recorded, not started</td><td class="note">Needs Kaan go — see table below</td></tr>
         <tr><td class="domain">First real dahiliye MD beta</td><td><span class="pill warning">Thin</span></td><td class="gap">Evidence is <code>qa.dahiliye</code> + synthetics, not a live muayenehane doctor</td><td class="note">Field day: KB→lab PDF→cards→SCORE→check-up merge with a beta internist</td></tr>
         <tr><td class="domain">Ledger hygiene</td><td><span class="pill warning">Thin</span></td><td class="gap">DAH-02 / DAH-WOW-v2 rows still read “waits” though shipped</td><td class="note">Mark SHIPPED / archive to cut operator confusion</td></tr>
@@ -165,7 +165,7 @@
     <div class="table-wrap"><table>
       <thead><tr><th>#</th><th>Move</th><th>Why</th><th>Size</th></tr></thead>
       <tbody>
-        <tr><td>1</td><td class="domain">DAH-PROMPTS-FU — scope soapKurallari growth text to pediatri</td><td class="note">Adult note pollution; S fix; already seen in smoke</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>1</td><td class="domain"><s>DAH-PROMPTS-FU — scope soapKurallari growth text to pediatri</s></td><td class="note">Shipped 2026-09-17 with KD/derm prompts locks</td><td><span class="pill success">Done</span></td></tr>
         <tr><td>2</td><td class="domain">DAH-SCORE2-OP (≥70)</td><td class="note">MoH/HYP elderly path; source zip in hand</td><td><span class="pill warning">M</span></td></tr>
         <tr><td>3</td><td class="domain">DAH-SCORE2-DIABETES</td><td class="note">Stops over-calling every DM as high without TOD</td><td><span class="pill warning">M</span></td></tr>
         <tr><td>4</td><td class="domain">Ledger hygiene (DAH-02 / WOW-v2 → SHIPPED)</td><td class="note">Operator clarity</td><td><span class="pill success">S</span></td></tr>
@@ -177,7 +177,7 @@
     <h2>Recommended next ships</h2>
     <div class="cards three">
       <div class="card"><div class="title">Sprint A — this week</div>
-        <div class="body"><div>1. DAH-PROMPTS-FU (soapKurallari ped scope)</div><div>2. DAH-SCORE2-OP</div><div>3. Ledger hygiene</div></div></div>
+        <div class="body"><div>1. <s>DAH-PROMPTS-FU (soapKurallari ped scope)</s> — shipped</div><div>2. DAH-SCORE2-OP</div><div>3. Ledger hygiene</div></div></div>
       <div class="card"><div class="title">Sprint B — risk math done</div>
         <div class="body"><div>1. DAH-SCORE2-DIABETES</div><div>2. Extend smoke ≥70 + DM patients</div><div>3. Re-note post-sprint audit</div></div></div>
       <div class="card"><div class="title">Sprint C — NEXT / field</div>
