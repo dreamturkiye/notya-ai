@@ -286,7 +286,8 @@ export default function HastaEklePage() {
     <div style={{ backgroundColor: '#060C18', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
       <DoktorNav />
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '28px 20px' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 600, color: '#fff', marginBottom: 8 }}>Yeni Hasta</h1>
+        <a href="/dashboard/doktor/hastalar" style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Hastalar</a>
+        <h1 style={{ fontSize: 28, fontWeight: 600, color: '#fff', margin: '10px 0 8px' }}>Yeni Hasta</h1>
         {phase !== 'chooser' && (
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>{stepLabel}</div>
         )}

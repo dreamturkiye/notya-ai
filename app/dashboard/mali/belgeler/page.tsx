@@ -47,6 +47,7 @@ export default function BelgelerPage() {
     <div style={{minHeight:"100vh",background:"#F1F5F9",fontFamily:"system-ui,sans-serif",overflowX:"hidden",width:"100%"}}>
       <MaliNav />
       <div style={{maxWidth:960,margin:"0 auto",padding:"16px 12px"}}>
+        <button type="button" onClick={()=>router.push("/dashboard/mali")} style={{background:'#fff',border:'1px solid #E2E8F0',color:'#475569',borderRadius:8,padding:'6px 12px',cursor:'pointer',fontSize:13,marginBottom:12}}>← Panel</button>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
           <div>
             <h1 style={{fontSize:20,fontWeight:700,color:"#0A1628",margin:0}}>Belge Arsivi</h1>

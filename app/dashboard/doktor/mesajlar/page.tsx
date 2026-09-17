@@ -110,7 +110,8 @@ export default function DoktorMesajlarPage() {
     <div style={{ background: '#0A1628', minHeight: '100vh', color: '#EDF1F7' }}>
       <DoktorNav />
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '20px 16px 48px' }}>
-        <h1 style={{ fontSize: 22, margin: '0 0 6px' }}>
+        <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>← Doktor</a>
+        <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>
           Mesajlar {unreadCount > 0 ? <span style={{ color: '#0F9B8E' }}>({unreadCount})</span> : null}
         </h1>
         <p style={{ margin: '0 0 18px', color: '#8FA0B5', fontSize: 13 }}>

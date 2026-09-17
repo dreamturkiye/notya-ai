@@ -64,7 +64,8 @@ export default function AyarlarPage() {
     <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
       <KlinikNav clinicName={name || 'Klinik'} adminName={adminName} />
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px' }}>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#0A1628', marginBottom: '32px', letterSpacing: '-0.02em' }}>Klinik Ayarlari</h1>
+        <a href="/dashboard/klinik" style={{ color: '#475569', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#0A1628', margin: '12px 0 32px', letterSpacing: '-0.02em' }}>Klinik Ayarlari</h1>
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: '12px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

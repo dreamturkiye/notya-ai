@@ -115,7 +115,8 @@ export default function PersonelPage() {
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
       <DoktorNav />
       <div style={{ maxWidth: 680, margin: '0 auto', padding: 24 }}>
-        <h1 style={{ fontSize: 26, marginBottom: 4 }}>Personel</h1>
+        <a href="/dashboard/doktor/ayarlar" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
+        <h1 style={{ fontSize: 26, margin: '10px 0 4px' }}>Personel</h1>
         <p style={{ color: '#94A3B8', fontSize: 14, marginBottom: 20 }}>
           Sekreterinizi davet edin — randevularınızı sizin adınıza görüp yönetebilir. Klinik notlara, e-reçeteye ve SGK araçlarına erişemez.
         </p>

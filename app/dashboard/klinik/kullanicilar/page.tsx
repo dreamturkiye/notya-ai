@@ -78,7 +78,8 @@ export default function KullanicilarPage() {
     <div style={{ minHeight: '100vh', background: '#FFFAFA', fontFamily: 'system-ui' }}>
       <KlinikNav clinicName={clinicName} adminName={adminName} />
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px' }}>
-        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#0A1628', marginBottom: '32px', letterSpacing: '-0.02em' }}>Kullanici Yonetimi</h1>
+        <a href="/dashboard/klinik" style={{ color: '#475569', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '28px', fontWeight: 400, color: '#0A1628', margin: '12px 0 32px', letterSpacing: '-0.02em' }}>Kullanici Yonetimi</h1>
 
         <div style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: '12px', overflow: 'hidden', marginBottom: '32px' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

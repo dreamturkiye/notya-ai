@@ -101,7 +101,8 @@ function KlinikPabauInner() {
     <>
       <KlinikNav />
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 64px', fontFamily: 'system-ui, sans-serif', color: '#0F172A' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: '8px 0 4px' }}>Pabau bağlantısı</h1>
+        <a href="/dashboard/klinik" style={{ color: '#475569', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Klinik</a>
+        <h1 style={{ fontSize: 22, fontWeight: 700, margin: '10px 0 4px' }}>Pabau bağlantısı</h1>
         <p style={{ fontSize: 14, color: '#64748B', margin: '0 0 24px', lineHeight: 1.6 }}>
           Kliniğiniz randevu ve hasta yönetimi için Pabau kullanıyorsa hesabınızı bağlayın: hastalarınız ve
           randevularınız Notya&apos;ya akar. Notya, Pabau&apos;nun yerine geçmez — üstüne Türkçe klinik zekâsı ekler.

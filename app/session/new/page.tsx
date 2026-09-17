@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { BRANS_ETIKETLERI } from "@/lib/intake/bransSorulari"
 import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
 import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
+import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
 
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
@@ -250,7 +251,7 @@ function NewSessionInner() {
     <div style={S({minHeight:"100vh",background:"#0A1628",fontFamily:"system-ui,sans-serif",padding:"20px"})}>
       <div style={S({maxWidth:"600px",margin:"0 auto"})}>
         <div style={S({display:"flex",alignItems:"center",gap:"12px",marginBottom:"24px"})}>
-          <div onClick={()=>router.push("/dashboard")} style={S({color:"rgba(255,255,255,.6)",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
+          <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"rgba(255,255,255,.6)",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
           <div style={S({fontSize:"18px",fontWeight:"600",color:"#fff"})}>Yeni Seans</div>
         </div>
 

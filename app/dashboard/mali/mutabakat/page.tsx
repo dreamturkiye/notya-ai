@@ -67,6 +67,7 @@ export default function MutabakatPage() {
     <div style={{minHeight:"100vh",background:"#F1F5F9",fontFamily:"system-ui,sans-serif",overflowX:"hidden"}}>
       <MaliNav />
       <div style={{maxWidth:960,margin:"0 auto",padding:"16px 12px"}}>
+        <button type="button" onClick={()=>router.push("/dashboard/mali")} style={{background:'#fff',border:'1px solid #E2E8F0',color:'#475569',borderRadius:8,padding:'6px 12px',cursor:'pointer',fontSize:13,marginBottom:12}}>← Panel</button>
         <h1 style={{fontSize:20,fontWeight:700,color:"#0A1628",margin:"0 0 4px"}}>Mutabakat</h1>
         <p style={{fontSize:13,color:"#64748B",margin:"0 0 20px"}}>Z Raporu x Banka / POS eslestirmesi</p>
 

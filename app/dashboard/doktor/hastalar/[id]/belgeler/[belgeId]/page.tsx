@@ -19,7 +19,8 @@ import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import type { BelgeRaporu, MotorCiktisi } from '@/core/belgeler/types';
 import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur';
-import { hastaBelgelerHref } from '@/lib/doktor/geriNavigasyon';
+import { hastaBelgelerHref, hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
+import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
 
 type Doc = { id: string; fileName: string; fileType: string; fileSize: number; category: string | null; createdAt: string };
 type Analiz = { id: string; durum: string; sonuc: BelgeRaporu | null; fusion: { fused: { kod: string; label_tr: string; p: number; sources: string[]; karsi: string[] }[]; capPct: number; acilNedenler: string[]; duzeltmeler: string[] } | null; motor_ciktilari: MotorCiktisi[]; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; note_id: string | null; onaylandi_at: string | null; olusturuldu: string; modality_final: string };
@@ -200,6 +201,10 @@ export default function BelgeAnalizPage() {
   const taniOnerisiEkle = (ad: string, icd10?: string | null) => setTaniTaslak((t) => (t ? t + '\n' : '') + (icd10 ? `${ad} (${icd10})` : ad));
   const taniHazir = !!(taniTaslak.trim() || analiz?.hekim_tanisi?.length);
   const onayKapali = !taniHazir || analiz?.durum === 'kalite_dusuk' || analiz?.durum === 'onaylandi' || analiz?.durum === 'muayene_onaylandi' || durum === 'onayliyor';
+  // Specialty deep-links (Deri/Göz) return to that chapter; default vault path → Belgeler.
+  const geriTab = (searchParams?.get('geriTab') || (searchParams?.get('dermModality') ? 'deri' : null)) as HastaDosyaSekmeId | null;
+  const geriHref = geriTab ? hastaDosyaHref(patientId, geriTab) : hastaBelgelerHref(patientId);
+  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : '← Belgeler';
 
   return (
     <div style={toolsShell}>
@@ -212,7 +217,7 @@ export default function BelgeAnalizPage() {
             <div style={{ ...toolsCard, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#EDF1F7' }}>{doc?.fileName || 'Belge'}</div>
-                <DoktorGeriLink href={hastaBelgelerHref(patientId)}>← Belgeler</DoktorGeriLink>
+                <DoktorGeriLink href={geriHref}>{geriLabel}</DoktorGeriLink>
               </div>
               <div style={etiket}>{personaAd} ile değerlendir · {kural.ad}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

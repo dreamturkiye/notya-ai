@@ -321,7 +321,8 @@ export default function IncelemePage() {
     <div style={toolsShell}>
       <DoktorNav />
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px' }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>İnceleme Kuyruğu</h1>
+        <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>← Doktor</a>
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: '10px 0 0' }}>İnceleme Kuyruğu</h1>
         <p style={{ color: '#94A3B8', fontSize: 14, margin: '6px 0 20px' }}>
           Onay bekleyen klinik notları inceleyin
         </p>

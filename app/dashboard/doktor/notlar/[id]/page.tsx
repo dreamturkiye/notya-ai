@@ -12,6 +12,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 import { onaylananNotYolu, hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
+import GeriLink from '@/components/navigasyon/GeriLink';
+import { notDuzenleGeriHref } from '@/lib/doktor/geriNavigasyon';
 
 interface NotVeri {
   not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
@@ -91,8 +93,13 @@ export default function NotSayfasi() {
   return (
     <div style={{ minHeight: '100vh', background: '#0B1628', color: '#EDF1F7', fontFamily: 'system-ui' }}>
       <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0B1628', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <button type="button" onClick={() => router.push(onaylananNotYolu(params.id))} style={{ background: 'transparent', border: 'none', color: '#9FB3C8', cursor: 'pointer', fontSize: 14 }}>← Geri</button>
-        {/* NOTYA-ONAY-DONUS-01: hasta dosyasına dönüş her zaman elin altında olsun. */}
+        <GeriLink
+          href={notDuzenleGeriHref(hasta.patientId)}
+          ileriHref={`/dashboard/doktor/notlar/${not.id}/yazdir`}
+          ileriLabel="Yazdır / PDF"
+        >
+          {hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}
+        </GeriLink>
         <a href={hastaDosyasiYolu(hasta.patientId)} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none' }}>{hasta.patientId ? 'Hasta Dosyası →' : 'Hastalar →'}</a>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: '#8FA0B5', fontWeight: 500 }}>· {not.specialty} · {trTarih(not.createdAt)}</span></div>

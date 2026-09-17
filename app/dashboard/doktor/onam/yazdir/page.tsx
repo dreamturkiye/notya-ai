@@ -6,17 +6,20 @@
 import React, { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ONAM_KUTUPHANESI } from '@/specialties/kadin-dogum/engines/dogum-spine';
+import { onamGeriHref } from '@/lib/doktor/geriNavigasyon';
 
 function OnamYazdirIc() {
   const sp = useSearchParams();
   const s = ONAM_KUTUPHANESI.find((o) => o.kod === (sp.get('kod') || ''));
+  const patientId = sp.get('patientId');
   const [ad, setAd] = useState('');
   const [hekim, setHekim] = useState('');
-  if (!s) return <div style={{ padding: 24, fontFamily: 'system-ui' }}>Onam şablonu bulunamadı.</div>;
+  if (!s) return <div style={{ padding: 24, fontFamily: 'system-ui' }}>Onam şablonu bulunamadı. <a href={onamGeriHref(patientId)}>← Geri</a></div>;
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: 32, fontFamily: 'Georgia, serif', color: '#111', background: '#fff' }}>
       <style>{`@media print { .no-print { display: none } body { background: #fff } }`}</style>
-      <div className="no-print" style={{ display: 'flex', gap: 8, marginBottom: 16, fontFamily: 'system-ui', fontSize: 13 }}>
+      <div className="no-print" style={{ display: 'flex', gap: 8, marginBottom: 16, fontFamily: 'system-ui', fontSize: 13, alignItems: 'center', flexWrap: 'wrap' }}>
+        <a href={onamGeriHref(patientId)} style={{ color: '#0F9B8E', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>{patientId ? '← Gebelik' : '← Geri'}</a>
         <input value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Hasta adı soyadı" style={{ padding: 6, flex: 1 }} />
         <input value={hekim} onChange={(e) => setHekim(e.target.value)} placeholder="Hekim" style={{ padding: 6, flex: 1 }} />
         <button type="button" onClick={() => window.print()} style={{ padding: '6px 14px', fontWeight: 700 }}>Yazdır / PDF</button>

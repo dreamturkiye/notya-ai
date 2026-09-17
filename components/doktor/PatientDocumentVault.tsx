@@ -15,7 +15,14 @@ type VaultDoc = {
   createdAt: string
 }
 
-export default function PatientDocumentVault({ patientId }: { patientId: string }) {
+export default function PatientDocumentVault({
+  patientId,
+  specialtyGeri,
+}: {
+  patientId: string
+  /** When opened from a specialty deep-link, evaluate Geri returns to that chapter. */
+  specialtyGeri?: 'deri' | 'goz' | 'gebelik' | null
+}) {
   const [docs, setDocs] = useState<VaultDoc[]>([])
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
   // NOTYA-LAB-03: lab summaries per document + Lab filter
@@ -105,10 +112,11 @@ export default function PatientDocumentVault({ patientId }: { patientId: string 
               <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: '#8FA0B5', marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(96,165,250,0.5)' : 'rgba(248,113,113,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#60A5FA' : '#F87171', fontWeight: 700 }}>{o}</span>)}</span>}</span>
               <span style={{ fontSize: 11, color: '#8FA0B5' }}>{belgeKategoriEtiket(d)}</span>
               {belgeDegerlendirmeCtalari(d).map((cta) => {
-                const href =
+                const base =
                   cta.yol === 'lab'
                     ? `/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}/lab`
                     : `/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`
+                const href = specialtyGeri ? `${base}?geriTab=${specialtyGeri}` : base
                 const color = cta.tur === 'lab' ? '#FBBF24' : '#2DD4BF'
                 const border = cta.tur === 'lab' ? 'rgba(251,191,36,0.4)' : 'rgba(45,212,191,0.4)'
                 return (

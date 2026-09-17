@@ -6,6 +6,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 import { IMAGING_MODALITIES, imagingDisplayLabel, imagingModalityMeta } from '@/lib/doktor/imagingModalities';
+import GeriLink from '@/components/navigasyon/GeriLink';
+import { DOKTOR_ANA, hastaGoruntulemeHref } from '@/lib/doktor/geriNavigasyon';
 
 interface Goruntuleme {
   id: string;
@@ -255,8 +257,13 @@ const Page = () => {
           flexDirection: 'column',
           overflow: 'auto',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ fontSize: '16px', fontWeight: 600 }}>Görüntüleme arşivi</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <GeriLink href={filterHastaId || selectedHastaId ? hastaGoruntulemeHref(filterHastaId || selectedHastaId) : DOKTOR_ANA}>
+                {filterHastaId || selectedHastaId ? '← Hasta Görüntüleme' : '← Doktor'}
+              </GeriLink>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginTop: 6 }}>Görüntüleme arşivi</div>
+            </div>
             <button
               type="button"
               onClick={() => {

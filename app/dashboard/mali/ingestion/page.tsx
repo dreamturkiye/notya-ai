@@ -95,6 +95,7 @@ export default function IngestionPage() {
     <div style={{minHeight:'100vh',background:'#F0F4F8',fontFamily:'system-ui,sans-serif'}}>
       <MaliNav />
       <div style={{maxWidth:680,margin:'0 auto',padding:'20px 16px'}}>
+        <button type="button" onClick={()=>router.push('/dashboard/mali')} style={{background:'#fff',border:'1px solid #E2E8F0',color:'#475569',borderRadius:8,padding:'6px 12px',cursor:'pointer',fontSize:13,marginBottom:12}}>← Panel</button>
         <div style={{marginBottom:20}}>
           <h1 style={{fontSize:22,fontWeight:800,color:'#0A1628',margin:0}}>Belge Yükle</h1>
           <p style={{fontSize:14,color:'#64748B',marginTop:4}}>Derya belgelerinizi okuyup kaydedecek. Fatura, Z raporu, banka ekstresi — hepsi burada.</p>

@@ -24,6 +24,8 @@ import {
 } from '@/lib/doktor/toolsUi'
 import { VAULT_MAX_BYTES } from '@/lib/vault/types'
 import { belgeDegerlendirmeCtalari, belgeKategoriEtiket } from '@/lib/doktor/belgeTur'
+import GeriLink from '@/components/navigasyon/GeriLink'
+import { DOKTOR_ANA, hastaBelgelerHref } from '@/lib/doktor/geriNavigasyon'
 
 const BELGE_TURLERI = [
   'Lab Sonucu',
@@ -245,6 +247,12 @@ export default function BelgelerPage() {
     <div style={toolsShell}>
       <DoktorNav />
       <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 16px 56px' }}>
+        <GeriLink
+          href={hastaId ? hastaBelgelerHref(hastaId) : DOKTOR_ANA}
+          style={{ display: 'inline-block', marginBottom: 10 }}
+        >
+          {hastaId ? '← Hasta Belgeler' : '← Doktor'}
+        </GeriLink>
         <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Belge Kasası</h1>
         <p style={{ color: '#94A3B8', fontSize: 14, margin: '6px 0 20px' }}>
           PDF, JPEG, PNG — hastaya bağlı, şifreli saklama (beta)

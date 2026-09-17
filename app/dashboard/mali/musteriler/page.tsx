@@ -73,7 +73,7 @@ export default function MusteriYonetimi() {
       <div style={{ maxWidth:900, margin:'0 auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <div>
-            <button onClick={() => router.push('/dashboard/mali')} style={{ background:'none', border:'none', color:'#64748B', cursor:'pointer', fontSize:14, marginBottom:4 }}>Ana Sayfa</button>
+            <button onClick={() => router.push('/dashboard/mali')} style={{ background:'none', border:'none', color:'#475569', cursor:'pointer', fontSize:13, fontWeight:600, marginBottom:4 }}>← Panel</button>
             <div style={{ fontSize:22, fontWeight:700, color:'#1E293B' }}>Müşteri Yönetimi</div>
             <div style={{ fontSize:13, color:'#64748B' }}>{musteriler.length} müşteri kayıtlı</div>
           </div>

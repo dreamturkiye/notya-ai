@@ -373,7 +373,16 @@ export default function HastaProfilPage() {
           <HastaBuyumeEgrileri patientId={patientId} hedefBoyGoster={pediatriAraci} />
         )}
         {!loading && !error && activeTab === 'belgeler' && (
-          <PatientDocumentVault patientId={patientId} />
+          <PatientDocumentVault
+            patientId={patientId}
+            specialtyGeri={
+              searchParams?.get('dermModality')
+                ? 'deri'
+                : activeTab === 'deri' || activeTab === 'goz' || activeTab === 'gebelik'
+                  ? activeTab
+                  : null
+            }
+          />
         )}
         {!loading && !error && activeTab === 'goruntuleme' && (
           <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>

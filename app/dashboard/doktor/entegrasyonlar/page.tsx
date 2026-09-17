@@ -160,7 +160,8 @@ export default function EntegrasyonlarPage() {
     <div style={{ backgroundColor: BG, minHeight: '100vh', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
       <DoktorNav />
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 650, margin: '0 0 8px' }}>Entegrasyonlar</h1>
+        <a href="/dashboard/doktor/ayarlar" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
+        <h1 style={{ fontSize: 28, fontWeight: 650, margin: '10px 0 8px' }}>Entegrasyonlar</h1>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, margin: '0 0 28px', lineHeight: 1.5 }}>
           Şifreniz şifreli saklanır; sorgular sizin yetkinizle yapılır.
         </p>

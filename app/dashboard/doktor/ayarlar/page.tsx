@@ -21,7 +21,8 @@ export default function AyarlarPage() {
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
       <DoktorNav />
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-        <h1 style={{ fontSize: 22, marginBottom: 6 }}>Ayarlar</h1>
+        <a href="/dashboard/doktor" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Doktor</a>
+        <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>Ayarlar</h1>
         <p style={{ fontSize: 13, color: '#8FA0B5', marginBottom: 20 }}>Kurulum ve yönetim işlemleri — günlük akışınızı kalabalıklaştırmasın diye burada.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {BOLUMLER.map((b) => (
