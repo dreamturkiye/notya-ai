@@ -106,6 +106,20 @@ Skill: `.cursor/skills/specialty-hasta-portali/SKILL.md`. Audits must score a **
 depth row (`specialty-audit-report`). Today’s gebelik/büyüme/dahiliye-anket bolt-ons are Partial;
 new chapters (Göz first next) ship doctor chapter + portal module in the same program.
 
+**SAGLIGIM-PORTAL-REGISTRY — SHIPPED 2026-09-17 (Part A of the Göz all-in-one brief).** `SpecialtyProfile.portal`
+(`PortalModulu`: id, nav, bundleKeys, eligibility, copyHints, views, derinlik) declared on pediatri (büyüme/hedef boy,
+Partial), KD (Gebeliğim + jine reminders, Partial), dahiliye (new registry entry `lib/specialties/dahiliye.ts`, ön anket,
+Partial), dermatoloji (**Missing**, declared honestly, mounts nothing), göz (Gözlerim). `lib/portal/moduller.ts`
+decides per token (doctor `users.specialty` × active pregnancy / KD chart / dahiliye cards / growth data × age). The
+portal API loads core always and builds büyüme / gebelik / jine slices only for attached modules; `PortalShell` nav
+extras come from `bundle.portal.nav`; Takip and home mount widgets only via `portalModulAktif`; the ön anket API uses
+the same eligibility. **Leaks fixed:** büyüme curves were computed for every patient with a DOB (adults included);
+Pap/HPV reminders for every woman in any practice; the ön anket shortcut fetched for every token. Rules: a doctor
+whose chapter has its own module never gets another chapter's chart-data modules (göz/derm/KD/dahiliye → no büyüme,
+Pap/HPV only for KD); Gebeliğim follows an active pregnancy for any practice (mixed care); baseline-branch doctors
+(aile hekimi, endokrin…) get chart-data modules only when the data exists. Assumption (recorded): unknown
+`users.specialty` = baseline branch, not pediatri. Tests: `lib/portal/moduller.test.ts` (10, in `npm test`).
+
 ### Göz Hastalıkları — next full chapter (queued 2026-09-17)
 
 No `specialties/goz-*` yet; registry = baseline only. Catalog/intake/SOAP stub + VA/GİB measurement

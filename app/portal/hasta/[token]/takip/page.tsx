@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { TrackingView } from '../../../_components/TrackingView'
 import { usePortalLive } from '../../../_components/PortalLiveProvider'
 import { SoftPanel } from '../../../_components/ui'
+import { portalModulAktif } from '@/lib/portal/moduller'
 
 export default function HastaTrackingPage() {
   const { data, token, basePath } = usePortalLive()
   // NOTYA-DAH-WOW W2.7: iç hastalıkları takibi olan hastaya muayene öncesi anket kısayolu (yalnız PIN sonrası API ile).
   const [anket, setAnket] = useState(false)
-  useEffect(() => { fetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setAnket(!!j?.uygun)).catch(() => undefined) }, [token])
+  const dahiliyeModulu = portalModulAktif(data, 'dahiliye')
+  useEffect(() => { if (!dahiliyeModulu) return; fetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setAnket(!!j?.uygun)).catch(() => undefined) }, [token, dahiliyeModulu])
   return (
     <>
       {/* MOBILE-REVIEW: .sg-fade parent gives the panel the portal's side inset; sg-hero-cta is a white hero pill (invisible on a white panel) */}

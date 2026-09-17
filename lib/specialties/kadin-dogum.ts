@@ -101,5 +101,21 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
     { konu: 'J. Pediatri köprüsü — YAPILDI, doğrulandı', neden: 'Canlı doğum zorunlu bebek kartı açar (029 dogum_olaylari + bebek_kartlari, anne_patient_id bağlı; gebelikler.yenidogan_patient_id). Taburcu paketi + NTP + izlem: lib/clinical/yenidogan, migration 036 (reuses 029 maddeler/yenidogan_tarama jsonb). specialties/pediatri donuk — Bebek kartı surface components/doktor/HastaBebekKarti.' },
   ],
 
+  // SAGLIGIM-PORTAL-REGISTRY — Gebeliğim fires on an active pregnancy record (any practice: mixed care);
+  // jine reminders only for a KD doctor, or a baseline-branch doctor when KD chart data exists. Never for
+  // göz / derm / dahiliye / pediatri doctors as a default Pap/HPV card.
+  portal: [
+    {
+      id: 'gebelik', nav: [], bundleKeys: ['gebelik'], eligibility: 'patient_active_record',
+      copyHints: ['Hafta/TDT sunucuda hesaplanır; hastaya yorum değil takvim gösterilir.', 'Tehlike işaretlerinde 112 / doğumhane.'],
+      views: ['GebeligimView'], derinlik: 'Partial',
+    },
+    {
+      id: 'jinekoloji', nav: [], bundleKeys: ['jinekoloji'], eligibility: 'combined',
+      copyHints: ['Pap/HPV/RİA hatırlatmaları bilgilendirmedir; sonuç ve plan doktordadır.'],
+      views: ['JinekolojiPortalView'], derinlik: 'Partial',
+    },
+  ],
+
   olgunluk: 'arastirma',
 }

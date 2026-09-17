@@ -51,6 +51,31 @@ export interface BelgeTanimi { id: string; ad: string; /** printed format family
 
 export interface UzmanIncelemeMaddesi { konu: string; neden: string }
 
+/**
+ * SAGLIGIM-PORTAL-REGISTRY (Kaan 2026-09-17) — one Sağlığım shell, many chapter modules.
+ * Core (PIN, mesajlar, ziyaretler, sonuçlar, ilaçlar, öykü, KVKK/112) is never declared here.
+ * A chapter declares ONLY its patient-facing extras; lib/portal/moduller.ts decides per token
+ * (doctor specialty × patient records × age) which modules attach. Contract:
+ * .cursor/skills/specialty-hasta-portali/SKILL.md
+ */
+export type PortalModulId = 'buyume' | 'gebelik' | 'jinekoloji' | 'dahiliye' | 'gozlerim' | 'dermatoloji'
+/** Typed PortalBundle slices a module may fill (null in the bundle when the module is not attached). */
+export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz'
+export interface PortalNavOge { key: string; label: string; path: string }
+export interface PortalModulu {
+  id: PortalModulId
+  /** extra nav beyond core — only shown when the module attaches */
+  nav: PortalNavOge[]
+  bundleKeys: PortalBundleAnahtari[]
+  eligibility: 'doctor_specialty' | 'patient_active_record' | 'age_rule' | 'combined'
+  /** patient-facing copy rules — reminders/trends/instructions, never diagnosis language */
+  copyHints: string[]
+  /** component ids mounted under Takip or a dedicated route */
+  views: string[]
+  /** honest audit depth of this slice (specialty-audit-report vocabulary) */
+  derinlik: 'Strong' | 'Partial' | 'Thin' | 'Missing'
+}
+
 export interface SpecialtyProfile {
   key: SpecialtyKey
   /** UI label (short) and formal TUK title used in signatures/epikriz */
@@ -69,6 +94,8 @@ export interface SpecialtyProfile {
   promptNotlari: string[]
   /** what a human specialist must verify — becomes their review checklist */
   specialistReview: UzmanIncelemeMaddesi[]
+  /** Sağlığım modules this chapter contributes (one chapter may own several, e.g. KD gebelik + jine) */
+  portal?: PortalModulu[]
   /** build maturity: baseline-only, research-built (80-90%), or specialist-validated */
   olgunluk: 'baseline' | 'arastirma' | 'uzman-dogrulandi'
 }
@@ -97,6 +124,7 @@ export function baselineProfile(key: SpecialtyKey, etiket: string, resmiUnvan: s
     hesaplayicilar: [], sekmeler: [], goruntu: null,
     belgeler: BASELINE_BELGELER,
     ekKaynaklar: [], promptNotlari: [], specialistReview: [],
+    portal: [],
     olgunluk: 'baseline',
   }
 }

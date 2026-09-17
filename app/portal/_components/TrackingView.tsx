@@ -13,6 +13,7 @@ import { BuyumeEgrileriView } from './BuyumeEgrileriView'
 import { GebeligimView } from './GebeligimView'
 import { JinekolojiPortalView } from './JinekolojiPortalView'
 import { HedefBoyAileKart } from '@/components/hedefBoy/HedefBoyManken'
+import { portalModulAktif } from '@/lib/portal/moduller'
 
 type Nokta = { tarih: string; deger: number }
 type Seri = { ad: string; renk: string; noktalar: Nokta[] }
@@ -136,6 +137,9 @@ function OzetKart({ baslik, deger, birim, degisim, ondalik, aralik, ters }: { ba
 
 export function TrackingView({ data }: { data: PortalBundle }) {
   const t = data.tracking
+  // SAGLIGIM-PORTAL-REGISTRY: specialty widgets mount only for attached modules, never "just in case".
+  const buyumeModulu = portalModulAktif(data, 'buyume')
+  const hedefBoy = buyumeModulu ? data.hedefBoy : null
   const empty = !t.tansiyon.length && !t.kilo.length && !t.nabiz.length && !t.spo2.length
   const son = <T,>(a: T[]): T | null => (a.length ? a[a.length - 1] : null)
   const lastBp = son(t.tansiyon)
@@ -163,13 +167,13 @@ export function TrackingView({ data }: { data: PortalBundle }) {
     <div className="sg-fade">
       <SectionHeader title="Sağlığımı takip et" subtitle="Muayenelerde ölçülen değerlerinizin zaman içindeki seyri. Yeşil bant genel normal aralığı gösterir; sizin için hedefi doktorunuz belirler." />
 
-      {data.hedefBoy && (
+      {hedefBoy && (
         <SoftPanel style={{ marginBottom: 14 }}>
-          <HedefBoyAileKart sonuc={data.hedefBoy} tema="portal" />
+          <HedefBoyAileKart sonuc={hedefBoy} tema="portal" />
         </SoftPanel>
       )}
 
-      {empty && !data.hedefBoy ? (
+      {empty && !hedefBoy ? (
         <EmptyState art="takip" title="Henüz takip verisi yok" body="Son muayenede yaşamsal bulgular paylaşıldığında trendler burada oluşur." />
       ) : !empty ? (
         <>
@@ -253,9 +257,9 @@ export function TrackingView({ data }: { data: PortalBundle }) {
           </SoftPanel>
         </>
       ) : null}
-      {data.gebelik && <GebeligimView gebelik={data.gebelik} />}
-      {data.jinekoloji && <JinekolojiPortalView jine={data.jinekoloji} />}
-      {data.buyume && <BuyumeEgrileriView buyume={data.buyume} />}
+      {portalModulAktif(data, 'gebelik') && data.gebelik && <GebeligimView gebelik={data.gebelik} />}
+      {portalModulAktif(data, 'jinekoloji') && data.jinekoloji && <JinekolojiPortalView jine={data.jinekoloji} />}
+      {buyumeModulu && data.buyume && <BuyumeEgrileriView buyume={data.buyume} />}
     </div>
   )
 }
