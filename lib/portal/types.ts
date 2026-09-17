@@ -1,4 +1,6 @@
 /** Sağlığım — shared TypeScript contracts for patient portal UI + API. */
+import type { PortalModulId, PortalNavOge } from '@/lib/specialties/profile'
+export type { PortalModulId, PortalNavOge }
 
 export type PortalNavKey =
   | 'ozet'
@@ -149,10 +151,14 @@ export interface PortalBundle {
   medicationHistory: PortalMedChange[]
   history: PortalHistory
   tracking: PortalTracking
+  /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules + their extra nav (lib/portal/moduller.ts). */
+  portal: { moduller: PortalModulId[]; nav: PortalNavOge[] }
+  // Specialty slices — each is null unless its module attached (never "just in case").
   buyume: PortalBuyume | null
   gebelik: PortalGebelik | null
   jinekoloji: PortalJinekoloji | null
   hedefBoy: PortalHedefBoy | null
+  goz: PortalGoz | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -168,5 +174,20 @@ export interface PortalGebelik {
 export interface PortalJinekoloji {
   hatirlatmalar: Array<{ ad: string; due: string | null; durum: 'gecikti' | 'yaklasiyor' | 'planli' }>
   riaIpKontrol: string | null
+  not: string
+}
+
+/** GOZ-PORTAL — "Gözlerim": clinic-recorded numbers, MD-set dates/regimen, image-ready notices. No tanı, no interpretation. */
+export interface PortalGoz {
+  /** next kontrol the doctor set (and whether dilatasyon damlası is planned) */
+  sonrakiKontrol: { tarih: string; neden: string; dilatasyon: boolean } | null
+  /** MD-set drop regimen only; `goz` is patient-readable (Sağ göz / Sol göz / İki göz) */
+  damlalar: Array<{ id: string; ad: string; goz: string; siklik: string; baslangic: string | null }>
+  /** planned intravitreal injection / procedure dates the MD set */
+  islemler: Array<{ id: string; tarih: string; ad: string; goz: string; durum: 'planli' | 'yapildi' }>
+  /** clinic-recorded visual acuity (as written, e.g. "0,8") and IOP (mmHg) per visit */
+  olcumler: Array<{ tarih: string; vaSag: string | null; vaSol: string | null; gibSag: number | null; gibSol: number | null }>
+  /** OCT / fundus / ön segment images uploaded to the file — notice only */
+  goruntuler: Array<{ id: string; tarih: string; tur: string; goz: string }>
   not: string
 }

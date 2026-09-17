@@ -27,9 +27,11 @@ export function emptyPortalBundle(): PortalBundle {
       nabiz: [],
       spo2: [],
     },
+    portal: { moduller: [], nav: [] },
     buyume: null,
     gebelik: null,
     jinekoloji: null,
     hedefBoy: null,
+    goz: null,
   }
 }

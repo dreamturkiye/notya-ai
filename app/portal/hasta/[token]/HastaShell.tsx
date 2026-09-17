@@ -1,14 +1,22 @@
 'use client'
 
 import { PortalShell } from '../../_components/PortalShell'
-import { LiveGate, PortalLiveProvider } from '../../_components/PortalLiveProvider'
+import { LiveGate, PortalLiveProvider, usePortalLive } from '../../_components/PortalLiveProvider'
+
+/** Nav extras follow the registry modules attached to this token's bundle (lib/portal/moduller.ts). */
+function ModulluShell({ token, children }: { token: string; children: React.ReactNode }) {
+  const { data } = usePortalLive()
+  return (
+    <PortalShell basePath={`/portal/hasta/${token}`} ekNav={data.portal?.nav || []}>
+      <LiveGate>{children}</LiveGate>
+    </PortalShell>
+  )
+}
 
 export function HastaShell({ token, children }: { token: string; children: React.ReactNode }) {
   return (
     <PortalLiveProvider token={token}>
-      <PortalShell basePath={`/portal/hasta/${token}`}>
-        <LiveGate>{children}</LiveGate>
-      </PortalShell>
+      <ModulluShell token={token}>{children}</ModulluShell>
     </PortalLiveProvider>
   )
 }

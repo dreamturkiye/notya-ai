@@ -74,5 +74,14 @@ export const PEDIATRI_PROFILE: SpecialtyProfile = {
     { konu: 'GİDR 25-36 ay', neden: 'Kaynak belgede standardizasyon tamamlanmamış; itemli sunulmuyor.' },
   ],
 
+  // SAGLIGIM-PORTAL-REGISTRY — Büyüme eğrileri + hedef boy on Takip. Partial: bolt-on views on the
+  // shared Takip page (no dedicated route), now gated by lib/portal/moduller.ts instead of "every patient
+  // with a DOB".
+  portal: [{
+    id: 'buyume', nav: [], bundleKeys: ['buyume', 'hedefBoy'], eligibility: 'combined',
+    copyHints: ['Persentil eğrileri Neyzi referansıdır; yorum ve hedef doktorunuzdadır.', 'Hedef boy bir tahmindir, tanı değildir.'],
+    views: ['BuyumeEgrileriView', 'HedefBoyAileKart'], derinlik: 'Partial',
+  }],
+
   olgunluk: 'uzman-dogrulandi',
 }

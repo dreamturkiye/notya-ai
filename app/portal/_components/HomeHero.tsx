@@ -4,6 +4,12 @@ import Link from 'next/link'
 import type { PortalBundle } from '@/lib/portal/types'
 import { SoftPanel, formatTrDate } from './ui'
 import { HedefBoyAileKart } from '@/components/hedefBoy/HedefBoyManken'
+import { portalModulAktif } from '@/lib/portal/moduller'
+
+const MODUL_IPUCU: Record<string, string> = {
+  gozlerim: 'Kontrol, damla ve ölçümleriniz',
+  'on-anket': 'Muayene öncesi bilgileriniz',
+}
 
 export function HomeHero({ basePath, data }: { basePath: string; data: PortalBundle }) {
   const chips = [
@@ -24,6 +30,8 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
     { label: 'İlaçlarım', href: `${basePath}/ilaclar`, hint: 'Aktif reçeteler' },
     { label: 'Öykü', href: `${basePath}/gecmis`, hint: 'Alerji ve geçmiş' },
     { label: 'Takip', href: `${basePath}/takip`, hint: 'Yaşamsal bulgular' },
+    // SAGLIGIM-PORTAL-REGISTRY — attached chapter modules only (e.g. Gözlerim for a göz practice)
+    ...(data.portal?.nav || []).map((n) => ({ label: n.label, href: `${basePath}${n.path}`, hint: MODUL_IPUCU[n.key] || 'Doktorunuzun takibi' })),
   ]
 
   return (
@@ -74,7 +82,7 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
           ))}
         </div>
 
-        {data.hedefBoy && (
+        {portalModulAktif(data, 'buyume') && data.hedefBoy && (
           <section className="sg-home-section sg-fade sg-fade-delay-2">
             <h2 className="sg-display sg-home-section-title">Hedef boy</h2>
             <SoftPanel>

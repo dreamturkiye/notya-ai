@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import type { PortalNavKey } from '@/lib/portal/types'
+import type { PortalNavKey, PortalNavOge } from '@/lib/portal/types'
 
+/** Core nav — identical for every specialty. Chapter extras come from the registry (bundle.portal.nav). */
 const NAV: Array<{ key: PortalNavKey; label: string; path: string }> = [
   { key: 'ozet', label: 'Özet', path: '' },
   { key: 'mesajlar', label: 'Mesajlar', path: '/mesajlar' },
@@ -17,9 +18,12 @@ const NAV: Array<{ key: PortalNavKey; label: string; path: string }> = [
 
 export function PortalShell({
   basePath,
+  ekNav = [],
   children,
 }: {
   basePath: string
+  /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules' nav (e.g. Gözlerim), never hardcoded per branş */
+  ekNav?: PortalNavOge[]
   children: React.ReactNode
 }) {
   const pathname = usePathname() || ''
@@ -42,7 +46,7 @@ export function PortalShell({
             <span className="sg-header-tag">Hasta alanı</span>
           </div>
           <nav ref={navRef} className="sg-nav" aria-label="Sağlığım bölümleri">
-            {NAV.map((item) => {
+            {[...NAV, ...ekNav].map((item) => {
               const href = `${basePath}${item.path}`
               const active =
                 item.path === ''

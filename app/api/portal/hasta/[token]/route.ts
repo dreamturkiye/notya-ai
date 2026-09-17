@@ -8,7 +8,10 @@ import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { SPECIALTY_MAP } from '@/lib/doktor/specialties'
 import { persentilEgrileri, ayFarki } from '@/lib/clinical/buyumeEgrisi'
 import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
-import { pediatriSekmesiUygun } from '@/lib/doktor/hastaDosyaSekmeleri'
+import { pediatriSekmesiUygun, yasYilKesir } from '@/lib/doktor/hastaDosyaSekmeleri'
+import { hekimBransi } from '@/lib/doktor/hekimAdi'
+import { portalModulAktif, portalModulleri } from '@/lib/portal/moduller'
+import { dahiliyeKartlari } from '@/lib/portal/dahiliyeKartlari'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -336,11 +339,29 @@ export async function GET(
     if (ozet) bundle.tracking.sonVitalOzet = ozet
   }
 
+  // SAGLIGIM-PORTAL-REGISTRY — specialty slices attach ONLY via lib/portal/moduller.ts eligibility
+  // (token doctor's specialty × patient records × age). Previously büyüme was computed for every patient
+  // with a DOB (adults included) and Pap/HPV reminders for every woman, whatever the practice.
+  const hastaRow = (await sb.from('patients').select('dob_encrypted, gender_encrypted, notes_encrypted, gender').eq('id', patientId).maybeSingle()).data
+  const coz = (v: unknown) => { try { return v ? decrypt(String(v)) : null } catch { return null } }
+  const dogumIso = coz(hastaRow?.dob_encrypted)
+  const cinsiyetHam = coz(hastaRow?.gender_encrypted) || ''
+  const doktorBransi = await hekimBransi(sb, tokenData.doctor_id as string)
+  const { data: geb } = await sb.from('gebelikler').select('id, sat, tdt').eq('patient_id', patientId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle()
+  const { data: ks } = await sb.from('kadin_sagligi').select('son_pap, son_hpv, son_mamografi, son_dxa, son_kolorektal, hrt, hrt_baslangic, histerektomi').eq('patient_id', patientId).maybeSingle()
+  const { data: kontr } = await sb.from('kontrasepsiyon').select('yontem, baslangic, ria_notu, aktif').eq('patient_id', patientId).eq('aktif', true).maybeSingle()
+  bundle.portal = portalModulleri({
+    doktorBransi,
+    hastaYasYil: yasYilKesir(dogumIso),
+    gebelikAktif: !!geb,
+    kdKaydi: !!ks || !!kontr,
+    buyumeOlcumu: buyumeHamNoktalar.length > 0,
+    dahiliyeKaydi: (await dahiliyeKartlari(sb, patientId)).length > 0,
+  })
+  const modulAktif = (id: Parameters<typeof portalModulAktif>[1]) => portalModulAktif(bundle, id)
+
   // Büyüme Eğrileri (Neyzi standartları) — doktor tarafındakiyle aynı hesap, hasta portalında da
-  {
-    const { data: hastaBuyume } = await sb.from('patients').select('dob_encrypted, gender_encrypted, notes_encrypted').eq('id', patientId).maybeSingle()
-    const dogumIso = hastaBuyume?.dob_encrypted ? (() => { try { return decrypt(String(hastaBuyume.dob_encrypted)) } catch { return null } })() : null
-    const cinsiyetHam = hastaBuyume?.gender_encrypted ? (() => { try { return decrypt(String(hastaBuyume.gender_encrypted)) } catch { return '' } })() : ''
+  if (modulAktif('buyume')) {
     const cinsiyet = cinsiyetHam === 'male' || cinsiyetHam === 'female' ? cinsiyetHam : null
     if (dogumIso && cinsiyet) {
       const mevcutYasAy = ayFarki(dogumIso) ?? 0
@@ -370,7 +391,7 @@ export async function GET(
     }
     try {
       if (pediatriSekmesiUygun(dogumIso)) {
-        const notlar = hastaBuyume?.notes_encrypted ? (() => { try { return JSON.parse(decrypt(String(hastaBuyume.notes_encrypted))) as Record<string, unknown> } catch { return {} } })() : {}
+        const notlar = hastaRow?.notes_encrypted ? (() => { try { return JSON.parse(decrypt(String(hastaRow.notes_encrypted))) as Record<string, unknown> } catch { return {} } })() : {}
         const anne = notlar.anneBoyCm
         const baba = notlar.babaBoyCm
         if (anne != null && baba != null) {
@@ -382,37 +403,30 @@ export async function GET(
   }
 
   // NOTYA-KHD-05 — aktif gebelik varsa anne için "Gebeliğim"
-  try {
-    const { data: geb } = await sb.from('gebelikler').select('id, sat, tdt').eq('patient_id', patientId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle()
-    if (geb) {
-      const { gebelikYasi, izlemDurumlari } = await import('@/lib/clinical/gebelik')
-      const y = gebelikYasi(geb.sat, geb.tdt)
-      if (y) {
-        const { data: izl } = await sb.from('gebelik_izlemleri').select('tarih, hafta, kilo, fetal_kalp_atimi').eq('gebelik_id', geb.id).order('tarih', { ascending: false }).limit(20)
-        const son = izl?.[0] || null
-        const takvim = izlemDurumlari(y.hafta, (izl || []).map((i) => i.hafta))
-        const buHafta: string[] = []
-        if (y.hafta >= 11 && y.hafta <= 14) buHafta.push('11-14. hafta: ense saydamlığı ultrasonu dönemi.')
-        if (y.hafta >= 18 && y.hafta <= 22) buHafta.push('18-22. hafta: ayrıntılı ultrason dönemi.')
-        if (y.hafta >= 24 && y.hafta <= 28) buHafta.push('24-28. hafta: şeker tarama testi dönemi.')
-        if (y.hafta >= 36) buHafta.push('Doğum belirtilerini ve ne zaman başvuracağınızı doktorunuzla konuşun.')
-        const z = takvim.find((t) => t.durum === 'zamani' || t.durum === 'gecikmis')
-        if (z) buHafta.push(`${z.etiket} (${z.haftaBas}-${z.haftaSon}. hafta) için randevunuzu planlayın.`)
-        bundle.gebelik = { hafta: y.hafta, gun: y.gun, trimester: y.trimester, metin: y.metin, toplamGun: y.toplamGun, tdt: geb.tdt,
-          takvim: takvim.map((t) => ({ no: t.no, etiket: t.etiket, haftaBas: t.haftaBas, haftaSon: t.haftaSon, durum: t.durum, maddeler: t.maddeler })),
-          sonIzlem: son ? { tarih: son.tarih, hafta: son.hafta, kilo: son.kilo, fetalKalpAtimi: son.fetal_kalp_atimi } : null, buHafta }
-      }
+  if (modulAktif('gebelik') && geb) try {
+    const { gebelikYasi, izlemDurumlari } = await import('@/lib/clinical/gebelik')
+    const y = gebelikYasi(geb.sat, geb.tdt)
+    if (y) {
+      const { data: izl } = await sb.from('gebelik_izlemleri').select('tarih, hafta, kilo, fetal_kalp_atimi').eq('gebelik_id', geb.id).order('tarih', { ascending: false }).limit(20)
+      const son = izl?.[0] || null
+      const takvim = izlemDurumlari(y.hafta, (izl || []).map((i) => i.hafta))
+      const buHafta: string[] = []
+      if (y.hafta >= 11 && y.hafta <= 14) buHafta.push('11-14. hafta: ense saydamlığı ultrasonu dönemi.')
+      if (y.hafta >= 18 && y.hafta <= 22) buHafta.push('18-22. hafta: ayrıntılı ultrason dönemi.')
+      if (y.hafta >= 24 && y.hafta <= 28) buHafta.push('24-28. hafta: şeker tarama testi dönemi.')
+      if (y.hafta >= 36) buHafta.push('Doğum belirtilerini ve ne zaman başvuracağınızı doktorunuzla konuşun.')
+      const z = takvim.find((t) => t.durum === 'zamani' || t.durum === 'gecikmis')
+      if (z) buHafta.push(`${z.etiket} (${z.haftaBas}-${z.haftaSon}. hafta) için randevunuzu planlayın.`)
+      bundle.gebelik = { hafta: y.hafta, gun: y.gun, trimester: y.trimester, metin: y.metin, toplamGun: y.toplamGun, tdt: geb.tdt,
+        takvim: takvim.map((t) => ({ no: t.no, etiket: t.etiket, haftaBas: t.haftaBas, haftaSon: t.haftaSon, durum: t.durum, maddeler: t.maddeler })),
+        sonIzlem: son ? { tarih: son.tarih, hafta: son.hafta, kilo: son.kilo, fetalKalpAtimi: son.fetal_kalp_atimi } : null, buHafta }
     }
   } catch (e) { console.error('[portal] gebelik:', e) }
 
   // NOTYA-JINE-04 — Pap/HPV/RİA due reminders (no diagnosis)
-  try {
+  if (modulAktif('jinekoloji')) try {
     const { dueHesapla } = await import('@/specialties/kadin-dogum/engines/jinekoloji-spine')
-    const { data: ks } = await sb.from('kadin_sagligi').select('son_pap, son_hpv, son_mamografi, son_dxa, son_kolorektal, hrt, hrt_baslangic, histerektomi').eq('patient_id', patientId).maybeSingle()
-    const { data: kontr } = await sb.from('kontrasepsiyon').select('yontem, baslangic, ria_notu, aktif').eq('patient_id', patientId).eq('aktif', true).maybeSingle()
-    const { data: hastaRow } = await sb.from('patients').select('dob_encrypted, gender').eq('id', patientId).maybeSingle()
-    let dob: string | null = null
-    try { dob = hastaRow?.dob_encrypted ? decrypt(String(hastaRow.dob_encrypted)).slice(0, 10) : null } catch { dob = null }
+    const dob = dogumIso ? dogumIso.slice(0, 10) : null
     const gender = String(hastaRow?.gender || '').toLowerCase()
     if (gender.includes('kadın') || gender.includes('kadin') || gender.includes('female') || gender === 'f' || ks) {
       const bugun = new Date().toISOString().slice(0, 10)
