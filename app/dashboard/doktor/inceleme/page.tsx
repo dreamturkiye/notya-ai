@@ -3,7 +3,8 @@ import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 import {
@@ -12,6 +13,11 @@ import {
   toolsCard,
   toolsErrorBox,
 } from '@/lib/doktor/toolsUi';
+import {
+  onaySonrasiHedef, onaylananNotYolu, hastaDosyasiYolu,
+  ONAYLANAN_NOTU_AC, HASTA_LISTESINE_DON, ANA_SAYFAYA_DON,
+  HASTA_LISTESI_YOLU, DOKTOR_ANA_SAYFA_YOLU,
+} from '@/lib/doktor/onaySonrasiYol';
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
@@ -81,10 +87,18 @@ function snippet(text: unknown, max = 120): string {
 }
 
 export default function IncelemePage() {
+  const router = useRouter();
   const [notes, setNotes] = useState<PendingNote[]>([]);
+  /* NOTYA-ONAY-DONUS-01: "kuyrukta kaç not kaldı" kararı onay yanıtı döndüğünde verilir —
+     o an ekrandaki (render sırasındaki) liste bayat olabilir. Ref her zaman en güncel liste. */
+  const notlarRef = useRef<PendingNote[]>([]);
+  const notlariYaz = (liste: PendingNote[]) => { notlarRef.current = liste; setNotes(liste); };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
+  // NOTYA-ONAY-DONUS-01: kuyrukta sıra işlenirken onaylanan notu gözden kaçırmayalım —
+  // sayfa değişmediği durumda onaylanan nota giden bağlantı burada tutulur.
+  const [sonOnaylanan, setSonOnaylanan] = useState<{ id: string; hasta: string; patientId: string | null } | null>(null);
   const [acikId, setAcikId] = useState('');
   const [taslak, setTaslak] = useState<Taslak>({ subjektif: '', objektif: '', degerlendirme: '', plan: '' });
   // Kaan/Gökhan (2026-09-10): başlık (hasta, branş, tarih) dışında her şey düzenlenebilir
@@ -209,7 +223,7 @@ export default function IncelemePage() {
         if (!token) {
           if (!cancelled) {
             setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
-            setNotes([]);
+            notlariYaz([]);
           }
           return;
         }
@@ -228,15 +242,15 @@ export default function IncelemePage() {
               ? (data as { error: string }).error
               : 'Bekleyen notlar alınamadı.';
           setError(message);
-          setNotes([]);
+          notlariYaz([]);
           return;
         }
 
-        setNotes(normalizeNotes(data));
+        notlariYaz(normalizeNotes(data));
       } catch {
         if (!cancelled) {
           setError('Bekleyen notlar alınamadı. Bağlantınızı kontrol edin.');
-          setNotes([]);
+          notlariYaz([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -249,6 +263,13 @@ export default function IncelemePage() {
     };
   }, []);
 
+  /**
+   * NOTYA-ONAY-DONUS-01 (Gökhan, 2026-09-17, canlı): onay notu listeden siliyor, başka hiçbir
+   * şey yapmıyordu. Kuyrukta tek not varsa hekim "Bekleyen not yok" yazan boş bir sayfada
+   * kalıyor, az önce onayladığı nota da hastanın dosyasına da dönemiyordu.
+   * Artık: kuyruk boşaldıysa notun kesinleşmiş haline gidilir (hasta dosyasından açılan sayfa);
+   * kuyrukta iş varsa akış bölünmez ama onaylanan nota giden bağlantı ekranda kalır.
+   */
   const approve = async (id: string) => {
     setError('');
     setBusyId(id);
@@ -265,7 +286,14 @@ export default function IncelemePage() {
         return;
       }
 
-      setNotes((prev) => prev.filter((n) => n.id !== id));
+      const onaylanan = notlarRef.current.find((n) => n.id === id) || null;
+      const kalan = notlarRef.current.filter((n) => n.id !== id);
+      notlariYaz(kalan);
+      if (acikId === id) setAcikId('');
+      setSonOnaylanan({ id, hasta: onaylanan?.maskedPatient || '', patientId: onaylanan?.patientId ?? null });
+
+      const hedef = onaySonrasiHedef(id, kalan.length);
+      if (hedef.tur === 'not') router.push(hedef.yol);
     } catch {
       setError('Not onaylanamadı. Bağlantınızı kontrol edin.');
     } finally {
@@ -275,7 +303,7 @@ export default function IncelemePage() {
 
   const reject = (id: string) => {
     setError('');
-    setNotes((prev) => prev.filter((n) => n.id !== id));
+    notlariYaz(notlarRef.current.filter((n) => n.id !== id));
   };
 
   const btnStyle = (bg: string, disabled: boolean): React.CSSProperties => ({
@@ -300,10 +328,38 @@ export default function IncelemePage() {
 
         {error && <div style={{ ...toolsErrorBox, marginTop: 0, marginBottom: 16 }}>{error}</div>}
 
+        {/* NOTYA-ONAY-DONUS-01: kuyrukta iş varken sayfa değişmez — onaylanan not yine de
+            erişilebilir kalsın (hekim onayladığı notu gözden kaybetmesin). */}
+        {sonOnaylanan && notes.length > 0 && (
+          <div style={{ ...toolsCard, marginTop: 0, marginBottom: 16, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, border: '1px solid rgba(16,185,129,0.4)' }}>
+            <span style={{ color: '#34D399', fontSize: 13, fontWeight: 600 }}>✓ Not onaylandı{sonOnaylanan.hasta ? ` — ${sonOnaylanan.hasta}` : ''}</span>
+            <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
+            <a href={hastaDosyasiYolu(sonOnaylanan.patientId)} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Hasta Dosyası →</a>
+          </div>
+        )}
+
         {loading ? (
           <div style={{ ...toolsCard, textAlign: 'center', color: '#94A3B8' }}>Yükleniyor...</div>
         ) : notes.length === 0 ? (
-          <div style={{ ...toolsCard, textAlign: 'center', color: '#94A3B8' }}>Bekleyen not yok</div>
+          /* NOTYA-ONAY-DONUS-01: "Bekleyen not yok" tek başına çıkmazdı — hekimin buradan
+             gidecek yeri yoktu. Boş kuyruk artık her zaman çıkış yolu gösterir; son onaylanan
+             not varsa önce ona döner. */
+          <div style={{ ...toolsCard, textAlign: 'center', color: '#94A3B8' }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#CBD5E1' }}>Bekleyen not yok</div>
+            <div style={{ fontSize: 13, marginTop: 6 }}>
+              {sonOnaylanan ? 'Son not onaylandı — kuyruk boşaldı.' : 'Onay bekleyen klinik not kalmadı.'}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginTop: 14 }}>
+              {sonOnaylanan && (
+                <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
+              )}
+              {sonOnaylanan?.patientId && (
+                <a href={hastaDosyasiYolu(sonOnaylanan.patientId)} style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Hasta Dosyası →</a>
+              )}
+              <a href={HASTA_LISTESI_YOLU} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{HASTA_LISTESINE_DON}</a>
+              <a href={DOKTOR_ANA_SAYFA_YOLU} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ANA_SAYFAYA_DON}</a>
+            </div>
+          </div>
         ) : (
           notes.map((note) => {
             const busy = busyId === note.id;

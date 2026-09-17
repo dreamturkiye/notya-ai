@@ -807,3 +807,71 @@ satıra sarıyor ve kesilmiyor. Sonuç satırları 44–56px. Satır içi metin 
 - `otomatikHastaKaydiOlustur()` kasten DEĞİŞTİRİLMEDİ: aynı ada düşen kaydı sunucuda sessizce
   yeniden kullanmak, gerçekten iki farklı aynı adlı hastayı birleştirme riskini taşır — klinik
   olarak kopya kayıttan daha kötü. Karar insana bırakıldı (kayıtsız moddaki kırmızı uyarı).
+
+## ONAY-SONRASI-DONUS — canlı hata, Dr. Gökhan (2026-09-17)
+
+**Nasıl geldi.** Dr. Gökhan bir muayene notunda düzeltme yaptı ve **Onayla**'ya bastı. Onaydan
+sonra **"Bekleyen not yok"** yazan İnceleme Kuyruğu ekranında kaldı; oradan ne az önce onayladığı
+nota ne de hastanın dosyasına dönebildi. Beklentisi: onaydan sonra notun **kesinleşmiş halinin**
+(PDF/son görünüm) karşısına gelmesi ve gerekirse oradan yeniden düzeltip yeniden onaylayabilmesi.
+
+**Kök sebep — onay sonrası hedefi hesaplayan bir yer yoktu.** Üç ayrı onay noktası vardı ve üçü de
+kendi kararını veriyordu:
+- `app/dashboard/doktor/inceleme/page.tsx` → onay başarılıysa **yalnızca** `setNotes(prev.filter(...))`
+  ile notu listeden siliyordu. Hiçbir yere gitmiyordu. Kuyrukta tek not varsa liste anında boşalıyor
+  ve `notes.length === 0` dalı devreye giriyordu — ekranda tek bir `<div>Bekleyen not yok</div>`.
+  O div'de **hiç bağlantı yoktu**: onaylanan nota da, hastanın dosyasına da. Dr. Gökhan'ın gördüğü
+  ekran tam olarak burasıydı. (Üst menü duruyordu, yani teknik olarak tam bir çıkmaz değildi — ama
+  onayladığı notun ve hastasının izi tamamen kaybolmuştu; şikayetin anlamı buydu.)
+- `app/session/new/page.tsx` → `notuOnayla()` onaydan sonra `/dashboard/doktor`'a (genel pano)
+  atıyordu; "Not Revizyonu" düğmesi de o notun formuna değil **genel kuyruğa** gönderiyordu.
+- `app/dashboard/doktor/notlar/[id]/page.tsx` → tek doğru davranan yer: onaydan sonra
+  `/notlar/[id]/yazdir`'a gidiyordu. Yani hedef zaten **vardı**, iki tüketici onu bilmiyordu.
+
+Yani eksik olan sayfa değil karardı: "onaydan sonra hekim nereye gider" sorusunun tek bir cevabı
+yoktu. Kesinleşmiş not görünümü (`/dashboard/doktor/notlar/[id]/yazdir`) zaten üretimdeydi —
+hasta dosyasındaki "Muayene Geçmişi"nden bir vizite tıklandığında açılan sayfanın ta kendisi, ve
+üstünde **"✏️ Yeniden Düzenle"** düğmesiyle muayene formuna, oradan da yeniden onaya giden yol
+hazırdı. Hiçbir şey yeniden yazılmadı; var olan yola bağlandı.
+
+**Ne yapıldı.**
+- Yeni `lib/doktor/onaySonrasiYol.ts` — kararın tek kaynağı. `onaylananNotYolu()` (kesinleşmiş not),
+  `hastaDosyasiYolu()` (hasta yoksa listeye düşer — ölü bağlantı üretmez) ve `onaySonrasiHedef(notId,
+  kalanBekleyen)`. Kural: **kalanBekleyen > 0 → kuyrukta kal** (hekim sırayı işliyorsa akışı bölme),
+  **kalanBekleyen === 0 → kesinleşmiş nota git**. `lib/doktor/muayeneFormuYolu.ts` (MUAYENEYE-DON-01)
+  üstüne kuruldu, kopyalanmadı.
+- `lib/doktor/onaySonrasiYol.test.ts` — 8 saf test; `npm test`e eklendi.
+- **İnceleme Kuyruğu:** onay artık hedefi bu fonksiyondan soruyor. Kuyruk boşaldıysa kesinleşmiş
+  nota yönlendiriyor; kuyrukta iş varsa sayfada kalıyor ama üstte yeşil bir şeritle "✓ Not onaylandı
+  — <hasta>" + "Onaylanan notu aç →" + "Hasta Dosyası →" duruyor (onaylanan not gözden kaybolmuyor).
+- **"Bekleyen not yok" ekranı** meşru bir durum (hekim kuyruğa doğrudan girip bir şey bulamayabilir),
+  bu yüzden kaldırılmadı — **çıkışlandırıldı**: her zaman Hasta Listesi / Ana Sayfa bağlantıları,
+  son onaylanan not varsa ayrıca ona ve hastasının dosyasına doğrudan bağlantı.
+- `app/session/new/page.tsx`: onay sonrası artık genel panoya değil kesinleşmiş nota gidiyor;
+  "Not Revizyonu" not kimliği varsa doğrudan **o** notun muayene formuna gidiyor (kuyruğa değil).
+  Ses dosyasından not üretme akışı kuyrukta bırakılıyor — orada yeni bir bekleyen not var, doğru hedef.
+- `notlar/[id]` ve `notlar/[id]/yazdir` aynı tek kaynağa geçti. Yazdır sayfasındaki
+  "← Hasta Dosyası" bağlantısı **koşulsuz** hale getirildi: hastaya bağlı olmayan notta (seansa hasta
+  seçilmeden üretilen not) o sayfanın hiçbir çıkışı kalmıyordu, artık "← Hastalar"a düşüyor.
+- Onay yanıtı döndüğünde "kuyrukta kaç not kaldı" kararı artık render anındaki bayat listeden değil
+  `notlarRef`ten okunuyor (hızlı ardışık onaylarda yanlış hedef seçilmesin).
+
+**Doğrulama.** `scripts/qa-onay-sonrasi-donus.mts` — GERÇEK route handler'ları
+(`GET /api/notes?pending=true`, `POST /api/notes/[id]/approve`, `GET /api/notes/[id]`) sahte oturum +
+bellek içi tablolarla çalıştırır. Kullanılan doktor ve hasta TAMAMEN SENTETİKTİR; Dr. Gökhan'ın
+hesabına, gerçek hastalara veya production veritabanına dokunmaz, PHI içermez. Doğrulananlar:
+(1) kuyrukta tek not → düzelt → onayla → kuyruk boşalır ve hedef kesinleşmiş nota döner;
+(2) o sayfa gerçekten onaylanmış notu ve düzeltmeyi gösteriyor, hasta dosyası bağlantısı hastanın
+dosyasına gidiyor; (3) oradan **yeniden düzeltme + yeniden onay** döngüsü çalışıyor (onaylı not
+tekrar onaylanıp içeriği güncelleniyor); (4) kuyrukta başka bekleyen not varsa akış bölünmüyor;
+(5) hastaya bağlı olmayan notta dönüş hasta listesine düşüyor. `npx tsc --noEmit` temiz,
+`npm test` 635/635 yeşil, `npm run build` başarılı.
+
+**Mobil kontrol (standing rule).** Yeni onay şeridi ve çıkışlı boş-kuyruk kartı gerçek Chrome'da
+390px ve 360px genişlikte render edildi (`/tmp/qa-mobil/onay-donus.html`): yatay taşma yok
+(taşma = 0px), uzun hasta adı kırpılmadan sarıyor, dört bağlantının hepsi 36px yükseklikte ve
+76–133px genişlikte (mobil dokunma hedefi kuralı).
+
+**Kapsam dışı bırakılan.** "Reddet" düğmesi hâlâ notu yalnız ekrandan düşürüyor (sunucuya bir şey
+yazmıyor) — bu ayrı ve daha eski bir konu, bu PR'da değiştirilmedi. Reddetme de kuyruğu
+boşaltabildiği için artık en azından çıkışlı boş ekrana düşüyor.

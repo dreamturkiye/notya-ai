@@ -5,6 +5,8 @@ import { createClient } from "@supabase/supabase-js"
 import { anamnezParcala, fizikParcala } from "@/lib/doktor/anamnezBolumleri"
 import { useRouter, useSearchParams } from "next/navigation"
 import { BRANS_ETIKETLERI } from "@/lib/intake/bransSorulari"
+import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
+import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
 
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
@@ -107,7 +109,7 @@ function NewSessionInner() {
       })
       const d = await resp.json()
       if (!resp.ok) throw new Error(d.error || "Not üretilemedi.")
-      router.push("/dashboard/doktor/inceleme")
+      router.push(INCELEME_KUYRUGU_YOLU)  // yeni not kuyruğa düştü — kuyruk burada doğru hedef
     } catch (e) {
       setSesHata(e instanceof Error ? e.message : "Yükleme başarısız oldu.")
     } finally {
@@ -232,7 +234,10 @@ function NewSessionInner() {
       const d = await r.json().catch(() => ({}))
       if (!r.ok || d.success === false) throw new Error(d.error || "Onaylanamadı")
       setOnayDurumu("onaylandi")
-      setTimeout(() => router.push("/dashboard/doktor"), 900)
+      // NOTYA-ONAY-DONUS-01 (Gökhan): onaydan sonra genel panoya değil, notun kesinleşmiş
+      // haline — hasta dosyasından açıldığında görülen sayfanın ta kendisine. Oradan
+      // "✏️ Yeniden Düzenle" ile düzeltip yeniden onaylayabilir.
+      setTimeout(() => router.push(onaylananNotYolu(noteId)), 900)
     } catch (e: unknown) {
       setOnayDurumu("beklemede")
       setOnayHata(e instanceof Error ? e.message : "Onaylanamadı — Not Revizyonu'ndan deneyin.")
@@ -387,7 +392,9 @@ function NewSessionInner() {
               </div>
             )}
             <div style={S({display:"flex",gap:"10px",marginTop:"8px"})}>
-              <button onClick={()=>router.push("/dashboard/doktor/inceleme")}
+              {/* NOTYA-ONAY-DONUS-01: "Not Revizyonu" genel kuyruğa atıyordu — notu orada aramak
+                  gerekiyordu. Not kimliği varsa doğrudan O notun muayene formuna gider. */}
+              <button onClick={()=>router.push(note?.id ? muayeneFormuYolu(String(note.id)) : INCELEME_KUYRUGU_YOLU)}
                 style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#374151",border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:"600",cursor:"pointer"})}>
                 Not Revizyonu
               </button>
