@@ -1,15 +1,26 @@
 /**
  * NOTYA-DAH-WOW W1.2 — SCORE2 (ESC 2021, ehab309) + KVR kova + LDL hedef + statin yoğunluk açığı.
- * Kaynak: SCORE2 working group, Eur Heart J 2021;42:2439 — Updated Supplementary p.9 (katsayılar, S0, bölge ölçekleri).
  * Türkiye ESC 2021 haritasında YÜKSEK risk bölgesindedir → varsayılan bölge 'high'.
  *
- * GÜVENLİK KİLİDİ: SCORE2_ONAYLI=false iken sayısal risk DÖNMEZ (null); yalnız kural tabanlı kova (ASKVH / DM+TOD / KBH)
- * ve "doğrulama bekliyor" notu döner. Katsayılar suppl. tablo ile birebir karşılaştırılıp ledger DAH-SCORE2-VERIFY kapanınca
- * true yapılır. Hiçbir koşulda hekim kilidi olmadan kategori nota yazılmaz.
+ * KAYNAK (DAH-SCORE2-VERIFY, 2026-09-17): SCORE2 working group & ESC Cardiovascular risk collaboration, Eur Heart J
+ * 2021;42(25):2439–2454, doi:10.1093/eurheartj/ehab309 — "SCORE2 Updated Supplementary Material.docx" (ehab309
+ * supplementary data, PMC8248998, file dated 2021-09-16). Satır satır karşılaştırıldı, fark yok:
+ *   - KATSAYI (log SHR, erkek/kadın) + s0 (baseline survival 0.9605 / 0.9776) → Supplementary methods Table 2
+ *     ("Model coefficients and baseline survival of the SCORE2 algorithm"; dönüşümler cage=(yaş−60)/5,
+ *     csbp=(SBP−120)/20, ctchol=TChol−6 mmol/L, chdl=(HDL−1.3)/0.5). Diyabet katsayısı (0.6457/0.8096) bilerek yok:
+ *     tablo dipnotu — SCORE2 diyabetsiz kişide kullanılır, diyabet göstergesi 0 alınır.
+ *   - OLCEK (scale1, scale2; low/moderate/high/very high) → Supplementary methods Table 3.
+ *   - Kalibrasyon: 1 − exp(−exp(scale1 + scale2 × ln(−ln(1 − ham risk)))) → Supplementary methods Table 4, adım 3.
+ *   - Yayımlanmış çalışılmış örnek (Table 4: 50 yaş, sigara, SBP 140, TChol 6.3, HDL 1.4) tests/score2.test.ts'de.
+ *
+ * GÜVENLİK: SCORE2_ONAYLI=true yalnız yukarıdaki doğrulamadan sonra. Sayısal skor yalnız 40–69 yaş + diyabet yok +
+ * kural kovası yokken hesaplanır ve "kova taslak" olarak döner; kategori ve LDL hedefi yalnız hekim kilidiyle
+ * (dahiliye_kart_kilitleri) kesinleşir — hiçbir koşulda nota otomatik yazılmaz. SCORE2-OP (≥70) ve SCORE2-Diabetes
+ * ayrı ledger kalemleridir (DAH-SCORE2-OP, DAH-SCORE2-DIABETES).
  */
 import type { Dipnot } from './dahiliye'
 
-export const SCORE2_ONAYLI = false
+export const SCORE2_ONAYLI = true
 
 export type Cinsiyet = 'erkek' | 'kadin'
 export type Bolge = 'low' | 'moderate' | 'high' | 'very_high'
@@ -25,15 +36,16 @@ const OLCEK: Record<Bolge, Record<Cinsiyet, [number, number]>> = {
   high: { erkek: [0.3207, 0.9360], kadin: [0.5710, 0.9369] },
   very_high: { erkek: [0.5836, 0.8294], kadin: [0.9412, 0.8329] },
 }
-const MGDL_MMOL = 38.67
+const BOLGE_AD: Record<Bolge, string> = { low: 'düşük risk bölgesi', moderate: 'orta risk bölgesi', high: 'yüksek risk bölgesi', very_high: 'çok yüksek risk bölgesi' }
+const MGDL_MMOL = 38.67 // kolesterol mg/dL → mmol/L
 
 export interface Score2Girdi {
   yas: number; cinsiyet: Cinsiyet; sigara: boolean; sbp: number
   tcholMgdl: number; hdlMgdl: number; bolge?: Bolge
 }
 
-/** Ham SCORE2 (40–69) — yalnız SCORE2_ONAYLI ise dışarı çıkar. */
-export function score2Ham(g: Score2Girdi): number | null {
+/** Kalibrasyonsuz 10 yıllık risk (olasılık) — Suppl. methods Table 4 adım 1–2. 40–69 dışı null. */
+export function score2Kalibrasyonsuz(g: Score2Girdi): number | null {
   if (g.yas < 40 || g.yas > 69) return null
   const k = KATSAYI[g.cinsiyet]
   const cage = (g.yas - 60) / 5, csbp = (g.sbp - 120) / 20
@@ -41,10 +53,23 @@ export function score2Ham(g: Score2Girdi): number | null {
   const sig = g.sigara ? 1 : 0
   const lp = k.yas * cage + k.sigara * sig + k.sbp * csbp + k.tchol * ctc + k.hdl * chdl
     + k.sigaraYas * sig * cage + k.sbpYas * csbp * cage + k.tcholYas * ctc * cage + k.hdlYas * chdl * cage
-  const ham = 1 - Math.pow(k.s0, Math.exp(lp))
-  const [s1, s2] = OLCEK[g.bolge || 'high'][g.cinsiyet]
-  const kal = 1 - Math.exp(-Math.exp(s1 + s2 * Math.log(-Math.log(1 - ham))))
-  return Math.round(kal * 1000) / 10
+  return 1 - Math.pow(k.s0, Math.exp(lp))
+}
+
+/** Bölgeye kalibre 10 yıllık risk (olasılık) — Suppl. methods Table 3 ölçekleri + Table 4 adım 3. */
+export function score2Olasilik(g: Score2Girdi): number | null {
+  const ham = score2Kalibrasyonsuz(g)
+  return ham == null ? null : score2Kalibre(ham, g.cinsiyet, g.bolge || 'high')
+}
+export function score2Kalibre(ham: number, cinsiyet: Cinsiyet, bolge: Bolge): number {
+  const [s1, s2] = OLCEK[bolge][cinsiyet]
+  return 1 - Math.exp(-Math.exp(s1 + s2 * Math.log(-Math.log(1 - ham))))
+}
+
+/** SCORE2 % (bir ondalık) — kvrDegerlendir yalnız SCORE2_ONAYLI ise dışarı çıkarır. */
+export function score2Ham(g: Score2Girdi): number | null {
+  const p = score2Olasilik(g)
+  return p == null ? null : Math.round(p * 1000) / 10
 }
 
 /** ESC 2021 yaşa göre eşikler. */
@@ -88,7 +113,7 @@ export function kvrDegerlendir(g: KvrGirdi): KvrSonuc {
     else if (g.yas > 69) score2Notu = '≥70 yaş: SCORE2-OP (ledger DAH-SCORE2-OP) — doğrulanmış katsayı gelene kadar klinik karar'
     else if (g.dm) score2Notu = 'Diyabet: SCORE2-Diabetes (ledger DAH-SCORE2-DIABETES) — şimdilik TEMD kuralı: DM = en az yüksek risk'
     else if (!SCORE2_ONAYLI) score2Notu = 'SCORE2 sayısal hesap katsayı doğrulaması bekliyor (EHJ 2021 suppl. p9) — kategori hekim kararı'
-    else { score2 = score2Ham({ yas: g.yas, cinsiyet: g.cinsiyet, sigara: !!g.sigara, sbp: g.sbp, tcholMgdl: g.tcholMgdl, hdlMgdl: g.hdlMgdl, bolge: g.bolge || 'high' }); if (score2 != null) { kova = score2Kova(g.yas, score2); neden = `SCORE2 %${score2} (yüksek risk bölgesi)` } }
+    else { score2 = score2Ham({ yas: g.yas, cinsiyet: g.cinsiyet, sigara: !!g.sigara, sbp: g.sbp, tcholMgdl: g.tcholMgdl, hdlMgdl: g.hdlMgdl, bolge: g.bolge || 'high' }); if (score2 != null) { kova = score2Kova(g.yas, score2); neden = `SCORE2 %${score2} (${BOLGE_AD[g.bolge || 'high']}) — hekim kilitler`; dip.push({ ref: 'ESC_SCORE2', not: `SCORE2 10 yıllık ölümcül + ölümcül olmayan KVH riski (40–69 yaş, diyabetsiz); ${BOLGE_AD[g.bolge || 'high']} kalibrasyonu (Türkiye = yüksek risk bölgesi); eşikler <50 yaş %2.5/%7.5, 50–69 yaş %5/%10` }) } }
     if (g.dm && kova == null) { kova = 'yuksek'; neden = neden || 'Diyabet (TEMD: en az yüksek risk)' }
   }
   const hedefLdl = kova === 'cok_yuksek' ? 55 : kova === 'yuksek' ? 70 : kova === 'dusuk_orta' ? 100 : null

@@ -238,20 +238,20 @@
     <div class="pills">
       <span class="pill success">npm test green</span>
       <span class="pill info">Migrations 039–043</span>
-      <span class="pill success">Smoke: 83 API calls · 15 checks · 0 failures</span>
+      <span class="pill success">Smoke: 90 API calls · 21 checks · 0 failures</span>
       <span class="pill success">24 real UI screenshots (synthetic patient)</span>
     </div>
 
     <div class="stats">
-      <div class="stat"><div class="v success">19/22</div><div class="l">Strong (all six criteria, strict)</div></div>
-      <div class="stat"><div class="v warn">3/22</div><div class="l">Partial (reason per row)</div></div>
+      <div class="stat"><div class="v success">20/22</div><div class="l">Strong (all six criteria, strict)</div></div>
+      <div class="stat"><div class="v warn">2/22</div><div class="l">Partial (reason per row)</div></div>
       <div class="stat"><div class="v info">0/22</div><div class="l">Before this pass: Strong</div></div>
       <div class="stat"><div class="v info">2·6·5·11</div><div class="l">Pre-wow: Strong · Partial · Thin · Missing</div></div>
     </div>
 
     <div class="callout">
       <h2>Verdict</h2>
-      <p>Criterion 5 is now met. A dedicated dahiliye QA doctor (<code>qa.dahiliye@notya.ai</code>, specialty dahiliye) and one synthetic patient ran the whole smoke path through the real API routes (<code>scripts/dahiliye-smoke.mts</code>, re-runnable). Screenshots were then taken of the real UI in a headless browser, logged in as that QA doctor. The shared <code>qa.test@notya.ai</code> pediatri account was not changed. With the smoke evidence in place, 19 domains meet all six criteria and are Strong. Three stay Partial: SCORE2/KVR (numeric SCORE2 is still off behind <code>SCORE2_ONAYLI=false</code>, and SCORE2-OP/Diabetes are not built), Lab/Belgeler (the shared extraction engine was not re-audited, and the smoke run approved seeded panels rather than an uploaded PDF), and the prompts/ lock (rubric criteria 1–2 don't apply to it).</p>
+      <p>Criterion 5 is now met. A dedicated dahiliye QA doctor (<code>qa.dahiliye@notya.ai</code>, specialty dahiliye) and one synthetic patient ran the whole smoke path through the real API routes (<code>scripts/dahiliye-smoke.mts</code>, re-runnable). Screenshots were then taken of the real UI in a headless browser, logged in as that QA doctor. The shared <code>qa.test@notya.ai</code> pediatri account was not changed. With the smoke evidence in place, 19 domains met all six criteria and were Strong. <strong>Update 2026-09-17 (DAH-SCORE2-VERIFY):</strong> SCORE2/KVR is now Strong too, making 20. Every SCORE2 coefficient, both baseline survivals and all four region scale pairs were checked line by line against the ehab309 <em>Updated Supplementary Material</em> (Suppl. methods Tables 2–3). No differences were found. The published worked example in Suppl. methods Table 4 (4 regions × 2 sexes) is reproduced in <code>tests/score2.test.ts</code>, and <code>SCORE2_ONAYLI=true</code>. A second synthetic patient (non-diabetic, 50-year-old man who smokes) runs the numeric path in the smoke script: 8.8% from approved labs, a draft category, then the hekim lock. SCORE2-OP (≥70) and SCORE2-Diabetes are not part of this row; they are tracked as separate ledger items. Two stay Partial: Lab/Belgeler (the shared extraction engine was not re-audited, and the smoke run approved seeded panels rather than an uploaded PDF), and the prompts/ lock (rubric criteria 1–2 don't apply to it).</p>
     </div>
 
     <h2 class="sec">Strong rubric by domain</h2>
@@ -270,7 +270,7 @@
           <tr><td class="domain">İlaç güvenliği + izlem takvimi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">eGFR uyarıları + polifarmasi; 13 izlem kuralı → görevler (her görev ref_code)</td></tr>
           <tr><td class="domain">Lab / Belgeler (paylaşılan)</td><td class="c n">~</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">~</td><td class="c n">~</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Partial: ortak lab motoru (core/lab çıkarım) yeniden denetlenmedi; smoke Onayla rotasını gerçek çağırdı ama PDF yükleme/çıkarım adımı atlandı (tohumlanmış panel). Onaysız satırın kartlara girmediği doğrulandı</td></tr>
           <tr><td class="domain">Kırmızı bayrak + sevk</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">V1 kapı + EKG acil bulguları aynı kapıya bağlı; anemi/antikoagülan/ön anket alarmları şeritte ⚑</td></tr>
-          <tr><td class="domain">SCORE2 / KVR</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Partial: kural kovası (smoke: DM+TOD → çok yüksek, LDL hedef 55, statin açığı, kilit) canlı; SCORE2 sayısal hesap SCORE2_ONAYLI=false; SCORE2-OP / Diabetes ledgered (brief W1.2 spec tamam değil)</td></tr>
+          <tr><td class="domain">SCORE2 / KVR</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Strong (2026-09-17, DAH-SCORE2-VERIFY): katsayılar/S0/bölge ölçekleri ehab309 Updated Supplementary Material Suppl. methods Table 2–3 ile birebir; Table 4 yayımlanmış örneği (4 bölge × 2 cinsiyet) testlerde; SCORE2_ONAYLI=true. Smoke: 2. sentetik hasta (erkek 50, sigara, SBP 140, TChol 6.3, HDL 1.4) onaylı lab → %8.8 yüksek risk bölgesi → kova taslak Yüksek + ESC_SCORE2 Kaynak → hekim kilidi; nota otomatik yazım yok. Kural kovası (DM+TOD → çok yüksek) 1. hastada. Kapsam dışı: SCORE2-OP / SCORE2-Diabetes ayrı ledger (DAH-SCORE2-OP, DAH-SCORE2-DIABETES).</td></tr>
           <tr><td class="domain">CKD (KDIGO)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">G×A ısı haritası, kreatininsiz evre yok, nefro sevk paketi</td></tr>
           <tr><td class="domain">Anemi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Morfoloji → sonraki test merdiveni; plan hekim kilidi</td></tr>
           <tr><td class="domain">Obezite / GLP-1</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">TEMD basamakları, bariatrik = sevk, 3. ay %5, gerekçe metni</td></tr>
@@ -336,6 +336,7 @@
       <figure><a href="/dahiliye-smoke/dmdongu.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/dmdongu-t.jpg" alt="DM döngü · FIB-4, SGLT2/GLP-1 bayrak" loading="lazy" /><figcaption>DM döngü · FIB-4, SGLT2/GLP-1 bayrak</figcaption></a></figure>
       <figure><a href="/dahiliye-smoke/lipid.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/lipid-t.jpg" alt="Lipid · statin altında hedef dışı" loading="lazy" /><figcaption>Lipid · statin altında hedef dışı</figcaption></a></figure>
       <figure><a href="/dahiliye-smoke/kvr.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/kvr-t.jpg" alt="KVR · DM+TOD → çok yüksek, LDL kilidi" loading="lazy" /><figcaption>KVR · DM+TOD → çok yüksek, LDL kilidi</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/kvr-score2.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/kvr-score2-t.jpg" alt="KVR · SCORE2 %8.8 (yüksek risk bölgesi) → kova taslak + hekim kilidi" loading="lazy" /><figcaption>KVR · SCORE2 %8.8 (Suppl. Table 4 örneği) → hekim kilidi</figcaption></a></figure>
       <figure><a href="/dahiliye-smoke/kbh.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/kbh-t.jpg" alt="KBH · G3b A2 + nefro sevk" loading="lazy" /><figcaption>KBH · G3b A2 + nefro sevk</figcaption></a></figure>
       <figure><a href="/dahiliye-smoke/tiroid.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/tiroid-t.jpg" alt="Tiroid · subklinik + nodül TR4" loading="lazy" /><figcaption>Tiroid · subklinik + nodül TR4</figcaption></a></figure>
       <figure><a href="/dahiliye-smoke/anemi.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/anemi-t.jpg" alt="Anemi · mikrositer, ferritin 22 → GİS" loading="lazy" /><figcaption>Anemi · mikrositer, ferritin 22 → GİS</figcaption></a></figure>
@@ -376,7 +377,7 @@
       <li><span class="okk">✓</span> Hatırlatma mesajında klinik değer yok</li>
     </ul>
     <details>
-      <summary>All 83 API calls (status vs expected)</summary>
+      <summary>All 83 API calls of the first smoke run (status vs expected; later runs add SMOKE-FU + SCORE2 steps)</summary>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Step</th><th>Status</th><th>Expected</th></tr></thead>
