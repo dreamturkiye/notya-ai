@@ -11,6 +11,7 @@ import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { hafizaYukle, hafizaBloguSes, karsilamaSecimi, hafizaKaydet, hafizaUnut, type HafizaKategori } from '@/lib/doktor/hafiza'
 import { gunVerisiDerle, gunFazi, gunOzetiMetni, gunBlogu } from '@/lib/doktor/gunOzeti'
 import { toAddressableUser, type DoctorProfile } from '@/lib/userProfile'
+import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,7 +42,8 @@ export async function GET(req: NextRequest) {
         rutin: h.iliski.rutin,
       },
       karsilama: karsilamaSecimi(h.iliski),
-      sesBlogu: hafizaBloguSes(h),
+      // DAH-PROMPTS-LOCK: sesli Ayşe için dahiliye kilidinin kısa hali (rol + kırılmaz kurallar)
+      sesBlogu: [hafizaBloguSes(h), dahiliyeMi((doktorRow as { specialty?: string } | null)?.specialty) ? dahiliyeKilidi('ses') : ''].filter(Boolean).join('\n\n'),
       gun,
       kayitlar: [...h.kesinKayitlar, ...h.belirsizKayitlar],
     })

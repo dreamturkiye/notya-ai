@@ -210,10 +210,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         .maybeSingle()
       const Anthropic = (await import('@anthropic-ai/sdk')).default
       const { stilProfiliDamit } = await import('@/lib/doktor/soapUret')
+      const { hekimBransi } = await import('@/lib/doktor/hekimAdi')
       const yeniProfil = await stilProfiliDamit(
         new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }),
         String(profilSatiri?.profil || ''),
-        gecmis || []
+        gecmis || [],
+        await hekimBransi(supabase, user.id)
       )
       if (yeniProfil) {
         await supabase.from('doktor_stil_profilleri').upsert({
