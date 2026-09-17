@@ -18,20 +18,21 @@ import { SPECIALTIES } from '@/lib/doktor/specialties'
 
 const KAAN = 'c4989e29-a219-45b6-bf17-18e260e3c7f9'   // kaanari@mac.com
 const GOKHAN = '94c4db57-8b89-4880-80be-143f88f4bcc1' // dr.gokhanmamur@gmail.com
+const GOKHAN2 = '9030fe09-0a5f-484b-9cc9-3e1e1b0b5178' // dr.gokhan@notya.ai (günlük hesabı)
 
-test('izin listesi tam olarak iki doğrulanmış kimlik', () => {
-  assert.equal(SUPERUSER_BRANS_IDS.length, 2)
-  assert.deepEqual([...SUPERUSER_BRANS_IDS].sort(), [GOKHAN, KAAN].sort())
+test('izin listesi tam olarak üç doğrulanmış kimlik', () => {
+  assert.equal(SUPERUSER_BRANS_IDS.length, 3)
+  assert.deepEqual([...SUPERUSER_BRANS_IDS].sort(), [GOKHAN, GOKHAN2, KAAN].sort())
 })
 
 test('yalnız o iki kimlik geçer', () => {
   assert.equal(bransDegistirebilir(KAAN), true)
   assert.equal(bransDegistirebilir(GOKHAN), true)
+  assert.equal(bransDegistirebilir(GOKHAN2), true)
 })
 
 test('başka her hekim reddedilir', () => {
   const baskalari = [
-    '9030fe09-0a5f-484b-9cc9-3e1e1b0b5178', // Dr. Gökhan'ın İKİNCİ hesabı — bilerek listede değil
     '419386d9-88b6-455b-a12a-ac422b0cd296', // sentetik QA hekimi
     'aaaaaaaa-0000-4000-8000-00000000d002',
     '00000000-0000-0000-0000-000000000000',

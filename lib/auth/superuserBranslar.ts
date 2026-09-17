@@ -17,10 +17,10 @@
  *   c4989e29-…  kaanari@mac.com          — Kaan Arioglu (o gün specialty=pediatri)
  *   94c4db57-…  dr.gokhanmamur@gmail.com — Dr. Gökhan Mamur (o gün specialty=pediatri)
  *
- * NOT (ledger'da da kayıtlı): Dr. Gökhan adına ikinci bir hesap daha var —
- * dr.gokhan@notya.ai / 9030fe09-0a5f-484b-9cc9-3e1e1b0b5178. Talep "tam olarak iki hesap"
- * dediği ve ekran görüntüsündeki adres gmail hesabı olduğu için o hesap listeye
- * ALINMADI. Gökhan asıl o hesapla çalışıyorsa buraya tek satır eklemek yeterli.
+ * GÜNCELLEME (2026-09-17, Kaan onayı): Dr. Gökhan günlük olarak dr.gokhan@notya.ai
+ * hesabıyla çalışıyor (son giriş bugün) — bu hesap da listeye eklendi. gmail hesabı
+ * (dr.gokhanmamur@gmail.com, son giriş 2026-07-27) da listede kalıyor, ikisi de aynı
+ * kişi.
  */
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
@@ -29,6 +29,7 @@ import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 export const SUPERUSER_BRANS_IDS: readonly string[] = [
   'c4989e29-a219-45b6-bf17-18e260e3c7f9', // kaanari@mac.com — Kaan Arioglu
   '94c4db57-8b89-4880-80be-143f88f4bcc1', // dr.gokhanmamur@gmail.com — Dr. Gökhan Mamur
+  '9030fe09-0a5f-484b-9cc9-3e1e1b0b5178', // dr.gokhan@notya.ai — Dr. Gökhan Mamur (günlük hesabı, Kaan onayladı 2026-09-17)
 ]
 
 /**
