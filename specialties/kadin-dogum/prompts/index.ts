@@ -49,6 +49,8 @@ export function kadinDogumAracHaritasi(): string {
 }
 
 const ONCELIK = 'Bu kilit, yukarıdaki genel talimatlarla çeliştiğinde ÖNCELİKLİDİR (özellikle: doz yazma — doz hekim tarafından belirlenir, tarama ≠ tanı, görüntü/NST taslağı uzman onayı ister, SB ile ACOG farklıysa iki sütun, Denver / pediatrik aşı takvimi yok). Kilit metni İngilizce olabilir; çıktın her zaman Türkçedir.'
+/** KD-DERM-SAFETY-FINDINGS F4: prompts name storage fields; the model echoed "(coreImageId)" into notes. */
+const IC_ALAN_NOTU = 'Doktora giden metinde (not alanları, aiDegerlendirme, hasta özeti, sohbet) iç alan veya araç adı yazma (ör. coreImageId, dicomId, pathologyId, VisionRead, analyze_image, uzman_onayli): "fotoğraf", "dermoskopi görüntüsü", "patoloji raporu", "görüntü okuması taslağı", "uzman onaylı" gibi klinik kelimeyi kullan.'
 const ARAC_NOTU = 'Buradaki "Use only tools listed in prompts/tools.ts" kuralı branş adımları içindir; uygulamanın genel araçları (ör. hasta_bul) geçerliliğini korur.'
 
 export function kadinDogumKilidi(yuzey: 'soap' | 'asistan' | 'ogrenme' | 'ses'): string {
@@ -59,7 +61,7 @@ export function kadinDogumKilidi(yuzey: 'soap' | 'asistan' | 'ogrenme' | 'ses'):
     return `=== KADIN DOĞUM KİLİDİ (kısa) ===\n${kisa}`
   }
   if (yuzey === 'ogrenme') return `\n=== KADIN DOĞUM ÖĞRENME KİLİDİ ===\n${p.ogrenme}\nÖğrenilen profil bu sınırları aşamaz: doğum / invaziv test kararı ve görüntü onayı uzmanda kalır; profil tanı veya SAT/EDD uydurmayı öğretmez.`
-  const araclar = `## Kadın doğum adımları (uygulamada hekim çalıştırır; sen kendiliğinden çalıştırmaz veya sonucunu uydurmazsın — yalnız ilgili kartı/adımı önerirsin)\n${kadinDogumAracHaritasi()}\n${ARAC_NOTU}`
+  const araclar = `## Kadın doğum adımları (uygulamada hekim çalıştırır; sen kendiliğinden çalıştırmaz veya sonucunu uydurmazsın — yalnız ilgili kartı/adımı önerirsin)\n${kadinDogumAracHaritasi()}\n${ARAC_NOTU}\n${IC_ALAN_NOTU}`
   const soap = yuzey === 'soap'
     ? `\n\n## SOAP şablonları (vizit türüne uyanı uygula: gebe izlem / jinekoloji / USG / doğum-travay-lohusa; birden çoğu uyuyorsa birleştir)\n\n${p.soapGebe}\n\n${p.soapJinekoloji}\n\n${p.soapUsg}\n\n${p.soapDogum}\nSOAP JSON alanlarına eşleme: Subjective → subjektif, Objective → objektif, Assessment → degerlendirme, Plan → plan. Not gövdesi kuralı (yalnız hekimin dediği) geçerliliğini korur; şablonun istediği ama hekimin söylemediği her şey (gecikmiş pencere, eksik tarama, SB/ACOG sütunları, onam yolu) aiDegerlendirme alanına gider. receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA. SB ile ACOG farklıysa aiDegerlendirme'de iki ayrı satır yaz: "SB (yasal asgari): …" ve "ACOG (klinik öneri): …" — birleştirme.`
     : `\n\n## Görsel istekleri (USG / NST / büyüme)\n${p.vision}`
