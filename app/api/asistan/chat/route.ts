@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, type SpecialtyId } from "@/lib/asistan/personaEngine"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
+import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
@@ -163,9 +164,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Build system prompt with learning context
-    // DAH-PROMPTS-LOCK / KD-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
+    // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
     const hekimBransi = (doctorRow as { specialty?: string } | null)?.specialty
-    const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : ""
+    const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : ""
     const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + bransKilidi + dosyaEk
 
     // Call Claude with full conversation history

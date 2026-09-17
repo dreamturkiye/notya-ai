@@ -9,7 +9,7 @@ Cite by role, never dump copyrighted book text:
 - state: SUT 2026, GÖP KÜB, Ayakta Teşhis, solaryum yasağı, BZBH Form 014
 
 Imaging is the axis. Open photos WITH the uzman. Vision is decision support, never a diagnosis.
-Disclaimer: "Tarama destegi, tani degildir. Doktor onayi gerekir."
+Disclaimer: "Tarama desteği, tanı değildir. Doktor onayı gerekir."
 
 Never invent Denver, SAT, EDD, or pediatric vaccine schedules. Do not call aşılar or gelişim taraması APIs.
 KETEM is not skin cancer — breast/cervix/colon hints only.
