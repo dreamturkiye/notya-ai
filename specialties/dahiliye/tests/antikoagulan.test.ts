@@ -31,3 +31,11 @@ test('warfarin: stabil → 4 hafta; hedef dışı → 1 hafta; INR ≥9 kırmız
   const h = antikoagulanDegerlendir({ ...t, ajan: 'warfarin', ilacMetinleri: ['coraspin aspirin'] })
   assert.equal(h.hasBledMaddeleri.length, 9); assert.ok(!('skor' in h)); assert.ok(h.uyarilar.some((u) => /antiplatelet/.test(u)))
 })
+
+test('apiksaban: onaylı kreatinin yoksa "kriteri yok" denmez — değerlendirilemez (DAH-WOW-SMOKE)', () => {
+  const eksik = antikoagulanDegerlendir({ ...t, ajan: 'apiksaban', yas: 67, kiloKg: 94, kre: null })
+  assert.ok(eksik.uygunluk.some((u) => /değerlendirilemez — eksik: onaylı kreatinin/.test(u)))
+  assert.ok(!eksik.uygunluk.some((u) => /kriteri yok/.test(u)))
+  const tam = antikoagulanDegerlendir({ ...t, ajan: 'apiksaban', yas: 67, kiloKg: 94, kre: 1.1 }).uygunluk
+  assert.ok(tam.some((u) => /kriteri yok/.test(u)), JSON.stringify(tam))
+})

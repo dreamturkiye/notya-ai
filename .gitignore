@@ -152,3 +152,6 @@ vite.config.ts.timestamp-*
 .gstack/
 .git-commit-msg.txt
 scripts/.approve-mamur-rollback.json
+
+# DAH-WOW-SMOKE local output (session token, raw JSON)
+smoke-out/

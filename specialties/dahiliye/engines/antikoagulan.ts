@@ -71,7 +71,13 @@ export function antikoagulanDegerlendir(g: AkGirdi): AkSonuc {
       const kriter = [g.yas != null && g.yas >= 80, g.kiloKg != null && g.kiloKg <= 60, g.kre != null && g.kre >= 1.5].filter(Boolean).length
       if (kriter >= 2) r.uygunluk.push(`Apiksaban: 3 kriterin ${kriter}'si (≥80 yaş, ≤60 kg, Kre ≥1,5) → azaltılmış doz kriteri — hekim dozu yazar`)
       else if (k != null && k >= 15 && k < 30) r.uygunluk.push(`Apiksaban: KrKl ${k} (15–29) → azaltılmış doz kriteri — hekim dozu yazar`)
-      else r.uygunluk.push('Apiksaban: azaltılmış doz kriteri yok (≥2/3 değil)')
+      else {
+        // Eksik girdi "kriter yok" sayılmaz (DAH-WOW-SMOKE bulgusu): kreatinin yoksa KrKl 15–29 dalı da bilinemez;
+        // diğer eksiklerle 2/3'e ulaşılabiliyorsa değerlendirilemez.
+        const eksik = [g.yas == null ? 'yaş' : null, g.kiloKg == null ? 'kilo' : null, g.kre == null ? 'onaylı kreatinin' : null].filter((x): x is string => !!x)
+        if (g.kre == null || kriter + eksik.length >= 2) r.uygunluk.push(`Apiksaban: azaltılmış doz kriteri değerlendirilemez — eksik: ${eksik.join(', ')}`)
+        else r.uygunluk.push('Apiksaban: azaltılmış doz kriteri yok (≥2/3 değil)')
+      }
     }
     r.plan.push('DOAK izlem: yılda en az 1 (KrKl <60 veya ≥75 yaş: 6 ayda; KrKl <30: 3 ayda) Kre/eGFR + Hb')
   }
