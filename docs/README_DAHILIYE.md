@@ -33,6 +33,9 @@ Lab/EKG/CXR → Belgeler (existing) → Asistana raporla → doctor edits → On
 ## Out of V1 (by ticket)
 ICU/sepsis bundles, chemo, dialysis prescription, coronary protocol, full SCORE2, CGM, GLP-1 prior-auth, bariatric pathway, executive check-up sales package.
 
+## Beta hekim rehberi
+İlk canlı oturum için hekime yönelik Türkçe adım adım rehber (hesap/branş, smoke yolu, her kartta hekim kilidi, 7 yeni kart, sorun bildirme): [docs/DAHILIYE-BETA-REHBERI.md](./DAHILIYE-BETA-REHBERI.md) · tüm beta belgeleri: [docs/beta/](./beta/README.md)
+
 ## Pre-wow audit
 Shareable depth/gap report (before dahiliye wow sprint): [docs/README_DAHILIYE_AUDIT.md](./README_DAHILIYE_AUDIT.md) · https://notya-ai.vercel.app/dahiliye-presprint-audit.html
 
