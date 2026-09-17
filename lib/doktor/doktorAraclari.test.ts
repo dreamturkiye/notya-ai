@@ -20,16 +20,18 @@ test('shared tools appear for every branş; chapter tiles do not cross-leak', ()
     assert.ok(goz.some((a) => a.route === o.route), `göz missing shared ${o.route}`)
     assert.ok(kd.some((a) => a.route === o.route), `KD missing shared ${o.route}`)
     assert.ok(dah.some((a) => a.route === o.route), `dahiliye missing shared ${o.route}`)
+    assert.ok(ped.some((a) => a.route === o.route), `pediatri missing shared ${o.route}`)
   }
 
-  // Göz / KD: shared only — no foreign chapter clinical tiles
   assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length)
   assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length)
-  assert.ok(!goz.some((a) => a.title.includes('Dahiliye') || a.route.includes('dahiliye')))
-  assert.ok(!kd.some((a) => a.title.includes('Göz') || a.route.includes('goz') || a.route.includes('dahiliye')))
+  assert.ok(!goz.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
+  assert.ok(!kd.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
 
   assert.ok(dah.some((a) => a.route === '/doktor-tools/dahiliye-kohort'))
-  assert.equal(ped.length, ORTAK_DOKTOR_ARACLARI.length)
+  assert.ok(!dah.some((a) => a.route.includes('hedef-boy')))
+  assert.ok(ped.some((a) => a.route === '/doktor-tools/hedef-boy'))
+  assert.ok(!ped.some((a) => a.route.includes('dahiliye-kohort')))
 })
 
 test('commercial grid: no internal audits, sprint jargon, or named beta-doctor copy', () => {
@@ -44,24 +46,27 @@ test('commercial grid: no internal audits, sprint jargon, or named beta-doctor c
 
 test('free-text users.specialty resolves for chapter araçlar', () => {
   assert.ok(doktorAraclariListesi('İç Hastalıkları').some((a) => a.route === '/doktor-tools/dahiliye-kohort'))
-  assert.ok(!doktorAraclariListesi('Kadın Hastalıkları ve Doğum').some((a) => a.route.includes('dahiliye')))
-  assert.ok(!doktorAraclariListesi('Göz Hastalıkları Uzmanı').some((a) => a.route.includes('dahiliye')))
+  assert.ok(doktorAraclariListesi('Çocuk Sağlığı ve Hastalıkları').some((a) => a.route === '/doktor-tools/hedef-boy'))
+  assert.ok(!doktorAraclariListesi('Kadın Hastalıkları ve Doğum').some((a) => a.route.includes('hedef-boy') || a.route.includes('dahiliye')))
 })
 
-test('deep-link guard: dahiliye kohort only for dahiliye', () => {
+test('deep-link guard: chapter tools only for owning branş', () => {
   assert.equal(doktorAraciBransaUygun('/doktor-tools/dahiliye-kohort', 'dahiliye'), true)
-  assert.equal(doktorAraciBransaUygun('/doktor-tools/dahiliye-kohort', 'goz-hastaliklari'), false)
-  assert.equal(doktorAraciBransaUygun('/doktor-tools/dahiliye-kohort', 'kadin-dogum'), false)
+  assert.equal(doktorAraciBransaUygun('/doktor-tools/dahiliye-kohort', 'pediatri'), false)
+  assert.equal(doktorAraciBransaUygun('/doktor-tools/hedef-boy', 'pediatri'), true)
+  assert.equal(doktorAraciBransaUygun('/doktor-tools/hedef-boy', 'dahiliye'), false)
   assert.equal(doktorAraciBransaUygun('/doktor-tools/erecete', 'goz-hastaliklari'), true)
 })
 
-test('page uses filtered catalog; no audit HTML wired into araçlar', () => {
+test('Araçlar landing is a card grid only — Hedef Boy opens as its own page', () => {
   const kok = path.join(import.meta.dirname, '../..')
   const page = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
   const catalog = fs.readFileSync(path.join(kok, 'lib/doktor/doktorAraclari.ts'), 'utf8')
+  const hedef = fs.readFileSync(path.join(kok, 'app/doktor-tools/hedef-boy/page.tsx'), 'utf8')
   assert.match(page, /doktorAraclariListesi/)
+  assert.doesNotMatch(page, /HedefBoyAracPaneli|usePediatriHedefBoy/)
+  assert.match(catalog, /\/doktor-tools\/hedef-boy/)
+  assert.match(hedef, /HedefBoyAracPaneli/)
   assert.doesNotMatch(catalog, /presprint-audit|post-sprint-audit|gaps-audit|\.html/)
   assert.doesNotMatch(catalog, /Gökhan|Gokhan/)
-  const kohort = fs.readFileSync(path.join(kok, 'app/doktor-tools/dahiliye-kohort/page.tsx'), 'utf8')
-  assert.match(kohort, /doktorAraciBransaUygun/)
 })

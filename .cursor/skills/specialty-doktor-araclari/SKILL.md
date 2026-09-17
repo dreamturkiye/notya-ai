@@ -36,7 +36,7 @@ Boss rules (verbatim intent):
 | Bucket | Meaning | Catalog | Who sees it |
 |--------|---------|---------|-------------|
 | **Base (shared spine)** | Same tool for every specialty — does not change by branş. Built historically via pediatri, but product is universal. Examples: ilaç etkileşimi, epikriz, e-reçete, ICD-10, tetkik, hasta portalı link, SGK Medula, e-Nabız, hasta raporları. | `ORTAK_DOKTOR_ARACLARI` (`branslar: null`) | All ~30 specialties |
-| **Specialty-only** | Clinical tool that only makes sense for one (or named) branş. Example: Dahiliye Kohort Paneli; Pediatri Hedef Boy (own gate). | `BRANS_DOKTOR_ARACLARI` + `branslar: […]` (or dedicated gate like `usePediatriHedefBoy`) | Only that branş |
+| **Specialty-only** | Clinical tool for one branş. Examples: Dahiliye Kohort; Pediatri Hedef Boy (**card that opens its own page** — never embed the studio on Araçlar landing). | `BRANS_DOKTOR_ARACLARI` + `branslar: […]` | Only that branş |
 | **New universal** | A brand-new tool that every specialty will use the same way. | Add to `ORTAK_DOKTOR_ARACLARI` | All ~30 specialties |
 
 If unsure: default to **base** when the workflow is branş-agnostik (reçete, epikriz, etkileşim, kodlama). Do **not** fork a base tool into `specialties/<slug>/` just because the bug was reported from pediatri.
@@ -49,8 +49,9 @@ If unsure: default to **base** when the workflow is branş-agnostik (reçete, ep
 
 `/doktor-tools` is what paying doctors see — not one clinic’s private toolbox, not an engineering dashboard.
 
-**Never** on the Araçlar grid:
+**Never** on the Araçlar grid / landing:
 
+- Full interactive studios embedded on the landing (e.g. Hedef Boy anne-baba UI) — open via a card → `/doktor-tools/hedef-boy`
 - Sprint / wow / pre-sprint / post-sprint / gaps audit HTML
 - Internal ticket ids in titles or descriptions (`JINE-04`, `DAH-WOW`, …)
 - Named people in doctor-facing copy (`Gökhan …`)
@@ -62,10 +63,11 @@ Keep those under `docs/` or repo paths; do not link them from Doktor Araçları.
 
 | File | Role |
 |------|------|
-| `lib/doktor/doktorAraclari.ts` | `ORTAK_…` + `BRANS_…` + `doktorAraclariListesi()` |
-| `lib/doktor/doktorAraclari.test.ts` | Cross-leak + commercial-copy lock |
-| `app/doktor-tools/page.tsx` | Renders **only** `doktorAraclariListesi(users.specialty)` |
-| Chapter deep links | `doktorAraciBransaUygun(route, specialty)` + redirect |
+| `lib/doktor/doktorAraclari.ts` | `ORTAK_…` + `BRANS_…` (incl. Hedef Boy → `/doktor-tools/hedef-boy`) + `doktorAraclariListesi()` |
+| `lib/doktor/doktorAraclari.test.ts` | Cross-leak + commercial-copy + landing-is-cards-only lock |
+| `app/doktor-tools/page.tsx` | Card grid only — **never** mounts `HedefBoyAracPaneli` |
+| `app/doktor-tools/hedef-boy/page.tsx` | Pediatri studio (opens when you use the card) |
+| Chapter deep links | `doktorAraciBransaUygun` / `usePediatriHedefBoy` + redirect |
 
 Do **not** hardcode the tool array on the page.
 

@@ -438,7 +438,7 @@ export default function DoktorDashboard() {
               { ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan', renk: '#7C8CF8' },
               { ikon: 'hastaEkle', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle', renk: '#14B8A6' },
               pediatriAraci
-                ? { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools', renk: '#E8C547' }
+                ? { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools/hedef-boy', renk: '#E8C547' }
                 : { ikon: 'araclar', text: 'Araçlar', path: '/doktor-tools', renk: '#4ADE80' },
               { ikon: 'belge', text: 'Belge Yükle', path: '/dashboard/doktor/belgeler', renk: '#38BDF8' },
               { ikon: 'inceleme', text: 'İnceleme', path: '/dashboard/doktor/inceleme', renk: '#F59E0B' },

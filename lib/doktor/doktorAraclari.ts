@@ -39,6 +39,7 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
  * keep those in docs/ or repo paths, never on /doktor-tools.
  */
 export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
+  { circleColor: '#E8C547', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boyuna göre çocuğun tahmini erişkin boyu — açıp aileyle kullanın', route: '/doktor-tools/hedef-boy', branslar: ['pediatri'] },
   { circleColor: '#0891B2', icon: 'KH', title: 'Dahiliye Kohort Paneli', desc: 'HbA1c >9 · KB/LDL hedef dışı · eGFR <45 · gecikmiş görevler · 1-tap hatırlatma', route: '/doktor-tools/dahiliye-kohort', branslar: ['dahiliye'] },
 ]
 
@@ -54,7 +55,7 @@ export function doktorAraciBransaUygun(
   doktorBransi: string | null | undefined,
 ): boolean {
   const arac = TUM_DOKTOR_ARACLARI.find((a) => a.route === route)
-  if (!arac) return true // unknown / shared subpages (hedef-boy, hatirlatma, …) use their own gates
+  if (!arac) return true // unknown shared subpages (hatirlatma, …) use their own gates
   if (!arac.branslar) return true
   const key = doktorAracBransi(doktorBransi)
   return !!key && arac.branslar.includes(key)

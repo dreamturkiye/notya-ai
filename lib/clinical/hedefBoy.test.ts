@@ -78,14 +78,19 @@ describe('hedefBoy (mid-parental height)', () => {
     assert.equal(pediatriHedefBoyBransi(null), false)
   })
 
-  it('Araçlar / dashboard / Ayarlar do not mount Hedef Boy for every doctor', () => {
+  it('Araçlar landing does not embed Hedef Boy — pediatri opens /doktor-tools/hedef-boy', () => {
     const root = join(import.meta.dirname, '../..')
     const tools = readFileSync(join(root, 'app/doktor-tools/page.tsx'), 'utf8')
+    const hedef = readFileSync(join(root, 'app/doktor-tools/hedef-boy/page.tsx'), 'utf8')
+    const catalog = readFileSync(join(root, 'lib/doktor/doktorAraclari.ts'), 'utf8')
     const dash = readFileSync(join(root, 'app/dashboard/doktor/page.tsx'), 'utf8')
     const ayar = readFileSync(join(root, 'app/dashboard/doktor/ayarlar/page.tsx'), 'utf8')
     const demo = readFileSync(join(root, 'lib/portal/demoData.ts'), 'utf8')
-    assert.match(tools, /usePediatriHedefBoy/)
+    assert.doesNotMatch(tools, /HedefBoyAracPaneli|usePediatriHedefBoy/)
+    assert.match(hedef, /HedefBoyAracPaneli/)
+    assert.match(catalog, /\/doktor-tools\/hedef-boy/)
     assert.match(dash, /pediatriHedefBoyBransi/)
+    assert.match(dash, /\/doktor-tools\/hedef-boy/)
     assert.doesNotMatch(ayar, /Hedef Boy/)
     assert.match(demo, /hedefBoy:\s*null/)
   })
