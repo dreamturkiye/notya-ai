@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 
 type Props = {
@@ -11,17 +11,14 @@ type Props = {
 }
 
 /**
- * In-browser vault viewer: images via <img>, PDFs via PDF.js (CDN).
+ * In-browser vault viewer: images via <img>, PDFs in a blob: iframe (tarayıcının kendi
+ * görüntüleyicisi; CSP'de frame-src blob: açık), ses için <audio>.
  * Bytes are fetched through the authenticated download route (no public URLs).
  */
 export default function DocumentViewer({ documentId, fileName, fileType, onClose }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
-  const [pdfPage, setPdfPage] = useState(1)
-  const [pdfPages, setPdfPages] = useState(0)
-  const pdfDocRef = useRef<{ numPages: number; getPage: (n: number) => Promise<unknown> } | null>(null)
 
   useEffect(() => {
     let revoked: string | null = null
@@ -45,10 +42,6 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
         const url = URL.createObjectURL(blob)
         revoked = url
         setObjectUrl(url)
-
-        if (fileType === 'application/pdf') {
-          // PDF artık iframe ile açılıyor — render/CDN gerekmiyor.
-        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Görüntüleyici açılamadı')
       } finally {
@@ -60,55 +53,8 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
     return () => {
       cancelled = true
       if (revoked) URL.revokeObjectURL(revoked)
-      pdfDocRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentId, fileType])
-
-  async function ensurePdfJs(): Promise<{
-    getDocument: (opts: { url: string }) => { promise: Promise<{ numPages: number; getPage: (n: number) => Promise<unknown> }> }
-    GlobalWorkerOptions: { workerSrc: string }
-  }> {
-    const w = window as unknown as { pdfjsLib?: unknown }
-    if (w.pdfjsLib) return w.pdfjsLib as never
-    await new Promise<void>((resolve, reject) => {
-      const s = document.createElement('script')
-      s.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'
-      s.onload = () => resolve()
-      s.onerror = () => reject(new Error('PDF.js yüklenemedi'))
-      document.head.appendChild(s)
-    })
-    const pdfjsLib = (window as unknown as { pdfjsLib: {
-      getDocument: (opts: { url: string }) => { promise: Promise<{ numPages: number; getPage: (n: number) => Promise<unknown> }> }
-      GlobalWorkerOptions: { workerSrc: string }
-    } }).pdfjsLib
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
-    return pdfjsLib
-  }
-
-  async function renderPdf(url: string, pageNum: number) {
-    const pdfjs = await ensurePdfJs()
-    if (!pdfDocRef.current) {
-      const doc = await pdfjs.getDocument({ url }).promise
-      pdfDocRef.current = doc
-      setPdfPages(doc.numPages)
-    }
-    const doc = pdfDocRef.current
-    const page = (await doc.getPage(pageNum)) as {
-      getViewport: (o: { scale: number }) => { width: number; height: number }
-      render: (o: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }) => { promise: Promise<void> }
-    }
-    const viewport = page.getViewport({ scale: 1.25 })
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    canvas.height = viewport.height
-    canvas.width = viewport.width
-    await page.render({ canvasContext: ctx, viewport }).promise
-    setPdfPage(pageNum)
-  }
+  }, [documentId])
 
   const isImage = fileType.startsWith('image/')
   const isPdf = fileType === 'application/pdf'
@@ -120,29 +66,6 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
         <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#E2E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {fileName}
         </div>
-        {isPdf && pdfPages > 0 && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button
-              type="button"
-              disabled={pdfPage <= 1}
-              onClick={() => objectUrl && renderPdf(objectUrl, pdfPage - 1)}
-              style={navBtn}
-            >
-              ‹
-            </button>
-            <span style={{ fontSize: 12, color: '#94A3B8' }}>
-              {pdfPage}/{pdfPages}
-            </span>
-            <button
-              type="button"
-              disabled={pdfPage >= pdfPages}
-              onClick={() => objectUrl && renderPdf(objectUrl, pdfPage + 1)}
-              style={navBtn}
-            >
-              ›
-            </button>
-          </div>
-        )}
         <a
           href={objectUrl || '#'}
           download={fileName}

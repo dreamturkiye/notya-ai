@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Document, Page, Text, View, StyleSheet, renderToBuffer } from '@react-pdf/renderer';
 import React from 'react';
+import { contentDispositionAd } from '@/lib/vault/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -319,7 +320,9 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="' + filename + '"',
+        // KASA-BELGE-01: "şubat"/"mayıs"/"ağustos" gibi aylar Latin-1 dışı harf taşır; ham ad
+        // başlığa yazılınca Node başlığı reddedip rapor indirmeyi 500'e düşürüyordu.
+        'Content-Disposition': 'attachment; ' + contentDispositionAd(filename),
       },
     });
   } catch (error: unknown) {

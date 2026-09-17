@@ -23,6 +23,9 @@ import {
 } from '@/lib/doktor/toolsUi'
 import { VAULT_MAX_BYTES } from '@/lib/vault/types'
 
+/** NOTYA-LAB-01 tablo çıkarımının okuyabildiği türler (hasta dosyası › Belgeler ile aynı). */
+const LAB_TURLERI = /^application\/pdf$|^image\/|csv|excel|spreadsheet/
+
 const BELGE_TURLERI = [
   'Lab Sonucu',
   'Görüntüleme Raporu',
@@ -471,8 +474,13 @@ export default function BelgelerPage() {
 
         {hastaId && (
           <div style={{ ...toolsCard, marginTop: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#E2E8F0', marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#E2E8F0', marginBottom: 4 }}>
               Kasa ({docs.length})
+            </div>
+            <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
+              Belge adına tıklayın: önizleme açılır. “Asistana raporla” taslak değerlendirme yazar;
+              siz resmi tanıyı kilitleyip onayladığınızda muayenenin Objektif bölümüne eklenir.
+              Lab sonuçlarında “Lab” tabloyu çıkarır.
             </div>
             {!docs.length ? (
               <div style={{ fontSize: 13, color: '#94A3B8' }}>Bu hasta için henüz belge yok.</div>
@@ -484,7 +492,10 @@ export default function BelgelerPage() {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 12,
+                      // MOBILE-REVIEW: "Asistana raporla" + "Lab" eklenince satır 360px'te kendi
+                      // kutusunu 29px aşıyordu; sarmalayınca ad üstte, eylemler altta kalıyor.
+                      flexWrap: 'wrap',
+                      gap: 8,
                       padding: '10px 12px',
                       background: viewer?.id === d.id ? 'rgba(45,212,191,0.1)' : 'rgba(255,255,255,0.03)',
                       border: '1px solid rgba(255,255,255,0.08)',
@@ -494,12 +505,31 @@ export default function BelgelerPage() {
                   >
                     <span
                       onClick={() => setViewer(d)}
-                      style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                      style={{ flex: '1 1 140px', minWidth: 0, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
                     >
                       {d.fileName}
                     </span>
                     <span style={{ fontSize: 11, color: '#94A3B8' }}>{d.category || d.fileType}</span>
                     <span style={{ fontSize: 11, color: '#64748B' }}>{Math.max(1, Math.round(d.fileSize / 1024))} KB</span>
+                    {/* KASA-BELGE-01: değerlendirme boru hattı (NOTYA-BELGE-01 / NOTYA-LAB-01) vardı ama
+                        yalnız hasta dosyası › Belgeler sekmesinden görünüyordu; yükleme yapılan bu sayfa
+                        çıkışsız bir arşiv gibi duruyordu. Aynı iki bağlantı burada da. */}
+                    <a
+                      href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}`}
+                      title="Asistan taslak rapor yazsın; hekim onayıyla son muayenenin Objektif bölümüne eklenir"
+                      style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                    >
+                      Asistana raporla
+                    </a>
+                    {LAB_TURLERI.test(d.fileType) && (
+                      <a
+                        href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}/lab`}
+                        title="Lab tablosunu çıkar, düzelt ve onayla"
+                        style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                      >
+                        Lab
+                      </a>
+                    )}
                     <button
                       type="button"
                       onClick={() => belgeSil(d)}
