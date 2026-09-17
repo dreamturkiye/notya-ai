@@ -719,6 +719,7 @@ function normalizeKey(key: string): string {
     .replace(/\s+/g, '-')
     .replace(/_/g, '-')
     .replace(/&/g, '-')
+    .replace(/\u0307/g, '') // "İ".toLowerCase() leaves a combining dot ("İç Hastalıkları")
 }
 
 const LABEL_ALIASES: Record<string, SpecialtyKey> = {
@@ -733,11 +734,15 @@ const LABEL_ALIASES: Record<string, SpecialtyKey> = {
   genelcerrahi: 'genel-cerrahi',
   ortopedi: 'ortopedi',
   dermatoloji: 'dermatoloji',
+  'deri-ve-zuhrevi-hastaliklar': 'dermatoloji',
+  'deri-ve-zuhrevi-hastaliklari': 'dermatoloji',
   'kulak-burun-bogaz': 'kulak-burun-bogaz',
   kbb: 'kulak-burun-bogaz',
   'goz-hastaliklari': 'goz-hastaliklari',
   goz: 'goz-hastaliklari',
   'kadin-hastaliklari-dogum': 'kadin-hastaliklari-dogum',
+  'kadin-dogum': 'kadin-hastaliklari-dogum', // users.specialty value real KD profiles carry
+  jinekoloji: 'kadin-hastaliklari-dogum',
   'kadin-hastaliklari': 'kadin-hastaliklari-dogum',
   'kadin-hastaliklari-ve-dogum': 'kadin-hastaliklari-dogum',
   uroloji: 'uroloji',
@@ -766,6 +771,13 @@ const LABEL_ALIASES: Record<string, SpecialtyKey> = {
   'genel-pratisyen': 'aile-hekimligi',
   'spor-hekimligi': 'spor-hekimligi',
   genel: 'pediatri',
+}
+
+/** Strict lookup: the specialist for this branch key/label, or null (no pediatri fallback; "genel" is not a branch). */
+export function findSpecialistForSpecialty(key: string): SpecialistDef | null {
+  const normalized = normalizeKey(key)
+  if (!normalized || normalized === 'genel') return null
+  return SPECIALIST_BY_SPECIALTY[LABEL_ALIASES[normalized] || (normalized as SpecialtyKey)] || null
 }
 
 export function getSpecialistForSpecialty(key: string): SpecialistDef {

@@ -11,6 +11,7 @@ import {
   SPECIALISTS,
   SPECIALIST_BY_ID,
   getSpecialistForSpecialty,
+  findSpecialistForSpecialty,
   type SpecialtyKey,
   type SpecialistDef,
 } from '@/lib/asistan/specialistsCatalog'
@@ -240,6 +241,20 @@ export function buildVoiceFirstMessage(
 
 export function getPersonaForSpecialty(specialty: string): PersonaId {
   return getSpecialistForSpecialty(specialty).id
+}
+
+/** Flagship colleague the Asistan opens on (b9406a9). */
+export const VARSAYILAN_PERSONA: PersonaId = 'aysekaya'
+
+/** ASISTAN-PERSONA-BRANS (KD-DERM-SAFETY-FINDINGS F2): colleague when the doctor has not picked one. The first branch
+ * (request specialty, then users.specialty) with its own specialist wins, so a kadın doğum doctor meets the KD colleague,
+ * not the pediatri one. genel / aile hekimliği / unknown keep the flagship Ayşe (mixed-age practice, b9406a9). */
+export function varsayilanPersonaId(...branslar: (string | null | undefined)[]): PersonaId {
+  for (const b of branslar) {
+    const s = b ? findSpecialistForSpecialty(b) : null
+    if (s && s.specialtyKey !== 'aile-hekimligi') return s.id
+  }
+  return VARSAYILAN_PERSONA
 }
 
 export function getPersona(id: string): Persona {
