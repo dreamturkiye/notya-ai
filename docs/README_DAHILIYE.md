@@ -44,3 +44,6 @@ Shareable depth/gap report (before dahiliye wow sprint): [docs/README_DAHILIYE_A
 - **İzlem**: hasta_ilaclar → ilaç izlem görevleri (metformin B12/eGFR, ACEi/ARB K/Kre, statin ALT, levotiroksin TSH, warfarin INR, …).
 - Prompts: `specialties/dahiliye/prompts/` (system lock, SOAP, tools).
 
+
+## DAH-WOW Wave 1 kapanış — W1.4 (2026-09-16)
+- **SGK rapor sekmesi**: HT / DM / statin / DOAK ilaç kullanım raporu taslağı aktif kartlardan (ofis KB serisi + hekim evresi; HbA1c serisi; LDL + KVR kilidi; endikasyon + CHA₂DS₂-VASc bileşenleri + INR geçmişi). Etken madde yalnız hasta_ilaclar'dan; eksik kanıt listesi + SUT kontrol listesi (hekim güncel metinle doğrular). Hekim onayı → `dahiliye_sgk_raporlari.durum=kilitli` + bugünkü nota satır. Yazdır/PDF ve e-Nabız/Medula zarfı (Tools › Hasta Raporları ile aynı `enabizSgkRapor`). Hasta adı ve T.C. saklanmaz. Migration 040.

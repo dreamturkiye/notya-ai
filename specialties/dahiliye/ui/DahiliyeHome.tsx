@@ -17,7 +17,9 @@ const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', 
 const chip = (ad: string, v: string, kirmizi = false) => <span key={ad} style={{ border: `1px solid ${kirmizi ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: kirmizi ? '#F87171' : '#EDF1F7' }}><span style={{ color: '#8FA0B5' }}>{ad} </span>{v}</span>;
 const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : '#8FA0B5' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const Kaynak = ({ d, acik, refler }: { d?: Dip[] | null; acik: boolean; refler: Record<string, string> }) => (!acik || !d?.length ? null : <div style={{ ...kucuk, marginTop: 4, borderLeft: '2px solid rgba(15,155,142,0.5)', paddingLeft: 8 }}>{d.map((x, i) => <div key={i}><b>{x.ref}</b> — {x.not} <span style={{ opacity: 0.7 }}>({refler[x.ref] || x.ref})</span></div>)}</div>);
-const SEKME = ['Özet', 'HT', 'DM', 'Lipid', 'KVR', 'KBH', 'Tiroid', 'Check-up', 'İlaçlar', 'İzlem', 'Ev kayıt', 'Sevk'] as const;
+const SEKME = ['Özet', 'HT', 'DM', 'Lipid', 'KVR', 'KBH', 'Tiroid', 'Check-up', 'İlaçlar', 'İzlem', 'Ev kayıt', 'SGK rapor', 'Sevk'] as const;
+
+const WOW_SEKME: readonly string[] = ['KVR', 'KBH', 'İzlem', 'Ev kayıt', 'SGK rapor'];
 
 export default function DahiliyeHome({ patientId }: { patientId: string }) {
   const [v, setV] = useState<Veri | null>(null);
@@ -29,7 +31,7 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
   const api = useCallback(async (body: Record<string, unknown>) => { const token = await getAccessTokenAsync(); const r = await fetch('/api/doktor/dahiliye', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ patientId, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); return j; }, [patientId]);
   const yukle = useCallback(async () => { const token = await getAccessTokenAsync(); const r = await fetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); if (r.ok) setV(await r.json()); }, [patientId]);
   useEffect(() => { yukle(); }, [yukle]);
-  const calistir = async (body: Record<string, unknown>, ok?: string) => { setMesaj(''); try { await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
+  const calistir = async (body: Record<string, unknown>, ok?: string): Promise<Record<string, unknown> | null> => { setMesaj(''); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
   if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Dahiliye yükleniyor…</div>;
   const c = v.chips; const fmt = (l: L, u = '') => (l?.kanonik_deger != null ? `${l.kanonik_deger}${u}` : '—');
   const sonHt = v.ht[0] || null;
@@ -102,7 +104,7 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
         <div style={kucuk}>Yeni reçete muayenede yazılır ve bu listeyi günceller (İlaçlar sekmesi).</div>
       </div>)}
 
-      {(sekme === 'KVR' || sekme === 'KBH' || sekme === 'İzlem' || sekme === 'Ev kayıt') && v.wow && <DahiliyeWow sekme={sekme} wow={v.wow} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
+      {WOW_SEKME.includes(sekme) && v.wow && <DahiliyeWow sekme={sekme} wow={v.wow} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {sekme === 'Sevk' && (<div>
         <div style={etiket}>Kırmızı bayrak + sevk <span style={kucuk}>· K {fmt(c.k)} · Hb {fmt(c.hb)} · eGFR {fmt(c.egfr)}</span></div>
         <div style={satir}>{chk('göğüs ağrısı', b('ga'), (x) => set('ga', x))}{chk('yeni EKG belgesi', b('ye'), (x) => set('ye', x))}{chk('ateş', b('at'), (x) => set('at', x))}{chk('acil / sevk onayı (hekim)', b('ao'), (x) => set('ao', x))}<input value={s('knot')} onChange={(e) => set('knot', e.target.value)} placeholder="not" style={{ ...toolsInput, minWidth: 160 }} /><button type="button" onClick={() => calistir({ adim: 'kirmizi', gogusAgrisi: b('ga'), yeniEkg: b('ye'), ates: b('at'), acilSevkOnayi: b('ao'), not: s('knot') }, 'Kırmızı bayrak kontrolü tamam.')} style={ghost}>Kırmızı bayrak kontrolü</button></div>
