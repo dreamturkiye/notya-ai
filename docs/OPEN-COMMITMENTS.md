@@ -131,7 +131,43 @@ speed (bilateral VA/GİB, glokom/DR/katarakt loops, enjeksiyon takvim, SGK rapor
 **Pre-sprint audit shipped 2026-09-17 (before Claude chapter build):**
 `public/goz-presprint-audit.html` → https://notya-ai.vercel.app/goz-presprint-audit.html
 Verdict: chapter Missing; overall ~8% vs wow bar; top gaps = VA/GİB strip, glokom, DR loop, Gözlerim.
-Post-sprint twin TBD after build: `goz-post-sprint-audit.html`.
+Post-sprint twin: `public/goz-post-sprint-audit.html` → https://notya-ai.vercel.app/goz-post-sprint-audit.html (11/18 Strong, ~77% vs wow bar).
+
+**GOZ-CHAPTER — SHIPPED 2026-09-17 (#292, Claude).** `specialties/goz-hastaliklari/**` + `lib/specialties/goz-hastaliklari.ts`
+(VA/GİB first-class olcumler, Gözlerim module Strong) + migration `048_goz_chapter.sql` (goz_* tables, oct/fundus/on_segment
+modalities; applied) + `/api/doktor/goz` + hasta dosyası › **Göz** (only for göz doctors). Engines: VA (logMAR/letters, PS/EH/IH
+non-numeric), glokom (hekim target/intervals, no titration), DR (TEMD 2026 screening + TEMD vs ICO 2017 dual column,
+`catisma`), anti-VEGF (SUT 4.2.33 verified line by line: basamak, rapor type/duration, loading, implant spacing, switch rule,
+8 mg, response class), SGK rapor drafts, acil red flags, katarakt checklist, ön segment cards (SUT 4.2.33.D), pediatric bridge,
+strip + intake→Subjektif, dual-sign OCT/fundus reads. Prompts lock wired (SOAP/chat/ses/stil). Dahiliye bridge: closing an open
+`sevkler(hedef=goz)` writes `dahiliye_dm.son_goz_dibi` and closes `dm_goz`. Sağlığım › Gözlerim + `/portal/demo-goz`.
+Tests: `npm run test:goz` (61), npm test 584/584. Smoke: `scripts/goz-smoke.mts` 48 steps/checks 0 failures (QA doctor
+`qa.goz@notya.ai`, password only in .env.local); `scripts/goz-prompts-smoke.mts` 7/0 (real SOAP + chat). Screenshots 360/390px,
+no horizontal overflow (smoke-out/goz, gitignored).
+
+**Assumptions recorded (low-risk, made without asking):** TEMD "minimal retinopati" = hafif NPDR and "ileri evre" = orta NPDR+
+or any DMÖ (TEMD gives no ICDR table) — shown next to ICO, hekim locks the date; glaucoma and pediatric intervals are hekim
+fields because TOD birim texts are members-only; ICD-10 suggestions on SGK drafts (H35.3/H36.0/H34.8/H44.2/H25.9) are marked
+"hekim doğrular"; `rapor_metni` on OCT/fundus rows stays visible in Sağlığım › Sonuçlar because it is doctor-typed at upload
+(same as every modality); a GİL draft is an info note because the SUT text has no GİL rapor rule.
+
+**Open / intentional outs (Göz):**
+- GOZ-AYSE-VISION — Ayşe OCT/fundus draft into `goz_goruntu_okumalari` (dual-sign record exists; auto-draft not wired). M.
+- GOZ-EK3G — verify SUT EK-3/G lens items (monofokal/torik/multifokal) with the clinic's billing; list could not be fetched. S.
+- GOZ-TOD-TEXTS — TOD Glokom / Retina / Pediatrik birim guidelines are members-only; read with a member login and replace hekim
+  interval fields with verified defaults. M.
+- GOZ-SB-GORME — SB görme taraması referral cut-offs (Lea/Snellen) unverified (hsgm PDFs refused connection); not embedded. S.
+- GOZ-INTAKE-SMOKE — intake → Subjektif path has unit tests but no smoke with a filled göz ön formu. S.
+- GOZ-COMPARE — side-by-side OCT compare for the same eye. M.
+- Real ophthalmologist beta — synthetic QA ≠ muayenehane; needs a göz hekimi field day.
+
+**SAGLIGIM PART C — portal honesty pass (2026-09-17):** pediatri büyüme Partial (gated, still Takip bolt-on), KD Gebeliğim + jine
+Partial (gated), dahiliye ön anket Partial (gated in bundle and API), dermatoloji **Missing** (declared, mounts nothing), göz
+Gözlerim Strong. Smoke proves a göz practice gets no büyüme/gebelik/jine/anket, including a 6-year-old with kilo/boy.
+**Waits on Kaan (doctor side, not changed):** hasta dosyası shows "Deri & Lezyon" to every branch (#244 made it universal) and
+pediatric tabs (M-CHAT, gelişim, büyüme, bebek kartı) follow patient age, not doctor branch — so göz/KD doctors see them for
+children. Proposal: same registry rule as the portal (own-chapter doctors don't get other chapters' tabs). Needs a yes because
+Dr. Gökhan's pediatri workflow may use the Deri tab.
 
 ## Kadın Hastalıkları ve Doğum — Wave 1, first slice shipped 2026-09-14 (night)
 
