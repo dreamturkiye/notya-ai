@@ -9,7 +9,7 @@ import type { Sb } from './_ortak'
 type Hasta = { id: string; yas: number | null; kadin: boolean }
 
 export async function wow4Verisi(sb: Sb, hasta: Hasta, sonKb: { hedefteMi?: boolean; teknik_onay?: boolean | null } | null, kronikKart: boolean, T: string) {
-  const { data } = await sb.from('dahiliye_taramalar').select('tip, skor, pozitif, not_metni, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(30)
+  const { data } = await sb.from('dahiliye_taramalar').select('id, tip, skor, pozitif, not_metni, nota_eklendi_at, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(30)
   const son = (tip: string) => (data || []).find((x) => x.tip === tip) || null
   const tarih = (tip: string) => { const r = son(tip); return r ? String(r.created_at).slice(0, 10) : null }
   const nudgeler = nudgeListesi({ yas: hasta.yas, kronikKart, sonFrail: tarih('frail'), sonDusme: tarih('dusme'), sonPhq2: tarih('phq2'), kbHedefDisi: sonKb?.hedefteMi === false, kbTeknikOnay: sonKb?.teknik_onay !== false, bugun: T })
@@ -32,10 +32,14 @@ export async function wow4Post(adim: string, b: Record<string, unknown>, sb: Sb,
     return NextResponse.json({ ok: true, skor, pozitif, not })
   }
   if (adim === 'notaekle') {
-    const { data: t } = await sb.from('dahiliye_taramalar').select('not_metni').eq('patient_id', hasta.id).eq('tip', String(b.tip || '')).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    const { data: t } = await sb.from('dahiliye_taramalar').select('id, not_metni').eq('patient_id', hasta.id).eq('tip', String(b.tip || '')).order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (!t?.not_metni) return NextResponse.json({ error: 'Tarama sonucu yok' }, { status: 404 })
     const r = await gununNotunaEkle(sb, userId, hasta.id, `${t.not_metni} (tarama — tanı değildir; hekim ekledi)`)
-    return r.eklendi ? NextResponse.json({ ok: true }) : NextResponse.json({ error: `Nota eklenemedi: ${r.sebep || ''}` }, { status: 409 })
+    if (!r.eklendi) return NextResponse.json({ error: `Nota eklenemedi: ${r.sebep || ''}` }, { status: 409 })
+    // Yalnız bu sonuç işaretlenir: NudgeBar "Nota ekle" CTA'sını gizler; yeni tarama kaydı yine CTA ile gelir.
+    const simdi = new Date().toISOString()
+    await sb.from('dahiliye_taramalar').update({ nota_eklendi_at: simdi }).eq('id', t.id)
+    return NextResponse.json({ ok: true, notaEklendiAt: simdi })
   }
   if (adim === 'kbteknik') {
     const liste = (Array.isArray(b.liste) ? b.liste : []).map(String).filter((x) => KB_TEKNIK.includes(x))

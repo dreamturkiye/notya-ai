@@ -33,7 +33,7 @@ export function NudgeBar({ w4, kaynak, refler, calistir }: { w4: Wow4Veri; kayna
           <button type="button" style={{ ...btn, marginTop: 4 }} onClick={() => calistir({ adim: 'nudge', tip: 'phq2', cevaplar: c }, 'PHQ-2 kaydedildi — nota eklemek için "Nota ekle".')}>Kaydet</button></>)}
         <Kaynak d={w4.nudgeler.filter((n) => n.kod === acik).map((n) => n.dipnot)} acik={kaynak} refler={refler} />
       </div>)}
-      {([['frail', w4.son.frail], ['dusme', w4.son.dusme], ['phq2', w4.son.phq2]] as const).filter(([, x]) => x).map(([tip, x]) => <div key={tip} style={{ ...kucuk, marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ color: x!.pozitif ? '#FBBF24' : '#8FA0B5' }}>{String(x!.created_at).slice(0, 10)} · {x!.not_metni}</span><button type="button" style={{ ...ghost, padding: '1px 6px', fontSize: 10 }} onClick={() => calistir({ adim: 'notaekle', tip }, 'Tarama sonucu bugünkü nota eklendi.')}>Nota ekle</button></div>)}
+      {([['frail', w4.son.frail], ['dusme', w4.son.dusme], ['phq2', w4.son.phq2]] as const).filter(([, x]) => x).map(([tip, x]) => <div key={tip} style={{ ...kucuk, marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ color: x!.pozitif ? '#FBBF24' : '#8FA0B5' }}>{String(x!.created_at).slice(0, 10)} · {x!.not_metni}</span>{x!.nota_eklendi_at ? <span style={{ color: '#22C55E', fontSize: 10 }}>✓ notta</span> : <button type="button" style={{ ...ghost, padding: '1px 6px', fontSize: 10 }} onClick={() => calistir({ adim: 'notaekle', tip }, 'Tarama sonucu bugünkü nota eklendi.')}>Nota ekle</button>}</div>)}
     </div>
   );
 }

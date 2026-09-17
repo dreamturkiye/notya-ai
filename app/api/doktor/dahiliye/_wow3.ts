@@ -32,8 +32,16 @@ async function belgeTarihleri(sb: Sb, patientId: string, sadeceOnayli = false) {
   return { m, satirlar: data || [] }
 }
 
+/** Check-up tarama kalemleri (W4.2 dahiliye_taramalar): tip → kayıt tarihleri. */
+async function taramaTarihleri(sb: Sb, patientId: string) {
+  const { data } = await sb.from('dahiliye_taramalar').select('tip, created_at').eq('patient_id', patientId).order('created_at', { ascending: false }).limit(30)
+  const m: Record<string, string[]> = {}
+  for (const t of data || []) (m[String(t.tip)] ||= []).push(String(t.created_at).slice(0, 10))
+  return m
+}
+
 export async function wow3Verisi(sb: Sb, hasta: Hasta, labs: Map<string, LabSatir[]>, ilaclar: IlacR[], T: string) {
-  const [hfQ, akQ, pulmQ, giQ, ekgQ, nodulQ, ramQ, paketQ, evQ, htQ, dmQ, kvrQ, gebeQ, belge] = await Promise.all([
+  const [hfQ, akQ, pulmQ, giQ, ekgQ, nodulQ, ramQ, paketQ, evQ, htQ, dmQ, kvrQ, gebeQ, belge, tarama] = await Promise.all([
     sb.from('dahiliye_hf').select('*').eq('patient_id', hasta.id).maybeSingle(),
     sb.from('dahiliye_antikoagulan').select('*').eq('patient_id', hasta.id).maybeSingle(),
     sb.from('dahiliye_pulm').select('*').eq('patient_id', hasta.id).maybeSingle(),
@@ -48,6 +56,7 @@ export async function wow3Verisi(sb: Sb, hasta: Hasta, labs: Map<string, LabSati
     sb.from('dahiliye_kvr').select('sigara, askvh').eq('patient_id', hasta.id).maybeSingle(),
     sb.from('gebelikler').select('durum').eq('patient_id', hasta.id),
     belgeTarihleri(sb, hasta.id),
+    taramaTarihleri(sb, hasta.id),
   ])
   const ilacMetin = ilaclar.filter((i) => i.aktif !== false).map((i) => `${i.ilac_adi} ${i.etken_madde || ''}`.toLowerCase())
   const kb = htQ.data?.[0] || null
@@ -78,7 +87,7 @@ export async function wow3Verisi(sb: Sb, hasta: Hasta, labs: Map<string, LabSati
 
   const labTarihleri: Record<string, string[]> = {}
   for (const [k, arr] of labs) labTarihleri[k] = arr.map((x) => x.numune_tarihi).filter(Boolean) as string[]
-  const paketler = (paketQ.data || []).map((p) => ({ id: String(p.id), sku: String(p.sku), ad: PAKETLER.find((x) => x.sku === p.sku)?.ad || String(p.sku), tarih: String(p.tarih), ucret: p.ucret != null ? Number(p.ucret) : null, durum: String(p.durum), raporKilitli: !!p.rapor_kilit_at, ...paketDurumu({ sku: String(p.sku), tarih: String(p.tarih), manuelTamam: (p.manuel_tamam || []) as string[] }, labTarihleri, belge.m) }))
+  const paketler = (paketQ.data || []).map((p) => ({ id: String(p.id), sku: String(p.sku), ad: PAKETLER.find((x) => x.sku === p.sku)?.ad || String(p.sku), tarih: String(p.tarih), ucret: p.ucret != null ? Number(p.ucret) : null, durum: String(p.durum), raporKilitli: !!p.rapor_kilit_at, ...paketDurumu({ sku: String(p.sku), tarih: String(p.tarih), manuelTamam: (p.manuel_tamam || []) as string[] }, labTarihleri, belge.m, tarama) }))
 
   return {
     hf: hf ? { ef: hf.ef, nyha: hf.nyha, eko_tarihi: hf.eko_tarihi, yatis_12ay: !!hf.yatis_12ay, sonuc: hfSonuc } : null,
@@ -202,10 +211,10 @@ export async function wow3Post(adim: string, b: Record<string, unknown>, sb: Sb,
       await gununNotunaEkle(sb, userId, hasta.id, `Check-up birleşik raporu hekim tarafından onaylandı (${PAKETLER.find((x) => x.sku === p.sku)?.ad || p.sku}).`)
       return ok()
     }
-    const [L, belge, kilitQ, ad] = await Promise.all([labs(), belgeTarihleri(sb, hasta.id, true), sb.from('dahiliye_kart_kilitleri').select('kart, alan, deger, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(200), hastaAdi(sb, userId, hasta.id)])
+    const [L, belge, tarama, kilitQ, ad] = await Promise.all([labs(), belgeTarihleri(sb, hasta.id, true), taramaTarihleri(sb, hasta.id), sb.from('dahiliye_kart_kilitleri').select('kart, alan, deger, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(200), hastaAdi(sb, userId, hasta.id)])
     const labTarihleri: Record<string, string[]> = {}
     for (const [k, arr] of L) labTarihleri[k] = arr.map((x) => x.numune_tarihi).filter(Boolean) as string[]
-    const durum = paketDurumu({ sku: String(p.sku), tarih: String(p.tarih), manuelTamam: (p.manuel_tamam || []) as string[] }, labTarihleri, belge.m)
+    const durum = paketDurumu({ sku: String(p.sku), tarih: String(p.tarih), manuelTamam: (p.manuel_tamam || []) as string[] }, labTarihleri, belge.m, tarama)
     const labSatir: { ad: string; deger: string; tarih: string }[] = []
     for (const [k, arr] of L) { const r = arr.find((x) => x.numune_tarihi && x.numune_tarihi >= String(p.tarih)); if (r) labSatir.push({ ad: k, deger: r.kanonik_deger != null ? String(r.kanonik_deger).replace('.', ',') : String(r.value_text || ''), tarih: String(r.numune_tarihi) }) }
     const belgeler = belge.satirlar.filter((x) => String(x.olusturuldu).slice(0, 10) >= String(p.tarih)).map((x) => ({ tur: String(x.modality_final).toUpperCase(), tarih: String(x.olusturuldu).slice(0, 10), ozet: String(x.hekim_ozet || (x.sonuc as { ozet?: string } | null)?.ozet || 'onaylı rapor') }))
