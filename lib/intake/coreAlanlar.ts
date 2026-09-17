@@ -78,9 +78,12 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
     baslik: 'Sağlık Güvencesi',
     alanlar: [
       { id: 'sigortaTuru', etiket: 'Sağlık Güvenceniz', tur: 'radio', zorunlu: true, secenekler: ['Ücretli Hasta', 'Özel Sağlık Sigortası', 'Tamamlayıcı Sağlık Sigortası', 'Kurumsal Anlaşma', 'SGK'] },
-      { id: 'sigortaSirketi', etiket: 'Özel Sigorta Şirketi', tur: 'text', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
-      { id: 'policeNo', etiket: 'Poliçe / Üyelik Numarası', tur: 'text', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
-      { id: 'kurumAdi', etiket: 'Kurum / İşveren Adı', tur: 'text', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
+      // NOTYA-INTAKE-08 (Dr. Gökhan, 2026-09-17): 'Yoksa "Yok" yazın' ipucu olan alanlar ZORUNLU DEĞİL.
+      // Hastaların çoğunun özel sigortası yok; zorunlu tutmak hastayı "Yok" yazmaya zorlayan bir
+      // geçici çözüme itiyordu. Boş bırakmak ile "Yok" yazmak aynı bilgiyi taşır — alan isteğe bağlı.
+      { id: 'sigortaSirketi', etiket: 'Özel Sigorta Şirketi', tur: 'text', placeholder: 'Yoksa "Yok" yazın' },
+      { id: 'policeNo', etiket: 'Poliçe / Üyelik Numarası', tur: 'text', placeholder: 'Yoksa "Yok" yazın' },
+      { id: 'kurumAdi', etiket: 'Kurum / İşveren Adı', tur: 'text', placeholder: 'Yoksa "Yok" yazın' },
     ],
   },
   {
@@ -88,9 +91,10 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
     alanlar: [
       { id: 'kanGrubu', etiket: 'Kan Grubu', tur: 'radio', zorunlu: true, secenekler: ['Bilmiyorum', 'A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', '0 Rh+', '0 Rh-'] },
       { id: 'kronikHastaliklar', etiket: 'Bilinen Kronik Hastalıklarınız', tur: 'checkbox-grup', zorunlu: true, secenekler: ['Diyabet', 'Hipertansiyon', 'Astım / KOAH', 'Kalp Hastalığı', 'Böbrek Hastalığı', 'Tiroid Hastalığı', 'Kanser', 'Yok'] },
-      { id: 'gecirilmisAmeliyatlar', etiket: 'Geçirdiğiniz Ameliyatlar', tur: 'textarea', zorunlu: true, placeholder: 'Ameliyat adı ve yılı — yoksa "Yok" yazın' },
+      // Aynı gerekçe (NOTYA-INTAKE-08): 'yoksa "Yok" yazın' ipucu → alan isteğe bağlı.
+      { id: 'gecirilmisAmeliyatlar', etiket: 'Geçirdiğiniz Ameliyatlar', tur: 'textarea', placeholder: 'Ameliyat adı ve yılı — yoksa "Yok" yazın' },
       { id: 'kullaniyorMu', etiket: 'Düzenli ilaç kullanıyor musunuz?', tur: 'radio', zorunlu: true, secenekler: ['Hayır', 'Evet'] },
-      { id: 'kullanilanIlaclar', etiket: 'İlaç Adı ve Dozu', tur: 'textarea', zorunlu: true, placeholder: 'Yoksa "Yok" yazın' },
+      { id: 'kullanilanIlaclar', etiket: 'İlaç Adı ve Dozu', tur: 'textarea', placeholder: 'Yoksa "Yok" yazın' },
       { id: 'alerjiVarMi', etiket: 'Bilinen Alerjileriniz', tur: 'radio', zorunlu: true, dikey: true, secenekler: ['Bilinen alerjisi yok', 'Bilinen alerjisi var'] },
       { id: 'alerjiAciklama', etiket: 'Alerji açıklaması', tur: 'textarea', placeholder: 'İlaç, gıda veya diğer bilinen alerjileri yazın', yardim: 'Yalnız "Bilinen alerjisi var" seçildiyse doldurun.' },
       { id: 'aileOykusu', etiket: 'Aile Sağlık Öyküsü', tur: 'textarea', zorunlu: true, placeholder: 'Anne/baba/kardeşte bilinen ciddi hastalıklar' },
@@ -127,13 +131,14 @@ export function coreBolumlerIcin(brans: string): IntakeBolum[] {
       alanlar: bolum.alanlar.flatMap((alan): IntakeAlan[] => {
         switch (alan.id) {
           case 'kronikHastaliklar':
-            return [{ id: 'kronikHastaliklar', etiket: 'Özgeçmiş — Hastalık / Ameliyat', tur: 'textarea', zorunlu: true, placeholder: 'Çocuğunuzun geçirdiği hastalıklar, ameliyatlar ve yılları — yoksa "Yok" yazın' }]
+            // NOTYA-INTAKE-08: 'yoksa "Yok" yazın' ipucu olan alanlar isteğe bağlı (core ile hizalı).
+            return [{ id: 'kronikHastaliklar', etiket: 'Özgeçmiş — Hastalık / Ameliyat', tur: 'textarea', placeholder: 'Çocuğunuzun geçirdiği hastalıklar, ameliyatlar ve yılları — yoksa "Yok" yazın' }]
           case 'gecirilmisAmeliyatlar':
             return [] // Özgeçmiş alanına birleştirildi
           case 'kullaniyorMu':
             return [] // Evet/Hayır ara sorusu kaldırıldı — doğrudan serbest metin
           case 'kullanilanIlaclar':
-            return [{ id: 'kullanilanIlaclar', etiket: 'Kullanılan İlaç / Takviyeler', tur: 'textarea', zorunlu: true, placeholder: 'Düzenli kullanılan ilaç ve takviyeler (adı, dozu) — yoksa "Yok" yazın' }]
+            return [{ id: 'kullanilanIlaclar', etiket: 'Kullanılan İlaç / Takviyeler', tur: 'textarea', placeholder: 'Düzenli kullanılan ilaç ve takviyeler (adı, dozu) — yoksa "Yok" yazın' }]
           case 'alerjiler':
           case 'alerjiVarMi':
             // Core ile hizalı (2026-09-08): checkbox yerine yok/var + açıklama.

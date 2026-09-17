@@ -38,8 +38,12 @@ function etiketHaritasi(brans: string): Record<string, string> {
   return h;
 }
 function degerGoster(v: unknown): string {
-  if (Array.isArray(v)) return v.join(', ');
-  const t = String(v ?? '—');
+  // NOTYA-INTAKE-08: isteğe bağlı alanlar (örn. sigorta) artık boş gönderilebiliyor — boş dize
+  // de en az null kadar "boş". Eskiden yalnız null/undefined '—' oluyordu, boş dize ise satırı
+  // sessizce bomboş bırakıp render hatası gibi görünüyordu.
+  if (Array.isArray(v)) return v.filter((x) => String(x ?? '').trim()).join(', ') || '—';
+  const t = String(v ?? '').trim();
+  if (!t) return '—';
   const m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m ? `${m[3]}.${m[2]}.${m[1]}` : t;
 }
