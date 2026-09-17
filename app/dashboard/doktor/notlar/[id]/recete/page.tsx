@@ -175,7 +175,7 @@ export default function ReceteYazdirPage() {
       {/* Üst çubuk: tek büyük düğme (doktorun yolu) + küçük diğerleri */}
       <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href={`/dashboard/doktor/notlar/${params.id}/yazdir`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Geri</a>
+          <a href={`/dashboard/doktor/notlar/${params.id}/yazdir`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap', padding: '6px 0' }}>← Geri</a>
           <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
         </span>
         {yol !== null && (
@@ -305,10 +305,10 @@ export default function ReceteYazdirPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                 <span><b>{s.ilacAdi}</b>{s.dozMetni ? ` ${s.dozMetni}` : ''}</span>
                 <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <button type="button" className="kutu-eksi" onClick={() => setKutular((k) => k.map((v, j) => (j === i ? Math.max(1, v - 1) : v)))} style={{ border: '1px solid #ccc', background: '#f7f7f7', borderRadius: 4, width: 20, height: 20, cursor: 'pointer', fontSize: 12 }}>−</button>
+                  <button type="button" className="kutu-eksi" onClick={() => setKutular((k) => k.map((v, j) => (j === i ? Math.max(1, v - 1) : v)))} style={{ border: '1px solid #ccc', background: '#f7f7f7', borderRadius: 4, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>−</button>
                   <input className="kutu-giris" type="number" min={1} max={20} value={kutular[i] ?? 1} onChange={(e) => setKutular((k) => k.map((v, j) => (j === i ? Math.max(1, Number(e.target.value) || 1) : v)))} style={{ width: 36, textAlign: 'right', fontFamily: 'inherit', fontSize: 13, border: '1px solid #ddd', borderRadius: 4, padding: '1px 4px' }} />
                   <span>kutu</span>
-                  <button type="button" className="kutu-arti" onClick={() => setKutular((k) => k.map((v, j) => (j === i ? Math.min(20, v + 1) : v)))} style={{ border: '1px solid #ccc', background: '#f7f7f7', borderRadius: 4, width: 20, height: 20, cursor: 'pointer', fontSize: 12 }}>+</button>
+                  <button type="button" className="kutu-arti" onClick={() => setKutular((k) => k.map((v, j) => (j === i ? Math.min(20, v + 1) : v)))} style={{ border: '1px solid #ccc', background: '#f7f7f7', borderRadius: 4, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>+</button>
                 </span>
               </div>
               <div style={{ paddingLeft: 10, fontStyle: 'italic' }}>S: {s.kullanimOzeti}</div>
