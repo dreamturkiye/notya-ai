@@ -16,6 +16,9 @@ import { ilacIzlemGorevleri } from '@/specialties/dahiliye/engines/ilacIzlem'
 import { evKbOzeti, evGlukozOzeti } from '@/specialties/dahiliye/engines/evKayit'
 import { vizitSeridi } from '@/specialties/dahiliye/engines/serit'
 import { kilitDogrula, kilitDegeri, type HekimKilit } from '@/specialties/dahiliye/engines/kart'
+import { sgkRaporTaslagi, SGK_SABLONLARI, type SgkSablon, type SgkLab } from '@/specialties/dahiliye/engines/sgkRapor'
+import { enabizSgkRapor } from '@/lib/enabiz/paket'
+import { RAPOR_TIPLERI } from '@/lib/sgk/raporTipleri'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -42,6 +45,17 @@ async function hastaBilgi(sb: Sb, doctorId: string, patientId: string) {
   return { id: data.id, yas, kadin }
 }
 
+async function hastaAdi(sb: Sb, doctorId: string, patientId: string): Promise<string> {
+  const { data } = await sb.from('patients').select('name_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
+  try { if (data?.name_encrypted) { const p = JSON.parse(decrypt(String(data.name_encrypted))); return `${p.ad || ''} ${p.soyad || ''}`.trim() || 'Hasta' } } catch { /* varsayılan */ }
+  return 'Hasta'
+}
+async function hekimKimlik(sb: Sb, user: { id: string; user_metadata?: Record<string, unknown> }) {
+  const [{ data: profil }, { data: medula }] = await Promise.all([sb.from('users').select('full_name, specialty').eq('id', user.id).maybeSingle(), sb.from('doctor_integrations').select('meta').eq('user_id', user.id).eq('provider', 'medula').eq('is_active', true).maybeSingle()])
+  const meta = (medula?.meta || {}) as { tesisKodu?: string; sicilNo?: string; diplomaTescilNo?: string; saglikKurumu?: string; kurumAdi?: string }
+  return { adSoyad: String(profil?.full_name || user.user_metadata?.full_name || ''), uzmanlik: String(profil?.specialty || user.user_metadata?.specialty || ''), diplomaTescilNo: meta.diplomaTescilNo || meta.sicilNo || '', saglikKurumu: meta.saglikKurumu || meta.kurumAdi || '', tesisKodu: meta.tesisKodu || '', medulaBagli: !!medula }
+}
+const labKayit = (m: Map<string, LabSatir[]>): Record<string, SgkLab[]> => { const o: Record<string, SgkLab[]> = {}; for (const [k, arr] of m) o[k] = arr.filter((x) => x.kanonik_deger != null && x.numune_tarihi).map((x) => ({ ad: k, deger: x.kanonik_deger as number, tarih: x.numune_tarihi as string })); return o }
 
 // ---------- NOTYA-DAH-WOW W0/W1: kilitler, KVR, KBH, ev kayıt, ilaç izlem, şerit ----------
 type IlacRow = { id: string; ilac_adi: string; etken_madde: string | null; doz: string | null; kullanim_sikli: string | null; baslangic_tarihi: string | null; aktif: boolean | null }
@@ -144,6 +158,45 @@ export async function POST(req: NextRequest) {
     await gorevEkle(sb, user.id, hasta.id, g.map((x) => ({ kod: x.kod, ad: `${x.ad} (${x.ilac})`, due: x.due, kaynak: 'ilac_izlem' })))
     return NextResponse.json({ ok: true, sayi: g.length })
   }
+  if (adim === 'sgkrapor') {
+    const sablon = String(b.sablon || '') as SgkSablon
+    if (!SGK_SABLONLARI.some((x) => x.id === sablon)) return NextResponse.json({ error: 'Şablon geçersiz' }, { status: 400 })
+    const [labs, ilaclar, htQ, dmQ, kvrQ, kilitQ, ad, hekim] = await Promise.all([
+      labSerisi(sb, hasta.id),
+      sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, aktif').eq('patient_id', hasta.id).eq('aktif', true),
+      sb.from('dahiliye_ht').select('sbp, dbp, tarih, evre_hekim').eq('patient_id', hasta.id).order('tarih', { ascending: false }).limit(3),
+      sb.from('dahiliye_dm').select('tip').eq('patient_id', hasta.id).maybeSingle(),
+      sb.from('dahiliye_kvr').select('askvh').eq('patient_id', hasta.id).maybeSingle(),
+      sb.from('dahiliye_kart_kilitleri').select('kart, alan, deger, created_at').eq('patient_id', hasta.id).in('kart', ['kvr', 'ht']).order('created_at', { ascending: false }).limit(50),
+      hastaAdi(sb, user.id, hasta.id), hekimKimlik(sb, user),
+    ])
+    const kilitler = (kilitQ.data || []) as HekimKilit[]
+    const cv = (b.chaVasc || {}) as Record<string, unknown>
+    const sonuc = sgkRaporTaslagi({ sablon, hasta: { adSoyad: ad, yas: hasta.yas, kadin: hasta.kadin }, bugun: T,
+      ilaclar: (ilaclar.data || []).map((i) => ({ ad: String(i.ilac_adi), etken: i.etken_madde, aktif: true })), labs: labKayit(labs),
+      kbSerisi: (htQ.data || []).map((h) => ({ sbp: Number(h.sbp), dbp: Number(h.dbp), tarih: String(h.tarih) })),
+      htEvreHekim: kilitDegeri<string>(kilitler, 'ht', 'evre') || (htQ.data?.find((h) => h.evre_hekim)?.evre_hekim as string | undefined) || null,
+      dmTip: (dmQ.data?.tip as 'T2' | 'T1' | 'diger' | undefined) || null, kvrKategoriHekim: kilitDegeri<string>(kilitler, 'kvr', 'kategori'), askvh: !!kvrQ.data?.askvh,
+      doakEndikasyon: ['af', 'dvt', 'pe'].includes(String(b.doakEndikasyon)) ? (String(b.doakEndikasyon) as 'af' | 'dvt' | 'pe') : null,
+      chaVasc: { kky: !!cv.kky, ht: !!cv.ht, dm: !!cv.dm, inmeTia: !!cv.inmeTia, vaskuler: !!cv.vaskuler }, mekanikKapak: !!b.mekanikKapak, sureAy: num(b.sureAy) ?? 12 })
+    const tip = RAPOR_TIPLERI.find((t) => t.id === 'ilac_kullanim')!
+    const enabiz = enabizSgkRapor({ raporTipiId: tip.id, raporTipiLabel: tip.label, draft: sonuc.draft, hekim })
+    const { data: kayit, error } = await sb.from('dahiliye_sgk_raporlari').insert({ patient_id: hasta.id, doctor_id: user.id, sablon, draft: { ...sonuc.draft, hastaAdi: '', tcSon4: '' }, sut_kontrol: sonuc.sutKontrol, eksikler: sonuc.eksikler }).select('id').maybeSingle()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true, raporId: kayit?.id || null, ...sonuc, hekim, enabiz, raporTipi: tip })
+  }
+  if (adim === 'sgkkilit') {
+    const raporId = String(b.raporId || '')
+    const { data: r } = await sb.from('dahiliye_sgk_raporlari').select('id, eksikler, draft').eq('id', raporId).eq('doctor_id', user.id).eq('patient_id', hasta.id).maybeSingle()
+    if (!r) return NextResponse.json({ error: 'Rapor bulunamadı' }, { status: 404 })
+    if ((r.eksikler as string[] | null)?.some((e) => /MEKANİK KAPAK/.test(e))) return NextResponse.json({ error: 'Mekanik kapakta DOAK raporu kilitlenemez' }, { status: 409 })
+    const duzen = (b.draft || {}) as Record<string, unknown>
+    const draft = { ...(r.draft as Record<string, unknown>), ...(typeof duzen.hekim_degerlendirmesi === 'string' ? { hekim_degerlendirmesi: String(duzen.hekim_degerlendirmesi).slice(0, 3000) } : {}), hastaAdi: '', tcSon4: '' }
+    const { error } = await sb.from('dahiliye_sgk_raporlari').update({ durum: 'kilitli', kilit_at: new Date().toISOString(), draft }).eq('id', raporId).eq('doctor_id', user.id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await gununNotunaEkle(sb, user.id, hasta.id, `SGK ilaç kullanım raporu taslağı hekim tarafından onaylandı (${String((r.draft as { tani?: { icd10?: string } })?.tani?.icd10 || '')}) — Medula'ya e-imza ile girilir.`)
+    return NextResponse.json({ ok: true })
+  }
   if (adim === 'kb') {
     const sbp = num(b.sbp), dbp = num(b.dbp)
     if (sbp == null || dbp == null) return NextResponse.json({ error: 'SBP/DBP zorunlu (her vizit)' }, { status: 400 })
@@ -227,7 +280,7 @@ export async function GET(req: NextRequest) {
   const hasta = await hastaBilgi(sb, user.id, patientId)
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
   const T = bugun()
-  const [labs, ht, dm, lipid, tiroid, checkup, gorevler, sevkler, ilaclar, gebe, jineDue] = await Promise.all([
+  const [labs, ht, dm, lipid, tiroid, checkup, gorevler, sevkler, ilaclar, gebe, jineDue, sgkRaporlar] = await Promise.all([
     labSerisi(sb, hasta.id),
     sb.from('dahiliye_ht').select('*').eq('patient_id', hasta.id).order('tarih', { ascending: false }).limit(6),
     sb.from('dahiliye_dm').select('*').eq('patient_id', hasta.id).maybeSingle(),
@@ -239,6 +292,7 @@ export async function GET(req: NextRequest) {
     sb.from('hasta_ilaclar').select('id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, aktif').eq('patient_id', hasta.id).order('created_at', { ascending: false }),
     sb.from('gebelikler').select('durum').eq('patient_id', hasta.id),
     hasta.kadin ? sb.from('jine_gorevleri').select('ad, due').eq('patient_id', hasta.id).eq('durum', 'acik').in('kod', ['pap', 'hpv', 'mamografi']).limit(3) : Promise.resolve({ data: [] as { ad: string; due: string | null }[] }),
+    sb.from('dahiliye_sgk_raporlari').select('id, sablon, draft, sut_kontrol, eksikler, durum, kilit_at, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(6),
   ])
   const sonKb = ht.data?.[0] || null
   const wow = await wowVerisi(sb, user.id, hasta, labs, (ilaclar.data || []) as IlacRow[], dm.data, sonKb, lipid.data, T)
@@ -265,5 +319,5 @@ export async function GET(req: NextRequest) {
     egfr: egfrSon?.kanonik_deger != null ? { deger: egfrSon.kanonik_deger, tarih: egfrSon.numune_tarihi, evre: wow.ckdSonuc.g, renk: wow.ckdSonuc.renk } : null,
     gorevler: (gorevler.data || []).map((g) => ({ kod: g.kod, ad: g.ad, due: g.due })), planlar, kirmizi })
   const { ckdSonuc: _c, kvrSonuc: _k, kilitler: _kl, ...wowOut } = wow
-  return NextResponse.json({ wow: wowOut, serit, hasta: { yas: hasta.yas, kadin: hasta.kadin, gebe: (gebe.data || []).some((g) => aktifGebelikDurumu(g.durum)) }, chips, ht: ht.data || [], dm: dm.data, lipid: lipid.data, tiroid: tiroid.data, checkup: checkup.data || [], gorevler: gorevler.data || [], sevkler: sevkler.data || [], ilaclar: ilaclar.data || [], ilacUyari: guvenlik.uyarilar, jineDue: jineDue.data || [], checkupAralik: checkupAraligi(hasta.yas), kutuphane: { checkup: CHECKUP_SABLONU, sevk: SEVK_HEDEFLERI, refler: REF_ACIKLAMA } })
+  return NextResponse.json({ wow: { ...wowOut, sgkRaporlar: sgkRaporlar.data || [], sgkSablonlar: SGK_SABLONLARI }, serit, hasta: { yas: hasta.yas, kadin: hasta.kadin, gebe: (gebe.data || []).some((g) => aktifGebelikDurumu(g.durum)) }, chips, ht: ht.data || [], dm: dm.data, lipid: lipid.data, tiroid: tiroid.data, checkup: checkup.data || [], gorevler: gorevler.data || [], sevkler: sevkler.data || [], ilaclar: ilaclar.data || [], ilacUyari: guvenlik.uyarilar, jineDue: jineDue.data || [], checkupAralik: checkupAraligi(hasta.yas), kutuphane: { checkup: CHECKUP_SABLONU, sevk: SEVK_HEDEFLERI, refler: REF_ACIKLAMA } })
 }

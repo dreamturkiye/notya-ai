@@ -9,6 +9,7 @@ export const DAHILIYE_TOOLS = [
   { name: 'dahiliye.evkayit', description: 'Ev KB/glukoz/kilo kaydı ve özeti (beyaz önlük / maskeli)' },
   { name: 'dahiliye.ilacizlem', description: 'İlaç izlem takvimi: hasta_ilaclar → lab izlem görevleri' },
   { name: 'dahiliye.kilit', description: 'Hekim kilidi: kart alanını kilitle (tanı/evre/hedef/kategori)' },
+  { name: 'dahiliye.sgkrapor', description: 'SGK ilaç kullanım raporu taslağı (HT/DM/statin/DOAK) kartlardan; hekim kilitler, Medula e-imza ile' },
   { name: 'dahiliye.sevk', description: 'Sevk oluştur (son onaylı panel eklenir)' },
 ] as const
 export type DahiliyeToolName = (typeof DAHILIYE_TOOLS)[number]['name']
