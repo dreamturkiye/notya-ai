@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
  */
 
 import DoktorNav from '@/components/doktor/DoktorNav'
+import DoktorAvatar from '@/components/doktor/DoktorAvatar'
 import YeniBebekIsleri from '@/components/doktor/YeniBebekIsleri'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -126,6 +127,9 @@ function Ikon({ ad, boyut = 26 }: { ad: string; boyut?: number }) {
 export default function DoktorDashboard() {
   const router = useRouter()
   const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
+  // NOTYA-AVATAR-01: ad gibi avatar da önbellekten ilk boyamada gelsin — her girişte
+  // baş harften fotoğrafa atlama olmasın. Sunucu yanıtı gelince tazelenir.
+  const [doktorAvatar, setDoktorAvatar] = useState<string | null>(() => { try { return localStorage.getItem('notya_doktor_avatar') } catch { return null } })
   const [ayseAcilis, setAyseAcilis] = useState<string>('')
   const [asistanKisaAd, setAsistanKisaAd] = useState('Ayşe')
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
@@ -156,6 +160,15 @@ export default function DoktorDashboard() {
           .then((r) => (r.ok ? r.json() : null))
           .then((j) => { if (j?.gun?.metin) setAyseAcilis(String(j.gun.metin)) })
           .catch(() => { /* açılış kritik değil */ })
+        // NOTYA-AVATAR-01: profil fotoğrafı — yoksa baş harfli avatar kalır, hiçbir şeyi bloklamaz
+        fetch('/api/doktor/profil/avatar', { headers: { Authorization: `Bearer ${token}` } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((j) => {
+            const url: string | null = j?.avatar?.dataUrl || null
+            setDoktorAvatar(url)
+            try { if (url) localStorage.setItem('notya_doktor_avatar', url); else localStorage.removeItem('notya_doktor_avatar') } catch {}
+          })
+          .catch(() => { /* avatar kritik değil */ })
         if (meRes.status === 401) { router.push(DOKTOR_GIRIS); return }
         if (meRes.ok) {
           const meData = await meRes.json()
@@ -270,14 +283,20 @@ export default function DoktorDashboard() {
 
         {/* Karşılama */}
         <div style={{ ...panel, background: 'linear-gradient(135deg, #10223D 0%, #0C1830 100%)', padding: '22px 24px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 13, color: '#5F7189', textTransform: 'capitalize' }}>{today}</div>
-            <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: -0.4, marginTop: 4 }}>Hoş geldiniz, Dr. {doktorAdi}</div>
-            {ayseAcilis && (
-              <div style={{ marginTop: 10, fontSize: 14, color: '#C9D4E3', lineHeight: 1.55, maxWidth: 720 }}>
-                <span style={{ color: '#2DD4BF', fontWeight: 700 }}>{asistanKisaAd}:</span> {ayseAcilis}
-              </div>
-            )}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, minWidth: 0 }}>
+            {/* NOTYA-AVATAR-01: fotoğraf varsa hekimin kendi fotoğrafı, yoksa baş harfleri */}
+            <div style={{ paddingTop: 6 }}>
+              <DoktorAvatar ad={doktorAdi} fotoUrl={doktorAvatar} boyut={52} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: '#5F7189', textTransform: 'capitalize' }}>{today}</div>
+              <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: -0.4, marginTop: 4 }}>Hoş geldiniz, Dr. {doktorAdi}</div>
+              {ayseAcilis && (
+                <div style={{ marginTop: 10, fontSize: 14, color: '#C9D4E3', lineHeight: 1.55, maxWidth: 720 }}>
+                  <span style={{ color: '#2DD4BF', fontWeight: 700 }}>{asistanKisaAd}:</span> {ayseAcilis}
+                </div>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#14B8A6', paddingBottom: 4 }}>
             <span style={{ width: 8, height: 8, background: '#10B981', borderRadius: '50%', animation: 'nabiz 1.6s infinite' }} />

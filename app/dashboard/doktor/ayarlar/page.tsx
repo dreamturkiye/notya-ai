@@ -8,6 +8,7 @@
 import DoktorNav from '@/components/doktor/DoktorNav';
 
 const BOLUMLER = [
+  { baslik: 'Profil fotoğrafı', aciklama: 'Karşılama ekranında adınızın yanında görünen avatar', rota: '/dashboard/doktor/ayarlar/profil', ikon: '🙂' },
   { baslik: 'Entegrasyonlar', aciklama: 'Takvim, e-posta ve dış sistem bağlantıları', rota: '/dashboard/doktor/entegrasyonlar', ikon: '🔌' },
   { baslik: 'Hesabım', aciklama: 'E-posta ve şifre', rota: '/dashboard/doktor/hesap', ikon: '🔑' },
   { baslik: 'Personel', aciklama: 'Çalışanların hesapları ve erişim yetkileri', rota: '/dashboard/doktor/personel', ikon: '👥' },
