@@ -40,7 +40,7 @@ When you fix a chrome leak for Göz (e.g. Deri tab on a göz chart), **fix the s
 | Prompts lock | `specialties/goz-hastaliklari/prompts/` | Load into pediatri SOAP |
 | Hasta dosyası tab body | `GozHome` | Mount on non-göz doctors |
 | Portal module content | **Gözlerim** (VA/GİB numbers, damla, enjeksiyon dates) | Show on pediatri/derm tokens by default |
-| Doktor Araçları **chapter** tiles | Göz/KD/Dahiliye audit HTML, dahiliye kohort | Show on another branş’s Araçlar grid (see `specialty-doktor-araclari`) |
+| Doktor Araçları **chapter** tiles | Real clinical tools (e.g. dahiliye kohort) | Show on another branş’s Araçlar grid; never put sprint audit HTML or named beta-doctor copy on /doktor-tools (`specialty-doktor-araclari`) |
 | Golden refs / SUT gates | TOD, SUT 4.2.33 | Invent as universal medical law for all branşlar |
 
 ## Hasta portalı uniqueness (every specialty)
