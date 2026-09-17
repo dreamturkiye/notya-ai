@@ -349,6 +349,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         )}
         {typeof sonuc?.baslik === 'string' && !!sonuc.a && !!sonuc.b ? (
           <div style={{ marginTop: 10 }}>
+            <button type="button" onClick={() => setSonuc(null)} style={{ ...ghost, marginBottom: 8, padding: '4px 10px' }}>← Geri</button>
             <div style={etiket}>{String(sonuc.baslik)}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {([{ u: (sonuc.a as { url?: string }).url, t: (sonuc.a as { tarih?: string }).tarih }, { u: (sonuc.b as { url?: string }).url, t: (sonuc.b as { tarih?: string }).tarih }]).map((x, i) => (

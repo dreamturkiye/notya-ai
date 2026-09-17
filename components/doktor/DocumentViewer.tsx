@@ -78,7 +78,7 @@ export default function DocumentViewer({ documentId, fileName, fileType, onClose
         </a>
         {onClose && (
           <button type="button" onClick={onClose} style={navBtn}>
-            Kapat
+            ← Geri
           </button>
         )}
       </div>

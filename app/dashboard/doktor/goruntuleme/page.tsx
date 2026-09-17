@@ -7,7 +7,8 @@ import DoktorNav from '@/components/doktor/DoktorNav';
 import { getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 import { IMAGING_MODALITIES, imagingDisplayLabel, imagingModalityMeta } from '@/lib/doktor/imagingModalities';
 import GeriLink from '@/components/navigasyon/GeriLink';
-import { DOKTOR_ANA, hastaGoruntulemeHref } from '@/lib/doktor/geriNavigasyon';
+import { DOKTOR_ANA, hastaDosyaHref, hastaGoruntulemeHref } from '@/lib/doktor/geriNavigasyon';
+import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
 
 interface Goruntuleme {
   id: string;
@@ -69,6 +70,17 @@ const Page = () => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [viewerRef, setViewerRef] = useState<HTMLDivElement | null>(null);
+  const [fromTab, setFromTab] = useState<HastaDosyaSekmeId | null>(null);
+
+  const chartHastaId = filterHastaId || selectedHastaId;
+  const parentGeri = (() => {
+    if (fromTab && chartHastaId) {
+      const label = fromTab === 'deri' ? '← Deri' : fromTab === 'goz' ? '← Göz' : fromTab === 'gebelik' ? '← Gebelik' : '← Hasta dosyası';
+      return { href: hastaDosyaHref(chartHastaId, fromTab), label };
+    }
+    if (chartHastaId) return { href: hastaGoruntulemeHref(chartHastaId), label: '← Hasta Görüntüleme' };
+    return { href: DOKTOR_ANA, label: '← Doktor' };
+  })();
 
   const fetchPatients = async () => {
     const token = await getAccessTokenAsync();
@@ -104,6 +116,8 @@ const Page = () => {
     const hid = q.get('hastaId') || '';
     const modaliteQ = q.get('modalite') || '';
     const upload = q.get('upload') === '1';
+    const from = q.get('from');
+    if (from === 'deri' || from === 'goz' || from === 'gebelik' || from === 'goruntuleme') setFromTab(from);
     void fetchPatients();
     if (hid) {
       setSelectedHastaId(hid);
@@ -259,9 +273,7 @@ const Page = () => {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: 8 }}>
             <div>
-              <GeriLink href={filterHastaId || selectedHastaId ? hastaGoruntulemeHref(filterHastaId || selectedHastaId) : DOKTOR_ANA}>
-                {filterHastaId || selectedHastaId ? '← Hasta Görüntüleme' : '← Doktor'}
-              </GeriLink>
+              <GeriLink href={parentGeri.href}>{parentGeri.label}</GeriLink>
               <div style={{ fontSize: '16px', fontWeight: 600, marginTop: 6 }}>Görüntüleme arşivi</div>
             </div>
             <button
@@ -442,9 +454,16 @@ const Page = () => {
               <div style={{ fontSize: '13px', marginTop: '8px' }}>Desteklenen formatlar: DICOM, JPEG, PNG, PDF</div>
             </div>
           ) : selectedGoruntuleme.tur === 'pdf' ? (
-            <iframe src={selectedGoruntuleme.dosya_url} style={{ width: '100%', height: '100%', border: 'none' }} title={selectedGoruntuleme.dosya_adi} />
+            <>
+              <div style={{ height: '44px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: '16px', fontSize: '14px' }}>
+                <button type="button" onClick={() => setSelectedGoruntuleme(null)} style={{ background: 'transparent', border: 'none', color: '#2DD4BF', cursor: 'pointer', fontWeight: 600, padding: 0 }}>← Geri</button>
+                <div style={{ flex: 1 }}>{selectedGoruntuleme.dosya_adi}</div>
+              </div>
+              <iframe src={selectedGoruntuleme.dosya_url} style={{ width: '100%', height: '100%', border: 'none' }} title={selectedGoruntuleme.dosya_adi} />
+            </>
           ) : selectedGoruntuleme.tur === 'dicom' ? (
             <div style={{ padding: '40px', textAlign: 'center' }}>
+              <button type="button" onClick={() => setSelectedGoruntuleme(null)} style={{ background: 'transparent', border: 'none', color: '#2DD4BF', cursor: 'pointer', fontWeight: 600, marginBottom: 16 }}>← Geri</button>
               <div style={{ background: 'rgba(255,255,255,0.05)', padding: '24px', borderRadius: '12px', maxWidth: '480px', margin: '0 auto' }}>
                 <div>Doğrudan DICOM görüntülemesi için harici DICOM viewer açılacak</div>
                 <button

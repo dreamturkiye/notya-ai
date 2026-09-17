@@ -201,9 +201,9 @@ export default function HastaProfilPage() {
     return Array.isArray(s.notes) ? s.notes[0] || null : s.notes;
   };
 
-  const vaultSpecialtyGeri: 'deri' | 'goz' | 'gebelik' | null = searchParams?.get('dermModality')
+  const vaultSpecialtyGeri: 'deri' | 'goz' | 'gebelik' | 'dahiliye' | null = searchParams?.get('dermModality')
     ? 'deri'
-    : activeTab === 'deri' || activeTab === 'goz' || activeTab === 'gebelik'
+    : activeTab === 'deri' || activeTab === 'goz' || activeTab === 'gebelik' || activeTab === 'dahiliye'
       ? activeTab
       : null;
 
@@ -384,7 +384,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'goruntuleme' && (
           <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 14, color: '#8FA0B5' }}>Röntgen, EKG ve diğer görüntüleme kayıtları görüntüleme merkezinde.</span>
-            <button type="button" onClick={() => router.push(`/dashboard/doktor/goruntuleme?hastaId=${patientId}`)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Görüntülemeyi aç ›</button>
+            <button type="button" onClick={() => router.push(`/dashboard/doktor/goruntuleme?hastaId=${patientId}&from=goruntuleme`)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Görüntülemeyi aç ›</button>
           </div>
         )}
         {!loading && !error && activeTab === 'ilaclar' && <HastaIlaclar patientId={patientId} />}

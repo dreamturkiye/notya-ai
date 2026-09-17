@@ -335,7 +335,7 @@ export default function IncelemePage() {
           <div style={{ ...toolsCard, marginTop: 0, marginBottom: 16, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, border: '1px solid rgba(16,185,129,0.4)' }}>
             <span style={{ color: '#34D399', fontSize: 13, fontWeight: 600 }}>✓ Not onaylandı{sonOnaylanan.hasta ? ` — ${sonOnaylanan.hasta}` : ''}</span>
             <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
-            <a href={hastaDosyasiYolu(sonOnaylanan.patientId)} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Hasta Dosyası →</a>
+            <a href={hastaDosyasiYolu(sonOnaylanan.patientId, 'muayene')} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Muayene Geçmişi →</a>
           </div>
         )}
 

@@ -100,7 +100,7 @@ export default function NotSayfasi() {
         >
           {hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}
         </GeriLink>
-        <a href={hastaDosyasiYolu(hasta.patientId)} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none' }}>{hasta.patientId ? 'Hasta Dosyası →' : 'Hastalar →'}</a>
+        <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none' }}>{hasta.patientId ? 'Muayene Geçmişi →' : 'Hastalar →'}</a>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: '#8FA0B5', fontWeight: 500 }}>· {not.specialty} · {trTarih(not.createdAt)}</span></div>
           <div style={{ fontSize: 12, color: onayli ? '#22C55E' : '#F59E0B' }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}{degisti ? ' · kaydedilmemiş değişiklik var' : ''}</div>

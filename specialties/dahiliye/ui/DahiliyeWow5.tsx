@@ -155,14 +155,14 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
         const c = await fetch('/api/doktor/belgeler/lab', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'cikar', documentId: uj.document.id, kaynak: 'enabiz' }) });
         const cj = await c.json().catch(() => ({}));
         if (!c.ok) throw new Error(cj.error || 'Çıkarılamadı');
-        window.location.href = `/dashboard/doktor/hastalar/${patientId}/belgeler/${uj.document.id}/lab`;
+        window.location.href = `/dashboard/doktor/hastalar/${patientId}/belgeler/${uj.document.id}/lab?geriTab=dahiliye`;
       } catch (e) { setYukleme(e instanceof Error ? e.message : 'Hata'); }
     };
     return (<div>
       <div style={etiket}>e-Nabız geçmiş PDF → Belgeler <span style={kucuk}>· yalnız hekimin yüklediği PDF (canlı e-Nabız çekimi yok) · aynı lab hattı: çıkar → tablo onayla → raporla → Onayla · kimlik kontrolü aynı</span></div>
       <div style={kucuk}>Hasta e-Nabız’dan “Tahlillerim” çıktısını PDF olarak verir. Her satır basılı tarihini taşır; tarihi okunamayan satır onaylanana kadar kartlara ve şeride girmez.</div>
       <div style={satir}><input type="file" accept="application/pdf" onChange={(e) => { const x = e.target.files?.[0]; if (x) yukle(x); }} style={{ ...kucuk }} />{yukleme && <span style={{ ...kucuk, color: /Hata|amadı|kabul/.test(yukleme) ? '#F87171' : '#2DD4BF' }}>{yukleme}</span>}</div>
-      <div style={govde}>{w5.enabiz.paneller.map((p) => <div key={p.id}><a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab`} style={{ color: '#2DD4BF' }}>e-Nabız geçmiş · {String(p.created_at).slice(0, 10)}</a> <span style={kucuk}>· durum {p.durum}{p.numune_tarihi ? ` · en yeni ${p.numune_tarihi}` : ''}{(p.kimlik_uyari as { eslesme?: boolean } | null)?.eslesme === false ? ' · ⚠ kimlik eşleşmiyor' : ''}</span></div>)}{!w5.enabiz.paneller.length && <span style={kucuk}>Henüz içe aktarma yok.</span>}</div>
+      <div style={govde}>{w5.enabiz.paneller.map((p) => <div key={p.id}><a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab?geriTab=dahiliye`} style={{ color: '#2DD4BF' }}>e-Nabız geçmiş · {String(p.created_at).slice(0, 10)}</a> <span style={kucuk}>· durum {p.durum}{p.numune_tarihi ? ` · en yeni ${p.numune_tarihi}` : ''}{(p.kimlik_uyari as { eslesme?: boolean } | null)?.eslesme === false ? ' · ⚠ kimlik eşleşmiyor' : ''}</span></div>)}{!w5.enabiz.paneller.length && <span style={kucuk}>Henüz içe aktarma yok.</span>}</div>
     </div>);
   }
 

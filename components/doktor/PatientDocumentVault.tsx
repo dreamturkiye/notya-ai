@@ -21,7 +21,7 @@ export default function PatientDocumentVault({
 }: {
   patientId: string
   /** When opened from a specialty deep-link, evaluate Geri returns to that chapter. */
-  specialtyGeri?: 'deri' | 'goz' | 'gebelik' | null
+  specialtyGeri?: 'deri' | 'goz' | 'gebelik' | 'dahiliye' | null
 }) {
   const [docs, setDocs] = useState<VaultDoc[]>([])
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
@@ -72,7 +72,7 @@ export default function PatientDocumentVault({
           <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>Şifreli PDF / görüntü arşivi</div>
         </div>
         <Link
-          href="/dashboard/doktor/belgeler"
+          href={patientId ? `/dashboard/doktor/belgeler?hastaId=${encodeURIComponent(patientId)}` : '/dashboard/doktor/belgeler'}
           style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
         >
           Belge yükle ›

@@ -137,7 +137,7 @@ export default function LabPage() {
   const eslesmeyen = satirlar.filter((s) => !s.canonical_key).length;
   const geriTab = (searchParams?.get('geriTab') || null) as HastaDosyaSekmeId | null;
   const geriHref = geriTab ? hastaDosyaHref(patientId, geriTab) : hastaBelgelerHref(patientId);
-  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : '← Belgeler';
+  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : geriTab === 'dahiliye' ? '← Dahiliye' : '← Belgeler';
 
   return (
     <div style={toolsShell}>

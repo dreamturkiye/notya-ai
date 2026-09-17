@@ -132,6 +132,20 @@ export default function BelgelerPage() {
     else setDocs([])
   }, [hastaId, loadDocs])
 
+  // Prefill from Belge kasası “Belge yükle ›” deep-link (?hastaId=)
+  useEffect(() => {
+    if (hastaId || !hastalar.length) return
+    try {
+      const q = new URLSearchParams(window.location.search).get('hastaId')
+      if (!q) return
+      const h = hastalar.find((x) => x.id === q)
+      if (h) {
+        setHastaId(h.id)
+        setHastaAra(h.label)
+      }
+    } catch { /* ignore */ }
+  }, [hastalar, hastaId])
+
   useEffect(() => {
     const kapat = (e: MouseEvent) => {
       if (kutuRef.current && !kutuRef.current.contains(e.target as Node)) setListeAcik(false)

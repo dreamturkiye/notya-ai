@@ -71,7 +71,9 @@ export default function BelgeAnalizPage() {
   useEffect(() => {
     if (!doc || searchParams?.get('goruntu') === '1') return;
     if (belgeLabMi(doc)) {
-      router.replace(`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab`);
+      const gt = searchParams?.get('geriTab');
+      const q = gt ? `?geriTab=${encodeURIComponent(gt)}` : '';
+      router.replace(`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab${q}`);
     }
   }, [doc, patientId, belgeId, router, searchParams]);
 
@@ -204,7 +206,7 @@ export default function BelgeAnalizPage() {
   // Specialty deep-links (Deri/Göz) return to that chapter; default vault path → Belgeler.
   const geriTab = (searchParams?.get('geriTab') || (searchParams?.get('dermModality') ? 'deri' : null)) as HastaDosyaSekmeId | null;
   const geriHref = geriTab ? hastaDosyaHref(patientId, geriTab) : hastaBelgelerHref(patientId);
-  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : '← Belgeler';
+  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : geriTab === 'dahiliye' ? '← Dahiliye' : '← Belgeler';
 
   return (
     <div style={toolsShell}>
@@ -239,7 +241,7 @@ export default function BelgeAnalizPage() {
                   {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Motorlar çalışıyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgeni değerlendir` : `${personaAd} ile değerlendir`}
                 </button>
                 {doc && belgeLabMi(doc) && (
-                  <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab`} style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24' }}>Laboratuvarı değerlendir →</a>
+                  <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab${geriTab ? `?geriTab=${geriTab}` : ''}`} style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24' }}>Laboratuvarı değerlendir →</a>
                 )}
                 {mesaj && <span style={{ fontSize: 12, color: durum === 'hata' ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>}
               </div>

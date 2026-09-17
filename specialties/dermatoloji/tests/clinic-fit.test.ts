@@ -205,6 +205,8 @@ describe('derm clinic-fit', () => {
     }), false)
     assert.match(goruntulemeCaptureHref('hasta-1', 'dermatoskopi'), /modalite=dermatoskopi/)
     assert.match(goruntulemeCaptureHref('hasta-1', 'dermatoskopi'), /upload=1/)
+    assert.match(goruntulemeCaptureHref('hasta-1', 'dermatoskopi'), /from=deri/)
+    assert.match(belgeAnalizHref('hasta-1', 'belge-9', 'dermatoskopi'), /geriTab=deri/)
     assert.match(belgeAnalizHref('hasta-1', 'belge-9', 'dermatoskopi', 'IV'), /modalityFinal=dermatoskopi/)
     assert.match(belgeAnalizHref('hasta-1', 'belge-9', 'dermatoskopi', 'IV'), /fitzpatrick=IV/)
     assert.equal(belgeHekimOnayli('taslak'), false)

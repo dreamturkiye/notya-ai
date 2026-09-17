@@ -36,7 +36,7 @@ export function goruntulemeCaptureHref(
   patientId: string,
   modalite: 'dermatoskopi' | 'derm' | 'yara' = 'dermatoskopi',
 ): string {
-  return `/dashboard/doktor/goruntuleme?hastaId=${encodeURIComponent(patientId)}&modalite=${modalite}&upload=1`
+  return `/dashboard/doktor/goruntuleme?hastaId=${encodeURIComponent(patientId)}&modalite=${modalite}&upload=1&from=deri`
 }
 
 export function belgeAnalizHref(
@@ -45,7 +45,7 @@ export function belgeAnalizHref(
   modality: 'derm' | 'dermatoskopi' | 'yara' = 'dermatoskopi',
   fitzpatrick?: string,
 ): string {
-  const q = new URLSearchParams({ modalityFinal: modality })
+  const q = new URLSearchParams({ modalityFinal: modality, geriTab: 'deri' })
   if (fitzpatrick) q.set('fitzpatrick', fitzpatrick)
   return `/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(belgeId)}?${q.toString()}`
 }
