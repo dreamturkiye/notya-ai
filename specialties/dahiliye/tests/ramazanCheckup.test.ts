@@ -34,3 +34,14 @@ test('check-up: yaş/cinsiyet SKU; paket sonrası onaylı lab/belge tamam sayar;
   const rap = birlesikRapor({ hasta: { adSoyad: 'QA Test', yas: 45, kadin: true }, paketAd: 'Kapsamlı', paketTarih: '2026-09-01', labs: [], belgeler: [], kartOzetleri: [], eksikKalemler: ['EKG'], hekimKilitli: false, bugun: '2026-09-16' })
   assert.equal(rap.taslak, true); assert.match(rap.bolumler[0].satirlar[1], /SGK'ya fatura edilmez/); assert.match(rap.bolumler[0].satirlar[2], /TASLAK/)
 })
+
+test('check-up: "Kırılganlık + düşme taraması" kalemi dahiliye_taramalar kaydıyla (FRAIL + düşme, ≤12 ay) otomatik tamam', () => {
+  const kalem = (tar: Record<string, string[]>, manuel: string[] = []) => paketDurumu({ sku: 'ileri65', tarih: '2026-09-10', manuelTamam: manuel }, {}, {}, tar).kalemler.find((k) => k.kod === 'kirilganlik')!
+  assert.equal(kalem({}).tamam, false)
+  assert.equal(kalem({ frail: ['2026-09-17'] }).tamam, false) // düşme taraması eksik
+  const k = kalem({ frail: ['2026-09-17'], dusme: ['2026-06-01'] })
+  assert.equal(k.tamam, true); assert.equal(k.kaynak, 'tarama'); assert.equal(k.tarih, '2026-09-17')
+  assert.equal(kalem({ frail: ['2025-09-10'], dusme: ['2025-09-09'] }).tamam, false) // düşme >12 ay önce
+  assert.equal(kalem({}, ['kirilganlik']).kaynak, 'hekim')
+})
+

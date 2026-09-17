@@ -268,6 +268,8 @@ kontrol('Tarama sonucu nota otomatik yazılmadı (C6)', !/FRAIL/.test(String(not
 await post('FRAIL → Nota ekle (hekim)', pid, { adim: 'notaekle', tip: 'frail' })
 const notSonra = await sb.from('notes').select('content_degerlendirme').eq('id', noteId).single()
 kontrol('Nota ekle sonrası FRAIL notta', /FRAIL/.test(String(notSonra.data?.content_degerlendirme || '')), 'FRAIL var')
+const nudgeV = (await istek('GET dahiliye (Nota ekle sonrası)', 'GET', dah(pid))).json as V
+kontrol('Nota ekle sonrası FRAIL sonucu işaretli (CTA gizlenir), düşme henüz eklenmedi', !!nudgeV.wow?.w4?.son?.frail?.nota_eklendi_at && !nudgeV.wow?.w4?.son?.dusme?.nota_eklendi_at, { frail: nudgeV.wow?.w4?.son?.frail?.nota_eklendi_at, dusme: nudgeV.wow?.w4?.son?.dusme?.nota_eklendi_at })
 
 // Hekim kilitleri (every card)
 const kilitler: [string, string, unknown][] = [
@@ -292,6 +294,8 @@ await post('Check-up paketi başlat (ileri65, kendi ödemeli)', pid, { adim: 'ch
 const paketV = (await istek('GET dahiliye (paket)', 'GET', dah(pid))).json as V
 const paket = paketV.wow?.w3?.checkup?.paketler?.[0]
 kontrol('Paket kalemleri onaylı lab ile tamamlanıyor', paket && paket.tamamlanan > 0, paket && { tamamlanan: paket.tamamlanan, zorunlu: paket.zorunluToplam })
+const kirilganlik = paket?.kalemler?.find((k: V) => k.kod === 'kirilganlik')
+kontrol('Check-up "Kırılganlık + düşme taraması" dahiliye_taramalar kaydıyla otomatik tamam', kirilganlik?.tamam === true && kirilganlik?.kaynak === 'tarama', kirilganlik)
 const taslak = await post('Birleşik rapor (taslak)', pid, { adim: 'checkuprapor', paketId: paket?.id })
 kontrol('Birleşik rapor TASLAK damgası', JSON.stringify((taslak.json as V).rapor).includes('TASLAK'), 'TASLAK')
 await post('Check-up kart kilidi (rapor)', pid, { adim: 'kilit', kart: 'checkup', alan: 'rapor', deger: 'onaylı', kaynak: 'dah-smoke' })
