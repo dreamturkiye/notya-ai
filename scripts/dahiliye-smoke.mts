@@ -50,6 +50,7 @@ for (const f of ['.env.local', '.env']) {
 const { encrypt, decrypt } = await import('../lib/security/encryption')
 const { generatePortalPin, hashPortalPin } = await import('../lib/portal/pinAuth')
 const { KB_TEKNIK } = await import('../specialties/dahiliye/engines/nudge')
+const { score2DmOlasilik } = await import('../specialties/dahiliye/engines/score2diabetes')
 const { sentetikLabPdf, SENTETIK_SATIRLAR } = await import('../core/lab/fixtures/sentetikLabPdf')
 
 const BASE = (process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
@@ -58,6 +59,8 @@ const QA_AD = 'QA Dahiliye (TEST hesabı)'
 const HASTA_AD = 'TEST — Dahiliye Smoke (sentetik)'
 const HASTA_AD_SCORE2 = 'TEST — Dahiliye Smoke SCORE2 (sentetik)'
 const HASTA_AD_LAB = 'TEST — Dahiliye Lab Yukleme Smoke (sentetik)'
+const HASTA_AD_OP = 'TEST — Dahiliye Smoke SCORE2-OP (sentetik)'
+const HASTA_AD_DM = 'TEST — Dahiliye Smoke SCORE2-Diabetes (sentetik)'
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const sb = createClient(URL_, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 const anon = createClient(URL_, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
@@ -102,7 +105,7 @@ async function hastaSil(doctorId: string) {
   for (const p of data || []) {
     let ad = ''
     try { ad = JSON.parse(decrypt(String(p.name_encrypted))).ad || '' } catch { ad = '' }
-    if (ad !== HASTA_AD && ad !== HASTA_AD_SCORE2 && ad !== HASTA_AD_LAB) continue
+    if (![HASTA_AD, HASTA_AD_SCORE2, HASTA_AD_LAB, HASTA_AD_OP, HASTA_AD_DM].includes(ad)) continue
     const pid = String(p.id)
     for (const t of DAHILIYE_TABLOLARI) await sb.from(t).delete().eq('patient_id', pid)
     const { data: kon } = await sb.from('hasta_mesaj_konulari').select('id').eq('patient_id', pid)
@@ -364,6 +367,49 @@ await post('SCORE2 hasta: KVR kategori hekim kilidi', pidS, { adim: 'kilit', kar
 const kvrKilitV = (await istek('GET dahiliye (SCORE2 kilit sonrası)', 'GET', dah(pidS))).json as V
 kontrol('SCORE2 kategori hekim kilidiyle kesinleşti', kvrKilitV.wow?.kvr?.kilitKategori === 'yuksek', kvrKilitV.wow?.kvr?.kilitKategori)
 
+// SCORE2-OP (DAH-SCORE2-OP, SCORE2_OP_ONAYLI=false) — ≥70 yaş sentetik hasta: KVR kartı OP yoluna gider, sayı YOK, hekim kategori kilitler.
+async function yasliHasta(ad: string, yil: number, not: string) {
+  const dob = new Date(Date.now() - (yil * 365.25 + 120) * 86400000).toISOString().slice(0, 10)
+  const { data, error } = await sb.from('patients').insert({ doctor_id: doktor.id, name_encrypted: encrypt(JSON.stringify({ ad })), dob_encrypted: encrypt(dob), gender_encrypted: encrypt('E'), notes_encrypted: encrypt(JSON.stringify({ not })), is_active: true }).select('id').single()
+  if (error || !data) throw new Error(`patients (${ad}): ${error?.message}`)
+  return String(data.id)
+}
+const pidOp = await yasliHasta(HASTA_AD_OP, 75, 'DAH-SCORE2-OP sentetik QA hastası. Gerçek kişi değildir.')
+const noteOp = await muayeneOlustur(doktor.id, pidOp)
+const lipOp = await labPaneliTohumla(doktor.id, pidOp, gun(3), [['Total kolesterol', 'TChol', 212.685, 'mg/dL', null, 200], ['HDL kolesterol', 'HDL', 50.271, 'mg/dL', 40, null], ['LDL kolesterol', 'LDL', 140, 'mg/dL', null, 130], ['eGFR', 'eGFR', 78, 'mL/dk/1.73m²', 90, null]])
+await istek('SCORE2-OP hasta: lipid paneli onayla', 'POST', '/api/doktor/belgeler/analiz/onayla', { analizId: lipOp.analizId, adim: 'onayla', noteId: noteOp })
+await post('SCORE2-OP hasta: KB kaydet (SBP 140)', pidOp, { adim: 'kb', sbp: 140, dbp: 80, nabiz: 72 })
+await post('SCORE2-OP hasta: KVR girdileri (75 yaş, sigara, ASKVH/DM yok)', pidOp, { adim: 'kvr', sigara: true, askvh: false, dmTod: false, statinYogunluk: 'yok' })
+const opV = (await istek('GET dahiliye (SCORE2-OP hasta)', 'GET', dah(pidOp))).json as V
+const opS = opV.wow?.kvr?.sonuc
+kontrol('≥70 yaş KVR: SCORE2-OP yolu, doğrulama kapısı kapalı → sayısal skor yok (SCORE2 de yok)', opS?.score2Op == null && opS?.score2 == null && /SCORE2-OP/.test(String(opS?.score2Notu || '')), { score2Op: opS?.score2Op, not: opS?.score2Notu })
+kontrol('≥70 yaş KVR: uydurma kova yok, nota yazılmadı', opS?.kova == null && !/SCORE2/.test(String((await sb.from('notes').select('content_degerlendirme').eq('id', noteOp).single()).data?.content_degerlendirme || '')), { kova: opS?.kova })
+await post('SCORE2-OP hasta: KVR kategori hekim kilidi (klinik karar)', pidOp, { adim: 'kilit', kart: 'kvr', alan: 'kategori', deger: 'yuksek', kaynak: 'dah-smoke-score2op' })
+const opKilitV = (await istek('GET dahiliye (SCORE2-OP kilit sonrası)', 'GET', dah(pidOp))).json as V
+kontrol('≥70 yaş KVR kategori yalnız hekim kilidiyle', opKilitV.wow?.kvr?.kilitKategori === 'yuksek', opKilitV.wow?.kvr?.kilitKategori)
+
+// SCORE2-Diabetes (DAH-SCORE2-DIABETES, ONAYLI=true) — DM 60 yaş erkek: ehad260 örnek profili (SBP 140, TChol 5.5, HDL 1.3, HbA1c 50 mmol/mol, eGFR 90, tanı yaşı 60).
+const pidDm = await yasliHasta(HASTA_AD_DM, 60, 'DAH-SCORE2-DIABETES sentetik QA hastası. Gerçek kişi değildir.')
+const noteDm = await muayeneOlustur(doktor.id, pidDm)
+const HBA1C_YUZDE = Math.round((50 / 10.929 + 2.15) * 1000) / 1000
+const labDm = await labPaneliTohumla(doktor.id, pidDm, gun(3), [['Total kolesterol', 'TChol', 212.685, 'mg/dL', null, 200], ['HDL kolesterol', 'HDL', 50.271, 'mg/dL', 40, null], ['LDL kolesterol', 'LDL', 125, 'mg/dL', null, 130], ['HbA1c', 'HbA1c', HBA1C_YUZDE, '%', 4, 6], ['eGFR', 'eGFR', 90, 'mL/dk/1.73m²', 90, null], ['Kreatinin', 'Kre', 0.9, 'mg/dL', 0.7, 1.2]])
+const dmOnaysiz = (await istek('GET dahiliye (SCORE2-Diabetes hasta, lab onaysız)', 'GET', dah(pidDm))).json as V
+await post('SCORE2-Diabetes hasta: DM kartı (T2)', pidDm, { adim: 'dm', tip: 'T2', hedefHba1c: 7 })
+await post('SCORE2-Diabetes hasta: KB kaydet (SBP 140)', pidDm, { adim: 'kb', sbp: 140, dbp: 85, nabiz: 74 })
+await post('SCORE2-Diabetes hasta: KVR girdileri (sigara yok, DM tanı yaşı 60)', pidDm, { adim: 'kvr', sigara: false, askvh: false, dmTod: false, statinYogunluk: 'yok', dmTaniYasi: 60 })
+const dmOnaysizV = (await istek('GET dahiliye (SCORE2-Diabetes hasta, onay öncesi)', 'GET', dah(pidDm))).json as V
+kontrol('SCORE2-Diabetes: onaysız lab satırıyla skor yok (TEMD yedeği, eksikler notta)', dmOnaysizV.wow?.kvr?.sonuc?.score2Diabetes == null && /eksik/.test(String(dmOnaysizV.wow?.kvr?.sonuc?.score2Notu || '')), dmOnaysizV.wow?.kvr?.sonuc?.score2Notu)
+void dmOnaysiz
+await istek('SCORE2-Diabetes hasta: lab paneli onayla', 'POST', '/api/doktor/belgeler/analiz/onayla', { analizId: labDm.analizId, adim: 'onayla', noteId: noteDm })
+const dmV = (await istek('GET dahiliye (SCORE2-Diabetes hasta)', 'GET', dah(pidDm))).json as V
+const dmS = dmV.wow?.kvr?.sonuc
+const dmBeklenen = Math.round(score2DmOlasilik({ yas: 60, cinsiyet: 'erkek', sigara: false, sbp: 140, tcholMmol: 212.685 / 38.67, hdlMmol: 50.271 / 38.67, hba1cMmolMol: (HBA1C_YUZDE - 2.15) * 10.929, eGFR: 90, taniYasi: 60, bolge: 'high' }) * 1000) / 10
+kontrol(`DM 60 yaş KVR: SCORE2-Diabetes %${dmBeklenen} (yüksek risk bölgesi; orta bölge yayımlanmış %11.0 profili)`, dmS?.score2Diabetes === dmBeklenen && dmS?.score2 == null, { score2Diabetes: dmS?.score2Diabetes, not: dmS?.score2Notu })
+kontrol('SCORE2-Diabetes kova taslak "yüksek" (ESC 2023 %10–<20) + ESC_SCORE2_DIABETES Kaynak', dmS?.kova === 'yuksek' && (dmS?.dipnotlar || []).some((d: V) => d.ref === 'ESC_SCORE2_DIABETES'), { kova: dmS?.kova, neden: dmS?.kovaNedeni })
+await post('SCORE2-Diabetes hasta: KVR kategori hekim kilidi', pidDm, { adim: 'kilit', kart: 'kvr', alan: 'kategori', deger: 'yuksek', kaynak: 'dah-smoke-score2dm' })
+const dmKilitV = (await istek('GET dahiliye (SCORE2-Diabetes kilit sonrası)', 'GET', dah(pidDm))).json as V
+kontrol('SCORE2-Diabetes kategori hekim kilidiyle kesinleşti', dmKilitV.wow?.kvr?.kilitKategori === 'yuksek', dmKilitV.wow?.kvr?.kilitKategori)
+
 // Lab upload path (DAH-LAB-BELGELER) — third synthetic patient, real upload → extraction → onayla.
 const { data: labHasta, error: lhErr } = await sb.from('patients').insert({ doctor_id: doktor.id, name_encrypted: encrypt(JSON.stringify({ ad: HASTA_AD_LAB })), dob_encrypted: encrypt('1966-06-02'), gender_encrypted: encrypt('K'), notes_encrypted: encrypt(JSON.stringify({ not: 'DAH-LAB-BELGELER sentetik QA hastası. Gerçek kişi değildir.' })), is_active: true }).select('id').single()
 if (lhErr || !labHasta) throw new Error(`patients (lab yükleme): ${lhErr?.message}`)
@@ -427,11 +473,13 @@ const ozet = {
   kohort: satir ? { bayraklar: satir.bayraklar, gecikmisSayi: satir.gecikmisSayi, oncelik: satir.oncelik, portalVar: satir.portalVar } : null,
   kbTeknikKapi: kbTeknikEksik.json,
   score2: { sonuc: kvrS, kilitKategori: kvrKilitV.wow?.kvr?.kilitKategori },
+  score2Op: { sonuc: opS, kilitKategori: opKilitV.wow?.kvr?.kilitKategori },
+  score2Diabetes: { sonuc: dmS, beklenen: dmBeklenen, kilitKategori: dmKilitV.wow?.kvr?.kilitKategori },
   labYukleme: { belgeId, panelId: labPanelId, analizId: labAnalizId, cikar: cikar.json, raporKaynak: labRapor?.kaynak, raporTanilar: labRapor?.tanilar?.map((t: V) => ({ ad: t.ad, icd10: t.icd10, guven_pct: t.guven_pct })), satirlarCikarimSonrasi: cikanSatirlar, tablo: { panel: labTablo.panel && { kaynaklar: labTablo.panel.kaynaklar, kalite: labTablo.panel.kalite, durum: labTablo.panel.durum, numune_tarihi: labTablo.panel.numune_tarihi, kimlik_uyari: labTablo.panel.kimlik_uyari } }, onaysizChips: { hba1c: labOnaysiz.chips?.hba1c ?? null, ldl: labOnaysiz.chips?.ldl ?? null }, onayla: labOnayla.json, onayliSatirSayisi: onayliSatirlar.length, onayliChips: { hba1c: labOnayli.chips?.hba1c, ldl: labOnayli.chips?.ldl, k: labOnayli.chips?.k } },
 }
 fs.writeFileSync(path.join(cikti, 'dahiliye-smoke.json'), JSON.stringify(ozet, null, 2))
 // Browser session for screenshots (local only, gitignored).
-fs.writeFileSync(path.join(cikti, 'session.json'), JSON.stringify({ patientId: pid, score2PatientId: pidS, labPatientId: pidL, labDocumentId: belgeId, portalToken: portalLink, auth: { access_token: doktor.token, refresh_token: doktor.refresh, expires_at: doktor.expiresAt } }))
+fs.writeFileSync(path.join(cikti, 'session.json'), JSON.stringify({ patientId: pid, score2PatientId: pidS, score2OpPatientId: pidOp, score2DmPatientId: pidDm, labPatientId: pidL, labDocumentId: belgeId, portalToken: portalLink, auth: { access_token: doktor.token, refresh_token: doktor.refresh, expires_at: doktor.expiresAt } }))
 const hatali = kayit.filter((k) => !k.ok).length + kontroller.filter((k) => !k.ok).length
 console.log(`\n${kayit.length} istek, ${kontroller.length} kontrol, ${hatali} hata → smoke-out/dahiliye-smoke.json`)
 process.exit(hatali ? 1 : 0)

@@ -15,10 +15,12 @@
  *
  * GÜVENLİK: SCORE2_ONAYLI=true yalnız yukarıdaki doğrulamadan sonra. Sayısal skor yalnız 40–69 yaş + diyabet yok +
  * kural kovası yokken hesaplanır ve "kova taslak" olarak döner; kategori ve LDL hedefi yalnız hekim kilidiyle
- * (dahiliye_kart_kilitleri) kesinleşir — hiçbir koşulda nota otomatik yazılmaz. SCORE2-OP (≥70) ve SCORE2-Diabetes
- * ayrı ledger kalemleridir (DAH-SCORE2-OP, DAH-SCORE2-DIABETES).
+ * (dahiliye_kart_kilitleri) kesinleşir — hiçbir koşulda nota otomatik yazılmaz. SCORE2-OP (≥70, engines/score2op.ts — kapı kapalı)
+ * ve SCORE2-Diabetes (DM 40–69, engines/score2diabetes.ts — doğrulandı) ayrı modüllerdir, kendi ONAYLI bayraklarıyla.
  */
 import type { Dipnot } from './dahiliye'
+import { score2Diabetes, SCORE2_DIABETES_ONAYLI, type DmRiskSinif } from './score2diabetes'
+import { score2Op as score2OpHesap, SCORE2_OP_BEKLEME_NOTU } from './score2op'
 
 export const SCORE2_ONAYLI = true
 
@@ -84,36 +86,63 @@ export interface KvrGirdi {
   askvh: boolean; dm: boolean; dmTod: boolean; dmSure10Yil?: boolean
   eGFR: number | null; uacr: number | null
   ldlMgdl: number | null; statinYogunluk: 'yok' | 'dusuk' | 'orta' | 'yuksek'; ezetimib?: boolean
+  /** SCORE2-Diabetes girdileri: onaylı HbA1c (%) ve diyabet tanı yaşı. */
+  hba1cYuzde?: number | null; dmTaniYasi?: number | null
 }
 export interface KvrSonuc {
   kova: KvrKova | null; kovaNedeni: string; skorGerekli: boolean
   score2: number | null; score2Notu: string
+  score2Diabetes: number | null; score2DmSinif: DmRiskSinif | null; score2Op: number | null
   hedefLdl: number | null; hedefNotu: string
   statinAcigi: string[]; dipnotlar: Dipnot[]
 }
 
-/** Kural kovası (skor gerekmez) → skor (onaylıysa) → LDL hedef + statin açığı. Hekim kilitler. */
+const KOVA_SIRA: Record<KvrKova, number> = { dusuk_orta: 0, yuksek: 1, cok_yuksek: 2 }
+const DM_SINIF_AD: Record<DmRiskSinif, string> = { dusuk: 'düşük', orta: 'orta', yuksek: 'yüksek', cok_yuksek: 'çok yüksek' }
+
+/** Kural kovası (skor gerekmez) → skor (onaylıysa: SCORE2 / SCORE2-Diabetes / SCORE2-OP) → LDL hedef + statin açığı. Hekim kilitler. */
 export function kvrDegerlendir(g: KvrGirdi): KvrSonuc {
   const dip: Dipnot[] = [{ ref: 'TEMD_LIPID', not: 'ESC 2021/TEMD: ASKVH, DM+hedef organ hasarı, ağır KBH → çok yüksek risk (skor gerekmez); LDL hedefleri kategoriye göre' }]
+  const bolge = g.bolge || 'high'
   let kova: KvrKova | null = null, neden = ''
   const kbhAgir = (g.eGFR != null && g.eGFR < 30) || (g.eGFR != null && g.eGFR < 45 && g.uacr != null && g.uacr > 30)
   const kbhOrta = !kbhAgir && g.eGFR != null && ((g.eGFR < 45) || (g.eGFR < 60 && g.uacr != null && g.uacr > 30))
   if (g.askvh) { kova = 'cok_yuksek'; neden = 'Aterosklerotik KVH öyküsü' }
   else if (g.dm && g.dmTod) { kova = 'cok_yuksek'; neden = 'Diyabet + hedef organ hasarı' }
   else if (kbhAgir) { kova = 'cok_yuksek'; neden = 'Ağır KBH (eGFR <30 veya eGFR <45 + albüminüri)' }
-  else if (g.dm && (g.dmSure10Yil || (g.yas != null && g.yas >= 50))) { kova = 'yuksek'; neden = 'Diyabet ≥10 yıl / ≥50 yaş (hedef organ hasarı yok)' }
-  else if (kbhOrta) { kova = 'yuksek'; neden = 'Orta KBH (KDIGO)' }
-  else if (g.sbp != null && g.sbp >= 180) { kova = 'yuksek'; neden = 'SBP ≥180' }
-  else if (g.tcholMgdl != null && g.tcholMgdl / MGDL_MMOL > 8) { kova = 'yuksek'; neden = 'Total kolesterol >8 mmol/L (~310 mg/dL)' }
-  const skorGerekli = kova == null
-  let score2: number | null = null, score2Notu = ''
-  if (skorGerekli) {
-    if (g.yas == null || g.cinsiyet == null || g.sbp == null || g.tcholMgdl == null || g.hdlMgdl == null) score2Notu = 'SCORE2 için yaş, cinsiyet, sigara, SBP, TChol, HDL gerekir'
+  // SCORE2-Diabetes (ESC 2023): DM 40–69, çok yüksek kural kovası yoksa; eksik girdide TEMD kuralı yedek kalır.
+  let score2Notu = ''
+  const dmSkor = kova == null && g.dm && g.yas != null && g.yas >= 40 && g.yas <= 69
+    ? score2Diabetes({ yas: g.yas, cinsiyet: g.cinsiyet, sigara: !!g.sigara, sbp: g.sbp, tcholMgdl: g.tcholMgdl, hdlMgdl: g.hdlMgdl, hba1cYuzde: g.hba1cYuzde ?? null, eGFR: g.eGFR, taniYasi: g.dmTaniYasi ?? null, bolge })
+    : null
+  const dmSkorVar = dmSkor?.skor != null
+  if (dmSkor && !dmSkorVar) score2Notu = SCORE2_DIABETES_ONAYLI ? `SCORE2-Diabetes için eksik: ${dmSkor.eksik.join(', ')} — şimdilik TEMD kuralı: DM = en az yüksek risk` : 'Diyabet: SCORE2-Diabetes doğrulama bekliyor — şimdilik TEMD kuralı: DM = en az yüksek risk'
+  let ikincil: KvrKova | null = null, ikincilNeden = ''
+  if (kova == null) {
+    if (g.dm && !dmSkorVar && (g.dmSure10Yil || (g.yas != null && g.yas >= 50))) { ikincil = 'yuksek'; ikincilNeden = 'Diyabet ≥10 yıl / ≥50 yaş (hedef organ hasarı yok)' }
+    else if (kbhOrta) { ikincil = 'yuksek'; ikincilNeden = 'Orta KBH (KDIGO)' }
+    else if (g.sbp != null && g.sbp >= 180) { ikincil = 'yuksek'; ikincilNeden = 'SBP ≥180' }
+    else if (g.tcholMgdl != null && g.tcholMgdl / MGDL_MMOL > 8) { ikincil = 'yuksek'; ikincilNeden = 'Total kolesterol >8 mmol/L (~310 mg/dL)' }
+  }
+  const skorGerekli = kova == null && (ikincil == null || dmSkorVar)
+  let score2: number | null = null, score2Op: number | null = null
+  if (dmSkorVar) {
+    const dmKova: KvrKova = dmSkor!.sinif === 'cok_yuksek' ? 'cok_yuksek' : dmSkor!.sinif === 'yuksek' ? 'yuksek' : 'dusuk_orta'
+    const skorNeden = `SCORE2-Diabetes %${dmSkor!.skor} (${BOLGE_AD[bolge]}; ESC 2023 sınıf: ${DM_SINIF_AD[dmSkor!.sinif!]}) — hekim kilitler`
+    if (ikincil && KOVA_SIRA[ikincil] > KOVA_SIRA[dmKova]) { kova = ikincil; neden = `${ikincilNeden}; ${skorNeden}` } else { kova = dmKova; neden = skorNeden }
+    dip.push({ ref: 'ESC_SCORE2_DIABETES', not: `SCORE2-Diabetes 10 yıllık KVH riski (tip 2 DM, 40–69 yaş; HbA1c, eGFR, tanı yaşı dahil); ${BOLGE_AD[bolge]} kalibrasyonu (Türkiye = yüksek risk bölgesi); ESC 2023 eşikleri <%5 düşük, %5–<10 orta, %10–<20 yüksek, ≥%20 çok yüksek` })
+  } else if (kova == null && ikincil) { kova = ikincil; neden = ikincilNeden }
+  if (skorGerekli && !dmSkorVar) {
+    if (g.yas == null || g.cinsiyet == null || g.sbp == null || g.tcholMgdl == null || g.hdlMgdl == null) score2Notu = score2Notu || 'SCORE2 için yaş, cinsiyet, sigara, SBP, TChol, HDL gerekir'
     else if (g.yas < 40) score2Notu = '<40 yaş: SCORE2 tanımlı değil — yaşam tarzı; risk faktörü yoğunluğu ile klinik karar'
-    else if (g.yas > 69) score2Notu = '≥70 yaş: SCORE2-OP (ledger DAH-SCORE2-OP) — doğrulanmış katsayı gelene kadar klinik karar'
-    else if (g.dm) score2Notu = 'Diyabet: SCORE2-Diabetes (ledger DAH-SCORE2-DIABETES) — şimdilik TEMD kuralı: DM = en az yüksek risk'
+    else if (g.yas > 69) {
+      score2Op = score2OpHesap({ yas: g.yas, cinsiyet: g.cinsiyet, sigara: !!g.sigara, dm: g.dm, sbp: g.sbp, tcholMgdl: g.tcholMgdl, hdlMgdl: g.hdlMgdl, bolge })
+      if (score2Op == null) score2Notu = SCORE2_OP_BEKLEME_NOTU
+      else { kova = score2Kova(g.yas, score2Op); neden = `SCORE2-OP %${score2Op} (${BOLGE_AD[bolge]}) — hekim kilitler`; dip.push({ ref: 'ESC_SCORE2_OP', not: `SCORE2-OP 10 yıllık KVH riski (≥70 yaş); ${BOLGE_AD[bolge]} kalibrasyonu; eşikler %7.5/%15` }) }
+    }
+    else if (g.dm) score2Notu = score2Notu || 'Diyabet: SCORE2-Diabetes girdileri eksik — şimdilik TEMD kuralı: DM = en az yüksek risk'
     else if (!SCORE2_ONAYLI) score2Notu = 'SCORE2 sayısal hesap katsayı doğrulaması bekliyor (EHJ 2021 suppl. p9) — kategori hekim kararı'
-    else { score2 = score2Ham({ yas: g.yas, cinsiyet: g.cinsiyet, sigara: !!g.sigara, sbp: g.sbp, tcholMgdl: g.tcholMgdl, hdlMgdl: g.hdlMgdl, bolge: g.bolge || 'high' }); if (score2 != null) { kova = score2Kova(g.yas, score2); neden = `SCORE2 %${score2} (${BOLGE_AD[g.bolge || 'high']}) — hekim kilitler`; dip.push({ ref: 'ESC_SCORE2', not: `SCORE2 10 yıllık ölümcül + ölümcül olmayan KVH riski (40–69 yaş, diyabetsiz); ${BOLGE_AD[g.bolge || 'high']} kalibrasyonu (Türkiye = yüksek risk bölgesi); eşikler <50 yaş %2.5/%7.5, 50–69 yaş %5/%10` }) } }
+    else { score2 = score2Ham({ yas: g.yas, cinsiyet: g.cinsiyet, sigara: !!g.sigara, sbp: g.sbp, tcholMgdl: g.tcholMgdl, hdlMgdl: g.hdlMgdl, bolge }); if (score2 != null) { kova = score2Kova(g.yas, score2); neden = `SCORE2 %${score2} (${BOLGE_AD[bolge]}) — hekim kilitler`; dip.push({ ref: 'ESC_SCORE2', not: `SCORE2 10 yıllık ölümcül + ölümcül olmayan KVH riski (40–69 yaş, diyabetsiz); ${BOLGE_AD[bolge]} kalibrasyonu (Türkiye = yüksek risk bölgesi); eşikler <50 yaş %2.5/%7.5, 50–69 yaş %5/%10` }) } }
     if (g.dm && kova == null) { kova = 'yuksek'; neden = neden || 'Diyabet (TEMD: en az yüksek risk)' }
   }
   const hedefLdl = kova === 'cok_yuksek' ? 55 : kova === 'yuksek' ? 70 : kova === 'dusuk_orta' ? 100 : null
@@ -126,5 +155,5 @@ export function kvrDegerlendir(g: KvrGirdi): KvrSonuc {
     else if (g.statinYogunluk === 'yuksek') statinAcigi.push(`Yüksek yoğunluk statin altında LDL ${g.ldlMgdl} > hedef: ${g.ezetimib ? 'PCSK9 inhibitörü için lipid/kardiyoloji sevk' : 'ezetimib ekleme'} — hekim`)
     else statinAcigi.push(`${g.statinYogunluk} yoğunluk statin altında hedef dışı: yoğunluk artışı veya ezetimib — hekim`)
   }
-  return { kova, kovaNedeni: neden, skorGerekli, score2, score2Notu, hedefLdl, hedefNotu, statinAcigi, dipnotlar: dip }
+  return { kova, kovaNedeni: neden, skorGerekli, score2, score2Notu, score2Diabetes: dmSkor?.skor ?? null, score2DmSinif: dmSkor?.sinif ?? null, score2Op, hedefLdl, hedefNotu, statinAcigi, dipnotlar: dip }
 }

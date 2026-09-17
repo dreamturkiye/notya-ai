@@ -4,7 +4,7 @@
 **Definition respected (TİHUD):** internist = chronic-disease manager + care coordinator. No hospitalist simulation.
 
 ## Locked rules in code
-AI drafts; doctor locks tanı / evre / hedef KB / HbA1c hedef / LDL hedef / ilaç. Flag ≠ diagnosis. Never auto-start combination antihypertensives or insulin (the engine only names classes with "hekim dozu yazar"). No SCORE2 number (inputs only; no reviewed formula in repo). Kırılgan is a doctor checkbox and moves the Uzlaşı target bucket. eGFR/HbA1c/LDL/TSH/K/Hb come **only from the lab engine's approved rows** — no second parser, nothing invented; no CKD stage without creatinine.
+AI drafts; doctor locks tanı / evre / hedef KB / HbA1c hedef / LDL hedef / ilaç. Flag ≠ diagnosis. Never auto-start combination antihypertensives or insulin (the engine only names classes with "hekim dozu yazar"). SCORE2 numbers only from gated, published-example-verified engines (SCORE2, SCORE2-Diabetes; SCORE2-OP gated off). Kırılgan is a doctor checkbox and moves the Uzlaşı target bucket. eGFR/HbA1c/LDL/TSH/K/Hb come **only from the lab engine's approved rows** — no second parser, nothing invented; no CKD stage without creatinine.
 
 ## Modules (as built)
 | # | Module | Rules encoded |
@@ -38,7 +38,7 @@ Shareable depth/gap report (before dahiliye wow sprint): [docs/README_DAHILIYE_A
 
 ## DAH-WOW Wave 0–1 (2026-09-16)
 - **Şerit**: sayfa üstünde sticky "BUGÜNKÜ VİZİT" (KB · HbA1c Δ · LDL · eGFR · gecikmiş) + 1-tap plan taslağı (kartlardan + gecikmiş görevlerden; nota yazmaz, kopyalanır).
-- **KVR sekmesi**: ASKVH / DM+TOD / KBH kural kovası → LDL hedef önerisi → statin yoğunluk açığı; SCORE2 sayısal hesap açık (`SCORE2_ONAYLI=true`, 2026-09-17: ehab309 Updated Supplementary Material Suppl. methods Table 2–4 ile doğrulandı; 40–69 yaş, diyabetsiz, varsayılan yüksek risk bölgesi) → kova taslak; SCORE2-OP / SCORE2-Diabetes ayrı ledger. Kategori ve LDL hedefi hekim kilidi (`dahiliye_kart_kilitleri`).
+- **KVR sekmesi**: ASKVH / DM+TOD / KBH kural kovası → LDL hedef önerisi → statin yoğunluk açığı; SCORE2 sayısal hesap açık (`SCORE2_ONAYLI=true`, 2026-09-17: ehab309 Updated Supplementary Material Suppl. methods Table 2–4 ile doğrulandı; 40–69 yaş, diyabetsiz, varsayılan yüksek risk bölgesi) → kova taslak; SCORE2-Diabetes (DM 40–69, `engines/score2diabetes.ts`, `SCORE2_DIABETES_ONAYLI=true`, ehad260 örnekleriyle doğrulandı; HbA1c/eGFR yalnız onaylı satırdan, tanı yaşı DM kartı veya KVR girişi) ve SCORE2-OP (≥70, `engines/score2op.ts`, `SCORE2_OP_ONAYLI=false` — ek materyal bölge ölçeklerinde çelişkili, sayı gösterilmez; ledger DAH-SCORE2-OP). Kategori ve LDL hedefi hekim kilidi (`dahiliye_kart_kilitleri`).
 - **KBH sekmesi**: KDIGO G×A (yalnız onaylı lab; UACR lab satırı yoksa hekim girişi), kronisite, hızlı düşüş, plan (RAS/SGLT2 sınıf), nefro sevk paketi (son panel eklenir).
 - **Ev kayıt**: ev KB/glukoz/kilo; beyaz önlük / maskeli fenotip; hipoglisemi sayacı.
 - **İzlem**: hasta_ilaclar → ilaç izlem görevleri (metformin B12/eGFR, ACEi/ARB K/Kre, statin ALT, levotiroksin TSH, warfarin INR, …).

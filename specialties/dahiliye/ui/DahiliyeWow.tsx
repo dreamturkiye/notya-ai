@@ -12,7 +12,7 @@ import type { Wow3Veri } from '@/app/api/doktor/dahiliye/_wow3';
 import type { Wow4Veri } from '@/app/api/doktor/dahiliye/_wow4';
 
 export type WowVeri = {
-  kvr: { sigara: boolean; askvh: boolean; dm_tod: boolean; dm_sure_10y: boolean; statin_yogunluk: string; ezetimib: boolean; sonuc: KvrSonuc; kilitKategori: string | null; kilitHedefLdl: number | null } | null;
+  kvr: { dm_tani_yasi: number | null; sigara: boolean; askvh: boolean; dm_tod: boolean; dm_sure_10y: boolean; statin_yogunluk: string; ezetimib: boolean; sonuc: KvrSonuc; kilitKategori: string | null; kilitHedefLdl: number | null } | null;
   ckd: { uacr_manual: number | null; uacr_tarih: string | null; ras_blokeri: boolean; sglt2: boolean; nsaii: boolean; sonuc: CkdSonuc; egfr: number | null; uacr: number | null; uacrKaynak: string; kilitEvre: string | null } | null;
   ev: { kb: EvKbOzet; glukoz: { n: number; aclikOrt: number | null; hipo: number; yuksek: number; not: string }; kayitlar: { id: string; tip: string; sbp: number | null; dbp: number | null; deger: number | null; olcum_at: string; kaynak: string }[] };
   izlem: { kod: string; ad: string; due: string; labs: string[]; ilac: string; kaynak: string; dipnot?: Dip }[];
@@ -64,17 +64,20 @@ export default function DahiliyeWow({ sekme, wow, kaynak, refler, calistir }: Pr
   if (sekme === 'KVR') {
     const k = wow.kvr; const r = k?.sonuc;
     return (<div>
-      <div style={etiket}>Kardiyovasküler risk (KVR) <span style={kucuk}>· ESC 2021 SCORE2 · TEMD/ESC LDL hedefleri · kategori hekim kilidi</span></div>
+      <div style={etiket}>Kardiyovasküler risk (KVR) <span style={kucuk}>· ESC 2021 SCORE2 / SCORE2-OP (≥70) · ESC 2023 SCORE2-Diabetes (DM 40–69) · TEMD/ESC LDL hedefleri · kategori hekim kilidi</span></div>
       <div style={satir}>
         {chk('sigara', bv('sigara', !!k?.sigara), (x) => set('sigara', x))}{chk('ASKVH öyküsü (MI/inme/PAH/revask.)', bv('askvh', !!k?.askvh), (x) => set('askvh', x))}
         {chk('DM + hedef organ hasarı', bv('dmTod', !!k?.dm_tod), (x) => set('dmTod', x))}{chk('DM ≥10 yıl', bv('dmSure', !!k?.dm_sure_10y), (x) => set('dmSure', x))}
         <select value={s('sy') || k?.statin_yogunluk || 'yok'} onChange={(e) => set('sy', e.target.value)} style={{ ...toolsInput, width: 'auto' }}>{['yok', 'dusuk', 'orta', 'yuksek'].map((x) => <option key={x} value={x} style={{ color: '#000' }}>statin: {x}</option>)}</select>
         {chk('ezetimib', bv('ez', !!k?.ezetimib), (x) => set('ez', x))}
-        <button type="button" style={btn} onClick={() => calistir({ adim: 'kvr', sigara: bv('sigara', !!k?.sigara), askvh: bv('askvh', !!k?.askvh), dmTod: bv('dmTod', !!k?.dm_tod), dmSure10Yil: bv('dmSure', !!k?.dm_sure_10y), statinYogunluk: s('sy') || k?.statin_yogunluk || 'yok', ezetimib: bv('ez', !!k?.ezetimib) }, 'KVR hesaplandı.')}>Hesapla</button>
+        <input value={f.dty !== undefined ? s('dty') : k?.dm_tani_yasi != null ? String(k.dm_tani_yasi) : ''} onChange={(e) => set('dty', e.target.value)} placeholder="DM tanı yaşı" title="SCORE2-Diabetes: DM kartında tanı tarihi yoksa" style={{ ...toolsInput, width: 110 }} />
+        <button type="button" style={btn} onClick={() => calistir({ adim: 'kvr', ...(f.dty !== undefined ? { dmTaniYasi: s('dty') } : {}), sigara: bv('sigara', !!k?.sigara), askvh: bv('askvh', !!k?.askvh), dmTod: bv('dmTod', !!k?.dm_tod), dmSure10Yil: bv('dmSure', !!k?.dm_sure_10y), statinYogunluk: s('sy') || k?.statin_yogunluk || 'yok', ezetimib: bv('ez', !!k?.ezetimib) }, 'KVR hesaplandı.')}>Hesapla</button>
       </div>
       {r && (<div style={{ fontSize: 12, color: '#EDF1F7', marginTop: 8 }}>
         <div>Kova taslak: <b style={{ color: r.kova === 'cok_yuksek' ? '#F87171' : r.kova === 'yuksek' ? '#FBBF24' : '#22C55E' }}>{r.kova ? KOVA_AD[r.kova] : 'belirlenemedi'}</b>{r.kovaNedeni ? ` — ${r.kovaNedeni}` : ''}{k?.kilitKategori ? ` · hekim kilidi: ${KOVA_AD[k.kilitKategori] || k.kilitKategori}` : ''}</div>
         {r.score2 != null && <div>SCORE2: <b>%{r.score2}</b> (yüksek risk bölgesi)</div>}
+        {r.score2Diabetes != null && <div>SCORE2-Diabetes: <b>%{r.score2Diabetes}</b> (yüksek risk bölgesi · HbA1c, eGFR, tanı yaşı onaylı kaynaktan)</div>}
+        {r.score2Op != null && <div>SCORE2-OP: <b>%{r.score2Op}</b> (yüksek risk bölgesi)</div>}
         {r.score2Notu && <div style={{ color: '#FBBF24' }}>ⓘ {r.score2Notu}</div>}
         <div>{r.hedefNotu}{k?.kilitHedefLdl ? ` · kilitli hedef <${k.kilitHedefLdl}` : ''}</div>
         {r.statinAcigi.map((x) => <div key={x} style={{ color: '#FBBF24' }}>⚠ {x}</div>)}
