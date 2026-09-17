@@ -154,7 +154,7 @@ export function gecerliKod(kodu: string): kodu is BulguKodu {
 
 /** Modality display names (doctor-facing) */
 export const MODALITE_TR: Record<Modalite, string> = {
-  cxr: 'Akciğer grafisi', xr_kemik: 'Kemik grafisi', xr_batin: 'Batın grafisi', ct: 'BT kesiti', mr: 'MR kesiti',
+  cxr: 'Röntgen (akciğer grafisi)', xr_kemik: 'Röntgen (kemik)', xr_batin: 'Röntgen (batın)', ct: 'BT kesiti', mr: 'MR kesiti',
   fundus: 'Fundus', oct: 'OCT', dis_goz: 'Dış göz fotoğrafı', ekg: 'EKG', eko: 'Ekokardiyografi',
   derm: 'Deri lezyonu fotoğrafı', dermatoskopi: 'Dermatoskopi', yara: 'Yara / yanık fotoğrafı', us: 'Ultrason',
   mamografi: 'Mamografi', patoloji: 'Patoloji / mikroskopi', yayma: 'Periferik yayma', otoskopi: 'Otoskopi',

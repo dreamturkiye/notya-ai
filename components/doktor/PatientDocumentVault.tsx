@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import DocumentViewer from '@/components/doktor/DocumentViewer'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
+import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur'
 
 type VaultDoc = {
   id: string
@@ -103,10 +104,15 @@ export default function PatientDocumentVault({ patientId }: { patientId: string 
             >
               <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: '#8FA0B5', marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(96,165,250,0.5)' : 'rgba(248,113,113,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#60A5FA' : '#F87171', fontWeight: 700 }}>{o}</span>)}</span>}</span>
               <span style={{ fontSize: 11, color: '#8FA0B5' }}>{d.category || d.fileType}</span>
-              {/* NOTYA-BELGE-01: multi-engine AI draft report for this document */}
-              <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Asistana raporla</a>
-              {/* NOTYA-LAB-01: lab table → trend → report */}
-              {(d.fileType === 'application/pdf' || d.fileType.startsWith('image/') || /csv|excel|spreadsheet/.test(d.fileType)) && <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}/lab`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Lab</a>}
+              {/* Lab PDFs → /lab (extract); röntgen/görüntü → imaging Asistana raporla */}
+              {belgeLabMi(d) ? (
+                <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}/lab`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Laboratuvarı değerlendir</a>
+              ) : (
+                <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>{belgeRontgenMi(d) ? 'Röntgenü değerlendir' : 'Asistana raporla'}</a>
+              )}
+              {!belgeLabMi(d) && (d.fileType === 'application/pdf' || d.fileType.startsWith('image/') || /csv|excel|spreadsheet/.test(d.fileType)) && (
+                <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}/lab`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '3px 9px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Laboratuvarı değerlendir</a>
+              )}
             </button>
           ))}
         </div>

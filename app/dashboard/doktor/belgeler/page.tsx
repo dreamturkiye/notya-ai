@@ -23,6 +23,7 @@ import {
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
 import { VAULT_MAX_BYTES } from '@/lib/vault/types'
+import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur'
 
 /** NOTYA-LAB-01 tablo çıkarımının okuyabildiği türler (hasta dosyası › Belgeler ile aynı). */
 const LAB_TURLERI = /^application\/pdf$|^image\/|csv|excel|spreadsheet/
@@ -478,9 +479,8 @@ export default function BelgelerPage() {
               Kasa ({docs.length})
             </div>
             <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
-              Belge adına tıklayın: önizleme açılır. “Asistana raporla” taslak değerlendirme yazar;
-              siz resmi tanıyı kilitleyip onayladığınızda muayenenin Objektif bölümüne eklenir.
-              Lab sonuçlarında “Lab” tabloyu çıkarır.
+              Belge adına tıklayın: önizleme açılır. Röntgen/görüntüde “Asistana raporla” (veya “Röntgenü değerlendir”) taslak yazar;
+              lab PDF’lerinde “Laboratuvarı değerlendir” tabloyu çıkarır. Resmi tanı onayıyla Objektif’e eklenir.
             </div>
             {!docs.length ? (
               <div style={{ fontSize: 13, color: '#94A3B8' }}>Bu hasta için henüz belge yok.</div>
@@ -514,20 +514,30 @@ export default function BelgelerPage() {
                     {/* KASA-BELGE-01: değerlendirme boru hattı (NOTYA-BELGE-01 / NOTYA-LAB-01) vardı ama
                         yalnız hasta dosyası › Belgeler sekmesinden görünüyordu; yükleme yapılan bu sayfa
                         çıkışsız bir arşiv gibi duruyordu. Aynı iki bağlantı burada da. */}
-                    <a
-                      href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}`}
-                      title="Asistan taslak rapor yazsın; hekim onayıyla son muayenenin Objektif bölümüne eklenir"
-                      style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
-                    >
-                      Asistana raporla
-                    </a>
-                    {LAB_TURLERI.test(d.fileType) && (
+                    {belgeLabMi(d) ? (
+                      <a
+                        href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}/lab`}
+                        title="Lab tablosunu çıkar, düzelt ve asistan raporunu üret"
+                        style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                      >
+                        Laboratuvarı değerlendir
+                      </a>
+                    ) : (
+                      <a
+                        href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}`}
+                        title="Asistan taslak rapor yazsın; hekim onayıyla son muayenenin Objektif bölümüne eklenir"
+                        style={{ fontSize: 11, fontWeight: 700, color: '#2DD4BF', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                      >
+                        {belgeRontgenMi(d) ? 'Röntgenü değerlendir' : 'Asistana raporla'}
+                      </a>
+                    )}
+                    {!belgeLabMi(d) && LAB_TURLERI.test(d.fileType) && (
                       <a
                         href={`/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}/lab`}
                         title="Lab tablosunu çıkar, düzelt ve onayla"
                         style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
                       >
-                        Lab
+                        Laboratuvarı değerlendir
                       </a>
                     )}
                     <button

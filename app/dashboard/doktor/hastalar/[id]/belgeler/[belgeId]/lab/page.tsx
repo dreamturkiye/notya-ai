@@ -6,7 +6,7 @@
  * → özet / yeni bozulanlar / düzelenler / kronik / olası tanılar → resmi tanı (hekim) → Onayla ve son muayeneye ekle
  * → Plan → Muayeneyi onayla. Strip always. Critical banner "Hekim şimdi baksın" (no auto-112).
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
@@ -45,6 +45,7 @@ export default function LabPage() {
   const [planAcik, setPlanAcik] = useState(false);
   const [persona, setPersona] = useState('Asistan');
   const [kaynakAcik, setKaynakAcik] = useState(false);
+  const autoCikarRef = useRef(false);
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync();
@@ -68,6 +69,14 @@ export default function LabPage() {
   useEffect(() => { yukle(); }, [yukle]);
 
   const cikar = async () => { setDurum('cikariyor'); setMesaj(''); try { const j = await api({ adim: 'cikar', documentId: belgeId }); setMesaj(`Belge eklendi. Tablo henüz onaylanmadı. ${j.ozet.toplam} satır · ${j.kaynaklar.length === 2 ? 'iki kaynak uzlaştırıldı' : 'tek kaynak'}${j.uyusmazlik ? ` · ${j.uyusmazlik} hücre doğrulanacak` : ''}`); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } setDurum('hazir'); };
+
+  // Opening "Laboratuvarı değerlendir" should start extraction — not leave an empty right panel.
+  useEffect(() => {
+    if (!doc || panel || autoCikarRef.current || durum !== 'hazir') return;
+    autoCikarRef.current = true;
+    void cikar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot on first document load without panel
+  }, [doc, panel, durum]);
   const hücreKaydet = async (s: Satir, alan: string, deger: string) => { if (!panel) return; try { await api({ adim: 'satir', panelId: panel.id, satirId: s.id, alan, deger }); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
   const takmaAd = async (s: Satir, key: string) => { if (!panel || !key) return; try { await api({ adim: 'takma_ad', panelId: panel.id, satirId: s.id, canonical_key: key }); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
   const tabloOnayla = async () => { if (!panel) return; try { await api({ adim: 'tablo_onayla', panelId: panel.id }); setMesaj('Tablo onaylandı.'); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
@@ -123,13 +132,13 @@ export default function LabPage() {
           </div>
 
           <div>
-            {!panel && <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 13 }}>Laboratuvar PDF, fotoğraf veya Excel bırakın (hasta dosyası › Belgeler), sonra "Tabloyu çıkar".</div>}
+            {!panel && <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 13 }}>{durum === 'cikariyor' ? 'Tablo çıkarılıyor…' : 'Laboratuvar tablosu hazırlanıyor. Birkaç saniye içinde burada görünür; gerekirse soldan "Tabloyu çıkar"a basın.'}</div>}
             {panel && (
               <div style={{ ...toolsCard, marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
                   <div style={etiket}>Tablo <span style={{ fontWeight: 400, color: '#64748B' }}>· {satirlar.length} parametre · {yuksek} yüksek · {dusuk} düşük{kritikSatirlar.length ? ` · ${kritikSatirlar.length} kritik` : ''} · hücreye tıklayıp düzeltin</span></div>
                   {!panel.tablo_onayli && !kilitli && <button type="button" onClick={tabloOnayla} style={btn}>Tabloyu onayla</button>}
-                  {panel.tablo_onayli && !analiz && <button type="button" onClick={raporla} disabled={durum !== 'hazir'} style={btn}>{durum === 'raporluyor' ? `${persona} raporluyor…` : 'Asistana raporla'}</button>}
+                  {panel.tablo_onayli && !analiz && <button type="button" onClick={raporla} disabled={durum !== 'hazir'} style={btn}>{durum === 'raporluyor' ? `${persona} raporluyor…` : `${persona} ile değerlendir`}</button>}
                   {panel.tablo_onayli && analiz && !kilitli && <button type="button" onClick={raporla} disabled={durum !== 'hazir'} style={btnGhost}>Yeniden raporla</button>}
                 </div>
                 <div style={{ overflowX: 'auto', marginTop: 6 }}>

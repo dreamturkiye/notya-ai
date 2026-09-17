@@ -5,7 +5,7 @@
  * + Plan düzenle → Muayeneyi onayla (revizyon). Disclaimer strip always visible (locked).
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
@@ -17,6 +17,7 @@ import { dicomMi, dicomCoz } from '@/core/belgeler/dicom';
 import '@/core/belgeler/motorlar/txrv'; // NOTYA-BELGE-02: registers the browser CXR engine
 import { UYARI_SERIDI } from '@/core/belgeler/yazar';
 import type { BelgeRaporu, MotorCiktisi } from '@/core/belgeler/types';
+import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur';
 
 type Doc = { id: string; fileName: string; fileType: string; fileSize: number; category: string | null; createdAt: string };
 type Analiz = { id: string; durum: string; sonuc: BelgeRaporu | null; fusion: { fused: { kod: string; label_tr: string; p: number; sources: string[]; karsi: string[] }[]; capPct: number; acilNedenler: string[]; duzeltmeler: string[] } | null; motor_ciktilari: MotorCiktisi[]; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; note_id: string | null; onaylandi_at: string | null; olusturuldu: string; modality_final: string };
@@ -28,6 +29,7 @@ const bantRenk: Record<string, string> = { 'yüksek': '#2DD4BF', 'orta': '#FBBF2
 
 export default function BelgeAnalizPage() {
   const { id: patientId, belgeId } = useParams<{ id: string; belgeId: string }>();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [doc, setDoc] = useState<Doc | null>(null);
   const [analiz, setAnaliz] = useState<Analiz | null>(null);
@@ -44,6 +46,7 @@ export default function BelgeAnalizPage() {
   const [uyusmazlik, setUyusmazlik] = useState<string | null>(null);
 
   const kural = bransKurali(bransKey);
+  const personaAd = kural.persona === 'ayse' ? 'Ayşe' : kural.persona === 'mehmet' ? 'Mehmet' : kural.persona === 'elif' ? 'Elif' : 'Asistan';
   const yetenek = useMemo(() => (typeof window !== 'undefined' ? tarayiciYetenek() : null), []);
   const sesMi = SES_MODALITELERI.includes((modalite || 'serbest') as Modalite);
   const pdfMi = doc?.fileType === 'application/pdf';
@@ -60,6 +63,14 @@ export default function BelgeAnalizPage() {
   }, [patientId, belgeId]);
   useEffect(() => { yukle(); }, [yukle]);
 
+  // Lab PDFs belong on /lab (table extract + Ayşe/Elif report) — not the imaging draft path.
+  useEffect(() => {
+    if (!doc || searchParams?.get('goruntu') === '1') return;
+    if (belgeLabMi(doc)) {
+      router.replace(`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab`);
+    }
+  }, [doc, patientId, belgeId, router, searchParams]);
+
   // default modality: query (Deri tab deep-link) then file type / category
   useEffect(() => {
     if (modalite) return;
@@ -70,6 +81,7 @@ export default function BelgeAnalizPage() {
     }
     if (!doc) return;
     if (doc.fileType.startsWith('audio/')) setModalite(kural.modaliteler.includes('ses_kalp') && doc.category === 'cihaz-kaydi' ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp');
+    else if (belgeRontgenMi(doc) && kural.modaliteler.includes('cxr')) setModalite('cxr');
     else if (doc.fileType === 'application/pdf') setModalite('pdf_rapor');
     else setModalite(kural.modaliteler.find((m) => !m.startsWith('ses') && m !== 'pdf_rapor') || 'serbest');
   }, [doc, kural, modalite, searchParams]);
@@ -138,17 +150,14 @@ export default function BelgeAnalizPage() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '14px 12px' }}>
         <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.35)', color: '#FBBF24', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 700, marginBottom: 12 }}>{UYARI_SERIDI}</div>
         <div className="notya-grid-yigin" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 14 }}>
-          {/* LEFT: media + controls */}
+          {/* LEFT: controls first (above fold), then media */}
           <div>
             <div style={{ ...toolsCard, marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#EDF1F7' }}>{doc?.fileName || 'Belge'}</div>
                 <a href={`/dashboard/doktor/hastalar/${patientId}`} style={{ color: '#2DD4BF', fontSize: 12 }}>← Hasta dosyası</a>
               </div>
-              {doc && <div style={{ marginTop: 8 }}><DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} onClose={() => {}} /></div>}
-            </div>
-            <div style={toolsCard}>
-              <div style={etiket}>Asistana raporla · {kural.ad}</div>
+              <div style={etiket}>{personaAd} ile değerlendir · {kural.ad}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <select value={modalite} onChange={(e) => setModalite(e.target.value as Modalite)} style={{ ...toolsInput, width: 'auto' }}>
                   {kural.modaliteler.map((m) => <option key={m} value={m} style={{ color: '#000' }}>{MODALITE_TR[m]}</option>)}
@@ -163,18 +172,27 @@ export default function BelgeAnalizPage() {
                 </label>
               )}
               {yetenek && <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>{yetenek.not} Tarayıcı motorları: {tierBMotorlari(bransKey, (modalite || 'serbest') as Modalite).join(', ') || 'bu modalite için yok (yalnız asistan)'}.</div>}
-              <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" onClick={raporla} disabled={durum !== 'hazir' && durum !== 'hata' || !modalite} style={{ ...btn, opacity: durum === 'hazir' || durum === 'hata' ? 1 : 0.6 }}>
-                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Motorlar çalışıyor…' : durum === 'yaziyor' ? 'Asistan yazıyor…' : analiz ? 'Yeniden raporla' : 'Asistana raporla'}
+                  {durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'motorlar' ? 'Motorlar çalışıyor…' : durum === 'yaziyor' ? `${personaAd} yazıyor…` : analiz ? 'Yeniden raporla' : modalite === 'cxr' || String(modalite).startsWith('xr_') ? `${personaAd} ile röntgenü değerlendir` : `${personaAd} ile değerlendir`}
                 </button>
+                {(pdfMi || (doc && belgeLabMi(doc))) && (
+                  <a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${belgeId}/lab`} style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24' }}>Laboratuvarı değerlendir →</a>
+                )}
                 {mesaj && <span style={{ fontSize: 12, color: durum === 'hata' ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>}
               </div>
+            </div>
+            <div style={toolsCard}>
+              {doc && <DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} onClose={() => {}} />}
             </div>
           </div>
 
           {/* RIGHT: report */}
           <div>
-            {!rapor && <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 13 }}>Henüz taslak yok. Modaliteyi seçin ve "Asistana raporla" deyin.</div>}
+            {!rapor && <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 13 }}>
+              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 6 }}>Henüz taslak yok</div>
+              Solda modaliteyi seçin (röntgen için <b>Röntgen (akciğer grafisi)</b>) ve <b>{personaAd} ile değerlendir</b>e basın. Lab PDF ise <b>Laboratuvarı değerlendir</b> yolunu kullanın.
+            </div>}
             {rapor && analiz && (
               <>
                 {analiz.durum === 'kalite_dusuk' && <div style={{ ...toolsCard, borderColor: 'rgba(248,113,113,0.4)', color: '#F87171', fontSize: 13, marginBottom: 10 }}>Kalite düşük — tanı önerisi üretilmedi. {rapor.sinirlar[0] || ''}</div>}
