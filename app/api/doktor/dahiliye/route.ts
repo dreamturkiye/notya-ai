@@ -49,7 +49,9 @@ async function wowVerisi(sb: Sb, doctorId: string, hasta: { id: string; yas: num
   const dmSatir = dm as { tip?: string; tani_tarihi?: string | null } | null
   const dmSure10 = !!kvrRow?.dm_sure_10y || (!!dmSatir?.tani_tarihi && dmSatir.tani_tarihi <= new Date(Date.now() - 10 * 365 * 86400000).toISOString().slice(0, 10))
   const lipidSatir = lipid as { hedef_ldl?: number | null; statin?: string | null; ezetimib?: boolean } | null
-  const kvrSonuc = kvrDegerlendir({ yas: hasta.yas, cinsiyet: hasta.kadin ? 'kadin' : 'erkek', sigara: !!kvrRow?.sigara, sbp: (ht as { sbp?: number } | null)?.sbp, tcholMgdl: sonDeger(labs, 'TChol') ?? undefined, hdlMgdl: sonDeger(labs, 'HDL') ?? undefined, askvh: !!kvrRow?.askvh, dm: !!dm, dmTod: !!kvrRow?.dm_tod, dmSure10Yil: dmSure10, eGFR: egfr, uacr, ldlMgdl: sonDeger(labs, 'LDL'), statinYogunluk: (kvrRow?.statin_yogunluk as 'yok' | 'dusuk' | 'orta' | 'yuksek') || (lipidSatir?.statin ? 'orta' : 'yok'), ezetimib: !!kvrRow?.ezetimib || !!lipidSatir?.ezetimib })
+  const taniYilOnce = dmSatir?.tani_tarihi ? Math.floor((Date.parse(T) - Date.parse(dmSatir.tani_tarihi)) / (365.25 * 86400000)) : null
+  const dmTaniYasi = kvrRow?.dm_tani_yasi != null ? Number(kvrRow.dm_tani_yasi) : hasta.yas != null && taniYilOnce != null && taniYilOnce >= 0 ? hasta.yas - taniYilOnce : null
+  const kvrSonuc = kvrDegerlendir({ hba1cYuzde: sonDeger(labs, 'HbA1c'), dmTaniYasi, yas: hasta.yas, cinsiyet: hasta.kadin ? 'kadin' : 'erkek', sigara: !!kvrRow?.sigara, sbp: (ht as { sbp?: number } | null)?.sbp, tcholMgdl: sonDeger(labs, 'TChol') ?? undefined, hdlMgdl: sonDeger(labs, 'HDL') ?? undefined, askvh: !!kvrRow?.askvh, dm: !!dm, dmTod: !!kvrRow?.dm_tod, dmSure10Yil: dmSure10, eGFR: egfr, uacr, ldlMgdl: sonDeger(labs, 'LDL'), statinYogunluk: (kvrRow?.statin_yogunluk as 'yok' | 'dusuk' | 'orta' | 'yuksek') || (lipidSatir?.statin ? 'orta' : 'yok'), ezetimib: !!kvrRow?.ezetimib || !!lipidSatir?.ezetimib })
   const evRows = (evQ.data || []) as { id: string; tip: string; sbp: number | null; dbp: number | null; deger: number | null; aclik: boolean | null; olcum_at: string; kaynak: string }[]
   const ofis = ht as { sbp?: number; dbp?: number } | null
   const evKb = evKbOzeti(evRows.filter((r) => r.tip === 'kb' && r.sbp != null && r.dbp != null).map((r) => ({ sbp: r.sbp as number, dbp: r.dbp as number, olcumAt: r.olcum_at })), ofis?.sbp != null && ofis.dbp != null ? { sbp: ofis.sbp, dbp: ofis.dbp } : null, T)
@@ -58,7 +60,7 @@ async function wowVerisi(sb: Sb, doctorId: string, hasta: { id: string; yas: num
   for (const [k, arr] of labs) sonLab[k] = arr[0]?.numune_tarihi || null
   const izlem = ilacIzlemGorevleri(aktifIlac.map((i) => ({ ad: i.ilac_adi, etken: i.etken_madde, baslangic: i.baslangic_tarihi, aktif: true })), sonLab, T)
   return {
-    kvr: { sigara: !!kvrRow?.sigara, askvh: !!kvrRow?.askvh, dm_tod: !!kvrRow?.dm_tod, dm_sure_10y: dmSure10, statin_yogunluk: String(kvrRow?.statin_yogunluk || 'yok'), ezetimib: !!kvrRow?.ezetimib, sonuc: kvrSonuc, kilitKategori: kilitDegeri<string>(kilitler, 'kvr', 'kategori'), kilitHedefLdl: kilitDegeri<number>(kilitler, 'kvr', 'hedef_ldl') ?? (lipidSatir?.hedef_ldl ?? null) },
+    kvr: { dm_tani_yasi: dmTaniYasi, sigara: !!kvrRow?.sigara, askvh: !!kvrRow?.askvh, dm_tod: !!kvrRow?.dm_tod, dm_sure_10y: dmSure10, statin_yogunluk: String(kvrRow?.statin_yogunluk || 'yok'), ezetimib: !!kvrRow?.ezetimib, sonuc: kvrSonuc, kilitKategori: kilitDegeri<string>(kilitler, 'kvr', 'kategori'), kilitHedefLdl: kilitDegeri<number>(kilitler, 'kvr', 'hedef_ldl') ?? (lipidSatir?.hedef_ldl ?? null) },
     ckd: { uacr_manual: ckdRow?.uacr_manual ?? null, uacr_tarih: ckdRow?.uacr_tarih ?? null, ras_blokeri: !!ckdRow?.ras_blokeri, sglt2: !!ckdRow?.sglt2, nsaii: !!ckdRow?.nsaii, sonuc: ckdSonuc, egfr, uacr, uacrKaynak, kilitEvre: kilitDegeri<string>(kilitler, 'ckd', 'evre') },
     ev: { kb: evKb, glukoz: evGlukoz, kayitlar: evRows.slice(0, 40) },
     izlem, kilitler, ckdSonuc, kvrSonuc,
@@ -91,7 +93,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
   if (adim === 'kvr') {
-    const { error } = await sb.from('dahiliye_kvr').upsert({ patient_id: hasta.id, doctor_id: user.id, sigara: !!b.sigara, askvh: !!b.askvh, dm_tod: !!b.dmTod, dm_sure_10y: !!b.dmSure10Yil, statin_yogunluk: ['yok', 'dusuk', 'orta', 'yuksek'].includes(String(b.statinYogunluk)) ? String(b.statinYogunluk) : 'yok', ezetimib: !!b.ezetimib, updated_at: new Date().toISOString() }, { onConflict: 'patient_id' })
+    const { error } = await sb.from('dahiliye_kvr').upsert({ patient_id: hasta.id, doctor_id: user.id, sigara: !!b.sigara, askvh: !!b.askvh, dm_tod: !!b.dmTod, dm_sure_10y: !!b.dmSure10Yil, statin_yogunluk: ['yok', 'dusuk', 'orta', 'yuksek'].includes(String(b.statinYogunluk)) ? String(b.statinYogunluk) : 'yok', ezetimib: !!b.ezetimib, ...(b.dmTaniYasi !== undefined ? { dm_tani_yasi: b.dmTaniYasi === '' || b.dmTaniYasi == null ? null : Math.round(Number(b.dmTaniYasi)) } : {}), updated_at: new Date().toISOString() }, { onConflict: 'patient_id' })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
   }

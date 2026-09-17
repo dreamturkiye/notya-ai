@@ -4,7 +4,7 @@ export const DAHILIYE_TOOLS = [
   { name: 'dahiliye.kb', description: 'Ofis KB kaydet → Uzlaşı 2025 evre taslağı + HT planı' },
   { name: 'dahiliye.dm', description: 'DM kartı: HbA1c trend, yıllık tarama görevleri, sınıf önerisi' },
   { name: 'dahiliye.lipid', description: 'Lipid kartı: LDL hedef (hekim), statin/ALT izlem' },
-  { name: 'dahiliye.kvr', description: 'KVR: kural kovası (ASKVH/DM+TOD/KBH) → SCORE2 (doğrulanmışsa) → LDL hedef + statin açığı' },
+  { name: 'dahiliye.kvr', description: 'KVR: kural kovası (ASKVH/DM+TOD/KBH) → SCORE2 / SCORE2-Diabetes / SCORE2-OP (yalnız ONAYLI motor) → LDL hedef + statin açığı' },
   { name: 'dahiliye.ckd', description: 'KDIGO G×A ısı haritası, plan, nefro sevk paketi' },
   { name: 'dahiliye.evkayit', description: 'Ev KB/glukoz/kilo kaydı ve özeti (beyaz önlük / maskeli)' },
   { name: 'dahiliye.ilacizlem', description: 'İlaç izlem takvimi: hasta_ilaclar → lab izlem görevleri' },
