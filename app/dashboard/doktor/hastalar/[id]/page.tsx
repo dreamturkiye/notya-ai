@@ -201,6 +201,12 @@ export default function HastaProfilPage() {
     return Array.isArray(s.notes) ? s.notes[0] || null : s.notes;
   };
 
+  const vaultSpecialtyGeri: 'deri' | 'goz' | 'gebelik' | null = searchParams?.get('dermModality')
+    ? 'deri'
+    : activeTab === 'deri' || activeTab === 'goz' || activeTab === 'gebelik'
+      ? activeTab
+      : null;
+
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: '#EDF1F7', fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
       <style>{`
