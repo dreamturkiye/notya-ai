@@ -1014,6 +1014,13 @@ Mobil (zorunlu 390px kontrolü): karşılama paneli gerçek `DoktorAvatar` bile�
 çerçevede ölçüldü — metin kutusu 299px → 233px'e daralıyor, **yatay taşma yok**, başlık düzgün
 sarıyor; fotoğraflı, baş harfli ve Türkçe ("İÇ") üç durum da temiz (`smoke-out/avatar-390.png`).
 
+### YAPILACAK — migration production'a elle uygulanmalı (Kaan)
+
+| Tarih | Madde | Durum |
+|---|---|---|
+| 2026-09-17 | **`050_doktor_profil_fotografi.sql` production'da HENÜZ UYGULANMADI.** Bu depoda migration'lar `next build`'in parçası değil, elle çalıştırılıyor (`npm run migrate:supabase` ise `001_doctor_profile.sql`'e sabitlenmiş — bu dosyayı çalıştırmaz). Kod canlıda ama tablo yok. **Uygulanacak komut** (`.env.local` içinde `DATABASE_URL`/`SUPABASE_DB_URL` olan bir checkout'tan): `node scripts/run-sql-migration.mjs 050_doktor_profil_fotografi.sql`. Bu çalıştırılmadan Ayarlar'dan yükleme "Fotoğraf kaydedilemedi" der. Ben çalıştıramadım: bu worktree'de veritabanı kimlik bilgisi yok ve başka bir checkout'a dokunmam istenmedi. | TODO (Kaan / bir sonraki oturum) |
+| 2026-09-17 | **Migration uygulanana kadar canlı GÜVENLİ — ölçüldü, varsayılmadı.** Tablo yokken rota davranışı sahte "42P01 relation does not exist" ile sınandı: `GET` **200 `{avatar:null}}`** döndü, yani karşılama ekranı baş harfli avatarla normal çalışır, kırılmaz; `POST` **500 + Türkçe "Fotoğraf kaydedilemedi"** döndü, çökme yok. Yani bu PR canlıdaki hiçbir şeyi bozmuyor; yalnız yükleme özelliği migration'a kadar uykuda. | VERIFIED |
+
 ### AÇIK — Kaan'ın kararı bekleniyor
 
 | Tarih | Madde | Durum |
