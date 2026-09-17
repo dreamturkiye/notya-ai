@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import DahiliyeWow, { VizitSeridiBar, type WowVeri } from './DahiliyeWow';
 import DahiliyeWow2 from './DahiliyeWow2';
+import DahiliyeWow3 from './DahiliyeWow3';
 import type { VizitSeridi } from '../engines/serit';
 
 type L = { kanonik_deger: number | null; numune_tarihi: string | null } | null;
@@ -22,9 +23,11 @@ const Kaynak = ({ d, acik, refler }: { d?: Dip[] | null; acik: boolean; refler: 
 const GRUPLAR: { ad: string; sekmeler: readonly string[] }[] = [
   { ad: 'Kronik', sekmeler: ['Özet', 'HT', 'DM', 'DM döngü', 'Lipid', 'KVR', 'KBH', 'Tiroid'] },
   { ad: 'Döngüler', sekmeler: ['Anemi', 'Obezite', 'Tarama/Aşı', 'İzlem', 'Ev kayıt', 'Ön anket'] },
+  { ad: 'Kartlar', sekmeler: ['KY', 'Antikoagülan', 'Solunum', 'GI', 'EKG', 'Ramazan'] },
   { ad: 'Belge', sekmeler: ['Check-up', 'İlaçlar', 'SGK rapor', 'Sevk'] },
 ];
 const WOW2_SEKME: readonly string[] = ['DM döngü', 'Anemi', 'Obezite', 'Tarama/Aşı', 'Ön anket'];
+const WOW3_SEKME: readonly string[] = ['KY', 'Antikoagülan', 'Solunum', 'GI', 'EKG', 'Ramazan'];
 
 const WOW_SEKME: readonly string[] = ['KVR', 'KBH', 'İzlem', 'Ev kayıt', 'SGK rapor'];
 
@@ -112,6 +115,9 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
       </div>)}
 
       {WOW2_SEKME.includes(sekme) && v.wow?.w2 && <DahiliyeWow2 sekme={sekme} w2={v.wow.w2} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
+      {WOW3_SEKME.includes(sekme) && v.wow?.w3 && <DahiliyeWow3 sekme={sekme} w3={v.wow.w3} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
+      {sekme === 'Tiroid' && v.wow?.w3 && <DahiliyeWow3 sekme="Tiroid nodül" w3={v.wow.w3} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
+      {sekme === 'Check-up' && v.wow?.w3 && <DahiliyeWow3 sekme="Check-up paket" w3={v.wow.w3} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {sekme === 'HT' && v.wow?.w2 && <DahiliyeWow2 sekme="HT panel" w2={v.wow.w2} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {WOW_SEKME.includes(sekme) && v.wow && <DahiliyeWow sekme={sekme} wow={v.wow} kaynak={kaynak} refler={v.kutuphane.refler} calistir={calistir} />}
       {sekme === 'Sevk' && (<div>

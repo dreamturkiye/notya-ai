@@ -17,6 +17,14 @@ export const DAHILIYE_TOOLS = [
   { name: 'dahiliye.asi', description: 'Erişkin aşı takvimi (HYP): grip, pnömokok, zona, Td, HBV, COVID-19' },
   { name: 'dahiliye.htpanel', description: 'HT başlangıç paneli istemi + 14 gün sonuçlanmayan lab takibi' },
   { name: 'dahiliye.anketsoap', description: 'Portal ön anketini bugünkü muayenenin Subjektif bölümüne ekle' },
+  { name: 'dahiliye.hf', description: 'KY: EF kategorisi, GDMT 4 sütun kontrol listesi, kardiyoloji sevk tetikleyicileri' },
+  { name: 'dahiliye.antikoagulan', description: 'Antikoagülan: INR + TTR, DOAK uygunluk (KrKl/yaş/kilo), HAS-BLED maddeleri kontrol listesi' },
+  { name: 'dahiliye.pulm', description: 'KOAH/astım: spirometri, GOLD + ABE, astım kontrolü, inhaler sınıfı + teknik' },
+  { name: 'dahiliye.gi', description: 'GÖRH, İBS Roma IV, MASLD FIB-4, H. pylori eradikasyon + kontrol testi zamanı' },
+  { name: 'dahiliye.ekg', description: 'EKG 1-tap Türkçe rapor; acil bulgu kırmızı bayrak kapısı' },
+  { name: 'dahiliye.nodul', description: 'Tiroid nodül TI-RADS tarzı tarif, izlem görevi, endokrin sevki' },
+  { name: 'dahiliye.ramazan', description: 'Ramazan DM/HT risk kademesi, ilaç zamanlaması (doz yok), hasta yaprağı' },
+  { name: 'dahiliye.checkup', description: 'Check-up paket defteri (kendi ödemeli) + birleşik rapor' },
   { name: 'dahiliye.sevk', description: 'Sevk oluştur (son onaylı panel eklenir)' },
 ] as const
 export type DahiliyeToolName = (typeof DAHILIYE_TOOLS)[number]['name']

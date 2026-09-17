@@ -57,3 +57,15 @@ Sekmeler artık gruplu: **Kronik** (Özet · HT · DM · DM döngü · Lipid · 
 - **HT sekmesi**: 1-tık başlangıç paneli istemi; 14 günde onaylı sonuç gelmezse takip görevi.
 - **Ön anket**: hasta Sağlığım › Takip › Muayene öncesi anket (PIN sonrası) — ev KB/glukoz/kilo `dahiliye_ev_kayitlari` (portal), uyum + semptom + sorular; alarm semptomu şeritte ⚑; "Subjektif'e ekle".
 Migration 041. Server: `app/api/doktor/dahiliye/_wow2.ts`.
+
+## DAH-WOW Wave 3 — geniş kartlar (2026-09-16)
+Yeni sekme grubu **Kartlar**: KY · Antikoagülan · Solunum · GI · EKG · Ramazan. Tiroid sekmesinin altında **nodül tarifi**, Check-up sekmesinin altında **paket defteri**.
+- **KY**: EF kategorisi (HFrEF/HFmrEF/HFpEF), GDMT 4 sütun (ARNI/ACEi/ARB · BB · MRA · SGLT2) hasta_ilaclar'dan; K/eGFR/nabız/SBP, NSAİİ/diltiazem/pioglitazon uyarıları, ev tartısında 3 günde >2 kg; kardiyoloji sevk (NYHA III–IV, EF ≤35, yatış, EF bilinmiyor).
+- **Antikoagülan**: warfarin INR serisi + TTR (Rosendaal), sonraki INR 1/2/4 hafta, INR ≥9 kırmızı; DOAK uygunluk (Cockcroft-Gault KrKl, yaş, kilo → "azaltılmış doz kriteri", mg yok); mekanik kapak + DOAK kırmızı; HAS-BLED maddeleri kontrol listesi (skor değil).
+- **Solunum**: spirometri değerleri → obstrüksiyon/BD yanıtı; KOAH GOLD + ABE + inhaler sınıfı (eozinofil ≥300 ICS); astım 4-soru kontrolü; inhaler teknik listesi; göğüs sevk.
+- **GI**: GÖRH (alarm / ≥60 → endoskopi; yoksa PPI 8 hafta), İBS Roma IV, MASLD FIB-4, H. pylori bizmutlu dörtlü 14 gün (sınıf) + kontrol testi tarihi ve görevi.
+- **EKG**: 6 şablon → Türkçe rapor, QTc; acil bulgu kırmızı bayrak kapısı (acil/sevk onayı olmadan kaydedilmez); hekim onayı nota yazar.
+- **Tiroid nodül**: TI-RADS tarzı puan → TR1–5, İİAB (endokrin sevki) / US izlem görevleri.
+- **Ramazan**: risk kademesi, oruç önerisi, ilaç zamanlaması (doz/insülin titrasyonu yok), oruç bozma kuralları, hasta yaprağı; sezonluk aç/kapat.
+- **Check-up paket defteri**: yaş/cinsiyete uygun paket (kendi ödemeli, DB kısıtı), kalemler onaylı lab/belge ile otomatik, birleşik rapor (onaylı lab + belge + kart kilitleri), hekim onayına kadar TASLAK, yazdır/PDF.
+Migration 042. Server: `app/api/doktor/dahiliye/_wow3.ts`.
