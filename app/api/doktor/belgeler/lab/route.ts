@@ -1,7 +1,8 @@
 /**
  * NOTYA-LAB-01 — Lab pipeline API.
  * POST body.adim:
- *   'cikar'    { documentId }                       → EXTRACT (structural + vision, reconciled) → lab_paneller + lab_satirlar
+ *   'cikar'    { documentId, kaynak? }              → EXTRACT (structural + vision, reconciled) → lab_paneller + lab_satirlar
+ *              kaynak='enabiz' (DAH-WOW-NEXT C5): e-Nabız geçmiş PDF — yalnız görsel geçiş, satır başına basılı numune tarihi, panel_type 'enabiz_gecmis'
  *   'satir'    { panelId, satirId, alan, deger }    → doctor cell edit (OCR fix) → recompute the row, doctor_corrected=true
  *   'takma_ad' { panelId, satirId, canonical_key }  → "bunu ALT say" alias; re-map + recompute the row
  *   'tablo_onayla' { panelId }                      → table confirmed
@@ -21,6 +22,7 @@ import { satirKur, uzlastir, panelOzeti, ozelHesaplar, type HamSatir, type LabSa
 import { KANONIK, normalizeAd, type KanonikAnahtar } from '@/core/lab/kanonik'
 import { labRaporYaz, labRaporuDogrula } from '@/core/lab/yorum'
 import { labRaporKaynaklari } from '@/specialties/dahiliye/engines/labKaynak'
+import { ENABIZ_TALIMAT, satirTarihiDogrula, tekrarAyikla, panelTarihi } from '@/core/lab/enabiz'
 import { muhtemelNtpPanel, ntpBelgeSahibi, ntpKeyFromRaw, yorumNtp, NTP_DISCLAIMER } from '@/lib/clinical/yenidogan'
 
 export const dynamic = 'force-dynamic'
@@ -55,13 +57,15 @@ export async function POST(req: NextRequest) {
     let meta; try { meta = await getDocumentMeta({ supabase: sb }, user.id, body.documentId) } catch { return NextResponse.json({ error: 'Belge bulunamadı' }, { status: 404 }) }
     const { bytes } = await downloadDocument({ supabase: sb }, user.id, body.documentId)
     const ft = meta.fileType
+    const enabiz = body.kaynak === 'enabiz'
+    if (enabiz && ft !== 'application/pdf') return NextResponse.json({ error: 'e-Nabız geçmiş içe aktarma yalnız PDF kabul eder.' }, { status: 400 })
     let yapi: CikarimSonucu | null = null, gorsel: CikarimSonucu | null = null
-    try {
+    if (!enabiz) try {
       if (/csv|excel|spreadsheet/.test(ft)) yapi = csvXlsxCoz(bytes, ft)
       else if (ft === 'application/pdf') { const p = await pdfMetinCoz(bytes); yapi = p.satirlar.length ? p : null; if (!p.metin.trim()) yapi = null }
     } catch (e) { yapi = null; console.error('lab yapi', e) }
     try {
-      if (ft === 'application/pdf') gorsel = await gorselCikar(getAnthropic(), { tip: 'pdf', base64: bytes.toString('base64') })
+      if (ft === 'application/pdf') gorsel = await gorselCikar(getAnthropic(), { tip: 'pdf', base64: bytes.toString('base64') }, undefined, enabiz ? ENABIZ_TALIMAT : undefined)
       else if (ft.startsWith('image/')) gorsel = await gorselCikar(getAnthropic(), { tip: 'image', mime: ft, base64: bytes.toString('base64') })
     } catch (e) { gorsel = null; console.error('lab gorsel', e) }
     if (!yapi && !gorsel) return NextResponse.json({ error: 'Bu dosyadan tablo çıkarılamadı.' }, { status: 422 })
@@ -70,9 +74,20 @@ export async function POST(req: NextRequest) {
     if (yapi && gorsel) { const u = uzlastir(yapi.satirlar, gorsel.satirlar); ham = u.satirlar; uyusmazlik = u.uyusmazlik }
     else ham = (yapi || gorsel)!.satirlar
     const kaynaklar = [yapi ? 'yapi' : null, gorsel ? 'gorsel' : null].filter(Boolean) as string[]
-    const numune = gorsel?.numune_tarihi || yapi?.numune_tarihi || null
     const [onc, al, hastaQ] = await Promise.all([oncekiler(sb, user.id, meta.patientId), aliaslar(sb, user.id), sb.from('patients').select('name_encrypted, dob_encrypted').eq('id', meta.patientId).eq('doctor_id', user.id).maybeSingle()])
-    const satirlar = ham.map((h) => { const s = satirKur(h, onc, al); const dis = uyusmazlik.filter((u) => u.raw_name === h.raw_name); if (dis.length) { s.dogrulanacak = true; s.dogrulama_notu = dis.map((d) => `${d.alan}: yapı "${d.yapi ?? '—'}" / görsel "${d.gorsel ?? '—'}"`).join('; ') } if (kaynaklar.length === 1) s.dogrulama_notu = s.dogrulama_notu || 'tek çıkarım kaynağı'; return s })
+    // e-Nabız geçmiş: satır tarihi doğrulanır (geçersiz/gelecek/doğumdan önce → null, satır onaylı seriye girmez), tekrarlar ayıklanır.
+    const satirTarih: (string | null)[] = []
+    const tarihNot: (string | null)[] = []
+    if (enabiz) {
+      let dogum: string | null = null
+      try { dogum = hastaQ.data?.dob_encrypted ? decrypt(String(hastaQ.data.dob_encrypted)).slice(0, 10) : null } catch { dogum = null }
+      const bugunIso = new Date().toISOString().slice(0, 10)
+      const dogrulanmis = tekrarAyikla(ham.map((h) => { const v = satirTarihiDogrula(h.numune_tarihi, bugunIso, dogum); return { ...h, numune_tarihi: v.tarih, tarihNot: v.not } }))
+      ham = dogrulanmis
+      for (const h of dogrulanmis) { satirTarih.push(h.numune_tarihi); tarihNot.push(h.tarihNot) }
+    }
+    const numune = enabiz ? panelTarihi(satirTarih) : gorsel?.numune_tarihi || yapi?.numune_tarihi || null
+    const satirlar = ham.map((h, i) => { const s = satirKur(h, onc, al); const dis = uyusmazlik.filter((u) => u.raw_name === h.raw_name); if (dis.length) { s.dogrulanacak = true; s.dogrulama_notu = dis.map((d) => `${d.alan}: yapı "${d.yapi ?? '—'}" / görsel "${d.gorsel ?? '—'}"`).join('; ') } if (kaynaklar.length === 1) s.dogrulama_notu = s.dogrulama_notu || 'tek çıkarım kaynağı'; if (enabiz && tarihNot[i]) { s.dogrulanacak = true; s.dogrulama_notu = `${tarihNot[i]}; ${s.dogrulama_notu || ''}`.replace(/; $/, '') } return s })
 
     // Identity guard: printed name/DOB vs this patient (compared once, only a boolean + masked hint stored)
     let kimlikUyari: { eslesme: boolean | null; ipucu: string | null } = { eslesme: null, ipucu: null }
@@ -88,7 +103,7 @@ export async function POST(req: NextRequest) {
     }
     const oz = panelOzeti(satirlar)
     const kalite = satirlar.length === 0 ? 'dusuk' : oz.dogrulanacak > satirlar.length / 3 ? 'orta' : 'iyi'
-    const ntpMi = muhtemelNtpPanel({ labAdi: gorsel?.lab_adi || yapi?.lab_adi || null, satirlar: satirlar.map((s) => ({ raw_name: s.raw_name, canonical_key: s.canonical_key })) })
+    const ntpMi = !enabiz && muhtemelNtpPanel({ labAdi: gorsel?.lab_adi || yapi?.lab_adi || null, satirlar: satirlar.map((s) => ({ raw_name: s.raw_name, canonical_key: s.canonical_key })) })
     if (ntpMi) {
       const { data: bebekKart } = await sb.from('bebek_kartlari').select('bebek_patient_id, anne_patient_id').eq('bebek_patient_id', meta.patientId).maybeSingle()
       const { data: anneOlarak } = await sb.from('bebek_kartlari').select('id').eq('anne_patient_id', meta.patientId).limit(1).maybeSingle()
@@ -118,10 +133,10 @@ export async function POST(req: NextRequest) {
         return k && k !== s.canonical_key ? { ...s, canonical_key: k } : s
       })
       : satirlar
-    const { data: panel, error } = await sb.from('lab_paneller').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, lab_adi: gorsel?.lab_adi || null, numune_tarihi: numune, rapor_tarihi: gorsel?.rapor_tarihi || yapi?.rapor_tarihi || null, kaynaklar, extract_json: { yapi: yapi ? { ...yapi, metin: undefined } : null, gorsel, uyusmazlik }, kalite, kimlik_uyari: kimlikUyari, durum: 'cikarildi', panel_type: ntpMi ? 'yenidogan_tarama' : 'genel', sample_no: sampleNo }).select('id').single()
+    const { data: panel, error } = await sb.from('lab_paneller').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, lab_adi: enabiz ? 'e-Nabız geçmiş' : gorsel?.lab_adi || null, numune_tarihi: numune, rapor_tarihi: gorsel?.rapor_tarihi || yapi?.rapor_tarihi || null, kaynaklar, extract_json: { yapi: yapi ? { ...yapi, metin: undefined } : null, gorsel, uyusmazlik }, kalite, kimlik_uyari: kimlikUyari, durum: 'cikarildi', panel_type: ntpMi ? 'yenidogan_tarama' : enabiz ? 'enabiz_gecmis' : 'genel', sample_no: sampleNo }).select('id').single()
     if (error || !panel) return NextResponse.json({ error: 'Panel kaydedilemedi' }, { status: 500 })
-    if (ntpSatirlar.length) { const { error: e2 } = await sb.from('lab_satirlar').insert(ntpSatirlar.map((s, i) => satirDb(s, panel.id, meta.patientId, user.id, i, numune))); if (e2) return NextResponse.json({ error: 'Satırlar kaydedilemedi' }, { status: 500 }) }
-    return NextResponse.json({ ok: true, panelId: panel.id, ozet: oz, kaynaklar, kimlikUyari, uyusmazlik: uyusmazlik.length, panel_type: ntpMi ? 'yenidogan_tarama' : 'genel' })
+    if (ntpSatirlar.length) { const { error: e2 } = await sb.from('lab_satirlar').insert(ntpSatirlar.map((s, i) => satirDb(s, panel.id, meta.patientId, user.id, i, enabiz ? satirTarih[i] : numune))); if (e2) return NextResponse.json({ error: 'Satırlar kaydedilemedi' }, { status: 500 }) }
+    return NextResponse.json({ ok: true, panelId: panel.id, ozet: oz, kaynaklar, kimlikUyari, uyusmazlik: uyusmazlik.length, panel_type: ntpMi ? 'yenidogan_tarama' : enabiz ? 'enabiz_gecmis' : 'genel', ...(enabiz ? { tarihler: Array.from(new Set(satirTarih.filter(Boolean))).sort(), tarihsiz: satirTarih.filter((t) => !t).length } : {}) })
   }
 
   // ---- row-level operations
@@ -141,11 +156,23 @@ export async function POST(req: NextRequest) {
     }
     const ham: HamSatir = { raw_name: satir.raw_name, value: body.adim === 'satir' && body.alan === 'value' ? body.deger : (satir.value_text ?? String(satir.value_num ?? '')), unit: body.adim === 'satir' && body.alan === 'unit' ? body.deger || null : satir.unit, ref_low: body.adim === 'satir' && body.alan === 'ref_low' ? body.deger || null : satir.ref_low == null ? null : String(satir.ref_low), ref_high: body.adim === 'satir' && body.alan === 'ref_high' ? body.deger || null : satir.ref_high == null ? null : String(satir.ref_high), flag_printed: null, page: satir.page }
     if (body.adim === 'satir' && body.alan === 'raw_name') ham.raw_name = body.deger || satir.raw_name
+    let satirNumune: string | null = panel.panel_type === 'enabiz_gecmis' ? (satir.numune_tarihi ?? null) : panel.numune_tarihi
+    if (body.adim === 'satir' && body.alan === 'numune_tarihi') {
+      if (panel.panel_type !== 'enabiz_gecmis') return NextResponse.json({ error: 'Satır tarihi yalnız e-Nabız geçmiş panelinde düzenlenir' }, { status: 400 })
+      const { data: hs } = await sb.from('patients').select('dob_encrypted').eq('id', panel.patient_id).eq('doctor_id', user.id).maybeSingle()
+      let dogum: string | null = null
+      try { dogum = hs?.dob_encrypted ? decrypt(String(hs.dob_encrypted)).slice(0, 10) : null } catch { dogum = null }
+      const v = satirTarihiDogrula(body.deger, new Date().toISOString().slice(0, 10), dogum)
+      if (!v.tarih) return NextResponse.json({ error: `Tarih kabul edilmedi: ${v.not}` }, { status: 400 })
+      satirNumune = v.tarih
+    }
     const onc = await oncekiler(sb, user.id, panel.patient_id, panel.id)
     const yeni = satirKur(ham, onc, al); yeni.doctor_corrected = true; yeni.dogrulanacak = false; yeni.dogrulama_notu = 'hekim düzeltti'
-    const { error } = await sb.from('lab_satirlar').update({ ...satirDb(yeni, panel.id, panel.patient_id, user.id, satir.sira, panel.numune_tarihi) }).eq('id', satir.id)
+    const { error } = await sb.from('lab_satirlar').update({ ...satirDb(yeni, panel.id, panel.patient_id, user.id, satir.sira, satirNumune) }).eq('id', satir.id)
     if (error) return NextResponse.json({ error: 'Satır güncellenemedi' }, { status: 500 })
-    await sb.from('lab_paneller').update({ updated_at: new Date().toISOString(), tablo_onayli: false }).eq('id', panel.id)
+    const panelGuncel: Record<string, unknown> = { updated_at: new Date().toISOString(), tablo_onayli: false }
+    if (panel.panel_type === 'enabiz_gecmis') { const { data: t } = await sb.from('lab_satirlar').select('numune_tarihi').eq('panel_id', panel.id); panelGuncel.numune_tarihi = panelTarihi((t || []).map((x) => x.numune_tarihi as string | null)) }
+    await sb.from('lab_paneller').update(panelGuncel).eq('id', panel.id)
     return NextResponse.json({ ok: true })
   }
 

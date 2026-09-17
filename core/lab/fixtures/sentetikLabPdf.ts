@@ -33,7 +33,29 @@ const pdfMetin = (s: string) => s.replace(/[\\()]/g, (c) => `\\${c}`)
 
 /** Minimal valid PDF 1.4 (catalog, pages, page, Helvetica, content stream) with a correct xref table. */
 export function sentetikLabPdf(numune: string, rapor: string, hastaAd?: string): Buffer {
-  const satirlar = sentetikLabSatirlari(numune, rapor, hastaAd)
+  return pdfYap(sentetikLabSatirlari(numune, rapor, hastaAd))
+}
+
+/** DAH-WOW-NEXT C5 — synthetic e-Nabiz "Tahlillerim" history printout: same tests on two different dates, one date per row. */
+export const SENTETIK_ENABIZ = [
+  { ad: 'HbA1c', eski: '8.1', yeni: '7.4', birim: '%', ref: '4 - 6' },
+  { ad: 'LDL kolesterol', eski: '142', yeni: '118', birim: 'mg/dL', ref: '0 - 130' },
+  { ad: 'Vitamin B12', eski: '185', yeni: '172', birim: 'pg/mL', ref: '197 - 771' },
+] as const
+export function sentetikEnabizSatirlari(eski: string, yeni: string, hastaAd = 'TEST Sentetik Hasta'): string[] {
+  return [
+    'e-Nabiz - Tahlillerim (NOTYA QA SENTETIK CIKTI, gercek kisi degildir)',
+    `Ad Soyad: ${hastaAd}`,
+    'Tarih  Tahlil  Sonuc  Birim  Referans',
+    ...SENTETIK_ENABIZ.map((s) => [trTarih(yeni), s.ad, s.yeni, s.birim, s.ref].join('  ')),
+    ...SENTETIK_ENABIZ.map((s) => [trTarih(eski), s.ad, s.eski, s.birim, s.ref].join('  ')),
+  ]
+}
+export function sentetikEnabizPdf(eski: string, yeni: string, hastaAd?: string): Buffer {
+  return pdfYap(sentetikEnabizSatirlari(eski, yeni, hastaAd))
+}
+
+function pdfYap(satirlar: string[]): Buffer {
   if (satirlar.some((l) => /[^\x20-\x7e]/.test(l))) throw new Error('sentetik PDF yalnız ASCII metin taşır')
   const icerik = ['BT', '/F1 11 Tf', ...satirlar.map((l, i) => `1 0 0 1 50 ${780 - i * 22} Tm (${pdfMetin(l)}) Tj`), 'ET'].join('\n')
   const nesneler = [

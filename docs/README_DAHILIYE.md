@@ -84,3 +84,14 @@ Migration 042. Server: `app/api/doktor/dahiliye/_wow3.ts`.
 5. Check-up › paket başlat → kalemler onaylı lab ile tamam → Birleşik rapor → Hekim onayı → Yazdır/PDF.
 6. Şerit › 1-tap bugünkü plan → kopyala → SOAP P.
 Migration 043. Server `app/api/doktor/dahiliye/_wow4.ts`, `_kohort.ts`, `kohort/route.ts`; UI `specialties/dahiliye/ui/DahiliyeWow4.tsx`.
+
+## DAH-WOW-NEXT (2026-09-17) — 7 kart
+Dahiliye › **Bakım+** satırı + Belge › **e-Nabız** (2 dokunuş). Sunucu: `app/api/doktor/dahiliye/_wow5.ts`; UI: `ui/DahiliyeWow5.tsx`; migrasyon 046/047.
+- **Polifarmasi** (`engines/polifarmasi.ts`): ≥65 STOPP/START v3 esinli sınıf kuralları; engelleyici öneride override gerekçesi ≥15 karakter; karar kaydı; ilaç asla otomatik kesilmez; nota yalnız hekim kararları.
+- **Hedef kartı** (`engines/hedefKart.ts`): yalnız kilitli HT/DM/LDL/KVR hedefleri; 4 Türkçe eğitim yaprağı (kendi metnimiz, doz yok); hekim onayıyla yazdırılır.
+- **Sigara** (`engines/sigara.ts`): paket-yıl, HSI, değişim evresi, 5A, ALO 171, farmakoterapi sınıfı, izlem görevleri; plan kilidi → nota.
+- **Vit D / B12** (`engines/vitamin.ts`): onaylı lab → sonraki test + replasman sınıfı; SGK `vitd` / `b12` şablonları.
+- **e-Nabız geçmiş PDF** (`core/lab/enabiz.ts`, belgeler/lab `cikar kaynak=enabiz`): yalnız yüklenen PDF; satır başına basılı tarih; kimlik koruması ve Onayla kapısı aynı; canlı e-Nabız çekimi yok.
+- **Gut** (`engines/gut.ts`): atak sınıfları vs ULT merdiveni, hedef ürik asit, diyet, septik artrit kırmızı bayrağı, sevk.
+- **Osteoporoz** (`engines/osteoporoz.ts`): T-skoru onaylı DXA belgesinden (hekim “Belgeden al”) veya hekim girişi; sınıf, risk bayrakları, plan, DXA aralığı; FRAX hesaplanmaz.
+

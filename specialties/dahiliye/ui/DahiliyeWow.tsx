@@ -10,6 +10,7 @@ import type { SgkRaporDraft } from '@/lib/sgk/raporTipleri';
 import type { Wow2Veri } from '@/app/api/doktor/dahiliye/_wow2';
 import type { Wow3Veri } from '@/app/api/doktor/dahiliye/_wow3';
 import type { Wow4Veri } from '@/app/api/doktor/dahiliye/_wow4';
+import type { Wow5Veri } from '@/app/api/doktor/dahiliye/_wow5';
 
 export type WowVeri = {
   kvr: { dm_tani_yasi: number | null; sigara: boolean; askvh: boolean; dm_tod: boolean; dm_sure_10y: boolean; statin_yogunluk: string; ezetimib: boolean; sonuc: KvrSonuc; kilitKategori: string | null; kilitHedefLdl: number | null } | null;
@@ -21,6 +22,7 @@ export type WowVeri = {
   w2?: Wow2Veri;
   w3?: Wow3Veri;
   w4?: Wow4Veri;
+  w5?: Wow5Veri;
 };
 type SgkCevap = { raporId: string | null; draft: SgkRaporDraft; sutKontrol: { madde: string; tamam: boolean | null }[]; eksikler: string[]; chaVascSkor: number | null; dipnotlar: Dip[]; hekim: { adSoyad: string; uzmanlik: string; diplomaTescilNo: string; saglikKurumu: string; tesisKodu: string; medulaBagli: boolean }; enabiz: unknown };
 type Dip = { ref: string; not: string };

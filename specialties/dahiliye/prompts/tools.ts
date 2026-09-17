@@ -27,6 +27,12 @@ export const DAHILIYE_TOOLS = [
   { name: 'dahiliye.checkup', description: 'Check-up paket defteri (kendi ödemeli) + birleşik rapor' },
   { name: 'dahiliye.kohort', description: 'Kronik kohort paneli: bayraklı hastalar + klinik değer içermeyen hatırlatma mesajı' },
   { name: 'dahiliye.nudge', description: 'Bakım kalitesi: KB ölçüm tekniği, FRAIL, düşme, PHQ-2 taramaları' },
+  { name: 'dahiliye.polifarmasi_karar', description: '≥65 polifarmasi (STOPP/START v3 esinli): öneri başına hekim kararı; engelleyici öneride override gerekçesi ≥15 karakter; ilaç asla otomatik kesilmez' },
+  { name: 'dahiliye.hedefkart', description: 'Hasta hedef kartı (yalnız kilitli HT/DM/LDL/KVR hedefleri) + Türkçe eğitim yaprakları; hekim onayıyla yazdırılır' },
+  { name: 'dahiliye.sigara', description: 'Sigara bırakma: paket-yıl, HSI, değişim evresi, 5A, ALO 171, farmakoterapi sınıfı (doz yok), izlem görevleri' },
+  { name: 'dahiliye.vitamin', description: 'D vitamini / B12 eksikliği (onaylı lab): sonraki test, replasman sınıfı (doz hekim), SGK vitd/b12 şablonu' },
+  { name: 'dahiliye.gut', description: 'Gut / ürik asit: atak sınıfları, ULT endikasyonu ve hedef, diyet danışmanlığı, sevk' },
+  { name: 'dahiliye.osteo', description: 'Osteoporoz: DXA T-skoru (belge/hekim), sınıf, risk bayrakları (FRAX hesaplanmaz), tedavi sınıfı, DXA aralığı' },
   { name: 'dahiliye.sevk', description: 'Sevk oluştur (son onaylı panel eklenir)' },
 ] as const
 export type DahiliyeToolName = (typeof DAHILIYE_TOOLS)[number]['name']
