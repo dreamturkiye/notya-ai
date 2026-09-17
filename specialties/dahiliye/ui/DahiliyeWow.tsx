@@ -8,6 +8,7 @@ import type { CkdSonuc } from '../engines/ckd';
 import type { EvKbOzet } from '../engines/evKayit';
 import type { SgkRaporDraft } from '@/lib/sgk/raporTipleri';
 import type { Wow2Veri } from '@/app/api/doktor/dahiliye/_wow2';
+import type { Wow3Veri } from '@/app/api/doktor/dahiliye/_wow3';
 
 export type WowVeri = {
   kvr: { sigara: boolean; askvh: boolean; dm_tod: boolean; dm_sure_10y: boolean; statin_yogunluk: string; ezetimib: boolean; sonuc: KvrSonuc; kilitKategori: string | null; kilitHedefLdl: number | null } | null;
@@ -17,6 +18,7 @@ export type WowVeri = {
   sgkRaporlar?: { id: string; sablon: string; draft: SgkRaporDraft; sut_kontrol: { madde: string; tamam: boolean | null }[] | null; eksikler: string[]; durum: string; kilit_at: string | null; created_at: string }[];
   sgkSablonlar?: { id: string; ad: string }[];
   w2?: Wow2Veri;
+  w3?: Wow3Veri;
 };
 type SgkCevap = { raporId: string | null; draft: SgkRaporDraft; sutKontrol: { madde: string; tamam: boolean | null }[]; eksikler: string[]; chaVascSkor: number | null; dipnotlar: Dip[]; hekim: { adSoyad: string; uzmanlik: string; diplomaTescilNo: string; saglikKurumu: string; tesisKodu: string; medulaBagli: boolean }; enabiz: unknown };
 type Dip = { ref: string; not: string };
