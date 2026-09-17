@@ -16,6 +16,7 @@ const AVATAR_ONBELLEK = 'notya_doktor_avatar';
 export default function HesabimPage() {
   const [eposta, setEposta] = useState('');
   const [ad, setAd] = useState('Doktor');
+  const [adSoyad, setAdSoyad] = useState('');
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
   const [avatarDurum, setAvatarDurum] = useState<'yukleniyor' | 'bos' | 'kaydediyor' | 'kaydedildi'>('yukleniyor');
   const [avatarHata, setAvatarHata] = useState('');
@@ -36,6 +37,9 @@ export default function HesabimPage() {
         ]);
         setEposta(me?.data?.email || '');
         setAd(me?.data?.first_name || me?.data?.full_name || 'Doktor');
+        const first = me?.data?.first_name || '';
+        const last = me?.data?.last_name || '';
+        setAdSoyad(`${first} ${last}`.trim() || me?.data?.full_name || '');
         setFotoUrl(av?.avatar?.dataUrl || null);
       } catch { /* e-posta/foto gösterimi kritik değil */ }
       setAvatarDurum('bos');
@@ -154,6 +158,10 @@ export default function HesabimPage() {
           </div>
         </div>
 
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 12, color: '#8FA0B5', display: 'block', marginBottom: 4 }}>Ad Soyad</label>
+          <div style={{ ...kutu, color: '#C9D4E3', background: 'rgba(255,255,255,0.03)' }}>{adSoyad || '—'}</div>
+        </div>
         <div style={{ marginBottom: 20 }}>
           <label style={{ fontSize: 12, color: '#8FA0B5', display: 'block', marginBottom: 4 }}>E-posta</label>
           <div style={{ ...kutu, color: '#C9D4E3', background: 'rgba(255,255,255,0.03)' }}>{eposta || '—'}</div>
