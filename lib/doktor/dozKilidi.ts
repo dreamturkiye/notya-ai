@@ -1,12 +1,19 @@
 /**
- * KD-DERM-SAFETY-FINDINGS F1 — code-level dose lock for the prompt-locked branches (dahiliye, kadın doğum, dermatoloji).
- * The prompt rule ("Doz yazma — doz hekim tarafından belirlenir") is the first line; this is the backstop, because
- * KD / derm test notes still carried doses from memory (anti-D 300 mcg, aspirin 81 mg, izotretinoin 0,5 mg/kg).
+ * KD-DERM-SAFETY-FINDINGS F1 — code-level dose lock. The prompt rule ("Doz yazma — doz hekim tarafından belirlenir")
+ * is the first line; this is the backstop, because KD / derm test notes still carried doses from memory
+ * (anti-D 300 mcg, aspirin 81 mg, izotretinoin 0,5 mg/kg).
  *
  * 1. receteOnerisi: doz / kullanım are always stripped; doses in ticariOrnek removed (was dahiliyeReceteDozsuz).
  * 2. Everything else (note body, aiDegerlendirme, hasta özeti, ilaclar, chat speech): a dose-looking token whose
  *    numbers do not appear in the source the hekim gave (transcript, patient file, doctor's chat messages) is replaced
  *    with DOZ_YER_TUTUCU and listed in a hekim-review line. A dose the hekim actually said is left untouched.
+ *
+ * CROSS-SPECIALTY-PARITY (2026-09-17) — two strengths, because (1) is a product policy and (2) is a safety backstop:
+ *  - soapDozKilidi: the full lock. Only the branches whose prompts/ say "Doz yazma" (dozKilitliBrans: dahiliye,
+ *    kadın doğum, dermatoloji, göz) — they promise a dose-free receteOnerisi.
+ *  - soapDozUydurmaKilidi: (2) alone, for EVERY other branch in lib/doktor/specialties. Invented doses are not a
+ *    kadın doğum problem; a kardiyoloji or pediatri note that carries "metoprolol 50 mg" the hekim never said is the
+ *    same class of harm. These branches keep their receteOnerisi doses (pediatrik mg/kg is by design, NOTYA-SOAP-02 §3).
  * Pure functions, no I/O.
  */
 
@@ -77,7 +84,7 @@ const METIN_ALANLARI = ['basvuruYakinmasi', 'anamnez', 'fizik_muayene', 'tani', 
 const LISTE_ALANLARI = ['alarmBulgulari', 'kritik_bulgular'] as const
 
 /** Apply the dose lock to a generated SOAP note in place-safe copy. `kaynak` = transcript + kimliksiz klinik bağlam. */
-export function soapDozKilidi<T extends object>(veri: T, ...kaynak: (string | null | undefined)[]): T & { aiDegerlendirme?: string } {
+function dozKilidiUygula<T extends object>(veri: T, receteyiDeSil: boolean, kaynak: (string | null | undefined)[]): T & { aiDegerlendirme?: string } {
   const sayilar = kaynakSayilari(...kaynak)
   const bulunan: { alan: string; doz: string }[] = []
   const temizle = (alan: string, v: unknown): unknown => {
@@ -95,7 +102,20 @@ export function soapDozKilidi<T extends object>(veri: T, ...kaynak: (string | nu
   if (Array.isArray(out.ilaclar)) {
     out.ilaclar = out.ilaclar.map((i) => (i && typeof i === 'object' ? Object.fromEntries(Object.entries(i as Record<string, unknown>).map(([k, v]) => [k, temizle('ilaclar', v)])) : i))
   }
-  if (Array.isArray(out.receteOnerisi)) out.receteOnerisi = receteDozsuz(out.receteOnerisi as { doz?: string }[])
+  if (receteyiDeSil && Array.isArray(out.receteOnerisi)) out.receteOnerisi = receteDozsuz(out.receteOnerisi as { doz?: string }[])
   if (bulunan.length) out.aiDegerlendirme = [out.aiDegerlendirme, dozKontrolSatiri(bulunan)].filter(Boolean).join('\n\n')
   return out as T & { aiDegerlendirme?: string }
+}
+
+/** Full lock for the prompt-locked branches: invented doses out AND receteOnerisi stripped of doz / kullanım. */
+export function soapDozKilidi<T extends object>(veri: T, ...kaynak: (string | null | undefined)[]): T & { aiDegerlendirme?: string } {
+  return dozKilidiUygula(veri, true, kaynak)
+}
+
+/**
+ * CROSS-SPECIALTY-PARITY — backstop for every other branch: a dose the hekim never gave is replaced with
+ * DOZ_YER_TUTUCU and listed for review, but receteOnerisi keeps its doses (that branch's prompt allows them).
+ */
+export function soapDozUydurmaKilidi<T extends object>(veri: T, ...kaynak: (string | null | undefined)[]): T & { aiDegerlendirme?: string } {
+  return dozKilidiUygula(veri, false, kaynak)
 }
