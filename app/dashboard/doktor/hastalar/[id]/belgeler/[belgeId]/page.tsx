@@ -37,8 +37,9 @@ export default function BelgeAnalizPage() {
   const [modalite, setModalite] = useState<Modalite | ''>('');
   const [klinikNot, setKlinikNot] = useState('');
   const [kimlikYok, setKimlikYok] = useState(false);
-  const [durum, setDurum] = useState<'hazir' | 'hazirlaniyor' | 'motorlar' | 'yaziyor' | 'hata'>('hazir');
+  const [durum, setDurum] = useState<'hazir' | 'hazirlaniyor' | 'motorlar' | 'yaziyor' | 'onayliyor' | 'hata'>('hazir');
   const [mesaj, setMesaj] = useState('');
+  const [onayMesaj, setOnayMesaj] = useState('');
   const [taniTaslak, setTaniTaslak] = useState('');
   const [ozetTaslak, setOzetTaslak] = useState('');
   const [plan, setPlan] = useState('');
@@ -122,27 +123,81 @@ export default function BelgeAnalizPage() {
     } catch (e) { setDurum('hata'); setMesaj(e instanceof Error ? e.message : 'Hata'); }
   };
 
+  const taniListesi = (metin: string) =>
+    metin.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => {
+      const m = s.match(/^(.*?)\s*\(([A-Z]\d{2}(?:\.\d{1,2})?)\)\s*$/);
+      return m ? { ad: m[1].trim(), icd10: m[2] } : { ad: s, icd10: null as string | null };
+    });
+
   const kaydet = async (alan: 'ozet' | 'hekim_tanisi') => {
-    if (!analiz) return;
+    if (!analiz) return false;
     const token = await getAccessTokenAsync();
-    const sonraki = alan === 'ozet' ? ozetTaslak : taniTaslak.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => { const m = s.match(/^(.*?)\s*\(([A-Z]\d{2}(?:\.\d{1,2})?)\)\s*$/); return m ? { ad: m[1].trim(), icd10: m[2] } : { ad: s, icd10: null }; });
+    const sonraki = alan === 'ozet' ? ozetTaslak : taniListesi(taniTaslak);
+    if (alan === 'hekim_tanisi' && !(sonraki as { ad: string }[]).length) {
+      setOnayMesaj('Resmi tanı boş — öneriden seçin veya yazın.');
+      setMesaj('Resmi tanı boş.');
+      return false;
+    }
     const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
     const j = await r.json().catch(() => ({}));
-    setMesaj(r.ok ? (alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.') : j.error || 'Kaydedilemedi');
+    const ok = r.ok;
+    const msg = ok ? (alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.') : (j.error || 'Kaydedilemedi');
+    setMesaj(msg);
+    if (alan === 'hekim_tanisi') setOnayMesaj(msg);
     await yukle();
+    return ok;
   };
 
   const onayla = async (adim: 'onayla' | 'muayene_onayla') => {
     if (!analiz) return;
-    const token = await getAccessTokenAsync();
-    const r = await fetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) { setMesaj(j.error || 'Onaylanamadı'); return; }
-    setMesaj(adim === 'onayla' ? 'Rapor muayenenin Objektif bölümüne eklendi.' : 'Muayene onaylandı; plan revizyonu kaydedildi.');
-    setPlanAcik(false); await yukle();
+    setOnayMesaj('');
+    setDurum('onayliyor');
+    try {
+      // One click: sync textarea → hekim_tanisi, then append to Objektif (was disabled-looking teal with no click when only local draft existed).
+      if (adim === 'onayla') {
+        const yerel = taniListesi(taniTaslak);
+        if (!yerel.length && !analiz.hekim_tanisi?.length) {
+          setOnayMesaj('Önce resmi tanı yazın veya "Resmi tanıya al"a basın.');
+          setMesaj('Resmi tanı gerekli.');
+          setDurum('hazir');
+          return;
+        }
+        if (yerel.length) {
+          const ok = await kaydet('hekim_tanisi');
+          if (!ok) { setDurum('hazir'); return; }
+        }
+      }
+      const token = await getAccessTokenAsync();
+      const r = await fetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const err = j.error || 'Onaylanamadı';
+        setOnayMesaj(err);
+        setMesaj(err);
+        setDurum('hazir');
+        return;
+      }
+      const okMsg = adim === 'onayla' ? 'Rapor muayenenin Objektif bölümüne eklendi.' : 'Muayene onaylandı; plan revizyonu kaydedildi.';
+      setMesaj(okMsg);
+      setOnayMesaj(okMsg);
+      setPlanAcik(false);
+      await yukle();
+      if (j.noteId) {
+        router.push(`/dashboard/doktor/notlar/${j.noteId}`);
+        return;
+      }
+      setDurum('hazir');
+    } catch (e) {
+      const err = e instanceof Error ? e.message : 'Onaylanamadı';
+      setOnayMesaj(err);
+      setMesaj(err);
+      setDurum('hazir');
+    }
   };
 
   const taniOnerisiEkle = (ad: string, icd10?: string | null) => setTaniTaslak((t) => (t ? t + '\n' : '') + (icd10 ? `${ad} (${icd10})` : ad));
+  const taniHazir = !!(taniTaslak.trim() || analiz?.hekim_tanisi?.length);
+  const onayKapali = !taniHazir || analiz?.durum === 'kalite_dusuk' || analiz?.durum === 'onaylandi' || analiz?.durum === 'muayene_onaylandi' || durum === 'onayliyor';
 
   return (
     <div style={toolsShell}>
@@ -182,8 +237,8 @@ export default function BelgeAnalizPage() {
                 {mesaj && <span style={{ fontSize: 12, color: durum === 'hata' ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>}
               </div>
             </div>
-            <div style={toolsCard}>
-              {doc && <DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} onClose={() => {}} />}
+            <div style={{ ...toolsCard, marginBottom: 12, overflow: 'hidden', maxHeight: '55vh' }}>
+              {doc && <DocumentViewer documentId={doc.id} fileName={doc.fileName} fileType={doc.fileType} />}
             </div>
           </div>
 
@@ -228,23 +283,35 @@ export default function BelgeAnalizPage() {
                   ))}
                 </div>
 
-                <div style={{ ...toolsCard, marginBottom: 10 }}>
+                <div style={{ ...toolsCard, marginBottom: 10, position: 'sticky', bottom: 12, zIndex: 30, boxShadow: '0 -8px 24px rgba(0,0,0,0.45)' }}>
                   <div style={etiket}>Resmi tanı (hekim) <span style={{ fontWeight: 400, color: '#64748B' }}>· her satır bir tanı; ICD-10 parantez içinde</span></div>
-                  <textarea value={taniTaslak} onChange={(e) => setTaniTaslak(e.target.value)} rows={3} placeholder="Örn. Pnömoni (J18.9)" style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} disabled={analiz.durum === 'muayene_onaylandi'} />
-                  <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button type="button" onClick={() => kaydet('hekim_tanisi')} style={btnGhost} disabled={analiz.durum === 'muayene_onaylandi'}>Resmi tanıyı kilitle</button>
-                    <button type="button" onClick={() => onayla('onayla')} style={btn} disabled={!analiz.hekim_tanisi?.length || analiz.durum === 'kalite_dusuk' || analiz.durum === 'onaylandi' || analiz.durum === 'muayene_onaylandi'} title="Son muayenenin Objektif bölümüne yazar">Onayla → Muayene Objektif</button>
+                  <textarea value={taniTaslak} onChange={(e) => { setTaniTaslak(e.target.value); setOnayMesaj(''); }} rows={3} placeholder="Örn. Pnömoni (J18.9)" style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} disabled={analiz.durum === 'muayene_onaylandi'} />
+                  <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button type="button" onClick={() => void kaydet('hekim_tanisi')} style={btnGhost} disabled={analiz.durum === 'muayene_onaylandi' || durum === 'onayliyor'}>Resmi tanıyı kilitle</button>
+                    <button
+                      type="button"
+                      onClick={() => void onayla('onayla')}
+                      style={{ ...btn, opacity: onayKapali ? 0.45 : 1, cursor: onayKapali ? 'not-allowed' : 'pointer', flex: '1 1 200px' }}
+                      disabled={onayKapali}
+                      title={taniHazir ? 'Tanıyı kaydeder ve son muayenenin Objektif bölümüne yazar' : 'Önce resmi tanı yazın veya öneriden seçin'}
+                    >
+                      {durum === 'onayliyor' ? 'Muayeneye ekleniyor…' : 'Onayla → Muayene Objektif'}
+                    </button>
                     {(analiz.durum === 'onaylandi') && <button type="button" onClick={() => setPlanAcik(!planAcik)} style={btnGhost}>Plan düzenle</button>}
                   </div>
+                  {onayMesaj && <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: /eklendi|kilitlendi|onaylandı/i.test(onayMesaj) ? '#2DD4BF' : '#F87171' }}>{onayMesaj}</div>}
+                  {!taniHazir && analiz.durum !== 'onaylandi' && analiz.durum !== 'muayene_onaylandi' && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: '#FBBF24' }}>Onaylamak için yukarıdan “Resmi tanıya al” veya tanı yazın — tek tıkla hem kilitlenir hem Objektif’e eklenir.</div>
+                  )}
                   {planAcik && analiz.durum === 'onaylandi' && (
                     <div style={{ marginTop: 8 }}>
                       <div style={etiket}>Plan (ilaç / doz / konsült)</div>
                       <textarea value={plan} onChange={(e) => setPlan(e.target.value)} rows={4} placeholder="Mevcut planı korumak için boş bırakın; değişiklik için tam planı yazın." style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} />
-                      <div style={{ marginTop: 6 }}><button type="button" onClick={() => onayla('muayene_onayla')} style={btn}>Muayeneyi onayla</button></div>
+                      <div style={{ marginTop: 6 }}><button type="button" onClick={() => void onayla('muayene_onayla')} style={btn} disabled={durum === 'onayliyor'}>{durum === 'onayliyor' ? 'Kaydediliyor…' : 'Muayeneyi onayla'}</button></div>
                     </div>
                   )}
                   {analiz.durum === 'muayene_onaylandi' && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>Muayene onaylandı — rapor kilitli. {analiz.note_id && <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a>}</div>}
-                  {analiz.durum === 'onaylandi' && analiz.note_id && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>Objektif'e eklendi. <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a></div>}
+                  {analiz.durum === 'onaylandi' && analiz.note_id && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>Objektif'e eklendi. <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a> · <a href={`/dashboard/doktor/hastalar/${patientId}`} style={{ color: '#2DD4BF' }}>Hasta dosyası →</a></div>}
                 </div>
 
                 {rapor.oneri && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: '#EDF1F7' }}><div style={etiket}>Öneri</div>{rapor.oneri}</div>}

@@ -84,19 +84,29 @@ export default function LabPage() {
   const raporla = async () => { if (!panel) return; setDurum('raporluyor'); setMesaj(`${persona} raporluyor…`); try { await api({ adim: 'raporla', panelId: panel.id }); setMesaj('Taslak rapor hazır. Resmi tanıyı siz kilitlersiniz.'); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } setDurum('hazir'); };
 
   const kaydet = async (alan: 'ozet' | 'hekim_tanisi') => {
-    if (!analiz) return;
+    if (!analiz) return false;
     const token = await getAccessTokenAsync();
     const sonraki = alan === 'ozet' ? ozetTaslak : taniTaslak.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => { const m = s.match(/^(.*?)\s*\(([A-Z]\d{2}(?:\.\d{1,2})?)\)\s*$/); return m ? { ad: m[1].trim(), icd10: m[2] } : { ad: s, icd10: null }; });
+    if (alan === 'hekim_tanisi' && !(sonraki as { ad: string }[]).length) { setMesaj('Resmi tanı boş.'); return false; }
     const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
     const j = await r.json().catch(() => ({})); setMesaj(r.ok ? (alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.') : j.error || 'Kaydedilemedi'); await yukle();
+    return r.ok;
   };
   const onayla = async (adim: 'onayla' | 'muayene_onayla') => {
     if (!analiz) return; setDurum('kaydediyor');
-    const token = await getAccessTokenAsync();
-    const r = await fetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
-    const j = await r.json().catch(() => ({})); setDurum('hazir');
-    if (!r.ok) { setMesaj(j.error || 'Onaylanamadı'); return; }
-    setMesaj(adim === 'onayla' ? 'Son muayenenin Objektif bölümüne eklendi; bu panel artık hastanın onaylı geçmişinde.' : 'Muayene onaylandı; plan revizyonu kaydedildi.'); setPlanAcik(false); await yukle();
+    try {
+      if (adim === 'onayla') {
+        const yerel = taniTaslak.split('\n').map((s) => s.trim()).filter(Boolean);
+        if (!yerel.length && !analiz.hekim_tanisi?.length) { setMesaj('Önce resmi tanı yazın veya öneriden seçin.'); setDurum('hazir'); return; }
+        if (yerel.length) { const ok = await kaydet('hekim_tanisi'); if (!ok) { setDurum('hazir'); return; } }
+      }
+      const token = await getAccessTokenAsync();
+      const r = await fetch('/api/doktor/belgeler/analiz/onayla', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, adim, plan: adim === 'muayene_onayla' ? plan : undefined }) });
+      const j = await r.json().catch(() => ({})); setDurum('hazir');
+      if (!r.ok) { setMesaj(j.error || 'Onaylanamadı'); return; }
+      setMesaj(adim === 'onayla' ? 'Son muayenenin Objektif bölümüne eklendi; bu panel artık hastanın onaylı geçmişinde.' : 'Muayene onaylandı; plan revizyonu kaydedildi.'); setPlanAcik(false); await yukle();
+      if (j.noteId && typeof window !== 'undefined') window.location.href = `/dashboard/doktor/notlar/${j.noteId}`;
+    } catch (e) { setDurum('hazir'); setMesaj(e instanceof Error ? e.message : 'Onaylanamadı'); }
   };
 
   const lab = analiz?.sonuc?.lab || null;
@@ -197,8 +207,8 @@ export default function LabPage() {
                   <textarea value={taniTaslak} onChange={(e) => setTaniTaslak(e.target.value)} rows={3} placeholder="Her satır bir tanı; ICD-10 parantez içinde" disabled={kilitli} style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} />
                   {lab.klinik_iliski && <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 6 }}>Asistan: {lab.klinik_iliski}</div>}
                   <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button type="button" onClick={() => kaydet('hekim_tanisi')} disabled={kilitli} style={btnGhost}>Resmi tanıyı kilitle</button>
-                    <button type="button" onClick={() => onayla('onayla')} disabled={!analiz.hekim_tanisi?.length || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir'} style={{ ...btn, opacity: !analiz.hekim_tanisi?.length || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir' ? 0.45 : 1, cursor: !analiz.hekim_tanisi?.length ? 'not-allowed' : 'pointer' }} title={analiz.hekim_tanisi?.length ? 'Son muayenenin Objektif bölümüne yazar; panel onaylı geçmişe girer' : 'Önce resmi tanıyı kilitleyin'}>Onayla ve son muayeneye ekle</button>
+                    <button type="button" onClick={() => void kaydet('hekim_tanisi')} disabled={kilitli} style={btnGhost}>Resmi tanıyı kilitle</button>
+                    <button type="button" onClick={() => void onayla('onayla')} disabled={(!taniTaslak.trim() && !analiz.hekim_tanisi?.length) || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir'} style={{ ...btn, opacity: (!taniTaslak.trim() && !analiz.hekim_tanisi?.length) || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir' ? 0.45 : 1, cursor: (!taniTaslak.trim() && !analiz.hekim_tanisi?.length) ? 'not-allowed' : 'pointer' }} title={taniTaslak.trim() || analiz.hekim_tanisi?.length ? 'Tanıyı kaydeder ve Objektif’e yazar' : 'Önce resmi tanı yazın veya öneriden seçin'}>Onayla ve son muayeneye ekle</button>
                     {analiz.durum === 'onaylandi' && <button type="button" onClick={() => setPlanAcik(!planAcik)} style={btnGhost}>Plan düzenle</button>}
                   </div>
                   {planAcik && analiz.durum === 'onaylandi' && (
