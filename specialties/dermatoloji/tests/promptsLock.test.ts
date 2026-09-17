@@ -59,7 +59,7 @@ describe('(c) wired into the runtime call paths', () => {
   })
   it('asistan / ses / ogrenme blocks', () => {
     const a = dermatolojiKilidi('asistan'); assert.ok(a.includes('ÖNCELİKLİDİR') && a.includes(dermatolojiAracHaritasi()) && a.includes('derm.analyze_image') && !a.includes('SOAP — fototerapi'))
-    const s = dermatolojiKilidi('ses'); assert.ok(s.length < 1600 && s.includes('Deri ve Zührevi Hastalıklar') && s.includes('never a diagnosis') && !s.includes('Bolognia Dermatology 5th'))
+    const s = dermatolojiKilidi('ses'); assert.ok(s.length < 2600 && s.includes('Deri ve Zührevi Hastalıklar') && s.includes('never a diagnosis') && !s.includes('Bolognia Dermatology 5th'))
     assert.ok(dermatolojiKilidi('ogrenme').includes('Dual-sign is the product'))
   })
   it('call sites use the loader (chat, hafıza/voice, SOAP, approve distiller, next.config tracing)', () => {
@@ -91,5 +91,13 @@ describe('(d) hekim / uzman lock language', () => {
     assert.ok(p.vision.includes('Asistan cannot finalize')); assert.ok(p.vision.includes('Status is always draft'))
     assert.ok(p.ogrenme.includes('Biopsy and treatment decisions stay with the uzman')); assert.ok(p.ogrenme.includes('Cannot mark VisionRead onayli'))
     assert.ok(dermatolojiKilidi('soap').includes('Not gövdesi kuralı (yalnız hekimin dediği) geçerliliğini korur'))
+  })
+  it('Doz kilidi (KD-DERM-SAFETY-FINDINGS F1): system.md rule reaches SOAP, chat and voice; SOAP output is dose-locked in code', () => {
+    const p = dermatolojiPromptlari()
+    assert.ok(p.system.includes('## Doz kilidi (kırılmaz)')); assert.ok(p.system.includes('doz hekim tarafından belirlenir')); assert.ok(p.system.includes('izotretinoin (günlük ve kümülatif doz)'))
+    for (const y of ['soap', 'asistan', 'ses'] as const) assert.ok(dermatolojiKilidi(y).includes('Doz yazma; hafızadan veya kılavuzdan doz uydurma'), y)
+    assert.ok(dermatolojiKilidi('soap').includes('receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA'))
+    assert.ok(kaynak('lib/doktor/soapUret.ts').includes('dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi('))
+    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
   })
 })

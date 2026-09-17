@@ -9,6 +9,7 @@
 import fs from 'fs'
 import path from 'path'
 import { DAHILIYE_TOOLS } from './tools'
+import { receteDozsuz } from '../../../lib/doktor/dozKilidi'
 
 export const DAHILIYE_PROMPT_DOSYALARI = { system: 'system.md', soap: 'soap-dahiliye.md', ogrenme: 'asistan-ogrenme.md' } as const
 type Anahtar = keyof typeof DAHILIYE_PROMPT_DOSYALARI
@@ -55,13 +56,6 @@ export function dahiliyeKilidi(yuzey: 'soap' | 'asistan' | 'ogrenme' | 'ses'): s
   return `\n=== DAHİLİYE SİSTEM KİLİDİ (specialties/dahiliye/prompts) ===\n${ONCELIK}\n\n${p.system}${soap}\n\n${araclar}\n=== KİLİT SONU ===`
 }
 
-const DOZ_RE = /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|μg|g|ml|mL|iu|IU|ünite|u)\b/gi
-
-/** Locked safety §1 for dahiliye: drug class / etken madde only — strip model-written doses from reçete önerisi. */
-export function dahiliyeReceteDozsuz<T extends { doz?: string; kullanim?: string; ticariOrnek?: string; not?: string }>(liste: T[]): T[] {
-  return liste.map((r) => {
-    const { doz: _d, kullanim: _k, ...kalan } = r
-    const ticari = r.ticariOrnek ? r.ticariOrnek.replace(DOZ_RE, '').replace(/\s{2,}/g, ' ').trim() : r.ticariOrnek
-    return { ...kalan, ...(ticari ? { ticariOrnek: ticari } : {}), not: [r.not, 'Doz hekim yazar'].filter(Boolean).join(' · ') } as T
-  })
-}
+/** Locked safety §1 for dahiliye: drug class / etken madde only — strip model-written doses from reçete önerisi.
+ * Implementation shared with kadın doğum / dermatoloji (lib/doktor/dozKilidi, KD-DERM-SAFETY-FINDINGS F1). */
+export const dahiliyeReceteDozsuz = receteDozsuz

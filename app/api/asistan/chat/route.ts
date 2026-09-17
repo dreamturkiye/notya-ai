@@ -6,6 +6,8 @@ import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, ty
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
+import { dozKilitliBrans } from "@/lib/doktor/soapUret"
+import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
@@ -193,6 +195,14 @@ export async function POST(req: NextRequest) {
     } catch {
       // If not JSON, treat as plain speech
       aiData = { speech: rawResponse, action: null, proactiveWarning: null }
+    }
+
+    // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches — a dose the doctor did not type (and that is not in the patient file /
+    // verified drug context) never reaches the chat bubble.
+    if (dozKilitliBrans(hekimBransi, specialty)) {
+      const kaynak = kaynakSayilari(augmentedMessage, dosyaEk, ...messages.filter((m) => m.role === "user").map((m) => m.content))
+      aiData.speech = uydurmaDozTemizle(String(aiData.speech || ""), kaynak).metin
+      if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaDozTemizle(String(aiData.proactiveWarning), kaynak).metin
     }
 
     // Execute action if AI decided to
