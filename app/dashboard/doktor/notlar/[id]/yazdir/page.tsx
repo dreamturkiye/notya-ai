@@ -13,6 +13,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { anamnezParcala, fizikParcala } from '@/lib/doktor/anamnezBolumleri';
 import { htmlBelgeYap, metinBelgeYap, type BelgeGirdisi } from '@/lib/entegrasyon/belgeHtml';
 import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
+import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 
 interface NotVeri {
   not: {
@@ -140,9 +141,11 @@ export default function NotYazdir() {
       <div className="yazdirma-gizle" style={{ background: '#0A1628', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Muayene Notu — Yazdır / PDF</span>
         <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          {hasta.patientId && (
-            <a href={`/dashboard/doktor/hastalar/${hasta.patientId}`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', marginRight: 4 }}>← Hasta Dosyası</a>
-          )}
+          {/* NOTYA-ONAY-DONUS-01: dönüş bağlantısı KOŞULSUZ — hastaya bağlı olmayan notta
+              (seansa hasta seçilmeden üretilen not) bu sayfanın hiçbir çıkışı kalmıyordu. */}
+          <a href={hastaDosyasiYolu(hasta.patientId)} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', marginRight: 4 }}>
+            {hasta.patientId ? '← Hasta Dosyası' : '← Hastalar'}
+          </a>
           {/* Kaan (2026-09-13): Muayene Geçmişi artık bu raporu açar; düzenleme buradan başlar */}
           <a href={`/dashboard/doktor/notlar/${params.id}`} style={{ background: '#1F5F8B', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>✏️ Yeniden Düzenle</a>
           <button type="button" onClick={hbysKopyala} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{kopyalandi ? '✓ Kopyalandı' : '📋 HBYS için kopyala'}</button>
