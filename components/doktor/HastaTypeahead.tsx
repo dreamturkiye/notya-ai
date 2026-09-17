@@ -13,24 +13,17 @@ import {
   toolsInput,
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
+import { trParcaEslesir } from '@/lib/utils/turkceArama'
 
-function normalizeTr(value: string): string {
-  return value
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-}
-
-/** Match query against full label or any name-part prefix (ad / soyad initials). */
+/**
+ * Match query against full label or any name-part prefix (ad / soyad initials).
+ *
+ * NOTYA-ARAMA-TR-01: buradaki yerel normalizeTr() doğrudan toLocaleLowerCase('tr-TR')
+ * kullanıyordu; Türkçe locale I ile i'yi ayrı tuttuğu için "Isik" kayıtlı hasta "isik"
+ * yazımıyla bulunamıyordu. Ortak katlama lib/utils/turkceArama.ts'te, testleriyle birlikte.
+ */
 export function hastaMatchesQuery(hasta: HastaOption, query: string): boolean {
-  const q = normalizeTr(query.trim())
-  if (!q) return true
-  const label = normalizeTr(hasta.label)
-  if (label.includes(q)) return true
-  const parts = [hasta.ad, hasta.soyad, ...hasta.label.split(/\s+/)]
-    .map((p) => normalizeTr(p || ''))
-    .filter(Boolean)
-  return parts.some((p) => p.startsWith(q))
+  return trParcaEslesir(hasta.label, query, [hasta.ad, hasta.soyad])
 }
 
 type Props = {

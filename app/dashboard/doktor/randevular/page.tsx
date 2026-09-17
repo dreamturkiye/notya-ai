@@ -20,6 +20,7 @@ import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { resmiTatilMi } from '@/lib/randevu/resmiTatiller';
 import { randevuAksiyonlari, REAKTIVASYON_DURUMU } from '@/lib/randevu/randevuDurum';
+import { trAramaNormalize, trIcerir } from '@/lib/utils/turkceArama';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,12 @@ interface Randevu {
 interface HastaAramaSonucu {
   id: string;
   name: string;
+  /** Yalnız aynı adlı iki hastayı ayırt etmek için gösterilir (patients.created_at). */
+  kayitTarihi?: string | null;
 }
+
+/** Açık listede aynı anda kaç sonuç gösterilir — gerisi "yazmaya devam edin" ile daraltılır. */
+const HASTA_SONUC_LIMITI = 10;
 
 const TUR_ETIKET: Record<string, string> = {
   ilk_muayene: 'İlk Muayene',
@@ -171,8 +177,16 @@ export default function RandevularPage() {
   const [hastaDurumu, setHastaDurumu] = useState<'saglikli' | 'sikayetli' | ''>('');
 
   const [hastaArama, setHastaArama] = useState('');
-  const [hastaSonuclari, setHastaSonuclari] = useState<HastaAramaSonucu[]>([]);
+  const [aktifSonucIdx, setAktifSonucIdx] = useState(0);
   const [seciliHasta, setSeciliHasta] = useState<HastaAramaSonucu | null>(null);
+  /**
+   * NOTYA-RANDEVU-12: kayıtsız (serbest metin) randevu artık SESSİZ VARSAYILAN DEĞİL — doktorun
+   * açıkça seçtiği bir yol. Eskiden hasta seçilmediği sürece serbest isim alanları hep açıktı;
+   * arama bir sebeple (örn. Türkçe I hatası) eşleşmeyince doktor farkında olmadan kayıtlı
+   * hastaya BAĞLI OLMAYAN bir randevu açıyordu ve bu, onaylandığında ikinci bir hasta dosyası
+   * yaratıyordu (bkz. [id]/route.ts, otomatikHastaKaydiOlustur).
+   */
+  const [kayitsizMod, setKayitsizMod] = useState(false);
   const [serbestAd, setSerbestAd] = useState('');
   const [serbestTelefon, setSerbestTelefon] = useState('');
   const [serbestEmail, setSerbestEmail] = useState('');
@@ -325,29 +339,84 @@ export default function RandevularPage() {
     })();
   }, []);
 
-  const [tumHastalar, setTumHastalar] = useState<{ id: string; name: string }[] | null>(null);
+  // NOTYA-ARAMA-TR-01: hasta listesi form AÇILIRKEN bir kez çekilir; arama tamamen istemci
+  // tarafında ve anında çalışır. Tuş başına istek gitmediği için debounce'a gerek yok —
+  // gecikme eklemek burada yalnızca yazarken listeyi geciktirirdi.
+  const [tumHastalar, setTumHastalar] = useState<HastaAramaSonucu[] | null>(null);
+  const [hastaListesiYukleniyor, setHastaListesiYukleniyor] = useState(false);
   useEffect(() => {
-    const q = hastaArama.trim();
-    if (q.length < 1) { setHastaSonuclari([]); return; }
+    if (!formAcik || tumHastalar) return;
     let iptal = false;
     (async () => {
+      setHastaListesiYukleniyor(true);
       try {
-        let liste = tumHastalar;
-        if (!liste) {
-          const t = await token();
-          if (!t) return;
-          const r = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` } });
-          const d = await r.json();
-          liste = (d.patients || []).map((p: any) => ({ id: p.id, name: p.name }));
-          if (!iptal) setTumHastalar(liste);
+        const t = await token();
+        if (!t) return;
+        const r = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` } });
+        const d = await r.json();
+        if (!iptal) {
+          setTumHastalar(
+            (d.patients || []).map((p: any) => ({ id: p.id, name: p.name, kayitTarihi: p.last_visit || null }))
+          );
         }
-        const qNorm = q.toLocaleLowerCase('tr-TR');
-        const sonuc = (liste || []).filter((p) => p.name.toLocaleLowerCase('tr-TR').includes(qNorm)).slice(0, 8);
-        if (!iptal) setHastaSonuclari(sonuc);
-      } catch { if (!iptal) setHastaSonuclari([]); }
+      } catch {
+        // Liste gelmezse arama boş kalır; kayıtsız yol yine de açık — randevu alınamaz duruma düşmesin.
+      } finally {
+        if (!iptal) setHastaListesiYukleniyor(false);
+      }
     })();
     return () => { iptal = true; };
+  }, [formAcik, tumHastalar, token]);
+
+  /**
+   * NOTYA-ARAMA-TR-01 (canlı hata, Dr. Gökhan 2026-09-17): burada eskiden doğrudan
+   * `toLocaleLowerCase('tr-TR')` vardı. Türkçe locale I ile i'yi KASTEN ayrı tutar
+   * ('Hasta Iki' → 'hasta ıki'), bu yüzden doktor "hasta iki" yazınca kayıtlı hasta hiç
+   * listelenmiyor, form sessizce kayıtsız randevu yoluna düşüyordu. trIcerir() dört I
+   * biçimini tek kovaya katlar (bkz. lib/utils/turkceArama.ts + testleri).
+   */
+  const hastaEslesmeleri = useMemo(() => {
+    const q = hastaArama.trim();
+    if (!q) return [] as HastaAramaSonucu[];
+    return (tumHastalar || []).filter((p) => trIcerir(p.name, q));
   }, [hastaArama, tumHastalar]);
+
+  const hastaSonuclari = useMemo(() => hastaEslesmeleri.slice(0, HASTA_SONUC_LIMITI), [hastaEslesmeleri]);
+
+  /** Aynı ada sahip birden fazla sonuç varsa kayıt tarihiyle ayırt edilir. */
+  const cakisanAdlar = useMemo(() => {
+    const sayac = new Map<string, number>();
+    for (const h of hastaSonuclari) {
+      const k = trAramaNormalize(h.name);
+      sayac.set(k, (sayac.get(k) || 0) + 1);
+    }
+    return sayac;
+  }, [hastaSonuclari]);
+
+  const aramaMetni = hastaArama.trim();
+  const aramaSonucsuz = aramaMetni.length >= 2 && !hastaListesiYukleniyor && tumHastalar !== null && hastaEslesmeleri.length === 0;
+
+  /** Kayıtsız isim yazılırken aynı isimde kayıtlı hasta varsa uyar — sessiz ikinci dosya açılmasın. */
+  const kayitsizAdCakismasi = useMemo(() => {
+    if (!kayitsizMod || seciliHasta) return [] as HastaAramaSonucu[];
+    const q = serbestAd.trim();
+    if (q.length < 2) return [] as HastaAramaSonucu[];
+    return (tumHastalar || []).filter((p) => trIcerir(p.name, q)).slice(0, 5);
+  }, [kayitsizMod, seciliHasta, serbestAd, tumHastalar]);
+
+  useEffect(() => { setAktifSonucIdx(0); }, [hastaArama]);
+
+  /** Listeden hasta seçmek: randevu gerçek patient_id'ye bağlanır, serbest metin yolu kapanır. */
+  function hastaSec(h: HastaAramaSonucu) {
+    setSeciliHasta(h);
+    setKayitsizMod(false);
+    setHastaArama('');
+    setAktifSonucIdx(0);
+    setSerbestAd('');
+    setSerbestTelefon('');
+    setSerbestEmail('');
+    setHata('');
+  }
 
   function formuSifirla() {
     setDuzenlenenId(null);
@@ -358,8 +427,9 @@ export default function RandevularPage() {
     setNotlar('');
     setHastaDurumu('');
     setHastaArama('');
-    setHastaSonuclari([]);
+    setAktifSonucIdx(0);
     setSeciliHasta(null);
+    setKayitsizMod(false);
     setSerbestAd('');
     setSerbestTelefon('');
     setSerbestEmail('');
@@ -397,19 +467,32 @@ export default function RandevularPage() {
     setGun(new Date(rv.baslangic));
     if (rv.kayitliHasta && rv.patientId) {
       setSeciliHasta({ id: rv.patientId, name: rv.hastaAdi });
+      setKayitsizMod(false);
       setSerbestAd(''); setSerbestTelefon('');
     } else {
       setSeciliHasta(null);
+      // Zaten kayıtsız açılmış bir randevuyu düzenlerken serbest alanlar açık gelir — ama
+      // "Hasta ara" da burada, doktor gerçek hastayı bulup bağlayabilsin diye (PATCH patientId
+      // gönderildiğinde serbest metin temizlenip randevu gerçek dosyaya bağlanır).
+      setKayitsizMod(true);
       setSerbestAd(rv.hastaAdi); setSerbestTelefon(rv.hastaTelefon); setSerbestEmail(rv.hastaEmail || '');
     }
     setHastaArama('');
+    setAktifSonucIdx(0);
     setFormAcik(true);
   }
 
   async function kaydet(e: React.FormEvent) {
     e.preventDefault();
+    // NOTYA-RANDEVU-12: kayıtsız yola düşmek artık açık bir karar. Doktor hastayı seçmediyse ve
+    // "kayıtsız" seçeneğini de işaretlemediyse, eskisi gibi kuru bir doğrulama hatası vermek
+    // yerine ne yapması gerektiğini söyle — canlı hatada doktor tam burada takılı kalmıştı.
+    if (!seciliHasta && !kayitsizMod) {
+      setHata('Hastayı "Hasta ara" kutusundan bulup listeden seçin. Hasta kayıtlı değilse "Hasta kayıtlı değil — kayıtsız randevu oluştur"a dokunun.');
+      return;
+    }
     if (!seciliHasta && !serbestAd.trim()) {
-      setHata('Kayıtlı hasta seçin veya hasta adı girin.');
+      setHata('Kayıtsız randevu için hasta adı girin.');
       return;
     }
     // Kaan (2026-09-10): e-posta ISTEGE BAGLI (PR #114 karari ile tutarli) — verildiyse gecerli olsun.
@@ -1180,40 +1263,126 @@ export default function RandevularPage() {
               )}
 
               <div className="ni-field">
-                <label className="ni-label">Hasta ara</label>
+                <label className="ni-label" htmlFor="randevu-hasta-ara">Hasta ara</label>
                 <input
+                  id="randevu-hasta-ara"
                   className="ni-input"
                   value={hastaArama}
                   onChange={(e) => { setHastaArama(e.target.value); setSeciliHasta(null); }}
-                  placeholder="Ad soyad yazın…"
+                  onKeyDown={(e) => {
+                    // Enter formu GÖNDERMEZ. Canlı hatada doktor "Hasta iki" yazıp Enter'a bastı
+                    // ve doğrudan doğrulama hatasına düştü; Enter burada listeden seçme tuşu.
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (hastaSonuclari[aktifSonucIdx]) hastaSec(hastaSonuclari[aktifSonucIdx]);
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setAktifSonucIdx((i) => Math.min(i + 1, Math.max(hastaSonuclari.length - 1, 0)));
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setAktifSonucIdx((i) => Math.max(i - 1, 0));
+                    }
+                  }}
+                  placeholder={hastaListesiYukleniyor ? 'Hastalar yükleniyor…' : 'Ad veya soyad yazın…'}
                   autoComplete="off"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={hastaSonuclari.length > 0 && !seciliHasta}
+                  aria-controls="randevu-hasta-sonuclari"
                 />
                 {hastaSonuclari.length > 0 && !seciliHasta && (
-                  <div className="ni-results">
-                    {hastaSonuclari.map((h) => (
+                  <div className="ni-results" id="randevu-hasta-sonuclari" role="listbox">
+                    {hastaSonuclari.map((h, idx) => (
                       <button
                         type="button"
                         key={h.id}
                         className="ni-result"
-                        onClick={() => { setSeciliHasta(h); setHastaArama(''); setHastaSonuclari([]); }}
+                        role="option"
+                        aria-selected={idx === aktifSonucIdx}
+                        onMouseEnter={() => setAktifSonucIdx(idx)}
+                        onClick={() => hastaSec(h)}
+                        style={idx === aktifSonucIdx ? { background: '#F5F8FF' } : undefined}
                       >
                         <span className="ni-result-name">{h.name}</span>
+                        {/* Aynı adlı iki hasta varsa kayıt tarihi ayırt eder — başka bir kimlik
+                            bilgisi listelemiyoruz, liste ekranına PHI taşımanın anlamı yok. */}
+                        {(cakisanAdlar.get(trAramaNormalize(h.name)) || 0) > 1 && h.kayitTarihi && (
+                          <span className="ni-result-brand">Kayıt: {new Date(h.kayitTarihi).toLocaleDateString('tr-TR')}</span>
+                        )}
                       </button>
                     ))}
+                    {hastaEslesmeleri.length > hastaSonuclari.length && (
+                      <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(10,22,40,0.5)' }}>
+                        {hastaEslesmeleri.length} sonuçtan ilk {hastaSonuclari.length} tanesi — yazmaya devam edin.
+                      </div>
+                    )}
                   </div>
                 )}
                 {seciliHasta && (
                   <div style={{ marginTop: 8, fontSize: 13, color: '#0F9B8E' }}>
                     Seçildi: {seciliHasta.name}{' '}
-                    <button type="button" onClick={() => setSeciliHasta(null)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', textDecoration: 'underline' }}>değiştir</button>
+                    <button type="button" onClick={() => { setSeciliHasta(null); setKayitsizMod(false); }} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', textDecoration: 'underline' }}>değiştir</button>
                   </div>
                 )}
-                {!seciliHasta && hastaArama.trim().length === 0 && (
-                  <p className="ni-hint">Kayıtlı değilse aşağıya isim ve telefon girerek kayıtsız randevu oluşturabilirsiniz.</p>
+                {/* NOTYA-RANDEVU-12: kayıtsız yola yalnız (a) gerçekten arayıp bulamayınca veya
+                    (b) doktor açıkça "kayıtlı değil" deyince geçilir — kendiliğinden değil. */}
+                {!seciliHasta && !kayitsizMod && aramaSonucsuz && (
+                  <div style={{ marginTop: 8, padding: '10px 12px', borderRadius: 8, background: '#FFF7ED', border: '1px solid #FED7AA' }}>
+                    <p style={{ margin: 0, fontSize: 13, color: '#9A3412' }}>
+                      “{aramaMetni}” için kayıtlı hasta bulunamadı.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setKayitsizMod(true); setSerbestAd(aramaMetni); }}
+                      style={{ marginTop: 8, minHeight: 44, padding: '10px 14px', borderRadius: 8, border: '1px solid #F59E0B', background: '#F59E0B', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Hasta kayıtlı değil — kayıtsız randevu oluştur
+                    </button>
+                  </div>
+                )}
+                {!seciliHasta && !kayitsizMod && !aramaSonucsuz && (
+                  <p className="ni-hint">
+                    Yazdıkça kayıtlı hastalar listelenir (Türkçe I/İ farkı önemsiz). Hasta hiç kayıtlı değilse{' '}
+                    <button
+                      type="button"
+                      onClick={() => { setKayitsizMod(true); setSerbestAd(aramaMetni); }}
+                      style={{ background: 'none', border: 'none', padding: '8px 4px', color: '#2563EB', fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      kayıtsız randevu oluşturun
+                    </button>
+                  </p>
+                )}
+                {!seciliHasta && kayitsizMod && (
+                  <p className="ni-hint">
+                    Kayıtsız randevu oluşturuluyor.{' '}
+                    <button
+                      type="button"
+                      onClick={() => { setKayitsizMod(false); setSerbestAd(''); setSerbestTelefon(''); setSerbestEmail(''); }}
+                      style={{ background: 'none', border: 'none', padding: '8px 4px', color: '#2563EB', fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Vazgeç, kayıtlı hasta arayacağım
+                    </button>
+                  </p>
                 )}
               </div>
 
-              {!seciliHasta && (
+              {!seciliHasta && kayitsizMod && kayitsizAdCakismasi.length > 0 && (
+                <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: '#FEF2F2', border: '1px solid #FECACA' }}>
+                  <p style={{ margin: '0 0 8px', fontSize: 13, color: '#991B1B', fontWeight: 600 }}>
+                    Bu isimde kayıtlı hasta var. Kayıtsız devam ederseniz aynı kişi için ikinci bir dosya açılabilir.
+                  </p>
+                  <div className="ni-results">
+                    {kayitsizAdCakismasi.map((h) => (
+                      <button key={h.id} type="button" className="ni-result" onClick={() => hastaSec(h)}>
+                        <span className="ni-result-name">{h.name}</span>
+                        <span className="ni-result-brand">Bu kayıtlı hastaya bağla</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!seciliHasta && kayitsizMod && (
                 <div className="ni-grid">
                   <div className="ni-field">
                     <label className="ni-label">Hasta adı *</label>

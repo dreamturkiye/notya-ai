@@ -544,3 +544,89 @@ oluştur → iptal (üstü çizili) → saati değiştir + Güncelle (hâlâ ipt
 (Planlandı). Regresyon testi `lib/randevu/randevuDurum.test.ts` (12 test) `npm test`'e eklendi;
 596/596 yeşil, `npx tsc --noEmit` temiz. Mobil (standing rule): modalın yeni iptal bloğu 360px ve
 390px'te gerçek CSS ile render edildi — yatay taşma yok, metin sarıyor, düğmeler 123×36.
+
+## RANDEVU-HASTA-ARAMA-TR — canlı hata, Dr. Gökhan (2026-09-17)
+
+**Nasıl geldi.** Dr. Gökhan "Yeni Randevu" penceresinde "Hasta ara" kutusuna **"Hasta iki"** yazdı
+ve Enter'a bastı. Sistemde kayıtlı hastanın adı **"Hasta Iki"** — NOKTASIZ büyük I ile. Hiçbir
+öneri çıkmadı, form "kayıtlı değilse aşağıya isim ve telefon girerek kayıtsız randevu
+oluşturabilirsiniz" moduna düştü ve *"Kayıtlı hasta seçin veya hasta adı girin."* doğrulama hatası
+verdi. Beklentisi: harfleri yazdıkça eşleşen kayıtlı hastaların canlı listelenmesi.
+
+**Kök sebep — Türkçe I/i katlaması, eksik otomatik tamamlama DEĞİL.** Canlı arama zaten vardı
+(`app/dashboard/doktor/randevular/page.tsx`, hasta listesini çekip istemci tarafında süzüyordu).
+Bozuk olan eşleştirmeydi: süzme doğrudan `toLocaleLowerCase('tr-TR')` kullanıyordu. Türkçe locale
+I ile i'yi **kasten ayrı tutar** — yazım için doğru, arama için yıkıcı:
+
+```
+'Hasta Iki'.toLocaleLowerCase('tr-TR')  →  'hasta ıki'   (I → ı, noktasız)
+'Hasta iki'.toLocaleLowerCase('tr-TR')  →  'hasta iki'
+'hasta ıki'.includes('hasta iki')       →  false
+```
+
+Yani "Hasta Iki" diye kayıtlı bir hasta, "hasta iki" yazımıyla **hiçbir zaman** bulunamıyordu.
+Aynı hatalı katlama uygulamada **üç ayrı yerde** kopyalanmıştı (randevu formu, Hastalar listesi,
+`components/doktor/HastaTypeahead.tsx`) ve iki yerde daha ham `toLocaleLowerCase` vardı
+(Belgeler, Cihaz paylaş) — hepsi aynı sessiz hatayı taşıyordu.
+
+**İkinci semptomun açıklaması (Dr. Gökhan'ın daha önce sorduğu "boş TC" notu).** Kayıtsız bir
+randevu ONAYLANDIĞINDA `app/api/doktor/randevular/[id]/route.ts` serbest isimden
+`otomatikHastaKaydiOlustur()` ile **yeni bir `patients` satırı** açıyor — TC Kimlik, doğum tarihi,
+cinsiyet BOŞ. Zincir şu: arama Türkçe I yüzünden kayıtlı hastayı bulamaz → doktor ismi elle yazar
+→ kayıtsız randevu → onay → aynı kişi için ikinci, demografisi boş bir dosya → o dosyaya yazılan
+muayene notunda TC/Doğum/Cinsiyet boş görünür. Dr. Gökhan'ın "acaba mükerrer hasta mı oluştu"
+şüphesi doğruydu; sebebi bu arama hatasıydı. `scripts/qa-randevu-hasta-arama-tr.mts` Adım 5 bunu
+gerçek route handler'la sentetik veride üretip gösteriyor.
+
+**Ne yapıldı.**
+- Yeni `lib/utils/turkceArama.ts` — tek ortak arama katlaması: dört I biçimi (I ı İ i) **tek kovaya**
+  iner, ardından küçük harf + NFD ile aksan düşürme (ö→o, ş→s, ğ→g, ç→c, ü→u) ve boşluk sadeleştirme.
+  `trAramaNormalize` / `trIcerir` / `trAyniAd` / `trParcaEslesir`. Dosyanın başında açık uyarı:
+  bu fonksiyon YALNIZ arama içindir, ekrana/veritabanına yazılacak metne uygulanmaz.
+- `lib/utils/turkceArama.test.ts` — 11 saf fonksiyon testi; `npm test`e eklendi. "iki/Iki/İki/IKI/ıkı/
+  İKİ/ıKi" × "Hasta Iki/Hasta İki/HASTA IKI/hasta ıkı/Hasta iki" matrisinin tamamı, NFD ile ayrışık
+  yazılmış İ, ve **alakasız adların eşleşMEmesi** (katlama her şeyi eşitlemiyor) kilitlendi.
+- Beş arama yeri tek fonksiyona geçti: randevu formu, Hastalar listesi, `HastaTypeahead`
+  (üç doktor aracı bunu kullanıyor), Belgeler hasta seçici, Cihaz paylaş hasta seçici.
+- Randevu formundaki "Hasta ara" gerçek bir typeahead oldu: liste form açılırken BİR kez çekilir,
+  süzme anlıktır (tuş başına istek yok — bu yüzden debounce da yok, gecikme eklemek burada sadece
+  zarar verirdi), ↑/↓ ile gezilir, **Enter artık formu göndermez** (canlı hatada Dr. Gökhan'ı
+  doğrudan doğrulama hatasına düşüren davranış buydu) — Enter seçili satırı seçer.
+- Aynı adlı iki hasta listelenirse satırın altında kayıt tarihi çıkıyor (ayırt edici). Listeye
+  başka kimlik bilgisi taşınmadı — bir seçim listesine PHI eklemenin gerekçesi yok.
+- **Kayıtsız randevu artık sessiz varsayılan değil.** Serbest isim/telefon alanları yalnız doktor
+  (a) gerçekten arayıp sonuç bulamayınca çıkan "Hasta kayıtlı değil — kayıtsız randevu oluştur"
+  düğmesine bastığında veya (b) ipuçtaki açık bağlantıya tıkladığında açılıyor. Hiçbiri olmadan
+  Kaydet'e basılırsa hata metni ne yapılacağını söylüyor. Kayıtsız modda yazılan isim kayıtlı bir
+  hastayla eşleşiyorsa kırmızı uyarı + "Bu kayıtlı hastaya bağla" düğmeleri çıkıyor — ikinci dosya
+  açılmadan önce insana sorulan son kapı.
+
+**Doğrulama.** `scripts/qa-randevu-hasta-arama-tr.mts` — GERÇEK route handler'ları
+(`GET /api/doktor/hastalar`, `POST /api/doktor/randevular`, `PATCH /api/doktor/randevular/[id]`)
+sahte oturum + bellek içi tablo ile çalıştırır. Kullanılan doktor ve hastalar TAMAMEN SENTETİKTİR;
+Dr. Gökhan'ın hesabına, gerçek hastalara veya production veritabanına dokunmaz, PHI içermez.
+Şifreleme anahtarı süreç içinde üretilen atılabilir bir test anahtarıdır. Eski katlama 0 sonuç,
+yeni katlama 1 sonuç veriyor; seçilen hastayla açılan randevunun `patient_id` dolu,
+`hasta_adi_serbest` null ve takvimde `kayitliHasta: true`. `npx tsc --noEmit` temiz, 611 test yeşil.
+
+**Mobil kontrol (standing rule).** Yeni panel/düğmeler 390px ve 360px genişlikte gerçek
+Chromium'da render edildi (`/tmp/qa-mobil/randevu-hasta-ara.html`, globals.css ile): yatay taşma
+yok (`scrollWidth === innerWidth`), uzun hasta adları kırpılmadan sarıyor, turuncu kayıtsız CTA iki
+satıra sarıyor ve kesilmiyor. Sonuç satırları 44–56px. Satır içi metin bağlantıları ilk render'da
+16px dokunma hedefiydi — `padding: 8px 4px` + 14px punto ile 33px'e çıkarıldı (metin akışını bozmadan).
+
+**AÇIK MADDE — mükerrer hasta kaydı birleştirme yolu yok.**
+- *Var olan:* kayıtsız bir RANDEVUYU sonradan gerçek hastaya bağlamak çalışıyor — randevuyu
+  düzenlemeye açıp listeden hasta seçmek `PATCH { patientId }` gönderir, `patient_id` yazılır ve
+  serbest metin temizlenir (QA Adım 6'da doğrulandı).
+- *Olmayan:* Adım 5'teki gibi **zaten açılmış** kopya bir `patients` satırını gerçek hasta dosyasıyla
+  birleştiren bir ekran ya da uç nokta YOK. Kopya kayıt ve ona yazılmış notlar/belgeler ortada
+  kalıyor. `grep -i "birleştir\|merge"` doktor tarafında hiçbir şey döndürmüyor.
+- *Sonuç:* Dr. Gökhan bu hata yüzünden farkında olmadan kopya dosya açmış olabilir. Yapılması
+  gereken iki iş: (1) hasta dosyası birleştirme akışı (iki kaydı seç → notlar/belgeler/randevular
+  hedefe taşınır → kaynak arşivlenir), (2) mevcut kopyaların tespiti için aynı doktorda Türkçe
+  katlamayla aynı ada düşen kayıtları listeleyen bir bakım taraması. İkisi de bu PR'ın kapsamı
+  dışında; Kaan'ın önceliklendirmesini bekliyor.
+- `otomatikHastaKaydiOlustur()` kasten DEĞİŞTİRİLMEDİ: aynı ada düşen kaydı sunucuda sessizce
+  yeniden kullanmak, gerçekten iki farklı aynı adlı hastayı birleştirme riskini taşır — klinik
+  olarak kopya kayıttan daha kötü. Karar insana bırakıldı (kayıtsız moddaki kırmızı uyarı).

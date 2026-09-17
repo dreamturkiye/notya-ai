@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import DoktorNav from '@/components/doktor/DoktorNav'
 import DocumentViewer from '@/components/doktor/DocumentViewer'
+import { trIcerir } from '@/lib/utils/turkceArama'
 import {
   getAccessTokenAsync,
   normalizeHastalar,
@@ -140,10 +141,9 @@ export default function BelgelerPage() {
   }, [])
 
   const secili = hastalar.find((h) => h.id === hastaId) || null
-  const aramaMetni = hastaAra.trim().toLocaleLowerCase('tr')
-  const suzulen = aramaMetni
-    ? hastalar.filter((h) => h.label.toLocaleLowerCase('tr').includes(aramaMetni))
-    : hastalar
+  // NOTYA-ARAMA-TR-01: ortak Türkçe katlama (I/ı/İ/i tek kovada) — bkz. lib/utils/turkceArama.ts
+  const aramaMetni = hastaAra.trim()
+  const suzulen = aramaMetni ? hastalar.filter((h) => trIcerir(h.label, aramaMetni)) : hastalar
 
   const hastaSec = (h: HastaOption) => {
     setHastaId(h.id)
