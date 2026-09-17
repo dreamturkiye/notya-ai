@@ -120,18 +120,13 @@ Pap/HPV only for KD); Gebeliğim follows an active pregnancy for any practice (m
 (aile hekimi, endokrin…) get chart-data modules only when the data exists. Assumption (recorded): unknown
 `users.specialty` = baseline branch, not pediatri. Tests: `lib/portal/moduller.test.ts` (10, in `npm test`).
 
-### Göz Hastalıkları — next full chapter (queued 2026-09-17)
+### Göz Hastalıkları — chapter (SHIPPED 2026-09-17; was queued)
 
-No `specialties/goz-*` yet; registry = baseline only. Catalog/intake/SOAP stub + VA/GİB measurement
-keys exist. Golden refs: TOD + SB DR/glokom + TOD birimler + SGK GİL/anti-VEGF first; Kanski/
-Vaughan/AAO BCSC secondary (çakışmada TOD/SB). Method = KD/dahiliye depth: pre-sprint audit →
-engines/UI/prompts lock → specialty portal “Gözlerim” → ship. Pain focus: 8-hour poliklinik
-speed (bilateral VA/GİB, glokom/DR/katarakt loops, enjeksiyon takvim, SGK rapor).
-
-**Pre-sprint audit shipped 2026-09-17 (before Claude chapter build):**
-`public/goz-presprint-audit.html` → https://notya-ai.vercel.app/goz-presprint-audit.html
-Verdict: chapter Missing; overall ~8% vs wow bar; top gaps = VA/GİB strip, glokom, DR loop, Gözlerim.
-Post-sprint twin: `public/goz-post-sprint-audit.html` → https://notya-ai.vercel.app/goz-post-sprint-audit.html (11/18 Strong, ~77% vs wow bar).
+**Pre-sprint:** `public/goz-presprint-audit.html` → ~8% wow bar (chapter Missing).
+**Post-sprint:** `public/goz-post-sprint-audit.html` → 11/18 Strong, ~77% wow bar (#292/#293).
+**Remaining-gaps re-audit (independent, 2026-09-17):** `public/goz-remaining-gaps-audit.html`
+→ https://notya-ai.vercel.app/goz-remaining-gaps-audit.html — Claude Strong ratings verified
+(`test:goz` 61/61); 7 Partial domains + chart-tab chrome leak + MD beta still open.
 
 **GOZ-CHAPTER — SHIPPED 2026-09-17 (#292, Claude).** `specialties/goz-hastaliklari/**` + `lib/specialties/goz-hastaliklari.ts`
 (VA/GİB first-class olcumler, Gözlerim module Strong) + migration `048_goz_chapter.sql` (goz_* tables, oct/fundus/on_segment
