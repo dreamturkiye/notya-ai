@@ -212,7 +212,18 @@
     td.c.y { color: var(--green); } td.c.n { color: #F87171; } td.c.na { color: var(--dim); }
     ol.steps { color: var(--text); font-size: 13px; padding-left: 20px; margin: 0 0 28px; }
     ol.steps li { margin-bottom: 4px; }
-    .shot { border: 1px dashed rgba(245,158,11,0.4); border-radius: 12px; padding: 16px; color: var(--muted); font-size: 13px; margin-bottom: 28px; background: var(--surface); }
+    .shot { border: 1px solid rgba(45,212,191,0.28); border-radius: 12px; padding: 16px; color: var(--muted); font-size: 13px; margin-bottom: 20px; background: var(--surface); }
+    .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+    @media (max-width: 800px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+    .gallery figure { margin: 0; background: var(--surface); border: 1px solid var(--stroke); border-radius: 10px; overflow: hidden; }
+    .gallery img { width: 100%; height: auto; aspect-ratio: 1080 / 620; object-fit: cover; object-position: top left; display: block; }
+    .gallery figcaption { font-size: 12px; color: var(--muted); padding: 6px 8px; }
+    .gallery a { color: inherit; text-decoration: none; }
+    ul.checks { list-style: none; padding: 0; margin: 0 0 28px; font-size: 13px; columns: 2; }
+    @media (max-width: 640px) { ul.checks { columns: 1; } }
+    ul.checks li { margin-bottom: 4px; break-inside: avoid; }
+    .okk { color: var(--green); font-weight: 700; } .nok { color: #F87171; font-weight: 700; }
+    details { margin-bottom: 28px; } summary { cursor: pointer; color: var(--teal); font-size: 13px; font-weight: 600; margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -223,23 +234,24 @@
     </div>
 
     <h1>Dahiliye — Post-Sprint Audit (DAH-WOW)</h1>
-    <p class="lede">NOTYA-DAH-WOW v2, Waves 0–4 shipped 2026-09-16 (PR #268–#272). Each domain is scored against the Strong rubric in <code>docs/DAH-WOW-BRIEF-v2.md</code> §2. A domain is <b>Strong only when all six criteria hold</b>; nothing is rounded up.</p>
+    <p class="lede">NOTYA-DAH-WOW v2, Waves 0–4 shipped 2026-09-16 (PR #268–#272); smoke evidence captured 2026-09-17 (DAH-WOW-SMOKE). Each domain is scored against the Strong rubric in <code>docs/DAH-WOW-BRIEF-v2.md</code> §2. A domain is <b>Strong only when all six criteria hold</b>; nothing is rounded up.</p>
     <div class="pills">
-      <span class="pill success">65 dahiliye unit tests (npm test green)</span>
+      <span class="pill success">npm test green</span>
       <span class="pill info">Migrations 039–043</span>
-      <span class="pill warn">Smoke screenshots pending</span>
+      <span class="pill success">Smoke: 83 API calls · 15 checks · 0 failures</span>
+      <span class="pill success">24 real UI screenshots (synthetic patient)</span>
     </div>
 
     <div class="stats">
-      <div class="stat"><div class="v warn">0/22</div><div class="l">Strong (strict rubric)</div></div>
-      <div class="stat"><div class="v success">19/22</div><div class="l">5 of 6 criteria — only smoke screenshot missing</div></div>
-      <div class="stat"><div class="v warn">3/22</div><div class="l">Partial</div></div>
+      <div class="stat"><div class="v success">19/22</div><div class="l">Strong (all six criteria, strict)</div></div>
+      <div class="stat"><div class="v warn">3/22</div><div class="l">Partial (reason per row)</div></div>
+      <div class="stat"><div class="v info">0/22</div><div class="l">Before this pass: Strong</div></div>
       <div class="stat"><div class="v info">2·6·5·11</div><div class="l">Pre-wow: Strong · Partial · Thin · Missing</div></div>
     </div>
 
     <div class="callout">
       <h2>Verdict</h2>
-      <p>Every care loop and breadth card in the brief is live: pure engine + tests, migration-backed tables scoped to doctor/patient, a Dahiliye tab ≤2 taps from the patient file, a ref_code on each suggestion, and a clinician lock before anything reaches the note. No domain is marked Strong yet because criterion 5 (one smoke-path screenshot on real qa.test data) could not be captured: the only QA account (qa.test@notya.ai) is a pediatri account, so the Dahiliye tab does not render for it, and the database has no approved lab rows. Creating a dahiliye QA account or switching the shared QA account was left for Kaan to decide (ledger DAH-WOW-SMOKE). Once the screenshots exist, 19 domains flip to Strong with no code changes. SCORE2/KVR stays Partial until the coefficient verification (DAH-SCORE2-VERIFY) and the SCORE2-OP/Diabetes engines land.</p>
+      <p>Criterion 5 is now met. A dedicated dahiliye QA doctor (<code>qa.dahiliye@notya.ai</code>, specialty dahiliye) and one synthetic patient ran the whole smoke path through the real API routes (<code>scripts/dahiliye-smoke.mts</code>, re-runnable). Screenshots were then taken of the real UI in a headless browser, logged in as that QA doctor. The shared <code>qa.test@notya.ai</code> pediatri account was not changed. With the smoke evidence in place, 19 domains meet all six criteria and are Strong. Three stay Partial: SCORE2/KVR (numeric SCORE2 is still off behind <code>SCORE2_ONAYLI=false</code>, and SCORE2-OP/Diabetes are not built), Lab/Belgeler (the shared extraction engine was not re-audited, and the smoke run approved seeded panels rather than an uploaded PDF), and the prompts/ lock (rubric criteria 1–2 don't apply to it).</p>
     </div>
 
     <h2 class="sec">Strong rubric by domain</h2>
@@ -250,28 +262,28 @@
           <tr><th>Domain</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>Rating</th><th>Note</th></tr>
         </thead>
         <tbody>
-          <tr><td class="domain">HT (Uzlaşı 2025)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">V1 kart + ev KB beyaz önlük/maskeli + başlangıç paneli + 14 gün lab takibi + KB ölçüm tekniği kapısı; SGK HT raporu</td></tr>
-          <tr><td class="domain">DM (TEMD 2026)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">V1 kart + DM döngü: FIB-4, SGLT2/GLP-1 kardiyo-renal bayrak, hipoglisemi riski, ayak foto, aşılar; Ramazan</td></tr>
-          <tr><td class="domain">Lipid (TEMD)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">LDL hedefi hekim alanı + KVR kilidi; statin yoğunluk açığı; SGK statin raporu</td></tr>
-          <tr><td class="domain">Tiroid (TEMD 2025)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">TSH kartı + tanı kilidi + nodül TI-RADS tarzı tarif, US izlem görevleri, İİAB = endokrin sevki</td></tr>
-          <tr><td class="domain">Check-up</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Paket defteri (kendi ödemeli, DB kısıtı), kalem = onaylı lab/belge, birleşik rapor + hekim kilidi</td></tr>
-          <tr><td class="domain">İlaç güvenliği + izlem takvimi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">eGFR uyarıları + polifarmasi; 13 izlem kuralı → görevler (her görev ref_code)</td></tr>
-          <tr><td class="domain">Lab / Belgeler (paylaşılan)</td><td class="c n">~</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">~</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Ortak lab motoru (core/lab) bu sprintte yeniden denetlenmedi; dahiliye yalnız onaylı satır okur</td></tr>
-          <tr><td class="domain">Kırmızı bayrak + sevk</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">V1 kapı + EKG acil bulguları aynı kapıya bağlı; anemi/antikoagülan/ön anket alarmları şeritte ⚑</td></tr>
-          <tr><td class="domain">SCORE2 / KVR</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Kural kovası + LDL hedef + statin açığı canlı; SCORE2 sayısal hesap SCORE2_ONAYLI=false; SCORE2-OP / Diabetes ledgered (brief W1.2 spec tamam değil)</td></tr>
-          <tr><td class="domain">CKD (KDIGO)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">G×A ısı haritası, kreatininsiz evre yok, nefro sevk paketi</td></tr>
-          <tr><td class="domain">Anemi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Morfoloji → sonraki test merdiveni; plan hekim kilidi</td></tr>
-          <tr><td class="domain">Obezite / GLP-1</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">TEMD basamakları, bariatrik = sevk, 3. ay %5, gerekçe metni</td></tr>
-          <tr><td class="domain">HF / GDMT</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">EF kategorisi, 4 sütun, güvenlik uyarıları, kardiyoloji tetikleyicileri</td></tr>
-          <tr><td class="domain">Antikoagülan</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">TTR, INR aralığı, DOAK uygunluk (mg yok), HAS-BLED kontrol listesi</td></tr>
-          <tr><td class="domain">Office GI</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">GÖRH, İBS Roma IV, MASLD FIB-4, H. pylori + kontrol testi</td></tr>
-          <tr><td class="domain">KOAH / astım</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Spirometri, GOLD + ABE, astım kontrolü, inhaler sınıfı + teknik</td></tr>
-          <tr><td class="domain">Kanser tarama (KETEM)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Kolon/meme/serviks, jine tarihleri ortak, GGK+ → sevk</td></tr>
-          <tr><td class="domain">Aşı takvimi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Grip, pnömokok dizisi, zona, Td, HBV seroloji, COVID-19 (HYP)</td></tr>
-          <tr><td class="domain">SGK rapor / e-reçete native</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">HT/DM/statin/DOAK ilaç raporu taslağı + e-Nabız/Medula zarfı; canlı Medula gönderimi kapsam dışı</td></tr>
-          <tr><td class="domain">Portal home logs + ön anket</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c na">n/a</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">PIN sonrası anket → ev kayıtları (portal) + Subjektif taslağı; hekim ekler</td></tr>
-          <tr><td class="domain">Kohort paneli</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c na">n/a</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill warn">5/6 — smoke</span></td><td class="note">Araçlar › Dahiliye Kohort; kart tabloları + onaylı lab; klinik değersiz hatırlatma</td></tr>
-          <tr><td class="domain">prompts/ system lock</td><td class="c n">✗</td><td class="c na">n/a</td><td class="c na">n/a</td><td class="c y">✓</td><td class="c n">✗</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">system.md + tools.ts kilidi; rubrik 1–2 (engine/tablo) bu alan için uygulanamaz</td></tr>
+          <tr><td class="domain">HT (Uzlaşı 2025)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">V1 kart + ev KB beyaz önlük/maskeli + başlangıç paneli + 14 gün lab takibi + KB ölçüm tekniği kapısı; SGK HT raporu</td></tr>
+          <tr><td class="domain">DM (TEMD 2026)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">V1 kart + DM döngü: FIB-4, SGLT2/GLP-1 kardiyo-renal bayrak, hipoglisemi riski, ayak foto, aşılar; Ramazan</td></tr>
+          <tr><td class="domain">Lipid (TEMD)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">LDL hedefi hekim alanı + KVR kilidi; statin yoğunluk açığı; SGK statin raporu</td></tr>
+          <tr><td class="domain">Tiroid (TEMD 2025)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">TSH kartı + tanı kilidi + nodül TI-RADS tarzı tarif, US izlem görevleri, İİAB = endokrin sevki</td></tr>
+          <tr><td class="domain">Check-up</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Paket defteri (kendi ödemeli, DB kısıtı), kalem = onaylı lab/belge, birleşik rapor + hekim kilidi</td></tr>
+          <tr><td class="domain">İlaç güvenliği + izlem takvimi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">eGFR uyarıları + polifarmasi; 13 izlem kuralı → görevler (her görev ref_code)</td></tr>
+          <tr><td class="domain">Lab / Belgeler (paylaşılan)</td><td class="c n">~</td><td class="c y">✓</td><td class="c y">✓</td><td class="c n">~</td><td class="c n">~</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Partial: ortak lab motoru (core/lab çıkarım) yeniden denetlenmedi; smoke Onayla rotasını gerçek çağırdı ama PDF yükleme/çıkarım adımı atlandı (tohumlanmış panel). Onaysız satırın kartlara girmediği doğrulandı</td></tr>
+          <tr><td class="domain">Kırmızı bayrak + sevk</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">V1 kapı + EKG acil bulguları aynı kapıya bağlı; anemi/antikoagülan/ön anket alarmları şeritte ⚑</td></tr>
+          <tr><td class="domain">SCORE2 / KVR</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Partial: kural kovası (smoke: DM+TOD → çok yüksek, LDL hedef 55, statin açığı, kilit) canlı; SCORE2 sayısal hesap SCORE2_ONAYLI=false; SCORE2-OP / Diabetes ledgered (brief W1.2 spec tamam değil)</td></tr>
+          <tr><td class="domain">CKD (KDIGO)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">G×A ısı haritası, kreatininsiz evre yok, nefro sevk paketi</td></tr>
+          <tr><td class="domain">Anemi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Morfoloji → sonraki test merdiveni; plan hekim kilidi</td></tr>
+          <tr><td class="domain">Obezite / GLP-1</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">TEMD basamakları, bariatrik = sevk, 3. ay %5, gerekçe metni</td></tr>
+          <tr><td class="domain">HF / GDMT</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">EF kategorisi, 4 sütun, güvenlik uyarıları, kardiyoloji tetikleyicileri</td></tr>
+          <tr><td class="domain">Antikoagülan</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">TTR, INR aralığı, DOAK uygunluk (mg yok), HAS-BLED kontrol listesi</td></tr>
+          <tr><td class="domain">Office GI</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">GÖRH, İBS Roma IV, MASLD FIB-4, H. pylori + kontrol testi</td></tr>
+          <tr><td class="domain">KOAH / astım</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Spirometri, GOLD + ABE, astım kontrolü, inhaler sınıfı + teknik</td></tr>
+          <tr><td class="domain">Kanser tarama (KETEM)</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Kolon/meme/serviks, jine tarihleri ortak, GGK+ → sevk</td></tr>
+          <tr><td class="domain">Aşı takvimi</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Grip, pnömokok dizisi, zona, Td, HBV seroloji, COVID-19 (HYP)</td></tr>
+          <tr><td class="domain">SGK rapor / e-reçete native</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">HT/DM/statin/DOAK ilaç raporu taslağı + e-Nabız/Medula zarfı; canlı Medula gönderimi kapsam dışı</td></tr>
+          <tr><td class="domain">Portal home logs + ön anket</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c na">n/a</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">PIN sonrası anket → ev kayıtları (portal) + Subjektif taslağı; hekim ekler</td></tr>
+          <tr><td class="domain">Kohort paneli</td><td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td><td class="c na">n/a</td><td class="c y">✓</td><td class="c y">✓</td><td><span class="pill success">Strong</span></td><td class="note">Araçlar › Dahiliye Kohort; kart tabloları + onaylı lab; klinik değersiz hatırlatma</td></tr>
+          <tr><td class="domain">prompts/ system lock</td><td class="c n">✗</td><td class="c na">n/a</td><td class="c na">n/a</td><td class="c y">✓</td><td class="c na">n/a</td><td class="c y">✓</td><td><span class="pill fail">Partial</span></td><td class="note">Partial: system.md + tools.ts kilidi; rubrik 1–2 (engine/tablo) ve UI ekran görüntüsü bu alan için uygulanamaz</td></tr>
         </tbody>
       </table>
     </div>
@@ -289,23 +301,186 @@
     <h2 class="sec">Quality nudges (W4.2)</h2>
     <p class="where" style="margin-bottom:28px">A "Bakım kalitesi" bar above every tab: KB measurement-technique checklist before "kontrolsüz" is shown (the strip shows KB as "dikkat · ölçüm tekniğini doğrula" until confirmed), FRAIL and 3-question falls screen for patients ≥65, and PHQ-2 on chronic cards (all yearly). Results are saved and reach the note only through the clinician's "Nota ekle" button.</p>
 
-    <h2 class="sec">First real patient smoke path (to capture for criterion 5)</h2>
+    <h2 class="sec">Smoke path — evidence for criterion 5 (DAH-WOW-SMOKE)</h2>
+    <div class="shot"><b>What was captured, and how.</b> Real screenshots of the running app (local <code>next dev</code> on the production Supabase project), taken with a headless Chromium logged in as the dedicated QA doctor <code>qa.dahiliye@notya.ai</code>. They are not mockups and were not rendered from fixtures. All data belongs to one synthetic patient, <i>TEST — Dahiliye Smoke (sentetik)</i> (67 y, E, invented birth date, no T.C., no phone, no e-mail). The path itself ran through the real API routes in <code>scripts/dahiliye-smoke.mts</code> (run 2026-09-17, 83 requests, 15 checks, 0 failures). One step was not run end to end: the two lab panels were inserted as the extractor leaves them (<code>onayli=false</code>), then approved with the real <code>/api/doktor/belgeler/analiz/onayla</code> route. The PDF upload and Claude vision extraction were skipped. Re-run: <code>npm run dev</code> then <code>npx tsx scripts/dahiliye-smoke.mts</code>.</div>
     <ol class="steps">
-      <li>Hasta dosyası (erişkin, dahiliye/aile/genel hekim) › <b>Dahiliye</b> › Özet: KB gir → şerit KB çipi; hedef dışıysa "Bakım kalitesi › KB ölçüm tekniği".</li>
-      <li>Belgeler › lab PDF yükle › <b>Asistana raporla</b> › düzenle › <b>Onayla</b> (lab_satirlar onayli=true).</li>
-      <li>Dahiliye yenile: şerit HbA1c Δ / LDL / eGFR dolar; DM › Değerlendir; Lipid › Değerlendir.</li>
-      <li>KVR: ASKVH/DM+TOD işaretle → kova + LDL hedefi → <b>Kilitle</b>. KBH: G×A ısı haritası → evre <b>Kilitle</b>.</li>
-      <li>Check-up › paket başlat → kalemler onaylı lab ile yeşil → <b>Birleşik rapor</b> → Hekim onayı → Yazdır/PDF.</li>
-      <li>1-tap bugünkü plan → kopyala → SOAP P.</li>
+      <li><b>KB kaydet</b> 152/94 → evre 1 taslak; eksik ölçüm tekniği listesi → 409 kapı; tam liste → onay.</li>
+      <li><b>Lab onayla</b>: önceki panel (muayene yok → route "Lab değerlendirme" muayenesi açar) + güncel panel. Onaylanmadan önce şerit boş kaldı (yalnız onaylı satır).</li>
+      <li><b>Dahiliye adımları</b>: dm, dmdongu, lipid, tiroid, nodul, kvr, ckd (+nefro sevk paketi), evkayit ×6, ilacizlem, anemi, obezite, tarama, asi, htpanel, hf, antikoagulan, pulm, gi, ekg (acil bulgu onaysız → 409), ekgonay, kirmizi, nudge ×3.</li>
+      <li><b>Hekim kilidi</b>: 22 kart alanı kilitlendi; kilitlenemez alan (<code>dm.insulin_doz</code>) → 400. Tarama sonucu "Nota ekle"ye kadar nota yazılmadı (C6 doğrulandı).</li>
+      <li><b>SGK rapor</b> (statin) KVR kilidini okudu; DB taslağında ad / T.C. boş → hekim kilidi.</li>
+      <li><b>Check-up</b> ileri65 paketi → 8/14 kalem onaylı labla yeşil → birleşik rapor TASLAK → hekim onayı → "hekim onaylı" + Yazdır/PDF.</li>
+      <li><b>Portal ön anket</b>: PIN olmadan 401 → PIN → anket → doktor "Subjektif'e ekle".</li>
+      <li><b>Kohort paneli</b>: KB/LDL hedef dışı + eGFR &lt;45 bayrakları → 1-tap hatırlatma (mesajda klinik değer yok) → 7 gün içinde ikinci gönderim atlandı.</li>
     </ol>
-    <div class="shot">Screenshot slots (criterion 5) — pending DAH-WOW-SMOKE: needs a dahiliye-specialty QA login with synthetic, non-PHI data. No screenshots are faked or rendered from fixtures.</div>
+
+    <h2 class="sec">Before / after (strip, same synthetic patient)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chip</th><th>Before (no approved lab, no card)</th><th>After smoke path</th></tr></thead>
+        <tbody>
+          <tr><td class="domain">KB</td><td class="note">— · bugün ölç</td><td>152/94 · kötü (ev ort. 146/90, sürdürülen HT)</td></tr>
+          <tr><td class="domain">HbA1c</td><td class="note">—</td><td>8,4 % · Δ +0,8 (önceki onaylı panel 7,6)</td></tr>
+          <tr><td class="domain">LDL</td><td class="note">—</td><td>131 · hedef &lt;55 (hekim kilidi, KVR çok yüksek)</td></tr>
+          <tr><td class="domain">eGFR</td><td class="note">— · "Kreatinin/eGFR onaylı lab satırı yok — evre verilmez"</td><td>44 · G3b A2 (UACR 86) · kırmızı → nefroloji</td></tr>
+          <tr><td class="domain">Görevler</td><td class="note">0</td><td>10 açık (DM yıllık, ramipril K/Kre, statin ALT, H. pylori kontrol, nodül US…)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="sec">Screenshots (one per domain tab)</h2>
+    <div class="gallery">
+      <figure><a href="/dahiliye-smoke/ozet.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/ozet-t.jpg" alt="Özet · şerit + bakım kalitesi + görevler" loading="lazy" /><figcaption>Özet · şerit + bakım kalitesi + görevler</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/ht.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/ht-t.jpg" alt="HT · KB + teknik kapısı + panel istemi" loading="lazy" /><figcaption>HT · KB + teknik kapısı + panel istemi</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/dm.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/dm-t.jpg" alt="DM · HbA1c Δ, görevler" loading="lazy" /><figcaption>DM · HbA1c Δ, görevler</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/dmdongu.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/dmdongu-t.jpg" alt="DM döngü · FIB-4, SGLT2/GLP-1 bayrak" loading="lazy" /><figcaption>DM döngü · FIB-4, SGLT2/GLP-1 bayrak</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/lipid.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/lipid-t.jpg" alt="Lipid · statin altında hedef dışı" loading="lazy" /><figcaption>Lipid · statin altında hedef dışı</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/kvr.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/kvr-t.jpg" alt="KVR · DM+TOD → çok yüksek, LDL kilidi" loading="lazy" /><figcaption>KVR · DM+TOD → çok yüksek, LDL kilidi</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/kbh.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/kbh-t.jpg" alt="KBH · G3b A2 + nefro sevk" loading="lazy" /><figcaption>KBH · G3b A2 + nefro sevk</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/tiroid.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/tiroid-t.jpg" alt="Tiroid · subklinik + nodül TR4" loading="lazy" /><figcaption>Tiroid · subklinik + nodül TR4</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/anemi.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/anemi-t.jpg" alt="Anemi · mikrositer, ferritin 22 → GİS" loading="lazy" /><figcaption>Anemi · mikrositer, ferritin 22 → GİS</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/obezite.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/obezite-t.jpg" alt="Obezite · VKİ 31,8, TEMD basamak" loading="lazy" /><figcaption>Obezite · VKİ 31,8, TEMD basamak</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/tarama-asi.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/tarama-asi-t.jpg" alt="Tarama/Aşı · GGK gecikti, grip/PCV" loading="lazy" /><figcaption>Tarama/Aşı · GGK gecikti, grip/PCV</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/izlem.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/izlem-t.jpg" alt="İzlem · ramipril K/Kre, statin ALT" loading="lazy" /><figcaption>İzlem · ramipril K/Kre, statin ALT</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/evkayit.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/evkayit-t.jpg" alt="Ev kayıt · ev KB ort. 146/90" loading="lazy" /><figcaption>Ev kayıt · ev KB ort. 146/90</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/onanket.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/onanket-t.jpg" alt="Ön anket · portal → Subjektif" loading="lazy" /><figcaption>Ön anket · portal → Subjektif</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/ky.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/ky-t.jpg" alt="KY · HFmrEF, eksik SGLT2, K 5,4" loading="lazy" /><figcaption>KY · HFmrEF, eksik SGLT2, K 5,4</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/antikoagulan.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/antikoagulan-t.jpg" alt="Antikoagülan · apiksaban uygunluk" loading="lazy" /><figcaption>Antikoagülan · apiksaban uygunluk</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/solunum.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/solunum-t.jpg" alt="Solunum · GOLD 2 / B" loading="lazy" /><figcaption>Solunum · GOLD 2 / B</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/gi.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/gi-t.jpg" alt="GI · H. pylori kontrol testi" loading="lazy" /><figcaption>GI · H. pylori kontrol testi</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/ekg.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/ekg-t.jpg" alt="EKG · LVH şablonu, hekim onaylı" loading="lazy" /><figcaption>EKG · LVH şablonu, hekim onaylı</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/checkup.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/checkup-t.jpg" alt="Check-up · paket defteri, onaylı lab" loading="lazy" /><figcaption>Check-up · paket defteri, onaylı lab</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/checkup-rapor.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/checkup-rapor-t.jpg" alt="Check-up · birleşik rapor, hekim onaylı" loading="lazy" /><figcaption>Check-up · birleşik rapor, hekim onaylı</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/ilaclar.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/ilaclar-t.jpg" alt="İlaçlar · aktif liste" loading="lazy" /><figcaption>İlaçlar · aktif liste</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/sgk.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/sgk-t.jpg" alt="SGK rapor · statin, kilitli" loading="lazy" /><figcaption>SGK rapor · statin, kilitli</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/sevk.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/sevk-t.jpg" alt="Sevk · nefroloji + göz" loading="lazy" /><figcaption>Sevk · nefroloji + göz</figcaption></a></figure>
+      <figure><a href="/dahiliye-smoke/kohort.jpg" target="_blank" rel="noopener"><img src="/dahiliye-smoke/kohort-t.jpg" alt="Kohort paneli · 3 bayrak" loading="lazy" /><figcaption>Kohort paneli · 3 bayrak</figcaption></a></figure>
+    </div>
+
+    <h2 class="sec">Smoke checks</h2>
+    <ul class="checks">
+      <li><span class="okk">✓</span> QA doktor branşı dahiliye (Dahiliye sekmesi görünür)</li>
+      <li><span class="okk">✓</span> Onaysız lab satırı kartlara girmez</li>
+      <li><span class="okk">✓</span> Şerit HbA1c Δ onaylı iki panelden</li>
+      <li><span class="okk">✓</span> Şerit eGFR/LDL dolu</li>
+      <li><span class="okk">✓</span> İlaç izlem ≥1 görev (ramipril K/Cr, statin ALT, metformin B12)</li>
+      <li><span class="okk">✓</span> Tarama sonucu nota otomatik yazılmadı (C6)</li>
+      <li><span class="okk">✓</span> Nota ekle sonrası FRAIL notta</li>
+      <li><span class="okk">✓</span> SGK taslağı DB'de ad / T.C. saklamaz</li>
+      <li><span class="okk">✓</span> SGK statin taslağı KVR kilidini okur</li>
+      <li><span class="okk">✓</span> Paket kalemleri onaylı lab ile tamamlanıyor</li>
+      <li><span class="okk">✓</span> Birleşik rapor TASLAK damgası</li>
+      <li><span class="okk">✓</span> Birleşik rapor hekim onaylı</li>
+      <li><span class="okk">✓</span> Ön anket doktor tarafında görünür</li>
+      <li><span class="okk">✓</span> Sentetik hasta kohortta bayraklı</li>
+      <li><span class="okk">✓</span> Hatırlatma mesajında klinik değer yok</li>
+    </ul>
+    <details>
+      <summary>All 83 API calls (status vs expected)</summary>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Step</th><th>Status</th><th>Expected</th></tr></thead>
+          <tbody>
+          <tr><td class="c na">1</td><td>users/me specialty</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">2</td><td>GET dahiliye (önce — lab yok)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">3</td><td>KB kaydet</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">4</td><td>KB ölçüm tekniği eksik → 409 (kapı)</td><td class="c y">409</td><td class="c na">409</td></tr>
+          <tr><td class="c na">5</td><td>KB ölçüm tekniği tam</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">6</td><td>GET dahiliye (paneller onaysız)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">7</td><td>Lab onayla (önceki panel, muayene yok → yeni muayene)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">8</td><td>Lab onayla (güncel panel)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">9</td><td>GET dahiliye (lab onaylı)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">10</td><td>DM değerlendir</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">11</td><td>DM döngü</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">12</td><td>Lipid değerlendir</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">13</td><td>Tiroid değerlendir</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">14</td><td>Tiroid nodül (US tarifi)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">15</td><td>KVR girdileri</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">16</td><td>KBH (RAS blokeri + nefro sevk paketi)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">17</td><td>Ev kayıt KB #1</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">18</td><td>Ev kayıt KB #2</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">19</td><td>Ev kayıt KB #3</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">20</td><td>Ev kayıt KB #4</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">21</td><td>Ev kayıt glukoz #1</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">22</td><td>Ev kayıt glukoz #2</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">23</td><td>Ev kayıt tip geçersiz → 400</td><td class="c y">400</td><td class="c na">400</td></tr>
+          <tr><td class="c na">24</td><td>İlaç izlem görevleri</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">25</td><td>Anemi girdisi</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">26</td><td>Obezite</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">27</td><td>KETEM tarama</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">28</td><td>Aşı profili</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">29</td><td>Aşı kaydı (grip, geçen sezon)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">30</td><td>HT başlangıç paneli istemi</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">31</td><td>KY / GDMT</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">32</td><td>Antikoagülan (AF, DOAK)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">33</td><td>KOAH spirometri</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">34</td><td>Office GI (GÖRH + H. pylori)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">35</td><td>EKG acil bulgu, onaysız → 409 (kırmızı kapı)</td><td class="c y">409</td><td class="c na">409</td></tr>
+          <tr><td class="c na">36</td><td>EKG şablon (LVH)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">37</td><td>EKG hekim onayı</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">38</td><td>Kırmızı bayrak kontrolü</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">39</td><td>FRAIL taraması</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">40</td><td>Düşme taraması</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">41</td><td>PHQ-2</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">42</td><td>FRAIL → Nota ekle (hekim)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">43</td><td>Hekim kilidi ht.evre</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">44</td><td>Hekim kilidi ht.hedef</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">45</td><td>Hekim kilidi dm.hedef_hba1c</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">46</td><td>Hekim kilidi dm.tip</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">47</td><td>Hekim kilidi lipid.hedef_ldl</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">48</td><td>Hekim kilidi kvr.kategori</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">49</td><td>Hekim kilidi kvr.hedef_ldl</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">50</td><td>Hekim kilidi ckd.evre</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">51</td><td>Hekim kilidi tiroid.tani</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">52</td><td>Hekim kilidi anemi.plan</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">53</td><td>Hekim kilidi obezite.plan</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">54</td><td>Hekim kilidi hf.nyha</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">55</td><td>Hekim kilidi antikoagulan.ajan</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">56</td><td>Hekim kilidi antikoagulan.endikasyon</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">57</td><td>Hekim kilidi gi.plan</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">58</td><td>Hekim kilidi pulm.tani</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">59</td><td>Hekim kilidi asi.plan</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">60</td><td>Hekim kilidi tarama.plan</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">61</td><td>Hekim kilidi ekg.rapor</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">62</td><td>Hekim kilidi nodul.tarif</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">63</td><td>Hekim kilidi sgk.rapor</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">64</td><td>Hekim kilidi nudge.kirilganlik</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">65</td><td>Kilitlenemez alan (dm.insulin_doz) → 400</td><td class="c y">400</td><td class="c na">400</td></tr>
+          <tr><td class="c na">66</td><td>SGK rapor taslağı (statin)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">67</td><td>SGK rapor hekim kilidi</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">68</td><td>Check-up V1 kaydı</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">69</td><td>Check-up paketi başlat (ileri65, kendi ödemeli)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">70</td><td>GET dahiliye (paket)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">71</td><td>Birleşik rapor (taslak)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">72</td><td>Check-up kart kilidi (rapor)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">73</td><td>Birleşik rapor hekim onayı</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">74</td><td>Birleşik rapor (hekim onaylı)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">75</td><td>Portal anket PIN olmadan → 401</td><td class="c y">401</td><td class="c na">401</td></tr>
+          <tr><td class="c na">76</td><td>Portal PIN unlock</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">77</td><td>Portal ön anket gönder</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">78</td><td>GET dahiliye (ön anket)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">79</td><td>Ön anket → Subjektif'e ekle (hekim)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">80</td><td>Kohort paneli</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">81</td><td>Kohort 1-tap hatırlatma</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">82</td><td>Kohort 7 gün içinde ikinci hatırlatma atlanır</td><td class="c y">200</td><td class="c na">200</td></tr>
+          <tr><td class="c na">83</td><td>GET dahiliye (sonra)</td><td class="c y">200</td><td class="c na">200</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <h2 class="sec">Found and fixed during the smoke run</h2>
+    <ol class="steps">
+      <li><code>/api/doktor/belgeler/analiz/onayla</code>: when a patient had no muayene yet, the route tried to write a <code>specialty</code> column that <code>notes</code> doesn't have, so approving that first lab returned a 500. The column is removed from the insert, and the smoke run now covers this path.</li>
+      <li>Antikoagülan engine: with no approved creatinine, apiksaban showed "azaltılmış doz kriteri yok". It now says "değerlendirilemez — eksik: onaylı kreatinin" (unit test added).</li>
+    </ol>
 
     <h2 class="sec">Out of scope (sevk only, never faked)</h2>
     <p class="where">ICU/sepsis bundles · chemotherapy · dialysis prescription · coronary cath protocol · CGM device stack · bariatric OR pathway (obezite card sends a referral) · FRAX (licensed) · live Medula submission (SGK drafts + e-Nabız envelope only). Next sprint: DAH-WOW-NEXT ledger.</p>
 
     <div class="foot">
-      <span>Source: docs/DAH-WOW-PROGRESS.md · NOTYA-DAH-WOW v2 · 2026-09-16</span>
-      <span>No patient data · internal product audit</span>
+      <span>Source: docs/DAH-WOW-PROGRESS.md · scripts/dahiliye-smoke.mts · NOTYA-DAH-WOW v2 · 2026-09-17</span>
+      <span>No patient data — synthetic QA patient only · internal product audit</span>
     </div>
   </div>
 </body>

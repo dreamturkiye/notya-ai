@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       const { data: doktor } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
       const { data: seans, error: e1 } = await supabase.from('sessions').insert({ doctor_id: user.id, patient_id: a.patient_id, status: 'completed', session_type: 'kontrol', specialty: doktor?.specialty || null, ended_at: new Date().toISOString(), duration_seconds: 0, transcript_cleaned: a.modality_final === 'lab' ? '[Lab değerlendirme — belge üzerinden oluşturuldu]' : '[Belge değerlendirme — belge üzerinden oluşturuldu]' }).select('id').single()
       if (e1 || !seans) return NextResponse.json({ error: 'Muayene oluşturulamadı' }, { status: 500 })
-      const { data: yeniNot, error: e2 } = await supabase.from('notes').insert({ session_id: seans.id, doctor_id: user.id, note_type: 'soap', specialty: doktor?.specialty || null, content_subjektif: a.modality_final === 'lab' ? 'Lab değerlendirme (belge).' : 'Belge değerlendirme.', content_objektif: null, content_degerlendirme: null, content_plan: null }).select('id').single()
+      const { data: yeniNot, error: e2 } = await supabase.from('notes').insert({ session_id: seans.id, doctor_id: user.id, note_type: 'soap', content_subjektif: a.modality_final === 'lab' ? 'Lab değerlendirme (belge).' : 'Belge değerlendirme.', content_objektif: null, content_degerlendirme: null, content_plan: null }).select('id').single()
       if (e2 || !yeniNot) return NextResponse.json({ error: 'Muayene notu oluşturulamadı' }, { status: 500 })
       noteId = yeniNot.id
     }
