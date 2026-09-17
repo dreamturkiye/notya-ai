@@ -2,9 +2,9 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
-import { getAccessToken, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 import { IMAGING_MODALITIES, imagingDisplayLabel, imagingModalityMeta } from '@/lib/doktor/imagingModalities';
 
 interface Goruntuleme {
@@ -21,13 +21,37 @@ interface Goruntuleme {
 
 const MODALITELER = IMAGING_MODALITIES.filter((m) => m.code !== 'diger').map((m) => m.label);
 
-const MODALITE_COLORS: { [key: string]: string } = Object.fromEntries(
-  IMAGING_MODALITIES.map((m) => [m.label, m.color])
-);
-// Also key by canonical code for rows stored as xray/ekg/...
-for (const m of IMAGING_MODALITIES) {
-  MODALITE_COLORS[m.code] = m.color;
+/** Bugünün tarihi Europe/Istanbul — type="date" değeri YYYY-MM-DD. */
+function bugunTR(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
 }
+
+function normalizeGoruntu(row: Record<string, unknown>): Goruntuleme {
+  const url = String(row.dosya_url || '');
+  const nameFromUrl = url.split('/').pop()?.split('?')[0] || 'görüntü';
+  const ext = (nameFromUrl.split('.').pop() || 'jpg').toLowerCase();
+  const tur: Goruntuleme['tur'] =
+    ext === 'dcm' || ext === 'dicom' ? 'dicom' : ext === 'pdf' ? 'pdf' : ext === 'png' ? 'png' : 'jpg';
+  return {
+    id: String(row.id || ''),
+    hastaId: String(row.patient_id || row.hastaId || ''),
+    modalite: String(row.modalite || 'diger'),
+    vucut_bolgesi: String(row.vucut_bolgesi || ''),
+    tarih: String(row.goruntuleme_tarihi || row.tarih || '').slice(0, 10),
+    dosya_adi: String(row.dosya_adi || nameFromUrl),
+    dosya_url: url,
+    rapor: String(row.rapor_metni || row.rapor || ''),
+    tur,
+  };
+}
+
+const bosUpload = () => ({
+  modalite: 'Röntgen',
+  vucut_bolgesi: '',
+  tarih: bugunTR(),
+  rapor: '',
+  file: null as File | null,
+});
 
 const Page = () => {
   const [patients, setPatients] = useState<HastaOption[]>([]);
@@ -36,15 +60,10 @@ const Page = () => {
   const [filterHastaId, setFilterHastaId] = useState('');
   const [selectedGoruntuleme, setSelectedGoruntuleme] = useState<Goruntuleme | null>(null);
   const [showUpload, setShowUpload] = useState(false);
-  const [uploadData, setUploadData] = useState({
-    modalite: 'Röntgen',
-    vucut_bolgesi: '',
-    tarih: '',
-    rapor: '',
-    file: null as File | null,
-  });
+  const [uploadData, setUploadData] = useState(bosUpload);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadHata, setUploadHata] = useState('');
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [viewerRef, setViewerRef] = useState<HTMLDivElement | null>(null);
@@ -60,100 +79,128 @@ const Page = () => {
     }
   };
 
-  const fetchGoruntulemeler = async (hastaId?: string) => {
+  const fetchGoruntulemeler = useCallback(async (hastaId?: string) => {
     const token = await getAccessTokenAsync();
     const url = hastaId
-      ? `/api/doktor/goruntuleme?hastaId=${hastaId}`
+      ? `/api/doktor/goruntuleme?hastaId=${encodeURIComponent(hastaId)}`
       : '/api/doktor/goruntuleme';
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
     });
     if (res.ok) {
       const data = await res.json();
-      setGoruntulemeler(Array.isArray(data) ? data : []);
+      const list = (Array.isArray(data) ? data : []).map((r: Record<string, unknown>) => normalizeGoruntu(r));
+      setGoruntulemeler(list);
+      return list;
     }
-  };
+    return [] as Goruntuleme[];
+  }, []);
 
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search)
-    const hid = q.get('hastaId') || ''
-    const modaliteQ = q.get('modalite') || ''
-    const upload = q.get('upload') === '1'
-    fetchPatients();
+    const q = new URLSearchParams(window.location.search);
+    const hid = q.get('hastaId') || '';
+    const modaliteQ = q.get('modalite') || '';
+    const upload = q.get('upload') === '1';
+    void fetchPatients();
     if (hid) {
       setSelectedHastaId(hid);
       setFilterHastaId(hid);
     } else {
-      fetchGoruntulemeler();
+      void fetchGoruntulemeler();
     }
     if (modaliteQ) {
-      const meta = imagingModalityMeta(modaliteQ)
-      setUploadData((prev) => ({ ...prev, modalite: meta.label }))
+      const meta = imagingModalityMeta(modaliteQ);
+      setUploadData((prev) => ({ ...prev, modalite: meta.label, tarih: prev.tarih || bugunTR() }));
     }
-    if (upload) setShowUpload(true)
-  }, []);
+    if (upload) setShowUpload(true);
+  }, [fetchGoruntulemeler]);
 
   useEffect(() => {
-    if (filterHastaId) {
-      fetchGoruntulemeler(filterHastaId);
-    } else {
-      fetchGoruntulemeler();
-    }
-  }, [filterHastaId]);
+    void fetchGoruntulemeler(filterHastaId || undefined);
+  }, [filterHastaId, fetchGoruntulemeler]);
 
   const handleFileSelect = (file: File) => {
-    let tur: Goruntuleme['tur'] = 'jpg';
-    const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    if (ext === 'dcm') tur = 'dicom';
-    else if (ext === 'pdf') tur = 'pdf';
-    else if (ext === 'png') tur = 'png';
-    setUploadData({ ...uploadData, file });
+    setUploadHata('');
+    setUploadData((prev) => ({ ...prev, file, tarih: prev.tarih || bugunTR() }));
   };
 
   const handleUpload = async () => {
-    if (!uploadData.file || !selectedHastaId) return;
+    setUploadHata('');
+    if (!selectedHastaId) {
+      setUploadHata('Önce hasta seçin.');
+      return;
+    }
+    if (!uploadData.file) {
+      setUploadHata('Dosya seçin (.jpg, .png, .pdf, .dcm).');
+      return;
+    }
+    if (!uploadData.tarih) {
+      setUploadHata('Tarih gerekli — varsayılan bugün; geçmiş için takvimden seçin.');
+      return;
+    }
+
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(8);
 
     const formData = new FormData();
     formData.append('hastaId', selectedHastaId);
     formData.append('modalite', uploadData.modalite);
-    formData.append('vucut_bolgesi', uploadData.vucut_bolgesi);
+    formData.append('vucut_bolgesi', uploadData.vucut_bolgesi || uploadData.file.name.replace(/\.[^.]+$/, ''));
     formData.append('tarih', uploadData.tarih);
     formData.append('rapor', uploadData.rapor);
     formData.append('file', uploadData.file);
 
     const token = await getAccessTokenAsync();
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 90_000);
 
     try {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/doktor/goruntuleme/yukle');
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      // Fake progress while waiting — XHR hung without onerror; fetch + timeout surfaces the stall.
+      const tick = window.setInterval(() => {
+        setUploadProgress((p) => (p >= 90 ? p : p + 4));
+      }, 400);
 
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          setUploadProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
+      const res = await fetch('/api/doktor/goruntuleme/yukle', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+        signal: ctrl.signal,
+      });
+      window.clearInterval(tick);
+      setUploadProgress(100);
 
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          setShowUpload(false);
-          setUploadData({ modalite: 'Röntgen', vucut_bolgesi: '', tarih: '', rapor: '', file: null });
-          setUploadProgress(0);
-          fetchGoruntulemeler(filterHastaId || undefined);
-        }
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setUploadHata(j.error || `Yükleme başarısız (${res.status}).`);
         setIsUploading(false);
-      };
+        setUploadProgress(0);
+        return;
+      }
 
-      xhr.send(formData);
-    } catch {
+      const list = await fetchGoruntulemeler(filterHastaId || selectedHastaId || undefined);
+      const yeniId = j.goruntuleme?.id as string | undefined;
+      const yeni = (yeniId && list.find((g) => g.id === yeniId)) || list[0] || null;
+      if (yeni) {
+        setSelectedGoruntuleme(yeni);
+        setFilterHastaId(selectedHastaId);
+      }
+      setShowUpload(false);
+      setUploadData(bosUpload());
+      setUploadProgress(0);
       setIsUploading(false);
+    } catch (e) {
+      const aborted = e instanceof DOMException && e.name === 'AbortError';
+      setUploadHata(aborted ? 'Yükleme zaman aşımına uğradı (90 sn). Dosya boyutunu kontrol edip tekrar deneyin.' : e instanceof Error ? e.message : 'Yükleme başarısız.');
+      setIsUploading(false);
+      setUploadProgress(0);
+    } finally {
+      window.clearTimeout(timer);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Bu görüntüyü arşivden silmek istediğinize emin misiniz?')) return
+    if (!window.confirm('Bu görüntüyü arşivden silmek istediğinize emin misiniz?')) return;
     const token = await getAccessTokenAsync();
     const res = await fetch(`/api/doktor/goruntuleme/${id}`, {
       method: 'DELETE',
@@ -164,7 +211,7 @@ const Page = () => {
       alert(j.error || 'Görüntü silinemedi.');
       return;
     }
-    fetchGoruntulemeler(filterHastaId || undefined);
+    void fetchGoruntulemeler(filterHastaId || undefined);
     if (selectedGoruntuleme?.id === id) setSelectedGoruntuleme(null);
   };
 
@@ -193,12 +240,12 @@ const Page = () => {
     : goruntulemeler;
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const bugun = bugunTR();
 
   return (
     <div style={{ background: '#060C18', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#fff' }}>
       <DoktorNav />
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 'calc(100vh - 64px)' }}>
-        {/* LEFT SIDEBAR */}
         <div style={{
           width: isMobile ? '100%' : '360px',
           background: 'rgba(255,255,255,0.04)',
@@ -206,34 +253,41 @@ const Page = () => {
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'auto',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ fontSize: '16px', fontWeight: 600 }}>Goruntuleme arsivi</div>
+            <div style={{ fontSize: '16px', fontWeight: 600 }}>Görüntüleme arşivi</div>
             <button
-              onClick={() => setShowUpload(!showUpload)}
+              type="button"
+              onClick={() => {
+                setShowUpload((v) => !v);
+                setUploadHata('');
+                setUploadData((prev) => ({ ...prev, tarih: prev.tarih || bugunTR() }));
+                if (!selectedHastaId && filterHastaId) setSelectedHastaId(filterHastaId);
+              }}
               style={{ background: '#14b8a6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', height: '36px' }}
             >
-              Yukle
+              Yükle
             </button>
           </div>
 
           {showUpload && (
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', marginBottom: '16px', flexShrink: 0 }}>
               <select
                 value={selectedHastaId}
                 onChange={(e) => setSelectedHastaId(e.target.value)}
                 style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '12px' }}
               >
-                <option value="">Hasta secin</option>
-                {patients.map(p => (
+                <option value="">Hasta seçin</option>
+                {patients.map((p) => (
                   <option key={p.id} value={p.id}>{p.label}</option>
                 ))}
               </select>
 
               <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '12px' }}>
-                {MODALITELER.map(m => (
-                  <div
+                {MODALITELER.map((m) => (
+                  <button
+                    type="button"
                     key={m}
                     onClick={() => setUploadData({ ...uploadData, modalite: m })}
                     style={{
@@ -242,35 +296,50 @@ const Page = () => {
                       borderRadius: '9999px',
                       fontSize: '12px',
                       whiteSpace: 'nowrap',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      border: 'none',
+                      color: '#fff',
                     }}
                   >
                     {m}
-                  </div>
+                  </button>
                 ))}
               </div>
 
               <input
-                placeholder="Vucut bolgesi"
+                placeholder="Başlık / vücut bölgesi (örn. Akciğer PA)"
                 value={uploadData.vucut_bolgesi}
                 onChange={(e) => setUploadData({ ...uploadData, vucut_bolgesi: e.target.value })}
                 style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '8px' }}
               />
+              <label style={{ display: 'block', fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>
+                Görüntüleme tarihi <span style={{ color: '#64748B' }}>(varsayılan bugün · geçmiş için takvim)</span>
+              </label>
               <input
                 type="date"
-                value={uploadData.tarih}
-                onChange={(e) => setUploadData({ ...uploadData, tarih: e.target.value })}
-                style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '8px' }}
+                value={uploadData.tarih || bugun}
+                max={bugun}
+                onChange={(e) => setUploadData({ ...uploadData, tarih: e.target.value || bugunTR() })}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  background: '#111827',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  marginBottom: '8px',
+                  colorScheme: 'dark',
+                }}
               />
 
               <div
                 onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files[0]) handleFileSelect(e.dataTransfer.files[0]); }}
                 onDragOver={(e) => e.preventDefault()}
                 onClick={() => document.getElementById('file-input')?.click()}
-                style={{ height: '120px', border: '2px dashed rgba(255,255,255,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', cursor: 'pointer' }}
+                style={{ height: '120px', border: '2px dashed rgba(255,255,255,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', cursor: 'pointer', padding: 8, textAlign: 'center', fontSize: 13 }}
               >
-                {uploadData.file ? uploadData.file.name : 'Dosya surukleyin veya tiklayin (.dcm .jpg .png .pdf)'}
-                <input id="file-input" type="file" accept=".dcm,.jpg,.png,.pdf" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
+                {uploadData.file ? uploadData.file.name : 'Dosya sürükleyin veya tıklayın (.dcm .jpg .png .pdf)'}
+                <input id="file-input" type="file" accept=".dcm,.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
               </div>
 
               <textarea
@@ -281,33 +350,54 @@ const Page = () => {
                 style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '12px' }}
               />
 
-              {uploadProgress > 0 && (
+              {(uploadProgress > 0 || isUploading) && (
                 <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginBottom: '12px' }}>
                   <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#14b8a6', transition: 'width 0.2s' }} />
                 </div>
               )}
 
+              {uploadHata && (
+                <div style={{ fontSize: 12, color: '#F87171', marginBottom: 10, lineHeight: 1.4 }}>{uploadHata}</div>
+              )}
+
               <button
-                onClick={handleUpload}
-                disabled={isUploading || !uploadData.file}
-                style={{ width: '100%', background: '#14b8a6', color: '#fff', padding: '10px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                type="button"
+                onClick={() => void handleUpload()}
+                disabled={isUploading}
+                style={{
+                  width: '100%',
+                  background: '#14b8a6',
+                  color: '#fff',
+                  padding: '10px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isUploading ? 'wait' : 'pointer',
+                  opacity: isUploading ? 0.7 : 1,
+                  fontWeight: 700,
+                }}
               >
-                Yukle
+                {isUploading ? `Yükleniyor… ${uploadProgress}%` : 'Yükle'}
               </button>
             </div>
           )}
 
-          <div style={{ fontSize: '13px', marginBottom: '8px', color: '#9ca3af' }}>Arsiv</div>
+          <div style={{ fontSize: '13px', marginBottom: '8px', color: '#9ca3af' }}>Arşiv</div>
           <select
             value={filterHastaId}
-            onChange={(e) => setFilterHastaId(e.target.value)}
+            onChange={(e) => {
+              setFilterHastaId(e.target.value);
+              if (e.target.value) setSelectedHastaId(e.target.value);
+            }}
             style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '12px' }}
           >
-            <option value="">Tum hastalar</option>
-            {patients.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+            <option value="">Tüm hastalar</option>
+            {patients.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
 
-          <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 120 }}>
+            {!filteredList.length && (
+              <div style={{ fontSize: 12, color: '#64748B', padding: '8px 0' }}>Bu hasta için henüz görüntü yok.</div>
+            )}
             {filteredList.map((g) => (
               <div
                 key={g.id}
@@ -320,60 +410,60 @@ const Page = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  marginBottom: '4px'
+                  marginBottom: '4px',
                 }}
               >
                 <div style={{ background: imagingModalityMeta(g.modalite).color || '#6b7280', color: '#fff', fontSize: '10px', padding: '2px 8px', borderRadius: '9999px' }}>{imagingDisplayLabel(g.modalite)}</div>
-                <div style={{ flex: 1 }}>
-                  <div>{g.vucut_bolgesi}</div>
-                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{g.tarih}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.vucut_bolgesi || g.dosya_adi}</div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{g.tarih || '—'}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <span>↗</span>
-                  <span onClick={(e) => { e.stopPropagation(); handleDelete(g.id); }}>🗑</span>
+                  <span role="button" onClick={(e) => { e.stopPropagation(); void handleDelete(g.id); }}>🗑</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* MAIN VIEWER */}
         <div ref={setViewerRef} style={{ flex: 1, background: '#020812', display: 'flex', flexDirection: 'column' }}>
           {!selectedGoruntuleme ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#6b7280' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🩺</div>
-              <div>Goruntuleme secin</div>
+              <div>Görüntüleme seçin</div>
               <div style={{ fontSize: '13px', marginTop: '8px' }}>Desteklenen formatlar: DICOM, JPEG, PNG, PDF</div>
             </div>
           ) : selectedGoruntuleme.tur === 'pdf' ? (
-            <iframe src={selectedGoruntuleme.dosya_url} style={{ width: '100%', height: '100%', border: 'none' }} />
+            <iframe src={selectedGoruntuleme.dosya_url} style={{ width: '100%', height: '100%', border: 'none' }} title={selectedGoruntuleme.dosya_adi} />
           ) : selectedGoruntuleme.tur === 'dicom' ? (
             <div style={{ padding: '40px', textAlign: 'center' }}>
               <div style={{ background: 'rgba(255,255,255,0.05)', padding: '24px', borderRadius: '12px', maxWidth: '480px', margin: '0 auto' }}>
-                <div>Dogrudan DICOM goruntulemesi icin harici DICOM viewer acilacak</div>
+                <div>Doğrudan DICOM görüntülemesi için harici DICOM viewer açılacak</div>
                 <button
+                  type="button"
                   onClick={() => window.open(`https://viewer.cornerstonejs.org?file=${encodeURIComponent(selectedGoruntuleme.dosya_url)}`, '_blank')}
                   style={{ marginTop: '24px', background: '#14b8a6', color: '#fff', padding: '14px 32px', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer' }}
                 >
-                  Cornerstone Viewer'da Ac
+                  Cornerstone Viewer&apos;da Aç
                 </button>
                 <div style={{ marginTop: '24px' }}>
-                  <a href={selectedGoruntuleme.dosya_url} download style={{ color: '#14b8a6' }}>DICOM Dosyasini Indir</a>
+                  <a href={selectedGoruntuleme.dosya_url} download style={{ color: '#14b8a6' }}>DICOM Dosyasını İndir</a>
                 </div>
-                <div style={{ marginTop: '16px', fontSize: '12px', color: '#6b7280' }}>PACS entegrasyonu Q3 2026 hedeflenmektedir</div>
               </div>
             </div>
           ) : (
             <>
               <div style={{ height: '44px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: '16px', fontSize: '14px' }}>
                 <div style={{ flex: 1 }}>{selectedGoruntuleme.dosya_adi}</div>
-                <button onClick={() => handleZoom(0.2)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>+</button>
-                <button onClick={() => handleZoom(-0.2)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>-</button>
-                <button onClick={handleRotate} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>↻</button>
-                <button onClick={handleFullscreen} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>⛶</button>
+                <button type="button" onClick={() => handleZoom(0.2)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>+</button>
+                <button type="button" onClick={() => handleZoom(-0.2)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>-</button>
+                <button type="button" onClick={handleRotate} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>↻</button>
+                <button type="button" onClick={handleFullscreen} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}>⛶</button>
                 <a href={selectedGoruntuleme.dosya_url} download style={{ color: '#fff', textDecoration: 'none' }}>⬇</a>
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#020812' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={selectedGoruntuleme.dosya_url}
                   style={{
@@ -381,9 +471,9 @@ const Page = () => {
                     transition: 'transform 0.2s',
                     maxWidth: '92%',
                     maxHeight: '92%',
-                    objectFit: 'contain'
+                    objectFit: 'contain',
                   }}
-                  alt="Goruntu"
+                  alt="Görüntü"
                 />
               </div>
               {selectedGoruntuleme.rapor && (

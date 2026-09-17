@@ -45,12 +45,17 @@ export async function POST(request: NextRequest) {
     const filePath = `${user.id}/${hastaId}/${modalite}/${fileName}`
 
     const { error: uploadError } = await supabase.storage.from('hasta-goruntuleme').upload(filePath, file, {
-      contentType: file.type,
+      contentType: file.type || 'application/octet-stream',
       upsert: false,
     })
 
     if (uploadError) {
-      return NextResponse.json({ error: 'Dosya yüklenemedi' }, { status: 500 })
+      console.error('[goruntuleme/yukle] storage', uploadError)
+      return NextResponse.json({
+        error: uploadError.message?.includes('Bucket') || uploadError.message?.includes('not found')
+          ? 'Depolama kovası (hasta-goruntuleme) yok veya erişilemiyor. Belgeler › Belge Kasası ile yükleyebilirsiniz.'
+          : `Dosya yüklenemedi: ${uploadError.message || 'bilinmeyen hata'}`,
+      }, { status: 500 })
     }
 
     const { data: urlData } = supabase.storage.from('hasta-goruntuleme').getPublicUrl(filePath)
@@ -61,20 +66,22 @@ export async function POST(request: NextRequest) {
         doctor_id: user.id,
         patient_id: hastaId,
         modalite,
-        vucut_bolgesi,
+        vucut_bolgesi: vucut_bolgesi || null,
         dosya_url: urlData.publicUrl,
-        rapor_metni,
+        rapor_metni: rapor_metni || null,
         goruntuleme_tarihi: tarih || null,
       })
       .select()
       .single()
 
     if (insertError) {
-      return NextResponse.json({ error: 'Kayıt oluşturulamadı' }, { status: 500 })
+      console.error('[goruntuleme/yukle] insert', insertError)
+      return NextResponse.json({ error: `Kayıt oluşturulamadı: ${insertError.message || 'bilinmeyen hata'}` }, { status: 500 })
     }
 
     return NextResponse.json({ goruntuleme })
-  } catch {
-    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+  } catch (e) {
+    console.error('[goruntuleme/yukle]', e)
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Sunucu hatası' }, { status: 500 })
   }
 }
