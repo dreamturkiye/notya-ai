@@ -454,3 +454,63 @@ Scope: everything shipped in the dahiliye wow sprint, the e-reçete / renkli re�
 | 2026-09-17 | **MOBILE-STICKY-GLOBAL — no `position: sticky` in the app actually sticks** (desktop too): the vizit şeridi, DoktorNav, KD/derm strips, note header, klinik/mali/avukat navs. Cause: `app/globals.css` `html, body { overflow-x: hidden }` makes `body` a scroll container while the window scrolls. Verified: with `overflow-x: clip` sticky works (`smoke-out/mobile-review/sticky-serit-360x640-clip-deneme.png`), but then (a) the nav becomes sticky on every page, taking 65px of a 640px phone screen, and (b) the dahiliye şerit (136px tall at 360) and the KD/derm strips park at `top: 0` **under** the nav (z 100). Today the şerit simply scrolls away and covers nothing. **Not changed:** app-wide chrome behaviour beyond this review. If wanted: `overflow-x: clip` on html/body (keep `hidden` as the fallback line), strips `top: <nav height>`, and a one-line collapsed şerit under 480px. | OPEN (Kaan decision) |
 | 2026-09-17 | **HEDEF-KARTI-KB-UNDEFINED** (found in the review, not layout): Hedef kartı shows "Tansiyon **undefined mmHg altı**" and the KB lock input shows "undefi". `specialties/dahiliye/engines/hedefKart.ts` reads `kbHedef.sbpUst/dbpUst`, but the HT target is stored as `{sbp, dbp}` (check-up report prints `HT: hedef: {"dbp":80,"sbp":130}`), so the status is also computed against `undefined` (always hedef dışı). Clinical logic, left for a separate ticket. | OPEN |
 | 2026-09-17 | Minor, not changed: placeholders cut in narrow fixed-width dahiliye inputs ("hedef INR aralığı", "T total kalça", "uyanınca ilk sigara (dk)"); the value is still typed and shown normally. Headless caveat: native `<select>` / date pickers and the iOS 16px-focus zoom can't be judged in headless Chromium, so they need a real iPhone/Galaxy pass. | NOTED |
+
+## RANDEVU-IPTAL-REAKTIVASYON — canlı hata, Dr. Gökhan (2026-09-17)
+
+**Nasıl geldi.** Dr. Gökhan uygulamayı kullanırken bildirdi: bir randevuyu iptal etti, takvimde
+üstü çizili göründü, sonra üstüne tıklayıp saatini değiştirdi ve Güncelle'ye bastı — randevu HÂLÂ
+iptal görünüyordu. Sorusu: *"Bu randevu nasıl yeniden aktif oluyor?"* Ayrıca aynı modaldeki
+doğrudan iptal düğmesinin "hiç tepki vermediğini" söyledi.
+
+**Kök sebep 1 — iptal tek yönlü bir kapıydı (asıl hata).** Takvimin üstü çizili göstermesi BAYAT
+ARAYÜZ DEĞİLDİ; veri gerçekten `durum='iptal'` kalıyordu. Saat düzenlemesinin `durum`'a dokunmaması
+doğru davranış (kaydetmek bir randevuyu sessizce aktifleştirmemeli) — asıl eksik, geri dönüş
+yolunun HİÇ OLMAMASIYDI. `app/dashboard/doktor/randevular/page.tsx` içinde durum değiştiren her
+düğme iki kapının arkasındaydı: gün kartında `rv.durum !== 'iptal'`, modalda
+`duzenlenenRandevu.durum !== 'iptal'`. Yani randevu iptal olur olmaz Onayla/Tamamlandı/Gelmedi/
+Yeniden Planla/Sil dahil TÜM aksiyonlar gizleniyordu; modal "Mevcut durum: İptal" rozetinden
+ibaret kalıyordu. Kodda iptal edilmiş bir randevuya başka bir durum gönderebilen tek bir tıklama
+yolu yoktu — iptal kalıcıydı. Dr. Gökhan'ın sorusunun cevabı gerçekten "olmuyor"du.
+
+**Kök sebep 2 — modaldeki İptal Et düğmesi bayat bayrak yüzünden kayboluyordu.** `duzenlemeyeAc()`
+`modalIptalAcik`/`modalIptalNedeni`'yi sıfırlamıyordu ve modalı ARKA PLANA dokunarak kapatmak
+(`formuSifirla()` çağırmadan sadece `setFormAcik(false)`) bayrağı açık bırakıyordu. Sonraki açılışta
+aksiyon satırının tamamı (İptal Et dahil) gizli geliyor, üstelik önceki iptal nedeni metni de
+duruyordu — kullanıcı gözünden "düğme tepki vermiyor".
+
+**Kök sebep 3 — hatalar yutuluyordu.** `durumDegistir()` oturum yoksa sessizce `return` ediyor,
+PATCH 4xx/5xx dönerse yanıtı hiç kontrol etmeden `yenile()` çağırıyordu; `silIslemi()` de aynı.
+Her iki durumda doktor için sonuç: düğmeye bas, hiçbir şey olmasın, hiçbir açıklama çıkmasın.
+
+**Kök sebep 4 — reaktivasyonda çift kayıt açığı (düzeltirken bulundu).** `durum` değişimi
+çakışma kontrolünü hiç tetiklemiyordu. İptalden sonra o saat başka bir hastaya verilmiş olabilir;
+kontrolsüz bir reaktivasyon iki randevuyu aynı saate koyardı — çift kayıt engelleme bu üründe
+opsiyonel değil.
+
+**Ne yapıldı.**
+- Yeni `lib/randevu/randevuDurum.ts`: `randevuGuncellemePlani()` (bir PATCH gövdesinin hangi
+  sütunlara dokunduğunu hesaplayan saf fonksiyon) + `randevuAksiyonlari()` (duruma göre hangi
+  düğmelerin görüneceği). API rotası ile arayüz artık aynı cümleyi kuruyor; aksiyon listesinin iki
+  ayrı yerde, iptal dalı eksik biçimde tekrarlanması hatanın ta kendisiydi.
+- **"↺ Aktif Hale Getir"** aksiyonu: hem düzenleme modalında (iptal nedeni + neden Güncelle'nin
+  yetmediğini anlatan açıklama ile birlikte) hem gün görünümü kartında. `durum='planlandi'` yazar,
+  `iptal_nedeni`'ni temizler, `hatirlatma_gonderildi`'yi sıfırlar (hasta yeniden hatırlatma alsın).
+  Modal KAPANMAZ, rozet anında "Planlandı"ya döner — Dr. Gökhan'ın yapmak istediği "aktif et +
+  saatini değiştir" tek akışta bitsin diye.
+- Reaktivasyon artık çakışma kontrolünden geçiyor; slot dolmuşsa 409 + "Önce saati değiştirin,
+  sonra aktif hale getirin". Buna karşılık İPTAL durumundaki bir randevunun saatini değiştirmek
+  artık çakışma kontrolü İSTEMİYOR (iptal satırı kimsenin önünü kesmiyor, kesilmemeli de).
+- İptal edilmiş randevu gün görünümünde artık Yeniden Planla ve Sil'e de erişebiliyor (eskiden
+  tek bir düğmesi yoktu).
+- `duzenlemeyeAc()` ve arka plana dokunarak kapatma artık modal durumunu sıfırlıyor; `durumDegistir()`
+  ve `silIslemi()` başarı/başarısızlık döndürüyor ve hatayı ekranda gösteriyor (modal açık kalıyor).
+- Dokunma hedefi: `aksiyonBtn` / `modalAksiyonBtn` 28px → 36px (`minHeight` + inline-flex).
+
+**Doğrulama.** `scripts/qa-randevu-iptal-reaktivasyon.mts` GERÇEK PATCH route handler'ını sahte
+oturum + bellek içi tablo ile çalıştırıp Dr. Gökhan'ın adımlarını birebir tekrarlıyor (SENTETİK
+QA doktoru/hastası — gerçek hesaba, gerçek hastaya, production veritabanına dokunmuyor, PHI yok):
+oluştur → iptal (üstü çizili) → saati değiştir + Güncelle (hâlâ iptal, doğru) → Aktif Hale Getir
+(Planlandı, iptal nedeni temiz) → slot dolmuşken reaktivasyon (409) → boş saate taşıyıp aktif et
+(Planlandı). Regresyon testi `lib/randevu/randevuDurum.test.ts` (12 test) `npm test`'e eklendi;
+596/596 yeşil, `npx tsc --noEmit` temiz. Mobil (standing rule): modalın yeni iptal bloğu 360px ve
+390px'te gerçek CSS ile render edildi — yatay taşma yok, metin sarıyor, düğmeler 123×36.

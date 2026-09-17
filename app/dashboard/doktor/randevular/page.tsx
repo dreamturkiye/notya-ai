@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { resmiTatilMi } from '@/lib/randevu/resmiTatiller';
+import { randevuAksiyonlari, REAKTIVASYON_DURUMU } from '@/lib/randevu/randevuDurum';
 
 export const dynamic = 'force-dynamic';
 
@@ -378,6 +379,14 @@ export default function RandevularPage() {
   }
 
   function duzenlemeyeAc(rv: Randevu) {
+    // Modalın iptal-nedeni satırı AÇIK kalmış olabilir: "İptal Et"e basıp modalı arka plana
+    // (backdrop) dokunarak kapatmak formuSifirla()'yı çağırmıyordu, bayrak true kalıyordu. Bir
+    // sonraki randevu açıldığında aksiyon satırının tamamı (İptal Et dahil) gizli geliyor, üstelik
+    // önceki iptal nedeni metni de duruyordu — dışarıdan "İptal Et düğmesi tepki vermiyor" diye
+    // görünen davranışın ikinci sebebi buydu. Düzenlemeye her girişte temiz başla.
+    setModalIptalAcik(false);
+    setModalIptalNedeni('');
+    setHata('');
     setDuzenlenenId(rv.id);
     setDuzenlenenRandevu(rv);
     setSaat(saatStr(rv.baslangic));
@@ -456,22 +465,49 @@ export default function RandevularPage() {
   // NOTYA-RANDEVU-07: dosya açılışı yalnızca onaylandi/tamamlandi/gelmedi geçişinde olur (bkz.
   // API route yorumu). Server bunu yeniHasta olarak döndürünce burada görünür kılıyoruz —
   // "onayla" tıklayıp dosyanın sessizce açılması doktora/sekretere bildirilmeden geçmemeli.
-  async function durumDegistir(id: string, durum: string, neden?: string) {
+  //
+  // Hata YUTULMAZ: eskiden oturum yoksa sessizce `return` ediliyor, PATCH 4xx/5xx dönerse yanıt
+  // hiç kontrol edilmeden yenile() çağrılıyordu. Her iki durumda da doktor için sonuç aynıydı —
+  // düğmeye basıyor, hiçbir şey olmuyor, hiçbir açıklama da çıkmıyor. Dr. Gökhan'ın "iptal
+  // düğmesi tepki vermiyor" gözleminin bir ayağı buydu. Artık başarı/başarısızlık dönüyor ve
+  // başarısızlık ekranda yazıyor.
+  async function durumDegistir(id: string, durum: string, neden?: string): Promise<boolean> {
     try {
       const t = await token();
-      if (!t) return;
+      if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return false; }
       const r = await fetch(`/api/doktor/randevular/${id}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ durum, iptalNedeni: neden }),
       });
       const sonuc = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setHata(sonuc?.error || 'Randevu durumu güncellenemedi.');
+        return false;
+      }
+      setHata('');
       if (sonuc?.yeniHasta?.ad) {
         setBasariMesaji(`${sonuc.yeniHasta.ad} için hasta dosyası açıldı.`);
         setTimeout(() => setBasariMesaji(''), 6000);
       }
       await yenile();
-    } catch { /* re-fetch will reflect actual state either way */ }
+      return true;
+    } catch {
+      setHata('Randevu durumu güncellenemedi. Bağlantınızı kontrol edin.');
+      return false;
+    }
+  }
+
+  /** NOTYA-RANDEVU-14: iptalin tek çıkış kapısı — randevuyu yeniden aktif (Planlandı) yapar.
+   * Daha önce böyle bir aksiyon hiçbir yerde yoktu: iptal edilen bir randevu kalıcı olarak
+   * iptaldi, saatini değiştirip kaydetmek de durumu değiştirmiyordu (değiştirmemeli de). */
+  async function aktifEt(id: string): Promise<boolean> {
+    const oldu = await durumDegistir(id, REAKTIVASYON_DURUMU);
+    if (oldu) {
+      setBasariMesaji('Randevu yeniden aktif edildi — durumu artık "Planlandı".');
+      setTimeout(() => setBasariMesaji(''), 6000);
+    }
+    return oldu;
   }
 
   /** Modal içinden durum değiştirme — randevuyu "açıp" onaylamak/tamamlamak/iptal etmek için
@@ -480,26 +516,47 @@ export default function RandevularPage() {
    * yeniden planlama alanları vardı, durum kontrolü yoktu. */
   async function modalDurumDegistir(durum: string, neden?: string) {
     if (!duzenlenenId) return;
-    await durumDegistir(duzenlenenId, durum, neden);
+    const oldu = await durumDegistir(duzenlenenId, durum, neden);
+    if (!oldu) return; // hata modal içinde görünür; kapatıp gizlemek işi yine sessizleştirirdi
     setFormAcik(false);
     formuSifirla();
+  }
+
+  /** Modaldan reaktivasyon — diğer durum aksiyonlarının aksine modal KAPANMAZ. Dr. Gökhan'ın
+   * yapmak istediği tam olarak "aktif et + saatini değiştir"di; rozetin anında Planlandı'ya
+   * dönmesi de aksiyonun işe yaradığının görünür kanıtı oluyor. */
+  async function modalAktifEt() {
+    if (!duzenlenenId) return;
+    const oldu = await aktifEt(duzenlenenId);
+    if (!oldu) return;
+    setDuzenlenenRandevu((r) => (r ? { ...r, durum: REAKTIVASYON_DURUMU, iptalNedeni: null } : r));
   }
 
   async function modalSil() {
     if (!duzenlenenId) return;
     if (!confirm('Bu randevuyu tamamen silmek istiyor musunuz? (Gerçek bir iptal için "İptal Et" kullanın.)')) return;
-    await silIslemi(duzenlenenId);
+    if (!await silIslemi(duzenlenenId)) return; // hata modalda görünsün
     setFormAcik(false);
     formuSifirla();
   }
 
-  async function silIslemi(id: string) {
+  async function silIslemi(id: string): Promise<boolean> {
     try {
       const t = await token();
-      if (!t) return;
-      await fetch(`/api/doktor/randevular/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      if (!t) { setHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return false; }
+      const r = await fetch(`/api/doktor/randevular/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        setHata(j.error || 'Randevu silinemedi.');
+        return false;
+      }
+      setHata('');
       await yenile();
-    } catch { /* ignore */ }
+      return true;
+    } catch {
+      setHata('Randevu silinemedi. Bağlantınızı kontrol edin.');
+      return false;
+    }
   }
 
   async function sil(id: string) {
@@ -882,31 +939,45 @@ export default function RandevularPage() {
                           </span>
                         </div>
 
-                        {rv.durum !== 'iptal' && (
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-                            {rv.patientId && (
-                              <button type="button" onClick={() => router.push(`/session/new?patientId=${rv.patientId}`)} style={{ ...aksiyonBtn, background: '#0F9B8E', color: 'white', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
-                            )}
-                            {rv.patientId && (
-                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}`)} style={{ ...aksiyonBtn, color: '#0F9B8E', fontWeight: 600 }}>Hasta Dosyasını Aç</button>
-                            )}
-                            {rv.patientId && (
-                              <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}?tab=formu`)} style={{ ...aksiyonBtn, color: '#0F9B8E' }}>Hasta Formu</button>
-                            )}
-                            <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
-                            {rv.durum === 'planlandi' && (
-                              <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={{ ...aksiyonBtn, color: '#4ADE80', fontWeight: 600 }}>Onayla</button>
-                            )}
-                            {gecmis && rv.durum !== 'tamamlandi' && rv.durum !== 'gelmedi' && (
-                              <>
+                        {/* NOTYA-RANDEVU-14: aksiyonlar randevuAksiyonlari()'ndan gelir — daha önce bu
+                            satırın TAMAMI `rv.durum !== 'iptal'` ile gizleniyordu, yani iptal edilmiş
+                            bir randevunun gün görünümünde tek bir düğmesi bile yoktu: ne geri alma, ne
+                            yeniden planlama, ne silme. */}
+                        {(() => {
+                          const aks = randevuAksiyonlari(rv.durum, gecmis);
+                          return (
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                              {aks.aktifEt && (
+                                <button type="button" onClick={() => aktifEt(rv.id)} style={{ ...aksiyonBtn, background: '#0F9B8E', color: 'white', fontWeight: 700 }}>↺ Aktif Hale Getir</button>
+                              )}
+                              {!aks.aktifEt && rv.patientId && (
+                                <>
+                                  <button type="button" onClick={() => router.push(`/session/new?patientId=${rv.patientId}`)} style={{ ...aksiyonBtn, background: '#0F9B8E', color: 'white', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                                  <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}`)} style={{ ...aksiyonBtn, color: '#0F9B8E', fontWeight: 600 }}>Hasta Dosyasını Aç</button>
+                                  <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}?tab=formu`)} style={{ ...aksiyonBtn, color: '#0F9B8E' }}>Hasta Formu</button>
+                                </>
+                              )}
+                              {aks.yenidenPlanla && (
+                                <button type="button" onClick={() => duzenlemeyeAc(rv)} style={aksiyonBtn}>Yeniden Planla</button>
+                              )}
+                              {aks.onayla && (
+                                <button type="button" onClick={() => durumDegistir(rv.id, 'onaylandi')} style={{ ...aksiyonBtn, color: '#4ADE80', fontWeight: 600 }}>Onayla</button>
+                              )}
+                              {aks.tamamlandi && (
                                 <button type="button" onClick={() => durumDegistir(rv.id, 'tamamlandi')} style={aksiyonBtn}>Tamamlandı</button>
+                              )}
+                              {aks.gelmedi && (
                                 <button type="button" onClick={() => durumDegistir(rv.id, 'gelmedi')} style={{ ...aksiyonBtn, color: '#F59E0B' }}>Gelmedi</button>
-                              </>
-                            )}
-                            <button type="button" onClick={() => setIptalId(rv.id)} style={{ ...aksiyonBtn, color: '#F87171' }}>İptal Et</button>
-                            <button type="button" onClick={() => sil(rv.id)} style={{ ...aksiyonBtn, color: '#7C8AA0' }}>Sil</button>
-                          </div>
-                        )}
+                              )}
+                              {aks.iptalEt && (
+                                <button type="button" onClick={() => { setIptalId(rv.id); setIptalNedeni(''); }} style={{ ...aksiyonBtn, color: '#F87171' }}>İptal Et</button>
+                              )}
+                              {aks.sil && (
+                                <button type="button" onClick={() => sil(rv.id)} style={{ ...aksiyonBtn, color: '#7C8AA0' }}>Sil</button>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {iptalId === rv.id && (
                           <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
@@ -1011,7 +1082,9 @@ export default function RandevularPage() {
         {formAcik && (
           <div
             role="presentation"
-            onClick={() => setFormAcik(false)}
+            // Arka plana dokunarak kapatmak da "Vazgeç" ile aynı şey olmalı: eskiden yalnızca
+            // formAcik=false yapıyor, modalIptalAcik gibi bayrakları bir sonraki açılışa taşıyordu.
+            onClick={() => { setFormAcik(false); formuSifirla(); }}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200 }}
           >
             <form
@@ -1033,6 +1106,7 @@ export default function RandevularPage() {
                   {(() => {
                     const durumBilgi = DURUM_ETIKET[duzenlenenRandevu.durum] || DURUM_ETIKET.planlandi;
                     const gecmis = new Date(duzenlenenRandevu.bitis) < new Date();
+                    const aks = randevuAksiyonlari(duzenlenenRandevu.durum, gecmis);
                     return (
                       <>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -1041,6 +1115,25 @@ export default function RandevularPage() {
                             {durumBilgi.label}
                           </span>
                         </div>
+                        {/* NOTYA-RANDEVU-14: iptal edilmiş randevunun ÇIKIŞ KAPISI. Burada daha önce
+                            hiçbir şey yoktu — durum 'iptal' ise aksiyon satırının tamamı gizliydi,
+                            dolayısıyla modal "Mevcut durum: İptal" rozetinden ibaret kalıyordu ve
+                            doktorun elinde randevuyu geri açacak tek bir yol bulunmuyordu. */}
+                        {duzenlenenRandevu.durum === 'iptal' && (
+                          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '10px 12px' }}>
+                            <div style={{ fontSize: 12.5, lineHeight: 1.5, color: '#0A1628' }}>
+                              Bu randevu iptal edildi{duzenlenenRandevu.iptalNedeni ? ` — ${duzenlenenRandevu.iptalNedeni}` : ''}. Tarih/saat değiştirip
+                              Güncelle demek randevuyu yeniden aktif etmez; iptali geri almak için Aktif Hale Getir düğmesini kullanın.
+                            </div>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                              <button type="button" onClick={modalAktifEt} style={{ ...modalAksiyonBtn, background: '#0F9B8E', color: 'white', borderColor: '#0F9B8E', fontWeight: 700 }}>↺ Aktif Hale Getir</button>
+                              <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: '#64748B' }}>Sil</button>
+                            </div>
+                          </div>
+                        )}
+                        {basariMesaji && (
+                          <div style={{ fontSize: 12.5, color: '#0F9B8E', fontWeight: 600, marginTop: 8 }}>{basariMesaji}</div>
+                        )}
                         {duzenlenenRandevu.durum !== 'iptal' && !modalIptalAcik && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {duzenlenenRandevu.patientId && (
@@ -1052,16 +1145,18 @@ export default function RandevularPage() {
                             {duzenlenenRandevu.patientId && (
                               <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}?tab=formu`)} style={{ ...modalAksiyonBtn, color: '#0F9B8E', borderColor: '#0F9B8E' }}>Hasta Formu</button>
                             )}
-                            {duzenlenenRandevu.durum === 'planlandi' && (
+                            {aks.onayla && (
                               <button type="button" onClick={() => modalDurumDegistir('onaylandi')} style={modalAksiyonBtn}>Onayla</button>
                             )}
-                            {gecmis && duzenlenenRandevu.durum !== 'tamamlandi' && duzenlenenRandevu.durum !== 'gelmedi' && (
-                              <>
-                                <button type="button" onClick={() => modalDurumDegistir('tamamlandi')} style={modalAksiyonBtn}>Tamamlandı</button>
-                                <button type="button" onClick={() => modalDurumDegistir('gelmedi')} style={{ ...modalAksiyonBtn, color: '#F59E0B', borderColor: '#F59E0B' }}>Gelmedi</button>
-                              </>
+                            {aks.tamamlandi && (
+                              <button type="button" onClick={() => modalDurumDegistir('tamamlandi')} style={modalAksiyonBtn}>Tamamlandı</button>
                             )}
-                            <button type="button" onClick={() => setModalIptalAcik(true)} style={{ ...modalAksiyonBtn, color: '#EF4444', borderColor: '#EF4444' }}>İptal Et</button>
+                            {aks.gelmedi && (
+                              <button type="button" onClick={() => modalDurumDegistir('gelmedi')} style={{ ...modalAksiyonBtn, color: '#F59E0B', borderColor: '#F59E0B' }}>Gelmedi</button>
+                            )}
+                            {aks.iptalEt && (
+                              <button type="button" onClick={() => { setModalIptalNedeni(''); setModalIptalAcik(true); }} style={{ ...modalAksiyonBtn, color: '#EF4444', borderColor: '#EF4444' }}>İptal Et</button>
+                            )}
                             <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: '#64748B' }}>Sil</button>
                           </div>
                         )}
@@ -1235,12 +1330,17 @@ const panelNavBtn: React.CSSProperties = {
   fontSize: 15,
 };
 
+// Dokunma hedefi: 12px yazı + 6px dolgu 28px'lik bir düğme yapıyordu — telefonda isabet
+// ettirmesi zor. minHeight 36 + inline-flex ortalama, satır sarmasını bozmadan büyütür.
 const aksiyonBtn: React.CSSProperties = {
   background: 'rgba(255,255,255,0.08)',
   border: 'none',
   color: '#C9D4E3',
   borderRadius: 8,
   padding: '6px 12px',
+  minHeight: 36,
+  display: 'inline-flex',
+  alignItems: 'center',
   fontSize: 12,
   cursor: 'pointer',
 };
@@ -1251,6 +1351,9 @@ const modalAksiyonBtn: React.CSSProperties = {
   color: '#0A1628',
   borderRadius: 8,
   padding: '6px 12px',
+  minHeight: 36,
+  display: 'inline-flex',
+  alignItems: 'center',
   fontSize: 12,
   cursor: 'pointer',
 };
