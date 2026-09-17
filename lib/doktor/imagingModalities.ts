@@ -16,6 +16,9 @@ export type ImagingModalityCode =
   | 'dermatoskopi'
   | 'derm'
   | 'yara'
+  | 'oct'
+  | 'fundus'
+  | 'on_segment'
 
 export type ImagingPortalKind = 'goruntuleme' | 'ekg' | 'diger'
 
@@ -42,6 +45,10 @@ export const IMAGING_MODALITIES: ImagingModality[] = [
   { code: 'dermatoskopi', label: 'Dermatoskopi', patientLabel: 'Dermatoskopi', portalKind: 'goruntuleme', color: '#0f766e' },
   { code: 'derm', label: 'Deri fotoğrafı', patientLabel: 'Deri fotoğrafı', portalKind: 'goruntuleme', color: '#14b8a6' },
   { code: 'yara', label: 'Yara / yanık', patientLabel: 'Yara fotoğrafı', portalKind: 'goruntuleme', color: '#f97316' },
+  // GOZ-CHAPTER: oftalmik görüntüleme (hasta_goruntulemeler; okuma dual-sign goz_goruntu_okumalari)
+  { code: 'oct', label: 'OCT', patientLabel: 'OCT', portalKind: 'goruntuleme', color: '#6366f1' },
+  { code: 'fundus', label: 'Fundus fotoğrafı', patientLabel: 'Göz dibi fotoğrafı', portalKind: 'goruntuleme', color: '#dc2626' },
+  { code: 'on_segment', label: 'Ön segment fotoğrafı', patientLabel: 'Ön segment fotoğrafı', portalKind: 'goruntuleme', color: '#0891b2' },
   { code: 'diger', label: 'Diğer', patientLabel: 'Diğer görüntüleme', portalKind: 'diger', color: '#6b7280' },
 ]
 
@@ -69,6 +76,9 @@ export function normalizeImagingModality(raw: string | null | undefined): Imagin
   if (/dermatoskopi|dermoskopi/.test(t)) return 'dermatoskopi'
   if (/^derm$|deri foto|deri lezyon|klinik foto/.test(t)) return 'derm'
   if (/^yara|yanik|yanık/.test(t)) return 'yara'
+  if (/^oct\b|^okt\b|optik koherens/.test(t)) return 'oct'
+  if (/fundus|goz dibi/.test(t)) return 'fundus'
+  if (/on segment|on_segment|biyomikroskop|slit/.test(t)) return 'on_segment'
   if (BY_CODE.has(t as ImagingModalityCode)) return t as ImagingModalityCode
   return 'diger'
 }

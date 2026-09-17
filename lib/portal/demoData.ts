@@ -378,3 +378,135 @@ export function demoResultById(id: string) {
 export function demoMessageById(id: string) {
   return SAGLIGIM_DEMO.messages.find((m) => m.id === id) || null
 }
+
+/**
+ * GOZ-PORTAL — synthetic, non-PHI fixture for /portal/demo-goz (Göz Hastalıkları chapter, "Gözlerim").
+ * Core spine (mesajlar / ziyaretler / sonuçlar / ilaçlar / öykü) is göz-shaped; no büyüme / gebelik / jine.
+ */
+const GOZ_HEKIM = 'Op. Dr. Deniz Aksoy'
+export const SAGLIGIM_DEMO_GOZ: PortalBundle = {
+  ...SAGLIGIM_DEMO,
+  portal: { moduller: ['gozlerim'], nav: [{ key: 'gozlerim', label: 'Gözlerim', path: '/gozlerim' }] },
+  buyume: null,
+  gebelik: null,
+  jinekoloji: null,
+  hedefBoy: null,
+  summary: {
+    aktifIlac: 2,
+    bekleyenMesaj: 1,
+    sonLabOzet: 'OCT görüntünüz dosyanıza eklendi',
+    yaklasanKontrol: '15 Ekim 2026 · 09:30',
+    sonAktivite: [
+      { id: 'ga1', tur: 'mesaj', baslik: 'Yeni mesaj: Kontrol öncesi bilgilendirme', tarih: '2026-09-10T09:00:00Z', href: 'mesajlar' },
+      { id: 'ga2', tur: 'sonuc', baslik: 'OCT · Sağ göz', tarih: '2026-09-03T10:20:00Z', href: 'sonuclar' },
+      { id: 'ga3', tur: 'ziyaret', baslik: 'Göz Hastalıkları ziyareti', tarih: '2026-09-03T10:00:00Z', href: 'ziyaretler' },
+    ],
+  },
+  messages: [
+    {
+      id: 'gm1',
+      klasor: 'gelen',
+      konu: 'Kontrol öncesi bilgilendirme',
+      gonderen: 'Notya Klinik Asistanı',
+      ozet: '15 Ekim kontrolünüzde göz bebeği büyütme damlası uygulanacak.',
+      tarih: '2026-09-10T09:00:00Z',
+      okundu: false,
+      mesajlar: [
+        {
+          id: 'gm1a',
+          kimden: 'Notya Klinik Asistanı',
+          taraf: 'klinik',
+          tarih: '2026-09-10T09:00:00Z',
+          metin: '15 Ekim 2026 saat 09:30 kontrolünüzde göz bebeği büyütme damlası uygulanacaktır. Muayene sonrası birkaç saat araç kullanmamanız önerilir; yanınızda bir refakatçi olması iyi olur.',
+        },
+      ],
+    },
+    {
+      id: 'gm2',
+      klasor: 'gonderilen',
+      konu: 'Damla saatleri',
+      gonderen: 'Siz',
+      ozet: 'İki damlayı aynı saatte kullanabilir miyim?',
+      tarih: '2026-08-12T18:30:00Z',
+      okundu: true,
+      mesajlar: [
+        { id: 'gm2a', kimden: 'Siz', taraf: 'hasta', tarih: '2026-08-12T18:30:00Z', metin: 'Akşam iki damlayı arka arkaya damlatabilir miyim?' },
+        { id: 'gm2b', kimden: GOZ_HEKIM, taraf: 'doktor', tarih: '2026-08-13T09:05:00Z', metin: 'İki damla arasında en az 5 dakika bekleyin. Damlattıktan sonra göz kapağınızı kapatıp iç köşeye hafifçe bastırabilirsiniz.' },
+      ],
+    },
+  ],
+  visits: [
+    {
+      id: 'gv1',
+      tarih: '2026-09-03T10:00:00Z',
+      brans: 'Göz Hastalıkları',
+      basvuruNedeni: 'Göz tansiyonu kontrolü',
+      hekim: GOZ_HEKIM,
+      ozetKisa: 'Kontrol muayenesi yapıldı; damlalara devam.',
+      objektif: 'Görme keskinliği ve göz tansiyonu ölçüldü. OCT çekildi.',
+      plan: 'Damlalara aynı şekilde devam. 6 hafta sonra kontrol (göz bebeği büyütülecek). Planlanan tarihte göz içi enjeksiyon.',
+      takip: '6 hafta · Ekim 2026',
+    },
+    {
+      id: 'gv2',
+      tarih: '2026-06-18T11:00:00Z',
+      brans: 'Göz Hastalıkları',
+      basvuruNedeni: 'Rutin kontrol',
+      hekim: GOZ_HEKIM,
+      ozetKisa: 'Kontrol muayenesi; damla kullanımı gözden geçirildi.',
+      plan: 'Damla uygulama tekniği anlatıldı. 3 ay sonra kontrol.',
+      takip: '3 ay',
+    },
+  ],
+  results: [
+    { id: 'gr1', tur: 'goruntuleme', baslik: 'OCT · Sağ göz', tarih: '2026-09-03T10:20:00Z', ozet: 'Görüntünüz dosyanıza eklendi. Değerlendirmeyi doktorunuz yapar.', durum: 'beklemede', modalite: 'OCT', gorselUrl: null },
+    { id: 'gr2', tur: 'goruntuleme', baslik: 'Göz dibi fotoğrafı · Sol göz', tarih: '2026-06-18T11:15:00Z', ozet: 'Görüntünüz dosyanıza eklendi. Değerlendirmeyi doktorunuz yapar.', durum: 'beklemede', modalite: 'Göz dibi fotoğrafı', gorselUrl: null },
+  ],
+  medications: [
+    { id: 'gi1', ad: 'Latanoprost %0,005 göz damlası', doz: '1 damla', siklik: 'Günde 1 kez, akşam', baslangic: '2025-03-10', aktif: true, not: 'İki göze.', yazan: GOZ_HEKIM },
+    { id: 'gi2', ad: 'Timolol %0,5 göz damlası', doz: '1 damla', siklik: 'Günde 2 kez, sabah ve akşam', baslangic: '2026-02-20', aktif: true, not: 'Sağ göze.', yazan: GOZ_HEKIM },
+  ],
+  medicationHistory: [
+    { id: 'gh1', tarih: '2026-02-20', tip: 'baslandi', ilacAdi: 'Timolol %0,5 göz damlası', aciklama: 'Sağ göze günde 2 kez başlandı.' },
+    { id: 'gh2', tarih: '2025-03-10', tip: 'baslandi', ilacAdi: 'Latanoprost %0,005 göz damlası', aciklama: 'İki göze akşam 1 kez başlandı.' },
+  ],
+  history: {
+    kronikHastaliklar: [],
+    alerjiler: [],
+    ameliyatlar: [],
+    aileOykusu: [{ yakinlik: 'Anne', durum: 'Göz tansiyonu takibi (bildirilen)' }],
+    asilar: [],
+  },
+  tracking: { tansiyon: [], kilo: [], nabiz: [], spo2: [] },
+  goz: {
+    sonrakiKontrol: { tarih: '2026-10-15', neden: 'Göz tansiyonu ve göz dibi kontrolü', dilatasyon: true },
+    damlalar: [
+      { id: 'gd1', ad: 'Latanoprost %0,005 göz damlası', goz: 'İki göz', siklik: 'Günde 1 kez, akşam', baslangic: '2025-03-10' },
+      { id: 'gd2', ad: 'Timolol %0,5 göz damlası', goz: 'Sağ göz', siklik: 'Günde 2 kez, sabah ve akşam', baslangic: '2026-02-20' },
+    ],
+    islemler: [
+      { id: 'ge1', tarih: '2026-08-06', ad: 'Göz içi enjeksiyon', goz: 'Sağ göz', durum: 'yapildi' },
+      { id: 'ge2', tarih: '2026-10-01', ad: 'Göz içi enjeksiyon', goz: 'Sağ göz', durum: 'planli' },
+    ],
+    olcumler: [
+      { tarih: '2025-11-12', vaSag: '0,7', vaSol: '0,9', gibSag: 24, gibSol: 19 },
+      { tarih: '2026-02-20', vaSag: '0,7', vaSol: '0,9', gibSag: 23, gibSol: 18 },
+      { tarih: '2026-04-15', vaSag: '0,6', vaSol: '1,0', gibSag: 19, gibSol: 17 },
+      { tarih: '2026-06-18', vaSag: '0,6', vaSol: '0,9', gibSag: 18, gibSol: 17 },
+      { tarih: '2026-09-03', vaSag: '0,7', vaSol: '0,9', gibSag: 17, gibSol: 16 },
+    ],
+    goruntuler: [
+      { id: 'gr1', tarih: '2026-09-03T10:20:00Z', tur: 'OCT', goz: 'Sağ göz' },
+      { id: 'gr2', tarih: '2026-06-18T11:15:00Z', tur: 'Göz dibi fotoğrafı', goz: 'Sol göz' },
+    ],
+    not: 'Değerler muayenehanede kaydedildiği gibidir; yorum ve plan doktorunuzdadır.',
+  },
+}
+
+export function demoGozVisitById(id: string) {
+  return SAGLIGIM_DEMO_GOZ.visits.find((v) => v.id === id) || null
+}
+
+export function demoGozResultById(id: string) {
+  return SAGLIGIM_DEMO_GOZ.results.find((r) => r.id === id) || null
+}

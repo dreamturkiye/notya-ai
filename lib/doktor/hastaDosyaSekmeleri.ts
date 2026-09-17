@@ -19,6 +19,7 @@ export type HastaDosyaSekmeId =
   | 'deri'
   | 'dahiliye'
   | 'bebek'
+  | 'goz'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -50,6 +51,8 @@ export function gebelikSekmesiUygun(input: {
 
 export function hastaDosyaSekmeleri(opts: {
   dahiliyeUygun?: boolean
+  /** GOZ-CHAPTER: doctor specialty göz hastalıkları */
+  gozUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -68,6 +71,7 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.pediatriUygun) {
     tabs.push({ id: 'bebek', label: 'Bebek kartı' }, { id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
   }
+  if (opts.gozUygun) tabs.push({ id: 'goz', label: 'Göz' }) // GOZ-CHAPTER — göz hekimi için dosyanın başında
   tabs.push({ id: 'ayse', label: "Ayşe'ye Danış" })
   if (opts.gebelikUygun) tabs.push({ id: 'gebelik', label: 'Kadın Sağlığı & Gebelik' })
   tabs.push({ id: 'deri', label: 'Deri & Lezyon' })

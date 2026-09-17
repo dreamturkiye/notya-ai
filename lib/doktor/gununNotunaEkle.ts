@@ -13,7 +13,7 @@ export async function gununNotunaEkle(
   doktorId: string,
   patientId: string,
   ekSatir: string,
-  alan: 'content_degerlendirme' | 'content_subjektif' = 'content_degerlendirme',
+  alan: 'content_degerlendirme' | 'content_subjektif' | 'content_objektif' = 'content_degerlendirme',
 ): Promise<GununNotunaEkleSonuc> {
   const bugunBasi = new Date(); bugunBasi.setHours(0, 0, 0, 0)
   const { data: seanslar } = await supabase
@@ -23,7 +23,7 @@ export async function gununNotunaEkle(
 
   const seansIdler = seanslar.map((s) => s.id)
   const { data: notlar } = await supabase
-    .from('notes').select('id, content_degerlendirme, content_subjektif, session_id').in('session_id', seansIdler)
+    .from('notes').select('id, content_degerlendirme, content_subjektif, content_objektif, session_id').in('session_id', seansIdler)
     .order('created_at', { ascending: false }).limit(1)
   const not = notlar?.[0]
   if (!not) return { eklendi: false, notId: null, sebep: 'Bugünkü muayenenin henüz bir notu yok.' }

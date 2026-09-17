@@ -6,6 +6,7 @@ import { PERSONAS, varsayilanPersonaId, buildSystemPrompt, type PersonaId } from
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
+import { gozKilidi, gozMi } from "@/specialties/goz-hastaliklari/prompts"
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
 import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
@@ -174,7 +175,7 @@ export async function POST(req: NextRequest) {
 
     // Build system prompt with learning context
     // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
-    const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : ""
+    const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : ""
     const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + bransKilidi + dosyaEk
 
     // Call Claude with full conversation history

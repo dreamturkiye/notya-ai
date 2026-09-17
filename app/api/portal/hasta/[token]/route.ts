@@ -451,6 +451,55 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] jinekoloji:', e) }
 
+  // GOZ-PORTAL — "Gözlerim": MD-entered goz_* rows only (kontrol / damla / enjeksiyon dates), clinic-recorded
+  // VA/GİB numbers and image-ready notices. No tanı, no report text, no AI read content, no drug names.
+  if (modulAktif('gozlerim')) try {
+    const { vaGoster, enIyiUzak } = await import('@/specialties/goz-hastaliklari/engines/va')
+    const bugun = new Date().toISOString().slice(0, 10)
+    const birYilOnce = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const GOZ_ETIKET: Record<string, string> = { sag: 'Sağ göz', sol: 'Sol göz', iki: 'İki göz' }
+    const [kontrolQ, glokomQ, enjQ, muayeneQ, goruntuQ] = await Promise.all([
+      sb.from('goz_kontroller').select('tarih, neden, dilatasyon').eq('patient_id', patientId).eq('durum', 'planli').gte('tarih', bugun).order('tarih', { ascending: true }).limit(1).maybeSingle(),
+      sb.from('goz_glokom').select('id, damlalar').eq('patient_id', patientId).maybeSingle(),
+      sb.from('goz_enjeksiyonlar').select('id, goz, ajan, tarih, durum').eq('patient_id', patientId).in('durum', ['planli', 'yapildi']).gte('tarih', birYilOnce).order('tarih', { ascending: true }).limit(40),
+      sb.from('goz_muayeneler').select('tarih, va, gib_sag, gib_sol, created_at').eq('patient_id', patientId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(12),
+      sb.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi, goruntuleme_tarihi, created_at').eq('patient_id', patientId).in('modalite', ['oct', 'fundus', 'on_segment']).order('created_at', { ascending: false }).limit(20),
+    ])
+    const k = kontrolQ.data
+    type DamlaHam = { ad?: string; goz?: string; siklik?: string; baslangic?: string | null }
+    const damlalarHam: DamlaHam[] = Array.isArray(glokomQ.data?.damlalar) ? (glokomQ.data!.damlalar as DamlaHam[]) : []
+    const sayi = (v: unknown) => (v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v))
+    const TUR: Record<string, string> = { oct: 'OCT', fundus: 'Göz dibi fotoğrafı', on_segment: 'Ön segment fotoğrafı' }
+    bundle.goz = {
+      sonrakiKontrol: k ? { tarih: String(k.tarih), neden: String(k.neden || 'Kontrol'), dilatasyon: !!k.dilatasyon } : null,
+      damlalar: damlalarHam.filter((d) => d && d.ad).map((d, i) => ({
+        id: `${glokomQ.data?.id || 'g'}-${i}`,
+        ad: String(d.ad),
+        goz: GOZ_ETIKET[String(d.goz || '')] || 'Belirtilmedi',
+        siklik: String(d.siklik || '—'),
+        baslangic: d.baslangic ? String(d.baslangic).slice(0, 10) : null,
+      })),
+      islemler: (enjQ.data || []).map((e) => ({
+        id: String(e.id),
+        tarih: String(e.tarih),
+        ad: e.ajan === 'deksametazon_implant' ? 'Göz içi implant' : 'Göz içi enjeksiyon',
+        goz: GOZ_ETIKET[String(e.goz)] || 'Belirtilmedi',
+        durum: e.durum === 'yapildi' ? 'yapildi' as const : 'planli' as const,
+      })),
+      olcumler: (muayeneQ.data || []).slice().reverse().map((m) => {
+        const va = (m.va && typeof m.va === 'object' ? m.va : {}) as { sag?: Parameters<typeof enIyiUzak>[0]; sol?: Parameters<typeof enIyiUzak>[0] }
+        const sag = enIyiUzak(va.sag), sol = enIyiUzak(va.sol)
+        return { tarih: String(m.tarih), vaSag: sag ? vaGoster(sag) : null, vaSol: sol ? vaGoster(sol) : null, gibSag: sayi(m.gib_sag), gibSol: sayi(m.gib_sol) }
+      }),
+      goruntuler: (goruntuQ.data || []).map((g) => {
+        const bolge = String(g.vucut_bolgesi || '').toLocaleLowerCase('tr-TR')
+        const goz = /iki g|bilateral/.test(bolge) || (/sağ|sag\b/.test(bolge) && /sol/.test(bolge)) ? 'İki göz' : /sağ|sag\b/.test(bolge) ? 'Sağ göz' : /sol/.test(bolge) ? 'Sol göz' : 'Belirtilmedi'
+        return { id: String(g.id), tarih: String(g.goruntuleme_tarihi || g.created_at), tur: TUR[String(g.modalite)] || 'Göz görüntüsü', goz }
+      }),
+      not: 'Değerler muayenehanede kaydedildiği gibidir; yorum ve plan doktorunuzdadır.',
+    }
+  } catch (e) { console.error('[portal] gozlerim:', e) }
+
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId)
   bundle.messages = messages
