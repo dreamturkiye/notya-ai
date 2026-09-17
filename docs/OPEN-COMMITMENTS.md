@@ -678,3 +678,46 @@ verified list), not a missing parity fix — noted here so the next chapter spri
 than assuming the guard already covers them.
 
 Ship bar: `npx tsc --noEmit` clean, `npm test` 605/605 (was 600 — 5 new parity tests).
+
+## HASTA-FORMU-SIGORTA-OPSIYONEL — Dr. Gökhan, canlı, 2026-09-17
+
+**Nasıl geldi.** Dr. Gökhan ekran görüntüsüyle bildirdi: Hasta Bilgi Formu'nun 4. bölümünde
+(**Sağlık Güvencesi**) üç alan kırmızı yıldızla zorunlu işaretliydi — **Özel Sigorta Şirketi**,
+**Poliçe / Üyelik Numarası**, **Kurum / İşveren Adı** — oysa üçünün de ipucu metni zaten
+`Yoksa "Yok" yazın` diyordu. Hastaların çoğunun özel sigortası yok; alan zorunlu kaldığı için
+hasta formu gönderebilmek adına kutuya **"Yok" yazmak zorunda** kalıyordu. Talep: alanlar kalsın,
+ipucu kalsın, **zorunluluk kalksın**.
+
+**Kök sebep — şema ile ipucu metni ayrışmıştı.** `lib/intake/coreAlanlar.ts` alan başına tek bir
+`zorunlu` bayrağı tutuyor; hem formun kırmızı yıldızı, hem istemci doğrulaması, hem sunucu
+doğrulaması bu bayraktan okuyor. Üç alanda bayrak `true` bırakılmış ama placeholder "yoksa boş
+geçebilirsin" diyordu. Tek satırlık bir çelişki, ama hastaya "Yok" yazdırdığı için veriyi de
+kirletiyordu: "Yok" dizesi ile boş alan aynı bilgiyi taşır, ikincisi dürüst olanı.
+
+**Ne yapıldı.**
+
+| Tarih | Kalem | Durum |
+|---|---|---|
+| 2026-09-17 | **Üç sigorta alanından `zorunlu: true` kaldırıldı** (`lib/intake/coreAlanlar.ts`). Alanlar da ipucu metinleri de aynen duruyor — yalnız kırmızı yıldız ve doğrulama gitti. `sigortaTuru` (Sağlık Güvenceniz: SGK / özel / ücretli) **zorunlu kaldı**: onda "Yok" ipucu yok ve hangi güvenceyle geldiği klinik/mali olarak gerçekten gerekli. | SHIPPED |
+| 2026-09-17 | **Aynı desen dört yerde daha vardı, hepsi düzeltildi.** Dr. Gökhan üçünü bildirdi ama `yoksa "Yok" yazın` ipucu taşıyan başka zorunlu alanlar da vardı: çekirdekte **Geçirdiğiniz Ameliyatlar** ve **İlaç Adı ve Dozu**, pediatri uyarlamasında **Özgeçmiş — Hastalık / Ameliyat** ve **Kullanılan İlaç / Takviyeler**. Kural: ipucu metni "yoksa boş bırakabilirsin" diyorsa alan zorunlu olamaz — nerede geçerse geçsin. Toplam **7 alan** isteğe bağlı oldu. | SHIPPED |
+| 2026-09-17 | **Zorunluluk/desen kuralı tek gövdeye indirildi** (`lib/intake/dogrula.ts`). Kural aynı anda iki yerde yaşıyordu: `app/intake/[token]/page.tsx` içindeki gönder döngüsü ve `app/api/intake/[token]/route.ts` içindeki sunucu döngüsü. İkisi de artık `intakeIlkHata()` çağırıyor, yalnız hastaya gösterilen metni kendileri biçimlendiriyor (sunucu mesajları birebir korundu). İstemcideki elle yazılmış TC kontrolü de kalktı — şemadaki `desen`/`desenHata` zaten aynı kuralı, aynı Türkçe mesajla taşıyor. Ayrıca boş + isteğe bağlı bir alan artık desen kontrolüne takılmıyor. **Birleştirirken çıkan yan bulgu:** istemcinin boşluk testi `!yanitlar[id]` idi ve `[]` (hiç seçim yapılmamış checkbox-grup) JavaScript'te truthy olduğu için istemci bunu DOLU sayıyordu; sunucu ise boş sayıp 400 dönüyordu. Yani zorunlu bir checkbox grubunu hiç işaretlemeyen hasta, istemciden geçip sunucudan geri çeviriliyordu. Ortak gövdede `[]` artık iki tarafta da boş. | SHIPPED |
+| 2026-09-17 | **Downstream: bağımlılık yok, tek pürüz düzeltildi.** `sigortaSirketi` hiçbir yerde okunmuyor; `policeNo`/`kurumAdi` yalnızca `lib/doktor/hastaDosyaDerleyici.ts`'in **gizli** listesinde (AI'ya hiç gönderilmiyorlar) ve derleyici zaten `v == null \|\| v === ''` olanı atlıyor. `hastaKaydinaAktar.ts` boş değer yazmıyor (`yaz()` boşu eler, `kronikHastaliklar` "yok"u süzer), `kullanilanIlaclar` boşken `kullaniyorMu='Hayır'` yedeği devrede. SGK rapor şablonlarındaki `kurumAdi` **başka bir alan** (doktorun Medula tesis bilgisi), intake formuyla ilgisi yok. Tek gerçek pürüz: doktorun inceleme görünümünde (`components/doktor/HastaIntake.tsx`) boş dize satırı bomboş bırakıyordu — `degerGoster()` yalnız `null/undefined` için `—` basıyordu. Boş dize ve boş dizi de artık `—` basıyor. | SHIPPED |
+
+**Doğrulama.** `scripts/qa-intake-sigorta-opsiyonel.mts` **gerçek** `POST /api/intake/[token]`
+route handler'ını, PostgREST'i fetch seviyesinde taklit ederek çalıştırıyor — **sentetik** hasta,
+sentetik token, sentetik şifreleme anahtarı; production veritabanına, Dr. Gökhan'ın hesabına veya
+gerçek bir hastaya dokunmuyor, PHI yok. Üç sigorta alanı (ve "Yok" ipuçlu diğerleri) **boş**
+gönderildi: **HTTP 200**, `durum='dolduruldu'`, kayıtta değerler `["","",""]`, hasta kaydına
+aktarım boşlarla sorunsuz çalıştı. Karşı kontrol: `ad` boşken hâlâ **400** — zorunlu alan koruması
+duruyor. Regresyon testi `lib/intake/coreAlanlar.test.ts` (4 test) `npm test`'e eklendi; içinde
+şemayı tarayıp `yoksa "Yok" yazın` ipuçlu **hiçbir** alanın zorunlu olmadığını doğrulayan bir test
+var, yani ipucu ile bayrak bir daha ayrışamaz. Testin gerilemeyi gerçekten yakaladığı, bayrak
+geçici olarak geri konularak ölçüldü (3 test kırmızıya döndü). main ile birleştirildikten sonra **616/616 yeşil,
+`npx tsc --noEmit` temiz.**
+
+**Mobil kontrol (standing rule) — YAPILMADI, gerekçesi:** bu hotfix worktree'sinde Supabase
+kimlik bilgisi yok, dolayısıyla geçerli bir intake token'ı üretilemiyor ve form sayfası canlı
+render edilemiyor (token'sız sayfa yalnız hata dalını gösterir). Görsel delta yalnızca **karakter
+çıkarıyor**: etiketten satır içi ` *` kalkıyor, doktor görünümünde boş hücre `—` oluyor. Yeni
+düğme/panel/rozet/sayfa yok, hiçbir kutu genişlemiyor. Yine de gerçek cihazda göz gezdirilmesi
+gerekirse Kaan'ın bir sonraki oturumunda 15 saniyelik bir kontrol yeter.

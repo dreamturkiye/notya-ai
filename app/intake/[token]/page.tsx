@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { IntakeAlan, IntakeBolum } from '@/lib/intake/coreAlanlar';
+import { intakeIstemciHataMetni } from '@/lib/intake/dogrula';
 
 export const dynamic = 'force-dynamic';
 
@@ -149,20 +150,11 @@ export default function IntakeFormPage() {
     e.preventDefault();
     setFormHata('');
 
+    // NOTYA-INTAKE-08: zorunluluk/desen kurallari sunucuyla TEK govdeden (lib/intake/dogrula.ts)
+    // okunur — istemcinin "zorunlu" tanimi sunucununkinden ayrisamasin diye.
     const tumBolumler = siralaOnaySonda([...(sema?.coreBolumler || []), ...(sema?.bransBolumu ? [sema.bransBolumu] : [])]);
-    for (const bolum of tumBolumler) {
-      for (const alan of bolum.alanlar) {
-        if (alan.tur === 'bolum-basligi') continue;
-        if (alan.zorunlu && !yanitlar[alan.id]) {
-          setFormHata(`Lütfen "${alan.etiket}" alanını doldurun.`);
-          return;
-        }
-      }
-    }
-    if (yanitlar.tcKimlik && !/^\d{11}$/.test(String(yanitlar.tcKimlik))) {
-      setFormHata('T.C. Kimlik Numarası 11 haneli olmalıdır.');
-      return;
-    }
+    const hata = intakeIstemciHataMetni(tumBolumler, yanitlar);
+    if (hata) { setFormHata(hata); return; }
 
     setGonderiliyor(true);
     try {
