@@ -95,7 +95,7 @@ export default function EReceteAyarPage() {
         {/* Kimlik */}
         <div style={kutu}>
           <div style={{ fontSize: 12, color: '#8FA0B5', letterSpacing: 1.2, marginBottom: 10 }}>SGK MEDULA KİMLİĞİ</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="notya-grid-yigin" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <label><span style={etiket}>Hekim TC kimlik no {g?.doktorTcMaske ? `(kayıtlı: ${g.doktorTcMaske})` : ''}</span><input style={giris} inputMode="numeric" maxLength={11} value={doktorTc} onChange={(e) => setDoktorTc(e.target.value.replace(/\D/g, ''))} placeholder={g?.doktorTcMaske ? 'Değiştirmek için yazın' : '11 hane'} /></label>
             <label><span style={etiket}>SGK hekim şifresi {g?.sifreVar ? '(kayıtlı)' : ''}</span><input style={giris} type="password" autoComplete="new-password" value={sifre} onChange={(e) => setSifre(e.target.value)} placeholder={g?.sifreVar ? 'Değiştirmek için yazın' : 'medeczane.sgk.gov.tr/doktor'} /></label>
             <label><span style={etiket}>Tesis kodu</span><input style={giris} inputMode="numeric" value={tesisKodu} onChange={(e) => setTesisKodu(e.target.value.replace(/\D/g, ''))} placeholder="Muayenehanenizin SGK tesis kodu" /></label>

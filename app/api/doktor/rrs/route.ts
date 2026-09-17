@@ -33,7 +33,15 @@ export async function GET(req: NextRequest) {
   const adlar: Record<string, string> = {}
   if (ids.length) {
     const { data: hastalar } = await sb.from('patients').select('id, name_encrypted').in('id', ids)
-    for (const h of hastalar || []) { try { adlar[h.id] = decrypt(String(h.name_encrypted || '')) } catch { adlar[h.id] = 'Hasta' } }
+    for (const h of hastalar || []) {
+      // name_encrypted is {"ad","soyad"} JSON (hastalar route); the card printed that JSON raw. Plain-text names (HL7 import) still pass through.
+      try {
+        const duz = decrypt(String(h.name_encrypted || ''))
+        let ad = duz
+        try { const n = JSON.parse(duz) as { ad?: string; soyad?: string }; if (n && typeof n === 'object') ad = [n.ad, n.soyad].map((x) => (x || '').trim()).filter(Boolean).join(' ') } catch { /* düz metin ad */ }
+        adlar[h.id] = ad || 'Hasta'
+      } catch { adlar[h.id] = 'Hasta' }
+    }
   }
   return NextResponse.json({ kayitlar: (data || []).map((r) => ({ ...r, hastaAd: adlar[r.patient_id as string] || 'Hasta' })) })
 }
