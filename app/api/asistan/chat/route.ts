@@ -202,12 +202,16 @@ export async function POST(req: NextRequest) {
     aiData.speech = doktorMetniTemizle(aiData.speech)
     if (aiData.proactiveWarning) aiData.proactiveWarning = doktorMetniTemizle(aiData.proactiveWarning)
 
-    // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches — a dose the doctor did not type (and that is not in the patient file /
-    // verified drug context) never reaches the chat bubble.
+    // KD-DERM-SAFETY-FINDINGS F1 + CROSS-SPECIALTY-PARITY: a dose the doctor did not type (and that is not in the patient
+    // file / verified drug context) never reaches the chat bubble — for EVERY branch, not only the prompt-locked chapters.
+    const dozKaynak = kaynakSayilari(augmentedMessage, dosyaEk, ...messages.filter((m) => m.role === "user").map((m) => m.content))
+    const dozTemiz = uydurmaDozTemizle(String(aiData.speech || ""), dozKaynak)
+    if (dozTemiz.dozlar.length) console.warn("[asistan/chat] doz kilidi", { brans: hekimBransi || specialty, dozlar: dozTemiz.dozlar })
+    aiData.speech = dozTemiz.metin
+    if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaDozTemizle(String(aiData.proactiveWarning), dozKaynak).metin
+    // The prompt-locked chapters also promise "sohbette doz sorulursa sayı verme" — there the hekim is told why a number went.
     if (dozKilitliBrans(hekimBransi, specialty)) {
-      const kaynak = kaynakSayilari(augmentedMessage, dosyaEk, ...messages.filter((m) => m.role === "user").map((m) => m.content))
-      aiData.speech = uydurmaDozTemizle(String(aiData.speech || ""), kaynak).metin
-      if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaDozTemizle(String(aiData.proactiveWarning), kaynak).metin
+      if (dozTemiz.dozlar.length) aiData.speech = `${aiData.speech}\n\n⚠ Doz kontrolü (hekim onayı): mesajda/dosyada geçmeyen doz ifadesi yanıttan çıkarıldı; doz hekim tarafından belirlenir.`
     }
     // KD-KAYNAK-KILIDI: a kadın doğum answer never carries a guideline number / year from memory (ACOG PB 797, TJOD 2019 …).
     if (kadinDogumMi(hekimBransi, specialty)) {

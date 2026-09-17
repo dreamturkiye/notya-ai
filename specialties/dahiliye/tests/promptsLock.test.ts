@@ -76,6 +76,20 @@ describe('(d) hekim lock language + enforced in code', () => {
     assert.ok(s.includes('yalnız hekim kilitler')); assert.ok(s.includes('Doz yazma')); assert.ok(s.includes('hekim dozu yazar')); assert.ok(s.includes('yalnız onaylı lab'))
     assert.ok(dahiliyePromptlari().soap.includes('Doz yok')); assert.ok(dahiliyePromptlari().soap.includes('Hekim kilitleri'))
   })
+  // CROSS-SPECIALTY-PARITY (2026-09-17): KD-DERM-SAFETY-FINDINGS F1 gave kadın doğum / dermatoloji a full
+  // "## Doz kilidi (kırılmaz)" block; dahiliye only got the code refactor, so its own prompt still lacked the three
+  // clauses that stop the model writing a number in the first place. Parity applied here.
+  it('Doz kilidi (kırılmaz): dahiliye system.md carries the same three clauses as KD / derm, on every surface', () => {
+    const s = dahiliyePromptlari().system
+    assert.ok(s.includes('## Doz kilidi (kırılmaz)'))
+    assert.ok(s.includes('hafızadan veya kılavuzdan doz uydurma'))
+    assert.ok(s.includes('Hekim dozu söylediyse aynen aktar'))
+    assert.ok(s.includes('sohbette doz sorulursa sayı verme') || s.includes('Hekim sohbette doz sorarsa sayı verme'))
+    assert.ok(s.includes('insülin (yükleme, titrasyon, bazal-bolus şeması)'), 'dahiliye has its own drug scope list')
+    // reaches SOAP + chat in full, and the compact voice lock via Kırılmaz kurallar #2
+    for (const y of ['soap', 'asistan'] as const) assert.ok(dahiliyeKilidi(y).includes('## Doz kilidi (kırılmaz)'), y)
+    assert.ok(dahiliyeKilidi('ses').includes('hafızadan veya kılavuzdan doz uydurma'), 'ses')
+  })
   it('SOAP reçete önerisi for dahiliye is stripped of doses in code', () => {
     const r = dahiliyeReceteDozsuz<{ etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string }>([{ etkenMadde: 'metformin', ticariOrnek: 'Glifor 1000 mg', doz: '1000 mg', kullanim: '2x1', sure: '3 ay' }])
     assert.equal(r[0].doz, undefined); assert.equal(r[0].kullanim, undefined); assert.equal(r[0].ticariOrnek, 'Glifor'); assert.equal(r[0].etkenMadde, 'metformin'); assert.ok(r[0].not!.includes('Doz hekim yazar'))

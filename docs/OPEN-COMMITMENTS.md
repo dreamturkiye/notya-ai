@@ -120,18 +120,13 @@ Pap/HPV only for KD); Gebeliğim follows an active pregnancy for any practice (m
 (aile hekimi, endokrin…) get chart-data modules only when the data exists. Assumption (recorded): unknown
 `users.specialty` = baseline branch, not pediatri. Tests: `lib/portal/moduller.test.ts` (10, in `npm test`).
 
-### Göz Hastalıkları — next full chapter (queued 2026-09-17)
+### Göz Hastalıkları — chapter (SHIPPED 2026-09-17; was queued)
 
-No `specialties/goz-*` yet; registry = baseline only. Catalog/intake/SOAP stub + VA/GİB measurement
-keys exist. Golden refs: TOD + SB DR/glokom + TOD birimler + SGK GİL/anti-VEGF first; Kanski/
-Vaughan/AAO BCSC secondary (çakışmada TOD/SB). Method = KD/dahiliye depth: pre-sprint audit →
-engines/UI/prompts lock → specialty portal “Gözlerim” → ship. Pain focus: 8-hour poliklinik
-speed (bilateral VA/GİB, glokom/DR/katarakt loops, enjeksiyon takvim, SGK rapor).
-
-**Pre-sprint audit shipped 2026-09-17 (before Claude chapter build):**
-`public/goz-presprint-audit.html` → https://notya-ai.vercel.app/goz-presprint-audit.html
-Verdict: chapter Missing; overall ~8% vs wow bar; top gaps = VA/GİB strip, glokom, DR loop, Gözlerim.
-Post-sprint twin: `public/goz-post-sprint-audit.html` → https://notya-ai.vercel.app/goz-post-sprint-audit.html (11/18 Strong, ~77% vs wow bar).
+**Pre-sprint:** `public/goz-presprint-audit.html` → ~8% wow bar (chapter Missing).
+**Post-sprint:** `public/goz-post-sprint-audit.html` → 11/18 Strong, ~77% wow bar (#292/#293).
+**Remaining-gaps re-audit (independent, 2026-09-17):** `public/goz-remaining-gaps-audit.html`
+→ https://notya-ai.vercel.app/goz-remaining-gaps-audit.html — Claude Strong ratings verified
+(`test:goz` 61/61); 7 Partial domains + chart-tab chrome leak + MD beta still open.
 
 **GOZ-CHAPTER — SHIPPED 2026-09-17 (#292, Claude).** `specialties/goz-hastaliklari/**` + `lib/specialties/goz-hastaliklari.ts`
 (VA/GİB first-class olcumler, Gözlerim module Strong) + migration `048_goz_chapter.sql` (goz_* tables, oct/fundus/on_segment
@@ -609,7 +604,77 @@ durumuna baktığı için bu halde yine de başarı mesajı yazıyor. Bu ÖNCEDE
 hatası, bu iş onu yaratmadı ve büyütmedi (bağlantı o durumda doğru şekilde çıkmıyor). Ayrı bir
 düzeltme hak ediyor.
 
-**Not.** `.cursor/skills/cross-specialty-parity/SKILL.md` bu dalın tabanında HENÜZ YOK
-(`.cursor/skills/` altında yalnız `specialty-audit-report` ve `specialty-hasta-portali` var),
-bu yüzden takip edilemedi. Yukarıdaki paylaşılan-mı-kopyalanmış-mı taraması o sözleşmenin
-ruhuna göre elle yapıldı; skill dosyası geldiğinde bu bölüm ona örnek olabilir.
+**Branş kapsamı (cross-specialty-parity).** Bu dal açıldığında
+`.cursor/skills/cross-specialty-parity/SKILL.md` henüz yoktu; #296 ile main'e indi ve merge
+sırasında alındı, sözleşme geriye dönük uygulandı. Kapsam bloğu PR gövdesinde.
+## CROSS-SPECIALTY-PARITY — standing rule + retroactive sweep of 2026-09-17 (Kaan)
+
+**Standing rule, now a skill.** `.cursor/skills/cross-specialty-parity/SKILL.md` (new; sits beside
+`specialty-audit-report` and `specialty-hasta-portali`, neither touched). It says: a fix is reported
+from one branş's screen but is not finished until you can name which of Notya's 30 registry branches
+(`lib/doktor/specialties.ts`) it reaches and why. Before closing any change to the shared spine
+(SOAP, İnceleme/onay, reçete/Medula, Belge Kasası, randevu/takvim, epikriz, Asistan sohbet, Sağlığım
+kabuğu, intake, lab çıkarım, doz/kaynak kilidi), name the shared files you touched; for the ~26
+baseline-only branches a properly-scoped shared fix covers them **by construction** with no
+per-branş verification — the single exception being behavior gated by specialty (`users.specialty`,
+`SpecialtyKey`, `specialtyProfile`, persona id, eligibility rule), which must be walked; and for each
+chapter that owns a `specialties/<slug>/` folder, check individually whether it forked the thing you
+fixed (its own `prompts/system.md` wording, its own copy of a UI component or guard) and would
+therefore miss it. The chapter list is **read live** (`ls specialties/` + the `CHAPTERS` map in
+`lib/specialties/registry.ts`), never hardcoded, because it grows every sprint. Every shared-spine PR
+must carry a **"Branş kapsamı"** block naming what was checked; "fixed X" alone is not enough, and
+"no fork found, nothing to do" is an expected, valid result — inventing chapter changes to have
+something to show is listed as an anti-pattern.
+
+**Retroactive sweep — today's shared-spine fixes, what was checked.** Commits reviewed by diff (not
+title): F1 doz kilidi (#280), F2 varsayılan persona (#281), F3 ham JSON yanıt (#282), F4 iç alan /
+uydurma form adı (#283), KD-KAYNAK-KILIDI + MD-TABLO (#286), PPH doz-kilidi FP (07ef910),
+MOBILE-REVIEW 1–3 (#288/#289/#290), DAH-LAB-BELGELER ortak lab motoru (#276),
+RANDEVU-IPTAL-REAKTIVASYON (#294), KASA-BELGE-01 (#295). Chapters checked individually: dahiliye,
+dermatoloji, kadın-doğum (göz-hastaliklari excluded — another agent was mid-build on it).
+
+*Correctly shared, no fork anywhere, nothing to do:* F3 `lib/asistan/yanitCoz.ts` and F4
+`lib/doktor/klinikMetin.ts` run ungated on both the chat and SOAP paths. F2 `varsayilanPersonaId`
+resolves through `findSpecialistForSpecialty` over the whole 30-specialist catalog. The MD-TABLO
+renderer (`lib/asistan/markdownTablo.ts` + `components/asistan/HafifMarkdown.tsx`) has no forked copy
+— every consumer (İnceleme, epikriz, SGK rapor, konsült, sohbet) imports the shared one. Kasa
+(`lib/vault/validation.ts`, `components/doktor/DocumentViewer.tsx`), randevu (`lib/randevu/randevuDurum.ts`,
+`app/api/doktor/randevular/`) and the lab engine (`core/lab/cikarim.ts`) likewise have no chapter
+copy. The MOBILE-REVIEW work split cleanly: `.notya-grid-yigin` and the portal pages are shared, the
+rest were dahiliye-only components with no derm/KD counterpart to mirror.
+
+*Found and fixed — the dose-invention guard reached 4 branches out of 30.* F1 built the guard in
+shared files (`lib/doktor/dozKilidi.ts`, `lib/doktor/soapUret.ts`, `app/api/asistan/chat/route.ts`)
+but gated it behind `dozKilitliBrans` — dahiliye, kadın doğum, dermatoloji, göz. The other ~26
+branches ran the same SOAP and chat code with **no backstop at all**: a kardiyoloji note carrying
+"metoprolol 50 mg" the hekim never said, or a pediatri note with an invented mg/kg, shipped as
+written. Split into two strengths rather than widening the gate, because the guard does two different
+jobs: `soapDozKilidi` (unchanged, chapters only) is the full lock and also strips `doz`/`kullanim`
+from `receteOnerisi` — that is a **product policy** their prompts promise, and forcing it on pediatri
+would delete the kg/doz reçete önerisi that NOTYA-SOAP-02 §3 designs for. New `soapDozUydurmaKilidi`
+applies the **safety backstop only** (invented dose → `[doz hekim tarafından belirlenir]` + a
+"⚠ Doz kontrolü (hekim onayı)" line in aiDegerlendirme) and now runs for every other branch; a dose
+the hekim actually dictated is still passed through untouched, and receteOnerisi doses survive. The
+chat cleaner was hoisted out of the `dozKilitliBrans` block so it runs for all branches, with the
+chapters additionally told in-bubble why a number disappeared (matching how KD's kaynak kilidi
+already behaves there).
+
+*Found and fixed — dahiliye's own prompt had drifted behind KD/derm.* F1 wrote a full
+`## Doz kilidi (kırılmaz)` block into `specialties/{kadin-dogum,dermatoloji}/prompts/system.md` but
+gave dahiliye only the code refactor, leaving its terser rule #2 without the three clauses that stop
+the model writing a number in the first place: don't invent from memory/guideline, pass a dictated
+dose through unchanged instead of "correcting" it, and give no number when asked for a dose in chat.
+Added those to dahiliye's `Kırılmaz kurallar` #2 (so they reach the compact voice lock too) plus a
+full `## Doz kilidi (kırılmaz)` section with dahiliye's own drug scope (antihipertansif, statin, OAD,
+SGLT2i/GLP-1, insülin titrasyonu, antikoagülan, levotiroksin, allopürinol/kolşisin, D vit/B12,
+bifosfonat, demir, PPİ, antibiyotik), matching the KD/derm pattern. Asserted in
+`specialties/dahiliye/tests/promptsLock.test.ts`.
+
+*Checked, correctly NOT generalized.* The citation lock (`lib/doktor/kaynakKilidi.ts`) stays KD-only
+by construction: it needs a per-chapter verified-source list to compare against
+(`specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar.ts`), and running it without one would
+strip every citation as unverified. Extending it is a **chapter build** (each chapter authors its own
+verified list), not a missing parity fix — noted here so the next chapter sprint picks it up rather
+than assuming the guard already covers them.
+
+Ship bar: `npx tsc --noEmit` clean, `npm test` 605/605 (was 600 — 5 new parity tests).
