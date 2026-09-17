@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, type SpecialtyId } from "@/lib/asistan/personaEngine"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
+import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
@@ -162,8 +163,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Build system prompt with learning context
-    // DAH-PROMPTS-LOCK: dahiliye hekimi (users.specialty) → specialties/dahiliye/prompts kilidi (system.md + tools.ts)
-    const bransKilidi = dahiliyeMi((doctorRow as { specialty?: string } | null)?.specialty, specialty) ? dahiliyeKilidi("asistan") : ""
+    // DAH-PROMPTS-LOCK / KD-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
+    const hekimBransi = (doctorRow as { specialty?: string } | null)?.specialty
+    const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : ""
     const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + bransKilidi + dosyaEk
 
     // Call Claude with full conversation history

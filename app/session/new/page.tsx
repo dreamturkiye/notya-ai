@@ -9,7 +9,7 @@ import { BRANS_ETIKETLERI } from "@/lib/intake/bransSorulari"
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
 const BRANS_EMOJI: Record<string, string> = { genel: "👨‍⚕️", pediatri: "🧒", kardiyoloji: "❤️", noroloji: "🧠", psikiyatri: "💭", dahiliye: "🩺", ortopedi: "🦴", "kadin-hastaliklari-dogum": "👶", "genel-cerrahi": "🔪", dermatoloji: "🌿", uroloji: "💊", onkoloji: "🎗️", "acil-tip": "🚨", "kulak-burun-bogaz": "👂", "goz-hastaliklari": "👁️", radyoloji: "🩻", anestezi: "😴", "fizik-tedavi": "🏃", "enfeksiyon-hastaliklari": "🦠", endokrinoloji: "🧪", gastroenteroloji: "🫁", nefroloji: "🫘", romatoloji: "🦵", "gogus-hastaliklari": "🫁", "gogus-cerrahisi": "🔬", "plastik-cerrahi": "✂️", "beyin-cerrahisi": "🧠", "kalp-damar-cerrahisi": "❤️‍🩹", "cocuk-cerrahisi": "🧸", "aile-hekimligi": "🏠", "spor-hekimligi": "⚽" }
-const ESKI_ANAHTAR: Record<string, string> = { kadin_hastaliklari: "kadin-hastaliklari-dogum", genel_cerrahi: "genel-cerrahi", acil: "acil-tip" }
+const ESKI_ANAHTAR: Record<string, string> = { kadin_hastaliklari: "kadin-hastaliklari-dogum", "kadin-dogum": "kadin-hastaliklari-dogum", genel_cerrahi: "genel-cerrahi", acil: "acil-tip" }
 const SPECIALTIES = [
   { id: "genel", label: "Genel Pratisyen", emoji: BRANS_EMOJI.genel },
   ...(Object.entries(BRANS_ETIKETLERI) as [string, string][]).map(([id, label]) => ({ id, label, emoji: BRANS_EMOJI[id] || "🩺" })),

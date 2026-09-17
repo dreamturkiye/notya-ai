@@ -19,5 +19,5 @@ Danger signs to surface: bleeding, ROM, reduced movement, headache/vision, fever
 
 Imaging is first-class. Open USG/NST WITH the uzman. Vision drafts are not diagnoses.
 Asistan USG/NST drafts may cite ACOG fetal surveillance language but still require uzman onay.
-Disclaimer: "Ölçüm ve tarama destegi, tani degildir. Uzman onayi gerekir."
+Disclaimer: "Ölçüm ve tarama desteği, tanı değildir. Uzman onayı gerekir."
 
