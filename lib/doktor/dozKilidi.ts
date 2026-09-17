@@ -35,10 +35,23 @@ export function kaynakSayilari(...kaynaklar: (string | null | undefined)[]): Set
   return set
 }
 
+/**
+ * Blood-loss / PPH volume thresholds (e.g. "≥500 mL", "≥1000 mL kan kaybı") look like dose tokens because
+ * mL is a drug unit, but they are clinical cut-offs — never replace them with DOZ_YER_TUTUCU.
+ */
+function kanKaybiHacimEsik(metin: string, offset: number, tam: string): boolean {
+  if (!/(?:mL|ml)\b/.test(tam)) return false
+  const once = metin.slice(Math.max(0, offset - 48), offset)
+  const baglam = once + metin.slice(offset, offset + tam.length + 48)
+  if (/[≥≤<>]|>=|<=|en\s+az|en\s+fazla|\büzeri\b|\balti\b|\baltı\b/.test(once)) return true
+  return /(?:kan\s*kayb|kanama\s+e[sş]i[gğ]|postpartum\s+hemor|\bPPH\b|doğum\s+sonu\s+kanama)/i.test(baglam)
+}
+
 /** Replace dose tokens whose numbers are not in the hekim's source. Returns the cleaned text and what was removed. */
 export function uydurmaDozTemizle(metin: string, kaynak: Set<string>): { metin: string; dozlar: string[] } {
   const dozlar: string[] = []
-  const temiz = metin.replace(DOZ_RE, (tam: string, a: string, b?: string) => {
+  const temiz = metin.replace(DOZ_RE, (tam: string, a: string, b: string | undefined, offset: number) => {
+    if (kanKaybiHacimEsik(metin, offset, tam)) return tam
     if ([a, b].every((n) => !n || kaynak.has(sayiAnahtari(n)))) return tam
     dozlar.push(tam.trim())
     return DOZ_YER_TUTUCU

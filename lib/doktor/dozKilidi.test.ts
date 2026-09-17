@@ -53,6 +53,18 @@ test('lab values and non-dose numbers are not treated as doses', () => {
   }
 })
 
+test('PPH blood-loss threshold ≥500 mL is not treated as an invented drug dose', () => {
+  const k = kaynakSayilari('')
+  const pph = 'Postpartum hemoraji (PPH): vajinal doğumda ≥500 mL, sezaryende ≥1000 mL kan kaybı eşiği.'
+  assert.equal(uydurmaDozTemizle(pph, k).metin, pph)
+  assert.equal(uydurmaDozTemizle(pph, k).dozlar.length, 0)
+  const karisik = 'PPH ≥500 mL kan kaybı; oksitosin 10 IU bolus.'
+  const r = uydurmaDozTemizle(karisik, k)
+  assert.ok(r.metin.includes('≥500 mL'), r.metin)
+  assert.ok(r.metin.includes(DOZ_YER_TUTUCU), r.metin)
+  assert.ok(r.dozlar.some((d) => /10\s*IU/i.test(d)), String(r.dozlar))
+})
+
 test('dose units the regex must catch', () => {
   const k = kaynakSayilari('')
   for (const s of ['1500 IU', '4 g yükleme magnezyum', '2 mU/dk oksitosin', '400 mcg folik asit', '1000ü/damla', '6 mg deksametazon', '20 ünite']) {

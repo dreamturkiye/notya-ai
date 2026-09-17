@@ -12,12 +12,13 @@ describe('acog citations', () => {
     assert.equal(PROTOCOL_SOURCES.find((s) => s.id === 'dobyr-2026')?.role, 'yasal_taban_sb')
   })
 
-  it('citeProtocol leads with ACOG then DÖBYR then Williams', () => {
+  it('citeProtocol leads with SB/TR then ACOG (TR-first overrides prior ACOG-first ranking)', () => {
     const cites = citeProtocol('obstetrik')
-    assert.equal(cites[0], 'acog')
-    assert.equal(cites[1], 'dobyr-2026')
-    assert.equal(cites[2], 'williams-26')
-    assert.ok(cites.includes('temel-kd-4'))
+    assert.equal(cites[0], 'dobyr-2026')
+    assert.equal(cites[1], 'temel-kd-4')
+    assert.equal(cites[2], 'acog')
+    assert.equal(cites[3], 'williams-26')
+    assert.ok(cites.indexOf('dobyr-2026') < cites.indexOf('acog'))
   })
 
   it('ACOG map rows use verified September 2026 titles-list numbers', () => {

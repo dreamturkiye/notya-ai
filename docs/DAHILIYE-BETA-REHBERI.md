@@ -148,10 +148,10 @@ Vit D/B12, e-Nabız ve gut kartları için henüz örnek ekran görüntüsü yok
 
 1. **Hastaya etkisi olabilecekse önce durun:** notu onaylamayın, yazdırmayın, kilitlemeyin. Klinik karar her zaman sizde; Notya'nın taslağına göre işlem yapmayın.
 2. **Not alın:** hangi hasta dosyası sekmesi / kart, hangi düğme, ne beklediniz, ne gördünüz, saat. Ekran görüntüsü alacaksanız **hasta adı, T.C., telefon görünmesin** (kırpın veya test hastasında tekrarlayın).
-3. **Bildirin:** Notya'da **henüz uygulama içi geri bildirim / destek kanalı yok** (açık iş, aşağıda). Şimdilik beta sürecindeki yol, Dr. Gökhan Mamur'un beta test listelerindeki ile aynıdır: notlarınızı **Kaan'a (beta sorumlusu) WhatsApp veya e-posta ile** gönderin. Mesaja hasta kimliği koymayın; "TEST hastası, Dahiliye › KVR, Kilitle sonrası notta kategori çıkmadı" gibi yazmanız yeterli.
+3. **Bildirin:** Beta döneminde uygulama içi geri bildirim kanalı **yok** (karar: beta sonrası değerlendirilecek). Yol, Dr. Gökhan Mamur'un beta test listelerindeki ile aynıdır: notlarınızı **Kaan'a (beta sorumlusu) WhatsApp veya e-posta ile** gönderin. Mesaja hasta kimliği koymayın; "TEST hastası, Dahiliye › KVR, Kilitle sonrası notta kategori çıkmadı" gibi yazmanız yeterli.
 4. **Acil klinik durum** Notya'nın konusu değildir: hastayı olağan pratiğinizle yönetin, sonra bildirin.
 
-> **Açık iş:** uygulama içi "Sorun bildir" kanalı (kimliksiz ekran bağlamı + sürüm + zaman ile) — `docs/OPEN-COMMITMENTS.md` › DAHILIYE-BETA-REHBERI satırı.
+> **Karar (2026-09-17):** beta için WhatsApp / e-posta yeterli; in-app "Sorun bildir" post-beta'ya ertelendi — `docs/OPEN-COMMITMENTS.md` › BETA-GERI-BILDIRIM-KANALI.
 
 ---
 

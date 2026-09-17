@@ -2,8 +2,10 @@
  * Structured citation catalog. Cite role; do not dump copyrighted book text.
  * e-Nabız / MBYS / e-Doğum are integration adapters, not gold sources.
  *
- * Ranking confirmed for Notya by Dr. Gokhan Mamur: TR kadın doğum hekimleri
- * pratikte ACOG (PB / CO / OCC) cite eder; DÖBYR yasal tabandır; Williams ders kitabı derinliğidir.
+ * Citation *display* order for Notya (product directive 2026-09-17): Turkish sources first —
+ * Sağlık Bakanlığı / national TR → TJOD / ulusal specialty orgs → ACOG / international.
+ * This overrides the prior ACOG-first ranking Dr. Gökhan used for clinical practice preference;
+ * ACOG remains pratik_altin_standart_tr_hekim for dual SB/ACOG columns, but is listed after TR sources.
  */
 export type SourceRole =
   | 'pratik_altin_standart_tr_hekim'
@@ -118,17 +120,17 @@ export type DualRecommendation<T> = {
 export type CiteKind = 'obstetrik' | 'jinekoloji' | 'lohusa' | 'risk' | 'acil'
 
 /**
- * Mandatory citation order: ACOG → DÖBYR/DSB/Riskli → Williams → Novak (gyn) → Temel KD.
+ * Mandatory citation display order (TR-first; overrides prior ACOG-first ranking):
+ * SB / national TR → ulusal specialty wording (Temel KD) → ACOG → Williams → Novak (gyn).
  * Never collapse ACOG and DÖBYR into one recommendation when they differ.
  */
 export function citeProtocol(kind: CiteKind = 'obstetrik'): string[] {
-  const out: string[] = ['acog']
+  const out: string[] = []
   if (kind === 'lohusa') out.push('dsbyr')
   else if (kind === 'risk') out.push('dobyr-2026', 'riskli-gebelikler')
   else out.push('dobyr-2026')
-  out.push('williams-26')
+  out.push('temel-kd-4', 'acog', 'williams-26')
   if (kind === 'jinekoloji') out.push('berek-novak-16-17')
-  out.push('temel-kd-4')
   return out
 }
 
