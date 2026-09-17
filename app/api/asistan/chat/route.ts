@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
 import { PERSONAS, getPersonaForSpecialty, buildSystemPrompt, type PersonaId, type SpecialtyId } from "@/lib/asistan/personaEngine"
+import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
@@ -161,7 +162,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Build system prompt with learning context
-    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + dosyaEk
+    // DAH-PROMPTS-LOCK: dahiliye hekimi (users.specialty) → specialties/dahiliye/prompts kilidi (system.md + tools.ts)
+    const bransKilidi = dahiliyeMi((doctorRow as { specialty?: string } | null)?.specialty, specialty) ? dahiliyeKilidi("asistan") : ""
+    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + bransKilidi + dosyaEk
 
     // Call Claude with full conversation history
     const response = await getAnthropic().messages.create({

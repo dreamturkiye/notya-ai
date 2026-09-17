@@ -23,6 +23,12 @@ READ FIRST (unchanged): https://notya-ai.vercel.app/dahiliye-presprint-audit.htm
 5. One smoke-path screenshot in `public/dahiliye-post-sprint-audit.html` (real qa.test data, no PHI).
 6. Hekim lock on every clinical output (tanı/evre/hedef/ilaç class) — no auto-commit to the note.
 
+**Prompts rubric (non-clinical artifacts, e.g. the `prompts/` lock) — distinct from the six-criterion clinical rubric above.** Added 2026-09-17 (DAH-PROMPTS-LOCK). For a prompts-only artifact, criteria 1–2 (engine + tests, table) are N/A by design. No engine or table is invented to satisfy them. Such a row is Strong only when all four of these hold:
+- **(a) Exists and complete:** `system.md` + `tools.ts` + `soap-*.md` (+ `asistan-ogrenme.md`) are present and non-empty, and every tool maps to a real API step.
+- **(b) Reviewed against the goldens:** checked against the same goldens as elsewhere (TİHUD / Harrison / TEMD / Uzlaşı + §1 locked safety). ref_codes only, no book text reproduced.
+- **(c) Wired at runtime:** the prompts are loaded on the actual dahiliye call paths (SOAP generation, asistan chat, voice, learning), with the exact call sites cited. A prompt file sitting unused in the repo does not count.
+- **(d) Hekim lock language** (criterion 6) is present in `system.md`.
+
 ## 3. Build order — four waves, each = PR(s) + `npx tsc --noEmit` clean + `npm test` green + Vercel production Ready before the next wave starts. Claude audits at wave boundaries only.
 
 ### Wave 0 — foundation (everything downstream reads from these; do first)

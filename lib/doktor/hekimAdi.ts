@@ -19,3 +19,11 @@ export async function hekimAdi(sb: SupabaseClient, doctorId: string): Promise<st
     return unvan
   } catch { return '' }
 }
+
+/** DAH-PROMPTS-LOCK: users.specialty — branş kilitleri (ör. dahiliye prompts/) seans bağlamına güvenmeden uygulanır. */
+export async function hekimBransi(sb: SupabaseClient, doctorId: string): Promise<string | null> {
+  try {
+    const { data } = await sb.from('users').select('specialty').eq('id', doctorId).maybeSingle()
+    return data?.specialty ? String(data.specialty) : null
+  } catch { return null }
+}

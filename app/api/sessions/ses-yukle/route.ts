@@ -14,7 +14,7 @@ import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { soapNotuUret, stilOrnekleriDerle } from '@/lib/doktor/soapUret'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
-import { hekimAdi } from '@/lib/doktor/hekimAdi'
+import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -128,8 +128,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-    const doktorAdi = await hekimAdi(supabase, doktorId)
-    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi })
+    const [doktorAdi, doktorBransi] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId)])
+    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi })
 
     const { data: note, error: noteError } = await supabase.from('notes').insert({
       session_id: seans.id,

@@ -12,6 +12,11 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
 
+  // DAH-PROMPTS-LOCK: specialties/dahiliye/prompts/*.md are read at runtime (fs) by SOAP, chat, hafıza (voice) and approve routes.
+  experimental: {
+    outputFileTracingIncludes: { '/api/**/*': ['./specialties/dahiliye/prompts/*.md'] },
+  },
+
   // QA-2026-09-06 bulgu #1: /login 404'tı — alışkanlıkla yazılan yolları gerçek girişe yönlendir.
   async redirects() {
     return [

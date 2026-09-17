@@ -19,6 +19,7 @@ import fs from 'fs'
 import path from 'path'
 import { normalize } from '@/lib/ilac/ilacArama'
 import { SPECIALTIES } from '@/lib/doktor/specialties'
+import { dahiliyeKilidi, dahiliyeMi, dahiliyeReceteDozsuz } from '@/specialties/dahiliye/prompts'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -181,6 +182,7 @@ export interface SoapGirdi {
   stilOrnekleri?: string // doktorun onayladığı önceki notlardan üslup örnekleri
   stilProfili?: string // NOTYA-OGRENME-02: düzeltme geçmişinden damıtılmış doktor tercihleri
   doktorAdi?: string // Kaan 2026-09-10: veli özetinde "Doktorunuz" yerine "Dr. Ad Soyad"
+  doktorBransi?: string | null // DAH-PROMPTS-LOCK: users.specialty — seans bağlamı branş göndermese de kilit uygulanır
 }
 
 /** AUDIT-2026-09-03 (canlı olay, 16:27): uzun muayenelerde model çıktısı token tavanında
@@ -222,15 +224,21 @@ function jsonKurtar(metin: string): SoapNotu {
   throw new Error('SOAP çıktısı ayrıştırılamadı (onarılamadı)')
 }
 
-export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Promise<SoapNotu> {
-  const sistem = [
+/** System prompt for SOAP generation. Dahiliye doctors get the prompts/ lock (system.md + soap-dahiliye.md + tools.ts) appended. */
+export function soapSistemPromptu(girdi: SoapGirdi): string {
+  return [
     aysePersona(girdi.specialty),
     soapKurallari(),
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
     girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
     girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',,
-    girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : ''
+    girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
+    dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : '',
   ].join('\n')
+}
+
+export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Promise<SoapNotu> {
+  const sistem = soapSistemPromptu(girdi)
 
   const yanit = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
@@ -243,6 +251,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   const veri = jsonKurtar(temiz)
   if (Array.isArray(veri.receteOnerisi)) {
     veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
+    if (dahiliyeMi(girdi.specialty, girdi.doktorBransi)) veri.receteOnerisi = dahiliyeReceteDozsuz(veri.receteOnerisi as ReceteOnerisi[])
   }
   return veri
 }
@@ -266,7 +275,8 @@ export function stilOrnekleriDerle(notlar: { content_subjektif?: string | null; 
 export async function stilProfiliDamit(
   anthropic: Anthropic,
   mevcutProfil: string,
-  duzeltmeler: { alan?: string | null; onceki?: string | null; sonraki?: string | null }[]
+  duzeltmeler: { alan?: string | null; onceki?: string | null; sonraki?: string | null }[],
+  doktorBransi?: string | null
 ): Promise<string> {
   const ornekler = duzeltmeler.slice(0, 20).map((d, i) =>
     `${i + 1}. [${d.alan || '?'}]\nÖNCE: ${String(d.onceki || '').slice(0, 400)}\nSONRA: ${String(d.sonraki || '').slice(0, 400)}`
@@ -281,7 +291,7 @@ export async function stilProfiliDamit(
 - ÜSLÜP tercihleri (terminoloji, format, uzunluk/ayrıntı düzeyi, yapı, hangi öğe türlerini siler/ekler): DÜŞÜK RİSK, tek örnekten bile kural çıkarabilirsin.
 - KLİNİK tercihler (belirli bir ilaç seçimi, doz şeması, tedavi planı değişikliği): YÜKSEK RİSK — hastaya özgü bir sebep olabilir (başka ilaç kullanımı, alerji, tolerans). SADECE aynı veya açıkça benzer değişikliğin aşağıdaki YENİ DÜZELTMELER listesinde EN AZ 2 FARKLI ÖRNEKTE tekrarlandığını gördüğünde bir klinik kural olarak yaz. Tek örnekte gördüğün bir ilaç/doz değişikliğini profile YAZMA (ne mevcut listeye ekle ne yeni madde aç) — profil "MUTLAKA uy" olduğu için tek vakadan genelleme riskli; o vakada başka bir klinik sebep olabilir. Liste son 20 düzeltmeyi içerir, yani aynı tercih birden fazla vizitte tekrarlanmışsa hepsi burada görünür — sayıp karar ver.
 
-Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.`,
+Hastaya özgü klinik içerikten (o hastanın adı, o vizidin detayları) kural üretme — yalnız GENELLENEBİLİR kalıplar. Mevcut profil varsa güncelleyip birleştir, çelişenlerde yeni düzeltmeyi esas al. SADECE madde listesini döndür.${dahiliyeMi(doktorBransi) ? dahiliyeKilidi('ogrenme') : ''}`,
     messages: [{ role: 'user', content: `MEVCUT PROFİL:\n${mevcutProfil || '(yok)'}\n\nYENİ DÜZELTMELER:\n${ornekler}` }],
   })
   const metin = yanit.content[0]?.type === 'text' ? yanit.content[0].text.trim() : ''
