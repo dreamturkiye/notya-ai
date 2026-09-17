@@ -51,8 +51,37 @@ export function rowToMeta(row: Record<string, unknown>): DocumentMeta {
   }
 }
 
+/**
+ * KASA-BELGE-01: macOS dosya adlarını NFD (ayrışmış) verir — "İ" = "I" + U+0307,
+ * "ç" = "c" + U+0327. Eski hâlde taban harf `\w` ile geçiyor, birleşen işaret ise
+ * izin listesinde olmadığı için "_" oluyordu: "Hasta İki … sonuçları.pdf" kasada
+ * "Hasta I_ki … sonuc_ları.pdf" olarak görünüyordu. Önce NFC'ye toparlıyoruz, sonra
+ * harf/rakamı Unicode duyarlı süzüyoruz — Türkçe, Kürtçe, Arapça adlar aynen kalır.
+ * Yol ayıracı, denetim karakteri ve baştaki nokta hâlâ temizlenir.
+ */
 export function sanitizeFileName(name: string): string {
-  return name.replace(/[^\w.\- ()ğüşıöçĞÜŞİÖÇ]+/gi, '_').slice(0, 180) || 'belge'
+  return (
+    name
+      .normalize('NFC')
+      .replace(/[\u0000-\u001F\u007F]+/g, '')
+      .replace(/[^\p{L}\p{N}._\- ()[\]]+/gu, '_')
+      .replace(/^\.+/, '')
+      .trim()
+      .slice(0, 180) || 'belge'
+  )
+}
+
+/**
+ * KASA-BELGE-01 — HTTP başlıkları yalnız Latin-1 taşır. "ğ ş ı İ" Latin-1'de yok; ham dosya adı
+ * Content-Disposition'a yazılınca Node başlığı reddediyor, indirme rotası catch'e düşüp 404
+ * dönüyordu. Sonuç: Türkçe adlı her belge Kasa'da açılmıyor ve İndir de çalışmıyordu (ç ö ü
+ * Latin-1'de olduğu için tesadüfen çalışıyordu). RFC 5987: ASCII yedek `filename=` + gerçek adı
+ * taşıyan `filename*=UTF-8''…`.
+ */
+export function contentDispositionAd(fileName: string): string {
+  const ad = (fileName || 'belge').normalize('NFC')
+  const asciiYedek = ad.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '') || 'belge'
+  return `filename="${asciiYedek}"; filename*=UTF-8''${encodeURIComponent(ad)}`
 }
 
 export type { UploadInput }
