@@ -96,6 +96,17 @@ Post-sprint audits reuse the same chrome but may collapse to Strong domains + sh
 - Footer: snapshot label + “no patient data”.
 - Cross-link pre ↔ post when both exist.
 
+## Hasta portalı row (mandatory on specialty audits)
+
+Every specialty coverage table **must** include a **Hasta portalı (Sağlığım)** row scored Strong|Partial|Thin|Missing.
+
+- **Strong** = specialty module exists, eligibility-gated, patient-safe copy, demo fixture.
+- **Partial** = bolt-on fields on shared Takip only (today’s KD gebelik / pediatri büyüme / dahiliye anket pattern).
+- **Thin** = doctor chapter exists, portal still generic core only.
+- **Missing** = no chapter and no portal slice.
+
+Architecture rules live in `.cursor/skills/specialty-hasta-portali/SKILL.md`: one shell, many chapters; pediatri ≠ göz ≠ KD portals beyond shared core.
+
 ## Anti-patterns
 
 - Markdown-only audit when the user wanted something shareable/visual
@@ -103,6 +114,7 @@ Post-sprint audits reuse the same chrome but may collapse to Strong domains + sh
 - Empty “Strong” with empty notes
 - Mixing pre- and post-sprint claims without labeling
 - Publishing canvas Publish button as the share path — always ship HTML URL
+- Treating Sağlığım as one identical product for every branş (violates specialty-hasta-portali)
 
 ## Quick checklist
 

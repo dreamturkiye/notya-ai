@@ -114,6 +114,11 @@ Vaughan/AAO BCSC secondary (çakışmada TOD/SB). Method = KD/dahiliye depth: pr
 engines/UI/prompts lock → specialty portal “Gözlerim” → ship. Pain focus: 8-hour poliklinik
 speed (bilateral VA/GİB, glokom/DR/katarakt loops, enjeksiyon takvim, SGK rapor).
 
+**Pre-sprint audit shipped 2026-09-17 (before Claude chapter build):**
+`public/goz-presprint-audit.html` → https://notya-ai.vercel.app/goz-presprint-audit.html
+Verdict: chapter Missing; overall ~8% vs wow bar; top gaps = VA/GİB strip, glokom, DR loop, Gözlerim.
+Post-sprint twin TBD after build: `goz-post-sprint-audit.html`.
+
 ## Kadın Hastalıkları ve Doğum — Wave 1, first slice shipped 2026-09-14 (night)
 
 Shipped for Dr. Gökhan's morning review: lib/clinical/gebelik.ts (Naegele/USG dating, SB DÖB

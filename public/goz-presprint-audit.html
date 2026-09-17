@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Göz Hastalıkları — Specialty Audit (pre-sprint) · Notya</title>
+  <meta name="description" content="Pre-Claude / pre-build Göz Hastalıkları specialty audit — baseline only. Snapshot 2026-09-17." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    h3 { margin:20px 0 8px; font-size:15px; font-weight:700; color:var(--muted); }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:860px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .pill.neutral { background:rgba(255,255,255,.06); color:var(--muted); border-color:var(--stroke); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.info { color:var(--blue); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout.danger { background:var(--red-soft); border-color:rgba(248,113,113,.32); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); } .callout.danger h2 { color:var(--red); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(140px,240px) 1fr 36px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-val { font-size:12px; font-weight:700; color:var(--text); text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; margin-bottom:8px; }
+    .card .title { font-size:14px; font-weight:650; }
+    .card .sub { font-size:11px; font-weight:700; color:var(--text); margin-top:6px; }
+    .card .sub.muted { color:var(--dim); font-weight:500; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <span class="tag">Notya · Pre-sprint specialty audit</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="https://notya-ai.vercel.app/kd-jine-presprint-audit.html">KD pre-sprint (method twin) →</a>
+        <a href="https://notya-ai.vercel.app/dashboard/doktor">Doktor paneli →</a>
+      </div>
+    </div>
+
+    <div class="banner">Snapshot <b>before</b> Göz chapter build (Claude all-in-one / registry + engines + Gözlerim portal). Re-audit after ship as <code>goz-post-sprint-audit.html</code>.</div>
+
+    <h1>Göz Hastalıkları (Oftalmoloji) — Specialty Audit</h1>
+    <p class="lede">Notya AI codebase × TOD / T.C. SB DR+glokom protokoller × SGK GİL/anti-VEGF × 8 saatlik TR oftalmoloji polikliniği. Snapshot 2026-09-17 (pre-build). Compare: KD ~111 files · Derm ~91 · Dahiliye ~75 · <b>Göz chapter 0</b>.</p>
+    <div class="pills">
+      <span class="pill danger">Chapter folder: Missing</span>
+      <span class="pill warning">Catalog + intake: Thin→Partial</span>
+      <span class="pill danger">Wow bar: near floor — no MD would say “ulan bu başka”</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v danger">0</div><div class="l">specialties/goz-* files</div></div>
+      <div class="stat"><div class="v warning">baseline</div><div class="l">Registry olgunluk</div></div>
+      <div class="stat"><div class="v info">~5</div><div class="l">Stub surfaces (catalog/intake/SOAP/types)</div></div>
+      <div class="stat"><div class="v">~8%</div><div class="l">Overall vs wow bar (honest)</div></div>
+    </div>
+
+    <div class="callout danger">
+      <h2>Executive verdict</h2>
+      <p>Göz is a <b>named specialty without a chapter</b>. What exists is platform scaffolding: branş kaydı, TOD-first reference strings, a solid intake questionnaire, a SOAP prompt stub, reserved VA/GİB measurement <i>type keys</i> (not wired into any profile olcumler), dahiliye “yıllık göz dibi sevk”, and belge-ontology awareness (fundus/OCT/DR codes + goz router row with empty motors). There is no Göz hasta dosyası tab, no bilateral VA/GİB strip, no glokom/DR/katarakt/enjeksiyon engine, no OCT/fundus upload chips in imaging modalities, no prompts lock, no SGK GİL/anti-VEGF rapor, and no specialty Sağlığım module. A Turkish ophthalmologist on an 8-hour day gets the generic EMR spine — not ophthalmology. That is the honest pre-Claude baseline.</p>
+    </div>
+
+    <h2>Coverage depth by domain</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Chapter folder / manifest / schema</td><td><span class="pill danger">Missing</span></td><td class="note">No specialties/goz-hastaliklari/; registry falls to baselineProfile</td></tr>
+        <tr><td class="domain">Registry SpecialtyProfile</td><td><span class="pill danger">Thin</span></td><td class="note">Key known in BRANS_ETIKETLERI / SPECIALTIES; CHAPTERS has pediatri/KD/derm only</td></tr>
+        <tr><td class="domain">TR golden refs (TOD/SB/SGK)</td><td><span class="pill warning">Partial</span></td><td class="note">turkishSpecialtyRefs + specialties.ts list correct TOD-first stack; no protocols/sources module, no dual-column conflict UI</td></tr>
+        <tr><td class="domain">Intake (pre-visit)</td><td><span class="pill warning">Partial</span></td><td class="note">bransSorulari goz block is real (lens, şikayet, glokom/katarakt öykü, aile); not wired to SOAP Subjektif/strip like dahiliye anket</td></tr>
+        <tr><td class="domain">SOAP / prompts lock</td><td><span class="pill danger">Thin</span></td><td class="note">specialtyTemplates “göz” stub only; no specialties/.../prompts/ runtime lock</td></tr>
+        <tr><td class="domain">Bilateral VA / GİB entry</td><td><span class="pill danger">Missing</span></td><td class="note">Type keys in profile.ts only; not in BASELINE_OLCUMLER; no sticky OD/OS strip</td></tr>
+        <tr><td class="domain">Glokom loop (GİB hedef, damla, VF/OCT due)</td><td><span class="pill danger">Missing</span></td><td class="note">No engine, no tasks, no trend card</td></tr>
+        <tr><td class="domain">Diyabetik retinopati (TOD/SB)</td><td><span class="pill danger">Thin</span></td><td class="note">Dahiliye dm_goz sevk task + belge FUN.DR* ontology labels; no ophthalmology staging/recall product</td></tr>
+        <tr><td class="domain">Katarakt / GİL + SGK rapor</td><td><span class="pill danger">Missing</span></td><td class="note">Refs mention SGK GİL; zero product</td></tr>
+        <tr><td class="domain">Anti-VEGF enjeksiyon takvim + rapor</td><td><span class="pill danger">Missing</span></td><td class="note">Intake lists “göz içi enjeksiyon” history checkbox only</td></tr>
+        <tr><td class="domain">Kornea / kuru göz / kontakt</td><td><span class="pill danger">Missing</span></td><td class="note">Intake awareness only</td></tr>
+        <tr><td class="domain">Pediatrik / şaşılık / ambliyopi</td><td><span class="pill danger">Missing</span></td><td class="note">TOD pediatrik listed in refs; no bridge module</td></tr>
+        <tr><td class="domain">Acil red flags (RD, AACG, kimyasal)</td><td><span class="pill danger">Thin</span></td><td class="note">critical_keywords in specialtyTemplates stub; no banner/workflow</td></tr>
+        <tr><td class="domain">OCT / fundus / slit gallery + dual-sign</td><td><span class="pill danger">Thin</span></td><td class="note">core/belgeler ontoloji+router goz modalities; imagingModalities chips have no oct/fundus (→ diğer); no chapter imaging/</td></tr>
+        <tr><td class="domain">Dahiliye köprüsü (göz dibi sevk)</td><td><span class="pill warning">Partial</span></td><td class="note">DM yıllık göz dibi → sevk hedefi “goz”; no receiving ophthalmology chart / closed loop</td></tr>
+        <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill danger">Missing</span></td><td class="note">No Gözlerim module; generic shell only — would incorrectly inherit bolt-ons if eligibility not gated (skill debt)</td></tr>
+        <tr><td class="domain">Tests / smoke / README</td><td><span class="pill danger">Missing</span></td><td class="note">No test:goz; no README_GOZ</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>How complete vs “wow bar”</h2>
+    <p class="cap">Score = product completeness vs what would impress a busy Turkish ophthalmologist (0–100). Pre-build: most bars are stubs or zero. Source: repo inventory 2026-09-17.</p>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-label">Branş catalog + TOD refs</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">55</div></div>
+      <div class="bar-row"><div class="bar-label">Intake questionnaire</div><div class="bar-track"><div class="bar-fill" style="width:45%"></div></div><div class="bar-val">45</div></div>
+      <div class="bar-row"><div class="bar-label">SOAP prompts lock</div><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><div class="bar-val">12</div></div>
+      <div class="bar-row"><div class="bar-label">Bilateral VA / GİB UX</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">5</div></div>
+      <div class="bar-row"><div class="bar-label">Glokom loop</div><div class="bar-track"><div class="bar-fill" style="width:3%"></div></div><div class="bar-val">3</div></div>
+      <div class="bar-row"><div class="bar-label">DR staging + recall</div><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><div class="bar-val">10</div></div>
+      <div class="bar-row"><div class="bar-label">Katarakt / GİL SGK</div><div class="bar-track"><div class="bar-fill" style="width:2%"></div></div><div class="bar-val">2</div></div>
+      <div class="bar-row"><div class="bar-label">Anti-VEGF schedule</div><div class="bar-track"><div class="bar-fill" style="width:2%"></div></div><div class="bar-val">2</div></div>
+      <div class="bar-row"><div class="bar-label">OCT/fundus dual-sign</div><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><div class="bar-val">15</div></div>
+      <div class="bar-row"><div class="bar-label">Acil red-flag workflow</div><div class="bar-track"><div class="bar-fill" style="width:8%"></div></div><div class="bar-val">8</div></div>
+      <div class="bar-row"><div class="bar-label">Portal Gözlerim</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+      <div class="bar-row"><div class="bar-label">Specialty portal registry</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">5</div></div>
+    </div>
+
+    <h2>TOD / SB / SGK practice matrix</h2>
+    <p class="cap">MoH = T.C. SB diyabetik retinopati tarama + glokom klinik protokolleri. Society = TOD birimler. Law/ops = SGK GİL / anti-VEGF rapor.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Mandate / expectation</th><th>Level</th><th>In product today</th><th>Gap to wow</th></tr></thead>
+      <tbody>
+        <tr><td>DR screening cadence (DM patients)</td><td><span class="pill info">MoH</span></td><td class="note">Dahiliye annual göz dibi task + sevk label</td><td class="gap">Receiving göz chart; staging; recall SMS; closed-loop status</td></tr>
+        <tr><td>Glokom: GİB izlem + hedef + görme alanı</td><td><span class="pill info">MoH / TOD</span></td><td class="note">None</td><td class="gap">Bilateral GİB strip + hedef + VF/OCT due engine</td></tr>
+        <tr><td>TOD Retina / Kornea / Glokom birim protocols</td><td><span class="pill neutral">Society</span></td><td class="note">Cited as strings in catalog</td><td class="gap">protocols/sources + engines with role citations</td></tr>
+        <tr><td>SGK GİL rapor</td><td><span class="pill info">SGK</span></td><td class="note">Mentioned in refs only</td><td class="gap">Rapor taslağı + kilit (dahiliye sgkRapor pattern)</td></tr>
+        <tr><td>SGK anti-VEGF enjeksiyon rapor / endikasyon</td><td><span class="pill info">SGK</span></td><td class="note">None</td><td class="gap">Enjeksiyon takvim + rapor kilidi</td></tr>
+        <tr><td>Pediatrik şaşılık / ambliyopi izlem</td><td><span class="pill neutral">TOD ped</span></td><td class="note">Ref string only</td><td class="gap">Izlem hatırlatma + pediatri bridge (don’t fork pediatri)</td></tr>
+        <tr><td>Acil: RD / AACG / kimyasal yanık</td><td><span class="pill neutral">BP / malpractice</span></td><td class="note">Keyword list in SOAP stub</td><td class="gap">Red banner + 112 path; no delay for portal messaging</td></tr>
+        <tr><td>KVKK — görüntü (fundus/OCT) hasta paylaşımı</td><td><span class="pill neutral">Law</span></td><td class="note">Generic portal KVKK footer</td><td class="gap">Patient-safe “görüntü yüklendi” without tanı language</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Doctor pain points (8-hour poliklinik)</h2>
+    <div class="cards">
+      <div class="card"><div class="top"><span class="title">OD/OS VA + GİB her hastada yeniden yazmak</span><span class="pill neutral">Highest daily friction</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Sticky bilateral strip; copy-forward last visit with confirm; cc/sc uzak/yakın</div>
+        <div class="sub muted">Now: Type keys reserved — UI Missing</div></div>
+      <div class="card"><div class="top"><span class="title">Glokom takip kaçırma (hedef GİB, damla, VF)</span><span class="pill neutral">Chronic panel volume</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Trend + due tasks + damla rejimi card (hekim doz yazar)</div>
+        <div class="sub muted">Now: Missing</div></div>
+      <div class="card"><div class="top"><span class="title">DR hastası — dahiliye sevki / yıllık kontrol</span><span class="pill neutral">Cross-specialty leak</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Sevk inbox → staging → recall; status back to dahiliye</div>
+        <div class="sub muted">Now: One-way dm_goz task only</div></div>
+      <div class="card"><div class="top"><span class="title">Anti-VEGF enjeksiyon günü + SGK rapor</span><span class="pill neutral">Ops + revenue risk</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Takvim + rapor kilidi pattern</div>
+        <div class="sub muted">Now: Missing</div></div>
+      <div class="card"><div class="top"><span class="title">OCT/fundus arşiv + asistan yorum güvenliği</span><span class="pill neutral">Medicolegal</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Gallery + dual-sign; “tanı değil” hard guard</div>
+        <div class="sub muted">Now: Ontology aware; upload chips Thin</div></div>
+      <div class="card"><div class="top"><span class="title">Katarakt pre-op + GİL SGK</span><span class="pill neutral">High volume surgery path</span></div>
+        <div class="sub"><b>Wow move</b></div><div class="body">Checklist + rapor taslağı</div>
+        <div class="sub muted">Now: Missing</div></div>
+    </div>
+
+    <h2>What exists vs what looks like product</h2>
+    <div class="callout warning">
+      <h2>Do not confuse platform stubs with a specialty</h2>
+      <p>Belge ontology already knows FUN.DR0–4, glokom şüphesi, AMD, papilödem and routes “goz” to fundus/oct/dis_goz — but motors are empty and doctor imaging chips don’t list those modalities. VA/GİB keys exist in a TypeScript union for future chapters — they are not measurements a doctor can enter today. Inflating any of this to Strong would lie.</p>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Surface</th><th>Coverage</th><th>Gap</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">lib/doktor/specialties.ts goz entry</td><td><span class="pill warning">Partial</span></td><td class="gap">Needs chapter to consume refs/soapFields</td></tr>
+        <tr><td class="domain">turkishSpecialtyRefs TOD stack</td><td><span class="pill warning">Partial</span></td><td class="gap">Move into protocols/sources + citeProtocol</td></tr>
+        <tr><td class="domain">bransSorulari intake</td><td><span class="pill warning">Partial</span></td><td class="gap">Prefill SOAP + şerit like dahiliye anket</td></tr>
+        <tr><td class="domain">specialtyTemplates göz SOAP</td><td><span class="pill danger">Thin</span></td><td class="gap">Replace with prompts/ lock + runtime wire</td></tr>
+        <tr><td class="domain">profile.ts VA/GİB keys</td><td><span class="pill danger">Thin</span></td><td class="gap">Add to GOZ_PROFILE.olcumler + UI strip</td></tr>
+        <tr><td class="domain">core/belgeler goz router + FUN.*</td><td><span class="pill danger">Thin</span></td><td class="gap">Motors + imaging chips + dual-sign chapter</td></tr>
+        <tr><td class="domain">dahiliye dm_goz sevk</td><td><span class="pill warning">Partial</span></td><td class="gap">Closed loop into göz chapter</td></tr>
+        <tr><td class="domain">Sağlığım shell</td><td><span class="pill danger">Missing</span></td><td class="gap">Gözlerim module + eligibility registry</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Forms &amp; tests — gap list</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Form / test / artifact</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">specialties/goz-hastaliklari/**</td><td class="note">Absent</td><td class="gap">Create KD-shaped chapter</td></tr>
+        <tr><td class="domain">GOZ_PROFILE in registry</td><td class="note">Absent</td><td class="gap">Register + portal module</td></tr>
+        <tr><td class="domain">Bilateral VA/GİB form</td><td class="note">Absent</td><td class="gap">Sticky strip game changer #1</td></tr>
+        <tr><td class="domain">Glokom izlem kartı</td><td class="note">Absent</td><td class="gap">Engine + UI</td></tr>
+        <tr><td class="domain">DR staging / recall</td><td class="note">Ontology labels only</td><td class="gap">TOD/SB engine + sevk loop</td></tr>
+        <tr><td class="domain">GİL / anti-VEGF SGK rapor</td><td class="note">Absent</td><td class="gap">Mirror dahiliye sgkRapor pattern</td></tr>
+        <tr><td class="domain">OCT/fundus modality chips</td><td class="note">Falls to “diğer”</td><td class="gap">Add to imagingModalities + chapter imaging</td></tr>
+        <tr><td class="domain">Prompts lock tests</td><td class="note">Absent</td><td class="gap">promptsLock.test.ts pattern</td></tr>
+        <tr><td class="domain">Portal Gözlerim + demo fixture</td><td class="note">Absent</td><td class="gap">Same sprint as doctor chapter</td></tr>
+        <tr><td class="domain">test:goz / smoke</td><td class="note">Absent</td><td class="gap">Add npm script + CI</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Game changers (priority)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Move</th><th>Why Turkish göz MD will care</th><th>Size</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">Bilateral VA/GİB sticky strip + copy-forward</td><td class="note">Every patient, every slot — instant time save</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>2</td><td class="domain">Glokom loop (trend, hedef, damla, VF/OCT due)</td><td class="note">Chronic panel is half the day</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>3</td><td class="domain">DR staging + dahiliye closed-loop sevk</td><td class="note">MoH + highest cross-specialty volume</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>4</td><td class="domain">Anti-VEGF takvim + SGK rapor kilidi</td><td class="note">Ops pain + payment risk</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>5</td><td class="domain">OCT/fundus gallery + dual-sign (no tanı)</td><td class="note">Image-native specialty like derm</td><td><span class="pill neutral">L</span></td></tr>
+        <tr><td>6</td><td class="domain">Katarakt pre-op + GİL SGK taslağı</td><td class="note">High volume surgical path</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>7</td><td class="domain">Acil red-flag banner (RD/AACG/kimyasal)</td><td class="note">Malpractice + 112 path clarity</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>8</td><td class="domain">Portal Gözlerim (kontrol/damla/enjeksiyon)</td><td class="note">Retention + compliance; specialty-specific mandate</td><td><span class="pill warning">M</span></td></tr>
+        <tr><td>9</td><td class="domain">Specialty portal registry (all chapters)</td><td class="note">Stops pediatri widgets on göz patients</td><td><span class="pill success">S</span></td></tr>
+        <tr><td>10</td><td class="domain">Prompts lock + intake→Subjektif</td><td class="note">Ayşe sounds like oftalmolog, not generic MD</td><td><span class="pill success">S</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Recommended next ships</h2>
+    <div class="cards three">
+      <div class="card"><div class="title">Sprint A — impress / velocity</div>
+        <div class="body"><div>1. Portal registry eligibility (shared)</div><div>2. Chapter skeleton + prompts lock</div><div>3. Bilateral VA/GİB strip</div><div>4. Acil red-flag banner</div></div></div>
+      <div class="card"><div class="title">Sprint B — chronic + MoH</div>
+        <div class="body"><div>1. Glokom loop</div><div>2. DR staging + dahiliye loop</div><div>3. Anti-VEGF + SGK</div><div>4. Gözlerim portal</div></div></div>
+      <div class="card"><div class="title">Sprint C — image + surgery</div>
+        <div class="body"><div>1. OCT/fundus dual-sign gallery</div><div>2. Katarakt/GİL rapor</div><div>3. Pediatrik/şaşılık hatırlatma</div><div>4. Post-sprint audit HTML</div></div></div>
+    </div>
+
+    <h3>Sources baked into this audit</h3>
+    <p class="cap">Code: specialties/ (no goz); lib/specialties/registry.ts + profile.ts; lib/doktor/specialties.ts; lib/asistan/turkishSpecialtyRefs.ts; lib/intake/bransSorulari.ts; lib/ai/specialtyTemplates.ts; specialties/dahiliye/engines/dahiliye.ts (dm_goz); core/belgeler/ontoloji.ts + router.ts; lib/doktor/imagingModalities.ts; lib/portal/*; docs/OPEN-COMMITMENTS.md (Göz queued 2026-09-17); .cursor/skills/specialty-hasta-portali/SKILL.md. External anchors: TOD; SB DR/glokom; SGK GİL/anti-VEGF; Kanski/Vaughan/AAO as secondary only.</p>
+    <p class="cap">Intentionally out of “wow now”: full OR scheduling, hospital PACS DICOM writeback, refractive surgery planning robotics, genetic retina panels — keep sevk-quality, don’t fake tertiary depth.</p>
+
+    <div class="foot">
+      <span>Pre-sprint · notya-ai · Göz Hastalıkları · 2026-09-17 · before Claude chapter build</span>
+      <span>No patient data · internal product audit</span>
+    </div>
+  </div>
+</body>
+</html>
