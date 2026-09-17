@@ -31,7 +31,7 @@ const BELGE_TURLERI = [
   'Lab Sonucu',
   'Görüntüleme Raporu',
   'EKG',
-  'X-Ray',
+  'Röntgen',
   'Epikriz',
   'Reçete',
   'Sevk',

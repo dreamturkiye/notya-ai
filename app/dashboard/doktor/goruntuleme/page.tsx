@@ -37,7 +37,7 @@ const Page = () => {
   const [selectedGoruntuleme, setSelectedGoruntuleme] = useState<Goruntuleme | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [uploadData, setUploadData] = useState({
-    modalite: 'X-Ray',
+    modalite: 'Röntgen',
     vucut_bolgesi: '',
     tarih: '',
     rapor: '',
@@ -139,7 +139,7 @@ const Page = () => {
       xhr.onload = () => {
         if (xhr.status === 200) {
           setShowUpload(false);
-          setUploadData({ modalite: 'X-Ray', vucut_bolgesi: '', tarih: '', rapor: '', file: null });
+          setUploadData({ modalite: 'Röntgen', vucut_bolgesi: '', tarih: '', rapor: '', file: null });
           setUploadProgress(0);
           fetchGoruntulemeler(filterHastaId || undefined);
         }
