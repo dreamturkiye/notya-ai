@@ -21,6 +21,8 @@ import { normalize } from '@/lib/ilac/ilacArama'
 import { SPECIALTIES } from '@/lib/doktor/specialties'
 import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
 import { soapDozKilidi } from '@/lib/doktor/dozKilidi'
+import { soapKaynakKilidi } from '@/lib/doktor/kaynakKilidi'
+import { kdDogrulanmisKaynaklar } from '@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar'
 import { notMetinleriniTemizle } from '@/lib/doktor/klinikMetin'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
@@ -281,7 +283,9 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   if (Array.isArray(veri.receteOnerisi)) veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
   // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches never keep a model-written dose the hekim did not give.
   // KD-DERM-SAFETY-FINDINGS F4 (every branch): no internal field names, no invented consent form number in doctor-facing text.
-  return notMetinleriniTemizle(dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : veri)
+  // KD-KAYNAK-KILIDI: kadın doğum notes never keep a guideline number / year that is not in the verified list.
+  const dozlu = dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : veri
+  return notMetinleriniTemizle(kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu)
 }
 
 /** Doktorun onayladığı son notlardan kısa üslup örnekleri derler (few-shot stil öğrenmesi).

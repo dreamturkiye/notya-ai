@@ -8,6 +8,8 @@ import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompt
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
 import { dozKilitliBrans } from "@/lib/doktor/soapUret"
 import { kaynakSayilari, uydurmaDozTemizle } from "@/lib/doktor/dozKilidi"
+import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
+import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar"
 import { asistanYanitiCoz } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
@@ -205,6 +207,14 @@ export async function POST(req: NextRequest) {
       const kaynak = kaynakSayilari(augmentedMessage, dosyaEk, ...messages.filter((m) => m.role === "user").map((m) => m.content))
       aiData.speech = uydurmaDozTemizle(String(aiData.speech || ""), kaynak).metin
       if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaDozTemizle(String(aiData.proactiveWarning), kaynak).metin
+    }
+    // KD-KAYNAK-KILIDI: a kadın doğum answer never carries a guideline number / year from memory (ACOG PB 797, TJOD 2019 …).
+    if (kadinDogumMi(hekimBransi, specialty)) {
+      const liste = kdDogrulanmisKaynaklar()
+      const r = uydurmaKaynakTemizle(String(aiData.speech || ""), liste)
+      if (r.bulgular.length) console.warn("[asistan/chat] kaynak kilidi", r.bulgular)
+      aiData.speech = r.bulgular.length ? `${r.metin}\n\n⚠ Kaynak kontrolü (hekim onayı): doğrulanamayan kılavuz numarası / yılı yanıttan çıkarıldı; kaynağı hekim doğrular.` : r.metin
+      if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaKaynakTemizle(String(aiData.proactiveWarning), liste).metin
     }
 
     // Execute action if AI decided to

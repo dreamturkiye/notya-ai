@@ -25,6 +25,8 @@ const IC_ALANLAR: [string, string][] = [
   ['uzman_onayli', 'uzman onaylı'],
   ['sb_required', 'SB (yasal asgari)'],
   ['acog_recommended', 'ACOG (klinik öneri)'],
+  ['pratik_altin_standart_tr_hekim', 'klinik öneri'],
+  ['yasal_taban_sb', 'SB yasal taban'],
   ['risk_class', 'risk sınıfı'],
   ['current_ga', 'gebelik haftası'],
 ]
