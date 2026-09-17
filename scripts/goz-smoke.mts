@@ -66,7 +66,7 @@ async function qaDoktor() {
   return { id, token: s.session.access_token }
 }
 
-const GOZ_TABLOLARI = ['goz_goruntu_okumalari', 'goz_muayeneler', 'goz_glokom', 'goz_dr', 'goz_enjeksiyonlar', 'goz_katarakt', 'goz_sgk_raporlari', 'goz_kontroller', 'goz_pediatrik', 'goz_gorevler', 'hasta_goruntulemeler', 'sevkler', 'dahiliye_dm', 'dahiliye_gorevleri', 'hasta_portal_tokens']
+const GOZ_TABLOLARI = ['goz_goruntu_okumalari', 'goz_muayeneler', 'goz_glokom', 'goz_dr', 'goz_enjeksiyonlar', 'goz_katarakt', 'goz_sgk_raporlari', 'goz_kontroller', 'goz_pediatrik', 'goz_gorevler', 'goz_kuru_goz', 'hasta_goruntulemeler', 'hasta_intake_formlari', 'sevkler', 'dahiliye_dm', 'dahiliye_gorevleri', 'hasta_portal_tokens']
 async function temizle(doctorId: string) {
   const { data } = await sb.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId)
   for (const p of data || []) {
@@ -152,14 +152,39 @@ const { data: rapRow } = await sb.from('goz_sgk_raporlari').select('draft').eq('
 kontrol('DB taslağında hasta adı yok', (rapRow?.draft as V)?.hastaAdi === '', rapRow?.draft)
 await post('Eksikli rapor kilit → 400', pid, { adim: 'sgkrapor_kilit', id: rap.json.id }, 400)
 
-// 5. Görüntü dual-sign
+// 5. Görüntü dual-sign + Ayşe + compare + kuru göz + intake
 const { data: img } = await sb.from('hasta_goruntulemeler').insert({ doctor_id: doktor.id, patient_id: pid, modalite: 'oct', vucut_bolgesi: 'sağ göz', goruntuleme_tarihi: T, rapor_metni: null }).select('id').single()
+const { data: img2 } = await sb.from('hasta_goruntulemeler').insert({ doctor_id: doktor.id, patient_id: pid, modalite: 'oct', vucut_bolgesi: 'sağ göz', goruntuleme_tarihi: gun(60), rapor_metni: null }).select('id').single()
 await post('OCT okuma taslağı (asistan)', pid, { adim: 'goruntu_okuma', eylem: 'taslak', goruntuId: img!.id, taslak: 'Foveal kalınlık artmış görünüm, intraretinal kistik alanlar? (sentetik)', taslakYazan: 'asistan', goz: 'sag' })
 v = await get(pid)
 const ok1 = v.goruntuler[0]?.okumalar[0]
 kontrol('okuma draft + disclaimer', ok1?.durum === 'draft' && /tanı değildir/.test(ok1?.disclaimer), ok1)
 await post('Uzman onayı', pid, { adim: 'goruntu_okuma', eylem: 'onayla', id: ok1.id })
 await post('Onaylı okumayı tekrar düzelt → 403', pid, { adim: 'goruntu_okuma', eylem: 'duzelt', id: ok1.id, uzmanMetin: 'x' }, 403)
+const ayse = await post('Ayşe OCT taslağı', pid, { adim: 'goruntu_okuma', eylem: 'ayse_taslak', goruntuId: img!.id, goz: 'sag' })
+kontrol('Ayşe taslak üretildi', ayse.json.ok === true, ayse.json)
+const kiyas = await post('OCT yan yana karşılaştır', pid, { adim: 'goruntu_okuma', eylem: 'kiyas', aId: img!.id, bId: img2!.id })
+kontrol('karşılaştırma aynı göz+modalite', /OCT karşılaştırması/.test(String(kiyas.json.baslik)), kiyas.json)
+await post('Kuru göz OSDI/Schirmer/TBUT', pid, { adim: 'kuru_goz', osdi: 28, schirmerSag: 8, schirmerSol: 12, tbutSag: 6, tbutSol: 11 })
+v = await get(pid)
+kontrol('kuru göz kaydı + ozet', v.kuruGoz?.length >= 1 && /OSDI/.test(v.kuruGoz[0].ozet.ozetSatir), v.kuruGoz?.[0])
+
+const intakeToken = createHmac('sha256', 'goz-smoke-intake').update(`${pid}${Date.now()}`).digest('hex')
+await sb.from('hasta_intake_formlari').insert({
+  doktor_id: doktor.id, patient_id: pid, brans: 'goz-hastaliklari', durum: 'dolduruldu',
+  token_hash: intakeToken, token_expires_at: new Date(Date.now() + 86400000).toISOString(),
+  form_data_encrypted: encrypt(JSON.stringify({
+    bransAlanlari: {
+      basvuruNedeni: 'Kontrol', mevcutGozSikayetleri: ['Bulanık Görme', 'Göz Kuruluğu'],
+      bilinenGozHastaliklari: ['Glokom'], kronikRahatsizliklarGoz: ['Diyabet'],
+      oncekiGozOperasyonlari: ['Yok'], aileGozHastaligiOykusu: ['Bilinmiyor'],
+    },
+  })),
+  dolduruldu_at: new Date().toISOString(),
+})
+await post('Intake → Subjektif (Nota ekle S)', pid, { adim: 'intake_nota' })
+const { data: notS } = await sb.from('sessions').select('id').eq('patient_id', pid).limit(1).single().then(async ({ data }) => sb.from('notes').select('content_subjektif').eq('session_id', data!.id).single())
+kontrol('intake Subjektif hasta beyanı', /Başvuru nedeni \(hasta beyanı\): Kontrol/.test(String(notS?.content_subjektif)), notS?.content_subjektif)
 
 // 6. Kontrol + portal
 await post('Kontrol (dilatasyonlu)', pid, { adim: 'kontrol', tarih: gun(-30), neden: 'Glokom ve retina kontrolü', dilatasyon: true })

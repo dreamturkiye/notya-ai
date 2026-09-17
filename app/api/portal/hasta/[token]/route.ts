@@ -122,6 +122,7 @@ export async function GET(
   if (locked) return locked
 
   const patientId = tokenData.patient_id as string
+  const doctorId = tokenData.doctor_id as string
   const bundle: PortalBundle = emptyPortalBundle()
 
   // Sessions + notes → visits.
@@ -499,6 +500,50 @@ export async function GET(
       not: 'Değerler muayenehanede kaydedildiği gibidir; yorum ve plan doktorunuzdadır.',
     }
   } catch (e) { console.error('[portal] gozlerim:', e) }
+
+  // DERM-PORTAL — "Derim": photo notices, open görevler, procedure dates, phototherapy session dates.
+  // No tanı, morfoloji, skor, or dose language.
+  if (modulAktif('dermatoloji')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const birYilOnce = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const ISLEM_ADI: Record<string, string> = {
+      punch: 'Deri biyopsisi', shave: 'Yüzeyel biyopsi', eksizyon: 'Eksizyon', kriyo: 'Kriyoterapi',
+      koter: 'Koter', tirnak_avulsiyon: 'Tırnak işlemi', sigil: 'İşlem', kuretaj: 'Küretaj',
+    }
+    const FOTO_TUR: Record<string, string> = { foto: 'Klinik fotoğraf', dermatoskopi: 'Dermoskopi fotoğrafı' }
+    const [gorevQ, imgQ, islemQ, ftQ, ilacQ] = await Promise.all([
+      sb.from('derm_gorevleri').select('ad, due, kod, durum').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_goruntulemeler').select('id, modalite, goruntuleme_tarihi, created_at').eq('patient_id', patientId).in('modalite', ['foto', 'dermatoskopi']).order('created_at', { ascending: false }).limit(20),
+      sb.from('derm_islemler').select('tarih, tur').eq('patient_id', patientId).eq('doctor_id', doctorId).gte('tarih', birYilOnce).order('tarih', { ascending: false }).limit(15),
+      sb.from('hasta_derm').select('id').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle().then(async (h) => {
+        if (!h.data?.id) return { data: [] as Array<{ seans_tarihi: string; device: string | null }> }
+        return sb.from('derm_fototerapi_seanslari').select('seans_tarihi, device').eq('hasta_derm_id', h.data.id).order('seans_tarihi', { ascending: false }).limit(12)
+      }),
+      sb.from('derm_ilac_guvenlik').select('ilac, aylik_due, aktif').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('aktif', true).limit(10),
+    ])
+    const gorevler = gorevQ.data || []
+    const kontrolGorev = gorevler.find((g) => /kontrol|foto|yama|tbse/i.test(`${g.kod} ${g.ad}`) && g.due && String(g.due) >= bugun)
+      || gorevler.find((g) => g.due && String(g.due) >= bugun)
+    const labAd = (ilac: string) => {
+      const t = String(ilac || '').toLowerCase()
+      if (t.includes('izotret')) return 'İlaç güvenlik lab kontrolü'
+      if (t.includes('biyolog') || t.includes('metotreks') || t.includes('asitretin') || t.includes('siklospor')) return 'Sistemik tedavi lab kontrolü'
+      return 'Tedavi güvenlik lab kontrolü'
+    }
+    bundle.deri = {
+      sonrakiKontrol: kontrolGorev?.due ? { tarih: String(kontrolGorev.due), neden: String(kontrolGorev.ad || 'Kontrol') } : null,
+      hatirlatmalar: gorevler.filter((g) => !/lab|bhcg|β|beta/i.test(`${g.kod} ${g.ad}`)).slice(0, 12).map((g) => ({ ad: String(g.ad), due: g.due ? String(g.due) : null })),
+      fotograflar: (imgQ.data || []).map((g) => ({
+        id: String(g.id),
+        tarih: String(g.goruntuleme_tarihi || g.created_at),
+        tur: FOTO_TUR[String(g.modalite)] || 'Klinik fotoğraf',
+      })),
+      islemler: (islemQ.data || []).map((i) => ({ tarih: String(i.tarih), ad: ISLEM_ADI[String(i.tur)] || 'Klinik işlem' })),
+      fototerapi: (ftQ.data || []).map((s) => ({ tarih: String(s.seans_tarihi), cihaz: s.device ? String(s.device) : null })),
+      labHatirlatma: (ilacQ.data || []).filter((r) => r.aylik_due).map((r) => ({ ad: labAd(String(r.ilac)), due: String(r.aylik_due) })),
+      not: 'Bu bilgiler bilgilendirme amaçlıdır; yorum ve plan doktorunuzdadır. Tanı dili kullanılmaz.',
+    }
+  } catch (e) { console.error('[portal] derim:', e) }
 
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId)

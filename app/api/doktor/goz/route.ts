@@ -16,7 +16,10 @@ import { glokomDegerlendir, type Damla } from '@/specialties/goz-hastaliklari/en
 import { drDegerlendir, dahiliyeGeriBildirim, type DrEvre, type Dmo } from '@/specialties/goz-hastaliklari/engines/dr'
 import { sgkKapilari, sonrakiDoz, yuklemeTakvimi, type Enjeksiyon } from '@/specialties/goz-hastaliklari/engines/antiVegf'
 import { gozSgkTaslak, GOZ_SGK_SABLONLARI, type GozSgkSablon } from '@/specialties/goz-hastaliklari/engines/sgkRapor'
-import { kataraktHazirlik, KATARAKT_KONTROL, ON_SEGMENT_PROTOKOLLERI, pediatrikIzlem, type PediatrikTip } from '@/specialties/goz-hastaliklari/engines/klinik'
+import { kataraktHazirlik, KATARAKT_KONTROL, ON_SEGMENT_PROTOKOLLERI, pediatrikIzlem, gilSgkKontrol, GIL_EK3G_KALEMLERI, type PediatrikTip } from '@/specialties/goz-hastaliklari/engines/klinik'
+import { kuruGozOzet } from '@/specialties/goz-hastaliklari/engines/kuruGoz'
+import { ayseGoruntuTaslagi } from '@/specialties/goz-hastaliklari/engines/ayseGoruntu'
+import { gozBolgeCoz, kiyasCifti, normalizeModalite } from '@/specialties/goz-hastaliklari/engines/kiyas'
 import { acilTara, ACIL_KODLARI, type AcilKod } from '@/specialties/goz-hastaliklari/engines/acil'
 import { gozSeridi, intakeSubjektif } from '@/specialties/goz-hastaliklari/engines/serit'
 import { okumaGecisi, taslakTaniDiliUyarisi, GOZ_GORUNTU_DISCLAIMER, GOZ_MODALITELER } from '@/specialties/goz-hastaliklari/imaging/dualSign'
@@ -64,7 +67,7 @@ export async function GET(req: NextRequest) {
   if (!h) return hata('Hasta bulunamadı.', 404)
   const T = bugun()
 
-  const [muQ, glQ, drQ, enjQ, rapQ, katQ, imgQ, okQ, konQ, pedQ, sevkQ, notQ] = await Promise.all([
+  const [muQ, glQ, drQ, enjQ, rapQ, katQ, imgQ, okQ, konQ, pedQ, sevkQ, notQ, kuruQ] = await Promise.all([
     sb.from('goz_muayeneler').select('id, tarih, va, gib_sag, gib_sol, gib_yontem, rapd, kaynak, created_at').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(30),
     sb.from('goz_glokom').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
     sb.from('goz_dr').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
@@ -77,6 +80,7 @@ export async function GET(req: NextRequest) {
     sb.from('goz_pediatrik').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
     sb.from('sevkler').select('id, not_metni, kaynak, created_at, doctor_id').eq('patient_id', h.id).eq('hedef', 'goz').eq('durum', 'acik').order('created_at', { ascending: false }).limit(5),
     sb.from('sessions').select('id').eq('patient_id', h.id).eq('doctor_id', doktorId).gte('created_at', `${T}T00:00:00`).limit(5),
+    sb.from('goz_kuru_goz').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).limit(20),
   ])
 
   const muayeneler = (muQ.data || []) as MuayeneRow[]
@@ -97,7 +101,20 @@ export async function GET(req: NextRequest) {
   const imgs = (imgQ.data || []).map((i) => ({ id: i.id, modalite: i.modalite, goz: i.vucut_bolgesi, tarih: String(i.goruntuleme_tarihi || i.created_at).slice(0, 10), url: i.dosya_url, okumalar: (okQ.data || []).filter((r) => r.goruntu_id === i.id) }))
 
   const ped = pedQ.data as Record<string, unknown> | null
-  const pedIzlem = pediatrikIzlem({ yasAy: h.yasAy, tip: (ped?.tip as PediatrikTip) || null, kapamaHekim: (ped?.kapama_hekim as string) || null, sonrakiKontrol: (ped?.sonraki_kontrol as string) || null, bugun: T })
+  const sonVa = muayeneler[0]?.va
+  const vaSagOnd = sonVa?.sag ? (vaCoz(enIyiUzak(sonVa.sag) || '')?.ondalik ?? null) : null
+  const vaSolOnd = sonVa?.sol ? (vaCoz(enIyiUzak(sonVa.sol) || '')?.ondalik ?? null) : null
+  const pedIzlem = pediatrikIzlem({
+    yasAy: h.yasAy, tip: (ped?.tip as PediatrikTip) || null, kapamaHekim: (ped?.kapama_hekim as string) || null,
+    sonrakiKontrol: (ped?.sonraki_kontrol as string) || null, bugun: T,
+    vaSag: vaSagOnd, vaSol: vaSolOnd,
+    sasilikVeyaNistagmus: ped?.tip === 'sasilik' || ped?.tip === 'ambliyopi_sasilik',
+  })
+
+  const kuruSatirlar = (kuruQ.data || []).map((r) => {
+    const girdi = { osdi: num(r.osdi), schirmerSag: num(r.schirmer_sag), schirmerSol: num(r.schirmer_sol), tbutSag: num(r.tbut_sag), tbutSol: num(r.tbut_sol), notHekim: (r.not_hekim as string) || null }
+    return { ...r, ozet: kuruGozOzet(girdi) }
+  })
 
   // Görev senkronu (idempotent, açık kod başına bir satır)
   await gorevSenkron(sb, doktorId, h.id, [...(glokom?.gorevler || []), ...(drSonuc?.taramaGorevi ? [drSonuc.taramaGorevi] : []), ...pedIzlem.gorevler], 'motor')
@@ -126,10 +143,11 @@ export async function GET(req: NextRequest) {
     acikGozSevkleri: sevkQ.data || [],
     enjeksiyonlar: enj, sonrakiDoz: sonraki,
     sgkRaporlari: rapQ.data || [], sgkSablonlari: GOZ_SGK_SABLONLARI,
-    katarakt: (katQ.data || []).map((k) => ({ ...k, hazirlik: kataraktHazirlik((k.checklist as Record<string, boolean>) || {}) })), kataraktKontrol: KATARAKT_KONTROL,
+    katarakt: (katQ.data || []).map((k) => ({ ...k, hazirlik: kataraktHazirlik((k.checklist as Record<string, boolean>) || {}), gilSgk: gilSgkKontrol((k.gil_tipi_hekim as string) || null) })), kataraktKontrol: KATARAKT_KONTROL, gilEk3g: GIL_EK3G_KALEMLERI,
     goruntuler: imgs, goruntuDisclaimer: GOZ_GORUNTU_DISCLAIMER,
     kontroller: konQ.data || [],
     pediatrik: { satir: ped, izlem: pedIzlem },
+    kuruGoz: kuruSatirlar,
     gorevler: gorevler || [],
     intake,
     acil: serit.acil, acilKodlari: ACIL_KODLARI,
@@ -269,6 +287,28 @@ export async function POST(req: NextRequest) {
 
   if (adim === 'goruntu_okuma') {
     const eylem = String(b.eylem || 'taslak')
+    if (eylem === 'ayse_taslak') {
+      const { data: img } = await sb.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi').eq('id', String(b.goruntuId || '')).eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle()
+      if (!img) return hata('Görüntü bulunamadı.', 404)
+      const mod = normalizeModalite(String(img.modalite || ''))
+      if (!mod) return hata('Yalnız OCT / fundus / ön segment için Ayşe taslağı.')
+      const goz = gozBolgeCoz(String(b.goz || img.vucut_bolgesi || ''))
+      const a = ayseGoruntuTaslagi({ modalite: mod, goz })
+      const { error } = await sb.from('goz_goruntu_okumalari').insert({ ...ortak, goruntu_id: img.id, goz, taslak: a.taslak, taslak_yazan: 'asistan', durum: 'draft', disclaimer: a.disclaimer })
+      if (error) return hata(error.message, 500)
+      return NextResponse.json({ ok: true, uyarilar: a.uyarilar, uyari: taslakTaniDiliUyarisi(a.taslak) })
+    }
+    if (eylem === 'kiyas') {
+      const { data: imgs } = await sb.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi, goruntuleme_tarihi, created_at, dosya_url').eq('patient_id', h.id).eq('doctor_id', doktorId).in('id', [String(b.aId || ''), String(b.bId || '')])
+      const a = (imgs || []).find((x) => x.id === String(b.aId)), c = (imgs || []).find((x) => x.id === String(b.bId))
+      if (!a || !c) return hata('İki görüntü de bulunmalı.', 404)
+      const r = kiyasCifti(
+        { id: a.id, modalite: String(a.modalite), goz: gozBolgeCoz(a.vucut_bolgesi), tarih: String(a.goruntuleme_tarihi || a.created_at), url: a.dosya_url },
+        { id: c.id, modalite: String(c.modalite), goz: gozBolgeCoz(c.vucut_bolgesi), tarih: String(c.goruntuleme_tarihi || c.created_at), url: c.dosya_url },
+      )
+      if (!r.ok) return hata(r.hata)
+      return NextResponse.json({ ok: true, baslik: r.baslik, a: { id: a.id, url: a.dosya_url, tarih: String(a.goruntuleme_tarihi || a.created_at).slice(0, 10) }, b: { id: c.id, url: c.dosya_url, tarih: String(c.goruntuleme_tarihi || c.created_at).slice(0, 10) } })
+    }
     if (eylem === 'taslak') {
       const { data: img } = await sb.from('hasta_goruntulemeler').select('id').eq('id', String(b.goruntuId || '')).eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle()
       if (!img) return hata('Görüntü bulunamadı.', 404)
@@ -286,6 +326,16 @@ export async function POST(req: NextRequest) {
     if (!g.ok) return hata(g.hata, 403)
     await sb.from('goz_goruntu_okumalari').update({ durum: g.okuma.durum, uzman_metin: g.okuma.uzmanMetin, onay_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', ok.id)
     return NextResponse.json({ ok: true })
+  }
+
+  if (adim === 'kuru_goz') {
+    const osdi = num(b.osdi), schirmerSag = num(b.schirmerSag), schirmerSol = num(b.schirmerSol), tbutSag = num(b.tbutSag), tbutSol = num(b.tbutSol)
+    const ozet = kuruGozOzet({ osdi, schirmerSag, schirmerSol, tbutSag, tbutSol, notHekim: b.notHekim ? String(b.notHekim).slice(0, 500) : null })
+    if (ozet.uyarilar.some((u) => u.includes('0–100'))) return hata(ozet.uyarilar[0])
+    const satir = { ...ortak, tarih: tarihMi(b.tarih) ? b.tarih : bugun(), osdi, schirmer_sag: schirmerSag, schirmer_sol: schirmerSol, tbut_sag: tbutSag, tbut_sol: tbutSol, not_hekim: b.notHekim ? String(b.notHekim).slice(0, 500) : null, updated_at: new Date().toISOString() }
+    const { error } = await sb.from('goz_kuru_goz').insert(satir)
+    if (error) return hata(error.message, 500)
+    return NextResponse.json({ ok: true, ozet })
   }
 
   if (adim === 'kontrol') {

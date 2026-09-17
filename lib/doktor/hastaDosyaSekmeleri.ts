@@ -1,8 +1,13 @@
 /**
- * Hasta dosyası tab visibility. KD is gated by sex; pediatric tools by age.
- * Adults must not see M-CHAT / gelişim / büyüme eğrileri.
+ * Hasta dosyası tab visibility — specialty-first (universal chrome for all ~29 branşlar).
+ *
+ * Rules (specialty-universal-vs-chapter + CHART-TAB-POLICY 2026-09-17):
+ *  - Exclusive chapter tabs (Göz, Deri, Dahiliye) only when that doctor’s specialty owns them.
+ *  - Pediatric tool tabs (büyüme / M-CHAT / gelişim / bebek) only when age qualifies AND the
+ *    doctor is pediatri or a baseline/aile-style practice — never on göz/derm/KD/dahiliye charts.
+ *  - Gebelik tab stays sex+age (mixed care); portal Gebeliğim has its own eligibility.
+ *  - Adults must not see M-CHAT / gelişim / büyüme.
  */
-
 export type HastaDosyaSekmeId =
   | 'ozet'
   | 'muayene'
@@ -25,6 +30,13 @@ export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
 const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 'gelisim'])
 
+/** Chapters that own exclusive chart tabs — they do not inherit another chapter’s tool strip. */
+export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast/.test(b)
+}
+
 export function yasYilKesir(dogumIso: string | null | undefined, nowMs = Date.now()): number | null {
   if (!dogumIso) return null
   const d = new Date(dogumIso)
@@ -32,11 +44,25 @@ export function yasYilKesir(dogumIso: string | null | undefined, nowMs = Date.no
   return (nowMs - d.getTime()) / (365.25 * 86_400_000)
 }
 
-/** Pediatric file tabs: under 18, or unknown DOB (same unknown-default as KD). */
+/** Pediatric age gate: under 18, or unknown DOB. */
 export function pediatriSekmesiUygun(dogumIso: string | null | undefined, nowMs = Date.now()): boolean {
   const y = yasYilKesir(dogumIso, nowMs)
   if (y == null) return true
   return y < 18
+}
+
+/**
+ * Show pediatri tool tabs: age OK and doctor is pediatri or baseline (not another exclusive chapter).
+ * Universal — same rule for göz, derm, KD, dahiliye, kardiyoloji, …
+ */
+export function pediatriAracSekmesiUygun(input: {
+  dogumIso: string | null | undefined
+  doktorBransi: string | null | undefined
+  pediatriDoktoru: boolean
+}, nowMs = Date.now()): boolean {
+  if (!pediatriSekmesiUygun(input.dogumIso, nowMs)) return false
+  if (input.pediatriDoktoru) return true
+  return !ozelBolumBransi(input.doktorBransi)
 }
 
 export function gebelikSekmesiUygun(input: {
@@ -53,6 +79,8 @@ export function hastaDosyaSekmeleri(opts: {
   dahiliyeUygun?: boolean
   /** GOZ-CHAPTER: doctor specialty göz hastalıkları */
   gozUygun?: boolean
+  /** DERM: doctor specialty dermatoloji — never always-on */
+  deriUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -71,11 +99,11 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.pediatriUygun) {
     tabs.push({ id: 'bebek', label: 'Bebek kartı' }, { id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
   }
-  if (opts.gozUygun) tabs.push({ id: 'goz', label: 'Göz' }) // GOZ-CHAPTER — göz hekimi için dosyanın başında
+  if (opts.gozUygun) tabs.push({ id: 'goz', label: 'Göz' })
   tabs.push({ id: 'ayse', label: "Ayşe'ye Danış" })
   if (opts.gebelikUygun) tabs.push({ id: 'gebelik', label: 'Kadın Sağlığı & Gebelik' })
-  tabs.push({ id: 'deri', label: 'Deri & Lezyon' })
-  if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' }) // NOTYA-DAH-01
+  if (opts.deriUygun) tabs.push({ id: 'deri', label: 'Deri & Lezyon' })
+  if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' })
   return tabs
 }
 

@@ -37,10 +37,12 @@ describe('KD / dahiliye / derm eligibility', () => {
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, [])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
   })
-  it('dermatoloji declares its portal slice honestly as Missing and mounts nothing', () => {
+  it('dermatoloji mounts Derim (Partial) — unique from göz / pediatri', () => {
     const m = specialtyProfile('dermatoloji').portal!
-    assert.equal(m[0].derinlik, 'Missing'); assert.deepEqual(m[0].views, [])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, [])
+    assert.equal(m[0].derinlik, 'Partial')
+    assert.deepEqual(m[0].nav.map((n) => n.path), ['/derim'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['dermatoloji'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji' })).nav[0]?.label, 'Derim')
   })
   it('free-text users.specialty resolves', () => {
     assert.equal(portalBransAnahtari('İç Hastalıkları'), 'dahiliye')
@@ -60,6 +62,7 @@ describe('registry contract', () => {
   it('bundle carries typed module state; empty + demo bundles attach nothing', () => {
     assert.deepEqual(emptyPortalBundle().portal, { moduller: [], nav: [] })
     assert.equal(emptyPortalBundle().goz, null)
+    assert.equal(emptyPortalBundle().deri, null)
     assert.ok(!portalModulAktif(SAGLIGIM_DEMO, 'buyume') && !portalModulAktif(SAGLIGIM_DEMO, 'gebelik'))
   })
   it('shell/Takip/API mount specialty slices only through the registry (no stacking just in case)', () => {

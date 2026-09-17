@@ -72,13 +72,20 @@ export const DERMATOLOJI_PROFILE: SpecialtyProfile = {
     { konu: 'Biyolojik SUT eşikleri', neden: 'PSOKİD 2025 + SUT 2026 birlikte okunmalı; doz uydurulmaz.' },
   ],
 
-  // SAGLIGIM-PORTAL-REGISTRY — honest: no patient-safe derm slice exists yet (photo series / tedavi planı
-  // özetleri are doctor-side only). Declared so audits read Missing from code, and nothing derm-specific
-  // mounts in Sağlığım.
+  // SAGLIGIM-PORTAL-REGISTRY — Derim: foto eklendi, kontrol/tedavi hatırlatma, fototerapi seans tarihi.
+  // Tanı / morfoloji / skor / ilaç dozu yok (.cursor/skills/specialty-hasta-portali).
   portal: [{
-    id: 'dermatoloji', nav: [], bundleKeys: [], eligibility: 'doctor_specialty',
-    copyHints: ['Fotoğraf serisi hastaya açılacaksa onam + hekim seçimiyle; tanı dili yok.'],
-    views: [], derinlik: 'Missing',
+    id: 'dermatoloji',
+    nav: [{ key: 'derim', label: 'Derim', path: '/derim' }],
+    bundleKeys: ['deri'],
+    eligibility: 'doctor_specialty',
+    copyHints: [
+      'Fotoğraf yüklendi bildirimi — tanı dili yok',
+      'Kontrol / lab / yara bakımı hatırlatmaları hekim görevinden',
+      'Fototerapi seans tarihi (J/cm² yorumu yok)',
+    ],
+    views: ['DerimView'],
+    derinlik: 'Partial',
   }],
 
   olgunluk: 'arastirma',

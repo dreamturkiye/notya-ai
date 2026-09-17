@@ -69,6 +69,7 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   // dahiliye ön anket: dahiliye doctor, or a baseline-branch doctor (aile hekimi, endokrin…) using dahiliye cards
   if (brans === 'dahiliye' || (!kendiModuluVar && g.dahiliyeKaydi)) aktif.add('dahiliye')
   if (brans === 'goz-hastaliklari') aktif.add('gozlerim')
+  if (brans === 'dermatoloji') aktif.add('dermatoloji')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]

@@ -42,7 +42,9 @@ export interface GozVeri {
   goruntuler: Array<{ id: string; modalite: string; goz: string | null; tarih: string; url: string | null; okumalar: Okuma[] }>
   goruntuDisclaimer: string
   kontroller: Array<{ id: string; tarih: string; neden: string; dilatasyon: boolean; durum: string }>
-  pediatrik: { satir: Record<string, string | boolean | null> | null; izlem: { hatirlatmalar: string[]; gorevler: unknown[]; dipnotlar: Dipnot[] } }
+  pediatrik: { satir: Record<string, string | boolean | null> | null; izlem: { hatirlatmalar: string[]; gorevler: unknown[]; dipnotlar: Dipnot[]; sevk?: { sevk: boolean; nedenler: Array<{ kod: string; metin: string }> } } }
+  kuruGoz: Array<{ id: string; tarih: string; osdi: number | null; schirmer_sag: number | null; schirmer_sol: number | null; tbut_sag: number | null; tbut_sol: number | null; not_hekim: string | null; ozet: { ozetSatir: string; uyarilar: string[] } }>
+  gilEk3g?: Array<{ kod: string; ad: string; not: string }>
   gorevler: Array<{ id: string; kod: string; ad: string; due: string | null; kaynak: string | null }>
   intake: { subjektif: string; ipuclari: Array<{ kart: string; neden: string }>; acil: AcilBayrak[] } | null
   acil: AcilBayrak[]
@@ -305,15 +307,24 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
 
   if (sekme === 'Katarakt') {
     const secili = (f.kat as Record<string, boolean>) || {};
+    const katRows = v.katarakt as Array<GozVeri['katarakt'][number] & { gilSgk?: { kalem: { kod: string; ad: string } | null; uyari: string[] } }>
     return (
       <div>
-        <div style={etiket}>Katarakt / GİL ön-op <span style={kucuk}>· GİL gücü biyometri cihazı + hekim; Notya hesaplamaz</span></div>
-        {v.katarakt.map((k) => <div key={k.id} style={{ ...metin, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginBottom: 6 }}>
+        <div style={etiket}>Katarakt / GİL ön-op <span style={kucuk}>· GİL gücü biyometri cihazı + hekim; Notya hesaplamaz · EK-3/G kod (bedel yok)</span></div>
+        {katRows.map((k) => <div key={k.id} style={{ ...metin, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginBottom: 6 }}>
           <b>{gozAd(k.goz)}</b> · {k.durum} · {k.hazirlik.tamam}/{k.hazirlik.toplam}{k.gil_tipi_hekim ? ` · GİL: ${k.gil_tipi_hekim}` : ''}{k.planlanan_tarih ? ` · ${k.planlanan_tarih}` : ''}
+          {k.gilSgk?.kalem && <div style={kucuk}>SGK EK-3/G: {k.gilSgk.kalem.kod} — {k.gilSgk.kalem.ad}</div>}
+          {(k.gilSgk?.uyari || []).map((u) => <div key={u} style={{ color: '#FBBF24' }}>• {u}</div>)}
           {k.hazirlik.eksikZorunlu.map((x) => <div key={x} style={{ color: '#FBBF24' }}>• {x}</div>)}
           {!salt && <button type="button" onClick={() => setF((p) => ({ ...p, katId: k.id, kat: k.checklist, katGoz: k.goz, gilTipi: k.gil_tipi_hekim || '', planlananTarih: k.planlanan_tarih || '' }))} style={{ ...ghost, marginTop: 4 }}>Düzenle</button>}
           <Kaynak d={k.hazirlik.dipnotlar} acik={kaynak} k={v.kaynaklar} />
         </div>)}
+        {(v.gilEk3g || []).length > 0 && (
+          <div style={{ marginTop: 8, ...kucuk }}>
+            <div style={etiket}>EK-3/G GİL kalemleri (referans)</div>
+            {v.gilEk3g!.map((g) => <div key={g.kod}>{g.kod} — {g.ad}</div>)}
+          </div>
+        )}
         {!salt && <>
           <div style={satir}><Secim deger={s('katGoz', 'sag')} set={(x) => set('katGoz', x)} secenekler={[['sag', 'OD'], ['sol', 'OS']]} /><Secim deger={s('gilTipi')} set={(x) => set('gilTipi', x)} secenekler={[['monofokal', 'Monofokal'], ['torik', 'Torik'], ['multifokal', 'Multifokal'], ['edof', 'EDOF'], ['diger', 'Diğer']]} bos="GİL tipi (hekim)" /><input type="date" value={s('planlananTarih')} onChange={(e) => set('planlananTarih', e.target.value)} style={{ ...toolsInput, width: 150 }} /></div>
           <div style={{ display: 'grid', gap: 4, marginTop: 6 }}>{v.kataraktKontrol.map((m) => <label key={m.kod} style={{ ...metin, display: 'flex', gap: 6, alignItems: 'flex-start' }}><input type="checkbox" checked={!!secili[m.kod]} onChange={(e) => set('kat', { ...secili, [m.kod]: e.target.checked })} /><span>{m.ad}{m.zorunlu ? '' : <span style={kucuk}> (gerekirse)</span>}</span></label>)}</div>
@@ -323,35 +334,89 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
     );
   }
 
-  if (sekme === 'Görüntü') return (
-    <div>
-      <div style={etiket}>OCT / fundus / ön segment <span style={kucuk}>· {v.goruntuDisclaimer} · asistan taslağı → uzman onayı</span></div>
-      <div style={kucuk}>Yükleme: Görüntüleme sekmesinde modalite olarak OCT / Fundus fotoğrafı / Ön segment fotoğrafı seçin; göz bilgisini bölge alanına yazın.</div>
-      {!v.goruntuler.length && <div style={{ ...kucuk, marginTop: 6 }}>Göz görüntüsü yok.</div>}
-      {v.goruntuler.map((g) => (
-        <div key={g.id} style={{ borderLeft: '2px solid rgba(99,102,241,0.6)', paddingLeft: 10, margin: '10px 0', ...metin }}>
-          <div><b>{g.tarih}</b> · {MOD_ADI[g.modalite] || g.modalite} · {g.goz || 'göz belirtilmedi'}{g.url && <> · <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>aç</a></>}</div>
-          {g.okumalar.map((o) => (
-            <div key={o.id} style={{ marginTop: 4, padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
-              <div style={kucuk}>{o.taslak_yazan === 'asistan' ? 'Asistan taslağı' : 'Uzman taslağı'} · {o.durum === 'draft' ? 'onay bekliyor' : o.durum}</div>
-              <div>{o.taslak}</div>
-              {o.uzman_metin && <div style={{ color: '#2DD4BF' }}>Uzman: {o.uzman_metin}</div>}
-              {!salt && o.durum === 'draft' && <div style={satir}>
-                <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'onayla', id: o.id }, 'Okuma uzman onaylı.')} style={btn}>Onayla</button>
-                <input value={s(`duz_${o.id}`)} onChange={(e) => set(`duz_${o.id}`, e.target.value)} placeholder="düzeltilmiş metin" style={{ ...toolsInput, minWidth: 160, flex: 1 }} />
-                <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'duzelt', id: o.id, uzmanMetin: s(`duz_${o.id}`) }, 'Düzeltildi.')} style={ghost}>Düzelt</button>
-                <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'reddet', id: o.id }, 'Reddedildi.')} style={ghost}>Reddet</button>
-              </div>}
+  if (sekme === 'Görüntü') {
+    const kiyasA = s('kiyasA'), kiyasB = s('kiyasB')
+    return (
+      <div>
+        <div style={etiket}>OCT / fundus / ön segment <span style={kucuk}>· {v.goruntuDisclaimer} · Ayşe taslağı → uzman onayı</span></div>
+        <div style={kucuk}>Yükleme: Görüntüleme sekmesinde OCT / Fundus / Ön segment seçin. Karşılaştırma: aynı göz + aynı modalite.</div>
+        {!salt && v.goruntuler.length >= 2 && (
+          <div style={{ ...satir, marginTop: 8 }}>
+            <Secim deger={kiyasA} set={(x) => set('kiyasA', x)} secenekler={v.goruntuler.map((g) => [g.id, `${g.tarih} ${MOD_ADI[g.modalite] || g.modalite} ${g.goz || ''}`])} bos="1. görüntü" />
+            <Secim deger={kiyasB} set={(x) => set('kiyasB', x)} secenekler={v.goruntuler.map((g) => [g.id, `${g.tarih} ${MOD_ADI[g.modalite] || g.modalite} ${g.goz || ''}`])} bos="2. görüntü" />
+            <button type="button" onClick={async () => { const j = await calistir({ adim: 'goruntu_okuma', eylem: 'kiyas', aId: kiyasA, bId: kiyasB }, 'Karşılaştırma hazır.'); if (j?.baslik) setSonuc(j); }} style={ghost}>Yan yana karşılaştır</button>
+          </div>
+        )}
+        {typeof sonuc?.baslik === 'string' && sonuc.a && sonuc.b && (
+          <div style={{ marginTop: 10 }}>
+            <div style={etiket}>{String(sonuc.baslik)}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {([{ u: (sonuc.a as { url?: string }).url, t: (sonuc.a as { tarih?: string }).tarih }, { u: (sonuc.b as { url?: string }).url, t: (sonuc.b as { tarih?: string }).tarih }]).map((x, i) => (
+                <div key={i} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: 6, ...metin }}>
+                  <div style={kucuk}>{x.t}</div>
+                  {x.u ? <a href={x.u} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>Görüntüyü aç</a> : 'URL yok'}
+                </div>
+              ))}
             </div>
-          ))}
-          {!salt && <div style={satir}>
-            <input value={s(`t_${g.id}`)} onChange={(e) => set(`t_${g.id}`, e.target.value)} placeholder="Gözlem taslağı (tanı değil)" style={{ ...toolsInput, minWidth: 180, flex: 1 }} />
-            <Secim deger={s(`y_${g.id}`, 'asistan')} set={(x) => set(`y_${g.id}`, x)} secenekler={[['asistan', 'Asistan'], ['uzman', 'Uzman']]} />
-            <button type="button" onClick={async () => { const j = await calistir({ adim: 'goruntu_okuma', eylem: 'taslak', goruntuId: g.id, taslak: s(`t_${g.id}`), taslakYazan: s(`y_${g.id}`, 'asistan') }, 'Taslak eklendi — uzman onayı bekliyor.'); if (j?.uyari) setSonuc(j); }} style={ghost}>Taslak ekle</button>
-          </div>}
+          </div>
+        )}
+        {!v.goruntuler.length && <div style={{ ...kucuk, marginTop: 6 }}>Göz görüntüsü yok.</div>}
+        {v.goruntuler.map((g) => (
+          <div key={g.id} style={{ borderLeft: '2px solid rgba(99,102,241,0.6)', paddingLeft: 10, margin: '10px 0', ...metin }}>
+            <div><b>{g.tarih}</b> · {MOD_ADI[g.modalite] || g.modalite} · {g.goz || 'göz belirtilmedi'}{g.url && <> · <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>aç</a></>}</div>
+            {g.okumalar.map((o) => (
+              <div key={o.id} style={{ marginTop: 4, padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
+                <div style={kucuk}>{o.taslak_yazan === 'asistan' ? 'Asistan / Ayşe taslağı' : 'Uzman taslağı'} · {o.durum === 'draft' ? 'onay bekliyor' : o.durum}</div>
+                <div style={{ whiteSpace: 'pre-wrap' }}>{o.taslak}</div>
+                {o.uzman_metin && <div style={{ color: '#2DD4BF' }}>Uzman: {o.uzman_metin}</div>}
+                {!salt && o.durum === 'draft' && <div style={satir}>
+                  <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'onayla', id: o.id }, 'Okuma uzman onaylı.')} style={btn}>Onayla</button>
+                  <input value={s(`duz_${o.id}`)} onChange={(e) => set(`duz_${o.id}`, e.target.value)} placeholder="düzeltilmiş metin" style={{ ...toolsInput, minWidth: 160, flex: 1 }} />
+                  <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'duzelt', id: o.id, uzmanMetin: s(`duz_${o.id}`) }, 'Düzeltildi.')} style={ghost}>Düzelt</button>
+                  <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'reddet', id: o.id }, 'Reddedildi.')} style={ghost}>Reddet</button>
+                </div>}
+              </div>
+            ))}
+            {!salt && <div style={satir}>
+              <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'ayse_taslak', goruntuId: g.id, goz: g.goz }, 'Ayşe taslağı eklendi — uzman onayı bekliyor.')} style={btn}>Ayşe taslak üret</button>
+              <input value={s(`t_${g.id}`)} onChange={(e) => set(`t_${g.id}`, e.target.value)} placeholder="Gözlem taslağı (tanı değil)" style={{ ...toolsInput, minWidth: 180, flex: 1 }} />
+              <Secim deger={s(`y_${g.id}`, 'asistan')} set={(x) => set(`y_${g.id}`, x)} secenekler={[['asistan', 'Asistan'], ['uzman', 'Uzman']]} />
+              <button type="button" onClick={async () => { const j = await calistir({ adim: 'goruntu_okuma', eylem: 'taslak', goruntuId: g.id, taslak: s(`t_${g.id}`), taslakYazan: s(`y_${g.id}`, 'asistan') }, 'Taslak eklendi — uzman onayı bekliyor.'); if (j?.uyari) setSonuc(j); }} style={ghost}>Taslak ekle</button>
+            </div>}
+          </div>
+        ))}
+        {typeof sonuc?.uyari === 'string' && <div style={{ ...metin, color: '#FBBF24' }}>⚠ {sonuc.uyari as string}</div>}
+      </div>
+    );
+  }
+
+  if (sekme === 'Kuru göz') return (
+    <div>
+      <div style={etiket}>Kuru göz kayıt <span style={kucuk}>· OSDI / Schirmer / TBUT — tanı yok, doz yok</span></div>
+      {(v.kuruGoz || []).map((r) => (
+        <div key={r.id} style={{ ...metin, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginBottom: 6 }}>
+          <b>{r.tarih}</b> · {r.ozet.ozetSatir}
+          {r.ozet.uyarilar.map((u) => <div key={u} style={{ color: '#FBBF24' }}>• {u}</div>)}
         </div>
       ))}
-      {typeof sonuc?.uyari === 'string' && <div style={{ ...metin, color: '#FBBF24' }}>⚠ {sonuc.uyari as string}</div>}
+      {!salt && <>
+        <div style={satir}>
+          <input type="date" value={s('kgTarih')} onChange={(e) => set('kgTarih', e.target.value)} style={{ ...toolsInput, width: 150 }} />
+          <input value={s('osdi')} onChange={(e) => set('osdi', e.target.value)} placeholder="OSDI 0–100" style={{ ...toolsInput, width: 100 }} />
+          <input value={s('schR')} onChange={(e) => set('schR', e.target.value)} placeholder="Schirmer OD mm" style={{ ...toolsInput, width: 110 }} />
+          <input value={s('schL')} onChange={(e) => set('schL', e.target.value)} placeholder="Schirmer OS mm" style={{ ...toolsInput, width: 110 }} />
+          <input value={s('tbutR')} onChange={(e) => set('tbutR', e.target.value)} placeholder="TBUT OD sn" style={{ ...toolsInput, width: 100 }} />
+          <input value={s('tbutL')} onChange={(e) => set('tbutL', e.target.value)} placeholder="TBUT OS sn" style={{ ...toolsInput, width: 100 }} />
+        </div>
+        <input value={s('kgNot')} onChange={(e) => set('kgNot', e.target.value)} placeholder="Hekim notu (opsiyonel)" style={{ ...toolsInput, width: '100%', marginTop: 6 }} />
+        <div style={satir}><button type="button" onClick={() => calistir({ adim: 'kuru_goz', tarih: s('kgTarih') || undefined, osdi: s('osdi') || null, schirmerSag: s('schR') || null, schirmerSol: s('schL') || null, tbutSag: s('tbutR') || null, tbutSol: s('tbutL') || null, notHekim: s('kgNot') || null }, 'Kuru göz kaydı eklendi.')} style={btn}>Kaydet</button></div>
+      </>}
+      {v.protokoller.filter((p) => p.id === 'kuru_goz').map((p) => (
+        <div key={p.id} style={{ marginTop: 12, ...metin }}>
+          <div style={kucuk}>Hızlı protokol (SUT 4.2.33.D)</div>
+          {p.sgk.map((x) => <div key={x}>• {x}</div>)}
+        </div>
+      ))}
     </div>
   );
 
@@ -372,11 +437,18 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
 
   if (sekme === 'Pediatrik') {
     const r = v.pediatrik.satir;
+    const sevk = v.pediatrik.izlem.sevk;
     return (
       <div>
-        <div style={etiket}>Ambliyopi / şaşılık izlem <span style={kucuk}>· pediatri bölümü çatallanmaz; kapama rejimi hekim yazar</span></div>
+        <div style={etiket}>Ambliyopi / şaşılık izlem <span style={kucuk}>· pediatri bölümü çatallanmaz; kapama rejimi hekim yazar · SB görme taraması eşikleri</span></div>
         {v.pediatrik.izlem.hatirlatmalar.map((h) => <div key={h} style={metin}>• {h}</div>)}
         {!v.pediatrik.izlem.hatirlatmalar.length && <div style={kucuk}>{v.hasta.yasAy != null && v.hasta.yasAy >= 216 ? 'Erişkin hasta.' : 'Hatırlatma yok.'}</div>}
+        {sevk?.sevk && (
+          <div style={{ marginTop: 8, border: '1px solid rgba(251,191,36,0.4)', borderRadius: 8, padding: 8, ...metin }}>
+            <div style={{ color: '#FBBF24', fontWeight: 700 }}>SB sevk kapısı açık</div>
+            {sevk.nedenler.map((n) => <div key={n.kod}>• {n.metin}</div>)}
+          </div>
+        )}
         <Kaynak d={v.pediatrik.izlem.dipnotlar} acik={kaynak} k={v.kaynaklar} />
         {!salt && <>
           <div style={satir}>

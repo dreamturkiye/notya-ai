@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import {
   gebelikSekmesiUygun,
   hastaDosyaSekmeleri,
+  ozelBolumBransi,
+  pediatriAracSekmesiUygun,
   pediatriSekmesiUygun,
 } from './hastaDosyaSekmeleri'
 
@@ -11,12 +13,20 @@ const NOW = Date.parse('2026-09-15T00:00:00Z')
 describe('hastaDosyaSekmeleri', () => {
   it('hides M-CHAT, gelişim, and büyüme tabs on adult patients', () => {
     assert.equal(pediatriSekmesiUygun('1998-04-01', NOW), false)
-    const adult = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false })
+    const adult = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, deriUygun: false })
     const labels = adult.map((t) => t.label)
     assert.equal(labels.includes('M-CHAT-R/F'), false)
     assert.equal(labels.includes('Gelişim Taraması'), false)
     assert.equal(labels.includes('Büyüme Eğrileri'), false)
-    assert.ok(labels.includes('Deri & Lezyon'))
+    assert.equal(labels.includes('Deri & Lezyon'), false)
+  })
+
+  it('shows Deri only when deriUygun (dermatoloji doctor)', () => {
+    const derm = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, deriUygun: true })
+    assert.ok(derm.some((t) => t.id === 'deri'))
+    const goz = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, gozUygun: true, deriUygun: false })
+    assert.equal(goz.some((t) => t.id === 'deri'), false)
+    assert.ok(goz.some((t) => t.id === 'goz'))
   })
 
   it('keeps pediatric tabs for a child and KD for an adult woman', () => {
@@ -31,5 +41,22 @@ describe('hastaDosyaSekmeleri', () => {
     assert.ok(child.some((t) => t.id === 'gelisim'))
     assert.ok(child.some((t) => t.id === 'buyume'))
     assert.ok(child.some((t) => t.id === 'bebek'))
+  })
+
+  it('CHART-TAB-POLICY: göz doctor does not get ped tabs even for a child', () => {
+    assert.equal(ozelBolumBransi('Göz Hastalıkları'), true)
+    assert.equal(ozelBolumBransi('aile hekimliği'), false)
+    assert.equal(
+      pediatriAracSekmesiUygun({ dogumIso: '2022-01-10', doktorBransi: 'goz-hastaliklari', pediatriDoktoru: false }, NOW),
+      false,
+    )
+    assert.equal(
+      pediatriAracSekmesiUygun({ dogumIso: '2022-01-10', doktorBransi: 'aile hekimliği', pediatriDoktoru: false }, NOW),
+      true,
+    )
+    assert.equal(
+      pediatriAracSekmesiUygun({ dogumIso: '2022-01-10', doktorBransi: 'pediatri', pediatriDoktoru: true }, NOW),
+      true,
+    )
   })
 })

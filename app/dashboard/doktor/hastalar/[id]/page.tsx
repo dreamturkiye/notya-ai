@@ -31,7 +31,7 @@ import { yasHesapla } from '@/lib/doktor/yas';
 import {
   gebelikSekmesiUygun,
   hastaDosyaSekmeleri,
-  pediatriSekmesiUygun,
+  pediatriAracSekmesiUygun,
   type HastaDosyaSekmeId,
 } from '@/lib/doktor/hastaDosyaSekmeleri';
 
@@ -83,11 +83,15 @@ export default function HastaProfilPage() {
   const [pediatriAraci, setPediatriAraci] = useState(false);
   const [dahiliyeAraci, setDahiliyeAraci] = useState(false); // NOTYA-DAH-01: iç hastalıkları / aile / genel dahiliye
   const [gozAraci, setGozAraci] = useState(false); // GOZ-CHAPTER: göz hastalıkları hekimi
+  const [deriAraci, setDeriAraci] = useState(false); // CHART-TAB-POLICY: dermatoloji only
+  const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
-  const pediatriUygun = patient ? pediatriSekmesiUygun(patient.dogum_tarihi) : false;
+  const pediatriUygun = patient
+    ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
+    : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci });
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci });
 
   useEffect(() => {
     if (!patientId) return;
@@ -107,9 +111,12 @@ export default function HastaProfilPage() {
         setPatient(data.patient);
         if (meRes.ok) {
           const me = await meRes.json();
-          setPediatriAraci(pediatriHedefBoyBransi(me?.data?.specialty));
-          setGozAraci(/göz|goz|oftalm/i.test(String(me?.data?.specialty || '')));
-          setDahiliyeAraci(/dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|kardiyo|gastro|romato|hemato|onkolo|göğüs|gogus/i.test(String(me?.data?.specialty || '')));
+          const sp = String(me?.data?.specialty || '');
+          setDoktorBransi(sp);
+          setPediatriAraci(pediatriHedefBoyBransi(sp));
+          setGozAraci(/göz|goz|oftalm/i.test(sp));
+          setDeriAraci(/derma|deri ve z/i.test(sp));
+          setDahiliyeAraci(/dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|kardiyo|gastro|romato|hemato|onkolo|göğüs|gogus/i.test(sp));
         }
       } catch {
         setError('Bir hata oluştu');

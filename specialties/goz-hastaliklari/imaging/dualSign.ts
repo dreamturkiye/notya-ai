@@ -1,7 +1,7 @@
 /**
  * GOZ-CHAPTER — OCT / fundus / ön segment okuma dual-sign. Pixels stay in core hasta_goruntulemeler; this is the read record.
- * Taslak (asistan hekim veya dikte) → uzman onay / düzeltme / red. Asistan kendi taslağını onaylayamaz. Karar desteği, tanı değildir.
- * Ayşe otomatik görüntü okuması bu sürümde bağlı değil (manifest.imagingCapabilities.ayseOtomatikOkuma=false) — kasıtlı dış kapsam.
+ * Taslak (asistan hekim, Ayşe scaffold/LLM, veya dikte) → uzman onay / düzeltme / red. Asistan kendi taslağını onaylayamaz.
+ * Karar desteği, tanı değildir. GOZ-AYSE-VISION: `ayse_taslak` API adımı dual-sign kaydına yazar.
  */
 export const GOZ_GORUNTU_DISCLAIMER = 'Karar desteği, tanı değildir. Uzman onayı gerekir.' as const
 export const GOZ_MODALITELER = ['oct', 'fundus', 'on_segment'] as const

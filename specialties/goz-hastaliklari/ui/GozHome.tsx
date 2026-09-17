@@ -13,7 +13,7 @@ import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 
 const { btn, ghost, etiket, kucuk, satir } = stil;
 const ALANLAR = [['uzak_sc', 'Uzak sc'], ['uzak_cc', 'Uzak cc'], ['yakin', 'Yakın']] as const;
-const SEKMELER = ['Özet', 'Glokom', 'DR', 'Enjeksiyon', 'SGK rapor', 'Katarakt', 'Görüntü', 'Ön segment', 'Pediatrik', 'Kontrol'] as const;
+const SEKMELER = ['Özet', 'Glokom', 'DR', 'Enjeksiyon', 'SGK rapor', 'Katarakt', 'Görüntü', 'Ön segment', 'Kuru göz', 'Pediatrik', 'Kontrol'] as const;
 export type GozSekme = (typeof SEKMELER)[number];
 
 type Form = { sag: Record<string, string>; sol: Record<string, string>; gibSag: string; gibSol: string; gibYontem: string; kopya: boolean };

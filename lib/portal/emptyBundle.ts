@@ -33,5 +33,6 @@ export function emptyPortalBundle(): PortalBundle {
     jinekoloji: null,
     hedefBoy: null,
     goz: null,
+    deri: null,
   }
 }

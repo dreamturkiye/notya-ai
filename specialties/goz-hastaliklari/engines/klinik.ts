@@ -26,8 +26,33 @@ export function kataraktHazirlik(isaretli: Record<string, boolean>): { tamam: nu
     dipnotlar: [
       { ref: 'TOD', not: 'Ön-op değerlendirme maddeleri — TR klinik pratik; kurum protokolü hekim teyit eder' },
       { ref: 'SUT_244I', not: 'SGK sözleşmeli özel sağlık hizmeti sunucusu FAKO tarihini ≥2 gün önce sisteme kaydeder (SGK sistemi kurulana kadar uygulanmaz)' },
-      { ref: 'SUT_EK3G', not: 'GİL SGK ödemesi EK-3/G listesine bağlı; monofokal/torik/multifokal kalemleri hekim/idare teyit eder' },
+      { ref: 'SUT_EK3G', not: 'GİL: EK-3/G kodları (G10090 standart/monofokal sınıfı, G10100 multifokal/akomodatif, G10105 özel kaplamalı, G10110 torik, G10115 ilgili kalem) — güncel bedel hekim/idare; Notya fiyat yazmaz' },
     ],
+  }
+}
+
+/** GOZ-EK3G — SGK EK-3/G göz içi lens kodları (sgk.gov.tr EK-3/G PDF özet, 2026-09-17 doğrulama). Bedel/fiyat gömülmez. */
+export const GIL_EK3G_KALEMLERI: Array<{ kod: string; ad: string; not: string }> = [
+  { kod: 'G10090', ad: 'Standart / monofokal sınıfı GİL', not: 'SGK’nın klasik katarakt GİL kalemi; güncel bedel idare/hekim' },
+  { kod: 'G10100', ad: 'Multifokal ve akomodatif lensler', not: 'EK-3/G listesinde; ödeme koşulları ve fark hekim/idare' },
+  { kod: 'G10105', ad: 'Özel kaplamalı lens', not: 'EK-3/G listesinde; endikasyon/bedel hekim/idare' },
+  { kod: 'G10110', ad: 'Torik lensler', not: 'EK-3/G listesinde; endikasyon/bedel hekim/idare' },
+  { kod: 'G10115', ad: 'İlgili GİL kalemi (EK-3/G)', not: 'Listedeki komşu kalem; güncel satır metni hekim/idare' },
+]
+
+export function gilSgkKontrol(gilTipiHekim: string | null): { kalem: typeof GIL_EK3G_KALEMLERI[number] | null; uyari: string[]; dipnotlar: Dipnot[] } {
+  const tip = String(gilTipiHekim || '').toLowerCase()
+  const map: Record<string, string> = { monofokal: 'G10090', torik: 'G10110', multifokal: 'G10100', edof: 'G10100', diger: '' }
+  const kod = map[tip] || ''
+  const kalem = GIL_EK3G_KALEMLERI.find((k) => k.kod === kod) || null
+  const uyari: string[] = []
+  if (tip === 'multifokal' || tip === 'edof') uyari.push('Multifokal/akomodatif (G10100): SGK farkı / ödeme koşulları idareyle teyit — Notya bedel yazmaz')
+  if (tip === 'torik') uyari.push('Torik (G10110): endikasyon ve ödeme idare/hekim teyidi')
+  if (!tip) uyari.push('GİL tipi hekim seçimi bekleniyor')
+  return {
+    kalem,
+    uyari,
+    dipnotlar: [{ ref: 'SUT_EK3G', not: 'EK-3/G GİL kodları doğrulandı (G10090–G10115 sınıfı); fiyat listesi değişkendir, gömülmez' }],
   }
 }
 
@@ -63,14 +88,67 @@ export const ON_SEGMENT_PROTOKOLLERI: ProtokolKart[] = [
 ]
 
 // ---------- Pediatrik köprü (pediatri bölümünü çatallamaz) ----------
+/** GOZ-SB-GORME — SB Ulusal Görme Taraması Rehberi 02.08.2019 (birincil PDF) sevk eşikleri. */
 export type PediatrikTip = 'ambliyopi' | 'sasilik' | 'ambliyopi_sasilik' | 'refraktif'
-export function pediatrikIzlem(g: { yasAy: number | null; tip: PediatrikTip | null; kapamaHekim: string | null; sonrakiKontrol: string | null; bugun: string }): { hatirlatmalar: string[]; gorevler: { kod: string; ad: string; due: string | null }[]; dipnotlar: Dipnot[] } {
+export type SbSevkNeden =
+  | 'va_esik'
+  | 'iki_goz_2_sira'
+  | 'sasilik_nistagmus'
+  | 'kirmizi_refle'
+  | 'rop'
+  | 'acil_konjenital'
+  | 'risk_grubu'
+
+export function sbGormeSevk(g: {
+  yasAy: number | null
+  /** ondalık VA sağ/sol (LEA/Snellen ondalık); null = ölçülmedi */
+  vaSag: number | null
+  vaSol: number | null
+  sasilikVeyaNistagmus?: boolean
+  kirmiziRefleAnormal?: boolean
+  prematüreRiskRop?: boolean // ≤32 hf veya ≤1500 g
+  konjenitalSuphe?: boolean // RB / konjenital glokom / katarakt
+  riskGrubu?: boolean // SB risk listesi (CP, Down, aile öyküsü, …)
+}): { sevk: boolean; nedenler: Array<{ kod: SbSevkNeden; metin: string }>; esikNotu: string | null; dipnotlar: Dipnot[] } {
+  const nedenler: Array<{ kod: SbSevkNeden; metin: string }> = []
+  let esikNotu: string | null = null
+  const y = g.yasAy
+  if (g.prematüreRiskRop) nedenler.push({ kod: 'rop', metin: '≤32 hf veya ≤1500 g: 4. haftada ROP için göz muayenesine sevk (SB 2019/17)' })
+  if (g.konjenitalSuphe) nedenler.push({ kod: 'acil_konjenital', metin: 'Retinoblastom / konjenital glokom / konjenital katarakt şüphesi veya aile öyküsü → acil göz sevki' })
+  if (g.sasilikVeyaNistagmus) nedenler.push({ kod: 'sasilik_nistagmus', metin: 'Şaşılık veya nistagmus → göz hastalıkları sevki' })
+  if (g.kirmiziRefleAnormal) nedenler.push({ kod: 'kirmizi_refle', metin: 'Kırmızı refle yok / beyaz-donuk / asimetrik → sevk' })
+  if (g.riskGrubu) nedenler.push({ kod: 'risk_grubu', metin: 'SB risk grubu (CP, Down, ailede ambliyopi/yüksek numaralı gözlük, metabolik, …) → sevk' })
+
+  if (y != null && g.vaSag != null && g.vaSol != null) {
+    const diffLines = Math.abs(Math.log10(Math.max(g.vaSag, 0.01)) - Math.log10(Math.max(g.vaSol, 0.01))) / 0.1 // ~0.1 logMAR ≈ 1 sıra
+    // 36–48 ay / 3–5 yaş: her göz ≥0,5; 2 sıra fark → sevk (Rehber EK-2 / EK-6)
+    if (y >= 36 && y < 72) {
+      esikNotu = '36–48 ay / 3–5 yaş: her gözde VA ≥0,5; gözler arası ≥2 sıra fark → sevk (SB Rehber 2019)'
+      if (g.vaSag < 0.5 || g.vaSol < 0.5) nedenler.push({ kod: 'va_esik', metin: `VA eşik altı (0,5): sağ ${g.vaSag}, sol ${g.vaSol}` })
+      if (diffLines >= 2) nedenler.push({ kod: 'iki_goz_2_sira', metin: 'İki göz arasında ≥2 sıra görme farkı' })
+    }
+    // 6–10 yaş / 1. sınıf: her göz ≥0,8 normal; sevk ≤0,7 veya 2 sıra (EK-3 / EK-6)
+    if (y >= 72 && y <= 120) {
+      esikNotu = '6–10 yaş / 1. sınıf: normal ≥0,8; sevk VA ≤0,7 veya ≥2 sıra fark (SB Rehber 2019)'
+      if (g.vaSag <= 0.7 || g.vaSol <= 0.7) nedenler.push({ kod: 'va_esik', metin: `VA ≤0,7: sağ ${g.vaSag}, sol ${g.vaSol}` })
+      if (diffLines >= 2) nedenler.push({ kod: 'iki_goz_2_sira', metin: 'İki göz arasında ≥2 sıra görme farkı' })
+    }
+  }
+
+  return {
+    sevk: nedenler.length > 0,
+    nedenler,
+    esikNotu,
+    dipnotlar: [{ ref: 'SB_COCUK_IZLEM', not: 'SB Ulusal Görme Taraması Rehberi 02.08.2019 (birincil PDF): EK-2/EK-3/EK-6 sevk eşikleri gömüldü' }],
+  }
+}
+
+export function pediatrikIzlem(g: { yasAy: number | null; tip: PediatrikTip | null; kapamaHekim: string | null; sonrakiKontrol: string | null; bugun: string; vaSag?: number | null; vaSol?: number | null; sasilikVeyaNistagmus?: boolean }): { hatirlatmalar: string[]; gorevler: { kod: string; ad: string; due: string | null }[]; sevk: ReturnType<typeof sbGormeSevk>; dipnotlar: Dipnot[] } {
   const hatirlatmalar: string[] = [], gorevler: { kod: string; ad: string; due: string | null }[] = []
   if (g.yasAy != null && g.yasAy < 216) {
-    // SB Ulusal Görme Taraması Programı Genelgesi 2019/17 — yaş noktaları (ikincil özet üzerinden; kesme değerleri gömülmedi)
     if (g.yasAy <= 3) hatirlatmalar.push('0–3 ay: kırmızı refle + risk soruları (SB ulusal görme taraması)')
-    if (g.yasAy >= 36 && g.yasAy <= 48) hatirlatmalar.push('36–48 ay: kırmızı refle + görme keskinliği taraması dönemi (SB)')
-    if (g.yasAy >= 72 && g.yasAy <= 84) hatirlatmalar.push('6–7 yaş (1. sınıf): okul dönemi görme taraması (SB)')
+    if (g.yasAy >= 36 && g.yasAy <= 48) hatirlatmalar.push('36–48 ay: kırmızı refle + LEA görme keskinliği (SB); eşik her göz ≥0,5 / ≥2 sıra fark → sevk')
+    if (g.yasAy >= 72 && g.yasAy <= 84) hatirlatmalar.push('6–7 yaş (1. sınıf): LEA/Snellen (SB); normal ≥0,8; sevk ≤0,7 veya ≥2 sıra fark')
   }
   if (g.tip) {
     if (!g.sonrakiKontrol) gorevler.push({ kod: 'ped_kontrol', ad: 'Ambliyopi/şaşılık izlem kontrol tarihini hekim belirlesin', due: null })
@@ -78,11 +156,19 @@ export function pediatrikIzlem(g: { yasAy: number | null; tip: PediatrikTip | nu
     if ((g.tip === 'ambliyopi' || g.tip === 'ambliyopi_sasilik') && !g.kapamaHekim) hatirlatmalar.push('Kapama / penalizasyon rejimi kayıtlı değil — hekim yazar (saat/gün motor önermez)')
     hatirlatmalar.push('Pediatri takibi pediatri bölümünde kalır; burada yalnız göz izlem hatırlatması tutulur.')
   }
+  const sevk = sbGormeSevk({
+    yasAy: g.yasAy,
+    vaSag: g.vaSag ?? null,
+    vaSol: g.vaSol ?? null,
+    sasilikVeyaNistagmus: g.sasilikVeyaNistagmus || g.tip === 'sasilik' || g.tip === 'ambliyopi_sasilik',
+  })
+  if (sevk.esikNotu) hatirlatmalar.push(sevk.esikNotu)
+  for (const n of sevk.nedenler) hatirlatmalar.push(`Sevk: ${n.metin}`)
   return {
-    hatirlatmalar, gorevler,
+    hatirlatmalar, gorevler, sevk,
     dipnotlar: [
-      { ref: 'SB_COCUK_IZLEM', not: 'SB Ulusal Görme Taraması Programı Genelgesi 2019/17: 0–3 ay, 36–48 ay, 6–7 yaş; ≤32 hf / ≤1500 g ROP muayenesi (ikincil özet) — sevk kesme değerleri doğrulanamadı, gömülmedi' },
-      { ref: 'TOD', not: 'TOD Pediatrik Oftalmoloji ve Şaşılık birimi — üye erişimli; hekim teyit eder' },
+      ...sevk.dipnotlar,
+      { ref: 'TOD', not: 'TOD Pediatrik Oftalmoloji ve Şaşılık birimi — üye erişimli ayrıntı hekim teyit eder; SB eşikleri birincil' },
       { ref: 'AAO_PPP_PED', not: 'Uluslararası derinlik' },
     ],
   }

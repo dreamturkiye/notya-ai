@@ -5,9 +5,12 @@ import { glokomDegerlendir, gibOzeti } from '../engines/glokom'
 import { drDegerlendir, ICO_ARALIK_AY } from '../engines/dr'
 import { sgkKapilari, sutYanit, yuklemeDozSayisi, yuklemeTakvimi, sonrakiDoz, type Enjeksiyon } from '../engines/antiVegf'
 import { acilTara } from '../engines/acil'
-import { kataraktHazirlik, pediatrikIzlem, ON_SEGMENT_PROTOKOLLERI } from '../engines/klinik'
+import { kataraktHazirlik, pediatrikIzlem, ON_SEGMENT_PROTOKOLLERI, gilSgkKontrol, sbGormeSevk } from '../engines/klinik'
 import { gozSgkTaslak } from '../engines/sgkRapor'
 import { gozSeridi, intakeSubjektif } from '../engines/serit'
+import { kuruGozOzet, osdiBand } from '../engines/kuruGoz'
+import { ayseGoruntuTaslagi } from '../engines/ayseGoruntu'
+import { gozBolgeCoz, kiyasCifti } from '../engines/kiyas'
 
 describe('VA — TR notation, logMAR, harf', () => {
   it('decimal (comma or dot), Snellen fractions → logMAR = −log10(decimal)', () => {
@@ -156,5 +159,49 @@ describe('Acil, katarakt, ön segment, pediatrik, şerit, intake', () => {
     const r = intakeSubjektif({ basvuruNedeni: 'Kontrol', mevcutGozSikayetleri: ['Bulanık Görme', 'Göz Kuruluğu'], bilinenGozHastaliklari: ['Glokom'], kronikRahatsizliklarGoz: ['Diyabet'], oncekiGozOperasyonlari: ['Yok'], aileGozHastaligiOykusu: ['Bilinmiyor'] })
     assert.match(r.subjektif, /Başvuru nedeni \(hasta beyanı\): Kontrol/); assert.ok(!r.subjektif.includes('Yok'))
     assert.deepEqual(r.ipuclari.map((i) => i.kart).sort(), ['dr', 'glokom', 'on_segment'])
+  })
+})
+
+describe('Gaps close — dry eye, SB sevk, EK-3/G, Ayşe, compare', () => {
+  it('OSDI bands + Schirmer/TBUT flags without diagnosis language', () => {
+    assert.equal(osdiBand(10), 'normal'); assert.equal(osdiBand(20), 'hafif'); assert.equal(osdiBand(40), 'siddetli')
+    const o = kuruGozOzet({ osdi: 40, schirmerSag: 5, schirmerSol: 12, tbutSag: 4, tbutSol: 11, notHekim: null })
+    assert.equal(o.osdiBand, 'siddetli'); assert.equal(o.schirmerDusuk, true); assert.equal(o.tbutDusuk, true)
+    assert.ok(!/tanı|glokom|reçete/i.test(o.ozetSatir))
+  })
+  it('SB görme sevk: 3–5y VA under 0.5 or ≥2 lines; 6–10y VA≤0.7', () => {
+    const a = sbGormeSevk({ yasAy: 42, vaSag: 0.4, vaSol: 0.8 })
+    assert.equal(a.sevk, true); assert.ok(a.nedenler.some((n) => n.kod === 'va_esik'))
+    const b = sbGormeSevk({ yasAy: 84, vaSag: 0.6, vaSol: 0.9 })
+    assert.ok(b.nedenler.some((n) => n.kod === 'va_esik'))
+    const c = sbGormeSevk({ yasAy: 42, vaSag: 0.8, vaSol: 0.8 })
+    assert.equal(c.sevk, false)
+  })
+  it('pediatric bridge embeds SB sevk when VA below threshold', () => {
+    const p = pediatrikIzlem({ yasAy: 40, tip: 'ambliyopi', kapamaHekim: 'OD 2 saat', sonrakiKontrol: '2026-10-01', bugun: '2026-09-17', vaSag: 0.3, vaSol: 0.8 })
+    assert.equal(p.sevk.sevk, true)
+  })
+  it('GİL EK-3/G maps monofokal→G10090; no price invented', () => {
+    const g = gilSgkKontrol('monofokal')
+    assert.equal(g.kalem?.kod, 'G10090')
+    assert.ok(!/₺|\d+\s*TL|fiyat\s*[:=]|bedel\s*\d/i.test(JSON.stringify(g)))
+  })
+  it('Ayşe draft is dual-sign scaffold, never diagnoses', () => {
+    const a = ayseGoruntuTaslagi({ modalite: 'oct', goz: 'sag' })
+    assert.match(a.taslak, /Ayşe taslak/); assert.match(a.taslak, /Tanı \/ evre yazılmaz/)
+    assert.ok(!/glokom|NPDR|AMD tanısı/i.test(a.taslak))
+  })
+  it('compare requires same eye + same modality; Turkish region parses', () => {
+    assert.equal(gozBolgeCoz('sağ göz'), 'sag'); assert.equal(gozBolgeCoz('sol'), 'sol')
+    const ok = kiyasCifti(
+      { id: 'a', modalite: 'oct', goz: 'sag', tarih: '2026-01-01', url: null },
+      { id: 'b', modalite: 'oct', goz: 'sag', tarih: '2026-06-01', url: null },
+    )
+    assert.equal(ok.ok, true)
+    const bad = kiyasCifti(
+      { id: 'a', modalite: 'oct', goz: 'sag', tarih: '2026-01-01', url: null },
+      { id: 'b', modalite: 'fundus', goz: 'sag', tarih: '2026-06-01', url: null },
+    )
+    assert.equal(bad.ok, false)
   })
 })

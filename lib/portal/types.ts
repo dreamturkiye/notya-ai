@@ -159,6 +159,8 @@ export interface PortalBundle {
   jinekoloji: PortalJinekoloji | null
   hedefBoy: PortalHedefBoy | null
   goz: PortalGoz | null
+  /** DERM-PORTAL — "Derim": photo notices, MD reminders, phototherapy session dates. No tanı. */
+  deri: PortalDeri | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -189,5 +191,16 @@ export interface PortalGoz {
   olcumler: Array<{ tarih: string; vaSag: string | null; vaSol: string | null; gibSag: number | null; gibSol: number | null }>
   /** OCT / fundus / ön segment images uploaded to the file — notice only */
   goruntuler: Array<{ id: string; tarih: string; tur: string; goz: string }>
+  not: string
+}
+
+/** DERM-PORTAL — "Derim": patient-safe derm surface. No morfoloji, tanı, skor, or dose. */
+export interface PortalDeri {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null }>
+  fotograflar: Array<{ id: string; tarih: string; tur: string }>
+  islemler: Array<{ tarih: string; ad: string }>
+  fototerapi: Array<{ tarih: string; cihaz: string | null }>
+  labHatirlatma: Array<{ ad: string; due: string | null }>
   not: string
 }

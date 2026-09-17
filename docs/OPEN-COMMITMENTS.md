@@ -128,6 +128,15 @@ Pap/HPV only for KD); Gebeliğim follows an active pregnancy for any practice (m
 → https://notya-ai.vercel.app/goz-remaining-gaps-audit.html — Claude Strong ratings verified
 (`test:goz` 61/61); 7 Partial domains + chart-tab chrome leak + MD beta still open.
 
+**GOZ-GAPS CLOSE — SHIPPED 2026-09-17 (Composer).** Closed Partial backlog after Claude chapter:
+Ayşe dual-sign scaffold + same-eye OCT compare; `goz_kuru_goz` OSDI/Schirmer/TBUT (migration 049);
+SB Ulusal Görme Taraması 2019 sevk eşikleri; EK-3/G GİL codes G10090–G10115 (no prices);
+intake filled form in `goz-smoke`; CHART-TAB-POLICY specialty-gate (universal helper — Deri/ped no longer
+leak onto exclusive chapters); dermatoloji Sağlığım **Derim** Partial (patient-safe). Skills:
+`specialty-universal-vs-chapter` (universal → all ~29; chapter stays chapter) +
+`specialty-hasta-portali` (each portal unique). Honest leftovers: TOD members-only PDFs (intervals stay
+hekim), GİL Medula path intentional out, GOZ-MD-BETA. `test:goz` 70/70.
+
 **GOZ-CHAPTER — SHIPPED 2026-09-17 (#292, Claude).** `specialties/goz-hastaliklari/**` + `lib/specialties/goz-hastaliklari.ts`
 (VA/GİB first-class olcumler, Gözlerim module Strong) + migration `048_goz_chapter.sql` (goz_* tables, oct/fundus/on_segment
 modalities; applied) + `/api/doktor/goz` + hasta dosyası › **Göz** (only for göz doctors). Engines: VA (logMAR/letters, PS/EH/IH
@@ -147,22 +156,20 @@ fields because TOD birim texts are members-only; ICD-10 suggestions on SGK draft
 (same as every modality); a GİL draft is an info note because the SUT text has no GİL rapor rule.
 
 **Open / intentional outs (Göz):**
-- GOZ-AYSE-VISION — Ayşe OCT/fundus draft into `goz_goruntu_okumalari` (dual-sign record exists; auto-draft not wired). M.
-- GOZ-EK3G — verify SUT EK-3/G lens items (monofokal/torik/multifokal) with the clinic's billing; list could not be fetched. S.
 - GOZ-TOD-TEXTS — TOD Glokom / Retina / Pediatrik birim guidelines are members-only; read with a member login and replace hekim
   interval fields with verified defaults. M.
-- GOZ-SB-GORME — SB görme taraması referral cut-offs (Lea/Snellen) unverified (hsgm PDFs refused connection); not embedded. S.
-- GOZ-INTAKE-SMOKE — intake → Subjektif path has unit tests but no smoke with a filled göz ön formu. S.
-- GOZ-COMPARE — side-by-side OCT compare for the same eye. M.
+- GİL Medula path — full GİL rapor submit stays hekim / intentional out (EK-3/G codes shipped). L.
 - Real ophthalmologist beta — synthetic QA ≠ muayenehane; needs a göz hekimi field day.
 
-**SAGLIGIM PART C — portal honesty pass (2026-09-17):** pediatri büyüme Partial (gated, still Takip bolt-on), KD Gebeliğim + jine
-Partial (gated), dahiliye ön anket Partial (gated in bundle and API), dermatoloji **Missing** (declared, mounts nothing), göz
+**Closed 2026-09-17 (gap-close):** GOZ-AYSE-VISION, GOZ-COMPARE, GOZ-EK3G (codes), GOZ-SB-GORME, GOZ-INTAKE-SMOKE,
+GOZ-DRYEYE, CHART-TAB-POLICY (universal specialty-gate), dermatoloji Derim Partial.
+
+**SAGLIGIM PART C — portal honesty pass (2026-09-17, updated gap-close):** pediatri büyüme Partial (gated), KD Gebeliğim + jine
+Partial (gated), dahiliye ön anket Partial (gated), dermatoloji **Derim Partial** (foto/kontrol/lab/fototerapi — no tanı), göz
 Gözlerim Strong. Smoke proves a göz practice gets no büyüme/gebelik/jine/anket, including a 6-year-old with kilo/boy.
-**Waits on Kaan (doctor side, not changed):** hasta dosyası shows "Deri & Lezyon" to every branch (#244 made it universal) and
-pediatric tabs (M-CHAT, gelişim, büyüme, bebek kartı) follow patient age, not doctor branch — so göz/KD doctors see them for
-children. Proposal: same registry rule as the portal (own-chapter doctors don't get other chapters' tabs). Needs a yes because
-Dr. Gökhan's pediatri workflow may use the Deri tab.
+**CHART-TAB-POLICY SHIPPED:** exclusive-chapter doctors (göz/derm/KD/dahiliye/…) no longer get other chapters' chart tabs;
+baseline/aile may still use age/sex mixed-care rules. See `lib/doktor/hastaDosyaSekmeleri.ts` +
+`.cursor/skills/specialty-universal-vs-chapter`.
 
 ## Kadın Hastalıkları ve Doğum — Wave 1, first slice shipped 2026-09-14 (night)
 

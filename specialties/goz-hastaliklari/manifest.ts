@@ -20,8 +20,8 @@ export const GOZ_MANIFEST = {
   ],
   visitTypes: ['genel-poliklinik', 'glokom', 'retina', 'enjeksiyon', 'katarakt-preop', 'kornea-on-segment', 'pediatrik-sasilik', 'acil'] as const satisfies readonly VisitType[],
   units: ['genel', 'glokom', 'retina', 'katarakt-refraktif', 'kornea', 'pediatrik-sasilik'] as const satisfies readonly ClinicUnit[],
-  imagingCapabilities: { oct: true, fundus: true, onSegment: true, zamanCizgisi: true, dualSignAsistanUzman: true, ayseOtomatikOkuma: false },
-  tabs: ['GozSerit', 'Ozet', 'Glokom', 'DR', 'Enjeksiyon', 'Katarakt', 'Goruntu', 'OnSegment', 'Pediatrik', 'SgkRapor', 'Kontrol'],
+  imagingCapabilities: { oct: true, fundus: true, onSegment: true, zamanCizgisi: true, dualSignAsistanUzman: true, ayseOtomatikOkuma: true },
+  tabs: ['GozSerit', 'Ozet', 'Glokom', 'DR', 'Enjeksiyon', 'Katarakt', 'Goruntu', 'OnSegment', 'KuruGoz', 'Pediatrik', 'SgkRapor', 'Kontrol'],
   bridges: ['dahiliye-dm-goz-dibi', 'pediatri-gorme-taramasi'] as const,
 }
 export type GozManifest = typeof GOZ_MANIFEST

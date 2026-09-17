@@ -14,9 +14,11 @@ description: >-
 
 Boss rule (verbatim intent): pediatrik hasta portalı ve göz doktorunun hasta portalı aynı olamaz. Core value’lar aynı olur; the rest should be section specific. Bundan sonraki specialty’lerde de hasta portalları specialty’ye göre olsun.
 
+Boss rule (2026-09-17): **Each hasta portalı must be unique** — show information that pertains to the specialty in hand and that is useful for that practice’s patients. Universal chrome changes apply to **all ~29 specialties**; Göz-only (or KD/derm/…) clinical content stays in that chapter. See `specialty-universal-vs-chapter`.
+
 ## Verdict in one line
 
-**One shell. Many chapters.** Shared trust + messaging + visits + results + meds + history. Everything clinical-facing beyond that is declared per `SpecialtyProfile` and mounted only when that practice (or that patient’s active chapter data) qualifies.
+**One shell. Many chapters.** Shared trust + messaging + visits + results + meds + history. Everything clinical-facing beyond that is declared per `SpecialtyProfile` and mounted only when that practice (or that patient’s active chapter data) qualifies. **Pediatri portal ≠ göz portal ≠ KD portal ≠ dahiliye portal ≠ derm portal.**
 
 ## Core (universal — never fork)
 
@@ -48,7 +50,7 @@ bundle state `PortalBundle.portal = { moduller, nav }`. Resolver rules that go b
   when that data exists.
 - Gebeliğim follows an **active pregnancy record** for any practice (mixed care).
 - Unknown `users.specialty` = baseline branch (not pediatri).
-- `derinlik: 'Missing'` modules (derm today) are declared for audits but mount nothing.
+- `derinlik: 'Missing'` modules are declared for audits but mount nothing (none today — derm is Partial via Derim).
 
 Tests to copy for a new chapter: `lib/portal/moduller.test.ts` (eligibility matrix), `lib/portal/gozlerim.test.ts`
 (no diagnosis words, route gated by `modulAktif`), and a smoke that opens the portal bundle through the PIN gate.
@@ -77,10 +79,23 @@ portal: {
 | **Pediatri** | Doctor specialty is pediatri **or** patient age qualifies + büyüme data | Adult-only göz / jine / dahiliye chronic cards as primary home |
 | **KD / Jinekoloji** | Active gebelik → Gebeliğim; jine reminders when KD chart data exists | Büyüme eğrileri as default; göz VA/GİB trends |
 | **Dahiliye** | Doctor specialty dahiliye → ön anket, ev KB/glukoz, hedef kart özeti | Pediatri büyüme; Gebeliğim unless truly active pregnancy on chart |
-| **Dermatoloji** | Derm photo series / tedavi plan patient-safe summaries | Fundus/OCT; Neyzi curves |
+| **Dermatoloji** | Doctor specialty dermatoloji → **Derim** (foto eklendi notices, MD-set kontrol/tedavi/lab hatırlatma, fototerapi seans tarihi — **no tanı**, no morfoloji/skor/doz) | Fundus/OCT; Neyzi curves; Gözlerim |
 | **Göz** | Doctor specialty `goz-hastaliklari` → Gözlerim (VA/GİB trends, damla uyumu, enjeksiyon/kontrol hatırlatma, hasta-safe OCT/fundus “görüntü hazır” — **no tanı**) | Pediatri büyüme; Pap/HPV; HbA1c DM loop as home |
+| **Next of ~29** | When chapter ships: unique module with that branş’s patient-useful surfaces | Other branş widgets |
 
 Mixed-care edge (e.g. dahiliye patient with active pregnancy): attach **only** the modules whose eligibility fires; never dump every specialty’s widgets.
+
+### What “unique + useful” means (content bar)
+
+Ask: *What should this specialty’s patient see between visits?* Examples:
+
+- Pediatri → büyüme / aşı / kontrol yaşı
+- KD → Gebeliğim takvim / Pap·RİA hatırlatma
+- Dahiliye → ön anket, ev KB/glukoz, hedef özeti
+- Göz → Gözlerim (kontrol, damla, enjeksiyon, VA/GİB sayıları)
+- Derm → Derim (foto yüklendi, kontrol/tedavi hatırlatma)
+
+If the answer is “the same Takip page as everyone else,” the portal module is not done.
 
 ## Anti-patterns (current debt — do not extend)
 
