@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { normalizeHastalar, toolsShell, toolsCard, toolsInput, type HastaOption } from '@/lib/doktor/toolsUi';
+import { trIcerir } from '@/lib/utils/turkceArama';
 
 const DOSYA_TURLERI: [string, string][] = [['steteskop', 'Steteskop kaydı'], ['ekg', 'EKG'], ['usg', 'Ultrason görüntüsü'], ['diger', 'Diğer cihaz çıktısı']];
 
@@ -58,8 +59,9 @@ export default function CihazPaylasPage() {
   }, [router]);
 
   const filtre = useMemo(() => {
-    const q = ara.trim().toLocaleLowerCase('tr-TR');
-    const l = q ? hastalar.filter((h) => h.label.toLocaleLowerCase('tr-TR').includes(q)) : hastalar;
+    // NOTYA-ARAMA-TR-01: ortak Türkçe katlama (I/ı/İ/i tek kovada)
+    const q = ara.trim();
+    const l = q ? hastalar.filter((h) => trIcerir(h.label, q)) : hastalar;
     return l.slice(0, 12);
   }, [hastalar, ara]);
 

@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { trIcerir } from '@/lib/utils/turkceArama';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -14,13 +15,6 @@ interface Patient {
   tc_kimlik_hash: string;
   last_visit: string;
   is_active: boolean;
-}
-
-function normalizeTr(value: string): string {
-  return value
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '');
 }
 
 async function sha256Hex(text: string): Promise<string> {
@@ -112,9 +106,9 @@ export default function HastalarPage() {
   const filtered = useMemo(() => {
     const q = search.trim();
     if (!q) return patients;
-    const qNorm = normalizeTr(q);
+    // NOTYA-ARAMA-TR-01: ortak Türkçe katlama — "isik" da "IŞIK" da "Işık"ı bulur.
     return patients.filter((p) => {
-      const nameHit = normalizeTr(p.name).includes(qNorm);
+      const nameHit = trIcerir(p.name, q);
       const tcHit = Boolean(tcHashQuery && p.tc_kimlik_hash && p.tc_kimlik_hash === tcHashQuery);
       return nameHit || tcHit;
     });
