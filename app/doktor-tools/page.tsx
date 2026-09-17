@@ -1,46 +1,40 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav'
 import { useRouter } from 'next/navigation';
 import { HedefBoyAracPaneli } from '@/components/hedefBoy/HedefBoyAracPaneli'
 import { usePediatriHedefBoy } from '@/components/hedefBoy/usePediatriHedefBoy'
+import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { doktorAraclariListesi, type DoktorArac } from '@/lib/doktor/doktorAraclari'
 
 export const dynamic = 'force-dynamic';
-
-interface Tool {
-  circleColor: string;
-  icon: string;
-  title: string;
-  desc: string;
-  route: string;
-}
-
-const tools: Tool[] = [
-  { circleColor: '#0F9B8E', icon: 'Rx', title: 'e-Reçete Asistanı', desc: 'Elektronik reçete oluştur ve SGK entegrasyonunu tamamla', route: '/doktor-tools/erecete' },
-  { circleColor: '#8B5CF6', icon: 'EP', title: 'Epikriz Üretici', desc: 'Hasta özetlerini otomatik oluştur ve profesyonel epikriz raporları hazırla', route: '/doktor-tools/epikriz' },
-  { circleColor: '#F59E0B', icon: 'IK', title: 'ICD-10 Kodlayıcı', desc: 'Türkçe tanı girişiyle anlık ICD-10 kodlama', route: '/doktor-tools/icd10' },
-  { circleColor: '#EF4444', icon: 'II', title: 'İlaç Etkileşimi', desc: 'Reçetedeki ilaç etkileşimlerini kontrol et ve uyarıları görüntüle', route: '/doktor-tools/ilac-interaksiyon' },
-  { circleColor: '#166534', icon: 'HR', title: 'Hasta Raporları', desc: 'SGK e-İstirahat / e-Rapor + muayenehane belgesi (Gökhan pediatri revizyonu)', route: '/doktor-tools/sgk-rapor' },
-  { circleColor: '#EA580C', icon: 'TX', title: 'Tetkik İstek', desc: 'Lab ve görüntüleme istek formu oluştur', route: '/doktor-tools/tetkik' },
-  { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali' },
-  { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula' },
-  { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Format', desc: 'FHIR/Medula/USS paketleri — canlı bağlantı yok, format-hazır çıktı', route: '/doktor-tools/enabiz' },
-  { circleColor: '#F59E0B', icon: 'KD', title: 'KD Audit (pre-sprint)', desc: 'Gaps + comments before wow sprint — Gökhan paylaşımı', route: '/kd-jine-presprint-audit.html' },
-  { circleColor: '#7C3AED', icon: 'KD+', title: 'KD Audit (post-sprint)', desc: 'After JINE-04: all domains Strong', route: '/kd-jine-post-sprint-audit.html' },
-  { circleColor: '#0F9B8E', icon: 'DAH', title: 'Dahiliye Audit (pre-wow)', desc: 'DAH-01 vs TR private wow bar — TİHUD/Harrison/TEMD + HYP', route: '/dahiliye-presprint-audit.html' },
-  { circleColor: '#7C3AED', icon: 'DAH+', title: 'Dahiliye Audit (post-sprint)', desc: 'DAH-WOW Waves 0–4 — domain rating by the Strong rubric', route: '/dahiliye-post-sprint-audit.html' },
-  { circleColor: '#3B82F6', icon: 'GÖZ', title: 'Göz Audit (pre-sprint)', desc: 'Before the Göz chapter — TOD/SB/SGK × 8-hour poliklinik', route: '/goz-presprint-audit.html' },
-  { circleColor: '#7C3AED', icon: 'GÖZ+', title: 'Göz Audit (post-sprint)', desc: 'Göz chapter + Sağlığım Gözlerim — domain depth, portal honesty pass', route: '/goz-post-sprint-audit.html' },
-  { circleColor: '#F59E0B', icon: 'DAH!', title: 'Dahiliye Gaps (remaining)', desc: 'After 22/22 Strong — OP/Diabetes, PROMPTS-FU, WOW-NEXT, field beta', route: '/dahiliye-gaps-audit.html' },
-  { circleColor: '#0891B2', icon: 'KH', title: 'Dahiliye Kohort Paneli', desc: 'HbA1c >9 · KB/LDL hedef dışı · eGFR <45 · gecikmiş görevler · 1-tap hatırlatma', route: '/doktor-tools/dahiliye-kohort' },
-];
 
 export default function DoktorToolsPage() {
   const router = useRouter();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [aile, setAile] = useState(false);
+  const [tools, setTools] = useState<DoktorArac[] | null>(null);
   const pediatriAraci = usePediatriHedefBoy();
+
+  useEffect(() => {
+    let iptal = false
+    ;(async () => {
+      try {
+        const t = await ensureDoctorAccessToken()
+        if (!t) {
+          if (!iptal) setTools(doktorAraclariListesi(null))
+          return
+        }
+        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const j = r.ok ? await r.json() : null
+        if (!iptal) setTools(doktorAraclariListesi(j?.data?.specialty))
+      } catch {
+        if (!iptal) setTools(doktorAraclariListesi(null))
+      }
+    })()
+    return () => { iptal = true }
+  }, [])
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#060C18', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
@@ -65,39 +59,43 @@ export default function DoktorToolsPage() {
             {pediatriAraci ? (
               <div style={{ fontSize: 14, fontWeight: 700, margin: '36px 0 14px', color: '#C9D4E3' }}>Diğer araçlar</div>
             ) : null}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
-              {tools.map((tool, index) => {
-                const isHovered = hoveredIndex === index;
-                return (
-                  <div
-                    key={tool.route}
-                    onClick={() => router.push(tool.route)}
-                    onMouseEnter={() => setHoveredIndex(index)}
-                    onMouseLeave={() => setHoveredIndex(null)}
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${isHovered ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)'}`,
-                      borderRadius: '18px',
-                      padding: '24px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: tool.circleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{tool.icon}</span>
+            {tools == null ? (
+              <div style={{ padding: '24px 0', color: '#8FA0B5', fontSize: 14 }}>Araçlar yükleniyor…</div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
+                {tools.map((tool, index) => {
+                  const isHovered = hoveredIndex === index;
+                  return (
+                    <div
+                      key={tool.route}
+                      onClick={() => router.push(tool.route)}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${isHovered ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)'}`,
+                        borderRadius: '18px',
+                        padding: '24px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: tool.circleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{tool.icon}</span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '17px', fontWeight: 600, color: '#fff', marginBottom: '6px' }}>{tool.title}</div>
+                          <div style={{ fontSize: '13px', color: '#9CA3AF', lineHeight: '1.45' }}>{tool.desc}</div>
+                        </div>
+                        <div style={{ color: '#6B7280', fontSize: '18px', marginTop: '2px' }}>→</div>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '17px', fontWeight: 600, color: '#fff', marginBottom: '6px' }}>{tool.title}</div>
-                        <div style={{ fontSize: '13px', color: '#9CA3AF', lineHeight: '1.45' }}>{tool.desc}</div>
-                      </div>
-                      <div style={{ color: '#6B7280', fontSize: '18px', marginTop: '2px' }}>→</div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </>
         )}
       </div>

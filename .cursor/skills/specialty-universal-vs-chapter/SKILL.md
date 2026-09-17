@@ -26,6 +26,7 @@ Apply via registry / shared libs — never hardcode only `goz-hastaliklari`:
 | Hasta dosyası **tab chrome** | `lib/doktor/hastaDosyaSekmeleri.ts` | Exclusive chapter tabs only for that doctor’s specialty; baseline/aile may use age/sex mixed-care rules |
 | Imaging modality catalog | `lib/doktor/imagingModalities.ts` | Add codes once (oct/fundus/dermatoskopi…); chapters opt in via `goruntu.modaliteler` |
 | Baseline SOAP / İnceleme / reçete / epikriz / randevu | core doctor app | Never fork per branş |
+| Doktor Araçları **shared** tiles | `lib/doktor/doktorAraclari.ts` (`ORTAK_…`) | e-reçete / ICD-10 / … for every branş |
 | Dose-lock / no invented form names / no internal field leak | `lib/doktor/*` | Specialty locks may extend; universal guards stay global |
 | Audit vocabulary | `specialty-audit-report` | Strong/Partial/Thin/Missing + **Hasta portalı** row on every chapter audit |
 
@@ -39,6 +40,7 @@ When you fix a chrome leak for Göz (e.g. Deri tab on a göz chart), **fix the s
 | Prompts lock | `specialties/goz-hastaliklari/prompts/` | Load into pediatri SOAP |
 | Hasta dosyası tab body | `GozHome` | Mount on non-göz doctors |
 | Portal module content | **Gözlerim** (VA/GİB numbers, damla, enjeksiyon dates) | Show on pediatri/derm tokens by default |
+| Doktor Araçları **chapter** tiles | Göz/KD/Dahiliye audit HTML, dahiliye kohort | Show on another branş’s Araçlar grid (see `specialty-doktor-araclari`) |
 | Golden refs / SUT gates | TOD, SUT 4.2.33 | Invent as universal medical law for all branşlar |
 
 ## Hasta portalı uniqueness (every specialty)
