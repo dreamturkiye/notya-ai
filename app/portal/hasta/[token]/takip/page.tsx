@@ -13,7 +13,8 @@ export default function HastaTrackingPage() {
   useEffect(() => { fetch(`/api/portal/hasta/${encodeURIComponent(token)}/dahiliye-anket`, { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).then((j) => setAnket(!!j?.uygun)).catch(() => undefined) }, [token])
   return (
     <>
-      {anket && <SoftPanel style={{ marginBottom: 12 }}><b>Muayene öncesi anket</b> — ev tansiyonu, şeker, kilo ve şikâyetlerinizi randevudan önce doktorunuza iletin. <Link href={`${basePath}/on-anket`} className="sg-hero-cta" style={{ marginLeft: 8 }}>Anketi doldur</Link></SoftPanel>}
+      {/* MOBILE-REVIEW: .sg-fade parent gives the panel the portal's side inset; sg-hero-cta is a white hero pill (invisible on a white panel) */}
+      {anket && <div className="sg-fade"><SoftPanel style={{ marginBottom: 12 }}><b>Muayene öncesi anket</b> — ev tansiyonu, şeker, kilo ve şikâyetlerinizi randevudan önce doktorunuza iletin.<div style={{ marginTop: 10 }}><Link href={`${basePath}/on-anket`} className="sg-pin-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#f4f8fa' }}>Anketi doldur</Link></div></SoftPanel></div>}
       <TrackingView data={data} />
     </>
   )

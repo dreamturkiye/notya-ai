@@ -105,7 +105,7 @@ export default function LabPage() {
         {kritikSatirlar.length > 0 && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.55)', color: '#FCA5A5', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontWeight: 800, marginBottom: 12 }}>⚠ Hekim şimdi baksın — {kritikSatirlar.map((s) => s.kritik_neden || s.raw_name).join(' · ')}</div>}
         {panel?.kimlik_uyari?.eslesme === false && <div style={{ ...toolsCard, borderColor: 'rgba(239,68,68,0.55)', color: '#FCA5A5', fontSize: 13, marginBottom: 12 }}>{panel.kimlik_uyari.ipucu} Doğru hastada olduğunuzdan eminseniz onaylayın; aksi halde bu belgeyi bu hastaya eklemeyin. <button type="button" onClick={kimlikOnayla} style={{ ...btnGhost, marginLeft: 8, padding: '4px 10px', fontSize: 12 }}>Bu hasta — devam et</button></div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,5fr) minmax(0,7fr)', gap: 14 }}>
+        <div className="notya-grid-yigin" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,5fr) minmax(0,7fr)', gap: 14 }}>
           <div>
             <div style={toolsCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
@@ -133,7 +133,7 @@ export default function LabPage() {
                   {panel.tablo_onayli && analiz && !kilitli && <button type="button" onClick={raporla} disabled={durum !== 'hazir'} style={btnGhost}>Yeniden raporla</button>}
                 </div>
                 <div style={{ overflowX: 'auto', marginTop: 6 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse' }}>
                     <thead><tr style={{ color: '#8FA0B5', fontSize: 11 }}>{['Test', 'Sonuç', 'Birim', 'Ref', 'Flag', 'Önceki', 'Δ', 'Trend'].map((h) => <th key={h} style={{ ...hücre, textAlign: 'left', fontWeight: 600 }}>{h}</th>)}</tr></thead>
                     <tbody>
                       {satirlar.map((s) => (
@@ -176,9 +176,9 @@ export default function LabPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}><div style={etiket}>Olası tanılar <span style={{ fontWeight: 400, color: '#64748B' }}>· güven üst sınırı %{analiz.fusion?.capPct ?? 70}</span></div>{lab.kaynak && <button type="button" onClick={() => setKaynakAcik((x) => !x)} style={{ ...btnGhost, padding: '3px 9px', fontSize: 11, color: kaynakAcik ? '#2DD4BF' : '#8FA0B5' }}>Kaynak</button>}</div>
                   {lab.tanilar.length === 0 && <div style={{ fontSize: 12, color: '#64748B' }}>Tanı önerisi yok.</div>}
                   {lab.tanilar.map((t, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '6px 0', borderTop: i ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                    <div key={i} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-start', padding: '6px 0', borderTop: i ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                       <div style={{ minWidth: 60, textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 800, color: t.guven_bant === 'yüksek' ? '#2DD4BF' : t.guven_bant === 'orta' ? '#FBBF24' : '#94A3B8' }}>%{t.guven_pct}</div><div style={{ fontSize: 10, color: '#8FA0B5' }}>{t.guven_bant}</div></div>
-                      <div style={{ flex: 1, fontSize: 13, color: '#EDF1F7' }}><div style={{ fontWeight: 700 }}>{t.ad} {t.icd10 && <span style={{ color: '#8FA0B5', fontWeight: 400 }}>({t.icd10})</span>}</div>{t.destek.length > 0 && <div style={{ fontSize: 11, color: '#2DD4BF' }}>destek: {t.destek.join(', ')}</div>}<KaynakDip d={lab.kaynak?.tanilar[i] ? [lab.kaynak.tanilar[i]] : null} acik={kaynakAcik} /></div>
+                      <div style={{ flex: '1 1 180px', minWidth: 0, fontSize: 13, color: '#EDF1F7' }}><div style={{ fontWeight: 700 }}>{t.ad} {t.icd10 && <span style={{ color: '#8FA0B5', fontWeight: 400 }}>({t.icd10})</span>}</div>{t.destek.length > 0 && <div style={{ fontSize: 11, color: '#2DD4BF' }}>destek: {t.destek.join(', ')}</div>}<KaynakDip d={lab.kaynak?.tanilar[i] ? [lab.kaynak.tanilar[i]] : null} acik={kaynakAcik} /></div>
                       <button type="button" onClick={() => setTaniTaslak((x) => (x ? x + '\n' : '') + (t.icd10 ? `${t.ad} (${t.icd10})` : t.ad))} disabled={kilitli} style={{ ...btnGhost, padding: '4px 8px', fontSize: 11 }}>Resmi tanıya al</button>
                     </div>
                   ))}

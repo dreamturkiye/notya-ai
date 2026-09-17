@@ -33,7 +33,7 @@ export function NudgeBar({ w4, kaynak, refler, calistir }: { w4: Wow4Veri; kayna
           <button type="button" style={{ ...btn, marginTop: 4 }} onClick={() => calistir({ adim: 'nudge', tip: 'phq2', cevaplar: c }, 'PHQ-2 kaydedildi — nota eklemek için "Nota ekle".')}>Kaydet</button></>)}
         <Kaynak d={w4.nudgeler.filter((n) => n.kod === acik).map((n) => n.dipnot)} acik={kaynak} refler={refler} />
       </div>)}
-      {([['frail', w4.son.frail], ['dusme', w4.son.dusme], ['phq2', w4.son.phq2]] as const).filter(([, x]) => x).map(([tip, x]) => <div key={tip} style={{ ...kucuk, marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ color: x!.pozitif ? '#FBBF24' : '#8FA0B5' }}>{String(x!.created_at).slice(0, 10)} · {x!.not_metni}</span>{x!.nota_eklendi_at ? <span style={{ color: '#22C55E', fontSize: 10 }}>✓ notta</span> : <button type="button" style={{ ...ghost, padding: '1px 6px', fontSize: 10 }} onClick={() => calistir({ adim: 'notaekle', tip }, 'Tarama sonucu bugünkü nota eklendi.')}>Nota ekle</button>}</div>)}
+      {([['frail', w4.son.frail], ['dusme', w4.son.dusme], ['phq2', w4.son.phq2]] as const).filter(([, x]) => x).map(([tip, x]) => <div key={tip} style={{ ...kucuk, marginTop: 4, display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ color: x!.pozitif ? '#FBBF24' : '#8FA0B5' }}>{String(x!.created_at).slice(0, 10)} · {x!.not_metni}</span>{x!.nota_eklendi_at ? <span style={{ color: '#22C55E', fontSize: 10 }}>✓ notta</span> : <button type="button" style={{ ...ghost, padding: '4px 10px', fontSize: 11, minHeight: 28, flexShrink: 0, whiteSpace: 'nowrap' }} onClick={() => calistir({ adim: 'notaekle', tip }, 'Tarama sonucu bugünkü nota eklendi.')}>Nota ekle</button>}</div>)}
     </div>
   );
 }
@@ -61,17 +61,17 @@ export function KohortPanel() {
     <div style={{ ...toolsCard }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: '#0F9B8E' }}>Kronik kohort paneli <span style={kucuk}>· {v ? `${v.toplamHasta} dahiliye hastası · ${v.satirlar.length} bayraklı` : 'yükleniyor…'} · yalnız kart tabloları ve onaylı lab</span></div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>{BAYRAKLAR.map((b) => { const n = (v?.satirlar || []).filter((s) => s.bayraklar.includes(b)).length; const on = filtre.includes(b); return <button key={b} type="button" onClick={() => setFiltre(on ? filtre.filter((x) => x !== b) : [...filtre, b])} style={{ ...ghost, color: on ? '#2DD4BF' : '#8FA0B5', background: on ? 'rgba(15,155,142,0.2)' : 'transparent', borderRadius: 999 }}>{BAYRAK_AD[b]} ({n})</button>; })}</div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
         <label style={kucuk}><input type="checkbox" checked={gorunen.length > 0 && gorunen.every((s) => secili.includes(s.patientId))} onChange={(e) => setSecili(e.target.checked ? gorunen.map((s) => s.patientId) : [])} /> görünenleri seç</label>
         <button type="button" style={btn} disabled={!secili.length} onClick={gonder}>1-tap hatırlatma gönder ({secili.length})</button>
         <span style={kucuk}>Mesaj klinik değer içermez: “kontrol / tahlil / aşı-tarama zamanınız geldi”.</span>
       </div>
       {mesaj && <div style={{ fontSize: 12, color: '#2DD4BF', marginBottom: 6 }}>{mesaj}</div>}
       <div style={{ display: 'grid', gap: 4 }}>
-        {gorunen.map((s) => (<div key={s.patientId} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: '#EDF1F7', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}>
+        {gorunen.map((s) => (<div key={s.patientId} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', fontSize: 12, color: '#EDF1F7', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}>
           <input type="checkbox" checked={secili.includes(s.patientId)} onChange={(e) => setSecili(e.target.checked ? [...secili, s.patientId] : secili.filter((x) => x !== s.patientId))} />
           <a href={`/dashboard/doktor/hastalar/${s.patientId}`} style={{ color: '#EDF1F7', minWidth: 160, fontWeight: 600 }}>{s.ad}</a>
-          <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1 }}>{s.bayraklar.map((b) => <span key={b} style={{ border: '1px solid rgba(248,113,113,0.5)', borderRadius: 999, padding: '0 6px', fontSize: 11, color: '#FCA5A5' }}>{BAYRAK_AD[b]}</span>)}</span>
+          <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: '1 1 160px' }}>{s.bayraklar.map((b) => <span key={b} style={{ border: '1px solid rgba(248,113,113,0.5)', borderRadius: 999, padding: '0 6px', fontSize: 11, color: '#FCA5A5', whiteSpace: 'nowrap' }}>{BAYRAK_AD[b]}</span>)}</span>
           <span style={kucuk}>son vizit {s.sonVizit || '—'}{s.portalVar ? '' : ' · portal yok'}</span>
         </div>))}
         {v && !gorunen.length && <div style={kucuk}>Bu filtrede hasta yok.</div>}

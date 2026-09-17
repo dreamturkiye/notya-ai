@@ -38,7 +38,7 @@ export default function OnAnketPage() {
   if (uygun === null) return <SoftPanel>Yükleniyor…</SoftPanel>
   if (!uygun || !sablon) return (<div><SectionHeader title="Muayene öncesi anket" subtitle="Bu anket, iç hastalıkları takibiniz başladığında açılır." /><Link href={`${basePath}/takip`} className="sg-back-link">← Takip</Link></div>)
   return (
-    <div>
+    <div className="sg-fade">
       <SectionHeader title="Muayene öncesi anket" subtitle="Randevunuzdan önce 2 dakikada doldurun; doktorunuz muayenede görür. Bu form acil başvuru yerine geçmez." />
       {durum?.acil && <SoftPanel><b style={{ color: 'var(--sg-coral-ink, #B23A48)' }}>{durum.acil}</b></SoftPanel>}
       {durum?.mesaj && <SoftPanel><span style={{ color: durum.ok ? 'var(--sg-accent-ink)' : 'var(--sg-coral-ink, #B23A48)' }}>{durum.mesaj}</span></SoftPanel>}
@@ -54,10 +54,10 @@ export default function OnAnketPage() {
           <div><b>İlaçlarla ilgili yan etki / şikâyet</b><textarea style={{ ...girdi, width: '100%', marginTop: 6 }} rows={2} maxLength={500} value={yanEtki} onChange={(e) => setYanEtki(e.target.value)} /></div>
           <div><b>Son 2 haftada yaşadıklarınız</b><div style={{ display: 'grid', gap: 6, marginTop: 6 }}>{sablon.semptomlar.map((x) => <label key={x.kod} style={{ display: 'flex', gap: 8, alignItems: 'center' }}><input type="checkbox" checked={semptom.includes(x.kod)} onChange={(e) => setSemptom(e.target.checked ? [...semptom, x.kod] : semptom.filter((y) => y !== x.kod))} />{x.ad}</label>)}</div></div>
           <div><b>Doktorunuza sormak istedikleriniz</b><textarea style={{ ...girdi, width: '100%', marginTop: 6 }} rows={3} maxLength={1000} value={sorular} onChange={(e) => setSorular(e.target.value)} /></div>
-          <button type="button" className="sg-hero-cta" onClick={gonder}>Gönder</button>
+          <button type="button" className="sg-pin-btn" style={{ justifySelf: 'start' }} onClick={gonder}>Gönder</button>
         </div>
       </SoftPanel>)}
-      <Link href={`${basePath}/takip`} className="sg-back-link">← Takip</Link>
+      <Link href={`${basePath}/takip`} className="sg-back-link" style={{ margin: '0 16px' }}>← Takip</Link>
     </div>
   )
 }
