@@ -19,7 +19,8 @@ import fs from 'fs'
 import path from 'path'
 import { normalize } from '@/lib/ilac/ilacArama'
 import { SPECIALTIES } from '@/lib/doktor/specialties'
-import { dahiliyeKilidi, dahiliyeMi, dahiliyeReceteDozsuz } from '@/specialties/dahiliye/prompts'
+import { dahiliyeKilidi, dahiliyeMi } from '@/specialties/dahiliye/prompts'
+import { soapDozKilidi } from '@/lib/doktor/dozKilidi'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 
@@ -245,6 +246,11 @@ export function soapPersonaAnahtari(girdi: Pick<SoapGirdi, 'specialty' | 'doktor
   return girdi.specialty
 }
 
+/** Branches whose prompts/ lock says "Doz yazma" (dahiliye, kadın doğum, dermatoloji) — the code-level dose lock applies. */
+export function dozKilitliBrans(...branslar: (string | null | undefined)[]): boolean {
+  return dahiliyeMi(...branslar) || kadinDogumMi(...branslar) || dermatolojiMi(...branslar)
+}
+
 /** System prompt for SOAP generation. Dahiliye / kadın doğum / dermatoloji doctors get their prompts/ lock appended. */
 export function soapSistemPromptu(girdi: SoapGirdi): string {
   const personaAnahtari = soapPersonaAnahtari(girdi)
@@ -271,11 +277,9 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   const ham = yanit.content[0].type === 'text' ? yanit.content[0].text : ''
   const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
   const veri = jsonKurtar(temiz)
-  if (Array.isArray(veri.receteOnerisi)) {
-    veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
-    if (dahiliyeMi(girdi.specialty, girdi.doktorBransi)) veri.receteOnerisi = dahiliyeReceteDozsuz(veri.receteOnerisi as ReceteOnerisi[])
-  }
-  return veri
+  if (Array.isArray(veri.receteOnerisi)) veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
+  // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches never keep a model-written dose the hekim did not give.
+  return dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : veri
 }
 
 /** Doktorun onayladığı son notlardan kısa üslup örnekleri derler (few-shot stil öğrenmesi).

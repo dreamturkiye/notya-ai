@@ -55,7 +55,7 @@ describe('(c) wired into the runtime call paths', () => {
   })
   it('asistan / ses / ogrenme blocks', () => {
     const a = kadinDogumKilidi('asistan'); assert.ok(a.includes('ÖNCELİKLİDİR') && a.includes(kadinDogumAracHaritasi()) && a.includes('kd.analyze_usg') && !a.includes('SOAP — gebe'))
-    const s = kadinDogumKilidi('ses'); assert.ok(s.length < 1600 && s.includes('Kadın Hastalıkları ve Doğum') && s.includes('uzman onay') && !s.includes('Williams Obstetrik 26 (TR'))
+    const s = kadinDogumKilidi('ses'); assert.ok(s.length < 2600 && s.includes('Kadın Hastalıkları ve Doğum') && s.includes('uzman onay') && !s.includes('Williams Obstetrik 26 (TR'))
     assert.ok(kadinDogumKilidi('ogrenme').includes('Dual-sign is the product'))
   })
   it('call sites use the loader (chat, hafıza/voice, SOAP, approve distiller, next.config tracing, session branch key)', () => {
@@ -96,5 +96,13 @@ describe('(d) hekim / uzman lock language', () => {
     assert.ok(p.vision.includes('Asistan cannot finalize')); assert.ok(p.vision.includes('Status is always draft'))
     assert.ok(p.ogrenme.includes('Delivery and invasive-test decisions stay with the uzman'))
     assert.ok(kadinDogumKilidi('soap').includes('Not gövdesi kuralı (yalnız hekimin dediği) geçerliliğini korur'))
+  })
+  it('Doz kilidi (KD-DERM-SAFETY-FINDINGS F1): system.md rule reaches SOAP, chat and voice; SOAP output is dose-locked in code', () => {
+    const p = kadinDogumPromptlari()
+    assert.ok(p.system.includes('## Doz kilidi (kırılmaz)')); assert.ok(p.system.includes('doz hekim tarafından belirlenir')); assert.ok(p.system.includes('anti-D immünglobulin'))
+    for (const y of ['soap', 'asistan', 'ses'] as const) assert.ok(kadinDogumKilidi(y).includes('Doz yazma; hafızadan veya kılavuzdan doz uydurma'), y)
+    assert.ok(kadinDogumKilidi('soap').includes('receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA'))
+    assert.ok(kaynak('lib/doktor/soapUret.ts').includes('dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi('))
+    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
   })
 })
