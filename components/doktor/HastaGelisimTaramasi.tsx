@@ -7,6 +7,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { GELISIM_ALAN_BASLIK, GIDR_3_YAS_SONRASI_REHBERLIK, type GelisimYasBasamagi } from '@/lib/clinical/gelisimTaramasi';
+import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
+import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 
 interface GecmisTarama { id: string; ay_yas: number; yas_basamak_etiket: string; ai_yorum: string | null; sevk_onerisi: boolean; created_at: string }
 
@@ -19,6 +21,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
   const [degerlendiriliyor, setDegerlendiriliyor] = useState(false);
   const [sonuc, setSonuc] = useState<{ yorum: string; sevkOnerisi: boolean } | null>(null);
   const [notEklendi, setNotEklendi] = useState<string | null>(null);
+  const [eklenenNot, setEklenenNot] = useState<string | null>(null);
   const [hata, setHata] = useState('');
 
   const yukle = useCallback(async () => {
@@ -73,8 +76,9 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
       });
       const d = await r.json();
       setNotEklendi(d.notEkleme?.eklendi ? 'Bugünkü muayene formuna eklendi.' : (d.notEkleme?.sebep || 'Nota eklenemedi.'));
+      setEklenenNot(eklenenNotId(d)); // NOTYA-MUAYENEYE-DON-01
       yukle();
-    } catch { setNotEklendi('Nota eklenemedi.'); } finally { setDegerlendiriliyor(false); }
+    } catch { setNotEklendi('Nota eklenemedi.'); setEklenenNot(null); } finally { setDegerlendiriliyor(false); }
   };
 
   const kutu: React.CSSProperties = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: 16 };
@@ -145,7 +149,12 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button type="button" disabled={degerlendiriliyor} onClick={muayeneFormunaEkle} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Bugünkü Muayene Formuna Ekle</button>
               </div>
-              {notEklendi && <div style={{ fontSize: 12, color: notEklendi.includes('eklendi') ? '#22C55E' : '#F59E0B', marginTop: 8 }}>{notEklendi}</div>}
+              {notEklendi && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
+                  <span style={{ fontSize: 12, color: notEklendi.includes('eklendi') ? '#22C55E' : '#F59E0B' }}>{notEklendi}</span>
+                  <MuayeneFormunaDon notId={eklenenNot} />
+                </div>
+              )}
             </div>
           )}
           {hata && <div style={{ fontSize: 12, color: '#F87171' }}>{hata}</div>}

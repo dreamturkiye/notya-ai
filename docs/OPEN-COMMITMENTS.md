@@ -540,6 +540,73 @@ oluştur → iptal (üstü çizili) → saati değiştir + Güncelle (hâlâ ipt
 596/596 yeşil, `npx tsc --noEmit` temiz. Mobil (standing rule): modalın yeni iptal bloğu 360px ve
 390px'te gerçek CSS ile render edildi — yatay taşma yok, metin sarıyor, düğmeler 123×36.
 
+---
+
+## CLOSED — onaydan muayene formuna dönüş yolu yoktu (NOTYA-MUAYENEYE-DON-01, 2026-09-17)
+
+**Şikayet (Dr. Gökhan, canlı).** Hasta dosyasında M-CHAT-R/F'i uyguladı, puanladı,
+"Bugünkü Muayene Formuna Ekle"ye bastı. Her şey doğru çalıştı: yeşil onay paneli sonucu
+("Otizm özelliği yok", puan, risk) ve "Bugünkü muayene formuna eklendi." mesajını gösterdi.
+Tek eksik: oradan sonucu yazdığı muayene formuna dönecek bir bağlantı yoktu — formu menüden
+elle bulmak zorunda kalıyordu.
+
+**Paylaşılan mı, kopyalanmış mı (tarama sonucu).** İkisi birden — ve ayrım tam da düzeltmenin
+şeklini belirledi:
+- **Sunucu tarafı PAYLAŞILMIŞ.** `lib/doktor/gununNotunaEkle.ts` tek bir yardımcı ve ~10 rota
+  onu çağırıyor (mchat, gelişim-taraması, gebelik, jinekoloji, dahiliye, göz, dermatoloji).
+  Önemlisi: zaten hangi nota yazdığını (`notId`) döndürüyordu — veri hep oradaydı, kimse
+  arayüze taşımıyordu.
+- **Arayüz tarafı KOPYALANMIŞ (forked).** Ortak bir "eklendi" onay bileşeni YOKTU. Her tüketici
+  onayı kendi yerel string state'inde tutuyordu (`setNotEklendi` / `setMesaj`) ve kendi
+  `<div>`'inde çiziyordu; `calistir(body, ok)` yardımcısı 5 branş kabuğunda birbirinin kopyası.
+  Yani "tek yerde düzelt, herkes kazansın" diye bir yer mevcut değildi — önce yaratmak gerekti.
+
+**Ne yapıldı.**
+- Yeni **`lib/doktor/muayeneFormuYolu.ts`** (saf, test edilebilir): `muayeneFormuYolu(notId)`
+  (hekimin düzenleyip yeniden onaylayabildiği `/dashboard/doktor/notlar/[id]` sayfası),
+  `MUAYENE_FORMUNA_DON` etiketi tek kaynakta, ve `eklenenNotId(yanit)` — iki farklı API yanıt
+  şeklini (`{notEkleme:{eklendi,notId}}` ve düz `{ok,notId}`) tek kurala indiriyor.
+- Yeni **`components/doktor/MuayeneFormunaDon.tsx`** — eksik olan ortak bileşen. Kasıtlı olarak
+  ikincil: düz bağlantı, dolgu yok, 12px, uygulamadaki mevcut "Notu aç →" deseniyle aynı teal
+  (#2DD4BF) — birincil yeşil onayla yarışmıyor. `notId` yoksa hiç çizilmiyor, yani not
+  gerçekten eklenemediyse hekim ölü bir bağlantıya tıklayamıyor.
+- Bağlanan tüketiciler (her biri kendi kopyalanmış onay kutusunda): `HastaMchat` (şikayetin
+  kendisi), `HastaGelisimTaramasi`, `HastaGebelik` (izlem / lohusa / genetik tarama),
+  `BugunkuJineMuayene`, `DahiliyeHome` ve `GozHome` kabukları.
+- `notId`'yi zaten atan rotalara geri koyduk: göz (`olcum_nota`, `intake_nota`), dahiliye
+  (`notaekle`, `kart_nota`, `polifarmasi_nota`, `anketsoap`, `htpanel`, `ekgonay`, `sgkkilit`).
+- Bayat bağlantı koruması: mesaj başına bir bağlantı. `GozHome`/`HastaGebelik`'te `setMesaj`
+  sarmalandı, yeni her mesaj bağlantıyı düşürüyor; yalnız gerçekten nota yazan akışlar geri
+  koyuyor. Böylece alakasız bir onayın altında bir önceki notun bağlantısı asılı kalmıyor.
+
+**Etiket.** "Muayene Formuna Dön →" — Dr. Gökhan'ın istediği sözcükler. Uygulamadaki mevcut
+yakın kural "Notu aç →" (belge/lab analizi onayları); görsel dil ondan alındı ama metin
+korunmadı: oradaki eylem "başka bir yerden notu aç", buradaki "az önce çalıştığın forma dön".
+
+**Doğrulama.** `scripts/qa-muayene-formuna-don.mts` GERÇEK `POST /api/doktor/mchat` handler'ını
+ve GERÇEK `wow4Post` (dahiliye "Nota ekle") fonksiyonunu sahte oturum + bellek içi tablolarla
+çalıştırıyor (SENTETİK QA doktoru/hastası — gerçek hesaba, gerçek hastaya, production
+veritabanına dokunmuyor, PHI yok). Dr. Gökhan'ın senaryosu birebir: 20 soru normal yanıtlandı →
+0/20 "Otizm özelliği yok" → forma eklendi → bağlantı çıkıyor ve **tam olarak** satırın yazıldığı
+nota gidiyor (genel not listesine değil), önceki not içeriği korunuyor. İkinci tüketici (dahiliye
+taraması, ayrı/kopyalanmış onay arayüzü) aynı şekilde doğrulandı. Negatif durum: bugün muayene
+yoksa onay da bağlantı da çıkmıyor. Regresyon testi `lib/doktor/muayeneFormuYolu.test.ts`
+(8 test) `npm test`'e eklendi; **607/607 yeşil, `tsc --noEmit` temiz**.
+
+**Mobil (standing rule).** Yeni onay satırı gerçek inline stilleriyle 360px ve 390px'te render
+edildi: yatay taşma yok (ölçüldü, taşan öğe listesi boş), bağlantı mesajın altına sarıyor,
+dokunma hedefi 149×36 (12px metin korunarak `minHeight: 36` ile büyütüldü — repo'nun 36px
+dokunma hedefi kuralı).
+
+**Açık kalan (kapsam dışı bırakıldı, kasıtlı).** Göz rotasının `olcum_nota`/`intake_nota`
+adımları not eklenemediğinde HTTP 200 + `{ok:false}` dönüyor; kabuktaki `calistir` yalnız HTTP
+durumuna baktığı için bu halde yine de başarı mesajı yazıyor. Bu ÖNCEDEN VAR OLAN bir etiketleme
+hatası, bu iş onu yaratmadı ve büyütmedi (bağlantı o durumda doğru şekilde çıkmıyor). Ayrı bir
+düzeltme hak ediyor.
+
+**Branş kapsamı (cross-specialty-parity).** Bu dal açıldığında
+`.cursor/skills/cross-specialty-parity/SKILL.md` henüz yoktu; #296 ile main'e indi ve merge
+sırasında alındı, sözleşme geriye dönük uygulandı. Kapsam bloğu PR gövdesinde.
 ## CROSS-SPECIALTY-PARITY — standing rule + retroactive sweep of 2026-09-17 (Kaan)
 
 **Standing rule, now a skill.** `.cursor/skills/cross-specialty-parity/SKILL.md` (new; sits beside
