@@ -170,7 +170,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const seans = Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions
     const patientId = (seans as { patient_id?: string } | null)?.patient_id
-    if (patientId) {
+    // HASTA-IZOLASYON-01: only into this doctor's OWN patient — a session can carry a foreign patient_id
+    // (sessions are also inserted from the browser), and hasta_ilaclar feeds the patient portal.
+    const { hastaSahibiMi } = await import('@/lib/doktor/hastaSahipligi')
+    if (patientId && (await hastaSahibiMi(supabase, user.id, patientId))) {
       const { nottanIlacAktar } = await import('@/lib/doktor/receteAktarim')
       const sonuc = await nottanIlacAktar(supabase, {
         noteId,

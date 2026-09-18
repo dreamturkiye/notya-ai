@@ -17,6 +17,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Universal chrome vs chapter content | `.cursor/skills/specialty-universal-vs-chapter/SKILL.md` |
 | Sağlığım / hasta portalı | `.cursor/skills/specialty-hasta-portali/SKILL.md` |
 | Specialty audit HTML / depth pills | `.cursor/skills/specialty-audit-report/SKILL.md` |
+| Any API route/helper taking a patient, note, session or other patient-derived id | `.cursor/skills/hasta-izolasyon/SKILL.md` |
 
 ## Doktor Araçları (short)
 

@@ -50,6 +50,8 @@ export async function GET(req: Request) {
         .from('patients')
         .select('name_encrypted, phone_encrypted')
         .eq('id', r.patient_id)
+        // HASTA-IZOLASYON-01: a reminder only ever goes to the patient of the doctor who owns the booking.
+        .eq('doctor_id', r.doktor_id)
         .maybeSingle()
       if (hasta?.phone_encrypted) {
         try { telefon = decrypt(hasta.phone_encrypted) || telefon } catch { /* keep fallback */ }

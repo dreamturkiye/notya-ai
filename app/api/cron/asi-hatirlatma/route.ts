@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 
   const { data: asilar, error } = await supabase
     .from('asilar')
-    .select('id, patient_id, asi_adi, doz_no, kategori, sonraki_doz_tarihi')
+    .select('id, doktor_id, patient_id, asi_adi, doz_no, kategori, sonraki_doz_tarihi')
     .eq('hatirlatma_gonderildi', false)
     .not('sonraki_doz_tarihi', 'is', null)
     .gte('sonraki_doz_tarihi', bugun)
@@ -47,6 +47,8 @@ export async function GET(req: Request) {
       .from('patients')
       .select('name_encrypted, phone_encrypted')
       .eq('id', a.patient_id)
+      // HASTA-IZOLASYON-01: a reminder only ever goes to the patient of the doctor who owns the row.
+      .eq('doctor_id', a.doktor_id)
       .maybeSingle()
 
     let telefon = ''

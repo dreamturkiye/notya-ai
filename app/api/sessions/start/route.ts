@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createDeepgramToken } from '@/lib/transcription/deepgramClient'
 import { logAccess } from '@/lib/security/auditLogger'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,6 +51,12 @@ export async function POST(req: NextRequest) {
     // İstek gövdesini al
     const body = await req.json()
     const { patient_id, session_type, specialty } = body
+
+    // HASTA-IZOLASYON-01: a session may only be linked to the doctor's OWN patient — the note, the
+    // prescription transfer and the portal all trust sessions.patient_id downstream.
+    if (patient_id && !(await hastaSahibiMi(getSupabase(), user.id, String(patient_id)))) {
+      return NextResponse.json({ success: false, error: 'Hasta bulunamadı' }, { status: 404 })
+    }
 
     // Seans oluştur
     const { data: session, error: sessionError } = await getSupabase()

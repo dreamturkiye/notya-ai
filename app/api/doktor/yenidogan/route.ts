@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false }).limit(40)
     const bebekIds = [...new Set((gorevler || []).map((g) => g.bebek_id))]
     const { data: hastalar } = bebekIds.length
-      ? await supabase.from('patients').select('id, name_encrypted, dob_encrypted').in('id', bebekIds)
+      ? await supabase.from('patients').select('id, name_encrypted, dob_encrypted').eq('doctor_id', doktorId).in('id', bebekIds)
       : { data: [] }
     const adMap = Object.fromEntries((hastalar || []).map((h) => [h.id, adCoz(h.name_encrypted)]))
     return NextResponse.json({
@@ -129,8 +129,8 @@ export async function GET(req: NextRequest) {
   const taburcuUi = taburcuUiFromRow(taburcu)
 
   const [{ data: bebekRow }, { data: anneRow }] = await Promise.all([
-    supabase.from('patients').select('id, name_encrypted, dob_encrypted').eq('id', bebekId).maybeSingle(),
-    supabase.from('patients').select('id, name_encrypted').eq('id', anneId).maybeSingle(),
+    supabase.from('patients').select('id, name_encrypted, dob_encrypted').eq('id', bebekId).eq('doctor_id', doktorId).maybeSingle(),
+    supabase.from('patients').select('id, name_encrypted').eq('id', anneId).eq('doctor_id', doktorId).maybeSingle(),
   ])
 
   const dogumAt = dogum?.dogum_zamani || kart.dogum_zamani

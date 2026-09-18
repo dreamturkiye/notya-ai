@@ -15,6 +15,7 @@ import { soapNotuUret, stilOrnekleriDerle } from '@/lib/doktor/soapUret'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -26,8 +27,13 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}))
   const { path, patientId, specialty } = body as { path?: string; patientId?: string | null; specialty?: string }
-  if (!path || !path.startsWith(`${doktorId}/`)) {
+  if (!path || !path.startsWith(`${doktorId}/`) || path.split('/').includes('..')) {
     return NextResponse.json({ error: 'Geçersiz dosya yolu.' }, { status: 400 })
+  }
+  // HASTA-IZOLASYON-01: checked BEFORE the recording is read — a foreign patientId used to pull that
+  // patient's last approved plan + diagnosis into this doctor's generated note.
+  if (patientId && !(await hastaSahibiMi(supabase, doktorId, String(patientId)))) {
+    return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   }
 
   // NOTYA-KOTA-01
@@ -96,6 +102,7 @@ export async function POST(req: NextRequest) {
         .from('notes')
         .select('content_plan, content_tani, created_at, sessions!inner(patient_id)')
         .eq('sessions.patient_id', patientId)
+        .eq('doctor_id', doktorId)
         .not('approved_at', 'is', null)
         .order('created_at', { ascending: false })
         .limit(1)

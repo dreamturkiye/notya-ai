@@ -26,11 +26,13 @@ export type PortalPaylasimOzeti = {
 };
 
 /** What will this patient actually see when they open the portal? */
-async function portalPaylasimOzeti(patientId: string): Promise<PortalPaylasimOzeti> {
+async function portalPaylasimOzeti(patientId: string, doctorId: string): Promise<PortalPaylasimOzeti> {
+  // HASTA-IZOLASYON-01: counted exactly as the portal reads — patient AND linked doctor.
   const { data: sessions } = await supabase
     .from('sessions')
     .select('id')
     .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
     .limit(200);
   const sessionIds = (sessions || []).map((s) => s.id as string);
 
@@ -40,7 +42,8 @@ async function portalPaylasimOzeti(patientId: string): Promise<PortalPaylasimOze
     const { data: notes } = await supabase
       .from('notes')
       .select('session_id, approved_at')
-      .in('session_id', sessionIds);
+      .in('session_id', sessionIds)
+      .eq('doctor_id', doctorId);
     const approvedSessions = new Set<string>();
     for (const n of notes || []) {
       if (n.approved_at) approvedSessions.add(String(n.session_id));
@@ -50,7 +53,7 @@ async function portalPaylasimOzeti(patientId: string): Promise<PortalPaylasimOze
   }
 
   const countFor = async (table: string, extra?: (q: any) => any) => {
-    const base = supabase.from(table).select('id', { count: 'exact', head: true }).eq('patient_id', patientId);
+    const base = supabase.from(table).select('id', { count: 'exact', head: true }).eq('patient_id', patientId).eq('doctor_id', doctorId);
     const { count } = await (extra ? extra(base) : base);
     return count ?? 0;
   };
@@ -188,7 +191,7 @@ export async function POST(request: Request) {
     // QA 2026-09-08: the portal only shares notes with approved_at set, so a
     // patient with unapproved notes opens a completely empty portal and the
     // doctor has no way to know. Report what this patient will actually see.
-    const paylasim = await portalPaylasimOzeti(hastaId);
+    const paylasim = await portalPaylasimOzeti(hastaId, user.id);
 
     return Response.json({
       portalUrl,

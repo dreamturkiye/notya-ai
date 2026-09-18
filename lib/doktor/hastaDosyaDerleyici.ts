@@ -34,22 +34,24 @@ export async function hastaDosyasiniDerle(
     .from('patients').select('*').eq('id', patientId).eq('doctor_id', doktorId).single()
   if (!hasta) return null
 
+  // HASTA-IZOLASYON-01: every child read is scoped to the doctor as well as the patient, so a row
+  // another doctor filed under this patient id can never enter this doctor's file or AI context.
   const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ] = await Promise.all([
-    supabase.from('sessions').select('id, created_at, status, specialty, session_type').eq('patient_id', patientId).order('created_at', { ascending: true }),
-    supabase.from('hasta_ilaclar').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
-    supabase.from('asilar').select('*').eq('patient_id', patientId).order('uygulama_tarihi', { ascending: false }),
-    supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }).limit(1),
-    supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }).limit(20),
-    supabase.from('hasta_belgeler').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }).limit(20),
+    supabase.from('sessions').select('id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
+    supabase.from('hasta_ilaclar').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
+    supabase.from('asilar').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
+    supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('created_at', { ascending: false }).limit(1),
+    supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
+    supabase.from('hasta_belgeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     // NOTYA-BLE-06 + NOTYA-BELGE-05: cihazdan gelen ölçümler/dosyalar ve onaylı belge değerlendirmeleri Ayşe'nin bağlamına girer
-    supabase.from('cihaz_olcumleri').select('tur, deger, birim, cihaz, profil, kaynak, alindi, onaylandi').eq('patient_id', patientId).eq('onaylandi', true).order('alindi', { ascending: false }).limit(12),
-    supabase.from('belge_analizleri').select('modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
+    supabase.from('cihaz_olcumleri').select('tur, deger, birim, cihaz, profil, kaynak, alindi, onaylandi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onaylandi', true).order('alindi', { ascending: false }).limit(12),
+    supabase.from('belge_analizleri').select('modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
   ])
 
   const seanslar = seanslarQ.data || []
   let notlar: Record<string, unknown>[] = []
   if (seanslar.length > 0) {
-    const { data } = await supabase.from('notes').select('*').in('session_id', seanslar.map((s) => s.id))
+    const { data } = await supabase.from('notes').select('*').eq('doctor_id', doktorId).in('session_id', seanslar.map((s) => s.id))
     notlar = (data || []) as Record<string, unknown>[]
   }
   const notHaritasi = new Map<string, Record<string, unknown>>()

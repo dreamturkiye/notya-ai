@@ -147,7 +147,7 @@ export async function GET(req: NextRequest) {
   const adlar = new Map<string, string>()
   if (pidler.length) {
     const { decrypt } = await import('@/lib/security/encryption')
-    const { data: hastalar } = await supabase.from('patients').select('id, name_encrypted, dob_encrypted, gender_encrypted').in('id', pidler)
+    const { data: hastalar } = await supabase.from('patients').select('id, name_encrypted, dob_encrypted, gender_encrypted').eq('doctor_id', user.id).in('id', pidler)
     for (const h of (hastalar || []) as { id: string; name_encrypted: string | null; dob_encrypted: string | null; gender_encrypted: string | null }[]) {
       try {
         const n = JSON.parse(decrypt(String(h.name_encrypted || ''))) as { ad?: string; soyad?: string }

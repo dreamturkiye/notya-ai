@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { groqChat } from '@/lib/dr-ayse/groq'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 export const dynamic = 'force-dynamic'
 
 const getSB = () => createClient(
@@ -16,6 +17,8 @@ export async function POST(req: NextRequest) {
   const { data: { user }, error: ae } = await sb.auth.getUser(authHeader.split(' ')[1])
   if (ae || !user) return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
   const { base64, mimeType, hastaId, belgeType } = await req.json()
+  // HASTA-IZOLASYON-01: no upload and no hasta_belgeler row for a patient this doctor does not own.
+  if (!(await hastaSahibiMi(sb, user.id, hastaId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   const ext = mimeType?.split('/')[1] || 'pdf'
   const { data: uploadData, error: uploadError } = await sb.storage
     .from('hasta-belgeler')

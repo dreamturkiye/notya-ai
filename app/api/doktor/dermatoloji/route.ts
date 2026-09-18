@@ -10,6 +10,7 @@ import { PHOTO_DEVICES } from '@/specialties/dermatoloji/engines/phototherapy-lo
 import { VISION_DISCLAIMER, uzmanOnay } from '@/specialties/dermatoloji/imaging/vision-tools'
 import { defaultVisitType } from '@/specialties/dermatoloji/engines/clinic-fit'
 import type { ClinicUnit } from '@/specialties/dermatoloji/types'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
@@ -84,6 +85,8 @@ export async function GET(req: NextRequest) {
   const { supabase, doktorId } = oturum
   const patientId = req.nextUrl.searchParams.get('patientId')
   if (!patientId) return NextResponse.json({ error: 'patientId zorunludur.' }, { status: 400 })
+  // HASTA-IZOLASYON-01: this route auto-creates a hasta_derm episode — never for a foreign patient.
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   let { data: kayit, error: kayitErr } = await supabase.from('hasta_derm').select('*')
     .eq('patient_id', patientId).eq('doctor_id', doktorId).maybeSingle()
@@ -157,6 +160,7 @@ export async function POST(req: NextRequest) {
   const patientId = String(body.patientId || '')
   const action = String(body.action || '')
   if (!patientId || !action) return NextResponse.json({ error: 'patientId ve action zorunludur.' }, { status: 400 })
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   const { data: kayit0, error: kayitErr } = await supabase.from('hasta_derm').select('*')
     .eq('patient_id', patientId).eq('doctor_id', doktorId).maybeSingle()

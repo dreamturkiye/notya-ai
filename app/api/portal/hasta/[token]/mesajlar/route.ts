@@ -30,7 +30,7 @@ export async function GET(
   const locked = requirePortalUnlock(req, params.token, tok)
   if (locked) return locked
 
-  const messages = await loadPortalMessages(client, tok.patient_id)
+  const messages = await loadPortalMessages(client, tok.patient_id, tok.doctor_id)
   return NextResponse.json({ messages })
 }
 
@@ -75,7 +75,7 @@ export async function PATCH(
     .update({ okundu_hasta: true })
     .eq('id', konuId)
 
-  const messages = await loadPortalMessages(client, tok.patient_id)
+  const messages = await loadPortalMessages(client, tok.patient_id, tok.doctor_id)
   return NextResponse.json({ ok: true, messages })
 }
 
@@ -176,6 +176,6 @@ export async function POST(
     /* ignore */
   }
 
-  const messages = await loadPortalMessages(client, tok.patient_id)
+  const messages = await loadPortalMessages(client, tok.patient_id, tok.doctor_id)
   return NextResponse.json({ ok: true, konuId, messages })
 }

@@ -6,6 +6,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
   if (!patientId || !asiAdi?.trim()) {
     return NextResponse.json({ error: 'patientId ve a\u015f\u0131 ad\u0131 zorunludur.' }, { status: 400 })
   }
+  // HASTA-IZOLASYON-01: patientId must be this doctor's own patient before anything is written for it.
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   const { data, error } = await supabase
     .from('asilar')

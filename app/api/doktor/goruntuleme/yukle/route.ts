@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { normalizeImagingModality } from '@/lib/doktor/imagingModalities'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,11 @@ export async function POST(request: NextRequest) {
 
     if (!file || !hastaId) {
       return NextResponse.json({ error: 'Dosya ve hastaId zorunludur' }, { status: 400 })
+    }
+    // HASTA-IZOLASYON-01: the table's RLS only checks doctor_id = auth.uid(), not whose patient it is —
+    // without this, imaging (and its portal card) could be filed under another doctor's patient.
+    if (!(await hastaSahibiMi(supabase, user.id, hastaId))) {
+      return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
     }
 
     const timestamp = Date.now()

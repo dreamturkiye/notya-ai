@@ -21,6 +21,7 @@ import { executeAction } from "@/lib/asistan/actionExecutor"
 import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
+import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,6 +48,12 @@ export async function POST(req: NextRequest) {
       specialty = "genel",
       personaId: requestedPersona,
     } = body
+
+    // HASTA-IZOLASYON-01: the patient context comes from the request — it must be this doctor's patient
+    // before it is stored on the assistant session or put into the model prompt.
+    if (patientId && !(await hastaSahibiMi(getSupabase(), user.id, String(patientId)))) {
+      return NextResponse.json({ success: false, error: "Hasta bulunamadı" }, { status: 404 })
+    }
 
     // Load doctor profile for Hocam addressing
     const { data: doctorRow } = await getSupabase()
@@ -106,11 +113,13 @@ export async function POST(req: NextRequest) {
     let currentPatient = null
     const contextPatientId = (asistanSession?.active_context as Record<string, unknown>)?.currentPatientId || patientId
     if (contextPatientId) {
+      // HASTA-IZOLASYON-01: patientId comes from the request body — only this doctor's patient enters the prompt.
       const { data } = await getSupabase()
         .from("patients")
         .select("*")
         .eq("id", contextPatientId)
-        .single()
+        .eq("doctor_id", user.id)
+        .maybeSingle()
       currentPatient = data
     }
 

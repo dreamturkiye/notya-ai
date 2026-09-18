@@ -8,6 +8,7 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { lezyonDegerlendir, islemGorevleri, DERM_ONAMLAR, ISLEM_SABLONLARI, RESMI_TANI_SECENEKLERI, biyolojikKapisi, izotretinoinKapisi, PEDIATRIK_SABLONLAR, type IslemTuru, type Abcde } from '@/specialties/dermatoloji/engines/derm-spine'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -32,15 +33,27 @@ export async function POST(req: NextRequest) {
   const { data: hasta } = await sb.from('patients').select('id, gender_encrypted').eq('id', String(b.patientId || '')).eq('doctor_id', user.id).maybeSingle()
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
   const kadin = (() => { try { return hasta.gender_encrypted ? /^k|^f/i.test(decrypt(String(hasta.gender_encrypted))) : false } catch { return false } })()
+  // HASTA-IZOLASYON-01: a lezyonId from the body must belong to THIS patient's (doctor-scoped) derm
+  // episode. derm_lezyonlar has no doctor_id of its own — it was updated by bare id, so any doctor
+  // could overwrite another doctor's lesion assessment or official diagnosis.
+  const lezyonBu = async (id: unknown): Promise<string | null> => {
+    const lid = String(id || ''); if (!lid) return null
+    const { data: hd } = await sb.from('hasta_derm').select('id').eq('patient_id', hasta.id).eq('doctor_id', user.id).maybeSingle()
+    if (!hd) return null
+    const { data: lz } = await sb.from('derm_lezyonlar').select('id').eq('id', lid).eq('hasta_derm_id', hd.id).maybeSingle()
+    return lz ? String(lz.id) : null
+  }
 
   if (adim === 'gorev') { const { error } = await sb.from('derm_gorevleri').update({ durum: String(b.durum || 'tamam'), tamam_at: b.durum === 'tamam' ? new Date().toISOString() : null }).eq('id', String(b.gorevId || '')).eq('doctor_id', user.id); return error ? NextResponse.json({ error: 'Yazılamadı' }, { status: 500 }) : NextResponse.json({ ok: true }) }
 
   if (adim === 'lezyon_degerlendir') {
+    const lezyonId = await lezyonBu(b.lezyonId)
+    if (!lezyonId) return NextResponse.json({ error: 'Lezyon bulunamadı' }, { status: 404 })
     const a = (b.abcde || {}) as Partial<Abcde>
     const abcde: Abcde = { asimetri: !!a.asimetri, sinir: !!a.sinir, renk: !!a.renk, cap6mm: !!a.cap6mm, evrim: !!a.evrim }
     const boyut = b.boyutMm == null || b.boyutMm === '' ? null : Number(b.boyutMm)
     const d = lezyonDegerlendir(abcde, !!b.dermoskopUyari, !!b.cirkinOrdek, boyut)
-    const { error } = await sb.from('derm_lezyonlar').update({ abcde, size_mm: boyut, dermoskop_notu: b.dermoskopNotu ? String(b.dermoskopNotu).slice(0, 1000) : null, dermoskop_uyari: !!b.dermoskopUyari, cirkin_ordek: !!b.cirkinOrdek, degerlendirme: d, acil: d.acil, updated_at: new Date().toISOString() }).eq('id', String(b.lezyonId || ''))
+    const { error } = await sb.from('derm_lezyonlar').update({ abcde, size_mm: boyut, dermoskop_notu: b.dermoskopNotu ? String(b.dermoskopNotu).slice(0, 1000) : null, dermoskop_uyari: !!b.dermoskopUyari, cirkin_ordek: !!b.cirkinOrdek, degerlendirme: d, acil: d.acil, updated_at: new Date().toISOString() }).eq('id', lezyonId)
     if (error) return NextResponse.json({ error: 'Lezyon güncellenemedi' }, { status: 500 })
     if (d.acil) { await gorevEkle(sb, user.id, hasta.id, [{ kod: `melanom_${String(b.lezyonId).slice(0, 8)}`, ad: 'MELANOM ŞÜPHESİ: eksizyonel biyopsi planı + dermatoonkoloji sevk (hekim kararı)', due: bugun(), kaynak: 'lezyon' }]); await gununNotunaEkle(sb, user.id, hasta.id, `Lezyon ABCDE ${d.abcdePuan}/5 — melanom şüphesi (acil bayrak); tanı histopatoloji ile.`) }
     return NextResponse.json({ ok: true, degerlendirme: d })
@@ -48,7 +61,9 @@ export async function POST(req: NextRequest) {
   if (adim === 'lezyon_tani') {
     const tani = String(b.resmiTani || '')
     if (!(RESMI_TANI_SECENEKLERI as readonly string[]).includes(tani) && !tani.startsWith('Diğer')) return NextResponse.json({ error: 'Geçersiz tanı seçeneği' }, { status: 400 })
-    const { error } = await sb.from('derm_lezyonlar').update({ resmi_tani: tani, updated_at: new Date().toISOString() }).eq('id', String(b.lezyonId || ''))
+    const lezyonId = await lezyonBu(b.lezyonId)
+    if (!lezyonId) return NextResponse.json({ error: 'Lezyon bulunamadı' }, { status: 404 })
+    const { error } = await sb.from('derm_lezyonlar').update({ resmi_tani: tani, updated_at: new Date().toISOString() }).eq('id', lezyonId)
     if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
     await gununNotunaEkle(sb, user.id, hasta.id, `Lezyon resmi tanısı (hekim): ${tani}`)
     return NextResponse.json({ ok: true })
@@ -58,8 +73,10 @@ export async function POST(req: NextRequest) {
     const tur = String(b.tur || '') as IslemTuru; const sab = ISLEM_SABLONLARI[tur]
     if (!sab) return NextResponse.json({ error: 'İşlem türü geçersiz' }, { status: 400 })
     const tarih = String(b.tarih || bugun()).slice(0, 10)
+    const islemLezyonId = b.lezyonId ? await lezyonBu(b.lezyonId) : null
+    if (b.lezyonId && !islemLezyonId) return NextResponse.json({ error: 'Lezyon bulunamadı' }, { status: 404 })
     const onamId = b.onamKaydet === true ? await onamOlustur(sb, user.id, hasta.id, sab.onamKodu, true) : null
-    const { data, error } = await sb.from('derm_islemler').insert({ patient_id: hasta.id, doctor_id: user.id, lezyon_id: b.lezyonId ? String(b.lezyonId) : null, tur, tarih, onam_id: onamId, islem_notu: (b.islemNotu || {}) as object, yara_bakimi: sab.yaraBakimi }).select('id').single()
+    const { data, error } = await sb.from('derm_islemler').insert({ patient_id: hasta.id, doctor_id: user.id, lezyon_id: islemLezyonId, tur, tarih, onam_id: onamId, islem_notu: (b.islemNotu || {}) as object, yara_bakimi: sab.yaraBakimi }).select('id').single()
     if (error || !data) return NextResponse.json({ error: 'İşlem kaydedilemedi' }, { status: 500 })
     await gorevEkle(sb, user.id, hasta.id, islemGorevleri(tur, tarih).map((g) => ({ ...g, kod: `${g.kod}_${data.id.slice(0, 8)}`, kaynak: 'islem' })))
     await gununNotunaEkle(sb, user.id, hasta.id, `İşlem: ${sab.ad} — ${tarih}${onamId ? ' (onam alındı)' : ''}. Yara bakımı: ${sab.yaraBakimi.join('; ')}`)
@@ -123,6 +140,7 @@ export async function GET(req: NextRequest) {
   const { user, supabase: sb } = oturum
   const patientId = req.nextUrl.searchParams.get('patientId')
   if (!patientId) return NextResponse.json({ error: 'patientId gerekli' }, { status: 400 })
+  if (!(await hastaSahibiMi(sb, user.id, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
   const { data: hd } = await sb.from('hasta_derm').select('id').eq('patient_id', patientId).eq('doctor_id', user.id).maybeSingle()
   const lezQ = hd ? sb.from('derm_lezyonlar').select('id, region, morphology, body_map_node, size_mm, abcde, dermoskop_notu, degerlendirme, resmi_tani, acil, patoloji_sonuc, created_at').eq('hasta_derm_id', hd.id).order('created_at', { ascending: false }) : null
   const [lez, isl, ilac, gor, onam, bebek] = await Promise.all([

@@ -5,6 +5,7 @@ import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { kritikAlarm } from "@/lib/alarm"
 import Anthropic from "@anthropic-ai/sdk"
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
+import { seansSahibi } from '@/lib/doktor/hastaSahipligi'
 
 // AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
 // aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
@@ -32,6 +33,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const body = await req.json()
     const { segments, profession, context } = body
     const sessionId = params.id
+
+    // HASTA-IZOLASYON-01: the session (and the patient it points at) must be this doctor's. Without
+    // this, a foreign session id got a note attached and its patient's last plan leaked into context.
+    const seans = await seansSahibi(getSupabase(), user.id, sessionId)
+    if (!seans) {
+      return NextResponse.json({ success: false, error: "Seans bulunamadı" }, { status: 404 })
+    }
 
     // Build transcript from segments or use raw text
     const transcript = segments
@@ -68,7 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         ai_model: 'claude-sonnet-4', ai_confidence: maliNote.ai_confidence,
       }).select().single()
       if (noteError) throw new Error('Mali not kaydedilemedi: ' + noteError.message)
-      await getSupabase().from('sessions').update({ status: 'completed' }).eq('id', sessionId)
+      await getSupabase().from('sessions').update({ status: 'completed' }).eq('id', sessionId).eq('doctor_id', user.id)
       return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note: maliNote } })
     }
 
@@ -127,7 +135,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
       if (alliedNoteError) throw new Error('Seans notu kaydedilemedi: ' + alliedNoteError.message)
 
-      await getSupabase().from('sessions').update({ status: 'completed' }).eq('id', sessionId)
+      await getSupabase().from('sessions').update({ status: 'completed' }).eq('id', sessionId).eq('doctor_id', user.id)
 
       return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: alliedNote.id, note: alliedNoteData } })
     }
@@ -146,8 +154,8 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     let klinikBaglam = ''
     try {
-      const { data: seansSatiri } = await getSupabase().from('sessions').select('patient_id').eq('id', sessionId).single()
-      if (seansSatiri?.patient_id) {
+      const seansSatiri = seans
+      if (seansSatiri.patient_id) {
         const { hastaDosyasiniDerle } = await import('@/lib/doktor/hastaDosyaDerleyici')
         const dosya = await hastaDosyasiniDerle(getSupabase(), user.id, String(seansSatiri.patient_id))
         if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
@@ -157,6 +165,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
           .from('notes')
           .select('content_plan, content_tani, created_at, sessions!inner(patient_id)')
           .eq('sessions.patient_id', seansSatiri.patient_id)
+          .eq('doctor_id', user.id)
           .not('approved_at', 'is', null)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -222,7 +231,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     if (noteError) throw new Error("Not kaydedilemedi: " + noteError.message)
 
     // Mark session complete
-    await getSupabase().from("sessions").update({ status: "completed" }).eq("id", sessionId)
+    await getSupabase().from("sessions").update({ status: "completed" }).eq("id", sessionId).eq("doctor_id", user.id)
 
     return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note } })
 

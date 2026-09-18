@@ -6,6 +6,7 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { address, type AddressableUser } from "@/lib/address"
+import { hastaSahibiMi, seansSahibi } from "@/lib/doktor/hastaSahipligi"
 
 export type ActionType =
   | "CREATE_PATIENT"
@@ -63,6 +64,10 @@ export async function executeAction(
 
     case "CREATE_SESSION": {
       const { patientId, specialty, sessionType } = action.data
+      // HASTA-IZOLASYON-01: the id comes from the model's output — treat it like any request input.
+      if (patientId && !(await hastaSahibiMi(supabase, action.doctorId, String(patientId)))) {
+        return { success: false, message: "Hasta bulunamadı" }
+      }
       const { data, error } = await supabase
         .from("sessions")
         .insert({
@@ -82,6 +87,8 @@ export async function executeAction(
 
     case "ADD_NOTE_CONTENT": {
       const { sessionId, field, content } = action.data
+      // HASTA-IZOLASYON-01: never create/extend a note on a session (or patient) that is not this doctor's.
+      if (!(await seansSahibi(supabase, action.doctorId, String(sessionId || "")))) return { success: false, message: "Seans bulunamadı" }
       // Find or create note for this session
       let { data: note } = await supabase
         .from("notes")
@@ -111,6 +118,8 @@ export async function executeAction(
 
     case "ADD_PRESCRIPTION": {
       const { sessionId, drug, dose, frequency, duration } = action.data
+      // HASTA-IZOLASYON-01: never create/extend a note on a session (or patient) that is not this doctor's.
+      if (!(await seansSahibi(supabase, action.doctorId, String(sessionId || "")))) return { success: false, message: "Seans bulunamadı" }
       let { data: note } = await supabase
         .from("notes")
         .select("id, content_ilaclar")
@@ -139,6 +148,8 @@ export async function executeAction(
 
     case "SET_DIAGNOSIS": {
       const { sessionId, diagnosis, icd10, isPrimary } = action.data
+      // HASTA-IZOLASYON-01: never create/extend a note on a session (or patient) that is not this doctor's.
+      if (!(await seansSahibi(supabase, action.doctorId, String(sessionId || "")))) return { success: false, message: "Seans bulunamadı" }
       let { data: note } = await supabase
         .from("notes")
         .select("id, icd10_codes")
