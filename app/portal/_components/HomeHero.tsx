@@ -65,10 +65,11 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
             <img src="/sagligim/preventive-care.jpg" alt="" />
             <figcaption className="sg-hero-tile-caption">Koruyucu tıp</figcaption>
           </figure>
+          {/* BRANS-ALAN-SIZMASI: "Bebek sağlığı" yalnız büyüme modülü bağlı (pediatrik) portalda — KD/göz/derm hastasına bebek görseli yok */}
           <figure className="sg-hero-tile">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/sagligim/baby-health.jpg" alt="" />
-            <figcaption className="sg-hero-tile-caption">Bebek sağlığı</figcaption>
+            <img src={portalModulAktif(data, 'buyume') ? '/sagligim/baby-health.jpg' : '/sagligim/wellness-cycle.jpg'} alt="" />
+            <figcaption className="sg-hero-tile-caption">{portalModulAktif(data, 'buyume') ? 'Bebek sağlığı' : 'Sağlıklı yaşam'}</figcaption>
           </figure>
         </div>
       </section>

@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic'
 import DoktorNav from '@/components/doktor/DoktorNav'
 import DoktorAvatar from '@/components/doktor/DoktorAvatar'
 import YeniBebekIsleri from '@/components/doktor/YeniBebekIsleri'
+import { bransAnahtari, pediatrikBaglamKurali } from '@/lib/specialties/kapsam'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
@@ -141,6 +142,8 @@ export default function DoktorDashboard() {
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [pediatriAraci, setPediatriAraci] = useState(false)
+  // BRANS-ALAN-SIZMASI: "Yeni bebek — pediatri iş listesi" KD hekiminin ana sayfasında çıkıyor, bebek sekmesine (KD'de kapalı) çıkmaz yola gidiyordu
+  const [bebekIsListesi, setBebekIsListesi] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -176,6 +179,7 @@ export default function DoktorDashboard() {
           const name = ham.replace(/^\s*(?:(?:Prof|Doç|Uzm|Op|Dr|Dt)\.?\s+)+/i, '').trim() || ham
           setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
           setPediatriAraci(pediatriHedefBoyBransi(meData.data?.specialty))
+          setBebekIsListesi(pediatrikBaglamKurali(bransAnahtari(meData.data?.specialty)) !== 'asla')
           const personaId = varsayilanPersonaId(meData.data?.specialty)
           setAsistanKisaAd(PERSONAS[personaId]?.shortName || 'Ayşe')
         }
@@ -304,7 +308,7 @@ export default function DoktorDashboard() {
           </div>
         </div>
 
-        <YeniBebekIsleri />
+        {bebekIsListesi && <YeniBebekIsleri />}
 
         {/* Randevular — Bugün / Bu Hafta */}
         <div style={{ marginTop: 18 }}>

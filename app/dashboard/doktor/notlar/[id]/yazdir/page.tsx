@@ -2,7 +2,7 @@
  * NOTYA-SOAP-03 — Yazdır / PDF görünümü.
  * Tarayıcının kendi "PDF olarak kaydet" akışını kullanır (sıfır bağımlılık, mobilde de çalışır).
  * Beyaz, kâğıt-dostu tasarım; kimlik başlığı, S/O/A/P, tanı/ICD, reçete önerisi, alarm
- * bulguları, veli özeti ve ATTESTASYON satırı (yapay zekâ desteği + doktor onayı + düzenleme
+ * bulguları, hasta özeti ve ATTESTASYON satırı (yapay zekâ desteği + doktor onayı + düzenleme
  * sayısı) içerir — hukuki iz bütünlüğü için.
  */
 'use client';
@@ -12,6 +12,8 @@ import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { anamnezParcala, fizikParcala } from '@/lib/doktor/anamnezBolumleri';
 import { htmlBelgeYap, metinBelgeYap, type BelgeGirdisi } from '@/lib/entegrasyon/belgeHtml';
+import type { BransKapsami } from '@/lib/specialties/kapsam';
+import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
 import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 
@@ -26,6 +28,7 @@ interface NotVeri {
     vitaller?: { kilo?: number | null; boy?: number | null; ates?: number | null; nabiz?: number | null; spo2?: number | null; tansiyon?: string | null } | null;
     hastaOzeti?: string; takipSuresi?: string;
     buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null;
+    bransKapsami?: BransKapsami;
   };
   hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string; patientId?: string | null };
   doktor: { ad: string; diplomaNo?: string; ozelBaslikSatirlari?: string[]; ozelLogo?: string };
@@ -224,7 +227,8 @@ export default function NotYazdir() {
             resmî yazdır çıktısına / dosyaya GİRMEZ. Yalnız İnceleme ekranında doktora gösterilir. */}
         {not.hastaOzeti && (
           <div className="not-bolum" style={{ background: '#F5F5F0', border: '1px solid #DDD', borderRadius: 6, padding: '10px 12px' }}>
-            <div className="not-etiket">Hasta / Veli Özeti</div><div className="not-metin">{not.hastaOzeti}</div>
+            {/* BRANS-ALAN-SIZMASI: basılı belgede de "Veli" yalnız pediatrik bağlamda */}
+            <div className="not-etiket">{istemciKapsami(not.bransKapsami).hitap.ozetYazdirEtiketi}</div><div className="not-metin">{not.hastaOzeti}</div>
             <div style={{ fontSize: 10.5, color: '#777', marginTop: 6, lineHeight: 1.45 }}>
               Bu özet, muayene sırasında yapılan sözlü bilgilendirmeyi hatırlatmak amacıyla hazırlanmış genel bir bilgilendirmedir; tıbbi rapor, reçete veya kesin tanı belgesi yerine geçmez. Teşhis ve tedavi kararı hastanın seyrine göre değişebilir. Bu tür durumlarda doktorunuza yeniden danışınız ve gerekirse acil servise gidiniz.
             </div>

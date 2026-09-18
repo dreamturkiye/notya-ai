@@ -10,6 +10,7 @@ export const DERMATOLOJI_PROFILE: SpecialtyProfile = {
   key: 'dermatoloji',
   etiket: 'Dermatoloji',
   resmiUnvan: 'Deri ve Zührevi Hastalıklar',
+  pediatrikBaglam: 'asla',
 
   olcumler: BASELINE_OLCUMLER,
 

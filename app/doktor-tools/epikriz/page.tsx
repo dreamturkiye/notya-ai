@@ -300,7 +300,7 @@ export default function EpikrizPage() {
               </div>
               {mod === 'tumSeanslar' && (
                 <div style={{ marginBottom: '16px', fontSize: 13, color: '#A1A9BB', lineHeight: 1.5 }}>
-                  Hastanın ilk geldiğinden son gelişine kadar tüm muayeneleri, geliş tanıları (sağlam çocuk kontrolleri ve geçirdiği hastalıklar ayrı, tarihli), aşı karnesi ve kullanılan ilaç/takviyeler tek özette birleştirilir.
+                  Hastanın ilk geldiğinden son gelişine kadar tüm muayeneleri, geliş tanıları (rutin kontroller ve geçirdiği hastalıklar ayrı, tarihli), kayıtlı aşılar ve kullanılan ilaç/takviyeler tek özette birleştirilir.
                 </div>
               )}
               {/* Seans Select */}

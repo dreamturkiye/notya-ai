@@ -231,7 +231,7 @@ export default function ReceteYazdirPage() {
         ) : (
           <div style={{ background: 'white', border: '1px solid #D1D5DB', borderRadius: 8, padding: 12, display: 'grid', gap: 8 }}>
             <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Başlık satırları (ilk satır adınız; sonra uzmanlık, adres, telefon)
-              <textarea value={bSatirlar} onChange={(e) => setBSatirlar(e.target.value)} rows={3} placeholder={'Dr. Gökhan Mamur\nÇocuk Sağlığı ve Hastalıkları Uzmanı\nBağdat Cad. No:12 Kadıköy / İstanbul\n0216 000 00 00'} style={{ fontFamily: 'inherit', fontSize: 13, padding: 8, border: '1px solid #D1D5DB', borderRadius: 6 }} />
+              <textarea value={bSatirlar} onChange={(e) => setBSatirlar(e.target.value)} rows={3} placeholder={'Uzm. Dr. Ad Soyad\nUzmanlık alanınız\nMuayenehane adresi\nTelefon'} style={{ fontFamily: 'inherit', fontSize: 13, padding: 8, border: '1px solid #D1D5DB', borderRadius: 6 }} />
             </label>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
               <label style={{ display: 'grid', gap: 4, color: '#374151' }}>Diploma No

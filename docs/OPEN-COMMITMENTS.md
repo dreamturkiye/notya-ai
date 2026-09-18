@@ -1212,3 +1212,113 @@ Service-role rotaları etkilenmez; tarayıcıdan bu tablolara doğrudan erişen 
 | 2026-09-17 | **Cron kimlik doğrulaması taklit edilebilir** (izolasyon dışı, ama güvenlik): `cron/*` ve `entegrasyon/fhir/isle` GET, dışarıdan gönderilebilen `x-vercel-cron: 1` başlığına güveniyor → herkes hatırlatma/KVKK imha/FHIR dışa aktarım işlerini tetikleyebilir (yanıtlar PHI içermiyor; işler kendi kurallarıyla çalışıyor). Önerilen: yalnız `Authorization: Bearer $CRON_SECRET` (Vercel bunu `CRON_SECRET` tanımlıysa otomatik gönderir). Cron'ları kırma riski olduğu için gözetimsiz değiştirilmedi — önce Vercel'de `CRON_SECRET` tanımlı mı bakılmalı. | OPEN (Kaan) |
 | 2026-09-17 | **Tasarım kısıtı (bilgi):** hasta tek doktora aittir (`patients.doctor_id`); klinik (`clinic_members`) içinde hasta paylaşımı YOK. Bir gün klinik-içi paylaşım istenirse bu denetimin tüm kontrolleri (ve 052) "doktor" yerine "yetkili üye" modeline taşınmalı — tek tek rotada değil, `hastaSahipligi.ts`'te. | Bilgi |
 | 2026-09-17 | **Sandbox** (`/api/sandbox/*`) paylaşılan erişim anahtarıyla çalışan, ayrı `sandbox_*` tablolu, yalnız simüle hasta içeren demo; çok-doktorlu değil (`doctor_id` sorgudan geliyor). Gerçek hasta verisi girilmemeli. | Bilgi |
+
+## BRANS-ALAN-SIZMASI — branşa özgü alan / kelime başka branşa sızmaz (Kaan, canlı, 2026-09-17)
+
+**Ne istendi (Kaan).** Bir branşa özgü olan (form, dosya, kelime, bölüm, alan) hiçbir zaman başka branşa
+taşınmamalı. Baseline (ortak omurga) ile branş deltası temiz ayrılmalı; branşa özgü içerik yalnız o branşın
+hekiminde, açık bir kapının arkasında görünmeli — varsayılan olarak asla. `cross-specialty-parity`'nin ayna
+görüntüsü: o "omurga düzeltmesi her branşa", bu "branş içeriği yalnız kendi branşına". Kaan bir **KD hekim
+hesabında** iki canlı hata buldu.
+
+### İki bildirilen hata — kök neden ve düzeltme
+
+| Hata | Kök neden | Düzeltme |
+|---|---|---|
+| **Yaşamsal Bulgular formunda "Baş Çevresi"** (KD) | `SpecialtyProfile.olcumler` baş çevresini doğru biçimde **yalnız pediatri** için ilan ediyordu (`kosul: 'pediatrik'`) ama **hiçbir ekran profili okumuyordu**. `inceleme/page.tsx` ve `notlar/[id]/page.tsx` `['ates', …, 'basCevresi']` listesini **koşulsuz sabit** yazmıştı — kapı yoktu, bozuk da değildi: hiç bağlanmamıştı. Ayrıca SOAP JSON şablonu her branşta `"basCevresi"` anahtarı taşıyordu (KD'de dikte edilen fetal HC annenin vitaline yazılabiliyordu). | Form alanları artık sunucunun hesapladığı `bransKapsami.olcumler`'den (profil → `lib/specialties/kapsam.ts` → `notOlcumleri`), tek ortak bileşen `components/doktor/YasamsalBulgularFormu.tsx`. SOAP JSON şablonunda `basCevresi` yalnız pediatrik; model çıktısı süzgeci `vitalleriKapsamaGoreSuz` SOAP üretiminde ve not-konsult önerisinde pediatrik ölçümü atar. Neyzi persentili (`buyumePersentilleri`) de yalnız pediatrik bağlamda hesaplanır. Gizlenen alanın mevcut değeri silinmez (klinik kayıt), yalnız çizilmez. |
+| **"Hasta/veli özeti" + özet metninde "veli"** (KD) | SOAP **üretim** promptu zaten pediatri kapısındaydı (DAH-PROMPTS-FU). Sızıntı dört yerden: (1) İnceleme / not sayfası / yazdır **etiketleri** ("Hasta/veli özeti", "veliye/hastaya", "Veliye anne-babaya anlatır gibi"), (2) "↻ Notuma göre yenile" düğmesinin Ayşe'ye **gönderdiği istek** ("hasta/veli özetini yeniden yaz"), (3) `not-konsult` **sistem promptu** ("veliye giden özet", "Veli özeti (taslak)", koşulsuz Neyzi kuralı) — model KD özetini veli diliyle yeniden yazıp portala gönderiyordu, (4) kapının kendisi delikti: `pediatrikKapsam` regex'i `/^(genel\|aile)/` **genel-cerrahi**'yi yakalıyordu; `some()` eski bir `'pediatri'` değerini (superuser branş değiştirici) KD'nin önüne geçiriyordu; branşı olmayan hekim (`null`, `'genel'`) pediatrik sayılıyordu. | Tüm hitap metinleri tek dosyada `lib/specialties/hitap.ts` (pediatrik set / "hasta" seti — erişkin sette "veli" yok, "hasta/veli" gibi muğlak ifade yok). Karar tek fonksiyonda `pediatrikBaglamMi()`; `pediatrikKapsam` artık onun ince sarmalayıcısı. `not-konsult` promptu `lib/doktor/notKonsultPromptu.ts`'e taşındı (test edilebilir), hitap / vital anahtarları / persentil kuralı notun kapsamından. |
+
+### Mimari (düzeltmenin dayandığı şekil — yeni if/else değil, mevcut kaydın uzantısı)
+
+- `SpecialtyProfile.pediatrikBaglam` + **`PEDIATRIK_BAGLAM: Record<SpecialtyKey, …>`** (`lib/specialties/profile.ts`,
+  `lib/intake/bransSorulari.ts` şeklinde: 30 branş açıkça yazılı, varsayılan yok): pediatri + çocuk cerrahisi
+  `her-zaman`; aile hekimliği (ve branşsız "genel") `cocuk-hastada` = **yaşı bilinen <18**; diğer 27 branş `asla`.
+- `PEDIATRIK_OLCUMLER` baseline'dan ayrı; `baselineProfile()` yalnız pediatrik bağlamı olan branşa ekler.
+- **Tek karar noktası `lib/specialties/kapsam.ts`**: `bransAnahtari` (kanonik anahtar; `'kadin-dogum'` çözülür,
+  `'genel'` → null), `etkinBrans` (seans branşı → hekim branşı), `pediatrikBaglamMi`, `notOlcumleri`,
+  `bransKapsami`, `vitalleriKapsamaGoreSuz`. Sunucu yardımcısı `kapsamSunucu.ts` (hekim branşı + hasta doğum
+  tarihi, `doctor_id` kapsamlı). İstemci varsayılanı `kapsamIstemci.ts`: paket yoksa baseline + "hasta".
+- `registry.ts`: `specialtyProfile(null)` artık **pediatri değil** baseline "genel" (eskiden `|| 'pediatri'`).
+
+### Ne denetlendi (Phase 2 envanteri)
+
+İki bağımsız tarama + elle okuma: `app/dashboard/**`, `app/api/**`, `app/portal/**`, `components/**`, `lib/**`,
+`core/**`, `specialties/*/prompts`. Kategoriler: vitaller/muayene formu (baş çevresi, Neyzi; KD SAT/fundus;
+göz VA/GİB; derm/dahiliye), hasta↔veli dili (portal, SOAP, yazdır/PDF, epikriz, konsult, asistan, Aşılar,
+LLM bağlamı), anamnez/intake bölümleri, SOAP/epikriz/SGK şablonları, portal shell, `specialties/<slug>/`
+kodunun ortak sayfalara import'u, "bilinmeyen branş = pediatri" varsayılanları, gevşek branş regex'leri.
+
+**Doğru kapılı bulunanlar (dokunulmadı):** intake (`BRANS_SORULARI` + `coreBolumlerIcin` — model desen),
+portal modülleri (`lib/portal/moduller.ts`), Doktor Araçları (`branslar` + deep-link guard, Hedef Boy),
+Göz sekmesi + mount, bölüm prompt kilitleri (`dahiliyeMi/kadinDogumMi/dermatolojiMi/gozMi`), onam yazdır
+(yalnız KD DogumSpine'dan erişilir), lab kaynakları (`bransKey === 'dahiliye'`), yazdır vital satırı (veri
+güdümlü), SOAP pediatri persona kg-doz satırı.
+
+### Bulunan ve DÜZELTİLEN diğer sızıntılar
+
+| # | Yer | Sızıntı | Düzeltme |
+|---|---|---|---|
+| L1 | `app/api/doktor/araclar/epikriz/route.ts` (tüm seanslar) | Branş **sabit `'pediatri'`**: her hekimin epikrizi "Kliniği: Pediatri (Çocuk Sağlığı)" başlığı ve "Çocuk Sağlığı ve Hastalıkları Uzmanı" **imzasıyla** basılıyordu (resmî belge); prompt her hastada "sağlam çocuk kontrolleri / AŞI KARNESİ" istiyordu | Branş notun kapsamından (hekimin branşı); branş yoksa satır yazılmaz; prompt metinleri `lib/doktor/epikrizMetinleri.ts` — pediatrik satırlar yalnız pediatrik bağlamda (pediatri promptu bayt bayt aynı, testle doğrulandı) |
+| L2 | aynı rota (tek vizit) | `seansBilgi?.specialty \|\| 'pediatri'`; "Anne beyanına göre çocuğun…", "doğum bilgileri" satırları | Aynı kapsam; erişkin metni "Hastanın beyanına göre…" |
+| L3 | `app/doktor-tools/epikriz/page.tsx` | Yardım metni "sağlam çocuk kontrolleri … aşı karnesi" (her branş) | Nötr metin |
+| L4 | `notlar/[id]/yazdir/page.tsx` | Basılı belgede "Hasta / Veli Özeti" + Neyzi persentil satırı her branşta | Kapsamdan etiket; persentil sunucuda kapılı |
+| L5 | `app/dashboard/doktor/hastalar/[id]/page.tsx` | `?tab=dahiliye` / `?tab=deri` derin bağlantısı `DahiliyeHome` / `HastaDermatoloji`'yi **branş kapısı olmadan** mount ediyordu | Mount, sekme düğmesiyle aynı boolean'a bağlandı (`dahiliyeUygun`, `deriAraci`) |
+| L6 | aynı sayfa — Dahiliye sekme regex'i | `/…\|genel\|…\|göğüs\|…/` **genel-cerrahi** ve **göğüs cerrahisi**'ni yakalıyordu (cerrah Dahiliye bölümünü görüyordu) | `dahiliyeSekmesiBransi()` (`hastaDosyaSekmeleri.ts`), cerrahi dışlanır, testli |
+| L7 | `pediatriAracSekmesiUygun` | Doğum tarihi **bilinmeyen erişkin** hastada kardiyoloji/üroloji/… hekimine M-CHAT, gelişim, büyüme, bebek sekmeleri | Bilinmeyen yaş yalnız pediatri hekiminde açık; diğerlerinde yaşı bilinen <18 şart |
+| L8 | `components/doktor/HastaAsilar.tsx` (Aşılar sekmesi, her branş) | "Hasta/veli beyanı" seçeneği; yeni kayıt varsayılanı `'pediatrik'`; SB çocukluk dönemi takvimi düğmesi erişkin hastada | Hitap kapsamdan; varsayılan kategori hasta yaşından; takvim yalnız çocuk hasta / pediatrik bağlamda |
+| L9 | `lib/doktor/hastaDosyaDerleyici.ts` (SOAP, konsult, not-konsult, epikriz, asistan bağlamı) | Modele giden başlık "ÖZGEÇMİŞ — hasta/veli beyanı" her hastada | Veri güdümlü: form veli tarafından doldurulduysa (`veliYakinligi`) "veli beyanı", değilse "hasta beyanı" |
+| L10 | `app/dashboard/doktor/page.tsx` | "Yeni bebek — pediatri iş listesi" KD hekiminin ana sayfasında; bebek sekmesi KD'de kapalı olduğundan çıkmaz yol | Yalnız pediatrik bağlamı olan branşta (`pediatrikBaglamKurali !== 'asla'`); görevler silinmez (superuser pediatri modunda görür) |
+| L11 | `app/portal/_components/HomeHero.tsx` | Sağlığım karşılamasında her hastaya "Bebek sağlığı" görseli | Yalnız büyüme modülü bağlıysa; diğerlerinde "Sağlıklı yaşam" |
+| L12 | `notlar/[id]/recete/page.tsx` | Reçete başlığı yer tutucusu "Dr. Gökhan Mamur / Çocuk Sağlığı ve Hastalıkları Uzmanı" (her hekim) | Nötr yer tutucu |
+| L13 | `components/doktor/HastaIntake.tsx` | (Ters yön) KD profili `'kadin-dogum'` anahtar sayılmadığı için KD hekiminin gönderdiği formda KD bölümü yoktu | `bransAnahtari()` ile kanonik anahtar |
+
+### Kalıcı korkuluk (yerinde)
+
+| Dosya | Ne |
+|---|---|
+| `.cursor/skills/brans-alan-sizmasi/SKILL.md` | Kaan'ın `661ace9` ile eklediği kural metni temel alındı (değiştirilmedi); bu iş ekledi: iki hatanın kök nedeni, tek karar noktası (`kapsam.ts`) ve `PEDIATRIK_BAGLAM`, içerik türü → mekanizma tablosu, varsayılan/regex tarama komutları, "üç katman" kuralı (etiket + prompt + model çıktısı), iki yönlü test, **"Branş sızıntısı" PR bloğu** (ortak bileşen PR'ında zorunlu), kontrol listesi |
+| `.cursor/rules/brans-alan-sizmasi.mdc` | `alwaysApply` (Kaan'ın metni) + gerçek kapı dosyaları, "bilinmeyen = baseline", üç katman, test komutu |
+| `CLAUDE.md`, `cross-specialty-parity`, `specialty-universal-vs-chapter` | Bağlantılar Kaan'ın `661ace9` commit'inden (aynen) |
+| `lib/specialties/brans-alan-sizmasi.test.ts` (26 test) | 30/30 branş döngüsü; `YasamsalBulgularFormu` **gerçek render** (react-dom/server): Baş Çevresi KD/dahiliye/derm/göz/kardiyoloji/cerrahide yok (hasta çocuk olsa bile), pediatride var ve son sırada; SOAP / not-konsult / epikriz promptlarında erişkin branşta veli / Neyzi / sağlam çocuk yok, pediatride var; sekme kapıları; **kaynak kilidi** (ortak sayfalarda sabit "Baş Çevresi" / "veli" / `'pediatri'` yok, bölüm mount'ları kapıda) |
+| `lib/specialties/brans-alan-sizmasi-rotalar.test.ts` (5 yürüyüş) | Aşağıdaki VERIFY — gerçek route handler'ları, sentetik hekimler |
+| `npm run test:brans-sizmasi` | İkisi; ikisi de `npm test` içinde |
+
+**Sahte yeşil değil:** `pediatrikBaglamMi` geçici olarak eski davranışa ("her zaman pediatrik") çevrildi → iki
+pakette **11 test kırmızı** (5 rota yürüyüşünün hepsi dahil) → geri alındı → yeşil. Mevcut iki test yeni politikaya
+güncellendi (bilinçli): `specialties/kadin-dogum/tests/promptsLock.test.ts` (eski "genel/aile/null = pediatrik"
+beklentisi → yaş güdümlü; genel-cerrahi ve KD+eski-pediatri delikleri eklendi) ve
+`specialties/dahiliye/tests/promptsLock.test.ts` (kırılgan `'doktorBransi })'` dize kontrolü → aynı niyetli regex).
+
+### VERIFY — sentetik QA hekimleriyle (gerçek hesap / gerçek hasta yok)
+
+`brans-alan-sizmasi-rotalar.test.ts`: 9 sentetik hekim — **pediatri** (çocuk hasta), **KD** (`users.specialty =
+'kadin-dogum'`, gerçek KD profil değeri), **KD + "genel" seans**, **dahiliye**, **dermatoloji**, **göz**,
+**kardiyoloji**, **aile hekimliği** (çocuk ve erişkin hasta) — her biri 5 gerçek rotadan geçer; veritabanı /
+model sahte (`lib/security/testing/sahteSupabase.ts`, HASTA-IZOLASYON-01 altyapısı):
+
+| Yol | Pediatri | KD / dahiliye / derm / göz / kardiyoloji / aile-erişkin |
+|---|---|---|
+| `GET /api/notes` → `YasamsalBulgularFormu` render | Baş Çevresi alanı + Neyzi persentili var; "Hasta/veli özeti" | Baş Çevresi yok, persentil yok, "Hasta özeti"; baseline 7 alan aynı |
+| `GET /api/notes/[id]` (not sayfası / yazdır) | "Hasta / Veli Özeti" | "Hasta Özeti"; KD+genel seans → KD |
+| `POST /api/sessions/[id]/end` (gerçek `soapUret`) | prompt veli + `"basCevresi"` taşır; model değeri kalır | prompt'ta veli / `basCevresi` yok; model "baş çevresi 28" yazsa bile nota **girmez**, diğer vitaller kalır |
+| `POST /api/doktor/not-konsult` (UI'nin gönderdiği istekle) | istek + prompt veli, Neyzi | istek + prompt'ta veli / Neyzi yok; önerilen baş çevresi süzülür |
+| `POST /api/doktor/araclar/epikriz` (tüm seanslar + tek vizit) | "Kliniği: Pediatri (Çocuk Sağlığı)", çocuk uzmanı imzası | "Kliniği: Kadın Hastalıkları ve Doğum" / "İç Hastalıkları (Dahiliye)" / "Göz Hastalıkları" + kendi unvanı; prompt'ta sağlam çocuk / aşı karnesi yok |
+
+Aile hekimliği + çocuk hasta pediatri gibi davranır (bebek izleminde baş çevresi, veli dili). Canlı tarayıcı
+yürüyüşü yapılmadı: notya.ai bu ortamdan erişilemiyor, vercel.app SSO arkasında, production'a sentetik hesap
+yazmak kural dışı — doğrulama yerel ve rota düzeyinde.
+
+`npx tsc --noEmit` temiz · `npm test` **878/878** yeşil.
+
+### AÇIK — karar gerekiyor (tahmin edilmedi)
+
+| Tarih | Madde | Gerekçe + öneri | Durum |
+|---|---|---|---|
+| 2026-09-17 | **Bilinen çocuk hastada baseline branşlarda pediatri sekmeleri** (kardiyoloji, KBB, üroloji, ortopedi… → Büyüme, M-CHAT, Gelişim, Bebek kartı) | Aynı gün yazılmış CHART-TAB-POLICY (`hastaDosyaSekmeleri.ts`) bunu bilerek açık bırakıyor ("baseline/aile mixed care"); Kaan'ın yeni kuralı ("pediatri alanı kardiyoloji hekimine çıkmaz") ise tersini söylüyor. Politikayı sessizce çevirmedim. **Öneri:** `pediatriAracSekmesiUygun`'u `pediatrikBaglamMi`'ye bağla (pediatri/çocuk cerrahisi her zaman, aile yalnız çocukta, diğerleri asla) — tek fonksiyon, testler 30/30 döngüyle hazır. | OPEN (Kaan) |
+| 2026-09-17 | **"Kadın Sağlığı & Gebelik" sekmesi her branşta** (≥12 yaş kadın hastada tam KD bölümü: NST, risk formu, VTE, gebe kartı) | "Mixed care" politikası olarak belgelenmiş; ama tam KD bölüm UI'sinin göz/derm/kardiyoloji hekimine açılması tam da bu denetimin sızıntı tanımı. Gebelik bilgisi ise her branş için güvenlik bilgisi (isotretinoin, görüntüleme, ilaç). **Öneri:** her branşa salt-okunur "Gebelik durumu" çipi; tam KD bölüm UI'si yalnız KD (±aile) hekimine. Sunucu tarafı (`/api/doktor/gebelik`, `jinekoloji`, `kadin-sagligi`) bugün yalnız hasta sahipliğine bakıyor, branşa değil — karar verilince orada da aynı kapı. | OPEN (Kaan) |
+| 2026-09-17 | **Pediatri dışı branşta reşit olmayan hasta** (göz, KBB, derm, ortopedi 10 yaşında hasta görür) | Kaan'ın kuralına birebir uyuldu: "veli" yalnız pediatri (+ çocuk cerrahisi); diğer branşlar çocuk hastada da "hasta" der. İstenirse branş bazında tek satır: `PEDIATRIK_BAGLAM[<branş>] = 'cocuk-hastada'`. | Karar uygulandı — teyit (Kaan) |
+| 2026-09-17 | **Aile hekimliği ve branşsız hekim = `cocuk-hastada`; çocuk cerrahisi = `her-zaman`** | Aile hekimleri SB Bebek-Çocuk İzlem Protokolü'nü (baş çevresi dahil) uyguluyor; eskiden aile/genel **her** hastada pediatrik dil alıyordu — şimdi yalnız yaşı bilinen çocukta (daha dar, sızmaz). Çocuk cerrahisinin tüm hastaları çocuk (intake zaten "Çocuğunuz" diyor) ve baş çevresi alanı onda önceden de vardı. | Karar uygulandı — teyit (Kaan / Dr. Gökhan) |
+| 2026-09-17 | **İlan edilmiş ama hiç çizilmeyen bölüm ölçümleri** (ters yön) | KD profili `sonAdetTarihi`, `fundusYuksekligi`; göz profili VA ve GİB ×2 ilan ediyor, ama not vital hattı (`NOT_VITAL_ANAHTARLARI`) bunları taşımıyor — gerçek kayıt bölüm tablolarında (gebelik, `goz_*`). Forma eklemek SOAP çıkarımı, onay, yazdır ve portal biçimini değiştirir (ürün kararı). **Öneri:** bölüm tablolarında kalsın; profilde "kaynak: bölüm" işaretiyle "ilan edilip okunmayan" tuzağı kapansın. | OPEN (ürün) |
+| 2026-09-17 | **Asistan persona varsayılanı pediatri** | `VARSAYILAN_PERSONA = 'aysekaya'` (pediatri Ayşe: "yetişkin dozu asla önerme"), `specialistsCatalog` `genel: 'pediatri'` + `getSpecialistForSpecialty` pediatri yedeği, `asistan/signed-url` `\|\| 'pediatri'` — aile / branşsız / bilinmeyen hekimde pediatri personası. Ses/persona sistemi paralel bir çalışmanın alanında (ElevenLabs dalı) — çakışmamak için dokunulmadı. **Öneri:** aile/genel için nötr "genel pratisyen" personası; bilinmeyen → pediatri değil. | OPEN |
+| 2026-09-17 | **Bölüm prompt kilitleri not-konsult / epikriz / doz-öner'e ulaşmıyor** (parite, ters yön) | SOAP ve asistan sohbeti dahiliye/KD/derm/göz `*Kilidi` ekliyor; `not-konsult`, epikriz ve `ilaclar/doz-oner` eklemiyor (doz-öner "doz yazma" kilidini de atlıyor). Sızıntı değil, `cross-specialty-parity` + doz kilidi işi. | OPEN (parite) |
+| 2026-09-17 | **Geçmiş kayıtlar** | Bu düzeltmeden önce üretilmiş KD/erişkin notlarında `hasta_ozeti` içinde "veli" ve `vitaller.basCevresi` olabilir (portal veri güdümlü gösterir). Klinik kayıt — dokunulmadı. Salt-okunur sayım: `select count(*) from notes n join sessions s on s.id = n.session_id where coalesce(s.specialty,'') not in ('pediatri','cocuk-cerrahisi') and (n.hasta_ozeti ilike '%veli%' or n.vitaller ? 'basCevresi');` Düzeltme kararı hekimin. | OPEN (Kaan) |

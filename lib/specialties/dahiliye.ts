@@ -10,6 +10,7 @@ export const DAHILIYE_PROFILE: SpecialtyProfile = {
   key: 'dahiliye',
   etiket: 'İç Hastalıkları',
   resmiUnvan: 'İç Hastalıkları',
+  pediatrikBaglam: 'asla',
 
   olcumler: BASELINE_OLCUMLER,
 

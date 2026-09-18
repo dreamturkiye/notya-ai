@@ -12,6 +12,7 @@ export const GOZ_PROFILE: SpecialtyProfile = {
   key: 'goz-hastaliklari',
   etiket: 'Göz Hastalıkları',
   resmiUnvan: 'Göz Hastalıkları',
+  pediatrikBaglam: 'asla',
 
   // Bilateral VA + GİB first-class (ateş-first standing rule keeps baseline order in front).
   olcumler: [

@@ -5,18 +5,16 @@
  * built with a practising pediatrician (Dr. Gökhan Mamur) over 2026-09-10 → 09-14.
  */
 import type { SpecialtyProfile } from './profile'
-import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
+import { BASELINE_OLCUMLER, BASELINE_BELGELER, PEDIATRIK_OLCUMLER } from './profile'
 
 export const PEDIATRI_PROFILE: SpecialtyProfile = {
   key: 'pediatri',
   etiket: 'Pediatri (Çocuk Sağlığı)',
   resmiUnvan: 'Çocuk Sağlığı ve Hastalıkları',
+  pediatrikBaglam: 'her-zaman',
 
   // Ateş first (standing rule 2026-09-14), baş çevresi only for children.
-  olcumler: [
-    ...BASELINE_OLCUMLER,
-    { anahtar: 'basCevresi', etiket: 'Baş Çevresi', birim: 'cm', kosul: 'pediatrik' },
-  ],
+  olcumler: [...BASELINE_OLCUMLER, ...PEDIATRIK_OLCUMLER],
 
   hesaplayicilar: [
     {

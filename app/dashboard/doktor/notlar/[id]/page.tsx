@@ -14,15 +14,17 @@ import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 import { onaylananNotYolu, hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 import GeriLink from '@/components/navigasyon/GeriLink';
 import { notDuzenleGeriHref } from '@/lib/doktor/geriNavigasyon';
+import type { BransKapsami } from '@/lib/specialties/kapsam';
+import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
+import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 
 interface NotVeri {
-  not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[] };
+  not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[]; bransKapsami?: BransKapsami };
   hasta: { ad: string ; patientId: string | null };
   doktor: { ad: string };
   duzenlemeSayisi: number;
 }
 
-const VITAL = [['ates', 'Ateş', '°C'], ['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const;
 const BOLUM = [['subjektif', 'Anamnez — Şikayet · Şikayetin Hikayesi · Özgeçmiş · Soygeçmiş'], ['objektif', 'Fizik Muayene / Bulgular'], ['degerlendirme', 'Değerlendirme — Ön Tanı / Ayırıcı Tanı'], ['plan', 'Tedavi · Tetkik · Kontrol']] as const;
 
 function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: string; sure: string }[] {
@@ -89,6 +91,7 @@ export default function NotSayfasi() {
   if (!veri) return <div style={{ padding: 40, color: '#8FA0B5', fontFamily: 'system-ui' }}>Not yükleniyor…</div>;
   const { not, hasta } = veri;
   const onayli = !!not.approvedAt;
+  const kapsam = istemciKapsami(not.bransKapsami);
 
   return (
     <div style={{ minHeight: '100vh', background: '#0B1628', color: '#EDF1F7', fontFamily: 'system-ui' }}>
@@ -124,22 +127,15 @@ export default function NotSayfasi() {
             <CihazdanAl hastaId={veri.hasta.patientId} notId={veri.not.id} onOlcum={(v) => isaretle((x: Record<string, string>) => setVital({ ...vital, ...x }))(v)} />
             <CihazDosyasi hastaId={veri.hasta.patientId} notId={veri.not.id} />
           </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {VITAL.map(([k, ad, birim]) => {
-              // Kaan (2026-09-13): Neyzi büyüme persentili — sunucudan hazır gelir
-              const bp = veri.not.buyumePersentilleri
-              const persentil = k === 'kilo' ? bp?.kilo : k === 'boy' ? bp?.boy : k === 'basCevresi' ? bp?.basCevresi : undefined
-              return (
-                <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>{ad}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <input value={vital[k] ?? ''} onChange={(e) => isaretle((v: string) => setVital({ ...vital, [k]: v }))(e.target.value)} placeholder="—" style={{ ...kutu, width: 76, padding: '6px 8px' }} />
-                    <span style={{ color: '#64748B' }}>{birim}</span>
-                  </span>
-                  {persentil && <span style={{ fontSize: 10, color: '#0F9B8E' }}>{persentil}</span>}
-                </label>
-              )
-            })}
-          </div>
+          {/* BRANS-ALAN-SIZMASI: alanlar notun branş profilinden — baş çevresi yalnız pediatrik bağlamda */}
+          <YasamsalBulgularFormu
+            olcumler={kapsam.olcumler}
+            degerler={vital}
+            onDegis={(k, v) => isaretle((x: string) => setVital({ ...vital, [k]: x }))(v)}
+            persentiller={veri.not.buyumePersentilleri}
+            girdiStili={{ ...kutu, width: 76, padding: '6px 8px' }}
+            persentilRengi="#0F9B8E"
+          />
           {veri.not.buyumePersentilleri?.vki && (
             <div style={{ marginTop: 6, fontSize: 11, color: '#0F9B8E' }}>
               VKİ: {veri.not.buyumePersentilleri.vki}{veri.not.buyumePersentilleri.vkiSinif ? ` — ${veri.not.buyumePersentilleri.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
@@ -163,11 +159,11 @@ export default function NotSayfasi() {
           <textarea value={ilac} onChange={(e) => isaretle(setIlac)(e.target.value)} rows={Math.max(2, ilac.split('\n').length)} placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam" style={kutu} />
         </div>
         <div>
-          <div style={etiket}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>(veliye/hastaya · her satır bir madde)</span></div>
+          <div style={etiket}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>({kapsam.hitap.evdeDikkatHedefi} · her satır bir madde)</span></div>
           <textarea value={alarm} onChange={(e) => isaretle(setAlarm)(e.target.value)} rows={Math.max(3, alarm.split('\n').length)} style={kutu} />
         </div>
         <div>
-          <div style={etiket}>Hasta/veli özeti <span style={{ fontWeight: 400, color: '#64748B' }}>(portala gider)</span></div>
+          <div style={etiket}>{kapsam.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: '#64748B' }}>(portala gider)</span></div>
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
       </div>
