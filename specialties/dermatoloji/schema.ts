@@ -127,7 +127,7 @@ export const photoSessionSchema = z.object({
   doz_adimi_pct: z.number().min(-100).max(100).optional(),
   eritem: z.enum(ERITEM_YANITLARI).optional(),
   kacirilan_gun: z.number().int().min(0).max(365).optional(),
-  yanik_protokolu: z.object({}).passthrough().optional(),
+  yanik_protokolu: z.object({}).optional(),
   not: z.string().optional(),
   med_j_cm2: z.number().optional(),
   dose_step: z.number().optional(),
