@@ -38,6 +38,8 @@ export interface IntakeAlan {
   desen?: string
   desenHata?: string
   dikey?: boolean   // seçenekler alt alta (Kaan 2026-09-10: alerji yok/var + açıklama)
+  /** Show this field only when another answer matches (e.g. Hamileyim → gebelik haftası). */
+  gosterEger?: { alanId: string; deger: string }
 }
 
 export interface IntakeBolum {

@@ -17,7 +17,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { IntakeAlan, IntakeBolum } from '@/lib/intake/coreAlanlar';
-import { intakeIstemciHataMetni } from '@/lib/intake/dogrula';
+import { intakeAlanGorunur, intakeIstemciHataMetni } from '@/lib/intake/dogrula';
 
 export const dynamic = 'force-dynamic';
 
@@ -143,7 +143,18 @@ export default function IntakeFormPage() {
   }, [token]);
 
   function alanDegistir(id: string, deger: unknown) {
-    setYanitlar((y) => ({ ...y, [id]: deger }));
+    const bolumler = siralaOnaySonda([...(sema?.coreBolumler || []), ...(sema?.bransBolumu ? [sema.bransBolumu] : [])])
+    setYanitlar((y) => {
+      const sonraki = { ...y, [id]: deger }
+      for (const bolum of bolumler) {
+        for (const alan of bolum.alanlar) {
+          const k = alan.gosterEger
+          if (!k || k.alanId !== id) continue
+          if (String(deger ?? '') !== k.deger) delete sonraki[alan.id]
+        }
+      }
+      return sonraki
+    })
   }
 
   async function gonder(e: React.FormEvent) {
@@ -224,6 +235,7 @@ export default function IntakeFormPage() {
                       </div>
                     );
                   }
+                  if (!intakeAlanGorunur(alan, yanitlar)) return null;
                   return (
                     <div key={alan.id}>
                       <label style={{ display: 'block', fontSize: 13, color: '#0A1628', marginBottom: 6, fontWeight: 500 }}>

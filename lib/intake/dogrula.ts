@@ -18,11 +18,20 @@ function bosMu(deger: unknown): boolean {
   return String(deger).trim() === ''
 }
 
+/** Conditional fields (gosterEger) are validated only when visible. */
+export function intakeAlanGorunur(alan: IntakeAlan, yanitlar: Record<string, unknown>): boolean {
+  if (alan.tur === 'bolum-basligi') return true
+  const k = alan.gosterEger
+  if (!k) return true
+  return String(yanitlar[k.alanId] ?? '') === k.deger
+}
+
 /** İlk kural ihlalini döndürür; form geçerliyse null. */
 export function intakeIlkHata(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>): IntakeHata | null {
   for (const bolum of bolumler) {
     for (const alan of bolum.alanlar) {
       if (alan.tur === 'bolum-basligi') continue
+      if (!intakeAlanGorunur(alan, yanitlar)) continue
       const deger = yanitlar[alan.id]
       if (bosMu(deger)) {
         if (alan.zorunlu) return { alan, sebep: 'zorunlu' }
