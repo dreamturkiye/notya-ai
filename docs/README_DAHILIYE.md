@@ -1,6 +1,7 @@
 # README_DAHILIYE — İç hastalıkları V1 (muayenehane dahiliye), NOTYA-DAH-01, 2026-09-16
 
-- **Final audit (2026-09-18, honest ~80%):** https://notya-ai.vercel.app/dahiliye-final-audit.html — clinical Strong; portal/Araçlar/olgunluk Partial–Thin; supersedes post-sprint “22/22 = exceptional”
+- **Exceptional audit (DAH-EXCEPTIONAL-01, honest ~95%):** https://notya-ai.vercel.app/dahiliye-exceptional-audit.html — Takibim Strong · 6 Araçlar · olgunluk beta-hazir; MD week: [DAHILIYE-MD-BETA.md](./DAHILIYE-MD-BETA.md)
+- **Final audit (superseded for maturity, ~80% snapshot):** https://notya-ai.vercel.app/dahiliye-final-audit.html
 - Pre-wow: https://notya-ai.vercel.app/dahiliye-presprint-audit.html
 - Post-sprint (historical rubric): https://notya-ai.vercel.app/dahiliye-post-sprint-audit.html
 - Gaps backlog: https://notya-ai.vercel.app/dahiliye-gaps-audit.html

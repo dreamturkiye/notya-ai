@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dahiliye — Post-exceptional Audit (DAH-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional sprint DAH-EXCEPTIONAL-01: Dahiliye ~20 Strong · 1 Partial (olgunluk beta-hazir) · ICU Missing intentional · 6 Araç · Takibim Strong · honest wow ~95%. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(20,184,166,.1); border-color:rgba(45,212,191,.4); color:var(--green); }
+    .banner.warn { background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.35); color:var(--amber); }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit · Dahiliye</span>
+    <span>
+      <a href="/dahiliye-final-audit.html">Final (superseded) →</a> ·
+      <a href="/dahiliye-presprint-audit.html">Pre-sprint →</a> ·
+      <a href="/dahiliye-gaps-audit.html">Gaps →</a> ·
+      <a href="/derm-live-audit.html">Derm live →</a>
+    </span>
+  </div>
+
+  <div class="banner ok"><b>Post-exceptional sprint DAH-EXCEPTIONAL-01</b> — 2026-09-18 · Supersedes <a href="/dahiliye-final-audit.html" style="color:inherit;font-weight:700">dahiliye-final-audit.html</a> for product maturity. Intake Strong · Portal Takibim Strong · 6 Araçlar · olgunluk <code>beta-hazir</code> (uzman-dogrulandi MD week pending). ICU Missing intentional. No PHI. Never on Doktor Araçları.</div>
+
+  <h1>Dahiliye (İç Hastalıkları) — Post-exceptional Audit</h1>
+  <p class="lede">
+    Code × TİHUD × TEMD DM/HT/lipid/tiroid/osteo × HT Uzlaşı 2025 × ESC SCORE2 family × KDIGO × SGK SUT × TR özel muayenehane / EAH poliklinik.
+    Soru: Dahiliye sekmesi pediatri gibi exceptional mı?
+    <b>Ürün cevap: evet — honest wow ~95% vs pediatri exceptional.</b>
+    <b>Olgunluk etiketi: beta-hazir shipped; uzman-dogrulandi gerçek internist saha haftasını (docs/DAHILIYE-MD-BETA.md) ve Boss/CEO onayını bekliyor.</b>
+  </p>
+
+  <div class="pills">
+    <span class="pill success">DAH-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">6 Araçlar</span>
+    <span class="pill success">Takibim Strong</span>
+    <span class="pill info">Honest wow ~95%</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v success">~20</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (maturity)</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">Thin</div></div>
+    <div class="stat"><div class="v danger">1</div><div class="l">Missing intentional (ICU)</div></div>
+  </div>
+
+  <div class="callout info">
+    <h2>Executive verdict</h2>
+    <p>
+      DAH-EXCEPTIONAL-01 final audit’teki dürüst boşlukları kapattı: intake’te <b>acilBelirtilerDahiliye</b> kırmızı bayrak kutuları,
+      Sağlığım’da <b>Takibim</b> (+ Ön anket) Strong hasta yüzü, Araçlar’da <b>6</b> dahiliye-only tile
+      (kohort · SCORE2 · CKD · SGK · polifarmasi · antikoag/CHA₂DS₂-HAS-BLED), registry <code>olgunluk: beta-hazir</code>.
+      Klinik omurga zaten Strong’du; ürün artık göz/derm live barıyla aynı ligde (~95%).
+      Tek Partial: olgunluk — beta-hazir shipped, <b>uzman-dogrulandi</b> MD week pending (eksik ürün değil, dürüst etiket).
+      ICU/hospitalist bilinçli Missing (TİHUD ofis tanımı).
+    </p>
+  </div>
+
+  <h2>Trajectory</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pre-wow → Final</div><div class="body">Clinical Strong · portal/Araçlar/olgunluk lag · ~80%</div></div>
+    <div class="card"><div class="title">DAH-EXCEPTIONAL-01</div><div class="body">Intake · Takibim · 6 Araç · beta-hazir → ~95%</div></div>
+    <div class="card"><div class="title">Next</div><div class="body">MD saha haftası → uzman-dogrulandi (Boss/CEO)</div></div>
+  </div>
+
+  <h2>Coverage depth — post-exceptional</h2>
+  <p class="cap">Strong = clinic-ready · Partial = beta-hazir shipped, uzman-dogrulandi pending · Missing = intentional out.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>In product (post-exceptional)</th><th>Footnote</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Sticky / şerit</td><td><span class="pill success">Strong</span></td><td class="note">KB · HbA1c · LDL · eGFR chips + vizit şeridi</td><td class="note">—</td></tr>
+        <tr><td class="domain">HT / KB</td><td><span class="pill success">Strong</span></td><td class="note">Uzlaşı 2025 evre/hedef · ev KB · dirençli sevk</td><td class="note">ABPM protokol out</td></tr>
+        <tr><td class="domain">DM / HbA1c</td><td><span class="pill success">Strong</span></td><td class="note">TEMD döngü · göz sevk · metformin/SGLT2 uyarı</td><td class="note">İnsülin titrasyon / CGM out</td></tr>
+        <tr><td class="domain">Lipid / statin</td><td><span class="pill success">Strong</span></td><td class="note">LDL hekim hedefi · statin yoğunluk · ALT/CK</td><td class="note">—</td></tr>
+        <tr><td class="domain">CKD / eGFR</td><td><span class="pill success">Strong</span></td><td class="note">KDIGO G×A · ısı haritası · nefro sevk · Araç stüdyosu</td><td class="note">—</td></tr>
+        <tr><td class="domain">HF / AF / antikoag</td><td><span class="pill success">Strong</span></td><td class="note">HF kartı · DOAK/TTR · CHA₂DS₂/HAS-BLED worksheet Araç</td><td class="note">—</td></tr>
+        <tr><td class="domain">SCORE2 / KVR</td><td><span class="pill success">Strong</span></td><td class="note">SCORE2 + DM + OP onaylı motorlar · Araç stüdyosu · hekim kova kilidi</td><td class="note">—</td></tr>
+        <tr><td class="domain">SGK rapor</td><td><span class="pill success">Strong</span></td><td class="note">HT/DM/statin/DOAK taslak · kilitle · e-Nabız zarfı · Araç</td><td class="note">Medula canlı yok</td></tr>
+        <tr><td class="domain">Lab / Belgeler</td><td><span class="pill success">Strong</span></td><td class="note">Onaylı satır → kart · e-Nabız PDF import</td><td class="note">—</td></tr>
+        <tr><td class="domain">Kohort</td><td><span class="pill success">Strong</span></td><td class="note">HbA1c/KB/LDL/eGFR/geciken · 1-tap hatırlatma · Araç</td><td class="note">—</td></tr>
+        <tr><td class="domain">Check-up / tarama / aşı</td><td><span class="pill success">Strong</span></td><td class="note">Paket · KETEM · aşı görevleri</td><td class="note">—</td></tr>
+        <tr><td class="domain">Polifarmasi</td><td><span class="pill success">Strong</span></td><td class="note">STOPP/START Bakım+ · Araç stüdyosu</td><td class="note">—</td></tr>
+        <tr><td class="domain">Bakım+ (sigara/Vit/gut/DXA)</td><td><span class="pill success">Strong</span></td><td class="note">7 NEXT kart · hekim kilit · nota</td><td class="note">FRAX out</td></tr>
+        <tr><td class="domain">Tiroid / nodül / EKG</td><td><span class="pill success">Strong</span></td><td class="note">TSH döngü · US sevk · EKG belge yolu</td><td class="note">—</td></tr>
+        <tr><td class="domain">SOAP / prompts</td><td><span class="pill success">Strong</span></td><td class="note">DAH-PROMPTS-LOCK · doz kilidi</td><td class="note">—</td></tr>
+        <tr><td class="domain">Kırmızı bayrak / sevk</td><td><span class="pill success">Strong</span></td><td class="note">Banner + checkbox · branş sevk</td><td class="note">—</td></tr>
+        <tr><td class="domain">Intake</td><td><span class="pill success">Strong</span></td><td class="note">acilBelirtilerDahiliye kutuları → acilTara / şerit (göğüs · nefes · nöro · bayılma · kanama · hipo)</td><td class="note">—</td></tr>
+        <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill success">Strong</span></td><td class="note">Takibim modülü + Ön anket (ev KB/glukoz/kilo); hasta-güvenli hatırlatma; eligibility-gated</td><td class="note">¹ Tanı/ICD hasta yüzünde yok</td></tr>
+        <tr><td class="domain">Doktor Araçları (dahiliye)</td><td><span class="pill success">Strong</span></td><td class="note">6 tile: kohort · SCORE2 · CKD · SGK · polifarmasi · antikoag; branş kapısı; 29 başka branşta yok</td><td class="note">Audit HTML Araçlar’a bağlanmaz</td></tr>
+        <tr><td class="domain">Olgunluk / MD beta</td><td><span class="pill warning">Partial</span></td><td class="note">beta-hazir shipped; docs/DAHILIYE-MD-BETA.md kontrol listesi</td><td class="gap">uzman-dogrulandi — MD week pending</td></tr>
+        <tr><td class="domain">ICU / hospitalist</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out (TİHUD ofis tanımı)</td><td class="note">Intentional</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cap">¹ Portal metinleri tanı/ICD taşımaz; hekim hatırlatması hasta-güvenli başlıklarla. Canlı Medula e-imza, insülin/CGM titrasyon, FRAX, ABPM sync bilinçli dışarıda.</p>
+
+  <h2>Wow bar (poliklinik, dürüst)</h2>
+  <p class="cap">0–100 = meşgul TR internist / muayenehane poliklinik eşiği vs pediatri exceptional. Klinik + portal + Araçlar ≥88; olgunluk barı ayrı (ortalamaya girmez) — beta-hazir ~70, uzman-dogrulandi bekliyor.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">SCORE2 / KVR + Araç</div><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><div class="bar-val">96</div></div>
+    <div class="bar-row"><div class="bar-label">HT / DM / lipid</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="bar-val">95</div></div>
+    <div class="bar-row"><div class="bar-label">CKD KDIGO + Araç</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="bar-val">95</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları (6)</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Takibim + Ön anket</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Lab / Belgeler</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + hatırlatma</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">SGK rapor + Araç</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Intake kırmızı bayrak</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Bakım+ / polifarmasi</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">SOAP / prompts</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">HF / antikoag worksheet</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">MD beta / olgunluk (ayrı)</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-val">70</div></div>
+  </div>
+
+  <h2>vs Pediatri / Göz / Derm</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pediatri</div><div class="body">uzman-dogrulandi · exceptional bar</div></div>
+    <div class="card"><div class="title">Göz / Derm live</div><div class="body">~90% · beta-hazir · 5 Araç · Strong portal</div></div>
+    <div class="card"><div class="title">Dahiliye (~95%)</div><div class="body">beta-hazir · 6 Araç · Takibim Strong · MD week pending</div></div>
+  </div>
+
+  <h2>Mandate / practice matrix</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mandate</th><th>Level</th><th>In product</th><th>Gap to wow</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">HT Uzlaşı 2025 hedefler</td><td><span class="pill info">TR BP</span></td><td class="note">Strong evre/hedef</td><td class="note">—</td></tr>
+        <tr><td class="domain">TEMD DM 2026 izlem</td><td><span class="pill info">TR BP</span></td><td class="note">Strong döngü + sevk</td><td class="note">—</td></tr>
+        <tr><td class="domain">ESC SCORE2 ailesi</td><td><span class="pill info">EU / TR</span></td><td class="note">Doğrulanmış motorlar + Araç</td><td class="note">—</td></tr>
+        <tr><td class="domain">KDIGO CKD</td><td><span class="pill info">BP</span></td><td class="note">G×A Strong + Araç</td><td class="note">—</td></tr>
+        <tr><td class="domain">SGK ilaç kullanım raporu</td><td><span class="pill info">SUT</span></td><td class="note">Taslak + kilitle + Araç</td><td class="note">Canlı Medula = hekim</td></tr>
+        <tr><td class="domain">KETEM / aşı hatırlatma</td><td><span class="pill info">MoH</span></td><td class="note">Tarama + aşı görev</td><td class="note">—</td></tr>
+        <tr><td class="domain">KVKK / hasta izolasyonu</td><td><span class="pill info">Law</span></td><td class="note">Portal Takibim hasta-güvenli; branş sızıntısı testleri</td><td class="note">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Doktor pain points → ne değişti</h2>
+  <div class="cards">
+    <div class="card"><div class="title">“SCORE2’yi her vizitte elle hesaplıyorum”</div><div class="body"><b>Now:</b> Chapter motor + Araçlar › SCORE2 stüdyosu · kova TASLAK → hekim kilidi.</div></div>
+    <div class="card"><div class="title">“HbA1c&gt;9 hastalarım kayboluyor”</div><div class="body"><b>Now:</b> Kohort Strong + 1-tap hatırlatma + Takibim hasta yüzü.</div></div>
+    <div class="card"><div class="title">“SGK raporunu Word’de yazıyorum”</div><div class="body"><b>Now:</b> Chapter + Araçlar › SGK taslak. Medula e-imza hekimde (bilinçli).</div></div>
+    <div class="card"><div class="title">“Hasta evde KB ölçüyor, dosyaya girmiyor”</div><div class="body"><b>Now:</b> Ön anket + Takibim Strong — Gözlerim/Derim kalitesinde suite.</div></div>
+  </div>
+
+  <h2>Dahiliye-only Araçlar (classify-before-add)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Bucket</th><th>Visibility</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Kohort — /doktor-tools/dahiliye-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">dahiliye</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">SCORE2 / KVR — /doktor-tools/dahiliye-score2</td><td><span class="pill info">specialty-only</span></td><td class="note">dahiliye</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">KDIGO CKD — /doktor-tools/dahiliye-ckd</td><td><span class="pill info">specialty-only</span></td><td class="note">dahiliye</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">SGK ilaç raporu — /doktor-tools/dahiliye-sgk</td><td><span class="pill info">specialty-only</span></td><td class="note">dahiliye</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Polifarmasi — /doktor-tools/dahiliye-polifarmasi</td><td><span class="pill info">specialty-only</span></td><td class="note">dahiliye</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">CHA₂DS₂ / HAS-BLED — /doktor-tools/dahiliye-antikoag</td><td><span class="pill info">specialty-only</span></td><td class="note">dahiliye</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Pediatri / göz / derm / KD / kardiyoloji + …</td><td><span class="pill success">none</span></td><td class="note">test: 6 kart görünmez, derin bağlantı → /doktor-tools</td><td><span class="pill success">Locked</span></td></tr>
+        <tr><td class="domain">Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar’a bağlanmaz</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Game changers</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Move</th><th>Status</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">DAH-MD-BETA pack + olgunluk → beta-hazir</td><td><span class="pill success">DONE</span></td><td class="note">lib/specialties/dahiliye.ts olgunluk: beta-hazir · docs/DAHILIYE-MD-BETA.md</td></tr>
+        <tr><td>2</td><td class="domain">Portal → Strong Takibim (+ Ön anket)</td><td><span class="pill success">DONE</span></td><td class="note">specialties/dahiliye/engines/portal-takibim.ts · app/portal/.../takibim</td></tr>
+        <tr><td>3</td><td class="domain">6 dahiliye-only Araçlar</td><td><span class="pill success">DONE</span></td><td class="note">kohort · SCORE2 · CKD · SGK · polifarmasi · antikoag</td></tr>
+        <tr><td>4</td><td class="domain">Intake kırmızı bayrak kutuları</td><td><span class="pill success">DONE</span></td><td class="note">acilBelirtilerDahiliye · lib/intake/bransSorulari.ts</td></tr>
+        <tr><td>5</td><td class="domain">CHA₂DS₂ / HAS-BLED worksheet UI</td><td><span class="pill success">DONE</span></td><td class="note">/doktor-tools/dahiliye-antikoag (HAS-BLED skor iddiası yok)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Intentionally out</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Out</th><th>Exceptional substitute shipped</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">ICU / hospitalist HIS</td><td class="note">Ofis kronik hastalık yöneticisi (TİHUD)</td></tr>
+        <tr><td class="domain">İnsülin / CGM titrasyon</td><td class="note">Sınıf önerisi + “hekim dozu yazar”</td></tr>
+        <tr><td class="domain">Live Medula e-imza</td><td class="note">SGK taslak + kilitle + e-Nabız zarfı</td></tr>
+        <tr><td class="domain">FRAX / ABPM cihaz sync</td><td class="note">DXA hatırlatma · ofis KB / ev KB</td></tr>
+        <tr><td class="domain">Uzman-doğrulandı etiketi</td><td class="note">beta-hazir + MD saha haftası; Boss/CEO onayı bekleniyor</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress · MD saha haftası</div><div class="body">docs/DAHILIYE-MD-BETA.md ile 5 gün gerçek poliklinik → Boss/CEO onayı → olgunluk uzman-dogrulandi.</div></div>
+    <div class="card"><div class="title">Velocity · CHA₂DS₂ polish</div><div class="body">Worksheet UX saha notlarıyla ince ayar (skor iddiası yok kuralı korunur).</div></div>
+    <div class="card"><div class="title">Mandate · Medula (shared)</div><div class="body">Canlı e-imza ortak altyapı — branş chapter’ı değil.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede" style="font-size:13px">
+    Code: specialties/dahiliye · lib/specialties/dahiliye.ts (olgunluk: beta-hazir) · lib/doktor/doktorAraclari.ts (6 BRANS) ·
+    lib/intake/bransSorulari.ts (acilBelirtilerDahiliye) · portal Takibim · docs/DAHILIYE-MD-BETA.md.
+    External: TİHUD · TEMD · HT Uzlaşı 2025 · ESC SCORE2 · KDIGO · SGK SUT.
+    Prior audits: presprint → post-sprint (hist.) → gaps → <a href="/dahiliye-final-audit.html">final (~80%, superseded)</a> → post-exceptional (this).
+  </p>
+
+  <div class="foot">
+    <span>Post-exceptional sprint DAH-EXCEPTIONAL-01 · notya-ai · Dahiliye · 2026-09-18</span>
+    <span>No patient data · internal product audit · not on Doktor Araçları</span>
+  </div>
+</div>
+</body>
+</html>
