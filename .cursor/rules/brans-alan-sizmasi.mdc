@@ -12,12 +12,14 @@ alwaysApply: true
 
 Boss rule (live KD bugs): **Baş Çevresi** and the word **veli** are pediatri-only — they must not appear for Kadın Doğum (or other adult branşlar). Specialty-specific content must never carry over to another specialty.
 
+Correction (Kaan 2026-09-17, Turkish law — VELI-YASAL-ONAM): **veli** follows the patient's **age**, not the branch — every patient under 18 gets veli/yasal temsilci wording in **every** branş (`veliDiliMi` / `veliOnamGerekliMi` in `lib/specialties/kapsam.ts`); an adult patient never does. Baş Çevresi / Neyzi / sağlam çocuk stay branch-gated (`pediatrikBaglamMi`).
+
 Before you add anything to a shared surface (Yaşamsal Bulgular, Anamnez, SOAP, hasta özeti, portal, intake, SGK, epikriz, Asistan):
 
 1. Is it **universal** for all ~30 branşlar? → shared OK.
 2. Is it **specialty-specific**? → gate via `SpecialtyProfile` / `specialties/<slug>/` / branch-keyed catalogs (see `lib/intake/bransSorulari.ts`). Never unconditional render.
 3. An empty wrong field is still a leak — do not “leave it blank for other branşlar.”
-4. Prefer one consistent gate mechanism; do not scatter ad-hoc `if (specialty === '…')`. The pediatric gate is `lib/specialties/kapsam.ts` (`pediatrikBaglamMi`, `notOlcumleri`, `bransKapsami`); wording lives in `lib/specialties/hitap.ts`.
+4. Prefer one consistent gate mechanism; do not scatter ad-hoc `if (specialty === '…')`. The pediatric clinical gate is `lib/specialties/kapsam.ts` (`pediatrikBaglamMi`, `notOlcumleri`, `bransKapsami`); hasta/veli wording is decided by `veliDiliMi` (age-based) and lives in `lib/specialties/hitap.ts`.
 5. Unknown / empty branş = baseline + "hasta" wording — never `|| 'pediatri'`.
 6. Gate all three layers (UI label, LLM prompt, model-output sanitizer) and put the tab button and its content mount behind the same gate.
 7. Test both directions (owner branş keeps it; KD / dahiliye / göz don't) — `npm run test:brans-sizmasi`. Ambiguous → OPEN in `docs/OPEN-COMMITMENTS.md`, don't guess.

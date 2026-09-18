@@ -8,7 +8,9 @@
  *
  * Bu modül ortak omurganın (İnceleme, not sayfası, yazdır, SOAP üretimi, not-konsult) branşa göre
  * dallanan TEK karar noktasıdır. Çağıranlar branş anahtarına kendileri bakmaz:
- *   - pediatrikBaglamMi()  → veli dili, baş çevresi, Neyzi persentili, pediatrik prompt satırları
+ *   - pediatrikBaglamMi()  → KLİNİK/ÖLÇÜM içeriği: baş çevresi, Neyzi persentili, sağlam çocuk / pediatrik prompt satırları
+ *   - veliOnamGerekliMi()  → HUKUKİ kural: <18 yaş hastada veli/yasal temsilci — branştan BAĞIMSIZ (VELI-YASAL-ONAM)
+ *   - veliDiliMi()         → hitap ("hasta" / "veli") kararı: yukarıdaki ikisinin birleşimi
  *   - notOlcumleri()       → Yaşamsal Bulgular formunun alanları (profil.olcumler'den)
  *   - bransKapsami()       → sunucunun istemciye gönderdiği hazır paket (ölçümler + hitap metinleri)
  * Kural ve kontrol listesi: .cursor/skills/brans-alan-sizmasi/SKILL.md
@@ -60,12 +62,66 @@ export function cocukHastaMi(dogumIso: string | null | undefined, nowMs = Date.n
   return y != null && y >= 0 && y < 18
 }
 
-/** Veli dili / baş çevresi / Neyzi / pediatrik prompt satırları bu notta görünür mü? Tek karar noktası. */
+/**
+ * Baş çevresi / Neyzi / sağlam çocuk / pediatrik prompt satırları (KLİNİK içerik) bu notta görünür mü? Branş güdümlü —
+ * göz hekimi, hasta çocuk diye baş çevresi izlemez. Hitap ("veli") kararı burada DEĞİL: veliDiliMi().
+ */
 export function pediatrikBaglamMi(g: KapsamGirdisi): boolean {
   const kural = pediatrikBaglamKurali(etkinBrans(g))
   if (kural === 'her-zaman') return true
   if (kural === 'asla') return false
   return cocukHastaMi(g.hastaDogumIso, g.nowMs)
+}
+
+/**
+ * VELI-YASAL-ONAM (Kaan 2026-09-17, BRANS-ALAN-SIZMASI düzeltmesi) — reşit olmayan hastada veli / yasal temsilci
+ * gerekli mi? HUKUKİ kural, BRANŞTAN BAĞIMSIZ: 18 yaşını doldurmamış her hastada klinik kayıt ve tıbbi onam için
+ * veli / yasal temsilci bilgisi alınır, rutin işlemde onam veliden — göz, KBB, ortopedi, kardiyoloji … fark etmez.
+ *
+ * Dar istisnalar:
+ *   - Acil / hayati tehlike: veli yokken müdahale edilir, sonra bildirilir — notun hitabını değiştirmez (veli yine
+ *     bilgilendirilir), burada ayrı dal yok.
+ *   - Evlilik veya mahkeme kararıyla ergin kılınma (belge şart): hasta kaydında bunu tutan bir alan YOK; uydurulmadı.
+ *     Alan + hekimin nereye işleyeceği kararı gelene kadar kural yalnız yaştır (OPEN: VELI-YASAL-ONAM, ergin kılınma).
+ *
+ * Yaşı bilinmeyen hasta reşit olmayan sayılmaz (varsayılan "hasta" dilidir; pediatri/çocuk cerrahisi zaten
+ * pediatrikBaglamMi ile veli dilindedir).
+ */
+export function veliOnamGerekliMi(dogumIso: string | null | undefined, nowMs = Date.now()): boolean {
+  const yas = tamYas(dogumIso, nowMs)
+  return yas != null && yas >= 0 && yas < 18
+}
+
+const TRT_MS = 3 * 3_600_000
+
+/**
+ * Takvim yaşı (TRT) — "18 yaşını doldurmak" doğum gününde olur. yasYilKesir'in 365,25 günlük kesri doğum gününde
+ * bir gün geç kalabilir; hukuki kural için tam yıl kullanılır. Bilinmeyen / çözülemeyen tarih → null.
+ */
+function tamYas(dogumIso: string | null | undefined, nowMs: number): number | null {
+  if (!dogumIso) return null
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dogumIso).trim())
+  let y: number, a: number, g: number
+  if (m) {
+    y = Number(m[1]); a = Number(m[2]); g = Number(m[3])
+  } else {
+    const d = new Date(dogumIso)
+    if (isNaN(d.getTime())) return null
+    const t = new Date(d.getTime() + TRT_MS)
+    y = t.getUTCFullYear(); a = t.getUTCMonth() + 1; g = t.getUTCDate()
+  }
+  const bugun = new Date(nowMs + TRT_MS)
+  const by = bugun.getUTCFullYear(), ba = bugun.getUTCMonth() + 1, bg = bugun.getUTCDate()
+  return by - y - (ba < a || (ba === a && bg < g) ? 1 : 0)
+}
+
+/**
+ * Hitap kararı — "veli" seti mi "hasta" seti mi (lib/specialties/hitap.ts). Reşit olmayan hasta HER branşta veli dili
+ * alır (veliOnamGerekliMi); pediatri / çocuk cerrahisi bağlamı da önceki gibi veli dilindedir (pediatrikBaglamMi).
+ * Erişkin hasta, pediatrik olmayan branşta: "hasta".
+ */
+export function veliDiliMi(g: KapsamGirdisi): boolean {
+  return veliOnamGerekliMi(g.hastaDogumIso, g.nowMs) || pediatrikBaglamMi(g)
 }
 
 export type NotOlcumu = Pick<OlcumTanimi, 'anahtar' | 'etiket' | 'birim'>
@@ -82,15 +138,18 @@ export function notOlcumleri(g: KapsamGirdisi): NotOlcumu[] {
 
 export interface BransKapsami {
   brans: SpecialtyKey | null
+  /** klinik/ölçüm içeriği (baş çevresi, Neyzi, sağlam çocuk) — pediatrikBaglamMi */
   pediatrik: boolean
+  /** hitap: veli dili — veliDiliMi (reşit olmayan hasta her branşta + pediatrik bağlam) */
+  veliDili: boolean
   olcumler: NotOlcumu[]
   hitap: HitapMetinleri
 }
 
 /** Sunucu hesaplar, istemci yalnız çizer (not listesi / tek not / yazdır). */
 export function bransKapsami(g: KapsamGirdisi): BransKapsami {
-  const pediatrik = pediatrikBaglamMi(g)
-  return { brans: etkinBrans(g), pediatrik, olcumler: notOlcumleri(g), hitap: hitapMetinleri(pediatrik) }
+  const veliDili = veliDiliMi(g)
+  return { brans: etkinBrans(g), pediatrik: pediatrikBaglamMi(g), veliDili, olcumler: notOlcumleri(g), hitap: hitapMetinleri(veliDili) }
 }
 
 /**

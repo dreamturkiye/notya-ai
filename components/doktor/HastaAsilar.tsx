@@ -26,12 +26,13 @@ interface Asi {
 const YAYGIN_YETISKIN = ['Tetanoz-Difteri (Td)', 'Grip', 'KOVID-19', 'Zona (Herpes Zoster)', 'Pnömokok'];
 
 /**
- * BRANS-ALAN-SIZMASI: `pediatrikBaglam` (lib/specialties/kapsam → pediatrikBaglamMi) "veli" kelimesini açar; `cocukHasta`
- * yeni kaydın varsayılan kategorisini seçer. Eskiden her hastada (KD'nin erişkin hastası dahil) varsayılan 'pediatrik'
- * ve "Hasta/veli beyanı" idi.
+ * BRANS-ALAN-SIZMASI: `veliDili` (lib/specialties/kapsam → veliDiliMi; VELI-YASAL-ONAM: reşit olmayan hasta her branşta)
+ * "veli" kelimesini açar; `pediatrikBaglam` (pediatrikBaglamMi) ve `cocukHasta` SB çocukluk takvimini ve yeni kaydın
+ * varsayılan kategorisini seçer. Eskiden her hastada (KD'nin erişkin hastası dahil) varsayılan 'pediatrik' ve
+ * "Hasta/veli beyanı" idi.
  */
-export default function HastaAsilar({ patientId, pediatrikBaglam = false, cocukHasta = false }: { patientId: string; pediatrikBaglam?: boolean; cocukHasta?: boolean }) {
-  const hitap = hitapMetinleri(pediatrikBaglam);
+export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDili = pediatrikBaglam, cocukHasta = false }: { patientId: string; pediatrikBaglam?: boolean; veliDili?: boolean; cocukHasta?: boolean }) {
+  const hitap = hitapMetinleri(veliDili);
   const [asilar, setAsilar] = useState<Asi[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');

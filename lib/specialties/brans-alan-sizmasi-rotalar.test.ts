@@ -12,6 +12,11 @@
  *   4. POST /api/doktor/not-konsult      → "↻ Notuma göre yenile": UI'nin gönderdiği istek + sistem promptu veli?
  *   5. POST /api/doktor/araclar/epikriz  → "Kliniği: …" başlığı ve imza unvanı hekimin branşı mı?
  *
+ * VELI-YASAL-ONAM (Kaan 2026-09-17): iki ayrı eksen yürünür —
+ *   KLİNİK (baş çevresi, Neyzi, sağlam çocuk)  → branş güdümlü: yalnız pediatri / çocuk cerrahisi / aile+çocuk
+ *   HİTAP  ("veli" dili)                        → yaş güdümlü: <18 hasta HER branşta (göz, KBB, ortopedi, kardiyoloji…)
+ * Her pediatri dışı branş hem reşit olmayan hem erişkin sentetik hastayla yürünür.
+ *
  * Sentetik veri — gerçek hasta, gerçek hesap, production yok.   npm test (--experimental-test-module-mocks)
  */
 import { describe, it, before, mock } from 'node:test'
@@ -133,6 +138,8 @@ function hekimKur(ad: string, usersSpecialty: string, seansBransi: string, dogum
 
 const COCUK = '2022-03-01'
 const YETISKIN = '1990-05-20'
+/** 16 yaşında ergen — bugüne göre hesaplanır ki test yıllar geçtikçe erişkine dönmesin */
+const ERGEN = new Date(Date.now() - 16.3 * 365.25 * 864e5).toISOString().slice(0, 10)
 
 function iste(yontem: string, yol: string, o: { token?: string; govde?: unknown } = {}) {
   const basliklar: Record<string, string> = {}
@@ -177,12 +184,23 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
     H.kardiyo = hekimKur('kardiyo', 'kardiyoloji', 'kardiyoloji', YETISKIN)
     H.aileCocuk = hekimKur('aile-cocuk', 'aile-hekimligi', 'aile-hekimligi', COCUK)
     H.aileYetiskin = hekimKur('aile-yetiskin', 'aile-hekimligi', 'aile-hekimligi', YETISKIN)
+    // VELI-YASAL-ONAM: pediatri dışı branşlar reşit olmayan hastayla (erişkin eşleri yukarıda: goz, kardiyo)
+    H.gozCocuk = hekimKur('goz-cocuk', 'goz-hastaliklari', 'goz-hastaliklari', COCUK)
+    H.kardiyoCocuk = hekimKur('kardiyo-cocuk', 'kardiyoloji', 'kardiyoloji', ERGEN)
+    H.kbbCocuk = hekimKur('kbb-cocuk', 'kulak-burun-bogaz', 'kulak-burun-bogaz', COCUK)
+    H.kbbYetiskin = hekimKur('kbb-yetiskin', 'kulak-burun-bogaz', 'kulak-burun-bogaz', YETISKIN)
+    H.ortopediCocuk = hekimKur('ortopedi-cocuk', 'ortopedi', 'ortopedi', ERGEN)
+    H.ortopediYetiskin = hekimKur('ortopedi-yetiskin', 'ortopedi', 'ortopedi', YETISKIN)
+    H.cocukCerrahi = hekimKur('cocuk-cerrahi', 'cocuk-cerrahisi', 'cocuk-cerrahisi', COCUK)
   })
 
-  const PEDIATRIK = new Set(['pediatri', 'aileCocuk'])
+  /** KLİNİK pediatrik içerik (baş çevresi, Neyzi, sağlam çocuk) — branş güdümlü */
+  const PEDIATRIK = new Set(['pediatri', 'aileCocuk', 'cocukCerrahi'])
+  /** HİTAP: veli dili — reşit olmayan hasta her branşta + pediatrik bağlam (VELI-YASAL-ONAM) */
+  const VELI_DILI = new Set([...PEDIATRIK, 'gozCocuk', 'kardiyoCocuk', 'kbbCocuk', 'ortopediCocuk'])
   const hepsi = () => Object.entries(H)
 
-  it('1. İnceleme kuyruğu (GET /api/notes): Baş Çevresi alanı ve "veli" etiketi yalnız pediatrik bağlamda — form gerçekten çizilir', async () => {
+  it('1. İnceleme kuyruğu (GET /api/notes): Baş Çevresi yalnız pediatrik bağlamda; "veli" etiketi her reşit olmayan hastada — form gerçekten çizilir', async () => {
     for (const [k, h] of hepsi()) {
       const { status, veri } = await json(R.notlar.GET(iste('GET', '/api/notes?pending=true', { token: h.token })))
       assert.equal(status, 200, k)
@@ -192,8 +210,12 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
       const ped = PEDIATRIK.has(k)
       assert.equal(html.includes('Baş Çevresi'), ped, `${k}: Baş Çevresi alanı`)
       assert.ok(html.includes('Ateş') && html.includes('Tansiyon') && html.includes('Kilo'), `${k}: baseline alanlar`)
-      assert.equal(VELI.test(JSON.stringify(not.bransKapsami.hitap)), ped, `${k}: veli hitabı`)
-      assert.equal(not.bransKapsami.hitap.ozetEtiketi, ped ? 'Hasta/veli özeti' : 'Hasta özeti', k)
+      const veli = VELI_DILI.has(k)
+      assert.equal(VELI.test(JSON.stringify(not.bransKapsami.hitap)), veli, `${k}: veli hitabı`)
+      assert.equal(not.bransKapsami.hitap.ozetEtiketi, veli ? 'Hasta/veli özeti' : 'Hasta özeti', k)
+      assert.equal(not.bransKapsami.hitap.evdeDikkatHedefi, veli ? 'veliye/hastaya' : 'hastaya', k)
+      assert.equal(not.bransKapsami.pediatrik, ped, `${k}: klinik kapsam`)
+      assert.equal(not.bransKapsami.veliDili, veli, `${k}: veliDili`)
       if (!ped) assert.equal(not.buyumePersentilleri, null, `${k}: Neyzi persentili`)
     }
     // pediatri bozulmadı: çocuk hastada Neyzi persentili hâlâ geliyor
@@ -201,19 +223,20 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
     assert.ok(ped.buyumePersentilleri && ped.buyumePersentilleri.basCevresi, 'pediatri: baş çevresi persentili')
   })
 
-  it('2. Not sayfası / yazdır (GET /api/notes/[id]): aynı kapsam; KD yazdır başlığı "Hasta Özeti"', async () => {
+  it('2. Not sayfası / yazdır (GET /api/notes/[id]): aynı kapsam; KD yazdır başlığı "Hasta Özeti", göz/KBB/ortopedi/kardiyoloji çocuk hastada "Hasta / Veli Özeti"', async () => {
     for (const [k, h] of hepsi()) {
       const { status, veri } = await json(R.notDetay.GET(iste('GET', `/api/notes/${h.bekleyenNot}`, { token: h.token }), prm({ id: h.bekleyenNot })))
       assert.equal(status, 200, k)
       const ped = PEDIATRIK.has(k)
       assert.equal(veri.not.bransKapsami.olcumler.some((o: any) => o.anahtar === 'basCevresi'), ped, k)
-      assert.equal(veri.not.bransKapsami.hitap.ozetYazdirEtiketi, ped ? 'Hasta / Veli Özeti' : 'Hasta Özeti', k)
+      assert.equal(veri.not.bransKapsami.hitap.ozetYazdirEtiketi, VELI_DILI.has(k) ? 'Hasta / Veli Özeti' : 'Hasta Özeti', k)
+      if (!ped) assert.equal(veri.not.buyumePersentilleri, null, `${k}: Neyzi persentili (yazdır)`)
     }
     const kd = (await json(R.notDetay.GET(iste('GET', `/api/notes/${H.kdGenel.bekleyenNot}`, { token: H.kdGenel.token }), prm({ id: H.kdGenel.bekleyenNot })))).veri
     assert.equal(kd.not.bransKapsami.brans, 'kadin-hastaliklari-dogum', 'genel seans + kadin-dogum profili → KD')
   })
 
-  it('3. SOAP üretimi (POST /api/sessions/[id]/end): veli dili yalnız pediatride; KD notuna model baş çevresi yazamaz', async () => {
+  it('3. SOAP üretimi (POST /api/sessions/[id]/end): veli dili her reşit olmayan hastada, baş çevresi / Neyzi yalnız pediatride; KD notuna model baş çevresi yazamaz', async () => {
     for (const [k, h] of hepsi()) {
       soapSistemleri.length = 0
       const { status, veri } = await json(R.seansBitir.POST(iste('POST', `/api/sessions/${h.yeniSeans}/end`, { token: h.token, govde: { segments: [{ speaker: 'doktor', text: 'Sentetik muayene dikte.' }], context: { specialty: h.seansBransi } } }), prm({ id: h.yeniSeans })))
@@ -221,15 +244,16 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
       const sistem = soapSistemleri.join('\n')
       assert.ok(sistem.length > 1000, `${k}: SOAP promptu yakalanmadı`)
       const ped = PEDIATRIK.has(k)
-      assert.equal(VELI.test(sistem), ped, `${k}: SOAP promptunda veli`)
+      assert.equal(VELI.test(sistem), VELI_DILI.has(k), `${k}: SOAP promptunda veli`)
       assert.equal(/"basCevresi"/.test(sistem), ped, `${k}: JSON şablonunda basCevresi`)
+      assert.equal(/Neyzi standartları|baş çevresi cm|pediatride prenatal|pediatride mg\/kg/i.test(sistem), ped, `${k}: pediatrik klinik satırlar`)
       const kayit = db.tablolar.get('notes')!.find((n) => n.id === veri.data.note_id)!
       assert.equal('basCevresi' in (kayit.vitaller || {}), ped, `${k}: kaydedilen vitaller`)
       assert.equal(kayit.vitaller.kilo, '64', `${k}: diğer vitaller korunur`)
     }
   })
 
-  it('4. "↻ Notuma göre yenile" (POST /api/doktor/not-konsult): UI isteği ve sistem promptu veli içermez; baş çevresi önerisi süzülür', async () => {
+  it('4. "↻ Notuma göre yenile" (POST /api/doktor/not-konsult): erişkinde UI isteği ve sistem promptu veli içermez, reşit olmayanda içerir; Neyzi ve baş çevresi yalnız pediatride', async () => {
     for (const [k, h] of hepsi()) {
       konsultIstekleri.length = 0
       const liste = (await json(R.notlar.GET(iste('GET', '/api/notes?pending=true', { token: h.token })))).veri as any[]
@@ -240,20 +264,24 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
       assert.equal(status, 200, `${k}: ${JSON.stringify(veri).slice(0, 200)}`)
       assert.equal(konsultIstekleri.length, 1, k)
       const ped = PEDIATRIK.has(k)
-      assert.equal(VELI.test(konsultIstekleri[0].system), ped, `${k}: konsult sistem promptunda veli`)
-      assert.equal(VELI.test(konsultIstekleri[0].mesajlar), ped, `${k}: gönderilen istekte veli`)
+      const veli = VELI_DILI.has(k)
+      assert.equal(VELI.test(konsultIstekleri[0].system), veli, `${k}: konsult sistem promptunda veli`)
+      assert.equal(VELI.test(konsultIstekleri[0].mesajlar), veli, `${k}: gönderilen istekte veli`)
       assert.equal(/Neyzi/.test(konsultIstekleri[0].system), ped, `${k}: Neyzi kuralı`)
       assert.equal('basCevresi' in veri.duzenlemeler.vitaller, ped, `${k}: önerilen baş çevresi`)
       assert.equal(veri.duzenlemeler.vitaller.nabiz, '84', `${k}: diğer vital önerisi korunur`)
     }
   })
 
-  it('5. Epikriz (tüm seanslar + tek vizit): başlık ve imza hekimin branşı — "Kliniği: Pediatri" yalnız pediatride', async () => {
+  it('5. Epikriz (tüm seanslar + tek vizit): başlık ve imza hekimin branşı — "Kliniği: Pediatri" ve sağlam çocuk yalnız pediatride; veli beyanı her reşit olmayan hastada', async () => {
     const beklenen: Record<string, [string, string]> = {
       pediatri: ['Kliniği: Pediatri (Çocuk Sağlığı)', 'Çocuk Sağlığı ve Hastalıkları Uzmanı'],
       kd: ['Kliniği: Kadın Hastalıkları ve Doğum', 'Kadın Hastalıkları ve Doğum Uzmanı'],
       dahiliye: ['Kliniği: İç Hastalıkları (Dahiliye)', 'İç Hastalıkları Uzmanı'],
       goz: ['Kliniği: Göz Hastalıkları', 'Göz Hastalıkları Uzmanı'],
+      gozCocuk: ['Kliniği: Göz Hastalıkları', 'Göz Hastalıkları Uzmanı'],
+      kbbCocuk: ['Kliniği: Kulak Burun Boğaz', 'Uzmanı'],
+      kbbYetiskin: ['Kliniği: Kulak Burun Boğaz', 'Uzmanı'],
     }
     for (const [k, [klinik, unvan]] of Object.entries(beklenen)) {
       const h = H[k]
@@ -263,8 +291,10 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
         assert.equal(status, 200, `${k}: ${JSON.stringify(veri).slice(0, 200)}`)
         assert.ok(veri.hastaBilgileri.includes(klinik), `${k}: ${veri.hastaBilgileri}`)
         assert.ok(veri.imza.includes(unvan), `${k}: ${veri.imza}`)
-        const ped = k === 'pediatri'
-        assert.equal(/sağlam çocuk|AŞI KARNESİ|Anne beyanı/.test(epikrizSistemleri.join('\n')), ped, `${k}: pediatrik epikriz satırları`)
+        const sistem = epikrizSistemleri.join('\n')
+        assert.equal(/sağlam çocuk|AŞI KARNESİ|doğum bilgileri/.test(sistem), PEDIATRIK.has(k), `${k}: pediatrik klinik epikriz satırları`)
+        // veli beyanı hitabı yalnız tek vizit promptunda yer alır
+        if (!('tumSeanslar' in govde)) assert.equal(/Anne beyanı/.test(sistem), VELI_DILI.has(k), `${k}: veli beyanı hitabı`)
       }
     }
   })

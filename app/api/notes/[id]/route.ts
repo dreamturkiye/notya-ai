@@ -127,9 +127,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     duzenlemeSayisi = count || 0
   } catch { /* 0 kalır */ }
 
-  // BRANS-ALAN-SIZMASI: not sayfası / yazdır branşa göre çizilir (ölçüm alanları + hasta/veli hitabı)
+  // BRANS-ALAN-SIZMASI: not sayfası / yazdır branşa göre çizilir (ölçüm alanları: branş; hasta/veli hitabı: yaş — VELI-YASAL-ONAM)
   const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, hastaDogumIso: dogumIso })
-  const bransKapsami = { brans: kapsam.brans, pediatrik: kapsam.pediatrik, olcumler: kapsam.olcumler, hitap: kapsam.hitap }
+  const bransKapsami = { brans: kapsam.brans, pediatrik: kapsam.pediatrik, veliDili: kapsam.veliDili, olcumler: kapsam.olcumler, hitap: kapsam.hitap }
 
   return NextResponse.json({
     not: {

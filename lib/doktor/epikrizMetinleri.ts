@@ -33,15 +33,17 @@ BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ek
 Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok" yaz.`
 }
 
-/** Tek vizit epikriz sistem promptu. */
-export function epikrizTekVizitSistem(pediatrik: boolean): string {
+/** Tek vizit epikriz sistem promptu. `pediatrik` = klinik satırlar (doğum bilgileri, tarama/aşı); `veli` = beyan hitabı
+ * (VELI-YASAL-ONAM: kapsam.ts → veliDiliMi, reşit olmayan hasta her branşta). Verilmezse `pediatrik` ile aynı. */
+export function epikrizTekVizitSistem(pediatrik: boolean, veli: boolean = pediatrik): string {
   const ped = secici(pediatrik)
+  const hitap = secici(veli)
   return `Türkiye Sağlık Bakanlığı standart epikriz formatında, PROFESYONEL ve ÖZLÜ yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"taniVeTedavi":"...","taburcuOzeti":"..."}
 BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor. Bilmediğin bir alan için ASLA köşeli parantez içinde yer tutucu ([...]) yazma.
 ÜSLUP — standart Türk epikriz belgesi gibi, anlatısal/gevşek düzyazı DEĞİL:
 - "taniVeTedavi" içinde BÜYÜK HARF alt başlıklar kullan: TANI (ICD-10 kodlarıyla, numaralı), ÖZGEÇMİŞ (yalnız klinik açıdan anlamlıysa — ${ped('doğum bilgileri gibi ', '')}rutin veriyi tek cümleyle geç), FİZİK MUAYENE (yalnız ANORMAL/dikkat çekici bulgular; "her sistem normal" tek satır yeterli), UYGULANAN TARAMA/AŞI${ped('', ' (yalnız yapıldıysa)')}, TEDAVİ VE TAKVİYELER (numaralı, ilaç adı+doz+kullanım), YÖNLENDİRMELER.
 - Kilo/boy/vital gibi ölçümleri BURADA TEKRAR ETME — bunlar zaten Hasta Bilgileri'nde/notta kayıtlı; yalnız KLİNİK ÖNEMİ olan değeri (ör. anormal VKİ, ateş yüksekliği) bir kez, kısaca an.
-- ${ped('"Anne beyanına göre çocuğun genel sağlık durumu iyi olup..."', '"Hastanın beyanına göre genel sağlık durumu iyi olup..."')} gibi dolgu cümleler kurma; doğrudan bulguyu yaz.
+- ${hitap('"Anne beyanına göre çocuğun genel sağlık durumu iyi olup..."', '"Hastanın beyanına göre genel sağlık durumu iyi olup..."')} gibi dolgu cümleler kurma; doğrudan bulguyu yaz.
 - "taburcuOzeti" 3-4 cümleyi geçmesin: klinik seyir + kontrol planı, telegrafik.
 Kısacası: bir meslektaşın hızlı okuyup anlayacağı, laf kalabalığı olmayan bir belge — dergi makalesi değil.`
 }

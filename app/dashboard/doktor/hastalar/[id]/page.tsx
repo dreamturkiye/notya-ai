@@ -35,7 +35,7 @@ import {
   pediatriAracSekmesiUygun,
   type HastaDosyaSekmeId,
 } from '@/lib/doktor/hastaDosyaSekmeleri';
-import { cocukHastaMi, pediatrikBaglamMi } from '@/lib/specialties/kapsam';
+import { cocukHastaMi, pediatrikBaglamMi, veliDiliMi } from '@/lib/specialties/kapsam';
 import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 
@@ -395,6 +395,7 @@ export default function HastaProfilPage() {
           <HastaAsilar
             patientId={patientId}
             pediatrikBaglam={pediatrikBaglamMi({ doktorBransi, hastaDogumIso: patient?.dogum_tarihi })}
+            veliDili={veliDiliMi({ doktorBransi, hastaDogumIso: patient?.dogum_tarihi })}
             cocukHasta={cocukHastaMi(patient?.dogum_tarihi) || (pediatriAraci && !patient?.dogum_tarihi)}
           />
         )}

@@ -23,7 +23,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 
 ## Branş alan sızması (short)
 
-Something specific to **one** specialty must never render for another (Baş Çevresi / “veli” on KD = leak). Gate chapter content; leave only truly universal fields in the shared spine. Full text: `.cursor/skills/brans-alan-sizmasi/SKILL.md`.
+Something specific to **one** specialty must never render for another (Baş Çevresi / “veli” on KD = leak). Exception by law: “veli” wording follows the patient's **age** — every patient under 18 gets it in every branş (`veliDiliMi`); an adult never does. Gate chapter content; leave only truly universal fields in the shared spine. Full text: `.cursor/skills/brans-alan-sizmasi/SKILL.md`.
 
 ## Doktor Araçları (short)
 
