@@ -31,9 +31,11 @@ import { olcumNotaMetni, refraksiyonNormalize, type OlcumSatiri } from '@/specia
 import { glokomMetaNormalize, GLOKOM_ARALIK_ONERILERI } from '@/specialties/goz-hastaliklari/engines/glokom'
 import { ivtKontrolDogrula, type IvtKontrol } from '@/specialties/goz-hastaliklari/engines/antiVegf'
 import { biyometriNormalize, postopUyarilari, type Biyometri, type PostopKayit, type PostopZaman } from '@/specialties/goz-hastaliklari/engines/katarakt'
-import { gozEkAdim, gozEkVeri } from './_ek'
+import { gozEkAdim, gozEkVeri, gozGoruntuKopru } from './_ek'
 
 export const dynamic = 'force-dynamic'
+// Göz › Görüntü › Asistana raporla aynı Tier A yazıcıyı çağırır (Belge analiz rotasıyla aynı süre).
+export const maxDuration = 120
 const bugun = () => new Date().toISOString().slice(0, 10)
 const tarihMi = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
 const num = (v: unknown) => (v == null || v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null)
@@ -108,6 +110,8 @@ export async function GET(req: NextRequest) {
   const planli = enj.filter((e) => e.durum === 'planli' && e.tarih >= T).sort((a, b) => (a.tarih < b.tarih ? -1 : 1))[0]
 
   const imgs = (imgQ.data || []).map((i) => ({ id: i.id, modalite: i.modalite, goz: i.vucut_bolgesi, tarih: String(i.goruntuleme_tarihi || i.created_at).slice(0, 10), url: i.dosya_url, okumalar: (okQ.data || []).filter((r) => r.goruntu_id === i.id) }))
+  // GOZ-EXCEPTIONAL-01: Belge kasasından (Tier A) aktarılan okumalar — hasta_goruntulemeler satırı yok, belge_id var.
+  const belgeOkumalari = (okQ.data || []).filter((r) => !r.goruntu_id && r.belge_id)
 
   const ped = pedQ.data as Record<string, unknown> | null
   const sonVa = muayeneler[0]?.va
@@ -166,7 +170,7 @@ export async function GET(req: NextRequest) {
     enjeksiyonlar: enj, sonrakiDoz: sonraki,
     sgkRaporlari: rapQ.data || [], sgkSablonlari: GOZ_SGK_SABLONLARI,
     katarakt: (katQ.data || []).map((k) => ({ ...k, hazirlik: kataraktHazirlik((k.checklist as Record<string, boolean>) || {}), gilSgk: gilSgkKontrol((k.gil_tipi_hekim as string) || null), postopUyari: postopUyarilari((k.postop as Partial<Record<PostopZaman, PostopKayit>>) || {}).acil })), kataraktKontrol: KATARAKT_KONTROL, gilEk3g: GIL_EK3G_KALEMLERI,
-    goruntuler: imgs, goruntuDisclaimer: GOZ_GORUNTU_DISCLAIMER,
+    goruntuler: imgs, belgeOkumalari, goruntuDisclaimer: GOZ_GORUNTU_DISCLAIMER,
     kontroller: konQ.data || [],
     pediatrik: { satir: ped, izlem: pedIzlem },
     kuruGoz: kuruSatirlar,
@@ -364,6 +368,8 @@ export async function POST(req: NextRequest) {
 
   if (adim === 'goruntu_okuma') {
     const eylem = String(b.eylem || 'taslak')
+    const kopru = await gozGoruntuKopru(eylem, { sb, doktorId, h, b, T })
+    if (kopru) return kopru
     if (eylem === 'ayse_taslak') {
       const { data: img } = await sb.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi').eq('id', String(b.goruntuId || '')).eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle()
       if (!img) return hata('Görüntü bulunamadı.', 404)

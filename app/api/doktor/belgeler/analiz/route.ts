@@ -15,10 +15,10 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { getDocumentMeta } from '@/lib/vault/service'
 import { decrypt } from '@/lib/security/encryption'
 import { bransAnahtari, bransKurali, etkinModalite, SES_MODALITELERI } from '@/core/belgeler/router'
-import { fusionYap, raporuDogrula } from '@/core/belgeler/fusion'
-import { claudeIleYaz, claudeMotorCiktisi } from '@/core/belgeler/yazar'
+import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
 import type { MotorCiktisi } from '@/core/belgeler/types'
+import type { ClaudeGorselGirdi } from '@/core/belgeler/yazar'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   const pdfMi = meta.fileType === 'application/pdf'
 
   // What the writer sees: de-identified image / spectrogram PNG / PDF bytes. PDF goes as-is (vault-decrypted, doctor-scoped).
-  let gorsel: Parameters<typeof claudeIleYaz>[3] = null
+  let gorsel: ClaudeGorselGirdi | null = null
   let deIdHash = ''
   if (pdfMi) {
     const { downloadDocument } = await import('@/lib/vault/service')
@@ -91,23 +91,17 @@ export async function POST(req: NextRequest) {
 
   const girdi = { brans: kural.ad, modality_final: modalite, yasAy, cinsiyet, klinikNot: body.klinikNot || null }
 
-  // First pass fusion on Tier B alone (so the writer sees the cap); second pass after Claude's own codes.
-  const onFusion = fusionYap(tierB, { modalite, yasAy, kalite: 'iyi', fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus })
-
-  let yazim
+  // Tier A: one shared path (core/belgeler/tierA) — also used by Göz › Görüntü › Asistana raporla.
+  let sonucA
   try {
-    yazim = await claudeIleYaz(getAnthropic(), kural.persona, girdi, gorsel, tierB.length ? onFusion : null, tierB, sesMi ? body.sesMetrikleri || null : null)
+    sonucA = await tierAYazVeFuzyonla({ anthropic: getAnthropic(), persona: kural.persona, girdi, gorsel, tierB, modalite, yasAy, fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus, serbest, sesMetrikleri: sesMi ? body.sesMetrikleri || null : null })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'yazar hatası'
     await supabase.from('belge_analizleri').insert({ belge_id: body.documentId, doctor_id: user.id, patient_id: meta.patientId, brans: bransKey, modality_final: modalite, yas_ay: yasAy, cinsiyet, de_id_hash: deIdHash, engine_set: 'tierA-v1', durum: 'hata', motor_ciktilari: tierB, sonuc: { hata: msg.slice(0, 300) } })
     return NextResponse.json({ error: 'Taslak üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 })
   }
-
-  const claudeMotor = claudeMotorCiktisi(yazim.bulguKodlari, yazim.rapor.kalite, null)
-  const motorlar = [...tierB, claudeMotor]
-  const fusion = fusionYap(motorlar, { modalite, yasAy, kalite: yazim.rapor.kalite, fitzpatrickBilinmiyor: body.fitzpatrickBilinmiyor, tekAlanFundus: body.tekAlanFundus })
-  const { rapor, duzeltmeler } = raporuDogrula(yazim.rapor, fusion)
-  if (serbest && !rapor.sinirlar.some((s) => s.includes('yalnızca tarif'))) rapor.sinirlar.push('Branş için tanımlı yüksek değerli girdi değil — yalnızca tarif.')
+  const { rapor, fusion, motorlar, duzeltmeler } = sonucA
+  const yazim = { ham: sonucA.ham }
 
   // Modality mismatch: the writer saw something else than the doctor chose
   const secilenTr = MODALITE_TR[modalite] || modalite

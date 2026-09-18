@@ -14,6 +14,8 @@ export type BransKurali = {
   motorlar: Partial<Record<Modalite, string[]>>
   pediatrik?: boolean
   engelli?: boolean
+  /** GOZ-EXCEPTIONAL-01: analiz, branşın dual-sign görüntü okumasına taslak olarak aktarılabilir (yalnız göz). */
+  goruntuOkumaKoprusu?: boolean
 }
 
 const CXR_B = ['txrv-densenet121']
@@ -36,7 +38,7 @@ export const BRANS_KURALLARI: Record<string, BransKurali> = {
   genel_cerrahi: { ad: 'Genel Cerrahi', persona: 'genel', modaliteler: ['xr_batin', 'ct', 'yara', 'cxr', 'pdf_rapor'], motorlar: { cxr: CXR_B } },
   gogus: { ad: 'Göğüs Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ct', 'ses_akciger', 'ses_oksuruk', 'pdf_rapor'], motorlar: { cxr: CXR_B, ses_akciger: AKC_SES_B } },
   gogus_cerrahisi: { ad: 'Göğüs Cerrahisi', persona: 'genel', modaliteler: ['cxr', 'ct', 'pdf_rapor'], motorlar: { cxr: CXR_B } },
-  goz: { ad: 'Göz Hastalıkları', persona: 'genel', modaliteler: ['fundus', 'oct', 'dis_goz', 'pdf_rapor'], motorlar: {} },
+  goz: { ad: 'Göz Hastalıkları', persona: 'genel', modaliteler: ['fundus', 'oct', 'dis_goz', 'pdf_rapor'], motorlar: {}, goruntuOkumaKoprusu: true },
   dahiliye: { ad: 'İç Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ekg', 'fundus', 'us', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B } },
   kadin_dogum: { ad: 'Kadın Hastalıkları ve Doğum', persona: 'genel', modaliteler: ['us', 'nst', 'mamografi', 'pdf_rapor'], motorlar: {} },
   kardiyoloji: { ad: 'Kardiyoloji', persona: 'mehmet', modaliteler: ['ekg', 'eko', 'ses_kalp', 'cxr', 'pdf_rapor'], motorlar: { ekg: EKG_B, ses_kalp: KALP_SES_B, cxr: CXR_B } },

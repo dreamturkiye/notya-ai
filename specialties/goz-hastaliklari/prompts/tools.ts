@@ -14,7 +14,7 @@ export const GOZ_TOOLS = [
   { name: 'goz.sgkrapor', description: 'SGK rapor taslağı (anti-VEGF, implant, GİL) — hekim kilitler' },
   { name: 'goz.sgkrapor_kilit', description: 'Rapor taslağını hekim kilitler (eksik varsa uyarır)' },
   { name: 'goz.katarakt', description: 'Katarakt / GİL ön-op kontrol listesi' },
-  { name: 'goz.goruntu_okuma', description: 'OCT / fundus / ön segment: asistan veya Ayşe taslağı, uzman onayı, yan yana karşılaştırma' },
+  { name: 'goz.goruntu_okuma', description: 'OCT / fundus / ön segment: asistan taslağı (Belge Tier A veya kontrol listesi), uzman onayı, yan yana karşılaştırma — tanı / evre yazılmaz' },
   { name: 'goz.kontrol', description: 'Portal kontrol hatırlatması' },
   { name: 'goz.pediatrik', description: 'Ambliyopi / şaşılık izlem + SB görme taraması sevk eşikleri' },
   { name: 'goz.onsegment', description: 'Kuru göz / kontakt lens / alerjik konjonktivit protokol kartı' },
