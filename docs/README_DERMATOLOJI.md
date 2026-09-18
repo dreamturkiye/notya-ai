@@ -1,6 +1,13 @@
 # README_DERMATOLOJI — Dermatoloji eksik paket (NOTYA-DERM-02, 2026-09-16)
 
-**Audit result:** the chapter already had (Cursor clinic-fit): lezyon + vücut haritası + foto serisi (aynı lezyon_id), dermoskopi galerisi, PASI/EASI/DLQI/UAS7/SALT/PDAI skor anları (spark vs önceki), fototerapi defteri (cihaz, J/cm², kümülatif doz, yanık), yama kursları (48/96 s okuma takvimi), izotretinoin GOP motoru, biyolojik TB/HBV alanları, onam paneli, karar kartları, vision reads. Built only the gaps; nothing duplicated. **Visibility: dermatoloji only** — partograf/C-S/NST/ikili tarama never appear here.
+Chapter code and engine table: `specialties/dermatoloji/README.md`.
+
+- **Final audit (2026-09-18, honest ~50%):** https://notya-ai.vercel.app/derm-final-audit.html — clinic-fit breadth, Partial skor/foto/SUT/Derim, 0 derm Araçlar
+- **Exceptional sprint prompt (Claude paste-ready):** `docs/DERM-EXCEPTIONAL-01-CLAUDE-PROMPT.md`
+- Portal: Derim (`lib/portal/moduller.ts`); skill: `.cursor/skills/specialty-hasta-portali/SKILL.md`
+- Smoke: `npm run test:derm` (59 engine tests); MD beta pack is DERM-EXCEPTIONAL-01 workstream C
+
+**Prior audit (NOTYA-DERM-02):** the chapter already had (Cursor clinic-fit): lezyon + vücut haritası + foto serisi (aynı lezyon_id), dermoskopi galerisi, PASI/EASI/DLQI/UAS7/SALT/PDAI skor anları (spark vs önceki), fototerapi defteri (cihaz, J/cm², kümülatif doz, yanık), yama kursları (48/96 s okuma takvimi), izotretinoin GOP motoru, biyolojik TB/HBV alanları, onam paneli, karar kartları, vision reads. Built only the gaps; nothing duplicated. **Visibility: dermatoloji only** — partograf/C-S/NST/ikili tarama never appear here.
 
 | Ticket | Built (gap) | Improvement |
 |---|---|---|
