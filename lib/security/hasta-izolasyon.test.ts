@@ -119,6 +119,8 @@ type Hekim = {
   hasta: string; seans: string; not: string; bekleyenNot: string; ilac: string; panel: string; belge: string
   randevu: string; serbestRandevu: string; hastaDerm: string; lezyon: string; dogum: string; bebekKart: string
   portalToken: string; konu: string; asistanEylem: string
+  /** GOZ-EXCEPTIONAL-01: göz OCT görüntüsü + fundus Belge analizi (dual-sign köprüsü) */
+  gozGoruntu: string; belgeAnaliz: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -173,9 +175,11 @@ function hekimKur(harf: Harf): Hekim {
   db.ekle('hasta_goruntulemeler', { doctor_id: id, patient_id: hasta, modalite: 'xray', rapor_metni: `Goruntu ${m}`, goruntuleme_tarihi: '2026-09-01', dosya_url: 'https://sahte.supabase.test/x' })
   db.ekle('kadin_sagligi', { doctor_id: id, patient_id: hasta, notlar: `KS ${m}` })
   db.ekle('goz_kontroller', { doctor_id: id, patient_id: hasta, tarih: '2026-01-05', neden: `Goz kontrol ${m}`, dilatasyon: false, durum: 'planli' })
+  const gozGoruntu = db.ekle('hasta_goruntulemeler', { doctor_id: id, patient_id: hasta, modalite: 'oct', vucut_bolgesi: 'sag', rapor_metni: `OCT ${m}`, goruntuleme_tarihi: '2026-09-01', dosya_url: 'https://sahte.supabase.test/oct' }).id
+  const belgeAnaliz = db.ekle('belge_analizleri', { belge_id: belge, doctor_id: id, patient_id: hasta, brans: 'goz', modality_final: 'fundus', durum: 'taslak', de_id_hash: 'sentetik', engine_set: 'tierA-v1', motor_ciktilari: [], fusion: { capPct: 85 }, sonuc: { modalite: 'Fundus', kalite: 'iyi', ozet: `Ozet ${m}`, bulgular: [], tanilar: [], acil_bayrak: false, oneri: '', sinirlar: [], hekim_tanisi: [], engines_used: [] } }).id
   db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01' })
   db.dosyaKoy('ses-kayitlari', `${id}/qa-kayit.m4a`, new Blob(['sentetik ses']))
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, hileliSeans: '', hileliNot: '' }
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -383,6 +387,12 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/goz hatirlatma (hasta dosyasından Sağlığım mesajı)', red: 404,
     yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.konu === 'Göz kontrol hatırlatması'),
     cagir: (r, a, h) => coz(r.goz.POST(iste('POST', '/api/doktor/goz', { token: a.token, govde: { adim: 'hatirlatma', patientId: h.hasta } }))) },
+  { ad: 'POST /api/doktor/goz goruntu_okuma belge_taslak (kendi hastası + yabancı Belge analizi)', red: 404,
+    yazdi: (a) => tablo('goz_goruntu_okumalari').some((x) => x.belge_analiz_id === a.belgeAnaliz && x.patient_id === a.hasta && x.durum === 'draft'),
+    cagir: (r, a, h) => coz(r.goz.POST(iste('POST', '/api/doktor/goz', { token: a.token, govde: { adim: 'goruntu_okuma', eylem: 'belge_taslak', patientId: a.hasta, analizId: h.belgeAnaliz, goz: 'sag' } }))) },
+  { ad: 'POST /api/doktor/goz goruntu_okuma asistana_raporla (Tier A — yabancı görüntü modele gitmez)', red: 404,
+    yazdi: (a) => tablo('goz_goruntu_okumalari').some((x) => x.goruntu_id === a.gozGoruntu && x.durum === 'draft'),
+    cagir: (r, a, h) => coz(r.goz.POST(iste('POST', '/api/doktor/goz', { token: a.token, govde: { adim: 'goruntu_okuma', eylem: 'asistana_raporla', patientId: h.hasta, goruntuId: h.gozGoruntu, goz: 'sag', kimlikYok: true, deid: { mime: 'image/png', base64: Buffer.from('sentetik').toString('base64'), hash: 'x' } } }))) },
   { ad: 'GET /api/doktor/goz/kohort (göz kohort listesi)', okur: true,
     cagir: (r, a) => coz(r.gozKohort.GET(iste('GET', '/api/doktor/goz/kohort', { token: a.token }))) },
   { ad: 'POST /api/doktor/goz/kohort (1-tap hatırlatma)',

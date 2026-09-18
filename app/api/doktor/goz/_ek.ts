@@ -5,6 +5,7 @@
  *
  * POST adim: serit_nota | fundus_dr | lazer | biyomikroskopi | keratokonus | on_segment_nota | katarakt_postop | katarakt_nota
  *            | rop | acil_kayit | acil_nota | oct_olcum | hatirlatma
+ *            + goruntu_okuma eylem belge_taslak | asistana_raporla (gozGoruntuKopru)
  */
 import { NextResponse } from 'next/server'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
@@ -17,6 +18,14 @@ import { yikamaDakika, ACIL_EYLEM_LISTESI, type AcilKod } from '@/specialties/go
 import { GLOKOM_ARALIK_ONERILERI, GLOKOM_ONERI_ETIKETI, SHAFFER_AD } from '@/specialties/goz-hastaliklari/engines/glokom'
 import { IVT_KONTROL } from '@/specialties/goz-hastaliklari/engines/antiVegf'
 import { gozKohortVerisi, gozHatirlatmaGonder, type Sb } from './_kohort'
+import Anthropic from '@anthropic-ai/sdk'
+import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
+import { bransKurali } from '@/core/belgeler/router'
+import type { BelgeRaporu } from '@/core/belgeler/types'
+import { belgeModaliteGoz, gozModaliteBelge, guvenUst, kopruGozDogrula, analizKopruyeUygun, belgeTaslakMetni } from '@/specialties/goz-hastaliklari/imaging/belgeKopru'
+import { GOZ_GORUNTU_DISCLAIMER, taslakTaniDiliUyarisi } from '@/specialties/goz-hastaliklari/imaging/dualSign'
+import { normalizeModalite, gozBolgeCoz } from '@/specialties/goz-hastaliklari/engines/kiyas'
+import { ayseGoruntuTaslagi } from '@/specialties/goz-hastaliklari/engines/ayseGoruntu'
 
 type Ctx = { sb: Sb; doktorId: string; h: { id: string; yasAy: number | null; dobIso: string | null }; b: Record<string, unknown>; T: string }
 const hata = (m: string, s = 400) => NextResponse.json({ error: m }, { status: s })
@@ -234,4 +243,69 @@ export async function gozEkVeri(sb: Sb, doktorId: string, h: { id: string; yasAy
     ivtKontrol: IVT_KONTROL,
     hatirlatma: { bayraklar: satirlar[0]?.bayraklar || [], detay: satirlar[0]?.detay || [], sonGonderim: sonHat?.son_mesaj_at ? String(sonHat.son_mesaj_at).slice(0, 10) : null },
   }
+}
+
+// ────────────────────────────── Belge Tier A ↔ dual-sign köprüsü ──────────────────────────────
+/**
+ * goruntu_okuma eylem:
+ *  - belge_taslak     { analizId, goz, tekAlan? } → Belge kasası analizi (belge_analizleri: id + doctor_id + patient_id) → asistan taslağı
+ *  - asistana_raporla { goruntuId, goz, deid{mime,base64,hash}, kimlikYok: true, tekAlanFundus?, klinikNot? } → Göz görüntüsü için aynı
+ *                     Tier A yolu (core/belgeler/tierA). Görsel istemcide kimliksizleştirilir; hekim kimlik bilgisi olmadığını onaylar.
+ * İkisi de dual-sign 'draft' yazar (taslak_yazan='asistan'); onay yalnız uzman (okumaGecisi). DR evresi / goz_dr'ye yazılmaz.
+ * Model hatası veya düşük kalite → kontrol listesi iskeleti (ayseGoruntu) yedek taslak olarak eklenir.
+ */
+export async function gozGoruntuKopru(eylem: string, c: Ctx): Promise<NextResponse | null> {
+  const { sb, doktorId, h, b } = c
+  const ortak = { patient_id: h.id, doctor_id: doktorId }
+  if (eylem === 'belge_taslak') {
+    const g = kopruGozDogrula(b.goz)
+    if (!g.ok) return hata(g.hata)
+    const { data: a } = await sb.from('belge_analizleri').select('id, belge_id, modality_final, durum, sonuc, fusion').eq('id', String(b.analizId || '')).eq('doctor_id', doktorId).eq('patient_id', h.id).maybeSingle()
+    if (!a) return hata('Analiz bulunamadı.', 404)
+    const mod = belgeModaliteGoz(String(a.modality_final))
+    if (!mod) return hata('Yalnız fundus / OCT / ön segment (dış göz) analizi göz okumasına aktarılır.')
+    const rapor = a.sonuc as BelgeRaporu | null
+    const uygun = analizKopruyeUygun(String(a.durum), rapor)
+    if (!uygun.ok) return hata(uygun.hata)
+    const { data: once } = await sb.from('goz_goruntu_okumalari').select('id').eq('belge_analiz_id', a.id).eq('doctor_id', doktorId).eq('durum', 'draft').limit(1).maybeSingle()
+    if (once) return hata('Bu analiz zaten onay bekleyen bir göz okuma taslağı olarak aktarıldı.', 409)
+    const tekAlan = mod === 'fundus' && b.tekAlan !== false
+    const ust = guvenUst((a.fusion as { capPct?: number } | null)?.capPct, mod, tekAlan)
+    const taslak = belgeTaslakMetni({ rapor: rapor!, modalite: mod, goz: g.goz, guvenUstPct: ust, tekAlan })
+    const { error } = await sb.from('goz_goruntu_okumalari').insert({ ...ortak, goruntu_id: null, belge_id: a.belge_id, belge_analiz_id: a.id, kaynak: 'belge_tier_a', modalite: mod, tek_alan: mod === 'fundus' ? tekAlan : null, guven_ust_pct: ust, asistan_rapor: rapor, goz: g.goz, taslak, taslak_yazan: 'asistan', durum: 'draft', disclaimer: GOZ_GORUNTU_DISCLAIMER })
+    if (error) return hata(error.message, 500)
+    return NextResponse.json({ ok: true, guvenUst: ust, uyari: taslakTaniDiliUyarisi(taslak) })
+  }
+  if (eylem === 'asistana_raporla') {
+    const { data: img } = await sb.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi').eq('id', String(b.goruntuId || '')).eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle()
+    if (!img) return hata('Görüntü bulunamadı.', 404)
+    const mod = normalizeModalite(String(img.modalite || ''))
+    if (!mod) return hata('Yalnız OCT / fundus / ön segment görüntüsü raporlanır.')
+    const g = kopruGozDogrula(b.goz || gozBolgeCoz(img.vucut_bolgesi))
+    if (!g.ok) return hata(g.hata)
+    if (b.kimlikYok !== true) return hata('Göndermeden önce görüntüde hasta adı / T.C. / doğum tarihi olmadığını onaylayın (KVKK).')
+    const d = (b.deid || {}) as { mime?: string; base64?: string }
+    if (!d.base64 || typeof d.base64 !== 'string' || d.base64.length > 12_000_000) return hata('Kimliksizleştirilmiş görüntü gerekli.')
+    const mime = (['image/jpeg', 'image/png', 'image/webp'].includes(String(d.mime)) ? d.mime : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp'
+    const tekAlan = mod === 'fundus' && b.tekAlanFundus !== false
+    const kural = bransKurali('goz')
+    const belgeMod = gozModaliteBelge(mod)
+    const iskelet = async (neden: string) => {
+      const s = ayseGoruntuTaslagi({ modalite: mod, goz: g.goz })
+      await sb.from('goz_goruntu_okumalari').insert({ ...ortak, goruntu_id: img.id, goz: g.goz, modalite: mod, kaynak: 'ayse_iskelet', taslak: s.taslak, taslak_yazan: 'asistan', durum: 'draft', disclaimer: s.disclaimer })
+      return NextResponse.json({ ok: true, yedek: true, uyari: `${neden} — kontrol listesi taslağı eklendi (uzman onayı bekler).` })
+    }
+    let sonuc
+    try {
+      sonuc = await tierAYazVeFuzyonla({ anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }), persona: kural.persona, girdi: { brans: kural.ad, modality_final: belgeMod, yasAy: h.yasAy, cinsiyet: null, klinikNot: [`Göz: ${g.goz === 'sag' ? 'OD (sağ)' : 'OS (sol)'}.`, b.klinikNot ? String(b.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') }, gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: belgeMod, yasAy: h.yasAy, tekAlanFundus: mod === 'fundus' ? tekAlan : undefined })
+    } catch { return iskelet('Görüntü asistan tarafından okunamadı') }
+    const uygun = analizKopruyeUygun('taslak', sonuc.rapor)
+    if (!uygun.ok) return iskelet('Görüntü kalitesi düşük')
+    const ust = guvenUst(sonuc.fusion.capPct, mod, tekAlan)
+    const taslak = belgeTaslakMetni({ rapor: sonuc.rapor, modalite: mod, goz: g.goz, guvenUstPct: ust, tekAlan })
+    const { error } = await sb.from('goz_goruntu_okumalari').insert({ ...ortak, goruntu_id: img.id, goz: g.goz, modalite: mod, kaynak: 'belge_tier_a', tek_alan: mod === 'fundus' ? tekAlan : null, guven_ust_pct: ust, asistan_rapor: sonuc.rapor, taslak, taslak_yazan: 'asistan', durum: 'draft', disclaimer: GOZ_GORUNTU_DISCLAIMER })
+    if (error) return hata(error.message, 500)
+    return NextResponse.json({ ok: true, guvenUst: ust, uyari: taslakTaniDiliUyarisi(taslak) })
+  }
+  return null
 }

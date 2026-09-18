@@ -378,3 +378,47 @@ export function GlokomOneriDugmeleri({ oneriler, etiketMetni, secili, sec, kayna
     </div>
   );
 }
+
+// ────────────────────────────── Görüntü › Asistana raporla (Belge Tier A ile aynı yol) ──────────────────────────────
+/** Görüntü tarayıcıda kimliksizleştirilir (EXIF temizlenir, küçültülür); hekim kimlik bilgisi olmadığını onaylar; OD/OS zorunlu. */
+export function AsistanaRaporla({ g, calistir }: { g: { id: string; modalite: string; goz: string | null; url: string | null }; calistir: Calistir }) {
+  const [acik, setAcik] = useState(false);
+  const [kimlikYok, setKimlikYok] = useState(false);
+  const [tekAlan, setTekAlan] = useState(true);
+  const [goz, setGoz] = useState(g.goz === 'sag' || g.goz === 'sol' ? g.goz : '');
+  const [durum, setDurum] = useState<'hazir' | 'hazirlaniyor' | 'yaziyor'>('hazir');
+  const [hata, setHata] = useState('');
+  if (!g.url) return null;
+  const gonder = async () => {
+    setHata('');
+    if (!kimlikYok) { setHata('Önce görüntüde kimlik bilgisi olmadığını onaylayın (KVKK).'); return; }
+    if (goz !== 'sag' && goz !== 'sol') { setHata('Göz seçin: OD veya OS.'); return; }
+    try {
+      setDurum('hazirlaniyor');
+      const r = await fetch(g.url!, { cache: 'no-store' });
+      if (!r.ok) throw new Error('Görüntü indirilemedi');
+      const { gorseliKimliksizlestir } = await import('@/core/belgeler/deid');
+      const deid = await gorseliKimliksizlestir(await r.blob());
+      setDurum('yaziyor');
+      const j = await calistir({ adim: 'goruntu_okuma', eylem: 'asistana_raporla', goruntuId: g.id, goz, kimlikYok: true, tekAlanFundus: g.modalite === 'fundus' ? tekAlan : undefined, deid: { mime: deid.mime, base64: deid.base64, hash: deid.hash } }, 'Asistan taslağı eklendi — uzman onayı bekliyor.');
+      if (j) setAcik(false);
+    } catch (e) { setHata(e instanceof Error ? e.message : 'Hata'); } finally { setDurum('hazir'); }
+  };
+  if (!acik) return <button type="button" onClick={() => setAcik(true)} style={ghost}>Asistana raporla</button>;
+  return (
+    <div style={{ ...kutu, borderColor: 'rgba(99,102,241,0.5)', width: '100%' }}>
+      <div style={etiket}>Asistana raporla <span style={kucuk}>· Belge › Asistana raporla ile aynı Tier A yolu · taslak → uzman onayı</span></div>
+      <div style={satir}>
+        {!(g.goz === 'sag' || g.goz === 'sol') && <Secim ad="Görüntü gözü" deger={goz} set={setGoz} secenekler={[['sag', 'OD (sağ)'], ['sol', 'OS (sol)']]} bos="göz seçin" />}
+        {g.modalite === 'fundus' && <Kutu c={tekAlan} set={setTekAlan}>Tek alan fundus fotoğrafı (güven ≤%70)</Kutu>}
+      </div>
+      <Kutu c={kimlikYok} set={setKimlikYok}>Görüntüde hasta adı, T.C., doğum tarihi gibi kimlik bilgisi yok. (Üst veri cihazınızda temizlenir; yalnız kimliksiz kopya gönderilir.)</Kutu>
+      <div style={satir}>
+        <button type="button" disabled={durum !== 'hazir'} onClick={gonder} style={{ ...btn, opacity: durum === 'hazir' ? 1 : 0.6 }}>{durum === 'hazirlaniyor' ? 'Kimliksizleştiriliyor…' : durum === 'yaziyor' ? 'Asistan yazıyor…' : 'Gönder'}</button>
+        <button type="button" onClick={() => setAcik(false)} style={ghost}>Vazgeç</button>
+        {hata && <span style={{ ...metin, color: '#F87171' }}>{hata}</span>}
+      </div>
+      <div style={kucuk}>Görüntü okunamazsa kontrol listesi taslağı eklenir. DR evresi yazılmaz — evre DR kartında hekim kilidi.</div>
+    </div>
+  );
+}

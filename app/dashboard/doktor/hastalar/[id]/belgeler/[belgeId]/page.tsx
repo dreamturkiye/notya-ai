@@ -50,6 +50,9 @@ export default function BelgeAnalizPage() {
   const [plan, setPlan] = useState('');
   const [planAcik, setPlanAcik] = useState(false);
   const [uyusmazlik, setUyusmazlik] = useState<string | null>(null);
+  // GOZ-EXCEPTIONAL-01: göz dual-sign köprüsü (yalnız bransKurali.goruntuOkumaKoprusu — göz)
+  const [kopruGoz, setKopruGoz] = useState<'sag' | 'sol' | ''>('');
+  const [kopruMesaj, setKopruMesaj] = useState('');
 
   const kural = bransKurali(bransKey);
   const personaAd = kural.persona === 'ayse' ? 'Ayşe' : kural.persona === 'mehmet' ? 'Mehmet' : kural.persona === 'elif' ? 'Elif' : 'Asistan';
@@ -133,6 +136,15 @@ export default function BelgeAnalizPage() {
       if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${j.analiz?.sonuc?.modalite}" olarak gördü; siz "${j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
       setDurum('hazir'); setMesaj(''); await yukle();
     } catch (e) { setDurum('hata'); setMesaj(e instanceof Error ? e.message : 'Hata'); }
+  };
+
+  const gozeAktar = async () => {
+    if (!analiz || !kopruGoz) return;
+    setKopruMesaj('');
+    const token = await getAccessTokenAsync();
+    const r = await fetch('/api/doktor/goz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ adim: 'goruntu_okuma', eylem: 'belge_taslak', patientId, analizId: analiz.id, goz: kopruGoz, tekAlan: analiz.modality_final === 'fundus' ? tekAlanFundus : undefined }) });
+    const j = await r.json().catch(() => ({}));
+    setKopruMesaj(r.ok ? 'Taslak gönderildi — uzman onayı bekliyor.' : j.error || 'Aktarılamadı');
   };
 
   const taniListesi = (metin: string) =>
@@ -344,6 +356,21 @@ export default function BelgeAnalizPage() {
                   {analiz.durum === 'onaylandi' && analiz.note_id && <div style={{ marginTop: 6, fontSize: 12, color: '#2DD4BF' }}>Objektif&apos;e eklendi. <a href={`/dashboard/doktor/notlar/${analiz.note_id}`} style={{ color: '#2DD4BF' }}>Notu aç →</a> · <a href={hastaBelgelerHref(patientId)} style={{ color: '#2DD4BF' }}>← Belgeler</a></div>}
                 </div>
 
+                {kural.goruntuOkumaKoprusu && ['fundus', 'oct', 'dis_goz'].includes(analiz.modality_final) && analiz.durum !== 'kalite_dusuk' && (
+                  <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: '#EDF1F7' }}>
+                    <div style={etiket}>Göz görüntü okumasına aktar <span style={{ fontWeight: 400, color: '#64748B' }}>· dual-sign taslak — uzman onayı Göz › Görüntü&apos;de</span></div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <select value={kopruGoz} onChange={(e) => setKopruGoz(e.target.value as 'sag' | 'sol' | '')} style={{ ...toolsInput, width: 'auto' }} aria-label="Aktarılacak göz">
+                        <option value="" style={{ color: '#000' }}>Göz seçin (zorunlu)</option>
+                        <option value="sag" style={{ color: '#000' }}>OD (sağ)</option>
+                        <option value="sol" style={{ color: '#000' }}>OS (sol)</option>
+                      </select>
+                      <button type="button" onClick={() => void gozeAktar()} disabled={!kopruGoz} style={{ ...btnGhost, opacity: kopruGoz ? 1 : 0.5 }}>Taslak olarak gönder</button>
+                      {kopruMesaj && <span style={{ fontSize: 12, color: /gönderildi/.test(kopruMesaj) ? '#2DD4BF' : '#F87171' }}>{kopruMesaj} {/gönderildi/.test(kopruMesaj) && <a href={hastaDosyaHref(patientId, 'goz')} style={{ color: '#2DD4BF' }}>Göz sekmesini aç →</a>}</span>}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>Tek alan fundus güven üst sınırı %70. DR evresi aktarılmaz — evre DR kartında hekim kilidi.</div>
+                  </div>
+                )}
                 {rapor.oneri && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 13, color: '#EDF1F7' }}><div style={etiket}>Öneri</div>{rapor.oneri}</div>}
                 {rapor.sinirlar.length > 0 && <div style={{ ...toolsCard, marginBottom: 10, fontSize: 12, color: '#8FA0B5' }}><div style={etiket}>Sınırlar</div><ul style={{ margin: 0, paddingLeft: 18 }}>{rapor.sinirlar.map((s, i) => <li key={i}>{s}</li>)}</ul></div>}
 
