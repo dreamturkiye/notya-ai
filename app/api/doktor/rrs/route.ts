@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   const ids = Array.from(new Set((data || []).map((r) => r.patient_id).filter(Boolean))) as string[]
   const adlar: Record<string, string> = {}
   if (ids.length) {
-    const { data: hastalar } = await sb.from('patients').select('id, name_encrypted').in('id', ids)
+    const { data: hastalar } = await sb.from('patients').select('id, name_encrypted').eq('doctor_id', oturum.doktorId).in('id', ids)
     for (const h of hastalar || []) {
       // name_encrypted is {"ad","soyad"} JSON (hastalar route); the card printed that JSON raw. Plain-text names (HL7 import) still pass through.
       try {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   const satirlar = Array.isArray(body.satirlar) ? body.satirlar.slice(0, 30) : []
   if (satirlar.some((s) => JSON.stringify(s).match(/\b\d{11}\b/))) return NextResponse.json({ error: 'Satırlarda TC olamaz.' }, { status: 400 })
 
-  const { data: not } = await sb.from('notes').select('id, sessions(patient_id)').eq('id', body.noteId).maybeSingle()
+  const { data: not } = await sb.from('notes').select('id, sessions(patient_id)').eq('id', body.noteId).eq('doctor_id', oturum.doktorId).maybeSingle()
   if (!not) return NextResponse.json({ error: 'Not bulunamadı.' }, { status: 404 })
   const s = (not as { sessions?: { patient_id?: string } | { patient_id?: string }[] }).sessions
   const pid = Array.isArray(s) ? s[0]?.patient_id : s?.patient_id

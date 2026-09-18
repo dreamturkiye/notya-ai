@@ -223,6 +223,8 @@ export async function nottanIlacAktar(
     .from('hasta_ilaclar')
     .select('id, ilac_adi, aktif, onay_durumu, baslangic_tarihi, doz, kullanim_sikli, kaynak_note_id')
     .eq('patient_id', opts.patientId)
+    // HASTA-IZOLASYON-01: only this doctor's rows are "existing" — never update another doctor's row.
+    .eq('doctor_id', opts.doctorId)
 
   const baslangic = String(opts.tarih || not.created_at || new Date().toISOString()).slice(0, 10)
 

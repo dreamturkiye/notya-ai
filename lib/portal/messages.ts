@@ -56,12 +56,15 @@ function gonderenFor(taraf: MsgRow['taraf']): string {
 
 export async function loadPortalMessages(
   sb: SupabaseClient,
-  patientId: string
+  patientId: string,
+  doctorId: string
 ): Promise<PortalMessage[]> {
+  // HASTA-IZOLASYON-01: only threads with the portal token's own doctor.
   const { data: konular } = await sb
     .from('hasta_mesaj_konulari')
     .select('id, konu, hasta_klasor, son_mesaj_at, okundu_hasta, created_at')
     .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
     .order('son_mesaj_at', { ascending: false })
     .limit(80)
 

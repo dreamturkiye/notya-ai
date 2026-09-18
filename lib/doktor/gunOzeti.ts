@@ -90,7 +90,7 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
   let ilkHasta: string | null = ilk?.hasta_adi_serbest || null
   if (!ilkHasta && ilk?.patient_id) {
     try {
-      const { data: p } = await sb.from('patients').select('name_encrypted').eq('id', ilk.patient_id).maybeSingle()
+      const { data: p } = await sb.from('patients').select('name_encrypted').eq('id', ilk.patient_id).eq('doctor_id', doctorId).maybeSingle()
       if (p?.name_encrypted) {
         const { decrypt } = await import('@/lib/security/encryption')
         ilkHasta = (JSON.parse(decrypt(p.name_encrypted)).ad || '').trim() || null

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { taramaDurumlari, KONTRASEPSIYON_YONTEMLERI, MENOPOZ_DEGERLENDIRME } from '@/lib/clinical/lohusaVeJinekoloji'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,6 +43,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as Record<string, unknown>
   const patientId = String(body.patientId || '')
   if (!patientId) return NextResponse.json({ error: 'patientId zorunludur.' }, { status: 400 })
+  // HASTA-IZOLASYON-01: patientId must be this doctor's own patient before anything is written for it.
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   const t = (k: string) => (body[k] === undefined || body[k] === '' ? null : body[k])
   const { error } = await supabase.from('kadin_sagligi').upsert({
     patient_id: patientId, doctor_id: doktorId,

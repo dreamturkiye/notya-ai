@@ -117,7 +117,8 @@ export async function POST(req: NextRequest) {
     const kime = b.kime === 'bebek' ? 'bebek' : 'anne'
     const { error } = await sb.from('komplikasyonlar').insert({ dogum_id: d!.id, patient_id: d!.patient_id, doctor_id: user.id, kime, ad: String(b.ad || '').slice(0, 120), ayrinti: b.ayrinti ? String(b.ayrinti).slice(0, 500) : null, acil: !!b.acil })
     if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
-    if (kime === 'bebek' && b.bebekId) { const { data: bk } = await sb.from('bebek_kartlari').select('komplikasyonlar').eq('id', String(b.bebekId)).maybeSingle(); if (bk) await sb.from('bebek_kartlari').update({ komplikasyonlar: [...(bk.komplikasyonlar || []), String(b.ad)] }).eq('id', String(b.bebekId)) }
+    // HASTA-IZOLASYON-01: the baby card must be this doctor's — it was read and written by bare body id.
+    if (kime === 'bebek' && b.bebekId) { const { data: bk } = await sb.from('bebek_kartlari').select('id, komplikasyonlar').eq('id', String(b.bebekId)).eq('doctor_id', user.id).maybeSingle(); if (bk) await sb.from('bebek_kartlari').update({ komplikasyonlar: [...(bk.komplikasyonlar || []), String(b.ad)] }).eq('id', bk.id).eq('doctor_id', user.id) }
     return NextResponse.json({ ok: true })
   }
   if (adim === 'dogum_kaydet') {

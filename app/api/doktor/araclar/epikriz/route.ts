@@ -14,6 +14,7 @@ import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudony
 import { decrypt } from '@/lib/security/encryption';
 import { hekimAdi } from '@/lib/doktor/hekimAdi';
 import { klinikAdi, resmiUzmanlikAdi } from '@/lib/doktor/bransAdlari';
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +63,7 @@ async function baslikKur(
   supabase: SupabaseClient, doktorId: string, patientId: string, branş: string, tarihIso: string,
 ): Promise<string> {
   const [{ data: hasta }, hekim] = await Promise.all([
-    supabase.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', patientId).maybeSingle(),
+    supabase.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
     hekimAdi(supabase, doktorId),
   ]);
   let adSoyad = '';
@@ -130,6 +131,11 @@ export async function POST(request: NextRequest) {
     );
     if (authError || !user) {
       return NextResponse.json({ hata: 'Yetkilendirme başarısız.' }, { status: 401 });
+    }
+    // HASTA-IZOLASYON-01: hastaId must be this doctor's patient in BOTH branches — the single-visit
+    // branch used to build the header (name/DOB/gender) from any patient id it was given.
+    if (!(await hastaSahibiMi(supabase, user.id, hastaId))) {
+      return NextResponse.json({ hata: 'Hasta dosyası bulunamadı.' }, { status: 404 });
     }
 
     if (tumSeanslar) {

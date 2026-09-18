@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,11 @@ export async function POST(request: NextRequest) {
 
   if (!hastaId || !ad || !etkenMadde || !doz || !kullanim_sikli || !baslangic_tarihi) {
     return NextResponse.json({ error: 'Zorunlu alanlar eksik.' }, { status: 400 });
+  }
+  // HASTA-IZOLASYON-01: onay_durumu defaults to 'onayli', so a row written here is on the patient's
+  // portal immediately — it must never be written for another doctor's patient.
+  if (!(await hastaSahibiMi(supabase, user.id, hastaId))) {
+    return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 });
   }
 
   const { data, error } = await supabase

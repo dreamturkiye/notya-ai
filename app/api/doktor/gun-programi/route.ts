@@ -80,13 +80,13 @@ export async function GET(req: NextRequest) {
   const bos = { data: [] as unknown[] }
   const [hastalarQ, notlarQ, ilaclarQ, mesajQ, intakeQ] = hastaIdler.length
     ? await Promise.all([
-        supabase.from('patients').select('id, name_encrypted').in('id', hastaIdler),
+        supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doktorId).in('id', hastaIdler),
         supabase.from('notes').select('created_at, content_degerlendirme, content_plan, icd10_codes, sessions!inner(patient_id)')
           .eq('doctor_id', doktorId).not('approved_at', 'is', null).in('sessions.patient_id', hastaIdler)
           .order('created_at', { ascending: false }).limit(400),
-        supabase.from('hasta_ilaclar').select('patient_id').in('patient_id', hastaIdler).eq('aktif', true),
+        supabase.from('hasta_ilaclar').select('patient_id').eq('doctor_id', doktorId).in('patient_id', hastaIdler).eq('aktif', true),
         supabase.from('hasta_mesaj_konulari').select('patient_id').eq('doctor_id', doktorId).in('patient_id', hastaIdler).eq('okundu_pratik', false).eq('pratik_arsiv', false),
-        supabase.from('hasta_intake_formlari').select('patient_id, durum, form_data_encrypted, created_at').in('patient_id', hastaIdler).order('created_at', { ascending: false }),
+        supabase.from('hasta_intake_formlari').select('patient_id, durum, form_data_encrypted, created_at').eq('doktor_id', doktorId).in('patient_id', hastaIdler).order('created_at', { ascending: false }),
       ])
     : [bos, bos, bos, bos, bos]
 

@@ -6,11 +6,12 @@ function appBaseUrl(): string {
   return String(process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app').replace(/\/$/, '')
 }
 
-async function patientEmail(sb: SupabaseClient, patientId: string): Promise<string | null> {
+async function patientEmail(sb: SupabaseClient, patientId: string, doctorId: string): Promise<string | null> {
   const { data } = await sb
     .from('patients')
     .select('email_encrypted')
     .eq('id', patientId)
+    .eq('doctor_id', doctorId)
     .maybeSingle()
   if (!data?.email_encrypted) return null
   try {
@@ -58,7 +59,7 @@ export async function notifyPatientNewPracticeMessage(
   sb: SupabaseClient,
   opts: { doctorId: string; patientId: string }
 ): Promise<{ sent: boolean; reason?: string }> {
-  const email = await patientEmail(sb, opts.patientId)
+  const email = await patientEmail(sb, opts.patientId, opts.doctorId)
   if (!email) return { sent: false, reason: 'no_email' }
 
   const portalUrl = await ensurePatientPortalUrl(sb, opts.doctorId, opts.patientId)

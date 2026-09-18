@@ -12,17 +12,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
 interface HastaOzet { id: string; ad: string; telefon: string }
 
-async function hastaBilgisi(supabase: any, patientId: string | null): Promise<HastaOzet | null> {
+async function hastaBilgisi(supabase: any, doktorId: string, patientId: string | null): Promise<HastaOzet | null> {
   if (!patientId) return null
+  // HASTA-IZOLASYON-01: name + phone are decrypted here — only ever for this practice's own patient.
   const { data } = await supabase
     .from('patients')
     .select('id, name_encrypted, phone_encrypted')
     .eq('id', patientId)
+    .eq('doctor_id', doktorId)
     .maybeSingle()
   if (!data) return null
   let ad = 'Bilinmiyor'
@@ -60,7 +63,7 @@ export async function GET(req: NextRequest) {
 
   const randevular = await Promise.all(
     (data || []).map(async (r: any) => {
-      const hasta = await hastaBilgisi(supabase, r.patient_id)
+      const hasta = await hastaBilgisi(supabase, doktorId, r.patient_id)
       return {
         id: r.id,
         baslangic: r.baslangic,
@@ -108,6 +111,11 @@ export async function POST(req: NextRequest) {
   }
   if (!patientId && !hastaAdiSerbest?.trim()) {
     return NextResponse.json({ error: 'Kayıtlı hasta seçin veya hasta adı girin.' }, { status: 400 })
+  }
+  // HASTA-IZOLASYON-01: a booking may only point at this practice's own patient — the calendar, the
+  // day programme and the SMS reminder cron all decrypt the linked patient's name and phone.
+  if (patientId && !(await hastaSahibiMi(supabase, doktorId, patientId))) {
+    return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   }
 
   // Overlap check: any existing (non-cancelled) appointment for this doctor whose window

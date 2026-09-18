@@ -55,6 +55,8 @@ export async function POST(req: NextRequest) {
   if (!patientId || !yanitlar?.length) return NextResponse.json({ error: 'patientId ve yanıtlar zorunludur.' }, { status: 400 })
 
   const { data: hasta } = await supabase.from('patients').select('dob_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle()
+  // HASTA-IZOLASYON-01: the lookup above was only used for age — a foreign patient id fell through to the insert.
+  if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
   const dogumIso = guvenliCoz(hasta?.dob_encrypted) || null
   const ayYas = dogumIso ? ayFarki(dogumIso) : null
   const basamak = ayYas !== null ? gidrBasamakBul(ayYas) : null

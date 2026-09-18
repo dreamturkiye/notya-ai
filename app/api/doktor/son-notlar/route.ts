@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   const pidler = [...new Set(satirlar.map((s) => (Array.isArray(s.sessions) ? s.sessions[0]?.patient_id : s.sessions?.patient_id)).filter(Boolean))] as string[]
   const adlar = new Map<string, string>()
   if (pidler.length) {
-    const { data: hastalar } = await supabase.from('patients').select('id, name_encrypted').in('id', pidler)
+    const { data: hastalar } = await supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doktorId).in('id', pidler)
     for (const h of (hastalar || []) as { id: string; name_encrypted: string | null }[]) adlar.set(h.id, kisaAd(h.name_encrypted))
   }
   return NextResponse.json({

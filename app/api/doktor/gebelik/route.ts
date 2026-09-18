@@ -20,6 +20,7 @@ import { onerilenSonrakiTarih } from '@/specialties/kadin-dogum/engines/clinic-f
 import { riskClassFromForm } from '@/specialties/kadin-dogum/protocols/risk-formu'
 import { vteScoreFromForm } from '@/specialties/kadin-dogum/protocols/vte-formu'
 import { olusturCanliDogum } from '@/lib/doktor/yenidoganKayit'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,8 @@ export async function GET(req: NextRequest) {
   const { supabase, doktorId } = oturum
   const patientId = req.nextUrl.searchParams.get('patientId')
   if (!patientId) return NextResponse.json({ error: 'patientId zorunludur.' }, { status: 400 })
+  // HASTA-IZOLASYON-01
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   const { data: tumGebelikler } = await supabase.from('gebelikler').select('*')
     .eq('patient_id', patientId).eq('doctor_id', doktorId)
@@ -98,7 +101,7 @@ export async function GET(req: NextRequest) {
 
   // Yazdırma (Gebe İzlem Kartı) için başlık — gerçek veriden, reçete/epikriz ile aynı ilke
   const [{ data: hastaRow }, { data: userRow }, hekim, { data: kadinSagligi }, { data: sonrakiRandevular }, { data: goruntulemeler }] = await Promise.all([
-    supabase.from('patients').select('name_encrypted, dob_encrypted').eq('id', patientId).maybeSingle(),
+    supabase.from('patients').select('name_encrypted, dob_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
     supabase.from('users').select('recete_baslik').eq('id', doktorId).maybeSingle(),
     hekimAdi(supabase, doktorId),
     supabase.from('kadin_sagligi').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).maybeSingle(),
@@ -151,6 +154,9 @@ export async function POST(req: NextRequest) {
   const action = String(body.action || '')
   const patientId = String(body.patientId || '')
   if (!patientId) return NextResponse.json({ error: 'patientId zorunludur.' }, { status: 400 })
+  // HASTA-IZOLASYON-01: 'baslat' used to open a pregnancy for any patient id, after which GET decrypted
+  // that patient's name and DOB for the print header.
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   if (action === 'baslat') {
     const sat = body.sat ? String(body.sat) : null

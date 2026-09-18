@@ -22,7 +22,7 @@ function sb() {
 
 /** SAGLIGIM-PORTAL-REGISTRY: the ön anket is the dahiliye module — same eligibility as the bundle (lib/portal/moduller.ts). */
 async function kartlar(client: NonNullable<ReturnType<typeof sb>>, patientId: string, doctorId: string): Promise<AnketKart[]> {
-  const k = await dahiliyeKartlari(client, patientId)
+  const k = await dahiliyeKartlari(client, patientId, doctorId)
   const { moduller } = portalModulleri({ doktorBransi: await hekimBransi(client, doctorId), hastaYasYil: null, gebelikAktif: false, kdKaydi: false, buyumeOlcumu: false, dahiliyeKaydi: k.length > 0 })
   return moduller.includes('dahiliye') ? k : []
 }
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
   const h = await hazirla(req, params.token)
   if ('hata' in h) return h.hata
   const k = await kartlar(h.client, h.tok.patient_id, h.tok.doctor_id)
-  const { data: son } = await h.client.from('dahiliye_anketler').select('created_at').eq('patient_id', h.tok.patient_id).order('created_at', { ascending: false }).limit(1)
+  const { data: son } = await h.client.from('dahiliye_anketler').select('created_at').eq('patient_id', h.tok.patient_id).eq('doctor_id', h.tok.doctor_id).order('created_at', { ascending: false }).limit(1)
   return NextResponse.json({ uygun: k.length > 0, sablon: anketSablonu(k), sonGonderim: son?.[0]?.created_at || null })
 }
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if ('hata' in h) return h.hata
   const { client, tok } = h
   const bugunBasi = new Date(); bugunBasi.setHours(0, 0, 0, 0)
-  const { count } = await client.from('dahiliye_anketler').select('id', { count: 'exact', head: true }).eq('patient_id', tok.patient_id).gte('created_at', bugunBasi.toISOString())
+  const { count } = await client.from('dahiliye_anketler').select('id', { count: 'exact', head: true }).eq('patient_id', tok.patient_id).eq('doctor_id', tok.doctor_id).gte('created_at', bugunBasi.toISOString())
   if ((count || 0) >= 3) return NextResponse.json({ error: 'Bugün için anket sınırına ulaşıldı. Doktorunuza Mesajlar bölümünden yazabilirsiniz.' }, { status: 429 })
   const ham = await req.json().catch(() => null)
   const sablon = anketSablonu(await kartlar(client, tok.patient_id, tok.doctor_id))

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { mchatPuanla, MCHAT_R_SORULARI } from '@/lib/clinical/mchatR'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as { patientId?: string; cevaplar?: Record<string, boolean>; muayeneFormunaEkle?: boolean }
   const { patientId, cevaplar, muayeneFormunaEkle } = body
   if (!patientId || !cevaplar) return NextResponse.json({ error: 'patientId ve cevaplar zorunludur.' }, { status: 400 })
+  // HASTA-IZOLASYON-01: patientId must be this doctor's own patient before anything is written for it.
+  if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
   const eksik = MCHAT_R_SORULARI.filter((s) => cevaplar[String(s.no)] === undefined)
   if (eksik.length) return NextResponse.json({ error: `${eksik.length} soru yanıtlanmamış.` }, { status: 400 })

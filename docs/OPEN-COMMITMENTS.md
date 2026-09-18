@@ -1100,3 +1100,115 @@ o yüzden iki katman eklendi:
 - Vercel'de `AVUKAT_AGENT_CANBEY` / `MALI_MUSAVIR_AGENT_ID` env'i farklı bir agent'a işaret
   ediyorsa o agent'ın base sesi de kontrol edilmeli (env değerleri okunmadı; kod varsayılan
   agent'ları düzeltildi).
+---
+
+## HASTA-IZOLASYON — doktorlar arası hasta sızıntısı denetimi + kalıcı korkuluk (Kaan, 2026-09-17)
+
+**Ne istendi (Kaan).** Hastalar hiçbir koşulda doktorlar arasında sızmamalı: bir doktor başka bir
+doktorun hastasını göremez, listeleyemez, arayamaz, düzenleyemez — tersi de. Varsayım değil,
+zorlanan bir korkuluk.
+
+### Mimari bulgu (düzeltmelerin dayandığı gerçek)
+
+Her sunucu rotası Supabase'e **service-role** ile bağlanır (`lib/doktor/serverAuth.ts` —
+`servisSupabase`, `doktorOturum`, `pratikOturum`); service-role **RLS'i atlar**, bilerek. Yani
+izolasyonun **birincil** denetimi her rotadaki `doctor_id` kapsamıdır; RLS yalnız herkese açık anon
+anahtarıyla PostgREST'e doğrudan gelen isteklere karşı **ikinci hat**tır. İki istisna görüldü:
+`app/api/doktor/goruntuleme/*` kullanıcı JWT'li anon istemci kullanır ve **tarayıcı**
+`app/session/new/page.tsx`'te `sessions` satırını anon istemciyle **kendisi** ekler — ikisinde de
+RLS devrede ama politikalar yalnız `doctor_id`'yi denetliyordu, hastanın kime ait olduğunu değil.
+
+### Ne denetlendi
+
+| Kapsam | Sayı | Yöntem |
+|---|---|---|
+| API dosyaları | 146 `route.ts` + 6 yardımcı (`app/api/doktor/dahiliye/_*.ts`) | Her dosya satır satır: dışarıdan gelen her kimlik (URL/query/body/form/model çıktısı) ilk okuma/yazmadan önce doktora bağlanıyor mu |
+| Paylaşılan yardımcılar | `hastaDosyaDerleyici`, `hastaCozumleyici`, `receteAktarim`, `gununNotunaEkle`, `gunOzeti`, `actionExecutor`, `lib/portal/*`, `lib/vault/*` | Aynı |
+| Tablolar | migration'lardaki tüm `CREATE TABLE`'lar (~135) + koddan kullanılıp repoda tanımı olmayanlar | Hasta/doktor kolonu, `ENABLE ROW LEVEL SECURITY`, `CREATE POLICY` |
+| Portal | `app/api/portal/hasta/[token]/**` | Token → (hasta, doktor); her okuma o doktora mı kapsanıyor |
+
+Doğru çalışan (şablon alınan) yerler: `lib/vault/service.ts` (`assertPatientOwned`), `goz`
+(`hasta()`), `jinekoloji` (`hastaDogrula()`), `dahiliye` (`hastaBilgi()`), `hastalar/[id]`,
+`notes/[id]`, `notes/[id]/approve`, `cihaz-olcum`, `mesajlar`, `erecete`, `sgk-rapor`,
+`hasta-portali`, `intake-formlari`, `belgeler/lab`, `belgeler/analiz`. Tek kontrol yardımcısı bunların
+aynı sorgusu: **`lib/doktor/hastaSahipligi.ts`** (`hastaSahibiMi`, `seansSahibi`).
+
+### Bulunan ve DÜZELTİLEN açıklar (hepsi regresyon paketinde, iki yönde sınanıyor)
+
+| # | Rota | Açık | Etki | Düzeltme |
+|---|---|---|---|---|
+| F1 | `POST /api/sessions/start` | `patient_id` gövdeden, sahiplik yok | Başka doktorun hastasına seans → not, reçete aktarımı, portal zinciri | `hastaSahibiMi` → 404 |
+| F2 | `POST /api/sessions/[id]/end` | Seans URL id'siyle, doktorsuz okunuyor; "önceki vizit" notu doktorsuz; durum güncellemeleri kapsamsız | **B'nin son onaylı planı + tanısı A'nın yapay zekâ bağlamına ve notuna** | `seansSahibi` (seans + hastası doktorun) → 404; sorgu + 3 güncelleme `doctor_id`'li |
+| F3 | `POST /api/doktor/araclar/epikriz` | Tek-vizit dalında `hastaId` hiç doğrulanmıyor; `baslikKur` doktorsuz | **B'nin hastasının adı, doğum tarihi, cinsiyeti** A'nın epikrizinde | İki dalda sahiplik → 404; başlık sorgusu `doctor_id`'li |
+| F4 | `POST /api/doktor/asilar` | Sahiplik yok | Yabancı hastaya aşı + hatırlatma SMS'i | 404 |
+| F5 | `POST /api/doktor/belgeler/ingest` | Sahiplik yok | Yabancı hastaya belge + depolama | 404 |
+| F6 | `POST /api/doktor/dermatoloji/spine` | `lezyon_degerlendir` / `lezyon_tani` `derm_lezyonlar`'ı çıplak body id'siyle günceller; `islem` lezyon id'sini doğrulamaz; GET sahipliksiz | **A, B'nin lezyon değerlendirmesini ve resmi tanısını değiştirir** | `lezyonBu`: lezyon, bu hastanın doktora kapsanmış derm dosyasına ait olmalı → 404; GET sahiplik |
+| F7 | `GET/POST /api/doktor/dermatoloji` | Sahiplikten önce `hasta_derm` otomatik açılıyor | Yabancı hastaya derm dosyası/fotoğraf meta (`patient_share`) | 404 |
+| F8 | `GET/POST /api/doktor/gebelik` | `baslat` yabancı hastaya gebelik açar; GET başlığı `patients`'ı doktorsuz okur | **B'nin hastasının adı + doğum tarihi** | İkisinde sahiplik; başlık `doctor_id`'li |
+| F9 | `POST /api/doktor/mchat` | Sahiplik yok | Yabancı hastaya test + nota ekleme | 404 |
+| F10 | `POST /api/doktor/gelisim-taramasi` | Hasta sorgusu var ama bulunamayınca durmuyor | Yabancı hastaya kayıt | 404 |
+| F11 | `POST /api/doktor/kadin-sagligi` | `upsert onConflict: patient_id`, sahiplik yok | **B'nin satırının üstüne yazar ve `doctor_id`'yi A yapar (ele geçirme)** | 404 |
+| F12 | `POST /api/doktor/gebelik/dogum` (`komplikasyon`) | `bebek_kartlari` body id'siyle, doktorsuz | B'nin bebek kartına yazı | okuma + yazma `doctor_id`'li |
+| F13 | `POST /api/doktor/goruntuleme/yukle` | RLS yalnız `doctor_id`'yi denetliyor, hasta sahipliği yok | Yabancı hastaya görüntü (portalına kart) | Yüklemeden önce 404 |
+| F14 | `POST/GET /api/doktor/randevular` (+ `gun-programi`, `gunOzeti`) | POST yabancı `patientId` kabul eder; GET `hastaBilgisi` `patients`'ı doktorsuz çözer | **A (veya sekreteri) B'nin hastasının ADINI ve TELEFONUNU takvimde görür**; hatırlatma SMS'i B'nin hastasına | POST 404; tüm ad/telefon/ilaç/intake okumaları `doctor_id`'li |
+| F15 | `PATCH /api/doktor/randevular/[id]` | Kendi randevusunu herhangi bir `patientId`'ye bağlar | F14 ile aynı sızıntı | 404 |
+| F16 | `POST /api/doktor/ilaclar` | Sahiplik yok; `onay_durumu` varsayılanı `'onayli'` | **A'nın yazdığı ilaç B'nin hastasının Sağlığım portalında "aktif ilaç" olarak görünür** | 404 |
+| F17 | `POST /api/sessions/ses-yukle` | `patientId` doğrulanmıyor; "önceki vizit" sorgusu kapısız ve doktorsuz | **B'nin son planı + tanısı A'nın notuna** | Ses okunmadan önce 404; sorgu `doctor_id`'li; yolda `..` reddi |
+| F18 | `POST /api/asistan/chat` | `patientId` → `patients.select('*')` doktorsuz, **model sistem istemine** JSON olarak | B'nin hasta satırı (şifreli alanlar + kimlikler) Claude'a | 404; okuma `doctor_id`'li |
+| F19 | `POST /api/asistan/learn` | `asistan_actions` id ile, doktorsuz güncelleniyor | Başka doktorun kaydına yazı | `doctor_id`'li |
+| F20 | `lib/asistan/actionExecutor.ts` | Model çıktısındaki `patientId`/`sessionId`'ye güven; yabancı seansa not açabiliyor | B'nin seans geçmişine A'nın notu (B'nin muayene geçmişi tüm notları gömer) | `CREATE_SESSION` → `hastaSahibiMi`; not eylemleri → `seansSahibi` |
+| F21 | `GET /api/portal/hasta/[token]` (+ mesajlar, dahiliye-anket, `lib/portal/*`) | Okumalar yalnız `patient_id` ile | Başka doktorun o hasta id'sine iliştirdiği satır hastanın portalında | 19 okuma + mesaj/kart/e-posta yardımcıları token'ın `doctor_id`'sine de kapsandı (tüm kolonlar `NOT NULL` — meşru satır kaybı yok) |
+| F22 | `POST /api/notes/[id]/approve` + `hastaDosyaDerleyici` + `receteAktarim` | Onayda reçete, seansın `patient_id`'sine sahiplik bakılmadan aktarılıyor; hasta dosyası çocuk satırları `patient_id` ile okunuyor | Kirli seanstan yabancı hastaya ilaç; kirli satırlar yapay zekâ bağlamına | Aktarım yalnız sahip olunan hastaya; dosya ve "mevcut ilaç" okumaları `doctor_id`'li |
+
+**Savunma derinliği (açık değildi, ama kirli veriyi yaymasın diye):** `notes` kuyruğu, `son-notlar`,
+`rrs`, `medula/recete`, `yenidogan`, `hastaCozumleyici` ("son hastam", aday özetleri), iki
+hatırlatma cron'u (SMS yalnız satırın sahibi doktorun hastasına) — hasta okumaları `doctor_id`'li.
+
+### Veritabanı katmanı — RLS
+
+Migration'lara göre **49 hasta/doktor tablosunda RLS hiç açılmamıştı** (024 cihaz, 025 belge analizi,
+028 lab, 029 doğum, 030/031 jinekoloji, 032 derm, 033/039 dahiliye, 035, 037 RRS,
+`doctor_integrations` ve `audit_logs`). Bunlar kapalı kaldıkça, herkese açık anon anahtarı + **herhangi bir**
+oturumla PostgREST üzerinden tüm doktorların satırları okunup yazılabilir (Supabase varsayılan
+GRANT'leri) — uygulama kodu hiç devreye girmeden. 040–047 dahiliye tabloları "RLS açık, politika
+yok" (yalnız sunucu) duruşunda — o doğru, dokunulmadı.
+
+Yazıldı: **`lib/db/migrations/052_hasta_izolasyon_rls.sql`** (idempotent, olmayan tabloyu atlar):
+1. RLS kapalı hasta tablolarında RLS + "yalnız kendi satırın" (`doctor_id = auth.uid()`).
+2. Doktor kolonu olmayan, yalnız sunucunun kullandığı tablolar (`kurum_hasta_eslesme`,
+   `fhir_*`, `audit_logs`, `motor_kayit`): RLS, politika yok.
+3. `patient_id` taşıyan her tabloya **RESTRICTIVE** hasta sahipliği (yalnız daraltır):
+   tarayıcının anon istemciyle `sessions` eklemesi artık yabancı hastaya yapılamaz.
+Service-role rotaları etkilenmez; tarayıcıdan bu tablolara doğrudan erişen başka kod yok
+(denetlendi: tarayıcı yalnız `sessions`, `users`, `mali_*`, `avukat_*` ve depolama kullanıyor).
+
+### Kalıcı korkuluk — `npm test`'in içinde, bundan sonra her değişiklikte
+
+| Dosya | Ne yapar |
+|---|---|
+| `lib/security/hasta-izolasyon.test.ts` | **Gerçek route handler'ları**, iki sentetik doktor (A, B) + sentetik hastaları. 51 vaka × (pozitif kontrol + A→B + B→A) + kirli veri, portal ve asistan senaryoları = **165 test**. Çapraz koşuda: kurbanın işareti yanıtta yok, kurbanın satırları değişmedi, kurbanın kimliğine yeni atıf yok, yapay zekâ bağlamına / model isteğine kurban girmedi, beklenen 404. |
+| `lib/security/hasta-izolasyon-envanter.test.ts` | Hasta ağaçlarındaki **her** API dosyası (+ hasta kimliği kullanan her diğer dosya) `lib/security/hastaIzolasyonEnvanteri.ts`'te sınıflı olmalı; `test` olanlar pakette gerçekten koşmalı; hasta/doktor kolonlu her tabloda RLS bir migration ile açılmalı. **Sınıflanmamış yeni rota → `npm test` kırmızı.** |
+| `lib/security/testing/sahteSupabase.ts` | Bellek içi PostgREST alt kümesi; bilmediği her yöntemde **hata fırlatır** (sessiz yutup sahte yeşil üretemez). |
+| `.cursor/skills/hasta-izolasyon/SKILL.md` | Kalıcı kural + birleştirme öncesi kontrol listesi (CLAUDE.md tablosunda). |
+
+**Paketin gerçekten yakaladığı kanıtlandı (sahte yeşil değil):**
+- Düzeltmeler geri alınıp **orijinal kod** üzerinde koşuldu → **62 test kırmızı**, hepsi yukarıdaki
+  açıklara karşılık gelen çapraz-doktor testleri; hiçbir pozitif kontrol kırılmadı.
+- Talep edilen VERIFY: `ilaclar` POST'taki eklenen sahiplik kontrolü geçici olarak silindi →
+  `npm run test:izolasyon` **2 kırmızı** ("SIZINTI: A doktoru B doktorunun hastasına/kaydına yazı
+  açtı" + tersi) → kontrol geri kondu → **171/171 yeşil**.
+- Envanter bekçisi: 052 geçici olarak çıkarıldı → RLS testi `lab_satirlar`, `dahiliye_ht`,
+  `sevkler`, `belge_analizleri` … listesiyle kırmızı → geri kondu → yeşil.
+- Tam paket: `npx tsc --noEmit` temiz, **`npm test` 841/841 yeşil**.
+
+### AÇIK — Kaan'ın erişimi/kararı gerekiyor (bu oturumda yapılamadı, tahmin edilmedi)
+
+| Tarih | Madde | Durum |
+|---|---|---|
+| 2026-09-17 | **052'yi production'a uygulayın.** Migration'lar build'in parçası değil (050 gibi). Önce 052 başındaki salt-okunur sorguyla canlı RLS durumunu görün (repo ile canlı farklı olabilir — ben canlıyı göremedim: bu worktree'de DB kimlik bilgisi yok, başka checkout'a dokunmam istenmedi). Sonra `.env.local`'lı bir checkout'tan: `node scripts/run-sql-migration.mjs 052_hasta_izolasyon_rls.sql` (ya da SQL Editor). Uygulandıktan sonra aynı sorgu: listelenen tablolarda `rls = true`, politika ≥ 1. Uygulanana kadar birincil koruma (uygulama kodu) zaten canlıda; açık kalan yalnız anon-anahtar + PostgREST doğrudan erişim yüzeyi. | OPEN (Kaan) |
+| 2026-09-17 | **Canlıda kirli satır taraması (salt-okunur).** Yukarıdaki yazma açıkları kullanılmışsa (kasıtlı ya da yanlış hasta seçimiyle) `doctor_id`'si hastanın doktoruyla uyuşmayan satırlar olabilir. Kod artık bunları hiçbir okumada göstermiyor, ama görülüp temizlenmeli. Her `patient_id`+`doctor_id` tablosu için: `select '<tablo>' t, count(*) from <tablo> x join patients p on p.id = x.patient_id where x.doctor_id <> p.doctor_id;` (randevular/asilar/hasta_intake_formlari için `doktor_id`). Sonuç sıfır değilse satırlar tek tek incelenmeli — silme kararı klinik kayıt olduğu için Kaan'ın. | OPEN (Kaan) |
+| 2026-09-17 | **Depolama kovaları büyük olasılıkla HERKESE AÇIK.** `goruntuleme/yukle` `getPublicUrl()` ile, `belgeler/ingest` `/storage/v1/object/public/hasta-belgeler/…` ile URL üretiyor → URL'yi bilen herkes (doktor olsun olmasın) hasta görüntüsünü/belgesini indirebilir. Kova ayarları ve storage politikaları repoda yok (panelde). Kontrol: Supabase › Storage › `hasta-goruntuleme`, `hasta-belgeler`, `ses-kayitlari` → "Public" kapalı mı, politikalar `{auth.uid()}/` önekine mi kısıtlı. Kapatmak, görüntülerin doktor ekranında ve portalda imzalı URL'lerle gösterilmesini gerektirir — görüntüleme akışını değiştiren bir ürün değişikliği, gözetimsiz yapılmadı. Yeni yüklemeler için Belge Kasası (`lib/vault`, şifreli, public URL yok) zaten doğru yol. | OPEN (Kaan: kova ayarını görüp karar) |
+| 2026-09-17 | **Repoda tanımı olmayan tablolar:** `not_duzenlemeleri` (notun önce/sonra klinik metni), `fhir_audit`, `fhir_export_kuyruk`, `kurum_*`, `ai_kullanim`. RLS durumları bilinmiyor; 052 var olanlarını kapatıyor (`not_duzenlemeleri` → doktor politikası). Uygulama sonrası sorguyla teyit edin. | OPEN (052 ile birlikte) |
+| 2026-09-17 | **Cron kimlik doğrulaması taklit edilebilir** (izolasyon dışı, ama güvenlik): `cron/*` ve `entegrasyon/fhir/isle` GET, dışarıdan gönderilebilen `x-vercel-cron: 1` başlığına güveniyor → herkes hatırlatma/KVKK imha/FHIR dışa aktarım işlerini tetikleyebilir (yanıtlar PHI içermiyor; işler kendi kurallarıyla çalışıyor). Önerilen: yalnız `Authorization: Bearer $CRON_SECRET` (Vercel bunu `CRON_SECRET` tanımlıysa otomatik gönderir). Cron'ları kırma riski olduğu için gözetimsiz değiştirilmedi — önce Vercel'de `CRON_SECRET` tanımlı mı bakılmalı. | OPEN (Kaan) |
+| 2026-09-17 | **Tasarım kısıtı (bilgi):** hasta tek doktora aittir (`patients.doctor_id`); klinik (`clinic_members`) içinde hasta paylaşımı YOK. Bir gün klinik-içi paylaşım istenirse bu denetimin tüm kontrolleri (ve 052) "doktor" yerine "yetkili üye" modeline taşınmalı — tek tek rotada değil, `hastaSahipligi.ts`'te. | Bilgi |
+| 2026-09-17 | **Sandbox** (`/api/sandbox/*`) paylaşılan erişim anahtarıyla çalışan, ayrı `sandbox_*` tablolu, yalnız simüle hasta içeren demo; çok-doktorlu değil (`doctor_id` sorgudan geliyor). Gerçek hasta verisi girilmemeli. | Bilgi |

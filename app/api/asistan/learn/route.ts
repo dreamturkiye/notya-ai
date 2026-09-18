@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       await getSupabase().from("asistan_actions").update({
         was_corrected: true,
         correction_data: { original, corrected, type: correctionType }
-      }).eq("id", actionId)
+      }).eq("id", actionId).eq("doctor_id", user.id)
     }
 
     // Update doctor preferences learning

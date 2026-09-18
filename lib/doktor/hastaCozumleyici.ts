@@ -76,10 +76,10 @@ function trTarih(iso: string | null): string {
 }
 
 /** Adayın son onaylı notundan kısa, sesli okunacak bir özet — "son şikayetle ayırt et" için. */
-async function sonZiyaretOzeti(supabase: SupabaseClient, patientId: string): Promise<string> {
+async function sonZiyaretOzeti(supabase: SupabaseClient, doctorId: string, patientId: string): Promise<string> {
   const { data } = await supabase
     .from('notes').select('basvuru_yakinmasi, content_degerlendirme, sessions!inner(patient_id)')
-    .eq('sessions.patient_id', patientId).not('approved_at', 'is', null)
+    .eq('sessions.patient_id', patientId).eq('doctor_id', doctorId).not('approved_at', 'is', null)
     .order('created_at', { ascending: false }).limit(1)
   const n = data?.[0] as { basvuru_yakinmasi?: string | null; content_degerlendirme?: string | null } | undefined
   const t = (n?.basvuru_yakinmasi || n?.content_degerlendirme || '').trim()
@@ -88,13 +88,13 @@ async function sonZiyaretOzeti(supabase: SupabaseClient, patientId: string): Pro
   return ilkCumle.length > 90 ? `${ilkCumle.slice(0, 89)}…` : ilkCumle
 }
 
-async function adaylariZenginlestir(supabase: SupabaseClient, adaylar: { id: string; ad: string }[]): Promise<CozumAday[]> {
-  const { data: hastalar } = await supabase.from('patients').select('id, dob_encrypted').in('id', adaylar.map((a) => a.id))
+async function adaylariZenginlestir(supabase: SupabaseClient, doctorId: string, adaylar: { id: string; ad: string }[]): Promise<CozumAday[]> {
+  const { data: hastalar } = await supabase.from('patients').select('id, dob_encrypted').eq('doctor_id', doctorId).in('id', adaylar.map((a) => a.id))
   const dobMap = new Map((hastalar || []).map((h) => [h.id, guvenliCoz(h.dob_encrypted)]))
   const zengin = await Promise.all(adaylar.map(async (a) => ({
     id: a.id, ad: a.ad,
     dobMetin: trTarih(dobMap.get(a.id) || null),
-    ozet: await sonZiyaretOzeti(supabase, a.id),
+    ozet: await sonZiyaretOzeti(supabase, doctorId, a.id),
   })))
   // Sıralı ve KARARLI: her çağrıda aynı sırada döner ki "ikincisi" tutarlı olsun
   return zengin.sort((a, b) => a.id.localeCompare(b.id))
@@ -113,7 +113,7 @@ export async function hastaninSozunuCoz(
       .not('patient_id', 'is', null).order('created_at', { ascending: false }).limit(1)
     const pid = data?.[0]?.patient_id
     if (pid) {
-      const { data: p } = await supabase.from('patients').select('id, name_encrypted').eq('id', pid).single()
+      const { data: p } = await supabase.from('patients').select('id, name_encrypted').eq('id', pid).eq('doctor_id', doctorId).maybeSingle()
       if (p) return { tur: 'tek', patientId: p.id, ad: adCoz(p.name_encrypted) || 'son hasta' }
     }
   }
@@ -135,11 +135,11 @@ export async function hastaninSozunuCoz(
   const cozAdaylar = async (adaylar: { id: string; ad: string }[]): Promise<HastaCozumu> => {
     if (adaylar.length === 1) return { tur: 'tek', patientId: adaylar[0].id, ad: adaylar[0].ad }
     if (adaylar.length === 0 || adaylar.length > 5) return { tur: 'yok' }
-    const zengin = await adaylariZenginlestir(supabase, adaylar)
+    const zengin = await adaylariZenginlestir(supabase, doctorId, adaylar)
     // 1) Doğum tarihiyle daraltma
     const tarih = tarihCoz(mesaj)
     if (tarih) {
-      const { data: dobHam } = await supabase.from('patients').select('id, dob_encrypted').in('id', zengin.map((z) => z.id))
+      const { data: dobHam } = await supabase.from('patients').select('id, dob_encrypted').eq('doctor_id', doctorId).in('id', zengin.map((z) => z.id))
       const eslesen = (dobHam || []).filter((h) => guvenliCoz(h.dob_encrypted).slice(0, 10) === tarih)
       if (eslesen.length === 1) {
         const aday = zengin.find((z) => z.id === eslesen[0].id)

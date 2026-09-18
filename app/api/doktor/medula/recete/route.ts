@@ -28,7 +28,7 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
   const pid = Array.isArray(not.sessions) ? not.sessions[0]?.patient_id : not.sessions?.patient_id
   const [{ data: ilaclar }, { data: hasta }, { data: doktor }] = await Promise.all([
     sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, doz, kullanim_sikli, notlar, baslangic_tarihi, bitis_tarihi').eq('kaynak_note_id', noteId).eq('onay_durumu', 'onayli'),
-    pid ? sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', pid).maybeSingle() : Promise.resolve({ data: null }),
+    pid ? sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', pid).eq('doctor_id', doktorId).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('users').select('first_name, last_name, full_name, specialty, title, clinic_name, recete_baslik, erecete_ayar').eq('id', doktorId).maybeSingle(),
   ])
   // Kaan (2026-09-10): not henüz onaylanmadıysa ilaç satırları hasta_ilaclar'da yoktur → nottaki

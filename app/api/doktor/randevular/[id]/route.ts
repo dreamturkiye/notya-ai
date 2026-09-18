@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { otomatikHastaKaydiOlustur } from '@/lib/doktor/otomatikHastaKaydi'
 import { randevuGuncellemePlani } from '@/lib/randevu/randevuDurum'
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
@@ -100,6 +101,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   let yeniHasta: { id: string; ad: string } | null = null
 
   if (patientId && patientId !== mevcut.patient_id) {
+    // HASTA-IZOLASYON-01: "an existing real patient" means THIS practice's patient — never another doctor's.
+    if (!(await hastaSahibiMi(supabase, doktorId, patientId))) {
+      return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
+    }
     guncelleme.patient_id = patientId
     guncelleme.hasta_adi_serbest = null
     guncelleme.hasta_telefon_serbest = null
