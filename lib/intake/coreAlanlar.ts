@@ -107,7 +107,6 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
   {
     baslik: 'Onay',
     alanlar: [
-      { id: 'dogruBeyan', etiket: 'Verdiğim bilgilerin doğru olduğunu beyan ederim.', tur: 'radio', zorunlu: true, secenekler: ['Beyan ediyorum'] },
       { id: 'kvkkOnay', etiket: 'KVKK Aydınlatma Metni\'ni okudum, kişisel verilerimin ilgili mevzuat kapsamında işlenmesini kabul ediyorum.', tur: 'radio', zorunlu: true, secenekler: ['Kabul ediyorum'] },
       { id: 'iletisimOnay', etiket: 'Gerekli durumlarda tarafımla telefon veya SMS yoluyla iletişime geçilmesini kabul ediyorum.', tur: 'radio', secenekler: ['Kabul ediyorum'] },
     ],
@@ -122,11 +121,6 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
 export function coreBolumlerIcin(brans: string): IntakeBolum[] {
   if (brans !== 'pediatri') return CORE_BOLUMLER
   return CORE_BOLUMLER.map((bolum) => {
-    if (bolum.baslik === 'Onay') {
-      // #13 (2026-09-02): "doğru beyan" onayı yasal zorunluluk DEĞİL — pediatride kaldırıldı.
-      // KVKK açık rıza (kvkkOnay) ise KVKK m.6 özel nitelikli veri (sağlık) için ZORUNLU ve kalıyor.
-      return { ...bolum, alanlar: bolum.alanlar.filter((a) => a.id !== 'dogruBeyan') }
-    }
     if (bolum.baslik !== 'Sağlık Geçmişi') return bolum
     return {
       ...bolum,

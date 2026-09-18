@@ -86,9 +86,8 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if (!yanitlar || typeof yanitlar !== 'object') {
     return NextResponse.json({ error: 'Yan\u0131tlar zorunludur.' }, { status: 400 })
   }
-  const dogruBeyanGerekli = Object.prototype.hasOwnProperty.call(yanitlar, 'dogruBeyan')
-  if (yanitlar.kvkkOnay !== 'Kabul ediyorum' || (dogruBeyanGerekli && yanitlar.dogruBeyan !== 'Beyan ediyorum')) {
-    return NextResponse.json({ error: 'KVKK onay\u0131 ve do\u011fru beyan i\u015faretlemesi olmadan form g\u00f6nderilemez.' }, { status: 400 })
+  if (yanitlar.kvkkOnay !== 'Kabul ediyorum') {
+    return NextResponse.json({ error: 'KVKK onay\u0131 olmadan form g\u00f6nderilemez.' }, { status: 400 })
   }
 
   // Kaan (2026-09-13): istemci dogrulamasi atlanabilir (dogrudan API cagrisi) - zorunlu ve desen

@@ -48,10 +48,17 @@ const QA_YANIT: Record<string, unknown> = {
   kanGrubu: 'A Rh+', kronikHastaliklar: ['Yok'], kullaniyorMu: 'Hayır',
   alerjiVarMi: 'Bilinen alerjisi yok', aileOykusu: 'Bilinen ciddi hastalık yok',
   sigara: 'Kullanmıyorum', alkol: 'Kullanmıyorum',
-  dogruBeyan: 'Beyan ediyorum', kvkkOnay: 'Kabul ediyorum',
+  kvkkOnay: 'Kabul ediyorum',
 }
 
-test('sigorta alanları boş bırakılan form doğrulamadan geçer ("Yok" yazmaya gerek yok)', () => {
+test('doğru beyan alanı formda yok — yalnız KVKK zorunlu', () => {
+  for (const brans of BRANSLAR) {
+    const onay = coreBolumlerIcin(brans).find((b) => b.baslik === 'Onay')!
+    assert.ok(!onay.alanlar.some((a) => a.id === 'dogruBeyan'), brans)
+    assert.ok(onay.alanlar.some((a) => a.id === 'kvkkOnay'), brans)
+  }
+})
+
   // Hem hastanın gördüğü istemci kontrolü hem de sunucu kontrolü — ikisi de geçmeli.
   for (const brans of BRANSLAR) {
     const bolumler = coreBolumlerIcin(brans)
