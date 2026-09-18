@@ -3,6 +3,8 @@
  * UI may send display labels; we always persist the canonical `code`.
  */
 
+import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+
 export type ImagingModalityCode =
   | 'xray'
   | 'mri'
@@ -95,4 +97,65 @@ export function imagingPortalKind(raw: string | null | undefined): ImagingPortal
 export function imagingDisplayLabel(raw: string | null | undefined, audience: 'doctor' | 'patient' = 'doctor'): string {
   const meta = imagingModalityMeta(raw)
   return audience === 'patient' ? meta.patientLabel : meta.label
+}
+
+/*
+ * GORUNTULEME-BRANS-SIRALI (Kaan, 2026-09-18) — modalite seçicisi hekimin branşına göre SIRALANIR, asla KISITLANMAZ.
+ *
+ * Bu bir brans-alan-sizmasi kapısı DEĞİLDİR ve öyle "düzeltilmemelidir". O kural bir branşa özgü İÇERİĞİN (baş çevresi,
+ * "veli" hitabı) başka branşın formuna SIZMASINI engeller. Görüntüleme modaliteleri ise her hekimin dışarıdan meşru olarak
+ * alabileceği ORTAK klinik sözlüktür: katarakt öncesi EKG'si gelen göz hekimi, hastanın elinde getirdiği dış merkez MR'ı
+ * yükleyen kardiyolog. Branşa göre gizlemek bu yüklemeleri engeller, hekim yanlış bir modaliteye yazar ve veri kalitesi
+ * sessizce bozulur. Bu yüzden: hekimin branşındaki sık modaliteler üstte, geri kalan HER modalite altında seçilebilir.
+ * Hiçbir kod düşürülmez; kalıcı sınama: lib/doktor/imagingModalities.test.ts.
+ *
+ * Yalnız GÖSTERİM SIRASI. Kanonik kod, normalizeImagingModality, portalKind, renk ve saklanan değer değişmez.
+ * Eşleme UX tercihidir (klinik eşik/sayı değil); eşlemesi olmayan branş = varsayılan IMAGING_MODALITIES sırası.
+ */
+export const BRANS_GORUNTULEME_ONCELIGI: Partial<Record<SpecialtyKey, readonly ImagingModalityCode[]>> = {
+  'goz-hastaliklari': ['oct', 'fundus', 'on_segment', 'us'], // us = B-scan
+  kardiyoloji: ['ekg', 'eko', 'bt', 'xray'], // bt = koroner BT anjiyo
+  'kalp-damar-cerrahisi': ['eko', 'bt', 'ekg', 'us', 'xray'], // us = Doppler
+  dermatoloji: ['dermatoskopi', 'derm', 'yara'],
+  'plastik-cerrahi': ['yara', 'derm'],
+  'kadin-hastaliklari-dogum': ['us', 'mamografi', 'mri'],
+  dahiliye: ['xray', 'us', 'bt', 'ekg'],
+  pediatri: ['xray', 'us', 'ekg'],
+  ortopedi: ['xray', 'mri', 'bt', 'us'],
+  'fizik-tedavi': ['xray', 'mri', 'us'],
+  noroloji: ['mri', 'bt'], // EEG/EMG kanonik modalite değil — OPEN: GORUNTULEME-EEG-EMG
+  'beyin-cerrahisi': ['mri', 'bt', 'xray'],
+  'gogus-hastaliklari': ['xray', 'bt', 'pet'],
+  onkoloji: ['pet', 'bt', 'mri', 'us'],
+  radyoloji: ['xray', 'bt', 'mri', 'us', 'mamografi', 'pet'],
+  'acil-tip': ['xray', 'bt', 'us', 'ekg'],
+  uroloji: ['us', 'bt', 'xray'],
+  'genel-cerrahi': ['us', 'bt', 'xray'],
+}
+
+export type BransGoruntulemeGruplari = {
+  /** Hekimin branşında sık kullanılanlar — eşleme yoksa boş (boş grup başlığı çizilmez). */
+  oncelikli: ImagingModality[]
+  /** Geri kalan TÜM kanonik modaliteler, varsayılan sırada ('diger' dahil, en sonda). */
+  digerleri: ImagingModality[]
+}
+
+/**
+ * Seçici için iki grup. `brans` kanonik branş anahtarıdır (bkz. bransAnahtari); boş / bilinmeyen / eşlemesiz → oncelikli
+ * boş, digerleri = IMAGING_MODALITIES. oncelikli ∪ digerleri her zaman IMAGING_MODALITIES'in tamamıdır — kısıtlamaz.
+ */
+export function bransGoruntulemeGruplari(brans: string | null | undefined): BransGoruntulemeGruplari {
+  const tercih = brans ? BRANS_GORUNTULEME_ONCELIGI[brans as SpecialtyKey] ?? [] : []
+  const oncelikli = tercih
+    .filter((code, i) => code !== 'diger' && tercih.indexOf(code) === i)
+    .map((code) => BY_CODE.get(code))
+    .filter((m): m is ImagingModality => !!m)
+  const secili = new Set(oncelikli.map((m) => m.code))
+  return { oncelikli, digerleri: IMAGING_MODALITIES.filter((m) => !secili.has(m.code)) }
+}
+
+/** Branşa göre sıralanmış TAM kod listesi: önce branşın sık modaliteleri, sonra geri kalan her şey. */
+export function bransGoruntulemeSirasi(brans: string | null | undefined): ImagingModalityCode[] {
+  const { oncelikli, digerleri } = bransGoruntulemeGruplari(brans)
+  return [...oncelikli, ...digerleri].map((m) => m.code)
 }
