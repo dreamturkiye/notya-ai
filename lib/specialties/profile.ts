@@ -76,8 +76,57 @@ export interface PortalModulu {
   derinlik: 'Strong' | 'Partial' | 'Thin' | 'Missing'
 }
 
+/**
+ * BRANS-ALAN-SIZMASI (Kaan 2026-09-17) — pediatrik içerik (veli dili, baş çevresi, Neyzi persentili,
+ * pediatrik prompt satırları) hangi branşta görünür? Her branş için AÇIKÇA yazılır (Record, varsayılan yok):
+ *  - 'her-zaman'     — hasta kitlesi tanım gereği çocuk (pediatri, çocuk cerrahisi)
+ *  - 'cocuk-hastada' — karma yaş pratiği (aile hekimliği; branşı bilinmeyen "genel"): YALNIZ hasta
+ *                      doğum tarihine göre <18 ise. Yaş bilinmiyorsa pediatrik DEĞİL.
+ *  - 'asla'          — diğer her branş; hasta çocuk olsa bile "hasta" dili (Kaan: veli yalnız pediatri).
+ * Karar noktası: lib/specialties/kapsam.ts → pediatrikBaglamMi(). Kural: .cursor/skills/brans-alan-sizmasi.
+ */
+export type PediatrikBaglamKurali = 'her-zaman' | 'cocuk-hastada' | 'asla'
+
+export const PEDIATRIK_BAGLAM: Record<SpecialtyKey, PediatrikBaglamKurali> = {
+  pediatri: 'her-zaman',
+  'cocuk-cerrahisi': 'her-zaman',
+  'aile-hekimligi': 'cocuk-hastada',
+  kardiyoloji: 'asla',
+  noroloji: 'asla',
+  dahiliye: 'asla',
+  psikiyatri: 'asla',
+  'genel-cerrahi': 'asla',
+  ortopedi: 'asla',
+  dermatoloji: 'asla',
+  'kulak-burun-bogaz': 'asla',
+  'goz-hastaliklari': 'asla',
+  'kadin-hastaliklari-dogum': 'asla',
+  uroloji: 'asla',
+  radyoloji: 'asla',
+  anestezi: 'asla',
+  'acil-tip': 'asla',
+  'fizik-tedavi': 'asla',
+  'enfeksiyon-hastaliklari': 'asla',
+  endokrinoloji: 'asla',
+  gastroenteroloji: 'asla',
+  nefroloji: 'asla',
+  romatoloji: 'asla',
+  onkoloji: 'asla',
+  'gogus-hastaliklari': 'asla',
+  'gogus-cerrahisi': 'asla',
+  'plastik-cerrahi': 'asla',
+  'beyin-cerrahisi': 'asla',
+  'kalp-damar-cerrahisi': 'asla',
+  'spor-hekimligi': 'asla',
+}
+
+/** Branşı bilinmeyen / "genel" (pratisyen) hekim: karma yaş pratiği gibi davranır. */
+export const BRANSSIZ_PEDIATRIK_BAGLAM: PediatrikBaglamKurali = 'cocuk-hastada'
+
 export interface SpecialtyProfile {
   key: SpecialtyKey
+  /** BRANS-ALAN-SIZMASI — pediatrik içerik kuralı (bkz. PEDIATRIK_BAGLAM) */
+  pediatrikBaglam: PediatrikBaglamKurali
   /** UI label (short) and formal TUK title used in signatures/epikriz */
   etiket: string
   resmiUnvan: string
@@ -110,6 +159,14 @@ export const BASELINE_OLCUMLER: OlcumTanimi[] = [
   { anahtar: 'boy', etiket: 'Boy', birim: 'cm' },
 ]
 
+/**
+ * Pediatriye özgü ölçümler — baseline'da YOK. Yalnız pediatrik bağlamda (pediatrikBaglamMi) forma girer.
+ * Canlı hata (Kaan 2026-09-17): baş çevresi KD hekiminin Yaşamsal Bulgular formunda çıkıyordu.
+ */
+export const PEDIATRIK_OLCUMLER: OlcumTanimi[] = [
+  { anahtar: 'basCevresi', etiket: 'Baş Çevresi', birim: 'cm', kosul: 'pediatrik' },
+]
+
 export const BASELINE_BELGELER: BelgeTanimi[] = [
   { id: 'recete', ad: 'Reçete', format: 'recete' },
   { id: 'muayene-raporu', ad: 'Muayene Raporu', format: 'rapor' },
@@ -118,9 +175,11 @@ export const BASELINE_BELGELER: BelgeTanimi[] = [
 
 /** Baseline chapter — what every specialty gets when it has no profile of its own yet. */
 export function baselineProfile(key: SpecialtyKey, etiket: string, resmiUnvan: string): SpecialtyProfile {
+  const pediatrikBaglam = PEDIATRIK_BAGLAM[key] ?? BRANSSIZ_PEDIATRIK_BAGLAM
   return {
-    key, etiket, resmiUnvan,
-    olcumler: BASELINE_OLCUMLER,
+    key, etiket, resmiUnvan, pediatrikBaglam,
+    // Pediatrik ölçüm yalnız çocuk gören branşın formuna girer; 'cocuk-hastada' için hasta yaşı ayrıca kapsam.ts'de süzülür.
+    olcumler: pediatrikBaglam === 'asla' ? BASELINE_OLCUMLER : [...BASELINE_OLCUMLER, ...PEDIATRIK_OLCUMLER],
     hesaplayicilar: [], sekmeler: [], goruntu: null,
     belgeler: BASELINE_BELGELER,
     ekKaynaklar: [], promptNotlari: [], specialistReview: [],

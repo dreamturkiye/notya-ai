@@ -18,6 +18,9 @@ import {
   ONAYLANAN_NOTU_AC, HASTA_LISTESINE_DON, ANA_SAYFAYA_DON,
   HASTA_LISTESI_YOLU, DOKTOR_ANA_SAYFA_YOLU,
 } from '@/lib/doktor/onaySonrasiYol';
+import type { BransKapsami } from '@/lib/specialties/kapsam';
+import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
+import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
@@ -48,6 +51,8 @@ interface PendingNote {
   receteOnerisi: ReceteOner[];
   alarmBulgulari: string[];
   aiDegerlendirme: string;
+  /** BRANS-ALAN-SIZMASI: sunucu hesaplar — ölçüm alanları + hasta/veli hitabı (yoksa baseline, "hasta") */
+  bransKapsami: BransKapsami;
 }
 
 function normalizeNotes(payload: unknown): PendingNote[] {
@@ -76,6 +81,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       receteOnerisi: Array.isArray(n.receteOnerisi) ? (n.receteOnerisi as ReceteOner[]) : [],
       alarmBulgulari: Array.isArray(n.alarmBulgulari) ? (n.alarmBulgulari as string[]).map(String) : [],
       aiDegerlendirme: String(n.aiDegerlendirme ?? ''),
+      bransKapsami: istemciKapsami(n.bransKapsami as BransKapsami | undefined),
     };
   });
 }
@@ -166,7 +172,7 @@ export default function IncelemePage() {
         if (typeof dz[a] === 'string' && (dz[a] as string).trim()) g[a] = dz[a] as string;
       });
       setTaslak(g);
-      // Kaan/Gökhan (2026-09-10): Ayşe'nin düzenlemeleri artık vitaller / başvuru / evde dikkat / veli özetine de işler
+      // Kaan/Gökhan (2026-09-10): Ayşe'nin düzenlemeleri artık vitaller / başvuru / evde dikkat / hasta özetine de işler
       if (typeof dz.basvuruYakinmasi === 'string') setBasvuruTaslak(dz.basvuruYakinmasi as string);
       if (dz.vitaller && typeof dz.vitaller === 'object' && !Array.isArray(dz.vitaller)) setVitalTaslak((v) => ({ ...v, ...Object.fromEntries(Object.entries(dz.vitaller as Record<string, unknown>).map(([k, x]) => [k, String(x ?? '')])) }));
       if (Array.isArray(dz.alarmBulgulari)) setAlarmTaslak((dz.alarmBulgulari as unknown[]).map(String).join('\n'));
@@ -411,24 +417,13 @@ export default function IncelemePage() {
                           <CihazdanAl hastaId={note.patientId} notId={note.id} onOlcum={(v) => setVitalTaslak({ ...vitalTaslak, ...v })} />
                           <CihazDosyasi hastaId={note.patientId} notId={note.id} />
                         </div>
-                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                          {([['ates', 'Ateş', '°C'], ['tansiyon', 'Tansiyon', 'mmHg'], ['nabiz', 'Nabız', '/dk'], ['solunum', 'Solunum Sayısı', '/dk'], ['spo2', 'SpO₂', '%'], ['kilo', 'Kilo', 'kg'], ['boy', 'Boy', 'cm'], ['basCevresi', 'Baş Çevresi', 'cm']] as const).map(([k, etiket, birim]) => {
-                            // Kaan (2026-09-13): Neyzi büyüme persentili — yalnız kilo/boy/baş çevresinde, sunucudan hazır gelir
-                            const bp = note.buyumePersentilleri
-                            const persentil = k === 'kilo' ? bp?.kilo : k === 'boy' ? bp?.boy : k === 'basCevresi' ? bp?.basCevresi : undefined
-                            return (
-                              <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>
-                                {etiket}
-                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <input value={vitalTaslak[k] ?? ''} onChange={(e) => setVitalTaslak({ ...vitalTaslak, [k]: e.target.value })} placeholder="—"
-                                    style={{ width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
-                                  <span style={{ color: '#64748B' }}>{birim}</span>
-                                </span>
-                                {persentil && <span style={{ fontSize: 10, color: '#2DD4BF' }}>{persentil}</span>}
-                              </label>
-                            )
-                          })}
-                        </div>
+                        {/* BRANS-ALAN-SIZMASI (Kaan 2026-09-17): alanlar notun branş profilinden — baş çevresi yalnız pediatrik bağlamda (KD formunda çıkıyordu) */}
+                        <YasamsalBulgularFormu
+                          olcumler={note.bransKapsami.olcumler}
+                          degerler={vitalTaslak}
+                          onDegis={(k, v) => setVitalTaslak({ ...vitalTaslak, [k]: v })}
+                          persentiller={note.buyumePersentilleri}
+                        />
                         {note.buyumePersentilleri?.vki && (
                           <div style={{ marginTop: 6, fontSize: 11, color: '#2DD4BF' }}>
                             VKİ: {note.buyumePersentilleri.vki}{note.buyumePersentilleri.vkiSinif ? ` — ${note.buyumePersentilleri.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
@@ -490,7 +485,7 @@ export default function IncelemePage() {
                         </div>
                       )}
                       <div style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>(veliye/hastaya anlatılacak · her satır bir madde · düzenlenebilir)</span></div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 3 }}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>({note.bransKapsami.hitap.evdeDikkatHedefi} anlatılacak · her satır bir madde · düzenlenebilir)</span></div>
                         <textarea value={alarmTaslak} onChange={(e) => setAlarmTaslak(e.target.value)} rows={Math.max(3, alarmTaslak.split('\n').length)}
                           placeholder="Her satıra bir uyarı yazın"
                           style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#CBD5E1', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
@@ -503,11 +498,12 @@ export default function IncelemePage() {
                       )}
                       <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 10px' }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>Hasta/veli özeti <span style={{ fontWeight: 400, color: '#64748B' }}>· portala gider · düzenlenebilir</span></span>
-                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, 'Notun güncel haline göre hasta/veli özetini yeniden yaz.')} style={{ background: 'transparent', border: '1px solid rgba(45,212,191,0.35)', color: '#2DD4BF', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>↻ Notuma göre yenile</button>
+                          {/* BRANS-ALAN-SIZMASI: "veli" yalnız pediatrik bağlamda — KD/dahiliye/göz/derm notunda "Hasta özeti" */}
+                          <span>{note.bransKapsami.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: '#64748B' }}>· portala gider · düzenlenebilir</span></span>
+                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, note.bransKapsami.hitap.ozetYenileIstegi)} style={{ background: 'transparent', border: '1px solid rgba(45,212,191,0.35)', color: '#2DD4BF', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>↻ Notuma göre yenile</button>
                         </div>
                         <textarea value={ozetTaslak} onChange={(e) => setOzetTaslak(e.target.value)} rows={Math.max(3, Math.ceil(ozetTaslak.length / 110))}
-                          placeholder="Veliye anne-babaya anlatır gibi kısa özet"
+                          placeholder={note.bransKapsami.hitap.ozetYerTutucu}
                           style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#CBD5E1', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
                       </div>
                       {/* NOTYA-KONSULT-03: Ayşe ile not üzerinde konsult, sözle düzenleme, tek-dokunuş takip eylemleri */}

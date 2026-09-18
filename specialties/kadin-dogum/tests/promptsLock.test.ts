@@ -79,11 +79,19 @@ describe('shared SOAP rules: no pediatric growth-percentile bleed (DAH-PROMPTS-F
   it('adult rules have no growth / veli wording; pediatric rules are unchanged', () => {
     assert.ok(!BUYUME_RE.test(soapKurallari(false).replace(/VKİ sınıfı veya persentil hesaplayıp sayı uydurma/, '')))
     assert.ok(soapKurallari(true).includes('Büyüme persentiline bakınız') && soapKurallari(true).includes('Veli beyanı'))
-    assert.equal(soapKurallari(), soapKurallari(true))
+    // BRANS-ALAN-SIZMASI: no default — the caller must pass the gate result (a default used to mean "pediatric").
+    assert.ok(!soapKurallari(false).includes('"basCevresi"')); assert.ok(soapKurallari(true).includes('"basCevresi": null'))
   })
-  it('pediatrikKapsam: pediatri/çocuk and mixed-age (genel, aile) yes; locked adult branches no', () => {
-    assert.ok(pediatrikKapsam('pediatri')); assert.ok(pediatrikKapsam('genel', 'pediatri')); assert.ok(pediatrikKapsam('cocuk-cerrahisi')); assert.ok(pediatrikKapsam('genel')); assert.ok(pediatrikKapsam('aile-hekimligi')); assert.ok(pediatrikKapsam(null))
+  it('pediatrikKapsam (BRANS-ALAN-SIZMASI): pediatri/çocuk cerrahisi always; aile/genel only for a KNOWN minor; everyone else never', () => {
+    assert.ok(pediatrikKapsam('pediatri')); assert.ok(pediatrikKapsam('genel', 'pediatri')); assert.ok(pediatrikKapsam('cocuk-cerrahisi'))
+    // mixed-age / branch-less: decided by the patient's age, never by default
+    assert.ok(!pediatrikKapsam('genel')); assert.ok(!pediatrikKapsam('aile-hekimligi')); assert.ok(!pediatrikKapsam(null))
+    assert.ok(pediatrikKapsam('aile-hekimligi', null, '2022-01-01')); assert.ok(!pediatrikKapsam('aile-hekimligi', null, '1980-01-01'))
     assert.ok(!pediatrikKapsam('kadin-hastaliklari-dogum', 'kadin-dogum')); assert.ok(!pediatrikKapsam('dahiliye')); assert.ok(!pediatrikKapsam('dermatoloji'))
+    // old regex holes: genel-cerrahi matched /^genel/; a KD session with a stale 'pediatri' doctor value won via some()
+    assert.ok(!pediatrikKapsam('genel-cerrahi')); assert.ok(!pediatrikKapsam('kadin-hastaliklari-dogum', 'pediatri'))
+    // a KD child patient is still addressed as "hasta" (Kaan: veli is pediatri's word)
+    assert.ok(!pediatrikKapsam('kadin-hastaliklari-dogum', 'kadin-dogum', '2012-01-01'))
     assert.ok(!soapSistemPromptu({ transcript: '', specialty: 'dahiliye' }).includes('Büyüme persentil'))
     assert.ok(soapSistemPromptu({ transcript: '', specialty: 'pediatri' }).includes('Büyüme persentiline bakınız'))
   })

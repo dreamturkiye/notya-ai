@@ -135,8 +135,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-    const [doktorAdi, doktorBransi] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId)])
-    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi })
+    // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
+    const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
+    const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId), hastaDogumIso(supabase, doktorId, patientId || null)])
+    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso })
 
     const { data: note, error: noteError } = await supabase.from('notes').insert({
       session_id: seans.id,

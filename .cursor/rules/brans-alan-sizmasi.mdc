@@ -17,6 +17,9 @@ Before you add anything to a shared surface (Yaşamsal Bulgular, Anamnez, SOAP, 
 1. Is it **universal** for all ~30 branşlar? → shared OK.
 2. Is it **specialty-specific**? → gate via `SpecialtyProfile` / `specialties/<slug>/` / branch-keyed catalogs (see `lib/intake/bransSorulari.ts`). Never unconditional render.
 3. An empty wrong field is still a leak — do not “leave it blank for other branşlar.”
-4. Prefer one consistent gate mechanism; do not scatter ad-hoc `if (specialty === '…')`.
+4. Prefer one consistent gate mechanism; do not scatter ad-hoc `if (specialty === '…')`. The pediatric gate is `lib/specialties/kapsam.ts` (`pediatrikBaglamMi`, `notOlcumleri`, `bransKapsami`); wording lives in `lib/specialties/hitap.ts`.
+5. Unknown / empty branş = baseline + "hasta" wording — never `|| 'pediatri'`.
+6. Gate all three layers (UI label, LLM prompt, model-output sanitizer) and put the tab button and its content mount behind the same gate.
+7. Test both directions (owner branş keeps it; KD / dahiliye / göz don't) — `npm run test:brans-sizmasi`. Ambiguous → OPEN in `docs/OPEN-COMMITMENTS.md`, don't guess.
 
-PR/commit must name the owning specialty(ies) and the gate. Mirror skill: `cross-specialty-parity` (fixes reach every branş); this skill (chapter content stays in its branş).
+PR/commit must name the owning specialty(ies) and the gate ("Branş sızıntısı" block in the skill). Mirror skill: `cross-specialty-parity` (fixes reach every branş); this skill (chapter content stays in its branş).

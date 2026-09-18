@@ -10,6 +10,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { ULUSAL_TAKVIM, OZEL_ASILAR, PEDIATRIK_ASI_ADLARI, TAKVIM_SURUM } from '@/lib/asi/ulusalAsiTakvimi';
+import { hitapMetinleri } from '@/lib/specialties/hitap';
 
 interface Asi {
   id: string;
@@ -24,14 +25,21 @@ interface Asi {
 
 const YAYGIN_YETISKIN = ['Tetanoz-Difteri (Td)', 'Grip', 'KOVID-19', 'Zona (Herpes Zoster)', 'Pnömokok'];
 
-export default function HastaAsilar({ patientId }: { patientId: string }) {
+/**
+ * BRANS-ALAN-SIZMASI: `pediatrikBaglam` (lib/specialties/kapsam → pediatrikBaglamMi) "veli" kelimesini açar; `cocukHasta`
+ * yeni kaydın varsayılan kategorisini seçer. Eskiden her hastada (KD'nin erişkin hastası dahil) varsayılan 'pediatrik'
+ * ve "Hasta/veli beyanı" idi.
+ */
+export default function HastaAsilar({ patientId, pediatrikBaglam = false, cocukHasta = false }: { patientId: string; pediatrikBaglam?: boolean; cocukHasta?: boolean }) {
+  const hitap = hitapMetinleri(pediatrikBaglam);
   const [asilar, setAsilar] = useState<Asi[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
   const [formAcik, setFormAcik] = useState(false);
   const [asiAdi, setAsiAdi] = useState('');
   const [dozNo, setDozNo] = useState('');
-  const [kategori, setKategori] = useState<'pediatrik' | 'yetiskin'>('pediatrik');
+  const [kategori, setKategori] = useState<'pediatrik' | 'yetiskin'>(cocukHasta ? 'pediatrik' : 'yetiskin');
+  useEffect(() => { setKategori(cocukHasta ? 'pediatrik' : 'yetiskin'); }, [cocukHasta]);
   const [uygulamaTarihi, setUygulamaTarihi] = useState('');
   const [sonrakiDozTarihi, setSonrakiDozTarihi] = useState('');
   const [kaynak, setKaynak] = useState<'kayit' | 'beyan'>('kayit');
@@ -148,9 +156,12 @@ export default function HastaAsilar({ patientId }: { patientId: string }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aşılar</div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
-            {takvimAcik ? 'Takvimi Gizle' : '📋 Ulusal Aşı Takvimi'}
-          </button>
+          {/* BRANS-ALAN-SIZMASI: SB çocukluk dönemi takvimi yalnız çocuk hastada / pediatrik bağlamda — KD'nin erişkin hastasında yok */}
+          {(cocukHasta || pediatrikBaglam) && (
+            <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
+              {takvimAcik ? 'Takvimi Gizle' : '📋 Ulusal Aşı Takvimi'}
+            </button>
+          )}
           <button type="button" onClick={() => setFormAcik((v) => !v)} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}>
             + Aşı Ekle
           </button>
@@ -159,7 +170,7 @@ export default function HastaAsilar({ patientId }: { patientId: string }) {
 
       {hata && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#EF4444', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
 
-      {takvimAcik && (
+      {takvimAcik && (cocukHasta || pediatrikBaglam) && (
         <div style={{ background: '#111C33', borderRadius: 12, padding: 16, marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{TAKVIM_SURUM}</div>
           <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 12 }}>
@@ -233,7 +244,7 @@ export default function HastaAsilar({ patientId }: { patientId: string }) {
               <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Kaynak</label>
               <select value={kaynak} onChange={(e) => setKaynak(e.target.value as 'kayit' | 'beyan')} style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>
                 <option value="kayit">Bu klinikte uygulandı</option>
-                <option value="beyan">Hasta/veli beyanı</option>
+                <option value="beyan">{hitap.beyanEtiketi}</option>
               </select>
             </div>
           </div>

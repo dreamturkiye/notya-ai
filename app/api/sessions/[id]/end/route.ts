@@ -196,8 +196,10 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       stilProfili = hafizaBloguNot(await hafizaYukle(getSupabase(), user.id))
     } catch { /* profil kritik değil */ }
 
-    const [doktorAdi, doktorBransi] = await Promise.all([hekimAdi(getSupabase(), user.id), hekimBransi(getSupabase(), user.id)])
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi })
+    // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
+    const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
+    const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(getSupabase(), user.id), hekimBransi(getSupabase(), user.id), hastaDogumIso(getSupabase(), user.id, seans.patient_id ? String(seans.patient_id) : null)])
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso })
 
     // Save note
     const { data: note, error: noteError } = await getSupabase().from("notes").insert({

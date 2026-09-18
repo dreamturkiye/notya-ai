@@ -28,6 +28,15 @@ vocabulary, sections, fields — must never carry over to another specialty.
 Optometri (göz-hastalıkları) will have many eye-specific fields; none of
 them should ever appear for a Kardiyoloji or Pediatri doctor, and vice versa.
 
+## Why the two bugs leaked (root causes — so they are not repeated)
+
+| Bug | Root cause | Fix (BRANS-ALAN-SIZMASI, 2026-09-17) |
+|-----|------------|------|
+| Baş Çevresi on the KD vitals form | `SpecialtyProfile.olcumler` **correctly** declared baş çevresi as pediatri-only — but **no screen read the profile**. `inceleme/page.tsx` and `notlar/[id]/page.tsx` hardcoded `['ates', …, 'basCevresi']` unconditionally. The SOAP JSON template also carried `"basCevresi"` for every branch (a fetal HC dictated in a KD visit could land in the mother's vitals). | The form renders the server-computed `bransKapsami.olcumler` through one shared component, `components/doktor/YasamsalBulgularFormu.tsx`. The JSON key is pediatric-only and `vitalleriKapsamaGoreSuz` strips it from model output. |
+| "Hasta/veli özeti" + veli wording in a KD summary | SOAP *generation* was already gated. The leak came from the **labels** (İnceleme, not sayfası, yazdır), the **request** the "↻ Notuma göre yenile" button sends ("hasta/veli özetini yeniden yaz") and the **not-konsult system prompt** ("veliye giden özet"), so the model rewrote KD summaries in guardian wording. The gate itself had holes: `/^(genel\|aile)/` matched `genel-cerrahi`, `some()` let a stale `'pediatri'` value beat a KD branch, and a branch-less doctor counted as pediatric. | Every hitap string lives in `lib/specialties/hitap.ts`; one decision function, `pediatrikBaglamMi()`. |
+
+The lesson both bugs share: **a registry that declares the right thing is no protection if the screen never reads it.**
+
 ## The architecture this rule rests on
 
 Same spine as cross-specialty-parity:
@@ -47,6 +56,26 @@ branch, it leaks into all 29+ of them.
 correctly: content is branch-keyed from the start, so a KD-only question
 never appears for a dahiliye doctor. Any new specialty-specific content
 should look like that, not like an unconditional field in a shared form.
+
+### The single decision point: `lib/specialties/kapsam.ts`
+
+Shared components do not look at the branch key themselves — they ask the gate:
+
+```ts
+pediatrikBaglamMi({ seansBransi, doktorBransi, hastaDogumIso })  // veli wording, baş çevresi, Neyzi, pediatric prompt lines
+notOlcumleri(...)       // Yaşamsal Bulgular fields, from profile.olcumler (ateş first)
+bransKapsami(...)       // { brans, pediatrik, olcumler, hitap } — the server computes it, the client only renders it
+vitalleriKapsamaGoreSuz(vitaller, kapsam)   // strips a pediatric-only vital from model output
+```
+
+- **Branch resolution:** the session's branch (when it is a real branch) → else the doctor's `users.specialty`
+  (legacy values like `'kadin-dogum'` resolve through `bransAnahtari()`) → else branch-less ("genel").
+- **`PEDIATRIK_BAGLAM: Record<SpecialtyKey, 'her-zaman' | 'cocuk-hastada' | 'asla'>`** in `profile.ts` — all 30
+  branches written out, no default (the `bransSorulari` shape): pediatri + çocuk cerrahisi `her-zaman`;
+  aile hekimliği and branch-less `cocuk-hastada` (= a patient **known** to be under 18); the other 27 `asla`
+  (even for a child patient they say "hasta").
+- **Client default** (`kapsamIstemci.ts`): no package from the server → baseline + "hasta". A default never carries
+  a branch's content. `specialtyProfile(null)` is baseline "genel", **not** pediatri.
 
 ## The check (run before adding ANYTHING to a shared/baseline component)
 
@@ -71,14 +100,98 @@ should look like that, not like an unconditional field in a shared form.
 ```
    This list grows. A hardcoded assumption about "which specialties need X"
    goes stale.
+6. **Patient-dependent (age / sex)?** An age gate goes **on top of** the branch gate, never instead of it.
+   An unknown age never counts as "child" (the one exception: a pediatri doctor's own patient).
+
+### Which mechanism for which kind of content
+
+| Content | Mechanism |
+|---------|-----------|
+| Vital / measurement field | `SpecialtyProfile.olcumler` (+ `kosul`) → `notOlcumleri()` → `YasamsalBulgularFormu` |
+| Wording (hasta ↔ veli) | `lib/specialties/hitap.ts` → `bransKapsami().hitap` |
+| LLM prompt line | `pediatrikBaglamMi()` / the `ped(…, …)` selector; chapter locks in `specialties/<slug>/prompts` |
+| Hasta dosyası tab **and its mount** | `lib/doktor/hastaDosyaSekmeleri.ts` — the tab button and the content mount use the **same** boolean (a `?tab=` deep link must not bypass the gate) |
+| Doktor Araçları tile | `specialty-doktor-araclari` (ORTAK vs BRANS + deep-link guard) |
+| Sağlığım module | `SpecialtyProfile.portal` + `lib/portal/moduller.ts` (`specialty-hasta-portali`) |
+| Intake section | `BRANS_SORULARI: Record<SpecialtyKey, …>` (unknown key → no section) |
+| Document header / signature | `bransKapsami().brans` → `klinikAdi` / `resmiUzmanlikAdi`; no branch → **no line** |
+
+### Hunt the defaults (the sneakiest leak)
+
+```bash
+# defaults that fall back to pediatri (or any branch):
+rg -n "\|\| ?'pediatri'|\?\? ?'pediatri'|useState<[^>]*>\('pediatrik'\)|genel: 'pediatri'" app lib components core
+# branch-specific words / fields hardcoded in shared files:
+rg -n "veli|Baş Çevresi|sağlam çocuk|AŞI KARNESİ|Neyzi|gebelik haftası|Görme Keskinliği|PASI" \
+   app/dashboard app/api components lib/doktor --glob '!**/*.test.ts'
+# loose branch regexes (substring match catches another branch: 'genel' ⊂ 'genel-cerrahi'):
+rg -n "\|genel\||\|göğüs\||\|aile\|" app components lib
+```
+
+For every hit: is there a gate, does it select the right branches, and what happens for an unknown / empty branch?
+
+### Gate all three layers
+
+A wording or field leak is only closed when **the UI label, the LLM prompt, and the model-output sanitizer** are all
+gated. Fixing only the label leaves the model writing "veli" into the portal text.
+
+### Test both directions
+
+`lib/specialties/brans-alan-sizmasi.test.ts` (pure layer, a real `react-dom/server` render of the vitals form,
+prompt checks, source locks on the shared pages) and `lib/specialties/brans-alan-sizmasi-rotalar.test.ts`
+(synthetic QA doctors through the real route handlers). A new gate is tested **both ways**: present for the owning
+branch (pediatri not broken) **and** absent for at least three foreign branches (KD, dahiliye/derm, göz). Loop over
+`Object.keys(BRANS_ETIKETLERI)` (30/30) instead of hand-listing branches.
+
+```bash
+npm run test:brans-sizmasi
+```
 
 ## PR description requirement
 
 Any PR that touches a shared/baseline component and adds specialty-flavored
 content must state explicitly: which specialty(ies) this belongs to, and
 what gate mechanism restricts it to them. "Added Baş Çevresi to vitals" is
-not enough — "Baş Çevresi gated to pediatri via `SpecialtyProfile.vitals`"
-is.
+not enough — "Baş Çevresi gated to pediatri via `SpecialtyProfile.olcumler`
++ `lib/specialties/kapsam.ts`" is.
+
+Required block, Turkish, in the PR body (next to cross-specialty-parity's "Branş kapsamı"):
+
+```markdown
+### Branş sızıntısı
+- **Eklenen/değişen içerik:** "Baş Çevresi" ölçümü / "veli" hitabı / …
+- **Sınıf:** evrensel (baseline) | branşa özgü (<branşlar>) | hastaya bağlı (yaş/cinsiyet) + branş
+- **Kapı:** `SpecialtyProfile.olcumler` / `PEDIATRIK_BAGLAM` / `hastaDosyaSekmeleri` / `specialties/<slug>/` …
+- **Varsayılan (branş bilinmiyorsa):** baseline, "hasta" dili — pediatri değil
+- **Test:** sahibi branşta var ✅, KD / dahiliye / göz'de yok ✅ (`brans-alan-sizmasi*.test.ts`)
+```
+
+Reviewers should reject a shared-component PR that omits it.
+
+## Anti-patterns
+
+- Declaring a field in the profile and then hardcoding a list on the screen (the baş çevresi bug itself).
+- Hedged text that covers two branches at once (`"hasta/veli"`) — adult wording says "hasta"; "veli" appears only in
+  pediatric context.
+- `|| 'pediatri'`, `genel: 'pediatri'`, `useState('pediatrik')` — unknown means pediatri.
+- Substring regexes (`/genel|göğüs/`) — they catch `genel-cerrahi`, `gogus-cerrahisi`. Resolve to the canonical key
+  (`bransAnahtari`) and write exclusions explicitly.
+- Hiding a tab button while the content mounts on `activeTab === 'x'` alone (reachable via `?tab=`).
+- Stripping the owner branch while fixing the leak — pediatri keeps its form, veli wording and Neyzi unchanged.
+- Silently deciding an ambiguous case — write it as OPEN in `docs/OPEN-COMMITMENTS.md`.
+
+## Quick checklist
+
+```
+- [ ] Content classified: universal / branch-specific (which branches) / patient-dependent + branch
+- [ ] Branch-specific → gated through an existing mechanism (profile, Record table, kapsam.ts, specialties/<slug>/)
+- [ ] No unconditional hardcoded field/word in a shared file (rg checked)
+- [ ] Unknown branch → baseline + "hasta", never pediatri
+- [ ] UI label + LLM prompt + model-output sanitizer all gated
+- [ ] Tab button and content mount behind the same gate
+- [ ] Tests: present for the owner, absent for ≥3 foreign branches; 30/30 loop
+- [ ] PR body carries the "Branş sızıntısı" block
+```
 
 ## Related
 
@@ -87,3 +200,4 @@ is.
 - `.cursor/skills/specialty-universal-vs-chapter/SKILL.md`
 - `.cursor/skills/specialty-doktor-araclari/SKILL.md` (Araçlar visibility)
 - `.cursor/skills/specialty-hasta-portali/SKILL.md`
+- Open decisions from the first audit: `docs/OPEN-COMMITMENTS.md` → BRANS-ALAN-SIZMASI

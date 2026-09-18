@@ -54,6 +54,8 @@ export function pediatriSekmesiUygun(dogumIso: string | null | undefined, nowMs 
 /**
  * Show pediatri tool tabs: age OK and doctor is pediatri or baseline (not another exclusive chapter).
  * Universal — same rule for göz, derm, KD, dahiliye, kardiyoloji, …
+ * BRANS-ALAN-SIZMASI: unknown DOB keeps the tabs only for a pediatri doctor. For every other branch the patient
+ * must be a KNOWN minor — an adult kardiyoloji/üroloji patient with no DOB on file used to get M-CHAT/gelişim tabs.
  */
 export function pediatriAracSekmesiUygun(input: {
   dogumIso: string | null | undefined
@@ -62,7 +64,19 @@ export function pediatriAracSekmesiUygun(input: {
 }, nowMs = Date.now()): boolean {
   if (!pediatriSekmesiUygun(input.dogumIso, nowMs)) return false
   if (input.pediatriDoktoru) return true
+  if (yasYilKesir(input.dogumIso, nowMs) == null) return false
   return !ozelBolumBransi(input.doktorBransi)
+}
+
+/**
+ * NOTYA-DAH-01 Dahiliye tab owners: iç hastalıkları + its subspecialties, aile hekimliği and the branch-less pratisyen.
+ * BRANS-ALAN-SIZMASI: the old inline regex matched `genel-cerrahi` (via "genel") and `gogus-cerrahisi` (via "göğüs") —
+ * surgeons got the Dahiliye chapter. Any cerrahi branch is excluded.
+ */
+export function dahiliyeSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b || /cerrah/.test(b)) return false
+  return /dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|kardiyo|gastro|romato|hemato|onkolo|göğüs|gogus/.test(b)
 }
 
 export function gebelikSekmesiUygun(input: {

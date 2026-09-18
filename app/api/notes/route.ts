@@ -10,6 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { persentilHesapla, vkiSiniflandir, vkiSinifEtiket, ayFarki, persentilMetni, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { bransKapsami } from '@/lib/specialties/kapsam'
+import { hekimBransi } from '@/lib/doktor/hekimAdi'
 
 export const dynamic = 'force-dynamic'
 
@@ -162,8 +164,12 @@ export async function GET(req: NextRequest) {
       } catch { /* doğum/cinsiyet çözülemedi — persentil hesaplanmaz */ }
     }
   }
+  // BRANS-ALAN-SIZMASI: İnceleme formu branşa göre çizilir — ölçüm alanları + hasta/veli hitabı sunucuda hesaplanır
+  const doktorBransi = await hekimBransi(supabase, user.id)
   const notes = rows.map((row) => {
     const session = firstSession(row.sessions)
+    const dogumIso = session.patient_id ? dogumlar.get(String(session.patient_id)) || null : null
+    const kapsam = bransKapsami({ seansBransi: session.specialty, doktorBransi, hastaDogumIso: dogumIso })
     return {
       id: String(row.id),
       maskedPatient: (session.patient_id && adlar.get(String(session.patient_id))) || maskPatient(session.patient_id),
@@ -181,9 +187,11 @@ export async function GET(req: NextRequest) {
       hastaOzeti: String(row.hasta_ozeti || ''),
       basvuruYakinmasi: String(row.basvuru_yakinmasi || ''),
       vitaller: (row.vitaller && typeof row.vitaller === 'object') ? row.vitaller : null,
-      buyumePersentilleri: session.patient_id
-        ? buyumePersentilleriniHesapla(row.vitaller, dogumlar.get(String(session.patient_id)) || null, cinsiyetler.get(String(session.patient_id)) || null, row.created_at || null)
+      // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda (KD/göz/derm hekimi 16 yaşında hastada "obez (Neyzi)" görmez)
+      buyumePersentilleri: session.patient_id && kapsam.pediatrik
+        ? buyumePersentilleriniHesapla(row.vitaller, dogumIso, cinsiyetler.get(String(session.patient_id)) || null, row.created_at || null)
         : null,
+      bransKapsami: kapsam,
       receteOnerisi: Array.isArray(row.recete_onerisi) ? row.recete_onerisi : [],
       aiDegerlendirme: (row as { ai_degerlendirme?: string }).ai_degerlendirme || null,
       alarmBulgulari: Array.isArray(row.alarm_bulgulari) ? (row.alarm_bulgulari as string[]).map(String) : [],

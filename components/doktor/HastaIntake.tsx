@@ -9,6 +9,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { BRANS_ETIKETLERI, BRANS_SORULARI } from '@/lib/intake/bransSorulari';
+import { bransAnahtari } from '@/lib/specialties/kapsam';
 import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar';
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs';
 
@@ -62,7 +63,9 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
         const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
         const j = await r.json();
         const sp = String(j?.data?.specialty || '');
-        if (sp && Object.prototype.hasOwnProperty.call(BRANS_ETIKETLERI, sp)) setSecilenBrans(sp);
+        // BRANS-ALAN-SIZMASI: gerçek KD profilleri 'kadin-dogum' taşır (BRANS_ETIKETLERI anahtarı değil) — kanonik anahtara çöz
+        const k = bransAnahtari(sp);
+        if (k && Object.prototype.hasOwnProperty.call(BRANS_ETIKETLERI, k)) setSecilenBrans(k);
       } catch { /* varsayılan genel kalır */ }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

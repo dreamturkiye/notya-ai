@@ -11,6 +11,7 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
   key: 'kadin-hastaliklari-dogum',
   etiket: 'Kadın Hastalıkları ve Doğum',
   resmiUnvan: 'Kadın Hastalıkları ve Doğum',
+  pediatrikBaglam: 'asla',
 
   olcumler: [
     ...BASELINE_OLCUMLER,

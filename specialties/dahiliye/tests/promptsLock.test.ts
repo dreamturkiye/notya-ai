@@ -62,8 +62,8 @@ describe('(c) wired into the runtime call paths', () => {
   it('call sites use the loader (chat, hafıza/voice, SOAP routes, approve distiller)', () => {
     assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('dahiliyeKilidi("asistan")'))
     assert.ok(kaynak('app/api/doktor/hafiza/route.ts').includes("dahiliyeKilidi('ses')"))
-    assert.ok(kaynak('app/api/sessions/[id]/end/route.ts').includes('doktorBransi })'))
-    assert.ok(kaynak('app/api/sessions/ses-yukle/route.ts').includes('doktorBransi })'))
+    assert.match(kaynak('app/api/sessions/[id]/end/route.ts'), /soapNotuUret\([^\n]*\bdoktorBransi\b/) // BRANS-ALAN-SIZMASI: hastaDogumIso de geçer
+    assert.match(kaynak('app/api/sessions/ses-yukle/route.ts'), /soapNotuUret\([^\n]*\bdoktorBransi\b/) // BRANS-ALAN-SIZMASI: hastaDogumIso de geçer
     assert.ok(kaynak('app/api/notes/[id]/approve/route.ts').includes('await hekimBransi(supabase, user.id)'))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("dahiliyeKilidi('ogrenme')"))
     assert.ok(kaynak('next.config.mjs').includes('./specialties/dahiliye/prompts/*.md'))

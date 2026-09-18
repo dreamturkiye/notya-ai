@@ -13,7 +13,9 @@ import { groqChat } from '@/lib/dr-ayse/groq';
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize';
 import { decrypt } from '@/lib/security/encryption';
 import { hekimAdi } from '@/lib/doktor/hekimAdi';
-import { klinikAdi, resmiUzmanlikAdi } from '@/lib/doktor/bransAdlari';
+import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs';
+import { epikrizKapsamliSistem, epikrizKlinikSatiri, epikrizTekVizitSistem, epikrizUnvanSatiri } from '@/lib/doktor/epikrizMetinleri';
+import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 
 export const dynamic = 'force-dynamic';
@@ -60,7 +62,7 @@ async function letterheadGetir(supabase: SupabaseClient, doktorId: string) {
 
 /** Ad/doğum/cinsiyet/branş/hekim — gerçek veriden, AI'ya hiç sormadan kurulan başlık. */
 async function baslikKur(
-  supabase: SupabaseClient, doktorId: string, patientId: string, branş: string, tarihIso: string,
+  supabase: SupabaseClient, doktorId: string, patientId: string, brans: SpecialtyKey | null, tarihIso: string,
 ): Promise<string> {
   const [{ data: hasta }, hekim] = await Promise.all([
     supabase.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
@@ -77,16 +79,16 @@ async function baslikKur(
     dogumIso ? `Doğum Tarihi: ${trTarih(dogumIso)} (${yasHesapla(dogumIso)})` : null,
     `Cinsiyet: ${cinsiyet}`,
     `Müracaat / Taburcu Tarihi: ${tarih}`,
-    `Kliniği: ${klinikAdi(branş || 'pediatri')}`,
+    epikrizKlinikSatiri(brans),
     hekim ? `Hekim: ${hekim}` : null,
   ].filter(Boolean);
   return satirlar.join('\n');
 }
 
-function imzaKur(hekim: string, branş: string, tarihIso: string): string {
+function imzaKur(hekim: string, brans: SpecialtyKey | null, tarihIso: string): string {
   const satirlar = [
     hekim || 'Uzm. Dr.',
-    branş ? `${resmiUzmanlikAdi(branş)} Uzmanı` : '',
+    epikrizUnvanSatiri(brans),
     `Tarih: ${trTarih(tarihIso) || trTarih(new Date().toISOString())}`,
   ].filter(Boolean);
   return satirlar.join('\n');
@@ -144,13 +146,11 @@ export async function POST(request: NextRequest) {
       if (!dosya) return NextResponse.json({ hata: 'Hasta dosyası bulunamadı.' }, { status: 404 });
 
       const hekim = await hekimAdi(supabase, user.id);
-      const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, 'pediatri', new Date().toISOString());
+      // BRANS-ALAN-SIZMASI: branş sabit 'pediatri' idi — her hekimin epikrizi "Kliniği: Pediatri" + çocuk uzmanı imzasıyla basılıyordu
+      const kapsam = await notKapsamiGetir(supabase, { doctorId: user.id, seansBransi: null, patientId: hastaId });
+      const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, kapsam.brans, new Date().toISOString());
       const letterhead = await letterheadGetir(supabase, user.id);
-      const kapsamliSystem = `Türkiye Sağlık Bakanlığı standart epikriz formatında, PROFESYONEL ve ÖZLÜ, hastanın İLK GELİŞİNDEN BU YANA TÜM İZLEMİNİ özetleyen kapsamlı bir epikriz yaz. Sadece JSON döndür: {"taniVeTedavi":"...","taburcuOzeti":"..."}
-BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor.
-ÜSLUP — anlatısal düzyazı DEĞİL, BÜYÜK HARF alt başlıklarla telegrafik: "taniVeTedavi" içinde SIRAYLA: TANI VE TARİHLER (sağlam çocuk/rutin kontroller ile geçirilen hastalıkları AYRI listele), AŞI KARNESİ (uygulanan aşılar ve tarihleri), İLAÇ VE TAKVİYELER (geçmiş ve güncel, tarihleriyle). Ölçüm/vital tekrarı yapma, yalnız klinik önemi olanı an.
-"taburcuOzeti" 3-4 cümleyi geçmesin: genel klinik seyir, takip süresi, toplam vizit sayısı — telegrafik.
-Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok" yaz.`;
+      const kapsamliSystem = epikrizKapsamliSistem(kapsam.pediatrik);
       const kapsamliUser = `${dosya}\n\nEk bilgi: ${ekBilgi || ''}`;
       const { text: guvenliKapsamli, map: kapsamliMap } = pseudonymize(kapsamliUser);
       assertNoTckn(guvenliKapsamli, 'epikriz-kapsamli');
@@ -175,7 +175,7 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
         hastaBilgileri,
         taniVeTedavi,
         taburcuOzeti,
-        imza: imzaKur(hekim, 'pediatri', new Date().toISOString()),
+        imza: imzaKur(hekim, kapsam.brans, new Date().toISOString()),
         letterhead,
         enabiz,
       });
@@ -188,21 +188,16 @@ Yalnız dosyada YER ALAN bilgiyi kullan, uydurma; bir bölüm boşsa "Kayıt yok
       return NextResponse.json({ hata: 'SOAP notu bulunamadı.' }, { status: 404 });
     }
     const seansBilgi = Array.isArray(note.sessions) ? note.sessions[0] : note.sessions;
-    const branş = seansBilgi?.specialty || 'pediatri';
+    // BRANS-ALAN-SIZMASI: 'genel'/boş seans artık 'pediatri' sayılmaz — seans branşı, yoksa hekimin branşı
+    const kapsam = await notKapsamiGetir(supabase, { doctorId: user.id, seansBransi: seansBilgi?.specialty ?? null, patientId: hastaId });
+    const branş = kapsam.brans;
     const tarihIso = seansBilgi?.started_at || note.created_at;
 
     const hekim = await hekimAdi(supabase, user.id);
     const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, branş, tarihIso);
     const letterhead = await letterheadGetir(supabase, user.id);
 
-    const systemPrompt = `Türkiye Sağlık Bakanlığı standart epikriz formatında, PROFESYONEL ve ÖZLÜ yaz. Sadece JSON döndür, başka hiçbir şey yazma: {"taniVeTedavi":"...","taburcuOzeti":"..."}
-BAŞLIK BİLGİLERİNİ (ad, tarih, hekim, protokol no vb.) YAZMA — ayrıca ekleniyor. İMZA/TARİH SATIRI YAZMA — ayrıca ekleniyor. Bilmediğin bir alan için ASLA köşeli parantez içinde yer tutucu ([...]) yazma.
-ÜSLUP — standart Türk epikriz belgesi gibi, anlatısal/gevşek düzyazı DEĞİL:
-- "taniVeTedavi" içinde BÜYÜK HARF alt başlıklar kullan: TANI (ICD-10 kodlarıyla, numaralı), ÖZGEÇMİŞ (yalnız klinik açıdan anlamlıysa — doğum bilgileri gibi rutin veriyi tek cümleyle geç), FİZİK MUAYENE (yalnız ANORMAL/dikkat çekici bulgular; "her sistem normal" tek satır yeterli), UYGULANAN TARAMA/AŞI, TEDAVİ VE TAKVİYELER (numaralı, ilaç adı+doz+kullanım), YÖNLENDİRMELER.
-- Kilo/boy/vital gibi ölçümleri BURADA TEKRAR ETME — bunlar zaten Hasta Bilgileri'nde/notta kayıtlı; yalnız KLİNİK ÖNEMİ olan değeri (ör. anormal VKİ, ateş yüksekliği) bir kez, kısaca an.
-- "Anne beyanına göre çocuğun genel sağlık durumu iyi olup..." gibi dolgu cümleler kurma; doğrudan bulguyu yaz.
-- "taburcuOzeti" 3-4 cümleyi geçmesin: klinik seyir + kontrol planı, telegrafik.
-Kısacası: bir meslektaşın hızlı okuyup anlayacağı, laf kalabalığı olmayan bir belge — dergi makalesi değil.`;
+    const systemPrompt = epikrizTekVizitSistem(kapsam.pediatrik);
     const userPrompt = `SOAP notu:
 Subjektif: ${note.content_subjektif || ''}
 Objektif: ${note.content_objektif || ''}
@@ -211,7 +206,7 @@ Plan: ${note.content_plan || ''}
 İlaçlar: ${note.content_ilaclar || ''}
 ICD10: ${note.icd10_codes || ''}
 Ek bilgi: ${ekBilgi || ''}
-Hastanın specialty: ${branş}`;
+Hastanın specialty: ${branş || 'genel'}`;
     const { text: guvenliPrompt, map: epikrizMap } = pseudonymize(userPrompt);
     assertNoTckn(guvenliPrompt, 'epikriz');
     const raw = await groqChat(

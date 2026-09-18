@@ -69,10 +69,16 @@ export async function hastaDosyasiniDerle(
   if (doktorNotu) b.push(`- Doktor notu: ${doktorNotu}`)
 
   const intake = intakeQ.data?.[0]
-  b.push('\n## İLK KAYIT FORMU (ÖZGEÇMİŞ — hasta/veli beyanı)')
+  // BRANS-ALAN-SIZMASI: "veli beyanı" yalnız formu gerçekten veli doldurduysa (pediatri formu: veliYakinligi) —
+  // KD/dahiliye/göz hastasının dosyası modele "hasta/veli" diye sunulmaz (model özet metnine veli dilini taşıyordu)
+  let yanitlar: Record<string, unknown> | null = null
+  if (intake?.form_data_encrypted) {
+    try { yanitlar = JSON.parse(decrypt(intake.form_data_encrypted)) as Record<string, unknown> } catch { yanitlar = null }
+  }
+  b.push(`\n## İLK KAYIT FORMU (ÖZGEÇMİŞ — ${yanitlar && yanitlar.veliYakinligi ? 'veli beyanı' : 'hasta beyanı'})`)
   if (intake?.form_data_encrypted) {
     try {
-      const yanitlar = JSON.parse(decrypt(intake.form_data_encrypted)) as Record<string, unknown>
+      if (!yanitlar) throw new Error('intake çözülemedi')
       const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi'])
       for (const [k, v] of Object.entries(yanitlar)) {
         if (gizli.has(k) || v == null || v === '') continue

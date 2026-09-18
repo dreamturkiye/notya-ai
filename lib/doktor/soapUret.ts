@@ -27,6 +27,7 @@ import { notMetinleriniTemizle } from '@/lib/doktor/klinikMetin'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
+import { bransKapsami, pediatrikBaglamMi, vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -61,16 +62,16 @@ export function aysePersona(specialty: string): string {
   return `Sen Ayşe Kaya — Türkiye'de yetişmiş, Türkçe tıbbi kayıt geleneğini çok iyi bilen bir ${k.unvan} ve Notya'nın klinik not uzmanısın. Klinik akıl yürütmen şu kaynaklara dayanır: ${k.kaynaklar}. İlaç önerilerinde Türkiye'de ruhsatlı ilaçları, Türk reçete pratiğini${pediatrikKapsam(specialty) ? ' ve pediatride kilogram başına dozlamayı' : ''} esas alırsın.`
 }
 
-/** DAH-PROMPTS-FU: growth-percentile (Neyzi) and veli wording belongs to pediatric notes only. True for a
- * pediatri/çocuk branch, or when every known branch is mixed-age (genel pratisyen / aile hekimliği — they also see
- * children, so the "persentil uydurma" guard stays). A specialty-locked adult branch (dahiliye, kadın doğum, …) → false. */
-export function pediatrikKapsam(...branslar: (string | null | undefined)[]): boolean {
-  const b = branslar.map((x) => (x || '').toLocaleLowerCase('tr-TR').trim()).filter(Boolean)
-  if (b.some((x) => /pediatri|çocuk|cocuk/.test(x))) return true
-  return b.every((x) => /^(genel|aile)/.test(x))
+/** DAH-PROMPTS-FU + BRANS-ALAN-SIZMASI: growth-percentile (Neyzi), baş çevresi and veli wording belong to pediatric
+ * notes only. Thin wrapper over the single gate lib/specialties/kapsam.ts → pediatrikBaglamMi(): pediatri / çocuk
+ * cerrahisi always; aile hekimliği and a branch-less ("genel") doctor only when the patient is a KNOWN minor; every
+ * other branch never. (The old regex version let `genel-cerrahi` match /^genel/, let a stale 'pediatri' in either
+ * argument win over a KD doctor, and treated "no branch at all" as pediatric.) */
+export function pediatrikKapsam(seansBransi?: string | null, doktorBransi?: string | null, hastaDogumIso?: string | null): boolean {
+  return pediatrikBaglamMi({ seansBransi, doktorBransi, hastaDogumIso })
 }
 
-export function soapKurallari(pediatrik = true): string {
+export function soapKurallari(pediatrik: boolean): string {
   const ped = (pediatrikMetin: string, yetiskinMetin: string) => (pediatrik ? pediatrikMetin : yetiskinMetin)
   return `GÖREV: Aşağıdaki muayene transkriptinden DÜNYA STANDARDINDA bir Türkçe SOAP notu üret.
 
@@ -131,7 +132,7 @@ SADECE geçerli JSON döndür:
   "basvuruYakinmasi": "",
   "soap": { "subjektif": "", "objektif": "", "degerlendirme": "", "plan": "" },
   "aiDegerlendirme": "",
-  "vitaller": { "kilo": null, "boy": null, "basCevresi": null, "ates": null, "nabiz": null, "solunum": null, "spo2": null, "tansiyon": null },
+  "vitaller": { "kilo": null, "boy": null, ${ped('"basCevresi": null, ', '')}"ates": null, "nabiz": null, "solunum": null, "spo2": null, "tansiyon": null },
   "anamnez": "",
   "fizik_muayene": "",
   "tani": "",
@@ -200,6 +201,7 @@ export interface SoapGirdi {
   stilProfili?: string // NOTYA-OGRENME-02: düzeltme geçmişinden damıtılmış doktor tercihleri
   doktorAdi?: string // Kaan 2026-09-10: veli özetinde "Doktorunuz" yerine "Dr. Ad Soyad"
   doktorBransi?: string | null // DAH-PROMPTS-LOCK: users.specialty — seans bağlamı branş göndermese de kilit uygulanır
+  hastaDogumIso?: string | null // BRANS-ALAN-SIZMASI: yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
 }
 
 /** AUDIT-2026-09-03 (canlı olay, 16:27): uzun muayenelerde model çıktısı token tavanında
@@ -263,7 +265,7 @@ export function soapSistemPromptu(girdi: SoapGirdi): string {
   const personaAnahtari = soapPersonaAnahtari(girdi)
   return [
     aysePersona(personaAnahtari),
-    soapKurallari(pediatrikKapsam(personaAnahtari, girdi.doktorBransi)),
+    soapKurallari(pediatrikKapsam(girdi.specialty, girdi.doktorBransi, girdi.hastaDogumIso)),
     girdi.klinikBaglam ? `\nHASTANIN BİLİNEN KLİNİK BAĞLAMI (kimliksiz — alerji ve sürekli ilaçlara reçete önerirken MUTLAKA dikkat et):\n${girdi.klinikBaglam}` : '',
     girdi.stilOrnekleri ? `\nDOKTORUN ONAYLADIĞI ÖNCEKİ NOTLARDAN ÜSLUP ÖRNEKLERİ (içeriği değil, ÜSLUBU ve ayrıntı düzeyini taklit et):\n${girdi.stilOrnekleri}` : '',
     girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',,
@@ -285,6 +287,9 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
   const veri = jsonKurtar(temiz)
   if (Array.isArray(veri.receteOnerisi)) veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
+  // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
+  // dictated during an obstetric USG is not the mother's vital sign).
+  veri.vitaller = vitalleriKapsamaGoreSuz(veri.vitaller, bransKapsami({ seansBransi: girdi.specialty, doktorBransi: girdi.doktorBransi, hastaDogumIso: girdi.hastaDogumIso }))
   // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches never keep a model-written dose the hekim did not give.
   // KD-DERM-SAFETY-FINDINGS F4 (every branch): no internal field names, no invented consent form number in doctor-facing text.
   // KD-KAYNAK-KILIDI: kadın doğum notes never keep a guideline number / year that is not in the verified list.

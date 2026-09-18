@@ -10,6 +10,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { persentilHesapla, vkiSiniflandir, vkiSinifEtiket, ayFarki, persentilMetni, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,6 +127,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     duzenlemeSayisi = count || 0
   } catch { /* 0 kalır */ }
 
+  // BRANS-ALAN-SIZMASI: not sayfası / yazdır branşa göre çizilir (ölçüm alanları + hasta/veli hitabı)
+  const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, hastaDogumIso: dogumIso })
+  const bransKapsami = { brans: kapsam.brans, pediatrik: kapsam.pediatrik, olcumler: kapsam.olcumler, hitap: kapsam.hitap }
+
   return NextResponse.json({
     not: {
       id: not.id,
@@ -144,7 +149,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       kritikBulgular: Array.isArray(not.kritik_bulgular) ? not.kritik_bulgular : [],
       alarmBulgulari: Array.isArray(not.alarm_bulgulari) ? not.alarm_bulgulari : [],
       vitaller: not.vitaller || null,
-      buyumePersentilleri: buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at),
+      // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda
+      buyumePersentilleri: kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null,
+      bransKapsami,
       hastaOzeti: not.hasta_ozeti || '',
       takipSuresi: not.takip_suresi || '',
     },

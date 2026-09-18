@@ -15,6 +15,9 @@ import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { hafizaYukle, hafizaBloguSohbet } from '@/lib/doktor/hafiza'
+import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
+import { vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
+import { notKonsultSistemPromptu } from '@/lib/doktor/notKonsultPromptu'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -62,49 +65,9 @@ export async function POST(req: NextRequest) {
   try { hafizaBlogu = hafizaBloguSohbet(await hafizaYukle(supabase, doktorId)) } catch { /* hafıza kritik değil */ }
 
   const trtBugun = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
-  const sistem = `Sen Ayşe Kaya — Notya'nın klinik uzmanı. Doktor, AZ ÖNCE üretilen SOAP notunu seninle birlikte gözden geçiriyor. Türkçe, meslektaş tonunda ("Hocam"), kısa ve öz konuş.
-
-YETENEKLERİN:
-1. KONSULT: prognoz, tedavi planı, kontrol zamanlaması gibi sorulara nottaki ve dosyadaki verilere dayanarak cevap ver. Dosyada olmayanı uydurma.
-2. DÜZENLEME: doktor bir bölümü değiştirmeni isterse (ekle, çıkar, kısalt, yeniden yaz) ilgili alanların YENİ TAM METNİNİ "duzenlemeler" içinde döndür — YALNIZ değişmesi istenen alanları döndür, diğerlerini hiç koyma. Düzenlemeyi cevapta bir cümleyle özetle.
-3. EYLEM ÖNERİSİ: kontrol randevusu ya da takip araması kararlaştırılıyorsa "eylemler" listesine ekle (tarih YYYY-MM-DD, saat HH:MM — TRT; kim: doktor|sekreter). Eylemi SEN gerçekleştiremezsin; doktor ekranda onaylayınca sistem takvime yazar — bunu bil ve "onaylarsanız takvime eklerim" de.
-
-Bugün (TRT): ${trtBugun}. Nihai klinik karar ve sorumluluk her zaman doktorundur.
-
-DÜZENLEYEBİLECEĞİN ALANLAR ve TAM ANAHTARLARI (başka anahtar KULLANMA; İngilizce anahtar yazma):
-- "subjektif", "objektif", "degerlendirme", "plan" → metin (bölümün yeni tam metni)
-- "basvuruYakinmasi" → metin
-- "vitaller" → nesne, anahtarlar: tansiyon, nabiz, spo2, ates, kilo, boy (değerler metin, örn. {"nabiz":"100"})
-- "alarmBulgulari" → dizi (evde dikkat edilmesi gerekenler, her öğe bir madde)
-- "ilaclar" → dizi, her öğe {"ad","doz","kullanim","sure"} (doktorun ilaç listesi)
-- "hastaOzeti" → metin (veliye giden özet)
-- "icdKodlari" → dizi, her öğe {"code","description_tr","is_primary"} (ICD-10 önerileri)
-- "receteOnerisi" → dizi, her öğe {"ticariOrnek","etkenMadde","doz","kullanim","sure","sgkListesinde","not"} (Ayşe'nin reçete önerisi — doktorun kendi "ilaclar" listesinden AYRI)
-- "aiDegerlendirme" → metin (ayırıcı tanı/öneri yorumun — hastaya görünmez)
-BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, WHO referansı verme — bu hesap ayrı, doğrulanmış bir bölümde (Neyzi standartları) gösteriliyor. Doktor açıkça söylemediyse persentile dayalı bir tanı (ör. "obezite") yazma/ekleme.
-
-DOKTOR "notu yeniden değerlendir", "tanıya göre güncelle" gibi KAPSAMLI bir istek yaparsa ya da tanıyı/değerlendirmeyi değiştirdiyse: mevcut subjektif/objektif/degerlendirme/plan'ı SABİT kabul edip, buna göre icdKodlari, receteOnerisi, aiDegerlendirme, alarmBulgulari ve hastaOzeti'ni BAŞTAN, TUTARLI biçimde yeniden üret — eski tanıya göre kalmış ICD kodu veya öneri bırakma.
-Nabız/ateş gibi vital değişikliklerini HEM "vitaller" HEM de objektif metninde geçiyorsa objektif'te yap. "Doktorunuz" ifadesini hekim adıyla değiştirme isteği hastaOzeti ve alarmBulgulari alanlarını ilgilendirir.
-Bir düzenleme yaptığında cevap metninde JSON gösterme; JSON yalnız zarfın kendisidir.
-
-MEVCUT SOAP TASLAĞI (doktorun ekranındaki güncel hali):
-S: ${taslak?.subjektif || ''}
-O: ${taslak?.objektif || ''}
-A: ${taslak?.degerlendirme || ''}
-P: ${taslak?.plan || ''}
-Başvuru yakınması: ${taslak?.basvuruYakinmasi || not.basvuru_yakinmasi || ''}
-Evde dikkat (taslak): ${JSON.stringify(taslak?.alarmBulgulari || not.alarm_bulgulari || [])}
-Veli özeti (taslak): ${taslak?.hastaOzeti || not.hasta_ozeti || ''}
-İlaçlar (doktorun listesi, taslak): ${JSON.stringify(taslak?.ilaclar || [])}
-ICD-10 önerileri (taslak): ${JSON.stringify(taslak?.icdKodlari || not.icd10_codes || [])}
-Reçete önerisi (taslak): ${JSON.stringify(taslak?.receteOnerisi || not.recete_onerisi || [])}
-
-NOT EKLERİ: Vitaller: ${JSON.stringify(not.vitaller || {})} | ICD önerileri: ${JSON.stringify(not.icd10_codes || [])} | Reçete önerisi: ${JSON.stringify(not.recete_onerisi || [])} | Alarm bulguları: ${JSON.stringify(not.alarm_bulgulari || [])}
-${klinikBaglam ? `\nHASTANIN KİMLİKSİZ DOSYA BAĞLAMI:\n${klinikBaglam}` : ''}
-
-SADECE geçerli JSON döndür:
-{"cevap":"...","duzenlemeler":{},"eylemler":[]}
-duzenlemeler yalnız değişen alanları içerir ({"plan":"..."} gibi); eylemler öğeleri {"tur":"kontrol_randevu"|"takip_aramasi","tarih":"YYYY-MM-DD","saat":"HH:MM","kim":"doktor"|"sekreter","aciklama":"..."} biçimindedir.${hafizaBlogu ? `\n\n${hafizaBlogu}` : ''}`
+  // BRANS-ALAN-SIZMASI: hitap (hasta/veli), vital anahtarları ve persentil kuralı notun branş kapsamından
+  const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, patientId: seans?.patient_id ? String(seans.patient_id) : null })
+  const sistem = notKonsultSistemPromptu({ kapsam, trtBugun, taslak, not, klinikBaglam, hafizaBlogu })
 
   const gecmis = mesajlar.slice(-16).map((m) => ({
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
@@ -139,6 +102,8 @@ duzenlemeler yalnız değişen alanları içerir ({"plan":"..."} gibi); eylemler
     const dzHam = (sonuc.duzenlemeler && typeof sonuc.duzenlemeler === 'object' ? sonuc.duzenlemeler : {}) as Record<string, unknown>
     const dz: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(dzHam)) { const hedef = ESLE[k] || ESLE[k.toLowerCase()] || k; dz[hedef] = v }
+    // BRANS-ALAN-SIZMASI: pediatrik olmayan notta model pediatrik ölçüm (baş çevresi) öneremez
+    if (dz.vitaller && typeof dz.vitaller === 'object') dz.vitaller = vitalleriKapsamaGoreSuz(dz.vitaller, kapsam)
     sonuc.duzenlemeler = dz
     if (typeof sonuc.cevap === 'string' && sonuc.cevap.trim().startsWith('{')) sonuc.cevap = 'Düzenlemeyi ekrana işledim Hocam.'
     return NextResponse.json({

@@ -31,9 +31,11 @@ import { yasHesapla } from '@/lib/doktor/yas';
 import {
   gebelikSekmesiUygun,
   hastaDosyaSekmeleri,
+  dahiliyeSekmesiBransi,
   pediatriAracSekmesiUygun,
   type HastaDosyaSekmeId,
 } from '@/lib/doktor/hastaDosyaSekmeleri';
+import { cocukHastaMi, pediatrikBaglamMi } from '@/lib/specialties/kapsam';
 import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 
@@ -133,7 +135,7 @@ export default function HastaProfilPage() {
           setPediatriAraci(pediatriHedefBoyBransi(sp));
           setGozAraci(/göz|goz|oftalm/i.test(sp));
           setDeriAraci(/derma|deri ve z/i.test(sp));
-          setDahiliyeAraci(/dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|kardiyo|gastro|romato|hemato|onkolo|göğüs|gogus/i.test(sp));
+          setDahiliyeAraci(dahiliyeSekmesiBransi(sp));
         }
       } catch {
         setError('Bir hata oluştu');
@@ -389,15 +391,22 @@ export default function HastaProfilPage() {
         )}
         {!loading && !error && activeTab === 'ilaclar' && <HastaIlaclar patientId={patientId} />}
         {!loading && !error && activeTab === 'formu' && <HastaIntake patientId={patientId} />}
-        {!loading && !error && activeTab === 'asilar' && <HastaAsilar patientId={patientId} />}
+        {!loading && !error && activeTab === 'asilar' && (
+          <HastaAsilar
+            patientId={patientId}
+            pediatrikBaglam={pediatrikBaglamMi({ doktorBransi, hastaDogumIso: patient?.dogum_tarihi })}
+            cocukHasta={cocukHastaMi(patient?.dogum_tarihi) || (pediatriAraci && !patient?.dogum_tarihi)}
+          />
+        )}
         {!loading && !error && pediatriUygun && activeTab === 'mchat' && <HastaMchat patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'bebek' && <HastaBebekKarti patientId={patientId} />}
         {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
         {!loading && !error && activeTab === 'gebelik' && gebelikUygun && <HastaGebelik patientId={patientId} />}
-        {!loading && !error && activeTab === 'dahiliye' && <DahiliyeHome patientId={patientId} />}
+        {/* BRANS-ALAN-SIZMASI: ?tab=dahiliye / ?tab=deri derin bağlantısı bölüm içeriğini branş kapısı olmadan açıyordu */}
+        {!loading && !error && activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome patientId={patientId} />}
         {!loading && !error && activeTab === 'goz' && gozAraci && <GozHome patientId={patientId} />}
-        {!loading && !error && activeTab === 'deri' && (
+        {!loading && !error && activeTab === 'deri' && deriAraci && (
           <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} />
         )}
       </div>
