@@ -153,6 +153,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       buyumePersentilleri: kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null,
       bransKapsami,
       hastaOzeti: not.hasta_ozeti || '',
+      aiDegerlendirme: not.ai_degerlendirme || '',
       takipSuresi: not.takip_suresi || '',
     },
     hasta: { ...hasta, patientId: seans?.patient_id ? String(seans.patient_id) : null },

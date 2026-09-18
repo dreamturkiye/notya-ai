@@ -6,8 +6,11 @@
  * orada yine düzeltilebilmeli ve yeniden onaylanabilmeli — sadece Yazdır/PDF değil.
  * Tek sayfa, İnceleme kartıyla aynı alanlar ve aynı onay ucu (/api/notes/[id]/approve):
  * düzenlemeler öğrenme loguna girer, ilaçlar dosya+portala işlenir (aynı ilaç aynı doz → tekrar açılmaz).
+ *
+ * Kaan (2026-09-18): Formda klinik yenileme (başvuru / vital / SOAP) olunca Ayşe notu yeniden
+ * okur — ICD, reçete/ilaç, evde dikkat, hasta özeti pediatrideki gibi güncellenir.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
@@ -17,15 +20,46 @@ import { notDuzenleGeriHref } from '@/lib/doktor/geriNavigasyon';
 import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
+import {
+  NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
+  NOT_YENIDEN_DEGERLENDIR_ISTEK,
+} from '@/lib/doktor/notYenidenDegerlendir';
+
+interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
+interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
 
 interface NotVeri {
-  not: { id: string; createdAt: string; approvedAt: string | null; specialty: string; basvuruYakinmasi: string; subjektif: string; objektif: string; degerlendirme: string; plan: string; alarmBulgulari: string[]; vitaller: Record<string, unknown> | null; ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]; buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null; hastaOzeti: string; icdKodlari: { code?: string; description?: string }[]; bransKapsami?: BransKapsami };
-  hasta: { ad: string ; patientId: string | null };
-  doktor: { ad: string };
-  duzenlemeSayisi: number;
+  not: {
+    id: string
+    createdAt: string
+    approvedAt: string | null
+    specialty: string
+    basvuruYakinmasi: string
+    subjektif: string
+    objektif: string
+    degerlendirme: string
+    plan: string
+    alarmBulgulari: string[]
+    vitaller: Record<string, unknown> | null
+    ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]
+    buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null
+    hastaOzeti: string
+    icdKodlari: IcdOner[]
+    receteOnerisi?: ReceteOner[]
+    aiDegerlendirme?: string
+    bransKapsami?: BransKapsami
+  }
+  hasta: { ad: string; patientId: string | null }
+  doktor: { ad: string }
+  duzenlemeSayisi: number
 }
 
-const BOLUM = [['subjektif', 'Anamnez — Şikayet · Şikayetin Hikayesi · Özgeçmiş · Soygeçmiş'], ['objektif', 'Fizik Muayene / Bulgular'], ['degerlendirme', 'Değerlendirme — Ön Tanı / Ayırıcı Tanı'], ['plan', 'Tedavi · Tetkik · Kontrol']] as const;
+const BOLUM = [
+  ['subjektif', 'Anamnez — Şikayet · Şikayetin Hikayesi · Özgeçmiş · Soygeçmiş'],
+  ['objektif', 'Fizik Muayene / Bulgular'],
+  ['degerlendirme', 'Değerlendirme — Ön Tanı / Ayırıcı Tanı'],
+  ['plan', 'Tedavi · Tetkik · Kontrol'],
+] as const;
 
 function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: string; sure: string }[] {
   return metin.split('\n').map((satir) => satir.trim()).filter(Boolean).map((satir) => {
@@ -48,9 +82,15 @@ export default function NotSayfasi() {
   const [taslak, setTaslak] = useState<Record<string, string>>({ subjektif: '', objektif: '', degerlendirme: '', plan: '' });
   const [alarm, setAlarm] = useState('');
   const [ozet, setOzet] = useState('');
-  const [ilac, setIlac] = useState('');   // "Ad — doz — kullanım — süre", satır başına bir ilaç
+  const [ilac, setIlac] = useState('');
+  const [icd, setIcd] = useState<IcdOner[]>([]);
+  const [recete, setRecete] = useState<ReceteOner[]>([]);
+  const [aiDeg, setAiDeg] = useState('');
   const [durum, setDurum] = useState<'bos' | 'kaydediyor' | 'kaydedildi' | 'hata'>('bos');
   const [degisti, setDegisti] = useState(false);
+  const [aiDurum, setAiDurum] = useState<'bos' | 'bekliyor' | 'guncellendi' | 'hata'>('bos');
+  const atlaOtomatikRef = useRef(true);
+  const aiBekliyorRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -59,6 +99,7 @@ export default function NotSayfasi() {
         const r = await fetch(`/api/notes/${params.id}`, { headers: { Authorization: `Bearer ${t}` } });
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Not alınamadı');
+        atlaOtomatikRef.current = true;
         setVeri(j);
         setBasvuru(j.not.basvuruYakinmasi || '');
         setVital(Object.fromEntries(Object.entries((j.not.vitaller || {}) as Record<string, unknown>).map(([k, v]) => [k, v == null ? '' : String(v)])));
@@ -66,23 +107,115 @@ export default function NotSayfasi() {
         setAlarm((j.not.alarmBulgulari || []).join('\n'));
         setOzet(j.not.hastaOzeti || '');
         setIlac((j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
+        setIcd(Array.isArray(j.not.icdKodlari) ? j.not.icdKodlari : []);
+        setRecete(Array.isArray(j.not.receteOnerisi) ? j.not.receteOnerisi : []);
+        setAiDeg(String(j.not.aiDegerlendirme || ''));
       } catch (e) { setHata(e instanceof Error ? e.message : 'Hata'); }
     })();
   }, [params.id]);
 
   const isaretle = <T,>(set: (v: T) => void) => (v: T) => { set(v); setDegisti(true); };
 
+  const aiYenidenOku = async () => {
+    if (aiBekliyorRef.current || !veri) return;
+    aiBekliyorRef.current = true;
+    setAiDurum('bekliyor');
+    try {
+      const t = await ensureDoctorAccessToken();
+      const r = await fetch('/api/doktor/not-konsult', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          noteId: params.id,
+          taslak: {
+            ...taslak,
+            basvuruYakinmasi: basvuru,
+            vitaller: vital,
+            alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean),
+            hastaOzeti: ozet,
+            ilaclar: ilacMetniniCoz(ilac),
+            icdKodlari: icd,
+            receteOnerisi: recete,
+            aiDegerlendirme: aiDeg,
+          },
+          mesajlar: [{ rol: 'doktor', icerik: NOT_YENIDEN_DEGERLENDIR_ISTEK }],
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
+      const dz = (d.duzenlemeler || {}) as Record<string, unknown>;
+      atlaOtomatikRef.current = true;
+      if (Array.isArray(dz.alarmBulgulari)) { setAlarm((dz.alarmBulgulari as unknown[]).map(String).join('\n')); setDegisti(true); }
+      if (typeof dz.hastaOzeti === 'string') { setOzet(dz.hastaOzeti as string); setDegisti(true); }
+      if (Array.isArray(dz.ilaclar)) {
+        setIlac((dz.ilaclar as unknown[]).map((it) => {
+          const o = it as Record<string, unknown>
+          return [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' — ')
+        }).join('\n'));
+        setDegisti(true);
+      }
+      if (Array.isArray(dz.icdKodlari)) {
+        setIcd((dz.icdKodlari as unknown[]).map((it) => {
+          const o = it as Record<string, unknown>
+          return { code: String(o.code || ''), description: String(o.description_tr || o.description || ''), description_tr: String(o.description_tr || o.description || ''), is_primary: !!o.is_primary }
+        }).filter((k) => k.code));
+        setDegisti(true);
+      }
+      if (Array.isArray(dz.receteOnerisi)) {
+        setRecete((dz.receteOnerisi as unknown[]).map((it) => {
+          const o = it as Record<string, unknown>
+          return { ticariOrnek: String(o.ticariOrnek || ''), etkenMadde: String(o.etkenMadde || ''), doz: String(o.doz || ''), kullanim: String(o.kullanim || ''), sure: String(o.sure || ''), sgkListesinde: !!o.sgkListesinde, not: String(o.not || '') }
+        }).filter((x) => x.ticariOrnek));
+        setDegisti(true);
+      }
+      if (typeof dz.aiDegerlendirme === 'string' && (dz.aiDegerlendirme as string).trim()) {
+        setAiDeg(dz.aiDegerlendirme as string);
+        setDegisti(true);
+      }
+      setAiDurum('guncellendi');
+      setTimeout(() => setAiDurum((s) => (s === 'guncellendi' ? 'bos' : s)), 2500);
+    } catch {
+      setAiDurum('hata');
+      setTimeout(() => setAiDurum((s) => (s === 'hata' ? 'bos' : s)), 3500);
+    } finally {
+      aiBekliyorRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (!veri) return;
+    if (atlaOtomatikRef.current) {
+      atlaOtomatikRef.current = false;
+      return;
+    }
+    if (aiBekliyorRef.current) return;
+    const t = setTimeout(() => { void aiYenidenOku(); }, NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [basvuru, vital, taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan, veri?.not.id]);
+
   const kaydetVeOnayla = async () => {
     setDurum('kaydediyor');
     try {
       const t = await ensureDoctorAccessToken();
       const r = await fetch(`/api/notes/${params.id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-        body: JSON.stringify({ duzenlemeler: { ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozet, ilaclar: ilacMetniniCoz(ilac) } }) });
+        body: JSON.stringify({
+          duzenlemeler: {
+            ...taslak,
+            basvuruYakinmasi: basvuru,
+            vitaller: vital,
+            alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean),
+            hastaOzeti: ozet,
+            ilaclar: ilacMetniniCoz(ilac),
+            icdKodlari: icd,
+            receteOnerisi: recete,
+            aiDegerlendirme: aiDeg,
+          },
+        }) });
       const j = await r.json();
       if (!r.ok || j.success === false) throw new Error(j.error || 'Onaylanamadı');
       setDurum('kaydedildi'); setDegisti(false);
       setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString() } } : v);
-      // NOTYA-ONAY-DONUS-01: onay sonrası hedef tek kaynaktan (kesinleşmiş not görünümü).
       setTimeout(() => router.push(onaylananNotYolu(params.id)), 700);
     } catch (e) { setDurum('hata'); alert(e instanceof Error ? e.message : 'Onaylanamadı'); setTimeout(() => setDurum('bos'), 2500); }
   };
@@ -106,11 +239,17 @@ export default function NotSayfasi() {
         <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none' }}>{hasta.patientId ? 'Muayene Geçmişi →' : 'Hastalar →'}</a>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: '#8FA0B5', fontWeight: 500 }}>· {not.specialty} · {trTarih(not.createdAt)}</span></div>
-          <div style={{ fontSize: 12, color: onayli ? '#22C55E' : '#F59E0B' }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}{degisti ? ' · kaydedilmemiş değişiklik var' : ''}</div>
+          <div style={{ fontSize: 12, color: onayli ? '#22C55E' : '#F59E0B' }}>
+            {onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}
+            {degisti ? ' · kaydedilmemiş değişiklik var' : ''}
+            {aiDurum === 'bekliyor' ? ' · Ayşe notu yeniden okuyor…' : ''}
+            {aiDurum === 'guncellendi' ? ' · öneriler güncellendi' : ''}
+            {aiDurum === 'hata' ? ' · AI öneri güncellemesi başarısız' : ''}
+          </div>
         </div>
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: '#C9D4E3', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(45,212,191,0.35)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
-        <button type="button" onClick={kaydetVeOnayla} disabled={durum === 'kaydediyor'} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+        <button type="button" onClick={kaydetVeOnayla} disabled={durum === 'kaydediyor' || aiDurum === 'bekliyor'} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.7 : 1 }}>
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
       </div>
@@ -123,11 +262,9 @@ export default function NotSayfasi() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <div style={etiket}>Yaşamsal Bulgular</div>
-            {/* NOTYA-BLE-01/02: cihazdan ölçüm / dosya — sonradan da eklenebilir; Kaydet ve yeniden onayla ile nota işlenir */}
             <CihazdanAl hastaId={veri.hasta.patientId} notId={veri.not.id} onOlcum={(v) => isaretle((x: Record<string, string>) => setVital({ ...vital, ...x }))(v)} />
             <CihazDosyasi hastaId={veri.hasta.patientId} notId={veri.not.id} />
           </div>
-          {/* BRANS-ALAN-SIZMASI: alanlar notun branş profilinden — baş çevresi yalnız pediatrik bağlamda */}
           <YasamsalBulgularFormu
             olcumler={kapsam.olcumler}
             degerler={vital}
@@ -136,7 +273,7 @@ export default function NotSayfasi() {
             girdiStili={{ ...kutu, width: 76, padding: '6px 8px' }}
             persentilRengi="#0F9B8E"
           />
-          {veri.not.buyumePersentilleri?.vki && (
+          {veri.not.buyumePersentilleri?.vki && kapsam.pediatrik && (
             <div style={{ marginTop: 6, fontSize: 11, color: '#0F9B8E' }}>
               VKİ: {veri.not.buyumePersentilleri.vki}{veri.not.buyumePersentilleri.vkiSinif ? ` — ${veri.not.buyumePersentilleri.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
             </div>
@@ -148,12 +285,23 @@ export default function NotSayfasi() {
             <textarea value={taslak[k]} onChange={(e) => isaretle((v: string) => setTaslak({ ...taslak, [k]: v }))(e.target.value)} rows={Math.max(4, Math.min(18, Math.ceil((taslak[k] || '').length / 95)))} style={kutu} />
           </div>
         ))}
-        {not.icdKodlari.length > 0 && (
-          <div>
-            <div style={etiket}>ICD-10</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{not.icdKodlari.map((c, i) => <span key={i} style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px' }}>{c.code}{c.description ? ` — ${c.description}` : ''}</span>)}</div>
+        <div>
+          <div style={{ ...etiket, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span>ICD-10 <span style={{ fontWeight: 400, color: '#64748B' }}>(onayınıza tabi)</span></span>
+            <button type="button" disabled={aiDurum === 'bekliyor'} onClick={() => { void aiYenidenOku(); }} style={{ background: 'transparent', border: '1px solid rgba(245,158,11,0.4)', color: '#F59E0B', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: aiDurum === 'bekliyor' ? 'default' : 'pointer', opacity: aiDurum === 'bekliyor' ? 0.5 : 1 }}>🔄 Notu AI ile yeniden değerlendir</button>
           </div>
-        )}
+          {icd.length > 0 ? (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{icd.map((c, i) => <span key={i} style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px' }}>{c.code}{(c.description_tr || c.description) ? ` — ${c.description_tr || c.description}` : ''}</span>)}</div>
+          ) : (
+            <div style={{ fontSize: 12, color: '#64748B' }}>Henüz ICD önerisi yok — notu düzenleyince Ayşe günceller.</div>
+          )}
+        </div>
+        {aiDeg.trim() ? (
+          <div>
+            <div style={etiket}>Klinik değerlendirme (AI · hastaya görünmez)</div>
+            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: '#CBD5E1' }}>{aiDeg}</div>
+          </div>
+        ) : null}
         <div>
           <div style={etiket}>İlaçlar <span style={{ fontWeight: 400, color: '#64748B' }}>(her satır bir ilaç: Ad — doz — kullanım — süre)</span></div>
           <textarea value={ilac} onChange={(e) => isaretle(setIlac)(e.target.value)} rows={Math.max(2, ilac.split('\n').length)} placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam" style={kutu} />

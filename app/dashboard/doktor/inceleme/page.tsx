@@ -21,6 +21,10 @@ import {
 import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
+import {
+  NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
+  NOT_YENIDEN_DEGERLENDIR_ISTEK,
+} from '@/lib/doktor/notYenidenDegerlendir';
 
 interface IlacOner { ad?: string; doz?: string; kullanim?: string; sure?: string }
 interface IcdOner { code?: string; description_tr?: string; description?: string; is_primary?: boolean }
@@ -120,6 +124,8 @@ export default function IncelemePage() {
   const [kGirdi, setKGirdi] = useState('');
   const [kBekliyor, setKBekliyor] = useState(false);
   const [eylemler, setEylemler] = useState<Eylem[]>([]);
+  const atlaOtomatikRef = useRef(true);
+  const kBekliyorRef = useRef(false);
 
   function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: string; sure: string }[] {
     return metin.split('\n').map((satir) => satir.trim()).filter(Boolean).map((satir) => {
@@ -129,6 +135,7 @@ export default function IncelemePage() {
   }
 
   const notuAc = (note: PendingNote) => {
+    atlaOtomatikRef.current = true;
     setAcikId(note.id);
     setTaslak({ subjektif: note.subjektif, objektif: note.objektif, degerlendirme: note.degerlendirme, plan: note.plan });
     setBasvuruTaslak(note.basvuruYakinmasi || '');
@@ -144,17 +151,17 @@ export default function IncelemePage() {
     setEylemler([]);
   };
 
-  // NOTYA-KONSULT-03: not üzerinde Ayşe ile konsult + sözle düzenleme. Ayşe'nin döndürdüğü
-  // düzenlemeler ekrandaki taslağa işlenir — kalıcı kayıt ve öğrenme logu doktor Onayla
-  // dediğinde olur. Eylem önerileri (kontrol randevusu / takip araması) tek dokunuşla
-  // ortak takvime yazılır; sekreter aramaları 📞 önekiyle takvimde görür, arama notunu
-  // randevunun not alanına yazar.
-  const konsultGonder = async (note: PendingNote, override?: string) => {
+  // NOTYA-KONSULT-03: not üzerinde Ayşe ile konsult + sözle düzenleme.
+  // sessiz=true: form yenilemesinde otomatik yeniden değerlendirme — sohbeti doldurmaz.
+  const konsultGonder = async (note: PendingNote, override?: string, opts?: { sessiz?: boolean; sabitleSoap?: boolean }) => {
     const soru = (override ?? kGirdi).trim();
-    if (!soru || kBekliyor) return;
+    if (!soru || kBekliyorRef.current) return;
     const yeni: KMesaj[] = [...kMesajlar, { rol: 'doktor', icerik: soru }];
-    setKMesajlar(yeni);
-    setKGirdi('');
+    if (!opts?.sessiz) {
+      setKMesajlar(yeni);
+      setKGirdi('');
+    }
+    kBekliyorRef.current = true;
     setKBekliyor(true);
     try {
       const token = await getAccessTokenAsync();
@@ -165,16 +172,19 @@ export default function IncelemePage() {
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
-      setKMesajlar([...yeni, { rol: 'asistan', icerik: String(d.cevap || '') }]);
+      if (!opts?.sessiz) setKMesajlar([...yeni, { rol: 'asistan', icerik: String(d.cevap || '') }]);
+      else if (d.cevap) setKMesajlar((prev) => [...prev, { rol: 'asistan', icerik: `↻ ${String(d.cevap)}` }]);
       const dz = (d.duzenlemeler || {}) as Record<string, unknown>;
-      const g: Taslak = { ...taslak };
-      (['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).forEach((a) => {
-        if (typeof dz[a] === 'string' && (dz[a] as string).trim()) g[a] = dz[a] as string;
-      });
-      setTaslak(g);
-      // Kaan/Gökhan (2026-09-10): Ayşe'nin düzenlemeleri artık vitaller / başvuru / evde dikkat / hasta özetine de işler
-      if (typeof dz.basvuruYakinmasi === 'string') setBasvuruTaslak(dz.basvuruYakinmasi as string);
-      if (dz.vitaller && typeof dz.vitaller === 'object' && !Array.isArray(dz.vitaller)) setVitalTaslak((v) => ({ ...v, ...Object.fromEntries(Object.entries(dz.vitaller as Record<string, unknown>).map(([k, x]) => [k, String(x ?? '')])) }));
+      atlaOtomatikRef.current = true;
+      if (!opts?.sabitleSoap) {
+        const g: Taslak = { ...taslak };
+        (['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).forEach((a) => {
+          if (typeof dz[a] === 'string' && (dz[a] as string).trim()) g[a] = dz[a] as string;
+        });
+        setTaslak(g);
+        if (typeof dz.basvuruYakinmasi === 'string') setBasvuruTaslak(dz.basvuruYakinmasi as string);
+        if (dz.vitaller && typeof dz.vitaller === 'object' && !Array.isArray(dz.vitaller)) setVitalTaslak((v) => ({ ...v, ...Object.fromEntries(Object.entries(dz.vitaller as Record<string, unknown>).map(([k, x]) => [k, String(x ?? '')])) }));
+      }
       if (Array.isArray(dz.alarmBulgulari)) setAlarmTaslak((dz.alarmBulgulari as unknown[]).map(String).join('\n'));
       if (typeof dz.hastaOzeti === 'string') setOzetTaslak(dz.hastaOzeti as string);
       if (Array.isArray(dz.ilaclar)) setIlacTaslak((dz.ilaclar as unknown[]).map((it) => { const o = it as Record<string, unknown>; return [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' — ') }).join('\n'));
@@ -185,8 +195,9 @@ export default function IncelemePage() {
         setEylemler((prev) => [...prev, ...(d.eylemler as Eylem[]).map((e) => ({ ...e, durum: 'oneri' as const }))]);
       }
     } catch (e) {
-      setKMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : 'Ayşe yanıt veremedi.' }]);
+      if (!opts?.sessiz) setKMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : 'Ayşe yanıt veremedi.' }]);
     } finally {
+      kBekliyorRef.current = false;
       setKBekliyor(false);
     }
   };
@@ -268,6 +279,23 @@ export default function IncelemePage() {
       cancelled = true;
     };
   }, []);
+
+  // Formda klinik yenileme → Ayşe notu yeniden okur (tüm branşlar)
+  useEffect(() => {
+    if (!acikId) return;
+    if (atlaOtomatikRef.current) {
+      atlaOtomatikRef.current = false;
+      return;
+    }
+    if (kBekliyorRef.current) return;
+    const note = notlarRef.current.find((n) => n.id === acikId);
+    if (!note) return;
+    const t = setTimeout(() => {
+      void konsultGonder(note, NOT_YENIDEN_DEGERLENDIR_ISTEK, { sessiz: true, sabitleSoap: true });
+    }, NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [basvuruTaslak, vitalTaslak, taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan, acikId]);
 
   /**
    * NOTYA-ONAY-DONUS-01 (Gökhan, 2026-09-17, canlı): onay notu listeden siliyor, başka hiçbir
@@ -383,6 +411,7 @@ export default function IncelemePage() {
                 >
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', minWidth: 0 }}>
                     {[note.maskedPatient, note.specialty, note.date].filter(Boolean).join(' • ')}
+                    {acikId === note.id && kBekliyor ? <span style={{ color: '#F59E0B', fontWeight: 500 }}> · Ayşe notu yeniden okuyor…</span> : null}
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                     <button onClick={() => approve(note.id)} disabled={busy} style={btnStyle('#10B981', busy)}>
@@ -448,7 +477,7 @@ export default function IncelemePage() {
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span>Tanı / ICD-10 önerileri <span style={{ fontWeight: 400, color: '#64748B' }}>(onayınıza tabi — otomatik yazılmaz)</span></span>
                           {/* Kaan (2026-09-14): "tanı değişince ICD-10 ve öneriler de değişmeli, AI tüm notu yeniden değerlendirmeli" */}
-                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, 'Notu yeniden değerlendir: mevcut tanı/değerlendirmeye göre ICD-10 kodlarını, reçete önerini, ilaçlar listesini (plan/Tedavi\'deki ürün adı ve dozla BİREBİR aynı olacak şekilde), klinik değerlendirmeni, evde dikkat maddelerini ve hasta özetini baştan, tutarlı biçimde güncelle.')} style={{ background: 'transparent', border: '1px solid rgba(245,158,11,0.4)', color: '#F59E0B', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>🔄 Notu AI ile yeniden değerlendir</button>
+                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, NOT_YENIDEN_DEGERLENDIR_ISTEK)} style={{ background: 'transparent', border: '1px solid rgba(245,158,11,0.4)', color: '#F59E0B', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>🔄 Notu AI ile yeniden değerlendir</button>
                         </div>
                         {icdTaslak.length > 0 ? (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

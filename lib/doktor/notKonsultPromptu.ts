@@ -62,7 +62,7 @@ ${g.kapsam.hitap.ozetPromptEtiketi}: ${taslak?.hastaOzeti || not.hasta_ozeti || 
 ICD-10 önerileri (taslak): ${JSON.stringify(taslak?.icdKodlari || not.icd10_codes || [])}
 Reçete önerisi (taslak): ${JSON.stringify(taslak?.receteOnerisi || not.recete_onerisi || [])}
 
-NOT EKLERİ: Vitaller: ${JSON.stringify(not.vitaller || {})} | ICD önerileri: ${JSON.stringify(not.icd10_codes || [])} | Reçete önerisi: ${JSON.stringify(not.recete_onerisi || [])} | Alarm bulguları: ${JSON.stringify(not.alarm_bulgulari || [])}
+NOT EKLERİ: Vitaller: ${JSON.stringify(taslak?.vitaller || not.vitaller || {})} | ICD önerileri: ${JSON.stringify(taslak?.icdKodlari || not.icd10_codes || [])} | Reçete önerisi: ${JSON.stringify(taslak?.receteOnerisi || not.recete_onerisi || [])} | Alarm bulguları: ${JSON.stringify(taslak?.alarmBulgulari || not.alarm_bulgulari || [])}
 ${klinikBaglam ? `\nHASTANIN KİMLİKSİZ DOSYA BAĞLAMI:\n${klinikBaglam}` : ''}
 
 SADECE geçerli JSON döndür:
