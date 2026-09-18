@@ -37,8 +37,7 @@ describe('KD / dahiliye / derm eligibility', () => {
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, [])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
   })
-  // DERM-EXCEPTIONAL-01: Derim artık hekim tetiklemeli hatırlatma kancasını taşıyor
-  // (engines/derimHatirlatma.ts → derm_gorevleri → bundle.deri.hatirlatmalar) → derinlik Strong.
+  // DERM-EXCEPTIONAL-01: Derim Strong (hekim tetiklemeli hatırlatma).
   it('dermatoloji mounts Derim (Strong) — unique from göz / pediatri', () => {
     const m = specialtyProfile('dermatoloji').portal!
     assert.equal(m[0].derinlik, 'Strong')

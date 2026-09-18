@@ -22,9 +22,6 @@ export function patchStatus(course: PatchCourse, todayIso: string): PatchStatus 
   return 'done'
 }
 
-/** Geriye dönük uyumluluk — kod listesi Avrupa baz serisinden. */
-export const EUROPEAN_BASELINE_STUB = AVRUPA_BAZ_SERISI.map((a) => a.kod) as unknown as readonly string[]
-
 // ──────────────────────────────────────────────────────────────────────────────
 // DERM-EXCEPTIONAL-01 — Avrupa baz serisi alerjen ızgarası, ICDRG okuma dereceleri,
 // çok kürlü takvim. Alerjen adları kamuya açık seri adlarıdır; konsantrasyon / vehikül

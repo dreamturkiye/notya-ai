@@ -70,6 +70,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/mchat/route.ts': T,
   'app/api/doktor/gelisim-taramasi/route.ts': T,
   'app/api/doktor/kadin-sagligi/route.ts': T,
+  // DERM-EXCEPTIONAL-01: 'goruntu-okuma' (belge_taslak / asistana_raporla) da bu dosyada — analiz ve görüntü
+  // kimlikleri hastaSahibiMi() sonrası patient_id + doctor_id ile yeniden daraltılır; okuma epizoda yazılır.
   'app/api/doktor/dermatoloji/route.ts': T,
   'app/api/doktor/dermatoloji/spine/route.ts': T,
   'app/api/doktor/dermatoloji/_kohort.ts': I('patient ids drawn only from hasta_derm / derm_gorevleri / derm_ilac_guvenlik rows with doctor_id = doctorId; child tables (yama, fototerapi, lezyon) read by hasta_derm_id taken from those doctor-scoped episodes; patients read by doctor_id; dermHatirlatmaGonder runs only on ids that passed that filter'),

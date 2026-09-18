@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dermatoloji — Post-exceptional Audit (DERM-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional sprint DERM-EXCEPTIONAL-01 (2026-09-18): Deri ve Zührevi 21/21 domain Strong, 5 derm-only Araç, Derim Strong, olgunluk beta-hazir (MD onayı bekliyor). No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:900px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout.danger { background:var(--red-soft); border-color:rgba(248,113,113,.32); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); } .callout.danger h2 { color:var(--red); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,260px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit</span>
+    <span>
+      <a href="/derm-final-audit.html">Final audit (~50%, pre-sprint for this one) →</a> ·
+      <a href="/goz-exceptional-audit.html">Göz post-exceptional (method twin) →</a>
+    </span>
+  </div>
+
+  <div class="banner" style="background:rgba(20,184,166,.1);border-color:rgba(45,212,191,.4);color:var(--green)"><b>Post-exceptional sprint DERM-EXCEPTIONAL-01</b> — 2026-09-18 · workstream A (chapter derinliği) · B (5 derm-only Araç) · C (game changers) · D (sızma / izolasyon sertleştirme) · E (bu audit) · migration 054 (yazıldı, <b>uygulanmadı</b> — Kaan) · <code>npm test</code> 993/993 · <code>test:derm</code> + <code>test:brans-sizmasi</code> + <code>test:izolasyon</code> yeşil · <code>scripts/derm-exceptional-smoke.mts</code> sentetik hastayla hazır, canlı koşusu migration 054 uygulandıktan sonra · no PHI.</div>
+
+  <h1>Dermatoloji (Deri ve Zührevi) — Post-exceptional Audit</h1>
+  <p class="lede">Aynı ölçek, aynı dürüstlük: Notya codebase × PSOKİD 2025 × TDD Atopik Dermatit 2018 / Akne × GÖP KÜB (TİTCK) × SGK SUT 2026 × TUKMOS 2019 × TR özel muayenehane ve EAH dermatoloji polikliniği. Soru: Deri bölümü Pediatri gibi exceptional mı? <b>Cevap: ürün olarak evet, 21/21 alan Strong. Olgunluk etiketi ise gerçek bir dermatoloğun saha haftasını ve Boss/CEO onayını bekliyor.</b></p>
+
+  <div class="pills">
+    <span class="pill success">21 / 21 domain Strong</span>
+    <span class="pill success">0 Partial · 0 Thin · 0 Missing</span>
+    <span class="pill success">5 derm-only Araç live</span>
+    <span class="pill success">Sağlığım › Derim: Strong</span>
+    <span class="pill warning">olgunluk: beta-hazir — MD sign-off bekliyor</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v success">21/21</div><div class="l">Coverage domains Strong (4/21 idi)</div></div>
+    <div class="stat"><div class="v success">5</div><div class="l">Derm-only Araçlar (0 → 5)</div></div>
+    <div class="stat"><div class="v success">10/10</div><div class="l">Game changers shipped</div></div>
+    <div class="stat"><div class="v info">~90%</div><div class="l">Poliklinik wow (from ~50%)</div></div>
+  </div>
+
+  <div class="callout info">
+    <h2>Executive verdict</h2>
+    <p>Deri bölümü artık bir TR dermatoloji polikliniğinin / özel muayenehanenin 8 saatlik gününü baştan sona taşıyor. Ekranlar sırayla: ünite seçimi ve sticky şerit, lezyon → ABCDE → <b>hekimin kataloglu resmî tanısı</b> → işlem odası (onam, numune, yara bakımı, patoloji aynı lezyona), bölge bazlı PASI / EASI / SCORAD worksheet'leri, fototerapi ünitesi v2 (MED, doz-adımı, yanık protokolü, cihaz başına kümülatif J/cm², solaryum yasağı), Avrupa baz serisi yama grid'i + D2/D4 oda takvimi, biyolojik lab kapısı → <b>SUT rapor taslağı</b>, interaktif vücut haritası, SJS/TEN–anjioödem–eritrodermi acil bandı, BZBH Form 014 yazdırılabilir taslağı ve saç-tırnak worksheet'i. Belge › Asistana raporla artık <b>dual-sign taslağına</b> düşüyor (<code>derm_vision_reads</code>), uzman onaylıyor; tanı hiçbir zaman aktarılmıyor. Araçlar'da 5 derm-only kart var ve başka branşa sızmıyor. Sağlığım › <b>Derim</b> Strong: β-hCG vadesi, fototerapi seansı, yama D2/D4, yara kontrolü ve TBSE hatırlatmaları hasta diliyle — skor, doz, ilaç adı ve tanı yok. Pediatriden tek farkı etiket: <b>olgunluk = beta-hazir</b>. <code>uzman-dogrulandi</code> gerçek dermatoloğun 5 günlük saha haftası (<code>docs/DERM-MD-BETA.md</code>) ve Boss/CEO onayıyla gelir. Bu, eksik ürün değil, dürüst etiket.</p>
+  </div>
+
+  <h2>Coverage depth</h2>
+  <p class="cap">Satırlar <a href="/derm-final-audit.html" style="color:var(--teal)">derm-final-audit</a> matrisiyle birebir aynı; sıra ve adlar korundu ki karşılaştırma dürüst olsun.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Final audit</th><th>Depth</th><th>In product (post-exceptional)</th><th>Footnote</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Spine / sticky strip</td><td class="note">Strong</td><td><span class="pill success">Strong</span></td><td class="note">DermSpine lezyon→ABCDE→biyopsi→patoloji; çipler (Fitzpatrick / ünite / skor / GÖP / yama / foto / TBSE); aktif işler kuyruğu</td><td class="note">—</td></tr>
+      <tr><td class="domain">Skorlar (PASI/EASI/…)</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">Bölge worksheet'i: PASI 4 bölge (eritem / infiltrasyon / deskuamasyon × alan), EASI, SCORAD; toplam + bant hesaplanır ve <code>derm_skor_anlari</code>'na yazılır; DLQI / UAS7 / SALT yapılandırılmış giriş; trend</td><td class="note">¹ Skor yorumu hekimindir</td></tr>
+      <tr><td class="domain">GÖP izotretinoin</td><td class="note">Strong</td><td><span class="pill success">Strong</span></td><td class="note">Çift korunma + son 30 gün negatif β-hCG + ≤30 gün reçete kapısı; aylık görev; kadın-doğum tarafına teratojen görevi; Derim'de hasta-güvenli vade</td><td class="note">² Doz yazılmaz (doz kilidi)</td></tr>
+      <tr><td class="domain">Fototerapi</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">Ünite v2: MED testi, seans başına doz-adımı, yanık protokolü kontrol listesi, cihaz başına kümülatif J/cm², yıllık TBSE görevi; hemşire defteri UX; solaryum (2018) sunucuda reddedilir</td><td class="note">³ Cihaz ağ entegrasyonu yok</td></tr>
+      <tr><td class="domain">Yama / patch</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">Avrupa baz serisi alerjen grid'i (seçilebilir seri), çoklu kurs takvimi, D2/D4 okuma + <code>yama_d2</code> / <code>yama_d4</code> foto türleri, oda çizelgesi</td><td class="note">—</td></tr>
+      <tr><td class="domain">Biyolojik / SUT</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">Lab kapısı (IGRA/PPD, HBsAg, Anti-HBc, Anti-HCV, HIV, hemogram, ALT) → <b>SUT rapor taslağı</b> göz anti-VEGF kalitesinde: zorunlu maddeler, eksikler listesi, hekim onayıyla kilit</td><td class="note">⁴ Medula canlı gönderim yok</td></tr>
+      <tr><td class="domain">Akne</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">IGA şiddet worksheet'i; ay-0 / ay-3 foto serisi izotretinoin kursuna bağlı; GÖP + onam + pediatri / kadın-doğum devri</td><td class="note">² Doz yazılmaz</td></tr>
+      <tr><td class="domain">Psoriasis</td><td class="note">Thin</td><td><span class="pill success">Strong</span></td><td class="note">PSOKİD 2025 tedavi merdiveni karar kartı (basamağı hekim kilitler); PASI / DLQI trend; PsA eklem triyaj kutusu + sevk ipucu</td><td class="note">⁵ Romatoloji chapter'ı taklit edilmez</td></tr>
+      <tr><td class="domain">Atopi</td><td class="note">Thin</td><td><span class="pill success">Strong</span></td><td class="note">TDD 2018 basamak kartı + SCORAD worksheet'i; pediatrik şablon bebek kartına bağlanır — pediatri UI'si derm ekranına sızmaz</td><td class="note">⁶ Neyzi / persentil yalnız pediatride</td></tr>
+      <tr><td class="domain">Dermoskopi / dual-sign</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">3-nokta / 7-nokta / CASH worksheet'leri; seri + önce-sonra; Belge Tier A → <code>derm_vision_reads</code> asistan taslağı, uzman onayı zorunlu; Fitzpatrick bilinmiyorsa güven ≤%70</td><td class="note">⁷ Gerçek görüntü kalitesi MD haftasında</td></tr>
+      <tr><td class="domain">Vücut haritası</td><td class="note">Thin</td><td><span class="pill success">Strong</span></td><td class="note">İnteraktif bölge diyagramı: tıkla → lezyon_id; nodeId listesi modelde kalır (geri uyum)</td><td class="note">⁸ FotoFinder / MoleMax sync yok</td></tr>
+      <tr><td class="domain">İşlem odası</td><td class="note">Strong</td><td><span class="pill success">Strong</span></td><td class="note">Punch / shave / eksizyon / kriyo / koter / tırnak / küretaj + onam; yazdırılabilir onam ve numune etiketi (URL'de PHI yok); yara / dikiş / patoloji görevleri; patoloji aynı lezyona bağlanır</td><td class="note">—</td></tr>
+      <tr><td class="domain">Estetik / legal</td><td class="note">Thin</td><td><span class="pill success">Strong</span></td><td class="note">Kozmetik işlemlerde lot numarası + komplikasyon giriş alanları; Ayakta Teşhis mevzuatı hekim-yüzü metin; kozmetik sekmesi varsayılan kapalı ve ünite kapısı arkasında</td><td class="note">⁹ Ürün/lot ulusal kaydı yok</td></tr>
+      <tr><td class="domain">Acil</td><td class="note">Thin</td><td><span class="pill success">Strong</span></td><td class="note">Sticky acil bandı: SJS/TEN, eritrodermi, anjioödem (hava yolu), nekrotizan fasiit şüphesi, yaygın bül — intake kutuları + yakınma taramasından; bayrak başına eylem listesi</td><td class="note">—</td></tr>
+      <tr><td class="domain">Behçet / büllöz / BZBH</td><td class="note">Thin</td><td><span class="pill success">Strong</span></td><td class="note">Yapılandırılmış izlem kartları (ISG kriter kutusu, Nikolsky / DIF / IIF / Dsg1-Dsg3 / BP180, PDAI); BZBH <b>Form 014 yazdırılabilir taslağı</b> + kontrol listesi</td><td class="note">¹⁰ Form 014 ağ bildirimi yok</td></tr>
+      <tr><td class="domain">Saç-tırnak</td><td class="note">Thin</td><td><span class="pill success">Strong</span></td><td class="note">SALT worksheet'i + trikoskopi not alanları fotoğrafa bağlı; tırnak işlemi şablonu ve takip</td><td class="note">—</td></tr>
+      <tr><td class="domain">Belge AI</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">derm / dermatoskopi / yara → BelgeAnalizÖzet'te <b>“Görüntü okumasına aktar”</b>; bölge zorunlu (okuma lezyon başına), “tüm vücut” reddedilir; tanılar “olası bulgu — tanı değildir” olarak, cap ile kırpılır; tek Tier A yolu (<code>core/belgeler/tierA</code>)</td><td class="note">⁷ ¹¹</td></tr>
+      <tr><td class="domain">Intake</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">Kutular: yaygın döküntü + ateş, nefes darlığı / anjioödem, kimyasal yanık, gebelik (GÖP), fototerapi / yama öyküsü, yeni ilaç → acil bandı + GÖP ipuçları (serbest metin gerekmez)</td><td class="note">—</td></tr>
+      <tr><td class="domain">SOAP / prompts</td><td class="note">Strong</td><td><span class="pill success">Strong</span></td><td class="note">DERM-PROMPTS-LOCK korunur: doz kilidi + onam/form adı kilidi + iç alan adı temizliği; soap-derm skor / GÖP / dual-sign / fototerapi motorlarıyla hizalandı; promptsLock testleri yeşil</td><td class="note">² ¹²</td></tr>
+      <tr><td class="domain">Hasta portalı (Derim)</td><td class="note">Partial</td><td><span class="pill success">Strong</span></td><td class="note">Hekim tetikli hatırlatmalar: aylık kan testi (β-hCG) vadesi, fototerapi seansı, yama testi D2/D4, yara / dikiş / biyopsi kontrolü, tüm vücut deri kontrolü (TBSE), kontrol fotoğrafı — geciken / yaklaşan işaretiyle. Başlıklar görev <b>kodundan</b> sabit hasta-güvenli metne çevrilir; hekimin klinik görev metni hastaya taşınmaz</td><td class="note">¹³ SMS ağ geçidi yok</td></tr>
+      <tr><td class="domain">Doktor Araçları (derm)</td><td class="note">Missing</td><td><span class="pill success">Strong</span></td><td class="note">PASI/EASI hesap · GÖP izotretinoin kapı · Fototerapi defteri · Yama D2/D4 · Derm kohort — kart → <code>/doktor-tools/derm-*</code>, branş kapısı + yönlendirme; diğer 29 branşta görünmez</td><td class="note">—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cap">¹ Skor motoru deterministiktir; “orta / ağır” yorumu ve tedavi kararı hekimindir. ² Doz kilidi (<code>lib/doktor/dozKilidi.ts</code> + prompt kuralı): izotretinoin günlük/kümülatif, biyolojik, topikal steroid (yalnız potens sınıfı), antibiyotik/antifungal kürü ve J/cm² sayıları hekim dikte etmedikçe yazılmaz. ³ Fototerapi cihazından otomatik veri çekme yok: seans/doz hekim-hemşire girişi, kümülatif ve yanık bayrağı hesaplanır. ⁴ Canlı Medula e-imza gönderimi yok: taslak + eksikler + kilit + “Medula'da hekim e-imza” CTA. ⁵ PsA triyajı sevk ipucudur; romatoloji chapter'ı üretilmez. ⁶ Büyüme persentili / Neyzi / Baş Çevresi pediatri chapter'ına aittir; derm ekranında hiçbir yaşta render edilmez (<code>test:brans-sizmasi</code>). ⁷ Tier A yolu sentetik gri görüntüyle uçtan uca doğrulanır (model okuyamazsa morfoloji kontrol listesi yedeği düşer); gerçek dermoskopi kalite değerlendirmesi MD beta haftasındadır. ⁸ FotoFinder / MoleMax cihaz senkronu yok: elle seri + bölge haritası + dual-sign. ⁹ Ulusal ürün/lot kaydı yok: lot ve komplikasyon muayenehane kaydı olarak tutulur. ¹⁰ Form 014 ağ bildirimi yok: yazdırılabilir taslak + kontrol listesi; Form 014'ün bildirim formu olduğu, onam formu olmadığı prompt kilidinde yazılıdır. ¹¹ Ortak Belge sayfasındaki köprü kutusu göz-özel kalır (<code>bransKurali.goruntuOkumaKoprusu</code>); derm köprüsü kendi chapter UI'sinden çalışır — OD/OS seçimi derm ekranına sızmaz. ¹² Prompts .md dosyaları runtime'da yüklenir (<code>outputFileTracingIncludes</code>). ¹³ TWILIO_SMS_FROM yapılandırılmamış: Sağlığım mesajı + e-posta bildirimi + hekimin kendi WhatsApp'ı.</p>
+
+  <h2>Wow bar (poliklinik, dürüst)</h2>
+  <p class="cap">0–100 = meşgul TR dermatolog / EAH poliklinik hekimi eşiği. Aynı ölçek final audit (~50%) ile. Poliklinik alanlarının hepsi ≥85; olgunluk barı ayrı gösterilir ve ortalamaya girmez.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">GÖP izotretinoin + aylık pack</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">İşlem odası + patoloji döngüsü</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Spine / sticky / aktif işler</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Bölge PASI / EASI / SCORAD</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Derim + recall</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">SOAP / prompts + doz kilidi</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Fototerapi ünitesi v2</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">Derm-only Araçlar</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">Intake kırmızı bayrak + acil bant</div><div class="bar-track"><div class="bar-fill" style="width:89%"></div></div><div class="bar-val">89</div></div>
+    <div class="bar-row"><div class="bar-label">Yama Avrupa baz + oda</div><div class="bar-track"><div class="bar-fill" style="width:89%"></div></div><div class="bar-val">89</div></div>
+    <div class="bar-row"><div class="bar-label">Dermoskopi dual-sign + Belge AI</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-val">88</div></div>
+    <div class="bar-row"><div class="bar-label">Psoriasis / atopi karar kartları</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-val">88</div></div>
+    <div class="bar-row"><div class="bar-label">Biyolojik SUT rapor taslağı</div><div class="bar-track"><div class="bar-fill" style="width:87%"></div></div><div class="bar-val">87</div></div>
+    <div class="bar-row"><div class="bar-label">Vücut haritası + foto serisi</div><div class="bar-track"><div class="bar-fill" style="width:87%"></div></div><div class="bar-val">87</div></div>
+    <div class="bar-row"><div class="bar-label">Behçet / büllöz / BZBH + saç-tırnak</div><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><div class="bar-val">86</div></div>
+    <div class="bar-row"><div class="bar-label">Estetik / legal kayıt</div><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><div class="bar-val">85</div></div>
+    <div class="bar-row"><div class="bar-label">MD beta / olgunluk (ayrı)</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--amber)"></div></div><div class="bar-val">55</div></div>
+  </div>
+
+  <h2>Mandate matrix</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate</th><th>Level</th><th>In product</th><th>Gap to wow</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">GÖP KÜB (izotretinoin, TİTCK)</td><td><span class="pill info">Law / KÜB</span></td><td class="note">Çift korunma + negatif β-hCG (≤30 gün) + ≤30 gün reçete + aylık görev + KD köprüsü</td><td class="note">Doz hekimde (bilinçli dışarıda)</td></tr>
+      <tr><td class="domain">SGK SUT 2026 — biyolojik / işlem</td><td><span class="pill info">SGK</span></td><td class="note">Lab kapısı + rapor taslağı + eksikler + kilit; işlem kalemleri</td><td class="note">Medula canlı gönderim = hekim</td></tr>
+      <tr><td class="domain">PSOKİD 2025</td><td><span class="pill info">TR dernek</span></td><td class="note">Tedavi merdiveni karar kartı; eşik metni rol/yıl atıflı, kitap dökümü yok</td><td class="note">—</td></tr>
+      <tr><td class="domain">TDD Atopik Dermatit 2018 / Akne</td><td><span class="pill info">TR dernek</span></td><td class="note">Basamak kartı + SCORAD / IGA worksheet</td><td class="note">—</td></tr>
+      <tr><td class="domain">Solaryum yasağı (2018)</td><td><span class="pill info">Law</span></td><td class="note">Cihaz olarak sunucuda reddedilir (400)</td><td class="note">—</td></tr>
+      <tr><td class="domain">BZBH / Form 014 bildirimi</td><td><span class="pill warning">MoH</span></td><td class="note">Yazdırılabilir taslak + kontrol listesi; “bildirim formu, onam formu değildir” kilidi</td><td class="note">Ağ bildirimi yok (OPEN)</td></tr>
+      <tr><td class="domain">KVKK / hasta izolasyonu</td><td><span class="pill info">Law</span></td><td class="note">Her yeni adım <code>hastaSahibiMi</code> sonrası; A↔B testleri; görüntü tarayıcıda kimliksizleşir + hekim onayı; envanterde kayıtlı</td><td class="note">—</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Doktor pain points → ne değişti</h2>
+  <div class="cards">
+    <div class="card"><div class="title">“Nevüs fotoğrafını AI okusun ama imza benim” <span class="pill info">yeni</span></div><div class="body">Belge / Görüntü › Asistana raporla → dual-sign taslağı; Fitzpatrick bilinmiyorsa ≤%70; tanı asla aktarılmaz; uzman onaylar, resmî tanı lezyon kartında hekim kilidi.</div></div>
+    <div class="card"><div class="title">“PASI'yi kâğıtta hesaplıyorum” <span class="pill warning">günlük</span></div><div class="body">Bölge worksheet'i: eritem / infiltrasyon / deskuamasyon × alan → toplam + bant anında; kayda ve trende yazılır.</div></div>
+    <div class="card"><div class="title">“İzotretinoinli hasta β-hCG'yi kaçırıyor” <span class="pill danger">yüksek risk</span></div><div class="body">Aylık görev hekim tarafında, hasta tarafında Derim'de “Aylık kan testi (gebelik testi)” vadesi; kadın-doğum tarafına da teratojen görevi düşer.</div></div>
+    <div class="card"><div class="title">“Yama D2/D4 ve fototerapi seansı kayboluyor” <span class="pill warning">haftalık</span></div><div class="body">Araçlar › Derm kohort geciken TBSE / yama / seans / β-hCG / biyolojik lab listesi; 1-tap hasta-güvenli hatırlatma; Derim'de aynı tarihler.</div></div>
+  </div>
+
+  <h2>Derm-only Araçlar (classify-before-add)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tool</th><th>Bucket</th><th>Visibility</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">PASI / EASI hesap — /doktor-tools/derm-pasi</td><td><span class="pill info">specialty-only</span></td><td class="note">dermatoloji</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">GÖP izotretinoin kapı — /doktor-tools/derm-gop</td><td><span class="pill info">specialty-only</span></td><td class="note">dermatoloji</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">Fototerapi defteri — /doktor-tools/derm-fototerapi</td><td><span class="pill info">specialty-only</span></td><td class="note">dermatoloji</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">Yama D2/D4 — /doktor-tools/derm-yama</td><td><span class="pill info">specialty-only</span></td><td class="note">dermatoloji</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">Derm kohort — /doktor-tools/derm-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">dermatoloji</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">Pediatri / göz / dahiliye / kardiyoloji / KD + 24 branş</td><td><span class="pill success">none</span></td><td class="note">test: 5 kart görünmez, derin bağlantı → /doktor-tools</td><td><span class="pill success">Locked</span></td></tr>
+      <tr><td class="domain">Hedef Boy / Göz kohort / Dahiliye kohort</td><td><span class="pill success">none</span></td><td class="note">dermatoloji hekiminde görünmez</td><td><span class="pill success">Locked</span></td></tr>
+      <tr><td class="domain">ICD-10 / e-reçete / epikriz / ilaç etkileşimi</td><td><span class="pill success">base</span></td><td class="note">tüm ~30 branş, aynı</td><td><span class="pill success">ORTAK — dokunulmadı</span></td></tr>
+      <tr><td class="domain">Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar'a bağlanmaz (test)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Game changers</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Status</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="domain">Bölge PASI/EASI (+ SCORAD) UI</td><td><span class="pill success">Shipped</span></td><td class="note">engines/score-calculator + SkorPaneli worksheet → derm_skor_anlari</td></tr>
+      <tr><td>2</td><td class="domain">Fototerapi ünitesi v2</td><td><span class="pill success">Shipped</span></td><td class="note">MED, doz-adımı, yanık protokolü, cihaz başına kümülatif J/cm², TBSE görevi</td></tr>
+      <tr><td>3</td><td class="domain">5 derm Araçlar</td><td><span class="pill success">Shipped</span></td><td class="note">BRANS_DOKTOR_ARACLARI (branslar: ['dermatoloji']) + /doktor-tools/derm-*</td></tr>
+      <tr><td>4</td><td class="domain">Belge → dual-sign vision</td><td><span class="pill success">Shipped</span></td><td class="note">specialties/dermatoloji/imaging/belgeKopru.ts + /api/doktor/dermatoloji <code>goruntu-okuma</code> → derm_vision_reads (migration 054)</td></tr>
+      <tr><td>5</td><td class="domain">Biyolojik SUT rapor taslağı</td><td><span class="pill success">Shipped</span></td><td class="note">Lab kapısı → zorunlu maddeler + eksikler + kilit</td></tr>
+      <tr><td>6</td><td class="domain">İnteraktif vücut haritası</td><td><span class="pill success">Shipped</span></td><td class="note">VucutHaritasi: tıkla → lezyon_id; nodeId modeli korundu</td></tr>
+      <tr><td>7</td><td class="domain">Acil sticky + intake</td><td><span class="pill success">Shipped</span></td><td class="note">SJS/TEN · eritrodermi · anjioödem · nekrotizan fasiit · yaygın bül</td></tr>
+      <tr><td>8</td><td class="domain">Yama Avrupa baz seri + takvim</td><td><span class="pill success">Shipped</span></td><td class="note">patch-calendar + alerjen grid + D2/D4 foto türleri</td></tr>
+      <tr><td>9</td><td class="domain">Derim → Strong hatırlatma</td><td><span class="pill success">Shipped</span></td><td class="note">engines/portal-derim.ts (kod → sabit hasta-güvenli başlık) + registry derinlik Strong</td></tr>
+      <tr><td>10</td><td class="domain">DERM-MD-BETA pack</td><td><span class="pill success">Shipped</span></td><td class="note">scripts/derm-exceptional-smoke.mts + docs/DERM-MD-BETA.md; olgunluk beta-hazir (uzman-dogrulandi MD + Boss onayıyla)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Intentionally out (not faked)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Out</th><th>Exceptional substitute shipped</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Canlı Medula e-imza gönderimi</td><td class="note">Biyolojik SUT rapor taslağı + eksikler + kilit + “Medula'da hekim e-imza” CTA</td></tr>
+      <tr><td class="domain">BZBH Form 014 ağ bildirimi</td><td class="note">Yazdırılabilir Form 014 taslağı + kontrol listesi; “bildirim formudur, onam formu değildir” prompt kilidi</td></tr>
+      <tr><td class="domain">FotoFinder / MoleMax cihaz senkronu</td><td class="note">Elle foto serisi (aynı lezyon_id) + interaktif bölge haritası + dual-sign okuma</td></tr>
+      <tr><td class="domain">Uydurulmuş biyolojik / izotretinoin dozu</td><td class="note">Kapılar + hekim alanları; doz kilidi her yüzeyde (SOAP, chat, ses)</td></tr>
+      <tr><td class="domain">Tam yataklı servis HIS'i</td><td class="note">Poliklinik + fototerapi / yama ünitesi operasyonu Strong; yatış nedeni kartı</td></tr>
+      <tr><td class="domain">Ulusal kozmetik ürün/lot kaydı</td><td class="note">Muayenehane lot + komplikasyon kaydı; Ayakta Teşhis mevzuatı hekim-yüzü metin</td></tr>
+      <tr><td class="domain">SMS ağ geçidi</td><td class="note">Sağlığım mesajı + e-posta bildirimi + dönüş görevi + hekimin WhatsApp'ı</td></tr>
+      <tr><td class="domain">Uzman-doğrulandı etiketi</td><td class="note">beta-hazir + MD saha haftası kontrol listesi (docs/DERM-MD-BETA.md); Boss/CEO onayı bekleniyor</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Branş sızması ve hasta izolasyonu</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Kural</th><th>Nerede kilitli</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">PASI / Fitzpatrick / MED / GÖP yalnız dermatolojide</td><td class="note">specialty payload + <code>schema-isolation</code> / <code>no-bleed</code> testleri; göz ve KD şemaları derm payload'ını reddeder</td></tr>
+      <tr><td class="domain">Baş Çevresi / Neyzi / persentil derm ekranında yok</td><td class="note"><code>pediatrikBaglam: 'asla'</code> + <code>npm run test:brans-sizmasi</code></td></tr>
+      <tr><td class="domain">“veli” dili yaşa bağlı, branşa değil</td><td class="note"><code>lib/specialties/kapsam.ts</code> → <code>veliDiliMi</code>; 18 yaş altı her branşta, erişkinde hiçbir branşta</td></tr>
+      <tr><td class="domain">Göz köprüsü (OD/OS) derm ekranına sızmaz</td><td class="note">Ortak Belge sayfası <code>bransKurali.goruntuOkumaKoprusu</code> ile yalnız göz; derm köprüsü chapter UI'sinde</td></tr>
+      <tr><td class="domain">Her hasta-kimlikli uç nokta doktor kapsamlı</td><td class="note"><code>hastaSahibiMi</code> + <code>lib/security/hastaIzolasyonEnvanteri.ts</code> + <code>npm run test:izolasyon</code> (A↔B çift yön)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Next chapter (21 alanlık matrise dahil değil)</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Dermatopatoloji</div><div class="body">Mikroskobik tanı, immünhistokimya panelleri, patolog iş akışı: ayrı chapter kapsamı.</div></div>
+    <div class="card"><div class="title">Dermatolojik cerrahi / Mohs</div><div class="body">Mohs haritalama, kademeli sınır, flep-greft planı: ayrı chapter.</div></div>
+    <div class="card"><div class="title">Zührevi / CYBH kliniği</div><div class="body">Partner bildirimi, temaslı takibi, TSİM entegrasyonu: ayrı chapter ve mevzuat akışı.</div></div>
+  </div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress · MD saha haftası</div><div class="body">docs/DERM-MD-BETA.md ile 5 gün gerçek poliklinik → Boss/CEO onayı → olgunluk uzman-dogrulandi.</div></div>
+    <div class="card"><div class="title">Mandate · Form 014 / TSİM</div><div class="body">Bildirim ağına erişim açılınca yazdırılabilir taslak aynı motorla elektronik bildirime bağlanır (OPEN).</div></div>
+    <div class="card"><div class="title">Velocity · Dermoskopi Tier B</div><div class="body">Doğrulanmış dermoskopi motoru (motor_kayit) eklenince füzyon cap'i %70'ten yükselir; dual-sign akışı aynı kalır.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede" style="font-size:13px">Code: specialties/dermatoloji (engines · imaging · protocols · prompts · ui) · lib/specialties/dermatoloji.ts (olgunluk: beta-hazir; portal Derim Strong) · app/api/doktor/dermatoloji (+ /spine) · specialties/dermatoloji/imaging/belgeKopru.ts · specialties/dermatoloji/engines/portal-derim.ts · core/belgeler/tierA.ts · lib/doktor/doktorAraclari.ts (5 dermatoloji BRANS) · lib/security/hastaIzolasyonEnvanteri.ts · migration 054_derm_exceptional.sql · scripts/derm-exceptional-smoke.mts · docs/DERM-MD-BETA.md. External: PSOKİD 2025, TDD Atopik Dermatit 2018 ve Akne, GÖP KÜB (TİTCK), SGK SUT 2026, TUKMOS 2019, solaryum yasağı 2018, BZBH Form 014 (bildirim), Bolognia 5 / Andrews 14 TR (klinisyen tarafı derinlik). Önceki auditler: derm-final (~50%, dürüst) → post-exceptional (bu belge). Yöntem ikizi: goz-exceptional-audit.html.</p>
+
+  <div class="foot">
+    <span>Post-exceptional sprint DERM-EXCEPTIONAL-01 · notya-ai · Dermatoloji · 2026-09-18</span>
+    <span>No patient data · internal product audit · not on Doktor Araçları</span>
+  </div>
+</div>
+</body>
+</html>

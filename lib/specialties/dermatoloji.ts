@@ -73,8 +73,11 @@ export const DERMATOLOJI_PROFILE: SpecialtyProfile = {
     { konu: 'Biyolojik SUT eşikleri', neden: 'PSOKİD 2025 + SUT 2026 birlikte okunmalı; doz uydurulmaz.' },
   ],
 
-  // SAGLIGIM-PORTAL-REGISTRY — Derim: foto eklendi, kontrol/tedavi hatırlatma, fototerapi seans tarihi.
-  // Tanı / morfoloji / skor / ilaç dozu yok (.cursor/skills/specialty-hasta-portali).
+  // SAGLIGIM-PORTAL-REGISTRY / DERM-EXCEPTIONAL-01 — Derim: foto eklendi, hekim tetikli hatırlatmalar
+  // (β-hCG vadesi, fototerapi seansı, yama D2/D4, yara-dikiş-biyopsi kontrolü, TBSE), işlem ve seans tarihleri.
+  // Başlıklar specialties/dermatoloji/engines/portal-derim (kod → sabit hasta-güvenli başlık) ile üretilir;
+  // hekimin klinik görev metni hastaya taşınmaz. Tanı / morfoloji / skor / ilaç dozu yok
+  // (.cursor/skills/specialty-hasta-portali).
   portal: [{
     id: 'dermatoloji',
     nav: [{ key: 'derim', label: 'Derim', path: '/derim' }],
@@ -82,17 +85,17 @@ export const DERMATOLOJI_PROFILE: SpecialtyProfile = {
     eligibility: 'doctor_specialty',
     copyHints: [
       'Fotoğraf yüklendi bildirimi — tanı dili yok',
-      'Kontrol / lab / yara bakımı hatırlatmaları hekim görevinden',
-      'Fototerapi seans tarihi (J/cm² yorumu yok)',
+      'Hatırlatma başlıkları sabit hasta-güvenli metinlerdir; ilaç adı, skor ve doz yazılmaz',
+      'Aylık kan testi (β-hCG) vadesi yalnız hekim tedaviyi başlattığında görünür',
+      'Fototerapi seansı ve yama D2/D4 tarihleri kliniğin kendi kaydından; J/cm² ve alerjen sonucu yorumu yok',
+      'Tüm vücut deri kontrolü (TBSE) vadesi hekimin girdiği son tarihten',
     ],
     views: ['DerimView'],
-    // DERM-EXCEPTIONAL-01: hekim tetiklemeli hatırlatma kancası eklendi
-    // (engines/derimHatirlatma.ts → /api/doktor/dermatoloji `action: 'hatirlatma'` → derm_gorevleri),
-    // DerimView'in hatırlatma / sonraki kontrol / foto / fototerapi slotları bunu okuyor.
+    // DERM-EXCEPTIONAL-01: hekim tetiklemeli hatırlatma + Derim Strong.
+    // MD saha onayı (docs/DERM-MD-BETA.md) ve Boss yazılı onayı gelmeden uzman-dogrulandi YAZILMAZ.
     derinlik: 'Strong',
   }],
 
-  // Bölüm derinliği klinik kullanıma hazır (skor bölge çalışma sayfaları, fototerapi v2, yama ICDRG,
-  // SUT taslağı, acil bandı, tedavi merdivenleri). Uzman doğrulaması bekliyor → beta-hazir.
+  // Bölüm derinliği klinik kullanıma hazır. Uzman doğrulaması bekliyor → beta-hazir.
   olgunluk: 'beta-hazir',
 }

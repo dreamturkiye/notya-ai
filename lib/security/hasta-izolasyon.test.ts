@@ -121,6 +121,8 @@ type Hekim = {
   portalToken: string; konu: string; asistanEylem: string
   /** GOZ-EXCEPTIONAL-01: göz OCT görüntüsü + fundus Belge analizi (dual-sign köprüsü) */
   gozGoruntu: string; belgeAnaliz: string
+  /** DERM-EXCEPTIONAL-01: dermatoskopi Belge analizi (derm dual-sign köprüsü) */
+  dermAnaliz: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -177,9 +179,10 @@ function hekimKur(harf: Harf): Hekim {
   db.ekle('goz_kontroller', { doctor_id: id, patient_id: hasta, tarih: '2026-01-05', neden: `Goz kontrol ${m}`, dilatasyon: false, durum: 'planli' })
   const gozGoruntu = db.ekle('hasta_goruntulemeler', { doctor_id: id, patient_id: hasta, modalite: 'oct', vucut_bolgesi: 'sag', rapor_metni: `OCT ${m}`, goruntuleme_tarihi: '2026-09-01', dosya_url: 'https://sahte.supabase.test/oct' }).id
   const belgeAnaliz = db.ekle('belge_analizleri', { belge_id: belge, doctor_id: id, patient_id: hasta, brans: 'goz', modality_final: 'fundus', durum: 'taslak', de_id_hash: 'sentetik', engine_set: 'tierA-v1', motor_ciktilari: [], fusion: { capPct: 85 }, sonuc: { modalite: 'Fundus', kalite: 'iyi', ozet: `Ozet ${m}`, bulgular: [], tanilar: [], acil_bayrak: false, oneri: '', sinirlar: [], hekim_tanisi: [], engines_used: [] } }).id
+  const dermAnaliz = db.ekle('belge_analizleri', { belge_id: belge, doctor_id: id, patient_id: hasta, brans: 'dermatoloji', modality_final: 'dermatoskopi', durum: 'taslak', de_id_hash: 'sentetik', engine_set: 'tierA-v1', motor_ciktilari: [], fusion: { capPct: 85 }, sonuc: { modalite: 'Dermatoskopi', kalite: 'iyi', ozet: `Derm ozet ${m}`, bulgular: [], tanilar: [], acil_bayrak: false, oneri: '', sinirlar: [], hekim_tanisi: [], engines_used: [] } }).id
   db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01' })
   db.dosyaKoy('ses-kayitlari', `${id}/qa-kayit.m4a`, new Blob(['sentetik ses']))
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, hileliSeans: '', hileliNot: '' }
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -369,6 +372,9 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.dermSpine.POST(iste('POST', '/api/doktor/dermatoloji/spine', { token: a.token, govde: { adim: 'lezyon_tani', patientId: a.hasta, lezyonId: h.lezyon, resmiTani: r.RESMI_TANI_SECENEKLERI[0] } }))) },
   { ad: 'GET /api/doktor/dermatoloji/spine', red: 404,
     cagir: (r, a, h) => coz(r.dermSpine.GET(iste('GET', `/api/doktor/dermatoloji/spine?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/dermatoloji goruntu-okuma belge_taslak (kendi hastası + yabancı Belge analizi)', red: 404,
+    yazdi: (a) => tablo('derm_vision_reads').some((x) => x.belge_analiz_id === a.dermAnaliz && x.hasta_derm_id === a.hastaDerm && x.status === 'draft' && x.drafted_by === 'asistan'),
+    cagir: (r, a, h) => coz(r.derm.POST(iste('POST', '/api/doktor/dermatoloji', { token: a.token, govde: { action: 'goruntu-okuma', eylem: 'belge_taslak', patientId: a.hasta, analizId: h.dermAnaliz, bolge: 'sırt' } }))) },
   { ad: 'GET /api/doktor/gebelik', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.gebelik.GET(iste('GET', `/api/doktor/gebelik?patientId=${h.hasta}`, { token: a.token }))) },
   { ad: 'POST /api/doktor/gebelik baslat', red: 404,
