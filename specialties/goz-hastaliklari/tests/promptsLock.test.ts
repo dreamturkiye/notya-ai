@@ -10,7 +10,7 @@ import { dozKilitliBrans, pediatrikKapsam, soapPersonaAnahtari, soapSistemPrompt
 // GOZ-PROMPTS-LOCK — same prompts rubric as dahiliye / dermatoloji: (a) complete, (b) goldens / no book text, (c) wired at runtime, (d) hekim lock.
 const kok = path.join(import.meta.dirname, '..', '..', '..')
 const kaynak = (p: string) => fs.readFileSync(path.join(kok, p), 'utf8')
-const ADIMLAR = ['serit', 'olcum', 'olcum_nota', 'fundus', 'fundus_nota', 'kopya', 'glokom', 'dr', 'dr_sevk_kapat', 'enjeksiyon', 'sgk_kapi', 'sgkrapor', 'sgkrapor_kilit', 'katarakt', 'goruntu_okuma', 'kontrol', 'pediatrik', 'onsegment', 'kuru_goz', 'acil', 'intake_nota', 'gorev']
+const ADIMLAR = ['serit', 'olcum', 'olcum_nota', 'fundus', 'fundus_nota', 'kopya', 'glokom', 'dr', 'dr_sevk_kapat', 'enjeksiyon', 'sgk_kapi', 'sgkrapor', 'sgkrapor_kilit', 'katarakt', 'goruntu_okuma', 'kontrol', 'pediatrik', 'onsegment', 'kuru_goz', 'acil', 'intake_nota', 'gorev', 'serit_nota', 'fundus_dr', 'lazer', 'biyomikroskopi', 'keratokonus', 'on_segment_nota', 'katarakt_postop', 'katarakt_nota', 'rop', 'acil_kayit', 'acil_nota', 'oct_olcum', 'hatirlatma']
 /** GET-computed steps (no POST adım): şerit, kopya taslağı, ön segment protokolleri — checked as GET response keys. */
 const GET_ADIMLARI: Record<string, string> = { serit: 'serit,', kopya: 'kopya,', onsegment: 'protokoller: ON_SEGMENT_PROTOKOLLERI' }
 
@@ -23,7 +23,7 @@ describe('(a) göz prompts exist and are complete', () => {
   })
   const apiYolu = path.join(kok, 'app/api/doktor/goz/route.ts')
   it('every tools.ts step exists in the göz API', { skip: !fs.existsSync(apiYolu) && 'app/api/doktor/goz/route.ts henüz yok' }, () => {
-    const api = kaynak('app/api/doktor/goz/route.ts')
+    const api = kaynak('app/api/doktor/goz/route.ts') + kaynak('app/api/doktor/goz/_ek.ts')
     for (const a of ADIMLAR) assert.ok(GET_ADIMLARI[a] ? api.includes(GET_ADIMLARI[a]) : new RegExp(`adim === ['"]${a}['"]`).test(api), `adım yok: ${a}`)
   })
 })

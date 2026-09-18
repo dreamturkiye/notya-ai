@@ -134,3 +134,28 @@ export function sonrakiDoz(gecmis: Enjeksiyon[], goz: 'sag' | 'sol', bugun: stri
   }
   return { faz: 'idame', dozNo: null, enErken: null, enGec: null, not: 'Yükleme tamam — idame aralığını hekim belirler (her idame raporunda yanıt yazılır).' }
 }
+
+// ---------- GOZ-EXCEPTIONAL-01: IVT odası kontrol listesi ("yapıldı" öncesi zorunlu) ----------
+/**
+ * Güvenli cerrahi / time-out ilkesi: onam, doğru göz işaretlemesi (kayıttaki gözle eşleşmeli — yanlış göz engeli), ilaç + lot/seri,
+ * asepsi. Madde metinleri kurum protokolüne atıf yapar; antiseptik konsantrasyonu / doz yazılmaz. Geçmiş kayıt (başka merkezde
+ * yapılmış) hekimin açık beyanıyla listesiz işlenir ve öyle etiketlenir.
+ */
+export const IVT_KONTROL: Array<{ kod: 'onam' | 'goz_isaret' | 'ilac_lot' | 'asepsi'; ad: string }> = [
+  { kod: 'onam', ad: 'Aydınlatılmış onam alındı (ajan, göz, riskler)' },
+  { kod: 'goz_isaret', ad: 'Doğru göz işaretlendi ve time-out yapıldı' },
+  { kod: 'ilac_lot', ad: 'İlaç adı ve lot / seri no kaydedildi' },
+  { kod: 'asepsi', ad: 'Asepsi: kapak ve konjonktiva antisepsisi, steril blefarostat ve örtü (kurum protokolü)' },
+]
+export interface IvtKontrol { onam?: boolean; goz_isaret?: boolean; isaretliGoz?: 'sag' | 'sol' | null; ilac_lot?: boolean; lot?: string | null; asepsi?: boolean; gecmisKayit?: boolean; saat?: string | null }
+
+export function ivtKontrolDogrula(k: IvtKontrol | null | undefined, goz: 'sag' | 'sol'): { tamam: boolean; eksikler: string[]; kontrol: IvtKontrol | null } {
+  if (k?.gecmisKayit === true) return { tamam: true, eksikler: [], kontrol: { gecmisKayit: true } }
+  const eksikler: string[] = []
+  for (const m of IVT_KONTROL) if (!k?.[m.kod]) eksikler.push(m.ad)
+  const lot = String(k?.lot || '').trim().slice(0, 40)
+  if (k?.ilac_lot && !lot) eksikler.push('Lot / seri no boş')
+  if (k?.goz_isaret && k.isaretliGoz !== goz) eksikler.push(`İşaretlenen göz (${k.isaretliGoz === 'sag' ? 'OD' : k.isaretliGoz === 'sol' ? 'OS' : '—'}) kayıttaki gözle (${goz === 'sag' ? 'OD' : 'OS'}) eşleşmiyor — YANLIŞ GÖZ riski`)
+  const kontrol: IvtKontrol = { onam: !!k?.onam, goz_isaret: !!k?.goz_isaret, isaretliGoz: k?.isaretliGoz === 'sag' || k?.isaretliGoz === 'sol' ? k.isaretliGoz : null, ilac_lot: !!k?.ilac_lot, lot: lot || null, asepsi: !!k?.asepsi, saat: typeof k?.saat === 'string' ? k.saat.slice(0, 5) : null }
+  return { tamam: eksikler.length === 0, eksikler, kontrol }
+}

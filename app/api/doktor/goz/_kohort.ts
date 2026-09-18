@@ -13,7 +13,13 @@ export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T e
 const KAYNAK_TABLOLARI = ['goz_muayeneler', 'goz_glokom', 'goz_dr', 'goz_enjeksiyonlar', 'goz_kontroller', 'goz_gorevler'] as const
 
 export async function gozKohortVerisi(sb: Sb, doctorId: string, bugun: string, sadece?: string[]) {
-  const kumeler = await Promise.all(KAYNAK_TABLOLARI.map(async (t) => { const { data } = await sb.from(t).select('patient_id').eq('doctor_id', doctorId).limit(3000); return (data || []).map((r) => String(r.patient_id)) }))
+  // `sadece` verildiyse kaynak sorguları o kimliklerle daraltılır (tek hasta: hasta dosyası GET / hatırlatma) — yine doctor_id kapsamlı.
+  const kumeler = await Promise.all(KAYNAK_TABLOLARI.map(async (t) => {
+    let q = sb.from(t).select('patient_id').eq('doctor_id', doctorId)
+    if (sadece) q = q.in('patient_id', sadece)
+    const { data } = await q.limit(3000)
+    return (data || []).map((r) => String(r.patient_id))
+  }))
   let ids = Array.from(new Set(kumeler.flat()))
   if (sadece) ids = ids.filter((x) => sadece.includes(x))
   ids = ids.slice(0, 500)

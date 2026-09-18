@@ -196,6 +196,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'oncekiGozMuayenesi', etiket: 'Daha önce göz muayenesi oldunuz mu?', tur: 'radio', secenekler: ['Evet', 'Hayır', 'Emin değilim'] },
       { id: 'gozlukKullanimi', etiket: 'Gözlük kullanıyor musunuz?', tur: 'radio', secenekler: ['Evet, sürekli', 'Evet, ara sıra', 'Hayır', 'Eskiden kullanıyordum'] },
       { id: 'kontaktLensKullanimi', etiket: 'Kontakt lens kullanıyor musunuz?', tur: 'radio', secenekler: ['Evet, sürekli', 'Evet, ara sıra', 'Hayır', 'Eskiden kullanıyordum'] },
+      { id: 'acilBelirtiler', etiket: 'Son günlerde bunlardan biri oldu mu? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ani görme kaybı', 'Işık çakması', 'Perde / gölge inmesi', 'Kimyasal madde teması', 'Ağrılı kızarıklık', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile / muayenehaneye başvurun. Kimyasal temasta gözünüzü hemen bol temiz suyla yıkayın.' },
       { id: 'mevcutGozSikayetleri', etiket: 'Mevcut göz şikâyetleriniz', tur: 'checkbox-grup', secenekler: ['Bulanık Görme', 'Uzağı Görmede Zorluk', 'Yakını Görmede Zorluk', 'Göz Kuruluğu', 'Baş Ağrısı', 'Işığa Hassasiyet', 'Göz Kızarıklığı', 'Kaşıntı', 'Çift Görme'] },
       { id: 'bulanikGormeSikligi', etiket: 'Bulanık görme sıklığı', tur: 'radio', secenekler: ['Yok', 'Ara sıra', 'Sık sık', 'Sürekli', 'Bilmiyorum'] },
       { id: 'gormeZorluguMesafe', etiket: 'Görme zorluğu en çok hangi mesafede?', tur: 'radio', secenekler: ['Uzakta', 'Yakında', 'Her ikisinde', 'Belirgin değil'] },

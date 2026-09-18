@@ -4,6 +4,8 @@
  *                   SGK raporları, katarakt, görüntüler + dual-sign okumalar, kontroller, pediatrik, görevler, intake, acil, kaynaklar
  * POST adim: olcum | olcum_nota | fundus | fundus_nota | glokom | dr | dr_sevk_kapat | enjeksiyon | sgk_kapi | sgkrapor | sgkrapor_kilit | katarakt
  *            | goruntu_okuma | kontrol | pediatrik | gorev | intake_nota | acil | kuru_goz
+ *            + GOZ-EXCEPTIONAL-01 (_ek.ts): serit_nota | fundus_dr | lazer | biyomikroskopi | keratokonus | on_segment_nota | katarakt_postop
+ *              | katarakt_nota | rop | acil_kayit | acil_nota | oct_olcum | hatirlatma
  * Hekim kilitleri: tanı/evre/hedef/rejim/aralık yalnız hekim girişi; motor önerir, uyarır, görev açar. Sekreter yalnız okur.
  */
 import { NextRequest, NextResponse } from 'next/server'
@@ -25,6 +27,11 @@ import { acilTara, ACIL_KODLARI, type AcilKod } from '@/specialties/goz-hastalik
 import { gozSeridi, intakeSubjektif } from '@/specialties/goz-hastaliklari/engines/serit'
 import { okumaGecisi, taslakTaniDiliUyarisi, GOZ_GORUNTU_DISCLAIMER, GOZ_MODALITELER } from '@/specialties/goz-hastaliklari/imaging/dualSign'
 import { GOZ_KAYNAKLAR } from '@/specialties/goz-hastaliklari/protocols/sources'
+import { olcumNotaMetni, refraksiyonNormalize, type OlcumSatiri } from '@/specialties/goz-hastaliklari/engines/muayene'
+import { glokomMetaNormalize, GLOKOM_ARALIK_ONERILERI } from '@/specialties/goz-hastaliklari/engines/glokom'
+import { ivtKontrolDogrula, type IvtKontrol } from '@/specialties/goz-hastaliklari/engines/antiVegf'
+import { biyometriNormalize, postopUyarilari, type Biyometri, type PostopKayit, type PostopZaman } from '@/specialties/goz-hastaliklari/engines/katarakt'
+import { gozEkAdim, gozEkVeri } from './_ek'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -32,15 +39,15 @@ const tarihMi = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.t
 const num = (v: unknown) => (v == null || v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null)
 const hata = (m: string, s = 400) => NextResponse.json({ error: m }, { status: s })
 type Sb = Extract<Awaited<ReturnType<typeof pratikOturum>>, { supabase: unknown }>['supabase']
-type MuayeneRow = { id: string; tarih: string; va: { sag?: VaSeti; sol?: VaSeti } | null; gib_sag: number | null; gib_sol: number | null; gib_yontem: string | null; rapd: string | null; ek: { fundus?: FundusKayit } | null; kaynak: string; created_at: string }
+type MuayeneRow = { id: string; tarih: string; va: { sag?: VaSeti; sol?: VaSeti } | null; gib_sag: number | null; gib_sol: number | null; gib_yontem: string | null; rapd: string | null; ek: { fundus?: FundusKayit; refraksiyon?: unknown; biyomikroskopi?: unknown; keratokonus?: unknown } | null; kaynak: string; created_at: string }
 
 async function hasta(sb: Sb, doktorId: string, patientId: string) {
   const { data } = await sb.from('patients').select('id, dob_encrypted, name_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle()
   if (!data) return null
-  let yasAy: number | null = null, adSoyad = 'Hasta'
-  try { if (data.dob_encrypted) { const d = new Date(decrypt(String(data.dob_encrypted))); if (!isNaN(d.getTime())) { const n = new Date(); yasAy = (n.getFullYear() - d.getFullYear()) * 12 + (n.getMonth() - d.getMonth()) - (n.getDate() < d.getDate() ? 1 : 0) } } } catch { yasAy = null }
+  let yasAy: number | null = null, adSoyad = 'Hasta', dobIso: string | null = null
+  try { if (data.dob_encrypted) { const d = new Date(decrypt(String(data.dob_encrypted))); if (!isNaN(d.getTime())) { dobIso = d.toISOString().slice(0, 10); const n = new Date(); yasAy = (n.getFullYear() - d.getFullYear()) * 12 + (n.getMonth() - d.getMonth()) - (n.getDate() < d.getDate() ? 1 : 0) } } } catch { yasAy = null }
   try { if (data.name_encrypted) { const p = JSON.parse(decrypt(String(data.name_encrypted))); adSoyad = `${p.ad || ''} ${p.soyad || ''}`.trim() || 'Hasta' } } catch { /* varsayılan */ }
-  return { id: data.id as string, yasAy, yas: yasAy == null ? null : Math.floor(yasAy / 12), adSoyad }
+  return { id: data.id as string, yasAy, yas: yasAy == null ? null : Math.floor(yasAy / 12), adSoyad, dobIso }
 }
 
 async function gorevSenkron(sb: Sb, doktorId: string, patientId: string, gorevler: { kod: string; ad: string; due: string | null }[], kaynak: string) {
@@ -72,7 +79,7 @@ export async function GET(req: NextRequest) {
     sb.from('goz_muayeneler').select('id, tarih, va, gib_sag, gib_sol, gib_yontem, rapd, ek, kaynak, created_at').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(30),
     sb.from('goz_glokom').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
     sb.from('goz_dr').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
-    sb.from('goz_enjeksiyonlar').select('id, goz, ajan, endikasyon, faz, doz_no, tarih, durum, yanit').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).limit(80),
+    sb.from('goz_enjeksiyonlar').select('id, goz, ajan, endikasyon, faz, doz_no, tarih, durum, yanit, ivt_kontrol').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).limit(80),
     sb.from('goz_sgk_raporlari').select('id, sablon, draft, eksikler, durum, kilit_at, created_at').eq('patient_id', h.id).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     sb.from('goz_katarakt').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(10),
     sb.from('hasta_goruntulemeler').select('id, modalite, vucut_bolgesi, goruntuleme_tarihi, created_at, dosya_url').eq('patient_id', h.id).eq('doctor_id', doktorId).in('modalite', [...GOZ_MODALITELER]).order('created_at', { ascending: false }).limit(60),
@@ -90,12 +97,13 @@ export async function GET(req: NextRequest) {
 
   const gl = glQ.data as Record<string, unknown> | null
   const glokomKart = gl ? { taniHekim: (gl.tani_hekim as string) || null, goz: (gl.goz as 'sag' | 'sol' | 'iki') || null, hedefSag: num(gl.hedef_gib_sag), hedefSol: num(gl.hedef_gib_sol), damlalar: (gl.damlalar as Damla[]) || [], sonGormeAlani: (gl.son_gorme_alani as string) || null, sonOctRnfl: (gl.son_oct_rnfl as string) || null, gaAralikAy: num(gl.ga_aralik_ay), octAralikAy: num(gl.oct_aralik_ay) } : null
+  const glokomMeta = gl ? { shafferSag: num(gl.shaffer_sag), shafferSol: num(gl.shaffer_sol), gonyoSag: (gl.gonyo_sag as string) || null, gonyoSol: (gl.gonyo_sol as string) || null, pakiSag: num(gl.paki_sag), pakiSol: num(gl.paki_sol), gormeAlaniCihaz: (gl.gorme_alani_cihaz as string) || null, octCihaz: (gl.oct_cihaz as string) || null, aralikOnerisi: (gl.aralik_onerisi as string) || null } : null
   const glokom = glokomKart ? glokomDegerlendir(glokomKart, olcumler.map((x) => ({ tarih: x.tarih, sag: x.gibSag, sol: x.gibSol })), T) : null
 
   const dr = drQ.data as Record<string, unknown> | null
   const drSonuc = dr ? drDegerlendir({ dmTip: (dr.dm_tip as 'T1' | 'T2' | 'diger') || null, dmTaniTarihi: (dr.dm_tani_tarihi as string) || null, yas: h.yas, gebe: !!dr.gebe, evreSag: (dr.evre_sag as DrEvre) || null, evreSol: (dr.evre_sol as DrEvre) || null, dmoSag: (dr.dmo_sag as Dmo) || null, dmoSol: (dr.dmo_sol as Dmo) || null, sonFundus: (dr.son_fundus as string) || null, bugun: T }) : null
 
-  const enj: Enjeksiyon[] = (enjQ.data || []).map((e) => ({ id: e.id, goz: e.goz, ajan: e.ajan, endikasyon: e.endikasyon, faz: e.faz, dozNo: e.doz_no, tarih: e.tarih, durum: e.durum }))
+  const enj: Array<Enjeksiyon & { ivtKontrol: IvtKontrol | null }> = (enjQ.data || []).map((e) => ({ id: e.id, goz: e.goz, ajan: e.ajan, endikasyon: e.endikasyon, faz: e.faz, dozNo: e.doz_no, tarih: e.tarih, durum: e.durum, ivtKontrol: (e.ivt_kontrol as IvtKontrol) || null }))
   const sonraki = { sag: sonrakiDoz(enj, 'sag', T), sol: sonrakiDoz(enj, 'sol', T) }
   const planli = enj.filter((e) => e.durum === 'planli' && e.tarih >= T).sort((a, b) => (a.tarih < b.tarih ? -1 : 1))[0]
 
@@ -131,8 +139,10 @@ export async function GET(req: NextRequest) {
   }
   const sikayetler = [...bugunSikayet, intake?.subjektif || '']
 
-  const serit = gozSeridi({ muayeneler: olcumler, hedefSag: glokomKart?.hedefSag ?? null, hedefSol: glokomKart?.hedefSol ?? null, evreSag: (dr?.evre_sag as DrEvre) || null, evreSol: (dr?.evre_sol as DrEvre) || null, sonrakiEnjeksiyon: planli ? `${planli.tarih} ${planli.goz === 'sag' ? 'OD' : 'OS'}` : null, gorevDue: (gorevler || []).map((g) => g.due), sikayetMetinleri: sikayetler, bugun: T })
+  const serit = gozSeridi({ hekimIsaretleri: intake?.acilKodlari || [], muayeneler: olcumler, hedefSag: glokomKart?.hedefSag ?? null, hedefSol: glokomKart?.hedefSol ?? null, evreSag: (dr?.evre_sag as DrEvre) || null, evreSol: (dr?.evre_sol as DrEvre) || null, sonrakiEnjeksiyon: planli ? `${planli.tarih} ${planli.goz === 'sag' ? 'OD' : 'OS'}` : null, gorevDue: (gorevler || []).map((g) => g.due), sikayetMetinleri: sikayetler, bugun: T })
 
+  const sonEk = <T,>(k: 'refraksiyon' | 'biyomikroskopi' | 'keratokonus'): (T & { tarih: string }) | null => { for (const m of muayeneler) { const v = m.ek?.[k]; if (v && typeof v === 'object') return { ...(v as T), tarih: m.tarih } } return null }
+  const ek = await gozEkVeri(sb, doktorId, h, T, ped)
   const sonFundusKayit = (() => {
     for (const m of muayeneler) {
       const f = m.ek && typeof m.ek === 'object' ? (m.ek as { fundus?: FundusKayit }).fundus : null
@@ -146,14 +156,16 @@ export async function GET(req: NextRequest) {
     rol: o.rol,
     serit,
     muayeneler: muayeneler.map((m) => ({ ...m, gosterim: { sag: vaGoster(enIyiUzak(m.va?.sag)), sol: vaGoster(enIyiUzak(m.va?.sol)) } })),
+    sonRefraksiyon: sonEk('refraksiyon'), sonBiyomikroskopi: sonEk('biyomikroskopi'), sonKeratokonus: sonEk('keratokonus'),
+    ...ek,
     sonFundus: sonFundusKayit,
     kopya,
-    glokom: gl ? { kart: glokomKart, degerlendirme: glokom } : null,
+    glokom: gl ? { kart: glokomKart, meta: glokomMeta, degerlendirme: glokom } : null,
     dr: dr ? { satir: dr, degerlendirme: drSonuc } : null,
     acikGozSevkleri: sevkQ.data || [],
     enjeksiyonlar: enj, sonrakiDoz: sonraki,
     sgkRaporlari: rapQ.data || [], sgkSablonlari: GOZ_SGK_SABLONLARI,
-    katarakt: (katQ.data || []).map((k) => ({ ...k, hazirlik: kataraktHazirlik((k.checklist as Record<string, boolean>) || {}), gilSgk: gilSgkKontrol((k.gil_tipi_hekim as string) || null) })), kataraktKontrol: KATARAKT_KONTROL, gilEk3g: GIL_EK3G_KALEMLERI,
+    katarakt: (katQ.data || []).map((k) => ({ ...k, hazirlik: kataraktHazirlik((k.checklist as Record<string, boolean>) || {}), gilSgk: gilSgkKontrol((k.gil_tipi_hekim as string) || null), postopUyari: postopUyarilari((k.postop as Partial<Record<PostopZaman, PostopKayit>>) || {}).acil })), kataraktKontrol: KATARAKT_KONTROL, gilEk3g: GIL_EK3G_KALEMLERI,
     goruntuler: imgs, goruntuDisclaimer: GOZ_GORUNTU_DISCLAIMER,
     kontroller: konQ.data || [],
     pediatrik: { satir: ped, izlem: pedIzlem },
@@ -187,20 +199,21 @@ export async function POST(req: NextRequest) {
       const ham = v.va?.[taraf]?.[alan]
       if (ham && String(ham).trim() && !vaCoz(String(ham)) && alan !== 'yakin') return hata(`${taraf === 'sag' ? 'Sağ' : 'Sol'} göz ${alan.replace('_', ' ')} okunamadı: "${ham}" (ör. 0,8 · 6/12 · PS 1m · EH · IH · IHY)`)
     }
-    const bos = !v.va?.sag && !v.va?.sol && v.gibSag == null && v.gibSol == null
-    if (bos) return hata('En az bir VA veya GİB değeri girin.')
-    const { data, error } = await sb.from('goz_muayeneler').insert({ ...ortak, tarih: tarihMi(v.tarih) ? v.tarih : T, va: v.va || {}, gib_sag: v.gibSag ?? null, gib_sol: v.gibSol ?? null, gib_yontem: v.gibYontem ?? null, rapd: v.rapd ?? null, kaynak: v.kopyaOnayli ? 'kopya_onayli' : 'hekim' }).select('id').single()
+    const rf = refraksiyonNormalize(b.refraksiyon as Record<string, unknown> | null)
+    if (rf.hatalar.length) return hata(`Refraksiyon: ${rf.hatalar.join('; ')}`)
+    const bos = !v.va?.sag && !v.va?.sol && v.gibSag == null && v.gibSol == null && !rf.refraksiyon && !v.rapd
+    if (bos) return hata('En az bir VA, GİB, RAPD veya refraksiyon değeri girin.')
+    const { data, error } = await sb.from('goz_muayeneler').insert({ ...ortak, tarih: tarihMi(v.tarih) ? v.tarih : T, va: v.va || {}, gib_sag: v.gibSag ?? null, gib_sol: v.gibSol ?? null, gib_yontem: v.gibYontem ?? null, rapd: v.rapd ?? null, ek: rf.refraksiyon ? { refraksiyon: rf.refraksiyon } : null, kaynak: v.kopyaOnayli ? 'kopya_onayli' : 'hekim' }).select('id').single()
     if (error) return hata(error.message, 500)
     return NextResponse.json({ ok: true, id: data.id })
   }
 
   if (adim === 'olcum_nota') {
-    const { data: m } = await sb.from('goz_muayeneler').select('tarih, va, gib_sag, gib_sol, gib_yontem').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    // Fundus / biyomikroskopi satırları (va boş) atlanır — son GERÇEK ölçüm yazılır.
+    const { data: rows } = await sb.from('goz_muayeneler').select('tarih, va, gib_sag, gib_sol, gib_yontem, rapd, ek').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(30)
+    const m = ((rows || []) as OlcumSatiri[]).find((x) => (x.va && ((x.va as Record<string, unknown>).sag || (x.va as Record<string, unknown>).sol)) || x.gib_sag != null || x.gib_sol != null || x.rapd || x.ek?.refraksiyon)
     if (!m) return hata('Kayıtlı ölçüm yok.')
-    const va = (m.va || {}) as { sag?: VaSeti; sol?: VaSeti }
-    const vaSatir = (t: 'sag' | 'sol') => { const s = va[t] || {}; return [s.uzak_sc ? `sc ${vaGoster(s.uzak_sc)}` : '', s.uzak_cc ? `cc ${vaGoster(s.uzak_cc)}` : '', s.yakin ? `yakın ${s.yakin}` : ''].filter(Boolean).join(', ') || '—' }
-    const yontem = m.gib_yontem ? ` (${m.gib_yontem === 'nct' ? 'NCT' : m.gib_yontem === 'applanasyon' ? 'aplanasyon' : m.gib_yontem})` : ''
-    const satir = `Görme keskinliği — OD: ${vaSatir('sag')}; OS: ${vaSatir('sol')}. GİB${yontem} — OD: ${m.gib_sag ?? '—'} mmHg; OS: ${m.gib_sol ?? '—'} mmHg.`
+    const satir = olcumNotaMetni(m)
     const r = await gununNotunaEkle(sb, doktorId, h.id, satir, 'content_objektif')
     // NOTYA-MUAYENEYE-DON-01: notId'yi geri veriyoruz ki kart onayında "Muayene Formuna Dön" çıksın.
     return NextResponse.json({ ok: r.eklendi, sebep: r.sebep, satir, notId: r.eklendi ? r.notId : null })
@@ -244,7 +257,10 @@ export async function POST(req: NextRequest) {
 
   if (adim === 'glokom') {
     const damlalar = Array.isArray(b.damlalar) ? (b.damlalar as Damla[]).filter((d) => d && String(d.ad || '').trim()).slice(0, 8).map((d) => ({ ad: String(d.ad).slice(0, 80), goz: ['sag', 'sol', 'iki'].includes(String(d.goz)) ? d.goz : 'iki', siklik: String(d.siklik || '').slice(0, 60), baslangic: tarihMi(d.baslangic) ? d.baslangic : null })) : []
-    const satir = { ...ortak, tani_hekim: b.taniHekim ? String(b.taniHekim).slice(0, 120) : null, goz: ['sag', 'sol', 'iki'].includes(String(b.goz)) ? b.goz : null, hedef_gib_sag: num(b.hedefSag), hedef_gib_sol: num(b.hedefSol), damlalar, son_gorme_alani: tarihMi(b.sonGormeAlani) ? b.sonGormeAlani : null, son_oct_rnfl: tarihMi(b.sonOctRnfl) ? b.sonOctRnfl : null, ga_aralik_ay: num(b.gaAralikAy), oct_aralik_ay: num(b.octAralikAy), updated_at: new Date().toISOString() }
+    const gm = glokomMetaNormalize(b)
+    if (gm.hatalar.length) return hata(gm.hatalar.join('; '))
+    const oneri = GLOKOM_ARALIK_ONERILERI.find((x) => x.kod === b.aralikOnerisi)?.kod || null
+    const satir = { ...ortak, shaffer_sag: gm.meta.shafferSag, shaffer_sol: gm.meta.shafferSol, gonyo_sag: gm.meta.gonyoSag, gonyo_sol: gm.meta.gonyoSol, paki_sag: gm.meta.pakiSag, paki_sol: gm.meta.pakiSol, gorme_alani_cihaz: gm.meta.gormeAlaniCihaz, oct_cihaz: gm.meta.octCihaz, aralik_onerisi: oneri, tani_hekim: b.taniHekim ? String(b.taniHekim).slice(0, 120) : null, goz: ['sag', 'sol', 'iki'].includes(String(b.goz)) ? b.goz : null, hedef_gib_sag: num(b.hedefSag), hedef_gib_sol: num(b.hedefSol), damlalar, son_gorme_alani: tarihMi(b.sonGormeAlani) ? b.sonGormeAlani : null, son_oct_rnfl: tarihMi(b.sonOctRnfl) ? b.sonOctRnfl : null, ga_aralik_ay: num(b.gaAralikAy), oct_aralik_ay: num(b.octAralikAy), updated_at: new Date().toISOString() }
     const { error } = await sb.from('goz_glokom').upsert(satir, { onConflict: 'patient_id' })
     if (error) return hata(error.message, 500)
     // Tamamlanan tetkik tarihi girilince açık görev kapanır
@@ -292,7 +308,14 @@ export async function POST(req: NextRequest) {
     const kapi = sgkKapilari({ ajan: e.ajan, goz: e.goz, tarih: e.tarih, basamak, gecmis: gecmis.filter((x) => x.id !== b.id), son3AydaMiVeyaSvo: !!b.son3AydaMiVeyaSvo })
     const takvim = e.faz === 'yukleme' && (e.dozNo ?? 1) === 1 ? yuklemeTakvimi(e.tarih, e.ajan, e.endikasyon, !!b.dmoBesDoz) : []
     if (adim === 'sgk_kapi') return NextResponse.json({ kapi, takvim })
-    const satir = { ...ortak, goz: e.goz, ajan: e.ajan, endikasyon: e.endikasyon, faz: e.faz, doz_no: e.dozNo ?? null, tarih: e.tarih, durum: e.durum, yanit: b.yanit && typeof b.yanit === 'object' ? b.yanit : null }
+    // GOZ-EXCEPTIONAL-01: "yapıldı" yalnız IVT odası kontrol listesi tamamsa (veya hekim "geçmiş kayıt" beyanıyla)
+    let ivtKontrol: IvtKontrol | null = null
+    if (e.durum === 'yapildi') {
+      const ivt = ivtKontrolDogrula(b.ivtKontrol as IvtKontrol | null, e.goz)
+      if (!ivt.tamam) return hata(`IVT kontrol listesi eksik: ${ivt.eksikler.join('; ')}`)
+      ivtKontrol = ivt.kontrol
+    }
+    const satir = { ...ortak, goz: e.goz, ajan: e.ajan, endikasyon: e.endikasyon, faz: e.faz, doz_no: e.dozNo ?? null, tarih: e.tarih, durum: e.durum, yanit: b.yanit && typeof b.yanit === 'object' ? b.yanit : null, ...(ivtKontrol ? { ivt_kontrol: ivtKontrol } : {}) }
     const q = b.id ? sb.from('goz_enjeksiyonlar').update(satir).eq('id', String(b.id)).eq('doctor_id', doktorId) : sb.from('goz_enjeksiyonlar').insert(satir)
     const { error } = await q
     if (error) return hata(error.message, 500)
@@ -305,7 +328,12 @@ export async function POST(req: NextRequest) {
     const { data: gecmisHam } = await sb.from('goz_enjeksiyonlar').select('goz, ajan, endikasyon, faz, doz_no, tarih, durum').eq('patient_id', h.id).eq('doctor_id', doktorId)
     const gecmis: Enjeksiyon[] = (gecmisHam || []).map((e) => ({ goz: e.goz, ajan: e.ajan, endikasyon: e.endikasyon, faz: e.faz, dozNo: e.doz_no, tarih: e.tarih, durum: e.durum }))
     const s = (k: string) => (b[k] == null || b[k] === '' ? null : String(b[k]))
-    const sonuc = gozSgkTaslak({ sablon, hasta: { adSoyad: h.adSoyad }, goz: b.goz === 'sol' ? 'sol' : 'sag', ajan: (s('ajan') as never) || null, endikasyon: (s('endikasyon') as never) || null, anamnez: s('anamnez'), vaBaslangic: s('vaBaslangic'), vaOnceki: s('vaOnceki'), vaSimdi: s('vaSimdi'), mfkBaslangic: num(b.mfkBaslangic), mfkOnceki: num(b.mfkOnceki), mfkSimdi: num(b.mfkSimdi), renkliResim: s('renkliResim'), ffa: s('ffa'), ffaKontrendike: !!b.ffaKontrendike, okt: s('okt'), gecmis, hekimYanitVarBeyani: !!b.hekimYanitVarBeyani, bugun: T })
+    let gil = null
+    if (sablon === 'katarakt_gil') {
+      const { data: k } = await sb.from('goz_katarakt').select('checklist, gil_tipi_hekim, ek3g_kod, biyometri, planlanan_tarih').eq('patient_id', h.id).eq('doctor_id', doktorId).eq('goz', b.goz === 'sol' ? 'sol' : 'sag').order('created_at', { ascending: false }).limit(1).maybeSingle()
+      gil = k ? { tip: (k.gil_tipi_hekim as string) || null, ek3gKod: (k.ek3g_kod as string) || null, biyometri: (k.biyometri as Biyometri) || null, kontrolEksik: kataraktHazirlik((k.checklist as Record<string, boolean>) || {}).eksikZorunlu, planlananTarih: (k.planlanan_tarih as string) || null } : null
+    }
+    const sonuc = gozSgkTaslak({ gil, sablon, hasta: { adSoyad: h.adSoyad }, goz: b.goz === 'sol' ? 'sol' : 'sag', ajan: (s('ajan') as never) || null, endikasyon: (s('endikasyon') as never) || null, anamnez: s('anamnez'), vaBaslangic: s('vaBaslangic'), vaOnceki: s('vaOnceki'), vaSimdi: s('vaSimdi'), mfkBaslangic: num(b.mfkBaslangic), mfkOnceki: num(b.mfkOnceki), mfkSimdi: num(b.mfkSimdi), renkliResim: s('renkliResim'), ffa: s('ffa'), ffaKontrendike: !!b.ffaKontrendike, okt: s('okt'), gecmis, hekimYanitVarBeyani: !!b.hekimYanitVarBeyani, bugun: T })
     // Hasta adı saklanmaz — render sırasında doldurulur (dahiliye_sgk_raporlari ile aynı ilke)
     const { data, error } = await sb.from('goz_sgk_raporlari').insert({ ...ortak, sablon, draft: { ...sonuc.draft, hastaAdi: '', raporTipi: sonuc.raporTipi, sutKontrol: sonuc.sutKontrol, dipnotlar: sonuc.dipnotlar }, eksikler: sonuc.eksikler }).select('id').single()
     if (error) return hata(error.message, 500)
@@ -325,7 +353,10 @@ export async function POST(req: NextRequest) {
     const checklist = Object.fromEntries(KATARAKT_KONTROL.map((m) => [m.kod, !!(b.checklist as Record<string, unknown> | undefined)?.[m.kod]]))
     const hz = kataraktHazirlik(checklist)
     const gil = ['monofokal', 'torik', 'multifokal', 'edof', 'diger'].includes(String(b.gilTipi)) ? b.gilTipi : null
-    const satir = { ...ortak, goz, checklist, gil_tipi_hekim: gil, planlanan_tarih: tarihMi(b.planlananTarih) ? b.planlananTarih : null, durum: b.durum === 'yapildi' || b.durum === 'iptal' ? b.durum : hz.hazir ? 'hazir' : 'planlama', updated_at: new Date().toISOString() }
+    const bio = b.biyometri && typeof b.biyometri === 'object' ? biyometriNormalize(b.biyometri as Record<string, unknown>) : null
+    if (bio?.hatalar.length) return hata(`Biyometri: ${bio.hatalar.join('; ')}`)
+    const ek3g = GIL_EK3G_KALEMLERI.some((k) => k.kod === b.ek3gKod) ? String(b.ek3gKod) : null
+    const satir = { ...ortak, goz, checklist, gil_tipi_hekim: gil, ek3g_kod: ek3g, ...(bio ? { biyometri: bio.biyometri } : {}), planlanan_tarih: tarihMi(b.planlananTarih) ? b.planlananTarih : null, durum: b.durum === 'yapildi' || b.durum === 'iptal' ? b.durum : hz.hazir ? 'hazir' : 'planlama', updated_at: new Date().toISOString() }
     const { error } = b.id ? await sb.from('goz_katarakt').update(satir).eq('id', String(b.id)).eq('doctor_id', doktorId) : await sb.from('goz_katarakt').insert(satir)
     if (error) return hata(error.message, 500)
     return NextResponse.json({ ok: true, hazirlik: hz })
@@ -399,7 +430,7 @@ export async function POST(req: NextRequest) {
   if (adim === 'pediatrik') {
     const tip = ['ambliyopi', 'sasilik', 'ambliyopi_sasilik', 'refraktif'].includes(String(b.tip)) ? b.tip : null
     if (!tip) return hata('Tip seçin.')
-    const { error } = await sb.from('goz_pediatrik').upsert({ ...ortak, tip, kapama_hekim: b.kapamaHekim ? String(b.kapamaHekim).slice(0, 200) : null, gozluk: !!b.gozluk, sonraki_kontrol: tarihMi(b.sonrakiKontrol) ? b.sonrakiKontrol : null, notlar: b.notlar ? String(b.notlar).slice(0, 500) : null, updated_at: new Date().toISOString() }, { onConflict: 'patient_id' })
+    const { error } = await sb.from('goz_pediatrik').upsert({ ...ortak, tip, kapama_hekim: b.kapamaHekim ? String(b.kapamaHekim).slice(0, 200) : null, gozluk: !!b.gozluk, sonraki_kontrol: tarihMi(b.sonrakiKontrol) ? b.sonrakiKontrol : null, notlar: b.notlar ? String(b.notlar).slice(0, 500) : null, cover_test: b.coverTest ? String(b.coverTest).slice(0, 200) : null, hirschberg: b.hirschberg ? String(b.hirschberg).slice(0, 120) : null, krimsky: b.krimsky ? String(b.krimsky).slice(0, 120) : null, updated_at: new Date().toISOString() }, { onConflict: 'patient_id' })
     if (error) return hata(error.message, 500)
     return NextResponse.json({ ok: true })
   }
@@ -424,5 +455,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ acil: acilTara([String(b.metin || '')], kodlar) })
   }
 
+  const ekYanit = await gozEkAdim(adim, { sb, doktorId, h, b, T })
+  if (ekYanit) return ekYanit
   return hata('Bilinmeyen adım.')
 }

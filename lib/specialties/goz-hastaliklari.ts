@@ -54,7 +54,7 @@ export const GOZ_PROFILE: SpecialtyProfile = {
   ],
 
   specialistReview: [
-    { konu: 'TOD birim kılavuzları (üye erişimli)', neden: 'Retina/Glokom/Pediatrik birim dokümanları bu build sırasında okunamadı; glokom ve pediatrik aralıklar hekim girişi olarak bırakıldı.' },
+    { konu: 'TOD birim kılavuzları (üye erişimli)', neden: 'Retina/Glokom/Pediatrik birim dokümanları okunamadı; glokom aralıkları EGS 5 (birincil PDF) hekim-düzenlenebilir ön ayar, pediatrik/ROP aralıkları hekim girişi. TOD metni gelince TR sütunu eklenecek.' },
     { konu: 'TEMD "minimal / ileri evre" ↔ ICDR eşlemesi', neden: 'TEMD evre tablosu vermez; hafif NPDR = minimal, orta+ veya DMÖ = ileri evre varsayımı hekimle teyit edilmeli.' },
     { konu: 'SUT EK-3/G GİL listesi', neden: 'Monofokal/torik/multifokal ödeme kalemleri doğrulanamadı — rapor kontrol maddesi "hekim/idare teyit eder".' },
     { konu: 'SB görme taraması sevk kesme değerleri', neden: 'Genelge yaş noktaları ikincil özetten; Lea/Snellen sevk eşikleri doğrulanamadığı için gömülmedi.' },
@@ -67,5 +67,6 @@ export const GOZ_PROFILE: SpecialtyProfile = {
     views: ['GozlerimView'], derinlik: 'Strong',
   }],
 
-  olgunluk: 'arastirma',
+  // GOZ-EXCEPTIONAL-01: ürün Strong, sentetik smoke yeşil — MD saha onayı (GOZ-MD-BETA) gelmeden uzman-dogrulandi YAZILMAZ.
+  olgunluk: 'beta-hazir',
 }

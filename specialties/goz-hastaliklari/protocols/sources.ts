@@ -22,7 +22,7 @@ export const GOZ_KAYNAKLAR: Record<GozRef, GozKaynak> = {
   ICDR_2003: { ref: 'ICDR_2003', ad: 'Uluslararası Klinik Diyabetik Retinopati ve DMÖ Şiddet Ölçeği (Wilkinson ve ark., Ophthalmology 2003)', rol: 'uluslararasi', dogrulama: 'ikincil', not: 'Sınıf adları; evre hekim girer' },
   ICO_DR_2017: { ref: 'ICO_DR_2017', ad: 'ICO Guidelines for Diabetic Eye Care (2017 güncelleme)', rol: 'uluslararasi', dogrulama: 'ikincil' },
   AAO_PPP_DR: { ref: 'AAO_PPP_DR', ad: 'AAO Preferred Practice Pattern — Diabetic Retinopathy', rol: 'uluslararasi', dogrulama: 'ikincil' },
-  EGS_5: { ref: 'EGS_5', ad: 'European Glaucoma Society Terminology and Guidelines for Glaucoma, 5. baskı (2020)', rol: 'uluslararasi', dogrulama: 'ikincil' },
+  EGS_5: { ref: 'EGS_5', ad: 'European Glaucoma Society Terminology and Guidelines for Glaucoma, 5. baskı (2020)', rol: 'uluslararasi', dogrulama: 'birincil', not: 'Birincil PDF okundu 2026-09-18: II.1.4.2.7 (s.84), FC V (s.98), II.3.3 (s.128) — GA sıklığı ve izlem aralıkları; TOD birim metni doğrulanana dek hekim-düzenlenebilir ön ayar' },
   AAO_PPP_PED: { ref: 'AAO_PPP_PED', ad: 'AAO PPP — Amblyopia / Pediatric Eye Evaluations', rol: 'uluslararasi', dogrulama: 'ikincil' },
   KANSKI: { ref: 'KANSKI', ad: "Kanski's Clinical Ophthalmology — ders kitabı derinliği", rol: 'ders-kitabi', dogrulama: 'ikincil' },
   VAUGHAN: { ref: 'VAUGHAN', ad: 'Vaughan & Asbury General Ophthalmology — ders kitabı derinliği', rol: 'ders-kitabi', dogrulama: 'ikincil' },

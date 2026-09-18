@@ -146,7 +146,8 @@ export interface SpecialtyProfile {
   /** Sağlığım modules this chapter contributes (one chapter may own several, e.g. KD gebelik + jine) */
   portal?: PortalModulu[]
   /** build maturity: baseline-only, research-built (80-90%), or specialist-validated */
-  olgunluk: 'baseline' | 'arastirma' | 'uzman-dogrulandi'
+  /** beta-hazir = ürün derinliği tamam, sentetik smoke yeşil; uzman hekim saha onayı (MD beta) bekliyor — uzman-dogrulandi değildir. */
+  olgunluk: 'baseline' | 'arastirma' | 'beta-hazir' | 'uzman-dogrulandi'
 }
 
 export const BASELINE_OLCUMLER: OlcumTanimi[] = [
