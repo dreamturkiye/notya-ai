@@ -47,8 +47,8 @@ function bandRenk(persentil: number): string {
   return RENK_BAND_DIS;
 }
 
-/** Tek bir eğri — küçük kart (buyuk=false) veya tam sayfa (buyuk=true) aynı bileşenle. */
-function Grafik({ veri, birim, buyuk }: { veri: ParamVeri; birim: string; buyuk?: boolean }) {
+/** Tek bir eğri — küçük kart (buyuk=false) veya tam sayfa (buyuk=true) aynı bileşenle. Araçlar › Büyüme stüdyosu da kullanır. */
+export function Grafik({ veri, birim, buyuk }: { veri: ParamVeri; birim: string; buyuk?: boolean }) {
   const W = buyuk ? 1000 : 320, H = buyuk ? 520 : 190;
   const L = buyuk ? 64 : 34, R = buyuk ? 28 : 10, T = buyuk ? 24 : 10, B = buyuk ? 52 : 22;
   const maxAy = Math.max(...veri.egriler.flatMap((s) => s.noktalar.map((n) => n.ay)), ...veri.noktalar.map((n) => n.ay), 6);

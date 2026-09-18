@@ -404,6 +404,8 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/goz/kohort (1-tap hatırlatma)',
     yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.konu === 'Göz kontrol hatırlatması') && tablo('goz_gorevler').some((x) => x.patient_id === a.hasta && x.kod === 'hatirlatma_takip'),
     cagir: (r, a, h) => coz(r.gozKohort.POST(iste('POST', '/api/doktor/goz/kohort', { token: a.token, govde: { patientIds: [h.hasta] } }))) },
+  { ad: 'GET /api/doktor/pediatri (Araçlar › Pediatri hasta özeti)', red: 404,
+    cagir: (r, a, h) => coz(r.pedi.GET(iste('GET', `/api/doktor/pediatri?patientId=${h.hasta}`, { token: a.token }))) },
   { ad: 'GET /api/doktor/jinekoloji', red: 404,
     cagir: (r, a, h) => coz(r.jine.GET(iste('GET', `/api/doktor/jinekoloji?patientId=${h.hasta}`, { token: a.token }))) },
   // Görüntüleme / belgeler / cihaz
@@ -482,6 +484,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       dahiliye: await ice('app/api/doktor/dahiliye/route'),
       goz: await ice('app/api/doktor/goz/route'),
       gozKohort: await ice('app/api/doktor/goz/kohort/route'),
+      pedi: await ice('app/api/doktor/pediatri/route'),
       jine: await ice('app/api/doktor/jinekoloji/route'),
       goruntuleme: await ice('app/api/doktor/goruntuleme/route'),
       goruntulemeYukle: await ice('app/api/doktor/goruntuleme/yukle/route'),
