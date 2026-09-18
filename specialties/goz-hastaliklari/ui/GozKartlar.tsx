@@ -379,10 +379,47 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
               </div>
             ))}
             {!salt && <div style={satir}>
-              <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'ayse_taslak', goruntuId: g.id, goz: g.goz }, 'Ayşe taslağı eklendi — uzman onayı bekliyor.')} style={btn}>Ayşe taslak üret</button>
+              {!g.goz && (
+                <Secim
+                  deger={s(`goz_${g.id}`, 'sag')}
+                  set={(x) => set(`goz_${g.id}`, x)}
+                  secenekler={[['sag', 'OD (sağ)'], ['sol', 'OS (sol)'], ['iki', 'OU']]}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() =>
+                  calistir(
+                    { adim: 'goruntu_okuma', eylem: 'ayse_taslak', goruntuId: g.id, goz: g.goz || s(`goz_${g.id}`, 'sag') },
+                    'Ayşe taslağı eklendi — uzman onayı bekliyor.',
+                  )
+                }
+                style={btn}
+              >
+                Ayşe taslak üret{g.goz ? ` (${gozAd(g.goz)})` : ''}
+              </button>
               <input value={s(`t_${g.id}`)} onChange={(e) => set(`t_${g.id}`, e.target.value)} placeholder="Gözlem taslağı (tanı değil)" style={{ ...toolsInput, minWidth: 180, flex: 1 }} />
               <Secim deger={s(`y_${g.id}`, 'asistan')} set={(x) => set(`y_${g.id}`, x)} secenekler={[['asistan', 'Asistan'], ['uzman', 'Uzman']]} />
-              <button type="button" onClick={async () => { const j = await calistir({ adim: 'goruntu_okuma', eylem: 'taslak', goruntuId: g.id, taslak: s(`t_${g.id}`), taslakYazan: s(`y_${g.id}`, 'asistan') }, 'Taslak eklendi — uzman onayı bekliyor.'); if (j?.uyari) setSonuc(j); }} style={ghost}>Taslak ekle</button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const j = await calistir(
+                    {
+                      adim: 'goruntu_okuma',
+                      eylem: 'taslak',
+                      goruntuId: g.id,
+                      taslak: s(`t_${g.id}`),
+                      taslakYazan: s(`y_${g.id}`, 'asistan'),
+                      goz: g.goz || s(`goz_${g.id}`, 'sag'),
+                    },
+                    'Taslak eklendi — uzman onayı bekliyor.',
+                  );
+                  if (j?.uyari) setSonuc(j);
+                }}
+                style={ghost}
+              >
+                Taslak ekle
+              </button>
             </div>}
           </div>
         ))}

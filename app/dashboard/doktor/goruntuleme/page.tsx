@@ -24,6 +24,18 @@ interface Goruntuleme {
 
 const MODALITELER = IMAGING_MODALITIES.filter((m) => m.code !== 'diger').map((m) => m.label);
 
+/** OCT / fundus / ön segment — her göz ayrı dosya; vucut_bolgesi = sag|sol|iki. */
+function gozGoruntuModalitesiMi(label: string): boolean {
+  const t = String(label || '').toLocaleLowerCase('tr-TR');
+  return /fundus|göz dibi|oct|ön segment|on segment/.test(t);
+}
+
+const GOZ_BOLGE: Array<{ kod: 'sag' | 'sol' | 'iki'; etiket: string }> = [
+  { kod: 'sag', etiket: 'OD (sağ)' },
+  { kod: 'sol', etiket: 'OS (sol)' },
+  { kod: 'iki', etiket: 'OU (iki göz)' },
+];
+
 /** Bugünün tarihi Europe/Istanbul — type="date" değeri YYYY-MM-DD. */
 function bugunTR(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
@@ -153,6 +165,10 @@ const Page = () => {
     }
     if (!uploadData.tarih) {
       setUploadHata('Tarih gerekli — varsayılan bugün; geçmiş için takvimden seçin.');
+      return;
+    }
+    if (gozGoruntuModalitesiMi(uploadData.modalite) && !['sag', 'sol', 'iki'].includes(uploadData.vucut_bolgesi)) {
+      setUploadHata('Fundus / OCT / ön segment için göz seçin: OD (sağ), OS (sol) veya OU.');
       return;
     }
 
@@ -308,7 +324,13 @@ const Page = () => {
                   <button
                     type="button"
                     key={m}
-                    onClick={() => setUploadData({ ...uploadData, modalite: m })}
+                    onClick={() =>
+                      setUploadData({
+                        ...uploadData,
+                        modalite: m,
+                        vucut_bolgesi: gozGoruntuModalitesiMi(m) ? '' : uploadData.vucut_bolgesi,
+                      })
+                    }
                     style={{
                       padding: '4px 12px',
                       background: uploadData.modalite === m ? '#14b8a6' : 'rgba(255,255,255,0.08)',
@@ -325,12 +347,41 @@ const Page = () => {
                 ))}
               </div>
 
-              <input
-                placeholder="Başlık / vücut bölgesi (örn. Akciğer PA)"
-                value={uploadData.vucut_bolgesi}
-                onChange={(e) => setUploadData({ ...uploadData, vucut_bolgesi: e.target.value })}
-                style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '8px' }}
-              />
+              {gozGoruntuModalitesiMi(uploadData.modalite) ? (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6 }}>
+                    Göz (zorunlu) · sağ ve sol için iki ayrı fotoğraf yükleyin
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {GOZ_BOLGE.map((g) => (
+                      <button
+                        type="button"
+                        key={g.kod}
+                        onClick={() => setUploadData({ ...uploadData, vucut_bolgesi: g.kod })}
+                        style={{
+                          padding: '6px 14px',
+                          background: uploadData.vucut_bolgesi === g.kod ? '#14b8a6' : 'rgba(255,255,255,0.08)',
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          border: 'none',
+                          color: '#fff',
+                        }}
+                      >
+                        {g.etiket}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <input
+                  placeholder="Başlık / vücut bölgesi (örn. Akciğer PA)"
+                  value={uploadData.vucut_bolgesi}
+                  onChange={(e) => setUploadData({ ...uploadData, vucut_bolgesi: e.target.value })}
+                  style={{ width: '100%', padding: '8px', background: '#111827', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '8px' }}
+                />
+              )}
               <label style={{ display: 'block', fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>
                 Görüntüleme tarihi <span style={{ color: '#64748B' }}>(varsayılan bugün · geçmiş için takvim)</span>
               </label>
