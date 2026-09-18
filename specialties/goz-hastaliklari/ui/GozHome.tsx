@@ -2,7 +2,7 @@
 /**
  * GOZ-CHAPTER — Hasta dosyası › Göz. 8 saatlik poliklinik için: yapışkan şerit (OD/OS VA + Δ harf, GİB × hedef, DR evresi,
  * sıradaki enjeksiyon, geciken görev) + acil bandı + saniyeler içinde bilateral VA/GİB girişi (son vizitten kopyala → onay) +
- * kartlar (Glokom · DR · Enjeksiyon · SGK rapor · Katarakt · Görüntü · Ön segment · Pediatrik · Kontrol). Hekim kilitleri:
+ * kartlar (Fundus · Glokom · DR · Enjeksiyon · SGK rapor · Katarakt · Görüntü · Ön segment · Pediatrik · Kontrol). Hekim kilitleri:
  * tanı/evre/hedef/rejim/aralık yalnız hekim girişi. Sekreter salt okur (API sadeceDoktor).
  */
 import React, { useCallback, useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 
 const { btn, ghost, etiket, kucuk, satir } = stil;
 const ALANLAR = [['uzak_sc', 'Uzak sc'], ['uzak_cc', 'Uzak cc'], ['yakin', 'Yakın']] as const;
-const SEKMELER = ['Özet', 'Glokom', 'DR', 'Enjeksiyon', 'SGK rapor', 'Katarakt', 'Görüntü', 'Ön segment', 'Kuru göz', 'Pediatrik', 'Kontrol'] as const;
+const SEKMELER = ['Özet', 'Fundus', 'Glokom', 'DR', 'Enjeksiyon', 'SGK rapor', 'Katarakt', 'Görüntü', 'Ön segment', 'Kuru göz', 'Pediatrik', 'Kontrol'] as const;
 export type GozSekme = (typeof SEKMELER)[number];
 
 type Form = { sag: Record<string, string>; sol: Record<string, string>; gibSag: string; gibSol: string; gibYontem: string; kopya: boolean };

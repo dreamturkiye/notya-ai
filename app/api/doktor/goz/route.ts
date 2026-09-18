@@ -2,15 +2,16 @@
  * GOZ-CHAPTER — Göz Hastalıkları API. Live truth = goz_* tables (migration 048); görüntü pikselleri core hasta_goruntulemeler.
  * GET ?patientId= → şerit, muayeneler + kopya taslağı, glokom, DR (+ açık dahiliye göz sevki), enjeksiyonlar + SUT kapıları,
  *                   SGK raporları, katarakt, görüntüler + dual-sign okumalar, kontroller, pediatrik, görevler, intake, acil, kaynaklar
- * POST adim: olcum | olcum_nota | glokom | dr | dr_sevk_kapat | enjeksiyon | sgk_kapi | sgkrapor | sgkrapor_kilit | katarakt
- *            | goruntu_okuma | kontrol | pediatrik | gorev | intake_nota
+ * POST adim: olcum | olcum_nota | fundus | fundus_nota | glokom | dr | dr_sevk_kapat | enjeksiyon | sgk_kapi | sgkrapor | sgkrapor_kilit | katarakt
+ *            | goruntu_okuma | kontrol | pediatrik | gorev | intake_nota | acil | kuru_goz
  * Hekim kilitleri: tanı/evre/hedef/rejim/aralık yalnız hekim girişi; motor önerir, uyarır, görev açar. Sekreter yalnız okur.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
-import { olcumSchema, enjeksiyonSchema, drSchema, SGK_SABLON } from '@/specialties/goz-hastaliklari/schema'
+import { olcumSchema, enjeksiyonSchema, drSchema, fundusSchema, SGK_SABLON } from '@/specialties/goz-hastaliklari/schema'
+import { fundusBosMu, fundusMetni, fundusNormalize, type FundusKayit } from '@/specialties/goz-hastaliklari/engines/fundus'
 import { vaCoz, vaGoster, enIyiUzak, kopyaIleriTaslak, type VaSeti } from '@/specialties/goz-hastaliklari/engines/va'
 import { glokomDegerlendir, type Damla } from '@/specialties/goz-hastaliklari/engines/glokom'
 import { drDegerlendir, dahiliyeGeriBildirim, type DrEvre, type Dmo } from '@/specialties/goz-hastaliklari/engines/dr'
@@ -31,7 +32,7 @@ const tarihMi = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.t
 const num = (v: unknown) => (v == null || v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null)
 const hata = (m: string, s = 400) => NextResponse.json({ error: m }, { status: s })
 type Sb = Extract<Awaited<ReturnType<typeof pratikOturum>>, { supabase: unknown }>['supabase']
-type MuayeneRow = { id: string; tarih: string; va: { sag?: VaSeti; sol?: VaSeti } | null; gib_sag: number | null; gib_sol: number | null; gib_yontem: string | null; rapd: string | null; kaynak: string; created_at: string }
+type MuayeneRow = { id: string; tarih: string; va: { sag?: VaSeti; sol?: VaSeti } | null; gib_sag: number | null; gib_sol: number | null; gib_yontem: string | null; rapd: string | null; ek: { fundus?: FundusKayit } | null; kaynak: string; created_at: string }
 
 async function hasta(sb: Sb, doktorId: string, patientId: string) {
   const { data } = await sb.from('patients').select('id, dob_encrypted, name_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle()
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
   const T = bugun()
 
   const [muQ, glQ, drQ, enjQ, rapQ, katQ, imgQ, okQ, konQ, pedQ, sevkQ, notQ, kuruQ] = await Promise.all([
-    sb.from('goz_muayeneler').select('id, tarih, va, gib_sag, gib_sol, gib_yontem, rapd, kaynak, created_at').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(30),
+    sb.from('goz_muayeneler').select('id, tarih, va, gib_sag, gib_sol, gib_yontem, rapd, ek, kaynak, created_at').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(30),
     sb.from('goz_glokom').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
     sb.from('goz_dr').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
     sb.from('goz_enjeksiyonlar').select('id, goz, ajan, endikasyon, faz, doz_no, tarih, durum, yanit').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).limit(80),
@@ -132,11 +133,20 @@ export async function GET(req: NextRequest) {
 
   const serit = gozSeridi({ muayeneler: olcumler, hedefSag: glokomKart?.hedefSag ?? null, hedefSol: glokomKart?.hedefSol ?? null, evreSag: (dr?.evre_sag as DrEvre) || null, evreSol: (dr?.evre_sol as DrEvre) || null, sonrakiEnjeksiyon: planli ? `${planli.tarih} ${planli.goz === 'sag' ? 'OD' : 'OS'}` : null, gorevDue: (gorevler || []).map((g) => g.due), sikayetMetinleri: sikayetler, bugun: T })
 
+  const sonFundusKayit = (() => {
+    for (const m of muayeneler) {
+      const f = m.ek && typeof m.ek === 'object' ? (m.ek as { fundus?: FundusKayit }).fundus : null
+      if (f && !fundusBosMu(fundusNormalize(f))) return { ...fundusNormalize(f), muayeneId: m.id }
+    }
+    return null
+  })()
+
   return NextResponse.json({
     hasta: { yas: h.yas, yasAy: h.yasAy },
     rol: o.rol,
     serit,
     muayeneler: muayeneler.map((m) => ({ ...m, gosterim: { sag: vaGoster(enIyiUzak(m.va?.sag)), sol: vaGoster(enIyiUzak(m.va?.sol)) } })),
+    sonFundus: sonFundusKayit,
     kopya,
     glokom: gl ? { kart: glokomKart, degerlendirme: glokom } : null,
     dr: dr ? { satir: dr, degerlendirme: drSonuc } : null,
@@ -193,6 +203,42 @@ export async function POST(req: NextRequest) {
     const satir = `Görme keskinliği — OD: ${vaSatir('sag')}; OS: ${vaSatir('sol')}. GİB${yontem} — OD: ${m.gib_sag ?? '—'} mmHg; OS: ${m.gib_sol ?? '—'} mmHg.`
     const r = await gununNotunaEkle(sb, doktorId, h.id, satir, 'content_objektif')
     // NOTYA-MUAYENEYE-DON-01: notId'yi geri veriyoruz ki kart onayında "Muayene Formuna Dön" çıksın.
+    return NextResponse.json({ ok: r.eklendi, sebep: r.sebep, satir, notId: r.eklendi ? r.notId : null })
+  }
+
+  if (adim === 'fundus') {
+    const p = fundusSchema.safeParse(b.fundus || b)
+    if (!p.success) return hata('Fundus kaydı hatalı.')
+    const kayit = fundusNormalize({
+      tarih: p.data.tarih,
+      dilate: p.data.dilate ?? null,
+      ortam: p.data.ortam,
+      sag: p.data.sag || {},
+      sol: p.data.sol || {},
+    })
+    if (fundusBosMu(kayit)) return hata('En az bir göz için disk / makula / damar / perifer girin veya «normal» kullanın.')
+    const { data: son } = await sb.from('goz_muayeneler').select('id, ek, tarih').eq('patient_id', h.id).eq('doctor_id', doktorId).eq('tarih', kayit.tarih).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    if (son?.id) {
+      const ekOnce = (son.ek && typeof son.ek === 'object' ? son.ek : {}) as Record<string, unknown>
+      const { error } = await sb.from('goz_muayeneler').update({ ek: { ...ekOnce, fundus: kayit } }).eq('id', son.id)
+      if (error) return hata(error.message, 500)
+      return NextResponse.json({ ok: true, id: son.id, metin: fundusMetni(kayit) })
+    }
+    const { data, error } = await sb.from('goz_muayeneler').insert({ ...ortak, tarih: kayit.tarih, va: {}, ek: { fundus: kayit }, kaynak: 'hekim' }).select('id').single()
+    if (error) return hata(error.message, 500)
+    return NextResponse.json({ ok: true, id: data.id, metin: fundusMetni(kayit) })
+  }
+
+  if (adim === 'fundus_nota') {
+    const { data: rows } = await sb.from('goz_muayeneler').select('ek').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).order('created_at', { ascending: false }).limit(15)
+    let kayit: FundusKayit | null = null
+    for (const row of rows || []) {
+      const f = row.ek && typeof row.ek === 'object' ? (row.ek as { fundus?: FundusKayit }).fundus : null
+      if (f && !fundusBosMu(fundusNormalize(f))) { kayit = fundusNormalize(f); break }
+    }
+    if (!kayit) return hata('Kayıtlı göz dibi muayenesi yok — önce Fundus sekmesinden kaydedin.')
+    const satir = fundusMetni(kayit)
+    const r = await gununNotunaEkle(sb, doktorId, h.id, satir, 'content_objektif')
     return NextResponse.json({ ok: r.eklendi, sebep: r.sebep, satir, notId: r.eklendi ? r.notId : null })
   }
 

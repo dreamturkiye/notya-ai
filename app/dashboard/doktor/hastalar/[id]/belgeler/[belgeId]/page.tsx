@@ -39,6 +39,8 @@ export default function BelgeAnalizPage() {
   const [bransKey, setBransKey] = useState('genel');
   const [modalite, setModalite] = useState<Modalite | ''>('');
   const [klinikNot, setKlinikNot] = useState('');
+  const [fundusGoz, setFundusGoz] = useState<'sag' | 'sol' | 'iki' | ''>('');
+  const [tekAlanFundus, setTekAlanFundus] = useState(true);
   const [kimlikYok, setKimlikYok] = useState(false);
   const [durum, setDurum] = useState<'hazir' | 'hazirlaniyor' | 'motorlar' | 'yaziyor' | 'onayliyor' | 'hata'>('hazir');
   const [mesaj, setMesaj] = useState('');
@@ -120,7 +122,12 @@ export default function BelgeAnalizPage() {
       }
       setDurum('yaziyor');
       const fitzQ = searchParams?.get('fitzpatrick');
-      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ }) });
+      const gozNot =
+        (modalite === 'fundus' || modalite === 'oct') && fundusGoz
+          ? `Göz: ${fundusGoz === 'sag' ? 'OD (sağ)' : fundusGoz === 'sol' ? 'OS (sol)' : 'OU (iki göz)'}.`
+          : '';
+      const klinikBirlesik = [gozNot, klinikNot].filter(Boolean).join(' ').trim();
+      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: doc.id, modalityFinal: modalite, klinikNot: klinikBirlesik || undefined, deid: deid ? { mime: deid.mime, base64: deid.base64, hash: deid.hash } : null, sesMetrikleri, tierB, fitzpatrickBilinmiyor: !fitzQ, tekAlanFundus: modalite === 'fundus' ? tekAlanFundus : undefined }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Taslak üretilemedi');
       if (j.uyusmazlik) setUyusmazlik(`Asistan görüntüyü "${j.analiz?.sonuc?.modalite}" olarak gördü; siz "${j.secilenModalite}" seçtiniz. Modaliteyi kontrol edip yeniden raporlayın veya taslağı bu haliyle değerlendirin.`);
@@ -227,8 +234,22 @@ export default function BelgeAnalizPage() {
                   {kural.modaliteler.map((m) => <option key={m} value={m} style={{ color: '#000' }}>{MODALITE_TR[m]}</option>)}
                   <option value="serbest" style={{ color: '#000' }}>Serbest görüntü (yalnızca tarif)</option>
                 </select>
-                <input value={klinikNot} onChange={(e) => setKlinikNot(e.target.value)} placeholder="Klinik not (isteğe bağlı): 3 gündür ateş, öksürük" style={{ ...toolsInput, flex: 1, minWidth: 220 }} />
+                {(modalite === 'fundus' || modalite === 'oct') && (
+                  <select value={fundusGoz} onChange={(e) => setFundusGoz(e.target.value as typeof fundusGoz)} style={{ ...toolsInput, width: 'auto' }} aria-label="Göz">
+                    <option value="" style={{ color: '#000' }}>Göz seçin</option>
+                    <option value="sag" style={{ color: '#000' }}>OD (sağ)</option>
+                    <option value="sol" style={{ color: '#000' }}>OS (sol)</option>
+                    <option value="iki" style={{ color: '#000' }}>OU (iki göz — tercihen ayrı foto)</option>
+                  </select>
+                )}
+                <input value={klinikNot} onChange={(e) => setKlinikNot(e.target.value)} placeholder={modalite === 'fundus' ? 'Klinik not: dilate mi, DM/HT…' : 'Klinik not (isteğe bağlı): 3 gündür ateş, öksürük'} style={{ ...toolsInput, flex: 1, minWidth: 220 }} />
               </div>
+              {modalite === 'fundus' && (
+                <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8, fontSize: 12, color: '#8FA0B5', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={tekAlanFundus} onChange={(e) => setTekAlanFundus(e.target.checked)} />
+                  <span>Tek alan fundus fotoğrafı (güven üst sınırı %70 — TR poliklinik standardı: OD ve OS ayrı yükleyin).</span>
+                </label>
+              )}
               {!pdfMi && (
                 <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8, fontSize: 12, color: '#8FA0B5', cursor: 'pointer' }}>
                   <input type="checkbox" checked={kimlikYok} onChange={(e) => setKimlikYok(e.target.checked)} />

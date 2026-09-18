@@ -55,11 +55,38 @@ KURALLAR
 ONTOLOJİ KODLARI: ${BULGU_KODLARI.map((k) => `${k}=${bulguTr(k)}`).join('; ')}`
 }
 
+/** Fundus / OCT: Türk göz hekimi okuma sırası — Tier A yazara sistematik madde listesi. */
+function gozGoruntuRehberi(modalite: Modalite): string | null {
+  if (modalite === 'fundus') {
+    return `FUNDUS (göz dibi) — "bulgular" dizisini şu sırayla yaz (TR poliklinik):
+1) Kalite / alan (tek alan mı, dilate izlenimi, artefakt)
+2) Optik disk — renk, kenar, C/D izlenimi (3C); glokom tanısı koyma
+3) Damarlar — kalibre, AV çaprazlaşma, neovaskülarizasyon şüphesi
+4) Makula — refle, kanama, eksuda (ICDR evresi yazma; "…ile uyumlu" de)
+5) Perifer — görünen alan; tek alan fotoğrafta perifer güvenilir değil
+OD/OS klinik notta yazılmışsa yalnız o gözü anlat. Tanı listesinde FUN.* kodlarını kullan; kesin DR evresi yazma.`
+  }
+  if (modalite === 'oct') {
+    return `OCT — "bulgular" dizisini şu sırayla yaz:
+1) Kalite / sinyal / artefakt
+2) Makula / fovea konturu
+3) İntra/subretinal sıvı izlenimi (evre yok)
+4) RNFL / GCL asimetri notu (hekim teyit eder)
+Tanı kesinliği yok; "…düşündürür" dili.`
+  }
+  if (modalite === 'dis_goz') {
+    return `Dış göz fotoğrafı — kapak, konjonktiva, kornea yüzey, kızarıklık dağılımı; fundus yorumu yapma.`
+  }
+  return null
+}
+
 export function kullaniciPromptu(g: AnalizGirdi, f: FusionSonuc | null, motorlar: MotorCiktisi[], sesMetrikleri?: Record<string, number | string> | null): string {
   const parcalar: string[] = []
   parcalar.push(`Branş: ${g.brans}. Doktorun seçtiği modalite: ${MODALITE_TR[g.modality_final] || g.modality_final}.`)
   if (typeof g.yasAy === 'number') parcalar.push(`Hasta yaşı: ${g.yasAy < 24 ? `${g.yasAy} ay` : `${Math.floor(g.yasAy / 12)} yaş`}${g.cinsiyet ? `, cinsiyet ${g.cinsiyet}` : ''}.`)
   if (g.klinikNot) parcalar.push(`Klinik not: ${g.klinikNot.slice(0, 400)}`)
+  const gozRehber = gozGoruntuRehberi(g.modality_final)
+  if (gozRehber) parcalar.push(gozRehber)
   if (SES_MODALITELERI.includes(g.modality_final)) {
     parcalar.push('Girdi bir SES kaydıdır; ekte kaydın spektrogramı var. Spektrogram ve metrikler üzerinden yalnız kalite ve kaba patern değerlendirmesi yap; özgül tanı verme.')
     if (sesMetrikleri) parcalar.push(`Ses metrikleri: ${JSON.stringify(sesMetrikleri)}`)

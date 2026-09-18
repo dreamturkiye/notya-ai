@@ -10,6 +10,7 @@ import { gozSgkTaslak } from '../engines/sgkRapor'
 import { gozSeridi, intakeSubjektif } from '../engines/serit'
 import { kuruGozOzet, osdiBand } from '../engines/kuruGoz'
 import { ayseGoruntuTaslagi } from '../engines/ayseGoruntu'
+import { fundusMetni, fundusBosMu, fundusNormalize, normalFundusGoz } from '../engines/fundus'
 import { gozBolgeCoz, kiyasCifti } from '../engines/kiyas'
 
 describe('VA — TR notation, logMAR, harf', () => {
@@ -188,8 +189,24 @@ describe('Gaps close — dry eye, SB sevk, EK-3/G, Ayşe, compare', () => {
   })
   it('Ayşe draft is dual-sign scaffold, never diagnoses', () => {
     const a = ayseGoruntuTaslagi({ modalite: 'oct', goz: 'sag' })
-    assert.match(a.taslak, /Ayşe taslak/); assert.match(a.taslak, /Tanı \/ evre yazılmaz/)
+    assert.match(a.taslak, /Ayşe taslak/); assert.match(a.taslak, /Tanı \/ ICDR evresi|Tanı \/ evre yazılmaz/)
     assert.ok(!/glokom|NPDR|AMD tanısı/i.test(a.taslak))
+  })
+  it('fundus scaffold follows TR disk→damar→makula→perifer order', () => {
+    const a = ayseGoruntuTaslagi({ modalite: 'fundus', goz: 'sag' })
+    assert.match(a.taslak, /Optik disk/)
+    assert.ok(a.taslak.indexOf('Optik disk') < a.taslak.indexOf('Damarlar'))
+    assert.ok(a.taslak.indexOf('Damarlar') < a.taslak.indexOf('Makula'))
+    assert.ok(a.taslak.indexOf('Makula') < a.taslak.indexOf('Perifer'))
+  })
+  it('fundus clinical text is OD/OS Turkish dictation style; normal shortcut fills both', () => {
+    const n = normalFundusGoz()
+    const m = fundusMetni({ tarih: '2026-09-18', dilate: true, ortam: 'berrak', sag: n, sol: n })
+    assert.match(m, /dilate/)
+    assert.match(m, /OD:/)
+    assert.match(m, /OS:/)
+    assert.match(m, /disk/)
+    assert.equal(fundusBosMu(fundusNormalize({ tarih: '2026-09-18', dilate: null, sag: {}, sol: {} })), true)
   })
   it('compare requires same eye + same modality; Turkish region parses', () => {
     assert.equal(gozBolgeCoz('sağ göz'), 'sag'); assert.equal(gozBolgeCoz('sol'), 'sol')

@@ -37,5 +37,19 @@ export const drSchema = z.object({
   sonFundus: z.string().optional(), sonrakiKontrol: z.string().optional(),
 })
 
+const fundusGoz = z.object({
+  disk: z.string().optional(), cd: z.string().optional(), damar: z.string().optional(),
+  makula: z.string().optional(), perifer: z.string().optional(), not: z.string().optional(),
+})
+/** Göz dibi muayene kaydı — goz_muayeneler.ek.fundus; tanı/evre yok. */
+export const fundusSchema = z.object({
+  tarih: z.string().optional(),
+  dilate: z.boolean().nullable().optional(),
+  ortam: z.string().optional(),
+  sag: fundusGoz.optional(),
+  sol: fundusGoz.optional(),
+})
+export type FundusGirdi = Infer<typeof fundusSchema>
+
 /** Göz chapter must never write pediatri / KD payload keys. */
 export const YASAK_ALANLAR = ['sat', 'edd', 'persentil', 'neyzi', 'gebelikHaftasi', 'pasi', 'fitzpatrick'] as const

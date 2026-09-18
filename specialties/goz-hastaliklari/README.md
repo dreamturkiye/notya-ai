@@ -16,13 +16,15 @@ Citation policy: cite role/id/year, never book text. **TR first:** SGK SUT (4.2.
 | `engines/acil.ts` | Red flags: kimyasal yanık (hemen yıkama), ani görme kaybı, dekolman şüphesi, açı kapanması, penetran travma | TOD hasta bilgilendirme, TOD PAKG, TEMD T13.1 | delay 112 |
 | `engines/klinik.ts` | Katarakt ön-op checklist (no IOL power), kuru göz / KL / alerjik konjonktivit cards (SUT 4.2.33.D), pediatric amblyopia/strabismus bridge | SUT, SB 2019/17 | patching hours; referral cut-offs |
 | `engines/serit.ts` | Sticky strip + intake → Subjektif (hasta beyanı) + card hints | — | diagnose |
+| `engines/fundus.ts` | TR göz dibi kaydı: dilate + OD/OS disk(3C)/damar/makula/perifer → SOAP metni; «normal» kısayolu | TR oftalmoskopi sırası | DR evresi / tanı |
+| `engines/ayseGoruntu.ts` | OCT/fundus/ön segment checklist scaffold (dual-sign) | — | diagnose; invent stage |
 | `imaging/dualSign.ts` | OCT/fundus/ön segment read: taslak → uzman onay/düzelt/red; asistan cannot approve | — | Ayşe auto-read (intentionally off) |
 
 ## Wiring
 
 - Registry: `lib/specialties/goz-hastaliklari.ts` (VA/GİB first-class `olcumler`, Gözlerim portal module **Strong**).
-- API: `app/api/doktor/goz/route.ts` (GET bundle; POST `adim`: olcum, olcum_nota, glokom, dr, dr_sevk_kapat, enjeksiyon, sgk_kapi, sgkrapor, sgkrapor_kilit, katarakt, goruntu_okuma, kontrol, pediatrik, gorev, intake_nota, acil). Secretary = read-only (`sadeceDoktor`).
-- UI: `ui/GozHome.tsx` + `ui/GozKartlar.tsx` on hasta dosyası › **Göz** (only for doctors whose `users.specialty` is göz).
+- API: `app/api/doktor/goz/route.ts` (GET bundle; POST `adim`: olcum, olcum_nota, fundus, fundus_nota, glokom, dr, …). Secretary = read-only (`sadeceDoktor`).
+- UI: `ui/GozHome.tsx` + `ui/GozKartlar.tsx` — **Fundus** sekmesi (OD/OS 3C sırası) + VA/GİB şerit.
 - Prompts lock: `prompts/` (system, soap-goz, asistan-ogrenme, tools) wired into SOAP, Ayşe chat, voice, style distiller; `next.config` traces the .md files.
 - Portal: `app/portal/_components/GozlerimView.tsx`, `/portal/hasta/[token]/gozlerim`, demo `/portal/demo-goz`.
 - Dahiliye bridge: open `sevkler(hedef='goz')` → DR card → "Sevki kapat" writes `dahiliye_dm.son_goz_dibi` and closes `dm_goz`.

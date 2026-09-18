@@ -9,6 +9,7 @@ import { AJAN_ADI, ENDIKASYON_ADI } from '../engines/antiVegf';
 import type { GlokomDegerlendirme, GlokomKart } from '../engines/glokom';
 import type { DrSonuc } from '../engines/dr';
 import { EVRE_ADI, DMO_ADI } from '../engines/dr';
+import { normalFundusGoz, fundusMetni, type FundusKayit, type FundusGozBulgu } from '../engines/fundus';
 import type { ProtokolKart } from '../engines/klinik';
 import type { GozKaynak } from '../protocols/sources';
 import type { Dipnot } from '../protocols/sources';
@@ -29,6 +30,7 @@ export interface GozVeri {
   rol: 'doktor' | 'sekreter'
   serit: GozSerit
   muayeneler: Array<{ id: string; tarih: string; gib_sag: number | null; gib_sol: number | null; gib_yontem: string | null; kaynak: string; gosterim: { sag: string; sol: string } }>
+  sonFundus?: (FundusKayit & { muayeneId?: string }) | null
   kopya: { taslak: { tarih: string; va: { sag?: Record<string, string | null | undefined>; sol?: Record<string, string | null | undefined> }; gibSag: number | null; gibSol: number | null; gibYontem?: string | null }; kaynakTarih: string } | null
   glokom: { kart: GlokomKart; degerlendirme: GlokomDegerlendirme } | null
   dr: { satir: Record<string, string | boolean | null>; degerlendirme: DrSonuc } | null
@@ -135,6 +137,99 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
       )}
     </div>
   );
+
+  if (sekme === 'Fundus') {
+    const kayit = v.sonFundus;
+    const gozAlan = (taraf: 'sag' | 'sol', alan: keyof FundusGozBulgu, ph: string) => {
+      const key = `f_${taraf}_${alan}`;
+      const once = kayit?.[taraf]?.[alan] || '';
+      return <input value={s(key, String(once || ''))} onChange={(e) => set(key, e.target.value)} placeholder={ph} style={{ ...toolsInput, minWidth: 0, width: '100%' }} />;
+    };
+    const gozPayload = (taraf: 'sag' | 'sol'): FundusGozBulgu => {
+      const once = kayit?.[taraf] || {};
+      return {
+        disk: s(`f_${taraf}_disk`, String(once.disk || '')) || null,
+        cd: s(`f_${taraf}_cd`, String(once.cd || '')) || null,
+        damar: s(`f_${taraf}_damar`, String(once.damar || '')) || null,
+        makula: s(`f_${taraf}_makula`, String(once.makula || '')) || null,
+        perifer: s(`f_${taraf}_perifer`, String(once.perifer || '')) || null,
+        not: s(`f_${taraf}_not`, String(once.not || '')) || null,
+      };
+    };
+    const normalDoldur = () => {
+      const n = normalFundusGoz();
+      const o: Record<string, unknown> = {};
+      for (const t of ['sag', 'sol'] as const) for (const [a, v] of Object.entries(n)) o[`f_${t}_${a}`] = v || '';
+      setF((p) => ({ ...p, ...o, f_dilate: true, f_ortam: 'berrak' }));
+    };
+    const fundusFotolar = v.goruntuler.filter((g) => (g.modalite || '').toLowerCase().includes('fundus') || g.modalite === 'fundus');
+    const onizleme = kayit ? fundusMetni(kayit) : null;
+    return (
+      <div>
+        <div style={etiket}>Göz dibi (fundus) <span style={kucuk}>· TR sıra: disk (3C) → damar → makula → perifer · OD/OS ayrı · tanı/DR evresi yok</span></div>
+        <div style={{ ...kucuk, marginBottom: 8 }}>
+          Dilate muayene kaydı hekimindir. Fotoğraf AI’si: Belge › Fundus › Asistana raporla (tek foto = bir göz; güven ≤%70). DR evresi için <b style={{ color: '#8FA0B5', fontWeight: 600 }}>DR</b> sekmesi.
+        </div>
+        {onizleme && <div style={{ ...metin, marginBottom: 8, padding: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>{onizleme}</div>}
+        {!salt && <>
+          <div style={satir}>
+            <input type="date" value={s('f_tarih', kayit?.tarih || bugun())} onChange={(e) => set('f_tarih', e.target.value)} style={{ ...toolsInput, width: 150 }} />
+            <label style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center' }}>
+              <input type="checkbox" checked={f.f_dilate == null ? !!kayit?.dilate : !!f.f_dilate} onChange={(e) => set('f_dilate', e.target.checked)} />
+              Dilate
+            </label>
+            <input value={s('f_ortam', kayit?.ortam || '')} onChange={(e) => set('f_ortam', e.target.value)} placeholder="Ortam (berrak / bulanık…)" style={{ ...toolsInput, flex: 1, minWidth: 140 }} />
+            <button type="button" onClick={normalDoldur} style={ghost}>Her iki göz normal</button>
+          </div>
+          <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12, marginTop: 8 }}>
+            <span />
+            <b style={{ color: '#2DD4BF' }}>OD (sağ)</b>
+            <b style={{ color: '#60A5FA' }}>OS (sol)</b>
+            <span style={kucuk}>Disk</span>{gozAlan('sag', 'disk', 'pembe, kenar net')}{gozAlan('sol', 'disk', 'pembe, kenar net')}
+            <span style={kucuk}>C/D</span>{gozAlan('sag', 'cd', '0,3')}{gozAlan('sol', 'cd', '0,3')}
+            <span style={kucuk}>Damar</span>{gozAlan('sag', 'damar', 'A/V normal')}{gozAlan('sol', 'damar', 'A/V normal')}
+            <span style={kucuk}>Makula</span>{gozAlan('sag', 'makula', 'refle doğal')}{gozAlan('sol', 'makula', 'refle doğal')}
+            <span style={kucuk}>Perifer</span>{gozAlan('sag', 'perifer', 'görünen alan OK')}{gozAlan('sol', 'perifer', 'görünen alan OK')}
+            <span style={kucuk}>Not</span>{gozAlan('sag', 'not', 'opsiyonel')}{gozAlan('sol', 'not', 'opsiyonel')}
+          </div>
+          <div style={satir}>
+            <button
+              type="button"
+              onClick={() =>
+                calistir(
+                  {
+                    adim: 'fundus',
+                    fundus: {
+                      tarih: s('f_tarih', kayit?.tarih || bugun()),
+                      dilate: f.f_dilate == null ? !!kayit?.dilate : !!f.f_dilate,
+                      ortam: s('f_ortam', kayit?.ortam || '') || null,
+                      sag: gozPayload('sag'),
+                      sol: gozPayload('sol'),
+                    },
+                  },
+                  'Göz dibi kaydedildi.',
+                )
+              }
+              style={btn}
+            >
+              Kaydet
+            </button>
+            <button type="button" onClick={() => calistir({ adim: 'fundus_nota' }, 'Göz dibi bugünkü notun Objektif bölümüne eklendi.')} style={ghost}>Nota ekle (O)</button>
+          </div>
+        </>}
+        {fundusFotolar.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <div style={kucuk}>Yüklü fundus fotoğrafları · Ayşe taslağı Görüntü sekmesinde</div>
+            {fundusFotolar.slice(0, 6).map((g) => (
+              <div key={g.id} style={{ ...metin, marginTop: 4 }}>
+                {g.tarih} · {gozAd(g.goz)} {g.url && <>· <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>aç</a></>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (sekme === 'Glokom') {
     const k = v.glokom?.kart; const d = v.glokom?.degerlendirme;

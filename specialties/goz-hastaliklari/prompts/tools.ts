@@ -3,6 +3,8 @@ export const GOZ_TOOLS = [
   { name: 'goz.serit', description: 'Vizit şeridi: son VA ve GİB (OD/OS), hedef, DR evresi, sıradaki enjeksiyon, geciken görev' },
   { name: 'goz.olcum', description: 'Bilateral VA / GİB kaydet (hekimin ölçtüğü değer)' },
   { name: 'goz.olcum_nota', description: 'Son VA / GİB satırını bugünkü notun Objektif bölümüne ekle' },
+  { name: 'goz.fundus', description: 'Göz dibi muayene kaydı: OD/OS disk (3C) → damar → makula → perifer' },
+  { name: 'goz.fundus_nota', description: 'Son göz dibi satırını bugünkü notun Objektif bölümüne ekle' },
   { name: 'goz.kopya', description: 'Son muayeneden kopyala — taslak, hekim onaylı' },
   { name: 'goz.glokom', description: 'Glokom kartı: GİB serisi hedefle karşılaştırma, tetkik görevleri (tanı/hedef hekimin)' },
   { name: 'goz.dr', description: 'Diyabetik retinopati: hekimin girdiği evreye göre kontrol aralığı (TEMD / ICO)' },
