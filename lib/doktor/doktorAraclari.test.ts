@@ -9,6 +9,7 @@ import {
   BRANS_DOKTOR_ARACLARI,
   TUM_DOKTOR_ARACLARI,
 } from './doktorAraclari'
+import { BRANS_ETIKETLERI } from '../intake/bransSorulari'
 
 test('shared tools appear for every branş; chapter tiles do not cross-leak', () => {
   const goz = doktorAraclariListesi('goz-hastaliklari')
@@ -23,7 +24,7 @@ test('shared tools appear for every branş; chapter tiles do not cross-leak', ()
     assert.ok(ped.some((a) => a.route === o.route), `pediatri missing shared ${o.route}`)
   }
 
-  assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length)
+  assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length + GOZ_ROTALARI.length)
   assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length)
   assert.ok(!goz.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
   assert.ok(!kd.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
@@ -32,6 +33,45 @@ test('shared tools appear for every branş; chapter tiles do not cross-leak', ()
   assert.ok(!dah.some((a) => a.route.includes('hedef-boy')))
   assert.ok(ped.some((a) => a.route === '/doktor-tools/hedef-boy'))
   assert.ok(!ped.some((a) => a.route.includes('dahiliye-kohort')))
+})
+
+const GOZ_ROTALARI = ['/doktor-tools/goz-va', '/doktor-tools/goz-sut-vegf', '/doktor-tools/goz-sgk-rapor', '/doktor-tools/goz-gil-kod', '/doktor-tools/goz-kohort']
+
+test('göz-only Araçlar: göz sees all five; pediatri / dahiliye / kardiyoloji / KD / derm and 25 others never', () => {
+  const goz = doktorAraclariListesi('goz-hastaliklari')
+  for (const r of GOZ_ROTALARI) {
+    assert.ok(goz.some((a) => a.route === r), `göz missing ${r}`)
+    assert.equal(doktorAraciBransaUygun(r, 'goz-hastaliklari'), true, r)
+    assert.equal(doktorAraciBransaUygun(r, 'Göz Hastalıkları'), true, r)
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.deepEqual(arac.branslar, ['goz-hastaliklari'], r)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'goz-hastaliklari')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'kadin-dogum', 'dermatoloji', 'İç Hastalıkları', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of GOZ_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  // göz does not see other chapters' tiles
+  assert.ok(!goz.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/dahiliye-kohort'))
+})
+
+test('göz studio pages: guarded, card-opened, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/goz-hastaliklari/ui/araclar/GozAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+  for (const r of GOZ_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /GozAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /VaAraci|SutVegfAraci|SgkRaporAraci|GilKodAraci|GozKohortPaneli|goz-exceptional-audit/)
 })
 
 test('commercial grid: no internal audits, sprint jargon, or named beta-doctor copy', () => {

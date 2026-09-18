@@ -77,6 +77,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/yenidogan/route.ts': I('baby card fetched by patient AND doctor_id; every derived id comes from that card; patient reads doctor-scoped'),
   'app/api/doktor/jinekoloji/route.ts': T,
   'app/api/doktor/goz/route.ts': T,
+  'app/api/doktor/goz/kohort/route.ts': T,
+  'app/api/doktor/goz/_kohort.ts': I('patient ids drawn only from goz_* rows with doctor_id = doctorId; patients read by doctor_id; gozHatirlatmaGonder runs only on ids that passed that filter or hasta()'),
   'app/api/doktor/dahiliye/route.ts': T,
   'app/api/doktor/dahiliye/_ortak.ts': I('hastaBilgi/hastaAdi: patients by id AND doctor_id — the gate every dahiliye handler passes first'),
   'app/api/doktor/dahiliye/_wow2.ts': I('runs only after hastaBilgi(); id-keyed updates scoped by doctor_id or the verified patient'),

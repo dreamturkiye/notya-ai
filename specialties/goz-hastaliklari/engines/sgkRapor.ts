@@ -8,6 +8,8 @@ import type { SgkRaporDraft } from '@/lib/sgk/raporTipleri'
 import type { Dipnot } from '../protocols/sources'
 import { AJAN_ADI, ENDIKASYON_ADI, sutYanit, type Ajan, type Endikasyon, type Enjeksiyon } from './antiVegf'
 import { vaGoster } from './va'
+import { GIL_EK3G_KALEMLERI } from './klinik'
+import { biyometriMetni, biyometriTamMi, type Biyometri } from './katarakt'
 
 export type GozSgkSablon = 'anti_vegf_baslangic' | 'anti_vegf_idame' | 'deksametazon_implant' | 'katarakt_gil'
 export const GOZ_SGK_SABLONLARI: { id: GozSgkSablon; ad: string }[] = [
@@ -49,8 +51,12 @@ export interface GozSgkGirdi {
   okt?: string | null
   gecmis: Enjeksiyon[]
   hekimYanitVarBeyani?: boolean
+  /** katarakt_gil: Katarakt kartından (hekim girişi) — biyometri saklanır, GİL gücü hesaplanmaz */
+  gil?: { tip: string | null; ek3gKod: string | null; biyometri: Biyometri | null; kontrolEksik: string[] | null; planlananTarih: string | null } | null
   bugun: string
 }
+
+const GIL_TIP_AD: Record<string, string> = { monofokal: 'Monofokal', torik: 'Torik', multifokal: 'Multifokal', edof: 'EDOF', diger: 'Diğer' }
 
 export interface GozSgkSonuc { draft: SgkRaporDraft; raporTipi: string; sutKontrol: { madde: string; tamam: boolean | null }[]; eksikler: string[]; dipnotlar: Dipnot[] }
 
@@ -60,14 +66,34 @@ export function gozSgkTaslak(g: GozSgkGirdi): GozSgkSonuc {
   const gozAd = g.goz === 'sag' ? 'Sağ göz' : 'Sol göz'
 
   if (g.sablon === 'katarakt_gil') {
+    // GOZ-EXCEPTIONAL-01: anti-VEGF kalitesinde bölümler — zorunlu maddeler, eksikler, kilit. SUT'ta GİL için ayrı rapor kuralı yok;
+    // maddeler klinik ön-op standardıdır (TR pratik) + EK-3/G kalem seçimi. GİL gücü yazılmaz / hesaplanmaz.
     const tani = ICD.katarakt
+    const gil = g.gil || null
+    if (g.anamnez) klinik.push(`Anamnez: ${g.anamnez}`)
     if (g.vaSimdi) klinik.push(`${gozAd} düzeltilmiş görme keskinliği: ${vaGoster(g.vaSimdi)}`); else eksikler.push('Güncel düzeltilmiş görme keskinliği')
-    sutKontrol.push({ madde: 'GİL kalemi EK-3/G listesinde (tip ve kod) — hekim/idare teyit eder', tamam: null })
+    const bio = gil?.biyometri || null
+    if (biyometriTamMi(bio)) tetkik.push(biyometriMetni(bio, gozAd)); else eksikler.push('Biyometri (AL, K1/K2, A-sabiti — hekim girer; Notya GİL gücü hesaplamaz)')
+    sutKontrol.push({ madde: 'Biyometri değerleri kayıtlı (hekim girişi)', tamam: biyometriTamMi(bio) })
+    const tip = gil?.tip || null
+    if (tip) klinik.push(`Planlanan GİL tipi (hekim): ${GIL_TIP_AD[tip] || tip}`); else eksikler.push('GİL tipi (hekim seçimi)')
+    const kalem = gil?.ek3gKod ? GIL_EK3G_KALEMLERI.find((k) => k.kod === gil.ek3gKod) || null : null
+    if (kalem) klinik.push(`SGK EK-3/G kalemi: ${kalem.kod} — ${kalem.ad} (bedel/fark idare teyit eder)`); else eksikler.push('EK-3/G GİL kalem kodu')
+    sutKontrol.push({ madde: 'GİL kalemi EK-3/G listesinde (tip ve kod) — hekim/idare teyit eder', tamam: kalem ? true : null })
+    if (gil?.kontrolEksik) {
+      if (gil.kontrolEksik.length) for (const e of gil.kontrolEksik) eksikler.push(`Ön-op kontrol: ${e}`)
+      sutKontrol.push({ madde: 'Ön-op kontrol listesinin zorunlu maddeleri (onam dahil) işaretli', tamam: gil.kontrolEksik.length === 0 })
+    } else {
+      eksikler.push('Ön-op kontrol listesi (Katarakt kartı) doldurulmadı')
+      sutKontrol.push({ madde: 'Ön-op kontrol listesinin zorunlu maddeleri (onam dahil) işaretli', tamam: false })
+    }
+    if (gil?.planlananTarih) klinik.push(`Planlanan işlem tarihi: ${gil.planlananTarih}`)
     sutKontrol.push({ madde: 'Sözleşmeli özel sağlık hizmeti sunucusu: FAKO tarihi ≥2 gün önce SGK sistemine (sistem kurulunca yürürlükte)', tamam: null })
-    dip.push({ ref: 'SUT_EK3G', not: 'GİL ödemesi EK-3/G listesine bağlı — liste içeriği bu repoda doğrulanamadı' }, { ref: 'SUT_244I', not: 'FAKO planlama bildirimi' })
+    sutKontrol.push({ madde: 'Medula girişi ve e-imza hekim tarafından (Notya canlı gönderim yapmaz)', tamam: null })
+    dip.push({ ref: 'SUT_EK3G', not: 'GİL ödemesi EK-3/G listesine bağlı — kalem kodu seçilir, bedel yazılmaz' }, { ref: 'SUT_244I', not: 'FAKO planlama bildirimi' }, { ref: 'TOD', not: 'Ön-op değerlendirme maddeleri — TR klinik pratik; kurum protokolü hekim teyit eder' })
     return {
-      raporTipi: 'Bilgi notu (SUT metninde GİL için ayrı rapor kuralı bulunamadı)',
-      draft: { raporBasligi: 'Katarakt Ameliyatı Öncesi Bilgi Notu', raporTuru: 'Ilk', hastaAdi: g.hasta.adSoyad, tcSon4: '', tani, mevcutDurum: klinik.join('\n'), hekim_degerlendirmesi: `${gozAd} katarakt nedeniyle fakoemülsifikasyon + GİL implantasyonu planlanmıştır. (Taslak — hekim düzenler ve onaylar.)`, malzemeOnerileri: ['Göz içi lens — tip ve güç hekim tarafından'], zorunluTetkikler: tetkik },
+      raporTipi: 'Bilgi notu (SUT metninde GİL için ayrı rapor kuralı bulunamadı) — Medula’ya hekim e-imza ile',
+      draft: { raporBasligi: 'Katarakt Ameliyatı Öncesi Bilgi Notu', raporTuru: 'Ilk', hastaAdi: g.hasta.adSoyad, tcSon4: '', tani, anamnez: g.anamnez || undefined, mevcutDurum: klinik.join('\n'), hekim_degerlendirmesi: `${gozAd} katarakt nedeniyle fakoemülsifikasyon + GİL implantasyonu planlanmıştır. (Taslak — hekim düzenler ve onaylar.)`, malzemeOnerileri: [kalem ? `Göz içi lens — EK-3/G ${kalem.kod}; tip ve güç hekim tarafından` : 'Göz içi lens — tip ve güç hekim tarafından'], zorunluTetkikler: tetkik },
       sutKontrol, eksikler, dipnotlar: dip,
     }
   }
@@ -128,4 +154,20 @@ export function gozSgkTaslak(g: GozSgkGirdi): GozSgkSonuc {
     zorunluTetkikler: tetkik,
   }
   return { draft, raporTipi, sutKontrol, eksikler, dipnotlar: dip }
+}
+
+/** Panoya / yazdırmaya düz metin (hasta adı ve T.C. boş kalır — Medula'da hekim doldurur). */
+export function gozSgkMetni(s: GozSgkSonuc): string {
+  const d = s.draft
+  return [
+    d.raporBasligi,
+    `Rapor türü: ${s.raporTipi}`,
+    `Tanı önerisi (hekim doğrular): ${d.tani.icd10 ? `${d.tani.icd10} ` : ''}${d.tani.aciklama}`,
+    d.mevcutDurum ? `\n${d.mevcutDurum}` : '',
+    d.zorunluTetkikler?.length ? `\nTetkikler:\n- ${d.zorunluTetkikler.join('\n- ')}` : '',
+    d.etkenMaddeler?.length ? `\nEtken madde: ${d.etkenMaddeler.join(', ')} (doz hekim yazar)` : '',
+    d.malzemeOnerileri?.length ? `\nMalzeme: ${d.malzemeOnerileri.join(', ')}` : '',
+    d.hekim_degerlendirmesi ? `\n${d.hekim_degerlendirmesi}` : '',
+    s.eksikler.length ? `\nEksikler:\n- ${s.eksikler.join('\n- ')}` : '',
+  ].filter(Boolean).join('\n')
 }

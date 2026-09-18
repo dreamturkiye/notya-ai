@@ -41,6 +41,12 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
 export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#E8C547', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boyuna göre çocuğun tahmini erişkin boyu — açıp aileyle kullanın', route: '/doktor-tools/hedef-boy', branslar: ['pediatri'] },
   { circleColor: '#0891B2', icon: 'KH', title: 'Dahiliye Kohort Paneli', desc: 'HbA1c >9 · KB/LDL hedef dışı · eGFR <45 · gecikmiş görevler · 1-tap hatırlatma', route: '/doktor-tools/dahiliye-kohort', branslar: ['dahiliye'] },
+  // Göz Hastalıkları — specialty-only (not dahiliye / pediatri / kardiyoloji / KD / dermatoloji). Chapter engines only.
+  { circleColor: '#0D9488', icon: 'VA', title: 'VA / logMAR', desc: 'Ondalık · Snellen · PS/EH/IH → logMAR ve iki vizit arası ETDRS harf farkı, OD/OS', route: '/doktor-tools/goz-va', branslar: ['goz-hastaliklari'] },
+  { circleColor: '#2563EB', icon: 'SV', title: 'SUT anti-VEGF kapı', desc: 'Ajan · göz · basamak · MI/SVO + enjeksiyon geçmişi → SUT 4.2.33 engel ve uyarıları', route: '/doktor-tools/goz-sut-vegf', branslar: ['goz-hastaliklari'] },
+  { circleColor: '#16A34A', icon: 'SR', title: 'SGK rapor taslağı', desc: 'Anti-VEGF başlangıç / idame / implant ve GİL bilgi notu — zorunlu maddeler ve eksikler', route: '/doktor-tools/goz-sgk-rapor', branslar: ['goz-hastaliklari'] },
+  { circleColor: '#9333EA', icon: 'GL', title: 'GİL EK-3/G kodları', desc: 'Göz içi lens kodlarını ara ve kopyala — bedel gösterilmez', route: '/doktor-tools/goz-gil-kod', branslar: ['goz-hastaliklari'] },
+  { circleColor: '#0891B2', icon: 'GK', title: 'Göz kohort paneli', desc: 'Geciken GA/OCT · planlı IVT · DR tarama · kontrol zamanı · 1-tap hatırlatma', route: '/doktor-tools/goz-kohort', branslar: ['goz-hastaliklari'] },
 ]
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]

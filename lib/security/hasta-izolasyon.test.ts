@@ -172,6 +172,7 @@ function hekimKur(harf: Harf): Hekim {
   const asistanEylem = db.ekle('asistan_actions', { doctor_id: id, action_type: 'ADD_NOTE_CONTENT', was_corrected: false }).id
   db.ekle('hasta_goruntulemeler', { doctor_id: id, patient_id: hasta, modalite: 'xray', rapor_metni: `Goruntu ${m}`, goruntuleme_tarihi: '2026-09-01', dosya_url: 'https://sahte.supabase.test/x' })
   db.ekle('kadin_sagligi', { doctor_id: id, patient_id: hasta, notlar: `KS ${m}` })
+  db.ekle('goz_kontroller', { doctor_id: id, patient_id: hasta, tarih: '2026-01-05', neden: `Goz kontrol ${m}`, dilatasyon: false, durum: 'planli' })
   db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01' })
   db.dosyaKoy('ses-kayitlari', `${id}/qa-kayit.m4a`, new Blob(['sentetik ses']))
   return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, hileliSeans: '', hileliNot: '' }
@@ -376,6 +377,11 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.dahiliye.GET(iste('GET', `/api/doktor/dahiliye?patientId=${h.hasta}`, { token: a.token }))) },
   { ad: 'GET /api/doktor/goz', red: 404,
     cagir: (r, a, h) => coz(r.goz.GET(iste('GET', `/api/doktor/goz?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/goz/kohort (göz kohort listesi)', okur: true,
+    cagir: (r, a) => coz(r.gozKohort.GET(iste('GET', '/api/doktor/goz/kohort', { token: a.token }))) },
+  { ad: 'POST /api/doktor/goz/kohort (1-tap hatırlatma)',
+    yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.konu === 'Göz kontrol hatırlatması') && tablo('goz_gorevler').some((x) => x.patient_id === a.hasta && x.kod === 'hatirlatma_takip'),
+    cagir: (r, a, h) => coz(r.gozKohort.POST(iste('POST', '/api/doktor/goz/kohort', { token: a.token, govde: { patientIds: [h.hasta] } }))) },
   { ad: 'GET /api/doktor/jinekoloji', red: 404,
     cagir: (r, a, h) => coz(r.jine.GET(iste('GET', `/api/doktor/jinekoloji?patientId=${h.hasta}`, { token: a.token }))) },
   // Görüntüleme / belgeler / cihaz
@@ -453,6 +459,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       dogum: await ice('app/api/doktor/gebelik/dogum/route'),
       dahiliye: await ice('app/api/doktor/dahiliye/route'),
       goz: await ice('app/api/doktor/goz/route'),
+      gozKohort: await ice('app/api/doktor/goz/kohort/route'),
       jine: await ice('app/api/doktor/jinekoloji/route'),
       goruntuleme: await ice('app/api/doktor/goruntuleme/route'),
       goruntulemeYukle: await ice('app/api/doktor/goruntuleme/yukle/route'),
