@@ -193,7 +193,7 @@ Reviewers should reject a shared-component PR that omits it.
 
 - Declaring a field in the profile and then hardcoding a list on the screen (the baş çevresi bug itself).
 - Hedged text that covers two branches at once (`"hasta/veli"`) — adult wording says "hasta"; "veli" appears only for
-  a minor patient (any branch) or in pediatric context.
+  a minor patient (any branch) or in pediatric context when the age is unknown — never for a known adult.
 - Gating veli wording on the **branch** (`pediatrikBaglamMi`) — it is a legal, age-based rule (`veliDiliMi`); a göz
   doctor's 10-year-old patient needs guardian wording. And the reverse: gating baş çevresi / Neyzi on **age** alone.
 - `|| 'pediatri'`, `genel: 'pediatri'`, `useState('pediatrik')` — unknown means pediatri.

@@ -1390,6 +1390,69 @@ döndü (erişkin hasta için hâlâ kilitli).
 
 `npx tsc --noEmit` temiz · `npm test` **885/885** yeşil.
 
+### Ek — INTAKE-VELI-ACIL: intake veli bölümü her branşta (yaşa bağlı) + isteğe bağlı Acil Durumda Aranacak Kişi (Kaan, 2026-09-17, #314)
+
+**İstenen (Kaan, VELI-YASAL-ONAM #313 incelemesi sonrası).** (1) 18 yaşını doldurmuş hastada "veli" kavramı hiçbir
+yerde kalmasın, intake formu dahil (#313 hitabı düzeltmiş, formun kendi veli bölümünü pediatri-only bırakıp OPEN
+işaretlemişti). (2) Erişkin intake formuna, ABD hasta kabul pratiğindeki gibi, acil durumda aranacak kişi alanı — ama
+önce Türk sağlık pratiğinde gerçekten yerleşik mi doğrulansın; **isteğe bağlı, asla zorunlu değil**.
+
+**Türk pratiği teyidi (aynı oturumda web araştırması — yeniden araştırılmadı):** üç bağımsız kaynak —
+(a) hastane **yatış / kabul formu** geleneği: "hasta yakını adı, adresi, telefonu" bölümü; (b) genel **Kişisel Sağlık
+Bilgi Formu** rehberi: "acil durumlar için aranacak kişi" açıkça isteniyor; (c) T.C. Sağlık Bakanlığı **e-Nabız**'ın
+kendi **"Acil Durumda Aranacak Kişi Listesi"** özelliği. → Gerçek, yerleşik uygulama.
+
+**Kalıcı kural (yalnız bu iş için değil):** "Acil Durumda Aranacak Kişi" alanları uygulamanın **her yerinde isteğe
+bağlıdır** — intake, hasta kartı, portal ya da ileride bu alana dokunan herhangi bir yüzey hiçbir alanını `zorunlu`
+yapamaz; boş form gönderilebilir. Veli bölümünden **ayrıdır** (veli = hukuki temsil / onam; acil kişi = yalnız
+iletişim) — alanları, etiketleri birleştirilmez; bir hastada ikisi birden (reşit olmayanın velisi + ayrı bir büyükanne)
+ya da yalnız biri olabilir. Kilit: `brans-alan-sizmasi.test.ts` (30/30 branşta `acilKisi*` zorunlu değil) + skill notu.
+
+**Bulunan durum.** Acil durum kişisi formda **zaten vardı** — İletişim Bilgileri içinde üç alan, **üçü de zorunlu**
+(`acilKisiAdi`, `acilKisiTelefon`, `acilKisiYakinlik`). Kaan'ın "asla zorunlu değil" kuralını ihlal ediyordu. Yeni alan
+eklenmedi; mevcut alanlar ayrı, isteğe bağlı bölüme taşındı (id'ler aynı → eski gönderimler aynı etiketle okunur).
+
+| Bölüm | Önce | Şimdi |
+|---|---|---|
+| **Veli / Yasal Temsilci** | yalnız `BRANS_SORULARI.pediatri` içinde alt başlık: yakınlık (Anne/Baba/Diğer, zorunlu) + "Diğer" metni; yaş kapısı yok (pediatride erişkine de çıkıyordu), göz / KBB / ortopedi / kardiyoloji formunda hiç yoktu; sunucu doğrulamıyordu (yalnız core doğrulanır) | ortak omurga `VELI_BOLUMU` (`lib/intake/coreAlanlar.ts`), Kimlik Bilgileri'nin hemen ardından, her branşta aynı nesne. Alanlar (Kaan'ın pratik kuralı): ad*, soyad*, yakınlık* (Anne/Baba/**Vasi**/Diğer), "Diğer ise yakınlığı" (eski `veliDigerAdSoyad` metni, isteğe bağlı), telefon* (yeni), **Kimlik teyidi yapıldı** onay kutusu (yeni, isteğe bağlı — "mümkünse") |
+| Veli kapısı | — | `IntakeBolum.veliKosulu` → `intakeBolumGorunur` → **`veliOnamGerekliMi`** (kapsam.ts, yeniden yazılmadı), formdaki `dogumTarihi` yanıtıyla. Doğum tarihi girilmeden bölüm çizilmez; girilince (reşit değilse) belirir — gebelik haftasının `gosterEger` deseniyle aynı sıra bağımlılığı. Reşit olmayanda **zorunlu** (istemci + sunucu aynı `dogrula.ts`); erişkinde çizilmez, doğrulanmaz, **kaydedilmez** (`intakeGorunmeyenYanitlariAyikla` — istemcide doğum tarihi erişkine düzeltilince ve sunucuda POST'ta) |
+| **Acil Durumda Aranacak Kişi (isteğe bağlı)** | İletişim Bilgileri'nde 3 zorunlu alan | ayrı bölüm, her branş her yaş, hiçbir alanı zorunlu değil; yakınlık serbest metin (radyo seçimi isteğe bağlı bölümde geri alınamıyor — boş bırakılabilirlik için metin). Mevcut isteğe bağlı alan deseni: yıldız yok + "(isteğe bağlı)" (Anne boyu alanı gibi) |
+| Hitap (`veliDiliMi`) | reşit olmayan **veya** pediatrik bağlam → pediatri / çocuk cerrahisi hekimindeki **erişkin** hasta da veli dilindeydi | yaşı bilinen erişkin **hiçbir branşta** veli dili almaz; pediatrik bağlam yalnız yaş bilinmiyorsa veli diline düşer. SOAP, not-konsult, İnceleme / not / yazdır etiketleri, Aşılar — hepsi bu tek fonksiyondan |
+| LLM bağlamı (`hastaDosyaDerleyici`) | acil kişi gizli, veli metni modele gidiyordu | veli ad / soyad / telefon / "Diğer" metni / kimlik teyidi de gizli; yakınlık gider ("veli beyanı" kararı `veliYakinligi`'nden, artık her branşta doğru) |
+
+**Depolama — migration yok.** Tüm intake yanıtları zaten tek şifreli blobda (`hasta_intake_formlari.form_data_encrypted`,
+`encrypt()` — 009 migration yorumu: "patients.notes_encrypted ile aynı desen", TC kimlik dahil). Veli ve acil kişi
+alanları aynı blobda şifreli; hekim Hasta Bilgi Formu sekmesinde etiketleriyle görür. Hasta kartına (`patients`) ayrı
+kolon açılmadı — kartta bu bilgiyi gösteren yüzey yok (ürün kararı gerekirse ayrı iş).
+
+**Görünen bölüm numarası** boşluk bırakmaz (bölüm çizimi `components/intake/IntakeBolumleri.tsx`'e taşındı, sayfa onu
+kullanır; testte gerçek render). Yeni UI öğesi / stil yok — mevcut bölüm ve alan çizimi aynen.
+
+**VERIFY (sentetik QA, gerçek hasta/hesap yok).** `brans-alan-sizmasi-rotalar.test.ts` › 6: 8 sentetik hekim —
+**pediatri + çocuk**, **pediatri + 20 yaş**, **göz + çocuk / erişkin**, **kardiyoloji + ergen / erişkin**, **KBB + çocuk**,
+**ortopedi + erişkin** — gerçek rotalar: hekim `POST /api/doktor/intake-formlari` (elden) → hasta `GET /api/intake/[token]`
+→ dönen şema `IntakeBolumleri` ile gerçekten çizilir → `POST /api/intake/[token]` → hekim `GET /api/doktor/intake-formlari/[id]`:
+
+| | reşit olmayan (her branş) | erişkin (pediatri dahil) |
+|---|---|---|
+| Veli / Yasal Temsilci bölümü | var, alanlar yıldızlı | **yok**; çizilen formda "veli" kelimesi yok |
+| Acil Durumda Aranacak Kişi | var, yıldızsız | var, yıldızsız |
+| Veli boş gönderim | **400** "Veli / Yasal Temsilcinin Adı alanı zorunludur" | — |
+| Acil kişi tamamen boş gönderim | 200 (veli dolu) | **200** |
+| Kaydedilen (çözülen) yanıt | veli alanları var | istemci veli alanı gönderse bile **veli izi yok** |
+
+Ayrıca pediatri + 20 yaş hekimi 5 mevcut rota yürüyüşüne eklendi: İnceleme / not / yazdır "Hasta özeti", SOAP ve
+not-konsult promptlarında veli yok, baş çevresi (klinik, branş) yerinde. Birim paketi (`brans-alan-sizmasi.test.ts`):
+30/30 branşta veli bölümü tek ortak nesne ve branş bölümünde veli alanı yok, acil alanları hiçbir branşta zorunlu değil,
+17/18 yaş sınırı, render numaralandırma, doğrulama, kayıt süzgeci, kaynak kilitleri. **Sahte yeşil değil:** veli kapısı
+geçici olarak kapatıldı → **9 kırmızı**; acil telefonu zorunlu yapıldı → **4 kırmızı**; ikisi de geri alındı → yeşil.
+Bilinçli değişen eski test: "30/30 branş veli dili" — pediatri / çocuk cerrahisi + erişkin artık "hasta".
+
+Canlı tarayıcı yürüyüşü yapılmadı: notya.ai bu ortamdan erişilemiyor, vercel.app SSO arkasında, production'a sentetik
+hesap yazmak kural dışı — doğrulama yerel, gerçek rota + gerçek render düzeyinde (#312 / #313 ile aynı).
+
+`npx tsc --noEmit` temiz · `npm test` **894/894** yeşil.
+
 ### AÇIK — karar gerekiyor (tahmin edilmedi)
 
 | Tarih | Madde | Gerekçe + öneri | Durum |
@@ -1398,7 +1461,8 @@ döndü (erişkin hasta için hâlâ kilitli).
 | 2026-09-17 | **"Kadın Sağlığı & Gebelik" sekmesi her branşta** (≥12 yaş kadın hastada tam KD bölümü: NST, risk formu, VTE, gebe kartı) | "Mixed care" politikası olarak belgelenmiş; ama tam KD bölüm UI'sinin göz/derm/kardiyoloji hekimine açılması tam da bu denetimin sızıntı tanımı. Gebelik bilgisi ise her branş için güvenlik bilgisi (isotretinoin, görüntüleme, ilaç). **Öneri:** her branşa salt-okunur "Gebelik durumu" çipi; tam KD bölüm UI'si yalnız KD (±aile) hekimine. Sunucu tarafı (`/api/doktor/gebelik`, `jinekoloji`, `kadin-sagligi`) bugün yalnız hasta sahipliğine bakıyor, branşa değil — karar verilince orada da aynı kapı. | OPEN (Kaan) |
 | 2026-09-17 | **Pediatri dışı branşta reşit olmayan hasta** (göz, KBB, derm, ortopedi 10 yaşında hasta görür) | #312 "veli"yi yalnız pediatri (+ çocuk cerrahisi) branşına bağlamıştı. **Kaan'ın kararı (2026-09-17, aynen):** "18 yaşını doldurmamış her çocukta klinik kayıt ve tıbbi onam için veli / yasal temsilci bilgisi alınır. … rutin işlemde onam veliden. İstisna dar: Acil / hayati tehlike: veli yokken müdahale edilir, sonra bildirilir; Evlilik veya mahkeme ile ergin kılınmışsa kendi onamı yeter (belge şart). SGK provizyonu çocuğun T.C. kimliğiyledir; veli kaydı fatura için değil, onam, iletişim ve dosya içindir." → hitap artık yaş güdümlü, her branşta (`veliOnamGerekliMi` / `veliDiliMi`); baş çevresi / Neyzi / sağlam çocuk branşta kaldı. Ayrıntı: yukarıda "Düzeltme — VELI-YASAL-ONAM". | **KAPANDI** (2026-09-17, VELI-YASAL-ONAM) |
 | 2026-09-17 | **Ergin kılınmış reşit olmayan hasta** (evlilik / mahkeme kararı — kendi onamı yeter, belge şart) | Hasta kaydında bunu tutan alan yok (`lib/db/schema.sql` + migrations: `patients` yalnız ad, doğum tarihi, cinsiyet, TC hash, telefon, not; kodda "ergin" / "emansipasyon" / yasal ehliyet araması boş); uydurulmadı. Bugün bu hasta da <18 olduğu için veli dili alır — güvenli taraf, ama hukuken yanlış hitap. Gerekenler: (1) veri alanı (ör. ergin kılınma türü + belge tarihi/no, şifreli), (2) hekimin bunu **nereye** işleyeceği (hasta kartı mı, intake mı, belge yükleme mi) ve kimin doğrulayacağı, (3) sonra `veliOnamGerekliMi`'ye tek dal. Acil/hayati tehlike istisnası nota hitap değişikliği gerektirmez (veli sonradan bilgilendirilir) — ayrı alan gerekmedi. | OPEN (Kaan — alan + yer kararı) |
-| 2026-09-17 | **Reşit olmayan hastada veli bilgisi TOPLAMA** (Kaan'ın pratik kuralı: ad, soyad, yakınlık — anne/baba/vasi —, telefon; mümkünse kimlik teyidi) | Bu iş yalnız **hitabı** düzeltti. Veli bilgisini toplayan tek yer pediatri intake bölümü ("Veli / Yasal Vasi": yalnız yakınlık Anne/Baba/Diğer + "Diğer" ise ad soyad) — göz / KBB / ortopedi hekiminin gönderdiği formda veli bölümü yok ve hiçbir yerde veli telefonu / kimlik teyidi alanı yok. Intake + hasta kartı veri modeli değişikliği (ürün kararı), bu işin kapsamı dışında bırakıldı. **Öneri:** `coreBolumlerIcin` omurgasına yaş güdümlü (`veliOnamGerekliMi`) "Veli / Yasal Temsilci" bölümü: ad, soyad, yakınlık (anne/baba/vasi/diğer), telefon, kimlik teyidi onay kutusu — her branşta aynı. | OPEN (Kaan) |
+| 2026-09-17 | **Reşit olmayan hastada veli bilgisi TOPLAMA** (Kaan'ın pratik kuralı: ad, soyad, yakınlık — anne/baba/vasi —, telefon; mümkünse kimlik teyidi) | Bu iş yalnız **hitabı** düzeltti. Veli bilgisini toplayan tek yer pediatri intake bölümü ("Veli / Yasal Vasi": yalnız yakınlık Anne/Baba/Diğer + "Diğer" ise ad soyad) — göz / KBB / ortopedi hekiminin gönderdiği formda veli bölümü yok ve hiçbir yerde veli telefonu / kimlik teyidi alanı yok. Intake + hasta kartı veri modeli değişikliği (ürün kararı), bu işin kapsamı dışında bırakıldı. **Öneri:** `coreBolumlerIcin` omurgasına yaş güdümlü (`veliOnamGerekliMi`) "Veli / Yasal Temsilci" bölümü: ad, soyad, yakınlık (anne/baba/vasi/diğer), telefon, kimlik teyidi onay kutusu — her branşta aynı. | **KAPANDI** (2026-09-17, #314 — öneri aynen uygulandı; ayrıntı: aşağıda "Ek — INTAKE-VELI-ACIL") |
+| 2026-09-17 | **Pediatri hekiminin erişkin hastasında pediatri branş bölümü** ("Çocuğunuz Hakkında", doğum / gelişim soruları, "Çocuğunuzun geçirdiği hastalıklar", "Ailede sigara") | #314 ile erişkin hastanın formunda veli bölümü ve "veli" kelimesi yok (testli). Ama pediatri **branş** bölümü klinik içerik olarak `PEDIATRIK_BAGLAM` = her-zaman kuralıyla yaştan bağımsız çıkıyor; ebeveyne hitap ediyor. Kural değiştirilmedi (klinik eksen branş güdümlü — BRANS-ALAN-SIZMASI). **Öneri:** pediatri hekimi erişkin hasta görüyorsa (geçiş dönemi 18–21) branş bölümü baseline başvuru nedeni + sağlık geçmişine düşsün; tek karar noktası: intake GET'te form doğum tarihi yok → istemci tarafında `veliKosulu` benzeri bir yaş koşulu. | OPEN (Kaan) |
 | 2026-09-17 | **Aile hekimliği ve branşsız hekim = `cocuk-hastada`; çocuk cerrahisi = `her-zaman`** | Aile hekimleri SB Bebek-Çocuk İzlem Protokolü'nü (baş çevresi dahil) uyguluyor; eskiden aile/genel **her** hastada pediatrik dil alıyordu — şimdi yalnız yaşı bilinen çocukta (daha dar, sızmaz). Çocuk cerrahisinin tüm hastaları çocuk (intake zaten "Çocuğunuz" diyor) ve baş çevresi alanı onda önceden de vardı. | Karar uygulandı — teyit (Kaan / Dr. Gökhan) |
 | 2026-09-17 | **İlan edilmiş ama hiç çizilmeyen bölüm ölçümleri** (ters yön) | KD profili `sonAdetTarihi`, `fundusYuksekligi`; göz profili VA ve GİB ×2 ilan ediyor, ama not vital hattı (`NOT_VITAL_ANAHTARLARI`) bunları taşımıyor — gerçek kayıt bölüm tablolarında (gebelik, `goz_*`). Forma eklemek SOAP çıkarımı, onay, yazdır ve portal biçimini değiştirir (ürün kararı). **Öneri:** bölüm tablolarında kalsın; profilde "kaynak: bölüm" işaretiyle "ilan edilip okunmayan" tuzağı kapansın. | OPEN (ürün) |
 | 2026-09-17 | **Asistan persona varsayılanı pediatri** | `VARSAYILAN_PERSONA = 'aysekaya'` (pediatri Ayşe: "yetişkin dozu asla önerme"), `specialistsCatalog` `genel: 'pediatri'` + `getSpecialistForSpecialty` pediatri yedeği, `asistan/signed-url` `\|\| 'pediatri'` — aile / branşsız / bilinmeyen hekimde pediatri personası. Ses/persona sistemi paralel bir çalışmanın alanında (ElevenLabs dalı) — çakışmamak için dokunulmadı. **Öneri:** aile/genel için nötr "genel pratisyen" personası; bilinmeyen → pediatri değil. | OPEN |
