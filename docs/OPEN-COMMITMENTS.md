@@ -1636,3 +1636,61 @@ notya.ai bu ortamdan erişilemiyor, production'a sentetik hesap yazmak kural dı
 | 2026-09-18 | **"Diğer" çipi Yükle panelinde yok** | 696c0d3'ten beri bilinçli süzgeç; bu iş korudu. Sonuç: listede olmayan tetkik yanlış modaliteyle saklanabilir (varsayılan seçili çip "Röntgen"). **Öneri:** "Diğer görüntülemeler" satırının sonuna "Diğer" çipi + zorunlu başlık; ya da EEG/EMG kararıyla birlikte ele alınsın. | OPEN (Kaan) |
 | 2026-09-18 | **DERM-EXCEPTIONAL-01 A — uzman doğrulaması ve klinik eşik teyidi** | Dermatoloji bölüm derinliği Strong'a çıkarıldı (PASI/EASI bölge çalışma sayfası, SCORAD/DLQI/UAS7/SALT/IGA, fototerapi v2 + MED, yama ICDRG + Avrupa baz serisi, biyolojik SUT taslağı, acil bandı, PSOKİD / TDD AD basamak kartları, vücut haritası, Form 014 taslağı, kozmetik lot). `olgunluk` bilinçli olarak `beta-hazir` — **uzman-dogrulandi değil**. Teyit bekleyenler: (1) EASI / SCORAD / SALT bant kesim noktaları ve PASI "onluk kuralı" eşikleri hekimle kilitlenmeli; (2) biyolojik SUT rapor süresi / rapor tipi ve ilgili SUT madde numarası hekim-idare teyidiyle (taslakta bilinçli olarak yazılmıyor); (3) Avrupa baz serisi alerjen listesi ünite hazır bandıyla karşılaştırılmalı (konsantrasyon / vehikül yazılmadı — test maddesi kararı hekimin); (4) fototerapi doz adımı ve MED birimleri ünite protokolüne göre hekim onayı. **Öneri:** beta hekimle tek oturumda bu 4 başlık gözden geçirilsin, sonra `olgunluk: 'uzman-dogrulandi'`. | OPEN (Kaan + beta hekim) |
 | 2026-09-18 | **DERM-EXCEPTIONAL-01 A — 054 migration Supabase'e uygulandı** | `lib/db/migrations/054_derm_exceptional.sql` applied live 2026-09-18 via `node scripts/run-sql-migration.mjs 054_derm_exceptional.sql` (success). Additive only: skor `ek` jsonb + SCORAD/IGA/BSA, fototerapi v2, `derm_med_kayitlari`, yama ICDRG, kozmetik lot, `hasta_derm` acil/basamak, `derm_biyolojik_raporlar`, `derm_dermoskopi_skorlari`, Belge dual-sign vision cols; RLS doktor-kendi + 052 restrictive. | SHIPPED |
+
+## KD-ARACLAR-01 — beş kadın-doğum-only Doktor Aracı (Kaan, 2026-09-18)
+
+**Sınıf (specialty-doktor-araclari):** beşi de **branşa özgü** → `BRANS_DOKTOR_ARACLARI`, `branslar: ['kadin-hastaliklari-dogum']`.
+Kanonik anahtar resolver'dan okundu: `portalBransAnahtari` (`lib/portal/moduller.ts`) `kadın|kadin|jinek|obstet` →
+`'kadin-hastaliklari-dogum'`; eski `'kadin-dogum'` ve serbest metin "Kadın Hastalıkları ve Doğum" aynı anahtara çözülür (testte).
+**Görmemesi gerekenler:** pediatri, dahiliye, kardiyoloji, göz, dermatoloji ve `BRANS_ETIKETLERI`'ndeki diğer 29 anahtar —
+`lib/doktor/doktorAraclari.test.ts` 30/30 döngüyle liste + derin bağlantı (`doktorAraciBransaUygun`) iki yönden kilitler.
+Kabuk `specialties/kadin-dogum/ui/araclar/KdAracKabugu.tsx` (GozAracKabugu kalıbı: oturum + branş kapısı + `/doktor-tools`'a
+yönlendirme, tr-TR hasta arama, 44 px). Landing yalnız kart; stüdyo gömülmez.
+
+### Ne SHIPPED
+
+| Araç | Rota | Motor (yeniden kullanılan) |
+|---|---|---|
+| Gebelik takvimi & tarama pencereleri | `/doktor-tools/kd-gebelik-takvim` | `sat-edd` (Naegele, Robinson CRL), `test-windows` (tek pencere kaynağı), `izlem-calendar` (DÖBYR 4 izlem + ACOG kadansı, `evaluateCadence` çift sütun), `dogum-spine` `kacirilinca` alternatifi, `clinic-fit.doneWindowIdsFromClinic` (hasta seçilince). "Kapanmak üzere — geri alınamaz" bandı yalnız ikili / üçlü-dörtlü / detaylı USG için; OGTT / anti-D / GBS / NIPT ikincil "Bu hafta kapanıyor". NIPT pencere sonu "kaçırıldı" değil "pencere geçti". |
+| Doğum & analık rapor asistanı | `/doktor-tools/kd-dogum-rapor` | `engines/araclar.analikIzni` — tekil 8+16 hf (168 g), çoğul 10+16 hf (182 g); erken doğumda kullanılamayan günler doğum sonrasına; geç doğumda öncesi uzar, sonrası kısalmaz; hekim onayıyla doğuma 2 hf kalana dek çalışma → çalışılan gün doğum sonrasına. İstirahat raporu taslağı (hekim kilitler), "rapor almadan istirahat → ödenek ÖDENMEZ" hasta notu, emzirme ödeneği bilgi notu. Medula / e-imza canlı gönderim YOK ("Medula'da hekim e-imza ile girilir"). |
+| Kontrasepsiyon MEC danışmanı | `/doktor-tools/kd-mec` | `kontrasepsiyon-mec` aynen (`yontemMec`, `acilKontrasepsiyon`, `postpartumKontrasepsiyonBaslangic`) — kopyalanmadı. Acil seçeneklerin motor `ad` alanı doz içerdiği için UI katalog adını gösterir (testle kilitli: UI'da doz yok). |
+| Obstetrik risk & sezaryen endikasyon notu | `/doktor-tools/kd-risk` | Preeklampsi risk → aspirin başlama penceresi (12+0–28+0, ideal < 16+0; doz yazılmaz), GDM riski, SSVD tartışma alanları, Robson (WHO) grubu, `dogum-spine.CS_ENDIKASYONLARI`'ndan **hekimin seçip kilitlediği** endikasyon notu (hiçbir endikasyon önceden seçili değil; bulgu + zaman + alternatif konuşuldu olmadan kilit açılmaz). |
+| KD kohort paneli | `/doktor-tools/kd-kohort` + `GET/POST /api/doktor/gebelik/kohort` | `engines/kd-kohort` — lohusa 1. hf (DSBYR 1. izlem 2–5. gün) ve 6. hf (3. izlem 30–40. gün) en üstte, turuncu, ayrı blok; kapanan tarama penceresi, geciken DÖBYR izlemi (geç başvuru kuralıyla), OGTT / anti-D / GBS zamanı, smear/HPV (`jinekoloji-spine.dueHesapla`). 1-tap hatırlatma: Sağlığım mesajı + e-posta bildirimi (7 gün tekrar yok), satırda dosyayı aç (Gebelik) + kişisel WhatsApp. Mesaj hasta-güvenli (tanı/değer/ilaç/hafta yok, 112 yönlendirmesi). |
+
+**Hasta izolasyonu:** yeni rota `lib/security/hastaIzolasyonEnvanteri.ts`'te `T`, yardımcı `_kohort.ts` `I(...)`; `hasta-izolasyon.test.ts`'e GET + POST vakaları (pozitif + A→B + B→A, sahneye sentetik lohusa gebeliği eklendi). Her sorgu `doctor_id` kapsamlı; POST kimlikleri önce `kdKohortVerisi(doctorId)` süzgecinden geçer. Diğer dört araç yeni uç açmaz: hasta seçilince mevcut `GET /api/doktor/gebelik` (hastaSahibiMi) okunur. Hiçbir araç nota / dosyaya yazmaz. Migration yok.
+
+**Doğrulama:** `npx tsc --noEmit` temiz · `npm test` **1159/1159** (main üzerinde, derm + pediatri dahil; KD eklemesi +25 test). Yerel geçici harness (commit edilmedi) + headless tarayıcı ile 390 px'te beş araç tıklanarak denendi: yatay taşma yok, ikili kapanıyor bandı, erken doğum yeniden hesabı, MEC 4 (≥35 + sigara), aspirin penceresi, endikasyon kilidi, kohort lohusa bloğu (sentetik satırlar). Bu turda eklenen düzeltmeler: tüm girdilere görünür etiket, segment düğmeleri 44 px, hasta listesi hatasında "Liste yüklenemedi".
+
+### Kaynaklar (bu oturumda gerçekten açılanlar)
+
+- **Analık süreleri — brief'ten farklı, güncel hukuk uygulandı.** Brief "doğum sonrası 8 hafta, toplam 112 / 126 gün" diyordu; bu, 01.05.2026 öncesi hukuk. **7578 sayılı Kanun** (RG 01.05.2026, sayı 33240, aynı gün yürürlük) 4857 s.K. md. 74 ve 5510 s.K. md. 18'i değiştirdi: doğum sonrası **16 hafta**, toplam tekil **24 hafta (168 gün)**, çoğul **26 hafta (182 gün)**; hekim onayıyla çalışma "doğuma 3 hafta" → **2 hafta** kalana kadar. **SGK Genelgesi 2026/13** ödeneği "doğumdan önceki 8 ve sonraki 16 haftalık sürede, hekimin vereceği istirahata bağlı olarak" öder; 01.05.2026'da devam eden raporlar başvurusuz 8 hafta uzatıldı. (alomaliye.com Genelge 2026/13 metni; Nazalı duyurusu; SGK "Analık Hali" sayfası.)
+- **"Rapor almadan istirahat → ödenmez":** SGK "Analık Halinde Geçici İş Göremezlik Ödeneği Ödenmesi" — "Gebelik istirahatinin başladığına dair rapor almaksızın istirahate ayrılan sigortalıya doğumun gerçekleştiği tarihe kadar olan süreye ait geçici iş göremezlik ödeneği ödenmeyecektir"; hekimden izin olmadan çalışılan dönem de ödenmez; doğum tahmini tarihten farklıysa sistem süreleri yeniden hesaplar. (Sayfa 2022 tarihli — 112 gün ifadesi eski; kural cümlesi için kullanıldı.)
+- **Emzirme / prim şartları:** SGK "Analık Hali" — emzirme ödeneği için doğumdan önceki 1 yılda ≥ 120 gün, analık GİÖ için ≥ 90 gün kısa vadeli prim. Tutar gösterilmez (yıllık belirlenir).
+- **DÖBYR izlem asgarisi:** en az 4 izlem, ilki 14. haftaya kadar — repo `izlem-calendar.SB_IZLEM_WINDOWS` (≤14, 18–24, 28–32, 36–38; DÖBYR 2026 HSGM Yayın No. 1402) + SB e-kütüphane DÖBYR özeti ile teyit.
+- **Aspirin:** SMFM 2021 güncel kontrol listesi (PMC13344198; ACOG/SMFM Practice Advisory ile teyitli) — 6 yüksek + 8 orta risk (ırk faktörü TR bağlamında listelenmedi; "düşük gelir / sosyal dezavantaj" tek başına "düşünülebilir"), ≥ 1 yüksek veya > 1 orta → önerilir, 12–28 hf, ideal 16 hf öncesi. ACOG CO 743 sayfası 402 döndü (paywall); numarası yazılmadı.
+- Diğer tüm pencere / numara (SUT P.901.120 / P.904.090, ACOG PB 190 / 205 / CO 797 / CC 8) repo'da zaten doğrulanmış kaynaklardan (`test-windows`, `acog-map`, `dogrulanmis-kaynaklar`).
+
+### Öneri — hekim kilitler (preset; kaynakla doğrulanmış eşik değil)
+
+| Preset | Değer | Neden preset |
+|---|---|---|
+| "Kapanmak üzere" / "yaklaşıyor" eşiği | kapanışa ≤ 7 gün / açılışa ≤ 14 gün | Planlama UX eşiği, klinik aralık değil. |
+| GDM risk listesi (6 faktör) + "erken glukoz değerlendirmesi tartışılır" | — | Bu oturumda TR / ACOG metni açılamadı; 24–28 hf OGTT (DÖBYR) herkes için ayrıca gösteriliyor. |
+| Aspirin "yasal asgari" sütunu | "Doğrulanmış Türk rehberi eşiği bu araçta yok" | SB/TJOD aspirin eşiği bulunup doğrulanamadı; klinik sütun SMFM/ACOG. |
+| SSVD tartışma notları | klasik/T kesi veya rüptür → "genellikle aday değil"; < 18 ay aralık → tartışılmalı; ≥ 2 sezaryen → ayrıntılı danışmanlık | Klinik derinlik ACOG PB 205 (repo'da doğrulanmış numara); Türk rehberi yok; karar değil tartışma notu. |
+| Lohusa kabul pencereleri (kohort) | 1. hf: 2–7. gün kaydı; 6. hf: 30–49. gün kaydı; liste 90 gün | DSBYR pencereleri (2–5, 30–40) + kayıt gecikmesine tolerans. |
+| Robson grubu | WHO 10 grup, alanlardan türetilir | "hekim doğrular" etiketi; sezaryen notuna yalnız hekim kilitleyince girer. |
+
+### AÇIK
+
+| Tarih | Madde | Gerekçe + öneri | Durum |
+|---|---|---|---|
+| 2026-09-18 | **Analık — brief'teki 112/126 gün eski hukuk** | 7578 s.K. sonrası 168/182 gün uygulandı (yukarıda). Brief'i yazan tarafa bildirilmeli; pazarlama / eğitim metinlerinde 112 gün geçiyorsa güncellenmeli. | OPEN (Kaan — bilgi) |
+| 2026-09-18 | **Geç doğumda SGK ödemesi** | Araç doğum öncesi istirahati gerçek doğuma kadar uzatır, doğum sonrasını 16 hf tam bırakır (SGK "sistem yeniden hesaplar"). Tahmini tarihten sonraki günler için ek rapor gerekip gerekmediği Genelge 2026/13 tam metninde doğrulanmadı. | OPEN (SGK metni) |
+| 2026-09-18 | **Hekim onayıyla çalışma (2 hafta) — SGK ödeme mekaniği** | Genelge 5510 md. 18'den "doğuma 3 hafta kalıncaya kadar çalışma" ibaresinin çıkarıldığını söylüyor; İş K. 74 yeni hali "2 haftaya kadar". Araç İş K. 74'e göre çalışılan günü doğum sonrasına ekler — SGK tarafının aynı hesabı yaptığı teyit edilmeli. Varsayılan 0 gün, gelişmiş ayarda. | OPEN (SGK metni) |
+| 2026-09-18 | **657 s.K. memurlar** | Araç 4/a–4/b (5510 / 4857) kurallarını modeller; memur analık izni ayrı rejim. Arayüzde memur seçeneği yok. | OPEN (ürün kararı) |
+| 2026-09-18 | **Üçlü / dörtlü penceresi** | Brief "16–18 hf" diyor; motor `TEST_WINDOWS.triple_quad_afp` 16+0–20+0 (SUT P.904.090 ile birlikte repo kaynağı). Araç tek kaynak olarak motoru kullanır; "ideal 16–18" alt penceresi istenirse kaynağıyla `test-windows`'a eklenmeli. | OPEN (klinik teyit) |
+| 2026-09-18 | **GBS penceresi** | Brief "36–37 hf"; motor SB sütunu 35–37 (DÖBYR), ACOG CO 797 ~36–37 — araç ikisini çift sütunda gösterir, kohort 35+0'da açar. | OPEN (klinik teyit) |
+| 2026-09-18 | **Kohort hatırlatması sonrası dönüş görevi yok** | Göz kohortu `goz_gorevler`'e "hatırlatma_takip" açar; KD'de gebelik dışı (serviks) hastalar için `gebelik_id`'siz görev tablosu yok. Yeni tablo = migration; bu sprintte açılmadı. | OPEN (Kaan) |
+| 2026-09-18 | **MEC motoru sadeleştirilmiş ofis seti** | `kontrasepsiyon-mec` 2 kategorisini hiç döndürmez (kısıt yoksa 1 → araç "MEC 1–2" yazar); aurasız migren, diyabet, SLE vb. girdisi yok. Araç bunu dipnotta söyler; motor genişletmesi ayrı iş (brief motoru yeniden yazmayı yasaklıyordu). | OPEN (klinik kapsam) |
+| 2026-09-18 | **Paralel pediatri branch'i** | `doktorAraclari.ts` / test'e yalnız ekleme yapıldı (derm bloğunun altına 5 satır, dosya sonuna test bloğu; pediatri ve derm girişleri ve testleri aynen korundu, origin/main üzerine yeniden uygulandı). Mevcut tek satır değişti: `kd.length === ORTAK` → `ORTAK + KD_ROTALARI.length` (KD'nin sıfır aracı olduğunu iddia eden satır — sıkılaştırıldı, zayıflatılmadı). | Bilgi |

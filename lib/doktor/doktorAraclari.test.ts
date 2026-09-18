@@ -211,7 +211,7 @@ test('pediatri studio pages: guarded by PediAracKabugu, card-opened, never on th
 })
 
 // ─── Kadın Hastalıkları ve Doğum — specialty-only Araçlar ───────────────────────────────────────
-const KD_ROTALARI = ['/doktor-tools/kd-gebelik-takvim', '/doktor-tools/kd-dogum-rapor', '/doktor-tools/kd-mec', '/doktor-tools/kd-risk']
+const KD_ROTALARI = ['/doktor-tools/kd-gebelik-takvim', '/doktor-tools/kd-dogum-rapor', '/doktor-tools/kd-mec', '/doktor-tools/kd-risk', '/doktor-tools/kd-kohort']
 
 test('KD-only Araçlar: KD sees all five (legacy + free-text keys); every other branş in BRANS_ETIKETLERI never', () => {
   for (const ham of ['kadin-hastaliklari-dogum', 'kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'Jinekoloji ve Obstetrik']) {
@@ -251,5 +251,5 @@ test('KD studio pages: guarded, card-opened, never on the landing', () => {
     assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
     assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
   }
-  assert.doesNotMatch(landing, /GebelikTakvimAraci|DogumRaporAraci|MecAraci|RiskAraci/)
+  assert.doesNotMatch(landing, /GebelikTakvimAraci|DogumRaporAraci|MecAraci|RiskAraci|KdKohortPaneli/)
 })
