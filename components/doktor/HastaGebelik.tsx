@@ -416,7 +416,6 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             type="button"
             style={btn(etkinMod === id)}
             onClick={() => setMod(id)}
-            disabled={id === 'lohusa' && !veri?.lohusa && !veri?.gebelik?.yenidogan_patient_id && id !== etkinMod}
           >
             {et}
           </button>
@@ -430,10 +429,10 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
         </div>
       )}
 
-      {!veri?.gebelik && (
+      {!veri?.gebelik && etkinMod === 'klinik' && (
         <div style={kutu} data-kd="empty-start">
           <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 6 }}>Aktif gebelik kaydı yok</div>
-          <p style={{ fontSize: 13, color: '#8FA0B5' }}>Jinekoloji kaydı aşağıda. Gebelik başlatınca izlem yüzeyi açılır.</p>
+          <p style={{ fontSize: 13, color: '#8FA0B5' }}>Jinekoloji kaydı Jinekoloji sekmesinde. Gebelik başlatınca izlem yüzeyi açılır.</p>
           {!baslatAcik ? <button type="button" style={btn(true)} onClick={() => setBaslatAcik(true)}>+ Gebelik Takibi Başlat</button> : (
             <form onSubmit={(e) => { e.preventDefault(); baslat(); }} style={{ display: 'grid', gap: 10, marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
@@ -457,6 +456,23 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </div>
               <div style={{ display: 'flex', gap: 8 }}><button type="submit" style={btn(true)}>Kaydet</button><button type="button" style={btn()} onClick={() => setBaslatAcik(false)}>Vazgeç</button></div>
             </form>
+          )}
+        </div>
+      )}
+
+      {etkinMod === 'lohusa' && !veri?.lohusa && (
+        <div style={kutu} data-kd="lohusa-empty">
+          <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 6 }}>Lohusa izlemi henüz açılmadı</div>
+          <p style={{ fontSize: 13, color: '#8FA0B5', lineHeight: 1.55, margin: 0 }}>
+            Doğum Sonu Bakım (DSBYR) yüzeyi, doğum kaydı oluşunca otomatik açılır.
+            {veri?.gebelik
+              ? ' Aktif gebelik var — doğumu kaydettiğinizde (Doğum / taburcu) lohusa takvimi ve izlem formu burada görünür.'
+              : ' Önce Klinik (gebe) sekmesinden gebelik takibini başlatın; doğum sonrası bu sekme lohusa takvimini gösterir.'}
+          </p>
+          {veri?.gebelik && (
+            <button type="button" style={{ ...btn(true), marginTop: 12 }} onClick={() => setMod('klinik')}>
+              Klinik (gebe) sekmesine dön
+            </button>
           )}
         </div>
       )}

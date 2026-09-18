@@ -452,12 +452,8 @@ export default function IncelemePage() {
                           degerler={vitalTaslak}
                           onDegis={(k, v) => setVitalTaslak({ ...vitalTaslak, [k]: v })}
                           persentiller={note.buyumePersentilleri}
+                          eriskinVkiGoster={!note.bransKapsami.pediatrik}
                         />
-                        {note.buyumePersentilleri?.vki && (
-                          <div style={{ marginTop: 6, fontSize: 11, color: '#2DD4BF' }}>
-                            VKİ: {note.buyumePersentilleri.vki}{note.buyumePersentilleri.vkiSinif ? ` — ${note.buyumePersentilleri.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
-                          </div>
-                        )}
                       </div>
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
                         <div key={alan} style={{ marginBottom: 10 }}>

@@ -15,6 +15,7 @@ import { htmlBelgeYap, metinBelgeYap, type BelgeGirdisi } from '@/lib/entegrasyo
 import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
+import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki';
 import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 
 interface NotVeri {
@@ -28,6 +29,7 @@ interface NotVeri {
     vitaller?: { kilo?: number | null; boy?: number | null; ates?: number | null; nabiz?: number | null; spo2?: number | null; tansiyon?: string | null } | null;
     hastaOzeti?: string; takipSuresi?: string;
     buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null;
+    eriskinVki?: { deger: number; sinif: string; etiket: string; ozet: string } | null;
     bransKapsami?: BransKapsami;
   };
   hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string; patientId?: string | null };
@@ -129,6 +131,9 @@ export default function NotYazdir() {
   if (bp?.boy) persentilParcalar.push(`Boy ${bp.boy}`);
   if (bp?.basCevresi) persentilParcalar.push(`Baş çevresi ${bp.basCevresi}`);
   if (bp?.vki) persentilParcalar.push(`VKİ ${bp.vki}${bp.vkiSinif ? ` (${bp.vkiSinif})` : ''}`);
+  // Erişkin VKİ (WHO) — kilo+boy varsa otomatik; çocukta Neyzi öncelikli
+  const eriskin = not.eriskinVki || eriskinVkiVitalerden(v as Record<string, unknown> | null);
+  if (!bp?.vki && eriskin) vitalParcalar.push(`VKİ: ${eriskin.ozet}`);
 
   return (
     <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif' }}>

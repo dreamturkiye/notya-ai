@@ -6,6 +6,7 @@ import {
   ozelBolumBransi,
   pediatriAracSekmesiUygun,
   pediatriSekmesiUygun,
+  muayeneAltiSekmeler,
 } from './hastaDosyaSekmeleri'
 
 const NOW = Date.parse('2026-09-15T00:00:00Z')
@@ -29,12 +30,14 @@ describe('hastaDosyaSekmeleri', () => {
     assert.ok(goz.some((t) => t.id === 'goz'))
   })
 
-  it('keeps pediatric tabs for a child and KD for an adult woman', () => {
+  it('keeps pediatric tabs for a child; KD lives under Muayene Geçmişi (not top-level)', () => {
     assert.equal(pediatriSekmesiUygun('2022-01-10', NOW), true)
     assert.equal(gebelikSekmesiUygun({ cinsiyet: 'Kadın', dogumIso: '1995-06-01' }, NOW), true)
     assert.equal(gebelikSekmesiUygun({ cinsiyet: 'Erkek', dogumIso: '1995-06-01' }, NOW), false)
     const woman = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: true })
-    assert.ok(woman.some((t) => t.id === 'gebelik'))
+    assert.equal(woman.some((t) => t.id === 'gebelik'), false)
+    assert.ok(muayeneAltiSekmeler(true).some((t) => t.id === 'gebelik'))
+    assert.equal(muayeneAltiSekmeler(false).some((t) => t.id === 'gebelik'), false)
     assert.equal(woman.some((t) => t.id === 'mchat'), false)
     const child = hastaDosyaSekmeleri({ pediatriUygun: true, gebelikUygun: false })
     assert.ok(child.some((t) => t.id === 'mchat'))

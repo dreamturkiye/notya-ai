@@ -115,10 +115,19 @@ export function hastaDosyaSekmeleri(opts: {
   }
   if (opts.gozUygun) tabs.push({ id: 'goz', label: 'Göz' })
   tabs.push({ id: 'ayse', label: "Ayşe'ye Danış" })
-  if (opts.gebelikUygun) tabs.push({ id: 'gebelik', label: 'Kadın Sağlığı & Gebelik' })
+  // Kadın Sağlığı & Gebelik: top-level değil — Muayene Geçmişi altında (Boss 2026-09-18)
   if (opts.deriUygun) tabs.push({ id: 'deri', label: 'Deri & Lezyon' })
   if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' })
   return tabs
+}
+
+/** Sub-tabs under Muayene Geçmişi when the patient qualifies for KD / kadın sağlığı. */
+export type MuayeneAltiId = 'vizitler' | 'gebelik'
+
+export function muayeneAltiSekmeler(gebelikUygun: boolean): Array<{ id: MuayeneAltiId; label: string }> {
+  const alti: Array<{ id: MuayeneAltiId; label: string }> = [{ id: 'vizitler', label: 'Vizitler' }]
+  if (gebelikUygun) alti.push({ id: 'gebelik', label: 'Kadın Sağlığı & Gebelik' })
+  return alti
 }
 
 export function pediatriSekmeIdleri(): readonly HastaDosyaSekmeId[] {

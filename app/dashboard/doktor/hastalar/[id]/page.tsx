@@ -33,7 +33,9 @@ import {
   hastaDosyaSekmeleri,
   dahiliyeSekmesiBransi,
   pediatriAracSekmesiUygun,
+  muayeneAltiSekmeler,
   type HastaDosyaSekmeId,
+  type MuayeneAltiId,
 } from '@/lib/doktor/hastaDosyaSekmeleri';
 import { cocukHastaMi, pediatrikBaglamMi, veliDiliMi } from '@/lib/specialties/kapsam';
 import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
@@ -75,6 +77,7 @@ export default function HastaProfilPage() {
   // NOTYA-RANDEVU-09: randevu takviminden hedefli linkler ?tab=formu / ?tab=asilar ile atlar.
   const tabParam = searchParams?.get('tab');
   const [activeTab, setActiveTab] = useState<HastaDosyaSekmeId>('ozet');
+  const [muayeneAlti, setMuayeneAlti] = useState<MuayeneAltiId>('vizitler');
   const [patient, setPatient] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -93,10 +96,24 @@ export default function HastaProfilPage() {
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
   const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci });
 
-  /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet). */
+  /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
+   *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
   const secSekme = useCallback((id: HastaDosyaSekmeId) => {
+    if (id === 'gebelik') {
+      setActiveTab('muayene');
+      setMuayeneAlti('gebelik');
+      router.replace(hastaDosyaHref(patientId, 'gebelik'), { scroll: false });
+      return;
+    }
     setActiveTab(id);
+    if (id === 'muayene') setMuayeneAlti('vizitler');
     router.replace(hastaDosyaHref(patientId, id), { scroll: false });
+  }, [patientId, router]);
+
+  const secMuayeneAlti = useCallback((id: MuayeneAltiId) => {
+    setActiveTab('muayene');
+    setMuayeneAlti(id);
+    router.replace(hastaDosyaHref(patientId, id === 'gebelik' ? 'gebelik' : 'muayene'), { scroll: false });
   }, [patientId, router]);
 
   useEffect(() => {
@@ -104,12 +121,18 @@ export default function HastaProfilPage() {
       setActiveTab('ozet');
       return;
     }
-    // Accept any known sekme id from URL (even before specialty gates finish loading).
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
       'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'bebek', 'goz',
     ];
-    if (bilinen.includes(tabParam as HastaDosyaSekmeId)) setActiveTab(tabParam as HastaDosyaSekmeId);
+    if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
+    if (tabParam === 'gebelik') {
+      setActiveTab('muayene');
+      setMuayeneAlti('gebelik');
+      return;
+    }
+    setActiveTab(tabParam as HastaDosyaSekmeId);
+    if (tabParam === 'muayene') setMuayeneAlti('vizitler');
   }, [tabParam]);
 
   useEffect(() => {
@@ -205,9 +228,11 @@ export default function HastaProfilPage() {
 
   const vaultSpecialtyGeri: 'deri' | 'goz' | 'gebelik' | 'dahiliye' | null = searchParams?.get('dermModality')
     ? 'deri'
-    : activeTab === 'deri' || activeTab === 'goz' || activeTab === 'gebelik' || activeTab === 'dahiliye'
+    : activeTab === 'deri' || activeTab === 'goz' || activeTab === 'dahiliye'
       ? activeTab
-      : null;
+      : (activeTab === 'gebelik' || (activeTab === 'muayene' && muayeneAlti === 'gebelik'))
+        ? 'gebelik'
+        : null;
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: '#EDF1F7', fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -343,37 +368,69 @@ export default function HastaProfilPage() {
 
         {!loading && !error && activeTab === 'muayene' && (
           <div style={{ ...panel, padding: '10px 20px' }}>
-            {seansYukleniyor && <div style={{ padding: '14px 0', color: '#8FA0B5', fontSize: 14 }}>Vizitler yükleniyor…</div>}
-            {!seansYukleniyor && seanslar !== null && seanslar.length === 0 && (
-              <div style={{ padding: '18px 0', color: '#8FA0B5', fontSize: 14 }}>Henüz muayene kaydı yok — ilk muayeneyle birlikte burada görünecek.</div>
+            {gebelikUygun && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '8px 0 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 4 }}>
+                {muayeneAltiSekmeler(true).map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => secMuayeneAlti(s.id)}
+                    style={{
+                      flexShrink: 0,
+                      padding: '6px 14px',
+                      background: muayeneAlti === s.id ? 'rgba(15,155,142,0.25)' : 'transparent',
+                      border: muayeneAlti === s.id ? '1px solid #0F9B8E' : '1px solid rgba(255,255,255,0.12)',
+                      color: muayeneAlti === s.id ? '#2DD4BF' : '#9FB3C8',
+                      fontWeight: muayeneAlti === s.id ? 700 : 500,
+                      borderRadius: 999,
+                      fontSize: 12.5,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             )}
-            {!seansYukleniyor && (seanslar || []).map((s, idx) => {
-              const n = notCek(s);
-              const onaylandi = Boolean(n?.approved_at);
-              const ozet = String(n?.content_tani || n?.content_subjektif || 'Not bulunamadı').slice(0, 110);
-              return (
-                <div key={s.id} className="dosya-satir" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 6px', borderBottom: idx < (seanslar?.length || 0) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', borderRadius: 8 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: onaylandi ? '#22C55E' : '#F59E0B' }} title={onaylandi ? 'Onaylı not' : 'Onay bekliyor'} />
-                  <span role={n?.id ? 'button' : undefined} tabIndex={n?.id ? 0 : undefined}
-                    onClick={() => { if (n?.id) router.push(`/dashboard/doktor/notlar/${n.id}/yazdir`); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && n?.id) router.push(`/dashboard/doktor/notlar/${n.id}/yazdir`); }}
-                    title={n?.id ? 'Raporu aç — düzenlemek için Yeniden Düzenle' : undefined}
-                    style={{ minWidth: 0, flex: 1, cursor: n?.id ? 'pointer' : 'default' }}>
-                    <span style={{ display: 'block', fontSize: 12, color: '#5F7189' }}>{trTarih(s.created_at)}</span>
-                    <span style={{ display: 'block', fontSize: 13.5, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
-                  </span>
-                  {n?.id && (
-                    <button
-                      type="button"
-                      onClick={() => window.open(`/dashboard/doktor/notlar/${n.id}/yazdir`, '_blank')}
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#C9D4E3', borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}
-                    >
-                      🖨️ Yazdır / PDF
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {muayeneAlti === 'gebelik' && gebelikUygun ? (
+              <div style={{ padding: '8px 0 12px' }}>
+                <HastaGebelik patientId={patientId} />
+              </div>
+            ) : (
+              <>
+                {seansYukleniyor && <div style={{ padding: '14px 0', color: '#8FA0B5', fontSize: 14 }}>Vizitler yükleniyor…</div>}
+                {!seansYukleniyor && seanslar !== null && seanslar.length === 0 && (
+                  <div style={{ padding: '18px 0', color: '#8FA0B5', fontSize: 14 }}>Henüz muayene kaydı yok — ilk muayeneyle birlikte burada görünecek.</div>
+                )}
+                {!seansYukleniyor && (seanslar || []).map((s, idx) => {
+                  const n = notCek(s);
+                  const onaylandi = Boolean(n?.approved_at);
+                  const ozet = String(n?.content_tani || n?.content_subjektif || 'Not bulunamadı').slice(0, 110);
+                  return (
+                    <div key={s.id} className="dosya-satir" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 6px', borderBottom: idx < (seanslar?.length || 0) - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', borderRadius: 8 }}>
+                      <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: onaylandi ? '#22C55E' : '#F59E0B' }} title={onaylandi ? 'Onaylı not' : 'Onay bekliyor'} />
+                      <span role={n?.id ? 'button' : undefined} tabIndex={n?.id ? 0 : undefined}
+                        onClick={() => { if (n?.id) router.push(`/dashboard/doktor/notlar/${n.id}/yazdir`); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && n?.id) router.push(`/dashboard/doktor/notlar/${n.id}/yazdir`); }}
+                        title={n?.id ? 'Raporu aç — düzenlemek için Yeniden Düzenle' : undefined}
+                        style={{ minWidth: 0, flex: 1, cursor: n?.id ? 'pointer' : 'default' }}>
+                        <span style={{ display: 'block', fontSize: 12, color: '#5F7189' }}>{trTarih(s.created_at)}</span>
+                        <span style={{ display: 'block', fontSize: 13.5, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
+                      </span>
+                      {n?.id && (
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/dashboard/doktor/notlar/${n.id}/yazdir`, '_blank')}
+                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#C9D4E3', borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          🖨️ Yazdır / PDF
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </div>
         )}
 
@@ -403,7 +460,6 @@ export default function HastaProfilPage() {
         {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'bebek' && <HastaBebekKarti patientId={patientId} />}
         {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
-        {!loading && !error && activeTab === 'gebelik' && gebelikUygun && <HastaGebelik patientId={patientId} />}
         {/* BRANS-ALAN-SIZMASI: ?tab=dahiliye / ?tab=deri derin bağlantısı bölüm içeriğini branş kapısı olmadan açıyordu */}
         {!loading && !error && activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome patientId={patientId} />}
         {!loading && !error && activeTab === 'goz' && gozAraci && <GozHome patientId={patientId} />}

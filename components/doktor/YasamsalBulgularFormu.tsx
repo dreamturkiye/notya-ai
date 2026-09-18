@@ -9,11 +9,12 @@
  */
 import React from 'react';
 import type { NotOlcumu } from '@/lib/specialties/kapsam';
+import { eriskinVkiHesapla } from '@/lib/clinical/eriskinVki';
 
 export interface BuyumePersentilleri { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string }
 
 export default function YasamsalBulgularFormu({
-  olcumler, degerler, onDegis, persentiller, girdiStili, persentilRengi = '#2DD4BF',
+  olcumler, degerler, onDegis, persentiller, girdiStili, persentilRengi = '#2DD4BF', eriskinVkiGoster = true,
 }: {
   olcumler: NotOlcumu[];
   degerler: Record<string, string>;
@@ -22,23 +23,41 @@ export default function YasamsalBulgularFormu({
   persentiller?: BuyumePersentilleri | null;
   girdiStili?: React.CSSProperties;
   persentilRengi?: string;
+  /** Erişkin WHO VKİ — pediatrik Neyzi VKİ varken gizlenir */
+  eriskinVkiGoster?: boolean;
 }) {
+  const eriskin = eriskinVkiGoster && !persentiller?.vki
+    ? eriskinVkiHesapla(degerler.kilo, degerler.boy)
+    : null;
+
   return (
-    <div data-testid="yasamsal-bulgular" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-      {olcumler.map(({ anahtar, etiket, birim }) => {
-        const persentil = anahtar === 'kilo' || anahtar === 'boy' || anahtar === 'basCevresi' ? persentiller?.[anahtar] : undefined;
-        return (
-          <label key={anahtar} data-olcum={anahtar} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>
-            {etiket}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <input value={degerler[anahtar] ?? ''} onChange={(e) => onDegis(anahtar, e.target.value)} placeholder="—"
-                style={girdiStili ?? { width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
-              <span style={{ color: '#64748B' }}>{birim}</span>
-            </span>
-            {persentil && <span style={{ fontSize: 10, color: persentilRengi }}>{persentil}</span>}
-          </label>
-        );
-      })}
+    <div data-testid="yasamsal-bulgular">
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {olcumler.map(({ anahtar, etiket, birim }) => {
+          const persentil = anahtar === 'kilo' || anahtar === 'boy' || anahtar === 'basCevresi' ? persentiller?.[anahtar] : undefined;
+          return (
+            <label key={anahtar} data-olcum={anahtar} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>
+              {etiket}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <input value={degerler[anahtar] ?? ''} onChange={(e) => onDegis(anahtar, e.target.value)} placeholder="—"
+                  style={girdiStili ?? { width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
+                <span style={{ color: '#64748B' }}>{birim}</span>
+              </span>
+              {persentil && <span style={{ fontSize: 10, color: persentilRengi }}>{persentil}</span>}
+            </label>
+          );
+        })}
+      </div>
+      {persentiller?.vki && (
+        <div style={{ marginTop: 6, fontSize: 11, color: persentilRengi }}>
+          VKİ: {persentiller.vki}{persentiller.vkiSinif ? ` — ${persentiller.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
+        </div>
+      )}
+      {eriskin && (
+        <div style={{ marginTop: 6, fontSize: 11, color: persentilRengi }} data-testid="eriskin-vki">
+          VKİ: {eriskin.ozet} <span style={{ color: '#64748B' }}>(WHO)</span>
+        </div>
+      )}
     </div>
   );
 }

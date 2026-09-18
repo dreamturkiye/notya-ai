@@ -10,6 +10,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { persentilHesapla, vkiSiniflandir, vkiSinifEtiket, ayFarki, persentilMetni, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 
 export const dynamic = 'force-dynamic'
@@ -151,6 +152,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       vitaller: not.vitaller || null,
       // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda
       buyumePersentilleri: kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null,
+      // Erişkin VKİ (WHO) — muayene raporunda otomatik; çocukta Neyzi kullanılır
+      eriskinVki: kapsam.pediatrik ? null : eriskinVkiVitalerden(not.vitaller && typeof not.vitaller === 'object' ? not.vitaller as Record<string, unknown> : null),
       bransKapsami,
       hastaOzeti: not.hasta_ozeti || '',
       aiDegerlendirme: not.ai_degerlendirme || '',

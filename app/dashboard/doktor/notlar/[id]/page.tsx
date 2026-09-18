@@ -272,12 +272,8 @@ export default function NotSayfasi() {
             persentiller={veri.not.buyumePersentilleri}
             girdiStili={{ ...kutu, width: 76, padding: '6px 8px' }}
             persentilRengi="#0F9B8E"
+            eriskinVkiGoster={!kapsam.pediatrik}
           />
-          {veri.not.buyumePersentilleri?.vki && kapsam.pediatrik && (
-            <div style={{ marginTop: 6, fontSize: 11, color: '#0F9B8E' }}>
-              VKİ: {veri.not.buyumePersentilleri.vki}{veri.not.buyumePersentilleri.vkiSinif ? ` — ${veri.not.buyumePersentilleri.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
-            </div>
-          )}
         </div>
         {BOLUM.map(([k, ad]) => (
           <div key={k}>

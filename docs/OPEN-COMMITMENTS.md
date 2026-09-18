@@ -24,7 +24,19 @@ Practical check for each PR that touches UI, before calling it finished:
   check is needed — but any new button, form, panel, badge, or page does need one.
 - Record what was checked (and any gap found) in the PR description / ledger, same as other work.
 
-## Open — self-serve şifre sıfırlama (2026-09-14)
+## Open — KD form alanlarına sesli giriş (2026-09-18)
+
+Boss (KD canlı): Kadın Sağlığı & Gebelik formları (SAT, Gravida/Para, lohusa izlem…) klavye
+ile dolduruluyor; muayene sırasında sesle girmek istiyor.
+
+**Mevcut:** SOAP / Ayşe sesli seansı ve yazılı “Ayşe'ye Danış” not gövdesini üretir.
+Yapılandırılmış KD alanlarına (tarih / sayı / seçenek) henüz dikte bağlanmadı.
+
+**Plan (Kaan onayı sonrası):** (a) odaklı alana Web Speech / cihaz diktesi; (b) Ayşe'ye
+“SAT 12 Mart, Gravida 2 Para 1” demek → alanlara yazma (not-konsult tarzı structured fill).
+SOAP sesli akışı bozulmaz. Bekliyor: Kaan öncelik (a vs b).
+
+---
 
 Login sayfasına "Şifremi unuttum" linki eklendi (PR pending) ama gerçek self-servis akış DEĞİL —
 tıklayınca "Notya ekibiyle iletişime geçin" diyor. Gerçek e-postalı sıfırlama şu an mümkün değil,
