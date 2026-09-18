@@ -219,8 +219,9 @@ test('Araçlar landing is a card grid only — Hedef Boy opens as its own page',
   assert.doesNotMatch(catalog, /Gökhan|Gokhan/)
 })
 
-// PEDI-ARACLAR-01 — pediatri-only Araçlar (same shape as the göz block above).
-const PEDI_ROTALAR = ['/doktor-tools/pedi-buyume', '/doktor-tools/pedi-doz']
+// PEDI-ARACLAR-01 / -02 — pediatri-only Araçlar (same shape as the göz block above). Pediatri sees all five studios.
+const PEDI_YENI_ROTALAR = ['/doktor-tools/pedi-asi', '/doktor-tools/pedi-gelisim', '/doktor-tools/pedi-kohort']
+const PEDI_ROTALAR = ['/doktor-tools/pedi-buyume', '/doktor-tools/pedi-doz', ...PEDI_YENI_ROTALAR]
 
 test('pediatri-only Araçlar: pediatri sees all; dahiliye / kardiyoloji / göz / KD / derm and every other branş never', () => {
   for (const b of ['pediatri', 'Çocuk Sağlığı ve Hastalıkları']) {
@@ -264,6 +265,36 @@ test('pediatri studio pages: guarded by PediAracKabugu, card-opened, never on th
     assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
   }
   assert.doesNotMatch(landing, /PediAracKabugu|BuyumeStudyosu|DozAraci|AsiPlanlayici|GelisimPaneli|PediKohortPaneli/)
+})
+
+test('PEDI-ARACLAR-02: aşı / gelişim / kohort — pediatri tek anahtar; 30/30 döngüde her yabancı branş görmez ve derin linki reddedilir', () => {
+  assert.equal(PEDI_ROTALAR.length, 5)
+  const ped = doktorAraclariListesi('pediatri')
+  for (const r of PEDI_ROTALAR) assert.ok(ped.some((a) => a.route === r), `pediatri beşini de görmeli: ${r}`)
+  for (const r of PEDI_YENI_ROTALAR) {
+    const arac = TUM_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, r)
+    assert.deepEqual(arac.branslar, ['pediatri'], `${r} yalnız pediatri anahtarını taşımalı`)
+    // ticari metin: sprint id / kişi adı / audit bağlantısı yok
+    assert.doesNotMatch(`${arac.title} ${arac.desc}`, /PEDI-|ARACLAR|sprint|audit|Gökhan|Gokhan|Kaan|\.html/i, r)
+  }
+  const anahtarlar = Object.keys(BRANS_ETIKETLERI)
+  assert.ok(anahtarlar.includes('pediatri'))
+  for (const b of anahtarlar) {
+    if (b === 'pediatri') continue
+    const liste = doktorAraclariListesi(b)
+    for (const r of PEDI_YENI_ROTALAR) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} ${r} görmemeli`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} ${r} derin linki reddedilmeli`)
+    }
+  }
+  // Adıyla: dahiliye, kardiyoloji, göz, KD (kanonik + eski + serbest metin), dermatoloji, branşsız.
+  for (const b of ['dahiliye', 'İç Hastalıkları', 'kardiyoloji', 'goz-hastaliklari', 'kadin-hastaliklari-dogum', 'kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'dermatoloji', 'aile-hekimligi', null, '']) {
+    for (const r of PEDI_YENI_ROTALAR) {
+      assert.ok(!doktorAraclariListesi(b).some((a) => a.route === r), `${b} ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} ${r}`)
+    }
+  }
 })
 
 // ─── Kadın Hastalıkları ve Doğum — specialty-only Araçlar ───────────────────────────────────────

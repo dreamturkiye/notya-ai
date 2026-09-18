@@ -183,6 +183,8 @@ function hekimKur(harf: Harf): Hekim {
   const belgeAnaliz = db.ekle('belge_analizleri', { belge_id: belge, doctor_id: id, patient_id: hasta, brans: 'goz', modality_final: 'fundus', durum: 'taslak', de_id_hash: 'sentetik', engine_set: 'tierA-v1', motor_ciktilari: [], fusion: { capPct: 85 }, sonuc: { modalite: 'Fundus', kalite: 'iyi', ozet: `Ozet ${m}`, bulgular: [], tanilar: [], acil_bayrak: false, oneri: '', sinirlar: [], hekim_tanisi: [], engines_used: [] } }).id
   const dermAnaliz = db.ekle('belge_analizleri', { belge_id: belge, doctor_id: id, patient_id: hasta, brans: 'dermatoloji', modality_final: 'dermatoskopi', durum: 'taslak', de_id_hash: 'sentetik', engine_set: 'tierA-v1', motor_ciktilari: [], fusion: { capPct: 85 }, sonuc: { modalite: 'Dermatoskopi', kalite: 'iyi', ozet: `Derm ozet ${m}`, bulgular: [], tanilar: [], acil_bayrak: false, oneri: '', sinirlar: [], hekim_tanisi: [], engines_used: [] } }).id
   db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01' })
+  // Pediatri kohort (Araçlar): bir ulusal takvim kaydı → 7 yaşındaki sentetik hastada gecikmiş doz bayrağı (yalnız bu hekimde)
+  db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: 'KKK (Kızamık-Kızamıkçık-Kabakulak)', doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2020-03-05', kaynak: 'kayit' })
   db.dosyaKoy('ses-kayitlari', `${id}/qa-kayit.m4a`, new Blob(['sentetik ses']))
   return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, hileliSeans: '', hileliNot: '' }
 }
@@ -408,6 +410,17 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.gozKohort.POST(iste('POST', '/api/doktor/goz/kohort', { token: a.token, govde: { patientIds: [h.hasta] } }))) },
   { ad: 'GET /api/doktor/pediatri (Araçlar › Pediatri hasta özeti)', red: 404,
     cagir: (r, a, h) => coz(r.pedi.GET(iste('GET', `/api/doktor/pediatri?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/pediatri/tarama (Araçlar › Gelişim paneli kayıtları)', red: 404,
+    cagir: (r, a, h) => coz(r.pediTarama.GET(iste('GET', `/api/doktor/pediatri/tarama?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/pediatri/tarama (tarama işareti + bugünkü muayene formuna ekle)', red: 404,
+    yazdi: (a) => tablo('pedi_taramalar').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.tur === 'gorme')
+      && String(tablo('notes').find((n) => n.id === a.bekleyenNot)?.content_degerlendirme || '').includes('Görme taraması'),
+    cagir: (r, a, h) => coz(r.pediTarama.POST(iste('POST', '/api/doktor/pediatri/tarama', { token: a.token, govde: { patientId: h.hasta, tur: 'gorme', sonuc: 'normal', muayeneFormunaEkle: true } }))) },
+  { ad: 'GET /api/doktor/pediatri/kohort (pediatri kohort listesi)', okur: true,
+    cagir: (r, a) => coz(r.pediKohort.GET(iste('GET', '/api/doktor/pediatri/kohort', { token: a.token }))) },
+  { ad: 'POST /api/doktor/pediatri/kohort (1-tap veli hatırlatması)',
+    yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.konu === 'Çocuğunuzun kontrol hatırlatması'),
+    cagir: (r, a, h) => coz(r.pediKohort.POST(iste('POST', '/api/doktor/pediatri/kohort', { token: a.token, govde: { patientIds: [h.hasta] } }))) },
   { ad: 'GET /api/doktor/gebelik/kohort (KD kohort listesi)', okur: true,
     cagir: (r, a) => coz(r.kdKohort.GET(iste('GET', '/api/doktor/gebelik/kohort', { token: a.token }))) },
   { ad: 'POST /api/doktor/gebelik/kohort (KD 1-tap hatırlatma)',
@@ -493,6 +506,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       gozKohort: await ice('app/api/doktor/goz/kohort/route'),
       kdKohort: await ice('app/api/doktor/gebelik/kohort/route'),
       pedi: await ice('app/api/doktor/pediatri/route'),
+      pediTarama: await ice('app/api/doktor/pediatri/tarama/route'),
+      pediKohort: await ice('app/api/doktor/pediatri/kohort/route'),
       jine: await ice('app/api/doktor/jinekoloji/route'),
       goruntuleme: await ice('app/api/doktor/goruntuleme/route'),
       goruntulemeYukle: await ice('app/api/doktor/goruntuleme/yukle/route'),

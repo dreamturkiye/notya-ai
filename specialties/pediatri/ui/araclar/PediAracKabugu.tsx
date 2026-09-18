@@ -122,7 +122,11 @@ export function PediHastaSecici({ secili, sec }: { secili: string; sec: (id: str
   );
 }
 
-export interface PediHastaOzet { dogumIso: string | null; cinsiyet: 'male' | 'female' | null; yasAy: number | null }
+export interface PediHastaOzet {
+  dogumIso: string | null; cinsiyet: 'male' | 'female' | null; yasAy: number | null
+  /** PEDI-ARACLAR-02: KD taburcu paketinden bebek kartı (varsa) — gebelik haftası ve doğum ağırlığı. */
+  dogumBilgisi?: { gebelikHaftasi: number | null; kiloGram: number | null } | null
+}
 
 /** Seçili hastanın doğum tarihi / cinsiyeti (/api/doktor/pediatri — sahiplik sunucuda doğrulanır). */
 export function usePediHasta(patientId: string): { ozet: PediHastaOzet | null; hata: string; yukleniyor: boolean } {
@@ -146,6 +150,36 @@ export function usePediHasta(patientId: string): { ozet: PediHastaOzet | null; h
     return () => { iptal = true; };
   }, [patientId]);
   return { ozet, hata, yukleniyor };
+}
+
+/** PEDI-ARACLAR-02: kohort satırından derin bağlantı — /doktor-tools/pedi-asi?hasta=<id>. Sahiplik yine sunucuda. */
+export function useUrlHasta(set: (id: string) => void) {
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('hasta')
+    if (id && /^[0-9a-f-]{8,64}$/i.test(id)) set(id)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+/** Küçük durum rozeti (renk tonu: iyi / uyarı / kırmızı / nötr). */
+export function Rozet({ ton = 'notr', children }: { ton?: 'iyi' | 'uyari' | 'kirmizi' | 'notr' | 'bilgi'; children: React.ReactNode }) {
+  const r = { iyi: ['rgba(45,212,191,0.12)', 'rgba(45,212,191,0.4)', '#5EEAD4'], uyari: ['rgba(251,191,36,0.1)', 'rgba(251,191,36,0.4)', '#FDE68A'], kirmizi: ['rgba(248,113,113,0.1)', 'rgba(248,113,113,0.45)', '#FCA5A5'], notr: ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.14)', '#C9D4E3'], bilgi: ['rgba(96,165,250,0.1)', 'rgba(96,165,250,0.4)', '#BFDBFE'] }[ton];
+  return <span style={{ background: r[0], border: `1px solid ${r[1]}`, color: r[2], borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-block' }}>{children}</span>;
+}
+
+/** Doğrulanamayan her ön ayarın yanındaki etiket (klinik kaynak disiplini). */
+export function OneriRozet() {
+  return <Rozet ton="uyari">öneri — hekim kilitler</Rozet>;
+}
+
+/** Büyük sayı kartı — sonuç ekranının üst şeridi. */
+export function Istatistik({ deger, etiket, ton = 'notr' }: { deger: React.ReactNode; etiket: string; ton?: 'iyi' | 'uyari' | 'kirmizi' | 'notr' }) {
+  const renk = { iyi: '#5EEAD4', uyari: '#FDE68A', kirmizi: '#FCA5A5', notr: '#EDF1F7' }[ton];
+  return (
+    <div style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 14px', flex: '1 1 120px', minWidth: 0 }}>
+      <div style={{ fontSize: 24, fontWeight: 800, color: renk, letterSpacing: '-0.5px', lineHeight: 1.15, overflowWrap: 'anywhere' }}>{deger}</div>
+      <div style={{ ...pediStil.kucuk, marginTop: 2 }}>{etiket}</div>
+    </div>
+  );
 }
 
 export default function PediAracKabugu({ route, baslik, aciklama, children }: { route: string; baslik: string; aciklama: string; children: React.ReactNode }) {

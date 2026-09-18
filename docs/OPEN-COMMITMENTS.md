@@ -1734,3 +1734,63 @@ yönlendirme, tr-TR hasta arama, 44 px). Landing yalnız kart; stüdyo gömülme
 | 2026-09-18 | **Kohort hatırlatması sonrası dönüş görevi yok** | Göz kohortu `goz_gorevler`'e "hatırlatma_takip" açar; KD'de gebelik dışı (serviks) hastalar için `gebelik_id`'siz görev tablosu yok. Yeni tablo = migration; bu sprintte açılmadı. | OPEN (Kaan) |
 | 2026-09-18 | **MEC motoru sadeleştirilmiş ofis seti** | `kontrasepsiyon-mec` 2 kategorisini hiç döndürmez (kısıt yoksa 1 → araç "MEC 1–2" yazar); aurasız migren, diyabet, SLE vb. girdisi yok. Araç bunu dipnotta söyler; motor genişletmesi ayrı iş (brief motoru yeniden yazmayı yasaklıyordu). | OPEN (klinik kapsam) |
 | 2026-09-18 | **Paralel pediatri branch'i** | `doktorAraclari.ts` / test'e yalnız ekleme yapıldı (derm bloğunun altına 5 satır, dosya sonuna test bloğu; pediatri ve derm girişleri ve testleri aynen korundu, origin/main üzerine yeniden uygulandı). Mevcut tek satır değişti: `kd.length === ORTAK` → `ORTAK + KD_ROTALARI.length` (KD'nin sıfır aracı olduğunu iddia eden satır — sıkılaştırıldı, zayıflatılmadı). | Bilgi |
+
+## PEDI-ARACLAR-02 — pediatri Araçlar'ın kalan üç aracı: aşı & telafi, gelişim/tarama paneli, kohort (Kaan, 2026-09-18)
+
+**Sınıf (specialty-doktor-araclari):** üçü de **branşa özgü** → `BRANS_DOKTOR_ARACLARI`, `branslar: ['pediatri']` (tek anahtar).
+**Görmemesi gerekenler:** dahiliye, kardiyoloji, göz, KD (kanonik + eski + serbest metin), dermatoloji, aile hekimliği, branşsız ve
+`BRANS_ETIKETLERI`'ndeki diğer tüm anahtarlar — `lib/doktor/doktorAraclari.test.ts` 30/30 döngüyle liste + derin bağlantı
+(`doktorAraciBransaUygun`) kilitli; pediatri beş stüdyonun beşini de görür. Kabuk: mevcut `PediAracKabugu` (yalnız ekleme:
+`useUrlHasta`, `Rozet`, `OneriRozet`, `Istatistik`, `PediHastaOzet.dogumBilgisi`). Sunucu kapısı `pediOturum` (users.specialty → pediatri).
+
+### Ne SHIPPED
+
+| Araç | Rota | Bağlanan motor (kopya yok) |
+|---|---|---|
+| Aşı takvimi & telafi planlayıcı | `/doktor-tools/pedi-asi` | `engines/asiPlan.ts` → doz listesi `lib/asi/ulusalAsiTakvimi.ts`'ten (6'lı dönem) ve `lib/clinical/yenidogan` `ASI_V1`'den (önceki 5'li + Hep B 0-1-6) türetilir. Doğum tarihi **ya da "14 aylık"** yeter; yapıldı / bugün yapılabilir / zamanı geldi / gecikti / planlı; telafi: seri **baştan başlamaz**, kalan dozlar min. yaş + min. aralık + 1. dozdan aralıkla zincir halinde bugünden ileri; GBP: min. aralıktan önce yapılan doz **geçersiz → yalnız o doz tekrarlanır** (hekim kapatabilir); canlı enjeksiyon aşıları aynı gün / ≥ 4 hf, BCG KKK'dan 4 hf sonra; ≥ 72 ay DaBT-İPA-Hib yok (Td şeması); aşısız ≥ 6 yaş BCG yok, > 3 ay BCG PPD ile; hiç aşısız 12–71 ay / ≥ 72 ay için genelge tablosu kartı. Prematüre: takvim yaşı; < 2000 g Hep B (TND 2026), < 34 hf BCG, ≤ 32 hf / ≤ 1500 g ROP notu. Hasta seçilince `/api/doktor/asilar` okunur; hekim dozu işaretler (burada / beyan, tarih düzeltilebilir), "aşı kartından hızlı giriş" (seçilen döneme kadar beyan), tek dokunuşla `POST /api/doktor/asilar` (isteğe bağlı sonraki doz tarihi → mevcut aşı hatırlatma cron'u). Özel/ücretli aşılar (`OZEL_ASILAR`) ayrı grup. Min. yaş/aralık ön ayarları hekim-düzenlenebilir (tarayıcıda). |
+| Gelişim & tarama paneli ("bu vizitte hangi tarama?") | `/doktor-tools/pedi-gelisim` + `GET/POST /api/doktor/pediatri/tarama` | `engines/gelisimPlan.ts` → SB İzlem Protokolü vizit takvimi; işitme (ABR, ≤ 30. gün), işitme risk faktörü, kırmızı refle (0–10 yaş), görme (36–48 ay Lea, 6 yaş), ROP, **GİDR** (`lib/clinical/gelisimTaramasi` — 6–9 ay / 18. ay / 24–36 ay, prematürede düzeltilmiş yaş), **otizm** (SB: 18 ay, 24 ay, 3 yaş — araç **M-CHAT-R/F**, `HastaMchat` bileşeni olduğu gibi takılır; 30 ay üstünde klinik değerlendirme), D vitamini, demir, 9. ay Hb. GİDR için `HastaGelisimTaramasi` olduğu gibi takılır. Diğer taramalar işaretlenir; "Bugünkü Muayene Formuna Ekle" **aynı yol** `lib/doktor/gununNotunaEkle` (+ `MuayeneFormunaDon`). Nota yalnız hekim basınca tek satır. |
+| Pediatri kohort paneli | `/doktor-tools/pedi-kohort` + `GET/POST /api/doktor/pediatri/kohort` | `engines/kohort.ts` → aşı (`asiPlani`, yalnız kaydı tutulan seriler), kaçan izlem (`vizitPlani` + seanslar + KD bebek görevleri), persentil kayması (`buyume.persentilKaymalari`, Neyzi, onaylı not vitalleri), D vit / demir (hasta_ilaclar + panel + bebek görevi; "süresi doldu"), işitme · görme · otizm gecikmesi. 1-tap veli hatırlatması (Sağlığım mesajı + e-posta bildirimi, 7 gün tekrar yok; tanı/ölçüm/ilaç yok, 112), mesaj önizleme, satırda dosyayı aç (ilgili sekme), **aşı planı / gelişim paneli derin bağlantısı (`?hasta=`)**, kişisel WhatsApp. |
+
+**Veritabanı:** `lib/db/migrations/055_pedi_taramalar.sql` — yalnız ekleme (yeni `pedi_taramalar`, RLS + doktor politikası + 052 ile aynı RESTRICTIVE hasta sahipliği). **Supabase'e uygulandı ve doğrulandı** (relrowsecurity = true, iki politika, schema_migrations 055). Tablo yoksa panel çalışmaya devam eder ve bunu söyler.
+
+**Hasta izolasyonu:** yeni rotalar envanterde `T` (tarama, kohort), `_kohort.ts` `I(...)`; `hasta-izolasyon.test.ts`'e 4 vaka (tarama GET/POST — POST nota ekleme yolunu da pozitifte sınar; kohort GET/POST; pozitif + A→B + B→A). Sahnede her sentetik hekimin hastasına bir KKK kaydı eklendi (kohort pozitif kontrolü). Her sorgu `doctor_id`/`doktor_id` kapsamlı; POST kimlikleri önce `pediHasta` / `pediKohortVerisi(doktorId)` süzgecinden geçer.
+
+**Doğrulama:** `npx tsc --noEmit` temiz · `npm test` yeşil (pediatri motor + SSR + katalog + izolasyon). Yerel geçici harness (commit edilmedi, sentetik veri) + headless tarayıcı ile **390 px ve 1280 px**'te üç araç tıklanarak denendi: yatay taşma yok (scrollWidth = 390), doz işaretleme → liste anında yeniden hesap, kaydet çubuğu, tarama işaretle → nota ekle, kohort filtre/önizleme. Bu turda bulunan ve düzeltilen: `position: sticky` kabuğun `overflow-x: hidden`'ı yüzünden çalışmıyordu → sabit alt çubuk; "18 aylık" 17 ay görünüyordu → yaş takvim ayıyla geri hesaplanıyor; 20 aylıkta GİDR başlığı yanlış pencereyi adlandırıyordu → kaçan pencere adıyla; > 6 ay işitme kaydı yokluğu "gecikti" değil "teyit et".
+Ayrıca main'deki kırmızı `tsc`: `lib/portal/takibim.test.ts` test girdisinde tipte olmayan `nav: []` kaldırıldı (assertion aynı).
+
+### Kaynaklar (bu oturumda açılanlar — resmi siteler doğrudan açılmadı, Wayback kopyaları okundu)
+
+- **Aşı takvimi:** SB asi.saglik.gov.tr "Aşı takvimindeki son güncellemeler" (6'lı karma 2/4/6 + 18. ay rapel; 1. ay Hep B kaldırıldı); HSGM 2020 aşı takvimi PDF + "Aşılama takviminde değişiklik" (KKK 2. doz ve DaBT-İPA **48. ay**, Td **13 yaş** — aile hekimliğinde). Bunlara göre `lib/asi/ulusalAsiTakvimi.ts` düzeltildi: "İlkokul 1. sınıf (78 ay)" → **48. ay**; "İlkokul 8. sınıf" → **13 yaş**; "Anne HBsAg(+) ise 1. ayda ek doz" notu **yanlıştı** (TND 2026: ≥ 2000 g'da ek doz yok, doğumda aşı + HBIG). Hasta dosyası Aşılar sekmesi aynı dosyayı okuduğu için orası da düzeldi.
+- **Telafi kuralları:** SB **GBP Genelgesi 2009/17** (dosyamerkez.saglik.gov.tr .doc): baştan başlamaz; kısa aralıklı doz geçersiz; DaBT-İPA-Hib 4 hf / 4 hf / 3. dozdan ≥ 6 ay; Hep B 4 hf, 8 hf, 1. dozdan ≥ 16 hf; KPA < 12 ay 4 hf, rapel ≥ 4 ay sonra ve ≥ 12 ay; kızamık içeren aşılar 4 hf; canlı enjeksiyon aşıları aynı gün / 4 hf; BCG kızamık aşısından 4 hf sonra; DaBT-İPA-Hib 72 aydan sonra yok; BCG > 3 ay PPD ile, aşısız > 6 yaş gerekmez; hiç aşısız 12–71 ay ve ≥ 72 ay tabloları.
+- **Prematüre:** **TND 2026** prematüre aşılama kitapçığı (neonatology.org.tr) — takvim yaşı, tam doz; < 2000 g Hep B şemaları; BCG < 34 hf kuralı.
+- **İzlem / tarama / profilaksi:** **SB Bebek, Çocuk, Ergen İzlem Protokolleri 2018** (genelge 2019/12; WHO politika arşivindeki PDF) — vizit takvimi ve gün pencereleri (≤ 24 ay), kırmızı refle, görme (yenidoğan, 36–48 ay, ilkokul 1), sevk eşikleri (< 0,5 · ≤ 0,7 · 2 sıra), ROP (≤ 32 hf / ≤ 1500 g, 4. hf), GİDR (en az 3: 6–9 ay, 18. ay, 24–36 ay; ≤ 37 hf düzeltilmiş yaş), otizm (18 ay, 24 ay, 3 yaş), D vitamini 400 IU ilk günden 12. ay sonuna, demir 4. ay kontrol → 10 mg/gün 12. aya / preterm-< 2500 g 2 mg/kg/gün 2. aydan 5 ay, 9. ay Hb/Htc. **HSGM Yenidoğan İşitme Taraması güncel test protokolü** — tarama ABR ≤ 72 sa, 7–15. gün, 15–30. gün; 30. günden sonra tarama yok.
+- İkincil (haber / dernek): 6'lı karma başlangıcı **14 Nisan 2025**; **suçiçeği 2. doz 48. ay, Eylül 2026** (49–72 ay telafi; resmi yazı no bulunamadı); **HPV** Bakan 2025 sonu dedi, program dışında (klimik, ekmud).
+
+### Öneri — hekim kilitler (resmi metinde sayı bulunamadı; ekranda rozetli)
+
+| Preset | Değer | Neden |
+|---|---|---|
+| Karma min. yaşlar | 1. doz 6 hf; rapel 12 ay; okul öncesi rapel 4 yaş; rapel → okul öncesi 182 g | Genelgede aralık var, min. yaş yok. |
+| KPA 1. doz min. yaş + yaşa göre doz azaltma | 6 hf; 12–23 ay 2 doz, 24–59 ay tek doz, ≥ 5 yaş gerekmeyebilir | Genelge KPA'dan önce; ACIP mantığı, "öneri" notu. |
+| OPA aralığı | 28 g | Genelgede OPA aralığı okunmadı. |
+| Hep A 2. doz aralığı | 180 g | Resmi metinde bulunamadı. |
+| Suçiçeği 2. doz aralığı + > 72 ay kapsamı | 90 g; 72 ay üstü "hekim kararı" | 2. doz ikincil kaynakla; aralık hiçbir kaynakta yok. |
+| 6'lı geçiş kuşağı | kayıttaki ürün, yoksa doğum ≥ 14.02.2025 → 6'lı | Başlangıç tarihi ikincil; geçiş kuşağında karışık seri olabilir — segmentle değişir. |
+| "Gecikti" eşiği / "yaklaşıyor" | önerilenden 30 gün sonra / 30 gün içinde | Ürün UX eşiği, klinik aralık değil. |
+| 30 / 36 / 48 / 60 ay ve 6–21 yaş izlem pencereleri | ay başından 60 g; yaş gününden 90 g | Protokol vizit var der, gün penceresi yazmaz. |
+| 6 yaş görme penceresi | 72–84 ay | Protokol "ilkokul 1. sınıf"; ay aralığı yok. |
+| Özel aşı "yaşı uygun" rozetleri | rota 6 hf–8 ay, MenACWY ≥ 9 ay, MenB ≥ 2 ay, grip ≥ 6 ay, HPV ≥ 9 yaş | Ürüne göre değişir; yalnız konuşma ipucu. |
+| Kohort gürültü kuralları | aşı: yalnız kaydı tutulan seri; izlem: daha önce muayene olmuş + son 180 g; işitme bayrağı 31–180. gün | Ürün kararı (ASM dozları / doğumhane taramaları kayıtta olmayabilir). |
+
+### AÇIK
+
+| Tarih | Madde | Gerekçe + öneri | Durum |
+|---|---|---|---|
+| 2026-09-18 | **Denver** | Brief "Denver" istedi; NOTYA-GELISIM-01 (Kaan 2026-09-14) "Denver II adı geçmeyecek" (telifli, madde/norm yok). Panelde GİDR + M-CHAT-R/F kullanıldı; GİDR'de gecikme işaretliyse "standart gelişim değerlendirmesine yönlendirme" satırı çıkar, test adı verilmez. İki talimat çelişiyor — Kaan karar verir. | OPEN (Kaan) |
+| 2026-09-18 | **SB 5 soruluk otizm formu** | Protokolün kendi formu (isme yanıt, göz teması, işaret takibi, tekrarlayıcı davranış, konuşma gecikmesi) — madde metni birebir okunmadığı için eklenmedi. 18/24 ayda M-CHAT-R/F, 3 yaşta "klinik değerlendirme → işaretle". | OPEN (metin doğrulama) |
+| 2026-09-18 | **`lib/clinical/yenidogan/constants.ts` ile çelişkiler (KD/yenidoğan alanı, bu sprintte dokunulmadı)** | `KAYNAK.dvit` / `TABURCU_ETIKET.dvit` "1. hafta → 2 yaş" — SB 2018: **ilk günden 12. ay sonuna**. `SB_BEBEK_IZLEM` pencereleri protokolden dar (15. gün 15–15 ↔ 11–29; 41. gün 41–41 ↔ 30–59; 2. ay 55–70 ↔ 60–89; 4. ay 110–130 ↔ 120–150 …). `ASI_V1` önceki takvim (HEPB2 30. gün) — bebek görevleri 6'lı dönem bebeklere eski dozu yazıyor olabilir. Pediatri aracı kendi doğrulanmış tablosunu kullanır; yenidoğan paketi KD sahibinin onayıyla hizalanmalı. | OPEN (KD + pediatri) |
+| 2026-09-18 | **GİDR kayıt ekranı takvim yaşı kullanır** | `HastaGelisimTaramasi` / `/api/doktor/gelisim-taramasi` basamağı takvim yaşından seçer; protokol ≤ 37 hf için düzeltilmiş yaş der. Panel düzeltilmiş yaşı gösterir ve uyarır; bileşen değiştirilmedi (hasta dosyası ortak bileşeni). | OPEN |
+| 2026-09-18 | **Bebek kartı `yenidogan_tarama.isitme` biçimi** | Kohort/panel `true` / `'gec'` → geçti, `'kaldi'` → ileri değerlendirme okur; başka biçim yazılıyorsa kayıt görünmez (bayrak çıkabilir). KD taburcu paketinin yazdığı gerçek değer canlı veride teyit edilmeli. | OPEN |
+| 2026-09-18 | **Kohort hatırlatması sonrası dönüş görevi yok** | KD kohortuyla aynı durum: pediatri için genel görev tablosu yok (bebek_gorevleri `kind` kısıtlı). | OPEN (Kaan) |
+| 2026-09-18 | **Sonraki doz tarihi → mevcut WhatsApp cron'u** | Aşı planlayıcı "sonraki doz tarihini de yaz" işaretliyse `asilar.sonraki_doz_tarihi` dolar; mevcut `/api/cron/asi-hatirlatma` 7 gün kala aileye WhatsApp atar (Aşılar sekmesindeki davranışın aynısı, kutu görünür ve kapatılabilir). | Bilgi |
+| 2026-09-18 | **Özel aşı dozu planlayıcıdan kaydedilmez** | Ürüne göre doz/şema değiştiği için özel aşılar yalnız bilgi + kayıt gösterir; ekleme hasta dosyası › Aşılar sekmesinden. | OPEN (ürün kararı) |

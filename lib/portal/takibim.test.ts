@@ -35,7 +35,7 @@ describe('DAH-EXCEPTIONAL-01 Takibim portal', () => {
   })
 
   it('foreign module token does not activate dahiliye', () => {
-    assert.equal(portalModulAktif({ portal: { moduller: ['gozlerim'], nav: [] } }, 'dahiliye'), false)
+    assert.equal(portalModulAktif({ portal: { moduller: ['gozlerim'] } }, 'dahiliye'), false)
   })
 
   it('gorevBasligi never leaks clinical jargon', () => {
