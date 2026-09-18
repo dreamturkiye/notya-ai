@@ -176,6 +176,8 @@ function hekimKur(harf: Harf): Hekim {
   const asistanEylem = db.ekle('asistan_actions', { doctor_id: id, action_type: 'ADD_NOTE_CONTENT', was_corrected: false }).id
   db.ekle('hasta_goruntulemeler', { doctor_id: id, patient_id: hasta, modalite: 'xray', rapor_metni: `Goruntu ${m}`, goruntuleme_tarihi: '2026-09-01', dosya_url: 'https://sahte.supabase.test/x' })
   db.ekle('kadin_sagligi', { doctor_id: id, patient_id: hasta, notlar: `KS ${m}` })
+  // KD kohort (Araçlar): synthetic lohusa episode — delivered 4 days ago, no lohusa izlem → 'lohusa_1hf' row for this doctor only
+  db.ekle('gebelikler', { doctor_id: id, patient_id: hasta, durum: 'tamamlandi', sat: new Date(Date.now() - 284 * 86400e3).toISOString().slice(0, 10), dogum_tarihi: new Date(Date.now() - 4 * 86400e3).toISOString().slice(0, 10), created_at: new Date(Date.now() - 200 * 86400e3).toISOString() })
   db.ekle('goz_kontroller', { doctor_id: id, patient_id: hasta, tarih: '2026-01-05', neden: `Goz kontrol ${m}`, dilatasyon: false, durum: 'planli' })
   const gozGoruntu = db.ekle('hasta_goruntulemeler', { doctor_id: id, patient_id: hasta, modalite: 'oct', vucut_bolgesi: 'sag', rapor_metni: `OCT ${m}`, goruntuleme_tarihi: '2026-09-01', dosya_url: 'https://sahte.supabase.test/oct' }).id
   const belgeAnaliz = db.ekle('belge_analizleri', { belge_id: belge, doctor_id: id, patient_id: hasta, brans: 'goz', modality_final: 'fundus', durum: 'taslak', de_id_hash: 'sentetik', engine_set: 'tierA-v1', motor_ciktilari: [], fusion: { capPct: 85 }, sonuc: { modalite: 'Fundus', kalite: 'iyi', ozet: `Ozet ${m}`, bulgular: [], tanilar: [], acil_bayrak: false, oneri: '', sinirlar: [], hekim_tanisi: [], engines_used: [] } }).id
@@ -406,6 +408,11 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.gozKohort.POST(iste('POST', '/api/doktor/goz/kohort', { token: a.token, govde: { patientIds: [h.hasta] } }))) },
   { ad: 'GET /api/doktor/pediatri (Araçlar › Pediatri hasta özeti)', red: 404,
     cagir: (r, a, h) => coz(r.pedi.GET(iste('GET', `/api/doktor/pediatri?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/gebelik/kohort (KD kohort listesi)', okur: true,
+    cagir: (r, a) => coz(r.kdKohort.GET(iste('GET', '/api/doktor/gebelik/kohort', { token: a.token }))) },
+  { ad: 'POST /api/doktor/gebelik/kohort (KD 1-tap hatırlatma)',
+    yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.konu === 'Kontrol hatırlatması'),
+    cagir: (r, a, h) => coz(r.kdKohort.POST(iste('POST', '/api/doktor/gebelik/kohort', { token: a.token, govde: { patientIds: [h.hasta] } }))) },
   { ad: 'GET /api/doktor/jinekoloji', red: 404,
     cagir: (r, a, h) => coz(r.jine.GET(iste('GET', `/api/doktor/jinekoloji?patientId=${h.hasta}`, { token: a.token }))) },
   // Görüntüleme / belgeler / cihaz
@@ -484,6 +491,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       dahiliye: await ice('app/api/doktor/dahiliye/route'),
       goz: await ice('app/api/doktor/goz/route'),
       gozKohort: await ice('app/api/doktor/goz/kohort/route'),
+      kdKohort: await ice('app/api/doktor/gebelik/kohort/route'),
       pedi: await ice('app/api/doktor/pediatri/route'),
       jine: await ice('app/api/doktor/jinekoloji/route'),
       goruntuleme: await ice('app/api/doktor/goruntuleme/route'),
