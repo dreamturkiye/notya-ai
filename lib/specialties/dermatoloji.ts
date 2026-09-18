@@ -86,8 +86,13 @@ export const DERMATOLOJI_PROFILE: SpecialtyProfile = {
       'Fototerapi seans tarihi (J/cm² yorumu yok)',
     ],
     views: ['DerimView'],
-    derinlik: 'Partial',
+    // DERM-EXCEPTIONAL-01: hekim tetiklemeli hatırlatma kancası eklendi
+    // (engines/derimHatirlatma.ts → /api/doktor/dermatoloji `action: 'hatirlatma'` → derm_gorevleri),
+    // DerimView'in hatırlatma / sonraki kontrol / foto / fototerapi slotları bunu okuyor.
+    derinlik: 'Strong',
   }],
 
-  olgunluk: 'arastirma',
+  // Bölüm derinliği klinik kullanıma hazır (skor bölge çalışma sayfaları, fototerapi v2, yama ICDRG,
+  // SUT taslağı, acil bandı, tedavi merdivenleri). Uzman doğrulaması bekliyor → beta-hazir.
+  olgunluk: 'beta-hazir',
 }

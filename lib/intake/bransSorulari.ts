@@ -164,9 +164,22 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'sikayetSuresiDerm', etiket: 'Bu şikayet ne zamandır var?', ...SIKAYET_SURESI_STANDART },
       { id: 'ciltTipi', etiket: 'Cilt Tipiniz', tur: 'radio', secenekler: ['Kuru', 'Yağlı', 'Karma', 'Normal', 'Hassas'] },
       { id: 'lezyonOzellikleri', etiket: 'Lezyon/şikayetinizin özellikleri', tur: 'checkbox-grup', secenekler: ['Kaşıntı', 'Ağrı', 'Kanama', 'Büyüme', 'Renk Değişimi', 'Pullanma', 'Su Toplama', 'Yok'] },
+      // DERM-EXCEPTIONAL-01 · madde 15 — acil kutucukları (göz `acilBelirtiler` deseni). Etiketler
+      // specialties/dermatoloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı;
+      // `intakeAcilKodlari()` eşleşmeyi etiket metniyle yapıyor (testle kilitli).
+      { id: 'acilBelirtilerDerm', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Yaygın döküntü ile birlikte ateş', 'Nefes darlığı / dilde veya boğazda şişlik', 'Ağızda ve gözde yara ile birlikte döküntü', 'Vücutta yaygın su toplaması (bül)', 'Vücudun tamamına yayılan kızarıklık', 'Hızla yayılan, çok ağrılı kızarıklık / şişlik', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
+      { id: 'yeniIlacDerm', etiket: 'Son 8 hafta içinde yeni bir ilaca başladınız mı?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'], yardim: 'Antibiyotik, ağrı kesici, epilepsi ilacı, gut ilacı, bitkisel takviye dahil.' },
+      { id: 'yeniIlacListesiDerm', etiket: 'Yeni başlanan ilaçlar ve başlama tarihleri', tur: 'textarea', placeholder: 'Örn. 12 Mart’ta antibiyotik, 20 Mart’ta ağrı kesici…', yardim: 'Yalnız “Evet” seçtiyseniz doldurun. Doz yazmanız gerekmez; kutuyu getirmeniz yeterli.' },
       { id: 'gunesMaruziyeti', etiket: 'Yoğun güneşe maruz kalma veya güneş yanığı öykünüz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'baslikDermGecmisi', etiket: 'Cilt Sağlığı Geçmişi', tur: 'bolum-basligi' },
       { id: 'bilinenDermHastaliklari', etiket: 'Bilinen cilt hastalıklarınız', tur: 'checkbox-grup', secenekler: ['Egzama', 'Sedef (Psoriazis)', 'Ürtiker', 'Akne', 'Vitiligo', 'Yok'] },
+      // Fototerapi / yama öyküsü: kümülatif doz ve tekrar kür kararı hekimin, ama önceki kürler poliklinikte sorulur.
+      { id: 'fototerapiOykusuDerm', etiket: 'Daha önce ışık tedavisi (fototerapi / PUVA) aldınız mı?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'] },
+      { id: 'fototerapiDetayDerm', etiket: 'Işık tedavisi aldıysanız: kaç yıl önce, kaç seans ve yanık oldu mu?', tur: 'textarea', placeholder: 'Örn. 2 yıl önce yaklaşık 30 seans, bir kez yanık oldu.', yardim: 'Hatırladığınız kadarıyla yazın. Solaryum tedavi değildir ve kullanılmaz.' },
+      { id: 'yamaTestiOykusuDerm', etiket: 'Daha önce alerji yama testi (sırta bant) yapıldı mı?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'] },
+      { id: 'yamaTestiSonucuDerm', etiket: 'Yama testinde çıkan maddeler (biliyorsanız)', tur: 'textarea', placeholder: 'Örn. nikel, koku karışımı…' },
+      { id: 'sistemikTedaviOykusuDerm', etiket: 'Cilt hastalığınız için daha önce hangi tedavileri aldınız?', tur: 'checkbox-grup', secenekler: ['Sadece krem / merhem', 'Işık tedavisi (fototerapi)', 'Ağızdan hap tedavi', 'İğne / damar yoluyla tedavi (biyolojik)', 'Hiçbiri'], yardim: 'Rapor ve geri ödeme için önceki tedavi basamakları gerekir; ilaç adını hatırlamıyorsanız boş bırakın.' },
+      { id: 'gebelikDurumuDerm', etiket: 'Gebelik durumu / planı (sizin için geçerliyse)', tur: 'checkbox-grup', secenekler: ['Gebe değilim', 'Gebe olabilirim / şüphem var', 'Gebeyim', 'Emziriyorum', 'Yakın dönemde gebelik planlıyorum', 'Bu soru bana uygun değil'], yardim: 'Bazı cilt tedavileri gebelikte kullanılamaz; bu yüzden soruyoruz. Karar ve test planı doktorunuzdadır.' },
       { id: 'aileCiltKanseri', etiket: 'Ailede cilt kanseri öyküsü var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'] },
       { id: 'kullanilanUrunler', etiket: 'Kullandığınız kozmetik / cilt bakım ürünleri', tur: 'textarea' },
       { id: 'biliknCiltAlerjisi', etiket: 'Bilinen cilt alerjileriniz', tur: 'checkbox-grup', secenekler: ['İlaç', 'Kozmetik', 'Metal (Nikel vb.)', 'Bitkisel Ürün', 'Yok'] },

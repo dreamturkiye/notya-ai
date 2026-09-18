@@ -105,7 +105,15 @@ export const scoreSnapshotSchema = z.object({
   uas7: z.number().int().min(0).max(42).optional(),
   salt: z.number().min(0).max(100).optional(),
   pdai: z.number().optional(),
+  /** DERM-EXCEPTIONAL-01 — bölge çalışma sayfası çıktıları */
+  scorad: z.number().optional(),
+  iga: z.number().int().min(0).max(4).optional(),
+  bsa_pct: z.number().min(0).max(100).optional(),
+  /** bölge dökümü (jsonb): { pasi: { bolgeler, bant, girdi }, ... } */
+  ek: z.object({}).optional(),
 })
+
+export const ERITEM_YANITLARI = ['yok', 'minimal', 'agrili', 'bullu'] as const
 
 export const photoSessionSchema = z.object({
   date: z.string().min(8),
@@ -114,6 +122,36 @@ export const photoSessionSchema = z.object({
   med_test: z.boolean().optional(),
   burn: z.boolean().optional(),
   sessionPhotoCoreImageId: z.string().optional(),
+  /** DERM-EXCEPTIONAL-01 — ünite v2 alanları (doz adımı hekim protokolünden girilir) */
+  seans_no: z.number().int().min(1).max(500).optional(),
+  doz_adimi_pct: z.number().min(-100).max(100).optional(),
+  eritem: z.enum(ERITEM_YANITLARI).optional(),
+  kacirilan_gun: z.number().int().min(0).max(365).optional(),
+  yanik_protokolu: z.object({}).optional(),
+  not: z.string().optional(),
+})
+
+/** MED / MPD testi — cihaz başına, hekim okur ve girer. */
+export const medKaydiSchema = z.object({
+  date: z.string().min(8),
+  device: z.enum(PHOTO_DEVICES_SCHEMA),
+  deger: z.number(),
+  birim: z.string().min(1),
+  testPhotoCoreImageId: z.string().optional(),
+  not: z.string().optional(),
+})
+
+/** Kozmetik işlem izlenebilirliği — yalnız kozmetik ünitesinde girilir. */
+export const kozmetikIslemSchema = z.object({
+  tur: z.string().min(1),
+  tarih: z.string().min(8),
+  bolge: z.string().min(1),
+  urun: z.string().nullable(),
+  lot_no: z.string().nullable(),
+  son_kullanma: z.string().nullable(),
+  test_spot: z.boolean(),
+  komplikasyonlar: z.array(z.string()),
+  komplikasyon_notu: z.string().nullable(),
 })
 
 export const seriesTimepointSchema = z.object({
@@ -248,6 +286,13 @@ export const dermatolojiPayloadSchema = z.object({
   bzbh_kind: z.string().optional(),
   ugly_duckling: z.boolean().optional(),
   psa_joint: z.boolean().optional(),
+  /** DERM-EXCEPTIONAL-01 */
+  med_kayitlari: z.array(medKaydiSchema).optional(),
+  kozmetik_islemler: z.array(kozmetikIslemSchema).optional(),
+  /** hekimin elle işaretlediği acil kırmızı bayrak kodları */
+  acil_isaretleri: z.array(z.string()).optional(),
+  /** hekimin kilitlediği tedavi basamağı: { psoriasis?: string; atopi?: string } */
+  basamak_kilidi: z.object({}).optional(),
 })
 
 export type DermatolojiPayload = Infer<typeof dermatolojiPayloadSchema>
@@ -267,6 +312,8 @@ export type Admission = Infer<typeof admissionSchema>
 export type GopPack = Infer<typeof gopPackSchema>
 export type ScoreSnapshot = Infer<typeof scoreSnapshotSchema>
 export type PhotoSessionPayload = Infer<typeof photoSessionSchema>
+export type MedKaydiPayload = Infer<typeof medKaydiSchema>
+export type KozmetikIslemPayload = Infer<typeof kozmetikIslemSchema>
 
 /** Isolation probes — do not import other specialty folders into production code. */
 export const pediatriProbeSchema = z.object({

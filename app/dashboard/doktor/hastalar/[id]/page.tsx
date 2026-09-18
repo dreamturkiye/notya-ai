@@ -464,7 +464,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome patientId={patientId} />}
         {!loading && !error && activeTab === 'goz' && gozAraci && <GozHome patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && deriAraci && (
-          <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} />
+          <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} hastaAdi={patient?.ad_soyad} />
         )}
       </div>
     </div>

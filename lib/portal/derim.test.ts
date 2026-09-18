@@ -8,9 +8,10 @@ import { specialtyProfile } from '../specialties/registry'
 const oku = (p: string) => fs.readFileSync(path.join(import.meta.dirname, '..', '..', p), 'utf8')
 
 describe('Derim portal — patient-safe + registry gated', () => {
-  it('dermatoloji profile declares Derim Partial with /derim nav', () => {
+  // DERM-EXCEPTIONAL-01: hekim tetiklemeli hatırlatma kancası eklendi → Strong.
+  it('dermatoloji profile declares Derim Strong with /derim nav', () => {
     const m = specialtyProfile('dermatoloji').portal![0]
-    assert.equal(m.derinlik, 'Partial')
+    assert.equal(m.derinlik, 'Strong')
     assert.equal(m.nav[0]?.path, '/derim')
     assert.ok(m.views.includes('DerimView'))
   })
