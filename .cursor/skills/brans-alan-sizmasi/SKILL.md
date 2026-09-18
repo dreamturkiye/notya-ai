@@ -29,6 +29,14 @@ specialty's shared form.
 > emancipated by marriage or court order (own consent, document required — no data field yet, OPEN). What stays
 > pediatri-only is the **clinical** content (Baş Çevresi, Neyzi, sağlam çocuk). The KD bug above is still a leak
 > because that patient was an **adult**.
+>
+> **Follow-up — intake veli section + acil durum kişisi (Kaan, 2026-09-17).** A patient whose age is known and ≥18
+> never gets veli wording or a veli field, in **any** branş, pediatri included (`veliDiliMi`: pediatrik bağlam only
+> falls back to veli when the age is unknown). The intake form's "Veli / Yasal Temsilci" section lives in the shared
+> spine (`VELI_BOLUMU` in `lib/intake/coreAlanlar.ts`) and is gated by `veliKosulu` → `veliOnamGerekliMi` on the
+> form's own doğum tarihi: required for minors, never drawn, validated or saved for adults. **"Acil Durumda Aranacak
+> Kişi" is OPTIONAL everywhere, permanently.** Do not mark those fields `zorunlu` on any surface. It is a separate
+> section from veli: veli is legal representation and consent; the emergency contact is only a phone number to call.
 
 His principle: things specific to one specialty — forms, dosyalar,
 vocabulary, sections, fields — must never carry over to another specialty.
@@ -185,7 +193,7 @@ Reviewers should reject a shared-component PR that omits it.
 
 - Declaring a field in the profile and then hardcoding a list on the screen (the baş çevresi bug itself).
 - Hedged text that covers two branches at once (`"hasta/veli"`) — adult wording says "hasta"; "veli" appears only for
-  a minor patient (any branch) or in pediatric context.
+  a minor patient (any branch) or in pediatric context when the age is unknown — never for a known adult.
 - Gating veli wording on the **branch** (`pediatrikBaglamMi`) — it is a legal, age-based rule (`veliDiliMi`); a göz
   doctor's 10-year-old patient needs guardian wording. And the reverse: gating baş çevresi / Neyzi on **age** alone.
 - `|| 'pediatri'`, `genel: 'pediatri'`, `useState('pediatrik')` — unknown means pediatri.

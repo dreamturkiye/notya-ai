@@ -16,8 +16,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import type { IntakeAlan, IntakeBolum } from '@/lib/intake/coreAlanlar';
-import { intakeAlanGorunur, intakeIstemciHataMetni, intakeGosterEgerUyuyor } from '@/lib/intake/dogrula';
+import { intakeFormBolumleri, type IntakeBolum } from '@/lib/intake/coreAlanlar';
+import { intakeGorunmeyenYanitlariAyikla, intakeIstemciHataMetni } from '@/lib/intake/dogrula';
+import IntakeBolumleri from '@/components/intake/IntakeBolumleri';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,92 +28,6 @@ interface FormSemasi {
   coreBolumler: IntakeBolum[];
   bransBolumu: IntakeBolum | null;
   bransEtiket: string | null;
-}
-
-/** Kaç sütun VE minimum sütun genişliği: uzun etiketli seçenekler (>14 karakter) 2 sütuna, kısa
- * olanlar 3 sütuna sığar — ama bu üst sınır, alt sınır değil. auto-fit/minmax kullanıyoruz ki
- * dar bir telefon ekranında (📱 mobil uyumluluk gereksinimi) grid otomatik olarak 1 sütuna
- * düşsün — sabit repeat(3,1fr) telefon genişliğinde metni sıkıştırıp okunmaz hale getirirdi. */
-/** NOTYA-FORM-ONAY-SON (Gökhan): Onay (KVKK) bölümü her zaman formun EN SONUNDA olmalı —
- * core'un sonundaydı ama branş soruları (pediatride veli/doğum) sonradan eklenince ortada kalıyordu. */
-function siralaOnaySonda(bolumler: IntakeBolum[]): IntakeBolum[] {
-  const onaylar = bolumler.filter((b) => b.baslik === 'Onay');
-  const digerleri = bolumler.filter((b) => b.baslik !== 'Onay');
-  return [...digerleri, ...onaylar];
-}
-
-function gridSablonu(secenekler: string[]): string {
-  const uzunEnUzun = Math.max(...secenekler.map((s) => s.length));
-  if (secenekler.length <= 2) return `repeat(${secenekler.length}, 1fr)`;
-  const minGenislik = uzunEnUzun > 14 ? 190 : 150;
-  return `repeat(auto-fit, minmax(${minGenislik}px, 1fr))`;
-}
-
-function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unknown; onChange: (v: unknown) => void }) {
-  const ortakStil: React.CSSProperties = {
-    width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(10,22,40,0.15)',
-    fontSize: 14, background: 'white', color: '#0A1628',
-  };
-
-  if (alan.tur === 'textarea') {
-    return <textarea style={{ ...ortakStil, minHeight: 64, resize: 'vertical' }} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} />;
-  }
-  if (alan.tur === 'select') {
-    return (
-      <select style={ortakStil} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Seçiniz…</option>
-        {alan.secenekler?.map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
-    );
-  }
-  if (alan.tur === 'radio' && alan.secenekler) {
-    const grid = alan.dikey ? '1fr' : gridSablonu(alan.secenekler);
-    return (
-      <div style={{ display: 'grid', gridTemplateColumns: grid, gap: '8px 12px' }}>
-        {alan.secenekler.map((s) => (
-          <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, cursor: 'pointer' }}>
-            <input type="radio" name={alan.id} checked={deger === s} onChange={() => onChange(s)} />
-            {s}
-          </label>
-        ))}
-      </div>
-    );
-  }
-  if (alan.tur === 'checkbox-grup' && alan.secenekler) {
-    const secililer = (deger as string[]) || [];
-    const grid = alan.dikey ? '1fr' : gridSablonu(alan.secenekler);
-    return (
-      <div style={{ display: 'grid', gridTemplateColumns: grid, gap: '8px 12px' }}>
-        {alan.secenekler.map((s) => (
-          <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={secililer.includes(s)}
-              onChange={(e) => {
-                if (e.target.checked) onChange([...secililer, s]);
-                else onChange(secililer.filter((x) => x !== s));
-              }}
-            />
-            {s}
-          </label>
-        ))}
-      </div>
-    );
-  }
-  const inputTur = alan.tur === 'tel' ? 'tel' : alan.tur === 'email' ? 'email' : alan.tur === 'date' ? 'date' : 'text';
-  // Kaan (2026-09-10): doğum tarihi gelecekte olamaz — takvim bugünle sınırlı
-  const tarihSinir = alan.tur === 'date' ? { max: new Date().toISOString().slice(0, 10), min: '1900-01-01' } : {};
-  // Kaan (2026-09-13): TC kimlik gibi desen tanımlı alanlarda tam uzunluk + yalnız rakam zorlanır ("ne az ne de fazla")
-  const desenSinir = alan.desen === '^[0-9]{11}$'
-    ? { inputMode: 'numeric' as const, pattern: '[0-9]*', maxLength: 11, onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9]/.test(e.key)) e.preventDefault() } }
-    : {};
-  const desenGecersiz = !!alan.desen && !!(deger as string) && !new RegExp(alan.desen).test(String(deger))
-  return (
-    <>
-      <input style={ortakStil} type={inputTur} value={(deger as string) || ''} onChange={(e) => onChange(alan.desen ? e.target.value.replace(/\D/g, '') : e.target.value)} placeholder={alan.placeholder} {...tarihSinir} {...desenSinir} />
-      {desenGecersiz && alan.desenHata && <div style={{ fontSize: 12, color: '#DC2626', marginTop: 4 }}>{alan.desenHata}</div>}
-    </>
-  );
 }
 
 export default function IntakeFormPage() {
@@ -143,18 +58,10 @@ export default function IntakeFormPage() {
   }, [token]);
 
   function alanDegistir(id: string, deger: unknown) {
-    const bolumler = siralaOnaySonda([...(sema?.coreBolumler || []), ...(sema?.bransBolumu ? [sema.bransBolumu] : [])])
-    setYanitlar((y) => {
-      const sonraki = { ...y, [id]: deger }
-      for (const bolum of bolumler) {
-        for (const alan of bolum.alanlar) {
-          const k = alan.gosterEger
-          if (!k || k.alanId !== id) continue
-          if (!intakeGosterEgerUyuyor(deger, k.deger)) delete sonraki[alan.id]
-        }
-      }
-      return sonraki
-    })
+    const bolumler = intakeFormBolumleri(sema?.coreBolumler || [], sema?.bransBolumu || null)
+    // Gizlenen alanın yanıtı atılır: gosterEger koşulu bozulan alan (gebelik haftası) ve VELI-YASAL-ONAM — doğum
+    // tarihi erişkine düzeltilince Veli / Yasal Temsilci bölümü (sunucu da aynı süzgeci uygular).
+    setYanitlar((y) => intakeGorunmeyenYanitlariAyikla(bolumler, { ...y, [id]: deger }))
   }
 
   async function gonder(e: React.FormEvent) {
@@ -163,7 +70,7 @@ export default function IntakeFormPage() {
 
     // NOTYA-INTAKE-08: zorunluluk/desen kurallari sunucuyla TEK govdeden (lib/intake/dogrula.ts)
     // okunur — istemcinin "zorunlu" tanimi sunucununkinden ayrisamasin diye.
-    const tumBolumler = siralaOnaySonda([...(sema?.coreBolumler || []), ...(sema?.bransBolumu ? [sema.bransBolumu] : [])]);
+    const tumBolumler = intakeFormBolumleri(sema?.coreBolumler || [], sema?.bransBolumu || null);
     const hata = intakeIstemciHataMetni(tumBolumler, yanitlar);
     if (hata) { setFormHata(hata); return; }
 
@@ -186,7 +93,7 @@ export default function IntakeFormPage() {
 
   const kutu: React.CSSProperties = { background: 'white', borderRadius: 16, padding: 24, maxWidth: 600, width: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
 
-  const tumBolumler = sema ? siralaOnaySonda([...sema.coreBolumler, ...(sema.bransBolumu ? [sema.bransBolumu] : [])]) : [];
+  const tumBolumler = sema ? intakeFormBolumleri(sema.coreBolumler, sema.bransBolumu) : [];
 
   return (
     <div style={{ minHeight: '100vh', background: '#F4F6F9', display: 'flex', alignItems: durum === 'gecerli' ? 'flex-start' : 'center', justifyContent: 'center', padding: '32px 16px' }}>
@@ -213,42 +120,7 @@ export default function IntakeFormPage() {
             randevunuz öncesinde bu kısa formu doldurmanız muayene sürenizi daha verimli kılar.
           </p>
 
-          {tumBolumler.map((bolum, bolumIndex) => (
-            <div key={bolum.baslik} style={{ marginBottom: 26 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: '50%', background: '#0F9B8E', color: 'white',
-                  fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}>
-                  {bolumIndex + 1}
-                </span>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0A1628', margin: 0, letterSpacing: '0.01em' }}>
-                  {bolum.baslik}
-                </h3>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingLeft: 30 }}>
-                {bolum.alanlar.map((alan) => {
-                  if (alan.tur === 'bolum-basligi') {
-                    return (
-                      <div key={alan.id} style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 6, borderTop: '1px solid rgba(15,155,142,0.15)', paddingTop: 12 }}>
-                        {alan.etiket}
-                      </div>
-                    );
-                  }
-                  if (!intakeAlanGorunur(alan, yanitlar)) return null;
-                  return (
-                    <div key={alan.id}>
-                      <label style={{ display: 'block', fontSize: 13, color: '#0A1628', marginBottom: 6, fontWeight: 500 }}>
-                        {alan.etiket}{alan.zorunlu && <span style={{ color: '#EF4444' }}> *</span>}
-                      </label>
-                      <AlanGirdisi alan={alan} deger={yanitlar[alan.id]} onChange={(v) => alanDegistir(alan.id, v)} />
-                      {alan.yardim && <p style={{ fontSize: 11.5, color: 'rgba(10,22,40,0.5)', marginTop: 4 }}>{alan.yardim}</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          <IntakeBolumleri bolumler={tumBolumler} yanitlar={yanitlar} onDegis={alanDegistir} />
 
           {formHata && (
             <div style={{ background: '#FEE2E2', border: '1px solid #EF4444', color: '#991B1B', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 16 }}>

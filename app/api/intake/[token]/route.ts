@@ -11,7 +11,7 @@ import { createHash } from 'crypto'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { encrypt, decrypt } from '@/lib/security/encryption'
 import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar'
-import { intakeSunucuHataMetni } from '@/lib/intake/dogrula'
+import { intakeGorunmeyenYanitlariAyikla, intakeSunucuHataMetni } from '@/lib/intake/dogrula'
 import { BRANS_SORULARI, BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
@@ -93,15 +93,20 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   // Kaan (2026-09-13): istemci dogrulamasi atlanabilir (dogrudan API cagrisi) - zorunlu ve desen
   // kurallari sunucuda da uygulanir. TC kimlik: tam 11 hane.
   // NOTYA-INTAKE-08: kural govdesi lib/intake/dogrula.ts'e tasindi - testler ayni kodu kosuyor.
+  const coreBolumler = coreBolumlerIcin(form.brans)
   {
-    const hata = intakeSunucuHataMetni(coreBolumlerIcin(form.brans), yanitlar)
+    const hata = intakeSunucuHataMetni(coreBolumler, yanitlar)
     if (hata) return NextResponse.json({ error: hata }, { status: 400 })
   }
+  // VELI-YASAL-ONAM: görünmeyen bölümün yanıtı kaydedilmez — erişkin hastanın formunda veli bilgisi kalmaz
+  // (istemci doğum tarihini sonradan erişkine çevirse ya da doğrudan API çağrısı veli alanı gönderse bile).
+  // Veli ve acil durum kişisi bilgisi de formun geri kalanı gibi tek şifreli blobda (form_data_encrypted).
+  const kayitYanitlari = intakeGorunmeyenYanitlariAyikla(coreBolumler, yanitlar)
 
   const { error } = await supabase
     .from('hasta_intake_formlari')
     .update({
-      form_data_encrypted: encrypt(JSON.stringify(yanitlar)),
+      form_data_encrypted: encrypt(JSON.stringify(kayitYanitlari)),
       durum: 'dolduruldu',
       dolduruldu_at: new Date().toISOString(),
     })
@@ -112,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if (form.patient_id) {
     try {
       const { intakeYanitlariniHastayaAktar } = await import('@/lib/intake/hastaKaydinaAktar')
-      await intakeYanitlariniHastayaAktar(supabase, form.patient_id, yanitlar)
+      await intakeYanitlariniHastayaAktar(supabase, form.patient_id, kayitYanitlari)
     } catch (e) { console.error('[intake→hasta]', e) }
   }
   return NextResponse.json({ basarili: true })

@@ -79,7 +79,8 @@ export async function hastaDosyasiniDerle(
   if (intake?.form_data_encrypted) {
     try {
       if (!yanitlar) throw new Error('intake çözülemedi')
-      const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi'])
+      // VELI-YASAL-ONAM: veli / yasal temsilcinin kimlik + iletişim bilgisi de modele gitmez (yakınlık gider: "anne beyanı")
+      const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi'])
       for (const [k, v] of Object.entries(yanitlar)) {
         if (gizli.has(k) || v == null || v === '') continue
         const deger = Array.isArray(v) ? v.join(', ') : String(v)
