@@ -1026,3 +1026,77 @@ sarıyor; fotoğraflı, baş harfli ve Türkçe ("İÇ") üç durum da temiz (`s
 | Tarih | Madde | Durum |
 |---|---|---|
 | 2026-09-17 | **Gerçek karikatürleştirme ertelendi.** Bugün gönderilen avatar hekimin **gerçek fotoğrafıdır**, stilize edilmiş hâli değil. Yapılabilmesi için **yeni bir dış görsel-üretme entegrasyonu** gerekir; bu bir kod işi değil, önce bir **sağlayıcı kararı**: (a) hangi sağlayıcı (görselden-görsele stilize eden bir servis), (b) API anahtarı + Vercel ortam değişkeni, (c) maliyet/hekim (tek seferlik üretim, sonuç önbelleğe alınır — her sayfa açılışında değil), (d) **KVKK**: hekimin yüzü Türkiye dışındaki yeni bir işleyene gider; `app/kvkk/page.tsx`'teki işleyen listesi ("Anthropic, OpenAI") ve `lib/security/pseudonymize.ts` notu güncellenmeli, hekimden ayrı açık rıza alınmalı. Altyapı buna hazır: `doctor_avatars` satırına stilize edilmiş ikinci bir görsel eklemek şema açısından küçük bir iştir. | OPEN (Kaan: sağlayıcı seçimi) |
+
+## ELEVENLABS-LIVE-MODERATION — "Voices with live moderation enabled cannot be used for agents" (Kaan, canlı, 2026-09-17)
+
+**Belirti.** Kadın Hastalıkları ve Doğum → Prof. Dr. Fatma Çelik sesli asistanı açılmadı:
+"Bağlantı kurulamadı. Tekrar deneyin. (Voices with live moderation enabled cannot be used for agents: 'HZh2tWL1clJO95e2…')".
+
+**Kök sebep (canlı doğrulandı, yalnız metadata değil).** ElevenLabs'te paylaşılan kütüphaneden
+kopyalanan bazı Professional Voice Clone seslerinde *sahibi* `sharing.live_moderation_enabled=true`
+açmış. Bu sesler TTS'de çalışır ama ConvAI agent oturumunda WebSocket 1008 ile kapanır. Notya
+kodunda veya agent ayarında bunu açıp kapatan bir düğme yok; tek çözüm başka voice_id.
+
+**"Tüm kadın sesleri professional → hepsi risk altında" varsayımı yanlış çıktı.** Hesaptaki TR
+seslerin *tamamı* (erkekler dahil) `category: professional` + `sharing.status: copied`; bu tek
+başına sorun değil. Belirleyici alan `sharing.live_moderation_enabled`. 16 TR_VOICES girdisinin
+(13 benzersiz ses) her biri için gerçek agent bağlantısı açıldı (signed URL → WS →
+`conversation_initiation_client_data` + `tts.voice_id` override → ilk `audio` paketi):
+13 sesten **10'u çalışıyor, 3'ü 1008 ile reddedildi**, metadata ile birebir aynı.
+
+| Anahtar | Bozuk voiceId | Yerine | Neden bu ses | Etkilenen personalar |
+|---|---|---|---|---|
+| `asli` | `HZh2tWL1clJO95e2qMt2` (Aslı) | `58oUR7g9xaf9pbxNCyws` (Günnur) | Kullanılmayan uygun TR kadın ses yok (aşağıda); çalışan sesler içinde ölçülen ses seviyesi iyi (~-20 dBFS, klip yok), sakin tempo; Ece ~-31 dBFS ile çok kısık | Doktor: **Fatma Çelik (KD)**, Cemre Taş (spor hek.); **Mali Derya Yılmaz**; klinik Fizyoterapi (Uzm. Aylin Doğan) |
+| `bahadir` | `LIayCu3NIwyEyDw2fhqs` (Bahadır) | `pGMp7Agf4sG0hyhiiGiw` (Abdulkadir) | Avukat kadrosunda başka kimsenin kullanmadığı tek çalışan TR erkek ses → "iki avukat aynı ses değil" kuralı korunuyor | Doktor: Caner Koç (radyoloji), Kerem Ersoy (beyin cerr.); **Avukat Can Bey** |
+| `halil` | `6U25IshsKGd7nVhRbPOT` (Halil Aykut) | `YRAJxpPvdBUTgvjBUHlB` (Eyüp) | ~-18 dBFS, doktor kadrosunda yalnız 2 kullanım | Doktor: Serkan Güneş (enfeksiyon), Yusuf Akın (aile hek.) |
+
+Anahtar adları ve F/M dizileri aynen kaldı; persona→slot ataması değişmedi, yalnız bu üç
+anahtarın voiceId'si değişti (ayseHanim/leyla ortak-ses emsaliyle aynı yaklaşım).
+
+**ElevenLabs tarafında da değişen (API PATCH, yalnız `conversation_config.tts.voice_id`;
+prompt ve platform_settings değişmediği diff ile doğrulandı):**
+- `agent_0501kwjca1qaeymv4c34444feshb` (Can Yılmaz — İdare Hukuku): base ses Bahadır → Abdulkadir.
+  Tüm avukat agent'ları `tts.voice_id` override'ına **izin vermiyor**; bu yüzden Can Bey kod
+  değişikliğiyle düzelemezdi — base ses değişmeden 1008 live-moderation, base ses değişip kod
+  değişmeseydi "Override for field 'voice_id' is not allowed". İkisi birlikte canlı doğrulandı.
+- `agent_4301kvraprgwf5btftn0k836t55m` (Derya Yılmaz — Mali Müşavir): base ses Aslı → Günnur.
+  Override açık olduğu için kod düzeltmesi tek başına yetiyordu; base ses override'sız
+  bağlantılara karşı sağlamlık için düzeltildi.
+- Geri almak gerekirse: aynı PATCH'i eski voice_id ile atmak yeterli (eski değerler yukarıda).
+
+**Doğrulama.** Düzeltme sonrası `npx tsx scripts/elevenlabs-ses-denetimi.ts --canli`: 13/13 ses
+agent oturumu açıp ses akıttı. Fatma Çelik: `PERSONAS.fatmacelik.voiceId` = Günnur, Ayşe base
+agent'ı üzerinden canlı bağlantı OK. Can Bey (kendi agent'ı + Abdulkadir) ve Mali (kendi agent'ı
++ Günnur) canlı OK. Eski Aslı voiceId negatif kontrol olarak hâlâ 1008 veriyor.
+
+**Regresyon kontrolü.** API bu durumu temiz bir alanla gösteriyor (`sharing.live_moderation_enabled`),
+o yüzden iki katman eklendi:
+- `lib/asistan/elevenVoices.test.ts` (npm test'te, ağsız): bilinen 3 live-moderation voiceId'sinin
+  TR_VOICES'a, doktor/avukat/mali/klinik personalarına geri dönmediğini ve avukat seslerinin
+  benzersiz kaldığını kilitliyor.
+- `npm run ses:denetim` (`scripts/elevenlabs-ses-denetimi.ts --canli`, ELEVENLABS_API_KEY ister):
+  her TR_VOICES sesinin metadata'sını + gerçek agent bağlantısını dener. **Yeni ses eklerken
+  çalıştırın.** Ses sahibi live moderation'ı ileride *açarsa* ağsız test bunu yakalayamaz —
+  yalnız bu script yakalar.
+
+### AÇIK — Kaan (ses kalitesi, kod dışı)
+- **Kullanılabilir, kullanılmayan uygun TR ses yok.** Hesaptaki diğer TR adaylar: "Wise Educator —
+  Ayşe Hanım" (`sMFjOtbPhx5GdIeKUBDN`, metadata'ya göre live moderation kapalı ama 2026-08-14'te Flash'ta Türkçe tıp
+  konuşmasında peltek/"slurry" olduğu için bilerek bırakılmış — Ayşe Kaya'ya bağlanması
+  amaçlanmıyor, emekli) ve "Sibel Malkoç" (`qLdPxFtPuffoxx5gieBJ`, "aşırı doygun" deneyi geri
+  alınmış). Hesaba ait "Defne" / "Mia Siren" generated sesleri flörtöz companion sesleri — hekim
+  için uygun değil. Bu yüzden üç persona grubu artık başka bir personayla aynı sesi paylaşıyor
+  (Günnur: 4 doktor + avukat Dilek Hanım + Mali + 2 klinik; Abdulkadir: Mehmet Demir dahil
+  5 doktor + avukat Can Bey + 1 klinik; Eyüp: 4 doktor + avukat Bora Bey).
+  **Daha iyi çözüm:** ElevenLabs Voice Library'den live moderation *kapalı* 2–3 yeni TR ses
+  (1 kadın, 2 erkek) eklemek ya da kendi PVC/Voice Design sesimizi üretmek — hesap/Library
+  işlemi, bu oturumda bilerek yapılmadı. Eklendikten sonra yalnız ilgili TR_VOICES anahtarının
+  voiceId'sini değiştirip `npm run ses:denetim` çalıştırmak yeterli.
+- **Gökhan sesi çok kısık** (flash_v2_5 ölçümü ~-33.6 dBFS; Abdulkadir ~-16, Leyla ~-18). Emre Aydın
+  (KBB), Barış Uysal (göğüs hast.), avukat Murat Bey ve klinik Saç Ekimi bu sesi kullanıyor.
+  Bu düzeltmenin kapsamı dışı; çalışıyor ama duyulabilirlik şikâyeti gelirse ilk aday.
+- **Ece de kısık** (~-31 dBFS) — dosyadaki eski "Ece was too quiet" notu ölçümle doğrulandı
+  (Aylin Erdem, klinik Ergoterapi).
+- Vercel'de `AVUKAT_AGENT_CANBEY` / `MALI_MUSAVIR_AGENT_ID` env'i farklı bir agent'a işaret
+  ediyorsa o agent'ın base sesi de kontrol edilmeli (env değerleri okunmadı; kod varsayılan
+  agent'ları düzeltildi).
