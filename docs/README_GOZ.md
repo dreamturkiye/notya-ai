@@ -2,8 +2,10 @@
 
 Chapter code and engine table: `specialties/goz-hastaliklari/README.md`.
 
+- **Final audit (2026-09-18, honest):** https://notya-ai.vercel.app/goz-final-audit.html — supersedes remaining-gaps ~90% claim
 - Pre-sprint audit: https://notya-ai.vercel.app/goz-presprint-audit.html
 - Post-sprint audit: https://notya-ai.vercel.app/goz-post-sprint-audit.html
+- Remaining-gaps (historical): https://notya-ai.vercel.app/goz-remaining-gaps-audit.html
 - Portal architecture (one shell, many chapters): `.cursor/skills/specialty-hasta-portali/SKILL.md`, `lib/portal/moduller.ts`
 - Smoke: `scripts/goz-smoke.mts` — QA doctor `qa.goz@notya.ai` (password only in `.env.local` as `QA_GOZ_PASSWORD`), synthetic patients "TEST Goz Smoke" (67 y) and "TEST Goz Smoke Cocuk" (6 y).
 
