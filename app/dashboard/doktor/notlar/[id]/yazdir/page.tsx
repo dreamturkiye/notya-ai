@@ -14,6 +14,7 @@ import { anamnezParcala, fizikParcala } from '@/lib/doktor/anamnezBolumleri';
 import { htmlBelgeYap, metinBelgeYap, type BelgeGirdisi } from '@/lib/entegrasyon/belgeHtml';
 import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
+import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki';
 import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
@@ -174,7 +175,7 @@ export default function NotYazdir() {
         <div style={{ borderBottom: '2px solid #111', paddingBottom: 10, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700 }}>MUAYENE NOTU</div>
-            <div style={{ font: '12px system-ui', color: '#444', textTransform: 'capitalize' }}>{not.specialty} · {trTarih(not.createdAt)} (TRT)</div>
+            <div style={{ font: '12px system-ui', color: '#444' }}>{bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} (TRT)</div>
             {/* Akış: Anamnez → Fizik Muayene → Tanı → Tedavi (Dr. Gökhan referansları) */}
           </div>
           <div style={{ textAlign: 'right' }}>

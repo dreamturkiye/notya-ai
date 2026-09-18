@@ -5,7 +5,7 @@ import { loadPortalMessages } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModalities'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
-import { SPECIALTY_MAP } from '@/lib/doktor/specialties'
+import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { persentilEgrileri, ayFarki } from '@/lib/clinical/buyumeEgrisi'
 import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
 import { pediatriSekmesiUygun, yasYilKesir } from '@/lib/doktor/hastaDosyaSekmeleri'
@@ -24,21 +24,8 @@ import type {
 
 export const dynamic = 'force-dynamic'
 
-/**
- * `sessions.specialty` holds a slug ('pediatri'), and the portal was showing it
- * to patients verbatim — "pediatri · Doktorunuz". Resolve through the canonical
- * specialty table so they read "Pediatri · Doktorunuz" instead.
- */
-function bransEtiketi(slug?: string | null): string {
-  const key = String(slug || '').trim().toLowerCase()
-  if (!key) return 'Genel'
-  const known = SPECIALTY_MAP[key]
-  if (known) return known.label
-  // Unknown slug: make it presentable rather than leaking raw snake_case.
-  return key
-    .replace(/[_-]+/g, ' ')
-    .replace(/\S/u, (c) => c.toLocaleUpperCase('tr-TR'))
-}
+// `sessions.specialty` holds a slug ('pediatri', 'kadin-dogum'); patients read the branch name via bransEtiketi
+// (lib/doktor/bransAdlari) — "Pediatri · Doktorunuz", "Kadın Hastalıkları ve Doğum · Doktorunuz".
 
 type LabTest = {
   testName?: string

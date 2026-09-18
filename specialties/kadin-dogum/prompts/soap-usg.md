@@ -1,6 +1,6 @@
 SOAP — USG visit. Structured only.
 
-TR kadın doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.
+TR kadın hastalıkları ve doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.
 
 Identify dating method (sat|crl), GA w+d, fetus A/B.
 

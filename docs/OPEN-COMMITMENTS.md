@@ -36,6 +36,46 @@ Yapılandırılmış KD alanlarına (tarih / sayı / seçenek) henüz dikte bağ
 “SAT 12 Mart, Gravida 2 Para 1” demek → alanlara yazma (not-konsult tarzı structured fill).
 SOAP sesli akışı bozulmaz. Bekliyor: Kaan öncelik (a vs b).
 
+## Open — KD-ISIMLENDIRME-02: `kadin-dogum` veri değerini tekilleştirme göçü (2026-09-18) — Kaan kararı bekliyor
+
+**Arka plan.** KD-ISIMLENDIRME-01 (2026-09-18) branşın hekim/hasta gören adını her yerde **"Kadın Hastalıkları ve
+Doğum"** yaptı ve bütün çözücüleri tek `bransAnahtari()`'na bağladı. Veri değeri bilinçli olarak DEĞİŞTİRİLMEDİ:
+`'kadin-dogum'` ve `'kadin-hastaliklari-dogum'` ikisi de yaşıyor, ikisi de aynı branşa çözülüyor ve bu bir testle
+kilitli (`lib/specialties/kd-isim-esdegerligi.test.ts`). Ledger: `docs/KD-ISIMLENDIRME-LEDGER.md`.
+
+**Öneri (yapılmadı): tek değer `kadin-hastaliklari-dogum`.**
+
+1. **Veri (salt-okunur sayım 2026-09-18):**
+   - `public.users.specialty = 'kadin-dogum'` → **2 satır** (1 gerçek hekim, 1 QA `qa.kd@notya.ai`) → `'kadin-hastaliklari-dogum'`.
+     (Karşılaştırma: `'kadin-hastaliklari-dogum'` zaten 1 satır.)
+   - `auth.users.raw_user_meta_data->>'specialty' = 'kadin-dogum'` → **2 satır** → aynı güncelleme (`jsonb_set`).
+   - `sessions.specialty`, `hasta_intake_formlari.brans`, `clinic_members.specialty`, `belge_analizleri.brans`: **0**
+     `'kadin-dogum'` satırı — göç gerekmiyor (`session/new` seansı zaten kanonik anahtarla açıyor). `specialty_records`
+     tablosu üretimde yok (Zod yükü yalnız bellek içi).
+   - Tarayıcı önbelleği `localStorage.notya_doktor_specialty` eski değeri tutabilir — çözücü okudukça zararsız.
+   - Göç dosyası: `lib/db/migrations/0xx_kd_specialty_tekil.sql`, tek transaction, yalnız `WHERE specialty = 'kadin-dogum'`;
+     öncesinde etkilenen `id` listesi (yalnız id + eski değer) ledger'a yazılır.
+2. **Kod (göçle aynı iş, göç uygulanıp doğrulandıktan SONRA merge):**
+   - `specialties/kadin-dogum/schema.ts` ve `specialties/dermatoloji/schema.ts` `z.literal('kadin-dogum')` →
+     `'kadin-hastaliklari-dogum'`; `lib/specialties/kadin-dogum-live.ts` payload; `specialties/kadin-dogum/fixtures/*.json`.
+   - `specialties/kadin-dogum/manifest.ts` `id` → `'kadin-hastaliklari-dogum'`.
+   - Klasör `specialties/kadin-dogum/` → `specialties/kadin-hastaliklari-dogum/`: 34 dosyada ~100 yol referansı (2026-09-18 sayımı), `next.config.mjs`
+     `outputFileTracingIncludes`, `package.json` test globları, `prompts/index.ts` `path.join`, `bridges/derm-kadin-dogum.ts`
+     + derm manifest köprü kimliği, `lib/specialties/kadin-dogum*.ts` dosya adları, DOM `data-specialty` işaretleri.
+   - `scripts/kd-prompts-smoke.mts` QA hesabı kanonik değerle.
+   - **`LABEL_ALIASES['kadin-dogum']` KALIR** (eski localStorage, eski dışa aktarımlar, geri alma). Eşdeğerlik testi de
+     kalır; yalnız gerekçe "canlı değer" → "eski değer" olarak güncellenir.
+3. **Geri alma:** göç öncesi alınan `id` listesiyle `UPDATE … SET specialty = 'kadin-dogum' WHERE id = ANY(…)`
+   (users + auth metadata). Çözücü iki değeri de okuduğundan veri, koddan bağımsız geri alınabilir; kod PR'ı revert
+   edilirse de alias iki değeri kabul ettiği için hesap bozulmaz. Sıra: göç → doğrula (KD hekimi girişi: Araçlar'da
+   5 KD aracı, Sağlığım KD modülü, SOAP'ta KD kilidi, Asistan'da Fatma) → kod PR'ı.
+4. **Neden şimdi tek başına yapılmadı:** (a) canlı beta hekim (Dr. Gökhan) KD tarafını her gün kullanıyor — hesabının
+   branş değeri haberi olmadan değişmemeli; (b) iki paralel sprint (pediatri, KD araçları) `specialties/kadin-dogum/`
+   altına yeni dosya ekliyor — klasör yeniden adlandırması açık dallarını çakıştırır, sprintler kapanınca tek seferde
+   yapılmalı; (c) kullanıcıya görünen kazanç yok: ad düzeltmesi KD-ISIMLENDIRME-01 ile zaten canlıda.
+
+**Bekliyor:** Kaan — onay + zamanlama (paralel sprintler kapandıktan sonra, Dr. Gökhan'a haber verilerek).
+
 ---
 
 Login sayfasına "Şifremi unuttum" linki eklendi (PR pending) ama gerçek self-servis akış DEĞİL —

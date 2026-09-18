@@ -55,7 +55,7 @@ describe('(c) wired into the runtime call paths', () => {
     for (const girdi of [{ specialty: 'goz-hastaliklari' }, { specialty: 'genel', doktorBransi: 'Göz Hastalıkları' }]) {
       const d = soapSistemPromptu({ transcript: '', ...girdi })
       assert.ok(d.startsWith('Sen Ayşe Kaya'))
-      assert.ok(!d.includes('DAHİLİYE') && !d.includes('KADIN DOĞUM') && !d.includes('DERMATOLOJİ'))
+      assert.ok(!d.includes('DAHİLİYE') && !d.includes('KADIN HASTALIKLARI VE DOĞUM') && !d.includes('DERMATOLOJİ'))
       assert.ok(!/pediatride|Büyüme persentil|BÜYÜME\/VKİ|Veli beyanı|veliye/.test(d))
     }
   })

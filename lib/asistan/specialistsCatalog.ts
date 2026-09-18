@@ -5,6 +5,7 @@
 
 import { TR_VOICES, type NotyaVoice } from '@/lib/asistan/elevenVoices'
 import { TURKISH_REFS, SECONDARY_TEXTBOOKS, type SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 export type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
 export interface SpecialistDef {
@@ -279,7 +280,7 @@ export const SPECIALISTS: SpecialistDef[] = [
     specialtyKey: 'kadin-hastaliklari-dogum',
     name: 'Prof. Dr. Fatma Çelik',
     shortName: 'Fatma',
-    title: 'Kadın Hastalıkları ve Doğum Uzmanı',
+    title: `${KADIN_HASTALIKLARI_DOGUM_ETIKETI} Uzmanı`,
     gender: 'female',
     personality: 'Sakin, güven veren. Anne-bebek güvenliğini önceleyen net kararlar.',
     textbooks: SECONDARY_TEXTBOOKS['kadin-hastaliklari-dogum'],
@@ -741,7 +742,9 @@ const LABEL_ALIASES: Record<string, SpecialtyKey> = {
   'goz-hastaliklari': 'goz-hastaliklari',
   goz: 'goz-hastaliklari',
   'kadin-hastaliklari-dogum': 'kadin-hastaliklari-dogum',
-  'kadin-dogum': 'kadin-hastaliklari-dogum', // users.specialty value real KD profiles carry
+  // KD-ISIMLENDIRME-01: live users.specialty value real KD profiles carry — same branch, NOT a stale alias. Removing it
+  // leaves every such account branch-less (lock test: lib/specialties/kd-isim-esdegerligi.test.ts; migration = OPEN KD-ISIMLENDIRME-02).
+  'kadin-dogum': 'kadin-hastaliklari-dogum',
   jinekoloji: 'kadin-hastaliklari-dogum',
   'kadin-hastaliklari': 'kadin-hastaliklari-dogum',
   'kadin-hastaliklari-ve-dogum': 'kadin-hastaliklari-dogum',

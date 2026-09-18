@@ -5,6 +5,7 @@
  * Psikiyatri: no engines, diagnostic audio rejected (locked).
  */
 import type { Modalite } from './ontoloji'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
 export type BransKurali = {
   ad: string
@@ -40,7 +41,7 @@ export const BRANS_KURALLARI: Record<string, BransKurali> = {
   gogus_cerrahisi: { ad: 'Göğüs Cerrahisi', persona: 'genel', modaliteler: ['cxr', 'ct', 'pdf_rapor'], motorlar: { cxr: CXR_B } },
   goz: { ad: 'Göz Hastalıkları', persona: 'genel', modaliteler: ['fundus', 'oct', 'dis_goz', 'pdf_rapor'], motorlar: {}, goruntuOkumaKoprusu: true },
   dahiliye: { ad: 'İç Hastalıkları', persona: 'elif', modaliteler: ['cxr', 'ekg', 'fundus', 'us', 'pdf_rapor'], motorlar: { cxr: CXR_B, ekg: EKG_B } },
-  kadin_dogum: { ad: 'Kadın Hastalıkları ve Doğum', persona: 'genel', modaliteler: ['us', 'nst', 'mamografi', 'pdf_rapor'], motorlar: {} },
+  kadin_dogum: { ad: KADIN_HASTALIKLARI_DOGUM_ETIKETI, persona: 'genel', modaliteler: ['us', 'nst', 'mamografi', 'pdf_rapor'], motorlar: {} },
   kardiyoloji: { ad: 'Kardiyoloji', persona: 'mehmet', modaliteler: ['ekg', 'eko', 'ses_kalp', 'cxr', 'pdf_rapor'], motorlar: { ekg: EKG_B, ses_kalp: KALP_SES_B, cxr: CXR_B } },
   kbb: { ad: 'Kulak Burun Boğaz', persona: 'genel', modaliteler: ['otoskopi', 'endoskopi', 'ses_konusma', 'pdf_rapor'], motorlar: {} },
   nefroloji: { ad: 'Nefroloji', persona: 'elif', modaliteler: ['us', 'xr_batin', 'pdf_rapor'], motorlar: {} },

@@ -6,11 +6,12 @@
 import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 import { KADIN_DOGUM_MANIFEST } from '../../specialties/kadin-dogum/manifest'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
 export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
   key: 'kadin-hastaliklari-dogum',
-  etiket: 'Kadın Hastalıkları ve Doğum',
-  resmiUnvan: 'Kadın Hastalıkları ve Doğum',
+  etiket: KADIN_HASTALIKLARI_DOGUM_ETIKETI,
+  resmiUnvan: KADIN_HASTALIKLARI_DOGUM_ETIKETI,
   pediatrikBaglam: 'asla',
 
   olcumler: [

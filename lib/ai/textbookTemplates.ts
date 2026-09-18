@@ -231,7 +231,7 @@ const TEXTBOOK_LIBRARY: Record<string, TextbookReference[]> = {
       authors: "American College of Obstetricians and Gynecologists",
       edition: "2024 Current",
       publisher: "ACOG",
-      why: "Kadın doğum pratiği için güncel kılavuzlar. Preeklampsi, GDM, doğum protokolleri."
+      why: "Kadın hastalıkları ve doğum pratiği için güncel kılavuzlar. Preeklampsi, GDM, doğum protokolleri."
     }
   ],
 

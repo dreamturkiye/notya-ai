@@ -91,7 +91,7 @@ const { data: seans } = await sb.from('sessions').insert({ doctor_id: doktorId, 
 
 // 1. hafıza / voice
 const hafiza = (await (await fetch(`${BASE}/api/doktor/hafiza`, { headers: H })).json()) as V
-kontrol('hafıza sesBlogu: dermatoloji system.md kısa kilidi yüklendi', /DERMATOLOJİ KİLİDİ/.test(hafiza.sesBlogu) && /locked to Deri ve Zührevi Hastalıklar/.test(hafiza.sesBlogu) && /never a diagnosis/.test(hafiza.sesBlogu) && !/DAHİLİYE|KADIN DOĞUM/.test(hafiza.sesBlogu), String(hafiza.sesBlogu || '').slice(0, 200))
+kontrol('hafıza sesBlogu: dermatoloji system.md kısa kilidi yüklendi', /DERMATOLOJİ KİLİDİ/.test(hafiza.sesBlogu) && /locked to Deri ve Zührevi Hastalıklar/.test(hafiza.sesBlogu) && /never a diagnosis/.test(hafiza.sesBlogu) && !/DAHİLİYE|KADIN HASTALIKLARI VE DOĞUM/.test(hafiza.sesBlogu), String(hafiza.sesBlogu || '').slice(0, 200))
 
 // 2. SOAP (context.specialty yok → users.specialty)
 const segments = [

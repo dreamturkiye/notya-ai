@@ -15,19 +15,18 @@
  * Pure + client-safe (no fs, no Supabase).
  */
 import { specialtyProfile } from '@/lib/specialties/registry'
+import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import type { PortalModulId, PortalModulu, PortalNavOge } from '@/lib/specialties/profile'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
-/** users.specialty is free text in older accounts ("İç Hastalıkları", "Göz Hastalıkları Uzmanı"). */
+/**
+ * users.specialty is free text in older accounts ("İç Hastalıkları", "Göz Hastalıkları Uzmanı") and 'kadin-dogum' on
+ * live KD profiles. Resolution is the single bransAnahtari(); an unknown value is passed through (lower-cased).
+ */
 export function portalBransAnahtari(ham: string | null | undefined): SpecialtyKey | null {
   const b = String(ham || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return null
-  if (/göz|goz|oftalm/.test(b)) return 'goz-hastaliklari'
-  if (/kadın|kadin|jinek|obstet/.test(b)) return 'kadin-hastaliklari-dogum'
-  if (/derma|deri ve z/.test(b)) return 'dermatoloji'
-  if (/dahiliye|iç hast|ic hast/.test(b)) return 'dahiliye'
-  if (/pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast/.test(b)) return 'pediatri'
-  return b as SpecialtyKey
+  return bransAnahtari(b) ?? (b as SpecialtyKey)
 }
 
 export interface PortalUygunlukGirdisi {

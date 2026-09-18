@@ -1,6 +1,8 @@
 export interface Specialty {
   key: string;
   label: string;
+  /** Dar alanlar (hap, rozet) için; yoksa label. */
+  shortLabel?: string;
   emoji: string;
   color: string;
   references: string[];
@@ -21,7 +23,7 @@ export const SPECIALTIES: Specialty[] = [
   { key: "dermatoloji", label: "Dermatoloji", emoji: "🧴", color: "#EC4899", references: ["Türk Dermatoloji Derneği (TDD) klinik kılavuzları", "T.C. SB deri kanseri / psoriazis klinik protokolleri", "TDD akne, ürtiker, atopik dermatit ve ilaç reaksiyonu konsensusları", "Türk Dermatoveneroloji / fototerapi çalışma grubu önerileri (TR)", "SGK biyolojik ve dermatolojik ilaç rapor kuralları"], soapFields: ["lezyon", "efflorescence"], greeting: "Merhaba, ben Prof. Dr. Selin Aksoy. Dermatoloji alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_DERMATOLOJİ" },
   { key: "kulak-burun-bogaz", label: "KBB", emoji: "👂", color: "#14B8A6", references: ["Türk Kulak Burun Boğaz ve Baş Boyun Cerrahisi Derneği klinik kılavuzları", "T.C. SB otitis media, tonsillit, sinüzit klinik protokolleri", "Türk Rinoloji Derneği sinüzit / rinoplasti konsensusları", "Türk Odyoloji / vestibüler çalışma grubu önerileri (TR KBB pratiği)", "SGK işitme cihazı, koklear implant ve KBB cerrahi raporları"], soapFields: ["kbb_muayene"], greeting: "Merhaba, ben Prof. Dr. Emre Aydın. KBB alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_KBB" },
   { key: "goz-hastaliklari", label: "Göz Hastalıkları", emoji: "👁️", color: "#3B82F6", references: ["Türk Oftalmoloji Derneği (TOD) kılavuz, bülten ve çalışma grubu önerileri", "T.C. SB diyabetik retinopati tarama ve glokom klinik protokolleri", "TOD Retina, Kornea, Glokom birimleri klinik protokolleri", "TOD pediatrik oftalmoloji / şaşılık yaklaşımları (TR)", "SGK göz içi lens, anti-VEGF enjeksiyon ve rapor kuralları"], soapFields: ["goz_muayene"], greeting: "Merhaba, ben Prof. Dr. İrem Kaya. Göz Hastalıkları alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_GÖZ" },
-  { key: "kadin-hastaliklari-dogum", label: "Kadın Hastalıkları ve Doğum", emoji: "🤰", color: "#BE185D", references: ["Türk Jinekoloji ve Obstetrik Derneği (TJOD) klinik kılavuzları", "T.C. SB Doğum ve Sezaryen Yönetim Rehberi", "SB anne ölümü / obstetrik acil protokolleri; prenatal bakım rehberleri", "TJOD jinekolojik onkoloji, üreme endokrinolojisi ve ürojinekoloji konsensusları", "SGK gebelik, IVF ve jinekoloji rapor kuralları"], soapFields: ["jinekolojik_anamnez"], greeting: "Merhaba, ben Prof. Dr. Fatma Çelik. Kadın Hastalıkları ve Doğum alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_KADIN_DOĞUM" },
+  { key: "kadin-hastaliklari-dogum", label: "Kadın Hastalıkları ve Doğum", shortLabel: "Kadın Hast. ve Doğum", emoji: "🤰", color: "#BE185D", references: ["Türk Jinekoloji ve Obstetrik Derneği (TJOD) klinik kılavuzları", "T.C. SB Doğum ve Sezaryen Yönetim Rehberi", "SB anne ölümü / obstetrik acil protokolleri; prenatal bakım rehberleri", "TJOD jinekolojik onkoloji, üreme endokrinolojisi ve ürojinekoloji konsensusları", "SGK gebelik, IVF ve jinekoloji rapor kuralları"], soapFields: ["jinekolojik_anamnez"], greeting: "Merhaba, ben Prof. Dr. Fatma Çelik. Kadın Hastalıkları ve Doğum alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_KADIN_DOĞUM" },
   { key: "uroloji", label: "Üroloji", emoji: "🚽", color: "#0EA5E9", references: ["Türk Üroloji Derneği (TÜD) klinik kılavuzları", "TÜD — EAU kılavuzlarının Türkiye pratiğine uyarlanmış yorumları", "T.C. SB üriner sistem enfeksiyonu ve prostat klinik protokolleri", "Türk Pediatrik Üroloji / endoüroloji çalışma grubu önerileri", "SGK ürolojik ilaç, ESWL, protez ve işlem raporları"], soapFields: ["urolojik_muayene"], greeting: "Merhaba, ben Prof. Dr. Murat Yıldız. Üroloji alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_ÜROLOJİ" },
   { key: "radyoloji", label: "Radyoloji", emoji: "📷", color: "#64748B", references: ["Türk Radyoloji Derneği (TRD) standartları ve kalite önerileri", "T.C. SB / TAEK radyasyon güvenliği mevzuatı ve doz sınırları", "TRD kontrast madde güvenliği ve gebelikte görüntüleme protokolleri", "TRD meme, toraks, nöro ve acil radyoloji çalışma grubu önerileri", "SGK görüntüleme tetkik endikasyon ve rapor kuralları"], soapFields: ["goruntuleme_bulgulari"], greeting: "Merhaba, ben Prof. Dr. Caner Koç. Radyoloji alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_RADYOLOJİ" },
   { key: "anestezi", label: "Anestezi", emoji: "💉", color: "#8B5CF6", references: ["Türk Anesteziyoloji ve Reanimasyon Derneği (TARD) klinik kılavuzları", "T.C. SB ameliyathane, sedasyon ve anestezi güvenlik protokolleri", "TARD zor havayolu ve obstetrik anestezi önerileri", "TARD perioperatif ağrı / ERAS uyumlu TR uygulamaları", "SGK anestezi işlem kodları ve rapor kuralları"], soapFields: ["anestezi_riski"], greeting: "Merhaba, ben Prof. Dr. Pınar Demir. Anestezi alanında size yardımcı oluyorum.", agentIdEnvVar: "GROQ_AGENT_ANESTEZİ" },
@@ -49,3 +51,12 @@ export const SPECIALTY_MAP: Record<string, Specialty> = SPECIALTIES.reduce((acc,
 }, {} as Record<string, Specialty>);
 
 export const SPECIALTY_COUNT = SPECIALTIES.length;
+
+/**
+ * KD-ISIMLENDIRME-01 (Kaan 2026-09-18): bu branşın TEK adı "Kadın Hastalıkları ve Doğum" (jinekoloji de bu branşa
+ * bağlı; hastanelerde böyle geçer). Hekim/hasta gören her metin bunu okur — "Kadın Doğum" yazılmaz. Veri anahtarı
+ * (`users.specialty = 'kadin-dogum'`) ayrı bir konudur: bransAnahtari() ikisini de 'kadin-hastaliklari-dogum'a çözer.
+ */
+export const KADIN_HASTALIKLARI_DOGUM_ETIKETI = SPECIALTY_MAP["kadin-hastaliklari-dogum"].label;
+/** Dar alanlar (hap, rozet) için kısaltma. "KD" yalnız teknik bağlamda; hasta metninde bu ya da tam ad. */
+export const KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI = SPECIALTY_MAP["kadin-hastaliklari-dogum"].shortLabel ?? KADIN_HASTALIKLARI_DOGUM_ETIKETI;

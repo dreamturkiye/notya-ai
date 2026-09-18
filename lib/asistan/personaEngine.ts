@@ -7,11 +7,12 @@
 import type { AddressableUser } from '@/lib/address'
 import { address } from '@/lib/address'
 import { formatColleagueDisplayName } from '@/lib/colleagueAddress'
+import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import {
   SPECIALISTS,
   SPECIALIST_BY_ID,
   getSpecialistForSpecialty,
-  findSpecialistForSpecialty,
+  SPECIALIST_BY_SPECIALTY,
   type SpecialtyKey,
   type SpecialistDef,
 } from '@/lib/asistan/specialistsCatalog'
@@ -248,11 +249,12 @@ export function getPersonaForSpecialty(specialty: string): PersonaId {
 export const VARSAYILAN_PERSONA: PersonaId = 'aysekaya'
 
 /** ASISTAN-PERSONA-BRANS (KD-DERM-SAFETY-FINDINGS F2): colleague when the doctor has not picked one. The first branch
- * (request specialty, then users.specialty) with its own specialist wins, so a kadın doğum doctor meets the KD colleague,
+ * (request specialty, then users.specialty) with its own specialist wins, so a Kadın Hastalıkları ve Doğum doctor meets the KD colleague,
  * not the pediatri one. genel / aile hekimliği / unknown keep the flagship Ayşe (mixed-age practice, b9406a9). */
 export function varsayilanPersonaId(...branslar: (string | null | undefined)[]): PersonaId {
   for (const b of branslar) {
-    const s = b ? findSpecialistForSpecialty(b) : null
+    const k = bransAnahtari(b)
+    const s = k ? SPECIALIST_BY_SPECIALTY[k] : null
     if (s && s.specialtyKey !== 'aile-hekimligi') return s.id
   }
   return VARSAYILAN_PERSONA

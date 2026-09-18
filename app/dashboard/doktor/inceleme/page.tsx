@@ -20,6 +20,7 @@ import {
 } from '@/lib/doktor/onaySonrasiYol';
 import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
+import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
@@ -410,7 +411,7 @@ export default function IncelemePage() {
                   }}
                 >
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0', minWidth: 0 }}>
-                    {[note.maskedPatient, note.specialty, note.date].filter(Boolean).join(' • ')}
+                    {[note.maskedPatient, bransEtiketi(note.specialty), note.date].filter(Boolean).join(' • ')}
                     {acikId === note.id && kBekliyor ? <span style={{ color: '#F59E0B', fontWeight: 500 }}> · Ayşe notu yeniden okuyor…</span> : null}
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>

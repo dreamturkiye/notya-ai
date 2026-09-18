@@ -4,6 +4,7 @@
  */
 import type { AsiKod, DualCite, NtpCanonicalKey } from './types'
 import { NTP_DISCLAIMER } from './types'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
 export { NTP_DISCLAIMER }
 
@@ -133,4 +134,4 @@ export const CIFT_ATIF: Record<string, DualCite> = {
 export const NTP2_SMS = (ntp2Bas: string, ntp2Son: string) =>
   `Bebeğinizin 2. topuk kanı (yenidoğan tarama, NTP-2) ${ntp2Bas}–${ntp2Son} tarihleri arasında aile sağlığı merkezinde (ASM) alınmalıdır. ${NTP_DISCLAIMER} Notya e-Nabız veya ulusal tarama kaydı yerine geçmez.`
 
-export const YENI_BEBEK_BILDIRIM = 'Yeni bebek — kadın-doğum taburcu paketi ile pediatri iş listesine düştü. Ayşe bebek kartını açabilir.'
+export const YENI_BEBEK_BILDIRIM = `Yeni bebek — ${KADIN_HASTALIKLARI_DOGUM_ETIKETI} taburcu paketi ile pediatri iş listesine düştü. Ayşe bebek kartını açabilir.`

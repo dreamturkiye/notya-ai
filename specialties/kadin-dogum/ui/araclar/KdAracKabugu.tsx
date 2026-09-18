@@ -1,6 +1,6 @@
 'use client';
 /**
- * Araçlar › Kadın Doğum stüdyoları ortak kabuğu (GozAracKabugu ile aynı kalıp). Oturum + branş kapısı (doktorAraciBransaUygun)
+ * Araçlar › Kadın Hastalıkları ve Doğum stüdyoları ortak kabuğu (GozAracKabugu ile aynı kalıp). Oturum + branş kapısı (doktorAraciBransaUygun)
  * + yönlendirme, mobil düzen, isteğe bağlı hasta seçici (tr-TR arama). Yalnız kadın hastalıkları ve doğum hekimi açar;
  * başka branş /doktor-tools'a döner (specialty-doktor-araclari).
  */
@@ -10,6 +10,7 @@ import DoktorNav from '@/components/doktor/DoktorNav';
 import { toolsShell, toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
+import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
 import { doneWindowIdsFromClinic } from '../../engines/clinic-fit';
 import type { WindowId } from '../../engines/test-windows';
 import type { PencereDurum } from '../../engines/araclar';
@@ -208,7 +209,7 @@ export default function KdAracKabugu({ route, baslik, aciklama, children }: { ro
         ) : (
           <>
             <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#F472B6', letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar · Kadın Doğum</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#F472B6', letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar · {KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI}</div>
               <h1 style={{ fontSize: 26, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>{baslik}</h1>
               <p style={{ margin: '8px 0 0', fontSize: 15, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
             </div>

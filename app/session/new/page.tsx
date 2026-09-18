@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js"
 import { anamnezParcala, fizikParcala } from "@/lib/doktor/anamnezBolumleri"
 import { useRouter, useSearchParams } from "next/navigation"
 import { BRANS_ETIKETLERI } from "@/lib/intake/bransSorulari"
+import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
 import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
 import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
@@ -12,7 +13,6 @@ import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
 const BRANS_EMOJI: Record<string, string> = { genel: "👨‍⚕️", pediatri: "🧒", kardiyoloji: "❤️", noroloji: "🧠", psikiyatri: "💭", dahiliye: "🩺", ortopedi: "🦴", "kadin-hastaliklari-dogum": "👶", "genel-cerrahi": "🔪", dermatoloji: "🌿", uroloji: "💊", onkoloji: "🎗️", "acil-tip": "🚨", "kulak-burun-bogaz": "👂", "goz-hastaliklari": "👁️", radyoloji: "🩻", anestezi: "😴", "fizik-tedavi": "🏃", "enfeksiyon-hastaliklari": "🦠", endokrinoloji: "🧪", gastroenteroloji: "🫁", nefroloji: "🫘", romatoloji: "🦵", "gogus-hastaliklari": "🫁", "gogus-cerrahisi": "🔬", "plastik-cerrahi": "✂️", "beyin-cerrahisi": "🧠", "kalp-damar-cerrahisi": "❤️‍🩹", "cocuk-cerrahisi": "🧸", "aile-hekimligi": "🏠", "spor-hekimligi": "⚽" }
-const ESKI_ANAHTAR: Record<string, string> = { kadin_hastaliklari: "kadin-hastaliklari-dogum", "kadin-dogum": "kadin-hastaliklari-dogum", genel_cerrahi: "genel-cerrahi", acil: "acil-tip" }
 const SPECIALTIES = [
   { id: "genel", label: "Genel Pratisyen", emoji: BRANS_EMOJI.genel },
   ...(Object.entries(BRANS_ETIKETLERI) as [string, string][]).map(([id, label]) => ({ id, label, emoji: BRANS_EMOJI[id] || "🩺" })),
@@ -52,7 +52,8 @@ function NewSessionInner() {
       // Sebep: bu sayfa süresi dolmuş token'la /api/users/me'ye gidiyordu (401 → seçici). Şimdi
       // (1) yenilenen token ile sorulur, (2) sonuç önbelleğe alınır, (3) ağ/oturum hatasında önbellek kullanılır.
       const uygula = (bHam: string | null | undefined) => {
-        const b = bHam ? (ESKI_ANAHTAR[bHam] || bHam) : bHam
+        // Eski anahtarlar ('kadin-dogum', 'kadin_hastaliklari', 'genel_cerrahi', 'acil') tek çözücüden kanonik anahtara; 'genel' olduğu gibi kalır.
+        const b = bHam ? (bransAnahtari(bHam) ?? bHam) : bHam
         if (b && SPECIALTIES.some((s) => s.id === b)) { setSpecialty(b); setBransKilitli(true); return true }
         return false
       }

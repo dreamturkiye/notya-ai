@@ -10,7 +10,7 @@ alwaysApply: true
 
 **Read and follow** `.cursor/skills/brans-alan-sizmasi/SKILL.md` before adding any field, section, vocabulary, or UI to a shared/baseline component.
 
-Boss rule (live KD bugs): **Baş Çevresi** and the word **veli** are pediatri-only — they must not appear for Kadın Doğum (or other adult branşlar). Specialty-specific content must never carry over to another specialty.
+Boss rule (live KD bugs): **Baş Çevresi** and the word **veli** are pediatri-only — they must not appear for Kadın Hastalıkları ve Doğum (or other adult branşlar). Specialty-specific content must never carry over to another specialty.
 
 Correction (Kaan 2026-09-17, Turkish law — VELI-YASAL-ONAM): **veli** follows the patient's **age**, not the branch — every patient under 18 gets veli/yasal temsilci wording in **every** branş (`veliDiliMi` / `veliOnamGerekliMi` in `lib/specialties/kapsam.ts`); an adult patient never does. Baş Çevresi / Neyzi / sağlam çocuk stay branch-gated (`pediatrikBaglamMi`).
 

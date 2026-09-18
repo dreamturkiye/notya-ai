@@ -42,11 +42,11 @@ describe('(b) goldens, no book text', () => {
 describe('(c) wired into the runtime call paths', () => {
   it('SOAP system prompt carries the KD lock (session key or users.specialty), not for other branches', () => {
     const d = soapSistemPromptu({ transcript: '', specialty: 'kadin-hastaliklari-dogum' })
-    assert.ok(d.includes('=== KADIN DOĞUM SİSTEM KİLİDİ')); assert.ok(d.includes('SOAP — gebe visit')); assert.ok(d.includes('SOAP — USG visit')); assert.ok(d.includes('- current_ga: '))
+    assert.ok(d.includes('=== KADIN HASTALIKLARI VE DOĞUM SİSTEM KİLİDİ')); assert.ok(d.includes('SOAP — gebe visit')); assert.ok(d.includes('SOAP — USG visit')); assert.ok(d.includes('- current_ga: '))
     assert.ok(d.includes('"SB (yasal asgari): …"'))
-    assert.ok(soapSistemPromptu({ transcript: '', specialty: 'genel', doktorBransi: 'kadin-dogum' }).includes('KADIN DOĞUM SİSTEM KİLİDİ'))
-    assert.ok(!soapSistemPromptu({ transcript: '', specialty: 'pediatri', doktorBransi: 'pediatri' }).includes('KADIN DOĞUM'))
-    assert.ok(!soapSistemPromptu({ transcript: '', specialty: 'dahiliye' }).includes('KADIN DOĞUM'))
+    assert.ok(soapSistemPromptu({ transcript: '', specialty: 'genel', doktorBransi: 'kadin-dogum' }).includes('KADIN HASTALIKLARI VE DOĞUM SİSTEM KİLİDİ'))
+    assert.ok(!soapSistemPromptu({ transcript: '', specialty: 'pediatri', doktorBransi: 'pediatri' }).includes('KADIN HASTALIKLARI VE DOĞUM'))
+    assert.ok(!soapSistemPromptu({ transcript: '', specialty: 'dahiliye' }).includes('KADIN HASTALIKLARI VE DOĞUM'))
     assert.ok(!soapSistemPromptu({ transcript: '', specialty: 'kadin-hastaliklari-dogum' }).includes('DAHİLİYE'))
   })
   it('kadinDogumMi matches router bransAnahtari (kadın / jinek / obstet only)', () => {
@@ -65,7 +65,8 @@ describe('(c) wired into the runtime call paths', () => {
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("kadinDogumKilidi('ogrenme')"))
     assert.ok(kaynak('app/api/notes/[id]/approve/route.ts').includes('await hekimBransi(supabase, user.id)'))
     assert.ok(kaynak('next.config.mjs').includes('./specialties/kadin-dogum/prompts/*.md'))
-    assert.ok(kaynak('app/session/new/page.tsx').includes('"kadin-dogum": "kadin-hastaliklari-dogum"'))
+    // KD-ISIMLENDIRME-01: session branch key comes from the single resolver ('kadin-dogum' → 'kadin-hastaliklari-dogum', kd-isim-esdegerligi.test.ts)
+    assert.ok(kaynak('app/session/new/page.tsx').includes('bransAnahtari(bHam)'))
   })
 })
 

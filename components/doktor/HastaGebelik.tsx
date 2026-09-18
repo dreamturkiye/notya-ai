@@ -8,6 +8,7 @@ import { JinekolojiSpine } from '@/specialties/kadin-dogum/ui/JinekolojiSpine'
 import { BugunkuJineMuayene } from '@/specialties/kadin-dogum/ui/BugunkuJineMuayene'
 import { TrTarihAlan } from '@/specialties/kadin-dogum/ui/TrTarihAlan'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties';
 import HastaKdChapter from '@/components/doktor/HastaKdChapter';
 import { oncekiGebelikDurumMetni, oncekiGebelikEtiketTuru, oncekiGebelikleriFiltrele } from '@/lib/clinical/gebelikDurum';
 import StickyGebeStrip from '@/specialties/kadin-dogum/ui/StickyGebeStrip';
@@ -600,7 +601,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           {dogumAcik && (
             <div style={kutu}>
               <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 4 }}>Doğum kaydı — Anne | Bebek</div>
-              <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>Canlı doğum bebek kartını zorunlu açar (anneye bağlı). Kadın-doğum ilk örnek ve taburcu paketini; Ayşe sonrası izlemi sahiplenir.</div>
+              <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>Canlı doğum bebek kartını zorunlu açar (anneye bağlı). {KADIN_HASTALIKLARI_DOGUM_ETIKETI} ilk örnek ve taburcu paketini; Ayşe sonrası izlemi sahiplenir.</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 6 }}>Anne</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('dogumTarihi', 'Doğum tarihi', d, setD, 'date')}

@@ -15,7 +15,7 @@ description: >-
 
 # Branş alan sızması (bir branşa özel bir şey başka branşta görünmemeli)
 
-Boss rule (verbatim intent, from two live bugs he found as a Kadın Doğum
+Boss rule (verbatim intent, from two live bugs he found as a Kadın Hastalıkları ve Doğum
 doctor): the Yaşamsal Bulgular form showed a **Baş Çevresi** (head
 circumference) field — pediatri-only, meaningless for an obstetrics patient —
 and the hasta/veli özeti used the word **"veli"** (guardian) — pediatri-only
@@ -87,6 +87,13 @@ vitalleriKapsamaGoreSuz(vitaller, kapsam)   // strips a pediatric-only vital fro
 
 - **Branch resolution:** the session's branch (when it is a real branch) → else the doctor's `users.specialty`
   (legacy values like `'kadin-dogum'` resolve through `bransAnahtari()`) → else branch-less ("genel").
+- **One branch, one name, two stored values (KD-ISIMLENDIRME-01, Kaan 2026-09-18).** `'kadin-dogum'` (live
+  `users.specialty` on real KD accounts) and `'kadin-hastaliklari-dogum'` (canonical key) are the SAME branch. Every
+  resolver delegates to `bransAnahtari()` (`lib/specialties/bransAnahtari.ts`) — never add a local
+  `=== 'kadin-dogum'` / regex check, never delete the alias (the account goes branch-less; lock:
+  `lib/specialties/kd-isim-esdegerligi.test.ts`). Every doctor- or patient-facing text reads the name from
+  `KADIN_HASTALIKLARI_DOGUM_ETIKETI` ("Kadın Hastalıkları ve Doğum"; narrow: `…_KISA_ETIKETI` "Kadın Hast. ve Doğum")
+  and a raw key is shown through `bransEtiketi()` — never "Kadın Doğum", never the slug.
 - **`PEDIATRIK_BAGLAM: Record<SpecialtyKey, 'her-zaman' | 'cocuk-hastada' | 'asla'>`** in `profile.ts` — all 30
   branches written out, no default (the `bransSorulari` shape): pediatri + çocuk cerrahisi `her-zaman`;
   aile hekimliği and branch-less `cocuk-hastada` (= a patient **known** to be under 18); the other 27 `asla`

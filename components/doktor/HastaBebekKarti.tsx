@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { NTP_DISCLAIMER } from '@/lib/clinical/yenidogan/constants'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
 type Gorev = {
   id: string
@@ -98,7 +99,7 @@ export default function HastaBebekKarti({ patientId }: { patientId: string }) {
   if (!veri?.bebek) {
     return (
       <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 20, color: '#8FA0B5', fontSize: 13 }}>
-        Bu dosyada bebek kartı yok. Canlı doğum kaydı kadın-doğumda bebek kartını otomatik açar.
+        Bu dosyada bebek kartı yok. Canlı doğum kaydı {KADIN_HASTALIKLARI_DOGUM_ETIKETI} bölümünde bebek kartını otomatik açar.
       </div>
     )
   }
@@ -111,7 +112,7 @@ export default function HastaBebekKarti({ patientId }: { patientId: string }) {
       <div style={{ fontSize: 16, fontWeight: 800, color: '#EDF1F7' }}>Bebek kartı · {veri.bebek.ad || 'Yenidoğan'}</div>
       <div style={{ fontSize: 12.5, color: '#FBBF24', margin: '6px 0 10px' }}>{veri.disclaimer || NTP_DISCLAIMER}</div>
       <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }}>
-        Ayşe / pediatri sahiplenir. Kadın-doğum doğum + ilk örnek + lohusayı tutar. Notya e-Nabız veya ulusal tarama kaydı değildir.
+        Ayşe / pediatri sahiplenir. {KADIN_HASTALIKLARI_DOGUM_ETIKETI} doğum + ilk örnek + lohusayı tutar. Notya e-Nabız veya ulusal tarama kaydı değildir.
         {veri.anne?.patientId && (
           <> · <Link href={`/dashboard/doktor/hastalar/${veri.anne.patientId}?tab=gebelik`} style={{ color: '#2DD4BF' }}>Anne dosyası</Link></>
         )}

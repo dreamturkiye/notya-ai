@@ -1,6 +1,6 @@
 SOAP — doğum + first 24–48h lohusa + travay.
 
-TR kadın doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.
+TR kadın hastalıkları ve doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.
 
 Labor / travay: partogram, Bishop, oxytocin, NST cat I–III + action, CS indication, Robson group, VBAC counseling (SB CS-rate note is counseling not a veto).
 
