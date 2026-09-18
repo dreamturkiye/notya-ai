@@ -84,6 +84,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/goz/kohort/route.ts': T,
   'app/api/doktor/goz/_ek.ts': I('gozEkAdim / gozEkVeri run only after route.ts hasta(doctorId, patientId); every read/write .eq(patient_id, h.id).eq(doctor_id); child ids (katarakt, acil, görüntü) re-scoped by patient_id + doctor_id'),
   'app/api/doktor/goz/_kohort.ts': I('patient ids drawn only from goz_* rows with doctor_id = doctorId; patients read by doctor_id; gozHatirlatmaGonder runs only on ids that passed that filter or hasta()'),
+  'app/api/doktor/pediatri/route.ts': T,
+  'app/api/doktor/pediatri/_ortak.ts': I('pediHasta: patients by id AND doctor_id — the gate every pediatri handler passes first; pediOturum = doktorOturum + users.specialty pediatri'),
   'app/api/doktor/dahiliye/route.ts': T,
   'app/api/doktor/dahiliye/_ortak.ts': I('hastaBilgi/hastaAdi: patients by id AND doctor_id — the gate every dahiliye handler passes first'),
   'app/api/doktor/dahiliye/_wow2.ts': I('runs only after hastaBilgi(); id-keyed updates scoped by doctor_id or the verified patient'),

@@ -29,7 +29,7 @@
 export type Cinsiyet = 'male' | 'female'
 export type BuyumeParametre = 'kilo' | 'boy' | 'basCevresi' | 'vki'
 
-interface LMSNokta { ay: number; L: number; M: number; S: number }
+export interface LMSNokta { ay: number; L: number; M: number; S: number }
 
 // ay: Birth=0, 1..33 ay noktaları, sonra yıl bazlı (3y=36 ... 18y=216)
 const KILO_ERKEK: LMSNokta[] = [
@@ -183,7 +183,15 @@ export interface PersentilSonuc { persentil: number; zSkor: number }
 /** ayYas: hastanın ölçüm anındaki yaşı (ay, ondalıklı olabilir, ör. 4 yaş 3 ay = 51). */
 export function persentilHesapla(param: BuyumeParametre, cinsiyet: Cinsiyet, ayYas: number, deger: number): PersentilSonuc | null {
   if (!Number.isFinite(deger) || deger <= 0 || !Number.isFinite(ayYas) || ayYas < 0 || ayYas > 216) return null
-  const tablo = tabloSec(param, cinsiyet)
+  return lmsDegerlendir(tabloSec(param, cinsiyet), ayYas, deger)
+}
+
+/**
+ * PEDI-ARACLAR-01 — aynı LMS matematiği başka bir referans tablosu için (Büyüme stüdyosu WHO seçeneği).
+ * Kapsam denetimi çağıranındır; burada tablo uçlarında sabitlenir (lmsAra ile aynı).
+ */
+export function lmsDegerlendir(tablo: LMSNokta[], ayYas: number, deger: number): PersentilSonuc | null {
+  if (!tablo.length || !Number.isFinite(deger) || deger <= 0 || !Number.isFinite(ayYas) || ayYas < 0) return null
   const lms = lmsAra(tablo, ayYas)
   if (!lms) return null
   const z = zSkorHesapla(deger, lms)
@@ -272,13 +280,16 @@ export function persentilEgrileri(
   persentiller: number[] = [3, 10, 25, 50, 75, 90, 97],
   adimAy = 1,
 ): EgriSerisi[] {
-  const tablo = tabloSec(param, cinsiyet)
-  const ustSinir = Math.min(216, Math.max(6, Math.ceil(maxAy)))
-  const noktaSayisi = Math.ceil(ustSinir / adimAy) + 1
+  return lmsEgrileri(tabloSec(param, cinsiyet), Math.min(216, Math.max(6, Math.ceil(maxAy))), persentiller, adimAy)
+}
+
+/** PEDI-ARACLAR-01 — persentilEgrileri'nin tablo bağımsız çekirdeği (0 → ustSinir ay). */
+export function lmsEgrileri(tablo: LMSNokta[], ustSinir: number, persentiller: number[] = [3, 10, 25, 50, 75, 90, 97], adimAy = 1, altSinir = 0): EgriSerisi[] {
+  const noktaSayisi = Math.ceil((ustSinir - altSinir) / adimAy) + 1
   return persentiller.map((p) => ({
     persentil: p,
     noktalar: Array.from({ length: noktaSayisi }, (_, i) => {
-      const ay = Math.min(ustSinir, i * adimAy)
+      const ay = Math.min(ustSinir, altSinir + i * adimAy)
       const lms = lmsAra(tablo, ay)
       return lms ? { ay, deger: Math.round(degerdenPersentil(lms, p) * 100) / 100 } : null
     }).filter((x): x is EgriNoktasi => x !== null),

@@ -40,6 +40,9 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
  */
 export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#E8C547', icon: 'HB', title: 'Hedef Boy', desc: 'Anne-baba boyuna göre çocuğun tahmini erişkin boyu — açıp aileyle kullanın', route: '/doktor-tools/hedef-boy', branslar: ['pediatri'] },
+  // Pediatri — specialty-only (not kardiyoloji / dahiliye / göz / KD / dermatoloji / …). Chapter engines: specialties/pediatri/engines.
+  { circleColor: '#14B8A6', icon: 'BP', title: 'Büyüme & Persentil', desc: 'Neyzi / WHO persentil ve z-skor, eğri, persentil kayması ve büyüme hızı (cm/yıl)', route: '/doktor-tools/pedi-buyume', branslar: ['pediatri'] },
+  { circleColor: '#F97316', icon: 'DH', title: 'Doz Hesaplayıcı (mg/kg)', desc: 'Girdiğiniz mg/kg ve konsantrasyonla doz başına mg ve mL — günlük toplam ve tavan uyarısı', route: '/doktor-tools/pedi-doz', branslar: ['pediatri'] },
   { circleColor: '#0891B2', icon: 'KH', title: 'Dahiliye Kohort Paneli', desc: 'HbA1c >9 · KB/LDL hedef dışı · eGFR <45 · gecikmiş görevler · 1-tap hatırlatma', route: '/doktor-tools/dahiliye-kohort', branslar: ['dahiliye'] },
   // Göz Hastalıkları — specialty-only (not dahiliye / pediatri / kardiyoloji / KD / dermatoloji). Chapter engines only.
   { circleColor: '#0D9488', icon: 'VA', title: 'VA / logMAR', desc: 'Ondalık · Snellen · PS/EH/IH → logMAR ve iki vizit arası ETDRS harf farkı, OD/OS', route: '/doktor-tools/goz-va', branslar: ['goz-hastaliklari'] },

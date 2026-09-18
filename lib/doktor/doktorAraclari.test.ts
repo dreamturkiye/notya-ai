@@ -162,3 +162,50 @@ test('Araçlar landing is a card grid only — Hedef Boy opens as its own page',
   assert.doesNotMatch(catalog, /presprint-audit|post-sprint-audit|gaps-audit|\.html/)
   assert.doesNotMatch(catalog, /Gökhan|Gokhan/)
 })
+
+// PEDI-ARACLAR-01 — pediatri-only Araçlar (same shape as the göz block above).
+const PEDI_ROTALAR = ['/doktor-tools/pedi-buyume', '/doktor-tools/pedi-doz']
+
+test('pediatri-only Araçlar: pediatri sees all; dahiliye / kardiyoloji / göz / KD / derm and every other branş never', () => {
+  for (const b of ['pediatri', 'Çocuk Sağlığı ve Hastalıkları']) {
+    const ped = doktorAraclariListesi(b)
+    for (const r of [...PEDI_ROTALAR, '/doktor-tools/hedef-boy']) {
+      assert.ok(ped.some((a) => a.route === r), `${b} missing ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), true, `${b} ${r}`)
+    }
+  }
+  for (const r of PEDI_ROTALAR) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, `${r} not in BRANS_DOKTOR_ARACLARI`)
+    assert.deepEqual(arac.branslar, ['pediatri'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'pediatri')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'dahiliye', 'kardiyoloji', 'goz-hastaliklari', 'kadin-dogum', 'dermatoloji', 'İç Hastalıkları', 'Kadın Hastalıkları ve Doğum', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of PEDI_ROTALAR) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  // pediatri does not see other chapters' tiles
+  const ped = doktorAraclariListesi('pediatri')
+  assert.ok(!ped.some((a) => a.route.startsWith('/doktor-tools/goz-') || a.route === '/doktor-tools/dahiliye-kohort'))
+  assert.equal(ped.length, ORTAK_DOKTOR_ARACLARI.length + 1 + PEDI_ROTALAR.length)
+})
+
+test('pediatri studio pages: guarded by PediAracKabugu, card-opened, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/pediatri/ui/araclar/PediAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+  for (const r of PEDI_ROTALAR) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /PediAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /PediAracKabugu|BuyumeStudyosu|DozAraci|AsiPlanlayici|GelisimPaneli|PediKohortPaneli/)
+})
