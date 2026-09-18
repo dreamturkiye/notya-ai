@@ -45,6 +45,33 @@ export interface IntakeAlan {
 export interface IntakeBolum {
   baslik: string
   alanlar: IntakeAlan[]
+  /**
+   * VELI-YASAL-ONAM — bölüm yalnız formdaki doğum tarihine göre reşit olmayan hastada görünür (ve yalnız o zaman
+   * doğrulanır / kaydedilir). Karar kapsam.ts → veliOnamGerekliMi (yaş, branştan bağımsız); doğum tarihi girilmeden
+   * bölüm çizilmez. Bkz. lib/intake/dogrula.ts → intakeBolumGorunur.
+   */
+  veliKosulu?: { dogumAlanId: string }
+}
+
+/**
+ * VELI-YASAL-ONAM (Kaan 2026-09-17): "18 yaşını doldurmamış her çocukta klinik kayıt ve tıbbi onam için veli / yasal
+ * temsilci bilgisi alınır. Pratik kural: Ad, soyad, yakınlık (anne, baba, vasi), telefon; mümkünse kimlik teyidi."
+ * Eskiden yalnız pediatri branş bölümündeydi (yakınlık Anne/Baba/Diğer + "Diğer" metni); artık ortak omurgada, her
+ * branşta aynı, YAŞ güdümlü (veliKosulu → veliOnamGerekliMi) — erişkin hastada hiç çizilmez. Reşit olmayanda zorunlu;
+ * yalnız kimlik teyidi isteğe bağlı ("mümkünse"). veliYakinligi / veliDigerAdSoyad id'leri eski pediatri
+ * gönderimleriyle aynı (hastaDosyaDerleyici "veli beyanı" kararı veliYakinligi'ne bakar).
+ */
+export const VELI_BOLUMU: IntakeBolum = {
+  baslik: 'Veli / Yasal Temsilci',
+  veliKosulu: { dogumAlanId: 'dogumTarihi' },
+  alanlar: [
+    { id: 'veliAd', etiket: 'Veli / Yasal Temsilcinin Adı', tur: 'text', zorunlu: true, yardim: '18 yaşından küçük hastalarda muayene ve tıbbi onam için veli / yasal temsilci bilgisi gereklidir.' },
+    { id: 'veliSoyad', etiket: 'Veli / Yasal Temsilcinin Soyadı', tur: 'text', zorunlu: true },
+    { id: 'veliYakinligi', etiket: 'Veli / Yasal Temsilcinin Yakınlığı', tur: 'radio', zorunlu: true, secenekler: ['Anne', 'Baba', 'Vasi', 'Diğer'] },
+    { id: 'veliDigerAdSoyad', etiket: 'Yakınlığı (Diğer ise)', tur: 'text', placeholder: 'Örn. anneanne, bakıcı, koruyucu aile', yardim: 'Yalnız "Diğer" seçildiyse doldurun.' },
+    { id: 'veliTelefon', etiket: 'Veli / Yasal Temsilcinin Telefonu', tur: 'tel', zorunlu: true, placeholder: '05xx xxx xx xx' },
+    { id: 'veliKimlikTeyidi', etiket: 'Kimlik Teyidi (isteğe bağlı)', tur: 'checkbox-grup', secenekler: ['Kimlik teyidi yapıldı'], yardim: 'Form klinikte dolduruluyorsa ve veli / yasal temsilcinin kimliği görüldüyse işaretleyin. Uzaktan dolduruyorsanız boş bırakın; teyit muayenede yapılır.' },
+  ],
 }
 
 export const CORE_BOLUMLER: IntakeBolum[] = [
@@ -64,6 +91,7 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       { id: 'medeniDurum', etiket: 'Medeni Durum', tur: 'radio', zorunlu: true, secenekler: ['Bekâr', 'Evli', 'Boşanmış', 'Dul'] },
     ],
   },
+  VELI_BOLUMU,
   {
     baslik: 'İletişim Bilgileri',
     alanlar: [
@@ -71,9 +99,18 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       { id: 'eposta', etiket: 'E-posta', tur: 'email', zorunlu: true },
       { id: 'adres', etiket: 'Adres', tur: 'textarea', zorunlu: true },
       { id: 'il', etiket: 'Şehir', tur: 'text', placeholder: 'Örn. İstanbul' },  // Kaan 2026-09-10: isteğe bağlı; Özet › Şehir buradan dolar
-      { id: 'acilKisiAdi', etiket: 'Acil Durumda Aranacak Kişi (Ad Soyad)', tur: 'text', zorunlu: true },
-      { id: 'acilKisiTelefon', etiket: 'Acil Durum Kişisi Telefonu', tur: 'tel', zorunlu: true },
-      { id: 'acilKisiYakinlik', etiket: 'Yakınlık Derecesi', tur: 'text', zorunlu: true, placeholder: 'Örn. eş, anne, kardeş' },
+    ],
+  },
+  // ACIL-KISI (Kaan 2026-09-17): Türk sağlık pratiğinde yerleşik (yatış formu "hasta yakını", Kişisel Sağlık Bilgi
+  // Formu, e-Nabız "Acil Durumda Aranacak Kişi Listesi") — ama HER YERDE İSTEĞE BAĞLI, asla zorunlu değil (kalıcı
+  // kural). Her branş, her yaş. Veli bölümünden ayrı: veli = hukuki temsil/onam, bu = yalnız iletişim.
+  // Alan id'leri İletişim Bilgileri'ndeki eski (zorunlu) alanlarla aynı — eski gönderimler aynı etiketle okunur.
+  {
+    baslik: 'Acil Durumda Aranacak Kişi (isteğe bağlı)',
+    alanlar: [
+      { id: 'acilKisiAdi', etiket: 'Acil Durumda Aranacak Kişi (Ad Soyad)', tur: 'text', yardim: 'Zorunlu değil — dilerseniz boş bırakabilirsiniz.' },
+      { id: 'acilKisiYakinlik', etiket: 'Acil Durum Kişisinin Yakınlık Derecesi', tur: 'text', placeholder: 'Örn. eş, anne, baba, kardeş, arkadaş' },
+      { id: 'acilKisiTelefon', etiket: 'Acil Durum Kişisi Telefonu', tur: 'tel', placeholder: '05xx xxx xx xx' },
     ],
   },
   {
@@ -112,6 +149,14 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
     ],
   },
 ]
+
+/** NOTYA-FORM-ONAY-SON (Gökhan): Onay (KVKK) bölümü her zaman formun EN SONUNDA olmalı —
+ * core'un sonundaydı ama branş soruları (pediatride doğum/gelişim) sonradan eklenince ortada kalıyordu.
+ * Hastanın gördüğü tam bölüm listesi: çekirdek + branş bölümü, onay sonda (web formu + testler). */
+export function intakeFormBolumleri(coreBolumler: IntakeBolum[], bransBolumu: IntakeBolum | null): IntakeBolum[] {
+  const bolumler = [...coreBolumler, ...(bransBolumu ? [bransBolumu] : [])]
+  return [...bolumler.filter((b) => b.baslik !== 'Onay'), ...bolumler.filter((b) => b.baslik === 'Onay')]
+}
 
 /** NOTYA-INTAKE-05: branşa göre çekirdek alan uyarlaması (Dr. Gökhan Mamur canlı test
  * geri bildirimi, 2026-09-02). Pediatride sağlık geçmişi ebeveynin serbest metinle

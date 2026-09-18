@@ -110,7 +110,7 @@ globalThis.fetch = (async (girdi: unknown, init?: { body?: string }) => {
 }) as typeof fetch
 
 // ─── Sentetik QA hekimleri ──────────────────────────────────────────────────────────────────────
-type Hekim = { ad: string; id: string; token: string; hasta: string; bekleyenNot: string; yeniSeans: string; seansBransi: string }
+type Hekim = { ad: string; id: string; token: string; hasta: string; bekleyenNot: string; yeniSeans: string; seansBransi: string; dogum: string }
 let encrypt: (s: string) => string
 let NextRequestSinifi: typeof import('next/server').NextRequest
 
@@ -133,7 +133,7 @@ function hekimKur(ad: string, usersSpecialty: string, seansBransi: string, dogum
     hasta_ozeti: 'Sentetik özet.',
   }).id
   const yeniSeans = db.ekle('sessions', { doctor_id: id, patient_id: hasta, specialty: seansBransi, status: 'recording' }).id
-  return { ad, id, token, hasta, bekleyenNot, yeniSeans, seansBransi }
+  return { ad, id, token, hasta, bekleyenNot, yeniSeans, seansBransi, dogum }
 }
 
 const COCUK = '2022-03-01'
@@ -159,6 +159,8 @@ const VELI = /veli|anne-baba|ebeveyn/i
 describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () => {
   let R: Record<string, any>
   let Form: typeof import('../../components/doktor/YasamsalBulgularFormu').default
+  let IntakeBolumleri: typeof import('../../components/intake/IntakeBolumleri').default
+  let intakeFormBolumleri: typeof import('../intake/coreAlanlar').intakeFormBolumleri
   const H: Record<string, Hekim> = {}
 
   before(async () => {
@@ -172,7 +174,12 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
       seansBitir: await ice('app/api/sessions/[id]/end/route'),
       konsult: await ice('app/api/doktor/not-konsult/route'),
       epikriz: await ice('app/api/doktor/araclar/epikriz/route'),
+      intakeOlustur: await ice('app/api/doktor/intake-formlari/route'),
+      intakeDetay: await ice('app/api/doktor/intake-formlari/[id]/route'),
+      intake: await ice('app/api/intake/[token]/route'),
     }
+    IntakeBolumleri = (await import('../../components/intake/IntakeBolumleri')).default
+    ;({ intakeFormBolumleri } = await import('../intake/coreAlanlar'))
     db = new SahteVeritabani()
     H.pediatri = hekimKur('pediatri', 'pediatri', 'pediatri', COCUK)
     H.kd = hekimKur('kd', 'kadin-dogum', 'kadin-hastaliklari-dogum', YETISKIN)
@@ -192,12 +199,14 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
     H.ortopediCocuk = hekimKur('ortopedi-cocuk', 'ortopedi', 'ortopedi', ERGEN)
     H.ortopediYetiskin = hekimKur('ortopedi-yetiskin', 'ortopedi', 'ortopedi', YETISKIN)
     H.cocukCerrahi = hekimKur('cocuk-cerrahi', 'cocuk-cerrahisi', 'cocuk-cerrahisi', COCUK)
+    // Intake veli bölümü işi (Kaan): pediatri hekimindeki ERİŞKİN hasta — klinik içerik branşta kalır, veli dili yok
+    H.pediatriYetiskin = hekimKur('pediatri-yetiskin', 'pediatri', 'pediatri', '2006-03-10')
   })
 
   /** KLİNİK pediatrik içerik (baş çevresi, Neyzi, sağlam çocuk) — branş güdümlü */
-  const PEDIATRIK = new Set(['pediatri', 'aileCocuk', 'cocukCerrahi'])
+  const PEDIATRIK = new Set(['pediatri', 'aileCocuk', 'cocukCerrahi', 'pediatriYetiskin'])
   /** HİTAP: veli dili — reşit olmayan hasta her branşta + pediatrik bağlam (VELI-YASAL-ONAM) */
-  const VELI_DILI = new Set([...PEDIATRIK, 'gozCocuk', 'kardiyoCocuk', 'kbbCocuk', 'ortopediCocuk'])
+  const VELI_DILI = new Set(['pediatri', 'aileCocuk', 'cocukCerrahi', 'gozCocuk', 'kardiyoCocuk', 'kbbCocuk', 'ortopediCocuk'])
   const hepsi = () => Object.entries(H)
 
   it('1. İnceleme kuyruğu (GET /api/notes): Baş Çevresi yalnız pediatrik bağlamda; "veli" etiketi her reşit olmayan hastada — form gerçekten çizilir', async () => {
@@ -296,6 +305,61 @@ describe('BRANS-ALAN-SIZMASI · sentetik QA hekimleriyle gerçek rotalar', () =>
         // veli beyanı hitabı yalnız tek vizit promptunda yer alır
         if (!('tumSeanslar' in govde)) assert.equal(/Anne beyanı/.test(sistem), VELI_DILI.has(k), `${k}: veli beyanı hitabı`)
       }
+    }
+  })
+
+  it('6. Hasta bilgi formu (POST /api/doktor/intake-formlari → GET/POST /api/intake/[token]): Veli / Yasal Temsilci her branşta yalnız <18; Acil Durumda Aranacak Kişi herkese, boş gönderilebilir', async () => {
+    /** Sentetik QA yanıtları — gerçek hasta verisi DEĞİL. Acil durum kişisi alanları BİLEREK yok. */
+    const temel = (dogumTarihi: string): Record<string, unknown> => ({
+      tcKimlik: '12345678901', ad: 'Sentetik', soyad: 'Test', dogumTarihi, cinsiyet: 'Kadın', dogumYeri: 'Ankara',
+      babaAdi: 'Test', anneAdi: 'Test', medeniDurum: 'Bekâr', telefon: '05551112233', eposta: 'qa@ornek.test',
+      adres: 'Test Mah. 1. Sok. No:1', sigortaTuru: 'SGK', kanGrubu: 'A Rh+', kronikHastaliklar: ['Yok'], kullaniyorMu: 'Hayır',
+      alerjiVarMi: 'Bilinen alerjisi yok', aileOykusu: 'Yok', sigara: 'Kullanmıyorum', alkol: 'Kullanmıyorum', kvkkOnay: 'Kabul ediyorum',
+    })
+    const VELI_YANIT = { veliAd: 'Sentetik', veliSoyad: 'Veli', veliYakinligi: 'Baba', veliTelefon: '05553334455' }
+    // pediatri, göz, kardiyoloji (+ KBB, ortopedi) × reşit olmayan / erişkin hasta
+    const yuruyus: Array<[string, string, boolean]> = [
+      ['pediatri', 'pediatri', true], ['pediatriYetiskin', 'pediatri', false],
+      ['gozCocuk', 'goz-hastaliklari', true], ['goz', 'goz-hastaliklari', false],
+      ['kardiyoCocuk', 'kardiyoloji', true], ['kardiyo', 'kardiyoloji', false],
+      ['kbbCocuk', 'kulak-burun-bogaz', true], ['ortopediYetiskin', 'ortopedi', false],
+    ]
+    for (const [k, brans, resit] of yuruyus) {
+      const h = H[k]
+      // Hekim formu "elden" oluşturur (WhatsApp yok) — gerçek rota, hasta sahipliği kapısı dahil
+      const olustur = await json(R.intakeOlustur.POST(iste('POST', '/api/doktor/intake-formlari', { token: h.token, govde: { patientId: h.hasta, brans, kanal: 'elden' } })))
+      assert.equal(olustur.status, 200, `${k}: ${JSON.stringify(olustur.veri)}`)
+      const formToken = String(olustur.veri.link).split('/intake/')[1]
+      // sahte veritabanı sütun varsayılanı uygulamaz — 009_intake_asilar.sql: durum DEFAULT 'gonderildi'
+      db.tablolar.get('hasta_intake_formlari')!.find((f) => f.id === olustur.veri.formId)!.durum = 'gonderildi'
+      // Hasta formu açar: sunucu şemayı verir, form gerçekten çizilir (doğum tarihi girilmiş hâliyle)
+      const sema = await json(R.intake.GET(iste('GET', `/api/intake/${formToken}`), prm({ token: formToken })))
+      assert.equal(sema.status, 200, k)
+      const bolumler = intakeFormBolumleri(sema.veri.coreBolumler, sema.veri.bransBolumu)
+      const html = renderToStaticMarkup(React.createElement(IntakeBolumleri, { bolumler, yanitlar: { dogumTarihi: h.dogum }, onDegis: () => {} }))
+      assert.equal(html.includes('Veli / Yasal Temsilci'), resit, `${k}: veli bölümü`)
+      if (!resit) assert.ok(!VELI.test(html), `${k}: erişkin formunda "veli" kelimesi`)
+      assert.ok(html.includes('Acil Durumda Aranacak Kişi (isteğe bağlı)'), `${k}: acil durum kişisi bölümü`)
+      assert.ok(!/Acil Durum[^<]*<span/.test(html), `${k}: acil durum alanı zorunlu işaretli`)
+      if (resit) {
+        // Veli bölümü reşit olmayanda zorunlu — sunucu da reddeder (istemci atlanabilir)
+        const eksik = await json(R.intake.POST(iste('POST', `/api/intake/${formToken}`, { govde: { yanitlar: temel(h.dogum) } }), prm({ token: formToken })))
+        assert.equal(eksik.status, 400, `${k}: veli eksik kabul edildi`)
+        assert.match(eksik.veri.error, /Veli \/ Yasal Temsilcinin Adı/, k)
+      }
+      // Acil durum kişisi TAMAMEN boş gönderim geçer. Erişkinde (bozuk istemci gibi) veli alanları da gönderilir → kaydedilmez.
+      const yanit = { ...temel(h.dogum), ...VELI_YANIT, veliKimlikTeyidi: [] }
+      const gonder = await json(R.intake.POST(iste('POST', `/api/intake/${formToken}`, { govde: { yanitlar: yanit } }), prm({ token: formToken })))
+      assert.equal(gonder.status, 200, `${k}: ${JSON.stringify(gonder.veri)}`)
+      // Hekim dosyada okur: şifreli blobdan çözülen yanıt
+      const kayit = db.tablolar.get('hasta_intake_formlari')!.find((f) => f.patient_id === h.hasta && f.durum === 'dolduruldu')!
+      assert.ok(typeof kayit.form_data_encrypted === 'string' && !kayit.form_data_encrypted.includes('Sentetik'), `${k}: form şifreli değil`)
+      const detay = await json(R.intakeDetay.GET(iste('GET', `/api/doktor/intake-formlari/${kayit.id}`, { token: h.token }), prm({ id: kayit.id })))
+      assert.equal(detay.status, 200, k)
+      const y = detay.veri.form.yanitlar as Record<string, unknown>
+      assert.equal(y.veliYakinligi, resit ? 'Baba' : undefined, `${k}: kaydedilen veli`)
+      assert.equal(Object.keys(y).some((x) => x.startsWith('veli')), resit, `${k}: veli izi`)
+      assert.ok(!Object.keys(y).some((x) => x.startsWith('acilKisi')), `${k}: boş acil kişi`)
     }
   })
 })

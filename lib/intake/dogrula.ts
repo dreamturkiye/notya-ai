@@ -8,6 +8,7 @@
  * bırakabilirsin" diyordu ama bayrak alanı zorunlu tutuyordu.
  */
 import type { IntakeAlan, IntakeBolum } from './coreAlanlar'
+import { veliOnamGerekliMi } from '@/lib/specialties/kapsam'
 
 export type IntakeHataSebebi = 'zorunlu' | 'desen'
 export interface IntakeHata { alan: IntakeAlan; sebep: IntakeHataSebebi }
@@ -28,14 +29,47 @@ export function intakeAlanGorunur(alan: IntakeAlan, yanitlar: Record<string, unk
   return String(v ?? '') === k.deger
 }
 
+/**
+ * Bölüm görünür mü? VELI-YASAL-ONAM: veliKosulu olan bölüm (Veli / Yasal Temsilci) yalnız formdaki doğum tarihine göre
+ * reşit olmayan hastada — karar kapsam.ts → veliOnamGerekliMi (tek yaş kuralı, burada yeniden yazılmaz). Doğum tarihi
+ * boş / geçersizken false: bölüm, tarih girilince belirir (gebelik haftası gibi sıra bağımlı alanlarla aynı desen).
+ */
+export function intakeBolumGorunur(bolum: IntakeBolum, yanitlar: Record<string, unknown>, nowMs = Date.now()): boolean {
+  const k = bolum.veliKosulu
+  if (!k) return true
+  const dogum = yanitlar[k.dogumAlanId]
+  return typeof dogum === 'string' && veliOnamGerekliMi(dogum, nowMs)
+}
+
+/** Formda şu an görünen bölümler (web formu numarayı buna göre verir, doğrulama bunlara bakar). */
+export function intakeGorunurBolumler(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>, nowMs = Date.now()): IntakeBolum[] {
+  return bolumler.filter((b) => intakeBolumGorunur(b, yanitlar, nowMs))
+}
+
+/**
+ * Görünmeyen alanların yanıtlarını atar (bu bölümlerde tanımlı olmayan anahtarlara dokunmaz). Doğum tarihi erişkine
+ * düzeltilirse daha önce yazılmış veli bilgisi kaydedilmez — erişkin hastanın formunda veli izi kalmaz.
+ */
+export function intakeGorunmeyenYanitlariAyikla(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>, nowMs = Date.now()): Record<string, unknown> {
+  const sonuc = { ...yanitlar }
+  for (const bolum of bolumler) {
+    const bolumGorunur = intakeBolumGorunur(bolum, yanitlar, nowMs)
+    for (const alan of bolum.alanlar) {
+      if (alan.tur === 'bolum-basligi') continue
+      if (!bolumGorunur || !intakeAlanGorunur(alan, yanitlar)) delete sonuc[alan.id]
+    }
+  }
+  return sonuc
+}
+
 export function intakeGosterEgerUyuyor(deger: unknown, beklenen: string): boolean {
   if (Array.isArray(deger)) return deger.map(String).includes(beklenen)
   return String(deger ?? '') === beklenen
 }
 
 /** İlk kural ihlalini döndürür; form geçerliyse null. */
-export function intakeIlkHata(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>): IntakeHata | null {
-  for (const bolum of bolumler) {
+export function intakeIlkHata(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>, nowMs = Date.now()): IntakeHata | null {
+  for (const bolum of intakeGorunurBolumler(bolumler, yanitlar, nowMs)) {
     for (const alan of bolum.alanlar) {
       if (alan.tur === 'bolum-basligi') continue
       if (!intakeAlanGorunur(alan, yanitlar)) continue
@@ -51,8 +85,8 @@ export function intakeIlkHata(bolumler: IntakeBolum[], yanitlar: Record<string, 
 }
 
 /** Sunucu (API) mesajı — mevcut 400 gövdeleriyle birebir aynı metin. */
-export function intakeSunucuHataMetni(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>): string | null {
-  const h = intakeIlkHata(bolumler, yanitlar)
+export function intakeSunucuHataMetni(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>, nowMs = Date.now()): string | null {
+  const h = intakeIlkHata(bolumler, yanitlar, nowMs)
   if (!h) return null
   return h.sebep === 'zorunlu'
     ? `"${h.alan.etiket}" alani zorunludur.`
@@ -60,8 +94,8 @@ export function intakeSunucuHataMetni(bolumler: IntakeBolum[], yanitlar: Record<
 }
 
 /** Hastaya gösterilen istemci mesajı (tam Türkçe — form ekranında okunuyor). */
-export function intakeIstemciHataMetni(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>): string | null {
-  const h = intakeIlkHata(bolumler, yanitlar)
+export function intakeIstemciHataMetni(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>, nowMs = Date.now()): string | null {
+  const h = intakeIlkHata(bolumler, yanitlar, nowMs)
   if (!h) return null
   return h.sebep === 'zorunlu'
     ? `Lütfen "${h.alan.etiket}" alanını doldurun.`

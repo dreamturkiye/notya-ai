@@ -20,7 +20,10 @@ import { join, resolve } from 'node:path'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
-import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
+import { BRANS_ETIKETLERI, BRANS_SORULARI } from '@/lib/intake/bransSorulari'
+import { CORE_BOLUMLER, VELI_BOLUMU, coreBolumlerIcin, intakeFormBolumleri, type IntakeBolum } from '@/lib/intake/coreAlanlar'
+import { intakeGorunmeyenYanitlariAyikla, intakeGorunurBolumler, intakeIstemciHataMetni, intakeSunucuHataMetni } from '@/lib/intake/dogrula'
+import IntakeBolumleri from '@/components/intake/IntakeBolumleri'
 import { specialtyProfile } from './registry'
 import { PEDIATRIK_BAGLAM } from './profile'
 import { bransAnahtari, bransKapsami, etkinBrans, notOlcumleri, pediatrikBaglamMi, veliDiliMi, veliOnamGerekliMi, vitalleriKapsamaGoreSuz } from './kapsam'
@@ -298,17 +301,20 @@ describe('VELI-YASAL-ONAM — reşit olmayan hastada veli dili HER branşta; kli
     assert.equal(veliOnamGerekliMi.length, 1, 'imza: (dogumIso, nowMs?) — branş girdisi yok')
   })
 
-  it('30/30 branş: veli dili = reşit olmayan hasta VEYA pediatrik bağlam; klinik kapsam (pediatrikBaglamMi) değişmedi', () => {
+  it('30/30 branş: veli dili = reşit olmayan hasta VEYA (yaşı bilinmeyen + pediatrik bağlam); erişkin HİÇBİR branşta; klinik kapsam değişmedi', () => {
     for (const k of TUM) {
       for (const dogum of [COCUK, ERGEN, YETISKIN, null]) {
         const g = { seansBransi: k, hastaDogumIso: dogum, nowMs: NOW }
         const resit = dogum === COCUK || dogum === ERGEN
         const ped = HER_ZAMAN.has(k) || (KARMA.has(k) && resit)
+        // Bilinçli değişiklik (intake veli bölümü işi, Kaan): pediatri / çocuk cerrahisi hekimindeki ERİŞKİN hasta artık
+        // "hasta" dilinde — eskiden pediatrik bağlam onu da veli diline çekiyordu. Bilinmeyen yaşta pediatri veli dilinde kalır.
+        const veli = resit || (ped && dogum === null)
         assert.equal(pediatrikBaglamMi(g), ped, `${k} / ${dogum}: klinik`)
-        assert.equal(veliDiliMi(g), resit || ped, `${k} / ${dogum}: veli dili`)
+        assert.equal(veliDiliMi(g), veli, `${k} / ${dogum}: veli dili`)
         const kapsam = bransKapsami(g)
-        assert.equal(kapsam.veliDili, resit || ped, `${k} / ${dogum}: paket`)
-        assert.equal(kapsam.hitap.ozetEtiketi, resit || ped ? 'Hasta/veli özeti' : 'Hasta özeti', `${k} / ${dogum}`)
+        assert.equal(kapsam.veliDili, veli, `${k} / ${dogum}: paket`)
+        assert.equal(kapsam.hitap.ozetEtiketi, veli ? 'Hasta/veli özeti' : 'Hasta özeti', `${k} / ${dogum}`)
         assert.equal(kapsam.olcumler.some((o) => o.anahtar === 'basCevresi'), ped, `${k} / ${dogum}: baş çevresi`)
       }
     }
@@ -372,3 +378,120 @@ describe('VELI-YASAL-ONAM — reşit olmayan hastada veli dili HER branşta; kli
     }
   })
 })
+
+describe('INTAKE VELI + ACİL KİŞİ — hasta bilgi formu: veli bölümü yaş güdümlü (her branş), acil durum kişisi herkese isteğe bağlı', () => {
+  /** Sentetik QA yanıtları — gerçek hasta verisi DEĞİL. Acil durum kişisi BİLEREK boş. */
+  const temel = (dogumTarihi: string): Record<string, unknown> => ({
+    tcKimlik: '12345678901', ad: 'Sentetik', soyad: 'Test', dogumTarihi, cinsiyet: 'Kadın', dogumYeri: 'Ankara',
+    babaAdi: 'Test', anneAdi: 'Test', medeniDurum: 'Bekâr', telefon: '05551112233', eposta: 'qa@ornek.test',
+    adres: 'Test Mah. 1. Sok. No:1', sigortaTuru: 'SGK', kanGrubu: 'A Rh+', kronikHastaliklar: ['Yok'], kullaniyorMu: 'Hayır',
+    alerjiVarMi: 'Bilinen alerjisi yok', aileOykusu: 'Yok', sigara: 'Kullanmıyorum', alkol: 'Kullanmıyorum', kvkkOnay: 'Kabul ediyorum',
+  })
+  const VELI_YANIT = { veliAd: 'Sentetik', veliSoyad: 'Veli', veliYakinligi: 'Anne', veliTelefon: '05553334455' }
+  const ERGEN = '2010-01-10' // NOW'a göre 16 yaş
+  const ON_YEDI = '2008-09-18' // NOW'dan bir gün sonra 18 → hâlâ 17
+  const ON_SEKIZ = '2008-09-17' // NOW günü 18 → erişkin
+  const bolumlerIcin = (b: string) => intakeFormBolumleri(coreBolumlerIcin(b), (BRANS_SORULARI as Record<string, IntakeBolum>)[b] ?? null)
+  const cizim = (b: string, y: Record<string, unknown>) =>
+    renderToStaticMarkup(React.createElement(IntakeBolumleri, { bolumler: bolumlerIcin(b), yanitlar: y, onDegis: () => {}, nowMs: NOW }))
+  const gorunenBasliklar = (b: string, y: Record<string, unknown>) => intakeGorunurBolumler(bolumlerIcin(b), y, NOW).map((x) => x.baslik)
+
+  it('veli bölümü ortak omurgada, TEK tanım, yaş kapısı veliOnamGerekliMi — branş listesinde veli alanı yok (30/30)', () => {
+    for (const k of TUM) {
+      const core = coreBolumlerIcin(k)
+      assert.equal(core.filter((b) => b.veliKosulu).length, 1, k)
+      assert.equal(core.find((b) => b.veliKosulu), VELI_BOLUMU, `${k}: aynı nesne — branşa göre değişmez`)
+      assert.ok(!(BRANS_SORULARI[k]?.alanlar || []).some((a) => /^veli/i.test(a.id) || VELI.test(a.etiket)), `${k}: branş bölümünde veli alanı`)
+    }
+    const s = kaynak('lib/intake/dogrula.ts')
+    assert.ok(s.includes("import { veliOnamGerekliMi } from '@/lib/specialties/kapsam'") && /veliOnamGerekliMi\(dogum, nowMs\)/.test(s), 'yaş kuralı yeniden yazılmadı')
+  })
+
+  it('veli alanları: ad, soyad, yakınlık (Anne/Baba/Vasi/Diğer), "Diğer" metni, telefon zorunlu; kimlik teyidi isteğe bağlı', () => {
+    const a = Object.fromEntries(VELI_BOLUMU.alanlar.map((x) => [x.id, x]))
+    for (const id of ['veliAd', 'veliSoyad', 'veliYakinligi', 'veliTelefon']) assert.equal(a[id]?.zorunlu, true, id)
+    assert.deepEqual(a.veliYakinligi.secenekler, ['Anne', 'Baba', 'Vasi', 'Diğer'])
+    assert.equal(a.veliTelefon.tur, 'tel')
+    assert.ok(a.veliDigerAdSoyad && !a.veliDigerAdSoyad.zorunlu && /Diğer/.test(a.veliDigerAdSoyad.yardim || ''))
+    assert.equal(a.veliKimlikTeyidi.zorunlu, undefined)
+    assert.deepEqual(a.veliKimlikTeyidi.secenekler, ['Kimlik teyidi yapıldı'])
+  })
+
+  it('acil durum kişisi: ayrı bölüm, her branşta, HİÇBİR alanı zorunlu değil, veli alanlarıyla ortak id/etiket yok', () => {
+    for (const k of TUM) {
+      const acil = coreBolumlerIcin(k).filter((b) => b.baslik.startsWith('Acil Durumda Aranacak Kişi'))
+      assert.equal(acil.length, 1, k)
+      assert.equal(acil[0].veliKosulu, undefined, `${k}: yaş kapısı yok`)
+      assert.deepEqual(acil[0].alanlar.map((x) => x.id).sort(), ['acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik'])
+      for (const alan of coreBolumlerIcin(k).flatMap((b) => b.alanlar).filter((x) => x.id.startsWith('acilKisi'))) {
+        assert.ok(!alan.zorunlu, `${k}/${alan.id}: zorunlu olmamalı (kalıcı kural)`)
+      }
+    }
+    const veliEtiketleri = new Set(VELI_BOLUMU.alanlar.map((x) => x.etiket))
+    for (const alan of CORE_BOLUMLER.find((b) => b.baslik.startsWith('Acil'))!.alanlar) assert.ok(!veliEtiketleri.has(alan.etiket) && !VELI.test(alan.etiket), alan.id)
+  })
+
+  it('görünürlük: <18 → Veli bölümü + Acil bölümü; ≥18 (pediatri dahil) → yalnız Acil; doğum tarihi yokken veli yok', () => {
+    for (const b of ['pediatri', 'goz-hastaliklari', 'kardiyoloji', 'kulak-burun-bogaz', 'ortopedi', 'cocuk-cerrahisi', 'dahiliye']) {
+      for (const dogum of [COCUK, ERGEN, ON_YEDI]) {
+        const bas = gorunenBasliklar(b, { dogumTarihi: dogum })
+        assert.ok(bas.includes('Veli / Yasal Temsilci') && bas.includes('Acil Durumda Aranacak Kişi (isteğe bağlı)'), `${b} / ${dogum}`)
+      }
+      for (const dogum of [ON_SEKIZ, YETISKIN, '2006-01-01']) {
+        const bas = gorunenBasliklar(b, { dogumTarihi: dogum })
+        assert.ok(!bas.includes('Veli / Yasal Temsilci') && bas.includes('Acil Durumda Aranacak Kişi (isteğe bağlı)'), `${b} / ${dogum}`)
+      }
+      assert.ok(!gorunenBasliklar(b, {}).includes('Veli / Yasal Temsilci'), `${b}: doğum tarihi girilmeden`)
+    }
+  })
+
+  it('gerçek render (IntakeBolumleri): erişkin formunda "veli" kelimesi yok — pediatri hekimindeki 20 yaşındaki hasta dahil; çocukta veli alanları yıldızlı, acil alanları yıldızsız', () => {
+    for (const b of ['pediatri', 'goz-hastaliklari', 'kardiyoloji']) {
+      const eriskin = cizim(b, { dogumTarihi: '2006-03-10' })
+      assert.ok(!VELI.test(eriskin), `${b}: erişkin formunda veli`)
+      assert.ok(eriskin.includes('Acil Durumda Aranacak Kişi (isteğe bağlı)') && eriskin.includes('Acil Durum Kişisi Telefonu'), b)
+      const cocuk = cizim(b, { dogumTarihi: COCUK })
+      assert.ok(cocuk.includes('Veli / Yasal Temsilci') && cocuk.includes('Vasi') && cocuk.includes('Kimlik teyidi yapıldı'), b)
+      assert.match(cocuk, /Veli \/ Yasal Temsilcinin Telefonu<span[^>]*> \*<\/span>/, `${b}: veli telefonu zorunlu işaretli`)
+      for (const e of ['Acil Durumda Aranacak Kişi (Ad Soyad)', 'Acil Durum Kişisinin Yakınlık Derecesi', 'Acil Durum Kişisi Telefonu']) {
+        assert.ok(cocuk.includes(`${e}</label>`), `${b}: ${e} yıldızsız`)
+      }
+      // Numara boşluk bırakmaz: erişkinde Acil bölümü 3., çocukta 4. (Kimlik, [Veli], İletişim, Acil …)
+      assert.match(eriskin, />3<\/span><h3[^>]*>Acil Durumda/)
+      assert.match(cocuk, />2<\/span><h3[^>]*>Veli \/ Yasal Temsilci/)
+      assert.match(cocuk, />4<\/span><h3[^>]*>Acil Durumda/)
+    }
+  })
+
+  it('doğrulama (istemci + sunucu aynı kod): acil kişisi tamamen boş form geçer; çocukta veli zorunlu; erişkinde veli istenmez', () => {
+    for (const b of ['pediatri', 'goz-hastaliklari', 'kardiyoloji']) {
+      const core = coreBolumlerIcin(b)
+      assert.equal(intakeSunucuHataMetni(core, temel(YETISKIN), NOW), null, `${b}: erişkin, acil boş`)
+      assert.equal(intakeIstemciHataMetni(core, temel(YETISKIN), NOW), null, `${b}: erişkin, acil boş (istemci)`)
+      assert.match(String(intakeSunucuHataMetni(core, temel(COCUK), NOW)), /Veli \/ Yasal Temsilcinin Adı/, `${b}: çocukta veli eksik`)
+      assert.match(String(intakeIstemciHataMetni(core, { ...temel(COCUK), ...VELI_YANIT, veliTelefon: '' }, NOW)), /Veli \/ Yasal Temsilcinin Telefonu/)
+      assert.equal(intakeSunucuHataMetni(core, { ...temel(COCUK), ...VELI_YANIT }, NOW), null, `${b}: çocuk, veli dolu, acil + kimlik teyidi boş`)
+    }
+  })
+
+  it('kayıt süzgeci: erişkin formunda gönderilen veli alanları atılır; çocukta kalır; acil kişisi ve bilinmeyen anahtarlar korunur', () => {
+    const core = coreBolumlerIcin('kardiyoloji')
+    const eriskin = intakeGorunmeyenYanitlariAyikla(core, { ...temel(YETISKIN), ...VELI_YANIT, acilKisiAdi: 'Sentetik Yakın', semptomlarKardiyo: ['Çarpıntı'] }, NOW)
+    assert.ok(!Object.keys(eriskin).some((x) => x.startsWith('veli')), 'erişkinde veli izi')
+    assert.equal(eriskin.acilKisiAdi, 'Sentetik Yakın')
+    assert.deepEqual(eriskin.semptomlarKardiyo, ['Çarpıntı'])
+    const cocuk = intakeGorunmeyenYanitlariAyikla(core, { ...temel(COCUK), ...VELI_YANIT }, NOW)
+    assert.equal(cocuk.veliYakinligi, 'Anne')
+  })
+
+  it('kaynak kilidi: form sayfası bölümleri IntakeBolumleri ile çizer, gizlenen yanıtı atar; intake POST süzülmüş yanıtı şifreler', () => {
+    const sayfa = kaynak('app/intake/[token]/page.tsx')
+    assert.ok(sayfa.includes('<IntakeBolumleri bolumler={tumBolumler}') && sayfa.includes('intakeGorunmeyenYanitlariAyikla(bolumler'))
+    assert.ok(!/bolum\.alanlar\.map/.test(sayfa), 'sayfa bölümleri kendisi çizmemeli (kapı atlanır)')
+    const rota = kaynak('app/api/intake/[token]/route.ts')
+    assert.ok(/encrypt\(JSON\.stringify\(kayitYanitlari\)\)/.test(rota))
+    const derleyici = kaynak('lib/doktor/hastaDosyaDerleyici.ts')
+    for (const id of ['veliAd', 'veliSoyad', 'veliTelefon', 'acilKisiTelefon']) assert.ok(derleyici.includes(`'${id}'`), `${id} modele gitmez`)
+  })
+})
+

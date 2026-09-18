@@ -115,13 +115,22 @@ function tamYas(dogumIso: string | null | undefined, nowMs: number): number | nu
   return by - y - (ba < a || (ba === a && bg < g) ? 1 : 0)
 }
 
+/** Yaşı BİLİNEN ve 18 yaşını doldurmuş hasta (takvim yaşı, TRT). Bilinmeyen / gelecek tarih → false. */
+export function eriskinHastaMi(dogumIso: string | null | undefined, nowMs = Date.now()): boolean {
+  const yas = tamYas(dogumIso, nowMs)
+  return yas != null && yas >= 18
+}
+
 /**
  * Hitap kararı — "veli" seti mi "hasta" seti mi (lib/specialties/hitap.ts). Reşit olmayan hasta HER branşta veli dili
- * alır (veliOnamGerekliMi); pediatri / çocuk cerrahisi bağlamı da önceki gibi veli dilindedir (pediatrikBaglamMi).
- * Erişkin hasta, pediatrik olmayan branşta: "hasta".
+ * alır (veliOnamGerekliMi). Pediatri / çocuk cerrahisi bağlamı (pediatrikBaglamMi) yalnız yaşı BİLİNMEYEN hastada veli
+ * diline düşer (hastaları çocuktur). Yaşı bilinen erişkin hiçbir branşta veli dili almaz — pediatri hekimindeki
+ * 20 yaşındaki hasta dahil (Kaan 2026-09-17, intake veli bölümü işi: "erişkinde veli kavramı hiçbir yerde yok").
  */
 export function veliDiliMi(g: KapsamGirdisi): boolean {
-  return veliOnamGerekliMi(g.hastaDogumIso, g.nowMs) || pediatrikBaglamMi(g)
+  if (veliOnamGerekliMi(g.hastaDogumIso, g.nowMs)) return true
+  if (eriskinHastaMi(g.hastaDogumIso, g.nowMs)) return false
+  return pediatrikBaglamMi(g)
 }
 
 export type NotOlcumu = Pick<OlcumTanimi, 'anahtar' | 'etiket' | 'birim'>
