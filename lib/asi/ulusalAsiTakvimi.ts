@@ -4,12 +4,15 @@
  * 2025 GBP güncellemesiyle 5'li karma + ayrı Hepatit B düzeni yerine 6'lı karma
  * (DaBT-İPA-Hib-HepB, hexavalent) sistemine geçildi; 2026'da standart uygulama budur.
  * Kritik değişiklik: 1. aydaki tekil Hepatit B dozu KALDIRILDI (Hep B artık 2/4/6/18. ay
- * karma dozların içinde). İstisna: anne HBsAg(+) ise 0 ve 1. ayda monovalan Hep B yapılır,
- * 2. aydan itibaren 6'lı karma ile devam edilir.
+ * karma dozların içinde). PEDI-ARACLAR-02 düzeltmesi (2026-09-18): ≥ 2000 g bebekte anne HBsAg(+)
+ * olsa da 1. ayda ek doz YOK — doğumda aşı + ilk 12 saatte HBIG, sonra 6'lı karma. < 2000 g bebekte
+ * doğum dozu seriye sayılmaz; 1. ayda tekli Hep B, sonra 6'lı karma (TND 2026 prematüre aşılama
+ * kitapçığı, SB takvimine atıfla).
  *
- * Kaynak doğrulama: SB GBP genelgesi (AHEF/ANKAHED duyurusu, 2025) + 2026 takvim yayınları
- * (Liv Hospital, Erdem Hastanesi, doktortakvimi) — 2026-09-02'de çapraz kontrol edildi.
- * Takvim yılda bir gözden geçirilmeli (resmiTatiller.ts ile aynı bakım notu).
+ * Kaynak doğrulama: SB asi.saglik.gov.tr "Aşı takvimindeki son güncellemeler" (6'lı karma, 2025);
+ * HSGM 2020 aşı takvimi + "Aşılama takviminde değişiklik" (KKK 2. doz ve DaBT-İPA 48. ay, Td 13 yaş —
+ * aile hekimliğinde); TND 2026. Suçiçeği 2. doz (48. ay, Eylül 2026) yalnız ikincil kaynakta (haber)
+ * doğrulandı — resmi yazı numarası bulunamadı. Takvim yılda bir gözden geçirilmeli.
  */
 
 export interface TakvimAsisi {
@@ -32,7 +35,7 @@ export const ULUSAL_TAKVIM: TakvimDonemi[] = [
     donem: 'Doğumda (ilk 72 saat)',
     siraAy: 0,
     asilar: [
-      { ad: 'Hepatit B', doz: 1, dozEtiket: '1. doz (monovalan)', not: 'Anne HBsAg(+) ise 1. ayda ek monovalan doz yapılır.' },
+      { ad: 'Hepatit B', doz: 1, dozEtiket: '1. doz (monovalan)', not: 'Anne HBsAg(+) veya bilinmiyorsa ilk 12 saatte HBIG de yapılır. < 2000 g bebekte bu doz seriye sayılmaz; 1. ayda tekli Hep B, sonra 6\'lı karma.' },
     ],
   },
   {
@@ -66,7 +69,7 @@ export const ULUSAL_TAKVIM: TakvimDonemi[] = [
     asilar: [
       { ad: 'KPA (Konjuge Pnömokok)', doz: null, dozEtiket: 'Rapel' },
       { ad: 'KKK (Kızamık-Kızamıkçık-Kabakulak)', doz: 1, dozEtiket: '1. doz' },
-      { ad: 'Suçiçeği (Varisella)', doz: 1, dozEtiket: 'Tek doz (ulusal takvim)' },
+      { ad: 'Suçiçeği (Varisella)', doz: 1, dozEtiket: '1. doz' },
     ],
   },
   {
@@ -86,15 +89,16 @@ export const ULUSAL_TAKVIM: TakvimDonemi[] = [
     ],
   },
   {
-    donem: 'İlkokul 1. sınıf (okul öncesi rapeller)',
-    siraAy: 78,
+    donem: '48. ay',
+    siraAy: 48,
     asilar: [
       { ad: 'KKK (Kızamık-Kızamıkçık-Kabakulak)', doz: 2, dozEtiket: '2. doz' },
       { ad: 'DaBT-İPA (4\u0027lü Karma)', doz: null, dozEtiket: 'Rapel' },
+      { ad: 'Suçiçeği (Varisella)', doz: 2, dozEtiket: '2. doz', not: 'Eylül 2026\'da başladı (49–72 ay telafi); resmi yazı doğrulanamadı — hekim teyit eder.' },
     ],
   },
   {
-    donem: 'İlkokul 8. sınıf',
+    donem: '13 yaş',
     siraAy: 156,
     asilar: [
       { ad: 'Td (Tetanoz-Difteri, erişkin tip)', doz: null, dozEtiket: 'Rapel' },

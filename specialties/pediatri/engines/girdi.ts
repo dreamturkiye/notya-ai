@@ -142,3 +142,48 @@ export function tr(n: number, basamak = 1): string {
   const y = Math.round(n * k) / k
   return y.toLocaleString('tr-TR', { maximumFractionDigits: basamak, minimumFractionDigits: 0 })
 }
+
+/**
+ * PEDI-ARACLAR-02 — yaş yazımı → parçalar. "14 aylık" · "14 ay" · "2 yaş 3 ay" · "2,5 yaş" · "3 haftalık" · "10 günlük" ·
+ * "1y 3a". Birim yoksa null (tek başına "14" yaş mı ay mı belli değil — tahmin etmeyiz).
+ */
+export function yasParcalariCoz(ham: string | null | undefined): { ay: number; gun: number } | null {
+  const s = String(ham ?? '').toLocaleLowerCase('tr-TR').replace(/,/g, '.').trim()
+  if (!s) return null
+  const re = /(\d+(?:\.\d+)?)\s*(yaşında|yaş|yas|yıl|yil|y|aylık|aylik|ay|a|haftalık|haftalik|hafta|hf|h|günlük|gunluk|gün|gun|g)(?![a-zçğıöşü])/g
+  let ay = 0, gun = 0, bulundu = false
+  let m: RegExpExecArray | null
+  while ((m = re.exec(s))) {
+    const n = Number(m[1]), b = m[2]
+    bulundu = true
+    if (/^(yaş|yas|yıl|yil|y)/.test(b)) ay += n * 12
+    else if (/^(ay|a)/.test(b)) ay += n
+    else if (/^(hafta|hf|h)/.test(b)) gun += n * 7
+    else gun += n
+  }
+  if (!bulundu) return null
+  // Birimli parçaların dışında rakam kalmışsa ("2 yaş 3") belirsizdir.
+  if (/\d/.test(s.replace(re, ''))) return null
+  const tamAyKismi = Math.floor(ay)
+  gun += Math.round((ay - tamAyKismi) * 30.4375)
+  if (tamAyKismi > 12 * 19 || gun > 366 * 19) return null
+  return { ay: tamAyKismi, gun: Math.round(gun) }
+}
+
+/** Yaş yazımı → yaklaşık gün (30,4375 gün/ay). */
+export function yasGunCoz(ham: string | null | undefined): number | null {
+  const p = yasParcalariCoz(ham)
+  return p ? Math.round(p.ay * 30.4375 + p.gun) : null
+}
+
+/**
+ * Doğum tarihi alanı: tarih ("12.03.2024") ya da yaş ("14 aylık"). Yaş yazıldıysa doğum tarihi bugünden TAKVİM ayıyla
+ * geriye hesaplanır ("18 aylık" → bugün − 18 ay; ekranda yine "18 aylık") ve `yaklasik` işaretlenir.
+ */
+export function dogumVeyaYasCoz(ham: string | null | undefined, bugunIso: string): { iso: string; yaklasik: boolean } | null {
+  const t = tarihCoz(ham)
+  if (t) return { iso: t, yaklasik: false }
+  const p = yasParcalariCoz(ham)
+  if (!p) return null
+  return { iso: gunEkle(ayEkle(bugunIso, -p.ay), -p.gun), yaklasik: true }
+}
