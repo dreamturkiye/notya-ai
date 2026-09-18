@@ -99,7 +99,7 @@ async function istek(ad: string, method: 'GET' | 'POST', yol: string, body?: unk
   console.log(`${ok ? '✓' : '✗'} ${ad} → ${r.status}${ok ? '' : ` (beklenen ${beklenen}) ${metin.slice(0, 240)}`}`)
   return { r, json }
 }
-function kontrol(ad: string, kosul: boolean, detay: unknown) { if (!kosul) hata++; kayit.push({ ad, ok: kosul }); console.log(`${kosul ? '✓' : '✗'} KONTROL ${ad}${kosul ? '' : ` — ${JSON.stringify(detay).slice(0, 300)}`}`) }
+function kontrol(ad: string, kosul: boolean, detay: unknown) { if (!kosul) hata++; kayit.push({ ad, ok: kosul }); console.log(`${kosul ? '✓' : '✗'} KONTROL ${ad}${kosul ? '' : ` — ${String(JSON.stringify(detay)).slice(0, 300)}`}`) }
 const post = (ad: string, pid: string, b: V, beklenen = 200) => istek(ad, 'POST', '/api/doktor/goz', { patientId: pid, ...b }, beklenen)
 const get = async (pid: string) => (await istek('GET göz', 'GET', `/api/doktor/goz?patientId=${pid}`)).json
 
@@ -142,7 +142,8 @@ kontrol('dahiliye DM kartına son göz dibi yazıldı + sevk kapandı', dm?.son_
 // 4. Anti-VEGF
 const kapi = await post('SUT kapısı: ranibizumab muayenehane', pid, { adim: 'sgk_kapi', basamak: 'muayenehane', enjeksiyon: { goz: 'sag', ajan: 'ranibizumab', endikasyon: 'dmo', faz: 'yukleme', dozNo: 1, tarih: T, durum: 'planli' } })
 kontrol('muayenehane uyarısı + yükleme takvimi 3 doz', kapi.json.kapi.uyarilar.some((u: string) => /basamağı değildir/.test(u)) && kapi.json.takvim.length === 3, kapi.json)
-await post('Bevacizumab yükleme 1 (yapıldı)', pid, { adim: 'enjeksiyon', basamak: '2', enjeksiyon: { goz: 'sag', ajan: 'bevacizumab', endikasyon: 'dmo', faz: 'yukleme', dozNo: 1, tarih: gun(14), durum: 'yapildi' } })
+// GOZ-EXCEPTIONAL-01: "yapıldı" IVT odası kontrol listesi ister (onam, göz işareti = kayıt gözü, ilaç + lot, asepsi)
+await post('Bevacizumab yükleme 1 (yapıldı)', pid, { adim: 'enjeksiyon', basamak: '2', ivtKontrol: { onam: true, goz_isaret: true, isaretliGoz: 'sag', ilac_lot: true, lot: 'QA-SMOKE-LOT', asepsi: true }, enjeksiyon: { goz: 'sag', ajan: 'bevacizumab', endikasyon: 'dmo', faz: 'yukleme', dozNo: 1, tarih: gun(14), durum: 'yapildi' } })
 await post('Bevacizumab yükleme 2 (planlı)', pid, { adim: 'enjeksiyon', basamak: '2', enjeksiyon: { goz: 'sag', ajan: 'bevacizumab', endikasyon: 'dmo', faz: 'yukleme', dozNo: 2, tarih: gun(-16), durum: 'planli' } })
 const imp = await post('SUT kapısı: implant 14 gün sonra → engel', pid, { adim: 'sgk_kapi', basamak: '3', enjeksiyon: { goz: 'sag', ajan: 'deksametazon_implant', endikasyon: 'dmo', faz: 'idame', tarih: T, durum: 'planli' } })
 kontrol('implant anti-VEGF sonrası 1 ay engeli', imp.json.kapi.engeller.some((e: string) => /1 ay/.test(e)), imp.json.kapi)
@@ -157,7 +158,7 @@ const { data: img } = await sb.from('hasta_goruntulemeler').insert({ doctor_id: 
 const { data: img2 } = await sb.from('hasta_goruntulemeler').insert({ doctor_id: doktor.id, patient_id: pid, modalite: 'oct', vucut_bolgesi: 'sağ göz', goruntuleme_tarihi: gun(60), rapor_metni: null }).select('id').single()
 await post('OCT okuma taslağı (asistan)', pid, { adim: 'goruntu_okuma', eylem: 'taslak', goruntuId: img!.id, taslak: 'Foveal kalınlık artmış görünüm, intraretinal kistik alanlar? (sentetik)', taslakYazan: 'asistan', goz: 'sag' })
 v = await get(pid)
-const ok1 = v.goruntuler[0]?.okumalar[0]
+const ok1 = v.goruntuler.find((g: V) => g.id === img!.id)?.okumalar[0] // sıra created_at'e bağlı — kimlikle bul
 kontrol('okuma draft + disclaimer', ok1?.durum === 'draft' && /tanı değildir/.test(ok1?.disclaimer), ok1)
 await post('Uzman onayı', pid, { adim: 'goruntu_okuma', eylem: 'onayla', id: ok1.id })
 await post('Onaylı okumayı tekrar düzelt → 403', pid, { adim: 'goruntu_okuma', eylem: 'duzelt', id: ok1.id, uzmanMetin: 'x' }, 403)
@@ -171,7 +172,7 @@ kontrol('kuru göz kaydı + ozet', v.kuruGoz?.length >= 1 && /OSDI/.test(v.kuruG
 
 const intakeToken = createHmac('sha256', 'goz-smoke-intake').update(`${pid}${Date.now()}`).digest('hex')
 await sb.from('hasta_intake_formlari').insert({
-  doktor_id: doktor.id, patient_id: pid, brans: 'goz-hastaliklari', durum: 'dolduruldu',
+  doktor_id: doktor.id, patient_id: pid, brans: 'goz-hastaliklari', durum: 'dolduruldu', gonderim_kanali: 'elden', // 009 CHECK: kolon varsayılanı 'link' listede yok
   token_hash: intakeToken, token_expires_at: new Date(Date.now() + 86400000).toISOString(),
   form_data_encrypted: encrypt(JSON.stringify({
     bransAlanlari: {
@@ -203,7 +204,7 @@ if (secret) {
   }
   const { b, anket } = await portal(pid, 'Portal yetişkin')
   kontrol('portal modülleri yalnız Gözlerim; nav /gozlerim', JSON.stringify(b.portal.moduller) === '["gozlerim"]' && b.portal.nav[0]?.path === '/gozlerim', b.portal)
-  kontrol('Gözlerim: kontrol + dilatasyon, 2 damla, enjeksiyon tarihleri, VA/GİB serisi, OCT bildirimi', b.goz?.sonrakiKontrol?.dilatasyon === true && b.goz.damlalar.length === 2 && b.goz.islemler.length === 2 && b.goz.olcumler.length === 2 && b.goz.goruntuler.length === 1, b.goz)
+  kontrol('Gözlerim: kontrol + dilatasyon, 2 damla, enjeksiyon tarihleri, VA/GİB serisi, OCT bildirimi', b.goz?.sonrakiKontrol?.dilatasyon === true && b.goz.damlalar.length === 2 && b.goz.islemler.length === 2 && b.goz.olcumler.length === 2 && b.goz.goruntuler.length === 2, b.goz) // iki OCT (karşılaştırma adımı ikinciyi ekler)
   kontrol('Gözlerim: ilaç adı / okuma metni / tanı dili sızmıyor', !/bevacizumab|Foveal|intraretinal|NPDR|glokomunuz/i.test(JSON.stringify(b.goz)), b.goz)
   kontrol('göz pratiği: büyüme/gebelik/jine yok; dahiliye ön anket kapalı', b.buyume === null && b.gebelik === null && b.jinekoloji === null && anket.uygun === false, { buyume: b.buyume, anket })
   const c = await portal(cocuk, 'Portal çocuk')

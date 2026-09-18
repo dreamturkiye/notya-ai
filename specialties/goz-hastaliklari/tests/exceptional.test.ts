@@ -3,6 +3,8 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import path from 'node:path'
 import { gozKohortSatiri, gozKohortSatirlari, gozHatirlatmaMesaji, GOZ_BAYRAK_AD } from '../engines/kohort'
 import { vaSatiri, vaKarsilastir, gilKodAra } from '../engines/araclar'
 import { biyometriNormalize, biyometriMetni, biyometriTamMi, postopNormalize, postopUyarilari, postopMetni } from '../engines/katarakt'
@@ -268,5 +270,28 @@ describe('Acil: intake red-flag checkboxes fire the band; irrigation timer; acti
 describe('Maturity: beta-hazir, never self-promoted to uzman-dogrulandi', () => {
   it('göz = beta-hazir until the MD sign-off (Boss/CEO) is recorded', () => {
     assert.equal(GOZ_PROFILE.olgunluk, 'beta-hazir')
+  })
+})
+
+describe('Exit audit (public/goz-exceptional-audit.html)', () => {
+  const kok = path.join(import.meta.dirname, '..', '..', '..')
+  const oku = (p: string) => fs.readFileSync(path.join(kok, p), 'utf8')
+  it('banner, 16 Strong domains, no Partial/Thin/Missing pill, game changers shipped, no PHI', () => {
+    const h = oku('public/goz-exceptional-audit.html')
+    assert.match(h, /Post-exceptional sprint GOZ-EXCEPTIONAL-01/)
+    const tablo = h.slice(h.indexOf('<h2>Coverage depth</h2>'), h.indexOf('<h2>Wow bar'))
+    assert.equal((tablo.match(/pill success">Strong</g) || []).length, 16)
+    assert.doesNotMatch(h, /pill (warning|danger)">(Partial|Thin|Missing)</)
+    const gc = h.slice(h.indexOf('<h2>Game changers</h2>'), h.indexOf('<h2>Intentionally out'))
+    assert.equal((gc.match(/pill success">Shipped</g) || []).length, 10)
+    assert.match(h, /maturity|olgunluk: beta-hazir/)
+    assert.doesNotMatch(h, /\b[1-9]\d{10}\b/, 'no T.C.-like numbers')
+    for (const bar of [...h.slice(h.indexOf('<h2>Wow bar'), h.indexOf('<h2>Mandate')).matchAll(/bar-label">([^<]+)<\/div><div class="bar-track"><div class="bar-fill" style="width:(\d+)%/g)]) {
+      if (!/olgunluk/.test(bar[1])) assert.ok(Number(bar[2]) >= 85, `${bar[1]} ${bar[2]} < 85`)
+    }
+  })
+  it('linked from docs/README_GOZ.md; never from Doktor Araçları', () => {
+    assert.match(oku('docs/README_GOZ.md'), /goz-exceptional-audit\.html/)
+    assert.doesNotMatch(oku('lib/doktor/doktorAraclari.ts') + oku('app/doktor-tools/page.tsx'), /goz-exceptional-audit|\.html/)
   })
 })
