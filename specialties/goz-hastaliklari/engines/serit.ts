@@ -5,7 +5,7 @@
  */
 import { enIyiUzak, harfFarki, vaGoster, type VaSeti } from './va'
 import { EVRE_ADI, type DrEvre } from './dr'
-import { acilTara, type AcilBayrak } from './acil'
+import { acilTara, intakeAcilKodlari, type AcilBayrak, type AcilKod } from './acil'
 
 export interface SeritMuayene { tarih: string; va: { sag?: VaSeti; sol?: VaSeti }; gibSag: number | null; gibSol: number | null }
 export interface GozSerit {
@@ -18,9 +18,12 @@ export interface GozSerit {
   bugunOlcumVar: boolean
 }
 
-export function gozSeridi(g: { muayeneler: SeritMuayene[]; hedefSag: number | null; hedefSol: number | null; evreSag: DrEvre | null; evreSol: DrEvre | null; sonrakiEnjeksiyon: string | null; gorevDue: (string | null)[]; sikayetMetinleri: string[]; bugun: string }): GozSerit {
+export function gozSeridi(g: { muayeneler: SeritMuayene[]; hedefSag: number | null; hedefSol: number | null; evreSag: DrEvre | null; evreSol: DrEvre | null; sonrakiEnjeksiyon: string | null; gorevDue: (string | null)[]; sikayetMetinleri: string[]; hekimIsaretleri?: AcilKod[]; bugun: string }): GozSerit {
   const m = [...g.muayeneler].sort((a, b) => (a.tarih < b.tarih ? 1 : -1))
-  const son = m[0], onceki = m[1]
+  // GOZ-EXCEPTIONAL-01: fundus / biyomikroskopi satırları (va boş) VA çipini boşaltmaz — VA'lı son iki satır kullanılır.
+  const vaVar = (x: SeritMuayene) => !!(x.va?.sag || x.va?.sol)
+  const vaSatirlari = m.filter(vaVar)
+  const son = vaSatirlari[0], onceki = vaSatirlari[1]
   const vaSag = enIyiUzak(son?.va.sag), vaSol = enIyiUzak(son?.va.sol)
   const sonGib = (k: 'gibSag' | 'gibSol') => m.find((x) => x[k] != null)?.[k] ?? null
   const gs = sonGib('gibSag'), gl = sonGib('gibSol')
@@ -31,8 +34,8 @@ export function gozSeridi(g: { muayeneler: SeritMuayene[]; hedefSag: number | nu
     drEvre: evre,
     sonrakiEnjeksiyon: g.sonrakiEnjeksiyon,
     gecikenGorev: g.gorevDue.filter((d) => d && d < g.bugun).length,
-    acil: acilTara(g.sikayetMetinleri),
-    bugunOlcumVar: son?.tarih === g.bugun,
+    acil: acilTara(g.sikayetMetinleri, g.hekimIsaretleri || []),
+    bugunOlcumVar: m.some((x) => x.tarih === g.bugun && (vaVar(x) || x.gibSag != null || x.gibSol != null)),
   }
 }
 
@@ -41,7 +44,7 @@ const liste = (v: unknown) => (Array.isArray(v) ? v.map(String).filter((x) => x 
 const metin = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
 
 /** Intake (Göz Sağlığınız) → Subjektif taslağı + kart ipuçları. Tanı üretmez; hasta beyanı olarak yazar. */
-export function intakeSubjektif(y: Yanit): { subjektif: string; ipuclari: { kart: 'glokom' | 'dr' | 'enjeksiyon' | 'katarakt' | 'on_segment' | 'pediatrik'; neden: string }[]; acil: AcilBayrak[] } {
+export function intakeSubjektif(y: Yanit): { subjektif: string; ipuclari: { kart: 'glokom' | 'dr' | 'enjeksiyon' | 'katarakt' | 'on_segment' | 'pediatrik'; neden: string }[]; acil: AcilBayrak[]; acilKodlari: AcilKod[] } {
   const satir: string[] = []
   const neden = metin(y.basvuruNedeni); if (neden) satir.push(`Başvuru nedeni (hasta beyanı): ${neden}`)
   const sik = liste(y.mevcutGozSikayetleri); if (sik.length) satir.push(`Şikâyetler: ${sik.join(', ')}`)
@@ -62,5 +65,8 @@ export function intakeSubjektif(y: Yanit): { subjektif: string; ipuclari: { kart
   if (op.includes('Göz İçi Enjeksiyon')) ipuclari.push({ kart: 'enjeksiyon', neden: 'Önceki göz içi enjeksiyon' })
   if (bilinen.includes('Katarakt')) ipuclari.push({ kart: 'katarakt', neden: 'Katarakt beyanı' })
   if (sik.includes('Göz Kuruluğu') || bilinen.includes('Göz Kuruluğu') || (kl && kl !== 'Hayır') || sik.includes('Kaşıntı')) ipuclari.push({ kart: 'on_segment', neden: 'Kuru göz / kontakt lens / kaşıntı' })
-  return { subjektif: satir.join('\n'), ipuclari, acil: acilTara([neden, ek, sik.join(' ')]) }
+  // GOZ-EXCEPTIONAL-01: kırmızı bayrak kutuları serbest metin olmadan acil bandını tetikler
+  const acilIsaret = liste(y.acilBelirtiler)
+  if (acilIsaret.length) satir.unshift(`KIRMIZI BAYRAK (hasta işaretledi): ${acilIsaret.join(', ')}`)
+  return { subjektif: satir.join('\n'), ipuclari, acil: acilTara([neden, ek, sik.join(' ')], intakeAcilKodlari(y.acilBelirtiler)), acilKodlari: intakeAcilKodlari(y.acilBelirtiler) }
 }

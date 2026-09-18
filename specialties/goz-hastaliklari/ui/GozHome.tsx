@@ -8,6 +8,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
 import { GozKartlar, type GozVeri, stil } from './GozKartlar';
+import { AcilSablon, RefraksiyonAlanlari } from './GozKartlarEk';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 
@@ -16,8 +17,8 @@ const ALANLAR = [['uzak_sc', 'Uzak sc'], ['uzak_cc', 'Uzak cc'], ['yakin', 'Yak�
 const SEKMELER = ['Özet', 'Fundus', 'Glokom', 'DR', 'Enjeksiyon', 'SGK rapor', 'Katarakt', 'Görüntü', 'Ön segment', 'Kuru göz', 'Pediatrik', 'Kontrol'] as const;
 export type GozSekme = (typeof SEKMELER)[number];
 
-type Form = { sag: Record<string, string>; sol: Record<string, string>; gibSag: string; gibSol: string; gibYontem: string; kopya: boolean };
-const bosForm = (): Form => ({ sag: {}, sol: {}, gibSag: '', gibSol: '', gibYontem: 'nct', kopya: false });
+type Form = { sag: Record<string, string>; sol: Record<string, string>; gibSag: string; gibSol: string; gibYontem: string; kopya: boolean; rapd: string; ref: Record<string, string> };
+const bosForm = (): Form => ({ sag: {}, sol: {}, gibSag: '', gibSol: '', gibYontem: 'nct', kopya: false, rapd: '', ref: {} });
 
 export default function GozHome({ patientId }: { patientId: string }) {
   const [v, setV] = useState<GozVeri | null>(null);
@@ -29,6 +30,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
   const setMesaj = useCallback((m: string) => { setMesajHam(m); setEklenenNot(null); }, []);
   const [form, setForm] = useState<Form>(bosForm());
   const [kopyaOnay, setKopyaOnay] = useState(false);
+  const [refAcik, setRefAcik] = useState(false);
 
   const yukle = useCallback(async () => {
     const token = await getAccessTokenAsync();
@@ -52,11 +54,13 @@ export default function GozHome({ patientId }: { patientId: string }) {
   if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>{mesaj || 'Göz yükleniyor…'}</div>;
   const s = v.serit;
   const salt = v.rol !== 'doktor';
+  // GOZ-EXCEPTIONAL-01: Pediatrik sekme yalnız bilinen yaş <18 veya kayıtlı pediatrik/ROP verisi (bilinmeyen yaş çocuk sayılmaz).
+  const sekmeler = SEKMELER.filter((x) => x !== 'Pediatrik' || v.pediatrikGorunum?.pediatrikSekme);
 
   const kopyala = () => {
     if (!v.kopya) return;
     const t = v.kopya.taslak;
-    setForm({ sag: { ...(t.va.sag || {}) } as Record<string, string>, sol: { ...(t.va.sol || {}) } as Record<string, string>, gibSag: t.gibSag == null ? '' : String(t.gibSag), gibSol: t.gibSol == null ? '' : String(t.gibSol), gibYontem: t.gibYontem || 'nct', kopya: true });
+    setForm({ sag: { ...(t.va.sag || {}) } as Record<string, string>, sol: { ...(t.va.sol || {}) } as Record<string, string>, gibSag: t.gibSag == null ? '' : String(t.gibSag), gibSol: t.gibSol == null ? '' : String(t.gibSol), gibYontem: t.gibYontem || 'nct', kopya: true, rapd: '', ref: {} });
     setKopyaOnay(false);
     setMesaj(`${v.kopya.kaynakTarih} değerleri forma kopyalandı — bugün ölçüp onaylayın.`);
   };
@@ -67,7 +71,10 @@ export default function GozHome({ patientId }: { patientId: string }) {
     const va: Record<string, Record<string, string>> = {};
     if (Object.keys(temiz(form.sag)).length) va.sag = temiz(form.sag);
     if (Object.keys(temiz(form.sol)).length) va.sol = temiz(form.sol);
-    const j = await calistir({ adim: 'olcum', olcum: { va, gibSag: n(form.gibSag), gibSol: n(form.gibSol), gibYontem: form.gibYontem, kopyaOnayli: form.kopya } }, 'OD/OS ölçüm kaydedildi.');
+    const r = form.ref;
+    const refVar = Object.values(r).some((x) => String(x || '').trim());
+    const refraksiyon = refVar ? { sag: { sph: r.sag_sph, cyl: r.sag_cyl, aks: r.sag_aks }, sol: { sph: r.sol_sph, cyl: r.sol_cyl, aks: r.sol_aks } } : null;
+    const j = await calistir({ adim: 'olcum', olcum: { va, gibSag: n(form.gibSag), gibSol: n(form.gibSol), gibYontem: form.gibYontem, kopyaOnayli: form.kopya, ...(form.rapd ? { rapd: form.rapd } : {}) }, refraksiyon }, 'OD/OS ölçüm kaydedildi.');
     if (j) { setForm(bosForm()); setKopyaOnay(false); }
   };
 
@@ -80,7 +87,8 @@ export default function GozHome({ patientId }: { patientId: string }) {
       {v.acil.length > 0 && (
         <div role="alert" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.6)', color: '#FCA5A5', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12 }}>
           {v.acil.map((a) => <div key={a.kod}><b style={{ color: '#F87171' }}>{a.oncelik === 'hemen' ? 'HEMEN' : 'AYNI GÜN'} · {a.ad}:</b> {a.eylem}</div>)}
-          <div style={{ ...kucuk, marginTop: 4 }}>Şikâyet metninden otomatik eşleşme — klinik karar hekimin; 112 / acil yönlendirmesini geciktirmeyin.</div>
+          <div style={{ ...kucuk, marginTop: 4 }}>Şikâyet metni / ön form kırmızı bayrak kutularından otomatik eşleşme — klinik karar hekimin; 112 / acil yönlendirmesini geciktirmeyin.</div>
+          <AcilSablon acil={v.acil} v={v} calistir={calistir} salt={salt} />
         </div>
       )}
 
@@ -94,7 +102,8 @@ export default function GozHome({ patientId }: { patientId: string }) {
         {s.sonrakiEnjeksiyon && chip('Enjeksiyon', s.sonrakiEnjeksiyon, '#2DD4BF')}
         {s.gecikenGorev > 0 && chip('Geciken görev', String(s.gecikenGorev), '#F87171')}
         {!s.bugunOlcumVar && chip('Bugün', 'VA/GİB girilmedi', '#FBBF24')}
-        <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#2DD4BF' : '#64748B', marginLeft: 'auto' }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
+        {!salt && <button type="button" onClick={() => calistir({ adim: 'serit_nota' }, 'Şerit (VA + GİB + son göz dibi) bugünkü notun Objektif bölümüne yazıldı.')} style={{ ...ghost, padding: '2px 8px', fontSize: 11, marginLeft: 'auto' }} title="VA + GİB + RAPD + son fundus satırı">Şeridi Objektif&apos;e yaz</button>}
+        <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#2DD4BF' : '#64748B', marginLeft: salt ? 'auto' : undefined }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
       </div>
 
       {/* Bilateral hızlı giriş */}
@@ -120,6 +129,15 @@ export default function GozHome({ patientId }: { patientId: string }) {
             <input aria-label="Sol GİB" value={form.gibSol} onChange={(e) => setForm({ ...form, gibSol: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} inputMode="decimal" />
           </div>
           <div style={satir}>
+            <label style={{ ...kucuk, display: 'flex', gap: 6, alignItems: 'center' }}>RAPD
+              <select aria-label="RAPD" value={form.rapd} onChange={(e) => setForm({ ...form, rapd: e.target.value })} style={{ ...toolsInput, width: 'auto' }}>
+                {[['', '—'], ['yok', 'Yok'], ['sag', 'Sağ (OD)'], ['sol', 'Sol (OS)']].map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}
+              </select>
+            </label>
+            <button type="button" onClick={() => setRefAcik(!refAcik)} style={{ ...ghost, color: refAcik ? '#2DD4BF' : '#8FA0B5' }}>{refAcik ? 'Refraksiyonu gizle' : '+ Refraksiyon (opsiyonel)'}</button>
+          </div>
+          {refAcik && <RefraksiyonAlanlari deger={form.ref} set={(ref) => setForm({ ...form, ref })} />}
+          <div style={satir}>
             <select value={form.gibYontem} onChange={(e) => setForm({ ...form, gibYontem: e.target.value })} style={{ ...toolsInput, width: 'auto' }}>
               {[['nct', 'NCT (hava)'], ['applanasyon', 'Aplanasyon'], ['tonopen', 'Tono-Pen'], ['icare', 'iCare'], ['diger', 'Diğer']].map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}
             </select>
@@ -131,7 +149,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
       )}
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-        {SEKMELER.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999, minHeight: 30 }}>{x}{x === 'DR' && v.acikGozSevkleri.length ? ' •' : ''}</button>)}
+        {sekmeler.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999, minHeight: 30 }}>{x}{x === 'DR' && v.acikGozSevkleri.length ? ' •' : ''}</button>)}
       </div>
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>

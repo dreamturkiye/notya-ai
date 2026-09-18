@@ -22,6 +22,19 @@ export const GOZ_TOOLS = [
   { name: 'goz.acil', description: 'Acil kırmızı bayrak kapısı: gecikmesiz 112 / acil yönlendirme' },
   { name: 'goz.intake_nota', description: 'Ön anket yanıtları → bugünkü notun Subjektif bölümüne (hasta beyanı)' },
   { name: 'goz.gorev', description: 'Göz görevleri: tamamla / ertele' },
+  { name: 'goz.serit_nota', description: 'Şeridi Objektif\'e yaz: son VA + GİB + RAPD + son göz dibi satırı (tek dokunuş)' },
+  { name: 'goz.fundus_dr', description: 'Fundus sonrası DR evresini güncelle — evreyi hekim seçer ve onaylar; motor evre önermez' },
+  { name: 'goz.lazer', description: 'DR lazer kaydı (PRP / fokal / grid), göz başına tarih + hekim; kontrole bağlanır' },
+  { name: 'goz.biyomikroskopi', description: 'Biyomikroskopi OD/OS: kapak, konjonktiva, kornea, ön kamara, iris, lens (gözlem, tanı yok)' },
+  { name: 'goz.keratokonus', description: 'Keratokonus izlemi: topografi notu, Kmax, CXL tarihi (hekim)' },
+  { name: 'goz.on_segment_nota', description: 'Son biyomikroskopi / keratokonus satırını bugünkü notun Objektif bölümüne ekle' },
+  { name: 'goz.katarakt_postop', description: 'Katarakt post-op 1. gün / 1. hafta: VA, GİB, kornea, endoftalmi bayrağı (hekim)' },
+  { name: 'goz.katarakt_nota', description: 'Biyometri (GİL gücü yok) + post-op satırlarını nota ekle' },
+  { name: 'goz.rop', description: 'ROP tarama kartı: PMA, zon / evre / plus hekim girer, sonraki tarama hekim kilitler' },
+  { name: 'goz.acil_kayit', description: 'Acil şablon: kimyasal yıkama zamanlayıcısı, pH, VA saati, eylem listesi' },
+  { name: 'goz.acil_nota', description: 'Acil yıkama kaydını bugünkü notun Objektif bölümüne ekle' },
+  { name: 'goz.oct_olcum', description: 'OCT görüntüsüne hekimin ölçtüğü MFK / RNFL kalınlığı (piksel ölçümü yok)' },
+  { name: 'goz.hatirlatma', description: 'Geciken GA / OCT / IVT / kontrol için hastaya hasta-güvenli hatırlatma (Sağlığım mesajı)' },
 ] as const
 
 export type GozToolName = (typeof GOZ_TOOLS)[number]['name']

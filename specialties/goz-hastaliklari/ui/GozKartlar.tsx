@@ -13,33 +13,29 @@ import { normalFundusGoz, fundusMetni, type FundusKayit, type FundusGozBulgu } f
 import type { ProtokolKart } from '../engines/klinik';
 import type { GozKaynak } from '../protocols/sources';
 import type { Dipnot } from '../protocols/sources';
+import { AcilSablon, FundusDrPaneli, LazerKarti, IvtKontrolPaneli, KataraktEk, BiyoKarti, OctKalinlik, RopKarti, HatirlatmaKarti, GlokomOneriDugmeleri, refraksiyonOzet, type GozEkVeri } from './GozKartlarEk';
+import type { Biyometri, PostopKayit } from '../engines/katarakt';
 
-export const stil = {
-  btn: { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 30 } as React.CSSProperties,
-  ghost: { background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 28 } as React.CSSProperties,
-  etiket: { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 } as React.CSSProperties,
-  kucuk: { fontSize: 11, color: '#8FA0B5' } as React.CSSProperties,
-  satir: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 } as React.CSSProperties,
-  metin: { fontSize: 12, color: '#EDF1F7' } as React.CSSProperties,
-};
+export { stil } from './stil';
+import { stil } from './stil';
 const { btn, ghost, etiket, kucuk, satir, metin } = stil;
 
 type Okuma = { id: string; taslak: string; taslak_yazan: string; durum: string; uzman_metin: string | null; goz: string | null; created_at: string };
-export interface GozVeri {
+export interface GozVeri extends GozEkVeri {
   hasta: { yas: number | null; yasAy: number | null }
   rol: 'doktor' | 'sekreter'
   serit: GozSerit
   muayeneler: Array<{ id: string; tarih: string; gib_sag: number | null; gib_sol: number | null; gib_yontem: string | null; kaynak: string; gosterim: { sag: string; sol: string } }>
   sonFundus?: (FundusKayit & { muayeneId?: string }) | null
   kopya: { taslak: { tarih: string; va: { sag?: Record<string, string | null | undefined>; sol?: Record<string, string | null | undefined> }; gibSag: number | null; gibSol: number | null; gibYontem?: string | null }; kaynakTarih: string } | null
-  glokom: { kart: GlokomKart; degerlendirme: GlokomDegerlendirme } | null
+  glokom: { kart: GlokomKart; meta: Record<string, string | number | null> | null; degerlendirme: GlokomDegerlendirme } | null
   dr: { satir: Record<string, string | boolean | null>; degerlendirme: DrSonuc } | null
   acikGozSevkleri: Array<{ id: string; not_metni: string | null; kaynak: string | null; created_at: string }>
-  enjeksiyonlar: Enjeksiyon[]
+  enjeksiyonlar: Array<Enjeksiyon & { ivtKontrol?: Record<string, unknown> | null }>
   sonrakiDoz: Record<'sag' | 'sol', { faz: string | null; dozNo: number | null; enErken: string | null; enGec: string | null; not: string }>
   sgkRaporlari: Array<{ id: string; sablon: string; draft: Record<string, unknown>; eksikler: string[]; durum: string; created_at: string }>
   sgkSablonlari: Array<{ id: string; ad: string }>
-  katarakt: Array<{ id: string; goz: string; checklist: Record<string, boolean>; gil_tipi_hekim: string | null; planlanan_tarih: string | null; durum: string; hazirlik: { tamam: number; toplam: number; eksikZorunlu: string[]; hazir: boolean; dipnotlar: Dipnot[] } }>
+  katarakt: Array<{ id: string; goz: string; checklist: Record<string, boolean>; gil_tipi_hekim: string | null; planlanan_tarih: string | null; durum: string; biyometri?: Biyometri | null; postop?: Partial<Record<'gun1' | 'hafta1', PostopKayit>> | null; ek3g_kod?: string | null; postopUyari?: string[]; hazirlik: { tamam: number; toplam: number; eksikZorunlu: string[]; hazir: boolean; dipnotlar: Dipnot[] } }>
   kataraktKontrol: Array<{ kod: string; ad: string; zorunlu: boolean }>
   goruntuler: Array<{ id: string; modalite: string; goz: string | null; tarih: string; url: string | null; okumalar: Okuma[] }>
   goruntuDisclaimer: string
@@ -105,6 +101,8 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
 
   if (sekme === 'Özet') return (
     <div>
+      <HatirlatmaKarti v={v} calistir={calistir} salt={salt} />
+      {v.sonRefraksiyon && <div style={{ ...metin, marginBottom: 8 }}><span style={kucuk}>Son refraksiyon ({v.sonRefraksiyon.tarih}): </span>{refraksiyonOzet(v.sonRefraksiyon)}</div>}
       {v.intake && (
         <div style={{ marginBottom: 10 }}>
           <div style={etiket}>Muayene öncesi form (hasta beyanı)</div>
@@ -133,6 +131,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
           <div style={etiket}>Acil işaret (hekim) <span style={kucuk}>· şikâyet metni otomatik taranır; burada elle de işaretleyin</span></div>
           <div style={satir}><input value={s('acilMetin')} onChange={(e) => set('acilMetin', e.target.value)} placeholder="şikâyet (ör. ışık çakması, perde)" style={{ ...toolsInput, minWidth: 200, flex: 1 }} /><button type="button" onClick={async () => { const j = await calistir({ adim: 'acil', metin: s('acilMetin') }, 'Tarandı.'); setSonuc(j); }} style={ghost}>Tara</button></div>
           {Array.isArray(sonuc?.acil) && ((sonuc!.acil as AcilBayrak[]).length ? (sonuc!.acil as AcilBayrak[]).map((a) => <div key={a.kod} style={{ ...metin, color: '#F87171' }}><b>{a.ad}:</b> {a.eylem}</div>) : <div style={kucuk}>Kırmızı bayrak eşleşmedi — klinik değerlendirme hekimin.</div>)}
+          {!v.acil.length && <AcilSablon acil={Array.isArray(sonuc?.acil) ? (sonuc!.acil as AcilBayrak[]) : []} v={v} calistir={calistir} salt={salt} />}
         </div>
       )}
     </div>
@@ -207,15 +206,17 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
                       sol: gozPayload('sol'),
                     },
                   },
-                  'Göz dibi kaydedildi.',
-                )
+                  'Göz dibi kaydedildi — DR evresini güncellemek isterseniz aşağıda.',
+                ).then((j) => { if (j) set('fundusDr', s('f_tarih', kayit?.tarih || bugun())); })
               }
               style={btn}
             >
               Kaydet
             </button>
             <button type="button" onClick={() => calistir({ adim: 'fundus_nota' }, 'Göz dibi bugünkü notun Objektif bölümüne eklendi.')} style={ghost}>Nota ekle (O)</button>
+            {kayit && !f.fundusDr && <button type="button" onClick={() => set('fundusDr', kayit.tarih)} style={ghost}>DR evresini güncelle</button>}
           </div>
+          {!!f.fundusDr && <FundusDrPaneli fundusTarihi={String(f.fundusDr)} dr={(v.dr?.satir as Record<string, unknown>) || null} calistir={calistir} kapat={() => set('fundusDr', null)} />}
         </>}
         {fundusFotolar.length > 0 && (
           <div style={{ marginTop: 12 }}>
@@ -258,6 +259,20 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             <span style={kucuk}>Son OCT</span><input type="date" value={s('sonOctRnfl', k?.sonOctRnfl || '')} onChange={(e) => set('sonOctRnfl', e.target.value)} style={{ ...toolsInput, width: 150 }} />
             <span style={kucuk}>OCT / ay</span><input value={s('octAralikAy', k?.octAralikAy?.toString() || '')} onChange={(e) => set('octAralikAy', e.target.value)} style={{ ...toolsInput, width: 56 }} inputMode="numeric" />
           </div>
+          <GlokomOneriDugmeleri oneriler={v.glokomOnerileri} etiketMetni={v.glokomOneriEtiketi} secili={s('aralikOnerisi', String(v.glokom?.meta?.aralikOnerisi || ''))} sec={(o) => setF((p) => ({ ...p, aralikOnerisi: o.kod, ...(o.gaAralikAy != null ? { gaAralikAy: String(o.gaAralikAy) } : {}) }))} kaynak={(d) => <Kaynak d={d} acik={true} k={v.kaynaklar} />} />
+          <div style={{ ...kucuk, marginTop: 8 }}>Gonyoskopi · pakimetri · GA / OCT cihazı (hekim girişi)</div>
+          {(['Sag', 'Sol'] as const).map((t) => (
+            <div key={t} style={satir}>
+              <span style={kucuk}>{t === 'Sag' ? 'OD' : 'OS'}</span>
+              <Secim deger={s(`shaffer${t}`, v.glokom?.meta?.[`shaffer${t}`] != null ? String(v.glokom?.meta?.[`shaffer${t}`]) : '')} set={(x) => set(`shaffer${t}`, x)} secenekler={Object.entries(v.shafferAd)} bos="Shaffer" />
+              <input value={s(`gonyo${t}`, String(v.glokom?.meta?.[`gonyo${t}`] || ''))} onChange={(e) => set(`gonyo${t}`, e.target.value)} placeholder="gonyo / Spaeth (serbest)" aria-label={`Gonyoskopi ${t}`} style={{ ...toolsInput, width: 180 }} />
+              <input value={s(`paki${t}`, v.glokom?.meta?.[`paki${t}`] != null ? String(v.glokom?.meta?.[`paki${t}`]) : '')} onChange={(e) => set(`paki${t}`, e.target.value)} placeholder="SKK µm" aria-label={`Pakimetri ${t}`} inputMode="numeric" style={{ ...toolsInput, width: 90 }} />
+            </div>
+          ))}
+          <div style={satir}>
+            <input value={s('gormeAlaniCihaz', String(v.glokom?.meta?.gormeAlaniCihaz || ''))} onChange={(e) => set('gormeAlaniCihaz', e.target.value)} placeholder="GA cihaz / program (ör. 24-2 SITA)" aria-label="Görme alanı cihazı" style={{ ...toolsInput, width: 220 }} />
+            <input value={s('octCihaz', String(v.glokom?.meta?.octCihaz || ''))} onChange={(e) => set('octCihaz', e.target.value)} placeholder="OCT cihazı" aria-label="OCT cihazı" style={{ ...toolsInput, width: 160 }} />
+          </div>
           <div style={{ ...kucuk, marginTop: 8 }}>Damlalar (hekim yazar — etken madde / ticari ad + göz + sıklık)</div>
           {damlalar.map((dm, i) => (
             <div key={i} style={satir}>
@@ -269,7 +284,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
           ))}
           <div style={satir}>
             <button type="button" onClick={() => set('damlalar', [...damlalar, { ad: '', goz: 'iki', siklik: '' }])} style={ghost}>+ damla</button>
-            <button type="button" onClick={() => calistir({ adim: 'glokom', taniHekim: s('taniHekim', k?.taniHekim || ''), goz: s('goz', k?.goz || 'iki'), hedefSag: s('hedefSag', k?.hedefSag?.toString() || ''), hedefSol: s('hedefSol', k?.hedefSol?.toString() || ''), damlalar, sonGormeAlani: s('sonGormeAlani', k?.sonGormeAlani || ''), sonOctRnfl: s('sonOctRnfl', k?.sonOctRnfl || ''), gaAralikAy: s('gaAralikAy', k?.gaAralikAy?.toString() || ''), octAralikAy: s('octAralikAy', k?.octAralikAy?.toString() || '') }, 'Glokom kartı kaydedildi (hekim kilidi).')} style={btn}>Kaydet</button>
+            <button type="button" onClick={() => calistir({ adim: 'glokom', taniHekim: s('taniHekim', k?.taniHekim || ''), goz: s('goz', k?.goz || 'iki'), hedefSag: s('hedefSag', k?.hedefSag?.toString() || ''), hedefSol: s('hedefSol', k?.hedefSol?.toString() || ''), damlalar, sonGormeAlani: s('sonGormeAlani', k?.sonGormeAlani || ''), sonOctRnfl: s('sonOctRnfl', k?.sonOctRnfl || ''), gaAralikAy: s('gaAralikAy', k?.gaAralikAy?.toString() || ''), octAralikAy: s('octAralikAy', k?.octAralikAy?.toString() || ''), aralikOnerisi: s('aralikOnerisi', String(v.glokom?.meta?.aralikOnerisi || '')) || null, ...Object.fromEntries(['shafferSag', 'shafferSol', 'gonyoSag', 'gonyoSol', 'pakiSag', 'pakiSol', 'gormeAlaniCihaz', 'octCihaz'].map((x) => [x, s(x, v.glokom?.meta?.[x] != null ? String(v.glokom?.meta?.[x]) : '')])) }, 'Glokom kartı kaydedildi (hekim kilidi).')} style={btn}>Kaydet</button>
           </div>
         </>}
       </div>
@@ -319,6 +334,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             <button type="button" onClick={() => { const o: Record<string, unknown> = {}; for (const [a, b] of [['dmTip', 'dm_tip'], ['dmTaniTarihi', 'dm_tani_tarihi'], ['evreSag', 'evre_sag'], ['evreSol', 'evre_sol'], ['dmoSag', 'dmo_sag'], ['dmoSol', 'dmo_sol'], ['sonFundus', 'son_fundus'], ['sonrakiKontrol', 'sonraki_kontrol']]) { const x = s(a, String(r?.[b] || '')); if (x) o[a] = x; } o.gebe = f.gebe == null ? !!r?.gebe : !!f.gebe; calistir({ adim: 'dr', dr: o }, 'DR kartı kaydedildi (hekim evresi).'); }} style={btn}>Kaydet</button>
           </div>
         </>}
+        <LazerKarti v={v} calistir={calistir} salt={salt} />
       </div>
     );
   }
@@ -334,9 +350,10 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         <div style={{ overflowX: 'auto', marginTop: 6 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#EDF1F7', minWidth: 360 }}>
             <thead><tr style={{ color: '#8FA0B5', textAlign: 'left' }}><th style={{ padding: 4 }}>Tarih</th><th>Göz</th><th>Ajan</th><th>Faz</th><th>Durum</th></tr></thead>
-            <tbody>{v.enjeksiyonlar.map((x) => <tr key={x.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 4 }}>{x.tarih}</td><td>{gozAd(x.goz)}</td><td>{AJAN_ADI[x.ajan]}</td><td>{x.faz === 'yukleme' ? `yükleme ${x.dozNo ?? ''}` : 'idame'}</td><td>{x.durum}{!salt && x.durum === 'planli' && <button type="button" onClick={() => calistir({ adim: 'enjeksiyon', id: x.id, enjeksiyon: { goz: x.goz, ajan: x.ajan, endikasyon: x.endikasyon, faz: x.faz, dozNo: x.dozNo ?? undefined, tarih: x.tarih, durum: 'yapildi' } }, 'Yapıldı olarak işaretlendi.')} style={{ ...ghost, marginLeft: 6, padding: '2px 8px' }}>yapıldı</button>}</td></tr>)}</tbody>
+            <tbody>{v.enjeksiyonlar.map((x) => <tr key={x.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 4 }}>{x.tarih}</td><td>{gozAd(x.goz)}</td><td>{AJAN_ADI[x.ajan]}</td><td>{x.faz === 'yukleme' ? `yükleme ${x.dozNo ?? ''}` : 'idame'}</td><td>{x.durum}{x.durum === 'yapildi' && x.ivtKontrol ? <span style={kucuk} title="IVT odası kontrol listesi">{(x.ivtKontrol as { gecmisKayit?: boolean }).gecmisKayit ? ' · geçmiş kayıt' : ` · ✓ liste${(x.ivtKontrol as { lot?: string }).lot ? ` · lot ${(x.ivtKontrol as { lot?: string }).lot}` : ''}`}</span> : null}{!salt && x.durum === 'planli' && <button type="button" onClick={() => set('ivtId', x.id)} style={{ ...ghost, marginLeft: 6, padding: '2px 8px' }}>yapıldı</button>}</td></tr>)}</tbody>
           </table>
         </div>
+        {!salt && (() => { const x = v.enjeksiyonlar.find((y) => y.id === f.ivtId); return x ? <IvtKontrolPaneli goz={x.goz} maddeler={v.ivtKontrol} iptal={() => set('ivtId', null)} onay={async (k) => { const j = await calistir({ adim: 'enjeksiyon', id: x.id, ivtKontrol: k, enjeksiyon: { goz: x.goz, ajan: x.ajan, endikasyon: x.endikasyon, faz: x.faz, dozNo: x.dozNo ?? undefined, tarih: x.tarih, durum: 'yapildi' } }, 'Yapıldı — IVT kontrol listesi kaydedildi.'); if (j) set('ivtId', null); }} /> : null; })()}
         {!salt && <>
           <div style={satir}>
             <Secim deger={e.goz} set={(x) => set('eGoz', x)} secenekler={[['sag', 'OD'], ['sol', 'OS']]} />
@@ -351,8 +368,9 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             <Secim deger={s('basamak', 'muayenehane')} set={(x) => set('basamak', x)} secenekler={[['muayenehane', 'Muayenehane'], ['2', '2. basamak'], ['3', '3. basamak']]} />
             <label style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center' }}><input type="checkbox" checked={!!f.mi} onChange={(ev) => set('mi', ev.target.checked)} />son 3 ay MI/SVO</label>
             <button type="button" onClick={async () => setSonuc(await calistir({ adim: 'sgk_kapi', enjeksiyon: e, basamak: s('basamak', 'muayenehane'), son3AydaMiVeyaSvo: !!f.mi }, 'SUT kontrolü yapıldı.'))} style={ghost}>SUT kontrol</button>
-            <button type="button" onClick={async () => setSonuc(await calistir({ adim: 'enjeksiyon', enjeksiyon: e, basamak: s('basamak', 'muayenehane'), son3AydaMiVeyaSvo: !!f.mi }, 'Enjeksiyon kaydedildi.'))} style={btn}>Kaydet</button>
+            <button type="button" onClick={async () => { if (e.durum === 'yapildi') { set('yeniIvt', true); return; } setSonuc(await calistir({ adim: 'enjeksiyon', enjeksiyon: e, basamak: s('basamak', 'muayenehane'), son3AydaMiVeyaSvo: !!f.mi }, 'Enjeksiyon kaydedildi.')); }} style={btn}>Kaydet</button>
           </div>
+          {!!f.yeniIvt && e.durum === 'yapildi' && <IvtKontrolPaneli goz={e.goz as 'sag' | 'sol'} maddeler={v.ivtKontrol} iptal={() => set('yeniIvt', false)} onay={async (k) => { const j = await calistir({ adim: 'enjeksiyon', enjeksiyon: e, ivtKontrol: k, basamak: s('basamak', 'muayenehane'), son3AydaMiVeyaSvo: !!f.mi }, 'Enjeksiyon kaydedildi — IVT kontrol listesi tamam.'); if (j) { setSonuc(j); set('yeniIvt', false); } }} />}
         </>}
         {kapi && <div style={{ marginTop: 6 }}>
           {kapi.engeller.map((x) => <div key={x} style={{ ...metin, color: '#F87171' }}>✕ {x}</div>)}
@@ -377,6 +395,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             <Secim deger={s('rGoz', 'sag')} set={(x) => set('rGoz', x)} secenekler={[['sag', 'OD'], ['sol', 'OS']]} />
             {s('sablon', 'anti_vegf_baslangic') !== 'katarakt_gil' && <><Secim deger={s('rAjan', 'bevacizumab')} set={(x) => set('rAjan', x)} secenekler={Object.entries(AJAN_ADI)} /><Secim deger={s('rEnd', 'ybmd')} set={(x) => set('rEnd', x)} secenekler={Object.entries(ENDIKASYON_ADI)} /></>}
           </div>
+          {s('sablon', 'anti_vegf_baslangic') === 'katarakt_gil' && <div style={{ ...kucuk, marginTop: 6 }}>GİL bilgi notu Katarakt kartından okur: biyometri (GİL gücü hesaplanmaz), GİL tipi, EK-3/G kodu, ön-op kontrol eksikleri. Önce Katarakt sekmesini doldurun.</div>}
           <div style={satir}><textarea value={s('anamnez')} onChange={(e) => set('anamnez', e.target.value)} placeholder="Anamnez (hekim)" rows={2} style={{ ...toolsInput, width: '100%' }} /></div>
           <div style={satir}>{alan('vaBaslangic', 'VA başlangıç', 100)}{alan('vaOnceki', 'VA önceki', 90)}{alan('vaSimdi', 'VA şimdi', 90)}{alan('mfkBaslangic', 'MFK başl. µm', 100)}{alan('mfkOnceki', 'MFK önceki µm', 110)}{alan('mfkSimdi', 'MFK şimdi µm', 100)}</div>
           <div style={satir}><span style={kucuk}>Renkli resim</span>{alan('renkliResim', 'renkli resim tarihi', 150, 'date')}<span style={kucuk}>FFA</span>{alan('ffa', 'FFA tarihi', 150, 'date')}<label style={{ ...kucuk, display: 'flex', gap: 4 }}><input type="checkbox" checked={!!f.ffaKontrendike} onChange={(e) => set('ffaKontrendike', e.target.checked)} />FFA kontrendike</label><span style={kucuk}>OKT</span>{alan('okt', 'OKT tarihi', 150, 'date')}</div>
@@ -394,7 +413,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
           <Kaynak d={r.dipnotlar} acik={kaynak} k={v.kaynaklar} />
         </div>}
         <div style={{ ...etiket, marginTop: 10 }}>Kayıtlı taslaklar</div>
-        {v.sgkRaporlari.map((x) => <div key={x.id} style={{ ...metin, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><span>{x.created_at.slice(0, 10)} · {v.sgkSablonlari.find((t) => t.id === x.sablon)?.ad} · <b>{x.durum}</b>{x.eksikler.length ? ` · ${x.eksikler.length} eksik` : ''}</span>{!salt && x.durum === 'taslak' && <button type="button" onClick={() => calistir({ adim: 'sgkrapor_kilit', id: x.id, eksikRaganKilitle: false }, 'Rapor kilitlendi.')} style={ghost}>Kilitle</button>}</div>)}
+        {v.sgkRaporlari.map((x) => <div key={x.id} style={{ ...metin, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><span>{x.created_at.slice(0, 10)} · {v.sgkSablonlari.find((t) => t.id === x.sablon)?.ad} · <b>{x.durum}</b>{x.eksikler.length ? ` · ${x.eksikler.length} eksik` : ''}</span>{!salt && x.durum === 'taslak' && <button type="button" onClick={() => { const eksikVar = x.eksikler.length > 0; if (eksikVar && !window.confirm(`${x.eksikler.length} eksik var:\n- ${x.eksikler.join('\n- ')}\n\nYine de kilitlensin mi? (hekim sorumluluğunda)`)) return; calistir({ adim: 'sgkrapor_kilit', id: x.id, eksikRaganKilitle: eksikVar }, eksikVar ? 'Rapor eksiklerle hekim onayıyla kilitlendi.' : 'Rapor kilitlendi.'); }} style={ghost}>Kilitle</button>}{x.durum === 'kilitli' && <span style={{ ...kucuk, color: '#2DD4BF' }}>Kilitli — Medula'ya hekim e-imza ile girilir (Notya canlı gönderim yapmaz)</span>}</div>)}
         {!v.sgkRaporlari.length && <div style={kucuk}>Taslak yok.</div>}
       </div>
     );
@@ -412,6 +431,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
           {(k.gilSgk?.uyari || []).map((u) => <div key={u} style={{ color: '#FBBF24' }}>• {u}</div>)}
           {k.hazirlik.eksikZorunlu.map((x) => <div key={x} style={{ color: '#FBBF24' }}>• {x}</div>)}
           {!salt && <button type="button" onClick={() => setF((p) => ({ ...p, katId: k.id, kat: k.checklist, katGoz: k.goz, gilTipi: k.gil_tipi_hekim || '', planlananTarih: k.planlanan_tarih || '' }))} style={{ ...ghost, marginTop: 4 }}>Düzenle</button>}
+          <KataraktEk k={k} ek3g={v.gilEk3g || []} calistir={calistir} salt={salt} />
           <Kaynak d={k.hazirlik.dipnotlar} acik={kaynak} k={v.kaynaklar} />
         </div>)}
         {(v.gilEk3g || []).length > 0 && (
@@ -451,15 +471,18 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
                 <div key={i} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: 6, ...metin }}>
                   <div style={kucuk}>{x.t}</div>
                   {x.u ? <a href={x.u} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>Görüntüyü aç</a> : 'URL yok'}
+                  {(() => { const o = v.octOlcumleri.find((m) => m.goruntu_id === (i === 0 ? (sonuc.a as { id?: string }).id : (sonuc.b as { id?: string }).id)); return o ? <div style={kucuk}>MFK {o.mfk_mikron ?? '—'} µm · RNFL {o.rnfl_mikron ?? '—'} µm (hekim)</div> : null; })()}
                 </div>
               ))}
             </div>
+            {(() => { const a = v.octOlcumleri.find((m) => m.goruntu_id === (sonuc.a as { id?: string }).id), b = v.octOlcumleri.find((m) => m.goruntu_id === (sonuc.b as { id?: string }).id); if (a?.mfk_mikron == null || b?.mfk_mikron == null) return <div style={{ ...kucuk, marginTop: 4 }}>Kalınlık farkı için iki OCT'ye de MFK girin (hekim ölçümü; piksel ölçümü yapılmaz).</div>; const d = b.mfk_mikron - a.mfk_mikron; return <div style={{ ...metin, marginTop: 4 }}>MFK farkı (2. − 1.): <b>{d > 0 ? '+' : ''}{d} µm</b> <span style={kucuk}>— hekimin girdiği değerlerden; yorum hekimin</span></div>; })()}
           </div>
         ) : null}
         {!v.goruntuler.length && <div style={{ ...kucuk, marginTop: 6 }}>Göz görüntüsü yok.</div>}
         {v.goruntuler.map((g) => (
           <div key={g.id} style={{ borderLeft: '2px solid rgba(99,102,241,0.6)', paddingLeft: 10, margin: '10px 0', ...metin }}>
             <div><b>{g.tarih}</b> · {MOD_ADI[g.modalite] || g.modalite} · {g.goz || 'göz belirtilmedi'}{g.url && <> · <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>aç</a></>}</div>
+            {g.modalite === 'oct' && <OctKalinlik goruntuId={g.id} goz={g.goz} olcum={v.octOlcumleri.find((x) => x.goruntu_id === g.id) || null} calistir={calistir} salt={salt} />}
             {g.okumalar.map((o) => (
               <div key={o.id} style={{ marginTop: 4, padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
                 <div style={kucuk}>{o.taslak_yazan === 'asistan' ? 'Asistan / Ayşe taslağı' : 'Uzman taslağı'} · {o.durum === 'draft' ? 'onay bekliyor' : o.durum}</div>
@@ -555,6 +578,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
 
   if (sekme === 'Ön segment') return (
     <div style={{ display: 'grid', gap: 10 }}>
+      <BiyoKarti v={v} calistir={calistir} salt={salt} />
       {v.protokoller.map((p) => (
         <div key={p.id} style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, ...metin }}>
           <div style={etiket}>{p.ad}</div>
@@ -589,9 +613,15 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             <input value={s('kapama', String(r?.kapama_hekim || ''))} onChange={(e) => set('kapama', e.target.value)} placeholder="kapama / penalizasyon (hekim)" style={{ ...toolsInput, width: 200 }} />
             <label style={{ ...kucuk, display: 'flex', gap: 4 }}><input type="checkbox" checked={f.gozluk == null ? !!r?.gozluk : !!f.gozluk} onChange={(e) => set('gozluk', e.target.checked)} />gözlük</label>
             <input type="date" value={s('pKontrol', String(r?.sonraki_kontrol || ''))} onChange={(e) => set('pKontrol', e.target.value)} style={{ ...toolsInput, width: 150 }} />
-            <button type="button" onClick={() => calistir({ adim: 'pediatrik', tip: s('pTip', String(r?.tip || '')), kapamaHekim: s('kapama', String(r?.kapama_hekim || '')), gozluk: f.gozluk == null ? !!r?.gozluk : !!f.gozluk, sonrakiKontrol: s('pKontrol', String(r?.sonraki_kontrol || '')) }, 'Pediatrik izlem kaydedildi.')} style={btn}>Kaydet</button>
+          </div>
+          <div style={satir}>
+            <input value={s('coverTest', String(r?.cover_test || ''))} onChange={(e) => set('coverTest', e.target.value)} placeholder="Cover / uncover test (serbest)" aria-label="Cover test" style={{ ...toolsInput, width: 220 }} />
+            <input value={s('hirschberg', String(r?.hirschberg || ''))} onChange={(e) => set('hirschberg', e.target.value)} placeholder="Hirschberg" aria-label="Hirschberg" style={{ ...toolsInput, width: 140 }} />
+            <input value={s('krimsky', String(r?.krimsky || ''))} onChange={(e) => set('krimsky', e.target.value)} placeholder="Krimsky (PD)" aria-label="Krimsky" style={{ ...toolsInput, width: 140 }} />
+            <button type="button" onClick={() => calistir({ adim: 'pediatrik', tip: s('pTip', String(r?.tip || '')), kapamaHekim: s('kapama', String(r?.kapama_hekim || '')), gozluk: f.gozluk == null ? !!r?.gozluk : !!f.gozluk, sonrakiKontrol: s('pKontrol', String(r?.sonraki_kontrol || '')), coverTest: s('coverTest', String(r?.cover_test || '')), hirschberg: s('hirschberg', String(r?.hirschberg || '')), krimsky: s('krimsky', String(r?.krimsky || '')) }, 'Pediatrik izlem kaydedildi.')} style={btn}>Kaydet</button>
           </div>
         </>}
+        {v.pediatrikGorunum.ropKart && <RopKarti v={v} calistir={calistir} salt={salt} />}
       </div>
     );
   }

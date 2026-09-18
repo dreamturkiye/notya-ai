@@ -121,3 +121,51 @@ export function dahiliyeGeriBildirim(s: DrSonuc, fundusTarihi: string): string {
   const dmo = s.kotuDmo ? `, ${DMO_ADI[s.kotuDmo]}` : ''
   return `Göz dibi muayenesi ${fundusTarihi}: ${evre}${dmo}.`
 }
+
+// ---------- GOZ-EXCEPTIONAL-01: Fundus → DR el sıkışması (hekim onaylı) + lazer kaydı ----------
+const EVRELER = Object.keys(EVRE_ADI) as DrEvre[]
+const DMOLAR = Object.keys(DMO_ADI) as Dmo[]
+
+/**
+ * Fundus kaydından sonra "DR evresini güncelle": evreyi HEKİM seçer ve onay kutusunu işaretler. Motor fundus metninden,
+ * görüntüden veya sohbetten evre ÇIKARMAZ; yalnız hekimin seçimini doğrular. Fundus tarihi son_fundus olur.
+ */
+export function fundusDrGecisi(g: { hekimOnay: unknown; evreSag?: unknown; evreSol?: unknown; dmoSag?: unknown; dmoSol?: unknown; fundusTarihi?: unknown }):
+  { ok: true; evreSag: DrEvre | null; evreSol: DrEvre | null; dmoSag: Dmo | null; dmoSol: Dmo | null; sonFundus: string } | { ok: false; hata: string } {
+  if (g.hekimOnay !== true) return { ok: false, hata: 'Evreyi fundus muayenenizle sizin belirlediğinizi onaylayın — Notya evre önermez.' }
+  const ev = (x: unknown) => (EVRELER.includes(x as DrEvre) ? (x as DrEvre) : null)
+  const dm = (x: unknown) => (DMOLAR.includes(x as Dmo) ? (x as Dmo) : null)
+  const r = { evreSag: ev(g.evreSag), evreSol: ev(g.evreSol), dmoSag: dm(g.dmoSag), dmoSol: dm(g.dmoSol) }
+  if (!r.evreSag && !r.evreSol) return { ok: false, hata: 'En az bir göz için evre seçin (OD / OS).' }
+  if (typeof g.fundusTarihi !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(g.fundusTarihi)) return { ok: false, hata: 'Fundus tarihi gerekli.' }
+  return { ok: true, ...r, sonFundus: g.fundusTarihi }
+}
+
+export type LazerTip = 'prp' | 'fokal' | 'grid' | 'diger'
+export const LAZER_AD: Record<LazerTip, string> = { prp: 'PRP (panretinal fotokoagülasyon)', fokal: 'Fokal lazer', grid: 'Grid lazer', diger: 'Diğer lazer' }
+export interface Lazer { id?: string; goz: 'sag' | 'sol'; tip: LazerTip; tarih: string; seansNo: number | null; hekimAdi: string | null; not: string | null; kontrolTarihi?: string | null }
+
+export function lazerDogrula(g: Record<string, unknown>): { ok: true; lazer: Lazer } | { ok: false; hata: string } {
+  const goz = g.goz === 'sag' || g.goz === 'sol' ? g.goz : null
+  if (!goz) return { ok: false, hata: 'Göz seçin (OD / OS).' }
+  const tip = (Object.keys(LAZER_AD) as LazerTip[]).includes(g.tip as LazerTip) ? (g.tip as LazerTip) : null
+  if (!tip) return { ok: false, hata: 'Lazer tipi seçin (PRP / fokal / grid).' }
+  if (typeof g.tarih !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(g.tarih)) return { ok: false, hata: 'Lazer tarihi gerekli.' }
+  const seans = g.seansNo == null || g.seansNo === '' ? null : Number(g.seansNo)
+  if (seans != null && (!Number.isInteger(seans) || seans < 1 || seans > 20)) return { ok: false, hata: 'Seans no 1–20 olmalı.' }
+  const kt = typeof g.kontrolTarihi === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(g.kontrolTarihi) ? g.kontrolTarihi : null
+  if (kt && kt < g.tarih) return { ok: false, hata: 'Kontrol tarihi lazer tarihinden önce olamaz.' }
+  return { ok: true, lazer: { goz, tip, tarih: g.tarih, seansNo: seans, hekimAdi: g.hekimAdi ? String(g.hekimAdi).trim().slice(0, 80) || null : null, not: g.not ? String(g.not).trim().slice(0, 240) || null : null, kontrolTarihi: kt } }
+}
+
+export function lazerOzeti(lazerler: Lazer[]): { goz: 'sag' | 'sol'; satirlar: string[] }[] {
+  return (['sag', 'sol'] as const).map((goz) => ({
+    goz,
+    satirlar: lazerler.filter((l) => l.goz === goz).sort((a, b) => (a.tarih < b.tarih ? 1 : -1))
+      .map((l) => `${l.tarih} · ${LAZER_AD[l.tip]}${l.seansNo ? ` (seans ${l.seansNo})` : ''}${l.hekimAdi ? ` · ${l.hekimAdi}` : ''}`),
+  }))
+}
+
+export function lazerNotaMetni(l: Lazer): string {
+  return `${l.goz === 'sag' ? 'Sağ göz (OD)' : 'Sol göz (OS)'} ${LAZER_AD[l.tip]} uygulandı (${l.tarih}${l.seansNo ? `, seans ${l.seansNo}` : ''}${l.hekimAdi ? `, ${l.hekimAdi}` : ''}).${l.not ? ` ${l.not}` : ''}`
+}

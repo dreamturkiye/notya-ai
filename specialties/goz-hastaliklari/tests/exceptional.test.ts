@@ -8,6 +8,17 @@ import { vaSatiri, vaKarsilastir, gilKodAra } from '../engines/araclar'
 import { biyometriNormalize, biyometriMetni, biyometriTamMi, postopNormalize, postopUyarilari, postopMetni } from '../engines/katarakt'
 import { gozSgkTaslak, gozSgkMetni } from '../engines/sgkRapor'
 import { sgkKapilari } from '../engines/antiVegf'
+import { refraksiyonNormalize, refraksiyonMetni, biyoNormalize, biyoMetni, normalBiyoGoz, keratokonusNormalize, olcumNotaMetni, seritNotaMetni } from '../engines/muayene'
+import { GLOKOM_ARALIK_ONERILERI, GLOKOM_ONERI_ETIKETI, glokomMetaNormalize, glokomMetaMetni } from '../engines/glokom'
+import { fundusDrGecisi, lazerDogrula, lazerNotaMetni } from '../engines/dr'
+import { ivtKontrolDogrula, IVT_KONTROL } from '../engines/antiVegf'
+import { pmaHesapla, ropDogrula, ropTaramaEndikasyonu, pediatrikGorunum } from '../engines/rop'
+import { acilTara, intakeAcilKodlari, yikamaDakika, ACIL_EYLEM_LISTESI, ACIL_KODLARI } from '../engines/acil'
+import { intakeSubjektif, gozSeridi } from '../engines/serit'
+import { fundusNormalize, normalFundusGoz } from '../engines/fundus'
+import { GOZ_KAYNAKLAR } from '../protocols/sources'
+import { GOZ_PROFILE } from '../../../lib/specialties/goz-hastaliklari'
+import { BRANS_SORULARI } from '../../../lib/intake/bransSorulari'
 
 const T = '2026-09-18'
 const bos = { gorevler: [], planliIvt: [], drSonrakiKontrol: null, planliKontroller: [], sonVizit: null, portalVar: true }
@@ -102,5 +113,160 @@ describe('SUT anti-VEGF kapı studio = chapter engine', () => {
   it('same gates as the chapter (ranibizumab 2. basamak engel; muayenehane → uyarı, odenebilir null)', () => {
     assert.equal(sgkKapilari({ ajan: 'ranibizumab', goz: 'sag', tarih: T, basamak: '2', gecmis: [] }).odenebilir, false)
     assert.equal(sgkKapilari({ ajan: 'bevacizumab', goz: 'sag', tarih: T, basamak: 'muayenehane', gecmis: [] }).odenebilir, null)
+  })
+})
+
+// ─────────────────────────── Workstream A — chapter depth ───────────────────────────
+
+describe('VA/GİB: RAPD + refraksiyon (no invented Rx)', () => {
+  it('refraction stored as measured; typos rejected; cyl needs axis; no rounding', () => {
+    const r = refraksiyonNormalize({ sag: { sph: '-1,37', cyl: '-0,75', aks: '180' }, sol: { sph: '+0,50' } })
+    assert.deepEqual(r.hatalar, [])
+    assert.equal(r.refraksiyon!.sag.sph, -1.37, 'value kept as written — not rounded to 0.25')
+    assert.match(refraksiyonMetni(r.refraksiyon)!, /OD: −1,37 sph −0,75 cyl × 180°; OS: \+0,50 sph/)
+    assert.ok(refraksiyonNormalize({ sag: { cyl: '-1' } }).hatalar.some((h) => h.includes('aks')))
+    assert.ok(refraksiyonNormalize({ sag: { sph: '-45' } }).hatalar.length === 1)
+    assert.equal(refraksiyonNormalize({}).refraksiyon, null)
+  })
+  it('Nota ekle (O) line carries RAPD + refraksiyon', () => {
+    const m = olcumNotaMetni({ tarih: T, va: { sag: { uzak_cc: '0,8' }, sol: { uzak_cc: '0,5' } }, gib_sag: 16, gib_sol: 18, gib_yontem: 'applanasyon', rapd: 'sol', ek: { refraksiyon: refraksiyonNormalize({ sag: { sph: '-1' } }).refraksiyon } })
+    assert.match(m, /RAPD sol \(OS\)/); assert.match(m, /Refraksiyon — OD: −1,00 sph/); assert.match(m, /aplanasyon/)
+  })
+  it('Şeridi Objektif\'e yaz: best VA + GİB + RAPD + last fundus line, no dose/diagnosis', () => {
+    const satir = seritNotaMetni({ sonOlcum: { tarih: T, va: { sag: { uzak_sc: '0,5', uzak_cc: '0,8' } }, gib_sag: 21, gib_sol: null, gib_yontem: 'nct', rapd: 'yok', ek: null }, sonFundus: fundusNormalize({ tarih: T, dilate: true, sag: normalFundusGoz(), sol: normalFundusGoz() }) })!
+    assert.match(satir, /VA OD 0,8, OS —/); assert.match(satir, /GİB \(NCT\) OD 21 \/ OS — mmHg/); assert.match(satir, /RAPD yok/); assert.match(satir, /Göz dibi \(dilate\)/)
+    assert.doesNotMatch(satir, /mg|damla|glokom|retinopati|evre/i)
+    assert.equal(seritNotaMetni({ sonOlcum: null, sonFundus: null }), null)
+  })
+  it('strip VA survives a later fundus-only row (va empty)', () => {
+    const s = gozSeridi({ muayeneler: [{ tarih: T, va: {}, gibSag: null, gibSol: null }, { tarih: '2026-09-01', va: { sag: { uzak_cc: '0,6' } }, gibSag: 15, gibSol: 15 }], hedefSag: null, hedefSol: null, evreSag: null, evreSol: null, sonrakiEnjeksiyon: null, gorevDue: [], sikayetMetinleri: [], bugun: T })
+    assert.equal(s.va.sag, '0,6'); assert.equal(s.bugunOlcumVar, false)
+  })
+})
+
+describe('Fundus → DR: hekim confirms, never auto-staged', () => {
+  it('rejects without hekimOnay, without any stage, or without date', () => {
+    assert.equal(fundusDrGecisi({ hekimOnay: false, evreSag: 'orta_npdr', fundusTarihi: T }).ok, false)
+    assert.equal(fundusDrGecisi({ hekimOnay: 'true', evreSag: 'orta_npdr', fundusTarihi: T }).ok, false, 'string "true" is not a confirmation')
+    assert.equal(fundusDrGecisi({ hekimOnay: true, fundusTarihi: T }).ok, false)
+    assert.equal(fundusDrGecisi({ hekimOnay: true, evreSag: 'uydurma', fundusTarihi: T }).ok, false)
+    const ok = fundusDrGecisi({ hekimOnay: true, evreSag: 'hafif_npdr', dmoSol: 'merkez_disi', evreSol: 'yok', fundusTarihi: T })
+    assert.ok(ok.ok && ok.evreSag === 'hafif_npdr' && ok.sonFundus === T)
+  })
+  it('fundus engine still never emits a DR stage', () => {
+    const m = fundusNormalize({ tarih: T, sag: { makula: 'sert eksuda, mikroanevrizma' } })
+    assert.equal((m as unknown as Record<string, unknown>).evre, undefined)
+  })
+})
+
+describe('DR laser log', () => {
+  it('validates eye/type/date/session, kontrol after laser; note line has no dose', () => {
+    assert.equal(lazerDogrula({ goz: 'iki', tip: 'prp', tarih: T }).ok, false)
+    assert.equal(lazerDogrula({ goz: 'sag', tip: 'yag', tarih: T }).ok, false)
+    assert.equal(lazerDogrula({ goz: 'sag', tip: 'prp', tarih: T, kontrolTarihi: '2026-09-01' }).ok, false)
+    const v = lazerDogrula({ goz: 'sol', tip: 'prp', tarih: T, seansNo: '2', kontrolTarihi: '2026-10-18' })
+    assert.ok(v.ok)
+    if (v.ok) assert.match(lazerNotaMetni({ ...v.lazer, hekimAdi: 'QA Hekim' }), /Sol göz \(OS\) PRP .*seans 2, QA Hekim/)
+  })
+})
+
+describe('Glokom: EGS 5 presets (öneri — hekim kilitler), gonyo / paki / VF meta', () => {
+  it('presets are EGS-sourced (primary), never fill OCT interval, labelled hekim-lock', () => {
+    assert.equal(GLOKOM_ONERI_ETIKETI, 'öneri — hekim kilitler')
+    assert.equal(GOZ_KAYNAKLAR.EGS_5.dogrulama, 'birincil')
+    for (const o of GLOKOM_ARALIK_ONERILERI) { assert.equal(o.octAralikAy, null, o.kod); assert.equal(o.dipnot.ref, 'EGS_5', o.kod) }
+    assert.equal(GLOKOM_ARALIK_ONERILERI.find((o) => o.kod === 'egs_yeni_tani')!.gaAralikAy, 4)
+    assert.equal(GLOKOM_ARALIK_ONERILERI.find((o) => o.kod === 'egs_progresyon')!.gaAralikAy, null, 'EGS gives only "<6 months" — no number invented')
+  })
+  it('gonyo Shaffer 0–4, pachymetry µm range, device meta; no interpretation words', () => {
+    const { meta, hatalar } = glokomMetaNormalize({ shafferSag: '3', shafferSol: '1', gonyoSol: 'Spaeth B10f', pakiSag: '512', pakiSol: '498', gormeAlaniCihaz: 'Humphrey 24-2 SITA' })
+    assert.deepEqual(hatalar, [])
+    const m = glokomMetaMetni(meta, '2026-08-01', null)!
+    assert.match(m, /OD: Shaffer 3, SKK 512 µm; OS: Shaffer 1, Spaeth B10f, SKK 498 µm; son GA 2026-08-01 \(Humphrey 24-2 SITA\)/)
+    assert.doesNotMatch(m, /ince kornea|risk|düzelt|glokom tanı/i)
+    assert.equal(glokomMetaNormalize({ shafferSag: '5' }).hatalar.length, 1)
+    assert.equal(glokomMetaNormalize({ pakiSag: '120' }).hatalar.length, 1)
+  })
+})
+
+describe('Anti-VEGF: IVT odası checklist before "yapıldı" (wrong-eye guard)', () => {
+  const tam = { onam: true, goz_isaret: true, isaretliGoz: 'sag' as const, ilac_lot: true, lot: 'QA-LOT-1', asepsi: true }
+  it('all four items + lot + matching eye required', () => {
+    assert.equal(IVT_KONTROL.length, 4)
+    assert.equal(ivtKontrolDogrula(tam, 'sag').tamam, true)
+    assert.equal(ivtKontrolDogrula(null, 'sag').tamam, false)
+    assert.ok(ivtKontrolDogrula({ ...tam, lot: '' }, 'sag').eksikler.some((e) => e.includes('Lot')))
+    const yanlis = ivtKontrolDogrula(tam, 'sol')
+    assert.equal(yanlis.tamam, false); assert.ok(yanlis.eksikler.some((e) => e.includes('YANLIŞ GÖZ')))
+    assert.equal(ivtKontrolDogrula({ gecmisKayit: true }, 'sol').tamam, true)
+    assert.doesNotMatch(JSON.stringify(IVT_KONTROL), /%|mg|ml\b/i, 'no antiseptic concentration / dose invented')
+  })
+})
+
+describe('Ön segment: biyomikroskopi OD/OS + keratokonus', () => {
+  it('structured OD/OS form + normal shortcut → note line, no diagnosis', () => {
+    const b = biyoNormalize({ sag: normalBiyoGoz(), sol: { ...normalBiyoGoz(), lens: 'nükleer opasite +2' }, floresein: true })!
+    const m = biyoMetni(b)!
+    assert.match(m, /Biyomikroskopi \(floresein boyalı\) — OD: kapak doğal; konjonktiva sakin; kornea saydam; ön kamara derin, sakin/)
+    assert.match(m, /OS: .*lens nükleer opasite \+2/)
+    assert.equal(biyoNormalize({ sag: {}, sol: {} }), null)
+  })
+  it('keratokonus: topo note + Kmax range + CXL dates (hekim)', () => {
+    const k = keratokonusNormalize({ topoNot: 'inferior dikleşme', kmaxSag: '52,4', cxlSag: '2026-01-10' })
+    assert.deepEqual(k.hatalar, []); assert.equal(k.keratokonus!.kmaxSag, 52.4)
+    assert.equal(keratokonusNormalize({ kmaxSag: '12' }).hatalar.length, 1)
+  })
+})
+
+describe('Pediatrik: ROP card + age gate (never on adult charts by default)', () => {
+  it('PMA = GA + weeks since birth; SB ≤32 hf / ≤1500 g criterion', () => {
+    assert.equal(pmaHesapla(28, '2026-08-07', '2026-09-18'), 34)
+    assert.equal(pmaHesapla(null, '2026-08-07', T), null)
+    assert.equal(ropTaramaEndikasyonu(31, 1700).var, true)
+    assert.equal(ropTaramaEndikasyonu(35, 2400).var, false)
+  })
+  it('zone / stage / plus only as entered; next screen date is hekim\'s — no interval invented', () => {
+    const r = ropDogrula({ tarih: T, dogumHaftasi: '28', zonSag: 'II', evreSag: '2', plusSag: 'yok' }, '2026-08-07')
+    assert.ok(r.ok)
+    if (r.ok) { assert.equal(r.kayit.sonrakiTarama, null); assert.ok(r.uyarilar.some((u) => u.includes('hekim belirlesin'))); assert.equal(r.kayit.pmaHafta, 34) }
+    assert.equal(ropDogrula({ tarih: T, zonSag: 'IV' }, null).ok, true, 'invalid zone is dropped, not coerced')
+    assert.equal(ropDogrula({ tarih: T, sonrakiTarama: '2026-09-01' }, null).ok, false)
+  })
+  it('gate: adult / unknown age → no Pediatrik tab, no ROP; infant → both; data keeps it visible', () => {
+    assert.deepEqual(pediatrikGorunum({ yasAy: 600, pedVeriVar: false, ropVeriVar: false }), { pediatrikSekme: false, ropKart: false })
+    assert.deepEqual(pediatrikGorunum({ yasAy: null, pedVeriVar: false, ropVeriVar: false }), { pediatrikSekme: false, ropKart: false })
+    assert.deepEqual(pediatrikGorunum({ yasAy: 2, pedVeriVar: false, ropVeriVar: false }), { pediatrikSekme: true, ropKart: true })
+    assert.deepEqual(pediatrikGorunum({ yasAy: 72, pedVeriVar: false, ropVeriVar: false }), { pediatrikSekme: true, ropKart: false })
+    assert.deepEqual(pediatrikGorunum({ yasAy: 600, pedVeriVar: false, ropVeriVar: true }), { pediatrikSekme: true, ropKart: true })
+  })
+})
+
+describe('Acil: intake red-flag checkboxes fire the band; irrigation timer; action lists', () => {
+  it('intake field exists on the göz form only; each box maps to an acil code', () => {
+    const alan = BRANS_SORULARI['goz-hastaliklari']!.alanlar.find((a) => a.id === 'acilBelirtiler')!
+    assert.ok(alan && alan.secenekler!.includes('Ani görme kaybı') && alan.secenekler!.includes('Kimyasal madde teması'))
+    for (const [k, v] of Object.entries(BRANS_SORULARI)) if (k !== 'goz-hastaliklari') assert.ok(!v?.alanlar.some((a) => a.id === 'acilBelirtiler'), `${k} must not get göz red-flag box`)
+    assert.deepEqual(intakeAcilKodlari(['Işık çakması', 'Perde / gölge inmesi', 'Yok']), ['retina_dekolmani_suphesi'])
+  })
+  it('checkboxes alone (no free text) raise the band via intakeSubjektif → gozSeridi', () => {
+    const i = intakeSubjektif({ acilBelirtiler: ['Kimyasal madde teması', 'Ağrılı kızarıklık'] })
+    assert.deepEqual(i.acil.map((a) => a.kod).sort(), ['agrili_kirmizi_goz', 'kimyasal_yanik'])
+    assert.match(i.subjektif, /KIRMIZI BAYRAK \(hasta işaretledi\): Kimyasal madde teması, Ağrılı kızarıklık/)
+    const s = gozSeridi({ muayeneler: [], hedefSag: null, hedefSol: null, evreSag: null, evreSol: null, sonrakiEnjeksiyon: null, gorevDue: [], sikayetMetinleri: [], hekimIsaretleri: i.acilKodlari, bugun: T })
+    assert.equal(s.acil[0].kod, 'kimyasal_yanik'); assert.equal(s.acil[0].oncelik, 'hemen')
+    assert.equal(intakeSubjektif({ acilBelirtiler: ['Yok'] }).acil.length, 0)
+  })
+  it('timer minutes; every acil code has an action list; no dose / pH target invented', () => {
+    assert.equal(yikamaDakika('2026-09-18T10:00:00Z', '2026-09-18T10:31:30Z'), 31.5)
+    assert.equal(yikamaDakika(null, null), null)
+    for (const k of ACIL_KODLARI) assert.ok(ACIL_EYLEM_LISTESI[k.kod]?.length >= 3, k.kod)
+    assert.doesNotMatch(JSON.stringify(ACIL_EYLEM_LISTESI), /\bmg\b|pH ?[<>=]? ?\d|ml\b/i)
+    assert.equal(acilTara(['ağrılı kızarıklık var'])[0].kod, 'agrili_kirmizi_goz')
+  })
+})
+
+describe('Maturity: beta-hazir, never self-promoted to uzman-dogrulandi', () => {
+  it('göz = beta-hazir until the MD sign-off (Boss/CEO) is recorded', () => {
+    assert.equal(GOZ_PROFILE.olgunluk, 'beta-hazir')
   })
 })
