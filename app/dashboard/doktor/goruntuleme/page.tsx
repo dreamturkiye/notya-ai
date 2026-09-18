@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
-import { IMAGING_MODALITIES, imagingDisplayLabel, imagingModalityMeta } from '@/lib/doktor/imagingModalities';
+import { bransGoruntulemeGruplari, imagingDisplayLabel, imagingModalityMeta } from '@/lib/doktor/imagingModalities';
+import { bransAnahtari } from '@/lib/specialties/kapsam';
 import GeriLink from '@/components/navigasyon/GeriLink';
 import { DOKTOR_ANA, hastaDosyaHref, hastaGoruntulemeHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
@@ -22,7 +23,16 @@ interface Goruntuleme {
   tur: 'dicom' | 'jpg' | 'png' | 'pdf';
 }
 
-const MODALITELER = IMAGING_MODALITIES.filter((m) => m.code !== 'diger').map((m) => m.label);
+/**
+ * GORUNTULEME-BRANS-SIRALI — hekimin branşındaki sık modaliteler üstte, geri kalan HER modalite "Diğer görüntülemeler"
+ * altında. Sıralama, kısıtlama değil: brans-alan-sizmasi kapısı değildir (göz hekimi pre-op EKG yükleyebilmeli).
+ * 'Diğer' çipi öncekiyle aynı şekilde gösterilmez (bkz. OPEN: GORUNTULEME-BRANS-SIRALI).
+ */
+function modaliteGruplari(brans: string | null): { oncelikli: string[]; digerleri: string[] } {
+  const g = bransGoruntulemeGruplari(brans);
+  const etiket = (ms: typeof g.oncelikli) => ms.filter((m) => m.code !== 'diger').map((m) => m.label);
+  return { oncelikli: etiket(g.oncelikli), digerleri: etiket(g.digerleri) };
+}
 
 /** OCT / fundus / ön segment — her göz ayrı dosya; vucut_bolgesi = sag|sol|iki. */
 function gozGoruntuModalitesiMi(label: string): boolean {
@@ -83,6 +93,7 @@ const Page = () => {
   const [rotation, setRotation] = useState(0);
   const [viewerRef, setViewerRef] = useState<HTMLDivElement | null>(null);
   const [fromTab, setFromTab] = useState<HastaDosyaSekmeId | null>(null);
+  const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
 
   const chartHastaId = filterHastaId || selectedHastaId;
   const parentGeri = (() => {
@@ -102,6 +113,20 @@ const Page = () => {
     if (res.ok) {
       const data = await res.json();
       setPatients(normalizeHastalar(data));
+    }
+  };
+
+  /** Yalnız modalite çiplerinin SIRASI için; başarısızsa varsayılan sıra (hiçbir modalite gizlenmez). */
+  const fetchDoktorBransi = async () => {
+    try {
+      const token = await getAccessTokenAsync();
+      const res = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) {
+        const me = await res.json();
+        setDoktorBransi(bransAnahtari(me?.data?.specialty));
+      }
+    } catch {
+      /* sıralama kritik değil */
     }
   };
 
@@ -131,6 +156,7 @@ const Page = () => {
     const from = q.get('from');
     if (from === 'deri' || from === 'goz' || from === 'gebelik' || from === 'goruntuleme') setFromTab(from);
     void fetchPatients();
+    void fetchDoktorBransi();
     if (hid) {
       setSelectedHastaId(hid);
       setFilterHastaId(hid);
@@ -319,8 +345,9 @@ const Page = () => {
                 ))}
               </select>
 
-              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '12px' }}>
-                {MODALITELER.map((m) => (
+              {(() => {
+                const { oncelikli, digerleri } = modaliteGruplari(doktorBransi);
+                const cip = (m: string) => (
                   <button
                     type="button"
                     key={m}
@@ -344,8 +371,19 @@ const Page = () => {
                   >
                     {m}
                   </button>
-                ))}
-              </div>
+                );
+                const satir = { display: 'flex', gap: '6px', overflowX: 'auto' as const, marginBottom: '12px' };
+                const baslik = { fontSize: 11, color: '#9ca3af', marginBottom: 6 };
+                if (oncelikli.length === 0) return <div style={satir}>{digerleri.map(cip)}</div>;
+                return (
+                  <>
+                    <div style={baslik}>Branşınızda sık kullanılanlar</div>
+                    <div style={satir}>{oncelikli.map(cip)}</div>
+                    <div style={baslik}>Diğer görüntülemeler</div>
+                    <div style={satir}>{digerleri.map(cip)}</div>
+                  </>
+                );
+              })()}
 
               {gozGoruntuModalitesiMi(uploadData.modalite) ? (
                 <div style={{ marginBottom: 8 }}>

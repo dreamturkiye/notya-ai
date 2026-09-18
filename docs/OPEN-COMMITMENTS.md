@@ -1468,3 +1468,77 @@ hesap yazmak kural dışı — doğrulama yerel, gerçek rota + gerçek render d
 | 2026-09-17 | **Asistan persona varsayılanı pediatri** | `VARSAYILAN_PERSONA = 'aysekaya'` (pediatri Ayşe: "yetişkin dozu asla önerme"), `specialistsCatalog` `genel: 'pediatri'` + `getSpecialistForSpecialty` pediatri yedeği, `asistan/signed-url` `\|\| 'pediatri'` — aile / branşsız / bilinmeyen hekimde pediatri personası. Ses/persona sistemi paralel bir çalışmanın alanında (ElevenLabs dalı) — çakışmamak için dokunulmadı. **Öneri:** aile/genel için nötr "genel pratisyen" personası; bilinmeyen → pediatri değil. | OPEN |
 | 2026-09-17 | **Bölüm prompt kilitleri not-konsult / epikriz / doz-öner'e ulaşmıyor** (parite, ters yön) | SOAP ve asistan sohbeti dahiliye/KD/derm/göz `*Kilidi` ekliyor; `not-konsult`, epikriz ve `ilaclar/doz-oner` eklemiyor (doz-öner "doz yazma" kilidini de atlıyor). Sızıntı değil, `cross-specialty-parity` + doz kilidi işi. | OPEN (parite) |
 | 2026-09-17 | **Geçmiş kayıtlar** | Bu düzeltmeden önce üretilmiş KD/erişkin notlarında `hasta_ozeti` içinde "veli" ve `vitaller.basCevresi` olabilir (portal veri güdümlü gösterir). Klinik kayıt — dokunulmadı. (VELI-YASAL-ONAM sonrası: reşit olmayan hastanın notunda "veli" artık doğru — sayımda doğum tarihi <18 olanları ayrıca hariç tutun; ters yönde, #312 ile bu düzeltme arasında pediatri dışı branşta çocuk hastaya üretilmiş özetler "hasta" dilinde kalmış olabilir.) Salt-okunur sayım: `select count(*) from notes n join sessions s on s.id = n.session_id where coalesce(s.specialty,'') not in ('pediatri','cocuk-cerrahisi') and (n.hasta_ozeti ilike '%veli%' or n.vitaller ? 'basCevresi');` Düzeltme kararı hekimin. | OPEN (Kaan) |
+
+---
+
+## GORUNTULEME-BRANS-SIRALI — görüntüleme modaliteleri branşa göre SIRALANIR, asla KISITLANMAZ (Kaan, 2026-09-18)
+
+**Karar (Kaan + Claude tasarım görüşmesi, yeniden tartışılmaz).** Görüntüleme yükleme seçicisinde ne branşa özel kısa
+liste ne de herkese aynı düz liste: hekimin **kendi branşındaki sık modaliteler üstte**, geri kalan **her** modalite
+"Diğer görüntülemeler" başlığı altında, seçilebilir. Hiçbir modalite gizlenmez, yasaklanmaz — yalnız sıra değişir.
+
+**Neden kısıtlama değil.** Branşa özel sıkı liste meşru bir yüklemeyi er geç engeller: katarakt öncesi EKG'si gelen göz
+hekimi, hastanın elinde getirdiği dış merkez kardiyoloji / MR raporu. Hekim o zaman yanlış bir modaliteye yazar (ya da
+"Diğer"e) ve veri kalitesi sessizce aranamaz bir kovaya düşer. Herkese aynı 14'lü düz liste ise göz hekimini her gün
+mamografi / dermatoskopi çiplerinin yanından geçirir. Sıralama ikisini de çözer.
+
+**Bu bir brans-alan-sizmasi kapısı DEĞİLDİR — "düzeltip" kapıya çevirmeyin.** O kural (baş çevresi KD formunda,
+"veli" erişkin hastada) bir branşa özgü **içeriğin** başka branşın formuna sızmasını engeller. Görüntüleme modaliteleri
+ise her hekimin dışarıdan meşru olarak alabileceği **ortak klinik sözlüktür**. Onları sıralamak UX'tir; branşa göre
+gizlemek o kuralı yanlış yere uygulamak olur. Kodda da, testte de, burada da bu ayrım açıkça yazılı.
+
+### Ne yapıldı
+
+| Yer | Değişiklik |
+|---|---|
+| `lib/doktor/imagingModalities.ts` | `BRANS_GORUNTULEME_ONCELIGI` (kanonik branş anahtarı → sık kodlar), `bransGoruntulemeGruplari(brans)` → `{ oncelikli, digerleri }`, `bransGoruntulemeSirasi(brans)` → tam sıralı kod listesi. Eşlemesiz / bilinmeyen / boş branş → öncelikli grup boş, varsayılan `IMAGING_MODALITIES` sırası (hata yok, boş başlık çizilmez). |
+| `app/dashboard/doktor/goruntuleme/page.tsx` (Görüntüleme → **Yükle**) | Hekimin branşı `/api/users/me` → `bransAnahtari` ile okunur. Eşleme varsa iki çip satırı: "Branşınızda sık kullanılanlar" + "Diğer görüntülemeler" (mevcut çip / küçük gri başlık stili, yeni UI kalıbı yok); yoksa eskisi gibi tek satır. `/api/users/me` başarısızsa varsayılan sıra. |
+| Değişmeyen | Kanonik kodlar, `normalizeImagingModality`, `portalKind`, renkler, saklanan değer, varsayılan seçili çip (Röntgen), `?modalite=` derin bağlantıları (derm "Dermoskopi ekle" vb.), yükleme rotası. Mevcut kayıtlar ve Sağlığım portalı etkilenmez. |
+
+Eşlemeler (UX tercihi, klinik eşik değil — ayarlanabilir): göz `oct, fundus, on_segment, us (B-scan)` · kardiyoloji
+`ekg, eko, bt (koroner BT), xray` · kalp-damar cerrahisi `eko, bt, ekg, us, xray` · dermatoloji `dermatoskopi, derm, yara`
+· plastik cerrahi `yara, derm` · KD `us, mamografi, mri` · dahiliye `xray, us, bt, ekg` · pediatri `xray, us, ekg` ·
+ortopedi `xray, mri, bt, us` · FTR `xray, mri, us` · nöroloji `mri, bt` · beyin cerrahisi `mri, bt, xray` · göğüs hst.
+`xray, bt, pet` · onkoloji `pet, bt, mri, us` · radyoloji `xray, bt, mri, us, mamografi, pet` · acil `xray, bt, us, ekg` ·
+üroloji `us, bt, xray` · genel cerrahi `us, bt, xray`. Diğer branşlar (psikiyatri, KBB, endokrin, …) varsayılan sırada.
+
+### Seçici yüzey envanteri (hangisi sıralama gerektirdi)
+
+| Yüzey | Sonuç |
+|---|---|
+| `/dashboard/doktor/goruntuleme` Yükle paneli — `IMAGING_MODALITIES` çipleri | **Tek gerçek modalite seçicisi → sıralama bağlandı.** |
+| Belgeler (`/dashboard/doktor/belgeler`) "Belge Türü" (Lab Sonucu / Görüntüleme Raporu / EKG / Röntgen / … / Diğer) | Modalite seçicisi değil, belge kasası kategorisi (şifreli kasa, `hasta_goruntulemeler`'e yazmaz). 8 öğe, dokunulmadı. |
+| Hasta belgesi analizi (`hastalar/[id]/belgeler/[belgeId]`) motor seçimi | Ayrı sözlük (`core/belgeler/ontoloji` `MODALITE_TR`: cxr, ses_kalp, serbest…) ve zaten `bransKurali` ile branşa göre; `IMAGING_MODALITIES` değil. Dokunulmadı. |
+| Derm bölümü "Dermoskopi ekle" / "Klinik foto ekle" / yama takvimi | Bağlam zaten özgül: `goruntulemeCaptureHref(…, 'dermatoskopi' \| 'derm')` modaliteyi önceden seçerek aynı Yükle panelini açar. Tam liste eklenmedi — hekim panelde yine her çipi görür. |
+| Göz bölümü kartları (`GozKartlar`) | Yalnız OCT/fundus/ön segment **okuma** / gösterim; seçici yok. Dokunulmadı. |
+| Hasta dosyası "Görüntülemeyi aç ›" | Aynı Yükle paneline gider — sıralama orada. |
+| Ayşe / asistan | Modalite sunan CTA bulunmadı (vision-tools yalnız `/api/doktor/goruntuleme` okur). |
+
+### Serbest metin modalite var mı? (araştırılan bilinmeyen)
+
+**Arayüzde yok.** Hekim yalnız sabit çiplerden seçer; `?modalite=` sorgu parametresi de `imagingModalityMeta` ile kanonik
+etikete çevrilir. Serbest metin yalnız API katmanında mümkün: `/api/doktor/goruntuleme/yukle` her dizgiyi
+`normalizeImagingModality` ile kanonik koda çevirir, tanınmayan → `diger`. Ayrıca **"Diğer" çipi bugün de gösterilmiyor**
+(696c0d3'ten beri `code !== 'diger'` süzgeci — bu iş korudu, değiştirmedi). Yani "engellenen yükleme" riski serbest
+metinle azalmıyor: listede olmayan bir tetkik (EEG) ya en yakın çipe yazılıyor ya da Belge Kasası'na "Diğer" + not ile
+gidiyor. Kısmi hafifletme: "Başlık / vücut bölgesi" alanı serbest metin (ör. "EEG"), ama modalite kodunu değiştirmez.
+Tam liste her branşta açık olduğu için bu iş riski artırmıyor.
+
+### Kalıcı korkuluk
+
+`lib/doktor/imagingModalities.test.ts` (`npm test` içinde, 18 test): 6 branşta sık kodlar önde; **30 branş + null / boş /
+bilinmeyen için her kanonik kod listede tam bir kez** — hata mesajı "SIRALANIR, asla KISITLANMAZ/GİZLENMEZ — bu
+brans-alan-sizmasi kapısı değildir" der; eşlemedeki her anahtar gerçek branş, her kod kanonik; yükleme rotası branşa
+bakmaz; eşlemesiz branş → tam varsayılan sıra; göz hekimi EKG'yi "Diğer görüntülemeler"de görür, `EKG` → `ekg`
+(portalKind `ekg`) — önceki gibi; `normalizeImagingModality` her etiket/kod için değişmedi.
+
+`npx tsc --noEmit` temiz · `npm test` **914/914** yeşil. Mobil: çip satırları mevcut yatay kaydırmalı satır stilini aynen
+kullanıyor, yalnız iki küçük başlık eklendi; canlı 390/360 px ekran görüntüsü alınmadı (sayfa oturum arkasında,
+notya.ai bu ortamdan erişilemiyor, production'a sentetik hesap yazmak kural dışı) — ilk canlı kullanımda göz atılmalı.
+
+### AÇIK
+
+| Tarih | Madde | Gerekçe + öneri | Durum |
+|---|---|---|---|
+| 2026-09-18 | **GORUNTULEME-EEG-EMG — EEG / EMG kanonik modalite değil** | Nöroloji intake'i soruyor (`lib/intake/bransSorulari.ts` `goruntulemeTestNoro`: "EEG Yapıldı", "EMG Yapıldı") ama `IMAGING_MODALITIES`'te kodları yok: API'ye EEG gelirse `diger`e düşer, arayüzde ise çipi yok (Diğer çipi de yok) — nöroloji hekimi EEG'yi yanlış çipe ya da Belge Kasası'na yazar. EEG/EMG görüntüleme değil **nörofizyoloji**; `hasta_goruntulemeler`'e mi girer, ayrı "tetkik" türü mü olur, portalda nerede görünür — ürün kararı. Kod uydurulmadı. | OPEN (Kaan) |
+| 2026-09-18 | **"Diğer" çipi Yükle panelinde yok** | 696c0d3'ten beri bilinçli süzgeç; bu iş korudu. Sonuç: listede olmayan tetkik yanlış modaliteyle saklanabilir (varsayılan seçili çip "Röntgen"). **Öneri:** "Diğer görüntülemeler" satırının sonuna "Diğer" çipi + zorunlu başlık; ya da EEG/EMG kararıyla birlikte ele alınsın. | OPEN (Kaan) |
