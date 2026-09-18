@@ -2,11 +2,12 @@
 
 Chapter code and engine table: `specialties/dermatoloji/README.md`.
 
-- **Exit audit (2026-09-18, post-exceptional):** `public/derm-exceptional-audit.html` — 21/21 domains Strong, 5 derm-only Araçlar, Derim Strong, `olgunluk: beta-hazir`. Never linked from Doktor Araçları.
-- **Final audit (2026-09-18, honest ~50%, the pre-sprint baseline):** https://notya-ai.vercel.app/derm-final-audit.html — clinic-fit breadth, Partial skor/foto/SUT/Derim, 0 derm Araçlar
-- **Exceptional sprint prompt (Claude paste-ready):** `docs/DERM-EXCEPTIONAL-01-CLAUDE-PROMPT.md`
-- Portal: Derim (`lib/portal/moduller.ts`) — **Strong**, reminders from `specialties/dermatoloji/engines/portal-derim.ts`; skill: `.cursor/skills/specialty-hasta-portali/SKILL.md`
-- Tests: `npm run test:derm`, `npm run test:brans-sizmasi`, `npm run test:izolasyon`. Runtime smoke: `npx tsx scripts/derm-exceptional-smoke.mts` (+ `scripts/derm-prompts-smoke.mts`). MD field week: `docs/DERM-MD-BETA.md`.
+- **Live audit (2026-09-18, post-054):** https://notya-ai.vercel.app/derm-live-audit.html — **current truth**: 21/21 Strong, migration 054 applied, Derim Strong, 5 derm Araçlar, `olgunluk: beta-hazir`
+- **Exit audit (post-exceptional sprint):** https://notya-ai.vercel.app/derm-exceptional-audit.html
+- **Final audit (pre-sprint ~50%):** https://notya-ai.vercel.app/derm-final-audit.html
+- **Exceptional sprint prompt:** `docs/DERM-EXCEPTIONAL-01-CLAUDE-PROMPT.md`
+- Portal: Derim Strong; skill: `.cursor/skills/specialty-hasta-portali/SKILL.md`
+- Tests: `npm run test:derm`; smoke: `npx tsx scripts/derm-exceptional-smoke.mts`; MD week: `docs/DERM-MD-BETA.md`
 
 ## DERM-EXCEPTIONAL-01 — workstreams C (partial) / D / E (2026-09-18)
 
