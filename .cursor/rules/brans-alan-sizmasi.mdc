@@ -1,0 +1,22 @@
+---
+description: >-
+  Specialty-specific fields/words/sections must never leak into other branşlar
+  (e.g. Baş Çevresi or “veli” on a KD chart). Mirror of cross-specialty-parity.
+  Read before editing shared spine forms, SOAP, intake, vitals, özet, portal.
+alwaysApply: true
+---
+
+# Branş alan sızması — gate specialty-specific content
+
+**Read and follow** `.cursor/skills/brans-alan-sizmasi/SKILL.md` before adding any field, section, vocabulary, or UI to a shared/baseline component.
+
+Boss rule (live KD bugs): **Baş Çevresi** and the word **veli** are pediatri-only — they must not appear for Kadın Doğum (or other adult branşlar). Specialty-specific content must never carry over to another specialty.
+
+Before you add anything to a shared surface (Yaşamsal Bulgular, Anamnez, SOAP, hasta özeti, portal, intake, SGK, epikriz, Asistan):
+
+1. Is it **universal** for all ~30 branşlar? → shared OK.
+2. Is it **specialty-specific**? → gate via `SpecialtyProfile` / `specialties/<slug>/` / branch-keyed catalogs (see `lib/intake/bransSorulari.ts`). Never unconditional render.
+3. An empty wrong field is still a leak — do not “leave it blank for other branşlar.”
+4. Prefer one consistent gate mechanism; do not scatter ad-hoc `if (specialty === '…')`.
+
+PR/commit must name the owning specialty(ies) and the gate. Mirror skill: `cross-specialty-parity` (fixes reach every branş); this skill (chapter content stays in its branş).

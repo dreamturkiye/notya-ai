@@ -7,6 +7,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Rule | Path |
 |------|------|
 | Doktor Araçları classify-before-add | `.cursor/rules/specialty-doktor-araclari.mdc` |
+| Branş alan sızması (specialty fields must not leak) | `.cursor/rules/brans-alan-sizmasi.mdc` |
 
 ## Skills (open before the matching work)
 
@@ -14,10 +15,15 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 |------|--------|
 | Any Doktor Araçları / `/doktor-tools` / new tool tile | `.cursor/skills/specialty-doktor-araclari/SKILL.md` |
 | Shared spine fix vs one branş | `.cursor/skills/cross-specialty-parity/SKILL.md` |
+| Specialty field/vocab/section must not leak to other branşlar | `.cursor/skills/brans-alan-sizmasi/SKILL.md` |
 | Universal chrome vs chapter content | `.cursor/skills/specialty-universal-vs-chapter/SKILL.md` |
 | Sağlığım / hasta portalı | `.cursor/skills/specialty-hasta-portali/SKILL.md` |
 | Specialty audit HTML / depth pills | `.cursor/skills/specialty-audit-report/SKILL.md` |
 | Any API route/helper taking a patient, note, session or other patient-derived id | `.cursor/skills/hasta-izolasyon/SKILL.md` |
+
+## Branş alan sızması (short)
+
+Something specific to **one** specialty must never render for another (Baş Çevresi / “veli” on KD = leak). Gate chapter content; leave only truly universal fields in the shared spine. Full text: `.cursor/skills/brans-alan-sizmasi/SKILL.md`.
 
 ## Doktor Araçları (short)
 

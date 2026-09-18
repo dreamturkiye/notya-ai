@@ -58,6 +58,8 @@ See `.cursor/skills/specialty-hasta-portali/SKILL.md`. Hard requirements:
 - [ ] Is this fix universal chrome/registry? → shared path + tests for ≥2 specialties
 - [ ] Is this clinical content? → specialties/<slug>/ only + that profile’s portal
 - [ ] Portal module unique for this branş?
-- [ ] No cross-leak (göz chart without Deri/ped tabs; göz portal without büyüme)
+- [ ] No cross-leak (göz chart without Deri/ped tabs; göz portal without büyüme; no Baş Çevresi / “veli” on adult branşlar — see `brans-alan-sizmasi`)
 - [ ] OPEN-COMMITMENTS + audit HTML updated
 ```
+
+Related standing skills: `brans-alan-sizmasi` (specialty content must not leak), `cross-specialty-parity` (shared fixes must reach every branş).

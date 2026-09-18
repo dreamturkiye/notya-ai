@@ -164,5 +164,7 @@ Does **not** apply to changes scoped entirely inside one
 by definition. Related: `.cursor/skills/specialty-audit-report/SKILL.md`
 (depth pills, audit format),
 `.cursor/skills/specialty-hasta-portali/SKILL.md` (portal: one shell, many
-chapters), and `.cursor/skills/specialty-doktor-araclari/SKILL.md` (Araçlar:
-base vs specialty-only vs new-universal — classify before add).
+chapters), `.cursor/skills/specialty-doktor-araclari/SKILL.md` (Araçlar:
+base vs specialty-only vs new-universal — classify before add), and
+`.cursor/skills/brans-alan-sizmasi/SKILL.md` (mirror: specialty-specific
+fields/words must **not** leak into other branşlar).
