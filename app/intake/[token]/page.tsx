@@ -17,7 +17,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { IntakeAlan, IntakeBolum } from '@/lib/intake/coreAlanlar';
-import { intakeAlanGorunur, intakeIstemciHataMetni } from '@/lib/intake/dogrula';
+import { intakeAlanGorunur, intakeIstemciHataMetni, intakeGosterEgerUyuyor } from '@/lib/intake/dogrula';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,7 +150,7 @@ export default function IntakeFormPage() {
         for (const alan of bolum.alanlar) {
           const k = alan.gosterEger
           if (!k || k.alanId !== id) continue
-          if (String(deger ?? '') !== k.deger) delete sonraki[alan.id]
+          if (!intakeGosterEgerUyuyor(deger, k.deger)) delete sonraki[alan.id]
         }
       }
       return sonraki

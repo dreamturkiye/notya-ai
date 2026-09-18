@@ -18,12 +18,19 @@ function bosMu(deger: unknown): boolean {
   return String(deger).trim() === ''
 }
 
-/** Conditional fields (gosterEger) are validated only when visible. */
+/** Conditional fields (gosterEger) are validated only when visible. Works for radio string or checkbox-grup array. */
 export function intakeAlanGorunur(alan: IntakeAlan, yanitlar: Record<string, unknown>): boolean {
   if (alan.tur === 'bolum-basligi') return true
   const k = alan.gosterEger
   if (!k) return true
-  return String(yanitlar[k.alanId] ?? '') === k.deger
+  const v = yanitlar[k.alanId]
+  if (Array.isArray(v)) return v.map(String).includes(k.deger)
+  return String(v ?? '') === k.deger
+}
+
+export function intakeGosterEgerUyuyor(deger: unknown, beklenen: string): boolean {
+  if (Array.isArray(deger)) return deger.map(String).includes(beklenen)
+  return String(deger ?? '') === beklenen
 }
 
 /** İlk kural ihlalini döndürür; form geçerliyse null. */
