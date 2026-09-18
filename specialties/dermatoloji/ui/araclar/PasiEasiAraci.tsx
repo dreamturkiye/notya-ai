@@ -1,0 +1,171 @@
+'use client';
+/**
+ * DERM-EXCEPTIONAL-01 — Araçlar › PASI / EASI hesap. Dermatoloji-only (BRANS_DOKTOR_ARACLARI).
+ * Bölge skoru (baş-boyun / üst ekstremite / gövde / alt ekstremite) → engines/score-calculator pasi + easi;
+ * ayrıca SCORAD alanları. Şiddet bandı karar desteğidir; endikasyon, SUT kriteri ve tedavi kararı hekimindir.
+ */
+import React, { useMemo, useState } from 'react';
+import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
+import { pasi, easi, scorad, pasiBandi, easiBandi, scoradBandi, type PasiRegion } from '../../engines/score-calculator';
+import { dermStil, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+
+const { kutu, etiket, kucuk, metin, satir, btn, ghost } = dermStil;
+
+type BolgeAnahtar = 'head' | 'upper' | 'trunk' | 'lower';
+type Mod = 'pasi' | 'easi';
+
+const BOLGELER: Array<{ k: BolgeAnahtar; ad: string; agirlik: string }> = [
+  { k: 'head', ad: 'Baş / boyun', agirlik: '×0,1' },
+  { k: 'upper', ad: 'Üst ekstremite', agirlik: '×0,2' },
+  { k: 'trunk', ad: 'Gövde', agirlik: '×0,3' },
+  { k: 'lower', ad: 'Alt ekstremite', agirlik: '×0,4' },
+];
+
+const PASI_OGE: Array<{ k: keyof PasiRegion; ad: string; kisa: string }> = [
+  { k: 'e', ad: 'Eritem', kisa: 'E' },
+  { k: 'i', ad: 'İnfiltrasyon (kalınlık)', kisa: 'İ' },
+  { k: 'd', ad: 'Deskuamasyon', kisa: 'D' },
+];
+
+const EASI_OGE: Array<{ k: keyof PasiRegion; ad: string; kisa: string }> = [
+  { k: 'e', ad: 'Eritem', kisa: 'E' },
+  { k: 'i', ad: 'Ödem / papülasyon', kisa: 'Ö' },
+  { k: 'd', ad: 'Ekskoriasyon', kisa: 'Eks' },
+  { k: 'l', ad: 'Likenifikasyon', kisa: 'Lik' },
+];
+
+/** Alan derecesi (A) — PASI ve EASI ortak ölçeği. */
+const ALAN_ACIKLAMA = ['%0', '<%10', '%10–29', '%30–49', '%50–69', '%70–89', '%90–100'];
+
+const BOS: Record<BolgeAnahtar, PasiRegion> = {
+  head: { e: 0, i: 0, d: 0, a: 0, l: 0 },
+  upper: { e: 0, i: 0, d: 0, a: 0, l: 0 },
+  trunk: { e: 0, i: 0, d: 0, a: 0, l: 0 },
+  lower: { e: 0, i: 0, d: 0, a: 0, l: 0 },
+};
+
+function Derece({ etiketAd, deger, enCok, set }: { etiketAd: string; deger: number; enCok: number; set: (n: number) => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+      <span style={{ ...kucuk, flex: '1 1 150px', color: '#C9D4E3' }}>{etiketAd}</span>
+      <div role="group" aria-label={etiketAd} style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {Array.from({ length: enCok + 1 }, (_, n) => (
+          <button
+            key={n}
+            type="button"
+            aria-pressed={deger === n}
+            onClick={() => set(n)}
+            style={{
+              minWidth: 44, minHeight: 44, borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+              background: deger === n ? '#DB2777' : 'rgba(255,255,255,0.05)',
+              color: deger === n ? '#FFF1F7' : '#C9D4E3',
+              border: `1px solid ${deger === n ? 'rgba(244,114,182,0.6)' : 'rgba(255,255,255,0.14)'}`,
+            }}
+          >{n}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function PasiEasiAraci() {
+  const [mod, setMod] = useState<Mod>('pasi');
+  const [bolge, setBolge] = useState<Record<BolgeAnahtar, PasiRegion>>(BOS);
+  const [sc, setSc] = useState({ yayginlik: '', siddet: '', oznel: '' });
+  const [hasta, setHasta] = useState<{ id: string; ad: string }>({ id: '', ad: '' });
+
+  const oge = mod === 'pasi' ? PASI_OGE : EASI_OGE;
+  const enCokSiddet = mod === 'pasi' ? 4 : 3;
+  const guncelle = (b: BolgeAnahtar, alan: keyof PasiRegion, n: number) =>
+    setBolge((p) => ({ ...p, [b]: { ...p[b], [alan]: n } }));
+
+  const pasiDeger = useMemo(() => pasi(bolge), [bolge]);
+  const easiDeger = useMemo(() => easi(bolge), [bolge]);
+  const toplam = mod === 'pasi' ? pasiDeger : easiDeger;
+  const bant = mod === 'pasi' ? pasiBandi(pasiDeger) : easiBandi(easiDeger);
+
+  const scGirildi = sc.yayginlik !== '' || sc.siddet !== '' || sc.oznel !== '';
+  const scoradDeger = scorad(Number(sc.yayginlik) || 0, Number(sc.siddet) || 0, Number(sc.oznel) || 0);
+  const scoradBant = scoradBandi(scoradDeger);
+
+  const dolu = BOLGELER.some(({ k }) => bolge[k].a > 0);
+  const modAd = mod === 'pasi' ? 'PASI' : 'EASI';
+  const kopyaMetni = [
+    `${modAd} ${toplam} (${bant.ad.toLocaleLowerCase('tr-TR')})`,
+    ...BOLGELER.map(({ k, ad }) => `${ad}: ${oge.map((o) => `${o.kisa} ${bolge[k][o.k] ?? 0}`).join(' · ')} · A ${bolge[k].a} (${ALAN_ACIKLAMA[bolge[k].a]})`),
+    scGirildi ? `SCORAD ${scoradDeger} (${scoradBant.ad.toLocaleLowerCase('tr-TR')}) — yaygınlık ${Number(sc.yayginlik) || 0}, şiddet ${Number(sc.siddet) || 0}, öznel ${Number(sc.oznel) || 0}` : null,
+    `Şiddet bandı karar desteğidir; tedavi kararı hekimindir. ${new Date().toISOString().slice(0, 10)}`,
+  ].filter(Boolean).join('\n');
+
+  return (
+    <>
+      <div style={kutu}>
+        <div style={etiket}>Skor</div>
+        <div style={satir}>
+          {(['pasi', 'easi'] as Mod[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mod === m}
+              onClick={() => setMod(m)}
+              style={{ ...(mod === m ? btn : ghost), minWidth: 150 }}
+            >{m === 'pasi' ? 'PASI (psoriasis)' : 'EASI (atopik dermatit)'}</button>
+          ))}
+          <button type="button" onClick={() => setBolge(BOS)} style={ghost}>Temizle</button>
+        </div>
+        <div style={{ ...kucuk, marginTop: 8 }}>
+          {mod === 'pasi'
+            ? 'PASI = 0,1×(E+İ+D)×A (baş/boyun) + 0,2 üst ekstremite + 0,3 gövde + 0,4 alt ekstremite. Şiddet 0–4, alan derecesi 0–6. Bölge ağırlıkları erişkin içindir.'
+            : 'EASI = 0,1×(E+Ö+Eks+Lik)×A (baş/boyun) + 0,2 üst ekstremite + 0,3 gövde + 0,4 alt ekstremite. Şiddet 0–3, alan derecesi 0–6. Bölge ağırlıkları erişkin içindir.'}
+        </div>
+      </div>
+
+      {BOLGELER.map(({ k, ad, agirlik }) => (
+        <div key={k} style={kutu}>
+          <div style={{ ...etiket, display: 'flex', justifyContent: 'space-between' }}>
+            <span>{ad}</span>
+            <span style={{ ...kucuk, color: '#8FA0B5' }}>{agirlik}</span>
+          </div>
+          {oge.map((o) => (
+            <Derece key={String(o.k)} etiketAd={`${ad} — ${o.ad}`} deger={Number(bolge[k][o.k] ?? 0)} enCok={enCokSiddet} set={(n) => guncelle(k, o.k, n)} />
+          ))}
+          <Derece etiketAd={`${ad} — Alan derecesi (${ALAN_ACIKLAMA[bolge[k].a]})`} deger={bolge[k].a} enCok={6} set={(n) => guncelle(k, 'a', n)} />
+        </div>
+      ))}
+
+      <div style={kutu}>
+        <div style={etiket}>SCORAD (isteğe bağlı)</div>
+        <div style={kucuk}>SCORAD = yaygınlık/5 + 3,5×şiddet + öznel (kaşıntı + uykusuzluk). Yaygınlık 0–100, şiddet 0–18, öznel 0–20.</div>
+        <div style={satir}>
+          <label style={{ ...metin, display: 'flex', gap: 6, alignItems: 'center' }}>Yaygınlık
+            <input type="number" min={0} max={100} inputMode="numeric" aria-label="SCORAD yaygınlık" value={sc.yayginlik} onChange={(e) => setSc((p) => ({ ...p, yayginlik: e.target.value }))} style={{ ...dermStil.input, width: 90 }} />
+          </label>
+          <label style={{ ...metin, display: 'flex', gap: 6, alignItems: 'center' }}>Şiddet
+            <input type="number" min={0} max={18} inputMode="numeric" aria-label="SCORAD şiddet" value={sc.siddet} onChange={(e) => setSc((p) => ({ ...p, siddet: e.target.value }))} style={{ ...dermStil.input, width: 90 }} />
+          </label>
+          <label style={{ ...metin, display: 'flex', gap: 6, alignItems: 'center' }}>Öznel
+            <input type="number" min={0} max={20} inputMode="numeric" aria-label="SCORAD öznel" value={sc.oznel} onChange={(e) => setSc((p) => ({ ...p, oznel: e.target.value }))} style={{ ...dermStil.input, width: 90 }} />
+          </label>
+        </div>
+        {scGirildi && <div style={{ ...metin, marginTop: 8, fontWeight: 700 }}>SCORAD {scoradDeger} — {scoradBant.ad}</div>}
+      </div>
+
+      <div style={{ ...kutu, borderColor: 'rgba(244,114,182,0.35)' }} aria-live="polite">
+        <div style={etiket}>Sonuç</div>
+        <div style={{ fontSize: 34, fontWeight: 800, color: '#F9A8D4', lineHeight: 1.1 }}>{modAd} {toplam}</div>
+        <div style={{ ...metin, marginTop: 4, fontWeight: 700 }}>Şiddet bandı: {bant.ad}</div>
+        <div style={{ ...metin, marginTop: 6 }}>Diğer skor: {mod === 'pasi' ? `EASI ${easiDeger}` : `PASI ${pasiDeger}`} <span style={kucuk}>(aynı bölge girdileriyle; EASI şiddeti 0–3, PASI 0–4 ölçeğindedir — ölçeği değiştirmeden okumayın)</span></div>
+        {!dolu && <div style={{ ...kucuk, marginTop: 8, color: '#FBBF24' }}>Alan derecesi (A) girilmeden skor 0 kalır.</div>}
+        <KopyalaButonu metin={kopyaMetni} />
+        <div style={{ ...kucuk, marginTop: 10 }}>Şiddet bandı karar desteğidir (PASI 10/20 · EASI 7/21 · SCORAD 25/50); endikasyon, SUT kriteri ve tedavi basamağı hekimin kararıdır. Hesap kaydedilmez.</div>
+      </div>
+
+      <div style={kutu}>
+        <div style={etiket}>Hastada kaydet (isteğe bağlı)</div>
+        <div style={kucuk}>Hesap için hasta seçmek gerekmez. Skoru dosyaya işlemek isterseniz hastayı seçip Deri sekmesini açın.</div>
+        <DermHastaSecici secili={hasta.id} sec={(id, ad) => setHasta({ id, ad })} />
+        {hasta.id && <div style={satir}><a href={hastaDosyaHref(hasta.id, 'deri')} style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Deri) →</a></div>}
+      </div>
+    </>
+  );
+}

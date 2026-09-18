@@ -1,7 +1,7 @@
 /**
  * Scores stay in this folder. PASI BSA PGA DLQI EASI SCORAD POEM UAS7 VASI SALT Hurley PDAI.
  */
-export type PasiRegion = { e: number; i: number; d: number; a: number }
+export type PasiRegion = { e: number; i: number; d: number; a: number; /** EASI likenifikasyon (4. şiddet bileşeni); PASI'de kullanılmaz. */ l?: number }
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, n))
@@ -19,9 +19,10 @@ export function dlqi(items0to3: number[]): number {
   return items0to3.slice(0, 10).reduce((s, n) => s + clamp(n, 0, 3), 0)
 }
 
+/** EASI şiddeti dört bileşendir: eritem, ödem/papülasyon, ekskoriasyon, likenifikasyon (her biri 0–3). */
 export function easi(input: { head: PasiRegion; upper: PasiRegion; trunk: PasiRegion; lower: PasiRegion }): number {
   const area = (a: number) => clamp(a, 0, 6)
-  const sev = (r: PasiRegion) => clamp(r.e, 0, 3) + clamp(r.i, 0, 3) + clamp(r.d, 0, 3)
+  const sev = (r: PasiRegion) => clamp(r.e, 0, 3) + clamp(r.i, 0, 3) + clamp(r.d, 0, 3) + clamp(r.l ?? 0, 0, 3)
   const v = 0.1 * sev(input.head) * area(input.head.a)
     + 0.2 * sev(input.upper) * area(input.upper.a)
     + 0.3 * sev(input.trunk) * area(input.trunk.a)
@@ -63,4 +64,30 @@ export function scorad(extent0to100: number, intensity0to18: number, subjective0
 
 export function vasi(percent: number): number {
   return clamp(percent, 0, 100)
+}
+
+/**
+ * Şiddet bandı — karar desteğidir, tanı veya tedavi kararı değildir.
+ * PASI 10 / 20, EASI 7 / 21, SCORAD 25 / 50 literatürde yaygın kullanılan eşiklerdir; endikasyon,
+ * SUT kriteri ve tedavi basamağı hekimin kararıdır.
+ */
+export type SiddetBandi = { kod: 'hafif' | 'orta' | 'siddetli'; ad: string }
+
+const BANT: Record<SiddetBandi['kod'], string> = { hafif: 'Hafif', orta: 'Orta', siddetli: 'Şiddetli' }
+
+function bant(deger: number, ortaEsik: number, siddetliEsik: number): SiddetBandi {
+  const kod: SiddetBandi['kod'] = deger >= siddetliEsik ? 'siddetli' : deger >= ortaEsik ? 'orta' : 'hafif'
+  return { kod, ad: BANT[kod] }
+}
+
+export function pasiBandi(deger: number): SiddetBandi {
+  return bant(deger, 10, 20)
+}
+
+export function easiBandi(deger: number): SiddetBandi {
+  return bant(deger, 7, 21)
+}
+
+export function scoradBandi(deger: number): SiddetBandi {
+  return bant(deger, 25, 50)
 }

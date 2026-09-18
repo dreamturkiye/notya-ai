@@ -72,6 +72,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/kadin-sagligi/route.ts': T,
   'app/api/doktor/dermatoloji/route.ts': T,
   'app/api/doktor/dermatoloji/spine/route.ts': T,
+  'app/api/doktor/dermatoloji/_kohort.ts': I('patient ids drawn only from hasta_derm / derm_gorevleri / derm_ilac_guvenlik rows with doctor_id = doctorId; child tables (yama, fototerapi, lezyon) read by hasta_derm_id taken from those doctor-scoped episodes; patients read by doctor_id; dermHatirlatmaGonder runs only on ids that passed that filter'),
+  'app/api/doktor/dermatoloji/kohort/route.ts': I('POST ids filtered through dermKohortVerisi(doctorId) before any message is written'),
   'app/api/doktor/gebelik/route.ts': T,
   'app/api/doktor/gebelik/dogum/route.ts': T,
   'app/api/doktor/yenidogan/route.ts': I('baby card fetched by patient AND doctor_id; every derived id comes from that card; patient reads doctor-scoped'),

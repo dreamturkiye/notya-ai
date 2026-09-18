@@ -114,6 +114,9 @@ export const photoSessionSchema = z.object({
   med_test: z.boolean().optional(),
   burn: z.boolean().optional(),
   sessionPhotoCoreImageId: z.string().optional(),
+  med_j_cm2: z.number().optional(),
+  dose_step: z.number().optional(),
+  burn_checklist: z.array(z.string()).optional(),
 })
 
 export const seriesTimepointSchema = z.object({

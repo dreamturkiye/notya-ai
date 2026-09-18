@@ -59,6 +59,46 @@ test('göz-only Araçlar: göz sees all five; pediatri / dahiliye / kardiyoloji 
   assert.ok(!goz.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/dahiliye-kohort'))
 })
 
+const DERM_ROTALARI = ['/doktor-tools/derm-pasi', '/doktor-tools/derm-gop', '/doktor-tools/derm-fototerapi', '/doktor-tools/derm-yama', '/doktor-tools/derm-kohort']
+
+test('dermatoloji-only Araçlar: derm sees all five; pediatri / dahiliye / kardiyoloji / göz / KD and 25 others never', () => {
+  const derm = doktorAraclariListesi('dermatoloji')
+  for (const r of DERM_ROTALARI) {
+    assert.ok(derm.some((a) => a.route === r), `dermatoloji missing ${r}`)
+    assert.equal(doktorAraciBransaUygun(r, 'dermatoloji'), true, r)
+    assert.equal(doktorAraciBransaUygun(r, 'Deri ve Zührevi Hastalıkları'), true, r)
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.deepEqual(arac.branslar, ['dermatoloji'], r)
+  }
+  assert.equal(derm.length, ORTAK_DOKTOR_ARACLARI.length + DERM_ROTALARI.length)
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'dermatoloji')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'kadin-dogum', 'goz-hastaliklari', 'İç Hastalıkları', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of DERM_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  // dermatoloji does not see other chapters' tiles
+  assert.ok(!derm.some((a) => GOZ_ROTALARI.includes(a.route) || a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/dahiliye-kohort'))
+})
+
+test('dermatoloji studio pages: guarded, card-opened, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/dermatoloji/ui/araclar/DermAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+  for (const r of DERM_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /DermAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /PasiEasiAraci|GopKapiAraci|FototerapiDefteriAraci|YamaAraci|DermKohortPaneli/)
+})
+
 test('göz studio pages: guarded, card-opened, never on the landing', () => {
   const kok = path.join(import.meta.dirname, '../..')
   const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')

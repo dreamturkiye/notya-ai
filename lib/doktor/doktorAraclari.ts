@@ -47,6 +47,12 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#16A34A', icon: 'SR', title: 'SGK rapor taslağı', desc: 'Anti-VEGF başlangıç / idame / implant ve GİL bilgi notu — zorunlu maddeler ve eksikler', route: '/doktor-tools/goz-sgk-rapor', branslar: ['goz-hastaliklari'] },
   { circleColor: '#9333EA', icon: 'GL', title: 'GİL EK-3/G kodları', desc: 'Göz içi lens kodlarını ara ve kopyala — bedel gösterilmez', route: '/doktor-tools/goz-gil-kod', branslar: ['goz-hastaliklari'] },
   { circleColor: '#0891B2', icon: 'GK', title: 'Göz kohort paneli', desc: 'Geciken GA/OCT · planlı IVT · DR tarama · kontrol zamanı · 1-tap hatırlatma', route: '/doktor-tools/goz-kohort', branslar: ['goz-hastaliklari'] },
+  // Dermatoloji — specialty-only (not pediatri / dahiliye / kardiyoloji / göz / KD). Chapter engines only.
+  { circleColor: '#DB2777', icon: 'PE', title: 'PASI / EASI hesap', desc: 'Bölge skoru · toplam ve şiddet bandı · SCORAD alanları', route: '/doktor-tools/derm-pasi', branslar: ['dermatoloji'] },
+  { circleColor: '#BE185D', icon: 'GÖ', title: 'GÖP izotretinoin kapı', desc: 'β-hCG · kontrasepsiyon · siklus günü · reçete süresi', route: '/doktor-tools/derm-gop', branslar: ['dermatoloji'] },
+  { circleColor: '#7C3AED', icon: 'FT', title: 'Fototerapi defteri', desc: 'Cihaz · J/cm² · kümülatif doz · MED · yanık bayrağı', route: '/doktor-tools/derm-fototerapi', branslar: ['dermatoloji'] },
+  { circleColor: '#C026D3', icon: 'YT', title: 'Yama D2 / D4', desc: 'Uygulama → okuma takvimi · Avrupa baz serisi antijenleri', route: '/doktor-tools/derm-yama', branslar: ['dermatoloji'] },
+  { circleColor: '#0891B2', icon: 'DK', title: 'Derm kohort paneli', desc: 'TBSE · yama okuma · fototerapi arası · β-hCG · lab · lezyon görevi', route: '/doktor-tools/derm-kohort', branslar: ['dermatoloji'] },
 ]
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]
