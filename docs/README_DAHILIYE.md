@@ -1,5 +1,12 @@
 # README_DAHILIYE — İç hastalıkları V1 (muayenehane dahiliye), NOTYA-DAH-01, 2026-09-16
 
+- **Final audit (2026-09-18, honest ~80%):** https://notya-ai.vercel.app/dahiliye-final-audit.html — clinical Strong; portal/Araçlar/olgunluk Partial–Thin; supersedes post-sprint “22/22 = exceptional”
+- Pre-wow: https://notya-ai.vercel.app/dahiliye-presprint-audit.html
+- Post-sprint (historical rubric): https://notya-ai.vercel.app/dahiliye-post-sprint-audit.html
+- Gaps backlog: https://notya-ai.vercel.app/dahiliye-gaps-audit.html
+- Beta rehberi: `docs/DAHILIYE-BETA-REHBERI.md`
+- Tests: `npx tsx --test specialties/dahiliye/tests/*.test.ts` (143)
+
 **Goldens (ref_code, clinician "Kaynak" toggle only):** TIHUD2023 (TİHUD İç Hastalıkları 4. baskı) · HARRISON (20 TR) · TEMD_DM2026 · HT_UZLASI2025 (Türk Hipertansiyon Uzlaşı Raporu 2025) · TEMD_HT2022 · TEMD_LIPID (2021) · TEMD_TIROID2025 · TEMD_OBEZITE2024 · TEMD_OSTEO2025.
 **Definition respected (TİHUD):** internist = chronic-disease manager + care coordinator. No hospitalist simulation.
 
