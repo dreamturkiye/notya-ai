@@ -59,6 +59,7 @@ test('doğru beyan alanı formda yok — yalnız KVKK zorunlu', () => {
   }
 })
 
+test('sigorta alanları boş bırakılan form doğrulamadan geçer ("Yok" yazmaya gerek yok)', () => {
   // Hem hastanın gördüğü istemci kontrolü hem de sunucu kontrolü — ikisi de geçmeli.
   for (const brans of BRANSLAR) {
     const bolumler = coreBolumlerIcin(brans)
