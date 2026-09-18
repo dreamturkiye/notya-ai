@@ -494,7 +494,7 @@ export const PROFESSION_LIST = {
       { id: 'doktor_noroloji', label: 'Nörolog', specialty: 'nöroloji' },
       { id: 'doktor_pediatri', label: 'Pediatrist', specialty: 'pediatri' },
       { id: 'doktor_psikiyatri', label: 'Psikiyatrist', specialty: 'psikiyatri' },
-      { id: 'doktor_kadin', label: 'Kadın Doğum Uzmanı', specialty: 'kadin_hastaliklari' },
+      { id: 'doktor_kadin', label: 'Kadın Hastalıkları ve Doğum Uzmanı', specialty: 'kadin_hastaliklari' },
       { id: 'doktor_ortopedi', label: 'Ortopedist', specialty: 'ortopedi' },
       { id: 'doktor_genel', label: 'Pratisyen Hekim', specialty: 'genel' },
       { id: 'doktor_acil', label: 'Acil Tıp Uzmanı', specialty: 'acil' },

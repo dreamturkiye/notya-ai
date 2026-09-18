@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy'
 import { PERSONAS, varsayilanPersonaId } from '@/lib/asistan/personaEngine'
+import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -498,7 +499,7 @@ export default function DoktorDashboard() {
               ) : recentNotes.length > 0 ? (
                 recentNotes.map((note, idx) => (
                   <div key={note.id} className="ev-satir" onClick={() => router.push('/dashboard/doktor/inceleme')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 6px', borderBottom: idx < recentNotes.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer', borderRadius: 8 }}>
-                    <span style={{ background: `${getSpecialtyColor(note.specialty)}26`, color: getSpecialtyColor(note.specialty), fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, textTransform: 'capitalize', flexShrink: 0 }}>{note.specialty}</span>
+                    <span style={{ background: `${getSpecialtyColor(note.specialty)}26`, color: getSpecialtyColor(note.specialty), fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, flexShrink: 0 }}>{bransEtiketi(note.specialty, { kisa: true })}</span>
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: 11, color: '#5F7189' }}>{note.date}</span>
                       <span style={{ display: 'block', fontSize: 13, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.hastaAdi ? <b style={{ color: '#EDF1F7' }}>{note.hastaAdi} — </b> : null}{note.content_subjektif.slice(0, 70) || 'Not'}</span>

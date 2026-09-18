@@ -51,7 +51,7 @@ describe('(c) wired into the runtime call paths', () => {
   })
   it('no other specialty lock bleeds into a dermatoloji prompt', () => {
     const d = soapSistemPromptu({ transcript: '', specialty: 'dermatoloji', doktorBransi: 'dermatoloji' })
-    assert.ok(!d.includes('DAHİLİYE')); assert.ok(!d.includes('KADIN DOĞUM')); assert.ok(!d.includes('SOAP — gebe')); assert.ok(!d.includes('ACOG'))
+    assert.ok(!d.includes('DAHİLİYE')); assert.ok(!d.includes('KADIN HASTALIKLARI VE DOĞUM')); assert.ok(!d.includes('SOAP — gebe')); assert.ok(!d.includes('ACOG'))
   })
   it('dermatolojiMi matches router bransAnahtari (derma) + resmi unvan only', () => {
     assert.ok(dermatolojiMi('dermatoloji')); assert.ok(dermatolojiMi(null, 'Deri ve Zührevi Hastalıklar')); assert.ok(dermatolojiMi('Dermatology'))

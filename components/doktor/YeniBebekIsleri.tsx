@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
 type Satir = { id: string; bebek_id: string; bebekAd?: string; title?: string; due_at?: string; status?: string }
 
@@ -35,7 +36,7 @@ export default function YeniBebekIsleri() {
   return (
     <div style={{ marginTop: 18, background: '#0D1C33', border: '1px solid rgba(251,191,36,0.28)', borderRadius: 16, padding: '14px 18px' }}>
       <div style={{ fontSize: 13, fontWeight: 800, color: '#FBBF24', marginBottom: 8 }}>Yeni bebek — pediatri iş listesi</div>
-      <div style={{ fontSize: 11.5, color: '#8FA0B5', marginBottom: 10 }}>Kadın-doğum taburcu paketinden. Ayşe bebek kartını açabilir. Notya e-Nabız değildir.</div>
+      <div style={{ fontSize: 11.5, color: '#8FA0B5', marginBottom: 10 }}>{KADIN_HASTALIKLARI_DOGUM_ETIKETI} taburcu paketinden. Ayşe bebek kartını açabilir. Notya e-Nabız değildir.</div>
       {liste.slice(0, 8).map((g) => (
         <button
           key={g.id}

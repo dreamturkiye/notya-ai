@@ -2,8 +2,8 @@
  * NOTYA-SUPERUSER-BRANS-01 (Kaan talebi, 2026-09-17) — kendi hesabının aktif branşını
  * anında değiştirebilen İKİ kişi.
  *
- * Neden var: Kaan ve Dr. Gökhan Mamur (3000+ doğumluk Kadın Doğum uzmanı, aynı zamanda
- * Notya'nın Pediatri bölümünü aktif kullanıyor) tek hesap üzerinde Kadın Doğum ↔ Pediatri
+ * Neden var: Kaan ve Dr. Gökhan Mamur (3000+ doğumluk Kadın Hastalıkları ve Doğum uzmanı, aynı zamanda
+ * Notya'nın Pediatri bölümünü aktif kullanıyor) tek hesap üzerinde Kadın Hastalıkları ve Doğum ↔ Pediatri
  * arasında gidip gelmek zorunda: bir bölümü canlıda kontrol edip diğerine dönmek.
  * Bugüne kadar bunun tek yolu onboarding'i baştan çalıştırmak ya da veritabanını elle
  * düzenlemekti. Bu liste o iki kişiyi — ve YALNIZ o ikisini — o işten kurtarır.

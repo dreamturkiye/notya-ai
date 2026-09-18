@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { kutu, giris, etiketS, btn } from './clinic-styles'
 import { NTP_DISCLAIMER, TABURCU_ETIKET } from '@/lib/clinical/yenidogan/constants'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
 type Taburcu = {
   ntp1_alindi_at?: string | null
@@ -78,7 +79,7 @@ export default function TaburcuPaketi({
       <div style={{ fontWeight: 800, color: '#EDF1F7', marginBottom: 4 }}>Taburcu paketi</div>
       <div style={{ fontSize: 12, color: '#FBBF24', marginBottom: 8 }}>{NTP_DISCLAIMER}</div>
       <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 12 }}>
-        Kadın-doğum: doğum + ilk örnek + lohusa. Pediatri (Ayşe) taburcu sonrası bebeği sahiplenir. Notya e-Nabız yerine geçmez.
+        {KADIN_HASTALIKLARI_DOGUM_ETIKETI}: doğum + ilk örnek + lohusa. Pediatri (Ayşe) taburcu sonrası bebeği sahiplenir. Notya e-Nabız yerine geçmez.
       </div>
 
       {([

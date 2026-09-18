@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties';
 
 type Bio = { deger: number; persentil: number };
 type Veri = {
@@ -169,7 +170,7 @@ export default function GebeIzlemKartiYazdir() {
 
         <div style={{ marginTop: 36, borderTop: '1px solid #333', paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
           <div style={{ color: '#666' }}>Tehlike işaretlerinde (kanama, şiddetli baş ağrısı, görme bozukluğu, ödem, fetal hareket azalması) hemen başvurunuz.</div>
-          <div style={{ textAlign: 'right' }}><div>{b.hekim || 'Uzm. Dr.'}</div><div>Kadın Hastalıkları ve Doğum</div><div>Tarih: {tr(new Date().toISOString())}</div></div>
+          <div style={{ textAlign: 'right' }}><div>{b.hekim || 'Uzm. Dr.'}</div><div>{KADIN_HASTALIKLARI_DOGUM_ETIKETI}</div><div>Tarih: {tr(new Date().toISOString())}</div></div>
         </div>
       </div>
     </div>

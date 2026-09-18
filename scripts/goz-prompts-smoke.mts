@@ -85,7 +85,7 @@ const { data: seans } = await sb.from('sessions').insert({ doctor_id: doktorId, 
 
 // 1. hafıza / voice
 const hafiza = (await (await fetch(`${BASE}/api/doktor/hafiza`, { headers: H })).json()) as V
-kontrol('hafıza sesBlogu: göz kısa kilidi yüklendi, başka branş kilidi yok', /GÖZ/.test(hafiza.sesBlogu) && !/DAHİLİYE|KADIN DOĞUM|DERMATOLOJİ KİLİDİ/.test(hafiza.sesBlogu), String(hafiza.sesBlogu || '').slice(0, 300))
+kontrol('hafıza sesBlogu: göz kısa kilidi yüklendi, başka branş kilidi yok', /GÖZ/.test(hafiza.sesBlogu) && !/DAHİLİYE|KADIN HASTALIKLARI VE DOĞUM|DERMATOLOJİ KİLİDİ/.test(hafiza.sesBlogu), String(hafiza.sesBlogu || '').slice(0, 300))
 
 // 2. SOAP (context.specialty yok → users.specialty)
 const segments = [

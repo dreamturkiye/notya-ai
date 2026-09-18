@@ -12,6 +12,7 @@ import fs from 'fs'
 import path from 'path'
 import { KADIN_DOGUM_TOOLS } from './tools'
 import { kdKaynakListesiBlogu } from '../protocols/dogrulanmis-kaynaklar'
+import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 
 export const KADIN_DOGUM_PROMPT_DOSYALARI = {
   system: 'system.md',
@@ -32,16 +33,16 @@ export function kadinDogumPromptlari(): Record<Anahtar, string> {
   const sonuc = {} as Record<Anahtar, string>
   for (const k of Object.keys(KADIN_DOGUM_PROMPT_DOSYALARI) as Anahtar[]) {
     const metin = fs.readFileSync(path.join(dizin, KADIN_DOGUM_PROMPT_DOSYALARI[k]), 'utf8').trim()
-    if (!metin) throw new Error(`kadın doğum prompt boş: ${KADIN_DOGUM_PROMPT_DOSYALARI[k]}`)
+    if (!metin) throw new Error(`kadın hastalıkları ve doğum prompt boş: ${KADIN_DOGUM_PROMPT_DOSYALARI[k]}`)
     sonuc[k] = metin
   }
   onbellek = sonuc
   return onbellek
 }
 
-/** users.specialty ('kadin-dogum') / session specialty ('kadin-hastaliklari-dogum') → KD? Same match as core/belgeler/router bransAnahtari. */
+/** users.specialty ('kadin-dogum') / session specialty ('kadin-hastaliklari-dogum') → KD? Resolved by the single bransAnahtari(). */
 export function kadinDogumMi(...branslar: (string | null | undefined)[]): boolean {
-  return branslar.some((b) => /kadın|kadin|jinek|obstet/.test((b || '').toLocaleLowerCase('tr-TR')))
+  return branslar.some((b) => bransAnahtari(b) === 'kadin-hastaliklari-dogum')
 }
 
 /** tools.ts rendered as a read-only map of steps. Chat has no tool-use loop for these: every card/VisionRead write is a hekim action in the UI. */
@@ -59,13 +60,13 @@ export function kadinDogumKilidi(yuzey: 'soap' | 'asistan' | 'ogrenme' | 'ses'):
   if (yuzey === 'ses') {
     // Voice stays short: system.md without the citation bullet list.
     const kisa = p.system.split('\n').filter((l) => l.trim() && !l.startsWith('- ')).join('\n')
-    return `=== KADIN DOĞUM KİLİDİ (kısa) ===\n${kisa}`
+    return `=== KADIN HASTALIKLARI VE DOĞUM KİLİDİ (kısa) ===\n${kisa}`
   }
-  if (yuzey === 'ogrenme') return `\n=== KADIN DOĞUM ÖĞRENME KİLİDİ ===\n${p.ogrenme}\nÖğrenilen profil bu sınırları aşamaz: doğum / invaziv test kararı ve görüntü onayı uzmanda kalır; profil tanı veya SAT/EDD uydurmayı öğretmez.`
-  const araclar = `## Kadın doğum adımları (uygulamada hekim çalıştırır; sen kendiliğinden çalıştırmaz veya sonucunu uydurmazsın — yalnız ilgili kartı/adımı önerirsin)\n${kadinDogumAracHaritasi()}\n${ARAC_NOTU}\n${IC_ALAN_NOTU}`
+  if (yuzey === 'ogrenme') return `\n=== KADIN HASTALIKLARI VE DOĞUM ÖĞRENME KİLİDİ ===\n${p.ogrenme}\nÖğrenilen profil bu sınırları aşamaz: doğum / invaziv test kararı ve görüntü onayı uzmanda kalır; profil tanı veya SAT/EDD uydurmayı öğretmez.`
+  const araclar = `## Kadın hastalıkları ve doğum adımları (uygulamada hekim çalıştırır; sen kendiliğinden çalıştırmaz veya sonucunu uydurmazsın — yalnız ilgili kartı/adımı önerirsin)\n${kadinDogumAracHaritasi()}\n${ARAC_NOTU}\n${IC_ALAN_NOTU}`
   const soap = yuzey === 'soap'
     ? `\n\n## SOAP şablonları (vizit türüne uyanı uygula: gebe izlem / jinekoloji / USG / doğum-travay-lohusa; birden çoğu uyuyorsa birleştir)\n\n${p.soapGebe}\n\n${p.soapJinekoloji}\n\n${p.soapUsg}\n\n${p.soapDogum}\nSOAP JSON alanlarına eşleme: Subjective → subjektif, Objective → objektif, Assessment → degerlendirme, Plan → plan. Not gövdesi kuralı (yalnız hekimin dediği) geçerliliğini korur; şablonun istediği ama hekimin söylemediği her şey (gecikmiş pencere, eksik tarama, SB/ACOG sütunları, onam yolu) aiDegerlendirme alanına gider. receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA. SB ile ACOG farklıysa aiDegerlendirme'de iki ayrı satır yaz: "SB (yasal asgari): …" ve "ACOG (klinik öneri): …" — birleştirme.`
     : `\n\n## Görsel istekleri (USG / NST / büyüme)\n${p.vision}`
   // KD-KAYNAK-KILIDI: verified numbers rendered from code (protocols/dogrulanmis-kaynaklar) — the same list the backstop checks.
-  return `\n=== KADIN DOĞUM SİSTEM KİLİDİ (specialties/kadin-dogum/prompts) ===\n${ONCELIK}\n\n${p.system}\n\n${kdKaynakListesiBlogu()}${soap}\n\n${araclar}\n=== KİLİT SONU ===`
+  return `\n=== KADIN HASTALIKLARI VE DOĞUM SİSTEM KİLİDİ (specialties/kadin-dogum/prompts) ===\n${ONCELIK}\n\n${p.system}\n\n${kdKaynakListesiBlogu()}${soap}\n\n${araclar}\n=== KİLİT SONU ===`
 }

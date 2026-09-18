@@ -8,6 +8,7 @@
  *   Notya is a commercial app — not one clinic's private toolbox.
  */
 import { portalBransAnahtari } from '@/lib/portal/moduller'
+import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
 export type DoktorArac = {
@@ -62,7 +63,7 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#7C3AED', icon: 'AR', title: 'Doğum & analık raporu', desc: 'TDT → SGK analık istirahati tarihleri, erken / geç doğumda yeniden hesap ve istirahat raporu taslağı', route: '/doktor-tools/kd-dogum-rapor', branslar: ['kadin-hastaliklari-dogum'] },
   { circleColor: '#059669', icon: 'MC', title: 'Kontrasepsiyon MEC', desc: 'Hasta faktörleri → yöntem başına WHO MEC 1–4 ve gerekçe · acil kontrasepsiyon · doğum sonrası başlama', route: '/doktor-tools/kd-mec', branslar: ['kadin-hastaliklari-dogum'] },
   { circleColor: '#E11D48', icon: 'OR', title: 'Obstetrik risk & sezaryen notu', desc: 'Preeklampsi → aspirin penceresi · GDM riski · SSVD alanları · hekim kilitli sezaryen endikasyon notu', route: '/doktor-tools/kd-risk', branslar: ['kadin-hastaliklari-dogum'] },
-  { circleColor: '#EA580C', icon: 'KK', title: 'Kadın doğum kohort paneli', desc: 'Lohusa 1. / 6. hafta · kapanan tarama pencereleri · geciken izlem · OGTT / anti-D / GBS · smear · 1-tap hatırlatma', route: '/doktor-tools/kd-kohort', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#EA580C', icon: 'KK', title: `${KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI} kohort paneli`, desc: 'Lohusa 1. / 6. hafta · kapanan tarama pencereleri · geciken izlem · OGTT / anti-D / GBS · smear · 1-tap hatırlatma', route: '/doktor-tools/kd-kohort', branslar: ['kadin-hastaliklari-dogum'] },
 ]
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]

@@ -16,9 +16,9 @@
  * Kural ve kontrol listesi: .cursor/skills/brans-alan-sizmasi/SKILL.md
  */
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
-import { findSpecialistForSpecialty } from '@/lib/asistan/specialistsCatalog'
 import { yasYilKesir } from '@/lib/doktor/hastaDosyaSekmeleri'
 import { specialtyProfile } from './registry'
+import { bransAnahtari } from './bransAnahtari'
 import { BRANSSIZ_PEDIATRIK_BAGLAM, PEDIATRIK_OLCUMLER, type OlcumAnahtari, type OlcumTanimi, type PediatrikBaglamKurali } from './profile'
 import { hitapMetinleri, type HitapMetinleri } from './hitap'
 
@@ -41,11 +41,8 @@ export interface KapsamGirdisi {
   nowMs?: number
 }
 
-/** Ham değer ('kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'genel-cerrahi') → kanonik anahtar; "genel"/boş/bilinmeyen → null. */
-export function bransAnahtari(ham: string | null | undefined): SpecialtyKey | null {
-  if (!ham || !String(ham).trim()) return null
-  return findSpecialistForSpecialty(String(ham))?.specialtyKey ?? null
-}
+/** Tek branş çözücüsü (./bransAnahtari): 'kadin-dogum' / 'Kadın Hastalıkları ve Doğum' → 'kadin-hastaliklari-dogum'. */
+export { bransAnahtari }
 
 /** Notun branşı: seans branşı (gerçek branşsa), yoksa hekimin branşı, yoksa null (branşsız). */
 export function etkinBrans(g: KapsamGirdisi): SpecialtyKey | null {

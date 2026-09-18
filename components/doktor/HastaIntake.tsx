@@ -63,7 +63,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
         const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
         const j = await r.json();
         const sp = String(j?.data?.specialty || '');
-        // BRANS-ALAN-SIZMASI: gerçek KD profilleri 'kadin-dogum' taşır (BRANS_ETIKETLERI anahtarı değil) — kanonik anahtara çöz
+        // BRANS-ALAN-SIZMASI / KD-ISIMLENDIRME-01: gerçek KD profilleri 'kadin-dogum' taşır (BRANS_ETIKETLERI anahtarı değil) — tek çözücüyle kanonik anahtara çöz
         const k = bransAnahtari(sp);
         if (k && Object.prototype.hasOwnProperty.call(BRANS_ETIKETLERI, k)) setSecilenBrans(k);
       } catch { /* varsayılan genel kalır */ }

@@ -17,6 +17,7 @@
  */
 import type { IntakeBolum } from './coreAlanlar'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 
 const BASVURU_NEDENI = {
   id: 'basvuruNedeni',
@@ -525,7 +526,7 @@ export const BRANS_ETIKETLERI: Record<SpecialtyKey, string> = {
   dermatoloji: 'Dermatoloji',
   'kulak-burun-bogaz': 'Kulak Burun Boğaz',
   'goz-hastaliklari': 'Göz Hastalıkları',
-  'kadin-hastaliklari-dogum': 'Kadın Hastalıkları ve Doğum',
+  'kadin-hastaliklari-dogum': KADIN_HASTALIKLARI_DOGUM_ETIKETI,
   uroloji: 'Üroloji',
   radyoloji: 'Radyoloji',
   anestezi: 'Anesteziyoloji ve Reanimasyon',

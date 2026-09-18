@@ -1,11 +1,12 @@
 'use client';
 /**
- * NOTYA-KD-02 — Printable onam (V1: browser print → PDF; e-imza later). Kadın-doğum templates only.
+ * NOTYA-KD-02 — Printable onam (V1: browser print → PDF; e-imza later). Kadın Hastalıkları ve Doğum templates only.
  * The patient's name is typed by the doctor at print time (not fetched) so nothing identifying is in the URL.
  */
 import React, { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ONAM_KUTUPHANESI } from '@/specialties/kadin-dogum/engines/dogum-spine';
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties';
 import { onamGeriHref } from '@/lib/doktor/geriNavigasyon';
 
 function OnamYazdirIc() {
@@ -38,7 +39,7 @@ function OnamYazdirIc() {
         <div style={{ flex: 1 }}>Hekim imzası / kaşe<br /><br />______________________</div>
         <div style={{ flex: 1 }}>Tanık<br /><br />______________________</div>
       </div>
-      <p style={{ fontSize: 10, color: '#777', marginTop: 24 }}>Notya — kadın-doğum onam kütüphanesi (TJOD tarzı). Bu form hekim tarafından hastaya açıklanarak kullanılır; yapay zekâ tanı koymaz.</p>
+      <p style={{ fontSize: 10, color: '#777', marginTop: 24 }}>Notya — {KADIN_HASTALIKLARI_DOGUM_ETIKETI} onam kütüphanesi (TJOD tarzı). Bu form hekim tarafından hastaya açıklanarak kullanılır; yapay zekâ tanı koymaz.</p>
     </div>
   );
 }

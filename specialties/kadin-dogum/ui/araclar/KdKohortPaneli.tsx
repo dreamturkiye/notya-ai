@@ -8,6 +8,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
+import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
 import { KD_BAYRAK_AD, LOHUSA_BAYRAKLARI, kdHatirlatmaMesaji, type KdKohortBayrak, type KdKohortSatir } from '../../engines/kd-kohort';
 
 const BAYRAKLAR = Object.keys(KD_BAYRAK_AD) as KdKohortBayrak[];
@@ -80,7 +81,7 @@ export default function KdKohortPaneli() {
     <div style={{ background: '#0C1830', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '20px 18px 24px' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#F472B6', marginBottom: 6 }}>Kadın doğum kohortu</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#F472B6', marginBottom: 6 }}>{KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI} kohortu</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: '#EDF1F7' }}>Takip bayrakları</div>
           <div style={{ ...muted, marginTop: 6, maxWidth: 560 }}>{v ? `${v.toplamHasta} gebelik / lohusa / kadın sağlığı kaydı olan hasta · ${v.satirlar.length} bayraklı · yalnız sizin girdiğiniz kayıtlar` : hata || 'Yükleniyor…'}</div>
         </div>

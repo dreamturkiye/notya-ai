@@ -1,6 +1,6 @@
 SOAP — gebe visit.
 
-TR kadın doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.
+TR kadın hastalıkları ve doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams.
 
 Subjective: movements, bleeding, ROM, headache/vision, supplements adherence, danger signs.
 

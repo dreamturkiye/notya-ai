@@ -7,6 +7,7 @@ import { TDD_SUT_CODES } from '../protocols/procedures-sut'
 import { draftDermPediatriHandoff } from '../../../bridges/derm-pediatri'
 import { draftDermKdHandoff } from '../../../bridges/derm-kadin-dogum'
 import { draftDermRomatolojiHandoff } from '../../../bridges/derm-romatoloji'
+import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 import type { ClinicUnit } from '../types'
 
 function copyJson(obj: unknown) {
@@ -190,7 +191,7 @@ export function UnitePanelleri({
 
       <section style={kutu} data-derm="handoff-cta">
         <h2 style={{ margin: 0, fontSize: 16 }}>Branş köprüleri</h2>
-        <p style={{ fontSize: 12, color: '#8FA0B5' }}>Kadın doğum / pediatri ağaçları değiştirilmez. Elden teslim JSON panoya kopyalanır.</p>
+        <p style={{ fontSize: 12, color: '#8FA0B5' }}>{KADIN_HASTALIKLARI_DOGUM_ETIKETI} / pediatri ağaçları değiştirilmez. Elden teslim JSON panoya kopyalanır.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <a href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}?tab=gebelik`} style={{ ...btn(), textDecoration: 'none' }} data-derm="cta-kd-handoff">
             Kadın sağlığı — GÖP / gebelik

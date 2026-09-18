@@ -1,6 +1,6 @@
 SOAP — jinekoloji visit (not the gebe card).
 
-TR kadın doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams. Jinekoloji: Berek & Novak. TR wording: Temel KD.
+TR kadın hastalıkları ve doğum hekimi pratik gold standard: ACOG. Yasal taban: DÖBYR. Ders kitabı: Williams. Jinekoloji: Berek & Novak. TR wording: Temel KD.
 
 Subjective: LMP, cycle, contraception, AUB, pain, discharge, menopause symptoms.
 

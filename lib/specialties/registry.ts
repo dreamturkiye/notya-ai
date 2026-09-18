@@ -7,6 +7,7 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import { resmiUzmanlikAdi } from '@/lib/doktor/bransAdlari'
 import { baselineProfile, type SpecialtyProfile } from './profile'
+import { bransAnahtari } from './bransAnahtari'
 import { PEDIATRI_PROFILE } from './pediatri'
 import { KADIN_DOGUM_PROFILE } from './kadin-dogum'
 import { DERMATOLOJI_PROFILE } from './dermatoloji'
@@ -25,8 +26,8 @@ export function specialtyProfile(keyHam: string | null | undefined): SpecialtyPr
   // BRANS-ALAN-SIZMASI: branşı bilinmeyen hekim pediatri DEĞİLDİR — "genel" baseline'a düşer
   // (eskiden `|| 'pediatri'` idi: branşsız hesap pediatri bölümünü miras alıyordu).
   const raw = (keyHam || '').trim() || 'genel'
-  if (raw === 'kadin-dogum' || raw === 'kadin-hastaliklari-dogum') return KADIN_DOGUM_PROFILE
-  const key = raw as SpecialtyKey
+  // KD-ISIMLENDIRME-01: 'kadin-dogum' (canlı users.specialty) ve serbest metin tek çözücüden kanonik anahtara gelir.
+  const key = (bransAnahtari(raw) ?? raw) as SpecialtyKey
   const chapter = CHAPTERS[key]
   if (chapter) return chapter
   return baselineProfile(key, BRANS_ETIKETLERI[key] || key, resmiUzmanlikAdi(key))
