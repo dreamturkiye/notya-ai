@@ -37,9 +37,9 @@ describe('KD / dahiliye / derm eligibility', () => {
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, [])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
   })
-  it('dermatoloji mounts Derim (Partial) — unique from göz / pediatri', () => {
+  it('dermatoloji mounts Derim (Strong) — unique from göz / pediatri', () => {
     const m = specialtyProfile('dermatoloji').portal!
-    assert.equal(m[0].derinlik, 'Partial')
+    assert.equal(m[0].derinlik, 'Strong')
     assert.deepEqual(m[0].nav.map((n) => n.path), ['/derim'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['dermatoloji'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji' })).nav[0]?.label, 'Derim')

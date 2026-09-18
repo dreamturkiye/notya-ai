@@ -197,7 +197,8 @@ export interface PortalGoz {
 /** DERM-PORTAL — "Derim": patient-safe derm surface. No morfoloji, tanı, skor, or dose. */
 export interface PortalDeri {
   sonrakiKontrol: { tarih: string; neden: string } | null
-  hatirlatmalar: Array<{ ad: string; due: string | null }>
+  /** DERM-EXCEPTIONAL-01: titles come from specialties/dermatoloji/engines/portal-derim (kod → sabit başlık). */
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
   fotograflar: Array<{ id: string; tarih: string; tur: string }>
   islemler: Array<{ tarih: string; ad: string }>
   fototerapi: Array<{ tarih: string; cihaz: string | null }>

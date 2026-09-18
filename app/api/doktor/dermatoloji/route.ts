@@ -5,12 +5,20 @@
  * Live tables are CRUD truth. Photos remain hasta_goruntulemeler (coreImageId). Belgeler remain vault (documentId).
  */
 import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { PHOTO_DEVICES } from '@/specialties/dermatoloji/engines/phototherapy-log'
 import { VISION_DISCLAIMER, uzmanOnay } from '@/specialties/dermatoloji/imaging/vision-tools'
+import {
+  analizKopruyeUygun, belgeModaliteDerm, belgeTaslakMetni, dermModaliteTask, guvenUst,
+  kopruBolgeDogrula, taslakAyiricilar, taslakSonrakiAdim, taslakTaniDiliUyarisi,
+} from '@/specialties/dermatoloji/imaging/belgeKopru'
 import { defaultVisitType } from '@/specialties/dermatoloji/engines/clinic-fit'
 import type { ClinicUnit } from '@/specialties/dermatoloji/types'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { tierAYazVeFuzyonla } from '@/core/belgeler/tierA'
+import { bransKurali } from '@/core/belgeler/router'
+import type { BelgeRaporu } from '@/core/belgeler/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,6 +83,13 @@ function mapVision(row: Record<string, unknown>) {
     differentials: Array.isArray(row.differentials) ? row.differentials.map(String) : [],
     next_step: String(row.next_step || ''),
     disclaimer: VISION_DISCLAIMER,
+    // DERM-EXCEPTIONAL-01 — Belge Tier A köprüsünden gelen taslaklarda dolu (migration 054).
+    kaynak: row.kaynak ? String(row.kaynak) : 'hekim',
+    belgeId: row.belge_id ? String(row.belge_id) : null,
+    belgeAnalizId: row.belge_analiz_id ? String(row.belge_analiz_id) : null,
+    modalite: row.modalite ? String(row.modalite) : null,
+    bolge: row.bolge ? String(row.bolge) : null,
+    guvenUstPct: row.guven_ust_pct == null ? null : Number(row.guven_ust_pct),
   }
 }
 
@@ -365,6 +380,91 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.from('derm_foto_meta').upsert(row, { onConflict: 'doctor_id,core_image_id' })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
+  }
+
+  // ────────────────────────── DERM-EXCEPTIONAL-01 — Belge Tier A ↔ dual-sign köprüsü ──────────────────────────
+  // eylem:
+  //  - belge_taslak     { analizId, bolge } → Belge kasası analizi (belge_analizleri: id + doctor_id + patient_id) → asistan taslağı
+  //  - asistana_raporla { coreImageId, bolge, deid{mime,base64}, kimlikYok: true, klinikNot? } → derm görüntüsü için aynı
+  //                     Tier A yolu (core/belgeler/tierA). Görsel istemcide kimliksizleştirilir; hekim kimlik olmadığını onaylar.
+  // İkisi de derm_vision_reads'e status 'draft' + drafted_by 'asistan' yazar; onay yalnız uzman (uzmanOnay / action 'vision').
+  // Resmî tanı YAZILMAZ — lezyon kartındaki resmi_tani hekim kilididir.
+  if (action === 'goruntu-okuma') {
+    const eylem = String(body.eylem || '')
+    const b = kopruBolgeDogrula(body.bolge)
+    if (!b.ok) return NextResponse.json({ error: b.hata }, { status: 400 })
+    const fitz = (kayit.patient_derm as { fitzpatrick?: string } | null)?.fitzpatrick
+    const fitzpatrickBilinmiyor = !fitz
+
+    if (eylem === 'belge_taslak') {
+      const { data: a } = await supabase.from('belge_analizleri')
+        .select('id, belge_id, modality_final, durum, sonuc, fusion')
+        .eq('id', String(body.analizId || '')).eq('doctor_id', doktorId).eq('patient_id', patientId).maybeSingle()
+      if (!a) return NextResponse.json({ error: 'Analiz bulunamadı.' }, { status: 404 })
+      const mod = belgeModaliteDerm(String(a.modality_final))
+      if (!mod) return NextResponse.json({ error: 'Yalnız dermatoskopi / deri / yara analizi deri okumasına aktarılır.' }, { status: 400 })
+      const rapor = a.sonuc as BelgeRaporu | null
+      const uygun = analizKopruyeUygun(String(a.durum), rapor)
+      if (!uygun.ok) return NextResponse.json({ error: uygun.hata }, { status: 400 })
+      const { data: once } = await supabase.from('derm_vision_reads').select('id')
+        .eq('hasta_derm_id', epId).eq('belge_analiz_id', a.id).eq('status', 'draft').limit(1).maybeSingle()
+      if (once) return NextResponse.json({ error: 'Bu analiz zaten onay bekleyen bir deri okuma taslağı olarak aktarıldı.' }, { status: 409 })
+      const ust = guvenUst((a.fusion as { capPct?: number } | null)?.capPct, fitzpatrickBilinmiyor)
+      const taslak = belgeTaslakMetni({ rapor: rapor!, modalite: mod, bolge: b.bolge, guvenUstPct: ust, fitzpatrickBilinmiyor })
+      const { error } = await supabase.from('derm_vision_reads').insert({
+        hasta_derm_id: epId, asset_ids: [], task: dermModaliteTask(mod), status: 'draft', drafted_by: 'asistan', approved_by: null,
+        observations: taslak, differentials: taslakAyiricilar(rapor!, ust), next_step: taslakSonrakiAdim(rapor!, mod),
+        disclaimer: VISION_DISCLAIMER, kaynak: 'belge_tier_a', belge_id: a.belge_id, belge_analiz_id: a.id,
+        modalite: mod, bolge: b.bolge, fitzpatrick_bilinmiyor: fitzpatrickBilinmiyor, guven_ust_pct: ust, asistan_rapor: rapor,
+      })
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: true, guvenUst: ust, uyari: taslakTaniDiliUyarisi(taslak) })
+    }
+
+    if (eylem === 'asistana_raporla') {
+      const { data: img } = await supabase.from('hasta_goruntulemeler').select('id, modalite')
+        .eq('id', String(body.coreImageId || '')).eq('patient_id', patientId).eq('doctor_id', doktorId).maybeSingle()
+      if (!img) return NextResponse.json({ error: 'Görüntü bulunamadı.' }, { status: 404 })
+      const mod = belgeModaliteDerm(String(img.modalite) === 'foto' ? 'derm' : String(img.modalite))
+      if (!mod) return NextResponse.json({ error: 'Yalnız dermatoskopi / deri / yara görüntüsü raporlanır.' }, { status: 400 })
+      if (body.kimlikYok !== true) return NextResponse.json({ error: 'Göndermeden önce görüntüde hasta adı / T.C. / doğum tarihi olmadığını onaylayın (KVKK).' }, { status: 400 })
+      const d = (body.deid || {}) as { mime?: string; base64?: string }
+      if (!d.base64 || typeof d.base64 !== 'string' || d.base64.length > 12_000_000) return NextResponse.json({ error: 'Kimliksizleştirilmiş görüntü gerekli.' }, { status: 400 })
+      const mime = (['image/jpeg', 'image/png', 'image/webp'].includes(String(d.mime)) ? d.mime : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp'
+      const kural = bransKurali('dermatoloji')
+      const iskelet = async (neden: string) => {
+        await supabase.from('derm_vision_reads').insert({
+          hasta_derm_id: epId, asset_ids: [String(img.id)], task: dermModaliteTask(mod), status: 'draft', drafted_by: 'asistan',
+          observations: `Morfoloji kontrol listesi taslağı (${b.bolge}) — ${VISION_DISCLAIMER}\nTip (makül/papül/plak/nodül/vezikül/bül/püstül) · sınır · renk · yüzey (skuam/krut/erozyon/ülser) · dağılım · boyut (mm).`,
+          differentials: [], next_step: 'Uzman onayı; gerekirse yeniden çekim (odak / ışık / ölçek).',
+          disclaimer: VISION_DISCLAIMER, kaynak: 'morfoloji_iskelet', modalite: mod, bolge: b.bolge,
+          fitzpatrick_bilinmiyor: fitzpatrickBilinmiyor,
+        })
+        return NextResponse.json({ ok: true, yedek: true, uyari: `${neden} — kontrol listesi taslağı eklendi (uzman onayı bekler).` })
+      }
+      let sonuc
+      try {
+        sonuc = await tierAYazVeFuzyonla({
+          anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }), persona: kural.persona,
+          girdi: { brans: kural.ad, modality_final: mod, yasAy: null, cinsiyet: null, klinikNot: [`Bölge: ${b.bolge}.`, body.klinikNot ? String(body.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') },
+          gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: mod, yasAy: null, fitzpatrickBilinmiyor,
+        })
+      } catch { return iskelet('Görüntü asistan tarafından okunamadı') }
+      const uygun = analizKopruyeUygun('taslak', sonuc.rapor)
+      if (!uygun.ok) return iskelet('Görüntü kalitesi düşük')
+      const ust = guvenUst(sonuc.fusion.capPct, fitzpatrickBilinmiyor)
+      const taslak = belgeTaslakMetni({ rapor: sonuc.rapor, modalite: mod, bolge: b.bolge, guvenUstPct: ust, fitzpatrickBilinmiyor })
+      const { error } = await supabase.from('derm_vision_reads').insert({
+        hasta_derm_id: epId, asset_ids: [String(img.id)], task: dermModaliteTask(mod), status: 'draft', drafted_by: 'asistan', approved_by: null,
+        observations: taslak, differentials: taslakAyiricilar(sonuc.rapor, ust), next_step: taslakSonrakiAdim(sonuc.rapor, mod),
+        disclaimer: VISION_DISCLAIMER, kaynak: 'belge_tier_a', modalite: mod, bolge: b.bolge,
+        fitzpatrick_bilinmiyor: fitzpatrickBilinmiyor, guven_ust_pct: ust, asistan_rapor: sonuc.rapor,
+      })
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: true, guvenUst: ust, uyari: taslakTaniDiliUyarisi(taslak) })
+    }
+
+    return NextResponse.json({ error: 'Bilinmeyen görüntü okuma eylemi.' }, { status: 400 })
   }
 
   return NextResponse.json({ error: 'Bilinmeyen işlem.' }, { status: 400 })

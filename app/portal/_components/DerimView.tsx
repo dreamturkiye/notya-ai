@@ -76,9 +76,16 @@ export function DerimView({ deri, basePath }: { deri: PortalDeri | null; basePat
           <Baslik>Hatırlatmalar</Baslik>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {deri.hatirlatmalar.map((h, i) => (
-              <li key={i}>{h.ad}{h.due ? ` · ${uzunTarih(h.due)}` : ''}</li>
+              <li key={i}>
+                {h.ad}{h.due ? ` · ${uzunTarih(h.due)}` : ''}
+                {h.durum === 'gecikti' && <span className="sg-goz-meta"> · tarihi geçti</span>}
+                {h.durum === 'yaklasiyor' && <span className="sg-goz-meta"> · yaklaşıyor</span>}
+              </li>
             ))}
           </ul>
+          <div className="sg-goz-meta" style={{ marginTop: 8 }}>
+            Tarihleri muayenehaneniz belirler. Değiştirmek için mesaj gönderin veya muayenehaneyi arayın.
+          </div>
         </SoftPanel>
       )}
 

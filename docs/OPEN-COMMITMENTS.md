@@ -215,11 +215,68 @@ fields because TOD birim texts are members-only; ICD-10 suggestions on SGK draft
 GOZ-DRYEYE, CHART-TAB-POLICY (universal specialty-gate), dermatoloji Derim Partial.
 
 **SAGLIGIM PART C — portal honesty pass (2026-09-17, updated gap-close):** pediatri büyüme Partial (gated), KD Gebeliğim + jine
-Partial (gated), dahiliye ön anket Partial (gated), dermatoloji **Derim Partial** (foto/kontrol/lab/fototerapi — no tanı), göz
+Partial (gated), dahiliye ön anket Partial (gated), dermatoloji **Derim Partial** (foto/kontrol/lab/fototerapi — no tanı;
+→ **Strong** 2026-09-18, DERM-EXCEPTIONAL-01), göz
 Gözlerim Strong. Smoke proves a göz practice gets no büyüme/gebelik/jine/anket, including a 6-year-old with kilo/boy.
 **CHART-TAB-POLICY SHIPPED:** exclusive-chapter doctors (göz/derm/KD/dahiliye/…) no longer get other chapters' chart tabs;
 baseline/aile may still use age/sex mixed-care rules. See `lib/doktor/hastaDosyaSekmeleri.ts` +
 `.cursor/skills/specialty-universal-vs-chapter`.
+
+### Dermatoloji (Deri ve Zührevi) — chapter (DERM-EXCEPTIONAL-01, 2026-09-18)
+
+**DERM-EXCEPTIONAL-01 workstreams C (kısmi) / D / E — SHIPPED 2026-09-18.** Exit audit:
+`public/derm-exceptional-audit.html` — **21/21 domains Strong** (was 4/21 Strong in `derm-final-audit.html`),
+0 Partial/Thin/Missing, 10/10 game changers shipped, poliklinik wow ~90% (from ~50%). Aynı yöntem ikizi:
+`public/goz-exceptional-audit.html`. Audit Doktor Araçları'na **bağlanmaz** (test ile kilitli).
+
+- **Belge Tier A → derm dual-sign okuma köprüsü.** `specialties/dermatoloji/imaging/belgeKopru.ts` (pure) +
+  `POST /api/doktor/dermatoloji` `action: 'goruntu-okuma'` (`eylem: 'belge_taslak' | 'asistana_raporla'`) →
+  `derm_vision_reads` **asistan taslağı**, uzman onayı zorunlu (asistan kendi taslağını onaylayamaz).
+  Modaliteler: `derm`, `dermatoskopi`, `yara`. Kurallar: **vücut bölgesi zorunlu** (okuma lezyon başınadır;
+  "tüm vücut" reddedilir — TBSE ayrı akış), **Fitzpatrick bilinmiyorsa güven ≤ %70** (`core/belgeler/fusion`
+  cap tablosuyla aynı sınır), model tanıları **"olası bulgu — tanı değildir"** olarak yazılır (resmî tanıyı
+  hekim lezyon kartında kilitler, histopatoloji esastır), analiz hatalı/kalitesi düşükse köprü reddeder ve
+  morfoloji kontrol listesi iskeleti önerilir. Tek Tier A yolu: `core/belgeler/tierA.ts` (göz ile ortak).
+  UI: `specialties/dermatoloji/ui/BelgeAnalizOzet.tsx` → **"Görüntü okumasına aktar"** (bölge girişi + Fitzpatrick uyarısı).
+  Migration `054_derm_exceptional.sql` (additive: `kaynak`, `belge_id`, `belge_analiz_id`, `modalite`, `bolge`,
+  `fitzpatrick_bilinmiyor`, `guven_ust_pct`, `asistan_rapor` + aynı analiz ikinci kez aktarılamaz unique index).
+  **Ortak Belge sayfasındaki köprü kutusu göz-özel kalır** (`bransKurali.goruntuOkumaKoprusu`) — OD/OS seçimi
+  derm ekranına sızmaz; derm köprüsü kendi chapter UI'sinde çalışır.
+- **Sağlığım › Derim → Strong.** `lib/specialties/dermatoloji.ts` `portal[0].derinlik = 'Strong'`,
+  `olgunluk: 'beta-hazir'`. Hekim tetikli hatırlatmalar hasta diliyle: aylık kan testi (β-hCG) vadesi,
+  fototerapi seansı, yama testi D2/D4, yara/dikiş/biyopsi kontrolü, tüm vücut deri kontrolü (TBSE), kontrol
+  fotoğrafı — geciken / yaklaşan işaretiyle. Motor: `specialties/dermatoloji/engines/portal-derim.ts` (pure).
+  Başlıklar görev **kodundan** sabit hasta-güvenli metne çevrilir; hekimin klinik görev metni hastaya taşınmaz.
+  Kalkan: `hastaDiliTemizMi` — skor (PASI/EASI/SCORAD/DLQI/SALT), doz (mg, mg/kg, J/cm²), ilaç adı ve tanı
+  yakalanır. Portal API `derm_gorevleri.ad`'ı seçmez (testle kilitli).
+- **MD beta paketi.** `docs/DERM-MD-BETA.md` (5 günlük saha kontrol listesi, `docs/GOZ-MD-BETA.md` ikizi) +
+  `scripts/derm-exceptional-smoke.mts` (sentetik hasta, QA hekimi `qa.derm@notya.ai`; köprü, bölge/modalite
+  reddi, Derim hatırlatmaları, portal PIN akışı, audit'in Araçlar'a bağlı olmaması).
+- **Testler:** `specialties/dermatoloji/tests/belgeKopru.test.ts` (köprü + branş sızması: derm rotası göz
+  modalitelerini köprülemez, BelgeAnalizÖzet'te OD/OS / persentil sözcüğü yok), `lib/portal/derim.test.ts`
+  (Derim Strong + hatırlatma motoru + hasta dili kalkanı), `lib/security/hasta-izolasyon.test.ts` (yeni
+  A↔B vakası: `goruntu-okuma belge_taslak` yabancı Belge analizini 404 ile reddeder). `test:derm`,
+  `test:brans-sizmasi`, `test:izolasyon` (192) yeşil.
+
+**OPEN (Dermatoloji — karar / erişim gerekiyor, tahmin edilmedi):**
+- **DERM-054-MIGRATION.** `lib/db/migrations/054_derm_exceptional.sql` yazıldı ama **uygulanmadı** (additive: `derm_vision_reads`
+  kolonları + tek taslak unique index; RLS `hasta_derm` üzerinden doctor-own, 027'nin politikaları geçerli kalır). Kaan uygulayana
+  kadar `goruntu-okuma` canlıda yeni kolonlara yazamaz ve `npx tsx scripts/derm-exceptional-smoke.mts` **canlı koşulmadı** —
+  yazıldı, tsc temiz, `npm test` 993/993 ile birlikte tip kontrolünden geçti. Uygulandıktan sonra smoke koşulup sonucu buraya yazılmalı.
+- **DERM-MD-BETA-SIGNOFF.** Olgunluk bilerek `beta-hazir`, `uzman-dogrulandi` **değil**. Gereken: (1) `docs/DERM-MD-BETA.md`
+  için pratisyen bir dermatolog adı + 5 günlük saha haftası; (2) Boss/CEO yazılı onayı → `lib/specialties/dermatoloji.ts`
+  `olgunluk` çevrilir ve audit yeniden yayınlanır.
+- **DERM-MEDULA-BIYOLOJIK.** Canlı Medula e-imza gönderimi yok (göz GİL ile aynı sınır). Shipped substitute: biyolojik
+  SUT rapor taslağı + eksikler + kilit + "Medula'da hekim e-imza" CTA.
+- **DERM-FORM014-BILDIRIM.** BZBH Form 014 ağ bildirimi (TSİM) yok. Shipped substitute: yazdırılabilir taslak + kontrol
+  listesi; "bildirim formudur, onam formu değildir" prompt kilidi (KD-DERM-SAFETY-FINDINGS F4).
+- **DERM-FOTOFINDER-SYNC.** FotoFinder / MoleMax cihaz senkronu yok. Shipped substitute: elle foto serisi (aynı `lezyon_id`)
+  + interaktif bölge haritası + dual-sign okuma.
+- **DERM-IMAGING-REAL-QA.** Tier A yolu yalnız sentetik görüntüyle doğrulandı (model okuyamazsa morfoloji kontrol listesi
+  yedeği düşer). Gerçek dermoskopi taslak kalitesi MD saha haftasında yargılanır; kayıtlı Tier B dermoskopi motoru yok —
+  eklemek `motor_kayit` doğrulaması ister (eklendiğinde füzyon cap'i %70'ten yükselir, dual-sign akışı aynı kalır).
+- **DERM-SMS-RECALL (altyapı, göz ile ortak).** `TWILIO_SMS_FROM` yapılandırılmadığı için hatırlatma = Sağlığım mesajı +
+  e-posta bildirimi (gövdesiz) + dönüş görevi + hekimin kendi WhatsApp'ı.
 
 ## Kadın Hastalıkları ve Doğum — Wave 1, first slice shipped 2026-09-14 (night)
 

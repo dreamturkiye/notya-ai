@@ -12,6 +12,7 @@ import { pediatriSekmesiUygun, yasYilKesir } from '@/lib/doktor/hastaDosyaSekmel
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { portalModulAktif, portalModulleri } from '@/lib/portal/moduller'
 import { dahiliyeKartlari } from '@/lib/portal/dahiliyeKartlari'
+import { derimHatirlatmalari, seansAraligi, sonrakiKontrol } from '@/specialties/dermatoloji/engines/portal-derim'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -508,8 +509,10 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] gozlerim:', e) }
 
-  // DERM-PORTAL — "Derim": photo notices, open görevler, procedure dates, phototherapy session dates.
-  // No tanı, morfoloji, skor, or dose language.
+  // DERM-PORTAL / DERM-EXCEPTIONAL-01 — "Derim": photo notices, doctor-triggered reminders (β-hCG vadesi,
+  // fototerapi seansı, yama D2/D4, yara/dikiş/biyopsi kontrolü, TBSE), procedure and session dates.
+  // Every reminder title comes from derimHatirlatmalari (kod → sabit hasta-güvenli başlık); the doctor's own
+  // görev metni is never forwarded. No tanı, morfoloji, skor, or dose language.
   if (modulAktif('dermatoloji')) try {
     const bugun = new Date().toISOString().slice(0, 10)
     const birYilOnce = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -518,36 +521,45 @@ export async function GET(
       koter: 'Koter', tirnak_avulsiyon: 'Tırnak işlemi', sigil: 'İşlem', kuretaj: 'Küretaj',
     }
     const FOTO_TUR: Record<string, string> = { foto: 'Klinik fotoğraf', dermatoskopi: 'Dermoskopi fotoğrafı' }
-    const [gorevQ, imgQ, islemQ, ftQ, ilacQ] = await Promise.all([
-      sb.from('derm_gorevleri').select('ad, due, kod, durum').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+    const { data: epizot } = await sb.from('hasta_derm').select('id, last_tbse_iso, next_photo_iso').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle()
+    const epId = epizot?.id ? String(epizot.id) : null
+    const bos = <T>() => Promise.resolve({ data: [] as T[] })
+    const [gorevQ, imgQ, islemQ, ftQ, ilacQ, yamaQ] = await Promise.all([
+      sb.from('derm_gorevleri').select('due, kod, durum').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
       sb.from('hasta_goruntulemeler').select('id, modalite, goruntuleme_tarihi, created_at').eq('patient_id', patientId).eq('doctor_id', doctorId).in('modalite', ['foto', 'dermatoskopi']).order('created_at', { ascending: false }).limit(20),
       sb.from('derm_islemler').select('tarih, tur').eq('patient_id', patientId).eq('doctor_id', doctorId).gte('tarih', birYilOnce).order('tarih', { ascending: false }).limit(15),
-      sb.from('hasta_derm').select('id').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle().then(async (h) => {
-        if (!h.data?.id) return { data: [] as Array<{ seans_tarihi: string; device: string | null }> }
-        return sb.from('derm_fototerapi_seanslari').select('seans_tarihi, device').eq('hasta_derm_id', h.data.id).order('seans_tarihi', { ascending: false }).limit(12)
-      }),
+      epId ? sb.from('derm_fototerapi_seanslari').select('seans_tarihi, device').eq('hasta_derm_id', epId).order('seans_tarihi', { ascending: false }).limit(12) : bos<{ seans_tarihi: string; device: string | null }>(),
       sb.from('derm_ilac_guvenlik').select('ilac, aylik_due, aktif').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('aktif', true).limit(10),
+      epId ? sb.from('derm_yama_kurslari').select('applied_at, read_d2, read_d4').eq('hasta_derm_id', epId).order('applied_at', { ascending: false }).limit(5) : bos<{ applied_at: string; read_d2: string | null; read_d4: string | null }>(),
     ])
-    const gorevler = gorevQ.data || []
-    const kontrolGorev = gorevler.find((g) => /kontrol|foto|yama|tbse/i.test(`${g.kod} ${g.ad}`) && g.due && String(g.due) >= bugun)
-      || gorevler.find((g) => g.due && String(g.due) >= bugun)
-    const labAd = (ilac: string) => {
-      const t = String(ilac || '').toLowerCase()
-      if (t.includes('izotret')) return 'İlaç güvenlik lab kontrolü'
-      if (t.includes('biyolog') || t.includes('metotreks') || t.includes('asitretin') || t.includes('siklospor')) return 'Sistemik tedavi lab kontrolü'
-      return 'Tedavi güvenlik lab kontrolü'
-    }
+    const seanslar = (ftQ.data || []).map((s) => ({ tarih: String(s.seans_tarihi), cihaz: s.device ? String(s.device) : null }))
+    const hatirlatmalar = derimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due) : null })),
+      ilacGuvenlik: (ilacQ.data || []).map((r) => ({ ilac: String(r.ilac || ''), aylikDue: r.aylik_due ? String(r.aylik_due) : null })),
+      yamaKurslari: (yamaQ.data || []).map((y) => ({
+        series: 'european_baseline' as const,
+        appliedAt: String(y.applied_at || '').slice(0, 10),
+        readD2: y.read_d2 ? String(y.read_d2).slice(0, 10) : null,
+        readD4: y.read_d4 ? String(y.read_d4).slice(0, 10) : null,
+        photoIds: [], positives: [],
+      })),
+      sonFototerapiSeansi: seanslar[0]?.tarih?.slice(0, 10) || null,
+      fototerapiAralikGun: seansAraligi(seanslar.map((s) => s.tarih)),
+      sonTbse: epizot?.last_tbse_iso ? String(epizot.last_tbse_iso).slice(0, 10) : null,
+      sonrakiFoto: epizot?.next_photo_iso ? String(epizot.next_photo_iso).slice(0, 10) : null,
+    })
     bundle.deri = {
-      sonrakiKontrol: kontrolGorev?.due ? { tarih: String(kontrolGorev.due), neden: String(kontrolGorev.ad || 'Kontrol') } : null,
-      hatirlatmalar: gorevler.filter((g) => !/lab|bhcg|β|beta/i.test(`${g.kod} ${g.ad}`)).slice(0, 12).map((g) => ({ ad: String(g.ad), due: g.due ? String(g.due) : null })),
+      sonrakiKontrol: sonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
       fotograflar: (imgQ.data || []).map((g) => ({
         id: String(g.id),
         tarih: String(g.goruntuleme_tarihi || g.created_at),
         tur: FOTO_TUR[String(g.modalite)] || 'Klinik fotoğraf',
       })),
       islemler: (islemQ.data || []).map((i) => ({ tarih: String(i.tarih), ad: ISLEM_ADI[String(i.tur)] || 'Klinik işlem' })),
-      fototerapi: (ftQ.data || []).map((s) => ({ tarih: String(s.seans_tarihi), cihaz: s.device ? String(s.device) : null })),
-      labHatirlatma: (ilacQ.data || []).filter((r) => r.aylik_due).map((r) => ({ ad: labAd(String(r.ilac)), due: String(r.aylik_due) })),
+      fototerapi: seanslar,
+      labHatirlatma: hatirlatmalar.filter((h) => /kan (testi|kontrol)/i.test(h.ad)).map((h) => ({ ad: h.ad, due: h.due })),
       not: 'Bu bilgiler bilgilendirme amaçlıdır; yorum ve plan doktorunuzdadır. Tanı dili kullanılmaz.',
     }
   } catch (e) { console.error('[portal] derim:', e) }
