@@ -5,6 +5,14 @@
  *
  * ConvAI sessions pass `overrides.tts.voiceId` so each persona sounds unique
  * even when agents temporarily share a base config.
+ *
+ * ConvAI kuralı: paylaşılan kütüphaneden kopyalanan bazı Professional seslerde sahibi
+ * "live moderation" açmıştır → agent oturumu 1008 "Voices with live moderation enabled
+ * cannot be used for agents" ile kapanır. Yeni ses eklemeden önce:
+ *   npx tsx scripts/elevenlabs-ses-denetimi.ts --canli
+ * 2026-09-17: Aslı / Bahadır / Halil Aykut bu yüzden çıkarıldı (anahtarlar korunup
+ * çalışan seslere yönlendirildi). Wise Educator (Flash'ta peltek) ve Sibel (aşırı doygun)
+ * daha önce kalite nedeniyle bırakılmıştı — yedek olarak kullanmayın.
  */
 
 export type VoiceGender = 'female' | 'male'
@@ -50,10 +58,14 @@ export const TR_VOICES = {
     gender: 'female',
     accent: 'istanbul',
   },
-  /** Warm native TR female (shared library) — Mali Derya */
+  /**
+   * Eski Aslı (HZh2tWL1clJO95e2qMt2) live moderation açık → agent'ta kullanılamıyor.
+   * Günnur ile paylaşılıyor (Ece çok kısık: ~-31 dBFS; Günnur ~-20 dBFS).
+   * Fatma Çelik, Cemre Taş, Mali Derya, klinik Fizyoterapi.
+   */
   asli: {
-    voiceId: 'HZh2tWL1clJO95e2qMt2',
-    label: 'Aslı — Warm Native Turkish (İstanbul)',
+    voiceId: '58oUR7g9xaf9pbxNCyws',
+    label: 'Günnur (İstanbul) — Aslı yerine, Dilek Hanım ile ortak',
     gender: 'female',
     accent: 'istanbul',
   },
@@ -102,11 +114,16 @@ export const TR_VOICES = {
     gender: 'male',
     accent: 'istanbul',
   },
+  /**
+   * Eski Bahadır (LIayCu3NIwyEyDw2fhqs) live moderation açık → agent'ta kullanılamıyor.
+   * Abdulkadir: avukat kadrosunda başka kimsede olmayan tek çalışan TR erkek ses (Can Bey).
+   * Can Bey agent'ı voice override'a izin vermiyor — base sesi de Abdulkadir yapıldı.
+   */
   bahadir: {
-    voiceId: 'LIayCu3NIwyEyDw2fhqs',
-    label: 'Bahadır',
+    voiceId: 'pGMp7Agf4sG0hyhiiGiw',
+    label: 'Abdulkadir (İstanbul) — Bahadır yerine, Mehmet Demir ile ortak',
     gender: 'male',
-    accent: 'standard',
+    accent: 'istanbul',
   },
   eyup: {
     voiceId: 'YRAJxpPvdBUTgvjBUHlB',
@@ -114,9 +131,10 @@ export const TR_VOICES = {
     gender: 'male',
     accent: 'istanbul',
   },
+  /** Eski Halil Aykut (6U25IshsKGd7nVhRbPOT) live moderation açık → agent'ta kullanılamıyor. */
   halil: {
-    voiceId: '6U25IshsKGd7nVhRbPOT',
-    label: 'Halil Aykut (İstanbul)',
+    voiceId: 'YRAJxpPvdBUTgvjBUHlB',
+    label: 'Eyüp (İstanbul) — Halil Aykut yerine',
     gender: 'male',
     accent: 'istanbul',
   },
