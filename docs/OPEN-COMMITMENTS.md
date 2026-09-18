@@ -1310,15 +1310,85 @@ yazmak kural dışı — doğrulama yerel ve rota düzeyinde.
 
 `npx tsc --noEmit` temiz · `npm test` **878/878** yeşil.
 
+### Düzeltme — VELI-YASAL-ONAM: "veli" yaşa bağlı, branşa değil (Kaan, 2026-09-17, #312 sonrası)
+
+**Kaan'ın hukuki düzeltmesi (aynen):** "Evet. 18 yaşını doldurmamış her çocukta klinik kayıt ve tıbbi onam için veli /
+yasal temsilci bilgisi alınır. Pratik kural: Ad, soyad, yakınlık (anne, baba, vasi), telefon; mümkünse kimlik teyidi;
+rutin işlemde onam veliden. İstisna dar: Acil / hayati tehlike: veli yokken müdahale edilir, sonra bildirilir; Evlilik
+veya mahkeme ile ergin kılınmışsa kendi onamı yeter (belge şart). SGK provizyonu çocuğun T.C. kimliğiyledir; veli kaydı
+fatura için değil, onam, iletişim ve dosya içindir."
+
+**Ne yanlıştı.** #312, "veli" dilini klinik içerikle aynı kapıya (`pediatrikBaglamMi` / `PEDIATRIK_BAGLAM`) bağlamıştı:
+göz / KBB / ortopedi / kardiyoloji / derm hekiminin 10 yaşındaki hastası notta, yazdırda ve Aşılar'da "hasta" diye
+anılıyordu. Türk hukukunda veli/yasal temsilci onamı branştan bağımsız olarak her reşit olmayan hastada gerekir.
+
+**Düzeltme — iki eksen, iki fonksiyon (`lib/specialties/kapsam.ts`):**
+
+| Eksen | Fonksiyon | Neye bakar | Neyi sürer |
+|---|---|---|---|
+| KLİNİK (değişmedi) | `pediatrikBaglamMi()` | branş (`PEDIATRIK_BAGLAM`) + aile/branşsızda yaş | Baş Çevresi alanı, Neyzi persentili, sağlam çocuk / aşı karnesi / doğum bilgileri, prenatal öykü, mg/kg satırı, `basCevresi` süzgeci |
+| HUKUKİ (yeni) | `veliOnamGerekliMi(dogumIso, nowMs?)` | **yalnız yaş**: takvim yaşı (TRT) < 18 — branş girdisi yok; doğum gününde 18 dolar; bilinmeyen / gelecek tarih → false | — |
+| HİTAP (yeni) | `veliDiliMi(g)` = `veliOnamGerekliMi ‖ pediatrikBaglamMi` | ikisi | `bransKapsami().veliDili` → `hitap.ts` veli seti; pediatri / çocuk cerrahisi önceki gibi her zaman veli dilinde |
+
+`hitapMetinleri(veliDili)` artık bu karardan beslenir (metinler aynı — pediatri etiketleri bayt bayt değişmedi).
+`soapKurallari(pediatrik, veli)` ve `epikrizTekVizitSistem(pediatrik, veli)` ikinci eksen aldı (verilmezse ilkiyle
+aynı → pediatri promptu değişmedi, testle kilitli).
+
+**Tüketici izi (eski pediatri-only veli kapısının her kullanıcısı — hepsi yeni kurala geçti):**
+
+| Yer | Önce | Şimdi |
+|---|---|---|
+| İnceleme "Hasta/veli özeti" + "Evde dikkat … (veliye/hastaya)" + yer tutucu (`inceleme/page.tsx`) | `bransKapsami.hitap` ← pediatrik | aynı alan ← `veliDili` |
+| "↻ Notuma göre yenile" isteği (`hitap.ozetYenileIstegi`) | ← pediatrik | ← `veliDili` |
+| Not sayfası etiketleri (`notlar/[id]/page.tsx`) + yazdır "Hasta / Veli Özeti" (`yazdir/page.tsx`) | `/api/notes/[id]` paketi | paket `veliDili` taşır, hitap ondan |
+| SOAP üretim promptu (`soapUret.ts` — sessions/end + ses-yukle) | 6 hitap satırı `ped()` | `hitap()` ← `veliDiliMi`; klinik `ped()` satırları dokunulmadı |
+| not-konsult promptu (`notKonsultPromptu.ts`) — "veliye giden özet", "Veli özeti (taslak)" | `kapsam.hitap` | aynı (paket `veliDili`'den); Neyzi kuralı hâlâ `kapsam.pediatrik` |
+| Epikriz tek vizit — "Anne beyanına göre çocuğun…" örnek satırı | `ped()` | `hitap()` ← `kapsam.veliDili`; "doğum bilgileri", tarama/aşı ve kapsamlı epikrizde sağlam çocuk / AŞI KARNESİ hâlâ `pediatrik` |
+| Aşılar "Hasta/veli beyanı" (`HastaAsilar.tsx`, hasta dosyası sayfası) | `hitapMetinleri(pediatrikBaglam)` | yeni `veliDili` prop'u ← `veliDiliMi`; SB çocukluk takvimi ve varsayılan kategori hâlâ `pediatrikBaglam` / `cocukHasta` |
+| Portal (Sağlığım) | etiketi yok; `hasta_ozeti` metnini gösterir | metin yukarıdaki SOAP / konsult promptlarından geldiği için otomatik düzeldi |
+| `hastaDosyaDerleyici` "veli beyanı / hasta beyanı" (L9) | veri güdümlü (`veliYakinligi`) | değişmedi — formu kimin doldurduğunu söyler, doğru |
+
+**Dokunulmayanlar (bilinçli):** Baş Çevresi alan kapısı, Neyzi hesabı, sağlam çocuk / aşı karnesi epikriz satırları,
+`PEDIATRIK_BAGLAM`, `pediatrikKapsam`, sekme görünürlüğü (M-CHAT / büyüme / bebek kartı) ve Kadın Sağlığı sekmesi
+politikaları — hepsi aşağıda ayrı OPEN olarak duruyor. Yeni UI öğesi yok (yalnız mevcut iki etiket setinden hangisinin
+seçildiği değişti; veli seti pediatride zaten canlı) → mobil kontrol gerekmedi.
+
+**Kalıcı korkuluk.** `brans-alan-sizmasi` SKILL + `.mdc` kuralı + `CLAUDE.md`: Kaan'ın ilk metni korundu, altına
+düzeltme notu eklendi ("veli" = yaş, her branş; klinik içerik = branş) + yeni anti-desen (veli'yi branşa, baş çevresini
+yalnız yaşa bağlamak).
+
+**VERIFY (sentetik QA, gerçek hasta/hesap yok).** `brans-alan-sizmasi-rotalar.test.ts`'e 7 yeni sentetik hekim:
+**göz + çocuk** (4 y), **kardiyoloji + ergen** (16 y), **KBB + çocuk / KBB + erişkin**, **ortopedi + ergen /
+ortopedi + erişkin**, **çocuk cerrahisi + çocuk** (mevcut göz / kardiyoloji erişkin eşleriyle birlikte). Gerçek 5 rota:
+
+| Yol | göz / KBB / ortopedi / kardiyoloji + **reşit olmayan** | aynı branşlar + **erişkin** | pediatri / çocuk cerrahisi / aile+çocuk |
+|---|---|---|---|
+| `GET /api/notes` (+ `YasamsalBulgularFormu` render) | "Hasta/veli özeti", "veliye/hastaya"; **Baş Çevresi yok, Neyzi null** | "Hasta özeti", veli yok | veli + Baş Çevresi + Neyzi (değişmedi) |
+| `GET /api/notes/[id]` (not / yazdır) | "Hasta / Veli Özeti"; persentil null | "Hasta Özeti" | "Hasta / Veli Özeti" |
+| `POST /api/sessions/[id]/end` (gerçek `soapUret`) | prompt veli dilinde; `"basCevresi"`, "Neyzi standartları", "pediatride prenatal", "pediatride mg/kg" **yok**; model baş çevresi yazarsa nota girmez | veli yok | veli + pediatrik klinik satırlar |
+| `POST /api/doktor/not-konsult` (UI isteğiyle) | istek + prompt veli; Neyzi yok; baş çevresi önerisi süzülür | veli yok | veli + Neyzi |
+| `POST /api/doktor/araclar/epikriz` | kendi branş başlığı / unvanı; tek vizitte veli beyanı; sağlam çocuk / doğum bilgileri yok | veli yok | değişmedi |
+
+Birim paketi: 30/30 branş × {4 y, 16 y, erişkin, bilinmeyen} döngüsü (klinik ve hitap eksenleri ayrı ayrı),
+`veliOnamGerekliMi` sınırları (18. doğum gününün bir günü öncesi / günü, gelecek tarih), `soapKurallari` /
+`epikrizTekVizitSistem` pediatri bayt eşitliği, Aşılar kaynak kilidi. **Sahte yeşil değil:** `veliDiliMi` geçici olarak
+eski kurala (`pediatrikBaglamMi`) çevrildi → **9 test kırmızı** (rota yürüyüşleri dahil) → geri alındı → yeşil.
+Bilinçli değişen eski test: "KD / dahiliye / … çocuk hastada SOAP promptunda veli yok" — Kaan'ın düzeltmesiyle tersine
+döndü (erişkin hasta için hâlâ kilitli).
+
+`npx tsc --noEmit` temiz · `npm test` **885/885** yeşil.
+
 ### AÇIK — karar gerekiyor (tahmin edilmedi)
 
 | Tarih | Madde | Gerekçe + öneri | Durum |
 |---|---|---|---|
 | 2026-09-17 | **Bilinen çocuk hastada baseline branşlarda pediatri sekmeleri** (kardiyoloji, KBB, üroloji, ortopedi… → Büyüme, M-CHAT, Gelişim, Bebek kartı) | Aynı gün yazılmış CHART-TAB-POLICY (`hastaDosyaSekmeleri.ts`) bunu bilerek açık bırakıyor ("baseline/aile mixed care"); Kaan'ın yeni kuralı ("pediatri alanı kardiyoloji hekimine çıkmaz") ise tersini söylüyor. Politikayı sessizce çevirmedim. **Öneri:** `pediatriAracSekmesiUygun`'u `pediatrikBaglamMi`'ye bağla (pediatri/çocuk cerrahisi her zaman, aile yalnız çocukta, diğerleri asla) — tek fonksiyon, testler 30/30 döngüyle hazır. | OPEN (Kaan) |
 | 2026-09-17 | **"Kadın Sağlığı & Gebelik" sekmesi her branşta** (≥12 yaş kadın hastada tam KD bölümü: NST, risk formu, VTE, gebe kartı) | "Mixed care" politikası olarak belgelenmiş; ama tam KD bölüm UI'sinin göz/derm/kardiyoloji hekimine açılması tam da bu denetimin sızıntı tanımı. Gebelik bilgisi ise her branş için güvenlik bilgisi (isotretinoin, görüntüleme, ilaç). **Öneri:** her branşa salt-okunur "Gebelik durumu" çipi; tam KD bölüm UI'si yalnız KD (±aile) hekimine. Sunucu tarafı (`/api/doktor/gebelik`, `jinekoloji`, `kadin-sagligi`) bugün yalnız hasta sahipliğine bakıyor, branşa değil — karar verilince orada da aynı kapı. | OPEN (Kaan) |
-| 2026-09-17 | **Pediatri dışı branşta reşit olmayan hasta** (göz, KBB, derm, ortopedi 10 yaşında hasta görür) | Kaan'ın kuralına birebir uyuldu: "veli" yalnız pediatri (+ çocuk cerrahisi); diğer branşlar çocuk hastada da "hasta" der. İstenirse branş bazında tek satır: `PEDIATRIK_BAGLAM[<branş>] = 'cocuk-hastada'`. | Karar uygulandı — teyit (Kaan) |
+| 2026-09-17 | **Pediatri dışı branşta reşit olmayan hasta** (göz, KBB, derm, ortopedi 10 yaşında hasta görür) | #312 "veli"yi yalnız pediatri (+ çocuk cerrahisi) branşına bağlamıştı. **Kaan'ın kararı (2026-09-17, aynen):** "18 yaşını doldurmamış her çocukta klinik kayıt ve tıbbi onam için veli / yasal temsilci bilgisi alınır. … rutin işlemde onam veliden. İstisna dar: Acil / hayati tehlike: veli yokken müdahale edilir, sonra bildirilir; Evlilik veya mahkeme ile ergin kılınmışsa kendi onamı yeter (belge şart). SGK provizyonu çocuğun T.C. kimliğiyledir; veli kaydı fatura için değil, onam, iletişim ve dosya içindir." → hitap artık yaş güdümlü, her branşta (`veliOnamGerekliMi` / `veliDiliMi`); baş çevresi / Neyzi / sağlam çocuk branşta kaldı. Ayrıntı: yukarıda "Düzeltme — VELI-YASAL-ONAM". | **KAPANDI** (2026-09-17, VELI-YASAL-ONAM) |
+| 2026-09-17 | **Ergin kılınmış reşit olmayan hasta** (evlilik / mahkeme kararı — kendi onamı yeter, belge şart) | Hasta kaydında bunu tutan alan yok (`lib/db/schema.sql` + migrations: `patients` yalnız ad, doğum tarihi, cinsiyet, TC hash, telefon, not; kodda "ergin" / "emansipasyon" / yasal ehliyet araması boş); uydurulmadı. Bugün bu hasta da <18 olduğu için veli dili alır — güvenli taraf, ama hukuken yanlış hitap. Gerekenler: (1) veri alanı (ör. ergin kılınma türü + belge tarihi/no, şifreli), (2) hekimin bunu **nereye** işleyeceği (hasta kartı mı, intake mı, belge yükleme mi) ve kimin doğrulayacağı, (3) sonra `veliOnamGerekliMi`'ye tek dal. Acil/hayati tehlike istisnası nota hitap değişikliği gerektirmez (veli sonradan bilgilendirilir) — ayrı alan gerekmedi. | OPEN (Kaan — alan + yer kararı) |
+| 2026-09-17 | **Reşit olmayan hastada veli bilgisi TOPLAMA** (Kaan'ın pratik kuralı: ad, soyad, yakınlık — anne/baba/vasi —, telefon; mümkünse kimlik teyidi) | Bu iş yalnız **hitabı** düzeltti. Veli bilgisini toplayan tek yer pediatri intake bölümü ("Veli / Yasal Vasi": yalnız yakınlık Anne/Baba/Diğer + "Diğer" ise ad soyad) — göz / KBB / ortopedi hekiminin gönderdiği formda veli bölümü yok ve hiçbir yerde veli telefonu / kimlik teyidi alanı yok. Intake + hasta kartı veri modeli değişikliği (ürün kararı), bu işin kapsamı dışında bırakıldı. **Öneri:** `coreBolumlerIcin` omurgasına yaş güdümlü (`veliOnamGerekliMi`) "Veli / Yasal Temsilci" bölümü: ad, soyad, yakınlık (anne/baba/vasi/diğer), telefon, kimlik teyidi onay kutusu — her branşta aynı. | OPEN (Kaan) |
 | 2026-09-17 | **Aile hekimliği ve branşsız hekim = `cocuk-hastada`; çocuk cerrahisi = `her-zaman`** | Aile hekimleri SB Bebek-Çocuk İzlem Protokolü'nü (baş çevresi dahil) uyguluyor; eskiden aile/genel **her** hastada pediatrik dil alıyordu — şimdi yalnız yaşı bilinen çocukta (daha dar, sızmaz). Çocuk cerrahisinin tüm hastaları çocuk (intake zaten "Çocuğunuz" diyor) ve baş çevresi alanı onda önceden de vardı. | Karar uygulandı — teyit (Kaan / Dr. Gökhan) |
 | 2026-09-17 | **İlan edilmiş ama hiç çizilmeyen bölüm ölçümleri** (ters yön) | KD profili `sonAdetTarihi`, `fundusYuksekligi`; göz profili VA ve GİB ×2 ilan ediyor, ama not vital hattı (`NOT_VITAL_ANAHTARLARI`) bunları taşımıyor — gerçek kayıt bölüm tablolarında (gebelik, `goz_*`). Forma eklemek SOAP çıkarımı, onay, yazdır ve portal biçimini değiştirir (ürün kararı). **Öneri:** bölüm tablolarında kalsın; profilde "kaynak: bölüm" işaretiyle "ilan edilip okunmayan" tuzağı kapansın. | OPEN (ürün) |
 | 2026-09-17 | **Asistan persona varsayılanı pediatri** | `VARSAYILAN_PERSONA = 'aysekaya'` (pediatri Ayşe: "yetişkin dozu asla önerme"), `specialistsCatalog` `genel: 'pediatri'` + `getSpecialistForSpecialty` pediatri yedeği, `asistan/signed-url` `\|\| 'pediatri'` — aile / branşsız / bilinmeyen hekimde pediatri personası. Ses/persona sistemi paralel bir çalışmanın alanında (ElevenLabs dalı) — çakışmamak için dokunulmadı. **Öneri:** aile/genel için nötr "genel pratisyen" personası; bilinmeyen → pediatri değil. | OPEN |
 | 2026-09-17 | **Bölüm prompt kilitleri not-konsult / epikriz / doz-öner'e ulaşmıyor** (parite, ters yön) | SOAP ve asistan sohbeti dahiliye/KD/derm/göz `*Kilidi` ekliyor; `not-konsult`, epikriz ve `ilaclar/doz-oner` eklemiyor (doz-öner "doz yazma" kilidini de atlıyor). Sızıntı değil, `cross-specialty-parity` + doz kilidi işi. | OPEN (parite) |
-| 2026-09-17 | **Geçmiş kayıtlar** | Bu düzeltmeden önce üretilmiş KD/erişkin notlarında `hasta_ozeti` içinde "veli" ve `vitaller.basCevresi` olabilir (portal veri güdümlü gösterir). Klinik kayıt — dokunulmadı. Salt-okunur sayım: `select count(*) from notes n join sessions s on s.id = n.session_id where coalesce(s.specialty,'') not in ('pediatri','cocuk-cerrahisi') and (n.hasta_ozeti ilike '%veli%' or n.vitaller ? 'basCevresi');` Düzeltme kararı hekimin. | OPEN (Kaan) |
+| 2026-09-17 | **Geçmiş kayıtlar** | Bu düzeltmeden önce üretilmiş KD/erişkin notlarında `hasta_ozeti` içinde "veli" ve `vitaller.basCevresi` olabilir (portal veri güdümlü gösterir). Klinik kayıt — dokunulmadı. (VELI-YASAL-ONAM sonrası: reşit olmayan hastanın notunda "veli" artık doğru — sayımda doğum tarihi <18 olanları ayrıca hariç tutun; ters yönde, #312 ile bu düzeltme arasında pediatri dışı branşta çocuk hastaya üretilmiş özetler "hasta" dilinde kalmış olabilir.) Salt-okunur sayım: `select count(*) from notes n join sessions s on s.id = n.session_id where coalesce(s.specialty,'') not in ('pediatri','cocuk-cerrahisi') and (n.hasta_ozeti ilike '%veli%' or n.vitaller ? 'basCevresi');` Düzeltme kararı hekimin. | OPEN (Kaan) |

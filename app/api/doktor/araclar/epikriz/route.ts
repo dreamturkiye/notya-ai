@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
     const hastaBilgileri = await baslikKur(supabase, user.id, hastaId, branş, tarihIso);
     const letterhead = await letterheadGetir(supabase, user.id);
 
-    const systemPrompt = epikrizTekVizitSistem(kapsam.pediatrik);
+    const systemPrompt = epikrizTekVizitSistem(kapsam.pediatrik, kapsam.veliDili);
     const userPrompt = `SOAP notu:
 Subjektif: ${note.content_subjektif || ''}
 Objektif: ${note.content_objektif || ''}

@@ -13,6 +13,7 @@ export function istemciKapsami(k: BransKapsami | null | undefined): BransKapsami
   return {
     brans: null,
     pediatrik: false,
+    veliDili: false,
     olcumler: BASELINE_OLCUMLER.map(({ anahtar, etiket, birim }) => ({ anahtar, etiket, birim })),
     hitap: hitapMetinleri(false),
   }

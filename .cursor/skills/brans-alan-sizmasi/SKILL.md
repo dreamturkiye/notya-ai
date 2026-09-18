@@ -23,6 +23,13 @@ vocabulary, wrong for an adult KD patient with no guardian. Neither was
 gated. Both leaked from wherever they were written straight into every
 specialty's shared form.
 
+> **Correction — VELI-YASAL-ONAM (Kaan, 2026-09-17, Turkish law).** "Veli" is decided by the patient's
+> **age, not the branch**: "18 yaşını doldurmamış her çocukta klinik kayıt ve tıbbi onam için veli / yasal temsilci bilgisi alınır." A 10-year-old seen by göz / KBB / ortopedi /
+> kardiyoloji gets veli wording too. Narrow exceptions: acute emergency (treat, inform the guardian after) and a minor
+> emancipated by marriage or court order (own consent, document required — no data field yet, OPEN). What stays
+> pediatri-only is the **clinical** content (Baş Çevresi, Neyzi, sağlam çocuk). The KD bug above is still a leak
+> because that patient was an **adult**.
+
 His principle: things specific to one specialty — forms, dosyalar,
 vocabulary, sections, fields — must never carry over to another specialty.
 Optometri (göz-hastalıkları) will have many eye-specific fields; none of
@@ -62,9 +69,11 @@ should look like that, not like an unconditional field in a shared form.
 Shared components do not look at the branch key themselves — they ask the gate:
 
 ```ts
-pediatrikBaglamMi({ seansBransi, doktorBransi, hastaDogumIso })  // veli wording, baş çevresi, Neyzi, pediatric prompt lines
+pediatrikBaglamMi({ seansBransi, doktorBransi, hastaDogumIso })  // CLINICAL: baş çevresi, Neyzi, sağlam çocuk, pediatric prompt lines
+veliOnamGerekliMi(hastaDogumIso, nowMs?)  // LEGAL: patient < 18 (calendar age, TRT) — no branch input at all
+veliDiliMi({ seansBransi, doktorBransi, hastaDogumIso })        // HİTAP: veliOnamGerekliMi || pediatrikBaglamMi
 notOlcumleri(...)       // Yaşamsal Bulgular fields, from profile.olcumler (ateş first)
-bransKapsami(...)       // { brans, pediatrik, olcumler, hitap } — the server computes it, the client only renders it
+bransKapsami(...)       // { brans, pediatrik, veliDili, olcumler, hitap } — the server computes it, the client only renders it
 vitalleriKapsamaGoreSuz(vitaller, kapsam)   // strips a pediatric-only vital from model output
 ```
 
@@ -73,7 +82,8 @@ vitalleriKapsamaGoreSuz(vitaller, kapsam)   // strips a pediatric-only vital fro
 - **`PEDIATRIK_BAGLAM: Record<SpecialtyKey, 'her-zaman' | 'cocuk-hastada' | 'asla'>`** in `profile.ts` — all 30
   branches written out, no default (the `bransSorulari` shape): pediatri + çocuk cerrahisi `her-zaman`;
   aile hekimliği and branch-less `cocuk-hastada` (= a patient **known** to be under 18); the other 27 `asla`
-  (even for a child patient they say "hasta").
+  (no baş çevresi / Neyzi even for a child patient). This drives **clinical** content only — wording for a minor
+  comes from `veliOnamGerekliMi` in every branch (VELI-YASAL-ONAM).
 - **Client default** (`kapsamIstemci.ts`): no package from the server → baseline + "hasta". A default never carries
   a branch's content. `specialtyProfile(null)` is baseline "genel", **not** pediatri.
 
@@ -83,6 +93,9 @@ vitalleriKapsamaGoreSuz(vitaller, kapsam)   // strips a pediatric-only vital fro
    only for one (or a few)?** "Baş Çevresi" is true only for pediatri (and
    maybe neonatoloji). "Veli" is true only where the patient can legally be
    a minor — pediatri, not KD/dahiliye/göz/kardiyoloji/dermatoloji/etc.
+   *(Corrected by Kaan 2026-09-17: "veli" follows the patient's age — every
+   patient under 18, in every branch, via `veliDiliMi`; an adult patient never
+   gets it. Only clinical content like Baş Çevresi is branch-gated.)*
 2. **If it's universal** — leave it in the shared component, no gate needed.
 3. **If it's specialty-specific** — gate it explicitly using the
    `SpecialtyProfile`/registry mechanism (or the `specialties/<slug>/` own
@@ -108,8 +121,8 @@ vitalleriKapsamaGoreSuz(vitaller, kapsam)   // strips a pediatric-only vital fro
 | Content | Mechanism |
 |---------|-----------|
 | Vital / measurement field | `SpecialtyProfile.olcumler` (+ `kosul`) → `notOlcumleri()` → `YasamsalBulgularFormu` |
-| Wording (hasta ↔ veli) | `lib/specialties/hitap.ts` → `bransKapsami().hitap` |
-| LLM prompt line | `pediatrikBaglamMi()` / the `ped(…, …)` selector; chapter locks in `specialties/<slug>/prompts` |
+| Wording (hasta ↔ veli) | `lib/specialties/hitap.ts` → `bransKapsami().hitap` (decided by `veliDiliMi` — patient age, every branch) |
+| LLM prompt line | clinical: `pediatrikBaglamMi()` / the `ped(…, …)` selector; wording: the `hitap(…, …)` selector fed by `veliDiliMi`; chapter locks in `specialties/<slug>/prompts` |
 | Hasta dosyası tab **and its mount** | `lib/doktor/hastaDosyaSekmeleri.ts` — the tab button and the content mount use the **same** boolean (a `?tab=` deep link must not bypass the gate) |
 | Doktor Araçları tile | `specialty-doktor-araclari` (ORTAK vs BRANS + deep-link guard) |
 | Sağlığım module | `SpecialtyProfile.portal` + `lib/portal/moduller.ts` (`specialty-hasta-portali`) |
@@ -171,8 +184,10 @@ Reviewers should reject a shared-component PR that omits it.
 ## Anti-patterns
 
 - Declaring a field in the profile and then hardcoding a list on the screen (the baş çevresi bug itself).
-- Hedged text that covers two branches at once (`"hasta/veli"`) — adult wording says "hasta"; "veli" appears only in
-  pediatric context.
+- Hedged text that covers two branches at once (`"hasta/veli"`) — adult wording says "hasta"; "veli" appears only for
+  a minor patient (any branch) or in pediatric context.
+- Gating veli wording on the **branch** (`pediatrikBaglamMi`) — it is a legal, age-based rule (`veliDiliMi`); a göz
+  doctor's 10-year-old patient needs guardian wording. And the reverse: gating baş çevresi / Neyzi on **age** alone.
 - `|| 'pediatri'`, `genel: 'pediatri'`, `useState('pediatrik')` — unknown means pediatri.
 - Substring regexes (`/genel|göğüs/`) — they catch `genel-cerrahi`, `gogus-cerrahisi`. Resolve to the canonical key
   (`bransAnahtari`) and write exclusions explicitly.

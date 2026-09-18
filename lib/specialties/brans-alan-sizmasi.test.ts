@@ -8,6 +8,10 @@
  * gerçek çıktısı (react-dom/server), SOAP / not-konsult / epikriz promptları, hasta dosyası sekme kapıları ve
  * ortak sayfaların kaynak kodunda sabit liste kalmadığı. Rota düzeyi yürüyüş (sentetik QA hekimleri, gerçek route
  * handler'ları): brans-alan-sizmasi-rotalar.test.ts. Kural: .cursor/skills/brans-alan-sizmasi/SKILL.md
+ *
+ * VELI-YASAL-ONAM (Kaan 2026-09-17 düzeltmesi): "veli" dili branşa değil hastanın YAŞINA bağlıdır — 18 yaşını
+ * doldurmamış her hasta her branşta veli dilini alır (veliOnamGerekliMi / veliDiliMi). Baş çevresi, Neyzi, sağlam
+ * çocuk gibi KLİNİK içerik ise branş güdümlü kalır (pediatrikBaglamMi, değişmedi).
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -19,7 +23,7 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import { specialtyProfile } from './registry'
 import { PEDIATRIK_BAGLAM } from './profile'
-import { bransAnahtari, bransKapsami, etkinBrans, notOlcumleri, pediatrikBaglamMi, vitalleriKapsamaGoreSuz } from './kapsam'
+import { bransAnahtari, bransKapsami, etkinBrans, notOlcumleri, pediatrikBaglamMi, veliDiliMi, veliOnamGerekliMi, vitalleriKapsamaGoreSuz } from './kapsam'
 import { hitapMetinleri } from './hitap'
 import { istemciKapsami } from './kapsamIstemci'
 import { soapKurallari, soapSistemPromptu } from '@/lib/doktor/soapUret'
@@ -148,7 +152,7 @@ describe('HATA 1 — Baş Çevresi yalnız pediatrik bağlamda (Yaşamsal Bulgul
   })
 })
 
-describe('HATA 2 — "veli" dili yalnız pediatrik bağlamda (hasta/veli özeti)', () => {
+describe('HATA 2 — erişkin hastada "veli" dili yok (hasta/veli özeti)', () => {
   it('hitap metinleri: erişkin setinde veli/anne-baba yok; pediatrik set veli der', () => {
     assert.ok(!VELI.test(JSON.stringify(hitapMetinleri(false))))
     assert.equal(hitapMetinleri(false).ozetEtiketi, 'Hasta özeti')
@@ -156,13 +160,15 @@ describe('HATA 2 — "veli" dili yalnız pediatrik bağlamda (hasta/veli özeti)
     assert.equal(hitapMetinleri(null).ozetEtiketi, 'Hasta özeti')
   })
 
-  it('KD / dahiliye / derm / göz / kardiyoloji / genel cerrahi: SOAP üretim promptunda veli yok', () => {
+  it('KD / dahiliye / derm / göz / kardiyoloji / genel cerrahi: erişkin (ve yaşı bilinmeyen) hastanın SOAP promptunda veli yok', () => {
     for (const b of YETISKIN_ORNEKLERI) {
       const p = soapSistemPromptu({ transcript: '', specialty: 'genel', doktorBransi: b })
       assert.ok(!VELI.test(p), b)
-      const p2 = soapSistemPromptu({ transcript: '', specialty: b, doktorBransi: b, hastaDogumIso: COCUK })
-      assert.ok(!VELI.test(p2), `${b} çocuk hasta`)
+      const p2 = soapSistemPromptu({ transcript: '', specialty: b, doktorBransi: b, hastaDogumIso: YETISKIN })
+      assert.ok(!VELI.test(p2), `${b} erişkin hasta`)
     }
+    // (Aynı branşlarda ÇOCUK hasta artık veli dilini alır — bkz. VELI-YASAL-ONAM bloğu. Eski test bunun tersini
+    // kilitliyordu; Kaan'ın hukuki düzeltmesiyle bilinçli olarak değişti.)
   })
 
   it('pediatri SOAP promptu veli dilini korur (pediatri bozulmadı)', () => {
@@ -244,6 +250,8 @@ describe('Kaynak kilidi: ortak sayfalar branşa özgü listeyi / kelimeyi sabit 
       const s = yorumsuz(kaynak(f))
         // pediatrik dal: ped('…veli…', '…') / PEDIATRIK_PERSENTIL_KURALI / veliYakinligi (pediatri intake alan adı)
         .replace(/ped\(\s*'[^']*'/g, "ped(''").replace(/veliYakinligi/g, '').replace(/veliOzeti/g, '')
+        // karar değişkeni adı (kapsam.ts → veliDiliMi) — metin değil
+        .replace(/veliDili(Mi)?/g, '')
       assert.ok(!/veli/i.test(s), f)
     }
   })
@@ -263,6 +271,10 @@ describe('Kaynak kilidi: ortak sayfalar branşa özgü listeyi / kelimeyi sabit 
     assert.ok(/\{\(cocukHasta \|\| pediatrikBaglam\) && \(\s*<button[\s\S]{0,80}setTakvimAcik/.test(s))
     assert.ok(s.includes("useState<'pediatrik' | 'yetiskin'>(cocukHasta ? 'pediatrik' : 'yetiskin')"))
     assert.ok(!/useState<[^>]*>\('pediatrik'\)/.test(s))
+    // VELI-YASAL-ONAM: beyan hitabı yaş kuralından (veliDili), takvim klinik kuraldan (pediatrikBaglam) — ayrı eksen
+    assert.ok(s.includes('const hitap = hitapMetinleri(veliDili);'))
+    const sayfa = kaynak('app/dashboard/doktor/hastalar/[id]/page.tsx')
+    assert.ok(/<HastaAsilar[\s\S]{0,300}veliDili=\{veliDiliMi\(\{ doktorBransi, hastaDogumIso: patient\?\.dogum_tarihi \}\)\}/.test(sayfa))
   })
 
   it('bölüm UI mount\'ları branş kapısının arkasında (derin bağlantı ?tab=deri / ?tab=dahiliye)', () => {
@@ -270,5 +282,93 @@ describe('Kaynak kilidi: ortak sayfalar branşa özgü listeyi / kelimeyi sabit 
     assert.ok(/activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome/.test(s))
     assert.ok(/activeTab === 'deri' && deriAraci &&/.test(s))
     assert.ok(/activeTab === 'goz' && gozAraci && <GozHome/.test(s))
+  })
+})
+
+describe('VELI-YASAL-ONAM — reşit olmayan hastada veli dili HER branşta; klinik pediatri içeriği branşta kalır', () => {
+  /** Kaan (2026-09-17): "18 yaşını doldurmamış her çocukta klinik kayıt ve tıbbi onam için veli / yasal temsilci bilgisi alınır." */
+  const ERGEN = '2010-01-10' // NOW'a göre 16 yaş
+  const ON_YEDI = '2008-09-18' // NOW'dan bir gün sonra 18 → hâlâ 17
+  const ON_SEKIZ = '2008-09-17' // NOW günü 18 → erişkin
+  const PEDIATRI_DISI = ['goz-hastaliklari', 'kulak-burun-bogaz', 'ortopedi', 'kardiyoloji', 'dermatoloji', 'kadin-hastaliklari-dogum', 'dahiliye']
+
+  it('veliOnamGerekliMi: yalnız yaş — <18 true, 18 ve üstü false, bilinmeyen/gelecek tarih false; branş parametresi yok', () => {
+    for (const d of [COCUK, ERGEN, ON_YEDI]) assert.equal(veliOnamGerekliMi(d, NOW), true, d)
+    for (const d of [ON_SEKIZ, YETISKIN, null, undefined, '', '2030-01-01']) assert.equal(veliOnamGerekliMi(d, NOW), false, String(d))
+    assert.equal(veliOnamGerekliMi.length, 1, 'imza: (dogumIso, nowMs?) — branş girdisi yok')
+  })
+
+  it('30/30 branş: veli dili = reşit olmayan hasta VEYA pediatrik bağlam; klinik kapsam (pediatrikBaglamMi) değişmedi', () => {
+    for (const k of TUM) {
+      for (const dogum of [COCUK, ERGEN, YETISKIN, null]) {
+        const g = { seansBransi: k, hastaDogumIso: dogum, nowMs: NOW }
+        const resit = dogum === COCUK || dogum === ERGEN
+        const ped = HER_ZAMAN.has(k) || (KARMA.has(k) && resit)
+        assert.equal(pediatrikBaglamMi(g), ped, `${k} / ${dogum}: klinik`)
+        assert.equal(veliDiliMi(g), resit || ped, `${k} / ${dogum}: veli dili`)
+        const kapsam = bransKapsami(g)
+        assert.equal(kapsam.veliDili, resit || ped, `${k} / ${dogum}: paket`)
+        assert.equal(kapsam.hitap.ozetEtiketi, resit || ped ? 'Hasta/veli özeti' : 'Hasta özeti', `${k} / ${dogum}`)
+        assert.equal(kapsam.olcumler.some((o) => o.anahtar === 'basCevresi'), ped, `${k} / ${dogum}: baş çevresi`)
+      }
+    }
+  })
+
+  it('göz / KBB / ortopedi / kardiyoloji + çocuk hasta: SOAP promptu veli dilinde, ama baş çevresi / Neyzi / prenatal / mg-kg YOK', () => {
+    for (const b of PEDIATRI_DISI) {
+      // soapSistemPromptu gerçek saati kullanır → ergen doğum tarihi bugüne göre (test yıllar geçtikçe erişkine dönmesin)
+      for (const dogum of [COCUK, new Date(Date.now() - 16.3 * 365.25 * 864e5).toISOString().slice(0, 10)]) {
+        const p = soapSistemPromptu({ transcript: '', specialty: b, doktorBransi: b, hastaDogumIso: dogum })
+        assert.ok(p.includes('Hasta/veli aynı şikayeti') && p.includes('Veli beyanı olduğu belirtilerek') && p.includes('hasta_ozeti: veliye/hastaya'), `${b} / ${dogum}: veli`)
+        assert.ok(!p.includes('"basCevresi"') && !/baş çevresi cm|Neyzi standartları|pediatride prenatal|pediatride mg\/kg/.test(p), `${b} / ${dogum}: klinik pediatri`)
+      }
+      const eriskin = soapSistemPromptu({ transcript: '', specialty: b, doktorBransi: b, hastaDogumIso: YETISKIN })
+      assert.ok(!VELI.test(eriskin), `${b} erişkin`)
+    }
+  })
+
+  it('soapKurallari: veli ekseni klinik eksenden bağımsız; tek argümanla pediatri promptu bayt bayt aynı', () => {
+    assert.equal(soapKurallari(true), soapKurallari(true, true))
+    assert.equal(soapKurallari(false), soapKurallari(false, false))
+    const veliEriskinKlinik = soapKurallari(false, true)
+    assert.ok(VELI.test(veliEriskinKlinik) && !veliEriskinKlinik.includes('basCevresi') && !veliEriskinKlinik.includes('Neyzi'))
+    assert.ok(!VELI.test(soapKurallari(false, false)))
+  })
+
+  it('not-konsult ("↻ Notuma göre yenile"): çocuk hastada göz/KBB/ortopedi/kardiyoloji veli dilinde, Neyzi / baş çevresi anahtarı yok', () => {
+    const not = { hasta_ozeti: 'Sentetik özet' }
+    for (const b of PEDIATRI_DISI) {
+      const kapsam = bransKapsami({ seansBransi: b, hastaDogumIso: COCUK, nowMs: NOW })
+      const p = notKonsultSistemPromptu({ kapsam, trtBugun: '2026-09-17', not, taslak: { hastaOzeti: 'x' } })
+      assert.ok(p.includes('veliye giden özet') && p.includes('Veli özeti (taslak): x'), b)
+      assert.ok(!/Neyzi/.test(p) && !/anahtarlar: [^\n]*basCevresi/.test(p), b)
+      assert.equal(kapsam.hitap.ozetYenileIstegi, 'Notun güncel haline göre hasta/veli özetini yeniden yaz.', b)
+      const eriskin = notKonsultSistemPromptu({ kapsam: bransKapsami({ seansBransi: b, hastaDogumIso: YETISKIN, nowMs: NOW }), trtBugun: '2026-09-17', not })
+      assert.ok(!VELI.test(eriskin), `${b} erişkin`)
+    }
+  })
+
+  it('epikriz tek vizit: veli beyanı hitabı ayrı eksen — sağlam çocuk / doğum bilgileri yalnız pediatride; pediatri promptu değişmedi', () => {
+    const veliEriskinKlinik = epikrizTekVizitSistem(false, true)
+    assert.ok(veliEriskinKlinik.includes('Anne beyanına göre') && !/doğum bilgileri|sağlam çocuk/.test(veliEriskinKlinik))
+    assert.equal(epikrizTekVizitSistem(true), epikrizTekVizitSistem(true, true))
+    assert.equal(epikrizTekVizitSistem(false), epikrizTekVizitSistem(false, false))
+    assert.ok(!/Anne beyanı/.test(epikrizTekVizitSistem(false)))
+  })
+
+  it('yazdır / İnceleme etiketleri: çocuk hasta her branşta "Hasta / Veli Özeti", erişkin "Hasta Özeti"; pediatri/çocuk cerrahisi aynen', () => {
+    for (const b of PEDIATRI_DISI) {
+      assert.equal(bransKapsami({ seansBransi: b, hastaDogumIso: ERGEN, nowMs: NOW }).hitap.ozetYazdirEtiketi, 'Hasta / Veli Özeti', b)
+      assert.equal(bransKapsami({ seansBransi: b, hastaDogumIso: YETISKIN, nowMs: NOW }).hitap.ozetYazdirEtiketi, 'Hasta Özeti', b)
+      assert.equal(hitapMetinleri(veliDiliMi({ seansBransi: b, hastaDogumIso: COCUK, nowMs: NOW })).beyanEtiketi, 'Hasta/veli beyanı', `${b}: Aşılar beyan`)
+      assert.equal(hitapMetinleri(veliDiliMi({ seansBransi: b, hastaDogumIso: YETISKIN, nowMs: NOW })).beyanEtiketi, 'Hasta beyanı', `${b}: Aşılar beyan erişkin`)
+    }
+    for (const b of ['pediatri', 'cocuk-cerrahisi']) {
+      for (const dogum of [COCUK, null]) {
+        const k = bransKapsami({ seansBransi: b, hastaDogumIso: dogum, nowMs: NOW })
+        assert.ok(k.pediatrik && k.veliDili && k.olcumler.some((o) => o.anahtar === 'basCevresi'), `${b} / ${dogum}`)
+        assert.equal(k.hitap.ozetYazdirEtiketi, 'Hasta / Veli Özeti', `${b} / ${dogum}`)
+      }
+    }
   })
 })
