@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Göz Hastalıkları — Post-exceptional Audit (GOZ-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional sprint GOZ-EXCEPTIONAL-01 (2026-09-18): Göz Hastalıkları 16/16 domain Strong, 5 göz-only Araç, olgunluk beta-hazir (MD onayı bekliyor). No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --teal-soft:rgba(20,184,166,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:900px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:var(--teal-soft); color:var(--green); border-color:rgba(45,212,191,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout.danger { background:var(--red-soft); border-color:rgba(248,113,113,.32); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); } .callout.danger h2 { color:var(--red); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,260px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    .banner { background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); color:var(--amber); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit</span>
+    <span>
+      <a href="/goz-final-audit.html">Final audit (~72%, pre-sprint for this one) →</a> ·
+      <a href="/goz-post-sprint-audit.html">Post-sprint →</a> ·
+      <a href="/goz-presprint-audit.html">Pre-sprint →</a>
+    </span>
+  </div>
+
+  <div class="banner" style="background:rgba(20,184,166,.1);border-color:rgba(45,212,191,.4);color:var(--green)"><b>Post-exceptional sprint GOZ-EXCEPTIONAL-01</b> — 2026-09-18 · 4 PR (#317 Araçlar · #318 chapter · #319 Belge↔dual-sign · this audit) · migration 053 applied · test:goz 116/116 · npm test 978/978 · smoke 57/0 + 88/0 · no PHI.</div>
+
+  <h1>Göz Hastalıkları — Post-exceptional Audit</h1>
+  <p class="lede">Aynı ölçek, aynı dürüstlük: Notya codebase × SGK SUT 4.2.33 × TEMD DM 2026 × SB görme taraması 2019 × EGS 5 (birincil PDF) × TR muayenehane / göz hastanesi polikliniği. Soru: Göz bölümü Pediatri gibi exceptional mı? <b>Cevap: ürün olarak evet, 16/16 alan Strong. Olgunluk etiketi ise gerçek bir göz hekiminin saha haftasını ve Boss/CEO onayını bekliyor.</b></p>
+
+  <div class="pills">
+    <span class="pill success">16 / 16 domain Strong</span>
+    <span class="pill success">0 Partial · 0 Thin · 0 Missing</span>
+    <span class="pill success">5 göz-only Araç live</span>
+    <span class="pill warning">olgunluk: beta-hazir — MD sign-off bekliyor</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v success">16/16</div><div class="l">Coverage domains Strong</div></div>
+    <div class="stat"><div class="v success">5</div><div class="l">Göz-only Araçlar (0 → 5)</div></div>
+    <div class="stat"><div class="v success">10/10</div><div class="l">Game changers shipped</div></div>
+    <div class="stat"><div class="v info">~90%</div><div class="l">Poliklinik wow (from ~72%)</div></div>
+  </div>
+
+  <div class="callout info">
+    <h2>Executive verdict</h2>
+    <p>Göz artık bir TR muayenehane / göz hastanesi polikliniğinin 8 saatlik gününü baştan sona taşıyor. Ekranlar sırayla: OD/OS VA + GİB + RAPD + refraksiyon, göz dibi → <b>hekim onaylı</b> DR evresi, lazer kaydı, gonyo / pakimetri / GA meta ve EGS ön ayarları, anti-VEGF SUT kapıları + <b>IVT odası kontrol listesi</b> (yanlış göz engeli), katarakt biyometri + post-op kartı (GİL gücü asla hesaplanmaz), biyomikroskopi / keratokonus, ROP kartı, acil yıkama zamanlayıcısı, intake kırmızı bayrak kutuları ve hasta-güvenli hatırlatma. Belge › Asistana raporla artık <b>dual-sign taslağına</b> düşüyor, uzman onaylıyor. Araçlar'da 5 göz-only kart var ve başka branşa sızmıyor. Pediatriden tek farkı etiket: <b>olgunluk = beta-hazir</b>. <code>uzman-dogrulandi</code> gerçek göz hekiminin 5 günlük saha haftası (docs/GOZ-MD-BETA.md) ve Boss/CEO onayıyla gelir. Bu, eksik ürün değil, dürüst etiket.</p>
+  </div>
+
+  <h2>Coverage depth</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Depth</th><th>In product (post-exceptional)</th><th>Footnote</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">VA / GİB</td><td><span class="pill success">Strong</span></td><td class="note">Sticky OD/OS + Δ harf; kopya → onay; RAPD (yok/sağ/sol) ölçüm bloğunda; refraksiyon sph/cyl/aks ölçüldüğü gibi → Nota ekle</td><td class="note">Rx üretilmez</td></tr>
+      <tr><td class="domain">Fundus (göz dibi)</td><td><span class="pill success">Strong</span></td><td class="note">TR sıra disk→damar→makula→perifer, dilate + ortam; Kaydet → “DR evresini güncelle” (hekim seçer + onaylar)</td><td class="note">Metinden/görüntüden evre yok</td></tr>
+      <tr><td class="domain">DR</td><td><span class="pill success">Strong</span></td><td class="note">Hekim evre; TEMD↔ICO iki sütun; dahiliye sevk kapanışı; PRP / fokal / grid lazer kaydı (göz, tarih, seans, hekim) → bağlı kontrol</td><td class="note">—</td></tr>
+      <tr><td class="domain">Glokom</td><td><span class="pill success">Strong</span></td><td class="note">Hedef GİB trend; Shaffer 0–4 + Spaeth; pakimetri µm OD/OS; GA/OCT cihaz meta; EGS 5 aralık ön ayarları “öneri — hekim kilitler”</td><td class="note">¹ TOD üye PDF → EGS birincil ön ayar</td></tr>
+      <tr><td class="domain">Anti-VEGF / SUT</td><td><span class="pill success">Strong</span></td><td class="note">SUT 4.2.33 kapıları; IVT odası listesi (onam · göz işareti = kayıt gözü · ilaç + lot · asepsi) “yapıldı” öncesi sunucuda zorunlu</td><td class="note">² Medula canlı gönderim yok</td></tr>
+      <tr><td class="domain">Katarakt / GİL</td><td><span class="pill success">Strong</span></td><td class="note">Ön-op liste; biyometri (AL, K1/K2, aks, A-sabiti, cihaz) hekim girer; post-op 1. gün / 1. hafta + endoftalmi bayrağı → acil; EK-3/G kalemi</td><td class="note">³ GİL gücü asla hesaplanmaz</td></tr>
+      <tr><td class="domain">Imaging dual-sign</td><td><span class="pill success">Strong</span></td><td class="note">Galeri, onay/düzelt/red; aynı göz OCT MFK/RNFL hekim girişi + Δ; Göz › Görüntü › Asistana raporla (Tier A); kontrol listesi yedeği</td><td class="note">⁴ PACS/DICOM yazımı yok</td></tr>
+      <tr><td class="domain">Ön segment / kuru göz</td><td><span class="pill success">Strong</span></td><td class="note">Biyomikroskopi OD/OS (kapak, konjonktiva, kornea, ÖK, iris, lens) + “doğal” kısayolu + floresein; keratokonus topo / Kmax / CXL; OSDI/Schirmer/TBUT trend</td><td class="note">—</td></tr>
+      <tr><td class="domain">Pediatrik oftalmoloji</td><td><span class="pill success">Strong</span></td><td class="note">Cover / Hirschberg / Krimsky; ROP kartı (PMA, zon/evre/plus hekim, sonraki tarama hekim, SB ≤32 hf/≤1500 g); SB sevk eşikleri; bilinen yaşa göre kapı (erişkinde ROP yok)</td><td class="note">—</td></tr>
+      <tr><td class="domain">Acil</td><td><span class="pill success">Strong</span></td><td class="note">Kırmızı bayrak bandı + acil şablon: kimyasal yıkama zamanlayıcısı, pH önce/sonra, VA saati, bayrak başına yazdırılabilir eylem listesi; “ağrılı kırmızı göz” kodu</td><td class="note">—</td></tr>
+      <tr><td class="domain">SGK rapor</td><td><span class="pill success">Strong</span></td><td class="note">Anti-VEGF başlangıç/idame/implant; GİL bilgi notu anti-VEGF kalitesinde (zorunlu maddeler, eksikler, EK-3/G, kontrol listesi); eksikle kilit hekim onayıyla; “Medula'da hekim e-imza”</td><td class="note">² Medula canlı gönderim yok</td></tr>
+      <tr><td class="domain">Belge AI fundus</td><td><span class="pill success">Strong</span></td><td class="note">Belge Tier A → dual-sign taslağı (OD/OS zorunlu, tek alan ≤%70, “olası bulgu — evre değildir”); tek Tier A yolu (core/belgeler/tierA) Belge + Göz ortak</td><td class="note">⁵ Gerçek görüntü kalitesi MD haftasında</td></tr>
+      <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill success">Strong</span></td><td class="note">Gözlerim modülü (VA/GİB, damla, enjeksiyon, kontrol, “görüntü eklendi”); hekimden hasta-güvenli hatırlatma (Mesajlar + e-posta bildirimi + dönüş görevi)</td><td class="note">⁶ SMS ağ geçidi yok → portal + WhatsApp</td></tr>
+      <tr><td class="domain">Doktor Araçları (göz)</td><td><span class="pill success">Strong</span></td><td class="note">VA/logMAR · SUT anti-VEGF kapı · SGK rapor taslağı · GİL EK-3/G · Göz kohort paneli: kart → /doktor-tools/goz-*, branş kapısı + yönlendirme; 29 başka branşta yok</td><td class="note">—</td></tr>
+      <tr><td class="domain">Voice / SOAP</td><td><span class="pill success">Strong</span></td><td class="note">GOZ-PROMPTS-LOCK + doz kilidi; “Şeridi Objektif'e yaz” (VA+GİB+RAPD+son fundus) tek dokunuş; 14 yeni adım tools.ts ile kilitli</td><td class="note">—</td></tr>
+      <tr><td class="domain">Intake</td><td><span class="pill success">Strong</span></td><td class="note">Ani görme kaybı · ışık çakması · perde/gölge · kimyasal temas · ağrılı kızarıklık kutuları → acilTara (serbest metin gerekmez) → bant + Subjektif “KIRMIZI BAYRAK”</td><td class="note">—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cap">¹ TOD birim dokümanları üye erişimli: EGS 5 birincil metinden (II.1.4.2.7 s.84, FC V s.98, II.3.3 s.128) hekim-düzenlenebilir ön ayar; OCT aralığı EGS'de sayı olmadığı için hiç doldurulmaz. ² Canlı Medula e-imza: taslak + kilit + “Medula'da hekim” CTA. ³ GİL gücü yok: biyometri saklanır. ⁴ Hastane HIS/PACS/DICOM yazımı: dual-sign + Belge Tier A + galeri. ⁵ Tier A yolu sentetik görüntüyle canlı doğrulandı (model “kalite düşük” → kontrol listesi yedeği). Gerçek fundus/OCT kalite değerlendirmesi MD beta haftasında. ⁶ TWILIO_SMS_FROM yapılandırılmamış: portal mesajı + e-posta bildirimi + dönüş görevi + hekimin kendi WhatsApp'ı.</p>
+
+  <h2>Wow bar (poliklinik, dürüst)</h2>
+  <p class="cap">0–100 = meşgul TR oftalmolog / göz hastanesi poliklinik hekimi eşiği. Aynı ölçek final audit (~72%) ile. Poliklinik alanlarının hepsi ≥85; olgunluk barı ayrı gösterilir ve ortalamaya girmez.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">VA / GİB + RAPD + refraksiyon</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Anti-VEGF + SUT + IVT listesi</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">DR TEMD↔ICO + lazer + dahiliye</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Fundus → DR (hekim onaylı)</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Gözlerim + recall</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Acil bant + şablon</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Intake kırmızı bayrak</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">SOAP / prompts lock + şerit→O</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Göz-only Araçlar</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">Glokom loop + gonyo/paki/VF</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">Ön segment / kuru göz / KK</div><div class="bar-track"><div class="bar-fill" style="width:89%"></div></div><div class="bar-val">89</div></div>
+    <div class="bar-row"><div class="bar-label">SGK rapor (anti-VEGF + GİL)</div><div class="bar-track"><div class="bar-fill" style="width:89%"></div></div><div class="bar-val">89</div></div>
+    <div class="bar-row"><div class="bar-label">Katarakt biyometri + post-op</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-val">88</div></div>
+    <div class="bar-row"><div class="bar-label">Pediatrik + ROP</div><div class="bar-track"><div class="bar-fill" style="width:87%"></div></div><div class="bar-val">87</div></div>
+    <div class="bar-row"><div class="bar-label">Imaging dual-sign + Belge AI</div><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><div class="bar-val">86</div></div>
+    <div class="bar-row"><div class="bar-label">MD beta / olgunluk (ayrı)</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--amber)"></div></div><div class="bar-val">55</div></div>
+  </div>
+
+  <h2>Mandate matrix</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate</th><th>Level</th><th>In product</th><th>Gap to wow</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">SUT 4.2.33 anti-VEGF / implant</td><td><span class="pill info">SGK / Law</span></td><td class="note">Kapılar + rapor tipi + yanıt sınıfı + IVT listesi (chapter + Araçlar)</td><td class="note">Medula canlı gönderim = hekim (bilinçli dışarıda)</td></tr>
+      <tr><td class="domain">SUT EK-3/G GİL</td><td><span class="pill info">SGK</span></td><td class="note">Kod ara/kopyala, GİL bilgi notu, bedel yok</td><td class="note">Güncel bedel idare teyit eder</td></tr>
+      <tr><td class="domain">TEMD 2026 retinopati taraması</td><td><span class="pill info">TR dernek</span></td><td class="note">Tarama görevi + TEMD↔ICO iki sütun + kohort bayrağı</td><td class="note">—</td></tr>
+      <tr><td class="domain">SB Ulusal Görme Taraması 2019</td><td><span class="pill info">MoH</span></td><td class="note">Yaş eşikleri + ROP kriteri (≤32 hf / ≤1500 g)</td><td class="note">—</td></tr>
+      <tr><td class="domain">TOD birim kılavuzları</td><td><span class="pill warning">TR dernek (üye)</span></td><td class="note">EGS 5 birincil ön ayar “öneri — hekim kilitler”</td><td class="note">TOD metni okununca TR sütunu (OPEN)</td></tr>
+      <tr><td class="domain">KVKK / hasta izolasyonu</td><td><span class="pill info">Law</span></td><td class="note">Her yeni adım hasta() sonrası; A↔B testleri; görüntü tarayıcıda kimliksizleşir + hekim onayı</td><td class="note">—</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Doktor pain points → ne değişti</h2>
+  <div class="cards">
+    <div class="card"><div class="title">“Enjeksiyon odasında yanlış göz korkusu” <span class="pill danger">yüksek risk</span></div><div class="body">IVT listesi sunucuda zorunlu: işaretlenen göz kayıttaki gözle eşleşmezse “YANLIŞ GÖZ” ile durur. Lot kaydı notta.</div></div>
+    <div class="card"><div class="title">“Fundusu yazdım, DR kartını ayrıca doldur” <span class="pill warning">günlük</span></div><div class="body">Kaydet → “DR evresini güncelle”: aynı ekranda hekim seçer + onaylar; TEMD↔ICO pencereleri anında.</div></div>
+    <div class="card"><div class="title">“Geciken GA/OCT hastaları kayboluyor” <span class="pill warning">haftalık</span></div><div class="body">Araçlar › Göz kohort: geciken GA/OCT, planlı IVT, DR tarama, kontrol → 1-tap hasta-güvenli hatırlatma + dönüş görevi.</div></div>
+    <div class="card"><div class="title">“Fundus fotoğrafını AI okusun ama imza benim” <span class="pill info">yeni</span></div><div class="body">Belge / Görüntü › Asistana raporla → dual-sign taslağı; tek alan ≤%70; evre asla aktarılmaz; uzman onaylar.</div></div>
+  </div>
+
+  <h2>Göz-only Araçlar (classify-before-add)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tool</th><th>Bucket</th><th>Visibility</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">VA / logMAR — /doktor-tools/goz-va</td><td><span class="pill info">specialty-only</span></td><td class="note">goz-hastaliklari</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">SUT anti-VEGF kapı — /doktor-tools/goz-sut-vegf</td><td><span class="pill info">specialty-only</span></td><td class="note">goz-hastaliklari</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">SGK rapor taslağı — /doktor-tools/goz-sgk-rapor</td><td><span class="pill info">specialty-only</span></td><td class="note">goz-hastaliklari</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">GİL EK-3/G kodları — /doktor-tools/goz-gil-kod</td><td><span class="pill info">specialty-only</span></td><td class="note">goz-hastaliklari</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">Göz kohort paneli — /doktor-tools/goz-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">goz-hastaliklari</td><td><span class="pill success">Shipped</span></td></tr>
+      <tr><td class="domain">Pediatri / dahiliye / kardiyoloji / KD / derm + 24 branş</td><td><span class="pill success">none</span></td><td class="note">test: 5 kart görünmez, derin bağlantı → /doktor-tools</td><td><span class="pill success">Locked</span></td></tr>
+      <tr><td class="domain">Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar'a bağlanmaz (test)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Game changers</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Status</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="domain">GOZ-MD-BETA pack</td><td><span class="pill success">Shipped</span></td><td class="note">Sentetik smoke 88/0 + docs/GOZ-MD-BETA.md; olgunluk beta-hazir (uzman-dogrulandi MD + Boss onayıyla)</td></tr>
+      <tr><td>2</td><td class="domain">Belge → dual-sign vision</td><td><span class="pill success">Shipped</span></td><td class="note">#319 core/belgeler/tierA + belge_taslak / asistana_raporla</td></tr>
+      <tr><td>3</td><td class="domain">Fundus → DR handoff</td><td><span class="pill success">Shipped</span></td><td class="note">#318 fundus_dr (hekimOnay)</td></tr>
+      <tr><td>4</td><td class="domain">RAPD + biyomikroskopi</td><td><span class="pill success">Shipped</span></td><td class="note">#318 ölçüm bloğu + Ön segment</td></tr>
+      <tr><td>5</td><td class="domain">Intake red-flag checkboxes</td><td><span class="pill success">Shipped</span></td><td class="note">#318 acilBelirtiler → acilTara</td></tr>
+      <tr><td>6</td><td class="domain">Göz Araçlar 1–5</td><td><span class="pill success">Shipped</span></td><td class="note">#317</td></tr>
+      <tr><td>7</td><td class="domain">Glokom cihaz meta</td><td><span class="pill success">Shipped</span></td><td class="note">#318 Shaffer/Spaeth, paki, GA/OCT cihaz</td></tr>
+      <tr><td>8</td><td class="domain">Laser + IVT checklist</td><td><span class="pill success">Shipped</span></td><td class="note">#318 goz_lazerler + ivt_kontrol</td></tr>
+      <tr><td>9</td><td class="domain">Recall (portal / mesaj)</td><td><span class="pill success">Shipped</span></td><td class="note">#317/#318 Sağlığım mesajı + e-posta + görev + WhatsApp (SMS ağ geçidi yok)</td></tr>
+      <tr><td>10</td><td class="domain">TOD: editable presets</td><td><span class="pill success">Shipped</span></td><td class="note">#318 EGS 5 birincil ön ayar “öneri — hekim kilitler”</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Intentionally out (not faked)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Out</th><th>Exceptional substitute shipped</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Canlı Medula e-imza gönderimi</td><td class="note">Taslak + eksikler + kilit + “Medula'da hekim e-imza” CTA</td></tr>
+      <tr><td class="domain">GİL (IOL) gücü hesabı</td><td class="note">Biyometri saklanır; hiçbir formül yok (test kilidi)</td></tr>
+      <tr><td class="domain">TOD üye PDF gömme</td><td class="note">EGS 5 birincil ön ayar, hekim düzenler; TEMD / SB / SUT birincil</td></tr>
+      <tr><td class="domain">Hastane HIS / PACS / DICOM yazımı</td><td class="note">Dual-sign + Belge Tier A + galeri + aynı göz OCT kalınlığı</td></tr>
+      <tr><td class="domain">SMS ağ geçidi</td><td class="note">Sağlığım mesajı + e-posta bildirimi + dönüş görevi + hekimin WhatsApp'ı</td></tr>
+      <tr><td class="domain">Uzman-doğrulandı etiketi</td><td class="note">beta-hazir + MD saha haftası kontrol listesi; Boss/CEO onayı bekleniyor</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Next chapter (16 alanlık matrise dahil değil)</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Oküloplastik</div><div class="body">Kapak / orbita / lakrimal cerrahi kayıtları: ayrı chapter kapsamı.</div></div>
+    <div class="card"><div class="title">Uvea</div><div class="body">Üveit sınıflama + immünsüpresif izlem (dahiliye/romatoloji köprüsü): ayrı chapter.</div></div>
+    <div class="card"><div class="title">Nöro-oftalmoloji</div><div class="body">Papil ödem, görme alanı defekt paternleri, nöroloji köprüsü: ayrı chapter.</div></div>
+  </div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress · MD saha haftası</div><div class="body">docs/GOZ-MD-BETA.md ile 5 gün gerçek poliklinik → Boss/CEO onayı → olgunluk uzman-dogrulandi.</div></div>
+    <div class="card"><div class="title">Mandate · TOD TR sütunu</div><div class="body">Üye girişiyle TOD Glokom/Retina/Pediatrik birim metni → EGS ön ayarlarının yanına TR sütunu (çakışmada TR kazanır).</div></div>
+    <div class="card"><div class="title">Velocity · SMS altyapısı</div><div class="body">TWILIO_SMS_FROM yapılandırılınca göz hatırlatması aynı motorla SMS kanalına eklenir (ortak altyapı).</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede" style="font-size:13px">Code: specialties/goz-hastaliklari (47 dosya, 17 engine) · lib/specialties/goz-hastaliklari.ts (olgunluk: beta-hazir) · app/api/doktor/goz (+ _ek, _kohort, kohort) · core/belgeler/tierA.ts · lib/doktor/doktorAraclari.ts (5 goz BRANS) · migration 053_goz_exceptional.sql · scripts/goz-exceptional-smoke.mts · docs/GOZ-MD-BETA.md. External: SGK SUT 4.2.33 + EK-3/G, TEMD DM 2026 §13.2.1, SB Ulusal Görme Taraması 2019, EGS Terminology and Guidelines 5th ed. (2020, birincil PDF: II.1.4.2.7, FC V, II.3.3), ICO DR 2017, ICROP sınıf adları. Önceki auditler: presprint (~8%) → post-sprint (~77%) → final (~72%, dürüst) → post-exceptional (bu belge).</p>
+
+  <div class="foot">
+    <span>Post-exceptional sprint GOZ-EXCEPTIONAL-01 · notya-ai · Göz Hastalıkları · 2026-09-18</span>
+    <span>No patient data · internal product audit · not on Doktor Araçları</span>
+  </div>
+</div>
+</body>
+</html>

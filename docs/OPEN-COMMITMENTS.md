@@ -134,6 +134,45 @@ Pap/HPV only for KD); Gebeliğim follows an active pregnancy for any practice (m
 
 ### Göz Hastalıkları — chapter (SHIPPED 2026-09-17; was queued)
 
+**GOZ-EXCEPTIONAL-01 — SHIPPED 2026-09-18 (Claude, #317 #318 #319 + audit PR).** Post-exceptional audit:
+`public/goz-exceptional-audit.html` → https://notya-ai.vercel.app/goz-exceptional-audit.html — **16/16 domains Strong**,
+0 Partial, 5 göz-only Araçlar, all 10 game changers shipped, poliklinik wow ~90% (from ~72%).
+- #317 Araçlar (specialty-only, `['goz-hastaliklari']`): VA/logMAR, SUT anti-VEGF kapı, SGK rapor taslağı, GİL EK-3/G, Göz kohort
+  (`/api/doktor/goz/kohort`, 1-tap hasta-güvenli hatırlatma). 29 foreign branşlar never see them (tested in a loop).
+- #318 chapter + migration `053_goz_exceptional.sql` (additive, **applied** and verified: 4 new tables RLS + 2 policies each):
+  RAPD + refraksiyon, Fundus→DR (hekim onaylı), lazer log, glokom Shaffer/Spaeth/paki/GA-OCT meta + EGS 5 ön ayarları
+  ("öneri — hekim kilitler"), IVT odası listesi (server-enforced, wrong-eye guard), katarakt biyometri (no IOL power) + post-op,
+  biyomikroskopi + keratokonus, ROP kartı + age gate, acil şablon (yıkama zamanlayıcısı, yazdırılabilir liste), intake kırmızı
+  bayrak kutuları → acil bandı, "Şeridi Objektif'e yaz", chart recall. `olgunluk: 'beta-hazir'` (new union member).
+- #319 Belge Tier A ↔ dual-sign: `core/belgeler/tierA.ts` shared by Belge analiz + Göz › Görüntü › Asistana raporla; OD/OS required,
+  single-field fundus ≤%70, model diagnoses → "olası bulgu — evre değildir", goz_dr never written; checklist scaffold fallback.
+- Tests: `test:goz` 116/116, `npm test` 978/978 (+ izolasyon A↔B for kohort GET/POST, lazer, hatirlatma, belge_taslak,
+  asistana_raporla). Smoke: `scripts/goz-smoke.mts` 57/0, `scripts/goz-exceptional-smoke.mts` 88/0 (live Tier A call on a
+  synthetic image returned kalite düşük → scaffold fallback, as designed). MD field checklist: `docs/GOZ-MD-BETA.md`.
+- Also fixed in passing: legacy `goz-smoke.mts` intake insert had been silently failing (see INTAKE-KANAL-DEFAULT) and its
+  OCT read check depended on insert order.
+
+**Closed by GOZ-EXCEPTIONAL-01:** GOZ-AYSE-VISION auto-read (now Belge Tier A → dual-sign), Fundus→DR handoff, RAPD UI, refraction,
+biyomikroskopi, keratokonus/CXL, gonyo/paki/VF meta, laser log, IVT checklist, biometry + post-op card, GİL draft depth, ROP UI,
+cover/Hirschberg/Krimsky, acil şablon, intake red-flag checkboxes, strip→Objektif, göz-only Araçlar (0 → 5), recall path.
+
+**OPEN (decisions for Kaan / Boss):**
+- **GOZ-MD-BETA-SIGNOFF — decision needed.** Maturity is `beta-hazir`, deliberately **not** `uzman-dogrulandi` (no Boss/CEO
+  confirmation in the sprint thread). Needed: (1) name a practising göz hekimi for the 5-day field week in `docs/GOZ-MD-BETA.md`;
+  (2) Boss/CEO written OK after it → flip `lib/specialties/goz-hastaliklari.ts` `olgunluk` and re-issue the audit.
+- **GOZ-TOD-TEXTS (still open; substitute shipped).** TOD Glokom / Retina / Pediatrik birim texts are members-only. Glaucoma
+  intervals ship as EGS 5 presets (primary PDF, pages cited) labelled "öneri — hekim kilitler"; OCT interval is never filled
+  (EGS gives none). Needed: a member login to read TOD and add the TR column (TR wins on conflict).
+- **GOZ-SMS-RECALL (infra).** `TWILIO_SMS_FROM` is not configured, so recall = Sağlığım message + e-posta bildirimi (no body) +
+  dönüş görevi + the doctor's own WhatsApp (`whatsapp_kisisel`). When an SMS sender exists, add the channel in `_kohort.ts`.
+- **GOZ-IMAGING-REAL-QA.** Tier A path verified live only on a synthetic image. Real fundus / OCT draft quality is judged in the
+  MD field week (Gün 2); no Tier B fundus engine is registered (`goz motorlar: {}`) — adding one needs `motor_kayit` validation.
+- **GOZ-AUDIT-CANVAS.** The specialty-audit skill also asks for a Cursor canvas; this Claude Code run shipped the public HTML
+  (share path) only. A Cursor agent can mirror it into `canvases/` if wanted.
+- **INTAKE-KANAL-DEFAULT (hygiene, not göz).** `009_intake_asilar.sql`: `gonderim_kanali` default `'link'` is not in its own
+  CHECK list (`whatsapp|eposta|elden`), so any insert that omits it fails. The app always sets it (`intake-formlari` route →
+  `'elden'`); only direct/script inserts break. Decide: add `'link'` to the CHECK or change the default to `'elden'`.
+
 **Pre-sprint:** `public/goz-presprint-audit.html` → ~8% wow bar (chapter Missing).
 **Post-sprint:** `public/goz-post-sprint-audit.html` → 11/18 Strong, ~77% wow bar (#292/#293).
 **Remaining-gaps re-audit (independent, 2026-09-17):** `public/goz-remaining-gaps-audit.html`
@@ -167,11 +206,10 @@ fields because TOD birim texts are members-only; ICD-10 suggestions on SGK draft
 "hekim doğrular"; `rapor_metni` on OCT/fundus rows stays visible in Sağlığım › Sonuçlar because it is doctor-typed at upload
 (same as every modality); a GİL draft is an info note because the SUT text has no GİL rapor rule.
 
-**Open / intentional outs (Göz):**
-- GOZ-TOD-TEXTS — TOD Glokom / Retina / Pediatrik birim guidelines are members-only; read with a member login and replace hekim
-  interval fields with verified defaults. M.
-- GİL Medula path — full GİL rapor submit stays hekim / intentional out (EK-3/G codes shipped). L.
-- Real ophthalmologist beta — synthetic QA ≠ muayenehane; needs a göz hekimi field day.
+**Open / intentional outs (Göz)** — superseded by the GOZ-EXCEPTIONAL-01 block above:
+- GOZ-TOD-TEXTS — still open; EGS 5 presets shipped as the substitute (see above).
+- GİL Medula path — intentional out; GİL bilgi notu now has anti-VEGF-quality sections + kilit + "Medula'da hekim e-imza" CTA.
+- Real ophthalmologist beta — GOZ-MD-BETA pack shipped (smoke + `docs/GOZ-MD-BETA.md`); sign-off OPEN (GOZ-MD-BETA-SIGNOFF).
 
 **Closed 2026-09-17 (gap-close):** GOZ-AYSE-VISION, GOZ-COMPARE, GOZ-EK3G (codes), GOZ-SB-GORME, GOZ-INTAKE-SMOKE,
 GOZ-DRYEYE, CHART-TAB-POLICY (universal specialty-gate), dermatoloji Derim Partial.
