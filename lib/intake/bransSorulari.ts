@@ -215,7 +215,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     alanlar: [
       BASVURU_NEDENI,
       { id: 'sonAdetTarihi', etiket: 'Son Adet Tarihiniz', tur: 'date' },
-      { id: 'adetDuzeni', etiket: 'Adet düzeniniz nasıl?', tur: 'radio', secenekler: ['Düzenli', 'Düzensiz', 'Menopoza girdim'] },
+      { id: 'adetDuzeni', etiket: 'Adet düzeniniz nasıl?', tur: 'radio', secenekler: ['Düzenli', 'Düzensiz', 'Hamileyim', 'Menopoza girdim'] },
       { id: 'semptomlarKadin', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Adet Öncesi Ağrı', 'Aşırı Kanama', 'Ara Kanama', 'Vajinal Akıntı', 'Kaşıntı / Yanma', 'Cinsel İlişkide Ağrı', 'Pelvik Ağrı', 'Yok'] },
       { id: 'gebelikSayisi', etiket: 'Toplam Gebelik Sayısı', tur: 'text' },
       { id: 'dogumSayisi', etiket: 'Doğum Sayısı', tur: 'text' },
