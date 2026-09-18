@@ -56,6 +56,12 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#7C3AED', icon: 'FT', title: 'Fototerapi defteri', desc: 'Cihaz · J/cm² · kümülatif doz · MED · yanık bayrağı', route: '/doktor-tools/derm-fototerapi', branslar: ['dermatoloji'] },
   { circleColor: '#C026D3', icon: 'YT', title: 'Yama D2 / D4', desc: 'Uygulama → okuma takvimi · Avrupa baz serisi antijenleri', route: '/doktor-tools/derm-yama', branslar: ['dermatoloji'] },
   { circleColor: '#0891B2', icon: 'DK', title: 'Derm kohort paneli', desc: 'TBSE · yama okuma · fototerapi arası · β-hCG · lab · lezyon görevi', route: '/doktor-tools/derm-kohort', branslar: ['dermatoloji'] },
+  // Kadın Hastalıkları ve Doğum — specialty-only (not pediatri / dahiliye / kardiyoloji / göz / dermatoloji). Chapter engines only.
+  // Canonical key: portalBransAnahtari('kadin-dogum' | 'Kadın Hastalıkları ve Doğum') → 'kadin-hastaliklari-dogum'.
+  { circleColor: '#DB2777', icon: 'GT', title: 'Gebelik takvimi', desc: 'SAT · USG · CRL → gebelik haftası, DÖBYR izlemleri ve tarama pencereleri: açık · kapanmak üzere · kaçırıldı', route: '/doktor-tools/kd-gebelik-takvim', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#7C3AED', icon: 'AR', title: 'Doğum & analık raporu', desc: 'TDT → SGK analık istirahati tarihleri, erken / geç doğumda yeniden hesap ve istirahat raporu taslağı', route: '/doktor-tools/kd-dogum-rapor', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#059669', icon: 'MC', title: 'Kontrasepsiyon MEC', desc: 'Hasta faktörleri → yöntem başına WHO MEC 1–4 ve gerekçe · acil kontrasepsiyon · doğum sonrası başlama', route: '/doktor-tools/kd-mec', branslar: ['kadin-hastaliklari-dogum'] },
+  { circleColor: '#E11D48', icon: 'OR', title: 'Obstetrik risk & sezaryen notu', desc: 'Preeklampsi → aspirin penceresi · GDM riski · SSVD alanları · hekim kilitli sezaryen endikasyon notu', route: '/doktor-tools/kd-risk', branslar: ['kadin-hastaliklari-dogum'] },
 ]
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]

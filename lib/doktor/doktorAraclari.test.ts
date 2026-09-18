@@ -25,7 +25,7 @@ test('shared tools appear for every branş; chapter tiles do not cross-leak', ()
   }
 
   assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length + GOZ_ROTALARI.length)
-  assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length)
+  assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length + KD_ROTALARI.length)
   assert.ok(!goz.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
   assert.ok(!kd.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
 
@@ -208,4 +208,48 @@ test('pediatri studio pages: guarded by PediAracKabugu, card-opened, never on th
     assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
   }
   assert.doesNotMatch(landing, /PediAracKabugu|BuyumeStudyosu|DozAraci|AsiPlanlayici|GelisimPaneli|PediKohortPaneli/)
+})
+
+// ─── Kadın Hastalıkları ve Doğum — specialty-only Araçlar ───────────────────────────────────────
+const KD_ROTALARI = ['/doktor-tools/kd-gebelik-takvim', '/doktor-tools/kd-dogum-rapor', '/doktor-tools/kd-mec', '/doktor-tools/kd-risk']
+
+test('KD-only Araçlar: KD sees all five (legacy + free-text keys); every other branş in BRANS_ETIKETLERI never', () => {
+  for (const ham of ['kadin-hastaliklari-dogum', 'kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'Jinekoloji ve Obstetrik']) {
+    const kd = doktorAraclariListesi(ham)
+    for (const r of KD_ROTALARI) {
+      assert.ok(kd.some((a) => a.route === r), `${ham} missing ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+  }
+  for (const r of KD_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.deepEqual(arac.branslar, ['kadin-hastaliklari-dogum'], r)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'kadin-hastaliklari-dogum')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'goz-hastaliklari', 'dermatoloji', 'Çocuk Sağlığı ve Hastalıkları', 'İç Hastalıkları', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of KD_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  // KD does not see other chapters' tiles
+  const kd = doktorAraclariListesi('kadin-hastaliklari-dogum')
+  assert.ok(!kd.some((a) => a.branslar && !a.branslar.includes('kadin-hastaliklari-dogum')))
+})
+
+test('KD studio pages: guarded, card-opened, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/kadin-dogum/ui/araclar/KdAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+  for (const r of KD_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /KdAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /GebelikTakvimAraci|DogumRaporAraci|MecAraci|RiskAraci/)
 })
