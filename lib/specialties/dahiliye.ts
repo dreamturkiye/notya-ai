@@ -26,13 +26,24 @@ export const DAHILIYE_PROFILE: SpecialtyProfile = {
   promptNotlari: ['Tam kilit specialties/dahiliye/prompts (DAH-PROMPTS-LOCK).'],
   specialistReview: [],
 
-  // Ön anket (ev KB/glukoz/kilo → dahiliye_ev_kayitlari) — doctor specialty dahiliye; the anket API
-  // additionally requires at least one dahiliye card on the patient. Partial: a Takip shortcut + one form.
+  // DAH-EXCEPTIONAL-01 — Takibim Strong + Ön anket. Doctor specialty dahiliye (or baseline + cards).
   portal: [{
-    id: 'dahiliye', nav: [{ key: 'on-anket', label: 'Ön anket', path: '/on-anket' }], bundleKeys: [], eligibility: 'combined',
-    copyHints: ['Anket acil başvuru yerine geçmez; alarmda 112 metni.', 'Hastaya yorum/tanı dönmez.'],
-    views: ['OnAnketPage'], derinlik: 'Partial',
+    id: 'dahiliye',
+    nav: [
+      { key: 'takibim', label: 'Takibim', path: '/takibim' },
+      { key: 'on-anket', label: 'Ön anket', path: '/on-anket' },
+    ],
+    bundleKeys: ['kronik'],
+    eligibility: 'combined',
+    copyHints: [
+      'Takibim: hekim hedefleri, hatırlatmalar, ev ölçüm özeti — tanı/doz yok.',
+      'Anket acil başvuru yerine geçmez; alarmda 112 metni.',
+      'Hastaya yorum/tanı dönmez.',
+    ],
+    views: ['TakibimView', 'OnAnketPage'],
+    derinlik: 'Strong',
   }],
 
-  olgunluk: 'arastirma',
+  // Product Strong + smoke green; uzman-dogrulandi needs live internist week (docs/DAHILIYE-MD-BETA.md).
+  olgunluk: 'beta-hazir',
 }

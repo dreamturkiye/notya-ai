@@ -6,6 +6,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   portal: { moduller: [], nav: [] },
   goz: null,
   deri: null,
+  kronik: null,
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
   gebelik: null,
   jinekoloji: null,

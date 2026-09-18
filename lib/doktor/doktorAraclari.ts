@@ -44,7 +44,13 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // Pediatri — specialty-only (not kardiyoloji / dahiliye / göz / KD / dermatoloji / …). Chapter engines: specialties/pediatri/engines.
   { circleColor: '#14B8A6', icon: 'BP', title: 'Büyüme & Persentil', desc: 'Neyzi / WHO persentil ve z-skor, eğri, persentil kayması ve büyüme hızı (cm/yıl)', route: '/doktor-tools/pedi-buyume', branslar: ['pediatri'] },
   { circleColor: '#F97316', icon: 'DH', title: 'Doz Hesaplayıcı (mg/kg)', desc: 'Girdiğiniz mg/kg ve konsantrasyonla doz başına mg ve mL — günlük toplam ve tavan uyarısı', route: '/doktor-tools/pedi-doz', branslar: ['pediatri'] },
+  // Dahiliye (İç Hastalıkları) — specialty-only (not pediatri / kardiyoloji / göz / KD / dermatoloji). Chapter engines: specialties/dahiliye/engines.
   { circleColor: '#0891B2', icon: 'KH', title: 'Dahiliye Kohort Paneli', desc: 'HbA1c >9 · KB/LDL hedef dışı · eGFR <45 · gecikmiş görevler · 1-tap hatırlatma', route: '/doktor-tools/dahiliye-kohort', branslar: ['dahiliye'] },
+  { circleColor: '#0D9488', icon: 'S2', title: 'SCORE2 / KVR', desc: 'ESC SCORE2 · Diabetes · OP · kova taslak — hekim kilidi olmadan kesinleşmez', route: '/doktor-tools/dahiliye-score2', branslar: ['dahiliye'] },
+  { circleColor: '#2563EB', icon: 'CK', title: 'KDIGO CKD evreleme', desc: 'eGFR × UACR ısı haritası · kronisite · nefro sevk paketi', route: '/doktor-tools/dahiliye-ckd', branslar: ['dahiliye'] },
+  { circleColor: '#16A34A', icon: 'SR', title: 'SGK ilaç raporu', desc: 'HT · DM · statin · DOAK · Vit D/B12 taslak · SUT kontrol listesi', route: '/doktor-tools/dahiliye-sgk', branslar: ['dahiliye'] },
+  { circleColor: '#9333EA', icon: 'PF', title: 'Polifarmasi STOPP/START', desc: '≥65 yaş tarama · engelleyici öneriler · override gerekçesi', route: '/doktor-tools/dahiliye-polifarmasi', branslar: ['dahiliye'] },
+  { circleColor: '#DC2626', icon: 'AK', title: 'CHA₂DS₂-VASc / HAS-BLED', desc: 'AF risk bileşenleri · HAS-BLED kontrol listesi (skor iddiası yok) · DOAK uygunluk', route: '/doktor-tools/dahiliye-antikoag', branslar: ['dahiliye'] },
   // Göz Hastalıkları — specialty-only (not dahiliye / pediatri / kardiyoloji / KD / dermatoloji). Chapter engines only.
   { circleColor: '#0D9488', icon: 'VA', title: 'VA / logMAR', desc: 'Ondalık · Snellen · PS/EH/IH → logMAR ve iki vizit arası ETDRS harf farkı, OD/OS', route: '/doktor-tools/goz-va', branslar: ['goz-hastaliklari'] },
   { circleColor: '#2563EB', icon: 'SV', title: 'SUT anti-VEGF kapı', desc: 'Ajan · göz · basamak · MI/SVO + enjeksiyon geçmişi → SUT 4.2.33 engel ve uyarıları', route: '/doktor-tools/goz-sut-vegf', branslar: ['goz-hastaliklari'] },

@@ -92,6 +92,9 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     alanlar: [
       BASVURU_NEDENI,
       { id: 'sikayetSuresiDahiliye', etiket: 'Bu şikayet ne zamandır var?', ...SIKAYET_SURESI_STANDART },
+      // DAH-EXCEPTIONAL-01 — acil kutucukları (göz `acilBelirtiler` / derm deseni). Etiketler
+      // specialties/dahiliye/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerDahiliye', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Göğüs ağrısı veya baskı', 'Ani / şiddetli nefes darlığı', 'Yüz kayması, konuşma bozukluğu veya ani güçsüzlük', 'Bayılma / bilinç kaybı', 'Ciddi kanama (kusma, siyah dışkı, bol idrar kanı)', 'Şiddetli hipoglisemi (şeker düşmesi) şüphesi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'genelSemptomlarDahiliye', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Halsizlik', 'Ateş', 'Gece Terlemesi', 'İştahsızlık', 'Kilo Değişimi', 'Baş Dönmesi', 'Eklem Ağrısı', 'Yok'] },
       { id: 'kiloDegisimi', etiket: 'Son 3 ayda istemsiz kilo kaybı/artışı oldu mu?', tur: 'radio', secenekler: ['Hayır', 'Kilo kaybettim', 'Kilo aldım'] },
       { id: 'baslikDahiliyeGecmisi', etiket: 'Kronik Takip', tur: 'bolum-basligi' },

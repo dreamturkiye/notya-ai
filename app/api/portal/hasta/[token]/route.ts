@@ -13,6 +13,11 @@ import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { portalModulAktif, portalModulleri } from '@/lib/portal/moduller'
 import { dahiliyeKartlari } from '@/lib/portal/dahiliyeKartlari'
 import { derimHatirlatmalari, seansAraligi, sonrakiKontrol } from '@/specialties/dermatoloji/engines/portal-derim'
+import {
+  hedefOzetleri,
+  sonrakiKontrol as dahiliyeSonrakiKontrol,
+  takibimHatirlatmalari,
+} from '@/specialties/dahiliye/engines/portal-takibim'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -550,6 +555,64 @@ export async function GET(
       not: 'Bu bilgiler bilgilendirme amaçlıdır; yorum ve plan doktorunuzdadır. Tanı dili kullanılmaz.',
     }
   } catch (e) { console.error('[portal] derim:', e) }
+
+  // DAH-EXCEPTIONAL-01 — "Takibim": hekim görevleri + kilitli hedefler + ev ölçüm özeti.
+  // Görev başlıkları kod → sabit hasta-güvenli metin; tanı/doz yok.
+  if (modulAktif('dahiliye')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, kilitQ, evKbQ, evGlukozQ] = await Promise.all([
+      sb.from('dahiliye_gorevleri').select('kod, due, durum').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('dahiliye_kart_kilitleri').select('kart, alan, deger, created_at').eq('patient_id', patientId).eq('doctor_id', doctorId).order('created_at', { ascending: false }).limit(40),
+      sb.from('dahiliye_ev_kayitlari').select('tip, sbp, dbp, deger, olcum_at').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('tip', 'kb').order('olcum_at', { ascending: false }).limit(14),
+      sb.from('dahiliye_ev_kayitlari').select('tip, deger, olcum_at').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('tip', 'glukoz').order('olcum_at', { ascending: false }).limit(14),
+    ])
+    const hatirlatmalar = takibimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      hedefler: [],
+      evKbOzet: null,
+      evGlukozOzet: null,
+      sonrakiKontrolIso: null,
+    })
+    // Latest lock per kart|alan — hedef metinleri hasta-güvenli özetlenir
+    const gorulen = new Set<string>()
+    const hedefGirdi: Array<{ kod: string; metin: string | null }> = []
+    for (const k of kilitQ.data || []) {
+      const key = `${k.kart}|${k.alan}`
+      if (gorulen.has(key)) continue
+      gorulen.add(key)
+      const kart = String(k.kart || '')
+      const alan = String(k.alan || '')
+      if (kart === 'ht' && (alan === 'hedef' || alan === 'hedef_hekim')) hedefGirdi.push({ kod: 'kb', metin: JSON.stringify(k.deger ?? '') })
+      else if (kart === 'dm' && (alan === 'hedef' || alan === 'hedef_hba1c')) hedefGirdi.push({ kod: 'hba1c', metin: String((k.deger as { hedef?: unknown })?.hedef ?? k.deger ?? '') })
+      else if (kart === 'kvr' && (alan === 'hedef_ldl' || alan === 'kova')) hedefGirdi.push({ kod: 'ldl', metin: String((k.deger as { ldl?: unknown })?.ldl ?? k.deger ?? '') })
+      else if (kart === 'hedef' && alan === 'kart') hedefGirdi.push({ kod: 'kilo', metin: 'Yaşam tarzı hedefi' })
+    }
+    const kbSatirlar = evKbQ.data || []
+    const glSatirlar = evGlukozQ.data || []
+    let evKbOzet: string | null = null
+    if (kbSatirlar.length) {
+      const son = kbSatirlar[0]
+      if (son.sbp != null && son.dbp != null) {
+        evKbOzet = `Son: ${son.sbp}/${son.dbp} mmHg (${String(son.olcum_at).slice(0, 10)}) · ${kbSatirlar.length} kayıt`
+      }
+    }
+    let evGlukozOzet: string | null = null
+    if (glSatirlar.length) {
+      const son = glSatirlar[0]
+      if (son.deger != null) {
+        evGlukozOzet = `Son: ${son.deger} mg/dL (${String(son.olcum_at).slice(0, 10)}) · ${glSatirlar.length} kayıt`
+      }
+    }
+    bundle.kronik = {
+      sonrakiKontrol: dahiliyeSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      hedefler: hedefOzetleri(hedefGirdi),
+      evKbOzet,
+      evGlukozOzet,
+      not: 'Bu bilgiler bilgilendirme amaçlıdır; yorum ve plan doktorunuzdadır. Acil durumda 112.',
+    }
+  } catch (e) { console.error('[portal] takibim:', e) }
 
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId, doctorId)

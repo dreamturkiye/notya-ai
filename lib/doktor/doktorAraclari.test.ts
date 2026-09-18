@@ -26,13 +26,69 @@ test('shared tools appear for every branş; chapter tiles do not cross-leak', ()
 
   assert.equal(goz.length, ORTAK_DOKTOR_ARACLARI.length + GOZ_ROTALARI.length)
   assert.equal(kd.length, ORTAK_DOKTOR_ARACLARI.length + KD_ROTALARI.length)
+  assert.equal(dah.length, ORTAK_DOKTOR_ARACLARI.length + DAH_ROTALARI.length)
   assert.ok(!goz.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
   assert.ok(!kd.some((a) => a.route.includes('dahiliye') || a.route.includes('hedef-boy')))
 
-  assert.ok(dah.some((a) => a.route === '/doktor-tools/dahiliye-kohort'))
+  for (const r of DAH_ROTALARI) assert.ok(dah.some((a) => a.route === r), `dahiliye missing ${r}`)
   assert.ok(!dah.some((a) => a.route.includes('hedef-boy')))
   assert.ok(ped.some((a) => a.route === '/doktor-tools/hedef-boy'))
-  assert.ok(!ped.some((a) => a.route.includes('dahiliye-kohort')))
+  assert.ok(!ped.some((a) => a.route.includes('dahiliye')))
+})
+
+// DAH-EXCEPTIONAL-01 — dahiliye-only Araçlar (same shape as the göz / derm blocks below).
+const DAH_ROTALARI = [
+  '/doktor-tools/dahiliye-kohort',
+  '/doktor-tools/dahiliye-score2',
+  '/doktor-tools/dahiliye-ckd',
+  '/doktor-tools/dahiliye-sgk',
+  '/doktor-tools/dahiliye-polifarmasi',
+  '/doktor-tools/dahiliye-antikoag',
+]
+
+test('dahiliye-only Araçlar: dahiliye sees all six; pediatri / kardiyoloji / göz / KD / derm and 25 others never', () => {
+  for (const ham of ['dahiliye', 'İç Hastalıkları']) {
+    const dah = doktorAraclariListesi(ham)
+    for (const r of DAH_ROTALARI) {
+      assert.ok(dah.some((a) => a.route === r), `${ham} missing ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+    assert.equal(dah.length, ORTAK_DOKTOR_ARACLARI.length + DAH_ROTALARI.length)
+  }
+  for (const r of DAH_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, `${r} not in BRANS_DOKTOR_ARACLARI`)
+    assert.deepEqual(arac.branslar, ['dahiliye'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'dahiliye')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'kardiyoloji', 'goz-hastaliklari', 'kadin-dogum', 'dermatoloji', 'Çocuk Sağlığı ve Hastalıkları', 'Kadın Hastalıkları ve Doğum', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of DAH_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  // dahiliye does not see other chapters' tiles
+  const dah = doktorAraclariListesi('dahiliye')
+  assert.ok(!dah.some((a) => a.branslar && !a.branslar.includes('dahiliye')))
+})
+
+test('dahiliye studio pages: guarded by DahiliyeAracKabugu, card-opened, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/dahiliye/ui/araclar/DahiliyeAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+  assert.match(kabuk, /Bu araç yalnızca dahiliye için\./)
+  for (const r of DAH_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /DahiliyeAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /Score2Araci|CkdAraci|SgkRaporAraci|PolifarmasiAraci|AntikoagAraci|KohortPanel/)
 })
 
 const GOZ_ROTALARI = ['/doktor-tools/goz-va', '/doktor-tools/goz-sut-vegf', '/doktor-tools/goz-sgk-rapor', '/doktor-tools/goz-gil-kod', '/doktor-tools/goz-kohort']

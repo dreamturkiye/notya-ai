@@ -34,5 +34,6 @@ export function emptyPortalBundle(): PortalBundle {
     hedefBoy: null,
     goz: null,
     deri: null,
+    kronik: null,
   }
 }

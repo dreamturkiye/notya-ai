@@ -58,7 +58,7 @@ describe('registry contract', () => {
     for (const k of ['pediatri', 'kadin-hastaliklari-dogum', 'dermatoloji', 'dahiliye', 'goz-hastaliklari'] as const) {
       assert.ok((specialtyProfile(k).portal || []).length > 0, k)
     }
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', dahiliyeKaydi: true })).nav.map((n) => n.key), ['on-anket'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', dahiliyeKaydi: true })).nav.map((n) => n.key), ['takibim', 'on-anket'])
   })
   it('bundle carries typed module state; empty + demo bundles attach nothing', () => {
     assert.deepEqual(emptyPortalBundle().portal, { moduller: [], nav: [] })

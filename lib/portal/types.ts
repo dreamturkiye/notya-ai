@@ -161,6 +161,8 @@ export interface PortalBundle {
   goz: PortalGoz | null
   /** DERM-PORTAL — "Derim": photo notices, MD reminders, phototherapy session dates. No tanı. */
   deri: PortalDeri | null
+  /** DAH-EXCEPTIONAL-01 — "Takibim": MD hedefler, hatırlatmalar, ev ölçüm. No tanı/doz. */
+  kronik: PortalKronik | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -203,5 +205,15 @@ export interface PortalDeri {
   islemler: Array<{ tarih: string; ad: string }>
   fototerapi: Array<{ tarih: string; cihaz: string | null }>
   labHatirlatma: Array<{ ad: string; due: string | null }>
+  not: string
+}
+
+/** DAH-EXCEPTIONAL-01 — "Takibim": chronic-care surface. No ICD, tanı, or dose. */
+export interface PortalKronik {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  hedefler: Array<{ ad: string; ozet: string }>
+  evKbOzet: string | null
+  evGlukozOzet: string | null
   not: string
 }
