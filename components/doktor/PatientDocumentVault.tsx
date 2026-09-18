@@ -30,6 +30,7 @@ export default function PatientDocumentVault({
   const [filtre, setFiltre] = useState<'hepsi' | 'lab'>('hepsi')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [silinen, setSilinen] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -64,6 +65,29 @@ export default function PatientDocumentVault({
     load()
   }, [load])
 
+  const belgeSil = async (d: VaultDoc) => {
+    if (!window.confirm(`“${d.fileName}” belgesini kasadan silmek istediğinize emin misiniz?`)) return
+    setSilinen(d.id)
+    setError('')
+    try {
+      const token = await getAccessTokenAsync()
+      if (!token) throw new Error('Oturum bulunamadı.')
+      const res = await fetch(`/api/doktor/documents/${d.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error((j as { error?: string }).error || 'Belge silinemedi')
+      }
+      setDocs((prev) => prev.filter((x) => x.id !== d.id))
+      if (viewer?.id === d.id) setViewer(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Belge silinemedi')
+    } finally {
+      setSilinen(null)
+    }
+  }
   return (
     <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
@@ -130,6 +154,25 @@ export default function PatientDocumentVault({
                   </a>
                 )
               })}
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); void belgeSil(d) }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); void belgeSil(d) } }}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#F87171',
+                  border: '1px solid rgba(248,113,113,0.4)',
+                  borderRadius: 999,
+                  padding: '3px 9px',
+                  whiteSpace: 'nowrap',
+                  cursor: silinen === d.id ? 'default' : 'pointer',
+                  opacity: silinen === d.id ? 0.5 : 1,
+                }}
+              >
+                {silinen === d.id ? 'Siliniyor…' : 'Sil'}
+              </span>
             </button>
           ))}
         </div>
