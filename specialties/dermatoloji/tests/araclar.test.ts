@@ -131,11 +131,11 @@ describe('Araçlar › Yama D2 / D4', () => {
     assert.ok(EUROPEAN_BASELINE.length >= 20)
     assert.equal(new Set(EUROPEAN_BASELINE.map((a) => a.kod)).size, EUROPEAN_BASELINE.length)
     assert.ok(EUROPEAN_BASELINE.every((a) => a.ad.length > 1 && a.kaynak.length > 1))
-    for (const kod of ['nickel-sulfate', 'ppd', 'mci-mi', 'formaldehyde', 'fragrance-mix-1']) {
+    for (const kod of ['nikel-sulfat', 'ppd', 'mci-mi', 'formaldehit', 'koku-mix-1']) {
       assert.ok(EUROPEAN_BASELINE.some((a) => a.kod === kod), kod)
     }
     assert.equal(EUROPEAN_BASELINE_STUB.length, EUROPEAN_BASELINE.length)
-    assert.equal(baselineAlerjenAdi('nickel-sulfate'), 'Nikel sülfat')
+    assert.equal(baselineAlerjenAdi('nikel-sulfat'), 'Nikel sülfat')
     assert.equal(baselineAlerjenAdi('bilinmeyen'), 'bilinmeyen')
   })
 })

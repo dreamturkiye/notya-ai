@@ -9,12 +9,17 @@ import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { PHOTO_DEVICES } from '@/specialties/dermatoloji/engines/phototherapy-log'
 import { VISION_DISCLAIMER, uzmanOnay } from '@/specialties/dermatoloji/imaging/vision-tools'
 import { defaultVisitType } from '@/specialties/dermatoloji/engines/clinic-fit'
+import { DERIM_HATIRLATMA_METNI, hastaGuvenliMi, type DerimHatirlatmaKodu } from '@/specialties/dermatoloji/engines/derimHatirlatma'
 import type { ClinicUnit } from '@/specialties/dermatoloji/types'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
 export const dynamic = 'force-dynamic'
 
 const DERM_MODALITELER = ['derm', 'dermatoskopi', 'yara']
+// DERM-EXCEPTIONAL-01 — 054 migration CHECK'leriyle aynı liste
+const ERITEM_YANITLARI = ['yok', 'minimal', 'agrili', 'bullu'] as const
+const YAMA_SERILERI = ['european_baseline', 'ek_kozmetik', 'ek_sac', 'ek_mesleki', 'ek_hekim'] as const
+const DERMOSKOPI_ALGORITMALARI = ['uc_nokta', 'yedi_nokta', 'cash'] as const
 
 function isoDate(v: unknown, fallback?: string): string {
   const s = String(v || fallback || '').slice(0, 10)
@@ -37,6 +42,11 @@ function mapSkor(row: Record<string, unknown>) {
     ...(row.uas7 != null ? { uas7: Number(row.uas7) } : {}),
     ...(row.salt != null ? { salt: Number(row.salt) } : {}),
     ...(row.pdai != null ? { pdai: Number(row.pdai) } : {}),
+    // DERM-EXCEPTIONAL-01: bölge çalışma sayfası çıktıları
+    ...(row.scorad != null ? { scorad: Number(row.scorad) } : {}),
+    ...(row.iga != null ? { iga: Number(row.iga) } : {}),
+    ...(row.bsa_pct != null ? { bsa_pct: Number(row.bsa_pct) } : {}),
+    ...(row.ek && typeof row.ek === 'object' ? { ek: row.ek } : {}),
   }
 }
 
@@ -48,6 +58,25 @@ function mapSeans(row: Record<string, unknown>) {
     med_test: row.med_test === true,
     burn: row.burn === true,
     ...(row.session_photo_core_image_id ? { sessionPhotoCoreImageId: String(row.session_photo_core_image_id) } : {}),
+    // DERM-EXCEPTIONAL-01: ünite v2 — doz adımı hekim protokolünden, hesaplanmaz
+    ...(row.seans_no != null ? { seans_no: Number(row.seans_no) } : {}),
+    ...(row.doz_adimi_pct != null ? { doz_adimi_pct: Number(row.doz_adimi_pct) } : {}),
+    ...(row.eritem ? { eritem: String(row.eritem) } : {}),
+    ...(row.kacirilan_gun != null ? { kacirilan_gun: Number(row.kacirilan_gun) } : {}),
+    ...(row.yanik_protokolu && typeof row.yanik_protokolu === 'object' ? { yanik_protokolu: row.yanik_protokolu } : {}),
+    ...(row.not_hemsire ? { not: String(row.not_hemsire) } : {}),
+  }
+}
+
+function mapMed(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    date: isoDate(row.tarih),
+    device: String(row.device || ''),
+    deger: Number(row.deger || 0),
+    birim: String(row.birim || ''),
+    ...(row.test_foto_core_image_id ? { testPhotoCoreImageId: String(row.test_foto_core_image_id) } : {}),
+    ...(row.not_hekim ? { not: String(row.not_hekim) } : {}),
   }
 }
 
@@ -120,6 +149,10 @@ export async function GET(req: NextRequest) {
     fotoMeta,
     goruntulemeler,
     belgeAnalizleri,
+    medKayitlari,
+    biyolojikRaporlar,
+    dermoskopiSkorlari,
+    islemler,
   ] = await Promise.all([
     supabase.from('derm_ziyaretleri').select('*').eq('hasta_derm_id', epId).order('tarih', { ascending: false }),
     supabase.from('derm_lezyonlar').select('*').eq('hasta_derm_id', epId).order('created_at', { ascending: true }),
@@ -134,6 +167,11 @@ export async function GET(req: NextRequest) {
       .eq('patient_id', patientId).eq('doctor_id', doktorId)
       .in('modality_final', DERM_MODALITELER)
       .order('olusturuldu', { ascending: false }).limit(12),
+    // DERM-EXCEPTIONAL-01 — 054 tabloları. Migration uygulanmadıysa boş döner, sayfa yine açılır.
+    supabase.from('derm_med_kayitlari').select('*').eq('hasta_derm_id', epId).order('tarih', { ascending: false }).limit(40),
+    supabase.from('derm_biyolojik_raporlar').select('*').eq('hasta_derm_id', epId).order('created_at', { ascending: false }).limit(20),
+    supabase.from('derm_dermoskopi_skorlari').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(40),
+    supabase.from('derm_islemler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('tarih', { ascending: false }).limit(40),
   ])
 
   return NextResponse.json({
@@ -147,6 +185,10 @@ export async function GET(req: NextRequest) {
     fotoMeta: fotoMeta.data || [],
     goruntulemeler: goruntulemeler.data || [],
     belgeAnalizleri: belgeAnalizleri.data || [],
+    medKayitlari: (medKayitlari.data || []).map((r) => mapMed(r as Record<string, unknown>)),
+    biyolojikRaporlar: biyolojikRaporlar.data || [],
+    dermoskopiSkorlari: dermoskopiSkorlari.data || [],
+    islemler: islemler.data || [],
   })
 }
 
@@ -197,6 +239,14 @@ export async function POST(req: NextRequest) {
     if (body.bzbh_kind !== undefined) patch.bzbh_kind = body.bzbh_kind || null
     if (typeof body.ugly_duckling === 'boolean') patch.ugly_duckling = body.ugly_duckling
     if (typeof body.psa_joint === 'boolean') patch.psa_joint = body.psa_joint
+    // DERM-EXCEPTIONAL-01: hekimin işaretlediği acil bayraklar, kilitlediği basamak, yapılandırılmış izlem kartları
+    if (body.acil_isaretleri !== undefined) {
+      patch.acil_isaretleri = Array.isArray(body.acil_isaretleri) ? body.acil_isaretleri.map(String) : null
+    }
+    if (body.basamak_kilidi !== undefined) patch.basamak_kilidi = body.basamak_kilidi || null
+    if (body.psa_triyaj !== undefined) patch.psa_triyaj = body.psa_triyaj || null
+    if (body.behcet_izlem !== undefined) patch.behcet_izlem = body.behcet_izlem || null
+    if (body.bulloz_izlem !== undefined) patch.bulloz_izlem = body.bulloz_izlem || null
     const { error } = await supabase.from('hasta_derm').update(patch).eq('id', epId).eq('doctor_id', doktorId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
@@ -252,6 +302,11 @@ export async function POST(req: NextRequest) {
       uas7: num(body.uas7),
       salt: num(body.salt),
       pdai: num(body.pdai),
+      // DERM-EXCEPTIONAL-01: bölge dökümü (PASI/EASI bölge bölge, SCORAD alanları) jsonb'da
+      scorad: num(body.scorad),
+      iga: num(body.iga),
+      bsa_pct: num(body.bsa_pct),
+      ek: body.ek && typeof body.ek === 'object' ? body.ek : null,
     })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
@@ -273,6 +328,34 @@ export async function POST(req: NextRequest) {
       med_test: body.med_test === true,
       burn: body.burn === true,
       session_photo_core_image_id: body.sessionPhotoCoreImageId || null,
+      // v2: doz adımı hemşire/hekim protokolünden girilir — Notya hesaplamaz
+      seans_no: num(body.seans_no),
+      doz_adimi_pct: num(body.doz_adimi_pct),
+      eritem: (ERITEM_YANITLARI as readonly string[]).includes(String(body.eritem)) ? String(body.eritem) : null,
+      kacirilan_gun: num(body.kacirilan_gun),
+      yanik_protokolu: body.yanik_protokolu && typeof body.yanik_protokolu === 'object' ? body.yanik_protokolu : null,
+      not_hemsire: body.not ? String(body.not).slice(0, 2000) : null,
+    })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  }
+
+  // MED / MPD testi — cihaz başına, hekim okur ve girer
+  if (action === 'med') {
+    const device = String(body.device || '')
+    if (!(PHOTO_DEVICES as readonly string[]).includes(device)) {
+      return NextResponse.json({ error: 'Geçerli fototerapi cihazı seçin.' }, { status: 400 })
+    }
+    const deger = num(body.deger)
+    if (!deger || deger <= 0) return NextResponse.json({ error: 'MED değeri zorunludur.' }, { status: 400 })
+    const { error } = await supabase.from('derm_med_kayitlari').insert({
+      patient_id: patientId, doctor_id: doktorId, hasta_derm_id: epId,
+      tarih: isoDate(body.date),
+      device,
+      deger,
+      birim: String(body.birim || 'mJ/cm²'),
+      test_foto_core_image_id: body.testPhotoCoreImageId || null,
+      not_hekim: body.not ? String(body.not).slice(0, 1000) : null,
     })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
@@ -280,15 +363,19 @@ export async function POST(req: NextRequest) {
 
   if (action === 'yama') {
     const applied = isoDate(body.appliedAt || body.applied_at)
-    const row = {
+    const seri = String(body.series || 'european_baseline')
+    const row: Record<string, unknown> = {
       hasta_derm_id: epId,
-      series: 'european_baseline',
+      series: (YAMA_SERILERI as readonly string[]).includes(seri) ? seri : 'european_baseline',
       applied_at: applied,
       read_d2: body.readD2 || body.read_d2 ? isoDate(body.readD2 || body.read_d2) : null,
       read_d4: body.readD4 || body.read_d4 ? isoDate(body.readD4 || body.read_d4) : null,
       photo_ids: Array.isArray(body.photoIds) ? body.photoIds : (body.photo_ids || []),
       positives: String(body.positives || '').split(',').map((s) => s.trim()).filter(Boolean),
       updated_at: now,
+      // ICDRG okuma dereceleri: { alerjenKodu: '+' | '++' | ... } — hekim okur
+      d2_dereceler: body.d2Dereceler && typeof body.d2Dereceler === 'object' ? body.d2Dereceler : null,
+      d4_dereceler: body.d4Dereceler && typeof body.d4Dereceler === 'object' ? body.d4Dereceler : null,
     }
     if (Array.isArray(body.positives)) row.positives = body.positives.map(String)
     if (body.id) {
@@ -363,6 +450,98 @@ export async function POST(req: NextRequest) {
       updated_at: now,
     }
     const { error } = await supabase.from('derm_foto_meta').upsert(row, { onConflict: 'doctor_id,core_image_id' })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  }
+
+  // Kozmetik işlem izlenebilirliği — lot + komplikasyon. Yalnız kozmetik ünitesi UI'sinden gelir.
+  if (action === 'kozmetik-islem') {
+    const tur = String(body.tur || '').trim()
+    if (!tur) return NextResponse.json({ error: 'İşlem türü zorunludur.' }, { status: 400 })
+    const { error } = await supabase.from('derm_islemler').insert({
+      patient_id: patientId, doctor_id: doktorId,
+      tur,
+      tarih: isoDate(body.tarih),
+      onam_id: body.onamId ? String(body.onamId) : null,
+      islem_notu: { bolge: body.bolge ? String(body.bolge) : null, kozmetik: true },
+      urun: body.urun ? String(body.urun).slice(0, 200) : null,
+      lot_no: body.lot_no ? String(body.lot_no).slice(0, 80) : null,
+      son_kullanma: body.son_kullanma ? isoDate(body.son_kullanma) : null,
+      test_spot: body.test_spot === true,
+      komplikasyonlar: Array.isArray(body.komplikasyonlar) ? body.komplikasyonlar.map(String) : [],
+      komplikasyon_notu: body.komplikasyon_notu ? String(body.komplikasyon_notu).slice(0, 2000) : null,
+    })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  }
+
+  // Dermoskopi çalışma sayfası sonucu — tanı değil, uzman kararına girdi
+  if (action === 'dermoskopi-skor') {
+    const algoritma = String(body.algoritma || '')
+    if (!(DERMOSKOPI_ALGORITMALARI as readonly string[]).includes(algoritma)) {
+      return NextResponse.json({ error: 'Geçerli algoritma seçin (3 nokta / 7 nokta / CASH).' }, { status: 400 })
+    }
+    const { error } = await supabase.from('derm_dermoskopi_skorlari').insert({
+      patient_id: patientId, doctor_id: doktorId,
+      lezyon_id: body.lezyonId ? String(body.lezyonId) : null,
+      algoritma,
+      toplam: Number(body.toplam || 0),
+      esik_ustu: body.esikUstu === true,
+      isaretli: Array.isArray(body.isaretli) ? body.isaretli.map(String) : [],
+      not_hekim: body.not ? String(body.not).slice(0, 2000) : null,
+    })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  }
+
+  // Biyolojik/sistemik SUT rapor taslağı. Doz saklanmaz; Medula girişini hekim yapar (canlı gönderim yok).
+  if (action === 'biyolojik-rapor') {
+    const sablon = body.sablon === 'idame' ? 'idame' : 'baslangic'
+    const endikasyon = String(body.endikasyon || '').trim()
+    if (!endikasyon) return NextResponse.json({ error: 'Endikasyon zorunludur.' }, { status: 400 })
+    const eksikler = Array.isArray(body.eksikler) ? body.eksikler.map(String) : []
+    const kilitli = body.kilitle === true
+    if (kilitli && eksikler.length > 0) {
+      return NextResponse.json({ error: 'Eksik zorunlu maddeler var — taslak kilitlenemez.' }, { status: 400 })
+    }
+    const row: Record<string, unknown> = {
+      patient_id: patientId, doctor_id: doktorId, hasta_derm_id: epId,
+      sablon, endikasyon,
+      etken_madde: body.etkenMadde ? String(body.etkenMadde).slice(0, 200) : null,
+      taslak_metni: body.taslakMetni ? String(body.taslakMetni).slice(0, 20000) : null,
+      eksikler,
+      kilitli,
+      kilit_at: kilitli ? now : null,
+      updated_at: now,
+    }
+    if (body.id) {
+      const { error } = await supabase.from('derm_biyolojik_raporlar').update(row)
+        .eq('id', String(body.id)).eq('doctor_id', doktorId).eq('patient_id', patientId)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    } else {
+      const { error } = await supabase.from('derm_biyolojik_raporlar').insert(row)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true })
+  }
+
+  // Derim (hasta portalı) hatırlatması — hekim tetikler; metin hasta-güvenli sabit listeden gelir.
+  // Portal bunu `derm_gorevleri` üzerinden okur (bundle.deri.hatirlatmalar) — yeni portal alanı gerekmez.
+  if (action === 'hatirlatma') {
+    const kod = String(body.kod || '').replace(/^derim_/, '') as DerimHatirlatmaKodu
+    const ad = DERIM_HATIRLATMA_METNI[kod]
+    if (!ad) return NextResponse.json({ error: 'Bilinmeyen hatırlatma kodu.' }, { status: 400 })
+    if (!hastaGuvenliMi(ad)) {
+      return NextResponse.json({ error: 'Hatırlatma metni hasta portalı için uygun değil.' }, { status: 400 })
+    }
+    const { error } = await supabase.from('derm_gorevleri').insert({
+      patient_id: patientId, doctor_id: doktorId,
+      kod: `derim_${kod}`,
+      ad,
+      due: body.due ? isoDate(body.due) : null,
+      kaynak: 'hekim',
+      durum: 'acik',
+    })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
   }

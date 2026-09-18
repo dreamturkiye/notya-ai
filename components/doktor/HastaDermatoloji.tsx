@@ -55,7 +55,25 @@ import YamaTakvimi from '@/specialties/dermatoloji/ui/YamaTakvimi'
 import FototerapiDefteri from '@/specialties/dermatoloji/ui/FototerapiDefteri'
 import { DERM_FITZ, DERM_UNIT, dermLabel } from '@/specialties/dermatoloji/ui/labels'
 import { FITZPATRICK } from '@/specialties/dermatoloji/schema'
-import type { PhotoSession } from '@/specialties/dermatoloji/engines/phototherapy-log'
+import type { MedKaydi, PhotoSession } from '@/specialties/dermatoloji/engines/phototherapy-log'
+// DERM-EXCEPTIONAL-01 — bölüm derinliği kartları
+import {
+  AcilBandi,
+  AkneKarti,
+  AtopiKarti,
+  BehcetTakipKarti,
+  BiyolojikSutKarti,
+  BullozTakipKarti,
+  BzbhForm014Karti,
+  DerimHatirlatmaKarti,
+  DermoskopiSkorKarti,
+  EstetikKarti,
+  IslemOdasiYazdir,
+  PsoriasisMerdiveniKarti,
+  SacTirnakKarti,
+} from '@/specialties/dermatoloji/ui/DermKartlarEk'
+import { acilBandMetni, dermAcilTara, type DermAcilKod } from '@/specialties/dermatoloji/engines/acil'
+import type { BzbhKind } from '@/specialties/dermatoloji/protocols/endemic-bzbh'
 
 const panel: React.CSSProperties = {
   background: '#0D1C33',
@@ -99,6 +117,14 @@ type ApiVeri = LiveDermVeri & {
     hekim_tanisi?: Array<{ ad?: string }> | null
     olusturuldu?: string | null
   }>
+  // DERM-EXCEPTIONAL-01
+  medKayitlari?: MedKaydi[]
+  islemler?: Array<{ id: string; tarih: string; tur: string }>
+}
+
+function gunFarki(a: string, b: string): number {
+  const ms = new Date(`${a.slice(0, 10)}T00:00:00Z`).getTime() - new Date(`${b.slice(0, 10)}T00:00:00Z`).getTime()
+  return Math.round(ms / 86400000)
 }
 
 function yerelIsoTarih() {
@@ -111,10 +137,13 @@ export default function HastaDermatoloji({
   patientId,
   cinsiyet = null,
   dogumTarihi = null,
+  hastaAdi = null,
 }: {
   patientId: string
   cinsiyet?: string | null
   dogumTarihi?: string | null
+  /** yazdırılabilir onam / Form 014 / SUT taslağı üst bilgisi — URL'ye yazılmaz */
+  hastaAdi?: string | null
 }) {
   const [veri, setVeri] = useState<ApiVeri | null>(null)
   const [hata, setHata] = useState('')
@@ -276,6 +305,36 @@ export default function HastaDermatoloji({
   const checklistMaddeler = unitChecklist(unit)
   const profil = CLINIC_UNIT_PROFILES.find((p) => p.id === unit)
 
+  // DERM-EXCEPTIONAL-01 — acil kırmızı bayrak: ziyaret notları + lezyon notları + hekim işareti
+  const hekimAcilIsaretleri = ((veri?.kayit as { acil_isaretleri?: unknown })?.acil_isaretleri || []) as DermAcilKod[]
+  const acilBayraklar = dermAcilTara(
+    [
+      ...(veri?.ziyaretler || []).slice(0, 3).map((z) => z.not_metni || ''),
+      ...(payload?.lesions || []).map((l) => l.notes || ''),
+    ],
+    hekimAcilIsaretleri,
+  )
+  const skorGecmisi = payload?.score_snapshots || veri?.skorlar || []
+  const oncekiSkor = skorGecmisi[1] ?? null
+  const basamakKilidi = ((veri?.kayit as { basamak_kilidi?: Record<string, string> })?.basamak_kilidi || {}) as Record<string, string>
+  const psaIsaretleri = ((veri?.kayit as { psa_triyaj?: Record<string, boolean> })?.psa_triyaj || null)
+  const izotretinoinKuru = !!gopPack?.start_iso
+  // izotretinoin ay-0 / ay-3 foto serisi: kür başlangıcı ve +3 ay civarı klinik foto var mı?
+  const akneFotoTarihleri = (payload?.photos || [])
+    .filter((p) => p.kind === 'klinik_genel' || p.kind === 'klinik_yakin' || p.kind === 'tedavi_hafta_n')
+    .map((p) => p.capturedAt)
+    .filter(Boolean) as string[]
+  const kurBaslangic = gopPack?.start_iso ?? null
+  const akneFotoAy0 = !!kurBaslangic && akneFotoTarihleri.some((t) => Math.abs(gunFarki(t, kurBaslangic)) <= 30)
+  const akneFotoAy3 = !!kurBaslangic && akneFotoTarihleri.some((t) => {
+    const d = gunFarki(t, kurBaslangic)
+    return d >= 60 && d <= 135
+  })
+  // Biyolojik/sistemik SUT taslağı ve tedavi merdivenleri yalnız ilgili ünitelerde açılır (branş içi ünite kapısı).
+  const psoriasisUnitesi = unit === 'psoriasis'
+  const atopiUnitesi = unit === 'genel' || unit === 'pediatrik'
+  const akneUnitesi = unit === 'genel'
+
   return (
     <div style={{ display: 'grid', gap: 12 }} data-chapter="dermatoloji">
       <div style={{ ...panel, padding: '12px 16px' }}>
@@ -319,6 +378,16 @@ export default function HastaDermatoloji({
             sonrakiFoto={nextPhotoCue(veri?.kayit?.next_photo_iso ?? null, today)}
             tbseCue={tbseCue(payload.last_tbse_iso ?? null, today)}
             onBugunkuMuayene={() => setMuayeneAcik(true)}
+            acilBant={acilBandMetni(acilBayraklar)}
+          />
+
+          {/* DERM-EXCEPTIONAL-01 · madde 12 — acil kırmızı bayrak bandı, muayeneden önce */}
+          <AcilBandi
+            bayraklar={acilBayraklar}
+            hekimIsaretleri={hekimAcilIsaretleri}
+            onIsaretle={(kodlar) => kaydet({ action: 'klinik', acil_isaretleri: kodlar }, 'Acil işareti kaydedildi.')}
+            hastaAdi={hastaAdi}
+            bugun={today}
           />
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} data-derm="imaging-cta">
@@ -431,6 +500,7 @@ export default function HastaDermatoloji({
           />
           <VucutHaritasi
             map={payload.total_body_map}
+            lesions={payload.lesions}
             emptyAction={empty ? nextActions : undefined}
             lastTbseIso={payload.last_tbse_iso}
             todayIso={today}
@@ -452,8 +522,12 @@ export default function HastaDermatoloji({
             dlqi={sonSkor?.dlqi}
             uas7={sonSkor?.uas7}
             salt={sonSkor?.salt}
+            scorad={(sonSkor as { scorad?: number } | null)?.scorad}
+            iga={(sonSkor as { iga?: number } | null)?.iga}
             showUas7={unit === 'urtiker'}
             showSalt={unit === 'sac'}
+            showScorad={atopiUnitesi}
+            showIga={akneUnitesi}
             emptyAction={nextActions}
             onKaydet={(s) => kaydet({ action: 'skor', recorded_at: today, ...s }, 'Skor kaydedildi.')}
           />
@@ -466,14 +540,165 @@ export default function HastaDermatoloji({
           />
           <YamaTakvimi
             course={patch}
+            courses={(veri?.yama || []) as typeof patch[]}
             today={today}
             patientId={patientId}
             onKaydet={(c) => kaydet({ action: 'yama', ...c }, 'Yama kaydedildi.')}
           />
           <FototerapiDefteri
             sessions={sessions}
+            medler={veri?.medKayitlari || []}
+            lastTbseIso={payload.last_tbse_iso ?? null}
+            todayIso={today}
             onEkle={(s) => kaydet({ action: 'fototerapi-seans', ...s }, 'Seans eklendi.')}
+            onMedEkle={(m) => kaydet({ action: 'med', ...m }, 'MED kaydedildi.')}
           />
+
+          {/* DERM-EXCEPTIONAL-01 · madde 8 — dermoskopi çalışma sayfaları (3 nokta / 7 nokta / CASH) */}
+          <DermoskopiSkorKarti
+            lesions={payload.lesions}
+            fitzpatrick={payload.patient_derm.fitzpatrick}
+            onFitzpatrick={(f) => kaydet({
+              action: 'klinik',
+              patient_derm: { ...(payload.patient_derm || {}), fitzpatrick: f, phototype: f },
+            }, 'Fitzpatrick kaydedildi.')}
+            onKaydet={(r) => kaydet({
+              action: 'dermoskopi-skor',
+              lezyonId: r.lesionId, algoritma: r.algoritma, toplam: r.toplam,
+              esikUstu: r.esikUstu, isaretli: r.isaretli, not: r.observations,
+            }, 'Dermoskopi çalışma sayfası kaydedildi.')}
+          />
+
+          {/* madde 6 — PSOKİD merdiveni + PsA triyajı (psoriasis ünitesi) */}
+          {psoriasisUnitesi && (
+            <PsoriasisMerdiveniKarti
+              pasi={sonSkor?.pasi ?? null}
+              pasiOnceki={(oncekiSkor as { pasi?: number } | null)?.pasi ?? null}
+              dlqi={sonSkor?.dlqi ?? null}
+              dlqiOnceki={(oncekiSkor as { dlqi?: number } | null)?.dlqi ?? null}
+              bsaPct={(sonSkor as { bsa_pct?: number } | null)?.bsa_pct ?? null}
+              psaIsaretleri={psaIsaretleri}
+              kilitliBasamak={basamakKilidi.psoriasis || null}
+              onBasamakKilitle={(b) => kaydet({
+                action: 'klinik', basamak_kilidi: { ...basamakKilidi, psoriasis: b },
+              }, 'Basamak kilitlendi.')}
+              onPsaKaydet={(isaretler, sevk) => kaydet({
+                action: 'klinik', psa_triyaj: isaretler, psa_joint: sevk,
+              }, 'Eklem triyajı kaydedildi.')}
+            />
+          )}
+
+          {/* madde 7 — TDD AD 2018 basamak kartı (genel / pediatrik ünite) */}
+          {atopiUnitesi && (
+            <AtopiKarti
+              scorad={(sonSkor as { scorad?: number } | null)?.scorad ?? null}
+              easi={sonSkor?.easi ?? null}
+              pediatrik={pediatric}
+              kilitliBasamak={basamakKilidi.atopi || null}
+              onBasamakKilitle={(b) => kaydet({
+                action: 'klinik', basamak_kilidi: { ...basamakKilidi, atopi: b },
+              }, 'Basamak kilitlendi.')}
+            />
+          )}
+
+          {/* madde 5 — akne IGA + izotretinoin ay 0 / ay 3 foto serisi */}
+          {akneUnitesi && (
+            <AkneKarti
+              iga={(sonSkor as { iga?: number } | null)?.iga ?? null}
+              izotretinoinKuru={izotretinoinKuru}
+              fotoAy0={akneFotoAy0}
+              fotoAy3={akneFotoAy3}
+              fotoHref={klinikFotoHref}
+            />
+          )}
+
+          {/* madde 4 — biyolojik / sistemik SUT rapor taslağı (psoriasis ünitesi) */}
+          {psoriasisUnitesi && (
+            <BiyolojikSutKarti
+              hastaAdi={hastaAdi || ''}
+              bugun={today}
+              skorlar={{
+                pasiSimdi: sonSkor?.pasi ?? null,
+                pasiBaslangic: (skorGecmisi[skorGecmisi.length - 1] as { pasi?: number } | undefined)?.pasi ?? null,
+                easiSimdi: sonSkor?.easi ?? null,
+                dlqiSimdi: sonSkor?.dlqi ?? null,
+                bsaPct: (sonSkor as { bsa_pct?: number } | null)?.bsa_pct ?? null,
+              }}
+              tbScreen={payload.tb_screen}
+              hbvScreen={payload.hbv_screen}
+              psaTutulumu={payload.psa_joint}
+              onKilitle={(r) => kaydet({
+                action: 'biyolojik-rapor',
+                sablon: r.sablon, endikasyon: r.endikasyon, taslakMetni: r.metin,
+                eksikler: r.eksikler, kilitle: r.eksikler.length === 0,
+              }, r.eksikler.length === 0 ? 'SUT taslağı kilitlendi.' : 'Taslak kaydedildi (eksikler var).')}
+            />
+          )}
+
+          {/* madde 14 — SALT çalışma sayfası + trikoskopi notu (saç ünitesi) */}
+          {unit === 'sac' && (
+            <SacTirnakKarti
+              saltToplam={sonSkor?.salt ?? null}
+              trikoskopiFotoSayisi={payload.photos.filter((p) => p.kind === 'trichoscopy').length}
+              onKaydet={(h) => kaydet({ action: 'klinik', hair_workup: { ...(payload.hair_workup || {}), ...h } }, 'Saç / tırnak kaydedildi.')}
+            />
+          )}
+
+          {/* madde 13 — Behçet / büllöz izlem kartları (ünite kapısı) */}
+          {unit === 'behcet-bagdokusu' && (
+            <BehcetTakipKarti
+              kart={payload.behcet_card ?? null}
+              bugun={today}
+              onKaydet={(ek) => kaydet({ action: 'klinik', behcet_izlem: ek }, 'Behçet izlemi kaydedildi.')}
+            />
+          )}
+          {unit === 'bullu' && (
+            <BullozTakipKarti
+              workup={payload.bullous_workup ?? null}
+              onKaydet={(ek) => kaydet({ action: 'klinik', bulloz_izlem: ek }, 'Büllü izlem kaydedildi.')}
+            />
+          )}
+          {payload.bzbh_kind && (
+            <BzbhForm014Karti
+              bzbhKind={payload.bzbh_kind as BzbhKind}
+              hastaAdi={hastaAdi}
+              bugun={today}
+              sonZiyaretIso={(veri?.ziyaretler || [])[0]?.tarih ?? null}
+            />
+          )}
+
+          {/* madde 10 — işlem odası: yazdırılabilir onam + numune etiketi (PHI URL'ye yazılmaz) */}
+          {(unit === 'cerrahi' || visitType === 'islem') && (
+            <IslemOdasiYazdir
+              hastaAdi={hastaAdi}
+              bugun={today}
+              lesions={payload.lesions}
+            />
+          )}
+
+          {/* madde 11 — kozmetik lot + komplikasyon (yalnız kozmetik ünitesi) */}
+          {unit === 'kozmetik' && (
+            <EstetikKarti
+              fitzpatrick={payload.patient_derm.fitzpatrick}
+              bugun={today}
+              onKaydet={(k) => kaydet({ action: 'kozmetik-islem', ...k }, 'Kozmetik işlem kaydedildi.')}
+            />
+          )}
+
+          {/* madde 19 — hekim tetiklemeli Derim hatırlatmaları (portal yalnız gösterir) */}
+          <DerimHatirlatmaKarti
+            girdi={{
+              bugun: today,
+              gopAktif: izotretinoinKuru && sex === 'female',
+              gopSonrakiHcgIso: gopPack?.hcg_iso ?? null,
+              sessions,
+              yamaKuru: patch,
+              lastTbseIso: payload.last_tbse_iso ?? null,
+              nextPhotoIso: veri?.kayit?.next_photo_iso ?? null,
+            }}
+            onGonder={(h) => kaydet({ action: 'hatirlatma', kod: h.kod, due: h.due }, 'Hastaya hatırlatma gönderildi.')}
+          />
+
           <KararKartlari kartlar={kartlar} />
           <UnitePanelleri
             unit={unit}
