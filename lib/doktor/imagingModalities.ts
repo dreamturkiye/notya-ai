@@ -131,6 +131,19 @@ export const BRANS_GORUNTULEME_ONCELIGI: Partial<Record<SpecialtyKey, readonly I
   'acil-tip': ['xray', 'bt', 'us', 'ekg'],
   uroloji: ['us', 'bt', 'xray'],
   'genel-cerrahi': ['us', 'bt', 'xray'],
+  // Kaan (2026-09-18): aile hekimliği EKG'yi çok kullanır; eşlemesi yokken varsayılan sırada
+  // EKG 7. sıraya (PET-BT / mamografi arkasına) düşüyordu. Birinci basamakta sık istenen
+  // tetkikler öne alındı. Aşağıdaki dahili branşlar da aynı nedenle eklendi.
+  'aile-hekimligi': ['ekg', 'xray', 'us'],
+  endokrinoloji: ['us', 'ekg', 'xray'], // us = tiroid USG
+  nefroloji: ['us', 'ekg', 'xray'],
+  gastroenteroloji: ['us', 'bt', 'mri'],
+  romatoloji: ['xray', 'mri', 'us'],
+  'enfeksiyon-hastaliklari': ['xray', 'bt', 'us'],
+  'spor-hekimligi': ['mri', 'us', 'xray', 'ekg'],
+  'gogus-cerrahisi': ['xray', 'bt', 'pet'],
+  'cocuk-cerrahisi': ['us', 'xray', 'bt'],
+  'kulak-burun-bogaz': ['bt', 'mri', 'us'],
 }
 
 export type BransGoruntulemeGruplari = {
