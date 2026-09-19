@@ -9,6 +9,7 @@ import {
   muayeneAltiSekmeler,
   gogusSekmesiBransi,
   dahiliyeSekmesiBransi,
+  urolojiSekmesiBransi,
 } from './hastaDosyaSekmeleri'
 
 const NOW = Date.parse('2026-09-15T00:00:00Z')
@@ -108,5 +109,17 @@ describe('hastaDosyaSekmeleri', () => {
     assert.equal(gogusSekmesiBransi('Göğüs Cerrahisi'), false)
     assert.equal(dahiliyeSekmesiBransi('gogus-hastaliklari'), false)
     assert.equal(ozelBolumBransi('gogus-hastaliklari'), true)
+  })
+
+  it('UROLOJI-EXCEPTIONAL-01: Üroloji sekmesi yalnız urolojiUygun; yabancı branşta yok', () => {
+    const uro = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, urolojiUygun: true })
+    assert.ok(uro.some((t) => t.id === 'uroloji' && t.label === 'Üroloji'))
+    const kbb = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, kbbUygun: true })
+    assert.equal(kbb.some((t) => t.id === 'uroloji'), false)
+    assert.equal(urolojiSekmesiBransi('uroloji'), true)
+    assert.equal(urolojiSekmesiBransi('Üroloji'), true)
+    assert.equal(urolojiSekmesiBransi('urology'), true)
+    assert.equal(urolojiSekmesiBransi('dahiliye'), false)
+    assert.equal(ozelBolumBransi('uroloji'), true)
   })
 })

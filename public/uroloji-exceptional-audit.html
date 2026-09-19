@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Üroloji — Post-exceptional Audit (UROLOJI-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional sprint UROLOJI-EXCEPTIONAL-01: Üroloji ~10% → ~93% · ≥16 Strong · olgunluk beta-hazir · 4 Araç · Ürolojimm Strong · OR/HIS/Medula Missing intentional. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#0D9488; --indigo-soft:rgba(13,148,136,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399; --teal:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--blue); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--indigo); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(13,148,136,.12); border-color:rgba(13,148,136,.4); color:#99F6E4; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit · Üroloji</span>
+    <span>
+      <a href="/uroloji-presprint-audit.html">Pre-sprint (~10%) →</a> ·
+      <a href="/kbb-exceptional-audit.html">KBB →</a> ·
+      <a href="/psik-exceptional-audit.html">Psikiyatri →</a>
+    </span>
+  </div>
+
+  <div class="banner ok"><b>Post-exceptional sprint UROLOJI-EXCEPTIONAL-01</b> — 2026-09-19 · Supersedes <a href="/uroloji-presprint-audit.html" style="color:inherit;font-weight:700">uroloji-presprint-audit.html</a> (~10% baseline). Chapter Strong · Intake Strong · Portal Ürolojimm Strong · 4 Araçlar · olgunluk <code>beta-hazir</code>. Ameliyathane / cerrahi HIS / canlı Medula e-imza / tanı auto-lock Missing intentional. No PHI. Never on Doktor Araçları.</div>
+
+  <h1>Üroloji — Post-exceptional Audit</h1>
+  <p class="lede">
+    Code × TÜD × SB × IPSS × PSA izlem × SGK/SUT × TİTCK × TR ayaktan muayenehane.
+    Soru: Üroloji bölümü psik / KBB barında mı?
+    <b>Ürün cevap: evet — honest wow ~93% (pre-sprint ~10%).</b>
+    <b>Olgunluk: beta-hazir shipped; uzman-dogrulandi MD week (docs/URO-MD-BETA.md) bekliyor.</b>
+  </p>
+
+  <div class="pills">
+    <span class="pill success">UROLOJI-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">4 Araçlar</span>
+    <span class="pill success">Ürolojimm Strong</span>
+    <span class="pill success">7 motor · test:uro</span>
+    <span class="pill info">Honest wow ~93%</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v success">16</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (maturity)</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">Thin</div></div>
+    <div class="stat"><div class="v danger">4</div><div class="l">Missing intentional</div></div>
+  </div>
+
+  <div class="callout info">
+    <h2>Executive verdict</h2>
+    <p>
+      UROLOJI-EXCEPTIONAL-01: <b>7 saf motor</b> (uroloji · ipss · psa · acil · kohort · serit · portal-urolojim),
+      hasta dosyası <b>Üroloji</b> sekmesi (sticky + Özet|IPSS|PSA|Risk|Görevler), intake <b>acilBelirtilerUroloji</b>,
+      Sağlığım <b>Ürolojimm</b> Strong, Araçlar'da <b>4</b> üroloji-only tile, migration <b>060</b> (5 tablo + RLS).
+      IPSS/PSA bantları karar desteği — BPH / prostat kanseri yazılmaz. Portal'da PSA sayı / IPSS skor yok.
+    </p>
+  </div>
+
+  <div class="cards three">
+    <div class="card"><div class="title">Pre-sprint</div><div class="body">~10% · intake omurga · bölüm yok</div></div>
+    <div class="card"><div class="title">UROLOJI-EXCEPTIONAL-01</div><div class="body">7 motor · UrolojiHome · 4 Araç · Ürolojimm · beta-hazir → ~93%</div></div>
+    <div class="card"><div class="title">Peer bar</div><div class="body">psik / KBB exceptional · Strong portal · specialty-only Araçlar</div></div>
+  </div>
+
+  <h2>Domain depth</h2>
+  <p class="cap">Strong = clinic-ready · Partial = beta-hazir / MD week · Missing = intentional out.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>Evidence</th><th>Gap / note</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Chapter registry + profil</td><td><span class="pill success">Strong</span></td><td class="note">CHAPTERS['uroloji'] · pediatrikBaglam: asla · IPSS+PSA hesaplayıcı</td><td class="note">—</td></tr>
+        <tr><td class="domain">Sticky / vizit şeridi</td><td><span class="pill success">Strong</span></td><td class="note">Risk · IPSS · PSA · kontrol · gecikmiş</td><td class="note">—</td></tr>
+        <tr><td class="domain">IPSS-7 motor</td><td><span class="pill success">Strong</span></td><td class="note">0–35 · hafif/orta/şiddetli · QoL ayrı · tanı değil</td><td class="note">—</td></tr>
+        <tr><td class="domain">PSA izlem motor</td><td><span class="pill success">Strong</span></td><td class="note">ng/mL · hız · yaş notu · kanser tanısı yok</td><td class="note">—</td></tr>
+        <tr><td class="domain">Acil triyaj</td><td><span class="pill success">Strong</span></td><td class="note">6 bayrak · 112 · hekim onay 409</td><td class="note">—</td></tr>
+        <tr><td class="domain">Kohort + recall</td><td><span class="pill success">Strong</span></td><td class="note">gecikmiş kontrol/PSA · IPSS yüksek · risk · PHI-free mesaj</td><td class="note">—</td></tr>
+        <tr><td class="domain">Hasta dosyası UI</td><td><span class="pill success">Strong</span></td><td class="note">UrolojiHome · branş kapısı</td><td class="note">—</td></tr>
+        <tr><td class="domain">API + izolasyon</td><td><span class="pill success">Strong</span></td><td class="note">hastaSahibiMi 404 · uro_* doctor_id · envanter 3 satır</td><td class="note">—</td></tr>
+        <tr><td class="domain">Veritabanı 060</td><td><span class="pill success">Strong</span></td><td class="note">hasta_uro · uro_ipss · uro_psa · uro_gorevleri · uro_risk + RLS</td><td class="note">Idempotent</td></tr>
+        <tr><td class="domain">Intake</td><td><span class="pill success">Strong</span></td><td class="note">acilBelirtilerUroloji = INTAKE_ACIL_SECENEKLERI 1:1</td><td class="note">—</td></tr>
+        <tr><td class="domain">SOAP prompts lock</td><td><span class="pill success">Strong</span></td><td class="note">doz yok · tanı hekim · 112 · OR yok</td><td class="note">—</td></tr>
+        <tr><td class="domain">Hasta portalı Ürolojimm</td><td><span class="pill success">Strong</span></td><td class="note">/urolojim · kod+due only · PSA/IPSS sayı yok</td><td class="note">—</td></tr>
+        <tr><td class="domain">Doktor Araçları (4)</td><td><span class="pill success">Strong</span></td><td class="note">IPSS · PSA · Acil · Kohort · UroAracKabugu · foreign omit</td><td class="note">Audit Araçlar'a bağlanmaz</td></tr>
+        <tr><td class="domain">Testler</td><td><span class="pill success">Strong</span></td><td class="note">npm run test:uro</td><td class="note">—</td></tr>
+        <tr><td class="domain">Branş sızıntısı kapıları</td><td><span class="pill success">Strong</span></td><td class="note">pediatrikBaglam asla · veli yaşa göre · baş çevresi yok</td><td class="note">—</td></tr>
+        <tr><td class="domain">Referans katmanı</td><td><span class="pill success">Strong</span></td><td class="note">TÜD · SB · SGK/SUT · TİTCK · IPSS · PSA</td><td class="note">—</td></tr>
+        <tr><td class="domain">Olgunluk / MD beta</td><td><span class="pill warning">Partial</span></td><td class="note">beta-hazir · docs/URO-MD-BETA.md</td><td class="gap">uzman-dogrulandi pending</td></tr>
+        <tr><td class="domain">Ameliyathane / OR scheduling / HIS</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Tanı auto-lock (BPH/kanser)</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out — hekim kilitler</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Uydurma doz</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Canlı Medula e-imza</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Honest wow bars</h2>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">IPSS + PSA motor</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Acil + Risk 409</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları (4)</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Ürolojimm</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + izolasyon</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Olgunluk (ayrı bar)</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-val">70</div></div>
+  </div>
+
+  <h2>Üroloji-only Araçlar (classify-before-add)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tile</th><th>Bucket</th><th>branslar</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">IPSS — /doktor-tools/uro-ipss</td><td><span class="pill info">specialty-only</span></td><td class="note">uroloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">PSA izlem — /doktor-tools/uro-psa</td><td><span class="pill info">specialty-only</span></td><td class="note">uroloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Hematuri/taş acil — /doktor-tools/uro-acil</td><td><span class="pill info">specialty-only</span></td><td class="note">uroloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Kohort — /doktor-tools/uro-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">uroloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar'a bağlanmaz</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    <span>UROLOJI-EXCEPTIONAL-01 · 2026-09-19 · No PHI</span>
+    <span>Never linked from /doktor-tools</span>
+  </div>
+</div>
+</body>
+</html>
