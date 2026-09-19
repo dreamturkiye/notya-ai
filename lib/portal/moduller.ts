@@ -69,12 +69,15 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   if (brans === 'dahiliye' || (!kendiModuluVar && g.dahiliyeKaydi)) aktif.add('dahiliye')
   if (brans === 'goz-hastaliklari') aktif.add('gozlerim')
   if (brans === 'dermatoloji') aktif.add('dermatoloji')
+  // PSIK-EXCEPTIONAL-01 — Ruh Sağlığım yalnız psikiyatri hekiminin token'ında; başka branşa hiç taşınmaz
+  // (ruh sağlığı içeriği hasta için en hassas veri: "çapraz kart verisi" ile açılmaz).
+  if (brans === 'psikiyatri') aktif.add('psikiyatri')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]
   const SAHIP: Record<PortalModulId, SpecialtyKey> = {
     buyume: 'pediatri', gebelik: 'kadin-hastaliklari-dogum', jinekoloji: 'kadin-hastaliklari-dogum',
-    dahiliye: 'dahiliye', gozlerim: 'goz-hastaliklari', dermatoloji: 'dermatoloji',
+    dahiliye: 'dahiliye', gozlerim: 'goz-hastaliklari', dermatoloji: 'dermatoloji', psikiyatri: 'psikiyatri',
   }
   const nav = sirali.flatMap((id) => modul(SAHIP[id], id)?.nav || [])
   return { moduller: sirali, nav }

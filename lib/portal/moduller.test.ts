@@ -45,8 +45,22 @@ describe('KD / dahiliye / derm eligibility', () => {
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['dermatoloji'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'Dermatoloji' })).nav[0]?.label, 'Derim')
   })
+  // PSIK-EXCEPTIONAL-01: Ruh Sağlığım Strong, kendi yolunda (/ruhsagligim ≠ dahiliye /takibim).
+  it('psikiyatri mounts Ruh Sağlığım (Strong) and no other chapter surface', () => {
+    const m = specialtyProfile('psikiyatri').portal!
+    assert.equal(m[0].derinlik, 'Strong')
+    assert.deepEqual(m[0].nav.map((n) => n.path), ['/ruhsagligim'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'psikiyatri', hastaYasYil: 5, buyumeOlcumu: true, kdKaydi: true })).moduller, ['psikiyatri'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'Ruh Sağlığı ve Hastalıkları' })).nav[0]?.label, 'Ruh Sağlığım')
+    // ...and no other branch mounts it
+    for (const b of ['dahiliye', 'dermatoloji', 'goz-hastaliklari', 'kadin-hastaliklari-dogum', 'pediatri', 'aile-hekimligi']) {
+      assert.ok(!portalModulleri(g({ doktorBransi: b, dahiliyeKaydi: true, kdKaydi: true })).moduller.includes('psikiyatri'), b)
+    }
+  })
   it('free-text users.specialty resolves', () => {
     assert.equal(portalBransAnahtari('İç Hastalıkları'), 'dahiliye')
+    assert.equal(portalBransAnahtari('Ruh Sağlığı ve Hastalıkları'), 'psikiyatri')
+    assert.equal(portalBransAnahtari('Psikiyatri Uzmanı'), 'psikiyatri')
     assert.equal(portalBransAnahtari('Göz Hastalıkları Uzmanı'), 'goz-hastaliklari')
     assert.equal(portalBransAnahtari('Kadın Hastalıkları ve Doğum'), 'kadin-hastaliklari-dogum')
     assert.equal(portalBransAnahtari(null), null)

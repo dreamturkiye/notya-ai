@@ -35,5 +35,6 @@ export function emptyPortalBundle(): PortalBundle {
     goz: null,
     deri: null,
     kronik: null,
+    psik: null,
   }
 }

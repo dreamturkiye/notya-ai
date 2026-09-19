@@ -21,6 +21,7 @@ import HastaBebekKarti from '@/components/doktor/HastaBebekKarti';
 import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
 import DahiliyeHome from '@/specialties/dahiliye/ui/DahiliyeHome';
 import GozHome from '@/specialties/goz-hastaliklari/ui/GozHome';
+import PsikiyatriHome from '@/specialties/psikiyatri/ui/PsikiyatriHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
 import { hesaplaHedefBoy, formatBoyCm, pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
@@ -32,6 +33,7 @@ import {
   gebelikSekmesiUygun,
   hastaDosyaSekmeleri,
   dahiliyeSekmesiBransi,
+  psikiyatriSekmesiBransi,
   pediatriAracSekmesiUygun,
   muayeneAltiSekmeler,
   type HastaDosyaSekmeId,
@@ -87,6 +89,7 @@ export default function HastaProfilPage() {
   const [dahiliyeAraci, setDahiliyeAraci] = useState(false); // NOTYA-DAH-01: iç hastalıkları / aile / genel dahiliye
   const [gozAraci, setGozAraci] = useState(false); // GOZ-CHAPTER: göz hastalıkları hekimi
   const [deriAraci, setDeriAraci] = useState(false); // CHART-TAB-POLICY: dermatoloji only
+  const [psikAraci, setPsikAraci] = useState(false); // PSIK-EXCEPTIONAL-01: yalnız psikiyatri hekimi
   const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
@@ -94,7 +97,7 @@ export default function HastaProfilPage() {
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
     : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci });
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci });
 
   /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
    *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
@@ -159,6 +162,7 @@ export default function HastaProfilPage() {
           setGozAraci(/göz|goz|oftalm/i.test(sp));
           setDeriAraci(/derma|deri ve z/i.test(sp));
           setDahiliyeAraci(dahiliyeSekmesiBransi(sp));
+          setPsikAraci(psikiyatriSekmesiBransi(sp));
         }
       } catch {
         setError('Bir hata oluştu');
@@ -463,6 +467,7 @@ export default function HastaProfilPage() {
         {/* BRANS-ALAN-SIZMASI: ?tab=dahiliye / ?tab=deri derin bağlantısı bölüm içeriğini branş kapısı olmadan açıyordu */}
         {!loading && !error && activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome patientId={patientId} />}
         {!loading && !error && activeTab === 'goz' && gozAraci && <GozHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'psikiyatri' && psikAraci && <PsikiyatriHome patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && deriAraci && (
           <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} hastaAdi={patient?.ad_soyad} />
         )}

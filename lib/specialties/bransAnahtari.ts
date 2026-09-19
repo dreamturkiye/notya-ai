@@ -19,6 +19,9 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/derma|deri ve z/, 'dermatoloji'],
   [/dahiliye|iç hast|ic hast/, 'dahiliye'],
   [/pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast/, 'pediatri'],
+  // PSIK-EXCEPTIONAL-01: "Psikiyatri Uzmanı", "Ruh Sağlığı ve Hastalıkları". Çocuk ve ergen psikiyatrisi
+  // ayrı branştır — eşleşmez, branşsız kalır (yetişkin psikiyatri bölümünü açmaz).
+  [/^(?!.*(çocuk|cocuk|ergen)).*(psikiyatr|ruh sağlığı|ruh sagligi)/, 'psikiyatri'],
 ]
 
 /** Ham değer ('kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'genel-cerrahi') → kanonik anahtar; "genel"/boş/bilinmeyen → null. */

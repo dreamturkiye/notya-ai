@@ -123,6 +123,21 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
         tur: 'radio', zorunlu: true, secenekler: ['Hayır', 'Evet'],
         yardim: 'Bu soru rutin bir güvenlik taramasıdır ve yanıtınız doktorunuz tarafından hemen değerlendirilecektir.',
       },
+      // PSIK-EXCEPTIONAL-01 — kırmızı bayrak kutuları. Etiketler specialties/psikiyatri/engines/acil.ts
+      // INTAKE_ACIL_SECENEKLERI ile BİREBİR aynı olmalı (test: specialties/psikiyatri/tests/acil.test.ts).
+      // Yalnız psikiyatri branşında; başka branşa taşınmaz (brans-alan-sizmasi).
+      {
+        id: 'acilBelirtilerPsik', etiket: 'Şu anda aşağıdakilerden herhangi biri var mı?', tur: 'checkbox-grup',
+        secenekler: [
+          'Yaşamımı sonlandırma düşüncesi',
+          'Kendime zarar verme düşüncesi veya davranışı',
+          'Başkasına zarar verme korkusu veya düşüncesi',
+          'Olmayan sesler duyma, aşırı huzursuzluk veya kontrolü kaybetme hissi',
+          'İlacımı kendi kararımla bıraktım',
+          'Yok',
+        ],
+        yardim: 'Bu maddelerden biri varsa formu göndermeyi beklemeyin: 112’yi arayın veya en yakın acile başvurun. Bu form acil başvurunun yerine geçmez.',
+      },
       { id: 'baslikPsikAile', etiket: 'Aile Öyküsü', tur: 'bolum-basligi' },
       { id: 'ailePsikOykusu', etiket: 'Ailede ruh sağlığı öyküsü', tur: 'checkbox-grup', secenekler: ['Depresyon', 'Anksiyete', 'Bipolar Bozukluk', 'Şizofreni', 'İntihar Öyküsü', 'Madde Bağımlılığı', 'Yok'] },
     ],

@@ -13,6 +13,7 @@ import { KADIN_DOGUM_PROFILE } from './kadin-dogum'
 import { DERMATOLOJI_PROFILE } from './dermatoloji'
 import { DAHILIYE_PROFILE } from './dahiliye'
 import { GOZ_PROFILE } from './goz-hastaliklari'
+import { PSIKIYATRI_PROFILE } from './psikiyatri'
 
 const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   pediatri: PEDIATRI_PROFILE,
@@ -20,6 +21,7 @@ const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   dermatoloji: DERMATOLOJI_PROFILE,
   dahiliye: DAHILIYE_PROFILE,
   'goz-hastaliklari': GOZ_PROFILE,
+  psikiyatri: PSIKIYATRI_PROFILE,
 }
 
 export function specialtyProfile(keyHam: string | null | undefined): SpecialtyProfile {

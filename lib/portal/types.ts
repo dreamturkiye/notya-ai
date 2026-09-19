@@ -163,6 +163,8 @@ export interface PortalBundle {
   deri: PortalDeri | null
   /** DAH-EXCEPTIONAL-01 — "Takibim": MD hedefler, hatırlatmalar, ev ölçüm. No tanı/doz. */
   kronik: PortalKronik | null
+  /** PSIK-EXCEPTIONAL-01 — "Ruh Sağlığım": MD-set kontrol + ölçek/ilaç hatırlatma. No tanı, skor, doz. */
+  psik: PortalPsik | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -205,6 +207,21 @@ export interface PortalDeri {
   islemler: Array<{ tarih: string; ad: string }>
   fototerapi: Array<{ tarih: string; cihaz: string | null }>
   labHatirlatma: Array<{ ad: string; due: string | null }>
+  not: string
+}
+
+/**
+ * PSIK-EXCEPTIONAL-01 — "Ruh Sağlığım": ayaktan psikiyatri hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı adı, ölçek skoru, şiddet bandı,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/psikiyatri/engines/portal-ruhsagligim.ts kilidi).
+ */
+export interface PortalPsik {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Kontrolden önce doldurmanız istenen form" — hangi ölçek olduğu yazılmaz */
+  olcekHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "İlaç güvenlik kan testi" gibi sınıf düzeyi hatırlatma — etken madde / doz yok */
+  ilacHatirlatma: Array<{ ad: string; due: string | null }>
   not: string
 }
 

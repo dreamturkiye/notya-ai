@@ -731,6 +731,10 @@ const LABEL_ALIASES: Record<string, SpecialtyKey> = {
   dahiliye: 'dahiliye',
   'ic-hastaliklari': 'dahiliye',
   psikiyatri: 'psikiyatri',
+  // PSIK-EXCEPTIONAL-01: resmi unvan "Ruh Sağlığı ve Hastalıkları" = psikiyatri. Çocuk ve ergen psikiyatrisi
+  // ayrı bir branştır ve bu anahtara çözülmez (yetişkin ayaktan psikiyatri bölümü onun ürünü değil).
+  'ruh-sagligi-ve-hastaliklari': 'psikiyatri',
+  'ruh-sagligi-hastaliklari': 'psikiyatri',
   'genel-cerrahi': 'genel-cerrahi',
   genelcerrahi: 'genel-cerrahi',
   ortopedi: 'ortopedi',

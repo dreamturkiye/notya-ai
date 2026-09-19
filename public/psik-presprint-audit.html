@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Psikiyatri — Pre-sprint Audit (PSIK-EXCEPTIONAL-01 baseline) · Notya</title>
+  <meta name="description" content="Honest baseline before PSIK-EXCEPTIONAL-01: Ruh Sağlığı ve Hastalıkları ~10% — no chapter, no engines, no Araçlar, no portal module. Intake only. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#6366F1; --indigo-soft:rgba(99,102,241,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--indigo); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--red); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.warn { background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.35); color:var(--amber); }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Pre-sprint specialty audit · Psikiyatri</span>
+    <span>
+      <a href="/psik-exceptional-audit.html">Post-exceptional →</a> ·
+      <a href="/dahiliye-exceptional-audit.html">Dahiliye bar →</a>
+    </span>
+  </div>
+
+  <div class="banner warn"><b>Pre-sprint baseline</b> — 2026-09-19 · PSIK-EXCEPTIONAL-01 başlamadan önceki dürüst durum: bölüm yok, motor yok, Araç yok, portal modülü yok. Bu belge kıyas noktasıdır; kapanış <a href="/psik-exceptional-audit.html" style="color:inherit;font-weight:700">psik-exceptional-audit.html</a>. No PHI. Never on Doktor Araçları.</div>
+
+  <h1>Psikiyatri (Ruh Sağlığı ve Hastalıkları) — Pre-sprint Audit</h1>
+  <p class="lede">
+    Code × TPD × DSM-5-TR (klinik kullanım çerçevesi) × SGK SUT × SB ruh sağlığı protokolleri × TR ayaktan muayenehane / poliklinik.
+    Soru: psikiyatri hekimi Notya'yı bugün açtığında bölüm var mı?
+    <b>Dürüst cevap: hayır — ürün derinliği ~10%.</b>
+    Baseline omurga (not, reçete, ilaç etkileşimi, belgeler, randevu, Sağlığım özeti) çalışıyor; <b>branşa ait hiçbir şey yok.</b>
+  </p>
+
+  <div class="pills">
+    <span class="pill danger">Chapter yok</span>
+    <span class="pill danger">0 Araç</span>
+    <span class="pill danger">Portal modülü yok</span>
+    <span class="pill warning">Intake var (tarama sorusu)</span>
+    <span class="pill info">Honest wow ~10%</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v danger">0</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">2</div><div class="l">Partial (intake · asistan persona)</div></div>
+    <div class="stat"><div class="v danger">14</div><div class="l">Missing / Thin</div></div>
+    <div class="stat"><div class="v info">~10%</div><div class="l">Honest wow</div></div>
+  </div>
+
+  <div class="callout warning">
+    <h2>Executive verdict</h2>
+    <p>
+      Psikiyatri bugün yalnız <b>baseline omurga + intake soruları + asistan persona</b>. <code>lib/specialties/registry.ts</code>'te bölüm girişi yok;
+      <code>specialties/psikiyatri/</code> klasörü yok; ölçek motoru (PHQ-9 / GAD-7 / CGI) yok; güvenlik / özkıyım triyajı yok;
+      psikotrop izlem takvimi yok; psikotrop rapor / renkli reçete kontrolü yok; kohort yok; Sağlığım'da psikiyatri modülü yok.
+      Intake'te <code>guvenlikTarama</code> tek satır var ama <b>hiçbir motora bağlı değil</b> — kırmızı bayrak kutusu, 112 yönlendirmesi ve hekim onaylı kayıt yok.
+      Göz / derm / dahiliye barı ~90–95 iken psikiyatri ~10. Bu, ruh sağlığı verisinin en hassas sınıf olduğu bir branşta ürün açığıdır.
+    </p>
+  </div>
+
+  <h2>Coverage depth — pre-sprint</h2>
+  <p class="cap">Strong = clinic-ready · Partial = var ama bağlı değil · Thin = yalnız baseline · Missing = hiç yok.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>Bugün üründe</th><th>Boşluk</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Chapter registry girişi</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">CHAPTERS.psikiyatri yok → baseline profil</td></tr>
+        <tr><td class="domain">Bölüm sekmesi (hasta dosyası)</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">PsikiyatriHome yok; vizit şeridi yok</td></tr>
+        <tr><td class="domain">Ölçekler (PHQ-9 / GAD-7 / CGI)</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">Motor, madde metni, bant, değişim yok</td></tr>
+        <tr><td class="domain">Güvenlik / özkıyım triyajı</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">Bayrak, 112 yönlendirme, hekim onaylı kayıt yok</td></tr>
+        <tr><td class="domain">Psikotrop izlem (Li · VPA · klozapin · AP · SSRI)</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">İzlem takvimi ve görev üretimi yok</td></tr>
+        <tr><td class="domain">SGK psikotrop rapor / renkli reçete</td><td><span class="pill warning">Thin</span></td><td class="note">Ortak RRS / reçete rengi omurgası var</td><td class="gap">Psikiyatri şablonu ve SUT kontrol listesi yok</td></tr>
+        <tr><td class="domain">Kohort paneli</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">PHQ yüksek / açık bayrak / geciken kontrol listesi yok</td></tr>
+        <tr><td class="domain">Doktor Araçları (psikiyatri)</td><td><span class="pill danger">Missing</span></td><td class="note">Yalnız ortak kartlar</td><td class="gap">0 branşa özel tile</td></tr>
+        <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill danger">Missing</span></td><td class="note">Genel özet / mesaj / belge</td><td class="gap">Psikiyatri modülü ve hasta-güvenli hatırlatma yok</td></tr>
+        <tr><td class="domain">Intake</td><td><span class="pill warning">Partial</span></td><td class="note">Ruh sağlığı soruları + guvenlikTarama</td><td class="gap">Kırmızı bayrak kutuları motora bağlı değil; 112 yardımı yok</td></tr>
+        <tr><td class="domain">SOAP / prompts kilidi</td><td><span class="pill warning">Thin</span></td><td class="note">Ortak doz kilidi</td><td class="gap">Branş prompt kilidi yok (tanı / özkıyım / yeşil reçete)</td></tr>
+        <tr><td class="domain">Asistan persona</td><td><span class="pill warning">Partial</span></td><td class="note">Psikiyatri uzmanı personası + TPD referansları</td><td class="gap">Bölüm motorlarına bağlı araç çağrısı yok</td></tr>
+        <tr><td class="domain">Veritabanı şeması</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">hasta_psik / psik_olcek / psik_gorevleri / psik_risk yok</td></tr>
+        <tr><td class="domain">Testler</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">Ölçek, acil, portal, Araçlar sızıntı testi yok</td></tr>
+        <tr><td class="domain">Olgunluk etiketi</td><td><span class="pill danger">Missing</span></td><td class="note">baseline</td><td class="gap">beta-hazir bile değil</td></tr>
+        <tr><td class="domain">Kapalı servis / istemsiz yatış</td><td><span class="pill info">Out</span></td><td class="note">Bilinçli kapsam dışı</td><td class="note">Intentional (ayaktan ürün)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Wow bar (poliklinik, dürüst)</h2>
+  <p class="cap">0–100 = meşgul TR psikiyatristin ayaktan poliklinik eşiği. Bugünkü ortalama ~10.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Asistan persona / referans</div><div class="bar-track"><div class="bar-fill warn" style="width:35%"></div></div><div class="bar-val">35</div></div>
+    <div class="bar-row"><div class="bar-label">Intake soruları</div><div class="bar-track"><div class="bar-fill warn" style="width:30%"></div></div><div class="bar-val">30</div></div>
+    <div class="bar-row"><div class="bar-label">Reçete / RRS omurgası</div><div class="bar-track"><div class="bar-fill warn" style="width:25%"></div></div><div class="bar-val">25</div></div>
+    <div class="bar-row"><div class="bar-label">Ölçekler (PHQ-9 / GAD-7)</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+    <div class="bar-row"><div class="bar-label">Güvenlik / acil triyaj</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+    <div class="bar-row"><div class="bar-label">Psikotrop izlem</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + hatırlatma</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+    <div class="bar-row"><div class="bar-label">Hasta portalı modülü</div><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><div class="bar-val">0</div></div>
+  </div>
+
+  <h2>Neden acil (risk)</h2>
+  <div class="cards">
+    <div class="card"><div class="title">Güvenlik akışı yok</div><div class="body">Intake'te "kendinize zarar verme düşüncesi" sorusu var ama hiçbir yönlendirme, bayrak veya hekim onayı üretmiyor. Ayaktan psikiyatride bu akışın ürün karşılığı olmalı — 112 metni dahil.</div></div>
+    <div class="card"><div class="title">Ölçek elle hesaplanıyor</div><div class="body">PHQ-9 / GAD-7 kâğıtta; toplam, bant ve vizitler arası değişim not içine elle yazılıyor.</div></div>
+    <div class="card"><div class="title">Lityum / klozapin izlemi hafızada</div><div class="body">Düzey ve hemogram vadeleri hekimin aklında; gecikme görünmüyor.</div></div>
+    <div class="card"><div class="title">Portal sızıntı riski</div><div class="body">Hazır modül olmadığı için hatırlatma göndermek isteyen hekim serbest metin yazar — tanı/skor sızma riski.</div></div>
+  </div>
+
+  <h2>Sprint hedefi (PSIK-EXCEPTIONAL-01)</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Foundation</div><div class="body">Migration 056 + registry + profil + portal modülü.</div></div>
+    <div class="card"><div class="title">Engines + UI</div><div class="body">PHQ-9 · GAD-7 · CGI · acil · şerit · ilaç izlem · SGK · kohort · portal; PsikiyatriHome + API.</div></div>
+    <div class="card"><div class="title">Araçlar + portal + testler</div><div class="body">5 psikiyatri-only tile · Ruh Sağlığım Strong · ölçek/acil/portal/sızıntı testleri.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede" style="font-size:13px">
+    Code (pre-sprint): lib/specialties/registry.ts (psikiyatri girişi yok) · lib/intake/bransSorulari.ts (psikiyatri soruları) ·
+    lib/asistan/specialistsCatalog.ts (persona) · lib/doktor/receteRengi.ts (ortak RRS).
+    External: TPD · DSM-5-TR (klinik kullanım çerçevesi) · SGK SUT · SB ruh sağlığı protokolleri · TİTCK KÜB.
+    Kapanış: <a href="/psik-exceptional-audit.html">psik-exceptional-audit.html</a>.
+  </p>
+
+  <div class="foot">
+    <span>Pre-sprint baseline · notya-ai · Psikiyatri · 2026-09-19</span>
+    <span>No patient data · internal product audit · not on Doktor Araçları</span>
+  </div>
+</div>
+</body>
+</html>

@@ -73,6 +73,13 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#059669', icon: 'MC', title: 'Kontrasepsiyon MEC', desc: 'Hasta faktörleri → yöntem başına WHO MEC 1–4 ve gerekçe · acil kontrasepsiyon · doğum sonrası başlama', route: '/doktor-tools/kd-mec', branslar: ['kadin-hastaliklari-dogum'] },
   { circleColor: '#E11D48', icon: 'OR', title: 'Obstetrik risk & sezaryen notu', desc: 'Preeklampsi → aspirin penceresi · GDM riski · SSVD alanları · hekim kilitli sezaryen endikasyon notu', route: '/doktor-tools/kd-risk', branslar: ['kadin-hastaliklari-dogum'] },
   { circleColor: '#EA580C', icon: 'KK', title: `${KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI} kohort paneli`, desc: 'Lohusa 1. / 6. hafta · kapanan tarama pencereleri · geciken izlem · OGTT / anti-D / GBS · smear · 1-tap hatırlatma', route: '/doktor-tools/kd-kohort', branslar: ['kadin-hastaliklari-dogum'] },
+  // Psikiyatri (Ruh Sağlığı ve Hastalıkları) — specialty-only (not pediatri / dahiliye / göz / dermatoloji / KD).
+  // Chapter engines: specialties/psikiyatri/engines. Ölçek bandı karar desteğidir; tanı ve doz hekimde.
+  { circleColor: '#6366F1', icon: 'PG', title: 'PHQ-9 / GAD-7', desc: 'Madde madde doldur · toplam ve şiddet bandı (karar desteği, tanı değil) · 9. madde güvenlik uyarısı · vizitler arası değişim', route: '/doktor-tools/psik-phq-gad', branslar: ['psikiyatri'] },
+  { circleColor: '#DC2626', icon: 'GR', title: 'Güvenlik & acil triyaj', desc: 'Özkıyım düşüncesi · kendine zarar · şiddet riski · akut psikoz bayrakları → 112 / acil yönlendirme ve hekim onaylı kriz planı', route: '/doktor-tools/psik-risk', branslar: ['psikiyatri'] },
+  { circleColor: '#0891B2', icon: 'Lİ', title: 'Psikotrop izlem takvimi', desc: 'Lityum düzey · valproat KCFT/hemogram · atipik AP metabolik panel · SSRI sodyum — sınıf düzeyi görevler, doz yok', route: '/doktor-tools/psik-ilac-izlem', branslar: ['psikiyatri'] },
+  { circleColor: '#16A34A', icon: 'PR', title: 'Psikotrop rapor & reçete', desc: 'İlaç raporu taslağı · SUT kontrol listesi · kırmızı / yeşil reçete uyarısı — T.C. kimlik ve doz yazılmaz', route: '/doktor-tools/psik-sgk', branslar: ['psikiyatri'] },
+  { circleColor: '#9333EA', icon: 'PK', title: 'Psikiyatri kohort paneli', desc: 'PHQ-9 yüksek · açık güvenlik bayrağı · geciken kontrol · geciken lityum/valproat düzeyi · 1-tap hatırlatma', route: '/doktor-tools/psik-kohort', branslar: ['psikiyatri'] },
 ]
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]

@@ -340,3 +340,70 @@ test('KD studio pages: guarded, card-opened, never on the landing', () => {
   }
   assert.doesNotMatch(landing, /GebelikTakvimAraci|DogumRaporAraci|MecAraci|RiskAraci|KdKohortPaneli/)
 })
+
+// ─── PSIK-EXCEPTIONAL-01 — Psikiyatri (Ruh Sağlığı ve Hastalıkları) specialty-only Araçlar ──────
+const PSIK_ROTALARI = [
+  '/doktor-tools/psik-phq-gad',
+  '/doktor-tools/psik-risk',
+  '/doktor-tools/psik-ilac-izlem',
+  '/doktor-tools/psik-sgk',
+  '/doktor-tools/psik-kohort',
+]
+
+test('psikiyatri-only Araçlar: psikiyatri sees all five (canonical + official title); 25+ foreign branşlar never', () => {
+  for (const ham of ['psikiyatri', 'Psikiyatri', 'Ruh Sağlığı ve Hastalıkları', 'Psikiyatri Uzmanı']) {
+    const psik = doktorAraclariListesi(ham)
+    for (const r of PSIK_ROTALARI) {
+      assert.ok(psik.some((a) => a.route === r), `${ham} missing ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+    assert.equal(psik.length, ORTAK_DOKTOR_ARACLARI.length + PSIK_ROTALARI.length)
+  }
+  for (const r of PSIK_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, `${r} not in BRANS_DOKTOR_ARACLARI`)
+    assert.deepEqual(arac.branslar, ['psikiyatri'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'psikiyatri')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'goz-hastaliklari', 'kadin-dogum', 'dermatoloji', 'İç Hastalıkları', 'Çocuk Sağlığı ve Hastalıkları', 'Kadın Hastalıkları ve Doğum', 'noroloji', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of PSIK_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  // psikiyatri does not see other chapters' tiles (Hedef Boy, dahiliye, göz, derm, KD)
+  const psik = doktorAraclariListesi('psikiyatri')
+  assert.ok(!psik.some((a) => a.branslar && !a.branslar.includes('psikiyatri')))
+  assert.ok(!psik.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/dahiliye-kohort'))
+  assert.ok(!psik.some((a) => GOZ_ROTALARI.includes(a.route) || DERM_ROTALARI.includes(a.route) || KD_ROTALARI.includes(a.route)))
+})
+
+test('psikiyatri studio pages: guarded by PsikAracKabugu, card-opened, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/psikiyatri/ui/araclar/PsikAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+  assert.match(kabuk, /Bu araç yalnızca psikiyatri için\./)
+  assert.match(kabuk, /Araçlar · Psikiyatri/)
+  for (const r of PSIK_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /PsikAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /PhqGadAraci|PsikSgkAraci|IlacIzlemAraci|PsikKohortAraci|PsikAracKabugu|psik-exceptional-audit/)
+})
+
+test('psikiyatri tiles stay commercial: no dose, no diagnosis claim, no locked-ward copy', () => {
+  for (const r of PSIK_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /tanı koy|tanısı konur|zorla yatış|kapalı servis/i, r)
+    assert.doesNotMatch(blob, /PSIK-|sprint|audit|\.html/i, r)
+  }
+})

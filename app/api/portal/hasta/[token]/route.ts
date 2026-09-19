@@ -18,6 +18,13 @@ import {
   sonrakiKontrol as dahiliyeSonrakiKontrol,
   takibimHatirlatmalari,
 } from '@/specialties/dahiliye/engines/portal-takibim'
+import {
+  ilacHatirlatmalari,
+  olcekHatirlatmalari,
+  ruhSagligimHatirlatmalari,
+  sonrakiKontrol as psikSonrakiKontrol,
+  RUH_SAGLIGIM_NOTU,
+} from '@/specialties/psikiyatri/engines/portal-ruhsagligim'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -613,6 +620,28 @@ export async function GET(
       not: 'Bu bilgiler bilgilendirme amaçlıdır; yorum ve plan doktorunuzdadır. Acil durumda 112.',
     }
   } catch (e) { console.error('[portal] takibim:', e) }
+
+  // PSIK-EXCEPTIONAL-01 — "Ruh Sağlığım": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Ölçek skoru, şiddet bandı, tanı, ilaç adı ve doz portala GEÇMEZ; başlıklar koddan sabit metne çevrilir.
+  if (modulAktif('psikiyatri')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('psik_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_psik').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = ruhSagligimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.psik = {
+      sonrakiKontrol: psikSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      olcekHatirlatma: olcekHatirlatmalari(hatirlatmalar),
+      ilacHatirlatma: ilacHatirlatmalari(hatirlatmalar),
+      not: RUH_SAGLIGIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] ruhsagligim:', e) }
 
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId, doctorId)

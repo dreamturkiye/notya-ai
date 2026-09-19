@@ -25,6 +25,7 @@ export type HastaDosyaSekmeId =
   | 'dahiliye'
   | 'bebek'
   | 'goz'
+  | 'psikiyatri'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -34,7 +35,18 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi/.test(b)
+}
+
+/**
+ * PSIK-EXCEPTIONAL-01 — Psikiyatri bölüm sekmesinin sahibi: yalnız psikiyatri / ruh sağlığı ve hastalıkları.
+ * Dahiliye, aile hekimliği, nöroloji ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi): ölçek,
+ * güvenlik değerlendirmesi ve psikotrop izlem içeriği başka branşın hasta dosyasına taşınmaz.
+ */
+export function psikiyatriSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /psikiyatri|ruh sağlığı ve hastalıkları|ruh sagligi ve hastaliklari/.test(b)
 }
 
 export function yasYilKesir(dogumIso: string | null | undefined, nowMs = Date.now()): number | null {
@@ -95,6 +107,8 @@ export function hastaDosyaSekmeleri(opts: {
   gozUygun?: boolean
   /** DERM: doctor specialty dermatoloji — never always-on */
   deriUygun?: boolean
+  /** PSIK-EXCEPTIONAL-01: doctor specialty psikiyatri only */
+  psikiyatriUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -118,6 +132,7 @@ export function hastaDosyaSekmeleri(opts: {
   // Kadın Sağlığı & Gebelik: top-level değil — Muayene Geçmişi altında (Boss 2026-09-18)
   if (opts.deriUygun) tabs.push({ id: 'deri', label: 'Deri & Lezyon' })
   if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' })
+  if (opts.psikiyatriUygun) tabs.push({ id: 'psikiyatri', label: 'Psikiyatri' })
   return tabs
 }
 
