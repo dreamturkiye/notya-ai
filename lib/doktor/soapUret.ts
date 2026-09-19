@@ -15,6 +15,7 @@
  *    Kimlik başlığı ekranda sunucu tarafında hasta kaydından birleştirilir.
  */
 import Anthropic from '@anthropic-ai/sdk'
+import { aiCagir } from '@/lib/ai/cagir'
 import fs from 'fs'
 import path from 'path'
 import { normalize } from '@/lib/ilac/ilacArama'
@@ -207,6 +208,7 @@ export interface SoapGirdi {
   doktorAdi?: string // Kaan 2026-09-10: veli özetinde "Doktorunuz" yerine "Dr. Ad Soyad"
   doktorBransi?: string | null // DAH-PROMPTS-LOCK: users.specialty — seans bağlamı branş göndermese de kilit uygulanır
   hastaDogumIso?: string | null // BRANS-ALAN-SIZMASI: aile/genel pediatrik bağlam + VELI-YASAL-ONAM (<18 → veli dili, her branş)
+  doctorId?: string | null // NOTYA-MALIYET-01: yalnız ai_token_kullanim ölçümü (prompta girmez)
 }
 
 /** AUDIT-2026-09-03 (canlı olay, 16:27): uzun muayenelerde model çıktısı token tavanında
@@ -282,9 +284,12 @@ export function soapSistemPromptu(girdi: SoapGirdi): string {
 export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Promise<SoapNotu> {
   const sistem = soapSistemPromptu(girdi)
 
-  const yanit = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 8000,
+  // NOTYA-MALIYET-01: muayene/SOAP notu — GÜÇLÜ
+  const yanit = await aiCagir({
+    istemci: anthropic,
+    gorev: 'soap',
+    maxTokens: 8000,
+    doctorId: girdi.doctorId ?? null,
     system: sistem,
     messages: [{ role: 'user', content: `Muayene transkripti:\n\n${girdi.transcript}` }],
   })
@@ -330,9 +335,11 @@ export async function stilProfiliDamit(
     `${i + 1}. [${d.alan || '?'}]\nÖNCE: ${String(d.onceki || '').slice(0, 400)}\nSONRA: ${String(d.sonraki || '').slice(0, 400)}`
   ).join('\n\n')
   if (!ornekler) return mevcutProfil
-  const yanit = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 800,
+  // NOTYA-MALIYET-01: doktorun kendi düzeltmelerinden tercih çıkarımı — dar HIZLI listesinde (hasta verisi yorumlamaz)
+  const yanit = await aiCagir({
+    istemci: anthropic,
+    gorev: 'cikarim',
+    maxTokens: 800,
     system: `Bir doktorun yapay zekâ taslak notlarına yaptığı düzeltmelerden, gelecekteki not üretimine rehber olacak KOMPAKT bir tercih profili çıkar. En fazla 12 madde.
 
 ÇOK ÖNEMLİ — GÜVEN EŞİĞİ (Kaan/Gökhan, 2026-09-09): bu profil "MUTLAKA uy" talimatıyla her yeni nota enjekte edilir, yani buraya giren HER madde bir sonraki hastada otomatik uygulanır. İki tercih türünü AYRI EŞİKLE değerlendir:

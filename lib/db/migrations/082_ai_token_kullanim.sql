@@ -1,9 +1,10 @@
 -- 082 — NOTYA-MALIYET-01 (2026-09-19): Claude çağrı başına token sayaçları (maliyet izleme).
+-- AD: ai_token_kullanim — "ai_kullanim" NOTYA-KOTA-01 günlük kota tablosudur (doctor_id, gun, kova, sayac); ona dokunulmaz.
 -- YALNIZ SAYAÇ: prompt, yanıt, hasta adı / kimliği / klinik içerik YAZILMAZ. patient_id kolonu BİLEREK yok.
 -- Yazan: lib/ai/cagir.ts → lib/ai/kullanim.ts (servis rolü). İstemciden yazma yok.
 -- YALNIZ EKLEME: yeni tablo + indeks + RLS. Veri silinmez / değişmez. İdempotent — tekrar çalıştırmak güvenli.
 
-create table if not exists ai_kullanim (
+create table if not exists ai_token_kullanim (
   id bigint generated always as identity primary key,
   created_at timestamptz not null default now(),
   -- çağrıyı tetikleyen hekim/kullanıcı (bilinmiyorsa null: arka plan işleri, portal, WhatsApp girişi)
@@ -19,21 +20,21 @@ create table if not exists ai_kullanim (
   -- stop_reason = max_tokens (F3 kesilme izleme)
   kesildi boolean not null default false
 );
-create index if not exists ai_kullanim_zaman_idx on ai_kullanim (created_at desc);
-create index if not exists ai_kullanim_gorev_idx on ai_kullanim (gorev, created_at desc);
-create index if not exists ai_kullanim_doktor_idx on ai_kullanim (doctor_id, created_at desc);
+create index if not exists ai_token_kullanim_zaman_idx on ai_token_kullanim (created_at desc);
+create index if not exists ai_token_kullanim_gorev_idx on ai_token_kullanim (gorev, created_at desc);
+create index if not exists ai_token_kullanim_doktor_idx on ai_token_kullanim (doctor_id, created_at desc);
 
 -- RLS: servis rolü RLS'i atlar (yazma yalnız sunucudan). Hekim yalnız KENDİ satırlarını okuyabilir; ekleme/güncelleme/
 -- silme politikası YOK → istemci (anon/authenticated) yazamaz.
-alter table public.ai_kullanim enable row level security;
+alter table public.ai_token_kullanim enable row level security;
 do $$
 begin
-  create policy "ai_kullanim_kendi_satiri_oku" on public.ai_kullanim for select to authenticated using (doctor_id = auth.uid());
+  create policy "ai_token_kullanim_kendi_satiri_oku" on public.ai_token_kullanim for select to authenticated using (doctor_id = auth.uid());
 exception when duplicate_object then null;
 end $$;
 
 -- Maliyet izleme görünümü: gün × görev × model toplamları (içerik yok). Yalnız servis rolü / SQL Editor okur.
-create or replace view ai_kullanim_gunluk with (security_invoker = true) as
+create or replace view ai_token_kullanim_gunluk with (security_invoker = true) as
 select
   date_trunc('day', created_at at time zone 'Europe/Istanbul')::date as gun,
   gorev,
@@ -44,5 +45,8 @@ select
   sum(cache_read) as cache_read,
   sum(cache_creation) as cache_creation,
   sum(case when kesildi then 1 else 0 end) as kesilen
-from ai_kullanim
+from ai_token_kullanim
 group by 1, 2, 3;
+
+-- Görünüm yalnız servis rolü / SQL Editor içindir (security_invoker RLS'i zaten uygular; ek olarak istemci rollerinden geri alınır).
+revoke all on public.ai_token_kullanim_gunluk from anon, authenticated;

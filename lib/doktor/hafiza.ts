@@ -23,6 +23,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type Anthropic from '@anthropic-ai/sdk'
+import { aiCagir } from '@/lib/ai/cagir'
 
 export type HafizaKategori = 'klinik' | 'uslup' | 'rutin' | 'iletisim' | 'kisisel' | 'uygulama'
 export type HafizaKaynak = 'doktor_soyledi' | 'duzeltme' | 'gozlem'
@@ -59,7 +60,6 @@ export interface HafizaOzeti {
   stilProfili: string
 }
 
-const HAIKU = 'claude-haiku-4-5-20251001'
 const KESINLIK_ESIGI: Record<HafizaKategori, number> = {
   klinik: 2,     // Kaan/Gökhan: tek vakadan ilaç/doz genellemesi riskli
   uslup: 1,
@@ -350,9 +350,12 @@ export async function sohbettenOgren(
   sonMesajlar: { role: string; content: string }[],
 ): Promise<number> {
   const metin = sonMesajlar.slice(-6).map((m) => `${m.role === 'user' ? 'DOKTOR' : 'ASİSTAN'}: ${String(m.content).slice(0, 600)}`).join('\n')
-  const yanit = await anthropic.messages.create({
-    model: HAIKU,
-    max_tokens: 500,
+  // NOTYA-MALIYET-01: doktorun kendi tercihlerini çıkarma — dar HIZLI listesinde (hasta klinik verisi alınmaz)
+  const yanit = await aiCagir({
+    istemci: anthropic,
+    gorev: 'cikarim',
+    maxTokens: 500,
+    doctorId,
     system: `Bir doktor ile AI meslektaşının sohbetinden, doktorun KENDİSİ hakkında AÇIKÇA söylediği ve gelecekte de geçerli KALICI bilgileri çıkar. Kişisel şef benzetmesi: "balık yemem", "akşam 7'de yerim", "az ricotta" gibi şeyler.
 Kategoriler: klinik (ilaç/tedavi tercihleri), uslup (not/konuşma biçimi tercihleri: kısa/uzun, terminoloji), rutin (mesai, öğle arası, hasta yoğunluğu, randevu süresi), iletisim (hitap: "bana X de", "Hocam deme", cevap uzunluğu, ses tonu), kisisel (doktorun paylaştığı kişisel ama işle ilgili detay: çocuğu var, cuma erken çıkar), uygulama (hangi özelliği nasıl kullanmak istediği).
 KURALLAR:
@@ -393,9 +396,12 @@ export async function ozetGerekirseGuncelle(anthropic: Anthropic, sb: SupabaseCl
     h.stilProfili ? `Not tercihleri:\n${h.stilProfili}` : '',
   ].filter(Boolean).join('\n')
   if (!malzeme) return
-  const yanit = await anthropic.messages.create({
-    model: HAIKU,
-    max_tokens: 300,
+  // NOTYA-MALIYET-01: hafıza kayıtlarından doktor profili paragrafı — dar HIZLI listesinde
+  const yanit = await aiCagir({
+    istemci: anthropic,
+    gorev: 'ozet',
+    maxTokens: 300,
+    doctorId,
     system: `Aşağıdaki hafıza kayıtlarından bir doktorun çalışma karakterini anlatan 3-5 cümlelik TEK paragraf yaz — bir meslektaşın onu yeni bir asistana tanıtması gibi (ritmi, üslubu, nelere önem verdiği, nasıl hitap edilmek istediği). Türkçe, üçüncü şahıs, süsleme yok, kayıtlarda olmayanı yazma.`,
     messages: [{ role: 'user', content: malzeme }],
   })

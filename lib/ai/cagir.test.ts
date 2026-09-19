@@ -6,6 +6,8 @@ import assert from 'node:assert/strict'
 import { aiCagir, etkinSecim, gorselIcerirMi, istekGovdesi, sistemGovdesi, type AiMesaj } from './cagir'
 import { kullanimSatiri } from './kullanim'
 import { gucluModel, hizliModel } from './modeller'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 const GORSEL: AiMesaj[] = [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'AAAA' } }, { type: 'text', text: 'Bu nedir?' }] }]
 const PDF: AiMesaj[] = [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: 'AAAA' } }, { type: 'text', text: 'Çıkar' }] }]
@@ -88,6 +90,12 @@ describe('ölçüm satırı — yalnız sayaç', () => {
     assert.equal(satir.input_tokens, 0)
     assert.equal(satir.output_tokens, 0)
     assert.equal(satir.kesildi, false)
+  })
+
+  it("tablo ai_token_kullanim — ai_kullanim NOTYA-KOTA-01'in günlük kota tablosudur, ona yazılmaz", () => {
+    const kaynak = readFileSync(join(__dirname, 'kullanim.ts'), 'utf8')
+    assert.match(kaynak, /from\('ai_token_kullanim'\)/)
+    assert.doesNotMatch(kaynak, /from\('ai_kullanim'\)/)
   })
 
   it('ölçüm hatası çağrıyı düşürmez (yanıt null olsa bile)', async () => {

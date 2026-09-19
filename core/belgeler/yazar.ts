@@ -6,6 +6,7 @@
  * fusion.ts caps and rules override it.
  */
 import type Anthropic from '@anthropic-ai/sdk'
+import { aiCagir } from '@/lib/ai/cagir'
 import { BULGU_KODLARI, MODALITE_TR, bulguTr, type Modalite } from './ontoloji'
 import { SES_MODALITELERI } from './router'
 import type { AnalizGirdi, BelgeRaporu, FusionSonuc, MotorCiktisi } from './types'
@@ -114,13 +115,14 @@ export async function claudeIleYaz(
   fusion: FusionSonuc | null,
   motorlar: MotorCiktisi[],
   sesMetrikleri?: Record<string, number | string> | null,
-  model = 'claude-sonnet-4-6'
+  doctorId?: string | null
 ): Promise<{ rapor: BelgeRaporu; bulguKodlari: { kod: string; p: number }[]; ham: string }> {
   const icerik: Anthropic.Messages.MessageParam['content'] extends string | (infer U)[] ? U[] : never = []
   if (gorsel?.tip === 'image') icerik.push({ type: 'image', source: { type: 'base64', media_type: gorsel.mime, data: gorsel.base64 } })
   if (gorsel?.tip === 'pdf') icerik.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: gorsel.base64 } } as unknown as (typeof icerik)[number])
   icerik.push({ type: 'text', text: kullaniciPromptu(girdi, fusion, motorlar, sesMetrikleri) })
-  const yanit = await anthropic.messages.create({ model, max_tokens: 3000, temperature: 0.2, system: sistemPromptu(persona), messages: [{ role: 'user', content: icerik }] })
+  // NOTYA-MALIYET-01: görüntü/belge yorumu — istisnasız GÜÇLÜ (goruntu-inceleme); model adı politikadan
+  const yanit = await aiCagir({ istemci: anthropic, gorev: 'goruntu-inceleme', maxTokens: 3000, temperature: 0.2, doctorId, system: sistemPromptu(persona), messages: [{ role: 'user', content: icerik }] })
   const ham = yanit.content.filter((c) => c.type === 'text').map((c) => (c as { text: string }).text).join('\n')
   const temiz = ham.replace(/```json|```/g, '').trim()
   const j = JSON.parse(temiz.slice(temiz.indexOf('{'), temiz.lastIndexOf('}') + 1)) as BelgeRaporu & { bulgu_kodlari?: { kod: string; p: number }[] }

@@ -1,9 +1,11 @@
 // ============================================================
 // NOTYA AI - Yapay Zeka Not Üretici
 // Tüm Meslekler için Claude API Entegrasyonu
+// NOTYA-MALIYET-01: hepsi GÜÇLÜ — tıbbi not 'soap', diğer meslek notları 'not-uretimi' (lib/ai/modeller.ts)
 // ============================================================
 
 import Anthropic from '@anthropic-ai/sdk'
+import { aiCagir } from './cagir'
 import type { 
   GeneratedNote, SessionContext, TranscriptSegment, MedicalSpecialty 
 } from '@/types/notya'
@@ -62,9 +64,10 @@ GÖREV: Transkripti analiz et ve aşağıdaki JSON yapısını döndür. Başka 
   "ai_confidence": 0.95
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'soap',
+    maxTokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [
@@ -148,9 +151,10 @@ Avukat-müvekkil görüşmesini analiz et ve JSON döndür. Başka hiçbir şey 
   "ai_confidence": 0.92
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Müvekkil görüşmesi transkripti:\n\n${transcript}` }]
@@ -220,9 +224,10 @@ Seans transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ai_confidence": 0.90
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Terapi seansı transkripti:\n\n${transcript}` }]
@@ -287,9 +292,10 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ai_confidence": 0.93
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Müşteri görüşmesi transkripti:\n\n${transcript}` }]
@@ -355,9 +361,10 @@ Transkripti analiz et ve YALNIZCA şu JSON'u döndür:
   "ai_confidence": 0.9
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 4000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Müşteri görüşmesi transkripti:\n\n${transcript}` }]
@@ -432,9 +439,10 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ai_confidence": 0.91
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Görüşme transkripti:\n\n${transcript}` }]
@@ -491,9 +499,10 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ai_confidence": 0.89
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Müşteri görüşmesi transkripti:\n\n${transcript}` }]
@@ -546,9 +555,10 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ai_confidence": 0.88
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Müşteri görüşmesi transkripti:\n\n${transcript}` }]
@@ -604,9 +614,10 @@ Görüşme transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ai_confidence": 0.90
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Veli/Öğrenci görüşmesi transkripti:\n\n${transcript}` }]
@@ -659,9 +670,10 @@ Toplantı transkriptini analiz et ve JSON döndür. Başka hiçbir şey yazma.
   "ai_confidence": 0.94
 }`
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+  const response = await aiCagir({
+    istemci: anthropic,
+    gorev: 'not-uretimi',
+    maxTokens: 3000,
     temperature: 0.1,
     system: systemPrompt,
     messages: [{ role: 'user', content: `Toplantı transkripti:\n\n${transcript}` }]

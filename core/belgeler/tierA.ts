@@ -21,6 +21,8 @@ export interface TierAGirdi {
   tekAlanFundus?: boolean
   serbest?: boolean
   sesMetrikleri?: Record<string, number | string> | null
+  /** Yalnız ai_token_kullanim ölçümü için hekim kimliği (NOTYA-MALIYET-01). */
+  doctorId?: string | null
 }
 
 export interface TierASonuc { rapor: BelgeRaporu; fusion: FusionSonuc; motorlar: MotorCiktisi[]; duzeltmeler: string[]; ham: string }
@@ -29,7 +31,7 @@ export interface TierASonuc { rapor: BelgeRaporu; fusion: FusionSonuc; motorlar:
 export async function tierAYazVeFuzyonla(g: TierAGirdi): Promise<TierASonuc> {
   const capGirdi = { modalite: g.modalite, yasAy: g.yasAy, fitzpatrickBilinmiyor: g.fitzpatrickBilinmiyor, tekAlanFundus: g.tekAlanFundus }
   const onFusion = fusionYap(g.tierB, { ...capGirdi, kalite: 'iyi' })
-  const yazim = await claudeIleYaz(g.anthropic, g.persona, g.girdi, g.gorsel, g.tierB.length ? onFusion : null, g.tierB, g.sesMetrikleri || null)
+  const yazim = await claudeIleYaz(g.anthropic, g.persona, g.girdi, g.gorsel, g.tierB.length ? onFusion : null, g.tierB, g.sesMetrikleri || null, g.doctorId ?? null)
   const motorlar = [...g.tierB, claudeMotorCiktisi(yazim.bulguKodlari, yazim.rapor.kalite, null)]
   const fusion = fusionYap(motorlar, { ...capGirdi, kalite: yazim.rapor.kalite })
   const { rapor, duzeltmeler } = raporuDogrula(yazim.rapor, fusion)

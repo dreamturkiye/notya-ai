@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { kritikAlarm } from "@/lib/alarm"
 import Anthropic from "@anthropic-ai/sdk"
+import { aiCagir } from "@/lib/ai/cagir"
+import { modelSec } from "@/lib/ai/modeller"
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { seansSahibi } from '@/lib/doktor/hastaSahipligi'
 
@@ -73,7 +75,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         görüşme_turu: maliNote.görüşme_turu,
         profession_type: 'mali_musavirlik',
         raw_note: JSON.stringify(maliNote),
-        ai_model: 'claude-sonnet-4', ai_confidence: maliNote.ai_confidence,
+        // NOTYA-MALIYET-01: yalnız etiket (notes.ai_model) — notu üreten generateAccountingNoteV2 'not-uretimi' (GÜÇLÜ)
+        ai_model: modelSec('not-uretimi').model, ai_confidence: maliNote.ai_confidence,
       }).select().single()
       if (noteError) throw new Error('Mali not kaydedilemedi: ' + noteError.message)
       await getSupabase().from('sessions').update({ status: 'completed' }).eq('id', sessionId).eq('doctor_id', user.id)
@@ -108,9 +111,12 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
       const alliedUserMessage = `Seans transkripti:\n${transcript}\n\nMeslek: ${alliedProfession}\nHekim Tanısı: ${hekimTaniReferansi}\nHekim Adı: ${hekimAdi || 'Belirtilmedi'}\nTedavi Planı Özeti: ${tedaviPlaniOzet || 'Belirtilmedi'}`
 
-      const alliedResponse = await getAnthropic().messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+      // NOTYA-MALIYET-01: sağlık meslekleri seans notu — GÜÇLÜ (not-uretimi)
+      const alliedResponse = await aiCagir({
+        istemci: getAnthropic(),
+        gorev: 'not-uretimi',
+        maxTokens: 1500,
+        doctorId: user.id,
         system: alliedSystemPrompt,
         messages: [{ role: 'user', content: alliedUserMessage }]
       })
@@ -129,7 +135,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
         hekim_tani_tarihi: hekimTaniTarihi,
         hekim_adi: hekimAdi,
         tedavi_plani_ozet: tedaviPlaniOzet,
-        ai_model: 'claude-sonnet-4-6',
+        ai_model: modelSec('not-uretimi').model,
         ai_confidence: alliedNoteData?.ai_confidence || 0.9,
       }).select().single()
 
@@ -199,7 +205,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
     const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(getSupabase(), user.id), hekimBransi(getSupabase(), user.id), hastaDogumIso(getSupabase(), user.id, seans.patient_id ? String(seans.patient_id) : null)])
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso })
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id })
 
     // Save note
     const { data: note, error: noteError } = await getSupabase().from("notes").insert({
@@ -226,7 +232,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       vitaller: noteData?.vitaller || null,
       recete_onerisi: noteData?.receteOnerisi || null,
       alarm_bulgulari: noteData?.alarmBulgulari || null,
-      ai_model: "claude-sonnet-4-6",
+      ai_model: modelSec("soap").model,
       ai_confidence: noteData?.ai_confidence || 0.9,
     }).select().single()
 
