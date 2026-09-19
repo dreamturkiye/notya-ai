@@ -199,6 +199,8 @@ export interface PortalBundle {
   nef: PortalNef | null
   /** ROMATOLOJI-EXCEPTIONAL-01 — "Romatizmam": MD-set kontrol + lab/eklem/belge hatırlatma. No tanı, skor, doz. */
   roma: PortalRoma | null
+  /** ONKOLOJI-EXCEPTIONAL-01 — "Tedavim": MD-set kontrol + kür/toksisite hatırlatma. No tanı, doz. */
+  onko: PortalOnko | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */

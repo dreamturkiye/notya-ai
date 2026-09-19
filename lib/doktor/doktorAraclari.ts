@@ -176,7 +176,7 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // ONKOLOJI-EXCEPTIONAL-01 — specialty-only (not dahiliye / hematoloji / radyasyon / pediatri / kardiyoloji).
   // Chapter engines: specialties/onkoloji/engines. Kür sayacı / toksisite karar desteği; tanı/evre/doz hekimde.
   // Visibility: onkoloji only — NOT dahiliye, NOT pediatri, NOT kardiyoloji, NOT endokrinoloji.
-  { circleColor: '#DC2626', icon: 'Kür', title: 'Tedavi döngü / kür sayacı', desc: 'Kür numarası · tarihler · protokol etiketi — mg/m², AUC, BSA ve eczane doz şeması yok', route: '/doktor-tools/onko-kur', branslar: ['onkoloji'] },
+  { circleColor: '#DC2626', icon: 'Kür', title: 'Tedavi döngü / kür sayacı', desc: 'Kür numarası · tarihler · protokol etiketi — doz ve vücut yüzeyi hesabı yazılmaz', route: '/doktor-tools/onko-kur', branslar: ['onkoloji'] },
   { circleColor: '#B91C1C', icon: 'Tx', title: 'Toksisite kontrol listesi', desc: 'Yan etki maddeleri · izlem tarihi · grade tanı değildir · doz azaltma hekimde', route: '/doktor-tools/onko-toksisite', branslar: ['onkoloji'] },
   { circleColor: '#991B1B', icon: 'SUT', title: 'SUT rapor taslağı', desc: 'SGK/SUT endikasyon taslağı · canlı Medula e-imza yok · güncel madde hekim doğrular', route: '/doktor-tools/onko-sut', branslar: ['onkoloji'] },
   { circleColor: '#7F1D1D', icon: 'OK', title: 'Onkoloji kohort paneli', desc: 'Geciken kontrol · kür · toksisite · açık acil · görüntü zaman çizelgesi · 1-tap hatırlatma', route: '/doktor-tools/onko-kohort', branslar: ['onkoloji'] },

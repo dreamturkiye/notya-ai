@@ -220,6 +220,7 @@ export default function HastaProfilPage() {
           setFtrAraci(fizikTedaviSekmesiBransi(sp));
           setAileAraci(aileHekimligiSekmesiBransi(sp));
           setEndoAraci(endokrinolojiSekmesiBransi(sp));
+          setRomaAraci(romatolojiSekmesiBransi(sp));
           setEnfAraci(enfeksiyonSekmesiBransi(sp));
           setGastroAraci(gastroenterolojiSekmesiBransi(sp));
           setNefAraci(nefrolojiSekmesiBransi(sp));

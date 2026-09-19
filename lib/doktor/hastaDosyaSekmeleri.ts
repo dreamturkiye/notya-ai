@@ -364,6 +364,7 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.gastroenterolojiUygun) tabs.push({ id: 'gastroenteroloji', label: 'Gastroenteroloji' })
   if (opts.nefrolojiUygun) tabs.push({ id: 'nefroloji', label: 'Nefroloji' })
   if (opts.romatolojiUygun) tabs.push({ id: 'romatoloji', label: 'Romatoloji' })
+  if (opts.onkolojiUygun) tabs.push({ id: 'onkoloji', label: 'Onkoloji' })
   return tabs
 }
 
