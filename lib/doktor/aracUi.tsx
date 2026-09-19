@@ -20,6 +20,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
+import { doktorBasHarfleri } from '@/lib/doktor/avatar';
 
 /** Bir branşın renk vurgusu — birincil düğme, etiket ve sayfa üst şeridi. */
 export type AracVurgu = {
@@ -273,6 +274,7 @@ export function KopyalaButonu({ metin, etiket = 'Sonucu kopyala' }: { metin: str
  */
 export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { secili: string; sec: (id: string, ad: string) => void; bosEtiket?: string }) {
   const stil = useAracStil();
+  const v = useVurgu();
   const [liste, setListe] = useState<HastaOption[] | null>(null);
   const [q, setQ] = useState('');
   const [hata, setHata] = useState('');
@@ -290,8 +292,38 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
   }, []);
   const kucukHarf = (s: string) => s.toLocaleLowerCase('tr-TR');
   const gorunen = (liste || []).filter((h) => !q.trim() || kucukHarf(h.label).includes(kucukHarf(q.trim()))).slice(0, 50);
+  const seciliAd = (liste || []).find((h) => h.id === secili)?.label || '';
   return (
     <div>
+      {/* SECILI-HASTA-BASLIGI (Kaan, 2026-09-19): seçili hasta yalnız açılır menünün içinde,
+          diğer her şeyle aynı puntoda duruyordu — hangi hastanın dosyasında çalışıldığı
+          belirsizdi. Seçim yapılınca adı büyük ve kalın bir başlık olarak gösterilir. */}
+      {secili && seciliAd && (
+        <div
+          aria-live="polite"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+            background: `${v.ana}1F`, border: `1px solid ${v.ana}66`,
+            borderRadius: 14, padding: '12px 14px', marginBottom: 10, minWidth: 0,
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 38, height: 38, minWidth: 38, borderRadius: '50%', background: `${v.ana}2E`,
+              border: `1px solid ${v.ana}80`, color: v.yumusak, display: 'flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0,
+            }}
+          >{doktorBasHarfleri(seciliAd)}</span>
+          <span style={{ minWidth: 0, flex: '1 1 160px' }}>
+            <span style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: 0.8, color: v.yumusak }}>SEÇİLİ HASTA</span>
+            <span style={{ display: 'block', fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: -0.3, lineHeight: 1.25, overflowWrap: 'anywhere' }}>{seciliAd}</span>
+          </span>
+          <button type="button" onClick={() => sec('', '')} style={{ ...stil.ghost, minHeight: 40, padding: '8px 14px', flexShrink: 0 }}>
+            Değiştir
+          </button>
+        </div>
+      )}
       <div style={{ ...stil.satir, marginTop: 0 }}>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hasta ara (isteğe bağlı)" aria-label="Hasta ara" style={{ ...stil.input, flex: '1 1 180px', width: 'auto', minWidth: 0 }} />
         <select aria-label="Hasta seç" value={secili} onChange={(e) => { const h = (liste || []).find((x) => x.id === e.target.value); sec(e.target.value, h?.label || ''); }} style={{ ...stil.input, flex: '1 1 200px', width: 'auto', minWidth: 0 }}>
