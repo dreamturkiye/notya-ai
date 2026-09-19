@@ -37,8 +37,9 @@ describe('KD / dahiliye / derm eligibility', () => {
     // AILE-HEKIMLIGI-EXCEPTIONAL-01: aile artık kendi portal modülüne sahip — çapraz kart verisi açılmaz.
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, ['saglik-paketim'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['saglik-paketim'])
-    // Hâlâ chapter'ı olmayan branş (ör. romatoloji baseline) chart-data alır
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'romatoloji', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
+    // Hâlâ chapter'ı olmayan branş (ör. anestezi baseline) chart-data alır; romatoloji artık kendi portalına sahip.
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'anestezi', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'romatoloji' })).moduller, ['romatizmam'])
   })
   // DERM-EXCEPTIONAL-01: Derim Strong (hekim tetiklemeli hatırlatma).
   it('dermatoloji mounts Derim (Strong) — unique from göz / pediatri', () => {

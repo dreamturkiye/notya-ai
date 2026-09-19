@@ -153,6 +153,40 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#9333EA', icon: 'DX', title: 'Osteoporoz / DXA hatırlatma', desc: 'Son DXA tarihi · risk bandı → tekrar aralığı · T-skor / tanı / ilaç dozu yazılmaz', route: '/doktor-tools/endo-dxa', branslar: ['endokrinoloji'] },
   { circleColor: '#7E22CE', icon: 'RJ', title: 'İnsülin / tiroid rejim kartı', desc: 'Yalnız başlangıç ve kontrol tarihleri · doz birimi yazılmaz', route: '/doktor-tools/endo-rejim', branslar: ['endokrinoloji'] },
   { circleColor: '#6B21A8', icon: 'EK', title: 'Endokrinoloji kohort paneli', desc: 'Geciken kontrol · lab/DXA · açık acil bayrak · yüksek HbA1c bandı · 1-tap hatırlatma', route: '/doktor-tools/endo-kohort', branslar: ['endokrinoloji'] },
+  // GASTROENTEROLOJI-EXCEPTIONAL-01 — specialty-only Araçlar (4 useful tiles; no filler).
+  // Chapter engines: specialties/gastroenteroloji/engines. IBD/IBS/HBV-HCV karar desteği; tanı ve doz hekimde.
+  // Visibility: gastroenteroloji only — NOT dahiliye (FIB-4/GGK stay dahiliye), NOT pediatri, NOT kardiyoloji.
+  { circleColor: '#F43F5E', icon: 'IB', title: 'IBD / IBS skor takip', desc: 'Mayo kısmi · HBI · IBS-SSS → aktivite bandı (karar desteği) · tanı ve doz yok', route: '/doktor-tools/gastro-ibd-ibs', branslar: ['gastroenteroloji'] },
+  { circleColor: '#E11D48', icon: 'EN', title: 'Endoskopi belge köprüsü', desc: 'İşlem türü · tarih · dosya belgesine köprü · sonraki kontrol · HIS / ameliyathane yok', route: '/doktor-tools/gastro-endoskopi', branslar: ['gastroenteroloji'] },
+  { circleColor: '#BE123C', icon: 'HV', title: 'HBV / HCV izlem vadeleri', desc: 'İzlem bandı → önerilen kontrol aralığı · antiviral doz yazılmaz', route: '/doktor-tools/gastro-hepatit', branslar: ['gastroenteroloji'] },
+  { circleColor: '#9F1239', icon: 'GK', title: 'Gastroenteroloji kohort paneli', desc: 'Geciken kontrol · skor/hepatit/endoskopi · PPI/biyolojik tarih · açık acil · 1-tap hatırlatma', route: '/doktor-tools/gastro-kohort', branslar: ['gastroenteroloji'] },
+  // NEFROLOJI-EXCEPTIONAL-01 — specialty-only (not dahiliye / üroloji / kardiyoloji / pediatri).
+  // Chapter engines: specialties/nefroloji/engines. KDIGO/Hb karar desteği; tanı ve ESA dozu hekimde.
+  // Visibility: nefroloji only — NOT dahiliye (CKD tools stay dahiliye), NOT uroloji, NOT kardiyoloji.
+  { circleColor: '#06B6D4', icon: 'eG', title: 'eGFR / KDIGO şerit', desc: 'eGFR × UACR ısı haritası · izlem aralığı (karar desteği) · tanı ve ESA dozu yok', route: '/doktor-tools/nef-egfr-kdigo', branslar: ['nefroloji'] },
+  { circleColor: '#0891B2', icon: 'DY', title: 'Diyaliz seans / takip', desc: 'Modalite · seans tarihleri · makine HIS / UF / reçete yok', route: '/doktor-tools/nef-diyaliz', branslar: ['nefroloji'] },
+  { circleColor: '#0E7490', icon: 'AN', title: 'Anemi-CKD izlem', desc: 'Hb (± ferritin) → izlem aralığı · ESA dozu yazılmaz', route: '/doktor-tools/nef-anemi', branslar: ['nefroloji'] },
+  { circleColor: '#155E75', icon: 'NK', title: 'Nefroloji kohort paneli', desc: 'Geciken kontrol · eGFR/anemi/diyaliz · açık acil · KDIGO kırmızı · ilaç checklist (doz yazılmaz) · 1-tap hatırlatma', route: '/doktor-tools/nef-kohort', branslar: ['nefroloji'] },
+  // ENFEKSIYON-EXCEPTIONAL-01 — specialty-only (not dahiliye / pediatri / kardiyoloji / göğüs).
+  // Visibility: enfeksiyon-hastaliklari only — NOT dahiliye, NOT pediatri, NOT kardiyoloji, NOT gogus-hastaliklari.
+  { circleColor: '#0D9488', icon: 'İZ', title: 'İzolasyon / bildirim hatırlatma', desc: 'İzolasyon tipi · başlangıç/bitiş · bildirim tarihi — tanı yok · hastane HIS yok', route: '/doktor-tools/enfeksiyon-izolasyon', branslar: ['enfeksiyon-hastaliklari'] },
+  { circleColor: '#14B8A6', icon: 'AT', title: 'Antibiyotik süre sayacı', desc: 'Başlangıç · süre gün → bitiş/kontrol · doz ve etken madde invent edilmez', route: '/doktor-tools/enfeksiyon-atb-sure', branslar: ['enfeksiyon-hastaliklari'] },
+  { circleColor: '#2DD4BF', icon: 'HV', title: 'HIV / viral izlem vadeleri', desc: 'Son izlem tarihi · tür → önerilen vade (karar desteği) · CD4/viral yorumu ve tanı hekimde', route: '/doktor-tools/enfeksiyon-viral-izlem', branslar: ['enfeksiyon-hastaliklari'] },
+  { circleColor: '#0F766E', icon: 'EK', title: 'Enfeksiyon kohort paneli', desc: 'Geciken kontrol · ATB süre · viral izlem · izolasyon · açık acil bayrak · 1-tap hatırlatma', route: '/doktor-tools/enfeksiyon-kohort', branslar: ['enfeksiyon-hastaliklari'] },
+  // ONKOLOJI-EXCEPTIONAL-01 — specialty-only (not dahiliye / hematoloji / radyasyon / pediatri / kardiyoloji).
+  // Chapter engines: specialties/onkoloji/engines. Kür sayacı / toksisite karar desteği; tanı/evre/doz hekimde.
+  // Visibility: onkoloji only — NOT dahiliye, NOT pediatri, NOT kardiyoloji, NOT endokrinoloji.
+  { circleColor: '#DC2626', icon: 'Kür', title: 'Tedavi döngü / kür sayacı', desc: 'Kür numarası · tarihler · protokol etiketi — mg/m², AUC, BSA ve eczane doz şeması yok', route: '/doktor-tools/onko-kur', branslar: ['onkoloji'] },
+  { circleColor: '#B91C1C', icon: 'Tx', title: 'Toksisite kontrol listesi', desc: 'Yan etki maddeleri · izlem tarihi · grade tanı değildir · doz azaltma hekimde', route: '/doktor-tools/onko-toksisite', branslar: ['onkoloji'] },
+  { circleColor: '#991B1B', icon: 'SUT', title: 'SUT rapor taslağı', desc: 'SGK/SUT endikasyon taslağı · canlı Medula e-imza yok · güncel madde hekim doğrular', route: '/doktor-tools/onko-sut', branslar: ['onkoloji'] },
+  { circleColor: '#7F1D1D', icon: 'OK', title: 'Onkoloji kohort paneli', desc: 'Geciken kontrol · kür · toksisite · açık acil · görüntü zaman çizelgesi · 1-tap hatırlatma', route: '/doktor-tools/onko-kohort', branslar: ['onkoloji'] },
+  // ROMATOLOJI-EXCEPTIONAL-01 — specialty-only (not ortopedi / fizik-tedavi / dahiliye / pediatri).
+  // Chapter engines: specialties/romatoloji/engines. DAS28/BASDAI karar desteği; tanı ve doz hekimde.
+  // Visibility: romatoloji only — NOT ortopedi, NOT fizik-tedavi, NOT dahiliye.
+  { circleColor: '#D97706', icon: 'D28', title: 'DAS28 / BASDAI', desc: 'Aktivite skoru ve şiddet bandı (karar desteği, tanı değil) · doz yok · infüzyon HIS yok', route: '/doktor-tools/roma-das28-basdai', branslar: ['romatoloji'] },
+  { circleColor: '#B45309', icon: 'SUT', title: 'Biyolojik SUT checklist', desc: 'TB/HBV/HCV · basamak beyanı · hekim kilidi — doz ve yükleme şeması yazılmaz', route: '/doktor-tools/roma-biyolojik-sut', branslar: ['romatoloji'] },
+  { circleColor: '#F59E0B', icon: 'EH', title: 'Lab izlem / eklem haritası', desc: 'CRP · ESR · RF ve 28 eklem TJC/SJC — karar desteği · tanı yok', route: '/doktor-tools/roma-lab-izlem', branslar: ['romatoloji'] },
+  { circleColor: '#92400E', icon: 'RK', title: 'Romatoloji kohort paneli', desc: 'Geciken kontrol · lab · yüksek skor bandı · açık acil · SUT eksik · 1-tap hatırlatma', route: '/doktor-tools/roma-kohort', branslar: ['romatoloji'] },
 ]
 
 /**

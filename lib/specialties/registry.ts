@@ -24,6 +24,11 @@ import { ORTOPEDI_PROFILE } from './ortopedi'
 import { AILE_HEKIMLIGI_PROFILE } from './aile-hekimligi'
 import { SPOR_HEKIMLIGI_PROFILE } from './spor-hekimligi'
 import { ENDOKRINOLOJI_PROFILE } from './endokrinoloji'
+import { GASTROENTEROLOJI_PROFILE } from './gastroenteroloji'
+import { NEFROLOJI_PROFILE } from './nefroloji'
+import { ENFEKSIYON_HASTALIKLARI_PROFILE } from './enfeksiyon-hastaliklari'
+import { ROMATOLOJI_PROFILE } from './romatoloji'
+import { ONKOLOJI_PROFILE } from './onkoloji'
 
 const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   pediatri: PEDIATRI_PROFILE,
@@ -40,6 +45,11 @@ const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   'fizik-tedavi': FIZIK_TEDAVI_PROFILE,
   ortopedi: ORTOPEDI_PROFILE,
   endokrinoloji: ENDOKRINOLOJI_PROFILE,
+  gastroenteroloji: GASTROENTEROLOJI_PROFILE,
+  nefroloji: NEFROLOJI_PROFILE,
+  'enfeksiyon-hastaliklari': ENFEKSIYON_HASTALIKLARI_PROFILE,
+  romatoloji: ROMATOLOJI_PROFILE,
+  onkoloji: ONKOLOJI_PROFILE,
   'aile-hekimligi': AILE_HEKIMLIGI_PROFILE,
   'spor-hekimligi': SPOR_HEKIMLIGI_PROFILE,
 }

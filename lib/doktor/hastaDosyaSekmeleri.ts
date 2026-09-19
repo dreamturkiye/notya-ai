@@ -36,6 +36,11 @@ export type HastaDosyaSekmeId =
   | 'aile'
   | 'spor-hekimligi'
   | 'endokrinoloji'
+  | 'romatoloji'
+  | 'gastroenteroloji'
+  | 'nefroloji'
+  | 'enfeksiyon'
+  | 'onkoloji'
   | 'konsultasyon'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
@@ -46,7 +51,7 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin|romato|gastro|nefroloji|b[öo]brek hastal|enfeksiyon|infeksiyon|onkolo/.test(b)
 }
 
 /**
@@ -146,16 +151,65 @@ export function aileHekimligiSekmesiBransi(specialtyHam: string | null | undefin
  * ENDOKRINOLOJI-EXCEPTIONAL-01 — Endokrinoloji bölüm sekmesinin sahibi: yalnız endokrinoloji.
  * Dahiliye DM araçları / sekmesi bu branşa sızmaz (brans-alan-sizmasi).
  */
+
+/**
+ * ROMATOLOJI-EXCEPTIONAL-01 — Romatoloji bölüm sekmesinin sahibi: yalnız romatoloji.
+ * Ortopedi, FTR, dahiliye ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function romatolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /romato/.test(b)
+}
+
 export function endokrinolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
   return /endokrin/.test(b)
 }
 
+/** ENFEKSIYON-EXCEPTIONAL-01 — yalnız enfeksiyon hastalıkları. */
+export function enfeksiyonSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /enfeksiyon|infeksiyon|klinik mikrobiyoloji/.test(b)
+}
+
+/**
+ * GASTROENTEROLOJI-EXCEPTIONAL-01 — Gastroenteroloji bölüm sekmesinin sahibi: yalnız gastroenteroloji.
+ * Dahiliye FIB-4 / GGK araçları / sekmesi bu branşa sızmaz (brans-alan-sizmasi).
+ */
+export function gastroenterolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /gastro/.test(b)
+}
+
+/**
+ * NEFROLOJI-EXCEPTIONAL-01 — Nefroloji bölüm sekmesinin sahibi: yalnız nefroloji.
+ * Dahiliye CKD araçları / sekmesi bu branşa sızmaz (brans-alan-sizmasi).
+ */
+export function nefrolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /nefroloji|b[öo]brek hastal/.test(b)
+}
+
 /**
  * FIZIK-TEDAVI-EXCEPTIONAL-01 — FTR bölüm sekmesinin sahibi: yalnız fizik-tedavi / FTR.
  * Ortopedi, nöroloji, romatoloji ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
  */
+/**
+ * ONKOLOJI-EXCEPTIONAL-01 — Onkoloji bölüm sekmesinin sahibi: yalnız tıbbi onkoloji.
+ * Dahiliye, hematoloji ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function onkolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b || /radyasyon|radyo/.test(b)) return false
+  return /onkolo|tibbi onkolo|tıbbi onkolo/.test(b)
+}
+
+
 export function fizikTedaviSekmesiBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
@@ -208,8 +262,18 @@ export function dahiliyeSekmesiBransi(specialtyHam: string | null | undefined): 
   // AILE-HEKIMLIGI-EXCEPTIONAL-01: aile hekimliği kendi sekmesine sahip — dahiliye WOW'a düşmez.
   if (/aile\s*hekim|aile-hekimligi|aile hekimliği|genel pratisyen/.test(b)) return false
   // ENDOKRINOLOJI-EXCEPTIONAL-01: endokrinoloji kendi sekmesine sahip — dahiliye DM/WOW'a düşmez.
-  if (/endokrin/.test(b)) return false
-  return /dahiliye|iç hast|ic hast|aile|genel|nefro|gastro|romato|hemato|onkolo/.test(b)
+  if (/endokrin|romato/.test(b)) return false
+  // GASTROENTEROLOJI-EXCEPTIONAL-01: gastroenteroloji kendi sekmesine sahip — dahiliye WOW'a düşmez.
+  if (/gastro/.test(b)) return false
+  // NEFROLOJI-EXCEPTIONAL-01: nefroloji kendi sekmesine sahip — dahiliye WOW'a düşmez.
+  if (/nefroloji|b[öo]brek hastal/.test(b)) return false
+  // ONKOLOJI-EXCEPTIONAL-01: onkoloji kendi sekmesine sahip — dahiliye WOW'a düşmez.
+  if (/onkolo/.test(b)) return false
+  // ENFEKSIYON-EXCEPTIONAL-01
+  if (/enfeksiyon/.test(b)) return false
+  // ROMATOLOJI-EXCEPTIONAL-01
+  if (/romato/.test(b)) return false
+  return /dahiliye|iç hast|ic hast|aile|genel|hemato/.test(b)
 }
 
 export function gebelikSekmesiUygun(input: {
@@ -250,6 +314,16 @@ export function hastaDosyaSekmeleri(opts: {
   sporHekimligiUygun?: boolean
   /** ENDOKRINOLOJI-EXCEPTIONAL-01: doctor specialty endokrinoloji only (not dahiliye) */
   endokrinolojiUygun?: boolean
+  /** ENFEKSIYON-EXCEPTIONAL-01: doctor specialty enfeksiyon-hastaliklari only */
+  enfeksiyonUygun?: boolean
+  /** GASTROENTEROLOJI-EXCEPTIONAL-01: doctor specialty gastroenteroloji only (not dahiliye) */
+  gastroenterolojiUygun?: boolean
+  /** NEFROLOJI-EXCEPTIONAL-01: doctor specialty nefroloji only (not dahiliye) */
+  nefrolojiUygun?: boolean
+  /** ROMATOLOJI-EXCEPTIONAL-01: doctor specialty romatoloji only */
+  romatolojiUygun?: boolean
+  /** ONKOLOJI-EXCEPTIONAL-01: doctor specialty onkoloji only (not dahiliye) */
+  onkolojiUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -286,6 +360,10 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.aileUygun) tabs.push({ id: 'aile', label: 'Aile Hekimliği' })
   if (opts.sporHekimligiUygun) tabs.push({ id: 'spor-hekimligi', label: 'Spor Hekimliği' })
   if (opts.endokrinolojiUygun) tabs.push({ id: 'endokrinoloji', label: 'Endokrinoloji' })
+  if (opts.enfeksiyonUygun) tabs.push({ id: 'enfeksiyon', label: 'Enfeksiyon' })
+  if (opts.gastroenterolojiUygun) tabs.push({ id: 'gastroenteroloji', label: 'Gastroenteroloji' })
+  if (opts.nefrolojiUygun) tabs.push({ id: 'nefroloji', label: 'Nefroloji' })
+  if (opts.romatolojiUygun) tabs.push({ id: 'romatoloji', label: 'Romatoloji' })
   return tabs
 }
 

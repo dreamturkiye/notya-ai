@@ -47,5 +47,10 @@ export function emptyPortalBundle(): PortalBundle {
     ftr: null,
     aile: null,
     endo: null,
+    enfeksiyon: null, // ENFEKSIYON-EXCEPTIONAL-01 — Enfeksiyon Takibim yalnız enfeksiyon hekiminin token'ında
+    gastro: null, // GASTROENTEROLOJI-EXCEPTIONAL-01 — Sindirimim yalnız gastroenteroloji hekiminin token'ında
+    nef: null, // NEFROLOJI-EXCEPTIONAL-01 — Böbreklerim yalnız nefroloji hekiminin token'ında
+    roma: null, // ROMATOLOJI-EXCEPTIONAL-01 — Romatizmam yalnız romatoloji hekiminin token'ında
+    onko: null, // ONKOLOJI-EXCEPTIONAL-01 — Tedavim yalnız onkoloji hekiminin token'ında
   }
 }

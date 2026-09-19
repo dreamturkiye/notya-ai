@@ -96,6 +96,16 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   if (brans === 'aile-hekimligi') aktif.add('saglik-paketim')
   // ENDOKRINOLOJI-EXCEPTIONAL-01 — Hormonlarım yalnız endokrinoloji hekiminin token'ında; dahiliye'ye taşınmaz.
   if (brans === 'endokrinoloji') aktif.add('hormonlarim')
+  // GASTROENTEROLOJI-EXCEPTIONAL-01 — Sindirimim yalnız gastroenteroloji hekiminin token'ında; dahiliye'ye taşınmaz.
+  if (brans === 'gastroenteroloji') aktif.add('sindirimim')
+  // ENFEKSIYON-EXCEPTIONAL-01 — Enfeksiyon Takibim yalnız enfeksiyon hastalıkları hekiminin token'ında.
+  if (brans === 'enfeksiyon-hastaliklari') aktif.add('enfeksiyon-takibim')
+  // NEFROLOJI-EXCEPTIONAL-01 — Böbreklerim yalnız nefroloji hekiminin token'ında; dahiliye/üroloji'ye taşınmaz.
+  if (brans === 'nefroloji') aktif.add('bobreklerim')
+  // ROMATOLOJI-EXCEPTIONAL-01 — Romatizmam yalnız romatoloji hekiminin token'ında; ortopedi/FTR/dahiliye'ye taşınmaz.
+  if (brans === 'romatoloji') aktif.add('romatizmam')
+  // ONKOLOJI-EXCEPTIONAL-01 — Tedavim yalnız onkoloji hekiminin token'ında; dahiliye'ye taşınmaz.
+  if (brans === 'onkoloji') aktif.add('tedavim')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]
@@ -104,7 +114,9 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     dahiliye: 'dahiliye', gozlerim: 'goz-hastaliklari', dermatoloji: 'dermatoloji', psikiyatri: 'psikiyatri',
     kulaklarim: 'kulak-burun-bogaz', kalbim: 'kardiyoloji', akcigerlerim: 'gogus-hastaliklari',
     norolojim: 'noroloji', urolojim: 'uroloji', sporum: 'spor-hekimligi', eklemlerim: 'ortopedi', ftrm: 'fizik-tedavi',
-    'saglik-paketim': 'aile-hekimligi', hormonlarim: 'endokrinoloji',
+    'saglik-paketim': 'aile-hekimligi', hormonlarim: 'endokrinoloji', sindirimim: 'gastroenteroloji',
+    'enfeksiyon-takibim': 'enfeksiyon-hastaliklari',
+    bobreklerim: 'nefroloji', romatizmam: 'romatoloji', tedavim: 'onkoloji',
   }
   const nav = sirali.flatMap((id) => modul(SAHIP[id], id)?.nav || [])
   return { moduller: sirali, nav }

@@ -767,6 +767,8 @@ const LABEL_ALIASES: Record<string, SpecialtyKey> = {
   'fizik-tedavi': 'fizik-tedavi',
   'fiziksel-tip-ve-rehabilitasyon': 'fizik-tedavi',
   'enfeksiyon-hastaliklari': 'enfeksiyon-hastaliklari',
+  'enfeksiyon-hastaliklari-ve-klinik-mikrobiyoloji': 'enfeksiyon-hastaliklari',
+  'klinik-mikrobiyoloji': 'enfeksiyon-hastaliklari',
   endokrinoloji: 'endokrinoloji',
   gastroenteroloji: 'gastroenteroloji',
   nefroloji: 'nefroloji',

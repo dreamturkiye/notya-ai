@@ -191,6 +191,14 @@ export interface PortalBundle {
   aile: PortalAile | null
   /** ENDOKRINOLOJI-EXCEPTIONAL-01 — "Hormonlarım": MD-set kontrol + lab/DXA/rejim hatırlatma. No tanı, lab sayı, doz. */
   endo: PortalEndo | null
+  /** ENFEKSIYON-EXCEPTIONAL-01 */
+  enfeksiyon: PortalEnfeksiyon | null
+  /** GASTROENTEROLOJI-EXCEPTIONAL-01 — "Sindirimim": MD-set kontrol + skor/hepatit/endoskopi/rejim hatırlatma. No tanı, skor, doz. */
+  gastro: PortalGastro | null
+  /** NEFROLOJI-EXCEPTIONAL-01 — "Böbreklerim": MD-set kontrol + lab/anemi/diyaliz hatırlatma. No tanı, eGFR sayı, ESA doz. */
+  nef: PortalNef | null
+  /** ROMATOLOJI-EXCEPTIONAL-01 — "Romatizmam": MD-set kontrol + lab/eklem/belge hatırlatma. No tanı, skor, doz. */
+  roma: PortalRoma | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -412,6 +420,80 @@ export interface PortalEndo {
   not: string
 }
 
+/**
+ * ROMATOLOJI-EXCEPTIONAL-01 — "Romatizmam": ayaktan romatoloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, DAS28/BASDAI sayı/bandı,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/romatoloji/engines/portal-romatizmam.ts kilidi).
+ */
+export interface PortalRoma {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Kan tahlili kontrolü" — değer / bant yazılmaz */
+  labHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Eklem takip kontrolü" — skor yazılmaz */
+  skorHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Belge / rapor işlemi" */
+  belgeHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * ENFEKSIYON-EXCEPTIONAL-01 — "Enfeksiyon Takibim": ayaktan enfeksiyon hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, CD4/viral sayı,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/enfeksiyon-hastaliklari/engines/portal-enfeksiyon-takibim.ts kilidi).
+ */
+export interface PortalEnfeksiyon {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Kan tahlili kontrolü" — CD4/viral sayı yazılmaz */
+  viralHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "İlaç süre kontrolü" — doz yok */
+  atbHatirlatma: Array<{ ad: string; due: string | null }>
+  /** İzolasyon / takip bitiş — tanı yok */
+  izolasyonHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * GASTROENTEROLOJI-EXCEPTIONAL-01 — "Sindirimim": ayaktan gastroenteroloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, skor/band,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/gastroenteroloji/engines/portal-sindirimim.ts kilidi).
+ */
+export interface PortalGastro {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Takip formu kontrolü" — skor / bant yazılmaz */
+  skorHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Kan tahlili kontrolü" — viral yük yazılmaz */
+  hepatitHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Endoskopi kontrolü" — tanı yazılmaz */
+  endoskopiHatirlatma: Array<{ ad: string; due: string | null }>
+  /** PPI / biyolojik rejim kontrol tarihleri — doz yok */
+  rejimHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * NEFROLOJI-EXCEPTIONAL-01 — "Böbreklerim": ayaktan nefroloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, eGFR/KDIGO,
+ * ilaç adı ve ESA dozu portala GEÇMEZ (specialties/nefroloji/engines/portal-bobreklerim.ts kilidi).
+ */
+export interface PortalNef {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Kan tahlili kontrolü" — eGFR / KDIGO yazılmaz */
+  labHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Kan sayımı kontrolü" — Hb / ESA doz yok */
+  anemiHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Diyaliz seans / takip" — makine parametresi yok */
+  diyalizHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
 /** DAH-EXCEPTIONAL-01 — "Takibim": chronic-care surface. No ICD, tanı, or dose. */
 export interface PortalKronik {
   sonrakiKontrol: { tarih: string; neden: string } | null
@@ -419,5 +501,24 @@ export interface PortalKronik {
   hedefler: Array<{ ad: string; ozet: string }>
   evKbOzet: string | null
   evGlukozOzet: string | null
+  not: string
+}
+
+
+/**
+ * ONKOLOJI-EXCEPTIONAL-01 — "Tedavim": ayaktan tıbbi onkoloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, evre/stage/TNM,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/onkoloji/engines/portal-tedavim.ts kilidi).
+ */
+export interface PortalOnko {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Tedavi / kür günü" — doz / protokol yazılmaz */
+  kurHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Kan tahlili kontrolü" — değer yazılmaz */
+  labHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Yan etki kontrolü" — grade/tanı yok */
+  yanEtkiHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
   not: string
 }

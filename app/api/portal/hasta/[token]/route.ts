@@ -83,6 +83,52 @@ import {
   ENDO_IPUCLARI,
 } from '@/specialties/endokrinoloji/engines/portal-hormonlarim'
 import {
+  romatizmamHatirlatmalari,
+  sonrakiKontrol as romaSonrakiKontrol,
+  labHatirlatmalari as romaLabHatirlatmalari,
+  skorHatirlatmalari as romaSkorHatirlatmalari,
+  belgeHatirlatmalari as romaBelgeHatirlatmalari,
+  ROMATIZMAM_NOTU,
+  ROMA_IPUCLARI,
+} from '@/specialties/romatoloji/engines/portal-romatizmam'
+import {
+  enfeksiyonTakibimHatirlatmalari,
+  viralHatirlatmalari as enfViralHatirlatmalari,
+  atbHatirlatmalari as enfAtbHatirlatmalari,
+  izolasyonHatirlatmalari as enfIzolasyonHatirlatmalari,
+  sonrakiKontrol as enfSonrakiKontrol,
+  ENFEKSIYON_TAKIBIM_NOTU,
+  ENF_IPUCLARI,
+} from '@/specialties/enfeksiyon-hastaliklari/engines/portal-enfeksiyon-takibim'
+import {
+  sindirimimHatirlatmalari,
+  skorHatirlatmalari as gastroSkorHatirlatmalari,
+  hepatitHatirlatmalari as gastroHepatitHatirlatmalari,
+  endoskopiHatirlatmalari as gastroEndoskopiHatirlatmalari,
+  rejimHatirlatmalari as gastroRejimHatirlatmalari,
+  sonrakiKontrol as gastroSonrakiKontrol,
+  SINDIRIMIM_NOTU,
+  GASTRO_IPUCLARI,
+} from '@/specialties/gastroenteroloji/engines/portal-sindirimim'
+import {
+  bobreklerimHatirlatmalari,
+  labHatirlatmalari as nefLabHatirlatmalari,
+  anemiHatirlatmalari as nefAnemiHatirlatmalari,
+  diyalizHatirlatmalari as nefDiyalizHatirlatmalari,
+  sonrakiKontrol as nefSonrakiKontrol,
+  BOBREKLERIM_NOTU,
+  NEF_IPUCLARI,
+} from '@/specialties/nefroloji/engines/portal-bobreklerim'
+import {
+  tedavimHatirlatmalari,
+  kurHatirlatmalari as onkoKurHatirlatmalari,
+  labHatirlatmalari as onkoLabHatirlatmalari,
+  yanEtkiHatirlatmalari as onkoYanEtkiHatirlatmalari,
+  sonrakiKontrol as onkoSonrakiKontrol,
+  TEDAVIM_NOTU,
+  ONKO_IPUCLARI,
+} from '@/specialties/onkoloji/engines/portal-tedavim'
+import {
   akcigerlerimHatirlatmalari,
   testHatirlatmalari as gogusTestHatirlatmalari,
   bakimHatirlatmalari,
@@ -831,6 +877,128 @@ export async function GET(
       not: HORMONLARIM_NOTU,
     }
   } catch (e) { console.error('[portal] hormonlarim:', e) }
+  // ROMATOLOJI-EXCEPTIONAL-01 — "Romatizmam": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // DAS28/BASDAI sayı/bandı, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('romatizmam')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('roma_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_romatoloji').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = romatizmamHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.roma = {
+      sonrakiKontrol: romaSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      labHatirlatma: romaLabHatirlatmalari(hatirlatmalar),
+      skorHatirlatma: romaSkorHatirlatmalari(hatirlatmalar),
+      belgeHatirlatma: romaBelgeHatirlatmalari(hatirlatmalar),
+      ipuclari: [...ROMA_IPUCLARI],
+      not: ROMATIZMAM_NOTU,
+    }
+  } catch (e) { console.error('[portal] romatizmam:', e) }
+
+
+  // ENFEKSIYON-EXCEPTIONAL-01 — "Enfeksiyon Takibim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, CD4/viral sayı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('enfeksiyon-takibim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('enfeksiyon_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_enfeksiyon').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = enfeksiyonTakibimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.enfeksiyon = {
+      sonrakiKontrol: enfSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      viralHatirlatma: enfViralHatirlatmalari(hatirlatmalar),
+      atbHatirlatma: enfAtbHatirlatmalari(hatirlatmalar),
+      izolasyonHatirlatma: enfIzolasyonHatirlatmalari(hatirlatmalar),
+      ipuclari: [...ENF_IPUCLARI],
+      not: ENFEKSIYON_TAKIBIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] enfeksiyon-takibim:', e) }
+
+
+  // GASTROENTEROLOJI-EXCEPTIONAL-01 — "Sindirimim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // IBD/IBS skor, hepatit bandı, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('sindirimim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('gastro_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_gastroenteroloji').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = sindirimimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.gastro = {
+      sonrakiKontrol: gastroSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      skorHatirlatma: gastroSkorHatirlatmalari(hatirlatmalar),
+      hepatitHatirlatma: gastroHepatitHatirlatmalari(hatirlatmalar),
+      endoskopiHatirlatma: gastroEndoskopiHatirlatmalari(hatirlatmalar),
+      rejimHatirlatma: gastroRejimHatirlatmalari(hatirlatmalar),
+      ipuclari: [...GASTRO_IPUCLARI],
+      not: SINDIRIMIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] sindirimim:', e) }
+
+  // NEFROLOJI-EXCEPTIONAL-01 — "Böbreklerim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // eGFR/KDIGO sayı/evresi, tanı, ilaç adı ve ESA dozu portala GEÇMEZ.
+  if (modulAktif('bobreklerim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('nef_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_nefroloji').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = bobreklerimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.nef = {
+      sonrakiKontrol: nefSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      labHatirlatma: nefLabHatirlatmalari(hatirlatmalar),
+      anemiHatirlatma: nefAnemiHatirlatmalari(hatirlatmalar),
+      diyalizHatirlatma: nefDiyalizHatirlatmalari(hatirlatmalar),
+      ipuclari: [...NEF_IPUCLARI],
+      not: BOBREKLERIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] bobreklerim:', e) }
+
+  // ONKOLOJI-EXCEPTIONAL-01 — "Tedavim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, evre/stage/TNM, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('tedavim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('onko_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_onkoloji').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = tedavimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.onko = {
+      sonrakiKontrol: onkoSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      kurHatirlatma: onkoKurHatirlatmalari(hatirlatmalar),
+      labHatirlatma: onkoLabHatirlatmalari(hatirlatmalar),
+      yanEtkiHatirlatma: onkoYanEtkiHatirlatmalari(hatirlatmalar),
+      ipuclari: [...ONKO_IPUCLARI],
+      not: TEDAVIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] tedavim:', e) }
 
   // GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": yalnız açık görev kodları + hekimin kontrol tarihi.
   // CAT/mMRC skoru, GOLD grup, FEV1, tanı, ilaç adı ve doz portala GEÇMEZ.

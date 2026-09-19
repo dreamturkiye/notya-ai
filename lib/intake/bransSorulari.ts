@@ -364,6 +364,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Enfeksiyon Değerlendirmesi',
     alanlar: [
       BASVURU_NEDENI,
+      // ENFEKSIYON-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/enfeksiyon-hastaliklari/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerEnfeksiyon', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Yüksek ateş ile bilinç bulanıklığı veya aşırı halsizlik', 'Boyun sertliği, ışığa bakamama veya mor noktalı döküntü', 'Hızla yayılan cilt / yumuşak doku şişliği veya şiddetli ağrı', 'Nefes darlığı ile yaygın döküntü veya alerjik şok şüphesi', 'Ateş ile tansiyon düşüklüğü veya organ yetmezliği şüphesi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'atesSuresi', etiket: 'Ateşiniz ne zamandır var?', tur: 'radio', secenekler: ['Bugün başladı', 'Birkaç gündür', '1 haftadan uzun'] },
       { id: 'semptomlarEnfeksiyon', etiket: 'Eşlik eden belirtiler', tur: 'checkbox-grup', secenekler: ['Titreme', 'Boğaz Ağrısı', 'Öksürük', 'İshal', 'Döküntü', 'Eklem Ağrısı', 'Yok'] },
       { id: 'seyahatOykusu', etiket: 'Son 1 ay içinde yurt dışı veya farklı bölgeye seyahatiniz oldu mu?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
@@ -395,6 +397,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Sindirim Sistemi Şikayetiniz',
     alanlar: [
       BASVURU_NEDENI,
+      // GASTROENTEROLOJI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/gastroenteroloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerGastro', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Kanlı kusma veya siyah / kanlı dışkı', 'Ani şiddetli karın ağrısı / sert karın', 'Şiddetli epigastrik ağrı ve kusma (pankreatit şüphesi)', 'Bilinç bulanıklığı / konfüzyon (karaciğer hastasında)', 'Yemek takıldı / yutamıyorum', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'karinAgrisiBolgesi', etiket: 'Karın ağrınız hangi bölgede?', tur: 'text' },
       { id: 'semptomlarGastro', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Karın Ağrısı', 'Şişkinlik', 'Bulantı / Kusma', 'Kabızlık', 'İshal', 'Ekşime / Reflü', 'Gaz', 'Yok'] },
       { id: 'kanliDiski', etiket: 'Dışkınızda kan fark ettiniz mi?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
@@ -411,6 +415,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Böbrek Sağlığınız',
     alanlar: [
       BASVURU_NEDENI,
+      // NEFROLOJI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/nefroloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerNef', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Şiddetli halsizlik veya çarpıntı (yüksek potasyum şüphesi)', 'Ani nefes darlığı veya aşırı şişlik', 'Bilinç bulanıklığı veya nöbet (üremik acil şüphesi)', 'Diyaliz erişiminde kanama / enfeksiyon veya kaçırılan seans', 'İdrarın birden azalması veya kesilmesi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarNefro', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['İdrar Renginde Değişim', 'İdrar Miktarında Azalma', 'Şişlik (Ödem)', 'Yorgunluk', 'İştahsızlık', 'Bel / Böğür Ağrısı', 'Yok'] },
       { id: 'baslikNefroGecmisi', etiket: 'Böbrek Sağlığı Geçmişi', tur: 'bolum-basligi' },
       { id: 'bilinenBobrekHastaliklariNefro', etiket: 'Bilinen böbrek hastalıklarınız', tur: 'checkbox-grup', secenekler: ['Kronik Böbrek Hastalığı', 'Böbrek Taşı', 'Tekrarlayan İdrar Yolu Enfeksiyonu', 'Polikistik Böbrek', 'Yok'] },
@@ -425,6 +431,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Eklem ve Romatolojik Şikayetiniz',
     alanlar: [
       BASVURU_NEDENI,
+      // ROMATOLOJI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/romatoloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerRoma', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ateş ile birlikte sıcak veya kızarık eklem', 'Şiddetli yaygın eklem ağrısı / alevlenme ile ateş', 'Ani nefes darlığı veya göğüs ağrısı', 'Bilinç değişikliği, bayılma veya ani güç kaybı', 'Yaygın döküntü ile birlikte ateş', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarRomato', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Eklem Ağrısı', 'Eklem Şişliği', 'Sabah Tutukluğu', 'Cilt Döküntüsü', 'Kas Ağrısı', 'Yorgunluk', 'Ateş', 'Yok'] },
       { id: 'sabahTutuklugu', etiket: 'Sabah tutukluğunuz varsa ne kadar sürüyor?', tur: 'text' },
       { id: 'etkilenenEklemler', etiket: 'Hangi eklemleriniz etkileniyor?', tur: 'text' },
@@ -439,6 +447,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Onkolojik Değerlendirme',
     alanlar: [
       BASVURU_NEDENI,
+      // ONKOLOJI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/onkoloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerOnko', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ateş ile birlikte aşırı halsizlik (febril nötropeni şüphesi)', 'Ani sırt ağrısı ve bacak güçsüzlüğü / idrar tutamama', 'Şiddetli nefes darlığı veya göğüs sıkışması', 'Kontrolsüz kusma veya ağızdan sıvı alamama', 'Durmayan / bol kanama', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'taniTarihiTuru', etiket: 'Tanı tarihiniz ve türü', tur: 'textarea' },
       { id: 'tedaviAsamasi', etiket: 'Şu anda hangi tedavi aşamasındasınız?', tur: 'text' },
       { id: 'semptomlarOnkoloji', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Ağrı', 'Yorgunluk / Halsizlik', 'İştahsızlık', 'Kilo Kaybı', 'Bulantı', 'Nefes Darlığı', 'Ateş', 'Yok'] },
