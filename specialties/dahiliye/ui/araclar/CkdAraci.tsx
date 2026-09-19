@@ -9,7 +9,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { ckdDegerlendir, nefroSevkPaketi, type Renk } from '../../engines/ckd';
-import { dahStil, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -62,6 +62,15 @@ export default function CkdAraci() {
 
   const sevkMetni = nefroSevkPaketi(sonuc, panel, { yas: sayi(yas), kadin: cinsiyet === 'kadin' }, ilaclar);
 
+  const notSatirlari = sonuc.g ? [
+    `KDIGO evre: ${sonuc.g} ${sonuc.a || '(UACR yok)'}${sonuc.renk ? ` — ${RENK_AD[sonuc.renk]}` : ''}`,
+    `Kronisite: ${KRONIK_AD[sonuc.kronikMi]}`,
+    sonuc.hizliDusus ? '1 yılda eGFR >%25 düşüş' : '',
+    sonuc.izlemAy != null ? `Önerilen izlem: her ${sonuc.izlemAy} ayda eGFR + UACR` : '',
+    ...sonuc.uyarilar.map((u) => `Uyarı: ${u}`),
+    ...sonuc.sevk.map((x) => `Nefroloji sevk ölçütü: ${x}`),
+  ].filter(Boolean) : [];
+
   return (
     <>
       <div style={kutu}>
@@ -111,6 +120,7 @@ export default function CkdAraci() {
           <div style={{ ...metin, fontWeight: 700 }}>eGFR girilmedi — evre verilmez</div>
         )}
         {sonuc.uyarilar.map((u) => <div key={u} style={{ ...metin, marginTop: 8, color: '#FBBF24' }}>⚠ {u}</div>)}
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="KDIGO CKD evrelemesi" satirlar={notSatirlari} />
         <TaslakNotu>KDIGO evresi ve izlem aralığı karar desteğidir; kronisite doğrulaması ve tedavi kararı hekimindir. Nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

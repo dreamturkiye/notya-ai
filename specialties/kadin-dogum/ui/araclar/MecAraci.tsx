@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { yontemMec, acilKontrasepsiyon, postpartumKontrasepsiyonBaslangic, YONTEM_KATALOG, type MecGirdi, type MecKat, type YontemKod } from '../../engines/kontrasepsiyon-mec';
 import { sayiOku, tarihOku } from '../../engines/araclar';
 import { diffDays } from '../../engines/dates';
-import { kdStil, Segment, Kutu, Etiketli, KdHastaSecici, kdHastaOzeti } from './KdAracKabugu';
+import { kdStil, Segment, Kutu, Etiketli, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti } from './KdAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, input, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -134,6 +134,16 @@ export default function MecAraci() {
               );
             })}
           </div>
+          <MuayeneFormunaEkle
+            hastaId={hasta.id}
+            arac="Kontrasepsiyon WHO MEC değerlendirmesi"
+            satirlar={[
+              `Kabul edilemez risk (MEC 4): ${sonuc.filter((s) => s.kategori === 4).map((s) => yontemAd(s.yontem)).join(', ') || 'yok'}`,
+              `Risk genellikle yarara üstün (MEC 3): ${sonuc.filter((s) => s.kategori === 3).map((s) => yontemAd(s.yontem)).join(', ') || 'yok'}`,
+              `Kısıtlama görülmeyen yöntemler (MEC 1–2): ${sonuc.filter((s) => s.kategori <= 2).map((s) => yontemAd(s.yontem)).join(', ') || 'yok'}`,
+              'Ürün ve reçete seçimi hekimindir; araç ürün ya da doz önermez.',
+            ]}
+          />
           <div style={{ ...kucuk, marginTop: 10 }}>MEC 1: kısıtlama yok · 2: yarar genellikle riske üstün · 3: risk genellikle yarara üstün, hekimle tartışılır · 4: kabul edilemez risk. Kısıtlayıcı faktör girilmeyen yöntemler &quot;MEC 1–2&quot; gösterilir. Sadeleştirilmiş ofis setidir; tam WHO MEC tablosunun yerini tutmaz. Ürün ve doz seçimi hekimindir.</div>
         </div>
       )}

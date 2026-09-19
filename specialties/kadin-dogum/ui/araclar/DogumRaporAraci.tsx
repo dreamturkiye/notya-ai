@@ -7,7 +7,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { analikIzni, istirahatRaporuTaslagi, eddHesapla, tarihOku, trTarih, RAPORSUZ_ISTIRAHAT_UYARISI, EMZIRME_ODENEGI_NOTU, ANALIK } from '../../engines/araclar';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
-import { kdStil, Segment, Kutu, Etiketli, KdHastaSecici, kdHastaOzeti, panoya } from './KdAracKabugu';
+import { kdStil, Segment, Kutu, Etiketli, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti, panoya } from './KdAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -153,7 +153,17 @@ export default function DogumRaporAraci() {
               {hasta.id && <a href={hastaDosyaHref(hasta.id, 'gebelik')} style={{ ...ghost, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Gebelik) →</a>}
             </div>
             {kopya && <div style={{ ...kucuk, color: '#F9A8D4', marginTop: 6 }}>{kopya}</div>}
-            <div style={{ ...kucuk, marginTop: 8 }}>Taslak nota yazılmaz ve Medula'ya gönderilmez. T.C. kimlik no ve hasta adı Medula'da doldurulur.</div>
+            <MuayeneFormunaEkle
+              hastaId={hasta.id}
+              arac="Analık istirahati tarihleri"
+              satirlar={[
+                `${cogul ? 'Çoğul' : 'Tekil'} gebelik · doğum öncesi rapor başlangıcı ${a.raporBaslangic} (${a.raporBaslangicHafta} hafta)`,
+                `${a.dogumGercek ? 'Doğum' : 'Tahmini doğum'}: ${a.dogum} · doğum sonrası bitiş ${a.sonrasiBitis} (${a.sonrasiGun} gün) · işbaşı ${a.isBasi}`,
+                a.bugunDurum,
+                ...a.aciklama,
+              ]}
+            />
+            <div style={{ ...kucuk, marginTop: 8 }}>Taslak Medula'ya gönderilmez; nota yalnız yukarıdaki düğmeyle eklenir. T.C. kimlik no ve hasta adı Medula'da doldurulur.</div>
           </div>
 
           <div style={kutu}>

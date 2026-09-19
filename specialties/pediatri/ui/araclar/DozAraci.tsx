@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { dozHesapla, dozOzetMetni, konsantrasyonCoz, fmt, type DozModu } from '../../engines/doz';
 import { kiloCoz, sayiCoz, tarihGoster } from '../../engines/girdi';
-import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, PediHastaSecici } from './PediAracKabugu';
+import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici } from './PediAracKabugu';
 
 const { kutu, etiket, kucuk, input, uyari, kirmizi } = pediStil;
 const SIKLIK: Array<[number, string]> = [[1, '1×'], [2, '2×'], [3, '3×'], [4, '4×'], [6, '6×']];
@@ -121,6 +121,7 @@ export default function DozAraci() {
             <div style={{ ...pediStil.satir, marginTop: 12 }}>
               <KopyalaButonu metin={dozOzetMetni(girdi, s, etiketMetin)} etiket="Hesabı kopyala" />
             </div>
+            <MuayeneFormunaEkle hastaId={hastaId} arac="Doz hesabı (mg/kg)" satirlar={dozOzetMetni(girdi, s, etiketMetin).split('\n')} />
           </>
         )}
         <TaslakNotu>Notya ilaç veya doz önermez: mg/kg, konsantrasyon ve tavanı siz girdiniz; araç yalnız aritmetik ve birim çevirisi yapar. Sonucu uygulamadan önce hekim doğrular.</TaslakNotu>

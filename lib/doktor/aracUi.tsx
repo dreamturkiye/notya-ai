@@ -14,6 +14,8 @@
  */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
+import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 
 /** Bir branşın renk vurgusu — birincil düğme, etiket ve sayfa üst şeridi. */
 export type AracVurgu = {
@@ -334,4 +336,96 @@ export function useHastaVerisi<T>(
     return () => { iptal = true; };
   }, [patientId]); // eslint-disable-line react-hooks/exhaustive-deps
   return { veri, hata, yukleniyor };
+}
+
+/* ───────────────────────── Bugünkü muayene formuna ekle ───────────────────────── */
+
+/**
+ * ARACLAR-CILA-01 Faz 2 — her aracın sonuç kartında duran ortak eylem.
+ *
+ * Bugüne kadar her araç "TASLAK — nota otomatik yazılmaz" ile bitiyor, hekim sonucu ELLE tekrar
+ * yazıyordu. Bu düğme o işi bitirir: hekim BASAR, sonuç bugünün açık notuna okunabilir Türkçe bir
+ * blok olarak eklenir (lib/doktor/aracNotu + gununNotunaEkle) ve muayene formuna dönüş bağlantısı
+ * görünür (muayeneFormuYolu).
+ *
+ * Kurallar:
+ *   • hiçbir şey OTOMATİK yazılmaz — tek yol bu düğmedir;
+ *   • hasta seçili değilse düğme pasiftir ve nedenini söyler ("Önce hasta seçin");
+ *   • eklenen metin hekimin düzenleyebileceği düz metindir; tanı/doz/evre iddiası içermez;
+ *   • hekim kilidi dili (TaslakNotu) kaldırılmaz — bu düğme onun yanında durur.
+ */
+export function MuayeneFormunaEkle({
+  hastaId,
+  arac,
+  satirlar,
+  alan,
+  etiket = 'Bugünkü muayene formuna ekle',
+  hastaYokMetni = 'Önce hasta seçin — sonuç ancak seçili hastanın bugünkü muayene formuna eklenebilir.',
+}: {
+  hastaId: string
+  /** Not bloğunun başlığı — aracın adı (ör. "VA / logMAR"). */
+  arac: string
+  /** Nota yazılacak satırlar; boş/anlamsız satırlar sunucuda elenir. */
+  satirlar: Array<string | null | undefined>
+  alan?: 'content_degerlendirme' | 'content_subjektif' | 'content_objektif'
+  etiket?: string
+  hastaYokMetni?: string
+}) {
+  const stil = useAracStil()
+  const [gonderiyor, setGonderiyor] = useState(false)
+  const [mesaj, setMesaj] = useState('')
+  const [iyiMi, setIyiMi] = useState(false)
+  const [notId, setNotId] = useState<string | null>(null)
+
+  const temiz = satirlar.map((x) => String(x ?? '').trim()).filter(Boolean)
+  const kapali = !hastaId || !temiz.length || gonderiyor
+
+  const ekle = async () => {
+    if (kapali) return
+    setGonderiyor(true); setMesaj(''); setIyiMi(false); setNotId(null)
+    try {
+      const t = await getAccessTokenAsync()
+      const r = await fetch('/api/doktor/araclar/nota-ekle', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patientId: hastaId, arac, satirlar: temiz, alan }),
+      })
+      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; notId?: string; error?: string }
+      const id = eklenenNotId(j)
+      if (j.ok && id) {
+        setIyiMi(true)
+        setMesaj('Bugünkü muayene formuna eklendi — metni formda düzenleyebilirsiniz.')
+        setNotId(id)
+      } else {
+        setMesaj(j.error || 'Eklenemedi — bugünkü muayene bulunamadı.')
+      }
+    } catch {
+      setMesaj('Eklenemedi — bağlantıyı kontrol edin.')
+    } finally {
+      setGonderiyor(false)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ ...stil.satir, marginTop: 0 }}>
+        <button
+          type="button"
+          onClick={ekle}
+          disabled={kapali}
+          aria-disabled={kapali}
+          style={{ ...stil.btn, opacity: kapali ? 0.55 : 1, cursor: kapali ? 'not-allowed' : 'pointer' }}
+        >{gonderiyor ? 'Ekleniyor…' : etiket}</button>
+        {mesaj && (
+          <span style={{ fontSize: 13, color: iyiMi ? '#5EEAD4' : '#FDE68A' }} aria-live="polite">{mesaj}</span>
+        )}
+        <MuayeneFormunaDon notId={notId} />
+      </div>
+      {!hastaId
+        ? <div style={{ ...stil.kucuk, marginTop: 6 }}>{hastaYokMetni}</div>
+        : !temiz.length
+          ? <div style={{ ...stil.kucuk, marginTop: 6 }}>Önce sonucu üretin — eklenecek satır yok.</div>
+          : <div style={{ ...stil.kucuk, marginTop: 6 }}>Nota eklenecek: “{arac} — {temiz[0].slice(0, 90)}{temiz.length > 1 ? ` …(+${temiz.length - 1} satır)` : ''}” — siz basmadan yazılmaz.</div>}
+    </div>
+  )
 }

@@ -5,7 +5,7 @@
  */
 import React, { useState } from 'react';
 import { vaKarsilastir, type VaSatir } from '../../engines/araclar';
-import { gozStil, Istatistik, Katlanir, KopyalaButonu, Rozet, TaslakNotu } from './GozAracKabugu';
+import { gozStil, GozHastaSecici, Istatistik, Katlanir, KopyalaButonu, MuayeneFormunaEkle, Rozet, TaslakNotu } from './GozAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, input, ghost, hata, kaydir } = gozStil;
 const ORNEKLER = ['1,0', '0,8', '0,5', '6/12', '20/40', 'PS 1m', 'EH', 'IH', 'IHY'];
@@ -24,6 +24,7 @@ function Hucre({ s }: { s: VaSatir }) {
 export default function VaAraci() {
   const [d, setD] = useState<Record<string, string>>({ odOnce: '', odSimdi: '', osOnce: '', osSimdi: '' });
   const [aktif, setAktif] = useState('odSimdi');
+  const [hastaId, setHastaId] = useState('');
   const set = (k: string, v: string) => setD((p) => ({ ...p, [k]: v }));
   const od = vaKarsilastir(d.odOnce, d.odSimdi), os = vaKarsilastir(d.osOnce, d.osSimdi);
   const harf = (x: number | null) => (x == null ? '—' : `${x > 0 ? '+' : ''}${x} harf`);
@@ -33,10 +34,13 @@ export default function VaAraci() {
     <input value={d[k]} onFocus={() => setAktif(k)} onChange={(e) => set(k, e.target.value)} placeholder={ph} aria-label={ad} style={{ ...input, minWidth: 0 }} />
   );
   const girildi = Object.values(d).some((x) => x.trim());
+  const notSatirlari = [
+    (d.odOnce.trim() || d.odSimdi.trim()) ? `OD (sağ): önceki ${od.onceki.gosterim || '—'} · bugün ${od.simdi.gosterim || '—'} · ETDRS harf farkı ${harf(od.harf)}` : '',
+    (d.osOnce.trim() || d.osSimdi.trim()) ? `OS (sol): önceki ${os.onceki.gosterim || '—'} · bugün ${os.simdi.gosterim || '—'} · ETDRS harf farkı ${harf(os.harf)}` : '',
+  ].filter(Boolean);
   const ozetMetni = [
     `Görme keskinliği (hekim girdisi) — ${new Date().toISOString().slice(0, 10)}`,
-    `OD (sağ): önceki ${od.onceki.gosterim || '—'} · bugün ${od.simdi.gosterim || '—'} · ETDRS farkı ${harf(od.harf)}`,
-    `OS (sol): önceki ${os.onceki.gosterim || '—'} · bugün ${os.simdi.gosterim || '—'} · ETDRS farkı ${harf(os.harf)}`,
+    ...notSatirlari,
     'logMAR = −log10(ondalık); 0,1 logMAR = 5 ETDRS harfi. Karar desteğidir; klinik yorum hekimindir.',
   ].join('\n');
 
@@ -52,6 +56,10 @@ export default function VaAraci() {
             <span style={kucuk}>Önceki vizit</span>{alan('odOnce', '0,5', 'Sağ önceki VA')}{alan('osOnce', '0,6', 'Sol önceki VA')}
             <span style={kucuk}>Bugün</span>{alan('odSimdi', '0,8', 'Sağ bugünkü VA')}{alan('osSimdi', '6/12', 'Sol bugünkü VA')}
           </div>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <div style={{ ...kucuk, marginBottom: 6 }}>Hasta (isteğe bağlı — sonucu bugünkü muayene formuna eklemek için seçin)</div>
+          <GozHastaSecici secili={hastaId} sec={(id) => setHastaId(id)} />
         </div>
         <div style={{ ...satir, marginTop: 10 }}>
           <span style={kucuk}>Hızlı giriş →</span>
@@ -77,6 +85,7 @@ export default function VaAraci() {
           </div>
         ))}
         {girildi && <div style={{ ...satir }}><KopyalaButonu metin={ozetMetni} etiket="VA özetini kopyala" /></div>}
+        <MuayeneFormunaEkle hastaId={hastaId} arac="VA / logMAR" satirlar={notSatirlari} />
         <Katlanir baslik="Yöntem ve ölçek">
           <div style={kucuk}>logMAR = −log10(ondalık); 0,1 logMAR = 5 ETDRS harfi. PS / EH / IH / IHY sayısal değildir, ikame değer kullanılmaz.</div>
         </Katlanir>

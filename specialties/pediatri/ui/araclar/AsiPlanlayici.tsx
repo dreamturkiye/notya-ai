@@ -14,7 +14,7 @@ import {
 } from '../../engines/asiPlan';
 import { dogumVeyaYasCoz, gebelikHaftasiCoz, gramCoz, tarihCoz, tarihGoster, yasMetni, gunFarki } from '../../engines/girdi';
 import {
-  pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, PediHastaSecici, usePediHasta, useUrlHasta, Rozet, OneriRozet, Istatistik,
+  pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici, usePediHasta, useUrlHasta, Rozet, OneriRozet, Istatistik,
 } from './PediAracKabugu';
 
 const { kutu, etiket, kucuk, input, ghost, btn, uyari, kirmizi } = pediStil;
@@ -286,8 +286,11 @@ export default function AsiPlanlayici() {
             </Katlanir>
           </div>
 
-          <div style={{ ...pediStil.satir, marginBottom: 14 }}>
-            <KopyalaButonu metin={asiOzetMetni(plan, bugun)} etiket="Aşı özetini kopyala" />
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ ...pediStil.satir }}>
+              <KopyalaButonu metin={asiOzetMetni(plan, bugun)} etiket="Aşı özetini kopyala" />
+            </div>
+            <MuayeneFormunaEkle hastaId={hastaId} arac="Aşı takvimi & telafi planı" satirlar={asiOzetMetni(plan, bugun).split('\n')} />
           </div>
         </>
       )}

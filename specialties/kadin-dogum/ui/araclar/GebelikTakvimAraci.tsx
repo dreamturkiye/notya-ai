@@ -7,7 +7,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { eddHesapla, gebelikTakvimi, takvimHastaMetni, tarihOku, haftaOku, sayiOku, trTarih, PENCERE_DURUM_AD, type TarihlemeYontemi, type TakvimTarama, type TakvimIzlem, type WindowId } from '../../engines/araclar';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
-import { kdStil, DURUM_RENK, Segment, Kutu, Etiketli, CiftSutun, KdHastaSecici, kdHastaOzeti, panoya } from './KdAracKabugu';
+import { kdStil, DURUM_RENK, Segment, Kutu, Etiketli, CiftSutun, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti, panoya } from './KdAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -207,7 +207,18 @@ export default function GebelikTakvimAraci() {
               {hasta.id && <a href={hastaDosyaHref(hasta.id, 'gebelik')} style={{ ...ghost, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Gebelik) →</a>}
               {kopya && <span style={{ ...kucuk, color: '#F9A8D4' }}>{kopya}</span>}
             </div>
-            <div style={{ ...kucuk, marginTop: 8 }}>Hiçbir şey nota veya hasta dosyasına otomatik yazılmaz.</div>
+            <MuayeneFormunaEkle
+              hastaId={hasta.id}
+              arac="Gebelik takvimi"
+              satirlar={[
+                `Gebelik haftası: ${t.gaMetin} · TDT ${trTarih(t.edd)}`,
+                t.kapaniyor.length ? `Kapanmak üzere: ${t.kapaniyor.map((x) => `${x.ad} (son gün ${trTarih(x.kapanis)})`).join('; ')}` : '',
+                t.kapaniyorDiger.length ? `Bu hafta kapanıyor: ${t.kapaniyorDiger.map((x) => `${x.ad} (${trTarih(x.kapanis)})`).join('; ')}` : '',
+                t.kacirilan.length ? `Kaçırılan pencere: ${t.kacirilan.map((x) => `${x.ad} (${x.pencereHafta})`).join('; ')}` : '',
+                `Doğum öncesi analık istirahati başlangıcı: ${trTarih(t.analikRaporuBaslangic.tekil)}${cogul ? ` (çoğul ${trTarih(t.analikRaporuBaslangic.cogul)})` : ''}`,
+              ]}
+            />
+            <div style={{ ...kucuk, marginTop: 8 }}>Hiçbir şey nota otomatik yazılmaz — yalnız yukarıdaki düğmeye bastığınızda eklenir.</div>
           </div>
         </div>
       )}

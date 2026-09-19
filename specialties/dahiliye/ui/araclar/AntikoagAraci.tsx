@@ -11,7 +11,7 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { antikoagulanDegerlendir, type Ajan } from '../../engines/antikoagulan';
 import { chaVascSkoru } from '../../engines/sgkRapor';
-import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -91,6 +91,15 @@ export default function AntikoagAraci() {
     '',
     'HAS-BLED maddeleri antikoagülan kesme gerekçesi değildir; karar hekimindir.',
   ].filter(Boolean).join('\n');
+
+  const notSatirlari = [
+    `CHA₂DS₂-VASc (hekimin işaretlediği bileşenler): ${chaSkor}`,
+    sonuc.krkl != null ? `KrKl (Cockcroft-Gault): ${sonuc.krkl} mL/dk` : '',
+    `HAS-BLED maddeleri (kontrol listesi, skor iddiası yok): ${sonuc.hasBledMaddeleri.filter((m) => m.var === true).map((m) => m.madde).join(', ') || 'işaretli madde yok'}`,
+    ...sonuc.kirmizi.map((x) => `Kırmızı bayrak: ${x}`),
+    ...sonuc.uygunluk.map((x) => `Uygunluk: ${x}`),
+    ...sonuc.uyarilar.map((x) => `Uyarı: ${x}`),
+  ].filter(Boolean);
 
   return (
     <>
@@ -186,6 +195,7 @@ export default function AntikoagAraci() {
         {sonuc.uyarilar.map((x) => <div key={x} style={{ ...metin, marginTop: 6, color: '#FBBF24' }}>⚠ {x}</div>)}
         {sonuc.plan.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6 }}>{x}</div>)}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Değerlendirmeyi kopyala" /></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="CHA₂DS₂-VASc / HAS-BLED değerlendirmesi" satirlar={notSatirlari} />
         <TaslakNotu>Azaltılmış doz ölçütleri bayrak olarak gösterilir; mg yazılmaz — dozu hekim belirler. Hesap kaydedilmez, nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

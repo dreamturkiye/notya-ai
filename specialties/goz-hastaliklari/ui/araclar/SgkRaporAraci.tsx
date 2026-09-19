@@ -14,7 +14,7 @@ import { GIL_EK3G_KALEMLERI } from '../../engines/klinik';
 import { GOZ_KAYNAKLAR } from '../../protocols/sources';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { gozStil, Secim, Segment, Etiketli, Onay, Istatistik, Katlanir, KopyalaButonu, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
+import { gozStil, Secim, Segment, Etiketli, Onay, Istatistik, Katlanir, KopyalaButonu, MuayeneFormunaEkle, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, input, ghost } = gozStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -67,6 +67,12 @@ export default function SgkRaporAraci() {
     <Etiketli ad={ph}><input type={tip} aria-label={ph} value={s(k)} onChange={(e) => set(k, e.target.value)} placeholder={ph} style={{ ...input, width: w }} /></Etiketli>
   );
   const tamamSayisi = sonuc.sutKontrol.filter((x) => x.tamam === true).length;
+  const notSatirlari = [
+    `${sonuc.draft.raporBasligi} — ${sonuc.raporTipi}`,
+    `Tanı önerisi (hekim doğrular): ${sonuc.draft.tani.icd10} ${sonuc.draft.tani.aciklama}`,
+    `SUT kontrol listesi: ${tamamSayisi}/${sonuc.sutKontrol.length} madde tamam`,
+    sonuc.eksikler.length ? `Eksik zorunlu madde: ${sonuc.eksikler.join('; ')}` : 'Zorunlu maddelerde eksik yok.',
+  ];
 
   return (
     <>
@@ -133,6 +139,7 @@ export default function SgkRaporAraci() {
           <div style={{ ...kucuk, borderLeft: '2px solid rgba(15,155,142,0.5)', paddingLeft: 8 }}>{sonuc.dipnotlar.map((d, i) => <div key={i}><b>{d.ref}</b> — {d.not} <span style={{ opacity: 0.7 }}>({GOZ_KAYNAKLAR[d.ref]?.ad})</span></div>)}</div>
         </Katlanir>
         <div style={{ ...satir }}><Rozet ton="notr">T.C. kimlik no ve doz yazılmaz</Rozet><Rozet ton="notr">hasta adı Medula&apos;da doldurulur</Rozet></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="SGK göz rapor taslağı" satirlar={notSatirlari} />
         <TaslakNotu>Rapor taslağıdır; zorunlu maddeleri ve tanıyı hekim doğrular, Medula girişi e-imza ile yapılır. Nota otomatik yazılmaz.</TaslakNotu>
       </div>
     </>

@@ -9,7 +9,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { sgkRaporTaslagi, SGK_SABLONLARI, type SgkSablon } from '../../engines/sgkRapor';
-import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, MuayeneFormunaEkle, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -73,6 +73,15 @@ export default function SgkRaporAraci() {
     ...sonuc.sutKontrol.map((s) => `  ${ISARET(s.tamam)} ${s.madde}`),
     sonuc.eksikler.length ? `\nEksikler:\n${sonuc.eksikler.map((e) => `  • ${e}`).join('\n')}` : null,
   ].filter(Boolean).join('\n');
+
+  const notSatirlari = [
+    `${d.raporBasligi} (taslak)`,
+    `Tanı: ${d.tani.icd10} ${d.tani.aciklama}`,
+    `Önerilen süre: ${d.onerilen_sure_ay} ay`,
+    `Etken madde (girilen ilaç satırlarından): ${(d.etkenMaddeler || []).join(', ') || '—'}`,
+    sonuc.chaVascSkor != null ? `CHA₂DS₂-VASc (işaretli bileşenler): ${sonuc.chaVascSkor}` : '',
+    sonuc.eksikler.length ? `Eksikler: ${sonuc.eksikler.join('; ')}` : 'SUT kontrol listesinde eksik yok.',
+  ].filter(Boolean);
 
   return (
     <>
@@ -172,6 +181,7 @@ export default function SgkRaporAraci() {
         {d.mevcutDurum && <div style={{ ...kucuk, marginTop: 6, whiteSpace: 'pre-wrap' }}>{d.mevcutDurum}</div>}
         {sonuc.chaVascSkor != null && <div style={{ ...metin, marginTop: 6 }}>CHA₂DS₂-VASc (işaretli bileşenler): {sonuc.chaVascSkor}</div>}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Taslağı kopyala" /></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="SGK ilaç raporu taslağı" satirlar={notSatirlari} />
         <TaslakNotu>Rapor hekim kilitleyene kadar taslaktır; Medula girişi e-imza ile yapılır. Hasta adı, T.C. kimlik no ve doz yazılmaz; nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

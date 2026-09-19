@@ -9,7 +9,7 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { plannedReads, patchStatus, EUROPEAN_BASELINE } from '../../engines/patch-calendar';
 import { DERM_PATCH_STATUS, dermLabel } from '../labels';
-import { dermStil, Istatistik, Katlanir, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { dermStil, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -52,6 +52,13 @@ export default function YamaAraci() {
     `Pozitif: ${pozitif.length ? pozitif.map(ad).join(', ') : 'yok'}`,
     'Okuma zamanlaması ve klinik ilgi değerlendirmesi hekimindir.',
   ].join('\n');
+
+  const notSatirlari = [
+    `Yama testi — D0 ${uygulama} · D2 okuma ${plan.d2} · D4 okuma ${plan.d4}`,
+    `Durum: ${dermLabel(DERM_PATCH_STATUS, durum)}${okumaD2 ? ` · D2 okundu ${okumaD2}` : ''}${okumaD4 ? ` · D4 okundu ${okumaD4}` : ''}`,
+    `Uygulanan antijen: ${uygulanan.length ? uygulanan.map(ad).join(', ') : 'Avrupa baz serisi (seçim yapılmadı)'}`,
+    `Pozitif: ${pozitif.length ? pozitif.map(ad).join(', ') : 'yok'}`,
+  ];
 
   return (
     <>
@@ -121,6 +128,7 @@ export default function YamaAraci() {
           <Istatistik deger={pozitif.length} etiket="pozitif" ton={pozitif.length ? 'kirmizi' : 'notr'} />
         </div>
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Takvimi ve seriyi kopyala" /></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="Yama testi D2 / D4" satirlar={notSatirlari} />
         <TaslakNotu>Okuma zamanlaması, klinik ilgi değerlendirmesi ve pozitifliğin anlamı hekimindir. Hesap kaydedilmez, nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

@@ -11,7 +11,7 @@ import {
 } from '../../engines/araclar';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { diffDays } from '../../engines/dates';
-import { kdStil, Segment, Kutu, Etiketli, CiftSutun, KdHastaSecici, kdHastaOzeti, panoya } from './KdAracKabugu';
+import { kdStil, Segment, Kutu, Etiketli, CiftSutun, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti, panoya } from './KdAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -165,6 +165,7 @@ export default function RiskAraci() {
               {hasta.id && <a href={hastaDosyaHref(hasta.id, 'gebelik')} style={{ ...ghost, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Doğum) →</a>}
               {kopya && <span style={{ ...kucuk, color: '#F9A8D4' }}>{kopya}</span>}
             </div>
+            <MuayeneFormunaEkle hastaId={hasta.id} arac="Sezaryen endikasyon notu (hekim kilitli)" satirlar={not.split('\n')} />
           </>
         ) : (
           <>
