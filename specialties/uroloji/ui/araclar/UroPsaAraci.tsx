@@ -71,7 +71,7 @@ export default function UroPsaAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Özet</div>
         {satirlar.length ? satirlar.map((x) => <div key={x} style={S.metin}>{x}</div>) : <div style={S.kucuk}>Değer girin.</div>}
-        <TaslakNotu>PSA bandı ve hız karar desteğidir; prostat kanseri tanısı yazılmaz. İleri tetkik hekimindir.</TaslakNotu>
+        <TaslakNotu>PSA bandı ve hız karar desteğidir; kanser tanısı yazılmaz. İleri tetkik hekimindir.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>
           <KopyalaButonu metin={satirlar.join('\n')} etiket="Özeti kopyala" />
         </div>

@@ -58,7 +58,7 @@ export default function UroIpssAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Özet</div>
         {satirlar.length ? satirlar.map((x) => <div key={x} style={S.metin}>{x}</div>) : <div style={S.kucuk}>Maddeleri girin.</div>}
-        <TaslakNotu>IPSS bandı şiddet karar desteğidir; BPH veya başka tanı yazılmaz. Tanı ve doz hekimindir.</TaslakNotu>
+        <TaslakNotu>IPSS bandı şiddet karar desteğidir; tanı yazılmaz. Tedavi kararı hekimindir.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>
           <KopyalaButonu metin={satirlar.join('\n')} etiket="Özeti kopyala" />
         </div>

@@ -87,7 +87,7 @@ export const UROLOJIM_NOTU =
 
 export const URO_BAKIM_IPUCLARI: readonly string[] = [
   'Bol sıvı alın; doktorunuz farklı söylemedikçe.',
-  'İlaç dozunu ve süresini yalnızca doktorunuzun yazdığı şekilde uygulayın.',
+  'İlaçları yalnızca doktorunuzun yazdığı şekilde kullanın.',
   'Kontrol tarihini kaçırmayın; değiştirmek için muayenehanenizi arayın.',
   'Ani şiddetli ağrı veya idrar yapamama durumunda portal mesajı beklemeyin.',
 ]
