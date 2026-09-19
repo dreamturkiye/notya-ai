@@ -27,6 +27,7 @@ export type HastaDosyaSekmeId =
   | 'goz'
   | 'psikiyatri'
   | 'kbb'
+  | 'konsultasyon'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -133,6 +134,8 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.pediatriUygun) tabs.push({ id: 'buyume', label: 'Büyüme Eğrileri' })
   tabs.push(
     { id: 'belgeler', label: 'Belgeler' },
+    // KONSULTASYON-01: evrensel — her branş, her yaş (istem → Kasa'daki rapor → hekimin yanıt özeti)
+    { id: 'konsultasyon', label: 'Konsültasyonlar' },
     { id: 'goruntuleme', label: 'Görüntüleme' },
     { id: 'ilaclar', label: 'İlaçlar' },
     { id: 'formu', label: 'Hasta Formu' },
