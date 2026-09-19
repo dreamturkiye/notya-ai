@@ -5,12 +5,19 @@
  * listede, kategoriye göre gruplu gösterilir — pediatrik hastalar için doz numarası ve sonraki
  * doz tarihi (SB Ulusal Aşılama Takvimi'ne göre çok daha yoğun); yetişkinler için tek doz/yıllık
  * (tetanoz-difteri, grip, KOVID) mantığı.
+ *
+ * ASI-KARNESI-01 (Dr. Gökhan Mamur; Kaan 2026-09-19): "Aşı karnesi yükle" — fotoğraf/PDF → Ayşe okur → hekim toplu
+ * onaylar (AsiKarnesiOkuma). Karneden aktarılanlar klinikte uygulananlardan GÖRSEL OLARAK AYRI: her satırda kaynak
+ * rozeti (lib/asi/karneOkuma → asiKaynakRozeti, paylaşılan Rozet) ve kaynağa göre kenar rengi.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { ULUSAL_TAKVIM, OZEL_ASILAR, PEDIATRIK_ASI_ADLARI, TAKVIM_SURUM } from '@/lib/asi/ulusalAsiTakvimi';
 import { hitapMetinleri } from '@/lib/specialties/hitap';
+import { Rozet } from '@/lib/doktor/aracUi';
+import { asiKaynakRozeti, asiKaynakTuru, trTarih } from '@/lib/asi/karneOkuma';
+import AsiKarnesiOkuma from '@/components/doktor/AsiKarnesiOkuma';
 
 interface Asi {
   id: string;
@@ -21,7 +28,10 @@ interface Asi {
   sonraki_doz_tarihi: string | null;
   kaynak: 'beyan' | 'kayit';
   notlar: string | null;
+  belge_id?: string | null;
 }
+
+const KAYNAK_KENAR = { karne: 'rgba(96,165,250,0.55)', beyan: 'rgba(255,255,255,0.18)', klinik: 'rgba(45,212,191,0.55)' } as const;
 
 const YAYGIN_YETISKIN = ['Tetanoz-Difteri (Td)', 'Grip', 'KOVID-19', 'Zona (Herpes Zoster)', 'Pnömokok'];
 
@@ -46,6 +56,8 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
   const [kaynak, setKaynak] = useState<'kayit' | 'beyan'>('kayit');
   const [kaydediyor, setKaydediyor] = useState(false);
   const [takvimAcik, setTakvimAcik] = useState(false);
+  const [karneAcik, setKarneAcik] = useState(false);
+  const [bilgi, setBilgi] = useState('');
 
   const token = ensureDoctorAccessToken;
 
@@ -129,17 +141,19 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {kayitlar.map((a) => {
             const yaklasan = a.sonraki_doz_tarihi && new Date(a.sonraki_doz_tarihi) >= new Date() && new Date(a.sonraki_doz_tarihi) <= new Date(Date.now() + 7 * 86400000);
+            const tur = asiKaynakTuru(a);
+            const rozet = asiKaynakRozeti(tur, hitap.beyanEtiketi);
             return (
-              <div key={a.id} style={{ background: '#111C33', borderRadius: 10, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div key={a.id} data-asi-kaynak={tur} style={{ background: '#111C33', borderRadius: 10, padding: 12, borderLeft: `3px solid ${KAYNAK_KENAR[tur]}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{a.asi_adi}{a.doz_no ? ` · ${a.doz_no}. doz` : ''}</div>
-                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
-                    {a.uygulama_tarihi ? `Uygulandı: ${new Date(a.uygulama_tarihi).toLocaleDateString('tr-TR')}` : 'Uygulama tarihi girilmedi'}
-                    {a.kaynak === 'beyan' ? ' · Hasta beyanı' : ''}
+                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span>{a.uygulama_tarihi ? `Uygulandı: ${trTarih(a.uygulama_tarihi)}` : 'Uygulama tarihi girilmedi'}</span>
+                    <Rozet ton={rozet.ton}>{rozet.metin}</Rozet>
                   </div>
                   {a.sonraki_doz_tarihi && (
                     <div style={{ fontSize: 12, marginTop: 2, color: yaklasan ? '#F59E0B' : '#64748B' }}>
-                      Sonraki doz: {new Date(a.sonraki_doz_tarihi).toLocaleDateString('tr-TR')}{yaklasan ? ' · Yaklaşıyor' : ''}
+                      Sonraki doz: {trTarih(a.sonraki_doz_tarihi)}{yaklasan ? ' · Yaklaşıyor' : ''}
                     </div>
                   )}
                 </div>
@@ -156,7 +170,10 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aşılar</div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={() => { setKarneAcik((v) => !v); setBilgi(''); }} style={{ background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 40 }}>
+            {karneAcik ? 'Karne yüklemeyi kapat' : '📷 Aşı karnesi yükle'}
+          </button>
           {/* BRANS-ALAN-SIZMASI: SB çocukluk dönemi takvimi yalnız çocuk hastada / pediatrik bağlamda — KD'nin erişkin hastasında yok */}
           {(cocukHasta || pediatrikBaglam) && (
             <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
@@ -168,6 +185,14 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
           </button>
         </div>
       </div>
+
+      {bilgi && <div role="status" style={{ background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.4)', color: '#5EEAD4', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{bilgi}</div>}
+      {karneAcik && (
+        <AsiKarnesiOkuma
+          patientId={patientId}
+          onKaydedildi={async (adet) => { setKarneAcik(false); setBilgi(`${adet} aşı karneden aktarıldı (hekim onaylı).`); await yukle(); }}
+        />
+      )}
 
       {hata && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#EF4444', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
 

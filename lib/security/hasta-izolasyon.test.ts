@@ -359,6 +359,10 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/asilar', red: 404,
     yazdi: (a) => tablo('asilar').some((x) => x.patient_id === a.hasta && x.asi_adi === 'QA Yeni Asi'),
     cagir: (r, a, h) => coz(r.asilar.POST(iste('POST', '/api/doktor/asilar', { token: a.token, govde: { patientId: h.hasta, asiAdi: 'QA Yeni Asi' } }))) },
+  // ASI-KARNESI-01: karne onayı — dışarıdan gelen tek kimlik Kasa belgesi; hasta belgeden türetilir. Yabancı belge = 404.
+  { ad: 'POST /api/doktor/asilar/karne onayla (Kasa belgesinden toplu onay)', red: 404,
+    yazdi: (a) => tablo('asilar').some((x) => x.patient_id === a.hasta && x.doktor_id === a.id && x.belge_id === a.kasaBelge && x.asi_adi === 'QA Karne KKK' && x.kaynak === 'beyan'),
+    cagir: (r, a, h) => coz(r.asiKarne.POST(iste('POST', '/api/doktor/asilar/karne', { token: a.token, govde: { adim: 'onayla', belgeId: h.kasaBelge, hekimOnayi: true, satirlar: [{ asiAdi: 'QA Karne KKK', dozNo: 1, uygulamaTarihi: '2020-03-05' }] } }))) },
   { ad: 'POST /api/doktor/mchat', red: 404,
     yazdi: (a) => tablo('mchat_testleri').some((x) => x.patient_id === a.hasta),
     cagir: async (r, a, h) => {
@@ -545,6 +549,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       gunProgrami: await ice('app/api/doktor/gun-programi/route'),
       epikriz: await ice('app/api/doktor/araclar/epikriz/route'),
       asilar: await ice('app/api/doktor/asilar/route'),
+      asiKarne: await ice('app/api/doktor/asilar/karne/route'),
       mchat: await ice('app/api/doktor/mchat/route'),
       gelisim: await ice('app/api/doktor/gelisim-taramasi/route'),
       kadinSagligi: await ice('app/api/doktor/kadin-sagligi/route'),
