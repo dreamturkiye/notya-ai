@@ -80,6 +80,8 @@ genel-cerrahi · plastik-cerrahi · cocuk-cerrahisi · gogus-cerrahisi · beyin-
 
 **Plastik shipped tip:** see git log · Live: https://notya-ai.vercel.app/plastik-exceptional-audit.html · Araç **4** · Portal **Yaram** · Migration **074**.
 
+- **cocuk-cerrahisi SHIPPED** — COCUK-CERRAHISI-EXCEPTIONAL-01 · 4 Araç (pre/post-op · yara/dren · onam/veli · kohort) · portal **Çocuğumun Cerrahisi** · migration **075** · `cocuk-cerrahisi-exceptional-audit.html` · `test:cc` · ≠ pediatri (no Hedef Boy / Neyzi / Baş Çevresi chapter mounts; veli = age/`veliDiliMi`).
+
 
 ### Dalga 5
 acil-tip · anestezi · radyoloji · kalp-damar-cerrahisi · deepen (en ince prior → psik audit barı)
