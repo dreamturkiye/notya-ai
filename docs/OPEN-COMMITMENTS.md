@@ -4,7 +4,7 @@
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.
 
-Last reviewed: 2026-09-01 (randevu sistemi #44 merged)
+Last reviewed: 2026-09-19 (NOTYA-MALIYET-01 model/maliyet politikası)
 
 ---
 
@@ -23,6 +23,144 @@ Practical check for each PR that touches UI, before calling it finished:
 - If a change is desktop-only by nature (e.g. a purely server-side calc with no new UI), no mobile
   check is needed — but any new button, form, panel, badge, or page does need one.
 - Record what was checked (and any gap found) in the PR description / ledger, same as other work.
+
+## NOTYA-MALIYET-01 — AI model/maliyet politikası: klinik kalite > maliyet (Kaan, 2026-09-19)
+
+Tetik: test aşamasında ~$20 harcandı. Kaan: *"Bütün kullanımlarda Sonnet 4.6 ve Haiku'yu ekonomik bir şekilde
+kullanması lazım."* Aynı gün, bağlayıcı düzeltme: *"Röntgenlerde ve diğer incelemelerde de Sonnet'i kullan.
+Kesinlikle application'ın kalitesinin düşmesini istemiyorum."* → Öncelik: **KLİNİK KALİTE > MALİYET**. Tasarruf yalnız
+klinik olmayan işlerden ve kaliteye dokunmayan tekniklerden (prompt caching, modele giden geçmiş) gelir.
+Skill: `.cursor/skills/ai-model-politikasi/SKILL.md` (Kaan). PR'lar: #339 (politika + caching + ölçüm), bu PR (kalan
+çağrı yerleri + sızma testi + ledger).
+
+### Mimari
+- **Tek model kaynağı** `lib/ai/modeller.ts` (`modelSec(gorev)`, `gucluModel()`, `hizliModel()`). Varsayılan GÜÇLÜ =
+  `claude-sonnet-4-6`, HIZLI = `claude-haiku-4-5-20251001`. Vercel'de `NOTYA_MODEL_GUCLU` / `NOTYA_MODEL_HIZLI` ile kod
+  değişmeden değiştirilebilir (geçersiz değer → varsayılan).
+- **Tek kapı** `lib/ai/cagir.ts` (`aiCagir`). Uygulamadaki her Claude isteği buradan geçer.
+- **Sızma testi** `lib/ai/model-sizmasi.test.ts`: `claude-(sonnet|haiku|opus)-<sürüm>` kod içinde yalnız `modeller.ts`'te;
+  `messages.create` / `api.anthropic.com` yalnız `cagir.ts`'te (app, lib, core, components, specialties, types).
+
+### Görüntü ve inceleme — İSTİSNASIZ Sonnet (Kaan talimatı)
+- Ayrı görev tipi `'goruntu-inceleme'` (GÜÇLÜ); `modeller.test.ts` HIZLI'ya çekilmesini kilitler.
+- **Kod seviyesinde güvence:** `cagir.ts` mesajda `image` ya da `document` (PDF) bloğu görürse çağıranın görevi ne olursa
+  olsun GÜÇLÜ modele yükseltir (`etkinSecim`, test: `cagir.test.ts` — HIZLI görevlerin hepsi görselle GÜÇLÜ'ye çıkar).
+- Kapsam: röntgen, OCT, fundus, ön segment, dermatoskopi, USG, MR, BT, mamografi, EKG ve her görüntü yorumu —
+  `core/belgeler/yazar.ts` (Tier A taslak; belge_analizleri, göz ve dermatoloji ekleri, konsültasyon yanıt raporunun
+  belge taslağı), `core/lab/cikarim.ts` (lab PDF/görsel), `lib/ingestion/pipeline.ts` analiz (2048) + ikinci geçiş (1024).
+- `pipeline.ts` etiketleme çağrısı (20 token) görevi `siniflandirma` olarak yazıldı ama mesajında görsel/PDF olduğu için
+  güvence onu da **Sonnet'e yükseltir**. Bilinçli: "her türlü görsel çağrı GÜÇLÜ" kuralı "etiketleme HIZLI kalabilir"
+  iznine üstün tutuldu. Ek maliyet: belge başına ~1 görsel girdi farkı, 20 çıktı token.
+- Not: `lib/ingestion/pipeline.ts` klinik değil **mali** belge hattıdır (Derya — z raporu, fatura, banka). Klinik
+  `belge_analizleri` hattı `core/belgeler/tierA.ts → yazar.ts`'tir; ikisi de GÜÇLÜ.
+
+### Çağrı → kademe → neden (tam envanter, 2026-09-19)
+| Çağrı yeri | Görev | Kademe | Neden |
+|---|---|---|---|
+| `lib/doktor/soapUret.ts` soapNotuUret (sessions/end, ses-yukle) | soap (8000) | GÜÇLÜ | Muayene/SOAP notu |
+| `lib/ai/noteGenerator.ts` generateMedicalNote | soap (4000) | GÜÇLÜ | Tıbbi not |
+| `lib/ai/noteGenerator.ts` diğer 9 üretici (hukuk, terapi, mali ×2, İK, emlak, sigorta, eğitim, toplantı) | not-uretimi | GÜÇLÜ | Mesleki not — dar HIZLI listesinde değil |
+| `sessions/[id]/end` sağlık meslekleri seans notu | not-uretimi (1500) | GÜÇLÜ | Klinik seans kaydı |
+| `doktor/konsult`, `doktor/not-konsult` | klinik-analiz | GÜÇLÜ | Klinik konsültasyon / SOAP düzenleme |
+| `doktor/ilaclar/doz-oner` | klinik-analiz (400) | GÜÇLÜ | Doz önerisi |
+| `doktor/araclar/erecete` | klinik-analiz (2500) | GÜÇLÜ | E-reçete + etkileşim — TASK.md'deki "HIZLI'ya geçebilir" önerisi Kaan talimatıyla **geçersiz** |
+| `core/lab/yorum.ts` labRaporYaz | klinik-analiz (2500) | GÜÇLÜ | Lab çıkarımı sonrası klinik yorum |
+| `lib/dr-ayse/groq.ts` (epikriz, gelişim taraması, belge ingest özeti, sandbox) | klinik-analiz | GÜÇLÜ | Klinik çıktı (ICD-10 eşleme de SOAP/not-konsult içinde, GÜÇLÜ) |
+| `core/belgeler/yazar.ts`, `core/lab/cikarim.ts`, `pipeline.ts` analiz ×2 | goruntu-inceleme | GÜÇLÜ | Görüntü/belge — istisnasız |
+| `pipeline.ts` detectType | siniflandirma → görselle GÜÇLÜ | GÜÇLÜ | Yukarıya bak |
+| `avukat/dilekce`, `avukat/sozlesme-analiz` | uzman-analiz | GÜÇLÜ | Hukuk analizi |
+| `avukat/portal` (müvekkil) | sohbet-uzman (800) | GÜÇLÜ | Hukuki süre/dosya bilgisi. #339 öncesi WIP bunu HIZLI'ya almıştı — geri alındı |
+| `asistan/mali-chat`, `asistan/avukat-chat` | sohbet-uzman | GÜÇLÜ | Mevzuat/hukuk tavsiyesi |
+| `asistan/chat` | yönlendirici | **varsayılan GÜÇLÜ** | Aşağıya bak |
+| `help/chat` | kisa-yanit (200) | HIZLI | Yardım/destek (dar liste) |
+| `mali/edevlet` (useAI) | kisa-yanit | HIZLI | Görevden önce de Haiku'ydu; e-Devlet adım rehberi (yardım niteliğinde). OPEN aşağıda |
+| `lib/doktor/hafiza.ts` sohbettenOgren / ozetGerekirseGuncelle | cikarim / ozet | HIZLI | Hafıza tercih çıkarımı / profil özeti — hasta klinik verisi alınmaz (dar liste) |
+| `lib/doktor/soapUret.ts` stilProfiliDamit (notes approve) | cikarim | HIZLI | Doktorun düzeltmelerinden tercih çıkarımı (dar liste). OPEN aşağıda |
+
+### Asistan sohbeti — şüphede GÜÇLÜ (`asistanModelYonlendir`)
+Sıra: hasta bağlamı (seçili hasta, çözülen dosya, çoklu eşleşme) → GÜÇLÜ, istisnasız · eylem niyeti → GÜÇLÜ · klinik
+kök/kısaltma (ilaç, tanı, tetkik, görüntü, lab, doz, risk/skor, "hasta" kelimesi dahil) → GÜÇLÜ · **dar istisna → HIZLI:**
+mesajın tamamı selam/teşekkür/hal-hatır/vedalaşma kelimeleri (en az bir çekirdek sosyal kelime, ≤8 kelime) ya da açık
+uygulama terimi (ekran, menü, şifre, abonelik…) içeren kısa klinik-sinyalsiz soru · geri kalan her şey → GÜÇLÜ.
+"evet / tamam / olur / peki" bilerek sosyal sayılmaz (asistanın klinik önerisine onay olabilir). Testler:
+`lib/ai/modeller.test.ts` (belirsiz → GÜÇLÜ, net sosyal → HIZLI, hasta bağlamında kısa mesaj → GÜÇLÜ).
+
+### Tasarruf — nereden geliyor
+1. **Prompt caching** (cache_control ephemeral, 5 dk). SDK `@anthropic-ai/sdk` 0.27.3: prompt caching API'de GA; SDK
+   gövdeyi olduğu gibi iletir (`cagir.ts` tipi `never` ile geçer), `usage.cache_*` alanları yanıtta gelir → sürüm
+   yükseltmeye gerek görülmedi (yükseltme tüm tipleri etkiler, ayrı iş). Uygulandığı yerler:
+   - `asistan/chat`: 1) persona + know-how + kurallar (hekim × persona sabit) 2) tüm system (hafıza + aktif hasta + branş
+     kilidi + dosya — aynı sohbette turdan tura aynı). Metin ve sıra birebir eski prompt (`sistemParcalari.test.ts`).
+   - `doktor/not-konsult`: kimlik + yetenekler + alan anahtarları + düzenleme kuralları (branş kapsamı başına sabit).
+     Tek metin değişikliği: "Bugün (TRT)" satırı taslağın hemen önüne taşındı (içerik aynı).
+   - `doktor/konsult`: SISTEM + hasta dosyası (aynı hastanın konsültasyonunda sabit) tek kırılma noktası.
+   - `asistan/mali-chat`, `asistan/avukat-chat`: kimlik + kurallar + JSON biçimi.
+   - Asgari önbelleklenebilir uzunluk: Sonnet 4.6 = 1024 token, Haiku 4.5 = 4096. mali/avukat sabit blokları büyük
+     ihtimalle 1024'ün altında → orada önbellek sessizce devreye girmez (zarar yok, fayda yok). Asıl kazanç asistan/chat
+     (uzman know-how bloğu) ve konsult (hasta dosyası).
+2. **Geçmiş kırpma**: asistan/mali/avukat sohbetinde modele giden geçmiş 20 → 8 mesaj (`SOHBET_GECMIS_MESAJ`); saklanan
+   geçmiş (ekran + doz-kaynak kontrolü) 20 kalır.
+3. **HIZLI kademe** yalnız dar listede (yardım, hafıza, net sosyal tur, uygulama sorusu).
+
+### Kalite riski nedeniyle yapılmadı
+- **max_tokens düşürülmedi.** Fatura üretilen token'a göredir; tavanı düşürmek tasarruf getirmez, yalnız kesilme (F3)
+  riski getirir. Mevcut tavanların hepsi korundu; mali-chat 800 → 1600 ve avukat-chat 1500 → 1600'e **çıktı** (F3 ile
+  aynı gerekçe, maliyet etkisi yok). F3 kurtarma (`asistanYanitiCoz`) ve testi değişmedi, yeşil.
+- **Branş kilidi asistan/chat'te sabit bloğa taşınmadı.** Kilit metni "yukarıdaki genel talimatlarla çeliştiğinde
+  ÖNCELİKLİDİR" diyor; hafıza/hasta bloğunun üstüne çıkarsa önceliği onları kapsamaz. Bunun yerine ikinci kırılma
+  noktası tüm system'i (kilit dahil) önbelleğe alıyor — sıra değişmedi.
+- **konsult / not-konsult geçmişi kırpılmadı** (20 / 16): konsültasyon dizisinin kendisi klinik iş ürünü.
+- **pipeline detectType + extract birleştirilmedi** (çift çağrı): tür başına ayrı çıkarım promptları var; birleştirmek
+  prompt değişikliği = doğrulanmamış kalite riski. Başka gereksiz çift çağrı bulunmadı (asistan/chat'teki hafıza
+  çağrısı regex kapılı, profil özeti 5 seansta bir).
+- Hiçbir klinik iş HIZLI'ya alınmadı.
+
+### Model adı düzeltmeleri
+- `asistan/avukat-chat`: `claude-sonnet-5` yazıyordu → artık politika (GÜÇLÜ = Sonnet 4.6). Not: `claude-sonnet-5`
+  aslında geçerli, daha yeni ve daha ucuz bir model kimliği ($2/$10 vs Sonnet 4.6 $3/$15 per MTok) — OPEN aşağıda.
+- `sessions/[id]/end:76` `'claude-sonnet-4'`: API çağrısı DEĞİL, `notes.ai_model` **etiketi**ydi (notu üreten
+  generateAccountingNoteV2 zaten Sonnet 4.6). Yalnız etiket `modelSec('not-uretimi').model` yapıldı, davranış aynı. Diğer
+  `ai_model` etiketleri (end, ses-yukle) de politikadan. `lib/db/schema.sql`'deki tarihsel `DEFAULT 'claude-sonnet-4'`
+  DDL belgesi olduğu için dokunulmadı (kod değil; sızma testi yalnız kod dosyalarını tarar).
+
+### Ölçüm — `ai_token_kullanim` (migration 082, uygulandı 2026-09-19)
+- **Ad çakışması:** görev metni `ai_kullanim` diyordu; o ad NOTYA-KOTA-01'in canlı günlük kota tablosu (doctor_id, gun,
+  kova, sayac). #339 kısa süre o tabloya yazmayı denedi — kolonlar uymadığı için her ekleme reddedildi (veri bozulmadı,
+  kota satırları 24/24 aynı). Bu PR'da ad `ai_token_kullanim`; `cagir.test.ts` yanlış tabloya yazmayı kilitler.
+- Kolonlar: created_at, doctor_id (auth.users, set null), gorev, model, input_tokens, output_tokens, cache_read,
+  cache_creation, kesildi (stop_reason = max_tokens → F3 izleme). **Prompt, yanıt, hasta kimliği/verisi yok; patient_id
+  kolonu bilerek yok.** RLS açık: hekim yalnız kendi satırını okur; istemci yazamaz (yazan servis rolü, `lib/ai/kullanim.ts`).
+  Kayıt hatası çağrıyı asla düşürmez.
+- Görünüm `ai_token_kullanim_gunluk` (gün TRT × görev × model toplamları) — yalnız servis rolü / SQL Editor.
+- **Maliyet izleme** (SQL Editor; fiyatlar per MTok: Sonnet 4.6 in $3 / out $15 / cache yazma $3.75 / okuma $0.30;
+  Haiku 4.5 in $1 / out $5 / yazma $1.25 / okuma $0.10):
+  ```sql
+  select gun, gorev, model, cagri, kesilen,
+    round(( case when model like '%haiku%'
+      then input_tokens*1.0 + output_tokens*5 + cache_creation*1.25 + cache_read*0.10
+      else input_tokens*3.0 + output_tokens*15 + cache_creation*3.75 + cache_read*0.30 end) / 1e6, 4) as usd,
+    round(100.0 * cache_read / nullif(cache_read + cache_creation + input_tokens, 0), 1) as onbellek_isabet_pct
+  from ai_token_kullanim_gunluk where gun >= current_date - 7 order by gun desc, usd desc;
+  ```
+  Hekim başına: `select doctor_id, sum(...) from ai_token_kullanim group by 1`. `kesilen > 0` ise ilgili görevin tavanı
+  gözden geçirilir (F3).
+
+### OPEN
+- **Canlı doğrulama — kredi yüklendikten sonra** (ANTHROPIC_API_KEY bakiyesi 2026-09-19'da tükenmiş, API 400 "credit
+  balance is too low"): (1) asistan/chat'te aynı sohbetin 2. turunda `ai_token_kullanim.cache_read > 0`; (2) not-konsult
+  sabit bloğu 1024 token eşiğini geçiyor mu (`cache_creation > 0`) — geçmiyorsa ya kabul ya da blok genişletme kararı;
+  (3) her rotadan en az bir satır düşüyor mu; (4) "merhaba" → Haiku, "evet" → Sonnet satırları; (5) görselli bir belge
+  analizinde model = Sonnet. Şu an yalnız saf fonksiyonlar ve kurallar testle doğrulandı.
+- **Kaan kararı — Sonnet 5:** `NOTYA_MODEL_GUCLU=claude-sonnet-5` tek env değişikliğiyle GÜÇLÜ kademeyi daha yeni ve
+  ~%33 daha ucuz modele taşır. Klinik kalite doğrulanmadan yapılmadı (Kaan açıkça "Sonnet 4.6" dedi). Önerilen:
+  SOAP + görüntü için küçük bir karşılaştırmalı değerlendirme, sonra karar.
+- **Kaan kararı — stilProfiliDamit HIZLI mı kalsın?** Dar listedeki "tercih çıkarımı"dır ama çıktısı her yeni SOAP'a
+  "MUTLAKA uy" diye enjekte edilir (klinik tercih ≥2 örnekte). Değişmedi (görevden önce de Haiku); GÜÇLÜ'ye almak düşük
+  maliyetli bir güvenlik payı olur.
+- **Kaan kararı — mali/edevlet HIZLI mı kalsın?** Görevden önce de Haiku'ydu, e-Devlet adım rehberi; "mali analiz
+  sonucu" değil. Değişmedi.
+- `@anthropic-ai/sdk` 0.27 → güncel sürüm yükseltmesi ayrı iş (tipler: `cache_control`, `document` bloğu, `usage.cache_*`
+  şu an geniş tiple geçiyor).
 
 ## ARACLAR-CILA-01 — 27 branş aracını aynı istisnai kaliteye çıkarma (Kaan, 2026-09-19)
 

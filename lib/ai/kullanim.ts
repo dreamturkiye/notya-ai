@@ -1,5 +1,5 @@
 /**
- * NOTYA-MALIYET-01 (E) — her Claude çağrısının token sayaçlarını ai_kullanim tablosuna yazar.
+ * NOTYA-MALIYET-01 (E) — her Claude çağrısının token sayaçlarını ai_token_kullanim tablosuna yazar.
  *
  * YALNIZ SAYAÇ: hekim kimliği (varsa), görev, model ve usage sayıları. Prompt, yanıt, hasta adı/kimliği
  * veya herhangi bir içerik YAZILMAZ — kullanimSatiri() şekli lib/ai/cagir.test.ts'te kilitli.
@@ -61,8 +61,8 @@ export async function kullanimKaydet(satir: KullanimSatiri): Promise<void> {
   try {
     const sb = await yaziciAl()
     if (!sb) return
-    const { error } = await sb.from('ai_kullanim').insert(satir)
-    if (error) console.warn('[ai_kullanim] kayıt yazılamadı', { gorev: satir.gorev, model: satir.model })
+    const { error } = await sb.from('ai_token_kullanim').insert(satir)
+    if (error) console.warn('[ai_token_kullanim] kayıt yazılamadı', { gorev: satir.gorev, model: satir.model })
   } catch {
     /* ölçüm kritik değil */
   }

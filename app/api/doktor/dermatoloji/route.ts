@@ -625,7 +625,7 @@ export async function POST(req: NextRequest) {
         sonuc = await tierAYazVeFuzyonla({
           anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }), persona: kural.persona,
           girdi: { brans: kural.ad, modality_final: mod, yasAy: null, cinsiyet: null, klinikNot: [`Bölge: ${b.bolge}.`, body.klinikNot ? String(body.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') },
-          gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: mod, yasAy: null, fitzpatrickBilinmiyor,
+          gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: mod, yasAy: null, fitzpatrickBilinmiyor, doctorId: doktorId,
         })
       } catch { return iskelet('Görüntü asistan tarafından okunamadı') }
       const uygun = analizKopruyeUygun('taslak', sonuc.rapor)

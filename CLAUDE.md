@@ -20,6 +20,7 @@ This repo is a **commercial** multi-specialty product (~30 branşlar). Skills an
 | Sağlığım / hasta portalı | `.cursor/skills/specialty-hasta-portali/SKILL.md` |
 | Specialty audit HTML / depth pills | `.cursor/skills/specialty-audit-report/SKILL.md` |
 | Any API route/helper taking a patient, note, session or other patient-derived id | `.cursor/skills/hasta-izolasyon/SKILL.md` |
+| Any Anthropic/Claude call (new route, new chapter, prompt change) | `.cursor/skills/ai-model-politikasi/SKILL.md` |
 
 ## Branş alan sızması (short)
 

@@ -10,7 +10,7 @@
  * Üç güvence burada, çağrı yerinde değil:
  *  1. GÖRSEL = GÜÇLÜ (Kaan, 2026-09-19): mesajlarda image/document bloğu varsa görev ne olursa olsun GÜÇLÜ model.
  *  2. Prompt caching: system blok dizisi olarak verilirse `onbellek: true` bloklar cache_control alır.
- *  3. Ölçüm: her yanıtın usage sayaçları ai_kullanim'a yazılır (yalnız sayaç — lib/ai/kullanim.ts).
+ *  3. Ölçüm: her yanıtın usage sayaçları ai_token_kullanim'a yazılır (yalnız sayaç — lib/ai/kullanim.ts).
  */
 import type Anthropic from '@anthropic-ai/sdk'
 import { gucluModel, modelSec, type Gorev, type ModelSecimi } from './modeller'

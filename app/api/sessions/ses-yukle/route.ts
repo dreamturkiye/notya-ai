@@ -9,6 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { modelSec } from '@/lib/ai/modeller'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { soapNotuUret, stilOrnekleriDerle } from '@/lib/doktor/soapUret'
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
     // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
     const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId), hastaDogumIso(supabase, doktorId, patientId || null)])
-    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso })
+    const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId })
 
     const { data: note, error: noteError } = await supabase.from('notes').insert({
       session_id: seans.id,
@@ -163,7 +164,7 @@ export async function POST(req: NextRequest) {
       vitaller: noteData?.vitaller || null,
       recete_onerisi: noteData?.receteOnerisi || null,
       alarm_bulgulari: noteData?.alarmBulgulari || null,
-      ai_model: 'claude-sonnet-4-6',
+      ai_model: modelSec('soap').model, // NOTYA-MALIYET-01: etiket politikadan
       ai_confidence: noteData?.ai_confidence || 0.9,
       specialty: brans,
     }).select('id').single()

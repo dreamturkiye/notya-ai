@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import Anthropic from '@anthropic-ai/sdk'
+import { aiCagir } from '@/lib/ai/cagir'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -87,9 +88,11 @@ SADECE geçerli JSON döndür, başka metin yazma:
 {"doz": "<örn. 560 mg veya 11 mL>", "kullanim": "<örn. 2x1>", "aciklama": "<tek cümle: mg/kg hesabı veya gerekçe>"}
 Kiloya/yaşa uygun değilse veya bu ilaç bu yaşta önerilmezse doz'u boş bırak, aciklama'da nedenini yaz.`
 
-    const resp = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 400,
+    // NOTYA-MALIYET-01: doz önerisi — klinik karar, GÜÇLÜ
+    const resp = await aiCagir({
+      istemci: anthropic,
+      gorev: 'klinik-analiz',
+      maxTokens: 400,
       messages: [{ role: 'user', content: prompt }],
     })
     const text = resp.content

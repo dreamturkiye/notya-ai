@@ -1,4 +1,8 @@
 import * as XLSX from "xlsx"
+import { aiCagir, AiCagriHatasi, yanitMetni } from "@/lib/ai/cagir"
+
+/** NOTYA-MALIYET-01: eski fetch yolu HTTP hatasında gövdesiz yanıtla devam ediyordu — aynı davranış; ağ hatası yine fırlar. */
+const httpHatasiBos = (e: unknown): null => { if (e instanceof AiCagriHatasi) return null; throw e }
 
 const DERYA_SYSTEM = "Sen Uzm. Derya Yılmaz - 15 yıllık deneyimli SMMM. " +
   "Turkiye mali mevzuatina tamamen vakifsin: " +
@@ -216,7 +220,6 @@ export function scoreConfidence(analiz: Record<string, unknown>, belgeTuru: stri
 }
 
 export async function detectType(b64: string, mime: string, filename: string): Promise<string> {
-  const key  = process.env.ANTHROPIC_API_KEY!
   const hint = filename.toLowerCase()
   if (/z[_-]?rapor|zrapor/.test(hint))                   return "z_raporu"
   if (/puantaj/.test(hint))                               return "puantaj"
@@ -230,19 +233,15 @@ export async function detectType(b64: string, mime: string, filename: string): P
   if (mime.startsWith("image/")) content.push({ type: "image", source: { type: "base64", media_type: mime, data: b64 } })
   else content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } })
   content.push({ type: "text", text: "Bu Turkiye mali belgesi hangi tur? SADECE: z_raporu | efatura | kagit_fatura | banka | puantaj | kira | diger_belge" })
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 20, messages: [{ role: "user", content }] })
-  })
-  const d = await r.json()
-  const t = (d.content?.[0]?.text || "").trim().toLowerCase().replace(/[^a-z_]/g, "")
+  // NOTYA-MALIYET-01: saf etiketleme (siniflandirma, 20 token). Mesajda görsel/PDF olduğu için cagir.ts GÖRSEL = GÜÇLÜ
+  // güvencesiyle Sonnet'e yükseltir (Kaan: her türlü görsel çağrı GÜÇLÜ). Eskisi gibi API hatasında "diger_belge".
+  const d = await aiCagir({ gorev: "siniflandirma", maxTokens: 20, messages: [{ role: "user", content }] }).catch(httpHatasiBos)
+  const t = (d ? yanitMetni(d) : "").trim().toLowerCase().replace(/[^a-z_]/g, "")
   const ok = ["z_raporu","efatura","kagit_fatura","banka","puantaj","kira","diger_belge"]
   return ok.includes(t) ? t : "diger_belge"
 }
 
 async function extractWithDerya(b64: string, mime: string, belgeTuru: string, isletmeTipi: string, donem: string, notlar: string): Promise<Record<string, unknown>> {
-  const key   = process.env.ANTHROPIC_API_KEY!
   const isImg = mime.startsWith("image/")
   const isPDF = mime === "application/pdf"
   const prompt = (EXTRACT_PROMPTS[belgeTuru] || EXTRACT_PROMPTS.diger_belge) +
@@ -253,19 +252,14 @@ async function extractWithDerya(b64: string, mime: string, belgeTuru: string, is
   if (isImg)      content.push({ type: "image",    source: { type: "base64", media_type: mime,                data: b64 } })
   else if (isPDF) content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } })
   content.push({ type: "text", text: prompt })
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 2048, system: DERYA_SYSTEM, messages: [{ role: "user", content }] })
-  })
-  const d   = await r.json()
-  const txt = (d.content?.[0]?.text || "{}").replace(/```json|```/g, "").trim()
+  // NOTYA-MALIYET-01: belge/görsel okuyup alan çıkarma — GÜÇLÜ (goruntu-inceleme). API hatasında eskisi gibi "{}".
+  const d   = await aiCagir({ gorev: "goruntu-inceleme", maxTokens: 2048, system: DERYA_SYSTEM, messages: [{ role: "user", content }] }).catch(httpHatasiBos)
+  const txt = ((d ? yanitMetni(d) : "") || "{}").replace(/```json|```/g, "").trim()
   try   { return JSON.parse(txt) }
   catch { return { ozet: txt.substring(0,300), guvenSkor:15, islemTuru:"diger", uyarilar:["JSON parse hatasi"], duzeltmeler:[] } }
 }
 
 async function selfCorrect(b64: string, mime: string, belgeTuru: string, first: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const key   = process.env.ANTHROPIC_API_KEY!
   const isImg = mime.startsWith("image/")
   const isPDF = mime === "application/pdf"
   const critMap: Record<string, string[]> = {
@@ -285,13 +279,9 @@ async function selfCorrect(b64: string, mime: string, belgeTuru: string, first: 
   if (isImg)      content.push({ type: "image",    source: { type: "base64", media_type: mime,                data: b64 } })
   else if (isPDF) content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } })
   content.push({ type: "text", text: prompt })
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1024, system: DERYA_SYSTEM, messages: [{ role: "user", content }] })
-  })
-  const d   = await r.json()
-  const txt = (d.content?.[0]?.text || "{}").replace(/```json|```/g, "").trim()
+  // NOTYA-MALIYET-01: eksik alanlar için ikinci geçiş — GÜÇLÜ (goruntu-inceleme). API hatasında eskisi gibi "{}".
+  const d   = await aiCagir({ gorev: "goruntu-inceleme", maxTokens: 1024, system: DERYA_SYSTEM, messages: [{ role: "user", content }] }).catch(httpHatasiBos)
+  const txt = ((d ? yanitMetni(d) : "") || "{}").replace(/```json|```/g, "").trim()
   try {
     const corrected = JSON.parse(txt)
     const merged: Record<string, unknown> = { ...first }

@@ -297,7 +297,7 @@ export async function gozGoruntuKopru(eylem: string, c: Ctx): Promise<NextRespon
     }
     let sonuc
     try {
-      sonuc = await tierAYazVeFuzyonla({ anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }), persona: kural.persona, girdi: { brans: kural.ad, modality_final: belgeMod, yasAy: h.yasAy, cinsiyet: null, klinikNot: [`Göz: ${g.goz === 'sag' ? 'OD (sağ)' : 'OS (sol)'}.`, b.klinikNot ? String(b.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') }, gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: belgeMod, yasAy: h.yasAy, tekAlanFundus: mod === 'fundus' ? tekAlan : undefined })
+      sonuc = await tierAYazVeFuzyonla({ anthropic: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! }), persona: kural.persona, girdi: { brans: kural.ad, modality_final: belgeMod, yasAy: h.yasAy, cinsiyet: null, klinikNot: [`Göz: ${g.goz === 'sag' ? 'OD (sağ)' : 'OS (sol)'}.`, b.klinikNot ? String(b.klinikNot).slice(0, 300) : ''].filter(Boolean).join(' ') }, gorsel: { tip: 'image', mime, base64: d.base64 }, tierB: [], modalite: belgeMod, yasAy: h.yasAy, tekAlanFundus: mod === 'fundus' ? tekAlan : undefined, doctorId: doktorId })
     } catch { return iskelet('Görüntü asistan tarafından okunamadı') }
     const uygun = analizKopruyeUygun('taslak', sonuc.rapor)
     if (!uygun.ok) return iskelet('Görüntü kalitesi düşük')
