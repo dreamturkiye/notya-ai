@@ -135,9 +135,45 @@ olur, arka planda sessizce yazılmaz") ve `OncekiVizit` şeridi — ikisi de `li
 **Hasta izolasyonu:** yeni uç eklenmedi; kullanılan dört uç (`goz`, `dermatoloji`, `dahiliye`) zaten
 envanterde ve çapraz-doktor paketinde. Ön doldurma yalnız hekimin kendi hastası için çalışır.
 
-### Faz 4 — sırada
+### Faz 4 — iki yeni EVRENSEL araç (2026-09-19)
 
-- Faz 4: iki yeni evrensel araç — Muayene sonu paketi ve Sık kullandıklarım / hızlı şablonlar.
+Kaan: "sırf araç olsun diye araç yapma." Yalnız bu ikisi onaylandı; başka yeni araç eklenmedi.
+İkisi de `ORTAK_DOKTOR_ARACLARI` (branslar: null) — her branş görür, kapı `OrtakAracKabugu` içinde.
+
+**A) Muayene sonu paketi — `/doktor-tools/muayene-sonu`**
+Vizitin kapanış ritüeli tek akışta: reçete · rapor · kontrol randevusu · portal özeti · SGK provizyon.
+MEVCUT rotalar BAĞLANDI, hiçbiri yeniden yazılmadı (`/doktor-tools/erecete`, `/doktor-tools/sgk-rapor`,
+`/dashboard/doktor/randevular`, `/doktor-tools/hasta-portali`, `/doktor-tools/sgk-medula`). Her adım
+isteğe bağlı; işaretlemek bir işlem yapmaz, yalnız kapanış özetine yazılır. Araç kendi yazma isteğini
+açmaz (bekçi: dosyada `method: 'POST'` yok); kapanış özeti yalnız Faz 2'nin ortak düğmesiyle nota eklenir.
+
+**B) Sık kullandıklarım / hızlı şablonlar — `/doktor-tools/sablonlarim`**
+Hekimin KENDİ vizit şablonları: alışılmış tanı + reçete taslağı + kontrol aralığı + not; tek dokunuşla
+açılır, tamamen düzenlenebilir, sık kullanılanlar üste çıkar (kullanım sayacı).
+- Kalıcılık: yeni tablo `doktor_sablonlari` (migration `056_doktor_sablonlari.sql`, yalnız ekleme,
+  idempotent, RLS + `doctor_id = auth.uid()` politikası). **Uygulandı** (2026-09-19).
+- **DOKTOR-IZOLASYON** (hasta-izolasyon değil — burada hasta verisi yok): rota hiçbir yerde
+  `patient_id` almaz; her okuma/yazma `doctor_id = oturum sahibi` ile daraltılır, id ile gelen
+  güncelleme/silme de aynı daraltmayı taşır → başka hekimin şablonu bulunamaz (404).
+  `lib/security/hastaIzolasyonEnvanteri.ts`'te `incelendi` olarak kapsamıyla kayıtlı.
+- **DOZ KİLİDİ:** Notya hazır şablon, ilaç ya da doz ÖNERMEZ. Araç boş başlar; reçete taslağı
+  tamamen hekimin kendi yazdığı metindir. Bekçi testi kaynakta etken madde adı ve "… mg" aramaz.
+
+**Yeni assertion'lar (mevcutların hiçbiri zayıflatılmadı):**
+`lib/doktor/doktorAraclari.test.ts` — evrensel = 30/30 branş + serbest metin adlar + branşsız hepsi
+iki aracı görür ve derin linki açabilir; sayfalar `OrtakAracKabugu` ile korunur ve açılış ızgarasında
+gömülü değildir; muayene sonu paketi beş mevcut rotayı bağlar ve kendi yazma isteğini açmaz; şablon
+rotası hasta verisine dokunmaz ve her sorgusu doctor_id ile daralır; migration yalnız ekleme yapar.
+`lib/doktor/sablonlar.test.ts` (saf yardımcılar) ve `lib/doktor/ortakAraclarUi.test.ts`
+(gerçek `react-dom/server`: dürüst boş durum, hiçbir adım ön işaretli değil, TASLAK dili, branş sızıntısı yok).
+
+### Deploy — Kaan'ı bekliyor (2026-09-19)
+
+Dört fazın dördü de main'e birleşti. **Deploy, Kaan'ın Vercel–GitHub bağlantısını onarmasını
+bekliyor:** entegrasyon kopuk (proje ayarlarında bağlı repo görünmüyor, otomatik deploy gelmiyor).
+Bu yüzden bu sprintte Vercel beklenmedi ve deploy tetiklenmedi — yalnız merge edildi. Bağlantı
+onarıldığında main'deki dört faz tek deploy'da canlıya çıkar; `056_doktor_sablonlari.sql` veritabanına
+zaten uygulandı (yalnız ekleme, mevcut veri değişmedi).
 
 ## Open — KD form alanlarına sesli giriş (2026-09-18)
 

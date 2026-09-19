@@ -407,3 +407,83 @@ test('psikiyatri tiles stay commercial: no dose, no diagnosis claim, no locked-w
     assert.doesNotMatch(blob, /PSIK-|sprint|audit|\.html/i, r)
   }
 })
+
+// ARACLAR-CILA-01 Faz 4 — iki YENİ evrensel araç. Evrensel = branslar null = HER branş görür.
+const YENI_EVRENSEL = ['/doktor-tools/muayene-sonu', '/doktor-tools/sablonlarim']
+
+test('ARACLAR-CILA-01 Faz 4: muayene sonu paketi ve sık kullandıklarım evrenseldir — her branş görür', () => {
+  for (const r of YENI_EVRENSEL) {
+    const arac = ORTAK_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, `${r} ORTAK_DOKTOR_ARACLARI'nda olmalı`)
+    assert.equal(arac.branslar, null, `${r} evrensel olmalı (branslar: null)`)
+    assert.ok(!BRANS_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} branş aracı olmamalı`)
+  }
+  // 30/30: BRANS_ETIKETLERI'ndeki her branş + branşsız + serbest metin adlar
+  const anahtarlar = Object.keys(BRANS_ETIKETLERI)
+  assert.ok(anahtarlar.length >= 26)
+  for (const b of [...anahtarlar, 'İç Hastalıkları', 'Çocuk Sağlığı ve Hastalıkları', 'Kadın Hastalıkları ve Doğum', 'Deri ve Zührevi Hastalıkları', 'Göz Hastalıkları', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of YENI_EVRENSEL) {
+      assert.ok(liste.some((a) => a.route === r), `${b} evrensel aracı görmeli: ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), true, `${b} derin linki açabilmeli: ${r}`)
+    }
+  }
+})
+
+test('ARACLAR-CILA-01 Faz 4: yeni evrensel sayfalar ortak kabukla korunur, ticari metin taşır', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  for (const r of YENI_EVRENSEL) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /OrtakAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} kendi rotasını bildirir`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  // Araçlar açılış sayfası yalnız kart ızgarasıdır — araçlar kendi sayfasında açılır.
+  assert.doesNotMatch(landing, /MuayeneSonuPaketi|Sablonlarim/)
+  const kabuk = fs.readFileSync(path.join(kok, 'lib/doktor/aracUi.tsx'), 'utf8')
+  assert.match(kabuk, /export function OrtakAracKabugu\(/)
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+})
+
+test('ARACLAR-CILA-01 Faz 4: muayene sonu MEVCUT rotaları bağlar, yeniden yazmaz', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const ui = fs.readFileSync(path.join(kok, 'components/doktor/araclar/MuayeneSonuPaketi.tsx'), 'utf8')
+  for (const yol of ['/doktor-tools/erecete', '/doktor-tools/sgk-rapor', '/dashboard/doktor/randevular', '/doktor-tools/hasta-portali', '/doktor-tools/sgk-medula']) {
+    assert.ok(ui.includes(yol), `muayene sonu paketi ${yol} rotasına bağlanmalı`)
+  }
+  // Kendi reçetesini / raporunu / randevusunu yazmaz: yazma isteği yok, yalnız nota ekleme ortak yoldan.
+  assert.doesNotMatch(ui, /method: 'POST'/, 'kapanış paketi kendi yazma isteğini açmaz')
+  assert.match(ui, /<MuayeneFormunaEkle/)
+  assert.match(ui, /TaslakNotu/)
+})
+
+test('ARACLAR-CILA-01 Faz 4: şablonlar hekime özeldir ve Notya doz / ilaç önermez', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const rota = fs.readFileSync(path.join(kok, 'app/api/doktor/araclar/sablonlarim/route.ts'), 'utf8')
+  // DOKTOR-IZOLASYON: her okuma/yazma doctor_id ile daraltılır; hasta verisi yok.
+  for (const parca of ["eq('doctor_id', user.id)"]) assert.ok(rota.includes(parca), `sablonlarim: ${parca}`)
+  const sorgu = (rota.match(/from\('doktor_sablonlari'\)/g) || []).length
+  const daralma = (rota.match(/eq\('doctor_id', user\.id\)/g) || []).length + (rota.match(/doctor_id: user\.id/g) || []).length
+  assert.equal(sorgu, daralma, 'her doktor_sablonlari sorgusu doctor_id ile daraltılmalı (okumada .eq, yazmada satırın kendisi)')
+  const rotaKod = rota.split('\n').filter((l) => !/^\s*(\*|\/\/|\/\*\*)/.test(l)).join('\n')
+  assert.doesNotMatch(rotaKod, /patient_id|patientId|from\('patients'\)/, 'şablon rotası hasta verisine dokunmaz')
+
+  const ui = fs.readFileSync(path.join(kok, 'components/doktor/araclar/Sablonlarim.tsx'), 'utf8')
+  const yardimci = fs.readFileSync(path.join(kok, 'lib/doktor/sablonlar.ts'), 'utf8')
+  // Hazır şablon / ilaç adı / doz tohumlanmaz — içerik hekimin kendi yazdığıdır (doz kilidi).
+  const kaynak = `${ui}\n${yardimci}\n${rota}`.toLocaleLowerCase('tr-TR')
+  for (const ad of ['parasetamol', 'ibuprofen', 'amoksisilin', 'klavulan', 'azitromisin', 'setirizin', 'prednizolon', 'salbutamol', 'metformin', 'ramipril']) {
+    assert.ok(!kaynak.includes(ad), `şablon aracı "${ad}" içeriyor — Notya ilaç önermez`)
+  }
+  assert.doesNotMatch(kaynak, /\d+\s*mg\b/, 'şablon aracında doz metni olmaz')
+  assert.match(ui, /Notya hazır şablon, ilaç ya da doz önermez/)
+  assert.match(ui, /const BOS = \{ ad: '', tani: '', receteTaslagi: '', kontrolAraligi: '', notlar: '' \}/, 'form boş başlar')
+
+  const migrasyon = fs.readFileSync(path.join(kok, 'lib/db/migrations/056_doktor_sablonlari.sql'), 'utf8')
+  assert.match(migrasyon, /create table if not exists doktor_sablonlari/)
+  assert.match(migrasyon, /alter table doktor_sablonlari enable row level security/)
+  assert.match(migrasyon, /doctor_id = auth\.uid\(\)/)
+  assert.doesNotMatch(migrasyon, /drop table|alter column|delete from/i, 'migration yalnız ekleme yapar')
+})
