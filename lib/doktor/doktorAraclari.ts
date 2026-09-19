@@ -164,18 +164,25 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
  * altta. Bu YALNIZ sunum sırasıdır — görünürlük kapısı değildir; hangi aracı kimin gördüğü
  * doktorAraclariListesi / doktorAraciBransaUygun tarafından belirlenir ve bu fonksiyon onu
  * değiştirmez (bkz. .cursor/skills/specialty-doktor-araclari/SKILL.md).
+ *
+ * İSİM REZERVASYONU (Kaan, 2026-09-19): "Günlük Araçlar" adı İLERİDE hekimin kendi kullanım
+ * sıklığına göre oluşacak bölüm için ayrıldı — en çok açtığı araçlar oraya düşecek. Bu yüzden
+ * evrensel omurga grubuna o ad VERİLMEDİ; adı "Temel Araçlar". Yeni bir grup eklerken
+ * "Günlük Araçlar" adını kullanma.
  */
 export type AracGrubu = { anahtar: 'cekirdek' | 'brans'; baslik: string; aciklama: string; araclar: DoktorArac[] }
 
 export function doktorAraclariGruplu(hamBrans: string | null | undefined): AracGrubu[] {
   const hepsi = doktorAraclariListesi(hamBrans)
   const cekirdek = hepsi.filter((a) => a.branslar === null)
+  // branslar !== null → o hekim için branşa özeldir. Bir araç BİRDEN ÇOK branşa açık olsa da
+  // (ör. ['dahiliye','kardiyoloji']) bu hekim açısından yine branşa özeldir: Temel'e DÜŞMEZ.
   const bransa = hepsi.filter((a) => a.branslar !== null)
   const gruplar: AracGrubu[] = []
   if (cekirdek.length) {
     gruplar.push({
       anahtar: 'cekirdek',
-      baslik: 'Çekirdek Araçlar',
+      baslik: 'Temel Araçlar',
       aciklama: 'Her branşta kullanılan ortak araçlar',
       araclar: cekirdek,
     })
@@ -184,7 +191,7 @@ export function doktorAraclariGruplu(hamBrans: string | null | undefined): AracG
     gruplar.push({
       anahtar: 'brans',
       baslik: `${bransEtiketi(hamBrans, { kisa: true })} Araçları`,
-      aciklama: 'Yalnız sizin branşınıza özel araçlar',
+      aciklama: 'Branşa özel',
       araclar: bransa,
     })
   }
