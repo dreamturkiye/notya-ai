@@ -55,8 +55,10 @@ Ekonomi: ortak kabuk (AracKabugu, aracUi, audit HTML şablonu, portal wiring) ye
 Zaten psik-barında: Pediatri · Derm · Göz · Dahiliye · Psik · KBB.  
 23 baseline + KD exceptional kilit (audit’i psik barına çek) + 1 deepen = 25.
 
-### Dalga 1
-kardiyoloji · noroloji · uroloji · gogus-hastaliklari · kadin-hastaliklari-dogum (exceptional audit kilit)
+### Dalga 1 — SHIPPED (2026-09-19)
+kardiyoloji · noroloji · uroloji · gogus-hastaliklari · kadin-hastaliklari-dogum  
+Live: kardio / noro / uroloji / gogus / kd `-exceptional-audit.html` · tip `731fef5`  
+Araç counts: kardio 4 · noro 4 · üro 4 · göğüs 5 · KD 5 (mevcut) — sabit 5 yok.
 
 ### Dalga 2
 aile-hekimligi · ortopedi · fizik-tedavi · spor-hekimligi · endokrinoloji
