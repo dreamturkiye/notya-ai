@@ -71,17 +71,12 @@ gastroenteroloji · nefroloji · romatoloji · enfeksiyon-hastaliklari · onkolo
 Live: gastro / nef / roma / enfeksiyon / onko `-exceptional-audit.html` · tip `8e1b0f5`  
 Araç: hepsi **4** — sabit 5 yok. Migrations 068–072 applied.
 
-### Dalga 4 — IN PROGRESS (2026-09-19)
+### Dalga 4 — SHIPPED (2026-09-19)
 genel-cerrahi · plastik-cerrahi · cocuk-cerrahisi · gogus-cerrahisi · beyin-cerrahisi  
-*(OR / full HIS = intentional Missing)* · Araç sayısı sabit değil.  
-`gogus-cerrahisi`: GOGUS-CERRAHISI-EXCEPTIONAL-01 · migration **076** · 4 Araç · portal `/gogus-cerrahisi-takibim` · live `/gogus-cerrahisi-exceptional-audit.html` (≠ gogus-hastaliklari).
-
-- **genel-cerrahi SHIPPED** — GENEL-CERRAHI-EXCEPTIONAL-01 · 4 Araç · Ameliyatım Strong · migration 073 · `gc-exceptional-audit.html` · `test:gc`
-
-**Plastik shipped tip:** see git log · Live: https://notya-ai.vercel.app/plastik-exceptional-audit.html · Araç **4** · Portal **Yaram** · Migration **074**.
-
-- **cocuk-cerrahisi SHIPPED** — COCUK-CERRAHISI-EXCEPTIONAL-01 · 4 Araç (pre/post-op · yara/dren · onam/veli · kohort) · portal **Çocuğumun Cerrahisi** · migration **075** · `cocuk-cerrahisi-exceptional-audit.html` · `test:cc` · ≠ pediatri (no Hedef Boy / Neyzi / Baş Çevresi chapter mounts; veli = age/`veliDiliMi`).
-
+*(OR / full HIS = intentional Missing)*  
+Live: gc / plastik / cocuk-cerrahisi / gogus-cerrahisi / beyin `-exceptional-audit.html` · tip `947cdce`  
+Araç: hepsi **4** — sabit 5 yok. Migrations 073–077 applied.  
+Not: cocuk-cerrahisi ≠ pediatri; gogus-cerrahisi ≠ gogus-hastaliklari.
 
 ### Dalga 5
 acil-tip · anestezi · radyoloji · kalp-damar-cerrahisi · deepen (en ince prior → psik audit barı)
