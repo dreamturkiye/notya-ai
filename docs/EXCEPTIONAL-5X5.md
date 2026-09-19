@@ -79,15 +79,18 @@ Araç: hepsi **4** — sabit 5 yok. Migrations 073–077 applied.
 Not: cocuk-cerrahisi ≠ pediatri; gogus-cerrahisi ≠ gogus-hastaliklari.
 
 ### Dalga 5 — IN PROGRESS (2026-09-19)
-acil-tip (**SHIPPED** · tip pending) · anestezi · radyoloji (**SHIPPED** · tip pending · 4 Araç · Tetkiklerim · migration 080) · kalp-damar-cerrahisi · deepen (en ince prior → psik audit barı)  
-Live (radyoloji): `/radyo-exceptional-audit.html` · OUT: PACS/RIS/HIS, AI tanı, uydurma bulgu.  
-Araç: acil-tip **4** — sabit 5 yok. Migration 078.
+acil-tip (**SHIPPED**) · anestezi (**SHIPPED**) · radyoloji (**SHIPPED**) · kalp-damar-cerrahisi (**SHIPPED**) · deepen (`nefroloji` SHIPPED)  
+Araç sayısı sabit değil (3–4 useful).
 
-**Anestezi SHIPPED:** ANESTEZI-EXCEPTIONAL-01 · migration **079** · 4 Araç · Anestezi Öncesi `/anestezi-oncesi` · live `/anestezi-exceptional-audit.html`
+**Kalp Damar Cerrahisi SHIPPED:** KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 · migration **081** · **4** Araç · Damar Cerrahisi takibi `/damar-cerrahisi-takibi` · live `/kalp-damar-exceptional-audit.html` · ≠ kardiyoloji SCORE2/Kalbim (çift yön sızıntı yok).
 
-**DEEPEN target (confirmed):** `nefroloji` — Wave-3 shipped but thinnest vs peers (`test:nef` ~23–26 specialty/portal tests vs psik-depth engines; Wave-3 exceptional audit had endokrinoloji copy — HbA1c/DXA/soap-endo).  
-`gogus-cerrahisi` also thin (~19 engine tests) but nefro preferred + dishonest audit made it the clear deepen.  
-Deepen ships: SGK nefro 5th Araç (clinically useful), deep acil/engines/portal tests, Home 7-sekme polish, honest `nef-exceptional-audit.html`, olgunluk `beta-hazir`, no migration (069 schema OK).
+**Radyoloji SHIPPED:** RADYOLOJI-EXCEPTIONAL-01 · migration **080** · 4 Araç · Tetkiklerim · live `/radyo-exceptional-audit.html` · OUT: PACS/RIS/HIS, AI tanı.
+
+**Acil Tıp SHIPPED:** ACIL-TIP-EXCEPTIONAL-01 · migration **078** · 4 Araç · live `/acil-tip-exceptional-audit.html`.
+
+**Anestezi SHIPPED:** ANESTEZI-EXCEPTIONAL-01 · migration **079** · 4 Araç · Anestezi Öncesi `/anestezi-oncesi` · live `/anestezi-exceptional-audit.html`.
+
+**DEEPEN SHIPPED:** `nefroloji` — SGK nefro 5th Araç, honest `nef-exceptional-audit.html`, olgunluk `beta-hazir`, no new migration (069 OK).
 
 ---
 
