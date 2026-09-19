@@ -450,7 +450,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'belgeler' && (
           <PatientDocumentVault patientId={patientId} specialtyGeri={vaultSpecialtyGeri} />
         )}
-        {!loading && !error && activeTab === 'konsultasyon' && <HastaKonsultasyonlar patientId={patientId} />}
+        {!loading && !error && activeTab === 'konsultasyon' && <HastaKonsultasyonlar patientId={patientId} yanitAc={searchParams?.get('yanit') || undefined} />}
         {!loading && !error && activeTab === 'goruntuleme' && (
           <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 14, color: '#8FA0B5' }}>Röntgen, EKG ve diğer görüntüleme kayıtları görüntüleme merkezinde.</span>

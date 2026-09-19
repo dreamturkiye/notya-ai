@@ -475,6 +475,8 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.konsultasyon.GET(iste('GET', `/api/doktor/konsultasyon?form=${h.konsultasyon}`, { token: a.token }))) },
   { ad: 'GET /api/doktor/konsultasyon?bekleyen (kohort satırı — yanıt bekleyenler)', okur: true,
     cagir: (r, a) => coz(r.konsultasyon.GET(iste('GET', '/api/doktor/konsultasyon?bekleyen=1', { token: a.token }))) },
+  { ad: 'GET /api/doktor/konsultasyon?bekleyen=sayi (ana sayfa özeti — yanıt bekleyen sayısı)',
+    cagir: (r, a) => coz(r.konsultasyon.GET(iste('GET', '/api/doktor/konsultasyon?bekleyen=sayi', { token: a.token }))) },
   { ad: 'POST /api/doktor/konsultasyon (istem oluştur)', red: 404,
     yazdi: (a) => tablo('sevkler').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.klinik_soru === 'QA işitme kaybı var mı?' && x.durum === 'yanit_bekleniyor'),
     cagir: (r, a, h) => coz(r.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: a.token, govde: { patientId: h.hasta, hedefBrans: 'kulak-burun-bogaz', klinikSoru: 'QA işitme kaybı var mı?' } }))) },
@@ -625,6 +627,35 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         }
       })
     }
+  })
+
+  // KONSULTASYON-02 — Araçlar › Bekleyen Konsültasyonlar + ana sayfa özeti: hekim düzeyinde liste, kimlik girdisi yok;
+  // kapsam oturumdaki hekim. A, B'nin bekleyenini ne listede ne sayıda görür; kendi kirli satırı (B'nin hastasına) da düşer.
+  describe('Bekleyen konsültasyonlar yalnız oturumdaki hekimin', () => {
+    for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
+      it(`${saldiran} hekimi ${kurbanHarf} hekiminin bekleyen konsültasyonlarını GÖREMEZ (liste + sayı)`, async () => {
+        const s = sahneKur()
+        const x = s[saldiran], k = s[kurbanHarf]
+        const liste = await coz(R.konsultasyon.GET(iste('GET', '/api/doktor/konsultasyon?bekleyen=1', { token: x.token })))
+        assert.equal(liste.status, 200)
+        const j = JSON.parse(liste.metin) as { bekleyenler: Array<{ id: string; patientId: string }> }
+        assert.deepEqual(j.bekleyenler.map((b) => b.id), [x.konsultasyon], 'yalnız kendi hastasına açtığı kendi istemi')
+        assert.ok(!j.bekleyenler.some((b) => b.id === k.konsultasyon), `${kurbanHarf}'nin konsültasyonu listede`)
+        assert.ok(!j.bekleyenler.some((b) => b.patientId === k.hasta), `${kurbanHarf}'nin hastası listede (kirli satır dahil)`)
+        assert.ok(!liste.metin.includes(isaret(kurbanHarf)) && !liste.metin.includes(k.hasta))
+        const sayi = await coz(R.konsultasyon.GET(iste('GET', '/api/doktor/konsultasyon?bekleyen=sayi', { token: x.token })))
+        assert.equal(sayi.status, 200)
+        assert.equal(JSON.parse(sayi.metin).sayi, 1, `sayı ${kurbanHarf}'nin satırını ya da kirli satırı saymamalı`)
+        assert.ok(!sayi.metin.includes(isaret(kurbanHarf)) && !sayi.metin.includes(k.hasta))
+      })
+    }
+    it('oturum yoksa liste de sayı da 401', async () => {
+      sahneKur()
+      for (const q of ['bekleyen=1', 'bekleyen=sayi']) {
+        const y = await coz(R.konsultasyon.GET(iste('GET', `/api/doktor/konsultasyon?${q}`, {})))
+        assert.equal(y.status, 401, q)
+      }
+    })
   })
 
   describe('Sağlığım portalı yalnız bağlı olduğu doktorun verisini gösterir', () => {
