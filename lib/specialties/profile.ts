@@ -145,6 +145,11 @@ export interface SpecialtyProfile {
   specialistReview: UzmanIncelemeMaddesi[]
   /** Sağlığım modules this chapter contributes (one chapter may own several, e.g. KD gebelik + jine) */
   portal?: PortalModulu[]
+  /**
+   * KONSULTASYON-01 — bu branşın hekimi için "önerilen" konsültasyon hedefleri (listenin başına çıkar).
+   * Yalnız SIRALAMA katkısıdır: tüm branşlar her zaman seçilebilir, konsültasyon akışı evrenseldir.
+   */
+  konsultasyonHedefleri?: SpecialtyKey[]
   /** build maturity: baseline-only, research-built (80-90%), or specialist-validated */
   /** beta-hazir = ürün derinliği tamam, sentetik smoke yeşil; uzman hekim saha onayı (MD beta) bekliyor — uzman-dogrulandi değildir. */
   olgunluk: 'baseline' | 'arastirma' | 'beta-hazir' | 'uzman-dogrulandi'

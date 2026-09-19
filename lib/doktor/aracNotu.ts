@@ -27,7 +27,7 @@ const SATIR_TAVANI = 300
 const ARAC_ADI_TAVANI = 80
 
 /** 11 haneli T.C. kimlik no benzeri diziyi maskeler (nota kimlik numarası kopyalanmaz). */
-function tcMaskele(s: string): string {
+export function tcMaskele(s: string): string {
   return s.replace(/(?<!\d)\d{11}(?!\d)/g, '***********')
 }
 

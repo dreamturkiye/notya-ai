@@ -47,6 +47,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/belgeler/analiz/route.ts': I('document via vault getDocumentMeta(doctorId) (assertPatientOwned); analyses by doctor_id'),
   'app/api/doktor/belgeler/analiz/onayla/route.ts': I('analysis by id AND doctor_id; target note by id AND doctor_id'),
   'app/api/doktor/belgeler/ingest/route.ts': T,
+  // KONSULTASYON-01 — kapalı döngü konsültasyon (sevkler + Kasa belgesi + bugünkü not + Sağlığım hatırlatması)
+  'app/api/doktor/konsultasyon/route.ts': T,
   'app/api/doktor/documents/route.ts': I('vault listDocuments/uploadDocument — doctor-scoped, assertPatientOwned (lib/vault/service.acl.test.ts)'),
   'app/api/doktor/documents/[id]/route.ts': I('vault getDocumentMeta/softDeleteDocument by doctor_id (lib/vault/service.acl.test.ts)'),
   'app/api/doktor/documents/[id]/download/route.ts': I('vault downloadDocument by doctor_id (lib/vault/service.acl.test.ts)'),
