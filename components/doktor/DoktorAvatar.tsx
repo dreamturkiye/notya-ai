@@ -7,6 +7,12 @@
  * kimlik başlığıyla aynı teal halka. Fotoğraf varsa GERÇEK fotoğraf gösterilir — bu depoda
  * görsel üreten sağlayıcı bağlı olmadığı için "karikatür" taklidi yapan bir filtre uygulanmaz
  * (bkz. docs/OPEN-COMMITMENTS.md).
+ *
+ * MOBİL DÜZELTMESİ (Kaan, 2026-09-19): telefonda avatar ELİPS görünüyordu. Neden: avatar dar
+ * bir flex satırında duruyor (karşılama kartı) ve yalnız width/height verilmişti; alan daralınca
+ * <img> yatayda eziliyordu. flexShrink tek başına yetmiyor çünkü esas sıkışma min-width: auto
+ * davranışından geliyor. Çözüm: minWidth/maxWidth/minHeight/maxHeight ile kesin ölçü + aspectRatio
+ * yedeği. Bundan sonra hangi kapta olursa olsun daire kalır.
  */
 import { doktorBasHarfleri } from '@/lib/doktor/avatar'
 
@@ -22,10 +28,17 @@ export default function DoktorAvatar({
   const ortak: React.CSSProperties = {
     width: boyut,
     height: boyut,
+    minWidth: boyut,
+    maxWidth: boyut,
+    minHeight: boyut,
+    maxHeight: boyut,
+    aspectRatio: '1 / 1',
     borderRadius: '50%',
     flexShrink: 0,
+    flexGrow: 0,
     border: '1px solid rgba(15,155,142,0.45)',
     boxSizing: 'border-box',
+    overflow: 'hidden',
   }
 
   if (fotoUrl) {
@@ -34,7 +47,9 @@ export default function DoktorAvatar({
       <img
         src={fotoUrl}
         alt={`Dr. ${ad} profil fotoğrafı`}
-        style={{ ...ortak, objectFit: 'cover', background: '#0D1C33' }}
+        width={boyut}
+        height={boyut}
+        style={{ ...ortak, objectFit: 'cover', objectPosition: 'center', display: 'block', background: '#0D1C33' }}
       />
     )
   }
@@ -52,6 +67,7 @@ export default function DoktorAvatar({
         fontWeight: 800,
         color: '#2DD4BF',
         letterSpacing: 0.5,
+        lineHeight: 1,
       }}
     >
       {doktorBasHarfleri(ad)}
