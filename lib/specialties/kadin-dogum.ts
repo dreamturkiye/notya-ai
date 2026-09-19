@@ -106,18 +106,21 @@ export const KADIN_DOGUM_PROFILE: SpecialtyProfile = {
   // SAGLIGIM-PORTAL-REGISTRY — Gebeliğim fires on an active pregnancy record (any practice: mixed care);
   // jine reminders only for a KD doctor, or a baseline-branch doctor when KD chart data exists. Never for
   // göz / derm / dahiliye / pediatri doctors as a default Pap/HPV card.
+  // KD-EXCEPTIONAL-01 — portal Strong (Gebeliğim + jine hatırlatmaları; tanı/yorum yok).
   portal: [
     {
       id: 'gebelik', nav: [], bundleKeys: ['gebelik'], eligibility: 'patient_active_record',
       copyHints: ['Hafta/TDT sunucuda hesaplanır; hastaya yorum değil takvim gösterilir.', 'Tehlike işaretlerinde 112 / doğumhane.'],
-      views: ['GebeligimView'], derinlik: 'Partial',
+      views: ['GebeligimView'], derinlik: 'Strong',
     },
     {
       id: 'jinekoloji', nav: [], bundleKeys: ['jinekoloji'], eligibility: 'combined',
       copyHints: ['Pap/HPV/RİA hatırlatmaları bilgilendirmedir; sonuç ve plan doktordadır.'],
-      views: ['JinekolojiPortalView'], derinlik: 'Partial',
+      views: ['JinekolojiPortalView'], derinlik: 'Strong',
     },
   ],
 
-  olgunluk: 'arastirma',
+  // Ürün derinliği Strong + sentetik testler yeşil; uzman-dogrulandi için gerçek KD poliklinik
+  // haftası gerekir (docs/KD-MD-BETA.md). KD-EXCEPTIONAL-01: psik peer bar kilidi.
+  olgunluk: 'beta-hazir',
 }

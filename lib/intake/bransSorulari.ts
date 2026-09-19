@@ -255,6 +255,9 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Kadın Sağlığı',
     alanlar: [
       BASVURU_NEDENI,
+      // KD-EXCEPTIONAL-01 — kırmızı bayrak kutucukları (psik / derm `acilBelirtiler*` deseni).
+      // Etiketler DÖBYR tehlike işaretleri + ofis jinekoloji acil; tanı değildir, 112 yönlendirmesi.
+      { id: 'acilBelirtilerKd', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Vajinal kanama', 'Şiddetli baş ağrısı veya görme bozukluğu', 'Ani el-yüz şişliği', 'Bebek hareketlerinde azalma', 'Erken su gelmesi veya düzenli şiddetli kasılmalar', 'Nefes darlığı veya göğüs ağrısı', 'Şiddetli karın / pelvik ağrı', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile / doğumhaneye başvurun. Bu form acil başvurunun yerine geçmez.' },
       { id: 'sonAdetTarihi', etiket: 'Son Adet Tarihiniz', tur: 'date' },
       { id: 'adetDuzeni', etiket: 'Adet düzeniniz nasıl?', tur: 'radio', secenekler: ['Düzenli', 'Düzensiz', 'Hamileyim', 'Menopoza girdim'] },
       { id: 'semptomlarKadin', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Adet Öncesi Ağrı', 'Aşırı Kanama', 'Ara Kanama', 'Vajinal Akıntı', 'Kaşıntı / Yanma', 'Cinsel İlişkide Ağrı', 'Pelvik Ağrı', 'Yok'] },

@@ -12,7 +12,8 @@ const ROOT = join(import.meta.dirname, '..')
 describe('live chapter wiring', () => {
   it('registry serves kadin-dogum and dermatoloji chapters, not baseline', () => {
     const kd = specialtyProfile('kadin-hastaliklari-dogum')
-    assert.equal(kd.olgunluk, 'arastirma')
+    assert.equal(kd.olgunluk, 'beta-hazir')
+    assert.ok(kd.portal?.every((m) => m.derinlik === 'Strong'))
     assert.ok(kd.sekmeler.some((s) => s.bilesen === 'HastaGebelik'))
     assert.ok(kd.sekmeler.some((s) => s.bilesen === 'GebeKarti'))
     assert.ok(kd.ekKaynaklar.some((k) => k.includes('ACOG')))

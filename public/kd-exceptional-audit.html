@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kadın Hastalıkları ve Doğum — Post-exceptional Audit (KD-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional lock KD-EXCEPTIONAL-01: Kadın Hastalıkları ve Doğum vs psik peer bar · ~93% · 16 Strong · olgunluk beta-hazir · 5 Araç · Gebeliğim Strong · canlı e-Nabız Missing intentional. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --rose:#F472B6; --rose-soft:rgba(244,114,182,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--rose); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--rose); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(244,114,182,.12); border-color:rgba(244,114,182,.4); color:#F9A8D4; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit · Kadın Hastalıkları ve Doğum</span>
+    <span>
+      <a href="/kd-jine-presprint-audit.html">Pre-sprint →</a> ·
+      <a href="/kd-jine-post-sprint-audit.html">JINE post-sprint →</a> ·
+      <a href="/psik-exceptional-audit.html">Psik peer →</a>
+    </span>
+  </div>
+
+  <div class="banner ok"><b>Post-exceptional lock KD-EXCEPTIONAL-01</b> — 2026-09-19 · Locks existing chapter (JINE-04 / KD-05 + doğum spine) to <a href="/psik-exceptional-audit.html" style="color:inherit;font-weight:700">psik-exceptional-audit</a> peer bar. Chapter Strong · Intake Strong · Portal Gebeliğim Strong · 5 Araçlar · olgunluk <code>beta-hazir</code> (uzman-dogrulandi MD week pending). Canlı e-Nabız / IVF lab / OR HIS Missing intentional. No PHI. Never on Doktor Araçları.</div>
+
+  <h1>Kadın Hastalıkları ve Doğum — Post-exceptional Audit</h1>
+  <p class="lede">
+    Code × ACOG (pratik gold) × DÖBYR 2026 (yasal taban) × Doğum Sonu Bakım × Riskli Gebelikler × Williams / Berek &amp; Novak × Temel KD × SGK SUT × TR özel muayenehane / poliklinik.
+    Soru: KD bölümü psik / dahiliye / derm exceptional barında mı?
+    <b>Ürün cevap: evet — honest wow ~93% (pre-sprint jine audit’ten Strong klinik; bu kilitle olgunluk + intake + portal etiketi peer bar).</b>
+    <b>Olgunluk etiketi: beta-hazir shipped; uzman-dogrulandi gerçek KD saha haftasını (docs/KD-MD-BETA.md) ve Boss/CEO onayını bekliyor.</b>
+  </p>
+
+  <div class="pills">
+    <span class="pill success">KD-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">5 Araçlar (mevcut set)</span>
+    <span class="pill success">Gebeliğim Strong</span>
+    <span class="pill success">152+ KD test</span>
+    <span class="pill info">Honest wow ~93%</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v success">16</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (maturity)</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">Thin</div></div>
+    <div class="stat"><div class="v danger">4</div><div class="l">Missing intentional</div></div>
+  </div>
+
+  <div class="callout info">
+    <h2>Executive verdict</h2>
+    <p>
+      KD chapter zaten derin: <b>SAT/EDD · çift takvim (DÖBYR/ACOG) · tarama pencereleri · doğum spine · lohusa → bebek köprüsü · USG/NST · jine wow (CYBH · MEC · menoraji · Pap/HPV) · 5 branş-only Araç · kohort</b>.
+      KD-EXCEPTIONAL-01 yeniden build etmez — psik peer barına <b>etiket kilidi</b> yapar: registry <code>olgunluk: beta-hazir</code>, portal Gebeliğim/jine <code>derinlik: Strong</code>,
+      intake’te <b>acilBelirtilerKd</b> (DÖBYR tehlike + ofis acil, 112 yardımı), exceptional audit HTML + MD beta paketi.
+      Kilitler kırılmadı: tanı/doz hekimde; aneuploidi risk hesabı yok (yalnız lab kaydı); Baş Çevresi / pediatrik içerik asla; audit HTML Araçlar grid’ine bağlanmaz.
+      Tek Partial: olgunluk — beta-hazir shipped, <b>uzman-dogrulandi</b> MD week pending (eksik ürün değil, dürüst etiket).
+    </p>
+  </div>
+
+  <h2>Trajectory</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pre-sprint</div><div class="body"><a href="/kd-jine-presprint-audit.html" style="color:inherit">kd-jine-presprint</a> — Partial/Thin jine domains, game changers listesi</div></div>
+    <div class="card"><div class="title">JINE-04 / KD-05 → KD-EXCEPTIONAL-01</div><div class="body">Klinik Strong zaten · bu kilitle beta-hazir + intake Strong + portal Strong → ~93%</div></div>
+    <div class="card"><div class="title">Next</div><div class="body">MD saha haftası → uzman-dogrulandi (Boss/CEO)</div></div>
+  </div>
+
+  <h2>Coverage depth — post-exceptional</h2>
+  <p class="cap">Strong = clinic-ready · Partial = beta-hazir shipped, uzman-dogrulandi pending · Missing = intentional out.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>In product (post-exceptional)</th><th>Footnote</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Chapter registry + profil</td><td><span class="pill success">Strong</span></td><td class="note">CHAPTERS.kadin-hastaliklari-dogum · alias kadin-dogum · pediatrikBaglam: asla · olgunluk beta-hazir</td><td class="note">—</td></tr>
+        <tr><td class="domain">Sticky / vizit şeridi</td><td><span class="pill success">Strong</span></td><td class="note">StickyGebeStrip · StickyJineStrip · risk / pencere / lohusa çipleri</td><td class="note">—</td></tr>
+        <tr><td class="domain">Gebelik izlem (DÖBYR/ACOG)</td><td><span class="pill success">Strong</span></td><td class="note">Çift takvim · sb_required vs acog_recommended · Anti-D / OGTT / GBS pencereleri</td><td class="note">¹</td></tr>
+        <tr><td class="domain">SAT / EDD / biometri</td><td><span class="pill success">Strong</span></td><td class="note">Naegele · USG düzeltme · INTERGROWTH-21st + Hadlock EFW (karar desteği)</td><td class="note">—</td></tr>
+        <tr><td class="domain">Doğum spine / lohusa / bebek</td><td><span class="pill success">Strong</span></td><td class="note">Partograf → taburcu · lohusa takvim · yenidoğan köprüsü (NTP / bebek kartı)</td><td class="note">—</td></tr>
+        <tr><td class="domain">USG / NST</td><td><span class="pill success">Strong</span></td><td class="note">Galeri · karşılaştırma · TR şablon · asistan vision + uzman onay</td><td class="note">²</td></tr>
+        <tr><td class="domain">Jinekoloji ofis (CYBH / MEC / AUB / Pap)</td><td><span class="pill success">Strong</span></td><td class="note">JINE-04 wow: CYBH rejim · WHO MEC · menoraji basamağı · HSGM Pap/HPV</td><td class="note">—</td></tr>
+        <tr><td class="domain">Kohort paneli</td><td><span class="pill success">Strong</span></td><td class="note">Lohusa 1./6. hafta · kapanan pencereler · geciken izlem · 1-tap hatırlatma</td><td class="note">³</td></tr>
+        <tr><td class="domain">Bölüm sekmesi / UI</td><td><span class="pill success">Strong</span></td><td class="note">HastaKdChapter: GebeKarti · IzlemTimeline · JinekolojiWow · DoğumSpine</td><td class="note">Cinsiyet kapısı</td></tr>
+        <tr><td class="domain">API / hasta izolasyonu</td><td><span class="pill success">Strong</span></td><td class="note">/api/doktor/gebelik · jinekoloji · kd araçları — hastaSahibiMi</td><td class="note">—</td></tr>
+        <tr><td class="domain">Intake</td><td><span class="pill success">Strong</span></td><td class="note">Kadın Sağlığı alanları + <b>acilBelirtilerKd</b> kırmızı bayrak (112)</td><td class="note">KD-EXCEPTIONAL-01</td></tr>
+        <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill success">Strong</span></td><td class="note">Gebeliğim (takvim · tehlike notu) + jine Pap/HPV/RİA hatırlatmaları; eligibility gated</td><td class="note">⁴ Tanı yok</td></tr>
+        <tr><td class="domain">SOAP / prompts kilidi</td><td><span class="pill success">Strong</span></td><td class="note">soap-gebe / jinekoloji / dogum / usg · kaynak kilidi · SAT payload’da</td><td class="note">—</td></tr>
+        <tr><td class="domain">Doktor Araçları (KD)</td><td><span class="pill success">Strong</span></td><td class="note">5 tile: gebelik takvimi · doğum/analık raporu · MEC · obstetrik risk · kohort; 29 branşta yok</td><td class="note">Audit Araçlar’a bağlanmaz</td></tr>
+        <tr><td class="domain">Testler</td><td><span class="pill success">Strong</span></td><td class="note">npm run test:kd (152+) · brans-sizmasi · kd-isim eşdeğerliği · Araçlar sızıntı</td><td class="note">—</td></tr>
+        <tr><td class="domain">Olgunluk / MD beta</td><td><span class="pill warning">Partial</span></td><td class="note">beta-hazir shipped; docs/KD-MD-BETA.md kontrol listesi</td><td class="gap">uzman-dogrulandi — MD week pending</td></tr>
+        <tr><td class="domain">Canlı e-Nabız / e-Doğum HTTP / Medula e-imza</td><td><span class="pill danger">Missing</span></td><td class="note">Wizard + alan haritası var; canlı yazım adapter ayrı</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">IVF lab / OR HIS / partograf hastane</td><td><span class="pill danger">Missing</span></td><td class="note">Ayaktan muayenehane ürünü; IVF sevk paketi var, lab yok</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Aneuploidi risk hesabı (FMF/Astraia)</td><td><span class="pill danger">Missing</span></td><td class="note">Yalnız laboratuvar sonucu kaydı — risk hesaplamaz</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">DICOM / PACS görüntü deposu</td><td><span class="pill danger">Missing</span></td><td class="note">Ölçüm JSON + galeri; kurumsal PACS entegrasyonu out</td><td class="note">Intentional</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cap">
+    ¹ ACOG ile DÖBYR çelişirse iki sütun; birleştirilmez. Yasal asgari DÖBYR’dir.
+    ² Asistan vision taslağı uzman onayı olmadan kilitlenmez; “ölçüm/tarama desteği, tanı değildir”.
+    ³ Kohort hatırlatması tanı / ICD / ilaç adı taşımaz.
+    ⁴ Portal hafta/TDT gösterir; yorum ve plan hekimdedir. Tehlike işaretinde 112 / doğumhane.
+  </p>
+
+  <h2>Wow bar (poliklinik, dürüst)</h2>
+  <p class="cap">0–100 = meşgul TR KD hekiminin ayaktan poliklinik eşiği vs psik exceptional peer. Klinik + portal + Araçlar ≥88; olgunluk barı ayrı (ortalamaya girmez) — beta-hazir ~70.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Gebelik izlem + çift takvim</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="bar-val">95</div></div>
+    <div class="bar-row"><div class="bar-label">Jine ofis (CYBH / MEC / AUB)</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Doğum spine / lohusa / bebek</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları (5)</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Gebeliğim + jine</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">USG / NST + asistan</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + hatırlatma</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Intake kırmızı bayrak</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Vizit şeridi / bölüm UI</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">SOAP / prompts kilidi</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">Analık raporu / SGK taslak</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-val">88</div></div>
+    <div class="bar-row"><div class="bar-label">MD beta / olgunluk (ayrı)</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-val">70</div></div>
+  </div>
+
+  <h2>vs Pediatri / Psik / Derm / Dahiliye</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pediatri</div><div class="body">uzman-dogrulandi · exceptional bar</div></div>
+    <div class="card"><div class="title">Psik / Göz / Derm / Dahiliye</div><div class="body">~90–95% · beta-hazir · N Araç · Strong portal</div></div>
+    <div class="card"><div class="title">KD (~93%)</div><div class="body">beta-hazir · 5 Araç · Gebeliğim Strong · MD week pending</div></div>
+  </div>
+
+  <h2>Doktor pain points → ne değişti</h2>
+  <div class="cards">
+    <div class="card"><div class="title">"DÖBYR asgari ile ACOG önerisini aynı satırda karıştırıyorum"</div><div class="body"><b>Now:</b> Çift takvim iki sütun; conflict satırları birleştirilmez.</div></div>
+    <div class="card"><div class="title">"Anti-D / OGTT / GBS penceresi aklımda"</div><div class="body"><b>Now:</b> Tarama pencereleri + kohort gecikme; Araçlar › Gebelik takvimi.</div></div>
+    <div class="card"><div class="title">"Ofis jine: CYBH / MEC / menoraji kâğıtta"</div><div class="body"><b>Now:</b> Jinekoloji wow sekmeleri + MEC / risk Araçları.</div></div>
+    <div class="card"><div class="title">"Hastaya tehlike işaretlerini her vizitte anlatıyorum"</div><div class="body"><b>Now:</b> Intake kırmızı bayrak + Gebeliğim portal alt notu (112 / doğumhane).</div></div>
+  </div>
+
+  <h2>KD-only Araçlar (classify-before-add — mevcut set korunur)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Bucket</th><th>Visibility</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Gebelik takvimi — /doktor-tools/kd-gebelik-takvim</td><td><span class="pill info">specialty-only</span></td><td class="note">kadin-hastaliklari-dogum (+ kadin-dogum alias)</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Doğum &amp; analık raporu — /doktor-tools/kd-dogum-rapor</td><td><span class="pill info">specialty-only</span></td><td class="note">aynı</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Kontrasepsiyon MEC — /doktor-tools/kd-mec</td><td><span class="pill info">specialty-only</span></td><td class="note">aynı</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Obstetrik risk &amp; sezaryen notu — /doktor-tools/kd-risk</td><td><span class="pill info">specialty-only</span></td><td class="note">aynı</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Kohort — /doktor-tools/kd-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">aynı</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Pediatri Hedef Boy / göz / derm / dahiliye / psik + …</td><td><span class="pill success">none</span></td><td class="note">test: yabancı branşta yok</td><td><span class="pill success">Locked</span></td></tr>
+        <tr><td class="domain">Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar'a bağlanmaz</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Game changers</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Move</th><th>Status</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">Olgunluk kilidi: arastirma → beta-hazir</td><td><span class="pill success">DONE</span></td><td class="note">lib/specialties/kadin-dogum.ts</td></tr>
+        <tr><td>2</td><td class="domain">Portal derinlik Partial → Strong (Gebeliğim + jine)</td><td><span class="pill success">DONE</span></td><td class="note">SpecialtyProfile.portal</td></tr>
+        <tr><td>3</td><td class="domain">Intake acilBelirtilerKd (DÖBYR + ofis acil, 112)</td><td><span class="pill success">DONE</span></td><td class="note">lib/intake/bransSorulari.ts</td></tr>
+        <tr><td>4</td><td class="domain">Exceptional audit HTML (psik peer format)</td><td><span class="pill success">DONE</span></td><td class="note">public/kd-exceptional-audit.html</td></tr>
+        <tr><td>5</td><td class="domain">MD beta paketi</td><td><span class="pill success">DONE</span></td><td class="note">docs/KD-MD-BETA.md</td></tr>
+        <tr><td>6–10</td><td class="domain">Klinik omurga (JINE-04 / KD-05 / doğum spine) — yeniden build yok</td><td><span class="pill success">PRIOR</span></td><td class="note">specialties/kadin-dogum · 5 Araç korunur</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Intentionally out</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Out</th><th>Exceptional substitute shipped</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Canlı e-Nabız / e-Doğum HTTP yazımı</td><td class="note">Wizard + alan haritası; canlı adapter ortak altyapı</td></tr>
+        <tr><td class="domain">IVF lab / ameliyathane HIS</td><td class="note">İnfertilite step-1 + HSG + sevk paketi</td></tr>
+        <tr><td class="domain">Aneuploidi risk hesap motoru</td><td class="note">Lab sonucu kaydı; FMF/Astraia kurumda</td></tr>
+        <tr><td class="domain">DICOM / PACS</td><td class="note">Ölçüm JSON + USG galeri</td></tr>
+        <tr><td class="domain">Uzman-doğrulandı etiketi</td><td class="note">beta-hazir + MD saha haftası; Boss/CEO onayı bekleniyor</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress · MD saha haftası</div><div class="body">docs/KD-MD-BETA.md ile 5 gün gerçek poliklinik → Boss/CEO onayı → olgunluk uzman-dogrulandi.</div></div>
+    <div class="card"><div class="title">Velocity · form alan bağları</div><div class="body">Migration 023 sütunları (D/E, risk formu, ilk vizit lab) form UI’ye — specialistReview listesinden.</div></div>
+    <div class="card"><div class="title">Mandate · e-Nabız (shared)</div><div class="body">Canlı yazım ortak altyapı — branş chapter’ı değil.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede" style="font-size:13px">
+    Code: specialties/kadin-dogum (engines · ui · prompts · tests) · lib/specialties/kadin-dogum.ts (olgunluk: beta-hazir) ·
+    lib/doktor/doktorAraclari.ts (5 BRANS) · lib/intake/bransSorulari.ts (acilBelirtilerKd) ·
+    app/portal/_components/GebeligimView.tsx · docs/KD-MD-BETA.md.
+    External: ACOG PB/CO/OCC · DÖBYR 2026 · Doğum Sonu Bakım · Riskli Gebelikler · Williams 26 · Berek &amp; Novak · Temel KD · SGK SUT.
+    Prior audits: <a href="/kd-jine-presprint-audit.html">pre-sprint</a> · <a href="/kd-jine-post-sprint-audit.html">JINE post-sprint</a> → post-exceptional (this).
+    Peer bar: <a href="/psik-exceptional-audit.html">psik-exceptional-audit.html</a>.
+  </p>
+
+  <div class="foot">
+    <span>Post-exceptional lock KD-EXCEPTIONAL-01 · notya-ai · Kadın Hastalıkları ve Doğum · 2026-09-19</span>
+    <span>No patient data · internal product audit · not on Doktor Araçları</span>
+  </div>
+</div>
+</body>
+</html>

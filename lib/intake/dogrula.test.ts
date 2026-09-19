@@ -31,3 +31,14 @@ test('jinekolojik Diğer opens explanation; smear and mamografi are separate', (
   assert.ok(kd.alanlar.some((a) => a.id === 'sonMamografiTarihi'))
   assert.ok(!kd.alanlar.some((a) => a.id === 'sonSmearMamografi'))
 })
+
+test('KD intake has DÖBYR-aligned acil kırmızı bayrak kutuları (KD-EXCEPTIONAL-01)', () => {
+  const kd = BRANS_SORULARI['kadin-hastaliklari-dogum']
+  const acil = kd.alanlar.find((a) => a.id === 'acilBelirtilerKd')
+  assert.ok(acil, 'acilBelirtilerKd zorunlu')
+  assert.equal(acil!.tur, 'checkbox-grup')
+  assert.ok(acil!.secenekler?.includes('Vajinal kanama'))
+  assert.ok(acil!.secenekler?.includes('Bebek hareketlerinde azalma'))
+  assert.ok(acil!.secenekler?.includes('Yok'))
+  assert.match(acil!.yardim || '', /112/)
+})
