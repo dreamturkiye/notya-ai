@@ -364,3 +364,100 @@ export function yanitSuresiOzeti(satirlar: ReadonlyArray<Pick<KonsultasyonSatiri
   const medyan = gunler.length % 2 ? gunler[o] : Math.round((gunler[o - 1] + gunler[o]) / 2)
   return { adet: gunler.length, medyanGun: medyan, enUzunGun: gunler[gunler.length - 1] }
 }
+
+/* ───────────────────────── Bekleyen konsültasyonlar · TEK kaynak ───────────────────────── */
+
+/**
+ * KONSULTASYON-02 (Kaan 2026-09-19) — "yanıt bekleyen" listesinin TEK tanımı. Üç yüzey aynı fonksiyonu kullanır,
+ * böylece aynı veriyi farklı göstermezler:
+ *   • Araçlar › Bekleyen Konsültasyonlar (evrensel, 30 branş) — components/doktor/araclar/BekleyenKonsultasyonlar.tsx
+ *   • yedi kohort panelindeki satır — components/doktor/KonsultasyonKohortSatiri.tsx
+ *   • doktor ana sayfası özeti (yalnız sayı) — components/doktor/BekleyenKonsultasyonOzeti.tsx
+ * Sunucu: GET /api/doktor/konsultasyon?bekleyen=1 (liste) · ?bekleyen=sayi (özet).
+ *
+ * Bekleme vurgusu SKS'nin konsültasyon yanıt süresini izleme mantığıyla uyumlu bir TAKİP İPUCUDUR:
+ * 14 gün ve üzeri dikkat, 30 gün ve üzeri kırmızı. Mevzuattan alınmış bir süre ya da klinik eşik DEĞİLDİR
+ * (bkz. docs/OPEN-COMMITMENTS.md § KONSULTASYON-02).
+ */
+export const BEKLEME_DIKKAT_GUN = 14
+export const BEKLEME_KIRMIZI_GUN = 30
+export type BeklemeVurgusu = 'notr' | 'uyari' | 'kirmizi'
+
+export function beklemeVurgusu(gun: number): BeklemeVurgusu {
+  if (gun >= BEKLEME_KIRMIZI_GUN) return 'kirmizi'
+  if (gun >= BEKLEME_DIKKAT_GUN) return 'uyari'
+  return 'notr'
+}
+
+/** Bekleyen listesinin satırı (API yanıtı; istemci-güvenli). */
+export interface BekleyenKonsultasyon {
+  id: string
+  patientId: string
+  hastaAdi: string
+  /** Hedef branşın görünen adı */
+  hedef: string
+  /** Hekimin kendi yazdığı klinik soru (eski kayıtta not metni) — liste için kısaltılmış */
+  klinikSoru: string
+  istemTarihi: string
+  gun: number
+  aciliyet: string | null
+  eskiKayit: boolean
+  sonHatirlatmaAt: string | null
+}
+
+const KLINIK_SORU_LISTE_TAVANI = 300
+const ACILIYET_SIRASI: Record<string, number> = { acil: 0, oncelikli: 1 }
+
+/**
+ * Sunucu satırları → yanıt bekleyen liste. `adlar` YALNIZ oturumdaki hekimin hastalarından çözülmüş ad haritasıdır
+ * (HASTA-IZOLASYON: haritada olmayan hastanın satırı — başka hekime ait kirli satır — listeden düşer).
+ * Sıra: en uzun bekleyen üstte; aynı günde acil → öncelikli → rutin; sonra id (kararlı).
+ */
+export function bekleyenListesi(
+  satirlar: ReadonlyArray<Pick<KonsultasyonSatiri, 'id' | 'patient_id' | 'hedef' | 'hedef_brans' | 'klinik_soru' | 'not_metni' | 'aciliyet' | 'istem_tarihi' | 'durum' | 'son_hatirlatma_at' | 'created_at'>>,
+  adlar: ReadonlyMap<string, string>,
+  bugun: string = bugunTrIso(),
+): BekleyenKonsultasyon[] {
+  return satirlar
+    .filter((s) => (BEKLEYEN_DURUMLAR as readonly string[]).includes(s.durum) && adlar.has(s.patient_id))
+    .map((s) => {
+      const soru = temiz(s.klinik_soru || s.not_metni, 1000)
+      return {
+        id: s.id,
+        patientId: s.patient_id,
+        hastaAdi: adlar.get(s.patient_id) || 'Hasta',
+        hedef: hedefEtiketi(s),
+        klinikSoru: soru.length > KLINIK_SORU_LISTE_TAVANI ? `${soru.slice(0, KLINIK_SORU_LISTE_TAVANI - 1)}…` : soru,
+        istemTarihi: s.istem_tarihi && isoGunMu(s.istem_tarihi) ? s.istem_tarihi : String(s.created_at || '').slice(0, 10),
+        gun: beklemeGunu(s, bugun),
+        aciliyet: s.aciliyet,
+        eskiKayit: !s.hedef_brans,
+        sonHatirlatmaAt: s.son_hatirlatma_at || null,
+      }
+    })
+    .sort((a, b) => (b.gun - a.gun)
+      || ((ACILIYET_SIRASI[a.aciliyet || ''] ?? 2) - (ACILIYET_SIRASI[b.aciliyet || ''] ?? 2))
+      || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+}
+
+/** Ana sayfa özeti ve araç başlığı — aynı listeden sayılır. */
+export interface BekleyenOzeti { sayi: number; dikkat: number; kirmizi: number; enUzunGun: number | null }
+
+export function bekleyenOzeti(liste: ReadonlyArray<Pick<BekleyenKonsultasyon, 'gun'>>): BekleyenOzeti {
+  let dikkat = 0, kirmizi = 0, enUzun: number | null = null
+  for (const b of liste) {
+    const v = beklemeVurgusu(b.gun)
+    if (v === 'kirmizi') kirmizi++
+    else if (v === 'uyari') dikkat++
+    if (enUzun == null || b.gun > enUzun) enUzun = b.gun
+  }
+  return { sayi: liste.length, dikkat, kirmizi, enUzunGun: enUzun }
+}
+
+/** Son hatırlatmadan bu yana sıklık sınırı dolmadıysa bir sonraki gönderilebilir gün (YYYY-AA-GG), yoksa null. */
+export function hatirlatmaBeklemesi(sonHatirlatmaAt: string | null | undefined, simdi: number = Date.now()): string | null {
+  const t = sonHatirlatmaAt ? Date.parse(sonHatirlatmaAt) : NaN
+  if (isNaN(t)) return null
+  const sonraki = t + HATIRLATMA_ARALIGI_GUN * 86400e3
+  return sonraki > simdi ? bugunTrIso(sonraki) : null
+}

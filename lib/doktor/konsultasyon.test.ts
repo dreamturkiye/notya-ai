@@ -5,7 +5,14 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  BEKLEME_DIKKAT_GUN,
+  BEKLEME_KIRMIZI_GUN,
+  HATIRLATMA_ARALIGI_GUN,
   beklemeGunu,
+  beklemeVurgusu,
+  bekleyenListesi,
+  bekleyenOzeti,
+  hatirlatmaBeklemesi,
   durumGrubu,
   gecisIzinli,
   hedefEtiketi,
@@ -185,5 +192,77 @@ describe('KONSULTASYON-01 — SKS yanıt süresi (yalnız ölçüm)', () => {
     ])
     assert.deepEqual(r, { adet: 4, medyanGun: 5, enUzunGun: 10 })
     assert.deepEqual(yanitSuresiOzeti([]), { adet: 0, medyanGun: null, enUzunGun: null })
+  })
+})
+
+describe('KONSULTASYON-02 — bekleyen listesi: sıralama, eşik, özet (tek tanım)', () => {
+  const ADLAR = new Map([['p1', 'QA Hasta Bir'], ['p2', 'QA Hasta İki']])
+
+  it('bekleme vurgusu: <14 nötr, 14–29 dikkat, ≥30 kırmızı (sınırlar dahil)', () => {
+    assert.equal(BEKLEME_DIKKAT_GUN, 14)
+    assert.equal(BEKLEME_KIRMIZI_GUN, 30)
+    for (const [gun, v] of [[0, 'notr'], [13, 'notr'], [14, 'uyari'], [29, 'uyari'], [30, 'kirmizi'], [365, 'kirmizi']] as const) {
+      assert.equal(beklemeVurgusu(gun), v, String(gun))
+    }
+  })
+
+  it('en uzun bekleyen üstte; aynı günde acil → öncelikli → rutin; id ile kararlı', () => {
+    const l = bekleyenListesi([
+      satir({ id: 'yeni', istem_tarihi: '2026-09-18' }),
+      satir({ id: 'eski-rutin', istem_tarihi: '2026-08-01', aciliyet: 'rutin' }),
+      satir({ id: 'eski-acil', istem_tarihi: '2026-08-01', aciliyet: 'acil' }),
+      satir({ id: 'orta', patient_id: 'p2', istem_tarihi: '2026-09-01', aciliyet: 'oncelikli' }),
+      satir({ id: 'eski-oncelikli', istem_tarihi: '2026-08-01', aciliyet: 'oncelikli' }),
+    ], ADLAR, BUGUN)
+    assert.deepEqual(l.map((b) => b.id), ['eski-acil', 'eski-oncelikli', 'eski-rutin', 'orta', 'yeni'])
+    assert.deepEqual(l.map((b) => b.gun), [49, 49, 49, 18, 1])
+    assert.deepEqual(l.map((b) => beklemeVurgusu(b.gun)), ['kirmizi', 'kirmizi', 'kirmizi', 'uyari', 'notr'])
+    assert.equal(l[3].hastaAdi, 'QA Hasta İki')
+    assert.equal(l[0].hedef, 'KBB')
+  })
+
+  it('yalnız bekleyen durumlar (eski "acik" dahil); yanıtlanan / kapanan / bilinmeyen durum listede yok', () => {
+    const l = bekleyenListesi([
+      satir({ id: 'a', durum: 'yanit_bekleniyor' }),
+      satir({ id: 'b', durum: 'acik', hedef_brans: null, hedef: 'nefroloji', klinik_soru: null, not_metni: 'eGFR düşüşü' }),
+      satir({ id: 'c', durum: 'yanitlandi' }),
+      satir({ id: 'd', durum: 'kapandi_yanitsiz' }),
+      satir({ id: 'e', durum: 'kapandi' }),
+      satir({ id: 'f', durum: 'taslak' }),
+    ], ADLAR, BUGUN)
+    assert.deepEqual(l.map((b) => b.id).sort(), ['a', 'b'])
+    const eski = l.find((b) => b.id === 'b')!
+    assert.equal(eski.eskiKayit, true)
+    assert.equal(eski.klinikSoru, 'eGFR düşüşü') // eski kayıtta soru not metninden
+    assert.equal(eski.hedef, 'Nefroloji')
+  })
+
+  it('HASTA-IZOLASYON: ad haritasında olmayan hastanın (başka hekimin) satırı düşer', () => {
+    const l = bekleyenListesi([satir({ id: 'kendi' }), satir({ id: 'yabanci', patient_id: 'baska-hekimin-hastasi' })], ADLAR, BUGUN)
+    assert.deepEqual(l.map((b) => b.id), ['kendi'])
+    assert.deepEqual(bekleyenListesi([satir()], new Map(), BUGUN), [])
+  })
+
+  it('satır alanları: istem tarihi yoksa created_at; uzun soru kısaltılır; son hatırlatma taşınır', () => {
+    const [b] = bekleyenListesi([satir({ istem_tarihi: null, created_at: '2026-09-05T10:00:00Z', klinik_soru: 'Ş'.repeat(900), son_hatirlatma_at: '2026-09-15T08:00:00Z' })], ADLAR, BUGUN)
+    assert.equal(b.istemTarihi, '2026-09-05')
+    assert.equal(b.gun, 14)
+    assert.equal(b.klinikSoru.length, 300)
+    assert.ok(b.klinikSoru.endsWith('…'))
+    assert.equal(b.sonHatirlatmaAt, '2026-09-15T08:00:00Z')
+  })
+
+  it('özet aynı listeden sayılır: sayı, dikkat, kırmızı, en uzun', () => {
+    assert.deepEqual(bekleyenOzeti([{ gun: 3 }, { gun: 14 }, { gun: 29 }, { gun: 30 }, { gun: 61 }]), { sayi: 5, dikkat: 2, kirmizi: 2, enUzunGun: 61 })
+    assert.deepEqual(bekleyenOzeti([]), { sayi: 0, dikkat: 0, kirmizi: 0, enUzunGun: null })
+  })
+
+  it('hatırlatma sıklık sınırı: 7 gün dolmadıysa sonraki gün, dolduysa null', () => {
+    const simdi = Date.parse('2026-09-19T09:00:00Z')
+    assert.equal(HATIRLATMA_ARALIGI_GUN, 7)
+    assert.equal(hatirlatmaBeklemesi('2026-09-15T09:00:00Z', simdi), '2026-09-22')
+    assert.equal(hatirlatmaBeklemesi('2026-09-10T09:00:00Z', simdi), null)
+    assert.equal(hatirlatmaBeklemesi(null, simdi), null)
+    assert.equal(hatirlatmaBeklemesi('gecersiz', simdi), null)
   })
 })

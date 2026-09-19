@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic'
 import DoktorNav from '@/components/doktor/DoktorNav'
 import DoktorAvatar from '@/components/doktor/DoktorAvatar'
 import YeniBebekIsleri from '@/components/doktor/YeniBebekIsleri'
+import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
 import { bransAnahtari, pediatrikBaglamKurali } from '@/lib/specialties/kapsam'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -310,6 +311,8 @@ export default function DoktorDashboard() {
         </div>
 
         {bebekIsListesi && <YeniBebekIsleri />}
+        {/* KONSULTASYON-02: yanıt bekleyen konsültasyon sayısı (her branş) — 0 iken hiçbir şey çizilmez */}
+        <BekleyenKonsultasyonOzeti />
 
         {/* Randevular — Bugün / Bu Hafta */}
         <div style={{ marginTop: 18 }}>

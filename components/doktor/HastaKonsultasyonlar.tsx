@@ -10,10 +10,10 @@
  * Hekim kilidi: yanıt özeti hekimin cümlesidir; belgeden çıkarılmış Tier A özeti yalnız TASLAK öneri olarak görünür.
  * Nota yalnız "Bugünkü muayene formuna ekle" basılınca yazılır. Ortak UI: lib/doktor/aracUi.tsx.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
-import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
+import { konsultasyonApi, konsultasyonIslemi, YANITSIZ_KAPAT_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
 import {
   AracVurguSaglayici, VURGU_TEAL, useAracStil, Alan, Segment, Katlanir, Rozet, TaslakNotu,
@@ -34,17 +34,7 @@ export type KonsultasyonGorunumu = KonsultasyonSatiri & {
 type Hedefler = { onerilen: Array<[string, string]>; diger: Array<[string, string]> }
 type KasaBelgesi = { id: string; fileName: string; fileType: string; category: string | null; createdAt: string }
 
-async function api(yol: string, init?: { method?: string; govde?: unknown }): Promise<{ ok: boolean; j: Record<string, any> }> {
-  const t = await getAccessTokenAsync();
-  const r = await fetch(yol, {
-    method: init?.method || 'GET',
-    headers: { Authorization: `Bearer ${t}`, ...(init?.govde !== undefined ? { 'Content-Type': 'application/json' } : {}) },
-    body: init?.govde !== undefined ? JSON.stringify(init.govde) : undefined,
-    cache: 'no-store',
-  });
-  const j = (await r.json().catch(() => ({}))) as Record<string, any>;
-  return { ok: r.ok && j.ok !== false, j };
-}
+const api = konsultasyonApi;
 
 /* ───────────────────────── Yeni istem formu ───────────────────────── */
 
@@ -230,14 +220,18 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
 
 /* ───────────────────────── Tek satır (kanıt kartı) ───────────────────────── */
 
-export function KonsultasyonKarti({ k, patientId, guncelle }: {
+export function KonsultasyonKarti({ k, patientId, guncelle, yanitAcikBaslar = false }: {
   k: KonsultasyonGorunumu
   patientId: string
   guncelle: (y: Partial<KonsultasyonGorunumu>) => void
+  /** KONSULTASYON-02: Araçlar › Bekleyen Konsültasyonlar "Yanıt ekle" → ?yanit=<id> ile form açık gelir. */
+  yanitAcikBaslar?: boolean
 }) {
   const stil = useAracStil();
   const g = durumGrubu(k.durum);
-  const [yanitAcik, setYanitAcik] = useState(false);
+  const [yanitAcik, setYanitAcik] = useState(yanitAcikBaslar);
+  const kartRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (yanitAcikBaslar) kartRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, [yanitAcikBaslar]);
   const [rapor, setRapor] = useState(false);
   const [calisiyor, setCalisiyor] = useState('');
   const [mesaj, setMesaj] = useState<{ iyi: boolean; metin: string } | null>(null);
@@ -245,14 +239,14 @@ export function KonsultasyonKarti({ k, patientId, guncelle }: {
 
   const islem = async (ad: 'kapat' | 'hatirlat' | 'nota_ekle') => {
     if (calisiyor) return;
-    if (ad === 'kapat' && typeof window !== 'undefined' && !window.confirm('Bu konsültasyon yanıt gelmeden kapatılsın mı? Geç gelen rapor yine eklenebilir.')) return;
+    if (ad === 'kapat' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_KAPAT_ONAYI)) return;
     setCalisiyor(ad); setMesaj(null);
     try {
-      const { ok, j } = await api('/api/doktor/konsultasyon', { method: 'PATCH', govde: { id: k.id, islem: ad } });
+      const { ok, j } = await konsultasyonIslemi(k.id, ad);
       if (ok) {
         if (j.konsultasyon) guncelle(j.konsultasyon);
         if (ad === 'nota_ekle' && j.notId) { setEklenenNot(j.notId); setMesaj({ iyi: true, metin: 'Bugünkü muayene formuna eklendi — metni formda düzenleyebilirsiniz.' }); }
-        if (ad === 'hatirlat') setMesaj({ iyi: true, metin: 'Hastaya Sağlığım üzerinden hatırlatma gönderildi (klinik bilgi içermez).' });
+        if (ad === 'hatirlat') setMesaj({ iyi: true, metin: HATIRLATMA_GONDERILDI });
       } else setMesaj({ iyi: false, metin: j.error || 'İşlem yapılamadı.' });
     } catch { setMesaj({ iyi: false, metin: 'İşlem yapılamadı — bağlantıyı kontrol edin.' }); }
     finally { setCalisiyor(''); }
@@ -266,7 +260,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle }: {
       : <Rozet ton={k.gun >= 30 ? 'kirmizi' : 'uyari'}>{DURUM_ETIKETI.bekliyor} · {k.gun === 0 ? 'bugün' : `${k.gun} gündür`}</Rozet>;
 
   return (
-    <div style={{ ...stil.kutu, marginBottom: 10 }} data-konsultasyon={k.id}>
+    <div ref={kartRef} style={{ ...stil.kutu, marginBottom: 10, scrollMarginTop: 80 }} data-konsultasyon={k.id}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {rozet}
         <span style={{ fontSize: 15, fontWeight: 700, color: '#EDF1F7' }}>{k.hedefEtiketi}</span>
@@ -332,7 +326,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle }: {
 
 /* ───────────────────────── Zaman çizelgesi (container) ───────────────────────── */
 
-export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, yenile, tabloHazir = true }: {
+export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, yenile, tabloHazir = true, yanitAc }: {
   patientId: string
   liste: KonsultasyonGorunumu[]
   hedefler: Hedefler
@@ -340,6 +334,8 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
   /** Sunucunun eklediği alanlar (rapor adı, belge taslağı, bekleme günü) için sessiz yeniden okuma. */
   yenile?: () => void
   tabloHazir?: boolean
+  /** Yanıt formu açık gelecek konsültasyon (?yanit=<id>). */
+  yanitAc?: string
 }) {
   const stil = useAracStil();
   const [yeni, setYeni] = useState(false);
@@ -369,12 +365,12 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
       {tabloHazir && !liste.length && !yeni && (
         <div style={{ ...stil.kutu, color: '#8FA0B5', fontSize: 14 }}>Bu hasta için konsültasyon kaydı yok. Bir meslektaşınızın görüşünü istediğinizde buradan istem oluşturun; gelen raporu Kasa'ya yükleyip bu kayda bağlayın.</div>
       )}
-      {liste.map((k) => <KonsultasyonKarti key={k.id} k={k} patientId={patientId} guncelle={guncelle(k.id)} />)}
+      {liste.map((k) => <KonsultasyonKarti key={k.id} k={k} patientId={patientId} guncelle={guncelle(k.id)} yanitAcikBaslar={!!yanitAc && k.id === yanitAc} />)}
     </div>
   );
 }
 
-export default function HastaKonsultasyonlar({ patientId }: { patientId: string }) {
+export default function HastaKonsultasyonlar({ patientId, yanitAc }: { patientId: string; yanitAc?: string }) {
   const [liste, setListe] = useState<KonsultasyonGorunumu[]>([]);
   const [hedefler, setHedefler] = useState<Hedefler>({ onerilen: [], diger: [] });
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
@@ -399,7 +395,7 @@ export default function HastaKonsultasyonlar({ patientId }: { patientId: string 
       <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', minWidth: 0 }}>
         {durum === 'yukleniyor' && <div style={{ fontSize: 14, color: '#8FA0B5' }}>Konsültasyonlar yükleniyor…</div>}
         {durum === 'hata' && <div style={{ fontSize: 14, color: '#FCA5A5' }}>{hata}</div>}
-        {durum === 'hazir' && <KonsultasyonCizelgesi patientId={patientId} liste={liste} hedefler={hedefler} setListe={setListe} yenile={() => yukle(true)} tabloHazir={tabloHazir} />}
+        {durum === 'hazir' && <KonsultasyonCizelgesi patientId={patientId} liste={liste} hedefler={hedefler} setListe={setListe} yenile={() => yukle(true)} tabloHazir={tabloHazir} yanitAc={yanitAc} />}
       </div>
     </AracVurguSaglayici>
   );

@@ -2007,6 +2007,49 @@ dahiliye → bölümün zaten yazdığı sevk hedefleri). Doktor Araçları'na y
 | 2026-09-19 | **Notya→Notya hekimler arası paylaşım (istem ve raporun konsültan Notya hekimine dijital gitmesi / geri gelmesi)** | Bilinçli olarak KAPSAM DIŞI. Ağ etkisi için değerli (iki Notya hekimi arasında kağıtsız döngü), ama bu **başka bir veri sorumlusuna aktarım**dır: m.6/3 istisnası tedavi amaçlı işlemeyi kapsar, fakat platform üzerinden başka muayenehaneye hasta verisi göndermek ayrı bir KVKK değerlendirmesi (aktarım — m.8, açık rıza ya da istisna gerekçesi, aydınlatma metni), iki hekim arasında paylaşım/iptal modeli, erişim süresi ve denetim izi tasarımı ister. Ayrıca hasta-izolasyon kuralının ("bir hekimin hastası asla başka hekime görünmez") **bilinçli, hasta onaylı bir istisnası** olur — bu kural değişikliği Kaan kararıdır. Bugün: konsültan raporu Kasa'ya hekim tarafından yüklenir. | OPEN (Kaan — KVKK + paylaşım modeli) |
 | 2026-09-19 | **Eski satırlar Sağlığım'da gösterilmez** | Dahiliye/göz/KD'nin bir kısmı hesaplayıcıların kendiliğinden açtığı sevk önerileri (FIB-4 → gastroenteroloji, HT → nefroloji…). Hekim bunları hastaya "yönlendirme" olarak bildirmedi; geriye dönük portal görünürlüğü açılmadı. Portal yalnız `hedef_brans` dolu (bu akışla açılmış) kayıtları gösterir. Hekim ekranında eski kayıtlar "eski kayıt" rozetiyle görünür ve kapalı döngüye alınabilir. | Karar (geri alınabilir) |
 | 2026-09-19 | **Spec'e ek kolonlar** | `tanilar`, `mevcut_durum` (TTB istem formu içeriği), `son_hatirlatma_at` (hatırlatma sıklık sınırı). Hepsi nullable, yalnız ekleme. | Bilgi |
-| 2026-09-19 | **Kohort paneli olmayan branşlar** | Yedi branşın kohort paneli var; diğer ~23 branşta "yanıt bekleyen" çapraz-hasta listesi yalnız API'de (`GET ?bekleyen=1`) — hasta dosyasındaki çizelge her branşta çalışır. Yeni araç açılmadı (brief). Öneri: Günün programı / ana sayfaya küçük sayaç. | OPEN (Kaan) |
+| 2026-09-19 | **Kohort paneli olmayan branşlar** | Yedi branşın kohort paneli var; diğer ~23 branşta "yanıt bekleyen" çapraz-hasta listesi yalnız API'de (`GET ?bekleyen=1`) — hasta dosyasındaki çizelge her branşta çalışır. Yeni araç açılmadı (brief). Öneri: Günün programı / ana sayfaya küçük sayaç. | **KAPANDI** — KONSULTASYON-02 (aşağıda): evrensel Bekleyen Konsültasyonlar aracı + ana sayfa sayacı |
 | 2026-09-19 | **Hatırlatma yalnız hastaya** | "Hatırlat" hastaya Sağlığım mesajı gönderir (raporu getirin). Konsültan hekime hatırlatma yok — Notya→Notya paylaşımı kararına bağlı. | OPEN |
 | 2026-09-19 | **Eski dahiliye/göz/KD yazıcıları hâlâ UI'de "sevk" diyor** | Dahiliye "Sevk" adımı, göz "açık dahiliye göz sevki", KD "Sevk notu" metinleri bu brief'te değiştirilmedi (branş klasörleri + mevcut akışlar kırılmasın). Sonraki adım: bu yüzeylerde "Konsültasyon istemi" diline geçiş ve istemi yeni akışa yönlendirme (hedef_brans + klinik soru). | OPEN |
+
+## KONSULTASYON-02 — bekleyen konsültasyon takibi 30 branşın hepsinde (Kaan kararı, 2026-09-19)
+
+**Boşluk (Claude denetimi, Kaan onayı 2026-09-19).** KONSULTASYON-01 rotası, hasta dosyası › Konsültasyonlar sekmesi,
+istem formu, Kasa bağlantısı ve Sağlığım "Yönlendirmeleriniz" zaten evrenseldi. Ama döngüyü *kapalı* yapan parça —
+"3 haftadır yanıt gelmedi" hatırlatması — yalnız `components/doktor/KonsultasyonKohortSatiri.tsx` içindeydi ve o satır
+yalnız kohort paneli OLAN 7 branşa takılıydı (dahiliye, göz, derm, KD, pediatri, psikiyatri, KBB). Kalan ~23 branşın
+hekimi konsültasyon oluşturabiliyor, dosyalayabiliyordu; ama yanıt gelmeyen istemleri çapraz-hasta göremiyordu —
+takip değil, yalnız dosyalama.
+
+**Karar — Kaan, seçenek #1: evrensel "Bekleyen konsültasyonlar" yüzeyi.** 23 branşa 23 ayrı kohort paneli
+kurulmadı. Gerekçe: (1) bekleyen konsültasyon listesi branştan bağımsızdır — KBB'ye yönlendiren kardiyolog ile
+pediatrist aynı soruyu sorar ("kimin yanıtı gelmedi?"); branş kohortu ise branşın klinik göstergelerini (HbA1c,
+aşı gecikmesi, PHQ-9…) izler ve her branş için ayrı bir ürün kararıdır, bu işin kapsamı değildir. (2) Tek araç tek
+kod yolu demektir; 23 kopya aynı mantığın 23 kez kaymasına davetiye. (3) Kohort paneli olan 7 branş zengin satırı
+korur; araç onlar için ikinci giriş noktasıdır.
+
+**Sonuç: konsültasyon döngüsü artık 30 branşın hepsinde kapalı** — istem → yanıt bekleniyor → (en uzun bekleyen üstte
+izlenir, hatırlatılır, gerekirse yanıtsız kapatılır) → rapor Kasa'da → hekimin cümlesi → yanıtlandı.
+
+**Sınıf (Doktor Araçları kapısı):** yeni evrensel araç → `ORTAK_DOKTOR_ARACLARI` (`branslar: null`); görünürlük:
+tüm ~30 branş, kimse hariç değil (branşı boş hekim dahil). `BRANS_DOKTOR_ARACLARI`'na eklenmedi.
+
+### Ne yapıldı
+
+| Parça | Ayrıntı |
+|---|---|
+| Araç `/doktor-tools/bekleyen-konsultasyonlar` | `OrtakAracKabugu` + `components/doktor/araclar/BekleyenKonsultasyonlar.tsx`, ortak kütüphane `lib/doktor/aracUi.tsx` (Istatistik, Rozet, kutu/etiket/ghost/btn stilleri) — yeni tasarım dili yok. Hekim düzeyinde liste, hasta seçici yok. Üstte sayaçlar (yanıt bekleyen · 14–29 gün · 30 gün ve üzeri · son 180 günün istem → yanıt medyanı). Satır: hasta adı, hedef branş, klinik soru (≤300 karakter), istem tarihi, "N gündür bekliyor", aciliyet rozeti (Acil / Öncelikli / Rutin), eski kayıt rozeti, son hatırlatma. Eylemler: **Yanıt ekle** (hasta dosyası › Konsültasyonlar'a `&yanit=<id>` ile gider; o kartın MEVCUT yanıt formu açık gelir ve karta kaydırılır — yeni form yok) · **Hasta dosyası** · **Hatırlat** (7 gün sınırı dolmadıysa pasif + "Sonraki hatırlatma …") · **Yanıtsız kapat** (aynı onay metni; satır listeden düşer). |
+| Tek kaynak (iki yüzey aynı veriyi farklı göstermesin) | `lib/doktor/konsultasyon.ts`: `bekleyenListesi()` (durum süzgeci + sahiplik süzgeci + sıra: en uzun bekleyen üstte, aynı günde acil → öncelikli → rutin, sonra id), `beklemeVurgusu()` (14 / 30), `bekleyenOzeti()`, `hatirlatmaBeklemesi()`. Araç, 7 kohort satırı (`KonsultasyonKohortSatiri` — eşiği artık yeniden tanımlamıyor, yeni araca bağlantı eklendi) ve ana sayfa özeti bunları kullanır. Tarayıcı işlemleri `lib/doktor/konsultasyonIstemci.ts` (PATCH, onay/başarı metinleri, dosya yolu) — hasta dosyası kartı da buna geçti. |
+| API (yeni rota YOK) | Mevcut `GET /api/doktor/konsultasyon?bekleyen=1` zaten "hekimin yanıt bekleyenleri"ydi → minimal genişletme: satıra `klinikSoru` + `sonHatirlatmaAt`; `?bekleyen=sayi` → aynı listeden `{ sayi, dikkat, kirmizi, enUzunGun }` (hasta adı çözülmez). Paylaşılan no-store servis istemcisi (`doktorOturum`). |
+| Hasta izolasyonu | Kimlik girdisi yok; kapsam oturumdaki hekim: `sevkler.doctor_id = user.id` + ad/sahiplik yalnız `patients.doctor_id = user.id`'den; haritada olmayan hastanın satırı (başka hekimin hastasına düşmüş kirli satır) liste **ve** sayıdan düşer. `hasta-izolasyon.test.ts`: `?bekleyen=sayi` vakası (pozitif + A→B + B→A) + "A hekimi B'nin bekleyenlerini GÖREMEZ" (iki yön; liste yalnız kendi istemi, sayı = 1 — B'nin satırı ve A'nın B hastasına kirli satırı sayılmaz) + oturumsuz 401. **Mutasyonla doğrulandı:** `sevkler` ve `patients` `doctor_id` filtreleri kaldırılınca 4 test kırmızı. |
+| Ana sayfa özeti | `components/doktor/BekleyenKonsultasyonOzeti.tsx`, `app/dashboard/doktor/page.tsx`'te karşılama panelinin (ve varsa yeni bebek iş listesinin) altında, branş koşulu yok. Yalnız sayı > 0 iken tek satırlık panel ("3 yanıt bekleyen konsültasyon · en uzun 32 gündür · Takip et →"), 0 ya da hata iken hiçbir şey çizilmez. Ana sayfa paneliyle aynı görsel dil (#0D1C33, ince hat, tabular rakam). |
+| Mobil (standing rule) | Geçici yerel QA sayfası (commit edilmedi, sentetik veri) + headless tarayıcı, **390 px ve 360 px**: araç listesi, sayaçlar, ana sayfa özeti, kohort satırı — `scrollWidth` = viewport (yatay taşma yok), araç satırı ve özetteki tüm bağlantı/düğmeler ≥ 44 px, konsol hatası yok. |
+| Testler | `doktorAraclari.test.ts` +2: araç `ORTAK_…`'ta, `branslar: null`, `BRANS_…`'ta yok; `BRANS_ETIKETLERI`'ndeki **her** anahtar + resmi etiket + kohortlu 7 + kohortsuz ≥20 branş listede görür ve derin linki açar; sayfa `OrtakAracKabugu` + kendi rotası, hasta seçici yok, ticari metin (mevcut branş-özel assertion'lar değişmedi). `konsultasyon.test.ts` +7 saf: eşik sınırları, sıralama, durum süzgeci (eski `acik` dahil), sahiplik süzgeci, alan eşlemesi, özet, hatırlatma sınırı. `konsultasyonUi.test.ts` +9 SSR: satır alanları, vurgu, eylem bağlantıları ve 44 px, pasif Hatırlat, sayaçlar, boş/hazır değil/yükleniyor, "sevk" ve branş alanı yok; ana sayfa özeti 0'da boş, >0'da araca bağlı; kohort satırı ve araç aynı `beklemeVurgusu`. KONSULTASYON-01'in "Araçlar'a konsültasyon rotası açılmadı" iddiası Kaan kararıyla güncellendi: tek konsültasyon aracı, evrensel. `konsultasyon-rota.test.ts`: `?bekleyen=sayi` listeyle aynı sayıyı verir, ad taşımaz. |
+
+### AÇIK
+
+| Tarih | Madde | Gerekçe + öneri | Durum |
+|---|---|---|---|
+| 2026-09-19 | **14 / 30 gün eşiklerinin kaynağı** | SKS konsültasyon istem → yanıt süresinin izlenmesini ister (KONSULTASYON-01 bulgu #2), ama bu muayenehane akışı için sayısal bir gün sınırı koymaz — 14 / 30 ürün UX ipucudur (KONSULTASYON-01 kohort satırından devralındı). Arayüzde "klinik bir süre sınırı değildir" yazıyor. Kurum/hekim bazlı ayar istenirse `BEKLEME_*_GUN` tek yerde. | OPEN (Kaan — ayar istenirse) |
+| 2026-09-19 | **Liste tavanı 200** | `?bekleyen` sorgusu en eski 200 bekleyen satırı okur (KONSULTASYON-01'den); sayı da bu tavanla sınırlı. Tek hekimde 200+ açık istem beklenmiyor; olursa sayfalama. | Bilgi |
+| 2026-09-19 | **Günün programında bekleyen konsültasyon işareti** | Randevusu olan hastanın bekleyen konsültasyonu brifingde "rapor getirdi mi?" diye hatırlatılabilir. Bu işin kapsamı dışında bırakıldı (ana sayfa özeti + araç yeterli). | OPEN (öneri) |
+

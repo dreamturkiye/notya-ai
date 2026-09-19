@@ -15,6 +15,9 @@ import { KonsultasyonCizelgesi, YeniKonsultasyonFormu, type KonsultasyonGorunumu
 import KonsultasyonIstemFormuKagidi, { type IstemFormuVerisi } from '../../components/doktor/KonsultasyonIstemFormuKagidi'
 import { hedefSecenekleri } from './konsultasyon'
 import { KonsultasyonKohortListesi } from '../../components/doktor/KonsultasyonKohortSatiri'
+import { BekleyenKonsultasyonListesi } from '../../components/doktor/araclar/BekleyenKonsultasyonlar'
+import { BekleyenKonsultasyonOzetiKarti } from '../../components/doktor/BekleyenKonsultasyonOzeti'
+import type { BekleyenKonsultasyon } from './konsultasyon'
 import { YonlendirmelerView } from '../../app/portal/_components/VisitsView'
 import { emptyPortalBundle } from '../portal/emptyBundle'
 import { specialtyProfile } from '../specialties/registry'
@@ -151,8 +154,8 @@ describe('KONSULTASYON-01 — KONSÜLTASYON İSTEM FORMU kağıdı (SSR)', () =>
 describe('KONSULTASYON-01 — kohort satırı (SSR, mevcut panellere takılır)', () => {
   it('en uzun bekleyen, gün rozeti, hasta dosyasına bağlantı, SKS medyanı; boş durum dürüst', () => {
     const h = sar(createElement(KonsultasyonKohortListesi, { bekleyenler: [
-      { id: 'x', patientId: 'p1', hastaAdi: 'QA Hasta', hedef: 'KBB', istemTarihi: '2026-08-10', gun: 40, aciliyet: 'acil', eskiKayit: false },
-      { id: 'y', patientId: 'p2', hastaAdi: 'QA Diğer', hedef: 'Nefroloji', istemTarihi: '2026-09-15', gun: 4, aciliyet: null, eskiKayit: true },
+      { id: 'x', patientId: 'p1', hastaAdi: 'QA Hasta', hedef: 'KBB', klinikSoru: 'İşitme kaybı var mı?', istemTarihi: '2026-08-10', gun: 40, aciliyet: 'acil', eskiKayit: false, sonHatirlatmaAt: null },
+      { id: 'y', patientId: 'p2', hastaAdi: 'QA Diğer', hedef: 'Nefroloji', klinikSoru: 'eGFR düşüşü', istemTarihi: '2026-09-15', gun: 4, aciliyet: null, eskiKayit: true, sonHatirlatmaAt: null },
     ], yanitSuresi: { adet: 3, medyanGun: 6, enUzunGun: 12 } }))
     assert.match(h, /Yanıt bekleyen konsültasyonlar \(2\)/)
     assert.match(h, /40 gündür açık/)
@@ -164,14 +167,108 @@ describe('KONSULTASYON-01 — kohort satırı (SSR, mevcut panellere takılır)'
     assert.doesNotMatch(h, /sevk/i)
     assert.match(sar(createElement(KonsultasyonKohortListesi, { bekleyenler: [] })), /Yanıt bekleyen konsültasyon yok/)
   })
-  it('yedi mevcut kohort paneli satırı taşır; yeni Araçlar rotası açılmadı', async () => {
+  it('yedi mevcut kohort paneli satırı taşır; tek konsültasyon aracı evrensel Bekleyen Konsültasyonlar (KONSULTASYON-02)', async () => {
     const { readFileSync, existsSync } = await import('node:fs')
     for (const d of ['dahiliye-kohort', 'derm-kohort', 'goz-kohort', 'kbb-kohort', 'kd-kohort', 'pedi-kohort', 'psik-kohort']) {
       assert.match(readFileSync(`app/doktor-tools/${d}/page.tsx`, 'utf8'), /<KonsultasyonKohortSatiri \/>/, d)
     }
     assert.equal(existsSync('app/doktor-tools/konsultasyon'), false)
+    // KONSULTASYON-01 "yeni araç yok" diyordu; Kaan (2026-09-19) seçenek #1 ile TEK evrensel araç açtı — branşa özel konsültasyon aracı yine yok.
     const { ORTAK_DOKTOR_ARACLARI, BRANS_DOKTOR_ARACLARI } = await import('./doktorAraclari')
-    assert.ok(![...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI].some((a: { href?: string; route?: string }) => /konsult/i.test(String(a.href || a.route || ''))))
+    assert.ok(!BRANS_DOKTOR_ARACLARI.some((a) => /konsult/i.test(a.route)))
+    assert.deepEqual(ORTAK_DOKTOR_ARACLARI.filter((a) => /konsult/i.test(a.route)).map((a) => [a.route, a.branslar]), [['/doktor-tools/bekleyen-konsultasyonlar', null]])
+  })
+  it('kohort satırı ve araç aynı eşik fonksiyonunu kullanır; satır araca bağlanır', () => {
+    const h = sar(createElement(KonsultasyonKohortListesi, { bekleyenler: [] }))
+    assert.match(h, /href="\/doktor-tools\/bekleyen-konsultasyonlar"/)
+    const { readFileSync } = require('node:fs') as typeof import('node:fs')
+    for (const f of ['components/doktor/KonsultasyonKohortSatiri.tsx', 'components/doktor/araclar/BekleyenKonsultasyonlar.tsx']) {
+      const k = readFileSync(f, 'utf8')
+      assert.match(k, /beklemeVurgusu\(/, f)
+      assert.doesNotMatch(k, /gun >= (14|30)/, `${f} eşiği yeniden tanımlamamalı`)
+    }
+  })
+})
+
+describe('KONSULTASYON-02 — Araçlar › Bekleyen Konsültasyonlar (SSR, evrensel)', () => {
+  const B = (o: Partial<BekleyenKonsultasyon>): BekleyenKonsultasyon => ({
+    id: 'k', patientId: 'p1', hastaAdi: 'QA Hasta GIZLI-A', hedef: 'KBB', klinikSoru: 'İşitme kaybı var mı?', istemTarihi: '2026-08-10',
+    gun: 40, aciliyet: 'rutin', eskiKayit: false, sonHatirlatmaAt: null, ...o,
+  })
+  const LISTE2 = [
+    B({ id: 'kirmizi', aciliyet: 'acil' }),
+    B({ id: 'dikkat', patientId: 'p2', hastaAdi: 'QA İkinci', hedef: 'Nefroloji', klinikSoru: 'eGFR düşüşü', istemTarihi: '2026-09-01', gun: 18, aciliyet: 'oncelikli', eskiKayit: true }),
+    B({ id: 'yeni', gun: 3, istemTarihi: '2026-09-16', sonHatirlatmaAt: new Date().toISOString() }),
+  ]
+  const islemYap = async () => ({ ok: true, metin: '' })
+  const h = sar(createElement(BekleyenKonsultasyonListesi, { bekleyenler: LISTE2, yanitSuresi: { adet: 3, medyanGun: 6, enUzunGun: 12 }, islemYap }))
+  const kart = (id: string) => { const i = h.indexOf(`data-bekleyen-konsultasyon="${id}"`); const j = h.indexOf('data-bekleyen-konsultasyon="', i + 10); return h.slice(i, j < 0 ? undefined : j) }
+
+  it('her satır: hasta adı, hedef branş, klinik soru, istem tarihi, gün, aciliyet rozeti', () => {
+    const k = kart('kirmizi')
+    assert.match(k, /QA Hasta GIZLI-A/)
+    assert.match(k, /→ KBB/)
+    assert.match(k, /İşitme kaybı var mı\?/)
+    assert.match(k, /İstem: 10\.08\.2026/)
+    assert.match(k, /40 gündür bekliyor/)
+    assert.match(k, />Acil</)
+    assert.match(kart('dikkat'), />Öncelikli</)
+    assert.match(kart('dikkat'), /eski kayıt/)
+    assert.match(kart('yeni'), />Rutin</)
+  })
+  it('bekleme vurgusu: ≥30 kırmızı, 14–29 dikkat, altı nötr; sıra verildiği gibi (sunucu sıralar)', () => {
+    assert.match(kart('kirmizi'), /data-vurgu="kirmizi"/)
+    assert.match(kart('dikkat'), /data-vurgu="uyari"/)
+    assert.match(kart('yeni'), /data-vurgu="notr"/)
+    assert.ok(h.indexOf('"kirmizi"') < h.indexOf('"dikkat"') && h.indexOf('"dikkat"') < h.indexOf('"yeni"'))
+    assert.match(h, /klinik bir süre sınırı değildir/)
+  })
+  it('eylemler: Yanıt ekle (hasta dosyasındaki form açık gelir), Hasta dosyası, Hatırlat, Yanıtsız kapat — ≥44 px', () => {
+    const k = kart('kirmizi')
+    assert.match(k, /href="\/dashboard\/doktor\/hastalar\/p1\?tab=konsultasyon&amp;yanit=kirmizi"[^>]*>Yanıt ekle</)
+    assert.match(k, /href="\/dashboard\/doktor\/hastalar\/p1\?tab=konsultasyon"[^>]*>Hasta dosyası</)
+    assert.match(k, />Hatırlat</)
+    assert.match(k, />Yanıtsız kapat</)
+    for (const m of k.match(/<(a|button)\b[^>]*>/g) || []) assert.match(m, /min-height:44px/, m)
+    // 7 gün içinde hatırlatılmışsa düğme pasif ve neden yazılı
+    assert.match(kart('yeni'), /disabled=""[^>]*>Hatırlat</)
+    assert.match(kart('yeni'), /Sonraki hatırlatma/)
+    assert.doesNotMatch(k, /disabled=""[^>]*>Hatırlat</)
+  })
+  it('üst sayaçlar aynı özetten; SKS medyanı yalnız ölçüm', () => {
+    assert.match(h, /yanıt bekleyen/)
+    assert.match(h, /14–29 gündür/)
+    assert.match(h, /30 gün ve üzeri/)
+    assert.match(h, /6 gün/)
+  })
+  it('boş / hazır değil / yükleniyor dürüst; hasta seçici yok; branş alanı ve "sevk" yok', () => {
+    assert.match(sar(createElement(BekleyenKonsultasyonListesi, { bekleyenler: [], islemYap })), /Yanıt bekleyen konsültasyonunuz yok/)
+    assert.match(sar(createElement(BekleyenKonsultasyonListesi, { bekleyenler: [], hazir: false, islemYap })), /henüz hazır değil/)
+    assert.match(sar(createElement(BekleyenKonsultasyonListesi, { bekleyenler: null, islemYap })), /Yükleniyor/)
+    assert.doesNotMatch(h, /Hasta seçilmedi|<select/)
+    assert.doesNotMatch(h, /Baş Çevresi|Neyzi|gebelik haftası|PASI|logMAR|SCORE2|veli\b/i)
+    assert.doesNotMatch(h, /sevk/i)
+  })
+})
+
+describe('KONSULTASYON-02 — ana sayfa özeti (yalnız sayı > 0)', () => {
+  it('sayı 0 / null iken hiçbir şey çizilmez', () => {
+    assert.equal(renderToStaticMarkup(createElement(BekleyenKonsultasyonOzetiKarti, { ozet: null })), '')
+    assert.equal(renderToStaticMarkup(createElement(BekleyenKonsultasyonOzetiKarti, { ozet: { sayi: 0, dikkat: 0, kirmizi: 0, enUzunGun: null } })), '')
+  })
+  it('sayı > 0: sayı + en uzun bekleme, araca götürür, 44 px; hasta adı taşımaz', () => {
+    const h = renderToStaticMarkup(createElement(BekleyenKonsultasyonOzetiKarti, { ozet: { sayi: 3, dikkat: 1, kirmizi: 1, enUzunGun: 32 } }))
+    assert.match(h, /href="\/doktor-tools\/bekleyen-konsultasyonlar"/)
+    assert.match(h, />3</)
+    assert.match(h, /yanıt bekleyen konsültasyon/)
+    assert.match(h, /en uzun 32 gündür/)
+    assert.match(h, /min-height:44px/)
+  })
+  it('doktor ana sayfasına bağlı (her branş — branş koşulu yok)', async () => {
+    const { readFileSync } = await import('node:fs')
+    const sayfa = readFileSync('app/dashboard/doktor/page.tsx', 'utf8')
+    assert.match(sayfa, /\n\s*<BekleyenKonsultasyonOzeti \/>/)
+    assert.doesNotMatch(sayfa, /&&\s*<BekleyenKonsultasyonOzeti/)
   })
 })
 

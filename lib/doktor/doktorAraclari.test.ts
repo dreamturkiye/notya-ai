@@ -554,3 +554,41 @@ test('KBB tiles stay commercial: no dose, no diagnosis claim, no surgery/OR copy
     assert.doesNotMatch(blob, /KBB-EXCEPTIONAL|sprint|audit|\.html/i, r)
   }
 })
+
+// KONSULTASYON-02 (Kaan 2026-09-19, seçenek #1) — "yanıt gelmedi" takibi kohort paneli olmayan branşlara da ulaşsın:
+// Bekleyen Konsültasyonlar EVRENSEL (ORTAK_…, branslar: null). 23 ayrı kohort paneli yerine tek araç.
+const BEKLEYEN_KONSULTASYONLAR = '/doktor-tools/bekleyen-konsultasyonlar'
+const KOHORT_PANELI_OLAN_BRANSLAR = ['dahiliye', 'goz-hastaliklari', 'dermatoloji', 'kadin-hastaliklari-dogum', 'pediatri', 'psikiyatri', 'kulak-burun-bogaz']
+
+test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş görür ve derin linki açar (kohortlu 7 + kohortsuz hepsi)', () => {
+  const arac = ORTAK_DOKTOR_ARACLARI.find((a) => a.route === BEKLEYEN_KONSULTASYONLAR)
+  assert.ok(arac, 'ORTAK_DOKTOR_ARACLARI içinde olmalı')
+  assert.equal(arac.branslar, null)
+  assert.ok(!BRANS_DOKTOR_ARACLARI.some((a) => a.route === BEKLEYEN_KONSULTASYONLAR), 'branşa özel listeye eklenmemeli')
+  assert.equal(TUM_DOKTOR_ARACLARI.filter((a) => a.route === BEKLEYEN_KONSULTASYONLAR).length, 1)
+
+  const anahtarlar = Object.keys(BRANS_ETIKETLERI)
+  assert.ok(anahtarlar.length >= 25)
+  for (const k of KOHORT_PANELI_OLAN_BRANSLAR) assert.ok(anahtarlar.includes(k), `${k} BRANS_ETIKETLERI'nde`)
+  const kohortsuz = anahtarlar.filter((b) => !doktorAraclariListesi(b).some((a) => a.route.endsWith('-kohort')))
+  assert.ok(kohortsuz.length >= 20, `kohort paneli olmayan branş sayısı: ${kohortsuz.length}`)
+  for (const b of [...anahtarlar, ...Object.values(BRANS_ETIKETLERI), ...KOHORT_PANELI_OLAN_BRANSLAR, 'kadin-dogum', 'İç Hastalıkları', 'Çocuk Sağlığı ve Hastalıkları']) {
+    assert.ok(doktorAraclariListesi(b).some((a) => a.route === BEKLEYEN_KONSULTASYONLAR), `${b} Bekleyen Konsültasyonlar'ı görmeli`)
+    assert.equal(doktorAraciBransaUygun(BEKLEYEN_KONSULTASYONLAR, b), true, `${b} derin link`)
+  }
+  // Branşı henüz tanımlanmamış hekim de kendi bekleyenlerini izler (evrensel omurga).
+  assert.ok(doktorAraclariListesi(null).some((a) => a.route === BEKLEYEN_KONSULTASYONLAR))
+})
+
+test('Bekleyen Konsültasyonlar sayfası: OrtakAracKabugu + kendi rotası, ticari metin, landing yalnız kart', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const sayfa = fs.readFileSync(path.join(kok, `app${BEKLEYEN_KONSULTASYONLAR}/page.tsx`), 'utf8')
+  assert.match(sayfa, /OrtakAracKabugu/)
+  assert.ok(sayfa.includes(`route="${BEKLEYEN_KONSULTASYONLAR}"`))
+  assert.doesNotMatch(sayfa.replace(/^\/\*\*.*\*\/$/m, ''), /audit|sprint|Gökhan|Gokhan|KONSULTASYON-0\d|\.html/i) // baş yorum hariç: hekime görünen metin
+  assert.doesNotMatch(sayfa, /HastaSecici/, 'hekim düzeyinde liste — hasta seçici yok')
+  const arac = ORTAK_DOKTOR_ARACLARI.find((a) => a.route === BEKLEYEN_KONSULTASYONLAR)!
+  assert.doesNotMatch(`${arac.title} ${arac.desc}`, /KONSULTASYON|sevk|Kaan|denetim/i)
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  assert.doesNotMatch(landing, /BekleyenKonsultasyonlar/)
+})

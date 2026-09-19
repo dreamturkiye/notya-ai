@@ -6,7 +6,9 @@
  * Not: /api/doktor/konsult (Ayşe'ye Danış — yapay zekâ meslektaş) ile karıştırmayın; bu rota hekimden hekime istemdir.
  *
  *   GET  ?patientId=        → hastanın konsültasyonları (+ bağlı Kasa raporu, belge taslağı durumu) + hedef seçenekleri
- *   GET  ?bekleyen=1        → hekimin yanıt bekleyen konsültasyonları, tüm hastalar (kohort satırı — N gündür açık)
+ *   GET  ?bekleyen=1        → hekimin yanıt bekleyen konsültasyonları, tüm hastalar (Araçlar › Bekleyen Konsültasyonlar +
+ *                             kohort satırı — N gündür açık, en uzun bekleyen üstte)
+ *   GET  ?bekleyen=sayi     → aynı listenin özeti { sayi, dikkat, kirmizi, enUzunGun } (ana sayfa; ad çözülmez)
  *   GET  ?form=<id>         → yazdırılabilir KONSÜLTASYON İSTEM FORMU verisi (antet + hasta tanımlayıcıları)
  *   POST { patientId, hedefBrans, klinikSoru, hedefHekim?, aciliyet?, not?, tanilar?, mevcutDurum?, istemTarihi? }
  *   PATCH { id, islem: 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat', … }
@@ -37,6 +39,8 @@ import {
   HATIRLATMA_ARALIGI_GUN,
   KONSULTASYON_KOLONLARI,
   beklemeGunu,
+  bekleyenListesi,
+  bekleyenOzeti,
   bugunTrIso,
   gecisIzinli,
   hedefEtiketi,
@@ -85,29 +89,25 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams
   const bugun = bugunTrIso()
 
-  // ── Kohort satırı: hekimin yanıt bekleyen konsültasyonları (yalnız kendi satırları, kendi hastaları) ──
-  if (q.get('bekleyen')) {
+  // ── Yanıt bekleyenler: Araçlar › Bekleyen Konsültasyonlar + kohort satırı (=1) · ana sayfa özeti (=sayi) ──
+  // KONSULTASYON-02: liste ve sayı AYNI bekleyenListesi() ile üretilir; yalnız kendi satırları, kendi hastaları.
+  const bekleyenModu = q.get('bekleyen')
+  if (bekleyenModu) {
+    const sadeceSayi = bekleyenModu === 'sayi'
     const { data, error } = await sb.from('sevkler').select(KONSULTASYON_KOLONLARI)
       .eq('doctor_id', user.id).in('durum', [...BEKLEYEN_DURUMLAR])
       .order('created_at', { ascending: true }).limit(200)
-    if (error) return NextResponse.json({ bekleyenler: [], tabloHazir: false })
+    if (error) return NextResponse.json(sadeceSayi ? { ...bekleyenOzeti([]), tabloHazir: false } : { bekleyenler: [], tabloHazir: false })
     const satirlar = (data || []) as unknown as KonsultasyonSatiri[]
     const ids = [...new Set(satirlar.map((s) => s.patient_id))]
     // HASTA-IZOLASYON: ad yalnız bu hekimin hastasından çözülür; hastası başka hekime ait kirli satır listeden düşer.
     const { data: hastalar } = ids.length
       ? await sb.from('patients').select('id, name_encrypted').in('id', ids).eq('doctor_id', user.id)
       : { data: [] as Array<{ id: string; name_encrypted: string }> }
-    const ad = new Map((hastalar || []).map((h) => [String(h.id), adCoz(h.name_encrypted) || 'Hasta']))
-    const bekleyenler = satirlar.filter((s) => ad.has(s.patient_id)).map((s) => ({
-      id: s.id,
-      patientId: s.patient_id,
-      hastaAdi: ad.get(s.patient_id) || 'Hasta',
-      hedef: hedefEtiketi(s),
-      istemTarihi: s.istem_tarihi || String(s.created_at || '').slice(0, 10),
-      gun: beklemeGunu(s, bugun),
-      aciliyet: s.aciliyet,
-      eskiKayit: !s.hedef_brans,
-    })).sort((a, b) => b.gun - a.gun)
+    // Sayı modunda ad çözülmez (yalnız sahiplik süzgeci) — ana sayfa her açılışta şifre çözmesin.
+    const ad = new Map((hastalar || []).map((h) => [String(h.id), sadeceSayi ? '' : (adCoz(h.name_encrypted) || 'Hasta')]))
+    const bekleyenler = bekleyenListesi(satirlar, ad, bugun)
+    if (sadeceSayi) return NextResponse.json({ ...bekleyenOzeti(bekleyenler), tabloHazir: true })
     // SKS göstergesi: son 180 günde yanıtlanan konsültasyonların istem → yanıt süresi (yalnız ölçüm)
     const alt = new Date(Date.now() - 180 * 86400e3).toISOString().slice(0, 10)
     const { data: yanitli } = await sb.from('sevkler').select('durum, istem_tarihi, created_at, yanit_tarihi')
