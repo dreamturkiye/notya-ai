@@ -1,14 +1,15 @@
 # NEF-MD-BETA — Nefroloji saha haftası checklist
 
-**Ticket:** NEFROLOJI-EXCEPTIONAL-01 · Migration **069** · Olgunluk `beta-hazir`
+**Ticket:** NEFROLOJI-EXCEPTIONAL-01 + WAVE-5 DEEPEN-01 · Migration **069** (deepen: no new migration) · Olgunluk `beta-hazir`
 
-## Araçlar (4 — specialty-only, nefroloji)
+## Araçlar (5 — specialty-only, nefroloji)
 
 | Tile | Route | Kilit |
 |------|-------|-------|
 | eGFR / KDIGO şerit | `/doktor-tools/nef-egfr-kdigo` | Bant karar desteği; tanı/ESA doz yok |
 | Diyaliz seans / takip | `/doktor-tools/nef-diyaliz` | Dates-only; makine HIS / UF yok |
 | Anemi-CKD izlem | `/doktor-tools/nef-anemi` | ESA dozu yazılmaz |
+| SGK nefro rapor | `/doktor-tools/nef-sgk` | T.C. yok; doz yok; Medula canlı yok |
 | Kohort | `/doktor-tools/nef-kohort` | Hasta-güvenli hatırlatma + hekim ilaç checklist (mg yok) |
 
 **Visibility:** yalnız `nefroloji`. Dahiliye CKD araçları bu grid'e sızmaz; nefro hekimi dahiliye kohortunu görmez.
@@ -35,5 +36,6 @@ npm run test:brans-sizmasi
 
 - [ ] KDIGO G×A izlem aralıkları saha doğrulaması
 - [ ] Anemi-CKD / ESA checklist metinleri
+- [ ] SGK rapor şablonları / SUT maddeleri
 - [ ] Acil yönlendirme metinleri
 - [ ] Portal hasta dili

@@ -166,6 +166,7 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#06B6D4', icon: 'eG', title: 'eGFR / KDIGO şerit', desc: 'eGFR × UACR ısı haritası · izlem aralığı (karar desteği) · tanı ve ESA dozu yok', route: '/doktor-tools/nef-egfr-kdigo', branslar: ['nefroloji'] },
   { circleColor: '#0891B2', icon: 'DY', title: 'Diyaliz seans / takip', desc: 'Modalite · seans tarihleri · makine HIS / UF / reçete yok', route: '/doktor-tools/nef-diyaliz', branslar: ['nefroloji'] },
   { circleColor: '#0E7490', icon: 'AN', title: 'Anemi-CKD izlem', desc: 'Hb (± ferritin) → izlem aralığı · ESA dozu yazılmaz', route: '/doktor-tools/nef-anemi', branslar: ['nefroloji'] },
+  { circleColor: '#0F766E', icon: 'SG', title: 'SGK nefro rapor', desc: 'KBH · diyaliz · ESA/anemi · mineral-kemik · nakil izlem taslağı · SUT checklist · T.C./doz yok · Medula canlı yok', route: '/doktor-tools/nef-sgk', branslar: ['nefroloji'] },
   { circleColor: '#155E75', icon: 'NK', title: 'Nefroloji kohort paneli', desc: 'Geciken kontrol · eGFR/anemi/diyaliz · açık acil · KDIGO kırmızı · ilaç checklist (doz yazılmaz) · 1-tap hatırlatma', route: '/doktor-tools/nef-kohort', branslar: ['nefroloji'] },
   // ENFEKSIYON-EXCEPTIONAL-01 — specialty-only (not dahiliye / pediatri / kardiyoloji / göğüs).
   // Visibility: enfeksiyon-hastaliklari only — NOT dahiliye, NOT pediatri, NOT kardiyoloji, NOT gogus-hastaliklari.

@@ -1,5 +1,5 @@
 /**
- * NEFROLOJI-EXCEPTIONAL-01 — Araçlar SSR: ESA doz yok, dahiliye/pediatri sızıntısı yok.
+ * NEFROLOJI-EXCEPTIONAL-01 + DEEPEN-01 — Araçlar SSR: ESA doz yok, dahiliye/pediatri sızıntısı yok.
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -8,10 +8,11 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import NefEgfrAraci from '../ui/araclar/NefEgfrAraci'
 import NefDiyalizAraci from '../ui/araclar/NefDiyalizAraci'
 import NefAnemiAraci from '../ui/araclar/NefAnemiAraci'
+import NefSgkAraci from '../ui/araclar/NefSgkAraci'
 import NefKohortAraci from '../ui/araclar/NefKohortAraci'
 
 const ciz = (C: ComponentType) => renderToStaticMarkup(createElement(C))
-const ARACLAR = [NefEgfrAraci, NefDiyalizAraci, NefAnemiAraci, NefKohortAraci]
+const ARACLAR = [NefEgfrAraci, NefDiyalizAraci, NefAnemiAraci, NefSgkAraci, NefKohortAraci]
 
 describe('Nefroloji araç bileşenleri (SSR)', () => {
   it('eGFR: TASLAK, tanı yok', () => {
@@ -32,6 +33,14 @@ describe('Nefroloji araç bileşenleri (SSR)', () => {
     assert.match(h, /ESA/)
   })
 
+  it('SGK: T.C. / doz / Medula canlı yok', () => {
+    const h = ciz(NefSgkAraci)
+    assert.match(h, /TASLAK/)
+    assert.match(h, /SUT/)
+    assert.match(h, /T\.C\./)
+    assert.match(h, /Medula/)
+  })
+
   it('Kohort: bayraklı hasta + checklist', () => {
     const h = ciz(NefKohortAraci)
     assert.match(h, /TASLAK/)
@@ -42,7 +51,7 @@ describe('Nefroloji araç bileşenleri (SSR)', () => {
     for (const C of ARACLAR) {
       const h = ciz(C)
       assert.doesNotMatch(h, /\d+\s*mg\b/)
-      assert.doesNotMatch(h, /Baş Çevresi|Neyzi|logMAR|PASI|Fitzpatrick|gebelik haftası|PHQ-9|SCORE2|CAT\/mMRC|veli\b/i)
+      assert.doesNotMatch(h, /Baş Çevresi|Neyzi|logMAR|PASI|Fitzpatrick|gebelik haftası|PHQ-9|SCORE2|CAT\/mMRC|veli\b|HbA1c|DXA/i)
     }
   })
 })

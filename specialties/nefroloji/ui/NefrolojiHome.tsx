@@ -1,8 +1,8 @@
 'use client'
 /**
- * NEFROLOJI-EXCEPTIONAL-01 — Nefroloji bölüm ana ekranı (hasta dosyası › Nefroloji).
- * Sticky şerit + sekmeler: Özet | eGFR/KDIGO | Diyaliz | Anemi | Acil | Görevler.
- * Kilitler: ESA dozu yazılmaz, tanı kilitlenmez, diyaliz HIS yok, açık bayrakta 409.
+ * NEFROLOJI-EXCEPTIONAL-01 + DEEPEN-01 — Nefroloji bölüm ana ekranı (hasta dosyası › Nefroloji).
+ * Sticky şerit + sekmeler: Özet | eGFR/KDIGO | Diyaliz | Anemi | Acil | Görevler | SGK.
+ * Kilitler: ESA dozu yazılmaz, tanı kilitlenmez, diyaliz HIS yok, açık bayrakta 409, T.C. yazılmaz.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi'
@@ -10,6 +10,7 @@ import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon'
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu'
 import { egfrSkorla } from '../engines/egfr'
 import { anemiSkorla } from '../engines/anemi'
+import { nefRaporTaslagi, NEF_RAPOR_SABLONLARI, type NefRaporSablon } from '../engines/sgkRapor'
 import type { NefSerit } from '../engines/serit'
 import type { DiyalizModalite } from '../engines/diyaliz'
 import { MODALITE_AD } from '../engines/diyaliz'
@@ -28,6 +29,8 @@ type Veri = {
   kutuphane: {
     acilKodlari: Array<{ kod: string; ad: string }>
     acilListesi: string[]
+    anemiListesi?: string[]
+    diyalizListesi?: string[]
     ilacUyariListesi: string[]
     hekimKilidi: string
     acilYonlendirme: string
@@ -43,7 +46,7 @@ const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5', lineHeight:
 const metin: React.CSSProperties = { fontSize: 12, color: '#EDF1F7', lineHeight: 1.5 }
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }
 
-const SEKMELER = ['Özet', 'eGFR/KDIGO', 'Diyaliz', 'Anemi', 'Acil', 'Görevler'] as const
+const SEKMELER = ['Özet', 'eGFR/KDIGO', 'Diyaliz', 'Anemi', 'Acil', 'Görevler', 'SGK'] as const
 type Sekme = (typeof SEKMELER)[number]
 const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: '#64748B' }
 
@@ -72,6 +75,10 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
   const [riskEylem, setRiskEylem] = useState('')
   const [riskOnay, setRiskOnay] = useState(false)
   const [kontrolTarih, setKontrolTarih] = useState('')
+  const [raporSablon, setRaporSablon] = useState<NefRaporSablon>('kbh_izlem')
+  const [raporIcd, setRaporIcd] = useState('')
+  const [raporIcdAd, setRaporIcdAd] = useState('')
+  const [raporNot, setRaporNot] = useState('')
 
   const api = useCallback(async (body: Record<string, unknown>) => {
     const token = await getAccessTokenAsync()
@@ -97,6 +104,13 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
 
   const egfrSonuc = useMemo(() => egfrSkorla(egfr === '' ? null : Number(egfr), uacr === '' ? null : Number(uacr)), [egfr, uacr])
   const anemiSonuc = useMemo(() => anemiSkorla(hb === '' ? null : Number(hb), ferritin === '' ? null : Number(ferritin)), [hb, ferritin])
+  const raporOnizleme = useMemo(() => nefRaporTaslagi({
+    sablon: raporSablon,
+    hastaAdi: '',
+    bugun: new Date().toISOString().slice(0, 10),
+    tani: raporIcd ? { icd10: raporIcd, aciklama: raporIcdAd || raporIcd } : null,
+    hekimDegerlendirmesi: raporNot,
+  }), [raporSablon, raporIcd, raporIcdAd, raporNot])
 
   if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Nefroloji yükleniyor…</div>
 
@@ -133,6 +147,14 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
               ? <>Son eGFR <b>{v.son.egfr.deger ?? '—'}</b> ({String(v.son.egfr.tarih).slice(0, 10)}) — {v.son.egfr.g}{v.son.egfr.a ? `×${v.son.egfr.a}` : ''} · {v.son.egfr.renk}. Bant karar desteğidir.</>
               : 'eGFR kaydı yok — eGFR/KDIGO sekmesinden girin.'}
           </div>
+          {v.son.hb && (
+            <div style={{ ...metin, marginTop: 6 }}>
+              Son Hb <b>{v.son.hb.deger ?? '—'}</b> ({String(v.son.hb.tarih).slice(0, 10)}) — {v.son.hb.bant}. ESA dozu Notya yazılmaz.
+            </div>
+          )}
+          {v.sonrakiDiyaliz && (
+            <div style={{ ...metin, marginTop: 6 }}>Sonraki diyaliz seans: <b>{v.sonrakiDiyaliz}</b></div>
+          )}
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -159,6 +181,11 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
             <input type="number" step="1" value={uacr} onChange={(e) => setUacr(e.target.value)} placeholder="UACR mg/g" style={{ ...toolsInput, width: 120 }} />
           </div>
           <div style={{ ...metin, marginTop: 8 }}>{egfrSonuc.ozet}</div>
+          {egfrSonuc.plan.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              {egfrSonuc.plan.map((p) => <div key={p} style={kucuk}>• {p}</div>)}
+            </div>
+          )}
           <button type="button" style={{ ...btn, marginTop: 8 }} onClick={() => calistir({ adim: 'egfr', egfr: Number(egfr), uacr: uacr === '' ? null : Number(uacr), hekimKilit: true }, 'eGFR kaydedildi.')}>Kaydet</button>
         </div>
       )}
@@ -177,6 +204,12 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
             <button type="button" style={btn} onClick={() => calistir({ adim: 'diyaliz', modalite, tarih: seansTarih, sonrakiSeans: sonrakiSeans || null }, 'Diyaliz seans kaydedildi.')}>Kaydet</button>
           </div>
           {v.sonrakiDiyaliz && <div style={{ ...kucuk, marginTop: 8 }}>Sonraki seans: {v.sonrakiDiyaliz}</div>}
+          {(v.kutuphane.diyalizListesi || []).length > 0 && (
+            <>
+              <div style={{ ...etiket, marginTop: 12 }}>Diyaliz kontrol listesi</div>
+              {v.kutuphane.diyalizListesi!.map((x) => <div key={x} style={kucuk}>☐ {x}</div>)}
+            </>
+          )}
         </div>
       )}
 
@@ -189,6 +222,12 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
           </div>
           <div style={{ ...metin, marginTop: 8 }}>{anemiSonuc.ozet}</div>
           <button type="button" style={{ ...btn, marginTop: 8 }} onClick={() => calistir({ adim: 'anemi', hb: Number(hb), ferritin: ferritin === '' ? null : Number(ferritin), hekimKilit: true }, 'Anemi izlem kaydedildi.')}>Kaydet</button>
+          {(v.kutuphane.anemiListesi || []).length > 0 && (
+            <>
+              <div style={{ ...etiket, marginTop: 12 }}>Anemi kontrol listesi</div>
+              {v.kutuphane.anemiListesi!.map((x) => <div key={x} style={kucuk}>☐ {x}</div>)}
+            </>
+          )}
         </div>
       )}
 
@@ -208,6 +247,8 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
           </label>
           <button type="button" style={{ ...btn, marginTop: 8 }} onClick={() => calistir({ adim: 'risk', bayraklar: riskKodlari, eylem: riskEylem, hekimOnay: riskOnay }, 'Risk kaydı yazıldı.')}>Kaydet</button>
           {v.risk.acik.length > 0 && <div style={{ ...kucuk, color: '#FCA5A5', marginTop: 8 }}>Açık bayrak: {v.risk.acik.map((r) => r.bayraklar.join(', ')).join(' | ')}</div>}
+          <div style={{ ...etiket, marginTop: 12 }}>Acil kontrol listesi</div>
+          {v.kutuphane.acilListesi.map((x) => <div key={x} style={kucuk}>☐ {x}</div>)}
         </div>
       )}
 
@@ -220,6 +261,26 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
               <span style={metin}>{g.ad}{g.due ? ` · ${g.due}` : ''}</span>
               <button type="button" style={ghost} onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' }, 'Görev tamamlandı.')}>Tamam</button>
             </div>
+          ))}
+        </div>
+      )}
+
+      {sekme === 'SGK' && (
+        <div>
+          <div style={etiket}>SGK nefro rapor taslağı</div>
+          <select value={raporSablon} onChange={(e) => setRaporSablon(e.target.value as NefRaporSablon)} style={toolsInput}>
+            {NEF_RAPOR_SABLONLARI.map((s) => <option key={s.id} value={s.id}>{s.ad}</option>)}
+          </select>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <input placeholder="ICD-10" value={raporIcd} onChange={(e) => setRaporIcd(e.target.value)} style={{ ...toolsInput, width: 100 }} />
+            <input placeholder="Tanı" value={raporIcdAd} onChange={(e) => setRaporIcdAd(e.target.value)} style={{ ...toolsInput, flex: 1 }} />
+          </div>
+          <textarea value={raporNot} onChange={(e) => setRaporNot(e.target.value)} rows={3} style={{ ...toolsInput, width: '100%', marginTop: 8 }} placeholder="Hekim değerlendirmesi" />
+          <div style={{ ...kucuk, marginTop: 8 }}>
+            Önizleme eksik: {raporOnizleme.eksikler.length} madde — T.C. yazılmaz; ESA dozu yok; Medula canlı yok.
+          </div>
+          {raporOnizleme.kontrolListesi.map((k) => (
+            <div key={k.madde} style={kucuk}>☐ {k.madde}</div>
           ))}
         </div>
       )}

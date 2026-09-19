@@ -1160,10 +1160,11 @@ const NEF_ROTALARI = [
   '/doktor-tools/nef-egfr-kdigo',
   '/doktor-tools/nef-diyaliz',
   '/doktor-tools/nef-anemi',
+  '/doktor-tools/nef-sgk',
   '/doktor-tools/nef-kohort',
 ] as const
 
-test('Nefroloji-only Araçlar: nefroloji sees all four; dahiliye and foreign never', () => {
+test('Nefroloji-only Araçlar: nefroloji sees all five; dahiliye and foreign never', () => {
   for (const ham of ['nefroloji', 'Nefroloji', 'Böbrek Hastalıkları']) {
     const liste = doktorAraclariListesi(ham)
     for (const r of NEF_ROTALARI) {
@@ -1202,7 +1203,7 @@ test('Nefroloji studio pages: guarded by NefAracKabugu, never on the landing', (
     assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
     assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
   }
-  assert.doesNotMatch(landing, /NefEgfrAraci|NefDiyalizAraci|NefAnemiAraci|NefKohortAraci|NefAracKabugu|nef-exceptional-audit/)
+  assert.doesNotMatch(landing, /NefEgfrAraci|NefDiyalizAraci|NefAnemiAraci|NefSgkAraci|NefKohortAraci|NefAracKabugu|nef-exceptional-audit/)
 })
 
 test('Nefroloji tiles stay commercial: no ESA dose, no dialysis HIS product, no diagnosis lock', () => {

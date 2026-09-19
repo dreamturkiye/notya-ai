@@ -78,8 +78,13 @@ Live: gc / plastik / cocuk-cerrahisi / gogus-cerrahisi / beyin `-exceptional-aud
 Araç: hepsi **4** — sabit 5 yok. Migrations 073–077 applied.  
 Not: cocuk-cerrahisi ≠ pediatri; gogus-cerrahisi ≠ gogus-hastaliklari.
 
-### Dalga 5
-acil-tip · anestezi · radyoloji · kalp-damar-cerrahisi · deepen (en ince prior → psik audit barı)
+### Dalga 5 — IN PROGRESS (2026-09-19)
+acil-tip · anestezi · radyoloji · kalp-damar-cerrahisi · deepen (en ince prior → psik audit barı)  
+Araç sayısı sabit değil.
+
+**DEEPEN target (confirmed):** `nefroloji` — Wave-3 shipped but thinnest vs peers (`test:nef` ~23–26 specialty/portal tests vs psik-depth engines; Wave-3 exceptional audit had endokrinoloji copy — HbA1c/DXA/soap-endo).  
+`gogus-cerrahisi` also thin (~19 engine tests) but nefro preferred + dishonest audit made it the clear deepen.  
+Deepen ships: SGK nefro 5th Araç (clinically useful), deep acil/engines/portal tests, Home 7-sekme polish, honest `nef-exceptional-audit.html`, olgunluk `beta-hazir`, no migration (069 schema OK).
 
 ---
 

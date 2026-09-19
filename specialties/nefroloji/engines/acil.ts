@@ -61,7 +61,7 @@ const KURALLAR: Array<{
   },
   {
     kod: 'anuri_oliguri',
-    re: /an[üu]ri|olig[üu]ri|[ıi]drar[^.]{0,20}(yok|azald[ıi]|[çc][ıi]km[ıi]yor)|ani b[öo]brek yetmez/i,
+    re: /an[üu]ri|olig[üu]ri|[ıi]drar[^.]{0,30}(yok|azald[ıi]|[çc][ıi]km[ıi]yor|kesildi|kesil)|ani b[öo]brek yetmez/i,
     ad: 'Ani anüri / oligüri',
     eylem: 'Aynı gün acil değerlendirme veya 112. Ayaktan randevu yeterli olmayabilir.',
     oncelik: 'ayni_gun',

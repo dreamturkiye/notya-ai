@@ -88,7 +88,12 @@ export const NEF_IPUCLARI: readonly string[] = [
   'Ani nefes darlığı veya şiddetli halsizlikte 112’yi arayın.',
 ]
 
-/** Hasta yüzü yasak kelimeler: tanı, eGFR/KDIGO, ESA, mg. */
+/** Hasta yüzü yasak kelimeler: tanı, eGFR/KDIGO, ESA, mg, ICD, evre. */
 export function hastaDiliTemizMi(metin: string): boolean {
-  return !/(tanı|tani|\bICD\b|eGFR|KDIGO|\bG[1-5]\b|\bA[1-3]\b|\bKBH\b|kronik b[öo]brek|\bESA\b|eritropoietin|\bskor\b|\bbant\b|\bmg\b|\bIU\b)/i.test(metin)
+  return !/(tanı|tani|\bICD\b|eGFR|KDIGO|\bG[1-5]\b|\bA[1-3]\b|\bKBH\b|kronik b[öo]brek|\bESA\b|eritropoietin|\bskor\b|\bbant\b|\bmg\b|\bIU\b|\bUACR\b|hiperkalemi tan[ıi]|CKD stage)/i.test(metin)
+}
+
+/** Portal paketinin hasta yüzüne sızabilecek klinik sayı/evreyi reddet. */
+export function portalPaketGuvenliMi(parcalar: Array<string | null | undefined>): boolean {
+  return parcalar.filter(Boolean).every((p) => hastaDiliTemizMi(String(p)))
 }
