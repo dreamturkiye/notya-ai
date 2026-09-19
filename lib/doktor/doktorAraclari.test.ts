@@ -780,3 +780,64 @@ test('Nöroloji tiles stay commercial: no dose, no diagnosis lock, no stroke-uni
     assert.doesNotMatch(blob, /NOROLOJI-EXCEPTIONAL|sprint|audit|\.html/i, r)
   }
 })
+
+
+// ─── UROLOJI-EXCEPTIONAL-01 — Üroloji specialty-only Araçlar ─────────────────────────────
+const URO_ROTALARI = [
+  '/doktor-tools/uro-ipss',
+  '/doktor-tools/uro-psa',
+  '/doktor-tools/uro-acil',
+  '/doktor-tools/uro-kohort',
+] as const
+
+test('Üroloji-only Araçlar: uroloji sees all four; foreign branşlar never', () => {
+  for (const ham of ['uroloji', 'Üroloji', 'Uroloji Uzmanı', 'urology']) {
+    const liste = doktorAraclariListesi(ham)
+    for (const r of URO_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+  }
+  for (const r of URO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)
+    assert.ok(arac, r)
+    assert.deepEqual(arac.branslar, ['uroloji'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'uroloji')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'kulak-burun-bogaz', 'psikiyatri', 'gogus-hastaliklari', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of URO_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const uro = doktorAraclariListesi('uroloji')
+  assert.ok(!uro.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/kbb-otoskopi'))
+})
+
+test('Üroloji studio pages: guarded by UroAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/uroloji/ui/araclar/UroAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca üroloji için\./)
+  for (const r of URO_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /UroAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /UroIpssAraci|UroPsaAraci|UroAcilAraci|UroKohortAraci|UroAracKabugu|uroloji-exceptional-audit/)
+})
+
+test('Üroloji tiles stay commercial: no dose, no BPH/cancer diagnosis, no OR scheduling', () => {
+  for (const r of URO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /BPH tanısı|prostat kanseri tanısı|ameliyathane|OR scheduling/i, r)
+    assert.doesNotMatch(blob, /UROLOJI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
