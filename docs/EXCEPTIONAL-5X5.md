@@ -66,21 +66,10 @@ Live: aile / orto / ftr / spor / endo `-exceptional-audit.html` · tip `2b9c04d`
 Araç: aile 4 · orto 4 · FTR 4 · spor **3** · endo 4 — sabit 5 yok.  
 Migrations 063–067 applied.
 
-### Dalga 3 — IN PROGRESS (2026-09-19)
-gastroenteroloji · nefroloji · romatoloji · enfeksiyon-hastaliklari · onkoloji
-Enfeksiyon: ENFEKSIYON-EXCEPTIONAL-01 shipped · migration 071 · 4 Araç · Enfeksiyon Takibim · live `/enfeksiyon-exceptional-audit.html`  
-Araç sayısı sabit değil — kaç useful ise o kadar.
-
-**GASTROENTEROLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Sindirimim Strong · migration 068 · ~93% · live `/gastro-exceptional-audit.html`
-
-**NEFROLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Böbreklerim Strong · migration **069** · ~93% · live `/nef-exceptional-audit.html`  
-OUT: diyaliz makinesi HIS · tanı kilidi · uydurma ESA dozu.
-
-**ROMATOLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Romatizmam Strong · migration **070** · ~93% · live `/roma-exceptional-audit.html`  
-OUT: infüzyon süiti HIS · tanı kilidi · uydurma biyolojik doz.
-
-**ONKOLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Tedavim Strong · migration **072** · ~93% · live `/onko-exceptional-audit.html`  
-OUT: chemo pharmacy dosing · tanı/evre kilidi · uydurma kemo dozu · canlı Medula e-imza.
+### Dalga 3 — SHIPPED (2026-09-19)
+gastroenteroloji · nefroloji · romatoloji · enfeksiyon-hastaliklari · onkoloji  
+Live: gastro / nef / roma / enfeksiyon / onko `-exceptional-audit.html` · tip `8e1b0f5`  
+Araç: hepsi **4** — sabit 5 yok. Migrations 068–072 applied.
 
 ### Dalga 4
 genel-cerrahi · plastik-cerrahi · cocuk-cerrahisi · gogus-cerrahisi · beyin-cerrahisi  
