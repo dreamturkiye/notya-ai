@@ -110,9 +110,33 @@ kendi `fetch`'ini icat etmez; sunucuda sahiplik kontrolü yazmadan ÖNCE) · `li
 yeni çapraz-doktor vakası (A→B ve B→A: yabancı hastaya 404, kurbanın notuna satır yazılmıyor) ·
 `lib/security/hastaIzolasyonEnvanteri.ts`'te rota `T` (test) olarak sınıflandı.
 
-### Faz 3–4 — sırada
+### Faz 3 — seri değerler için kalıcılık (2026-09-19)
 
-- Faz 3: seri klinik değerler için kalıcılık (VA/GİB, PASI/EASI, büyüme, SCORE2/CKD, gebelik izlem).
+Sorun: araçlar durumsuzdu — VA aracını yenileyince önceki vizit değerleri gidiyordu; GİB, PASI,
+persentil her vizit yeniden giriliyordu.
+
+**Karar: yeni tablo AÇILMADI.** Mevcut desenler önce araştırıldı ve beşinin de kendi kanonik kaydı
+zaten vardı; Araçlar yüzeyi o kayda bağlandı. (Genel bir `arac_olcumleri` tablosu ikinci bir hasta
+verisi yüzeyi ve ikinci bir izolasyon sınırı demek olurdu; bekçi testi böyle bir tablonun
+eklenmediğini de doğruluyor.)
+
+| Araç | Kullanılan mevcut kayıt | Okuma | Yazma (hekimin açık eylemi) |
+|---|---|---|---|
+| Göz VA / logMAR | `goz_muayeneler` (VA jsonb + `gib_sag`/`gib_sol`) | `GET /api/doktor/goz` → son ölçüm "önceki vizit" alanlarına ön doldurulur | `POST /api/doktor/goz { adim:'olcum' }` — "Bu vizitin ölçümünü kaydet". Araca GİB OD/OS alanları ve "VA hangi alana yazılsın (uzak sc / uzak cc)" segmenti eklendi. |
+| Derm PASI / EASI | `derm_skor_anlari` (+ `ek` jsonb) | `GET /api/doktor/dermatoloji` → son skor gösterilir, bölge dökümü `ek`'ten geri yüklenir | `POST /api/doktor/dermatoloji { action:'skor' }` — bölge dökümü `ek.arac='pasi-easi'` ile saklanır |
+| Dahiliye SCORE2 / KVR | `dahiliye_kvr` | `GET /api/doktor/dahiliye` → yaş, cinsiyet, ofis SBP, eGFR/UACR, sigara/ASKVH/DM-TOD/statin/ezetimib ön doldurulur | `POST { adim:'kvr' }` |
+| Dahiliye KDIGO CKD | `dahiliye_ckd` (+ lab serisi) | `GET /api/doktor/dahiliye` → eGFR, UACR, RAS/SGLT2/NSAİİ ve aktif ilaç listesi ön doldurulur | `POST { adim:'ckd' }` |
+| Pediatri büyüme | onaylı not vitalleri (`/api/doktor/hastalar/[id]/buyume-egrileri`) | zaten okunuyordu; "önceki vizit" şeridi eklendi (son kayıtlı kilo/boy/baş çevresi) | ölçüm muayene notunun onayıyla kalıcı olur — araç ikinci bir kayıt açmaz |
+| KD gebelik izlem | `gebelikler` + izlemler (`/api/doktor/gebelik`) | zaten ön dolduruyordu (SAT/TDT, Rh, çoğul, risk, yapılan taramalar, izlem haftaları) | gebelik kaydı Gebelik sekmesinde yazılır — araç ikinci bir kayıt açmaz |
+
+**Ortak parçalar:** `KayitButonu` (hasta seçili değilse pasif + nedeni; "kayıt yalnız bu düğmeyle
+olur, arka planda sessizce yazılmaz") ve `OncekiVizit` şeridi — ikisi de `lib/doktor/aracUi.tsx`'te.
+
+**Hasta izolasyonu:** yeni uç eklenmedi; kullanılan dört uç (`goz`, `dermatoloji`, `dahiliye`) zaten
+envanterde ve çapraz-doktor paketinde. Ön doldurma yalnız hekimin kendi hastası için çalışır.
+
+### Faz 4 — sırada
+
 - Faz 4: iki yeni evrensel araç — Muayene sonu paketi ve Sık kullandıklarım / hızlı şablonlar.
 
 ## Open — KD form alanlarına sesli giriş (2026-09-18)

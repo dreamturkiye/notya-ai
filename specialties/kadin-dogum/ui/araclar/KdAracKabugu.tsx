@@ -25,7 +25,7 @@ export const kdStil = aracStil(KD_VURGU);
 
 export {
   Alan, Segment, Secim, Etiketli, Kutu, Onay, Sayi, Katlanir, TaslakNotu, Rozet, OneriRozet,
-  Istatistik, KopyalaButonu, MuayeneFormunaEkle, panoyaKopyala, useUrlHasta, useHastaVerisi,
+  Istatistik, KopyalaButonu, MuayeneFormunaEkle, KayitButonu, OncekiVizit, panoyaKopyala, useUrlHasta, useHastaVerisi,
 } from '@/lib/doktor/aracUi';
 
 /** Pencere durum renkleri — "kapanmak üzere" en baskın (geri alınamaz). */

@@ -9,7 +9,7 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const KOK = join(import.meta.dirname, '../..')
@@ -187,5 +187,62 @@ describe('ARACLAR-CILA-01 Faz 2: bugünkü muayene formuna ekle', () => {
     // Sahiplik kontrolü not yazımından ÖNCE gelir.
     assert.ok(rota.indexOf('hastaSahibiMi(supabase') < rota.indexOf('gununNotunaEkle(supabase'), 'sahiplik kontrolü yazmadan önce olmalı')
     assert.match(rota, /gununNotunaEkle\(supabase, user\.id, patientId/)
+  })
+})
+
+/**
+ * ARACLAR-CILA-01 Faz 3 — seri klinik değerler kalıcı.
+ *
+ * Araçlar durumsuzdu: VA aracını yenileyince önceki vizit değerleri gidiyordu. Kalıcılık YENİ bir
+ * tablo açarak değil, her branşın ZATEN sahip olduğu kayıt yoluna yazarak sağlandı. Bu bekçi üç şeyi
+ * korur: (1) yazma mevcut branş ucuna gider, (2) hasta seçiliyse son kayıt okunup ön doldurulur,
+ * (3) kaydetme hekimin açık eylemidir — sessiz arka plan yazması yoktur.
+ */
+describe('ARACLAR-CILA-01 Faz 3: seri değerlerin kalıcılığı', () => {
+  const KALICI = [
+    { yol: 'specialties/goz-hastaliklari/ui/araclar/VaAraci.tsx', uc: '/api/doktor/goz', yazma: "adim: 'olcum'" },
+    { yol: 'specialties/dermatoloji/ui/araclar/PasiEasiAraci.tsx', uc: '/api/doktor/dermatoloji', yazma: "action: 'skor'" },
+    { yol: 'specialties/dahiliye/ui/araclar/Score2Araci.tsx', uc: '/api/doktor/dahiliye', yazma: "adim: 'kvr'" },
+    { yol: 'specialties/dahiliye/ui/araclar/CkdAraci.tsx', uc: '/api/doktor/dahiliye', yazma: "adim: 'ckd'" },
+  ]
+
+  it('kayıt mevcut branş kaydına yazar — araçlar için yeni tablo açılmadı', () => {
+    for (const { yol, uc, yazma } of KALICI) {
+      const kod = oku(yol)
+      assert.ok(kod.includes(uc), `${yol}: mevcut branş ucunu kullanmalı (${uc})`)
+      assert.ok(kod.includes(yazma), `${yol}: mevcut yazma adımını kullanmalı (${yazma})`)
+    }
+    // Araçlara özel genel bir ölçüm tablosu AÇILMADI — branş tabloları kullanıldı.
+    const migrasyonlar = readdirSync(join(KOK, 'lib/db/migrations')).join('\n')
+    assert.doesNotMatch(migrasyonlar, /arac_olcumleri/, 'Faz 3 mevcut branş tablolarını kullanır; yeni genel tablo yok')
+  })
+
+  it('ön doldurma: hasta seçiliyse son kayıt okunur ve "önceki vizit" gösterilir', () => {
+    for (const { yol } of KALICI) {
+      const kod = oku(yol)
+      assert.match(kod, /<OncekiVizit/, `${yol}: önceki vizit şeridi yok`)
+      assert.match(kod, /ÖN DOLDUR/, `${yol}: ön doldurma yolu işaretlenmeli (hekim üzerine yazabilir)`)
+    }
+    // Pediatri büyüme ve KD gebelik: kalıcılık zaten mevcut kayıttan geliyordu — okuma + ön doldurma yerinde.
+    const buyume = oku('specialties/pediatri/ui/araclar/BuyumeStudyosu.tsx')
+    assert.match(buyume, /buyume-egrileri/)
+    assert.match(buyume, /<OncekiVizit/)
+    const gebelik = oku('specialties/kadin-dogum/ui/araclar/GebelikTakvimAraci.tsx')
+    assert.match(gebelik, /kdHastaOzeti/)
+    assert.match(gebelik, /Gebelik kaydından dolduruldu/)
+  })
+
+  it('kaydetme hekimin açık eylemidir — sessiz arka plan yazması yok', () => {
+    for (const { yol } of KALICI) {
+      const kod = oku(yol)
+      assert.match(kod, /<KayitButonu/, `${yol}: açık kaydet düğmesi yok`)
+      const postlar = kod.match(/method: 'POST'/g) || []
+      assert.equal(postlar.length, 1, `${yol}: araçta tek yazma isteği olmalı`)
+      assert.ok(kod.indexOf('kaydet') < kod.indexOf("method: 'POST'"), `${yol}: yazma yalnız kaydet eyleminde`)
+    }
+    const kutuphane = oku(KUTUPHANE)
+    assert.match(kutuphane, /export function KayitButonu\(/)
+    assert.match(kutuphane, /Önce hasta seçin — değerler ancak seçili hastanın dosyasına kaydedilir/)
+    assert.match(kutuphane, /arka planda sessizce yazılmaz/)
   })
 })
