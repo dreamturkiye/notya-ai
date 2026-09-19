@@ -79,6 +79,9 @@ OUT: diyaliz makinesi HIS · tanı kilidi · uydurma ESA dozu.
 **ROMATOLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Romatizmam Strong · migration **070** · ~93% · live `/roma-exceptional-audit.html`  
 OUT: infüzyon süiti HIS · tanı kilidi · uydurma biyolojik doz.
 
+**ONKOLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Tedavim Strong · migration **072** · ~93% · live `/onko-exceptional-audit.html`  
+OUT: chemo pharmacy dosing · tanı/evre kilidi · uydurma kemo dozu · canlı Medula e-imza.
+
 ### Dalga 4
 genel-cerrahi · plastik-cerrahi · cocuk-cerrahisi · gogus-cerrahisi · beyin-cerrahisi  
 *(OR / full HIS = intentional Missing)*
