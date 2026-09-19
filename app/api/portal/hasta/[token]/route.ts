@@ -147,12 +147,12 @@ import {
   PLASTIK_IPUCLARI,
 } from '@/specialties/plastik-cerrahi/engines/portal-yaram'
 import {
-  takibimHatirlatmalari,
+  takibimHatirlatmalari as gogusCerrahiTakibimHatirlatmalari,
   tupYaraHatirlatmalari as gogusCerrahiTupHatirlatmalari,
   patolojiHatirlatmalari as gogusCerrahiPatolojiHatirlatmalari,
   preopHatirlatmalari as gogusCerrahiPreopHatirlatmalari,
   sonrakiKontrol as gogusCerrahiSonrakiKontrol,
-  TAKIBIM_NOTU,
+  TAKIBIM_NOTU as GOGUS_CERRAHI_TAKIBIM_NOTU,
   GC_IPUCLARI as GOGUS_CERRAHI_IPUCLARI,
 } from '@/specialties/gogus-cerrahisi/engines/portal-takibim'
 
@@ -1056,7 +1056,7 @@ export async function GET(
       sb.from('goc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
       sb.from('hasta_gogus_cerrahisi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
     ])
-    const hatirlatmalar = takibimHatirlatmalari({
+    const hatirlatmalar = gogusCerrahiTakibimHatirlatmalari({
       bugun,
       gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
       sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
@@ -1068,7 +1068,7 @@ export async function GET(
       patolojiHatirlatma: gogusCerrahiPatolojiHatirlatmalari(hatirlatmalar),
       preopHatirlatma: gogusCerrahiPreopHatirlatmalari(hatirlatmalar),
       ipuclari: [...GOGUS_CERRAHI_IPUCLARI],
-      not: TAKIBIM_NOTU,
+      not: GOGUS_CERRAHI_TAKIBIM_NOTU,
     }
   } catch (e) { console.error('[portal] gogus-cerrahisi-takibim:', e) }
 
