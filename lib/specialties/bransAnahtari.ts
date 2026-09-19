@@ -18,6 +18,8 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/kadın|kadin|jinek|obstet/, 'kadin-hastaliklari-dogum'],
   [/derma|deri ve z/, 'dermatoloji'],
   [/dahiliye|iç hast|ic hast/, 'dahiliye'],
+  // COCUK-CERRAHISI-EXCEPTIONAL-01: "Çocuk Cerrahisi" — pediatri "çocuk sağlığı/hastalıkları"ndan ÖNCE.
+  [/çocuk cerrah|cocuk cerrah|cocuk-cerrahisi/, 'cocuk-cerrahisi'],
   [/pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast/, 'pediatri'],
   // PSIK-EXCEPTIONAL-01: "Psikiyatri Uzmanı", "Ruh Sağlığı ve Hastalıkları". Çocuk ve ergen psikiyatrisi
   // ayrı branştır — eşleşmez, branşsız kalır (yetişkin psikiyatri bölümünü açmaz).

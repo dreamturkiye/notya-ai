@@ -487,6 +487,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Toraks Cerrahisi Değerlendirmesi',
     alanlar: [
       BASVURU_NEDENI,
+      { id: 'acilBelirtilerGogusCerrahi', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ani tek taraflı göğüs ağrısı ile nefes darlığı', 'Bol kanlı balgam veya ağızdan bol kan', 'Toraks tüpü / drenin yerinden çıkması veya tıkanması', 'Ameliyat sonrası ani / belirgin nefes darlığı', 'Yara çevresinde hızla artan kızarıklık, irin veya ateş', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarGogusCerrahi', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Göğüs Ağrısı', 'Nefes Darlığı', 'Öksürük', 'Kilo Kaybı', 'Balgamda Kan', 'Yok'] },
       { id: 'sigaraOykusuGogus', etiket: 'Sigara kullanım öykünüz', tur: 'text' },
       { id: 'oncekiAkcigerAmeliyati', etiket: 'Daha önce akciğer/göğüs ameliyatı geçirdiniz mi?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },

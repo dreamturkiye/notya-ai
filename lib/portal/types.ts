@@ -612,7 +612,7 @@ export interface PortalCc {
   sonrakiKontrol: { tarih: string; neden: string } | null
   hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
   yaraHatirlatma: Array<{ ad: string; due: string | null }>
-  prepostHatirlatma: Array<{ ad: string; due: string | null }>
-  ipuclari: string[]
+  islemHatirlatma: Array<{ ad: string; due: string | null }>
+  bakimIpuclari: string[]
   not: string
 }

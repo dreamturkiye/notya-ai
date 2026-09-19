@@ -28,9 +28,9 @@ type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends 
 async function gorevEkle(sb: Sb, doctorId: string, patientId: string, g: Array<{ kod: string; ad: string; due?: string | null; kaynak: string }>) {
   let eklenen = 0
   for (const x of g) {
-    const { data } = await sb.from('gc_gorevleri').select('id').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('kod', x.kod).eq('durum', 'acik').maybeSingle()
+    const { data } = await sb.from('goc_gorevleri').select('id').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('kod', x.kod).eq('durum', 'acik').maybeSingle()
     if (data) continue
-    await sb.from('gc_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak })
+    await sb.from('goc_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: x.kod, ad: x.ad, due: x.due || null, kaynak: x.kaynak })
     eklenen++
   }
   return eklenen
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const s = preopSkorla(b.secilen, b.not ? String(b.not) : null)
     if (!s.tamamMi) return NextResponse.json({ error: s.ozet, sonuc: s }, { status: 400 })
     const kayit = await bolumKaydi(sb, user.id, patientId)
-    const { error } = await sb.from('gc_preop').insert({
+    const { error } = await sb.from('goc_preop').insert({
       patient_id: patientId, doctor_id: user.id, hasta_gogus_cerrahisi_id: kayit?.id || null,
       tarih: T, maddeler: s.secilen, hekim_kilit: b.hekimKilit === true, not_hekim: b.not ? String(b.not).slice(0, 500) : null,
     })
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     const s = tupYaraSkorla(b.kart ?? b)
     if (!s.tamamMi) return NextResponse.json({ error: s.ozet, sonuc: s }, { status: 400 })
     const kayit = await bolumKaydi(sb, user.id, patientId)
-    const { error } = await sb.from('gc_tup_yara').insert({
+    const { error } = await sb.from('goc_tup_yara').insert({
       patient_id: patientId, doctor_id: user.id, hasta_gogus_cerrahisi_id: kayit?.id || null,
       tarih: s.kart.tarih!, tip: s.kart.tip, durum: s.kart.durum, sonraki_kontrol: s.kart.sonrakiKontrol,
       hekim_kilit: b.hekimKilit === true, not_hekim: s.kart.not,
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     const s = patolojiSkorla(b.kart ?? b)
     if (!s.tamamMi) return NextResponse.json({ error: s.ozet, sonuc: s }, { status: 400 })
     const kayit = await bolumKaydi(sb, user.id, patientId)
-    const { error } = await sb.from('gc_patoloji').insert({
+    const { error } = await sb.from('goc_patoloji').insert({
       patient_id: patientId, doctor_id: user.id, hasta_gogus_cerrahisi_id: kayit?.id || null,
       ornek_tarihi: s.kart.ornekTarihi, rapor_hazir_tarihi: s.kart.raporHazirTarihi, hazir: s.kart.hazir,
       hekim_kilit: b.hekimKilit === true, not_hekim: s.kart.not,
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     }
     const kayit = await bolumKaydi(sb, user.id, patientId)
     const eylem = b.eylem ? String(b.eylem).slice(0, 1000) : null
-    const { error } = await sb.from('gc_acil').insert({
+    const { error } = await sb.from('goc_acil').insert({
       patient_id: patientId, doctor_id: user.id, hasta_gogus_cerrahisi_id: kayit?.id || null,
       tarih: T, bayraklar: bayraklar.map((x) => x.kod), eylem, hekim_onay: b.hekimOnay === true,
     })
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (adim === 'gorev') {
-    const { error } = await sb.from('gc_gorevleri')
+    const { error } = await sb.from('goc_gorevleri')
       .update({ durum: b.durum === 'acik' ? 'acik' : 'tamam', tamam_at: b.durum === 'acik' ? null : new Date().toISOString() })
       .eq('id', String(b.gorevId || '')).eq('doctor_id', user.id).eq('patient_id', patientId)
     return error ? NextResponse.json({ error: 'Yazılamadı' }, { status: 500 }) : NextResponse.json({ ok: true })
@@ -157,8 +157,8 @@ export async function GET(req: NextRequest) {
 
   const [bolum, riskQ, gorevQ] = await Promise.all([
     sb.from('hasta_gogus_cerrahisi').select('id, next_kontrol, preop, tup_yara, patoloji, notes').eq('patient_id', patientId).eq('doctor_id', user.id).maybeSingle(),
-    sb.from('gc_acil').select('id, tarih, bayraklar, eylem, hekim_onay').eq('patient_id', patientId).eq('doctor_id', user.id).order('tarih', { ascending: false }).limit(10),
-    sb.from('gc_gorevleri').select('id, kod, ad, due, durum, kaynak').eq('patient_id', patientId).eq('doctor_id', user.id).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }),
+    sb.from('goc_acil').select('id, tarih, bayraklar, eylem, hekim_onay').eq('patient_id', patientId).eq('doctor_id', user.id).order('tarih', { ascending: false }).limit(10),
+    sb.from('goc_gorevleri').select('id, kod, ad, due, durum, kaynak').eq('patient_id', patientId).eq('doctor_id', user.id).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }),
   ])
 
   const acikRisk = (riskQ.data || []).filter((r) => (r.bayraklar || []).length && !r.hekim_onay)

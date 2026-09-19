@@ -11,7 +11,7 @@ import { patolojiNormalize } from '@/specialties/gogus-cerrahisi/engines/patoloj
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
-const KAYNAK_TABLOLARI = ['hasta_gogus_cerrahisi', 'gc_preop', 'gc_tup_yara', 'gc_patoloji', 'gc_acil', 'gc_gorevleri'] as const
+const KAYNAK_TABLOLARI = ['hasta_gogus_cerrahisi', 'goc_preop', 'goc_tup_yara', 'goc_patoloji', 'goc_acil', 'goc_gorevleri'] as const
 
 export async function gcKohortVerisi(sb: Sb, doctorId: string, bugun: string, sadece?: string[]) {
   const kumeler = await Promise.all(KAYNAK_TABLOLARI.map(async (t) => {
@@ -28,8 +28,8 @@ export async function gcKohortVerisi(sb: Sb, doctorId: string, bugun: string, sa
   const [pQ, bQ, rQ, gQ, sQ, tQ] = await Promise.all([
     sb.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).in('id', ids),
     sb.from('hasta_gogus_cerrahisi').select('patient_id, next_kontrol, preop, tup_yara, patoloji').eq('doctor_id', doctorId).in('patient_id', ids),
-    sb.from('gc_acil').select('patient_id, bayraklar, hekim_onay, tarih').eq('doctor_id', doctorId).in('patient_id', ids).order('tarih', { ascending: false }).limit(3000),
-    sb.from('gc_gorevleri').select('patient_id, kod, due').eq('doctor_id', doctorId).eq('durum', 'acik').in('patient_id', ids).limit(5000),
+    sb.from('goc_acil').select('patient_id, bayraklar, hekim_onay, tarih').eq('doctor_id', doctorId).in('patient_id', ids).order('tarih', { ascending: false }).limit(3000),
+    sb.from('goc_gorevleri').select('patient_id, kod, due').eq('doctor_id', doctorId).eq('durum', 'acik').in('patient_id', ids).limit(5000),
     sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
@@ -91,8 +91,8 @@ export async function gcHatirlatmaGonder(
   await sb.from('hasta_mesajlar').insert({ konu_id: konu.id, taraf: 'doktor', yazar_user_id: doctorId, metin: m.metin })
   try { await notifyPatientNewPracticeMessage(sb, { doctorId, patientId }) } catch { /* */ }
   const due = new Date(Date.parse(`${bugun}T00:00:00Z`) + 7 * 86400000).toISOString().slice(0, 10)
-  const { data: acik } = await sb.from('gc_gorevleri').select('id')
+  const { data: acik } = await sb.from('goc_gorevleri').select('id')
     .eq('doctor_id', doctorId).eq('patient_id', patientId).eq('kod', 'hatirlatma_takip').eq('durum', 'acik').maybeSingle()
-  if (!acik) await sb.from('gc_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: 'hatirlatma_takip', ad: 'Hatırlatma gönderildi — randevu dönüşünü takip edin', due, kaynak: 'hatirlatma' })
+  if (!acik) await sb.from('goc_gorevleri').insert({ patient_id: patientId, doctor_id: doctorId, kod: 'hatirlatma_takip', ad: 'Hatırlatma gönderildi — randevu dönüşünü takip edin', due, kaynak: 'hatirlatma' })
   return 'gonderildi'
 }

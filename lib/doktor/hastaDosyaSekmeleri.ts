@@ -45,6 +45,7 @@ export type HastaDosyaSekmeId =
   | 'plastik'
   | 'beyin'
   | 'gogus-cerrahisi'
+  | 'cocuk-cerrahisi'
   | 'konsultasyon'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
@@ -55,7 +56,7 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|göğüs cerrah|gogus cerrah|gogus-cerrah|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin|romato|gastro|nefroloji|b[öo]brek hastal|enfeksiyon|infeksiyon|onkolo|genel.?cerrah|plastik|beyin.?cerrah/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|çocuk cerrah|cocuk cerrah|cocuk-cerrahisi|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|göğüs cerrah|gogus cerrah|gogus-cerrah|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin|romato|gastro|nefroloji|b[öo]brek hastal|enfeksiyon|infeksiyon|onkolo|genel.?cerrah|plastik|beyin.?cerrah/.test(b)
 }
 
 /**
@@ -240,6 +241,16 @@ export function beyinCerrahisiSekmesiBransi(specialtyHam: string | null | undefi
   return /beyin.?cerrah|n[öo]ro[şs]ir[üu]rj|neurosurg/.test(b)
 }
 
+/**
+ * COCUK-CERRAHISI-EXCEPTIONAL-01 — Çocuk Cerrahisi sekmesi: yalnız cocuk-cerrahisi.
+ * Pediatri (büyüme/Neyzi/Hedef Boy), genel cerrahi ve diğer branşlar bu sekmeyi GÖRMEZ.
+ */
+export function cocukCerrahisiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /çocuk cerrah|cocuk cerrah|cocuk-cerrahisi/.test(b)
+}
+
 
 /**
  * GOGUS-CERRAHISI-EXCEPTIONAL-01 — Göğüs Cerrahisi bölüm sekmesinin sahibi: yalnız gogus-cerrahisi.
@@ -381,6 +392,8 @@ export function hastaDosyaSekmeleri(opts: {
   plastikUygun?: boolean
   /** BEYIN-CERRAHISI-EXCEPTIONAL-01: doctor specialty beyin-cerrahisi only (not noroloji) */
   beyinCerrahisiUygun?: boolean
+  /** COCUK-CERRAHISI-EXCEPTIONAL-01: doctor specialty cocuk-cerrahisi only (not pediatri) */
+  cocukCerrahisiUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -426,6 +439,7 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.genelCerrahiUygun) tabs.push({ id: 'genel-cerrahi', label: 'Genel Cerrahi' })
   if (opts.plastikUygun) tabs.push({ id: 'plastik', label: 'Plastik' })
   if (opts.beyinCerrahisiUygun) tabs.push({ id: 'beyin', label: 'Beyin Cerrahisi' })
+  if (opts.cocukCerrahisiUygun) tabs.push({ id: 'cocuk-cerrahisi', label: 'Çocuk Cerrahisi' })
   return tabs
 }
 

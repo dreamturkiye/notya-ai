@@ -73,7 +73,10 @@ Araç: hepsi **4** — sabit 5 yok. Migrations 068–072 applied.
 
 ### Dalga 4 — IN PROGRESS (2026-09-19)
 genel-cerrahi · plastik-cerrahi · cocuk-cerrahisi · gogus-cerrahisi · beyin-cerrahisi  
-*(OR / full HIS = intentional Missing)* · Araç sayısı sabit değil.
+*(OR / full HIS = intentional Missing)* · Araç sayısı sabit değil.  
+`gogus-cerrahisi`: GOGUS-CERRAHISI-EXCEPTIONAL-01 · migration **076** · 4 Araç · portal `/gogus-cerrahisi-takibim` · live `/gogus-cerrahisi-exceptional-audit.html` (≠ gogus-hastaliklari).
+
+- **genel-cerrahi SHIPPED** — GENEL-CERRAHI-EXCEPTIONAL-01 · 4 Araç · Ameliyatım Strong · migration 073 · `gc-exceptional-audit.html` · `test:gc`
 
 **Plastik shipped tip:** see git log · Live: https://notya-ai.vercel.app/plastik-exceptional-audit.html · Araç **4** · Portal **Yaram** · Migration **074**.
 

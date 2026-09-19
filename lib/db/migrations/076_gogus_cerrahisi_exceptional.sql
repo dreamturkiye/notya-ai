@@ -27,7 +27,7 @@ create table if not exists hasta_gogus_cerrahisi (
 create index if not exists hasta_gogus_cerrahisi_idx on hasta_gogus_cerrahisi (doctor_id, next_kontrol);
 
 -- ── Pre-op solunum checklist kayıtları ────────────────────────────────────────────────────
-create table if not exists gc_preop (
+create table if not exists goc_preop (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id),
   doctor_id uuid not null references auth.users(id),
@@ -38,11 +38,11 @@ create table if not exists gc_preop (
   not_hekim text,
   created_at timestamptz not null default now()
 );
-create index if not exists gc_preop_idx on gc_preop (patient_id, tarih desc);
-create index if not exists gc_preop_doktor_idx on gc_preop (doctor_id, tarih desc);
+create index if not exists goc_preop_idx on goc_preop (patient_id, tarih desc);
+create index if not exists goc_preop_doktor_idx on goc_preop (doctor_id, tarih desc);
 
 -- ── Toraks tüp / yara izlem ───────────────────────────────────────────────────────────────
-create table if not exists gc_tup_yara (
+create table if not exists goc_tup_yara (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id),
   doctor_id uuid not null references auth.users(id),
@@ -55,11 +55,11 @@ create table if not exists gc_tup_yara (
   not_hekim text,
   created_at timestamptz not null default now()
 );
-create index if not exists gc_tup_yara_idx on gc_tup_yara (patient_id, tarih desc);
-create index if not exists gc_tup_yara_doktor_idx on gc_tup_yara (doctor_id, tarih desc);
+create index if not exists goc_tup_yara_idx on goc_tup_yara (patient_id, tarih desc);
+create index if not exists goc_tup_yara_doktor_idx on goc_tup_yara (doctor_id, tarih desc);
 
 -- ── Patoloji köprü — tarih + hazır bayrağı; tanı / ICD yazılmaz ────────────────────────────
-create table if not exists gc_patoloji (
+create table if not exists goc_patoloji (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id),
   doctor_id uuid not null references auth.users(id),
@@ -71,11 +71,11 @@ create table if not exists gc_patoloji (
   not_hekim text,
   created_at timestamptz not null default now()
 );
-create index if not exists gc_patoloji_idx on gc_patoloji (patient_id, created_at desc);
-create index if not exists gc_patoloji_doktor_idx on gc_patoloji (doctor_id, created_at desc);
+create index if not exists goc_patoloji_idx on goc_patoloji (patient_id, created_at desc);
+create index if not exists goc_patoloji_doktor_idx on goc_patoloji (doctor_id, created_at desc);
 
 -- ── Görevler: kontrol, tüp, yara, patoloji, pre-op ────────────────────────────────────────
-create table if not exists gc_gorevleri (
+create table if not exists goc_gorevleri (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id),
   doctor_id uuid not null references auth.users(id),
@@ -87,13 +87,13 @@ create table if not exists gc_gorevleri (
   tamam_at timestamptz,
   created_at timestamptz not null default now()
 );
-create index if not exists gc_gorev_idx on gc_gorevleri (patient_id, durum, due);
-create index if not exists gc_gorev_doktor_idx on gc_gorevleri (doctor_id, durum, due);
+create index if not exists goc_gorev_idx on goc_gorevleri (patient_id, durum, due);
+create index if not exists goc_gorev_doktor_idx on goc_gorevleri (doctor_id, durum, due);
 
 -- ── Acil / toraks kırmızı bayrak: tansiyon pnömotoraks, masif hemotoraks, … ───────────────
 -- Ayaktan muayenehane akışı → 112. Portal mesajı bu akışı YÖNETMEZ. Tanı yazılmaz.
 -- CAT/mMRC / inhaler / Akciğerlerim bu tabloya girmez.
-create table if not exists gc_acil (
+create table if not exists goc_acil (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references patients(id),
   doctor_id uuid not null references auth.users(id),
@@ -104,14 +104,14 @@ create table if not exists gc_acil (
   hekim_onay boolean not null default false,
   created_at timestamptz not null default now()
 );
-create index if not exists gc_acil_idx on gc_acil (patient_id, tarih desc);
-create index if not exists gc_acil_doktor_idx on gc_acil (doctor_id, tarih desc);
+create index if not exists goc_acil_idx on goc_acil (patient_id, tarih desc);
+create index if not exists goc_acil_doktor_idx on goc_acil (doctor_id, tarih desc);
 
 -- ── RLS (HASTA-İZOLASYON) ──────────────────────────────────────────────────────────────────
 do $$
 declare t text;
 begin
-  foreach t in array array['hasta_gogus_cerrahisi','gc_preop','gc_tup_yara','gc_patoloji','gc_gorevleri','gc_acil'] loop
+  foreach t in array array['hasta_gogus_cerrahisi','goc_preop','goc_tup_yara','goc_patoloji','goc_gorevleri','goc_acil'] loop
     execute format('alter table public.%I enable row level security', t);
     begin
       execute format('create policy "hasta_izolasyon_kendi_satiri" on public.%I for all using (doctor_id = auth.uid()) with check (doctor_id = auth.uid())', t);
@@ -129,5 +129,5 @@ begin
 end $$;
 
 insert into schema_migrations (version, filename, checksum, applied_at, backfilled, note)
-values ('076', '076_gogus_cerrahisi_exceptional.sql', null, now(), false, 'GOGUS-CERRAHISI-EXCEPTIONAL-01: hasta_gogus_cerrahisi, gc_preop, gc_tup_yara, gc_patoloji, gc_gorevleri, gc_acil + RLS')
+values ('076', '076_gogus_cerrahisi_exceptional.sql', null, now(), false, 'GOGUS-CERRAHISI-EXCEPTIONAL-01: hasta_gogus_cerrahisi, goc_preop, goc_tup_yara, goc_patoloji, goc_gorevleri, goc_acil + RLS (not genel-cerrahi gc_*)')
 on conflict (version) do nothing;

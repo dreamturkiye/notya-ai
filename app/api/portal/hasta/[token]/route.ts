@@ -166,6 +166,14 @@ import {
   BEYIN_IPUCLARI,
 } from '@/specialties/beyin-cerrahisi/engines/portal-beyin-takibi'
 import {
+  cocugumunCerrahisiHatirlatmalari,
+  yaraHatirlatmalari as ccYaraHatirlatmalari,
+  islemHatirlatmalari as ccIslemHatirlatmalari,
+  sonrakiKontrol as ccSonrakiKontrol,
+  COCUGUMUN_CERRAHISI_NOTU,
+  CC_BAKIM_IPUCLARI,
+} from '@/specialties/cocuk-cerrahisi/engines/portal-cocugumun-cerrahisi'
+import {
   akcigerlerimHatirlatmalari,
   testHatirlatmalari as gogusTestHatirlatmalari,
   bakimHatirlatmalari,
@@ -1045,7 +1053,7 @@ export async function GET(
   if (modulAktif('gogus-cerrahisi-takibim')) try {
     const bugun = new Date().toISOString().slice(0, 10)
     const [gorevQ, bolumQ] = await Promise.all([
-      sb.from('gc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('goc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
       sb.from('hasta_gogus_cerrahisi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
     ])
     const hatirlatmalar = takibimHatirlatmalari({
@@ -1133,6 +1141,29 @@ export async function GET(
       not: BEYIN_TAKIP_NOTU,
     }
   } catch (e) { console.error('[portal] beyin-takibi:', e) }
+
+  // COCUK-CERRAHISI-EXCEPTIONAL-01 — "Çocuğumun Cerrahisi": yalnız açık görev + hekim kontrol tarihi.
+  // Tanı, doz, Neyzi/büyüme chapter portala GEÇMEZ.
+  if (modulAktif('cocugumun-cerrahisi')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('cc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_cocuk_cerrahisi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = cocugumunCerrahisiHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.cc = {
+      sonrakiKontrol: ccSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      yaraHatirlatma: ccYaraHatirlatmalari(hatirlatmalar),
+      islemHatirlatma: ccIslemHatirlatmalari(hatirlatmalar),
+      bakimIpuclari: [...CC_BAKIM_IPUCLARI],
+      not: COCUGUMUN_CERRAHISI_NOTU,
+    }
+  } catch (e) { console.error('[portal] cocugumun-cerrahisi:', e) }
 
 
   // GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": yalnız açık görev kodları + hekimin kontrol tarihi.

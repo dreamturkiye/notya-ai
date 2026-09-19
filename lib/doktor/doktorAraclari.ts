@@ -205,7 +205,7 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   // GOGUS-CERRAHISI-EXCEPTIONAL-01 — specialty-only (not gogus-hastaliklari / genel-cerrahi / kardiyoloji / pediatri).
   // Chapter engines: specialties/gogus-cerrahisi/engines. Pre-op / tüp-yara / patoloji karar desteği; tanı/doz hekimde.
   // Visibility: gogus-cerrahisi only — NOT gogus-hastaliklari (CAT/mMRC), NOT genel-cerrahi, NOT kardiyoloji.
-  { circleColor: '#B91C1C', icon: 'PO', title: 'Pre-op solunum checklist', desc: 'SFT · görüntü · anestezi · onam maddeleri — CAT/mMRC, doz ve OR planı yazılmaz', route: '/doktor-tools/gogus-cerrahi-preop', branslar: ['gogus-cerrahisi'] },
+  { circleColor: '#B91C1C', icon: 'PO', title: 'Pre-op solunum checklist', desc: 'SFT · görüntü · anestezi · onam maddeleri — doz ve OR planı yazılmaz', route: '/doktor-tools/gogus-cerrahi-preop', branslar: ['gogus-cerrahisi'] },
   { circleColor: '#991B1B', icon: 'TY', title: 'Toraks tüp / yara izlem', desc: 'Tüp · dren · yara durumu · sonraki kontrol — tanı ve doz yok', route: '/doktor-tools/gogus-cerrahi-tup-yara', branslar: ['gogus-cerrahisi'] },
   { circleColor: '#7F1D1D', icon: 'PT', title: 'Patoloji köprü', desc: 'Örnek/rapor tarihleri · hazır bayrağı — tanı, ICD, CAT yazılmaz', route: '/doktor-tools/gogus-cerrahi-patoloji', branslar: ['gogus-cerrahisi'] },
   { circleColor: '#450A0A', icon: 'GK', title: 'Göğüs cerrahisi kohort', desc: 'Geciken kontrol · pre-op · tüp/yara · patoloji · açık acil · 1-tap hatırlatma', route: '/doktor-tools/gogus-cerrahi-kohort', branslar: ['gogus-cerrahisi'] },
@@ -216,6 +216,13 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#B45309', icon: 'SUT', title: 'Biyolojik SUT checklist', desc: 'TB/HBV/HCV · basamak beyanı · hekim kilidi — doz ve yükleme şeması yazılmaz', route: '/doktor-tools/roma-biyolojik-sut', branslar: ['romatoloji'] },
   { circleColor: '#F59E0B', icon: 'EH', title: 'Lab izlem / eklem haritası', desc: 'CRP · ESR · RF ve 28 eklem TJC/SJC — karar desteği · tanı yok', route: '/doktor-tools/roma-lab-izlem', branslar: ['romatoloji'] },
   { circleColor: '#92400E', icon: 'RK', title: 'Romatoloji kohort paneli', desc: 'Geciken kontrol · lab · yüksek skor bandı · açık acil · SUT eksik · 1-tap hatırlatma', route: '/doktor-tools/roma-kohort', branslar: ['romatoloji'] },
+  // COCUK-CERRAHISI-EXCEPTIONAL-01 — specialty-only (not pediatri / genel-cerrahi / ortopedi / plastik).
+  // Chapter engines: specialties/cocuk-cerrahisi/engines. Pre/post-op · yara/dren · onam/veli · kohort.
+  // Visibility: cocuk-cerrahisi only — NOT pediatri (Hedef Boy), NOT genel-cerrahi, NOT ortopedi.
+  { circleColor: '#0891B2', icon: 'PP', title: 'Pre/post-op izlem checklist', desc: 'Pre-op ve post-op maddeleri · tarihler — doz ve OR/HIS yazılmaz', route: '/doktor-tools/cc-prepost-op', branslar: ['cocuk-cerrahisi'] },
+  { circleColor: '#0E7490', icon: 'YD', title: 'Yara / dren izlem', desc: 'Pediatrik cerrahi ofis · yara · dren · dikiş — enfeksiyon tanısı ve doz yok', route: '/doktor-tools/cc-yara-dren', branslar: ['cocuk-cerrahisi'] },
+  { circleColor: '#155E75', icon: 'OV', title: 'Onam / veli checklist', desc: 'Yaşa göre veli maddeleri · yazılı onam hatırlatma — canlı e-imza yok', route: '/doktor-tools/cc-onam-veli', branslar: ['cocuk-cerrahisi'] },
+  { circleColor: '#164E63', icon: 'CK', title: 'Çocuk cerrahisi kohort', desc: 'Geciken kontrol · pre-op · yara · onam/veli · açık acil · 1-tap hatırlatma', route: '/doktor-tools/cc-kohort', branslar: ['cocuk-cerrahisi'] },
 ]
 
 /**
