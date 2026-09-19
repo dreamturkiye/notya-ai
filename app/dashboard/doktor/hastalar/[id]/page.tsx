@@ -27,6 +27,11 @@ import KardioHome from '@/specialties/kardiyoloji/ui/KardioHome';
 import GogusHome from '@/specialties/gogus-hastaliklari/ui/GogusHome';
 import NorolojiHome from '@/specialties/noroloji/ui/NorolojiHome';
 import UrolojiHome from '@/specialties/uroloji/ui/UrolojiHome';
+import SporHekimligiHome from '@/specialties/spor-hekimligi/ui/SporHekimligiHome';
+import OrtopediHome from '@/specialties/ortopedi/ui/OrtopediHome';
+import FtrHome from '@/specialties/fizik-tedavi/ui/FtrHome';
+import AileHome from '@/specialties/aile-hekimligi/ui/AileHome';
+import EndokrinolojiHome from '@/specialties/endokrinoloji/ui/EndokrinolojiHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
@@ -45,6 +50,11 @@ import {
   gogusSekmesiBransi,
   norolojiSekmesiBransi,
   urolojiSekmesiBransi,
+  sporHekimligiSekmesiBransi,
+  ortopediSekmesiBransi,
+  fizikTedaviSekmesiBransi,
+  aileHekimligiSekmesiBransi,
+  endokrinolojiSekmesiBransi,
   pediatriAracSekmesiUygun,
   muayeneAltiSekmeler,
   type HastaDosyaSekmeId,
@@ -106,6 +116,11 @@ export default function HastaProfilPage() {
   const [gogusAraci, setGogusAraci] = useState(false); // GOGUS-EXCEPTIONAL-01: yalnız göğüs hastalıkları hekimi
   const [noroAraci, setNoroAraci] = useState(false); // NOROLOJI-EXCEPTIONAL-01: yalnız nöroloji hekimi
   const [uroAraci, setUroAraci] = useState(false); // UROLOJI-EXCEPTIONAL-01: yalnız üroloji hekimi
+  const [sporAraci, setSporAraci] = useState(false); // SPOR-HEKIMLIGI-EXCEPTIONAL-01: yalnız spor hekimliği
+  const [ortoAraci, setOrtoAraci] = useState(false); // ORTOPEDI-EXCEPTIONAL-01: yalnız ortopedi hekimi
+  const [ftrAraci, setFtrAraci] = useState(false); // FIZIK-TEDAVI-EXCEPTIONAL-01: yalnız fizik tedavi hekimi
+  const [aileAraci, setAileAraci] = useState(false); // AILE-HEKIMLIGI-EXCEPTIONAL-01: yalnız aile hekimliği
+  const [endoAraci, setEndoAraci] = useState(false); // ENDOKRINOLOJI-EXCEPTIONAL-01: yalnız endokrinoloji
   const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
@@ -113,7 +128,7 @@ export default function HastaProfilPage() {
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
     : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci });
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci });
 
   /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
    *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
@@ -143,7 +158,7 @@ export default function HastaProfilPage() {
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
       'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'bebek', 'goz',
-      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'konsultasyon',
+      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'konsultasyon',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
     if (tabParam === 'gebelik') {
@@ -185,6 +200,11 @@ export default function HastaProfilPage() {
           setGogusAraci(gogusSekmesiBransi(sp));
           setNoroAraci(norolojiSekmesiBransi(sp));
           setUroAraci(urolojiSekmesiBransi(sp));
+          setSporAraci(sporHekimligiSekmesiBransi(sp));
+          setOrtoAraci(ortopediSekmesiBransi(sp));
+          setFtrAraci(fizikTedaviSekmesiBransi(sp));
+          setAileAraci(aileHekimligiSekmesiBransi(sp));
+          setEndoAraci(endokrinolojiSekmesiBransi(sp));
         }
       } catch {
         setError('Bir hata oluştu');
@@ -496,6 +516,11 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'gogus' && gogusAraci && <GogusHome patientId={patientId} />}
         {!loading && !error && activeTab === 'noroloji' && noroAraci && <NorolojiHome patientId={patientId} />}
         {!loading && !error && activeTab === 'uroloji' && uroAraci && <UrolojiHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'spor-hekimligi' && sporAraci && <SporHekimligiHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'ortopedi' && ortoAraci && <OrtopediHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'fizik-tedavi' && ftrAraci && <FtrHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'aile' && aileAraci && <AileHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'endokrinoloji' && endoAraci && <EndokrinolojiHome patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && deriAraci && (
           <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} hastaAdi={patient?.ad_soyad} />
         )}

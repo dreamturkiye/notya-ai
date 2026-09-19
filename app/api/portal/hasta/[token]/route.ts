@@ -43,6 +43,22 @@ import {
   URO_BAKIM_IPUCLARI,
 } from '@/specialties/uroloji/engines/portal-urolojim'
 import {
+  sporumHatirlatmalari,
+  planHatirlatmalari as sporPlanHatirlatmalari,
+  sonrakiKontrol as sporSonrakiKontrol,
+  rtpHastaOzeti,
+  SPORUM_NOTU,
+  SPOR_BAKIM_IPUCLARI,
+} from '@/specialties/spor-hekimligi/engines/portal-sporum'
+import {
+  eklemlerimHatirlatmalari,
+  izlemHatirlatmalari as ortoIzlemHatirlatmalari,
+  islemHatirlatmalari as ortoIslemHatirlatmalari,
+  sonrakiKontrol as eklemSonrakiKontrol,
+  EKLEMLERIM_NOTU,
+  ORTO_BAKIM_IPUCLARI,
+} from '@/specialties/ortopedi/engines/portal-eklemlerim'
+import {
   kalbimHatirlatmalari,
   olcumHatirlatmalari,
   sonrakiKontrol as kalpSonrakiKontrol,
@@ -58,6 +74,15 @@ import {
   NORO_IPUCLARI,
 } from '@/specialties/noroloji/engines/portal-norolojim'
 import {
+  hormonlarimHatirlatmalari,
+  labHatirlatmalari as endoLabHatirlatmalari,
+  dxaHatirlatmalari as endoDxaHatirlatmalari,
+  rejimHatirlatmalari as endoRejimHatirlatmalari,
+  sonrakiKontrol as endoSonrakiKontrol,
+  HORMONLARIM_NOTU,
+  ENDO_IPUCLARI,
+} from '@/specialties/endokrinoloji/engines/portal-hormonlarim'
+import {
   akcigerlerimHatirlatmalari,
   testHatirlatmalari as gogusTestHatirlatmalari,
   bakimHatirlatmalari,
@@ -65,6 +90,22 @@ import {
   AKCIGERLERIM_NOTU,
   AKCIGER_BAKIM_IPUCLARI,
 } from '@/specialties/gogus-hastaliklari/engines/portal-akcigerlerim'
+import {
+  ftrmHatirlatmalari,
+  seansHatirlatmalari as ftrSeansHatirlatmalari,
+  egzersizHatirlatmalari as ftrEgzersizHatirlatmalari,
+  sonrakiKontrol as ftrSonrakiKontrol,
+  FTRM_NOTU,
+  FTR_IPUCLARI,
+} from '@/specialties/fizik-tedavi/engines/portal-ftrm'
+import {
+  saglikPaketimHatirlatmalari,
+  asiTaramaHatirlatmalari as aileAsiHatirlatmalari,
+  kronikHatirlatmalari as aileKronikHatirlatmalari,
+  sonrakiKontrol as aileSonrakiKontrol,
+  SAGLIK_PAKETIM_NOTU,
+  AILE_IPUCLARI,
+} from '@/specialties/aile-hekimligi/engines/portal-saglik-paketim'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -767,6 +808,30 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] norolojim:', e) }
 
+  // ENDOKRINOLOJI-EXCEPTIONAL-01 — "Hormonlarım": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // HbA1c/TSH sayı/bandı, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('hormonlarim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('endo_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_endokrinoloji').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = hormonlarimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.endo = {
+      sonrakiKontrol: endoSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      labHatirlatma: endoLabHatirlatmalari(hatirlatmalar),
+      dxaHatirlatma: endoDxaHatirlatmalari(hatirlatmalar),
+      rejimHatirlatma: endoRejimHatirlatmalari(hatirlatmalar),
+      ipuclari: [...ENDO_IPUCLARI],
+      not: HORMONLARIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] hormonlarim:', e) }
+
   // GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": yalnız açık görev kodları + hekimin kontrol tarihi.
   // CAT/mMRC skoru, GOLD grup, FEV1, tanı, ilaç adı ve doz portala GEÇMEZ.
   if (modulAktif('akcigerlerim')) try {
@@ -812,6 +877,100 @@ export async function GET(
       not: UROLOJIM_NOTU,
     }
   } catch (e) { console.error('[portal] urolojim:', e) }
+
+  // SPOR-HEKIMLIGI-EXCEPTIONAL-01 — "Sporum": yalnız açık görev kodları + hekimin kontrol tarihi + RTP aşama.
+  // Tanı, doz, doping, klinik skor yorumu portala GEÇMEZ.
+  if (modulAktif('sporum')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ, rtpQ] = await Promise.all([
+      sb.from('spor_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_spor').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+      sb.from('spor_rtp').select('basamak').eq('patient_id', patientId).eq('doctor_id', doctorId).order('tarih', { ascending: false }).limit(1).maybeSingle(),
+    ])
+    const hatirlatmalar = sporumHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+      rtpBasamak: rtpQ.data?.basamak != null ? Number(rtpQ.data.basamak) : null,
+    })
+    bundle.spor = {
+      sonrakiKontrol: sporSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      planHatirlatma: sporPlanHatirlatmalari(hatirlatmalar),
+      rtpOzet: rtpHastaOzeti(rtpQ.data?.basamak != null ? Number(rtpQ.data.basamak) : null),
+      bakimIpuclari: [...SPOR_BAKIM_IPUCLARI],
+      not: SPORUM_NOTU,
+    }
+  } catch (e) { console.error('[portal] sporum:', e) }
+
+  // ORTOPEDI-EXCEPTIONAL-01 — "Eklemlerim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // VAS sayı, skor, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('eklemlerim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('orto_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_ortopedi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = eklemlerimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.eklem = {
+      sonrakiKontrol: eklemSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      izlemHatirlatma: ortoIzlemHatirlatmalari(hatirlatmalar),
+      islemHatirlatma: ortoIslemHatirlatmalari(hatirlatmalar),
+      bakimIpuclari: [...ORTO_BAKIM_IPUCLARI],
+      not: EKLEMLERIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] eklemlerim:', e) }
+
+  // FIZIK-TEDAVI-EXCEPTIONAL-01 — "FTR'm": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // VAS/ODI skoru/bandı, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('ftrm')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('ftr_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_fizik_tedavi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = ftrmHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.ftr = {
+      sonrakiKontrol: ftrSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      seansHatirlatma: ftrSeansHatirlatmalari(hatirlatmalar),
+      egzersizHatirlatma: ftrEgzersizHatirlatmalari(hatirlatmalar),
+      ipuclari: [...FTR_IPUCLARI],
+      not: FTRM_NOTU,
+    }
+  } catch (e) { console.error('[portal] ftrm:', e) }
+
+  // AILE-HEKIMLIGI-EXCEPTIONAL-01 — "Sağlık Paketim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, skor, ilaç adı, doz ve aşı lot portala GEÇMEZ.
+  if (modulAktif('saglik-paketim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('aile_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_aile').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = saglikPaketimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.aile = {
+      sonrakiKontrol: aileSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      asiTaramaHatirlatma: aileAsiHatirlatmalari(hatirlatmalar),
+      kronikHatirlatma: aileKronikHatirlatmalari(hatirlatmalar),
+      ipuclari: [...AILE_IPUCLARI],
+      not: SAGLIK_PAKETIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] saglik-paketim:', e) }
 
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId, doctorId)

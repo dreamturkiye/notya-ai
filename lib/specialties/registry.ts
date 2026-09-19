@@ -19,6 +19,11 @@ import { KARDIOLOJI_PROFILE } from './kardiyoloji'
 import { NOROLOJI_PROFILE } from './noroloji'
 import { GOGUS_HASTALIKLARI_PROFILE } from './gogus-hastaliklari'
 import { UROLOJI_PROFILE } from './uroloji'
+import { FIZIK_TEDAVI_PROFILE } from './fizik-tedavi'
+import { ORTOPEDI_PROFILE } from './ortopedi'
+import { AILE_HEKIMLIGI_PROFILE } from './aile-hekimligi'
+import { SPOR_HEKIMLIGI_PROFILE } from './spor-hekimligi'
+import { ENDOKRINOLOJI_PROFILE } from './endokrinoloji'
 
 const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   pediatri: PEDIATRI_PROFILE,
@@ -32,6 +37,11 @@ const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   noroloji: NOROLOJI_PROFILE,
   'gogus-hastaliklari': GOGUS_HASTALIKLARI_PROFILE,
   uroloji: UROLOJI_PROFILE,
+  'fizik-tedavi': FIZIK_TEDAVI_PROFILE,
+  ortopedi: ORTOPEDI_PROFILE,
+  endokrinoloji: ENDOKRINOLOJI_PROFILE,
+  'aile-hekimligi': AILE_HEKIMLIGI_PROFILE,
+  'spor-hekimligi': SPOR_HEKIMLIGI_PROFILE,
 }
 
 export function specialtyProfile(keyHam: string | null | undefined): SpecialtyProfile {

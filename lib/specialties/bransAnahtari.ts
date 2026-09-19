@@ -32,6 +32,14 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/n[öo]roloji|noroloji/, 'noroloji'],
   // UROLOJI-EXCEPTIONAL-01: "Üroloji Uzmanı", "Uroloji", "Urology".
   [/[üu]roloji|urology/, 'uroloji'],
+  // ORTOPEDI-EXCEPTIONAL-01: "Ortopedi Uzmanı", "Ortopedi ve Travmatoloji".
+  [/ortopedi|travmatoloji|orthop/, 'ortopedi'],
+  // FIZIK-TEDAVI-EXCEPTIONAL-01: "Fizik Tedavi", "FTR", "Fiziksel Tıp ve Rehabilitasyon".
+  [/fizik.?tedavi|fiziksel.?t[ıi]p|fiziksel tip|\bftr\b|rehabilitasyon/, 'fizik-tedavi'],
+  // SPOR-HEKIMLIGI-EXCEPTIONAL-01: "Spor Hekimliği Uzmanı", "Spor hekimliği".
+  [/spor hekim|spor-hekim|sports medicine/, 'spor-hekimligi'],
+  // ENDOKRINOLOJI-EXCEPTIONAL-01: "Endokrinoloji Uzmanı", "Endokrinoloji ve Metabolizma".
+  [/endokrin/, 'endokrinoloji'],
 ]
 
 /** Ham değer ('kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'genel-cerrahi') → kanonik anahtar; "genel"/boş/bilinmeyen → null. */

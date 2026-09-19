@@ -42,5 +42,10 @@ export function emptyPortalBundle(): PortalBundle {
     akciger: null,
     noro: null,
     uro: null,
+    spor: null, // SPOR-HEKIMLIGI-EXCEPTIONAL-01 — Sporum yalnız spor-hekimligi hekiminin token'ında
+    eklem: null,
+    ftr: null,
+    aile: null,
+    endo: null,
   }
 }

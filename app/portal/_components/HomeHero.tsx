@@ -14,7 +14,9 @@ const MODUL_IPUCU: Record<string, string> = {
   kalbim: 'Kontrol ve kalp takibi hatırlatmalarınız',
   akcigerlerim: 'Kontrol, solunum testi ve inhaler hatırlatmalarınız',
   norolojim: 'Kontrol, form ve ilaç güvenlik hatırlatmalarınız',
+  hormonlarim: 'Kontrol, kan tahlili ve hatırlatmalarınız',
   urolojim: 'Kontrol ve hatırlatmalarınız',
+  sporum: 'Kontrol ve antrenmana dönüş planınız',
   'on-anket': 'Muayene öncesi bilgileriniz',
 }
 

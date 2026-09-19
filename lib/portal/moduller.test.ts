@@ -33,9 +33,12 @@ describe('KD / dahiliye / derm eligibility', () => {
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'kadin-hastaliklari-dogum', gebelikAktif: true })).moduller, ['gebelik', 'jinekoloji'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'dahiliye', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['dahiliye'])
   })
-  it('baseline-branch doctor (aile hekimi) gets chart-data modules only when that data exists', () => {
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, [])
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
+  it('baseline-branch doctor without own portal gets chart-data modules; aile hekimliği owns Sağlık Paketim', () => {
+    // AILE-HEKIMLIGI-EXCEPTIONAL-01: aile artık kendi portal modülüne sahip — çapraz kart verisi açılmaz.
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, ['saglik-paketim'])
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['saglik-paketim'])
+    // Hâlâ chapter'ı olmayan branş (ör. romatoloji baseline) chart-data alır
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'romatoloji', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
   })
   // DERM-EXCEPTIONAL-01: Derim Strong (hekim tetiklemeli hatırlatma).
   it('dermatoloji mounts Derim (Strong) — unique from göz / pediatri', () => {
