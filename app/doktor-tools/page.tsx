@@ -1,13 +1,17 @@
 'use client';
 
 /**
- * ARACLAR-GRUPLAMA-01 (Kaan, 2026-09-19): Araçlar sayfası tek düz ızgaraydı; 12 evrensel
- * omurga aracı ile branşa özel araçlar görsel olarak eşitti. Artık iki bölüm:
- * ÇEKİRDEK ARAÇLAR üstte, ince bir ayraçtan sonra BRANŞ ARAÇLARI altta.
- * Gruplama yalnız sunumdur; görünürlük kapısı doktorAraclariListesi içindedir.
+ * ARACLAR-GRUPLAMA-01 / GUI (Kaan, 2026-09-19):
+ * Temel Araçlar üstte, altında "Branşa özel · <Branş> Araçları". Gruplama sunum sırasıdır;
+ * görünürlük kapısı doktorAraclariListesi içindedir (bkz. lib/doktor/doktorAraclari.ts).
+ *
+ * Cursor 30 branşa araç eklemeye devam ediyor: yeni bir araç katalogda `branslar` alanıyla
+ * tanımlandığı an bu sayfa onu DOĞRU bölüme kendiliğinden yerleştirir — burada değişiklik
+ * gerekmez. Yeni bölüm adı eklerken "Günlük Araçlar" adını KULLANMA; o ad ileride kullanım
+ * sıklığına göre oluşacak bölüm için ayrıldı.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav'
 import { useRouter } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
@@ -15,10 +19,14 @@ import { doktorAraclariGruplu, type AracGrubu } from '@/lib/doktor/doktorAraclar
 
 export const dynamic = 'force-dynamic';
 
+const RENK = { cekirdek: '#14B8A6', brans: '#A78BFA' } as const
+
 export default function DoktorToolsPage() {
   const router = useRouter();
   const [hovered, setHovered] = useState<string | null>(null);
   const [gruplar, setGruplar] = useState<AracGrubu[] | null>(null);
+  const [brans, setBrans] = useState<string | null>(null);
+  const [filtre, setFiltre] = useState<'hepsi' | 'cekirdek' | 'brans'>('hepsi');
 
   useEffect(() => {
     let iptal = false
@@ -31,7 +39,7 @@ export default function DoktorToolsPage() {
         }
         const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
         const j = r.ok ? await r.json() : null
-        if (!iptal) setGruplar(doktorAraclariGruplu(j?.data?.specialty))
+        if (!iptal) { setGruplar(doktorAraclariGruplu(j?.data?.specialty)); setBrans(j?.data?.specialty || null) }
       } catch {
         if (!iptal) setGruplar(doktorAraclariGruplu(null))
       }
@@ -39,92 +47,97 @@ export default function DoktorToolsPage() {
     return () => { iptal = true }
   }, [])
 
-  const toplam = (gruplar || []).reduce((n, g) => n + g.araclar.length, 0)
+  const toplam = useMemo(() => (gruplar || []).reduce((n, g) => n + g.araclar.length, 0), [gruplar])
+  const gorunen = useMemo(
+    () => (gruplar || []).filter((g) => filtre === 'hepsi' || g.anahtar === filtre),
+    [gruplar, filtre],
+  )
+  const bransBasligi = useMemo(() => gruplar?.find((g) => g.anahtar === 'brans')?.baslik ?? null, [gruplar])
+
+  const cip = (aktif: boolean, renk: string): React.CSSProperties => ({
+    fontSize: 12.5,
+    fontWeight: 600,
+    color: aktif ? '#07121F' : renk,
+    backgroundColor: aktif ? renk : 'rgba(255,255,255,0.04)',
+    border: `1px solid ${aktif ? renk : 'rgba(255,255,255,0.10)'}`,
+    borderRadius: 999,
+    padding: '6px 14px',
+    cursor: 'pointer',
+    minHeight: 34,
+    transition: 'all .15s ease',
+  })
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#060C18', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
       <DoktorNav />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 20px 48px' }}>
-        <div style={{ marginBottom: 26 }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: '#14B8A6', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>ARAÇLAR</div>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, letterSpacing: '-0.6px' }}>Doktor Araçları</h1>
-          {toplam > 0 && (
-            <div style={{ fontSize: 13, color: '#8FA0B5', marginTop: 6 }}>{toplam} araç kullanımınıza hazır</div>
-          )}
-        </div>
+        <div style={{ fontSize: '11px', fontWeight: 600, color: '#14B8A6', letterSpacing: '1.5px', marginBottom: 8 }}>ARAÇLAR</div>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, letterSpacing: '-0.6px' }}>Doktor Araçları</h1>
+        {toplam > 0 && (
+          <div style={{ fontSize: 13, color: '#8FA0B5', marginTop: 6 }}>
+            {bransBasligi ? `${bransBasligi.replace(/ Araçları$/, '')} · ` : ''}{toplam} araç
+          </div>
+        )}
+
+        {/* Araç sayısı branş başına büyüdükçe filtre gerekiyor; tek dokunuşla daraltır. */}
+        {gruplar && gruplar.length > 1 && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 18 }}>
+            <button type="button" onClick={() => setFiltre('hepsi')} style={cip(filtre === 'hepsi', '#9FB3C8')}>Tümü {toplam}</button>
+            {gruplar.map((g) => (
+              <button key={g.anahtar} type="button" onClick={() => setFiltre(g.anahtar)} style={cip(filtre === g.anahtar, RENK[g.anahtar])}>
+                {g.anahtar === 'cekirdek' ? 'Temel' : g.baslik.replace(/ Araçları$/, '')} {g.araclar.length}
+              </button>
+            ))}
+          </div>
+        )}
 
         {gruplar == null ? (
-          <div style={{ padding: '24px 0', color: '#8FA0B5', fontSize: 14 }}>Araçlar yükleniyor…</div>
-        ) : gruplar.length === 0 ? (
-          <div style={{ padding: '24px 0', color: '#8FA0B5', fontSize: 14 }}>Şu an görüntülenecek araç yok.</div>
+          <div style={{ padding: '28px 0', color: '#8FA0B5', fontSize: 14 }}>Araçlar yükleniyor…</div>
+        ) : gorunen.length === 0 ? (
+          <div style={{ padding: '28px 0', color: '#8FA0B5', fontSize: 14 }}>Bu bölümde araç yok.</div>
         ) : (
-          gruplar.map((grup, gi) => (
-            <section key={grup.anahtar} style={{ marginTop: gi === 0 ? 0 : 40 }}>
-              {/* Bölüm başlığı — branş bölümü ince bir ayraçla ayrılır */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: 12,
-                  paddingTop: gi === 0 ? 0 : 22,
-                  borderTop: gi === 0 ? 'none' : '1px solid rgba(255,255,255,0.07)',
-                  marginBottom: 16,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0, letterSpacing: '-0.2px', color: '#fff' }}>{grup.baslik}</h2>
+          gorunen.map((grup, gi) => (
+            <section key={grup.anahtar} style={{ marginTop: gi === 0 ? 26 : 34 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+                <span style={{ width: 3, height: 16, backgroundColor: RENK[grup.anahtar], borderRadius: 2, flexShrink: 0 }} />
+                <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: '-0.2px' }}>{grup.baslik}</h2>
                 <span style={{ fontSize: 12, color: '#6B7280' }}>{grup.aciklama}</span>
-                <span
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: grup.anahtar === 'cekirdek' ? '#14B8A6' : '#A78BFA',
-                    backgroundColor: grup.anahtar === 'cekirdek' ? 'rgba(20,184,166,0.12)' : 'rgba(167,139,250,0.12)',
-                    border: `1px solid ${grup.anahtar === 'cekirdek' ? 'rgba(20,184,166,0.25)' : 'rgba(167,139,250,0.25)'}`,
-                    borderRadius: 999,
-                    padding: '3px 10px',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {grup.araclar.length}
-                </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: 12 }}>
                 {grup.araclar.map((tool) => {
-                  const isHovered = hovered === tool.route;
+                  const acik = hovered === tool.route;
                   return (
                     <div
                       key={tool.route}
                       role="link"
                       tabIndex={0}
+                      aria-label={tool.title}
                       onClick={() => router.push(tool.route)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(tool.route) } }}
                       onMouseEnter={() => setHovered(tool.route)}
                       onMouseLeave={() => setHovered(null)}
                       style={{
-                        backgroundColor: 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${isHovered ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)'}`,
-                        borderRadius: '18px',
-                        padding: '24px',
+                        backgroundColor: acik ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.035)',
+                        border: `1px solid ${acik ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)'}`,
+                        borderLeft: `3px solid ${tool.circleColor}`,
+                        borderRadius: '0 14px 14px 0',
+                        padding: '16px 18px',
                         cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                        transition: 'all .15s ease',
+                        transform: acik ? 'translateY(-2px)' : 'translateY(0)',
                         minHeight: 44,
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: tool.circleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>{tool.icon}</span>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '17px', fontWeight: 600, color: '#fff', marginBottom: '6px' }}>{tool.title}</div>
-                          <div style={{ fontSize: '13px', color: '#9CA3AF', lineHeight: '1.45' }}>{tool.desc}</div>
-                        </div>
-                        <div style={{ color: '#6B7280', fontSize: '18px', marginTop: '2px' }}>→</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
+                        <span style={{ width: 28, height: 28, borderRadius: '9999px', backgroundColor: tool.circleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11.5, fontWeight: 700, color: '#fff' }}>
+                          {tool.icon}
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', minWidth: 0 }}>{tool.title}</span>
+                        <span style={{ marginLeft: 'auto', color: acik ? '#9FB3C8' : '#4B5563', fontSize: 15, flexShrink: 0, transition: 'color .15s ease' }}>→</span>
                       </div>
+                      <div style={{ fontSize: 12.5, color: '#9CA3AF', lineHeight: 1.5 }}>{tool.desc}</div>
                     </div>
                   );
                 })}

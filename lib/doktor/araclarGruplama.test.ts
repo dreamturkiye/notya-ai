@@ -60,3 +60,21 @@ test('branş başlığı ham anahtar sızdırmaz (KD-ISIMLENDIRME-01)', () => {
     assert.ok(!kd.baslik.includes('-'), `başlık okunur olmalı: ${kd.baslik}`)
   }
 })
+
+test('grup adları: Temel Araçlar + "<Branş> Araçları" (Kaan 2026-09-19 isimlendirmesi)', () => {
+  const g = doktorAraclariGruplu('kardiyoloji')
+  assert.equal(g[0].baslik, 'Temel Araçlar')
+  const brans = g.find((x) => x.anahtar === 'brans')
+  if (brans) {
+    assert.match(brans.baslik, / Araçları$/)
+    assert.equal(brans.aciklama, 'Branşa özel')
+  }
+})
+
+test('"Günlük Araçlar" adı REZERVE: hiçbir grup bu adı kullanmamalı (ileride kullanım sıklığı bölümü olacak)', () => {
+  for (const b of [...ANAHTARLAR, null]) {
+    for (const g of doktorAraclariGruplu(b as string | null)) {
+      assert.notEqual(g.baslik, 'Günlük Araçlar', `${b}: "Günlük Araçlar" adı ileriye ayrıldı, grup adı olarak kullanılamaz`)
+    }
+  }
+})
