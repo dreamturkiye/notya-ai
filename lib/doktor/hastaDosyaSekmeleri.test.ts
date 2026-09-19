@@ -63,6 +63,26 @@ describe('hastaDosyaSekmeleri', () => {
     )
   })
 
+  it('KONSULTASYON-01: Konsültasyonlar sekmesi evrensel — her branş bayrağı kombinasyonunda, Belgeler\'in hemen ardından', () => {
+    const kombinasyonlar = [
+      { pediatriUygun: false, gebelikUygun: false },
+      { pediatriUygun: true, gebelikUygun: false },
+      { pediatriUygun: false, gebelikUygun: true, dahiliyeUygun: true },
+      { pediatriUygun: false, gebelikUygun: false, gozUygun: true },
+      { pediatriUygun: false, gebelikUygun: false, deriUygun: true },
+      { pediatriUygun: false, gebelikUygun: false, psikiyatriUygun: true },
+      { pediatriUygun: false, gebelikUygun: false, kbbUygun: true },
+    ]
+    for (const k of kombinasyonlar) {
+      const ids = hastaDosyaSekmeleri(k).map((t) => t.id)
+      assert.equal(ids.filter((x) => x === 'konsultasyon').length, 1, JSON.stringify(k))
+      assert.equal(ids[ids.indexOf('belgeler') + 1], 'konsultasyon')
+    }
+    const etiket = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false }).find((t) => t.id === 'konsultasyon')!.label
+    assert.equal(etiket, 'Konsültasyonlar')
+    assert.doesNotMatch(etiket, /sevk/i, 'SGK sevki ayrı belgedir — sekme "sevk" demez')
+  })
+
   it('KBB-EXCEPTIONAL-01: KBB sekmesi yalnız kbbUygun; yabancı branşta yok', () => {
     const kbb = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, kbbUygun: true })
     assert.ok(kbb.some((t) => t.id === 'kbb' && t.label === 'KBB'))

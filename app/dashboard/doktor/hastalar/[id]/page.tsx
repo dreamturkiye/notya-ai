@@ -24,6 +24,7 @@ import GozHome from '@/specialties/goz-hastaliklari/ui/GozHome';
 import PsikiyatriHome from '@/specialties/psikiyatri/ui/PsikiyatriHome';
 import KbbHome from '@/specialties/kulak-burun-bogaz/ui/KbbHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
+import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
 import { hesaplaHedefBoy, formatBoyCm, pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
@@ -130,7 +131,7 @@ export default function HastaProfilPage() {
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
       'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'bebek', 'goz',
-      'psikiyatri', 'kbb',
+      'psikiyatri', 'kbb', 'konsultasyon',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
     if (tabParam === 'gebelik') {
@@ -449,6 +450,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'belgeler' && (
           <PatientDocumentVault patientId={patientId} specialtyGeri={vaultSpecialtyGeri} />
         )}
+        {!loading && !error && activeTab === 'konsultasyon' && <HastaKonsultasyonlar patientId={patientId} />}
         {!loading && !error && activeTab === 'goruntuleme' && (
           <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 14, color: '#8FA0B5' }}>Röntgen, EKG ve diğer görüntüleme kayıtları görüntüleme merkezinde.</span>

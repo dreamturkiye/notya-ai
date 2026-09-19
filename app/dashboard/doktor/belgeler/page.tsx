@@ -26,6 +26,7 @@ import { VAULT_MAX_BYTES } from '@/lib/vault/types'
 import { belgeDegerlendirmeCtalari, belgeKategoriEtiket } from '@/lib/doktor/belgeTur'
 import GeriLink from '@/components/navigasyon/GeriLink'
 import { DOKTOR_ANA, hastaBelgelerHref } from '@/lib/doktor/geriNavigasyon'
+import KasaKonsultasyonBaglantisi, { BOS_KONSULTASYON_SECIMI, konsultasyonaBagla, type KasaKonsultasyonSecimi } from '@/components/doktor/KasaKonsultasyonBaglantisi'
 
 const BELGE_TURLERI = [
   'Lab Sonucu',
@@ -34,6 +35,8 @@ const BELGE_TURLERI = [
   'Röntgen',
   'Epikriz',
   'Reçete',
+  // KONSULTASYON-01: meslektaştan gelen görüş raporu. "Sevk" yalnız gerçek SGK sevk belgesi içindir.
+  'Konsültasyon raporu',
   'Sevk',
   'Diğer',
 ]
@@ -55,6 +58,7 @@ export default function BelgelerPage() {
   const [listeAcik, setListeAcik] = useState(false)
   const [belgeType, setBelgeType] = useState(BELGE_TURLERI[0])
   const [notes, setNotes] = useState('')
+  const [kons, setKons] = useState<KasaKonsultasyonSecimi>(BOS_KONSULTASYON_SECIMI)
   const [hastalar, setHastalar] = useState<HastaOption[]>([])
   const [docs, setDocs] = useState<VaultDoc[]>([])
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
@@ -164,6 +168,7 @@ export default function BelgelerPage() {
     setHastaAra(h.label)
     setListeAcik(false)
     setViewer(null)
+    setKons(BOS_KONSULTASYON_SECIMI)
   }
 
   const dosyaSecildi = (f: File | null) => {
@@ -235,7 +240,11 @@ export default function BelgelerPage() {
       })
       const d = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(d.error || 'Belge yüklenemedi. Lütfen tekrar deneyin.')
-      setInfo(`"${file.name}" kasaya eklendi${secili ? ` · ${secili.label}` : ''}.`)
+      // KONSULTASYON-01: isteğe bağlı — yüklenen raporu seçili konsültasyona bağla (KANIT).
+      const bag = kons.acik && kons.id && d.document?.id ? await konsultasyonaBagla(kons, d.document.id) : null
+      if (bag?.hata) setError(`Belge kasaya eklendi ama konsültasyona bağlanamadı: ${bag.hata}`)
+      setInfo(`"${file.name}" kasaya eklendi${secili ? ` · ${secili.label}` : ''}${bag && !bag.hata ? (bag.yanitlandi ? ' · konsültasyon yanıtlandı' : ' · konsültasyona bağlandı — yanıt özetinizi hasta dosyasından yazın') : ''}.`)
+      if (bag && !bag.hata) setKons(BOS_KONSULTASYON_SECIMI)
       dosyayiKaldir()
       setNotes('')
       await loadDocs(hastaId)
@@ -374,6 +383,8 @@ export default function BelgelerPage() {
               ))}
             </select>
           </div>
+
+          <KasaKonsultasyonBaglantisi hastaId={hastaId} secim={kons} setSecim={(k) => { setKons(k); if (k.acik && !kons.acik) setBelgeType('Konsültasyon raporu') }} />
 
           <div style={{ marginBottom: 16 }}>
             <label style={toolsLabel} htmlFor="belge-not">
