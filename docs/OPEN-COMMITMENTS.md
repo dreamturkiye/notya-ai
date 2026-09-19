@@ -24,6 +24,65 @@ Practical check for each PR that touches UI, before calling it finished:
   check is needed — but any new button, form, panel, badge, or page does need one.
 - Record what was checked (and any gap found) in the PR description / ledger, same as other work.
 
+## ARACLAR-CILA-01 — 27 branş aracını aynı istisnai kaliteye çıkarma (Kaan, 2026-09-19)
+
+Tespit: beş branşın araçları farklı sprintlerde yazıldı; paylaşılan bileşen kütüphanesi her sprintte
+büyüdü ama öncekiler geriye doldurulmadı. Göz kabuğunda 3 paylaşılan parça vardı, pediatri kabuğunda 12;
+aynı `Secim` bileşeninin beş ayrı kopyası dolaşıyordu. Kaan: "aynı sırayla yürüt, tüm branşlar aynı
+istisnai kaliteye gelsin." Dört faz, ayrı PR'lar.
+
+### Faz 1 — paylaşılan araç UI kütüphanesi + geriye doldurma (ŞU PR)
+
+**Tek kaynak: `lib/doktor/aracUi.tsx`.** Pediatri kabuğunda olgunlaşan parçalar buraya taşındı:
+stil sözlüğü (`kutu/etiket/kucuk/metin/satir/btn/ghost/input/hata/uyari/kirmizi/iyi/kaydir`),
+`Alan`, `Etiketli`, `Secim`, `Segment`, `Onay`, `Kutu`, `Sayi`, `Katlanir`, `TaslakNotu`, `Rozet`,
+`OneriRozet`, `Istatistik`, `KopyalaButonu`, `panoyaKopyala`, branştan bağımsız `HastaSecici`,
+`useUrlHasta` ve `useHastaVerisi` (eski `usePediHasta`ın genel hâli).
+
+Branş rengi `AracVurguSaglayici` bağlamıyla verilir (teal / dahiliye teal / pembe); her branşın
+KENDİ kabuğu duruyor — branş kapısı (`doktorAraciBransaUygun`), başlık ve renk vurgusu orada.
+`gozStil` / `dermStil` / `dahStil` / `kdStil` / `pediStil` dışa aktarımları `aracStil(<vurgu>)`
+sonucunu gösteren ince sarmalayıcı olarak KALDI — 27 aracın importu kırılmadı. Davranış değişmedi.
+
+**Geriye doldurulan araçlar (13 + 2 kohort paneli):**
+
+| Branş | Araç | Ne eklendi |
+|---|---|---|
+| Göz | GİL EK-3/G kodları | Segment (tip), `Alan` etiketleri, manşet kalem sayısı, kayan liste, satır başına `KopyalaButonu`, katlanır kaynak notu, TASLAK rozeti |
+| Göz | VA / logMAR | OD/OS ETDRS farkı manşet kartı, yön rozeti, özet kopyalama, katlanır yöntem notu, TASLAK rozeti |
+| Göz | SUT anti-VEGF kapı | Göz + basamak segmenti, `Onay`, engel/uyarı manşeti, kayan geçmiş tablosu, katlanır SUT dayanakları, TASLAK rozeti |
+| Göz | SGK rapor taslağı | Göz segmenti, görünür alan etiketleri (`Etiketli`), katlanır MFK/görüntüleme, eksik sayısı manşeti, `KopyalaButonu`, TASLAK rozeti |
+| Göz | Kohort paneli | `Istatistik` manşet kartları, bayraklar `Rozet` |
+| Derm | PASI / EASI | Skor segmenti, manşet skor kartları, katlanır SCORAD, TASLAK rozeti |
+| Derm | GÖP izotretinoin kapı | Yerel `Onay` kopyası kaldırıldı (ortak), engel sayısı manşeti, katlanır asitretin notu, TASLAK rozeti |
+| Derm | Fototerapi defteri | 5 `Istatistik` kartı, katlanır MED/yanık bölümü, kayan defter tablosu, TASLAK rozeti |
+| Derm | Yama D2/D4 | Takvim manşet kartları, durum rozeti, kayan antijen listesi, TASLAK rozeti |
+| Derm | Kohort paneli | `Istatistik` manşet kartları, bayraklar `Rozet` |
+| Dahiliye | SCORE2 / KVR | Cinsiyet + statin segmenti, risk/kova/statin açığı manşeti, katlanır lipid bölümü, TASLAK rozeti |
+| Dahiliye | KDIGO CKD | Cinsiyet segmenti, evre + izlem manşeti, kronisite rozeti, katlanır önceki eGFR, TASLAK rozeti |
+| Dahiliye | Polifarmasi STOPP/START | İlaç/öneri sayısı manşeti, engelleyici öneri rozeti, TASLAK rozeti |
+| Dahiliye | CHA₂DS₂-VASc / HAS-BLED | Cinsiyet + endikasyon segmenti, skor + KrKl manşeti, HAS-BLED rozetleri, katlanır ilaç listesi, TASLAK rozeti |
+| Dahiliye | SGK ilaç raporu | Cinsiyet / DM tipi / endikasyon segmenti, eksik + SUT tamam manşeti, kontrol listesi rozetleri, TASLAK rozeti |
+
+**Klinik davranış değişmedi:** hiçbir hesap, eşik, kaynak metni veya motor çağrısı değiştirilmedi;
+değişen yalnız sunum ve etkileşim. Doz kilidi, kaynak kilidi ve hekim kilidi dili korundu.
+
+**Yeni bekçiler:** `lib/doktor/aracUi.test.ts` (tek kaynak — hiçbir kabuk ortak bileşeni yeniden
+tanımlamaz, eski `*Stil` adları durur, branş kapısı yerinde, geriye doldurulan her araçta
+`Istatistik` + `TaslakNotu` var) ve üç SSR paketi: `specialties/{goz-hastaliklari,dermatoloji,
+dahiliye}/tests/araclarUi.test.ts` (gerçek `react-dom/server` çıktısı, pediatri `ui.test.ts` kalıbı,
+branş sızıntısı kontrolü dâhil). Mevcut assertion'ların hiçbiri zayıflatılmadı.
+
+**Mobil:** ortak `kaydir` kabı geniş tabloları kendi kabında kaydırıyor (sayfa 390 px'te yatay
+kaymıyor), ortak `input` artık her branşta `minHeight: 44`, `Segment` parçaları ≥ 44 px.
+
+### Faz 2–4 — sırada
+
+- Faz 2: "Bugünkü muayene formuna ekle" tüm uygun araçlara (mevcut `gununNotunaEkle` +
+  `muayeneFormuYolu` yolu; hiçbir şey otomatik yazılmaz).
+- Faz 3: seri klinik değerler için kalıcılık (VA/GİB, PASI/EASI, büyüme, SCORE2/CKD, gebelik izlem).
+- Faz 4: iki yeni evrensel araç — Muayene sonu paketi ve Sık kullandıklarım / hızlı şablonlar.
+
 ## Open — KD form alanlarına sesli giriş (2026-09-18)
 
 Boss (KD canlı): Kadın Sağlığı & Gebelik formları (SAT, Gravida/Para, lohusa izlem…) klavye

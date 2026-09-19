@@ -1,5 +1,7 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — cinsiyet/endikasyon segmenti, manşet skor kartı,
+ * HAS-BLED rozetleri, katlanır eş zamanlı ilaç bölümü ve taslak rozeti.
  * DAH-EXCEPTIONAL-01 — Araçlar › CHA₂DS₂-VASc / HAS-BLED. Dahiliye-only (BRANS_DOKTOR_ARACLARI).
  * CHA₂DS₂-VASc hekimin işaretlediği bileşenlerden toplanır (engines/sgkRapor.chaVascSkoru).
  * HAS-BLED maddeleri KONTROL LİSTESİDİR — skor iddiası yoktur; kanamanın değiştirilebilir nedenlerini gösterir
@@ -9,7 +11,7 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { antikoagulanDegerlendir, type Ajan } from '../../engines/antikoagulan';
 import { chaVascSkoru } from '../../engines/sgkRapor';
-import { dahStil, Secim, Onay, Sayi, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -32,7 +34,7 @@ const ENDIKASYON: Array<[string, string]> = [
   ['diger', 'Diğer'],
 ];
 const VAR_AD = (v: boolean | null) => (v === true ? 'var' : v === false ? 'yok' : 'bilinmiyor');
-const VAR_RENK = (v: boolean | null) => (v === true ? '#F87171' : v === false ? '#34D399' : '#FBBF24');
+const VAR_TON = (v: boolean | null): 'kirmizi' | 'iyi' | 'uyari' => (v === true ? 'kirmizi' : v === false ? 'iyi' : 'uyari');
 
 export default function AntikoagAraci() {
   const [yas, setYas] = useState('');
@@ -94,9 +96,13 @@ export default function AntikoagAraci() {
     <>
       <div style={kutu}>
         <div style={etiket}>Hasta</div>
+        <div style={{ maxWidth: 280, marginBottom: 10 }}>
+          <Alan etiket="Cinsiyet" ipucu="CHA₂DS₂-VASc'ın Sc bileşeni buradan gelir.">
+            <Segment etiket="Cinsiyet" deger={cinsiyet} set={setCinsiyet} secenekler={CINSIYET} />
+          </Alan>
+        </div>
         <div style={satir}>
           <Sayi ad="Yaş" deger={yas} set={setYas} genislik={90} />
-          <Secim etiket="Cinsiyet" deger={cinsiyet} set={setCinsiyet} secenekler={CINSIYET} />
           <Sayi ad="Kilo" deger={kilo} set={setKilo} birim="kg" genislik={90} />
           <Sayi ad="Kreatinin" deger={kre} set={setKre} birim="mg/dL" adim="0.1" genislik={90} />
         </div>
@@ -121,7 +127,10 @@ export default function AntikoagAraci() {
 
       <div style={{ ...kutu, borderColor: 'rgba(20,184,166,0.35)' }} aria-live="polite">
         <div style={etiket}>CHA₂DS₂-VASc</div>
-        <div style={{ fontSize: 34, fontWeight: 800, color: '#5EEAD4', lineHeight: 1.1 }}>{chaSkor}</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+          <Istatistik deger={chaSkor} etiket="işaretli bileşen toplamı" ton="iyi" />
+          <Istatistik deger={sonuc.krkl != null ? `${sonuc.krkl}` : '—'} etiket="KrKl mL/dk (Cockcroft-Gault)" />
+        </div>
         {chaSatirlari.map(([ad, p]) => (
           <div key={ad} style={{ ...metin, marginTop: 4, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ color: p ? '#EDF1F7' : '#8FA0B5' }}>{ad}</span>
@@ -135,7 +144,11 @@ export default function AntikoagAraci() {
         <div style={etiket}>Antikoagülan ve kanama bağlamı</div>
         <div style={satir}>
           <Secim etiket="Ajan" deger={ajan} set={setAjan} secenekler={AJAN} />
-          <Secim etiket="Endikasyon" deger={endikasyon} set={setEndikasyon} secenekler={ENDIKASYON} />
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <Alan etiket="Endikasyon">
+            <Segment etiket="Endikasyon" deger={endikasyon} set={setEndikasyon} secenekler={ENDIKASYON} />
+          </Alan>
         </div>
         <div style={satir}>
           <Onay ad="Karaciğer hastalığı" deger={hasBled.karaciger} set={(b) => setHasBled((p) => ({ ...p, karaciger: b }))} />
@@ -143,10 +156,12 @@ export default function AntikoagAraci() {
           <Onay ad="Kanama öyküsü / yatkınlık" deger={hasBled.kanama} set={(b) => setHasBled((p) => ({ ...p, kanama: b }))} />
           <Onay ad="Alkol (haftada ≥8 kadeh)" deger={hasBled.alkol} set={(b) => setHasBled((p) => ({ ...p, alkol: b }))} />
         </div>
-        <label style={{ ...metin, display: 'block', marginTop: 8 }}>Eş zamanlı ilaçlar (her satıra bir)
-          <textarea aria-label="Eş zamanlı ilaçlar" value={ilacMetni} onChange={(e) => setIlacMetni(e.target.value)} rows={3} placeholder={'asetilsalisilik asit\nibuprofen'} style={{ ...dahStil.input, marginTop: 6, resize: 'vertical' }} />
-        </label>
-        <div style={{ ...kucuk, marginTop: 6 }}>Warfarinde labil INR maddesi INR serisi hasta dosyasında (Dahiliye › Antikoagülan) hesaplanır; burada "bilinmiyor" kalır.</div>
+        <Katlanir baslik="Eş zamanlı ilaçlar" acik={!!ilacMetni} rozet={ilacMetinleri.length ? `${ilacMetinleri.length} satır` : undefined}>
+          <label style={{ ...metin, display: 'block' }}>Her satıra bir ilaç
+            <textarea aria-label="Eş zamanlı ilaçlar" value={ilacMetni} onChange={(e) => setIlacMetni(e.target.value)} rows={3} placeholder={'asetilsalisilik asit\nibuprofen'} style={{ ...dahStil.input, marginTop: 6, resize: 'vertical' }} />
+          </label>
+          <div style={{ ...kucuk, marginTop: 6 }}>Warfarinde labil INR maddesi INR serisi hasta dosyasında (Dahiliye › Antikoagülan) hesaplanır; burada &quot;bilinmiyor&quot; kalır.</div>
+        </Katlanir>
       </div>
 
       <div style={kutu}>
@@ -155,9 +170,9 @@ export default function AntikoagAraci() {
           <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>SKOR İDDİASI YOK</span>
         </div>
         {sonuc.hasBledMaddeleri.map((m) => (
-          <div key={m.madde} style={{ ...metin, marginTop: 6, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div key={m.madde} style={{ ...metin, marginTop: 6, display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span>{m.madde}{m.degistirilebilir && <span style={{ ...kucuk, display: 'block' }}>değiştirilebilir faktör</span>}</span>
-            <span style={{ fontWeight: 700, color: VAR_RENK(m.var) }}>{VAR_AD(m.var)}</span>
+            <Rozet ton={VAR_TON(m.var)}>{VAR_AD(m.var)}</Rozet>
           </div>
         ))}
         <div style={{ ...kucuk, marginTop: 10 }}>Maddeler toplanmaz: kanama riskinin değiştirilebilir nedenlerini göstermek içindir ve antikoagülan kesme gerekçesi değildir.</div>
@@ -170,8 +185,8 @@ export default function AntikoagAraci() {
         {sonuc.uygunluk.map((x) => <div key={x} style={{ ...metin, marginTop: 6 }}>• {x}</div>)}
         {sonuc.uyarilar.map((x) => <div key={x} style={{ ...metin, marginTop: 6, color: '#FBBF24' }}>⚠ {x}</div>)}
         {sonuc.plan.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6 }}>{x}</div>)}
-        <KopyalaButonu metin={kopyaMetni} etiket="Değerlendirmeyi kopyala" />
-        <div style={{ ...kucuk, marginTop: 10 }}>Azaltılmış doz ölçütleri bayrak olarak gösterilir; mg yazılmaz — dozu hekim belirler. Hesap kaydedilmez.</div>
+        <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Değerlendirmeyi kopyala" /></div>
+        <TaslakNotu>Azaltılmış doz ölçütleri bayrak olarak gösterilir; mg yazılmaz — dozu hekim belirler. Hesap kaydedilmez, nota otomatik yazılmaz.</TaslakNotu>
       </div>
 
       <div style={kutu}>

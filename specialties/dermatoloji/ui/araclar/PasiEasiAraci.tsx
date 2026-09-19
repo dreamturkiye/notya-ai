@@ -1,5 +1,6 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — skor segmenti, manşet sayılar, katlanır SCORAD, taslak rozeti.
  * DERM-EXCEPTIONAL-01 — Araçlar › PASI / EASI hesap. Dermatoloji-only (BRANS_DOKTOR_ARACLARI).
  * Bölge skoru (baş-boyun / üst ekstremite / gövde / alt ekstremite) → engines/score-calculator pasi + easi;
  * ayrıca SCORAD alanları. Şiddet bandı karar desteğidir; endikasyon, SUT kriteri ve tedavi kararı hekimindir.
@@ -7,7 +8,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { pasi, easi, scorad, pasiBandi, easiBandi, scoradBandi, type PasiRegion } from '../../engines/score-calculator';
-import { dermStil, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { dermStil, Alan, Segment, Istatistik, Katlanir, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost } = dermStil;
 
@@ -101,17 +102,11 @@ export default function PasiEasiAraci() {
     <>
       <div style={kutu}>
         <div style={etiket}>Skor</div>
+        <Alan etiket="Hangi skor">
+          <Segment etiket="Skor" deger={mod} set={(m) => setMod(m)} secenekler={[['pasi', 'PASI (psoriasis)'], ['easi', 'EASI (atopik dermatit)']] as Array<[Mod, string]>} />
+        </Alan>
         <div style={satir}>
-          {(['pasi', 'easi'] as Mod[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              aria-pressed={mod === m}
-              onClick={() => setMod(m)}
-              style={{ ...(mod === m ? btn : ghost), minWidth: 150 }}
-            >{m === 'pasi' ? 'PASI (psoriasis)' : 'EASI (atopik dermatit)'}</button>
-          ))}
-          <button type="button" onClick={() => setBolge(BOS)} style={ghost}>Temizle</button>
+          <button type="button" onClick={() => setBolge(BOS)} style={ghost}>Bölge skorlarını temizle</button>
         </div>
         <div style={{ ...kucuk, marginTop: 8 }}>
           {mod === 'pasi'
@@ -134,7 +129,7 @@ export default function PasiEasiAraci() {
       ))}
 
       <div style={kutu}>
-        <div style={etiket}>SCORAD (isteğe bağlı)</div>
+        <Katlanir baslik="SCORAD (isteğe bağlı)" acik={scGirildi} rozet={scGirildi ? `SCORAD ${scoradDeger}` : undefined}>
         <div style={kucuk}>SCORAD = yaygınlık/5 + 3,5×şiddet + öznel (kaşıntı + uykusuzluk). Yaygınlık 0–100, şiddet 0–18, öznel 0–20.</div>
         <div style={satir}>
           <label style={{ ...metin, display: 'flex', gap: 6, alignItems: 'center' }}>Yaygınlık
@@ -147,17 +142,21 @@ export default function PasiEasiAraci() {
             <input type="number" min={0} max={20} inputMode="numeric" aria-label="SCORAD öznel" value={sc.oznel} onChange={(e) => setSc((p) => ({ ...p, oznel: e.target.value }))} style={{ ...dermStil.input, width: 90 }} />
           </label>
         </div>
-        {scGirildi && <div style={{ ...metin, marginTop: 8, fontWeight: 700 }}>SCORAD {scoradDeger} — {scoradBant.ad}</div>}
+        {scGirildi && <div style={{ ...satir }}><Rozet ton="bilgi">SCORAD {scoradDeger}</Rozet><span style={metin}>{scoradBant.ad}</span></div>}
+        </Katlanir>
       </div>
 
       <div style={{ ...kutu, borderColor: 'rgba(244,114,182,0.35)' }} aria-live="polite">
         <div style={etiket}>Sonuç</div>
-        <div style={{ fontSize: 34, fontWeight: 800, color: '#F9A8D4', lineHeight: 1.1 }}>{modAd} {toplam}</div>
-        <div style={{ ...metin, marginTop: 4, fontWeight: 700 }}>Şiddet bandı: {bant.ad}</div>
-        <div style={{ ...metin, marginTop: 6 }}>Diğer skor: {mod === 'pasi' ? `EASI ${easiDeger}` : `PASI ${pasiDeger}`} <span style={kucuk}>(aynı bölge girdileriyle; EASI şiddeti 0–3, PASI 0–4 ölçeğindedir — ölçeği değiştirmeden okumayın)</span></div>
-        {!dolu && <div style={{ ...kucuk, marginTop: 8, color: '#FBBF24' }}>Alan derecesi (A) girilmeden skor 0 kalır.</div>}
-        <KopyalaButonu metin={kopyaMetni} />
-        <div style={{ ...kucuk, marginTop: 10 }}>Şiddet bandı karar desteğidir (PASI 10/20 · EASI 7/21 · SCORAD 25/50); endikasyon, SUT kriteri ve tedavi basamağı hekimin kararıdır. Hesap kaydedilmez.</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+          <Istatistik deger={`${modAd} ${toplam}`} etiket={`şiddet bandı: ${bant.ad}`} ton={dolu ? 'iyi' : 'notr'} />
+          <Istatistik deger={mod === 'pasi' ? `EASI ${easiDeger}` : `PASI ${pasiDeger}`} etiket="diğer skor (aynı girdilerle)" />
+          {scGirildi && <Istatistik deger={`SCORAD ${scoradDeger}`} etiket={scoradBant.ad} />}
+        </div>
+        <div style={{ ...kucuk }}>EASI şiddeti 0–3, PASI 0–4 ölçeğindedir — ölçeği değiştirmeden okumayın.</div>
+        {!dolu && <div style={{ ...satir }}><Rozet ton="uyari">Alan derecesi (A) girilmeden skor 0 kalır</Rozet></div>}
+        <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
+        <TaslakNotu>Şiddet bandı karar desteğidir (PASI 10/20 · EASI 7/21 · SCORAD 25/50); endikasyon, SUT kriteri ve tedavi basamağı hekimin kararıdır. Hesap kaydedilmez, nota otomatik yazılmaz.</TaslakNotu>
       </div>
 
       <div style={kutu}>

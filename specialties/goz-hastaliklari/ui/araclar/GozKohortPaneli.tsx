@@ -8,12 +8,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { GOZ_BAYRAK_AD, gozHatirlatmaMesaji, type GozKohortBayrak, type GozKohortSatir } from '../../engines/kohort';
+import { gozStil, Istatistik, Rozet } from './GozAracKabugu';
 
 const BAYRAKLAR = Object.keys(GOZ_BAYRAK_AD) as GozKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: '#9BB0C7', lineHeight: 1.5 };
 const chip = (on: boolean): React.CSSProperties => ({ background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)', color: on ? '#5EEAD4' : '#C9D4E3', border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 });
-const btn: React.CSSProperties = { background: '#0F9B8E', color: '#041016', border: 'none', borderRadius: 12, padding: '12px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 44 };
-const ghost: React.CSSProperties = { background: 'transparent', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 40, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' };
+const btn: React.CSSProperties = { ...gozStil.btn, padding: '12px 18px', fontSize: 15 };
+const ghost: React.CSSProperties = { ...gozStil.ghost, borderRadius: 10, padding: '8px 12px', minHeight: 40 };
 
 export default function GozKohortPaneli() {
   const [v, setV] = useState<{ satirlar: GozKohortSatir[]; toplamHasta: number } | null>(null);
@@ -64,9 +65,9 @@ export default function GozKohortPaneli() {
           <div style={{ fontSize: 20, fontWeight: 700, color: '#EDF1F7' }}>Takip bayrakları</div>
           <div style={{ ...muted, marginTop: 6, maxWidth: 560 }}>{v ? `${v.toplamHasta} göz kaydı olan hasta · ${v.satirlar.length} bayraklı · yalnız hekimin girdiği tarih ve görevler` : hata || 'Yükleniyor…'}</div>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <div style={{ background: 'rgba(15,155,142,0.12)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}><div style={{ fontSize: 22, fontWeight: 800, color: '#5EEAD4' }}>{v?.toplamHasta ?? '—'}</div><div style={{ fontSize: 12, color: '#8FA0B5' }}>hasta</div></div>
-          <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.28)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}><div style={{ fontSize: 22, fontWeight: 800, color: '#FCA5A5' }}>{v ? v.satirlar.length : '—'}</div><div style={{ fontSize: 12, color: '#8FA0B5' }}>bayraklı</div></div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', minWidth: 200 }}>
+          <Istatistik deger={v?.toplamHasta ?? '—'} etiket="göz kaydı olan hasta" ton="iyi" />
+          <Istatistik deger={v ? v.satirlar.length : '—'} etiket="bayraklı" ton={v && v.satirlar.length ? 'kirmizi' : 'notr'} />
         </div>
       </div>
       {hata && <div style={{ color: '#FCA5A5', fontSize: 14, marginBottom: 12 }}>{hata} <button type="button" onClick={yukle} style={ghost}>Tekrar dene</button></div>}
@@ -88,7 +89,7 @@ export default function GozKohortPaneli() {
             <input type="checkbox" aria-label={`${s.ad} seç`} style={{ width: 20, height: 20 }} checked={secili.includes(s.patientId)} onChange={(e) => setSecili(e.target.checked ? [...secili, s.patientId] : secili.filter((x) => x !== s.patientId))} />
             <a href={hastaDosyaHref(s.patientId, 'goz')} style={{ color: '#F1F5F9', minWidth: 160, fontWeight: 700, fontSize: 16, textDecoration: 'none' }}>{s.ad}</a>
             <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: '1 1 200px' }}>
-              {s.bayraklar.map((b) => <span key={b} style={{ border: '1px solid rgba(248,113,113,0.45)', borderRadius: 999, padding: '4px 10px', fontSize: 13, fontWeight: 600, color: '#FCA5A5', background: 'rgba(248,113,113,0.08)' }}>{GOZ_BAYRAK_AD[b]}</span>)}
+              {s.bayraklar.map((b) => <Rozet key={b} ton="kirmizi">{GOZ_BAYRAK_AD[b]}</Rozet>)}
             </span>
             <span style={{ fontSize: 13, color: '#8FA0B5', flex: '1 1 100%' }}>{s.detay.join(' · ')}{s.sonVizit ? ` · son vizit ${s.sonVizit}` : ''}{s.portalVar ? '' : ' · portal bağlantısı yok (mesaj portal açılınca görünür)'}</span>
             <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

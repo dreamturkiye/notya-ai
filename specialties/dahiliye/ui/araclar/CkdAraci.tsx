@@ -1,5 +1,7 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — cinsiyet segmenti, manşet evre kartları,
+ * katlanır önceki ölçüm bölümü ve taslak rozeti.
  * DAH-EXCEPTIONAL-01 — Araçlar › KDIGO CKD evreleme. Dahiliye-only (BRANS_DOKTOR_ARACLARI).
  * Chapter motoru (engines/ckd.ckdDegerlendir + nefroSevkPaketi) ile birebir aynı kural: eGFR × UACR ısı haritası,
  * kronisite (≥3 ay), izlem sıklığı, sınıf düzeyinde plan ve nefroloji sevk gerekçesi. Doz yazılmaz; karar hekimindir.
@@ -7,7 +9,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { ckdDegerlendir, nefroSevkPaketi, type Renk } from '../../engines/ckd';
-import { dahStil, Secim, Onay, Sayi, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -70,13 +72,15 @@ export default function CkdAraci() {
           <Sayi ad="K" deger={k} set={setK} birim="mmol/L" adim="0.1" genislik={90} />
           <Sayi ad="Hb" deger={hb} set={setHb} birim="g/dL" adim="0.1" genislik={90} />
         </div>
-        <div style={satir}>
-          <Sayi ad="Önceki eGFR" deger={oncekiEGFR} set={setOncekiEGFR} />
-          <label style={{ ...metin, display: 'flex', gap: 6, alignItems: 'center' }}>Ölçüm tarihi
-            <input type="date" aria-label="Önceki eGFR tarihi" value={oncekiTarih} onChange={(e) => setOncekiTarih(e.target.value)} style={{ ...dahStil.input, width: 170, minHeight: 44 }} />
-          </label>
-        </div>
-        <div style={{ ...kucuk, marginTop: 8 }}>Kronisite için ≥3 ay arayla iki ölçüm gerekir; tek ölçümde evre "olası" işaretlenir. Kreatinin/eGFR girilmezse evre verilmez.</div>
+        <Katlanir baslik="Önceki eGFR (kronisite için)" acik={!!oncekiEGFR} rozet={oncekiEGFR && oncekiTarih ? 'girildi' : undefined}>
+          <div style={satir}>
+            <Sayi ad="Önceki eGFR" deger={oncekiEGFR} set={setOncekiEGFR} />
+            <label style={{ ...metin, display: 'flex', gap: 6, alignItems: 'center' }}>Ölçüm tarihi
+              <input type="date" aria-label="Önceki eGFR tarihi" value={oncekiTarih} onChange={(e) => setOncekiTarih(e.target.value)} style={{ ...dahStil.input, width: 170 }} />
+            </label>
+          </div>
+          <div style={{ ...kucuk, marginTop: 8 }}>Kronisite için ≥3 ay arayla iki ölçüm gerekir; tek ölçümde evre &quot;olası&quot; işaretlenir. Kreatinin/eGFR girilmezse evre verilmez.</div>
+        </Katlanir>
       </div>
 
       <div style={kutu}>
@@ -94,15 +98,20 @@ export default function CkdAraci() {
         <div style={etiket}>KDIGO değerlendirme</div>
         {sonuc.g ? (
           <>
-            <div style={{ fontSize: 32, fontWeight: 800, color: RENK_KOD[sonuc.renk || 'yesil'], lineHeight: 1.1 }}>{sonuc.g} {sonuc.a || '(UACR yok)'}</div>
-            <div style={{ ...metin, marginTop: 4, fontWeight: 700 }}>{sonuc.renk ? RENK_AD[sonuc.renk] : '—'} · kronisite: {KRONIK_AD[sonuc.kronikMi]}</div>
-            {sonuc.hizliDusus && <div style={{ ...metin, marginTop: 6, color: '#F87171', fontWeight: 700 }}>1 yılda eGFR &gt;%25 düşüş</div>}
-            {sonuc.izlemAy != null && <div style={{ ...kucuk, marginTop: 6 }}>Önerilen izlem: her {sonuc.izlemAy} ayda eGFR + UACR</div>}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+              <Istatistik deger={`${sonuc.g} ${sonuc.a || '(UACR yok)'}`} etiket={sonuc.renk ? RENK_AD[sonuc.renk] : 'evre'} ton={sonuc.renk === 'kirmizi' ? 'kirmizi' : sonuc.renk === 'turuncu' || sonuc.renk === 'sari' ? 'uyari' : 'iyi'} />
+              <Istatistik deger={sonuc.izlemAy != null ? `${sonuc.izlemAy} ay` : '—'} etiket="önerilen izlem aralığı (eGFR + UACR)" />
+            </div>
+            <div style={satir}>
+              <Rozet ton={sonuc.kronikMi === 'evet' ? 'iyi' : 'uyari'}>kronisite: {KRONIK_AD[sonuc.kronikMi]}</Rozet>
+              {sonuc.hizliDusus && <Rozet ton="kirmizi">1 yılda eGFR &gt;%25 düşüş</Rozet>}
+            </div>
           </>
         ) : (
           <div style={{ ...metin, fontWeight: 700 }}>eGFR girilmedi — evre verilmez</div>
         )}
         {sonuc.uyarilar.map((u) => <div key={u} style={{ ...metin, marginTop: 8, color: '#FBBF24' }}>⚠ {u}</div>)}
+        <TaslakNotu>KDIGO evresi ve izlem aralığı karar desteğidir; kronisite doğrulaması ve tedavi kararı hekimindir. Nota otomatik yazılmaz.</TaslakNotu>
       </div>
 
       {!!sonuc.plan.length && (
@@ -119,13 +128,17 @@ export default function CkdAraci() {
           : <div style={kucuk}>Bu girdilerle sevk ölçütü oluşmadı.</div>}
         <div style={satir}>
           <Sayi ad="Yaş" deger={yas} set={setYas} genislik={90} />
-          <Secim etiket="Cinsiyet" deger={cinsiyet} set={setCinsiyet} secenekler={CINSIYET} />
+        </div>
+        <div style={{ maxWidth: 280, marginTop: 10 }}>
+          <Alan etiket="Cinsiyet">
+            <Segment etiket="Cinsiyet" deger={cinsiyet} set={setCinsiyet} secenekler={CINSIYET} />
+          </Alan>
         </div>
         <label style={{ ...metin, display: 'block', marginTop: 8 }}>Aktif ilaçlar (her satıra bir)
           <textarea aria-label="Aktif ilaçlar" value={ilacMetni} onChange={(e) => setIlacMetni(e.target.value)} rows={3} placeholder={'ramipril\nempagliflozin'} style={{ ...dahStil.input, marginTop: 6, resize: 'vertical' }} />
         </label>
-        <KopyalaButonu metin={sevkMetni} etiket="Sevk paketini kopyala" />
-        <div style={{ ...kucuk, marginTop: 10 }}>Sevk paketi taslaktır; hasta adı ve kimlik bilgisi yazılmaz. Gönderim ve içerik hekim onayıyla.</div>
+        <div style={satir}><KopyalaButonu metin={sevkMetni} etiket="Sevk paketini kopyala" /></div>
+        <TaslakNotu>Sevk paketi taslaktır; hasta adı ve kimlik bilgisi yazılmaz. Gönderim ve içerik hekim onayıyla; nota otomatik yazılmaz.</TaslakNotu>
       </div>
 
       <div style={kutu}>

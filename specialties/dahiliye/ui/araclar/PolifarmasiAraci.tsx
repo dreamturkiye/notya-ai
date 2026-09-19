@@ -1,5 +1,6 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — manşet sayı kartları, şiddet rozeti ve taslak rozeti.
  * DAH-EXCEPTIONAL-01 — Araçlar › Polifarmasi STOPP/START. Dahiliye-only (BRANS_DOKTOR_ARACLARI).
  * Chapter motoru (engines/polifarmasi.polifarmasiDegerlendir) ile birebir aynı kural: ≥65 yaş taraması,
  * sınıf düzeyinde öneri, doz yok. Hiçbir ilaç otomatik kesilmez/başlanmaz; karar hekimindir.
@@ -7,7 +8,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { polifarmasiDegerlendir, OVERRIDE_MIN, type PoliSiddet } from '../../engines/polifarmasi';
-import { dahStil, Onay, Sayi, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Onay, Sayi, Istatistik, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -83,10 +84,16 @@ export default function PolifarmasiAraci() {
 
       <div style={{ ...kutu, borderColor: 'rgba(20,184,166,0.35)' }} aria-live="polite">
         <div style={etiket}>Tarama sonucu</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+          <Istatistik deger={ilaclar.length} etiket="aktif ilaç satırı" ton={ilaclar.length >= 5 ? 'uyari' : 'notr'} />
+          <Istatistik deger={sonuc.oneriler.filter((o) => o.siddet === 'durdur').length} etiket="durdurmayı değerlendir" ton={sonuc.oneriler.some((o) => o.siddet === 'durdur') ? 'kirmizi' : 'notr'} />
+          <Istatistik deger={sonuc.oneriler.filter((o) => o.siddet === 'baslat').length} etiket="başlatmayı değerlendir" ton={sonuc.oneriler.some((o) => o.siddet === 'baslat') ? 'iyi' : 'notr'} />
+        </div>
         <div style={{ ...metin, fontWeight: 700 }}>{sonuc.not}</div>
-        {!sonuc.uygulanabilir && <div style={{ ...kucuk, marginTop: 6, color: '#FBBF24' }}>Öneri üretilmedi.</div>}
+        {!sonuc.uygulanabilir && <div style={satir}><Rozet ton="uyari">Öneri üretilmedi — tarama ≥65 yaş için uygulanır</Rozet></div>}
         {sonuc.uygulanabilir && !sonuc.oneriler.length && <div style={{ ...kucuk, marginTop: 6 }}>Bu girdilerle STOPP/START önerisi oluşmadı.</div>}
-        {!!sonuc.oneriler.length && <KopyalaButonu metin={kopyaMetni} etiket="Önerileri kopyala" />}
+        {!!sonuc.oneriler.length && <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Önerileri kopyala" /></div>}
+        <TaslakNotu>Öneriler sınıf düzeyindedir; hiçbir ilaç otomatik kesilmez veya başlanmaz, doz yazılmaz. Karar hekimindir; nota otomatik yazılmaz.</TaslakNotu>
       </div>
 
       {sonuc.oneriler.map((o) => (
@@ -98,7 +105,7 @@ export default function PolifarmasiAraci() {
           {!!o.ilaclar.length && <div style={{ ...metin, fontWeight: 700 }}>{o.ilaclar.join(', ')}</div>}
           <div style={{ ...metin, marginTop: 6 }}>{o.gerekce}</div>
           <div style={{ ...metin, marginTop: 6 }}>→ {o.oneri}</div>
-          {o.engelleyici && <div style={{ ...kucuk, marginTop: 8, color: '#FBBF24' }}>Engelleyici öneri: uygulanmaması için en az {OVERRIDE_MIN} karakterlik klinik gerekçe gerekir (hasta dosyasında).</div>}
+          {o.engelleyici && <div style={satir}><Rozet ton="uyari">engelleyici öneri — atlamak için ≥{OVERRIDE_MIN} karakterlik klinik gerekçe (hasta dosyasında)</Rozet></div>}
         </div>
       ))}
 

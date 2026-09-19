@@ -1,5 +1,6 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — ortak onay kutusu, manşet engel sayısı, katlanır asitretin notu, taslak rozeti.
  * DERM-EXCEPTIONAL-01 — Araçlar › GÖP izotretinoin kapı. Dermatoloji-only (BRANS_DOKTOR_ARACLARI).
  * Chapter motoru (engines/gop-isotretinoin.gopIsotretinoin) ile birebir aynı kural: çift kontrasepsiyon,
  * β-hCG tarihi ve sonucu, siklus günü, reçete süresi. Doz ve endikasyon yoktur; karar hekimindir.
@@ -7,7 +8,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { gopIsotretinoin, acitretinPregnancyBanYears, type GopSex } from '../../engines/gop-isotretinoin';
-import { dermStil, Secim, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { dermStil, Secim, Onay, Istatistik, Katlanir, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -17,18 +18,6 @@ const CINSIYET: Array<[string, string]> = [
   ['male', 'Erkek'],
   ['unknown', 'Belirtilmedi (gebelik kapıları uygulanır)'],
 ];
-
-function Onay({ ad, deger, set, aciklama }: { ad: string; deger: boolean; set: (b: boolean) => void; aciklama?: string }) {
-  return (
-    <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', minHeight: 44, padding: '6px 0', cursor: 'pointer' }}>
-      <input type="checkbox" checked={deger} onChange={(e) => set(e.target.checked)} style={{ width: 20, height: 20, marginTop: 3 }} />
-      <span>
-        <span style={metin}>{ad}</span>
-        {aciklama && <span style={{ ...kucuk, display: 'block' }}>{aciklama}</span>}
-      </span>
-    </label>
-  );
-}
 
 export default function GopKapiAraci() {
   const [sex, setSex] = useState<GopSex>('female');
@@ -114,15 +103,21 @@ export default function GopKapiAraci() {
 
       <div style={{ ...kutu, borderColor: sonuc.allowed ? 'rgba(45,212,191,0.4)' : 'rgba(248,113,113,0.45)' }} aria-live="polite">
         <div style={etiket}>GÖP kapı sonucu</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+          <Istatistik deger={engeller.length} etiket="açık kapı engeli" ton={engeller.length ? 'kirmizi' : 'iyi'} />
+          <Istatistik deger={(sonuc.notApplicable || []).length} etiket="uygulanmayan kapı" />
+        </div>
         <div style={{ ...metin, fontWeight: 800, fontSize: 18, color: sonuc.allowed ? '#2DD4BF' : '#F87171' }}>
           {sonuc.allowed ? 'Kapılarda engel yok — başlatma kararı hekimindir' : `${engeller.length} engel var — başlatılamaz`}
         </div>
         {engeller.map((b) => <div key={b} style={{ ...metin, color: '#F87171' }}>✕ {b}</div>)}
         {(sonuc.notApplicable || []).map((n) => <div key={n} style={{ ...metin, color: '#8FA0B5' }}>— {n}: uygulanmaz</div>)}
-        <KopyalaButonu metin={kopyaMetni} />
-        <div style={{ ...kucuk, marginTop: 10 }}>
-          Kapı kontrolüdür; endikasyon, doz ve izlem planı hekimindir. Asitretin için gebelik yasağı tedavi bitiminden sonra {acitretinPregnancyBanYears()} yıl sürer — izotretinoin kapıları asitretin için yeterli değildir.
-        </div>
+        <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
+        <Katlanir baslik="Asitretin farkı">
+          <div style={kucuk}>Asitretin için gebelik yasağı tedavi bitiminden sonra {acitretinPregnancyBanYears()} yıl sürer — izotretinoin kapıları asitretin için yeterli değildir.</div>
+        </Katlanir>
+        <div style={satir}><Rozet ton="notr">doz ve endikasyon Notya tarafından önerilmez</Rozet></div>
+        <TaslakNotu>Kapı kontrolüdür; endikasyon, doz ve izlem planı hekimindir. Nota otomatik yazılmaz.</TaslakNotu>
       </div>
 
       <div style={kutu}>
