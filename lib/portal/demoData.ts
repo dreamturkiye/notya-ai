@@ -9,6 +9,8 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   kronik: null,
   psik: null, // ruh sağlığı verisi demo portalında hiç taşınmaz
   kulak: null, // KBB izlemi yalnız KBB hekiminin token'ında açılır
+  // KONSULTASYON-01 — çekirdek: yalnız branş + tarih + durum (klinik içerik yok)
+  yonlendirmeler: [{ id: 'dy1', brans: 'Kardiyoloji', tarih: '2026-08-20', durum: 'sonuc_alindi', sonucTarihi: '2026-09-02' }],
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
   gebelik: null,
   jinekoloji: null,
@@ -391,6 +393,7 @@ const GOZ_HEKIM = 'Op. Dr. Deniz Aksoy'
 export const SAGLIGIM_DEMO_GOZ: PortalBundle = {
   ...SAGLIGIM_DEMO,
   portal: { moduller: ['gozlerim'], nav: [{ key: 'gozlerim', label: 'Gözlerim', path: '/gozlerim' }] },
+  yonlendirmeler: [],
   buyume: null,
   gebelik: null,
   jinekoloji: null,

@@ -347,3 +347,20 @@ export function konsultasyonHatirlatmaMesaji(bransAdi: string): { konu: string; 
 
 /** Hatırlatma sıklık sınırı — aynı konsültasyon için 7 günde bir. */
 export const HATIRLATMA_ARALIGI_GUN = 7
+
+/* ───────────────────────── Kohort satırı · yanıt süresi (SKS) ───────────────────────── */
+
+/**
+ * SKS: konsültasyon istem → yanıt süresi kalite göstergesidir. Hekimin yanıtlanmış konsültasyonlarından
+ * (istem ve yanıt tarihi olan) gün cinsinden medyan ve en uzun süre. Sayı klinik eşik DEĞİLDİR — yalnız ölçüm.
+ */
+export function yanitSuresiOzeti(satirlar: ReadonlyArray<Pick<KonsultasyonSatiri, 'durum' | 'istem_tarihi' | 'created_at' | 'yanit_tarihi'>>): { adet: number; medyanGun: number | null; enUzunGun: number | null } {
+  const gunler = satirlar
+    .filter((s) => durumGrubu(s.durum) === 'yanitlandi' && isoGunMu(s.yanit_tarihi))
+    .map((s) => beklemeGunu(s, String(s.yanit_tarihi)))
+    .sort((a, b) => a - b)
+  if (!gunler.length) return { adet: 0, medyanGun: null, enUzunGun: null }
+  const o = Math.floor(gunler.length / 2)
+  const medyan = gunler.length % 2 ? gunler[o] : Math.round((gunler[o - 1] + gunler[o]) / 2)
+  return { adet: gunler.length, medyanGun: medyan, enUzunGun: gunler[gunler.length - 1] }
+}

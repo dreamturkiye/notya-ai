@@ -8,6 +8,39 @@ import {
   yasamsalBulguSatirlari,
 } from '@/lib/clinical/yasamsalBulgular'
 import { EmptyState, ListRow, SectionHeader, SoftPanel, formatTrDate } from './ui'
+import { portalYonlendirmeMetni } from '@/lib/doktor/konsultasyon'
+
+/**
+ * KONSULTASYON-01 — "Yönlendirmeleriniz": doktorunuzun sizi yönlendirdiği uzmanlık alanları ve sonucun gelip
+ * gelmediği. Yalnız branş + tarih + durum; klinik içerik doktorunuzda kalır (KVKK m.10 aydınlatma).
+ */
+export function YonlendirmelerView({ data }: { data: PortalBundle }) {
+  const liste = data.yonlendirmeler || []
+  if (!liste.length) return null
+  return (
+    <div style={{ marginTop: 20 }}>
+      <SectionHeader title="Yönlendirmeleriniz" subtitle="Doktorunuzun görüşünü istediği uzmanlık alanları ve sonucun ulaşıp ulaşmadığı." />
+      <SoftPanel className="sg-list-panel">
+        {liste.map((y) => (
+          <ListRow
+            key={y.id}
+            // YYYY-AA-GG gün değeri: öğlen UTC ile biçimlenir ki tarayıcı saat dilimi günü kaydırmasın
+            meta={formatTrDate(`${y.tarih}T12:00:00Z`)}
+            title={portalYonlendirmeMetni(y)}
+            badge={
+              <span style={{ fontWeight: 700, color: y.durum === 'sonuc_alindi' ? 'var(--sg-accent)' : 'inherit', opacity: y.durum === 'kapandi' ? 0.7 : 1 }}>
+                {y.durum === 'sonuc_alindi' ? 'Sonuç alındı' : y.durum === 'kapandi' ? 'Kapatıldı' : 'Bekleniyor'}
+              </span>
+            }
+          />
+        ))}
+      </SoftPanel>
+      <p style={{ fontSize: 12.5, opacity: 0.75, margin: '10px 20px 0', lineHeight: 1.5 }}>
+        Görüşmenin ayrıntılarını ve sonucunu doktorunuz sizinle muayenede konuşur. Randevu almadıysanız lütfen yönlendirildiğiniz uzmanlık alanından randevu alın.
+      </p>
+    </div>
+  )
+}
 
 export function VisitsListView({ basePath, data }: { basePath: string; data: PortalBundle }) {
   return (
@@ -33,6 +66,7 @@ export function VisitsListView({ basePath, data }: { basePath: string; data: Por
           ))}
         </SoftPanel>
       )}
+      <YonlendirmelerView data={data} />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import type { PortalYonlendirme } from '@/lib/doktor/konsultasyon'
 /** Sağlığım — shared TypeScript contracts for patient portal UI + API. */
 import type { PortalModulId, PortalNavOge } from '@/lib/specialties/profile'
 export type { PortalModulId, PortalNavOge }
@@ -151,6 +152,11 @@ export interface PortalBundle {
   medicationHistory: PortalMedChange[]
   history: PortalHistory
   tracking: PortalTracking
+  /**
+   * KONSULTASYON-01 — ÇEKİRDEK omurga (her branş): doktorun bu hastayı yönlendirdiği konsültasyonlar.
+   * Yalnız branş + tarih + durum (KVKK m.10 aydınlatma). Klinik soru, tanı, yanıt özeti, rapor ve konsültan adı YOK.
+   */
+  yonlendirmeler: PortalYonlendirme[]
   /** SAGLIGIM-PORTAL-REGISTRY — attached specialty modules + their extra nav (lib/portal/moduller.ts). */
   portal: { moduller: PortalModulId[]; nav: PortalNavOge[] }
   // Specialty slices — each is null unless its module attached (never "just in case").
