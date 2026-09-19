@@ -1,5 +1,7 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — cinsiyet/statin segmenti, manşet risk sayısı,
+ * katlanır lipid bölümü ve taslak rozeti.
  * DAH-EXCEPTIONAL-01 — Araçlar › SCORE2 / KVR. Dahiliye-only (BRANS_DOKTOR_ARACLARI).
  * Chapter motoru (engines/score2.kvrDegerlendir) ile birebir aynı kural: kural kovası → SCORE2 / SCORE2-Diabetes /
  * SCORE2-OP → LDL hedefi ve statin yoğunluk açığı. Çıktı taslaktır; kategori ve hedef hekim kilidiyle kesinleşir.
@@ -7,7 +9,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { kvrDegerlendir, type Bolge, type Cinsiyet, type KvrKova } from '../../engines/score2';
-import { dahStil, Secim, Onay, Sayi, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -73,9 +75,13 @@ export default function Score2Araci() {
     <>
       <div style={kutu}>
         <div style={etiket}>SCORE2 girdileri</div>
+        <div style={{ maxWidth: 280, marginBottom: 10 }}>
+          <Alan etiket="Cinsiyet">
+            <Segment etiket="Cinsiyet" deger={cinsiyet} set={(x) => setCinsiyet(x as Cinsiyet)} secenekler={CINSIYET as Array<[string, string]>} />
+          </Alan>
+        </div>
         <div style={satir}>
           <Sayi ad="Yaş" deger={yas} set={setYas} genislik={90} />
-          <Secim etiket="Cinsiyet" deger={cinsiyet} set={(x) => setCinsiyet(x as Cinsiyet)} secenekler={CINSIYET} />
           <Sayi ad="SBP" deger={sbp} set={setSbp} birim="mmHg" />
           <Sayi ad="Total kolesterol" deger={tchol} set={setTchol} birim="mg/dL" />
           <Sayi ad="HDL" deger={hdl} set={setHdl} birim="mg/dL" />
@@ -107,34 +113,33 @@ export default function Score2Araci() {
       </div>
 
       <div style={kutu}>
-        <div style={etiket}>Lipid durumu (isteğe bağlı)</div>
-        <div style={satir}>
-          <Sayi ad="LDL" deger={ldl} set={setLdl} birim="mg/dL" />
-          <Secim etiket="Statin yoğunluğu" deger={statin} set={(x) => setStatin(x as typeof statin)} secenekler={STATIN} />
-          <Onay ad="Ezetimib altında" deger={ezetimib} set={setEzetimib} />
-        </div>
+        <Katlanir baslik="Lipid durumu (isteğe bağlı)" acik={!!ldl || statin !== 'yok' || ezetimib} rozet={ldl ? `LDL ${ldl}` : statin !== 'yok' ? 'statin altında' : undefined}>
+          <div style={satir}>
+            <Sayi ad="LDL" deger={ldl} set={setLdl} birim="mg/dL" />
+            <Onay ad="Ezetimib altında" deger={ezetimib} set={setEzetimib} />
+          </div>
+          <div style={{ maxWidth: 420, marginTop: 10 }}>
+            <Alan etiket="Statin yoğunluğu">
+              <Segment etiket="Statin yoğunluğu" deger={statin} set={(x) => setStatin(x as typeof statin)} secenekler={STATIN as Array<[string, string]>} />
+            </Alan>
+          </div>
+        </Katlanir>
       </div>
 
       <div style={{ ...kutu, borderColor: 'rgba(20,184,166,0.35)' }} aria-live="polite">
-        <div style={{ ...etiket, display: 'flex', justifyContent: 'space-between' }}>
-          <span>Sonuç</span>
-          <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>TASLAK</span>
+        <div style={etiket}>Sonuç</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+          <Istatistik deger={riskAd ? `%${risk}` : '—'} etiket={riskAd ? `${riskAd} — 10 yıllık KV risk` : 'sayısal risk hesaplanmadı'} ton={riskAd ? 'iyi' : 'notr'} />
+          <Istatistik deger={sonuc.kova ? KOVA_AD[sonuc.kova] : 'belirlenemedi'} etiket="risk kovası (taslak)" ton={sonuc.kova === 'cok_yuksek' ? 'kirmizi' : sonuc.kova === 'yuksek' ? 'uyari' : 'notr'} />
+          <Istatistik deger={sonuc.statinAcigi.length} etiket="statin açığı uyarısı" ton={sonuc.statinAcigi.length ? 'uyari' : 'notr'} />
         </div>
-        {riskAd ? (
-          <>
-            <div style={{ fontSize: 34, fontWeight: 800, color: '#5EEAD4', lineHeight: 1.1 }}>%{risk}</div>
-            <div style={{ ...metin, marginTop: 4 }}>{riskAd} — 10 yıllık kardiyovasküler risk</div>
-          </>
-        ) : (
-          <div style={{ ...metin, fontWeight: 700 }}>Sayısal risk hesaplanmadı</div>
-        )}
-        <div style={{ ...metin, marginTop: 8, fontWeight: 700 }}>Kova (taslak): {sonuc.kova ? KOVA_AD[sonuc.kova] : 'belirlenemedi'}</div>
         {sonuc.kovaNedeni && <div style={{ ...kucuk, marginTop: 4 }}>{sonuc.kovaNedeni}</div>}
         {sonuc.score2Notu && <div style={{ ...kucuk, marginTop: 8, color: '#FBBF24' }}>{sonuc.score2Notu}</div>}
         <div style={{ ...metin, marginTop: 10 }}>{sonuc.hedefNotu}</div>
         {sonuc.statinAcigi.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6, color: '#C9D4E3' }}>• {x}</div>)}
-        <KopyalaButonu metin={kopyaMetni} />
-        <div style={{ ...kucuk, marginTop: 10 }}>Risk kovası ve LDL hedefi karar desteğidir; hekim kilidi olmadan kesinleşmez ve nota otomatik yazılmaz. Hesap kaydedilmez.</div>
+        {!riskAd && <div style={satir}><Rozet ton="uyari">yaş, SBP, kolesterol ve HDL girilince sayısal risk hesaplanır</Rozet></div>}
+        <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
+        <TaslakNotu>Risk kovası ve LDL hedefi karar desteğidir; hekim kilidi olmadan kesinleşmez ve nota otomatik yazılmaz. Hesap kaydedilmez.</TaslakNotu>
       </div>
 
       <div style={kutu}>

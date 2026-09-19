@@ -3,29 +3,30 @@
  * Araçlar › Kadın Hastalıkları ve Doğum stüdyoları ortak kabuğu (GozAracKabugu ile aynı kalıp). Oturum + branş kapısı (doktorAraciBransaUygun)
  * + yönlendirme, mobil düzen, isteğe bağlı hasta seçici (tr-TR arama). Yalnız kadın hastalıkları ve doğum hekimi açar;
  * başka branş /doktor-tools'a döner (specialty-doktor-araclari).
+ *
+ * ARACLAR-CILA-01: ortak parçalar artık lib/doktor/aracUi.tsx'te (tek kaynak). Buradaki dışa aktarımlar
+ * o kütüphaneye delege eden ince sarmalayıcılar; yalnız branşa özel olanlar (pencere durum renkleri,
+ * çift sütun, gebelik özeti) burada kalır.
  */
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
-import { toolsShell, toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { toolsShell, getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
+import { AracVurguSaglayici, aracStil, HastaSecici, panoyaKopyala, VURGU_KD } from '@/lib/doktor/aracUi';
 import { doneWindowIdsFromClinic } from '../../engines/clinic-fit';
 import type { WindowId } from '../../engines/test-windows';
 import type { PencereDurum } from '../../engines/araclar';
 
-export const kdStil = {
-  kutu: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 18, marginBottom: 14 } as React.CSSProperties,
-  etiket: { fontSize: 13, fontWeight: 700, color: '#F9A8D4', marginBottom: 8 } as React.CSSProperties,
-  kucuk: { fontSize: 12, color: '#8FA0B5', lineHeight: 1.45 } as React.CSSProperties,
-  metin: { fontSize: 14, color: '#EDF1F7', lineHeight: 1.5 } as React.CSSProperties,
-  satir: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 8 } as React.CSSProperties,
-  btn: { background: '#DB2777', color: '#FFFFFF', border: 'none', borderRadius: 12, padding: '11px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 } as React.CSSProperties,
-  ghost: { background: 'transparent', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 12, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44 } as React.CSSProperties,
-  input: { ...toolsInput, fontSize: 16 } as React.CSSProperties,
-  hata: { color: '#FCA5A5', fontSize: 13 } as React.CSSProperties,
-};
+export const KD_VURGU = VURGU_KD;
+export const kdStil = aracStil(KD_VURGU);
+
+export {
+  Alan, Segment, Secim, Etiketli, Kutu, Onay, Sayi, Katlanir, TaslakNotu, Rozet, OneriRozet,
+  Istatistik, KopyalaButonu, panoyaKopyala, useUrlHasta, useHastaVerisi,
+} from '@/lib/doktor/aracUi';
 
 /** Pencere durum renkleri — "kapanmak üzere" en baskın (geri alınamaz). */
 export const DURUM_RENK: Record<PencereDurum, { fg: string; bg: string; kenar: string }> = {
@@ -37,47 +38,6 @@ export const DURUM_RENK: Record<PencereDurum, { fg: string; bg: string; kenar: s
   yapildi: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
   ileride: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.08)' },
 };
-
-export function Secim({ deger, set, secenekler, bos, etiket }: { deger: string; set: (x: string) => void; secenekler: Array<[string, string]>; bos?: string; etiket?: string }) {
-  return (
-    <select aria-label={etiket} value={deger} onChange={(e) => set(e.target.value)} style={{ ...kdStil.input, width: 'auto', minWidth: 120, minHeight: 44 }}>
-      {bos != null && <option value="" style={{ color: '#000' }}>{bos}</option>}
-      {secenekler.map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}
-    </select>
-  );
-}
-
-/** Segment düğmesi (iOS segmented control) — az seçenekli alanlarda select yerine tek dokunuş. */
-export function Segment<T extends string>({ deger, set, secenekler, etiket }: { deger: T; set: (x: T) => void; secenekler: Array<[T, string]>; etiket: string }) {
-  return (
-    <div role="radiogroup" aria-label={etiket} style={{ display: 'inline-flex', flexWrap: 'wrap', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: 3, gap: 3 }}>
-      {secenekler.map(([k, a]) => {
-        const on = k === deger;
-        return <button key={k} type="button" role="radio" aria-checked={on} onClick={() => set(k)} style={{ minHeight: 44, padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, background: on ? '#DB2777' : 'transparent', color: on ? '#FFFFFF' : '#C9D4E3' }}>{a}</button>;
-      })}
-    </div>
-  );
-}
-
-/** Görünür etiketli alan — doldurulunca placeholder kaybolsa da alanın ne olduğu okunur. */
-export function Etiketli({ ad, children, genislik }: { ad: string; children: React.ReactNode; genislik?: number | string }) {
-  return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: genislik === '100%' ? '1 1 100%' : '0 1 auto', maxWidth: '100%' }}>
-      <span style={{ fontSize: 12, fontWeight: 600, color: '#9BB0C7' }}>{ad}</span>
-      {children}
-    </label>
-  );
-}
-
-/** Onay kutusu satırı — 44px dokunma alanı. */
-export function Kutu({ on, set, children }: { on: boolean; set: (x: boolean) => void; children: React.ReactNode }) {
-  return (
-    <label style={{ ...kdStil.metin, display: 'flex', gap: 10, alignItems: 'center', minHeight: 44, cursor: 'pointer' }}>
-      <input type="checkbox" checked={on} onChange={(e) => set(e.target.checked)} style={{ width: 20, height: 20, flex: 'none' }} />
-      <span>{children}</span>
-    </label>
-  );
-}
 
 /** Çift sütun (yasal asgari vs klinik öneri) — çakışma asla tek öneriye indirgenmez. */
 export function CiftSutun({ baslik, sb, klinik }: { baslik: string; sb: string; klinik: string }) {
@@ -94,35 +54,7 @@ export function CiftSutun({ baslik, sb, klinik }: { baslik: string; sb: string; 
 
 /** Hekimin kendi hasta listesi (/api/doktor/hastalar — doctor_id kapsamlı). Seçim isteğe bağlıdır. */
 export function KdHastaSecici({ secili, sec }: { secili: string; sec: (id: string, ad: string) => void }) {
-  const [liste, setListe] = useState<HastaOption[] | null>(null);
-  const [q, setQ] = useState('');
-  const [hata, setHata] = useState('');
-  useEffect(() => {
-    let iptal = false;
-    (async () => {
-      try {
-        const t = await getAccessTokenAsync();
-        const r = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
-        const j = await r.json().catch(() => ({}));
-        if (!iptal) { if (r.ok) setListe(normalizeHastalar(j)); else setHata(j.error || 'Hasta listesi yüklenemedi'); }
-      } catch { if (!iptal) setHata('Hasta listesi yüklenemedi'); }
-    })();
-    return () => { iptal = true; };
-  }, []);
-  const kucukHarf = (s: string) => s.toLocaleLowerCase('tr-TR');
-  const gorunen = (liste || []).filter((h) => !q.trim() || kucukHarf(h.label).includes(kucukHarf(q.trim()))).slice(0, 50);
-  return (
-    <div>
-      <div style={kdStil.satir}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hasta ara (isteğe bağlı)" aria-label="Hasta ara" style={{ ...kdStil.input, flex: '1 1 200px', width: 'auto' }} />
-        <select aria-label="Hasta seç" value={secili} onChange={(e) => { const h = (liste || []).find((x) => x.id === e.target.value); sec(e.target.value, h?.label || ''); }} style={{ ...kdStil.input, flex: '1 1 220px', width: 'auto', minHeight: 44 }}>
-          <option value="" style={{ color: '#000' }}>{liste == null ? (hata ? 'Liste yüklenemedi' : 'Yükleniyor…') : liste.length ? 'Hasta seçilmedi' : 'Kayıtlı hasta yok'}</option>
-          {gorunen.map((h) => <option key={h.id} value={h.id} style={{ color: '#000' }}>{h.label}</option>)}
-        </select>
-      </div>
-      {hata && <div style={{ ...kdStil.hata, marginTop: 6 }}>{hata}</div>}
-    </div>
-  );
+  return <HastaSecici secili={secili} sec={sec} />;
 }
 
 /** Seçilen hastanın gebelik özeti — mevcut /api/doktor/gebelik GET (hastaSahibiMi + doctor_id kapsamlı); yeni uç yok. */
@@ -178,9 +110,8 @@ export async function kdHastaOzeti(patientId: string): Promise<KdHastaOzeti> {
   };
 }
 
-export async function panoya(metin: string): Promise<boolean> {
-  try { await navigator.clipboard.writeText(metin); return true; } catch { return false; }
-}
+/** Geriye dönük ad — ortak panoyaKopyala'ya delege eder. */
+export const panoya = panoyaKopyala;
 
 export default function KdAracKabugu({ route, baslik, aciklama, children }: { route: string; baslik: string; aciklama: string; children: React.ReactNode }) {
   const router = useRouter();
@@ -201,22 +132,24 @@ export default function KdAracKabugu({ route, baslik, aciklama, children }: { ro
   }, [router, route]);
 
   return (
-    <div style={toolsShell}>
-      <DoktorNav />
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px' }}>
-        {!izin ? (
-          <div style={{ color: '#9BB0C7', fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca kadın hastalıkları ve doğum için.'}</div>
-        ) : (
-          <>
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#F472B6', letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar · {KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI}</div>
-              <h1 style={{ fontSize: 26, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>{baslik}</h1>
-              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
-            </div>
-            {children}
-          </>
-        )}
+    <AracVurguSaglayici vurgu={KD_VURGU}>
+      <div style={{ ...toolsShell, overflowX: 'hidden' }}>
+        <DoktorNav />
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px', boxSizing: 'border-box' }}>
+          {!izin ? (
+            <div style={{ color: '#9BB0C7', fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca kadın hastalıkları ve doğum için.'}</div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: KD_VURGU.baslik, letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar · {KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI}</div>
+                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>{baslik}</h1>
+                <p style={{ margin: '8px 0 0', fontSize: 15, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
+              </div>
+              {children}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </AracVurguSaglayici>
   );
 }

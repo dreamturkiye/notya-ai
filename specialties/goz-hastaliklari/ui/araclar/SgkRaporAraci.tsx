@@ -1,5 +1,7 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — göz segmenti, görünür alan etiketleri, katlanır ileri alanlar,
+ * manşet eksik sayısı ve taslak rozeti.
  * GOZ-EXCEPTIONAL-01 — Araçlar › SGK rapor taslağı. Chapter motoru engines/sgkRapor.gozSgkTaslak (anti-VEGF başlangıç / idame /
  * implant + GİL bilgi notu). T.C. ve doz yazılmaz; hasta adı taslakta boş (Medula'da hekim). Hasta seçilirse son VA, görüntü
  * tarihleri, enjeksiyon geçmişi ve katarakt kartı (biyometri, GİL tipi, EK-3/G, kontrol listesi) hekimin kendi kaydından dolar.
@@ -12,9 +14,9 @@ import { GIL_EK3G_KALEMLERI } from '../../engines/klinik';
 import { GOZ_KAYNAKLAR } from '../../protocols/sources';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { gozStil, Secim, GozHastaSecici } from './GozAracKabugu';
+import { gozStil, Secim, Segment, Etiketli, Onay, Istatistik, Katlanir, KopyalaButonu, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
 
-const { kutu, etiket, kucuk, metin, satir, input, btn, ghost } = gozStil;
+const { kutu, etiket, kucuk, metin, satir, input, ghost } = gozStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
 type Katarakt = { goz: string; gil_tipi_hekim: string | null; ek3g_kod?: string | null; planlanan_tarih: string | null; biyometri?: Biyometri | null; hazirlik: { eksikZorunlu: string[] } };
 
@@ -26,8 +28,7 @@ export default function SgkRaporAraci() {
   const [gecmis, setGecmis] = useState<Enjeksiyon[]>([]);
   const [katarakt, setKatarakt] = useState<Katarakt[]>([]);
   const [mesaj, setMesaj] = useState('');
-  const [kopyalandi, setKopyalandi] = useState(false);
-  const set = (k: string, v: string) => { setF((p) => ({ ...p, [k]: v })); setKopyalandi(false); };
+  const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   const s = (k: string) => f[k] || '';
   const num = (k: string) => (s(k).trim() === '' || !Number.isFinite(Number(s(k).replace(',', '.'))) ? null : Number(s(k).replace(',', '.')));
   const gil = f.sablon === 'katarakt_gil';
@@ -62,8 +63,10 @@ export default function SgkRaporAraci() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [f, ffaKontrendike, hekimYanit, gecmis, katarakt]);
 
-  const kopyala = async () => { try { await navigator.clipboard.writeText(gozSgkMetni(sonuc)); setKopyalandi(true); } catch { setMesaj('Pano erişimi yok — metni elle seçin.'); } };
-  const alan = (k: string, ph: string, tip = 'text', w: number | string = 150) => <input type={tip} aria-label={ph} value={s(k)} onChange={(e) => set(k, e.target.value)} placeholder={ph} style={{ ...input, width: w }} />;
+  const alan = (k: string, ph: string, tip = 'text', w: number | string = 150) => (
+    <Etiketli ad={ph}><input type={tip} aria-label={ph} value={s(k)} onChange={(e) => set(k, e.target.value)} placeholder={ph} style={{ ...input, width: w }} /></Etiketli>
+  );
+  const tamamSayisi = sonuc.sutKontrol.filter((x) => x.tamam === true).length;
 
   return (
     <>
@@ -78,18 +81,24 @@ export default function SgkRaporAraci() {
         <div style={etiket}>Şablon</div>
         <div style={satir}>
           <Secim etiket="Şablon" deger={f.sablon} set={(x) => set('sablon', x)} secenekler={GOZ_SGK_SABLONLARI.map((x) => [x.id, x.ad])} />
-          <Secim etiket="Göz" deger={f.goz} set={(x) => set('goz', x)} secenekler={[['sag', 'OD (sağ)'], ['sol', 'OS (sol)']]} />
           {!gil && <><Secim etiket="Ajan" deger={f.ajan} set={(x) => set('ajan', x)} secenekler={Object.entries(AJAN_ADI)} /><Secim etiket="Endikasyon" deger={f.endikasyon} set={(x) => set('endikasyon', x)} secenekler={Object.entries(ENDIKASYON_ADI)} /></>}
+        </div>
+        <div style={{ marginTop: 12, maxWidth: 320 }}>
+          <Etiketli ad="Göz" genislik="100%">
+            <Segment etiket="Göz" deger={f.goz} set={(x) => set('goz', x)} secenekler={[['sag', 'OD (sağ)'], ['sol', 'OS (sol)']]} />
+          </Etiketli>
         </div>
         <div style={satir}><textarea aria-label="Anamnez" value={s('anamnez')} onChange={(e) => set('anamnez', e.target.value)} placeholder="Anamnez (hekim)" rows={3} style={{ ...input, width: '100%', fontFamily: 'inherit' }} /></div>
         {!gil ? (
           <>
             <div style={satir}>{alan('vaBaslangic', 'VA başlangıç', 'text', 130)}{alan('vaOnceki', 'VA önceki', 'text', 120)}{alan('vaSimdi', 'VA şimdi', 'text', 120)}</div>
-            <div style={satir}>{alan('mfkBaslangic', 'MFK başlangıç µm', 'text', 150)}{alan('mfkOnceki', 'MFK önceki µm', 'text', 140)}{alan('mfkSimdi', 'MFK şimdi µm', 'text', 140)}</div>
-            <div style={satir}><span style={kucuk}>Renkli resim</span>{alan('renkliResim', 'renkli resim tarihi', 'date', 170)}<span style={kucuk}>FFA</span>{alan('ffa', 'FFA tarihi', 'date', 170)}<span style={kucuk}>OKT</span>{alan('okt', 'OKT tarihi', 'date', 170)}</div>
+            <Katlanir baslik="MFK ve görüntüleme tarihleri" acik={!!(s('mfkSimdi') || s('okt') || s('renkliResim') || s('ffa'))} rozet={s('mfkSimdi') || s('okt') ? 'girildi' : undefined}>
+              <div style={satir}>{alan('mfkBaslangic', 'MFK başlangıç µm', 'text', 150)}{alan('mfkOnceki', 'MFK önceki µm', 'text', 140)}{alan('mfkSimdi', 'MFK şimdi µm', 'text', 140)}</div>
+              <div style={satir}>{alan('renkliResim', 'Renkli resim tarihi', 'date', 170)}{alan('ffa', 'FFA tarihi', 'date', 170)}{alan('okt', 'OKT tarihi', 'date', 170)}</div>
+            </Katlanir>
             <div style={satir}>
-              <label style={{ ...metin, display: 'flex', gap: 8, alignItems: 'center', minHeight: 44 }}><input type="checkbox" checked={ffaKontrendike} onChange={(e) => setFfaKontrendike(e.target.checked)} style={{ width: 20, height: 20 }} />FFA kontrendike</label>
-              <label style={{ ...metin, display: 'flex', gap: 8, alignItems: 'center', minHeight: 44 }}><input type="checkbox" checked={hekimYanit} onChange={(e) => setHekimYanit(e.target.checked)} style={{ width: 20, height: 20 }} />Hekim beyanı: tedaviye yanıt var (MFK ≥250 µm, 4.2.33(5))</label>
+              <Onay ad="FFA kontrendike" deger={ffaKontrendike} set={setFfaKontrendike} />
+              <Onay ad="Hekim beyanı: tedaviye yanıt var" deger={hekimYanit} set={setHekimYanit} aciklama="MFK ≥250 µm, SUT 4.2.33(5)" />
             </div>
           </>
         ) : (
@@ -106,6 +115,10 @@ export default function SgkRaporAraci() {
       <div style={kutu} aria-live="polite">
         <div style={etiket}>{sonuc.draft.raporBasligi}</div>
         <div style={kucuk}>{sonuc.raporTipi}</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0 4px' }}>
+          <Istatistik deger={sonuc.eksikler.length} etiket="eksik zorunlu madde" ton={sonuc.eksikler.length ? 'kirmizi' : 'iyi'} />
+          <Istatistik deger={`${tamamSayisi}/${sonuc.sutKontrol.length}`} etiket="SUT maddesi tamam" ton={tamamSayisi === sonuc.sutKontrol.length ? 'iyi' : 'notr'} />
+        </div>
         <div style={{ ...metin, marginTop: 6 }}>Tanı önerisi: {sonuc.draft.tani.icd10} {sonuc.draft.tani.aciklama} <span style={kucuk}>(hekim doğrular)</span></div>
         <pre style={{ ...metin, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: '6px 0' }}>{sonuc.draft.mevcutDurum || ''}</pre>
         {!!sonuc.draft.zorunluTetkikler?.length && <div style={kucuk}>Tetkikler: {sonuc.draft.zorunluTetkikler.join(' · ')}</div>}
@@ -113,11 +126,14 @@ export default function SgkRaporAraci() {
         <div style={{ marginTop: 8 }}>{sonuc.sutKontrol.map((x) => <div key={x.madde} style={{ ...metin, color: x.tamam === true ? '#2DD4BF' : x.tamam === false ? '#F87171' : '#8FA0B5' }}>{x.tamam === true ? '✓' : x.tamam === false ? '✕' : '?'} {x.madde}</div>)}</div>
         {sonuc.eksikler.length > 0 ? <div style={{ marginTop: 8 }}>{sonuc.eksikler.map((x) => <div key={x} style={{ ...metin, color: '#FBBF24' }}>Eksik: {x}</div>)}</div> : <div style={{ ...metin, color: '#2DD4BF', marginTop: 8 }}>Zorunlu maddelerde eksik yok.</div>}
         <div style={satir}>
-          <button type="button" onClick={kopyala} style={btn}>{kopyalandi ? 'Kopyalandı' : 'Taslağı kopyala'}</button>
-          <span style={{ ...ghost, display: 'inline-flex', alignItems: 'center', cursor: 'default' }} title="Notya Medula'ya canlı gönderim yapmaz">Medula'da hekim e-imza ile girilir</span>
+          <KopyalaButonu metin={gozSgkMetni(sonuc)} etiket="Taslağı kopyala" />
+          <span style={{ ...ghost, cursor: 'default' }} title="Notya Medula'ya canlı gönderim yapmaz">Medula'da hekim e-imza ile girilir</span>
         </div>
-        <div style={{ ...kucuk, marginTop: 10, borderLeft: '2px solid rgba(15,155,142,0.5)', paddingLeft: 8 }}>{sonuc.dipnotlar.map((d, i) => <div key={i}><b>{d.ref}</b> — {d.not} <span style={{ opacity: 0.7 }}>({GOZ_KAYNAKLAR[d.ref]?.ad})</span></div>)}</div>
-        <div style={{ ...kucuk, marginTop: 6 }}>T.C. kimlik no ve doz yazılmaz; hasta adı Medula'da doldurulur.</div>
+        <Katlanir baslik={`SUT dayanakları (${sonuc.dipnotlar.length})`}>
+          <div style={{ ...kucuk, borderLeft: '2px solid rgba(15,155,142,0.5)', paddingLeft: 8 }}>{sonuc.dipnotlar.map((d, i) => <div key={i}><b>{d.ref}</b> — {d.not} <span style={{ opacity: 0.7 }}>({GOZ_KAYNAKLAR[d.ref]?.ad})</span></div>)}</div>
+        </Katlanir>
+        <div style={{ ...satir }}><Rozet ton="notr">T.C. kimlik no ve doz yazılmaz</Rozet><Rozet ton="notr">hasta adı Medula&apos;da doldurulur</Rozet></div>
+        <TaslakNotu>Rapor taslağıdır; zorunlu maddeleri ve tanıyı hekim doğrular, Medula girişi e-imza ile yapılır. Nota otomatik yazılmaz.</TaslakNotu>
       </div>
     </>
   );

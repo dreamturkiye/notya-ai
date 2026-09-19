@@ -1,5 +1,6 @@
 'use client';
 /**
+ * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — manşet takvim kartları, durum rozeti, kayan antijen listesi, taslak rozeti.
  * DERM-EXCEPTIONAL-01 — Araçlar › Yama D2/D4. Dermatoloji-only (BRANS_DOKTOR_ARACLARI).
  * Uygulama tarihi → plannedReads D2/D4 ve patchStatus durumu; Avrupa baz serisi seçilebilir liste.
  * Hesap kaydedilmez; kalıcı kür kaydı hasta dosyasının Deri sekmesindedir.
@@ -8,18 +9,18 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { plannedReads, patchStatus, EUROPEAN_BASELINE } from '../../engines/patch-calendar';
 import { DERM_PATCH_STATUS, dermLabel } from '../labels';
-import { dermStil, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { dermStil, Istatistik, Katlanir, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 
-const { kutu, etiket, kucuk, metin, satir, btn, ghost } = dermStil;
+const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
 
-const DURUM_RENK: Record<string, string> = {
-  not_yet: '#8FA0B5',
-  open_d2: '#FBBF24',
-  open_d4: '#FBBF24',
-  overdue_d2: '#F87171',
-  overdue_d4: '#F87171',
-  done: '#2DD4BF',
+const DURUM_TON: Record<string, 'iyi' | 'uyari' | 'kirmizi' | 'notr'> = {
+  not_yet: 'notr',
+  open_d2: 'uyari',
+  open_d4: 'uyari',
+  overdue_d2: 'kirmizi',
+  overdue_d4: 'kirmizi',
+  done: 'iyi',
 };
 
 export default function YamaAraci() {
@@ -72,15 +73,14 @@ export default function YamaAraci() {
       <div style={{ ...kutu, borderColor: 'rgba(244,114,182,0.35)' }} aria-live="polite">
         <div style={etiket}>Okuma takvimi</div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
-          {[['D0 uygulama', uygulama], ['D2 okuma', plan.d2], ['D4 okuma', plan.d4]].map(([a, t]) => (
-            <div key={a} style={{ background: 'rgba(219,39,119,0.1)', border: '1px solid rgba(244,114,182,0.28)', borderRadius: 14, padding: '10px 14px', minWidth: 130 }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#F9A8D4' }}>{t}</div>
-              <div style={{ fontSize: 12, color: '#8FA0B5' }}>{a}</div>
-            </div>
-          ))}
+          <Istatistik deger={uygulama} etiket="D0 uygulama" />
+          <Istatistik deger={plan.d2} etiket="D2 okuma" ton={okumaD2 ? 'iyi' : 'notr'} />
+          <Istatistik deger={plan.d4} etiket="D4 okuma" ton={okumaD4 ? 'iyi' : 'notr'} />
         </div>
-        <div style={{ ...metin, marginTop: 10, fontWeight: 700, color: DURUM_RENK[durum] }}>Durum: {dermLabel(DERM_PATCH_STATUS, durum)}</div>
-        <div style={{ ...kucuk, marginTop: 6 }}>Geç okuma (D7) gerekebilen antijenler için hekim ek randevu planlar; bu araç D2 / D4 takvimini hesaplar.</div>
+        <div style={satir}><span style={metin}>Durum:</span> <Rozet ton={DURUM_TON[durum] || 'notr'}>{dermLabel(DERM_PATCH_STATUS, durum)}</Rozet></div>
+        <Katlanir baslik="Geç okuma (D7)">
+          <div style={kucuk}>Geç okuma gerekebilen antijenler için hekim ek randevu planlar; bu araç D2 / D4 takvimini hesaplar.</div>
+        </Katlanir>
       </div>
 
       <div style={kutu}>
@@ -91,7 +91,7 @@ export default function YamaAraci() {
           <button type="button" onClick={() => setUygulanan(EUROPEAN_BASELINE.map((a) => a.kod))} style={ghost}>Tüm seriyi işaretle</button>
           <button type="button" onClick={() => { setUygulanan([]); setPozitif([]); }} style={ghost}>Temizle</button>
         </div>
-        <div style={{ marginTop: 10, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ ...kaydir, marginTop: 10, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
           {gorunen.map((a, i) => (
             <div key={a.kod} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '10px 12px', background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)' }}>
               <label style={{ display: 'flex', gap: 8, alignItems: 'center', flex: '1 1 260px', minHeight: 44, cursor: 'pointer' }}>
@@ -116,8 +116,12 @@ export default function YamaAraci() {
           ))}
           {!gorunen.length && <div style={{ padding: '24px 14px', textAlign: 'center', ...kucuk }}>Aramaya uyan antijen yok.</div>}
         </div>
-        <div style={{ ...metin, marginTop: 10 }}>{uygulanan.length} antijen işaretli · {pozitif.length} pozitif</div>
-        <KopyalaButonu metin={kopyaMetni} etiket="Takvimi ve seriyi kopyala" />
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+          <Istatistik deger={uygulanan.length} etiket="antijen işaretli" />
+          <Istatistik deger={pozitif.length} etiket="pozitif" ton={pozitif.length ? 'kirmizi' : 'notr'} />
+        </div>
+        <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Takvimi ve seriyi kopyala" /></div>
+        <TaslakNotu>Okuma zamanlaması, klinik ilgi değerlendirmesi ve pozitifliğin anlamı hekimindir. Hesap kaydedilmez, nota otomatik yazılmaz.</TaslakNotu>
       </div>
 
       <div style={kutu}>
