@@ -117,10 +117,10 @@ export default function FtrHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Bu vizit</div>
           <div style={metin}>
             {v.sonVas
-              ? <>Son VAS <b>{v.sonVas.toplam ?? '—'}</b> ({String(v.sonVas.tarih).slice(0, 10)}) — {v.sonVas.bant || '—}. </>
+              ? <>Son VAS <b>{v.sonVas.toplam ?? '—'}</b> ({String(v.sonVas.tarih).slice(0, 10)}) — {v.sonVas.bant || '—'}.</>
               : 'VAS kaydı yok. '}
             {v.sonOdi
-              ? <>Son ODI <b>{v.sonOdi.toplam ?? '—'}%</b> — {v.sonOdi.bant || '—}. Bant karar desteğidir.</>
+              ? <>Son ODI <b>{v.sonOdi.toplam ?? '—'}%</b> — {v.sonOdi.bant || '—'}. Bant karar desteğidir.</>
               : 'ODI kaydı yok — VAS/ODI sekmesinden girin.'}
           </div>
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot;</span></div>

@@ -72,7 +72,7 @@ export default function FtrEgzersizAraci() {
           <KopyalaButonu metin={sonuc.ozet} etiket="Notu kopyala" />
           <button type="button" onClick={kaydet} style={ftrStil.btn}>Kaydet</button>
         </div>
-        <MuayeneFormunaEkle hastaId={hasta} arac="Ev egzersiz" satirlar={[sonuc.ozet]} alan="content_plan" />
+        <MuayeneFormunaEkle hastaId={hasta} arac="Ev egzersiz" satirlar={[sonuc.ozet]} alan="content_degerlendirme" />
         {durum && <div style={{ ...ftrStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...ftrStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
         <div style={{ ...ftrStil.kucuk, marginTop: 10 }}>{REF_ACIKLAMA.TFTRD}</div>
