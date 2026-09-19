@@ -43,6 +43,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/ilaclar/doz-oner/route.ts': I('patient row fetched and doctor_id compared to user.id before any read → 404'),
   'app/api/doktor/asilar/route.ts': T,
   'app/api/doktor/asilar/[id]/route.ts': I('update/delete by id AND doktor_id = doktorId'),
+  'app/api/doktor/asilar/karne/route.ts': T,
   'app/api/doktor/belgeler/lab/route.ts': T,
   'app/api/doktor/belgeler/analiz/route.ts': I('document via vault getDocumentMeta(doctorId) (assertPatientOwned); analyses by doctor_id'),
   'app/api/doktor/belgeler/analiz/onayla/route.ts': I('analysis by id AND doctor_id; target note by id AND doctor_id'),

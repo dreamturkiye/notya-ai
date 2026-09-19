@@ -4,7 +4,7 @@
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.
 
-Last reviewed: 2026-09-19 (NOTYA-MALIYET-01 model/maliyet politikası)
+Last reviewed: 2026-09-19 (ASI-KARNESI-01 aşı karnesi)
 
 ---
 
@@ -23,6 +23,54 @@ Practical check for each PR that touches UI, before calling it finished:
 - If a change is desktop-only by nature (e.g. a purely server-side calc with no new UI), no mobile
   check is needed — but any new button, form, panel, badge, or page does need one.
 - Record what was checked (and any gap found) in the PR description / ledger, same as other work.
+
+## ASI-KARNESI-01 — aşı karnesi fotoğrafından okuma + dijital aşı karnesi + hekim onaylı hatırlatma (2026-09-19)
+
+**Kaynak — Dr. Gökhan Mamur (pediatri, gerçek beta hekim), aynen:** *"Burada bir resim yükleme düğmesi olmalı. Diyelim ki
+hasta doktora 2 yaşındayken ilk kez geldi. Doktoru hastanın elindeki aşı karnesinin resmini çekip bu sayfadaki resim
+yükle dosyasına yüklesin. Orada AI aşı karnesini okuyup tüm aşıları bu sistemdeki aşı kayıtlarına geçsin. Sonra, bir de
+dijital aşı karnesi olmalı ebeveynin cep telefonundan ulaşabileceği. Türkiye'de hâlâ anne babalar kağıda yazılmış aşı
+kayıtlarını ellerinde taşıyorlar, param parça oluyor."*
+
+**Kaan'ın üç kararı (2026-09-19, bağlayıcı):**
+1. **Onay biçimi: TOPLU ONAY + satır düzeltme.** Hekim okunan listeyi görür, her satırı (aşı adı, doz, tarih) düzeltir ya
+   da çıkarır, tek düğmeyle hepsini onaylar ("belki okunan bir veri doğru scan edilmedi"). Onaysız satır YOK.
+2. **Karneden okunan aşılar GÖRSEL OLARAK AYRI** — klinikte uygulanan dozlarla karışmaz.
+3. **Hatırlatma HEKİM ONAYIYLA.** Yaklaşan aşılar hekime listelenir, hekim açıp bakar, onaylayıp gönderir. Otomatik gönderim YOK.
+
+### A+B — karne yükle ve oku, görsel ayrım (PR 1)
+- Hasta dosyası › Aşılar › **📷 Aşı karnesi yükle** (`components/doktor/AsiKarnesiOkuma.tsx`): "Fotoğraf çek"
+  (`accept="image/*" capture="environment"` — telefonda kamera doğrudan açılır) + "Dosya seç" (fotoğraf/PDF). Büyük telefon
+  fotoğrafı istemcide ≤ 2400 px JPEG'e küçültülür (4 MB Kasa sınırı + model görüntü sınırı). Belge **MEVCUT Kasa yolundan**
+  (`POST /api/doktor/documents`, kategori "Aşı karnesi", şifreli `medical_documents`) kaydedilir — yeni saklama yolu yok.
+- Okuma: `POST /api/doktor/asilar/karne { adim: 'oku' }` → Kasa belgesi `lib/ai/cagir.ts` üzerinden görev
+  **`goruntu-inceleme` = GÜÇLÜ (Sonnet)**. Neden: görüntü okuması hekimin karar verdiği klinik veridir; skill
+  `ai-model-politikasi` "görüntü ve inceleme — istisnasız GÜÇLÜ" der ve cagir.ts'in görsel emniyeti zaten yükseltir — yine
+  de doğru görev tipi verildi (HIZLI'ya hiç alınmadı). Sabit talimat (`KARNE_SISTEM`) `onbellek: true` — hasta verisi system
+  bloğunda yok, prompt caching bozulmaz. Hasta adı modele gitmez; model kişi adı/TC aktarmaz, yalnız doğum tarihi (kimlik
+  uyarısı için, kaydedilmez).
+- **Uydurma yok** (`lib/asi/karneOkuma.ts`): model "emin değilim" dediği satırda verdiği tarih/doz ATILIR; okunamayan alan,
+  yalnız ay/yıl, takvimde olmayan gün, gelecek ya da doğumdan önceki tarih null → satır **"Okunamadı — elle girin"**.
+  Kısmi okuma normal; iyi satırlar yanında okunamayanlar kırmızı işaretli gelir.
+- **SB Ulusal Aşı Takvimi eşleşmesi**: pediatri aşı motorunun `kayitSerisi` eşleştirmesi (takvim kopyalanmadı —
+  `lib/asi/ulusalAsiTakvimi.ts` tek kaynak). Onay ekranında iki grup: "SB Ulusal Aşı Takvimi" ve "Özel / takvim dışı aşılar".
+- **Toplu onay**: `{ adim: 'onayla', hekimOnayi: true }` — yalnız hekim (sekreter 403); `hekimOnayi !== true` → 400; okunamadı
+  satır hekim düzeltmeden ya da "karneyle karşılaştırdım, böyle kalsın" demeden gelirse TÜM istek reddedilir (yarım kayıt
+  yok). Yazılan satır: `kaynak='beyan'`, `belge_id` (Kasa kanıt izi), `hekim_onay_at`, notlar öneki.
+- **Görsel ayrım**: Aşılar listesinde her satırda paylaşılan `Rozet` (`lib/doktor/aracUi`): "Karneden aktarıldı · hekim
+  onaylı" (bilgi/mavi) · "Bu klinikte uygulandı" (iyi/yeşil) · elle girilmiş beyan (nötr; hitap yaş kuralından) + kaynağa
+  göre sol kenar rengi. Yeni tasarım dili yok.
+- Migration `084_asilar_karne_kaniti.sql` (yalnız ekleme: `belge_id`, `hekim_onay_at`). Uygulanmamış ortamda rota kanıt
+  izini notlar önekinde tutar.
+- Testler: `lib/asi/karneOkuma.test.ts` (saf), `lib/asi/asiRotalari.test.ts` (gerçek rota: onaysız kayıt yok, düzeltilen değer
+  yansır, GÜÇLÜ model, sekreter 403, yabancı belge 404), hasta-izolasyon vakası (A↔B).
+
+### OPEN
+- **Canlı uçtan uca karne okuma — kredi yüklendikten sonra.** ANTHROPIC_API_KEY kredisi tükenmiş olabilir; akış saf
+  fonksiyon + gerçek rota testleriyle (sahte model) doğrulandı. Kredi gelince: sentetik bir karne fotoğrafıyla
+  (el yazısı + soluk kaşe) Aşılar › Aşı karnesi yükle → onay ekranı → kaydet; okunamadı satırların işaretlendiğini gör.
+- iPhone galerisinden seçilen HEIC fotoğraf: Safari çoğunlukla JPEG'e çevirir; çeviremeyen tarayıcıda Kasa "Desteklenen
+  türler" hatası verir (dürüst hata, sessiz kayıp yok). Gerekirse HEIC desteği ayrı iş.
 
 ## NOTYA-MALIYET-01 — AI model/maliyet politikası: klinik kalite > maliyet (Kaan, 2026-09-19)
 
