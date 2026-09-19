@@ -12,6 +12,8 @@ import { hesaplaHedefBoy } from '@/lib/clinical/hedefBoy'
 import { pediatriSekmesiUygun, yasYilKesir } from '@/lib/doktor/hastaDosyaSekmeleri'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { portalModulAktif, portalModulleri } from '@/lib/portal/moduller'
+import { asiKarnesiVerisi } from '@/lib/asi/karneSunucu'
+import { asiKarnesiDoluMu, type AsiKarnesi } from '@/lib/asi/karneBelgesi'
 import { dahiliyeKartlari } from '@/lib/portal/dahiliyeKartlari'
 import { derimHatirlatmalari, seansAraligi, sonrakiKontrol } from '@/specialties/dermatoloji/engines/portal-derim'
 import {
@@ -581,6 +583,9 @@ export async function GET(
   const { data: geb } = await sb.from('gebelikler').select('id, sat, tdt').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'aktif').order('created_at', { ascending: false }).limit(1).maybeSingle()
   const { data: ks } = await sb.from('kadin_sagligi').select('son_pap, son_hpv, son_mamografi, son_dxa, son_kolorektal, hrt, hrt_baslangic, histerektomi').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle()
   const { data: kontr } = await sb.from('kontrasepsiyon').select('yontem, baslangic, ria_notu, aktif').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('aktif', true).maybeSingle()
+  // ASI-KARNESI-01 — evrensel Aşı Karnesi: bu doktorun aşı kaydı varsa her branşta. PDF ile AYNI veri (tek içerik).
+  let asiKarnesi: AsiKarnesi | null = null
+  try { asiKarnesi = await asiKarnesiVerisi(sb, doctorId, patientId) } catch (e) { console.error('[portal] asi-karnesi:', e) }
   bundle.portal = portalModulleri({
     doktorBransi,
     hastaYasYil: yasYilKesir(dogumIso),
@@ -588,8 +593,10 @@ export async function GET(
     kdKaydi: !!ks || !!kontr,
     buyumeOlcumu: buyumeHamNoktalar.length > 0,
     dahiliyeKaydi: (await dahiliyeKartlari(sb, patientId, doctorId)).length > 0,
+    asiKaydi: asiKarnesiDoluMu(asiKarnesi),
   })
   const modulAktif = (id: Parameters<typeof portalModulAktif>[1]) => portalModulAktif(bundle, id)
+  if (modulAktif('asi-karnesi')) bundle.asiKarnesi = asiKarnesi
 
   // Büyüme Eğrileri (Neyzi standartları) — doktor tarafındakiyle aynı hesap, hasta portalında da
   if (modulAktif('buyume')) {

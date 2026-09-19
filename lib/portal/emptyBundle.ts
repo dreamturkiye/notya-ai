@@ -61,5 +61,6 @@ export function emptyPortalBundle(): PortalBundle {
     acilSonrasi: null, // ACIL-TIP-EXCEPTIONAL-01 — Acil sonrası takip yalnız acil-tip hekiminin token'ında
     damarCerrahisi: null, // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01
     radyo: null, // RADYOLOJI-EXCEPTIONAL-01 — Tetkiklerim yalnız radyoloji hekiminin token'ında
+    asiKarnesi: null, // ASI-KARNESI-01 — Aşı Karnesi evrensel; yalnız aşı kaydı varsa dolar
   }
 }

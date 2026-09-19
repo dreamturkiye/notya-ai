@@ -1,4 +1,5 @@
 import type { PortalYonlendirme } from '@/lib/doktor/konsultasyon'
+import type { AsiKarnesi } from '@/lib/asi/karneBelgesi'
 /** Sağlığım — shared TypeScript contracts for patient portal UI + API. */
 import type { PortalModulId, PortalNavOge } from '@/lib/specialties/profile'
 export type { PortalModulId, PortalNavOge }
@@ -219,7 +220,15 @@ export interface PortalBundle {
   damarCerrahisi: PortalDamarCerrahisi | null
   /** RADYOLOJI-EXCEPTIONAL-01 — "Tetkiklerim": durum/tarih. No tanı, BI-RADS sayı, AI bulgu. */
   radyo: PortalRadyo | null
+  /**
+   * ASI-KARNESI-01 — "Aşı Karnesi" (EVRENSEL, branş kapısı yok): kayıtlı aşı · doz · tarih · kaynak, hekimin girdiği
+   * sonraki doz tarihi, e-Nabız uyarısı. PDF ve yazdırma AYNI modelden çizilir. Klinik yorum yok. Kayıt yoksa null.
+   */
+  asiKarnesi: PortalAsiKarnesi | null
 }
+
+/** ASI-KARNESI-01 — ekran, yazdırma ve PDF'in ortak modeli (lib/asi/karneBelgesi.ts). */
+export type PortalAsiKarnesi = AsiKarnesi
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
 export interface PortalGebelik {

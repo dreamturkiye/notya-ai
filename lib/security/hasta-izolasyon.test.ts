@@ -363,6 +363,9 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/doktor/asilar/karne onayla (Kasa belgesinden toplu onay)', red: 404,
     yazdi: (a) => tablo('asilar').some((x) => x.patient_id === a.hasta && x.doktor_id === a.id && x.belge_id === a.kasaBelge && x.asi_adi === 'QA Karne KKK' && x.kaynak === 'beyan'),
     cagir: (r, a, h) => coz(r.asiKarne.POST(iste('POST', '/api/doktor/asilar/karne', { token: a.token, govde: { adim: 'onayla', belgeId: h.kasaBelge, hekimOnayi: true, satirlar: [{ asiAdi: 'QA Karne KKK', dozNo: 1, uygulamaTarihi: '2020-03-05' }] } }))) },
+  // ASI-KARNESI-01 (C7): hekimin karne PDF'i — yabancı hasta 404 (PDF gövdesi ikilidir; kapsam hastaSahibiMi + (doktor, hasta) sorgusu)
+  { ad: 'GET /api/doktor/asilar/karne/pdf (aşı karnesi PDF)', red: 404,
+    cagir: (r, a, h) => coz(r.asiKarnePdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${h.hasta}`, { token: a.token }))) },
   { ad: 'POST /api/doktor/mchat', red: 404,
     yazdi: (a) => tablo('mchat_testleri').some((x) => x.patient_id === a.hasta),
     cagir: async (r, a, h) => {
@@ -550,6 +553,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       epikriz: await ice('app/api/doktor/araclar/epikriz/route'),
       asilar: await ice('app/api/doktor/asilar/route'),
       asiKarne: await ice('app/api/doktor/asilar/karne/route'),
+      asiKarnePdf: await ice('app/api/doktor/asilar/karne/pdf/route'),
+      portalAsiKarnesiPdf: await ice('app/api/portal/hasta/[token]/asi-karnesi/pdf/route'),
       mchat: await ice('app/api/doktor/mchat/route'),
       gelisim: await ice('app/api/doktor/gelisim-taramasi/route'),
       kadinSagligi: await ice('app/api/doktor/kadin-sagligi/route'),
@@ -705,6 +710,20 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         assert.equal(y.status, 200, y.metin.slice(0, 300))
         assert.ok(y.metin.includes(`Ilac ${isaret(hastaHarf)}`), 'kendi doktorunun ilacı portalda görünmeli')
         assert.ok(!y.metin.includes(isaret(digerHarf)), `başka doktorun verisi portala sızdı: ${y.metin.slice(0, 400)}`)
+      })
+      it(`${hastaHarf} hastasının aşı karnesi PDF'i: 200, yalnız kendi doktorunun kaydı (ASI-KARNESI-01)`, async () => {
+        const s = sahneKur()
+        const h = s[hastaHarf], diger = s[digerHarf]
+        db.ekle('asilar', { doktor_id: diger.id, patient_id: h.hasta, asi_adi: `Hileli asi ${isaret(digerHarf)}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-02' })
+        const { asiKarnesiVerisi } = await import('../asi/karneSunucu')
+        const karne = await asiKarnesiVerisi(db.istemci() as never, h.id, h.hasta)
+        assert.ok(JSON.stringify(karne).includes(`Asi ${isaret(hastaHarf)}`))
+        assert.ok(!JSON.stringify(karne).includes(isaret(digerHarf)), 'başka doktorun iliştirdiği aşı karneye girdi')
+        const cerez = await portalCerezi(h.portalToken)
+        const y = await coz(R.portalAsiKarnesiPdf.GET(iste('GET', `/api/portal/hasta/${h.portalToken}/asi-karnesi/pdf`, { cerez }), prm({ token: h.portalToken })))
+        assert.equal(y.status, 200, y.metin.slice(0, 200))
+        const yok = await coz(R.portalAsiKarnesiPdf.GET(iste('GET', `/api/portal/hasta/${h.portalToken}/asi-karnesi/pdf`, {}), prm({ token: h.portalToken })))
+        assert.equal(yok.status, 401, 'PIN çerezi olmadan PDF verilmez')
       })
       it(`${hastaHarf} hastasının portal mesajları yalnız kendi doktoruyla`, async () => {
         const s = sahneKur()

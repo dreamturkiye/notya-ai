@@ -44,6 +44,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/asilar/route.ts': T,
   'app/api/doktor/asilar/[id]/route.ts': I('update/delete by id AND doktor_id = doktorId'),
   'app/api/doktor/asilar/karne/route.ts': T,
+  'app/api/doktor/asilar/karne/pdf/route.ts': T,
   'app/api/doktor/belgeler/lab/route.ts': T,
   'app/api/doktor/belgeler/analiz/route.ts': I('document via vault getDocumentMeta(doctorId) (assertPatientOwned); analyses by doctor_id'),
   'app/api/doktor/belgeler/analiz/onayla/route.ts': I('analysis by id AND doctor_id; target note by id AND doctor_id'),
@@ -214,6 +215,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // ── Sağlığım portalı / intake (token = kimlik) ──
   'app/api/portal/hasta/[token]/route.ts': T,
   'app/api/portal/hasta/[token]/mesajlar/route.ts': T,
+  'app/api/portal/hasta/[token]/asi-karnesi/pdf/route.ts': T,
   'app/api/portal/hasta/[token]/dahiliye-anket/route.ts': I('token → (patient_id, doctor_id); every read/write scoped by both'),
   'app/api/portal/hasta/[token]/unlock/route.ts': I('PIN check for the token row only'),
   'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check)'),
