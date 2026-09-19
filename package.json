@@ -35,12 +35,16 @@
     "ses:denetim": "npx tsx scripts/elevenlabs-ses-denetimi.ts --canli",
     "test:ftr": "npx tsx --test specialties/fizik-tedavi/tests/*.test.ts lib/portal/ftrm.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:roma": "npx tsx --test specialties/romatoloji/tests/*.test.ts lib/portal/romatizmam.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
+    "test:radyo": "npx tsx --test specialties/radyoloji/tests/*.test.ts lib/portal/tetkiklerim.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:beyin": "npx tsx --test specialties/beyin-cerrahisi/tests/*.test.ts lib/portal/beyin-takibi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
+    "test:anestezi": "npx tsx --test specialties/anestezi/tests/*.test.ts lib/portal/anestezi-oncesi.test.ts && npx tsx --test --test-name-pattern='Anestezi' lib/doktor/doktorAraclari.test.ts && npx tsx --test --test-name-pattern='anestezi|Anestezi Öncesi|baseline-branch' lib/portal/moduller.test.ts",
     "test:onko": "npx tsx --test specialties/onkoloji/tests/*.test.ts lib/portal/tedavim.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:gogus-cerrahisi": "npx tsx --test specialties/gogus-cerrahisi/tests/*.test.ts lib/portal/gogus-cerrahisi-takibim.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
+    "test:kalp-damar": "npx tsx --test specialties/kalp-damar-cerrahisi/tests/*.test.ts lib/portal/damar-cerrahisi-takibi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:gc": "npx tsx --test specialties/genel-cerrahi/tests/*.test.ts lib/portal/ameliyatim.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:plastik": "npx tsx --test specialties/plastik-cerrahi/tests/*.test.ts lib/portal/yaram.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
-    "test:cc": "npx tsx --test specialties/cocuk-cerrahisi/tests/*.test.ts lib/portal/cocugumun-cerrahisi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts"
+    "test:cc": "npx tsx --test specialties/cocuk-cerrahisi/tests/*.test.ts lib/portal/cocugumun-cerrahisi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
+    "test:acil": "npx tsx --test specialties/acil-tip/tests/*.test.ts lib/portal/acil-sonrasi.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

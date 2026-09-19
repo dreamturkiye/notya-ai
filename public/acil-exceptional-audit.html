@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Acil Tıp — Post-exceptional Audit (ACIL-TIP-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional ACIL-TIP-EXCEPTIONAL-01: Acil Tıp ~10% → ~93% · 16 Strong · olgunluk beta-hazir · 4 Araç · Acil sonrası takip Strong · ED bed board / boarding HIS / tanı lock / doz / Medula Missing intentional. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#F97316;
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399; --teal:#FDBA74;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; color:var(--blue); }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; font-weight:700; }
+    td.note { color:var(--muted); } td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--indigo); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; background:rgba(249,115,22,.12); border-color:rgba(249,115,22,.4); color:#FFEDD5; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit · Acil Tıp</span>
+    <span>
+      <a href="/acil-presprint-audit.html">Pre-sprint (~10%) →</a> ·
+      <a href="/psik-exceptional-audit.html">Psikiyatri →</a> ·
+      <a href="/kardio-exceptional-audit.html">Kardiyoloji →</a>
+    </span>
+  </div>
+  <div class="banner"><b>Post-exceptional sprint ACIL-TIP-EXCEPTIONAL-01</b> — 2026-09-19 · Supersedes acil-presprint-audit.html (~10%). Chapter Strong · Intake Strong · Portal Acil sonrası takip Strong · 4 Araçlar · olgunluk <code>beta-hazir</code>. Full ED bed board HIS / boarding HIS / tanı lock / uydurma doz / canlı Medula Missing intentional. No PHI. Never on Doktor Araçları. Kardiyoloji STEMI / nöroloji İnme sızmaz.</div>
+  <h1>Acil Tıp — Post-exceptional Audit</h1>
+  <p class="lede">Code × TATD × SB Acil × ESI × ERC/ATLS TR × SGK × TİTCK. <b>Ürün cevap: evet — honest wow ~93%.</b> Olgunluk: beta-hazir shipped; uzman-dogrulandi MD week pending (docs/ACIL-MD-BETA.md). Portal Strong ama dürüst — ED hastalarında uzun döngü yok.</p>
+  <div class="pills">
+    <span class="pill success">ACIL-TIP-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">4 Araçlar</span>
+    <span class="pill success">Acil sonrası takip Strong</span>
+    <span class="pill success">7+ motor · test:acil</span>
+    <span class="pill info">Honest wow ~93%</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v success">16</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (maturity)</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">Thin</div></div>
+    <div class="stat"><div class="v danger">4</div><div class="l">Missing intentional</div></div>
+  </div>
+  <div class="callout"><h2>Executive verdict</h2>
+    <p>ACIL-TIP-EXCEPTIONAL-01: <b>7+ saf motor</b> (acilTip · esi · kritikYol · sevk · acil · kohort · serit · portal-acil-sonrasi), hasta dosyası <b>Acil Tıp</b> sekmesi (sticky + Özet|ESI|Kritik yol|Sevk|Risk|Görevler), intake <b>acilBelirtilerAcilTip</b>, Sağlığım <b>Acil sonrası takip</b> Strong, Araçlar'da <b>4</b> acil-tip-only tile, migration <b>078</b> (6 tablo + RLS). ESI/kritik yol karar desteği — tanı kilidi yok. Portal'da ESI sayı / STEMI skoru yok.</p>
+  </div>
+  <h2>Domain depth</h2>
+  <p class="cap">Strong = clinic-ready · Partial = beta-hazir / MD week · Missing = intentional out.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>Evidence</th><th>Gap / note</th></tr></thead>
+      <tbody>
+        <tr><td>Chapter registry + profil</td><td><span class="pill success">Strong</span></td><td class="note">CHAPTERS['acil-tip'] · pediatrikBaglam: asla · ESI+kritik yol hesaplayıcı</td><td class="note">—</td></tr>
+        <tr><td>Sticky / vizit şeridi</td><td><span class="pill success">Strong</span></td><td class="note">Risk · ESI · kritik yol · sevk · kontrol · gecikmiş</td><td class="note">—</td></tr>
+        <tr><td>ESI triyaj motor</td><td><span class="pill success">Strong</span></td><td class="note">1–5 · kaynak bayrak · tanı değil</td><td class="note">—</td></tr>
+        <tr><td>Kritik yol motor</td><td><span class="pill success">Strong</span></td><td class="note">STEMI/inme/travma/sepsis/hava yolu · tanı kilidi yok</td><td class="note">—</td></tr>
+        <tr><td>Sevk/yatış paket</td><td><span class="pill success">Strong</span></td><td class="note">Madde + hedef · boarding HIS yok</td><td class="note">—</td></tr>
+        <tr><td>Acil triyaj / Risk 409</td><td><span class="pill success">Strong</span></td><td class="note">6 bayrak · hekim onay 409</td><td class="note">—</td></tr>
+        <tr><td>Kohort + recall</td><td><span class="pill success">Strong</span></td><td class="note">ESI yüksek · kritik · sevk · risk · PHI-free</td><td class="note">—</td></tr>
+        <tr><td>Hasta dosyası UI</td><td><span class="pill success">Strong</span></td><td class="note">AcilTipHome · branş kapısı</td><td class="note">—</td></tr>
+        <tr><td>API + izolasyon</td><td><span class="pill success">Strong</span></td><td class="note">hastaSahibiMi 404 · at_* doctor_id · envanter</td><td class="note">—</td></tr>
+        <tr><td>Veritabanı 078</td><td><span class="pill success">Strong</span></td><td class="note">hasta_acil_tip · at_esi · at_kritik_yol · at_sevk · at_gorevleri · at_risk + RLS</td><td class="note">Idempotent</td></tr>
+        <tr><td>Intake</td><td><span class="pill success">Strong</span></td><td class="note">acilBelirtilerAcilTip = INTAKE_ACIL_SECENEKLERI 1:1</td><td class="note">—</td></tr>
+        <tr><td>SOAP prompts lock</td><td><span class="pill success">Strong</span></td><td class="note">doz yok · tanı hekim · bed board yok</td><td class="note">—</td></tr>
+        <tr><td>Hasta portalı Acil sonrası</td><td><span class="pill success">Strong</span></td><td class="note">/acil-sonrasi · kod+due only · ESI/skor yok · kısa takip</td><td class="note">Honest Strong</td></tr>
+        <tr><td>Doktor Araçları (4)</td><td><span class="pill success">Strong</span></td><td class="note">ESI · Kritik yol · Sevk · Kohort · foreign omit</td><td class="note">Audit Araçlar'a bağlanmaz</td></tr>
+        <tr><td>Testler</td><td><span class="pill success">Strong</span></td><td class="note">npm run test:acil</td><td class="note">—</td></tr>
+        <tr><td>Branş sızıntısı kapıları</td><td><span class="pill success">Strong</span></td><td class="note">pediatrikBaglam asla · veli yaşa göre · baş çevresi yok</td><td class="note">—</td></tr>
+        <tr><td>Olgunluk / MD beta</td><td><span class="pill warning">Partial</span></td><td class="note">beta-hazir · docs/ACIL-MD-BETA.md</td><td class="gap">uzman-dogrulandi pending</td></tr>
+        <tr><td>Full ED bed board HIS</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+        <tr><td>Yatış boarding HIS</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+        <tr><td>Tanı auto-lock</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out — hekim kilitler</td><td class="note">Intentional</td></tr>
+        <tr><td>Uydurma doz / canlı Medula</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h2>Honest wow bars</h2>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">ESI + kritik yol</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Acil + Risk 409</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları (4)</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Acil sonrası</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + izolasyon</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Olgunluk (ayrı bar)</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-val">70</div></div>
+  </div>
+  <h2>Acil-tip-only Araçlar (classify-before-add)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tile</th><th>Bucket</th><th>branslar</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>ESI — /doktor-tools/acil-esi</td><td><span class="pill info">specialty-only</span></td><td class="note">acil-tip</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td>Kritik yol — /doktor-tools/acil-kritik-yol</td><td><span class="pill info">specialty-only</span></td><td class="note">acil-tip</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td>Sevk/yatış — /doktor-tools/acil-sevk</td><td><span class="pill info">specialty-only</span></td><td class="note">acil-tip</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td>Kohort — /doktor-tools/acil-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">acil-tip</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td>Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar'a bağlanmaz</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="foot">ACIL-TIP-EXCEPTIONAL-01 · 2026-09-19 · No PHI · Never linked from /doktor-tools</div>
+</div>
+</body>
+</html>

@@ -196,6 +196,14 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#EC4899', icon: 'On', title: 'Onam taslağı checklist', desc: 'Bilgilendirilmiş onam maddeleri · tanı auto-lock yok · canlı e-imza yok', route: '/doktor-tools/plastik-onam', branslar: ['plastik-cerrahi'] },
   { circleColor: '#9D174D', icon: 'PK', title: 'Plastik kohort paneli', desc: 'Geciken kontrol · yara/greft · foto · açık acil · onam · 1-tap hatırlatma', route: '/doktor-tools/plastik-kohort', branslar: ['plastik-cerrahi'] },
 
+  // ACIL-TIP-EXCEPTIONAL-01 — specialty-only (not kardiyoloji / noroloji / anestezi / pediatri / dahiliye).
+  // Chapter engines: specialties/acil-tip/engines. ESI / kritik yol / sevk karar desteği; tanı/doz hekimde.
+  // Visibility: acil-tip only — NOT kardiyoloji (STEMI tile), NOT noroloji (İnme), NOT anestezi, NOT pediatri.
+  { circleColor: '#F97316', icon: 'ESI', title: 'ESI triyaj', desc: 'ESI 1–5 · kaynak bayrakları · karar desteği — tanı, doz ve ED bed board HIS yazılmaz', route: '/doktor-tools/acil-esi', branslar: ['acil-tip'] },
+  { circleColor: '#EA580C', icon: 'KY', title: 'Kritik yol checklist', desc: 'STEMI · inme · travma · sepsis · hava yolu bayrakları — tanı kilidi yok · doz yok', route: '/doktor-tools/acil-kritik-yol', branslar: ['acil-tip'] },
+  { circleColor: '#C2410C', icon: 'SV', title: 'Sevk / yatış paket taslağı', desc: 'Yatış · sevk · taburcu · konsültasyon maddeleri — boarding HIS yok', route: '/doktor-tools/acil-sevk', branslar: ['acil-tip'] },
+  { circleColor: '#9A3412', icon: 'AK', title: 'Acil Tıp kohort paneli', desc: 'Geciken kontrol · ESI 1–2 · kritik yol · sevk · açık bayrak · 1-tap hatırlatma', route: '/doktor-tools/acil-kohort', branslar: ['acil-tip'] },
+
   // BEYIN-CERRAHISI-EXCEPTIONAL-01 — specialty-only (not noroloji / genel-cerrahi / pediatri / kardiyoloji).
   // Chapter engines: specialties/beyin-cerrahisi/engines. Post-op / görüntü / bilinç karar desteği; tanı/AED doz hekimde.
   // Visibility: beyin-cerrahisi only — NOT noroloji (Migren/İnme), NOT genel-cerrahi, NOT pediatri.
@@ -203,6 +211,23 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#6D28D9', icon: 'GB', title: 'Görüntü belge köprü', desc: 'BT/MR/belge kontrol tarihi + etiket · AI tanı yok · rapor yorumu hekimde', route: '/doktor-tools/bc-goruntu', branslar: ['beyin-cerrahisi'] },
   { circleColor: '#5B21B6', icon: 'NB', title: 'Nöbet / bilinç izlem', desc: 'Bayraklar ve tarihler · tanı değil · AED dozu yazılmaz · nöroloji Migren/İnme değildir', route: '/doktor-tools/bc-bilinc', branslar: ['beyin-cerrahisi'] },
   { circleColor: '#4C1D95', icon: 'BK', title: 'Beyin cerrahisi kohort', desc: 'Geciken kontrol · post-op · bilinç · açık acil · görüntü · 1-tap hatırlatma', route: '/doktor-tools/bc-kohort', branslar: ['beyin-cerrahisi'] },
+
+  // ANESTEZI-EXCEPTIONAL-01 — specialty-only (not genel-cerrahi / gogus-cerrahisi / pediatri / kardiyoloji).
+  // Chapter engines: specialties/anestezi/engines. ASA/pre-op · hava yolu · ağrı karar desteği; tanı/doz hekimde.
+  // Visibility: anestezi only — NOT genel-cerrahi, NOT gogus-cerrahisi, NOT pediatri.
+  { circleColor: '#8B5CF6', icon: 'ASA', title: 'ASA / pre-op checklist', desc: 'Pre-op maddeler · ASA sınıfı · alerji/ilaç — tanı, OR anestezi makinesi HIS ve doz yazılmaz', route: '/doktor-tools/anestezi-asa', branslar: ['anestezi'] },
+  { circleColor: '#7C3AED', icon: 'HY', title: 'Hava yolu notu', desc: 'Mallampati · zor hava yolu bayrakları · tarih — tanı ve ilaç dozu yazılmaz', route: '/doktor-tools/anestezi-hava-yolu', branslar: ['anestezi'] },
+  { circleColor: '#6D28D9', icon: 'Ağ', title: 'Post-op ağrı izlem', desc: 'Skor 0–10 · bayraklar · tarih — analjezik dozu yazılmaz', route: '/doktor-tools/anestezi-agri', branslar: ['anestezi'] },
+  { circleColor: '#5B21B6', icon: 'AK', title: 'Anestezi kohort', desc: 'Geciken kontrol · ASA · hava yolu · ağrı · alerji/ilaç · açık acil · 1-tap hatırlatma', route: '/doktor-tools/anestezi-kohort', branslar: ['anestezi'] },
+
+  // RADYOLOJI-EXCEPTIONAL-01 — specialty-only (not dahiliye / onkoloji / gogus-hastaliklari / pediatri).
+  // Chapter engines: specialties/radyoloji/engines. Kuyruk / BI-RADS şablon / kritik bildirim; AI tanı yok.
+  // Visibility: radyoloji only — NOT dahiliye, NOT onkoloji, NOT gogus-hastaliklari, NOT pediatri.
+  { circleColor: '#0D9488', icon: 'TK', title: 'Tetkik kuyruğu / öncelik', desc: 'Modalite · öncelik · durum — PACS/RIS/HIS ve AI tanı yazılmaz', route: '/doktor-tools/radyo-kuyruk', branslar: ['radyoloji'] },
+  { circleColor: '#0F766E', icon: 'BR', title: 'Yapılandırılmış rapor taslağı', desc: 'BI-RADS-style kategori hekim seçer — otomatik tanı değildir · uydurma bulgu yok', route: '/doktor-tools/radyo-rapor', branslar: ['radyoloji'] },
+  { circleColor: '#115E59', icon: 'KB', title: 'Kritik bulgu bildirimi', desc: 'Bayrak + klinisyen checklist — AI tanı yok · acilde 112', route: '/doktor-tools/radyo-kritik', branslar: ['radyoloji'] },
+  { circleColor: '#134E4A', icon: 'RK', title: 'Radyoloji kohort', desc: 'Geciken kontrol · kuyruk · rapor · kritik · belge · 1-tap hatırlatma', route: '/doktor-tools/radyo-kohort', branslar: ['radyoloji'] },
+
   // GOGUS-CERRAHISI-EXCEPTIONAL-01 — specialty-only (not gogus-hastaliklari / genel-cerrahi / kardiyoloji / pediatri).
   // Chapter engines: specialties/gogus-cerrahisi/engines. Pre-op / tüp-yara / patoloji karar desteği; tanı/doz hekimde.
   // Visibility: gogus-cerrahisi only — NOT gogus-hastaliklari (CAT/mMRC), NOT genel-cerrahi, NOT kardiyoloji.
@@ -210,6 +235,13 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#991B1B', icon: 'TY', title: 'Toraks tüp / yara izlem', desc: 'Tüp · dren · yara durumu · sonraki kontrol — tanı ve doz yok', route: '/doktor-tools/gogus-cerrahi-tup-yara', branslar: ['gogus-cerrahisi'] },
   { circleColor: '#7F1D1D', icon: 'PT', title: 'Patoloji köprü', desc: 'Örnek/rapor tarihleri · hazır bayrağı — tanı, ICD, CAT yazılmaz', route: '/doktor-tools/gogus-cerrahi-patoloji', branslar: ['gogus-cerrahisi'] },
   { circleColor: '#450A0A', icon: 'GK', title: 'Göğüs cerrahisi kohort', desc: 'Geciken kontrol · pre-op · tüp/yara · patoloji · açık acil · 1-tap hatırlatma', route: '/doktor-tools/gogus-cerrahi-kohort', branslar: ['gogus-cerrahisi'] },
+  // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 — specialty-only (not kardiyoloji / genel-cerrahi / gogus-cerrahisi / pediatri).
+  // Chapter engines: specialties/kalp-damar-cerrahisi/engines. Pre-op / greft-yara / antikoag vade; tanı/doz hekimde.
+  // Visibility: kalp-damar-cerrahisi only — NOT kardiyoloji (SCORE2/Kalbim), NOT genel-cerrahi, NOT gogus-cerrahisi.
+  { circleColor: '#9F1239', icon: 'PO', title: 'Pre-op risk checklist', desc: 'Görüntü · anestezi · lab · onam · antikoagülan sorgusu — doz, SCORE2 ve OR planı yazılmaz', route: '/doktor-tools/kdc-preop', branslar: ['kalp-damar-cerrahisi'] },
+  { circleColor: '#BE123C', icon: 'GY', title: 'Greft / yara izlem', desc: 'Greft · bypass · yara durumu · sonraki kontrol — tanı ve doz yok', route: '/doktor-tools/kdc-greft-yara', branslar: ['kalp-damar-cerrahisi'] },
+  { circleColor: '#E11D48', icon: 'AK', title: 'Antikoagülan izlem vadeleri', desc: 'Kontrol / lab vadeleri · sınıf etiketi — mg ve INR sayısı üretilmez', route: '/doktor-tools/kdc-antikoag', branslar: ['kalp-damar-cerrahisi'] },
+  { circleColor: '#881337', icon: 'KK', title: 'Kalp damar cerrahisi kohort', desc: 'Geciken kontrol · pre-op · greft/yara · antikoag · açık acil · 1-tap hatırlatma', route: '/doktor-tools/kdc-kohort', branslar: ['kalp-damar-cerrahisi'] },
   // ROMATOLOJI-EXCEPTIONAL-01 — specialty-only (not ortopedi / fizik-tedavi / dahiliye / pediatri).
   // Chapter engines: specialties/romatoloji/engines. DAS28/BASDAI karar desteği; tanı ve doz hekimde.
   // Visibility: romatoloji only — NOT ortopedi, NOT fizik-tedavi, NOT dahiliye.

@@ -125,6 +125,7 @@ export const BRANS_GORUNTULEME_ONCELIGI: Partial<Record<SpecialtyKey, readonly I
   'fizik-tedavi': ['xray', 'mri', 'us'],
   noroloji: ['mri', 'bt'], // EEG/EMG kanonik modalite değil — OPEN: GORUNTULEME-EEG-EMG
   'beyin-cerrahisi': ['mri', 'bt', 'xray'],
+  anestezi: ['xray', 'bt', 'us', 'ekg'],
   'gogus-hastaliklari': ['xray', 'bt', 'pet'],
   onkoloji: ['pet', 'bt', 'mri', 'us'],
   radyoloji: ['xray', 'bt', 'mri', 'us', 'mamografi', 'pet'],

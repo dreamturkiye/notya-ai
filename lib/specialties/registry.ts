@@ -34,6 +34,10 @@ import { PLASTIK_CERRAHI_PROFILE } from './plastik-cerrahi'
 import { GOGUS_CERRAHISI_PROFILE } from './gogus-cerrahisi'
 import { BEYIN_CERRAHISI_PROFILE } from './beyin-cerrahisi'
 import { COCUK_CERRAHISI_PROFILE } from './cocuk-cerrahisi'
+import { ANESTEZI_PROFILE } from './anestezi'
+import { ACIL_TIP_PROFILE } from './acil-tip'
+import { RADYOLOJI_PROFILE } from './radyoloji'
+import { KALP_DAMAR_CERRAHISI_PROFILE } from './kalp-damar-cerrahisi'
 
 const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   pediatri: PEDIATRI_PROFILE,
@@ -60,8 +64,12 @@ const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   'gogus-cerrahisi': GOGUS_CERRAHISI_PROFILE,
   'beyin-cerrahisi': BEYIN_CERRAHISI_PROFILE,
   'cocuk-cerrahisi': COCUK_CERRAHISI_PROFILE,
+  anestezi: ANESTEZI_PROFILE,
   'aile-hekimligi': AILE_HEKIMLIGI_PROFILE,
   'spor-hekimligi': SPOR_HEKIMLIGI_PROFILE,
+  'acil-tip': ACIL_TIP_PROFILE,
+  radyoloji: RADYOLOJI_PROFILE,
+  'kalp-damar-cerrahisi': KALP_DAMAR_CERRAHISI_PROFILE,
 }
 
 export function specialtyProfile(keyHam: string | null | undefined): SpecialtyProfile {

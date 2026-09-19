@@ -120,6 +120,17 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   if (brans === 'beyin-cerrahisi') aktif.add('beyin-takibi')
   // COCUK-CERRAHISI-EXCEPTIONAL-01 — Çocuğumun Cerrahisi yalnız cocuk-cerrahisi hekiminin token'ında.
   if (brans === 'cocuk-cerrahisi') aktif.add('cocugumun-cerrahisi')
+  // ANESTEZI-EXCEPTIONAL-01 — Anestezi Öncesi yalnız anestezi hekiminin token'ında;
+  // genel-cerrahi / göğüs-cerrahisi pre-op tile'ları BURAYA TAŞINMAZ.
+  if (brans === 'anestezi') aktif.add('anestezi-oncesi')
+  // ACIL-TIP-EXCEPTIONAL-01 — Acil Sonrası yalnız acil-tip hekiminin token'ında.
+  if (brans === 'acil-tip') aktif.add('acil-sonrasi')
+  // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 — Damar Cerrahisi takibi yalnız kalp-damar-cerrahisi;
+  // kardiyoloji Kalbim / SCORE2 BURAYA TAŞINMAZ (ve tersi).
+  if (brans === 'kalp-damar-cerrahisi') aktif.add('damar-cerrahisi-takibi')
+  // RADYOLOJI-EXCEPTIONAL-01 — Tetkiklerim yalnız radyoloji hekiminin token'ında;
+  // dahiliye / onkoloji / göğüs'e taşınmaz.
+  if (brans === 'radyoloji') aktif.add('tetkiklerim')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]
@@ -134,6 +145,10 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     'gogus-cerrahisi-takibim': 'gogus-cerrahisi',
     'beyin-takibi': 'beyin-cerrahisi',
     'cocugumun-cerrahisi': 'cocuk-cerrahisi',
+    'anestezi-oncesi': 'anestezi',
+    'acil-sonrasi': 'acil-tip',
+    'damar-cerrahisi-takibi': 'kalp-damar-cerrahisi',
+    tetkiklerim: 'radyoloji',
   }
   const nav = sirali.flatMap((id) => modul(SAHIP[id], id)?.nav || [])
   return { moduller: sirali, nav }

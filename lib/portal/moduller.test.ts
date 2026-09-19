@@ -37,9 +37,13 @@ describe('KD / dahiliye / derm eligibility', () => {
     // AILE-HEKIMLIGI-EXCEPTIONAL-01: aile artık kendi portal modülüne sahip — çapraz kart verisi açılmaz.
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi' })).moduller, ['saglik-paketim'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'aile-hekimligi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['saglik-paketim'])
-    // Hâlâ chapter'ı olmayan branş (ör. anestezi baseline) chart-data alır; romatoloji artık kendi portalına sahip.
-    assert.deepEqual(portalModulleri(g({ doktorBransi: 'anestezi', kdKaydi: true, dahiliyeKaydi: true })).moduller.sort(), ['dahiliye', 'jinekoloji'])
+    // ANESTEZI-EXCEPTIONAL-01: anestezi kendi portalına sahip — çapraz kart verisi açılmaz.
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'anestezi', kdKaydi: true, dahiliyeKaydi: true })).moduller, ['anestezi-oncesi'])
     assert.deepEqual(portalModulleri(g({ doktorBransi: 'romatoloji' })).moduller, ['romatizmam'])
+    // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: Damar Cerrahisi takibi; Kalbim yok.
+    assert.deepEqual(portalModulleri(g({ doktorBransi: 'kalp-damar-cerrahisi' })).moduller, ['damar-cerrahisi-takibi'])
+    assert.ok(!portalModulleri(g({ doktorBransi: 'kalp-damar-cerrahisi' })).moduller.includes('kalbim'))
+    assert.ok(!portalModulleri(g({ doktorBransi: 'kardiyoloji' })).moduller.includes('damar-cerrahisi-takibi'))
   })
   // DERM-EXCEPTIONAL-01: Derim Strong (hekim tetiklemeli hatırlatma).
   it('dermatoloji mounts Derim (Strong) — unique from göz / pediatri', () => {

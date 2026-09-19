@@ -166,6 +166,15 @@ import {
   BEYIN_IPUCLARI,
 } from '@/specialties/beyin-cerrahisi/engines/portal-beyin-takibi'
 import {
+  anesteziOncesiHatirlatmalari,
+  preopHatirlatmalari as anesteziPreopHatirlatmalari,
+  havaYoluHatirlatmalari as anesteziHavaYoluHatirlatmalari,
+  agriHatirlatmalari as anesteziAgriHatirlatmalari,
+  sonrakiKontrol as anesteziSonrakiKontrol,
+  ANESTEZI_ONCESI_NOTU,
+  ANESTEZI_IPUCLARI,
+} from '@/specialties/anestezi/engines/portal-anestezi-oncesi'
+import {
   cocugumunCerrahisiHatirlatmalari,
   yaraHatirlatmalari as ccYaraHatirlatmalari,
   islemHatirlatmalari as ccIslemHatirlatmalari,
@@ -173,6 +182,33 @@ import {
   COCUGUMUN_CERRAHISI_NOTU,
   CC_BAKIM_IPUCLARI,
 } from '@/specialties/cocuk-cerrahisi/engines/portal-cocugumun-cerrahisi'
+import {
+  acilSonrasiHatirlatmalari,
+  taburcuHatirlatmalari as acilTaburcuHatirlatmalari,
+  takipHatirlatmalari as acilTakipHatirlatmalari,
+  sevkHatirlatmalari as acilSevkHatirlatmalari,
+  sonrakiKontrol as acilSonrasiSonrakiKontrol,
+  ACIL_SONRASI_NOTU,
+  ACIL_SONRASI_IPUCLARI,
+} from '@/specialties/acil-tip/engines/portal-acil-sonrasi'
+import {
+  damarHatirlatmalari,
+  greftYaraHatirlatmalari as kdcGreftHatirlatmalari,
+  antikoagHatirlatmalari as kdcAntikoagHatirlatmalari,
+  preopHatirlatmalari as kdcPreopHatirlatmalari,
+  sonrakiKontrol as kdcSonrakiKontrol,
+  DAMAR_TAKIP_NOTU,
+  KDC_IPUCLARI,
+} from '@/specialties/kalp-damar-cerrahisi/engines/portal-damar'
+import {
+  tetkiklerimHatirlatmalari,
+  tetkikHatirlatmalari as radyoTetkikHatirlatmalari,
+  raporHatirlatmalari as radyoRaporHatirlatmalari,
+  belgeHatirlatmalari as radyoBelgeHatirlatmalari,
+  sonrakiKontrol as radyoSonrakiKontrol,
+  TETKIKLERIM_NOTU,
+  TETKIKLERIM_IPUCLARI,
+} from '@/specialties/radyoloji/engines/portal-tetkiklerim'
 import {
   akcigerlerimHatirlatmalari,
   testHatirlatmalari as gogusTestHatirlatmalari,
@@ -1072,6 +1108,30 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] gogus-cerrahisi-takibim:', e) }
 
+  // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 — "Damar Cerrahisi takibi": yalnız açık görev + kontrol.
+  // Tanı, SCORE2, Kalbim, doz portala GEÇMEZ. kardiyoloji Kalbim ayrı branş.
+  if (modulAktif('damar-cerrahisi-takibi')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('kdc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_kalp_damar_cerrahisi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = damarHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.damarCerrahisi = {
+      sonrakiKontrol: kdcSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      greftYaraHatirlatma: kdcGreftHatirlatmalari(hatirlatmalar),
+      antikoagHatirlatma: kdcAntikoagHatirlatmalari(hatirlatmalar),
+      preopHatirlatma: kdcPreopHatirlatmalari(hatirlatmalar),
+      ipuclari: [...KDC_IPUCLARI],
+      not: DAMAR_TAKIP_NOTU,
+    }
+  } catch (e) { console.error('[portal] damar-cerrahisi-takibi:', e) }
+
   if (modulAktif('ameliyatim')) try {
     const bugun = new Date().toISOString().slice(0, 10)
     const [gorevQ, bolumQ] = await Promise.all([
@@ -1142,6 +1202,68 @@ export async function GET(
     }
   } catch (e) { console.error('[portal] beyin-takibi:', e) }
 
+  // RADYOLOJI-EXCEPTIONAL-01 — "Tetkiklerim": yalnız açık görev + hekim kontrol tarihi + kuyruk durumu.
+  // Tanı, BI-RADS sayı, AI bulgu portala GEÇMEZ.
+  if (modulAktif('tetkiklerim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ, kuyrukQ] = await Promise.all([
+      sb.from('radyo_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_radyoloji').select('next_kontrol, kuyruk').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+      sb.from('radyo_kuyruk').select('tarih, modalite, durum').eq('patient_id', patientId).eq('doctor_id', doctorId).order('tarih', { ascending: false }).limit(10),
+    ])
+    const hatirlatmalar = tetkiklerimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    const DURUM_MAP: Record<string, 'Bekliyor' | 'Çekildi' | 'Rapor hazır' | 'Arşiv'> = {
+      bekliyor: 'Bekliyor', cekildi: 'Çekildi', rapor_hazir: 'Rapor hazır', arsiv: 'Arşiv',
+    }
+    const MOD_MAP: Record<string, string> = {
+      xray: 'Direkt grafi', us: 'Ultrason', bt: 'BT', mri: 'MR', mamografi: 'Mamografi', pet: 'PET', diger: 'Tetkik',
+    }
+    const tetkikler = (kuyrukQ.data || []).map((r) => ({
+      durum: DURUM_MAP[String(r.durum || 'bekliyor')] || 'Bekliyor',
+      tarih: r.tarih ? String(r.tarih).slice(0, 10) : null,
+      modaliteEtiket: MOD_MAP[String(r.modalite || 'diger')] || 'Tetkik',
+    }))
+    bundle.radyo = {
+      sonrakiKontrol: radyoSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      tetkikler,
+      tetkikHatirlatma: radyoTetkikHatirlatmalari(hatirlatmalar),
+      raporHatirlatma: radyoRaporHatirlatmalari(hatirlatmalar),
+      belgeHatirlatma: radyoBelgeHatirlatmalari(hatirlatmalar),
+      ipuclari: [...TETKIKLERIM_IPUCLARI],
+      not: TETKIKLERIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] tetkiklerim:', e) }
+
+
+  // ANESTEZI-EXCEPTIONAL-01 — "Anestezi Öncesi": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, ASA skor yorumu, ilaç dozu, OR HIS portala GEÇMEZ.
+  if (modulAktif('anestezi-oncesi')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('anestezi_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_anestezi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = anesteziOncesiHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.anestezi = {
+      sonrakiKontrol: anesteziSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      preopHatirlatma: anesteziPreopHatirlatmalari(hatirlatmalar),
+      havaYoluHatirlatma: anesteziHavaYoluHatirlatmalari(hatirlatmalar),
+      agriHatirlatma: anesteziAgriHatirlatmalari(hatirlatmalar),
+      ipuclari: [...ANESTEZI_IPUCLARI],
+      not: ANESTEZI_ONCESI_NOTU,
+    }
+  } catch (e) { console.error('[portal] anestezi-oncesi:', e) }
+
   // COCUK-CERRAHISI-EXCEPTIONAL-01 — "Çocuğumun Cerrahisi": yalnız açık görev + hekim kontrol tarihi.
   // Tanı, doz, Neyzi/büyüme chapter portala GEÇMEZ.
   if (modulAktif('cocugumun-cerrahisi')) try {
@@ -1164,6 +1286,30 @@ export async function GET(
       not: COCUGUMUN_CERRAHISI_NOTU,
     }
   } catch (e) { console.error('[portal] cocugumun-cerrahisi:', e) }
+
+  // ACIL-TIP-EXCEPTIONAL-01 — "Acil sonrası takip": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, doz, ESI sayı, STEMI/inme skoru, bed board portala GEÇMEZ.
+  if (modulAktif('acil-sonrasi')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('at_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_acil_tip').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = acilSonrasiHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.acilSonrasi = {
+      sonrakiKontrol: acilSonrasiSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      taburcuHatirlatma: acilTaburcuHatirlatmalari(hatirlatmalar),
+      takipHatirlatma: acilTakipHatirlatmalari(hatirlatmalar),
+      sevkHatirlatma: acilSevkHatirlatmalari(hatirlatmalar),
+      ipuclari: [...ACIL_SONRASI_IPUCLARI],
+      not: ACIL_SONRASI_NOTU,
+    }
+  } catch (e) { console.error('[portal] acil-sonrasi:', e) }
 
 
   // GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": yalnız açık görev kodları + hekimin kontrol tarihi.

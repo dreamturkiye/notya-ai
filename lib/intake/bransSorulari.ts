@@ -307,6 +307,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
   radyoloji: {
     baslik: 'Görüntüleme Öncesi Bilgiler',
     alanlar: [
+      { id: 'acilBelirtilerRadyo', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Daha önce ciddi kontrast reaksiyonu / anafilaksi', 'Gebelik olasılığı var ve iyonizan çekim planlanıyor', 'Çekim sırasında nefes darlığı veya bilinç değişikliği', 'Doktorunuz kritik bulgu için acil iletişim istedi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun / klinisyeni bilgilendirin.' },
       { id: 'basvuruNedeniRad', etiket: 'İstenen tetkik türü / çekim nedeni', tur: 'textarea', zorunlu: true },
       { id: 'kontrastAlerjisi', etiket: 'Daha önce kontrast madde alerjisi yaşadınız mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'gebelikOlasiligi', etiket: 'Gebelik olasılığınız var mı? (kadın hastalar için)', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Emin değilim', 'Uygun değil'] },
@@ -322,6 +323,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Anestezi Öncesi Değerlendirme',
     alanlar: [
       { id: 'basvuruNedeniAnestezi', etiket: 'Planlanan işlem nedir?', tur: 'textarea', zorunlu: true },
+      // ANESTEZI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/anestezi/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerAnestezi', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Zor nefes alma veya boğulma hissi', 'Ciddi ilaç alerjisi / şişlik / döküntü (şu an)', 'Yüksek ateş ve kas sertliği (anestezi sonrası şüphe)', 'Kusma sonrası nefes darlığı / aspirasyon şüphesi', 'Ani göğüs ağrısı veya bayılma', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'oncekiAnesteziSorunu', etiket: 'Daha önce anestezi alırken bir sorun yaşadınız mı?', tur: 'textarea' },
       { id: 'aileAnesteziKomplikasyon', etiket: 'Ailede anesteziyle ilgili bilinen bir komplikasyon (malign hipertermi vb.) var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'] },
       { id: 'aclikTeyit', etiket: 'İşlemden önce açlık süresine uyacağınızı onaylıyor musunuz?', tur: 'radio', secenekler: ['Evet'] },
@@ -337,6 +340,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Acil Şikayet Bilgisi',
     alanlar: [
       BASVURU_NEDENI,
+      // ACIL-TIP-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/acil-tip/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerAcilTip', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Nefes alamıyorum veya boğulma hissi', 'Bayılma / bilinç kaybı veya yanıtsızlık', 'Kontrol edilemeyen kanama', 'Şiddetli nefes darlığı veya morarma', 'Çok düşük tansiyon / soğuk ter / şok hissi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'siddet', etiket: 'Şikayetin şiddeti (1: hafif — 10: dayanılmaz)', tur: 'select', secenekler: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] },
       { id: 'baslamaSekli', etiket: 'Şikayet nasıl başladı?', tur: 'radio', secenekler: ['Aniden', 'Yavaş yavaş'] },
       { id: 'esliqSemptomlar', etiket: 'Eşlik eden belirtiler', tur: 'checkbox-grup', secenekler: ['Ateş', 'Nefes Darlığı', 'Göğüs Ağrısı', 'Bilinç Değişikliği', 'Kanama', 'Kusma', 'Yok'] },
@@ -537,6 +542,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Kalp-Damar Cerrahisi Değerlendirmesi',
     alanlar: [
       BASVURU_NEDENI,
+      // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 — etiketler engines/acil.ts INTAKE_ACIL_SECENEKLERI ile birebir.
+      { id: 'acilBelirtilerKDC', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ani soğuk / soluk el veya ayak ile şiddetli ağrı', 'Greft veya bypass hattında ani tıkanma şüphesi', 'Bol kanama veya greft bölgesinde hızla büyüyen şişlik', 'Ani yırtıcı göğüs veya sırt ağrısı', 'Ameliyat sonrası ani göğüs ağrısı veya nefes darlığı', 'Yara çevresinde hızla artan kızarıklık, irin veya ateş', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarKDC', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Göğüs Ağrısı', 'Bacak Ağrısı', 'Bacakta Şişlik', 'Varis', 'Nefes Darlığı', 'Soğuk Ekstremite', 'Yok'] },
       { id: 'oncekiDamarAmeliyati', etiket: 'Daha önce kalp veya damar ameliyatı geçirdiniz mi?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'sigaraKDC', etiket: 'Sigara kullanıyor musunuz?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },

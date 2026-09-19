@@ -46,6 +46,10 @@ export type HastaDosyaSekmeId =
   | 'beyin'
   | 'gogus-cerrahisi'
   | 'cocuk-cerrahisi'
+  | 'anestezi'
+  | 'acil'
+  | 'kalp-damar'
+  | 'radyo'
   | 'konsultasyon'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
@@ -56,7 +60,7 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|çocuk cerrah|cocuk cerrah|cocuk-cerrahisi|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|göğüs cerrah|gogus cerrah|gogus-cerrah|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin|romato|gastro|nefroloji|b[öo]brek hastal|enfeksiyon|infeksiyon|onkolo|genel.?cerrah|plastik|beyin.?cerrah/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|çocuk cerrah|cocuk cerrah|cocuk-cerrahisi|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|göğüs cerrah|gogus cerrah|gogus-cerrah|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin|romato|gastro|nefroloji|b[öo]brek hastal|enfeksiyon|infeksiyon|onkolo|genel.?cerrah|plastik|beyin.?cerrah|anestez|reanimasyon|acil.?t[ıi]p|acil tip|radyolo|radiolo/.test(b)
 }
 
 /**
@@ -251,11 +255,53 @@ export function cocukCerrahisiSekmesiBransi(specialtyHam: string | null | undefi
   return /çocuk cerrah|cocuk cerrah|cocuk-cerrahisi/.test(b)
 }
 
+/**
+ * ANESTEZI-EXCEPTIONAL-01 — Anestezi bölüm sekmesinin sahibi: yalnız anestezi / anesteziyoloji.
+ * Genel cerrahi, göğüs cerrahisi ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function anesteziSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /anestez|reanimasyon/.test(b)
+}
+
+/**
+ * ACIL-TIP-EXCEPTIONAL-01 — Acil Tıp bölüm sekmesinin sahibi: yalnız acil tıp.
+ * Kardiyoloji, nöroloji, anestezi ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function acilTipSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /acil.?t[ıi]p|acil tip|emergency medicine/.test(b)
+}
+
+/**
+ * RADYOLOJI-EXCEPTIONAL-01 — Radyoloji bölüm sekmesinin sahibi: yalnız radyoloji.
+ * Dahiliye, onkoloji, göğüs ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function radyolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /radyolo|radiolo/.test(b)
+}
+
+
 
 /**
  * GOGUS-CERRAHISI-EXCEPTIONAL-01 — Göğüs Cerrahisi bölüm sekmesinin sahibi: yalnız gogus-cerrahisi.
  * gogus-hastaliklari (pulmonoloji), genel cerrahi ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
  */
+
+/**
+ * KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 — Kalp Damar Cerrahisi sekmesi: yalnız kalp-damar-cerrahisi.
+ * kardiyoloji (SCORE2/Kalbim) ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function kalpDamarCerrahisiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /kalp.{0,12}damar.?cerrah|kardiyovask.?cerrah|cardiovascular.?surg|damar cerrah/.test(b)
+}
+
 export function gogusCerrahisiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
@@ -392,8 +438,16 @@ export function hastaDosyaSekmeleri(opts: {
   plastikUygun?: boolean
   /** BEYIN-CERRAHISI-EXCEPTIONAL-01: doctor specialty beyin-cerrahisi only (not noroloji) */
   beyinCerrahisiUygun?: boolean
+  /** KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 */
+  kalpDamarCerrahisiUygun?: boolean
   /** COCUK-CERRAHISI-EXCEPTIONAL-01: doctor specialty cocuk-cerrahisi only (not pediatri) */
   cocukCerrahisiUygun?: boolean
+  /** ANESTEZI-EXCEPTIONAL-01: doctor specialty anestezi only (not genel-cerrahi) */
+  anesteziUygun?: boolean
+  /** ACIL-TIP-EXCEPTIONAL-01: doctor specialty acil-tip only (not kardiyoloji / noroloji) */
+  acilTipUygun?: boolean
+  /** RADYOLOJI-EXCEPTIONAL-01: doctor specialty radyoloji only */
+  radyolojiUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -439,7 +493,11 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.genelCerrahiUygun) tabs.push({ id: 'genel-cerrahi', label: 'Genel Cerrahi' })
   if (opts.plastikUygun) tabs.push({ id: 'plastik', label: 'Plastik' })
   if (opts.beyinCerrahisiUygun) tabs.push({ id: 'beyin', label: 'Beyin Cerrahisi' })
+  if (opts.kalpDamarCerrahisiUygun) tabs.push({ id: 'kalp-damar', label: 'Kalp Damar Cerrahisi' })
   if (opts.cocukCerrahisiUygun) tabs.push({ id: 'cocuk-cerrahisi', label: 'Çocuk Cerrahisi' })
+  if (opts.anesteziUygun) tabs.push({ id: 'anestezi', label: 'Anestezi' })
+  if (opts.acilTipUygun) tabs.push({ id: 'acil', label: 'Acil Tıp' })
+  if (opts.radyolojiUygun) tabs.push({ id: 'radyo', label: 'Radyoloji' })
   return tabs
 }
 

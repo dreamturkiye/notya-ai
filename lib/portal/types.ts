@@ -211,6 +211,14 @@ export interface PortalBundle {
   beyin: PortalBeyin | null
   /** COCUK-CERRAHISI-EXCEPTIONAL-01 — "Çocuğumun Cerrahisi". No Neyzi/büyüme chapter, tanı, doz. */
   cc: PortalCc | null
+  /** ANESTEZI-EXCEPTIONAL-01 — "Anestezi Öncesi": MD-set kontrol + pre-op/hava yolu/ağrı. No tanı, doz, OR HIS. */
+  anestezi: PortalAnestezi | null
+  /** ACIL-TIP-EXCEPTIONAL-01 — "Acil sonrası takip": MD-set kısa takip. No tanı, doz, ESI sayı, bed board. */
+  acilSonrasi: PortalAcilSonrasi | null
+  /** KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 — "Damar Cerrahisi takibi". No SCORE2/Kalbim, tanı, doz. */
+  damarCerrahisi: PortalDamarCerrahisi | null
+  /** RADYOLOJI-EXCEPTIONAL-01 — "Tetkiklerim": durum/tarih. No tanı, BI-RADS sayı, AI bulgu. */
+  radyo: PortalRadyo | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -614,5 +622,73 @@ export interface PortalCc {
   yaraHatirlatma: Array<{ ad: string; due: string | null }>
   islemHatirlatma: Array<{ ad: string; due: string | null }>
   bakimIpuclari: string[]
+  not: string
+}
+
+/**
+ * RADYOLOJI-EXCEPTIONAL-01 — "Tetkiklerim": ayaktan görüntüleme hasta yüzü.
+ * Yalnız durum / tarihler. Tanı, BI-RADS kategori sayısı, AI bulgu portala GEÇMEZ.
+ */
+export interface PortalRadyo {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** Hasta-güvenli durum satırları — yorum/tanı yok */
+  tetkikler: Array<{ durum: 'Bekliyor' | 'Çekildi' | 'Rapor hazır' | 'Arşiv'; tarih: string | null; modaliteEtiket: string }>
+  tetkikHatirlatma: Array<{ ad: string; due: string | null }>
+  raporHatirlatma: Array<{ ad: string; due: string | null }>
+  belgeHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * ANESTEZI-EXCEPTIONAL-01 — "Anestezi Öncesi": ayaktan / poliklinik anestezi hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, ASA skor yorumu,
+ * ilaç dozu portala GEÇMEZ (specialties/anestezi/engines/portal-anestezi-oncesi.ts kilidi).
+ */
+export interface PortalAnestezi {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Anestezi öncesi değerlendirme" — tanı/doz yok */
+  preopHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Hava yolu kontrolü" — teknik/doz yok */
+  havaYoluHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Ağrı izlem kontrolü" — mg doz yok */
+  agriHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * ACIL-TIP-EXCEPTIONAL-01 — "Acil sonrası takip": ED sonrası kısa hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler. Tanı, doz, ESI sayı, STEMI/inme skoru,
+ * bed board portala GEÇMEZ (specialties/acil-tip/engines/portal-acil-sonrasi.ts kilidi).
+ */
+export interface PortalAcilSonrasi {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Acil sonrası kontrol" — tanı/doz yok */
+  taburcuHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Takip kontrolü" — ESI/skor yok */
+  takipHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Sevk / yatış takibi" — boarding HIS yok */
+  sevkHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+
+/**
+ * KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 — "Damar Cerrahisi takibi": ayaktan kalp-damar cerrahisi hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler. Tanı, SCORE2, Kalbim, doz portala GEÇMEZ
+ * (specialties/kalp-damar-cerrahisi/engines/portal-damar.ts kilidi). kardiyoloji Kalbim ayrı.
+ */
+export interface PortalDamarCerrahisi {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  greftYaraHatirlatma: Array<{ ad: string; due: string | null }>
+  antikoagHatirlatma: Array<{ ad: string; due: string | null }>
+  preopHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
   not: string
 }

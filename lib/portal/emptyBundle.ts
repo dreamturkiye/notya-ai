@@ -57,5 +57,9 @@ export function emptyPortalBundle(): PortalBundle {
     gogusCerrahi: null, // GOGUS-CERRAHISI-EXCEPTIONAL-01
     beyin: null, // BEYIN-CERRAHISI-EXCEPTIONAL-01 — Beyin Cerrahisi takibi yalnız beyin-cerrahisi hekiminin token'ında
     cc: null, // COCUK-CERRAHISI-EXCEPTIONAL-01
+    anestezi: null, // ANESTEZI-EXCEPTIONAL-01 — Anestezi Öncesi yalnız anestezi hekiminin token'ında
+    acilSonrasi: null, // ACIL-TIP-EXCEPTIONAL-01 — Acil sonrası takip yalnız acil-tip hekiminin token'ında
+    damarCerrahisi: null, // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01
+    radyo: null, // RADYOLOJI-EXCEPTIONAL-01 — Tetkiklerim yalnız radyoloji hekiminin token'ında
   }
 }

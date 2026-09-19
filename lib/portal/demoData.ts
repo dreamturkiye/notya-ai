@@ -24,6 +24,10 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   plastik: null, // PLASTIK-CERRAHI-EXCEPTIONAL-01 — Yaram yalnız plastik-cerrahi hekiminin token'ında
   gogusCerrahi: null,
   beyin: null, // BEYIN-CERRAHISI-EXCEPTIONAL-01 — Beyin Cerrahisi takibi yalnız beyin-cerrahisi hekiminin token'ında
+  anestezi: null, // ANESTEZI-EXCEPTIONAL-01 — Anestezi Öncesi yalnız anestezi hekiminin token'ında
+  damarCerrahisi: null, // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01
+  acilSonrasi: null, // ACIL-TIP-EXCEPTIONAL-01 — Acil sonrası takip yalnız acil-tip hekiminin token'ında
+  radyo: null, // RADYOLOJI-EXCEPTIONAL-01
   cc: null,
   enfeksiyon: null, // ENFEKSIYON-EXCEPTIONAL-01 — Enfeksiyon Takibim yalnız enfeksiyon hekiminin token'ında
   gastro: null, // GASTROENTEROLOJI-EXCEPTIONAL-01 — Sindirimim yalnız gastroenteroloji hekiminin token'ında

@@ -41,7 +41,11 @@ import GogusCerrahiHome from '@/specialties/gogus-cerrahisi/ui/GogusCerrahiHome'
 import GenelCerrahiHome from '@/specialties/genel-cerrahi/ui/GenelCerrahiHome';
 import PlastikHome from '@/specialties/plastik-cerrahi/ui/PlastikHome'
 import BeyinCerrahisiHome from '@/specialties/beyin-cerrahisi/ui/BeyinCerrahisiHome';
+import RadyolojiHome from '@/specialties/radyoloji/ui/RadyolojiHome';
 import CocukCerrahisiHome from '@/specialties/cocuk-cerrahisi/ui/CocukCerrahisiHome';
+import AnesteziHome from '@/specialties/anestezi/ui/AnesteziHome';
+import KalpDamarHome from '@/specialties/kalp-damar-cerrahisi/ui/KalpDamarHome';
+import AcilTipHome from '@/specialties/acil-tip/ui/AcilTipHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
@@ -75,6 +79,10 @@ import {
   plastikSekmesiBransi,
   beyinCerrahisiSekmesiBransi,
   cocukCerrahisiSekmesiBransi,
+  anesteziSekmesiBransi,
+  radyolojiSekmesiBransi,
+  kalpDamarCerrahisiSekmesiBransi,
+  acilTipSekmesiBransi,
   pediatriAracSekmesiUygun,
   muayeneAltiSekmeler,
   type HastaDosyaSekmeId,
@@ -151,6 +159,10 @@ export default function HastaProfilPage() {
   const [plastikAraci, setPlastikAraci] = useState(false); // PLASTIK-CERRAHI-EXCEPTIONAL-01: yalnız plastik-cerrahi
   const [beyinAraci, setBeyinAraci] = useState(false); // BEYIN-CERRAHISI-EXCEPTIONAL-01: yalnız beyin-cerrahisi
   const [ccAraci, setCcAraci] = useState(false); // COCUK-CERRAHISI-EXCEPTIONAL-01: yalnız cocuk-cerrahisi
+  const [anesteziAraci, setAnesteziAraci] = useState(false); // ANESTEZI-EXCEPTIONAL-01: yalnız anestezi
+  const [radyoAraci, setRadyoAraci] = useState(false); // RADYOLOJI-EXCEPTIONAL-01: yalnız radyoloji
+  const [kdcAraci, setKdcAraci] = useState(false); // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01
+  const [acilAraci, setAcilAraci] = useState(false); // ACIL-TIP-EXCEPTIONAL-01: yalnız acil-tip
   const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
@@ -158,7 +170,7 @@ export default function HastaProfilPage() {
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
     : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci });
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci, anesteziUygun: anesteziAraci, kalpDamarCerrahisiUygun: kdcAraci, acilTipUygun: acilAraci, radyolojiUygun: radyoAraci });
 
   /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
    *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
@@ -245,6 +257,10 @@ export default function HastaProfilPage() {
           setPlastikAraci(plastikSekmesiBransi(sp));
           setBeyinAraci(beyinCerrahisiSekmesiBransi(sp));
           setCcAraci(cocukCerrahisiSekmesiBransi(sp));
+          setAnesteziAraci(anesteziSekmesiBransi(sp));
+          setRadyoAraci(radyolojiSekmesiBransi(sp));
+          setKdcAraci(kalpDamarCerrahisiSekmesiBransi(sp));
+          setAcilAraci(acilTipSekmesiBransi(sp));
         }
       } catch {
         setError('Bir hata oluştu');
@@ -571,6 +587,10 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'plastik' && plastikAraci && <PlastikHome patientId={patientId} />}
         {!loading && !error && activeTab === 'beyin' && beyinAraci && <BeyinCerrahisiHome patientId={patientId} />}
         {!loading && !error && activeTab === 'cocuk-cerrahisi' && ccAraci && <CocukCerrahisiHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'anestezi' && anesteziAraci && <AnesteziHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'radyo' && radyoAraci && <RadyolojiHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'kalp-damar' && kdcAraci && <KalpDamarHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'acil' && acilAraci && <AcilTipHome patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && deriAraci && (
           <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} hastaAdi={patient?.ad_soyad} />
         )}

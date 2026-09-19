@@ -30,6 +30,9 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/göğüs cerrah|gogus cerrah|gogus-cerrah/, 'gogus-cerrahisi'],
   // GOGUS-EXCEPTIONAL-01: "Göğüs Hastalıkları" — cerrahi ("Göğüs Cerrahisi") eşleşmez (ayrı branş).
   [/göğüs hastal|gogus-hastalik|gogus hastal/, 'gogus-hastaliklari'],
+  // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: "Kalp Damar Cerrahisi" — kardiyoloji'den ÖNCE.
+  // KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: "Kalp Damar Cerrahisi" / "Kalp ve Damar Cerrahisi" — kardiyoloji'den ÖNCE.
+  [/kalp.{0,12}damar.?cerrah|kardiyovask.?cerrah|cardiovascular.?surg/, 'kalp-damar-cerrahisi'],
   // KARDIO-EXCEPTIONAL-01: "Kardiyoloji Uzmanı". Kalp-damar cerrahisi ayrı branş — eşleşmez.
   [/^(?!.*(cerrah|damar)).*(kardiyoloji|\bkardiyo\b)/, 'kardiyoloji'],
   // BEYIN-CERRAHISI-EXCEPTIONAL-01: "Beyin Cerrahisi", "Nöroşirürji" — noroloji'den ÖNCE.
@@ -52,12 +55,18 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/nefroloji|b[öo]brek hastal/, 'nefroloji'],
   // ENFEKSIYON-EXCEPTIONAL-01: "Enfeksiyon Hastalıkları", "Klinik Mikrobiyoloji".
   [/enfeksiyon|infeksiyon|klinik mikrobiyoloji/, 'enfeksiyon-hastaliklari'],
+  // RADYOLOJI-EXCEPTIONAL-01: "Radyoloji", "Radiology" — onkoloji (radyasyon onkolojisi) negatif lookahead'inden ÖNCE.
+  [/radyolo|radiolo/, 'radyoloji'],
   // ONKOLOJI-EXCEPTIONAL-01: "Onkoloji Uzmanı", "Tıbbi Onkoloji" (radyasyon onkolojisi ayrı — eşleşmez).
   [/^(?!.*(radyasyon|radyo)).*(onkolo|tibbi onkolo|tıbbi onkolo)/, 'onkoloji'],
   // GENEL-CERRAHI-EXCEPTIONAL-01: "Genel Cerrahi" — çocuk/göğüs/beyin/plastik/kalp-damar cerrahisi eşleşmez.
   [/^(?!.*(çocuk|cocuk|göğüs|gogus|beyin|plastik|kalp|damar|kardiyovask|toraks)).*(genel.?cerrah|general.?surg)/, 'genel-cerrahi'],
   // PLASTIK-CERRAHI-EXCEPTIONAL-01: "Plastik Cerrahi", "Plastik Rekonstrüktif ve Estetik Cerrahi".
   [/plastik|rekonstr[üu]ktif|estetik cerrah/, 'plastik-cerrahi'],
+  // ACIL-TIP-EXCEPTIONAL-01: "Acil Tıp", "Acil Tıp Uzmanı", "Emergency Medicine".
+  [/acil.?t[ıi]p|acil tip|emergency medicine/, 'acil-tip'],
+  // ANESTEZI-EXCEPTIONAL-01: "Anestezi", "Anesteziyoloji", "Anesteziyoloji ve Reanimasyon".
+  [/anestez|reanimasyon/, 'anestezi'],
 ]
 
 /** Ham değer ('kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'genel-cerrahi') → kanonik anahtar; "genel"/boş/bilinmeyen → null. */
