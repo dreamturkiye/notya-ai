@@ -65,10 +65,57 @@ kayıtlarını ellerinde taşıyorlar, param parça oluyor."*
 - Testler: `lib/asi/karneOkuma.test.ts` (saf), `lib/asi/asiRotalari.test.ts` (gerçek rota: onaysız kayıt yok, düzeltilen değer
   yansır, GÜÇLÜ model, sekreter 403, yabancı belge 404), hasta-izolasyon vakası (A↔B).
 
+### C — Sağlığım'da dijital aşı karnesi: PDF indir · cihazdan paylaş · yazdır (PR 2)
+- **Evrensel portal modülü "Aşı Karnesi"** (`/portal/hasta/[token]/asi-karnesi`): branş kapısı YOK — bu token'ın doktoruna ait
+  aşı kaydı varsa her branşta açılır (aşı kaydı pediatri dışında da tutulur; `kategori` ayırır). `lib/portal/moduller.ts`
+  (`asiKaydi`, `ASI_KARNESI_NAV`), `PortalBundle.asiKarnesi`, emptyBundle, demo (sentetik).
+- **Tek içerik** `lib/asi/karneBelgesi.ts`: ekran, yazdırma (aynı ekran + `@media print`) ve PDF aynı modelden ve aynı
+  sabitlerden çizilir (kaynak etiketi, açıklama, e-Nabız metni, sıra). PDF üreticisi TEK (`lib/asi/karnePdf.tsx`) — portal
+  (`GET /api/portal/hasta/[token]/asi-karnesi/pdf`) ve hekim (`GET /api/doktor/asilar/karne/pdf`, Aşılar sekmesi) aynı
+  fonksiyonu çağırır; test iki PDF'in metninin birebir aynı olduğunu doğrular.
+- İçerik: ad soyad + doğum tarihi (yalnız karne diliminde ve PDF'te; Sağlığım karşılama başlığı hâlâ adsız), yapılan aşılar
+  (ad · doz · tarih · kaynak: "Karneden aktarıldı · hekim onaylı" / "Klinikte uygulandı" / "Beyana göre kaydedildi"),
+  sıradaki aşı = **hekimin girdiği** `sonraki_doz_tarihi` (bugün ve sonrası; takvim motoru portalda çalışmaz — hesaplama,
+  "eksik/gecikmiş" çıkarımı yok), hekim/klinik, oluşturulma tarihi. **Klinik yorum yok** (test: yasak kelime listesi).
+- **e-Nabız uyarısı ZORUNLU — neden:** aile bu karneyi okul kaydı / yurt dışı gibi resmî işlemde geçerli belge sanmasın.
+  Resmî ve eksiksiz kaynak T.C. Sağlık Bakanlığı e-Nabız'dır; bizim karne yalnız bu muayenehanenin kayıtlarının özetidir
+  (dış kurumda yapılan ve karneye aktarılmamış doz burada yoktur). Yanlış beklenti = aile resmî işlemde reddedilir ya da
+  eksik bir dozu "yapılmış" sanır. Bu yüzden metin ekranda listeden ÖNCE, tam boyutta, çerçeveli; yazdırmada ve PDF'te de
+  var; küçültülemez/gizlenemez (testler: SSR sırası, print CSS'te gizlenmez, PDF metninde var).
+- **Üç eylem (Kaan):** (1) **PDF indir** — dosya cihaza iner (dosya adında hasta adı yok: `asi-karnesi-YYYY-MM-DD.pdf`).
+  (2) **Paylaş** — yalnız cihazın kendi paylaşım sayfası (Web Share API + `canShare({files})`); iOS için PDF önceden
+  hazırlanır (paylaşım dokunuştan hemen sonra açılmalı). Destek yoksa düğme GÖSTERİLMEZ, yerine açık ipucu: "PDF'i indirip
+  kendi e-postanızdan ya da mesaj uygulamanızdan gönderebilirsiniz." mailto'ya ek denenmez. (3) **Yazdır** — portalde
+  `window.print()` + `ASI_KARNESI_YAZDIRMA_CSS` (kabuk/gezinme/alt bilgi/düğmeler gizli, beyaz zemin + siyah metin,
+  satırlar `break-inside: avoid`, e-Nabız uyarısı ve kaynak rozeti basılır); hekim tarafında aynı PDF gizli çerçevede
+  yazdırılır (izin yoksa yeni sekmede açılır).
+- **C6 (e-postayla gönder) İPTAL — Kaan'ın kararı ve gerekçesi:** *"Burada Resend'e gerek yok… Eğer birisine e-mail etmek
+  istiyorsa direkt kendi e-mailinden yollasın. Bizimle bir alakası yok."* Sağlık verisini Notya'nın e-posta altyapısından
+  geçirmek gereksiz bir KVKK sorumluluğu ve maliyettir; ebeveyn belgeyi indirir, paylaşmak isterse KENDİ e-postasından /
+  WhatsApp'ından yollar. Notya adres SORMAZ, SAKLAMAZ, GÖNDERMEZ. Resend / `lib/mail/resend.ts` / `notifyPatientEmail.ts`
+  bu iş için kullanılmadı ve değiştirilmedi. **Regresyon koruması:** `lib/asi/asiKarnesi.test.ts` karne yüzeylerinde
+  e-posta gönderen/adres soran herhangi bir şey (Resend, notifyPatient, mailto, e-posta alanı) ve karne portal API'sinde
+  GET /pdf dışında rota bulursa kırılır — ileride biri geri eklemeye kalkarsa gerekçe burada.
+- **Türkçe karakter (PDF):** mevcut rapor PDF'i (`app/api/doktor/raporlar/pdf`) yerleşik Helvetica kullanıyor; Helvetica'da
+  ı/İ/ş/Ş/ğ/Ğ glifi YOK. Karne PDF'i aynı deseni (react-pdf, beyaz zemin) izler ama gömülü **Liberation Sans** kaydeder
+  (`pdfjs-dist/standard_fonts` — zaten kurulu, yeni bağımlılık yok; `next.config.mjs` outputFileTracingIncludes ile yalnız iki
+  PDF rotasının paketine girer). react-pdf `textTransform: uppercase` yerel ayar bilmediğinden ("TARIH") büyük harf
+  `toLocaleUpperCase('tr-TR')` ile üretilir. Test üretilen PDF'in METNİNİ pdfjs ile çıkarır ve ı ş ğ İ Ş Ğ ö ç ü'yü arar;
+  Next paketlemesi altında da doğrulandı (dev sunucu).
+- **Hasta izolasyonu:** portal PDF'i dışarıdan hasta kimliği almaz (token satırından); PIN çerezi olmadan 401, uydurma token
+  404, A'nın PIN çerezi B'nin token'ında 401; başka doktorun bu hastaya iliştirdiği aşı karneye/PDF'e girmez. Hekim PDF'i:
+  hastaSahibiMi → yabancı hasta 404. Envanter + hasta-izolasyon vakaları eklendi.
+- Mobil: 390px'te karne ekranı (yatay taşma yok, düğmeler 44px), yazdırma çıktısı (print media → PDF) ve hekim eylemleri
+  ekran görüntüsüyle kontrol edildi.
+
 ### OPEN
 - **Canlı uçtan uca karne okuma — kredi yüklendikten sonra.** ANTHROPIC_API_KEY kredisi tükenmiş olabilir; akış saf
   fonksiyon + gerçek rota testleriyle (sahte model) doğrulandı. Kredi gelince: sentetik bir karne fotoğrafıyla
   (el yazısı + soluk kaşe) Aşılar › Aşı karnesi yükle → onay ekranı → kaydet; okunamadı satırların işaretlendiğini gör.
+- **Rapor PDF'inde (Aylık rapor, `app/api/doktor/raporlar/pdf`) aynı Helvetica sorunu** — Türkçe ı/ş/ğ/İ bozuk çıkar.
+  Bu işin kapsamı dışında bırakıldı; düzeltme: karne PDF'indeki font kaydını (`lib/asi/karnePdf.tsx`) oraya da uygulamak.
+- Portal karnesi yalnız **gelecekteki** sonraki doz tarihini gösterir; tarihi geçmiş sonraki doz portalda "sıradaki" olarak
+  görünmez (başka yerde yapılmış olabilir — yorum yapmamak için). Hatırlatması hekim listesinde (D).
 - iPhone galerisinden seçilen HEIC fotoğraf: Safari çoğunlukla JPEG'e çevirir; çeviremeyen tarayıcıda Kasa "Desteklenen
   türler" hatası verir (dürüst hata, sessiz kayıp yok). Gerekirse HEIC desteği ayrı iş.
 

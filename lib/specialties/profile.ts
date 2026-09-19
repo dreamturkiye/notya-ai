@@ -59,6 +59,8 @@ export interface UzmanIncelemeMaddesi { konu: string; neden: string }
  * .cursor/skills/specialty-hasta-portali/SKILL.md
  */
 export type PortalModulId = 'buyume' | 'gebelik' | 'jinekoloji' | 'dahiliye' | 'gozlerim' | 'dermatoloji' | 'psikiyatri' | 'kulaklarim' | 'kalbim' | 'norolojim' | 'akcigerlerim' | 'urolojim' | 'sporum' | 'saglik-paketim' | 'eklemlerim' | 'ftrm' | 'hormonlarim' | 'bobreklerim' | 'sindirimim' | 'enfeksiyon-takibim' | 'romatizmam' | 'tedavim' | 'gogus-cerrahisi-takibim' | 'ameliyatim' | 'yaram' | 'beyin-takibi' | 'cocugumun-cerrahisi' | 'acil-sonrasi' | 'anestezi-oncesi' | 'damar-cerrahisi-takibi' | 'tetkiklerim'
+  /** ASI-KARNESI-01 — EVRENSEL (branş kapısı yok): hastanın aşı kaydı varsa. Hiçbir chapter'ın malı değil. */
+  | 'asi-karnesi'
 /** Typed PortalBundle slices a module may fill (null in the bundle when the module is not attached). */
 export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz' | 'deri' | 'kronik' | 'psik' | 'kulak' | 'kalp' | 'akciger' | 'noro' | 'uro' | 'eklem' | 'ftr' | 'aile' | 'endo' | 'spor' | 'enfeksiyon' | 'gastro' | 'nef' | 'roma' | 'onko' | 'gc' | 'plastik' | 'gogusCerrahi' | 'beyin' | 'cc' | 'anestezi' | 'damarCerrahisi' | 'acil' | 'acilSonrasi' | 'radyo'
 export interface PortalNavOge { key: string; label: string; path: string }

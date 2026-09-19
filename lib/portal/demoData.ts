@@ -1,4 +1,5 @@
 import type { PortalBundle } from './types'
+import { E_NABIZ_BASLIK, E_NABIZ_UYARISI } from '@/lib/asi/karneBelgesi'
 
 /** Rich Turkish fixture for /portal/demo — reference-grade Sağlığım experience. */
 export const SAGLIGIM_DEMO: PortalBundle = {
@@ -32,6 +33,19 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   enfeksiyon: null, // ENFEKSIYON-EXCEPTIONAL-01 — Enfeksiyon Takibim yalnız enfeksiyon hekiminin token'ında
   gastro: null, // GASTROENTEROLOJI-EXCEPTIONAL-01 — Sindirimim yalnız gastroenteroloji hekiminin token'ında
   nef: null, // NEFROLOJI-EXCEPTIONAL-01 — Böbreklerim yalnız nefroloji hekiminin token'ında
+  // ASI-KARNESI-01 — evrensel Aşı Karnesi (sentetik yetişkin kayıtları, PHI yok; Öykü'deki aşılarla aynı)
+  asiKarnesi: {
+    hasta: { adSoyad: 'Demo Hasta', dogumTarihi: '1968-04-02' },
+    hekim: { ad: 'Dr. Demo Hekim', klinik: 'İç Hastalıkları Uzmanı' },
+    uretimTarihi: '2026-09-19',
+    yapilanlar: [
+      { ad: 'Td (tetanos-difteri)', doz: null, tarih: '2021-03-18', kaynak: 'karne', kaynakEtiketi: 'Karneden aktarıldı · hekim onaylı' },
+      { ad: 'COVID-19 (son doz)', doz: null, tarih: '2024-10-12', kaynak: 'beyan', kaynakEtiketi: 'Beyana göre kaydedildi' },
+      { ad: 'Influenza', doz: null, tarih: '2025-10-05', kaynak: 'klinik', kaynakEtiketi: 'Klinikte uygulandı' },
+    ],
+    siradakiler: [{ ad: 'Influenza', tarih: '2026-10-05' }],
+    uyari: { baslik: E_NABIZ_BASLIK, metin: E_NABIZ_UYARISI },
+  },
   // KONSULTASYON-01 — çekirdek: yalnız branş + tarih + durum (klinik içerik yok)
   yonlendirmeler: [{ id: 'dy1', brans: 'Kardiyoloji', tarih: '2026-08-20', durum: 'sonuc_alindi', sonucTarihi: '2026-09-02' }],
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı

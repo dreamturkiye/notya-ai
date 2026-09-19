@@ -18,6 +18,7 @@ import { hitapMetinleri } from '@/lib/specialties/hitap';
 import { Rozet } from '@/lib/doktor/aracUi';
 import { asiKaynakRozeti, asiKaynakTuru, trTarih } from '@/lib/asi/karneOkuma';
 import AsiKarnesiOkuma from '@/components/doktor/AsiKarnesiOkuma';
+import AsiKarnesiEylemleri from '@/components/doktor/AsiKarnesiEylemleri';
 
 interface Asi {
   id: string;
@@ -193,6 +194,8 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
           onKaydedildi={async (adet) => { setKarneAcik(false); setBilgi(`${adet} aşı karneden aktarıldı (hekim onaylı).`); await yukle(); }}
         />
       )}
+
+      {!yukleniyor && <AsiKarnesiEylemleri patientId={patientId} kayitSayisi={asilar.length} />}
 
       {hata && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#EF4444', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
 

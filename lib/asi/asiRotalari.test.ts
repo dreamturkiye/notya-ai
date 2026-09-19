@@ -7,6 +7,9 @@
  *   - 'oku' asilar'a hiçbir şey yazmaz; okunamayan satır "okunamadı" gelir, tarih/doz uydurulmaz
  *   - karne okuma 'goruntu-inceleme' → GÜÇLÜ kademe (HIZLI'ya düşmez), model adı çağrı yerinde yazılmaz
  *   - sekreter karneyi okutamaz / onaylayamaz (klinik karar)
+ *  Dijital aşı karnesi (Sağlığım bundle + PDF — portal ve hekim):
+ *   - geçerli token + PIN → 200 PDF; token yok / PIN yok → reddedilir; başka hastanın kaydı PDF'e ve bundle'a girmez
+ *   - hekim PDF'i: kendi hastası 200, yabancı hasta 404; portal ile AYNI içerik
  * Sentetik veri — gerçek hasta yok.
  *
  *   npm test  (--experimental-test-module-mocks)
@@ -76,7 +79,7 @@ let NextRequestSinifi: typeof import('next/server').NextRequest
 let gucluModel: () => string
 let hizliModel: () => string
 
-type Hekim = { id: string; token: string; hasta: string; karne: string; sekreterToken: string }
+type Hekim = { id: string; token: string; hasta: string; karne: string; sekreterToken: string; portalToken: string; bosHasta: string; bosPortalToken: string }
 function hekimKur(harf: 'A' | 'B'): Hekim {
   const id = randomUUID()
   const token = `qa-asi-token-${harf}`
@@ -89,14 +92,46 @@ function hekimKur(harf: 'A' | 'B'): Hekim {
   const sekreter = randomUUID(), sekreterToken = `qa-asi-sekreter-${harf}`
   db.kullanicilar.set(sekreterToken, { id: sekreter })
   db.ekle('personel', { user_id: sekreter, doktor_id: id, aktif: true })
-  return { id, token, hasta, karne, sekreterToken }
+  // Dijital karne: bu hekimin bu hastaya girdiği iki kayıt (biri karneden aktarılmış) + hekimin girdiği sonraki doz tarihi
+  db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Hepatit B ${harf}-İşaret`, doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2024-03-10', kaynak: 'beyan', belge_id: karne })
+  db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `KKK ${harf}-İşaret`, doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2025-03-12', sonraki_doz_tarihi: '2099-03-01', kaynak: 'kayit' })
+  const portalToken = `qa-asi-portal-${harf}`
+  db.ekle('hasta_portal_tokens', { token_hash: portalToken, doctor_id: id, patient_id: hasta, expires_at: new Date(Date.now() + 30 * 86400e3).toISOString(), pin_hash: 'sentetik' })
+  const bosHasta = db.ekle('patients', { doctor_id: id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: `QA Kayıtsız ${harf}` })), dob_encrypted: encrypt('1980-01-01') }).id
+  const bosPortalToken = `qa-asi-portal-bos-${harf}`
+  db.ekle('hasta_portal_tokens', { token_hash: bosPortalToken, doctor_id: id, patient_id: bosHasta, expires_at: new Date(Date.now() + 30 * 86400e3).toISOString(), pin_hash: 'sentetik' })
+  return { id, token, hasta, karne, sekreterToken, portalToken, bosHasta, bosPortalToken }
+}
+/** X hekiminin Y'nin hastasına iliştirdiği kayıt (düzeltme öncesi açıklardan kalmış olabilecek kirli satır). */
+function hileliKur(x: Hekim, y: Hekim, harf: string) {
+  db.ekle('asilar', { doktor_id: x.id, patient_id: y.hasta, asi_adi: `Hileli ${harf}-GIZLI`, doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2025-01-01', sonraki_doz_tarihi: '2099-01-01', kaynak: 'kayit' })
 }
 function sahneKur() {
   db = new SahteVeritabani()
   modelIstekleri.length = 0
-  return { A: hekimKur('A'), B: hekimKur('B') }
+  const A = hekimKur('A'), B = hekimKur('B')
+  hileliKur(A, B, 'A'); hileliKur(B, A, 'B')
+  taban = db.tablo('asilar').length
+  return { A, B }
 }
-const asilar = () => db.tablo('asilar')
+/** Sahnedeki hazır aşı satırlarının sayısı — karne testleri yalnız YENİ yazılanlara bakar. */
+let taban = 0
+async function portalCerezi(token: string): Promise<string> {
+  const { setUnlockCookie, UNLOCK_COOKIE } = await import('../portal/pinAuth')
+  const { NextResponse } = await import('next/server')
+  const res = NextResponse.json({})
+  setUnlockCookie(res, token)
+  return `${UNLOCK_COOKIE}=${res.cookies.get(UNLOCK_COOKIE)?.value}`
+}
+async function pdfMetni(metinVeyaBuf: string | Buffer): Promise<string> {
+  const buf = typeof metinVeyaBuf === 'string' ? Buffer.from(metinVeyaBuf, 'latin1') : metinVeyaBuf
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(buf), disableFontFace: true, useSystemFonts: false, isEvalSupported: false }).promise
+  let t = ''
+  for (let i = 1; i <= doc.numPages; i++) t += ((await (await doc.getPage(i)).getTextContent()).items as Array<{ str?: string }>).map((x) => x.str || '').join(' ') + '\n'
+  return t.replace(/\s+/g, ' ')
+}
+const asilar = () => db.tablo('asilar').slice(taban)
 
 function iste(yontem: string, yol: string, o: { token?: string; govde?: unknown; cerez?: string } = {}) {
   const h: Record<string, string> = {}
@@ -107,11 +142,13 @@ function iste(yontem: string, yol: string, o: { token?: string; govde?: unknown;
 }
 async function coz(r: Response | Promise<Response>) {
   const y = await r
-  const metin = await y.text()
+  const bayt = Buffer.from(await y.arrayBuffer())
+  const metin = bayt.toString('utf8')
   let json: any = null
   try { json = JSON.parse(metin) } catch { /* ikili yanıt */ }
-  return { status: y.status, metin, json }
+  return { status: y.status, metin, json, bayt, tur: y.headers.get('content-type') || '', ek: y.headers.get('content-disposition') || '' }
 }
+const prm = <T extends object>(p: T) => ({ params: p })
 
 const OKUMA = JSON.stringify({
   asi_karnesi: true, okunabilirlik: 'kismi', dogum_tarihi: '2024-03-10', not: null,
@@ -216,5 +253,91 @@ describe('ASI-KARNESI-01 — karne okuma ve toplu onay (gerçek rota)', () => {
     assert.equal(onay.status, 404)
     assert.equal(modelIstekleri.length, 0)
     assert.equal(asilar().length, 0)
+  })
+})
+
+describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (gerçek rotalar)', () => {
+  let portal: typeof import('../../app/api/portal/hasta/[token]/route')
+  let portalPdf: typeof import('../../app/api/portal/hasta/[token]/asi-karnesi/pdf/route')
+  let hekimPdf: typeof import('../../app/api/doktor/asilar/karne/pdf/route')
+  before(async () => {
+    ;({ encrypt } = await import('../security/encryption'))
+    ;({ encryptBytes } = await import('../vault/crypto'))
+    NextRequestSinifi = (await import('next/server')).NextRequest
+    portal = await import('../../app/api/portal/hasta/[token]/route')
+    portalPdf = await import('../../app/api/portal/hasta/[token]/asi-karnesi/pdf/route')
+    hekimPdf = await import('../../app/api/doktor/asilar/karne/pdf/route')
+  })
+
+  it('portal PDF: geçerli token + PIN → 200 PDF; yalnız o hastanın, o doktorun kayıtları; e-Nabız + kaynak ayrımı', async () => {
+    const { A } = sahneKur()
+    const y = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${A.portalToken}/asi-karnesi/pdf`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
+    assert.equal(y.status, 200, y.metin.slice(0, 200))
+    assert.equal(y.tur, 'application/pdf')
+    assert.match(y.ek, /^attachment; filename="asi-karnesi-\d{4}-\d{2}-\d{2}\.pdf"/)
+    const t = await pdfMetni(y.bayt)
+    assert.ok(t.includes('Hepatit B A-İşaret') && t.includes('KKK A-İşaret'), t.slice(0, 300))
+    assert.ok(t.includes('QA Çocuk A Işıkoğlu'), 'hasta adı PDF\'te (Türkçe karakter)')
+    assert.ok(!t.includes('Hileli B-GIZLI') && !t.includes('B-İşaret'), 'başka doktorun bu hastaya iliştirdiği kayıt PDF\'e girmez')
+    assert.ok(t.includes('e-Nabız') && t.includes('Bu karne bilgi amaçlıdır'))
+    assert.ok(t.includes('Karneden aktarıldı · hekim onaylı') && t.includes('Klinikte uygulandı'))
+    assert.ok(t.includes('01.03.2099'), 'hekimin girdiği sonraki doz tarihi')
+  })
+
+  it('portal PDF: PIN açılmamış → 401; token yok/uydurma → 404; başka hastanın token\'ı yalnız kendi hastasını verir', async () => {
+    const { A, B } = sahneKur()
+    const pinsiz = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${A.portalToken}/asi-karnesi/pdf`), prm({ token: A.portalToken })))
+    assert.equal(pinsiz.status, 401)
+    const uydurma = await coz(portalPdf.GET(iste('GET', '/api/portal/hasta/yok/asi-karnesi/pdf', { cerez: await portalCerezi('yok') }), prm({ token: 'yok' })))
+    assert.equal(uydurma.status, 404)
+    const bos = await coz(portalPdf.GET(iste('GET', '/api/portal/hasta//asi-karnesi/pdf'), prm({ token: '' })))
+    assert.equal(bos.status, 404)
+    // A'nın PIN çerezi B'nin token'ında geçmez (çerez token'a bağlı)
+    const capraz = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${B.portalToken}/asi-karnesi/pdf`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: B.portalToken })))
+    assert.equal(capraz.status, 401)
+    const bKendi = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${B.portalToken}/asi-karnesi/pdf`, { cerez: await portalCerezi(B.portalToken) }), prm({ token: B.portalToken })))
+    const t = await pdfMetni(bKendi.bayt)
+    assert.ok(t.includes('KKK B-İşaret') && !t.includes('A-İşaret') && !t.includes('Hileli A-GIZLI'))
+  })
+
+  it('portal PDF: aşı kaydı olmayan hasta → 404 (boş karne üretilmez)', async () => {
+    const { A } = sahneKur()
+    const y = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${A.bosPortalToken}/asi-karnesi/pdf`, { cerez: await portalCerezi(A.bosPortalToken) }), prm({ token: A.bosPortalToken })))
+    assert.equal(y.status, 404)
+  })
+
+  it('Sağlığım bundle: kayıt varsa Aşı Karnesi modülü + veri (her branşta); kirli satır yok; kayıt yoksa modül yok', async () => {
+    const { A } = sahneKur()
+    const y = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.portalToken}`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
+    assert.equal(y.status, 200, y.metin.slice(0, 200))
+    assert.ok(y.json.portal.moduller.includes('asi-karnesi'))
+    assert.ok(y.json.portal.nav.some((n: { path: string }) => n.path === '/asi-karnesi'))
+    const k = y.json.asiKarnesi
+    assert.deepEqual(k.yapilanlar.map((a: { ad: string; kaynak: string }) => `${a.ad}|${a.kaynak}`), ['Hepatit B A-İşaret|karne', 'KKK A-İşaret|klinik'])
+    assert.deepEqual(k.siradakiler, [{ ad: 'KKK A-İşaret', tarih: '2099-03-01' }])
+    assert.ok(!y.metin.includes('Hileli B-GIZLI'))
+    assert.match(k.uyari.metin, /e-Nabız/)
+    const bos = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.bosPortalToken}`, { cerez: await portalCerezi(A.bosPortalToken) }), prm({ token: A.bosPortalToken })))
+    assert.equal(bos.status, 200)
+    assert.equal(bos.json.asiKarnesi, null)
+    assert.ok(!bos.json.portal.moduller.includes('asi-karnesi'))
+  })
+
+  it('hekim PDF: kendi hastası 200 (portal ile aynı içerik); yabancı hasta 404; oturumsuz 401; sekreter basabilir', async () => {
+    const { A, B } = sahneKur()
+    const y = await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`, { token: A.token })))
+    assert.equal(y.status, 200, y.metin.slice(0, 200))
+    assert.equal(y.tur, 'application/pdf')
+    const t = await pdfMetni(y.bayt)
+    assert.ok(t.includes('Hepatit B A-İşaret') && !t.includes('Hileli B-GIZLI'))
+    const p = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${A.portalToken}/asi-karnesi/pdf`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
+    assert.equal(await pdfMetni(p.bayt), t, 'hekim ve Sağlığım AYNI PDF içeriğini üretir')
+    const yabanci = await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${B.hasta}`, { token: A.token })))
+    assert.equal(yabanci.status, 404)
+    assert.ok(!yabanci.metin.includes('B-İşaret'))
+    const oturumsuz = await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`)))
+    assert.equal(oturumsuz.status, 401)
+    const sekreter = await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`, { token: A.sekreterToken })))
+    assert.equal(sekreter.status, 200)
   })
 })
