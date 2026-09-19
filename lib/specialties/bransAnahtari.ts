@@ -24,6 +24,14 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/^(?!.*(çocuk|cocuk|ergen)).*(psikiyatr|ruh sağlığı|ruh sagligi)/, 'psikiyatri'],
   // KBB-EXCEPTIONAL-01: "KBB Uzmanı", "Kulak Burun Boğaz Hastalıkları ve Baş Boyun Cerrahisi", "Otolarengoloji".
   [/kulak burun|kulak-burun|\bkbb\b|otolaring|otolareng|otorinolaring|otorinolareng/, 'kulak-burun-bogaz'],
+  // GOGUS-EXCEPTIONAL-01: "Göğüs Hastalıkları" — cerrahi ("Göğüs Cerrahisi") eşleşmez (ayrı branş).
+  [/göğüs hastal|gogus-hastalik|gogus hastal/, 'gogus-hastaliklari'],
+  // KARDIO-EXCEPTIONAL-01: "Kardiyoloji Uzmanı". Kalp-damar cerrahisi ayrı branş — eşleşmez.
+  [/^(?!.*(cerrah|damar)).*(kardiyoloji|\bkardiyo\b)/, 'kardiyoloji'],
+  // NOROLOJI-EXCEPTIONAL-01: "Nöroloji Uzmanı", "Noroloji".
+  [/n[öo]roloji|noroloji/, 'noroloji'],
+  // UROLOJI-EXCEPTIONAL-01: "Üroloji Uzmanı", "Uroloji", "Urology".
+  [/[üu]roloji|urology/, 'uroloji'],
 ]
 
 /** Ham değer ('kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'genel-cerrahi') → kanonik anahtar; "genel"/boş/bilinmeyen → null. */

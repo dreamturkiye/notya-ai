@@ -23,6 +23,10 @@ import DahiliyeHome from '@/specialties/dahiliye/ui/DahiliyeHome';
 import GozHome from '@/specialties/goz-hastaliklari/ui/GozHome';
 import PsikiyatriHome from '@/specialties/psikiyatri/ui/PsikiyatriHome';
 import KbbHome from '@/specialties/kulak-burun-bogaz/ui/KbbHome';
+import KardioHome from '@/specialties/kardiyoloji/ui/KardioHome';
+import GogusHome from '@/specialties/gogus-hastaliklari/ui/GogusHome';
+import NorolojiHome from '@/specialties/noroloji/ui/NorolojiHome';
+import UrolojiHome from '@/specialties/uroloji/ui/UrolojiHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
@@ -37,6 +41,10 @@ import {
   dahiliyeSekmesiBransi,
   psikiyatriSekmesiBransi,
   kbbSekmesiBransi,
+  kardiyolojiSekmesiBransi,
+  gogusSekmesiBransi,
+  norolojiSekmesiBransi,
+  urolojiSekmesiBransi,
   pediatriAracSekmesiUygun,
   muayeneAltiSekmeler,
   type HastaDosyaSekmeId,
@@ -94,6 +102,10 @@ export default function HastaProfilPage() {
   const [deriAraci, setDeriAraci] = useState(false); // CHART-TAB-POLICY: dermatoloji only
   const [psikAraci, setPsikAraci] = useState(false); // PSIK-EXCEPTIONAL-01: yalnız psikiyatri hekimi
   const [kbbAraci, setKbbAraci] = useState(false); // KBB-EXCEPTIONAL-01: yalnız kulak burun boğaz hekimi
+  const [kardioAraci, setKardioAraci] = useState(false); // KARDIO-EXCEPTIONAL-01: yalnız kardiyoloji hekimi
+  const [gogusAraci, setGogusAraci] = useState(false); // GOGUS-EXCEPTIONAL-01: yalnız göğüs hastalıkları hekimi
+  const [noroAraci, setNoroAraci] = useState(false); // NOROLOJI-EXCEPTIONAL-01: yalnız nöroloji hekimi
+  const [uroAraci, setUroAraci] = useState(false); // UROLOJI-EXCEPTIONAL-01: yalnız üroloji hekimi
   const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
 
   const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
@@ -101,7 +113,7 @@ export default function HastaProfilPage() {
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
     : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci });
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci });
 
   /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
    *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
@@ -131,7 +143,7 @@ export default function HastaProfilPage() {
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
       'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'bebek', 'goz',
-      'psikiyatri', 'kbb', 'konsultasyon',
+      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'konsultasyon',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
     if (tabParam === 'gebelik') {
@@ -169,6 +181,10 @@ export default function HastaProfilPage() {
           setDahiliyeAraci(dahiliyeSekmesiBransi(sp));
           setPsikAraci(psikiyatriSekmesiBransi(sp));
           setKbbAraci(kbbSekmesiBransi(sp));
+          setKardioAraci(kardiyolojiSekmesiBransi(sp));
+          setGogusAraci(gogusSekmesiBransi(sp));
+          setNoroAraci(norolojiSekmesiBransi(sp));
+          setUroAraci(urolojiSekmesiBransi(sp));
         }
       } catch {
         setError('Bir hata oluştu');
@@ -476,6 +492,10 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'goz' && gozAraci && <GozHome patientId={patientId} />}
         {!loading && !error && activeTab === 'psikiyatri' && psikAraci && <PsikiyatriHome patientId={patientId} />}
         {!loading && !error && activeTab === 'kbb' && kbbAraci && <KbbHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'kardiyoloji' && kardioAraci && <KardioHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'gogus' && gogusAraci && <GogusHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'noroloji' && noroAraci && <NorolojiHome patientId={patientId} />}
+        {!loading && !error && activeTab === 'uroloji' && uroAraci && <UrolojiHome patientId={patientId} />}
         {!loading && !error && activeTab === 'deri' && deriAraci && (
           <HastaDermatoloji patientId={patientId} cinsiyet={patient?.cinsiyet} dogumTarihi={patient?.dogum_tarihi} hastaAdi={patient?.ad_soyad} />
         )}

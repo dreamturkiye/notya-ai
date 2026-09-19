@@ -7,6 +7,8 @@ import {
   pediatriAracSekmesiUygun,
   pediatriSekmesiUygun,
   muayeneAltiSekmeler,
+  gogusSekmesiBransi,
+  dahiliyeSekmesiBransi,
 } from './hastaDosyaSekmeleri'
 
 const NOW = Date.parse('2026-09-15T00:00:00Z')
@@ -93,5 +95,18 @@ describe('hastaDosyaSekmeleri', () => {
     assert.equal(goz.some((t) => t.id === 'kbb'), false)
     assert.equal(ozelBolumBransi('Kulak Burun Boğaz'), true)
     assert.equal(ozelBolumBransi('kulak-burun-bogaz'), true)
+  })
+
+  it('GOGUS-EXCEPTIONAL-01: Göğüs sekmesi yalnız gogusUygun; cerrahi ve dahiliye yok', () => {
+    const g = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, gogusUygun: true })
+    assert.ok(g.some((t) => t.id === 'gogus' && t.label === 'Göğüs'))
+    const dah = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, dahiliyeUygun: true })
+    assert.equal(dah.some((t) => t.id === 'gogus'), false)
+    assert.equal(gogusSekmesiBransi('gogus-hastaliklari'), true)
+    assert.equal(gogusSekmesiBransi('Göğüs Hastalıkları'), true)
+    assert.equal(gogusSekmesiBransi('gogus-cerrahisi'), false)
+    assert.equal(gogusSekmesiBransi('Göğüs Cerrahisi'), false)
+    assert.equal(dahiliyeSekmesiBransi('gogus-hastaliklari'), false)
+    assert.equal(ozelBolumBransi('gogus-hastaliklari'), true)
   })
 })

@@ -9,6 +9,10 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   kronik: null,
   psik: null, // ruh sağlığı verisi demo portalında hiç taşınmaz
   kulak: null, // KBB izlemi yalnız KBB hekiminin token'ında açılır
+  kalp: null, // Kalbim yalnız kardiyoloji hekiminin token'ında açılır
+  noro: null, // Nörolojimm yalnız nöroloji hekiminin token'ında açılır
+  akciger: null, // GOGUS-EXCEPTIONAL-01 — Akciğerlerim yalnız göğüs hekiminin token'ında
+  uro: null, // UROLOJI-EXCEPTIONAL-01 — Ürolojimm yalnız üroloji hekiminin token'ında
   // KONSULTASYON-01 — çekirdek: yalnız branş + tarih + durum (klinik içerik yok)
   yonlendirmeler: [{ id: 'dy1', brans: 'Kardiyoloji', tarih: '2026-08-20', durum: 'sonuc_alindi', sonucTarihi: '2026-09-02' }],
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
