@@ -9,6 +9,7 @@
  */
 import { portalBransAnahtari } from '@/lib/portal/moduller'
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties'
+import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
 export type DoktorArac = {
@@ -119,6 +120,42 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#DC2626', icon: 'UA', title: 'Hematuri / taş acil triyaj', desc: 'Makroskopik hematüri · retansiyon · flank+ateş · torsiyon · priapizm · üretra travması → 112 · hekim onaylı', route: '/doktor-tools/uro-acil', branslar: ['uroloji'] },
   { circleColor: '#10B981', icon: 'UK', title: 'Üroloji kohort paneli', desc: 'Geciken kontrol · PSA izlem · yüksek IPSS · açık kırmızı bayrak · 1-tap hatırlatma', route: '/doktor-tools/uro-kohort', branslar: ['uroloji'] },
 ]
+
+/**
+ * ARACLAR-GRUPLAMA-01 (Kaan, 2026-09-19): Araçlar sayfası tek düz ızgaraydı — 12 evrensel
+ * omurga aracı ile branşa özel araçlar görsel olarak eşitti, hiyerarşi yoktu. Hekim her gün
+ * kullandığı e-Reçete / Epikriz ile branş aracını aynı yığında arıyordu.
+ *
+ * Kural: ÇEKİRDEK (evrensel, branslar === null) üstte; branşa özel araçlar küçük bir ayrımla
+ * altta. Bu YALNIZ sunum sırasıdır — görünürlük kapısı değildir; hangi aracı kimin gördüğü
+ * doktorAraclariListesi / doktorAraciBransaUygun tarafından belirlenir ve bu fonksiyon onu
+ * değiştirmez (bkz. .cursor/skills/specialty-doktor-araclari/SKILL.md).
+ */
+export type AracGrubu = { anahtar: 'cekirdek' | 'brans'; baslik: string; aciklama: string; araclar: DoktorArac[] }
+
+export function doktorAraclariGruplu(hamBrans: string | null | undefined): AracGrubu[] {
+  const hepsi = doktorAraclariListesi(hamBrans)
+  const cekirdek = hepsi.filter((a) => a.branslar === null)
+  const bransa = hepsi.filter((a) => a.branslar !== null)
+  const gruplar: AracGrubu[] = []
+  if (cekirdek.length) {
+    gruplar.push({
+      anahtar: 'cekirdek',
+      baslik: 'Çekirdek Araçlar',
+      aciklama: 'Her branşta kullanılan ortak araçlar',
+      araclar: cekirdek,
+    })
+  }
+  if (bransa.length) {
+    gruplar.push({
+      anahtar: 'brans',
+      baslik: `${bransEtiketi(hamBrans, { kisa: true })} Araçları`,
+      aciklama: 'Yalnız sizin branşınıza özel araçlar',
+      araclar: bransa,
+    })
+  }
+  return gruplar
+}
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]
 
