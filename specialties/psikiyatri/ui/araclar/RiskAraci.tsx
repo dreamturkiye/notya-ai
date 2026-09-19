@@ -6,7 +6,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { psikStil, PsikHastaSecici, PsikOnay, PsikKopyala } from './PsikAracKabugu';
+import { psikStil, PsikHastaSecici, PsikOnay, PsikKopyala, Istatistik, TaslakNotu } from './PsikAracKabugu';
 import { acilTara, hekimOnayiGerekliMi, ACIL_KODLARI, GUVENLIK_KONTROL_LISTESI, HASTA_ACIL_METNI, type AcilKod } from '../../engines/acil';
 import { ACIL_YONLENDIRME_METNI } from '../../engines/psikiyatri';
 
@@ -51,7 +51,7 @@ export default function RiskAraci() {
 
   return (
     <>
-      <div style={{ ...psikStil.kutu, ...psikStil.uyari }}>{ACIL_YONLENDIRME_METNI}</div>
+      <div style={{ ...psikStil.kutu, ...psikStil.kirmizi }}>{ACIL_YONLENDIRME_METNI}</div>
 
       <div style={psikStil.kutu}>
         <div style={psikStil.etiket}>Hekim işareti</div>
@@ -78,9 +78,14 @@ export default function RiskAraci() {
 
       <div style={psikStil.kutu}>
         <div style={psikStil.etiket}>Triyaj sonucu</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+          <Istatistik deger={bayraklar.length} etiket="Güvenlik bayrağı" ton={bayraklar.length ? 'kirmizi' : 'iyi'} />
+          <Istatistik deger={onayGerek ? 'Gerekli' : 'Gerekmiyor'} etiket="Hekim onayı" ton={onayGerek ? 'uyari' : 'notr'} />
+          <Istatistik deger={`${liste.length} / ${GUVENLIK_KONTROL_LISTESI.length}`} etiket="Kontrol listesi" ton={liste.length ? 'notr' : 'uyari'} />
+        </div>
         {!bayraklar.length && <div style={psikStil.metin}>Bayrak yok. Klinik kanı bayraktan önce gelir — riski siz görüyorsanız işaretleyin.</div>}
         {bayraklar.map((b) => (
-          <div key={b.kod} style={{ ...(b.oncelik === 'hemen' ? psikStil.uyari : psikStil.kutu), marginBottom: 8 }}>
+          <div key={b.kod} style={{ ...(b.oncelik === 'hemen' ? psikStil.kirmizi : psikStil.kutu), marginBottom: 8 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: b.oncelik === 'hemen' ? '#FCA5A5' : '#EDF1F7' }}>
               {b.oncelik === 'hemen' ? '⚑ HEMEN' : '• AYNI GÜN'} — {b.ad}
             </div>
@@ -89,6 +94,7 @@ export default function RiskAraci() {
           </div>
         ))}
         {bayraklar.length > 0 && <div style={psikStil.kucuk}>{HASTA_ACIL_METNI}</div>}
+        <TaslakNotu>Bayraklar tarama çıktısıdır; risk kararı, eylem ve kayıt kilidi hekimindir.</TaslakNotu>
       </div>
 
       <div style={psikStil.kutu}>

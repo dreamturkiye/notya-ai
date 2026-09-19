@@ -1,10 +1,10 @@
 /**
  * ARACLAR-CILA-01 — Doktor Araçları ortak UI kütüphanesi TEK kaynaktır.
  *
- * Beş branş kabuğu (Göz, Dermatoloji, Dahiliye, Kadın Hastalıkları ve Doğum, Pediatri) aynı parçaların
- * beş ayrı kopyasını taşıyordu; parçalar lib/doktor/aracUi.tsx'e taşındı. Bu bekçi iki şeyi korur:
+ * Branş kabukları (Göz, Dermatoloji, Dahiliye, Kadın Hastalıkları ve Doğum, Pediatri, Psikiyatri) aynı
+ * parçaların ayrı kopyalarını taşıyordu; parçalar lib/doktor/aracUi.tsx'e taşındı. Bu bekçi iki şeyi korur:
  *   1. hiçbir kabuk ortak bir bileşeni yeniden tanımlamaz (kopya geri sızmasın),
- *   2. eski `gozStil` / `dermStil` / `dahStil` / `kdStil` / `pediStil` dışa aktarımları durur —
+ *   2. eski `gozStil` / `dermStil` / `dahStil` / `kdStil` / `pediStil` / `psikStil` dışa aktarımları durur —
  *      27 aracın importu kırılmaz (bu bir refactor, davranış değişikliği değil).
  */
 import { describe, it } from 'node:test'
@@ -23,6 +23,7 @@ const KABUKLAR: Array<{ yol: string; stil: string; vurgu: string }> = [
   { yol: 'specialties/dahiliye/ui/araclar/DahiliyeAracKabugu.tsx', stil: 'dahStil', vurgu: 'DAH_VURGU' },
   { yol: 'specialties/kadin-dogum/ui/araclar/KdAracKabugu.tsx', stil: 'kdStil', vurgu: 'KD_VURGU' },
   { yol: 'specialties/pediatri/ui/araclar/PediAracKabugu.tsx', stil: 'pediStil', vurgu: 'PEDI_VURGU' },
+  { yol: 'specialties/psikiyatri/ui/araclar/PsikAracKabugu.tsx', stil: 'psikStil', vurgu: 'PSIK_VURGU' },
 ]
 
 /** Kütüphanede yaşayan, hiçbir kabukta yeniden tanımlanmaması gereken parçalar. */
@@ -89,7 +90,7 @@ describe('ARACLAR-CILA-01 ortak araç kütüphanesi', () => {
   })
 })
 
-describe('ARACLAR-CILA-01 geriye doldurma: göz / dermatoloji / dahiliye araçları olgun parçaları kullanır', () => {
+describe('ARACLAR-CILA-01 geriye doldurma: göz / dermatoloji / dahiliye / psikiyatri araçları olgun parçaları kullanır', () => {
   const GERI_DOLDURULAN = [
     'specialties/goz-hastaliklari/ui/araclar/GilKodAraci.tsx',
     'specialties/goz-hastaliklari/ui/araclar/VaAraci.tsx',
@@ -104,6 +105,11 @@ describe('ARACLAR-CILA-01 geriye doldurma: göz / dermatoloji / dahiliye araçla
     'specialties/dahiliye/ui/araclar/PolifarmasiAraci.tsx',
     'specialties/dahiliye/ui/araclar/AntikoagAraci.tsx',
     'specialties/dahiliye/ui/araclar/SgkRaporAraci.tsx',
+    'specialties/psikiyatri/ui/araclar/PhqGadAraci.tsx',
+    'specialties/psikiyatri/ui/araclar/RiskAraci.tsx',
+    'specialties/psikiyatri/ui/araclar/IlacIzlemAraci.tsx',
+    'specialties/psikiyatri/ui/araclar/PsikSgkAraci.tsx',
+    'specialties/psikiyatri/ui/araclar/PsikKohortAraci.tsx',
   ]
 
   it('her klinik çıktı üreten araçta manşet sayı (Istatistik) ve taslak rozeti var', () => {

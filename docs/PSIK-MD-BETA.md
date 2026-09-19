@@ -54,3 +54,7 @@
 - [ ] CEO onayı → `olgunluk: 'uzman-dogrulandi'` (ayrı commit).
 
 Kaynak: `public/psik-exceptional-audit.html`, `lib/specialties/psikiyatri.ts`, `specialties/psikiyatri/engines/`.
+
+Araç arayüzü ortak kütüphaneden gelir (`lib/doktor/aracUi.tsx`): manşet sayı kartı, segmentli seçim,
+TASLAK rozeti ve hasta seçici beş branşla aynı; psikiyatriye özel olan yalnız indigo vurgu ve
+PHQ-9 / GAD-7 madde satırı. Bekçiler: `lib/doktor/aracUi.test.ts`, `specialties/psikiyatri/tests/araclarUi.test.ts`.

@@ -7,7 +7,7 @@
  */
 import React, { useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { psikStil, PsikHastaSecici, PsikKopyala } from './PsikAracKabugu';
+import { psikStil, PsikHastaSecici, PsikKopyala, Istatistik, TaslakNotu } from './PsikAracKabugu';
 import { PSIK_IZLEM_KURALLARI } from '../../engines/ilacIzlem';
 import { HEKIM_KILIT_METNI } from '../../engines/psikiyatri';
 
@@ -58,7 +58,12 @@ export default function IlacIzlemAraci() {
 
       {veri && (
         <div style={psikStil.kutu}>
-          <div style={psikStil.etiket}>İzlem görevleri ({veri.izlem.length})</div>
+          <div style={psikStil.etiket}>İzlem görevleri</div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+            <Istatistik deger={veri.izlem.length} etiket="Açılacak izlem görevi" ton={veri.izlem.length ? 'uyari' : 'iyi'} />
+            <Istatistik deger={veri.izlem.filter((g) => g.due < bugun).length} etiket="Vadesi geçmiş" ton={veri.izlem.some((g) => g.due < bugun) ? 'kirmizi' : 'notr'} />
+            <Istatistik deger={veri.ilaclar.length} etiket="Aktif psikotrop" />
+          </div>
           {!veri.ilaclar.length && <div style={psikStil.kucuk}>Aktif psikotrop kaydı yok. Görevler hasta ilaç listesinden üretilir; Notya ilaç eklemez.</div>}
           {veri.izlem.map((g) => (
             <div key={g.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -72,6 +77,7 @@ export default function IlacIzlemAraci() {
           </div>
           {durum && <div style={{ ...psikStil.iyi, marginTop: 8 }}>{durum}</div>}
           <PsikKopyala metin={veri.izlem.map((g) => `${g.ad} — ${g.ilac} — vade ${g.due}`).join('\n')} etiket="İzlem planını kopyala" />
+          <TaslakNotu>Sınıf düzeyi izlem önerisidir; tetkik istemi, aralık ve doz kararı hekimindir.</TaslakNotu>
         </div>
       )}
 
@@ -87,7 +93,7 @@ export default function IlacIzlemAraci() {
             <div style={psikStil.kucuk}>{k.dipnot}</div>
           </div>
         ))}
-        <div style={{ ...psikStil.kucuk, marginTop: 10 }}>{HEKIM_KILIT_METNI}</div>
+        <TaslakNotu>{HEKIM_KILIT_METNI}</TaslakNotu>
       </div>
     </>
   );

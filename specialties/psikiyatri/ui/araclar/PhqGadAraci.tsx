@@ -7,7 +7,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { psikStil, PsikHastaSecici, PsikMadde, PsikKopyala } from './PsikAracKabugu';
+import { psikStil, PsikHastaSecici, PsikMadde, PsikKopyala, Segment, Istatistik, TaslakNotu, Rozet } from './PsikAracKabugu';
 import { PHQ9_MADDELER, PHQ9_SIKLIK, PHQ9_YONERGE, PHQ9_ISLEVSELLIK_SORUSU, PHQ9_ISLEVSELLIK_SECENEKLERI, skorla as phq9Skorla } from '../../engines/phq9';
 import { GAD7_MADDELER, GAD7_YONERGE, GAD7_TARAMA_ESIGI, skorla as gad7Skorla } from '../../engines/gad7';
 import { HASTA_ACIL_METNI } from '../../engines/acil';
@@ -57,16 +57,12 @@ export default function PhqGadAraci() {
   return (
     <>
       <div style={psikStil.kutu}>
-        <div style={psikStil.satir}>
-          {(['phq9', 'gad7'] as Tip[]).map((x) => (
-            <button
-              key={x}
-              type="button"
-              onClick={() => setTip(x)}
-              style={{ ...psikStil.ghost, background: tip === x ? 'rgba(99,102,241,0.25)' : 'transparent', color: tip === x ? '#C7D2FE' : '#C9D4E3' }}
-            >{x === 'phq9' ? 'PHQ-9 (depresyon)' : 'GAD-7 (anksiyete)'}</button>
-          ))}
-        </div>
+        <Segment
+          etiket="Ölçek"
+          deger={tip}
+          set={(x) => setTip(x)}
+          secenekler={[['phq9', 'PHQ-9 (depresyon)'], ['gad7', 'GAD-7 (anksiyete)']] as Array<[Tip, string]>}
+        />
         <div style={{ ...psikStil.kucuk, marginTop: 10 }}>{tip === 'phq9' ? PHQ9_YONERGE : GAD7_YONERGE}</div>
       </div>
 
@@ -83,15 +79,13 @@ export default function PhqGadAraci() {
           <div style={{ marginTop: 12 }}>
             <div style={psikStil.etiket}>{PHQ9_ISLEVSELLIK_SORUSU}</div>
             <div style={psikStil.kucuk}>Toplam skora girmez; işlevsellik kaydı içindir.</div>
-            <div style={psikStil.satir}>
-              {PHQ9_ISLEVSELLIK_SECENEKLERI.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setIslevsellik(islevsellik === s ? '' : s)}
-                  style={{ ...psikStil.ghost, background: islevsellik === s ? 'rgba(99,102,241,0.25)' : 'transparent', color: islevsellik === s ? '#C7D2FE' : '#C9D4E3' }}
-                >{s}</button>
-              ))}
+            <div style={{ marginTop: 8 }}>
+              <Segment
+                etiket={PHQ9_ISLEVSELLIK_SORUSU}
+                deger={islevsellik}
+                set={setIslevsellik}
+                secenekler={[['', 'Belirtilmedi'], ...PHQ9_ISLEVSELLIK_SECENEKLERI.map((x) => [x, x] as [string, string])]}
+              />
             </div>
           </div>
         )}
@@ -99,10 +93,9 @@ export default function PhqGadAraci() {
 
       <div style={psikStil.kutu}>
         <div style={psikStil.etiket}>Sonuç</div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 34, fontWeight: 800, color: aktif.tamamMi ? '#C7D2FE' : '#64748B', lineHeight: 1 }}>{aktif.toplam}</span>
-          <span style={psikStil.kucuk}>/ {tip === 'phq9' ? 27 : 21}</span>
-          <span style={psikStil.iyi}>{aktif.tamamMi ? aktif.bantAd : `${aktif.eksikMadde} madde boş`}</span>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Istatistik deger={`${aktif.toplam} / ${tip === 'phq9' ? 27 : 21}`} etiket="Toplam skor" ton={aktif.tamamMi ? 'notr' : 'uyari'} />
+          <Istatistik deger={aktif.tamamMi ? aktif.bantAd : `${aktif.eksikMadde} madde boş`} etiket="Şiddet bandı (karar desteği)" ton={aktif.tamamMi ? 'notr' : 'uyari'} />
         </div>
         <div style={{ ...psikStil.metin, marginTop: 8 }}>{aktif.ozet}</div>
         {tip === 'gad7' && gadSonuc.tamamMi && (
@@ -111,14 +104,14 @@ export default function PhqGadAraci() {
         <div style={{ ...psikStil.kucuk, marginTop: 6 }}>{aktif.dipnot.not}</div>
 
         {tip === 'phq9' && phqSonuc.ozkıyımMadde9 && (
-          <div style={{ ...psikStil.uyari, marginTop: 10 }}>
+          <div style={{ ...psikStil.kirmizi, marginTop: 10 }}>
             <b>9. madde pozitif.</b> Güvenlik değerlendirmesi yapılmadan vizit kapatılmaz — Araçlar › Güvenlik &amp; acil triyaj.
             <div style={{ marginTop: 6 }}>{HASTA_ACIL_METNI}</div>
           </div>
         )}
 
         <PsikKopyala metin={ozet} etiket="Skoru kopyala" />
-        <div style={{ ...psikStil.kucuk, marginTop: 10 }}>{HEKIM_KILIT_METNI}</div>
+        <TaslakNotu>{HEKIM_KILIT_METNI}</TaslakNotu>
       </div>
 
       <div style={psikStil.kutu}>

@@ -29,6 +29,7 @@ export const VURGU_TEAL: AracVurgu = { ana: '#0F9B8E', anaMetin: '#041016', yumu
 export const VURGU_DAHILIYE: AracVurgu = { ana: '#0D9488', anaMetin: '#ECFEFF', yumusak: '#5EEAD4', baslik: '#14B8A6' };
 export const VURGU_DERM: AracVurgu = { ana: '#DB2777', anaMetin: '#FFF1F7', yumusak: '#F9A8D4', baslik: '#F472B6' };
 export const VURGU_KD: AracVurgu = { ana: '#DB2777', anaMetin: '#FFFFFF', yumusak: '#F9A8D4', baslik: '#F472B6' };
+export const VURGU_PSIK: AracVurgu = { ana: '#6366F1', anaMetin: '#EEF2FF', yumusak: '#A5B4FC', baslik: '#818CF8' };
 
 export interface AracStil {
   kutu: React.CSSProperties;

@@ -7,7 +7,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { psikStil } from './PsikAracKabugu';
+import { psikStil, Istatistik, TaslakNotu, Rozet } from './PsikAracKabugu';
 import { PSIK_BAYRAK_AD, psikKohortFiltre, type PsikKohortBayrak, type PsikKohortSatir } from '../../engines/kohort';
 
 const BAYRAKLAR = Object.keys(PSIK_BAYRAK_AD) as PsikKohortBayrak[];
@@ -69,8 +69,10 @@ export default function PsikKohortAraci() {
             >{PSIK_BAYRAK_AD[b]}</button>
           ))}
         </div>
-        <div style={{ ...psikStil.kucuk, marginTop: 8 }}>
-          {satirlar == null ? 'Yükleniyor…' : `${gorunen.length} bayraklı hasta · kohortta ${toplam} hasta`}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+          <Istatistik deger={satirlar == null ? '…' : gorunen.length} etiket="Bayraklı hasta" ton={gorunen.length ? 'uyari' : 'iyi'} />
+          <Istatistik deger={satirlar == null ? '…' : gorunen.filter((s) => s.bayraklar.includes('risk_acik')).length} etiket="Açık güvenlik bayrağı" ton={gorunen.some((s) => s.bayraklar.includes('risk_acik')) ? 'kirmizi' : 'notr'} />
+          <Istatistik deger={satirlar == null ? '…' : toplam} etiket="Kohortta hasta" />
         </div>
         {hata && <div style={{ ...psikStil.hata, marginTop: 8 }}>{hata}</div>}
       </div>
@@ -94,7 +96,7 @@ export default function PsikKohortAraci() {
                 {s.portalVar ? '' : ' · portal daveti yok'}
               </span>
             </span>
-            {s.bayraklar.includes('risk_acik') && <span style={{ ...psikStil.hata, whiteSpace: 'nowrap' }}>⚑ güvenlik</span>}
+            {s.bayraklar.includes('risk_acik') && <Rozet ton="kirmizi">⚑ güvenlik</Rozet>}
           </label>
         ))}
         <div style={psikStil.satir}>
@@ -104,10 +106,10 @@ export default function PsikKohortAraci() {
           <button type="button" style={psikStil.ghost} onClick={() => setSecili(gorunen.map((s) => s.patientId))} disabled={!gorunen.length}>Tümünü seç</button>
         </div>
         {durum && <div style={{ ...psikStil.iyi, marginTop: 8 }}>{durum}</div>}
-        <div style={{ ...psikStil.kucuk, marginTop: 10 }}>
+        <TaslakNotu>
           Hatırlatma metni ruh sağlığı bağlamı taşımaz: tanı, ölçek adı, skor ve ilaç adı yazılmaz. Açık güvenlik
           bayrağı olan hastaya “sizinle iletişime geçeceğiz” mesajı gider — risk portal mesajıyla yönetilmez, hekim arar.
-        </div>
+        </TaslakNotu>
       </div>
     </>
   );

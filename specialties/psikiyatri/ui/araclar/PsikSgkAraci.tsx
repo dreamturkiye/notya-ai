@@ -6,7 +6,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { psikStil, PsikHastaSecici, PsikOnay, PsikSecim, PsikKopyala } from './PsikAracKabugu';
+import { psikStil, PsikHastaSecici, PsikOnay, PsikSecim, PsikKopyala, Istatistik, TaslakNotu, Rozet } from './PsikAracKabugu';
 import { psikRaporTaslagi, PSIK_RAPOR_SABLONLARI, type PsikRaporSablon } from '../../engines/sgkRapor';
 
 export default function PsikSgkAraci() {
@@ -82,8 +82,8 @@ export default function PsikSgkAraci() {
           <>
             <div style={{ ...psikStil.etiket, marginTop: 12 }}>Reçete türü (RRS)</div>
             {sonuc.receteNotlari.map((r) => (
-              <div key={r.ilac} style={{ ...psikStil.metin, color: r.renk === 'normal' ? '#EDF1F7' : '#FBBF24' }}>
-                {r.ilac} — {r.etiket}
+              <div key={r.ilac} style={{ ...psikStil.metin, marginTop: 6 }}>
+                {r.ilac} — <Rozet ton={r.renk === 'normal' ? 'notr' : 'uyari'}>{r.etiket}</Rozet>
                 {r.dogrulanmali && <div style={psikStil.kucuk}>{r.dogrulanmali}</div>}
               </div>
             ))}
@@ -99,12 +99,18 @@ export default function PsikSgkAraci() {
       </div>
 
       <div style={psikStil.kutu}>
-        <div style={psikStil.etiket}>{sonuc.eksikler.length ? `Eksikler (${sonuc.eksikler.length})` : 'Eksik yok'}</div>
+        <div style={psikStil.etiket}>{sonuc.eksikler.length ? 'Eksikler' : 'Eksik yok'}</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+          <Istatistik deger={sonuc.eksikler.length} etiket="Eksik alan" ton={sonuc.eksikler.length ? 'uyari' : 'iyi'} />
+          <Istatistik deger={sonuc.draft.etkenMaddeler.length} etiket="Eşleşen etken madde" />
+          <Istatistik deger={`${Object.values(isaretli).filter(Boolean).length} / ${sonuc.kontrolListesi.length}`} etiket="Kontrol listesi" />
+        </div>
         {sonuc.eksikler.map((e) => <div key={e} style={{ ...psikStil.metin, color: '#FBBF24' }}>• {e}</div>)}
         {!sonuc.eksikler.length && <div style={psikStil.iyi}>Tüm alanlar dolu — rapor kilidi hekimin.</div>}
         <div style={{ ...psikStil.etiket, marginTop: 12 }}>Taslak çıktı</div>
         <pre style={{ ...psikStil.kucuk, whiteSpace: 'pre-wrap', margin: 0 }}>{metin}</pre>
         <PsikKopyala metin={metin} etiket="Taslağı kopyala" />
+        <TaslakNotu>Rapor taslaktır: Medula girişi, süre ve e-imza hekimindedir.</TaslakNotu>
         {sonuc.dipnotlar.map((d) => <div key={d.not} style={{ ...psikStil.kucuk, marginTop: 6 }}>{d.not}</div>)}
       </div>
     </>
