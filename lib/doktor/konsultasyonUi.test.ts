@@ -11,7 +11,7 @@ import assert from 'node:assert/strict'
 import React, { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AracVurguSaglayici, VURGU_TEAL } from './aracUi'
-import { KonsultasyonCizelgesi, KonsultasyonKarti, IstemDuzenleFormu, YeniKonsultasyonFormu, type KonsultasyonGorunumu } from '../../components/doktor/HastaKonsultasyonlar'
+import { AyseTaslakDurumu, KonsultasyonCizelgesi, KonsultasyonKarti, IstemDuzenleFormu, YanitFormu, YeniKonsultasyonFormu, type KonsultasyonGorunumu } from '../../components/doktor/HastaKonsultasyonlar'
 import KonsultasyonIstemFormuKagidi, { type IstemFormuVerisi } from '../../components/doktor/KonsultasyonIstemFormuKagidi'
 import { hedefSecenekleri } from './konsultasyon'
 import { KonsultasyonKohortListesi } from '../../components/doktor/KonsultasyonKohortSatiri'
@@ -318,5 +318,49 @@ describe('AYSE-KONSULTASYON-01 — istem düzenleme ve düzenleme geçmişi (SSR
     assert.match(h, /Kısaltma olabilir: KBB, OME/)
     assert.match(h, /önceki metin düzenleme geçmişinde saklanır/)
     for (const b of h.match(/<button[^>]*>/g) || []) assert.match(b, /min-height:(4[4-9]|[5-9]\d)px|min-height:40px/, b)
+  })
+})
+
+describe('AYSE-KONSULTASYON-01 — Ayşe taslağı arayüzü (SSR)', () => {
+  const d = (t: Parameters<typeof AyseTaslakDurumu>[0]['t'], yon: 'istem' | 'yanit' = 'istem') => sar(createElement(AyseTaslakDurumu, { t, yon, taslagiKullan: () => {} }))
+  it('yeni istem formu: branş seçilmeden taslak yok, Ayşe\'nin ne yapacağı yazıyor; "Oluştur" düğmesi', () => {
+    const h = sar(createElement(YeniKonsultasyonFormu, { patientId: 'p', hedefler, olustu: () => {} }))
+    assert.match(h, /Branşı seçtiğinizde Ayşe hasta dosyasından \(son muayene ağırlıklı\) istem taslağını yazar/)
+    assert.match(h, /Konsültasyon istemi oluştur/)
+    assert.doesNotMatch(h, /TASLAK · Ayşe/)
+    assert.match(h, /Klinik soru \(konsültasyonun nedeni\)/)
+  })
+  it('taslak hazır: TASLAK rozeti + hekim onayı dili (TaslakNotu); düzenlenince rozet değişir', () => {
+    const h = d({ durum: 'hazir', duzenlendi: false, bilgi: 'Son muayene 12.09.2026 ağırlıklı · 3 vizit okundu' })
+    assert.match(h, /TASLAK · Ayşe · hekim onayı bekliyor/)
+    assert.match(h, />TASLAK</, 'ortak TaslakNotu rozeti')
+    assert.match(h, /tanı, evre, doz eklemez/)
+    assert.match(h, /“Oluştur”a basmadan hiçbir şey kaydedilmez/)
+    assert.match(h, /3 vizit okundu/)
+    assert.match(d({ durum: 'hazir', duzenlendi: true }), /Ayşe taslağı · düzenlendi/)
+  })
+  it('HATA YOLU: "Taslak oluşturulamadı, elle yazabilirsiniz" — metin alanı ve Oluştur düğmesi yerinde', () => {
+    const h = d({ durum: 'hata', mesaj: 'Taslak oluşturulamadı, elle yazabilirsiniz.' })
+    assert.match(h, /Taslak oluşturulamadı, elle yazabilirsiniz\./)
+    assert.doesNotMatch(h, /disabled/)
+  })
+  it('yazıyor: hekim beklemek zorunda değil; korundu: hekimin metni ezilmez, "Ayşe\'nin taslağını kullan" ≥ 44 px', () => {
+    assert.match(d({ durum: 'yaziyor' }), /Beklemeden kendiniz de yazabilirsiniz/)
+    const k = d({ durum: 'korundu', bekleyen: 'x' })
+    assert.match(k, /metninizin üstüne yazılmadı/)
+    assert.match(k, /Ayşe&#x27;nin taslağını kullan|Ayşe'nin taslağını kullan/)
+    assert.match(k, /min-height:44px/)
+  })
+  it('yanıt: taslak dili "Notya tanı iddia etmez", "onaylamadan yanıtlandı olmaz"; form "Onayla ve kaydet"', () => {
+    const h = d({ durum: 'hazir', duzenlendi: false, bilgi: 'konsültan raporundan' }, 'yanit')
+    assert.match(h, /Notya tanı iddia etmez/)
+    assert.match(h, /Onaylamadan konsültasyon “yanıtlandı” olmaz/)
+    const f = sar(createElement(YanitFormu, { k: satir({ belge_id: 'b1' }), patientId: 'p', kaydedildi: () => {}, vazgec: () => {} }))
+    assert.match(f, /Onayla ve kaydet/)
+    assert.match(f, /Yanıt özeti — kendi cümleniz/)
+  })
+  it('bekleyen kart: rapor bağlıysa Ayşe\'nin özet taslağına yönlendirir', () => {
+    const h = sar(createElement(KonsultasyonKarti, { k: satir({ belge_id: 'b1', belge: { id: 'b1', ad: 'kbb.pdf', tur: 'application/pdf', tarih: '2026-09-18T10:00:00Z', silindi: false } }), patientId: 'p', guncelle: () => {} }))
+    assert.match(h, /Ayşe(&#x27;|')nin özet taslağını görün, onaylayın/)
   })
 })
