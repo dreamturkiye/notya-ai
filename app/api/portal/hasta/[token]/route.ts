@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
+import { portalYonlendirmeleri } from '@/lib/doktor/konsultasyon'
 import { loadPortalMessages } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModalities'
@@ -209,6 +210,21 @@ export async function GET(
     }
   })
   bundle.visits = visits
+
+  // KONSULTASYON-01 — "KBB'ye yönlendirildiniz (tarih) · Sonuç alındı (tarih)". ÇEKİRDEK (her branş).
+  // Yalnız hastaya gösterilecek kolonlar seçilir: klinik soru, tanılar, yanıt özeti, belge ve konsültan adı
+  // bu sorguya HİÇ girmez. Token'ın doktoruna kapsanır (HASTA-IZOLASYON-01). Tablo/kolon yoksa boş kalır.
+  try {
+    const { data: yonRows } = await sb
+      .from('sevkler')
+      .select('id, hedef_brans, istem_tarihi, created_at, durum, yanit_tarihi')
+      .eq('patient_id', patientId)
+      .eq('doctor_id', doctorId)
+      .not('hedef_brans', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(40)
+    bundle.yonlendirmeler = portalYonlendirmeleri(yonRows || [])
+  } catch (e) { console.error('[portal] yonlendirmeler:', e) }
 
   // Medications + history.
   // NOTYA-RECETE-01: nottan aktarılan reçeteler 'beklemede' durumunda gelir ve

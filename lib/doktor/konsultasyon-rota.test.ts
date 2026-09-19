@@ -23,6 +23,7 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
+process.env.PORTAL_TOKEN_SECRET = 'qa-sentetik-portal-sirri'
 
 let db = new SahteVeritabani()
 const KOK = resolve(__dirname, '../..')
@@ -63,10 +64,10 @@ let encrypt: (s: string) => string
 type Rotalar = Record<string, any>
 let R: Rotalar
 
-function iste(yontem: string, yol: string, token: string, govde?: unknown) {
+function iste(yontem: string, yol: string, token: string, govde?: unknown, cerez?: string) {
   return new NextRequestSinifi(`http://localhost${yol}`, {
     method: yontem,
-    headers: { authorization: `Bearer ${token}`, ...(govde !== undefined ? { 'content-type': 'application/json' } : {}) },
+    headers: { authorization: `Bearer ${token}`, ...(cerez ? { cookie: cerez } : {}), ...(govde !== undefined ? { 'content-type': 'application/json' } : {}) },
     body: govde !== undefined ? JSON.stringify(govde) : undefined,
   } as ConstructorParameters<typeof NextRequestSinifi>[1])
 }
@@ -98,6 +99,7 @@ describe('KONSULTASYON-01 — kapalı döngü (gerçek rota, sahte veritabanı)'
       konsultasyon: await ice('app/api/doktor/konsultasyon/route'),
       dahiliye: await ice('app/api/doktor/dahiliye/route'),
       goz: await ice('app/api/doktor/goz/route'),
+      portal: await ice('app/api/portal/hasta/[token]/route'),
     }
   })
 
@@ -249,5 +251,39 @@ describe('KONSULTASYON-01 — kapalı döngü (gerçek rota, sahte veritabanı)'
     const eskiSatir = k.j.konsultasyonlar.find((x: { id: string }) => x.id === eski.id)
     assert.equal(eskiSatir.hedefEtiketi, 'Göz Hastalıkları')
     assert.equal(eskiSatir.eskiKayit, true)
+  })
+
+  it('SAĞLIĞIM: "KBB\'ye yönlendirildiniz · Sonuç alındı" — klinik soru, tanı, yanıt, rapor, konsültan adı ve eski/yabancı satır YOK', async () => {
+    // Yeni akış: istem + yanıt (rapor bağlı)
+    const k = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'kulak-burun-bogaz', klinikSoru: 'GIZLI-SORU işitme kaybı var mı?', tanilar: 'GIZLI-TANI', mevcutDurum: 'GIZLI-DURUM', hedefHekim: 'Dr. GIZLI-KONSULTAN', istemTarihi: '2026-09-12' })))).j.konsultasyon
+    await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: k.id, islem: 'yanit', yanitOzeti: 'GIZLI-YANIT saptanmadı', yanitTarihi: '2026-09-18', belgeId: s.belge })))
+    // Eski dahiliye hesaplayıcı satırı (hedef_brans yok) ve başka hekimin aynı hastaya düşmüş satırı
+    db.ekle('sevkler', { patient_id: s.hasta, doctor_id: s.hekim, hedef: 'gastroenteroloji', not_metni: 'GIZLI-ESKI FIB-4', kaynak: 'dm_fib4', durum: 'acik' })
+    db.ekle('sevkler', { patient_id: s.hasta, doctor_id: randomUUID(), hedef: 'noroloji', hedef_brans: 'noroloji', klinik_soru: 'GIZLI-YABANCI', durum: 'yanit_bekleniyor', istem_tarihi: '2026-09-15' })
+    const portalToken = 'qa-portal-konsultasyon'
+    db.ekle('hasta_portal_tokens', { token_hash: portalToken, doctor_id: s.hekim, patient_id: s.hasta, expires_at: new Date(Date.now() + 86400e3).toISOString(), pin_hash: 'sentetik' })
+    const { setUnlockCookie, UNLOCK_COOKIE } = await import('../portal/pinAuth')
+    const { NextResponse } = await import('next/server')
+    const res = NextResponse.json({}); setUnlockCookie(res, portalToken)
+    const cerez = `${UNLOCK_COOKIE}=${res.cookies.get(UNLOCK_COOKIE)?.value}`
+    const y = await coz(R.portal.GET(iste('GET', `/api/portal/hasta/${portalToken}`, '', undefined, cerez), { params: { token: portalToken } }))
+    assert.equal(y.status, 200, JSON.stringify(y.j).slice(0, 300))
+    assert.deepEqual(y.j.yonlendirmeler, [{ id: k.id, brans: 'KBB', tarih: '2026-09-12', durum: 'sonuc_alindi', sonucTarihi: '2026-09-18' }])
+    const metin = JSON.stringify(y.j)
+    for (const g of ['GIZLI-SORU', 'GIZLI-TANI', 'GIZLI-DURUM', 'GIZLI-KONSULTAN', 'GIZLI-YANIT', 'GIZLI-ESKI', 'GIZLI-YABANCI', 'kbb-konsultasyon-raporu']) {
+      assert.ok(!metin.includes(g), `portala sızdı: ${g}`)
+    }
+    const { portalYonlendirmeMetni } = await import('./konsultasyon')
+    assert.equal(portalYonlendirmeMetni(y.j.yonlendirmeler[0]), "KBB'ye yönlendirildiniz (12.09.2026) · Sonuç alındı (18.09.2026)")
+  })
+
+  it('KOHORT: yanıt bekleyenler en uzun bekleyen üstte + son 180 günün istem → yanıt medyanı', async () => {
+    const olustur = async (istemTarihi: string) => (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'goz-hastaliklari', klinikSoru: 'Görme keskinliği değerlendirmesi?', istemTarihi })))).j.konsultasyon
+    const a = await olustur('2026-09-01'), b = await olustur('2026-09-10'), c = await olustur('2026-09-11')
+    await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: c.id, islem: 'yanit', yanitOzeti: 'Olağan.', yanitTarihi: '2026-09-15' })))
+    const y = await coz(R.konsultasyon.GET(iste('GET', '/api/doktor/konsultasyon?bekleyen=1', s.token)))
+    assert.deepEqual(y.j.bekleyenler.map((x: { id: string }) => x.id), [a.id, b.id])
+    assert.ok(y.j.bekleyenler[0].gun > y.j.bekleyenler[1].gun)
+    assert.deepEqual(y.j.yanitSuresi, { adet: 1, medyanGun: 4, enUzunGun: 4 })
   })
 })

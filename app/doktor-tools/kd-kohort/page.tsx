@@ -3,6 +3,7 @@
 import KdAracKabugu from '@/specialties/kadin-dogum/ui/araclar/KdAracKabugu'
 import KdKohortPaneli from '@/specialties/kadin-dogum/ui/araclar/KdKohortPaneli'
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
+import KonsultasyonKohortSatiri from '@/components/doktor/KonsultasyonKohortSatiri'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,8 @@ export default function Page() {
   return (
     <KdAracKabugu route="/doktor-tools/kd-kohort" baslik={`${KADIN_HASTALIKLARI_DOGUM_ETIKETI} Kohort Paneli`} aciklama="Lohusa 1. ve 6. hafta kontrolü, kapanmak üzere tarama pencereleri, geciken izlemler, OGTT / anti-D / GBS zamanı ve smear / HPV gecikmesi — tek dokunuşla hatırlatma.">
       <KdKohortPaneli />
+      {/* KONSULTASYON-01: evrensel satır — yanıt bekleyen konsültasyonlar (yeni araç değil) */}
+      <KonsultasyonKohortSatiri />
     </KdAracKabugu>
   )
 }

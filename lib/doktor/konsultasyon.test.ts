@@ -18,6 +18,7 @@ import {
   portalYonlendirmeMetni,
   yanitDogrula,
   yonelmeEki,
+  yanitSuresiOzeti,
   type KonsultasyonSatiri,
 } from './konsultasyon'
 import { specialtyProfile } from '@/lib/specialties/registry'
@@ -169,5 +170,20 @@ describe('KONSULTASYON-01 — Sağlığım: branş + tarih + durum, klinik içer
     const m = konsultasyonHatirlatmaMesaji('KBB')
     assert.ok(m.metin.includes("KBB'ye yönlendirildiğiniz"))
     assert.ok(!/işitme|tanı|şüphe/i.test(m.metin))
+  })
+})
+
+describe('KONSULTASYON-01 — SKS yanıt süresi (yalnız ölçüm)', () => {
+  it('medyan ve en uzun gün; yanıtsız / tarihsiz kayıtlar sayılmaz', () => {
+    const r = yanitSuresiOzeti([
+      satir({ durum: 'yanitlandi', istem_tarihi: '2026-09-01', yanit_tarihi: '2026-09-03' }),
+      satir({ durum: 'yanitlandi', istem_tarihi: '2026-09-01', yanit_tarihi: '2026-09-11' }),
+      satir({ durum: 'yanitlandi', istem_tarihi: '2026-09-01', yanit_tarihi: '2026-09-05' }),
+      satir({ durum: 'yanitlandi', istem_tarihi: '2026-09-01', yanit_tarihi: '2026-09-07' }),
+      satir({ durum: 'yanit_bekleniyor' }),
+      satir({ durum: 'yanitlandi', yanit_tarihi: null }),
+    ])
+    assert.deepEqual(r, { adet: 4, medyanGun: 5, enUzunGun: 10 })
+    assert.deepEqual(yanitSuresiOzeti([]), { adet: 0, medyanGun: null, enUzunGun: null })
   })
 })

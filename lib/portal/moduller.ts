@@ -12,6 +12,8 @@
  *    branch has no portal module of its own — a göz / derm / dahiliye / KD doctor never gets pediatri
  *    growth curves, and only a KD doctor gets Pap/HPV as a default card. Same for the dahiliye ön anket
  *    (dahiliye doctor, or a baseline-branch doctor whose patient has dahiliye cards).
+ * KONSULTASYON-01: "Yönlendirmeleriniz" bir chapter modülü DEĞİLDİR — her branşın hastasına aynı, çekirdek omurgadır
+ * (PortalBundle.yonlendirmeler, Ziyaretler sayfası). Bu çözücüye bilerek eklenmedi; branş kapısı yok.
  * Pure + client-safe (no fs, no Supabase).
  */
 import { specialtyProfile } from '@/lib/specialties/registry'

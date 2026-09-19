@@ -11,6 +11,7 @@ export function emptyPortalBundle(): PortalBundle {
     },
     messages: [],
     visits: [],
+    yonlendirmeler: [],
     results: [],
     medications: [],
     medicationHistory: [],

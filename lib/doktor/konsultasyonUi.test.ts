@@ -8,12 +8,15 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { createElement } from 'react'
+import React, { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AracVurguSaglayici, VURGU_TEAL } from './aracUi'
 import { KonsultasyonCizelgesi, YeniKonsultasyonFormu, type KonsultasyonGorunumu } from '../../components/doktor/HastaKonsultasyonlar'
 import KonsultasyonIstemFormuKagidi, { type IstemFormuVerisi } from '../../components/doktor/KonsultasyonIstemFormuKagidi'
 import { hedefSecenekleri } from './konsultasyon'
+import { KonsultasyonKohortListesi } from '../../components/doktor/KonsultasyonKohortSatiri'
+import { YonlendirmelerView } from '../../app/portal/_components/VisitsView'
+import { emptyPortalBundle } from '../portal/emptyBundle'
 import { specialtyProfile } from '../specialties/registry'
 
 const satir = (o: Partial<KonsultasyonGorunumu>): KonsultasyonGorunumu => ({
@@ -142,5 +145,49 @@ describe('KONSULTASYON-01 — KONSÜLTASYON İSTEM FORMU kağıdı (SSR)', () =>
   it('veli / yasal temsilci satırı yaşa bağlı (VELI-YASAL-ONAM)', () => {
     assert.match(h, /Veli \/ yasal temsilci/)
     assert.doesNotMatch(renderToStaticMarkup(createElement(KonsultasyonIstemFormuKagidi, { v: v(false) })), /Veli \/ yasal temsilci/)
+  })
+})
+
+describe('KONSULTASYON-01 — kohort satırı (SSR, mevcut panellere takılır)', () => {
+  it('en uzun bekleyen, gün rozeti, hasta dosyasına bağlantı, SKS medyanı; boş durum dürüst', () => {
+    const h = sar(createElement(KonsultasyonKohortListesi, { bekleyenler: [
+      { id: 'x', patientId: 'p1', hastaAdi: 'QA Hasta', hedef: 'KBB', istemTarihi: '2026-08-10', gun: 40, aciliyet: 'acil', eskiKayit: false },
+      { id: 'y', patientId: 'p2', hastaAdi: 'QA Diğer', hedef: 'Nefroloji', istemTarihi: '2026-09-15', gun: 4, aciliyet: null, eskiKayit: true },
+    ], yanitSuresi: { adet: 3, medyanGun: 6, enUzunGun: 12 } }))
+    assert.match(h, /Yanıt bekleyen konsültasyonlar \(2\)/)
+    assert.match(h, /40 gündür açık/)
+    assert.match(h, /href="\/dashboard\/doktor\/hastalar\/p1\?tab=konsultasyon"/)
+    assert.match(h, /istem 10\.08\.2026 · acil/)
+    assert.match(h, /eski kayıt/)
+    assert.match(h, /istem → yanıt medyanı 6 gün/)
+    assert.match(h, /min-height:44px/)
+    assert.doesNotMatch(h, /sevk/i)
+    assert.match(sar(createElement(KonsultasyonKohortListesi, { bekleyenler: [] })), /Yanıt bekleyen konsültasyon yok/)
+  })
+  it('yedi mevcut kohort paneli satırı taşır; yeni Araçlar rotası açılmadı', async () => {
+    const { readFileSync, existsSync } = await import('node:fs')
+    for (const d of ['dahiliye-kohort', 'derm-kohort', 'goz-kohort', 'kbb-kohort', 'kd-kohort', 'pedi-kohort', 'psik-kohort']) {
+      assert.match(readFileSync(`app/doktor-tools/${d}/page.tsx`, 'utf8'), /<KonsultasyonKohortSatiri \/>/, d)
+    }
+    assert.equal(existsSync('app/doktor-tools/konsultasyon'), false)
+    const { ORTAK_DOKTOR_ARACLARI, BRANS_DOKTOR_ARACLARI } = await import('./doktorAraclari')
+    assert.ok(![...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI].some((a: { href?: string; route?: string }) => /konsult/i.test(String(a.href || a.route || ''))))
+  })
+})
+
+describe('KONSULTASYON-01 — Sağlığım › Ziyaretler › Yönlendirmeleriniz (SSR)', () => {
+  // Portal ui.tsx klasik JSX çalışma zamanı için React'i kapsamda bekler (Next derleyicisi otomatik sağlar)
+  ;(globalThis as { React?: unknown }).React = React
+  it('yalnız branş + tarih + durum cümlesi; liste boşsa bölüm yok', () => {
+    const data = { ...emptyPortalBundle(), yonlendirmeler: [
+      { id: 'a', brans: 'KBB', tarih: '2026-09-12', durum: 'sonuc_alindi' as const, sonucTarihi: '2026-09-18' },
+      { id: 'b', brans: 'Göz Hastalıkları', tarih: '2026-09-15', durum: 'bekliyor' as const, sonucTarihi: null },
+    ] }
+    const h = renderToStaticMarkup(createElement(YonlendirmelerView, { data }))
+    assert.match(h, /Yönlendirmeleriniz/)
+    assert.ok(h.includes("KBB&#x27;ye yönlendirildiniz (12.09.2026) · Sonuç alındı (18.09.2026)"), h)
+    assert.ok(h.includes("Göz Hastalıkları&#x27;na yönlendirildiniz (15.09.2026) · Sonuç bekleniyor"))
+    assert.doesNotMatch(h, /sevk|tanı|tanı/i)
+    assert.equal(renderToStaticMarkup(createElement(YonlendirmelerView, { data: emptyPortalBundle() })), '')
   })
 })

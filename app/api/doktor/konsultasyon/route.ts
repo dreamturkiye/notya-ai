@@ -45,6 +45,7 @@ import {
   konsultasyonHatirlatmaMesaji,
   konsultasyonNotBlogu,
   yanitDogrula,
+  yanitSuresiOzeti,
   type KonsultasyonIslemi,
   type KonsultasyonSatiri,
 } from '@/lib/doktor/konsultasyon'
@@ -107,7 +108,11 @@ export async function GET(req: NextRequest) {
       aciliyet: s.aciliyet,
       eskiKayit: !s.hedef_brans,
     })).sort((a, b) => b.gun - a.gun)
-    return NextResponse.json({ bekleyenler, tabloHazir: true })
+    // SKS göstergesi: son 180 günde yanıtlanan konsültasyonların istem → yanıt süresi (yalnız ölçüm)
+    const alt = new Date(Date.now() - 180 * 86400e3).toISOString().slice(0, 10)
+    const { data: yanitli } = await sb.from('sevkler').select('durum, istem_tarihi, created_at, yanit_tarihi')
+      .eq('doctor_id', user.id).eq('durum', 'yanitlandi').gte('yanit_tarihi', alt).limit(500)
+    return NextResponse.json({ bekleyenler, yanitSuresi: yanitSuresiOzeti((yanitli || []) as unknown as KonsultasyonSatiri[]), tabloHazir: true })
   }
 
   // ── Yazdırılabilir istem formu ──
