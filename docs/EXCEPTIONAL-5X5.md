@@ -73,6 +73,12 @@ Araç sayısı sabit değil — kaç useful ise o kadar.
 
 **GASTROENTEROLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Sindirimim Strong · migration 068 · ~93% · live `/gastro-exceptional-audit.html`
 
+**NEFROLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Böbreklerim Strong · migration **069** · ~93% · live `/nef-exceptional-audit.html`  
+OUT: diyaliz makinesi HIS · tanı kilidi · uydurma ESA dozu.
+
+**ROMATOLOJI-EXCEPTIONAL-01 SHIPPED:** 4 Araç · Romatizmam Strong · migration **070** · ~93% · live `/roma-exceptional-audit.html`  
+OUT: infüzyon süiti HIS · tanı kilidi · uydurma biyolojik doz.
+
 ### Dalga 4
 genel-cerrahi · plastik-cerrahi · cocuk-cerrahisi · gogus-cerrahisi · beyin-cerrahisi  
 *(OR / full HIS = intentional Missing)*
