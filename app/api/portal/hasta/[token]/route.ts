@@ -34,6 +34,37 @@ import {
   KULAKLARIM_NOTU,
   KULAK_BAKIM_IPUCLARI,
 } from '@/specialties/kulak-burun-bogaz/engines/portal-kulaklarim'
+import {
+  urolojimHatirlatmalari,
+  testHatirlatmalari as uroTestHatirlatmalari,
+  islemHatirlatmalari as uroIslemHatirlatmalari,
+  sonrakiKontrol as uroSonrakiKontrol,
+  UROLOJIM_NOTU,
+  URO_BAKIM_IPUCLARI,
+} from '@/specialties/uroloji/engines/portal-urolojim'
+import {
+  kalbimHatirlatmalari,
+  olcumHatirlatmalari,
+  sonrakiKontrol as kalpSonrakiKontrol,
+  KALBIM_NOTU,
+  KALP_BAKIM_IPUCLARI,
+} from '@/specialties/kardiyoloji/engines/portal-kalbim'
+import {
+  norolojimHatirlatmalari,
+  formHatirlatmalari as noroFormHatirlatmalari,
+  ilacHatirlatmalari as noroIlacHatirlatmalari,
+  sonrakiKontrol as noroSonrakiKontrol,
+  NOROLOJIM_NOTU,
+  NORO_IPUCLARI,
+} from '@/specialties/noroloji/engines/portal-norolojim'
+import {
+  akcigerlerimHatirlatmalari,
+  testHatirlatmalari as gogusTestHatirlatmalari,
+  bakimHatirlatmalari,
+  sonrakiKontrol as akcigerSonrakiKontrol,
+  AKCIGERLERIM_NOTU,
+  AKCIGER_BAKIM_IPUCLARI,
+} from '@/specialties/gogus-hastaliklari/engines/portal-akcigerlerim'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -690,6 +721,97 @@ export async function GET(
       not: KULAKLARIM_NOTU,
     }
   } catch (e) { console.error('[portal] kulaklarim:', e) }
+
+  // KARDIO-EXCEPTIONAL-01 — "Kalbim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // SCORE2 %, risk bandı, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('kalbim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('kardio_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_kardiyoloji').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = kalbimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.kalp = {
+      sonrakiKontrol: kalpSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      olcumHatirlatma: olcumHatirlatmalari(hatirlatmalar),
+      bakimIpuclari: [...KALP_BAKIM_IPUCLARI],
+      not: KALBIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] kalbim:', e) }
+
+  // NOROLOJI-EXCEPTIONAL-01 — "Nörolojimm": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // MIDAS skoru/bandı, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('norolojim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('noro_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_noroloji').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = norolojimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.noro = {
+      sonrakiKontrol: noroSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      formHatirlatma: noroFormHatirlatmalari(hatirlatmalar),
+      ilacHatirlatma: noroIlacHatirlatmalari(hatirlatmalar),
+      ipuclari: [...NORO_IPUCLARI],
+      not: NOROLOJIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] norolojim:', e) }
+
+  // GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // CAT/mMRC skoru, GOLD grup, FEV1, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('akcigerlerim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('gogus_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_gogus').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = akcigerlerimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.akciger = {
+      sonrakiKontrol: akcigerSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      testHatirlatma: gogusTestHatirlatmalari(hatirlatmalar),
+      bakimHatirlatma: bakimHatirlatmalari(hatirlatmalar),
+      bakimIpuclari: [...AKCIGER_BAKIM_IPUCLARI],
+      not: AKCIGERLERIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] akcigerlerim:', e) }
+
+  // UROLOJI-EXCEPTIONAL-01 — "Ürolojimm": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // PSA sayı, IPSS skor, tanı, ilaç adı ve doz portala GEÇMEZ.
+  if (modulAktif('urolojim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('uro_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_uro').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = urolojimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.uro = {
+      sonrakiKontrol: uroSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      testHatirlatma: uroTestHatirlatmalari(hatirlatmalar),
+      islemHatirlatma: uroIslemHatirlatmalari(hatirlatmalar),
+      bakimIpuclari: [...URO_BAKIM_IPUCLARI],
+      not: UROLOJIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] urolojim:', e) }
 
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId, doctorId)

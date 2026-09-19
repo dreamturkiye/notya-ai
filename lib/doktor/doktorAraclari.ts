@@ -92,6 +92,32 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#DC2626', icon: 'VT', title: 'Vertigo / Dix-Hallpike', desc: 'Pozisyonel test ve repozisyon manevrası notu · nistagmus özellikleri · santral şüphesi işaretinde manevra yerine acil', route: '/doktor-tools/kbb-vertigo', branslar: ['kulak-burun-bogaz'] },
   { circleColor: '#16A34A', icon: 'İR', title: 'SGK işitme raporu', desc: 'İşitme cihazı · odyolojik tetkik · iş gücü / öğrenci raporu taslağı ve SUT kontrol listesi — T.C. kimlik, cihaz markası ve bedel yazılmaz', route: '/doktor-tools/kbb-sgk', branslar: ['kulak-burun-bogaz'] },
   { circleColor: '#0891B2', icon: 'KK', title: 'KBB kohort paneli', desc: 'Geciken kontrol · yenilenmesi gereken işitme testi · açık kırmızı bayrak · bekleyen uyku tetkiki sevki · 1-tap hatırlatma', route: '/doktor-tools/kbb-kohort', branslar: ['kulak-burun-bogaz'] },
+  // KARDIO-EXCEPTIONAL-01 — specialty-only (not pediatri / dahiliye / göz / KD / dermatoloji / KBB / göğüs).
+  // Chapter engines: specialties/kardiyoloji/engines. SCORE2 bandı karar desteğidir; tanı ve doz hekimde.
+  // Visibility: kardiyoloji only — NOT dahiliye, NOT kalp-damar-cerrahisi, NOT pediatri.
+  { circleColor: '#DC2626', icon: 'S2', title: 'SCORE2 / KV risk', desc: 'ESC 2021 SCORE2 · 10 yıllık risk % ve bant (karar desteği, tanı değil) · Türkiye yüksek risk bölgesi · doz yok', route: '/doktor-tools/kardio-score2', branslar: ['kardiyoloji'] },
+  { circleColor: '#EA580C', icon: 'HT', title: 'HT / KKY izlem', desc: 'Hipertansiyon ve kalp yetersizliği izlem özeti · NYHA hekim seçimi · sınıf düzeyi görev · EKG/belge köprüsü · doz yok', route: '/doktor-tools/kardio-ht-kky', branslar: ['kardiyoloji'] },
+  { circleColor: '#16A34A', icon: 'KR', title: 'SGK kardiyo rapor', desc: 'HT · KKY · antikoagülan · koroner izlem taslağı ve SUT kontrol listesi — T.C. kimlik ve doz yazılmaz', route: '/doktor-tools/kardio-sgk', branslar: ['kardiyoloji'] },
+  { circleColor: '#B91C1C', icon: 'KK', title: 'Kardiyoloji kohort paneli', desc: 'Geciken kontrol · lab/EKG · açık kırmızı bayrak · yüksek risk izlem gecikmesi · 1-tap hatırlatma', route: '/doktor-tools/kardio-kohort', branslar: ['kardiyoloji'] },
+  // GOGUS-EXCEPTIONAL-01 — specialty-only (not dahiliye / gogus-cerrahisi / kardiyoloji / …).
+  // Chapter engines: specialties/gogus-hastaliklari/engines. CAT/mMRC/GOLD grubu karar desteğidir; tanı ve doz hekimde.
+  { circleColor: '#0284C7', icon: 'CM', title: 'CAT / mMRC skorları', desc: 'CAT 8 madde ve mMRC ile GOLD ABE grubu (karar desteği) · alevlenme öyküsü · tanı ve doz yazılmaz', route: '/doktor-tools/gogus-cat-mmrc', branslar: ['gogus-hastaliklari'] },
+  { circleColor: '#0EA5E9', icon: 'AP', title: 'Astım-KOAH aksiyon planı', desc: 'Yeşil / sarı / kırmızı yazılı plan taslağı · inhaler sınıfı (doz yok) · hasta eğitimi metni', route: '/doktor-tools/gogus-aksiyon-plani', branslar: ['gogus-hastaliklari'] },
+  { circleColor: '#38BDF8', icon: 'İN', title: 'İnhaler teknik & izlem', desc: 'ÖDİ / KTİ / soft mist teknik kontrol listesi · tekrar kontrol takvimi · miktar şeması yazılmaz', route: '/doktor-tools/gogus-inhaler', branslar: ['gogus-hastaliklari'] },
+  { circleColor: '#16A34A', icon: 'SR', title: 'SGK solunum raporu', desc: 'USOT · nebulizatör · solunum değerlendirme taslağı ve SUT kontrol listesi — T.C. kimlik ve doz yazılmaz', route: '/doktor-tools/gogus-sgk', branslar: ['gogus-hastaliklari'] },
+  { circleColor: '#0369A1', icon: 'GK', title: 'Göğüs kohort paneli', desc: 'Geciken kontrol · spirometri · açık kırmızı bayrak · inhaler teknik · 1-tap hatırlatma', route: '/doktor-tools/gogus-kohort', branslar: ['gogus-hastaliklari'] },
+  // NOROLOJI-EXCEPTIONAL-01 — specialty-only (not pediatri / dahiliye / göz / KBB / psikiyatri / göğüs).
+  // Chapter engines: specialties/noroloji/engines. MIDAS bandı karar desteğidir; tanı ve doz hekimde.
+  { circleColor: '#DC2626', icon: 'İN', title: 'İnme / TIA kırmızı bayrak', desc: 'Yüz kayması · konuşma bozukluğu · güç kaybı · ani görme kaybı · thunderclap baş ağrısı → 112 / acil · hekim onaylı triyaj', route: '/doktor-tools/noro-inme', branslar: ['noroloji'] },
+  { circleColor: '#7C3AED', icon: 'MG', title: 'Migren günlüğü / MIDAS', desc: 'Son 3 ay engellilik günleri · toplam ve bant (karar desteği, tanı değil) · eksik madde yorumlanmaz', route: '/doktor-tools/noro-migren', branslar: ['noroloji'] },
+  { circleColor: '#0891B2', icon: 'AE', title: 'Nöroloji ilaç izlem (AED)', desc: 'Valproat · karbamazepin · fenitoin · lamotrijin · levetirasetam — sınıf düzeyi lab görevleri, doz yok', route: '/doktor-tools/noro-ilac-izlem', branslar: ['noroloji'] },
+  { circleColor: '#9333EA', icon: 'NK', title: 'Nöroloji kohort paneli', desc: 'Geciken kontrol · geciken ilaç izlem · açık inme/TIA bayrağı · yüksek MIDAS · 1-tap hatırlatma', route: '/doktor-tools/noro-kohort', branslar: ['noroloji'] },
+  // UROLOJI-EXCEPTIONAL-01 — specialty-only (not pediatri / dahiliye / kardiyoloji / KBB / göz).
+  // Chapter engines: specialties/uroloji/engines. IPSS/PSA bantları karar desteğidir; tanı ve doz hekimde.
+  { circleColor: '#0D9488', icon: 'IP', title: 'IPSS semptom skoru', desc: '7 madde 0–5 toplamı ve şiddet bandı (karar desteği, tanı değil) · QoL ayrı · BPH yazılmaz', route: '/doktor-tools/uro-ipss', branslar: ['uroloji'] },
+  { circleColor: '#059669', icon: 'PS', title: 'PSA izlem', desc: 'PSA değeri ve hız (karar desteği) · kanser tanısı yazılmaz · yaş notu hekim karar desteği', route: '/doktor-tools/uro-psa', branslar: ['uroloji'] },
+  { circleColor: '#DC2626', icon: 'UA', title: 'Hematuri / taş acil triyaj', desc: 'Makroskopik hematüri · retansiyon · flank+ateş · torsiyon · priapizm · üretra travması → 112 · hekim onaylı', route: '/doktor-tools/uro-acil', branslar: ['uroloji'] },
+  { circleColor: '#10B981', icon: 'UK', title: 'Üroloji kohort paneli', desc: 'Geciken kontrol · PSA izlem · yüksek IPSS · açık kırmızı bayrak · 1-tap hatırlatma', route: '/doktor-tools/uro-kohort', branslar: ['uroloji'] },
 ]
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]

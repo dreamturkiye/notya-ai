@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kardiyoloji — Post-exceptional Audit (KARDIO-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional sprint KARDIO-EXCEPTIONAL-01: Kardiyoloji ~10% → ~93% · 16 Strong · olgunluk beta-hazir · 4 Araç · Kalbim Strong · cath lab Missing intentional. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#6366F1; --indigo-soft:rgba(99,102,241,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--indigo); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--indigo); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(99,102,241,.12); border-color:rgba(99,102,241,.4); color:#A5B4FC; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit · Kardiyoloji</span>
+    <span>
+      <a href="/kardio-presprint-audit.html">Pre-sprint (~10%) →</a> ·
+      <a href="/psik-exceptional-audit.html">Psik →</a> ·
+      <a href="/kbb-exceptional-audit.html">KBB →</a>
+    </span>
+  </div>
+
+  <div class="banner ok"><b>Post-exceptional sprint KARDIO-EXCEPTIONAL-01</b> — 2026-09-19 · Supersedes <a href="/kardio-presprint-audit.html" style="color:inherit;font-weight:700">kardio-presprint-audit.html</a> (~10% baseline). Chapter Strong · Intake Strong · Portal Kalbim Strong · 4 Araçlar · olgunluk <code>beta-hazir</code> (uzman-dogrulandi MD week pending). Cath lab planlama / canlı Medula e-imza Missing intentional. No PHI. Never on Doktor Araçları.</div>
+
+  <h1>Kardiyoloji — Post-exceptional Audit</h1>
+  <p class="lede">
+    Code × TKD × ESC / SCORE2 × SGK SUT / kardiyak rapor mevzuatı × TİTCK KÜB × SB AKS protokolleri × TR ayaktan muayenehane / poliklinik.
+    Soru: Kardiyoloji bölümü psik / KBB / dahiliye barında mı?
+    <b>Ürün cevap: evet — honest wow ~93% (pre-sprint ~10%).</b>
+    <b>Olgunluk etiketi: beta-hazir shipped; uzman-dogrulandi gerçek kardiyoloji uzmanının saha haftasını (docs/KARDIO-MD-BETA.md) ve Boss/CEO onayını bekliyor.</b>
+  </p>
+
+  <div class="pills">
+    <span class="pill success">KARDIO-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">4 Araçlar</span>
+    <span class="pill success">Kalbim Strong</span>
+    <span class="pill success">8 motor · 81 test</span>
+    <span class="pill info">Honest wow ~93%</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v success">16</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (maturity)</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">Thin</div></div>
+    <div class="stat"><div class="v danger">3</div><div class="l">Missing intentional</div></div>
+  </div>
+
+  <div class="callout info">
+    <h2>Executive verdict</h2>
+    <p>
+      KARDIO-EXCEPTIONAL-01 pre-sprint boşluklarını kapattı: <b>8 saf motor</b> (SCORE2 · HT/KKY izlem · acil/kırmızı bayrak · şerit · SGK kardiyo rapor · kohort · portal Kalbim · ortak referans),
+      <b>KardioHome</b> (sticky şerit + 6 sekme: Özet · SCORE2 · HT/KKY · Risk · Görevler · SGK),
+      <b>/api/doktor/kardiyoloji</b> (+ kohort) hasta-izolasyon kapılı,
+      intake'te <b>acilBelirtilerKardio</b> kırmızı bayrak kutuları (112 yardımı),
+      Sağlığım'da <b>Kalbim</b> Strong hasta yüzü,
+      Araçlar'da <b>4</b> kardiyoloji-only tile (SCORE2 · HT/KKY · SGK · Kohort),
+      migration <b>059</b> (hasta_kardiyoloji · kardio_score2 · kardio_izlem · kardio_gorevleri · kardio_risk + RLS).
+      Kilitler kırılmadı: Notya doz yazmaz, tanı kilitlemez, SCORE2 bandını tanıya çevirmez; açık bayrakta hekim onayı olmadan risk kaydı yok (409);
+      portal hiçbir yerde tanı, risk %, ilaç adı veya doz taşımaz.
+      Tek Partial: olgunluk — beta-hazir shipped, <b>uzman-dogrulandi</b> MD week pending.
+    </p>
+  </div>
+
+  <h2>Trajectory</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pre-sprint</div><div class="body">Baseline omurga + birkaç intake sorusu · bölüm yok · ~10%</div></div>
+    <div class="card"><div class="title">KARDIO-EXCEPTIONAL-01</div><div class="body">8 motor · KardioHome · 4 Araç · Kalbim · beta-hazir → ~93%</div></div>
+    <div class="card"><div class="title">Next</div><div class="body">MD saha haftası → uzman-dogrulandi (Boss/CEO)</div></div>
+  </div>
+
+  <h2>Coverage depth — post-exceptional</h2>
+  <p class="cap">Strong = clinic-ready · Partial = beta-hazir shipped, uzman-dogrulandi pending · Missing = intentional out.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>In product (post-exceptional)</th><th>Footnote</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Chapter registry + profil</td><td><span class="pill success">Strong</span></td><td class="note">CHAPTERS['kardiyoloji'] · pediatrikBaglam: asla · hesaplayıcı SCORE2</td><td class="note">Alias: Kardiyoloji Uzmanı (cerrah/damar hariç)</td></tr>
+        <tr><td class="domain">Sticky / vizit şeridi</td><td><span class="pill success">Strong</span></td><td class="note">Kırmızı bayrak · SCORE2 bant çipi · sonraki kontrol · gecikmiş görev + plan taslağı</td><td class="note">—</td></tr>
+        <tr><td class="domain">SCORE2 / KV risk</td><td><span class="pill success">Strong</span></td><td class="note">ESC 2021 SCORE2 (dahiliye motoru paylaşımı) · 10 yıllık % + bant · Türkiye yüksek risk bölgesi · eksik girdide uydurma yok</td><td class="note">¹ Bant karar desteği, tanı değil</td></tr>
+        <tr><td class="domain">HT / KKY izlem</td><td><span class="pill success">Strong</span></td><td class="note">NYHA hekim seçimi · sınıf düzeyi görev · EKG/belge köprüsü · doz/titrasyon yok</td><td class="note">²</td></tr>
+        <tr><td class="domain">Kırmızı bayrak / acil triyaj</td><td><span class="pill success">Strong</span></td><td class="note">6 kod (göğüs ağrısı · ani nefes darlığı · bayılma · inme bulgusu · çarpıntı+baygınlık · akut ödem) · serbest metin · 112 · hekim onayı olmadan kayıt yok (409)</td><td class="note">Türkçe büyük "İ" kapısı dahil</td></tr>
+        <tr><td class="domain">SGK kardiyo rapor</td><td><span class="pill success">Strong</span></td><td class="note">HT · KKY · antikoagülan · koroner izlem taslakları · SUT kontrol listesi · T.C. yok · doz yok</td><td class="note">Medula canlı yok</td></tr>
+        <tr><td class="domain">Kohort paneli</td><td><span class="pill success">Strong</span></td><td class="note">gecikmis_kontrol · lab/EKG · risk_acik · yüksek risk izlem · kırmızı bayrak ağırlıklı sıralama · 1-tap hatırlatma</td><td class="note">³ Hatırlatma klinik sayı taşımaz</td></tr>
+        <tr><td class="domain">Bölüm sekmesi / UI</td><td><span class="pill success">Strong</span></td><td class="note">KardioHome: Özet · SCORE2 · HT/KKY · Risk · Görevler · SGK</td><td class="note">kardiyolojiSekmesiBransi; Dahiliye sekmesine düşmez</td></tr>
+        <tr><td class="domain">API / hasta izolasyonu</td><td><span class="pill success">Strong</span></td><td class="note">/api/doktor/kardiyoloji (+ /kohort): hastaSahibiMi, doctor_id + patient_id</td><td class="note">Envanter + RLS (059)</td></tr>
+        <tr><td class="domain">Veritabanı şeması</td><td><span class="pill success">Strong</span></td><td class="note">059: hasta_kardiyoloji · kardio_score2 · kardio_izlem · kardio_gorevleri · kardio_risk + indeksler + RLS</td><td class="note">Yalnız ekleme, idempotent</td></tr>
+        <tr><td class="domain">Intake</td><td><span class="pill success">Strong</span></td><td class="note">acilBelirtilerKardio kutuları → intakeAcilKodlari / acilTara; etiketler motorla birebir; 112 yardımı</td><td class="note">Etiket ↔ kod testi kilitli</td></tr>
+        <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill success">Strong</span></td><td class="note">Kalbim (/kalbim): kontrol tarihi · ölçüm/belge hatırlatması · 112 notu; eligibility doctor_specialty</td><td class="note">⁴ SCORE2 % / tanı / doz yok</td></tr>
+        <tr><td class="domain">SOAP / prompts kilidi</td><td><span class="pill success">Strong</span></td><td class="note">specialties/kardiyoloji/prompts/soap-kardiyoloji.md: doz yok · tanı hekimde · göğüs ağrısı → 112 · ölçüm uydurma yasağı</td><td class="note">—</td></tr>
+        <tr><td class="domain">Doktor Araçları (Kardiyoloji)</td><td><span class="pill success">Strong</span></td><td class="note">4 tile: SCORE2 · HT/KKY · SGK kardiyo · kohort; branş kapısı; 29 başka branşta yok</td><td class="note">Audit HTML Araçlar'a bağlanmaz</td></tr>
+        <tr><td class="domain">Testler</td><td><span class="pill success">Strong</span></td><td class="note">engines + acil + Araçlar SSR + portal Kalbim + doktorAraclari sızıntı; npm run test:kardiyoloji → 81 pass</td><td class="note">+ test:brans-sizmasi</td></tr>
+        <tr><td class="domain">Olgunluk / MD beta</td><td><span class="pill warning">Partial</span></td><td class="note">beta-hazir shipped; docs/KARDIO-MD-BETA.md</td><td class="gap">uzman-dogrulandi — MD week pending</td></tr>
+        <tr><td class="domain">Cath lab planlama / invaziv HIS</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out (ayaktan muayenehane ürünü)</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Canlı Medula e-imza</td><td><span class="pill danger">Missing</span></td><td class="note">Taslak + kontrol listesi; e-imza hekimde</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Uydurma doz / tanı auto-lock</td><td><span class="pill danger">Missing</span></td><td class="note">Çekirdek kilit — ürün bilerek yazmaz</td><td class="note">Intentional</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cap">
+    ¹ SCORE2 bandı karar desteğidir; KV olay tanısı ve tedavi kararı hekimindir. Eksik girdide risk üretilmez.
+    ² HT/KKY görevleri sınıf düzeyindedir (hangi izlem, hangi aralık). Doz ve titrasyon hekimin.
+    ³ Kohort hatırlatması tanı, risk % ve ilaç adı taşımaz; açık bayrakta portal mesajı değil telefon / 112 dili.
+    ⁴ Portal başlıkları koddan sabit metne (portal-kalbim.ts · hastaDiliTemizMi); hekim görev adı hasta yüzüne taşınmaz.
+  </p>
+
+  <h2>Wow bar (poliklinik, dürüst)</h2>
+  <p class="cap">0–100 = meşgul TR kardiyoloğun ayaktan poliklinik eşiği vs pediatri/psik exceptional. Klinik + portal + Araçlar ≥88; olgunluk barı ayrı — beta-hazir ~70.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Kırmızı bayrak / acil triyaj</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="bar-val">95</div></div>
+    <div class="bar-row"><div class="bar-label">SCORE2 + Araç</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları (4)</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Kalbim</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Intake kırmızı bayrak</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">HT / KKY izlem</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + hatırlatma</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Vizit şeridi / bölüm UI</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">SGK kardiyo rapor</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">SOAP / prompts kilidi</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">MD beta / olgunluk (ayrı)</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-val">70</div></div>
+  </div>
+
+  <h2>vs Pediatri / Psik / KBB / Dahiliye</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pediatri</div><div class="body">uzman-dogrulandi · exceptional bar</div></div>
+    <div class="card"><div class="title">Psik / KBB / Dahiliye</div><div class="body">~90–95% · beta-hazir · 4–6 Araç · Strong portal</div></div>
+    <div class="card"><div class="title">Kardiyoloji (~93%)</div><div class="body">beta-hazir · 4 Araç · Kalbim Strong · MD week pending</div></div>
+  </div>
+
+  <h2>Doktor pain points → ne değişti</h2>
+  <div class="cards">
+    <div class="card"><div class="title">"SCORE2'yi Excel'de hesaplıyorum"</div><div class="body"><b>Now:</b> Bölüm sekmesi ve Araçlar'da ESC motoru; bant karar desteği olarak nota düşer. Eksik girdide risk üretilmez.</div></div>
+    <div class="card"><div class="title">"Göğüs ağrısını randevu sırasına yazıyordum"</div><div class="body"><b>Now:</b> Intake kutusu + serbest metin taraması kırmızı bayrağı yakalar; hekim onayı olmadan risk kaydı 409, şerit kırmızı kalır.</div></div>
+    <div class="card"><div class="title">"HT/KKY izlem görevleri aklımda"</div><div class="body"><b>Now:</b> Sınıf düzeyi görev + EKG/belge köprüsü; doz yazılmaz.</div></div>
+    <div class="card"><div class="title">"Hastaya hatırlatmada risk skoru sızdırma korkusu"</div><div class="body"><b>Now:</b> Kalbim sabit hasta-güvenli başlıklar; kohort hatırlatması klinik sayı taşımaz.</div></div>
+  </div>
+
+  <h2>Kardiyoloji-only Araçlar (classify-before-add)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Bucket</th><th>Visibility</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">SCORE2 / KV risk — /doktor-tools/kardio-score2</td><td><span class="pill info">specialty-only</span></td><td class="note">kardiyoloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">HT / KKY izlem — /doktor-tools/kardio-ht-kky</td><td><span class="pill info">specialty-only</span></td><td class="note">kardiyoloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">SGK kardiyo rapor — /doktor-tools/kardio-sgk</td><td><span class="pill info">specialty-only</span></td><td class="note">kardiyoloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Kardiyoloji kohort — /doktor-tools/kardio-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">kardiyoloji</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Pediatri / dahiliye / kalp-damar-cerrahisi / göğüs / …</td><td><span class="pill success">none</span></td><td class="note">test: 4 kart görünmez, derin bağlantı → /doktor-tools</td><td><span class="pill success">Locked</span></td></tr>
+        <tr><td class="domain">Hedef Boy / Neyzi / baş çevresi (pediatri)</td><td><span class="pill success">none</span></td><td class="note">pediatrikBaglam: 'asla' — kardiyolojide hiç açılmaz</td><td><span class="pill success">Locked</span></td></tr>
+        <tr><td class="domain">Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar'a bağlanmaz</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Game changers</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Move</th><th>Status</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">Chapter foundation: migration 059 + registry + profil (olgunluk beta-hazir)</td><td><span class="pill success">DONE</span></td><td class="note">lib/db/migrations/059_kardiyoloji_exceptional.sql · lib/specialties/kardiyoloji.ts</td></tr>
+        <tr><td>2</td><td class="domain">SCORE2 motoru (karar desteği, tanı değil)</td><td><span class="pill success">DONE</span></td><td class="note">engines/score2.ts (ESC / dahiliye paylaşımı)</td></tr>
+        <tr><td>3</td><td class="domain">Kırmızı bayrak triyajı + hekim onayı kapısı (409)</td><td><span class="pill success">DONE</span></td><td class="note">engines/acil.ts · app/api/doktor/kardiyoloji · acilBelirtilerKardio</td></tr>
+        <tr><td>4</td><td class="domain">HT/KKY izlem (sınıf düzeyi, doz yok)</td><td><span class="pill success">DONE</span></td><td class="note">engines/htKky.ts · kardio_gorevleri</td></tr>
+        <tr><td>5</td><td class="domain">KardioHome: sticky şerit + 6 sekme</td><td><span class="pill success">DONE</span></td><td class="note">specialties/kardiyoloji/ui/KardioHome.tsx</td></tr>
+        <tr><td>6</td><td class="domain">4 kardiyoloji-only Araçlar + KardioAracKabugu</td><td><span class="pill success">DONE</span></td><td class="note">lib/doktor/doktorAraclari.ts · app/doktor-tools/kardio-*</td></tr>
+        <tr><td>7</td><td class="domain">Portal → Strong Kalbim</td><td><span class="pill success">DONE</span></td><td class="note">engines/portal-kalbim.ts · app/portal/.../kalbim</td></tr>
+        <tr><td>8</td><td class="domain">Kohort + klinik bilgi taşımayan hatırlatma</td><td><span class="pill success">DONE</span></td><td class="note">engines/kohort.ts · /api/doktor/kardiyoloji/kohort</td></tr>
+        <tr><td>9</td><td class="domain">SGK kardiyo rapor taslağı (T.C. yok, doz yok)</td><td><span class="pill success">DONE</span></td><td class="note">engines/sgkRapor.ts</td></tr>
+        <tr><td>10</td><td class="domain">Prompts lock + MD beta + test paketi</td><td><span class="pill success">DONE</span></td><td class="note">soap-kardiyoloji.md · docs/KARDIO-MD-BETA.md · test:kardiyoloji</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Intentionally out</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Out</th><th>Exceptional substitute shipped</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Cath lab / invaziv laboratuvar planlama</td><td class="note">Ayaktan akış: kırmızı bayrak → 112 + hekim onaylı risk kaydı</td></tr>
+        <tr><td class="domain">Canlı Medula e-imza</td><td class="note">Rapor taslağı + SUT kontrol listesi; e-imza hekimde</td></tr>
+        <tr><td class="domain">Uydurma doz / statin şeması</td><td class="note">SCORE2 bant + "doz hekim tarafından belirlenir"</td></tr>
+        <tr><td class="domain">Tanının otomatik kilitlenmesi</td><td class="note">Risk bandı karar desteği; tanı hekimin satırından</td></tr>
+        <tr><td class="domain">Pediatri sızıntısı (baş çevresi / Hedef Boy)</td><td class="note">pediatrikBaglam: asla + Araçlar branş kapısı</td></tr>
+        <tr><td class="domain">Uzman-doğrulandı etiketi</td><td class="note">beta-hazir + MD saha haftası; Boss/CEO onayı bekleniyor</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress · MD saha haftası</div><div class="body">docs/KARDIO-MD-BETA.md ile 5 gün gerçek poliklinik → Boss/CEO onayı → olgunluk uzman-dogrulandi.</div></div>
+    <div class="card"><div class="title">Velocity · belge köprüsü</div><div class="body">EKG/belge hatırlatması aynı portal dilinde genişletilebilir — tanı/skor taşınmaz.</div></div>
+    <div class="card"><div class="title">Mandate · Medula (shared)</div><div class="body">Canlı e-imza ortak altyapı — branş chapter'ı değil.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede" style="font-size:13px">
+    Code: specialties/kardiyoloji (engines · ui · prompts · tests) · lib/specialties/kardiyoloji.ts (olgunluk: beta-hazir) ·
+    lib/doktor/doktorAraclari.ts (4 BRANS, visibility: kardiyoloji only) · lib/intake/bransSorulari.ts (acilBelirtilerKardio) ·
+    app/api/doktor/kardiyoloji · app/portal/_components/KalbimView.tsx · lib/db/migrations/059_kardiyoloji_exceptional.sql · docs/KARDIO-MD-BETA.md.
+    External: TKD · ESC 2021 SCORE2 · SGK SUT · TİTCK KÜB · SB AKS.
+    Prior audit: <a href="/kardio-presprint-audit.html">pre-sprint (~10%, superseded)</a> → post-exceptional (this).
+  </p>
+
+  <div class="foot">
+    <span>Post-exceptional sprint KARDIO-EXCEPTIONAL-01 · notya-ai · Kardiyoloji · 2026-09-19</span>
+    <span>No patient data · internal product audit · not on Doktor Araçları</span>
+  </div>
+</div>
+</body>
+</html>

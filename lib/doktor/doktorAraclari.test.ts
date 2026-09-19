@@ -558,9 +558,21 @@ test('KBB tiles stay commercial: no dose, no diagnosis claim, no surgery/OR copy
 // KONSULTASYON-02 (Kaan 2026-09-19, seçenek #1) — "yanıt gelmedi" takibi kohort paneli olmayan branşlara da ulaşsın:
 // Bekleyen Konsültasyonlar EVRENSEL (ORTAK_…, branslar: null). 23 ayrı kohort paneli yerine tek araç.
 const BEKLEYEN_KONSULTASYONLAR = '/doktor-tools/bekleyen-konsultasyonlar'
-const KOHORT_PANELI_OLAN_BRANSLAR = ['dahiliye', 'goz-hastaliklari', 'dermatoloji', 'kadin-hastaliklari-dogum', 'pediatri', 'psikiyatri', 'kulak-burun-bogaz']
+const KOHORT_PANELI_OLAN_BRANSLAR = [
+  'dahiliye',
+  'goz-hastaliklari',
+  'dermatoloji',
+  'kadin-hastaliklari-dogum',
+  'pediatri',
+  'psikiyatri',
+  'kulak-burun-bogaz',
+  'kardiyoloji',
+  'gogus-hastaliklari',
+  'noroloji',
+  'uroloji',
+]
 
-test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş görür ve derin linki açar (kohortlu 7 + kohortsuz hepsi)', () => {
+test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş görür ve derin linki açar (kohortlu + kohortsuz hepsi)', () => {
   const arac = ORTAK_DOKTOR_ARACLARI.find((a) => a.route === BEKLEYEN_KONSULTASYONLAR)
   assert.ok(arac, 'ORTAK_DOKTOR_ARACLARI içinde olmalı')
   assert.equal(arac.branslar, null)
@@ -571,7 +583,7 @@ test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş gö
   assert.ok(anahtarlar.length >= 25)
   for (const k of KOHORT_PANELI_OLAN_BRANSLAR) assert.ok(anahtarlar.includes(k), `${k} BRANS_ETIKETLERI'nde`)
   const kohortsuz = anahtarlar.filter((b) => !doktorAraclariListesi(b).some((a) => a.route.endsWith('-kohort')))
-  assert.ok(kohortsuz.length >= 20, `kohort paneli olmayan branş sayısı: ${kohortsuz.length}`)
+  assert.ok(kohortsuz.length >= 16, `kohort paneli olmayan branş sayısı: ${kohortsuz.length}`)
   for (const b of [...anahtarlar, ...Object.values(BRANS_ETIKETLERI), ...KOHORT_PANELI_OLAN_BRANSLAR, 'kadin-dogum', 'İç Hastalıkları', 'Çocuk Sağlığı ve Hastalıkları']) {
     assert.ok(doktorAraclariListesi(b).some((a) => a.route === BEKLEYEN_KONSULTASYONLAR), `${b} Bekleyen Konsültasyonlar'ı görmeli`)
     assert.equal(doktorAraciBransaUygun(BEKLEYEN_KONSULTASYONLAR, b), true, `${b} derin link`)
@@ -591,4 +603,241 @@ test('Bekleyen Konsültasyonlar sayfası: OrtakAracKabugu + kendi rotası, ticar
   assert.doesNotMatch(`${arac.title} ${arac.desc}`, /KONSULTASYON|sevk|Kaan|denetim/i)
   const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
   assert.doesNotMatch(landing, /BekleyenKonsultasyonlar/)
+})
+
+// ─── KARDIO-EXCEPTIONAL-01 — Kardiyoloji specialty-only Araçlar ─────────────────────────────
+const KARDIO_ROTALARI = [
+  '/doktor-tools/kardio-score2',
+  '/doktor-tools/kardio-ht-kky',
+  '/doktor-tools/kardio-sgk',
+  '/doktor-tools/kardio-kohort',
+]
+
+test('kardiyoloji-only Araçlar: kardiyoloji sees all four; 25+ foreign branşlar never', () => {
+  for (const ham of ['kardiyoloji', 'Kardiyoloji', 'Kardiyoloji Uzmanı']) {
+    const g = doktorAraclariListesi(ham)
+    for (const r of KARDIO_ROTALARI) assert.ok(g.some((a) => a.route === r), `${ham} missing ${r}`)
+  }
+  for (const r of KARDIO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.deepEqual(arac.branslar, ['kardiyoloji'], r)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'kardiyoloji')
+  for (const b of [...yabanci, 'dahiliye', 'pediatri', 'kalp-damar-cerrahisi', 'gogus-hastaliklari', 'İç Hastalıkları', null, '']) {
+    const g = doktorAraclariListesi(b as string | null)
+    for (const r of KARDIO_ROTALARI) assert.ok(!g.some((a) => a.route === r), `${b} must not see ${r}`)
+  }
+  const kard = doktorAraclariListesi('kardiyoloji')
+  assert.ok(!kard.some((a) => a.branslar && !a.branslar.includes('kardiyoloji')))
+})
+
+test('kardiyoloji studio pages: guarded by KardioAracKabugu, card-opened, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/kardiyoloji/ui/araclar/KardioAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca kardiyoloji için\./)
+  for (const r of KARDIO_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /KardioAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+  }
+  assert.doesNotMatch(landing, /KardioScore2Araci|KardioHtKkyAraci|KardioSgkAraci|KardioKohortAraci|KardioAracKabugu|kardio-exceptional-audit/)
+})
+
+test('kardiyoloji tiles stay commercial: no dose, no cath-lab copy, no audit jargon', () => {
+  for (const r of KARDIO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /cath lab|ameliyathane|tanı koy|Medula e-imza/i, r)
+    assert.doesNotMatch(blob, /KARDIO-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+// ─── GOGUS-EXCEPTIONAL-01 — Göğüs Hastalıkları specialty-only Araçlar ─────────────────────────
+const GOGUS_ROTALARI = [
+  '/doktor-tools/gogus-cat-mmrc',
+  '/doktor-tools/gogus-aksiyon-plani',
+  '/doktor-tools/gogus-inhaler',
+  '/doktor-tools/gogus-sgk',
+  '/doktor-tools/gogus-kohort',
+]
+
+test('GOGUS-only Araçlar: gogus-hastaliklari sees all five; gogus-cerrahisi and 25+ foreign branşlar never', () => {
+  for (const ham of ['gogus-hastaliklari', 'Göğüs Hastalıkları', 'Göğüs Hastalıkları Uzmanı']) {
+    const g = doktorAraclariListesi(ham)
+    for (const r of GOGUS_ROTALARI) {
+      assert.ok(g.some((a) => a.route === r), `${ham} missing ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+    assert.equal(g.length, ORTAK_DOKTOR_ARACLARI.length + GOGUS_ROTALARI.length)
+  }
+  for (const r of GOGUS_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, `${r} not in BRANS_DOKTOR_ARACLARI`)
+    assert.deepEqual(arac.branslar, ['gogus-hastaliklari'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'gogus-hastaliklari')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'gogus-cerrahisi', 'Göğüs Cerrahisi', 'dahiliye', 'kardiyoloji', 'kulak-burun-bogaz', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of GOGUS_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const gogus = doktorAraclariListesi('gogus-hastaliklari')
+  assert.ok(!gogus.some((a) => a.branslar && !a.branslar.includes('gogus-hastaliklari')))
+  assert.ok(!gogus.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/kbb-odyometri'))
+})
+
+test('GOGUS studio pages: guarded by GogusAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/gogus-hastaliklari/ui/araclar/GogusAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /router\.replace\('\/doktor-tools'\)/)
+  assert.match(kabuk, /Bu araç yalnızca göğüs hastalıkları için\./)
+  assert.match(kabuk, /Araçlar · Göğüs/)
+  for (const r of GOGUS_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /GogusAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /GogusCatMmrcAraci|GogusAksiyonPlaniAraci|GogusInhalerAraci|GogusSgkAraci|GogusKohortAraci|GogusAracKabugu|gogus-exceptional-audit/)
+})
+
+test('GOGUS tiles stay commercial: no dose, no diagnosis lock, no thoracic surgery copy', () => {
+  for (const r of GOGUS_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|mcg|doz şeması/i, r)
+    assert.doesNotMatch(blob, /tanı koy|tanısı konur|lobektomi|VATS|ameliyathane|gogus-cerrahisi/i, r)
+    assert.doesNotMatch(blob, /GOGUS-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+// ─── NOROLOJI-EXCEPTIONAL-01 — Nöroloji specialty-only Araçlar ─────────────────────────────
+const NORO_ROTALARI = [
+  '/doktor-tools/noro-inme',
+  '/doktor-tools/noro-migren',
+  '/doktor-tools/noro-ilac-izlem',
+  '/doktor-tools/noro-kohort',
+]
+
+test('Nöroloji-only Araçlar: noroloji sees all four; foreign branşlar never', () => {
+  for (const ham of ['noroloji', 'Nöroloji', 'Noroloji Uzmanı', 'nöroloji']) {
+    const noro = doktorAraclariListesi(ham)
+    for (const r of NORO_ROTALARI) {
+      assert.ok(noro.some((a) => a.route === r), `${ham} missing ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+    assert.equal(noro.length, ORTAK_DOKTOR_ARACLARI.length + NORO_ROTALARI.length)
+  }
+  for (const r of NORO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, `${r} not in BRANS_DOKTOR_ARACLARI`)
+    assert.deepEqual(arac.branslar, ['noroloji'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'noroloji')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'kulak-burun-bogaz', 'psikiyatri', 'gogus-hastaliklari', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of NORO_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const noro = doktorAraclariListesi('noroloji')
+  assert.ok(!noro.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/kbb-otoskopi'))
+})
+
+test('Nöroloji studio pages: guarded by NoroAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/noroloji/ui/araclar/NoroAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca nöroloji için\./)
+  for (const r of NORO_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /NoroAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /NoroInmeAraci|NoroMigrenAraci|NoroIlacIzlemAraci|NoroKohortAraci|NoroAracKabugu|noro-exceptional-audit/)
+})
+
+test('Nöroloji tiles stay commercial: no dose, no diagnosis lock, no stroke-unit HIS', () => {
+  for (const r of NORO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /tanı koy|tanısı konur|stroke unit|inme ünitesi|yatış emri/i, r)
+    assert.doesNotMatch(blob, /NOROLOJI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+
+// ─── UROLOJI-EXCEPTIONAL-01 — Üroloji specialty-only Araçlar ─────────────────────────────
+const URO_ROTALARI = [
+  '/doktor-tools/uro-ipss',
+  '/doktor-tools/uro-psa',
+  '/doktor-tools/uro-acil',
+  '/doktor-tools/uro-kohort',
+] as const
+
+test('Üroloji-only Araçlar: uroloji sees all four; foreign branşlar never', () => {
+  for (const ham of ['uroloji', 'Üroloji', 'Uroloji Uzmanı', 'urology']) {
+    const liste = doktorAraclariListesi(ham)
+    for (const r of URO_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+  }
+  for (const r of URO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)
+    assert.ok(arac, r)
+    assert.deepEqual(arac.branslar, ['uroloji'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'uroloji')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'kulak-burun-bogaz', 'psikiyatri', 'gogus-hastaliklari', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of URO_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const uro = doktorAraclariListesi('uroloji')
+  assert.ok(!uro.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/kbb-otoskopi'))
+})
+
+test('Üroloji studio pages: guarded by UroAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/uroloji/ui/araclar/UroAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca üroloji için\./)
+  for (const r of URO_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /UroAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /UroIpssAraci|UroPsaAraci|UroAcilAraci|UroKohortAraci|UroAracKabugu|uroloji-exceptional-audit/)
+})
+
+test('Üroloji tiles stay commercial: no dose, no BPH/cancer diagnosis, no OR scheduling', () => {
+  for (const r of URO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /BPH tanısı|prostat kanseri tanısı|ameliyathane|OR scheduling/i, r)
+    assert.doesNotMatch(blob, /UROLOJI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
 })

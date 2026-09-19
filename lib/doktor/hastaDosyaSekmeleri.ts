@@ -27,6 +27,10 @@ export type HastaDosyaSekmeId =
   | 'goz'
   | 'psikiyatri'
   | 'kbb'
+  | 'kardiyoloji'
+  | 'gogus'
+  | 'noroloji'
+  | 'uroloji'
   | 'konsultasyon'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
@@ -37,7 +41,7 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology/.test(b)
 }
 
 /**
@@ -60,6 +64,46 @@ export function kbbSekmesiBransi(specialtyHam: string | null | undefined): boole
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
   return /kulak burun|kulak-burun|\bkbb\b|otolaring/.test(b)
+}
+
+/**
+ * KARDIO-EXCEPTIONAL-01 — Kardiyoloji bölüm sekmesinin sahibi: yalnız kardiyoloji.
+ * Dahiliye, kalp-damar cerrahisi ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function kardiyolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b || /cerrah/.test(b)) return false
+  return /kardiyoloji|^kardiyo$|kalp hastal/.test(b)
+}
+
+/**
+ * GOGUS-EXCEPTIONAL-01 — Göğüs Hastalıkları sekmesi: yalnız gogus-hastaliklari.
+ * gogus-cerrahisi, dahiliye, kardiyoloji ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function gogusSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b || /cerrah/.test(b)) return false
+  return /göğüs hastal|gogus-hastalik|gogus hastal|^göğüs$|^gogus$/.test(b)
+}
+
+/**
+ * NOROLOJI-EXCEPTIONAL-01 — Nöroloji bölüm sekmesinin sahibi: yalnız nöroloji.
+ * Dahiliye, KBB, pediatri ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function norolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /n[öo]roloji|noroloji/.test(b)
+}
+
+/**
+ * UROLOJI-EXCEPTIONAL-01 — Üroloji bölüm sekmesinin sahibi: yalnız üroloji.
+ * Dahiliye, nefroloji, genel cerrahi ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function urolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /[üu]roloji|urology/.test(b)
 }
 
 export function yasYilKesir(dogumIso: string | null | undefined, nowMs = Date.now()): number | null {
@@ -101,7 +145,11 @@ export function pediatriAracSekmesiUygun(input: {
 export function dahiliyeSekmesiBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b || /cerrah/.test(b)) return false
-  return /dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|kardiyo|gastro|romato|hemato|onkolo|göğüs|gogus/.test(b)
+  // GOGUS-EXCEPTIONAL-01: gogus-hastaliklari kendi "Göğüs" sekmesine sahip — dahiliye WOW'a düşmez.
+  if (/göğüs hastal|gogus-hastalik|gogus hastal/.test(b)) return false
+  // KARDIO-EXCEPTIONAL-01: kardiyoloji kendi sekmesine sahip — dahiliye WOW'a düşmez.
+  if (/kardiyoloji|^kardiyo$|kalp hastal/.test(b) && !/damar/.test(b)) return false
+  return /dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|gastro|romato|hemato|onkolo/.test(b)
 }
 
 export function gebelikSekmesiUygun(input: {
@@ -124,6 +172,14 @@ export function hastaDosyaSekmeleri(opts: {
   psikiyatriUygun?: boolean
   /** KBB-EXCEPTIONAL-01: doctor specialty kulak burun boğaz only */
   kbbUygun?: boolean
+  /** KARDIO-EXCEPTIONAL-01: doctor specialty kardiyoloji only */
+  kardiyolojiUygun?: boolean
+  /** GOGUS-EXCEPTIONAL-01: doctor specialty gogus-hastaliklari only (not gogus-cerrahisi) */
+  gogusUygun?: boolean
+  /** NOROLOJI-EXCEPTIONAL-01: doctor specialty noroloji only */
+  norolojiUygun?: boolean
+  /** UROLOJI-EXCEPTIONAL-01: doctor specialty uroloji only */
+  urolojiUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -151,6 +207,10 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' })
   if (opts.psikiyatriUygun) tabs.push({ id: 'psikiyatri', label: 'Psikiyatri' })
   if (opts.kbbUygun) tabs.push({ id: 'kbb', label: 'KBB' })
+  if (opts.kardiyolojiUygun) tabs.push({ id: 'kardiyoloji', label: 'Kardiyoloji' })
+  if (opts.gogusUygun) tabs.push({ id: 'gogus', label: 'Göğüs' })
+  if (opts.norolojiUygun) tabs.push({ id: 'noroloji', label: 'Nöroloji' })
+  if (opts.urolojiUygun) tabs.push({ id: 'uroloji', label: 'Üroloji' })
   return tabs
 }
 

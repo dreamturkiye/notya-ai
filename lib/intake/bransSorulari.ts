@@ -57,6 +57,9 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     alanlar: [
       BASVURU_NEDENI,
       { id: 'sikayetSuresiKardiyo', etiket: 'Bu şikayet ne zamandır var?', ...SIKAYET_SURESI_STANDART },
+      // KARDIO-EXCEPTIONAL-01 — kırmızı bayrak kutucukları. Etiketler
+      // specialties/kardiyoloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerKardio', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Göğüs ağrısı veya baskı', 'Ani / şiddetli nefes darlığı', 'Bayılma veya bilinç kaybı', 'Yüz kayması, konuşma bozukluğu veya ani güçsüzlük', 'Çarpıntı ile birlikte baygınlık veya baş dönmesi', 'Ani bacak şişliği veya nefes darlığı ile birlikte şişlik', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarKardiyo', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Göğüs Ağrısı', 'Çarpıntı', 'Nefes Darlığı', 'Bayılma/Baygınlık Hissi', 'Bacaklarda Şişlik', 'Halsizlik', 'Soğuk Terleme', 'Yok'] },
       { id: 'gogusAgrisiNiteligi', etiket: 'Göğüs ağrınız varsa, niteliği nasıl?', tur: 'radio', secenekler: ['Batıcı', 'Baskı Hissi', 'Yanma', 'Ağrım Yok'] },
       { id: 'nefesDarligiZamani', etiket: 'Nefes darlığı ne zaman oluyor?', tur: 'radio', secenekler: ['Hiç olmuyor', 'Eforla', 'İstirahatte de'] },
@@ -75,6 +78,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     alanlar: [
       BASVURU_NEDENI,
       { id: 'sikayetSuresiNoro', etiket: 'Bu şikayet ne zamandır var?', ...SIKAYET_SURESI_STANDART },
+      // NOROLOJI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/noroloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerNoro', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ani yüz kayması veya asimetri', 'Ani konuşma bozukluğu veya kelime bulamama', 'Ani kol veya bacak güç kaybı', 'Ani görme kaybı veya çift görme', 'Hayatınızın en şiddetli baş ağrısı (aniden)', 'Bilinç değişikliği veya bayılma', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarNoro', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Baş Ağrısı', 'Baş Dönmesi', 'Uyuşma / Karıncalanma', 'Güçsüzlük', 'Denge Kaybı', 'Konuşma Bozukluğu', 'Bellek / Konsantrasyon Sorunu', 'Görme Değişikliği', 'Yok'] },
       { id: 'basAgrisiTipi', etiket: 'Baş ağrınız varsa, niteliği nasıl?', tur: 'radio', secenekler: ['Zonklayıcı', 'Sıkıştırıcı', 'Bıçak Saplanır Gibi', 'Baş Ağrım Yok'] },
       { id: 'bayilmaNobetNoro', etiket: 'Daha önce bayılma veya nöbet geçirdiniz mi?', tur: 'radio', secenekler: ['Hayır', 'Bayılma', 'Nöbet / Kasılma', 'Her İkisi de'] },
@@ -281,6 +286,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Ürolojik Şikayetiniz',
     alanlar: [
       BASVURU_NEDENI,
+      { id: 'acilBelirtilerUroloji', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Gözle görülür idrar kanaması', 'İdrar yapamama / mesaneyi boşaltamama', 'Yan veya bel ağrısı ile ateş', 'Testiste ani şiddetli ağrı (torsiyon şüphesi)', 'Uzamış veya ağrılı ereksiyon (priapizm)', 'Üretra veya pelvis bölgesine darbe / travma', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarUroloji', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Sık İdrara Çıkma', 'İdrarda Yanma', 'İdrarda Kan', 'Gece İdrara Çıkma', 'İdrar Yaparken Zorlanma', 'İdrar Kaçırma', 'Kasık / Bel Ağrısı', 'Yok'] },
       { id: 'bobrekTasi', etiket: 'Daha önce böbrek taşı öykünüz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'prostatSikayeti', etiket: 'Prostatla ilgili şikayetiniz (erkek hastalar için)', tur: 'checkbox-grup', secenekler: ['Sık İdrara Çıkma', 'Zayıf İdrar Akışı', 'Tam Boşalamama Hissi', 'Yok', 'Uygun Değil'] },
@@ -441,6 +447,10 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Solunum Şikayetiniz',
     alanlar: [
       BASVURU_NEDENI,
+      { id: 'sikayetSuresiGogus', etiket: 'Bu şikayet ne zamandır var?', ...SIKAYET_SURESI_STANDART },
+      // GOGUS-EXCEPTIONAL-01 — kırmızı bayrak kutucukları. Etiketler
+      // specialties/gogus-hastaliklari/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerGogus', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Bol miktarda kanlı balgam', 'Belirgin nefes darlığı, morarma veya düşük oksijen', 'Ani tek taraflı göğüs ağrısı ile nefes darlığı', 'Nefes borusunda tıkanma / stridor hissi', 'Şiddetli alerjik reaksiyon (şişlik, nefes darlığı)', 'Göğüs ağrısı ile nefes darlığı veya baskı hissi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarGogus', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Öksürük', 'Balgam', 'Nefes Darlığı', 'Hırıltılı Solunum', 'Göğüs Ağrısı', 'Ateş', 'Kilo Kaybı', 'Yok'] },
       { id: 'balgamKan', etiket: 'Balgam çıkarıyor musunuz? Kan var mı?', tur: 'radio', secenekler: ['Hayır', 'Balgam var', 'Kanlı balgam var'] },
       { id: 'nefesDarligiGogus', etiket: 'Nefes darlığınız ne zaman oluyor?', tur: 'radio', secenekler: ['Hiç olmuyor', 'Eforla', 'İstirahatte de'] },

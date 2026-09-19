@@ -58,9 +58,9 @@ export interface UzmanIncelemeMaddesi { konu: string; neden: string }
  * (doctor specialty × patient records × age) which modules attach. Contract:
  * .cursor/skills/specialty-hasta-portali/SKILL.md
  */
-export type PortalModulId = 'buyume' | 'gebelik' | 'jinekoloji' | 'dahiliye' | 'gozlerim' | 'dermatoloji' | 'psikiyatri' | 'kulaklarim'
+export type PortalModulId = 'buyume' | 'gebelik' | 'jinekoloji' | 'dahiliye' | 'gozlerim' | 'dermatoloji' | 'psikiyatri' | 'kulaklarim' | 'kalbim' | 'norolojim' | 'akcigerlerim' | 'urolojim'
 /** Typed PortalBundle slices a module may fill (null in the bundle when the module is not attached). */
-export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz' | 'deri' | 'kronik' | 'psik' | 'kulak'
+export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz' | 'deri' | 'kronik' | 'psik' | 'kulak' | 'kalp' | 'akciger' | 'noro' | 'uro'
 export interface PortalNavOge { key: string; label: string; path: string }
 export interface PortalModulu {
   id: PortalModulId

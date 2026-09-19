@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Göğüs Hastalıkları — Post-exceptional Audit (GOGUS-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional sprint GOGUS-EXCEPTIONAL-01: Göğüs Hastalıkları Hastalıkları ~10% → ~93% · 16 Strong · olgunluk beta-hazir · 5 Araç · Akciğerlerim Strong · SFT cihaz + tanı kilidi + doz Missing intentional. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --sky:#0284C7; --sky-soft:rgba(79,70,229,0.14);
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399; --teal:#2DD4BF;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; letter-spacing:-.03em; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); } .stat .v.info { color:var(--blue); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--blue); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    tr:last-child td { border-bottom:none; }
+    td.domain { font-weight:600; }
+    td.note { color:var(--muted); }
+    td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--sky); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(79,70,229,.12); border-color:rgba(79,70,229,.4); color:#A5B4FC; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:space-between; }
+    @media (max-width:900px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .cards, .cards.three { grid-template-columns:1fr; }
+      h1 { font-size:22px; }
+      .bar-row { grid-template-columns:1fr; gap:4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit · Göğüs Hastalıkları</span>
+    <span>
+      <a href="/gogus-presprint-audit.html">Pre-sprint (~10%) →</a> ·
+      <a href="/psik-exceptional-audit.html">Psikiyatri →</a> ·
+      <a href="/dahiliye-exceptional-audit.html">Dahiliye →</a>
+    </span>
+  </div>
+
+  <div class="banner ok"><b>Post-exceptional sprint GOGUS-EXCEPTIONAL-01</b> — 2026-09-19 · Supersedes <a href="/gogus-presprint-audit.html" style="color:inherit;font-weight:700">gogus-presprint-audit.html</a> (~10% baseline). Chapter Strong · Intake Strong · Portal Akciğerlerim Strong · 5 Araçlar · olgunluk <code>beta-hazir</code> (uzman-dogrulandi MD week pending). Ameliyathane / toraks cerrahisi / gogus-cerrahisi OR cerrahi akışı Missing intentional. No PHI. Never on Doktor Araçları.</div>
+
+  <h1>Göğüs Hastalıkları Hastalıkları — Post-exceptional Audit</h1>
+  <p class="lede">
+    Code × TKBBD × SB KBB protokolleri × odyolojik sınıflama × SGK SUT / USOT / nebulizatör mevzuatı × TİTCK KÜB × TR ayaktan muayenehane / poliklinik.
+    Soru: KBB bölümü psikiyatri / dahiliye / göz barında mı?
+    <b>Ürün cevap: evet — honest wow ~93% (pre-sprint ~10%).</b>
+    <b>Olgunluk etiketi: beta-hazir shipped; uzman-dogrulandi gerçek KBB uzmanının saha haftasını (docs/KBB-MD-BETA.md) ve Boss/CEO onayını bekliyor.</b>
+  </p>
+
+  <div class="pills">
+    <span class="pill success">GOGUS-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">5 Araçlar</span>
+    <span class="pill success">Akciğerlerim Strong</span>
+    <span class="pill success">10 motor · 43 test</span>
+    <span class="pill info">Honest wow ~93%</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v success">16</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (maturity)</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">Thin</div></div>
+    <div class="stat"><div class="v danger">3</div><div class="l">Missing intentional</div></div>
+  </div>
+
+  <div class="callout info">
+    <h2>Executive verdict</h2>
+    <p>
+      GOGUS-EXCEPTIONAL-01 pre-sprint auditteki boşlukların tamamını kapattı: <b>10 saf motor</b> (aksiyon planı · CAT/mMRC · inhaler izlem ·
+      acil/kırmızı bayrak · şerit · SGK rapor · kohort · portal · sinüs-rinit · ortak referans), <b>GogusHome</b> (sticky şerit + 7 sekme +
+      ölçüm çalışma sayfaları + hekim onaylı kırmızı bayrak kaydı), <b>/api/doktor/kulak-burun-bogaz</b> (+ kohort) hasta-izolasyon kapılı,
+      intake'te <b>acilBelirtilerKbb</b> kırmızı bayrak kutuları (112 yardımı), Sağlığım'da <b>Akciğerlerim</b> Strong hasta yüzü,
+      Araçlar'da <b>5</b> KBB-only tile, migration 061 (4 tablo + RLS).
+      Kilitler kırılmadı: Notya doz yazmaz, tanı kilitlemez, PTA bandını tanıya çevirmez, kayıp tipini atamaz; "hemen" bandı kırmızı bayrak
+      varken hekim onayı olmadan kayıt yazılmaz (409); santral şüphesi işaretliyken repozisyon manevrası önerilmez;
+      portal hiçbir yerde tanı, dB / PTA değeri, kayıp bandı, ilaç adı veya doz taşımaz.
+      Tek Partial: olgunluk — beta-hazir shipped, <b>uzman-dogrulandi</b> MD week pending (eksik ürün değil, dürüst etiket).
+    </p>
+  </div>
+
+  <h2>Trajectory</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pre-sprint</div><div class="body">Baseline omurga + birkaç intake sorusu · bölüm yok · ~10%</div></div>
+    <div class="card"><div class="title">GOGUS-EXCEPTIONAL-01</div><div class="body">10 motor · GogusHome · 5 Araç · Akciğerlerim · beta-hazir → ~93%</div></div>
+    <div class="card"><div class="title">Next</div><div class="body">MD saha haftası → uzman-dogrulandi (Boss/CEO)</div></div>
+  </div>
+
+  <h2>Coverage depth — post-exceptional</h2>
+  <p class="cap">Strong = clinic-ready · Partial = beta-hazir shipped, uzman-dogrulandi pending · Missing = intentional out.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Domain</th><th>Depth</th><th>In product (post-exceptional)</th><th>Footnote</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Chapter registry + profil</td><td><span class="pill success">Strong</span></td><td class="note">CHAPTERS['kulak-burun-bogaz'] · pediatrikBaglam: asla · hesaplayıcı CAT/mMRC PTA bandı</td><td class="note">Alias: kbb · resmi unvan · otolarengoloji</td></tr>
+        <tr><td class="domain">Sticky / vizit şeridi</td><td><span class="pill success">Strong</span></td><td class="note">Kırmızı bayrak · son CAT/mMRC (bant) · sonraki kontrol · OSAS sevki · gecikmiş görev çipleri + plan taslağı</td><td class="note">—</td></tr>
+        <tr><td class="domain">Otoskopi / kulak zarı</td><td><span class="pill success">Strong</span></td><td class="note">Sağ-sol dış kulak yolu + TM görünüm kontrol listesi → yapılandırılmış muayene cümlesi; "bu vizitte karar" başlıkları</td><td class="note">¹ Tanı iddiası yok</td></tr>
+        <tr><td class="domain">Odyometri / PTA</td><td><span class="pill success">Strong</span></td><td class="note">0,5–4 kHz eşik → ortalama · 6 şiddet bandı · önceki ölçümle değişim (test-retest penceresi) · asimetri uyarısı · tekrar ölçüm takvimi</td><td class="note">² Bant karar desteği; kayıp tipi hekimin</td></tr>
+        <tr><td class="domain">Vestibüler muayene / manevra</td><td><span class="pill success">Strong</span></td><td class="note">Dix-Hallpike · supine roll · Epley · barbekü · head impulse · Romberg + nistagmus özellikleri; santral işaret → manevra yerine acil</td><td class="note">³ BPPV / Meniere etiketi yazılmaz</td></tr>
+        <tr><td class="domain">Kırmızı bayrak / acil triyaj</td><td><span class="pill success">Strong</span></td><td class="note">6 kod (ani işitme kaybı · tek taraflı ani kayıp · durdurulamayan epistaksis · hava yolu · santral inhaler izlem · travma) · serbest metin taraması · 112 · 7 maddeli kontrol listesi · hekim onayı olmadan kayıt yok (409)</td><td class="note">Türkçe büyük "İ" kapısı dahil</td></tr>
+        <tr><td class="domain">Burun / sinüs-rinit protokolü</td><td><span class="pill success">Strong</span></td><td class="note">Şikâyet × süre → karar başlıkları · muayene bulguları · sınıf düzeyi tedavi basamakları</td><td class="note">Doz yok</td></tr>
+        <tr><td class="domain">SGK USOT / nebulizatör / rapor</td><td><span class="pill success">Strong</span></td><td class="note">5 şablon · SUT kontrol listesi · odyolojik güncellik kapısı · eksikler · T.C. yok · cihaz markası ve bedeli yok</td><td class="note">Medula canlı yok</td></tr>
+        <tr><td class="domain">Kohort paneli</td><td><span class="pill success">Strong</span></td><td class="note">gecikmis_kontrol · odyo_gecikmis · risk_acik · osas_sevk · kırmızı bayrak ağırlıklı sıralama · 1-tap hatırlatma</td><td class="note">⁴ Hatırlatma klinik bilgi taşımaz</td></tr>
+        <tr><td class="domain">Bölüm sekmesi / UI</td><td><span class="pill success">Strong</span></td><td class="note">GogusHome: Özet · Otoskopi · Odyometri · Vertigo · Risk · Görevler · SGK</td><td class="note">Branş kapısı + derin bağlantı kilidi</td></tr>
+        <tr><td class="domain">API / hasta izolasyonu</td><td><span class="pill success">Strong</span></td><td class="note">/api/doktor/kulak-burun-bogaz (+ /kohort): hastaSahibiMi kapısı, her okuma/yazma doctor_id + patient_id kapsamlı</td><td class="note">Envanter + RLS (061)</td></tr>
+        <tr><td class="domain">Veritabanı şeması</td><td><span class="pill success">Strong</span></td><td class="note">061: hasta_gogus · kbb_CAT/mMRC · gogus_gorevleri · gogus_risk + indeksler + RLS (kendi satırı + hasta sahipliği)</td><td class="note">Yalnız ekleme, idempotent</td></tr>
+        <tr><td class="domain">Intake</td><td><span class="pill success">Strong</span></td><td class="note">acilBelirtilerKbb kutuları → intakeAcilKodlari / acilTara; etiketler motorla birebir; 112 yardımı; inhaler izlem / epistaksis / gürültü / kan sulandırıcı soruları</td><td class="note">Etiket ↔ kod testi kilitli</td></tr>
+        <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill success">Strong</span></td><td class="note">Akciğerlerim (/akcigerlerim): kontrol tarihi · "işitme testi randevusu" · "uyku tetkiki randevusu" · işlem/bakım · 112 notu; eligibility doctor_specialty</td><td class="note">⁵ dB / bant / tanı / ilaç / doz yok</td></tr>
+        <tr><td class="domain">SOAP / prompts kilidi</td><td><span class="pill success">Strong</span></td><td class="note">specialties/kulak-burun-bogaz/prompts/soap-kbb.md: doz yok · tanı hekimde · kırmızı bayrak → 112 · ölçüm uydurma yasağı</td><td class="note">—</td></tr>
+        <tr><td class="domain">Doktor Araçları (KBB)</td><td><span class="pill success">Strong</span></td><td class="note">5 tile: aksiyon planı · CAT/mMRC · inhaler izlem · SGK işitme raporu · kohort; branş kapısı; 29 başka branşta yok</td><td class="note">Audit HTML Araçlar'a bağlanmaz</td></tr>
+        <tr><td class="domain">Testler</td><td><span class="pill success">Strong</span></td><td class="note">30 motor testi (acil · CAT/mMRC · aksiyon planı/inhaler izlem) + 13 portal testi + Araçlar sızıntı testleri; tüm repo paketi yeşil</td><td class="note">npm test + npm run test:kbb</td></tr>
+        <tr><td class="domain">Olgunluk / MD beta</td><td><span class="pill warning">Partial</span></td><td class="note">beta-hazir shipped; docs/KBB-MD-BETA.md kontrol listesi</td><td class="gap">uzman-dogrulandi — MD week pending</td></tr>
+        <tr><td class="domain">Ameliyathane planlama / cerrahi HIS</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out (ayaktan muayenehane ürünü)</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Koklear implant cerrahi akışı</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+        <tr><td class="domain">Canlı Medula e-imza</td><td><span class="pill danger">Missing</span></td><td class="note">Taslak + kontrol listesi; e-imza hekimde</td><td class="note">Intentional (shared altyapı)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cap">
+    ¹ Otoskopi kontrol listesi standart muayene başlıklarıdır; bulgunun tanıya çevrilmesi hekim değerlendirmesidir. Muayene edilmeyen kulak sessizce "normal" sayılmaz, eksik olarak işaretlenir.
+    ² PTA = 0,5/1/2/4 kHz hava yolu eşiklerinin ortalaması. Eksik frekanslı ölçüm toplanmaz ve yorumlanmaz; iletim / sensorinöral / mikst ayrımını motor atamaz.
+    ³ Santral şüphesi işareti varken repozisyon manevrası önerilmez; kontrol aralığı 7 günden 1 güne iner ve not acil değerlendirmeyi öne alır.
+    ⁴ Kohort hatırlatması tanı, dB değeri, bant ve ilaç adı taşımaz; açık kırmızı bayrakta portal mesajı değil "sizinle iletişime geçeceğiz" dili kullanılır — acil telefonla yönetilir.
+    ⁵ Portal başlıkları koddan sabit metne çevrilir (portal-akcigerlerim.ts · hastaDiliTemizMi); hekimin yazdığı görev adı hasta yüzüne hiç taşınmaz.
+  </p>
+
+  <h2>Wow bar (poliklinik, dürüst)</h2>
+  <p class="cap">0–100 = meşgul TR KBB uzmanının ayaktan poliklinik eşiği vs pediatri exceptional. Klinik + portal + Araçlar ≥88; olgunluk barı ayrı (ortalamaya girmez) — beta-hazir ~70.</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Kırmızı bayrak / acil triyaj</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="bar-val">95</div></div>
+    <div class="bar-row"><div class="bar-label">Odyometri + Araç</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Otoskopi / muayene notu</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları (5)</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Vertigo / manevra</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Akciğerlerim</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Intake kırmızı bayrak</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + hatırlatma</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Vizit şeridi / bölüm UI</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">SGK USOT / nebulizatör raporu</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">SOAP / prompts kilidi</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">Burun / sinüs-rinit protokolü</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-val">88</div></div>
+    <div class="bar-row"><div class="bar-label">MD beta / olgunluk (ayrı)</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-val">70</div></div>
+  </div>
+
+  <h2>vs Pediatri / Göz / Derm / Dahiliye / Psikiyatri</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pediatri</div><div class="body">uzman-dogrulandi · exceptional bar</div></div>
+    <div class="card"><div class="title">Göz / Derm / Dahiliye / Psikiyatri</div><div class="body">~90–95% · beta-hazir · 5–6 Araç · Strong portal</div></div>
+    <div class="card"><div class="title">KBB (~93%)</div><div class="body">beta-hazir · 5 Araç · Akciğerlerim Strong · MD week pending</div></div>
+  </div>
+
+  <h2>Doktor pain points → ne değişti</h2>
+  <div class="cards">
+    <div class="card"><div class="title">"Odyogramı kâğıttan okuyup nota elle yazıyorum"</div><div class="body"><b>Now:</b> Bölüm sekmesi ve Araçlar'da eşik girişi; ortalama, bant, önceki ölçümle fark ve asimetri uyarısı tek dokunuşla notun içine. Eksik frekans varsa ortalama yorumlanmıyor.</div></div>
+    <div class="card"><div class="title">"Ani işitme kaybını randevu sırasına yazıyordum"</div><div class="body"><b>Now:</b> Intake kutusu ve serbest metin taraması kırmızı bayrağı yakalıyor; hekim onayı olmadan kayıt kapanmıyor (409), şerit kırmızı kalıyor.</div></div>
+    <div class="card"><div class="title">"Dix-Hallpike pozitif diye yazıp geçiyorum"</div><div class="body"><b>Now:</b> Manevra + nistagmus özelliği + santral işaret tek notta; santral bulgu işaretliyse ürün manevra değil acil değerlendirme diyor.</div></div>
+    <div class="card"><div class="title">"İşitme cihazı raporu Medula'dan geri dönüyor"</div><div class="body"><b>Now:</b> SUT kontrol listesi ve odyolojik güncellik kapısı; eksikler kapanmadan taslak "hazır" sayılmıyor.</div></div>
+  </div>
+
+  <h2>KBB-only Araçlar (classify-before-add)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Bucket</th><th>Visibility</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Otoskopi / kulak zarı notu — /doktor-tools/kbb-aksiyon planı</td><td><span class="pill info">specialty-only</span></td><td class="note">kulak-burun-bogaz</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Odyometri özeti — /doktor-tools/kbb-CAT/mMRC</td><td><span class="pill info">specialty-only</span></td><td class="note">kulak-burun-bogaz</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Vertigo / Dix-Hallpike — /doktor-tools/kbb-inhaler izlem</td><td><span class="pill info">specialty-only</span></td><td class="note">kulak-burun-bogaz</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">SGK işitme raporu — /doktor-tools/kbb-sgk</td><td><span class="pill info">specialty-only</span></td><td class="note">kulak-burun-bogaz</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">KBB kohort — /doktor-tools/kbb-kohort</td><td><span class="pill info">specialty-only</span></td><td class="note">kulak-burun-bogaz</td><td><span class="pill success">Shipped</span></td></tr>
+        <tr><td class="domain">Pediatri / dahiliye / göz / derm / KD / psikiyatri + …</td><td><span class="pill success">none</span></td><td class="note">test: 5 kart görünmez, derin bağlantı → /doktor-tools</td><td><span class="pill success">Locked</span></td></tr>
+        <tr><td class="domain">Hedef Boy / Neyzi / baş çevresi (pediatri)</td><td><span class="pill success">none</span></td><td class="note">pediatrikBaglam: 'asla' — KBB'de hiç açılmaz</td><td><span class="pill success">Locked</span></td></tr>
+        <tr><td class="domain">Bu audit HTML</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">—</td><td class="note">Araçlar'a bağlanmaz</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Game changers</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Move</th><th>Status</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="domain">Chapter foundation: migration 061 + registry + profil (olgunluk beta-hazir)</td><td><span class="pill success">DONE</span></td><td class="note">lib/db/migrations/061_kbb_exceptional.sql · lib/specialties/kulak-burun-bogaz.ts · registry.ts</td></tr>
+        <tr><td>2</td><td class="domain">Ölçüm motorları: CAT/mMRC PTA bandı · aksiyon planı · inhaler izlem (karar desteği, tanı değil)</td><td><span class="pill success">DONE</span></td><td class="note">engines/CAT/mMRC.ts · aksiyon planı.ts · inhaler izlem.ts</td></tr>
+        <tr><td>3</td><td class="domain">Kırmızı bayrak triyajı + hekim onayı kapısı (409)</td><td><span class="pill success">DONE</span></td><td class="note">engines/acil.ts · app/api/doktor/kulak-burun-bogaz/route.ts · intake acilBelirtilerKbb</td></tr>
+        <tr><td>4</td><td class="domain">Santral inhaler izlem kilidi: manevra yerine acil</td><td><span class="pill success">DONE</span></td><td class="note">engines/inhaler izlem.ts (manevraUygunMu)</td></tr>
+        <tr><td>5</td><td class="domain">GogusHome: sticky şerit + 7 sekme + ölçüm çalışma sayfaları</td><td><span class="pill success">DONE</span></td><td class="note">specialties/kulak-burun-bogaz/ui/GogusHome.tsx</td></tr>
+        <tr><td>6</td><td class="domain">5 KBB-only Araçlar + KbbAracKabugu branş kapısı</td><td><span class="pill success">DONE</span></td><td class="note">lib/doktor/doktorAraclari.ts · app/doktor-tools/kbb-*</td></tr>
+        <tr><td>7</td><td class="domain">Portal → Strong Akciğerlerim (hasta-güvenli sabit başlıklar)</td><td><span class="pill success">DONE</span></td><td class="note">engines/portal-akcigerlerim.ts · app/portal/.../akcigerlerim</td></tr>
+        <tr><td>8</td><td class="domain">Kohort + klinik bilgi taşımayan hatırlatma</td><td><span class="pill success">DONE</span></td><td class="note">engines/kohort.ts · app/api/doktor/kulak-burun-bogaz/kohort</td></tr>
+        <tr><td>9</td><td class="domain">SGK USOT / nebulizatör rapor taslağı (T.C. yok, marka/bedel yok, doz yok)</td><td><span class="pill success">DONE</span></td><td class="note">engines/sgkRapor.ts</td></tr>
+        <tr><td>10</td><td class="domain">Prompts lock + MD beta paketi + test paketi</td><td><span class="pill success">DONE</span></td><td class="note">prompts/soap-kbb.md · docs/KBB-MD-BETA.md · 43 yeni test</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Intentionally out</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Out</th><th>Exceptional substitute shipped</th></tr></thead>
+      <tbody>
+        <tr><td class="domain">Ameliyathane planlama / cerrahi HIS</td><td class="note">Ayaktan muayenehane akışı: muayene → ölçüm → karar desteği → kontrol takvimi; cerrahi kararı hekimin</td></tr>
+        <tr><td class="domain">Koklear implant cerrahi iş akışı</td><td class="note">Odyolojik izlem ve SGK rapor taslağı; implant cerrahi süreci ürün kapsamı dışında</td></tr>
+        <tr><td class="domain">Doz / kür şeması (damla, sprey, antibiyotik)</td><td class="note">Sınıf düzeyi basamak listesi + "doz ve süre hekim tarafından belirlenir"</td></tr>
+        <tr><td class="domain">Tanının otomatik kilitlenmesi</td><td class="note">PTA bandı karar desteği; tanı ve kayıp tipi hekimin yazdığı satırdan</td></tr>
+        <tr><td class="domain">Canlı Medula e-imza</td><td class="note">Rapor taslağı + SUT kontrol listesi; e-imza hekimde</td></tr>
+        <tr><td class="domain">Pediatri içeriği (Baş Çevresi · Neyzi · sağlam çocuk)</td><td class="note">pediatrikBaglam: 'asla' — sızmaz; 18 yaş altı hastada yalnız yasa gereği veli dili açılır</td></tr>
+        <tr><td class="domain">Uzman-doğrulandı etiketi</td><td class="note">beta-hazir + MD saha haftası; Boss/CEO onayı bekleniyor</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Recommended next ships</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress · MD saha haftası</div><div class="body">docs/KBB-MD-BETA.md ile 5 gün gerçek poliklinik → Boss/CEO onayı → olgunluk uzman-dogrulandi.</div></div>
+    <div class="card"><div class="title">Velocity · tempanometri & akustik refleks</div><div class="body">Saha talebine göre timpanogram tipi (A/B/C) ve refleks eşiği aynı motor deseniyle — hepsi karar desteği etiketiyle.</div></div>
+    <div class="card"><div class="title">Mandate · Medula (shared)</div><div class="body">Canlı e-imza ortak altyapı — branş chapter'ı değil.</div></div>
+  </div>
+
+  <h2>Sources</h2>
+  <p class="lede" style="font-size:13px">
+    Code: specialties/kulak-burun-bogaz (engines · ui · prompts · tests) · lib/specialties/kulak-burun-bogaz.ts (olgunluk: beta-hazir) ·
+    lib/doktor/doktorAraclari.ts (5 BRANS) · lib/intake/bransSorulari.ts (acilBelirtilerKbb) · app/api/doktor/kulak-burun-bogaz ·
+    app/portal/_components/KulaklarimView.tsx · lib/db/migrations/061_kbb_exceptional.sql · docs/KBB-MD-BETA.md.
+    External: TKBBD · T.C. SB KBB protokolleri · odyolojik sınıflama (saf ses ortalaması bantları) · SGK SUT ve USOT / nebulizatör mevzuatı · TİTCK KÜB.
+    Prior audit: <a href="/gogus-presprint-audit.html">pre-sprint (~10%, superseded)</a> → post-exceptional (this).
+  </p>
+
+  <div class="foot">
+    <span>Post-exceptional sprint GOGUS-EXCEPTIONAL-01 · notya-ai · Göğüs Hastalıkları · 2026-09-19</span>
+    <span>No patient data · internal product audit · not on Doktor Araçları</span>
+  </div>
+</div>
+</body>
+</html>

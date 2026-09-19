@@ -216,10 +216,11 @@ describe('Diğer sızıntılar (Phase 2 envanterinden düzeltilenler)', () => {
   })
 
   it('hasta dosyası: Dahiliye sekmesi cerrahi branşlara açılmaz (eski regex genel-cerrahi / göğüs cerrahisi yakalıyordu)', () => {
-    for (const b of ['genel-cerrahi', 'gogus-cerrahisi', 'Göğüs Cerrahisi', 'kalp-damar-cerrahisi', 'kadin-dogum', 'goz-hastaliklari', 'pediatri', '']) {
+    // KARDIO/GOGUS-EXCEPTIONAL-01: kendi branş sekmeleri var — Dahiliye WOW'a düşmez (brans-alan-sizmasi).
+    for (const b of ['genel-cerrahi', 'gogus-cerrahisi', 'Göğüs Cerrahisi', 'kalp-damar-cerrahisi', 'kadin-dogum', 'goz-hastaliklari', 'pediatri', 'kardiyoloji', 'gogus-hastaliklari', '']) {
       assert.equal(dahiliyeSekmesiBransi(b), false, b)
     }
-    for (const b of ['dahiliye', 'İç Hastalıkları', 'aile-hekimligi', 'genel', 'kardiyoloji', 'gogus-hastaliklari', 'endokrinoloji']) {
+    for (const b of ['dahiliye', 'İç Hastalıkları', 'aile-hekimligi', 'genel', 'endokrinoloji']) {
       assert.equal(dahiliyeSekmesiBransi(b), true, b)
     }
   })

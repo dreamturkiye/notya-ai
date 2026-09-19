@@ -173,6 +173,14 @@ export interface PortalBundle {
   psik: PortalPsik | null
   /** KBB-EXCEPTIONAL-01 — "Kulaklarım": MD-set kontrol + işitme testi / işlem hatırlatma. No tanı, dB, doz. */
   kulak: PortalKulak | null
+  /** KARDIO-EXCEPTIONAL-01 — "Kalbim": MD-set kontrol + tansiyon/test hatırlatma. No tanı, SCORE2 %, doz. */
+  kalp: PortalKalp | null
+  /** GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": MD-set kontrol + solunum testi / inhaler hatırlatma. No tanı, CAT, doz. */
+  akciger: PortalAkciger | null
+  /** NOROLOJI-EXCEPTIONAL-01 — "Nörolojimm": MD-set kontrol + form / ilaç güvenlik hatırlatma. No tanı, skor, doz. */
+  noro: PortalNoro | null
+  /** UROLOJI-EXCEPTIONAL-01 — "Ürolojimm": MD-set kontrol + hatırlatma. No tanı, PSA sayı, IPSS skor, doz. */
+  uro: PortalUro | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -246,6 +254,68 @@ export interface PortalKulak {
   /** pansuman, cihaz kontrolü, denge muayenesi gibi işlem randevuları */
   islemHatirlatma: Array<{ ad: string; due: string | null }>
   /** hasta-güvenli, tanı içermeyen genel kulak bakımı önerileri */
+  bakimIpuclari: string[]
+  not: string
+}
+
+/**
+ * KARDIO-EXCEPTIONAL-01 — "Kalbim": ayaktan kardiyoloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı adı, SCORE2 %, risk bandı,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/kardiyoloji/engines/portal-kalbim.ts kilidi).
+ */
+export interface PortalKalp {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** tansiyon / kan tahlili / kalp testi randevuları — skor ve sonuç yazılmaz */
+  olcumHatirlatma: Array<{ ad: string; due: string | null }>
+  bakimIpuclari: string[]
+  not: string
+}
+
+/**
+ * GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": ayaktan göğüs hastalıkları hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, CAT/mMRC, GOLD, FEV1,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/gogus-hastaliklari/engines/portal-akcigerlerim.ts).
+ */
+export interface PortalAkciger {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Solunum testi randevusu" — sonuç ve sayı yazılmaz */
+  testHatirlatma: Array<{ ad: string; due: string | null }>
+  /** inhaler teknik, aksiyon planı, oksijen, tütün bırakma */
+  bakimHatirlatma: Array<{ ad: string; due: string | null }>
+  bakimIpuclari: string[]
+  not: string
+}
+
+/**
+ * NOROLOJI-EXCEPTIONAL-01 — "Nörolojimm": ayaktan nöroloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, MIDAS skoru/bandı,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/noroloji/engines/portal-norolojim.ts kilidi).
+ */
+export interface PortalNoro {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Baş ağrısı takip formu" — skor / bant yazılmaz */
+  formHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "İlaç güvenlik kontrolü" — etken madde / doz yok */
+  ilacHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * UROLOJI-EXCEPTIONAL-01 — "Ürolojimm": ayaktan üroloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, PSA ng/mL, IPSS skor,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/uroloji/engines/portal-urolojim.ts kilidi).
+ */
+export interface PortalUro {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Kan testi randevusu" / "Semptom formu kontrolü" — sayı ve skor yazılmaz */
+  testHatirlatma: Array<{ ad: string; due: string | null }>
+  /** taş takibi, belge / rapor */
+  islemHatirlatma: Array<{ ad: string; due: string | null }>
   bakimIpuclari: string[]
   not: string
 }
