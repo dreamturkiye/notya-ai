@@ -570,6 +570,10 @@ const KOHORT_PANELI_OLAN_BRANSLAR = [
   'gogus-hastaliklari',
   'noroloji',
   'uroloji',
+  'ortopedi',
+  'fizik-tedavi',
+  'aile-hekimligi',
+  'spor-hekimligi',
 ]
 
 test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş görür ve derin linki açar (kohortlu + kohortsuz hepsi)', () => {
@@ -583,7 +587,7 @@ test('Bekleyen Konsültasyonlar evrensel: BRANS_ETIKETLERI\'ndeki HER branş gö
   assert.ok(anahtarlar.length >= 25)
   for (const k of KOHORT_PANELI_OLAN_BRANSLAR) assert.ok(anahtarlar.includes(k), `${k} BRANS_ETIKETLERI'nde`)
   const kohortsuz = anahtarlar.filter((b) => !doktorAraclariListesi(b).some((a) => a.route.endsWith('-kohort')))
-  assert.ok(kohortsuz.length >= 16, `kohort paneli olmayan branş sayısı: ${kohortsuz.length}`)
+  assert.ok(kohortsuz.length >= 8, `kohort paneli olmayan branş sayısı: ${kohortsuz.length}`)
   for (const b of [...anahtarlar, ...Object.values(BRANS_ETIKETLERI), ...KOHORT_PANELI_OLAN_BRANSLAR, 'kadin-dogum', 'İç Hastalıkları', 'Çocuk Sağlığı ve Hastalıkları']) {
     assert.ok(doktorAraclariListesi(b).some((a) => a.route === BEKLEYEN_KONSULTASYONLAR), `${b} Bekleyen Konsültasyonlar'ı görmeli`)
     assert.equal(doktorAraciBransaUygun(BEKLEYEN_KONSULTASYONLAR, b), true, `${b} derin link`)
@@ -839,5 +843,302 @@ test('Üroloji tiles stay commercial: no dose, no BPH/cancer diagnosis, no OR sc
     assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
     assert.doesNotMatch(blob, /BPH tanısı|prostat kanseri tanısı|ameliyathane|OR scheduling/i, r)
     assert.doesNotMatch(blob, /UROLOJI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+// ─── ORTOPEDI-EXCEPTIONAL-01 — Ortopedi specialty-only Araçlar ─────────────────────────────
+const ORTO_ROTALARI = [
+  '/doktor-tools/orto-kirik-alci',
+  '/doktor-tools/orto-vas',
+  '/doktor-tools/orto-op-protokol',
+  '/doktor-tools/orto-kohort',
+] as const
+
+test('Ortopedi-only Araçlar: ortopedi sees all four; foreign branşlar never', () => {
+  for (const ham of ['ortopedi', 'Ortopedi', 'Ortopedi ve Travmatoloji', 'orthopedics']) {
+    const liste = doktorAraclariListesi(ham)
+    for (const r of ORTO_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+  }
+  for (const r of ORTO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)
+    assert.ok(arac, r)
+    assert.deepEqual(arac.branslar, ['ortopedi'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'ortopedi')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'fizik-tedavi', 'kardiyoloji', 'uroloji', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of ORTO_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const orto = doktorAraclariListesi('ortopedi')
+  assert.ok(!orto.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/ftr-seans'))
+})
+
+test('Ortopedi studio pages: guarded by OrtoAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/ortopedi/ui/araclar/OrtoAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca ortopedi için\./)
+  for (const r of ORTO_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /OrtoAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /OrtoKirikAlciAraci|OrtoVasAraci|OrtoOpProtokolAraci|OrtoKohortAraci|OrtoAracKabugu|ortopedi-exceptional-audit/)
+})
+
+test('Ortopedi tiles stay commercial: no dose, no diagnosis lock, no OR scheduling', () => {
+  for (const r of ORTO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /artroz tanısı|kaynama tanısı|ameliyathane plan/i, r)
+    assert.doesNotMatch(blob, /ORTOPEDI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+// ─── AILE-HEKIMLIGI-EXCEPTIONAL-01 — Aile hekimliği specialty-only Araçlar ─────────────────
+const AILE_ROTALARI = [
+  '/doktor-tools/aile-asi-tarama',
+  '/doktor-tools/aile-kronik',
+  '/doktor-tools/aile-sevk',
+  '/doktor-tools/aile-kohort',
+] as const
+
+test('Aile hekimliği-only Araçlar: aile-hekimligi sees all four; foreign branşlar never', () => {
+  for (const ham of ['aile-hekimligi', 'Aile Hekimliği', 'Genel Pratisyen']) {
+    const liste = doktorAraclariListesi(ham)
+    for (const r of AILE_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+  }
+  for (const r of AILE_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.deepEqual(arac.branslar, ['aile-hekimligi'], r)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'aile-hekimligi')
+  for (const b of [...yabanci, 'dahiliye', 'pediatri', 'kardiyoloji', 'endokrinoloji', 'İç Hastalıkları', null, '']) {
+    for (const r of AILE_ROTALARI) {
+      assert.ok(!doktorAraclariListesi(b).some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const aile = doktorAraclariListesi('aile-hekimligi')
+  assert.ok(!aile.some((a) => a.branslar && !a.branslar.includes('aile-hekimligi')))
+})
+
+test('Aile hekimliği studio pages: guarded by AileAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/aile-hekimligi/ui/araclar/AileAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca aile hekimliği için\./)
+  for (const r of AILE_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /AileAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /AileAsiTaramaAraci|AileKronikAraci|AileSevkAraci|AileKohortAraci|AileAracKabugu|aile-exceptional-audit/)
+})
+
+test('Aile hekimliği tiles stay commercial: no dose, no AHIS, no audit jargon', () => {
+  for (const r of AILE_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması|lot numarası/i, r)
+    assert.doesNotMatch(blob, /AHIS|ulusal HIS|tanı kilidi/i, r)
+    assert.doesNotMatch(blob, /AILE-HEKIMLIGI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+// ─── FIZIK-TEDAVI-EXCEPTIONAL-01 — FTR specialty-only Araçlar ─────────────────────────────
+const FTR_ROTALARI = [
+  '/doktor-tools/ftr-seans',
+  '/doktor-tools/ftr-vas-odi',
+  '/doktor-tools/ftr-egzersiz',
+  '/doktor-tools/ftr-kohort',
+] as const
+
+test('FTR-only Araçlar: fizik-tedavi sees all four; foreign branşlar never', () => {
+  for (const ham of ['fizik-tedavi', 'Fizik Tedavi', 'Fiziksel Tıp ve Rehabilitasyon', 'FTR']) {
+    const liste = doktorAraclariListesi(ham)
+    for (const r of FTR_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+    assert.equal(liste.length, ORTAK_DOKTOR_ARACLARI.length + FTR_ROTALARI.length)
+  }
+  for (const r of FTR_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    assert.ok(arac, `${r} not in BRANS_DOKTOR_ARACLARI`)
+    assert.deepEqual(arac.branslar, ['fizik-tedavi'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'fizik-tedavi')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'ortopedi', 'noroloji', 'kardiyoloji', 'pediatri', 'spor-hekimligi', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of FTR_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const ftr = doktorAraclariListesi('fizik-tedavi')
+  assert.ok(!ftr.some((a) => a.branslar && !a.branslar.includes('fizik-tedavi')))
+  assert.ok(!ftr.some((a) => a.route === '/doktor-tools/hedef-boy' || a.route === '/doktor-tools/orto-vas'))
+})
+
+test('FTR studio pages: guarded by FtrAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/fizik-tedavi/ui/araclar/FtrAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca fizik tedavi için\./)
+  for (const r of FTR_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /FtrAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /FtrSeansAraci|FtrVasOdiAraci|FtrEgzersizAraci|FtrKohortAraci|FtrAracKabugu|ftr-exceptional-audit/)
+})
+
+test('FTR tiles stay commercial: no dose, no diagnosis lock, no hospital rehab HIS', () => {
+  for (const r of FTR_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /disk hernisi tanısı|hastane HIS|tanı kilidi/i, r)
+    assert.doesNotMatch(blob, /FIZIK-TEDAVI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+// ─── SPOR-HEKIMLIGI-EXCEPTIONAL-01 — Spor Hekimliği specialty-only Araçlar ───────────────────
+const SPOR_ROTALARI = [
+  '/doktor-tools/spor-rtp',
+  '/doktor-tools/spor-sakatlik',
+  '/doktor-tools/spor-kohort',
+] as const
+
+test('Spor-hekimligi-only Araçlar: spor-hekimligi sees all three; ortopedi/FTR and foreign branşlar never', () => {
+  for (const ham of ['spor-hekimligi', 'Spor Hekimliği', 'Spor Hekimliği Uzmanı', 'sports medicine']) {
+    const liste = doktorAraclariListesi(ham)
+    for (const r of SPOR_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+  }
+  for (const r of SPOR_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)
+    assert.ok(arac, r)
+    assert.deepEqual(arac.branslar, ['spor-hekimligi'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'spor-hekimligi')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'ortopedi', 'fizik-tedavi', 'pediatri', 'dahiliye', 'uroloji', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of SPOR_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const spor = doktorAraclariListesi('spor-hekimligi')
+  assert.ok(!spor.some((a) => a.route === '/doktor-tools/orto-vas' || a.route === '/doktor-tools/ftr-seans'))
+})
+
+test('Spor studio pages: guarded by SporAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/spor-hekimligi/ui/araclar/SporAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca spor hekimliği için\./)
+  for (const r of SPOR_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /SporAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /SporRtpAraci|SporSakatlikAraci|SporKohortAraci|SporAracKabugu|spor-exceptional-audit/)
+})
+
+test('Spor tiles stay commercial: no dose, no doping panel, no team roster HIS, no diagnosis lock', () => {
+  for (const r of SPOR_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması/i, r)
+    assert.doesNotMatch(blob, /doping|WADA|takım kadrosu|team roster|tanı kilidi/i, r)
+    assert.doesNotMatch(blob, /SPOR-HEKIMLIGI-EXCEPTIONAL|sprint|audit|\.html/i, r)
+  }
+})
+
+// ─── ENDOKRINOLOJI-EXCEPTIONAL-01 — Endokrinoloji specialty-only Araçlar ─────────────────
+const ENDO_ROTALARI = [
+  '/doktor-tools/endo-lab-izlem',
+  '/doktor-tools/endo-dxa',
+  '/doktor-tools/endo-rejim',
+  '/doktor-tools/endo-kohort',
+] as const
+
+test('Endokrinoloji-only Araçlar: endokrinoloji sees all four; dahiliye and foreign never', () => {
+  for (const ham of ['endokrinoloji', 'Endokrinoloji', 'Endokrinoloji ve Metabolizma']) {
+    const liste = doktorAraclariListesi(ham)
+    for (const r of ENDO_ROTALARI) {
+      assert.ok(liste.some((a) => a.route === r), `${ham} must see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, ham), true, `${ham} deep-link ${r}`)
+    }
+  }
+  for (const r of ENDO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)
+    assert.ok(arac, r)
+    assert.deepEqual(arac.branslar, ['endokrinoloji'], r)
+    assert.ok(!ORTAK_DOKTOR_ARACLARI.some((a) => a.route === r), `${r} must not be a shared tile`)
+  }
+  const yabanci = Object.keys(BRANS_ETIKETLERI).filter((b) => b !== 'endokrinoloji')
+  assert.ok(yabanci.length >= 25)
+  for (const b of [...yabanci, 'pediatri', 'dahiliye', 'kardiyoloji', 'noroloji', 'aile-hekimligi', null, '']) {
+    const liste = doktorAraclariListesi(b)
+    for (const r of ENDO_ROTALARI) {
+      assert.ok(!liste.some((a) => a.route === r), `${b} must not see ${r}`)
+      assert.equal(doktorAraciBransaUygun(r, b), false, `${b} deep-link ${r}`)
+    }
+  }
+  const endo = doktorAraclariListesi('endokrinoloji')
+  assert.ok(!endo.some((a) => a.route === '/doktor-tools/dahiliye-kohort' || a.route === '/doktor-tools/hedef-boy'))
+})
+
+test('Endokrinoloji studio pages: guarded by EndoAracKabugu, never on the landing', () => {
+  const kok = path.join(import.meta.dirname, '../..')
+  const landing = fs.readFileSync(path.join(kok, 'app/doktor-tools/page.tsx'), 'utf8')
+  const kabuk = fs.readFileSync(path.join(kok, 'specialties/endokrinoloji/ui/araclar/EndoAracKabugu.tsx'), 'utf8')
+  assert.match(kabuk, /doktorAraciBransaUygun\(route/)
+  assert.match(kabuk, /Bu araç yalnızca endokrinoloji için\./)
+  for (const r of ENDO_ROTALARI) {
+    const sayfa = fs.readFileSync(path.join(kok, `app${r}/page.tsx`), 'utf8')
+    assert.match(sayfa, /EndoAracKabugu/, r)
+    assert.ok(sayfa.includes(`route="${r}"`), `${r} guards its own route`)
+    assert.doesNotMatch(sayfa, /audit|sprint|Gökhan|\.html/i, r)
+  }
+  assert.doesNotMatch(landing, /EndoLabIzlemAraci|EndoDxaAraci|EndoRejimAraci|EndoKohortAraci|EndoAracKabugu|endo-exceptional-audit/)
+})
+
+test('Endokrinoloji tiles stay commercial: no dose, no CGM core, no diagnosis lock', () => {
+  for (const r of ENDO_ROTALARI) {
+    const arac = BRANS_DOKTOR_ARACLARI.find((a) => a.route === r)!
+    const blob = `${arac.title} ${arac.desc}`
+    assert.doesNotMatch(blob, /\bmg\b|\bmL\b|doz şeması|ünite|sliding.?scale/i, r)
+    assert.doesNotMatch(blob, /tanı koy|tanısı konur|CGM entegrasyon|sürekli glukoz/i, r)
+    assert.doesNotMatch(blob, /ENDOKRINOLOJI-EXCEPTIONAL|sprint|audit|\.html/i, r)
   }
 })

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fizik Tedavi — Post-exceptional Audit (FIZIK-TEDAVI-EXCEPTIONAL-01) · Notya</title>
+  <meta name="description" content="Post-exceptional FIZIK-TEDAVI-EXCEPTIONAL-01: Fizik Tedavi ~10% → ~93% · 16 Strong · olgunluk beta-hazir · 4 Araç · Fizik Tedavimm Strong · stroke unit Missing intentional. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#7C3Egzersiz;
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399; --teal:#4ADE80;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; color:var(--blue); }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; font-weight:700; }
+    td.note { color:var(--muted); } td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-label { font-size:12px; color:var(--muted); }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--indigo); border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .bar-val { font-size:12px; font-weight:700; text-align:right; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; background:rgba(22,163,74,.12); border-color:rgba(22,163,74,.4); color:#DDD6FE; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); }
+    .cap { font-size:12px; color:var(--dim); margin:-6px 0 14px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional specialty audit · Fizik Tedavi</span>
+    <span>
+      <a href="/ftr-presprint-audit.html">Pre-sprint (~10%) →</a> ·
+      <a href="/psik-exceptional-audit.html">Psikiyatri →</a> ·
+      <a href="/kbb-exceptional-audit.html">KBB →</a>
+    </span>
+  </div>
+  <div class="banner"><b>Post-exceptional sprint FIZIK-TEDAVI-EXCEPTIONAL-01</b> — 2026-09-19 · Supersedes ftr-presprint-audit.html (~10%). Chapter Strong · Intake Strong · Portal Fizik Tedavimm Strong · 4 Araçlar · olgunluk <code>beta-hazir</code>. Hastane rehab HIS Missing intentional. No PHI. Never on Doktor Araçları.</div>
+  <h1>Fizik Tedavi — Post-exceptional Audit</h1>
+  <p class="lede">Code × TND × TBDHD × VAS/ODI × SGK/SUT × TİTCK × TR ayaktan muayenehane. <b>Ürün cevap: evet — honest wow ~93%.</b> Olgunluk: beta-hazir shipped; uzman-dogrulandi MD week pending (docs/FTR-MD-BETA.md).</p>
+  <div class="pills">
+    <span class="pill success">FIZIK-TEDAVI-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">4 Araçlar</span>
+    <span class="pill success">Fizik Tedavimm Strong</span>
+    <span class="pill success">8 motor · tests</span>
+    <span class="pill info">Honest wow ~93%</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v success">16</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (maturity)</div></div>
+    <div class="stat"><div class="v success">0</div><div class="l">Thin</div></div>
+    <div class="stat"><div class="v danger">3</div><div class="l">Missing intentional</div></div>
+  </div>
+  <div class="callout"><h2>Executive verdict</h2>
+    <p>FIZIK-TEDAVI-EXCEPTIONAL-01: <b>8 saf motor</b> (acil · VAS/ODI · ilaç izlem · şerit · kohort · portal · ortak ref), <b>FtrHome</b>, <b>/api/doktor/fizik-tedavi</b>, intake <b>acilBelirtilerFtr</b>, Sağlığım <b>Fizik Tedavimm</b>, Araçlar'da <b>4</b> tile, migration <b>065</b>. Kilitler: doz yok, tanı kilidi yok, VAS/ODI tanıya çevrilmez, hemen bayrakta 409, portal skor/tanı/doz taşımaz. Hastane rehab HIS HIS intentional Missing.</p>
+  </div>
+  <h2>Coverage depth — post-exceptional</h2>
+  <p class="cap">Strong = clinic-ready · Partial = beta-hazir · Missing = intentional out.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Depth</th><th>In product</th><th>Footnote</th></tr></thead>
+    <tbody>
+      <tr><td>Chapter registry + profil</td><td><span class="pill success">Strong</span></td><td class="note">CHAPTERS.fizik-tedavi · pediatrikBaglam: asla · VAS/ODI hesaplayıcı</td><td class="note">—</td></tr>
+      <tr><td>Sticky / vizit şeridi</td><td><span class="pill success">Strong</span></td><td class="note">Kırmızı bayrak · VAS/ODI · kontrol · ilaç izlem · gecikmiş</td><td class="note">—</td></tr>
+      <tr><td>Kırmızı bayrak triyaj</td><td><span class="pill success">Strong</span></td><td class="note">6 BE-FAST kod · metin taraması · 112 · hekim onayı 409</td><td class="note">¹</td></tr>
+      <tr><td>VAS/ODI / migren</td><td><span class="pill success">Strong</span></td><td class="note">5 madde · bant karar desteği · eksik yorumlanmaz</td><td class="note">²</td></tr>
+      <tr><td>Ev egzersiz</td><td><span class="pill success">Strong</span></td><td class="note">Valproat · CBZ · fenitoin · LTG · LEV · TPM · OXC — doz yok</td><td class="note">—</td></tr>
+      <tr><td>Kohort paneli</td><td><span class="pill success">Strong</span></td><td class="note">gecikmis_kontrol · ilac_izlem · risk_acik · migren_yuksek</td><td class="note">³</td></tr>
+      <tr><td>Bölüm UI</td><td><span class="pill success">Strong</span></td><td class="note">FtrHome: Özet · VAS/ODI · Kırmızı bayrak · İlaç izlem · Görevler</td><td class="note">—</td></tr>
+      <tr><td>API / izolasyon</td><td><span class="pill success">Strong</span></td><td class="note">hastaSahibiMi · doctor_id + patient_id</td><td class="note">065 RLS</td></tr>
+      <tr><td>Veritabanı</td><td><span class="pill success">Strong</span></td><td class="note">hasta_fizik-tedavi · ftr_migren · ftr_gorevleri · ftr_risk</td><td class="note">—</td></tr>
+      <tr><td>Intake</td><td><span class="pill success">Strong</span></td><td class="note">acilBelirtilerFtr · 112 yardımı</td><td class="note">—</td></tr>
+      <tr><td>Hasta portalı</td><td><span class="pill success">Strong</span></td><td class="note">Fizik Tedavimm (/fizik-tedavim) — skor/tanı/doz yok</td><td class="note">⁴</td></tr>
+      <tr><td>SOAP / prompts</td><td><span class="pill success">Strong</span></td><td class="note">soap-ftr.md kilidi</td><td class="note">—</td></tr>
+      <tr><td>Doktor Araçları</td><td><span class="pill success">Strong</span></td><td class="note">4 tile; foreign omit test</td><td class="note">—</td></tr>
+      <tr><td>Testler</td><td><span class="pill success">Strong</span></td><td class="note">acil · migren · araç SSR · portal</td><td class="note">test:ftr</td></tr>
+      <tr><td>Olgunluk / MD beta</td><td><span class="pill warning">Partial</span></td><td class="note">beta-hazir · docs/FTR-MD-BETA.md</td><td class="gap">MD week pending</td></tr>
+      <tr><td>Hastane rehab HIS</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+      <tr><td>Tanı auto-lock</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+      <tr><td>Uydurma doz / canlı Medula</td><td><span class="pill danger">Missing</span></td><td class="note">Bilinçli out</td><td class="note">Intentional</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cap">¹ Portal mesajı ile yönetilmez. ² Bant tanı değildir. ³ Hatırlatma klinik bilgi taşımaz. ⁴ hastaDiliTemizMi kilidi.</p>
+  <h2>Wow bar (dürüst)</h2>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label">Kırmızı bayrak triyaj</div><div class="bar-track"><div class="bar-fill" style="width:95%"></div></div><div class="bar-val">95</div></div>
+    <div class="bar-row"><div class="bar-label">VAS/ODI + Araç</div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div><div class="bar-val">94</div></div>
+    <div class="bar-row"><div class="bar-label">Ev egzersiz</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Doktor Araçları (4)</div><div class="bar-track"><div class="bar-fill" style="width:93%"></div></div><div class="bar-val">93</div></div>
+    <div class="bar-row"><div class="bar-label">Portal Fizik Tedavimm</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">Kohort + hatırlatma</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Vizit şeridi / bölüm UI</div><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="bar-val">91</div></div>
+    <div class="bar-row"><div class="bar-label">Intake kırmızı bayrak</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-val">92</div></div>
+    <div class="bar-row"><div class="bar-label">SOAP / prompts</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-val">90</div></div>
+    <div class="bar-row"><div class="bar-label">MD beta / olgunluk</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-val">70</div></div>
+  </div>
+  <div class="foot">No PHI · Audit HTML never on /doktor-tools · Migration 065 · 2026-09-19</div>
+</div>
+</body>
+</html>

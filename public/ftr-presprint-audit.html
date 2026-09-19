@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fizik Tedavi — Pre-sprint Audit (FIZIK-TEDAVI-EXCEPTIONAL-01 baseline) · Notya</title>
+  <meta name="description" content="Pre-sprint baseline: Fizik Tedavi ~10% — omurga var, bölüm yok. Motor, bölüm UI, Araçlar, portal ve şema eksik. No PHI." />
+  <style>
+    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#7C3AED;
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399; --teal:#A78BFA;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:var(--teal); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .stat .v.danger { color:var(--red); } .stat .v.warning { color:var(--amber); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; color:var(--amber); }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Pre-sprint specialty audit · Fizik Tedavi</span>
+    <a href="/ftr-exceptional-audit.html">Post-exceptional →</a>
+  </div>
+  <h1>Fizik Tedavi — Pre-sprint Audit (~10%)</h1>
+  <p class="lede">Baseline omurga + intake soruları var; bölüm motorları, NorolojiHome, Araçlar, Fizik Tedavimm portal ve migration yok. Honest wow ~10%.</p>
+  <div class="pills">
+    <span class="pill danger">Missing chapter</span>
+    <span class="pill warning">olgunluk baseline</span>
+    <span class="pill info">Honest wow ~10%</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v danger">0</div><div class="l">Domains Strong</div></div>
+    <div class="stat"><div class="v warning">2</div><div class="l">Partial (intake/registry key)</div></div>
+    <div class="stat"><div class="v danger">12+</div><div class="l">Thin / Missing</div></div>
+    <div class="stat"><div class="v danger">—</div><div class="l">Araçlar / Portal</div></div>
+  </div>
+  <div class="callout"><h2>Gap</h2><p>FIZIK-TEDAVI-EXCEPTIONAL-01 bu boşlukları kapatır: 4 Araç · Fizik Tedavimm Strong · inme/TIA + MIDAS + AED izlem + kohort · migration 062 · beta-hazir.</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Depth</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Chapter registry</td><td>Thin</td><td>baseline key only</td></tr>
+      <tr><td>İnme/TIA triyaj</td><td>Missing</td><td>—</td></tr>
+      <tr><td>MIDAS / migren</td><td>Missing</td><td>—</td></tr>
+      <tr><td>AED ilaç izlem</td><td>Missing</td><td>—</td></tr>
+      <tr><td>Kohort</td><td>Missing</td><td>—</td></tr>
+      <tr><td>Portal Fizik Tedavimm</td><td>Missing</td><td>—</td></tr>
+      <tr><td>Intake</td><td>Partial</td><td>sorular var, acil kutusu yok</td></tr>
+      <tr><td>SOAP lock</td><td>Missing</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <div class="foot">No PHI · Never on Doktor Araçları · 2026-09-19</div>
+</div>
+</body>
+</html>

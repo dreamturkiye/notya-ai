@@ -60,8 +60,10 @@ kardiyoloji · noroloji · uroloji · gogus-hastaliklari · kadin-hastaliklari-d
 Live: kardio / noro / uroloji / gogus / kd `-exceptional-audit.html` · tip `731fef5`  
 Araç counts: kardio 4 · noro 4 · üro 4 · göğüs 5 · KD 5 (mevcut) — sabit 5 yok.
 
-### Dalga 2
-aile-hekimligi · ortopedi · fizik-tedavi · spor-hekimligi · endokrinoloji
+### Dalga 2 — IN PROGRESS (2026-09-19)
+aile-hekimligi · ortopedi · fizik-tedavi · **spor-hekimligi (SHIPPED)** · endokrinoloji  
+Araç sayısı sabit değil — kaç useful ise o kadar.
+Spor Hekimliği: 3 Araç (RTP · Sakatlık · Kohort) · Sporum · migration 066 · live `/spor-exceptional-audit.html`
 
 ### Dalga 3
 gastroenteroloji · nefroloji · romatoloji · enfeksiyon-hastaliklari · onkoloji

@@ -31,6 +31,11 @@ export type HastaDosyaSekmeId =
   | 'gogus'
   | 'noroloji'
   | 'uroloji'
+  | 'ortopedi'
+  | 'fizik-tedavi'
+  | 'aile'
+  | 'spor-hekimligi'
+  | 'endokrinoloji'
   | 'konsultasyon'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
@@ -41,7 +46,7 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin/.test(b)
 }
 
 /**
@@ -106,6 +111,57 @@ export function urolojiSekmesiBransi(specialtyHam: string | null | undefined): b
   return /[üu]roloji|urology/.test(b)
 }
 
+/**
+ * SPOR-HEKIMLIGI-EXCEPTIONAL-01 — Spor Hekimliği sekmesi: yalnız spor-hekimligi.
+ * Ortopedi, FTR ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function sporHekimligiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /spor hekim|spor-hekim|sports medicine/.test(b)
+}
+
+/**
+ * ORTOPEDI-EXCEPTIONAL-01 — Ortopedi bölüm sekmesinin sahibi: yalnız ortopedi / travmatoloji.
+ * FTR, spor hekimliği, romatoloji ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function ortopediSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /ortopedi|travmatoloji|orthop/.test(b)
+}
+
+/**
+ * AILE-HEKIMLIGI-EXCEPTIONAL-01 — Aile Hekimliği bölüm sekmesinin sahibi: yalnız aile hekimliği.
+ * Dahiliye, pediatri, endokrinoloji ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ * Not: aile ozelBolumBransi'na EKLENMEZ — çocuk hastada büyüme / M-CHAT sekmeleri korunur.
+ */
+export function aileHekimligiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /aile\s*hekim|aile-hekimligi|aile hekimliği|genel pratisyen/.test(b)
+}
+
+/**
+ * ENDOKRINOLOJI-EXCEPTIONAL-01 — Endokrinoloji bölüm sekmesinin sahibi: yalnız endokrinoloji.
+ * Dahiliye DM araçları / sekmesi bu branşa sızmaz (brans-alan-sizmasi).
+ */
+export function endokrinolojiSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /endokrin/.test(b)
+}
+
+/**
+ * FIZIK-TEDAVI-EXCEPTIONAL-01 — FTR bölüm sekmesinin sahibi: yalnız fizik-tedavi / FTR.
+ * Ortopedi, nöroloji, romatoloji ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi).
+ */
+export function fizikTedaviSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /fizik.?tedavi|fiziksel.?t[ıi]p|fiziksel tip|\bftr\b|rehabilitasyon/.test(b)
+}
+
 export function yasYilKesir(dogumIso: string | null | undefined, nowMs = Date.now()): number | null {
   if (!dogumIso) return null
   const d = new Date(dogumIso)
@@ -149,7 +205,11 @@ export function dahiliyeSekmesiBransi(specialtyHam: string | null | undefined): 
   if (/göğüs hastal|gogus-hastalik|gogus hastal/.test(b)) return false
   // KARDIO-EXCEPTIONAL-01: kardiyoloji kendi sekmesine sahip — dahiliye WOW'a düşmez.
   if (/kardiyoloji|^kardiyo$|kalp hastal/.test(b) && !/damar/.test(b)) return false
-  return /dahiliye|iç hast|ic hast|aile|genel|endokrin|nefro|gastro|romato|hemato|onkolo/.test(b)
+  // AILE-HEKIMLIGI-EXCEPTIONAL-01: aile hekimliği kendi sekmesine sahip — dahiliye WOW'a düşmez.
+  if (/aile\s*hekim|aile-hekimligi|aile hekimliği|genel pratisyen/.test(b)) return false
+  // ENDOKRINOLOJI-EXCEPTIONAL-01: endokrinoloji kendi sekmesine sahip — dahiliye DM/WOW'a düşmez.
+  if (/endokrin/.test(b)) return false
+  return /dahiliye|iç hast|ic hast|aile|genel|nefro|gastro|romato|hemato|onkolo/.test(b)
 }
 
 export function gebelikSekmesiUygun(input: {
@@ -180,6 +240,16 @@ export function hastaDosyaSekmeleri(opts: {
   norolojiUygun?: boolean
   /** UROLOJI-EXCEPTIONAL-01: doctor specialty uroloji only */
   urolojiUygun?: boolean
+  /** ORTOPEDI-EXCEPTIONAL-01: doctor specialty ortopedi only */
+  ortopediUygun?: boolean
+  /** FIZIK-TEDAVI-EXCEPTIONAL-01: doctor specialty fizik-tedavi only */
+  fizikTedaviUygun?: boolean
+  /** AILE-HEKIMLIGI-EXCEPTIONAL-01: doctor specialty aile-hekimligi only */
+  aileUygun?: boolean
+  /** SPOR-HEKIMLIGI-EXCEPTIONAL-01: doctor specialty spor-hekimligi only (not ortopedi/FTR) */
+  sporHekimligiUygun?: boolean
+  /** ENDOKRINOLOJI-EXCEPTIONAL-01: doctor specialty endokrinoloji only (not dahiliye) */
+  endokrinolojiUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -211,6 +281,11 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.gogusUygun) tabs.push({ id: 'gogus', label: 'Göğüs' })
   if (opts.norolojiUygun) tabs.push({ id: 'noroloji', label: 'Nöroloji' })
   if (opts.urolojiUygun) tabs.push({ id: 'uroloji', label: 'Üroloji' })
+  if (opts.ortopediUygun) tabs.push({ id: 'ortopedi', label: 'Ortopedi' })
+  if (opts.fizikTedaviUygun) tabs.push({ id: 'fizik-tedavi', label: 'FTR' })
+  if (opts.aileUygun) tabs.push({ id: 'aile', label: 'Aile Hekimliği' })
+  if (opts.sporHekimligiUygun) tabs.push({ id: 'spor-hekimligi', label: 'Spor Hekimliği' })
+  if (opts.endokrinolojiUygun) tabs.push({ id: 'endokrinoloji', label: 'Endokrinoloji' })
   return tabs
 }
 

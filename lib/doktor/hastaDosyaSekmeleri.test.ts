@@ -10,6 +10,8 @@ import {
   gogusSekmesiBransi,
   dahiliyeSekmesiBransi,
   urolojiSekmesiBransi,
+  sporHekimligiSekmesiBransi,
+  ortopediSekmesiBransi,
 } from './hastaDosyaSekmeleri'
 
 const NOW = Date.parse('2026-09-15T00:00:00Z')
@@ -121,5 +123,31 @@ describe('hastaDosyaSekmeleri', () => {
     assert.equal(urolojiSekmesiBransi('urology'), true)
     assert.equal(urolojiSekmesiBransi('dahiliye'), false)
     assert.equal(ozelBolumBransi('uroloji'), true)
+  })
+
+  it('SPOR-HEKIMLIGI-EXCEPTIONAL-01: Spor Hekimliği sekmesi yalnız sporHekimligiUygun; ortopedi/FTR yok', () => {
+    const spor = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, sporHekimligiUygun: true })
+    assert.ok(spor.some((t) => t.id === 'spor-hekimligi' && t.label === 'Spor Hekimliği'))
+    const orto = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, ortopediUygun: true })
+    assert.equal(orto.some((t) => t.id === 'spor-hekimligi'), false)
+    const ftr = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, fizikTedaviUygun: true })
+    assert.equal(ftr.some((t) => t.id === 'spor-hekimligi'), false)
+    assert.equal(sporHekimligiSekmesiBransi('spor-hekimligi'), true)
+    assert.equal(sporHekimligiSekmesiBransi('Spor Hekimliği'), true)
+    assert.equal(sporHekimligiSekmesiBransi('ortopedi'), false)
+    assert.equal(sporHekimligiSekmesiBransi('fizik-tedavi'), false)
+    assert.equal(ozelBolumBransi('spor-hekimligi'), true)
+  })
+
+  it('ORTOPEDI-EXCEPTIONAL-01: Ortopedi sekmesi yalnız ortopediUygun; yabancı branşta yok', () => {
+    const orto = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, ortopediUygun: true })
+    assert.ok(orto.some((t) => t.id === 'ortopedi' && t.label === 'Ortopedi'))
+    const ftr = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, fizikTedaviUygun: true })
+    assert.equal(ftr.some((t) => t.id === 'ortopedi'), false)
+    assert.equal(ortopediSekmesiBransi('ortopedi'), true)
+    assert.equal(ortopediSekmesiBransi('Ortopedi ve Travmatoloji'), true)
+    assert.equal(ortopediSekmesiBransi('orthopedics'), true)
+    assert.equal(ortopediSekmesiBransi('fizik-tedavi'), false)
+    assert.equal(ozelBolumBransi('ortopedi'), true)
   })
 })

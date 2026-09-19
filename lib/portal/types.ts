@@ -181,6 +181,16 @@ export interface PortalBundle {
   noro: PortalNoro | null
   /** UROLOJI-EXCEPTIONAL-01 — "Ürolojimm": MD-set kontrol + hatırlatma. No tanı, PSA sayı, IPSS skor, doz. */
   uro: PortalUro | null
+  /** SPOR-HEKIMLIGI-EXCEPTIONAL-01 — "Sporum": MD-set kontrol + antrenmana dönüş planı hatırlatma. No tanı, doz, doping. */
+  spor: PortalSpor | null
+  /** ORTOPEDI-EXCEPTIONAL-01 — "Eklemlerim": MD-set kontrol + hatırlatma. No tanı, VAS sayı, skor, doz. */
+  eklem: PortalEklem | null
+  /** FIZIK-TEDAVI-EXCEPTIONAL-01 — "FTR'm": MD-set kontrol + seans / egzersiz hatırlatma. No tanı, VAS/ODI skor, doz. */
+  ftr: PortalFtr | null
+  /** AILE-HEKIMLIGI-EXCEPTIONAL-01 — "Sağlık Paketim": MD-set kontrol + aşı/tarama / kronik hatırlatma. No tanı, skor, doz. */
+  aile: PortalAile | null
+  /** ENDOKRINOLOJI-EXCEPTIONAL-01 — "Hormonlarım": MD-set kontrol + lab/DXA/rejim hatırlatma. No tanı, lab sayı, doz. */
+  endo: PortalEndo | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -317,6 +327,88 @@ export interface PortalUro {
   /** taş takibi, belge / rapor */
   islemHatirlatma: Array<{ ad: string; due: string | null }>
   bakimIpuclari: string[]
+  not: string
+}
+
+/**
+ * SPOR-HEKIMLIGI-EXCEPTIONAL-01 — "Sporum": ayaktan spor hekimliği hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, doz, doping
+ * portala GEÇMEZ (specialties/spor-hekimligi/engines/portal-sporum.ts kilidi).
+ */
+export interface PortalSpor {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** Antrenmana dönüş / sakatlık izlem / yük değerlendirmesi — klinik skor yorumu yok */
+  planHatirlatma: Array<{ ad: string; due: string | null }>
+  /** Hasta-güvenli RTP özeti ("aşama N") — tanı yok */
+  rtpOzet: string | null
+  bakimIpuclari: string[]
+  not: string
+}
+
+/**
+ * ORTOPEDI-EXCEPTIONAL-01 — "Eklemlerim": ayaktan ortopedi hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, VAS sayı, skor,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/ortopedi/engines/portal-eklemlerim.ts kilidi).
+ */
+export interface PortalEklem {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** alçı / hareket / ağrı formu — sayı ve skor yazılmaz */
+  izlemHatirlatma: Array<{ ad: string; due: string | null }>
+  /** görüntüleme, op-sonrası kontrol, belge */
+  islemHatirlatma: Array<{ ad: string; due: string | null }>
+  bakimIpuclari: string[]
+  not: string
+}
+
+/**
+ * FIZIK-TEDAVI-EXCEPTIONAL-01 — "FTR'm": ayaktan FTR hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, VAS/ODI skoru/bandı,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/fizik-tedavi/engines/portal-ftrm.ts kilidi).
+ */
+export interface PortalFtr {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Tedavi seansı" — modalite / sayı yazılmaz */
+  seansHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Ev egzersiz kontrolü" / "Ağrı / fonksiyon formu" — skor yok */
+  egzersizHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * AILE-HEKIMLIGI-EXCEPTIONAL-01 — "Sağlık Paketim": birinci basamak hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, skor, ilaç adı,
+ * doz ve aşı lot portala GEÇMEZ (specialties/aile-hekimligi/engines/portal-saglik-paketim.ts).
+ */
+export interface PortalAile {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Aşı veya tarama randevusu" — ürün / lot yazılmaz */
+  asiTaramaHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Kronik takip kontrolü" — tanı / doz yok */
+  kronikHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * ENDOKRINOLOJI-EXCEPTIONAL-01 — "Hormonlarım": ayaktan endokrinoloji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, HbA1c/TSH sayı/bandı,
+ * ilaç adı ve doz portala GEÇMEZ (specialties/endokrinoloji/engines/portal-hormonlarim.ts kilidi).
+ */
+export interface PortalEndo {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Kan tahlili kontrolü" — değer / bant yazılmaz */
+  labHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Kemik yoğunluğu testi" — T-skor yazılmaz */
+  dxaHatirlatma: Array<{ ad: string; due: string | null }>
+  /** İnsülin / tiroid rejim kontrol tarihleri — doz yok */
+  rejimHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
   not: string
 }
 

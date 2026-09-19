@@ -119,6 +119,40 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#059669', icon: 'PS', title: 'PSA izlem', desc: 'PSA değeri ve hız (karar desteği) · kanser tanısı yazılmaz · yaş notu hekim karar desteği', route: '/doktor-tools/uro-psa', branslar: ['uroloji'] },
   { circleColor: '#DC2626', icon: 'UA', title: 'Hematuri / taş acil triyaj', desc: 'Makroskopik hematüri · retansiyon · flank+ateş · torsiyon · priapizm · üretra travması → 112 · hekim onaylı', route: '/doktor-tools/uro-acil', branslar: ['uroloji'] },
   { circleColor: '#10B981', icon: 'UK', title: 'Üroloji kohort paneli', desc: 'Geciken kontrol · PSA izlem · yüksek IPSS · açık kırmızı bayrak · 1-tap hatırlatma', route: '/doktor-tools/uro-kohort', branslar: ['uroloji'] },
+  // ORTOPEDI-EXCEPTIONAL-01 — specialty-only (not pediatri / dahiliye / kardiyoloji / FTR / göz).
+  // Chapter engines: specialties/ortopedi/engines. VAS/fonksiyon bandı karar desteğidir; tanı ve doz hekimde.
+  // Visibility: ortopedi only — NOT fizik-tedavi, NOT spor-hekimligi, NOT pediatri.
+  { circleColor: '#D97706', icon: 'KA', title: 'Kırık / alçı-ortez takip', desc: 'Bölge · NV · alçı alma / yük verme tarihleri · görüntü köprüsü · kaynama yazılmaz', route: '/doktor-tools/orto-kirik-alci', branslar: ['ortopedi'] },
+  { circleColor: '#F59E0B', icon: 'VS', title: 'VAS / fonksiyon skoru', desc: 'VAS 0–10 + 4 fonksiyon maddesi · şiddet bandı (karar desteği, tanı değil) · artroz yazılmaz', route: '/doktor-tools/orto-vas', branslar: ['ortopedi'] },
+  { circleColor: '#B45309', icon: 'OP', title: 'Op-sonrası protokol', desc: 'Dikiş · yük verme · görüntü kilometre taşları · OR scheduling / HIS yok', route: '/doktor-tools/orto-op-protokol', branslar: ['ortopedi'] },
+  { circleColor: '#92400E', icon: 'OK', title: 'Ortopedi kohort paneli', desc: 'Geciken kontrol · alçı/yük izlemi · yüksek VAS · açık kırmızı bayrak · 1-tap hatırlatma', route: '/doktor-tools/orto-kohort', branslar: ['ortopedi'] },
+  // FIZIK-TEDAVI-EXCEPTIONAL-01 — specialty-only (not ortopedi / noroloji / romatoloji / kardiyoloji / …).
+  // Chapter engines: specialties/fizik-tedavi/engines. VAS/ODI bandı karar desteğidir; tanı ve ilaç dozu hekimde.
+  // Visibility: fizik-tedavi only — NOT ortopedi, NOT noroloji, NOT romatoloji, NOT pediatri.
+  { circleColor: '#16A34A', icon: 'SP', title: 'FTR seans planı', desc: 'Bölge · modalite · seans sayısı / haftalık sıklık · SGK notu hekim doğrular · ilaç/doz yok', route: '/doktor-tools/ftr-seans', branslar: ['fizik-tedavi'] },
+  { circleColor: '#22C55E', icon: 'VO', title: 'VAS / ODI ölçek', desc: 'VAS 0–10 ve ODI 10 madde yüzde bandı (karar desteği, tanı değil) · eksik madde yorumlanmaz', route: '/doktor-tools/ftr-vas-odi', branslar: ['fizik-tedavi'] },
+  { circleColor: '#15803D', icon: 'EG', title: 'Ev egzersiz reçetesi', desc: 'Genel egzersiz adı · set/tekrar (ilaç dozu değil) · ağrı artınca dur · 112 notu', route: '/doktor-tools/ftr-egzersiz', branslar: ['fizik-tedavi'] },
+  { circleColor: '#166534', icon: 'FK', title: 'FTR kohort paneli', desc: 'Geciken kontrol · seans/egzersiz · açık kırmızı bayrak · yüksek VAS/ODI · 1-tap hatırlatma', route: '/doktor-tools/ftr-kohort', branslar: ['fizik-tedavi'] },
+  // AILE-HEKIMLIGI-EXCEPTIONAL-01 — specialty-only (not dahiliye / pediatri / kardiyoloji / göz / KD).
+  // Chapter engines: specialties/aile-hekimligi/engines. Paket vadeleri karar desteğidir; tanı ve doz hekimde.
+  // Visibility: aile-hekimligi only — NOT dahiliye, NOT pediatri, NOT endokrinoloji.
+  { circleColor: '#15803D', icon: 'AŞ', title: 'Aşı / tarama paketi', desc: 'Ulusal aşı takvimi · grip/pnömokok/HPV · kolon/meme/serviks tarama vadeleri — doz ve lot yok', route: '/doktor-tools/aile-asi-tarama', branslar: ['aile-hekimligi'] },
+  { circleColor: '#16A34A', icon: 'KR', title: 'Kronik paket (DM / HT)', desc: 'Diyabet · hipertansiyon · lipid · solunum izlem vadeleri · sınıf düzeyi görev — doz ve hedef sayı yok', route: '/doktor-tools/aile-kronik', branslar: ['aile-hekimligi'] },
+  { circleColor: '#DC2626', icon: 'SV', title: 'Sevk / acil triyaj', desc: 'Göğüs ağrısı · ani nefes darlığı · bilinç · kanama · inme bayrağı · anafilaksi → 112 · hekim onaylı', route: '/doktor-tools/aile-sevk', branslar: ['aile-hekimligi'] },
+  { circleColor: '#059669', icon: 'AK', title: 'Aile hekimliği kohort', desc: 'Geciken kontrol · aşı/tarama · kronik izlem · açık sevk/acil bayrağı · 1-tap hatırlatma', route: '/doktor-tools/aile-kohort', branslar: ['aile-hekimligi'] },
+  // SPOR-HEKIMLIGI-EXCEPTIONAL-01 — specialty-only (not ortopedi / fizik-tedavi / dahiliye / pediatri).
+  // Chapter engines: specialties/spor-hekimligi/engines. RTP/sakatlık bantları karar desteğidir; tanı ve doz hekimde.
+  // Visibility: spor-hekimligi only — NOT ortopedi, NOT fizik-tedavi, NOT pediatri.
+  { circleColor: '#CA8A04', icon: 'RT', title: 'RTP (return-to-play) basamak', desc: '0–5 basamak karar desteği · kontrol takvimi · spora dönüş ve tanı yazılmaz', route: '/doktor-tools/spor-rtp', branslar: ['spor-hekimligi'] },
+  { circleColor: '#A16207', icon: 'SG', title: 'Sakatlık günlüğü', desc: 'Bölge · mekanizma · şiddet bandı (karar desteği) · isteğe bağlı yüklenme uyarısı · tanı/doz yok', route: '/doktor-tools/spor-sakatlik', branslar: ['spor-hekimligi'] },
+  { circleColor: '#854D0E', icon: 'SK', title: 'Spor kohort paneli', desc: 'Geciken kontrol · RTP · aktif sakatlık · yüklenme uyarısı · açık kırmızı bayrak · 1-tap hatırlatma', route: '/doktor-tools/spor-kohort', branslar: ['spor-hekimligi'] },
+  // ENDOKRINOLOJI-EXCEPTIONAL-01 — specialty-only (not dahiliye / pediatri / kardiyoloji / göz).
+  // Chapter engines: specialties/endokrinoloji/engines. HbA1c/TSH/DXA karar desteği; tanı ve doz hekimde.
+  // Visibility: endokrinoloji only — NOT dahiliye (DM tools stay dahiliye), NOT pediatri, NOT kardiyoloji.
+  { circleColor: '#A855F7', icon: 'Hb', title: 'HbA1c / tiroid izlem döngüsü', desc: 'HbA1c · TSH · FT4 değeri → önerilen izlem aralığı (karar desteği) · tanı ve doz yok · CGM yok', route: '/doktor-tools/endo-lab-izlem', branslar: ['endokrinoloji'] },
+  { circleColor: '#9333EA', icon: 'DX', title: 'Osteoporoz / DXA hatırlatma', desc: 'Son DXA tarihi · risk bandı → tekrar aralığı · T-skor / tanı / ilaç dozu yazılmaz', route: '/doktor-tools/endo-dxa', branslar: ['endokrinoloji'] },
+  { circleColor: '#7E22CE', icon: 'RJ', title: 'İnsülin / tiroid rejim kartı', desc: 'Yalnız başlangıç ve kontrol tarihleri · doz birimi yazılmaz', route: '/doktor-tools/endo-rejim', branslar: ['endokrinoloji'] },
+  { circleColor: '#6B21A8', icon: 'EK', title: 'Endokrinoloji kohort paneli', desc: 'Geciken kontrol · lab/DXA · açık acil bayrak · yüksek HbA1c bandı · 1-tap hatırlatma', route: '/doktor-tools/endo-kohort', branslar: ['endokrinoloji'] },
 ]
 
 /**

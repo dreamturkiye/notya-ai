@@ -86,6 +86,16 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   if (brans === 'noroloji') aktif.add('norolojim')
   // UROLOJI-EXCEPTIONAL-01 — Ürolojimm yalnız üroloji hekiminin token'ında; başka branşa hiç taşınmaz.
   if (brans === 'uroloji') aktif.add('urolojim')
+  // SPOR-HEKIMLIGI-EXCEPTIONAL-01 — Sporum yalnız spor-hekimligi hekiminin token'ında; ortopedi/FTR'ye taşınmaz.
+  if (brans === 'spor-hekimligi') aktif.add('sporum')
+  // ORTOPEDI-EXCEPTIONAL-01 — Eklemlerim yalnız ortopedi hekiminin token'ında; başka branşa hiç taşınmaz.
+  if (brans === 'ortopedi') aktif.add('eklemlerim')
+  // FIZIK-TEDAVI-EXCEPTIONAL-01 — FTR'm yalnız fizik-tedavi hekiminin token'ında; başka branşa hiç taşınmaz.
+  if (brans === 'fizik-tedavi') aktif.add('ftrm')
+  // AILE-HEKIMLIGI-EXCEPTIONAL-01 — Sağlık Paketim yalnız aile hekimliği hekiminin token'ında.
+  if (brans === 'aile-hekimligi') aktif.add('saglik-paketim')
+  // ENDOKRINOLOJI-EXCEPTIONAL-01 — Hormonlarım yalnız endokrinoloji hekiminin token'ında; dahiliye'ye taşınmaz.
+  if (brans === 'endokrinoloji') aktif.add('hormonlarim')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]
@@ -93,7 +103,8 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     buyume: 'pediatri', gebelik: 'kadin-hastaliklari-dogum', jinekoloji: 'kadin-hastaliklari-dogum',
     dahiliye: 'dahiliye', gozlerim: 'goz-hastaliklari', dermatoloji: 'dermatoloji', psikiyatri: 'psikiyatri',
     kulaklarim: 'kulak-burun-bogaz', kalbim: 'kardiyoloji', akcigerlerim: 'gogus-hastaliklari',
-    norolojim: 'noroloji', urolojim: 'uroloji',
+    norolojim: 'noroloji', urolojim: 'uroloji', sporum: 'spor-hekimligi', eklemlerim: 'ortopedi', ftrm: 'fizik-tedavi',
+    'saglik-paketim': 'aile-hekimligi', hormonlarim: 'endokrinoloji',
   }
   const nav = sirali.flatMap((id) => modul(SAHIP[id], id)?.nav || [])
   return { moduller: sirali, nav }

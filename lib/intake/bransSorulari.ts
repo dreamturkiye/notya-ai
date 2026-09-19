@@ -172,6 +172,9 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'agriSuresiOrtopedi', etiket: 'Bu ağrı ne zamandır var?', tur: 'radio', secenekler: ['Bugün başladı', 'Birkaç gündür', 'Birkaç haftadır', 'Aylardır / Kronik'] },
       { id: 'travmaOykusu', etiket: 'Bir düşme, çarpma veya travma sonucu mu başladı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'eslikEdenSemptomlarOrtopedi', etiket: 'Eşlik eden belirtiler', tur: 'checkbox-grup', secenekler: ['Şişlik', 'Kızarıklık', 'Isı Artışı', 'Hareket Kısıtlılığı', 'Uyuşma / Karıncalanma', 'Kilitlenme Hissi', 'Yok'] },
+      // ORTOPEDI-EXCEPTIONAL-01 — kırmızı bayrak kutucukları. Etiketler
+      // specialties/ortopedi/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerOrtopedi', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Şiddetli şişlik ile dayanılmaz ağrı (kompartman şüphesi)', 'Ani his, güç veya nabız kaybı', 'Açık kırık / kemik dışarıda görünmesi', 'Ateş ile sıcak veya kızarık eklem', 'Bel ve bacak ağrısı ile idrar veya gaita kontrol kaybı', 'Çıkık ile birlikte soğukluk veya nabız kaybı', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'baslikOrtopediGecmisi', etiket: 'Kas-İskelet Sağlığı Geçmişi', tur: 'bolum-basligi' },
       { id: 'bilinenOrtopedikHastaliklar', etiket: 'Bilinen kas-iskelet hastalıklarınız', tur: 'checkbox-grup', secenekler: ['Osteoporoz', 'Artrit / Romatizma', 'Skolyoz', 'Disk Hernisi', 'Yok'] },
       { id: 'oncekiOrtopedikAmeliyat', etiket: 'Daha önce ortopedik bir ameliyat geçirdiniz mi?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
@@ -346,6 +349,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     alanlar: [
       BASVURU_NEDENI,
       { id: 'agriSuresiFT', etiket: 'Bu ağrı ne zamandır var?', tur: 'radio', secenekler: ['Birkaç gündür', 'Birkaç haftadır', 'Aylardır', 'Yıllardır / Kronik'] },
+      // FIZIK-TEDAVI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/fizik-tedavi/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerFtr', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Eyer / oturak bölgesinde uyuşukluk veya idrar-gaita kaçırma', 'İlerleyici güç kaybı veya ayak düşürme', 'Travma sonrası yük bindirememe / kırık şüphesi', 'Ateş ile birlikte bel, sırt veya eklem ağrısı', 'Gece ağrısı, açıklanamayan kilo kaybı veya bilinen kanser ile bel ağrısı', 'Yüksek enerjili travma (trafik, yüksekten düşme) sonrası şiddetli ağrı', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'agriNiteligiFT', etiket: 'Ağrınızın niteliği', tur: 'checkbox-grup', secenekler: ['Zonklayıcı', 'Batıcı', 'Yanıcı', 'Uyuşturucu', 'Sertlik / Tutukluk', 'Yok'] },
       { id: 'gunlukKisitlama', etiket: 'Günlük yaşam aktivitelerinizi ne kadar kısıtlıyor?', tur: 'radio', secenekler: ['Hiç', 'Az', 'Orta', 'Ciddi şekilde'] },
       { id: 'baslikFTGecmisi', etiket: 'Kas-İskelet Geçmişi', tur: 'bolum-basligi' },
@@ -374,6 +379,8 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Endokrin Değerlendirme',
     alanlar: [
       BASVURU_NEDENI,
+      // ENDOKRINOLOJI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/endokrinoloji/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerEndo', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ciddi hipoglisemi veya bilinç bulanıklığı', 'Kusma, derin nefes veya bilinç değişikliği (ketoasidoz şüphesi)', 'Ateş, çarpıntı ve aşırı ajitasyon (tiroid fırtınası şüphesi)', 'Ani halsizlik / tansiyon düşüklüğü (adrenal kriz şüphesi)', 'Çok yüksek kan şekeri ile aşırı susama / bilinç bulanıklığı', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarEndokrin', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Aşırı Susama', 'Sık İdrara Çıkma', 'Açıklanamayan Kilo Değişimi', 'Yorgunluk', 'Sıcak / Soğuğa Dayanıksızlık', 'Saç Dökülmesi', 'Çarpıntı', 'Yok'] },
       { id: 'tiroidDiyabet', etiket: 'Bilinen tiroid veya diyabet hastalığınız varsa detay', tur: 'textarea' },
       { id: 'baslikEndokrinGecmisi', etiket: 'Endokrin Sağlık Geçmişi', tur: 'bolum-basligi' },
@@ -535,6 +542,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       BASVURU_NEDENI,
       { id: 'ziyaretAmaci', etiket: 'Bu bir genel sağlık kontrolü mü, yoksa belirli bir şikayet mi?', tur: 'radio', secenekler: ['Genel kontrol / check-up', 'Belirli bir şikayetim var'] },
       { id: 'genelSemptomlarAile', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Halsizlik', 'Baş Ağrısı', 'Eklem Ağrısı', 'Uyku Sorunu', 'Kilo Değişimi', 'Sindirim Sorunu', 'Yok'] },
+      { id: 'acilBelirtilerAile', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Göğüs ağrısı veya baskı', 'Ani / şiddetli nefes darlığı', 'Bilinç değişikliği veya bayılma', 'Şiddetli veya durmayan kanama', 'Ani yüz kayması, konuşma bozukluğu veya güç kaybı', 'Ağır alerjik reaksiyon (nefes / şişme)', 'Ani şiddetli karın ağrısı', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'guncelTaramalar', etiket: 'Güncel koruyucu tarama testleriniz (kolonoskopi, mamografi vb.)', tur: 'textarea' },
       { id: 'baskaAileHekimi', etiket: 'Başka bir yerde kayıtlı aile hekiminiz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'koruyucuAsiDurumu', etiket: 'Yetişkin aşı takviminiz güncel mi?', tur: 'radio', secenekler: ['Güncel', 'Eksik var', 'Emin değilim'] },
@@ -546,6 +554,9 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     alanlar: [
       BASVURU_NEDENI,
       { id: 'sporDaliSikligi', etiket: 'Yaptığınız spor dalı ve haftalık sıklığı', tur: 'text' },
+      // SPOR-HEKIMLIGI-EXCEPTIONAL-01 — kırmızı bayrak kutucukları. Etiketler
+      // specialties/spor-hekimligi/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerSpor', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Baş darbesi sonrası kusma, bilinç kaybı, nöbet veya çift görme', 'Egzersiz / antrenman sırasında göğüs ağrısı', 'Efor veya spor sırasında bayılma', 'Şüpheli kırık ile uyuşma veya güç kaybı', 'Aşırı gergin şişlik / kompartman şüphesi', 'Boyun veya omurga travması şüphesi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarSpor', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Eklem Ağrısı', 'Kas Ağrısı', 'Şişlik', 'Hareket Kısıtlılığı', 'Çarpıntı', 'Nefes Darlığı', 'Yok'] },
       { id: 'sonSakatlik', etiket: 'Son sakatlık öykünüz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'kalpTaramasi', etiket: 'Daha önce kalp taraması (EKG, efor testi) yaptırdınız mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
