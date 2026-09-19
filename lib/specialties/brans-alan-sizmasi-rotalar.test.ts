@@ -102,7 +102,9 @@ const konsultIstekleri: Array<{ system: string; mesajlar: string }> = []
 globalThis.fetch = (async (girdi: unknown, init?: { body?: string }) => {
   if (String(girdi).includes('api.anthropic.com')) {
     const govde = JSON.parse(String(init?.body || '{}'))
-    konsultIstekleri.push({ system: String(govde.system || ''), mesajlar: JSON.stringify(govde.messages || []) })
+    // NOTYA-MALIYET-01: system önbellek için blok dizisi olarak gidebilir — modelin gördüğü metin blokların birleşimidir
+    const system = Array.isArray(govde.system) ? govde.system.map((b: { text?: string }) => String(b?.text || '')).join('') : String(govde.system || '')
+    konsultIstekleri.push({ system, mesajlar: JSON.stringify(govde.messages || []) })
     const cevap = { cevap: 'Özeti güncelledim Hocam.', duzenlemeler: { hastaOzeti: 'Yenilenmiş sentetik özet.', vitaller: { nabiz: '84', basCevresi: '30' } }, eylemler: [] }
     return new Response(JSON.stringify({ content: [{ type: 'text', text: JSON.stringify(cevap) }] }), { status: 200, headers: { 'content-type': 'application/json' } })
   }

@@ -40,6 +40,18 @@ export function buildMaliSystemPrompt(
   currentMüşteri: Record<string, unknown> | null,
   müşavir?: { id: string; name: string } | null
 ): string {
+  const p = buildMaliSystemPromptParcalari(persona, prefs, currentMüşteri, müşavir)
+  return p.sabit + p.degisken
+}
+
+/** NOTYA-MALIYET-01 (prompt caching): `sabit` = kimlik + kurallar + JSON biçimi (müşavir × persona başına sabit),
+ *  `degisken` = öğrenilenler + aktif müşteri. sabit + degisken === buildMaliSystemPrompt(...). */
+export function buildMaliSystemPromptParcalari(
+  persona: MaliPersona,
+  prefs: Partial<MaliPreferences> | null,
+  currentMüşteri: Record<string, unknown> | null,
+  müşavir?: { id: string; name: string } | null
+): { sabit: string; degisken: string } {
   const addr = müşavir ? müşavir.name.split(' ')[0] + ' Bey/Hanim' : 'Müşavir'
   let prompt = `Kimligin: Sen ${persona.name} -- ${persona.title}. ${persona.oda}, ${persona.yil} yil deneyim.`
   prompt += `
@@ -60,6 +72,8 @@ Mutlak kurallar:`
 - Her eylemden sonra teyit et`
   prompt += `
 JSON YANIT FORMATI: { "speech": "...", "action": null | { "type": string, "payload": any }, "proactiveWarning": null | "..." }`
+  const sabit = prompt
+  prompt = ''
   if (prefs && (prefs.sessionsCompleted ?? 0) >= 5) {
     prompt += `
 === MUSAVIRDAN OGRENDIKLERIM ===`
@@ -74,7 +88,7 @@ Not stili: ${JSON.stringify(prefs.noteStyle)}`
     prompt += `
 === AKTIF MUSTERI === ${JSON.stringify(currentMüşteri)}`
   }
-  return prompt
+  return { sabit, degisken: prompt }
 }
 
 export function getMaliPersona(): MaliPersonaId {

@@ -17,7 +17,8 @@ import { kritikAlarm } from '@/lib/alarm'
 import { hafizaYukle, hafizaBloguSohbet } from '@/lib/doktor/hafiza'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 import { vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
-import { notKonsultSistemPromptu } from '@/lib/doktor/notKonsultPromptu'
+import { notKonsultSistemParcalari } from '@/lib/doktor/notKonsultPromptu'
+import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
   const trtBugun = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   // BRANS-ALAN-SIZMASI: hitap (hasta/veli), vital anahtarları ve persentil kuralı notun branş kapsamından
   const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, patientId: seans?.patient_id ? String(seans.patient_id) : null })
-  const sistem = notKonsultSistemPromptu({ kapsam, trtBugun, taslak, not, klinikBaglam, hafizaBlogu })
+  const sistem = notKonsultSistemParcalari({ kapsam, trtBugun, taslak, not, klinikBaglam, hafizaBlogu })
 
   const gecmis = mesajlar.slice(-16).map((m) => ({
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
@@ -75,21 +76,16 @@ export async function POST(req: NextRequest) {
   }))
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, system: sistem, messages: gecmis }),
-    })
-    const veri = await r.json()
-    if (!r.ok) {
-      console.error('[not-konsult] anthropic', JSON.stringify(veri).slice(0, 300))
+    // NOTYA-MALIYET-01: SOAP üzerinde klinik danışma + düzenleme — GÜÇLÜ (klinik-analiz)
+    let ham: string
+    try {
+      // prompt caching: kimlik/yetenekler/alan anahtarları (branş kapsamı başına sabit) önbellekli; tarih, taslak, dosya, hafıza arkasından
+      ham = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit, onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis }))
+    } catch (e) {
+      if (!(e instanceof AiCagriHatasi)) throw e
+      console.error('[not-konsult] anthropic', e.govde.slice(0, 300))
       return NextResponse.json({ error: 'Ayşe şu an yanıt veremiyor. Lütfen tekrar deneyin.' }, { status: 502 })
     }
-    const ham = (veri.content || []).filter((c: { type: string }) => c.type === 'text').map((c: { text: string }) => c.text).join('')
     const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
     let sonuc: { cevap?: string; duzenlemeler?: Record<string, unknown>; eylemler?: unknown[] }
     // Kaan/Gökhan (2026-09-10): model bazen JSON'u düz metnin içine gömüyor → ilk {...} bloğunu çıkar

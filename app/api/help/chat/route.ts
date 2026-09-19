@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { aiCagir } from '@/lib/ai/cagir'
 
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 const getSB = () => createClient(
@@ -60,9 +61,11 @@ export async function POST(req: NextRequest) {
       }))
     messages.push({ role: 'user', content: message.trim() })
 
-    const response = await getAnthropic().messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
+    const response = await aiCagir({
+      istemci: getAnthropic(),
+      gorev: 'kisa-yanit',
+      doctorId: user.id,
+      maxTokens: 200, // "Maksimum 3 cümle"
       system: systemPrompt,
       messages,
     })

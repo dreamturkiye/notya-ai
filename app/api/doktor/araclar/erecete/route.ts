@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize';
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti';
 import { kritikAlarm } from '@/lib/alarm';
+import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir';
 
 interface IlacInput {
   ad: string;
@@ -86,27 +87,17 @@ export async function POST(request: NextRequest) {
 
     // AUDIT-2026-09-03: Groq'tan Anthropic'e geçiş — GROQ_API_KEY hiçbir ortamda tanımlı
     // değildi, araç hiç çalışmamıştı. Tek AI sağlayıcı = tek fatura, tutarlı kalite.
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2500,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: guvenliMesaj }],
-      }),
-    });
-    const veri = await r.json();
-    if (!r.ok) {
-      console.error('[erecete] anthropic', JSON.stringify(veri).slice(0, 300));
-      await kritikAlarm('erecete AI hatasi', JSON.stringify(veri).slice(0, 200));
+    // NOTYA-MALIYET-01: yalnız biçimlendirme değil — mevcut ilaçlarla etkileşim kontrolü ve SGK notu üretir;
+    // klinik karar çıktısı olduğu için GÜÇLÜ (klinik-analiz) kalır. 2500: ilaç + etkileşim listesi JSON'u kesilmesin.
+    let hamMetin: string
+    try {
+      hamMetin = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', maxTokens: 2500, doctorId: user.id, system: systemPrompt, messages: [{ role: 'user', content: guvenliMesaj }] }))
+    } catch (e) {
+      if (!(e instanceof AiCagriHatasi)) throw e
+      console.error('[erecete] anthropic', e.govde.slice(0, 300));
+      await kritikAlarm('erecete AI hatasi', e.govde.slice(0, 200));
       return NextResponse.json({ hata: 'Reçete taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
     }
-    const hamMetin = (veri.content || []).filter((c: { type: string }) => c.type === 'text').map((c: { text: string }) => c.text).join('');
     const temiz = hamMetin.replace(/```json\n?|\n?```/g, '').trim();
     let parsedRecete: Record<string, unknown>;
     try {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
+import { aiCagir } from '@/lib/ai/cagir'
 import { verifyPortalToken, generatePortalToken, registerPortalToken, buildMuvekkilSystemPrompt } from '@/lib/avukat/avukatPortalEngine'
 
 const getSupabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
@@ -98,7 +99,8 @@ export async function POST(req: NextRequest) {
     )
     const ai = getAnthropic()
     const msgs = [...(history || []), { role: 'user' as const, content: message }]
-    const resp = await ai.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 800, system, messages: msgs })
+    // NOTYA-MALIYET-01: müvekkile hukuki süre/dosya durumu — hukuk içeriği, GÜÇLÜ kalır (Haiku dar listesinde değil)
+    const resp = await aiCagir({ istemci: ai, gorev: 'sohbet-uzman', maxTokens: 800, doctorId: payload.avukatId, system, messages: msgs })
     const reply = resp.content[0].type === 'text' ? resp.content[0].text : 'Yanit alinamadi.'
     return NextResponse.json({ success: true, data: { speech: reply } })
   } catch (e: unknown) {

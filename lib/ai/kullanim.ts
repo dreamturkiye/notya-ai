@@ -1,0 +1,69 @@
+/**
+ * NOTYA-MALIYET-01 (E) — her Claude çağrısının token sayaçlarını ai_kullanim tablosuna yazar.
+ *
+ * YALNIZ SAYAÇ: hekim kimliği (varsa), görev, model ve usage sayıları. Prompt, yanıt, hasta adı/kimliği
+ * veya herhangi bir içerik YAZILMAZ — kullanimSatiri() şekli lib/ai/cagir.test.ts'te kilitli.
+ * Kayıt hatası çağrıyı asla düşürmez (ölçüm kritik yol değildir).
+ */
+import type { Gorev } from './modeller'
+
+export interface HamKullanim {
+  input_tokens?: number | null
+  output_tokens?: number | null
+  cache_creation_input_tokens?: number | null
+  cache_read_input_tokens?: number | null
+}
+
+export interface KullanimSatiri {
+  doctor_id: string | null
+  gorev: Gorev
+  model: string
+  input_tokens: number
+  output_tokens: number
+  cache_read: number
+  cache_creation: number
+  kesildi: boolean
+}
+
+const sayi = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x > 0 ? Math.round(x) : 0)
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Saf: API yanıtının usage alanından tabloya gidecek satır. doctor_id UUID değilse null (FK güvenli). */
+export function kullanimSatiri(g: { doctorId?: string | null; gorev: Gorev; model: string; usage?: HamKullanim | null; stopReason?: string | null }): KullanimSatiri {
+  const u = g.usage || {}
+  return {
+    doctor_id: g.doctorId && UUID.test(g.doctorId) ? g.doctorId : null,
+    gorev: g.gorev,
+    model: String(g.model || '').slice(0, 80),
+    input_tokens: sayi(u.input_tokens),
+    output_tokens: sayi(u.output_tokens),
+    cache_read: sayi(u.cache_read_input_tokens),
+    cache_creation: sayi(u.cache_creation_input_tokens),
+    kesildi: g.stopReason === 'max_tokens',
+  }
+}
+
+type Yazici = { from: (t: string) => { insert: (r: KullanimSatiri) => PromiseLike<{ error: unknown }> } }
+let yazici: Yazici | null | undefined
+
+async function yaziciAl(): Promise<Yazici | null> {
+  if (yazici !== undefined) return yazici
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anahtar = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !anahtar) { yazici = null; return null }
+  const { createClient } = await import('@supabase/supabase-js')
+  yazici = createClient(url, anahtar, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }) as unknown as Yazici
+  return yazici
+}
+
+/** Servis rolüyle tek satır ekler; her hata yutulur (yalnız konsola sayaçsız bir uyarı). */
+export async function kullanimKaydet(satir: KullanimSatiri): Promise<void> {
+  try {
+    const sb = await yaziciAl()
+    if (!sb) return
+    const { error } = await sb.from('ai_kullanim').insert(satir)
+    if (error) console.warn('[ai_kullanim] kayıt yazılamadı', { gorev: satir.gorev, model: satir.model })
+  } catch {
+    /* ölçüm kritik değil */
+  }
+}

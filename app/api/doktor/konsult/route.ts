@@ -12,6 +12,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
+import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -59,30 +60,20 @@ export async function POST(req: NextRequest) {
   }))
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
-        system: `${SISTEM}\n\n=== HASTA DOSYASI ===\n${dosya}`,
-        messages: gecmis,
-      }),
-    })
-    const veri = await r.json()
-    if (!r.ok) {
-      console.error('[konsult] anthropic', JSON.stringify(veri).slice(0, 300))
-      const ham = JSON.stringify(veri)
+    // NOTYA-MALIYET-01: hasta dosyası üzerinde klinik konsültasyon — GÜÇLÜ (klinik-analiz)
+    let veri: Awaited<ReturnType<typeof aiCagir>>
+    try {
+      // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }], messages: gecmis })
+    } catch (e) {
+      if (!(e instanceof AiCagriHatasi)) throw e
+      console.error('[konsult] anthropic', e.govde.slice(0, 300))
       let msg = 'Asistan şu an yanıt veremiyor. Lütfen tekrar deneyin.'
-      if (/credit balance/i.test(ham)) msg = 'Yapay zekâ servisi geçici olarak kullanılamıyor (hesap bakiyesi). Yönetici bilgilendirildi.'
-      else if (/rate_limit|overloaded/i.test(ham)) msg = 'Sistem şu an yoğun. Birkaç saniye sonra tekrar deneyin.'
+      if (/credit balance/i.test(e.govde)) msg = 'Yapay zekâ servisi geçici olarak kullanılamıyor (hesap bakiyesi). Yönetici bilgilendirildi.'
+      else if (/rate_limit|overloaded/i.test(e.govde)) msg = 'Sistem şu an yoğun. Birkaç saniye sonra tekrar deneyin.'
       return NextResponse.json({ error: msg }, { status: 502 })
     }
-    const cevap = (veri.content || []).filter((c: { type: string }) => c.type === 'text').map((c: { text: string }) => c.text).join('\n')
+    const cevap = yanitMetni(veri, '\n')
     return NextResponse.json({ cevap })
   } catch (e) {
     console.error('[konsult]', e)

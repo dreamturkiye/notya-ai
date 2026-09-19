@@ -2,6 +2,7 @@ import{NextRequest,NextResponse}from 'next/server'
 import{createClient}from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import{buildDilekceSystemPrompt}from '@/lib/avukat/dilekceEngine'
+import{aiCagir}from '@/lib/ai/cagir'
 const getSupabase=()=>createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } })
 const getAnthropic=()=>new Anthropic({apiKey:process.env.ANTHROPIC_API_KEY!})
 export async function POST(req:NextRequest){
@@ -17,7 +18,7 @@ export async function POST(req:NextRequest){
     const avukat={name:u?.full_name||'Avukat',baro:u?.baro_no||''}
     const system=buildDilekceSystemPrompt(turId,avukat,muvekkil_bilgileri||null)
     const ai=getAnthropic()
-    const resp=await ai.messages.create({model:'claude-sonnet-4-6',max_tokens:2000,system,messages:[{role:'user',content:ek_bilgiler||'Dilekceyi olustur.'}]})
+    const resp=await aiCagir({istemci:ai,gorev:'uzman-analiz',doctorId:user.id,system,messages:[{role:'user',content:ek_bilgiler||'Dilekceyi olustur.'}]})
     const raw=resp.content[0].type==='text'?resp.content[0].text:''
     let parsed:{dilekce_metni:string;eksik_bilgiler:string[];uyarilar:string[]}
     try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim())}

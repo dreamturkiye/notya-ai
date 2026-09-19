@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
-import { PERSONAS, varsayilanPersonaId, buildSystemPrompt, type PersonaId } from "@/lib/asistan/personaEngine"
+import { PERSONAS, varsayilanPersonaId, buildSystemPromptParcalari, type PersonaId } from "@/lib/asistan/personaEngine"
 import { dahiliyeKilidi, dahiliyeMi } from "@/specialties/dahiliye/prompts"
 import { kadinDogumKilidi, kadinDogumMi } from "@/specialties/kadin-dogum/prompts"
 import { dermatolojiKilidi, dermatolojiMi } from "@/specialties/dermatoloji/prompts"
@@ -22,6 +22,8 @@ import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asi
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
+import { aiCagir } from "@/lib/ai/cagir"
+import { asistanModelYonlendir, gecmisiKirp, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -185,15 +187,27 @@ export async function POST(req: NextRequest) {
     // Build system prompt with learning context
     // DAH-/KD-/DERM-PROMPTS-LOCK: branş hekimi (users.specialty) → specialties/<branş>/prompts kilidi (system.md + tools.ts)
     const bransKilidi = dahiliyeMi(hekimBransi, specialty) ? dahiliyeKilidi("asistan") : kadinDogumMi(hekimBransi, specialty) ? kadinDogumKilidi("asistan") : dermatolojiMi(hekimBransi, specialty) ? dermatolojiKilidi("asistan") : gozMi(hekimBransi, specialty) ? gozKilidi("asistan") : ""
-    const systemPrompt = buildSystemPrompt(persona, prefs, currentPatient, doctorProfile, hafizaBlogu) + bransKilidi + dosyaEk
+    // NOTYA-MALIYET-01 (prompt caching): metin ve sıra eskisiyle birebir aynı (buildSystemPrompt + bransKilidi + dosyaEk).
+    // 1. kırılma noktası: persona/know-how/kurallar (hekim × persona başına sabit). 2. kırılma noktası: tüm system — hafıza,
+    // aktif hasta, branş kilidi ve dosya aynı sohbette turdan tura değişmez (yalnız ilk turda gün bloğu var).
+    // Branş kilidi BİLEREK sabit bloğa taşınmadı: kilit "yukarıdaki talimatlarla çeliştiğinde ÖNCELİKLİDİR" der; hafıza
+    // ve hasta bloğunun üstüne çıkarsa önceliği onları kapsamaz (kalite riski).
+    const sistem = buildSystemPromptParcalari(persona, prefs, currentPatient, doctorProfile, hafizaBlogu)
 
-    // Call Claude with full conversation history
-    const response = await getAnthropic().messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1600, // 800 cut long clinical answers mid-JSON (F3)
-      system: systemPrompt,
+    // NOTYA-MALIYET-01 (Kaan, 2026-09-19): ŞÜPHEDE GÜÇLÜ. Hasta bağlamı, eylem niyeti, klinik sinyal ya da belirsiz mesaj →
+    // GÜÇLÜ (Sonnet, 1600 token — F3). HIZLI yalnız net sosyal tur / uygulama kullanımı sorusu. Kural: lib/ai/modeller.ts.
+    const yonlendirme = asistanModelYonlendir({ mesaj: String(message || ""), hastaBaglami: Boolean(dosyaEk) || Boolean(currentPatient), niyet: quickIntent })
+    const response = await aiCagir({
+      istemci: getAnthropic(),
+      gorev: yonlendirme.gorev,
+      doctorId: user.id,
+      system: [
+        { metin: sistem.sabit, onbellek: true },
+        { metin: sistem.degisken + bransKilidi + dosyaEk, onbellek: true },
+      ],
       messages: [
-        ...messages.map((m: { role: string; content: string }) => ({
+        // modele son 8 mesaj (4 tur) gider; saklanan geçmiş ve doz-kaynak kontrolü tam listeyi kullanır
+        ...gecmisiKirp(messages).map((m: { role: string; content: string }) => ({
           role: m.role as "user" | "assistant",
           content: m.content
         })),
@@ -264,7 +278,7 @@ export async function POST(req: NextRequest) {
       ...messages,
       { role: "user", content: message },
       { role: "assistant", content: aiData.speech }
-    ].slice(-20) // Keep last 20 messages (10 exchanges)
+    ].slice(-SOHBET_SAKLANAN_MESAJ) // ekran + doz-kaynak kontrolü için 20 mesaj saklanır; modele 8'i gider
 
     await getSupabase().from("asistan_sessions")
       .update({
