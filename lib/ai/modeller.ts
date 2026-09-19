@@ -91,7 +91,12 @@ export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number
   soap: { kademe: 'guclu', maxTokens: 8000 },
   'not-uretimi': { kademe: 'guclu', maxTokens: 4000 },
   'klinik-analiz': { kademe: 'guclu', maxTokens: 2000 },
-  'goruntu-inceleme': { kademe: 'guclu', maxTokens: 3000 },
+  // ASI-KARNESI-FIX (Kaan/Dr. Gokhan, 2026-09-19): 3000 yetmiyordu. Turk asi karnesinde 20-25
+  // satir olur; her satir JSON'da ~150 token (ad, doz, tarih, okunamadi, neden, ham metin) →
+  // 3500-4000 token. Tavan asilinca JSON ORTADAN KESILIYOR ve karneYanitiniCoz kesik JSON'u
+  // reddediyor (F3 geregi hekime ham JSON gosterilmez) → hekim 'Karne okunamadi' goruyordu.
+  // Ayni karnenin hem PDF'i hem fotografi ayni anda basarisiz oluyordu; belirti de buydu.
+  'goruntu-inceleme': { kademe: 'guclu', maxTokens: 8000 },
   'uzman-analiz': { kademe: 'guclu', maxTokens: 2000 },
   // F3 (KD-DERM-SAFETY-FINDINGS): 800 uzun klinik cevabı JSON ortasında kesiyordu — klinik tur bu yüzden 1600.
   'sohbet-uzman': { kademe: 'guclu', maxTokens: 1600 },

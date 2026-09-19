@@ -77,9 +77,23 @@ export async function POST(req: NextRequest) {
         temperature: 0,
         doctorId: doktorId,
       })
+      // ASI-KARNESI-FIX: yanit token tavaninda kesildiyse bunu SESSIZCE "okunamadi"ya dusurme —
+      // sebebi farkli (karne okunmadi degil, cevap sigmadi) ve hekime verilecek tavsiye de farkli.
+      const kesildi = (y as { stopReason?: string | null })?.stopReason === 'max_tokens'
+      if (kesildi) {
+        console.error('[asi-karnesi] yanit token tavaninda kesildi (goruntu inceleme gorevi)')
+        return NextResponse.json(
+          { error: 'Karne çok uzun geldi ve okuma yarıda kesildi. Karneyi iki parça hâlinde (ör. sol/sağ sayfa) ayrı ayrı yükleyin ya da aşıları elle girin.' },
+          { status: 422 },
+        )
+      }
       sonuc = karneYanitiniCoz(yanitMetni(y as { content?: unknown }, '\n'), { bugunIso, dogumIso })
     } catch (e) {
-      if (e instanceof KarneOkumaHatasi) return NextResponse.json({ error: 'Karne okunamadı. Daha net bir fotoğrafla yeniden deneyin ya da aşıları elle girin.' }, { status: 422 })
+      // 422 yolunda hicbir sey loglanmiyordu — nedeni gormeden teshis edilemiyordu.
+      if (e instanceof KarneOkumaHatasi) {
+        console.error('[asi-karnesi] yanit ayristirilamadi (JSON bozuk/eksik)')
+        return NextResponse.json({ error: 'Karne okunamadı. Daha net bir fotoğrafla yeniden deneyin ya da aşıları elle girin.' }, { status: 422 })
+      }
       console.error('[asi-karnesi] okuma', e instanceof Error ? e.message : e)
       return NextResponse.json({ error: 'Karne şu an okunamadı. Birazdan yeniden deneyin ya da aşıları elle girin.' }, { status: 502 })
     }
