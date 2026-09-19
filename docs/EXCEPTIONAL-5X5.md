@@ -61,9 +61,11 @@ Live: kardio / noro / uroloji / gogus / kd `-exceptional-audit.html` · tip `731
 Araç counts: kardio 4 · noro 4 · üro 4 · göğüs 5 · KD 5 (mevcut) — sabit 5 yok.
 
 ### Dalga 2 — IN PROGRESS (2026-09-19)
-aile-hekimligi · ortopedi · fizik-tedavi · **spor-hekimligi (SHIPPED)** · endokrinoloji  
+aile-hekimligi · ortopedi · **fizik-tedavi (SHIPPED FIZIK-TEDAVI-EXCEPTIONAL-01)** · **spor-hekimligi (SHIPPED)** · **endokrinoloji (SHIPPED ENDOKRINOLOJI-EXCEPTIONAL-01)**  
 Araç sayısı sabit değil — kaç useful ise o kadar.
+Fizik Tedavi: 4 Araç (Seans · VAS/ODI · Ev egzersiz · Kohort) · FTR'm · migration 065 · live `/ftr-exceptional-audit.html`
 Spor Hekimliği: 3 Araç (RTP · Sakatlık · Kohort) · Sporum · migration 066 · live `/spor-exceptional-audit.html`
+Endokrinoloji: 4 Araç (HbA1c/tiroid · DXA · rejim dates-only · Kohort) · Hormonlarım · migration 067 · live `/endo-exceptional-audit.html`
 
 ### Dalga 3
 gastroenteroloji · nefroloji · romatoloji · enfeksiyon-hastaliklari · onkoloji

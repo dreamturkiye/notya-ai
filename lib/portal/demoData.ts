@@ -17,6 +17,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   eklem: null, // ORTOPEDI-EXCEPTIONAL-01 — Eklemlerim yalnız ortopedi hekiminin token'ında
   ftr: null, // FIZIK-TEDAVI-EXCEPTIONAL-01 — FTR'm yalnız fizik-tedavi hekiminin token'ında
   aile: null, // AILE-HEKIMLIGI-EXCEPTIONAL-01 — Sağlık Paketim yalnız aile hekimliği hekiminin token'ında
+  endo: null, // ENDOKRINOLOJI-EXCEPTIONAL-01 — Hormonlarım yalnız endokrinoloji hekiminin token'ında
   // KONSULTASYON-01 — çekirdek: yalnız branş + tarih + durum (klinik içerik yok)
   yonlendirmeler: [{ id: 'dy1', brans: 'Kardiyoloji', tarih: '2026-08-20', durum: 'sonuc_alindi', sonucTarihi: '2026-09-02' }],
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı

@@ -1,7 +1,7 @@
 'use client'
 import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
-import { endoStil, EndoHastaSecici, Onay, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './EndoAracKabugu'
+import { endoStil, EndoHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './EndoAracKabugu'
 import { labSkorla, LAB_TUR_ETIKET, type LabTur } from '../../engines/labIzlem'
 
 const TURLER: LabTur[] = ['hba1c', 'tsh', 'ft4']
@@ -58,7 +58,6 @@ export default function EndoLabIzlemAraci() {
           <Istatistik deger={sonuc.sonrakiAy ? `${sonuc.sonrakiAy} ay` : '—'} etiket="Önerilen izlem" ton="notr" />
         </div>
         <div style={endoStil.metin}>{ozet}</div>
-        <Onay ad="Hekim değerleri gördü ve kilitleyecek" deger={true} set={() => {}} />
         <div style={{ ...endoStil.satir, marginTop: 12 }}>
           <button type="button" style={endoStil.btn} onClick={kaydet}>Kaydet</button>
           <KopyalaButonu metin={ozet} />

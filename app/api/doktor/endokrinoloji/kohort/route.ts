@@ -3,7 +3,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
-import { endoKohortVerisi, endoHatirlatmaGonder } from './_kohort'
+import { endoKohortVerisi, endoHatirlatmaGonder } from '../_kohort'
 import type { EndoKohortBayrak } from '@/specialties/endokrinoloji/engines/kohort'
 
 export const dynamic = 'force-dynamic'

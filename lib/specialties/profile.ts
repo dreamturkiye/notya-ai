@@ -60,7 +60,7 @@ export interface UzmanIncelemeMaddesi { konu: string; neden: string }
  */
 export type PortalModulId = 'buyume' | 'gebelik' | 'jinekoloji' | 'dahiliye' | 'gozlerim' | 'dermatoloji' | 'psikiyatri' | 'kulaklarim' | 'kalbim' | 'norolojim' | 'akcigerlerim' | 'urolojim' | 'sporum' | 'saglik-paketim' | 'eklemlerim' | 'ftrm' | 'hormonlarim'
 /** Typed PortalBundle slices a module may fill (null in the bundle when the module is not attached). */
-export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz' | 'deri' | 'kronik' | 'psik' | 'kulak' | 'kalp' | 'akciger' | 'noro' | 'uro' | 'eklem' | 'ftr' | 'aile' | 'endo'
+export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz' | 'deri' | 'kronik' | 'psik' | 'kulak' | 'kalp' | 'akciger' | 'noro' | 'uro' | 'eklem' | 'ftr' | 'aile' | 'endo' | 'spor'
 export interface PortalNavOge { key: string; label: string; path: string }
 export interface PortalModulu {
   id: PortalModulId
