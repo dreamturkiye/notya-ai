@@ -294,4 +294,85 @@ describe('KONSULTASYON-01 — kapalı döngü (gerçek rota, sahte veritabanı)'
     assert.equal(sayi.j.tabloHazir, true)
     assert.ok(!JSON.stringify(sayi.j).includes('QA'), 'sayı modunda hasta adı yok')
   })
+
+  // ── AYSE-KONSULTASYON-01 (A): istem düzenlenebilir, yanıt gelince KİLİTLİ; düzenleme izi kaybolmaz ──
+  it('İSTEM DÜZENLEME: yanıt beklerken düzenlenir, önceki metin izde kalır; yanıtlanınca SUNUCU reddeder', async () => {
+    const ilk = 'İşitme kaybı var mı? Okul performansında düşüş.'
+    const k = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'kulak-burun-bogaz', klinikSoru: ilk, aciliyet: 'rutin' })))).j.konsultasyon
+    const patch = (g: Record<string, unknown>) => coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: k.id, ...g })))
+
+    // 1) yanit_bekleniyor → düzenlenir
+    const yeni = 'Sayın Meslektaşım,\n\nİşitme kaybı açısından değerlendirmenizi rica ederim.'
+    const d1 = await patch({ islem: 'duzenle', klinikSoru: yeni, aciliyet: 'oncelikli' })
+    assert.equal(d1.status, 200, JSON.stringify(d1.j))
+    assert.equal(d1.j.konsultasyon.klinik_soru, yeni)
+    assert.equal(d1.j.konsultasyon.aciliyet, 'oncelikli')
+    assert.equal(d1.j.konsultasyon.durum, 'yanit_bekleniyor', 'düzenleme durumu değiştirmez')
+    assert.deepEqual([...d1.j.degisen].sort(), ['aciliyet', 'klinik_soru'])
+    // 2) İZ: önceki metin KAYBOLMADI — kim, ne zaman, hangi alan
+    const iz = db.tablo('konsultasyon_revizyonlar').filter((r) => r.sevk_id === k.id)
+    assert.equal(iz.length, 2)
+    const soruIzi = iz.find((r) => r.alan === 'klinik_soru')!
+    assert.equal(soruIzi.onceki, ilk, 'önceki istem metni izde')
+    assert.equal(soruIzi.sonraki, yeni)
+    assert.equal(soruIzi.doctor_id, s.hekim)
+    assert.equal(soruIzi.patient_id, s.hasta)
+    assert.equal(iz.find((r) => r.alan === 'aciliyet')!.onceki, 'rutin')
+    // değişiklik yoksa iz yazılmaz
+    assert.equal((await patch({ islem: 'duzenle', klinikSoru: yeni })).status, 400)
+    assert.equal(db.tablo('konsultasyon_revizyonlar').filter((r) => r.sevk_id === k.id).length, 2)
+    // kısa soru reddedilir, satır değişmez
+    assert.equal((await patch({ islem: 'duzenle', klinikSoru: 'KBB?' })).status, 400)
+    // ikinci düzenleme de iz bırakır (ilk metin hâlâ duruyor)
+    const ucuncu = `${yeni}\nTelevizyonu yüksek sesle izliyor.`
+    assert.equal((await patch({ islem: 'duzenle', klinikSoru: ucuncu })).status, 200)
+    const soruIzleri = db.tablo('konsultasyon_revizyonlar').filter((r) => r.sevk_id === k.id && r.alan === 'klinik_soru').map((r) => r.onceki)
+    assert.deepEqual(soruIzleri, [ilk, yeni], 'her önceki metin sırayla saklanır')
+    // GET düzenleme geçmişini döndürür
+    const g = await coz(R.konsultasyon.GET(iste('GET', `/api/doktor/konsultasyon?patientId=${s.hasta}`, s.token)))
+    const satir = g.j.konsultasyonlar.find((x: { id: string }) => x.id === k.id)
+    assert.deepEqual(satir.duzenlemeler.filter((r: { alan: string }) => r.alan === 'klinik_soru').map((r: { onceki: string }) => r.onceki), [ilk, yeni])
+
+    // 3) yanıtlandı → istem KİLİTLİ (sunucuda 409), metin ve iz değişmez
+    assert.equal((await patch({ islem: 'yanit', yanitOzeti: 'İşitme kaybı saptanmadı.' })).status, 200)
+    const izOnce = db.tablo('konsultasyon_revizyonlar').length
+    const kilit = await patch({ islem: 'duzenle', klinikSoru: 'Yanıttan sonra değiştirilmiş istem metni.' })
+    assert.equal(kilit.status, 409)
+    assert.match(kilit.j.error, /kilitli/)
+    assert.equal(db.tablo('sevkler').find((x) => x.id === k.id)?.klinik_soru, ucuncu)
+    assert.equal(db.tablo('konsultasyon_revizyonlar').length, izOnce)
+
+    // 4) yanıt tarafı düzeltilebilir kalır — önceki özet izde
+    const duzelt = await patch({ islem: 'yanit', yanitOzeti: 'İşitme kaybı saptanmadı; odyometri normal.' })
+    assert.equal(duzelt.status, 200)
+    const yanitIzi = db.tablo('konsultasyon_revizyonlar').filter((r) => r.sevk_id === k.id && r.alan === 'yanit_ozeti')
+    assert.deepEqual(yanitIzi.map((r) => [r.onceki, r.sonraki]), [['İşitme kaybı saptanmadı.', 'İşitme kaybı saptanmadı; odyometri normal.']])
+  })
+
+  it('İSTEM DÜZENLEME: eski "acik" kayıt düzenlenir; yanıtsız kapatılmış kayıt düzenlenmez', async () => {
+    const eski = db.ekle('sevkler', { patient_id: s.hasta, doctor_id: s.hekim, hedef: 'nefroloji', not_metni: 'eGFR düşüşü', kaynak: 'hekim', durum: 'acik', created_at: '2026-09-01T08:00:00Z' })
+    const y = await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: eski.id, islem: 'duzenle', klinikSoru: 'eGFR düşüşü — nefroloji değerlendirmesi rica olunur.' })))
+    assert.equal(y.status, 200, JSON.stringify(y.j))
+    assert.equal(db.tablo('sevkler').find((x) => x.id === eski.id)?.not_metni, 'eGFR düşüşü', 'eski not_metni korunur')
+    const k = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'goz-hastaliklari', klinikSoru: 'Şaşılık var mı, göz muayenesi?' })))).j.konsultasyon
+    await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: k.id, islem: 'kapat' })))
+    const kapali = await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: k.id, islem: 'duzenle', klinikSoru: 'Kapandıktan sonra değiştirilmiş istem.' })))
+    assert.equal(kapali.status, 409)
+  })
+
+  it('İSTEM DÜZENLEME: iz yazılamazsa değişiklik YAPILMAZ (sessiz üzerine yazma yok)', async () => {
+    const ilk = 'Görme keskinliği değerlendirmesi rica olunur.'
+    const k = (await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', s.token, { patientId: s.hasta, hedefBrans: 'goz-hastaliklari', klinikSoru: ilk })))).j.konsultasyon
+    const asil = db.istemci.bind(db)
+    ;(db as unknown as { istemci: typeof db.istemci }).istemci = (o) => {
+      const c = asil(o)
+      return { ...c, from: (t: string) => (t === 'konsultasyon_revizyonlar' ? { insert: () => ({ select: async () => ({ data: null, error: { message: 'tablo yok' } }) }) } : c.from(t)) } as ReturnType<typeof db.istemci>
+    }
+    try {
+      const y = await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', s.token, { id: k.id, islem: 'duzenle', klinikSoru: 'Tamamen farklı bir istem metni yazıldı.' })))
+      assert.equal(y.status, 500)
+      assert.match(y.j.error, /değişiklik yapılmadı/)
+    } finally { (db as unknown as { istemci: typeof db.istemci }).istemci = asil }
+    assert.equal(db.tablo('sevkler').find((x) => x.id === k.id)?.klinik_soru, ilk)
+  })
 })

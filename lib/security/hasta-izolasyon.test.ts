@@ -492,6 +492,11 @@ const VAKALAR: Vaka[] = [
   { ad: 'PATCH /api/doktor/konsultasyon nota_ekle (yanıtı bugünkü muayene formuna ekle)', red: 404,
     yazdi: (a) => String(tablo('notes').find((n) => n.id === a.bekleyenNot)?.content_degerlendirme || '').includes('Konsültasyon yanıtı') && tablo('sevkler').find((x) => x.id === a.konsultasyonYanitli)?.note_id === a.bekleyenNot,
     cagir: (r, a, h) => coz(r.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', { token: a.token, govde: { id: h.konsultasyonYanitli, islem: 'nota_ekle' } }))) },
+  // AYSE-KONSULTASYON-01 (A): istem düzenleme — A, B'nin istemini düzenleyemez; kurbanın metni ve izi değişmez
+  { ad: 'PATCH /api/doktor/konsultasyon duzenle (istem metnini düzenle + düzenleme izi)', red: 404,
+    yazdi: (a) => tablo('sevkler').find((x) => x.id === a.konsultasyon)?.klinik_soru === 'QA düzenlenmiş istem metni: işitme kaybı var mı?'
+      && tablo('konsultasyon_revizyonlar').some((r) => r.sevk_id === a.konsultasyon && r.doctor_id === a.id && r.patient_id === a.hasta && String(r.onceki).startsWith('İşitme kaybı var mı?')),
+    cagir: (r, a, h) => coz(r.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', { token: a.token, govde: { id: h.konsultasyon, islem: 'duzenle', klinikSoru: 'QA düzenlenmiş istem metni: işitme kaybı var mı?' } }))) },
   { ad: 'PATCH /api/doktor/konsultasyon hatirlat (hastaya Sağlığım mesajı)', red: 404,
     yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.konu === 'Konsültasyon sonucu hatırlatması'),
     cagir: (r, a, h) => coz(r.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', { token: a.token, govde: { id: h.konsultasyon, islem: 'hatirlat' } }))) },
