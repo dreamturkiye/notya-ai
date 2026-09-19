@@ -7,7 +7,7 @@
  */
 import React, { useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { psikStil, PsikHastaSecici, PsikKopyala, Istatistik, TaslakNotu } from './PsikAracKabugu';
+import { psikStil, PsikHastaSecici, PsikKopyala, Istatistik, TaslakNotu, MuayeneFormunaEkle } from './PsikAracKabugu';
 import { PSIK_IZLEM_KURALLARI } from '../../engines/ilacIzlem';
 import { HEKIM_KILIT_METNI } from '../../engines/psikiyatri';
 
@@ -77,6 +77,11 @@ export default function IlacIzlemAraci() {
           </div>
           {durum && <div style={{ ...psikStil.iyi, marginTop: 8 }}>{durum}</div>}
           <PsikKopyala metin={veri.izlem.map((g) => `${g.ad} — ${g.ilac} — vade ${g.due}`).join('\n')} etiket="İzlem planını kopyala" />
+          <MuayeneFormunaEkle
+            hastaId={hastaId}
+            arac="Psikotrop izlem planı"
+            satirlar={veri.izlem.map((g) => `${g.ad} — ${g.ilac} — vade ${g.due}${g.labs.length ? ` (${g.labs.join(', ')})` : ''}`)}
+          />
           <TaslakNotu>Sınıf düzeyi izlem önerisidir; tetkik istemi, aralık ve doz kararı hekimindir.</TaslakNotu>
         </div>
       )}

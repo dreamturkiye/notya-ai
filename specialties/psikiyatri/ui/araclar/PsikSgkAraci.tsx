@@ -6,7 +6,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { psikStil, PsikHastaSecici, PsikOnay, PsikSecim, PsikKopyala, Istatistik, TaslakNotu, Rozet } from './PsikAracKabugu';
+import { psikStil, PsikHastaSecici, PsikOnay, PsikSecim, PsikKopyala, Istatistik, TaslakNotu, Rozet, MuayeneFormunaEkle } from './PsikAracKabugu';
 import { psikRaporTaslagi, PSIK_RAPOR_SABLONLARI, type PsikRaporSablon } from '../../engines/sgkRapor';
 
 export default function PsikSgkAraci() {
@@ -110,6 +110,7 @@ export default function PsikSgkAraci() {
         <div style={{ ...psikStil.etiket, marginTop: 12 }}>Taslak çıktı</div>
         <pre style={{ ...psikStil.kucuk, whiteSpace: 'pre-wrap', margin: 0 }}>{metin}</pre>
         <PsikKopyala metin={metin} etiket="Taslağı kopyala" />
+        <MuayeneFormunaEkle hastaId={hastaId} arac={sonuc.draft.sablonAd} satirlar={metin.split('\n')} />
         <TaslakNotu>Rapor taslaktır: Medula girişi, süre ve e-imza hekimindedir.</TaslakNotu>
         {sonuc.dipnotlar.map((d) => <div key={d.not} style={{ ...psikStil.kucuk, marginTop: 6 }}>{d.not}</div>)}
       </div>

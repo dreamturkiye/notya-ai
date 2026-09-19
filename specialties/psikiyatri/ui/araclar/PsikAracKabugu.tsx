@@ -21,7 +21,7 @@ export const psikStil = aracStil(PSIK_VURGU);
 
 export {
   Alan, Etiketli, Secim, Segment, Onay, Kutu, Sayi, Katlanir, TaslakNotu, Rozet, OneriRozet,
-  Istatistik, KopyalaButonu, panoyaKopyala, useUrlHasta, useHastaVerisi,
+  Istatistik, KopyalaButonu, MuayeneFormunaEkle, panoyaKopyala, useUrlHasta, useHastaVerisi,
 } from '@/lib/doktor/aracUi';
 
 /** Hekimin kendi hasta listesi (/api/doktor/hastalar — doctor_id kapsamlı). Seçim isteğe bağlıdır. */

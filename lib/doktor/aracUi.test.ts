@@ -155,6 +155,10 @@ describe('ARACLAR-CILA-01 Faz 2: bugünkü muayene formuna ekle', () => {
     'specialties/kadin-dogum/ui/araclar/DogumRaporAraci.tsx',
     'specialties/kadin-dogum/ui/araclar/MecAraci.tsx',
     'specialties/kadin-dogum/ui/araclar/RiskAraci.tsx',
+    // Psikiyatri: ölçek ve güvenlik kaydı zaten kendi uçlarından bugünün notuna yazılır
+    // (POST /api/doktor/psikiyatri) — ikinci yazma yolu açılmadı; kopyala-yapıştırla kalan iki araç burada.
+    'specialties/psikiyatri/ui/araclar/IlacIzlemAraci.tsx',
+    'specialties/psikiyatri/ui/araclar/PsikSgkAraci.tsx',
   ]
 
   it('her klinik araç ortak "Bugünkü muayene formuna ekle" eylemini taşır', () => {
