@@ -201,6 +201,16 @@ export interface PortalBundle {
   roma: PortalRoma | null
   /** ONKOLOJI-EXCEPTIONAL-01 — "Tedavim": MD-set kontrol + kür/toksisite hatırlatma. No tanı, doz. */
   onko: PortalOnko | null
+  /** GENEL-CERRAHI-EXCEPTIONAL-01 — "Ameliyatım": MD-set kontrol + ameliyat/yara/rapor hatırlatma. No tanı, doz. */
+  gc: PortalGc | null
+  /** PLASTIK-CERRAHI-EXCEPTIONAL-01 — "Yaram": MD-set pansuman/dikiş/foto/kontrol. No tanı, skor, doz. */
+  plastik: PortalPlastik | null
+  /** GOGUS-CERRAHISI-EXCEPTIONAL-01 — "Göğüs Cerrahisi takibi". No CAT/mMRC, tanı, doz. */
+  gogusCerrahi: PortalGogusCerrahi | null
+  /** BEYIN-CERRAHISI-EXCEPTIONAL-01 — "Beyin Cerrahisi takibi": MD-set kontrol + post-op/görüntü/izlem. No tanı, AED doz. */
+  beyin: PortalBeyin | null
+  /** COCUK-CERRAHISI-EXCEPTIONAL-01 — "Çocuğumun Cerrahisi". No Neyzi/büyüme chapter, tanı, doz. */
+  cc: PortalCc | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -521,6 +531,88 @@ export interface PortalOnko {
   labHatirlatma: Array<{ ad: string; due: string | null }>
   /** "Yan etki kontrolü" — grade/tanı yok */
   yanEtkiHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * GENEL-CERRAHI-EXCEPTIONAL-01 — "Ameliyatım": ayaktan genel cerrahi hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, patoloji sonucu,
+ * doz portala GEÇMEZ (specialties/genel-cerrahi/engines/portal-ameliyatim.ts kilidi).
+ */
+export interface PortalGc {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Ameliyat / işlem günü" — tanı yok */
+  ameliyatHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Yara / dren kontrolü" — enfeksiyon tanısı yok */
+  yaraHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Rapor takibi" / görüntüleme — sonuç yorumu yok */
+  raporHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * GOGUS-CERRAHISI-EXCEPTIONAL-01 — "Göğüs Cerrahisi takibi": ayaktan toraks cerrahisi hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler. Tanı, CAT/mMRC, GOLD, doz portala GEÇMEZ
+ * (specialties/gogus-cerrahisi/engines/portal-takibim.ts kilidi). gogus-hastaliklari Akciğerlerim ayrı.
+ */
+export interface PortalGogusCerrahi {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Tüp / yara kontrolü" — tanı yok */
+  tupYaraHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Patoloji raporu kontrolü" — tanı/ICD yok */
+  patolojiHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Ameliyat öncesi hazırlık" — OR planı yok */
+  preopHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * PLASTIK-CERRAHI-EXCEPTIONAL-01 — "Yaram": ayaktan plastik cerrahi hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, PASI/skor,
+ * doz portala GEÇMEZ (specialties/plastik-cerrahi/engines/portal-yaram.ts kilidi).
+ */
+export interface PortalPlastik {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  pansumanHatirlatma: Array<{ ad: string; due: string | null }>
+  fotoHatirlatma: Array<{ ad: string; due: string | null }>
+  dikisHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * BEYIN-CERRAHISI-EXCEPTIONAL-01 — "Beyin Cerrahisi takibi": ayaktan nöroşirürji hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı, AED doz,
+ * migren/inme skoru portala GEÇMEZ (specialties/beyin-cerrahisi/engines/portal-beyin-takibi.ts kilidi).
+ */
+export interface PortalBeyin {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "Ameliyat sonrası kontrol" — teknik/tanı yok */
+  postopHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "Görüntü / belge kontrolü" — tanı yorumu yok */
+  goruntuHatirlatma: Array<{ ad: string; due: string | null }>
+  /** "İzlem kontrolü" — AED doz yok */
+  izlemHatirlatma: Array<{ ad: string; due: string | null }>
+  ipuclari: string[]
+  not: string
+}
+
+/**
+ * COCUK-CERRAHISI-EXCEPTIONAL-01 — "Çocuğumun Cerrahisi": ayaktan çocuk cerrahisi hasta yüzü.
+ * Tanı, doz, Neyzi/büyüme chapter portala GEÇMEZ.
+ */
+export interface PortalCc {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  yaraHatirlatma: Array<{ ad: string; due: string | null }>
+  prepostHatirlatma: Array<{ ad: string; due: string | null }>
   ipuclari: string[]
   not: string
 }

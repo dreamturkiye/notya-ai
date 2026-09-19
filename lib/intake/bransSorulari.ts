@@ -155,6 +155,9 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'sikayetSuresiCerrahi', etiket: 'Bu şikayet ne zamandır var?', ...SIKAYET_SURESI_STANDART },
       { id: 'semptomlarCerrahi', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Karın Ağrısı', 'Şişlik / Kitle', 'Bulantı / Kusma', 'Kabızlık', 'İshal', 'Kanama', 'Ateş', 'Yok'] },
       { id: 'agriNiteligiCerrahi', etiket: 'Ağrınız varsa, niteliği nasıl?', tur: 'radio', secenekler: ['Keskin', 'Künt', 'Kramp Tarzı', 'Ağrım Yok'] },
+      // GENEL-CERRAHI-EXCEPTIONAL-01 — kırmızı bayrak kutucukları. Etiketler
+      // specialties/genel-cerrahi/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'acilBelirtilerGenelCerrahi', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Şiddetli karın ağrısı ile ateş veya kusma', 'Bol miktarda kanama (kusma veya gaita ile)', 'Fıtık sıkıştı, geri girmiyor veya kızarık/ağrılı', 'Ameliyat sonrası ateş veya yarada kızarıklık / irin', 'Ameliyat sonrası karın ağrısı ile ateş (kötüleşme)', 'Kusma ile birlikte gaz veya gaita çıkaramama', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'baslikCerrahiGecmisi', etiket: 'Cerrahi Geçmiş', tur: 'bolum-basligi' },
       { id: 'oncekiAmeliyatlarDetay', etiket: 'Daha önce geçirdiğiniz ameliyatlar ve varsa komplikasyonları', tur: 'textarea' },
       { id: 'kanamaBozuklugu', etiket: 'Bilinen bir kanama/pıhtılaşma bozukluğunuz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
@@ -504,6 +507,15 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'baslikPlastikGecmisi', etiket: 'Sağlık Geçmişi', tur: 'bolum-basligi' },
       { id: 'kanamaBozukluguPlastik', etiket: 'Bilinen bir kanama/pıhtılaşma bozukluğunuz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'keloitEgilimi', etiket: 'Keloit (aşırı skar) eğiliminiz var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'] },
+      // PLASTIK-CERRAHI-EXCEPTIONAL-01 — acil kutucukları. Etiketler specialties/plastik-cerrahi/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı.
+      { id: 'baslikPlastikAcil', etiket: 'Acil belirtiler (şimdi)', tur: 'bolum-basligi' },
+      { id: 'acilBelirtilerPlastik', etiket: 'Aşağıdakilerden hangileri şu anda var?', tur: 'checkbox-grup', secenekler: [
+        'Yara/greftte ani solukluk, morarma veya soğukluk',
+        'Hızla büyüyen gergin şişlik (hematom şüphesi)',
+        'Yara çevresinde kızarıklık, ateş veya irinli akıntı',
+        'Yara kenarlarının açılması / dikişlerin ayrılması',
+        'Durmayan / bol kanama',
+      ], yardim: 'Bu belirtilerde 112 veya en yakın acil — portal mesajı yeterli değildir.' },
     ],
   },
 
@@ -511,6 +523,7 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     baslik: 'Nöroşirürji Değerlendirmesi',
     alanlar: [
       BASVURU_NEDENI,
+      { id: 'acilBelirtilerBeyin', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Ani bilinç kaybı veya belirgin bilinç kötüleşmesi', 'Yeni kol/bacak güçsüzlüğü veya felç hissi', 'Şiddetli baş ağrısı ve kusma', 'Cerrahi yara sızıntısı veya ateş', 'Ani konuşma bozukluğu', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
       { id: 'semptomlarBeyinCerrahi', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Baş Ağrısı', 'Bilinç Değişikliği', 'Güçsüzlük', 'Uyuşma', 'Denge Bozukluğu', 'Konuşma Bozukluğu', 'Görme Değişikliği', 'Yok'] },
       { id: 'goruntulemeVarMi', etiket: 'Elinizde bir BT/MR sonucu var mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
       { id: 'baslikBeyinCerrahiGecmisi', etiket: 'Nöroşirürjik Geçmiş', tur: 'bolum-basligi' },

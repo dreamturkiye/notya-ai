@@ -52,5 +52,10 @@ export function emptyPortalBundle(): PortalBundle {
     nef: null, // NEFROLOJI-EXCEPTIONAL-01 — Böbreklerim yalnız nefroloji hekiminin token'ında
     roma: null, // ROMATOLOJI-EXCEPTIONAL-01 — Romatizmam yalnız romatoloji hekiminin token'ında
     onko: null, // ONKOLOJI-EXCEPTIONAL-01 — Tedavim yalnız onkoloji hekiminin token'ında
+    gc: null, // GENEL-CERRAHI-EXCEPTIONAL-01 — Ameliyatım yalnız genel-cerrahi hekiminin token'ında
+    plastik: null, // PLASTIK-CERRAHI-EXCEPTIONAL-01 — Yaram yalnız plastik-cerrahi hekiminin token'ında
+    gogusCerrahi: null, // GOGUS-CERRAHISI-EXCEPTIONAL-01
+    beyin: null, // BEYIN-CERRAHISI-EXCEPTIONAL-01 — Beyin Cerrahisi takibi yalnız beyin-cerrahisi hekiminin token'ında
+    cc: null, // COCUK-CERRAHISI-EXCEPTIONAL-01
   }
 }

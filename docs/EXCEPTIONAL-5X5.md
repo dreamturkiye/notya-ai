@@ -71,9 +71,12 @@ gastroenteroloji · nefroloji · romatoloji · enfeksiyon-hastaliklari · onkolo
 Live: gastro / nef / roma / enfeksiyon / onko `-exceptional-audit.html` · tip `8e1b0f5`  
 Araç: hepsi **4** — sabit 5 yok. Migrations 068–072 applied.
 
-### Dalga 4
+### Dalga 4 — IN PROGRESS (2026-09-19)
 genel-cerrahi · plastik-cerrahi · cocuk-cerrahisi · gogus-cerrahisi · beyin-cerrahisi  
-*(OR / full HIS = intentional Missing)*
+*(OR / full HIS = intentional Missing)* · Araç sayısı sabit değil.
+
+**Plastik shipped tip:** see git log · Live: https://notya-ai.vercel.app/plastik-exceptional-audit.html · Araç **4** · Portal **Yaram** · Migration **074**.
+
 
 ### Dalga 5
 acil-tip · anestezi · radyoloji · kalp-damar-cerrahisi · deepen (en ince prior → psik audit barı)

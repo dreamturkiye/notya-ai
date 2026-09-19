@@ -129,6 +129,43 @@ import {
   ONKO_IPUCLARI,
 } from '@/specialties/onkoloji/engines/portal-tedavim'
 import {
+  ameliyatimHatirlatmalari,
+  ameliyatHatirlatmalari as gcAmeliyatHatirlatmalari,
+  yaraHatirlatmalari as gcYaraHatirlatmalari,
+  raporHatirlatmalari as gcRaporHatirlatmalari,
+  sonrakiKontrol as gcSonrakiKontrol,
+  AMELIYATIM_NOTU,
+  GC_IPUCLARI,
+} from '@/specialties/genel-cerrahi/engines/portal-ameliyatim'
+import {
+  yaramHatirlatmalari,
+  pansumanHatirlatmalari as plastikPansumanHatirlatmalari,
+  fotoHatirlatmalari as plastikFotoHatirlatmalari,
+  dikisHatirlatmalari as plastikDikisHatirlatmalari,
+  sonrakiKontrol as plastikSonrakiKontrol,
+  YARAM_NOTU,
+  PLASTIK_IPUCLARI,
+} from '@/specialties/plastik-cerrahi/engines/portal-yaram'
+import {
+  takibimHatirlatmalari,
+  tupYaraHatirlatmalari as gogusCerrahiTupHatirlatmalari,
+  patolojiHatirlatmalari as gogusCerrahiPatolojiHatirlatmalari,
+  preopHatirlatmalari as gogusCerrahiPreopHatirlatmalari,
+  sonrakiKontrol as gogusCerrahiSonrakiKontrol,
+  TAKIBIM_NOTU,
+  GC_IPUCLARI as GOGUS_CERRAHI_IPUCLARI,
+} from '@/specialties/gogus-cerrahisi/engines/portal-takibim'
+
+import {
+  beyinTakipHatirlatmalari,
+  postopHatirlatmalari as beyinPostopHatirlatmalari,
+  goruntuHatirlatmalari as beyinGoruntuHatirlatmalari,
+  izlemHatirlatmalari as beyinIzlemHatirlatmalari,
+  sonrakiKontrol as beyinSonrakiKontrol,
+  BEYIN_TAKIP_NOTU,
+  BEYIN_IPUCLARI,
+} from '@/specialties/beyin-cerrahisi/engines/portal-beyin-takibi'
+import {
   akcigerlerimHatirlatmalari,
   testHatirlatmalari as gogusTestHatirlatmalari,
   bakimHatirlatmalari,
@@ -999,6 +1036,104 @@ export async function GET(
       not: TEDAVIM_NOTU,
     }
   } catch (e) { console.error('[portal] tedavim:', e) }
+
+  // GENEL-CERRAHI-EXCEPTIONAL-01 — "Ameliyatım": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, patoloji sonucu ve doz portala GEÇMEZ.
+
+  // GOGUS-CERRAHISI-EXCEPTIONAL-01 — "Göğüs Cerrahisi takibi": yalnız açık görev + kontrol.
+  // Tanı, CAT/mMRC, doz portala GEÇMEZ. Akciğerlerim ayrı branş.
+  if (modulAktif('gogus-cerrahisi-takibim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('gc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_gogus_cerrahisi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = takibimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.gogusCerrahi = {
+      sonrakiKontrol: gogusCerrahiSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      tupYaraHatirlatma: gogusCerrahiTupHatirlatmalari(hatirlatmalar),
+      patolojiHatirlatma: gogusCerrahiPatolojiHatirlatmalari(hatirlatmalar),
+      preopHatirlatma: gogusCerrahiPreopHatirlatmalari(hatirlatmalar),
+      ipuclari: [...GOGUS_CERRAHI_IPUCLARI],
+      not: TAKIBIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] gogus-cerrahisi-takibim:', e) }
+
+  if (modulAktif('ameliyatim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('gc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_genel_cerrahi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = ameliyatimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.gc = {
+      sonrakiKontrol: gcSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      ameliyatHatirlatma: gcAmeliyatHatirlatmalari(hatirlatmalar),
+      yaraHatirlatma: gcYaraHatirlatmalari(hatirlatmalar),
+      raporHatirlatma: gcRaporHatirlatmalari(hatirlatmalar),
+      ipuclari: [...GC_IPUCLARI],
+      not: AMELIYATIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] ameliyatim:', e) }
+
+  // PLASTIK-CERRAHI-EXCEPTIONAL-01 — "Yaram": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, PASI/skor ve doz portala GEÇMEZ.
+  if (modulAktif('yaram')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('plastik_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_plastik').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = yaramHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.plastik = {
+      sonrakiKontrol: plastikSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      pansumanHatirlatma: plastikPansumanHatirlatmalari(hatirlatmalar),
+      fotoHatirlatma: plastikFotoHatirlatmalari(hatirlatmalar),
+      dikisHatirlatma: plastikDikisHatirlatmalari(hatirlatmalar),
+      ipuclari: [...PLASTIK_IPUCLARI],
+      not: YARAM_NOTU,
+    }
+  } catch (e) { console.error('[portal] yaram:', e) }
+
+  // BEYIN-CERRAHISI-EXCEPTIONAL-01 — "Beyin Cerrahisi takibi": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Tanı, AED doz, migren/inme skoru portala GEÇMEZ.
+  if (modulAktif('beyin-takibi')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('bc_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_beyin_cerrahisi').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = beyinTakipHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.beyin = {
+      sonrakiKontrol: beyinSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      postopHatirlatma: beyinPostopHatirlatmalari(hatirlatmalar),
+      goruntuHatirlatma: beyinGoruntuHatirlatmalari(hatirlatmalar),
+      izlemHatirlatma: beyinIzlemHatirlatmalari(hatirlatmalar),
+      ipuclari: [...BEYIN_IPUCLARI],
+      not: BEYIN_TAKIP_NOTU,
+    }
+  } catch (e) { console.error('[portal] beyin-takibi:', e) }
+
 
   // GOGUS-EXCEPTIONAL-01 — "Akciğerlerim": yalnız açık görev kodları + hekimin kontrol tarihi.
   // CAT/mMRC skoru, GOLD grup, FEV1, tanı, ilaç adı ve doz portala GEÇMEZ.

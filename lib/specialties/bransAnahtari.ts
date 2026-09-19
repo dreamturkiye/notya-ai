@@ -24,10 +24,14 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/^(?!.*(çocuk|cocuk|ergen)).*(psikiyatr|ruh sağlığı|ruh sagligi)/, 'psikiyatri'],
   // KBB-EXCEPTIONAL-01: "KBB Uzmanı", "Kulak Burun Boğaz Hastalıkları ve Baş Boyun Cerrahisi", "Otolarengoloji".
   [/kulak burun|kulak-burun|\bkbb\b|otolaring|otolareng|otorinolaring|otorinolareng/, 'kulak-burun-bogaz'],
+  // GOGUS-CERRAHISI-EXCEPTIONAL-01: "Göğüs Cerrahisi" — hastalıkları eşleşmesinden ÖNCE (ayrı branş).
+  [/göğüs cerrah|gogus cerrah|gogus-cerrah/, 'gogus-cerrahisi'],
   // GOGUS-EXCEPTIONAL-01: "Göğüs Hastalıkları" — cerrahi ("Göğüs Cerrahisi") eşleşmez (ayrı branş).
   [/göğüs hastal|gogus-hastalik|gogus hastal/, 'gogus-hastaliklari'],
   // KARDIO-EXCEPTIONAL-01: "Kardiyoloji Uzmanı". Kalp-damar cerrahisi ayrı branş — eşleşmez.
   [/^(?!.*(cerrah|damar)).*(kardiyoloji|\bkardiyo\b)/, 'kardiyoloji'],
+  // BEYIN-CERRAHISI-EXCEPTIONAL-01: "Beyin Cerrahisi", "Nöroşirürji" — noroloji'den ÖNCE.
+  [/beyin.?cerrah|n[öo]ro[şs]ir[üu]rj|neurosurg/, 'beyin-cerrahisi'],
   // NOROLOJI-EXCEPTIONAL-01: "Nöroloji Uzmanı", "Noroloji".
   [/n[öo]roloji|noroloji/, 'noroloji'],
   // UROLOJI-EXCEPTIONAL-01: "Üroloji Uzmanı", "Uroloji", "Urology".
@@ -48,6 +52,10 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
   [/enfeksiyon|infeksiyon|klinik mikrobiyoloji/, 'enfeksiyon-hastaliklari'],
   // ONKOLOJI-EXCEPTIONAL-01: "Onkoloji Uzmanı", "Tıbbi Onkoloji" (radyasyon onkolojisi ayrı — eşleşmez).
   [/^(?!.*(radyasyon|radyo)).*(onkolo|tibbi onkolo|tıbbi onkolo)/, 'onkoloji'],
+  // GENEL-CERRAHI-EXCEPTIONAL-01: "Genel Cerrahi" — çocuk/göğüs/beyin/plastik/kalp-damar cerrahisi eşleşmez.
+  [/^(?!.*(çocuk|cocuk|göğüs|gogus|beyin|plastik|kalp|damar|kardiyovask|toraks)).*(genel.?cerrah|general.?surg)/, 'genel-cerrahi'],
+  // PLASTIK-CERRAHI-EXCEPTIONAL-01: "Plastik Cerrahi", "Plastik Rekonstrüktif ve Estetik Cerrahi".
+  [/plastik|rekonstr[üu]ktif|estetik cerrah/, 'plastik-cerrahi'],
 ]
 
 /** Ham değer ('kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'genel-cerrahi') → kanonik anahtar; "genel"/boş/bilinmeyen → null. */

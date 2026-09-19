@@ -12,6 +12,7 @@ import {
   urolojiSekmesiBransi,
   sporHekimligiSekmesiBransi,
   ortopediSekmesiBransi,
+  genelCerrahiSekmesiBransi,
 } from './hastaDosyaSekmeleri'
 
 const NOW = Date.parse('2026-09-15T00:00:00Z')
@@ -149,5 +150,17 @@ describe('hastaDosyaSekmeleri', () => {
     assert.equal(ortopediSekmesiBransi('orthopedics'), true)
     assert.equal(ortopediSekmesiBransi('fizik-tedavi'), false)
     assert.equal(ozelBolumBransi('ortopedi'), true)
+  })
+
+  it('GENEL-CERRAHI-EXCEPTIONAL-01: Genel Cerrahi sekmesi yalnız genelCerrahiUygun; yabancı branşta yok', () => {
+    const gc = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, genelCerrahiUygun: true })
+    assert.ok(gc.some((t) => t.id === 'genel-cerrahi' && t.label === 'Genel Cerrahi'))
+    const plastik = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, plastikUygun: true })
+    assert.equal(plastik.some((t) => t.id === 'genel-cerrahi'), false)
+    assert.equal(genelCerrahiSekmesiBransi('genel-cerrahi'), true)
+    assert.equal(genelCerrahiSekmesiBransi('Genel Cerrahi'), true)
+    assert.equal(genelCerrahiSekmesiBransi('plastik-cerrahi'), false)
+    assert.equal(genelCerrahiSekmesiBransi('cocuk-cerrahisi'), false)
+    assert.equal(ozelBolumBransi('genel-cerrahi'), true)
   })
 })

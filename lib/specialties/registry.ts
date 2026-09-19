@@ -29,6 +29,11 @@ import { NEFROLOJI_PROFILE } from './nefroloji'
 import { ENFEKSIYON_HASTALIKLARI_PROFILE } from './enfeksiyon-hastaliklari'
 import { ROMATOLOJI_PROFILE } from './romatoloji'
 import { ONKOLOJI_PROFILE } from './onkoloji'
+import { GENEL_CERRAHI_PROFILE } from './genel-cerrahi'
+import { PLASTIK_CERRAHI_PROFILE } from './plastik-cerrahi'
+import { GOGUS_CERRAHISI_PROFILE } from './gogus-cerrahisi'
+import { BEYIN_CERRAHISI_PROFILE } from './beyin-cerrahisi'
+import { COCUK_CERRAHISI_PROFILE } from './cocuk-cerrahisi'
 
 const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   pediatri: PEDIATRI_PROFILE,
@@ -50,6 +55,11 @@ const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   'enfeksiyon-hastaliklari': ENFEKSIYON_HASTALIKLARI_PROFILE,
   romatoloji: ROMATOLOJI_PROFILE,
   onkoloji: ONKOLOJI_PROFILE,
+  'genel-cerrahi': GENEL_CERRAHI_PROFILE,
+  'plastik-cerrahi': PLASTIK_CERRAHI_PROFILE,
+  'gogus-cerrahisi': GOGUS_CERRAHISI_PROFILE,
+  'beyin-cerrahisi': BEYIN_CERRAHISI_PROFILE,
+  'cocuk-cerrahisi': COCUK_CERRAHISI_PROFILE,
   'aile-hekimligi': AILE_HEKIMLIGI_PROFILE,
   'spor-hekimligi': SPOR_HEKIMLIGI_PROFILE,
 }
