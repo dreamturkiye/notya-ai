@@ -93,6 +93,10 @@ describe('KONSULTASYON-01 — durumlar ve geçişler', () => {
     assert.equal(gecisIzinli('yanitlandi', 'nota_ekle').ok, true)
     assert.equal(gecisIzinli('yanitlandi', 'hatirlat').ok, false)
     assert.equal(gecisIzinli('acik', 'hatirlat').ok, true)
+    assert.equal(gecisIzinli('kapandi_yanitsiz', 'sil').ok, true, 'yanıtsız kapatılmış silinebilir')
+    assert.equal(gecisIzinli('kapandi', 'sil').ok, true)
+    assert.equal(gecisIzinli('yanit_bekleniyor', 'sil').ok, false, 'açık istem silinmez — önce yanıtsız kapat')
+    assert.equal(gecisIzinli('yanitlandi', 'sil').ok, false, 'yanıtlanmış kanıt silinmez')
   })
   it('yanıt: hekimin cümlesi zorunlu; tarih istemden önce ya da ileri olamaz', () => {
     const s = satir()

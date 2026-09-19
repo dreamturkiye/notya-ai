@@ -20,7 +20,7 @@ export async function konsultasyonApi(yol: string, init?: { method?: string; gov
 }
 
 /** Kart ve bekleyenler listesinin tek dokunuşlu işlemleri (yanıt ekleme formu hasta dosyasındadır). */
-export function konsultasyonIslemi(id: string, islem: 'kapat' | 'hatirlat' | 'nota_ekle') {
+export function konsultasyonIslemi(id: string, islem: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil') {
   return konsultasyonApi('/api/doktor/konsultasyon', { method: 'PATCH', govde: { id, islem } })
 }
 
@@ -28,6 +28,7 @@ export function konsultasyonIslemi(id: string, islem: 'kapat' | 'hatirlat' | 'no
 export const BEKLEYEN_KONSULTASYONLAR_ROTASI = '/doktor-tools/bekleyen-konsultasyonlar'
 
 export const YANITSIZ_KAPAT_ONAYI = 'Bu konsültasyon yanıt gelmeden kapatılsın mı? Geç gelen rapor yine eklenebilir.'
+export const YANITSIZ_SIL_ONAYI = 'Yanıtsız kapatılmış bu konsültasyon hasta dosyasından silinsin mi? Bu işlem geri alınamaz.'
 export const HATIRLATMA_GONDERILDI = 'Hastaya Sağlığım üzerinden hatırlatma gönderildi (klinik bilgi içermez).'
 
 /** Hasta dosyası › Konsültasyonlar; `yanit` verilirse o konsültasyonun yanıt formu açık gelir. */

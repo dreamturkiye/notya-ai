@@ -213,7 +213,7 @@ export function yanitDogrula(
   return { yanit_ozeti: ozet, yanit_tarihi: tarih }
 }
 
-export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle'
+export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil'
 
 /** İstem KİLİDİ (AYSE-KONSULTASYON-01): yanıt gelmiş kayıtta istem metni değişmez — yalnız yanıt tarafı işlenir. */
 export const ISTEM_KILITLI_YANITLANDI = 'Yanıtlanmış konsültasyonun istemi kilitlidir — yalnız yanıt özeti düzeltilebilir.'
@@ -223,6 +223,7 @@ export const ISTEM_KILITLI_KAPANDI = 'Kapatılmış konsültasyonun istemi düze
  * Durum geçiş kuralı (PATCH). Kapanmış (yanıtsız) bir konsültasyona geç gelen rapor YİNE eklenebilir;
  * yanıtlanmış kayıtta yanıt düzeltilebilir. Yanıtlanmış kayıt "yanıtsız" kapatılamaz.
  * İstem ('duzenle') yalnız yanıt beklerken ('acik' / 'yanit_bekleniyor') düzenlenir; yanıt geldikten sonra KİLİTLİ.
+ * Silme yalnız yanıtsız kapatılmış kayıtlar için (hekim hatalı/boş istemi dosyadan kaldırmak ister).
  */
 export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: true } | { ok: false; hata: string } {
   const g = durumGrubu(durum)
@@ -238,6 +239,10 @@ export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: tru
       return g === 'yanitlandi' ? { ok: true } : { ok: false, hata: 'Önce yanıt özetini ekleyin — nota eklenecek yanıt yok.' }
     case 'hatirlat':
       return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyon için hatırlatma gönderilir.' }
+    case 'sil':
+      return g === 'kapandi'
+        ? { ok: true }
+        : { ok: false, hata: g === 'yanitlandi' ? 'Yanıtlanmış konsültasyon silinemez — kayıt kanıt olarak kalır.' : 'Yalnız yanıtsız kapatılmış konsültasyon silinebilir.' }
   }
 }
 

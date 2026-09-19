@@ -721,6 +721,22 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
     }
   })
 
+  describe('Yanıtsız konsültasyon sil — yabancı id 404', () => {
+    for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
+      it(`${saldiran} → ${kurbanHarf}: yanıtsız kapatılmış satır silinemez (404); kurban satırı kalır`, async () => {
+        const s = sahneKur()
+        const arayan = s[saldiran], kurban = s[kurbanHarf]
+        const kapali = db.ekle('sevkler', {
+          doctor_id: kurban.id, patient_id: kurban.hasta, hedef: 'kulak-burun-bogaz', hedef_brans: 'kulak-burun-bogaz',
+          klinik_soru: `Silinecek mi? ${isaret(kurbanHarf)}`, durum: 'kapandi_yanitsiz', kaynak: 'konsultasyon',
+        })
+        const y = await coz(R.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', { token: arayan.token, govde: { id: kapali.id, islem: 'sil' } })))
+        assert.equal(y.status, 404)
+        assert.ok(tablo('sevkler').some((x) => x.id === kapali.id), 'kurban satırı silinmemeli')
+      })
+    }
+  })
+
   describe('Sağlığım portalı yalnız bağlı olduğu doktorun verisini gösterir', () => {
     async function portalCerezi(token: string): Promise<string> {
       const { setUnlockCookie, UNLOCK_COOKIE } = await import('../portal/pinAuth')

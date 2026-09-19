@@ -18,10 +18,11 @@
  *         Taslak üretilemezse 200 { ok: false, error } — form boş ama kullanılabilir (hekim asla kilitlenmez).
  *         Yanıt taslağı önce mevcut belge_analizleri taslağını KULLANIR (ikinci analiz yolu açılmaz); yoksa PDF kasadan
  *         (hekim kapsamlı) okunur, fotoğraf tarayıcıda kimliksizleştirilmiş türev olarak gelir (NOTYA-BELGE-01 sözleşmesi).
- *   PATCH { id, islem: 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle', … }
+ *   PATCH { id, islem: 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle' | 'sil', … }
  *         'duzenle' (AYSE-KONSULTASYON-01): istem alanları yalnız yanıt beklerken; 'yanitlandi' / kapanmış → 409 (istem
  *         KİLİDİ sunucuda). Her değişen alanın önceki metni konsultasyon_revizyonlar'a yazılır — önce iz, sonra güncelleme;
  *         iz yazılamazsa değişiklik YAPILMAZ. Yanıt özeti düzeltmesi ('yanit', önceki özet varken) de iz bırakır.
+ *         'sil': yalnız yanıtsız kapatılmış kayıt (kapandi / kapandi_yanitsiz) — hard delete, doctor_id kapsamlı.
  *
  * VERİ: tablo `sevkler` (033; dahiliye/göz/KD aynı tabloya yazmaya devam eder). Terim "sevk" UI'de kullanılmaz —
  * SGK sevki (SUT EK-2/F / e-sevk) ayrı ve düzenleyici bir belgedir. lib/doktor/konsultasyon.ts başlığına bakın.
@@ -468,7 +469,7 @@ export async function PATCH(req: NextRequest) {
   const { user, supabase: sb } = oturum
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
   const islem = String(b?.islem || '') as KonsultasyonIslemi
-  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle'].includes(islem)) return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 })
+  if (!['yanit', 'belge_bagla', 'kapat', 'nota_ekle', 'hatirlat', 'duzenle', 'sil'].includes(islem)) return NextResponse.json({ error: 'Geçersiz işlem.' }, { status: 400 })
 
   // HASTA-IZOLASYON: satır id + doctor_id, sonra satırın hastası — yabancı id = yok.
   const s = await satirBu(sb, user.id, b?.id)
@@ -524,6 +525,13 @@ export async function PATCH(req: NextRequest) {
   if (islem === 'kapat') {
     const y = await guncelle({ durum: 'kapandi_yanitsiz' })
     return y ? NextResponse.json({ ok: true, konsultasyon: y }) : NextResponse.json({ error: 'Kaydedilemedi.' }, { status: 500 })
+  }
+
+  if (islem === 'sil') {
+    // HASTA-IZOLASYON: yalnız kendi satırı; yanıtsız kapatılmış kayıt (gecisIzinli). Hard delete — sevkler'de soft-delete kolonu yok.
+    const { error } = await sb.from('sevkler').delete().eq('id', s.id).eq('doctor_id', user.id)
+    if (error) return NextResponse.json({ error: 'Silinemedi.' }, { status: 500 })
+    return NextResponse.json({ ok: true, silindi: true, id: s.id })
   }
 
   if (islem === 'nota_ekle') {

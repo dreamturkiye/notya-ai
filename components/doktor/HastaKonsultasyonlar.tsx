@@ -17,7 +17,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
-import { konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir, YANITSIZ_KAPAT_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
+import { konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir, YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
 import { taslakUygulanir } from '@/lib/doktor/konsultasyonTaslagi';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
 import {
@@ -422,12 +422,14 @@ export function DuzenlemeGecmisi({ liste }: { liste: KonsultasyonRevizyonu[] }) 
 
 /* ───────────────────────── Tek satır (kanıt kartı) ───────────────────────── */
 
-export function KonsultasyonKarti({ k, patientId, guncelle, yenile, yanitAcikBaslar = false }: {
+export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yanitAcikBaslar = false }: {
   k: KonsultasyonGorunumu
   patientId: string
   guncelle: (y: Partial<KonsultasyonGorunumu>) => void
   /** Düzenleme sonrası sessiz yeniden okuma (düzenleme geçmişi sunucudan gelir). */
   yenile?: () => void
+  /** Yanıtsız kapatılmış kayıt silindiğinde listeden düşer. */
+  silindi?: () => void
   /** KONSULTASYON-02: Araçlar › Bekleyen Konsültasyonlar "Yanıt ekle" → ?yanit=<id> ile form açık gelir. */
   yanitAcikBaslar?: boolean
 }) {
@@ -442,13 +444,15 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, yanitAcikBas
   const [mesaj, setMesaj] = useState<{ iyi: boolean; metin: string } | null>(null);
   const [eklenenNot, setEklenenNot] = useState<string | null>(null);
 
-  const islem = async (ad: 'kapat' | 'hatirlat' | 'nota_ekle') => {
+  const islem = async (ad: 'kapat' | 'hatirlat' | 'nota_ekle' | 'sil') => {
     if (calisiyor) return;
     if (ad === 'kapat' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_KAPAT_ONAYI)) return;
+    if (ad === 'sil' && typeof window !== 'undefined' && !window.confirm(YANITSIZ_SIL_ONAYI)) return;
     setCalisiyor(ad); setMesaj(null);
     try {
       const { ok, j } = await konsultasyonIslemi(k.id, ad);
       if (ok) {
+        if (ad === 'sil') { silindi?.(); return; }
         if (j.konsultasyon) guncelle(j.konsultasyon);
         if (ad === 'nota_ekle' && j.notId) { setEklenenNot(j.notId); setMesaj({ iyi: true, metin: 'Bugünkü muayene formuna eklendi — metni formda düzenleyebilirsiniz.' }); }
         if (ad === 'hatirlat') setMesaj({ iyi: true, metin: HATIRLATMA_GONDERILDI });
@@ -517,6 +521,16 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, yanitAcikBas
             <button type="button" onClick={() => islem('kapat')} disabled={!!calisiyor} style={stil.ghost}>Yanıtsız kapat</button>
           </>
         )}
+        {g === 'kapandi' && (
+          <button
+            type="button"
+            onClick={() => islem('sil')}
+            disabled={!!calisiyor}
+            style={{ ...stil.ghost, color: 'var(--warn, #7a4a22)', borderColor: 'rgba(122,74,34,0.35)' }}
+          >
+            {calisiyor === 'sil' ? 'Siliniyor…' : 'Sil'}
+          </button>
+        )}
         {!k.eskiKayit && (
           <a href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/konsultasyon/${encodeURIComponent(k.id)}/yazdir`} target="_blank" rel="noopener" style={stil.ghost}>🖨️ İstem formu</a>
         )}
@@ -558,6 +572,7 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
     setListe((l) => l.map((x) => (x.id === id ? { ...x, ...y, belge: x.belge, belgeTaslagi: x.belgeTaslagi, gun: x.gun, eskiKayit: x.eskiKayit, duzenlemeler: x.duzenlemeler } : x)));
     if (belgeDegisti) yenile?.();
   };
+  const silSatir = (id: string) => () => setListe((l) => l.filter((x) => x.id !== id));
 
   return (
     <div style={{ minWidth: 0 }}>
@@ -576,7 +591,7 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
       {tabloHazir && !liste.length && !yeni && (
         <div style={{ ...stil.kutu, color: '#8FA0B5', fontSize: 14 }}>Bu hasta için konsültasyon kaydı yok. Bir meslektaşınızın görüşünü istediğinizde buradan istem oluşturun; gelen raporu Kasa'ya yükleyip bu kayda bağlayın.</div>
       )}
-      {liste.map((k) => <KonsultasyonKarti key={k.id} k={k} patientId={patientId} guncelle={guncelle(k.id)} yenile={yenile} yanitAcikBaslar={!!yanitAc && k.id === yanitAc} />)}
+      {liste.map((k) => <KonsultasyonKarti key={k.id} k={k} patientId={patientId} guncelle={guncelle(k.id)} yenile={yenile} silindi={silSatir(k.id)} yanitAcikBaslar={!!yanitAc && k.id === yanitAc} />)}
     </div>
   );
 }

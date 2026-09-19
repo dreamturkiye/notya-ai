@@ -75,10 +75,11 @@ describe('KONSULTASYON-01 — zaman çizelgesi (SSR)', () => {
     assert.match(k, /Bugünkü muayene formuna ekle/)
     assert.ok(!k.includes('Muayene notuna eklendi'))
   })
-  it('yanıtsız kapatılmış: geç gelen rapor eklenebilir', () => {
+  it('yanıtsız kapatılmış: geç gelen rapor eklenebilir; Sil görünür', () => {
     const k = kart('kapali')
     assert.match(k, /Yanıtsız kapatıldı/)
     assert.match(k, /Geç gelen raporu ekle/)
+    assert.match(k, />Sil</)
   })
   it('eski dahiliye kaydı: "eski kayıt" rozeti, not metni soru yerine, istem formu yok (klinik soru yok)', () => {
     const k = kart('eski')
