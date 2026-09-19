@@ -430,3 +430,77 @@ export function MuayeneFormunaEkle({
     </div>
   )
 }
+
+/* ───────────────────────── Seri değerlerin kalıcılığı ───────────────────────── */
+
+/**
+ * ARACLAR-CILA-01 Faz 3 — "hastaya kaydet" düğmesi.
+ *
+ * Araçlar durumsuzdu: VA aracını yenileyince önceki vizit değerleri gidiyordu. Faz 3 kalıcılığı
+ * YENİ bir tablo açarak değil, her branşın ZATEN sahip olduğu kayıt yoluna yazarak çözer
+ * (göz `goz_muayeneler`, derm `derm_skor_anlari`, dahiliye `dahiliye_kvr` / `dahiliye_ckd`,
+ * pediatri onaylı not vitalleri, KD `gebelikler`). Bu düğme o yazmanın ortak yüzüdür.
+ *
+ * Kaydetme HEKİMİN AÇIK EYLEMİDİR — sessiz arka plan yazması yoktur; hasta seçili değilse pasiftir.
+ */
+export function KayitButonu({
+  etiket,
+  kaydet,
+  hastaId,
+  kapali,
+  kapaliNedeni,
+  ipucu,
+}: {
+  etiket: string
+  /** Başarılıysa null/boş, hata varsa hekime gösterilecek Türkçe mesaj döner. */
+  kaydet: () => Promise<string | null | void>
+  hastaId: string
+  kapali?: boolean
+  kapaliNedeni?: string
+  ipucu?: React.ReactNode
+}) {
+  const stil = useAracStil()
+  const [calisiyor, setCalisiyor] = useState(false)
+  const [mesaj, setMesaj] = useState('')
+  const [iyiMi, setIyiMi] = useState(false)
+  const engelli = !hastaId || !!kapali || calisiyor
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ ...stil.satir, marginTop: 0 }}>
+        <button
+          type="button"
+          onClick={async () => {
+            if (engelli) return
+            setCalisiyor(true); setMesaj(''); setIyiMi(false)
+            try {
+              const h = await kaydet()
+              if (h) { setMesaj(String(h)); setIyiMi(false) } else { setMesaj('Hastaya kaydedildi.'); setIyiMi(true) }
+            } catch {
+              setMesaj('Kaydedilemedi — bağlantıyı kontrol edin.')
+            } finally { setCalisiyor(false) }
+          }}
+          disabled={engelli}
+          aria-disabled={engelli}
+          style={{ ...stil.ghost, opacity: engelli ? 0.55 : 1, cursor: engelli ? 'not-allowed' : 'pointer' }}
+        >{calisiyor ? 'Kaydediliyor…' : etiket}</button>
+        {mesaj && <span style={{ fontSize: 13, color: iyiMi ? '#5EEAD4' : '#FDE68A' }} aria-live="polite">{mesaj}</span>}
+      </div>
+      <div style={{ ...stil.kucuk, marginTop: 6 }}>
+        {!hastaId ? 'Önce hasta seçin — değerler ancak seçili hastanın dosyasına kaydedilir.' : kapali ? (kapaliNedeni || 'Kaydedilecek değer yok.') : (ipucu || 'Kayıt yalnız bu düğmeyle olur; arka planda sessizce yazılmaz.')}
+      </div>
+    </div>
+  )
+}
+
+/** "Önceki vizit" şeridi — son kayıtlı değer ve tarihi (hekim üzerine yazabilir). */
+export function OncekiVizit({ tarih, children }: { tarih: string | null; children: React.ReactNode }) {
+  const stil = useAracStil()
+  if (!tarih) return null
+  return (
+    <div style={{ ...stil.satir, marginTop: 8 }}>
+      <Rozet ton="bilgi">önceki vizit · {tarih}</Rozet>
+      <span style={stil.kucuk}>{children}</span>
+    </div>
+  )
+}

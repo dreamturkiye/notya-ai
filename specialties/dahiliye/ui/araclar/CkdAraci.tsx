@@ -2,14 +2,18 @@
 /**
  * ARACLAR-CILA-01: ortak araç kütüphanesiyle yenilendi — cinsiyet segmenti, manşet evre kartları,
  * katlanır önceki ölçüm bölümü ve taslak rozeti.
+ * Faz 3 (kalıcılık): hasta seçiliyse eGFR / UACR ve ilaç bağlamı dahiliye chapter'ın KENDİ
+ * kayıtlarından (lab serisi + dahiliye_ckd, /api/doktor/dahiliye) ön doldurulur; "Girdileri hastaya
+ * kaydet" aynı tabloya mevcut `adim: 'ckd'` yoluyla yazar. Yeni tablo açılmadı.
  * DAH-EXCEPTIONAL-01 — Araçlar › KDIGO CKD evreleme. Dahiliye-only (BRANS_DOKTOR_ARACLARI).
  * Chapter motoru (engines/ckd.ckdDegerlendir + nefroSevkPaketi) ile birebir aynı kural: eGFR × UACR ısı haritası,
  * kronisite (≥3 ay), izlem sıklığı, sınıf düzeyinde plan ve nefroloji sevk gerekçesi. Doz yazılmaz; karar hekimindir.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
+import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { ckdDegerlendir, nefroSevkPaketi, type Renk } from '../../engines/ckd';
-import { dahStil, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, KayitButonu, MuayeneFormunaEkle, OncekiVizit, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -37,6 +41,34 @@ export default function CkdAraci() {
   const [nsaii, setNsaii] = useState(false);
   const [ilacMetni, setIlacMetni] = useState('');
   const [hasta, setHasta] = useState<{ id: string; ad: string }>({ id: '', ad: '' });
+  const [kayitliTarih, setKayitliTarih] = useState<string | null>(null);
+  const [kayitHata, setKayitHata] = useState('');
+
+  /** Kayıtlı KBH girdileri + lab serisinin son eGFR / UACR değeri (sahiplik sunucuda doğrulanır). */
+  const yukle = useCallback(async (id: string) => {
+    setKayitHata(''); setKayitliTarih(null);
+    if (!id) return;
+    try {
+      const t = await getAccessTokenAsync();
+      const r = await fetch(`/api/doktor/dahiliye?patientId=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { setKayitHata(j.error || 'Hasta kaydı okunamadı.'); return; }
+      const c = j.wow?.ckd as { egfr?: number | null; uacr?: number | null; uacr_tarih?: string | null; ras_blokeri?: boolean; sglt2?: boolean; nsaii?: boolean } | undefined;
+      // ÖN DOLDUR — hekim hepsini değiştirebilir.
+      if (j.hasta?.yas != null) setYas((p) => p || String(j.hasta.yas));
+      if (j.hasta?.kadin != null) setCinsiyet(j.hasta.kadin ? 'kadin' : 'erkek');
+      if (c) {
+        if (c.egfr != null) setEGFR((p) => p || String(c.egfr));
+        if (c.uacr != null) setUacr((p) => p || String(c.uacr));
+        setRas(!!c.ras_blokeri); setSglt2(!!c.sglt2); setNsaii(!!c.nsaii);
+        setKayitliTarih(c.uacr_tarih || 'kayıtlı');
+      }
+      const ilaclar = (j.ilaclar || []) as Array<{ ilac_adi?: string; aktif?: boolean | null }>;
+      const aktif = ilaclar.filter((x) => x.aktif !== false).map((x) => String(x.ilac_adi || '').trim()).filter(Boolean);
+      if (aktif.length) setIlacMetni((p) => p || aktif.join('\n'));
+    } catch { setKayitHata('Hasta kaydı okunamadı — bağlantıyı kontrol edin.'); }
+  }, []);
+  useEffect(() => { yukle(hasta.id); }, [hasta.id, yukle]);
 
   const bugunTarih = bugun();
   const onceki = useMemo(() => {
@@ -153,8 +185,29 @@ export default function CkdAraci() {
 
       <div style={kutu}>
         <div style={etiket}>Hastada kaydet (isteğe bağlı)</div>
-        <div style={kucuk}>Hesap için hasta seçmek gerekmez. Evreyi dosyaya işlemek isterseniz hastayı seçip Dahiliye sekmesini açın.</div>
+        <div style={kucuk}>Hesap için hasta seçmek gerekmez. Hasta seçerseniz kayıtlı eGFR / UACR ve ilaç bağlamı ön doldurulur; bu vizitin girdileri dosyaya kaydedilebilir.</div>
         <DahHastaSecici secili={hasta.id} sec={(id, ad) => setHasta({ id, ad })} />
+        {kayitHata && <div style={{ ...dahStil.hata, marginTop: 6 }}>{kayitHata}</div>}
+        <OncekiVizit tarih={kayitliTarih}>eGFR / UACR ve ilaç bağlamı hastanın dahiliye kaydından okundu — üzerine yazabilirsiniz.</OncekiVizit>
+        <KayitButonu
+          etiket="Girdileri hastaya kaydet"
+          hastaId={hasta.id}
+          kapali={sayi(uacr) == null && !ras && !sglt2 && !nsaii}
+          kapaliNedeni="UACR ya da ilaç bağlamı girin — kaydedilecek değer yok."
+          ipucu="UACR (hekim girişi) ve RAS blokeri / SGLT2 / NSAİİ bağlamı hastanın dahiliye kaydına yazılır."
+          kaydet={async () => {
+            const t = await getAccessTokenAsync();
+            const r = await fetch('/api/doktor/dahiliye', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ adim: 'ckd', patientId: hasta.id, rasBlokeri: ras, sglt2, nsaii, ...(sayi(uacr) != null ? { uacr: sayi(uacr), uacrTarih: bugunTarih } : {}) }),
+            });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) return j.error || 'Kaydedilemedi.';
+            await yukle(hasta.id);
+            return null;
+          }}
+        />
         {hasta.id && <div style={satir}><a href={hastaDosyaHref(hasta.id, 'dahiliye')} style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Hastada aç (Dahiliye) →</a></div>}
       </div>
     </>

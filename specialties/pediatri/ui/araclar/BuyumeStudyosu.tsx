@@ -14,7 +14,7 @@ import {
   REFERANS_AD, REFERANS_UST_AY, PARAM_AD, PARAM_BIRIM, type Referans, type Olcum,
 } from '../../engines/buyume';
 import { cmCoz, kiloCoz, tarihCoz, tarihGoster, yasMetni, ondalikAy, tr } from '../../engines/girdi';
-import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici, usePediHasta } from './PediAracKabugu';
+import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, OncekiVizit, PediHastaSecici, usePediHasta } from './PediAracKabugu';
 
 const { kutu, etiket, kucuk, input, ghost, uyari, kirmizi, kaydir } = pediStil;
 const bugun = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -92,6 +92,9 @@ export default function BuyumeStudyosu() {
     return { birim: PARAM_BIRIM[param], egriler: e, noktalar };
   }, [hazir, satirlar, param, ref, cinsiyet]);
 
+  /** Faz 3 (kalıcılık): büyüme ölçümleri zaten onaylı not vitallerinde saklanır — son kayıt görünür olsun. */
+  const sonKayitliOlcum = [...gecmis].reverse().find((x) => x.kaynak === 'kayit' && (x.kilo || x.boy || x.bas)) || null;
+
   const setB = (k: keyof Satir, v: string) => setBugunSatir((s) => ({ ...s, [k]: v }));
   const setG = (id: string, k: keyof Satir, v: string) => setGecmis((g) => g.map((s) => (s.id === id ? { ...s, [k]: v } : s)));
 
@@ -102,6 +105,9 @@ export default function BuyumeStudyosu() {
         <PediHastaSecici secili={hastaId} sec={(id) => setHastaId(id)} />
         {(hastaHata || gecmisHata) && <div style={{ ...pediStil.hata, marginTop: 6 }}>{hastaHata || gecmisHata}</div>}
         {ozet && (!ozet.dogumIso || !ozet.cinsiyet) && <div style={{ ...kucuk, marginTop: 6 }}>Kayıtta {!ozet.dogumIso ? 'doğum tarihi' : 'cinsiyet'} yok — aşağıya elle girin.</div>}
+        <OncekiVizit tarih={sonKayitliOlcum?.tarih || null}>
+          {[sonKayitliOlcum?.kilo ? `kilo ${sonKayitliOlcum.kilo} kg` : '', sonKayitliOlcum?.boy ? `boy ${sonKayitliOlcum.boy} cm` : '', sonKayitliOlcum?.bas ? `baş çevresi ${sonKayitliOlcum.bas} cm` : ''].filter(Boolean).join(' · ')} — onaylı muayene notlarından okundu; bugünün satırını aşağıya girin.
+        </OncekiVizit>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 14 }}>
           <Alan etiket="Doğum tarihi" ipucu={dogumHam && !dogumIso ? 'Okunamadı — ör. 12.03.2024' : dogumIso && bugunTarih ? yasMetni(dogumIso, bugunTarih) : 'gg.aa.yyyy'}>
             <input value={dogumHam} onChange={(e) => setDogumHam(e.target.value)} placeholder="12.03.2024" aria-label="Doğum tarihi" inputMode="decimal" style={input} />
