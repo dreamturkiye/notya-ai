@@ -1,18 +1,18 @@
+'use client'
 /** ANESTEZI-EXCEPTIONAL-01 — Sağlığım › Anestezi Öncesi. Yalnız anestezi modülü bu token'a bağlandıysa. */
-import { getPortalBundle } from '../_lib'
-import { portalModulAktif } from '@/lib/portal/moduller'
+import Link from 'next/link'
 import { AnesteziOncesiView } from '../../../_components/AnesteziOncesiView'
-import { SectionHeader, SoftPanel } from '../../../_components/ui'
+import { usePortalLive } from '../../../_components/PortalLiveProvider'
+import { SectionHeader } from '../../../_components/ui'
+import { portalModulAktif } from '@/lib/portal/moduller'
 
-export default async function AnesteziOncesiPage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params
-  const data = await getPortalBundle(token)
-  const basePath = `/portal/hasta/${token}`
+export default function HastaAnesteziOncesiPage() {
+  const { data, basePath } = usePortalLive()
   if (!portalModulAktif(data, 'anestezi-oncesi')) {
     return (
       <div className="sg-fade">
         <SectionHeader title="Anestezi Öncesi" subtitle="Bu bölüm anestezi takibinizde açılır." />
-        <SoftPanel className="sg-goz-panel">Bu alanda henüz paylaşılmış bir anestezi öncesi takip yok.</SoftPanel>
+        <Link href={basePath} className="sg-back-link" style={{ margin: '0 20px' }}>← Özet</Link>
       </div>
     )
   }
