@@ -51,10 +51,10 @@ export default function OrtoOpProtokolAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Op-sonrası kilometre taşları (hekim)</div>
         <Etiketli ad="Bölge">
-          <Secim deger={bolge} set={setBolge} secenekler={BOLGELER.map((x) => [x, x] as [string, string])} />
+          <Secim deger={bolge} set={(v) => setBolge(v as typeof bolge)} secenekler={BOLGELER.map((x) => [x, x] as [string, string])} />
         </Etiketli>
         <Etiketli ad="Taraf">
-          <Secim deger={taraf} set={setTaraf} secenekler={TARAFLAR.map((x) => [x, x] as [string, string])} />
+          <Secim deger={taraf} set={(v) => setTaraf(v as typeof taraf)} secenekler={TARAFLAR.map((x) => [x, x] as [string, string])} />
         </Etiketli>
         <Etiketli ad="İşlem tarihi">
           <input type="date" value={baslangic} onChange={(e) => setBaslangic(e.target.value)} style={S.input} />
@@ -66,7 +66,7 @@ export default function OrtoOpProtokolAraci() {
           <input type="date" value={yukVerme} onChange={(e) => setYukVerme(e.target.value)} style={S.input} />
         </Etiketli>
         <Etiketli ad="NV durumu">
-          <Secim deger={nvDurum} set={setNvDurum} secenekler={NV_DURUMLARI.map((x) => [x, x] as [string, string])} />
+          <Secim deger={nvDurum} set={(v) => setNvDurum(v as typeof nvDurum)} secenekler={NV_DURUMLARI.map((x) => [x, x] as [string, string])} />
         </Etiketli>
         <label style={{ ...S.metin, display: 'flex', gap: 8, marginTop: 8 }}>
           <input type="checkbox" checked={goruntuHazir} onChange={(e) => setGoruntuHazir(e.target.checked)} />
@@ -88,7 +88,7 @@ export default function OrtoOpProtokolAraci() {
         <div style={{ ...S.satir, marginTop: 10 }}>
           <KopyalaButonu metin={satirlar.join('\n')} etiket="Özeti kopyala" />
         </div>
-        <MuayeneFormunaEkle hastaId={hasta} arac="Op-sonrası" satirlar={satirlar} alan="content_plan" />
+        <MuayeneFormunaEkle hastaId={hasta} arac="Op-sonrası" satirlar={satirlar} alan="content_degerlendirme" />
         <div style={{ ...S.kucuk, marginTop: 10 }}>{KAPSAM_NOTU}</div>
         <div style={{ ...S.kucuk, marginTop: 4 }}>{REF_ACIKLAMA.TOTBID}</div>
       </div>

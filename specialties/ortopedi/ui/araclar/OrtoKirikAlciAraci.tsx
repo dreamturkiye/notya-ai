@@ -49,10 +49,10 @@ export default function OrtoKirikAlciAraci() {
           <Secim deger={tip} set={(v) => setTip(v as KirikAlciTip)} secenekler={TIPLER.map((t) => [t, TIP_AD[t]] as [string, string])} />
         </Etiketli>
         <Etiketli ad="Bölge">
-          <Secim deger={bolge} set={setBolge} secenekler={BOLGELER.map((x) => [x, x] as [string, string])} />
+          <Secim deger={bolge} set={(v) => setBolge(v as typeof bolge)} secenekler={BOLGELER.map((x) => [x, x] as [string, string])} />
         </Etiketli>
         <Etiketli ad="Taraf">
-          <Secim deger={taraf} set={setTaraf} secenekler={TARAFLAR.map((x) => [x, x] as [string, string])} />
+          <Secim deger={taraf} set={(v) => setTaraf(v as typeof taraf)} secenekler={TARAFLAR.map((x) => [x, x] as [string, string])} />
         </Etiketli>
         <Etiketli ad="Başlangıç / uygulama tarihi">
           <input type="date" value={baslangic} onChange={(e) => setBaslangic(e.target.value)} style={S.input} />
@@ -64,7 +64,7 @@ export default function OrtoKirikAlciAraci() {
           <input type="date" value={yukVerme} onChange={(e) => setYukVerme(e.target.value)} style={S.input} />
         </Etiketli>
         <Etiketli ad="NV durumu">
-          <Secim deger={nvDurum} set={setNvDurum} secenekler={NV_DURUMLARI.map((x) => [x, x] as [string, string])} />
+          <Secim deger={nvDurum} set={(v) => setNvDurum(v as typeof nvDurum)} secenekler={NV_DURUMLARI.map((x) => [x, x] as [string, string])} />
         </Etiketli>
         <label style={{ ...S.metin, display: 'flex', gap: 8, marginTop: 8 }}>
           <input type="checkbox" checked={goruntuHazir} onChange={(e) => setGoruntuHazir(e.target.checked)} />

@@ -56,7 +56,7 @@ export default function SporRtpAraci() {
         <div style={{ ...S.satir, marginTop: 10 }}>
           <KopyalaButonu metin={satirlar.join('\n')} etiket="Özeti kopyala" />
         </div>
-        <MuayeneFormunaEkle hastaId={hasta} arac="RTP" satirlar={satirlar} alan="content_plan" />
+        <MuayeneFormunaEkle hastaId={hasta} arac="RTP" satirlar={satirlar} alan="content_degerlendirme" />
         <div style={{ ...S.kucuk, marginTop: 10 }}>{REF_ACIKLAMA.RTP_BASAMAK}</div>
       </div>
     </>
