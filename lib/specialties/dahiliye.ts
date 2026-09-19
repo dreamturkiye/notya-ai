@@ -45,5 +45,7 @@ export const DAHILIYE_PROFILE: SpecialtyProfile = {
   }],
 
   // Product Strong + smoke green; uzman-dogrulandi needs live internist week (docs/DAHILIYE-MD-BETA.md).
+  // KONSULTASYON-01: dahiliye bölümünün zaten yazdığı sevk hedefleri (engines/dahiliye.ts SEVK_HEDEFLERI) — yalnız sıralama.
+  konsultasyonHedefleri: ['kardiyoloji', 'endokrinoloji', 'nefroloji', 'gastroenteroloji', 'goz-hastaliklari'],
   olgunluk: 'beta-hazir',
 }

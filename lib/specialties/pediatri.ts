@@ -81,5 +81,7 @@ export const PEDIATRI_PROFILE: SpecialtyProfile = {
     views: ['BuyumeEgrileriView', 'HedefBoyAileKart'], derinlik: 'Partial',
   }],
 
+  // KONSULTASYON-01 (Kaan 2026-09-19): çocuk hekiminin en sık yönlendirdiği branşlar — yalnız sıralama.
+  konsultasyonHedefleri: ['kulak-burun-bogaz', 'goz-hastaliklari', 'cocuk-cerrahisi'],
   olgunluk: 'uzman-dogrulandi',
 }
