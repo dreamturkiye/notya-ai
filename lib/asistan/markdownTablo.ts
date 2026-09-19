@@ -25,7 +25,13 @@ export function ayiriciMi(satir: string): boolean {
 export function tabloBasiMi(satirlar: string[], i: number): boolean {
   const bas = satirlar[i]?.trim() || ''
   const ayr = satirlar[i + 1]
-  return bas.includes('|') && !ayiriciMi(bas) && ayr !== undefined && ayiriciMi(ayr) && hucreler(ayr).length === hucreler(bas).length
+  // MD-TABLO-FIX (Kaan, 2026-09-19): sutun sayisi ESIT olmayinca tablo taninmiyor ve ham pipe
+  // satirlari duz metin basiliyordu - hekim ekranda "IIIII IIIII" goruyordu (|---|---| satiri).
+  // Model tabloyu kusurlu yazabilir ya da max_tokens tabloyu ortadan kesebilir; bu NORMALDIR.
+  // Artik sayi esitligi ARANMAZ; tabloOku hucreleri hizalar.
+  if (!bas.includes('|') || ayiriciMi(bas)) return false
+  if (ayr === undefined || !ayiriciMi(ayr)) return false
+  return hucreler(bas).length > 0 && hucreler(ayr).length > 0
 }
 
 /** Parse the table starting at i. Returns the table and the index of the first line after it. */
