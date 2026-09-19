@@ -36,7 +36,13 @@ test('alignment colons, rows without outer pipes, short / long rows, escaped pip
 
 test('not a table: a lone pipe line, a separator with a different column count, horizontal rule, plain text with a pipe', () => {
   assert.ok(!tabloBasiMi(['| sadece satır |', 'devam'], 0))
-  assert.ok(!tabloBasiMi(['| a | b | c |', '|---|---|'], 0))
+  // MD-TABLO-FIX (Kaan, 2026-09-19): bu satir eskiden 'tablo DEGIL' diye dogrulaniyordu.
+  // Uretimde hataya yol acti: sutun sayisi tutmayinca tablo taninmiyor, ham '|---|---|'
+  // satiri duz metin basiliyor ve hekim ekranda "IIIII IIIII" goruyordu (Dr. Gokhan bildirdi).
+  // Model tabloyu kusurlu yazabilir / max_tokens ortadan kesebilir - ikisi de normaldir.
+  // Karar: sutun sayisi esitligi ARANMAZ; tabloOku hucreleri hizalar. Yanlis pozitif riski
+  // dusuk, cunku hemen ardindan GERCEK bir ayirici satiri sart (duz metinde nadir).
+  assert.ok(tabloBasiMi(['| a | b | c |', '|---|---|'], 0), 'sutun sayisi tutmasa da tablo')
   assert.ok(!tabloBasiMi(['---', '---'], 0), 'a markdown rule is not a table')
   assert.ok(ayiriciMi('|:--|--:|'))
   assert.ok(!tabloBasiMi(['TA 150/95 | nabız 88', 'Plan: kontrol'], 0))

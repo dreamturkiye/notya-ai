@@ -6,7 +6,7 @@
  * MD-TABLO (2026-09-17): pipe tabloları gerçek tablo (dar ekranda yalnız tablo yatay kayar, sayfa taşmaz), # / ## / ### başlık, --- ayraç.
  */
 import React from 'react';
-import { tabloBasiMi, tabloOku, type Tablo } from '@/lib/asistan/markdownTablo';
+import { tabloBasiMi, tabloOku, ayiriciMi, type Tablo } from '@/lib/asistan/markdownTablo';
 
 const HIZA = { sol: 'left', orta: 'center', sag: 'right' } as const;
 
@@ -77,6 +77,10 @@ export default function HafifMarkdown({ metin, karanlik = true }: { metin: strin
       i = sonraki - 1;
       continue;
     }
+    // MD-TABLO-FIX (Kaan, 2026-09-19): tablo olarak ayristirilamayan ham satirlar hekime
+    // "IIIII IIIII" gibi gorunuyordu. Yalniz ayiractan ibaret bir satir ("|---|---|") bicim
+    // gurultusudur - asla duz metin olarak basilmaz.
+    if (t.includes('|') && ayiriciMi(t)) continue;
     const md = t.match(/^[-•*]\s+(.*)$/);
     if (md && !/^(?:[-*]\s*){3,}$/.test(t)) { madde.push(md[1]); continue; }
     maddeyiBos(`m${i}`);
