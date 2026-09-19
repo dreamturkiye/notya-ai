@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kalp Damar Cerrahisi — Post-exceptional Audit (KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01) · Notya</title>
-  <meta name="description" content="Post-exceptional KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: Kalp Damar Cerrahisi ~10% → ~93% · 16 Strong · olgunluk beta-hazir · 4 Araç · Kalp Damar Cerrahisi takibi Strong · OR/HIS / tanı lock / uydurma doz Missing intentional. No SCORE2/Kalbim/Kalbim. No PHI." />
+  <meta name="description" content="Post-exceptional KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: Kalp Damar Cerrahisi ~10% → ~93% · 16 Strong · olgunluk beta-hazir · 4 Araç · Damar Cerrahisi takibi Strong · OR/HIS / tanı lock / uydurma doz Missing intentional. No SCORE2/Kalbim. No PHI." />
   <style>
     :root {
       --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
@@ -61,14 +61,14 @@
       <a href="/psik-exceptional-audit.html">Psikiyatri →</a>
     </span>
   </div>
-  <div class="banner"><b>Post-exceptional sprint KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01</b> — 2026-09-19 · Supersedes kalp-damar-cerrahisi-presprint-audit.html (~10%). Chapter Strong · Intake Strong · Portal Kalp Damar Cerrahisi takibi Strong · 4 Araçlar · olgunluk <code>beta-hazir</code>. OR/HIS · tanı lock · uydurma doz Missing intentional. <b>No SCORE2/Kalbim/Kalbim</b> (kardiyoloji ayrı). No PHI. Never on Doktor Araçları.</div>
+  <div class="banner"><b>Post-exceptional sprint KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01</b> — 2026-09-19 · Supersedes kalp-damar-presprint-audit.html (~10%). Chapter Strong · Intake Strong · Portal Damar Cerrahisi takibi Strong · 4 Araçlar · olgunluk <code>beta-hazir</code>. OR/HIS · tanı lock · uydurma doz Missing intentional. <b>No SCORE2/Kalbim</b> (kardiyoloji ayrı). No PHI. Never on Doktor Araçları.</div>
   <h1>Kalp Damar Cerrahisi — Post-exceptional Audit</h1>
   <p class="lede">Code × TKDCD × SB vasküler × TTD cerrahi × SGK/SUT × TİTCK × TR ayaktan muayenehane. <b>Ürün cevap: evet — honest wow ~93%.</b> Olgunluk: beta-hazir shipped; uzman-dogrulandi MD week pending (docs/KALP-DAMAR-CERRAHISI-MD-BETA.md). Kardiyoloji ürünü değildir.</p>
   <div class="pills">
     <span class="pill success">KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01</span>
     <span class="pill warning">olgunluk beta-hazir</span>
     <span class="pill success">4 Araçlar</span>
-    <span class="pill success">Kalp Damar Cerrahisi takibi Strong</span>
+    <span class="pill success">Damar Cerrahisi takibi Strong</span>
     <span class="pill success">8 motor · tests</span>
     <span class="pill info">Honest wow ~93%</span>
   </div>
@@ -79,7 +79,7 @@
     <div class="stat"><div class="v danger">3</div><div class="l">Missing intentional</div></div>
   </div>
   <div class="callout"><h2>Executive verdict</h2>
-    <p>KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: <b>saf motorlar</b> (acil · pre-op · greft/yara · antikoag · şerit · kohort · portal), <b>KalpDamarHome</b>, <b>/api/doktor/kalp-damar-cerrahisi</b>, intake <b>acilBelirtilerKDC</b>, Sağlığım <b>/kalp-damar-cerrahisi-takibim</b>, Araçlar'da <b>4</b> tile, migration <b>081</b> (<code>kdc_*</code> tablolar — genel-cerrahi <code>kalp_*</code> ile çakışmaz). Kilitler: doz yok, tanı kilidi yok, OR/HIS yok, SCORE2/Kalbim/Kalbim sızıntısı yok.</p>
+    <p>KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01: <b>saf motorlar</b> (acil · pre-op · greft/yara · antikoag · şerit · kohort · portal), <b>KalpDamarHome</b>, <b>/api/doktor/kalp-damar-cerrahisi</b>, intake <b>acilBelirtilerKDC</b>, Sağlığım <b>/damar-cerrahisi-takibi</b>, Araçlar'da <b>4</b> tile, migration <b>081</b> (<code>kdc_*</code> tablolar — genel-cerrahi <code>kalp_*</code> ile çakışmaz). Kilitler: doz yok, tanı kilidi yok, OR/HIS yok, SCORE2/Kalbim sızıntısı yok.</p>
   </div>
   <h2>Coverage depth — post-exceptional</h2>
   <p class="cap">Strong = clinic-ready · Partial = beta-hazir · Missing = intentional out.</p>
@@ -97,7 +97,7 @@
       <tr><td>API / izolasyon</td><td><span class="pill success">Strong</span></td><td class="note">hastaSahibiMi · doctor_id + patient_id · kdc_*</td><td class="note">081 RLS</td></tr>
       <tr><td>Veritabanı</td><td><span class="pill success">Strong</span></td><td class="note">hasta_kalp_damar_cerrahisi · kdc_preop · kdc_greft_yara · goc_antikoag · kdc_gorevleri · kdc_acil</td><td class="note">≠ kalp_*</td></tr>
       <tr><td>Intake</td><td><span class="pill success">Strong</span></td><td class="note">acilBelirtilerKDC · 112 yardımı</td><td class="note">—</td></tr>
-      <tr><td>Hasta portalı</td><td><span class="pill success">Strong</span></td><td class="note">/kalp-damar-cerrahisi-takibim — tanı/CAT/doz yok</td><td class="note">⁴</td></tr>
+      <tr><td>Hasta portalı</td><td><span class="pill success">Strong</span></td><td class="note">/damar-cerrahisi-takibi — tanı/SCORE2/doz yok</td><td class="note">⁴</td></tr>
       <tr><td>SOAP / prompts</td><td><span class="pill success">Strong</span></td><td class="note">soap-kdc.md kilidi</td><td class="note">—</td></tr>
       <tr><td>Doktor Araçları</td><td><span class="pill success">Strong</span></td><td class="note">4 tile; kardiyoloji + foreign omit</td><td class="note">—</td></tr>
       <tr><td>Testler</td><td><span class="pill success">Strong</span></td><td class="note">engines · araç SSR · portal · Araçlar cross-leak</td><td class="note">test:kalp-damar-cerrahisi</td></tr>
