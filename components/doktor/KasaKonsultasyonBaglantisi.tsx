@@ -9,7 +9,7 @@
  */
 import React, { useEffect, useState } from 'react'
 import { getAccessTokenAsync, toolsInput, toolsLabel } from '@/lib/doktor/toolsUi'
-import { durumGrubu, hedefEtiketi, trGun, KONSULTASYON_SINIRLARI, type KonsultasyonSatiri } from '@/lib/doktor/konsultasyon'
+import { durumGrubu, hedefEtiketi, istemOzu, trGun, KONSULTASYON_SINIRLARI, type KonsultasyonSatiri } from '@/lib/doktor/konsultasyon'
 
 export type KasaKonsultasyonSecimi = { acik: boolean; id: string; ozet: string }
 export const BOS_KONSULTASYON_SECIMI: KasaKonsultasyonSecimi = { acik: false, id: '', ozet: '' }
@@ -77,7 +77,7 @@ export default function KasaKonsultasyonBaglantisi({ hastaId, secim, setSecim }:
               <option value="" style={{ background: '#0A1628', color: '#fff' }}>Konsültasyon seçin</option>
               {liste.map((k) => (
                 <option key={k.id} value={k.id} style={{ background: '#0A1628', color: '#fff' }}>
-                  {(k.hedefEtiketi || hedefEtiketi(k))} · {trGun(k.istem_tarihi || k.created_at)} · {String(k.klinik_soru || k.not_metni || '').slice(0, 60)}
+                  {(k.hedefEtiketi || hedefEtiketi(k))} · {trGun(k.istem_tarihi || k.created_at)} · {String(istemOzu(k.klinik_soru) || k.not_metni || '').slice(0, 60)}
                 </option>
               ))}
             </select>

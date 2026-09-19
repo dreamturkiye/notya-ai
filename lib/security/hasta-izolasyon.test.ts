@@ -497,6 +497,14 @@ const VAKALAR: Vaka[] = [
     yazdi: (a) => tablo('sevkler').find((x) => x.id === a.konsultasyon)?.klinik_soru === 'QA düzenlenmiş istem metni: işitme kaybı var mı?'
       && tablo('konsultasyon_revizyonlar').some((r) => r.sevk_id === a.konsultasyon && r.doctor_id === a.id && r.patient_id === a.hasta && String(r.onceki).startsWith('İşitme kaybı var mı?')),
     cagir: (r, a, h) => coz(r.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', { token: a.token, govde: { id: h.konsultasyon, islem: 'duzenle', klinikSoru: 'QA düzenlenmiş istem metni: işitme kaybı var mı?' } }))) },
+  // AYSE-KONSULTASYON-01 (B/C): Ayşe taslakları — yabancı hastanın dosyası / raporu modele GİTMEZ, hiçbir şey yazılmaz
+  { ad: 'POST /api/doktor/konsultasyon istem_taslagi (Ayşe istem taslağı — hasta dosyası modele)', red: 404,
+    yazdi: (a) => modelIstekleri.some((m) => m.includes(isaret(a.harf))),
+    cagir: (r, a, h) => coz(r.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: a.token, govde: { islem: 'istem_taslagi', patientId: h.hasta, hedefBrans: 'kulak-burun-bogaz' } }))) },
+  { ad: 'POST /api/doktor/konsultasyon yanit_taslagi (Ayşe yanıt özeti taslağı — yabancı konsültasyon)', red: 404,
+    cagir: (r, a, h) => coz(r.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: a.token, govde: { islem: 'yanit_taslagi', id: h.konsultasyonYanitli } }))) },
+  { ad: 'POST /api/doktor/konsultasyon yanit_taslagi (kendi konsültasyonu + yabancı Kasa raporu)', red: 404,
+    cagir: (r, a, h) => coz(r.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: a.token, govde: { islem: 'yanit_taslagi', id: a.konsultasyon, belgeId: h.kasaBelge } }))) },
   { ad: 'PATCH /api/doktor/konsultasyon hatirlat (hastaya Sağlığım mesajı)', red: 404,
     yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.konu === 'Konsültasyon sonucu hatırlatması'),
     cagir: (r, a, h) => coz(r.konsultasyon.PATCH(iste('PATCH', '/api/doktor/konsultasyon', { token: a.token, govde: { id: h.konsultasyon, islem: 'hatirlat' } }))) },
@@ -618,6 +626,18 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         const y = await coz(R.notOnay.POST(iste('POST', `/api/notes/${x.hileliNot}/approve`, { token: x.token, govde: {} }), prm({ id: x.hileliNot })))
         assert.equal(y.status, 200)
         assert.equal(tablo('hasta_ilaclar').filter((i) => i.patient_id === kurban.hasta).length, once, 'reçete yabancı hastaya aktarıldı')
+      })
+      it(`${saldiran}: Ayşe istem taslağı yabancı hekimin kendi hastasına düşmüş seans/notunu modele taşımaz`, async () => {
+        const s = sahneKur()
+        const x = s[saldiran]
+        const y = await coz(R.konsultasyon.POST(iste('POST', '/api/doktor/konsultasyon', { token: x.token, govde: { islem: 'istem_taslagi', patientId: x.hasta, hedefBrans: 'kulak-burun-bogaz' } })))
+        assert.equal(y.status, 200)
+        assert.ok(modelIstekleri.length > 0, 'model çağrılmadı — vaka boşa koştu')
+        for (const m of modelIstekleri) {
+          assert.ok(m.includes(isaret(saldiran)), 'kendi hastasının dosyası modele gitmedi')
+          assert.ok(!m.includes(isaret(kurbanHarf)), `SIZINTI: ${kurbanHarf} hekiminin kirli notu taslak bağlamına girdi`)
+          assert.ok(!m.includes('Zyxorin') && !m.includes('Qwavelin'), 'SIZINTI: yabancı hekimin kirli reçetesi taslak bağlamına girdi')
+        }
       })
       it(`${saldiran}: takvim ve gün programı yabancı hastanın adını/telefonunu çözmez`, async () => {
         const s = sahneKur()

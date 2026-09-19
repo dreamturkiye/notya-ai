@@ -9,11 +9,16 @@
  * Terim: "Konsültasyon" (eş anlamlı "yönlendirme"). "Sevk" yazılmaz — SGK sevki (SUT EK-2/F / e-sevk) ayrı belgedir.
  * Hekim kilidi: yanıt özeti hekimin cümlesidir; belgeden çıkarılmış Tier A özeti yalnız TASLAK öneri olarak görünür.
  * Nota yalnız "Bugünkü muayene formuna ekle" basılınca yazılır. Ortak UI: lib/doktor/aracUi.tsx.
+ *
+ * AYSE-KONSULTASYON-01 (Dr. Gökhan + Kaan): hedef branş seçilince Ayşe istem metnini hasta dosyasından (son muayene
+ * ağırlıklı) TASLAK yazar — alan DOLU gelir, ayrı düğme yok; yanıt formunda bağlı rapordan özet taslağı dolu gelir.
+ * Taslak hekimin yazdığının üstüne yazılmaz; üretilemezse form boş ama kullanılabilir ("elle yazabilirsiniz").
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
-import { konsultasyonApi, konsultasyonIslemi, YANITSIZ_KAPAT_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
+import { konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir, YANITSIZ_KAPAT_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
+import { taslakUygulanir } from '@/lib/doktor/konsultasyonTaslagi';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
 import {
   AracVurguSaglayici, VURGU_TEAL, useAracStil, Alan, Segment, Katlanir, Rozet, TaslakNotu,
@@ -38,6 +43,47 @@ type KasaBelgesi = { id: string; fileName: string; fileType: string; category: s
 
 const api = konsultasyonApi;
 
+/* ───────────────────────── Ayşe taslak durumu (ortak gösterim) ───────────────────────── */
+
+export type TaslakDurumu =
+  | { durum: 'yok' }
+  | { durum: 'yaziyor' }
+  | { durum: 'hazir'; duzenlendi: boolean; bilgi?: string }
+  | { durum: 'korundu'; bekleyen: string }
+  | { durum: 'hata'; mesaj: string };
+
+/**
+ * Taslağın yanındaki durum satırı: TASLAK rozeti + hekim onayı dili (TaslakNotu). Hata halinde form boş ama kullanılabilir
+ * ve "elle yazabilirsiniz" der — hekim asla kilitlenmez.
+ */
+export function AyseTaslakDurumu({ t, yon, taslagiKullan }: { t: TaslakDurumu; yon: 'istem' | 'yanit'; taslagiKullan?: () => void }) {
+  const stil = useAracStil();
+  if (t.durum === 'yok') return null;
+  if (t.durum === 'yaziyor') {
+    return <div style={{ ...stil.kucuk, display: 'flex', gap: 8, alignItems: 'center' }} aria-live="polite"><Rozet ton="bilgi">Ayşe</Rozet>{yon === 'istem' ? 'Ayşe hasta dosyasından istem taslağını yazıyor… Beklemeden kendiniz de yazabilirsiniz.' : 'Ayşe raporu okuyup özet taslağını çıkarıyor… Beklemeden kendiniz de yazabilirsiniz.'}</div>;
+  }
+  if (t.durum === 'hata') return <div style={stil.uyari} aria-live="polite">{t.mesaj}</div>;
+  if (t.durum === 'korundu') {
+    return (
+      <div style={stil.uyari} aria-live="polite">
+        Siz yazmaya başladığınız için Ayşe&apos;nin taslağı metninizin üstüne yazılmadı.
+        {taslagiKullan && <button type="button" onClick={taslagiKullan} style={{ ...stil.ghost, marginLeft: 8, marginTop: 6 }}>Ayşe&apos;nin taslağını kullan</button>}
+      </div>
+    );
+  }
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        {t.duzenlendi ? <Rozet ton="bilgi">Ayşe taslağı · düzenlendi</Rozet> : <Rozet ton="uyari">TASLAK · Ayşe · hekim onayı bekliyor</Rozet>}
+        {t.bilgi && <span style={stil.kucuk}>{t.bilgi}</span>}
+      </div>
+      <TaslakNotu>{yon === 'istem'
+        ? 'Ayşe yalnız hasta dosyasındaki bilgiyle yazdı (tanı, evre, doz eklemez). Okuyun, düzenleyin; “Oluştur”a basmadan hiçbir şey kaydedilmez.'
+        : 'Ayşe raporu okuyup özet taslağı çıkardı. Özet sizin cümlenizdir — Notya tanı iddia etmez. Onaylamadan konsültasyon “yanıtlandı” olmaz.'}</TaslakNotu>
+    </div>
+  );
+}
+
 /* ───────────────────────── Yeni istem formu ───────────────────────── */
 
 export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
@@ -54,10 +100,55 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
   const [tanilar, setTanilar] = useState('');
   const [durum, setDurum] = useState('');
   const [not, setNot] = useState('');
+  const [ayseNotu, setAyseNotu] = useState('');
+  const [taslak, setTaslak] = useState<TaslakDurumu>({ durum: 'yok' });
   const [gonderiyor, setGonderiyor] = useState(false);
   const [hata, setHata] = useState('');
   const kisaltmalar = olasiKisaltmalar(soru);
   const hazir = !!hedef && soru.trim().length >= KLINIK_SORU_EN_AZ && !gonderiyor;
+
+  // Ayşe'nin son taslağı + hekimin güncel metni (yanıt geldiğinde hekimin yazdığının üstüne yazmamak için).
+  const soruRef = useRef(soru); soruRef.current = soru;
+  const sonTaslak = useRef<string | null>(null);
+  const istekNo = useRef(0);
+
+  const taslakYaz = useCallback(async (h: string, hekimNotu: string, zorla = false) => {
+    if (!h) return;
+    if (!zorla && !taslakUygulanir(soruRef.current, sonTaslak.current)) return;
+    const no = ++istekNo.current;
+    setTaslak({ durum: 'yaziyor' });
+    const y = await istemTaslagiIste(patientId, h, hekimNotu || undefined);
+    if (no !== istekNo.current) return; // daha yeni bir istek (branş değişti) var
+    if (!y.ok) { setTaslak({ durum: 'hata', mesaj: y.mesaj }); return; }
+    const k = (y.kaynak || {}) as { sonMuayene?: string | null; vizitSayisi?: number };
+    const bilgi = k.sonMuayene ? `Son muayene ${trGun(k.sonMuayene)} ağırlıklı · ${k.vizitSayisi || 1} vizit okundu` : undefined;
+    if (zorla || taslakUygulanir(soruRef.current, sonTaslak.current)) {
+      sonTaslak.current = y.taslak;
+      setSoru(y.taslak);
+      setTaslak({ durum: 'hazir', duzenlendi: false, bilgi });
+    } else setTaslak({ durum: 'korundu', bekleyen: y.taslak });
+  }, [patientId]);
+
+  // Kaan: taslak DOLU gelir — hedef branş seçilir seçilmez, ayrı düğme yok.
+  useEffect(() => { if (hedef) void taslakYaz(hedef, ''); }, [hedef, taslakYaz]);
+
+  const soruDegisti = (v: string) => {
+    setSoru(v);
+    setTaslak((t) => (t.durum === 'hazir' ? { ...t, duzenlendi: v.trim() !== String(sonTaslak.current || '').trim() } : t));
+  };
+  const yenidenYaz = () => {
+    if (!hedef) return;
+    const elle = soru.trim() && soru.trim() !== String(sonTaslak.current || '').trim();
+    if (elle && typeof window !== 'undefined' && !window.confirm('Metindeki değişiklikleriniz Ayşe’nin yeni taslağıyla değiştirilecek. Devam edilsin mi?')) return;
+    void taslakYaz(hedef, ayseNotu, true);
+  };
+  const bekleyeniKullan = () => {
+    if (taslak.durum !== 'korundu') return;
+    if (typeof window !== 'undefined' && !window.confirm('Yazdığınız metin Ayşe’nin taslağıyla değiştirilecek. Devam edilsin mi?')) return;
+    sonTaslak.current = taslak.bekleyen;
+    setSoru(taslak.bekleyen);
+    setTaslak({ durum: 'hazir', duzenlendi: false });
+  };
 
   const gonder = async () => {
     if (!hazir) return;
@@ -74,7 +165,7 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
     <div style={stil.kutu}>
       <div style={stil.etiket}>Yeni konsültasyon istemi</div>
       <div style={{ display: 'grid', gap: 12 }}>
-        <Alan etiket="Hedef branş">
+        <Alan etiket="Hedef branş" ipucu="Branşı seçtiğinizde Ayşe hasta dosyasından (son muayene ağırlıklı) istem taslağını yazar; siz düzenler ve onaylarsınız.">
           <select aria-label="Hedef branş" value={hedef} onChange={(e) => setHedef(e.target.value)} style={stil.input}>
             <option value="" style={{ color: '#000' }}>Branş seçin</option>
             {hedefler.onerilen.length > 0 && (
@@ -87,11 +178,20 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
             </optgroup>
           </select>
         </Alan>
+        <AyseTaslakDurumu t={taslak} yon="istem" taslagiKullan={bekleyeniKullan} />
         <Alan etiket="Klinik soru (konsültasyonun nedeni)" ipucu="Açık ve kısaltmasız yazın — ör. “İşitme kaybı var mı? Okul başarısında düşüş, televizyonu yüksek sesle izliyor.”">
-          <textarea aria-label="Klinik soru" value={soru} onChange={(e) => setSoru(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.klinikSoru} rows={3} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
+          <textarea aria-label="Klinik soru" value={soru} onChange={(e) => soruDegisti(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.klinikSoru} rows={soru.length > 200 ? 12 : 4} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
         </Alan>
         {kisaltmalar.length > 0 && (
           <div style={stil.uyari} aria-live="polite">Kısaltma olabilir: {kisaltmalar.join(', ')} — konsültasyon isteminde açık yazım önerilir (Türk Tabipleri Birliği konsültasyon ilkesi). Kaydetmenize engel değildir.</div>
+        )}
+        {hedef && (
+          <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'minmax(0, 1fr)' }}>
+            <Alan etiket="Ayşe'ye kısa not (isteğe bağlı)" ipucu="Ör. “işitme kaybı şüphesi, okulda duymakta zorlanıyor” — Ayşe notunuzu dosyayla birleştirip yeniden yazar.">
+              <input aria-label="Ayşe'ye kısa not" value={ayseNotu} onChange={(e) => setAyseNotu(e.target.value)} maxLength={500} style={stil.input} />
+            </Alan>
+            <div><button type="button" onClick={yenidenYaz} disabled={taslak.durum === 'yaziyor'} style={{ ...stil.ghost, opacity: taslak.durum === 'yaziyor' ? 0.55 : 1 }}>{ayseNotu.trim() ? 'Bu notla yeniden yaz' : 'Ayşe yeniden yazsın'}</button></div>
+          </div>
         )}
         <Alan etiket="Aciliyet">
           <Segment etiket="Aciliyet" deger={aciliyet} set={setAciliyet} secenekler={(['rutin', 'oncelikli', 'acil'] as const).map((k) => [k, ACILIYET_ETIKETI[k]])} />
@@ -118,7 +218,7 @@ export function YeniKonsultasyonFormu({ patientId, hedefler, olustu, vazgec }: {
         {vazgec && <button type="button" onClick={vazgec} style={stil.ghost}>Vazgeç</button>}
       </div>
       {!hedef || soru.trim().length < KLINIK_SORU_EN_AZ
-        ? <div style={{ ...stil.kucuk, marginTop: 6 }}>Hedef branş ve en az {KLINIK_SORU_EN_AZ} karakterlik klinik soru gerekli.</div>
+        ? <div style={{ ...stil.kucuk, marginTop: 6 }}>Hedef branş ve en az {KLINIK_SORU_EN_AZ} karakterlik istem metni gerekli.</div>
         : null}
       {hata && <div style={{ ...stil.hata, marginTop: 8 }}>{hata}</div>}
       <div style={{ ...stil.kucuk, marginTop: 10 }}>Bu bir konsültasyon (meslektaş görüşü) istemidir; SGK sevk belgesi değildir. Kurumlar arası SGK sevki gerekiyorsa MEDULA üzerinden düzenlenir.</div>
@@ -140,9 +240,12 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
   const [ozet, setOzet] = useState(k.yanit_ozeti || '');
   const [tarih, setTarih] = useState(k.yanit_tarihi || bugunTrIso());
   const [hekim, setHekim] = useState(k.hedef_hekim || '');
-  const [taslak, setTaslak] = useState<{ durum: string; ozet: string } | null>(k.belgeTaslagi);
+  const [taslak, setTaslak] = useState<TaslakDurumu>({ durum: 'yok' });
   const [gonderiyor, setGonderiyor] = useState(false);
   const [hata, setHata] = useState('');
+  const ozetRef = useRef(ozet); ozetRef.current = ozet;
+  const sonTaslak = useRef<string | null>(null);
+  const istekNo = useRef(0);
 
   useEffect(() => {
     let iptal = false;
@@ -150,18 +253,38 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
     return () => { iptal = true; };
   }, [patientId]);
 
-  // Seçilen belgenin (varsa) Tier A değerlendirme TASLAĞI — yalnız öneri; hekim kendi cümlesini yazar.
+  // Kaan: dönüşte de taslak DOLU gelir. Rapor seçiliyse ve hekim özet yazmadıysa Ayşe bağlı raporu okur. Sunucu önce
+  // mevcut belge değerlendirmesini (belge_analizleri) kullanır; yoksa raporu okur. Hekimin yazdığının üstüne yazılmaz.
   useEffect(() => {
-    if (!belgeId) { setTaslak(null); return; }
-    if (belgeId === k.belge_id && k.belgeTaslagi) { setTaslak(k.belgeTaslagi); return; }
-    let iptal = false;
-    api(`/api/doktor/belgeler/analiz?documentId=${encodeURIComponent(belgeId)}`).then(({ j }) => {
-      if (iptal) return;
-      const a = j.analiz as { durum?: string; hekim_ozet?: string | null; sonuc?: { ozet?: string } } | null;
-      setTaslak(a ? { durum: String(a.durum || ''), ozet: String(a.hekim_ozet || a.sonuc?.ozet || '').slice(0, 600) } : null);
-    }).catch(() => { if (!iptal) setTaslak(null); });
-    return () => { iptal = true; };
-  }, [belgeId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!belgeId) { setTaslak({ durum: 'yok' }); return; }
+    if (!taslakUygulanir(ozetRef.current, sonTaslak.current)) return;
+    const no = ++istekNo.current;
+    setTaslak({ durum: 'yaziyor' });
+    yanitTaslagiIsteVeGerekirseKimliksizlestir(k.id, belgeId).then((y) => {
+      if (no !== istekNo.current) return;
+      if (!y.ok) { setTaslak({ durum: 'hata', mesaj: y.mesaj }); return; }
+      const bilgi = y.kaynak === 'belge_analizi'
+        ? (y.belgeDurumu === 'onaylandi' || y.belgeDurumu === 'muayene_onaylandi' ? 'belge değerlendirmesinden (hekim onaylı)' : 'belge değerlendirmesinden')
+        : 'konsültan raporundan';
+      if (taslakUygulanir(ozetRef.current, sonTaslak.current)) {
+        sonTaslak.current = y.taslak;
+        setOzet(y.taslak);
+        setTaslak({ durum: 'hazir', duzenlendi: false, bilgi });
+      } else setTaslak({ durum: 'korundu', bekleyen: y.taslak });
+    });
+  }, [belgeId, k.id]);
+
+  const ozetDegisti = (v: string) => {
+    setOzet(v);
+    setTaslak((t) => (t.durum === 'hazir' ? { ...t, duzenlendi: v.trim() !== String(sonTaslak.current || '').trim() } : t));
+  };
+  const bekleyeniKullan = () => {
+    if (taslak.durum !== 'korundu') return;
+    if (typeof window !== 'undefined' && !window.confirm('Yazdığınız özet Ayşe’nin taslağıyla değiştirilecek. Devam edilsin mi?')) return;
+    sonTaslak.current = taslak.bekleyen;
+    setOzet(taslak.bekleyen);
+    setTaslak({ durum: 'hazir', duzenlendi: false });
+  };
 
   const kaydet = async () => {
     if (ozet.trim().length < 3 || gonderiyor) return;
@@ -189,18 +312,9 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
           <a href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(belgeId)}`} style={{ color: '#2DD4BF' }}>Belgeyi değerlendir (Asistana raporla) ›</a> — belgeden taslak özet çıkarır; onay yine sizindir.
         </div>
       )}
-      {taslak?.ozet ? (
-        <div style={{ ...stil.uyari }}>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 }}>
-            <Rozet ton="uyari">TASLAK · belgeden</Rozet>
-            <span>{taslak.durum === 'onaylandi' || taslak.durum === 'muayene_onaylandi' ? 'belge değerlendirmesi hekim onaylı' : 'hekim onayı bekliyor'}</span>
-          </div>
-          <div style={{ color: '#FEF3C7', overflowWrap: 'anywhere' }}>{taslak.ozet}</div>
-          <button type="button" onClick={() => setOzet(taslak.ozet)} style={{ ...stil.ghost, marginTop: 8 }}>Taslağı özete aktar (düzenleyin)</button>
-        </div>
-      ) : null}
+      <AyseTaslakDurumu t={taslak} yon="yanit" taslagiKullan={bekleyeniKullan} />
       <Alan etiket="Yanıt özeti — kendi cümleniz" ipucu="Ör. “İşitme kaybı saptanmadı.” Notya tanı iddia etmez; bu satır sizin klinik kaydınızdır.">
-        <textarea aria-label="Yanıt özeti" value={ozet} onChange={(e) => setOzet(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.yanitOzeti} rows={3} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
+        <textarea aria-label="Yanıt özeti" value={ozet} onChange={(e) => ozetDegisti(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.yanitOzeti} rows={3} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
       </Alan>
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
         <Alan etiket="Yanıt tarihi">
@@ -211,11 +325,11 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
         </Alan>
       </div>
       <div style={{ ...stil.satir, marginTop: 0 }}>
-        <button type="button" onClick={kaydet} disabled={!hazir} aria-disabled={!hazir} style={{ ...stil.btn, opacity: hazir ? 1 : 0.55, cursor: hazir ? 'pointer' : 'not-allowed' }}>{gonderiyor ? 'Kaydediliyor…' : 'Yanıtı kaydet'}</button>
+        <button type="button" onClick={kaydet} disabled={!hazir} aria-disabled={!hazir} style={{ ...stil.btn, opacity: hazir ? 1 : 0.55, cursor: hazir ? 'pointer' : 'not-allowed' }}>{gonderiyor ? 'Kaydediliyor…' : 'Onayla ve kaydet'}</button>
         <button type="button" onClick={vazgec} style={stil.ghost}>Vazgeç</button>
       </div>
       {hata && <div style={stil.hata}>{hata}</div>}
-      <TaslakNotu>Yanıt kaydedilince muayene notuna kendiliğinden yazılmaz; “Bugünkü muayene formuna ekle” ile siz eklersiniz.</TaslakNotu>
+      <div style={stil.kucuk}>Yanıt kaydedilince muayene notuna kendiliğinden yazılmaz; “Bugünkü muayene formuna ekle” ile siz eklersiniz.</div>
     </div>
   );
 }
@@ -377,7 +491,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, yanitAcikBas
           {k.belge.silindi
             ? <span style={stil.kucuk}>📎 {k.belge.ad} — kasadan silinmiş</span>
             : <button type="button" onClick={() => setRapor(!rapor)} aria-expanded={rapor} style={stil.ghost}>📎 {k.belge.ad} · {trGun(k.belge.tarih)}</button>}
-          {g !== 'yanitlandi' && <span style={stil.kucuk}>Rapor bağlı — yanıt özetinizi yazın.</span>}
+          {g !== 'yanitlandi' && <span style={stil.kucuk}>Rapor bağlı — “Yanıt ekle” ile Ayşe&apos;nin özet taslağını görün, onaylayın.</span>}
         </div>
       )}
       {rapor && k.belge && !k.belge.silindi && (

@@ -30,8 +30,11 @@ export const ACILIYETLER = ['rutin', 'oncelikli', 'acil'] as const
 export type Aciliyet = (typeof ACILIYETLER)[number]
 export const ACILIYET_ETIKETI: Record<Aciliyet, string> = { rutin: 'Rutin', oncelikli: 'Öncelikli', acil: 'Acil' }
 
-/** Uzunluk tavanları — sunucu ve istemci aynı sınırı uygular. */
-export const KONSULTASYON_SINIRLARI = { klinikSoru: 1000, hedefHekim: 120, not: 1000, tanilar: 500, mevcutDurum: 1000, yanitOzeti: 1000 } as const
+/**
+ * Uzunluk tavanları — sunucu ve istemci aynı sınırı uygular. klinikSoru 4000: AYSE-KONSULTASYON-01'de istem metni
+ * meslektaşa yazılan mektup biçimidir ("Sayın Meslektaşım, … Saygılarımla,") — 1000 karakter yetmiyordu.
+ */
+export const KONSULTASYON_SINIRLARI = { klinikSoru: 4000, hedefHekim: 120, not: 1000, tanilar: 500, mevcutDurum: 1000, yanitOzeti: 1000 } as const
 /** Klinik soru en az bu kadar karakter — "KBB?" bir istem değildir (TTB: açık ve anlaşılır). */
 export const KLINIK_SORU_EN_AZ = 10
 
@@ -137,6 +140,20 @@ export function olasiKisaltmalar(metin: string | null | undefined): string[] {
 
 const temiz = (s: unknown, tavan: number) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, tavan)
 const cokSatir = (s: unknown, tavan: number) => String(s ?? '').replace(/\r\n?/g, '\n').replace(/[ \t]+/g, ' ').trim().slice(0, tavan)
+
+/**
+ * Mektup biçimli istemin ÖZÜ (not bloğu, bekleyen listesi): "Sayın Meslektaşım," ve "Saygılarımla, …" atılır; mektupsa
+ * son paragraf (net talep — "… konsültasyonunuzu rica ederim.") döner. Mektup değilse metnin kendisi.
+ */
+export function istemOzu(metin: string | null | undefined): string {
+  const s = String(metin || '').replace(/\r\n?/g, '\n').trim()
+  if (!/^Sayın\s+Meslektaşım/i.test(s)) return s
+  let govde = s.replace(/^Sayın\s+Meslektaşım[^\n]*\n*/i, '')
+  const k = govde.search(/\n\s*Saygılarımla\b/i)
+  if (k >= 0) govde = govde.slice(0, k)
+  const paragraflar = govde.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
+  return paragraflar[paragraflar.length - 1] || govde.trim()
+}
 
 /** YYYY-AA-GG mi (geçerli takvim günü)? */
 export function isoGunMu(s: unknown): s is string {
@@ -335,7 +352,7 @@ export function konsultasyonNotBlogu(
   const ozet = tcMaskele(temiz(s.yanit_ozeti, KONSULTASYON_SINIRLARI.yanitOzeti))
   if (!ozet) return null
   const gun = isoGunMu(bugunIso) ? `[${bugunIso}] ` : ''
-  const soru = tcMaskele(temiz(s.klinik_soru || s.not_metni, 300))
+  const soru = tcMaskele(temiz(istemOzu(s.klinik_soru) || s.not_metni, 300))
   const istem = trGun(s.istem_tarihi || s.created_at)
   const kim = temiz(s.hedef_hekim, KONSULTASYON_SINIRLARI.hedefHekim)
   const satirlar = [
@@ -507,7 +524,7 @@ export function bekleyenListesi(
   return satirlar
     .filter((s) => (BEKLEYEN_DURUMLAR as readonly string[]).includes(s.durum) && adlar.has(s.patient_id))
     .map((s) => {
-      const soru = temiz(s.klinik_soru || s.not_metni, 1000)
+      const soru = temiz(istemOzu(s.klinik_soru) || s.not_metni, 1000)
       return {
         id: s.id,
         patientId: s.patient_id,
