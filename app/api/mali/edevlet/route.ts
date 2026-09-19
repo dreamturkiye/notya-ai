@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
+import { aiCagir } from '@/lib/ai/cagir'
 import { buildEDevletRehber, buildDeryaVoiceResponse, EDevletSorgu } from '@/lib/mali/eDevletEngine'
 
 function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }) }
@@ -29,9 +30,10 @@ export async function POST(req: NextRequest) {
     const sonuc = buildEDevletRehber(sorgu)
 
     if (useAI) {
-      const aiResponse = await getAnthropic().messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+      const aiResponse = await aiCagir({
+        istemci: getAnthropic(),
+        gorev: 'kisa-yanit',
+        doctorId: user.id,
         system: 'Sen Derya Yılmaz, Türk mali müşavirisin. Kısa, net, pratik Türkçe cevaplar ver.',
         messages: [{
           role: 'user',

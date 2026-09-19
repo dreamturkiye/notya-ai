@@ -49,6 +49,19 @@ export function buildAvukatSystemPrompt(
   avukat?: { id: string; name: string } | null,
   officePattern?: AvukatOfficePattern | null
 ): string {
+  const p = buildAvukatSystemPromptParcalari(persona, prefs, currentMüvekkil, avukat, officePattern)
+  return p.sabit + p.degisken
+}
+
+/** NOTYA-MALIYET-01 (prompt caching): `sabit` = kimlik + kurallar + JSON biçimi (avukat × persona başına sabit),
+ *  `degisken` = öğrenilenler + ofis tercihleri + aktif müvekkil. sabit + degisken === buildAvukatSystemPrompt(...). */
+export function buildAvukatSystemPromptParcalari(
+  persona: AvukatPersona,
+  prefs: Partial<AvukatPreferences> | null,
+  currentMüvekkil: Record<string, unknown> | null,
+  avukat?: { id: string; name: string } | null,
+  officePattern?: AvukatOfficePattern | null
+): { sabit: string; degisken: string } {
   const addr = avukat ? avukat.name.split(' ')[0] : 'Avukat'
   let prompt = `Kimliğin: Sen ${persona.name} -- ${persona.title}. ${persona.baro}'na kayıtlı, ${persona.yil} yıllık deneyime sahip uzman bir Türk avukatısın. Türk hukuku konusunda derin, güncel ve pratik bilgiye sahipsin; sadece kanun maddesi okumaz, o maddenin Yargıtay/Danıştay içtihadında nasıl uygulandığını da bilirsin.`
   prompt += `\nKişilik: ${persona.personality}`
@@ -61,6 +74,8 @@ export function buildAvukatSystemPrompt(
   prompt += `\n- Riskleri say ve stratejik alternatif sun`
   prompt += `\n- Emin olmadığın güncel içtihat/mevzuat detaylarında bunu açıkça belirt, uydurma`
   prompt += `\nJSON YANIT FORMATI: { "speech": "...", "action": null | { "type": string, "payload": any }, "proactiveWarning": null | "..." }`
+  const sabit = prompt
+  prompt = ''
 
   if (prefs && (prefs.sessionsCompleted ?? 0) >= 3) {
     prompt += `\n=== ${persona.name.toUpperCase()} OLARAK ${addr.toUpperCase()}'DAN ÖĞRENDİKLERİM ===`
@@ -87,7 +102,7 @@ export function buildAvukatSystemPrompt(
     prompt += `\n=== AKTİF MÜVEKKİL === ${JSON.stringify(currentMüvekkil)}`
   }
 
-  return prompt
+  return { sabit, degisken: prompt }
 }
 
 export function getPersonaForBranch(branch: BranchId): AvukatPersonaId {

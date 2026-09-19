@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
-import { AVUKAT_PERSONAS, getPersonaForBranch, buildAvukatSystemPrompt, type AvukatPersonaId, type BranchId } from "@/lib/avukat/avukatPersonaEngine"
+import { AVUKAT_PERSONAS, getPersonaForBranch, buildAvukatSystemPromptParcalari, type AvukatPersonaId, type BranchId } from "@/lib/avukat/avukatPersonaEngine"
 import { quickClassifyLegal } from "@/lib/avukat/avukatIntentParser"
 import { toAddressableUser } from "@/lib/userProfile"
+import { aiCagir } from "@/lib/ai/cagir"
+import { gecmisiKirp } from "@/lib/ai/modeller"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,13 +68,16 @@ export async function POST(req: NextRequest) {
       muvekkel = muvekkelData;
     }
 
-    const systemPrompt = buildAvukatSystemPrompt(persona, prefs, muvekkel || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null), officePattern || null);
+    const sistem = buildAvukatSystemPromptParcalari(persona, prefs, muvekkel || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null), officePattern || null);
 
-    const aiResponse = await anthropic.messages.create({
-      model: "claude-sonnet-5",
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: (session.messages as { role: 'user' | 'assistant', content: string }[]).slice(-20).concat([{ role: "user", content: message }])
+    // NOTYA-MALIYET-01: hukuk tavsiyesi — GÜÇLÜ kalır (sohbet-uzman); model adı artık politikadan
+    const aiResponse = await aiCagir({
+      istemci: anthropic,
+      gorev: "sohbet-uzman",
+      doctorId: user.id,
+      // prompt caching: kimlik + kurallar bloğu önbellekli; öğrenilenler / aktif kayıt arkasından
+      system: [{ metin: sistem.sabit, onbellek: true }, { metin: sistem.degisken }],
+      messages: gecmisiKirp(session.messages as { role: 'user' | 'assistant', content: string }[]).concat([{ role: "user", content: message }])
     });
 
     const rawText = aiResponse.content[0].type === "text" ? aiResponse.content[0].text : "{}";

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import Anthropic from "@anthropic-ai/sdk"
-import { MALI_PERSONAS, getMaliPersona, buildMaliSystemPrompt, type MaliPersonaId } from "@/lib/mali/maliPersonaEngine"
+import { MALI_PERSONAS, getMaliPersona, buildMaliSystemPromptParcalari, type MaliPersonaId } from "@/lib/mali/maliPersonaEngine"
 import { quickClassifyMali } from "@/lib/mali/maliIntentParser"
 import { toAddressableUser } from "@/lib/userProfile"
+import { aiCagir } from "@/lib/ai/cagir"
+import { gecmisiKirp } from "@/lib/ai/modeller"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,13 +51,16 @@ export async function POST(req: NextRequest) {
     }
 
     const persona = MALI_PERSONAS[getMaliPersona()]
-    const systemPrompt = buildMaliSystemPrompt(persona, prefs, musteri || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null))
+    const sistem = buildMaliSystemPromptParcalari(persona, prefs, musteri || null, (userRow ? { id: String((userRow as { id?: string }).id ?? ''), name: String((userRow as { full_name?: string }).full_name ?? '') } : null))
 
-    const aiResponse = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 800,
-      system: systemPrompt,
-      messages: (session.messages as { role: 'user' | 'assistant', content: string }[]).slice(-20).concat([{ role: "user", content: message }])
+    // NOTYA-MALIYET-01: mevzuat tavsiyesi — GÜÇLÜ kalır (sohbet-uzman)
+    const aiResponse = await aiCagir({
+      istemci: anthropic,
+      gorev: "sohbet-uzman",
+      doctorId: user.id,
+      // prompt caching: kimlik + kurallar bloğu önbellekli; öğrenilenler / aktif kayıt arkasından
+      system: [{ metin: sistem.sabit, onbellek: true }, { metin: sistem.degisken }],
+      messages: gecmisiKirp(session.messages as { role: 'user' | 'assistant', content: string }[]).concat([{ role: "user", content: message }])
     })
 
     const rawText = aiResponse.content[0].type === "text" ? aiResponse.content[0].text : "{}"

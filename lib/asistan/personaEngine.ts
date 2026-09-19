@@ -138,6 +138,20 @@ export function buildSystemPrompt(
   doctor?: AddressableUser | null,
   hafiza?: string
 ): string {
+  const p = buildSystemPromptParcalari(persona, prefs, currentPatient, doctor, hafiza)
+  return p.sabit + p.degisken
+}
+
+/** NOTYA-MALIYET-01 (prompt caching): aynı metin, iki parça. `sabit` (persona, know-how, kurallar, JSON biçimi) hekim ×
+ *  persona başına değişmez → önbelleklenir; `degisken` (hafıza, aktif hasta) her turda değişebilir. sabit + degisken ===
+ *  buildSystemPrompt(...) — metin ve sıra birebir aynı (lib/asistan/personaEngine.test.ts). */
+export function buildSystemPromptParcalari(
+  persona: Persona,
+  prefs: Partial<DoctorPreferences> | null,
+  currentPatient: Record<string, unknown> | null,
+  doctor?: AddressableUser | null,
+  hafiza?: string
+): { sabit: string; degisken: string } {
   const sessionsCount = prefs?.sessionsCompleted || 0
   const hasLearned = sessionsCount >= 5
   const casualAddress = address(doctor || { firstName: 'Hocam' }, 'casual')
@@ -159,7 +173,7 @@ Bu bilgilere göre doktorun alışkanlıklarını tahmin et ve önerilerde onun 
 === AKTİF HASTA ===
 ${JSON.stringify(currentPatient, null, 2)}` : ""
 
-  return `Sen ${persona.name} — ${persona.title}. Türkiye'nin önde gelen tıp uzmanlarından birisin.
+  const sabit = `Sen ${persona.name} — ${persona.title}. Türkiye'nin önde gelen tıp uzmanlarından birisin.
 ${specialtyKnowhowBlock(persona)}
 KİŞİLİK: ${persona.personality}
 
@@ -192,9 +206,8 @@ JSON YANIT FORMATINI KULLAN:
   "action": null veya { "type": "ACTION_TYPE", "data": {} },
   "proactiveWarning": null veya "Uyarı metni"
 }
-Yanıtın TAMAMI (liste ve tablolar dahil) "speech" alanının İÇİNDE olsun; JSON'dan önce veya sonra metin yazma. Kapsamlı bir konu sorulursa en önemli maddeleri özlü ver, ayrıntı için "devam edeyim mi" diye sor.
-${learningContext}
-${patientContext}`
+Yanıtın TAMAMI (liste ve tablolar dahil) "speech" alanının İÇİNDE olsun; JSON'dan önce veya sonra metin yazma. Kapsamlı bir konu sorulursa en önemli maddeleri özlü ver, ayrıntı için "devam edeyim mi" diye sor.`
+  return { sabit, degisken: `\n${learningContext}\n${patientContext}` }
 }
 
 export function buildVoiceSystemPrompt(
