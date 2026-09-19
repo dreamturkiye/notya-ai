@@ -8,7 +8,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { pasi, easi, scorad, pasiBandi, easiBandi, scoradBandi, type PasiRegion } from '../../engines/score-calculator';
-import { dermStil, Alan, Segment, Istatistik, Katlanir, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { dermStil, Alan, Segment, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost } = dermStil;
 
@@ -98,6 +98,12 @@ export default function PasiEasiAraci() {
     `Şiddet bandı karar desteğidir; tedavi kararı hekimindir. ${new Date().toISOString().slice(0, 10)}`,
   ].filter(Boolean).join('\n');
 
+  const notSatirlari = [
+    `${modAd} ${toplam} — şiddet bandı: ${bant.ad}`,
+    ...BOLGELER.map(({ k, ad }) => `${ad}: ${oge.map((o) => `${o.kisa} ${bolge[k][o.k] ?? 0}`).join(' · ')} · A ${bolge[k].a} (${ALAN_ACIKLAMA[bolge[k].a]})`),
+    scGirildi ? `SCORAD ${scoradDeger} — ${scoradBant.ad}` : '',
+  ].filter(Boolean);
+
   return (
     <>
       <div style={kutu}>
@@ -156,6 +162,7 @@ export default function PasiEasiAraci() {
         <div style={{ ...kucuk }}>EASI şiddeti 0–3, PASI 0–4 ölçeğindedir — ölçeği değiştirmeden okumayın.</div>
         {!dolu && <div style={{ ...satir }}><Rozet ton="uyari">Alan derecesi (A) girilmeden skor 0 kalır</Rozet></div>}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac={`${modAd} skoru`} satirlar={dolu ? notSatirlari : []} />
         <TaslakNotu>Şiddet bandı karar desteğidir (PASI 10/20 · EASI 7/21 · SCORAD 25/50); endikasyon, SUT kriteri ve tedavi basamağı hekimin kararıdır. Hesap kaydedilmez, nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

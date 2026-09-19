@@ -14,7 +14,7 @@ import {
   REFERANS_AD, REFERANS_UST_AY, PARAM_AD, PARAM_BIRIM, type Referans, type Olcum,
 } from '../../engines/buyume';
 import { cmCoz, kiloCoz, tarihCoz, tarihGoster, yasMetni, ondalikAy, tr } from '../../engines/girdi';
-import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, PediHastaSecici, usePediHasta } from './PediAracKabugu';
+import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici, usePediHasta } from './PediAracKabugu';
 
 const { kutu, etiket, kucuk, input, ghost, uyari, kirmizi, kaydir } = pediStil;
 const bugun = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -206,8 +206,11 @@ export default function BuyumeStudyosu() {
       )}
 
       {hazir && son && (
-        <div style={{ ...pediStil.satir, marginBottom: 14 }}>
-          <KopyalaButonu metin={buyumeOzetMetni(ref, satirlar, kaymalar, hizlar)} etiket="Özeti kopyala" />
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ ...pediStil.satir }}>
+            <KopyalaButonu metin={buyumeOzetMetni(ref, satirlar, kaymalar, hizlar)} etiket="Özeti kopyala" />
+          </div>
+          <MuayeneFormunaEkle hastaId={hastaId} arac="Büyüme & persentil" satirlar={buyumeOzetMetni(ref, satirlar, kaymalar, hizlar).split('\n')} />
         </div>
       )}
       <TaslakNotu>Persentil ve z-skor istatistiksel konumdur, tanı değildir. Kayma eşiği: ≥ 2 majör persentil çizgisi (3/10/25/50/75/90/97). Kaynak: Neyzi ve ark. 2015 (JCRPE) · WHO Child Growth Standards 2006 / Growth Reference 2007. Klinik yorum hekimindir.</TaslakNotu>

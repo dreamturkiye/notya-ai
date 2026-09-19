@@ -76,10 +76,42 @@ branş sızıntısı kontrolü dâhil). Mevcut assertion'ların hiçbiri zayıfl
 **Mobil:** ortak `kaydir` kabı geniş tabloları kendi kabında kaydırıyor (sayfa 390 px'te yatay
 kaymıyor), ortak `input` artık her branşta `minHeight: 44`, `Segment` parçaları ≥ 44 px.
 
-### Faz 2–4 — sırada
+### Faz 2 — "Bugünkü muayene formuna ekle" tüm araçlarda (2026-09-19)
 
-- Faz 2: "Bugünkü muayene formuna ekle" tüm uygun araçlara (mevcut `gununNotunaEkle` +
-  `muayeneFormuYolu` yolu; hiçbir şey otomatik yazılmaz).
+Sorun: her araç "TASLAK — nota otomatik yazılmaz" ile bitiyordu ve hekim sonucu ELLE tekrar
+yazıyordu — araçların çözmesi gereken sorunun ta kendisi.
+
+**Yeni mekanizma icat edilmedi.** M-CHAT-R/F, gelişim taraması ve `/api/doktor/pediatri/tarama`
+ile AYNI yazma yolu: `lib/doktor/gununNotunaEkle.ts` → bugünün açık notunun Değerlendirme alanı,
+dönüş bağlantısı `lib/doktor/muayeneFormuYolu.ts` (`MuayeneFormunaDon`).
+
+| Parça | Ne yapar |
+|---|---|
+| `lib/doktor/aracNotu.ts` | Saf fonksiyon: blok metnini kurar. Başlık + tire işaretli satırlar (düz metin, hekim düzenler), `(araç çıktısı — hekim ekledi)` etiketi, 11 haneli T.C.-benzeri dizi maskeleme, 24 satır / 300 karakter tavanı. |
+| `POST /api/doktor/araclar/nota-ekle` | Tek yazma ucu. `hastaSahibiMi()` geçmeden HİÇBİR okuma/yazma yok; yabancı kimlik 404. Yanıt `{ ok, notId }` (mevcut `eklenenNotId` düz şekli). |
+| `MuayeneFormunaEkle` (aracUi) | Her aracın sonuç kartındaki ortak düğme. Hasta seçili değilse pasif + "Önce hasta seçin"; eklenecek satır yoksa pasif; eklendikten sonra "Muayene Formuna Dön →". |
+
+**Eylemi alan 19 araç:** göz VA / SUT anti-VEGF / SGK rapor · derm PASI-EASI / GÖP / fototerapi /
+yama · dahiliye SCORE2 / CKD / polifarmasi / antikoagülan / SGK rapor · pediatri doz / büyüme /
+aşı planı · KD gebelik takvimi / analık raporu / MEC / sezaryen endikasyon notu.
+VA aracına bu iş için hasta seçici de eklendi (daha önce yoktu).
+
+**Bilerek dışarıda kalanlar:** GİL EK-3/G kod arama (hastaya bağlı klinik çıktı değil, kod
+kataloğu), beş kohort paneli (tek hasta çıktısı yok — zaten 1-tap hatırlatma yolu var), Gelişim &
+tarama paneli (kalem başına kendi nota-ekleme akışı zaten var; Faz 2'nin referans uygulaması odur).
+
+**Hekim kilidi:** hiçbir şey otomatik yazılmaz — tek yol hekimin bastığı düğmedir; eklenen metin
+tanı / doz / evre iddiası içermez, aracın ekranda zaten gösterdiği satırlardır ve blok "araç çıktısı"
+diye etiketlenir. `TaslakNotu` dili her araçta yerinde kaldı.
+
+**Bekçiler:** `lib/doktor/aracNotu.test.ts` (10 vaka: blok biçimi, boş blok yazılmaz, T.C. maskeleme,
+tavanlar, UTC+3 gün) · `lib/doktor/aracUi.test.ts` Faz 2 bölümü (19 aracın hepsi eylemi taşır; hiçbiri
+kendi `fetch`'ini icat etmez; sunucuda sahiplik kontrolü yazmadan ÖNCE) · `lib/security/hasta-izolasyon.test.ts`
+yeni çapraz-doktor vakası (A→B ve B→A: yabancı hastaya 404, kurbanın notuna satır yazılmıyor) ·
+`lib/security/hastaIzolasyonEnvanteri.ts`'te rota `T` (test) olarak sınıflandı.
+
+### Faz 3–4 — sırada
+
 - Faz 3: seri klinik değerler için kalıcılık (VA/GİB, PASI/EASI, büyüme, SCORE2/CKD, gebelik izlem).
 - Faz 4: iki yeni evrensel araç — Muayene sonu paketi ve Sık kullandıklarım / hızlı şablonlar.
 

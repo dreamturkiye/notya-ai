@@ -9,7 +9,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { kvrDegerlendir, type Bolge, type Cinsiyet, type KvrKova } from '../../engines/score2';
-import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -70,6 +70,14 @@ export default function Score2Araci() {
     sonuc.score2Notu ? `Not: ${sonuc.score2Notu}` : null,
     new Date().toISOString().slice(0, 10),
   ].filter(Boolean).join('\n');
+
+  const notSatirlari = [
+    riskAd ? `${riskAd}: %${risk} — 10 yıllık kardiyovasküler risk` : '',
+    sonuc.kova ? `Risk kovası (taslak, hekim kilitler): ${KOVA_AD[sonuc.kova]} — ${sonuc.kovaNedeni}` : '',
+    sonuc.hedefNotu,
+    ...sonuc.statinAcigi.map((x) => `Statin: ${x}`),
+    sonuc.score2Notu || '',
+  ].filter(Boolean);
 
   return (
     <>
@@ -139,6 +147,7 @@ export default function Score2Araci() {
         {sonuc.statinAcigi.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6, color: '#C9D4E3' }}>• {x}</div>)}
         {!riskAd && <div style={satir}><Rozet ton="uyari">yaş, SBP, kolesterol ve HDL girilince sayısal risk hesaplanır</Rozet></div>}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="SCORE2 / KVR değerlendirmesi" satirlar={notSatirlari} />
         <TaslakNotu>Risk kovası ve LDL hedefi karar desteğidir; hekim kilidi olmadan kesinleşmez ve nota otomatik yazılmaz. Hesap kaydedilmez.</TaslakNotu>
       </div>
 

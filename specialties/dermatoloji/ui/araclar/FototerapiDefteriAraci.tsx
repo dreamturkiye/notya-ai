@@ -10,7 +10,7 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { PHOTO_DEVICES, BURN_CHECKLIST, cumulativeJ, fototerapiOzeti, SOLARIUM_FORBIDDEN, type PhotoDevice, type PhotoSession } from '../../engines/phototherapy-log';
 import { DERM_PHOTO_DEVICE, dermLabel } from '../labels';
-import { dermStil, Secim, Kutu, Istatistik, Katlanir, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { dermStil, Secim, Kutu, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -51,6 +51,13 @@ export default function FototerapiDefteriAraci() {
     ...cihazSeanslari.map((s) => `${s.date} · ${s.j_cm2} J/cm²${s.dose_step != null ? ` (adım +${s.dose_step})` : ''}${s.med_test ? ' · MED testi' : ''}${s.burn ? ' · YANIK' : ''}`),
     'Solaryum kullanılmaz (2018 yasağı). Doz artışı ve protokol hekimin kararıdır.',
   ].join('\n');
+
+  const notSatirlari = ozet.seans ? [
+    `Fototerapi defteri — ${dermLabel(DERM_PHOTO_DEVICE, cihaz)}`,
+    `Seans ${ozet.seans} · kümülatif ${ozet.kumulatif} J/cm²${ozet.sonDoz != null ? ` · son doz ${ozet.sonDoz} J/cm²` : ''}`,
+    ozet.medJ != null ? `MED eşiği ${ozet.medJ} J/cm²` : 'MED eşiği girilmedi',
+    ozet.yanik ? `Yanık işaretli seans: ${ozet.yanik}` : '',
+  ].filter(Boolean) : [];
 
   return (
     <>
@@ -141,6 +148,7 @@ export default function FototerapiDefteriAraci() {
         </div>
         {seanslar.length > cihazSeanslari.length && <div style={{ ...kucuk, marginTop: 8 }}>Tüm cihazlar toplamı: {tumKumulatif} J/cm² ({seanslar.length} seans).</div>}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Defteri kopyala" /></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="Fototerapi defteri" satirlar={notSatirlari} />
         <TaslakNotu>Bu defter kaydedilmez — kalıcı seans kaydı hasta dosyasının Deri sekmesinde tutulur. Doz artışı ve protokol hekimin kararıdır; nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

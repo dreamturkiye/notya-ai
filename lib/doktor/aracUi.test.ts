@@ -121,3 +121,71 @@ describe('ARACLAR-CILA-01 geriye doldurma: göz / dermatoloji / dahiliye araçla
     }
   })
 })
+
+/**
+ * ARACLAR-CILA-01 Faz 2 — "Bugünkü muayene formuna ekle" klinik çıktı üreten HER araçta.
+ * Bu bekçi hem kapsamı hem de hekim kilidini korur: tek yazma yolu ortak bileşendir, hasta
+ * seçilmeden eylem pasiftir ve hiçbir araç kendi yazma isteğini icat etmez.
+ */
+describe('ARACLAR-CILA-01 Faz 2: bugünkü muayene formuna ekle', () => {
+  /** Klinik çıktı üreten araçlar — her biri ortak eylemi taşır. */
+  const NOTA_EKLEYEN = [
+    'specialties/goz-hastaliklari/ui/araclar/VaAraci.tsx',
+    'specialties/goz-hastaliklari/ui/araclar/SutVegfAraci.tsx',
+    'specialties/goz-hastaliklari/ui/araclar/SgkRaporAraci.tsx',
+    'specialties/dermatoloji/ui/araclar/PasiEasiAraci.tsx',
+    'specialties/dermatoloji/ui/araclar/GopKapiAraci.tsx',
+    'specialties/dermatoloji/ui/araclar/FototerapiDefteriAraci.tsx',
+    'specialties/dermatoloji/ui/araclar/YamaAraci.tsx',
+    'specialties/dahiliye/ui/araclar/Score2Araci.tsx',
+    'specialties/dahiliye/ui/araclar/CkdAraci.tsx',
+    'specialties/dahiliye/ui/araclar/PolifarmasiAraci.tsx',
+    'specialties/dahiliye/ui/araclar/AntikoagAraci.tsx',
+    'specialties/dahiliye/ui/araclar/SgkRaporAraci.tsx',
+    'specialties/pediatri/ui/araclar/DozAraci.tsx',
+    'specialties/pediatri/ui/araclar/BuyumeStudyosu.tsx',
+    'specialties/pediatri/ui/araclar/AsiPlanlayici.tsx',
+    'specialties/kadin-dogum/ui/araclar/GebelikTakvimAraci.tsx',
+    'specialties/kadin-dogum/ui/araclar/DogumRaporAraci.tsx',
+    'specialties/kadin-dogum/ui/araclar/MecAraci.tsx',
+    'specialties/kadin-dogum/ui/araclar/RiskAraci.tsx',
+  ]
+
+  it('her klinik araç ortak "Bugünkü muayene formuna ekle" eylemini taşır', () => {
+    for (const yol of NOTA_EKLEYEN) {
+      const kod = oku(yol)
+      assert.match(kod, /<MuayeneFormunaEkle\b/, `${yol}: nota ekleme eylemi yok`)
+      assert.match(kod, /hastaId=\{/, `${yol}: eylem seçili hastayı almalı`)
+    }
+  })
+
+  it('hiçbir araç kendi yazma isteğini icat etmez — tek yol ortak bileşendir', () => {
+    for (const yol of NOTA_EKLEYEN) {
+      const kod = oku(yol)
+      assert.doesNotMatch(kod, /fetch\([^)]*nota-ekle/, `${yol}: nota yazma isteği ortak bileşende olmalı`)
+      assert.doesNotMatch(kod, /gununNotunaEkle/, `${yol}: sunucu yardımcısı istemciden çağrılamaz`)
+    }
+  })
+
+  it('ortak eylem: hasta seçilmeden pasif, nedenini söyler, otomatik yazmaz', () => {
+    const kod = oku(KUTUPHANE)
+    assert.match(kod, /export function MuayeneFormunaEkle\(/)
+    assert.match(kod, /Önce hasta seçin/)
+    assert.match(kod, /const kapali = !hastaId \|\| !temiz\.length \|\| gonderiyor/)
+    assert.match(kod, /disabled=\{kapali\}/)
+    assert.match(kod, /siz basmadan yazılmaz/)
+    // Yazma yalnız düğmenin tıklama yolunda; başka bir efekt tetiklemez.
+    assert.doesNotMatch(kod, /useEffect\([^)]*nota-ekle/)
+    assert.equal((kod.match(/'\/api\/doktor\/araclar\/nota-ekle'/g) || []).length, 1)
+    assert.match(kod, /MuayeneFormunaDon/)
+  })
+
+  it('sunucu: hasta sahipliği doğrulanmadan hiçbir şey yazılmaz', () => {
+    const rota = oku('app/api/doktor/araclar/nota-ekle/route.ts')
+    assert.match(rota, /hastaSahibiMi\(supabase, user\.id, patientId\)/)
+    assert.match(rota, /status: 404/)
+    // Sahiplik kontrolü not yazımından ÖNCE gelir.
+    assert.ok(rota.indexOf('hastaSahibiMi(supabase') < rota.indexOf('gununNotunaEkle(supabase'), 'sahiplik kontrolü yazmadan önce olmalı')
+    assert.match(rota, /gununNotunaEkle\(supabase, user\.id, patientId/)
+  })
+})

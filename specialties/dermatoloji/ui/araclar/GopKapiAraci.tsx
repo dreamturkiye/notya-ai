@@ -8,7 +8,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { gopIsotretinoin, acitretinPregnancyBanYears, type GopSex } from '../../engines/gop-isotretinoin';
-import { dermStil, Secim, Onay, Istatistik, Katlanir, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { dermStil, Secim, Onay, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -53,6 +53,15 @@ export default function GopKapiAraci() {
     ...engeller.map((b) => `Engel: ${b}`),
     ...(sonuc.notApplicable || []).map((n) => `Uygulanmaz: ${n}`),
   ].filter(Boolean).join('\n');
+
+  const notSatirlari = [
+    `GÖP izotretinoin kapı: ${sonuc.allowed ? 'kapılarda engel yok' : `${engeller.length} engel var`}`,
+    gebelikKapisi ? `Çift kontrasepsiyon: ${kontrasepsiyon1 && kontrasepsiyon2 ? 'iki yöntem işaretli' : 'eksik'}` : '',
+    gebelikKapisi ? `β-hCG: ${hcgTarih || 'tarih yok'}${hcgNegatif ? ' · negatif' : ' · negatif işaretlenmedi'}` : '',
+    gebelikKapisi && siklusGunu ? `Siklus günü: ${siklusGunu}` : '',
+    receteGun ? `Reçete süresi: ${receteGun} gün` : '',
+    ...engeller.map((b) => `Engel: ${b}`),
+  ].filter(Boolean);
 
   return (
     <>
@@ -117,6 +126,7 @@ export default function GopKapiAraci() {
           <div style={kucuk}>Asitretin için gebelik yasağı tedavi bitiminden sonra {acitretinPregnancyBanYears()} yıl sürer — izotretinoin kapıları asitretin için yeterli değildir.</div>
         </Katlanir>
         <div style={satir}><Rozet ton="notr">doz ve endikasyon Notya tarafından önerilmez</Rozet></div>
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="GÖP izotretinoin kapı" satirlar={notSatirlari} />
         <TaslakNotu>Kapı kontrolüdür; endikasyon, doz ve izlem planı hekimindir. Nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

@@ -8,7 +8,7 @@
 import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { polifarmasiDegerlendir, OVERRIDE_MIN, type PoliSiddet } from '../../engines/polifarmasi';
-import { dahStil, Onay, Sayi, Istatistik, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { dahStil, Onay, Sayi, Istatistik, MuayeneFormunaEkle, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -56,6 +56,11 @@ export default function PolifarmasiAraci() {
     'Öneriler sınıf düzeyindedir; doz ve tedavi kararı hekimindir.',
   ].join('\n');
 
+  const notSatirlari = sonuc.oneriler.length ? [
+    `Polifarmasi taraması (STOPP/START): ${sonuc.not}`,
+    ...sonuc.oneriler.map((o) => `${o.tip} · ${SIDDET_AD[o.siddet]}: ${o.baslik}${o.ilaclar.length ? ` (${o.ilaclar.join(', ')})` : ''} — ${o.oneri}`),
+  ] : [];
+
   return (
     <>
       <div style={kutu}>
@@ -93,6 +98,7 @@ export default function PolifarmasiAraci() {
         {!sonuc.uygulanabilir && <div style={satir}><Rozet ton="uyari">Öneri üretilmedi — tarama ≥65 yaş için uygulanır</Rozet></div>}
         {sonuc.uygulanabilir && !sonuc.oneriler.length && <div style={{ ...kucuk, marginTop: 6 }}>Bu girdilerle STOPP/START önerisi oluşmadı.</div>}
         {!!sonuc.oneriler.length && <div style={satir}><KopyalaButonu metin={kopyaMetni} etiket="Önerileri kopyala" /></div>}
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="Polifarmasi taraması (STOPP/START)" satirlar={notSatirlari} />
         <TaslakNotu>Öneriler sınıf düzeyindedir; hiçbir ilaç otomatik kesilmez veya başlanmaz, doz yazılmaz. Karar hekimindir; nota otomatik yazılmaz.</TaslakNotu>
       </div>
 

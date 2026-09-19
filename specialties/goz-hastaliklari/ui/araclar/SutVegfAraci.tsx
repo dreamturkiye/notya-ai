@@ -9,7 +9,7 @@ import { sgkKapilari, yuklemeTakvimi, sonrakiDoz, AJAN_ADI, ENDIKASYON_ADI, type
 import { GOZ_KAYNAKLAR } from '../../protocols/sources';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
-import { gozStil, Secim, Segment, Alan, Onay, Istatistik, Katlanir, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
+import { gozStil, Secim, Segment, Alan, Onay, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, kaydir } = gozStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -44,6 +44,13 @@ export default function SutVegfAraci() {
   const takvim = yuklemeTakvimi(tarih, ajan, end);
   const sira = sonrakiDoz(gecmis, goz, tarih);
   const satirGuncelle = (i: number, p: Partial<Enjeksiyon>) => setGecmis((g) => g.map((x, j) => (j === i ? { ...x, ...p } : x)));
+
+  const notSatirlari = [
+    `SUT anti-VEGF kapı — ${AJAN_ADI[ajan]} · ${ENDIKASYON_ADI[end]} · ${goz === 'sag' ? 'OD (sağ)' : 'OS (sol)'} · planlanan ${tarih}`,
+    kapi.engeller.length ? `SGK ödeme engeli (${kapi.engeller.length}): ${kapi.engeller.join('; ')}` : 'SUT kapılarında ödeme engeli görülmedi.',
+    ...kapi.uyarilar.map((u) => `Uyarı: ${u}`),
+    `Sıradaki doz: ${sira.not}${sira.enErken ? ` — pencere ${sira.enErken} → ${sira.enGec}` : ''}`,
+  ];
 
   return (
     <>
@@ -109,6 +116,7 @@ export default function SutVegfAraci() {
         </Katlanir>
         {!gecmis.length && !hasta.id && <div style={{ ...satir }}><Rozet ton="uyari">geçmiş girilmedi — aralık / geçiş kuralları değerlendirilmez</Rozet></div>}
         {hasta.id && <div style={satir}><a href={hastaDosyaHref(hasta.id, 'goz')} style={{ ...btn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Enjeksiyonu hastada kaydet →</a></div>}
+        <MuayeneFormunaEkle hastaId={hasta.id} arac="SUT anti-VEGF kapı" satirlar={notSatirlari} />
         <TaslakNotu>Ödeme kuralı kontrolüdür; enjeksiyon kararı, idame aralığı ve doz hekimindir. Nota otomatik yazılmaz.</TaslakNotu>
       </div>
     </>
