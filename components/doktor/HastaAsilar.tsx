@@ -19,6 +19,7 @@ import { Rozet } from '@/lib/doktor/aracUi';
 import { asiKaynakRozeti, asiKaynakTuru, trTarih } from '@/lib/asi/karneOkuma';
 import AsiKarnesiOkuma from '@/components/doktor/AsiKarnesiOkuma';
 import AsiKarnesiEylemleri from '@/components/doktor/AsiKarnesiEylemleri';
+import AsiHatirlatmaListesi from '@/components/doktor/AsiHatirlatmaListesi';
 
 interface Asi {
   id: string;
@@ -196,6 +197,10 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
       )}
 
       {!yukleniyor && <AsiKarnesiEylemleri patientId={patientId} kayitSayisi={asilar.length} />}
+      {/* ASI-KARNESI-01 (D): bu hastanın yaklaşan/geçen sonraki doz tarihleri — hekim metni görür, onaylar, gönderir */}
+      {!yukleniyor && asilar.some((a) => a.sonraki_doz_tarihi) && (
+        <div style={{ marginBottom: 16 }}><AsiHatirlatmaListesi patientId={patientId} yenile={asilar.length} /></div>
+      )}
 
       {hata && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#EF4444', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
 

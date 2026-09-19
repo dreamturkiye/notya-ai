@@ -265,7 +265,7 @@ export default function AsiPlanlayici() {
                   <>
                     <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, color: '#C9D4E3', minHeight: 44, cursor: 'pointer' }}>
                       <input type="checkbox" checked={hatirlatmaYaz} onChange={(e) => setHatirlatmaYaz(e.target.checked)} style={{ width: 20, height: 20 }} />
-                      Sonraki doz tarihini de yaz (aileye hatırlatma)
+                      Sonraki doz tarihini de yaz (hatırlatma listenize düşer — onayınızla gönderilir)
                     </label>
                     <button type="button" onClick={kaydet} disabled={kaydediyor} style={{ ...btn, opacity: kaydediyor ? 0.6 : 1 }}>{kaydediyor ? 'Kaydediliyor…' : `${yerelSayisi} dozu hasta kaydına ekle`}</button>
                   </>

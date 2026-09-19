@@ -76,6 +76,13 @@ describe('karne modeli (tek içerik)', () => {
     const k = ORNEK()
     assert.deepEqual(k.siradakiler, [{ ad: 'KKK (Kızamık-Kızamıkçık-Kabakulak)', tarih: '2027-03-01' }])
   })
+  it('sonraki dozu daha sonra kaydedilmiş aşı "sıradaki" gösterilmez (hekim hatırlatma listesiyle aynı kural)', () => {
+    const k = asiKarnesiOlustur({ asilar: [
+      { asi_adi: 'Hepatit A', doz_no: 1, uygulama_tarihi: '2025-09-15', sonraki_doz_tarihi: '2026-10-15', kaynak: 'kayit' },
+      { asi_adi: 'Hepatit A', doz_no: 2, uygulama_tarihi: '2026-09-01', kaynak: 'kayit' },
+    ], hasta: { adSoyad: null, dogumTarihi: null }, hekim: { ad: null, klinik: null }, bugunIso: '2026-09-19' })
+    assert.deepEqual(k.siradakiler, [])
+  })
   it('e-Nabız uyarısı modelde, resmî kaynağı açıkça söyler', () => {
     const k = ORNEK()
     assert.equal(k.uyari.baslik, E_NABIZ_BASLIK)
