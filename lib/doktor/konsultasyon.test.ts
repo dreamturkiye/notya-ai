@@ -15,6 +15,9 @@ import {
   hatirlatmaBeklemesi,
   durumGrubu,
   gecisIzinli,
+  duzenlemeDogrula,
+  yanitRevizyonu,
+  ISTEM_KILITLI_YANITLANDI,
   hedefEtiketi,
   hedefSecenekleri,
   istemDogrula,
@@ -264,5 +267,43 @@ describe('KONSULTASYON-02 — bekleyen listesi: sıralama, eşik, özet (tek tan
     assert.equal(hatirlatmaBeklemesi('2026-09-10T09:00:00Z', simdi), null)
     assert.equal(hatirlatmaBeklemesi(null, simdi), null)
     assert.equal(hatirlatmaBeklemesi('gecersiz', simdi), null)
+  })
+})
+
+describe('AYSE-KONSULTASYON-01 — istem düzenleme kuralları (saf)', () => {
+  const satir = { klinik_soru: 'İşitme kaybı var mı? Okul başarısı düştü.', aciliyet: 'rutin', hedef_hekim: null, tanilar: null, mevcut_durum: null, not_metni: null }
+  it("istem yalnız yanıt beklerken düzenlenir; 'yanitlandi' ve kapanmış kayıtta KİLİTLİ", () => {
+    assert.deepEqual(gecisIzinli('yanit_bekleniyor', 'duzenle'), { ok: true })
+    assert.deepEqual(gecisIzinli('acik', 'duzenle'), { ok: true }, "eski 'acik' = yanıt bekleniyor")
+    assert.deepEqual(gecisIzinli('yanitlandi', 'duzenle'), { ok: false, hata: ISTEM_KILITLI_YANITLANDI })
+    for (const d of ['kapandi_yanitsiz', 'kapandi']) assert.equal(gecisIzinli(d, 'duzenle').ok, false, d)
+    // yanıt tarafı yanıtlanmış kayıtta düzeltilebilir kalır
+    assert.deepEqual(gecisIzinli('yanitlandi', 'yanit'), { ok: true })
+  })
+  it('yalnız değişen alanlar güncellenir ve her biri için önceki → sonraki izi üretilir', () => {
+    const d = duzenlemeDogrula({ klinikSoru: 'İşitme kaybı açısından değerlendirmenizi rica ederim.', aciliyet: 'rutin', tanilar: 'İşitme kaybı şüphesi' }, satir)
+    assert.ok(!('hata' in d))
+    if ('hata' in d) return
+    assert.deepEqual(d.guncelleme, { klinik_soru: 'İşitme kaybı açısından değerlendirmenizi rica ederim.', tanilar: 'İşitme kaybı şüphesi' })
+    assert.deepEqual(d.revizyonlar, [
+      { alan: 'klinik_soru', onceki: satir.klinik_soru, sonraki: 'İşitme kaybı açısından değerlendirmenizi rica ederim.' },
+      { alan: 'tanilar', onceki: null, sonraki: 'İşitme kaybı şüphesi' },
+    ])
+  })
+  it('değişiklik yoksa, soru kısaysa ya da aciliyet geçersizse hata — boş iz yazılmaz', () => {
+    assert.deepEqual(duzenlemeDogrula({ klinikSoru: satir.klinik_soru }, satir), { hata: 'Değişiklik yok.' })
+    assert.deepEqual(duzenlemeDogrula({}, satir), { hata: 'Değişiklik yok.' })
+    assert.ok('hata' in duzenlemeDogrula({ klinikSoru: 'KBB?' }, satir))
+    assert.ok('hata' in duzenlemeDogrula({ aciliyet: 'cok-acil' }, satir))
+  })
+  it('çok satırlı istem (mektup biçimi) satır sonlarını korur', () => {
+    const mektup = 'Sayın Meslektaşım,\n\nHastamız üç gündür kulak ağrısı ile başvurdu.\n\nSaygılarımla,'
+    const d = duzenlemeDogrula({ klinikSoru: mektup }, satir)
+    assert.ok(!('hata' in d) && d.guncelleme.klinik_soru === mektup)
+  })
+  it('yanıt özeti düzeltmesi: önceki özet varsa ve değiştiyse iz; ilk yanıt iz değildir', () => {
+    assert.equal(yanitRevizyonu(null, 'İşitme kaybı saptanmadı.'), null)
+    assert.equal(yanitRevizyonu('Aynı.', 'Aynı.'), null)
+    assert.deepEqual(yanitRevizyonu('Eski özet.', 'Yeni özet.'), { alan: 'yanit_ozeti', onceki: 'Eski özet.', sonraki: 'Yeni özet.' })
   })
 })

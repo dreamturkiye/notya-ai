@@ -2191,3 +2191,31 @@ tüm ~30 branş, kimse hariç değil (branşı boş hekim dahil). `BRANS_DOKTOR_
 | 2026-09-19 | **Liste tavanı 200** | `?bekleyen` sorgusu en eski 200 bekleyen satırı okur (KONSULTASYON-01'den); sayı da bu tavanla sınırlı. Tek hekimde 200+ açık istem beklenmiyor; olursa sayfalama. | Bilgi |
 | 2026-09-19 | **Günün programında bekleyen konsültasyon işareti** | Randevusu olan hastanın bekleyen konsültasyonu brifingde "rapor getirdi mi?" diye hatırlatılabilir. Bu işin kapsamı dışında bırakıldı (ana sayfa özeti + araç yeterli). | OPEN (öneri) |
 
+
+## AYSE-KONSULTASYON-01 — istem düzenlenebilir + Ayşe istem ve yanıt özetini TASLAK yazar (Dr. Gökhan + Kaan, 2026-09-19)
+
+**Kaynak — Dr. Gökhan Mamur (gerçek beta hekim), canlı kullanımda, kelimesi kelimesine:**
+1. *"Bu yazıyı boş forma yazdıktan sonra oluştura bastım... sonra bu sayfa çıktı. Eğer doktor değiştirme yapmak
+   istiyorsa yapamıyor, yani düzeltme olanağı yok."*
+2. *"Hani asistan (Ayşe Kaya) diyoruz ya... 'şöyle bir durum var, bununla ilgili profesyonel tonda bir e-posta yaz bir
+   göreyim' gibi. Yani AI fikri alıp konsültasyon notunu yazıyor, hem de muayene dosyasına bakıp oradan da bilgi
+   alarak. Sonra doktor AI'ın yazısını görünce onu onaylayıp konsültasyon notu ortaya çıkarabilir. Mümkün mü?"*
+
+**Kaan'ın kararları (2026-09-19, bağlayıcı):** (1) yapılacak. Taslak DOLU gelsin — hekim formu açtığında metin hazır,
+ayrı düğme yok. Ayşe BÜTÜN vizitleri dikkate alır, AĞIRLIK SON MUAYENEDE. Aynı mantık DÖNÜŞTE: gelen raporu Ayşe okur,
+özet taslağı çıkarır, hekim onaylayıp dosyaya işler.
+
+**İstem kilidi kuralı (Claude'un operasyonel kararı, Kaan'a bildirildi):** istem `acik` / `yanit_bekleniyor` iken
+DÜZENLENEBİLİR; yanıt geldikten (`yanitlandi`) sonra — ve yanıtsız kapatılmış kayıtta — istem KİLİTLİDİR, yalnız yanıt
+tarafı işlenir. Kilit **sunucuda** (`gecisIzinli(durum, 'duzenle')` → 409), UI yalnız düğmeyi gizler. Düzenleme izi
+tutulur; üzerine sessizce yazılmaz.
+
+### PR A — istem düzenleme + düzenleme izi
+
+| Parça | Ayrıntı |
+|---|---|
+| Migration `083_konsultasyon_revizyonlar.sql` | **Yalnız ekleme**: yeni tablo `konsultasyon_revizyonlar (sevk_id → sevkler, doctor_id, patient_id, alan, onceki, sonraki, created_at)` + dizin + RLS (kendi satırı + RESTRICTIVE hasta sahipliği, 052 deseni). `jsonb` kolon yerine tablo seçildi: `belge_revizyonlar` / `muayene_revizyonlar` (025) ile aynı desen; satır başına sınırsız büyüyen dizi yok. **Canlıya uygulandı 2026-09-19** (`run-sql-migration.mjs`): `relrowsecurity = true`, politikalar `hasta_izolasyon_kendi_satiri` (PERMISSIVE) + `hasta_izolasyon_hasta_sahipligi` (RESTRICTIVE), 0 satır. |
+| API (yeni rota YOK) | `PATCH /api/doktor/konsultasyon { id, islem: 'duzenle', klinikSoru?, aciliyet?, hedefHekim?, tanilar?, mevcutDurum?, not? }`. Hedef branş değişmez (başka branş = yeni istem). Yalnız DEĞİŞEN alanlar güncellenir; her biri için `onceki → sonraki` izi **güncellemeden önce** yazılır — iz yazılamazsa değişiklik yapılmaz (500, "değişiklik yapılmadı"); güncelleme başarısızsa iz geri alınır. Değişiklik yoksa 400 (boş iz yok). Yanıt özeti düzeltmesi (`islem: 'yanit'`, önceki özet varken) de `yanit_ozeti` izi bırakır; ilk yanıt iz değil, kaydın kendisidir. `GET ?patientId` her satıra `duzenlemeler` (eskiden yeniye) ekler — hekim + hasta kapsamlı; tablo yoksa boş. |
+| Hasta izolasyonu | Konsültasyon kimliği mevcut `satirBu()` ile (`id` + `doctor_id` aynı sorguda, sonra satırın hastası `hastaSahibiMi`). İz satırı hekime + hastaya bağlı yazılır/okunur. `hasta-izolasyon.test.ts` yeni vaka: `PATCH duzenle` — pozitif (kendi istemi düzenlenir + iz A'ya/A'nın hastasına bağlı) + A→B + B→A (404, kurbanın metni ve izi değişmez, kurbana atıf yok). |
+| UI | Kart: yanıt beklerken **Düzenle** (ghost, 44 px) → `IstemDuzenleFormu` (mevcut metin dolu, kısaltma uyarısı engellemez, "önceki metin düzenleme geçmişinde saklanır"); yanıtlanmışta düğme yok, istem satırında "istem kilitli (yanıt geldi)", **Yanıtı düzelt** kalır. **Düzenleme geçmişi (N)** — `Katlanir`, her durumda (yanıtlanmış dahil) görülebilir: tarih · alan · önceki metin. Ortak `aracUi` bileşenleri; yeni tasarım dili yok. |
+| Testler | Rota (gerçek handler): yanıt beklerken düzenlenir + iki iz (önceki metin kaybolmaz, sıralı); değişiklik yok / kısa soru → 400; yanıtlandı → **409, metin ve iz değişmez**; yanıt düzeltmesi izi; eski `acik` düzenlenir, yanıtsız kapanmış → 409; **iz tablosu yazılamazsa değişiklik yapılmaz**. Saf: kilit tablosu, yalnız değişen alanlar, çok satırlı mektup korunur. SSR: Düzenle görünürlüğü, kilit metni, geçmiş. |

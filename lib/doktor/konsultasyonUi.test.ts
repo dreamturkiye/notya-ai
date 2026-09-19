@@ -11,7 +11,7 @@ import assert from 'node:assert/strict'
 import React, { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AracVurguSaglayici, VURGU_TEAL } from './aracUi'
-import { KonsultasyonCizelgesi, YeniKonsultasyonFormu, type KonsultasyonGorunumu } from '../../components/doktor/HastaKonsultasyonlar'
+import { KonsultasyonCizelgesi, KonsultasyonKarti, IstemDuzenleFormu, YeniKonsultasyonFormu, type KonsultasyonGorunumu } from '../../components/doktor/HastaKonsultasyonlar'
 import KonsultasyonIstemFormuKagidi, { type IstemFormuVerisi } from '../../components/doktor/KonsultasyonIstemFormuKagidi'
 import { hedefSecenekleri } from './konsultasyon'
 import { KonsultasyonKohortListesi } from '../../components/doktor/KonsultasyonKohortSatiri'
@@ -286,5 +286,37 @@ describe('KONSULTASYON-01 — Sağlığım › Ziyaretler › Yönlendirmelerini
     assert.ok(h.includes("Göz Hastalıkları&#x27;na yönlendirildiniz (15.09.2026) · Sonuç bekleniyor"))
     assert.doesNotMatch(h, /sevk|tanı|tanı/i)
     assert.equal(renderToStaticMarkup(createElement(YonlendirmelerView, { data: emptyPortalBundle() })), '')
+  })
+})
+
+describe('AYSE-KONSULTASYON-01 — istem düzenleme ve düzenleme geçmişi (SSR)', () => {
+  const kart = (o: Partial<KonsultasyonGorunumu>) => sar(createElement(KonsultasyonKarti, { k: satir(o), patientId: 'p', guncelle: () => {} }))
+  const IZ = [{ id: 'r1', alan: 'klinik_soru' as const, onceki: 'İlk istem metni.', sonraki: 'İşitme kaybı var mı?', created_at: '2026-09-13T09:00:00Z' }]
+  it("yanıt beklerken 'Düzenle' var; yanıtlandıysa yok ve istem kilitli yazar", () => {
+    const bekleyen = kart({})
+    assert.match(bekleyen, />Düzenle</)
+    assert.doesNotMatch(bekleyen, /istem kilitli/)
+    const eski = kart({ durum: 'acik', hedef_brans: null, eskiKayit: true, klinik_soru: null, not_metni: 'eGFR düşüşü' })
+    assert.match(eski, />Düzenle</, "eski 'acik' kayıt da düzenlenir")
+    const yanitli = kart({ durum: 'yanitlandi', yanit_ozeti: 'İşitme kaybı saptanmadı.', yanit_tarihi: '2026-09-18' })
+    assert.doesNotMatch(yanitli, />Düzenle</)
+    assert.match(yanitli, /istem kilitli \(yanıt geldi\)/)
+    assert.match(yanitli, /Yanıtı düzelt/, 'yanıt tarafı düzeltilebilir kalır')
+    assert.doesNotMatch(kart({ durum: 'kapandi_yanitsiz' }), />Düzenle</)
+  })
+  it('düzenleme geçmişi her durumda görülebilir (yanıtlanmış kayıt dahil); iz yoksa hiç çizilmez', () => {
+    assert.doesNotMatch(kart({}), /Düzenleme geçmişi/)
+    const h = kart({ durum: 'yanitlandi', yanit_ozeti: 'Olağan.', duzenlemeler: IZ })
+    assert.match(h, /Düzenleme geçmişi/)
+    assert.match(h, />1</)
+  })
+  it('düzenleme formu: mevcut metin dolu, kaydet/vazgeç ≥ 44 px, kısaltma uyarısı engellemez', () => {
+    const h = sar(createElement(IstemDuzenleFormu, { k: satir({ klinik_soru: 'KBB değerlendirmesi — OME şüphesi var mı?' }), kaydedildi: () => {}, vazgec: () => {} }))
+    assert.match(h, /KBB değerlendirmesi — OME şüphesi var mı\?<\/textarea>/)
+    assert.match(h, /Değişiklikleri kaydet/)
+    assert.match(h, /Vazgeç/)
+    assert.match(h, /Kısaltma olabilir: KBB, OME/)
+    assert.match(h, /önceki metin düzenleme geçmişinde saklanır/)
+    for (const b of h.match(/<button[^>]*>/g) || []) assert.match(b, /min-height:(4[4-9]|[5-9]\d)px|min-height:40px/, b)
   })
 })

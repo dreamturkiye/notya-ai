@@ -19,8 +19,8 @@ import {
   AracVurguSaglayici, VURGU_TEAL, useAracStil, Alan, Segment, Katlanir, Rozet, TaslakNotu,
 } from '@/lib/doktor/aracUi';
 import {
-  ACILIYET_ETIKETI, DURUM_ETIKETI, KLINIK_SORU_EN_AZ, KONSULTASYON_SINIRLARI,
-  bugunTrIso, durumGrubu, olasiKisaltmalar, trGun, type Aciliyet, type KonsultasyonSatiri,
+  ACILIYET_ETIKETI, DURUM_ETIKETI, KLINIK_SORU_EN_AZ, KONSULTASYON_SINIRLARI, REVIZYON_ALAN_ETIKETI,
+  bugunTrIso, durumGrubu, olasiKisaltmalar, trGun, type Aciliyet, type KonsultasyonRevizyonu, type KonsultasyonSatiri,
 } from '@/lib/doktor/konsultasyon';
 
 /** GET ?patientId= satırı (sunucu ekleri ile). */
@@ -30,6 +30,8 @@ export type KonsultasyonGorunumu = KonsultasyonSatiri & {
   gun: number
   belge: { id: string; ad: string; tur: string; tarih: string; silindi: boolean } | null
   belgeTaslagi: { durum: string; ozet: string } | null
+  /** AYSE-KONSULTASYON-01: düzenleme izi (önceki metinler) — eskiden yeniye. */
+  duzenlemeler?: KonsultasyonRevizyonu[]
 }
 type Hedefler = { onerilen: Array<[string, string]>; diger: Array<[string, string]> }
 type KasaBelgesi = { id: string; fileName: string; fileType: string; category: string | null; createdAt: string }
@@ -218,18 +220,107 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
   );
 }
 
+/* ───────────────────────── İstem düzenleme (AYSE-KONSULTASYON-01) ───────────────────────── */
+
+/**
+ * Dr. Gökhan: "Oluştur'a bastım… düzeltme olanağı yok." İstem yanıt beklerken düzenlenir; yanıt geldikten sonra
+ * KİLİTLİ (sunucu da reddeder). Kaydedince önceki metin düzenleme geçmişine yazılır — üzerine sessizce yazılmaz.
+ */
+export function IstemDuzenleFormu({ k, kaydedildi, vazgec }: {
+  k: KonsultasyonGorunumu
+  kaydedildi: (y: Partial<KonsultasyonGorunumu>) => void
+  vazgec: () => void
+}) {
+  const stil = useAracStil();
+  const [soru, setSoru] = useState(k.klinik_soru || k.not_metni || '');
+  const [aciliyet, setAciliyet] = useState<Aciliyet>((['rutin', 'oncelikli', 'acil'] as const).includes(k.aciliyet as Aciliyet) ? (k.aciliyet as Aciliyet) : 'rutin');
+  const [hekim, setHekim] = useState(k.hedef_hekim || '');
+  const [tanilar, setTanilar] = useState(k.tanilar || '');
+  const [durum, setDurum] = useState(k.mevcut_durum || '');
+  const [gonderiyor, setGonderiyor] = useState(false);
+  const [hata, setHata] = useState('');
+  const kisaltmalar = olasiKisaltmalar(soru);
+  const hazir = soru.trim().length >= KLINIK_SORU_EN_AZ && !gonderiyor;
+
+  const kaydet = async () => {
+    if (!hazir) return;
+    setGonderiyor(true); setHata('');
+    try {
+      // Eski kayıtta istem not_metni'ndeydi; düzenlenmiş metin klinik_soru'ya yazılır (not_metni izde kalır).
+      const { ok, j } = await api('/api/doktor/konsultasyon', { method: 'PATCH', govde: { id: k.id, islem: 'duzenle', klinikSoru: soru, aciliyet, hedefHekim: hekim, tanilar, mevcutDurum: durum } });
+      if (ok && j.konsultasyon) kaydedildi(j.konsultasyon);
+      else setHata(j.error || 'Değişiklik kaydedilemedi.');
+    } catch { setHata('Kaydedilemedi — bağlantıyı kontrol edin.'); }
+    finally { setGonderiyor(false); }
+  };
+
+  return (
+    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 12, paddingTop: 12, display: 'grid', gap: 12 }}>
+      <Alan etiket="İstem metni (klinik soru)" ipucu="Yanıt gelene kadar düzenleyebilirsiniz; önceki metin düzenleme geçmişinde saklanır.">
+        <textarea aria-label="İstem metni" value={soru} onChange={(e) => setSoru(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.klinikSoru} rows={6} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
+      </Alan>
+      {kisaltmalar.length > 0 && (
+        <div style={stil.uyari} aria-live="polite">Kısaltma olabilir: {kisaltmalar.join(', ')} — konsültasyon isteminde açık yazım önerilir (Türk Tabipleri Birliği konsültasyon ilkesi). Kaydetmenize engel değildir.</div>
+      )}
+      <Alan etiket="Aciliyet">
+        <Segment etiket="Aciliyet" deger={aciliyet} set={setAciliyet} secenekler={(['rutin', 'oncelikli', 'acil'] as const).map((x) => [x, ACILIYET_ETIKETI[x]])} />
+      </Alan>
+      <Alan etiket="Konsültan hekim (isteğe bağlı)">
+        <input aria-label="Konsültan hekim" value={hekim} onChange={(e) => setHekim(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.hedefHekim} placeholder="Ör. Dr. Ad Soyad" style={stil.input} />
+      </Alan>
+      <Katlanir baslik="İstem formu ayrıntıları (isteğe bağlı)">
+        <div style={{ display: 'grid', gap: 12 }}>
+          <Alan etiket="Muhtemel / kesin tanılar">
+            <textarea aria-label="Muhtemel / kesin tanılar" value={tanilar} onChange={(e) => setTanilar(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.tanilar} rows={2} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
+          </Alan>
+          <Alan etiket="Hastanın mevcut durumu">
+            <textarea aria-label="Hastanın mevcut durumu" value={durum} onChange={(e) => setDurum(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.mevcutDurum} rows={2} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
+          </Alan>
+        </div>
+      </Katlanir>
+      <div style={{ ...stil.satir, marginTop: 0 }}>
+        <button type="button" onClick={kaydet} disabled={!hazir} aria-disabled={!hazir} style={{ ...stil.btn, opacity: hazir ? 1 : 0.55, cursor: hazir ? 'pointer' : 'not-allowed' }}>{gonderiyor ? 'Kaydediliyor…' : 'Değişiklikleri kaydet'}</button>
+        <button type="button" onClick={vazgec} style={stil.ghost}>Vazgeç</button>
+      </div>
+      {hata && <div style={stil.hata}>{hata}</div>}
+    </div>
+  );
+}
+
+/** Düzenleme geçmişi — kim/ne zaman/önceki metin. Klinik kayıt: önceki metin kaybolmaz. */
+export function DuzenlemeGecmisi({ liste }: { liste: KonsultasyonRevizyonu[] }) {
+  const stil = useAracStil();
+  if (!liste.length) return null;
+  return (
+    <Katlanir baslik="Düzenleme geçmişi" rozet={`${liste.length}`}>
+      <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
+        {[...liste].reverse().map((r) => (
+          <li key={r.id} data-revizyon={r.id} style={{ borderLeft: '2px solid rgba(255,255,255,0.14)', paddingLeft: 10, minWidth: 0 }}>
+            <div style={stil.kucuk}>{trGun(r.created_at)} · {REVIZYON_ALAN_ETIKETI[r.alan] || r.alan} değiştirildi (hekim)</div>
+            <div style={{ ...stil.kucuk, color: '#C9D4E3', marginTop: 2 }}>Önceki:</div>
+            <div style={{ ...stil.metin, fontSize: 13, color: '#9BB0C7', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{r.alan === 'aciliyet' && r.onceki ? (ACILIYET_ETIKETI[r.onceki as Aciliyet] || r.onceki) : (r.onceki || '(boş)')}</div>
+          </li>
+        ))}
+      </ol>
+    </Katlanir>
+  );
+}
+
 /* ───────────────────────── Tek satır (kanıt kartı) ───────────────────────── */
 
-export function KonsultasyonKarti({ k, patientId, guncelle, yanitAcikBaslar = false }: {
+export function KonsultasyonKarti({ k, patientId, guncelle, yenile, yanitAcikBaslar = false }: {
   k: KonsultasyonGorunumu
   patientId: string
   guncelle: (y: Partial<KonsultasyonGorunumu>) => void
+  /** Düzenleme sonrası sessiz yeniden okuma (düzenleme geçmişi sunucudan gelir). */
+  yenile?: () => void
   /** KONSULTASYON-02: Araçlar › Bekleyen Konsültasyonlar "Yanıt ekle" → ?yanit=<id> ile form açık gelir. */
   yanitAcikBaslar?: boolean
 }) {
   const stil = useAracStil();
   const g = durumGrubu(k.durum);
   const [yanitAcik, setYanitAcik] = useState(yanitAcikBaslar);
+  const [duzenleAcik, setDuzenleAcik] = useState(false);
   const kartRef = useRef<HTMLDivElement>(null);
   useEffect(() => { if (yanitAcikBaslar) kartRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, [yanitAcikBaslar]);
   const [rapor, setRapor] = useState(false);
@@ -271,6 +362,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yanitAcikBaslar = fa
       {soru && <div style={{ ...stil.metin, marginTop: 8, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{soru}</div>}
       <div style={{ ...stil.kucuk, marginTop: 6 }}>
         İstem: {trGun(k.istem_tarihi || k.created_at)}{k.hedef_hekim ? ` · ${k.hedef_hekim}` : ''}
+        {g === 'yanitlandi' ? ' · istem kilitli (yanıt geldi)' : ''}
       </div>
 
       {g === 'yanitlandi' && (
@@ -302,6 +394,9 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yanitAcikBaslar = fa
           <button type="button" onClick={() => setYanitAcik(true)} style={stil.btn}>{g === 'kapandi' ? 'Geç gelen raporu ekle' : 'Yanıt ekle'}</button>
         )}
         {g === 'yanitlandi' && !yanitAcik && <button type="button" onClick={() => setYanitAcik(true)} style={stil.ghost}>Yanıtı düzelt</button>}
+        {g === 'bekliyor' && !duzenleAcik && (
+          <button type="button" onClick={() => { setDuzenleAcik(true); setYanitAcik(false); }} style={stil.ghost}>Düzenle</button>
+        )}
         {g === 'bekliyor' && (
           <>
             <button type="button" onClick={() => islem('hatirlat')} disabled={!!calisiyor} style={stil.ghost}>{calisiyor === 'hatirlat' ? 'Gönderiliyor…' : 'Hatırlat'}</button>
@@ -319,7 +414,9 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yanitAcikBaslar = fa
         </div>
       )}
       {k.son_hatirlatma_at && g === 'bekliyor' && <div style={{ ...stil.kucuk, marginTop: 6 }}>Son hatırlatma: {trGun(k.son_hatirlatma_at.slice(0, 10))}</div>}
-      {yanitAcik && <YanitFormu k={k} patientId={patientId} kaydedildi={(y) => { guncelle(y); setYanitAcik(false); }} vazgec={() => setYanitAcik(false)} />}
+      {duzenleAcik && g === 'bekliyor' && <IstemDuzenleFormu k={k} kaydedildi={(y) => { guncelle(y); setDuzenleAcik(false); yenile?.(); }} vazgec={() => setDuzenleAcik(false)} />}
+      {yanitAcik && <YanitFormu k={k} patientId={patientId} kaydedildi={(y) => { guncelle(y); setYanitAcik(false); yenile?.(); }} vazgec={() => setYanitAcik(false)} />}
+      <DuzenlemeGecmisi liste={k.duzenlemeler || []} />
     </div>
   );
 }
@@ -344,7 +441,7 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
   const guncelle = (id: string) => (y: Partial<KonsultasyonGorunumu>) => {
     const belgeDegisti = liste.some((x) => x.id === id && y.belge_id !== undefined && y.belge_id !== x.belge_id);
     // PATCH yanıtı satırın ham kolonlarını döndürür; sunucu ekleri (belge, gun, eskiKayit) korunur.
-    setListe((l) => l.map((x) => (x.id === id ? { ...x, ...y, belge: x.belge, belgeTaslagi: x.belgeTaslagi, gun: x.gun, eskiKayit: x.eskiKayit } : x)));
+    setListe((l) => l.map((x) => (x.id === id ? { ...x, ...y, belge: x.belge, belgeTaslagi: x.belgeTaslagi, gun: x.gun, eskiKayit: x.eskiKayit, duzenlemeler: x.duzenlemeler } : x)));
     if (belgeDegisti) yenile?.();
   };
 
@@ -365,7 +462,7 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
       {tabloHazir && !liste.length && !yeni && (
         <div style={{ ...stil.kutu, color: '#8FA0B5', fontSize: 14 }}>Bu hasta için konsültasyon kaydı yok. Bir meslektaşınızın görüşünü istediğinizde buradan istem oluşturun; gelen raporu Kasa'ya yükleyip bu kayda bağlayın.</div>
       )}
-      {liste.map((k) => <KonsultasyonKarti key={k.id} k={k} patientId={patientId} guncelle={guncelle(k.id)} yanitAcikBaslar={!!yanitAc && k.id === yanitAc} />)}
+      {liste.map((k) => <KonsultasyonKarti key={k.id} k={k} patientId={patientId} guncelle={guncelle(k.id)} yenile={yenile} yanitAcikBaslar={!!yanitAc && k.id === yanitAc} />)}
     </div>
   );
 }

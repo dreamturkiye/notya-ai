@@ -196,15 +196,22 @@ export function yanitDogrula(
   return { yanit_ozeti: ozet, yanit_tarihi: tarih }
 }
 
-export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat'
+export type KonsultasyonIslemi = 'yanit' | 'belge_bagla' | 'kapat' | 'nota_ekle' | 'hatirlat' | 'duzenle'
+
+/** İstem KİLİDİ (AYSE-KONSULTASYON-01): yanıt gelmiş kayıtta istem metni değişmez — yalnız yanıt tarafı işlenir. */
+export const ISTEM_KILITLI_YANITLANDI = 'Yanıtlanmış konsültasyonun istemi kilitlidir — yalnız yanıt özeti düzeltilebilir.'
+export const ISTEM_KILITLI_KAPANDI = 'Kapatılmış konsültasyonun istemi düzenlenemez.'
 
 /**
  * Durum geçiş kuralı (PATCH). Kapanmış (yanıtsız) bir konsültasyona geç gelen rapor YİNE eklenebilir;
  * yanıtlanmış kayıtta yanıt düzeltilebilir. Yanıtlanmış kayıt "yanıtsız" kapatılamaz.
+ * İstem ('duzenle') yalnız yanıt beklerken ('acik' / 'yanit_bekleniyor') düzenlenir; yanıt geldikten sonra KİLİTLİ.
  */
 export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: true } | { ok: false; hata: string } {
   const g = durumGrubu(durum)
   switch (islem) {
+    case 'duzenle':
+      return g === 'bekliyor' ? { ok: true } : { ok: false, hata: g === 'yanitlandi' ? ISTEM_KILITLI_YANITLANDI : ISTEM_KILITLI_KAPANDI }
     case 'yanit':
     case 'belge_bagla':
       return { ok: true }
@@ -215,6 +222,85 @@ export function gecisIzinli(durum: string, islem: KonsultasyonIslemi): { ok: tru
     case 'hatirlat':
       return g === 'bekliyor' ? { ok: true } : { ok: false, hata: 'Yalnız yanıt bekleyen konsültasyon için hatırlatma gönderilir.' }
   }
+}
+
+/* ───────────────────────── İstem düzenleme + düzenleme izi (AYSE-KONSULTASYON-01) ───────────────────────── */
+
+/**
+ * Dr. Gökhan Mamur (canlı): "Oluştur'a bastım… doktor değişiklik yapmak istiyorsa yapamıyor." İstem yanıt beklerken
+ * düzenlenir; her değişen alanın ÖNCEKİ metni `konsultasyon_revizyonlar`'a yazılır (sessiz üzerine yazma yok).
+ * Hedef branş değişmez — başka branştan görüş yeni bir istemdir.
+ */
+export const ISTEM_DUZENLENEBILIR_ALANLAR = ['klinik_soru', 'aciliyet', 'hedef_hekim', 'tanilar', 'mevcut_durum', 'not_metni'] as const
+export type IstemAlani = (typeof ISTEM_DUZENLENEBILIR_ALANLAR)[number]
+export type RevizyonAlani = IstemAlani | 'yanit_ozeti'
+
+export const REVIZYON_ALAN_ETIKETI: Record<RevizyonAlani, string> = {
+  klinik_soru: 'İstem metni',
+  aciliyet: 'Aciliyet',
+  hedef_hekim: 'Konsültan hekim',
+  tanilar: 'Tanılar',
+  mevcut_durum: 'Mevcut durum',
+  not_metni: 'Ek not',
+  yanit_ozeti: 'Yanıt özeti',
+}
+
+/** Tek değişiklik — önceki ve sonraki değer (boş = null). */
+export interface Revizyon { alan: RevizyonAlani; onceki: string | null; sonraki: string | null }
+
+/** GET'in döndürdüğü düzenleme izi satırı. */
+export interface KonsultasyonRevizyonu extends Revizyon { id: string; created_at: string }
+
+/** Revizyon satırları (GET). */
+export const REVIZYON_KOLONLARI = 'id, sevk_id, alan, onceki, sonraki, created_at'
+
+/**
+ * PATCH 'duzenle' gövdesi → yalnız DEĞİŞEN alanlar. Gövdede olmayan alan dokunulmaz; boş string alanı temizler
+ * (klinik soru hariç — o zorunlu). Hiçbir alan değişmediyse hata (boş revizyon yazılmaz).
+ */
+export function duzenlemeDogrula(
+  b: Record<string, unknown> | null | undefined,
+  s: Pick<KonsultasyonSatiri, IstemAlani>,
+): { hata: string } | { guncelleme: Partial<Record<IstemAlani, string | null>>; revizyonlar: Revizyon[] } {
+  const var_ = (...k: string[]) => k.some((x) => b != null && Object.prototype.hasOwnProperty.call(b, x))
+  const al = (...k: string[]) => { for (const x of k) if (b != null && Object.prototype.hasOwnProperty.call(b, x)) return b[x]; return undefined }
+  const yeni: Partial<Record<IstemAlani, string | null>> = {}
+  const bosNull = (x: string) => (x ? x : null)
+
+  if (var_('klinikSoru', 'klinik_soru')) {
+    const soru = cokSatir(al('klinikSoru', 'klinik_soru'), KONSULTASYON_SINIRLARI.klinikSoru)
+    if (soru.length < KLINIK_SORU_EN_AZ) return { hata: `Klinik soruyu açık yazın (en az ${KLINIK_SORU_EN_AZ} karakter).` }
+    yeni.klinik_soru = soru
+  }
+  if (var_('aciliyet')) {
+    const a = String(al('aciliyet') ?? '')
+    if (!(ACILIYETLER as readonly string[]).includes(a)) return { hata: 'Aciliyet geçersiz (rutin, öncelikli, acil).' }
+    yeni.aciliyet = a
+  }
+  if (var_('hedefHekim', 'hedef_hekim')) yeni.hedef_hekim = bosNull(temiz(al('hedefHekim', 'hedef_hekim'), KONSULTASYON_SINIRLARI.hedefHekim))
+  if (var_('tanilar')) yeni.tanilar = bosNull(cokSatir(al('tanilar'), KONSULTASYON_SINIRLARI.tanilar))
+  if (var_('mevcutDurum', 'mevcut_durum')) yeni.mevcut_durum = bosNull(cokSatir(al('mevcutDurum', 'mevcut_durum'), KONSULTASYON_SINIRLARI.mevcutDurum))
+  if (var_('not', 'not_metni')) yeni.not_metni = bosNull(cokSatir(al('not', 'not_metni'), KONSULTASYON_SINIRLARI.not))
+
+  const guncelleme: Partial<Record<IstemAlani, string | null>> = {}
+  const revizyonlar: Revizyon[] = []
+  for (const alan of ISTEM_DUZENLENEBILIR_ALANLAR) {
+    if (!(alan in yeni)) continue
+    const onceki = s[alan] == null || s[alan] === '' ? null : String(s[alan])
+    const sonraki = yeni[alan] ?? null
+    if (onceki === sonraki) continue
+    guncelleme[alan] = sonraki
+    revizyonlar.push({ alan, onceki, sonraki })
+  }
+  if (!revizyonlar.length) return { hata: 'Değişiklik yok.' }
+  return { guncelleme, revizyonlar }
+}
+
+/** Yanıt özeti düzeltmesi: önceki özet varsa ve değiştiyse izi. İlk yanıt (önceki boş) iz değil, kaydın kendisidir. */
+export function yanitRevizyonu(onceki: string | null | undefined, sonraki: string): Revizyon | null {
+  const o = onceki == null || onceki === '' ? null : String(onceki)
+  if (o == null || o === sonraki) return null
+  return { alan: 'yanit_ozeti', onceki: o, sonraki }
 }
 
 /** İstem tarihinden bugüne kaç gün (yanıt bekleyen satırda "N gündür bekliyor"). */
