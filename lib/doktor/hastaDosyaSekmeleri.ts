@@ -26,6 +26,7 @@ export type HastaDosyaSekmeId =
   | 'bebek'
   | 'goz'
   | 'psikiyatri'
+  | 'kbb'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -35,7 +36,7 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring/.test(b)
 }
 
 /**
@@ -47,6 +48,17 @@ export function psikiyatriSekmesiBransi(specialtyHam: string | null | undefined)
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
   return /psikiyatri|ruh sağlığı ve hastalıkları|ruh sagligi ve hastaliklari/.test(b)
+}
+
+/**
+ * KBB-EXCEPTIONAL-01 — KBB bölüm sekmesinin sahibi: yalnız kulak burun boğaz / otolarengoloji.
+ * Dahiliye, aile hekimliği, göz, pediatri ve diğer branşlar bu sekmeyi GÖRMEZ (brans-alan-sizmasi):
+ * otoskopi, odyometri ve vestibüler muayene içeriği başka branşın hasta dosyasına taşınmaz.
+ */
+export function kbbSekmesiBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return false
+  return /kulak burun|kulak-burun|\bkbb\b|otolaring/.test(b)
 }
 
 export function yasYilKesir(dogumIso: string | null | undefined, nowMs = Date.now()): number | null {
@@ -109,6 +121,8 @@ export function hastaDosyaSekmeleri(opts: {
   deriUygun?: boolean
   /** PSIK-EXCEPTIONAL-01: doctor specialty psikiyatri only */
   psikiyatriUygun?: boolean
+  /** KBB-EXCEPTIONAL-01: doctor specialty kulak burun boğaz only */
+  kbbUygun?: boolean
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -133,6 +147,7 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.deriUygun) tabs.push({ id: 'deri', label: 'Deri & Lezyon' })
   if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' })
   if (opts.psikiyatriUygun) tabs.push({ id: 'psikiyatri', label: 'Psikiyatri' })
+  if (opts.kbbUygun) tabs.push({ id: 'kbb', label: 'KBB' })
   return tabs
 }
 

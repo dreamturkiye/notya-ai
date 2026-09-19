@@ -102,6 +102,9 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/psikiyatri/_kohort.ts': I('patient ids drawn only from hasta_psik / psik_olcek / psik_risk / psik_gorevleri rows with doctor_id = doctorId; patients read by doctor_id; psikHatirlatmaGonder runs only on ids that passed that filter'),
   'app/api/doktor/psikiyatri/kohort/route.ts': I('POST ids filtered through psikKohortVerisi(doctorId) before any message is written'),
   'app/api/doktor/psikiyatri/route.ts': I('GET and POST both open with hastaSahibiMi(supabase, user.id, patientId) → 404 for a foreign patient; every psik_* read/write .eq(patient_id).eq(doctor_id), and row-id updates (gorev, kontrol) carry id + doctor_id + patient_id in the same query'),
+  'app/api/doktor/kulak-burun-bogaz/_kohort.ts': I('patient ids drawn only from hasta_kbb / kbb_odyometri / kbb_risk / kbb_gorevleri rows with doctor_id = doctorId; patients read by doctor_id; kbbHatirlatmaGonder runs only on ids that passed that filter'),
+  'app/api/doktor/kulak-burun-bogaz/kohort/route.ts': I('POST ids filtered through kbbKohortVerisi(doctorId) before any message is written'),
+  'app/api/doktor/kulak-burun-bogaz/route.ts': I('GET and POST both open with hastaSahibiMi(supabase, user.id, patientId) → 404 for a foreign patient; every kbb_* read/write .eq(patient_id).eq(doctor_id), and row-id updates (gorev, kontrol, osas) carry id + doctor_id + patient_id in the same query'),
   // ── Araçlar ──
   'app/api/doktor/araclar/epikriz/route.ts': T,
   'app/api/doktor/araclar/erecete/route.ts': I('patient ownership check (id AND doctor_id) before any read → 404'),

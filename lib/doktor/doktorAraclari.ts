@@ -83,6 +83,13 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#0891B2', icon: 'Lİ', title: 'Psikotrop izlem takvimi', desc: 'Lityum düzey · valproat KCFT/hemogram · atipik AP metabolik panel · SSRI sodyum — sınıf düzeyi görevler, doz yok', route: '/doktor-tools/psik-ilac-izlem', branslar: ['psikiyatri'] },
   { circleColor: '#16A34A', icon: 'PR', title: 'Psikotrop rapor & reçete', desc: 'İlaç raporu taslağı · SUT kontrol listesi · kırmızı / yeşil reçete uyarısı — T.C. kimlik ve doz yazılmaz', route: '/doktor-tools/psik-sgk', branslar: ['psikiyatri'] },
   { circleColor: '#9333EA', icon: 'PK', title: 'Psikiyatri kohort paneli', desc: 'PHQ-9 yüksek · açık güvenlik bayrağı · geciken kontrol · geciken lityum/valproat düzeyi · 1-tap hatırlatma', route: '/doktor-tools/psik-kohort', branslar: ['psikiyatri'] },
+  // Kulak Burun Boğaz — specialty-only (not pediatri / dahiliye / göz / dermatoloji / KD / psikiyatri).
+  // Chapter engines: specialties/kulak-burun-bogaz/engines. PTA bandı karar desteğidir; kayıp tipi, tanı ve doz hekimde.
+  { circleColor: '#4F46E5', icon: 'OT', title: 'Otoskopi / kulak zarı notu', desc: 'Sağ-sol dış kulak ve TM görünümü işaretle → düzenli muayene notu · karar bekleyen bulgular · tanı yazılmaz', route: '/doktor-tools/kbb-otoskopi', branslar: ['kulak-burun-bogaz'] },
+  { circleColor: '#0D9488', icon: 'OD', title: 'Odyometri özeti', desc: '0,5–4 kHz eşiklerden PTA ve şiddet bandı (karar desteği) · önceki ölçümle değişim · asimetri uyarısı · kayıp tipini hekim seçer', route: '/doktor-tools/kbb-odyometri', branslar: ['kulak-burun-bogaz'] },
+  { circleColor: '#DC2626', icon: 'VT', title: 'Vertigo / Dix-Hallpike', desc: 'Pozisyonel test ve repozisyon manevrası notu · nistagmus özellikleri · santral şüphesi işaretinde manevra yerine acil', route: '/doktor-tools/kbb-vertigo', branslar: ['kulak-burun-bogaz'] },
+  { circleColor: '#16A34A', icon: 'İR', title: 'SGK işitme raporu', desc: 'İşitme cihazı · odyolojik tetkik · iş gücü / öğrenci raporu taslağı ve SUT kontrol listesi — T.C. kimlik, cihaz markası ve bedel yazılmaz', route: '/doktor-tools/kbb-sgk', branslar: ['kulak-burun-bogaz'] },
+  { circleColor: '#0891B2', icon: 'KK', title: 'KBB kohort paneli', desc: 'Geciken kontrol · yenilenmesi gereken işitme testi · açık kırmızı bayrak · bekleyen uyku tetkiki sevki · 1-tap hatırlatma', route: '/doktor-tools/kbb-kohort', branslar: ['kulak-burun-bogaz'] },
 ]
 
 export const TUM_DOKTOR_ARACLARI: readonly DoktorArac[] = [...ORTAK_DOKTOR_ARACLARI, ...BRANS_DOKTOR_ARACLARI]

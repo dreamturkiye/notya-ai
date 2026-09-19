@@ -165,6 +165,8 @@ export interface PortalBundle {
   kronik: PortalKronik | null
   /** PSIK-EXCEPTIONAL-01 — "Ruh Sağlığım": MD-set kontrol + ölçek/ilaç hatırlatma. No tanı, skor, doz. */
   psik: PortalPsik | null
+  /** KBB-EXCEPTIONAL-01 — "Kulaklarım": MD-set kontrol + işitme testi / işlem hatırlatma. No tanı, dB, doz. */
+  kulak: PortalKulak | null
 }
 
 /** NOTYA-KHD-05 — anne için "Gebeliğim" görünümü (hesaplar sunucuda, tanı/yorum yok). */
@@ -222,6 +224,23 @@ export interface PortalPsik {
   olcekHatirlatma: Array<{ ad: string; due: string | null }>
   /** "İlaç güvenlik kan testi" gibi sınıf düzeyi hatırlatma — etken madde / doz yok */
   ilacHatirlatma: Array<{ ad: string; due: string | null }>
+  not: string
+}
+
+/**
+ * KBB-EXCEPTIONAL-01 — "Kulaklarım": ayaktan KBB hasta yüzü.
+ * Yalnız hekimin belirlediği tarihler ve hasta-güvenli başlıklar. Tanı adı, dB / PTA değeri, kayıp
+ * bandı, ilaç adı ve doz portala GEÇMEZ (specialties/kulak-burun-bogaz/engines/portal-kulaklarim.ts kilidi).
+ */
+export interface PortalKulak {
+  sonrakiKontrol: { tarih: string; neden: string } | null
+  hatirlatmalar: Array<{ ad: string; due: string | null; durum?: 'gecikti' | 'yaklasiyor' | 'planli' }>
+  /** "İşitme testi randevusu" / "Uyku tetkiki randevusu" — sonuç ve sayı yazılmaz */
+  testHatirlatma: Array<{ ad: string; due: string | null }>
+  /** pansuman, cihaz kontrolü, denge muayenesi gibi işlem randevuları */
+  islemHatirlatma: Array<{ ad: string; due: string | null }>
+  /** hasta-güvenli, tanı içermeyen genel kulak bakımı önerileri */
+  bakimIpuclari: string[]
   not: string
 }
 

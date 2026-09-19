@@ -743,6 +743,12 @@ const LABEL_ALIASES: Record<string, SpecialtyKey> = {
   'deri-ve-zuhrevi-hastaliklari': 'dermatoloji',
   'kulak-burun-bogaz': 'kulak-burun-bogaz',
   kbb: 'kulak-burun-bogaz',
+  // KBB-EXCEPTIONAL-01: resmi unvan "Kulak Burun Boğaz Hastalıkları" ve baş-boyun cerrahisi yazımı aynı branştır.
+  'kulak-burun-bogaz-hastaliklari': 'kulak-burun-bogaz',
+  'kulak-burun-bogaz-ve-bas-boyun-cerrahisi': 'kulak-burun-bogaz',
+  'kulak-burun-bogaz-hastaliklari-ve-bas-boyun-cerrahisi': 'kulak-burun-bogaz',
+  otolarengoloji: 'kulak-burun-bogaz',
+  otorinolarengoloji: 'kulak-burun-bogaz',
   'goz-hastaliklari': 'goz-hastaliklari',
   goz: 'goz-hastaliklari',
   'kadin-hastaliklari-dogum': 'kadin-hastaliklari-dogum',

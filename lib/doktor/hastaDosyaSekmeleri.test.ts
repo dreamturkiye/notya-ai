@@ -62,4 +62,16 @@ describe('hastaDosyaSekmeleri', () => {
       true,
     )
   })
+
+  it('KBB-EXCEPTIONAL-01: KBB sekmesi yalnız kbbUygun; yabancı branşta yok', () => {
+    const kbb = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, kbbUygun: true })
+    assert.ok(kbb.some((t) => t.id === 'kbb' && t.label === 'KBB'))
+    const psik = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, psikiyatriUygun: true })
+    assert.equal(psik.some((t) => t.id === 'kbb'), false)
+    assert.ok(psik.some((t) => t.id === 'psikiyatri'))
+    const goz = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false, gozUygun: true })
+    assert.equal(goz.some((t) => t.id === 'kbb'), false)
+    assert.equal(ozelBolumBransi('Kulak Burun Boğaz'), true)
+    assert.equal(ozelBolumBransi('kulak-burun-bogaz'), true)
+  })
 })

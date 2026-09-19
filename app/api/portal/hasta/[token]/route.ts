@@ -25,6 +25,14 @@ import {
   sonrakiKontrol as psikSonrakiKontrol,
   RUH_SAGLIGIM_NOTU,
 } from '@/specialties/psikiyatri/engines/portal-ruhsagligim'
+import {
+  kulaklarimHatirlatmalari,
+  testHatirlatmalari,
+  islemHatirlatmalari,
+  sonrakiKontrol as kulakSonrakiKontrol,
+  KULAKLARIM_NOTU,
+  KULAK_BAKIM_IPUCLARI,
+} from '@/specialties/kulak-burun-bogaz/engines/portal-kulaklarim'
 import { decrypt } from '@/lib/security/encryption'
 import type {
   PortalBundle,
@@ -642,6 +650,30 @@ export async function GET(
       not: RUH_SAGLIGIM_NOTU,
     }
   } catch (e) { console.error('[portal] ruhsagligim:', e) }
+
+  // KBB-EXCEPTIONAL-01 — "Kulaklarım": yalnız açık görev kodları + hekimin kontrol tarihi.
+  // Odyometri değeri (dB / PTA), kayıp bandı ve tipi, tanı, ilaç adı ve doz portala GEÇMEZ;
+  // başlıklar koddan sabit hasta-güvenli metne çevrilir (portal-kulaklarim.ts).
+  if (modulAktif('kulaklarim')) try {
+    const bugun = new Date().toISOString().slice(0, 10)
+    const [gorevQ, bolumQ] = await Promise.all([
+      sb.from('kbb_gorevleri').select('kod, due').eq('patient_id', patientId).eq('doctor_id', doctorId).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }).limit(20),
+      sb.from('hasta_kbb').select('next_kontrol').eq('patient_id', patientId).eq('doctor_id', doctorId).maybeSingle(),
+    ])
+    const hatirlatmalar = kulaklarimHatirlatmalari({
+      bugun,
+      gorevler: (gorevQ.data || []).map((g) => ({ kod: String(g.kod || ''), due: g.due ? String(g.due).slice(0, 10) : null })),
+      sonrakiKontrolIso: bolumQ.data?.next_kontrol ? String(bolumQ.data.next_kontrol).slice(0, 10) : null,
+    })
+    bundle.kulak = {
+      sonrakiKontrol: kulakSonrakiKontrol(hatirlatmalar),
+      hatirlatmalar: hatirlatmalar.map((h) => ({ ad: h.ad, due: h.due, durum: h.durum })),
+      testHatirlatma: testHatirlatmalari(hatirlatmalar),
+      islemHatirlatma: islemHatirlatmalari(hatirlatmalar),
+      bakimIpuclari: [...KULAK_BAKIM_IPUCLARI],
+      not: KULAKLARIM_NOTU,
+    }
+  } catch (e) { console.error('[portal] kulaklarim:', e) }
 
   // Messages from DB
   const messages = await loadPortalMessages(sb, patientId, doctorId)

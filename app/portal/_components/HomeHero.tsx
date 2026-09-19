@@ -9,6 +9,8 @@ import { portalModulAktif } from '@/lib/portal/moduller'
 const MODUL_IPUCU: Record<string, string> = {
   gozlerim: 'Kontrol, damla ve ölçümleriniz',
   derim: 'Kontrol, fotoğraf ve hatırlatmalarınız',
+  ruhsagligim: 'Kontrol ve hatırlatmalarınız',
+  kulaklarim: 'Kontrol, test ve işlem hatırlatmalarınız',
   'on-anket': 'Muayene öncesi bilgileriniz',
 }
 

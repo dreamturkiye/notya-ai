@@ -212,7 +212,16 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
     alanlar: [
       BASVURU_NEDENI,
       { id: 'sikayetSuresiKBB', etiket: 'Bu şikayet ne zamandır var?', ...SIKAYET_SURESI_STANDART },
-      { id: 'semptomlarKBB', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['İşitme Kaybı', 'Kulak Ağrısı', 'Kulak Akıntısı', 'Burun Tıkanıklığı', 'Burun Akıntısı', 'Koku Kaybı', 'Horlama', 'Ses Kısıklığı', 'Boğaz Ağrısı', 'Yok'] },
+      // KBB-EXCEPTIONAL-01 — kırmızı bayrak kutucukları (derm / psikiyatri `acilBelirtiler*` deseni). Etiketler
+      // specialties/kulak-burun-bogaz/engines/acil.ts → INTAKE_ACIL_SECENEKLERI ile birebir aynı olmalı;
+      // `intakeAcilKodlari()` eşleşmeyi etiket metniyle yapıyor (testle kilitli).
+      { id: 'acilBelirtilerKbb', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Aniden başlayan işitme kaybı', 'Tek kulakta aniden başlayan işitme kaybı veya çınlama', 'Durdurulamayan burun kanaması', 'Nefes darlığı ile birlikte boğazda şişlik veya yutamama', 'Baş dönmesi ile birlikte çift görme, konuşma bozukluğu veya güç kaybı', 'Baş, yüz veya boyun bölgesine darbe / travma', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya en yakın acile başvurun.' },
+      { id: 'semptomlarKBB', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['İşitme Kaybı', 'Kulak Ağrısı', 'Kulak Akıntısı', 'Kulak Çınlaması', 'Kulakta Dolgunluk', 'Baş Dönmesi / Denge Sorunu', 'Burun Tıkanıklığı', 'Burun Akıntısı', 'Burun Kanaması', 'Koku Kaybı', 'Horlama', 'Uykuda Nefes Durması (yakınının fark ettiği)', 'Ses Kısıklığı', 'Boğaz Ağrısı', 'Yutma Güçlüğü', 'Yok'] },
+      { id: 'basDonmesiKBB', etiket: 'Baş dönmeniz varsa nasıl tarif edersiniz?', tur: 'radio', secenekler: ['Baş dönmem yok', 'Dönme hissi (etraf dönüyor gibi)', 'Dengesizlik / sallanma', 'Göz kararması', 'Emin değilim'], yardim: 'Yalnızca baş dönmesi yaşıyorsanız doldurun.' },
+      { id: 'basDonmesiTetikleyiciKBB', etiket: 'Baş dönmeniz ne zaman oluyor?', tur: 'checkbox-grup', secenekler: ['Yatakta dönünce veya kalkınca', 'Başımı yukarı kaldırınca', 'Ataklar hâlinde, kendiliğinden geçiyor', 'Sürekli var', 'Bu soru bana uygun değil'] },
+      { id: 'burunKanamasiKBB', etiket: 'Burun kanamanız varsa ne sıklıkta oluyor?', tur: 'radio', secenekler: ['Kanamam yok', 'Ayda birden az', 'Ayda birkaç kez', 'Haftada birkaç kez', 'Neredeyse her gün'] },
+      { id: 'kanSulandiriciKBB', etiket: 'Kan sulandırıcı veya aspirin türü ilaç kullanıyor musunuz?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Bilmiyorum'], yardim: 'Burun kanaması ve işlem planı için sorulur. İlaç adını hatırlamıyorsanız kutuyu getirmeniz yeterli; doz yazmanız gerekmez.' },
+      { id: 'gurultuMaruziyetiKBB', etiket: 'Gürültülü ortamda çalışıyor veya sık sık yüksek sese maruz kalıyor musunuz?', tur: 'radio', secenekler: ['Hayır', 'Evet', 'Eskiden'] },
       { id: 'baslikKBBGecmisi', etiket: 'KBB Sağlığı Geçmişi', tur: 'bolum-basligi' },
       { id: 'bilinenKBBHastaliklari', etiket: 'Bilinen KBB hastalıklarınız', tur: 'checkbox-grup', secenekler: ['Kronik Sinüzit', 'Alerjik Rinit', 'Tonsillit (Bademcik)', 'Uyku Apnesi', 'Tinnitus (Kulak Çınlaması)', 'Yok'] },
       { id: 'oncekiKBBAmeliyat', etiket: 'Daha önce geçirdiğiniz KBB ameliyatları', tur: 'checkbox-grup', secenekler: ['Bademcik Ameliyatı', 'Sinüs Ameliyatı', 'Kulak Zarı Ameliyatı', 'Geniz Eti Ameliyatı', 'Yok'] },

@@ -8,6 +8,7 @@ export const SAGLIGIM_DEMO: PortalBundle = {
   deri: null,
   kronik: null,
   psik: null, // ruh sağlığı verisi demo portalında hiç taşınmaz
+  kulak: null, // KBB izlemi yalnız KBB hekiminin token'ında açılır
   buyume: null, // demo hastası yetişkin (71.4 kg) — büyüme eğrileri yalnız çocuk hastalarda anlamlı
   gebelik: null,
   jinekoloji: null,
