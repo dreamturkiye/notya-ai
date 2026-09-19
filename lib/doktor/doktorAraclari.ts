@@ -32,6 +32,9 @@ export const ORTAK_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#0284C7', icon: 'HP', title: 'Hasta Portalı', desc: 'Hastalara güvenli portal erişimi ver', route: '/doktor-tools/hasta-portali', branslar: null },
   { circleColor: '#DC2626', icon: 'SG', title: 'SGK Medula', desc: 'E-reçete ve provizyon sorgulama entegrasyonu', route: '/doktor-tools/sgk-medula', branslar: null },
   { circleColor: '#0F9B8E', icon: 'EN', title: 'e-Nabız Format', desc: 'FHIR/Medula/USS paketleri — canlı bağlantı yok, format-hazır çıktı', route: '/doktor-tools/enabiz', branslar: null },
+  // ARACLAR-CILA-01 Faz 4 — her branşta her vizitin kapanış ritüeli ve hekime özel hızlı şablonlar.
+  { circleColor: '#14B8A6', icon: 'MS', title: 'Muayene sonu paketi', desc: 'Vizitin kapanışı tek akışta: reçete · rapor · kontrol randevusu · portal özeti · SGK provizyon — her adım isteğe bağlı', route: '/doktor-tools/muayene-sonu', branslar: null },
+  { circleColor: '#F59E0B', icon: 'SK', title: 'Sık kullandıklarım', desc: 'Kendi vizit şablonlarınız: alışılmış tanı · reçete taslağı · kontrol aralığı — tek dokunuşla ön doldurulur, tamamen düzenlenebilir', route: '/doktor-tools/sablonlarim', branslar: null },
 ]
 
 /**

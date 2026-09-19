@@ -13,7 +13,11 @@
  * artık `aracStil(<vurgu>)` sonucunu gösteren ince sarmalayıcılar, 27 aracın importu kırılmıyor.
  */
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { useRouter } from 'next/navigation';
+import DoktorNav from '@/components/doktor/DoktorNav';
+import { toolsShell, toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 
@@ -502,5 +506,60 @@ export function OncekiVizit({ tarih, children }: { tarih: string | null; childre
       <Rozet ton="bilgi">önceki vizit · {tarih}</Rozet>
       <span style={stil.kucuk}>{children}</span>
     </div>
+  )
+}
+
+/* ───────────────────────── Evrensel araç kabuğu ───────────────────────── */
+
+/**
+ * ARACLAR-CILA-01 Faz 4 — branştan bağımsız (ORTAK_DOKTOR_ARACLARI) araçların kabuğu.
+ *
+ * Branş stüdyolarının kabuğuyla aynı görsel dil ve aynı kapı çağrısı (doktorAraciBransaUygun);
+ * evrensel bir rotada o çağrı her branş için true döner — kapı yine de burada, çünkü rota bir gün
+ * branşlanırsa tek yerde değişir. Oturum yoksa /doktor-tools'a döner.
+ */
+export function OrtakAracKabugu({
+  route,
+  baslik,
+  aciklama,
+  children,
+}: { route: string; baslik: string; aciklama: string; children: React.ReactNode }) {
+  const router = useRouter()
+  const [izin, setIzin] = useState<boolean | null>(null)
+  useEffect(() => {
+    let iptal = false
+    ;(async () => {
+      try {
+        const t = await ensureDoctorAccessToken()
+        if (!t) { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } return }
+        const r = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } })
+        const j = r.ok ? await r.json() : null
+        const ok = doktorAraciBransaUygun(route, j?.data?.specialty)
+        if (!iptal) { setIzin(ok); if (!ok) router.replace('/doktor-tools') }
+      } catch { if (!iptal) { setIzin(false); router.replace('/doktor-tools') } }
+    })()
+    return () => { iptal = true }
+  }, [router, route])
+
+  return (
+    <AracVurguSaglayici vurgu={VURGU_TEAL}>
+      <div style={{ ...toolsShell, overflowX: 'hidden' }}>
+        <DoktorNav />
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px', boxSizing: 'border-box' }}>
+          {!izin ? (
+            <div style={{ color: '#9BB0C7', fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç açılamadı.'}</div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: VURGU_TEAL.baslik, letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar</div>
+                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>{baslik}</h1>
+                <p style={{ margin: '8px 0 0', fontSize: 15, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
+              </div>
+              {children}
+            </>
+          )}
+        </div>
+      </div>
+    </AracVurguSaglayici>
   )
 }
