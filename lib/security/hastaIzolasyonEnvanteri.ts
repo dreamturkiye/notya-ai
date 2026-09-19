@@ -45,6 +45,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/asilar/[id]/route.ts': I('update/delete by id AND doktor_id = doktorId'),
   'app/api/doktor/asilar/karne/route.ts': T,
   'app/api/doktor/asilar/karne/pdf/route.ts': T,
+  'app/api/doktor/asilar/hatirlatma/route.ts': T,
   'app/api/doktor/belgeler/lab/route.ts': T,
   'app/api/doktor/belgeler/analiz/route.ts': I('document via vault getDocumentMeta(doctorId) (assertPatientOwned); analyses by doctor_id'),
   'app/api/doktor/belgeler/analiz/onayla/route.ts': I('analysis by id AND doctor_id; target note by id AND doctor_id'),
@@ -223,7 +224,6 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/entegrasyon/fhir/isle/route.ts': I('cron-secret gated; exports notes only of doctors enrolled in that institution'),
   'app/api/entegrasyon/hl7/al/route.ts': I('per-institution inbound key; patient mapping scoped by kurum_id'),
   'app/api/entegrasyon/yonetim/route.ts': I('ADMIN_EMAILS only'),
-  'app/api/cron/asi-hatirlatma/route.ts': I('cron-secret gated; reminder only to the patient of the row owner (doctor_id = row doktor_id)'),
   'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; reminder only to the patient of the booking owner (doctor_id = row doktor_id)'),
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path'),
 }

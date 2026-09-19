@@ -12,6 +12,7 @@
  * "Eksik", "gecikmiş", risk, öneri gibi çıkarım yapılmaz (takvim motoru burada ÇALIŞMAZ).
  */
 import { asiKaynakTuru, KARNE_ROZETI, trTarih, type AsiKaynakTuru } from './karneOkuma'
+import { sonrakiDozKarsilandiMi } from './hatirlatma'
 
 /** e-Nabız uyarısı — ZORUNLU, ekranda / çıktıda / PDF'te görünür ve küçültülmez (Kaan). */
 export const E_NABIZ_BASLIK = 'Bu karne bilgi amaçlıdır'
@@ -89,14 +90,16 @@ export function asiKarnesiOlustur(g: {
 }): AsiKarnesi {
   const yapilanlar: AsiKarnesiSatiri[] = []
   const siradaki = new Map<string, AsiKarnesiSiradaki>()
-  for (const a of g.asilar || []) {
+  // Sonraki dozu aynı hastada daha sonra kaydedilmiş satır "sıradaki" olarak gösterilmez (hekim listesiyle aynı kural).
+  const karsilama = (g.asilar || []).map((a, i) => ({ id: String(i), patient_id: 'hasta', asi_adi: a.asi_adi, uygulama_tarihi: a.uygulama_tarihi }))
+  for (const [i, a] of (g.asilar || []).entries()) {
     const ad = temiz(a.asi_adi)
     if (!ad) continue
     const kaynak = asiKaynakTuru(a)
     const doz = Number.isInteger(a.doz_no) && (a.doz_no as number) > 0 ? (a.doz_no as number) : null
     yapilanlar.push({ ad, doz, tarih: gun(a.uygulama_tarihi), kaynak, kaynakEtiketi: HASTA_KAYNAK_ETIKETI[kaynak] })
     const sonraki = gun(a.sonraki_doz_tarihi)
-    if (sonraki && sonraki >= g.bugunIso) siradaki.set(`${ad}|${sonraki}`, { ad, tarih: sonraki })
+    if (sonraki && sonraki >= g.bugunIso && !sonrakiDozKarsilandiMi(karsilama[i], karsilama)) siradaki.set(`${ad}|${sonraki}`, { ad, tarih: sonraki })
   }
   // Eskiden yeniye; tarihsiz kayıtlar sonda, kendi içinde ada göre.
   yapilanlar.sort((a, b) => (a.tarih && b.tarih ? a.tarih.localeCompare(b.tarih) : a.tarih ? -1 : b.tarih ? 1 : 0) || a.ad.localeCompare(b.ad, 'tr') || (a.doz ?? 0) - (b.doz ?? 0))

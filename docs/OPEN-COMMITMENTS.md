@@ -108,6 +108,31 @@ kayıtlarını ellerinde taşıyorlar, param parça oluyor."*
 - Mobil: 390px'te karne ekranı (yatay taşma yok, düğmeler 44px), yazdırma çıktısı (print media → PDF) ve hekim eylemleri
   ekran görüntüsüyle kontrol edildi.
 
+### D — hekim onaylı aşı hatırlatması (PR 3)
+- **Önce kontrol edildi:** pediatri kohort paneli aşı gecikmesini takvim motoruyla (hekimin girdiği tarih değil) bayraklıyor ve
+  toplu "kontrol hatırlatması" gönderiyor; doktor ana sayfasında aşı listesi YOK. Buna karşılık **otomatik** bir günlük cron
+  vardı: `/api/cron/asi-hatirlatma` — `sonraki_doz_tarihi` 7 gün kala hekim onayı olmadan aileye WhatsApp atıyor ve mesajda
+  aşı adı + doz yazıyordu. Kaan'ın kararıyla (otomatik gönderim YOK) **kaldırıldı** (rota + `vercel.json` takvimi + envanter);
+  pediatri aşı planlayıcısındaki "(aileye hatırlatma)" etiketi "hatırlatma listenize düşer — onayınızla gönderilir" oldu.
+  Önceden cron'un işaretlediği satırlar listede "Hatırlatma gönderildi" olarak görünür (doğru).
+- **Liste — yeni araç değil:** `components/doktor/AsiHatirlatmaListesi.tsx` mevcut **Pediatri kohort** ve **Aile hekimliği
+  kohort** panellerine ve **hasta dosyası › Aşılar** sekmesine (yalnız o hasta) takılır. Kaynak: hekimin girdiği
+  `sonraki_doz_tarihi` — 30 gün içinde yaklaşan ya da ≤ 90 gün önce geçen; aynı hastada sonraki dozu daha sonra kaydedilmiş
+  satır listelenmez (aynı kural Sağlığım karnesinin "sıradaki aşı"sında da). `GET /api/doktor/asilar/hatirlatma[?patientId]`.
+- **Gönderim:** hekim satırı açar → gidecek metnin AYNISINI görür (önizleme sunucudan) → "Onayla ve gönder" →
+  `POST { asiId, hekimOnayi: true }`. Yalnız hekim (sekreter listeyi görür, gönderemez); `hekimOnayi !== true` → 400.
+  `hatirlatma_gonderildi` atomik işaretlenir (yalnız işaretli değilse — eşzamanlı iki tık tek mesaj), tekrar → 409. Kanal
+  MEVCUT Sağlığım mesaj yolu (`hasta_mesaj_konulari` + `hasta_mesajlar` + gövdesiz e-posta bildirimi, pediatri kohortuyla
+  aynı) — yeni kanal yok; mesaj yazılamazsa işaret geri alınır. Tarih değişirse (`PATCH asilar/[id]`) işaret zaten sıfırlanır.
+- **Metin sade, klinik iddiasız:** "Merhaba, [Çocuğunuzun kayıtlı bir sonraki aşı tarihi | Kayıtlı bir sonraki aşı tarihiniz]
+  GG.AA.YYYY. Randevu için muayenehanemizi arayabilir ya da bu mesaja yanıt yazabilirsiniz. Aşı kayıtlarınızı Sağlığım › Aşı
+  Karnesi bölümünde görebilirsiniz." + acil notu. Aşı adı, doz, tıbbi öneri YOK. "Çocuğunuzun" yalnız yaş kuralından
+  (`veliOnamGerekliMi`, 18 yaş altı), branştan değil.
+- Testler: `lib/asi/hatirlatma.test.ts` (pencere, karşılanmış doz, metin, cron yok, hiçbir cron asilar'a dokunmaz),
+  `lib/asi/asiRotalari.test.ts` (onaysız 400 + mesaj yok, onaylı → önizlemedeki metin gönderilir, ikinci 409, sekreter 403,
+  yabancı kayıt 404), hasta-izolasyon (POST/GET vakaları + hekim düzeyi liste A↔B, kirli satır dahil).
+- Mobil: 390px'te liste, önizleme ve gönderim ekran görüntüsüyle kontrol edildi.
+
 ### OPEN
 - **Canlı uçtan uca karne okuma — kredi yüklendikten sonra.** ANTHROPIC_API_KEY kredisi tükenmiş olabilir; akış saf
   fonksiyon + gerçek rota testleriyle (sahte model) doğrulandı. Kredi gelince: sentetik bir karne fotoğrafıyla
@@ -116,6 +141,11 @@ kayıtlarını ellerinde taşıyorlar, param parça oluyor."*
   Bu işin kapsamı dışında bırakıldı; düzeltme: karne PDF'indeki font kaydını (`lib/asi/karnePdf.tsx`) oraya da uygulamak.
 - Portal karnesi yalnız **gelecekteki** sonraki doz tarihini gösterir; tarihi geçmiş sonraki doz portalda "sıradaki" olarak
   görünmez (başka yerde yapılmış olabilir — yorum yapmamak için). Hatırlatması hekim listesinde (D).
+- Hatırlatma listesi yalnız Pediatri ve Aile hekimliği kohort panellerinde + her branşta hasta dosyası › Aşılar'da. Aşı
+  kaydını başka branşlar da tutuyorsa (enfeksiyon, dahiliye kendi `dahiliye_asilar` tablosunu kullanıyor) o kohort
+  panellerine de aynı satır tek satırla takılabilir — branş talebi gelirse.
+- Pediatri kohortunun takvim tabanlı "aşı zamanı geldi" toplu hatırlatması ile bu satır bazlı hatırlatma ayrı kaynaklardır
+  (takvim motoru vs hekimin girdiği tarih); aynı gün ikisi birden gönderilirse aile iki mesaj alabilir. Birleştirme ayrı iş.
 - iPhone galerisinden seçilen HEIC fotoğraf: Safari çoğunlukla JPEG'e çevirir; çeviremeyen tarayıcıda Kasa "Desteklenen
   türler" hatası verir (dürüst hata, sessiz kayıp yok). Gerekirse HEIC desteği ayrı iş.
 
@@ -2176,7 +2206,7 @@ Ayrıca main'deki kırmızı `tsc`: `lib/portal/takibim.test.ts` test girdisinde
 | 2026-09-18 | **GİDR kayıt ekranı takvim yaşı kullanır** | `HastaGelisimTaramasi` / `/api/doktor/gelisim-taramasi` basamağı takvim yaşından seçer; protokol ≤ 37 hf için düzeltilmiş yaş der. Panel düzeltilmiş yaşı gösterir ve uyarır; bileşen değiştirilmedi (hasta dosyası ortak bileşeni). | OPEN |
 | 2026-09-18 | **Bebek kartı `yenidogan_tarama.isitme` biçimi** | Kohort/panel `true` / `'gec'` → geçti, `'kaldi'` → ileri değerlendirme okur; başka biçim yazılıyorsa kayıt görünmez (bayrak çıkabilir). KD taburcu paketinin yazdığı gerçek değer canlı veride teyit edilmeli. | OPEN |
 | 2026-09-18 | **Kohort hatırlatması sonrası dönüş görevi yok** | KD kohortuyla aynı durum: pediatri için genel görev tablosu yok (bebek_gorevleri `kind` kısıtlı). | OPEN (Kaan) |
-| 2026-09-18 | **Sonraki doz tarihi → mevcut WhatsApp cron'u** | Aşı planlayıcı "sonraki doz tarihini de yaz" işaretliyse `asilar.sonraki_doz_tarihi` dolar; mevcut `/api/cron/asi-hatirlatma` 7 gün kala aileye WhatsApp atar (Aşılar sekmesindeki davranışın aynısı, kutu görünür ve kapatılabilir). | Bilgi |
+| 2026-09-18 | **Sonraki doz tarihi → mevcut WhatsApp cron'u** | Aşı planlayıcı "sonraki doz tarihini de yaz" işaretliyse `asilar.sonraki_doz_tarihi` dolar; mevcut `/api/cron/asi-hatirlatma` 7 gün kala aileye WhatsApp atar (Aşılar sekmesindeki davranışın aynısı, kutu görünür ve kapatılabilir). **2026-09-19: cron kaldırıldı — hatırlatma artık hekim onaylı (ASI-KARNESI-01 D).** | Bilgi |
 | 2026-09-18 | **Özel aşı dozu planlayıcıdan kaydedilmez** | Ürüne göre doz/şema değiştiği için özel aşılar yalnız bilgi + kayıt gösterir; ekleme hasta dosyası › Aşılar sekmesinden. | OPEN (ürün kararı) |
 
 ## KONSULTASYON-01 — kapalı döngü konsültasyon (yönlendirme) sistemi (Kaan, 2026-09-19)

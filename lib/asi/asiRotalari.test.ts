@@ -10,6 +10,9 @@
  *  Dijital aşı karnesi (Sağlığım bundle + PDF — portal ve hekim):
  *   - geçerli token + PIN → 200 PDF; token yok / PIN yok → reddedilir; başka hastanın kaydı PDF'e ve bundle'a girmez
  *   - hekim PDF'i: kendi hastası 200, yabancı hasta 404; portal ile AYNI içerik
+ *  Hekim onaylı hatırlatma (app/api/doktor/asilar/hatirlatma):
+ *   - hekim onayı olmadan gönderilmez (400, mesaj yok, işaret yok); gönderilen tekrar gönderilmez (409)
+ *   - liste yalnız hekimin kendi hastaları; önizleme = gönderilen metin; sekreter görür ama gönderemez
  * Sentetik veri — gerçek hasta yok.
  *
  *   npm test  (--experimental-test-module-mocks)
@@ -79,7 +82,9 @@ let NextRequestSinifi: typeof import('next/server').NextRequest
 let gucluModel: () => string
 let hizliModel: () => string
 
-type Hekim = { id: string; token: string; hasta: string; karne: string; sekreterToken: string; portalToken: string; bosHasta: string; bosPortalToken: string }
+type Hekim = { id: string; token: string; hasta: string; karne: string; sekreterToken: string; portalToken: string; bosHasta: string; bosPortalToken: string; yaklasanAsi: string; gecikenAsi: string; tarihsizAsi: string }
+/** Türkiye takvim gününe göre bugünden n gün sonrası (YYYY-MM-DD). */
+const gunSonra = (n: number) => new Date(Date.now() + 3 * 3600e3 + n * 86400e3).toISOString().slice(0, 10)
 function hekimKur(harf: 'A' | 'B'): Hekim {
   const id = randomUUID()
   const token = `qa-asi-token-${harf}`
@@ -100,11 +105,17 @@ function hekimKur(harf: 'A' | 'B'): Hekim {
   const bosHasta = db.ekle('patients', { doctor_id: id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: `QA Kayıtsız ${harf}` })), dob_encrypted: encrypt('1980-01-01') }).id
   const bosPortalToken = `qa-asi-portal-bos-${harf}`
   db.ekle('hasta_portal_tokens', { token_hash: bosPortalToken, doctor_id: id, patient_id: bosHasta, expires_at: new Date(Date.now() + 30 * 86400e3).toISOString(), pin_hash: 'sentetik' })
-  return { id, token, hasta, karne, sekreterToken, portalToken, bosHasta, bosPortalToken }
+  // Hatırlatma: biri 10 gün sonra (gönderilmedi), biri 20 gün önce (zaten gönderildi), biri tarihsiz; biri sonraki dozu kaydedilmiş
+  const yaklasanAsi = db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Suçiçeği ${harf}-İşaret`, doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2025-03-12', sonraki_doz_tarihi: gunSonra(10), kaynak: 'kayit', hatirlatma_gonderildi: false }).id
+  const gecikenAsi = db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Td ${harf}-İşaret`, doz_no: null, kategori: 'pediatrik', uygulama_tarihi: '2025-01-01', sonraki_doz_tarihi: gunSonra(-20), kaynak: 'kayit', hatirlatma_gonderildi: true }).id
+  const tarihsizAsi = db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `BCG ${harf}-İşaret`, doz_no: null, kategori: 'pediatrik', uygulama_tarihi: '2024-03-12', kaynak: 'kayit', hatirlatma_gonderildi: false }).id
+  db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: 'Hepatit A', doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2025-03-12', sonraki_doz_tarihi: gunSonra(3), kaynak: 'kayit', hatirlatma_gonderildi: false })
+  db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: 'Hepatit A', doz_no: 2, kategori: 'pediatrik', uygulama_tarihi: gunSonra(-2), kaynak: 'kayit', hatirlatma_gonderildi: false })
+  return { id, token, hasta, karne, sekreterToken, portalToken, bosHasta, bosPortalToken, yaklasanAsi, gecikenAsi, tarihsizAsi }
 }
 /** X hekiminin Y'nin hastasına iliştirdiği kayıt (düzeltme öncesi açıklardan kalmış olabilecek kirli satır). */
 function hileliKur(x: Hekim, y: Hekim, harf: string) {
-  db.ekle('asilar', { doktor_id: x.id, patient_id: y.hasta, asi_adi: `Hileli ${harf}-GIZLI`, doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2025-01-01', sonraki_doz_tarihi: '2099-01-01', kaynak: 'kayit' })
+  db.ekle('asilar', { doktor_id: x.id, patient_id: y.hasta, asi_adi: `Hileli ${harf}-GIZLI`, doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2025-01-01', sonraki_doz_tarihi: gunSonra(5), kaynak: 'kayit', hatirlatma_gonderildi: false })
 }
 function sahneKur() {
   db = new SahteVeritabani()
@@ -313,8 +324,9 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     assert.ok(y.json.portal.moduller.includes('asi-karnesi'))
     assert.ok(y.json.portal.nav.some((n: { path: string }) => n.path === '/asi-karnesi'))
     const k = y.json.asiKarnesi
-    assert.deepEqual(k.yapilanlar.map((a: { ad: string; kaynak: string }) => `${a.ad}|${a.kaynak}`), ['Hepatit B A-İşaret|karne', 'KKK A-İşaret|klinik'])
-    assert.deepEqual(k.siradakiler, [{ ad: 'KKK A-İşaret', tarih: '2099-03-01' }])
+    const yap = k.yapilanlar.map((a: { ad: string; kaynak: string }) => `${a.ad}|${a.kaynak}`)
+    assert.ok(yap.includes('Hepatit B A-İşaret|karne') && yap.includes('KKK A-İşaret|klinik'), yap.join())
+    assert.deepEqual(k.siradakiler.map((x: { ad: string }) => x.ad), ['Suçiçeği A-İşaret', 'KKK A-İşaret'], 'geçmiş tarih ve 2. dozu kaydedilmiş Hepatit A sıradaki değil')
     assert.ok(!y.metin.includes('Hileli B-GIZLI'))
     assert.match(k.uyari.metin, /e-Nabız/)
     const bos = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.bosPortalToken}`, { cerez: await portalCerezi(A.bosPortalToken) }), prm({ token: A.bosPortalToken })))
@@ -339,5 +351,84 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     assert.equal(oturumsuz.status, 401)
     const sekreter = await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`, { token: A.sekreterToken })))
     assert.equal(sekreter.status, 200)
+  })
+})
+
+describe('ASI-KARNESI-01 — hekim onaylı aşı hatırlatması (gerçek rota)', () => {
+  let hat: typeof import('../../app/api/doktor/asilar/hatirlatma/route')
+  before(async () => {
+    ;({ encrypt } = await import('../security/encryption'))
+    ;({ encryptBytes } = await import('../vault/crypto'))
+    NextRequestSinifi = (await import('next/server')).NextRequest
+    hat = await import('../../app/api/doktor/asilar/hatirlatma/route')
+  })
+  const konular = (h: Hekim) => db.tablo('hasta_mesaj_konulari').filter((k) => k.patient_id === h.hasta && k.konu === 'Aşı hatırlatması')
+  const isaretli = (asiId: string) => db.tablo('asilar').find((a) => a.id === asiId)?.hatirlatma_gonderildi
+  const gonder = (h: Hekim, govde: unknown, token = h.token) => coz(hat.POST(iste('POST', '/api/doktor/asilar/hatirlatma', { token, govde })))
+
+  it('liste: yalnız kendi hastası, pencere içi; kirli satır ve sonraki dozu kaydedilmiş satır yok; önizleme metni hazır', async () => {
+    const { A } = sahneKur()
+    const y = await coz(hat.GET(iste('GET', '/api/doktor/asilar/hatirlatma', { token: A.token })))
+    assert.equal(y.status, 200, y.metin)
+    const s = y.json.satirlar as Array<Record<string, any>>
+    assert.deepEqual(s.map((x) => x.asiAdi), ['Suçiçeği A-İşaret', 'Td A-İşaret'], 'gönderilmemiş önce; 2099 ve Hepatit A (2. doz kayıtlı) yok')
+    assert.deepEqual(s.map((x) => [x.durum, x.gonderildi]), [['yaklasiyor', false], ['gecikti', true]])
+    assert.equal(s[0].hastaAdi, 'QA Çocuk A Işıkoğlu')
+    assert.equal(s[0].portalVar, true)
+    assert.match(s[0].onizleme.metin, /^Merhaba, Çocuğunuzun kayıtlı bir sonraki aşı tarihi/)
+    assert.ok(!y.metin.includes('GIZLI') && !y.metin.includes('B-İşaret') && !y.metin.includes('QA Çocuk B'), 'başka hekimin hastası listede')
+    const tek = await coz(hat.GET(iste('GET', `/api/doktor/asilar/hatirlatma?patientId=${A.hasta}`, { token: A.token })))
+    assert.equal(tek.json.satirlar.length, 2)
+  })
+
+  it('hekim onayı olmadan GÖNDERİLMEZ: 400, mesaj yok, işaret değişmez', async () => {
+    const { A } = sahneKur()
+    for (const hekimOnayi of [undefined, false, 'true', 1]) {
+      const y = await gonder(A, { asiId: A.yaklasanAsi, hekimOnayi })
+      assert.equal(y.status, 400, String(hekimOnayi))
+    }
+    assert.equal(konular(A).length, 0)
+    assert.equal(isaretli(A.yaklasanAsi), false)
+  })
+
+  it('onayla → Sağlığım mesajı (önizlemedeki metnin aynısı) + işaret; ikinci gönderim 409, yeni mesaj yok', async () => {
+    const { A } = sahneKur()
+    const liste = await coz(hat.GET(iste('GET', '/api/doktor/asilar/hatirlatma', { token: A.token })))
+    const onizleme = liste.json.satirlar.find((x: { asiId: string }) => x.asiId === A.yaklasanAsi).onizleme
+    const y = await gonder(A, { asiId: A.yaklasanAsi, hekimOnayi: true })
+    assert.equal(y.status, 200, y.metin)
+    assert.equal(isaretli(A.yaklasanAsi), true)
+    const k = konular(A)
+    assert.equal(k.length, 1)
+    assert.equal(k[0].doctor_id, A.id)
+    const mesaj = db.tablo('hasta_mesajlar').filter((m) => m.konu_id === k[0].id)
+    assert.equal(mesaj.length, 1)
+    assert.equal(mesaj[0].metin, onizleme.metin, 'hekimin gördüğü metin gönderilen metin')
+    assert.equal(mesaj[0].taraf, 'doktor')
+    const tekrar = await gonder(A, { asiId: A.yaklasanAsi, hekimOnayi: true })
+    assert.equal(tekrar.status, 409)
+    assert.equal(konular(A).length, 1, 'mükerrer mesaj')
+    const zaten = await gonder(A, { asiId: A.gecikenAsi, hekimOnayi: true })
+    assert.equal(zaten.status, 409, 'önceden gönderilmiş satır')
+  })
+
+  it('sekreter listeyi görür ama gönderemez (403); tarihsiz satır 400', async () => {
+    const { A } = sahneKur()
+    const liste = await coz(hat.GET(iste('GET', '/api/doktor/asilar/hatirlatma', { token: A.sekreterToken })))
+    assert.equal(liste.status, 200)
+    assert.equal((await gonder(A, { asiId: A.yaklasanAsi, hekimOnayi: true }, A.sekreterToken)).status, 403)
+    assert.equal(konular(A).length, 0)
+    assert.equal((await gonder(A, { asiId: A.tarihsizAsi, hekimOnayi: true })).status, 400)
+  })
+
+  it('başka hekimin aşı kaydı: 404, mesaj yok, işaret değişmez; başka hekimin hastası tek hasta filtresinde 404', async () => {
+    const { A, B } = sahneKur()
+    const y = await gonder(A, { asiId: B.yaklasanAsi, hekimOnayi: true })
+    assert.equal(y.status, 404)
+    assert.equal(konular(B).length, 0)
+    assert.equal(isaretli(B.yaklasanAsi), false)
+    const tek = await coz(hat.GET(iste('GET', `/api/doktor/asilar/hatirlatma?patientId=${B.hasta}`, { token: A.token })))
+    assert.equal(tek.status, 404)
+    assert.ok(!tek.metin.includes('B-İşaret'))
   })
 })

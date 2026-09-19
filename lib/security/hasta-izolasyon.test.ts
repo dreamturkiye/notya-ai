@@ -125,6 +125,8 @@ type Hekim = {
   dermAnaliz: string
   /** KONSULTASYON-01: yanıt bekleyen + yanıtlanmış konsültasyon, Kasa'daki konsültasyon raporu */
   konsultasyon: string; konsultasyonYanitli: string; kasaBelge: string
+  /** ASI-KARNESI-01 (D): sonraki doz tarihi 10 gün sonra, hatırlatması gönderilmemiş aşı kaydı */
+  asiHatirlatma: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -187,12 +189,13 @@ function hekimKur(harf: Harf): Hekim {
   db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01' })
   // Pediatri kohort (Araçlar): bir ulusal takvim kaydı → 7 yaşındaki sentetik hastada gecikmiş doz bayrağı (yalnız bu hekimde)
   db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: 'KKK (Kızamık-Kızamıkçık-Kabakulak)', doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2020-03-05', kaynak: 'kayit' })
+  const asiHatirlatma = db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Hatirlatma asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01', sonraki_doz_tarihi: trGun(10, 12).slice(0, 10), kaynak: 'kayit', hatirlatma_gonderildi: false }).id
   // KONSULTASYON-01: Kasa'daki konsültan raporu + iki konsültasyon (biri yanıt bekliyor, biri yanıtlandı)
   const kasaBelge = db.ekle('medical_documents', { doctor_id: id, patient_id: hasta, file_name: `kbb-raporu-${m}.pdf`, file_type: 'application/pdf', file_size: 10, category: 'Konsültasyon raporu', deleted_at: null }).id
   const konsultasyon = db.ekle('sevkler', { doctor_id: id, patient_id: hasta, hedef: 'kulak-burun-bogaz', hedef_brans: 'kulak-burun-bogaz', klinik_soru: `İşitme kaybı var mı? ${m}`, aciliyet: 'rutin', istem_tarihi: '2026-09-10', durum: 'yanit_bekleniyor', kaynak: 'konsultasyon', belge_id: null, son_hatirlatma_at: null }).id
   const konsultasyonYanitli = db.ekle('sevkler', { doctor_id: id, patient_id: hasta, hedef: 'goz-hastaliklari', hedef_brans: 'goz-hastaliklari', klinik_soru: `Görme keskinliği? ${m}`, aciliyet: 'rutin', istem_tarihi: '2026-09-01', durum: 'yanitlandi', yanit_tarihi: '2026-09-08', yanit_ozeti: `Göz muayenesi olağan ${m}`, kaynak: 'konsultasyon', belge_id: kasaBelge }).id
   db.dosyaKoy('ses-kayitlari', `${id}/qa-kayit.m4a`, new Blob(['sentetik ses']))
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, hileliSeans: '', hileliNot: '' }
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -204,6 +207,8 @@ function hileliKur(x: Hekim, y: Hekim) {
   db.ekle('hasta_ilaclar', { doctor_id: x.id, patient_id: y.hasta, ilac_adi: `Hileli ilac ${m}`, etken_madde: 'x', doz: '1', kullanim_sikli: '1x1', baslangic_tarihi: '2026-09-01', aktif: true, onay_durumu: 'onayli' })
   // KONSULTASYON-01: X'in Y'nin hastasına açtığı konsültasyon — X'in "yanıt bekleyen" listesinde Y'nin hasta adı çözülmemeli
   db.ekle('sevkler', { doctor_id: x.id, patient_id: y.hasta, hedef: 'kulak-burun-bogaz', hedef_brans: 'kulak-burun-bogaz', klinik_soru: `Hileli ${m}`, durum: 'yanit_bekleniyor', istem_tarihi: '2026-09-05', kaynak: 'konsultasyon' })
+  // ASI-KARNESI-01 (D): X'in Y'nin hastasına iliştirdiği aşı — X'in hatırlatma listesinde Y'nin hasta adı çözülmemeli
+  db.ekle('asilar', { doktor_id: x.id, patient_id: y.hasta, asi_adi: `Hileli asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01', sonraki_doz_tarihi: trGun(5, 12).slice(0, 10), kaynak: 'kayit', hatirlatma_gonderildi: false })
 }
 
 function sahneKur(): { A: Hekim; B: Hekim } {
@@ -364,6 +369,12 @@ const VAKALAR: Vaka[] = [
     yazdi: (a) => tablo('asilar').some((x) => x.patient_id === a.hasta && x.doktor_id === a.id && x.belge_id === a.kasaBelge && x.asi_adi === 'QA Karne KKK' && x.kaynak === 'beyan'),
     cagir: (r, a, h) => coz(r.asiKarne.POST(iste('POST', '/api/doktor/asilar/karne', { token: a.token, govde: { adim: 'onayla', belgeId: h.kasaBelge, hekimOnayi: true, satirlar: [{ asiAdi: 'QA Karne KKK', dozNo: 1, uygulamaTarihi: '2020-03-05' }] } }))) },
   // ASI-KARNESI-01 (C7): hekimin karne PDF'i — yabancı hasta 404 (PDF gövdesi ikilidir; kapsam hastaSahibiMi + (doktor, hasta) sorgusu)
+  // ASI-KARNESI-01 (D): hekim onaylı hatırlatma — yabancı aşı kaydı 404, kurbanın hastasına mesaj açılmaz
+  { ad: 'POST /api/doktor/asilar/hatirlatma (hekim onaylı aşı hatırlatması)', red: 404,
+    yazdi: (a) => tablo('hasta_mesaj_konulari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.konu === 'Aşı hatırlatması') && tablo('asilar').find((x) => x.id === a.asiHatirlatma)?.hatirlatma_gonderildi === true,
+    cagir: (r, a, h) => coz(r.asiHatirlatma.POST(iste('POST', '/api/doktor/asilar/hatirlatma', { token: a.token, govde: { asiId: h.asiHatirlatma, hekimOnayi: true } }))) },
+  { ad: 'GET /api/doktor/asilar/hatirlatma?patientId (hasta dosyası › Aşılar)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.asiHatirlatma.GET(iste('GET', `/api/doktor/asilar/hatirlatma?patientId=${h.hasta}`, { token: a.token }))) },
   { ad: 'GET /api/doktor/asilar/karne/pdf (aşı karnesi PDF)', red: 404,
     cagir: (r, a, h) => coz(r.asiKarnePdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${h.hasta}`, { token: a.token }))) },
   { ad: 'POST /api/doktor/mchat', red: 404,
@@ -554,6 +565,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       asilar: await ice('app/api/doktor/asilar/route'),
       asiKarne: await ice('app/api/doktor/asilar/karne/route'),
       asiKarnePdf: await ice('app/api/doktor/asilar/karne/pdf/route'),
+      asiHatirlatma: await ice('app/api/doktor/asilar/hatirlatma/route'),
       portalAsiKarnesiPdf: await ice('app/api/portal/hasta/[token]/asi-karnesi/pdf/route'),
       mchat: await ice('app/api/doktor/mchat/route'),
       gelisim: await ice('app/api/doktor/gelisim-taramasi/route'),
@@ -691,6 +703,22 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         assert.equal(y.status, 401, q)
       }
     })
+  })
+
+  // ASI-KARNESI-01 (D) — hekim düzeyinde hatırlatma listesi: kimlik girdisi yok, kapsam oturumdaki hekim.
+  describe('Aşı hatırlatma listesi yalnız oturumdaki hekimin hastaları', () => {
+    for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
+      it(`${saldiran} hekimi ${kurbanHarf} hekiminin hastasını listede GÖREMEZ (kendi kirli satırı dahil)`, async () => {
+        const s = sahneKur()
+        const x = s[saldiran], k = s[kurbanHarf]
+        const y = await coz(R.asiHatirlatma.GET(iste('GET', '/api/doktor/asilar/hatirlatma', { token: x.token })))
+        assert.equal(y.status, 200, y.metin.slice(0, 200))
+        const j = JSON.parse(y.metin) as { satirlar: Array<{ asiId: string; patientId: string }> }
+        assert.deepEqual(j.satirlar.map((r) => r.asiId), [x.asiHatirlatma])
+        assert.ok(!j.satirlar.some((r) => r.patientId === k.hasta), `${kurbanHarf}'nin hastası listede`)
+        assert.ok(!y.metin.includes(isaret(kurbanHarf)) && !y.metin.includes(k.hasta))
+      })
+    }
   })
 
   describe('Sağlığım portalı yalnız bağlı olduğu doktorun verisini gösterir', () => {
