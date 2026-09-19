@@ -173,7 +173,7 @@ export default function HastaProfilPage() {
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
       'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'bebek', 'goz',
-      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'onkoloji', 'konsultasyon',
+      'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'romatoloji', 'onkoloji', 'konsultasyon',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
     if (tabParam === 'gebelik') {
