@@ -96,7 +96,10 @@ export const GOREV_POLITIKASI: Record<Gorev, { kademe: Kademe; maxTokens: number
   // 3500-4000 token. Tavan asilinca JSON ORTADAN KESILIYOR ve karneYanitiniCoz kesik JSON'u
   // reddediyor (F3 geregi hekime ham JSON gosterilmez) → hekim 'Karne okunamadi' goruyordu.
   // Ayni karnenin hem PDF'i hem fotografi ayni anda basarisiz oluyordu; belirti de buydu.
-  'goruntu-inceleme': { kademe: 'guclu', maxTokens: 8000 },
+  // Kaan (2026-09-19) 12000 istedi: cok dozlu/uzun karnelerde 8000 de yetmeyebilir. Bu bir
+  // TAVAN'dir, sabit maliyet degil — cikti kisa ise kisa faturalanir; yalniz gercekten uzun
+  // karnede devreye girer. Karne okuma seyrek bir islem oldugu icin risk dusuk.
+  'goruntu-inceleme': { kademe: 'guclu', maxTokens: 12000 },
   'uzman-analiz': { kademe: 'guclu', maxTokens: 2000 },
   // F3 (KD-DERM-SAFETY-FINDINGS): 800 uzun klinik cevabı JSON ortasında kesiyordu — klinik tur bu yüzden 1600.
   'sohbet-uzman': { kademe: 'guclu', maxTokens: 1600 },
