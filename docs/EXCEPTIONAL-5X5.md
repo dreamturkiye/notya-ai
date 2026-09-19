@@ -78,20 +78,12 @@ Live: gc / plastik / cocuk-cerrahisi / gogus-cerrahisi / beyin `-exceptional-aud
 Araç: hepsi **4** — sabit 5 yok. Migrations 073–077 applied.  
 Not: cocuk-cerrahisi ≠ pediatri; gogus-cerrahisi ≠ gogus-hastaliklari.
 
-### Dalga 5 — IN PROGRESS (2026-09-19)
-acil-tip (**SHIPPED**) · anestezi (**SHIPPED**) · radyoloji (**SHIPPED**) · kalp-damar-cerrahisi (**SHIPPED**) · deepen (`nefroloji` SHIPPED)  
-Araç sayısı sabit değil (3–4 useful).
-
-**Kalp Damar Cerrahisi SHIPPED:** KALP-DAMAR-CERRAHISI-EXCEPTIONAL-01 · migration **081** · **4** Araç · Damar Cerrahisi takibi `/damar-cerrahisi-takibi` · live `/kalp-damar-exceptional-audit.html` · ≠ kardiyoloji SCORE2/Kalbim (çift yön sızıntı yok).
-
-**Radyoloji SHIPPED:** RADYOLOJI-EXCEPTIONAL-01 · migration **080** · 4 Araç · Tetkiklerim · live `/radyo-exceptional-audit.html` · OUT: PACS/RIS/HIS, AI tanı.
-
-**Acil Tıp SHIPPED:** ACIL-TIP-EXCEPTIONAL-01 · migration **078** · 4 Araç · live `/acil-tip-exceptional-audit.html`.
-
-**Anestezi SHIPPED:** ANESTEZI-EXCEPTIONAL-01 · migration **079** · 4 Araç · Anestezi Öncesi `/anestezi-oncesi` · live `/anestezi-exceptional-audit.html`.
-
-**DEEPEN SHIPPED:** `nefroloji` — SGK nefro 5th Araç, honest `nef-exceptional-audit.html`, olgunluk `beta-hazir`, no new migration (069 OK).
-
+### Dalga 5 — SHIPPED (2026-09-19) — program complete
+acil-tip · anestezi · radyoloji · kalp-damar-cerrahisi · deepen(`nefroloji`)  
+Live: acil / anestezi / radyo / kalp-damar / nef `-exceptional-audit.html` · tip `82e475d`  
+Araç: acil 4 · anestezi 4 · radyo 4 · KVC 4 · nef deepen → **5** (SGK eklendi)  
+Migrations 078–081 applied (deepen: no new migration).  
+Not: KVC ≠ kardiyoloji; deepen = nefroloji (Wave-3 en ince).
 ---
 
 ## Dalga 1 — psik paketine birebir eşleme (örnek)
