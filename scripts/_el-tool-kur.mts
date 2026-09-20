@@ -225,6 +225,17 @@ async function main() {
   for (const t of EYLEM_TOOLS) ids.push(await ensureTool(t, existing))
 
   const hasta = existing.find((e) => e.name === 'hasta_bul')
+  if (hasta && !DRY) {
+    await el('PATCH', `/tools/${hasta.id}`, {
+      tool_config: clientTool(
+        'hasta_bul',
+        'Doktor bir hastayı adıyla, doğum tarihiyle VEYA klinik izle (geçen hafta aşı, bu hafta kulak iltihabı, son hastam) sorduğunda çağır. Tam cümleyi isim olarak gönder. Ad hatırlanmasa da dosya/form/aşı/not taranır. Dönen listeyi sırayla oku. "erişimim yok" DEME.',
+        ['isim'],
+        { isim: strParam('Doktorun söylediği tam cümle veya ad. Örn: "geçen hafta aşı yaptığım hastalar", "Ayşe Metin"') }
+      ),
+    })
+    console.log(`  tool güncellendi: hasta_bul → ${hasta.id}`)
+  }
   const attachIds = hasta ? [hasta.id, ...ids] : ids
 
   for (const agentId of [...new Set(AGENT_IDS)]) {

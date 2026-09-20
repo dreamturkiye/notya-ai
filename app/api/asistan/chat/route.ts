@@ -167,7 +167,8 @@ ${ilacBaglamMetni(drugs[0])}`
     try {
       const cozum = await hastaninSozunuCoz(getSupabase(), user.id, message)
       if (cozum.tur === "coklu") {
-        dosyaEk = `\n\n[SİSTEM: Doktorun bahsettiği isim birden çok hastayla eşleşiyor: ${cozum.adaylar.join(", ")}. Hangisini kastettiğini kibarca sor; tahmin etme.]`
+        const liste = cozum.adaylar.map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`).join('\n')
+        dosyaEk = `\n\n[SİSTEM: Klinik/ad araması ${cozum.adaylar.length} hasta buldu. Hepsini SIRAYLA söyle, tekini tahmin etme:\n${liste}\nDoktor birini seçerse (birinci / ad / şikayet) o dosyayı açacağız.]`
       } else {
         const aktifId = cozum.tur === "tek" ? cozum.patientId : (contextPatientId ? String(contextPatientId) : null)
         if (aktifId) {

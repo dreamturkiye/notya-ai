@@ -15,6 +15,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
+import { hastaDosyaAra, klinikAramaMi } from '@/lib/doktor/hastaDosyaAra'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
 
@@ -159,7 +160,47 @@ export async function hastaninSozunuCoz(
     return { tur: 'coklu', adaylar: zengin }
   }
 
-  if (tam.length > 0) return cozAdaylar(tam)
-  if (kismi.length > 0) return cozAdaylar(kismi)
-  return { tur: 'yok' }
+  if (tam.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(tam))
+  if (kismi.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(kismi))
+  return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' })
+}
+
+async function dosyaIleDaralt(
+  supabase: SupabaseClient,
+  doctorId: string,
+  mesaj: string,
+  ad: HastaCozumu
+): Promise<HastaCozumu> {
+  const klinik = klinikAramaMi(mesaj)
+  if (ad.tur === 'tek' && !klinik) return ad
+  if (ad.tur === 'coklu' && !klinik) return ad
+  if (ad.tur === 'yok' && !klinik) return ad
+
+  const ara = await hastaDosyaAra(supabase, doctorId, mesaj)
+  if (!ara.length) return ad
+
+  if (ad.tur === 'coklu') {
+    const idler = new Set(ad.adaylar.map((a) => a.id))
+    const kesi = ara.filter((x) => idler.has(x.id))
+    const kaynak = kesi.length ? kesi : ara
+    if (kaynak.length === 1 && !/hastalar|hangileri|kimler/.test(duzle(mesaj))) {
+      return { tur: 'tek', patientId: kaynak[0].id, ad: kaynak[0].ad }
+    }
+    return {
+      tur: 'coklu',
+      adaylar: kaynak.map((x) => ({ id: x.id, ad: x.ad, dobMetin: x.dobMetin, ozet: x.ozet })),
+    }
+  }
+
+  if (ad.tur === 'tek' && ara.some((x) => x.id === ad.patientId) && !/hastalar|hangileri|kimler/.test(duzle(mesaj))) {
+    return ad
+  }
+
+  if (ara.length === 1 && !/hastalar|hangileri|kimler/.test(duzle(mesaj))) {
+    return { tur: 'tek', patientId: ara[0].id, ad: ara[0].ad }
+  }
+  return {
+    tur: 'coklu',
+    adaylar: ara.map((x) => ({ id: x.id, ad: x.ad, dobMetin: x.dobMetin, ozet: x.ozet })),
+  }
 }

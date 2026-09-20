@@ -31,11 +31,14 @@ export async function POST(req: NextRequest) {
   try {
     const cozum = await hastaninSozunuCoz(supabase, doktorId, soz)
     if (cozum.tur === 'coklu') {
-      const liste = cozum.adaylar.map((a, i) => `${i + 1}. ${a.ad} — doğum tarihi ${a.dobMetin || 'bilinmiyor'}, son gelişinde: ${a.ozet}`).join('. ')
-      return NextResponse.json({ sonuc: `"${soz}" isminde ${cozum.adaylar.length} kayıt var. ${liste}. Hangisini istiyorsunuz — sırasıyla, doğum tarihiyle ya da son şikayetiyle söyleyebilirsiniz.` })
+      const liste = cozum.adaylar.map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`).join('. ')
+      return NextResponse.json({
+        sonuc: `${cozum.adaylar.length} hasta eşleşti, sırayla: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`,
+        adaylar: cozum.adaylar.map((a, i) => ({ sira: i + 1, ad: a.ad, ozet: a.ozet })),
+      })
     }
     if (cozum.tur === 'yok') {
-      return NextResponse.json({ sonuc: `Kayıtlarımda "${soz}" adında bir hasta bulamadım. Hasta adını kontrol eder misiniz?` })
+      return NextResponse.json({ sonuc: `Bu soruya uyan hasta bulamadım Hocam. Ad, aşı, şikayet, tanı veya haftayla tekrar dener misiniz?` })
     }
     const dosya = await hastaDosyasiniDerle(supabase, doktorId, cozum.patientId)
     if (!dosya) return NextResponse.json({ sonuc: `${cozum.ad} için dosya bulamadım.` })
