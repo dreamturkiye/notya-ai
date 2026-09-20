@@ -45,8 +45,38 @@ export const T3_YASAKLI_ANAHTARLAR = [
 
 export type T3Anahtar = (typeof T3_YASAKLI_ANAHTARLAR)[number]
 
+/**
+ * NOTYA-EYLEM-24 — the OLD action vocabulary of `/api/asistan/chat`.
+ *
+ * Before this list existed, a model turn could emit `{ "action": { "type": "ADD_PRESCRIPTION" } }`
+ * and `lib/asistan/actionExecutor.ts` wrote the row: a prescription line, a diagnosis, a note field,
+ * a patient, a session (with `patient_consent_given: true`) — all with no doctor tap anywhere.
+ * The executor is now a gate that writes nothing. These names are kept here so the closure is
+ * TESTED, not merely intended:
+ *   • none of them may ever become an eylem anahtar (they are not proposals, they are a dead path);
+ *   • none of them may reach a clinical table without core/eylemler/onayla.ts.
+ * `ADD_NOTE_CONTENT` is on the list too: it now routes to the `dosya_notu_ekle` taslak, which is a
+ * card, not a write — the legacy name itself must still never execute.
+ */
+export const ESKI_SESSIZ_EYLEM_TIPLERI = [
+  'CREATE_PATIENT',
+  'CREATE_SESSION',
+  'UPDATE_SESSION',
+  'ADD_NOTE_CONTENT',
+  'ADD_PRESCRIPTION',
+  'SET_DIAGNOSIS',
+] as const
+
+export type EskiSessizEylemTipi = (typeof ESKI_SESSIZ_EYLEM_TIPLERI)[number]
+
 const KUME: ReadonlySet<string> = new Set<string>(T3_YASAKLI_ANAHTARLAR)
+const ESKI_KUME: ReadonlySet<string> = new Set<string>(ESKI_SESSIZ_EYLEM_TIPLERI.map((t) => t.toLowerCase()))
 
 export function t3Mi(anahtar: string): boolean {
   return KUME.has(anahtar)
+}
+
+/** True for the old silent-path type names, in any casing — they are not valid eylem anahtarları. */
+export function eskiSessizTipMi(anahtar: string): boolean {
+  return ESKI_KUME.has(String(anahtar || '').toLowerCase())
 }

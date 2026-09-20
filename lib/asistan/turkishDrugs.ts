@@ -254,18 +254,93 @@ export function checkSGKRestriction(drugKey: string): string | null {
   return TURKISH_DRUGS[drugKey]?.sgkRestriction || null
 }
 
+// ============================================================
+// EŞLEŞTİRME — tek motor (NOTYA-EYLEM-25)
+// ============================================================
+/**
+ * `interactions` / `contraindications` entries are written the way a doctor writes them: sometimes a
+ * molecule ("Warfarin"), sometimes a CLASS ("NSAIDs", "ACE inhibitörleri", "SSRI/SNRI"), sometimes
+ * with an aside ("Warfarin (yüksek doz)"). The original matcher only compared an entry against the
+ * other drug's `name`, so every class entry silently never fired — ibuprofen + ramipril, naproksen +
+ * metilprednizolon and sertralin + sumatriptan all read as "no interaction".
+ *
+ * This is the same engine reading the field that actually holds the class (`category`) plus the
+ * brand list. No second drug table, no new data: only the matching rule is honest now.
+ *
+ * Conservative on false positives: an entry matches only when EVERY significant token of it matches
+ * a token of the target. "ACE inhibitörleri" therefore does not fire on "Proton pompa inhibitörü".
+ */
+const KUCUK_TR = (x: string) => x.replace(/İ/g, 'i').replace(/I/g, 'ı').toLocaleLowerCase('tr')
+
+function tokenlar(ifade: string): string[] {
+  return KUCUK_TR(ifade)
+    .replace(/\([^)]*\)/g, ' ')          // parenthetical aside is explanation, not a name
+    .split(/[^a-zçğıöşü0-9]+/i)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 3)
+}
+
+function tokenEslesir(a: string, b: string): boolean {
+  if (a === b) return true
+  if (a.length < 5 || b.length < 5) return false
+  const kisa = a.length <= b.length ? a : b
+  const uzun = a.length <= b.length ? b : a
+  if (uzun.startsWith(kisa)) return true
+  let i = 0
+  while (i < kisa.length && kisa[i] === uzun[i]) i++
+  return i >= 5 // "inhibitörleri" ↔ "inhibitörü"
+}
+
+/** The searchable vocabulary of a drug: generic name, brands and pharmacological class. */
+function ilacTokenlari(d: TürkishDrug): string[] {
+  return [...tokenlar(d.name), ...d.brand.flatMap(tokenlar), ...tokenlar(d.category)]
+}
+
+/**
+ * True when a free-text clinical phrase (an interaction entry, a contraindication, a recorded
+ * allergy) names this drug — by molecule, by brand or by class.
+ */
+export function ifadeIlaciAnlatiyorMu(ifade: string, drug: TürkishDrug): boolean {
+  const hedef = ilacTokenlari(drug)
+  // "SSRI/SNRI", "Warfarin, Lityum" → alternatives; each alternative must match on its own.
+  return KUCUK_TR(ifade)
+    .replace(/\([^)]*\)/g, ' ')
+    .split(/[/,;+]|\bveya\b|\bve\b/)
+    .some((alt) => {
+      const t = tokenlar(alt)
+      return t.length > 0 && t.every((x) => hedef.some((h) => tokenEslesir(x, h)))
+    })
+}
+
+/** True when every significant token of `aranan` also appears in `hedef` (both free clinical text). */
+export function ifadeMetindeGecerMi(aranan: string, hedef: string): boolean {
+  const a = tokenlar(aranan)
+  const h = tokenlar(hedef)
+  return a.length > 0 && h.length > 0 && a.every((x) => h.some((y) => tokenEslesir(x, y)))
+}
+
+/** Free-text drug name ("Largopen 1000 mg", "PAROL (parasetamol)") → table key, or null. */
+export function drugKeyFor(ad: string): string | null {
+  const t = tokenlar(String(ad || ''))
+  if (!t.length) return null
+  for (const [anahtar, d] of Object.entries(TURKISH_DRUGS)) {
+    const hedef = [...tokenlar(d.name), ...d.brand.flatMap(tokenlar), ...tokenlar(anahtar)]
+    if (t.some((x) => hedef.some((h) => tokenEslesir(x, h)))) return anahtar
+  }
+  return null
+}
+
 // İlaç etkileşimi kontrolü
 export function checkInteractions(drug1Key: string, drug2Key: string): string | null {
   const drug1 = TURKISH_DRUGS[drug1Key]
   const drug2 = TURKISH_DRUGS[drug2Key]
   if (!drug1 || !drug2) return null
-  
-  const hasInteraction = drug1.interactions.some(i =>
-    drug2.name.toLowerCase().includes(i.toLowerCase())
-  ) || drug2.interactions.some(i =>
-    drug1.name.toLowerCase().includes(i.toLowerCase())
-  )
-  
+  if (drug1Key === drug2Key) return null
+
+  const hasInteraction =
+    drug1.interactions.some((i) => ifadeIlaciAnlatiyorMu(i, drug2)) ||
+    drug2.interactions.some((i) => ifadeIlaciAnlatiyorMu(i, drug1))
+
   return hasInteraction
     ? `⚠️ UYARI: ${drug1.name} ve ${drug2.name} arasında etkileşim var!`
     : null

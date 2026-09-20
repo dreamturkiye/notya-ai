@@ -810,22 +810,42 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
     }
   })
 
-  describe('Asistan eylemleri (model çıktısındaki kimlikler de istek girdisidir)', () => {
+  /**
+   * NOTYA-EYLEM-24 — the old silent path is closed, so this case is no longer "A cannot write into
+   * B's file": it is "NOBODY writes here, not even into their own file". `lib/asistan/actionExecutor`
+   * used to run the write itself and was guarded by ownership checks; it now classifies and
+   * redirects, and the write only exists behind the doctor's tap in core/eylemler/onayla.ts.
+   * The positive control is therefore inverted on purpose: the own-file call must ALSO write nothing.
+   */
+  describe('Asistan eylemleri (eski sessiz yazma yolu — artık hiç yazmıyor)', () => {
     for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
-      it(`${saldiran}: yabancı hastaya seans açamaz, yabancı seansa not yazamaz`, async () => {
+      it(`${saldiran}: yabancı dosyaya da kendi dosyasına da sessizce yazamaz`, async () => {
         const s = sahneKur()
         const x = s[saldiran], k = s[kurbanHarf]
-        const { executeAction } = await import('../asistan/actionExecutor')
-        const once = anlikGoruntu(k)
-        const r1 = await executeAction({ type: 'CREATE_SESSION', doctorId: x.id, data: { patientId: k.hasta } } as never, 'sahte')
-        const r2 = await executeAction({ type: 'ADD_NOTE_CONTENT', doctorId: x.id, data: { sessionId: k.seans, field: 'content_plan', content: 'Hileli' } } as never, 'sahte')
-        const r3 = await executeAction({ type: 'SET_DIAGNOSIS', doctorId: x.id, data: { sessionId: x.hileliSeans, diagnosis: 'Hileli', icd10: 'Z00' } } as never, 'sahte')
-        assert.equal(r1.success, false); assert.equal(r2.success, false); assert.equal(r3.success, false)
-        const sonra = anlikGoruntu(k)
-        assert.equal(sonra.sahip, once.sahip)
-        assert.deepEqual([...sonra.atiflar].filter((a) => !once.atiflar.has(a)), [])
-        const kendi = await executeAction({ type: 'ADD_NOTE_CONTENT', doctorId: x.id, data: { sessionId: x.seans, field: 'content_plan', content: 'Kendi' } } as never, 'sahte')
-        assert.equal(kendi.success, true, 'kendi seansına not yazabilmeli (pozitif kontrol)')
+        const { executeAction, KLINIK_ESKI_EYLEM_TIPLERI } = await import('../asistan/actionExecutor')
+        const onceKurban = anlikGoruntu(k)
+        const onceKendi = anlikGoruntu(x)
+
+        const istekler: Record<string, unknown>[] = [
+          { type: 'CREATE_SESSION', doctorId: x.id, data: { patientId: k.hasta } },
+          { type: 'ADD_NOTE_CONTENT', doctorId: x.id, data: { sessionId: k.seans, field: 'content_plan', content: 'Hileli' } },
+          { type: 'SET_DIAGNOSIS', doctorId: x.id, data: { sessionId: x.hileliSeans, diagnosis: 'Hileli', icd10: 'Z00' } },
+          { type: 'ADD_PRESCRIPTION', doctorId: x.id, data: { sessionId: x.seans, drug: 'Hileli', dose: '1g', frequency: '2x1' } },
+          { type: 'CREATE_PATIENT', doctorId: x.id, data: { name: 'Hileli Hasta' } },
+          // Kendi seansı — eskiden bu YAZIYORDU. Artık o da kart yolundan geçiyor.
+          { type: 'ADD_NOTE_CONTENT', doctorId: x.id, data: { sessionId: x.seans, field: 'content_plan', content: 'Kendi' } },
+        ]
+        for (const istek of istekler) {
+          const r = await executeAction(istek as never, 'sahte')
+          assert.equal(r.success, false, `${istek.type} hâlâ başarı dönüyor — sessiz yazma yolu açık`)
+          assert.equal(r.data?.yazildi, false)
+        }
+
+        const sonraKurban = anlikGoruntu(k)
+        assert.equal(sonraKurban.sahip, onceKurban.sahip)
+        assert.deepEqual([...sonraKurban.atiflar].filter((a) => !onceKurban.atiflar.has(a)), [])
+        assert.equal(anlikGoruntu(x).sahip, onceKendi.sahip, 'kendi dosyasına da sessizce yazılmamalı')
+        assert.ok(KLINIK_ESKI_EYLEM_TIPLERI.length >= 6)
       })
     }
   })

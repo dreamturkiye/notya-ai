@@ -1,6 +1,8 @@
 # NOTYA-EYLEM — Ayşe dosyaya yazar (as-built)
 
-**Durum:** 2026-09-19 tarihinde `feat/ayse-eylem` ile birleşti. Mimari not: `docs/AYSE-EYLEM-MIMARISI.md`.
+**Durum:** 2026-09-19 tarihinde `feat/ayse-eylem` ile birleşti; aynı gün `fix/eylem-sessiz-yol-ve-etkilesim`
+ile **eski sessiz yazma yolu kapatıldı** (NOTYA-EYLEM-24) ve **ilaç uyarıları karta basıldı**
+(NOTYA-EYLEM-21). Mimari not: `docs/AYSE-EYLEM-MIMARISI.md`.
 Bu dosya NE YAPILDIĞINI anlatır; tasarım gerekçesi mimari nottadır, açık kalemler
 `docs/OPEN-COMMITMENTS.md` § NOTYA-EYLEM'dedir.
 
@@ -32,12 +34,15 @@ onay kartı HER ZAMAN, sessiz yazma ASLA. Denetim okuması: **hazırlayan = Ayş
 | `core/eylemler/onayla.ts` | ONAY: sahiplik, süre, korumalı durum geçişi (idempotans), zod, zorunlu, makullük, yazma, denetim |
 | `core/eylemler/geriAl.ts` | 24 saat içinde T1 geri alma; loglanır |
 | `core/eylemler/bosluk.ts` | P2 proaktif boşluk teklifi (LLM'siz, bir kez) |
-| `core/eylemler/yasakli.ts` | T3 anahtarları — yokluğu sınanır |
+| `core/eylemler/yasakli.ts` | T3 anahtarları + **eski sessiz yol tip adları** — yokluğu sınanır |
+| `core/eylemler/ilacUyari.ts` | İlaç güvenlik uyarıları (alerji / aynı etken / etkileşim / pediatrik) — LLM'siz |
 | `core/eylemler/istem.ts` | Yetenek paragrafı — her yüzeye AYNI metin |
 | `core/eylemler/hasta.ts` | Hasta kimliğinin SUNUCU tarafında çözümü (model çıktısından asla) |
 | `components/core/EylemKarti.tsx` | Onay kartı + toplu kart |
 | `app/api/doktor/eylem/route.ts` | `POST adim: onayla \| vazgec \| geri_al \| toplu_onayla`, `GET ?hastaId` |
+| `lib/asistan/actionExecutor.ts` | **Eski eylem kapısı** — sınıflandırır, YAZMAZ (NOTYA-EYLEM-24) |
 | `lib/db/migrations/085_ayse_eylem.sql` | `eylem_onerileri`, `eylem_kayitlari` + RLS |
+| `lib/db/migrations/086_eylem_ilac_uyarilari.sql` | `uyari_detay` (öneri) + `uyari_onayi` (kayıt) |
 
 ### Paylaşılan yazma yolu için çıkarılanlar (ikinci yazma yolu YOK)
 
@@ -105,10 +110,90 @@ bir yüzeyde hazırlanan kart, konuşma kapansa bile hastanın dosyasında bekle
 - **Model politikası:** yeni model çağrısı YOK. Araç tanımları mevcut çağrıya eklenir (`lib/ai/cagir.ts`
   → `araclar`), yetenek paragrafı önbelleklenen sabit bloğa girer. Yeni satıcı, yeni maliyet kalemi yok.
 
+## Eski sessiz yazma yolu — KAPALI (NOTYA-EYLEM-24)
+
+P1–P3 şiplendiğinde `lib/asistan/actionExecutor.ts` yerinde bırakılmıştı: yeni hiçbir şey ona
+yönlenmiyordu ama `/api/asistan/chat` üzerinden **hâlâ erişilebilirdi**. Model bir turda
+`{ "action": { "type": "ADD_PRESCRIPTION", … } }` yazarsa satır **hekimin hiçbir dokunuşu olmadan**
+veritabanına düşüyordu. Kilitli kural bunu yasaklar: *Ayşe hazırlar, hekim kaydeder; sessiz asla.*
+
+`actionExecutor` artık bir **kapı**: hiçbir tabloya dokunmaz (modülde `supabase` / `createClient` /
+`.insert(` yok — testle zorlanıyor). Her eski tip sınıflandırılır:
+
+| Eski tip | Sınıf | Ne oluyor |
+|---|---|---|
+| `ADD_NOTE_CONTENT` | `klinik_eylem` | `dosya_notu_ekle` **taslağı + onay kartı**; yazmayı hekimin dokunuşu yapar |
+| `ADD_PRESCRIPTION` | `klinik_t3` | Yazılmaz, hazırlanmaz bile. Ayşe anlatır, e-Reçete ekranına bağlantı verir |
+| `SET_DIAGNOSIS` | `klinik_t3` | Yazılmaz. Muayene notu ekranına bağlantı |
+| `CREATE_PATIENT` | `klinik_ekran` | Yazılmaz (kimlik bilgisi işi). Hasta ekle ekranına bağlantı |
+| `CREATE_SESSION` | `klinik_ekran` | Yazılmaz — seans açmak **hasta onayını** da kaydediyordu. Hasta dosyasına bağlantı |
+| `UPDATE_SESSION` | `klinik_ekran` | Yazılmaz. Muayene notuna bağlantı |
+| `GENERATE_DOCUMENT` | `klinik_disi` | Kalır — yalnız bir şablon metni üretir, hiçbir satır yazmaz |
+| bilinmeyen / uydurma tip | `klinik_ekran` | **Şüphede klinik**: reddedilir |
+
+Klinik dışı kalanlar: `GENERATE_DOCUMENT` (metin şablonu) ve niyet sınıflandırıcısı
+`lib/asistan/intentParser.ts` (yalnız model yönlendirmesi ve ilaç bağlamı için — yazmaz).
+Sesli yüzeyin tek aracı `hasta_bul`, o da salt okunur.
+
+**Prompt:** `lib/asistan/personaEngine.ts`'in JSON biçiminden `"action"` alanı **kaldırıldı**;
+yerine "dosyaya kayıt bu JSON'dan YAPILMAZ, tek yol araçlardır" cümlesi kondu.
+
+**Muhafız test** (`core/eylemler/tests/sessizYol.test.ts`, 13 test): sohbet/ses giriş noktalarından
+içe aktarma grafiği yürünür; grafikteki hiçbir dosya klinik tabloya yazamaz (izinli olanlar yalnız
+`core/eylemler/*` ve onun paylaştığı `hastaKayitAlanlari` / `gununNotunaEkle`), grafikte `calistir()`
+hiç çağrılmaz, `calistir()`'i omurgada yalnız `onayla.ts` çağırır, sesli ajanın araç listesi salt
+okunur, eski tip adları eylem anahtarı olamaz, prompt artık eylem reklamı yapmaz. Mutasyonla
+doğrulandı: sohbet rotasına tek bir `notes.update` eklendiğinde test kırmızı.
+
+## İlaç uyarıları kartın üstünde (NOTYA-EYLEM-21)
+
+`ilac_ekle` ve `ilac_doz_degistir` kartları, hekim dokunmadan ÖNCE dört deterministik kontrolden
+geçer (`core/eylemler/ilacUyari.ts`). Yeni satıcı yok, yeni model çağrısı yok, yeni ilaç veritabanı
+yok: uygulamanın **kendi** ilaç tablosu (`lib/asistan/turkishDrugs.ts`, 18 molekül) + hastanın kendi
+kayıtları okunur.
+
+| Kontrol | Kaynak | Şiddet |
+|---|---|---|
+| Alerji (ad / marka / sınıf ve ilacın "… alerjisi" kontrendikasyonu) | Hasta dosyası + tablo | `ciddi` |
+| Aynı etken madde aktif (Parol + Minoset) | Hasta dosyası + tablo | `ciddi` |
+| Etkileşim (tablonun kendi `interactions` listesi) | Tablo | `ciddi` |
+| Yaş kontrendikasyonu ("6 ay altı bebek") | Tablo | `ciddi` |
+| Pediatrik mg/kg dozu (dosyadaki son kiloyla hesaplanır) | Tablo + dosya | `bilgi` |
+| İlaç tabloda yok → "etkileşim kontrol edilemedi" | Tablo | `bilgi` |
+| **Ayşe'nin notu** — modelin kendi uyarı cümlesi, etiketli | Model | `orta`, **asla `ciddi`** |
+
+**Eşleştirme düzeltildi:** `checkInteractions` eskiden yalnız diğer ilacın `name` alanına bakıyordu,
+bu yüzden **sınıf** olarak yazılmış her etkileşim ("NSAIDs", "ACE inhibitörleri", "SSRI/SNRI")
+sessizce hiç eşleşmiyordu — ibuprofen + ramipril, naproksen + metilprednizolon, sertralin +
+sumatriptan "etkileşim yok" okunuyordu. Motor aynı motor; artık sınıfı tutan alanı (`category`) ve
+marka listesini de okuyor. Yanlış pozitife karşı muhafazakâr: bir ifade ancak **bütün** anlamlı
+sözcükleri eşleşirse yakalar ("ACE inhibitörleri" → "Proton pompa inhibitörü" değil).
+
+**Kart:** uyarılar alanların ÜSTÜNDE, şiddet renkli (kırmızı / kehribar / mavi), Türkçe,
+**asla katlanabilir değil**, her satırda `Kaynak:` var. Bir `ciddi` uyarı hekimi **ENGELLEMEZ** —
+yetki hekimdedir — ama düğme önce **"Uyarıyı gördüm, kaydet"**e döner; kayıt ancak o ikinci
+dokunuşla gider. Toplu kartta aynı kural satır başına: ciddi uyarısı olan satır, "Uyarıyı gördüm"
+kutusu işaretlenmeden seçilemez.
+
+**Sunucu bağımsız zorlar:** `onayla.ts` kontrolü **yeniden** koşar (kart çizildiğinden beri ilaç
+listesi değişmiş olabilir) ve onay gelmemişse 409 + güncel uyarılar döner; öneri `taslak` kalır.
+Onaylanan kayıtta `eylem_kayitlari.uyari_onayi` = `{ uyarilar, ciddi, goruldu, onaylayan, at }`.
+
+**Hafıza bunu yumuşatamaz.** `ilacUyari.ts` yalnız iki şey içe aktarır (ilaç tablosu + hasta kayıt
+alanları); hafıza, tercih ya da persona okumaz. Test hem kaynağı (yorumlar elenerek) hem davranışı
+sınar: hafızaya "uyarı gösterme" yazıldığında çıktı birebir aynı kalır ve kapı yine kapalı.
+
+**Bilinen sınır:** tablo 18 molekül taşıyor. Dışındaki bir ilaç için deterministik etkileşim hükmü
+verilmez — kart bunu **söyler** ("etkileşim kontrolü yapılamadı"), sessiz kalarak temiz kâğıt
+izlenimi vermez. Tam kapsam `docs/OPEN-COMMITMENTS.md` NOTYA-EYLEM-25'te açık kalem.
+
+
 ## Test
 
 ```
 npx tsx --experimental-test-module-mocks --test core/eylemler/tests/eylem.test.ts
+npx tsx --experimental-test-module-mocks --test core/eylemler/tests/sessizYol.test.ts
+npx tsx --experimental-test-module-mocks --test core/eylemler/tests/ilacUyari.test.ts
 npm run test:izolasyon
 npm test
 ```
@@ -116,3 +201,13 @@ npm test
 `core/eylemler/tests/eylem.test.ts` (37 test): T3 yokluğu, kayıt tutarlılığı, araç süzgeci + branş
 kapısı (30+ branş × eylem), tahmin→eksik alan, zod yeniden doğrulama, makullük, mükerrer, idempotans,
 süre dolması, geri alma (T1 evet / T2 hayır / 24 saat), branş görevi, proaktif boşluk.
+
+`core/eylemler/tests/sessizYol.test.ts` (13 test): sessiz yazma yolunun kapalılığı — yukarıya bakın.
+
+`core/eylemler/tests/ilacUyari.test.ts` (29 test): alerji (ad / kontrendikasyon / yanlış pozitif yok),
+aynı etken madde, sınıf adıyla yazılmış etkileşimlerin artık çalışması, pediatrik yaş ve mg/kg,
+Ayşe'nin notunun asla `ciddi` olmaması, onay kapısı (409 → ikinci dokunuş → denetim satırı),
+onay anında yeniden koşma, hafızanın kontrolü yumuşatamaması.
+
+`lib/security/hasta-izolasyon.test.ts` — "Asistan eylemleri" vakası artık **yabancı dosyaya da kendi
+dosyasına da sessizce yazılamadığını** sınar (eski pozitif kontrol bilerek tersine çevrildi).

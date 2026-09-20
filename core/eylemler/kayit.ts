@@ -13,7 +13,7 @@
  */
 import { TEMEL_EYLEMLER } from './temelEylemler'
 import { BRANS_EYLEMLERI } from './bransEylemleri'
-import { t3Mi } from './yasakli'
+import { eskiSessizTipMi, t3Mi } from './yasakli'
 import type { EylemTanimi } from './types'
 
 const TUMU: EylemTanimi[] = [...TEMEL_EYLEMLER, ...BRANS_EYLEMLERI]
@@ -24,6 +24,8 @@ const TUMU: EylemTanimi[] = [...TEMEL_EYLEMLER, ...BRANS_EYLEMLERI]
     if (gorulen.has(e.anahtar)) throw new Error(`NOTYA-EYLEM: yinelenen eylem anahtarı "${e.anahtar}"`)
     gorulen.add(e.anahtar)
     if (t3Mi(e.anahtar)) throw new Error(`NOTYA-EYLEM: T3 eylemi kayıt defterine giremez — "${e.anahtar}" (docs/AYSE-EYLEM-MIMARISI.md §3)`)
+    // NOTYA-EYLEM-24: the old silent-path names are a closed door, not a tool name to be revived.
+    if (eskiSessizTipMi(e.anahtar)) throw new Error(`NOTYA-EYLEM: eski sessiz yazma yolunun adı eylem anahtarı olamaz — "${e.anahtar}" (core/eylemler/yasakli.ts)`)
   }
 }
 

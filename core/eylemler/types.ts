@@ -128,6 +128,12 @@ export interface EylemTanimi<V = Record<string, unknown>> {
   mukerrerKontrol?: (ctx: EylemBaglami, veri: V) => Promise<string | null>
   /** Turkish message when the data is not plausible (date before birth, future date…), else null. */
   makullukKontrol?: (ctx: EylemBaglami, veri: V) => string | null
+  /**
+   * NOTYA-EYLEM-21 — structured safety warnings printed ON the card, above the fields, before the
+   * tap. Deterministic and re-run at commit: a `ciddi` one does not block the hekim (he is the
+   * authority) but requires an explicit second tap, which is recorded. Drug actions only, today.
+   */
+  uyariKontrol?: (ctx: EylemBaglami, veri: V) => Promise<import('./ilacUyari').IlacUyarisi[]>
 }
 
 /** A field as it arrives from the model, with where it came from. */
@@ -151,7 +157,10 @@ export interface EylemOnerisi {
   durum: OneriDurumu
   grup_id: string | null
   yuzey: Yuzey
+  /** Free-text warnings (mükerrer / makullük) — one line each on the card. */
   uyarilar: string[]
+  /** NOTYA-EYLEM-21 — structured, severity-carrying warnings (ilaç güvenliği). Migration 086. */
+  uyari_detay: import('./ilacUyari').IlacUyarisi[]
   created_at: string
   karar_at: string | null
 }

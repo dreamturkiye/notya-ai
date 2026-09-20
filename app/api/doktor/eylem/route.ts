@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
   const { data } = await supabase
     .from('eylem_onerileri')
-    .select('id, eylem_anahtar, veri, alan_kaynaklari, eksik_alanlar, uyarilar, kademe, grup_id, yuzey, created_at')
+    .select('id, eylem_anahtar, veri, alan_kaynaklari, eksik_alanlar, uyarilar, uyari_detay, kademe, grup_id, yuzey, created_at')
     .eq('doctor_id', user.id)
     .eq('hasta_id', hastaId)
     .eq('durum', 'taslak')
@@ -70,21 +70,25 @@ export async function POST(req: NextRequest) {
   const brans = await hekimBransi(supabase, user.id)
 
   if (adim === 'onayla') {
-    const { oneriId, duzeltmeler, mesajId } = govde as { oneriId?: string; duzeltmeler?: Record<string, unknown>; mesajId?: string }
+    const { oneriId, duzeltmeler, mesajId, uyariGoruldu } = govde as { oneriId?: string; duzeltmeler?: Record<string, unknown>; mesajId?: string; uyariGoruldu?: boolean }
     if (!oneriId) return NextResponse.json({ error: 'oneriId zorunludur.' }, { status: 400 })
-    const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId, duzeltmeler, brans, mesajId })
-    if (!s.ok) return NextResponse.json({ error: s.hata }, { status: s.durum })
+    const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId, duzeltmeler, brans, mesajId, uyariGoruldu: Boolean(uyariGoruldu) })
+    // NOTYA-EYLEM-21: the warning gate answers with the warnings themselves, so the card can print
+    // the CURRENT ones (the med list may have changed since it was drawn) and offer the second tap.
+    if (!s.ok) return NextResponse.json({ error: s.hata, uyarilar: s.uyarilar ?? null, uyariOnayiGerekli: Boolean(s.uyariOnayiGerekli) }, { status: s.durum })
     return NextResponse.json({ ok: true, kayitId: s.kayitId, etiket: s.etiket, ilgiliSekme: s.sonuc.ilgiliSekme ?? null })
   }
 
   if (adim === 'toplu_onayla') {
-    const { oneriIdler, duzeltmeler } = govde as { oneriIdler?: string[]; duzeltmeler?: Record<string, Record<string, unknown>> }
+    const { oneriIdler, duzeltmeler, uyariGoruldu } = govde as { oneriIdler?: string[]; duzeltmeler?: Record<string, Record<string, unknown>>; uyariGoruldu?: Record<string, boolean> }
     if (!Array.isArray(oneriIdler) || !oneriIdler.length) return NextResponse.json({ error: 'oneriIdler zorunludur.' }, { status: 400 })
     // Sequential, not Promise.all: each commit re-runs its mükerrer check, and two rows from the
     // same batch can be duplicates of each other. Running them in parallel would let both pass.
     const sonuclar: { oneriId: string; ok: boolean; hata?: string; kayitId?: string }[] = []
     for (const id of oneriIdler.slice(0, 25)) {
-      const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId: String(id), duzeltmeler: duzeltmeler?.[String(id)], brans })
+      // A batch row carrying a `ciddi` warning is NOT swept along: its acknowledgement is per row,
+      // so an unacknowledged one refuses here exactly as it would on its own card.
+      const s = await eylemOnayla({ supabase, doktorId: user.id, oneriId: String(id), duzeltmeler: duzeltmeler?.[String(id)], brans, uyariGoruldu: Boolean(uyariGoruldu?.[String(id)]) })
       sonuclar.push(s.ok ? { oneriId: String(id), ok: true, kayitId: s.kayitId } : { oneriId: String(id), ok: false, hata: s.hata })
     }
     return NextResponse.json({ ok: sonuclar.every((s) => s.ok), sonuclar })

@@ -4,7 +4,7 @@
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.
 
-Last reviewed: 2026-09-19 (NOTYA-EYLEM — Ayşe dosyaya yazar)
+Last reviewed: 2026-09-19 (NOTYA-EYLEM düzeltme turu — sessiz yol kapandı, ilaç uyarıları kartta)
 
 ---
 
@@ -197,10 +197,8 @@ Cihaz Köprüsü ile aynı kural: onay kartı HER ZAMAN, sessiz yazma ASLA.
 - **NOTYA-EYLEM-20 — klinik dikeyi aynası (P3, ŞİPLENMEDİ).** Omurga branştan bağımsız olduğu için `/asistan/klinik`
   personalarına bağlamak yalnız rota işi; ama klinik dikeyinin hasta/kayıt modeli (clinics / clinic_members / Pabau)
   doktor dikeyinden ayrı ve hangi tabloya yazılacağı ürün kararı. Kaan'ın kararını bekliyor.
-- **NOTYA-EYLEM-21 — ilaç etkileşim uyarısının KART ÜZERİNE basılması (mimari §5).** Bugün etkileşim uyarısı sohbet
-  metninde çıkıyor (konsult prompt kuralı 4, değişmedi) ama `ilac_ekle` kartının `uyarilar` alanına ayrıca YAZILMIYOR.
-  Kart altyapısı hazır (mükerrer ve makullük uyarıları oraya basılıyor); eksik olan, hastanın aktif ilaçlarıyla
-  etkileşim kontrolünü LLM'siz yapacak bir kaynak. `/doktor-tools/ilac-interaksiyon` aracıyla birleştirilecek. Sahibi: Claude.
+- ~~**NOTYA-EYLEM-21 — ilaç etkileşim uyarısının KART ÜZERİNE basılması (mimari §5).**~~ **KAPANDI 2026-09-19**
+  (`fix/eylem-sessiz-yol-ve-etkilesim`) — aşağıdaki "2026-09-19 düzeltme turu" tablosuna bakın.
 - **NOTYA-EYLEM-22 — canlı uçtan uca model testi.** Üretimde propose→commit→satır→geri al akışı QA hesabıyla
   doğrulandı (sentetik hasta), ama **gerçek bir Claude araç çağrısıyla değil**: doğrulama commit/undo yolunu
   (`/api/doktor/eylem`) sürer, aracı modelin çağırdığı adımı sürmez. ANTHROPIC kredisi ve bir gerçek oturum gerekiyor
@@ -208,6 +206,47 @@ Cihaz Köprüsü ile aynı kural: onay kartı HER ZAMAN, sessiz yazma ASLA.
 - **NOTYA-EYLEM-23 — mobil kontrol (standing rule).** Kart 390px için yazıldı (alanlar alt alta, düğmeler sarmalı) ama
   **gerçek cihazda/tarayıcıda görülmedi** — bu oturumda canlı kart üretecek bir model turu koşulmadı. Dr. Gökhan'ın
   v8 maddesi bunu ilk gerçek kullanımda yakalar; ayrıca Claude bir sonraki oturumda 390px ekran görüntüsü alacak.
+
+### 2026-09-19 düzeltme turu — `fix/eylem-sessiz-yol-ve-etkilesim` (Kaan yönlendirdi)
+
+Şiplenen paketin kendi raporunda adı konmuş iki açık: **(1)** eski sessiz klinik yazma yolu
+`/api/asistan/chat` üzerinden hâlâ erişilebilirdi; **(2)** ilaç etkileşim uyarısı karta basılmıyordu.
+
+| # | Kalem | Durum |
+|---|---|---|
+| NOTYA-EYLEM-21 | **İlaç uyarıları kartın ÜSTÜNDE.** `core/eylemler/ilacUyari.ts` (LLM'siz, yeni satıcı/çağrı yok): alerji (ad/marka/sınıf + ilacın kendi "… alerjisi" kontrendikasyonu) `ciddi`; aynı etken madde aktif (Parol + Minoset) `ciddi`; etkileşim `ciddi`; yaş kontrendikasyonu ("6 ay altı bebek") `ciddi`; pediatrik mg/kg + dosyadaki son kilo `bilgi`; ilaç tabloda yoksa "kontrol edilemedi" `bilgi`; modelin kendi cümlesi **"Ayşe'nin notu"** etiketiyle `orta` — asla `ciddi`. Kart: şiddet renkli, Türkçe, alanların üstünde, **katlanabilir değil**, her satırda `Kaynak:`. `ciddi` uyarı hekimi ENGELLEMEZ; düğme **"Uyarıyı gördüm, kaydet"**e döner, kayıt ikinci dokunuşla gider. Toplu kartta satır başına aynı kural. Onay anında kontrol **yeniden** koşar (ilaç listesi değişmiş olabilir) → onaysızsa 409 + güncel uyarılar, öneri `taslak` kalır. Onay `eylem_kayitlari.uyari_onayi`'ya yazılır. Migration **086** (`uyari_detay`, `uyari_onayi`), yalnız ekleme | **DONE** |
+| NOTYA-EYLEM-24 | **Eski sessiz yazma yolu KAPALI.** `lib/asistan/actionExecutor.ts` artık hiçbir tabloya yazmaz (modülde `supabase` / `createClient` / `.insert(` yok, testle zorlanıyor). Envanter: `ADD_NOTE_CONTENT` → `dosya_notu_ekle` **taslağı + onay kartı**; `ADD_PRESCRIPTION` / `SET_DIAGNOSIS` → T3, hazırlanmaz bile, Ayşe ekrana yönlendirir; `CREATE_PATIENT` / `CREATE_SESSION` / `UPDATE_SESSION` → yazılmaz, ekrana yönlendirir (seans açmak **hasta onayını** da kaydediyordu); `GENERATE_DOCUMENT` → klinik dışı, kalır (yalnız şablon metni). Bilinmeyen tip → **şüphede klinik**. Tek çağıran: `/api/asistan/chat` | **DONE** |
+| NOTYA-EYLEM-24a | **Prompt temizliği.** `lib/asistan/personaEngine.ts` JSON biçiminden `"action": null veya { "type": "ACTION_TYPE", "data": {} }` **kaldırıldı**; yerine "dosyaya kayıt bu JSON'dan YAPILMAZ, tek yol araçlardır" kuralı. Başka hiçbir prompt eski eylemleri reklam etmiyor (tarandı) | **DONE** |
+| NOTYA-EYLEM-24b | **Muhafız test** `core/eylemler/tests/sessizYol.test.ts` (13): sohbet/ses giriş noktalarından içe aktarma grafiği yürünür, grafikteki hiçbir dosya klinik tabloya yazamaz (izinli: `core/eylemler/*` + paylaşılan `hastaKayitAlanlari` / `gununNotunaEkle`), grafikte `calistir()` hiç çağrılmaz, omurgada `calistir()`'i yalnız `onayla.ts` çağırır, sesli ajanın araç listesi salt okunur (`hasta_bul`), eski tip adları eylem anahtarı olamaz (`yasakli.ts` → `ESKI_SESSIZ_EYLEM_TIPLERI`, kayıt defteri yüklemede fırlatır), prompt eylem reklamı yapmıyor. **Mutasyonla doğrulandı**: sohbet rotasına tek bir `notes.update` eklenince kırmızı | **DONE** |
+| NOTYA-EYLEM-25 | **Etkileşim eşleştirmesi düzeltildi.** `checkInteractions` yalnız diğer ilacın `name` alanına bakıyordu; bu yüzden SINIF olarak yazılmış her etkileşim ("NSAIDs", "ACE inhibitörleri", "SSRI/SNRI") sessizce hiç eşleşmiyordu — ibuprofen+ramipril, naproksen+metilprednizolon, sertralin+sumatriptan "etkileşim yok" okunuyordu. Aynı motor artık `category` ve marka listesini de okuyor; yanlış pozitife karşı muhafazakâr (bir ifade ancak BÜTÜN anlamlı sözcükleri eşleşirse yakalar) | **DONE** |
+| NOTYA-EYLEM-26 | **Hafıza bir güvenlik kontrolünü yumuşatamaz** (mimari §5). `ilacUyari.ts` yalnız ilaç tablosunu ve hastanın kendi kayıtlarını içe aktarır; hafıza/tercih/persona okumaz. Test hem kaynağı (yorumlar elenerek + içe aktarma listesi birebir) hem davranışı sınar: hafızaya "uyarı gösterme" yazıldığında çıktı birebir aynı, kapı yine kapalı | **DONE** |
+| NOTYA-EYLEM-27 | `lib/security/hasta-izolasyon.test.ts` "Asistan eylemleri" vakası güncellendi: artık **yabancı dosyaya da kendi dosyasına da** sessizce yazılamadığı sınanıyor. Eski pozitif kontrol ("kendi seansına not yazabilmeli") bilerek tersine çevrildi — o yol artık karttan geçiyor | **DONE** |
+
+### AÇIK — bu turda YAPILMAYANLAR (2026-09-19, sahibi Claude)
+
+- **NOTYA-EYLEM-28 — ilaç tablosu 18 molekül.** Deterministik etkileşim/alerji hükmü yalnız
+  `lib/asistan/turkishDrugs.ts`'teki 18 molekül için verilebiliyor. Dışındaki bir ilaçta kart
+  **susmuyor**, "etkileşim kontrolü yapılamadı" diyor (sessizlik temiz kâğıt sanılmasın) — ama bu
+  gerçek bir kapsam açığı. `/doktor-tools/ilac-interaksiyon` aracı kapsamlı ama **LLM tabanlı**
+  (Groq/xAI çağrısı): kart yolunda bilerek kullanılmadı — "yeni satıcı yok, yeni ücretli çağrı yok"
+  kuralı ve her karta bir dış çağrı eklemenin maliyeti. Doğru çözüm ayrı iş: SGK/TİTCK ilaç listesi
+  + ATC kodu üzerinden deterministik bir etkileşim kaynağı (ürün kararı, Kaan).
+- **NOTYA-EYLEM-29 — sınıf bazlı etkileşimlerin bir kısmı hâlâ yakalanmıyor.** Tablo bazı
+  etkileşimleri hiçbir ilacın `category`'siyle eşleşmeyen sözcüklerle yazıyor ("Antihipertansifler",
+  "QT uzatan ilaçlar", "Aminoglikozidler"). Eşleştirici bilerek muhafazakâr: eşleşmediğinde uydurmak
+  yerine susuyor. Tablo metinleri ATC/sınıf sözlüğüne bağlanınca kapanır (NOTYA-EYLEM-28 ile aynı iş).
+- **NOTYA-EYLEM-30 — pediatrik doz AŞIMI hükmü verilmiyor.** Mevcut motor (`calculatePediatricDose`)
+  mg/kg aralığını metin olarak üretiyor; bazı ilaçlarda bu "mg/kg/doz", bazılarında "mg/kg/gün" ve
+  hesaplayıcı ikisini de "mg/gün" diye yazıyor. Reçete edilen dozla karşılaştırıp "aşıldı" demek bu
+  veriyle yanlış hüküm üretebilirdi. Kart bu yüzden dozu **bilgi** olarak gösteriyor, hüküm vermiyor.
+  Ayrı iş: doz birimini tabloda yapısallaştırmak.
+- **NOTYA-EYLEM-31 — "Ayşe'nin notu" yalnız yazılı sohbette.** `proactiveWarning` alanı yapısal
+  olarak yalnız `/api/asistan/chat` yanıtında var; Danış ve not içi kutu düz metin döndürüyor, orada
+  modelin uyarı cümlesi baloncukta kalıyor (karta taşınmıyor). Deterministik kontroller üç yüzeyde de
+  aynı çalışıyor. Ayrı iş: konsult yanıtını yapısallaştırmak.
+- **NOTYA-EYLEM-32 — mobil kontrol (standing rule).** Uyarı bloğu ve "Uyarıyı gördüm, kaydet"
+  düğmesi 390px için yazıldı (blok tam genişlik, düğme ≥44px, sarma açık) ama **gerçek tarayıcıda
+  görülmedi** — NOTYA-EYLEM-23 ile aynı açık kalem, aynı sahibi.
 
 ## NOTYA-MALIYET-01 — AI model/maliyet politikası: klinik kalite > maliyet (Kaan, 2026-09-19)
 

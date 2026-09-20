@@ -1,12 +1,35 @@
-
 // ============================================================
-// NOTYA ASISTAN — Action Executor
-// Runs real actions in Supabase based on AI decisions
+// NOTYA ASISTAN — Action gate (eski "executor")
 // ============================================================
+/**
+ * NOTYA-EYLEM-24 — the old silent clinical write path, closed.
+ *
+ * This file used to WRITE. A model turn on `/api/asistan/chat` could emit
+ * `{ "action": { "type": "ADD_PRESCRIPTION", … } }` and a prescription line, a diagnosis, a note
+ * field or a whole patient row appeared in the database with no doctor tap anywhere in the flow.
+ * That contradicts the locked relationship model (docs/AYSE-EYLEM-MIMARISI.md §1):
+ * **Ayşe PREPARES, the hekim COMMITS. Confirm card ALWAYS, silent write NEVER.**
+ *
+ * So the module keeps its name and its signature — callers and the isolation suite still import
+ * `executeAction` — but it no longer reaches a clinical table. It CLASSIFIES and REDIRECTS:
+ *
+ *   • klinik_eylem  — an equivalent exists in `core/eylemler` (dosya notu). The caller turns the
+ *                     legacy payload into an `eylem_onerileri` taslak and renders EylemKarti; the
+ *                     write happens in core/eylemler/onayla.ts, behind the doctor's tap, or not at all.
+ *   • klinik_t3     — reçete, tanı, not onayı, silme, anything leaving the system
+ *                     (core/eylemler/yasakli.ts). Never executed and never proposed: Ayşe says she
+ *                     can prepare it and points at the screen where it legally belongs.
+ *   • klinik_ekran  — record-writing, no eylem equivalent (hasta açma, seans açma/güncelleme —
+ *                     seans açmak hasta onayını da yazıyordu). Same treatment as T3: point, do not write.
+ *   • klinik_disi   — writes nothing at all. GENERATE_DOCUMENT renders a template string into the
+ *                     chat; the doctor is the one who saves or sends anything.
+ *
+ * Conservative rule (directed): if a type's clinical status is unclear, it is clinical. There is no
+ * "probably fine" branch in here — the only branch that returns `success: true` is the one that
+ * touches no table.
+ */
 
-import { createClient } from "@supabase/supabase-js"
 import { address, type AddressableUser } from "@/lib/address"
-import { hastaSahibiMi, seansSahibi } from "@/lib/doktor/hastaSahipligi"
 
 export type ActionType =
   | "CREATE_PATIENT"
@@ -30,173 +53,140 @@ export interface ActionResult {
   data?: Record<string, unknown>
 }
 
+/** What the gate decided about a legacy action type. */
+export type EylemSinifi = "klinik_eylem" | "klinik_t3" | "klinik_ekran" | "klinik_disi"
+
+export interface EskiEylemKarari {
+  sinif: EylemSinifi
+  /** core/eylemler anahtarı — only for `klinik_eylem`. */
+  eylemAnahtar?: string
+  /** Turkish sentence Ayşe says INSTEAD of writing. Same voice as core/eylemler/istem.ts. */
+  metin: string
+  /** Where the doctor is pointed. `:hastaId` is substituted by the caller when it has one. */
+  yol?: string
+  etiket?: string
+}
+
+/**
+ * The inventory. Every legacy action type is listed here exactly once; a type that is not in this
+ * map is unknown and therefore clinical (see `eskiEylemKarari`). Adding a type without a row here
+ * makes the guard test red rather than silently re-opening a write path.
+ */
+const KARARLAR: Record<ActionType, EskiEylemKarari> = {
+  // ── Bir EYLEM karşılığı var: kart hazırlanır, yazmayı hekimin dokunuşu yapar ──
+  ADD_NOTE_CONTENT: {
+    sinif: "klinik_eylem",
+    eylemAnahtar: "dosya_notu_ekle",
+    metin: "Notu dosyaya ben yazmıyorum — kartını hazırladım, onaylarsanız bugünkü muayene notuna işlenir.",
+  },
+
+  // ── T3: bu yoldan ASLA (core/eylemler/yasakli.ts) ──
+  ADD_PRESCRIPTION: {
+    sinif: "klinik_t3",
+    metin:
+      "Reçeteyi bu yoldan yazamam — reçete sistemden çıkan, hukuken bağlayıcı bir işlem, onu e-Reçete ekranından siz oluşturuyorsunuz. İlacı hastanın sürekli ilaç listesine eklememi isterseniz kartını hazırlayabilirim.",
+    yol: "/doktor-tools/erecete",
+    etiket: "e-Reçete ekranına git",
+  },
+  SET_DIAGNOSIS: {
+    sinif: "klinik_t3",
+    metin:
+      "Tanıyı dosyaya ben yazamam — tanı ve ICD kodu hekimin imzasıdır, muayene notu ekranından siz giriyorsunuz. İsterseniz ayırıcı tanıyı burada birlikte gözden geçirelim.",
+    yol: "/dashboard/doktor/inceleme",
+    etiket: "Muayene notuna git",
+  },
+
+  // ── Kayıt yazan, EYLEM karşılığı olmayan türler: yazmıyorum, ekranı gösteriyorum ──
+  CREATE_PATIENT: {
+    sinif: "klinik_ekran",
+    metin:
+      "Yeni hasta kaydını ben açmıyorum — hasta dosyası açmak kimlik bilgisi isteyen bir işlem, Hastalar ekranından siz açıyorsunuz. Dosya açıldıktan sonra içine kayıt hazırlamak bende.",
+    yol: "/dashboard/doktor/hasta-ekle",
+    etiket: "Hasta ekle ekranına git",
+  },
+  CREATE_SESSION: {
+    sinif: "klinik_ekran",
+    metin:
+      "Muayeneyi ben başlatmıyorum — seans açmak hasta onayını da kaydeden bir işlem, onu siz başlatıyorsunuz.",
+    yol: "/dashboard/doktor/hastalar",
+    etiket: "Hasta dosyasına git",
+  },
+  UPDATE_SESSION: {
+    sinif: "klinik_ekran",
+    metin: "Muayene kaydını ben güncellemiyorum — muayene ekranından siz düzenliyorsunuz.",
+    yol: "/dashboard/doktor/inceleme",
+    etiket: "Muayene notuna git",
+  },
+
+  // ── Klinik dışı: hiçbir tabloya dokunmaz ──
+  GENERATE_DOCUMENT: {
+    sinif: "klinik_disi",
+    metin: "Belge taslağını hazırladım — kaydı ve gönderimi siz yapıyorsunuz.",
+  },
+}
+
+/** Every legacy type that must never produce a write on the model's say-so. */
+export const KLINIK_ESKI_EYLEM_TIPLERI = (Object.keys(KARARLAR) as ActionType[])
+  .filter((t) => KARARLAR[t].sinif !== "klinik_disi")
+  .sort()
+
+/** Legacy type → core/eylemler anahtarı, for the types that have an equivalent. */
+export const ESKI_EYLEM_KARSILIKLARI: Readonly<Record<string, string>> = Object.fromEntries(
+  (Object.keys(KARARLAR) as ActionType[])
+    .filter((t) => KARARLAR[t].eylemAnahtar)
+    .map((t) => [t, KARARLAR[t].eylemAnahtar as string])
+)
+
+/**
+ * Classify a type coming out of a model turn. An unknown / misspelled / newly invented type is
+ * treated as clinical and refused — the conservative default, deliberately.
+ */
+export function eskiEylemKarari(type: string, hastaId?: string | null): EskiEylemKarari {
+  const k = KARARLAR[String(type || "") as ActionType]
+  if (!k) {
+    return {
+      sinif: "klinik_ekran",
+      metin: "Bunu bu yoldan yapamam — ilgili ekrandan siz yapıyorsunuz. Dosyaya kayıt hazırlamamı isterseniz söyleyin, kartını getireyim.",
+    }
+  }
+  const yol = k.yol && hastaId && k.yol.includes(":hastaId") ? k.yol.replace(":hastaId", hastaId) : k.yol
+  return { ...k, yol }
+}
+
+export function klinikEskiEylemMi(type: string): boolean {
+  return eskiEylemKarari(type).sinif !== "klinik_disi"
+}
+
+/**
+ * Kept for call/­test compatibility. It NEVER writes.
+ *
+ * A clinical type answers `success: false` plus the Turkish redirect in `message` and the decision
+ * in `data`, whoever asks and whatever ids are in the payload — there is no owner check left to
+ * pass, because there is no write left to guard. The only `success: true` branch renders a document
+ * template, which touches nothing.
+ */
 export async function executeAction(
   action: ActionRequest,
-  serviceKey: string
+  _serviceKey?: string
 ): Promise<ActionResult> {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
-  )
+  const karar = eskiEylemKarari(String(action?.type || ""))
 
-  switch (action.type) {
-
-    case "CREATE_PATIENT": {
-      const { name, age, gender, complaint } = action.data
-      const { data, error } = await supabase
-        .from("patients")
-        .insert({
-          doctor_id: action.doctorId,
-          name_encrypted: String(name || "Bilinmiyor"),
-          dob_encrypted: age ? `${new Date().getFullYear() - Number(age)}-01-01` : null,
-          gender_encrypted: String(gender || "Belirtilmemiş"),
-          notes_encrypted: complaint ? String(complaint) : null,
-        })
-        .select()
-        .single()
-      if (error) return { success: false, message: `Hasta oluşturulamadı: ${error.message}` }
-      return {
-        success: true,
-        message: `${name || "Hasta"} kaydedildi`,
-        data: { patient: data }
-      }
+  if (karar.sinif !== "klinik_disi") {
+    return {
+      success: false,
+      message: karar.metin,
+      data: { sinif: karar.sinif, eylemAnahtar: karar.eylemAnahtar ?? null, yol: karar.yol ?? null, etiket: karar.etiket ?? null, yazildi: false },
     }
-
-    case "CREATE_SESSION": {
-      const { patientId, specialty, sessionType } = action.data
-      // HASTA-IZOLASYON-01: the id comes from the model's output — treat it like any request input.
-      if (patientId && !(await hastaSahibiMi(supabase, action.doctorId, String(patientId)))) {
-        return { success: false, message: "Hasta bulunamadı" }
-      }
-      const { data, error } = await supabase
-        .from("sessions")
-        .insert({
-          doctor_id: action.doctorId,
-          patient_id: patientId as string || null,
-          specialty: String(specialty || "genel"),
-          session_type: String(sessionType || "muayene"),
-          status: "recording",
-          patient_consent_given: true,
-          patient_consent_at: new Date().toISOString(),
-        })
-        .select()
-        .single()
-      if (error) return { success: false, message: `Seans oluşturulamadı: ${error.message}` }
-      return { success: true, message: "Seans başlatıldı", data: { session: data } }
-    }
-
-    case "ADD_NOTE_CONTENT": {
-      const { sessionId, field, content } = action.data
-      // HASTA-IZOLASYON-01: never create/extend a note on a session (or patient) that is not this doctor's.
-      if (!(await seansSahibi(supabase, action.doctorId, String(sessionId || "")))) return { success: false, message: "Seans bulunamadı" }
-      // Find or create note for this session
-      let { data: note } = await supabase
-        .from("notes")
-        .select("id")
-        .eq("session_id", String(sessionId))
-        .eq("doctor_id", action.doctorId)
-        .single()
-
-      if (!note) {
-        const { data: newNote, error } = await supabase
-          .from("notes")
-          .insert({ session_id: String(sessionId), doctor_id: action.doctorId, note_type: "soap" })
-          .select().single()
-        if (error) return { success: false, message: "Not oluşturulamadı" }
-        note = newNote
-      }
-      if (!note) return { success: false, message: "Not oluşturulamadı" }
-
-      const updateData: Record<string, unknown> = {}
-      updateData[String(field)] = content
-      updateData.updated_at = new Date().toISOString()
-
-      const { error } = await supabase.from("notes").update(updateData).eq("id", note.id)
-      if (error) return { success: false, message: "Not güncellenemedi" }
-      return { success: true, message: "Not güncellendi", data: { noteId: note.id } }
-    }
-
-    case "ADD_PRESCRIPTION": {
-      const { sessionId, drug, dose, frequency, duration } = action.data
-      // HASTA-IZOLASYON-01: never create/extend a note on a session (or patient) that is not this doctor's.
-      if (!(await seansSahibi(supabase, action.doctorId, String(sessionId || "")))) return { success: false, message: "Seans bulunamadı" }
-      let { data: note } = await supabase
-        .from("notes")
-        .select("id, content_ilaclar")
-        .eq("session_id", String(sessionId))
-        .eq("doctor_id", action.doctorId)
-        .single()
-
-      if (!note) {
-        const { data: newNote } = await supabase
-          .from("notes")
-          .insert({ session_id: String(sessionId), doctor_id: action.doctorId, note_type: "soap" })
-          .select().single()
-        note = newNote
-      }
-      if (!note) return { success: false, message: "Not oluşturulamadı" }
-
-      const medications = (note?.content_ilaclar as unknown[]) || []
-      medications.push({ ad: drug, doz: dose, kullanim: frequency, sure: duration })
-
-      await supabase.from("notes")
-        .update({ content_ilaclar: medications, updated_at: new Date().toISOString() })
-        .eq("id", note.id)
-
-      return { success: true, message: `${drug} ${dose} ${frequency} reçeteye eklendi`, data: { medications } }
-    }
-
-    case "SET_DIAGNOSIS": {
-      const { sessionId, diagnosis, icd10, isPrimary } = action.data
-      // HASTA-IZOLASYON-01: never create/extend a note on a session (or patient) that is not this doctor's.
-      if (!(await seansSahibi(supabase, action.doctorId, String(sessionId || "")))) return { success: false, message: "Seans bulunamadı" }
-      let { data: note } = await supabase
-        .from("notes")
-        .select("id, icd10_codes")
-        .eq("session_id", String(sessionId))
-        .eq("doctor_id", action.doctorId)
-        .single()
-
-      if (!note) {
-        const { data: newNote } = await supabase
-          .from("notes")
-          .insert({ session_id: String(sessionId), doctor_id: action.doctorId, note_type: "soap" })
-          .select().single()
-        note = newNote
-      }
-      if (!note) return { success: false, message: "Not oluşturulamadı" }
-
-      const codes = (note?.icd10_codes as unknown[]) || []
-      codes.push({ code: icd10, description: diagnosis, description_tr: diagnosis, is_primary: isPrimary !== false })
-
-      await supabase.from("notes")
-        .update({
-          content_degerlendirme: String(diagnosis),
-          content_tani: String(diagnosis),
-          icd10_codes: codes,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", note.id)
-
-      return { success: true, message: `Tanı eklendi: ${diagnosis} (${icd10})`, data: { icd10: codes } }
-    }
-
-    case "GENERATE_DOCUMENT": {
-      const { type, sessionId, patientName } = action.data
-      const referralHeader = address(
-        action.doctorProfile || { firstName: 'Meslektaşım' },
-        'referral'
-      )
-      const templates: Record<string, string> = {
-        sevk: `SEVK MEKTUBU\n\n${referralHeader},\n\n${patientName || "Hastamız"} ileri tetkik ve tedavi amacıyla kliniğinize sevk edilmektedir.\n\nSaygılarımla.`,
-        istirahat: `İSTİRAHAT RAPORU\n\n${patientName || "Hasta"} ${new Date().toLocaleDateString("tr-TR")} tarihinde muayene edilmiş olup ... gün istirahat uygundur.`,
-        rapor: `TIBBİ RAPOR\n\n${patientName || "Hasta"} tarafından kliniğimize başvurulmuş, muayene ve tetkikler yapılmıştır.`,
-      }
-      const docContent = templates[String(type)] || templates.rapor
-      return { success: true, message: `${type} belgesi hazırlandı`, data: { document: docContent, type } }
-    }
-
-    default:
-      return { success: false, message: `Bilinmeyen eylem: ${action.type}` }
   }
+
+  // GENERATE_DOCUMENT — a template string handed to the chat. No table, no row, no id.
+  const { type, patientName } = action.data || {}
+  const referralHeader = address(action.doctorProfile || { firstName: "Meslektaşım" }, "referral")
+  const templates: Record<string, string> = {
+    sevk: `SEVK MEKTUBU\n\n${referralHeader},\n\n${patientName || "Hastamız"} ileri tetkik ve tedavi amacıyla kliniğinize sevk edilmektedir.\n\nSaygılarımla.`,
+    istirahat: `İSTİRAHAT RAPORU\n\n${patientName || "Hasta"} ${new Date().toLocaleDateString("tr-TR")} tarihinde muayene edilmiş olup ... gün istirahat uygundur.`,
+    rapor: `TIBBİ RAPOR\n\n${patientName || "Hasta"} tarafından kliniğimize başvurulmuş, muayene ve tetkikler yapılmıştır.`,
+  }
+  const docContent = templates[String(type)] || templates.rapor
+  return { success: true, message: karar.metin, data: { document: docContent, type, yazildi: false } }
 }

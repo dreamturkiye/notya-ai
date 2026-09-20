@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto'
 import { eylemBul } from './kayit'
 import { eylemUygunMu, type AracSuzgeci } from './araclar'
 import { veriNormalize, tarihAlanlariGecerliMi } from './sema'
+import { ayseNotuUyarisi, type IlacUyarisi } from './ilacUyari'
 import type { AlanKaynagi, AlanKaynakKaydi, AlanTanimi, EylemBaglami, Yuzey } from './types'
 
 export interface OneriGirdisi {
@@ -26,6 +27,11 @@ export interface OneriGirdisi {
   grupId?: string | null
   /** Chat message the tool_use came from, for the audit trail. */
   mesajId?: string | null
+  /**
+   * NOTYA-EYLEM-21 — the model's own safety sentence for this turn (`proactiveWarning`). Carried
+   * onto the card labelled "Ayşe'nin notu", never as a deterministic verdict.
+   */
+  modelNotu?: string | null
   suzgec: AracSuzgeci
 }
 
@@ -38,6 +44,7 @@ export interface HazirOneri {
   alan_kaynaklari: Record<string, AlanKaynakKaydi>
   eksik_alanlar: string[]
   uyarilar: string[]
+  uyari_detay: IlacUyarisi[]
   portalaYansir: boolean
   grup_id: string | null
   /** Field metadata + required keys travel WITH the proposal so the card is a pure renderer —
@@ -116,6 +123,22 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
     if (mukerrer) uyarilar.push(mukerrer)
   } catch { /* a duplicate check that fails must not swallow the proposal — the commit re-runs it */ }
 
+  // NOTYA-EYLEM-21: drug safety, on the card, before the tap. Deterministic — it reads the table and
+  // the patient's own records, never hafıza and never the model's opinion (that goes in as a
+  // separate, labelled `ayse_notu` and is never `ciddi`).
+  const uyariDetay: IlacUyarisi[] = []
+  if (eylem.uyariKontrol) {
+    try {
+      uyariDetay.push(...(await eylem.uyariKontrol(g.ctx, veri as never)))
+    } catch (e) {
+      // A check that cannot run must SAY so — silence would read as "no interaction".
+      console.error('[eylem] uyarı kontrolü çalışmadı', e)
+      uyariDetay.push({ tur: 'kapsam_disi', siddet: 'bilgi', baslik: 'Uyarı kontrolü yapılamadı', metin: 'İlaç güvenlik kontrolü bu kart için çalıştırılamadı; kaydetmeden önce elle değerlendirin.', kaynak: 'Notya' })
+    }
+    const ayse = ayseNotuUyarisi(g.modelNotu)
+    if (ayse) uyariDetay.push(ayse)
+  }
+
   const { data, error } = await g.ctx.supabase
     .from('eylem_onerileri')
     .insert({
@@ -127,6 +150,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
       eksik_alanlar: [...new Set(eksik)],
       kademe: eylem.kademe,
       durum: 'taslak',
+      uyari_detay: uyariDetay,
       grup_id: g.grupId || null,
       yuzey: g.yuzey,
       uyarilar,
@@ -145,6 +169,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
     alan_kaynaklari: kaynaklar,
     eksik_alanlar: [...new Set(eksik)],
     uyarilar,
+    uyari_detay: uyariDetay,
     portalaYansir: Boolean(eylem.portalaYansir),
     grup_id: g.grupId || null,
     alanlar: eylem.alanlar,
@@ -166,7 +191,8 @@ export async function toolUseOnerileri(
   yanit: { content?: unknown },
   ctx: EylemBaglami,
   yuzey: Yuzey,
-  suzgec: AracSuzgeci
+  suzgec: AracSuzgeci,
+  modelNotu?: string | null
 ): Promise<HazirOneri[]> {
   const bloklar = (Array.isArray(yanit?.content) ? yanit.content : []) as { type?: string; name?: string; input?: unknown; id?: string }[]
   const kullanimlar = bloklar.filter((b) => b?.type === 'tool_use')
@@ -181,6 +207,7 @@ export async function toolUseOnerileri(
       yuzey,
       grupId,
       mesajId: k.id || null,
+      modelNotu,
       suzgec,
     })
     if (o) cikti.push(o)
