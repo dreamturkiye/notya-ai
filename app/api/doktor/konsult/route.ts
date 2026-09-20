@@ -14,9 +14,10 @@ import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 import { aracTanimlari, eylemKapali } from '@/core/eylemler/araclar'
-import { toolUseOnerileri } from '@/core/eylemler/oneri'
+import { toolUseOnerileri, kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
+import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bugunTRT } from '@/core/eylemler/types'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
@@ -82,14 +83,14 @@ export async function POST(req: NextRequest) {
       supabase.from('asilar').select('id', { count: 'exact', head: true }).eq('doktor_id', doktorId).eq('patient_id', patientId),
       supabase.from('hasta_ilaclar').select('id', { count: 'exact', head: true }).eq('doctor_id', doktorId).eq('patient_id', patientId).eq('aktif', true),
       supabase.from('patients').select('notes_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
-      supabase.from('notes').select('vitaller').eq('doctor_id', doktorId).not('vitaller', 'is', null).limit(1),
+      supabase.from('notes').select('vitaller, sessions!inner(patient_id)').eq('sessions.patient_id', patientId).not('vitaller', 'is', null).limit(1),
     ])
     const notAlanlari = notAlanlariCoz((hastaSatiri.data?.notes_encrypted as string | null) ?? null)
     const bosluklar = bosluklariBul(dosya, {
       asi: asiSay.count ?? 0,
       ilac: ilacSay.count ?? 0,
       alerjiVar: alerjiListe(notAlanlari).length > 0,
-      olcumVar: Boolean(notSatiri.data?.length),
+      olcumVar: Boolean(Array.isArray(notSatiri.data) ? notSatiri.data.length : notSatiri.data),
     })
     boslukEk = boslukBlogu(bosluklar, mesajlar.filter((m) => m.rol !== 'asistan').length)
   }
@@ -102,13 +103,16 @@ export async function POST(req: NextRequest) {
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
     content: String(m.icerik || '').slice(0, 4000),
   }))
+  const sonMetin = String(mesajlar[mesajlar.length - 1]?.icerik || '')
+  // yazıver / kaydet → tool_choice any: model cannot narrate a refusal; card still needs the tap.
+  const toolChoice = araclar.length && kayitNiyetiMi(sonMetin) ? ('any' as const) : undefined
 
   try {
     // NOTYA-MALIYET-01: hasta dosyası üzerinde klinik konsültasyon — GÜÇLÜ (klinik-analiz)
     let veri: Awaited<ReturnType<typeof aiCagir>>
     try {
       // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
-      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk }], messages: gecmis, araclar })
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk }], messages: gecmis, araclar, toolChoice })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[konsult] anthropic', e.govde.slice(0, 300))
@@ -124,7 +128,15 @@ export async function POST(req: NextRequest) {
     // No tool_result round-trip: the card IS the result, and a second model call would cost a turn
     // to tell Ayşe something she must not claim anyway ("kaydedildi") before the doctor has acted.
     const oneriler = hasta
-      ? await toolUseOnerileri(veri, { supabase, doktorId, hasta, brans, oneriId: '', bugunTRT: bugunTRT() }, 'danis', { brans, hasta })
+      ? await toolUseOnerileri(
+          veri,
+          { supabase, doktorId, hasta, brans, oneriId: '', bugunTRT: bugunTRT() },
+          'danis',
+          { brans, hasta },
+          // NOTYA-EYLEM-31: Danış düz metin döndürür, bu yüzden Ayşe'nin uyarı cümlesi karta
+          // deterministik olarak metinden seçilir — üç yüzeyde de kartta aynı satır çıksın diye.
+          ayseUyariCumlesi(cevap)
+        )
       : []
     return NextResponse.json({ cevap, oneriler, hasta: hasta ? { ad: hasta.ad, dogumTarihi: hasta.dogumTarihi } : null })
   } catch (e) {

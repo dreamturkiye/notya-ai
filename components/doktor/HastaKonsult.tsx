@@ -34,6 +34,7 @@ const HAZIR_SORULAR = [
   'Sürekli kullandığı ilaçları söyle.',
   'Özgeçmişini özetle.',
   'Son görüntüleme kayıtları neler?',
+  'Belgedeki aşı / ilaç / alerji kayıtlarını hazırla.',
 ]
 
 export default function HastaKonsult({

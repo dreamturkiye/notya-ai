@@ -28,6 +28,7 @@ import { gununNotunaEkle, gununNotunaVitalEkle, notVitalleriGeriYukle } from '@/
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { ilacUyarilariHesapla } from './ilacUyari'
+import { kayitSerisi, SERI_AD, type SeriKod } from '@/specialties/pediatri/engines/asiPlan'
 import { encrypt } from '@/lib/security/encryption'
 
 /** Helper: build a definition with the schema derived from its own field list. */
@@ -62,6 +63,23 @@ const ASI_ALANLARI: AlanTanimi[] = [
   { anahtar: 'notlar', etiket: 'Not', tip: 'metin' },
 ]
 
+/** SB ulusal takvim matcher — "Hep B" / "Hepatit B aşısı" → "Hepatit B" so duplicate + portal grouping align with karne. */
+export function asiAdiNormalize(ad: string): string {
+  const t = String(ad || '').trim()
+  if (!t) return t
+  const k = kayitSerisi(t)
+  if (k && k in SERI_AD) return SERI_AD[k as SeriKod]
+  return t
+}
+
+async function asiBelgeId(ctx: EylemBaglami): Promise<string | null> {
+  if (!ctx.oneriId) return null
+  const { data } = await ctx.supabase.from('eylem_onerileri').select('alan_kaynaklari').eq('id', ctx.oneriId).eq('doctor_id', ctx.doktorId).maybeSingle()
+  const k = (data?.alan_kaynaklari || {}) as Record<string, { belgeId?: string | null }>
+  for (const v of Object.values(k)) if (v?.belgeId) return String(v.belgeId)
+  return null
+}
+
 export const ASI_KAYDI_EKLE = eylem({
   anahtar: 'asi_kaydi_ekle',
   etiket: 'Aşı kaydı',
@@ -71,40 +89,49 @@ export const ASI_KAYDI_EKLE = eylem({
   zorunlu: ['asi_adi', 'uygulama_tarihi'],
   kademe: 'T1',
   branslar: 'hepsi',
-  makullukKontrol: (ctx, v) =>
-    tarihMakul('Uygulama tarihi', v.uygulama_tarihi, ctx.hasta, ctx.bugunTRT) ||
-    (v.sonraki_doz_tarihi && String(v.sonraki_doz_tarihi) < ctx.bugunTRT
-      ? `Sonraki doz tarihi (${v.sonraki_doz_tarihi}) geçmişte — kontrol edin.`
-      : null),
+  // Past sonraki_doz is a soft card warning only (oneri.ts) — catch-up Hep B/KKK must still save.
+  makullukKontrol: (ctx, v) => tarihMakul('Uygulama tarihi', v.uygulama_tarihi, ctx.hasta, ctx.bugunTRT),
   mukerrerKontrol: async (ctx, v) => {
     if (!v.asi_adi) return null
+    const hedefSeri = kayitSerisi(String(v.asi_adi))
     const { data } = await ctx.supabase
       .from('asilar')
       .select('id, asi_adi, uygulama_tarihi')
       .eq('doktor_id', ctx.doktorId)
       .eq('patient_id', ctx.hasta.id)
-      .ilike('asi_adi', String(v.asi_adi))
-      .limit(5)
-    const ayniGun = (data || []).find((r) => String(r.uygulama_tarihi || '') === String(v.uygulama_tarihi || ''))
+      .limit(40)
+    const eslesen = (data || []).filter((r) => {
+      if (hedefSeri) return kayitSerisi(String(r.asi_adi || '')) === hedefSeri
+      return String(r.asi_adi || '').toLowerCase() === String(v.asi_adi).toLowerCase()
+    })
+    const ayniGun = eslesen.find((r) => String(r.uygulama_tarihi || '') === String(v.uygulama_tarihi || ''))
+    const ad = asiAdiNormalize(String(v.asi_adi))
     if (ayniGun) return `Bu aşı aynı tarihle (${v.uygulama_tarihi}) dosyada zaten var — mükerrer kayıt olabilir.`
-    if ((data || []).length) return `Bu hastada "${v.asi_adi}" için ${data!.length} kayıt daha var — doz numarasını kontrol edin.`
+    if (eslesen.length) return `Bu hastada "${ad}" için ${eslesen.length} kayıt daha var — doz numarasını kontrol edin.`
     return null
   },
   calistir: async (ctx, v) => {
-    // Same insert shape as app/api/doktor/asilar POST; `kategori` and `kaynak` use that route's own
-    // coercion so the two rows are indistinguishable downstream.
-    const satir = {
+    // Same insert shape as karne onay + app/api/doktor/asilar POST; hekim_onay_at + belge_id match
+    // the "Karneden aktarıldı · hekim onaylı" provenance badge (asiKaynakTuru).
+    const belgeId = await asiBelgeId(ctx)
+    const satir: Record<string, unknown> = {
       doktor_id: ctx.doktorId,
       patient_id: ctx.hasta.id,
-      asi_adi: String(v.asi_adi),
+      asi_adi: asiAdiNormalize(String(v.asi_adi)),
       doz_no: v.doz_no ?? null,
       kategori: ctx.hasta.yasAy != null && ctx.hasta.yasAy < 216 ? 'pediatrik' : 'yetiskin',
       uygulama_tarihi: v.uygulama_tarihi ?? null,
       sonraki_doz_tarihi: v.sonraki_doz_tarihi ?? null,
       kaynak: v.kaynak === 'kayit' ? 'kayit' : 'beyan',
       notlar: v.notlar ?? null,
+      belge_id: belgeId,
+      hekim_onay_at: new Date().toISOString(),
     }
-    const { data, error } = await ctx.supabase.from('asilar').insert(satir).select('id').single()
+    let { data, error } = await ctx.supabase.from('asilar').insert(satir).select('id').single()
+    if (error && /belge_id|hekim_onay_at|column/i.test(String(error.message || ''))) {
+      const { belge_id: _b, hekim_onay_at: _h, ...eski } = satir
+      ;({ data, error } = await ctx.supabase.from('asilar').insert(eski).select('id').single())
+    }
     if (error || !data) throw new Error(error?.message || 'Aşı kaydedilemedi.')
     return { hedefTablo: 'asilar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'Aşılar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=asilar` } }
   },

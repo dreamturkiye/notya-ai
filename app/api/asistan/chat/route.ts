@@ -25,7 +25,7 @@ import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aiCagir } from "@/lib/ai/cagir"
 import { asistanModelYonlendir, gecmisiKirp, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali } from "@/core/eylemler/araclar"
-import { toolUseOnerileri, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
+import { toolUseOnerileri, oneriHazirla, kayitNiyetiMi, type HazirOneri } from "@/core/eylemler/oneri"
 import { hastaOzetiGetir } from "@/core/eylemler/hasta"
 import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
 import { bugunTRT } from "@/core/eylemler/types"
@@ -214,12 +214,14 @@ ${ilacBaglamMetni(drugs[0])}`
     const eylemHastasi = eylemKapali() ? null : await hastaOzetiGetir(getSupabase(), user.id, eylemHastaId)
     const eylemBransi = bransAnahtari(hekimBransi)
     const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
+    const toolChoice = araclar.length && kayitNiyetiMi(String(message || augmentedMessage || '')) ? ('any' as const) : undefined
 
     const response = await aiCagir({
       istemci: getAnthropic(),
       gorev: yonlendirme.gorev,
       doctorId: user.id,
       araclar,
+      toolChoice,
       system: [
         { metin: sistem.sabit, onbellek: true },
         { metin: sistem.degisken + bransKilidi + dosyaEk + (araclar.length ? EYLEM_ISTEM_BLOGU : ""), onbellek: true },

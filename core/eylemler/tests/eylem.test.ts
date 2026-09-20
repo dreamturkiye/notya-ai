@@ -23,10 +23,11 @@ import { encrypt } from '@/lib/security/encryption'
 import { eylemler, eylemBul } from '@/core/eylemler/kayit'
 import { T3_YASAKLI_ANAHTARLAR } from '@/core/eylemler/yasakli'
 import { aracTanimlari, uygunEylemler, ARAC_TAVANI } from '@/core/eylemler/araclar'
-import { oneriHazirla, tahminleriAyikla, kaynaklariCoz } from '@/core/eylemler/oneri'
+import { oneriHazirla, tahminleriAyikla, kaynaklariCoz, kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { eylemOnayla, eylemVazgec, suresiDolduMu } from '@/core/eylemler/onayla'
 import { eylemGeriAl } from '@/core/eylemler/geriAl'
 import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
+import { asiAdiNormalize } from '@/core/eylemler/temelEylemler'
 import { bugunTRT, yasAyHesapla, type EylemBaglami, type HastaOzeti } from '@/core/eylemler/types'
 import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
@@ -183,13 +184,16 @@ describe('Araç süzgeci ve branş kapısı', () => {
 })
 
 describe('Tahmin asla değer olarak yazılmaz', () => {
-  it('tahmin işaretli alan düşer, kaynaksız alan da düşer', () => {
-    const { veri, dusen } = tahminleriAyikla(
+  it('tahmin işaretli alan düşer; kaynaksız alan KALIR (belirsiz)', () => {
+    const kaynaklar = kaynaklariCoz({ asi_adi: { kaynak: 'dosyadan', alinti: 'Hep B 1. doz yapıldı' }, uygulama_tarihi: { kaynak: 'tahmin' } })
+    const { veri, dusen, belirsiz } = tahminleriAyikla(
       { asi_adi: 'Hepatit B', uygulama_tarihi: '2026-09-01', doz_no: 2 },
-      kaynaklariCoz({ asi_adi: { kaynak: 'dosyadan', alinti: 'Hep B 1. doz yapıldı' }, uygulama_tarihi: { kaynak: 'tahmin' } })
+      kaynaklar
     )
-    assert.deepEqual(veri, { asi_adi: 'Hepatit B' })
-    assert.deepEqual(dusen.sort(), ['doz_no', 'uygulama_tarihi'])
+    assert.deepEqual(veri, { asi_adi: 'Hepatit B', doz_no: 2 })
+    assert.deepEqual(dusen, ['uygulama_tarihi'])
+    assert.deepEqual(belirsiz, ['doz_no'])
+    assert.equal(kaynaklar.doz_no?.kaynak, 'belirsiz')
   })
 
   it('öneride tahmin edilen zorunlu alan boş kalır ve eksik listesine düşer', async () => {
@@ -203,6 +207,19 @@ describe('Tahmin asla değer olarak yazılmaz', () => {
     assert.equal(o!.veri.uygulama_tarihi, undefined, 'tahmin edilen tarih değer olarak yazıldı')
     assert.ok(o!.eksik_alanlar.includes('uygulama_tarihi'))
     assert.equal(o!.alan_kaynaklari.asi_adi.alinti, 'doğum epikrizi')
+  })
+
+  it('kaynaksız zorunlu alan KALIR ve belirsiz uyarısı çıkar (kart boşalmaz)', async () => {
+    const o = await oneriAc('asi_kaydi_ekle', {
+      asi_adi: 'Hep B',
+      uygulama_tarihi: '2025-01-10',
+      // alan_kaynaklari bilerek yok — model unuttu
+    })
+    assert.ok(o)
+    assert.equal(o!.veri.asi_adi, 'Hep B')
+    assert.equal(o!.veri.uygulama_tarihi, '2025-01-10')
+    assert.equal(o!.alan_kaynaklari.asi_adi?.kaynak, 'belirsiz')
+    assert.ok(o!.uyarilar.some((u) => /kaynak belirtilmedi/i.test(u)))
   })
 
   it('eksik zorunlu alanla onay REDDEDİLİR', async () => {
@@ -233,12 +250,56 @@ describe('Onay: doğrulama, makullük, mükerrer, idempotans', () => {
     assert.equal(satir.asi_adi, 'Hepatit B')
     assert.equal(satir.doz_no, 2)
     assert.equal(satir.kaynak, 'beyan')
+    assert.ok(satir.hekim_onay_at, 'hekim_onay_at yok — karne rozeti çıkmaz')
     assert.equal(satir.doktor_id, DOKTOR)
     assert.equal(satir.patient_id, HASTA_ID)
     const kayit = db.tablo('eylem_kayitlari')[0]
     assert.equal(kayit.hedef_tablo, 'asilar')
     assert.equal(kayit.kaynak, 'ayse_oneri', 'denetim satırı hazırlayanı yazmıyor')
     assert.equal(kayit.doctor_id, DOKTOR, 'denetim satırı onaylayanı yazmıyor')
+  })
+
+  it('Hep B → Hepatit B normalize; belge_id kaynaklardan taşınır', async () => {
+    assert.equal(asiAdiNormalize('Hep B'), 'Hepatit B')
+    assert.equal(asiAdiNormalize('Hepatit B aşısı'), 'Hepatit B')
+    const o = await oneriAc('asi_kaydi_ekle', {
+      asi_adi: 'Hep B',
+      uygulama_tarihi: '2024-03-15',
+      alan_kaynaklari: {
+        asi_adi: { kaynak: 'dosyadan', alinti: 'doğumda Hep B yapıldı', belgeId: 'belge-epikriz-1' },
+        uygulama_tarihi: { kaynak: 'dosyadan', alinti: 'doğumda', belgeId: 'belge-epikriz-1' },
+      },
+    })
+    const s = await eylemOnayla({ supabase: sb, doktorId: DOKTOR, oneriId: o!.id, brans: 'pediatri' })
+    assert.equal(s.ok, true)
+    const satir = db.tablo('asilar')[0]
+    assert.equal(satir.asi_adi, 'Hepatit B')
+    assert.equal(satir.belge_id, 'belge-epikriz-1')
+    assert.ok(satir.hekim_onay_at)
+  })
+
+  it('geçmişteki sonraki_doz uyarıdır, commit 400 değildir', async () => {
+    const o = await oneriAc(
+      'asi_kaydi_ekle',
+      hepsiDoktordan({ asi_adi: 'Hepatit B', uygulama_tarihi: '2024-03-15', sonraki_doz_tarihi: '2024-04-15' })
+    )
+    assert.ok(o!.uyarilar.some((u) => /Sonraki doz tarihi.*geçmişte/i.test(u)), `uyarı yok: ${JSON.stringify(o!.uyarilar)}`)
+    const s = await eylemOnayla({ supabase: sb, doktorId: DOKTOR, oneriId: o!.id, brans: 'pediatri' })
+    assert.equal(s.ok, true, 'geçmiş sonraki_doz commit reddetti')
+    assert.equal(db.tablo('asilar').length, 1)
+  })
+
+  it('mükerrer: Hep B mevcut Hepatit B ile seri eşleşir', async () => {
+    db.tablo('asilar').push({ id: randomUUID(), doktor_id: DOKTOR, patient_id: HASTA_ID, asi_adi: 'Hepatit B', uygulama_tarihi: '2025-01-10' })
+    const o = await oneriAc('asi_kaydi_ekle', hepsiDoktordan({ asi_adi: 'Hep B', uygulama_tarihi: '2025-01-10' }))
+    assert.ok(o!.uyarilar.some((u) => /mükerrer/i.test(u)), `uyarı yok: ${JSON.stringify(o!.uyarilar)}`)
+  })
+
+  it('kayitNiyetiMi: yazıver / kaydet / dosyaya gir', () => {
+    assert.equal(kayitNiyetiMi('sen yazıver'), true)
+    assert.equal(kayitNiyetiMi('bunu kaydet'), true)
+    assert.equal(kayitNiyetiMi('dosyaya gir'), true)
+    assert.equal(kayitNiyetiMi('özetle'), false)
   })
 
   it('geçersiz tarih düzeltmesi 400 döner, kayıt yazılmaz', async () => {

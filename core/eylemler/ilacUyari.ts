@@ -466,3 +466,35 @@ export async function ilacUyarilariHesapla(ctx: EylemBaglami, girdi: IlacUyariGi
   }
   return uyarilar
 }
+
+/**
+ * NOTYA-EYLEM-31 — Ayşe'nin uyarı cümlesini DÜZ METİNDEN çıkarır.
+ *
+ * `proactiveWarning` yapısal olarak yalnız `/api/asistan/chat` yanıtında vardı; Danış ve not içi
+ * kutu düz metin döndürüyor, orada modelin uyarı cümlesi baloncukta kalıp karta HİÇ taşınmıyordu.
+ * Aynı deterministik kontroller üç yüzeyde de koşuyordu ama hekimin kartta gördüğü şey farklıydı.
+ *
+ * Konsult yanıtını yapısallaştırmak (ikinci bir model çağrısı ya da JSON zorlaması) yerine burada
+ * seçim yapılıyor: yanıttaki cümlelerden RİSK sözcüğü taşıyanlar alınır. Yanlış seçim ucuzdur —
+ * çıktı `orta` şiddetle, "Ayşe'nin notu" etiketiyle ve "doğrulaması hekimde" kaynağıyla basılır;
+ * hiçbir zaman `ciddi` olmaz ve hiçbir zaman ikinci dokunuşu tetiklemez. Hiçbir şey seçilmezse
+ * kartta Ayşe'nin notu satırı çıkmaz — uydurulmuş bir uyarı basmaktansa hiç basmamak doğrudur.
+ */
+const RISK_SOZCUKLERI =
+  /etkileşim|risk|dikkat|uyar|kontrendike|alerji|yan etki|artırabilir|azaltabilir|kanama|toksis|doz aşım|birlikte kullan|önerilmez|kaçınıl/i
+
+/** Model çıktısında kart yerine metin biçimi üretilmişse temizlenecek başlık kalıntıları. */
+const BASLIK_KALINTISI = /^\s*(hocam[,:]?|not[:.]|uyarı[:.]|dikkat[:.])\s*/i
+
+export function ayseUyariCumlesi(cevap: string | null | undefined, enCok = 2): string | null {
+  const metin = String(cevap || '').trim()
+  if (!metin) return null
+  const cumleler = metin
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+/)
+    .map((c) => c.trim())
+    .filter((c) => c.length >= 25 && c.length <= 400)
+  const secilen = cumleler.filter((c) => RISK_SOZCUKLERI.test(c)).slice(0, enCok)
+  if (!secilen.length) return null
+  return secilen.map((c) => c.replace(BASLIK_KALINTISI, '')).join(' ').slice(0, 600)
+}

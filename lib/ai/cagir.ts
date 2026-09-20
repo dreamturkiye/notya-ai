@@ -43,6 +43,11 @@ export interface AiCagriGirdisi {
    * DEĞİLDİR: yanıttaki tool_use blokları yalnız hekime onay kartı hazırlar (docs/AYSE-EYLEM-MIMARISI.md §1).
    */
   araclar?: unknown[]
+  /**
+   * When the doctor says kaydet/yazıver, force a tool call (`any`) so the model cannot narrate
+   * "veri girişi yapamam". Still a proposal only — commit is the tap.
+   */
+  toolChoice?: 'auto' | 'any' | { type: 'tool'; name: string }
 }
 
 export class AiCagriHatasi extends Error {
@@ -111,7 +116,12 @@ export function istekGovdesi(g: AiCagriGirdisi): Record<string, unknown> {
   const system = sistemGovdesi(g.system)
   if (system) govde.system = system
   if (g.temperature !== undefined) govde.temperature = g.temperature
-  if (g.araclar?.length) govde.tools = g.araclar
+  if (g.araclar?.length) {
+    govde.tools = g.araclar
+    if (g.toolChoice === 'any') govde.tool_choice = { type: 'any' }
+    else if (g.toolChoice === 'auto') govde.tool_choice = { type: 'auto' }
+    else if (g.toolChoice && typeof g.toolChoice === 'object') govde.tool_choice = g.toolChoice
+  }
   return govde
 }
 

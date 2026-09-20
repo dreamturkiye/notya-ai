@@ -1,10 +1,15 @@
 /**
  * NOTYA-EYLEM — model tool_use → `eylem_onerileri` row (a taslak, never a record).
  *
- * THE structural safety property of this file (docs §2): **a `tahmin` value is never stored as a
- * value.** The field is emptied and listed in `eksik_alanlar`, so the card shows it blank-yellow and
- * the doctor types it. Dr. Gökhan's "tahminen Eylül 2026" class of error cannot survive a tap,
- * because there is nothing to tap past — the save button refuses while a required field is empty.
+ * THE structural safety property of this file (docs §2): **an explicit `tahmin` value is never
+ * stored as a value.** The field is emptied and listed in `eksik_alanlar`, so the card shows it
+ * blank-yellow and the doctor types it. Dr. Gökhan's "tahminen Eylül 2026" class of error cannot
+ * survive a tap, because there is nothing to tap past — the save button refuses while a required
+ * field is empty.
+ *
+ * Missing alan_kaynaklari is softer: keep the value, mark `belirsiz`, warn on the card. Models
+ * often forget the nested object; wiping Hep B name+date made an empty yellow form look like Ayşe
+ * did nothing.
  *
  * hasta_id is resolved SERVER-SIDE by the caller and passed in. Nothing here reads a patient identity
  * out of model output; the chat route pseudonymises, so model output could not carry a real one anyway.
@@ -74,21 +79,37 @@ export function kaynaklariCoz(ham: unknown): Record<string, AlanKaynakKaydi> {
 }
 
 /**
- * Drop every guessed value. A field the model filled WITHOUT declaring a source counts as a guess:
- * silence is not evidence, and the honest failure mode is an empty yellow box, not a plausible date.
+ * Drop only explicit `tahmin` values. Missing kaynak → keep value + mark `belirsiz` (card warns).
+ * Mutates `kaynaklar` when stamping belirsiz so the stored öneri carries the flag for the card.
  */
 export function tahminleriAyikla(
   veri: Record<string, unknown>,
   kaynaklar: Record<string, AlanKaynakKaydi>
-): { veri: Record<string, unknown>; dusen: string[] } {
+): { veri: Record<string, unknown>; dusen: string[]; belirsiz: string[] } {
   const temiz: Record<string, unknown> = {}
   const dusen: string[] = []
+  const belirsiz: string[] = []
   for (const [alan, deger] of Object.entries(veri)) {
     const k = kaynaklar[alan]?.kaynak
     if (k === 'doktor_soyledi' || k === 'dosyadan') temiz[alan] = deger
-    else dusen.push(alan)
+    else if (k === 'tahmin') dusen.push(alan)
+    else {
+      temiz[alan] = deger
+      belirsiz.push(alan)
+      kaynaklar[alan] = {
+        kaynak: 'belirsiz',
+        alinti: kaynaklar[alan]?.alinti ?? null,
+        belgeId: kaynaklar[alan]?.belgeId ?? null,
+        notId: kaynaklar[alan]?.notId ?? null,
+      }
+    }
   }
-  return { veri: temiz, dusen }
+  return { veri: temiz, dusen, belirsiz }
+}
+
+/** Doctor said “kaydet / yazıver / dosyaya gir …” — force a tool call so the model cannot narrate a refusal. */
+export function kayitNiyetiMi(metin: string): boolean {
+  return /kaydet|yaz[ıi]ver|dosyaya\s*gir|kayda\s*ge[çc]|kayda\s*ge[çc]ir/i.test(String(metin || ''))
 }
 
 export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> {
@@ -101,7 +122,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
   const ham: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(g.girdi)) if (alanAnahtarlari.has(k)) ham[k] = v
 
-  const { veri: kaynakli, dusen } = tahminleriAyikla(ham, kaynaklar)
+  const { veri: kaynakli, dusen, belirsiz } = tahminleriAyikla(ham, kaynaklar)
   const veri = veriNormalize(eylem.alanlar, kaynakli)
 
   // A date that came back malformed is worth no more than a guess.
@@ -118,6 +139,17 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
   const uyarilar: string[] = []
   const makul = eylem.makullukKontrol?.(g.ctx, veri as never)
   if (makul) uyarilar.push(makul)
+  // Soft: past next-dose is a catch-up reality for neonates — warn on the card, never hard-fail commit.
+  if (eylem.anahtar === 'asi_kaydi_ekle') {
+    const sonraki = veri.sonraki_doz_tarihi
+    if (sonraki && String(sonraki) < g.ctx.bugunTRT) {
+      uyarilar.push(`Sonraki doz tarihi (${sonraki}) geçmişte — kontrol edin.`)
+    }
+  }
+  for (const a of belirsiz) {
+    const etiket = eylem.alanlar.find((x) => x.anahtar === a)?.etiket || a
+    uyarilar.push(`${etiket}: kaynak belirtilmedi — kontrol edin.`)
+  }
   try {
     const mukerrer = await eylem.mukerrerKontrol?.(g.ctx, veri as never)
     if (mukerrer) uyarilar.push(mukerrer)

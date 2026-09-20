@@ -69,7 +69,11 @@ const hayalet: React.CSSProperties = { ...btn, background: 'transparent', color:
 const girdi: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '7px 9px', color: '#EDF1F7', fontSize: 13 }
 const girdiBos: React.CSSProperties = { ...girdi, borderColor: 'rgba(250,204,21,0.55)', background: 'rgba(250,204,21,0.08)' }
 
-const KAYNAK_ETIKET: Record<string, string> = { doktor_soyledi: 'Hekim söyledi', dosyadan: 'Dosyadan' }
+const KAYNAK_ETIKET: Record<string, string> = {
+  doktor_soyledi: 'Hekim söyledi',
+  dosyadan: 'Dosyadan',
+  belirsiz: 'Kaynak belirtilmedi — kontrol edin',
+}
 
 /**
  * NOTYA-EYLEM-21 — safety warnings, ABOVE the fields, severity-coloured, Turkish, NEVER collapsible.
@@ -277,6 +281,15 @@ export function EylemKarti({
                   style={isaretli ? girdiBos : girdi}
                 />
               )}
+              {oneri.eylem_anahtar === 'asi_kaydi_ekle' && a.anahtar === 'uygulama_tarihi' && !String(deger[a.anahtar] || '').trim() && hasta.dogumTarihi ? (
+                <button
+                  type="button"
+                  onClick={() => setDeger((d) => ({ ...d, uygulama_tarihi: String(hasta.dogumTarihi) }))}
+                  style={{ ...btn, marginTop: 6, fontSize: 11, padding: '5px 10px' }}
+                >
+                  Doğum tarihinde uygulandı
+                </button>
+              ) : null}
               {isaretli ? <div style={{ ...kucuk, color: '#FCD34D', marginTop: 3 }}>Ayşe bu alandan emin değil — siz girin.</div> : null}
               {!bos && k && KAYNAK_ETIKET[k.kaynak] ? (
                 <div style={{ ...kucuk, marginTop: 3 }}>Kaynak: {KAYNAK_ETIKET[k.kaynak]}{k.alinti ? ` — “${k.alinti}”` : ''}</div>

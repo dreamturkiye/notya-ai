@@ -25,8 +25,11 @@ export type Kademe = 'T1' | 'T2'
  * Per-field provenance. `tahmin` is never stored AS A VALUE — the field is left empty and listed in
  * `eksik_alanlar` for the doctor to fill. That is the structural fix for the "tahminen Eylül 2026"
  * class of error: a guess cannot become a clinical record by being tapped past.
+ *
+ * `belirsiz` = model filled a value but forgot alan_kaynaklari. Value is KEPT (emptying the card
+ * looked like Ayşe did nothing) and flagged "kaynak belirtilmedi — kontrol edin" on the card.
  */
-export type AlanKaynagi = 'doktor_soyledi' | 'dosyadan' | 'tahmin'
+export type AlanKaynagi = 'doktor_soyledi' | 'dosyadan' | 'tahmin' | 'belirsiz'
 
 /** Which chat surface produced the proposal. */
 export type Yuzey = 'danis' | 'sohbet' | 'ses' | 'not'

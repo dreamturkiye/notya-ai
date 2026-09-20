@@ -20,10 +20,11 @@ import { vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { notKonsultSistemParcalari } from '@/lib/doktor/notKonsultPromptu'
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
 import { aracTanimlari, eylemKapali } from '@/core/eylemler/araclar'
-import { toolUseOnerileri } from '@/core/eylemler/oneri'
+import { toolUseOnerileri, kayitNiyetiMi } from '@/core/eylemler/oneri'
 import { hastaOzetiGetir } from '@/core/eylemler/hasta'
 import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
 import { bugunTRT } from '@/core/eylemler/types'
+import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 
 export const dynamic = 'force-dynamic'
@@ -85,6 +86,8 @@ export async function POST(req: NextRequest) {
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
     content: String(m.icerik || '').slice(0, 3000),
   }))
+  const sonMetin = String(mesajlar[mesajlar.length - 1]?.icerik || '')
+  const toolChoice = araclar.length && kayitNiyetiMi(sonMetin) ? ('any' as const) : undefined
 
   try {
     // NOTYA-MALIYET-01: SOAP üzerinde klinik danışma + düzenleme — GÜÇLÜ (klinik-analiz)
@@ -92,7 +95,7 @@ export async function POST(req: NextRequest) {
     let yanit: Awaited<ReturnType<typeof aiCagir>> | null = null
     try {
       // prompt caching: kimlik/yetenekler/alan anahtarları (branş kapsamı başına sabit) önbellekli; tarih, taslak, dosya, hafıza arkasından
-      yanit = await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit + (araclar.length ? EYLEM_ISTEM_BLOGU : ''), onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis, araclar })
+      yanit = await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit + (araclar.length ? EYLEM_ISTEM_BLOGU : ''), onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis, araclar, toolChoice })
       // yanitMetni yalnız text bloklarını birleştirir — tool_use blokları JSON zarfını bozmaz.
       ham = yanitMetni(yanit)
     } catch (e) {
@@ -123,6 +126,9 @@ export async function POST(req: NextRequest) {
           { supabase, doktorId, hasta: eylemHastasi, brans: eylemBransi, oneriId: '', bugunTRT: bugunTRT() },
           'not',
           { brans: eylemBransi, hasta: eylemHastasi },
+          // NOTYA-EYLEM-31: not içi kutu da düz metin döndürür; Ayşe'nin uyarı cümlesi karta aynı
+          // deterministik seçimle taşınır, böylece üç yüzey de aynı kartı gösterir.
+          ayseUyariCumlesi(String(sonuc.cevap || '')),
         )
       : []
     // Araç çağırıp hiç metin yazmadıysa hekim boş baloncuk görmesin.
