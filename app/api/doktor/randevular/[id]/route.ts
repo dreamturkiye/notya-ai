@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { otomatikHastaKaydiOlustur } from '@/lib/doktor/otomatikHastaKaydi'
+import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 import { randevuGuncellemePlani } from '@/lib/randevu/randevuDurum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 
@@ -56,22 +57,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (plan.hata) return NextResponse.json({ error: plan.hata }, { status: 400 })
 
   if (plan.cakismaKontrolu) {
-    const { data: cakisan, error: cakismaHata } = await supabase
-      .from('randevular')
-      .select('id')
-      .eq('doktor_id', doktorId)
-      .neq('id', params.id)
-      .neq('durum', 'iptal')
-      .lt('baslangic', plan.cakismaKontrolu.bitis)
-      .gt('bitis', plan.cakismaKontrolu.baslangic)
-      .limit(1)
-    if (cakismaHata) return NextResponse.json({ error: 'Çakışma kontrolü yapılamadı.' }, { status: 500 })
-    if (cakisan && cakisan.length > 0) {
+    // Same predicate as the create route and the Ayşe action layer — lib/randevu/cakisma.ts.
+    const cakisma = await randevuCakismasiVarMi(supabase, doktorId, plan.cakismaKontrolu.baslangic, plan.cakismaKontrolu.bitis, params.id)
+    if (cakisma.hata) return NextResponse.json({ error: CAKISMA_KONTROL_HATASI }, { status: 500 })
+    if (cakisma.cakisiyor) {
       return NextResponse.json(
         {
           error: plan.reaktivasyon
             ? 'Bu saat aralığı iptalden sonra başka bir randevuya verilmiş. Önce saati değiştirin, sonra aktif hale getirin.'
-            : 'Bu saat aralığında zaten bir randevu var. Lütfen başka bir saat seçin.',
+            : CAKISMA_MESAJI,
         },
         { status: 409 }
       )

@@ -1,4 +1,5 @@
 'use client';
+import { EylemKarti, EylemToplu, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 
 export const dynamic = 'force-dynamic';
@@ -125,6 +126,10 @@ export default function IncelemePage() {
   const [kGirdi, setKGirdi] = useState('');
   const [kBekliyor, setKBekliyor] = useState(false);
   const [eylemler, setEylemler] = useState<Eylem[]>([]);
+  // NOTYA-EYLEM: Ayşe'nin bu notta hazırladığı dosya kayıtları (aşı, ilaç, ölçüm…) ve kart başlığı
+  // için hasta adı. Öneriler sunucudan gelir; istemci hiçbir zaman kendi başına hasta seçmez.
+  const [eylemOnerileri, setEylemOnerileri] = useState<EylemOneriGorunumu[]>([]);
+  const [eylemHastasi, setEylemHastasi] = useState<EylemHasta | null>(null);
   const atlaOtomatikRef = useRef(true);
   const kBekliyorRef = useRef(false);
 
@@ -194,6 +199,10 @@ export default function IncelemePage() {
       if (typeof dz.aiDegerlendirme === 'string' && dz.aiDegerlendirme.trim()) setAiDegTaslak(dz.aiDegerlendirme as string);
       if (Array.isArray(d.eylemler) && d.eylemler.length) {
         setEylemler((prev) => [...prev, ...(d.eylemler as Eylem[]).map((e) => ({ ...e, durum: 'oneri' as const }))]);
+      }
+      if (Array.isArray(d.eylemOnerileri) && d.eylemOnerileri.length) {
+        setEylemOnerileri((prev) => [...prev, ...(d.eylemOnerileri as EylemOneriGorunumu[])]);
+        if (d.eylemHastasi) setEylemHastasi(d.eylemHastasi as EylemHasta);
       }
     } catch (e) {
       if (!opts?.sessiz) setKMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : 'Ayşe yanıt veremedi.' }]);
@@ -551,6 +560,11 @@ export default function IncelemePage() {
                             {e.durum === 'hata' && <span style={{ color: '#FCA5A5' }}>Eklenemedi — takvimden elle ekleyin</span>}
                           </div>
                         ))}
+                        {eylemOnerileri.length > 0 && eylemHastasi ? (
+                          eylemOnerileri.length > 1
+                            ? <EylemToplu oneriler={eylemOnerileri} hasta={eylemHastasi} tokenAl={getAccessTokenAsync} />
+                            : <EylemKarti oneri={eylemOnerileri[0]} hasta={eylemHastasi} tokenAl={getAccessTokenAsync} />
+                        ) : null}
                         <form onSubmit={(ev) => { ev.preventDefault(); konsultGonder(note); }} style={{ display: 'flex', gap: 6 }}>
                           <input value={kGirdi} onChange={(ev) => setKGirdi(ev.target.value)} placeholder="Örn. prognoz? / kontrolü 5 gün sonraya planla / planı kısalt" style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#EDF1F7', borderRadius: 9, padding: '8px 10px', fontSize: 13, minWidth: 0 }} />
                           <button type="submit" disabled={kBekliyor || !kGirdi.trim()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 9, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: kBekliyor || !kGirdi.trim() ? 0.5 : 1 }}>Sor</button>

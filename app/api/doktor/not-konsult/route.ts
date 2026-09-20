@@ -19,6 +19,12 @@ import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 import { vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { notKonsultSistemParcalari } from '@/lib/doktor/notKonsultPromptu'
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
+import { aracTanimlari, eylemKapali } from '@/core/eylemler/araclar'
+import { toolUseOnerileri } from '@/core/eylemler/oneri'
+import { hastaOzetiGetir } from '@/core/eylemler/hasta'
+import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
+import { bugunTRT } from '@/core/eylemler/types'
+import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -70,6 +76,11 @@ export async function POST(req: NextRequest) {
   const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, patientId: seans?.patient_id ? String(seans.patient_id) : null })
   const sistem = notKonsultSistemParcalari({ kapsam, trtBugun, taslak, not, klinikBaglam, hafizaBlogu })
 
+  // NOTYA-EYLEM: hasta SUNUCUDA çözülür — notun seansındaki patient_id, doctor_id ile kapsanmış olarak.
+  const eylemHastasi = eylemKapali() ? null : await hastaOzetiGetir(supabase, doktorId, seans?.patient_id ? String(seans.patient_id) : null)
+  const eylemBransi = bransAnahtari(seans?.specialty) ?? kapsam.brans
+  const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
+
   const gecmis = mesajlar.slice(-16).map((m) => ({
     role: m.rol === 'asistan' ? ('assistant' as const) : ('user' as const),
     content: String(m.icerik || '').slice(0, 3000),
@@ -78,9 +89,12 @@ export async function POST(req: NextRequest) {
   try {
     // NOTYA-MALIYET-01: SOAP üzerinde klinik danışma + düzenleme — GÜÇLÜ (klinik-analiz)
     let ham: string
+    let yanit: Awaited<ReturnType<typeof aiCagir>> | null = null
     try {
       // prompt caching: kimlik/yetenekler/alan anahtarları (branş kapsamı başına sabit) önbellekli; tarih, taslak, dosya, hafıza arkasından
-      ham = yanitMetni(await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit, onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis }))
+      yanit = await aiCagir({ gorev: 'klinik-analiz', doctorId: doktorId, system: [{ metin: sistem.sabit + (araclar.length ? EYLEM_ISTEM_BLOGU : ''), onbellek: true }, { metin: `\n${sistem.degisken}` }], messages: gecmis, araclar })
+      // yanitMetni yalnız text bloklarını birleştirir — tool_use blokları JSON zarfını bozmaz.
+      ham = yanitMetni(yanit)
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[not-konsult] anthropic', e.govde.slice(0, 300))
@@ -102,10 +116,23 @@ export async function POST(req: NextRequest) {
     if (dz.vitaller && typeof dz.vitaller === 'object') dz.vitaller = vitalleriKapsamaGoreSuz(dz.vitaller, kapsam)
     sonuc.duzenlemeler = dz
     if (typeof sonuc.cevap === 'string' && sonuc.cevap.trim().startsWith('{')) sonuc.cevap = 'Düzenlemeyi ekrana işledim Hocam.'
+    // NOTYA-EYLEM: tool_use → taslak öneri. Hiçbir şey yazılmadı; hekim kartta onaylayacak.
+    const eylemOnerileri = eylemHastasi
+      ? await toolUseOnerileri(
+          (yanit ?? {}) as { content?: unknown },
+          { supabase, doktorId, hasta: eylemHastasi, brans: eylemBransi, oneriId: '', bugunTRT: bugunTRT() },
+          'not',
+          { brans: eylemBransi, hasta: eylemHastasi },
+        )
+      : []
+    // Araç çağırıp hiç metin yazmadıysa hekim boş baloncuk görmesin.
+    const cevap = String(sonuc.cevap || '') || (eylemOnerileri.length ? 'Kartı hazırladım Hocam — onaylarsanız dosyaya işlenir.' : '')
     return NextResponse.json({
-      cevap: String(sonuc.cevap || ''),
+      cevap,
       duzenlemeler: sonuc.duzenlemeler && typeof sonuc.duzenlemeler === 'object' ? sonuc.duzenlemeler : {},
       eylemler: Array.isArray(sonuc.eylemler) ? sonuc.eylemler : [],
+      eylemOnerileri,
+      eylemHastasi: eylemHastasi ? { ad: eylemHastasi.ad, dogumTarihi: eylemHastasi.dogumTarihi } : null,
       patientId: seans?.patient_id || null,
     })
   } catch (e) {

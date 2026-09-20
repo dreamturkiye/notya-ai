@@ -12,8 +12,12 @@ import { useEffect, useRef, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz';
+import { EylemKarti, EylemToplu, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti';
 
-interface Mesaj { rol: 'doktor' | 'asistan'; icerik: string }
+// NOTYA-EYLEM: cards ride ON the assistant message. This surface has no patientId on the client —
+// the patient is resolved server-side from free text — so both the proposal ids and the header name
+// come back from the route; the client never picks a patient for a write.
+interface Mesaj { rol: 'doktor' | 'asistan'; icerik: string; oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta }
 
 interface TanimaSonucu { isFinal: boolean; 0: { transcript: string } }
 interface TanimaOlayi { resultIndex: number; results: { length: number; [i: number]: TanimaSonucu } }
@@ -102,7 +106,7 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
       const cevap = asistanYanitiCoz(String(veri.speech || veri.response || veri.message || veri.cevap || '')).speech;
       if (veri.asistanSessionId) setOturumId(String(veri.asistanSessionId));
       if (veri.aktifHasta) setAktifHasta(String(veri.aktifHasta));
-      setMesajlar([...yeni, { rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.' }]);
+      setMesajlar([...yeni, { rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.', oneriler: (veri.eylemOnerileri as EylemOneriGorunumu[]) || [], hasta: (veri.eylemHastasi as EylemHasta) || undefined }]);
     } catch (e) {
       setMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : `${personaAdi} yanıt veremedi.` }]);
     } finally {
@@ -134,7 +138,12 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
             {mesajlar.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '90%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal', overflowWrap: 'anywhere', minWidth: 0 }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
+              <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'stretch', maxWidth: m.rol === 'doktor' ? '90%' : '100%', minWidth: 0 }}>
+                <div style={{ display: 'inline-block', maxWidth: '100%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal', overflowWrap: 'anywhere' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
+                {m.oneriler?.length && m.hasta ? (
+                  m.oneriler.length > 1 ? <EylemToplu oneriler={m.oneriler} hasta={m.hasta} /> : <EylemKarti oneri={m.oneriler[0]} hasta={m.hasta} />
+                ) : null}
+              </div>
             ))}
             {bekliyor && <div style={{ fontSize: 12, color: '#5F7189' }}>{personaAdi} dosyaya bakıyor…</div>}
             <div ref={altRef} />

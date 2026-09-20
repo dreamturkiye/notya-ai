@@ -4,7 +4,7 @@
 resurfacing weeks later as "why was this never done?". Chat history is not a tracking system.
 Anything deferred goes here with a date and who it waits on, or it does not count as agreed.
 
-Last reviewed: 2026-09-19 (ASI-KARNESI-01 aşı karnesi)
+Last reviewed: 2026-09-19 (NOTYA-EYLEM — Ayşe dosyaya yazar)
 
 ---
 
@@ -148,6 +148,66 @@ kayıtlarını ellerinde taşıyorlar, param parça oluyor."*
   (takvim motoru vs hekimin girdiği tarih); aynı gün ikisi birden gönderilirse aile iki mesaj alabilir. Birleştirme ayrı iş.
 - iPhone galerisinden seçilen HEIC fotoğraf: Safari çoğunlukla JPEG'e çevirir; çeviremeyen tarayıcıda Kasa "Desteklenen
   türler" hatası verir (dürüst hata, sessiz kayıp yok). Gerekirse HEIC desteği ayrı iş.
+
+## NOTYA-EYLEM — Ayşe dosyaya kayıt HAZIRLAR, hekim ONAYLAR (Kaan, 2026-09-19)
+
+**Kaynak — Dr. Gökhan Mamur, canlı:** "Ayşe'ye Danış"ta doğum epikrizinde bulduğu Hepatit B dozunu kaydetmesini istedi;
+Ayşe *"veri girişi yapabilen bir araç değilim"* dedi. Bu cümle kodda hiçbir yerde yazmıyordu — prompt'unda hiç yazma
+sözcüğü olmayan bir modelin genellemesiydi. **Kaan:** bu 30+ branşın tamamı ve klinik dikeyi için çekirdek yetenek,
+"build now". Mimari: `docs/AYSE-EYLEM-MIMARISI.md`. As-built: `docs/README_EYLEM.md`.
+
+**İlişki modeli KİLİTLİ:** Ayşe HAZIRLAR, hekim KAYDEDER. Model hiçbir şey yazmaz; araç çağrısı yalnız taslak üretir.
+Cihaz Köprüsü ile aynı kural: onay kartı HER ZAMAN, sessiz yazma ASLA.
+
+| # | Kalem | Durum |
+|---|---|---|
+| NOTYA-EYLEM-01 | Omurga: `core/eylemler/*` (types, z, sema, kayit, araclar, oneri, onayla, geriAl, yasakli, istem, hasta, bosluk) | **DONE** |
+| NOTYA-EYLEM-02 | Tablolar `eylem_onerileri` + `eylem_kayitlari` + RLS (migration **085**), uygulandı | **DONE** |
+| NOTYA-EYLEM-03 | Onay kartı `components/core/EylemKarti.tsx` (tekil + toplu; hasta adı/doğum tarihi büyük = yanlış hasta koruması; eksik alan sarı-boş; kaynak satırı; T2 önce→sonra; 390px) | **DONE** |
+| NOTYA-EYLEM-04 | API `POST /api/doktor/eylem` (onayla / vazgec / geri_al / toplu_onayla) + `GET ?hastaId` bekleyen tepsisi; `doktorOturum` (sekreter klinik kayıt onaylayamaz) | **DONE** |
+| NOTYA-EYLEM-05 | T1 eylemler: asi_kaydi_ekle, ilac_ekle, alerji_ekle, kronik_hastalik_ekle, olcum_ekle, bas_cevresi_ekle, kontrol_randevusu_olustur, dosya_notu_ekle | **DONE** |
+| NOTYA-EYLEM-06 | T2 eylemler (diff + dokunuş): ilac_sonlandir, ilac_doz_degistir, alerji_kaldir, hasta_bilgisi_duzelt | **DONE** |
+| NOTYA-EYLEM-07 | Prompt düzeltmesi: yetenek paragrafı (`core/eylemler/istem.ts`) üç yüzeyde aynı metin; personaEngine'in "Kaydettim / Ekledim / Yazıldı" kuralı **kaldırıldı** (olmamış kaydı olmuş gösteriyordu); not-konsult'a 4. yetenek eklendi; konsult prompt'u kart adını sistemin koyduğunu söylüyor | **DONE** |
+| NOTYA-EYLEM-08 | Üç yüzeyde kart: Danış (`/api/doktor/konsult` + `HastaKonsult.tsx`), yazılı sohbet (`/api/asistan/chat` + `YaziliSohbet.tsx`), not içi kutu (`/api/doktor/not-konsult` + `inceleme/page.tsx`). Yeni ekran yok | **DONE** |
+| NOTYA-EYLEM-09 | Testler (37): T3 yokluğu (liste + fiil regex), kayıt tutarlılığı, araç süzgeci + branş kapısı (30+ branş × eylem), tahmin→eksik alan, zod yeniden doğrulama, makullük, mükerrer, idempotans, süre dolması, geri alma (T1 evet / T2 hayır / 24 saat), branş görevi, proaktif boşluk. `npm test` içinde | **DONE** |
+| NOTYA-EYLEM-10 | Çapraz-doktor izolasyon: envanterde `T`, pakette 4 vaka (GET / onayla / vazgec / geri_al) A↔B iki yönde | **DONE** |
+| NOTYA-EYLEM-11 | İkinci yazma yolu YOK: `lib/doktor/hastaKayitAlanlari.ts` (alerji/kronik), `gununNotunaVitalEkle` (vitaller), `lib/randevu/cakisma.ts` (çakışma — mevcut POST **ve** PATCH rotaları da buna geçirildi) | **DONE** |
+| NOTYA-EYLEM-12 | P2 toplu kart (bir turda çok araç → tek `grup_id` → "Seçilenleri kaydet") + proaktif boşluk teklifi (LLM'siz, yalnız ilk doktor turunda) | **DONE** |
+| NOTYA-EYLEM-13 | P3 branş eylemleri: jine_gorevi_ekle (KD), derm_gorevi_ekle (dermatoloji), dahiliye_gorevi_ekle (dahiliye). Pediatri kendi eylemini gerektirmedi — aşı/ölçüm zaten temel, baş çevresi kapıyı kapsam motorundan alıyor | **DONE** |
+| NOTYA-EYLEM-14 | Kill switch `AYSE_EYLEM_KAPALI=1`, 24 saat süre dolması, belge metni güvenilmez (araç yalnız doktor turunda) | **DONE** |
+| NOTYA-EYLEM-15 | Beta kontrol listesi v8 — "Ayşe'ye dosyaya kayıt yaptırın (aşı, ilaç, ölçüm) + Geri al" maddesi (`docs/beta/Notya-Beta-Test-Listesi-DrGokhan-v8.html`) | **DONE** (PDF basılmadı — tarayıcıdan Yazdır → PDF; sahibi Kaan) |
+
+### OPEN — bu PR'da YAPILMAYANLAR (2026-09-19, sahibi Claude, Kaan onayıyla sıraya girer)
+
+- **NOTYA-EYLEM-16 — `takip_gorevi_olustur` (P1 listesindeydi, ŞİPLENMEDİ).** Ortak/çekirdek bir görev tablosu YOK: 31
+  branşın her birinin kendi `*_gorevleri` tablosu var ve hiçbirini gösteren branştan bağımsız bir ekran yok. Yeni bir
+  `takip_gorevleri` tablosu açmak, hekimin hiçbir yerde göremeyeceği bir kayıt üretirdi ("yeni ekran yok" kuralı). Hasta
+  hatırlatması (`hasta_hatirlatma`) doğru yer değil — o hastaya WhatsApp/SMS gider, yani T3. Karar: ortak görev
+  omurgası ayrı iştir; bugünkü takip ihtiyacını `kontrol_randevusu_olustur` karşılıyor (Randevular'da görünür).
+- **NOTYA-EYLEM-17 — `konsultasyon_taslagi` (P1 listesindeydi, ŞİPLENMEDİ, gerek kalmadı).** AYSE-KONSULTASYON-01 aynı
+  gün bu akışı zaten daha zengin bir editörle şipledi (Ayşe istem metnini taslak yazar, hekim düzenler/onaylar).
+  İkinci bir yol açmak "tek yazma yolu" kuralını bozardı.
+- **NOTYA-EYLEM-18 — `onayli_nota_ek` (T2 listesindeydi, ŞİPLENMEDİ).** Mimari "yalnız mevcut revizyon/yeniden onay
+  yolundan" diyor; o yol bugün belge analizi onay rotasına bağlı ve onaylı bir klinik notu sohbetten değiştirmenin
+  hukuki ağırlığı bir kartın taşıyabileceğinden fazla. Hekim not sayfasından düzenleyip yeniden onaylıyor.
+- **NOTYA-EYLEM-19 — sesli seansta araç çağrısı (P3, YARISI ŞİPLENDİ).** Şiplenen: taslak şeması `yuzey='ses'` taşıyor
+  ve **bekleyen tepsisi** hasta dosyasında duruyor, yani hangi yüzey hazırlarsa hazırlasın kart hekimi bekliyor.
+  Şiplenmeyen: ElevenLabs sesli ajanına client-tool tanımı + webhook — ajan yapılandırması ve canlı ses testi gerekiyor
+  (Dr. Gökhan'la bir oturum). Sahibi: Claude, Kaan'ın oturum planına bağlı.
+- **NOTYA-EYLEM-20 — klinik dikeyi aynası (P3, ŞİPLENMEDİ).** Omurga branştan bağımsız olduğu için `/asistan/klinik`
+  personalarına bağlamak yalnız rota işi; ama klinik dikeyinin hasta/kayıt modeli (clinics / clinic_members / Pabau)
+  doktor dikeyinden ayrı ve hangi tabloya yazılacağı ürün kararı. Kaan'ın kararını bekliyor.
+- **NOTYA-EYLEM-21 — ilaç etkileşim uyarısının KART ÜZERİNE basılması (mimari §5).** Bugün etkileşim uyarısı sohbet
+  metninde çıkıyor (konsult prompt kuralı 4, değişmedi) ama `ilac_ekle` kartının `uyarilar` alanına ayrıca YAZILMIYOR.
+  Kart altyapısı hazır (mükerrer ve makullük uyarıları oraya basılıyor); eksik olan, hastanın aktif ilaçlarıyla
+  etkileşim kontrolünü LLM'siz yapacak bir kaynak. `/doktor-tools/ilac-interaksiyon` aracıyla birleştirilecek. Sahibi: Claude.
+- **NOTYA-EYLEM-22 — canlı uçtan uca model testi.** Üretimde propose→commit→satır→geri al akışı QA hesabıyla
+  doğrulandı (sentetik hasta), ama **gerçek bir Claude araç çağrısıyla değil**: doğrulama commit/undo yolunu
+  (`/api/doktor/eylem`) sürer, aracı modelin çağırdığı adımı sürmez. ANTHROPIC kredisi ve bir gerçek oturum gerekiyor
+  (ASI-KARNESI-01'deki aynı açık kalemle aynı kapı).
+- **NOTYA-EYLEM-23 — mobil kontrol (standing rule).** Kart 390px için yazıldı (alanlar alt alta, düğmeler sarmalı) ama
+  **gerçek cihazda/tarayıcıda görülmedi** — bu oturumda canlı kart üretecek bir model turu koşulmadı. Dr. Gökhan'ın
+  v8 maddesi bunu ilk gerçek kullanımda yakalar; ayrıca Claude bir sonraki oturumda 390px ekran görüntüsü alacak.
 
 ## NOTYA-MALIYET-01 — AI model/maliyet politikası: klinik kalite > maliyet (Kaan, 2026-09-19)
 

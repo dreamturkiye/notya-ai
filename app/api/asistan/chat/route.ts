@@ -24,6 +24,12 @@ import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgr
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aiCagir } from "@/lib/ai/cagir"
 import { asistanModelYonlendir, gecmisiKirp, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
+import { aracTanimlari, eylemKapali } from "@/core/eylemler/araclar"
+import { toolUseOnerileri } from "@/core/eylemler/oneri"
+import { hastaOzetiGetir } from "@/core/eylemler/hasta"
+import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
+import { bugunTRT } from "@/core/eylemler/types"
+import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -197,13 +203,23 @@ export async function POST(req: NextRequest) {
     // NOTYA-MALIYET-01 (Kaan, 2026-09-19): ŞÜPHEDE GÜÇLÜ. Hasta bağlamı, eylem niyeti, klinik sinyal ya da belirsiz mesaj →
     // GÜÇLÜ (Sonnet, 1600 token — F3). HIZLI yalnız net sosyal tur / uygulama kullanımı sorusu. Kural: lib/ai/modeller.ts.
     const yonlendirme = asistanModelYonlendir({ mesaj: String(message || ""), hastaBaglami: Boolean(dosyaEk) || Boolean(currentPatient), niyet: quickIntent })
+
+    // NOTYA-EYLEM: hasta kimliği SUNUCUDA çözülür. Bu yüzeyde hasta serbest metinden bulunur
+    // (hastaninSozunuCoz) — çözülen hasta belirsizse (cozum.tur === 'coklu') aktifEylemHastasi null
+    // kalır, araç sunulmaz ve Ayşe hangi hastayı kastettiğini sorar (docs §2: "ambiguous → ask, no card").
+    const eylemHastaId = cozulenHasta?.id || (contextPatientId ? String(contextPatientId) : null)
+    const eylemHastasi = eylemKapali() ? null : await hastaOzetiGetir(getSupabase(), user.id, eylemHastaId)
+    const eylemBransi = bransAnahtari(hekimBransi)
+    const araclar = eylemHastasi ? aracTanimlari({ brans: eylemBransi, hasta: eylemHastasi }) : []
+
     const response = await aiCagir({
       istemci: getAnthropic(),
       gorev: yonlendirme.gorev,
       doctorId: user.id,
+      araclar,
       system: [
         { metin: sistem.sabit, onbellek: true },
-        { metin: sistem.degisken + bransKilidi + dosyaEk, onbellek: true },
+        { metin: sistem.degisken + bransKilidi + dosyaEk + (araclar.length ? EYLEM_ISTEM_BLOGU : ""), onbellek: true },
       ],
       messages: [
         // modele son 8 mesaj (4 tur) gider; saklanan geçmiş ve doz-kaynak kontrolü tam listeyi kullanır
@@ -327,9 +343,21 @@ export async function POST(req: NextRequest) {
       await getSupabase().from("doctor_preferences").update({ last_session_at: new Date().toISOString() }).eq("doctor_id", user.id)
     }
 
+    // NOTYA-EYLEM: tool_use → taslak öneri + onay kartı. Hiçbir şey yazılmadı; hekim onaylayacak.
+    const eylemOnerileri = eylemHastasi
+      ? await toolUseOnerileri(
+          response as unknown as { content?: unknown },
+          { supabase: getSupabase(), doktorId: user.id, hasta: eylemHastasi, brans: eylemBransi, oneriId: "", bugunTRT: bugunTRT() },
+          "sohbet",
+          { brans: eylemBransi, hasta: eylemHastasi },
+        )
+      : []
+
     return NextResponse.json({
       success: true,
       data: {
+        eylemOnerileri,
+        eylemHastasi: eylemHastasi ? { ad: eylemHastasi.ad, dogumTarihi: eylemHastasi.dogumTarihi } : null,
         speech: aiData.speech,
         proactiveWarning: aiData.proactiveWarning,
         action: aiData.action,
