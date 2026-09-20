@@ -72,8 +72,9 @@ onaylayan = hekim.
 - P2: T2 actions with diff, batch-from-belge ("epikrizdeki her şeyi işle"), proactive gap
   offers (when a dossier summary finds document facts missing from structured records —
   aşı, ilaç, alerji, ölçüm — Ayşe offers one batch card, once, not nagging), geri al.
-- P3: sesli seans (voice creates cards into the same pending tray; commit is still a tap in
-  V1), specialty chapter actions registered from specialties/ for the shipped chapters
+- P3: sesli seans (voice prepares cards `yuzey='ses'`; spoken “Evet” after read-back commits via
+  the same `eylemOnayla` spine — NOTYA-EYLEM-19; live ElevenLabs agent tool paste is Kaan’s step),
+  specialty chapter actions registered from specialties/ for the shipped chapters
   (kadın hastalıkları ve doğum: gebelik görevi, jine görevi; dermatoloji: lezyon kaydı, derm
   görevi; dahiliye: HT/DM ölçüm, dahiliye görevi; pediatri: gelişim/aşı) each calling the
   chapter's existing API logic, and the klinik vertical mirror (same spine, klinik personas).

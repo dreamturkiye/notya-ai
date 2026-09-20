@@ -154,12 +154,22 @@ describe('NOTYA-EYLEM-24 — sohbet/ses yolundan sessiz klinik yazma YOK', () =>
     assert.deepEqual(cagiranlar.sort(), ['onayla.ts'], `calistir() beklenmedik yerden çağrılıyor: ${cagiranlar.join(', ')}`)
   })
 
-  it('sesli yüzeyin araçları salt okunur', () => {
+  it('sesli yüzeyin clientTools yazmaz — yalnız fetch (hasta_bul + eylem ses araçları)', () => {
     const metin = g.get('app/asistan/page.tsx') as string
     const blok = /clientTools:\s*\{([\s\S]*?)\n\s{8}\},/.exec(metin)
     assert.ok(blok, 'clientTools bloğu bulunamadı — sesli yüzeyin araç listesi değişmiş olabilir')
     const araclar = [...blok[1].matchAll(/^\s{10}([a-z_][a-z0-9_]*)\s*:/gim)].map((m) => m[1])
-    assert.deepEqual(araclar, ['hasta_bul'], `sesli ajana yeni bir araç eklenmiş: ${araclar.join(', ')} — yazan bir araç EylemKarti yolundan geçmelidir`)
+    assert.deepEqual(
+      araclar.sort(),
+      ['dosyaya_kayit_hazirla', 'eylem_onayla', 'eylem_vazgec', 'hasta_bul'].sort(),
+      `sesli ajan araç listesi beklenmedik: ${araclar.join(', ')}`
+    )
+    // Each tool body may only talk to our APIs via fetch — no supabase / insert in the page.
+    for (const yasak of ['.insert(', '.update(', '.delete(', 'createClient', 'from(\'asilar\'', 'from("asilar"']) {
+      assert.ok(!blok[1].includes(yasak), `clientTools içinde "${yasak}" — yazma tarayıcıya sızmış`)
+    }
+    assert.ok(blok[1].includes('/api/asistan/ses-eylem'), 'eylem ses araçları ses-eylem rotasını çağırmıyor')
+    assert.ok(blok[1].includes('/api/asistan/hasta-bul'), 'hasta_bul kayboldu')
   })
 })
 

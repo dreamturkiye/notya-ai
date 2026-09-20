@@ -190,10 +190,13 @@ Cihaz Köprüsü ile aynı kural: onay kartı HER ZAMAN, sessiz yazma ASLA.
 - **NOTYA-EYLEM-18 — `onayli_nota_ek` (T2 listesindeydi, ŞİPLENMEDİ).** Mimari "yalnız mevcut revizyon/yeniden onay
   yolundan" diyor; o yol bugün belge analizi onay rotasına bağlı ve onaylı bir klinik notu sohbetten değiştirmenin
   hukuki ağırlığı bir kartın taşıyabileceğinden fazla. Hekim not sayfasından düzenleyip yeniden onaylıyor.
-- **NOTYA-EYLEM-19 — sesli seansta araç çağrısı (P3, YARISI ŞİPLENDİ).** Şiplenen: taslak şeması `yuzey='ses'` taşıyor
-  ve **bekleyen tepsisi** hasta dosyasında duruyor, yani hangi yüzey hazırlarsa hazırlasın kart hekimi bekliyor.
-  Şiplenmeyen: ElevenLabs sesli ajanına client-tool tanımı + webhook — ajan yapılandırması ve canlı ses testi gerekiyor
-  (Dr. Gökhan'la bir oturum). Sahibi: Claude, Kaan'ın oturum planına bağlı.
+- **NOTYA-EYLEM-19 — sesli seansta araç çağrısı + sözlü onay (P3, YARISI ŞİPLENDİ — 2026-09-20).** Şiplenen:
+  `POST /api/asistan/ses-eylem` (`hazirla` → taslak `yuzey='ses'`; `onayla`/`vazgec` → `eylemOnayla` /
+  `eylemVazgec`); ses kapıları (`core/eylemler/sesKapilari.ts`: net Evet, tek taslak, eksik alan yok,
+  `ciddi` yok); `/asistan` clientTools `dosyaya_kayit_hazirla` / `eylem_onayla` / `eylem_vazgec`
+  (yalnız fetch); ajan şema + prompt satırları `docs/README_EYLEM.md`. Şiplenmeyen: **canlı
+  ElevenLabs ajanına** tool tanımlarını yapıştırma + Dr. Gökhan ile bir mic oturumu. Sahibi: Kaan
+  (ajan dashboard), Claude (kod hazır).
 - **NOTYA-EYLEM-20 — klinik dikeyi aynası (P3, ŞİPLENMEDİ).** Omurga branştan bağımsız olduğu için `/asistan/klinik`
   personalarına bağlamak yalnız rota işi; ama klinik dikeyinin hasta/kayıt modeli (clinics / clinic_members / Pabau)
   doktor dikeyinden ayrı ve hangi tabloya yazılacağı ürün kararı. Kaan'ın kararını bekliyor.

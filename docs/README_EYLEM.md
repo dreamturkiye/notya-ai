@@ -133,16 +133,54 @@ veritabanına düşüyordu. Kilitli kural bunu yasaklar: *Ayşe hazırlar, hekim
 
 Klinik dışı kalanlar: `GENERATE_DOCUMENT` (metin şablonu) ve niyet sınıflandırıcısı
 `lib/asistan/intentParser.ts` (yalnız model yönlendirmesi ve ilaç bağlamı için — yazmaz).
-Sesli yüzeyin tek aracı `hasta_bul`, o da salt okunur.
 
-**Prompt:** `lib/asistan/personaEngine.ts`'in JSON biçiminden `"action"` alanı **kaldırıldı**;
+## Sesli yüzey — sözlü onay (NOTYA-EYLEM-19)
+
+**Akış:** Doktor “aşıyı kayda geç” → client tool `dosyaya_kayit_hazirla` →
+`POST /api/asistan/ses-eylem` `adim=hazirla` (taslak, `yuzey='ses'`) → Ayşe özeti okur
+(“… Onaylıyor musunuz?”) → Doktor “Evet” → `eylem_onayla` → aynı `eylemOnayla` omurgası.
+“Hayır” → `eylem_vazgec`. Model hiçbir tabloya yazmaz.
+
+**Kapılar (ses commit):** tek açık ses taslağı (veya `oneriId`); zorunlu alan dolu;
+`ciddi` ilaç uyarısı yok (onlar ekran dokunuşu ister); onay metni net (`Evet` /
+`Onaylıyorum` / `Kaydet`). “Doğumda” + DOB varsa uygulama tarihi sunucuda doldurulabilir.
+
+**Client tools** (`app/asistan/page.tsx`): `hasta_bul` (okuma) · `dosyaya_kayit_hazirla` ·
+`eylem_onayla` · `eylem_vazgec` — hepsi yalnız `fetch`; yazma yok.
+
+### ElevenLabs ajan yapılandırması (Kaan — canlı ajanı kod değiştirmez)
+
+Dashboard’da client tool olarak ekle (isimler birebir):
+
+| Tool name | Parameters | Ne zaman |
+|---|---|---|
+| `hasta_bul` | `isim` (string) | Doktor hasta adı söylediğinde |
+| `dosyaya_kayit_hazirla` | `eylem` (örn. `asi_kaydi_ekle`), `hasta` (ad), `alanlar` (object) | “yazıver / kayda geç / gir” |
+| `eylem_onayla` | `onayMetni` (doktorun söylediği: “Evet”) | Read-back sonrası net onay |
+| `eylem_vazgec` | (opsiyonel `oneriId`) | “Hayır / vazgeç” |
+
+Prompt satırları (ajan system’e yapıştır):
+
+```
+Dosyaya kayıt: hazırsın, hekim sesle onaylar. "veri girişi yapamam" DEME.
+Doktor kaydet/yazıver/kayda geç dediğinde dosyaya_kayit_hazirla çağır; dönen metni oku;
+sonunda "Onaylıyor musunuz?" diye sor. Doktor Evet/Onaylıyorum/Kaydet derse eylem_onayla
+çağır (onayMetni = duyduğun kelime). Hayır/vazgeç → eylem_vazgec.
+Araç sonucu "Kaydedildi" demeden ASLA kaydedildi deme. Ciddi ilaç uyarısı veya eksik alan
+varsa ekrana yönlendir, sesle zorla kaydetme.
+```
+
+Canlı ajan güncellenmeden clientTools tarayıcıda hazırdır; ajan tool’u tanımazsa çağırmaz —
+yapıştırma Kaan oturumunda.
+
+**Prompt (yazılı):** `lib/asistan/personaEngine.ts`'in JSON biçiminden `"action"` alanı **kaldırıldı**;
 yerine "dosyaya kayıt bu JSON'dan YAPILMAZ, tek yol araçlardır" cümlesi kondu.
 
-**Muhafız test** (`core/eylemler/tests/sessizYol.test.ts`, 13 test): sohbet/ses giriş noktalarından
+**Muhafız test** (`core/eylemler/tests/sessizYol.test.ts`): sohbet/ses giriş noktalarından
 içe aktarma grafiği yürünür; grafikteki hiçbir dosya klinik tabloya yazamaz (izinli olanlar yalnız
 `core/eylemler/*` ve onun paylaştığı `hastaKayitAlanlari` / `gununNotunaEkle`), grafikte `calistir()`
-hiç çağrılmaz, `calistir()`'i omurgada yalnız `onayla.ts` çağırır, sesli ajanın araç listesi salt
-okunur, eski tip adları eylem anahtarı olamaz, prompt artık eylem reklamı yapmaz. Mutasyonla
+hiç çağrılmaz, `calistir()`'i omurgada yalnız `onayla.ts` çağırır, sesli ajanın clientTools’ları
+yalnız `fetch` eder (yazma yok), eski tip adları eylem anahtarı olamaz, prompt artık eylem reklamı yapmaz. Mutasyonla
 doğrulandı: sohbet rotasına tek bir `notes.update` eklendiğinde test kırmızı.
 
 ## İlaç uyarıları kartın üstünde (NOTYA-EYLEM-21)

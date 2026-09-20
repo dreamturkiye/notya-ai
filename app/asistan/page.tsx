@@ -36,6 +36,8 @@ export default function AsistanPage() {
   const [authToken, setAuthToken] = useState<string | null>(null)
   const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
   const conversationRef = useRef<ActiveConversation | null>(null)
+  /** Last voice-prepared öneri — eylem_onayla / vazgec use this when the agent omits oneriId. */
+  const sesEylemRef = useRef<{ oneriId: string; hastaId: string } | null>(null)
   const sureUyariRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sureSonRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sureBaslangicRef = useRef<number>(0)
@@ -338,6 +340,10 @@ export default function AsistanPage() {
         // sesli Ayşe'nin gerçekten hasta dosyasına erişimi yoktu (yazılı sohbette vardı).
         // ElevenLabs client tool: doktor bir hasta adı söylediğinde agent bunu çağırır,
         // tarayıcı doktorun kendi oturum belirtecinle /api/asistan/hasta-bul'u sorgular.
+        //
+        // NOTYA-EYLEM-19 — dosyaya kayıt HAZIRLAMA + sözlü onay. Bu araçlar klinik tabloya
+        // yazmaz: /api/asistan/ses-eylem yalnız taslak açar veya eylemOnayla omurgasını çağırır.
+        // Canlı ElevenLabs ajanına araç şeması Kaan tarafından yapıştırılmalı (docs/README_EYLEM.md).
         clientTools: {
           hasta_bul: async (params: { isim?: string }) => {
             try {
@@ -351,6 +357,71 @@ export default function AsistanPage() {
               return String(j.sonuc || "Dosyaya şu an ulaşamadım.")
             } catch {
               return "Dosyaya şu an ulaşamadım, bağlantı sorunu olabilir."
+            }
+          },
+          dosyaya_kayit_hazirla: async (params: {
+            eylem?: string
+            hasta?: string
+            alanlar?: Record<string, unknown>
+          }) => {
+            try {
+              const t = await ensureDoctorAccessToken()
+              const r = await fetch("/api/asistan/ses-eylem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+                body: JSON.stringify({
+                  adim: "hazirla",
+                  eylem: params?.eylem || "",
+                  hastaAdi: params?.hasta || "",
+                  alanlar: params?.alanlar && typeof params.alanlar === "object" ? params.alanlar : {},
+                }),
+              })
+              const j = (await r.json()) as { sonuc?: string; oneriId?: string; hastaId?: string }
+              if (j.oneriId && j.hastaId) sesEylemRef.current = { oneriId: String(j.oneriId), hastaId: String(j.hastaId) }
+              return String(j.sonuc || "Kartı hazırlayamadım Hocam, ekrandan deneyelim.")
+            } catch {
+              return "Kartı hazırlayamadım Hocam, bağlantı sorunu olabilir."
+            }
+          },
+          eylem_onayla: async (params: { onayMetni?: string; oneriId?: string; hastaId?: string }) => {
+            try {
+              const t = await ensureDoctorAccessToken()
+              const son = sesEylemRef.current
+              const r = await fetch("/api/asistan/ses-eylem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+                body: JSON.stringify({
+                  adim: "onayla",
+                  onayMetni: params?.onayMetni || "evet",
+                  oneriId: params?.oneriId || son?.oneriId || "",
+                  hastaId: params?.hastaId || son?.hastaId || "",
+                }),
+              })
+              const j = (await r.json()) as { sonuc?: string; ok?: boolean }
+              if (j.ok) sesEylemRef.current = null
+              return String(j.sonuc || "Onaylanamadı.")
+            } catch {
+              return "Onaylanamadı, bağlantı sorunu olabilir."
+            }
+          },
+          eylem_vazgec: async (params: { oneriId?: string; hastaId?: string }) => {
+            try {
+              const t = await ensureDoctorAccessToken()
+              const son = sesEylemRef.current
+              const r = await fetch("/api/asistan/ses-eylem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+                body: JSON.stringify({
+                  adim: "vazgec",
+                  oneriId: params?.oneriId || son?.oneriId || "",
+                  hastaId: params?.hastaId || son?.hastaId || "",
+                }),
+              })
+              const j = (await r.json()) as { sonuc?: string }
+              sesEylemRef.current = null
+              return String(j.sonuc || "Vazgeçilemedi.")
+            } catch {
+              return "Vazgeçilemedi, bağlantı sorunu olabilir."
             }
           },
         },
