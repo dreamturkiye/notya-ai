@@ -14,6 +14,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
+import { formAlanlariniTara, dosyaAlanOzeti } from '@/lib/doktor/dosyaAlanTara'
+import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -36,7 +38,7 @@ export async function hastaDosyasiniDerle(
 
   // HASTA-IZOLASYON-01: every child read is scoped to the doctor as well as the patient, so a row
   // another doctor filed under this patient id can never enter this doctor's file or AI context.
-  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ] = await Promise.all([
+  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ, hekimQ] = await Promise.all([
     supabase.from('sessions').select('id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
     supabase.from('hasta_ilaclar').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
     supabase.from('asilar').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
@@ -46,6 +48,7 @@ export async function hastaDosyasiniDerle(
     // NOTYA-BLE-06 + NOTYA-BELGE-05: cihazdan gelen ölçümler/dosyalar ve onaylı belge değerlendirmeleri Ayşe'nin bağlamına girer
     supabase.from('cihaz_olcumleri').select('tur, deger, birim, cihaz, profil, kaynak, alindi, onaylandi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onaylandi', true).order('alindi', { ascending: false }).limit(12),
     supabase.from('belge_analizleri').select('modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
+    supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle(),
   ])
 
   const seanslar = seanslarQ.data || []
@@ -62,8 +65,12 @@ export async function hastaDosyasiniDerle(
   const cinsiyet = cinsiyetTr(coz(hasta.gender_encrypted))
   const doktorNotu = coz(hasta.notes_encrypted)
 
+  const brans = bransAnahtari((hekimQ.data as { specialty?: string } | null)?.specialty)
+  const kimlikDobSatiri = (iso: string | null, kaynak?: string) =>
+    iso ? `- Doğum tarihi: ${trTarih(iso)} (${yasHesapla(iso)})${kaynak ? ` — ${kaynak}` : ''}` : '- Doğum tarihi: kayıtlı değil'
+
   b.push('## HASTA KİMLİK ÖZETİ')
-  b.push(`- Doğum tarihi: ${dogum ? `${trTarih(dogum)} (${yasHesapla(dogum)})` : 'kayıtlı değil'}`)
+  b.push(kimlikDobSatiri(dogum || null))
   if (cinsiyet) b.push(`- Cinsiyet: ${cinsiyet}`)
   b.push(`- İlk kayıt: ${trTarih(hasta.created_at)}`)
   if (doktorNotu) b.push(`- Doktor notu: ${doktorNotu}`)
@@ -161,8 +168,28 @@ export async function hastaDosyasiniDerle(
   const belgeler = belgelerQ.data || []
   if (belgeler.length === 0) b.push('- Kayıtlı belge yok.')
   for (const d of belgeler) {
-    b.push(`- ${d.baslik || d.dosya_adi || d.tur || 'Belge'} — ${trTarih(d.created_at)}`)
+    const ozet = d.ai_ozet && typeof d.ai_ozet === 'object' ? JSON.stringify(d.ai_ozet).replace(/[{}"[\]]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400) : ''
+    b.push(`- ${d.baslik || d.dosya_adi || d.belge_turu || d.tur || 'Belge'} — ${trTarih(d.created_at)}${ozet ? ` — ${ozet}` : ''}`)
   }
+
+  // Form boş / eksikse aynı başlıkları epikriz, SOAP, belge özetinde ara (Gökhan: doğum tarihi formda yoktu).
+  const dolu = new Set<string>()
+  if (dogum) dolu.add('dogumTarihi')
+  if (cinsiyet) dolu.add('cinsiyet')
+  if (yanitlar) {
+    for (const [k, v] of Object.entries(yanitlar)) {
+      if (v != null && String(v).trim()) dolu.add(k)
+    }
+  }
+  const ham = b.join('\n')
+  const taranan = formAlanlariniTara(ham, { brans, hastaDogumIso: dogum || null, dolu })
+  const dosyadanDob = taranan.find((x) => x.id === 'dogumTarihi')
+  if (!dogum && dosyadanDob) {
+    const idx = b.findIndex((s) => s.startsWith('- Doğum tarihi:'))
+    if (idx >= 0) b[idx] = kimlikDobSatiri(dosyadanDob.deger, `dosyadan, “${dosyadanDob.alinti}”`)
+  }
+  const ozet = dosyaAlanOzeti(taranan)
+  if (ozet) b.push(ozet)
 
   // Sınır: ~48k karakter (yaklaşık 15k token) — çok uzun dosyalarda baştan kes (eski vizit özetleri gider).
   const metin = b.join('\n')
