@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 
 export const dynamic = 'force-dynamic'
 
@@ -120,23 +121,11 @@ export async function POST(req: NextRequest) {
 
   // Overlap check: any existing (non-cancelled) appointment for this doctor whose window
   // intersects the requested one. Standard interval overlap: existing.start < new.end AND
-  // existing.end > new.start.
-  const { data: cakisan, error: cakismaHata } = await supabase
-    .from('randevular')
-    .select('id, baslangic, bitis, hasta_adi_serbest, patient_id')
-    .eq('doktor_id', doktorId)
-    .neq('durum', 'iptal')
-    .lt('baslangic', bitis)
-    .gt('bitis', baslangic)
-    .limit(1)
-
-  if (cakismaHata) return NextResponse.json({ error: 'Çakışma kontrolü yapılamadı.' }, { status: 500 })
-  if (cakisan && cakisan.length > 0) {
-    return NextResponse.json(
-      { error: 'Bu saat aralığında zaten bir randevu var. Lütfen başka bir saat seçin.' },
-      { status: 409 }
-    )
-  }
+  // existing.end > new.start. Predicate shared with the PATCH route and the Ayşe action layer
+  // (lib/randevu/cakisma.ts) — one definition, three callers.
+  const cakisma = await randevuCakismasiVarMi(supabase, doktorId, baslangic, bitis)
+  if (cakisma.hata) return NextResponse.json({ error: CAKISMA_KONTROL_HATASI }, { status: 500 })
+  if (cakisma.cakisiyor) return NextResponse.json({ error: CAKISMA_MESAJI }, { status: 409 })
 
   // NOTYA-RANDEVU-07: kayıt sırasında hasta kaydı AÇILMAZ, kasten. Dosya yalnızca doktor
   // randevuyu ONAYLADIğINDA açılır (bkz. [id]/route.ts PATCH, durum='onaylandi') — sekreterin

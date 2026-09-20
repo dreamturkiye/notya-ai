@@ -127,6 +127,8 @@ type Hekim = {
   konsultasyon: string; konsultasyonYanitli: string; kasaBelge: string
   /** ASI-KARNESI-01 (D): sonraki doz tarihi 10 gün sonra, hatırlatması gönderilmemiş aşı kaydı */
   asiHatirlatma: string
+  /** NOTYA-EYLEM: Ayşe'nin hazırladığı bekleyen taslak + onaylanmış (geri alınabilir) eylem kaydı */
+  eylemOneri: string; eylemKayit: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -194,8 +196,21 @@ function hekimKur(harf: Harf): Hekim {
   const kasaBelge = db.ekle('medical_documents', { doctor_id: id, patient_id: hasta, file_name: `kbb-raporu-${m}.pdf`, file_type: 'application/pdf', file_size: 10, category: 'Konsültasyon raporu', deleted_at: null }).id
   const konsultasyon = db.ekle('sevkler', { doctor_id: id, patient_id: hasta, hedef: 'kulak-burun-bogaz', hedef_brans: 'kulak-burun-bogaz', klinik_soru: `İşitme kaybı var mı? ${m}`, aciliyet: 'rutin', istem_tarihi: '2026-09-10', durum: 'yanit_bekleniyor', kaynak: 'konsultasyon', belge_id: null, son_hatirlatma_at: null }).id
   const konsultasyonYanitli = db.ekle('sevkler', { doctor_id: id, patient_id: hasta, hedef: 'goz-hastaliklari', hedef_brans: 'goz-hastaliklari', klinik_soru: `Görme keskinliği? ${m}`, aciliyet: 'rutin', istem_tarihi: '2026-09-01', durum: 'yanitlandi', yanit_tarihi: '2026-09-08', yanit_ozeti: `Göz muayenesi olağan ${m}`, kaynak: 'konsultasyon', belge_id: kasaBelge }).id
+  // NOTYA-EYLEM: Ayşe'nin hazırladığı bekleyen taslak (aşı) + onaylanmış, 24 saat içinde geri alınabilir kayıt
+  const eylemOneri = db.ekle('eylem_onerileri', {
+    doctor_id: id, hasta_id: hasta, eylem_anahtar: 'asi_kaydi_ekle',
+    veri: { asi_adi: `Eylem asi ${m}`, uygulama_tarihi: '2026-02-02' },
+    alan_kaynaklari: { asi_adi: { kaynak: 'doktor_soyledi' }, uygulama_tarihi: { kaynak: 'doktor_soyledi' } },
+    eksik_alanlar: [], uyarilar: [], kademe: 'T1', durum: 'taslak', grup_id: null, yuzey: 'danis', karar_at: null,
+  }).id
+  const geriAlinabilirAsi = db.ekle('asilar', { doktor_id: id, patient_id: hasta, asi_adi: `Geri alinabilir ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-02-03', kaynak: 'kayit' }).id
+  const eylemKayit = db.ekle('eylem_kayitlari', {
+    oneri_id: eylemOneri, doctor_id: id, hasta_id: hasta, eylem_anahtar: 'asi_kaydi_ekle',
+    hedef_tablo: 'asilar', hedef_id: geriAlinabilirAsi, once: null, sonra: { asi_adi: `Geri alinabilir ${m}` },
+    kaynak: 'ayse_oneri', geri_alindi_at: null,
+  }).id
   db.dosyaKoy('ses-kayitlari', `${id}/qa-kayit.m4a`, new Blob(['sentetik ses']))
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, hileliSeans: '', hileliNot: '' }
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -355,6 +370,18 @@ const VAKALAR: Vaka[] = [
   { ad: 'DELETE /api/doktor/randevular/[id]',
     yazdi: (a) => !tablo('randevular').some((x) => x.id === a.randevu),
     cagir: (r, a, h) => coz(r.randevu.DELETE(iste('DELETE', `/api/doktor/randevular/${h.randevu}`, { token: a.token }), prm({ id: h.randevu }))) },
+  // NOTYA-EYLEM — Ayşe hazırlar, hekim onaylar. Yabancı bir öneri okunamaz, onaylanamaz, geri alınamaz.
+  { ad: 'GET /api/doktor/eylem (bekleyen öneriler)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.eylem.GET(iste('GET', `/api/doktor/eylem?hastaId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'POST /api/doktor/eylem onayla (yabancı öneriyi kaydetme)', red: 404,
+    yazdi: (a) => tablo('asilar').some((x) => x.patient_id === a.hasta && x.asi_adi === `Eylem asi ${isaret(a.harf)}`),
+    cagir: (r, a, h) => coz(r.eylem.POST(iste('POST', '/api/doktor/eylem', { token: a.token, govde: { adim: 'onayla', oneriId: h.eylemOneri } }))) },
+  { ad: 'POST /api/doktor/eylem vazgec (yabancı öneriyi düşürme)', red: 404,
+    yazdi: (a) => tablo('eylem_onerileri').find((x) => x.id === a.eylemOneri)?.durum === 'vazgecildi',
+    cagir: (r, a, h) => coz(r.eylem.POST(iste('POST', '/api/doktor/eylem', { token: a.token, govde: { adim: 'vazgec', oneriId: h.eylemOneri } }))) },
+  { ad: 'POST /api/doktor/eylem geri_al (yabancı kaydı geri alma)', red: 404,
+    yazdi: (a) => !!tablo('eylem_kayitlari').find((x) => x.id === a.eylemKayit)?.geri_alindi_at,
+    cagir: (r, a, h) => coz(r.eylem.POST(iste('POST', '/api/doktor/eylem', { token: a.token, govde: { adim: 'geri_al', kayitId: h.eylemKayit } }))) },
   // Araçlar
   { ad: 'POST /api/doktor/araclar/epikriz (kendi seansı + yabancı hastaId)', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.epikriz.POST(iste('POST', '/api/doktor/araclar/epikriz', { token: a.token, govde: { hastaId: h.hasta, seansId: a.seans } }))) },
@@ -580,6 +607,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       kdKohort: await ice('app/api/doktor/gebelik/kohort/route'),
       aracNotaEkle: await ice('app/api/doktor/araclar/nota-ekle/route'),
       konsultasyon: await ice('app/api/doktor/konsultasyon/route'),
+      eylem: await ice('app/api/doktor/eylem/route'),
       pedi: await ice('app/api/doktor/pediatri/route'),
       pediTarama: await ice('app/api/doktor/pediatri/tarama/route'),
       pediKohort: await ice('app/api/doktor/pediatri/kohort/route'),

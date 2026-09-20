@@ -37,6 +37,12 @@ export interface AiCagriGirdisi {
   istemci?: AiIstemci
   /** Ölçüm satırı için hekim/kullanıcı kimliği (UUID değilse null yazılır). Hasta kimliği ASLA verilmez. */
   doctorId?: string | null
+  /**
+   * NOTYA-EYLEM: Anthropic tool tanımları (core/eylemler/araclar.ts). Boş/verilmezse istek eskisiyle
+   * birebir aynı kalır — araç kullanmayan çağrı yerleri hiç etkilenmez. Bir aracın çağrılması KAYIT
+   * DEĞİLDİR: yanıttaki tool_use blokları yalnız hekime onay kartı hazırlar (docs/AYSE-EYLEM-MIMARISI.md §1).
+   */
+  araclar?: unknown[]
 }
 
 export class AiCagriHatasi extends Error {
@@ -105,6 +111,7 @@ export function istekGovdesi(g: AiCagriGirdisi): Record<string, unknown> {
   const system = sistemGovdesi(g.system)
   if (system) govde.system = system
   if (g.temperature !== undefined) govde.temperature = g.temperature
+  if (g.araclar?.length) govde.tools = g.araclar
   return govde
 }
 

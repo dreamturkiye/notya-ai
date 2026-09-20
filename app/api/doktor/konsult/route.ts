@@ -13,6 +13,14 @@ import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
+import { aracTanimlari, eylemKapali } from '@/core/eylemler/araclar'
+import { toolUseOnerileri } from '@/core/eylemler/oneri'
+import { hastaOzetiGetir } from '@/core/eylemler/hasta'
+import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
+import { bugunTRT } from '@/core/eylemler/types'
+import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { bosluklariBul, boslukBlogu } from '@/core/eylemler/bosluk'
+import { notAlanlariCoz, alerjiListe } from '@/lib/doktor/hastaKayitAlanlari'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -35,7 +43,12 @@ Kurallar:
 5. Doktorun unutmuş olabileceği kritik dosya bilgilerini (alerji, kronik hastalık, önceki
    kritik bulgu) yeri geldiğinde kendiliğinden hatırlat.
 6. Nihai klinik karar ve sorumluluk her zaman doktordadır; bunu gerektiğinde kibarca belirt.
-7. Hastanın adını/kimliğini asla üretme — "hasta" de. Dosyada kimlik bilgisi zaten yoktur.`
+7. Hastanın adını/kimliğini asla üretme — "hasta" de. Dosyada kimlik bilgisi zaten yoktur. (Onay kartındaki
+   hasta adını sistem koyar, sen değil.)`
+
+// NOTYA-EYLEM: the capability paragraph is the SAME text on every surface (core/eylemler/istem.ts).
+// Appended to the cached constant block, so it costs nothing per turn.
+const SISTEM_EYLEMLI = SISTEM + EYLEM_ISTEM_BLOGU
 
 export async function POST(req: NextRequest) {
   const oturum = await pratikOturum(req)
@@ -49,6 +62,37 @@ export async function POST(req: NextRequest) {
 
   const dosya = await hastaDosyasiniDerle(supabase, doktorId, patientId)
   if (!dosya) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
+
+  // NOTYA-EYLEM: hasta kimliği ve branş SUNUCUDA çözülür — model çıktısından ASLA alınmaz (docs §2).
+  // hastaOzetiGetir doctor_id ile kapsar, yani yabancı bir id burada null döner ve araç hiç sunulmaz.
+  const hasta = eylemKapali() ? null : await hastaOzetiGetir(supabase, doktorId, patientId)
+  const { data: hekim } = eylemKapali() ? { data: null } : await supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle()
+  const brans = bransAnahtari((hekim as { specialty?: string } | null)?.specialty)
+  // Araçlar yalnız DOKTOR turunda sunulur (docs §5): belge metni güvenilmezdir, kendi başına
+  // bir araç çağrısı tetikleyemez. Danış sekmesinde her istek zaten hekimin bir mesajıyla gelir.
+  const sonMesajDoktorun = mesajlar[mesajlar.length - 1]?.rol !== 'asistan'
+  const araclar = hasta && sonMesajDoktorun ? aracTanimlari({ brans, hasta }) : []
+
+  // NOTYA-EYLEM P2 — proaktif boşluk teklifi. LLM'siz: derlenmiş dosya metni belgelerde aşı/ilaç/
+  // alerji/ölçüm geçtiğini söylüyor ama yapılandırılmış kayıt boşsa, Ayşe İLK turda BİR KEZ teklif
+  // eder. İkinci turdan sonra sessiz — dırdır eden asistan görmezden gelinir (core/eylemler/bosluk.ts).
+  let boslukEk = ''
+  if (araclar.length) {
+    const [asiSay, ilacSay, hastaSatiri, notSatiri] = await Promise.all([
+      supabase.from('asilar').select('id', { count: 'exact', head: true }).eq('doktor_id', doktorId).eq('patient_id', patientId),
+      supabase.from('hasta_ilaclar').select('id', { count: 'exact', head: true }).eq('doctor_id', doktorId).eq('patient_id', patientId).eq('aktif', true),
+      supabase.from('patients').select('notes_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
+      supabase.from('notes').select('vitaller').eq('doctor_id', doktorId).not('vitaller', 'is', null).limit(1),
+    ])
+    const notAlanlari = notAlanlariCoz((hastaSatiri.data?.notes_encrypted as string | null) ?? null)
+    const bosluklar = bosluklariBul(dosya, {
+      asi: asiSay.count ?? 0,
+      ilac: ilacSay.count ?? 0,
+      alerjiVar: alerjiListe(notAlanlari).length > 0,
+      olcumVar: Boolean(notSatiri.data?.length),
+    })
+    boslukEk = boslukBlogu(bosluklar, mesajlar.filter((m) => m.rol !== 'asistan').length)
+  }
 
   // NOTYA-KOTA-01
   const kota = await aiKotaKullan(supabase, doktorId, 'konsult')
@@ -64,7 +108,7 @@ export async function POST(req: NextRequest) {
     let veri: Awaited<ReturnType<typeof aiCagir>>
     try {
       // prompt caching: aynı hastanın konsültasyonunda SISTEM + dosya her turda aynı → tek kırılma noktası dosyanın sonunda
-      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }], messages: gecmis })
+      veri = await aiCagir({ gorev: 'klinik-analiz', maxTokens: 1500, doctorId: doktorId, system: [{ metin: araclar.length ? SISTEM_EYLEMLI : SISTEM }, { metin: `\n\n=== HASTA DOSYASI ===\n${dosya}`, onbellek: true }, { metin: boslukEk }], messages: gecmis, araclar })
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[konsult] anthropic', e.govde.slice(0, 300))
@@ -74,7 +118,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 502 })
     }
     const cevap = yanitMetni(veri, '\n')
-    return NextResponse.json({ cevap })
+
+    // NOTYA-EYLEM: a tool_use block is a PROPOSAL, never a write. Each becomes an eylem_onerileri
+    // taslak and comes back as a card; the record happens when the doctor taps (POST /api/doktor/eylem).
+    // No tool_result round-trip: the card IS the result, and a second model call would cost a turn
+    // to tell Ayşe something she must not claim anyway ("kaydedildi") before the doctor has acted.
+    const oneriler = hasta
+      ? await toolUseOnerileri(veri, { supabase, doktorId, hasta, brans, oneriId: '', bugunTRT: bugunTRT() }, 'danis', { brans, hasta })
+      : []
+    return NextResponse.json({ cevap, oneriler, hasta: hasta ? { ad: hasta.ad, dogumTarihi: hasta.dogumTarihi } : null })
   } catch (e) {
     console.error('[konsult]', e)
     await kritikAlarm('konsult 502', e instanceof Error ? e.message : String(e))

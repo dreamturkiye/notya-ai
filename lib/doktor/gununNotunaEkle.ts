@@ -40,3 +40,53 @@ export async function gununNotunaEkle(
 
   return { eklendi: true, notId: not.id }
 }
+
+/**
+ * NOTYA-EYLEM — the same "today's note" resolution, for the vitaller JSONB.
+ *
+ * Measurements are not their own table: boy / kilo / baş çevresi / vitals live in `notes.vitaller`,
+ * and the büyüme eğrileri endpoint recomputes the curves from approved notes. So "record a
+ * measurement" means merging keys into today's note, exactly where the İnceleme form and Cihaz
+ * Köprüsü put them — not opening a parallel store.
+ *
+ * `basCevresi` is pediatric; the caller gates it (BRANS-ALAN-SIZMASI) and this function does not
+ * second-guess which keys it is handed.
+ */
+export interface VitalEkleSonuc extends GununNotunaEkleSonuc {
+  once: Record<string, unknown> | null
+  sonra: Record<string, unknown> | null
+}
+
+export async function gununNotunaVitalEkle(
+  supabase: SupabaseClient,
+  doktorId: string,
+  patientId: string,
+  vitaller: Record<string, unknown>,
+): Promise<VitalEkleSonuc> {
+  const bugunBasi = new Date(); bugunBasi.setHours(0, 0, 0, 0)
+  const { data: seanslar } = await supabase
+    .from('sessions').select('id, created_at').eq('doctor_id', doktorId).eq('patient_id', patientId)
+    .gte('created_at', bugunBasi.toISOString()).order('created_at', { ascending: false }).limit(5)
+  if (!seanslar?.length) return { eklendi: false, notId: null, once: null, sonra: null, sebep: 'Bugün bu hastaya ait bir muayene bulunamadı.' }
+
+  const { data: notlar } = await supabase
+    .from('notes').select('id, vitaller').in('session_id', seanslar.map((s) => s.id))
+    .order('created_at', { ascending: false }).limit(1)
+  const not = notlar?.[0]
+  if (!not) return { eklendi: false, notId: null, once: null, sonra: null, sebep: 'Bugünkü muayenenin henüz bir notu yok.' }
+
+  const once = (not.vitaller && typeof not.vitaller === 'object' ? not.vitaller : {}) as Record<string, unknown>
+  const sonra = { ...once, ...vitaller }
+  const { error } = await supabase.from('notes').update({ vitaller: sonra }).eq('id', not.id)
+  if (error) return { eklendi: false, notId: not.id, once, sonra: null, sebep: error.message }
+  return { eklendi: true, notId: not.id, once, sonra }
+}
+
+/** Undo for the above: put the previous vitaller blob back on the same note. */
+export async function notVitalleriGeriYukle(
+  supabase: SupabaseClient,
+  notId: string,
+  once: Record<string, unknown> | null,
+): Promise<void> {
+  await supabase.from('notes').update({ vitaller: once ?? {} }).eq('id', notId)
+}
