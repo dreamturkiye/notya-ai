@@ -48,12 +48,13 @@ import KalpDamarHome from '@/specialties/kalp-damar-cerrahisi/ui/KalpDamarHome';
 import AcilTipHome from '@/specialties/acil-tip/ui/AcilTipHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
 import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
-import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
-import { hesaplaHedefBoy, formatBoyCm, pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
+import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
+import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { yasHesapla } from '@/lib/doktor/yas';
+import type { HastaOzetKayit } from '@/lib/doktor/hastaOzetKayit';
 import {
   gebelikSekmesiUygun,
   hastaDosyaSekmeleri,
@@ -95,12 +96,22 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 export const dynamic = 'force-dynamic';
 
 interface PatientData {
-  id: string; ad_soyad: string; dogum_tarihi: string | null; cinsiyet: string | null;
-  telefon: string | null; sehir: string | null; kan_grubu: string | null;
-  kronik_hastaliklar: string[]; alerjiler: string | null; surekli_ilaclar: string | null;
-  sigara_alkol: string | null;
-  anne_boy_cm?: number | null;
-  baba_boy_cm?: number | null;
+  id: string
+  ad_soyad: string
+  dogum_tarihi: string | null
+  cinsiyet: string | null
+  telefon: string | null
+  eposta: string | null
+  sehir: string | null
+  kan_grubu: string | null
+  anne_adi: string | null
+  baba_adi: string | null
+  kronik_hastaliklar: string[]
+  alerjiler: string | null
+  surekli_ilaclar: string | null
+  sigara_alkol: string | null
+  anne_boy_cm?: number | null
+  baba_boy_cm?: number | null
 }
 
 interface SeansNotu {
@@ -214,6 +225,11 @@ export default function HastaProfilPage() {
       setMuayeneAlti('gebelik');
       return;
     }
+    // Eski ?tab=ayse → Özet + şerit açık (Ayşe artık sekme değil)
+    if (tabParam === 'ayse') {
+      setActiveTab('ozet');
+      return;
+    }
     setActiveTab(tabParam as HastaDosyaSekmeId);
     if (tabParam === 'muayene') setMuayeneAlti('vizitler');
   }, [tabParam]);
@@ -316,21 +332,6 @@ export default function HastaProfilPage() {
       ].filter(Boolean) as string[]
     : [];
 
-  const bilgiSatiri = (etiket: string, deger: React.ReactNode) => (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-      <span style={{ fontSize: 12, fontWeight: 700, color: '#14B8A6', letterSpacing: '0.03em', minWidth: 132, flexShrink: 0 }}>{etiket}</span>
-      <span style={{ fontSize: 15, fontWeight: 600, color: '#F4F7FB', lineHeight: 1.45, minWidth: 0 }}>{deger || '—'}</span>
-    </div>
-  );
-
-  const cipListesi = (degerler: string[], renk: string, kenar: string) => (
-    <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-      {degerler.map((k, i) => (
-        <span key={i} style={{ fontSize: 12.5, fontWeight: 600, color: renk, background: `${kenar}1A`, border: `1px solid ${kenar}55`, borderRadius: 999, padding: '3px 11px' }}>{k}</span>
-      ))}
-    </span>
-  );
-
   const notCek = (s: Seans): SeansNotu | null => {
     if (!s.notes) return null;
     return Array.isArray(s.notes) ? s.notes[0] || null : s.notes;
@@ -376,12 +377,6 @@ export default function HastaProfilPage() {
               >
                 🩺 Muayeneyi Başlat
               </button>
-              <button
-                onClick={() => secSekme('ayse')}
-                style={{ padding: '10px 18px', background: 'rgba(255,255,255,0.07)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Ayşe&apos;ye Danış
-              </button>
             </div>
           )}
         </div>
@@ -391,7 +386,7 @@ export default function HastaProfilPage() {
         </div>
 
         {/* Hap sekmeler — mobilde yatay kaydırma */}
-        <div className="dosya-sekmeler" style={{ display: 'flex', gap: 6, margin: '16px 0 18px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+        <div className="dosya-sekmeler" style={{ display: 'flex', gap: 6, margin: '16px 0 12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -415,29 +410,24 @@ export default function HastaProfilPage() {
           ))}
         </div>
 
+        {/* Ayşe şeridi: sekmeler ↔ içerik (Konuş + Yaz) — Gökhan/Boss 2026-09-20 */}
+        {!loading && !error && patient && (
+          <HastaKonsult patientId={patientId} baslangicAcik={tabParam === 'ayse'} />
+        )}
+
         {loading && <div style={{ ...panel, padding: 18, color: '#8FA0B5', fontSize: 14 }}>Dosya yükleniyor…</div>}
         {error && <div style={{ ...panel, padding: 18, color: '#FCA5A5', fontSize: 14, borderColor: 'rgba(239,68,68,0.4)' }}>{error}</div>}
 
         {!loading && !error && patient && activeTab === 'ozet' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-            <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #0F9B8E, transparent)' }} />
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Demografik bilgiler</div>
-              {bilgiSatiri('Ad Soyad', patient.ad_soyad)}
-              {bilgiSatiri('Doğum tarihi', dogumGoster)}
-              {bilgiSatiri('Cinsiyet', patient.cinsiyet)}
-              {bilgiSatiri('Telefon', patient.telefon)}
-              {bilgiSatiri('Şehir', patient.sehir)}
-              {bilgiSatiri('Kan grubu', patient.kan_grubu ? cipListesi([patient.kan_grubu], '#FCA5A5', '#EF4444') : null)}
-            </div>
-            <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #F59E0B, transparent)' }} />
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Sağlık geçmişi</div>
-              {bilgiSatiri('Kronik hastalıklar', patient.kronik_hastaliklar?.length ? cipListesi(patient.kronik_hastaliklar, '#FDBA74', '#F59E0B') : null)}
-              {bilgiSatiri('Alerjiler', patient.alerjiler ? cipListesi(patient.alerjiler.split(',').map((a) => a.trim()).filter(Boolean), '#FCA5A5', '#EF4444') : null)}
-              {bilgiSatiri('Sürekli ilaçlar', patient.surekli_ilaclar)}
-              {bilgiSatiri('Sigara / Alkol', patient.sigara_alkol)}
-            </div>
+            <HastaOzetDuzenlenebilir
+              patientId={patientId}
+              patient={patient}
+              dogumGoster={dogumGoster}
+              onKaydedildi={(p: HastaOzetKayit) => {
+                setPatient((onceki) => (onceki ? { ...onceki, ...p } : onceki))
+              }}
+            />
             <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #38BDF8, transparent)' }} />
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Gelişler ve tanılar</div>
@@ -486,41 +476,6 @@ export default function HastaProfilPage() {
                 </button>
               )}
             </div>
-            {pediatriAraci && pediatriUygun && (() => {
-              const hedef = (patient.anne_boy_cm != null && patient.baba_boy_cm != null)
-                ? hesaplaHedefBoy({ anneBoy: patient.anne_boy_cm, babaBoy: patient.baba_boy_cm, cinsiyet: patient.cinsiyet })
-                : null
-              return (
-                <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden', gridColumn: '1 / -1' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #FBBF24, transparent)' }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-                    <div style={{ fontSize: 14, fontWeight: 700 }}>Anne-Baba Boylarına Göre Hedef Boy</div>
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/doktor-tools/hedef-boy?patientId=${patient.id}`)}
-                      style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.35)', color: '#FDE68A', borderRadius: 999, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      Araçlar › Hedef Boy
-                    </button>
-                  </div>
-                  {hedef && hedef.ok ? (
-                    <>
-                      {bilgiSatiri('Baba', formatBoyCm(hedef.sonuc.babaCm))}
-                      {bilgiSatiri('Anne', formatBoyCm(hedef.sonuc.anneCm))}
-                      {bilgiSatiri('Tahmini erişkin boy', formatBoyCm(hedef.sonuc.cocukCm))}
-                      <HedefBoyManken sonuc={hedef.sonuc} tema="doktor" style={{ marginTop: 8 }} />
-                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#8FA0B5' }}>
-                        Tanner tahmini (±8,5 cm). Tanı değildir — aileye gösterilen cici bir bakış.
-                      </p>
-                    </>
-                  ) : (
-                    <p style={{ margin: '10px 0 0', fontSize: 13.5, color: '#8FA0B5', lineHeight: 1.5 }}>
-                      Çekirdek veri; intake zorunlu değil. Anne ve baba boyunu Araçlar’dan girin — sonuç burada ve hasta portalında mankenlerle görünür.
-                    </p>
-                  )}
-                </div>
-              )
-            })()}
           </div>
         )}
 
@@ -618,7 +573,7 @@ export default function HastaProfilPage() {
         {!loading && !error && pediatriUygun && activeTab === 'mchat' && <HastaMchat patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'bebek' && <HastaBebekKarti patientId={patientId} />}
-        {!loading && !error && activeTab === 'ayse' && <HastaKonsult patientId={patientId} />}
+        {/* Ayşe şeritte — ayrı sekme içeriği yok */}
         {/* BRANS-ALAN-SIZMASI: ?tab=dahiliye / ?tab=deri derin bağlantısı bölüm içeriğini branş kapısı olmadan açıyordu */}
         {!loading && !error && activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome patientId={patientId} />}
         {!loading && !error && activeTab === 'goz' && gozAraci && <GozHome patientId={patientId} />}

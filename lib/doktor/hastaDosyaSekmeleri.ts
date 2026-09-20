@@ -469,7 +469,7 @@ export function hastaDosyaSekmeleri(opts: {
     tabs.push({ id: 'bebek', label: 'Bebek kartı' }, { id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
   }
   if (opts.gozUygun) tabs.push({ id: 'goz', label: 'Göz' })
-  tabs.push({ id: 'ayse', label: "Ayşe'ye Danış" })
+  // Ayşe'ye Danış artık sekme değil — sekmeler ile içerik arasında şerit (HastaKonsult).
   // Kadın Sağlığı & Gebelik: top-level değil — Muayene Geçmişi altında (Boss 2026-09-18)
   if (opts.deriUygun) tabs.push({ id: 'deri', label: 'Deri & Lezyon' })
   if (opts.dahiliyeUygun) tabs.push({ id: 'dahiliye', label: 'Dahiliye' })

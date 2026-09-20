@@ -86,6 +86,7 @@ describe('hedefBoy (mid-parental height)', () => {
     const dash = readFileSync(join(root, 'app/dashboard/doktor/page.tsx'), 'utf8')
     const ayar = readFileSync(join(root, 'app/dashboard/doktor/ayarlar/page.tsx'), 'utf8')
     const demo = readFileSync(join(root, 'lib/portal/demoData.ts'), 'utf8')
+    const hastaOzet = readFileSync(join(root, 'app/dashboard/doktor/hastalar/[id]/page.tsx'), 'utf8')
     assert.doesNotMatch(tools, /HedefBoyAracPaneli|usePediatriHedefBoy/)
     assert.match(hedef, /HedefBoyAracPaneli/)
     assert.match(catalog, /\/doktor-tools\/hedef-boy/)
@@ -93,6 +94,9 @@ describe('hedefBoy (mid-parental height)', () => {
     assert.match(dash, /\/doktor-tools\/hedef-boy/)
     assert.doesNotMatch(ayar, /Hedef Boy/)
     assert.match(demo, /hedefBoy:\s*null/)
+    // Boss 2026-09-20: novelty manken Özet’te değil — yalnız Araçlar › Hedef Boy
+    assert.doesNotMatch(hastaOzet, /HedefBoyManken|Anne-Baba Boylarına Göre Hedef Boy/)
+    assert.match(hastaOzet, /HastaOzetDuzenlenebilir/)
   })
 
   it('ships 3D cartoon family cutouts for the Araçlar studio', () => {

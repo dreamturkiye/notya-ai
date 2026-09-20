@@ -50,6 +50,8 @@ export async function intakeYanitlariniHastayaAktar(sb: SupabaseClient, patientI
   const sigaraMetni = sigara === 'Evet' || sigara === 'Hayır' ? `Ailede sigara: ${sigara}` : sigara ? `Sigara: ${sigara}` : ''
   yaz('sigaraAlkol', [sigaraMetni, alkol ? `Alkol: ${alkol}` : ''].filter(Boolean).join(' · '))
   yaz('sehir', metin(y.il))
+  yaz('anneAdi', metin(y.anneAdi))
+  yaz('babaAdi', metin(y.babaAdi))
   const anneBoy = parseBoyGirdi(metin(y.anneBoyPed) || metin(y.anneBoy))
   const babaBoy = parseBoyGirdi(metin(y.babaBoyPed) || metin(y.babaBoy))
   if (bos('anneBoyCm') && anneBoy.ok) { notlar.anneBoyCm = anneBoy.cm; doldurulan.push('anneBoyCm') }

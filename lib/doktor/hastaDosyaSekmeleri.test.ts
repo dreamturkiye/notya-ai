@@ -26,6 +26,9 @@ describe('hastaDosyaSekmeleri', () => {
     assert.equal(labels.includes('Gelişim Taraması'), false)
     assert.equal(labels.includes('Büyüme Eğrileri'), false)
     assert.equal(labels.includes('Deri & Lezyon'), false)
+    // Ayşe şerit — sekme listesinde yok
+    assert.equal(adult.some((t) => t.id === 'ayse'), false)
+    assert.equal(labels.includes("Ayşe'ye Danış"), false)
   })
 
   it('shows Deri only when deriUygun (dermatoloji doctor)', () => {
