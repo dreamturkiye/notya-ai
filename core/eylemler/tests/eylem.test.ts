@@ -295,10 +295,11 @@ describe('Onay: doğrulama, makullük, mükerrer, idempotans', () => {
     assert.ok(o!.uyarilar.some((u) => /mükerrer/i.test(u)), `uyarı yok: ${JSON.stringify(o!.uyarilar)}`)
   })
 
-  it('kayitNiyetiMi: yazıver / kaydet / dosyaya gir', () => {
+  it('kayitNiyetiMi: yazıver / kaydet / dosyaya gir / Gökhan doğal dil', () => {
     assert.equal(kayitNiyetiMi('sen yazıver'), true)
     assert.equal(kayitNiyetiMi('bunu kaydet'), true)
     assert.equal(kayitNiyetiMi('dosyaya gir'), true)
+    assert.equal(kayitNiyetiMi('Ama ben senden rica ediyorum dolayısıyla giriş benim sorumluluğumda olacak'), true)
     assert.equal(kayitNiyetiMi('özetle'), false)
   })
 

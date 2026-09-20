@@ -107,9 +107,16 @@ export function tahminleriAyikla(
   return { veri: temiz, dusen, belirsiz }
 }
 
-/** Doctor said “kaydet / yazıver / dosyaya gir …” — force a tool call so the model cannot narrate a refusal. */
+/**
+ * Doctor asked Ayşe to prepare a dosya write — Turkish is informal and varied.
+ * "sen yazıver" is the canonical ask; Gökhan also said "rica ediyorum … giriş benim
+ * sorumluluğumda" and got the old "yapamam" refusal when only the narrow verbs matched.
+ * Still a PROPOSAL only: tool_choice forces the card; the tap is the commit.
+ */
 export function kayitNiyetiMi(metin: string): boolean {
-  return /kaydet|yaz[ıi]ver|dosyaya\s*gir|kayda\s*ge[çc]|kayda\s*ge[çc]ir/i.test(String(metin || ''))
+  return /kaydet|yaz[ıi]ver|dosyaya\s*(gir|yaz|ekle)|kayda\s*(ge[çc]|al|ge[çc]ir)|sen\s+(yaz|gir|ekle|hazırla|yap)|geçir|sorumlulu[gğ]umda|rica\s+ediyorum|giriş\s+(benim|hekimin)|aşıy[ıi]\s*(gir|yaz|ekle|kaydet)|hazırla\.?\s*$/i.test(
+    String(metin || '')
+  )
 }
 
 export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> {
