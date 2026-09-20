@@ -81,6 +81,21 @@ describe('KONSULTASYON-01 — zaman çizelgesi (SSR)', () => {
     assert.match(k, /Geç gelen raporu ekle/)
     assert.match(k, />Sil</)
   })
+  it('uzun istem metni varsayılan daraltılır (Devamını göster); kısa metin açık kalır', () => {
+    const mektup = Array.from({ length: 12 }, (_, i) => `Sayın Meslektaşım, satır ${i + 1} klinik ayrıntı ve muayene bulgusu.`).join('\n')
+    const uzun = sar(createElement(KonsultasyonCizelgesi, {
+      patientId: 'p',
+      liste: [satir({ id: 'uzun', klinik_soru: mektup, durum: 'yanitlandi', yanit_tarihi: '2026-09-18', yanit_ozeti: 'Kısa yanıt.' })],
+      hedefler,
+      setListe: () => {},
+    }))
+    assert.match(uzun, /Devamını göster/)
+    assert.match(uzun, /Sayın Meslektaşım, satır 1/)
+    assert.doesNotMatch(uzun, /satır 12 klinik/)
+    const kisa = kart('bekleyen')
+    assert.match(kisa, /İşitme kaybı var mı\?/)
+    assert.doesNotMatch(kisa, /Devamını göster/)
+  })
   it('eski dahiliye kaydı: "eski kayıt" rozeti, not metni soru yerine, istem formu yok (klinik soru yok)', () => {
     const k = kart('eski')
     assert.match(k, /eski kayıt/)

@@ -422,6 +422,49 @@ export function DuzenlemeGecmisi({ liste }: { liste: KonsultasyonRevizyonu[] }) 
 
 /* ───────────────────────── Tek satır (kanıt kartı) ───────────────────────── */
 
+/**
+ * Uzun istem / yanıt mektubu — varsayılan daraltılmış.
+ * Birden fazla konsültasyonda ekranı mektuplar kaplamasın; kısa metinler olduğu gibi kalır.
+ */
+export function UzunMetin({
+  metin,
+  esik = 240,
+  stilMetin,
+}: {
+  metin: string
+  esik?: number
+  stilMetin: React.CSSProperties
+}) {
+  const stil = useAracStil();
+  const uzun = metin.length > esik || metin.split('\n').length > 4;
+  const [acik, setAcik] = useState(false);
+  if (!uzun) {
+    return <div style={{ ...stilMetin, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{metin}</div>;
+  }
+  let kes = metin.slice(0, esik);
+  const sonSatir = kes.lastIndexOf('\n');
+  if (sonSatir > esik * 0.35) kes = kes.slice(0, sonSatir);
+  else {
+    const sonBosluk = kes.lastIndexOf(' ');
+    if (sonBosluk > esik * 0.5) kes = kes.slice(0, sonBosluk);
+  }
+  return (
+    <div>
+      <div style={{ ...stilMetin, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+        {acik ? metin : `${kes.trimEnd()}…`}
+      </div>
+      <button
+        type="button"
+        aria-expanded={acik}
+        onClick={() => setAcik(!acik)}
+        style={{ ...stil.ghost, marginTop: 6, minHeight: 44 }}
+      >
+        {acik ? 'Daralt' : 'Devamını göster'}
+      </button>
+    </div>
+  );
+}
+
 export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yanitAcikBaslar = false }: {
   k: KonsultasyonGorunumu
   patientId: string
@@ -477,7 +520,11 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
         {k.aciliyet === 'oncelikli' && <Rozet ton="uyari">Öncelikli</Rozet>}
         {k.eskiKayit && <Rozet ton="bilgi">eski kayıt</Rozet>}
       </div>
-      {soru && <div style={{ ...stil.metin, marginTop: 8, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{soru}</div>}
+      {soru ? (
+        <div style={{ marginTop: 8 }}>
+          <UzunMetin metin={soru} stilMetin={stil.metin} />
+        </div>
+      ) : null}
       <div style={{ ...stil.kucuk, marginTop: 6 }}>
         İstem: {trGun(k.istem_tarihi || k.created_at)}{k.hedef_hekim ? ` · ${k.hedef_hekim}` : ''}
         {g === 'yanitlandi' ? ' · istem kilitli (yanıt geldi)' : ''}
@@ -486,7 +533,11 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
       {g === 'yanitlandi' && (
         <div style={{ marginTop: 10, background: 'rgba(45,212,191,0.06)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: 12, padding: '10px 12px' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#5EEAD4' }}>Yanıt · {trGun(k.yanit_tarihi)}{k.hedef_hekim ? ` · ${k.hedef_hekim}` : ''}</div>
-          <div style={{ ...stil.metin, marginTop: 4, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{k.yanit_ozeti}</div>
+          {k.yanit_ozeti ? (
+            <div style={{ marginTop: 4 }}>
+              <UzunMetin metin={k.yanit_ozeti} stilMetin={stil.metin} />
+            </div>
+          ) : null}
         </div>
       )}
 
