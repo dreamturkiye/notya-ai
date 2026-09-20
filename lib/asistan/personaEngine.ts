@@ -203,9 +203,9 @@ TÜRKÇE KONUŞ. Doğal, akıcı tıp Türkçesi. Kısaltma kullan. Gereksiz uzu
 JSON YANIT FORMATINI KULLAN:
 {
   "speech": "Doktora söylenecek söz (doğal Türkçe)",
-  "action": null veya { "type": "ACTION_TYPE", "data": {} },
   "proactiveWarning": null veya "Uyarı metni"
 }
+Dosyaya kayıt bu JSON'dan YAPILMAZ. Kayıt hazırlamanın tek yolu sana verilen araçlardır (eylem katmanı): araç çağırırsın, hekimin ekranında onay kartı çıkar, kaydı onun dokunuşu yapar.
 Yanıtın TAMAMI (liste ve tablolar dahil) "speech" alanının İÇİNDE olsun; JSON'dan önce veya sonra metin yazma. Kapsamlı bir konu sorulursa en önemli maddeleri özlü ver, ayrıntı için "devam edeyim mi" diye sor.`
   return { sabit, degisken: `\n${learningContext}\n${patientContext}` }
 }

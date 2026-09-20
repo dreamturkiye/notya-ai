@@ -10,6 +10,8 @@
  *   5. zod re-validation of the values the DOCTOR confirmed (model output is not trusted twice)
  *   6. zorunlu alanlar, makullük, mükerrer                → re-run at commit, not only at proposal:
  *      the world may have changed since the card was drawn, and the doctor may have edited it
+ *   6b. ilaç güvenlik uyarıları (NOTYA-EYLEM-21)         → re-run too; a `ciddi` one does not block
+ *      the hekim but costs an explicit second tap, and the acknowledgement is written down
  *   7. calistir()                                        → the shared write path
  *   8. eylem_kayitlari                                   → hazırlayan Ayşe, onaylayan hekim
  *   9. hafıza                                            → the approve route's own learning signal
@@ -22,13 +24,16 @@ import { veriNormalize, tarihAlanlariGecerliMi } from './sema'
 import { hastaOzetiGetir } from './hasta'
 import { bugunTRT, type EylemBaglami, type EylemOnerisi, type EylemSonucu } from './types'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { ciddiUyariVarMi, type IlacUyarisi } from './ilacUyari'
 
 /** docs §5 — öneriler expire after 24h. */
 export const ONERI_OMRU_MS = 24 * 3600e3
 
 export type OnaySonucu =
-  | { ok: true; kayitId: string; sonuc: EylemSonucu; etiket: string }
-  | { ok: false; durum: number; hata: string }
+  | { ok: true; kayitId: string; sonuc: EylemSonucu; etiket: string; uyarilar: IlacUyarisi[] }
+  /** `uyarilar` is set when the refusal IS the warning gate — the card re-renders them and offers
+   *  the second tap. Everything else refuses with a sentence only. */
+  | { ok: false; durum: number; hata: string; uyarilar?: IlacUyarisi[]; uyariOnayiGerekli?: boolean }
 
 export interface OnayGirdisi {
   supabase: SupabaseClient
@@ -38,6 +43,11 @@ export interface OnayGirdisi {
   duzeltmeler?: Record<string, unknown>
   brans: import('@/lib/asistan/turkishSpecialtyRefs').SpecialtyKey | null
   mesajId?: string | null
+  /**
+   * NOTYA-EYLEM-21 — the doctor's explicit second tap on "Uyarıyı gördüm, kaydet". A `ciddi`
+   * warning never blocks him; it costs one deliberate acknowledgement, which is recorded.
+   */
+  uyariGoruldu?: boolean
 }
 
 async function oneriYukle(sb: SupabaseClient, doktorId: string, oneriId: string): Promise<EylemOnerisi | null> {
@@ -106,6 +116,25 @@ export async function eylemOnayla(g: OnayGirdisi): Promise<OnaySonucu> {
   const makul = eylem.makullukKontrol?.(ctx, veri as never)
   if (makul) return { ok: false, durum: 400, hata: makul }
 
+  // NOTYA-EYLEM-21: re-run the drug check HERE, not only when the card was drawn. The patient's
+  // active med list may have changed since — a card prepared an hour ago is not a statement about
+  // now. The model's own note (`ayse_notu`) cannot be recomputed, so it is carried from the taslak.
+  let uyarilar: IlacUyarisi[] = []
+  if (eylem.uyariKontrol) {
+    try {
+      uyarilar = await eylem.uyariKontrol(ctx, veri as never)
+    } catch (e) {
+      console.error('[eylem] onayda uyarı kontrolü çalışmadı', e)
+      return { ok: false, durum: 503, hata: 'İlaç güvenlik kontrolü şu an çalıştırılamadı; lütfen tekrar deneyin.' }
+    }
+    const ayse = (oneri.uyari_detay || []).filter((u) => u.tur === 'ayse_notu')
+    uyarilar = [...uyarilar, ...ayse]
+    // The hekim is the authority — this does not block, it asks for one deliberate second tap.
+    if (ciddiUyariVarMi(uyarilar) && !g.uyariGoruldu) {
+      return { ok: false, durum: 409, hata: 'Ciddi bir ilaç uyarısı var. Uyarıyı okuyup "Uyarıyı gördüm, kaydet" ile onaylayın.', uyarilar, uyariOnayiGerekli: true }
+    }
+  }
+
   // Idempotency: one guarded statement flips taslak → onaylandi. Two concurrent taps mean exactly
   // one row comes back here; the loser sees "zaten işlendi" and no second write happens.
   const { data: kilit } = await sb
@@ -142,6 +171,10 @@ export async function eylemOnayla(g: OnayGirdisi): Promise<OnaySonucu> {
       sonra: sonuc.sonra,
       kaynak: 'ayse_oneri',
       mesaj_id: g.mesajId ?? null,
+      // Denetim: hekim uyarıyı gördü mü, hangi uyarıyı gördü (migration 086).
+      uyari_onayi: uyarilar.length
+        ? { uyarilar, ciddi: ciddiUyariVarMi(uyarilar), goruldu: Boolean(g.uyariGoruldu), onaylayan: doktorId, at: new Date().toISOString() }
+        : null,
     })
     .select('id')
     .single()
@@ -149,7 +182,7 @@ export async function eylemOnayla(g: OnayGirdisi): Promise<OnaySonucu> {
   // failing the request here would tell the doctor "kaydedilmedi" about a record that exists.
   if (kayitHatasi) console.error('[eylem] denetim satırı yazılamadı', kayitHatasi.message)
 
-  return { ok: true, kayitId: String(kayit?.id || ''), sonuc, etiket: eylem.etiket }
+  return { ok: true, kayitId: String(kayit?.id || ''), sonuc, etiket: eylem.etiket, uyarilar }
 }
 
 export async function eylemVazgec(sb: SupabaseClient, doktorId: string, oneriId: string): Promise<boolean> {

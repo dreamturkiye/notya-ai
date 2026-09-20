@@ -17,7 +17,8 @@ import { EylemKarti, EylemToplu, type EylemHasta, type EylemOneriGorunumu } from
 // NOTYA-EYLEM: cards ride ON the assistant message. This surface has no patientId on the client —
 // the patient is resolved server-side from free text — so both the proposal ids and the header name
 // come back from the route; the client never picks a patient for a write.
-interface Mesaj { rol: 'doktor' | 'asistan'; icerik: string; oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta }
+interface Yonlendirme { metin: string; etiket: string | null; yol: string | null }
+interface Mesaj { rol: 'doktor' | 'asistan'; icerik: string; oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta; yonlendirme?: Yonlendirme | null }
 
 interface TanimaSonucu { isFinal: boolean; 0: { transcript: string } }
 interface TanimaOlayi { resultIndex: number; results: { length: number; [i: number]: TanimaSonucu } }
@@ -106,7 +107,9 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
       const cevap = asistanYanitiCoz(String(veri.speech || veri.response || veri.message || veri.cevap || '')).speech;
       if (veri.asistanSessionId) setOturumId(String(veri.asistanSessionId));
       if (veri.aktifHasta) setAktifHasta(String(veri.aktifHasta));
-      setMesajlar([...yeni, { rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.', oneriler: (veri.eylemOnerileri as EylemOneriGorunumu[]) || [], hasta: (veri.eylemHastasi as EylemHasta) || undefined }]);
+      // NOTYA-EYLEM-24: Ayşe bir şeyi bu yoldan yapmıyorsa (reçete, tanı, hasta açma) cümlesi
+      // baloncukta; ilgili ekranın bağlantısı burada, baloncuğun altında tek satır.
+      setMesajlar([...yeni, { rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.', oneriler: (veri.eylemOnerileri as EylemOneriGorunumu[]) || [], hasta: (veri.eylemHastasi as EylemHasta) || undefined, yonlendirme: (veri.eylemYonlendirme as Yonlendirme) || null }]);
     } catch (e) {
       setMesajlar([...yeni, { rol: 'asistan', icerik: e instanceof Error ? e.message : `${personaAdi} yanıt veremedi.` }]);
     } finally {
@@ -142,6 +145,13 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
                 <div style={{ display: 'inline-block', maxWidth: '100%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal', overflowWrap: 'anywhere' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
                 {m.oneriler?.length && m.hasta ? (
                   m.oneriler.length > 1 ? <EylemToplu oneriler={m.oneriler} hasta={m.hasta} /> : <EylemKarti oneri={m.oneriler[0]} hasta={m.hasta} />
+                ) : null}
+                {m.yonlendirme?.yol && m.yonlendirme.etiket ? (
+                  <div style={{ marginTop: 6 }}>
+                    <a href={m.yonlendirme.yol} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, color: '#2DD4BF', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}>
+                      {m.yonlendirme.etiket} ›
+                    </a>
+                  </div>
                 ) : null}
               </div>
             ))}

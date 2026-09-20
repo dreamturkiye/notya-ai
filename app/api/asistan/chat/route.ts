@@ -17,7 +17,7 @@ import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
-import { executeAction } from "@/lib/asistan/actionExecutor"
+import { executeAction, eskiEylemKarari, type ActionResult } from "@/lib/asistan/actionExecutor"
 import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
@@ -25,7 +25,7 @@ import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
 import { aiCagir } from "@/lib/ai/cagir"
 import { asistanModelYonlendir, gecmisiKirp, SOHBET_SAKLANAN_MESAJ } from "@/lib/ai/modeller"
 import { aracTanimlari, eylemKapali } from "@/core/eylemler/araclar"
-import { toolUseOnerileri } from "@/core/eylemler/oneri"
+import { toolUseOnerileri, oneriHazirla, type HazirOneri } from "@/core/eylemler/oneri"
 import { hastaOzetiGetir } from "@/core/eylemler/hasta"
 import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
 import { bugunTRT } from "@/core/eylemler/types"
@@ -261,31 +261,52 @@ export async function POST(req: NextRequest) {
       if (aiData.proactiveWarning) aiData.proactiveWarning = uydurmaKaynakTemizle(String(aiData.proactiveWarning), liste).metin
     }
 
-    // Execute action if AI decided to
-    let actionResult = null
-    if (aiData.action) {
-      actionResult = await executeAction(
-        {
-          type: aiData.action.type as never,
-          doctorId: user.id,
-          data: (aiData.action.data as Record<string, unknown>) || {},
-          doctorProfile,
-        },
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
+    // NOTYA-EYLEM: tool_use → taslak öneri + onay kartı. Hiçbir şey yazılmadı; hekim onaylayacak.
+    const eylemCtx = (h: NonNullable<typeof eylemHastasi>) => ({ supabase: getSupabase(), doktorId: user.id, hasta: h, brans: eylemBransi, oneriId: "", bugunTRT: bugunTRT() })
+    const eylemOnerileri: HazirOneri[] = eylemHastasi
+      // NOTYA-EYLEM-21: Ayşe'nin kendi uyarı cümlesi karta "Ayşe'nin notu" olarak taşınır — deterministik
+      // kontrolün yerine değil, yanına; asla `ciddi` sayılmaz (core/eylemler/ilacUyari.ts).
+      ? await toolUseOnerileri(response as unknown as { content?: unknown }, eylemCtx(eylemHastasi), "sohbet", { brans: eylemBransi, hasta: eylemHastasi }, aiData.proactiveWarning)
+      : []
 
-      // Update asistan session context if patient was created
-      if (aiData.action.type === "CREATE_PATIENT" && actionResult.data?.patient) {
-        await getSupabase().from("asistan_sessions")
-          .update({
-            patient_id: (actionResult.data.patient as Record<string, unknown>).id,
-            active_context: {
-              ...(asistanSession?.active_context as Record<string, unknown> || {}),
-              currentPatientId: (actionResult.data.patient as Record<string, unknown>).id,
-              patientName: (actionResult.data.patient as Record<string, unknown>).name_encrypted
-            }
+    // NOTYA-EYLEM-24: the OLD silent write path is closed. A legacy `{ action: { type, data } }`
+    // from the model is classified (lib/asistan/actionExecutor.ts) and NEVER executed against a
+    // clinical table. Where an eylem equivalent exists the payload becomes a taslak + onay kartı —
+    // the same spine, the same tap, the same audit row. Everything else (reçete, tanı, hasta/seans
+    // açma) becomes a Turkish sentence plus a deep link to the screen where it belongs.
+    let actionResult: ActionResult | null = null
+    let eylemYonlendirme: { metin: string; etiket: string | null; yol: string | null } | null = null
+    if (aiData.action) {
+      const tip = String((aiData.action as { type?: unknown }).type || "")
+      const veriler = ((aiData.action as { data?: unknown }).data || {}) as Record<string, unknown>
+      const karar = eskiEylemKarari(tip, eylemHastasi?.id ?? null)
+      // Kept for the response shape (and as the tripwire test's subject): it writes nothing.
+      actionResult = await executeAction({ type: tip as never, doctorId: user.id, data: veriler, doctorProfile })
+
+      let kartCikti = false
+      if (karar.sinif === "klinik_eylem" && karar.eylemAnahtar && eylemHastasi) {
+        // Provenance is literally true: the line is what the doctor asked for in THIS turn, and the
+        // card shows it in an editable box with the doctor's own sentence quoted underneath.
+        const metin = String(veriler.content ?? veriler.metin ?? "").trim()
+        if (metin) {
+          const o = await oneriHazirla({
+            ctx: eylemCtx(eylemHastasi),
+            anahtar: karar.eylemAnahtar,
+            girdi: { metin, alan_kaynaklari: { metin: { kaynak: "doktor_soyledi", alinti: String(message || "").slice(0, 400) } } },
+            yuzey: "sohbet",
+            suzgec: { brans: eylemBransi, hasta: eylemHastasi },
           })
-          .eq("id", asistanSession?.id)
+          if (o) { eylemOnerileri.push(o); kartCikti = true }
+        }
+      }
+      if (!kartCikti) {
+        const soz = karar.sinif === "klinik_eylem"
+          ? "Bunu dosyaya ben yazmıyorum — hangi hastanın dosyası olduğunu söylerseniz kartını hazırlayayım, kaydı siz onaylarsınız."
+          : karar.metin
+        aiData.speech = `${String(aiData.speech || "").trimEnd()}\n\n${soz}`.trim()
+        if (karar.sinif !== "klinik_disi") eylemYonlendirme = { metin: soz, etiket: karar.etiket ?? null, yol: karar.yol ?? null }
+      } else {
+        aiData.speech = `${String(aiData.speech || "").trimEnd()}\n\n${karar.metin}`.trim()
       }
     }
 
@@ -343,20 +364,11 @@ export async function POST(req: NextRequest) {
       await getSupabase().from("doctor_preferences").update({ last_session_at: new Date().toISOString() }).eq("doctor_id", user.id)
     }
 
-    // NOTYA-EYLEM: tool_use → taslak öneri + onay kartı. Hiçbir şey yazılmadı; hekim onaylayacak.
-    const eylemOnerileri = eylemHastasi
-      ? await toolUseOnerileri(
-          response as unknown as { content?: unknown },
-          { supabase: getSupabase(), doktorId: user.id, hasta: eylemHastasi, brans: eylemBransi, oneriId: "", bugunTRT: bugunTRT() },
-          "sohbet",
-          { brans: eylemBransi, hasta: eylemHastasi },
-        )
-      : []
-
     return NextResponse.json({
       success: true,
       data: {
         eylemOnerileri,
+        eylemYonlendirme,
         eylemHastasi: eylemHastasi ? { ad: eylemHastasi.ad, dogumTarihi: eylemHastasi.dogumTarihi } : null,
         speech: aiData.speech,
         proactiveWarning: aiData.proactiveWarning,

@@ -270,9 +270,11 @@ describe('Onay: doğrulama, makullük, mükerrer, idempotans', () => {
   })
 
   it('idempotans: iki kez onaylanınca tek satır yazılır', async () => {
+    // QA hastasının dosyasında "Penisilin" alerjisi var ve Augmentin penisilin grubudur: NOTYA-EYLEM-21
+    // ciddi uyarısı burada bilerek onaylanıyor (hekim yetkilidir) — kapının kendisi ayrıca sınanıyor.
     const o = await oneriAc('ilac_ekle', hepsiDoktordan({ ilac_adi: 'Augmentin', doz: '400 mg', kullanim_sikli: '2x1' }))
-    const bir = await eylemOnayla({ supabase: sb, doktorId: DOKTOR, oneriId: o!.id, brans: 'pediatri' })
-    const iki = await eylemOnayla({ supabase: sb, doktorId: DOKTOR, oneriId: o!.id, brans: 'pediatri' })
+    const bir = await eylemOnayla({ supabase: sb, doktorId: DOKTOR, oneriId: o!.id, brans: 'pediatri', uyariGoruldu: true })
+    const iki = await eylemOnayla({ supabase: sb, doktorId: DOKTOR, oneriId: o!.id, brans: 'pediatri', uyariGoruldu: true })
     assert.equal(bir.ok, true)
     assert.equal(iki.ok, false)
     assert.equal((iki as { durum: number }).durum, 409)

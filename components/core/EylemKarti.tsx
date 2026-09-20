@@ -30,6 +30,14 @@ export interface EylemAlan {
   birim?: string
 }
 
+export interface EylemUyarisi {
+  tur: 'alerji' | 'mukerrer_etken' | 'etkilesim' | 'pediatrik' | 'kapsam_disi' | 'ayse_notu'
+  siddet: 'ciddi' | 'orta' | 'bilgi'
+  baslik: string
+  metin: string
+  kaynak: string
+}
+
 export interface EylemOneriGorunumu {
   id: string
   eylem_anahtar: string
@@ -40,6 +48,8 @@ export interface EylemOneriGorunumu {
   alan_kaynaklari?: Record<string, { kaynak: string; alinti?: string | null }>
   eksik_alanlar: string[]
   uyarilar?: string[]
+  /** NOTYA-EYLEM-21 — severity-carrying drug warnings, printed above the fields. */
+  uyari_detay?: EylemUyarisi[]
   zorunlu?: string[]
   portalaYansir?: boolean
   /** T2 only — what the row looks like today, so the card can show önce → sonra. */
@@ -60,6 +70,42 @@ const girdi: React.CSSProperties = { width: '100%', boxSizing: 'border-box', bac
 const girdiBos: React.CSSProperties = { ...girdi, borderColor: 'rgba(250,204,21,0.55)', background: 'rgba(250,204,21,0.08)' }
 
 const KAYNAK_ETIKET: Record<string, string> = { doktor_soyledi: 'Hekim söyledi', dosyadan: 'Dosyadan' }
+
+/**
+ * NOTYA-EYLEM-21 — safety warnings, ABOVE the fields, severity-coloured, Turkish, NEVER collapsible.
+ *
+ * A warning behind a "Ayrıntı" toggle is a warning nobody read. `ciddi` is red and, on the card
+ * logic below, costs a deliberate second tap; `orta` is amber; `bilgi` is blue. The kaynak line is
+ * small but always present — a doctor weighing a warning needs to know whether it came from the
+ * drug table, from this patient's own file, or from Ayşe.
+ */
+const UYARI_RENK: Record<string, { cizgi: string; zemin: string; yazi: string }> = {
+  ciddi: { cizgi: 'rgba(239,68,68,0.55)', zemin: 'rgba(239,68,68,0.12)', yazi: '#FCA5A5' },
+  orta: { cizgi: 'rgba(245,158,11,0.5)', zemin: 'rgba(245,158,11,0.10)', yazi: '#FCD34D' },
+  bilgi: { cizgi: 'rgba(59,130,246,0.45)', zemin: 'rgba(59,130,246,0.10)', yazi: '#93C5FD' },
+}
+
+function UyariSatiri({ u }: { u: EylemUyarisi }) {
+  const r = UYARI_RENK[u.siddet] || UYARI_RENK.bilgi
+  return (
+    <div style={{ border: `1px solid ${r.cizgi}`, background: r.zemin, borderRadius: 9, padding: '8px 10px', marginBottom: 6 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: r.yazi }}>
+        {u.siddet === 'ciddi' ? '⚠ ' : u.siddet === 'orta' ? '• ' : 'ℹ '}
+        {u.baslik}
+      </div>
+      <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 2 }}>{u.metin}</div>
+      <div style={{ ...kucuk, marginTop: 3 }}>Kaynak: {u.kaynak}</div>
+    </div>
+  )
+}
+
+export function EylemUyarilari({ uyarilar }: { uyarilar?: EylemUyarisi[] }) {
+  if (!uyarilar?.length) return null
+  // Most serious first: the eye lands on the top of the block.
+  const sira = { ciddi: 0, orta: 1, bilgi: 2 } as const
+  const sirali = [...uyarilar].sort((a, b) => (sira[a.siddet] ?? 3) - (sira[b.siddet] ?? 3))
+  return <div style={{ marginBottom: 10 }}>{sirali.map((u, i) => <UyariSatiri key={i} u={u} />)}</div>
+}
 
 function trTarih(iso?: string | null): string {
   if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return ''
@@ -99,6 +145,12 @@ export function EylemKarti({
   const [durum, setDurum] = useState<'acik' | 'kaydediliyor' | 'kaydedildi' | 'vazgecildi' | 'geri_alindi'>('acik')
   const [hata, setHata] = useState('')
   const [sonuc, setSonuc] = useState<{ kayitId: string; ilgiliSekme: { etiket: string; yol: string } | null } | null>(null)
+  // NOTYA-EYLEM-21: the warnings shown here are the ones the server last computed. A commit re-runs
+  // the check, so a refusal can arrive with FRESHER warnings than the card was drawn with — those
+  // replace what is on screen rather than being appended to a stale list.
+  const [uyarilar, setUyarilar] = useState<EylemUyarisi[]>(oneri.uyari_detay || [])
+  const [onayBekliyor, setOnayBekliyor] = useState(false)
+  const ciddiVar = uyarilar.some((u) => u.siddet === 'ciddi')
 
   const zorunlu = useMemo(() => new Set(oneri.zorunlu || []), [oneri.zorunlu])
   const eksik = useMemo(() => new Set(oneri.eksik_alanlar || []), [oneri.eksik_alanlar])
@@ -117,11 +169,21 @@ export function EylemKarti({
 
   async function kaydet() {
     setHata('')
+    // A `ciddi` warning does NOT block — the hekim is the authority. It costs one deliberate second
+    // tap: the button becomes "Uyarıyı gördüm, kaydet" and only THAT tap sends the acknowledgement.
+    // The server enforces the same rule independently (core/eylemler/onayla.ts), so a client that
+    // skipped this step is refused there.
+    if (ciddiVar && !onayBekliyor) {
+      setOnayBekliyor(true)
+      return
+    }
     setDurum('kaydediliyor')
     const duzeltmeler: Record<string, unknown> = {}
     for (const a of oneri.alanlar) if (String(deger[a.anahtar] ?? '').trim()) duzeltmeler[a.anahtar] = deger[a.anahtar]
-    const r = await cagir({ adim: 'onayla', oneriId: oneri.id, duzeltmeler })
+    const r = await cagir({ adim: 'onayla', oneriId: oneri.id, duzeltmeler, uyariGoruldu: onayBekliyor })
     if (!r.ok) {
+      if (Array.isArray(r.veri.uyarilar)) setUyarilar(r.veri.uyarilar as EylemUyarisi[])
+      if (r.veri.uyariOnayiGerekli) setOnayBekliyor(true)
       setHata(String(r.veri.error || 'Kaydedilemedi.'))
       setDurum('acik')
       return
@@ -172,6 +234,8 @@ export function EylemKarti({
   return (
     <div style={kart}>
       <Baslik hasta={hasta} etiket={oneri.etiket} kademe={oneri.kademe} />
+
+      <EylemUyarilari uyarilar={uyarilar} />
 
       {(oneri.uyarilar || []).map((u, i) => (
         <div key={i} style={{ ...kucuk, color: '#FCD34D', marginBottom: 6 }}>⚠ {u}</div>
@@ -226,8 +290,19 @@ export function EylemKarti({
       {hata ? <div style={{ ...kucuk, color: '#FCA5A5', marginTop: 8 }}>{hata}</div> : null}
 
       <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button type="button" onClick={kaydet} disabled={durum === 'kaydediliyor' || doldurulmamis.length > 0} style={{ ...birincil, opacity: durum === 'kaydediliyor' || doldurulmamis.length ? 0.5 : 1, cursor: doldurulmamis.length ? 'not-allowed' : 'pointer' }}>
-          {durum === 'kaydediliyor' ? 'Kaydediliyor…' : 'Kaydet'}
+        <button
+          type="button"
+          onClick={kaydet}
+          disabled={durum === 'kaydediliyor' || doldurulmamis.length > 0}
+          style={{
+            ...birincil,
+            ...(onayBekliyor ? { background: '#DC2626', borderColor: '#DC2626' } : {}),
+            minHeight: 44,
+            opacity: durum === 'kaydediliyor' || doldurulmamis.length ? 0.5 : 1,
+            cursor: doldurulmamis.length ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {durum === 'kaydediliyor' ? 'Kaydediliyor…' : onayBekliyor ? 'Uyarıyı gördüm, kaydet' : 'Kaydet'}
         </button>
         <button type="button" onClick={vazgec} style={hayalet}>Vazgeç</button>
         {doldurulmamis.length ? <span style={{ ...kucuk, color: '#FCD34D' }}>Önce doldurun: {doldurulmamis.map((a) => a.etiket).join(', ')}</span> : null}
@@ -254,11 +329,15 @@ export function EylemToplu({
   onSonuc?: (d: { kaydedilen: number }) => void
 }) {
   const eksikOlan = (o: EylemOneriGorunumu) => (o.zorunlu || []).filter((k) => o.veri?.[k] == null || String(o.veri[k]).trim() === '')
-  const [secili, setSecili] = useState<Record<string, boolean>>(() => Object.fromEntries(oneriler.map((o) => [o.id, eksikOlan(o).length === 0])))
+  // NOTYA-EYLEM-21: a `ciddi` warning costs the same deliberate acknowledgement inside a batch as it
+  // does on its own card — "Seçilenleri kaydet" must never be the way a serious warning gets skipped.
+  const ciddiOlan = (o: EylemOneriGorunumu) => (o.uyari_detay || []).some((u) => u.siddet === 'ciddi')
+  const [secili, setSecili] = useState<Record<string, boolean>>(() => Object.fromEntries(oneriler.map((o) => [o.id, eksikOlan(o).length === 0 && !ciddiOlan(o)])))
+  const [gorulen, setGorulen] = useState<Record<string, boolean>>({})
   const [durum, setDurum] = useState<'acik' | 'kaydediliyor' | 'bitti'>('acik')
   const [rapor, setRapor] = useState<{ oneriId: string; ok: boolean; hata?: string }[]>([])
 
-  const secililer = oneriler.filter((o) => secili[o.id] && eksikOlan(o).length === 0)
+  const secililer = oneriler.filter((o) => secili[o.id] && eksikOlan(o).length === 0 && (!ciddiOlan(o) || gorulen[o.id]))
 
   async function kaydet() {
     setDurum('kaydediliyor')
@@ -270,7 +349,11 @@ export function EylemToplu({
     const r = await fetch('/api/doktor/eylem', {
       method: 'POST',
       headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adim: 'toplu_onayla', oneriIdler: secililer.map((o) => o.id) }),
+      body: JSON.stringify({
+        adim: 'toplu_onayla',
+        oneriIdler: secililer.map((o) => o.id),
+        uyariGoruldu: Object.fromEntries(secililer.map((o) => [o.id, Boolean(gorulen[o.id])])),
+      }),
     })
     const d = (await r.json().catch(() => ({}))) as { sonuclar?: { oneriId: string; ok: boolean; hata?: string }[] }
     setRapor(d.sonuclar || [])
@@ -295,14 +378,21 @@ export function EylemToplu({
             <div key={o.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
               <input
                 type="checkbox"
-                checked={Boolean(secili[o.id]) && !eksik.length}
-                disabled={eksik.length > 0 || durum !== 'acik'}
+                checked={Boolean(secili[o.id]) && !eksik.length && (!ciddiOlan(o) || Boolean(gorulen[o.id]))}
+                disabled={eksik.length > 0 || (ciddiOlan(o) && !gorulen[o.id]) || durum !== 'acik'}
                 onChange={(e) => setSecili((s) => ({ ...s, [o.id]: e.target.checked }))}
                 style={{ marginTop: 3 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600 }}>{o.etiket}</div>
                 <div style={kucuk}>{ozet(o) || '—'}</div>
+                <EylemUyarilari uyarilar={o.uyari_detay} />
+                {ciddiOlan(o) ? (
+                  <label style={{ display: 'flex', gap: 6, alignItems: 'center', minHeight: 44, fontSize: 12.5, color: '#FCA5A5', fontWeight: 700 }}>
+                    <input type="checkbox" checked={Boolean(gorulen[o.id])} disabled={durum !== 'acik'} onChange={(e) => setGorulen((g) => ({ ...g, [o.id]: e.target.checked }))} />
+                    Uyarıyı gördüm, kaydedilebilir
+                  </label>
+                ) : null}
                 {eksik.length ? (
                   <div style={{ ...kucuk, color: '#FCD34D' }}>
                     Eksik alan var — tek tek açıp doldurmanız gerekiyor ({eksik.map((k) => o.alanlar.find((a) => a.anahtar === k)?.etiket || k).join(', ')}).

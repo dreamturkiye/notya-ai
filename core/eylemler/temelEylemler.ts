@@ -27,6 +27,7 @@ import {
 import { gununNotunaEkle, gununNotunaVitalEkle, notVitalleriGeriYukle } from '@/lib/doktor/gununNotunaEkle'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 import { bransKapsami } from '@/lib/specialties/kapsam'
+import { ilacUyarilariHesapla } from './ilacUyari'
 import { encrypt } from '@/lib/security/encryption'
 
 /** Helper: build a definition with the schema derived from its own field list. */
@@ -148,6 +149,8 @@ export const ILAC_EKLE = eylem({
       .limit(1)
     return data?.length ? `"${v.ilac_adi}" hastanın aktif ilaç listesinde zaten var.` : null
   },
+  // NOTYA-EYLEM-21: alerji / aynı etken madde / etkileşim / pediatrik yaş — kartın ÜSTÜNDE, dokunuştan önce.
+  uyariKontrol: (ctx, v) => ilacUyarilariHesapla(ctx, { ilacAdi: String(v.ilac_adi || ''), etkenMadde: (v.etken_madde as string | null) ?? null }),
   calistir: async (ctx, v) => {
     const satir = {
       doctor_id: ctx.doktorId,
@@ -437,6 +440,9 @@ export const ILAC_DOZ_DEGISTIR = eylem({
     if (liste.length > 1) return `"${v.ilac_adi}" ile eşleşen birden çok aktif kayıt var — hangisi olduğunu ekrandan seçin.`
     return null
   },
+  // A dose change is still a drug decision: the same check runs, with the edited row excluded from
+  // the duplicate test (it is the row being changed, not a second box of the same molecule).
+  uyariKontrol: (ctx, v) => ilacUyarilariHesapla(ctx, { ilacAdi: String(v.ilac_adi || '') }),
   calistir: async (ctx, v) => {
     if (!v.yeni_doz && !v.yeni_kullanim) throw new Error('Yeni doz ya da yeni kullanım girin.')
     const liste = await aktifIlac(ctx, String(v.ilac_adi))
