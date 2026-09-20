@@ -18,7 +18,7 @@ import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
 import { executeAction, eskiEylemKarari, type ActionResult } from "@/lib/asistan/actionExecutor"
-import { searchDrug, calculatePediatricDose, checkInteractions } from "@/lib/asistan/turkishDrugs"
+import { searchDrug, ilacBaglamMetni } from "@/lib/asistan/turkishDrugs"
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren, ozetGerekirseGuncelle } from "@/lib/doktor/hafiza"
 import { hastaSahibiMi } from "@/lib/doktor/hastaSahipligi"
@@ -144,9 +144,12 @@ export async function POST(req: NextRequest) {
       if (prescData.drugName) {
         const drugs = searchDrug(String(prescData.drugName))
         if (drugs.length > 0) {
+          // NOTYA-EYLEM-28: entries are now full KÜB-sourced records; JSON.stringify of one would
+          // cost more prompt tokens than the answer is worth. A compact, source-cited block instead.
           augmentedMessage += `
 
-[SİSTEM BAĞLAMI: İlaç bilgisi - ${JSON.stringify(drugs[0])}]`
+[SİSTEM BAĞLAMI: İlaç bilgisi]
+${ilacBaglamMetni(drugs[0])}`
         }
       }
     }

@@ -28,23 +28,48 @@
  * A `ciddi` warning never BLOCKS: the hekim is the authority. It requires a second, explicit tap
  * ("Uyarıyı gördüm, kaydet") and the acknowledgement is written to `eylem_kayitlari.uyari_onayi`.
  *
- * Known coverage limit (docs/OPEN-COMMITMENTS.md NOTYA-EYLEM-21): the table holds 18 molecules. A
- * drug outside it resolves to null and gets no deterministic interaction verdict — the card then
- * says so rather than implying safety.
+ * NOTYA-EYLEM-28/29/30 (2026-09-19): the table now holds 176 molecules, every one sourced from a
+ * fetched TİTCK KÜB. Three things changed here with it —
+ *   • interactions carry a SEVERITY and a one-line Turkish mechanism from the table, so a `ciddi`
+ *     and an `orta` interaction no longer look the same on the card;
+ *   • allergy matching also reads `alerjiSinifi`, so "penisilin alerjisi" reaches ampisilin and
+ *     "sülfonamid alerjisi" reaches furosemid without anyone writing the pair down;
+ *   • the pediatric line is computed from a UNIT-TYPED dose and, where the source stated a ceiling,
+ *     carries an overdose verdict (NOTYA-EYLEM-30). A drug still outside the table gets no verdict
+ *     and the card says so — and when NOTHING fires, the card says that silence is not safety.
  */
 import {
+  MOLEKUL_SAYISI,
   TURKISH_DRUGS,
-  calculatePediatricDose,
-  checkInteractions,
   drugKeyFor,
+  etkilesimBul,
   ifadeIlaciAnlatiyorMu,
   ifadeMetindeGecerMi,
+  pediatrikDozHesapla,
 } from '@/lib/asistan/turkishDrugs'
 import { alerjiListe, notAlanlariCoz } from '@/lib/doktor/hastaKayitAlanlari'
 import type { EylemBaglami } from './types'
 
 export type UyariSiddeti = 'ciddi' | 'orta' | 'bilgi'
-export type UyariTuru = 'alerji' | 'mukerrer_etken' | 'etkilesim' | 'pediatrik' | 'kapsam_disi' | 'ayse_notu'
+export type UyariTuru =
+  | 'alerji'
+  | 'mukerrer_etken'
+  | 'etkilesim'
+  | 'pediatrik'
+  | 'pediatrik_asim'
+  | 'kapsam_disi'
+  | 'kapsam_notu'
+  | 'ayse_notu'
+
+/**
+ * Printed under the warnings block when NOTHING fired. Silence from a 176-molecule table is not a
+ * clean bill of health, and a card that says nothing reads as one — Kaan, 2026-09-19.
+ */
+export const UYARI_YOK_CUMLESI = 'Tabloda uyarı bulunmadı; bu, etkileşim olmadığı anlamına gelmez.'
+
+/** Shown on a computed pediatric dose line while no physician has signed the entry off. */
+export const TEYIT_CUMLESI = "KÜB'den teyit edin."
+
 
 export interface IlacUyarisi {
   tur: UyariTuru
@@ -57,7 +82,7 @@ export interface IlacUyarisi {
   kaynak: string
 }
 
-const TABLO_KAYNAK = 'Notya ilaç tablosu (SGK/TİTCK listesi)'
+const TABLO_KAYNAK = `Notya ilaç tablosu (${MOLEKUL_SAYISI} molekül, TİTCK KÜB)`
 const DOSYA_KAYNAK = 'Hasta dosyası'
 
 /** The actions whose cards carry a drug check. */
@@ -108,8 +133,23 @@ export function alerjiUyarilari(alerjiler: string[], ilacAdi: string, etkenMadde
       continue
     }
 
-    // b) The drug's own contraindication list names the allergen ("Penisilin alerjisi").
-    const kontrendike = ilac?.contraindications.find((c) => /alerji/i.test(c) && ifadeMetindeGecerMi(alerjen, c))
+    // b) The allergen names a cross-reactivity GROUP the drug belongs to. This is what carries
+    //    "penisilin alerjisi" onto the ampisilin card and "sülfonamid alerjisi" onto furosemid —
+    //    the KÜBs say so in §4.3 and the table encodes it once, in `alerjiSinifi`.
+    const sinif = ilac?.alerjiSinifi?.find((g) => ifadeMetindeGecerMi(g, alerjen) || ifadeMetindeGecerMi(alerjen, g))
+    if (sinif) {
+      out.push({
+        tur: 'alerji',
+        siddet: 'ciddi',
+        baslik: 'Alerji sınıfı',
+        metin: `Dosyada "${ham}" alerjisi kayıtlı; ${ilac?.name} "${sinif}" çapraz duyarlılık grubunda.`,
+        kaynak: `${DOSYA_KAYNAK} + ${TABLO_KAYNAK}`,
+      })
+      continue
+    }
+
+    // c) The drug's own contraindication list names the allergen ("Penisilin alerjisi").
+    const kontrendike = ilac?.contraindications.find((c) => /alerji|duyarl/i.test(c) && ifadeMetindeGecerMi(alerjen, c))
     if (kontrendike) {
       out.push({
         tur: 'alerji',
@@ -179,14 +219,17 @@ export function etkilesimUyarilari(aktif: AktifIlacSatiri[], ilacAdi: string, et
   for (const s of aktif) {
     const mevcutAnahtar = ilacAnahtari(String(s.ilac_adi || ''), s.etken_madde)
     if (!mevcutAnahtar || mevcutAnahtar === anahtar || gorulen.has(mevcutAnahtar)) continue
-    if (!checkInteractions(anahtar, mevcutAnahtar)) continue
+    const bulgu = etkilesimBul(anahtar, mevcutAnahtar)
+    if (!bulgu) continue
     gorulen.add(mevcutAnahtar)
     out.push({
       tur: 'etkilesim',
-      siddet: 'ciddi',
-      baslik: 'İlaç etkileşimi',
-      metin: `${TURKISH_DRUGS[anahtar].name} ile hastanın aktif ilacı "${s.ilac_adi}" (${TURKISH_DRUGS[mevcutAnahtar].name}) arasında etkileşim bildiriliyor.`,
-      kaynak: TABLO_KAYNAK,
+      // The table's own severity. An `orta` interaction is real but does not demand the second tap;
+      // grading everything `ciddi` is how a warning block stops being read.
+      siddet: bulgu.siddet,
+      baslik: bulgu.siddet === 'ciddi' ? 'İlaç etkileşimi (ciddi)' : 'İlaç etkileşimi',
+      metin: `${TURKISH_DRUGS[anahtar].name} + "${s.ilac_adi}" (${TURKISH_DRUGS[mevcutAnahtar].name}): ${bulgu.not}`,
+      kaynak: `${TABLO_KAYNAK} — ${bulgu.bildiren} KÜB §4.5`,
     })
   }
   return out
@@ -205,21 +248,39 @@ function yasAltiSiniri(ifade: string): number | null {
   return /ay/i.test(m[2]) ? n : n * 12
 }
 
+/**
+ * `verilenGunlukMg` — the daily milligram total the doctor wrote on the card, when it can be read
+ * from the dose field. Only then can an overdose VERDICT be given, and only against a ceiling the
+ * source actually stated (NOTYA-EYLEM-30).
+ */
 export function pediatrikUyarilar(
   yasAy: number | null,
   ilacAdi: string,
   etkenMadde: string | null | undefined,
-  kiloKg: number | null
+  kiloKg: number | null,
+  verilenGunlukMg?: number | null
 ): IlacUyarisi[] {
   if (yasAy === null || yasAy >= ON_SEKIZ_YAS_AY) return []
   const anahtar = ilacAnahtari(ilacAdi, etkenMadde)
   const ilac = anahtar ? TURKISH_DRUGS[anahtar] : null
-  if (!ilac) return []
+  if (!ilac || !anahtar) return []
   const out: IlacUyarisi[] = []
 
+  // a) Age floor from the structured field, then from the contraindication prose. The structured
+  //    number is the KÜB's own; the prose scan stays because some KÜBs only say it in a sentence.
+  const yasSiniri = typeof ilac.yasKontrendikasyonAy === 'number' ? ilac.yasKontrendikasyonAy : null
+  if (yasSiniri !== null && yasAy < yasSiniri) {
+    out.push({
+      tur: 'pediatrik',
+      siddet: 'ciddi',
+      baslik: 'Yaş kontrendikasyonu',
+      metin: `${ilac.name} ${yasSiniri < 24 ? `${yasSiniri} ay` : `${Math.round(yasSiniri / 12)} yaş`} altında kullanılmaz; hasta ${yasAy} aylık.`,
+      kaynak: `${TABLO_KAYNAK} — ${ilac.kaynak.belge}`,
+    })
+  }
   for (const c of ilac.contraindications) {
     const sinir = yasAltiSiniri(c)
-    if (sinir !== null && yasAy < sinir) {
+    if (sinir !== null && yasAy < sinir && sinir !== yasSiniri) {
       out.push({
         tur: 'pediatrik',
         siddet: 'ciddi',
@@ -230,19 +291,58 @@ export function pediatrikUyarilar(
     }
   }
 
-  if (ilac.pediatricDose) {
+  // b) The dose line. `hekimDogruladi` is false for every entry today, so every computed pediatric
+  //    dose carries "KÜB'den teyit edin" — the number is the KÜB's, the responsibility is the
+  //    hekim's, and the card must not let the two blur.
+  const hesap = kiloKg ? pediatrikDozHesapla(anahtar, kiloKg, verilenGunlukMg ?? undefined) : null
+  if (hesap) {
     out.push({
       tur: 'pediatrik',
       siddet: 'bilgi',
       baslik: 'Pediatrik doz',
-      metin:
-        kiloKg && anahtar
-          ? `${ilac.name} pediatrik doz (${kiloKg} kg): ${calculatePediatricDose(anahtar, kiloKg)}. Dozu siz belirliyorsunuz.`
-          : `${ilac.name} pediatrik doz: ${ilac.pediatricDose}. Dosyada güncel kilo yok — kilo girilirse hesaplanabilir.`,
-      kaynak: TABLO_KAYNAK,
+      metin: `${ilac.name} (${kiloKg} kg): ${hesap.metin} Dozu siz belirliyorsunuz.${hesap.hekimDogruladi ? '' : ` ${TEYIT_CUMLESI}`}`,
+      kaynak: `${TABLO_KAYNAK} — ${ilac.kaynak.belge}`,
+    })
+    // c) The verdict, only when a ceiling was sourced AND a written daily total was readable.
+    if (hesap.asim && hesap.asimMetni) {
+      out.push({
+        tur: 'pediatrik_asim',
+        siddet: 'ciddi',
+        baslik: 'Pediatrik doz aşımı',
+        metin: `${hesap.asimMetni}${hesap.hekimDogruladi ? '' : ` ${TEYIT_CUMLESI}`}`,
+        kaynak: `${TABLO_KAYNAK} — ${ilac.kaynak.belge}`,
+      })
+    }
+  } else if (ilac.pediatrik || ilac.pediatricDose) {
+    out.push({
+      tur: 'pediatrik',
+      siddet: 'bilgi',
+      baslik: 'Pediatrik doz',
+      metin: `${ilac.name} pediatrik doz: ${ilac.pediatrik?.metin || ilac.pediatricDose}. Dosyada güncel kilo yok — kilo girilirse hesaplanabilir.${TEYIT_CUMLESI ? ` ${TEYIT_CUMLESI}` : ''}`,
+      kaynak: `${TABLO_KAYNAK} — ${ilac.kaynak.belge}`,
     })
   }
   return out
+}
+
+/**
+ * Daily milligram total from a written dose field ("500 mg 3x1", "2x250 mg", "10 mL 3x1").
+ * Returns null when the line cannot be read as milligrams — an unreadable dose must produce NO
+ * verdict rather than a guessed one.
+ */
+export function gunlukMgOku(doz: string | null | undefined, siklik?: string | null): number | null {
+  const metin = `${doz || ''} ${siklik || ''}`.trim()
+  if (!metin) return null
+  const mg = /(\d+(?:[.,]\d+)?)\s*mg\b/i.exec(metin)
+  if (!mg) return null
+  const birim = Number(mg[1].replace(',', '.'))
+  if (!Number.isFinite(birim) || birim <= 0) return null
+  // "3x1", "2 x 1", "günde 3", "3 kez"
+  const carpim = /(\d+)\s*[xX×]\s*(\d+)/.exec(metin)
+  if (carpim) return birim * Number(carpim[1]) * Number(carpim[2])
+  const kez = /(?:günde|gunde)\s*(\d+)|(\d+)\s*(?:kez|defa)/i.exec(metin)
+  if (kez) return birim * Number(kez[1] || kez[2])
+  return birim
 }
 
 /* ─────────────────────────── Ayşe'nin notu ─────────────────────────── */
@@ -316,6 +416,9 @@ async function sonKiloKg(ctx: EylemBaglami): Promise<number | null> {
 export interface IlacUyariGirdisi {
   ilacAdi: string
   etkenMadde?: string | null
+  /** Dose line as written on the card — the only input that can license an overdose verdict. */
+  doz?: string | null
+  kullanimSikligi?: string | null
   /** For `ilac_doz_degistir`: the row being edited is not its own duplicate. */
   haricTutulanId?: string | null
 }
@@ -337,16 +440,27 @@ export async function ilacUyarilariHesapla(ctx: EylemBaglami, girdi: IlacUyariGi
     ...alerjiUyarilari(alerjiler, ad, girdi.etkenMadde),
     ...mukerrerEtkenUyarilari(aktif, ad, girdi.etkenMadde, girdi.haricTutulanId),
     ...etkilesimUyarilari(aktif, ad, girdi.etkenMadde),
-    ...pediatrikUyarilar(ctx.hasta.yasAy, ad, girdi.etkenMadde, kilo),
+    ...pediatrikUyarilar(ctx.hasta.yasAy, ad, girdi.etkenMadde, kilo, gunlukMgOku(girdi.doz, girdi.kullanimSikligi)),
   ]
 
-  // Honesty about coverage: silence from a table of 18 molecules is not a clean bill of health.
-  if (!ilacAnahtari(ad, girdi.etkenMadde) && aktif.length > 0) {
+  // Honesty about coverage: silence from the table is not a clean bill of health.
+  if (!ilacAnahtari(ad, girdi.etkenMadde)) {
     uyarilar.push({
       tur: 'kapsam_disi',
       siddet: 'bilgi',
       baslik: 'Etkileşim kontrolü yapılamadı',
-      metin: `"${ad}" Notya ilaç tablosunda yok; hastanın ${aktif.length} aktif ilacıyla etkileşim otomatik kontrol edilemedi.`,
+      metin: aktif.length
+        ? `"${ad}" Notya ilaç tablosunda yok; hastanın ${aktif.length} aktif ilacıyla etkileşim otomatik kontrol edilemedi.`
+        : `"${ad}" Notya ilaç tablosunda yok; bu ilaç için otomatik etkileşim/alerji kontrolü yapılamadı.`,
+      kaynak: TABLO_KAYNAK,
+    })
+  } else if (uyarilar.length === 0) {
+    // NOTHING fired and the drug IS in the table. The card must still not read as "safe".
+    uyarilar.push({
+      tur: 'kapsam_notu',
+      siddet: 'bilgi',
+      baslik: 'Uyarı bulunmadı',
+      metin: UYARI_YOK_CUMLESI,
       kaynak: TABLO_KAYNAK,
     })
   }

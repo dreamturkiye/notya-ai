@@ -1,220 +1,56 @@
-
 // ============================================================
-// NOTYA ASISTAN — Türkiye İlaç Formulasyonu
-// Kaynak: SGK İlaç Listesi + TİTCK + Vademecum
+// NOTYA ASISTAN — Türkiye İlaç Tablosu (CLINICAL SAFETY DATA)
+//
+// Kaan, 2026-09-19: "drug table to 150". The table behind the ilaç card held 18 molecules, so the
+// card could only say "etkileşim kontrolü yapılamadı" for most of Turkish outpatient prescribing.
+// The entries now live in `lib/asistan/ilac/veri/` by therapeutic group; this file is the ENGINE
+// and the public surface, unchanged for every existing caller.
+//
+// Sourcing rule (docs/README_EYLEM.md, NOTYA-EYLEM-28): every entry names the document its numbers
+// came from (`kaynak.belge` + `kaynak.url`) and how it was verified (`kaynak.dogrulama`). A
+// pediatric mg/kg line exists ONLY where a fetched TİTCK KÜB or a named Turkish paediatric source
+// stated it — an empty field is safe, an invented one is not.
 // ============================================================
+import { receteRengi } from '@/lib/doktor/receteRengi'
+import type { Dogrulama, Etkilesim, PediatrikDoz, TürkishDrug } from './ilac/tipler'
+import { ANALJEZIK } from './ilac/veri/analjezik'
+import { ANTIBIYOTIK } from './ilac/veri/antibiyotik'
+import { ANTIINFEKTIF } from './ilac/veri/antiinfektif'
+import { SOLUNUM_ALERJI } from './ilac/veri/solunumAlerji'
+import { GASTROINTESTINAL } from './ilac/veri/gastrointestinal'
+import { KARDIYOVASKULER } from './ilac/veri/kardiyovaskuler'
+import { ENDOKRIN } from './ilac/veri/endokrin'
+import { HEMATOLOJI } from './ilac/veri/hematoloji'
+import { NOROPSIKIYATRI } from './ilac/veri/noropsikiyatri'
+import { DERM_ROMATOLOJI } from './ilac/veri/dermRomatoloji'
+import { KADIN_DOGUM } from './ilac/veri/kadinDogum'
+import { UROLOJI_DIGER } from './ilac/veri/urolojiDiger'
 
-export interface TürkishDrug {
-  name: string            // Jenerik ad
-  brand: string[]         // Türkiye'deki marka adları
-  dose: string            // Standart doz
-  pediatricDose?: string  // Pediatrik doz (mg/kg)
-  form: string            // Tablet, şurup, ampul vb.
-  sgkCovered: boolean     // SGK ödeme durumu
-  sgkRestriction?: string // SGK kısıtlaması
-  category: string        // Farmakolojik kategori
-  contraindications: string[]
-  interactions: string[]
-  notes?: string
-}
+export type { TürkishDrug, Dogrulama, Etkilesim, PediatrikDoz }
+export { DOGRULAMA_ETIKET } from './ilac/tipler'
 
 export const TURKISH_DRUGS: Record<string, TürkishDrug> = {
-  amoksisilin: {
-    name: "Amoksisilin",
-    brand: ["Amoksina", "Amoksipen", "Largopen", "Alfoxil", "Amoklavin (+ klavulanat)"],
-    dose: "500mg 3x1 veya 875mg 2x1 (yetişkin)",
-    pediatricDose: "40-90 mg/kg/gün 3 eşit doza bölünmüş",
-    form: "Kapsül, şurup, efervesan",
-    sgkCovered: true,
-    category: "Penisilin antibiyotik",
-    contraindications: ["Penisilin alerjisi", "Mononükleoz"],
-    interactions: ["Varfarin", "Allopürinol", "Metotreksat"],
-    notes: "Otit için 10 gün, ÜSYE için 7 gün önerilir"
-  },
-  parasetamol: {
-    name: "Parasetamol (Asetaminofen)",
-    brand: ["Parol", "Minoset", "Calpol", "Tylol", "Atafen", "Panadon"],
-    dose: "500-1000mg 4-6 saatte bir (max 4g/gün)",
-    pediatricDose: "10-15 mg/kg/doz, 4-6 saatte bir (max 60mg/kg/gün)",
-    form: "Tablet, şurup, supozituar, IV",
-    sgkCovered: true,
-    category: "Analjezik/Antipiretik",
-    contraindications: ["Ağır karaciğer yetmezliği"],
-    interactions: ["Warfarin (yüksek doz)", "Alkol"],
-    notes: "SGK kısıtlaması yok. Türkiye'de en yaygın kullanılan."
-  },
-  naproksen: {
-    name: "Naproksen",
-    brand: ["Naprosyn", "Apranax", "Naproks", "Xenar"],
-    dose: "250-500mg 2x1",
-    form: "Tablet, jel",
-    sgkCovered: true,
-    category: "NSAID",
-    contraindications: ["Aktif peptik ülser", "Böbrek yetmezliği", "Astım (aspirin duyarlı)"],
-    interactions: ["Warfarin", "Lityum", "Metotreksat", "Antihipertansifler"],
-  },
-  diklofenak: {
-    name: "Diklofenak",
-    brand: ["Voltaren", "Dikloron", "Voltfast", "Cataflam"],
-    dose: "75mg 2x1 veya 50mg 3x1",
-    form: "Tablet, IM, jel, supozituar",
-    sgkCovered: true,
-    category: "NSAID",
-    contraindications: ["Peptik ülser", "KVH", "Böbrek yetmezliği"],
-    interactions: ["Warfarin", "ACE inhibitörleri", "Diüretikler"],
-  },
-  ibuprofen: {
-    name: "İbuprofen",
-    brand: ["Brufen", "Nurofen", "Advil", "Profen"],
-    dose: "400-800mg 3-4x/gün",
-    pediatricDose: "5-10 mg/kg/doz 6-8 saatte bir",
-    form: "Tablet, şurup",
-    sgkCovered: true,
-    category: "NSAID",
-    contraindications: ["Peptik ülser", "KVH", "6 ay altı bebek"],
-    interactions: ["Aspirin", "Warfarin", "ACE inhibitörleri"],
-  },
-  amoksisilinKlavulanat: {
-    name: "Amoksisilin + Klavulanat",
-    brand: ["Augmentin", "Amoklavin", "Klavamoks", "Synulox"],
-    dose: "875/125mg 2x1 (yetişkin)",
-    pediatricDose: "45/6.4 mg/kg/gün 2 eşit doza",
-    form: "Tablet, şurup",
-    sgkCovered: true,
-    category: "Beta-laktamaz inhibitörlü penisilin",
-    contraindications: ["Penisilin alerjisi", "Kolestaz öyküsü"],
-    interactions: ["Varfarin", "Allopürinol"],
-    notes: "Komplike otit, sinüzit, pnömoni için tercih edilir"
-  },
-  azitromisin: {
-    name: "Azitromisin",
-    brand: ["Zithromax", "Azitro", "Ribotrex", "Azitrobak"],
-    dose: "500mg 1x1 (3-5 gün) veya tek doz 1g",
-    pediatricDose: "10 mg/kg/gün 1x1 (3 gün)",
-    form: "Tablet, şurup",
-    sgkCovered: true,
-    sgkRestriction: "Penisilin alerjisi veya atipik pnömoni belgelenirse",
-    category: "Makrolid antibiyotik",
-    contraindications: ["QT uzaması", "Karaciğer yetmezliği"],
-    interactions: ["Warfarin", "Digoksin", "QT uzatan ilaçlar"],
-  },
-  metilprednizolon: {
-    name: "Metilprednizolon",
-    brand: ["Prednol", "Medrol", "Metpred", "Caberdelta"],
-    dose: "4-32mg/gün oral, 40-125mg IV/IM",
-    pediatricDose: "0.5-1.7 mg/kg/gün",
-    form: "Tablet, IV, IM",
-    sgkCovered: true,
-    category: "Kortikosteroid",
-    contraindications: ["Sistemik mantar enfeksiyonu", "Canlı aşı"],
-    interactions: ["NSAIDs", "Aspirin", "Warfarin", "İnsülin"],
-  },
-  sertralin: {
-    name: "Sertralin",
-    brand: ["Lustral", "Zoloft", "Serteva", "Xydep", "Selectra"],
-    dose: "50-200mg 1x1 sabah",
-    form: "Tablet",
-    sgkCovered: true,
-    category: "SSRI antidepresan",
-    contraindications: ["MAO inhibitörü kullanımı (14 gün beklenmeli)"],
-    interactions: ["MAOIs", "Pimozid", "Triptanlar", "Tramadol"],
-    notes: "Türkiye'de en yaygın SSRI. Karaciğer hastaları dikkatli kullanmalı."
-  },
-  metformin: {
-    name: "Metformin",
-    brand: ["Glucophage", "Diaformin", "Glifor", "Metforal"],
-    dose: "500-2000mg/gün 2-3 doza bölünmüş, yemekle",
-    form: "Tablet, XR tablet",
-    sgkCovered: true,
-    category: "Biguanid antidiyabetik",
-    contraindications: ["eGFR <30", "Kontrast madde öncesi", "Ağır karaciğer yetmezliği"],
-    interactions: ["Kontrast maddeler", "Alkol", "Simetidin"],
-    notes: "Tip 2 DM birinci basamak tedavisi. XR formu GI yan etkiyi azaltır."
-  },
-  atorvastatin: {
-    name: "Atorvastatin",
-    brand: ["Sortis", "Lipitor", "Atol", "Atoris", "Liponorm"],
-    dose: "10-80mg 1x1 gece",
-    form: "Tablet",
-    sgkCovered: true,
-    category: "Statin (HMG-CoA redüktaz inhibitörü)",
-    contraindications: ["Aktif karaciğer hastalığı", "Gebelik", "Emzirme"],
-    interactions: ["Siklosporin", "Gemfibrozil", "Eritromisin", "Diltiazem"],
-  },
-  ranitidin: {
-    name: "Famotidin (Ranitidin artık piyasada yok)",
-    brand: ["Quamatel", "Pepcid", "Famoser"],
-    dose: "20-40mg 2x1",
-    form: "Tablet, IV",
-    sgkCovered: true,
-    category: "H2 reseptör antagonisti",
-    contraindications: [],
-    interactions: ["Ketokonazol", "Itrakonazol"],
-    notes: "Not: Ranitidin TİTCK tarafından piyasadan kaldırıldı (NDMA). Famotidin kullanın."
-  },
-  omeprazol: {
-    name: "Omeprazol",
-    brand: ["Losec", "Prilosec", "Omez", "Gastrozol", "Pepticum"],
-    dose: "20-40mg 1x1 sabah aç karnına",
-    form: "Kapsül, IV",
-    sgkCovered: true,
-    category: "Proton pompa inhibitörü",
-    contraindications: [],
-    interactions: ["Klopidogrel (etkiyi azaltır)", "Metotreksat", "Rifampisin"],
-  },
-  furosemid: {
-    name: "Furosemid",
-    brand: ["Lasix", "Furanthril", "Diuver (torasemid)"],
-    dose: "20-80mg/gün oral, 20-40mg IV",
-    pediatricDose: "1-2 mg/kg/doz",
-    form: "Tablet, IV, IM",
-    sgkCovered: true,
-    category: "Loop diüretik",
-    contraindications: ["Anüri", "Hipovolemi", "Sulfonamid alerjisi"],
-    interactions: ["ACE inhibitörleri", "NSAIDs", "Aminoglikozidler", "Lityum"],
-    notes: "Potasyum takibi zorunlu. KKY'de standart tedavi."
-  },
-  sumatriptan: {
-    name: "Sumatriptan",
-    brand: ["İmitrex", "Imigran", "Sumatran"],
-    dose: "50-100mg oral, 6mg SC, 20mg nazal",
-    form: "Tablet, enjeksiyon, nazal sprey",
-    sgkCovered: true,
-    sgkRestriction: "Nörolog reçetesi veya nöroloji raporu gerekli",
-    category: "Triptan (5-HT1B/1D agonisti)",
-    contraindications: ["İskemik KVH", "İnme öyküsü", "Kontrolsüz HT", "Hemiplejik migren"],
-    interactions: ["MAOIs", "Ergotamin", "Diğer triptanlar", "SSRI/SNRI (serotonin sendromu)"],
-  },
-  amlodipim: {
-    name: "Amlodipin",
-    brand: ["Norvasc", "Amlovas", "Tenox", "Amlodis"],
-    dose: "5-10mg 1x1",
-    form: "Tablet",
-    sgkCovered: true,
-    category: "Kalsiyum kanal blokörü (dihidropiridin)",
-    contraindications: ["Ağır hipotansiyon", "Kararsız anjin"],
-    interactions: ["Siklosporin", "Takrolimus", "Simvastatin (doz kısıtlaması)"],
-  },
-  ramipril: {
-    name: "Ramipril",
-    brand: ["Delix", "Tritace", "Ramiprol", "Ramace"],
-    dose: "2.5-10mg 1x1",
-    form: "Kapsül, tablet",
-    sgkCovered: true,
-    category: "ACE inhibitörü",
-    contraindications: ["Gebelik", "Anjiyoödem öyküsü", "Bilateral renal arter stenozu"],
-    interactions: ["Potasyum tutucu diüretikler", "NSAIDs", "Lityum"],
-  },
-  metoprolol: {
-    name: "Metoprolol",
-    brand: ["Beloc", "Beloc-Zok", "Lopressor", "Toprol"],
-    dose: "25-200mg/gün (suksinat: 1x1, tartrat: 2x1)",
-    form: "Tablet, IV",
-    sgkCovered: true,
-    category: "Beta-1 selektif blokör",
-    contraindications: ["Ağır bradikardi", "İkinci/üçüncü derece AV blok", "Dekompanze KKY"],
-    interactions: ["Verapamil", "Diltiazem", "Klonidin", "İnsülin"],
-  },
+  ...ANALJEZIK,
+  ...ANTIBIYOTIK,
+  ...ANTIINFEKTIF,
+  ...SOLUNUM_ALERJI,
+  ...GASTROINTESTINAL,
+  ...KARDIYOVASKULER,
+  ...ENDOKRIN,
+  ...HEMATOLOJI,
+  ...NOROPSIKIYATRI,
+  ...DERM_ROMATOLOJI,
+  ...KADIN_DOGUM,
+  ...UROLOJI_DIGER,
+}
+
+/** Molecule count, for the card's coverage sentence and the review sheet. */
+export const MOLEKUL_SAYISI = Object.keys(TURKISH_DRUGS).length
+
+export function dogrulamaSayilari(): Record<Dogrulama, number> {
+  const out: Record<Dogrulama, number> = { kub_okundu: 0, literatur: 0, hekim_dogruladi: 0 }
+  for (const d of Object.values(TURKISH_DRUGS)) out[d.kaynak.dogrulama] += 1
+  return out
 }
 
 // ============================================================
@@ -229,24 +65,117 @@ export function searchDrug(query: string): TürkishDrug[] {
   )
 }
 
+/**
+ * Compact model-facing context for one drug. The full entry is now large enough that
+ * `JSON.stringify(drug)` in a chat prompt would cost more tokens than the answer is worth
+ * (`/api/asistan/chat` did exactly that when the table held 18 small entries).
+ */
+export function ilacBaglamMetni(d: TürkishDrug): string {
+  const satir = [
+    `${d.name} (${d.brand.slice(0, 3).join(', ')}) — ${d.category}`,
+    `Doz: ${d.dose}`,
+    d.pediatricDose ? `Pediatrik: ${d.pediatricDose}` : '',
+    d.contraindications.length ? `Kontrendikasyon: ${d.contraindications.slice(0, 5).join('; ')}` : '',
+    d.interactions.length ? `Etkileşim: ${d.interactions.slice(0, 8).join(', ')}` : '',
+    d.gebelik ? `Gebelik: ${d.gebelik.kategori ? `kategori ${d.gebelik.kategori} — ` : ''}${d.gebelik.metin}` : '',
+    d.sgkRestriction ? `SGK: ${d.sgkRestriction}` : '',
+    `Kaynak: ${d.kaynak.belge}`,
+  ]
+  return satir.filter(Boolean).join('\n')
+}
+
 // ============================================================
 // DOSE CALCULATOR — pediatric weight-based dosing
 // ============================================================
-export function calculatePediatricDose(drugKey: string, weightKg: number): string {
+
+export interface PediatrikDozHesabi {
+  /** Turkish sentence for the card. */
+  metin: string
+  /** Computed daily total in mg, when the source expressed the dose per kilogram. */
+  gunlukMinMg?: number
+  gunlukMaxMg?: number
+  /** Per-dose total in mg, when the unit is mg/kg/doz. */
+  dozBasiMinMg?: number
+  dozBasiMaxMg?: number
+  /** The ceiling this was measured against, when one is sourced. */
+  tavanMgGun?: number
+  /** True when the computed daily total exceeds the sourced ceiling — NOTYA-EYLEM-30. */
+  asim?: boolean
+  asimMetni?: string
+  /** False until a physician signs the entry off; drives the "KÜB'den teyit edin" line. */
+  hekimDogruladi: boolean
+}
+
+/** Units the calculator can turn into a daily milligram total. Others are informational only. */
+const HESAPLANABILIR = new Set<PediatrikDoz['birim']>(['mg/kg/doz', 'mg/kg/gün'])
+
+/**
+ * Structured pediatric dose for a weight. THE fix for NOTYA-EYLEM-30: the old calculator read a
+ * free-text line where some molecules meant mg/kg/DOZ and others mg/kg/GÜN, and printed both as
+ * "mg/gün". Here the unit is a typed field, so a daily total is only ever produced when the source
+ * said something that can honestly be turned into one — and an overdose verdict is only given when
+ * a ceiling (`maxMgKgGun` / `mutlakMaxMgGun`) was actually sourced.
+ */
+export function pediatrikDozHesapla(drugKey: string, weightKg: number, verilenGunlukMg?: number): PediatrikDozHesabi | null {
   const drug = TURKISH_DRUGS[drugKey]
-  if (!drug?.pediatricDose) return "Pediatrik doz bilgisi mevcut değil"
-  
-  const match = drug.pediatricDose.match(/(\d+)(?:-(\d+))?\s*mg\/kg/)
-  if (!match) return drug.pediatricDose
-  
-  const minDose = parseInt(match[1])
-  const maxDose = match[2] ? parseInt(match[2]) : minDose
-  const minTotal = Math.round(minDose * weightKg)
-  const maxTotal = Math.round(maxDose * weightKg)
-  
-  return maxDose > minDose
-    ? `${minTotal}-${maxTotal} mg/gün (${drug.pediatricDose})`
-    : `${minTotal} mg/gün (${drug.pediatricDose})`
+  const p = drug?.pediatrik
+  if (!drug || !p) return null
+  const hekimDogruladi = drug.kaynak.dogrulama === 'hekim_dogruladi'
+
+  if (!HESAPLANABILIR.has(p.birim) || !Number.isFinite(weightKg) || weightKg <= 0) {
+    return { metin: p.metin, hekimDogruladi }
+  }
+
+  const min = typeof p.min === 'number' ? p.min : undefined
+  const max = typeof p.max === 'number' ? p.max : min
+  if (min === undefined) return { metin: p.metin, hekimDogruladi }
+
+  const bolum = p.gunlukBolum && p.gunlukBolum > 0 ? p.gunlukBolum : 1
+  const perDozMin = p.birim === 'mg/kg/doz' ? min * weightKg : (min * weightKg) / bolum
+  const perDozMax = p.birim === 'mg/kg/doz' ? (max ?? min) * weightKg : ((max ?? min) * weightKg) / bolum
+  const gunlukMin = p.birim === 'mg/kg/doz' ? perDozMin * bolum : min * weightKg
+  const gunlukMax = p.birim === 'mg/kg/doz' ? perDozMax * bolum : (max ?? min) * weightKg
+
+  const yuvarla = (n: number) => Math.round(n * 10) / 10
+
+  // Ceiling: the lower of the per-kg ceiling and the absolute daily ceiling, when sourced.
+  const tavanlar: number[] = []
+  if (typeof p.maxMgKgGun === 'number') tavanlar.push(p.maxMgKgGun * weightKg)
+  if (typeof p.mutlakMaxMgGun === 'number') tavanlar.push(p.mutlakMaxMgGun)
+  const tavan = tavanlar.length ? Math.min(...tavanlar) : undefined
+
+  const parcalar = [
+    p.birim === 'mg/kg/doz'
+      ? `${yuvarla(perDozMin)}${perDozMax !== perDozMin ? `–${yuvarla(perDozMax)}` : ''} mg/doz (günde ${bolum} kez, toplam ${yuvarla(gunlukMin)}${gunlukMax !== gunlukMin ? `–${yuvarla(gunlukMax)}` : ''} mg/gün)`
+      : `${yuvarla(gunlukMin)}${gunlukMax !== gunlukMin ? `–${yuvarla(gunlukMax)}` : ''} mg/gün${bolum > 1 ? ` (${bolum} doza bölünmüş: ${yuvarla(perDozMin)}${perDozMax !== perDozMin ? `–${yuvarla(perDozMax)}` : ''} mg/doz)` : ''}`,
+  ]
+  if (tavan !== undefined) parcalar.push(`Kaynaktaki tavan: ${yuvarla(tavan)} mg/gün`)
+
+  let asim: boolean | undefined
+  let asimMetni: string | undefined
+  if (tavan !== undefined && typeof verilenGunlukMg === 'number' && Number.isFinite(verilenGunlukMg)) {
+    asim = verilenGunlukMg > tavan
+    if (asim) asimMetni = `Yazılan günlük doz (${yuvarla(verilenGunlukMg)} mg) kaynaktaki tavanı (${yuvarla(tavan)} mg/gün) AŞIYOR.`
+  }
+
+  return {
+    metin: `${weightKg} kg için ${parcalar.join('. ')}. Kaynak: ${p.metin}`,
+    gunlukMinMg: yuvarla(gunlukMin),
+    gunlukMaxMg: yuvarla(gunlukMax),
+    dozBasiMinMg: yuvarla(perDozMin),
+    dozBasiMaxMg: yuvarla(perDozMax),
+    tavanMgGun: tavan === undefined ? undefined : yuvarla(tavan),
+    asim,
+    asimMetni,
+    hekimDogruladi,
+  }
+}
+
+/** Back-compat wrapper: the free-text line the older callers print. */
+export function calculatePediatricDose(drugKey: string, weightKg: number): string {
+  const h = pediatrikDozHesapla(drugKey, weightKg)
+  if (!h) return 'Pediatrik doz bilgisi mevcut değil'
+  return h.metin
 }
 
 // SGK kısıtlaması kontrolü
@@ -255,27 +184,37 @@ export function checkSGKRestriction(drugKey: string): string | null {
 }
 
 // ============================================================
-// EŞLEŞTİRME — tek motor (NOTYA-EYLEM-25)
+// EŞLEŞTİRME — tek motor (NOTYA-EYLEM-25 / -29)
 // ============================================================
 /**
  * `interactions` / `contraindications` entries are written the way a doctor writes them: sometimes a
- * molecule ("Warfarin"), sometimes a CLASS ("NSAIDs", "ACE inhibitörleri", "SSRI/SNRI"), sometimes
+ * molecule ("Warfarin"), sometimes a CLASS ("NSAİİ", "ACE inhibitörü", "QT uzatan ilaç"), sometimes
  * with an aside ("Warfarin (yüksek doz)"). The original matcher only compared an entry against the
  * other drug's `name`, so every class entry silently never fired — ibuprofen + ramipril, naproksen +
  * metilprednizolon and sertralin + sumatriptan all read as "no interaction".
  *
- * This is the same engine reading the field that actually holds the class (`category`) plus the
- * brand list. No second drug table, no new data: only the matching rule is honest now.
+ * NOTYA-EYLEM-29 closed the rest of that gap: a molecule now carries EVERY class label it answers to
+ * in `siniflar`, so "Antihipertansifler", "QT uzatan ilaçlar" and "Aminoglikozidler" resolve instead
+ * of going quiet. A test asserts that every class named in an interaction resolves to ≥1 molecule.
  *
  * Conservative on false positives: an entry matches only when EVERY significant token of it matches
- * a token of the target. "ACE inhibitörleri" therefore does not fire on "Proton pompa inhibitörü".
+ * a token of the target. "ACE inhibitörü" therefore does not fire on "Proton pompa inhibitörü".
  */
 const KUCUK_TR = (x: string) => x.replace(/İ/g, 'i').replace(/I/g, 'ı').toLocaleLowerCase('tr')
 
+/**
+ * Turkish case folding, for matching only. Doctors type the same brand as "İmigran", "Imigran" and
+ * "imigran"; a matcher that distinguishes ı from i reads those as three different drugs and goes
+ * silent — which is exactly the failure mode this whole module exists to prevent. Folding ı→i is
+ * safe here because the comparison is between drug names and class labels, not between Turkish
+ * words whose meaning turns on the dot.
+ */
+const ESLESME_KATLA = (x: string) => x.replace(/ı/g, 'i')
+
 function tokenlar(ifade: string): string[] {
-  return KUCUK_TR(ifade)
+  return ESLESME_KATLA(KUCUK_TR(ifade))
     .replace(/\([^)]*\)/g, ' ')          // parenthetical aside is explanation, not a name
-    .split(/[^a-zçğıöşü0-9]+/i)
+    .split(/[^a-zçğiöşü0-9]+/i)
     .map((t) => t.trim())
     .filter((t) => t.length >= 3)
 }
@@ -291,9 +230,14 @@ function tokenEslesir(a: string, b: string): boolean {
   return i >= 5 // "inhibitörleri" ↔ "inhibitörü"
 }
 
-/** The searchable vocabulary of a drug: generic name, brands and pharmacological class. */
+/** The searchable vocabulary of a drug: generic name, brands, primary class and every class label. */
 function ilacTokenlari(d: TürkishDrug): string[] {
-  return [...tokenlar(d.name), ...d.brand.flatMap(tokenlar), ...tokenlar(d.category)]
+  return [
+    ...tokenlar(d.name),
+    ...d.brand.flatMap(tokenlar),
+    ...tokenlar(d.category),
+    ...(d.siniflar || []).flatMap(tokenlar),
+  ]
 }
 
 /**
@@ -303,7 +247,7 @@ function ilacTokenlari(d: TürkishDrug): string[] {
 export function ifadeIlaciAnlatiyorMu(ifade: string, drug: TürkishDrug): boolean {
   const hedef = ilacTokenlari(drug)
   // "SSRI/SNRI", "Warfarin, Lityum" → alternatives; each alternative must match on its own.
-  return KUCUK_TR(ifade)
+  return ESLESME_KATLA(KUCUK_TR(ifade))
     .replace(/\([^)]*\)/g, ' ')
     .split(/[/,;+]|\bveya\b|\bve\b/)
     .some((alt) => {
@@ -319,7 +263,13 @@ export function ifadeMetindeGecerMi(aranan: string, hedef: string): boolean {
   return a.length > 0 && h.length > 0 && a.every((x) => h.some((y) => tokenEslesir(x, y)))
 }
 
-/** Free-text drug name ("Largopen 1000 mg", "PAROL (parasetamol)") → table key, or null. */
+/**
+ * Free-text drug name ("Largopen 1000 mg", "PAROL (parasetamol)") → table key, or null.
+ *
+ * Matches on molecule name, brand and the table key only — NOT on `category`/`siniflar`: a class
+ * label resolving a written prescription line to one arbitrary member of that class would make the
+ * duplicate-ingredient check wrong ("bir NSAİİ" is not ibuprofen).
+ */
 export function drugKeyFor(ad: string): string | null {
   const t = tokenlar(String(ad || ''))
   if (!t.length) return null
@@ -330,18 +280,104 @@ export function drugKeyFor(ad: string): string | null {
   return null
 }
 
-// İlaç etkileşimi kontrolü
+/** Every class label used anywhere in the table — the vocabulary a class-level entry may draw on. */
+export function tumSiniflar(): Set<string> {
+  const out = new Set<string>()
+  for (const d of Object.values(TURKISH_DRUGS)) {
+    out.add(d.category)
+    for (const s of d.siniflar || []) out.add(s)
+  }
+  return out
+}
+
+/**
+ * NOTYA-EYLEM-29 — interaction targets that are KNOWINGLY outside the 176-molecule table.
+ *
+ * The bug this list exists to prevent: an interaction written against a name nothing in the table
+ * answers to fires for nobody and says nothing, so the gap is invisible. Every such name now has to
+ * be declared here, and `core/eylemler/tests/ilacTablosu.test.ts` fails when a new one appears — so
+ * "this class never matched" becomes a red test instead of a quiet card.
+ *
+ * Two kinds of entry:
+ *   • molecules that are real and prescribed in Turkey but not yet in the table (amiodaron,
+ *     lityum, teofilin, verapamil…) — adding the molecule removes it from this list automatically;
+ *   • things that are not table rows at all ("Canlı aşı", "Alkol").
+ */
+export const TABLO_DISI_ETKILESIM: ReadonlySet<string> = new Set([
+  // not a drug row
+  'Alkol', 'Canlı aşı', 'Aktif kömür',
+  // classes with no member in the table yet
+  'Trisiklik antidepresan',
+  // molecules not in the table
+  'Amiodaron', 'Apomorfin', 'Atazanavir', 'Azatiyoprin', 'Busulfan', 'Diazepam', 'Diltiazem',
+  'Disülfiram', 'Fenitoin', 'Fenobarbital', 'Flukloksasilin', 'Gemfibrozil', 'Ketokonazol',
+  'Klonidin', 'Kloramfenikol', 'Klorpromazin', 'Levodopa', 'Linezolid', 'Lityum', 'Midazolam',
+  'Mikofenolat mofetil', 'Mikonazol', 'Nelfinavir', 'Pimozid', 'Probenesid', 'Rilpivirin',
+  'Ritonavir', 'Sisaprid', 'Sitalopram', 'Sukralfat', 'Takrolimus', 'Tamoksifen', 'Teofilin',
+  'Tizanidin', 'Verapamil', 'Vildagliptin', 'Vorikonazol', 'Zidovudin',
+])
+
+/** Every interaction target that no molecule in the table answers to and that is not declared above. */
+export function bildirilmemisEtkilesimHedefleri(): string[] {
+  const out = new Set<string>()
+  for (const d of Object.values(TURKISH_DRUGS)) {
+    for (const e of d.etkilesimler || []) {
+      if (TABLO_DISI_ETKILESIM.has(e.ile)) continue
+      if (!Object.values(TURKISH_DRUGS).some((x) => ifadeIlaciAnlatiyorMu(e.ile, x))) out.add(e.ile)
+    }
+  }
+  return [...out].sort()
+}
+
+export interface EtkilesimBulgusu {
+  /** Which molecule the interaction is WITH. */
+  digerAnahtar: string
+  siddet: 'ciddi' | 'orta'
+  /** One Turkish line: mechanism → advice. */
+  not: string
+  /** Which of the two entries declared it, for the card's `Kaynak:` line. */
+  bildiren: string
+}
+
+/**
+ * Structured interaction verdict between two table molecules, or null. Symmetric by construction:
+ * both entries' lists are read, so "A lists B" and "B lists A" produce the same answer.
+ */
+export function etkilesimBul(drug1Key: string, drug2Key: string): EtkilesimBulgusu | null {
+  const d1 = TURKISH_DRUGS[drug1Key]
+  const d2 = TURKISH_DRUGS[drug2Key]
+  if (!d1 || !d2 || drug1Key === drug2Key) return null
+
+  const adaylar: EtkilesimBulgusu[] = []
+  for (const e of d1.etkilesimler || []) {
+    if (ifadeIlaciAnlatiyorMu(e.ile, d2)) adaylar.push({ digerAnahtar: drug2Key, siddet: e.siddet, not: e.not, bildiren: d1.name })
+  }
+  for (const e of d2.etkilesimler || []) {
+    if (ifadeIlaciAnlatiyorMu(e.ile, d1)) adaylar.push({ digerAnahtar: drug2Key, siddet: e.siddet, not: e.not, bildiren: d2.name })
+  }
+  if (!adaylar.length) {
+    // Back-compat: an entry that only carries the free-text list still fires.
+    const serbest =
+      (d1.interactions || []).some((i) => ifadeIlaciAnlatiyorMu(i, d2)) ||
+      (d2.interactions || []).some((i) => ifadeIlaciAnlatiyorMu(i, d1))
+    if (!serbest) return null
+    return { digerAnahtar: drug2Key, siddet: 'ciddi', not: `${d1.name} ile ${d2.name} arasında etkileşim bildiriliyor.`, bildiren: d1.name }
+  }
+  // Most severe wins; among equals, the first declaration.
+  adaylar.sort((a, b) => (a.siddet === b.siddet ? 0 : a.siddet === 'ciddi' ? -1 : 1))
+  return adaylar[0]
+}
+
+/** Back-compat boolean/string form. */
 export function checkInteractions(drug1Key: string, drug2Key: string): string | null {
-  const drug1 = TURKISH_DRUGS[drug1Key]
-  const drug2 = TURKISH_DRUGS[drug2Key]
-  if (!drug1 || !drug2) return null
-  if (drug1Key === drug2Key) return null
+  const b = etkilesimBul(drug1Key, drug2Key)
+  if (!b) return null
+  const d1 = TURKISH_DRUGS[drug1Key]
+  const d2 = TURKISH_DRUGS[drug2Key]
+  return `⚠️ UYARI: ${d1.name} ve ${d2.name} arasında etkileşim var! ${b.not}`
+}
 
-  const hasInteraction =
-    drug1.interactions.some((i) => ifadeIlaciAnlatiyorMu(i, drug2)) ||
-    drug2.interactions.some((i) => ifadeIlaciAnlatiyorMu(i, drug1))
-
-  return hasInteraction
-    ? `⚠️ UYARI: ${drug1.name} ve ${drug2.name} arasında etkileşim var!`
-    : null
+/** `renkliRecete` must agree with lib/doktor/receteRengi — asserted by a test, computed here. */
+export function beklenenReceteRengi(d: TürkishDrug): ReturnType<typeof receteRengi> {
+  return receteRengi(d.name, d.brand.join(' '))
 }

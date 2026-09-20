@@ -92,10 +92,14 @@ describe('NOTYA-EYLEM-21 · alerji', () => {
     assert.ok(ciddiUyariVarMi(alerjiUyarilari(['Penisilin alerjisi'], 'Largopen')))
   })
 
-  it('ilacın kendi kontrendikasyonu üzerinden eşleşir (sülfonamid → Furosemid)', () => {
+  it('çapraz duyarlılık sınıfı üzerinden eşleşir (sülfonamid → Furosemid)', () => {
+    // NOTYA-EYLEM-28: the cross-reactivity group is now a typed field (`alerjiSinifi`) rather than a
+    // string scan of the contraindication prose, so the sentence names the GROUP. The gate is the
+    // same one: a `ciddi` warning that demands the second tap.
     const u = alerjiUyarilari(['Sulfonamid'], 'Lasix 40 mg')
     assert.ok(ciddiUyariVarMi(u), JSON.stringify(u))
-    assert.match(u[0].metin, /kontrendikasyon/i)
+    assert.match(u[0].metin, /çapraz duyarlılık|kontrendikasyon/i)
+    assert.equal(u[0].tur, 'alerji')
   })
 
   it('ilgisiz alerji uyarı üretmez (yanlış pozitif yok)', () => {

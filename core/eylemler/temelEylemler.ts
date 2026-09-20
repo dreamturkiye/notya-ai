@@ -150,7 +150,14 @@ export const ILAC_EKLE = eylem({
     return data?.length ? `"${v.ilac_adi}" hastanın aktif ilaç listesinde zaten var.` : null
   },
   // NOTYA-EYLEM-21: alerji / aynı etken madde / etkileşim / pediatrik yaş — kartın ÜSTÜNDE, dokunuştan önce.
-  uyariKontrol: (ctx, v) => ilacUyarilariHesapla(ctx, { ilacAdi: String(v.ilac_adi || ''), etkenMadde: (v.etken_madde as string | null) ?? null }),
+  uyariKontrol: (ctx, v) =>
+    ilacUyarilariHesapla(ctx, {
+      ilacAdi: String(v.ilac_adi || ''),
+      etkenMadde: (v.etken_madde as string | null) ?? null,
+      // NOTYA-EYLEM-30: the written dose is what an overdose verdict is measured against.
+      doz: (v.doz as string | null) ?? null,
+      kullanimSikligi: (v.kullanim_sikli as string | null) ?? null,
+    }),
   calistir: async (ctx, v) => {
     const satir = {
       doctor_id: ctx.doktorId,
@@ -442,7 +449,12 @@ export const ILAC_DOZ_DEGISTIR = eylem({
   },
   // A dose change is still a drug decision: the same check runs, with the edited row excluded from
   // the duplicate test (it is the row being changed, not a second box of the same molecule).
-  uyariKontrol: (ctx, v) => ilacUyarilariHesapla(ctx, { ilacAdi: String(v.ilac_adi || '') }),
+  uyariKontrol: (ctx, v) =>
+    ilacUyarilariHesapla(ctx, {
+      ilacAdi: String(v.ilac_adi || ''),
+      doz: (v.yeni_doz as string | null) ?? null,
+      kullanimSikligi: (v.yeni_kullanim as string | null) ?? null,
+    }),
   calistir: async (ctx, v) => {
     if (!v.yeni_doz && !v.yeni_kullanim) throw new Error('Yeni doz ya da yeni kullanım girin.')
     const liste = await aktifIlac(ctx, String(v.ilac_adi))
