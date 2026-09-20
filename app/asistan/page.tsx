@@ -362,10 +362,21 @@ export default function AsistanPage() {
           dosyaya_kayit_hazirla: async (params: {
             eylem?: string
             hasta?: string
-            alanlar?: Record<string, unknown>
+            alanlar?: Record<string, unknown> | string
           }) => {
             try {
               const t = await ensureDoctorAccessToken()
+              let alanlar: Record<string, unknown> = {}
+              if (typeof params?.alanlar === 'string' && params.alanlar.trim()) {
+                try {
+                  const p = JSON.parse(params.alanlar)
+                  if (p && typeof p === 'object' && !Array.isArray(p)) alanlar = p as Record<string, unknown>
+                } catch {
+                  alanlar = { notlar: params.alanlar }
+                }
+              } else if (params?.alanlar && typeof params.alanlar === 'object') {
+                alanlar = params.alanlar
+              }
               const r = await fetch("/api/asistan/ses-eylem", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
@@ -373,7 +384,7 @@ export default function AsistanPage() {
                   adim: "hazirla",
                   eylem: params?.eylem || "",
                   hastaAdi: params?.hasta || "",
-                  alanlar: params?.alanlar && typeof params.alanlar === "object" ? params.alanlar : {},
+                  alanlar,
                 }),
               })
               const j = (await r.json()) as { sonuc?: string; oneriId?: string; hastaId?: string }

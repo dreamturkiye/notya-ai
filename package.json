@@ -33,6 +33,7 @@
     "migrate:tidb": "node scripts/run-tidb-migration.mjs",
     "typecheck": "tsc --noEmit",
     "ses:denetim": "npx tsx scripts/elevenlabs-ses-denetimi.ts --canli",
+    "ses:eylem-tools": "npx tsx scripts/_el-tool-kur.mts",
     "test:ftr": "npx tsx --test specialties/fizik-tedavi/tests/*.test.ts lib/portal/ftrm.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:roma": "npx tsx --test specialties/romatoloji/tests/*.test.ts lib/portal/romatizmam.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",
     "test:radyo": "npx tsx --test specialties/radyoloji/tests/*.test.ts lib/portal/tetkiklerim.test.ts lib/portal/moduller.test.ts lib/doktor/doktorAraclari.test.ts",

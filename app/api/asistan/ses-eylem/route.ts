@@ -56,10 +56,18 @@ export async function POST(req: NextRequest) {
   if (adim === 'hazirla') {
     const eylemAnahtar = String(body.eylem || body.eylemAnahtar || '').trim()
     const hastaAdi = String(body.hastaAdi || body.hasta || body.isim || '').trim()
-    const alanlarHam =
-      body.alanlar && typeof body.alanlar === 'object' && !Array.isArray(body.alanlar)
-        ? (body.alanlar as Record<string, unknown>)
-        : {}
+    let alanlarHam: Record<string, unknown> = {}
+    if (typeof body.alanlar === 'string' && body.alanlar.trim()) {
+      try {
+        const p = JSON.parse(body.alanlar)
+        if (p && typeof p === 'object' && !Array.isArray(p)) alanlarHam = p as Record<string, unknown>
+        else alanlarHam = { notlar: body.alanlar }
+      } catch {
+        alanlarHam = { notlar: body.alanlar }
+      }
+    } else if (body.alanlar && typeof body.alanlar === 'object' && !Array.isArray(body.alanlar)) {
+      alanlarHam = body.alanlar as Record<string, unknown>
+    }
     if (!eylemAnahtar) return sesYanit('Hangi kaydı hazırlayacağımı anlayamadım (aşı, ilaç, alerji…). Tekrar söyler misiniz?')
     if (!hastaAdi) return sesYanit('Hangi hasta için hazırlayayım? Adını söyler misiniz?')
 
