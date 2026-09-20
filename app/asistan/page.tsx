@@ -19,6 +19,7 @@ import { formatColleagueTabLabel, formatColleagueDisplayName } from "@/lib/colle
 import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAuth"
 import { address } from '@/lib/address'
+import { EylemKarti, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti'
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
@@ -44,6 +45,7 @@ export default function AsistanPage() {
   const sureHedefDkRef = useRef<number>(60)
   const sureHitapRef = useRef<string>("Hocam")
   const [sureUzatmaGoster, setSureUzatmaGoster] = useState(false)
+  const [sesKarti, setSesKarti] = useState<{ oneri: EylemOneriGorunumu; hasta: EylemHasta } | null>(null)
   const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
 
   const sureTimerlariTemizle = () => {
@@ -388,7 +390,10 @@ export default function AsistanPage() {
                 }),
               })
               const j = (await r.json()) as { sonuc?: string; oneriId?: string; hastaId?: string }
-              if (j.oneriId && j.hastaId) sesEylemRef.current = { oneriId: String(j.oneriId), hastaId: String(j.hastaId) }
+              if (j.oneriId && j.hastaId) {
+                sesEylemRef.current = { oneriId: String(j.oneriId), hastaId: String(j.hastaId) }
+                void kartiYukle(String(j.hastaId), String(j.oneriId))
+              }
               return String(j.sonuc || "Kartı hazırlayamadım Hocam, ekrandan deneyelim.")
             } catch {
               return "Kartı hazırlayamadım Hocam, bağlantı sorunu olabilir."
@@ -409,7 +414,10 @@ export default function AsistanPage() {
                 }),
               })
               const j = (await r.json()) as { sonuc?: string; ok?: boolean }
-              if (j.ok) sesEylemRef.current = null
+              if (j.ok) {
+                sesEylemRef.current = null
+                setSesKarti(null)
+              }
               return String(j.sonuc || "Onaylanamadı.")
             } catch {
               return "Onaylanamadı, bağlantı sorunu olabilir."
@@ -430,9 +438,29 @@ export default function AsistanPage() {
               })
               const j = (await r.json()) as { sonuc?: string }
               sesEylemRef.current = null
+              setSesKarti(null)
               return String(j.sonuc || "Vazgeçilemedi.")
             } catch {
               return "Vazgeçilemedi, bağlantı sorunu olabilir."
+            }
+          },
+          randevu_takvim: async (params: { tarih?: string; saat?: string; sure_dk?: number | string }) => {
+            try {
+              const t = await ensureDoctorAccessToken()
+              const r = await fetch("/api/asistan/ses-eylem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+                body: JSON.stringify({
+                  adim: "takvim",
+                  tarih: params?.tarih || "",
+                  saat: params?.saat || "",
+                  sure_dk: params?.sure_dk || 20,
+                }),
+              })
+              const j = (await r.json()) as { sonuc?: string }
+              return String(j.sonuc || "Takvimi okuyamadım Hocam.")
+            } catch {
+              return "Takvimi okuyamadım, bağlantı sorunu olabilir."
             }
           },
         },
@@ -504,6 +532,19 @@ export default function AsistanPage() {
     }
   }
 
+  async function kartiYukle(hastaId: string, oneriId: string) {
+    try {
+      const t = await ensureDoctorAccessToken()
+      if (!t) return
+      const r = await fetch(`/api/doktor/eylem?hastaId=${encodeURIComponent(hastaId)}`, {
+        headers: { Authorization: `Bearer ${t}` },
+      })
+      const j = (await r.json()) as { oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta }
+      const oneri = (j.oneriler || []).find((o) => o.id === oneriId) || (j.oneriler || [])[0]
+      if (oneri && j.hasta) setSesKarti({ oneri, hasta: j.hasta })
+    } catch { /* kart yoksa ses özeti yine durur */ }
+  }
+
   async function stopConversation() {
     await endConversation()
   }
@@ -514,6 +555,8 @@ export default function AsistanPage() {
     setPersona(PERSONAS[key])
     setMessages([])
     setErrorMsg("")
+    setSesKarti(null)
+    sesEylemRef.current = null
     try {
       localStorage.setItem('notya_asistan_persona', key)
     } catch { /* ignore */ }
@@ -635,6 +678,19 @@ export default function AsistanPage() {
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {sesKarti && (
+        <div style={{ flexShrink: 0, maxHeight: '46%', overflowY: 'auto', padding: '8px 12px 4px', borderTop: '1px solid rgba(15,155,142,0.35)', background: '#0C1A14' }}>
+          <EylemKarti
+            oneri={sesKarti.oneri}
+            hasta={sesKarti.hasta}
+            onSonuc={() => {
+              sesEylemRef.current = null
+              setSesKarti(null)
+            }}
+          />
+        </div>
+      )}
 
       <div style={{ padding: "16px 16px 24px", display: "flex", flexDirection: "column",
                     alignItems: "center", gap: "12px", borderTop: "1px solid rgba(255,255,255,.06)",

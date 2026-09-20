@@ -25,6 +25,7 @@ import {
   sesOnayMetniGecerliMi,
   sesOzetMetni,
 } from '@/core/eylemler/sesKapilari'
+import { doktorunGununuOku, gunlukOzetMetni } from '@/lib/randevu/gunlukOzet'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import type { IlacUyarisi } from '@/core/eylemler/ilacUyari'
 
@@ -117,12 +118,27 @@ export async function POST(req: NextRequest) {
     })
     if (!o) return sesYanit('Bu kaydı bu hasta / branş için hazırlayamadım. Ekrandan deneyin.')
 
+    let takvimEk = ''
+    if (eylemAnahtar === 'kontrol_randevusu_olustur') {
+      const tarih = String(o.veri.tarih || alanlarHam.tarih || '')
+      const saat = String(o.veri.saat || alanlarHam.saat || '')
+      if (/^\d{4}-\d{2}-\d{2}$/.test(tarih)) {
+        const satirlar = await doktorunGununuOku(supabase, user.id, tarih)
+        takvimEk = gunlukOzetMetni({
+          tarih,
+          satirlar,
+          istenenSaat: saat || null,
+          istenenSureDk: Number(o.veri.sure_dk || alanlarHam.sure_dk || 20),
+        }).metin
+      }
+    }
     const ozet = sesOzetMetni({
       etiket: o.etiket,
       hastaAd: hasta.ad,
       veri: o.veri,
       alanlar: o.alanlar,
       eksik: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)),
+      ek: [takvimEk, ...(o.uyarilar || [])].filter(Boolean).join(' '),
     })
     return sesYanit(ozet, {
       ok: true,
@@ -131,7 +147,23 @@ export async function POST(req: NextRequest) {
       eylemAnahtar: o.eylem_anahtar,
       eksik: o.eksik_alanlar,
       onayBekliyor: o.eksik_alanlar.filter((a) => o.zorunlu.includes(a)).length === 0,
+      kart: true,
     })
+  }
+
+  if (adim === 'takvim') {
+    const tarihHam = String(body.tarih || body.gun || '').trim()
+    const tarih = /^\d{4}-\d{2}-\d{2}$/.test(tarihHam) ? tarihHam : bugunTRT()
+    const saat = String(body.saat || '').trim()
+    const sure = Number(body.sure_dk || body.sureDk || 20)
+    const satirlar = await doktorunGununuOku(supabase, user.id, tarih)
+    const ozet = gunlukOzetMetni({
+      tarih,
+      satirlar,
+      istenenSaat: /^([01]\d|2[0-3]):([0-5]\d)$/.test(saat) ? saat : null,
+      istenenSureDk: sure,
+    })
+    return sesYanit(ozet.metin, { ok: true, cakisiyor: ozet.cakisiyor, tarih, satirlar })
   }
 
   if (adim === 'onayla') {
@@ -219,5 +251,5 @@ export async function POST(req: NextRequest) {
     return sesYanit('Tamam, vazgeçtim — dosyaya hiçbir şey yazılmadı.', { ok: true })
   }
 
-  return sesYanit('Geçersiz adım. hazirla, onayla veya vazgec bekleniyor.', {}, 400)
+  return sesYanit('Geçersiz adım. hazirla, onayla, vazgec veya takvim bekleniyor.', {}, 400)
 }

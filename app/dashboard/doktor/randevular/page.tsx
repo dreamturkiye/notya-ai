@@ -368,6 +368,26 @@ export default function RandevularPage() {
     return () => { iptal = true; };
   }, [formAcik, tumHastalar, token]);
 
+  // Form açıkken o günün randevularını her zaman çek — ay görünümünde gunlukRandevular boş kalıyordu.
+  useEffect(() => {
+    if (!formAcik) return
+    let iptal = false
+    ;(async () => {
+      try {
+        const t = await token()
+        if (!t) return
+        const { baslangic, bitis } = gunBaslangicBitis(gun)
+        const r = await fetch(`/api/doktor/randevular?baslangic=${encodeURIComponent(baslangic)}&bitis=${encodeURIComponent(bitis)}`, {
+          headers: { Authorization: `Bearer ${t}` },
+        })
+        if (!r.ok || iptal) return
+        const d = await r.json()
+        if (!iptal) setGunlukRandevular(d.randevular || [])
+      } catch { /* liste boş kalır; kaydet yine sunucu çakışma kontrolü yapar */ }
+    })()
+    return () => { iptal = true }
+  }, [formAcik, gun, token])
+
   /**
    * NOTYA-ARAMA-TR-01 (canlı hata, Dr. Gökhan 2026-09-17): burada eskiden doğrudan
    * `toLocaleLowerCase('tr-TR')` vardı. Türkçe locale I ile i'yi KASTEN ayrı tutar
@@ -1319,9 +1339,10 @@ export default function RandevularPage() {
                   </div>
                 )}
                 {seciliHasta && (
-                  <div style={{ marginTop: 8, fontSize: 13, color: '#0F9B8E' }}>
-                    Seçildi: {seciliHasta.name}{' '}
-                    <button type="button" onClick={() => { setSeciliHasta(null); setKayitsizMod(false); }} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', textDecoration: 'underline' }}>değiştir</button>
+                  <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: 12, background: '#ECFDF5', border: '2px solid #0F9B8E' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: '#0F766E', textTransform: 'uppercase' }}>Seçilen hasta</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#0A1628', lineHeight: 1.2, marginTop: 2 }}>{seciliHasta.name}</div>
+                    <button type="button" onClick={() => { setSeciliHasta(null); setKayitsizMod(false); }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', textDecoration: 'underline', fontSize: 13, padding: 0 }}>değiştir</button>
                   </div>
                 )}
                 {/* NOTYA-RANDEVU-12: kayıtsız yola yalnız (a) gerçekten arayıp bulamayınca veya
@@ -1429,6 +1450,35 @@ export default function RandevularPage() {
                   </select>
                 </div>
               </div>
+
+              {(() => {
+                const formSlotBas = new Date(`${yerelGunAnahtari(gun)}T${saat}:00+03:00`)
+                const formSlotBit = new Date(formSlotBas.getTime() + sureDk * 60000)
+                const gunListe = siraliGunlukRandevular.filter((r) => r.durum !== 'iptal' && r.id !== duzenlenenId)
+                const cakisan = gunListe.filter((r) => new Date(r.baslangic) < formSlotBit && new Date(r.bitis) > formSlotBas)
+                return (
+                  <div style={{ margin: '4px 0 12px', padding: '10px 12px', borderRadius: 10, background: cakisan.length ? '#FEF2F2' : '#F8FAFC', border: `1px solid ${cakisan.length ? '#FECACA' : 'rgba(10,22,40,0.08)'}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: cakisan.length ? '#991B1B' : '#334155', marginBottom: 6 }}>
+                      {cakisan.length ? `Bu saat dolu (${cakisan.map((r) => r.hastaAdi).join(', ')})` : `Bu günün randevuları${gunListe.length ? ` (${gunListe.length})` : ''}`}
+                    </div>
+                    {gunListe.length === 0 ? (
+                      <div style={{ fontSize: 13, color: '#64748B' }}>Bu günde başka randevu yok — {saat} boş.</div>
+                    ) : (
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#0A1628', lineHeight: 1.55 }}>
+                        {gunListe.map((r) => {
+                          const dolu = cakisan.some((c) => c.id === r.id)
+                          return (
+                            <li key={r.id} style={{ fontWeight: dolu ? 800 : 500, color: dolu ? '#991B1B' : undefined }}>
+                              {saatStr(r.baslangic)}–{saatStr(r.bitis)} {r.hastaAdi}
+                              {dolu ? ' — çakışıyor' : ''}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )
+              })()}
 
               <div className="ni-field">
                 <label className="ni-label">Hasta Durumu</label>

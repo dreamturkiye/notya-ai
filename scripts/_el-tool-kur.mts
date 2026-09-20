@@ -127,6 +127,16 @@ const EYLEM_TOOLS = [
     [],
     {}
   ),
+  clientTool(
+    'randevu_takvim',
+    'Doktor o günün randevularını veya bir saatin boş olup olmadığını sorduğunda çağır. KAYIT YAPMAZ — takvimi okur. "takvimi göremem / iznim yok" DEME: bu araç vardır. Dönen Türkçe metni oku.',
+    ['tarih'],
+    {
+      tarih: strParam('Gün YYYY-MM-DD (Türkiye). Örn 2026-09-25'),
+      saat: strParam('Kontrol edilecek saat HH:MM (24s). Örn 09:00. Yoksa yalnız gün listesi.'),
+      sure_dk: strParam('Süre dakika, varsayılan 20'),
+    }
+  ),
 ]
 
 async function el<T>(method: string, path: string, body?: unknown): Promise<T> {

@@ -76,6 +76,7 @@ export function sesOzetMetni(g: {
   veri: Record<string, unknown>
   alanlar: readonly AlanTanimi[]
   eksik: readonly string[]
+  ek?: string | null
 }): string {
   const parcalar: string[] = [`${g.hastaAd} için ${g.etiket} hazırladım`]
   for (const a of g.alanlar) {
@@ -84,9 +85,10 @@ export function sesOzetMetni(g: {
     if (a.tip === 'uzunMetin' && String(v).length > 80) continue
     parcalar.push(`${a.etiket}: ${v}`)
   }
+  const ek = g.ek ? ` ${g.ek.replace(/\s+/g, ' ').trim()}` : ''
   if (g.eksik.length) {
     const etiketler = g.eksik.map((k) => g.alanlar.find((a) => a.anahtar === k)?.etiket || k)
-    return `${parcalar.join('. ')}. Ama ${etiketler.join(', ')} boş — sesle kaydedemem, ekrandan doldurun.`
+    return `${parcalar.join('. ')}.${ek} Ama ${etiketler.join(', ')} boş — ekrandaki karttan doldurup onaylayın.`
   }
-  return `${parcalar.join('. ')}. Henüz dosyaya yazılmadı. Onaylıyor musunuz?`
+  return `${parcalar.join('. ')}.${ek} Kart ekranda. Henüz dosyaya yazılmadı. Onaylıyor musunuz?`
 }

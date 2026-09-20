@@ -161,7 +161,7 @@ describe('NOTYA-EYLEM-24 — sohbet/ses yolundan sessiz klinik yazma YOK', () =>
     const araclar = [...blok[1].matchAll(/^\s{10}([a-z_][a-z0-9_]*)\s*:/gim)].map((m) => m[1])
     assert.deepEqual(
       araclar.sort(),
-      ['dosyaya_kayit_hazirla', 'eylem_onayla', 'eylem_vazgec', 'hasta_bul'].sort(),
+      ['dosyaya_kayit_hazirla', 'eylem_onayla', 'eylem_vazgec', 'hasta_bul', 'randevu_takvim'].sort(),
       `sesli ajan araç listesi beklenmedik: ${araclar.join(', ')}`
     )
     // Each tool body may only talk to our APIs via fetch — no supabase / insert in the page.
