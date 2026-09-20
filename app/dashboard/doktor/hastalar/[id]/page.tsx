@@ -103,7 +103,13 @@ interface PatientData {
   baba_boy_cm?: number | null;
 }
 
-interface SeansNotu { id?: string; content_tani?: string | null; content_subjektif?: string | null; approved_at?: string | null }
+interface SeansNotu {
+  id?: string
+  content_tani?: string | null
+  content_subjektif?: string | null
+  basvuru_yakinmasi?: string | null
+  approved_at?: string | null
+}
 interface Seans { id: string; created_at: string; notes?: SeansNotu[] | SeansNotu | null }
 
 const panel: React.CSSProperties = {
@@ -287,7 +293,9 @@ export default function HastaProfilPage() {
     }
   }, [patientId, seanslar, seansYukleniyor]);
 
-  useEffect(() => { if (activeTab === 'muayene') seansYukle(); }, [activeTab, seansYukle]);
+  useEffect(() => {
+    if (activeTab === 'muayene' || activeTab === 'ozet') seansYukle()
+  }, [activeTab, seansYukle])
 
   // Doğum tarihi her yerde Gün.Ay.Yıl + yaş; bebeklerde gün hassasiyeti ("8 ay 3 günlük")
   const dogumGoster = (() => {
@@ -411,7 +419,7 @@ export default function HastaProfilPage() {
         {error && <div style={{ ...panel, padding: 18, color: '#FCA5A5', fontSize: 14, borderColor: 'rgba(239,68,68,0.4)' }}>{error}</div>}
 
         {!loading && !error && patient && activeTab === 'ozet' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
             <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #0F9B8E, transparent)' }} />
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Demografik bilgiler</div>
@@ -429,6 +437,54 @@ export default function HastaProfilPage() {
               {bilgiSatiri('Alerjiler', patient.alerjiler ? cipListesi(patient.alerjiler.split(',').map((a) => a.trim()).filter(Boolean), '#FCA5A5', '#EF4444') : null)}
               {bilgiSatiri('Sürekli ilaçlar', patient.surekli_ilaclar)}
               {bilgiSatiri('Sigara / Alkol', patient.sigara_alkol)}
+            </div>
+            <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: 'linear-gradient(90deg, #38BDF8, transparent)' }} />
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Gelişler ve tanılar</div>
+              {seansYukleniyor && <div style={{ fontSize: 13, color: '#8FA0B5' }}>Yükleniyor…</div>}
+              {!seansYukleniyor && seanslar !== null && seanslar.length === 0 && (
+                <div style={{ fontSize: 13, color: '#8FA0B5', lineHeight: 1.45 }}>Henüz muayene yok. İlk vizitten sonra tarihler ve tanılar burada tıklanır.</div>
+              )}
+              {!seansYukleniyor && (seanslar || []).slice(0, 8).map((s, idx, arr) => {
+                const n = notCek(s)
+                const tani = String(n?.content_tani || n?.basvuru_yakinmasi || n?.content_subjektif || 'Tanı yazılmamış').trim()
+                const ozet = tani.length > 90 ? `${tani.slice(0, 90)}…` : tani
+                const ac = () => { if (n?.id) router.push(`/dashboard/doktor/notlar/${n.id}/yazdir`) }
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={ac}
+                    disabled={!n?.id}
+                    title={n?.id ? 'Bu günün muayene raporunu aç' : 'Not henüz yok'}
+                    className="dosya-satir"
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      textAlign: 'left',
+                      background: 'transparent',
+                      border: 'none',
+                      borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                      padding: '10px 4px',
+                      cursor: n?.id ? 'pointer' : 'default',
+                      color: 'inherit',
+                      opacity: n?.id ? 1 : 0.55,
+                    }}
+                  >
+                    <span style={{ display: 'block', fontSize: 12, color: '#5F7189', fontWeight: 600 }}>{trTarih(s.created_at)}</span>
+                    <span style={{ display: 'block', fontSize: 13.5, color: n?.id ? '#2DD4BF' : '#C9D4E3', marginTop: 2, lineHeight: 1.35, textDecoration: n?.id ? 'underline' : 'none', textUnderlineOffset: 3 }}>{ozet}</span>
+                  </button>
+                )
+              })}
+              {!seansYukleniyor && (seanslar || []).length > 8 && (
+                <button
+                  type="button"
+                  onClick={() => secSekme('muayene')}
+                  style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#8FA0B5', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                >
+                  Tüm muayene geçmişi ›
+                </button>
+              )}
             </div>
             {pediatriAraci && pediatriUygun && (() => {
               const hedef = (patient.anne_boy_cm != null && patient.baba_boy_cm != null)

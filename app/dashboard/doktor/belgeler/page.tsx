@@ -24,22 +24,10 @@ import {
 } from '@/lib/doktor/toolsUi'
 import { VAULT_MAX_BYTES } from '@/lib/vault/types'
 import { belgeDegerlendirmeCtalari, belgeKategoriEtiket } from '@/lib/doktor/belgeTur'
+import { belgeTurleriIcinBrans, ORTAK_BELGE_TURLERI } from '@/lib/doktor/belgeTurleri'
 import GeriLink from '@/components/navigasyon/GeriLink'
 import { DOKTOR_ANA, hastaBelgelerHref } from '@/lib/doktor/geriNavigasyon'
 import KasaKonsultasyonBaglantisi, { BOS_KONSULTASYON_SECIMI, konsultasyonaBagla, type KasaKonsultasyonSecimi } from '@/components/doktor/KasaKonsultasyonBaglantisi'
-
-const BELGE_TURLERI = [
-  'Lab Sonucu',
-  'Görüntüleme Raporu',
-  'EKG',
-  'Röntgen',
-  'Epikriz',
-  'Reçete',
-  // KONSULTASYON-01: meslektaştan gelen görüş raporu. "Sevk" yalnız gerçek SGK sevk belgesi içindir.
-  'Konsültasyon raporu',
-  'Sevk',
-  'Diğer',
-]
 
 type VaultDoc = {
   id: string
@@ -56,7 +44,8 @@ export default function BelgelerPage() {
   const [hastaId, setHastaId] = useState('')
   const [hastaAra, setHastaAra] = useState('')
   const [listeAcik, setListeAcik] = useState(false)
-  const [belgeType, setBelgeType] = useState(BELGE_TURLERI[0])
+  const [belgeTurleri, setBelgeTurleri] = useState<string[]>([...ORTAK_BELGE_TURLERI])
+  const [belgeType, setBelgeType] = useState<string>(ORTAK_BELGE_TURLERI[0])
   const [notes, setNotes] = useState('')
   const [kons, setKons] = useState<KasaKonsultasyonSecimi>(BOS_KONSULTASYON_SECIMI)
   const [hastalar, setHastalar] = useState<HastaOption[]>([])
@@ -112,13 +101,24 @@ export default function BelgelerPage() {
           if (!cancelled) setError('Oturum bulunamadı. Lütfen tekrar giriş yapın.')
           return
         }
-        const res = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } })
+        const [res, meRes] = await Promise.all([
+          fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
+        ])
         if (!res.ok) {
           if (!cancelled) setError('Hasta listesi alınamadı.')
           return
         }
         const data = await res.json()
         if (!cancelled) setHastalar(normalizeHastalar(data))
+        if (meRes.ok) {
+          const me = await meRes.json()
+          const turler = belgeTurleriIcinBrans(me?.data?.specialty)
+          if (!cancelled) {
+            setBelgeTurleri(turler)
+            setBelgeType((onceki) => (turler.includes(onceki) ? onceki : turler[0]))
+          }
+        }
       } catch {
         if (!cancelled) setError('Hasta listesi alınamadı. Bağlantınızı kontrol edin.')
       } finally {
@@ -376,7 +376,7 @@ export default function BelgelerPage() {
               Belge Türü
             </label>
             <select id="belge-turu" value={belgeType} onChange={(e) => setBelgeType(e.target.value)} style={toolsInput}>
-              {BELGE_TURLERI.map((t) => (
+              {belgeTurleri.map((t) => (
                 <option key={t} value={t} style={{ background: '#0A1628', color: '#fff' }}>
                   {t}
                 </option>
@@ -509,8 +509,8 @@ export default function BelgelerPage() {
               Kasa ({docs.length})
             </div>
             <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
-              Belge adına tıklayın: önizleme açılır. Röntgen/görüntüde “Röntgeni değerlendir” veya “Asistana raporla” taslak yazar;
-              lab PDF’lerinde “Laboratuvarı değerlendir” tabloyu çıkarır. Resmi tanı onayıyla Objektif’e eklenir.
+              Belge adına tıklayın: önizleme açılır. “Değerlendir” lab tablosu veya görüntü taslağı üretir;
+              “Asistana raporla” epikriz / genel belge taslağı yazar. Resmi tanı onayıyla Objektif’e eklenir.
             </div>
             {!docs.length ? (
               <div style={{ fontSize: 13, color: '#94A3B8' }}>Bu hasta için henüz belge yok.</div>
@@ -553,7 +553,7 @@ export default function BelgelerPage() {
                         <a
                           key={cta.tur}
                           href={href}
-                          title={cta.tur === 'lab' ? 'Lab tablosunu çıkar, düzelt ve asistan raporunu üret' : 'Asistan taslak rapor yazsın; hekim onayıyla Objektif’e eklenir'}
+                          title={cta.tur === 'lab' ? 'Tabloyu çıkar, düzelt ve asistan raporunu üret' : cta.tur === 'rontgen' ? 'Görüntüyü değerlendir; hekim onayıyla Objektif’e eklenir' : 'Asistan taslak rapor yazsın; hekim onayıyla Objektif’e eklenir'}
                           style={{ fontSize: 11, fontWeight: 700, color, border: `1px solid ${border}`, borderRadius: 999, padding: '4px 10px', textDecoration: 'none', whiteSpace: 'nowrap' }}
                         >
                           {cta.label}

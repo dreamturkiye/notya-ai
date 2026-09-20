@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
+import { belgeTuruIzinliMi } from '@/lib/doktor/belgeTurleri'
 import {
   VaultAccessError,
   VaultValidationError,
@@ -46,6 +47,17 @@ export async function POST(req: NextRequest) {
     }
     if (!(file instanceof File)) {
       return NextResponse.json({ error: 'Dosya zorunludur' }, { status: 400 })
+    }
+
+    // BRANŞ-ALAN-SIZMASI: Yenidoğan Taburculuk Epikrizi yalnız pediatri / KD.
+    if (category) {
+      const { data: doktor } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
+      if (!belgeTuruIzinliMi(category, doktor?.specialty)) {
+        return NextResponse.json(
+          { error: 'Bu belge türü branşınız için kullanılamaz.' },
+          { status: 400 },
+        )
+      }
     }
 
     const bytes = Buffer.from(await file.arrayBuffer())

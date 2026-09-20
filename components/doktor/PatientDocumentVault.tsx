@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import DocumentViewer from '@/components/doktor/DocumentViewer'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
-import { belgeDegerlendirmeCtalari, belgeKategoriEtiket } from '@/lib/doktor/belgeTur'
+import { belgeDegerlendirmeCtalari, belgeKategoriEtiket, belgeYenidoganTaburcuEpikriziMi } from '@/lib/doktor/belgeTur'
 
 type VaultDoc = {
   id: string
@@ -27,7 +27,7 @@ export default function PatientDocumentVault({
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
   // NOTYA-LAB-03: lab summaries per document + Lab filter
   const [labOzet, setLabOzet] = useState<Record<string, { toplam: number; yuksek: number; dusuk: number; kritik: number; onemli: string[]; durum: string; panel_type?: string; sample_no?: string | null }>>({})
-  const [filtre, setFiltre] = useState<'hepsi' | 'lab'>('hepsi')
+  const [filtre, setFiltre] = useState<'hepsi' | 'lab' | 'yenidogan'>('hepsi')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [silinen, setSilinen] = useState<string | null>(null)
@@ -108,14 +108,35 @@ export default function PatientDocumentVault({
       {!loading && !error && !docs.length && (
         <div style={{ fontSize: 13, color: '#8FA0B5' }}>Bu hasta için kasa boş. Belge merkezinden yükleyin.</div>
       )}
-      {!loading && !error && docs.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-          {(['hepsi', 'lab'] as const).map((f) => <button key={f} type="button" onClick={() => setFiltre(f)} style={{ background: filtre === f ? 'rgba(15,155,142,0.2)' : 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: filtre === f ? '#2DD4BF' : '#8FA0B5', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{f === 'hepsi' ? 'Tümü' : `Lab (${Object.keys(labOzet).length})`}</button>)}
+      {!loading && !error && docs.length > 0 && (() => {
+        const yenidoganSayisi = docs.filter((d) => belgeYenidoganTaburcuEpikriziMi(d)).length
+        const chip = (aktif: boolean) => ({
+          background: aktif ? 'rgba(15,155,142,0.2)' : 'transparent',
+          border: '1px solid rgba(255,255,255,0.12)',
+          color: aktif ? '#2DD4BF' : '#8FA0B5',
+          borderRadius: 999,
+          padding: '3px 10px',
+          fontSize: 11,
+          fontWeight: 700,
+          cursor: 'pointer' as const,
+        })
+        return (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+          <button type="button" onClick={() => setFiltre('hepsi')} style={chip(filtre === 'hepsi')}>Tümü</button>
+          <button type="button" onClick={() => setFiltre('lab')} style={chip(filtre === 'lab')}>Lab ({Object.keys(labOzet).length})</button>
+          {yenidoganSayisi > 0 && (
+            <button type="button" onClick={() => setFiltre('yenidogan')} style={chip(filtre === 'yenidogan')}>Yenidoğan epikriz ({yenidoganSayisi})</button>
+          )}
         </div>
-      )}
+        )
+      })()}
       {!loading && !error && docs.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {docs.filter((d) => filtre === 'hepsi' || labOzet[d.id]).map((d) => (
+          {docs.filter((d) => {
+            if (filtre === 'lab') return !!labOzet[d.id]
+            if (filtre === 'yenidogan') return belgeYenidoganTaburcuEpikriziMi(d)
+            return true
+          }).map((d) => (
             <button
               key={d.id}
               type="button"
