@@ -1,7 +1,5 @@
-# Doktor Studio
+# Notya Studio (inside notya-ai)
 
-Clickable GUI is isolated so `dev` and `main` stay untouched.
-
-- Source: https://github.com/dreamturkiye/notya
-- Vercel project: notya-studio (root = that repo, not this Next app)
-- Do not merge this branch to main/dev until a dedicated UI PR.
+Branch: `design`
+This folder is the website we iterate on.
+Live product remains `dev` → `main`. Studio is not live.
