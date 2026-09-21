@@ -33,7 +33,7 @@ export const KLINIK_SOZLUK: Record<string, string[]> = {
   noro: ['nobet', 'havale', 'epilepsi', 'fejril konvulsiyon'],
   ruh: ['otizm', 'mchat', 'dikkat', 'hiperaktivite', 'kekeme', 'gelisim geriligi'],
   ilac: ['ilac', 'recete', 'antibiyotik', 'amoksisilin', 'parasetamol', 'ibuprofen'],
-  augmentin: ['augmentin', 'amoklavin', 'klavunat', 'croxilex', 'bioment', 'klamoks', 'amoksisilin', 'klavulan'],
+  augmentin: ['augmentin', 'amoklavin', 'klavunat', 'croxilex', 'bioment', 'klamoks', 'klavulan'],
   randevu: ['randevu', 'kontrol', 'takip'],
   belge: ['belge', 'epikriz', 'lab', 'rontgen', 'tetkik', 'sonuc'],
   gebelik: ['gebelik', 'gebe', 'hamile', 'trimester', 'nst', 'tokoliz'],
