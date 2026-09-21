@@ -34,10 +34,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const bytes = Buffer.from(await dosya.arrayBuffer())
+    let visitId: string | null = null
+    if (notId) {
+      const { data: not } = await supabase.from('notes').select('session_id').eq('id', notId).eq('doctor_id', user.id).maybeSingle()
+      visitId = not?.session_id ? String(not.session_id) : null
+    }
     const document = await uploadDocument(
       { supabase },
       {
-        doctorId: user.id, patientId, visitId: null,
+        doctorId: user.id, patientId, visitId,
         fileName: dosya.name || `cihaz-${tur}`,
         fileType: dosya.type || 'application/octet-stream',
         bytes,

@@ -174,6 +174,7 @@ export async function GET(req: NextRequest) {
       id: String(row.id),
       maskedPatient: (session.patient_id && adlar.get(String(session.patient_id))) || maskPatient(session.patient_id),
       patientId: session.patient_id ? String(session.patient_id) : null,
+      sessionId: row.session_id ? String(row.session_id) : null,
       specialty: String(session.specialty || 'Genel'),
       date: formatDate(row.created_at),
       subjektif: String(row.content_subjektif || ''),

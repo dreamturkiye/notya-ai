@@ -1,15 +1,30 @@
 /**
- * Wide patient search — name is optional.
+ * Wide patient search — name is optional. Filters AND across every dossier table.
  *
- * A doctor with hundreds of patients asks "geçen hafta aşı yaptığım kimler" or
- * "bu hafta kulak iltihabı ile gelen". This module reads the doctor's own notes,
- * vaccines, drugs, bookings, belgeler and intake (never another doctor's row)
- * and ranks matching patients.
+ * "bu hafta gördüğüm 2 yaşındakiler" = yaş ∩ bu haftanın muayenesi.
+ * Isolation: every child query carries doktor/doctor_id.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import { hastaAdiCoz } from '@/core/eylemler/hasta'
+import {
+  alanEslesir,
+  sorguyuAyikla,
+  tumTerimlerEslesir,
+  yasAyHesapla,
+  yasFiltreEslesir,
+  type SorguAyik,
+} from '@/lib/doktor/hastaAramaFiltre'
+
+export type { SorguAyik } from '@/lib/doktor/hastaAramaFiltre'
+export {
+  ARAMA_ALANLARI,
+  listeSorgusuMu,
+  metinEslesir,
+  sorguyuAyikla,
+  yasAyHesapla,
+  yasFiltreEslesir,
+} from '@/lib/doktor/hastaAramaFiltre'
 
 export interface DosyaAramaAday {
   id: string
@@ -19,136 +34,21 @@ export interface DosyaAramaAday {
   skor: number
 }
 
-export interface SorguAyik {
-  terimler: string[]
-  asi: boolean
-  cogul: boolean
-  klinik: boolean
-  pencere: { basIso: string; bitIso: string; basGun: string; bitGun: string; etiket: string } | null
-}
-
 const GIZLI = new Set([
   'tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres',
   'acilKisiAdi', 'acilKisiTelefon', 'veliAd', 'veliSoyad', 'veliTelefon',
 ])
 
-const ESANLAM: Record<string, string[]> = {
-  kulak: ['kulak', 'otit', 'otitis', 'h65', 'h66', 'orta kulak'],
-  iltihap: ['iltihap', 'enfeksiyon', 'infeksiyon', 'enflam'],
-  asi: ['asi', 'asilama', 'immuniz', 'asi kart', 'asi kaydi'],
-  ates: ['ates', 'fever', 'pireksi'],
-  oksuruk: ['oksuruk', 'oksuruklu', 'krup'],
-  alerji: ['alerji', 'allerji', 'anafilaksi'],
-  bronşit: ['bronşit', 'bronşit', 'bronchiol', 'wheez'],
-  idrar: ['idrar', 'uti', 'sistit', 'pyelonefrit'],
-  bogaz: ['bogaz', 'farenjit', 'tonsillit', 'streptokok'],
-  ishal: ['ishal', 'gastroenterit', 'kusma', 'rotavirus'],
-}
+interface HamSatir { patientId: string; kaynak: string; neden: string; skor: number; metin?: string; zaman?: string }
 
-const ASI_KELIME = /(^|[^a-z])(asi|asilama|immuniz|kpa|kgb|hepatit|bcg|kizamik|kizamikcik|kabakulak|sucicegi|sucice|difteri|tetanoz|bogmaca|polio|rotavir)([^a-z]|$)/
-const DURAK = new Set([
-  'hangi', 'hangileri', 'hangileriyedi', 'hangisiydi', 'hasta', 'hastalar', 'hastasi', 'hastam', 'hastanin', 'hastaniz',
-  'bana', 'ile', 'gelen', 'geldi', 'gelenler', 'yaptigim', 'yaptigimiz', 'yaptiklarim',
-  'olan', 'olanlar', 'kim', 'kimler', 'bir', 'bu', 'su', 'o', 've', 'veya', 'icin',
-  'mi', 'mu', 'miydi', 'yedi', 'gecen', 'hafta', 'haftaki', 'ay', 'ayi', 'bugun', 'dun',
-  'son', 'onceki', 'benim', 'ben', 'da', 'de', 'ki', 'ne', 'nedir', 'var', 'yok',
-  'soyle', 'bak', 'bul', 'ara', 'arama', 'hocam', 'merhaba', 'selam', 'nasilsiniz',
-])
-
-function trtParca(d = new Date(), gunOffset = 0): { iso: string; gun: string } {
-  const x = new Date(d.getTime() + gunOffset * 86400000)
-  const gun = x.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
-  return { iso: new Date(`${gun}T00:00:00+03:00`).toISOString(), gun }
-}
-
-function haftaBasiGun(d = new Date()): string {
-  const gun = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
-  const dt = new Date(`${gun}T12:00:00+03:00`)
-  const dow = (dt.getUTCDay() + 6) % 7 // Mon=0 in TRT noon
-  dt.setUTCDate(dt.getUTCDate() - dow)
-  return dt.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
-}
-
-function gunEkle(gun: string, n: number): string {
-  const d = new Date(`${gun}T12:00:00+03:00`)
-  d.setUTCDate(d.getUTCDate() + n)
-  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
-}
-
-export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
-  const n = trAramaNormalize(mesaj)
-  const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n)
-  const asi = ASI_KELIME.test(n)
-  let pencere: SorguAyik['pencere'] = null
-  const bugun = trtParca(now).gun
-  if (/\bbugun\b/.test(n)) {
-    pencere = { basIso: `${bugun}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bugun, bitGun: bugun, etiket: 'bugün' }
-  } else if (/\bdun\b/.test(n)) {
-    const d = gunEkle(bugun, -1)
-    pencere = { basIso: `${d}T00:00:00+03:00`, bitIso: `${d}T23:59:59+03:00`, basGun: d, bitGun: d, etiket: 'dün' }
-  } else if (/gecen hafta/.test(n)) {
-    const bu = haftaBasiGun(now)
-    const bas = gunEkle(bu, -7)
-    const bit = gunEkle(bu, -1)
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: 'geçen hafta' }
-  } else if (/bu hafta/.test(n)) {
-    const bas = haftaBasiGun(now)
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu hafta' }
-  } else if (/gecen ay/.test(n)) {
-    const [y, a] = bugun.split('-').map(Number)
-    const ay = a === 1 ? 12 : a - 1
-    const yil = a === 1 ? y - 1 : y
-    const bas = `${yil}-${String(ay).padStart(2, '0')}-01`
-    const bit = gunEkle(`${bugun.slice(0, 8)}01`, -1)
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: 'geçen ay' }
-  } else if (/bu ay/.test(n)) {
-    const bas = `${bugun.slice(0, 8)}01`
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu ay' }
-  } else if (asi || /sikayet|tani|iltihap|otit|alerji|ilac|randevu|epikriz|form/.test(n)) {
-    const bas = gunEkle(bugun, -90)
-    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'son 90 gün' }
-  }
-
-  const ham = n
-    .replace(/gecen hafta|bu hafta|gecen ay|bu ay|bugun|dun/g, ' ')
-    .split(/[^a-z0-9]+/)
-    .filter((k) => k.length >= 3 && !DURAK.has(k))
-    .map((k) => k.replace(/iltehabi?|iltihabi?|iltehap/, 'iltihap'))
-
-  const terimler = new Set<string>()
-  for (const k of ham) {
-    terimler.add(k)
-    for (const [kok, liste] of Object.entries(ESANLAM)) {
-      if (k === kok || liste.includes(k) || k.startsWith(kok)) {
-        for (const e of liste) terimler.add(e)
-        terimler.add(kok)
-      }
-    }
-  }
-  const liste = [...terimler]
-  const klinikKelime = liste.some((t) =>
-    Boolean(ESANLAM[t]) || Object.values(ESANLAM).some((l) => l.includes(t)) || ASI_KELIME.test(t)
-  )
-  const klinik = asi || cogul || klinikKelime
-  return { terimler: liste, asi, cogul, klinik, pencere }
-}
-
-export function metinEslesir(metin: string, terimler: string[]): boolean {
-  if (!terimler.length) return false
-  const t = trAramaNormalize(metin)
-  if (!t) return false
-  return terimler.some((k) => k.length >= 3 && t.includes(k))
-}
-
-interface HamSatir { patientId: string; kaynak: string; neden: string; skor: number }
-
-export function adaylariTopla(satirlar: HamSatir[]): Map<string, { nedenler: string[]; skor: number }> {
-  const m = new Map<string, { nedenler: string[]; skor: number }>()
+export function adaylariTopla(satirlar: HamSatir[]): Map<string, { nedenler: string[]; skor: number; metin: string }> {
+  const m = new Map<string, { nedenler: string[]; skor: number; metin: string }>()
   for (const s of satirlar) {
     if (!s.patientId) continue
-    const cur = m.get(s.patientId) || { nedenler: [], skor: 0 }
-    if (cur.nedenler.length < 3) cur.nedenler.push(s.neden)
+    const cur = m.get(s.patientId) || { nedenler: [], skor: 0, metin: '' }
+    if (cur.nedenler.length < 4) cur.nedenler.push(s.neden)
     cur.skor += s.skor
+    cur.metin = `${cur.metin} ${s.metin || ''}`.trim()
     m.set(s.patientId, cur)
   }
   return m
@@ -181,6 +81,16 @@ function gunAralikta(gun: string | null | undefined, p: SorguAyik['pencere']): b
   return g >= p.basGun && g <= p.bitGun
 }
 
+function cinsiyetCoz(enc: string | null | undefined): 'kadin' | 'erkek' | null {
+  if (!enc) return null
+  try {
+    const v = decrypt(enc).toLowerCase()
+    if (v === 'female' || v === 'kadin' || v === 'kız' || v === 'kiz') return 'kadin'
+    if (v === 'male' || v === 'erkek') return 'erkek'
+  } catch { /* */ }
+  return null
+}
+
 /** Doctor-scoped wide search. Every child query carries doktor/doctor_id. */
 export async function hastaDosyaAra(
   supabase: SupabaseClient,
@@ -199,15 +109,15 @@ export async function hastaDosyaAra(
     .eq('doctor_id', doktorId)
     .not('patient_id', 'is', null)
     .order('created_at', { ascending: false })
-    .limit(250)
+    .limit(400)
   if (p) seansQ.gte('created_at', p.basIso).lte('created_at', p.bitIso)
 
   const notQ = supabase
     .from('notes')
-    .select('session_id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, basvuru_yakinmasi, icd10_codes, content_ilaclar')
+    .select('session_id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, basvuru_yakinmasi, icd10_codes, content_ilaclar, vitaller')
     .eq('doctor_id', doktorId)
     .order('created_at', { ascending: false })
-    .limit(250)
+    .limit(400)
   if (p) notQ.gte('created_at', p.basIso)
 
   const asiQ = supabase
@@ -241,6 +151,14 @@ export async function hastaDosyaAra(
     .order('created_at', { ascending: false })
     .limit(80)
 
+  const kasaQ = supabase
+    .from('medical_documents')
+    .select('patient_id, file_name, category, notes, created_at, visit_id')
+    .eq('doctor_id', doktorId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(80)
+
   const analizQ = supabase
     .from('belge_analizleri')
     .select('patient_id, hekim_ozet, sonuc, onaylandi_at')
@@ -255,17 +173,35 @@ export async function hastaDosyaAra(
     .eq('doktor_id', doktorId)
     .not('form_data_encrypted', 'is', null)
     .order('dolduruldu_at', { ascending: false })
-    .limit(40)
+    .limit(400)
 
-  const [seanslar, notlar, asilar, ilaclar, randevular, belgeler, analiz, intake] = await Promise.all([
-    seansQ, notQ, asiQ, ilacQ, randevuQ, belgeQ, analizQ, intakeQ,
+  const cihazQ = supabase
+    .from('cihaz_olcumleri')
+    .select('patient_id, tur, deger, profil, created_at')
+    .eq('doctor_id', doktorId)
+    .order('created_at', { ascending: false })
+    .limit(80)
+
+  const [seanslar, notlar, asilar, ilaclar, randevular, belgeler, kasa, analiz, intake, cihaz] = await Promise.all([
+    seansQ, notQ, asiQ, ilacQ, randevuQ, belgeQ, kasaQ, analizQ, intakeQ, cihazQ,
   ])
 
   const seansHasta = new Map<string, string>()
+  const ziyaretId = new Set<string>()
   for (const s of seanslar.data || []) {
-    if (s.patient_id) seansHasta.set(String(s.id), String(s.patient_id))
+    if (s.patient_id) {
+      seansHasta.set(String(s.id), String(s.patient_id))
+      ziyaretId.add(String(s.patient_id))
+      ham.push({
+        patientId: String(s.patient_id),
+        kaynak: 'seans',
+        neden: kisa(`${trTarih(s.created_at as string)} muayene`),
+        skor: 4,
+        metin: 'muayene seans',
+        zaman: String(s.created_at || ''),
+      })
+    }
   }
-  // Notes whose session is this doctor's — never a foreign session's patient_id.
   if ((notlar.data || []).length) {
     const eksik = [...new Set((notlar.data || []).map((n) => String(n.session_id)).filter((id) => !seansHasta.has(id)))]
     if (eksik.length) {
@@ -281,56 +217,49 @@ export async function hastaDosyaAra(
   for (const n of notlar.data || []) {
     const pid = seansHasta.get(String(n.session_id))
     if (!pid || !isoAralikta(n.created_at as string, p)) continue
+    ziyaretId.add(pid)
     const icd = Array.isArray(n.icd10_codes) ? JSON.stringify(n.icd10_codes) : ''
     const ilac = Array.isArray(n.content_ilaclar) ? JSON.stringify(n.content_ilaclar) : ''
-    const metin = [n.basvuru_yakinmasi, n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan, n.content_tani, icd, ilac].filter(Boolean).join(' ')
-    if (!q.terimler.length || !metinEslesir(metin, q.terimler)) continue
+    const vital = n.vitaller && typeof n.vitaller === 'object' ? JSON.stringify(n.vitaller) : ''
+    const metin = [n.basvuru_yakinmasi, n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan, n.content_tani, icd, ilac, vital].filter(Boolean).join(' ')
     ham.push({
       patientId: pid,
       kaynak: 'not',
       neden: kisa(`${trTarih(n.created_at as string)} not: ${n.basvuru_yakinmasi || n.content_tani || n.content_subjektif || 'muayene'}`),
       skor: 8,
+      metin,
+      zaman: String(n.created_at || ''),
     })
   }
 
   for (const a of asilar.data || []) {
     if (!a.patient_id || !gunAralikta(a.uygulama_tarihi as string, p)) continue
     const metin = `${a.asi_adi || ''} ${a.notlar || ''}`
-    if (q.asi) {
-      const asiTerim = q.terimler.filter((t) => !['asi', 'asilama', 'immuniz', 'kart'].includes(t))
-      if (asiTerim.length && !metinEslesir(metin, asiTerim)) continue
-    } else if (!q.terimler.length || !metinEslesir(metin, q.terimler)) {
-      continue
-    }
     ham.push({
       patientId: String(a.patient_id),
       kaynak: 'asi',
       neden: kisa(`${trTarih(a.uygulama_tarihi as string)} aşı: ${a.asi_adi || '?'}`),
       skor: 12,
+      metin,
     })
   }
 
   for (const i of ilaclar.data || []) {
     if (!i.patient_id || !isoAralikta(i.created_at as string, p)) continue
     const ad = String(i.ilac_adi || i.ad || i.name || '')
-    if (!q.terimler.length || !metinEslesir(ad, q.terimler)) continue
-    ham.push({ patientId: String(i.patient_id), kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7 })
+    ham.push({ patientId: String(i.patient_id), kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad })
   }
 
   for (const r of randevular.data || []) {
     if (!r.patient_id) continue
     const metin = `${r.notlar || ''} ${r.tur || ''}`
-    const klinik = q.terimler.length ? metinEslesir(metin, q.terimler) : q.asi === false && !q.terimler.length
-    if (q.terimler.length && !klinik) continue
-    if (!q.terimler.length && !q.asi) {
-      // time-only + "hastalar" → list bookings in the window
-      if (!q.cogul) continue
-    }
+    ziyaretId.add(String(r.patient_id))
     ham.push({
       patientId: String(r.patient_id),
       kaynak: 'randevu',
       neden: kisa(`${trTarih(r.baslangic as string)} randevu${r.notlar ? `: ${r.notlar}` : ''}`),
       skor: 5,
+      metin,
     })
   }
 
@@ -338,20 +267,30 @@ export async function hastaDosyaAra(
     if (!b.patient_id || !isoAralikta(b.created_at as string, p)) continue
     const ozet = typeof b.ai_ozet === 'string' ? b.ai_ozet : b.ai_ozet ? JSON.stringify(b.ai_ozet) : ''
     const metin = `${b.baslik || ''} ${b.belge_turu || ''} ${ozet}`
-    if (q.terimler.length && !metinEslesir(metin, q.terimler) && !q.asi) continue
-    if (q.asi && !/asi|epikriz|karne/i.test(metin) && q.terimler.length && !metinEslesir(metin, q.terimler)) continue
-    if (!q.terimler.length && !q.asi) continue
-    ham.push({ patientId: String(b.patient_id), kaynak: 'belge', neden: kisa(`belge: ${b.baslik || b.belge_turu || 'dosya'}`), skor: 6 })
+    ham.push({ patientId: String(b.patient_id), kaynak: 'belge', neden: kisa(`belge: ${b.baslik || b.belge_turu || 'dosya'}`), skor: 6, metin })
+  }
+
+  for (const b of kasa.data || []) {
+    if (!b.patient_id || !isoAralikta(b.created_at as string, p)) continue
+    const metin = `${b.file_name || ''} ${b.category || ''} ${b.notes || ''}`
+    ham.push({ patientId: String(b.patient_id), kaynak: 'kasa', neden: kisa(`kasa: ${b.file_name || b.category || 'belge'}`), skor: 5, metin })
   }
 
   for (const a of analiz.data || []) {
     if (!a.patient_id) continue
     const s = a.sonuc as { ozet?: string } | null
     const metin = `${a.hekim_ozet || ''} ${s?.ozet || ''}`
-    if (!q.terimler.length || !metinEslesir(metin, q.terimler)) continue
-    ham.push({ patientId: String(a.patient_id), kaynak: 'belge', neden: kisa(`belge özeti: ${metin}`), skor: 6 })
+    ham.push({ patientId: String(a.patient_id), kaynak: 'belge', neden: kisa(`belge özeti: ${metin}`), skor: 6, metin })
   }
 
+  for (const cih of cihaz.data || []) {
+    if (!cih.patient_id || !isoAralikta(cih.created_at as string, p)) continue
+    const metin = `${cih.tur || ''} ${cih.deger || ''} ${cih.profil || ''}`
+    ham.push({ patientId: String(cih.patient_id), kaynak: 'cihaz', neden: kisa(`cihaz: ${cih.tur || 'ölçüm'}`), skor: 4, metin })
+  }
+
+  const intakeCinsiyet = new Map<string, 'kadin' | 'erkek'>()
+  const intakeIl = new Map<string, string>()
   for (const f of intake.data || []) {
     if (!f.patient_id || !f.form_data_encrypted) continue
     let hamForm = ''
@@ -361,46 +300,64 @@ export async function hastaDosyaAra(
     const parca: string[] = []
     for (const [k, v] of Object.entries(o)) {
       if (GIZLI.has(k) || v == null) continue
-      parca.push(String(v))
+      parca.push(`${k} ${String(v)}`)
     }
-    const metin = parca.join(' ')
-    if (!q.terimler.length || !metinEslesir(metin, q.terimler)) continue
-    ham.push({ patientId: String(f.patient_id), kaynak: 'intake', neden: 'hasta formunda geçiyor', skor: 5 })
-  }
-
-  // Sessions in the window with no extra keyword — "bu hafta gelenler"
-  if (q.cogul && !q.terimler.length && !q.asi) {
-    for (const s of seanslar.data || []) {
-      if (s.patient_id) ham.push({ patientId: String(s.patient_id), kaynak: 'seans', neden: kisa(`${trTarih(s.created_at as string)} muayene`), skor: 4 })
-    }
+    const cins = String(o.cinsiyet || '').toLowerCase()
+    if (/kadın|kadin|kız|kiz|female/.test(cins)) intakeCinsiyet.set(String(f.patient_id), 'kadin')
+    if (/erkek|male/.test(cins)) intakeCinsiyet.set(String(f.patient_id), 'erkek')
+    if (o.il) intakeIl.set(String(f.patient_id), String(o.il))
+    ham.push({ patientId: String(f.patient_id), kaynak: 'intake', neden: 'hasta formunda geçiyor', skor: 5, metin: parca.join(' ') })
   }
 
   const grup = adaylariTopla(ham)
-  const idler = [...grup.keys()]
-  if (!idler.length) return []
 
   const { data: hastalar } = await supabase
     .from('patients')
-    .select('id, name_encrypted, dob_encrypted')
+    .select('id, name_encrypted, dob_encrypted, gender_encrypted')
     .eq('doctor_id', doktorId)
-    .in('id', idler)
     .eq('is_active', true)
+    .limit(500)
 
   const cikti: DosyaAramaAday[] = []
   for (const h of hastalar || []) {
-    const g = grup.get(String(h.id))
-    if (!g) continue
+    const id = String(h.id)
+    const g = grup.get(id) || { nedenler: [], skor: 0, metin: '' }
     let dob = ''
     try { dob = decrypt(String(h.dob_encrypted || '')) } catch { dob = '' }
+    const ad = hastaAdiCoz(h.name_encrypted as string | null)
+    const ay = dob ? yasAyHesapla(dob, now) : null
+    if (!yasFiltreEslesir(ay, q.yas)) continue
+
+    const cins = cinsiyetCoz(h.gender_encrypted as string | null) || intakeCinsiyet.get(id) || null
+    if (q.cinsiyet && cins !== q.cinsiyet) continue
+
+    const torba = `${ad} ${dob} ${g.metin} ${intakeIl.get(id) || ''}`
+    if (!tumTerimlerEslesir(torba, q.terimler)) continue
+    if (q.alanlar.some((a) => !alanEslesir(torba, a))) continue
+
+    if (q.asi && !/asi|asilama|immuniz|hepatit|kpa|bcg|kizamik/.test(torba.toLowerCase()) && !g.nedenler.some((n) => /aşı|asi/i.test(n))) {
+      continue
+    }
+
+    const ziyaretGerek = q.ziyaret || Boolean(q.pencere && (q.cogul || q.yas))
+    if (ziyaretGerek && !ziyaretId.has(id) && !g.nedenler.some((n) => /muayene|randevu|not:|aşı/i.test(n))) {
+      continue
+    }
+
+    if (!q.yas && !q.terimler.length && !q.alanlar.length && !q.asi && !q.ziyaret && !q.pencere) continue
+    if (!q.yas && !q.terimler.length && !q.alanlar.length && !q.asi && !ziyaretGerek) continue
+
+    const yasEtiket = ay != null ? `${Math.floor(ay / 12)} yaş ${ay % 12} ay` : ''
     cikti.push({
-      id: String(h.id),
-      ad: hastaAdiCoz(h.name_encrypted as string | null),
+      id,
+      ad,
       dobMetin: trTarih(dob || null),
-      ozet: g.nedenler.join(' · '),
-      skor: g.skor,
+      ozet: [q.ozet, yasEtiket, ...g.nedenler].filter(Boolean).join(' · '),
+      skor: g.skor + (q.yas ? 10 : 0),
     })
   }
-  return cikti.sort((a, b) => b.skor - a.skor || a.ad.localeCompare(b.ad, 'tr')).slice(0, 12)
+
+  return cikti.sort((a, b) => b.skor - a.skor || a.ad.localeCompare(b.ad, 'tr')).slice(0, 40)
 }
 
 export function klinikAramaMi(mesaj: string): boolean {

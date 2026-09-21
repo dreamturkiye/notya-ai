@@ -37,11 +37,16 @@ type VaultDoc = {
   category: string | null
   notes: string | null
   createdAt: string
+  visitId: string | null
 }
+
+type SeansSecim = { id: string; etiket: string }
 
 export default function BelgelerPage() {
   const [file, setFile] = useState<File | null>(null)
   const [hastaId, setHastaId] = useState('')
+  const [seanslar, setSeanslar] = useState<SeansSecim[]>([])
+  const [visitId, setVisitId] = useState('')
   const [hastaAra, setHastaAra] = useState('')
   const [listeAcik, setListeAcik] = useState(false)
   const [belgeTurleri, setBelgeTurleri] = useState<string[]>([...ORTAK_BELGE_TURLERI])
@@ -72,23 +77,16 @@ export default function BelgelerPage() {
     if (!res.ok) return
     const data = await res.json()
     setDocs(
-      (data.documents || []).map((d: {
-        id: string
-        fileName: string
-        fileType: string
-        fileSize: number
-        category: string | null
-        notes: string | null
-        createdAt: string
-      }) => ({
-        id: d.id,
-        fileName: d.fileName,
-        fileType: d.fileType,
-        fileSize: d.fileSize,
-        category: d.category,
-        notes: d.notes,
-        createdAt: d.createdAt,
-      }))
+        (data.documents || []).map((d: VaultDoc) => ({
+          id: d.id,
+          fileName: d.fileName,
+          fileType: d.fileType,
+          fileSize: d.fileSize,
+          category: d.category,
+          notes: d.notes,
+          createdAt: d.createdAt,
+          visitId: d.visitId || null,
+        }))
     )
   }, [])
 
@@ -136,6 +134,25 @@ export default function BelgelerPage() {
     else setDocs([])
   }, [hastaId, loadDocs])
 
+  useEffect(() => {
+    if (!hastaId) { setSeanslar([]); setVisitId(''); return }
+    let iptal = false
+    ;(async () => {
+      const token = await getAccessTokenAsync()
+      if (!token) return
+      const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(hastaId)}/sessions`, { headers: { Authorization: `Bearer ${token}` } })
+      if (!r.ok) return
+      const j = await r.json()
+      const liste: SeansSecim[] = (j.sessions || []).map((s: { id: string; created_at?: string; notes?: { basvuru_yakinmasi?: string | null }[] }) => {
+        const tarih = s.created_at ? new Date(s.created_at).toLocaleDateString('tr-TR') : ''
+        const yakinma = s.notes?.[0]?.basvuru_yakinmasi || ''
+        return { id: s.id, etiket: [tarih, yakinma].filter(Boolean).join(' · ') || 'Muayene' }
+      })
+      if (!iptal) setSeanslar(liste)
+    })()
+    return () => { iptal = true }
+  }, [hastaId])
+
   // Prefill from Belge kasası “Belge yükle ›” deep-link (?hastaId=)
   useEffect(() => {
     if (hastaId || !hastalar.length) return
@@ -169,6 +186,7 @@ export default function BelgelerPage() {
     setListeAcik(false)
     setViewer(null)
     setKons(BOS_KONSULTASYON_SECIMI)
+    setVisitId('')
   }
 
   const dosyaSecildi = (f: File | null) => {
@@ -231,6 +249,7 @@ export default function BelgelerPage() {
       form.append('file', file)
       form.append('patientId', hastaId)
       form.append('category', belgeType)
+      if (visitId) form.append('visitId', visitId)
       if (notes.trim()) form.append('notes', notes.trim())
 
       const res = await fetch('/api/doktor/documents', {
@@ -257,6 +276,7 @@ export default function BelgelerPage() {
           category: d.document.category,
           notes: d.document.notes,
           createdAt: d.document.createdAt,
+          visitId: d.document.visitId || visitId || null,
         })
       }
     } catch (e) {
@@ -384,6 +404,18 @@ export default function BelgelerPage() {
             </select>
           </div>
 
+          <div style={{ marginBottom: 16 }}>
+            <label style={toolsLabel} htmlFor="belge-muayene">
+              Muayene (görüntü / ses bu vizite bağlanır)
+            </label>
+            <select id="belge-muayene" value={visitId} onChange={(e) => setVisitId(e.target.value)} disabled={!hastaId} style={toolsInput}>
+              <option value="" style={{ background: '#0A1628', color: '#fff' }}>Hasta dosyası — muayene dışı</option>
+              {seanslar.map((s) => (
+                <option key={s.id} value={s.id} style={{ background: '#0A1628', color: '#fff' }}>{s.etiket}</option>
+              ))}
+            </select>
+          </div>
+
           <KasaKonsultasyonBaglantisi hastaId={hastaId} secim={kons} setSecim={(k) => { setKons(k); if (k.acik && !kons.acik) setBelgeType('Konsültasyon raporu') }} />
 
           <div style={{ marginBottom: 16 }}>
@@ -407,7 +439,7 @@ export default function BelgelerPage() {
               id="belge-dosya"
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp3,.m4a,.wav,application/pdf,image/*,audio/*"
               onChange={(e) => dosyaSecildi(e.target.files?.[0] || null)}
               style={{ display: 'none' }}
             />
@@ -441,7 +473,7 @@ export default function BelgelerPage() {
                 >
                   Dosya Seç
                 </span>
-                <span style={{ color: '#94A3B8' }}>PDF, JPG, PNG, WebP (≤4 MB)</span>
+                <span style={{ color: '#94A3B8' }}>PDF, görüntü, ses (≤4 MB)</span>
               </button>
             ) : (
               <div
@@ -539,7 +571,7 @@ export default function BelgelerPage() {
                     >
                       {d.fileName}
                     </span>
-                    <span style={{ fontSize: 11, color: '#94A3B8' }}>{belgeKategoriEtiket(d)}</span>
+                    <span style={{ fontSize: 11, color: '#94A3B8' }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · bu muayene' : ''}</span>
                     <span style={{ fontSize: 11, color: '#64748B' }}>{Math.max(1, Math.round(d.fileSize / 1024))} KB</span>
                     {/* KASA-BELGE-01: lab → /lab; röntgen → analiz; asla röntgende lab CTA */}
                     {belgeDegerlendirmeCtalari(d).map((cta) => {

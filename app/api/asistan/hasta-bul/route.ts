@@ -33,12 +33,13 @@ export async function POST(req: NextRequest) {
     if (cozum.tur === 'coklu') {
       const liste = cozum.adaylar.map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`).join('. ')
       return NextResponse.json({
-        sonuc: `${cozum.adaylar.length} hasta eşleşti, sırayla: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`,
+        sonuc: `${cozum.adaylar.length} hasta: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`,
         adaylar: cozum.adaylar.map((a, i) => ({ sira: i + 1, ad: a.ad, ozet: a.ozet })),
+        sayi: cozum.adaylar.length,
       })
     }
     if (cozum.tur === 'yok') {
-      return NextResponse.json({ sonuc: `Bu soruya uyan hasta bulamadım Hocam. Ad, aşı, şikayet, tanı veya haftayla tekrar dener misiniz?` })
+      return NextResponse.json({ sonuc: `Bu filtrelere uyan hasta yok Hocam. Yaş, hafta, gelme nedeni, tanı veya adla tekrar dener misiniz?` })
     }
     const dosya = await hastaDosyasiniDerle(supabase, doktorId, cozum.patientId)
     if (!dosya) return NextResponse.json({ sonuc: `${cozum.ad} için dosya bulamadım.` })

@@ -15,7 +15,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { hastaDosyaAra, klinikAramaMi } from '@/lib/doktor/hastaDosyaAra'
+import { hastaDosyaAra, klinikAramaMi, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
 
@@ -179,11 +179,12 @@ async function dosyaIleDaralt(
   const ara = await hastaDosyaAra(supabase, doctorId, mesaj)
   if (!ara.length) return ad
 
+  const liste = listeSorgusuMu(mesaj)
   if (ad.tur === 'coklu') {
     const idler = new Set(ad.adaylar.map((a) => a.id))
     const kesi = ara.filter((x) => idler.has(x.id))
     const kaynak = kesi.length ? kesi : ara
-    if (kaynak.length === 1 && !/hastalar|hangileri|kimler/.test(duzle(mesaj))) {
+    if (kaynak.length === 1 && !liste) {
       return { tur: 'tek', patientId: kaynak[0].id, ad: kaynak[0].ad }
     }
     return {
@@ -192,11 +193,11 @@ async function dosyaIleDaralt(
     }
   }
 
-  if (ad.tur === 'tek' && ara.some((x) => x.id === ad.patientId) && !/hastalar|hangileri|kimler/.test(duzle(mesaj))) {
+  if (ad.tur === 'tek' && ara.some((x) => x.id === ad.patientId) && !liste) {
     return ad
   }
 
-  if (ara.length === 1 && !/hastalar|hangileri|kimler/.test(duzle(mesaj))) {
+  if (ara.length === 1 && !liste) {
     return { tur: 'tek', patientId: ara[0].id, ad: ara[0].ad }
   }
   return {

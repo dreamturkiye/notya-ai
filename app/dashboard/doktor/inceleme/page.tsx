@@ -23,6 +23,7 @@ import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
+import MuayeneEkleri from '@/components/doktor/MuayeneEkleri';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
@@ -40,6 +41,7 @@ interface PendingNote {
   id: string;
   maskedPatient: string;
   patientId: string | null;
+  sessionId: string | null;
   specialty: string;
   date: string;
   subjektif: string;
@@ -70,6 +72,7 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       id: String(n.id ?? idx),
       maskedPatient: String(n.maskedPatient ?? 'Hasta'),
       patientId: n.patientId ? String(n.patientId) : null,
+      sessionId: n.sessionId ? String(n.sessionId) : null,
       specialty: String(n.specialty ?? 'Genel'),
       date: String(n.date ?? ''),
       subjektif: String(n.subjektif ?? ''),
@@ -456,6 +459,7 @@ export default function IncelemePage() {
                           <CihazdanAl hastaId={note.patientId} notId={note.id} onOlcum={(v) => setVitalTaslak({ ...vitalTaslak, ...v })} />
                           <CihazDosyasi hastaId={note.patientId} notId={note.id} />
                         </div>
+                        <MuayeneEkleri hastaId={note.patientId} visitId={note.sessionId} kompakt />
                         {/* BRANS-ALAN-SIZMASI (Kaan 2026-09-17): alanlar notun branş profilinden — baş çevresi yalnız pediatrik bağlamda (KD formunda çıkıyordu) */}
                         <YasamsalBulgularFormu
                           olcumler={note.bransKapsami.olcumler}

@@ -61,6 +61,19 @@ export async function POST(req: NextRequest) {
     }
 
     const bytes = Buffer.from(await file.arrayBuffer())
+    const ad = (file.name || 'belge').toLowerCase()
+    let fileType = file.type || 'application/octet-stream'
+    if (!fileType || fileType === 'application/octet-stream') {
+      if (ad.endsWith('.heic')) fileType = 'image/heic'
+      else if (ad.endsWith('.heif')) fileType = 'image/heif'
+      else if (ad.endsWith('.jpg') || ad.endsWith('.jpeg')) fileType = 'image/jpeg'
+      else if (ad.endsWith('.png')) fileType = 'image/png'
+      else if (ad.endsWith('.webp')) fileType = 'image/webp'
+      else if (ad.endsWith('.pdf')) fileType = 'application/pdf'
+      else if (ad.endsWith('.m4a')) fileType = 'audio/mp4'
+      else if (ad.endsWith('.mp3')) fileType = 'audio/mpeg'
+      else if (ad.endsWith('.wav')) fileType = 'audio/wav'
+    }
     const document = await uploadDocument(
       { supabase },
       {
@@ -68,7 +81,7 @@ export async function POST(req: NextRequest) {
         patientId,
         visitId,
         fileName: file.name || 'belge',
-        fileType: file.type || 'application/octet-stream',
+        fileType,
         bytes,
         notes,
         category,

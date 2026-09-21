@@ -21,6 +21,8 @@ export const ORTAK_BELGE_TURLERI = [
   // KONSULTASYON-01: meslektaştan gelen görüş raporu. "Sevk" yalnız gerçek SGK sevk belgesi içindir.
   'Konsültasyon raporu',
   'Sevk',
+  'Muayene görüntüsü',
+  'Muayene ses kaydı',
   'Diğer',
 ] as const
 

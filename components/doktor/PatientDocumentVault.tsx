@@ -5,6 +5,7 @@ import Link from 'next/link'
 import DocumentViewer from '@/components/doktor/DocumentViewer'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { belgeDegerlendirmeCtalari, belgeKategoriEtiket, belgeYenidoganTaburcuEpikriziMi } from '@/lib/doktor/belgeTur'
+import MuayeneEkleri from '@/components/doktor/MuayeneEkleri'
 
 type VaultDoc = {
   id: string
@@ -13,6 +14,7 @@ type VaultDoc = {
   fileSize: number
   category: string | null
   createdAt: string
+  visitId: string | null
 }
 
 export default function PatientDocumentVault({
@@ -27,7 +29,9 @@ export default function PatientDocumentVault({
   const [viewer, setViewer] = useState<VaultDoc | null>(null)
   // NOTYA-LAB-03: lab summaries per document + Lab filter
   const [labOzet, setLabOzet] = useState<Record<string, { toplam: number; yuksek: number; dusuk: number; kritik: number; onemli: string[]; durum: string; panel_type?: string; sample_no?: string | null }>>({})
-  const [filtre, setFiltre] = useState<'hepsi' | 'lab' | 'yenidogan'>('hepsi')
+  const [filtre, setFiltre] = useState<'hepsi' | 'lab' | 'yenidogan' | 'muayene'>('hepsi')
+  const [seanslar, setSeanslar] = useState<{ id: string; etiket: string }[]>([])
+  const [visitId, setVisitId] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [silinen, setSilinen] = useState<string | null>(null)
@@ -45,13 +49,14 @@ export default function PatientDocumentVault({
       const data = await res.json()
       fetch(`/api/doktor/belgeler/lab?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }).then((r) => (r.ok ? r.json() : { ozet: {} })).then((j) => setLabOzet(j.ozet || {})).catch(() => {})
       setDocs(
-        (data.documents || []).map((d: VaultDoc & { fileName: string }) => ({
+        (data.documents || []).map((d: VaultDoc) => ({
           id: d.id,
           fileName: d.fileName,
           fileType: d.fileType,
           fileSize: d.fileSize,
           category: d.category,
           createdAt: d.createdAt,
+          visitId: d.visitId || null,
         }))
       )
     } catch (e) {
@@ -64,6 +69,23 @@ export default function PatientDocumentVault({
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    let iptal = false
+    ;(async () => {
+      const token = await getAccessTokenAsync()
+      if (!token) return
+      const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(patientId)}/sessions`, { headers: { Authorization: `Bearer ${token}` } })
+      if (!r.ok) return
+      const j = await r.json()
+      const liste = (j.sessions || []).map((s: { id: string; created_at?: string; notes?: { basvuru_yakinmasi?: string | null }[] }) => ({
+        id: s.id,
+        etiket: [s.created_at ? new Date(s.created_at).toLocaleDateString('tr-TR') : '', s.notes?.[0]?.basvuru_yakinmasi || ''].filter(Boolean).join(' · ') || 'Muayene',
+      }))
+      if (!iptal) setSeanslar(liste)
+    })()
+    return () => { iptal = true }
+  }, [patientId])
 
   const belgeSil = async (d: VaultDoc) => {
     if (!window.confirm(`“${d.fileName}” belgesini kasadan silmek istediğinize emin misiniz?`)) return
@@ -93,7 +115,7 @@ export default function PatientDocumentVault({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#E2E8F0' }}>Belge kasası</div>
-          <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>Şifreli PDF / görüntü arşivi</div>
+          <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>Şifreli PDF / görüntü / ses — muayeneye bağlanabilir</div>
         </div>
         <Link
           href={patientId ? `/dashboard/doktor/belgeler?hastaId=${encodeURIComponent(patientId)}` : '/dashboard/doktor/belgeler'}
@@ -103,6 +125,19 @@ export default function PatientDocumentVault({
         </Link>
       </div>
 
+      <div style={{ marginBottom: 12 }}>
+        <select
+          value={visitId}
+          onChange={(e) => setVisitId(e.target.value)}
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 12, padding: '6px 8px', width: '100%', maxWidth: 420 }}
+        >
+          <option value="" style={{ color: '#000' }}>Hasta dosyası — muayene seçin (görüntü/ses bağlamak için)</option>
+          {seanslar.map((s) => (
+            <option key={s.id} value={s.id} style={{ color: '#000' }}>{s.etiket}</option>
+          ))}
+        </select>
+        <MuayeneEkleri hastaId={patientId} visitId={visitId || null} onYuklendi={() => void load()} />
+      </div>
       {loading && <div style={{ fontSize: 13, color: '#8FA0B5' }}>Yükleniyor…</div>}
       {error && <div style={{ fontSize: 13, color: '#F87171' }}>{error}</div>}
       {!loading && !error && !docs.length && (
@@ -124,6 +159,7 @@ export default function PatientDocumentVault({
         <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => setFiltre('hepsi')} style={chip(filtre === 'hepsi')}>Tümü</button>
           <button type="button" onClick={() => setFiltre('lab')} style={chip(filtre === 'lab')}>Lab ({Object.keys(labOzet).length})</button>
+          <button type="button" onClick={() => setFiltre('muayene')} style={chip(filtre === 'muayene')}>Bu muayeneye bağlı ({docs.filter((d) => d.visitId).length})</button>
           {yenidoganSayisi > 0 && (
             <button type="button" onClick={() => setFiltre('yenidogan')} style={chip(filtre === 'yenidogan')}>Yenidoğan epikriz ({yenidoganSayisi})</button>
           )}
@@ -135,6 +171,7 @@ export default function PatientDocumentVault({
           {docs.filter((d) => {
             if (filtre === 'lab') return !!labOzet[d.id]
             if (filtre === 'yenidogan') return belgeYenidoganTaburcuEpikriziMi(d)
+            if (filtre === 'muayene') return Boolean(d.visitId && (!visitId || d.visitId === visitId))
             return true
           }).map((d) => (
             <button
@@ -155,7 +192,7 @@ export default function PatientDocumentVault({
               }}
             >
               <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: '#8FA0B5', marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(96,165,250,0.5)' : 'rgba(248,113,113,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#60A5FA' : '#F87171', fontWeight: 700 }}>{o}</span>)}</span>}</span>
-              <span style={{ fontSize: 11, color: '#8FA0B5' }}>{belgeKategoriEtiket(d)}</span>
+              <span style={{ fontSize: 11, color: '#8FA0B5' }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · muayene' : ''}</span>
               {belgeDegerlendirmeCtalari(d).map((cta) => {
                 const base =
                   cta.yol === 'lab'

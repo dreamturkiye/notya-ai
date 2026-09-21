@@ -9,7 +9,7 @@ import {
 export function assertAllowedUpload(fileType: string, fileSize: number, fileName: string): void {
   if (!fileName?.trim()) throw new VaultValidationError('Dosya adı zorunludur')
   if (!VAULT_ALLOWED_MIME.includes(fileType as VaultAllowedMime)) {
-    throw new VaultValidationError('Desteklenen türler: PDF, JPEG, PNG, WebP')
+    throw new VaultValidationError('Desteklenen türler: PDF, JPEG, PNG, WebP, HEIC, ses (WAV/MP3/M4A)')
   }
   if (!Number.isFinite(fileSize) || fileSize <= 0) {
     throw new VaultValidationError('Dosya boş olamaz')
