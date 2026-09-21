@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { trIcerir } from '@/lib/utils/turkceArama';
+import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,7 @@ interface Patient {
   tc_kimlik_hash: string;
   last_visit: string;
   is_active: boolean;
+  ozet?: string;
 }
 
 async function sha256Hex(text: string): Promise<string> {
@@ -27,6 +29,7 @@ async function sha256Hex(text: string): Promise<string> {
 export default function HastalarPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
+  const [klinikSonuc, setKlinikSonuc] = useState<Patient[] | null>(null);
   const [tcHashQuery, setTcHashQuery] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -103,8 +106,33 @@ export default function HastalarPage() {
     };
   }, [search]);
 
+  useEffect(() => {
+    const q = search.trim();
+    if (!q || !klinikAramaMi(q)) { setKlinikSonuc(null); return; }
+    let iptal = false;
+    const t = window.setTimeout(async () => {
+      const token = await ensureDoctorAccessToken();
+      if (!token || iptal) return;
+      const res = await fetch(`/api/doktor/hastalar?q=${encodeURIComponent(q)}`, { headers: { Authorization: `Bearer ${token}` } });
+      const d = await res.json().catch(() => ({}));
+      if (iptal || !res.ok) return;
+      const list = Array.isArray(d?.patients) ? d.patients : [];
+      setKlinikSonuc(list.map((p: Record<string, unknown>) => ({
+        id: String(p.id || ''),
+        name: String(p.name || ''),
+        masked_name: String(p.masked_name || p.name || ''),
+        tc_kimlik_hash: '',
+        last_visit: String(p.last_visit || ''),
+        is_active: true,
+        ozet: String(p.ozet || ''),
+      })));
+    }, 350);
+    return () => { iptal = true; window.clearTimeout(t); };
+  }, [search]);
+
   const filtered = useMemo(() => {
     const q = search.trim();
+    if (klinikSonuc) return klinikSonuc;
     if (!q) return patients;
     // NOTYA-ARAMA-TR-01: ortak Türkçe katlama — "isik" da "IŞIK" da "Işık"ı bulur.
     return patients.filter((p) => {
@@ -112,7 +140,7 @@ export default function HastalarPage() {
       const tcHit = Boolean(tcHashQuery && p.tc_kimlik_hash && p.tc_kimlik_hash === tcHashQuery);
       return nameHit || tcHit;
     });
-  }, [patients, search, tcHashQuery]);
+  }, [patients, search, tcHashQuery, klinikSonuc]);
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
@@ -124,7 +152,7 @@ export default function HastalarPage() {
           <button type="button" onClick={() => router.push('/dashboard/doktor/hasta-ekle')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>+ Hasta Ekle</button>
         </div>
         <input
-          placeholder="Ad, soyad veya TC Kimlik No ile ara..."
+          placeholder="Ad, TC, yaş, şikayet, tanı, aşı, bu hafta, 1-5 yaş, veya, hariç…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autoComplete="off"
@@ -135,11 +163,16 @@ export default function HastalarPage() {
             border: '1px solid #334155',
             borderRadius: 8,
             width: '100%',
-            marginBottom: 24,
+            marginBottom: 12,
             color: 'white',
             boxSizing: 'border-box',
           }}
         />
+        {klinikSonuc && search.trim() && (
+          <div style={{ color: '#94A3B8', fontSize: 13, marginBottom: 16 }}>
+            {klinikSonuc.length} hasta eşleşti — dosya, not, aşı, ilaç, randevu ve belgeler AND ile tarandı.
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {loading && (
@@ -168,10 +201,17 @@ export default function HastalarPage() {
                 alignItems: 'center',
               }}
             >
-              <div style={{ fontWeight: 600, flex: 1, minWidth: 0 }}>{p.name}</div>
-              <div style={{ color: '#94A3B8', flexShrink: 0 }}>
-                {p.last_visit ? new Date(p.last_visit).toLocaleDateString('tr-TR') : '—'}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600 }}>{p.name}</div>
+                {p.ozet ? (
+                  <div style={{ color: '#94A3B8', fontSize: 13, marginTop: 4, overflowWrap: 'anywhere' }}>{p.ozet}</div>
+                ) : null}
               </div>
+              {!p.ozet && (
+                <div style={{ color: '#94A3B8', flexShrink: 0 }}>
+                  {p.last_visit ? new Date(p.last_visit).toLocaleDateString('tr-TR') : '—'}
+                </div>
+              )}
               <div style={{ color: p.is_active ? '#10B981' : '#EF4444', flexShrink: 0 }}>
                 {p.is_active ? 'Aktif' : 'Pasif'}
               </div>

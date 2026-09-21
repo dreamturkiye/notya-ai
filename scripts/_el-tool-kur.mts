@@ -229,9 +229,9 @@ async function main() {
     await el('PATCH', `/tools/${hasta.id}`, {
       tool_config: clientTool(
         'hasta_bul',
-        'Doktor hasta listesi/sayısı sorduğunda çağır: ad, yaş (2 yaşında), cinsiyet, bu hafta/geçen hafta, gelme nedeni, tanı, aşı, ilaç, randevu, belge. Tam cümleyi isim olarak gönder. Filtreler AND birleşir, tüm dosya taranır. Sayıyı ve listeyi sırayla oku. "erişimim yok" DEME.',
+        'Doktor hasta listesi/sayısı sorduğunda çağır: ad, yaş, cinsiyet, bu hafta/son N gün, gelme nedeni, tanı, aşı, ilaç, randevu, belge, ateş, kan grubu. Tam cümleyi isim olarak gönder. Filtreler AND + BETWEEN + VEYA + HARİÇ. Tüm dosya taranır. Sayıyı ve listeyi sırayla oku. "erişimim yok" DEME.',
         ['isim'],
-        { isim: strParam('Tam cümle. Örn: "bu hafta gördüğüm 2 yaşındaki hastalar", "kaç tane", "Ayşe Metin"') }
+        { isim: strParam('Tam cümle. Örn: "bu hafta 1-5 yaş otit veya farenjit", "aşı olmayan", "kaç tane", "Ayşe Metin"') }
       ),
     })
     console.log(`  tool güncellendi: hasta_bul → ${hasta.id}`)

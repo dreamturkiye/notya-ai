@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { ARAMA_ALANLARI, adaylariTopla, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
+import { haricEslesir, sayisalEslesir, veyaEslesir } from './hastaAramaFiltre'
 
 const PAZAR = new Date('2026-09-20T15:00:00+03:00')
 
@@ -96,12 +97,56 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
     assert.equal(yasFiltreEslesir(12, { minAy: 24, maxAy: 35, etiket: '2 yaş' }), false)
   })
 
+  it('VEYA / HARİÇ / son N gün / ateş / kan grubu', () => {
+    const veya = sorguyuAyikla('Bu hafta otit veya farenjit', PAZAR)
+    assert.equal(veya.veya.length, 2)
+    assert.ok(veya.veya[0].some((t) => t === 'otit' || t === 'kulak'))
+    assert.ok(veya.veya[1].some((t) => t === 'farenjit' || t === 'bogaz'))
+    assert.equal(veya.pencere?.etiket, 'bu hafta')
+
+    const haric = sorguyuAyikla('2 yaşında aşı olmayanlar', PAZAR)
+    assert.ok(haric.haric.includes('asi'))
+    assert.equal(haric.asi, false)
+    assert.equal(haric.yas?.minAy, 24)
+
+    const son = sorguyuAyikla('son 3 gün ateşi 38 üstü', PAZAR)
+    assert.equal(son.pencere?.basGun, '2026-09-17')
+    assert.equal(son.pencere?.bitGun, '2026-09-20')
+    assert.ok(son.sayisal.some((s) => s.alan === 'ates' && s.min === 38))
+
+    const kan = sorguyuAyikla('A rh+ hastalar', PAZAR)
+    assert.equal(kan.kanGrubu, 'a rh+')
+    assert.equal(kan.klinik, true)
+
+    assert.equal(sorguyuAyikla('kızlar', PAZAR).cinsiyet, 'kadin')
+    assert.equal(klinikAramaMi('kızlar'), true)
+
+    assert.equal(veyaEslesir('akut otitis media', [['kulak', 'otit'], ['bogaz', 'farenjit']]), true)
+    assert.equal(veyaEslesir('sağlam çocuk', [['kulak', 'otit'], ['bogaz', 'farenjit']]), false)
+    assert.equal(haricEslesir('kontrol muayene', ['asi']), true)
+    assert.equal(haricEslesir('KPA aşı kaydı', ['asi']), false)
+    assert.equal(sayisalEslesir('ates 38.6 kilo 12', [{ alan: 'ates', min: 38, max: null, etiket: 'ates ≥38' }]), true)
+    assert.equal(sayisalEslesir('ates 37.2', [{ alan: 'ates', min: 38, max: null, etiket: 'ates ≥38' }]), false)
+  })
+
+  it('istemci sayfası şifre çözücüyü çekmez (klinikAramaMi filtrede)', () => {
+    const sayfa = readFileSync(new URL('../../app/dashboard/doktor/hastalar/page.tsx', import.meta.url), 'utf8')
+    const secici = readFileSync(new URL('./aracUi.tsx', import.meta.url), 'utf8')
+    const rota = readFileSync(new URL('../../app/api/doktor/hastalar/route.ts', import.meta.url), 'utf8')
+    assert.ok(sayfa.includes("from '@/lib/doktor/hastaAramaFiltre'"))
+    assert.ok(!sayfa.includes('hastaDosyaAra'))
+    assert.ok(secici.includes("from '@/lib/doktor/hastaAramaFiltre'"))
+    assert.ok(rota.includes('hastaDosyaAra') && rota.includes('searchParams.get(\'q\')'))
+  })
+
   it('her tablo sorgusu doktor kolonuna kilitli (izolasyon)', () => {
     const s = readFileSync(new URL('./hastaDosyaAra.ts', import.meta.url), 'utf8')
-    const fromlar = [...s.matchAll(/\.from\('([^']+)'\)([\s\S]{0,280})/g)]
-    assert.ok(fromlar.length >= 8, 'arama tabloları eksik')
+    assert.ok(s.includes('notes_encrypted'))
+    assert.ok(s.includes('hasta_goruntulemeler'))
+    const fromlar = [...s.matchAll(/\.from\('([^']+)'\)/g)]
+    assert.ok(fromlar.length >= 10, 'arama tabloları eksik')
     for (const m of fromlar) {
-      const parca = m[2]
+      const parca = s.slice(m.index ?? 0, (m.index ?? 0) + 280)
       assert.ok(
         /doctor_id|doktor_id/.test(parca),
         `${m[1]} doktor filtresi yok`

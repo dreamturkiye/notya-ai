@@ -6,9 +6,11 @@
  * Isolation lives in hastaDosyaAra (every query doctor-scoped).
  */
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { AY_AD, ASI_KELIME, KAN_GRUPLARI, KLINIK_SOZLUK } from '@/lib/doktor/hastaAramaSozluk'
 
 export interface YasFiltresi { minAy: number; maxAy: number; etiket: string }
 export interface AlanFiltresi { anahtar: string; etiket: string; degerler: string[] }
+export interface SayisalFiltre { alan: string; min: number | null; max: number | null; etiket: string }
 
 export interface Pencere {
   basIso: string
@@ -29,6 +31,10 @@ export interface SorguAyik {
   yas: YasFiltresi | null
   cinsiyet: 'kadin' | 'erkek' | null
   alanlar: AlanFiltresi[]
+  veya: string[][]
+  haric: string[]
+  sayisal: SayisalFiltre[]
+  kanGrubu: string | null
   ozet: string
 }
 
@@ -81,22 +87,21 @@ export const ARAMA_ALANLARI: AlanTanimi[] = [
   { anahtar: 'ishal', etiket: 'İshal', grup: 'sikayet', takma: ['ishal', 'gastroenterit', 'kusma', 'rotavirus'] },
   { anahtar: 'idrar', etiket: 'İdrar', grup: 'sikayet', takma: ['idrar', 'uti', 'sistit'] },
   { anahtar: 'bronşit', etiket: 'Bronşit', grup: 'sikayet', takma: ['bronşit', 'bronchiol', 'wheez'] },
+  { anahtar: 'dokuntu', etiket: 'Döküntü', grup: 'sikayet', takma: ['dokuntu', 'egzama', 'isilik', 'dermatit'] },
+  { anahtar: 'hirilti', etiket: 'Hırıltı', grup: 'sikayet', takma: ['hirilti', 'bronşiolit', 'wheez'] },
+  { anahtar: 'astim', etiket: 'Astım', grup: 'sikayet', takma: ['astim', 'nefes'] },
+  { anahtar: 'gelisim', etiket: 'Gelişim', grup: 'sikayet', takma: ['gelisim', 'persentil', 'neyzi'] },
+  { anahtar: 'anemi', etiket: 'Anemi', grup: 'sikayet', takma: ['anemi', 'demir'] },
+  { anahtar: 'travma', etiket: 'Travma', grup: 'sikayet', takma: ['dusme', 'kirik', 'yanik', 'travma'] },
+  { anahtar: 'karin', etiket: 'Karın', grup: 'sikayet', takma: ['karin', 'kolik', 'gaz'] },
+  { anahtar: 'goz', etiket: 'Göz', grup: 'sikayet', takma: ['goz', 'konjonktivit', 'katarakt', 'glokom'] },
+  { anahtar: 'burun', etiket: 'Burun', grup: 'sikayet', takma: ['burun', 'sinuzit', 'nezle', 'rinit'] },
+  { anahtar: 'gebelik', etiket: 'Gebelik', grup: 'sikayet', takma: ['gebe', 'hamile', 'gebelik', 'nst'] },
+  { anahtar: 'kalp', etiket: 'Kalp', grup: 'sikayet', takma: ['aritmi', 'stent', 'kalp'] },
 ]
 
-export const ESANLAM: Record<string, string[]> = {
-  kulak: ['kulak', 'otit', 'otitis', 'h65', 'h66', 'orta kulak'],
-  iltihap: ['iltihap', 'enfeksiyon', 'infeksiyon', 'enflam'],
-  asi: ['asi', 'asilama', 'immuniz', 'asi kart', 'asi kaydi'],
-  ates: ['ates', 'fever', 'pireksi'],
-  oksuruk: ['oksuruk', 'oksuruklu', 'krup'],
-  alerji: ['alerji', 'allerji', 'anafilaksi'],
-  bronşit: ['bronşit', 'bronşit', 'bronchiol', 'wheez'],
-  idrar: ['idrar', 'uti', 'sistit', 'pyelonefrit'],
-  bogaz: ['bogaz', 'farenjit', 'tonsillit', 'streptokok'],
-  ishal: ['ishal', 'gastroenterit', 'kusma', 'rotavirus'],
-}
-
-export const ASI_KELIME = /(^|[^a-z])(asi|asilama|immuniz|kpa|kgb|hepatit|bcg|kizamik|kizamikcik|kabakulak|sucicegi|sucice|difteri|tetanoz|bogmaca|polio|rotavir)([^a-z]|$)/
+export const ESANLAM: Record<string, string[]> = { ...KLINIK_SOZLUK }
+export { ASI_KELIME }
 
 const DURAK = new Set([
   'hangi', 'hangileri', 'hangileriyedi', 'hangisiydi', 'hasta', 'hastalar', 'hastasi', 'hastam', 'hastanin', 'hastaniz',
@@ -112,6 +117,9 @@ const DURAK = new Set([
   'yil', 'yilinda', 'yilindaki',
   'tell', 'number', 'had', 'this', 'week', 'last', 'month', 'between', 'then', 'ages', 'age',
   'years', 'year', 'old', 'the', 'of', 'to', 'and', 'arasi', 'arasinda',
+  'veya', 'except', 'without', 'olmayan', 'olmadigi', 'haric', 'yapmadigim',
+  'days', 'day', 'weeks', 'months', 'gunluk',
+  'ustu', 'uzeri', 'alti', 'esit', 'buyuk', 'kucuk',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -274,19 +282,94 @@ function pencereCikar(n: string, now: Date): { pencere: Pencere | null; kalan: s
   } else if (/bu ay|this month/.test(n)) {
     const bas = `${bugun.slice(0, 8)}01`
     pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu ay' }
+  } else if (/bu yil|this year/.test(n)) {
+    const bas = `${bugun.slice(0, 4)}-01-01`
+    pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu yıl' }
+  } else {
+    const son = n.match(/\bson\s+(\d{1,2})\s+(gun|hafta|ay|days?|weeks?|months?)/)
+    if (son) {
+      const adet = Number(son[1])
+      const birim = son[2]
+      const gun = /hafta|week/.test(birim) ? adet * 7 : /ay|month/.test(birim) ? adet * 30 : adet
+      const bas = gunEkle(bugun, -gun)
+      pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: `son ${adet} ${birim}` }
+      kalan = kalan.replace(son[0], ' ')
+    }
+    const ayAralik = n.match(/\b(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)\s*[-–]\s*(\d{1,2})\s*(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik)/)
+    if (ayAralik && !pencere) {
+      const yil = Number(bugun.slice(0, 4))
+      const a1 = AY_AD[ayAralik[2]]
+      const a2 = AY_AD[ayAralik[4]]
+      if (a1 && a2) {
+        const bas = `${yil}-${String(a1).padStart(2, '0')}-${String(ayAralik[1]).padStart(2, '0')}`
+        const bit = `${yil}-${String(a2).padStart(2, '0')}-${String(ayAralik[3]).padStart(2, '0')}`
+        pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: `${ayAralik[1]}–${ayAralik[3]} ${ayAralik[4]}` }
+        kalan = kalan.replace(ayAralik[0], ' ')
+      }
+    }
+    const isoAralik = n.match(/\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})\s*[-–]\s*(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/)
+    if (isoAralik && !pencere) {
+      const bas = `${isoAralik[3]}-${isoAralik[2].padStart(2, '0')}-${isoAralik[1].padStart(2, '0')}`
+      const bit = `${isoAralik[6]}-${isoAralik[5].padStart(2, '0')}-${isoAralik[4].padStart(2, '0')}`
+      pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: `${isoAralik[1]}.${isoAralik[2]}–${isoAralik[4]}.${isoAralik[5]}` }
+      kalan = kalan.replace(isoAralik[0], ' ')
+    }
   }
   if (pencere) {
-    kalan = kalan.replace(/gecen hafta|bu hafta|gecen ay|bu ay|bugun|dun|this week|last week|this month|last month|today|yesterday/g, ' ')
+    kalan = kalan.replace(/gecen hafta|bu hafta|gecen ay|bu ay|bu yil|bugun|dun|this week|last week|this month|last month|this year|today|yesterday/g, ' ')
   }
   return { pencere, kalan: kalan.replace(/\s+/g, ' ').trim() }
 }
 
-function cinsiyetCikar(n: string): { cinsiyet: 'kadin' | 'erkek' | null; kalan: string } {
-  if (/\b(kiz|kadin|kizi|kız)\b/.test(n)) {
-    return { cinsiyet: 'kadin', kalan: n.replace(/\b(kiz|kadin|kizi)\b/g, ' ') }
+function sayisalCikar(n: string): { sayisal: SayisalFiltre[]; kalan: string } {
+  const sayisal: SayisalFiltre[] = []
+  let kalan = n
+  const tek = [
+    { alan: 'ates', rx: /\bates(?:i)?\s*(?:>=|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/ },
+    { alan: 'spo2', rx: /\bspo2\s*(?:<=|<|alti)\s*(\d{2,3})/ },
+    { alan: 'kilo', rx: /\bkilo(?:su)?\s*(?:>=|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/ },
+  ]
+  for (const t of tek) {
+    const m = kalan.match(t.rx)
+    if (!m) continue
+    const v = Number(m[1].replace(',', '.'))
+    if (!Number.isFinite(v)) continue
+    if (t.alan === 'spo2') sayisal.push({ alan: t.alan, min: null, max: v, etiket: `SpO₂ ≤${v}` })
+    else sayisal.push({ alan: t.alan, min: v, max: null, etiket: `${t.alan} ≥${v}` })
+    kalan = kalan.replace(m[0], ' ')
   }
-  if (/\b(erkek|ogl(an|u))\b/.test(n)) {
-    return { cinsiyet: 'erkek', kalan: n.replace(/\b(erkek|oglan|oglu)\b/g, ' ') }
+  const aralik = kalan.match(/\b(ates|kilo|boy|nabiz|spo2)\s*(\d+[.,]?\d*)\s*[-–]\s*(\d+[.,]?\d*)/)
+  if (aralik) {
+    const a = Number(aralik[2].replace(',', '.'))
+    const b = Number(aralik[3].replace(',', '.'))
+    if (Number.isFinite(a) && Number.isFinite(b)) {
+      sayisal.push({ alan: aralik[1], min: Math.min(a, b), max: Math.max(a, b), etiket: `${aralik[1]} ${Math.min(a, b)}–${Math.max(a, b)}` })
+      kalan = kalan.replace(aralik[0], ' ')
+    }
+  }
+  return { sayisal, kalan: kalan.replace(/\s+/g, ' ').trim() }
+}
+
+function haricCikar(n: string): { haric: string[]; kalan: string } {
+  const haric: string[] = []
+  let kalan = n
+  if (/asi\s*(olmayan|yok|yapmadigim|yapilmayan)|asisi yok|unvaccinated|without vaccine/.test(n)) {
+    haric.push('asi')
+    kalan = kalan.replace(/asi\s*(olmayan|yok|yapmadigim|yapilmayan)|asisi yok|unvaccinated|without vaccine/g, ' ')
+  }
+  if (/alerji(si)?\s*(olmayan|yok)/.test(n)) {
+    haric.push('alerji')
+    kalan = kalan.replace(/alerji(si)?\s*(olmayan|yok)/g, ' ')
+  }
+  return { haric, kalan: kalan.replace(/\s+/g, ' ').trim() }
+}
+
+function cinsiyetCikar(n: string): { cinsiyet: 'kadin' | 'erkek' | null; kalan: string } {
+  if (/\b(kiz|kadin|kizi|kizlar|kadinlar)\b/.test(n)) {
+    return { cinsiyet: 'kadin', kalan: n.replace(/\b(kiz|kadin|kizi|kizlar|kadinlar)\b/g, ' ') }
+  }
+  if (/\b(erkek|erkekler|ogl(an|u))\b/.test(n)) {
+    return { cinsiyet: 'erkek', kalan: n.replace(/\b(erkek|erkekler|oglan|oglu)\b/g, ' ') }
   }
   return { cinsiyet: null, kalan: n }
 }
@@ -301,9 +384,17 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const y = yasCikar(n0)
   const p = pencereCikar(y.kalan, now)
   const c = cinsiyetCikar(p.kalan)
-  let kalan = c.kalan
+  const h = haricCikar(c.kalan)
+  const s = sayisalCikar(h.kalan)
+  let kalan = s.kalan
+  const haric = h.haric
+  const sayisal = s.sayisal
+  let kanGrubu: string | null = null
+  for (const k of KAN_GRUPLARI) {
+    if (kalan.includes(k) || kalan.includes(k.replace(/\s+/g, ''))) { kanGrubu = k; break }
+  }
 
-  if (!p.pencere && (asi || /sikayet|tani|iltihap|otit|alerji|ilac|randevu|epikriz|form/.test(n0)) && !y.yas) {
+  if (!p.pencere && (asi || /sikayet|tani|iltihap|otit|alerji|ilac|randevu|epikriz|form/.test(n0)) && !y.yas && !haric.includes('asi')) {
     const bugun = trtParca(now).gun
     const bas = gunEkle(bugun, -90)
     p.pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'son 90 gün' }
@@ -322,34 +413,42 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     alanlar.push({ anahtar: alan.anahtar, etiket: alan.etiket, degerler: [...degerler] })
   }
 
-  const ham = kalan
-    .split(/[^a-z0-9]+/)
-    .filter((k) => k.length >= 3 && !DURAK.has(k))
-    .map((k) => k.replace(/iltehabi?|iltihabi?|iltehap/, 'iltihap'))
-
-  const terimler = new Set<string>()
-  for (const k of ham) {
-    terimler.add(k)
-    for (const [kok, liste] of Object.entries(ESANLAM)) {
-      if (k === kok || liste.includes(k) || k.startsWith(kok)) {
-        for (const e of liste) terimler.add(e)
-        terimler.add(kok)
+  const terimCikar = (parca: string): string[] => {
+    const ham = parca
+      .split(/[^a-z0-9]+/)
+      .filter((k) => k.length >= 3 && !DURAK.has(k))
+      .map((k) => k.replace(/iltehabi?|iltihabi?|iltehap/, 'iltihap'))
+    const terimler = new Set<string>()
+    for (const k of ham) {
+      terimler.add(k)
+      for (const [kok, liste] of Object.entries(ESANLAM)) {
+        if (k === kok || liste.includes(k) || k.startsWith(kok)) {
+          for (const e of liste) terimler.add(e)
+          terimler.add(kok)
+        }
       }
     }
+    return [...terimler]
   }
 
-  const liste = [...terimler]
+  const veyaParca = kalan.split(/\b(?:veya|ya da| or )\b/)
+  const veya = veyaParca.length > 1 ? veyaParca.map(terimCikar).filter((g) => g.length) : []
+  const liste = veya.length ? [] : terimCikar(kalan)
   const klinikKelime = liste.some((t) => Boolean(ESANLAM[t]) || Object.values(ESANLAM).some((l) => l.includes(t)) || ASI_KELIME.test(t))
-  const klinik = asi || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0
+    || veya.some((g) => g.some((t) => Boolean(ESANLAM[t])))
+  const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet)
   const etiketler = [
     y.yas?.etiket,
     p.pencere?.etiket,
     c.cinsiyet === 'kadin' ? 'kız' : c.cinsiyet === 'erkek' ? 'erkek' : '',
+    kanGrubu,
+    ...sayisal.map((x) => x.etiket),
+    ...haric.map((x) => `${x} hariç`),
     ...alanlar.map((a) => a.etiket),
   ].filter(Boolean)
   return {
     terimler: liste,
-    asi,
+    asi: asi && !haric.includes('asi'),
     cogul: cogul || sayim,
     sayim,
     klinik,
@@ -358,8 +457,16 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     yas: y.yas,
     cinsiyet: c.cinsiyet,
     alanlar,
+    veya,
+    haric,
+    sayisal,
+    kanGrubu,
     ozet: etiketler.join(' · '),
   }
+}
+
+export function klinikAramaMi(mesaj: string, now = new Date()): boolean {
+  return sorguyuAyikla(mesaj, now).klinik
 }
 
 export function listeSorgusuMu(mesaj: string, q?: SorguAyik): boolean {
@@ -396,4 +503,39 @@ export function tumTerimlerEslesir(metin: string, terimler: string[]): boolean {
 
 export function alanEslesir(metin: string, alan: AlanFiltresi): boolean {
   return metinEslesir(metin, alan.degerler)
+}
+
+export function veyaEslesir(metin: string, gruplar: string[][]): boolean {
+  if (!gruplar.length) return true
+  return gruplar.some((g) => metinEslesir(metin, g))
+}
+
+export function sayisalEslesir(metin: string, filtreler: SayisalFiltre[]): boolean {
+  if (!filtreler.length) return true
+  const t = metin.toLowerCase()
+  for (const f of filtreler) {
+    const rx = new RegExp(`${f.alan}[^0-9]{0,12}(\\d+[.,]?\\d*)`, 'g')
+    let ok = false
+    let m: RegExpExecArray | null
+    while ((m = rx.exec(t))) {
+      const v = Number(m[1].replace(',', '.'))
+      if (!Number.isFinite(v)) continue
+      if (f.min != null && v < f.min) continue
+      if (f.max != null && v > f.max) continue
+      ok = true
+      break
+    }
+    if (!ok) return false
+  }
+  return true
+}
+
+export function haricEslesir(metin: string, haric: string[]): boolean {
+  if (!haric.length) return true
+  const t = trAramaNormalize(metin)
+  for (const h of haric) {
+    const liste = ESANLAM[h] || [h]
+    if (liste.some((k) => t.includes(k))) return false
+  }
+  return true
 }

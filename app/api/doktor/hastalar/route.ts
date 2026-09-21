@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doktorOturum } from '@/lib/doktor/serverAuth';
 import { encrypt, decrypt } from '@/lib/security/encryption';
+import { hastaDosyaAra, klinikAramaMi } from '@/lib/doktor/hastaDosyaAra';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,24 @@ export async function GET(req: NextRequest) {
   const oturum = await doktorOturum(req);
   if ('hata' in oturum) return oturum.hata;
   const { user, supabase } = oturum;
+
+  const q = String(req.nextUrl.searchParams.get('q') || '').trim()
+  if (q && klinikAramaMi(q)) {
+    const ara = await hastaDosyaAra(supabase, user.id, q)
+    return NextResponse.json({
+      arama: true,
+      sayi: ara.length,
+      patients: ara.map((a) => ({
+        id: a.id,
+        name: a.ad,
+        masked_name: a.ad,
+        tc_kimlik_hash: '',
+        last_visit: a.dobMetin,
+        is_active: true,
+        ozet: a.ozet,
+      })),
+    })
+  }
 
   const { data: patients, error } = await supabase
     .from('patients')

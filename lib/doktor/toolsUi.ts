@@ -49,8 +49,10 @@ export function normalizeHastalar(payload: unknown): HastaOption[] {
         ''
     )
     const tcKimlikNo = String(p.tcKimlikNo || p.tc_kimlik || p.masked_tc || '')
+    const ozet = String(p.ozet || '').replace(/\s+/g, ' ').trim()
     const baseName = masked || `${ad} ${soyad}`.trim() || `Hasta ${idx + 1}`
-    const label = tcKimlikNo && !masked ? `${baseName} (${tcKimlikNo})` : baseName
+    const withTc = tcKimlikNo && !masked ? `${baseName} (${tcKimlikNo})` : baseName
+    const label = ozet ? `${withTc} — ${ozet.slice(0, 72)}` : withTc
     return { id, ad, soyad, label, tcKimlikNo: tcKimlikNo || undefined }
   })
 }

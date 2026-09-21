@@ -16,6 +16,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DoktorNav from '@/components/doktor/DoktorNav';
 import { toolsShell, toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
+import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
@@ -277,6 +278,7 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
   const v = useVurgu();
   const [liste, setListe] = useState<HastaOption[] | null>(null);
   const [q, setQ] = useState('');
+  const [klinikListe, setKlinikListe] = useState<HastaOption[] | null>(null);
   const [hata, setHata] = useState('');
   useEffect(() => {
     let iptal = false;
@@ -290,9 +292,25 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
     })();
     return () => { iptal = true; };
   }, []);
+  useEffect(() => {
+    const query = q.trim();
+    if (!query || !klinikAramaMi(query)) { setKlinikListe(null); return; }
+    let iptal = false;
+    const t = window.setTimeout(async () => {
+      try {
+        const token = await getAccessTokenAsync();
+        const r = await fetch(`/api/doktor/hastalar?q=${encodeURIComponent(query)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+        const j = await r.json().catch(() => ({}));
+        if (!iptal && r.ok) setKlinikListe(normalizeHastalar(j));
+      } catch { /* ad listesi durur */ }
+    }, 350);
+    return () => { iptal = true; window.clearTimeout(t); };
+  }, [q]);
   const kucukHarf = (s: string) => s.toLocaleLowerCase('tr-TR');
-  const gorunen = (liste || []).filter((h) => !q.trim() || kucukHarf(h.label).includes(kucukHarf(q.trim()))).slice(0, 50);
-  const seciliAd = (liste || []).find((h) => h.id === secili)?.label || '';
+  const kaynak = klinikListe || liste;
+  const gorunen = (kaynak || []).filter((h) => klinikListe || !q.trim() || kucukHarf(h.label).includes(kucukHarf(q.trim()))).slice(0, 50);
+  const seciliKayit = (liste || []).find((h) => h.id === secili) || (klinikListe || []).find((h) => h.id === secili);
+  const seciliAd = seciliKayit?.label || '';
   return (
     <div>
       {/* SECILI-HASTA-BASLIGI (Kaan, 2026-09-19): seçili hasta yalnız açılır menünün içinde,
@@ -325,8 +343,8 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
         </div>
       )}
       <div style={{ ...stil.satir, marginTop: 0 }}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Hasta ara (isteğe bağlı)" aria-label="Hasta ara" style={{ ...stil.input, flex: '1 1 180px', width: 'auto', minWidth: 0 }} />
-        <select aria-label="Hasta seç" value={secili} onChange={(e) => { const h = (liste || []).find((x) => x.id === e.target.value); sec(e.target.value, h?.label || ''); }} style={{ ...stil.input, flex: '1 1 200px', width: 'auto', minWidth: 0 }}>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ad, yaş, şikayet, tanı, bu hafta…" aria-label="Hasta ara" style={{ ...stil.input, flex: '1 1 180px', width: 'auto', minWidth: 0 }} />
+        <select aria-label="Hasta seç" value={secili} onChange={(e) => { const h = (liste || []).find((x) => x.id === e.target.value) || (klinikListe || []).find((x) => x.id === e.target.value); sec(e.target.value, (h?.ad ? `${h.ad} ${h.soyad}`.trim() : h?.label) || ''); }} style={{ ...stil.input, flex: '1 1 200px', width: 'auto', minWidth: 0 }}>
           <option value="" style={{ color: '#000' }}>{liste == null ? (hata ? 'Liste yüklenemedi' : 'Yükleniyor…') : liste.length ? bosEtiket : 'Kayıtlı hasta yok'}</option>
           {gorunen.map((h) => <option key={h.id} value={h.id} style={{ color: '#000' }}>{h.label}</option>)}
         </select>
