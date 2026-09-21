@@ -125,8 +125,8 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   }
 
   const alts = TIP_MODALITELER[tip]
-  const gosterimler = seri.filter((s) => s.belge_id).map((s) => s.belge_id!) 
-  const anaBelge = satir?.belge_id
+  const gosterimler = seri.filter((s) => s.belge_id).map((s) => s.belge_id as string)
+  const anaBelge: string | null = satir?.belge_id ?? null
   const ikiUp = satir?.tip === 'mg' && gosterimler.length >= 2
 
   return (
