@@ -41,7 +41,7 @@ export interface SorguAyik {
   seriGecikme: boolean
   mchat: 'yok_veya_riskli' | null
   persentilEsik: number | null
-  kirilim: 'asi_adi' | 'ilac_adi' | null
+  kirilim: 'asi_adi' | 'ilac_adi' | 'tani' | 'sikayet' | null
   ilacSinif: 'antibiyotik' | null
   yasKirilim: boolean
   ucDeger: boolean
@@ -153,6 +153,8 @@ const DURAK = new Set([
   'hastalari', 'hastalarimi', 'receteledigim', 'receteledigi',
   'hangi', 'hangisi', 'hangisini', 'hangileri', 'icinde',
   'yazdim', 'yazdigim', 'yazdigin', 'yazdi',
+  'verdim', 'verdigim', 'koydum', 'koydugum', 'uyguladim', 'uyguladigim',
+  'sik', 'neydi', 'nedir',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -425,22 +427,27 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const asi = ASI_KELIME.test(n0)
   const ziyaret = /gordugum|gorduklerim|gorduk|muayene|ettigim|baktigim|gelen|geldi|gordum|\bhad\b|\bsaw\b/.test(n0)
   const sureSor = /averaj|ortalama|average|dakika/.test(n0)
-  const ilacYaz = /recete|yazdim|yazdigim|yazdigin/.test(n0)
-  const ilacKir = !/hangi\s+hasta/.test(n0)
-    && /antibiyoti|ilac|recete|yazdim|yazdigim/.test(n0)
-    && (/hangi\s+(?:antibiyoti|ilac)/.test(n0) || /en\s+(?:fazla|cok).{0,24}(?:yaz|recete)/.test(n0))
+  const ilacYaz = /recete|yazdim|yazdigim|yazdigin|verdim|verdigim/.test(n0)
+  const pratik = pratikKirilimCikar(n0)
   let olcum: SorguAyik['olcum'] = sureSor
     ? 'sure'
-    : (asi && sayim && !/hastaya|hastalar?/.test(n0))
+    : (asi && sayim && !/hastaya|hastalar?/.test(n0) && pratik.kirilim !== 'ilac_adi')
       ? 'asi'
-      : (ilacYaz || ilacKir)
+      : (ilacYaz || pratik.kirilim === 'ilac_adi')
         ? 'ilac'
-        : (sayim || ziyaret) ? 'hasta' : null
+        : pratik.kirilim === 'asi_adi'
+          ? 'asi'
+          : (sayim || ziyaret) ? 'hasta' : null
 
   const yasKirilim = /1\s*[-–]\s*5\s*yas.*5\s*\+|ayri ortalama/.test(n0)
   const nYas = yasKirilim ? n0.replace(/1\s*[-–]\s*5\s*yas(?:lari)?(?:\s+ve\s+5\s*\+?\s*yas)?/g, ' ') : n0
   const y = yasCikar(nYas)
   const p = pencereCikar(y.kalan, now)
+  if (!p.pencere && (pratik.kirilim || (olcum === 'ilac' && sayim))) {
+    const bugun = trtParca(now).gun
+    const bas = gunEkle(bugun, -30)
+    p.pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'son 30 gün' }
+  }
   const c = cinsiyetCikar(p.kalan)
   const h = haricCikar(c.kalan)
   const s = sayisalCikar(h.kalan)
@@ -465,13 +472,16 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const mchat = /m\s*-?\s*chat/.test(n0) ? 'yok_veya_riskli' as const : null
   if (mchat) kalan = kalan.replace(/m\s*-?\s*chat\S*|\byapilmamis\b|\briskli\b|\bsonucu\b/g, ' ')
   const persentilEsik = /persentil/.test(n0) && /kayma|kanal/.test(n0) ? 2 : null
-  const kirilim = /adina\s+gore|asi\s+adina|\bkir\b/.test(n0)
-    ? 'asi_adi' as const
-    : ilacKir ? 'ilac_adi' as const : null
-  const ilacSinif: SorguAyik['ilacSinif'] = /antibiyoti/.test(n0) ? 'antibiyotik' : null
+  const kirilim = pratik.kirilim
+  const ilacSinif = pratik.ilacSinif
   if (kirilim === 'ilac_adi') {
     kalan = kalan.replace(/\b(?:antibiyoti\w*|ilac|recete)\S*/g, ' ')
-    if (olcum !== 'sure' && olcum !== 'asi') olcum = 'ilac'
+    if (olcum !== 'sure') olcum = 'ilac'
+  } else if (kirilim === 'asi_adi') {
+    kalan = kalan.replace(/\basi\S*/g, ' ')
+    if (olcum !== 'sure') olcum = 'asi'
+  } else if (kirilim === 'tani' || kirilim === 'sikayet') {
+    kalan = kalan.replace(/\b(?:tani|teshis|hastalik|icd|sikayet|yakinma|basvuru)\S*/g, ' ')
   }
   const ucDeger = /en\s+uzun|en\s+kisa/.test(n0)
   const bayrakVe: string[] = []
@@ -641,6 +651,24 @@ export function listeSorgusuMu(mesaj: string, q?: SorguAyik): boolean {
   return s.cogul || s.sayim || Boolean(s.kirilim) || Boolean(s.yas && (s.ziyaret || s.pencere))
 }
 
+export function pratikKirilimCikar(n0: string): { kirilim: SorguAyik['kirilim']; ilacSinif: 'antibiyotik' | null } {
+  if (/hangi\s+hasta/.test(n0) && !/antibiyoti|ilac|asi|tani|sikayet/.test(n0)) {
+    return { kirilim: null, ilacSinif: null }
+  }
+  const sira = /en\s+(fazla|cok|sik)|hangi\s+\S+|daha\s+fazla\s+(?:yaz|ver|koy|yap|uygula)|\bhangisi\b/.test(n0)
+  const kir = /adina\s+gore|asi\s+adina|\bkir\b/.test(n0)
+  const antibiyo = /antibiyoti/.test(n0)
+  if (antibiyo && (sira || /yaz|ver|recete/.test(n0))) return { kirilim: 'ilac_adi', ilacSinif: 'antibiyotik' }
+  if ((/\bilac\b|recete/.test(n0) || /yazdim|yazdigim|verdim|verdigim/.test(n0)) && sira && !/\basi/.test(n0)) {
+    return { kirilim: 'ilac_adi', ilacSinif: null }
+  }
+  if ((ASI_KELIME.test(n0) || /\basi/.test(n0)) && (sira || kir)) return { kirilim: 'asi_adi', ilacSinif: null }
+  if (/tani|teshis|hastalik|\bicd\b|koydum|koydugum/.test(n0) && sira) return { kirilim: 'tani', ilacSinif: null }
+  if (/sikayet|yakinma|basvuru|gelme neden/.test(n0) && sira) return { kirilim: 'sikayet', ilacSinif: null }
+  if (kir) return { kirilim: 'asi_adi', ilacSinif: null }
+  return { kirilim: null, ilacSinif: null }
+}
+
 export function antibiyotikMi(ad: string): boolean {
   const t = trAramaNormalize(ad)
   return ANTIBIYOTIK_GOVDE.some((g) => t.includes(g))
@@ -656,38 +684,69 @@ export function ilacAnahtar(ad: string): string {
   return t.split(/[^a-z0-9]+/).find((x) => x.length >= 3) || t
 }
 
-export function ilacAdiKir(
+export function siraKir(
   satirlar: { ad: string; patientId: string }[],
-  sinif: 'antibiyotik' | null,
-  donem: string,
+  opts: {
+    donem: string
+    birim: string
+    yok: string
+    fiil: string
+    adet?: string
+    filtre?: (ad: string) => boolean
+    anahtar?: (ad: string) => string
+  },
 ): { cumle: string; birincil: string | null; sira: { ad: string; n: number; hasta: number }[] } {
   const grup = new Map<string, { n: number; hasta: Set<string>; goster: string }>()
   for (const s of satirlar) {
-    if (sinif === 'antibiyotik' && !antibiyotikMi(s.ad)) continue
-    const key = ilacAnahtar(s.ad)
+    if (opts.filtre && !opts.filtre(s.ad)) continue
+    const key = (opts.anahtar || ilacAnahtar)(s.ad)
     if (!key) continue
     const cur = grup.get(key) || { n: 0, hasta: new Set<string>(), goster: s.ad.trim() || key }
     cur.n += 1
     if (s.patientId) cur.hasta.add(s.patientId)
     grup.set(key, cur)
   }
-  const sira = [...grup.entries()]
-    .map(([, v]) => ({ ad: v.goster, n: v.n, hasta: v.hasta.size }))
+  const sira = [...grup.values()]
+    .map((v) => ({ ad: v.goster, n: v.n, hasta: v.hasta.size }))
     .sort((a, b) => b.n - a.n || a.ad.localeCompare(b.ad, 'tr'))
-  const bas = donem[0]?.toLocaleUpperCase('tr-TR') || ''
-  const donemYazi = `${bas}${donem.slice(1)}`
-  const sinifAd = sinif === 'antibiyotik' ? 'antibiyotik' : 'ilaç'
-  if (!sira.length) {
-    return { cumle: `${donemYazi} ${sinifAd} reçetesi kaydı yok.`, birincil: null, sira }
-  }
+  const bas = opts.donem[0]?.toLocaleUpperCase('tr-TR') || ''
+  const donemYazi = `${bas}${opts.donem.slice(1)}`
+  if (!sira.length) return { cumle: `${donemYazi} ${opts.yok}.`, birincil: null, sira }
   const top = sira[0]
+  const adet = opts.adet ? ` ${opts.adet}` : ''
   const liste = sira.slice(0, 8).map((x) => `${x.ad} ${x.n}`).join(', ')
   const toplam = sira.reduce((n, x) => n + x.n, 0)
   return {
-    cumle: `${donemYazi} en çok yazdığın ${sinifAd} ${top.ad} (${top.n} reçete). Sıra: ${liste} (toplam ${toplam} reçete).`,
+    cumle: `${donemYazi} en çok ${opts.fiil} ${opts.birim} ${top.ad} (${top.n}${adet}). Sıra: ${liste} (toplam ${toplam}${adet}).`,
     birincil: top.ad,
     sira,
   }
+}
+
+export function ilacAdiKir(
+  satirlar: { ad: string; patientId: string }[],
+  sinif: 'antibiyotik' | null,
+  donem: string,
+) {
+  return siraKir(satirlar, {
+    donem,
+    birim: sinif === 'antibiyotik' ? 'antibiyotik' : 'ilaç',
+    yok: `${sinif === 'antibiyotik' ? 'antibiyotik' : 'ilaç'} reçetesi kaydı yok`,
+    fiil: 'yazdığın',
+    adet: 'reçete',
+    filtre: sinif === 'antibiyotik' ? antibiyotikMi : undefined,
+    anahtar: ilacAnahtar,
+  })
+}
+
+export function sikayetAnahtar(ad: string): string {
+  const t = trAramaNormalize(ad)
+  if (!t) return ''
+  for (const [kok, liste] of Object.entries(ESANLAM)) {
+    if (['ilac', 'antibiyotik', 'asi', 'randevu', 'belge'].includes(kok)) continue
+    if (t === kok || liste.some((x) => x.length >= 4 && t.includes(x))) return kok
+  }
+  return t.slice(0, 48)
 }
 
 export function metinEslesir(metin: string, terimler: string[]): boolean {
@@ -776,7 +835,7 @@ export function istatistikKur(
   if (birim === 'asi') {
     cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.asiAdedi} aşı kaydı var (${g.hastaSayisi} hasta).`
   } else if (birim === 'ilac') {
-    cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.hastaSayisi} hastaya bu ilaç yazılmış (${g.ilacAdedi} kayıt).`
+    cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.ilacAdedi} reçete (${g.hastaSayisi} hasta).`
   } else if (birim === 'dakika') {
     cumle = g.ortalamaSeansDk == null
       ? `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} seans süresi kayıtlı değil (${g.seansSayisi} seans).`

@@ -13,6 +13,8 @@ import {
   haricEslesir,
   ilacAdiKir,
   istatistikKur,
+  siraKir,
+  sikayetAnahtar,
   sayisalEslesir,
   sorguyuAyikla,
   tumTerimlerEslesir,
@@ -183,6 +185,10 @@ export async function klinikAramaYurut(
     if (bolum === 'kd') return kdBolumYurut(supabase, doktorId, q, now)
     if (bolum === 'dahiliye') return dahiliyeBolumYurut(supabase, doktorId, q, now)
     if (bolum === 'derm') return dermBolumYurut(supabase, doktorId, q, now)
+  }
+
+  if ((q.kirilim || (q.olcum === 'ilac' && q.sayim)) && !q.yas && !q.minSeans && !q.seriGecikme && !q.bayrakVe.length) {
+    return pratikKirilimYurut(supabase, doktorId, q, now)
   }
 
   const p = q.pencere
@@ -578,6 +584,135 @@ export async function klinikAramaYurut(
   if (q.kirilim === 'ilac_adi' && ek.length) istatistik.cumle = ek.join(' ')
   else if (ek.length) istatistik.cumle = `${istatistik.cumle} ${ek.join(' ')}`
   return { adaylar, q, istatistik, tur: cevapTuru(q, null) }
+}
+
+function taniAdlari(n: { content_tani?: unknown; icd10_codes?: unknown }): string[] {
+  const tani = String(n.content_tani || '').split(/[;\n]/).map((x) => x.trim()).filter(Boolean)
+  if (tani.length) return [tani[0]]
+  if (!Array.isArray(n.icd10_codes)) return []
+  for (const c of n.icd10_codes) {
+    if (!c) continue
+    if (typeof c === 'string' && c.trim()) return [c.trim()]
+    const o = c as { description_tr?: string; description?: string; code?: string }
+    const ad = String(o.description_tr || o.description || o.code || '').trim()
+    if (ad) return [ad]
+  }
+  return []
+}
+
+async function notHastaHaritasi(
+  supabase: SupabaseClient,
+  doktorId: string,
+  notlar: { session_id?: string | null }[],
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  const ids = [...new Set(notlar.map((n) => String(n.session_id || '')).filter(Boolean))]
+  if (!ids.length) return map
+  const { data } = await supabase
+    .from('sessions')
+    .select('id, patient_id')
+    .eq('doctor_id', doktorId)
+    .in('id', ids.slice(0, 400))
+  for (const s of data || []) if (s.patient_id) map.set(String(s.id), String(s.patient_id))
+  return map
+}
+
+async function pratikKirilimYurut(
+  supabase: SupabaseClient,
+  doktorId: string,
+  q: SorguAyik,
+  now: Date,
+): Promise<KlinikAramaSonuc> {
+  const p = q.pencere
+  const donem = p?.etiket || 'kayıtlarda'
+  const ham: HamSatir[] = []
+
+  if (q.kirilim === 'asi_adi') {
+    const asiQ = supabase
+      .from('asilar')
+      .select('patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
+      .eq('doktor_id', doktorId)
+      .order('uygulama_tarihi', { ascending: false })
+      .limit(800)
+    if (p) asiQ.gte('uygulama_tarihi', p.basGun).lte('uygulama_tarihi', p.bitGun)
+    const { data } = await asiQ
+    for (const a of data || []) {
+      if (!a.patient_id || !gunAralikta(a.uygulama_tarihi as string, p)) continue
+      ham.push({
+        patientId: String(a.patient_id),
+        kaynak: 'asi',
+        neden: String(a.asi_adi || 'aşı'),
+        skor: 12,
+        metin: String(a.asi_adi || ''),
+        zaman: String(a.uygulama_tarihi || ''),
+      })
+    }
+    const kir = siraKir(ham.map((h) => ({ ad: h.metin || h.neden, patientId: h.patientId })), {
+      donem, birim: 'aşı', yok: 'aşı kaydı yok', fiil: 'uyguladığın', adet: 'doz',
+    })
+    const istatistik = { ...istatistikKur(q, { hastaSayisi: new Set(ham.map((h) => h.patientId)).size, seansSayisi: 0, asiAdedi: ham.length, ilacAdedi: 0, ortalamaSeansDk: null }), cumle: kir.cumle }
+    return { adaylar: [], q, istatistik, tur: 'pivot' }
+  }
+
+  const notQ = supabase
+    .from('notes')
+    .select('session_id, created_at, content_tani, basvuru_yakinmasi, icd10_codes, content_ilaclar')
+    .eq('doctor_id', doktorId)
+    .order('created_at', { ascending: false })
+    .limit(800)
+  if (p) notQ.gte('created_at', p.basIso)
+  const { data: notlar } = await notQ
+  const seansHasta = await notHastaHaritasi(supabase, doktorId, notlar || [])
+
+  if (q.kirilim === 'ilac_adi' || q.olcum === 'ilac') {
+    const ilacQ = supabase
+      .from('hasta_ilaclar')
+      .select('patient_id, ilac_adi, etken_madde, created_at, baslangic_tarihi')
+      .eq('doctor_id', doktorId)
+      .order('created_at', { ascending: false })
+      .limit(800)
+    if (p) ilacQ.gte('created_at', p.basIso).lte('created_at', p.bitIso)
+    const { data: ilaclar } = await ilacQ
+    for (const n of notlar || []) {
+      const pid = seansHasta.get(String(n.session_id))
+      if (!pid || !isoAralikta(n.created_at as string, p)) continue
+      const gun = String(n.created_at || '').slice(0, 10)
+      for (const ad of notIlacAdlari(n.content_ilaclar)) {
+        ham.push({ patientId: pid, kaynak: 'ilac', neden: ad, skor: 7, metin: ad, zaman: gun })
+      }
+    }
+    for (const i of ilaclar || []) {
+      const zaman = String(i.created_at || i.baslangic_tarihi || '')
+      if (!i.patient_id || !isoAralikta(zaman, p)) continue
+      const ad = String(i.ilac_adi || i.etken_madde || '')
+      if (ad) ham.push({ patientId: String(i.patient_id), kaynak: 'ilac', neden: ad, skor: 7, metin: ad, zaman })
+    }
+    const tekil = ilacSatirlariTekil(ham)
+    const kir = q.kirilim === 'ilac_adi'
+      ? ilacAdiKir(tekil, q.ilacSinif, donem)
+      : null
+    const istatistik = istatistikKur(q, { hastaSayisi: new Set(tekil.map((h) => h.patientId)).size, seansSayisi: 0, asiAdedi: 0, ilacAdedi: tekil.length, ortalamaSeansDk: null })
+    if (kir) istatistik.cumle = kir.cumle
+    return { adaylar: [], q, istatistik, tur: q.kirilim ? 'pivot' : 'sayim' }
+  }
+
+  for (const n of notlar || []) {
+    const pid = seansHasta.get(String(n.session_id))
+    if (!pid || !isoAralikta(n.created_at as string, p)) continue
+    const adlar = q.kirilim === 'tani' ? taniAdlari(n) : [String(n.basvuru_yakinmasi || '').trim()].filter(Boolean)
+    for (const ad of adlar) {
+      ham.push({ patientId: pid, kaynak: 'not', neden: ad, skor: 8, metin: ad, zaman: String(n.created_at || '') })
+    }
+  }
+  const kir = siraKir(ham.map((h) => ({ ad: h.metin || h.neden, patientId: h.patientId })), {
+    donem,
+    birim: q.kirilim === 'tani' ? 'tanı' : 'şikayet',
+    yok: q.kirilim === 'tani' ? 'tanı kaydı yok' : 'şikayet kaydı yok',
+    fiil: q.kirilim === 'tani' ? 'koyduğun' : 'görülen',
+    anahtar: q.kirilim === 'sikayet' ? sikayetAnahtar : (ad) => trAramaNormalize(ad).slice(0, 48),
+  })
+  const istatistik = { ...istatistikKur(q, { hastaSayisi: new Set(ham.map((h) => h.patientId)).size, seansSayisi: ham.length, asiAdedi: 0, ilacAdedi: 0, ortalamaSeansDk: null }), cumle: kir.cumle }
+  return { adaylar: [], q, istatistik, tur: 'pivot' }
 }
 
 async function pediBolumYurut(
