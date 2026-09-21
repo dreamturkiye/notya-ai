@@ -100,6 +100,7 @@ export const ASI_KELIME = /(^|[^a-z])(asi|asilama|immuniz|kpa|kgb|hepatit|bcg|ki
 
 const DURAK = new Set([
   'hangi', 'hangileri', 'hangileriyedi', 'hangisiydi', 'hasta', 'hastalar', 'hastasi', 'hastam', 'hastanin', 'hastaniz',
+  'hastas', 'patients', 'patient', 'how', 'many',
   'bana', 'ile', 'gelen', 'geldi', 'gelenler', 'yaptigim', 'yaptigimiz', 'yaptiklarim',
   'olan', 'olanlar', 'kim', 'kimler', 'bir', 'bu', 'su', 'o', 've', 'veya', 'icin',
   'mi', 'mu', 'miydi', 'yedi', 'gecen', 'hafta', 'haftaki', 'ay', 'ayi', 'bugun', 'dun',
@@ -109,6 +110,8 @@ const DURAK = new Set([
   'yasinda', 'yasindaki', 'yasindakiler', 'yasında', 'aylik', 'aylikken', 'tane',
   'kac', 'kaci', 'sayisi', 'sayi', 'listele', 'liste', 'hepsi', 'tamami',
   'yil', 'yilinda', 'yilindaki',
+  'tell', 'number', 'had', 'this', 'week', 'last', 'month', 'between', 'then', 'ages', 'age',
+  'years', 'year', 'old', 'the', 'of', 'to', 'and', 'arasi', 'arasinda',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -159,6 +162,14 @@ function yaziSayi(n: string): number | null {
   return YAZI_SAYI[n] ?? null
 }
 
+const SAYI_RE = '(\\d{1,2}|bir|iki|uc|dort|bes|alti|yedi|sekiz|dokuz|on|onbir|oniki|onuc|ondort|onbes|onalti|onyedi|onsekiz)'
+
+function yasAralikYil(a: number, b: number): YasFiltresi {
+  const lo = Math.min(a, b)
+  const hi = Math.max(a, b)
+  return { minAy: lo * 12, maxAy: hi * 12 + 11, etiket: `${lo}–${hi} yaş` }
+}
+
 function yasCikar(n: string): { yas: YasFiltresi | null; kalan: string } {
   let kalan = n
   let yas: YasFiltresi | null = null
@@ -169,15 +180,31 @@ function yasCikar(n: string): { yas: YasFiltresi | null; kalan: string } {
     kalan = kalan.replace(/\byenidogan\b/g, ' ')
   }
 
-  const aralik = kalan.match(/\b(\d{1,2}|bir|iki|uc|dort|bes|alti|yedi|sekiz|dokuz|on)\s*[-–ila]{1,3}\s*(\d{1,2}|bir|iki|uc|dort|bes|alti|yedi|sekiz|dokuz|on|oniki|onsekiz)\s*yas/)
-  if (aralik) {
-    const a = yaziSayi(aralik[1])
-    const b = yaziSayi(aralik[2])
+  const aralikKalip: RegExp[] = [
+    new RegExp(`\\bbetween\\s+\\w{0,8}\\s*ages?\\s+(?:of\\s+)?${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}`),
+    new RegExp(`\\bbetween\\s+${SAYI_RE}\\s+(?:and|to|ile|ila)\\s+${SAYI_RE}\\s*(?:yas|years?|yo)?`),
+    new RegExp(`\\b${SAYI_RE}\\s+(?:ile|ila|to|and)\\s+${SAYI_RE}\\s*(?:yas|years?|yo)\\b`),
+    new RegExp(`\\b${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}\\s*(?:yas|years?|yo)\\b`),
+    new RegExp(`\\b${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}\\s*(?:yas|years?)?\\s*(?:arasi|arasinda)\\b`),
+  ]
+  for (const rx of aralikKalip) {
+    const m = kalan.match(rx)
+    if (!m) continue
+    const a = yaziSayi(m[1])
+    const b = yaziSayi(m[2])
+    if (a == null || b == null) continue
+    yas = yasAralikYil(a, b)
+    kalan = kalan.replace(m[0], ' ')
+    break
+  }
+
+  const ayAralik = kalan.match(new RegExp(`\\b${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}\\s*ay(?:lik)?\\b`))
+  if (ayAralik && !yas) {
+    const a = yaziSayi(ayAralik[1])
+    const b = yaziSayi(ayAralik[2])
     if (a != null && b != null) {
-      const lo = Math.min(a, b)
-      const hi = Math.max(a, b)
-      yas = { minAy: lo * 12, maxAy: hi * 12 + 11, etiket: `${lo}–${hi} yaş` }
-      kalan = kalan.replace(aralik[0], ' ')
+      yas = { minAy: Math.min(a, b), maxAy: Math.max(a, b), etiket: `${Math.min(a, b)}–${Math.max(a, b)} ay` }
+      kalan = kalan.replace(ayAralik[0], ' ')
     }
   }
 
@@ -224,32 +251,32 @@ function pencereCikar(n: string, now: Date): { pencere: Pencere | null; kalan: s
   const bugun = trtParca(now).gun
   let pencere: Pencere | null = null
   let kalan = n
-  if (/\bbugun\b/.test(n)) {
+  if (/\bbugun\b|\btoday\b/.test(n)) {
     pencere = { basIso: `${bugun}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bugun, bitGun: bugun, etiket: 'bugün' }
-  } else if (/\bdun\b/.test(n)) {
+  } else if (/\bdun\b|\byesterday\b/.test(n)) {
     const d = gunEkle(bugun, -1)
     pencere = { basIso: `${d}T00:00:00+03:00`, bitIso: `${d}T23:59:59+03:00`, basGun: d, bitGun: d, etiket: 'dün' }
-  } else if (/gecen hafta/.test(n)) {
+  } else if (/gecen hafta|last week/.test(n)) {
     const bu = haftaBasiGun(now)
     const bas = gunEkle(bu, -7)
     const bit = gunEkle(bu, -1)
     pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: 'geçen hafta' }
-  } else if (/bu hafta/.test(n)) {
+  } else if (/bu hafta|this week/.test(n)) {
     const bas = haftaBasiGun(now)
     pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu hafta' }
-  } else if (/gecen ay/.test(n)) {
+  } else if (/gecen ay|last month/.test(n)) {
     const [y, a] = bugun.split('-').map(Number)
     const ay = a === 1 ? 12 : a - 1
     const yil = a === 1 ? y - 1 : y
     const bas = `${yil}-${String(ay).padStart(2, '0')}-01`
     const bit = gunEkle(`${bugun.slice(0, 8)}01`, -1)
     pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bit}T23:59:59+03:00`, basGun: bas, bitGun: bit, etiket: 'geçen ay' }
-  } else if (/bu ay/.test(n)) {
+  } else if (/bu ay|this month/.test(n)) {
     const bas = `${bugun.slice(0, 8)}01`
     pencere = { basIso: `${bas}T00:00:00+03:00`, bitIso: `${bugun}T23:59:59+03:00`, basGun: bas, bitGun: bugun, etiket: 'bu ay' }
   }
   if (pencere) {
-    kalan = kalan.replace(/gecen hafta|bu hafta|gecen ay|bu ay|bugun|dun/g, ' ')
+    kalan = kalan.replace(/gecen hafta|bu hafta|gecen ay|bu ay|bugun|dun|this week|last week|this month|last month|today|yesterday/g, ' ')
   }
   return { pencere, kalan: kalan.replace(/\s+/g, ' ').trim() }
 }
@@ -267,9 +294,9 @@ function cinsiyetCikar(n: string): { cinsiyet: 'kadin' | 'erkek' | null; kalan: 
 export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const n0 = trAramaNormalize(mesaj)
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
-  const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many/.test(n0)
+  const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many|number of/.test(n0)
   const asi = ASI_KELIME.test(n0)
-  const ziyaret = /gordugum|gorduklerim|muayene|ettigim|baktigim|gelen|geldi|gordum/.test(n0)
+  const ziyaret = /gordugum|gorduklerim|muayene|ettigim|baktigim|gelen|geldi|gordum|\bhad\b|\bsaw\b/.test(n0)
 
   const y = yasCikar(n0)
   const p = pencereCikar(y.kalan, now)

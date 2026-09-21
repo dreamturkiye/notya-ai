@@ -67,6 +67,21 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
     assert.equal(a.yas?.maxAy, 59)
   })
 
+  it('BETWEEN 1–5 yaş + bu hafta + kaç tane (TR ve EN)', () => {
+    for (const cumle of [
+      'Bu hafta 1-5 yaş arası kaç hasta gördüm?',
+      'Bu hafta 1 ile 5 yaş arasında kaç hastam vardı?',
+      "Tell me the number of hastas I had this week between then ages of 1-5",
+    ]) {
+      const q = sorguyuAyikla(cumle, PAZAR)
+      assert.equal(q.yas?.minAy, 12, cumle)
+      assert.equal(q.yas?.maxAy, 71, cumle)
+      assert.equal(q.pencere?.etiket, 'bu hafta', cumle)
+      assert.equal(q.sayim, true, cumle)
+      assert.equal(q.ziyaret, true, cumle)
+    }
+  })
+
   it('kaç tane → sayım + liste', () => {
     const q = sorguyuAyikla('Bu hafta 2 yaşında kaç hasta gördüm?', PAZAR)
     assert.equal(q.sayim, true)
