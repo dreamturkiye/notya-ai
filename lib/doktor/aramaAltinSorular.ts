@@ -15,7 +15,7 @@ export interface AltinSoru {
   haric?: string
   veyaMin?: number
   olcum?: 'hasta' | 'asi' | 'ilac' | 'sure'
-  kirilim?: 'asi_adi'
+  kirilim?: 'asi_adi' | 'ilac_adi'
   ucDeger?: boolean
   portalYok?: boolean
   hatirlatmaSay?: boolean

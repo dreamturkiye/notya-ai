@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { ARAMA_ALANLARI, adaylariTopla, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
-import { haricEslesir, sayisalEslesir, veyaEslesir } from './hastaAramaFiltre'
+import { antibiyotikMi, haricEslesir, ilacAdiKir, sayisalEslesir, veyaEslesir } from './hastaAramaFiltre'
 
 const PAZAR = new Date('2026-09-20T15:00:00+03:00')
 
@@ -164,6 +164,26 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
     assert.equal(kulak.veya.length, 0, 'hasta veya hastalar OR açmamalı')
     assert.ok(kulak.terimler.includes('kulak') || kulak.terimler.includes('otit'))
     assert.ok(kulak.terimler.includes('iltihap'))
+
+    const gokhanIlac = sorguyuAyikla('Son bir ay içinde hangi antibiyotiği en fazla yazdım?', PAZAR)
+    assert.equal(gokhanIlac.olcum, 'ilac')
+    assert.equal(gokhanIlac.kirilim, 'ilac_adi')
+    assert.equal(gokhanIlac.ilacSinif, 'antibiyotik')
+    assert.equal(gokhanIlac.pencere?.etiket, 'son 1 ay')
+    assert.equal(gokhanIlac.klinik, true)
+    assert.ok(!gokhanIlac.terimler.includes('hangi'))
+    const kir = ilacAdiKir([
+      { ad: 'Augmentin 400', patientId: 'a' },
+      { ad: 'Augmentin 400', patientId: 'b' },
+      { ad: 'Amoklavin BID', patientId: 'c' },
+      { ad: 'Azitromisin 200', patientId: 'd' },
+      { ad: 'Parasetamol', patientId: 'e' },
+    ], 'antibiyotik', 'son 1 ay')
+    assert.match(kir.cumle, /Augmentin|Amoklavin|augmentin/i)
+    assert.match(kir.cumle, /3 reçete/)
+    assert.equal(kir.sira.length, 2)
+    assert.equal(antibiyotikMi('Parasetamol'), false)
+    assert.equal(antibiyotikMi('Sefiksim 100'), true)
 
     const st = istatistikKur(asi, { hastaSayisi: 3, seansSayisi: 4, asiAdedi: 5, ilacAdedi: 0, ortalamaSeansDk: 18 })
     assert.equal(st.birim, 'asi')

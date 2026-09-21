@@ -11,6 +11,7 @@ import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import {
   alanEslesir,
   haricEslesir,
+  ilacAdiKir,
   istatistikKur,
   sayisalEslesir,
   sorguyuAyikla,
@@ -61,6 +62,38 @@ export function adaylariTopla(satirlar: HamSatir[]): Map<string, { nedenler: str
     m.set(s.patientId, cur)
   }
   return m
+}
+
+function notIlacAdlari(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const adlar: string[] = []
+  for (const x of raw) {
+    if (!x) continue
+    if (typeof x === 'string') {
+      const t = x.trim()
+      if (t) adlar.push(t)
+      continue
+    }
+    const o = x as Record<string, unknown>
+    const ad = String(o.ad || o.ilac_adi || o.name || o.ticariOrnek || o.etkenMadde || o.etken_madde || '').trim()
+    if (ad) adlar.push(ad)
+  }
+  return adlar
+}
+
+function ilacSatirlariTekil(ham: HamSatir[]): { ad: string; patientId: string }[] {
+  const seen = new Set<string>()
+  const out: { ad: string; patientId: string }[] = []
+  for (const h of ham) {
+    if (h.kaynak !== 'ilac') continue
+    const ad = (h.metin || '').trim()
+    if (!ad) continue
+    const key = `${h.patientId}|${trAramaNormalize(ad)}|${(h.zaman || '').slice(0, 10)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push({ ad, patientId: h.patientId })
+  }
+  return out
 }
 
 function kisa(s: string, n = 80): string {
@@ -184,10 +217,11 @@ export async function klinikAramaYurut(
 
   const ilacQ = supabase
     .from('hasta_ilaclar')
-    .select('patient_id, ilac_adi, ad, name, created_at')
+    .select('patient_id, ilac_adi, etken_madde, created_at, baslangic_tarihi')
     .eq('doctor_id', doktorId)
     .order('created_at', { ascending: false })
-    .limit(200)
+    .limit(q.kirilim === 'ilac_adi' ? 800 : 200)
+  if (p) ilacQ.gte('created_at', p.basIso).lte('created_at', p.bitIso)
 
   const randevuQ = supabase
     .from('randevular')
@@ -291,7 +325,8 @@ export async function klinikAramaYurut(
     if (!pid || !isoAralikta(n.created_at as string, p)) continue
     ziyaretId.add(pid)
     const icd = Array.isArray(n.icd10_codes) ? JSON.stringify(n.icd10_codes) : ''
-    const ilac = Array.isArray(n.content_ilaclar) ? JSON.stringify(n.content_ilaclar) : ''
+    const ilacListe = notIlacAdlari(n.content_ilaclar)
+    const ilac = ilacListe.length ? ilacListe.join(' ') : ''
     const vital = n.vitaller && typeof n.vitaller === 'object' ? JSON.stringify(n.vitaller) : ''
     const metin = [n.basvuru_yakinmasi, n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan, n.content_tani, icd, ilac, vital].filter(Boolean).join(' ')
     ham.push({
@@ -302,6 +337,10 @@ export async function klinikAramaYurut(
       metin,
       zaman: String(n.created_at || ''),
     })
+    const gun = String(n.created_at || '').slice(0, 10)
+    for (const ad of ilacListe) {
+      ham.push({ patientId: pid, kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad, zaman: gun })
+    }
   }
 
   for (const a of asilar.data || []) {
@@ -317,9 +356,10 @@ export async function klinikAramaYurut(
   }
 
   for (const i of ilaclar.data || []) {
-    if (!i.patient_id || !isoAralikta(i.created_at as string, p)) continue
-    const ad = String(i.ilac_adi || i.ad || i.name || '')
-    ham.push({ patientId: String(i.patient_id), kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad })
+    const zaman = String(i.created_at || i.baslangic_tarihi || '')
+    if (!i.patient_id || !isoAralikta(zaman, p)) continue
+    const ad = String(i.ilac_adi || i.etken_madde || '')
+    ham.push({ patientId: String(i.patient_id), kaynak: 'ilac', neden: kisa(`ilaç: ${ad}`), skor: 7, metin: ad, zaman })
   }
 
   for (const r of randevular.data || []) {
@@ -437,7 +477,7 @@ export async function klinikAramaYurut(
 
     const omurTorba = `${ad} ${dob} ${g.metin} ${intakeIl.get(id) || ''} ${notBlob}`
     const torba = q.pencere ? `${ad} ${g.metin}` : omurTorba
-    const analiz = q.olcum === 'sure' || q.kirilim === 'asi_adi' || q.ucDeger || q.yasKirilim
+    const analiz = q.olcum === 'sure' || q.kirilim === 'asi_adi' || q.kirilim === 'ilac_adi' || q.ucDeger || q.yasKirilim
     if (!analiz) {
       if (q.terimler.length && !tumTerimlerEslesir(torba, q.terimler)) continue
       if (q.veya.length && !veyaEslesir(torba, q.veya)) continue
@@ -463,7 +503,7 @@ export async function klinikAramaYurut(
     const anlamiVar = Boolean(
       q.yas || q.terimler.length || q.alanlar.length || q.asi || q.ziyaret || q.pencere
       || q.veya.length || q.haric.length || q.sayisal.length || q.kanGrubu || q.cinsiyet || q.olcum
-      || q.minSeans || q.seriGecikme || q.mchat || q.persentilEsik || q.bayrakVe.length || q.kirilim
+      || q.minSeans || q.seriGecikme || q.mchat || q.persentilEsik || q.bayrakVe.length || q.kirilim || q.ilacSinif
       || q.bolumIstegi || q.ziyaretYok
     )
     if (!anlamiVar) continue
@@ -478,8 +518,15 @@ export async function klinikAramaYurut(
     })
   }
 
-  const adaylar = cikti.sort((a, b) => b.skor - a.skor || a.ad.localeCompare(b.ad, 'tr')).slice(0, 40)
+  const adaylar = q.kirilim === 'ilac_adi'
+    ? []
+    : cikti.sort((a, b) => b.skor - a.skor || a.ad.localeCompare(b.ad, 'tr')).slice(0, 40)
   const ek: string[] = []
+
+  if (q.kirilim === 'ilac_adi') {
+    const kir = ilacAdiKir(ilacSatirlariTekil(ham), q.ilacSinif, q.pencere?.etiket || 'kayıtlarda')
+    ek.push(kir.cumle)
+  }
 
   if (q.kirilim === 'asi_adi') {
     const grup = new Map<string, { n: number; beyan: number; kayit: number; cocuk: Set<string> }>()
@@ -517,7 +564,7 @@ export async function klinikAramaYurut(
   const eslesen = new Set(adaylar.map((a) => a.id))
   const asiAdedi = ham.filter((h) => h.kaynak === 'asi' && (q.kirilim || eslesen.has(h.patientId))).length
   const seansSayisi = ham.filter((h) => h.kaynak === 'seans' && (q.olcum === 'sure' || eslesen.has(h.patientId))).length
-  const ilacAdedi = ham.filter((h) => h.kaynak === 'ilac' && eslesen.has(h.patientId)).length
+  const ilacAdedi = ham.filter((h) => h.kaynak === 'ilac' && (q.kirilim === 'ilac_adi' || eslesen.has(h.patientId))).length
   const sureOrtalama = seansSureleri.length
     ? Math.round((seansSureleri.reduce((a, b) => a + b, 0) / seansSureleri.length / 60) * 10) / 10
     : null
@@ -528,7 +575,8 @@ export async function klinikAramaYurut(
     ilacAdedi,
     ortalamaSeansDk: sureOrtalama,
   })
-  if (ek.length) istatistik.cumle = `${istatistik.cumle} ${ek.join(' ')}`
+  if (q.kirilim === 'ilac_adi' && ek.length) istatistik.cumle = ek.join(' ')
+  else if (ek.length) istatistik.cumle = `${istatistik.cumle} ${ek.join(' ')}`
   return { adaylar, q, istatistik, tur: cevapTuru(q, null) }
 }
 

@@ -33,7 +33,11 @@ export const KLINIK_SOZLUK: Record<string, string[]> = {
   noro: ['nobet', 'havale', 'epilepsi', 'fejril konvulsiyon'],
   ruh: ['otizm', 'mchat', 'dikkat', 'hiperaktivite', 'kekeme', 'gelisim geriligi'],
   ilac: ['ilac', 'recete', 'antibiyotik', 'amoksisilin', 'parasetamol', 'ibuprofen'],
-  antibiyotik: ['antibiyotik', 'amoksisilin', 'augmentin', 'amoklavin', 'klavulan', 'sefiksim', 'azitromisin', 'klaritromisin'],
+  antibiyotik: [
+    'antibiyotik', 'amoksisilin', 'augmentin', 'amoklavin', 'klavulan', 'klavunat',
+    'sefiksim', 'sefuroksim', 'seftriakson', 'azitromisin', 'klaritromisin',
+    'penisilin', 'ampisilin', 'klindamisin', 'metronidazol', 'kotrimoksazol',
+  ],
   augmentin: ['augmentin', 'amoklavin', 'klavunat', 'croxilex', 'bioment', 'klamoks', 'klavulan', 'amoksisilin klavulanat'],
   randevu: ['randevu', 'kontrol', 'takip'],
   belge: ['belge', 'epikriz', 'lab', 'rontgen', 'tetkik', 'sonuc'],
@@ -46,6 +50,19 @@ export const KLINIK_SOZLUK: Record<string, string[]> = {
 }
 
 export const ASI_KELIME = /(^|[^a-z])(asi|asilama|immuniz|kpa|kgb|hepatit|bcg|kizamik|kizamikcik|kabakulak|sucicegi|sucice|difteri|tetanoz|bogmaca|polio|rotavir|influenza|grip)([^a-z]|$)/
+
+/** Brand/stem list — a written drug is an antibiotic if any stem hits. */
+export const ANTIBIYOTIK_GOVDE = [
+  'antibiyotik', 'amoksisilin', 'klavulan', 'klavunat', 'augmentin',
+  'amoklavin', 'croxilex', 'bioment', 'klamoks',
+  'sefiksim', 'sefuroksim', 'seftriakson', 'sefprozil', 'sefdinir', 'sefalexin', 'ospexin',
+  'azitromisin', 'klaritromisin', 'eritromisin', 'klacid', 'zitrotek',
+  'penisilin', 'ampisilin', 'sulbaktam',
+  'siprofloksasin', 'levofloksasin',
+  'metronidazol', 'klindamisin', 'doksisiklin',
+  'trimetoprim', 'kotrimoksazol', 'baktrim', 'nitrofurantoin',
+  'vankomisin', 'gentamisin',
+]
 
 export const AY_AD: Record<string, number> = {
   ocak: 1, subat: 2, mart: 3, nisan: 4, mayis: 5, haziran: 6,
