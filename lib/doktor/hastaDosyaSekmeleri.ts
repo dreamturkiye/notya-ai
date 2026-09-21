@@ -460,7 +460,7 @@ export function hastaDosyaSekmeleri(opts: {
     { id: 'belgeler', label: 'Belgeler' },
     // KONSULTASYON-01: evrensel — her branş, her yaş (istem → Kasa'daki rapor → hekimin yanıt özeti)
     { id: 'konsultasyon', label: 'Konsültasyonlar' },
-    { id: 'goruntuleme', label: 'Görüntüleme' },
+    { id: 'goruntuleme', label: 'Görüntüler' },
     { id: 'ilaclar', label: 'İlaçlar' },
     { id: 'formu', label: 'Hasta Formu' },
     { id: 'asilar', label: 'Aşılar' },

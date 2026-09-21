@@ -75,6 +75,7 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
           </button>
         ))}
       </div>
+      <HastaDisFilmYukle basePath={basePath} />
       {!list.length ? (
         <EmptyState art="sonuclar" title="Sonuç yok" body="Bu filtrede yayınlanmış sonuç bulunmuyor." />
       ) : (
@@ -95,6 +96,58 @@ export function ResultsListView({ basePath, data }: { basePath: string; data: Po
         </SoftPanel>
       )}
     </div>
+  )
+}
+
+function HastaDisFilmYukle({ basePath }: { basePath: string }) {
+  const token = basePath.match(/\/portal\/hasta\/([^/]+)/)?.[1]
+  const [tip, setTip] = useState('xr')
+  const [dosya, setDosya] = useState<File | null>(null)
+  const [mesaj, setMesaj] = useState('')
+  const [yukleniyor, setYukleniyor] = useState(false)
+  if (!token) return null
+
+  const gonder = async () => {
+    if (!dosya) { setMesaj('Dosya seçin.'); return }
+    setYukleniyor(true)
+    setMesaj('')
+    const fd = new FormData()
+    fd.set('file', dosya)
+    fd.set('tip', tip)
+    const r = await fetch(`/api/portal/hasta/${encodeURIComponent(token)}/goruntu`, {
+      method: 'POST',
+      credentials: 'include',
+      body: fd,
+    })
+    const j = await r.json().catch(() => ({}))
+    setYukleniyor(false)
+    if (!r.ok) { setMesaj(j.error || 'Yüklenemedi'); return }
+    setDosya(null)
+    setMesaj('Dosya doktorunuza iletildi. Değerlendirme onaylanınca burada görünür.')
+  }
+
+  return (
+    <SoftPanel style={{ marginBottom: 16, padding: 16 }}>
+      <div style={{ fontWeight: 800, marginBottom: 6 }}>Dış film yükle</div>
+      <p style={{ margin: '0 0 10px', color: 'var(--sg-muted)', fontSize: 14, lineHeight: 1.45 }}>
+        Dışarıda çekilmiş bir filmi dosyanıza ekleyin. Doktorunuz görmeden sonuçlarda yayınlanmaz.
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+        <select value={tip} onChange={(e) => setTip(e.target.value)} className="sg-chip-btn" style={{ padding: '8px 10px' }}>
+          <option value="xr">Röntgen</option>
+          <option value="ekg">EKG</option>
+          <option value="goz">Göz</option>
+          <option value="derm">Deri</option>
+          <option value="mg">Mamografi</option>
+          <option value="us">Ultrason</option>
+        </select>
+        <input type="file" accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} onChange={(e) => setDosya(e.target.files?.[0] || null)} />
+        <button type="button" className="sg-chip-btn is-active" disabled={yukleniyor} onClick={() => void gonder()}>
+          {yukleniyor ? 'Gönderiliyor…' : 'Gönder'}
+        </button>
+      </div>
+      {mesaj && <p style={{ margin: '10px 0 0', fontSize: 13, color: /iletildi/.test(mesaj) ? 'var(--sg-ok)' : 'var(--sg-warn)' }}>{mesaj}</p>}
+    </SoftPanel>
   )
 }
 

@@ -60,6 +60,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/goruntuleme/route.ts': T,
   'app/api/doktor/goruntuleme/[id]/route.ts': I('row fetched, doctor_id !== user.id → 403 before storage/DB delete'),
   'app/api/doktor/goruntuleme/yukle/route.ts': T,
+  'app/api/doktor/goruntuler/route.ts': I('GET/POST: hastaSahibiMi then goruntu_calisma.eq(doctor_id); vault uploadDocument assertPatientOwned'),
+  'app/api/doktor/goruntuler/[id]/route.ts': I('GET/PATCH row by id AND doctor_id; priors/seri scoped doctor_id+patient_id'),
   'app/api/doktor/cihaz-olcum/route.ts': T,
   'app/api/doktor/cihaz-olcum/dosya/route.ts': I('patient ownership check before vault upload (vault re-checks)'),
   // ── Randevu / takvim / mesaj / hatırlatma / intake ──
@@ -218,6 +220,8 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/asistan/mali-signed-url/route.ts': I('accountant product; no patient data'),
   // ── Sağlığım portalı / intake (token = kimlik) ──
   'app/api/portal/hasta/[token]/route.ts': T,
+  'app/api/portal/hasta/[token]/goruntu/route.ts': I('token → patient_id+doctor_id; vault upload as doctor; jacket kaynak=hasta_yukleme taslak'),
+  'app/api/portal/hasta/[token]/goruntu/[id]/route.ts': I('token unlock; jacket id+patient_id+doctor_id; portaldaGorunurMu else 404; vault download doctor-scoped'),
   'app/api/portal/hasta/[token]/mesajlar/route.ts': T,
   'app/api/portal/hasta/[token]/asi-karnesi/pdf/route.ts': T,
   'app/api/portal/hasta/[token]/dahiliye-anket/route.ts': I('token → (patient_id, doctor_id); every read/write scoped by both'),

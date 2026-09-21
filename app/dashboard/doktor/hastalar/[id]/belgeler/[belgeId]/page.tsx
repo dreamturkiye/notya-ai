@@ -225,7 +225,7 @@ export default function BelgeAnalizPage() {
   // Specialty deep-links (Deri/Göz) return to that chapter; default vault path → Belgeler.
   const geriTab = (searchParams?.get('geriTab') || (searchParams?.get('dermModality') ? 'deri' : null)) as HastaDosyaSekmeId | null;
   const geriHref = geriTab ? hastaDosyaHref(patientId, geriTab) : hastaBelgelerHref(patientId);
-  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : geriTab === 'dahiliye' ? '← Dahiliye' : '← Belgeler';
+  const geriLabel = geriTab === 'deri' ? '← Deri' : geriTab === 'goz' ? '← Göz' : geriTab === 'gebelik' ? '← Gebelik' : geriTab === 'dahiliye' ? '← Dahiliye' : geriTab === 'goruntuleme' ? '← Görüntüler' : '← Belgeler';
 
   return (
     <div style={toolsShell}>

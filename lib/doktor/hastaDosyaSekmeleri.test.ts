@@ -86,6 +86,8 @@ describe('hastaDosyaSekmeleri', () => {
       const ids = hastaDosyaSekmeleri(k).map((t) => t.id)
       assert.equal(ids.filter((x) => x === 'konsultasyon').length, 1, JSON.stringify(k))
       assert.equal(ids[ids.indexOf('belgeler') + 1], 'konsultasyon')
+      const goruntu = hastaDosyaSekmeleri(k).find((t) => t.id === 'goruntuleme')
+      assert.equal(goruntu?.label, 'Görüntüler')
     }
     const etiket = hastaDosyaSekmeleri({ pediatriUygun: false, gebelikUygun: false }).find((t) => t.id === 'konsultasyon')!.label
     assert.equal(etiket, 'Konsültasyonlar')

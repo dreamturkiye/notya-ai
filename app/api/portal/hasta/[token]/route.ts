@@ -5,6 +5,7 @@ import { portalYonlendirmeleri } from '@/lib/doktor/konsultasyon'
 import { loadPortalMessages } from '@/lib/portal/messages'
 import { requirePortalUnlock } from '@/lib/portal/requireUnlock'
 import { imagingDisplayLabel, imagingPortalKind } from '@/lib/doktor/imagingModalities'
+import { portalOzeti, portaldaGorunurMu, TIP_ETIKET, type GoruntuTip } from '@/lib/doktor/goruntuCalisma'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import { persentilEgrileri, ayFarki } from '@/lib/clinical/buyumeEgrisi'
@@ -538,6 +539,30 @@ export async function GET(
     })
   }
 
+  const { data: ceket } = await sb
+    .from('goruntu_calisma')
+    .select('id, tip, modalite, bolge, tarih, onay_durum, hekim_yorum, created_at')
+    .eq('patient_id', patientId)
+    .eq('doctor_id', doctorId)
+    .eq('onay_durum', 'hasta_paylas')
+    .order('tarih', { ascending: false, nullsFirst: false })
+    .limit(20)
+  for (const row of ceket || []) {
+    if (!portaldaGorunurMu(row)) continue
+    const tip = String(row.tip || 'diger') as GoruntuTip
+    results.push({
+      id: `gc-${row.id}`,
+      tur: imagingPortalKind(row.modalite),
+      baslik: [TIP_ETIKET[tip] || 'Görüntü', row.bolge].filter(Boolean).join(' · '),
+      tarih: String(row.tarih || row.created_at),
+      ozet: portalOzeti(row.hekim_yorum),
+      durum: 'raporlandi',
+      modalite: TIP_ETIKET[tip] || 'Görüntü',
+      gorselUrl: `/api/portal/hasta/${encodeURIComponent(token)}/goruntu/${row.id}`,
+      raporMetni: portalOzeti(row.hekim_yorum),
+    })
+  }
+
   results.sort((a, b) => (a.tarih < b.tarih ? 1 : -1))
   bundle.results = results
 
@@ -729,11 +754,19 @@ export async function GET(
         const sag = enIyiUzak(va.sag), sol = enIyiUzak(va.sol)
         return { tarih: String(m.tarih), vaSag: sag ? vaGoster(sag) : null, vaSol: sol ? vaGoster(sol) : null, gibSag: sayi(m.gib_sag), gibSol: sayi(m.gib_sol) }
       }),
-      goruntuler: (goruntuQ.data || []).map((g) => {
-        const bolge = String(g.vucut_bolgesi || '').toLocaleLowerCase('tr-TR')
-        const goz = /iki g|bilateral/.test(bolge) || (/sağ|sag\b/.test(bolge) && /sol/.test(bolge)) ? 'İki göz' : /sağ|sag\b/.test(bolge) ? 'Sağ göz' : /sol/.test(bolge) ? 'Sol göz' : 'Belirtilmedi'
-        return { id: String(g.id), tarih: String(g.goruntuleme_tarihi || g.created_at), tur: TUR[String(g.modalite)] || 'Göz görüntüsü', goz }
-      }),
+      goruntuler: [
+        ...(goruntuQ.data || []).map((g) => {
+          const bolge = String(g.vucut_bolgesi || '').toLocaleLowerCase('tr-TR')
+          const goz = /iki g|bilateral/.test(bolge) || (/sağ|sag\b/.test(bolge) && /sol/.test(bolge)) ? 'İki göz' : /sağ|sag\b/.test(bolge) ? 'Sağ göz' : /sol/.test(bolge) ? 'Sol göz' : 'Belirtilmedi'
+          return { id: String(g.id), tarih: String(g.goruntuleme_tarihi || g.created_at), tur: TUR[String(g.modalite)] || 'Göz görüntüsü', goz }
+        }),
+        ...(ceket || []).filter((row) => portaldaGorunurMu(row) && row.tip === 'goz' && row.modalite === 'fundus').map((row) => ({
+          id: `gc-${row.id}`,
+          tarih: String(row.tarih || row.created_at),
+          tur: 'Göz dibi fotoğrafı',
+          goz: String(row.bolge || 'Belirtilmedi'),
+        })),
+      ],
       not: 'Değerler muayenehanede kaydedildiği gibidir; yorum ve plan doktorunuzdadır.',
     }
   } catch (e) { console.error('[portal] gozlerim:', e) }

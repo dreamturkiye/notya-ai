@@ -47,6 +47,7 @@ import AnesteziHome from '@/specialties/anestezi/ui/AnesteziHome';
 import KalpDamarHome from '@/specialties/kalp-damar-cerrahisi/ui/KalpDamarHome';
 import AcilTipHome from '@/specialties/acil-tip/ui/AcilTipHome';
 import PatientDocumentVault from '@/components/doktor/PatientDocumentVault';
+import HastaGoruntuler from '@/components/doktor/HastaGoruntuler';
 import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
@@ -555,10 +556,7 @@ export default function HastaProfilPage() {
         )}
         {!loading && !error && activeTab === 'konsultasyon' && <HastaKonsultasyonlar patientId={patientId} yanitAc={searchParams?.get('yanit') || undefined} />}
         {!loading && !error && activeTab === 'goruntuleme' && (
-          <div style={{ ...panel, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 14, color: '#8FA0B5' }}>Röntgen, EKG ve diğer görüntüleme kayıtları görüntüleme merkezinde.</span>
-            <button type="button" onClick={() => router.push(`/dashboard/doktor/goruntuleme?hastaId=${patientId}&from=goruntuleme`)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Görüntülemeyi aç ›</button>
-          </div>
+          <HastaGoruntuler patientId={patientId} />
         )}
         {!loading && !error && activeTab === 'ilaclar' && <HastaIlaclar patientId={patientId} />}
         {!loading && !error && activeTab === 'formu' && <HastaIntake patientId={patientId} />}
