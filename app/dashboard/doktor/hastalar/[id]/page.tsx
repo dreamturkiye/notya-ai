@@ -413,7 +413,7 @@ export default function HastaProfilPage() {
 
         {/* Ayşe şeridi: sekmeler ↔ içerik (Konuş + Yaz) — Gökhan/Boss 2026-09-20 */}
         {!loading && !error && patient && (
-          <HastaKonsult patientId={patientId} baslangicAcik={tabParam === 'ayse'} />
+          <HastaKonsult patientId={patientId} baslangicAcik={tabParam === 'ayse'} hastaDogumIso={patient.dogum_tarihi} />
         )}
 
         {loading && <div style={{ ...panel, padding: 18, color: '#8FA0B5', fontSize: 14 }}>Dosya yükleniyor…</div>}

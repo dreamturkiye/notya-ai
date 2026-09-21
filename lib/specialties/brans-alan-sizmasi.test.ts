@@ -34,6 +34,7 @@ import { notKonsultSistemPromptu } from '@/lib/doktor/notKonsultPromptu'
 import { epikrizKapsamliSistem, epikrizKlinikSatiri, epikrizTekVizitSistem, epikrizUnvanSatiri } from '@/lib/doktor/epikrizMetinleri'
 import { dahiliyeSekmesiBransi, pediatriAracSekmesiUygun } from '@/lib/doktor/hastaDosyaSekmeleri'
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu'
+import { muayeneCekListesi } from '@/lib/doktor/muayeneCekListesi'
 
 const KOK = resolve(__dirname, '../..')
 const kaynak = (yol: string) => readFileSync(join(KOK, yol), 'utf8')
@@ -493,6 +494,16 @@ describe('INTAKE VELI + ACİL KİŞİ — hasta bilgi formu: veli bölümü yaş
     assert.ok(/encrypt\(JSON\.stringify\(kayitYanitlari\)\)/.test(rota))
     const derleyici = kaynak('lib/doktor/hastaDosyaDerleyici.ts')
     for (const id of ['veliAd', 'veliSoyad', 'veliTelefon', 'acilKisiTelefon']) assert.ok(derleyici.includes(`'${id}'`), `${id} modele gitmez`)
+  })
+
+  it('muayene çek listesi: baş çevresi / aşı yalnız pediatrik bağlamda; kutu evrensel', () => {
+    const kdCocuk = muayeneCekListesi({ seansBransi: 'kadin-hastaliklari-dogum', hastaDogumIso: COCUK })
+    const ped = muayeneCekListesi({ seansBransi: 'pediatri', hastaDogumIso: COCUK })
+    assert.ok(ped.some((m) => m.id === 'basCevresi'))
+    assert.ok(!kdCocuk.some((m) => m.id === 'basCevresi' || m.id === 'asi' || m.id === 'prenatal'))
+    const seans = kaynak('app/session/new/page.tsx')
+    assert.ok(seans.includes('MuayeneCekListesi') && seans.includes('muayeneCekListesi'))
+    assert.ok(!/Baş Çevresi/.test(seans))
   })
 })
 

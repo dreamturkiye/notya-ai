@@ -6,9 +6,18 @@
 'use client'
 
 import HafifMarkdown from '@/components/asistan/HafifMarkdown'
+import MuayeneCekListesi from '@/components/doktor/MuayeneCekListesi'
 import { useEffect, useRef, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { EylemKarti, EylemToplu, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti'
+import {
+  CEK_LISTE_SORU,
+  cekListeAsistanCevabi,
+  cekListeOku,
+  cekListeSorulduMu,
+  cekListeYaz,
+  muayeneCekListesi,
+} from '@/lib/doktor/muayeneCekListesi'
 
 // NOTYA-EYLEM: an assistant turn may carry confirm cards. They live ON the message so they stay in
 // place as the conversation grows — a card that jumps to the bottom is a card tapped for the wrong turn.
@@ -28,6 +37,7 @@ interface Tanima {
 }
 
 const HAZIR_SORULAR = [
+  CEK_LISTE_SORU,
   'Bu hastanın bize bu kaçıncı ziyareti?',
   'Son vizitlerini yoğun şekilde özetle.',
   'Son 6 aydaki geliş nedenleri, verilen ilaçlar ve sonuçları neler?',
@@ -40,10 +50,14 @@ const HAZIR_SORULAR = [
 export default function HastaKonsult({
   patientId,
   baslangicAcik = false,
+  doktorBransi = null,
+  hastaDogumIso = null,
 }: {
   patientId: string
   /** ?tab=ayse derin bağlantısı şeridi açık getirir. */
   baslangicAcik?: boolean
+  doktorBransi?: string | null
+  hastaDogumIso?: string | null
 }) {
   const [acik, setAcik] = useState(baslangicAcik)
   const [mod, setMod] = useState<'yaz' | 'konus'>('yaz')
@@ -54,6 +68,14 @@ export default function HastaKonsult({
   const [hata, setHata] = useState('')
   const [bekleyen, setBekleyen] = useState<EylemOneriGorunumu[]>([])
   const [kartHastasi, setKartHastasi] = useState<EylemHasta | null>(null)
+  const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>(() => cekListeOku(patientId))
+  const [cekAcik, setCekAcik] = useState(false)
+  const [bransOnbel, setBransOnbel] = useState<string | null>(doktorBransi)
+  useEffect(() => {
+    if (doktorBransi) return
+    try { setBransOnbel(localStorage.getItem('notya_doktor_specialty')) } catch { /* yok */ }
+  }, [doktorBransi])
+  const cekMaddeler = muayeneCekListesi({ doktorBransi: bransOnbel, hastaDogumIso })
   const altRef = useRef<HTMLDivElement>(null)
   const tanimaRef = useRef<Tanima | null>(null)
 
@@ -130,6 +152,11 @@ export default function HastaKonsult({
     setAcik(true)
     const yeniGecmis: Mesaj[] = [...mesajlar, { rol: 'doktor', icerik: soru }]
     setMesajlar(yeniGecmis)
+    if (cekListeSorulduMu(soru)) {
+      setCekAcik(true)
+      setMesajlar([...yeniGecmis, { rol: 'asistan', icerik: cekListeAsistanCevabi(cekMaddeler) }])
+      return
+    }
     setBekliyor(true)
     try {
       const t = await ensureDoctorAccessToken()
@@ -238,6 +265,25 @@ export default function HastaKonsult({
                   {s}
                 </button>
               ))}
+            </div>
+          )}
+          {cekAcik && (
+            <div style={{ margin: '8px 0 12px' }}>
+              <MuayeneCekListesi
+                maddeler={cekMaddeler}
+                isaretler={cekIsaret}
+                onToggle={(id) => {
+                  const sonraki = { ...cekIsaret, [id]: !cekIsaret[id] }
+                  setCekIsaret(sonraki)
+                  cekListeYaz(patientId, sonraki)
+                }}
+              />
+              <a
+                href={`/session/new?patientId=${encodeURIComponent(patientId)}`}
+                style={{ display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 700, color: '#2DD4BF' }}
+              >
+                Muayeneye geç — liste sağda durur →
+              </a>
             </div>
           )}
 

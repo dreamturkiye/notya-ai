@@ -205,7 +205,18 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
     const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(getSupabase(), user.id), hekimBransi(getSupabase(), user.id), hastaDogumIso(getSupabase(), user.id, seans.patient_id ? String(seans.patient_id) : null)])
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id })
+    const { cekListeDogrula, cekListeDogrulamaMetni, cekListePromptBlogu, muayeneCekListesi } = await import('@/lib/doktor/muayeneCekListesi')
+    const isaretler = body.cekListe && typeof body.cekListe === 'object' && !Array.isArray(body.cekListe)
+      ? body.cekListe as Record<string, boolean>
+      : {}
+    const cekMaddeler = muayeneCekListesi({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso })
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekMaddeler, isaretler) })
+    const cekListeDogrulama = cekListeDogrula(cekMaddeler, {
+      transcript,
+      soap: [noteData?.soap?.subjektif, noteData?.soap?.objektif, noteData?.soap?.degerlendirme, noteData?.soap?.plan, noteData?.anamnez, noteData?.fizik_muayene].filter(Boolean).join(' '),
+      isaretler,
+    })
+    const cekMetin = cekListeDogrulamaMetni(cekListeDogrulama)
 
     // Save note
     const { data: note, error: noteError } = await getSupabase().from("notes").insert({
@@ -218,7 +229,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       content_plan: noteData?.soap?.plan || null,
       // NOTYA-AI-AYRIM-01: AI'ın kendi klinik yorumu/önerisi — DOKTORA ÖZEL, portala GİTMEZ.
       // Not gövdesi (degerlendirme/plan) yalnız doktorun söylediğini içerir; AI çıkarımı burada.
-      ai_degerlendirme: noteData?.aiDegerlendirme || null,
+      ai_degerlendirme: [cekMetin, noteData?.aiDegerlendirme].filter(Boolean).join('\n\n') || null,
       content_anamnez: noteData?.anamnez || null,
       content_fizik_muayene: noteData?.fizik_muayene || null,
       content_tani: noteData?.tani || null,
@@ -241,7 +252,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // Mark session complete
     await getSupabase().from("sessions").update({ status: "completed" }).eq("id", sessionId).eq("doctor_id", user.id)
 
-    return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note } })
+    return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note, cekListeDogrulama } })
 
   } catch (error: unknown) {
     console.error("[sessions/end]", error)

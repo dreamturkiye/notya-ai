@@ -9,6 +9,14 @@ import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
 import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
 import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
+import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
+import {
+  cekListeDogrula,
+  cekListeOku,
+  cekListeYaz,
+  muayeneCekListesi,
+  type CekDogrulamaSatir,
+} from "@/lib/doktor/muayeneCekListesi"
 
 // Kaan (2026-09-10): 30 branşın tamamı, kanonik anahtarlarla (BRANS_ETIKETLERI ile aynı) —
 // böylece profil branşı hangi branş olursa olsun kilitlenir; eski alt-çizgili anahtarlar eşlenir.
@@ -84,6 +92,8 @@ function NewSessionInner() {
   const [sesYukleniyor, setSesYukleniyor] = useState(false)
   const [sesHata, setSesHata] = useState("")
   const [error, setError] = useState("")
+  const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>(() => cekListeOku(patientId))
+  const [cekDogrulama, setCekDogrulama] = useState<CekDogrulamaSatir[] | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
@@ -202,7 +212,8 @@ function NewSessionInner() {
         body: JSON.stringify({
           segments: [{ speaker: "doktor", text: transcript, start_ms: 0, end_ms: seconds*1000, confidence: 0.9 }],
           transcript, duration_seconds: seconds, profession: "doktor",
-          context: { specialty, session_type: sessionType }
+          context: { specialty, session_type: sessionType },
+          cekListe: cekIsaret,
         })
       })
 
@@ -213,7 +224,14 @@ function NewSessionInner() {
         throw new Error("Sunucu geçici bir sorun yaşadı. Notlarınız güvende — birkaç saniye bekleyip 'Seansı Bitir'e yeniden basın.")
       }
       if (!resp.ok || !result.success) throw new Error(result.error || "Not oluşturulamadı")
-      setNote((result.data as { note: Record<string, unknown> }).note)
+      const not = (result.data as { note: Record<string, unknown>; cekListeDogrulama?: CekDogrulamaSatir[] }).note
+      setNote(not)
+      const dog = (result.data as { cekListeDogrulama?: CekDogrulamaSatir[] }).cekListeDogrulama
+      if (dog) setCekDogrulama(dog)
+      else {
+        const maddeler = muayeneCekListesi({ seansBransi: specialty })
+        setCekDogrulama(cekListeDogrula(maddeler, { transcript, soap: JSON.stringify(not), isaretler: cekIsaret }))
+      }
       setStep("done")
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Bir hata oluştu")
@@ -250,7 +268,7 @@ function NewSessionInner() {
 
   return (
     <div style={S({minHeight:"100vh",background:"#0A1628",fontFamily:"system-ui,sans-serif",padding:"20px"})}>
-      <div style={S({maxWidth:"600px",margin:"0 auto"})}>
+      <div style={S({maxWidth: step === "recording" || step === "done" ? "980px" : "600px", margin:"0 auto"})}>
         <div style={S({display:"flex",alignItems:"center",gap:"12px",marginBottom:"24px"})}>
           <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"rgba(255,255,255,.6)",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
           <div style={S({fontSize:"18px",fontWeight:"600",color:"#fff"})}>Yeni Seans</div>
@@ -303,6 +321,7 @@ function NewSessionInner() {
         )}
 
         {step === "recording" && (
+          <div className="notya-grid-yigin" style={S({display:"grid",gridTemplateColumns:"minmax(0,1.15fr) minmax(240px,0.85fr)",gap:"16px",alignItems:"start"})}>
           <div style={S({background:"#fff",borderRadius:"20px",padding:"24px"})}>
             <div style={S({textAlign:"center",marginBottom:"20px"})}>
               <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#EFF6FF",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
@@ -340,6 +359,17 @@ function NewSessionInner() {
             <div style={S({textAlign:"center",marginTop:"10px",fontSize:"11px",color:"#94A3B8"})}>
               Notları yazdıktan sonra "Seansı Bitir" butonuna basın
             </div>
+          </div>
+          <MuayeneCekListesi
+            acikRenk
+            maddeler={muayeneCekListesi({ seansBransi: specialty })}
+            isaretler={cekIsaret}
+            onToggle={(id) => {
+              const sonraki = { ...cekIsaret, [id]: !cekIsaret[id] }
+              setCekIsaret(sonraki)
+              cekListeYaz(patientId, sonraki)
+            }}
+          />
           </div>
         )}
 
@@ -406,6 +436,17 @@ function NewSessionInner() {
               </button>
             </div>
             {onayHata && <div style={S({marginTop:"8px",color:"#DC2626",fontSize:"13px",textAlign:"center"})}>{onayHata}</div>}
+            {cekDogrulama && (
+              <div style={S({marginTop:"16px"})}>
+                <MuayeneCekListesi
+                  acikRenk
+                  maddeler={muayeneCekListesi({ seansBransi: specialty })}
+                  isaretler={cekIsaret}
+                  dogrulama={cekDogrulama}
+                  onToggle={() => { /* not üretildikten sonra kilit */ }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -209,6 +209,7 @@ export interface SoapGirdi {
   doktorBransi?: string | null // DAH-PROMPTS-LOCK: users.specialty — seans bağlamı branş göndermese de kilit uygulanır
   hastaDogumIso?: string | null // BRANS-ALAN-SIZMASI: aile/genel pediatrik bağlam + VELI-YASAL-ONAM (<18 → veli dili, her branş)
   doctorId?: string | null // NOTYA-MALIYET-01: yalnız ai_token_kullanim ölçümü (prompta girmez)
+  cekListeBlogu?: string // hekim çek listesi — gövdeye uydurma yasağı
 }
 
 /** AUDIT-2026-09-03 (canlı olay, 16:27): uzun muayenelerde model çıktısı token tavanında
@@ -278,6 +279,7 @@ export function soapSistemPromptu(girdi: SoapGirdi): string {
     girdi.stilProfili ? `\nDOKTORUN ÖĞRENİLMİŞ TERCİHLERİ (kendi düzeltmelerinden damıtıldı — bu kurallara MUTLAKA uy):\n${girdi.stilProfili}` : '',,
     girdi.doktorAdi ? `\nHEKİM ADI: ${girdi.doktorAdi}. hasta_ozeti ve alarmBulgulari metinlerinde "doktorunuz" / "hekiminiz" yerine bu adı kullan (örn. "${girdi.doktorAdi} antibiyotik başladı", "şu durumlarda ${girdi.doktorAdi} ile temas kurun").` : '',
     dahiliyeMi(girdi.specialty, girdi.doktorBransi) ? dahiliyeKilidi('soap') : kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? kadinDogumKilidi('soap') : dermatolojiMi(girdi.specialty, girdi.doktorBransi) ? dermatolojiKilidi('soap') : gozMi(girdi.specialty, girdi.doktorBransi) ? gozKilidi('soap') : '',
+    ...(girdi.cekListeBlogu ? [girdi.cekListeBlogu] : []),
   ].join('\n')
 }
 
