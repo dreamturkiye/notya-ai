@@ -13,7 +13,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
-import { hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
+import { cozumKonus, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
 import { hastaDosyaPaketiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { dosyaSoruCevap, kartSoyle } from '@/lib/doktor/hastaDosyaKart'
 
@@ -31,17 +31,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const cozum = await hastaninSozunuCoz(supabase, doktorId, soz)
+    const konus = cozumKonus(cozum)
     if (cozum.tur === 'coklu') {
-      const liste = cozum.adaylar.map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`).join('. ')
-      const bas = cozum.sayiMetin || `${cozum.adaylar.length} hasta`
       return NextResponse.json({
-        sonuc: `${bas}: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`,
+        sonuc: konus || 'Birden fazla hasta bulundu. Hangisini istiyorsunuz?',
         adaylar: cozum.adaylar.map((a, i) => ({ sira: i + 1, ad: a.ad, ozet: a.ozet })),
         sayi: cozum.adaylar.length,
       })
     }
     if (cozum.tur === 'yok') {
-      return NextResponse.json({ sonuc: cozum.sayiMetin || 'Bu filtrelere uyan hasta yok Hocam. Yaş, hafta, gelme nedeni, tanı veya adla tekrar dener misiniz?' })
+      return NextResponse.json({ sonuc: konus || 'Bu filtrelere uyan hasta yok Hocam. Yaş, hafta, gelme nedeni, tanı veya adla tekrar dener misiniz?' })
     }
     const paket = await hastaDosyaPaketiniDerle(supabase, doktorId, cozum.patientId)
     if (!paket) return NextResponse.json({ sonuc: `${cozum.ad} için dosya bulamadım.` })

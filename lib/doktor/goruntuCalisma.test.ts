@@ -2,11 +2,14 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import {
+  altTipSecilmeli,
   analizHref,
   goruntuChip,
   goruntuYuklemeReddi,
   hacimAiKapali,
   modalityFinalIcin,
+  onayDurumDipnot,
+  paylasimYorumu,
   portaldaGorunurMu,
   portalOzeti,
   TASLAK_DIPNOT,
@@ -76,8 +79,26 @@ describe('görüntü ceketi — portal kapısı', () => {
     assert.match(goruntuChip('xr', '2026-09-12'), /XR/)
   })
 
-  it('taslak dipnotu kilitli', () => {
+  it('taslak dipnotu kilitli; paylaşılınca taslak yalanı durmaz', () => {
     assert.match(TASLAK_DIPNOT, /Hekim onaylamadan/)
+    assert.equal(onayDurumDipnot('taslak'), TASLAK_DIPNOT)
+    assert.match(onayDurumDipnot('hasta_paylas'), /paylaşıldı/i)
+    assert.ok(!/Taslak/.test(onayDurumDipnot('hasta_paylas')))
+  })
+
+  it('XR/Göz/Derm alt tip zorunlu; EKG/US değil', () => {
+    assert.equal(altTipSecilmeli('xr'), true)
+    assert.equal(altTipSecilmeli('goz'), true)
+    assert.equal(altTipSecilmeli('derm'), true)
+    assert.equal(altTipSecilmeli('ekg'), false)
+    assert.equal(altTipSecilmeli('us'), false)
+    assert.equal(altTipSecilmeli('mg'), false)
+  })
+
+  it('paylaşım ham Asistan özetini hekim yorumu saymaz', () => {
+    assert.equal(paylasimYorumu({ hamAsistan: 'AI taslak', hekimOzet: 'AI taslak' }), null)
+    assert.equal(paylasimYorumu({ hamAsistan: 'AI taslak', hekimOzet: 'Hekim: infiltrasyon yok.' }), 'Hekim: infiltrasyon yok.')
+    assert.equal(paylasimYorumu({ mevcut: 'Klinik notum.' }), 'Klinik notum.')
   })
 })
 
@@ -104,12 +125,17 @@ describe('görüntü ceketi — izolasyon + cxr yolu duruyor', () => {
     assert.match(analiz, /tekAlanFundus/)
   })
 
-  it('UI PACS demez; Değerlendir mevcut POST yoluna gider', () => {
+  it('UI PACS demez; Değerlendir mevcut POST yoluna gider; alt tip ve paylaşım kapısı var', () => {
     assert.ok(!/PACS/i.test(ui))
     assert.ok(!/PACS/i.test(rota))
     assert.match(ui, /Değerlendir/)
     assert.match(ui, /analizHref/)
     assert.match(ui, /Bu hastanın filmleri/)
+    assert.match(ui, /altTipSecilmeli/)
+    assert.match(ui, /onayDurumDipnot/)
+    assert.match(ui, /portaldaGorunurMu/)
+    assert.ok(!ui.includes('analiz?.hekim_ozet || analiz?.sonuc?.ozet || satir.hekim_yorum'))
+    assert.match(rota, /altTipSecilmeli/)
   })
 })
 

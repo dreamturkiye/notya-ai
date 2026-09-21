@@ -55,6 +55,9 @@ export const VAULT_ALLOWED_MIME = [
   'text/csv',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  // Görüntüler — kısa US klip (vault 4 MB sınırı duruyor)
+  'video/mp4',
+  'video/webm',
 ] as const
 
 export type VaultAllowedMime = (typeof VAULT_ALLOWED_MIME)[number]

@@ -8,6 +8,7 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { uploadDocument, VaultAccessError, VaultValidationError } from '@/lib/vault/service'
 import {
+  altTipSecilmeli,
   goruntuYuklemeReddi,
   modalityFinalIcin,
   tipGecerli,
@@ -69,7 +70,11 @@ export async function POST(req: NextRequest) {
   const tarih = String(form.get('tarih') || '').slice(0, 10) || null
   const seansId = String(form.get('seansId') || '') || null
   const calismaId = String(form.get('calismaId') || '') || randomUUID()
-  const modalite = modalityFinalIcin(tip, String(form.get('modalite') || '') || null)
+  const altHam = String(form.get('modalite') || '') || null
+  if (altTipSecilmeli(tip) && !altHam) {
+    return NextResponse.json({ error: 'Alt tip seçin (PA akciğer, kemik, fundus…).' }, { status: 400 })
+  }
+  const modalite = modalityFinalIcin(tip, altHam)
 
   let belgeId: string | null = null
   let dicomVar = false

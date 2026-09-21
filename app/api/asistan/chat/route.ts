@@ -13,7 +13,7 @@ import { uydurmaKaynakTemizle } from "@/lib/doktor/kaynakKilidi"
 import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar"
 import { asistanYanitiCoz } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
-import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
+import { cozumKonus, hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyaPaketiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { dosyaSoruCevap } from "@/lib/doktor/hastaDosyaKart"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
@@ -162,14 +162,12 @@ ${ilacBaglamMetni(drugs[0])}`
     let dosyaEk = ""
     let cozulenHasta: { id: string; ad: string } | null = null
     let kesinDosyaCevap: string | null = null
+    let aramaCevabi: string | null = null
     try {
       const cozum = await hastaninSozunuCoz(getSupabase(), user.id, message)
-      if (cozum.tur === "coklu") {
-        const liste = cozum.adaylar.map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`).join('\n')
-        const bas = cozum.sayiMetin || `Filtre araması ${cozum.adaylar.length} hasta buldu`
-        dosyaEk = `\n\n[SİSTEM: ${bas} — bu sayıyı AYNEN söyle, uydurma; sonra listeyi SIRAYLA oku:\n${liste}\nDoktor birini seçerse (birinci / ad / şikayet) o dosyayı açacağız.]`
-      } else if (cozum.tur === "yok" && cozum.sayiMetin) {
-        dosyaEk = `\n\n[SİSTEM: ${cozum.sayiMetin} Başka hasta veya sayı uydurma.]`
+      const konus = cozumKonus(cozum)
+      if (konus) {
+        aramaCevabi = konus
       } else {
         const aktifId = cozum.tur === "tek" ? cozum.patientId : (contextPatientId ? String(contextPatientId) : null)
         if (aktifId) {
@@ -187,8 +185,8 @@ ${ilacBaglamMetni(drugs[0])}`
       }
     } catch { /* dosya bağlamı kritik değil — normal akış sürer */ }
 
-    if (kesinDosyaCevap && !kayitNiyetiMi(String(message || ""))) {
-      const speech = kesinDosyaCevap
+    if ((aramaCevabi || kesinDosyaCevap) && !kayitNiyetiMi(String(message || ""))) {
+      const speech = aramaCevabi || kesinDosyaCevap || ""
       const updatedMessages = [
         ...messages,
         { role: "user", content: message },

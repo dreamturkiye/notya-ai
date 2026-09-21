@@ -24,6 +24,19 @@ export type HastaCozumu =
   | { tur: 'coklu'; adaylar: CozumAday[]; sayiMetin?: string }
   | { tur: 'yok'; sayiMetin?: string }
 
+/** Ses + sohbet aynı cümleyi söyler — pratik sıralama / çoklu aday LLM'e gitmez. */
+export function cozumKonus(cozum: HastaCozumu): string | null {
+  if (cozum.tur === 'coklu') {
+    const liste = cozum.adaylar
+      .map((a, i) => `${i + 1}. ${a.ad}${a.dobMetin ? ` (d.t. ${a.dobMetin})` : ''} — ${a.ozet}`)
+      .join('. ')
+    const bas = cozum.sayiMetin || `${cozum.adaylar.length} hasta`
+    return `${bas}: ${liste}. Hangisini istiyorsunuz — birinci, ikinci, adıyla veya şikayetiyle söyleyin.`
+  }
+  if (cozum.tur === 'yok' && cozum.sayiMetin) return cozum.sayiMetin
+  return null
+}
+
 const TR_MAP: Record<string, string> = { 'ç': 'c', 'Ç': 'c', 'ğ': 'g', 'Ğ': 'g', 'ı': 'i', 'I': 'i', 'İ': 'i', 'ö': 'o', 'Ö': 'o', 'ş': 's', 'Ş': 's', 'ü': 'u', 'Ü': 'u' }
 function duzle(s: string): string {
   return s.replace(/[çÇğĞıIİöÖşŞüÜ]/g, (c) => TR_MAP[c] || c).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim()

@@ -132,3 +132,28 @@ export function analizHref(patientId: string, belgeId: string, modalityFinal: Mo
   const q = new URLSearchParams({ modalityFinal, geriTab: 'goruntuleme', goruntu: '1' })
   return `/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(belgeId)}?${q}`
 }
+
+/** XR/Göz/Derm/hacim: doktor alt tipi seçmeden kasaya alma / Değerlendir yok. */
+export function altTipSecilmeli(tip: GoruntuTip): boolean {
+  return TIP_MODALITELER[tip].length > 1
+}
+
+export function onayDurumDipnot(durum: string): string {
+  if (durum === 'hasta_paylas') return 'Hastayla paylaşıldı. Portalda yalnız hekim yorumu görünür.'
+  if (durum === 'hekim_onay' || durum === 'hekim_duzenledi') {
+    return 'Hekim işledi. Portalda görünmesi için paylaşın.'
+  }
+  return TASLAK_DIPNOT
+}
+
+/** Portal yorumu: hekim özeti veya mevcut yorum. Ham Asistan ozeti asla. */
+export function paylasimYorumu(g: {
+  hekimOzet?: string | null
+  mevcut?: string | null
+  hamAsistan?: string | null
+}): string | null {
+  const t = String(g.hekimOzet || g.mevcut || '').trim()
+  if (!t) return null
+  if (g.hamAsistan && t === String(g.hamAsistan).trim()) return null
+  return t.slice(0, 2000)
+}

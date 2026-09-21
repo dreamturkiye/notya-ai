@@ -127,7 +127,7 @@ export async function GET(req: NextRequest) {
   const { data: doktor } = await supabase.from('users').select('specialty').eq('id', user.id).maybeSingle()
   const bransKey = bransAnahtari(doktor?.specialty)
   if (patientId && !documentId) {
-    const { data } = await supabase.from('belge_analizleri').select('id, durum, sonuc, fusion, motor_ciktilari, hekim_tanisi, hekim_ozet, note_id, onaylandi_at, olusturuldu, brans, modality_final, yas_ay, belge_id').eq('doctor_id', user.id).eq('patient_id', patientId).order('olusturuldu', { ascending: false }).limit(20)
+    const { data } = await supabase.from('belge_analizleri').select('id, durum, sonuc, fusion, motor_ciktilari, hekim_tanisi, hekim_ozet, note_id, onaylandi_at, olusturuldu, brans, modality_final, yas_ay, belge_id').eq('doctor_id', user.id).eq('patient_id', patientId).order('olusturuldu', { ascending: false }).limit(80)
     return NextResponse.json({ analizler: data || [], bransKey })
   }
   if (!documentId) return NextResponse.json({ error: 'documentId gerekli' }, { status: 400 })

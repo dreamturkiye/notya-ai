@@ -41,7 +41,7 @@ export async function hastaDosyaPaketiniDerle(
 
   // HASTA-IZOLASYON-01: every child read is scoped to the doctor as well as the patient, so a row
   // another doctor filed under this patient id can never enter this doctor's file or AI context.
-  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ, hekimQ, randevuQ, labQ] = await Promise.all([
+  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ, hekimQ, randevuQ, labQ, calismaQ] = await Promise.all([
     supabase.from('sessions').select('id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
     supabase.from('hasta_ilaclar').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
     supabase.from('asilar').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
@@ -54,6 +54,7 @@ export async function hastaDosyaPaketiniDerle(
     supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle(),
     supabase.from('randevular').select('baslangic, tur, durum').eq('patient_id', patientId).eq('doktor_id', doktorId).neq('durum', 'iptal').order('baslangic', { ascending: true }).limit(20),
     supabase.from('lab_satirlar').select('canonical_key, kanonik_deger, value_text, numune_tarihi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onayli', true).not('canonical_key', 'is', null).order('numune_tarihi', { ascending: false }).limit(40),
+    supabase.from('goruntu_calisma').select('tip, modalite, bolge, tarih, onay_durum, hekim_yorum, created_at').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
   ])
 
   const seanslar = seanslarQ.data || []
@@ -185,8 +186,16 @@ export async function hastaDosyaPaketiniDerle(
   })
 
   b.push('\n## GÖRÜNTÜLEME KAYITLARI (en yeni üstte)')
+  const calismalar = (calismaQ.data || []) as { tip?: string; modalite?: string; bolge?: string | null; tarih?: string | null; onay_durum?: string; hekim_yorum?: string | null; created_at?: string }[]
   const goruntulemeler = goruntulemeQ.data || []
-  if (goruntulemeler.length === 0) b.push('- Kayıtlı görüntüleme yok.')
+  if (calismalar.length === 0 && goruntulemeler.length === 0) b.push('- Kayıtlı görüntüleme yok.')
+  for (const g of calismalar) {
+    const ad = [g.tip, g.modalite, g.bolge].filter(Boolean).join(' · ') || 'Film'
+    const tarih = trTarih(g.tarih || g.created_at)
+    const yorum = String(g.hekim_yorum || '').trim()
+    const onay = g.onay_durum === 'hasta_paylas' ? 'paylaşıldı' : g.onay_durum === 'taslak' ? 'taslak' : 'hekim'
+    b.push(`- ${ad} — ${tarih} (${onay})${yorum ? ` — ${yorum.slice(0, 180)}` : ''}`)
+  }
   for (const g of goruntulemeler) {
     b.push(`- ${g.tur || g.tip || g.baslik || g.dosya_adi || 'Görüntüleme'} — ${trTarih(g.created_at)}${g.aciklama ? ` — ${g.aciklama}` : ''}`)
   }

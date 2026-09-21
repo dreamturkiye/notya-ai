@@ -283,8 +283,15 @@ export async function klinikAramaYurut(
     .order('created_at', { ascending: false })
     .limit(80)
 
-  const [seanslar, notlar, asilar, ilaclar, randevular, belgeler, kasa, analiz, intake, cihaz, goruntuler] = await Promise.all([
-    seansQ, notQ, asiQ, ilacQ, randevuQ, belgeQ, kasaQ, analizQ, intakeQ, cihazQ, goruntuQ,
+  const calismaQ = supabase
+    .from('goruntu_calisma')
+    .select('patient_id, tip, modalite, bolge, hekim_yorum, tarih, created_at')
+    .eq('doctor_id', doktorId)
+    .order('created_at', { ascending: false })
+    .limit(80)
+
+  const [seanslar, notlar, asilar, ilaclar, randevular, belgeler, kasa, analiz, intake, cihaz, goruntuler, calismalar] = await Promise.all([
+    seansQ, notQ, asiQ, ilacQ, randevuQ, belgeQ, kasaQ, analizQ, intakeQ, cihazQ, goruntuQ, calismaQ,
   ])
 
   const seansHasta = new Map<string, string>()
@@ -396,8 +403,8 @@ export async function klinikAramaYurut(
 
   for (const a of analiz.data || []) {
     if (!a.patient_id) continue
-    const s = a.sonuc as { ozet?: string } | null
-    const metin = `${a.hekim_ozet || ''} ${s?.ozet || ''}`
+    const metin = String(a.hekim_ozet || '').trim()
+    if (!metin) continue
     ham.push({ patientId: String(a.patient_id), kaynak: 'belge', neden: kisa(`belge özeti: ${metin}`), skor: 6, metin })
   }
 
@@ -415,6 +422,18 @@ export async function klinikAramaYurut(
       kaynak: 'goruntu',
       neden: kisa(`görüntü: ${g.modalite || g.vucut_bolgesi || 'tetkik'}`),
       skor: 5,
+      metin,
+    })
+  }
+
+  for (const g of calismalar.data || []) {
+    if (!g.patient_id || !isoAralikta((g.tarih || g.created_at) as string, p)) continue
+    const metin = `${g.tip || ''} ${g.modalite || ''} ${g.bolge || ''} ${g.hekim_yorum || ''}`
+    ham.push({
+      patientId: String(g.patient_id),
+      kaynak: 'goruntu',
+      neden: kisa(`görüntü: ${g.tip || g.modalite || 'film'}`),
+      skor: 6,
       metin,
     })
   }

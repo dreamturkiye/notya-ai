@@ -6,12 +6,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import {
+  altTipSecilmeli,
   analizHref,
   goruntuChip,
   hacimAiKapali,
   MG_DIPNOT,
   modalityFinalIcin,
-  TASLAK_DIPNOT,
+  onayDurumDipnot,
+  paylasimYorumu,
+  portaldaGorunurMu,
   TIP_ETIKET,
   TIP_MODALITELER,
   type GoruntuTip,
@@ -91,6 +94,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
 
   const gonder = async () => {
     if (!dosya) { setMesaj('Dosya seçin.'); return }
+    if (altTipSecilmeli(tip) && !alt) { setMesaj('Önce alt tipi seçin (PA akciğer, kemik, fundus…).'); return }
     setYukleniyor(true); setMesaj('')
     const token = await getAccessTokenAsync()
     const fd = new FormData()
@@ -109,13 +113,22 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
 
   const paylas = async () => {
     if (!satir) return
+    const yorum = paylasimYorumu({
+      hekimOzet: analiz?.hekim_ozet,
+      mevcut: satir.hekim_yorum,
+      hamAsistan: analiz?.sonuc?.ozet,
+    })
+    if (satir.tip === 'mg' && !yorum) {
+      setMesaj('Mamografiyi paylaşmadan önce Değerlendir’de hekim özetini onaylayın.')
+      return
+    }
     const token = await getAccessTokenAsync()
     const r = await fetch(`/api/doktor/goruntuler/${satir.id}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         onay_durum: 'hasta_paylas',
-        hekim_yorum: analiz?.hekim_ozet || analiz?.sonuc?.ozet || satir.hekim_yorum,
+        ...(yorum ? { hekim_yorum: yorum } : {}),
         asistan_analiz_id: analiz?.id || satir.asistan_analiz_id,
       }),
     })
@@ -128,6 +141,17 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   const gosterimler = seri.filter((s) => s.belge_id).map((s) => s.belge_id as string)
   const anaBelge: string | null = satir?.belge_id ?? null
   const ikiUp = satir?.tip === 'mg' && gosterimler.length >= 2
+  const paylasYorum = paylasimYorumu({
+    hekimOzet: analiz?.hekim_ozet,
+    mevcut: satir?.hekim_yorum,
+    hamAsistan: analiz?.sonuc?.ozet,
+  })
+  const portalHazir = !!satir && portaldaGorunurMu({
+    onay_durum: 'hasta_paylas',
+    tip: satir.tip,
+    modalite: satir.modalite,
+    hekim_yorum: paylasYorum || satir.hekim_yorum,
+  })
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
@@ -158,7 +182,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
           )}
           <input value={bolge} onChange={(e) => setBolge(e.target.value)} placeholder="Bölge (akciğer, meme-R…)" style={inp} />
           <input type="file" accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} onChange={(e) => setDosya(e.target.files?.[0] || null)} style={{ color: '#8FA0B5', fontSize: 12 }} />
-          <button type="button" onClick={() => void gonder()} disabled={yukleniyor} style={btn}>{yukleniyor ? 'Yükleniyor…' : 'Kasa’ya al'}</button>
+          <button type="button" onClick={() => void gonder()} disabled={yukleniyor || (altTipSecilmeli(tip) && !alt)} style={btn}>{yukleniyor ? 'Yükleniyor…' : 'Kasa’ya al'}</button>
           {satir?.tip === tip && <span style={{ fontSize: 12, color: '#8FA0B5' }}>Seçili çalışmaya eklenir (MG iki kare / seri).</span>}
         </div>
         {hacimAiKapali(tip) && <div style={{ fontSize: 11, color: '#FBBF24', marginTop: 8 }}>CT/MR/PET: yalnız anahtar kare + rapor. Hacim arşivi yok.</div>}
@@ -190,10 +214,10 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
             <div style={{ fontSize: 14, fontWeight: 800, color: '#EDF1F7', marginBottom: 6 }}>
               {TIP_ETIKET[satir.tip]} {satir.bolge ? `· ${satir.bolge}` : ''}
             </div>
-            <div style={{ fontSize: 12, color: '#8FA0B5', marginBottom: 10 }}>{TASLAK_DIPNOT}</div>
+            <div style={{ fontSize: 12, color: '#8FA0B5', marginBottom: 10 }}>{onayDurumDipnot(satir.onay_durum)}</div>
             {satir.tip === 'mg' && <div style={{ fontSize: 12, color: '#FBBF24', marginBottom: 10 }}>{MG_DIPNOT}</div>}
             <div style={{ fontSize: 13, color: '#EDF1F7', marginBottom: 8 }}>
-              <b>Özet</b>
+              <b>{analiz?.hekim_ozet ? 'Hekim özeti' : 'Asistan taslağı'}</b>
               <div style={{ color: '#8FA0B5', fontWeight: 400, marginTop: 4 }}>{analiz?.hekim_ozet || analiz?.sonuc?.ozet || 'Henüz taslak yok.'}</div>
             </div>
             {!!analiz?.sonuc?.bulgular?.length && (
@@ -210,8 +234,8 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
                 <a href={analizHref(patientId, satir.belge_id, 'pdf_rapor')} style={{ ...ghost, textDecoration: 'none' }}>Raporu özetle</a>
               )}
               {analiz && <a href={analizHref(patientId, satir.belge_id || '', modalityFinalIcin(satir.tip, satir.modalite as Modalite))} style={{ ...ghost, textDecoration: 'none' }}>Nota ekle</a>}
-              <button type="button" onClick={() => void paylas()} style={ghost} disabled={satir.onay_durum === 'hasta_paylas'}>
-                {satir.onay_durum === 'hasta_paylas' ? 'Paylaşıldı' : 'Onayla ve paylaş'}
+              <button type="button" onClick={() => void paylas()} style={ghost} disabled={satir.onay_durum === 'hasta_paylas' || !portalHazir}>
+                {satir.onay_durum === 'hasta_paylas' ? 'Paylaşıldı' : satir.tip === 'goz' && satir.modalite !== 'fundus' ? 'Portala yalnız fundus' : 'Onayla ve paylaş'}
               </button>
             </div>
             {satir.hastane_link && <a href={satir.hastane_link} style={{ display: 'block', marginTop: 10, fontSize: 12, color: '#2DD4BF' }}>Hastane bağlantısı →</a>}
@@ -228,41 +252,47 @@ const inp: React.CSSProperties = { ...sel, minWidth: 160 }
 function GoruntuIzleyici({ belgeId, tip, ikiUp }: { belgeId: string | null; tip: GoruntuTip; ikiUp: string[] | null }) {
   const [url, setUrl] = useState<string | null>(null)
   const [url2, setUrl2] = useState<string | null>(null)
-  const [video, setVideo] = useState(false)
+  const [ortam, setOrtam] = useState<'img' | 'video' | 'pdf'>('img')
   const [invert, setInvert] = useState(false)
   const [zoom, setZoom] = useState(1)
 
   useEffect(() => {
-    let a: string | null = null
-    let b: string | null = null
+    const acilan: string[] = []
     let iptal = false
     const al = async (id: string) => {
       const token = await getAccessTokenAsync()
       const r = await fetch(`/api/doktor/documents/${id}/download`, { headers: { Authorization: `Bearer ${token}` } })
       if (!r.ok) return null
       const blob = await r.blob()
-      if (blob.type.startsWith('video/')) setVideo(true)
-      return URL.createObjectURL(blob)
+      const u = URL.createObjectURL(blob)
+      if (iptal) {
+        URL.revokeObjectURL(u)
+        return null
+      }
+      acilan.push(u)
+      if (blob.type.startsWith('video/')) setOrtam('video')
+      else if (blob.type.includes('pdf')) setOrtam('pdf')
+      else setOrtam('img')
+      return u
     }
     void (async () => {
-      setVideo(false)
+      setOrtam('img')
       setInvert(false)
       setZoom(1)
       if (ikiUp) {
         const [u1, u2] = await Promise.all(ikiUp.map(al))
         if (iptal) return
-        a = u1; b = u2; setUrl(u1); setUrl2(u2)
+        setUrl(u1); setUrl2(u2)
         return
       }
       if (!belgeId) { setUrl(null); setUrl2(null); return }
       const u = await al(belgeId)
       if (iptal) return
-      a = u; setUrl(u); setUrl2(null)
+      setUrl(u); setUrl2(null)
     })()
     return () => {
       iptal = true
-      if (a) URL.revokeObjectURL(a)
-      if (b) URL.revokeObjectURL(b)
+      for (const u of acilan) URL.revokeObjectURL(u)
     }
   }, [belgeId, ikiUp?.[0], ikiUp?.[1]])
 
@@ -289,12 +319,18 @@ function GoruntuIzleyici({ belgeId, tip, ikiUp }: { belgeId: string | null; tip:
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-        {xr && <button type="button" onClick={() => setInvert((x) => !x)} style={ghost}>Ters</button>}
-        <button type="button" onClick={() => setZoom((z) => Math.min(3, z + 0.25))} style={ghost}>Yakın</button>
-        <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))} style={ghost}>Uzak</button>
-        <button type="button" onClick={() => { setZoom(1); setInvert(false) }} style={ghost}>Sığdır</button>
+        {xr && ortam === 'img' && <button type="button" onClick={() => setInvert((x) => !x)} style={ghost}>Ters</button>}
+        {ortam !== 'pdf' && (
+          <>
+            <button type="button" onClick={() => setZoom((z) => Math.min(3, z + 0.25))} style={ghost}>Yakın</button>
+            <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))} style={ghost}>Uzak</button>
+            <button type="button" onClick={() => { setZoom(1); setInvert(false) }} style={ghost}>Sığdır</button>
+          </>
+        )}
       </div>
-      {tip === 'us' && video && url ? (
+      {ortam === 'pdf' && url ? (
+        <iframe src={url} title="Rapor PDF" style={{ width: '100%', height: 420, border: 0, background: '#020812' }} />
+      ) : ortam === 'video' && url ? (
         <video src={url} autoPlay loop muted playsInline style={{ width: '100%', maxHeight: 420, background: '#020812' }} />
       ) : ikiUp ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>

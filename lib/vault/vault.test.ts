@@ -9,6 +9,8 @@ describe('vault validation', () => {
   it('accepts allowed mime and size', () => {
     assert.doesNotThrow(() => assertAllowedUpload('image/jpeg', 1024, 'ekg.jpg'))
     assert.doesNotThrow(() => assertAllowedUpload('application/pdf', 2048, 'lab.pdf'))
+    assert.doesNotThrow(() => assertAllowedUpload('video/mp4', 1024, 'us-klip.mp4'))
+    assert.doesNotThrow(() => assertAllowedUpload('video/webm', 2048, 'us-klip.webm'))
   })
 
   it('rejects disallowed mime', () => {

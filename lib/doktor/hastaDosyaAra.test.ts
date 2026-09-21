@@ -272,6 +272,8 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
     const s = readFileSync(new URL('./hastaDosyaAra.ts', import.meta.url), 'utf8')
     assert.ok(s.includes('notes_encrypted'))
     assert.ok(s.includes('hasta_goruntulemeler'))
+    assert.ok(s.includes('goruntu_calisma'))
+    assert.ok(!s.includes('s?.ozet'), 'onaylı analiz aramada ham AI özeti yok')
     assert.ok(!/^import .*pediatri/m.test(s), 'pediatri motoru statik import edilmemeli')
     assert.ok(s.includes('async function pediBolumYurut'), 'kapalı dilim ayrı yolda')
     const fromlar = [...s.matchAll(/\.from\('([^']+)'\)/g)]

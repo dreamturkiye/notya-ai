@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { bosKart, dosyaSoruCevap, kartBosMu, kartMetin, kartSoyle, type HastaDosyaKart } from './hastaDosyaKart'
+import { cozumKonus } from './hastaCozumleyici'
 
 const KOK = new URL('.', import.meta.url)
 
@@ -123,6 +124,7 @@ describe('hasta dosya derleyici — kart başta kalır, izolasyon', () => {
     assert.ok(derle.includes('hastaDosyaPaketiniDerle'))
     assert.ok(derle.includes("from('randevular')"))
     assert.ok(derle.includes("from('lab_satirlar')"))
+    assert.ok(derle.includes("from('goruntu_calisma')"))
   })
 
   it('her tablo sorgusu doktor kolonuna kilitli', () => {
@@ -150,8 +152,31 @@ describe('hasta dosya derleyici — kart başta kalır, izolasyon', () => {
     assert.ok(chat.includes('hastaDosyaPaketiniDerle'))
     assert.ok(chat.includes('dosyaSoruCevap'))
     assert.ok(chat.includes('KESİN DOSYA CEVABI'))
+    assert.ok(chat.includes('cozumKonus'))
+    assert.ok(chat.includes('aramaCevabi'))
     assert.ok(ses.includes('hastaDosyaPaketiniDerle'))
     assert.ok(ses.includes('kartSoyle'))
     assert.ok(ses.includes('dosyaSoruCevap'))
+    assert.ok(ses.includes('cozumKonus'))
+  })
+})
+
+describe('arama çözümü — pratik sayı LLM’e gitmez', () => {
+  it('çoklu aday ve boş filtre aynı cümleyi söyler', () => {
+    const coklu = cozumKonus({
+      tur: 'coklu',
+      sayiMetin: 'Bu ay 3 hastaya Augmentin yazıldı',
+      adaylar: [
+        { id: '1', ad: 'Elif', dobMetin: '01.01.2020', ozet: 'öksürük' },
+        { id: '2', ad: 'Can', dobMetin: '', ozet: 'ateş' },
+      ],
+    })
+    assert.match(coklu || '', /Augmentin/)
+    assert.match(coklu || '', /Elif/)
+    assert.match(coklu || '', /Hangisini istiyorsunuz/)
+
+    assert.equal(cozumKonus({ tur: 'yok', sayiMetin: 'Bu dönemde 0 hasta.' }), 'Bu dönemde 0 hasta.')
+    assert.equal(cozumKonus({ tur: 'yok' }), null)
+    assert.equal(cozumKonus({ tur: 'tek', patientId: 'x', ad: 'Elif' }), null)
   })
 })
