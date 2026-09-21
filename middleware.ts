@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { siteV2AcikMi } from '@/lib/site-v2/sandbox'
 
 // Korunan rotalar
 const PROTECTED_ROUTES = [
@@ -33,6 +34,10 @@ const PUBLIC_ROUTES = [
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const response = NextResponse.next()
+
+  if (pathname.startsWith('/site-v2') && !siteV2AcikMi()) {
+    return new NextResponse('Not Found', { status: 404 })
+  }
 
   // ---- GÜVENLİK BAŞLIKLARI ----
   response.headers.set('X-Frame-Options', 'DENY')
