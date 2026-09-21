@@ -35,6 +35,7 @@ export interface SorguAyik {
   haric: string[]
   sayisal: SayisalFiltre[]
   kanGrubu: string | null
+  olcum: 'hasta' | 'asi' | 'ilac' | 'sure' | null
   ozet: string
 }
 
@@ -120,6 +121,10 @@ const DURAK = new Set([
   'veya', 'except', 'without', 'olmayan', 'olmadigi', 'haric', 'yapmadigim',
   'days', 'day', 'weeks', 'months', 'gunluk',
   'ustu', 'uzeri', 'alti', 'esit', 'buyuk', 'kucuk',
+  'toplam', 'averaj', 'ortalama', 'average', 'dakika', 'dakikaydi', 'dakikalik',
+  'seans', 'seansim', 'seansi', 'seanslar', 'yaptik', 'yaptim', 'yaptigi', 'yaptigimiz',
+  'gordum', 'gorduk', 'receteledim', 'receteledi', 'recete', 'hastaya', 'hastalarina',
+  'yaslari', 'yaslarinda', 'arasindaki',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -191,6 +196,7 @@ function yasCikar(n: string): { yas: YasFiltresi | null; kalan: string } {
   const aralikKalip: RegExp[] = [
     new RegExp(`\\bbetween\\s+\\w{0,8}\\s*ages?\\s+(?:of\\s+)?${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}`),
     new RegExp(`\\bbetween\\s+${SAYI_RE}\\s+(?:and|to|ile|ila)\\s+${SAYI_RE}\\s*(?:yas|years?|yo)?`),
+    new RegExp(`\\b${SAYI_RE}\\s+(?:ile|ila|ve|to|and)\\s+${SAYI_RE}\\s+(?:yas(?:lari|larinda)?|years?|yo)(?:\\s*(?:arasi|arasinda))?\\b`),
     new RegExp(`\\b${SAYI_RE}\\s+(?:ile|ila|to|and)\\s+${SAYI_RE}\\s*(?:yas|years?|yo)\\b`),
     new RegExp(`\\b${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}\\s*(?:yas|years?|yo)\\b`),
     new RegExp(`\\b${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}\\s*(?:yas|years?)?\\s*(?:arasi|arasinda)\\b`),
@@ -379,7 +385,15 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
   const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many|number of/.test(n0)
   const asi = ASI_KELIME.test(n0)
-  const ziyaret = /gordugum|gorduklerim|muayene|ettigim|baktigim|gelen|geldi|gordum|\bhad\b|\bsaw\b/.test(n0)
+  const ziyaret = /gordugum|gorduklerim|gorduk|muayene|ettigim|baktigim|gelen|geldi|gordum|\bhad\b|\bsaw\b/.test(n0)
+  const sureSor = /averaj|ortalama|average|dakika/.test(n0)
+  const olcum: SorguAyik['olcum'] = sureSor
+    ? 'sure'
+    : (asi && sayim && !/hastaya|hastalar?/.test(n0))
+      ? 'asi'
+      : /recete/.test(n0)
+        ? 'ilac'
+        : (sayim || ziyaret) ? 'hasta' : null
 
   const y = yasCikar(n0)
   const p = pencereCikar(y.kalan, now)
@@ -417,7 +431,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     const ham = parca
       .split(/[^a-z0-9]+/)
       .filter((k) => k.length >= 3 && !DURAK.has(k))
-      .map((k) => k.replace(/iltehabi?|iltihabi?|iltehap/, 'iltihap'))
+      .map((k) => k.replace(/i[hl]tihabi?|iltehabi?|iltihabi?|iltehap|ihtihab/, 'iltihap'))
     const terimler = new Set<string>()
     for (const k of ham) {
       terimler.add(k)
@@ -431,12 +445,13 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     return [...terimler]
   }
 
-  const veyaParca = kalan.split(/\b(?:veya|ya da| or )\b/)
+  const yalinVeya = kalan.replace(/\bhasta(?:lar|si|nin)?\s+(?:veya|ya da| or )\s+hasta(?:lar|si)?\b/g, ' ')
+  const veyaParca = yalinVeya.split(/\b(?:veya|ya da| or )\b/)
   const veya = veyaParca.length > 1 ? veyaParca.map(terimCikar).filter((g) => g.length) : []
   const liste = veya.length ? [] : terimCikar(kalan)
   const klinikKelime = liste.some((t) => Boolean(ESANLAM[t]) || Object.values(ESANLAM).some((l) => l.includes(t)) || ASI_KELIME.test(t))
     || veya.some((g) => g.some((t) => Boolean(ESANLAM[t])))
-  const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet)
+  const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet) || sureSor || Boolean(olcum)
   const etiketler = [
     y.yas?.etiket,
     p.pencere?.etiket,
@@ -461,6 +476,7 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     haric,
     sayisal,
     kanGrubu,
+    olcum,
     ozet: etiketler.join(' · '),
   }
 }
@@ -538,4 +554,35 @@ export function haricEslesir(metin: string, haric: string[]): boolean {
     if (liste.some((k) => t.includes(k))) return false
   }
   return true
+}
+
+export interface AramaIstatistik {
+  hastaSayisi: number
+  seansSayisi: number
+  asiAdedi: number
+  ilacAdedi: number
+  ortalamaSeansDk: number | null
+  birim: 'hasta' | 'asi' | 'ilac' | 'seans' | 'dakika'
+  cumle: string
+}
+
+export function istatistikKur(
+  q: SorguAyik,
+  g: { hastaSayisi: number; seansSayisi: number; asiAdedi: number; ilacAdedi: number; ortalamaSeansDk: number | null }
+): AramaIstatistik {
+  const donem = q.pencere?.etiket || 'kayıtlarda'
+  const birim: AramaIstatistik['birim'] = q.olcum === 'asi' ? 'asi' : q.olcum === 'ilac' ? 'ilac' : q.olcum === 'sure' ? 'dakika' : 'hasta'
+  let cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.hastaSayisi} hasta.`
+  if (birim === 'asi') {
+    cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.asiAdedi} aşı kaydı var (${g.hastaSayisi} hasta).`
+  } else if (birim === 'ilac') {
+    cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.hastaSayisi} hastaya bu ilaç yazılmış (${g.ilacAdedi} kayıt).`
+  } else if (birim === 'dakika') {
+    cumle = g.ortalamaSeansDk == null
+      ? `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} seans süresi kayıtlı değil (${g.seansSayisi} seans).`
+      : `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.seansSayisi} seans, ortalama ${g.ortalamaSeansDk} dakika.`
+  } else if (q.sayim) {
+    cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.hastaSayisi} hasta.`
+  }
+  return { ...g, birim, cumle }
 }

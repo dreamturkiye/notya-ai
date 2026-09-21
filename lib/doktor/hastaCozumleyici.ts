@@ -15,14 +15,14 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { hastaDosyaAra, klinikAramaMi, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
+import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
 
 export type HastaCozumu =
-  | { tur: 'tek'; patientId: string; ad: string }
-  | { tur: 'coklu'; adaylar: CozumAday[] }
-  | { tur: 'yok' }
+  | { tur: 'tek'; patientId: string; ad: string; sayiMetin?: string }
+  | { tur: 'coklu'; adaylar: CozumAday[]; sayiMetin?: string }
+  | { tur: 'yok'; sayiMetin?: string }
 
 const TR_MAP: Record<string, string> = { 'ç': 'c', 'Ç': 'c', 'ğ': 'g', 'Ğ': 'g', 'ı': 'i', 'I': 'i', 'İ': 'i', 'ö': 'o', 'Ö': 'o', 'ş': 's', 'Ş': 's', 'ü': 'u', 'Ü': 'u' }
 function duzle(s: string): string {
@@ -176,32 +176,34 @@ async function dosyaIleDaralt(
   if (ad.tur === 'coklu' && !klinik) return ad
   if (ad.tur === 'yok' && !klinik) return ad
 
-  const ara = await hastaDosyaAra(supabase, doctorId, mesaj)
-  if (!ara.length) return ad
+  const { adaylar: ara, istatistik } = await klinikAramaYurut(supabase, doctorId, mesaj)
+  if (!ara.length) return { tur: 'yok', sayiMetin: istatistik.cumle }
 
-  const liste = listeSorgusuMu(mesaj)
+  const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle)
   if (ad.tur === 'coklu') {
     const idler = new Set(ad.adaylar.map((a) => a.id))
     const kesi = ara.filter((x) => idler.has(x.id))
     const kaynak = kesi.length ? kesi : ara
     if (kaynak.length === 1 && !liste) {
-      return { tur: 'tek', patientId: kaynak[0].id, ad: kaynak[0].ad }
+      return { tur: 'tek', patientId: kaynak[0].id, ad: kaynak[0].ad, sayiMetin: istatistik.cumle }
     }
     return {
       tur: 'coklu',
       adaylar: kaynak.map((x) => ({ id: x.id, ad: x.ad, dobMetin: x.dobMetin, ozet: x.ozet })),
+      sayiMetin: istatistik.cumle,
     }
   }
 
   if (ad.tur === 'tek' && ara.some((x) => x.id === ad.patientId) && !liste) {
-    return ad
+    return { ...ad, sayiMetin: istatistik.cumle }
   }
 
   if (ara.length === 1 && !liste) {
-    return { tur: 'tek', patientId: ara[0].id, ad: ara[0].ad }
+    return { tur: 'tek', patientId: ara[0].id, ad: ara[0].ad, sayiMetin: istatistik.cumle }
   }
   return {
     tur: 'coklu',
     adaylar: ara.map((x) => ({ id: x.id, ad: x.ad, dobMetin: x.dobMetin, ozet: x.ozet })),
+    sayiMetin: istatistik.cumle,
   }
 }

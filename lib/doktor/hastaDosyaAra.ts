@@ -11,18 +11,21 @@ import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import {
   alanEslesir,
   haricEslesir,
+  istatistikKur,
   sayisalEslesir,
   sorguyuAyikla,
   tumTerimlerEslesir,
   veyaEslesir,
   yasAyHesapla,
   yasFiltreEslesir,
+  type AramaIstatistik,
   type SorguAyik,
 } from '@/lib/doktor/hastaAramaFiltre'
 
-export type { SorguAyik } from '@/lib/doktor/hastaAramaFiltre'
+export type { AramaIstatistik, SorguAyik } from '@/lib/doktor/hastaAramaFiltre'
 export {
   ARAMA_ALANLARI,
+  istatistikKur,
   klinikAramaMi,
   listeSorgusuMu,
   metinEslesir,
@@ -86,6 +89,16 @@ function gunAralikta(gun: string | null | undefined, p: SorguAyik['pencere']): b
   return g >= p.basGun && g <= p.bitGun
 }
 
+function seansSureSn(s: { duration_seconds?: number | null; started_at?: string | null; ended_at?: string | null }): number | null {
+  const d = Number(s.duration_seconds)
+  if (Number.isFinite(d) && d > 0) return d
+  if (s.started_at && s.ended_at) {
+    const sn = (new Date(s.ended_at).getTime() - new Date(s.started_at).getTime()) / 1000
+    return sn > 30 && sn < 8 * 3600 ? sn : null
+  }
+  return null
+}
+
 function cinsiyetCoz(enc: string | null | undefined): 'kadin' | 'erkek' | null {
   if (!enc) return null
   try {
@@ -96,6 +109,12 @@ function cinsiyetCoz(enc: string | null | undefined): 'kadin' | 'erkek' | null {
   return null
 }
 
+export interface KlinikAramaSonuc {
+  adaylar: DosyaAramaAday[]
+  istatistik: AramaIstatistik
+  q: SorguAyik
+}
+
 /** Doctor-scoped wide search. Every child query carries doktor/doctor_id. */
 export async function hastaDosyaAra(
   supabase: SupabaseClient,
@@ -103,14 +122,24 @@ export async function hastaDosyaAra(
   mesaj: string,
   now = new Date()
 ): Promise<DosyaAramaAday[]> {
-  if (!doktorId) return []
+  return (await klinikAramaYurut(supabase, doktorId, mesaj, now)).adaylar
+}
+
+export async function klinikAramaYurut(
+  supabase: SupabaseClient,
+  doktorId: string,
+  mesaj: string,
+  now = new Date()
+): Promise<KlinikAramaSonuc> {
+  const bos = istatistikKur(sorguyuAyikla(mesaj, now), { hastaSayisi: 0, seansSayisi: 0, asiAdedi: 0, ilacAdedi: 0, ortalamaSeansDk: null })
+  if (!doktorId) return { adaylar: [], istatistik: bos, q: sorguyuAyikla(mesaj, now) }
   const q = sorguyuAyikla(mesaj, now)
   const p = q.pencere
   const ham: HamSatir[] = []
 
   const seansQ = supabase
     .from('sessions')
-    .select('id, patient_id, created_at')
+    .select('id, patient_id, created_at, started_at, ended_at, duration_seconds')
     .eq('doctor_id', doktorId)
     .not('patient_id', 'is', null)
     .order('created_at', { ascending: false })
@@ -200,17 +229,22 @@ export async function hastaDosyaAra(
 
   const seansHasta = new Map<string, string>()
   const ziyaretId = new Set<string>()
+  const seansSureleri: number[] = []
   for (const s of seanslar.data || []) {
+    const zaman = String(s.started_at || s.created_at || '')
+    if (!isoAralikta(zaman, p)) continue
     if (s.patient_id) {
       seansHasta.set(String(s.id), String(s.patient_id))
       ziyaretId.add(String(s.patient_id))
+      const sure = seansSureSn(s)
+      if (sure != null) seansSureleri.push(sure)
       ham.push({
         patientId: String(s.patient_id),
         kaynak: 'seans',
-        neden: kisa(`${trTarih(s.created_at as string)} muayene`),
+        neden: kisa(`${trTarih(zaman)} muayene`),
         skor: 4,
         metin: 'muayene seans',
-        zaman: String(s.created_at || ''),
+        zaman,
       })
     }
   }
@@ -373,7 +407,8 @@ export async function hastaDosyaAra(
       }
     } catch { /* */ }
 
-    const torba = `${ad} ${dob} ${g.metin} ${intakeIl.get(id) || ''} ${notBlob}`
+    const omurTorba = `${ad} ${dob} ${g.metin} ${intakeIl.get(id) || ''} ${notBlob}`
+    const torba = q.pencere ? `${ad} ${g.metin}` : omurTorba
     if (q.veya.length) {
       if (!veyaEslesir(torba, q.veya)) continue
     } else if (!tumTerimlerEslesir(torba, q.terimler)) {
@@ -384,18 +419,18 @@ export async function hastaDosyaAra(
     if (!haricEslesir(torba, q.haric)) continue
     if (q.kanGrubu && !kanGrubuEslesir(torba, q.kanGrubu)) continue
 
-    if (q.asi && !/asi|asilama|immuniz|hepatit|kpa|bcg|kizamik/.test(torba.toLowerCase()) && !g.nedenler.some((n) => /aşı|asi/i.test(n))) {
+    if (q.asi && !g.nedenler.some((n) => /aşı|asi/i.test(n))) {
       continue
     }
 
-    const ziyaretGerek = q.ziyaret || Boolean(q.pencere && (q.cogul || q.yas))
-    if (ziyaretGerek && !ziyaretId.has(id) && !g.nedenler.some((n) => /muayene|randevu|not:|aşı/i.test(n))) {
+    const seansGerek = q.olcum === 'sure' || q.olcum === 'hasta' || q.ziyaret || Boolean(q.pencere && q.yas && q.olcum !== 'asi' && q.olcum !== 'ilac')
+    if (seansGerek && !ziyaretId.has(id) && !g.nedenler.some((n) => /muayene|randevu|not:/i.test(n))) {
       continue
     }
 
     const anlamiVar = Boolean(
       q.yas || q.terimler.length || q.alanlar.length || q.asi || q.ziyaret || q.pencere
-      || q.veya.length || q.haric.length || q.sayisal.length || q.kanGrubu || q.cinsiyet
+      || q.veya.length || q.haric.length || q.sayisal.length || q.kanGrubu || q.cinsiyet || q.olcum
     )
     if (!anlamiVar) continue
 
@@ -409,7 +444,25 @@ export async function hastaDosyaAra(
     })
   }
 
-  return cikti.sort((a, b) => b.skor - a.skor || a.ad.localeCompare(b.ad, 'tr')).slice(0, 40)
+  const adaylar = cikti.sort((a, b) => b.skor - a.skor || a.ad.localeCompare(b.ad, 'tr')).slice(0, 40)
+  const eslesen = new Set(adaylar.map((a) => a.id))
+  const asiAdedi = ham.filter((h) => h.kaynak === 'asi' && eslesen.has(h.patientId)).length
+  const seansSayisi = ham.filter((h) => h.kaynak === 'seans' && (q.olcum === 'sure' || eslesen.has(h.patientId))).length
+  const ilacAdedi = ham.filter((h) => h.kaynak === 'ilac' && eslesen.has(h.patientId)).length
+  const sureOrtalama = seansSureleri.length
+    ? Math.round((seansSureleri.reduce((a, b) => a + b, 0) / seansSureleri.length / 60) * 10) / 10
+    : null
+  return {
+    adaylar,
+    q,
+    istatistik: istatistikKur(q, {
+      hastaSayisi: adaylar.length,
+      seansSayisi,
+      asiAdedi,
+      ilacAdedi,
+      ortalamaSeansDk: sureOrtalama,
+    }),
+  }
 }
 
 function kanGrubuEslesir(torba: string, kan: string): boolean {

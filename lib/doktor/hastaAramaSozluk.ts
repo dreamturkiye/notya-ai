@@ -6,7 +6,7 @@
 export const KLINIK_SOZLUK: Record<string, string[]> = {
   kulak: ['kulak', 'otit', 'otitis', 'h65', 'h66', 'orta kulak', 'kulak agri', 'kulak akinti'],
   bogaz: ['bogaz', 'farenjit', 'tonsillit', 'streptokok', 'anjin', 'j02', 'j03'],
-  iltihap: ['iltihap', 'enfeksiyon', 'infeksiyon', 'enflam'],
+  iltihap: ['iltihap', 'enfeksiyon', 'infeksiyon', 'enflam', 'ihtihab', 'iltehab'],
   ates: ['ates', 'fever', 'pireksi', 'atesli'],
   oksuruk: ['oksuruk', 'oksuruklu', 'krup', 'j05'],
   hirilti: ['hirilti', 'wheez', 'bronşiolit', 'bronchiol', 'bronşit', 'j21', 'j20'],
@@ -33,6 +33,7 @@ export const KLINIK_SOZLUK: Record<string, string[]> = {
   noro: ['nobet', 'havale', 'epilepsi', 'fejril konvulsiyon'],
   ruh: ['otizm', 'mchat', 'dikkat', 'hiperaktivite', 'kekeme', 'gelisim geriligi'],
   ilac: ['ilac', 'recete', 'antibiyotik', 'amoksisilin', 'parasetamol', 'ibuprofen'],
+  augmentin: ['augmentin', 'amoklavin', 'klavunat', 'croxilex', 'bioment', 'klamoks', 'amoksisilin', 'klavulan'],
   randevu: ['randevu', 'kontrol', 'takip'],
   belge: ['belge', 'epikriz', 'lab', 'rontgen', 'tetkik', 'sonuc'],
   gebelik: ['gebelik', 'gebe', 'hamile', 'trimester', 'nst', 'tokoliz'],

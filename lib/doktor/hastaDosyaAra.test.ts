@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { ARAMA_ALANLARI, adaylariTopla, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
+import { ARAMA_ALANLARI, adaylariTopla, istatistikKur, klinikAramaMi, listeSorgusuMu, metinEslesir, sorguyuAyikla, yasAyHesapla, yasFiltreEslesir } from './hastaDosyaAra'
 import { haricEslesir, sayisalEslesir, veyaEslesir } from './hastaAramaFiltre'
 
 const PAZAR = new Date('2026-09-20T15:00:00+03:00')
@@ -127,6 +127,49 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
     assert.equal(haricEslesir('KPA aşı kaydı', ['asi']), false)
     assert.equal(sayisalEslesir('ates 38.6 kilo 12', [{ alan: 'ates', min: 38, max: null, etiket: 'ates ≥38' }]), true)
     assert.equal(sayisalEslesir('ates 37.2', [{ alan: 'ates', min: 38, max: null, etiket: 'ates ≥38' }]), false)
+  })
+
+  it('Gökhan’ın altı cümlesi: aşı adedi, 1 ve 5 yaş, süre, toplam, Augmentin, ihtihabi', () => {
+    const asi = sorguyuAyikla('Bu hafta kac asi yaptik?', PAZAR)
+    assert.equal(asi.olcum, 'asi')
+    assert.equal(asi.pencere?.etiket, 'bu hafta')
+    assert.equal(asi.sayim, true)
+    assert.ok(!asi.terimler.includes('yaptik'))
+
+    const yas = sorguyuAyikla('Bu hafta 1 ve 5 yaslari arasinda kac hasta gordum', PAZAR)
+    assert.equal(yas.yas?.minAy, 12)
+    assert.equal(yas.yas?.maxAy, 71)
+    assert.equal(yas.pencere?.etiket, 'bu hafta')
+    assert.equal(yas.olcum, 'hasta')
+    assert.equal(yas.ziyaret, true)
+
+    const sure = sorguyuAyikla('Bu haftaki averaj hasta seansim kac dakikaydi', PAZAR)
+    assert.equal(sure.olcum, 'sure')
+    assert.equal(sure.pencere?.etiket, 'bu hafta')
+    assert.ok(!sure.terimler.includes('averaj') && !sure.terimler.includes('dakika'))
+
+    const toplam = sorguyuAyikla('Bu hafta toplam kac hasta gordum', PAZAR)
+    assert.equal(toplam.olcum, 'hasta')
+    assert.equal(toplam.pencere?.etiket, 'bu hafta')
+    assert.ok(!toplam.terimler.includes('toplam'))
+
+    const ilac = sorguyuAyikla('Bu ay kac hastaya Augmentin receteledim, bu hastalari listele', PAZAR)
+    assert.equal(ilac.olcum, 'ilac')
+    assert.equal(ilac.pencere?.etiket, 'bu ay')
+    assert.ok(ilac.terimler.includes('augmentin') || ilac.terimler.includes('amoksisilin'))
+    assert.equal(ilac.cogul, true)
+
+    const kulak = sorguyuAyikla('Hangi hasta veya hastalar bana gecen hafta kulak ihtihabi ile geldi?', PAZAR)
+    assert.equal(kulak.pencere?.etiket, 'geçen hafta')
+    assert.equal(kulak.veya.length, 0, 'hasta veya hastalar OR açmamalı')
+    assert.ok(kulak.terimler.includes('kulak') || kulak.terimler.includes('otit'))
+    assert.ok(kulak.terimler.includes('iltihap'))
+
+    const st = istatistikKur(asi, { hastaSayisi: 3, seansSayisi: 4, asiAdedi: 5, ilacAdedi: 0, ortalamaSeansDk: 18 })
+    assert.equal(st.birim, 'asi')
+    assert.match(st.cumle, /5 aşı/)
+    const dk = istatistikKur(sure, { hastaSayisi: 4, seansSayisi: 4, asiAdedi: 0, ilacAdedi: 0, ortalamaSeansDk: 18 })
+    assert.match(dk.cumle, /18 dakika/)
   })
 
   it('istemci sayfası şifre çözücüyü çekmez (klinikAramaMi filtrede)', () => {
