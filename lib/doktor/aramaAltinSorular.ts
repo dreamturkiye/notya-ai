@@ -1,0 +1,186 @@
+/** 30 golden NL questions per pilot branş — parser contract for Ayşe search. */
+export type AltinBrans = 'pediatri' | 'goz' | 'kd' | 'dahiliye' | 'derm'
+
+export interface AltinSoru {
+  brans: AltinBrans
+  no: number
+  soru: string
+  bolumIstegi: AltinBrans | null
+  bayrak?: string
+  yasMin?: number
+  yasMax?: number
+  pencere?: string
+  minSeans?: number
+  sayisalAlan?: string
+  haric?: string
+  veyaMin?: number
+  olcum?: 'hasta' | 'asi' | 'ilac' | 'sure'
+  kirilim?: 'asi_adi'
+  ucDeger?: boolean
+  portalYok?: boolean
+  hatirlatmaSay?: boolean
+  ziyaretYok?: boolean
+}
+
+export const ALTIN_SORULAR: AltinSoru[] = [
+  // —— Pediatri 1–10 (orijinal zor set) ——
+  { brans: 'pediatri', no: 1, soru: 'Bu ay 12–24 ay aralığındaki çocuklarda KPA serisi başlamış ama 2. veya 3. dozu gecikmiş kaç hasta var?', bolumIstegi: 'pediatri', bayrak: 'asi_gecikti', yasMin: 12, yasMax: 24, pencere: 'bu ay' },
+  { brans: 'pediatri', no: 2, soru: 'Geçen hafta otit / orta kulak iltihabı ile gelen ve Augmentin veya amoksisilin-klavulanat reçetelediğim 1–5 yaş arası hastaları listele', bolumIstegi: null, yasMin: 12, yasMax: 71, pencere: 'geçen hafta', veyaMin: 2 },
+  { brans: 'pediatri', no: 3, soru: 'Son 90 günde 3 veya daha fazla kez muayene ettiğim ve en az birinde ateş ≥38,5 kaydı olan hastalar kimler?', bolumIstegi: null, minSeans: 3, sayisalAlan: 'ates' },
+  { brans: 'pediatri', no: 4, soru: '18–24 aylık olup M-CHAT’i hiç yapılmamış veya sonucu riskli olan ve son 6 ayda muayenesi olan çocukları bul.', bolumIstegi: 'pediatri', bayrak: 'tarama_gecikti', yasMin: 18, yasMax: 24 },
+  { brans: 'pediatri', no: 5, soru: 'Son 6 ayda kilo veya boy persentilinde 2 majör kanal kayması olan 0–36 aylık hastaları listele', bolumIstegi: 'pediatri', bayrak: 'persentil_kaymasi', yasMin: 0, yasMax: 36 },
+  { brans: 'pediatri', no: 6, soru: 'Bu hafta ortalama hasta seansım kaç dakikaydı? En uzun ve en kısa 3 seansı söyle; 1–5 yaş ve 5+ yaş ayrı ortalamalar.', bolumIstegi: null, olcum: 'sure', ucDeger: true, pencere: 'bu hafta' },
+  { brans: 'pediatri', no: 7, soru: 'Bu hafta toplam kaç aşı uyguladık? Aşı adına göre kır (KPA, KKK, Hepatit B).', bolumIstegi: null, olcum: 'asi', kirilim: 'asi_adi', pencere: 'bu hafta' },
+  { brans: 'pediatri', no: 8, soru: '6–12 aylık, aktif D vitamini veya demir kaydı olmayan ve bebek görevi bekliyor olan hastaları listele.', bolumIstegi: 'pediatri', bayrak: 'profilaksi', yasMin: 6, yasMax: 12 },
+  { brans: 'pediatri', no: 9, soru: 'Bu ay hırıltı veya bronşiolit veya astım ile gelen, antibiyotik almayan, alerji kaydı olmayan 0–24 aylık hastalar kimler?', bolumIstegi: null, haric: 'antibiyotik', yasMin: 0, yasMax: 24, pencere: 'bu ay', veyaMin: 2 },
+  { brans: 'pediatri', no: 10, soru: 'Sağlam çocuk izlemi kaçmış, aşı gecikmesi de olan ve hasta portalı açık olmayan aileleri listele; kaçına hatırlatma gidebilirim?', bolumIstegi: 'pediatri', bayrak: 'izlem_kacti', portalYok: true, hatirlatmaSay: true },
+  // —— Pediatri 11–30 ——
+  { brans: 'pediatri', no: 11, soru: 'Bu ay 0–2 aylık bebeklerde Hepatit B serisi gecikmiş kimler?', bolumIstegi: 'pediatri', yasMin: 0, yasMax: 2, pencere: 'bu ay' },
+  { brans: 'pediatri', no: 12, soru: 'Son 6 ayda ateş ≥39 ile gelen 3–36 aylık çocukları listele', bolumIstegi: null, sayisalAlan: 'ates', yasMin: 3, yasMax: 36 },
+  { brans: 'pediatri', no: 13, soru: 'Bu hafta ishal veya gastroenterit ile gelen 0–5 yaş, antibiyotik almayanlar', bolumIstegi: null, haric: 'antibiyotik', pencere: 'bu hafta', veyaMin: 1 },
+  { brans: 'pediatri', no: 14, soru: 'Kızlar 8–13 yaş bu yıl HPV veya aşı kaydı olmayanlar', bolumIstegi: null, haric: 'asi' },
+  { brans: 'pediatri', no: 15, soru: 'Son 90 günde 2 kez idrar yolu enfeksiyonu olan 1–7 yaş', bolumIstegi: null, minSeans: 2, yasMin: 12, yasMax: 95 },
+  { brans: 'pediatri', no: 16, soru: 'Bu ay sarılık veya fototerapi kaydı olan yenidoğanlar', bolumIstegi: null, pencere: 'bu ay' },
+  { brans: 'pediatri', no: 17, soru: 'Persentil kayması olan ve portalı açık olmayan 0–24 aylık, hatırlatma?', bolumIstegi: 'pediatri', bayrak: 'persentil_kaymasi', portalYok: true, hatirlatmaSay: true, yasMin: 0, yasMax: 24 },
+  { brans: 'pediatri', no: 18, soru: 'Bu hafta ortalama seans süresi; en uzun 3 seans', bolumIstegi: null, olcum: 'sure', ucDeger: true, pencere: 'bu hafta' },
+  { brans: 'pediatri', no: 19, soru: 'KKK dozu gecikmiş 12–24 aylık çocuklar', bolumIstegi: 'pediatri', bayrak: 'asi_gecikti', yasMin: 12, yasMax: 24 },
+  { brans: 'pediatri', no: 20, soru: 'Son 6 ayda muayenesi olmayan 0–12 aylık bebekler', bolumIstegi: null, ziyaretYok: true, yasMin: 0, yasMax: 12 },
+  { brans: 'pediatri', no: 21, soru: 'Bu ay astım ile gelen ve antibiyotik almayan 5–12 yaş', bolumIstegi: null, haric: 'antibiyotik', pencere: 'bu ay' },
+  { brans: 'pediatri', no: 22, soru: 'M-CHAT riskli 16–30 aylık, son 6 ayda muayene', bolumIstegi: 'pediatri', bayrak: 'tarama_gecikti' },
+  { brans: 'pediatri', no: 23, soru: 'Bu hafta kaç aşı; adına göre kır', bolumIstegi: null, olcum: 'asi', kirilim: 'asi_adi', pencere: 'bu hafta' },
+  { brans: 'pediatri', no: 24, soru: 'Nöbet veya havale ile gelen son 30 gün 0–6 yaş', bolumIstegi: null, veyaMin: 1 },
+  { brans: 'pediatri', no: 25, soru: 'Profilaksi boşluğu 6–12 ay D vitamini olmayan', bolumIstegi: 'pediatri', bayrak: 'profilaksi', yasMin: 6, yasMax: 12 },
+  { brans: 'pediatri', no: 26, soru: 'Bu ay 3 veya daha fazla kez gelen ateşli çocuklar', bolumIstegi: null, minSeans: 3, pencere: 'bu ay' },
+  { brans: 'pediatri', no: 27, soru: 'Sağlam çocuk izlemi kaçmış 9–18 aylık', bolumIstegi: 'pediatri', bayrak: 'izlem_kacti', yasMin: 9, yasMax: 18 },
+  { brans: 'pediatri', no: 28, soru: 'Geçen hafta kulak iltihabı, Augmentin yazdığım 2 yaşındakiler', bolumIstegi: null, pencere: 'geçen hafta', yasMin: 24, yasMax: 35 },
+  { brans: 'pediatri', no: 29, soru: 'Aşı olmayan 12–24 aylık (hiç kayıt yok)', bolumIstegi: null, haric: 'asi', yasMin: 12, yasMax: 24 },
+  { brans: 'pediatri', no: 30, soru: 'İzlem kaçmış ve aşı gecikmiş, hatırlatma kaçına gider?', bolumIstegi: 'pediatri', bayrak: 'izlem_kacti', hatirlatmaSay: true },
+
+  // —— Göz 1–30 ——
+  { brans: 'goz', no: 1, soru: 'OCT veya görme alanı gecikmiş glokom hastaları kimler? En eski gecikmeye göre sırala.', bolumIstegi: 'goz', bayrak: 'ga_oct_gecikti' },
+  { brans: 'goz', no: 2, soru: 'Planlı IVT tarihi geçmiş, yapılmadı işaretli kaç hasta var? Listele.', bolumIstegi: 'goz', bayrak: 'ivt_gecikti' },
+  { brans: 'goz', no: 3, soru: 'Önümüzdeki 14 günde IVT penceresi açık olanları söyle', bolumIstegi: 'goz', bayrak: 'ivt_penceresi' },
+  { brans: 'goz', no: 4, soru: 'Diyabetik retinopati tarama veya göz dibi kontrolü zamanı gelenler', bolumIstegi: 'goz', bayrak: 'dr_tarama' },
+  { brans: 'goz', no: 5, soru: 'IVT gecikmiş ve portalı açık olmayan, kaçına hatırlatma gidebilirim?', bolumIstegi: 'goz', bayrak: 'ivt_gecikti', portalYok: true, hatirlatmaSay: true },
+  { brans: 'goz', no: 6, soru: 'Bu hafta katarakt ile gelen 60 yaş üstü hastalar', bolumIstegi: null, pencere: 'bu hafta' },
+  { brans: 'goz', no: 7, soru: 'Geçen hafta konjonktivit veya kırmızı göz, antibiyotik almayanlar', bolumIstegi: null, haric: 'antibiyotik', pencere: 'geçen hafta', veyaMin: 1 },
+  { brans: 'goz', no: 8, soru: 'Son 90 günde 3 veya daha fazla kez muayene ettiğim glokom hastaları', bolumIstegi: null, minSeans: 3 },
+  { brans: 'goz', no: 9, soru: 'Bu hafta ortalama seansım kaç dakikaydı? En uzun 3', bolumIstegi: null, olcum: 'sure', ucDeger: true, pencere: 'bu hafta' },
+  { brans: 'goz', no: 10, soru: 'GİB ≥24 kaydı olan bu ayki muayeneler', bolumIstegi: null, sayisalAlan: 'gib', pencere: 'bu ay' },
+  { brans: 'goz', no: 11, soru: 'Anti-VEGF enjeksiyonu gecikmiş OD/OS hastaları', bolumIstegi: 'goz', bayrak: 'ivt_gecikti' },
+  { brans: 'goz', no: 12, soru: 'DR tarama zamanı ve portal yok, hatırlatma?', bolumIstegi: 'goz', bayrak: 'dr_tarama', portalYok: true, hatirlatmaSay: true },
+  { brans: 'goz', no: 13, soru: 'Bu ay OCT çektiğim hastaları listele', bolumIstegi: null, pencere: 'bu ay' },
+  { brans: 'goz', no: 14, soru: 'Katarakt veya glokom ile gelen geçen hafta 50+ yaş', bolumIstegi: null, pencere: 'geçen hafta', veyaMin: 1 },
+  { brans: 'goz', no: 15, soru: 'Son 6 ayda muayenesi olmayan göz hastalarım', bolumIstegi: null, ziyaretYok: true },
+  { brans: 'goz', no: 16, soru: 'Bu hafta kaç hasta gördüm', bolumIstegi: null, olcum: 'hasta', pencere: 'bu hafta' },
+  { brans: 'goz', no: 17, soru: 'Alerji kaydı olmayan konjonktivit bu ay', bolumIstegi: null, haric: 'alerji', pencere: 'bu ay' },
+  { brans: 'goz', no: 18, soru: 'Göz kontrol zamanı geçmiş kohort', bolumIstegi: 'goz', bayrak: 'kontrol_gecikti' },
+  { brans: 'goz', no: 19, soru: 'IVT penceresi veya IVT gecikmiş — VEYA listele', bolumIstegi: 'goz' },
+  { brans: 'goz', no: 20, soru: 'Bu ay fundus notu olanlar', bolumIstegi: null, pencere: 'bu ay' },
+  { brans: 'goz', no: 21, soru: 'Kızlar bu hafta kırmızı göz', bolumIstegi: null, pencere: 'bu hafta' },
+  { brans: 'goz', no: 22, soru: 'OCT gecikmiş, hatırlatma kaçına gider', bolumIstegi: 'goz', bayrak: 'ga_oct_gecikti', hatirlatmaSay: true },
+  { brans: 'goz', no: 23, soru: 'Son 30 günde 2 kez gelen retina hastaları', bolumIstegi: null, minSeans: 2 },
+  { brans: 'goz', no: 24, soru: 'Glokom ve GİB ≥21 bu ay', bolumIstegi: null, sayisalAlan: 'gib', pencere: 'bu ay' },
+  { brans: 'goz', no: 25, soru: 'Portalı açık olmayan IVT penceresi', bolumIstegi: 'goz', bayrak: 'ivt_penceresi', portalYok: true },
+  { brans: 'goz', no: 26, soru: 'Bu yıl katarakt ameliyatı notu olanlar', bolumIstegi: null, pencere: 'bu yıl' },
+  { brans: 'goz', no: 27, soru: 'Antibiyotik almayan kapak iltihabı geçen hafta', bolumIstegi: null, haric: 'antibiyotik', pencere: 'geçen hafta' },
+  { brans: 'goz', no: 28, soru: 'En kısa 3 seans bu hafta, ortalama dakika', bolumIstegi: null, olcum: 'sure', ucDeger: true, pencere: 'bu hafta' },
+  { brans: 'goz', no: 29, soru: 'Retinopati taraması kaydı yok kohort', bolumIstegi: 'goz', bayrak: 'dr_tarama' },
+  { brans: 'goz', no: 30, soru: 'Görme alanı gecikmiş ve portal yok', bolumIstegi: 'goz', bayrak: 'ga_oct_gecikti', portalYok: true },
+
+  // —— KD 1–30 ——
+  { brans: 'kd', no: 1, soru: 'Lohusa 1. hafta kontrolü kaydı olmayanları listele', bolumIstegi: 'kd', bayrak: 'lohusa_1hf' },
+  { brans: 'kd', no: 2, soru: 'Doğum sonu 6. hafta lohusa kontrolü gecikmiş kimler?', bolumIstegi: 'kd', bayrak: 'lohusa_6hf' },
+  { brans: 'kd', no: 3, soru: 'OGTT zamanı gelen veya penceresi kapanan gebeler', bolumIstegi: 'kd', bayrak: 'ogtt_zamani' },
+  { brans: 'kd', no: 4, soru: 'Rh negatif anti-D zamanı gelen gebeler', bolumIstegi: 'kd', bayrak: 'anti_d_zamani' },
+  { brans: 'kd', no: 5, soru: 'GBS taraması zamanı gelen 35–37. hafta gebeler', bolumIstegi: 'kd', bayrak: 'gbs_zamani' },
+  { brans: 'kd', no: 6, soru: 'Smear veya serviks taraması gecikmiş 21–65 yaş', bolumIstegi: 'kd', bayrak: 'serviks_tarama' },
+  { brans: 'kd', no: 7, soru: 'Gebelik izlemi gecikmiş DÖBYR kaydı olmayanlar', bolumIstegi: 'kd', bayrak: 'izlem_gecikti' },
+  { brans: 'kd', no: 8, soru: 'İkili tarama penceresi kapanıyor olan gebeler', bolumIstegi: 'kd', bayrak: 'tarama_kapaniyor' },
+  { brans: 'kd', no: 9, soru: 'Lohusa kontrolü kaçmış ve portalı açık olmayan, hatırlatma kaçına gider?', bolumIstegi: 'kd', portalYok: true, hatirlatmaSay: true },
+  { brans: 'kd', no: 10, soru: 'Bu hafta adet düzensizliği veya menoraji ile gelen 20–45 yaş', bolumIstegi: null, pencere: 'bu hafta', veyaMin: 1 },
+  { brans: 'kd', no: 11, soru: 'Geçen hafta pelvik ağrı, ateş ≥38 olanlar', bolumIstegi: null, sayisalAlan: 'ates', pencere: 'geçen hafta' },
+  { brans: 'kd', no: 12, soru: 'Bu ay PCOS veya endometriyozis notu', bolumIstegi: null, pencere: 'bu ay', veyaMin: 1 },
+  { brans: 'kd', no: 13, soru: 'Son 90 günde 3 kez gelen jinekoloji hastaları', bolumIstegi: null, minSeans: 3 },
+  { brans: 'kd', no: 14, soru: 'Bu hafta ortalama seans dakikası, en uzun 3', bolumIstegi: null, olcum: 'sure', ucDeger: true, pencere: 'bu hafta' },
+  { brans: 'kd', no: 15, soru: 'OGTT zamanı, portal yok, hatırlatma', bolumIstegi: 'kd', bayrak: 'ogtt_zamani', portalYok: true, hatirlatmaSay: true },
+  { brans: 'kd', no: 16, soru: 'Bu ay NST kaydı olan gebeler', bolumIstegi: null, pencere: 'bu ay' },
+  { brans: 'kd', no: 17, soru: 'Menopoz veya postmenopoz kanama geçen ay', bolumIstegi: null, pencere: 'geçen ay', veyaMin: 1 },
+  { brans: 'kd', no: 18, soru: 'Smear gecikmiş portal açık olmayan', bolumIstegi: 'kd', bayrak: 'serviks_tarama', portalYok: true },
+  { brans: 'kd', no: 19, soru: 'Anti-D zamanı Rh negatif kohort', bolumIstegi: 'kd', bayrak: 'anti_d_zamani' },
+  { brans: 'kd', no: 20, soru: 'Son 6 ayda muayenesi olmayan jinekoloji hastalarım', bolumIstegi: null, ziyaretYok: true },
+  { brans: 'kd', no: 21, soru: 'Bu hafta kaç hasta gördüm', bolumIstegi: null, olcum: 'hasta', pencere: 'bu hafta' },
+  { brans: 'kd', no: 22, soru: 'Lohusa 6. hafta ve hatırlatma', bolumIstegi: 'kd', bayrak: 'lohusa_6hf', hatirlatmaSay: true },
+  { brans: 'kd', no: 23, soru: 'GBS zamanı gelenler listele', bolumIstegi: 'kd', bayrak: 'gbs_zamani' },
+  { brans: 'kd', no: 24, soru: 'Myom veya polikistik over bu ay 25–40 yaş', bolumIstegi: null, pencere: 'bu ay', veyaMin: 1 },
+  { brans: 'kd', no: 25, soru: 'Antibiyotik almayan idrar yolu bu hafta gebe olmayan — idrar', bolumIstegi: null, haric: 'antibiyotik', pencere: 'bu hafta' },
+  { brans: 'kd', no: 26, soru: 'Tarama kapanıyor ikili NT', bolumIstegi: 'kd', bayrak: 'tarama_kapaniyor' },
+  { brans: 'kd', no: 27, soru: 'Gebelik izlemi gecikmiş hatırlatma', bolumIstegi: 'kd', bayrak: 'izlem_gecikti', hatirlatmaSay: true },
+  { brans: 'kd', no: 28, soru: 'Bu yıl pap smear yazdığım hastalar', bolumIstegi: 'kd', bayrak: 'serviks_tarama', pencere: 'bu yıl' },
+  { brans: 'kd', no: 29, soru: 'Alerji kaydı olmayan, bu ay vajinal akıntı', bolumIstegi: null, haric: 'alerji', pencere: 'bu ay' },
+  { brans: 'kd', no: 30, soru: 'Lohusa 1. hafta portal yok', bolumIstegi: 'kd', bayrak: 'lohusa_1hf', portalYok: true },
+
+  // —— Dahiliye 1–30 ——
+  { brans: 'dahiliye', no: 1, soru: 'HbA1c >9 olan diyabet kohortumu listele', bolumIstegi: 'dahiliye', bayrak: 'hba1c_9', sayisalAlan: 'hba1c' },
+  { brans: 'dahiliye', no: 2, soru: 'eGFR <45 KDIGO kohortu kimler?', bolumIstegi: 'dahiliye', bayrak: 'egfr_45', sayisalAlan: 'egfr' },
+  { brans: 'dahiliye', no: 3, soru: 'LDL hedef dışı hastalar', bolumIstegi: 'dahiliye', bayrak: 'ldl_hedef_disi' },
+  { brans: 'dahiliye', no: 4, soru: 'KB hedef dışı hipertansiyon kartı', bolumIstegi: 'dahiliye', bayrak: 'kb_hedef_disi' },
+  { brans: 'dahiliye', no: 5, soru: 'Son 6 aydır gelmeyen vizit kohortu', bolumIstegi: 'dahiliye', bayrak: 'vizit_6ay' },
+  { brans: 'dahiliye', no: 6, soru: 'HbA1c >9 ve portalı açık olmayan, hatırlatma kaçına gider?', bolumIstegi: 'dahiliye', bayrak: 'hba1c_9', portalYok: true, hatirlatmaSay: true },
+  { brans: 'dahiliye', no: 7, soru: 'SCORE2 yüksek risk diye sorduğum kohort', bolumIstegi: 'dahiliye' },
+  { brans: 'dahiliye', no: 8, soru: 'Gecikmiş lab görevi olanlar', bolumIstegi: 'dahiliye', bayrak: 'gecikmis_lab' },
+  { brans: 'dahiliye', no: 9, soru: 'Bu hafta göğüs ağrısı veya nefes darlığı, 40–80 yaş', bolumIstegi: null, pencere: 'bu hafta', veyaMin: 1 },
+  { brans: 'dahiliye', no: 10, soru: 'Geçen hafta idrar yolu, antibiyotik yazdığım 18+ kadınlar', bolumIstegi: null, pencere: 'geçen hafta' },
+  { brans: 'dahiliye', no: 11, soru: 'Son 90 günde 3 kez gelen tansiyon hastaları', bolumIstegi: null, minSeans: 3 },
+  { brans: 'dahiliye', no: 12, soru: 'Bu hafta ortalama seans, en uzun 3', bolumIstegi: null, olcum: 'sure', ucDeger: true, pencere: 'bu hafta' },
+  { brans: 'dahiliye', no: 13, soru: 'LDL ≥160 kaydı bu ay', bolumIstegi: 'dahiliye', sayisalAlan: 'ldl', pencere: 'bu ay' },
+  { brans: 'dahiliye', no: 14, soru: 'eGFR ≤30 acil nefro sevk kohortu', bolumIstegi: 'dahiliye', bayrak: 'egfr_45', sayisalAlan: 'egfr' },
+  { brans: 'dahiliye', no: 15, soru: 'Tiroid veya hipotiroid bu ay', bolumIstegi: null, pencere: 'bu ay', veyaMin: 1 },
+  { brans: 'dahiliye', no: 16, soru: 'Alerji kaydı olmayan, bu hafta ürtiker', bolumIstegi: null, haric: 'alerji', pencere: 'bu hafta' },
+  { brans: 'dahiliye', no: 17, soru: 'Vizit 6 ay ve hatırlatma', bolumIstegi: 'dahiliye', bayrak: 'vizit_6ay', hatirlatmaSay: true },
+  { brans: 'dahiliye', no: 18, soru: 'Bu hafta kaç hasta', bolumIstegi: null, olcum: 'hasta', pencere: 'bu hafta' },
+  { brans: 'dahiliye', no: 19, soru: 'HbA1c ≥10 listele', bolumIstegi: 'dahiliye', bayrak: 'hba1c_9', sayisalAlan: 'hba1c' },
+  { brans: 'dahiliye', no: 20, soru: 'Son 6 ayda muayenesi olmayan (liste, kohort değil)', bolumIstegi: null, ziyaretYok: true },
+  { brans: 'dahiliye', no: 21, soru: 'Statin veya atorvastatin bu ay reçete', bolumIstegi: null, pencere: 'bu ay', olcum: 'ilac' },
+  { brans: 'dahiliye', no: 22, soru: 'Kalp yetmezliği veya AF geçen ay', bolumIstegi: null, pencere: 'geçen ay', veyaMin: 1 },
+  { brans: 'dahiliye', no: 23, soru: 'KB hedef dışı portal yok', bolumIstegi: 'dahiliye', bayrak: 'kb_hedef_disi', portalYok: true },
+  { brans: 'dahiliye', no: 24, soru: 'Gecikmiş aşı görevi kohortu', bolumIstegi: 'dahiliye', bayrak: 'gecikmis_asi' },
+  { brans: 'dahiliye', no: 25, soru: 'Ateş ≥38,5 bu hafta, 2 kez gelen', bolumIstegi: null, sayisalAlan: 'ates', minSeans: 2, pencere: 'bu hafta' },
+  { brans: 'dahiliye', no: 26, soru: 'LDL hedef dışı hatırlatma', bolumIstegi: 'dahiliye', bayrak: 'ldl_hedef_disi', hatirlatmaSay: true },
+  { brans: 'dahiliye', no: 27, soru: 'Anemi veya demir bu ay kadınlar', bolumIstegi: null, pencere: 'bu ay', veyaMin: 1 },
+  { brans: 'dahiliye', no: 28, soru: 'SCORE2 sorusu — kohort aç', bolumIstegi: 'dahiliye' },
+  { brans: 'dahiliye', no: 29, soru: 'Antibiyotik almayan öksürük bu hafta', bolumIstegi: null, haric: 'antibiyotik', pencere: 'bu hafta' },
+  { brans: 'dahiliye', no: 30, soru: 'eGFR <45 ve portal yok, hatırlatma', bolumIstegi: 'dahiliye', bayrak: 'egfr_45', portalYok: true, hatirlatmaSay: true },
+
+  // —— Derm 1–30 ——
+  { brans: 'derm', no: 1, soru: 'TBSE zamanı geçmiş tüm vücut deri muayenesi kohortu', bolumIstegi: 'derm', bayrak: 'tbse_gecikti' },
+  { brans: 'derm', no: 2, soru: 'Yama testi D2 veya D4 okuma zamanı gelenler', bolumIstegi: 'derm', bayrak: 'yama_okuma' },
+  { brans: 'derm', no: 3, soru: 'Fototerapi seans arası açılmış hastalar', bolumIstegi: 'derm', bayrak: 'fototerapi_seans' },
+  { brans: 'derm', no: 4, soru: 'İzotretinoin aylık β-hCG takibi gecikmiş', bolumIstegi: 'derm', bayrak: 'beta_hcg' },
+  { brans: 'derm', no: 5, soru: 'Biyolojik lab tarama eksik veya gecikmiş', bolumIstegi: 'derm', bayrak: 'biyolojik_lab' },
+  { brans: 'derm', no: 6, soru: 'Melanom veya lezyon görevi açık olanlar', bolumIstegi: 'derm', bayrak: 'melanom_gorev' },
+  { brans: 'derm', no: 7, soru: 'TBSE gecikmiş portal yok, hatırlatma kaçına gider?', bolumIstegi: 'derm', bayrak: 'tbse_gecikti', portalYok: true, hatirlatmaSay: true },
+  { brans: 'derm', no: 8, soru: 'PASI ≥10 kaydı olan bu ayki sedef hastaları', bolumIstegi: 'derm', sayisalAlan: 'pasi', pencere: 'bu ay' },
+  { brans: 'derm', no: 9, soru: 'Bu hafta akne veya egzama, antibiyotik almayan 12–25 yaş', bolumIstegi: null, haric: 'antibiyotik', pencere: 'bu hafta', veyaMin: 1 },
+  { brans: 'derm', no: 10, soru: 'Geçen hafta ürtiker veya alerji döküntü', bolumIstegi: null, pencere: 'geçen hafta', veyaMin: 1 },
+  { brans: 'derm', no: 11, soru: 'Son 90 günde 3 kez gelen psoriasis', bolumIstegi: null, minSeans: 3 },
+  { brans: 'derm', no: 12, soru: 'Bu hafta ortalama seans, en uzun 3', bolumIstegi: null, olcum: 'sure', ucDeger: true, pencere: 'bu hafta' },
+  { brans: 'derm', no: 13, soru: 'EASI ≥16 bu ay', bolumIstegi: 'derm', sayisalAlan: 'easi', pencere: 'bu ay' },
+  { brans: 'derm', no: 14, soru: 'Yama okuma ve hatırlatma', bolumIstegi: 'derm', bayrak: 'yama_okuma', hatirlatmaSay: true },
+  { brans: 'derm', no: 15, soru: 'UVB fototerapi ara kohort', bolumIstegi: 'derm', bayrak: 'fototerapi_seans' },
+  { brans: 'derm', no: 16, soru: 'Bu ay zona veya herpes notu', bolumIstegi: null, pencere: 'bu ay', veyaMin: 1 },
+  { brans: 'derm', no: 17, soru: 'Alerji kaydı olmayan kontakt dermatit bu hafta', bolumIstegi: null, haric: 'alerji', pencere: 'bu hafta' },
+  { brans: 'derm', no: 18, soru: 'İzotretinoin hCG portal yok', bolumIstegi: 'derm', bayrak: 'beta_hcg', portalYok: true },
+  { brans: 'derm', no: 19, soru: 'Melanom görev hatırlatma', bolumIstegi: 'derm', bayrak: 'melanom_gorev', hatirlatmaSay: true },
+  { brans: 'derm', no: 20, soru: 'Son 6 ayda muayenesi olmayan derm hastalar', bolumIstegi: null, ziyaretYok: true },
+  { brans: 'derm', no: 21, soru: 'Bu hafta kaç hasta', bolumIstegi: null, olcum: 'hasta', pencere: 'bu hafta' },
+  { brans: 'derm', no: 22, soru: 'Yıllık deri muayenesi TBSE gecikti', bolumIstegi: 'derm', bayrak: 'tbse_gecikti' },
+  { brans: 'derm', no: 23, soru: 'Metotreksat lab tarama gecikmiş biyolojik', bolumIstegi: 'derm', bayrak: 'biyolojik_lab' },
+  { brans: 'derm', no: 24, soru: 'PASI ≥12 veya EASI ≥20 bu ay', bolumIstegi: 'derm', pencere: 'bu ay', sayisalAlan: 'pasi' },
+  { brans: 'derm', no: 25, soru: 'Kızlar bu hafta akne', bolumIstegi: null, pencere: 'bu hafta' },
+  { brans: 'derm', no: 26, soru: 'Fototerapi ve portal yok', bolumIstegi: 'derm', bayrak: 'fototerapi_seans', portalYok: true },
+  { brans: 'derm', no: 27, soru: 'Antibiyotik almayan impetigo geçen hafta', bolumIstegi: null, haric: 'antibiyotik', pencere: 'geçen hafta' },
+  { brans: 'derm', no: 28, soru: '2 kez gelen egzama son 90 gün', bolumIstegi: null, minSeans: 2 },
+  { brans: 'derm', no: 29, soru: 'TBSE + hatırlatma', bolumIstegi: 'derm', bayrak: 'tbse_gecikti', hatirlatmaSay: true },
+  { brans: 'derm', no: 30, soru: 'Lezyon görevi açık melanom kohort', bolumIstegi: 'derm', bayrak: 'melanom_gorev' },
+]

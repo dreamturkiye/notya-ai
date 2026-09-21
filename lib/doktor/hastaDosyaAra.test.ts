@@ -182,14 +182,86 @@ describe('hastaDosyaAra — sorgu (ad/doğum tarihi yok)', () => {
     assert.ok(rota.includes('hastaDosyaAra') && rota.includes('searchParams.get(\'q\')'))
   })
 
+  it('Pediatri altın 10: parser sınıfları (gecikme, frekans, yokluk, pivot, kohort)', () => {
+    const q1 = sorguyuAyikla('Bu ay 12–24 ay aralığındaki çocuklarda KPA serisi başlamış ama 2. veya 3. dozu gecikmiş kaç hasta var? Listele, en erken önerilen doza göre sırala.', PAZAR)
+    assert.equal(q1.seri, 'kpa')
+    assert.equal(q1.seriGecikme, true)
+    assert.equal(q1.yas?.minAy, 12)
+    assert.equal(q1.yas?.maxAy, 24)
+    assert.equal(q1.pencere?.etiket, 'bu ay')
+    assert.equal(q1.veya.length, 0, '2. veya 3. doz OR açmamalı')
+
+    const q2 = sorguyuAyikla('Geçen hafta otit / orta kulak iltihabı ile gelen ve Augmentin veya amoksisilin-klavulanat reçetelediğim 1–5 yaş arası hastaları listele', PAZAR)
+    assert.equal(q2.pencere?.etiket, 'geçen hafta')
+    assert.equal(q2.yas?.minAy, 12)
+    assert.equal(q2.yas?.maxAy, 71)
+    assert.ok(q2.terimler.some((t) => t === 'otit' || t === 'kulak'))
+    assert.ok(q2.veya.length >= 2)
+    assert.ok(q2.veya.flat().some((t) => t.includes('augmentin') || t.includes('klavulan')))
+
+    const q3 = sorguyuAyikla('Son 90 günde 3 veya daha fazla kez muayene ettiğim ve en az birinde ateş ≥38,5 kaydı olan hastalar kimler?', PAZAR)
+    assert.equal(q3.minSeans, 3)
+    assert.ok(q3.sayisal.some((s) => s.alan === 'ates' && s.min === 38.5))
+    assert.match(q3.pencere?.etiket || '', /son 90/)
+
+    const q4 = sorguyuAyikla('18–24 aylık olup M-CHAT’i hiç yapılmamış veya sonucu riskli olan ve son 6 ayda muayenesi olan çocukları bul.', PAZAR)
+    assert.equal(q4.mchat, 'yok_veya_riskli')
+    assert.equal(q4.yas?.minAy, 18)
+    assert.equal(q4.yas?.maxAy, 24)
+    assert.match(q4.pencere?.etiket || '', /son 6/)
+
+    const q5 = sorguyuAyikla('Son 6 ayda kilo veya boy persentilinde 2 majör kanal kayması olan 0–36 aylık hastaları listele', PAZAR)
+    assert.equal(q5.persentilEsik, 2)
+    assert.equal(q5.yas?.minAy, 0)
+    assert.equal(q5.yas?.maxAy, 36)
+
+    const q6 = sorguyuAyikla('Bu hafta ortalama hasta seansım kaç dakikaydı? En uzun ve en kısa 3 seansı hasta adıyla söyle; 1–5 yaş ve 5+ yaş ayrı ortalamalar.', PAZAR)
+    assert.equal(q6.olcum, 'sure')
+    assert.equal(q6.ucDeger, true)
+    assert.equal(q6.yasKirilim, true)
+    assert.equal(q6.pencere?.etiket, 'bu hafta')
+
+    const q7 = sorguyuAyikla('Bu hafta toplam kaç aşı uyguladık? Aşı adına göre kır (KPA, KKK, Hepatit B). Kaç tekil çocuk aşılandı?', PAZAR)
+    assert.equal(q7.olcum, 'asi')
+    assert.equal(q7.kirilim, 'asi_adi')
+    assert.equal(q7.pencere?.etiket, 'bu hafta')
+
+    const q8 = sorguyuAyikla('6–12 aylık, aktif D vitamini veya demir kaydı olmayan ve bebek görevi bekliyor/gecikmiş olan hastaları listele.', PAZAR)
+    assert.ok(q8.bayrakVe.includes('profilaksi'))
+    assert.equal(q8.yas?.minAy, 6)
+    assert.equal(q8.yas?.maxAy, 12)
+
+    const q9 = sorguyuAyikla('Bu ay hırıltı veya bronşiolit veya astım ile gelen, antibiyotik almayan, alerji kaydı olmayan 0–24 aylık hastalar kimler?', PAZAR)
+    assert.ok(q9.veya.length >= 2)
+    assert.ok(q9.veya.flat().includes('hirilti'))
+    assert.ok(q9.veya.flat().includes('astim'))
+    assert.ok(q9.haric.includes('antibiyotik'))
+    assert.ok(q9.haric.includes('alerji'))
+    assert.equal(q9.yas?.minAy, 0)
+    assert.equal(q9.yas?.maxAy, 24)
+    assert.equal(q9.pencere?.etiket, 'bu ay')
+
+    const q10 = sorguyuAyikla('Sağlam çocuk izlemi kaçmış, aşı gecikmesi de olan ve hasta portalı açık olmayan aileleri listele; kaçına bu hafta hatırlatma gidebilirim?', PAZAR)
+    assert.ok(q10.bayrakVe.includes('izlem_kacti'))
+    assert.ok(q10.bayrakVe.includes('asi_gecikti'))
+    assert.equal(q10.portalYok, true)
+    assert.equal(q10.hatirlatmaSay, true)
+  })
+
   it('her tablo sorgusu doktor kolonuna kilitli (izolasyon)', () => {
     const s = readFileSync(new URL('./hastaDosyaAra.ts', import.meta.url), 'utf8')
     assert.ok(s.includes('notes_encrypted'))
     assert.ok(s.includes('hasta_goruntulemeler'))
+    assert.ok(!/^import .*pediatri/m.test(s), 'pediatri motoru statik import edilmemeli')
+    assert.ok(s.includes('async function pediBolumYurut'), 'kapalı dilim ayrı yolda')
     const fromlar = [...s.matchAll(/\.from\('([^']+)'\)/g)]
     assert.ok(fromlar.length >= 10, 'arama tabloları eksik')
     for (const m of fromlar) {
       const parca = s.slice(m.index ?? 0, (m.index ?? 0) + 280)
+      if (m[1] === 'users') {
+        assert.ok(/\.eq\('id',\s*doktorId\)/.test(parca), 'users kendi hekim id')
+        continue
+      }
       assert.ok(
         /doctor_id|doktor_id/.test(parca),
         `${m[1]} doktor filtresi yok`

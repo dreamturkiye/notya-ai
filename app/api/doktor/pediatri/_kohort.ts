@@ -31,7 +31,7 @@ function grupla<T>(rows: T[], anahtar: (r: T) => string): Map<string, T[]> {
 
 export const KOHORT_UST_SINIR = 600
 
-export async function pediKohortVerisi(sb: SupabaseClient, doktorId: string, bugun: string, sadece?: string[]) {
+export async function pediKohortGirdileri(sb: SupabaseClient, doktorId: string, bugun: string, sadece?: string[]): Promise<{ girdiler: PediKohortGirdi[]; taramaTablosu: boolean }> {
   let pq = sb.from('patients').select('id, name_encrypted, dob_encrypted, gender_encrypted, is_active').eq('doctor_id', doktorId)
   if (sadece) pq = pq.in('id', sadece)
   const { data: hastalar } = await pq.order('created_at', { ascending: false }).limit(3000)
@@ -47,7 +47,7 @@ export async function pediKohortVerisi(sb: SupabaseClient, doktorId: string, bug
     if (cocuklar.length >= KOHORT_UST_SINIR) break
   }
   const ids = cocuklar.map((c) => c.id)
-  if (!ids.length) return { satirlar: [], toplamCocuk: 0, taramaTablosu: true }
+  if (!ids.length) return { girdiler: [], taramaTablosu: true }
 
   const [asilar, taramalarQ, mchat, gidr, seanslar, ilaclar, gorevler, kartlar, portal, notlar] = await Promise.all([
     topla(ids, (p) => sb.from('asilar').select('id, patient_id, asi_adi, doz_no, uygulama_tarihi, kaynak, kategori').eq('doktor_id', doktorId).in('patient_id', p).limit(20000)),
@@ -102,7 +102,12 @@ export async function pediKohortVerisi(sb: SupabaseClient, doktorId: string, bug
       portalVar: portalSet.has(c.id),
     }
   })
-  return { satirlar: pediKohortSatirlari(girdi, bugun), toplamCocuk: girdi.length, taramaTablosu }
+  return { girdiler: girdi, taramaTablosu }
+}
+
+export async function pediKohortVerisi(sb: SupabaseClient, doktorId: string, bugun: string, sadece?: string[]) {
+  const { girdiler, taramaTablosu } = await pediKohortGirdileri(sb, doktorId, bugun, sadece)
+  return { satirlar: pediKohortSatirlari(girdiler, bugun), toplamCocuk: girdiler.length, taramaTablosu }
 }
 
 /**

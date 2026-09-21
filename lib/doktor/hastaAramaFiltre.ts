@@ -36,6 +36,19 @@ export interface SorguAyik {
   sayisal: SayisalFiltre[]
   kanGrubu: string | null
   olcum: 'hasta' | 'asi' | 'ilac' | 'sure' | null
+  minSeans: number | null
+  seri: string | null
+  seriGecikme: boolean
+  mchat: 'yok_veya_riskli' | null
+  persentilEsik: number | null
+  kirilim: 'asi_adi' | null
+  yasKirilim: boolean
+  ucDeger: boolean
+  bayrakVe: string[]
+  portalYok: boolean
+  hatirlatmaSay: boolean
+  bolumIstegi: 'pediatri' | 'goz' | 'kd' | 'dahiliye' | 'derm' | null
+  ziyaretYok: boolean
   ozet: string
 }
 
@@ -101,7 +114,12 @@ export const ARAMA_ALANLARI: AlanTanimi[] = [
   { anahtar: 'kalp', etiket: 'Kalp', grup: 'sikayet', takma: ['aritmi', 'stent', 'kalp'] },
 ]
 
-export const ESANLAM: Record<string, string[]> = { ...KLINIK_SOZLUK }
+export const ESANLAM: Record<string, string[]> = Object.fromEntries(
+  Object.entries(KLINIK_SOZLUK).map(([k, v]) => {
+    const nk = trAramaNormalize(k)
+    return [nk, [...new Set([nk, ...v.map((x) => trAramaNormalize(x))])]]
+  }),
+)
 export { ASI_KELIME }
 
 const DURAK = new Set([
@@ -124,7 +142,14 @@ const DURAK = new Set([
   'toplam', 'averaj', 'ortalama', 'average', 'dakika', 'dakikaydi', 'dakikalik',
   'seans', 'seansim', 'seansi', 'seanslar', 'yaptik', 'yaptim', 'yaptigi', 'yaptigimiz',
   'gordum', 'gorduk', 'receteledim', 'receteledi', 'recete', 'hastaya', 'hastalarina',
-  'yaslari', 'yaslarinda', 'arasindaki',
+  'yaslari', 'yaslarinda', 'arasindaki', 'araligindaki', 'araliginda',
+  'kez', 'defa', 'fazla', 'daha', 'en', 'uzun', 'kisa', 'kir', 'kirilim', 'tekil',
+  'beyan', 'kayit', 'dozu', 'doza', 'serisi', 'baslamis', 'gecikmis', 'gecikmis',
+  'onerilen', 'sirala', 'major', 'kanal', 'kaymasi', 'kayma', 'yapilmamis', 'riskli',
+  'aktif', 'cocuklarda', 'cocuklari', 'aileleri', 'satirda', 'gidebilirim',
+  'kacina', 'kurali', 'uyguladik', 'uyguladim', 'uygulanan', 'kaydi', 'adina', 'gore',
+  'ama', 'ikinci', 'ucuncu', 'majör', 'major',
+  'hastalari', 'hastalarimi', 'receteledigim', 'receteledigi',
 ])
 
 const YAZI_SAYI: Record<string, number> = {
@@ -212,7 +237,7 @@ function yasCikar(n: string): { yas: YasFiltresi | null; kalan: string } {
     break
   }
 
-  const ayAralik = kalan.match(new RegExp(`\\b${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}\\s*ay(?:lik)?\\b`))
+  const ayAralik = kalan.match(new RegExp(`\\b${SAYI_RE}\\s*[-–]\\s*${SAYI_RE}\\s*ay(?:lik)?(?:\\s*aralig(?:i|inda|indaki))?\\b`))
   if (ayAralik && !yas) {
     const a = yaziSayi(ayAralik[1])
     const b = yaziSayi(ayAralik[2])
@@ -331,16 +356,22 @@ function sayisalCikar(n: string): { sayisal: SayisalFiltre[]; kalan: string } {
   const sayisal: SayisalFiltre[] = []
   let kalan = n
   const tek = [
-    { alan: 'ates', rx: /\bates(?:i)?\s*(?:>=|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/ },
-    { alan: 'spo2', rx: /\bspo2\s*(?:<=|<|alti)\s*(\d{2,3})/ },
-    { alan: 'kilo', rx: /\bkilo(?:su)?\s*(?:>=|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/ },
+    { alan: 'ates', rx: /\bates(?:i)?\s*(?:>=|≥|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/, yon: 'min' as const },
+    { alan: 'spo2', rx: /\bspo2\s*(?:<=|<|alti)\s*(\d{2,3})/, yon: 'max' as const },
+    { alan: 'kilo', rx: /\bkilo(?:su)?\s*(?:>=|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/, yon: 'min' as const },
+    { alan: 'hba1c', rx: /\bhba1c\s*(?:>=|≥|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/, yon: 'min' as const },
+    { alan: 'egfr', rx: /\begfr\s*(?:<=|≤|<|alti)?\s*(\d{1,3})/, yon: 'max' as const },
+    { alan: 'ldl', rx: /\bldl\s*(?:>=|≥|>|ustu|uzeri)?\s*(\d{1,3})/, yon: 'min' as const },
+    { alan: 'pasi', rx: /\bpasi\s*(?:>=|≥|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/, yon: 'min' as const },
+    { alan: 'easi', rx: /\beasi\s*(?:>=|≥|>|ustu|uzeri)?\s*(\d+[.,]?\d*)/, yon: 'min' as const },
+    { alan: 'gib', rx: /\b(?:gib|goz\s*ici\s*basinc)\s*(?:>=|≥|>|ustu)?\s*(\d{1,3})/, yon: 'min' as const },
   ]
   for (const t of tek) {
     const m = kalan.match(t.rx)
     if (!m) continue
     const v = Number(m[1].replace(',', '.'))
     if (!Number.isFinite(v)) continue
-    if (t.alan === 'spo2') sayisal.push({ alan: t.alan, min: null, max: v, etiket: `SpO₂ ≤${v}` })
+    if (t.yon === 'max') sayisal.push({ alan: t.alan, min: null, max: v, etiket: `${t.alan} ≤${v}` })
     else sayisal.push({ alan: t.alan, min: v, max: null, etiket: `${t.alan} ≥${v}` })
     kalan = kalan.replace(m[0], ' ')
   }
@@ -359,13 +390,17 @@ function sayisalCikar(n: string): { sayisal: SayisalFiltre[]; kalan: string } {
 function haricCikar(n: string): { haric: string[]; kalan: string } {
   const haric: string[] = []
   let kalan = n
-  if (/asi\s*(olmayan|yok|yapmadigim|yapilmayan)|asisi yok|unvaccinated|without vaccine/.test(n)) {
+  if (/\basi(?:\s+kaydi)?\s*(olmayan|yok|yapmadigim|yapilmayan)|asisi yok|unvaccinated|without vaccine/.test(n)) {
     haric.push('asi')
-    kalan = kalan.replace(/asi\s*(olmayan|yok|yapmadigim|yapilmayan)|asisi yok|unvaccinated|without vaccine/g, ' ')
+    kalan = kalan.replace(/\basi(?:\s+kaydi)?\s*(olmayan|yok|yapmadigim|yapilmayan)|asisi yok|unvaccinated|without vaccine/g, ' ')
   }
-  if (/alerji(si)?\s*(olmayan|yok)/.test(n)) {
+  if (/alerji(?:si| kaydi| kayit)?\s*(olmayan|yok)|alerji kaydi olmayan/.test(n)) {
     haric.push('alerji')
-    kalan = kalan.replace(/alerji(si)?\s*(olmayan|yok)/g, ' ')
+    kalan = kalan.replace(/alerji(?:si| kaydi| kayit)?\s*(olmayan|yok)/g, ' ')
+  }
+  if (/antibiyotik\s*(almayan|yok|olmayan)|antibiyotik almayan/.test(n)) {
+    haric.push('antibiyotik')
+    kalan = kalan.replace(/antibiyotik\s*(almayan|yok|olmayan)/g, ' ')
   }
   return { haric, kalan: kalan.replace(/\s+/g, ' ').trim() }
 }
@@ -381,7 +416,7 @@ function cinsiyetCikar(n: string): { cinsiyet: 'kadin' | 'erkek' | null; kalan: 
 }
 
 export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
-  const n0 = trAramaNormalize(mesaj)
+  const n0 = trAramaNormalize(mesaj).replace(/\borta\s+kulak\b/g, 'kulak')
   const cogul = /hastalar|hangileri|kimler|hangileriyedi|hepsi|listele/.test(n0)
   const sayim = /\bkac\b|\bsayisi\b|\bkaci\b|how many|number of/.test(n0)
   const asi = ASI_KELIME.test(n0)
@@ -395,7 +430,9 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
         ? 'ilac'
         : (sayim || ziyaret) ? 'hasta' : null
 
-  const y = yasCikar(n0)
+  const yasKirilim = /1\s*[-–]\s*5\s*yas.*5\s*\+|ayri ortalama/.test(n0)
+  const nYas = yasKirilim ? n0.replace(/1\s*[-–]\s*5\s*yas(?:lari)?(?:\s+ve\s+5\s*\+?\s*yas)?/g, ' ') : n0
+  const y = yasCikar(nYas)
   const p = pencereCikar(y.kalan, now)
   const c = cinsiyetCikar(p.kalan)
   const h = haricCikar(c.kalan)
@@ -403,6 +440,79 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
   let kalan = s.kalan
   const haric = h.haric
   const sayisal = s.sayisal
+  let minSeans: number | null = null
+  const seansM = kalan.match(/\b(\d{1,2}|uc|iki|dort)\s*(?:veya\s+)?daha\s+fazla|\b(\d{1,2}|uc)\s*(?:kez|defa)/)
+  if (seansM) {
+    minSeans = yaziSayi(seansM[1] || seansM[2])
+    kalan = kalan.replace(seansM[0], ' ')
+  }
+  let seri: string | null = null
+  if (/\bkpa\b|pnomokok/.test(n0)) seri = 'kpa'
+  else if (/\bkkk\b/.test(n0)) seri = 'kkk'
+  else if (/hepatit\s*b/.test(n0)) seri = 'hepb'
+  const seriGecikme = Boolean(seri && /gecik|baslamis|2\.\s*veya\s*3|ikinci|ucuncu/.test(n0))
+  if (seriGecikme) {
+    kalan = kalan.replace(/\b\d+\s*[.)]?\s*(?:veya|ya da)\s*\d+\s*[.)]?\s*(?:doz(?:u|lar|a)?)?/g, ' ')
+  }
+  kalan = kalan.replace(/amoksisilin\s*-?\s*klavulanat/g, 'augmentin')
+  const mchat = /m\s*-?\s*chat/.test(n0) ? 'yok_veya_riskli' as const : null
+  if (mchat) kalan = kalan.replace(/m\s*-?\s*chat\S*|\byapilmamis\b|\briskli\b|\bsonucu\b/g, ' ')
+  const persentilEsik = /persentil/.test(n0) && /kayma|kanal/.test(n0) ? 2 : null
+  const kirilim = /adina\s+gore|asi\s+adina|\bkir\b/.test(n0) ? 'asi_adi' as const : null
+  const ucDeger = /en\s+uzun|en\s+kisa/.test(n0)
+  const bayrakVe: string[] = []
+  if (/izlem\s*kac|saglam\s+cocuk/.test(n0)) bayrakVe.push('izlem_kacti')
+  if ((/\basi\s*gecik/.test(n0) && !/gorev|hba1c|egfr|ivt|tbse/.test(n0)) || seriGecikme) bayrakVe.push('asi_gecikti')
+  if (persentilEsik) bayrakVe.push('persentil_kaymasi')
+  if (/d\s*vit|demir/.test(n0) && /olmayan|yok|profilaksi/.test(n0)) bayrakVe.push('profilaksi')
+  if (mchat) bayrakVe.push('tarama_gecikti')
+  if (/gorme alani|glokom.*oct|\boct\b.*gecik|ga.?oct/.test(n0)) bayrakVe.push('ga_oct_gecikti')
+  if (/ivt.*pencere|yaklasan.{0,12}ivt|14 gun.*ivt|ivt.*14/.test(n0)) bayrakVe.push('ivt_penceresi')
+  if (/ivt.*(?:gecik|gecmis)|anti.?vegf.*gecik|enjeksiyon.{0,20}gecik/.test(n0)) bayrakVe.push('ivt_gecikti')
+  if (/retinopat|goz dibi|dr tarama/.test(n0)) bayrakVe.push('dr_tarama')
+  if (/goz kontrol.*gecik|kontrol zaman[iı].*gec/.test(n0) && /goz|oct|ivt|glokom/.test(n0)) bayrakVe.push('kontrol_gecikti')
+  if (/lohusa.*1|1\.\s*hafta.*lohusa|dogum sonu.{0,12}1/.test(n0)) bayrakVe.push('lohusa_1hf')
+  if (/lohusa.*6|6\.\s*hafta.*lohusa|dogum sonu.{0,12}6/.test(n0)) bayrakVe.push('lohusa_6hf')
+  if (/lohusa|dogum sonu|postpartum/.test(n0) && !bayrakVe.some((b) => b.startsWith('lohusa'))) {
+    bayrakVe.push('lohusa_1hf', 'lohusa_6hf')
+  }
+  if (/tarama kapan|ikili tarama|nt pencere/.test(n0)) bayrakVe.push('tarama_kapaniyor')
+  if (/gebe izlem|dobyr|gebelik izlem.*gecik/.test(n0)) bayrakVe.push('izlem_gecikti')
+  if (/\bogtt\b|seker yukleme/.test(n0)) bayrakVe.push('ogtt_zamani')
+  if (/anti.?d\b|rh\s*\(?\s*-/.test(n0)) bayrakVe.push('anti_d_zamani')
+  if (/\bgbs\b/.test(n0)) bayrakVe.push('gbs_zamani')
+  if (/smear|\bpap\b|serviks tarama|hpv tarama/.test(n0)) bayrakVe.push('serviks_tarama')
+  if (/hba1c/.test(n0)) bayrakVe.push('hba1c_9')
+  if (/kb hedef|tansiyon hedef/.test(n0)) bayrakVe.push('kb_hedef_disi')
+  if (/ldl/.test(n0)) bayrakVe.push('ldl_hedef_disi')
+  if (/egfr|kdigo/.test(n0)) bayrakVe.push('egfr_45')
+  if (/gecikmis lab|lab gecik/.test(n0)) bayrakVe.push('gecikmis_lab')
+  if (/gecikmis\s+asi|asi gorev/.test(n0)) bayrakVe.push('gecikmis_asi')
+  if (/vizit.{0,10}6\s*ay|6\s*aydir gelmeyen/.test(n0)) bayrakVe.push('vizit_6ay')
+  if (/tbse|tum vucut deri|yillik deri/.test(n0)) bayrakVe.push('tbse_gecikti')
+  if (/yama/.test(n0)) bayrakVe.push('yama_okuma')
+  if ((/fototerapi|\buvb\b/).test(n0) && !/sarilik|yenidogan|ikter/.test(n0)) bayrakVe.push('fototerapi_seans')
+  if (/izotretinoin|isotretinoin|beta.?hcg/.test(n0)) bayrakVe.push('beta_hcg')
+  if (/biyolojik|adalimumab|metotreksat/.test(n0) && /lab|tarama/.test(n0)) bayrakVe.push('biyolojik_lab')
+  if (/melanom|lezyon gorev/.test(n0)) bayrakVe.push('melanom_gorev')
+  const portalYok = /portal.*(?:acik olmayan|yok|olmayan)|portali\s+acik\s+olmayan/.test(n0)
+  const hatirlatmaSay = /hatirlatma/.test(n0)
+  const ziyaretYok = /muayene(?:si)?\s*(?:olmayan|yok)|gelmeyenler|viziti\s*olmayan/.test(n0)
+  const bolumIstegi: SorguAyik['bolumIstegi'] =
+    (mchat || persentilEsik || seriGecikme || bayrakVe.some((b) => ['izlem_kacti', 'asi_gecikti', 'persentil_kaymasi', 'profilaksi', 'tarama_gecikti'].includes(b)))
+      ? 'pediatri'
+      : bayrakVe.some((b) => ['ga_oct_gecikti', 'ivt_penceresi', 'ivt_gecikti', 'dr_tarama', 'kontrol_gecikti'].includes(b))
+        || /ivt|anti.?vegf|retinopat|goz dibi|gorme alani/.test(n0)
+        ? 'goz'
+        : bayrakVe.some((b) => ['lohusa_1hf', 'lohusa_6hf', 'tarama_kapaniyor', 'izlem_gecikti', 'ogtt_zamani', 'anti_d_zamani', 'gbs_zamani', 'serviks_tarama'].includes(b))
+          ? 'kd'
+          : bayrakVe.some((b) => ['tbse_gecikti', 'yama_okuma', 'fototerapi_seans', 'beta_hcg', 'biyolojik_lab', 'melanom_gorev'].includes(b))
+            || /\bpasi\b|\beasi\b/.test(n0)
+            ? 'derm'
+            : bayrakVe.some((b) => ['hba1c_9', 'kb_hedef_disi', 'ldl_hedef_disi', 'egfr_45', 'gecikmis_lab', 'gecikmis_asi', 'gecikmis_tarama', 'gecikmis_izlem', 'vizit_6ay'].includes(b))
+              || /score\s*2/.test(n0)
+              ? 'dahiliye'
+              : null
   let kanGrubu: string | null = null
   for (const k of KAN_GRUPLARI) {
     if (kalan.includes(k) || kalan.includes(k.replace(/\s+/g, ''))) { kanGrubu = k; break }
@@ -433,25 +543,33 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
       .filter((k) => k.length >= 3 && !DURAK.has(k))
       .map((k) => k.replace(/i[hl]tihabi?|iltehabi?|iltihabi?|iltehap|ihtihab/, 'iltihap'))
     const terimler = new Set<string>()
+    const genis = new Set(['ilac', 'antibiyotik'])
     for (const k of ham) {
       terimler.add(k)
-      for (const [kok, liste] of Object.entries(ESANLAM)) {
-        if (k === kok || liste.includes(k) || k.startsWith(kok)) {
-          for (const e of liste) terimler.add(e)
-          terimler.add(kok)
-        }
+      const tam = Object.entries(ESANLAM).filter(([kok]) => k === kok)
+      const icinde = Object.entries(ESANLAM).filter(([kok, liste]) => k !== kok && liste.includes(k) && !genis.has(kok))
+      const kaynak = tam.length ? tam : icinde
+      for (const [kok, liste] of kaynak) {
+        for (const e of liste) terimler.add(e)
+        terimler.add(kok)
       }
     }
     return [...terimler]
   }
 
   const yalinVeya = kalan.replace(/\bhasta(?:lar|si|nin)?\s+(?:veya|ya da| or )\s+hasta(?:lar|si)?\b/g, ' ')
-  const veyaParca = yalinVeya.split(/\b(?:veya|ya da| or )\b/)
-  const veya = veyaParca.length > 1 ? veyaParca.map(terimCikar).filter((g) => g.length) : []
-  const liste = veya.length ? [] : terimCikar(kalan)
+  let veya: string[][] = []
+  const zincir = yalinVeya.match(/^(.*?)(\S+(?:\s+\S+){0,2})\s+(?:veya|ya da| or )\s+(\S+(?:\s+\S+){0,2})(?:\s+(?:veya|ya da| or )\s+(\S+(?:\s+\S+){0,2}))?(.*)$/)
+  if (zincir) {
+    const parca = [zincir[2], zincir[3], zincir[4]].filter((x): x is string => Boolean(x))
+    veya = parca.map(terimCikar).filter((g) => g.length)
+    kalan = `${zincir[1]} ${zincir[5] || ''}`.replace(/\s+/g, ' ').trim()
+  }
+  const liste = terimCikar(kalan)
   const klinikKelime = liste.some((t) => Boolean(ESANLAM[t]) || Object.values(ESANLAM).some((l) => l.includes(t)) || ASI_KELIME.test(t))
     || veya.some((g) => g.some((t) => Boolean(ESANLAM[t])))
-  const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet) || sureSor || Boolean(olcum)
+  const bolum = Boolean(seriGecikme || mchat || persentilEsik || kirilim || minSeans || bayrakVe.length || portalYok || hatirlatmaSay || yasKirilim || ucDeger || bolumIstegi || ziyaretYok)
+  const klinik = (asi && !haric.includes('asi')) || cogul || sayim || klinikKelime || Boolean(y.yas) || Boolean(p.pencere && ziyaret) || alanlar.length > 0 || sayisal.length > 0 || haric.length > 0 || Boolean(kanGrubu) || Boolean(c.cinsiyet) || sureSor || Boolean(olcum) || bolum
   const etiketler = [
     y.yas?.etiket,
     p.pencere?.etiket,
@@ -460,6 +578,11 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     ...sayisal.map((x) => x.etiket),
     ...haric.map((x) => `${x} hariç`),
     ...alanlar.map((a) => a.etiket),
+    seriGecikme ? `${seri} gecikme` : '',
+    mchat ? 'M-CHAT yok/riskli' : '',
+    persentilEsik ? 'persentil kayması' : '',
+    minSeans ? `≥${minSeans} seans` : '',
+    portalYok ? 'portal yok' : '',
   ].filter(Boolean)
   return {
     terimler: liste,
@@ -477,6 +600,19 @@ export function sorguyuAyikla(mesaj: string, now = new Date()): SorguAyik {
     sayisal,
     kanGrubu,
     olcum,
+    minSeans,
+    seri,
+    seriGecikme,
+    mchat,
+    persentilEsik,
+    kirilim,
+    yasKirilim,
+    ucDeger,
+    bayrakVe,
+    portalYok,
+    hatirlatmaSay,
+    bolumIstegi,
+    ziyaretYok,
     ozet: etiketler.join(' · '),
   }
 }
@@ -584,5 +720,6 @@ export function istatistikKur(
   } else if (q.sayim) {
     cumle = `${donem[0]?.toLocaleUpperCase('tr-TR') || ''}${donem.slice(1)} ${g.hastaSayisi} hasta.`
   }
+  if (q.ozet) cumle += ` Filtre: ${q.ozet}.`
   return { ...g, birim, cumle }
 }
