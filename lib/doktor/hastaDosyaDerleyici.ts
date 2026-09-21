@@ -16,6 +16,9 @@ import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { formAlanlariniTara, dosyaAlanOzeti } from '@/lib/doktor/dosyaAlanTara'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
+import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
+import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -27,18 +30,18 @@ function trTarih(d: string | null | undefined): string {
   try { return new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' }) } catch { return '?' }
 }
 
-export async function hastaDosyasiniDerle(
+export async function hastaDosyaPaketiniDerle(
   supabase: SupabaseClient,
   doktorId: string,
   patientId: string
-): Promise<string | null> {
+): Promise<{ metin: string; kart: HastaDosyaKart } | null> {
   const { data: hasta } = await supabase
     .from('patients').select('*').eq('id', patientId).eq('doctor_id', doktorId).single()
   if (!hasta) return null
 
   // HASTA-IZOLASYON-01: every child read is scoped to the doctor as well as the patient, so a row
   // another doctor filed under this patient id can never enter this doctor's file or AI context.
-  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ, hekimQ] = await Promise.all([
+  const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ, hekimQ, randevuQ, labQ] = await Promise.all([
     supabase.from('sessions').select('id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
     supabase.from('hasta_ilaclar').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
     supabase.from('asilar').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
@@ -49,6 +52,8 @@ export async function hastaDosyasiniDerle(
     supabase.from('cihaz_olcumleri').select('tur, deger, birim, cihaz, profil, kaynak, alindi, onaylandi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onaylandi', true).order('alindi', { ascending: false }).limit(12),
     supabase.from('belge_analizleri').select('modality_final, durum, sonuc, hekim_tanisi, hekim_ozet, onaylandi_at').eq('patient_id', patientId).eq('doctor_id', doktorId).in('durum', ['onaylandi', 'muayene_onaylandi']).order('onaylandi_at', { ascending: false }).limit(5),
     supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle(),
+    supabase.from('randevular').select('baslangic, tur, durum').eq('patient_id', patientId).eq('doktor_id', doktorId).neq('durum', 'iptal').order('baslangic', { ascending: true }).limit(20),
+    supabase.from('lab_satirlar').select('canonical_key, kanonik_deger, value_text, numune_tarihi').eq('patient_id', patientId).eq('doctor_id', doktorId).eq('onayli', true).not('canonical_key', 'is', null).order('numune_tarihi', { ascending: false }).limit(40),
   ])
 
   const seanslar = seanslarQ.data || []
@@ -66,6 +71,7 @@ export async function hastaDosyasiniDerle(
   const doktorNotu = coz(hasta.notes_encrypted)
 
   const brans = bransAnahtari((hekimQ.data as { specialty?: string } | null)?.specialty)
+  const pediatrik = pediatrikBaglamMi({ doktorBransi: brans, hastaDogumIso: dogum || null })
   const kimlikDobSatiri = (iso: string | null, kaynak?: string) =>
     iso ? `- Doğum tarihi: ${trTarih(iso)} (${yasHesapla(iso)})${kaynak ? ` — ${kaynak}` : ''}` : '- Doğum tarihi: kayıtlı değil'
 
@@ -112,6 +118,27 @@ export async function hastaDosyasiniDerle(
   if (asilar.length === 0) b.push('- Kayıtlı aşı yok.')
   for (const a of asilar) {
     b.push(`- ${a.asi_adi || '?'}${a.doz_no ? ` (${a.doz_no}. doz)` : ''} — ${trTarih(a.uygulama_tarihi)}`)
+  }
+
+  const lablar = labQ.data || []
+  b.push('\n## ONAYLI LAB (en yeni, her kalem bir kez)')
+  if (lablar.length === 0) b.push('- Onaylı lab satırı yok.')
+  const labGorulenGovde = new Set<string>()
+  for (const l of lablar) {
+    const key = String(l.canonical_key || '')
+    if (!key || labGorulenGovde.has(key)) continue
+    labGorulenGovde.add(key)
+    b.push(`- ${key}: ${l.kanonik_deger || l.value_text || '?'} (${trTarih(l.numune_tarihi)})`)
+    if (labGorulenGovde.size >= 12) break
+  }
+
+  const randevular = randevuQ.data || []
+  b.push('\n## RANDEVULAR')
+  const simdiRandevu = Date.now()
+  const gelecek = randevular.filter((r) => r.baslangic && new Date(r.baslangic).getTime() >= simdiRandevu)
+  if (gelecek.length === 0) b.push('- Gelecek randevu yok.')
+  for (const r of gelecek.slice(0, 5)) {
+    b.push(`- ${trTarih(r.baslangic)}${r.tur ? ` — ${r.tur}` : ''}${r.durum ? ` (${r.durum})` : ''}`)
   }
 
   // NOTYA-BLE-06 / NOTYA-BELGE-05 — cihaz kaynaklı ölçümler ve onaylı belge değerlendirmeleri (VİZİT GEÇMİŞİ'nden önce: SOAP bağlam dilimine girsin)
@@ -191,7 +218,141 @@ export async function hastaDosyasiniDerle(
   const ozet = dosyaAlanOzeti(taranan)
   if (ozet) b.push(ozet)
 
-  // Sınır: ~48k karakter (yaklaşık 15k token) — çok uzun dosyalarda baştan kes (eski vizit özetleri gider).
-  const metin = b.join('\n')
-  return metin.length > 48000 ? metin.slice(metin.length - 48000) : metin
+  const kart = kartKur({
+    yas: (dogum || dosyadanDob?.deger) ? yasHesapla(dogum || dosyadanDob!.deger) : 'kayıtlı değil',
+    cinsiyet,
+    yanitlar,
+    ilaclar: ilaclarQ.data || [],
+    asilar: asilarQ.data || [],
+    seanslar,
+    notlar,
+    cihaz: cihazQ.data || [],
+    lablar: labQ.data || [],
+    randevular: randevuQ.data || [],
+    pediatrik,
+    taranan,
+  })
+
+  const bas = kartMetin(kart)
+  const govde = b.join('\n')
+  const metin = dosyaKirp(bas, govde)
+  return { metin, kart }
+}
+
+export async function hastaDosyasiniDerle(
+  supabase: SupabaseClient,
+  doktorId: string,
+  patientId: string
+): Promise<string | null> {
+  const p = await hastaDosyaPaketiniDerle(supabase, doktorId, patientId)
+  return p?.metin ?? null
+}
+
+function dosyaKirp(bas: string, govde: string, limit = 48000): string {
+  const tam = `${bas}\n\n${govde}`
+  if (tam.length <= limit) return tam
+  const ara = '\n\n…(eski vizit özetleri kısaltıldı)…\n'
+  const basBudce = Math.min(bas.length, 8000)
+  const govdeBas = Math.min(12000, govde.length)
+  const kalan = Math.max(8000, limit - basBudce - govdeBas - ara.length)
+  return `${bas.slice(0, basBudce)}\n\n${govde.slice(0, govdeBas)}${ara}${govde.slice(-kalan)}`
+}
+
+function kartKur(g: {
+  yas: string
+  cinsiyet: string
+  yanitlar: Record<string, unknown> | null
+  ilaclar: Record<string, unknown>[]
+  asilar: Record<string, unknown>[]
+  seanslar: { id: string; created_at: string }[]
+  notlar: Record<string, unknown>[]
+  cihaz: { tur?: string; deger?: string | null; birim?: string | null; alindi?: string }[]
+  lablar: { canonical_key?: string; kanonik_deger?: string | null; value_text?: string | null; numune_tarihi?: string | null }[]
+  randevular: { baslangic?: string; tur?: string | null; durum?: string | null }[]
+  pediatrik: boolean
+  taranan: { id: string; deger: string }[]
+}): HastaDosyaKart {
+  const k = bosKart()
+  k.yas = g.yas
+  k.cinsiyet = g.cinsiyet
+  const y = g.yanitlar || {}
+  const alerji = String(y.alerjiAciklama || y.alerji || '').trim()
+  if (alerji) k.alerji = alerji
+  const kronikHam = y.kronikHastaliklar ?? y.kronik
+  if (Array.isArray(kronikHam)) {
+    const birlesik = kronikHam.map(String).filter((s) => s.trim()).join(', ')
+    if (birlesik) k.kronik = birlesik
+  } else if (String(kronikHam || '').trim()) {
+    k.kronik = String(kronikHam).trim()
+  }
+  const kan = String(y.kanGrubu || '').trim()
+  if (kan) k.kanGrubu = kan
+
+  const ilacSatir = g.ilaclar.slice(0, 8).map((i) => [i.ilac_adi || i.ad, i.doz].filter(Boolean).join(' ')).filter(Boolean)
+  if (ilacSatir.length) k.ilaclar = ilacSatir.join('; ')
+
+  const asiSatir = g.asilar.slice(0, 5).map((a) => `${a.asi_adi || '?'}${a.uygulama_tarihi ? ` ${trTarih(String(a.uygulama_tarihi))}` : ''}`)
+  if (asiSatir.length) k.asilar = asiSatir.join('; ')
+
+  const notlarSirali = [...g.notlar].sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
+  k.vizitSayisi = g.seanslar.length
+  if (g.seanslar.length) {
+    k.vizitAralik = `${trTarih(g.seanslar[0].created_at)} – ${trTarih(g.seanslar[g.seanslar.length - 1].created_at)}`
+    const son = g.seanslar[g.seanslar.length - 1]
+    const n = notlarSirali.find((x) => String(x.session_id) === String(son.id))
+    const sikayet = String(n?.basvuru_yakinmasi || '').trim() || String(n?.content_subjektif || '').slice(0, 120).trim()
+    k.sonVizit = `${trTarih(son.created_at)}${sikayet ? ` — ${sikayet}` : ''}`
+    if (sikayet) k.sonSikayet = sikayet
+    if (n?.content_tani) k.sonTani = String(n.content_tani)
+  }
+
+  const receteler: string[] = []
+  for (const n of [...notlarSirali].reverse()) {
+    const liste = n.content_ilaclar
+    if (!Array.isArray(liste)) continue
+    for (const x of liste) {
+      const ad = typeof x === 'string' ? x : String((x as { ad?: string }).ad || '')
+      if (ad) receteler.push(ad)
+    }
+    if (receteler.length) {
+      k.sonRecete = `${receteler.slice(0, 6).join(', ')} (${trTarih(String(n.created_at || ''))})`
+      break
+    }
+  }
+
+  const cihaz = g.cihaz[0]
+  if (cihaz?.deger) k.olcum = `${cihaz.tur || 'ölçüm'} ${cihaz.deger} ${cihaz.birim || ''} (${trTarih(cihaz.alindi)})`.trim()
+  if (k.olcum === 'kayıt yok') {
+    const vitalNot = [...notlarSirali].reverse().find((n) => n.vitaller && typeof n.vitaller === 'object')
+    if (vitalNot) {
+      let ozet = yasamsalBulguOzeti(vitalNot.vitaller as never)
+      if (!g.pediatrik) ozet = ozet.replace(/Baş Çevresi:[^·]+·?\s*/gi, '').trim()
+      if (ozet) k.olcum = ozet
+    }
+  }
+
+  const labGorulen = new Set<string>()
+  const labSatir: string[] = []
+  for (const l of g.lablar) {
+    const key = String(l.canonical_key || '')
+    if (!key || labGorulen.has(key)) continue
+    labGorulen.add(key)
+    labSatir.push(`${key} ${l.kanonik_deger || l.value_text || ''} (${trTarih(l.numune_tarihi)})`.trim())
+    if (labSatir.length >= 6) break
+  }
+  if (labSatir.length) k.lab = labSatir.join('; ')
+
+  const simdi = Date.now()
+  const sonraki = g.randevular.find((r) => r.baslangic && new Date(r.baslangic).getTime() >= simdi)
+  if (sonraki?.baslangic) k.randevu = `${trTarih(sonraki.baslangic)}${sonraki.tur ? ` — ${sonraki.tur}` : ''}`
+
+  for (const f of g.taranan) {
+    if (f.id === 'alerjiAciklama' && kartBosMu(k.alerji)) k.alerji = f.deger
+    if (f.id === 'kanGrubu' && kartBosMu(k.kanGrubu)) k.kanGrubu = f.deger
+    if (f.id === 'kronikHastaliklar' && kartBosMu(k.kronik)) k.kronik = f.deger
+    if (f.id === 'kullanilanIlaclar' && kartBosMu(k.ilaclar)) k.ilaclar = f.deger
+    if (f.id === 'cinsiyet' && !k.cinsiyet) k.cinsiyet = f.deger
+  }
+
+  return k
 }

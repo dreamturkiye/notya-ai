@@ -207,7 +207,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   // ── Asistan ──
   'app/api/asistan/chat/route.ts': T,
   'app/api/asistan/learn/route.ts': T,
-  'app/api/asistan/hasta-bul/route.ts': I('hastaninSozunuCoz(doktorId) searches only the doctor\'s patients; file via hastaDosyasiniDerle(doktorId)'),
+  'app/api/asistan/hasta-bul/route.ts': I('hastaninSozunuCoz(doktorId) searches only the doctor\'s patients; file via hastaDosyaPaketiniDerle(doktorId)'),
   'app/api/asistan/ses-eylem/route.ts': I('hastaninSozunuCoz / hastaSahibiMi; eylem_onerileri doctor_id; takvim randevular.eq(doktor_id) + patients.eq(doctor_id)'),
   'app/api/asistan/signed-url/route.ts': I('voice-agent URL for the caller; no patient read'),
   'app/api/asistan/klinik-signed-url/route.ts': I('voice-agent URL for the caller; no patient read'),

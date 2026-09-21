@@ -14,7 +14,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
-import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
+import { hastaDosyaPaketiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
+import { dosyaSoruCevap, kartSoyle } from '@/lib/doktor/hastaDosyaKart'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,10 +43,14 @@ export async function POST(req: NextRequest) {
     if (cozum.tur === 'yok') {
       return NextResponse.json({ sonuc: cozum.sayiMetin || 'Bu filtrelere uyan hasta yok Hocam. Yaş, hafta, gelme nedeni, tanı veya adla tekrar dener misiniz?' })
     }
-    const dosya = await hastaDosyasiniDerle(supabase, doktorId, cozum.patientId)
-    if (!dosya) return NextResponse.json({ sonuc: `${cozum.ad} için dosya bulamadım.` })
-    // Sese okunacak metin — dosya zaten kısa/sınırlı derleniyor (hastaDosyasiniDerle)
-    return NextResponse.json({ sonuc: `${cozum.ad} — dosya:\n${dosya}`, patientId: cozum.patientId, ad: cozum.ad })
+    const paket = await hastaDosyaPaketiniDerle(supabase, doktorId, cozum.patientId)
+    if (!paket) return NextResponse.json({ sonuc: `${cozum.ad} için dosya bulamadım.` })
+    const kesin = dosyaSoruCevap(soz, paket.kart)
+    return NextResponse.json({
+      sonuc: `${cozum.ad}. ${kesin || kartSoyle(paket.kart)}`,
+      patientId: cozum.patientId,
+      ad: cozum.ad,
+    })
   } catch (e) {
     console.error('[ses-hasta-bul]', e)
     return NextResponse.json({ sonuc: 'Dosyaya şu an ulaşamadım, kısa bir süre sonra tekrar deneyin.' })

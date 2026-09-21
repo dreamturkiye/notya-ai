@@ -14,7 +14,8 @@ import { kdDogrulanmisKaynaklar } from "@/specialties/kadin-dogum/protocols/dogr
 import { asistanYanitiCoz } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
-import { hastaDosyasiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
+import { hastaDosyaPaketiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
+import { dosyaSoruCevap } from "@/lib/doktor/hastaDosyaKart"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
 import { executeAction, eskiEylemKarari, type ActionResult } from "@/lib/asistan/actionExecutor"
@@ -154,16 +155,13 @@ ${ilacBaglamMetni(drugs[0])}`
       }
     }
 
-    // NOTYA-KOTA-01: yazılı sohbet günlük kotaya tabi
-    const kota = await aiKotaKullan(getSupabase(), user.id, 'sohbet')
-    if (!kota.izin) return NextResponse.json({ success: false, error: KOTA_MESAJI }, { status: 429 })
-
     // NOTYA-KONSULT-02: "klinik meslektaş" tek asistanda — doktor sohbette bir hastadan
     // bahsettiğinde (adıyla ya da "son hastam" diyerek) hastanın TAM dosyası bağlama eklenir;
     // ayrı ekran/buton gerekmez. Çözülen hasta oturum bağlamına yazılır ki takip soruları
     // ("peki ilaçları?") doğal akışta cevaplansın. Basitlik ilkesi: tek asistan, tek konuşma.
     let dosyaEk = ""
     let cozulenHasta: { id: string; ad: string } | null = null
+    let kesinDosyaCevap: string | null = null
     try {
       const cozum = await hastaninSozunuCoz(getSupabase(), user.id, message)
       if (cozum.tur === "coklu") {
@@ -175,15 +173,59 @@ ${ilacBaglamMetni(drugs[0])}`
       } else {
         const aktifId = cozum.tur === "tek" ? cozum.patientId : (contextPatientId ? String(contextPatientId) : null)
         if (aktifId) {
-          const dosya = await hastaDosyasiniDerle(getSupabase(), user.id, aktifId)
-          if (dosya) {
+          const paket = await hastaDosyaPaketiniDerle(getSupabase(), user.id, aktifId)
+          if (paket) {
             if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
             const aktifAd = cozum.tur === "tek" ? cozum.ad : "aktif hasta"
-            dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${dosya}\n=== DOSYA SONU ===\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya dayan; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
+            kesinDosyaCevap = dosyaSoruCevap(String(message || ""), paket.kart)
+            const kesinBlok = kesinDosyaCevap
+              ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
+              : ""
+            dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===${kesinBlok}\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
           }
         }
       }
     } catch { /* dosya bağlamı kritik değil — normal akış sürer */ }
+
+    if (kesinDosyaCevap && !kayitNiyetiMi(String(message || ""))) {
+      const speech = kesinDosyaCevap
+      const updatedMessages = [
+        ...messages,
+        { role: "user", content: message },
+        { role: "assistant", content: speech },
+      ].slice(-SOHBET_SAKLANAN_MESAJ)
+      await getSupabase().from("asistan_sessions").update({
+        messages: updatedMessages,
+        ...(cozulenHasta ? {
+          patient_id: cozulenHasta.id,
+          active_context: {
+            ...(asistanSession?.active_context as Record<string, unknown> || {}),
+            currentPatientId: cozulenHasta.id,
+            patientName: cozulenHasta.ad,
+          },
+        } : {}),
+      }).eq("id", asistanSession?.id)
+      return NextResponse.json({
+        success: true,
+        data: {
+          eylemOnerileri: [],
+          eylemYonlendirme: null,
+          eylemHastasi: null,
+          speech,
+          proactiveWarning: null,
+          action: null,
+          actionResult: null,
+          asistanSessionId: asistanSession?.id,
+          aktifHasta: cozulenHasta?.ad || null,
+          personaId,
+          personaName: persona.name,
+        },
+      })
+    }
+
+    // NOTYA-KOTA-01: yazılı sohbet günlük kotaya tabi (dosya gerçeği LLM'e gitmez — kota harcanmaz)
+    const kota = await aiKotaKullan(getSupabase(), user.id, 'sohbet')
+    if (!kota.izin) return NextResponse.json({ success: false, error: KOTA_MESAJI }, { status: 429 })
 
     // NOTYA-OGRENME-03: meslektaş hafızası — tek kaynak, tüm yüzeyler aynı bloğu okur
     let hafizaBlogu = ""
