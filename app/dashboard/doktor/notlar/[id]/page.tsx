@@ -127,11 +127,14 @@ export default function NotSayfasi() {
     if (aiBekliyorRef.current || !veri) return;
     aiBekliyorRef.current = true;
     setAiDurum('bekliyor');
+    const kontrolor = new AbortController();
+    const zamanAsimi = setTimeout(() => kontrolor.abort(), 30000);
     try {
       const t = await ensureDoctorAccessToken();
       const r = await fetch('/api/doktor/not-konsult', {
         method: 'POST',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        signal: kontrolor.signal,
         body: JSON.stringify({
           noteId: params.id,
           taslak: {
@@ -148,6 +151,7 @@ export default function NotSayfasi() {
           mesajlar: [{ rol: 'doktor', icerik: NOT_YENIDEN_DEGERLENDIR_ISTEK }],
         }),
       });
+      clearTimeout(zamanAsimi);
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Ayşe yanıt veremedi.');
       const dz = (d.duzenlemeler || {}) as Record<string, unknown>;
@@ -182,6 +186,7 @@ export default function NotSayfasi() {
       setAiDurum('guncellendi');
       setTimeout(() => setAiDurum((s) => (s === 'guncellendi' ? 'bos' : s)), 2500);
     } catch {
+      clearTimeout(zamanAsimi);
       setAiDurum('hata');
       setTimeout(() => setAiDurum((s) => (s === 'hata' ? 'bos' : s)), 3500);
     } finally {
@@ -256,7 +261,7 @@ export default function NotSayfasi() {
         </div>
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: '#C9D4E3', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(45,212,191,0.35)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
-        <button type="button" onClick={kaydetVeOnayla} disabled={durum === 'kaydediyor' || aiDurum === 'bekliyor'} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.7 : 1 }}>
+        <button type="button" onClick={kaydetVeOnayla} disabled={durum === 'kaydediyor'} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
       </div>
