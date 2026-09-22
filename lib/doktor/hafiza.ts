@@ -19,6 +19,15 @@
  *
  * Ekonomi: Haiku yalnız (a) doktor kendinden bahsettiğinde (regex kapısı) ve
  * (b) 5 seansta bir özet için çağrılır. Rutin hesabı günde bir, LLM'siz.
+ *
+ * NOTYA-OGRENME-04 (Kaan, 2026-09-22) — TEMPO + İŞ SIRASI: doktor_soyledi yalnız AÇIKÇA
+ * söylediğini yakalar ("kısa yazıyorum" gibi) — ama doktorun GERÇEKTE nasıl konuştuğu
+ * (cümle uzunluğu, doğrudanlık) ve işi hangi sırayla yaptığı (önce X, sonra Y) genelde
+ * AÇIKÇA söylenmez, davranıştan gözlemlenir. 5-seanslık özet çağrısı artık iki ek girdi
+ * alır: sohbetOrnekleriDerle (doktorun kendi mesajlarından birebir örnek — tempo için) ve
+ * eylemSirasiOzeti (asistan_actions'tan LLM'siz çıkarılan iş sırası — "A→B→C"). Haiku
+ * bunları görerek özet paragrafa tempo + iş sırası gözlemini de katar; ekonomi bozulmaz
+ * (mevcut 5-seans çağrısına binen ek metin, yeni bir LLM çağrısı değil).
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -393,24 +402,83 @@ SADECE JSON döndür: {"kayitlar":[{"kategori":"...","anahtar":"...","deger":"..
   return n
 }
 
+/** NOTYA-OGRENME-04: doktorun kendi mesajlarından BIREBIR örnek — 5-seanslık özete tempo
+ *  sinyali sağlar. LLM'siz; yazılı sohbet/Ayşe'ye Danış oturumlarından (asistan_sessions)
+ *  en son birkaç oturumun doktor tarafı turlarını alır. Hastaya özel klinik bilgi filtrelenmez
+ *  — bu metin yalnız bir sonraki Haiku çağrısına (özet) girer, doğrudan hiçbir yüzeye
+ *  gösterilmez ya da kaydedilmez. */
+export async function sohbetOrnekleriDerle(sb: SupabaseClient, doctorId: string, limitMesaj = 15): Promise<string> {
+  const { data } = await sb
+    .from('asistan_sessions')
+    .select('messages')
+    .eq('doctor_id', doctorId)
+    .order('created_at', { ascending: false })
+    .limit(4)
+  const turler: string[] = []
+  for (const s of (data || []) as { messages?: { role: string; content: string }[] }[]) {
+    for (const m of (s.messages || [])) {
+      const t = String(m?.content || '').trim()
+      if (m?.role === 'user' && t) turler.push(t.slice(0, 200))
+    }
+  }
+  return turler.slice(0, limitMesaj).join('\n---\n')
+}
+
+/** NOTYA-OGRENME-04: LLM'siz gözlem — asistan_actions'tan seans başına eylem sırası ("A→B→C").
+ *  Ardışık aynı tip sıkıştırılır (GENERAL_CHAT tekrarı gürültü); yalnız en az 2 farklı
+ *  anlamlı (GENERAL_CHAT dışı) adım içeren seanslar döndürülür — tek adımlı seanslar
+ *  "sıra" sayılmaz. */
+export async function eylemSirasiOzeti(sb: SupabaseClient, doctorId: string, limitSeans = 6): Promise<string> {
+  const { data } = await sb
+    .from('asistan_actions')
+    .select('asistan_session_id, action_type, created_at')
+    .eq('doctor_id', doctorId)
+    .order('created_at', { ascending: false })
+    .limit(150)
+  const satirlar = (data || []) as { asistan_session_id: string | null; action_type: string; created_at: string }[]
+  const gruplar = new Map<string, string[]>()
+  for (const s of satirlar) {
+    const k = s.asistan_session_id || 'bilinmeyen'
+    if (!gruplar.has(k)) gruplar.set(k, [])
+    gruplar.get(k)!.push(s.action_type)
+  }
+  const satirMetni: string[] = []
+  for (const [, tipler] of [...gruplar.entries()].slice(0, limitSeans)) {
+    const kronolojik = [...tipler].reverse() // created_at desc geldi
+    const sikistirilmis: string[] = []
+    for (const t of kronolojik) if (sikistirilmis[sikistirilmis.length - 1] !== t) sikistirilmis.push(t)
+    if (sikistirilmis.filter((t) => t !== 'GENERAL_CHAT').length >= 2) satirMetni.push(sikistirilmis.join(' → '))
+  }
+  return satirMetni.join('\n')
+}
+
 /** 5 seansta bir "bu doktor kimdir" özeti (Haiku). Sesli promptta ve karşılamada kullanılır. */
 export async function ozetGerekirseGuncelle(anthropic: Anthropic, sb: SupabaseClient, doctorId: string): Promise<void> {
   const h = await hafizaYukle(sb, doctorId)
   const seans = h.iliski.seans_sayisi
   if (seans < 5 || seans - h.iliski.ozet_seans < 5) return
+  const [ornekMetni, siraMetni] = await Promise.all([
+    sohbetOrnekleriDerle(sb, doctorId).catch(() => ''),
+    eylemSirasiOzeti(sb, doctorId).catch(() => ''),
+  ])
   const malzeme = [
     rutinMetni(h.iliski.rutin),
     h.kesinKayitlar.length ? kayitlariGrupla(h.kesinKayitlar) : '',
     h.stilProfili ? `Not tercihleri:\n${h.stilProfili}` : '',
+    ornekMetni ? `Doktorun kendi mesajlarından birebir örnekler (tempo/üslup için — bunları ANALİZ ET, aynen tekrarlama):\n${ornekMetni}` : '',
+    siraMetni ? `Geçmiş seanslarda gözlemlenen eylem sırası (chat içindeki iş adımları, kronolojik):\n${siraMetni}` : '',
   ].filter(Boolean).join('\n')
   if (!malzeme) return
   // NOTYA-MALIYET-01: hafıza kayıtlarından doktor profili paragrafı — dar HIZLI listesinde
   const yanit = await aiCagir({
     istemci: anthropic,
     gorev: 'ozet',
-    maxTokens: 300,
+    maxTokens: 350,
     doctorId,
-    system: `Aşağıdaki hafıza kayıtlarından bir doktorun çalışma karakterini anlatan 3-5 cümlelik TEK paragraf yaz — bir meslektaşın onu yeni bir asistana tanıtması gibi (ritmi, üslubu, nelere önem verdiği, nasıl hitap edilmek istediği). Türkçe, üçüncü şahıs, süsleme yok, kayıtlarda olmayanı yazma.`,
+    system: `Aşağıdaki hafıza kayıtlarından bir doktorun çalışma karakterini anlatan 3-6 cümlelik TEK paragraf yaz — bir meslektaşın onu yeni bir asistana tanıtması gibi (ritmi, üslubu, nelere önem verdiği, nasıl hitap edilmek istediği).
+Elinde "birebir mesaj örnekleri" varsa bunlardan doktorun GERÇEK konuşma temposunu çıkar (kısa/uzun cümle kurar mı, doğrudan mı nazik mi, terminoloji mi günlük dil mi kullanır) — örnekleri TIRNAK İÇİNDE ALINTILAMA, yalnız gözlemi anlat.
+Elinde "eylem sırası" varsa ve GERÇEKTEN tekrar eden bir kalıp görüyorsan (ör. genelde önce tanı sorar, sonra reçete ister) bunu bir cümleyle ekle; tek örnekten genelleme yapma, kalıp net değilse hiç bahsetme.
+Türkçe, üçüncü şahıs, süsleme yok, kayıtlarda olmayanı yazma, uydurma.`,
     messages: [{ role: 'user', content: malzeme }],
   })
   const ozet = yanit.content[0]?.type === 'text' ? yanit.content[0].text.trim() : ''
