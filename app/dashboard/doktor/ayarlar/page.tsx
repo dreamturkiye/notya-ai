@@ -2,8 +2,12 @@
  * NOTYA-SADE-01 (Ö4) — Ayarlar: kurulum/idare işlerinin tek kapısı.
  * Entegrasyonlar, Personel, SGK Medula ve Araçlar günlük klinik akış değildir; üst menüden
  * kaldırılıp buraya toplandı. Rotalar değişmedi — bu sayfa yalnız bir yönlendirme katmanıdır.
+ *
+ * NOTYA-YENI-GORUNUM-01: warm chrome pass — content only, header/dock now come from the layout.
  */
 'use client';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+
 const BOLUMLER = [
   { baslik: 'Entegrasyonlar', aciklama: 'Takvim, e-posta ve dış sistem bağlantıları', rota: '/dashboard/doktor/entegrasyonlar', ikon: '🔌' },
   { baslik: 'Hesabım', aciklama: 'E-posta ve şifre', rota: '/dashboard/doktor/hesap', ikon: '🔑' },
@@ -15,27 +19,25 @@ const BOLUMLER = [
 
 export default function AyarlarPage() {
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-        <a href="/dashboard/doktor" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Doktor</a>
-        <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>Ayarlar</h1>
-        <p style={{ fontSize: 13, color: '#8FA0B5', marginBottom: 20 }}>Kurulum ve yönetim işlemleri — günlük akışınızı kalabalıklaştırmasın diye burada.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {BOLUMLER.map((b) => (
-            <a
-              key={b.rota}
-              href={b.rota}
-              style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '16px 18px', textDecoration: 'none', color: 'white' }}
-            >
-              <span style={{ fontSize: 22 }}>{b.ikon}</span>
-              <span style={{ flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{b.baslik}</span>
-                <span style={{ display: 'block', fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>{b.aciklama}</span>
-              </span>
-              <span style={{ color: '#5F7189', fontSize: 18 }}>›</span>
-            </a>
-          ))}
-        </div>
+    <div>
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
+      <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Ayarlar</h1>
+      <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 22 }}>Kurulum ve yönetim işlemleri — günlük akışınızı kalabalıklaştırmasın diye burada.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 640 }}>
+        {BOLUMLER.map((b) => (
+          <a
+            key={b.rota}
+            href={b.rota}
+            style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '16px 18px', textDecoration: 'none', color: CHROME_RENK.ink, boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}
+          >
+            <span style={{ fontSize: 22 }}>{b.ikon}</span>
+            <span style={{ flex: 1 }}>
+              <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{b.baslik}</span>
+              <span style={{ display: 'block', fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>{b.aciklama}</span>
+            </span>
+            <span style={{ color: '#C9BEA9', fontSize: 18 }}>›</span>
+          </a>
+        ))}
       </div>
     </div>
   );

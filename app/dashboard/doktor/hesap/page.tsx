@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import DoktorAvatar from '@/components/doktor/DoktorAvatar';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AVATAR_IZINLI_MIME, AVATAR_MAX_BYTES, avatarDogrula, AvatarGecersizError } from '@/lib/doktor/avatar';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 const AVATAR_ONBELLEK = 'notya_doktor_avatar';
 
@@ -122,21 +123,21 @@ export default function HesabimPage() {
     }
   };
 
-  const kutu: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'white', fontSize: 14, padding: '10px 12px', boxSizing: 'border-box' };
-  const dugme: React.CSSProperties = { background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' };
+  const kutu: React.CSSProperties = { width: '100%', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 8, color: CHROME_RENK.ink, fontSize: 14, padding: '10px 12px', boxSizing: 'border-box' };
+  const dugme: React.CSSProperties = { background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: 24 }}>
-        <a href="/dashboard/doktor/ayarlar" style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
-        <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>Hesabım</h1>
-        <p style={{ fontSize: 13, color: '#8FA0B5', marginBottom: 24 }}>Giriş bilgileriniz, profil fotoğrafınız ve şifreniz.</p>
+    <div>
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+      <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: '0 0 6px', color: '#2e251d', letterSpacing: '-0.02em' }}>Hesabım</h1>
+      <p style={{ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 24 }}>Giriş bilgileriniz, profil fotoğrafınız ve şifreniz.</p>
+      <div style={{ maxWidth: 480 }}>
 
         {/* Profil fotoğrafı — e-postanın üstünde (Kaan, 2026-09-17) */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 18, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 18, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
           <DoktorAvatar ad={ad} fotoUrl={fotoUrl} boyut={56} />
           <div style={{ flex: 1, minWidth: 180 }}>
-            <div style={{ fontSize: 13, color: '#8FA0B5', marginBottom: 8 }}>
+            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 8 }}>
               {avatarDurum === 'yukleniyor' ? 'Yükleniyor…' : fotoUrl ? 'Karşılama ekranında bu şekilde görünür.' : 'Şu an baş harfli avatar kullanılıyor.'}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -144,34 +145,34 @@ export default function HesabimPage() {
                 {avatarDurum === 'kaydediyor' ? 'Yükleniyor…' : fotoUrl ? 'Fotoğrafı değiştir' : 'Fotoğraf yükle'}
               </button>
               {fotoUrl && (
-                <button type="button" onClick={fotoKaldir} disabled={avatarDurum === 'kaydediyor'} style={{ ...dugme, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#C9D4E3' }}>
+                <button type="button" onClick={fotoKaldir} disabled={avatarDurum === 'kaydediyor'} style={{ ...dugme, background: 'transparent', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink }}>
                   Kaldır
                 </button>
               )}
               <input ref={dosyaRef} type="file" accept={AVATAR_IZINLI_MIME.join(',')} style={{ display: 'none' }} onChange={(e) => fotoSecildi(e.target.files?.[0])} />
             </div>
-            <p style={{ fontSize: 11, color: '#5F7189', marginTop: 8 }}>JPEG, PNG veya WebP · en fazla {Math.round(AVATAR_MAX_BYTES / (1024 * 1024))} MB</p>
-            {avatarDurum === 'kaydedildi' && <p style={{ fontSize: 12, color: '#22C55E', marginTop: 6 }}>Fotoğrafınız kaydedildi.</p>}
-            {avatarHata && <p style={{ fontSize: 12, color: '#F87171', marginTop: 6 }}>{avatarHata}</p>}
+            <p style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 8 }}>JPEG, PNG veya WebP · en fazla {Math.round(AVATAR_MAX_BYTES / (1024 * 1024))} MB</p>
+            {avatarDurum === 'kaydedildi' && <p style={{ fontSize: 12, color: '#2E6E4E', marginTop: 6 }}>Fotoğrafınız kaydedildi.</p>}
+            {avatarHata && <p style={{ fontSize: 12, color: CHROME_RENK.warn, marginTop: 6 }}>{avatarHata}</p>}
           </div>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 12, color: '#8FA0B5', display: 'block', marginBottom: 4 }}>Ad Soyad</label>
-          <div style={{ ...kutu, color: '#C9D4E3', background: 'rgba(255,255,255,0.03)' }}>{adSoyad || '—'}</div>
+          <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Ad Soyad</label>
+          <div style={{ ...kutu, color: CHROME_RENK.ink, background: '#F6F0E4' }}>{adSoyad || '—'}</div>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 12, color: '#8FA0B5', display: 'block', marginBottom: 4 }}>E-posta</label>
-          <div style={{ ...kutu, color: '#C9D4E3', background: 'rgba(255,255,255,0.03)' }}>{eposta || '—'}</div>
+          <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>E-posta</label>
+          <div style={{ ...kutu, color: CHROME_RENK.ink, background: '#F6F0E4' }}>{eposta || '—'}</div>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 18 }}>
-          <div style={{ fontWeight: 700, marginBottom: 12 }}>Şifreyi değiştir</div>
-          <label style={{ fontSize: 12, color: '#8FA0B5', display: 'block', marginBottom: 4 }}>Yeni şifre</label>
+        <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 18, boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+          <div style={{ fontWeight: 700, marginBottom: 12, color: CHROME_RENK.ink }}>Şifreyi değiştir</div>
+          <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Yeni şifre</label>
           <input type="password" value={yeni} onChange={(e) => setYeni(e.target.value)} placeholder="En az 8 karakter" style={{ ...kutu, marginBottom: 12 }} />
-          <label style={{ fontSize: 12, color: '#8FA0B5', display: 'block', marginBottom: 4 }}>Yeni şifre (tekrar)</label>
+          <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Yeni şifre (tekrar)</label>
           <input type="password" value={tekrar} onChange={(e) => setTekrar(e.target.value)} style={{ ...kutu, marginBottom: 14 }} />
-          {hata && <div style={{ color: '#F87171', fontSize: 13, marginBottom: 10 }}>{hata}</div>}
-          <button type="button" onClick={kaydet} disabled={durum === 'kaydediyor'} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
+          {hata && <div style={{ color: CHROME_RENK.warn, fontSize: 13, marginBottom: 10 }}>{hata}</div>}
+          <button type="button" onClick={kaydet} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
             {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Şifre değiştirildi' : 'Şifreyi Kaydet'}
           </button>
         </div>
@@ -183,7 +184,7 @@ export default function HesabimPage() {
             if (key) localStorage.removeItem(key);
             window.location.href = '/giris/doktor';
           }}
-          style={{ marginTop: 24, background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', color: '#F87171', borderRadius: 8, padding: '10px 18px', fontWeight: 600, cursor: 'pointer', width: '100%' }}
+          style={{ marginTop: 24, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}55`, color: CHROME_RENK.warn, borderRadius: 8, padding: '10px 18px', fontWeight: 600, cursor: 'pointer', width: '100%' }}
         >
           Çıkış Yap
         </button>
