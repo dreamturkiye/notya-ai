@@ -4,6 +4,7 @@ import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route'
 import React, { useState, useEffect } from 'react'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import RrsBekleyenler from '@/components/doktor/RrsBekleyenler'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 interface Hasta {
   id: string
@@ -86,9 +87,11 @@ const ERecetePage: React.FC = () => {
     setOneriSatir(null); setOneriler([])
   }
 
-  const teal = '#00D4AA'
-  const glassBg = 'rgba(255,255,255,0.05)'
-  const glassBorder = 'rgba(255,255,255,0.1)'
+  const teal = CHROME_RENK.pine
+  const glassBg = '#FFFFFF'
+  const glassBorder = CHROME_RENK.border
+  const inkText = CHROME_RENK.ink
+  const mutedText = CHROME_RENK.muted
 
   useEffect(() => {
     const chk = () => setIsMobile(window.innerWidth < 768)
@@ -208,28 +211,28 @@ const ERecetePage: React.FC = () => {
     <div
       style={{
         minHeight: '100dvh',
-        backgroundColor: '#060C18',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        color: '#fff',
+        backgroundColor: 'transparent',
+        fontFamily: CHROME_FONT.sans,
+        color: inkText,
       }}
     >
-      <div style={{ padding: '20px 16px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ padding: '0 0 20px', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px' }}>
           <div
             style={{
-              color: teal,
-              fontSize: '12px',
-              fontWeight: 600,
-              letterSpacing: '1.5px',
-              marginBottom: '8px',
+              fontFamily: CHROME_FONT.serif,
+              fontStyle: 'italic',
+              color: '#6d6055',
+              fontSize: '15px',
+              marginBottom: '4px',
             }}
           >
-            E-REÇETE
+            E-Reçete
           </div>
-          <h1 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, margin: 0, marginBottom: '6px' }}>
+          <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: isMobile ? '26px' : '32px', margin: 0, marginBottom: '6px', color: '#2e251d', letterSpacing: '-0.02em' }}>
             Elektronik Reçete
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '15px', margin: 0 }}>
+          <p style={{ color: mutedText, fontSize: '15px', margin: 0 }}>
             Elektronik reçete oluşturma ve SGK entegrasyonu
           </p>
         </div>
@@ -258,7 +261,7 @@ const ERecetePage: React.FC = () => {
               </div>
 
               <div style={{ marginBottom: '18px' }}>
-                <div style={{ fontSize: '13px', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>
+                <div style={{ fontSize: '13px', marginBottom: '8px', color: mutedText }}>
                   Hasta
                 </div>
                 <select
@@ -267,12 +270,12 @@ const ERecetePage: React.FC = () => {
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
-                    backgroundColor: 'rgba(255,255,255,0.06)',
+                    backgroundColor: '#FFFFFF',
                     border: `1px solid ${glassBorder}`,
                     borderRadius: '14px',
                     padding: '12px 16px',
                     fontSize: '14px',
-                    color: '#fff',
+                    color: inkText,
                     outline: 'none',
                   }}
                 >
@@ -286,7 +289,7 @@ const ERecetePage: React.FC = () => {
               </div>
 
               <div style={{ marginBottom: '18px' }}>
-                <div style={{ fontSize: '13px', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>
+                <div style={{ fontSize: '13px', marginBottom: '8px', color: mutedText }}>
                   Tanı
                 </div>
                 <textarea
@@ -297,12 +300,12 @@ const ERecetePage: React.FC = () => {
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
-                    backgroundColor: 'rgba(255,255,255,0.06)',
+                    backgroundColor: '#FFFFFF',
                     border: `1px solid ${glassBorder}`,
                     borderRadius: '14px',
                     padding: '12px 16px',
                     fontSize: '14px',
-                    color: '#fff',
+                    color: inkText,
                     resize: 'vertical',
                     outline: 'none',
                   }}
@@ -310,7 +313,7 @@ const ERecetePage: React.FC = () => {
               </div>
 
               <div style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '13px', marginBottom: '8px', color: 'rgba(255,255,255,0.7)' }}>
+                <div style={{ fontSize: '13px', marginBottom: '8px', color: mutedText }}>
                   Ek Notlar
                 </div>
                 <textarea
@@ -320,12 +323,12 @@ const ERecetePage: React.FC = () => {
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
-                    backgroundColor: 'rgba(255,255,255,0.06)',
+                    backgroundColor: '#FFFFFF',
                     border: `1px solid ${glassBorder}`,
                     borderRadius: '14px',
                     padding: '12px 16px',
                     fontSize: '14px',
-                    color: '#fff',
+                    color: inkText,
                     resize: 'vertical',
                     outline: 'none',
                   }}
@@ -387,21 +390,21 @@ const ERecetePage: React.FC = () => {
                         style={{
                           width: '100%',
                           boxSizing: 'border-box',
-                          backgroundColor: 'rgba(255,255,255,0.06)',
+                          backgroundColor: '#FFFFFF',
                           border: `1px solid ${glassBorder}`,
                           borderRadius: '14px',
                           padding: '10px 14px',
                           fontSize: '14px',
-                          color: '#fff',
+                          color: inkText,
                           outline: 'none',
                         }}
                       />
                       {field === 'ad' && oneriSatir === ilac.id && oneriler.length > 0 && (
-                        <div style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%', marginTop: 4, background: '#0F172A', border: `1px solid ${glassBorder}`, borderRadius: 12, boxShadow: '0 12px 30px -10px rgba(0,0,0,.6)', maxHeight: 260, overflowY: 'auto' }}>
+                        <div style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%', marginTop: 4, background: '#FFFFFF', border: `1px solid ${glassBorder}`, borderRadius: 12, boxShadow: '0 12px 30px -10px rgba(58,44,34,.18)', maxHeight: 260, overflowY: 'auto' }}>
                           {oneriler.map((g, i) => (
                             <div key={g.marka} onMouseDown={() => oneriSec(ilac.id, g)} style={{ padding: '10px 14px', cursor: 'pointer', borderTop: i === 0 ? 'none' : `1px solid ${glassBorder}` }}>
-                              <div style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{g.marka} <span style={{ fontWeight: 400, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>· {g.sunumlar.length} sunum</span></div>
-                              {g.etkenMadde && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{g.etkenMadde}</div>}
+                              <div style={{ fontWeight: 600, fontSize: 14, color: inkText }}>{g.marka} <span style={{ fontWeight: 400, fontSize: 11, color: mutedText }}>· {g.sunumlar.length} sunum</span></div>
+                              {g.etkenMadde && <div style={{ fontSize: 12, color: mutedText }}>{g.etkenMadde}</div>}
                             </div>
                           ))}
                         </div>
@@ -415,7 +418,7 @@ const ERecetePage: React.FC = () => {
                       style={{
                         background: 'transparent',
                         border: 'none',
-                        color: 'rgba(255,255,255,0.5)',
+                        color: mutedText,
                         cursor: 'pointer',
                         fontSize: '16px',
                       }}
@@ -435,7 +438,7 @@ const ERecetePage: React.FC = () => {
                   width: '100%',
                   height: '52px',
                   backgroundColor: teal,
-                  color: '#060C18',
+                  color: '#FAF8F4',
                   border: 'none',
                   borderRadius: '14px',
                   fontSize: '15px',
@@ -449,9 +452,9 @@ const ERecetePage: React.FC = () => {
               {error && (
                 <div
                   style={{
-                    color: '#fecaca',
-                    background: 'rgba(220,38,38,0.2)',
-                    border: '1px solid rgba(248,113,113,0.5)',
+                    color: '#7A3D28',
+                    background: '#FBEAE3',
+                    border: `1px solid ${CHROME_RENK.warn}70`,
                     borderRadius: '12px',
                     padding: '12px 14px',
                     fontSize: '14px',
@@ -489,7 +492,7 @@ const ERecetePage: React.FC = () => {
                   }}
                 >
                   <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.4 }}>📋</div>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
+                  <div style={{ color: mutedText, fontSize: '14px' }}>
                     Reçete önizlemesi burada görünecek
                   </div>
                 </div>
@@ -508,9 +511,9 @@ const ERecetePage: React.FC = () => {
                       type="button"
                       onClick={() => window.print()}
                       style={{
-                        backgroundColor: 'rgba(255,255,255,0.08)',
+                        backgroundColor: '#EFE9DC',
                         border: `1px solid ${glassBorder}`,
-                        color: '#fff',
+                        color: inkText,
                         padding: '6px 14px',
                         borderRadius: '10px',
                         fontSize: '13px',
@@ -524,7 +527,7 @@ const ERecetePage: React.FC = () => {
                   <div
                     style={{
                       display: 'inline-block',
-                      backgroundColor: 'rgba(0,212,170,0.1)',
+                      backgroundColor: '#E4F3F1',
                       color: teal,
                       padding: '4px 10px',
                       borderRadius: '999px',
@@ -536,14 +539,14 @@ const ERecetePage: React.FC = () => {
                   </div>
 
                   <div style={{ marginBottom: '20px' }}>
-                    <div style={{ fontSize: '13px', marginBottom: '10px', color: 'rgba(255,255,255,0.6)' }}>
+                    <div style={{ fontSize: '13px', marginBottom: '10px', color: mutedText }}>
                       İlaçlar
                     </div>
                     {sonuc.ilaclar.map((ilac, idx) => (
                       <div
                         key={idx}
                         style={{
-                          backgroundColor: 'rgba(255,255,255,0.04)',
+                          backgroundColor: '#F6F0E4',
                           borderRadius: '12px',
                           padding: '10px 14px',
                           marginBottom: '6px',
@@ -561,9 +564,9 @@ const ERecetePage: React.FC = () => {
                       padding: '10px 14px',
                       borderRadius: '12px',
                       backgroundColor: sonuc.sgkUyum
-                        ? 'rgba(0,212,170,0.1)'
-                        : 'rgba(255,107,107,0.1)',
-                      color: sonuc.sgkUyum ? teal : '#fecaca',
+                        ? '#E4F3F1'
+                        : '#FBEAE3',
+                      color: sonuc.sgkUyum ? teal : CHROME_RENK.warn,
                       fontSize: '13px',
                       fontWeight: 600,
                     }}
