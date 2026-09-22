@@ -26,6 +26,8 @@
  * Bu bir istatistiksel referanstır; klinik karar hekimindir.
  */
 
+import { cmCoz, kiloCoz } from './olcumCoz'
+
 export type Cinsiyet = 'male' | 'female'
 export type BuyumeParametre = 'kilo' | 'boy' | 'basCevresi' | 'vki'
 
@@ -225,6 +227,37 @@ export function ayFarki(dogumIso: string, olcumIso?: string): number | null {
 export function persentilMetni(p: number): string {
   const yuvarlak = Math.round(p)
   return `${yuvarlak}. persentil`
+}
+
+export type BuyumePersentilleri = { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string }
+
+/**
+ * Not vitallerinden Neyzi persentili. Gram ("3180 gr") kg'a, "50.50 cm" cm'e çevrilir;
+ * birim süzülmeden 3180 kg sanılırsa 100. persentil + sahte obez çıkar.
+ */
+export function buyumePersentilleriniHesapla(
+  vitaller: unknown,
+  dogumIso: string | null,
+  cinsiyet: Cinsiyet | null,
+  olcumIso: string | null,
+): BuyumePersentilleri | null {
+  if (!vitaller || typeof vitaller !== 'object' || !dogumIso || !cinsiyet) return null
+  const ayYas = ayFarki(dogumIso, olcumIso || undefined)
+  if (ayYas === null || ayYas > 216) return null
+  const v = vitaller as Record<string, unknown>
+  const kilo = kiloCoz(v.kilo as string | number | null | undefined)
+  const boy = cmCoz(v.boy as string | number | null | undefined)
+  const bas = cmCoz(v.basCevresi as string | number | null | undefined)
+  const out: BuyumePersentilleri = {}
+  if (kilo != null) { const r = persentilHesapla('kilo', cinsiyet, ayYas, kilo); if (r) out.kilo = persentilMetni(r.persentil) }
+  if (boy != null) { const r = persentilHesapla('boy', cinsiyet, ayYas, boy); if (r) out.boy = persentilMetni(r.persentil) }
+  if (bas != null) { const r = persentilHesapla('basCevresi', cinsiyet, ayYas, bas); if (r) out.basCevresi = persentilMetni(r.persentil) }
+  if (kilo != null && boy != null && ayYas >= 24) {
+    const vki = kilo / Math.pow(boy / 100, 2)
+    const r = persentilHesapla('vki', cinsiyet, ayYas, vki)
+    if (r) { out.vki = persentilMetni(r.persentil); out.vkiSinif = vkiSinifEtiket(vkiSiniflandir(r.persentil)) }
+  }
+  return Object.keys(out).length ? out : null
 }
 
 /**

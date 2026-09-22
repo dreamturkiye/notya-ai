@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 
 export const dynamic = 'force-dynamic'
 
@@ -143,7 +144,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const yeniVital = duzenlemeler.vitaller
   if (yeniVital && typeof yeniVital === 'object' && !Array.isArray(yeniVital)) {
     const temiz: Record<string, string> = {}
-    for (const [k, v] of Object.entries(yeniVital as Record<string, unknown>)) { const t = String(v ?? '').trim(); if (t) temiz[k] = t.slice(0, 40) }
+    const norm = vitalOlcumleriniNormallestir(yeniVital) as Record<string, unknown>
+    for (const [k, v] of Object.entries(norm)) { const t = String(v ?? '').trim(); if (t) temiz[k] = t.slice(0, 40) }
     const eskiStr = JSON.stringify(existing.vitaller || {})
     const yeniStr = JSON.stringify(temiz)
     if (eskiStr !== yeniStr) {

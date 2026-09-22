@@ -9,7 +9,8 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
-import { persentilHesapla, vkiSiniflandir, vkiSinifEtiket, ayFarki, persentilMetni, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { buyumePersentilleriniHesapla, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 
@@ -18,35 +19,6 @@ export const dynamic = 'force-dynamic'
 function coz(v: string | null | undefined): string {
   if (!v) return ''
   try { return decrypt(v) } catch { return '' }
-}
-
-/**
- * Kaan (2026-09-13): kilo/boy/baş çevresi/VKİ persentili Neyzi standartlarına göre —
- * türetilmiş veri, saklanmaz; her görüntülemede vitaller + doğum tarihinden yeniden hesaplanır.
- * 18 yaş üstü veya doğum tarihi/cinsiyet bilinmiyorsa boş döner.
- */
-function buyumePersentilleriniHesapla(
-  vitaller: unknown,
-  dogumIso: string | null,
-  cinsiyet: Cinsiyet | null,
-  olcumIso: string | null,
-): { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null {
-  if (!vitaller || typeof vitaller !== 'object' || !dogumIso || !cinsiyet) return null
-  const ayYas = ayFarki(dogumIso, olcumIso || undefined)
-  if (ayYas === null || ayYas > 216) return null
-  const v = vitaller as Record<string, unknown>
-  const say = (x: unknown): number | null => { const n = parseFloat(String(x ?? '').replace(',', '.').replace(/[^0-9.]/g, '')); return Number.isFinite(n) && n > 0 ? n : null }
-  const out: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } = {}
-  const kilo = say(v.kilo), boy = say(v.boy), bas = say(v.basCevresi)
-  if (kilo != null) { const r = persentilHesapla('kilo', cinsiyet, ayYas, kilo); if (r) out.kilo = persentilMetni(r.persentil) }
-  if (boy != null) { const r = persentilHesapla('boy', cinsiyet, ayYas, boy); if (r) out.boy = persentilMetni(r.persentil) }
-  if (bas != null) { const r = persentilHesapla('basCevresi', cinsiyet, ayYas, bas); if (r) out.basCevresi = persentilMetni(r.persentil) }
-  if (kilo != null && boy != null && ayYas >= 24) {
-    const vki = kilo / Math.pow(boy / 100, 2)
-    const r = persentilHesapla('vki', cinsiyet, ayYas, vki)
-    if (r) { out.vki = persentilMetni(r.persentil); out.vkiSinif = vkiSinifEtiket(vkiSiniflandir(r.persentil)) }
-  }
-  return Object.keys(out).length ? out : null
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -149,7 +121,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       icdKodlari: Array.isArray(not.icd10_codes) ? not.icd10_codes : [],
       kritikBulgular: Array.isArray(not.kritik_bulgular) ? not.kritik_bulgular : [],
       alarmBulgulari: Array.isArray(not.alarm_bulgulari) ? not.alarm_bulgulari : [],
-      vitaller: not.vitaller || null,
+      vitaller: not.vitaller && typeof not.vitaller === 'object' ? vitalOlcumleriniNormallestir(not.vitaller) : null,
       // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda
       buyumePersentilleri: kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null,
       // Erişkin VKİ (WHO) — muayene raporunda otomatik; çocukta Neyzi kullanılır

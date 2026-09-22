@@ -29,6 +29,7 @@ import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompt
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
 import { bransKapsami, pediatrikBaglamMi, veliDiliMi, vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
+import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 
 export interface ReceteOnerisi {
   etkenMadde?: string
@@ -114,7 +115,7 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
   "Alışkanlıklar: ..." (${ped('beslenme; erişkinde sigara/alkol', 'beslenme, sigara/alkol')})
   ${hitap('Veli beyanı olduğu belirtilerek; transkriptte', 'Transkriptte')} olmayan alt bölümü HİÇ yazma.
 - objektif: FİZİK MUAYENE sistematiğinde yaz: "Genel durum: ..." ile başla (bilinç/koopere-oryante, distres, cilt-mukoza: solukluk/ikter/siyanoz, hidrasyon). Sonra YALNIZ muayene edilen sistemler, klasik düzen ve terminolojiyle — solunum (dinlemekle ral/ronküs/wheezing, eşit katılım), kardiyovasküler (S1-S2, üfürüm, periferik nabızlar, ödem), batın (inspeksiyon→oskültasyon→perküsyon→palpasyon sırasına saygılı: bağırsak sesleri, hassasiyet, defans/rebound, organomegali), KBB/baş-boyun, cilt, nörolojik (bilinç/GKS, kranyal sinirler, motor-duyu, DTR/Babinski, serebellar), kas-iskelet (ROM, şişlik/ısı artışı), GÜS (KVAH). Dikte edilen bulguyu uygun sistem başlığı altına, uygun terimle yerleştir; muayene edilmeyen sistemi HİÇ yazma. Varsa laboratuvar ve görüntüleme sonuçlarını "Laboratuvar: / Görüntüleme: ..." satırlarıyla en sona ekle.${ped(' BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, WHO referansı verme, "X. persentil" gibi bir sayı uydurma — bu hesap uygulamada ayrı, doğrulanmış bir bölümde (Neyzi standartları) otomatik gösteriliyor; sen yalnız ölçülen ham değerleri (kilo/boy/baş çevresi) yaz.', ' VKİ sınıfı veya persentil hesaplayıp sayı uydurma; yalnız ölçülen ham değerleri yaz.')}
-- vitaller: transkriptte GEÇEN değerleri çıkar (kilo kg, boy cm, ${ped('baş çevresi cm — pediatri sağlam çocuk muayenesinde, ', '')}ateş °C, nabız, solunum sayısı /dk, SpO2, tansiyon); geçmeyeni null bırak.
+- vitaller: transkriptte GEÇEN değerleri çıkar (kilo kg, boy cm, ${ped('baş çevresi cm — pediatri sağlam çocuk muayenesinde, ', '')}ateş °C, nabız, solunum sayısı /dk, SpO2, tansiyon); geçmeyeni null bırak. Kilo HER ZAMAN kilogram: gram görürsen (3180 g / 3180 gr) kg'a çevir (3.18). Değerin yanına birim YAZMA — form zaten kg/cm gösterir (kilo: 3.18, boy: 50.5${ped(', basCevresi: 34.7', '')}).
 - degerlendirme: doktorun söylediği/koyduğu TANILARI yaz (numaralı problem listesi). YALNIZ
   doktorun ifade ettiği tanılar — kendi ayırıcı tanını, dışladığın tanıları, olasılık
   yorumunu BURAYA YAZMA (onlar aiDegerlendirme'ye gider). Doktor açıkça söylemediyse ${ped('VKİ/büyüme persentiline', 'VKİ\'ye')} dayalı bir tanı (ör. "obezite") YAZMA.
@@ -301,7 +302,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   if (Array.isArray(veri.receteOnerisi)) veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])
   // BRANS-ALAN-SIZMASI: a non-pediatric note never keeps a pediatric-only vital the model filled (fetal "baş çevresi"
   // dictated during an obstetric USG is not the mother's vital sign).
-  veri.vitaller = vitalleriKapsamaGoreSuz(veri.vitaller, bransKapsami({ seansBransi: girdi.specialty, doktorBransi: girdi.doktorBransi, hastaDogumIso: girdi.hastaDogumIso }))
+  veri.vitaller = vitalOlcumleriniNormallestir(vitalleriKapsamaGoreSuz(veri.vitaller, bransKapsami({ seansBransi: girdi.specialty, doktorBransi: girdi.doktorBransi, hastaDogumIso: girdi.hastaDogumIso })))
   // KD-DERM-SAFETY-FINDINGS F1: prompt-locked branches never keep a model-written dose the hekim did not give.
   // KD-DERM-SAFETY-FINDINGS F4 (every branch): no internal field names, no invented consent form number in doctor-facing text.
   // KD-KAYNAK-KILIDI: kadın doğum notes never keep a guideline number / year that is not in the verified list.

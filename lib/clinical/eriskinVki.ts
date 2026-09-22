@@ -2,6 +2,7 @@
  * Adult BMI (VKİ) — WHO classification for muayene notes / vitals.
  * Pediatric VKİ uses Neyzi percentiles (lib/clinical/buyumeEgrisi); do not use this for <18.
  */
+import { cmCoz, kiloCoz } from './olcumCoz'
 export type EriskinVkiSinif = 'zayif' | 'normal' | 'fazla_kilolu' | 'obez'
 
 export type EriskinVkiSonuc = {
@@ -13,10 +14,9 @@ export type EriskinVkiSonuc = {
   ozet: string
 }
 
-function sayi(raw: unknown): number | null {
+function sayi(raw: unknown, tur: 'kilo' | 'cm'): number | null {
   if (raw == null || raw === '') return null
-  const n = typeof raw === 'number' ? raw : parseFloat(String(raw).replace(',', '.').replace(/[^0-9.\-]/g, ''))
-  return Number.isFinite(n) && n > 0 ? n : null
+  return tur === 'kilo' ? kiloCoz(raw as string | number) : cmCoz(raw as string | number)
 }
 
 export function eriskinVkiSiniflandir(vki: number): Pick<EriskinVkiSonuc, 'sinif' | 'etiket'> {
@@ -29,8 +29,8 @@ export function eriskinVkiSiniflandir(vki: number): Pick<EriskinVkiSonuc, 'sinif
 }
 
 export function eriskinVkiHesapla(kiloKg: unknown, boyCm: unknown): EriskinVkiSonuc | null {
-  const kilo = sayi(kiloKg)
-  const boy = sayi(boyCm)
+  const kilo = sayi(kiloKg, 'kilo')
+  const boy = sayi(boyCm, 'cm')
   if (kilo == null || boy == null || boy < 50) return null
   const vki = kilo / Math.pow(boy / 100, 2)
   if (!Number.isFinite(vki) || vki < 10 || vki > 80) return null

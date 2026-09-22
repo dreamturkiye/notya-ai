@@ -9,7 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { persentilHesapla, vkiSiniflandir, vkiSinifEtiket, ayFarki, persentilMetni, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { buyumePersentilleriniHesapla, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 
@@ -60,31 +61,6 @@ function formatDate(createdAt?: string | null): string {
   } catch {
     return d.toISOString().slice(0, 10)
   }
-}
-
-/** Kaan (2026-09-13): İnceleme Kuyruğu'nda da büyüme persentili — /api/notes/[id] ile aynı mantık. */
-function buyumePersentilleriniHesapla(
-  vitaller: unknown,
-  dogumIso: string | null,
-  cinsiyet: Cinsiyet | null,
-  olcumIso: string | null,
-): { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null {
-  if (!vitaller || typeof vitaller !== 'object' || !dogumIso || !cinsiyet) return null
-  const ayYas = ayFarki(dogumIso, olcumIso || undefined)
-  if (ayYas === null || ayYas > 216) return null
-  const v = vitaller as Record<string, unknown>
-  const say = (x: unknown): number | null => { const n = parseFloat(String(x ?? '').replace(',', '.').replace(/[^0-9.]/g, '')); return Number.isFinite(n) && n > 0 ? n : null }
-  const out: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } = {}
-  const kilo = say(v.kilo), boy = say(v.boy), bas = say(v.basCevresi)
-  if (kilo != null) { const r = persentilHesapla('kilo', cinsiyet, ayYas, kilo); if (r) out.kilo = persentilMetni(r.persentil) }
-  if (boy != null) { const r = persentilHesapla('boy', cinsiyet, ayYas, boy); if (r) out.boy = persentilMetni(r.persentil) }
-  if (bas != null) { const r = persentilHesapla('basCevresi', cinsiyet, ayYas, bas); if (r) out.basCevresi = persentilMetni(r.persentil) }
-  if (kilo != null && boy != null && ayYas >= 24) {
-    const vki = kilo / Math.pow(boy / 100, 2)
-    const r = persentilHesapla('vki', cinsiyet, ayYas, vki)
-    if (r) { out.vki = persentilMetni(r.persentil); out.vkiSinif = vkiSinifEtiket(vkiSiniflandir(r.persentil)) }
-  }
-  return Object.keys(out).length ? out : null
 }
 
 export async function GET(req: NextRequest) {
@@ -187,7 +163,7 @@ export async function GET(req: NextRequest) {
       kritikBulgular: Array.isArray(row.kritik_bulgular) ? row.kritik_bulgular : [],
       hastaOzeti: String(row.hasta_ozeti || ''),
       basvuruYakinmasi: String(row.basvuru_yakinmasi || ''),
-      vitaller: (row.vitaller && typeof row.vitaller === 'object') ? row.vitaller : null,
+      vitaller: (row.vitaller && typeof row.vitaller === 'object') ? vitalOlcumleriniNormallestir(row.vitaller) : null,
       // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda (KD/göz/derm hekimi 16 yaşında hastada "obez (Neyzi)" görmez)
       buyumePersentilleri: session.patient_id && kapsam.pediatrik
         ? buyumePersentilleriniHesapla(row.vitaller, dogumIso, cinsiyetler.get(String(session.patient_id)) || null, row.created_at || null)

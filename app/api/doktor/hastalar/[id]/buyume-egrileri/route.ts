@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { persentilEgrileri, ayFarki, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { cmCoz, kiloCoz } from '@/lib/clinical/olcumCoz'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,9 +16,9 @@ function guvenliCoz(v: string | null | undefined): string {
   if (!v) return ''
   try { return decrypt(v) } catch { return '' }
 }
-function sayi(x: unknown): number | null {
-  const n = parseFloat(String(x ?? '').replace(',', '.').replace(/[^0-9.]/g, ''))
-  return Number.isFinite(n) && n > 0 ? n : null
+function sayi(x: unknown, tur: 'kilo' | 'cm'): number | null {
+  if (x == null || x === '') return null
+  return tur === 'kilo' ? kiloCoz(x as string | number) : cmCoz(x as string | number)
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const ay = ayFarki(dogumIso, n.created_at)
     if (ay === null) continue
     const v = (n.vitaller || {}) as Record<string, unknown>
-    const kilo = sayi(v.kilo), boy = sayi(v.boy), bas = sayi(v.basCevresi)
+    const kilo = sayi(v.kilo, 'kilo'), boy = sayi(v.boy, 'cm'), bas = sayi(v.basCevresi, 'cm')
     if (kilo != null) noktalar.kilo.push({ ay, deger: kilo, tarih: n.created_at })
     if (boy != null) noktalar.boy.push({ ay, deger: boy, tarih: n.created_at })
     if (bas != null) noktalar.basCevresi.push({ ay, deger: bas, tarih: n.created_at })

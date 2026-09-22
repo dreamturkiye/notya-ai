@@ -3,46 +3,9 @@
  * Türk kliniğinin yazdığı biçimi sessizce normalleştirir (3,5 · 3.500 gr · 1,12 m · 12.03.2024 · 32+4) — hata yerine
  * en makul okumayı döndürür, okunamazsa null. Hiçbir klinik eşik yok; yalnız biçim.
  */
+import { sayiCoz } from '@/lib/clinical/olcumCoz'
 
-/** "3,5" · "3.5" · " 12 " · "1.250,5" → sayı. Tek nokta + tam 3 hane ("3.500") binlik ayırıcı sayılır. */
-export function sayiCoz(ham: string | number | null | undefined): number | null {
-  if (typeof ham === 'number') return Number.isFinite(ham) ? ham : null
-  let s = String(ham ?? '').trim().replace(/\s+/g, '')
-  if (!s) return null
-  s = s.replace(/[^0-9.,-]/g, '')
-  if (!s || s === '-' ) return null
-  if (s.includes(',') && s.includes('.')) {
-    // Türkçe: nokta binlik, virgül ondalık ("1.250,5"); İngilizce karışığı ("1,250.5") da tolere edilir.
-    s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '')
-  } else if (s.includes(',')) {
-    s = s.replace(',', '.')
-  } else if (/^\d{1,3}(\.\d{3})+$/.test(s)) {
-    s = s.replace(/\./g, '')
-  }
-  const n = Number(s)
-  return Number.isFinite(n) ? n : null
-}
-
-/** Kilo → kg. "3,5" · "3,5 kg" · "3500" · "3500 gr" · "3.500 g" · "850 g" hepsi kabul. */
-export function kiloCoz(ham: string | null | undefined): number | null {
-  const s = String(ham ?? '').toLocaleLowerCase('tr-TR')
-  const gramBirim = /\d\s*(gr|g|gram)\b/.test(s)
-  // "3.500" / "3.500 g" → binlik; ama "3.5 kg" ondalık
-  const n = sayiCoz(s)
-  if (n == null || n <= 0) return null
-  // Birim yok: 250'den büyük değer gram kabul edilir (hiçbir çocuk 250 kg değildir; 3500 = 3,5 kg).
-  const kg = gramBirim || (!/kg/.test(s) && n > 250) ? n / 1000 : n
-  return Math.round(kg * 10000) / 10000
-}
-
-/** Boy / baş çevresi → cm. "112" · "112,5 cm" · "1,12 m" · "1.12" (3'ten küçük birimsiz değer metre sayılır). */
-export function cmCoz(ham: string | null | undefined): number | null {
-  const s = String(ham ?? '').toLocaleLowerCase('tr-TR')
-  const n = sayiCoz(s)
-  if (n == null || n <= 0) return null
-  const cm = /\d\s*m\b/.test(s) && !/cm/.test(s) ? n * 100 : /mm/.test(s) ? n / 10 : n < 3 ? n * 100 : n
-  return Math.round(cm * 100) / 100
-}
+export { sayiCoz, kiloCoz, cmCoz, gramCoz } from '@/lib/clinical/olcumCoz'
 
 const iki = (n: number) => String(n).padStart(2, '0')
 
@@ -82,12 +45,6 @@ export function gebelikHaftasiCoz(ham: string | null | undefined): number | null
   const n = r ? +r[1] + +r[2] / 7 : sayiCoz(s)
   if (n == null || n < 20 || n > 45) return null
   return Math.round(n * 100) / 100
-}
-
-/** Doğum ağırlığı gram olarak ("1850" · "1,85 kg" · "1.850 g"). */
-export function gramCoz(ham: string | null | undefined): number | null {
-  const kg = kiloCoz(ham)
-  return kg == null ? null : Math.round(kg * 1000)
 }
 
 export const GUN_MS = 86_400_000
