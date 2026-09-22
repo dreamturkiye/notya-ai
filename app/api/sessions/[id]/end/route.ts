@@ -263,6 +263,24 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // Mark session complete
     await getSupabase().from("sessions").update({ status: "completed" }).eq("id", sessionId).eq("doctor_id", user.id)
 
+    // NOTYA-OGRENME-03: sesli muayene doktorun Ayşe'yle EN SIK konuştuğu yüzeydir, ama yazılı sohbet
+    // dışında hiçbir yerden öğrenme çalışmıyordu — bu doktor için hafıza pratikte hep boş kalıyordu.
+    // Yalnız DOKTOR etiketli segmentleri kullan (hasta konuşması alınmaz); segment yoksa (tek blok
+    // transkript) tüm metni doktorun kendi anlatımı say — muayenelerde diyalog nadir, çoğu doktor
+    // narrasyonu. sohbettenOgren zaten "yalnız doktorun kendi ağzından, genellenebilir" diye filtreler.
+    try {
+      const { ogrenmeyeDeger, sohbettenOgren } = await import('@/lib/doktor/hafiza')
+      const doktorSozleri = Array.isArray(segments) && segments.length
+        ? segments
+            .filter((s: { speaker?: string }) => !s?.speaker || /doktor|hekim/i.test(String(s.speaker)))
+            .map((s: { text?: string }) => String(s?.text || ''))
+            .join('\n')
+        : String(transcript || '')
+      if (doktorSozleri && ogrenmeyeDeger(doktorSozleri)) {
+        await sohbettenOgren(getAnthropic(), getSupabase(), user.id, [{ role: 'user', content: doktorSozleri }])
+      }
+    } catch (e) { console.error('[hafiza] seans-sonu', e) }
+
     return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note, cekListeDogrulama } })
 
   } catch (error: unknown) {

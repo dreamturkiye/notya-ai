@@ -14,7 +14,9 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
-import { hafizaYukle, hafizaBloguSohbet } from '@/lib/doktor/hafiza'
+import Anthropic from '@anthropic-ai/sdk'
+import { hafizaYukle, hafizaBloguSohbet, seansIsle, ogrenmeyeDeger, sohbettenOgren } from '@/lib/doktor/hafiza'
+import { NOT_YENIDEN_DEGERLENDIR_ISTEK } from '@/lib/doktor/notYenidenDegerlendir'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 import { vitalleriKapsamaGoreSuz } from '@/lib/specialties/kapsam'
 import { notKonsultSistemParcalari } from '@/lib/doktor/notKonsultPromptu'
@@ -29,6 +31,8 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
+
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 interface Mesaj { rol: string; icerik: string }
 
@@ -133,6 +137,22 @@ export async function POST(req: NextRequest) {
       : []
     // Araç çağırıp hiç metin yazmadıysa hekim boş baloncuk görmesin.
     const cevap = String(sonuc.cevap || '') || (eylemOnerileri.length ? 'Kartı hazırladım Hocam — onaylarsanız dosyaya işlenir.' : '')
+
+    // NOTYA-OGRENME-03: bu kutu da bir doktor–Ayşe sohbetidir (Dr. Gökhan'ın aslında kullandığı yüzey) —
+    // yalnız yazılı sohbette öğrenip burada öğrenmemek hafızayı doktorun gerçekte hiç kullanmadığı tek
+    // ekrana bağlıyordu. Otomatik yeniden-değerlendirme tetiklemesi (sistem mesajı) öğrenmeye girmez.
+    if (sonMetin !== NOT_YENIDEN_DEGERLENDIR_ISTEK) {
+      try {
+        await seansIsle(supabase, doktorId, 'sohbet')
+        if (ogrenmeyeDeger(sonMetin)) {
+          await sohbettenOgren(getAnthropic(), supabase, doktorId, [
+            ...gecmis.slice(-4),
+            { role: 'assistant', content: cevap },
+          ])
+        }
+      } catch (e) { console.error('[hafiza] not-konsult', e) }
+    }
+
     return NextResponse.json({
       cevap,
       duzenlemeler: sonuc.duzenlemeler && typeof sonuc.duzenlemeler === 'object' ? sonuc.duzenlemeler : {},

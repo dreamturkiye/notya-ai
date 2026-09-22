@@ -85,17 +85,25 @@ export function asamaBul(seans: number): IliskiAsamasi {
 }
 
 /** Aşamaya göre davranış kuralı — prompta girer. Şef benzetmesi: ilk gün sorar,
- *  ikinci hafta tahmin eder, 3. yılda sormadan yapar. */
-function asamaKurali(asama: IliskiAsamasi, seans: number): string {
+ *  ikinci hafta tahmin eder, 3. yılda sormadan yapar.
+ *  `ogrenilenVar`: en az bir KESİN (doktor_soyledi ya da eşik geçmiş) kayıt var mı?
+ *  YOK ise MESLEKTAŞ/ORTAK aşamasında bile "SORMADAN uygula" denmez — gün sayısı yüksek
+ *  olsa da (yalnız not onaylayan, hiç sohbet etmemiş doktor gibi) hiçbir şey bilmiyorsan
+ *  bilmiyormuş gibi davran — sahte tanıdıklık, gerçek tanıdıklıktan kötüdür. */
+function asamaKurali(asama: IliskiAsamasi, seans: number, ogrenilenVar: boolean): string {
   switch (asama) {
     case 'tanisma':
       return `${seans + 1}. seansınız — TANIŞMA. Doktoru henüz az tanıyorsun: tercihlerini yeri geldiğinde kısa ve doğal sor, öğrendiğini bir sonraki cümlede uygula. Kendini her seansta kısaca tanıt.`
     case 'alisma':
-      return `${seans + 1}. seansınız — ALIŞMA. Artık bazı alışkanlıklarını biliyorsun: tahmin et ve tek kelimeyle teyit al ("her zamanki gibi mi Hocam?"). Kendini artık tanıtma; doğrudan işe gir.`
+      return `${seans + 1}. seansınız — ALIŞMA.${ogrenilenVar ? ' Artık bazı alışkanlıklarını biliyorsun: tahmin et ve tek kelimeyle teyit al ("her zamanki gibi mi Hocam?").' : ' Henüz kendinden pek bahsetmedi — varsaymaktan kaçın, doğal bir şekilde sormaya devam et.'} Kendini artık tanıtma; doğrudan işe gir.`
     case 'meslektas':
-      return `${seans + 1}. seansınız — MESLEKTAŞ. Yıllardır birlikte çalışıyormuş gibi davran: bilinen tercihleri SORMADAN uygula, yalnız yeni/riskli durumda sor. Açıklama yapma, kısa konuş; ortak dil kullan.`
+      return ogrenilenVar
+        ? `${seans + 1}. seansınız — MESLEKTAŞ. Yıllardır birlikte çalışıyormuş gibi davran: bilinen tercihleri SORMADAN uygula, yalnız yeni/riskli durumda sor. Açıklama yapma, kısa konuş; ortak dil kullan.`
+        : `${seans + 1}. seansınız — gün sayısı MESLEKTAŞ seviyesinde ama doktor henüz kendinden/tercihinden pek bahsetmedi (aşağıda "Bildiklerim" boş ya da az). Sahte tanıdıklık YAPMA — bilmediğin bir tercihi biliyormuş gibi varsayma. Ton yine de meslektaş sıcaklığında ve kısa olsun, ama net bilmediğin şeyi doğal bir şekilde sor.`
     case 'ortak':
-      return `${seans + 1}. seansınız — ORTAK. Tam güven: tercihleri uygula, günün ritmini bil, gün sonu/gün başı hatırlatmaları kendiliğinden yap. Doktorun "partners in crime" hissettiği kişisin.`
+      return ogrenilenVar
+        ? `${seans + 1}. seansınız — ORTAK. Tam güven: tercihleri uygula, günün ritmini bil, gün sonu/gün başı hatırlatmaları kendiliğinden yap. Doktorun "partners in crime" hissettiği kişisin.`
+        : `${seans + 1}. seansınız — gün sayısı yüksek ama doktor kendinden henüz az bahsetti. Tecrübeli/sıcak bir meslektaş gibi konuş, ama bilmediğin kişisel tercihi biliyormuş gibi ASLA yapma.`
   }
 }
 
@@ -281,7 +289,7 @@ export function hafizaBloguSohbet(h: HafizaOzeti): string {
   const { iliski, asama } = h
   const parcalar = [
     `=== MESLEKTAŞ HAFIZASI — bu doktoru tanıyorsun ===`,
-    asamaKurali(asama, iliski.seans_sayisi),
+    asamaKurali(asama, iliski.seans_sayisi, h.kesinKayitlar.length > 0),
     iliski.ozet ? `Doktor hakkında özetim: ${iliski.ozet}` : '',
     rutinMetni(iliski.rutin),
     h.kesinKayitlar.length ? `Bildiklerim (UYGULA, sorma):\n${kayitlariGrupla(h.kesinKayitlar)}` : '',
@@ -302,7 +310,7 @@ export function hafizaBloguSes(h: HafizaOzeti): string {
     .slice(0, 8)
     .map((k) => `• ${k.deger}`)
   return [
-    `Bu doktorla ${iliski.seans_sayisi} seans çalıştın (${asama}). ${asamaKurali(asama, iliski.seans_sayisi)} Hafıza klinik güvenlik uyarılarını asla gevşetmez; nihai karar doktorundur.`,
+    `Bu doktorla ${iliski.seans_sayisi} seans çalıştın (${asama}). ${asamaKurali(asama, iliski.seans_sayisi, h.kesinKayitlar.length > 0)} Hafıza klinik güvenlik uyarılarını asla gevşetmez; nihai karar doktorundur.`,
     iliski.ozet ? `Özet: ${iliski.ozet}` : '',
     onemli.length ? `Bildiklerin:\n${onemli.join('\n')}` : '',
   ].filter(Boolean).join('\n')

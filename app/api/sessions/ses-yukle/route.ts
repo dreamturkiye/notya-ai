@@ -170,6 +170,15 @@ export async function POST(req: NextRequest) {
     }).select('id').single()
     if (noteError || !note) throw new Error(noteError?.message || 'not kaydedilemedi')
 
+    // NOTYA-OGRENME-03: bu da bir "doktor konuştu" yüzeyi — seans/end ile aynı kanca (bkz. oradaki not).
+    // Scribe burada diarizasyon döndürmez, tek blok transkript doktorun kendi anlatımı sayılır.
+    try {
+      const { ogrenmeyeDeger, sohbettenOgren } = await import('@/lib/doktor/hafiza')
+      if (ogrenmeyeDeger(transcript)) {
+        await sohbettenOgren(anthropic, supabase, doktorId, [{ role: 'user', content: transcript }])
+      }
+    } catch (e) { console.error('[hafiza] ses-yukle', e) }
+
     return NextResponse.json({ success: true, noteId: note.id, sessionId: seans.id })
   } catch (e) {
     console.error('[ses-yukle] uretim', e)
