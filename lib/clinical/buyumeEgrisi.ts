@@ -229,11 +229,68 @@ export function persentilMetni(p: number): string {
   return `${yuvarlak}. persentil`
 }
 
-export type BuyumePersentilleri = { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string }
+export type BuyumePersentilleri = {
+  kilo?: string
+  boy?: string
+  basCevresi?: string
+  vki?: string
+  vkiSinif?: string
+  /** Ölçüm-yaş uyumsuzluğu — 0. persentil diye gösterme */
+  uyari?: string
+  /** Ayşe değerlendirmesine gidecek Neyzi cümlesi (sayı uydurulmaz) */
+  aiYorum?: string
+}
+
+export const BUYUME_AI_ETIKET = 'Büyüme (Neyzi):'
+
+function yasOzet(ay: number): string {
+  if (ay < 1) return `${Math.max(1, Math.round(ay * 30.44))} günlük`
+  if (ay < 24) return `${Math.round(ay)} aylık`
+  return `${Math.floor(ay / 12)} yaşında`
+}
+
+/** 3.18 kg / 50 cm bir 2 yaşında yaşamaz — bunlar doğum ölçüsü, karttaki tarih yanlış olabilir. */
+export function yenidoganOlcumYasUyumsuzMu(kiloKg: number | null, boyCm: number | null, basCm: number | null, ayYas: number): boolean {
+  if (ayYas < 6) return false
+  const kiloYeni = kiloKg != null && kiloKg >= 1.2 && kiloKg <= 5.5
+  const boyYeni = boyCm == null || (boyCm >= 40 && boyCm <= 58)
+  const basYeni = basCm == null || (basCm >= 28 && basCm <= 40)
+  return kiloYeni && boyYeni && basYeni
+}
+
+function persentilSayi(metin?: string): number | null {
+  if (!metin) return null
+  const n = parseInt(metin, 10)
+  return Number.isFinite(n) ? n : null
+}
+
+function buyumeAiYorumu(p: BuyumePersentilleri): string | undefined {
+  if (p.uyari) return `${BUYUME_AI_ETIKET} ${p.uyari} 0. persentil klinik bulgu değildir — resmi tanıya yazma.`
+  const parca = [
+    p.kilo ? `kilo ${p.kilo}` : null,
+    p.boy ? `boy ${p.boy}` : null,
+    p.basCevresi ? `baş çevresi ${p.basCevresi}` : null,
+    p.vki ? `VKİ ${p.vki}${p.vkiSinif ? ` (${p.vkiSinif})` : ''}` : null,
+  ].filter(Boolean)
+  if (!parca.length) return undefined
+  const sayilar = [p.kilo, p.boy, p.basCevresi, p.vki].map(persentilSayi)
+  const esik = sayilar.some((n) => n != null && (n <= 3 || n >= 97))
+  return `${BUYUME_AI_ETIKET} ${parca.join(' · ')}.${esik ? ' Eşik dışı persentil — değerlendirmede belirt; resmi tanıya doktor söylemedikçe yazma.' : ''}`
+}
+
+/** İnceleme / seans bitince Neyzi cümlesini tekrar ekleme. */
+export function buyumeYorumunuEkle(ai: string | null | undefined, persentil: BuyumePersentilleri | null | undefined): string {
+  const mevcut = String(ai || '').trim()
+  const yorum = persentil?.aiYorum
+  if (!yorum) return mevcut
+  if (mevcut.includes(BUYUME_AI_ETIKET)) return mevcut
+  return [mevcut, yorum].filter(Boolean).join('\n\n')
+}
 
 /**
  * Not vitallerinden Neyzi persentili. Gram ("3180 gr") kg'a, "50.50 cm" cm'e çevrilir;
  * birim süzülmeden 3180 kg sanılırsa 100. persentil + sahte obez çıkar.
+ * Yenidoğan ölçüsü + ≥6 ay kayıtlı yaş → 0. persentil yazılmaz.
  */
 export function buyumePersentilleriniHesapla(
   vitaller: unknown,
@@ -248,6 +305,17 @@ export function buyumePersentilleriniHesapla(
   const kilo = kiloCoz(v.kilo as string | number | null | undefined)
   const boy = cmCoz(v.boy as string | number | null | undefined)
   const bas = cmCoz(v.basCevresi as string | number | null | undefined)
+  if (kilo == null && boy == null && bas == null) return null
+
+  if (yenidoganOlcumYasUyumsuzMu(kilo, boy, bas, ayYas)) {
+    const olcum = [kilo != null ? `${kilo} kg` : null, boy != null ? `${boy} cm boy` : null, bas != null ? `${bas} cm baş çevresi` : null].filter(Boolean).join(', ')
+    const out: BuyumePersentilleri = {
+      uyari: `Ölçümler yenidoğan aralığında (${olcum}) ama kayıtlı yaş ${yasOzet(ayYas)}. Persentil hesaplanmadı — hasta kartındaki doğum tarihini kontrol edin.`,
+    }
+    out.aiYorum = buyumeAiYorumu(out)
+    return out
+  }
+
   const out: BuyumePersentilleri = {}
   if (kilo != null) { const r = persentilHesapla('kilo', cinsiyet, ayYas, kilo); if (r) out.kilo = persentilMetni(r.persentil) }
   if (boy != null) { const r = persentilHesapla('boy', cinsiyet, ayYas, boy); if (r) out.boy = persentilMetni(r.persentil) }
@@ -257,7 +325,8 @@ export function buyumePersentilleriniHesapla(
     const r = persentilHesapla('vki', cinsiyet, ayYas, vki)
     if (r) { out.vki = persentilMetni(r.persentil); out.vkiSinif = vkiSinifEtiket(vkiSiniflandir(r.persentil)) }
   }
-  return Object.keys(out).length ? out : null
+  out.aiYorum = buyumeAiYorumu(out)
+  return out.kilo || out.boy || out.basCevresi || out.vki || out.uyari ? out : null
 }
 
 /**

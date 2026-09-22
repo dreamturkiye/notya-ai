@@ -11,7 +11,7 @@ import React from 'react';
 import type { NotOlcumu } from '@/lib/specialties/kapsam';
 import { eriskinVkiHesapla } from '@/lib/clinical/eriskinVki';
 
-export interface BuyumePersentilleri { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string }
+export interface BuyumePersentilleri { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string; uyari?: string }
 
 export default function YasamsalBulgularFormu({
   olcumler, degerler, onDegis, persentiller, girdiStili, persentilRengi = '#2DD4BF', eriskinVkiGoster = true,
@@ -48,7 +48,10 @@ export default function YasamsalBulgularFormu({
           );
         })}
       </div>
-      {persentiller?.vki && (
+      {persentiller?.uyari && (
+        <div style={{ marginTop: 6, fontSize: 11, color: '#F59E0B', maxWidth: 520 }} data-testid="buyume-uyari">{persentiller.uyari}</div>
+      )}
+      {persentiller?.vki && !persentiller.uyari && (
         <div style={{ marginTop: 6, fontSize: 11, color: persentilRengi }}>
           VKİ: {persentiller.vki}{persentiller.vkiSinif ? ` — ${persentiller.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
         </div>

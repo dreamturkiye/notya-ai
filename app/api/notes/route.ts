@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { buyumePersentilleriniHesapla, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
@@ -146,6 +146,9 @@ export async function GET(req: NextRequest) {
     const session = firstSession(row.sessions)
     const dogumIso = session.patient_id ? dogumlar.get(String(session.patient_id)) || null : null
     const kapsam = bransKapsami({ seansBransi: session.specialty, doktorBransi, hastaDogumIso: dogumIso })
+    const buyume = session.patient_id && kapsam.pediatrik
+      ? buyumePersentilleriniHesapla(row.vitaller, dogumIso, cinsiyetler.get(String(session.patient_id)) || null, row.created_at || null)
+      : null
     return {
       id: String(row.id),
       maskedPatient: (session.patient_id && adlar.get(String(session.patient_id))) || maskPatient(session.patient_id),
@@ -165,12 +168,10 @@ export async function GET(req: NextRequest) {
       basvuruYakinmasi: String(row.basvuru_yakinmasi || ''),
       vitaller: (row.vitaller && typeof row.vitaller === 'object') ? vitalOlcumleriniNormallestir(row.vitaller) : null,
       // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda (KD/göz/derm hekimi 16 yaşında hastada "obez (Neyzi)" görmez)
-      buyumePersentilleri: session.patient_id && kapsam.pediatrik
-        ? buyumePersentilleriniHesapla(row.vitaller, dogumIso, cinsiyetler.get(String(session.patient_id)) || null, row.created_at || null)
-        : null,
+      buyumePersentilleri: buyume,
       bransKapsami: kapsam,
       receteOnerisi: Array.isArray(row.recete_onerisi) ? row.recete_onerisi : [],
-      aiDegerlendirme: (row as { ai_degerlendirme?: string }).ai_degerlendirme || null,
+      aiDegerlendirme: buyumeYorumunuEkle((row as { ai_degerlendirme?: string }).ai_degerlendirme || '', buyume) || null,
       alarmBulgulari: Array.isArray(row.alarm_bulgulari) ? (row.alarm_bulgulari as string[]).map(String) : [],
     }
   })

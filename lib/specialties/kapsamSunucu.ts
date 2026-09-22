@@ -8,6 +8,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { bransKapsami, type BransKapsami } from './kapsam'
+import type { Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 
 export async function hastaDogumIso(sb: SupabaseClient, doctorId: string, patientId: string | null | undefined): Promise<string | null> {
   if (!patientId) return null
@@ -15,6 +16,16 @@ export async function hastaDogumIso(sb: SupabaseClient, doctorId: string, patien
     const { data } = await sb.from('patients').select('dob_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
     const dob = data?.dob_encrypted ? decrypt(String(data.dob_encrypted)) : ''
     return dob || null
+  } catch { return null }
+}
+
+/** Neyzi için cinsiyet — aynı hasta + doctor_id kapısı. */
+export async function hastaCinsiyet(sb: SupabaseClient, doctorId: string, patientId: string | null | undefined): Promise<Cinsiyet | null> {
+  if (!patientId) return null
+  try {
+    const { data } = await sb.from('patients').select('gender_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle()
+    const g = data?.gender_encrypted ? decrypt(String(data.gender_encrypted)) : ''
+    return g === 'male' || g === 'female' ? g : null
   } catch { return null }
 }
 

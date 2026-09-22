@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { buyumePersentilleriniHesapla, persentilHesapla, persentilMetni } from './buyumeEgrisi'
+import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, BUYUME_AI_ETIKET, persentilHesapla, persentilMetni } from './buyumeEgrisi'
 import { kiloCoz, cmCoz, vitalOlcumleriniNormallestir } from './olcumCoz'
 
 describe('yenidoğan ölçüm birimleri — Neyzi persentili', () => {
@@ -26,6 +26,28 @@ describe('yenidoğan ölçüm birimleri — Neyzi persentili', () => {
     assert.ok(basP >= 20 && basP <= 80, `baş ${p!.basCevresi}`)
     assert.equal(p!.vki, undefined)
     assert.equal(p!.vkiSinif, undefined)
+    assert.equal(p!.uyari, undefined)
+    assert.match(p!.aiYorum || '', /Büyüme \(Neyzi\):/)
+  })
+
+  it('2 yaş kart + yenidoğan ölçüsü 0. persentil yazmaz; AI yorumu doğum tarihini sorar', () => {
+    const p = buyumePersentilleriniHesapla(
+      { kilo: '3.18', boy: '50', basCevresi: '34' },
+      '2024-05-15',
+      'male',
+      '2026-09-21T10:00:00.000Z',
+    )
+    assert.ok(p?.uyari)
+    assert.equal(p!.kilo, undefined)
+    assert.equal(p!.boy, undefined)
+    assert.equal(p!.vki, undefined)
+    assert.match(p!.uyari!, /yenidoğan aralığında/)
+    assert.match(p!.uyari!, /2 yaşında/)
+    assert.match(p!.aiYorum || '', /0\. persentil klinik bulgu değildir/)
+    const ai = buyumeYorumunuEkle('Öneri (doktor onayına tabi): sarılık izlemi.', p)
+    assert.match(ai, /sarılık/)
+    assert.ok(ai.includes(BUYUME_AI_ETIKET))
+    assert.equal(buyumeYorumunuEkle(ai, p), ai)
   })
 
   it('birim silinip 3180 kg sanılırsa 100. persentil olur — bu yüzden gram çevrilir', () => {

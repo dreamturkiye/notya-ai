@@ -203,8 +203,14 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     } catch { /* profil kritik değil */ }
 
     // BRANS-ALAN-SIZMASI: hasta doğum tarihi yalnız karma-yaş branşında (aile/genel) pediatrik bağlam kararı için
-    const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
-    const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(getSupabase(), user.id), hekimBransi(getSupabase(), user.id), hastaDogumIso(getSupabase(), user.id, seans.patient_id ? String(seans.patient_id) : null)])
+    const { hastaCinsiyet, hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
+    const hastaId = seans.patient_id ? String(seans.patient_id) : null
+    const [doktorAdi, doktorBransi, dogumIso, cinsiyet] = await Promise.all([
+      hekimAdi(getSupabase(), user.id),
+      hekimBransi(getSupabase(), user.id),
+      hastaDogumIso(getSupabase(), user.id, hastaId),
+      hastaCinsiyet(getSupabase(), user.id, hastaId),
+    ])
     const { cekListeDogrula, cekListeDogrulamaMetni, cekListePromptBlogu, muayeneCekListesi } = await import('@/lib/doktor/muayeneCekListesi')
     const isaretler = body.cekListe && typeof body.cekListe === 'object' && !Array.isArray(body.cekListe)
       ? body.cekListe as Record<string, boolean>
@@ -217,6 +223,11 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       isaretler,
     })
     const cekMetin = cekListeDogrulamaMetni(cekListeDogrulama)
+    const { bransKapsami } = await import('@/lib/specialties/kapsam')
+    const { buyumePersentilleriniHesapla, buyumeYorumunuEkle } = await import('@/lib/clinical/buyumeEgrisi')
+    const buyume = bransKapsami({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso }).pediatrik
+      ? buyumePersentilleriniHesapla(noteData?.vitaller, dogumIso, cinsiyet, new Date().toISOString())
+      : null
 
     // Save note
     const { data: note, error: noteError } = await getSupabase().from("notes").insert({
@@ -229,7 +240,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       content_plan: noteData?.soap?.plan || null,
       // NOTYA-AI-AYRIM-01: AI'ın kendi klinik yorumu/önerisi — DOKTORA ÖZEL, portala GİTMEZ.
       // Not gövdesi (degerlendirme/plan) yalnız doktorun söylediğini içerir; AI çıkarımı burada.
-      ai_degerlendirme: [cekMetin, noteData?.aiDegerlendirme].filter(Boolean).join('\n\n') || null,
+      ai_degerlendirme: buyumeYorumunuEkle([cekMetin, noteData?.aiDegerlendirme].filter(Boolean).join('\n\n'), buyume) || null,
       content_anamnez: noteData?.anamnez || null,
       content_fizik_muayene: noteData?.fizik_muayene || null,
       content_tani: noteData?.tani || null,

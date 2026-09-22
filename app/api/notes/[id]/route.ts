@@ -9,7 +9,7 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
-import { buyumePersentilleriniHesapla, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
+import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
@@ -103,6 +103,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // BRANS-ALAN-SIZMASI: not sayfası / yazdır branşa göre çizilir (ölçüm alanları: branş; hasta/veli hitabı: yaş — VELI-YASAL-ONAM)
   const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, hastaDogumIso: dogumIso })
   const bransKapsami = { brans: kapsam.brans, pediatrik: kapsam.pediatrik, veliDili: kapsam.veliDili, olcumler: kapsam.olcumler, hitap: kapsam.hitap }
+  const buyume = kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null
 
   return NextResponse.json({
     not: {
@@ -123,12 +124,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       alarmBulgulari: Array.isArray(not.alarm_bulgulari) ? not.alarm_bulgulari : [],
       vitaller: not.vitaller && typeof not.vitaller === 'object' ? vitalOlcumleriniNormallestir(not.vitaller) : null,
       // Neyzi persentili pediatrik içeriktir — yalnız pediatrik bağlamda
-      buyumePersentilleri: kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null,
+      buyumePersentilleri: buyume,
       // Erişkin VKİ (WHO) — muayene raporunda otomatik; çocukta Neyzi kullanılır
       eriskinVki: kapsam.pediatrik ? null : eriskinVkiVitalerden(not.vitaller && typeof not.vitaller === 'object' ? not.vitaller as Record<string, unknown> : null),
       bransKapsami,
       hastaOzeti: not.hasta_ozeti || '',
-      aiDegerlendirme: not.ai_degerlendirme || '',
+      aiDegerlendirme: buyumeYorumunuEkle(not.ai_degerlendirme || '', buyume),
       takipSuresi: not.takip_suresi || '',
     },
     hasta: { ...hasta, patientId: seans?.patient_id ? String(seans.patient_id) : null },

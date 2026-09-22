@@ -29,7 +29,7 @@ interface NotVeri {
     kritikBulgular?: string[]; alarmBulgulari?: string[];
     vitaller?: { kilo?: number | null; boy?: number | null; ates?: number | null; nabiz?: number | null; spo2?: number | null; tansiyon?: string | null } | null;
     hastaOzeti?: string; takipSuresi?: string;
-    buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null;
+    buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string; uyari?: string } | null;
     eriskinVki?: { deger: number; sinif: string; etiket: string; ozet: string } | null;
     bransKapsami?: BransKapsami;
   };
@@ -199,7 +199,10 @@ export default function NotYazdir() {
             {vitalParcalar.length > 0 && (
               <tr><td colSpan={2} style={{ padding: '3px 0' }}><strong>{YASAMSAL_BULGULAR_BASLIK}:</strong> {vitalParcalar.join(' · ')}</td></tr>
             )}
-            {persentilParcalar.length > 0 && (
+            {bp?.uyari && (
+              <tr><td colSpan={2} style={{ padding: '3px 0', color: '#B45309' }}><strong>Büyüme Persentili:</strong> {bp.uyari}</td></tr>
+            )}
+            {!bp?.uyari && persentilParcalar.length > 0 && (
               <tr><td colSpan={2} style={{ padding: '3px 0', color: '#0F766E' }}><strong>Büyüme Persentili (Neyzi standartları):</strong> {persentilParcalar.join(' · ')}</td></tr>
             )}
           </tbody>
