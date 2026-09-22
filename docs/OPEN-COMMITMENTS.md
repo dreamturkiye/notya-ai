@@ -2472,3 +2472,5 @@ tutulur; üzerine sessizce yazılmaz.
 | 2026-09-19 | **Kasa yükleme akışında taslak yok** | `/dashboard/doktor/belgeler`'deki "Bu bir konsültasyon yanıtı mı?" isteğe bağlı özet alanı Ayşe taslağı almaz; rapor orada bağlanır, özet taslağı hasta dosyası › Konsültasyonlar › Yanıt ekle'de dolu gelir. | OPEN (öneri) |
 | 2026-09-19 | **Tanılar / mevcut durum alanları** | Taslak yalnız istem metnini doldurur; TTB formunun "tanılar" ve "mevcut durum" alanları elle. Son muayenenin tanısı deterministik olarak (AI'sız) önerilebilir. | OPEN (öneri) |
 | 2026-09-19 | **Kısaltma uyarısı imzadaki büyük harfleri yakalar** | `olasiKisaltmalar` tamamı büyük harf 2–6 harfli sözcükleri bulur; imzada büyük harfli ad varsa uyarı çıkar (engellemez). | Bilgi |
+
+- 2026-09-22 — Kokpit boş randevu durumu: bugün planlı randevu yokken muayene yapılmışsa "Bugün N muayene yapıldı, planlı randevu yok" yazıyor; muayene de yoksa eski "Bugün için randevu yok" metni kalıyor (`app/dashboard/doktor/page.tsx`).
