@@ -154,22 +154,33 @@ export default function BelgeAnalizPage() {
     });
 
   const kaydet = async (alan: 'ozet' | 'hekim_tanisi') => {
-    if (!analiz) return false;
-    const token = await getAccessTokenAsync();
+    if (!analiz?.id) {
+      const yok = 'Taslak rapor henüz yok.';
+      setOnayMesaj(yok); setMesaj(yok); return false;
+    }
     const sonraki = alan === 'ozet' ? ozetTaslak : taniListesi(taniTaslak);
     if (alan === 'hekim_tanisi' && !(sonraki as { ad: string }[]).length) {
       setOnayMesaj('Resmi tanı boş — öneriden seçin veya yazın.');
       setMesaj('Resmi tanı boş.');
       return false;
     }
-    const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
-    const j = await r.json().catch(() => ({}));
-    const ok = r.ok;
-    const msg = ok ? (alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.') : (j.error || 'Kaydedilemedi');
-    setMesaj(msg);
-    if (alan === 'hekim_tanisi') setOnayMesaj(msg);
-    await yukle();
-    return ok;
+    try {
+      const token = await getAccessTokenAsync();
+      if (!token) throw new Error('Oturum bulunamadı — yeniden giriş yapın.');
+      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Kaydedilemedi');
+      const msg = alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.';
+      setMesaj(msg);
+      if (alan === 'hekim_tanisi') setOnayMesaj(msg);
+      await yukle();
+      return true;
+    } catch (e) {
+      const err = e instanceof Error ? e.message : 'Kaydedilemedi';
+      setMesaj(err);
+      if (alan === 'hekim_tanisi') setOnayMesaj(err);
+      return false;
+    }
   };
 
   const onayla = async (adim: 'onayla' | 'muayene_onayla') => {

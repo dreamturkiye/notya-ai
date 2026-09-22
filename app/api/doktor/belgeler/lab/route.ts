@@ -279,7 +279,7 @@ export async function GET(req: NextRequest) {
   if (!panel) return NextResponse.json({ panel: null })
   const [{ data: rowsRaw }, { data: analiz }] = await Promise.all([
     sb.from('lab_satirlar').select('*').eq('panel_id', panel.id).order('sira'),
-    panel.analiz_id ? sb.from('belge_analizleri').select('id, durum, sonuc, fusion, hekim_tanisi, hekim_ozet, note_id, onaylandi_at').eq('id', panel.analiz_id).maybeSingle() : Promise.resolve({ data: null }),
+    panel.analiz_id ? sb.from('belge_analizleri').select('id, durum, sonuc, fusion, hekim_tanisi, hekim_ozet, note_id, onaylandi_at').eq('id', panel.analiz_id).eq('doctor_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
   ])
   const rows = [...(rowsRaw || [])].sort((a, b) => panelSirasi(a.canonical_key) - panelSirasi(b.canonical_key) || Number(a.sira) - Number(b.sira))
   return NextResponse.json({ panel: { ...panel, extract_json: undefined }, satirlar: rows, analiz: analiz || null, kanonik: Object.fromEntries(Object.entries(KANONIK).map(([k, v]) => [k, v.tr])) })

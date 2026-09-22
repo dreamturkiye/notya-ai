@@ -49,6 +49,8 @@ export default function LabPage() {
   const [planAcik, setPlanAcik] = useState(false);
   const [persona, setPersona] = useState('Asistan');
   const [kaynakAcik, setKaynakAcik] = useState(false);
+  const [kayitMesaj, setKayitMesaj] = useState('');
+  const [kayitDurum, setKayitDurum] = useState<'hazir' | 'kaydediyor'>('hazir');
   const autoCikarRef = useRef(false);
 
   const api = useCallback(async (body: Record<string, unknown>) => {
@@ -105,13 +107,34 @@ export default function LabPage() {
   };
 
   const kaydet = async (alan: 'ozet' | 'hekim_tanisi') => {
-    if (!analiz) return false;
-    const token = await getAccessTokenAsync();
+    if (!analiz?.id) {
+      const yok = 'Taslak rapor henüz yok — önce Tabloyu onayla ve değerlendir.';
+      setKayitMesaj(yok); setMesaj(yok); return false;
+    }
     const sonraki = alan === 'ozet' ? ozetTaslak : taniTaslak.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => { const m = s.match(/^(.*?)\s*\(([A-Z]\d{2}(?:\.\d{1,2})?)\)\s*$/); return m ? { ad: m[1].trim(), icd10: m[2] } : { ad: s, icd10: null }; });
-    if (alan === 'hekim_tanisi' && !(sonraki as { ad: string }[]).length) { setMesaj('Resmi tanı boş.'); return false; }
-    const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
-    const j = await r.json().catch(() => ({})); setMesaj(r.ok ? (alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.') : j.error || 'Kaydedilemedi'); await yukle();
-    return r.ok;
+    if (alan === 'hekim_tanisi' && !(sonraki as { ad: string }[]).length) {
+      const bos = 'Resmi tanı boş — öneriden “Resmi tanıya al” veya bir satır yazın (ICD şart değil).';
+      setKayitMesaj(bos); setMesaj(bos); return false;
+    }
+    setKayitDurum('kaydediyor');
+    setKayitMesaj(alan === 'ozet' ? 'Özet kaydediliyor…' : 'Tanı kilitleniyor…');
+    try {
+      const token = await getAccessTokenAsync();
+      if (!token) throw new Error('Oturum bulunamadı — yeniden giriş yapın.');
+      const r = await fetch('/api/doktor/belgeler/analiz', { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ analizId: analiz.id, alan, sonraki }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Kaydedilemedi');
+      const okMsg = alan === 'ozet' ? 'Özet kaydedildi.' : 'Resmi tanı kilitlendi.';
+      setKayitMesaj(okMsg); setMesaj(okMsg);
+      await yukle();
+      return true;
+    } catch (e) {
+      const err = e instanceof Error ? e.message : 'Kaydedilemedi';
+      setKayitMesaj(err); setMesaj(err);
+      return false;
+    } finally {
+      setKayitDurum('hazir');
+    }
   };
   const onayla = async (adim: 'onayla' | 'muayene_onayla') => {
     if (!analiz) return; setDurum('kaydediyor');
@@ -223,7 +246,12 @@ export default function LabPage() {
                 <div style={{ ...toolsCard, marginBottom: 10 }}>
                   <div style={etiket}>Özet ({persona}) <span style={{ fontWeight: 400, color: '#64748B' }}>· düzenlenebilir</span></div>
                   <textarea value={ozetTaslak} onChange={(e) => setOzetTaslak(e.target.value)} rows={5} disabled={kilitli} style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} />
-                  <div style={{ marginTop: 6 }}><button type="button" onClick={() => kaydet('ozet')} disabled={kilitli} style={btnGhost}>Özeti kaydet</button></div>
+                  <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button type="button" onClick={() => void kaydet('ozet')} disabled={kilitli || kayitDurum !== 'hazir'} style={btnGhost}>{kayitDurum === 'kaydediyor' ? 'Kaydediliyor…' : 'Özeti kaydet'}</button>
+                    {kayitMesaj && /özet|Özet|oturum|Taslak|Kaydedilemedi|kaydedildi/i.test(kayitMesaj) && (
+                      <span style={{ fontSize: 12, fontWeight: 700, color: /kaydedildi/i.test(kayitMesaj) ? '#2DD4BF' : /kaydediliyor/i.test(kayitMesaj) ? '#8FA0B5' : '#F87171' }}>{kayitMesaj}</span>
+                    )}
+                  </div>
                 </div>
                 {[['Yeni bozulanlar', lab.yeni_bozulanlar, '#F87171'], ['Düzelenler', lab.duzelenler, '#2DD4BF'], ['Kronik sapma', lab.kronik, '#FBBF24']].map(([baslik, liste, renk]) => (liste as string[]).length ? (
                   <div key={String(baslik)} style={{ ...toolsCard, marginBottom: 10 }}><div style={{ ...etiket, color: String(renk) }}>{String(baslik)}</div><ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#EDF1F7' }}>{(liste as string[]).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
@@ -241,13 +269,22 @@ export default function LabPage() {
                 </div>
                 <div style={{ ...toolsCard, marginBottom: 10 }}>
                   <div style={etiket}>Resmi tanı (hekim) · klinik ilişki</div>
-                  <textarea value={taniTaslak} onChange={(e) => setTaniTaslak(e.target.value)} rows={3} placeholder="Her satır bir tanı; ICD-10 parantez içinde" disabled={kilitli} style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} />
+                  <textarea value={taniTaslak} onChange={(e) => { setTaniTaslak(e.target.value); setKayitMesaj(''); }} rows={3} placeholder="Örn. Yenidoğan tarama negatif — klinik izlem (ICD şart değil)" disabled={kilitli} style={{ ...toolsInput, width: '100%', fontFamily: 'inherit' }} />
                   {lab.klinik_iliski && <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 6 }}>Asistan: {lab.klinik_iliski}</div>}
-                  <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button type="button" onClick={() => void kaydet('hekim_tanisi')} disabled={kilitli} style={btnGhost}>Resmi tanıyı kilitle</button>
+                  {lab.tanilar.length === 0 && !taniTaslak.trim() && ozetTaslak.trim() && !kilitli && (
+                    <div style={{ marginTop: 6 }}>
+                      <button type="button" onClick={() => { setTaniTaslak(ozetTaslak.split('\n').map((s) => s.trim()).filter(Boolean)[0] || ozetTaslak.trim()); setKayitMesaj('Özet satırı resmi tanı kutusuna alındı — Kilitle’ye basın.'); }} style={btnGhost}>Özeti resmi tanıya al</button>
+                    </div>
+                  )}
+                  <div style={{ marginTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button type="button" onClick={() => void kaydet('hekim_tanisi')} disabled={kilitli || kayitDurum !== 'hazir'} style={btnGhost}>{kayitDurum === 'kaydediyor' ? 'Kilitleniyor…' : 'Resmi tanıyı kilitle'}</button>
                     <button type="button" onClick={() => void onayla('onayla')} disabled={(!taniTaslak.trim() && !analiz.hekim_tanisi?.length) || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir'} style={{ ...btn, opacity: (!taniTaslak.trim() && !analiz.hekim_tanisi?.length) || analiz.durum === 'onaylandi' || kilitli || durum !== 'hazir' ? 0.45 : 1, cursor: (!taniTaslak.trim() && !analiz.hekim_tanisi?.length) ? 'not-allowed' : 'pointer' }} title={taniTaslak.trim() || analiz.hekim_tanisi?.length ? 'Tanıyı kaydeder ve Objektif’e yazar' : 'Önce resmi tanı yazın veya öneriden seçin'}>Onayla ve son muayeneye ekle</button>
                     {analiz.durum === 'onaylandi' && <button type="button" onClick={() => setPlanAcik(!planAcik)} style={btnGhost}>Plan düzenle</button>}
                   </div>
+                  {kayitMesaj && <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: /kaydedildi|kilitlendi|alındı/i.test(kayitMesaj) ? '#2DD4BF' : /kaydediliyor|kilitleniyor/i.test(kayitMesaj) ? '#8FA0B5' : '#F87171' }}>{kayitMesaj}</div>}
+                  {!taniTaslak.trim() && !analiz.hekim_tanisi?.length && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: '#FBBF24' }}>Tarama negatif olsa bile kilit için bir hekim satırı gerekir — “Özeti resmi tanıya al” veya yazın.</div>
+                  )}
                   {planAcik && analiz.durum === 'onaylandi' && (
                     <div style={{ marginTop: 8 }}>
                       <div style={etiket}>Plan (ilaç / doz / konsült / tekrar tetkik)</div>
