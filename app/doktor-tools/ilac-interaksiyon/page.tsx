@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 export const dynamic = 'force-dynamic';
 
 interface Interaction {
@@ -52,10 +53,12 @@ const Page: React.FC = () => {
   const [hastaOnerileri, setHastaOnerileri] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
-  const teal = '#14B8A6';
-  const bg = '#060C18';
-  const glass = 'rgba(255,255,255,0.035)';
-  const border = 'rgba(255,255,255,0.08)';
+  const teal = CHROME_RENK.pine;
+  const bg = 'transparent';
+  const glass = '#FFFFFF';
+  const border = CHROME_RENK.border;
+  const inkText = CHROME_RENK.ink;
+  const mutedText = CHROME_RENK.muted;
 
   const addIlac = () => {
     const trimmed = yeniIlac.trim();
@@ -70,9 +73,9 @@ const Page: React.FC = () => {
   };
 
   const getSeverityColor = (siddet: string) => {
-    if (siddet === 'Agir') return '#EF4444';
-    if (siddet === 'Orta') return '#F59E0B';
-    return '#3B82F6';
+    if (siddet === 'Agir') return CHROME_RENK.warn;
+    if (siddet === 'Orta') return '#B4832F';
+    return '#4A5C8A';
   };
 
   const handleSubmit = async () => {
@@ -110,17 +113,17 @@ const Page: React.FC = () => {
   };
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
-      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '48px 24px' }}>
+    <div style={{ background: bg, minHeight: '100vh', fontFamily: CHROME_FONT.sans, color: inkText }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 0 48px' }}>
         {/* HEADER */}
         <div style={{ marginBottom: 40 }}>
-          <div style={{ color: teal, fontSize: 11, letterSpacing: 2, fontWeight: 600, marginBottom: 8 }}>
-            İLAÇ ETKİLEŞİMİ
+          <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#6d6055', fontSize: 15, marginBottom: 4 }}>
+            İlaç Etkileşimi
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 600, margin: 0, letterSpacing: -0.5 }}>
+          <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: 0, letterSpacing: '-0.02em', color: '#2e251d' }}>
             İlaç Etkileşim Kontrolü
           </h1>
-          <p style={{ color: '#9CA3AF', marginTop: 8, fontSize: 15 }}>
+          <p style={{ color: mutedText, marginTop: 8, fontSize: 15 }}>
             İlaçlar arasındaki etkileşimleri anında kontrol edin
           </p>
         </div>
@@ -150,21 +153,21 @@ const Page: React.FC = () => {
               style={{
                 width: '100%',
                 height: 44,
-                background: 'rgba(0,0,0,0.3)',
+                background: '#FFFFFF',
                 border: `1px solid ${border}`,
                 borderRadius: 10,
                 padding: '0 16px',
-                color: '#fff',
+                color: inkText,
                 fontSize: 15,
                 outline: 'none',
               }}
             />
               {oneriAcik && oneriler.length > 0 && (
-                <div style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%', marginTop: 4, background: '#0F172A', border: `1px solid ${border}`, borderRadius: 10, boxShadow: '0 12px 30px -10px rgba(0,0,0,.6)', maxHeight: 280, overflowY: 'auto' }}>
+                <div style={{ position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%', marginTop: 4, background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: 10, boxShadow: '0 12px 30px -10px rgba(58,44,34,.18)', maxHeight: 280, overflowY: 'auto' }}>
                   {oneriler.map((g, i) => (
                     <div key={g.marka} onMouseDown={() => oneriSec(g)} style={{ padding: '10px 14px', cursor: 'pointer', borderTop: i === 0 ? 'none' : `1px solid ${border}` }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{g.marka}</div>
-                      {g.etkenMadde && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{g.etkenMadde}</div>}
+                      <div style={{ fontWeight: 600, fontSize: 14, color: inkText }}>{g.marka}</div>
+                      {g.etkenMadde && <div style={{ fontSize: 12, color: mutedText }}>{g.etkenMadde}</div>}
                     </div>
                   ))}
                 </div>
@@ -176,7 +179,7 @@ const Page: React.FC = () => {
                 height: 44,
                 padding: '0 24px',
                 background: teal,
-                color: '#000',
+                color: '#FAF8F4',
                 border: 'none',
                 borderRadius: 10,
                 fontWeight: 600,
@@ -210,21 +213,21 @@ const Page: React.FC = () => {
           {/* PATIENT PARAMS */}
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
             <div>
-              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Ağırlık (kg)</div>
+              <div style={{ fontSize: 12, color: mutedText, marginBottom: 4 }}>Ağırlık (kg)</div>
               <input type="number" value={agirlik} onChange={(e) => setAgirlik(Number(e.target.value))} style={{
-                width: 60, height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 8px', fontSize: 14,
+                width: 60, height: 36, background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: 8, color: inkText, padding: '0 8px', fontSize: 14,
               }} />
             </div>
             <div>
-              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Yaş</div>
+              <div style={{ fontSize: 12, color: mutedText, marginBottom: 4 }}>Yaş</div>
               <input type="number" value={yas} onChange={(e) => setYas(Number(e.target.value))} style={{
-                width: 60, height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 8px', fontSize: 14,
+                width: 60, height: 36, background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: 8, color: inkText, padding: '0 8px', fontSize: 14,
               }} />
             </div>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Böbrek Fonksiyonu</div>
+              <div style={{ fontSize: 12, color: mutedText, marginBottom: 4 }}>Böbrek Fonksiyonu</div>
               <select value={bobrekFonksiyonu} onChange={(e) => setBobrekFonksiyonu(e.target.value)} style={{
-                width: '100%', height: 36, background: 'rgba(0,0,0,0.3)', border: `1px solid ${border}`, borderRadius: 8, color: '#fff', padding: '0 12px', fontSize: 14,
+                width: '100%', height: 36, background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: 8, color: inkText, padding: '0 12px', fontSize: 14,
               }}>
                 <option>Normal</option>
                 <option>Hafif Bozuk</option>
@@ -241,7 +244,7 @@ const Page: React.FC = () => {
               width: '100%',
               height: 52,
               background: teal,
-              color: '#000',
+              color: '#FAF8F4',
               border: 'none',
               borderRadius: 12,
               fontSize: 15,
@@ -256,7 +259,7 @@ const Page: React.FC = () => {
           >
             {loading ? (
               <>
-                <div style={{ width: 16, height: 16, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                <div style={{ width: 16, height: 16, border: '2px solid #FAF8F4', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 Analiz ediliyor...
               </>
             ) : 'Kontrol Et'}
@@ -275,7 +278,7 @@ const Page: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               padding: '4px 14px',
-              background: 'rgba(20,184,166,0.1)',
+              background: '#E4F3F1',
               color: teal,
               borderRadius: 999,
               fontSize: 13,
@@ -288,14 +291,14 @@ const Page: React.FC = () => {
             {interaksiyonlar.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <div style={{ fontSize: 42, marginBottom: 12 }}>✅</div>
-                <div style={{ color: '#4ADE80', fontSize: 15, fontWeight: 500 }}>
+                <div style={{ color: '#2E6E4E', fontSize: 15, fontWeight: 500 }}>
                   Kritik etkileşim tespit edilmedi
                 </div>
               </div>
             ) : (
               interaksiyonlar.map((item, idx) => (
                 <div key={idx} style={{
-                  background: 'rgba(0,0,0,0.25)',
+                  background: '#F6F0E4',
                   borderRadius: 14,
                   padding: 18,
                   marginBottom: 12,
@@ -318,7 +321,7 @@ const Page: React.FC = () => {
                       {item.siddet}
                     </div>
                   </div>
-                  <div style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.45, marginBottom: 6 }}>
+                  <div style={{ fontSize: 13, color: mutedText, lineHeight: 1.45, marginBottom: 6 }}>
                     {item.aciklama}
                   </div>
                   <div style={{ fontSize: 12, color: teal, fontStyle: 'italic' }}>
@@ -334,7 +337,7 @@ const Page: React.FC = () => {
                   Hasta Önerileri
                 </div>
                 {hastaOnerileri.map((o, i) => (
-                  <div key={i} style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 4 }}>• {o}</div>
+                  <div key={i} style={{ fontSize: 13, color: mutedText, marginBottom: 4 }}>• {o}</div>
                 ))}
               </div>
             )}

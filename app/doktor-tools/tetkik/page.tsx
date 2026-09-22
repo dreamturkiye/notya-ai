@@ -12,6 +12,7 @@ import {
 } from '@/lib/doktor/toolsUi'
 import React, { useEffect, useMemo, useState } from 'react'
 import { TETKIK_KATALOGU, TETKIK_PANELLERI, TETKIK_BOLUMU, NUMUNE_ADI, TUM_TETKIKLER, tetkikAra } from '@/lib/doktor/tetkikKatalogu'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
@@ -73,8 +74,8 @@ export default function TetkikPage() {
     gap: 10,
     padding: '10px 12px',
     borderRadius: 12,
-    border: `1px solid ${active ? 'rgba(15,155,142,0.55)' : 'rgba(255,255,255,0.12)'}`,
-    background: active ? 'rgba(15,155,142,0.12)' : 'rgba(255,255,255,0.03)',
+    border: `1px solid ${active ? CHROME_RENK.pine + '88' : CHROME_RENK.border}`,
+    background: active ? '#E4F3F1' : '#FFFFFF',
     cursor: 'pointer',
     minWidth: 0,
   })
@@ -82,11 +83,11 @@ export default function TetkikPage() {
   return (
     <div style={toolsShell}>
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px 48px' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', letterSpacing: 1.2, marginBottom: 8 }}>
-          ARAÇLAR
+        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>
+          Araçlar
         </div>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#FFFFFF' }}>Tetkik İstek Formu</h1>
-        <p style={{ marginTop: 8, color: '#94A3B8', fontSize: 14 }}>Lab ve görüntüleme istek formu oluşturun.</p>
+        <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, color: '#2e251d', letterSpacing: '-0.02em' }}>Tetkik İstek Formu</h1>
+        <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14 }}>Lab ve görüntüleme istek formu oluşturun.</p>
 
         {error && <div style={toolsErrorBox}>{error}</div>}
 
@@ -106,8 +107,8 @@ export default function TetkikPage() {
                 fontWeight: 700,
                 fontSize: 13,
                 cursor: 'pointer',
-                background: activeTab === key ? '#0F9B8E' : 'rgba(255,255,255,0.08)',
-                color: activeTab === key ? '#041016' : '#CBD5E1',
+                background: activeTab === key ? CHROME_RENK.pine : '#EFE9DC',
+                color: activeTab === key ? '#FAF8F4' : CHROME_RENK.muted,
               }}
             >
               {label}
@@ -147,7 +148,7 @@ export default function TetkikPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {Object.entries(TETKIK_PANELLERI).map(([ad, liste]) => (
                     <button key={ad} type="button" onClick={() => setSelectedLabTests((prev) => { const n = { ...prev }; liste.forEach((t) => { n[t] = true }); return n })}
-                      style={{ background: 'rgba(15,155,142,0.12)', border: '1px solid rgba(15,155,142,0.45)', color: '#5EEAD4', borderRadius: 999, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>
+                      style={{ background: '#E4F3F1', border: `1px solid ${CHROME_RENK.pine}70`, color: CHROME_RENK.pine, borderRadius: 999, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>
                       + {ad} <span style={{ opacity: 0.6 }}>({liste.length})</span>
                     </button>
                   ))}
@@ -175,16 +176,16 @@ export default function TetkikPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 8, maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
                 {gorunen.map((x) => (
                   <label key={x.ad} style={choiceStyle(!!selectedLabTests[x.ad])}>
-                    <input type="checkbox" checked={!!selectedLabTests[x.ad]} onChange={() => setSelectedLabTests((prev) => ({ ...prev, [x.ad]: !prev[x.ad] }))} style={{ marginTop: 2, accentColor: '#0F9B8E', flexShrink: 0 }} />
-                    <span style={{ color: '#F8FAFC', fontSize: 13, lineHeight: 1.35, wordBreak: 'break-word' }}>
+                    <input type="checkbox" checked={!!selectedLabTests[x.ad]} onChange={() => setSelectedLabTests((prev) => ({ ...prev, [x.ad]: !prev[x.ad] }))} style={{ marginTop: 2, accentColor: CHROME_RENK.pine, flexShrink: 0 }} />
+                    <span style={{ color: CHROME_RENK.ink, fontSize: 13, lineHeight: 1.35, wordBreak: 'break-word' }}>
                       {x.ad}
-                      <span style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                      <span style={{ display: 'block', fontSize: 11, color: CHROME_RENK.muted }}>
                         {!bolum ? `${TETKIK_BOLUMU.get(x.ad)} · ` : ''}{NUMUNE_ADI[x.n]}{x.aclik ? ' · açlık' : ''}{x.not ? ` · ${x.not}` : ''}
                       </span>
                     </span>
                   </label>
                 ))}
-                {gorunen.length === 0 && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Eşleşen tetkik yok — Ekstra Tetkikler alanına yazabilirsiniz.</div>}
+                {gorunen.length === 0 && <div style={{ color: CHROME_RENK.muted, fontSize: 13 }}>Eşleşen tetkik yok — Ekstra Tetkikler alanına yazabilirsiniz.</div>}
               </div>
 
               {/* Seçilenler */}
@@ -193,12 +194,12 @@ export default function TetkikPage() {
                   <label style={toolsLabel}>Seçilen Tetkikler ({selectedTests.length})</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {selectedTests.map((t) => (
-                      <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, padding: '4px 10px', fontSize: 12, color: '#F8FAFC' }}>
+                      <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#EFE9DC', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 999, padding: '4px 10px', fontSize: 12, color: CHROME_RENK.ink }}>
                         {t}
-                        <button type="button" onClick={() => setSelectedLabTests((prev) => ({ ...prev, [t]: false }))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }} aria-label={`${t} kaldır`}>×</button>
+                        <button type="button" onClick={() => setSelectedLabTests((prev) => ({ ...prev, [t]: false }))} style={{ background: 'none', border: 'none', color: CHROME_RENK.muted, cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }} aria-label={`${t} kaldır`}>×</button>
                       </span>
                     ))}
-                    <button type="button" onClick={() => setSelectedLabTests({})} style={{ background: 'none', border: 'none', color: '#F87171', cursor: 'pointer', fontSize: 12 }}>Tümünü temizle</button>
+                    <button type="button" onClick={() => setSelectedLabTests({})} style={{ background: 'none', border: 'none', color: CHROME_RENK.warn, cursor: 'pointer', fontSize: 12 }}>Tümünü temizle</button>
                   </div>
                 </div>
               )}
@@ -240,9 +241,9 @@ export default function TetkikPage() {
                         value={m}
                         checked={modalite === m}
                         onChange={(e) => setModalite(e.target.value)}
-                        style={{ marginTop: 2, accentColor: '#0F9B8E', flexShrink: 0 }}
+                        style={{ marginTop: 2, accentColor: CHROME_RENK.pine, flexShrink: 0 }}
                       />
-                      <span style={{ color: '#F8FAFC', fontSize: 13 }}>{m}</span>
+                      <span style={{ color: CHROME_RENK.ink, fontSize: 13 }}>{m}</span>
                     </label>
                   ))}
                 </div>
