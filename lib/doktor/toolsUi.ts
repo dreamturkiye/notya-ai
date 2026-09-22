@@ -1,7 +1,8 @@
-/** Shared helpers for doktor-tools pages (dark theme + patients API). */
+/** Shared helpers for doktor-tools pages (warm cream theme + patients API). */
 
 import type { CSSProperties } from 'react'
 import { ensureDoctorAccessToken, getDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 export type HastaOption = {
   id: string
@@ -59,16 +60,17 @@ export function normalizeHastalar(payload: unknown): HastaOption[] {
 
 export const toolsShell: CSSProperties = {
   minHeight: '100dvh',
-  background: '#060C18',
-  color: '#F8FAFC',
-  fontFamily: 'system-ui, -apple-system, sans-serif',
+  background: 'transparent',
+  color: CHROME_RENK.ink,
+  fontFamily: CHROME_FONT.sans,
 }
 
 export const toolsCard: CSSProperties = {
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: '#FFFFFF',
+  border: `1px solid ${CHROME_RENK.border}`,
   borderRadius: 16,
   padding: 18,
+  boxShadow: '0 8px 18px rgba(58,44,34,0.045)',
 }
 
 export const toolsInput: CSSProperties = {
@@ -76,9 +78,9 @@ export const toolsInput: CSSProperties = {
   boxSizing: 'border-box',
   padding: '12px 14px',
   borderRadius: 12,
-  border: '1px solid rgba(255,255,255,0.14)',
-  background: '#0A1628',
-  color: '#fff',
+  border: `1.5px solid ${CHROME_RENK.border}`,
+  background: '#FFFFFF',
+  color: CHROME_RENK.ink,
   fontSize: 14,
   outline: 'none',
 }
@@ -86,7 +88,7 @@ export const toolsInput: CSSProperties = {
 export const toolsLabel: CSSProperties = {
   display: 'block',
   fontSize: 13,
-  color: '#CBD5E1',
+  color: CHROME_RENK.muted,
   marginBottom: 8,
   fontWeight: 600,
 }
@@ -96,8 +98,8 @@ export const toolsPrimaryBtn = (disabled?: boolean): CSSProperties => ({
   padding: '13px 16px',
   borderRadius: 12,
   border: 'none',
-  background: disabled ? '#334155' : '#0F9B8E',
-  color: disabled ? '#94A3B8' : '#041016',
+  background: disabled ? '#D8D0BE' : CHROME_RENK.pine,
+  color: disabled ? '#8B8877' : '#FAF8F4',
   fontWeight: 700,
   fontSize: 14,
   cursor: disabled ? 'not-allowed' : 'pointer',
@@ -107,9 +109,9 @@ export const toolsErrorBox: CSSProperties = {
   marginTop: 12,
   padding: '12px 14px',
   borderRadius: 12,
-  background: '#7F1D1D',
-  border: '1px solid #FCA5A5',
-  color: '#FEE2E2',
+  background: '#FBEAE3',
+  border: `1px solid ${CHROME_RENK.warn}55`,
+  color: '#7A3D28',
   fontSize: 13,
   lineHeight: 1.45,
 }

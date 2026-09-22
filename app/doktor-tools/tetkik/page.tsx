@@ -1,6 +1,4 @@
 'use client'
-
-import DoktorNav from '@/components/doktor/DoktorNav'
 import {
   getAccessToken, getAccessTokenAsync,
   normalizeHastalar,
@@ -83,7 +81,6 @@ export default function TetkikPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px 48px' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', letterSpacing: 1.2, marginBottom: 8 }}>
           ARAÇLAR

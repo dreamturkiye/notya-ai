@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route';
-import DoktorNav from '@/components/doktor/DoktorNav';
-
 export const dynamic = 'force-dynamic';
 
 interface Interaction {
@@ -113,8 +111,6 @@ const Page: React.FC = () => {
 
   return (
     <div style={{ background: bg, minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
-      <DoktorNav />
-
       <div style={{ maxWidth: 1080, margin: '0 auto', padding: '48px 24px' }}>
         {/* HEADER */}
         <div style={{ marginBottom: 40 }}>

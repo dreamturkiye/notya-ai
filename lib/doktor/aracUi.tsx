@@ -14,7 +14,6 @@
  */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { toolsShell, toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
@@ -22,6 +21,7 @@ import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { doktorBasHarfleri } from '@/lib/doktor/avatar';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 /** Bir branşın renk vurgusu — birincil düğme, etiket ve sayfa üst şeridi. */
 export type AracVurgu = {
@@ -61,18 +61,18 @@ export function aracStil(v: AracVurgu): AracStil {
   const hazir = stilOnbellek.get(v);
   if (hazir) return hazir;
   const s: AracStil = {
-    kutu: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 18, marginBottom: 14, minWidth: 0 },
-    etiket: { fontSize: 13, fontWeight: 700, color: v.yumusak, marginBottom: 8 },
-    kucuk: { fontSize: 12, color: '#8FA0B5', lineHeight: 1.45 },
-    metin: { fontSize: 14, color: '#EDF1F7', lineHeight: 1.5 },
+    kutu: { background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 18, marginBottom: 14, minWidth: 0, boxShadow: '0 8px 18px rgba(58,44,34,0.045)' },
+    etiket: { fontSize: 13, fontWeight: 700, color: v.baslik, marginBottom: 8 },
+    kucuk: { fontSize: 12, color: CHROME_RENK.muted, lineHeight: 1.45 },
+    metin: { fontSize: 14, color: CHROME_RENK.ink, lineHeight: 1.5 },
     satir: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 8 },
     btn: { background: v.ana, color: v.anaMetin, border: 'none', borderRadius: 12, padding: '11px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 },
-    ghost: { background: 'transparent', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 12, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' },
+    ghost: { background: 'transparent', color: CHROME_RENK.ink, border: `1.5px solid ${CHROME_RENK.border}`, borderRadius: 12, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' },
     input: { ...toolsInput, fontSize: 16, minHeight: 44 },
-    hata: { color: '#FCA5A5', fontSize: 13 },
-    uyari: { background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.35)', color: '#FDE68A', borderRadius: 12, padding: '10px 12px', fontSize: 13, lineHeight: 1.45 },
-    kirmizi: { background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.4)', color: '#FCA5A5', borderRadius: 12, padding: '10px 12px', fontSize: 13, lineHeight: 1.45 },
-    iyi: { color: '#5EEAD4', fontSize: 14, fontWeight: 700 },
+    hata: { color: CHROME_RENK.warn, fontSize: 13 },
+    uyari: { background: '#FBF3DE', border: '1px solid #E4C989', color: '#7A5B1E', borderRadius: 12, padding: '10px 12px', fontSize: 13, lineHeight: 1.45 },
+    kirmizi: { background: '#FBEAE3', border: `1px solid ${CHROME_RENK.warn}70`, color: '#7A3D28', borderRadius: 12, padding: '10px 12px', fontSize: 13, lineHeight: 1.45 },
+    iyi: { color: '#2E6E4E', fontSize: 14, fontWeight: 700 },
     kaydir: { overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' },
   };
   stilOnbellek.set(v, s);
@@ -96,7 +96,7 @@ export function Alan({ etiket, ipucu, children }: { etiket: string; ipucu?: Reac
   const stil = useAracStil();
   return (
     <label style={{ display: 'grid', gap: 6, minWidth: 0 }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: '#C9D4E3' }}>{etiket}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: CHROME_RENK.ink }}>{etiket}</span>
       {children}
       {ipucu ? <span style={stil.kucuk}>{ipucu}</span> : null}
     </label>
@@ -107,7 +107,7 @@ export function Alan({ etiket, ipucu, children }: { etiket: string; ipucu?: Reac
 export function Etiketli({ ad, children, genislik }: { ad: string; children: React.ReactNode; genislik?: number | string }) {
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: genislik === '100%' ? '1 1 100%' : '0 1 auto', maxWidth: '100%' }}>
-      <span style={{ fontSize: 12, fontWeight: 600, color: '#9BB0C7' }}>{ad}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, color: CHROME_RENK.muted }}>{ad}</span>
       {children}
     </label>
   );
@@ -128,12 +128,12 @@ export function Secim({ deger, set, secenekler, bos, etiket }: { deger: string; 
 export function Segment<T extends string | number>({ deger, set, secenekler, etiket }: { deger: T; set: (x: T) => void; secenekler: Array<[T, string]>; etiket: string }) {
   const v = useVurgu();
   return (
-    <div role="radiogroup" aria-label={etiket} style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 3, flexWrap: 'wrap' }}>
+    <div role="radiogroup" aria-label={etiket} style={{ display: 'flex', gap: 4, background: '#EFE9DC', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 12, padding: 3, flexWrap: 'wrap' }}>
       {secenekler.map(([k, a]) => {
         const on = k === deger;
         return (
           <button key={String(k)} type="button" role="radio" aria-checked={on} onClick={() => set(k)}
-            style={{ flex: '1 1 auto', minHeight: 40, minWidth: 44, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: on ? 700 : 500, background: on ? v.ana : 'transparent', color: on ? v.anaMetin : '#C9D4E3' }}>
+            style={{ flex: '1 1 auto', minHeight: 40, minWidth: 44, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: on ? 700 : 500, background: on ? v.ana : 'transparent', color: on ? v.anaMetin : CHROME_RENK.ink }}>
             {a}
           </button>
         );
@@ -185,9 +185,9 @@ export function Katlanir({ baslik, acik: baslangic = false, children, rozet }: {
   const v = useVurgu();
   const [acik, setAcik] = useState(baslangic);
   return (
-    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 12, paddingTop: 4 }}>
-      <button type="button" aria-expanded={acik} onClick={() => setAcik(!acik)} style={{ ...stil.ghost, border: 'none', padding: '8px 0', width: '100%', justifyContent: 'space-between', color: '#9BB0C7' }}>
-        <span>{baslik}{rozet ? <span style={{ marginLeft: 8, fontSize: 12, color: v.yumusak }}>{rozet}</span> : null}</span>
+    <div style={{ borderTop: `1px solid ${CHROME_RENK.border}`, marginTop: 12, paddingTop: 4 }}>
+      <button type="button" aria-expanded={acik} onClick={() => setAcik(!acik)} style={{ ...stil.ghost, border: 'none', padding: '8px 0', width: '100%', justifyContent: 'space-between', color: CHROME_RENK.muted }}>
+        <span>{baslik}{rozet ? <span style={{ marginLeft: 8, fontSize: 12, color: v.baslik }}>{rozet}</span> : null}</span>
         <span aria-hidden style={{ transform: acik ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>›</span>
       </button>
       {acik && <div style={{ paddingTop: 6 }}>{children}</div>}
@@ -212,11 +212,11 @@ export function TaslakNotu({ children }: { children?: React.ReactNode }) {
 /** Küçük durum rozeti (renk tonu: iyi / uyarı / kırmızı / bilgi / nötr). Ton semantiktir — branş vurgusundan bağımsız. */
 export function Rozet({ ton = 'notr', children }: { ton?: 'iyi' | 'uyari' | 'kirmizi' | 'notr' | 'bilgi'; children: React.ReactNode }) {
   const r = {
-    iyi: ['rgba(45,212,191,0.12)', 'rgba(45,212,191,0.4)', '#5EEAD4'],
-    uyari: ['rgba(251,191,36,0.1)', 'rgba(251,191,36,0.4)', '#FDE68A'],
-    kirmizi: ['rgba(248,113,113,0.1)', 'rgba(248,113,113,0.45)', '#FCA5A5'],
-    notr: ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.14)', '#C9D4E3'],
-    bilgi: ['rgba(96,165,250,0.1)', 'rgba(96,165,250,0.4)', '#BFDBFE'],
+    iyi: ['#E4F3EA', '#8FCBA8', '#2E6E4E'],
+    uyari: ['#FBF3DE', '#E4C989', '#7A5B1E'],
+    kirmizi: ['#FBEAE3', `${CHROME_RENK.warn}80`, '#7A3D28'],
+    notr: ['#F6F0E4', CHROME_RENK.border, CHROME_RENK.muted],
+    bilgi: ['#EAEEF5', '#A9B8D8', '#3E4F7A'],
   }[ton];
   return <span style={{ background: r[0], border: `1px solid ${r[1]}`, color: r[2], borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-block' }}>{children}</span>;
 }
@@ -229,9 +229,9 @@ export function OneriRozet() {
 /** Büyük sayı kartı — sonuç ekranının üst şeridi. */
 export function Istatistik({ deger, etiket, ton = 'notr' }: { deger: React.ReactNode; etiket: string; ton?: 'iyi' | 'uyari' | 'kirmizi' | 'notr' }) {
   const stil = useAracStil();
-  const renk = { iyi: '#5EEAD4', uyari: '#FDE68A', kirmizi: '#FCA5A5', notr: '#EDF1F7' }[ton];
+  const renk = { iyi: '#2E6E4E', uyari: '#7A5B1E', kirmizi: '#7A3D28', notr: CHROME_RENK.ink }[ton];
   return (
-    <div style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 14px', flex: '1 1 120px', minWidth: 0 }}>
+    <div style={{ background: '#F6F0E4', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 14, padding: '12px 14px', flex: '1 1 120px', minWidth: 0 }}>
       <div style={{ fontSize: 24, fontWeight: 800, color: renk, letterSpacing: '-0.5px', lineHeight: 1.15, overflowWrap: 'anywhere' }}>{deger}</div>
       <div style={{ ...stil.kucuk, marginTop: 2 }}>{etiket}</div>
     </div>
@@ -335,7 +335,7 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
           >{doktorBasHarfleri(seciliAd)}</span>
           <span style={{ minWidth: 0, flex: '1 1 160px' }}>
             <span style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: 0.8, color: v.yumusak }}>SEÇİLİ HASTA</span>
-            <span style={{ display: 'block', fontSize: 19, fontWeight: 800, color: '#fff', letterSpacing: -0.3, lineHeight: 1.25, overflowWrap: 'anywhere' }}>{seciliAd}</span>
+            <span style={{ display: 'block', fontSize: 19, fontWeight: 800, color: CHROME_RENK.ink, letterSpacing: -0.3, lineHeight: 1.25, overflowWrap: 'anywhere' }}>{seciliAd}</span>
           </span>
           <button type="button" onClick={() => sec('', '')} style={{ ...stil.ghost, minHeight: 40, padding: '8px 14px', flexShrink: 0 }}>
             Değiştir
@@ -472,7 +472,7 @@ export function MuayeneFormunaEkle({
           style={{ ...stil.btn, opacity: kapali ? 0.55 : 1, cursor: kapali ? 'not-allowed' : 'pointer' }}
         >{gonderiyor ? 'Ekleniyor…' : etiket}</button>
         {mesaj && (
-          <span style={{ fontSize: 13, color: iyiMi ? '#5EEAD4' : '#FDE68A' }} aria-live="polite">{mesaj}</span>
+          <span style={{ fontSize: 13, color: iyiMi ? '#2E6E4E' : '#7A5B1E' }} aria-live="polite">{mesaj}</span>
         )}
         <MuayeneFormunaDon notId={notId} />
       </div>
@@ -538,7 +538,7 @@ export function KayitButonu({
           aria-disabled={engelli}
           style={{ ...stil.ghost, opacity: engelli ? 0.55 : 1, cursor: engelli ? 'not-allowed' : 'pointer' }}
         >{calisiyor ? 'Kaydediliyor…' : etiket}</button>
-        {mesaj && <span style={{ fontSize: 13, color: iyiMi ? '#5EEAD4' : '#FDE68A' }} aria-live="polite">{mesaj}</span>}
+        {mesaj && <span style={{ fontSize: 13, color: iyiMi ? '#2E6E4E' : '#7A5B1E' }} aria-live="polite">{mesaj}</span>}
       </div>
       <div style={{ ...stil.kucuk, marginTop: 6 }}>
         {!hastaId ? 'Önce hasta seçin — değerler ancak seçili hastanın dosyasına kaydedilir.' : kapali ? (kapaliNedeni || 'Kaydedilecek değer yok.') : (ipucu || 'Kayıt yalnız bu düğmeyle olur; arka planda sessizce yazılmaz.')}
@@ -594,16 +594,15 @@ export function OrtakAracKabugu({
   return (
     <AracVurguSaglayici vurgu={VURGU_TEAL}>
       <div style={{ ...toolsShell, overflowX: 'hidden' }}>
-        <DoktorNav />
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px', boxSizing: 'border-box' }}>
           {!izin ? (
-            <div style={{ color: '#9BB0C7', fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç açılamadı.'}</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç açılamadı.'}</div>
           ) : (
             <>
               <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: VURGU_TEAL.baslik, letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar</div>
-                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>{baslik}</h1>
-                <p style={{ margin: '8px 0 0', fontSize: 15, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
+                <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Araçlar</div>
+                <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{baslik}</h1>
+                <p style={{ margin: '8px 0 0', fontSize: 15, color: CHROME_RENK.muted, lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
               </div>
               {children}
             </>

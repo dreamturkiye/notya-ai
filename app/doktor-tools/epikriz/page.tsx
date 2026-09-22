@@ -1,7 +1,5 @@
 'use client';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
-
-import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
@@ -194,8 +192,6 @@ export default function EpikrizPage() {
       backgroundColor: '#060C18', 
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
     }}>
-      <DoktorNav />
-      
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '20px 16px' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '40px' }}>

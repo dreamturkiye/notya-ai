@@ -14,11 +14,23 @@
  * than fabricate one, it's simply not there.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import BransDegistir from './BransDegistir';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
+import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
+
+/**
+ * A page rendered under a chrome-owning layout (e.g. hedef-boy's "aile" / family-facing embed
+ * mode) can hide the header+dock without touching the layout -- call this with true while that
+ * mode is active. Children still render either way; only the chrome visibility changes.
+ */
+const ChromeGizleContext = createContext<(gizli: boolean) => void>(() => {});
+export function useChromeGizle(gizli: boolean) {
+  const setGizli = useContext(ChromeGizleContext);
+  useEffect(() => { setGizli(gizli); return () => setGizli(false); }, [gizli, setGizli]);
+}
 
 interface NavItem {
   label: string;
@@ -76,7 +88,7 @@ const DOCK_ICON: Record<string, React.ReactNode> = {
 
 const BRANS_ETIKET: Record<string, string> = {
   pediatri: 'Pediatrist', kardiyoloji: 'Kardiyolog', noroloji: 'Nörolog', psikiyatri: 'Psikiyatrist',
-  dahiliye: 'Dahiliyeci', ortopedi: 'Ortopedist', 'kadin-hastaliklari-dogum': 'Kadın Doğum Uzmanı',
+  dahiliye: 'Dahiliyeci', ortopedi: 'Ortopedist', 'kadin-hastaliklari-dogum': KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI,
   'genel-cerrahi': 'Genel Cerrah', dermatoloji: 'Dermatolog', uroloji: 'Ürolog', onkoloji: 'Onkolog',
   'acil-tip': 'Acil Tıp Uzmanı', 'kulak-burun-bogaz': 'KBB Uzmanı', 'goz-hastaliklari': 'Göz Hastalıkları Uzmanı',
   'aile-hekimligi': 'Aile Hekimi',
@@ -92,6 +104,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [saat, setSaat] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [gizli, setGizli] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 900);
@@ -160,7 +173,14 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
 
   const S = (s: Record<string, unknown>) => s as React.CSSProperties;
 
+  if (gizli) {
+    // Aile / embed modu: sayfa kendi tam ekran deneyimini yönetir -- hiçbir sarmalayıcı yok,
+    // yalnız içerik. Görünürlük geri değiştiğinde (useChromeGizle temizlenince) normale döner.
+    return <ChromeGizleContext.Provider value={setGizli}>{children}</ChromeGizleContext.Provider>;
+  }
+
   return (
+    <ChromeGizleContext.Provider value={setGizli}>
     <div
       style={S({
         minHeight: '100vh', position: 'relative', overflow: 'hidden',
@@ -264,5 +284,6 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         )}
       </div>
     </div>
+    </ChromeGizleContext.Provider>
   );
 }

@@ -7,7 +7,6 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { normalizeHastalar, toolsShell, toolsCard, toolsInput, type HastaOption } from '@/lib/doktor/toolsUi';
 import { trIcerir } from '@/lib/utils/turkceArama';
@@ -82,7 +81,6 @@ export default function CihazPaylasPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '16px 12px' }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: '#EDF1F7', margin: '8px 0 4px' }}>🎧 Cihazdan gelen dosya</h1>
         <div style={{ fontSize: 13, color: '#8FA0B5', marginBottom: 14 }}>

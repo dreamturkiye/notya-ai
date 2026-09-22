@@ -1,6 +1,4 @@
 'use client'
-
-import DoktorNav from '@/components/doktor/DoktorNav'
 import {
   normalizeHastalar,
   toolsCard,
@@ -11,6 +9,7 @@ import {
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import React, { useEffect, useState } from 'react'
 
 type HatirlatmaItem = {
@@ -153,13 +152,12 @@ export default function HatirlatmaPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px 48px' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', letterSpacing: 1.2, marginBottom: 8 }}>
-          ARAÇLAR
+        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>
+          Araçlar
         </div>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700 }}>Hasta Hatırlatma</h1>
-        <p style={{ marginTop: 8, color: '#94A3B8', fontSize: 14 }}>WhatsApp veya SMS ile hasta bildirimi gönderin</p>
+        <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, color: '#2e251d', letterSpacing: '-0.02em' }}>Hasta Hatırlatma</h1>
+        <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14 }}>WhatsApp veya SMS ile hasta bildirimi gönderin</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 20 }}>
           <div style={toolsCard}>
@@ -183,7 +181,7 @@ export default function HatirlatmaPage() {
               type="datetime-local"
               value={tarihSaat}
               onChange={(e) => setTarihSaat(e.target.value)}
-              style={{ ...toolsInput, marginBottom: 12, colorScheme: 'dark' as never }}
+              style={{ ...toolsInput, marginBottom: 12 }}
             />
             <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
               {(['WhatsApp', 'SMS'] as const).map((k) => (
@@ -198,8 +196,8 @@ export default function HatirlatmaPage() {
                     borderRadius: 999,
                     border: 'none',
                     cursor: 'pointer',
-                    background: kanal === k ? (k === 'WhatsApp' ? '#166534' : '#1e40af') : 'rgba(255,255,255,0.06)',
-                    color: kanal === k ? '#fff' : '#94a3b8',
+                    background: kanal === k ? (k === 'WhatsApp' ? '#3F7D4A' : CHROME_RENK.pine) : '#EFE9DC',
+                    color: kanal === k ? '#FAF8F4' : CHROME_RENK.muted,
                     fontWeight: 700,
                     fontSize: 14,
                   }}
@@ -216,12 +214,12 @@ export default function HatirlatmaPage() {
                   onClick={() => setMesaj(sablonlar[key])}
                   style={{
                     padding: '6px 12px',
-                    background: 'rgba(255,255,255,0.06)',
+                    background: '#EFE9DC',
                     borderRadius: 999,
                     fontSize: 12,
                     cursor: 'pointer',
-                    color: '#94a3b8',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: CHROME_RENK.muted,
+                    border: `1px solid ${CHROME_RENK.border}`,
                   }}
                 >
                   {key}
@@ -232,7 +230,7 @@ export default function HatirlatmaPage() {
               {loading ? 'Gönderiliyor...' : 'Hatırlatmayı Gönder'}
             </button>
             {success && (
-              <div style={{ marginTop: 12, padding: 12, background: '#166534', borderRadius: 12, color: '#4ade80', fontSize: 14 }}>
+              <div style={{ marginTop: 12, padding: 12, background: '#E4F3EA', borderRadius: 12, color: '#2E6E4E', fontSize: 14 }}>
                 {kanal === 'WhatsApp' ? 'WhatsApp açıldı — mesaj hazır, Gönder\'e dokunmanız yeterli' : `${kanal} mesajı gönderildi`}
               </div>
             )}
@@ -242,14 +240,14 @@ export default function HatirlatmaPage() {
           <div style={toolsCard}>
             <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 16 }}>Gönderilen Hatırlatmalar</div>
             {hatirlatmalar.length === 0 && (
-              <div style={{ textAlign: 'center', color: '#64748b', padding: '40px 0' }}>Henüz hatırlatma yok</div>
+              <div style={{ textAlign: 'center', color: CHROME_RENK.muted, padding: '40px 0' }}>Henüz hatırlatma yok</div>
             )}
             {hatirlatmalar.map((item) => (
               <div
                 key={item.id}
                 style={{
                   padding: '14px 0',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
+                  borderBottom: `1px solid ${CHROME_RENK.border}`,
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: 12,
@@ -257,11 +255,11 @@ export default function HatirlatmaPage() {
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>{item.hastaAdi}</div>
-                  <div style={{ color: '#94a3b8', fontSize: 14, margin: '2px 0', wordBreak: 'break-word' }}>
+                  <div style={{ color: CHROME_RENK.muted, fontSize: 14, margin: '2px 0', wordBreak: 'break-word' }}>
                     {(item.mesaj || '').slice(0, 80)}
                     {(item.mesaj || '').length > 80 ? '...' : ''}
                   </div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>
+                  <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>
                     {item.tarih ? new Date(item.tarih).toLocaleString('tr-TR') : '—'} · {item.kanal}
                   </div>
                 </div>
@@ -271,8 +269,8 @@ export default function HatirlatmaPage() {
                     borderRadius: 999,
                     fontSize: 12,
                     flexShrink: 0,
-                    background: item.durum === 'gonderildi' ? '#166534' : '#854d0e',
-                    color: item.durum === 'gonderildi' ? '#4ade80' : '#fbbf24',
+                    background: item.durum === 'gonderildi' ? '#E4F3EA' : '#FBF3DE',
+                    color: item.durum === 'gonderildi' ? '#2E6E4E' : '#7A5B1E',
                   }}
                 >
                   {item.durum}

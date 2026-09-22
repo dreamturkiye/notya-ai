@@ -1,6 +1,4 @@
 'use client';
-
-import DoktorNav from '@/components/doktor/DoktorNav'
 import { dozCikar } from '@/components/doktor/IlacSecici'
 import type { GruplanmisIlac } from '@/app/api/doktor/ilac-ara/route'
 import React, { useState, useEffect } from 'react'
@@ -215,8 +213,6 @@ const ERecetePage: React.FC = () => {
         color: '#fff',
       }}
     >
-      <DoktorNav />
-
       <div style={{ padding: '20px 16px', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px' }}>
           <div
