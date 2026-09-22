@@ -49,7 +49,7 @@ export function soapNumaraliAlanlariDuzenle<T extends {
   }
   for (const k of NOT_NUMARA_ALANLARI) {
     const v = veri[k]
-    if (typeof v === 'string' && v) (veri as Record<string, string>)[k] = satirBasiNumarala(v)
+    if (typeof v === 'string' && v) veri[k] = satirBasiNumarala(v)
   }
   return veri
 }
