@@ -31,6 +31,14 @@ export async function POST(req: NextRequest) {
   if (!path || !path.startsWith(`${doktorId}/`) || path.split('/').includes('..')) {
     return NextResponse.json({ error: 'Geçersiz dosya yolu.' }, { status: 400 })
   }
+
+  // NOTYA-GECMIS-MUAYENE-01: opsiyonel geçmiş tarih, sunucuda doğrulanır (bkz. sessions/[id]/end aynı kural).
+  let gecmisTarihIso: string | null = null
+  if (typeof body.tarih === 'string' && body.tarih) {
+    const t = new Date(body.tarih)
+    const onYilOnce = Date.now() - 10 * 365 * 86400000
+    if (!Number.isNaN(t.getTime()) && t.getTime() < Date.now() && t.getTime() > onYilOnce) gecmisTarihIso = t.toISOString()
+  }
   // HASTA-IZOLASYON-01: checked BEFORE the recording is read — a foreign patientId used to pull that
   // patient's last approved plan + diagnosis into this doctor's generated note.
   if (patientId && !(await hastaSahibiMi(supabase, doktorId, String(patientId)))) {
@@ -85,6 +93,7 @@ export async function POST(req: NextRequest) {
       session_type: 'ses_yukleme',
       status: 'completed',
       transcript_cleaned: transcript,
+      ...(gecmisTarihIso ? { started_at: gecmisTarihIso } : {}),
     })
     .select('id')
     .single()
@@ -167,6 +176,7 @@ export async function POST(req: NextRequest) {
       ai_model: modelSec('soap').model, // NOTYA-MALIYET-01: etiket politikadan
       ai_confidence: noteData?.ai_confidence || 0.9,
       specialty: brans,
+      ...(gecmisTarihIso ? { created_at: gecmisTarihIso } : {}),
     }).select('id').single()
     if (noteError || !note) throw new Error(noteError?.message || 'not kaydedilemedi')
 

@@ -36,6 +36,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { segments, profession, context } = body
     const sessionId = params.id
 
+    // NOTYA-GECMIS-MUAYENE-01: opsiyonel gecmis tarih (yalniz GECMIS, sunucu tarafinda dogrulanir
+    // — istemci max ile gelecegi zaten engeller ama sunucu asla istemciye guvenmez). Gecersiz/
+    // gelecek/cok eski (10 yildan fazla) tarih sessizce yok sayilir, not her zamanki gibi simdi ile kaydedilir.
+    let gecmisTarihIso: string | null = null
+    if (typeof body.tarih === 'string' && body.tarih) {
+      const t = new Date(body.tarih)
+      const onYilOnce = Date.now() - 10 * 365 * 86400000
+      if (!Number.isNaN(t.getTime()) && t.getTime() < Date.now() && t.getTime() > onYilOnce) gecmisTarihIso = t.toISOString()
+    }
+
     // HASTA-IZOLASYON-01: the session (and the patient it points at) must be this doctor's. Without
     // this, a foreign session id got a note attached and its patient's last plan leaked into context.
     const seans = await seansSahibi(getSupabase(), user.id, sessionId)
@@ -54,6 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       ended_at: new Date().toISOString(),
       transcript_cleaned: transcript,
       duration_seconds: body.duration_seconds || 0,
+      ...(gecmisTarihIso ? { started_at: gecmisTarihIso } : {}),
     }).eq("id", sessionId).eq("doctor_id", user.id)
 
     // Mali müşavirlik path
@@ -256,6 +267,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       alarm_bulgulari: noteData?.alarmBulgulari || null,
       ai_model: modelSec("soap").model,
       ai_confidence: noteData?.ai_confidence || 0.9,
+      ...(gecmisTarihIso ? { created_at: gecmisTarihIso } : {}),
     }).select().single()
 
     if (noteError) throw new Error("Not kaydedilemedi: " + noteError.message)

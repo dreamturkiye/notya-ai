@@ -104,6 +104,10 @@ function NewSessionInner() {
   }, [patientId])
   const [sessionType, setSessionType] = useState("muayene")
   const [step, setStep] = useState<"setup"|"recording"|"processing"|"done">("setup")
+  // NOTYA-GECMIS-MUAYENE-01 (Kaan/Gökhan, 2026-09-22): test/geçmiş veri girişi için opsiyonel
+  // geçmiş tarih. Boş bırakılırsa hiçbir şey değişmez (varsayılan: şimdi). Sadece GEÇMİŞ tarih
+  // kabul edilir; gelecek tarih sunucuda yok sayılır (aşağıdaki API'ler).
+  const [gecmisTarih, setGecmisTarih] = useState("")
   const [seconds, setSeconds] = useState(0)
   const [transcript, setTranscript] = useState("")
   const [isRecordingVoice, setIsRecordingVoice] = useState(false)
@@ -140,7 +144,7 @@ function NewSessionInner() {
       const resp = await fetch("/api/sessions/ses-yukle", {
         method: "POST",
         headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ path: yol, patientId: patientId || null, specialty }),
+        body: JSON.stringify({ path: yol, patientId: patientId || null, specialty, ...(gecmisTarih ? { tarih: new Date(gecmisTarih).toISOString() } : {}) }),
       })
       const d = await resp.json()
       if (!resp.ok) throw new Error(d.error || "Not üretilemedi.")
@@ -222,6 +226,7 @@ function NewSessionInner() {
         doctor_id: user.id, patient_id: patientId, specialty, session_type: sessionType,
         status: "processing", duration_seconds: seconds,
         patient_consent_given: true, patient_consent_at: new Date().toISOString(),
+        ...(gecmisTarih ? { started_at: new Date(gecmisTarih).toISOString() } : {}),
       }).select().single()
       if (se || !session) throw new Error("Seans oluşturulamadı: " + se?.message)
 
@@ -237,6 +242,7 @@ function NewSessionInner() {
           transcript, duration_seconds: seconds, profession: "doktor",
           context: { specialty, session_type: sessionType },
           cekListe: cekIsaret,
+          ...(gecmisTarih ? { tarih: new Date(gecmisTarih).toISOString() } : {}),
         })
       })
 
@@ -331,6 +337,22 @@ function NewSessionInner() {
               style={S({width:"100%",padding:"16px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
+            {/* NOTYA-GECMIS-MUAYENE-01: geçmiş veri girişi/test için opsiyonel geçmiş tarih — boş
+                bırakılırsa hiçbir şey değişmez, not her zamanki gibi şimdiki tarihle kaydedilir. */}
+            <div style={S({marginTop:"14px",padding:"10px 12px",background:"#F9FAFB",border:"1px dashed #D1D5DB",borderRadius:"10px"})}>
+              <label style={S({display:"block",fontSize:"12px",fontWeight:"600",color:"#374151",marginBottom:"6px"})}>
+                📅 Geçmişe dönük tarih <span style={S({fontWeight:"400",color:"#94A3B8"})}>(opsiyonel — geçmiş kayıt girişi için)</span>
+              </label>
+              <input type="datetime-local" value={gecmisTarih} max={new Date(Date.now() - 60000).toISOString().slice(0,16)}
+                onChange={e=>setGecmisTarih(e.target.value)}
+                style={S({width:"100%",padding:"8px 10px",border:"1.5px solid #E5E7EB",borderRadius:"8px",fontSize:"13px",color:"#374151",boxSizing:"border-box"})} />
+              {gecmisTarih && (
+                <div style={S({fontSize:"11px",color:"#0F9B8E",marginTop:"6px"})}>
+                  Bu muayene {new Date(gecmisTarih).toLocaleDateString("tr-TR")} tarihiyle kaydedilecek — 
+                  <span onClick={()=>setGecmisTarih("")} style={S({textDecoration:"underline",cursor:"pointer",marginLeft:"4px"})}>temizle</span>
+                </div>
+              )}
+            </div>
             {/* NOTYA-SES-01: hazır ses kaydı yükle — telefonda kaydedilen ya da kayıt başlatılmayı
                 unutulan muayeneler için aynı Ayşe Kaya SOAP motoru. Ses, transkript sonrası silinir. */}
             <div style={S({textAlign:"center",margin:"14px 0 6px",color:"#9CA3AF",fontSize:"12px"})}>ya da</div>
