@@ -1055,7 +1055,7 @@ export default function RandevularPage() {
                               )}
                               {!aks.aktifEt && rv.patientId && (
                                 <>
-                                  <button type="button" onClick={() => router.push(`/session/new?patientId=${rv.patientId}`)} style={{ ...aksiyonBtn, background: '#0F9B8E', color: 'white', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                                  <button type="button" onClick={() => router.push(`/session/new?patientId=${rv.patientId}&randevuBaslangic=${encodeURIComponent(rv.baslangic)}`)} style={{ ...aksiyonBtn, background: '#0F9B8E', color: 'white', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
                                   <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}`)} style={{ ...aksiyonBtn, color: '#0F9B8E', fontWeight: 600 }}>Hasta Dosyasını Aç</button>
                                   <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${rv.patientId}?tab=formu`)} style={{ ...aksiyonBtn, color: '#0F9B8E' }}>Hasta Formu</button>
                                 </>
@@ -1240,7 +1240,7 @@ export default function RandevularPage() {
                         {duzenlenenRandevu.durum !== 'iptal' && !modalIptalAcik && (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {duzenlenenRandevu.patientId && (
-                              <button type="button" onClick={() => router.push(`/session/new?patientId=${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, background: '#0F9B8E', color: 'white', borderColor: '#0F9B8E', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
+                              <button type="button" onClick={() => router.push(`/session/new?patientId=${duzenlenenRandevu.patientId}&randevuBaslangic=${encodeURIComponent(duzenlenenRandevu.baslangic)}`)} style={{ ...modalAksiyonBtn, background: '#0F9B8E', color: 'white', borderColor: '#0F9B8E', fontWeight: 700 }}>🩺 Muayeneyi Başlat</button>
                             )}
                             {duzenlenenRandevu.patientId && (
                               <button type="button" onClick={() => router.push(`/dashboard/doktor/hastalar/${duzenlenenRandevu.patientId}`)} style={{ ...modalAksiyonBtn, color: '#0F9B8E', fontWeight: 600, borderColor: '#0F9B8E' }}>Hasta Dosyasını Aç</button>

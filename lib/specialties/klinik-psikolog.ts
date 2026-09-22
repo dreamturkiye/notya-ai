@@ -1,7 +1,6 @@
-import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
-export const KLINIK_PSIKOLOG_PROFILE: SpecialtyProfile = {
+export const KLINIK_PSIKOLOG_PROFILE = {
   key: 'klinik-psikolog',
   etiket: 'Klinik Psikoloji',
   resmiUnvan: 'Klinik Psikoloji',

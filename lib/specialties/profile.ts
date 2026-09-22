@@ -121,14 +121,6 @@ export const PEDIATRIK_BAGLAM: Record<SpecialtyKey, PediatrikBaglamKurali> = {
   'beyin-cerrahisi': 'asla',
   'kalp-damar-cerrahisi': 'asla',
   'spor-hekimligi': 'asla',
-  'sac-ekimi': 'asla',
-  'medikal-estetik': 'asla',
-  longevity: 'asla',
-  fizyoterapi: 'asla',
-  'klinik-psikolog': 'asla',
-  diyetisyen: 'asla',
-  ergoterapi: 'asla',
-  odyoloji: 'asla',
 }
 
 /** Branşı bilinmeyen / "genel" (pratisyen) hekim: karma yaş pratiği gibi davranır. */

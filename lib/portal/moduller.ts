@@ -21,6 +21,7 @@
  */
 import { specialtyProfile } from '@/lib/specialties/registry'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 import type { PortalModulId, PortalModulu, PortalNavOge } from '@/lib/specialties/profile'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
@@ -139,20 +140,31 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   // RADYOLOJI-EXCEPTIONAL-01 — Tetkiklerim yalnız radyoloji hekiminin token'ında;
   // dahiliye / onkoloji / göğüs'e taşınmaz.
   if (brans === 'radyoloji') aktif.add('tetkiklerim')
-  if (brans === 'sac-ekimi') aktif.add('sacim')
-  if (brans === 'medikal-estetik') aktif.add('estetik-bakimim')
-  if (brans === 'longevity') aktif.add('longevitim')
-  if (brans === 'fizyoterapi') aktif.add('fizyom')
-  if (brans === 'klinik-psikolog') aktif.add('seanslarim')
-  if (brans === 'diyetisyen') aktif.add('beslenmem')
-  if (brans === 'ergoterapi') aktif.add('ergom')
-  if (brans === 'odyoloji') aktif.add('isitmem-odyoloji')
+  const klinikDal = klinikSlugCoz(g.doktorBransi)
+  if (klinikDal === 'sac-ekimi') aktif.add('sacim')
+  if (klinikDal === 'medikal-estetik') aktif.add('estetik-bakimim')
+  if (klinikDal === 'longevity') aktif.add('longevitim')
+  if (klinikDal === 'fizyoterapi') aktif.add('fizyom')
+  if (klinikDal === 'klinik-psikolog') aktif.add('seanslarim')
+  if (klinikDal === 'diyetisyen') aktif.add('beslenmem')
+  if (klinikDal === 'ergoterapi') aktif.add('ergom')
+  if (klinikDal === 'odyoloji') aktif.add('isitmem-odyoloji')
   // ASI-KARNESI-01 — evrensel: kayıt varsa her branşta (göz hekiminin kaydettiği grip aşısı da karnede görünür).
   if (g.asiKaydi) aktif.add('asi-karnesi')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]
-  const SAHIP: Record<Exclude<PortalModulId, 'asi-karnesi'>, SpecialtyKey> = {
+  const KLINIK_NAV: Partial<Record<PortalModulId, PortalNavOge[]>> = {
+    sacim: [{ key: 'sacim', label: 'Saçım', path: '/sacim' }],
+    'estetik-bakimim': [{ key: 'estetik-bakimim', label: 'Estetik bakımım', path: '/estetik-bakimim' }],
+    longevitim: [{ key: 'longevitim', label: 'Longevitim', path: '/longevitim' }],
+    fizyom: [{ key: 'fizyom', label: 'Fizyom', path: '/fizyom' }],
+    seanslarim: [{ key: 'seanslarim', label: 'Seanslarım', path: '/seanslarim' }],
+    beslenmem: [{ key: 'beslenmem', label: 'Beslenmem', path: '/beslenmem' }],
+    ergom: [{ key: 'ergom', label: 'Ergom', path: '/ergom' }],
+    'isitmem-odyoloji': [{ key: 'isitmem-odyoloji', label: 'İşitmem', path: '/isitmem-odyoloji' }],
+  }
+  const SAHIP: Record<Exclude<PortalModulId, 'asi-karnesi'>, SpecialtyKey | 'klinik'> = {
     buyume: 'pediatri', gebelik: 'kadin-hastaliklari-dogum', jinekoloji: 'kadin-hastaliklari-dogum',
     dahiliye: 'dahiliye', gozlerim: 'goz-hastaliklari', dermatoloji: 'dermatoloji', psikiyatri: 'psikiyatri',
     kulaklarim: 'kulak-burun-bogaz', kalbim: 'kardiyoloji', akcigerlerim: 'gogus-hastaliklari',
@@ -167,16 +179,20 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     'acil-sonrasi': 'acil-tip',
     'damar-cerrahisi-takibi': 'kalp-damar-cerrahisi',
     tetkiklerim: 'radyoloji',
-    sacim: 'sac-ekimi',
-    'estetik-bakimim': 'medikal-estetik',
-    longevitim: 'longevity',
-    fizyom: 'fizyoterapi',
-    seanslarim: 'klinik-psikolog',
-    beslenmem: 'diyetisyen',
-    ergom: 'ergoterapi',
-    'isitmem-odyoloji': 'odyoloji',
+    sacim: 'klinik',
+    'estetik-bakimim': 'klinik',
+    longevitim: 'klinik',
+    fizyom: 'klinik',
+    seanslarim: 'klinik',
+    beslenmem: 'klinik',
+    ergom: 'klinik',
+    'isitmem-odyoloji': 'klinik',
   }
-  const nav = sirali.flatMap((id) => (id === 'asi-karnesi' ? [ASI_KARNESI_NAV] : modul(SAHIP[id], id)?.nav || []))
+  const nav = sirali.flatMap((id) => {
+    if (id === 'asi-karnesi') return [ASI_KARNESI_NAV]
+    if (SAHIP[id] === 'klinik') return KLINIK_NAV[id] || []
+    return modul(SAHIP[id], id)?.nav || []
+  })
   return { moduller: sirali, nav }
 }
 

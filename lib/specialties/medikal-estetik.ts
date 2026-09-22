@@ -1,7 +1,6 @@
-import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
-export const MEDIKAL_ESTETIK_PROFILE: SpecialtyProfile = {
+export const MEDIKAL_ESTETIK_PROFILE = {
   key: 'medikal-estetik',
   etiket: 'Medikal Estetik',
   resmiUnvan: 'Medikal Estetik',

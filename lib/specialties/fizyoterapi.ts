@@ -1,7 +1,6 @@
-import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
-export const FIZYOTERAPI_PROFILE: SpecialtyProfile = {
+export const FIZYOTERAPI_PROFILE = {
   key: 'fizyoterapi',
   etiket: 'Fizyoterapi',
   resmiUnvan: 'Fizyoterapi',

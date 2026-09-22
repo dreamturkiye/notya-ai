@@ -1,7 +1,6 @@
-import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
-export const DIYETISYEN_PROFILE: SpecialtyProfile = {
+export const DIYETISYEN_PROFILE = {
   key: 'diyetisyen',
   etiket: 'Diyetisyen',
   resmiUnvan: 'Diyetisyen',

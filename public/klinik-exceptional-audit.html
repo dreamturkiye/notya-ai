@@ -54,9 +54,9 @@
     <div class="stat"><div class="v info">~88%</div><div class="l">Wow (from ~12%)</div></div>
   </div>
   <div class="callout">
-    Klinik kullanıcı artık doktor omurgasında: Hastalar, seans, SOAP, İnceleme, Araçlar. Ayrı kod tabanı yok.
-    Müttefik meslek (fizyo / psikolog / diyet / ergo / odyo) tanı koyamaz, e-reçete görmez.
-    Fizyoterapi ≠ FTR, klinik-psikolog ≠ psikiyatri, odyoloji ≠ KBB — TUS gridlerine sızmaz.
+    Klinik ayrı kategoridir — Doktor’a birleşmez. Onboarding /dashboard/klinik, Araçlar /klinik-tools.
+    Müttefik meslek (fizyo / psikolog / diyet / ergo / odyo) tanı koyamaz.
+    Fizyoterapi ≠ FTR, klinik-psikolog ≠ psikiyatri, odyoloji ≠ KBB.
   </div>
   <h2>Wow bar (klinik sandalye)</h2>
   <p class="lede" style="font-size:13px">0–100 = meşgul TR klinik uzmanının günlük eşiği vs doktor exceptional. Source: bu sprint.</p>
@@ -73,7 +73,7 @@
   <h2>Coverage depth</h2>
   <table>
     <tr><th>Domain</th><th>Depth</th><th>In product</th><th>Gap to wow</th></tr>
-    <tr><td>Doktor omurgası</td><td><span class="pill success">Strong</span></td><td class="note">Onboarding → /dashboard/doktor</td><td class="note">—</td></tr>
+    <tr><td>Klinik omurgası</td><td><span class="pill success">Strong</span></td><td class="note">Onboarding → /dashboard/klinik · /klinik-tools</td><td class="gap">Hasta/seans CRUD sıradaki tur</td></tr>
     <tr><td>Saç ekimi Araç + çek</td><td><span class="pill success">Strong</span></td><td class="note">Greft bandı · yıkama takvimi · Norwood</td><td class="gap">Canlı kohort yok</td></tr>
     <tr><td>Medikal estetik</td><td><span class="pill success">Strong</span></td><td class="note">Soğuma · bakım takvimi · 112</td><td class="gap">Ünite haritası el ile</td></tr>
     <tr><td>Longevity</td><td><span class="pill success">Strong</span></td><td class="note">Seans vadesi · sınıf · IV 112</td><td class="gap">Lab köprüsü yok</td></tr>

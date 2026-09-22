@@ -595,92 +595,6 @@ export const BRANS_SORULARI: Record<SpecialtyKey, IntakeBolum> = {
       { id: 'bilinenSporSakatligi', etiket: 'Bilinen sakatlık geçmişiniz', tur: 'checkbox-grup', secenekler: ['Bağ Yaralanması', 'Kas Yırtığı', 'Kırık Öyküsü', 'Tendon Sorunu', 'Yok'] },
     ],
   },
-
-  'sac-ekimi': {
-    baslik: 'Saç Ekimi Değerlendirmesi',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'sacSikayetSuresi', etiket: 'Saç seyrelmesi / dökülme ne zamandır var?', ...SIKAYET_SURESI_STANDART },
-      { id: 'acilBelirtilerSac', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Yeni ekim alanında hızla yayılan kızarıklık, ateş veya irin', 'Ani yüz şişmesi veya nefes darlığı (ilaç / anestezi sonrası)', 'Kontrolsüz kanama', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112’yi arayın veya kliniği acil arayın.' },
-      { id: 'semptomlarSac', etiket: 'Aşağıdakilerden hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Tepe açılması', 'Ön saç çizgisi gerilemesi', 'Yaygın seyrelme', 'Kaşıntı / kepek', 'Yok'] },
-      { id: 'baslikSacGecmisi', etiket: 'Saç ve İşlem Geçmişi', tur: 'bolum-basligi' },
-      { id: 'oncekiSacIslem', etiket: 'Daha önce saç ekimi veya PRP yapıldı mı?', tur: 'checkbox-grup', secenekler: ['FUE', 'DHI', 'Safir FUE', 'PRP', 'Yok'] },
-      { id: 'sacIlac', etiket: 'Kullandığınız saç ilaçları (finasterid, minoksidil vb.)', tur: 'textarea' },
-    ],
-  },
-
-  'medikal-estetik': {
-    baslik: 'Medikal Estetik Değerlendirmesi',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'estetikHedef', etiket: 'Bugünkü işlem hedefiniz nedir?', tur: 'checkbox-grup', secenekler: ['Botoks', 'Dolgu', 'PRP / mezoterapi', 'Lazer', 'Diğer', 'Henüz karar vermedim'] },
-      { id: 'acilBelirtilerEstetik', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['İşlem sonrası görme kaybı veya ani şiddetli ağrı (dolgu)', 'Yüzde solukluk / livedo (vasküler oklüzyon şüphesi)', 'Nefes darlığı, yaygın kurdeşen, dil-dudak şişmesi', 'Yok'], yardim: 'Bunlardan biri şu an varsa formu beklemeyin: 112.’yi arayın.' },
-      { id: 'baslikEstetikGecmis', etiket: 'İşlem Geçmişi', tur: 'bolum-basligi' },
-      { id: 'oncekiEstetik', etiket: 'Daha önce geçirdiğiniz estetik işlemler', tur: 'checkbox-grup', secenekler: ['Botoks', 'Hyaluronik asit dolgu', 'İplik', 'Lazer', 'Yok'] },
-      { id: 'estetikAlerji', etiket: 'Bilinen alerji veya herpes öyküsü', tur: 'textarea' },
-    ],
-  },
-
-  longevity: {
-    baslik: 'Longevity & Wellness',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'longevityHedef', etiket: 'Bugünkü başvurunuzun odağı', tur: 'checkbox-grup', secenekler: ['IV destek', 'Hormon değerlendirmesi', 'Check-up / biyobelirteç', 'Uyku / enerji', 'Diğer'] },
-      { id: 'acilBelirtilerLongevity', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['IV sırasında nefes darlığı, yaygın kaşıntı veya tansiyon düşmesi', 'Göğüs ağrısı', 'Bayılma', 'Yok'], yardim: 'IV reaksiyon şüphesinde formu beklemeyin: 112.’yi arayın.' },
-      { id: 'baslikLongevityGecmis', etiket: 'Sağlık Geçmişi', tur: 'bolum-basligi' },
-      { id: 'kronikLongevity', etiket: 'Bilinen kronik hastalıklarınız', tur: 'checkbox-grup', secenekler: ['Hipertansiyon', 'Diyabet', 'Tiroid', 'Böbrek', 'Yok'] },
-    ],
-  },
-
-  fizyoterapi: {
-    baslik: 'Fizyoterapi Değerlendirmesi',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'hekimTaniFizyo', etiket: 'Sizi yönlendiren hekimin tanısı (zorunlu — fizyoterapist tanı koymaz)', tur: 'textarea', zorunlu: true, placeholder: 'Hekim adı ve tanı / rapor özeti' },
-      { id: 'acilBelirtilerFizyo', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Eyer tarzı uyuşukluk veya idrar / gaita kaçırma (cauda şüphesi)', 'Egzersiz sırasında göğüs ağrısı veya bayılma', 'İlerleyici güç kaybı veya ani düşme', 'Yok'], yardim: 'Bunlardan biri varsa formu beklemeyin: 112 veya hekiminize acil dönün.' },
-      { id: 'semptomlarFizyo', etiket: 'Yakınmanız', tur: 'checkbox-grup', secenekler: ['Bel / boyun ağrısı', 'Eklem ağrısı', 'Denge sorunu', 'Felç sonrası', 'Spor sakatlığı', 'Yok'] },
-    ],
-  },
-
-  'klinik-psikolog': {
-    baslik: 'Klinik Psikoloji',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'acilBelirtilerPsikolog', etiket: 'Şu anda bunlardan biri var mı? (varsa işaretleyin)', tur: 'checkbox-grup', secenekler: ['Kendine zarar verme veya intihar düşüncesi', 'Başkasına zarar verme düşüncesi', 'Gerçeği değerlendirmede belirgin bozulma', 'Yok'], yardim: 'Krizde formu beklemeyin: 112 veya en yakın acil / psikiyatri.' },
-      { id: 'semptomlarPsikolog', etiket: 'Hangilerini yaşıyorsunuz?', tur: 'checkbox-grup', secenekler: ['Kaygı', 'Çökkünlük', 'Uyku sorunu', 'Panik', 'Travma anıları', 'Yok'] },
-      { id: 'oncekiTerapi', etiket: 'Daha önce psikoterapi veya psikiyatri takibi oldu mu?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
-    ],
-  },
-
-  diyetisyen: {
-    baslik: 'Beslenme Değerlendirmesi',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'hekimTaniDiyet', etiket: 'Hekim tanısı / sevk nedeni (tıbbi beslenme için)', tur: 'textarea', placeholder: 'Örn. tip 2 DM — hekim adı' },
-      { id: 'acilBelirtilerDiyet', etiket: 'Şu anda bunlardan biri var mı?', tur: 'checkbox-grup', secenekler: ['Kontrolsüz kusma veya bilinç değişikliği (diyabet şüphesi)', 'Ağır alerjik reaksiyon', 'Yok'], yardim: 'Acilde formu beklemeyin: 112.' },
-      { id: 'hedefDiyet', etiket: 'Beslenme hedefiniz', tur: 'checkbox-grup', secenekler: ['Kilo', 'Diyabet', 'Kolesterol', 'Gebelik', 'Spor', 'Diğer'] },
-    ],
-  },
-
-  ergoterapi: {
-    baslik: 'Ergoterapi Değerlendirmesi',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'hekimTaniErgo', etiket: 'Hekim tanısı / sevk (ergoterapist tanı koymaz)', tur: 'textarea', zorunlu: true },
-      { id: 'gyaZorluk', etiket: 'Günlük yaşamda zorlandığınız alanlar', tur: 'checkbox-grup', secenekler: ['Giyinme', 'Yemek', 'Banyo', 'Yazı / okul', 'İş', 'Oyun', 'Yok'] },
-      { id: 'acilBelirtilerErgo', etiket: 'Şu anda bunlardan biri var mı?', tur: 'checkbox-grup', secenekler: ['Ani güç kaybı veya konuşma bozukluğu', 'Kontrolsüz nöbet', 'Yok'], yardim: 'Acilde 112.' },
-    ],
-  },
-
-  odyoloji: {
-    baslik: 'Odyoloji Değerlendirmesi',
-    alanlar: [
-      BASVURU_NEDENI,
-      { id: 'acilBelirtilerOdyo', etiket: 'Şu anda bunlardan biri var mı?', tur: 'checkbox-grup', secenekler: ['Saatler / günler içinde ani işitme kaybı', 'Yüz felci ile birlikte işitme kaybı', 'Akıntılı, ağrılı kulak + ateş', 'Yok'], yardim: 'Ani işitme kaybında KBB acil — formu beklemeyin.' },
-      { id: 'semptomlarOdyo', etiket: 'Yakınmanız', tur: 'checkbox-grup', secenekler: ['İşitme azalması', 'Çınlama', 'Denge', 'Cihaz ayarı', 'Çocuk tarama', 'Yok'] },
-      { id: 'oncekiOdyo', etiket: 'Daha önce odyometri veya cihaz kullanıldı mı?', tur: 'radio', secenekler: ['Hayır', 'Evet'] },
-    ],
-  },
 }
 
 export const BRANS_ETIKETLERI: Record<SpecialtyKey, string> = {
@@ -714,12 +628,4 @@ export const BRANS_ETIKETLERI: Record<SpecialtyKey, string> = {
   'cocuk-cerrahisi': 'Çocuk Cerrahisi',
   'aile-hekimligi': 'Aile Hekimliği',
   'spor-hekimligi': 'Spor Hekimliği',
-  'sac-ekimi': 'Saç Ekimi',
-  'medikal-estetik': 'Medikal Estetik',
-  longevity: 'Longevity & Wellness',
-  fizyoterapi: 'Fizyoterapi',
-  'klinik-psikolog': 'Klinik Psikoloji',
-  diyetisyen: 'Diyetisyen',
-  ergoterapi: 'Ergoterapi',
-  odyoloji: 'Odyoloji',
 }

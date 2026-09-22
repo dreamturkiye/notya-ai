@@ -23,6 +23,7 @@ export default function DashboardRedirect() {
         if (type === 'doktor') router.push('/dashboard/doktor')
         else if (type === 'mali_musavirlik' || type === 'mali') router.push('/dashboard/mali')
         else if (type === 'avukat') router.push('/dashboard/avukat')
+        else if (type === 'klinik-uzman' || type === 'saglik-uzmani') router.push('/dashboard/klinik')
         else router.push('/dashboard/doktor')
       } catch { router.push('/giris/doktor') }
     }

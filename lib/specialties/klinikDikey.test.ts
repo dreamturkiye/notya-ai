@@ -23,10 +23,10 @@ describe('KLINIK-AYNA-01 dikey', () => {
     assert.equal(klinikSlugCoz('Odyoloji'), 'odyoloji')
   })
 
-  it('estetik-cerrahi plastik chapter’a alias; dermatoloji TUS anahtarıdır', () => {
-    assert.equal(klinikSlugCoz('estetik-cerrahi'), 'plastik-cerrahi')
-    assert.equal(klinikSlugCoz('Estetik & Plastik Cerrahi'), 'plastik-cerrahi')
-    assert.equal(klinikSlugCoz('dermatoloji'), null) // TUS çözücü (bransAnahtari) işler
+  it('estetik-cerrahi / dermatoloji TUS’a alias olmaz — Klinik ayrı kategori', () => {
+    assert.equal(klinikSlugCoz('estetik-cerrahi'), null)
+    assert.equal(klinikSlugCoz('Estetik & Plastik Cerrahi'), null)
+    assert.equal(klinikSlugCoz('dermatoloji'), null)
   })
 
   it('fizyoterapi FTR değildir; klinik psikolog psikiyatri değildir', () => {

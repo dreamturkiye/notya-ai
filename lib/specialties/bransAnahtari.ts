@@ -14,15 +14,6 @@ import { findSpecialistForSpecialty } from '@/lib/asistan/specialistsCatalog'
 
 /** Eski hesaplardaki serbest metin ("Kadın Doğum Uzmanı", "Göz Hastalıkları Uzmanı", "Jinekoloji ve Obstetrik"). Sıra önemli. */
 const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
-  // KLINIK-AYNA-01 — TUS eşlerinden ÖNCE (fizyoterapi ≠ FTR, medikal estetik ≠ plastik, odyoloji ≠ KBB).
-  [/fizyoterapi/, 'fizyoterapi'],
-  [/klinik.?psikolog|klinik.?psikoloji/, 'klinik-psikolog'],
-  [/diyetisyen|beslenme ve diyet/, 'diyetisyen'],
-  [/ergoterapi/, 'ergoterapi'],
-  [/odyoloji/, 'odyoloji'],
-  [/sa[cç].?ekimi|sac-ekimi/, 'sac-ekimi'],
-  [/medikal.?estetik/, 'medikal-estetik'],
-  [/longevity/, 'longevity'],
   [/göz|goz|oftalm/, 'goz-hastaliklari'],
   [/kadın|kadin|jinek|obstet/, 'kadin-hastaliklari-dogum'],
   [/derma|deri ve z/, 'dermatoloji'],

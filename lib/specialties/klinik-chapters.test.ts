@@ -1,9 +1,9 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { specialtyProfile } from './registry'
 import { KLINIK_YENI_SLUGS } from './klinikDikey'
 import { bransAnahtari } from './bransAnahtari'
 import { doktorAraclariListesi } from '@/lib/doktor/doktorAraclari'
+import { klinikAraclariListesi } from '@/lib/klinik/klinikAraclari'
 import { greftBandi } from '@/specialties/sac-ekimi/engines/sac'
 import { sogumaUygun } from '@/specialties/medikal-estetik/engines/estetik'
 import { icfOzet } from '@/specialties/fizyoterapi/engines/fizyo'
@@ -11,33 +11,27 @@ import { seansCercevesi } from '@/specialties/klinik-psikolog/engines/psikolog'
 import { makroBand } from '@/specialties/diyetisyen/engines/diyet'
 import { gyaOzet } from '@/specialties/ergoterapi/engines/ergo'
 import { ptaKayit } from '@/specialties/odyoloji/engines/odyo'
-import { muayeneCekListesi } from '@/lib/doktor/muayeneCekListesi'
 
-describe('KLINIK-EXCEPTIONAL-01 chapter pack', () => {
-  it('8 yeni dal registry + portal Strong + TUS sızıntısı yok', () => {
+describe('KLINIK-EXCEPTIONAL-01 — Klinik kategorisi (Doktor değil)', () => {
+  it('8 dal Klinik Araçlar’da; Doktor Araçlar’a sızmaz', () => {
     for (const k of KLINIK_YENI_SLUGS) {
-      const p = specialtyProfile(k)
-      assert.equal(p.key, k)
-      assert.equal(p.olgunluk, 'beta-hazir')
-      assert.equal(p.portal?.[0]?.derinlik, 'Strong')
-      const arac = doktorAraclariListesi(k)
-      assert.ok(arac.some((a) => a.branslar?.includes(k)), k)
+      const arac = klinikAraclariListesi(k)
+      assert.ok(arac.some((a) => a.dallar.includes(k)), k)
+      assert.ok(arac.some((a) => a.route.startsWith('/klinik-tools/')), k)
       assert.ok(arac.some((a) => a.route.endsWith('-kohort')), `${k} kohort`)
-      assert.equal(arac.some((a) => a.route.includes('hedef-boy')), false, k)
-      assert.equal(arac.some((a) => a.branslar?.includes('kardiyoloji')), false, k)
+      assert.equal(doktorAraclariListesi(k).some((a) => a.route.startsWith('/klinik-tools/')), false, k)
     }
-    assert.equal(doktorAraclariListesi('kardiyoloji').some((a) => a.route.startsWith('/doktor-tools/sac-')), false)
-    assert.equal(doktorAraclariListesi('fizik-tedavi').some((a) => a.route.startsWith('/doktor-tools/fizyo-')), false)
-    assert.equal(doktorAraclariListesi('psikiyatri').some((a) => a.route.includes('psikolog')), false)
-    assert.equal(doktorAraclariListesi('kulak-burun-bogaz').some((a) => a.route.startsWith('/doktor-tools/odyo-')), false)
+    for (const tus of ['kardiyoloji', 'fizik-tedavi', 'psikiyatri', 'kulak-burun-bogaz'] as const) {
+      assert.equal(doktorAraclariListesi(tus).some((a) => a.route.startsWith('/klinik-tools/')), false, tus)
+    }
   })
 
-  it('etiketler kanonik anahtara çözülür; FTR ≠ fizyo', () => {
-    assert.equal(bransAnahtari('Fizyoterapi'), 'fizyoterapi')
+  it('TUS çözücü Klinik dal üretmez; FTR ≠ fizyo', () => {
+    assert.equal(bransAnahtari('Fizyoterapi'), null)
     assert.equal(bransAnahtari('Fizik Tedavi'), 'fizik-tedavi')
-    assert.equal(bransAnahtari('Saç Ekimi'), 'sac-ekimi')
-    assert.equal(bransAnahtari('Klinik Psikoloji'), 'klinik-psikolog')
-    assert.equal(bransAnahtari('Odyoloji'), 'odyoloji')
+    assert.equal(bransAnahtari('Saç Ekimi'), null)
+    assert.equal(bransAnahtari('Klinik Psikoloji'), null)
+    assert.equal(bransAnahtari('Odyoloji'), null)
   })
 
   it('motorlar: greft / soğuma / ICF / seans / makro / GYA / PTA', () => {
@@ -55,16 +49,9 @@ describe('KLINIK-EXCEPTIONAL-01 chapter pack', () => {
     assert.ok(!('hata' in p) && p.ozet.includes('tanı değildir'))
   })
 
-  it('çek listesi saç maddeleri kardiyolojiye sızmaz', () => {
-    const sac = muayeneCekListesi({ seansBransi: 'sac-ekimi', doktorBransi: 'sac-ekimi' })
-    const kard = muayeneCekListesi({ seansBransi: 'kardiyoloji', doktorBransi: 'kardiyoloji' })
-    assert.ok(sac.some((m) => m.id.startsWith('sac-')))
-    assert.equal(kard.some((m) => m.id.startsWith('sac-')), false)
-  })
-
-  it('müttefik e-reçete görmez', () => {
-    const fizyo = doktorAraclariListesi('fizyoterapi')
-    assert.equal(fizyo.some((a) => a.route === '/doktor-tools/erecete'), false)
-    assert.ok(doktorAraclariListesi('sac-ekimi').some((a) => a.route === '/doktor-tools/erecete'))
+  it('müttefik Klinik’te e-reçete rotası görmez (Doktor gridinde de yok)', () => {
+    const fizyo = klinikAraclariListesi('fizyoterapi')
+    assert.equal(fizyo.some((a) => a.route.includes('erecete')), false)
+    assert.ok(klinikAraclariListesi('sac-ekimi').some((a) => a.route === '/klinik-tools/sac-greft'))
   })
 })

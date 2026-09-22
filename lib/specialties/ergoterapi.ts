@@ -1,7 +1,6 @@
-import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
-export const ERGOTERAPI_PROFILE: SpecialtyProfile = {
+export const ERGOTERAPI_PROFILE = {
   key: 'ergoterapi',
   etiket: 'Ergoterapi',
   resmiUnvan: 'Ergoterapi',

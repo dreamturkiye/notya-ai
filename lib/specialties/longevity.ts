@@ -1,7 +1,6 @@
-import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
-export const LONGEVITY_PROFILE: SpecialtyProfile = {
+export const LONGEVITY_PROFILE = {
   key: 'longevity',
   etiket: 'Longevity & Wellness',
   resmiUnvan: 'Longevity & Wellness',

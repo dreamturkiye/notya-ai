@@ -1,7 +1,6 @@
-import type { SpecialtyProfile } from './profile'
 import { BASELINE_OLCUMLER, BASELINE_BELGELER } from './profile'
 
-export const SAC_EKIMI_PROFILE: SpecialtyProfile = {
+export const SAC_EKIMI_PROFILE = {
   key: 'sac-ekimi',
   etiket: 'Saç Ekimi',
   resmiUnvan: 'Saç Ekimi',

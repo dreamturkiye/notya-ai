@@ -9,7 +9,6 @@
  * Klinik dermatoloji → `dermatoloji` (TDD chapter, kopya yok).
  * Fizyoterapi ≠ FTR; klinik-psikolog ≠ psikiyatri; odyoloji ≠ KBB.
  */
-import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
 export const KLINIK_HEKIM_SLUGS = ['sac-ekimi', 'medikal-estetik', 'longevity'] as const
 export const KLINIK_MUTTEFIK_SLUGS = [
@@ -23,11 +22,12 @@ export const KLINIK_YENI_SLUGS = [...KLINIK_HEKIM_SLUGS, ...KLINIK_MUTTEFIK_SLUG
 
 export type KlinikYeniSlug = (typeof KLINIK_YENI_SLUGS)[number]
 
-/** Landing slug → kanonik SpecialtyKey (TUS chapter reuse). */
-export const KLINIK_ALIAS: Record<string, SpecialtyKey> = {
-  'estetik-cerrahi': 'plastik-cerrahi',
-  'estetik & plastik cerrahi': 'plastik-cerrahi',
-  'estetik ve plastik cerrahi': 'plastik-cerrahi',
+/** Landing slug → Klinik dal (TUS'a alias yok — Klinik ayrı kategori). */
+export const KLINIK_ALIAS: Record<string, string> = {
+  'estetik-cerrahi': 'estetik-cerrahi',
+  'estetik & plastik cerrahi': 'estetik-cerrahi',
+  'estetik ve plastik cerrahi': 'estetik-cerrahi',
+  dermatoloji: 'dermatoloji',
 }
 
 export const KLINIK_ETIKET: Record<KlinikYeniSlug, string> = {
@@ -92,16 +92,15 @@ export function hekimKlinikMi(ham: string | null | undefined): boolean {
 export function klinikDikeyMi(ham: string | null | undefined): boolean {
   const k = klinikSlugCoz(ham)
   if (!k) return false
-  return YENI_SET.has(k) || k === 'plastik-cerrahi' || k === 'dermatoloji'
+  return YENI_SET.has(k)
 }
 
-/** Ham etiket / slug → kanonik anahtar; bilinmeyen → null. */
-export function klinikSlugCoz(ham: string | null | undefined): SpecialtyKey | null {
+/** Ham etiket / slug → Klinik dal; TUS SpecialtyKey döndürmez. */
+export function klinikSlugCoz(ham: string | null | undefined): KlinikYeniSlug | null {
   const t = String(ham || '').trim().toLocaleLowerCase('tr-TR')
   if (!t) return null
-  if (KLINIK_ALIAS[t]) return KLINIK_ALIAS[t]
   if (ETIKET_SLUG[t]) return ETIKET_SLUG[t]
-  if (YENI_SET.has(t)) return t as SpecialtyKey
+  if (YENI_SET.has(t)) return t as KlinikYeniSlug
   return null
 }
 
