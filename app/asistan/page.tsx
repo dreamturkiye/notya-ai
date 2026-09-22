@@ -37,6 +37,9 @@ export default function AsistanPage() {
   const [authToken, setAuthToken] = useState<string | null>(null)
   const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
   const conversationRef = useRef<ActiveConversation | null>(null)
+  /** NOTYA-OGRENME-03: addMsg ile eş zamanlı tutulur — endConversation()'ın kullandığı kapanışlar
+   *  (özellikle mount-effect cleanup) React state'in bayat bir kopyasını görebilir; ref her zaman güncel. */
+  const messagesRef = useRef<Message[]>([])
   /** Last voice-prepared öneri — eylem_onayla / vazgec use this when the agent omits oneriId. */
   const sesEylemRef = useRef<{ oneriId: string; hastaId: string } | null>(null)
   const sureUyariRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -179,14 +182,35 @@ export default function AsistanPage() {
       // Guard against connect-seed + agent transcript of the same greeting.
       const last = prev[prev.length - 1]
       if (last && last.role === role && last.text === trimmed) return prev
-      return [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: trimmed }]
+      const next = [...prev, { id: `${Date.now()}-${Math.random()}`, role, text: trimmed }]
+      messagesRef.current = next
+      return next
     })
+  }
+
+  /** NOTYA-OGRENME-03: canlı sesli Ayşe, doktorun aslında EN çok konuştuğu yüzeydi ama Next.js
+   *  sunucusuna hiç uğramadığı için hafıza buradan hiçbir şey öğrenmiyordu. SDK zaten her turu
+   *  onMessage ile tarayıcıya veriyor (messagesRef) — konuşma biterken doktor tarafını tek istekte
+   *  yolla. keepalive: sekme kapanırken/navigasyonda istek yarım kalmasın.
+   */
+  function sesOgrenGonder() {
+    try {
+      const doktorSozleri = messagesRef.current.filter((m) => m.role === "user").map((m) => m.text).join("\n").slice(0, 4000)
+      if (!doktorSozleri || !authToken) return
+      void fetch("/api/asistan/ses-ogren", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ doktorSozleri }),
+        keepalive: true,
+      }).catch(() => { /* öğrenme kritik değil */ })
+    } catch { /* öğrenme kritik değil */ }
   }
 
   async function endConversation() {
     const conv = conversationRef.current
     conversationRef.current = null
     if (conv) {
+      sesOgrenGonder()
       try { await conv.endSession() } catch { /* ignore */ }
     }
     setStatus("idle")
@@ -222,6 +246,7 @@ export default function AsistanPage() {
     setStatus("connecting")
     setErrorMsg("")
     setMessages([])
+    messagesRef.current = []
     // Pre-flight: request mic permission explicitly on user gesture
     // so the browser prompt fires before any async work
     try {
@@ -554,6 +579,7 @@ export default function AsistanPage() {
     setPersonaKey(key)
     setPersona(PERSONAS[key])
     setMessages([])
+    messagesRef.current = []
     setErrorMsg("")
     setSesKarti(null)
     sesEylemRef.current = null

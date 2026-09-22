@@ -6,7 +6,8 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
-import { dermKohortVerisi, dermHatirlatmaGonder } from '../_kohort'
+import { dermKohortVerisi } from '../_kohort'
+import { dermHatirlatmaGonder } from '../_kohortHatirlatma'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
