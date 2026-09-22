@@ -499,8 +499,10 @@ describe('INTAKE VELI + ACİL KİŞİ — hasta bilgi formu: veli bölümü yaş
   it('muayene çek listesi: baş çevresi / aşı yalnız pediatrik bağlamda; kutu evrensel', () => {
     const kdCocuk = muayeneCekListesi({ seansBransi: 'kadin-hastaliklari-dogum', hastaDogumIso: COCUK })
     const ped = muayeneCekListesi({ seansBransi: 'pediatri', hastaDogumIso: COCUK })
+    const kdYenidogan = muayeneCekListesi({ seansBransi: 'kadin-hastaliklari-dogum', hastaDogumIso: new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10) })
     assert.ok(ped.some((m) => m.id === 'basCevresi'))
     assert.ok(!kdCocuk.some((m) => m.id === 'basCevresi' || m.id === 'asi' || m.id === 'prenatal'))
+    assert.ok(!kdYenidogan.some((m) => String(m.id).startsWith('sc_') || /göbek|NTP|sarılık/i.test(m.etiket)))
     const seans = kaynak('app/session/new/page.tsx')
     assert.ok(seans.includes('MuayeneCekListesi') && seans.includes('muayeneCekListesi'))
     assert.ok(!/Baş Çevresi/.test(seans))

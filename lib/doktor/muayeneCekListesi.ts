@@ -10,6 +10,7 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { saglamCocukCekMaddeleri } from '@/specialties/pediatri/engines/saglamCocukCek'
 
 export type CekGrup = 'anamnez' | 'olcum' | 'fizik' | 'kapanis'
 
@@ -121,7 +122,10 @@ export function muayeneCekListesi(g: CekListeGirdi): CekMadde[] {
     hastaDogumIso: g.hastaDogumIso,
   })
   const liste = [...ORTAK]
-  if (ped) liste.push(...PEDIATRI)
+  if (ped) {
+    liste.push(...PEDIATRI)
+    liste.push(...saglamCocukCekMaddeleri(g.hastaDogumIso))
+  }
   if (brans && BRANS_EK[brans]) liste.push(...BRANS_EK[brans]!)
   const gorulen = new Set<string>()
   return liste.filter((m) => {
@@ -206,4 +210,10 @@ export function cekListeOku(patientId: string | null | undefined): Record<string
 export function cekListeYaz(patientId: string | null | undefined, isaretler: Record<string, boolean>): void {
   if (!patientId || typeof localStorage === 'undefined') return
   try { localStorage.setItem(cekListeDepoAnahtari(patientId), JSON.stringify(isaretler)) } catch { /* yok */ }
+}
+
+/** Yeni seans / yeni muayene — önceki vizitin işaretleri hatırlatmayı körleştirmesin. */
+export function cekListeSifirla(patientId: string | null | undefined): void {
+  if (!patientId || typeof localStorage === 'undefined') return
+  try { localStorage.removeItem(cekListeDepoAnahtari(patientId)) } catch { /* yok */ }
 }

@@ -25,6 +25,7 @@ import { soapDozKilidi, soapDozUydurmaKilidi } from '@/lib/doktor/dozKilidi'
 import { soapKaynakKilidi } from '@/lib/doktor/kaynakKilidi'
 import { kdDogrulanmisKaynaklar } from '@/specialties/kadin-dogum/protocols/dogrulanmis-kaynaklar'
 import { notMetinleriniTemizle } from '@/lib/doktor/klinikMetin'
+import { soapNumaraliAlanlariDuzenle } from '@/lib/doktor/satirBasiNumarala'
 import { kadinDogumKilidi, kadinDogumMi } from '@/specialties/kadin-dogum/prompts'
 import { dermatolojiKilidi, dermatolojiMi } from '@/specialties/dermatoloji/prompts'
 import { gozKilidi, gozMi } from '@/specialties/goz-hastaliklari/prompts'
@@ -119,10 +120,12 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
 - degerlendirme: doktorun söylediği/koyduğu TANILARI yaz (numaralı problem listesi). YALNIZ
   doktorun ifade ettiği tanılar — kendi ayırıcı tanını, dışladığın tanıları, olasılık
   yorumunu BURAYA YAZMA (onlar aiDegerlendirme'ye gider). Doktor açıkça söylemediyse ${ped('VKİ/büyüme persentiline', 'VKİ\'ye')} dayalı bir tanı (ör. "obezite") YAZMA.
+  NUMARALAMA: her madde YENİ SATIRDA ("1. ...\\n2. ..."). "1. 3 günlük ... 2. Sarılık" tek satır YASAK. Ondalık (3.18) ve ICD (Z00.110) kırılmaz.
 - icd10_codes: değerlendirmedeki problemlere karşılık ICD-10 önerileri (Türkçe açıklamayla, birincil işaretli). Bunlar ÖNERİDİR — doktor onaylar.
 - plan: doktorun SÖYLEDİĞİ tedavi/tetkik/kontrolü numaralı yaz (TEDAVİ başta): 1) doktorun
   söylediği tedavi/ilaç, 2) doktorun istediği tetkik/görüntüleme, 3) kontrol zamanı. Doktorun
   söylemediği öneri/eğitim/ilaç EKLEME (onlar aiDegerlendirme/receteOnerisi'ne gider).
+  NUMARALAMA: 1) / a) maddeleri de YENİ SATIRDA; "1. TEDAVİ: a) ... b) ... 2. TAKİP" tek satır YASAK.
 - ilaclar: plan'daki TEDAVİ satırlarının (ilaç/takviye kalemleri) YAPILANDIRILMIŞ hâlidir — AYRI BİR KAYNAK DEĞİL. Her kalem için ad/doz/kullanım/süre plan'da yazdığınla BİREBİR AYNI ürün adı ve dozu taşımalı (ör. plan'da "Wellcare D vitamini damlası 1000ü/damla haftada 5 damla" yazdıysan, ilaclar'da da aynı ürün adı ve aynı doz olmalı — farklı bir marka/doz uydurma). Reçete doğrudan bu alandan üretilir; tutarsızlık yanlış ilaç yazılmasına yol açar.
 - aiDegerlendirme: SENİN klinik yorumun — hastaya GÖRÜNMEZ, yalnız doktora. Ayırıcı tanı
   düşünüşü, dışlanan tanılar, doktorun atlamış olabileceği noktalar, ek tetkik/tedavi önerisi.
@@ -309,7 +312,7 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
   // CROSS-SPECIALTY-PARITY: the prompt-locked chapters get the full lock (dose-free receteOnerisi too); every other
   // branch in lib/doktor/specialties still gets the invention backstop — a dose the hekim never said never ships.
   const dozlu = dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : soapDozUydurmaKilidi(veri, girdi.transcript, girdi.klinikBaglam)
-  return notMetinleriniTemizle(kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu)
+  return notMetinleriniTemizle(soapNumaraliAlanlariDuzenle(kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar()) : dozlu))
 }
 
 /** Doktorun onayladığı son notlardan kısa üslup örnekleri derler (few-shot stil öğrenmesi).

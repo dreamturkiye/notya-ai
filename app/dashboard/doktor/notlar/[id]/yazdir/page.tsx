@@ -18,6 +18,7 @@ import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical/yasamsalBulgular';
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki';
 import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
+import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 
 interface NotVeri {
   not: {
@@ -42,12 +43,6 @@ interface NotVeri {
 function doktorUnvanli(ad: string): string {
   const t = String(ad || '').trim()
   return /^(dr|doç|doc|prof|uzm|op)\.?\s/i.test(t) ? t : `Dr. ${t}`
-}
-
-function satirBasiNumarala(metin: string): string {
-  return metin.replace(/(^|[^\n])(\d+)\.\s+(?=[A-ZÇĞİÖŞÜ])/g, (esleme, onceki, sayi) =>
-    onceki === '' ? `${sayi}. ` : `${onceki}\n${sayi}. `
-  )
 }
 
 function trTarih(iso?: string | null): string {

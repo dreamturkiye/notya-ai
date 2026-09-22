@@ -12,7 +12,7 @@ import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
 import {
   cekListeDogrula,
-  cekListeOku,
+  cekListeSifirla,
   cekListeYaz,
   muayeneCekListesi,
   type CekDogrulamaSatir,
@@ -81,6 +81,27 @@ function NewSessionInner() {
       } catch { /* sessiz — önbellek ya da seçici */ }
     })()
   }, [])
+
+  // Yeni muayene: önceki vizitin işaretleri durmasın. Doğum tarihi → yaşa özel sağlam çocuk maddeleri.
+  useEffect(() => {
+    cekListeSifirla(patientId)
+    setCekIsaret({})
+    if (!patientId) { setHastaDogumIso(null); return }
+    let iptal = false
+    ;(async () => {
+      try {
+        const { ensureDoctorAccessToken } = await import('@/lib/doktor/clientAuth')
+        const token = await ensureDoctorAccessToken()
+        if (!token || iptal) return
+        const r = await fetch(`/api/doktor/hastalar/${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!r.ok || iptal) return
+        const d = await r.json()
+        const dob = d?.patient?.dogum_tarihi || d?.dogum_tarihi
+        if (dob && !iptal) setHastaDogumIso(String(dob).slice(0, 10))
+      } catch { /* liste generic pediatri maddeleriyle açılır */ }
+    })()
+    return () => { iptal = true }
+  }, [patientId])
   const [sessionType, setSessionType] = useState("muayene")
   const [step, setStep] = useState<"setup"|"recording"|"processing"|"done">("setup")
   const [seconds, setSeconds] = useState(0)
@@ -92,8 +113,10 @@ function NewSessionInner() {
   const [sesYukleniyor, setSesYukleniyor] = useState(false)
   const [sesHata, setSesHata] = useState("")
   const [error, setError] = useState("")
-  const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>(() => cekListeOku(patientId))
+  const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>({})
   const [cekDogrulama, setCekDogrulama] = useState<CekDogrulamaSatir[] | null>(null)
+  const [hastaDogumIso, setHastaDogumIso] = useState<string | null>(null)
+  const cekGirdi = { seansBransi: specialty, hastaDogumIso }
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
@@ -229,7 +252,7 @@ function NewSessionInner() {
       const dog = (result.data as { cekListeDogrulama?: CekDogrulamaSatir[] }).cekListeDogrulama
       if (dog) setCekDogrulama(dog)
       else {
-        const maddeler = muayeneCekListesi({ seansBransi: specialty })
+        const maddeler = muayeneCekListesi(cekGirdi)
         setCekDogrulama(cekListeDogrula(maddeler, { transcript, soap: JSON.stringify(not), isaretler: cekIsaret }))
       }
       setStep("done")
@@ -304,7 +327,7 @@ function NewSessionInner() {
                 </div>
               ))}
             </div>
-            <button onClick={()=>{setSeconds(0);setStep("recording")}}
+            <button onClick={()=>{cekListeSifirla(patientId);setCekIsaret({});setSeconds(0);setStep("recording")}}
               style={S({width:"100%",padding:"16px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
@@ -362,7 +385,7 @@ function NewSessionInner() {
           </div>
           <MuayeneCekListesi
             acikRenk
-            maddeler={muayeneCekListesi({ seansBransi: specialty })}
+            maddeler={muayeneCekListesi(cekGirdi)}
             isaretler={cekIsaret}
             onToggle={(id) => {
               const sonraki = { ...cekIsaret, [id]: !cekIsaret[id] }
@@ -440,7 +463,7 @@ function NewSessionInner() {
               <div style={S({marginTop:"16px"})}>
                 <MuayeneCekListesi
                   acikRenk
-                  maddeler={muayeneCekListesi({ seansBransi: specialty })}
+                  maddeler={muayeneCekListesi(cekGirdi)}
                   isaretler={cekIsaret}
                   dogrulama={cekDogrulama}
                   onToggle={() => { /* not üretildikten sonra kilit */ }}

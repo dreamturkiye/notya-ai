@@ -21,6 +21,7 @@ import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
+import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
@@ -104,7 +105,12 @@ export default function NotSayfasi() {
         setVeri(j);
         setBasvuru(j.not.basvuruYakinmasi || '');
         setVital(Object.fromEntries(Object.entries((j.not.vitaller || {}) as Record<string, unknown>).map(([k, v]) => [k, v == null ? '' : String(v)])));
-        setTaslak({ subjektif: j.not.subjektif || '', objektif: j.not.objektif || '', degerlendirme: j.not.degerlendirme || '', plan: j.not.plan || '' });
+        setTaslak({
+          subjektif: satirBasiNumarala(j.not.subjektif || ''),
+          objektif: satirBasiNumarala(j.not.objektif || ''),
+          degerlendirme: satirBasiNumarala(j.not.degerlendirme || ''),
+          plan: satirBasiNumarala(j.not.plan || ''),
+        });
         setAlarm((j.not.alarmBulgulari || []).join('\n'));
         setOzet(j.not.hastaOzeti || '');
         setIlac((j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));

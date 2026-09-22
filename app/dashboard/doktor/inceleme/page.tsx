@@ -23,6 +23,7 @@ import type { BransKapsami } from '@/lib/specialties/kapsam';
 import { istemciKapsami } from '@/lib/specialties/kapsamIstemci';
 import { bransEtiketi } from '@/lib/doktor/bransAdlari';
 import YasamsalBulgularFormu from '@/components/doktor/YasamsalBulgularFormu';
+import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri';
 import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
@@ -75,10 +76,10 @@ function normalizeNotes(payload: unknown): PendingNote[] {
       sessionId: n.sessionId ? String(n.sessionId) : null,
       specialty: String(n.specialty ?? 'Genel'),
       date: String(n.date ?? ''),
-      subjektif: String(n.subjektif ?? ''),
-      objektif: String(n.objektif ?? ''),
-      degerlendirme: String(n.degerlendirme ?? ''),
-      plan: String(n.plan ?? ''),
+      subjektif: satirBasiNumarala(String(n.subjektif ?? '')),
+      objektif: satirBasiNumarala(String(n.objektif ?? '')),
+      degerlendirme: satirBasiNumarala(String(n.degerlendirme ?? '')),
+      plan: satirBasiNumarala(String(n.plan ?? '')),
       tani: String(n.tani ?? ''),
       ilaclar: Array.isArray(n.ilaclar) ? (n.ilaclar as IlacOner[]) : [],
       icdKodlari: Array.isArray(n.icdKodlari) ? (n.icdKodlari as IcdOner[]) : [],
