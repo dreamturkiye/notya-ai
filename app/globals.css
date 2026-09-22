@@ -99,6 +99,60 @@ body {
   .notya-grid-yigin {
     grid-template-columns: minmax(0, 1fr) !important;
   }
+
+  /* MOBILE-REVIEW: Yeni Seans çek listesi — kayıt kartı önce, liste accordion. */
+  .notya-seans-sayfa {
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .notya-seans-kayit {
+    padding: 16px !important;
+    border-radius: 16px !important;
+  }
+  .notya-seans-kayit textarea {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    min-height: 140px !important;
+  }
+  .notya-seans-aksiyon {
+    flex-direction: column !important;
+  }
+  .notya-seans-aksiyon button {
+    flex: none !important;
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+  [data-muayene-cek] {
+    padding: 12px !important;
+  }
+  [data-muayene-cek] [data-cek-govde] {
+    display: none;
+  }
+  [data-muayene-cek][data-cek-acik="1"] [data-cek-govde] {
+    display: block;
+  }
+  [data-cek-toggle] {
+    min-height: 48px;
+    align-items: center !important;
+  }
+  [data-cek-satir] {
+    min-height: 44px;
+    align-items: center !important;
+    margin-bottom: 0 !important;
+    padding: 8px 0;
+  }
+}
+
+@media (min-width: 769px) {
+  [data-cek-ok] {
+    display: none;
+  }
+  [data-cek-toggle] {
+    pointer-events: none;
+    cursor: default;
+  }
+  [data-muayene-cek] [data-cek-govde] {
+    display: block !important;
+  }
 }
 
 @media (max-width: 1024px) and (min-width: 769px) {

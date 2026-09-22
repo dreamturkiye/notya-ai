@@ -267,7 +267,7 @@ function NewSessionInner() {
   const S = (s: Record<string,unknown>) => s as React.CSSProperties
 
   return (
-    <div style={S({minHeight:"100vh",background:"#0A1628",fontFamily:"system-ui,sans-serif",padding:"20px"})}>
+    <div className="notya-seans-sayfa" style={S({minHeight:"100vh",background:"#0A1628",fontFamily:"system-ui,sans-serif",padding:"20px"})}>
       <div style={S({maxWidth: step === "recording" || step === "done" ? "980px" : "600px", margin:"0 auto"})}>
         <div style={S({display:"flex",alignItems:"center",gap:"12px",marginBottom:"24px"})}>
           <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"rgba(255,255,255,.6)",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
@@ -321,12 +321,12 @@ function NewSessionInner() {
         )}
 
         {step === "recording" && (
-          <div className="notya-grid-yigin" style={S({display:"grid",gridTemplateColumns:"minmax(0,1.15fr) minmax(240px,0.85fr)",gap:"16px",alignItems:"start"})}>
-          <div style={S({background:"#fff",borderRadius:"20px",padding:"24px"})}>
+          <div className="notya-grid-yigin notya-seans-cek" style={S({display:"grid",gridTemplateColumns:"minmax(0,1.15fr) minmax(240px,0.85fr)",gap:"16px",alignItems:"start"})}>
+          <div className="notya-seans-kayit" style={S({background:"#fff",borderRadius:"20px",padding:"24px"})}>
             <div style={S({textAlign:"center",marginBottom:"20px"})}>
               <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#EFF6FF",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
               <div style={S({fontSize:"32px",fontWeight:"600",color:"#0A1628",fontFamily:"monospace",marginBottom:"4px"})}>{fmt(seconds)}</div>
-              <div style={S({fontSize:"13px",color:"#64748B"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label}</div>
+              <div style={S({fontSize:"13px",color:"#64748B",lineHeight:1.45,padding:"0 4px"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label}</div>
             </div>
 
             {/* Voice recording button */}
@@ -344,9 +344,9 @@ function NewSessionInner() {
             </div>
             <textarea value={transcript} onChange={e=>setTranscript(e.target.value)}
               placeholder={"Muayene bulgularını buraya yazın...\n\nÖrnek: 7 yaşında erkek hasta, 3 gündür devam eden ateş şikayeti var. Ateş 38.8°C. Boğaz kırmızı, tonsiller hiperemik..."}
-              style={S({width:"100%",minHeight:"180px",padding:"12px",border:"1.5px solid #E5E7EB",borderRadius:"10px",fontSize:"13px",fontFamily:"system-ui",resize:"vertical",marginBottom:"16px",color:"#374151",lineHeight:"1.6",outline:"none"})}
+              style={S({width:"100%",minHeight:"180px",padding:"12px",border:"1.5px solid #E5E7EB",borderRadius:"10px",fontSize:"16px",fontFamily:"system-ui",resize:"vertical",marginBottom:"16px",color:"#374151",lineHeight:"1.6",outline:"none",boxSizing:"border-box"})}
             />
-            <div style={S({display:"flex",gap:"10px"})}>
+            <div className="notya-seans-aksiyon" style={S({display:"flex",gap:"10px"})}>
               <button onClick={()=>{stopTimer();recognitionRef.current?.stop();setStep("setup");setSeconds(0);setTranscript("")}}
                 style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#374151",border:"none",borderRadius:"10px",fontSize:"14px",cursor:"pointer"})}>
                 İptal

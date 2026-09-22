@@ -282,7 +282,7 @@ export default function HastaKonsult({
                 href={`/session/new?patientId=${encodeURIComponent(patientId)}`}
                 style={{ display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 700, color: '#2DD4BF' }}
               >
-                Muayeneye geç — liste sağda durur →
+                Muayeneye geç — liste seansa gelir →
               </a>
             </div>
           )}
