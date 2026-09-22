@@ -5,6 +5,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { trIcerir } from '@/lib/utils/turkceArama';
 import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
 import { useRouter } from 'next/navigation';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,80 +143,82 @@ export default function HastalarPage() {
   }, [patients, search, tcHashQuery, klinikSonuc]);
 
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 28, margin: 0 }}>Hastalar</h1>
-          {/* NOTYA-SADE-01 (Ö2): üst menüden kalkan "Hasta Ekle" buraya buton olarak geldi */}
-          <button type="button" onClick={() => router.push('/dashboard/doktor/hasta-ekle')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>+ Hasta Ekle</button>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: 0, color: '#2e251d', letterSpacing: '-0.02em' }}>Hastalar</h1>
+        {/* NOTYA-SADE-01 (Ö2): üst menüden kalkan "Hasta Ekle" buraya buton olarak geldi */}
+        <button type="button" onClick={() => router.push('/dashboard/doktor/hasta-ekle')} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>+ Hasta Ekle</button>
+      </div>
+      <input
+        placeholder="Ad, TC, yaş, şikayet, tanı, aşı, bu hafta, 1-5 yaş, veya, hariç…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        autoComplete="off"
+        inputMode="search"
+        style={{
+          padding: 12,
+          background: '#FFFFFF',
+          border: `1.5px solid ${CHROME_RENK.border}`,
+          borderRadius: 10,
+          width: '100%',
+          maxWidth: 640,
+          marginBottom: 12,
+          color: CHROME_RENK.ink,
+          boxSizing: 'border-box',
+          fontSize: 15,
+        }}
+      />
+      {klinikSonuc && search.trim() && (
+        <div style={{ color: CHROME_RENK.muted, fontSize: 13, marginBottom: 16 }}>
+          {klinikSonuc.length} hasta eşleşti — dosya, not, aşı, ilaç, randevu ve belgeler AND ile tarandı.
         </div>
-        <input
-          placeholder="Ad, TC, yaş, şikayet, tanı, aşı, bu hafta, 1-5 yaş, veya, hariç…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          autoComplete="off"
-          inputMode="search"
-          style={{
-            padding: 12,
-            background: '#1E2937',
-            border: '1px solid #334155',
-            borderRadius: 8,
-            width: '100%',
-            marginBottom: 12,
-            color: 'white',
-            boxSizing: 'border-box',
-          }}
-        />
-        {klinikSonuc && search.trim() && (
-          <div style={{ color: '#94A3B8', fontSize: 13, marginBottom: 16 }}>
-            {klinikSonuc.length} hasta eşleşti — dosya, not, aşı, ilaç, randevu ve belgeler AND ile tarandı.
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {loading && (
+          <div style={{ color: CHROME_RENK.muted, padding: '24px 4px' }}>Hastalar yükleniyor...</div>
+        )}
+        {!loading && loadError && (
+          <div style={{ color: CHROME_RENK.warn, padding: '24px 4px' }}>{loadError}</div>
+        )}
+        {!loading && !loadError && filtered.length === 0 && (
+          <div style={{ color: CHROME_RENK.muted, padding: '24px 4px' }}>
+            {search.trim() ? 'Aramanızla eşleşen hasta bulunamadı.' : 'Henüz hasta kaydı yok.'}
           </div>
         )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {loading && (
-            <div style={{ color: '#94A3B8', padding: '24px 4px' }}>Hastalar yükleniyor...</div>
-          )}
-          {!loading && loadError && (
-            <div style={{ color: '#FCA5A5', padding: '24px 4px' }}>{loadError}</div>
-          )}
-          {!loading && !loadError && filtered.length === 0 && (
-            <div style={{ color: '#94A3B8', padding: '24px 4px' }}>
-              {search.trim() ? 'Aramanızla eşleşen hasta bulunamadı.' : 'Henüz hasta kaydı yok.'}
+        {filtered.map((p) => (
+          <div
+            key={p.id}
+            onClick={() => router.push(`/dashboard/doktor/hastalar/${p.id}`)}
+            style={{
+              background: '#FFFFFF',
+              border: `1px solid ${CHROME_RENK.border}`,
+              padding: 16,
+              borderRadius: 16,
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 12,
+              cursor: 'pointer',
+              alignItems: 'center',
+              boxShadow: '0 8px 18px rgba(58,44,34,0.045)',
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 600, color: CHROME_RENK.ink }}>{p.name}</div>
+              {p.ozet ? (
+                <div style={{ color: CHROME_RENK.muted, fontSize: 13, marginTop: 4, overflowWrap: 'anywhere' }}>{p.ozet}</div>
+              ) : null}
             </div>
-          )}
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              onClick={() => router.push(`/dashboard/doktor/hastalar/${p.id}`)}
-              style={{
-                background: '#1E2937',
-                padding: 16,
-                borderRadius: 12,
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: 12,
-                cursor: 'pointer',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600 }}>{p.name}</div>
-                {p.ozet ? (
-                  <div style={{ color: '#94A3B8', fontSize: 13, marginTop: 4, overflowWrap: 'anywhere' }}>{p.ozet}</div>
-                ) : null}
+            {!p.ozet && (
+              <div style={{ color: CHROME_RENK.muted, flexShrink: 0 }}>
+                {p.last_visit ? new Date(p.last_visit).toLocaleDateString('tr-TR') : '—'}
               </div>
-              {!p.ozet && (
-                <div style={{ color: '#94A3B8', flexShrink: 0 }}>
-                  {p.last_visit ? new Date(p.last_visit).toLocaleDateString('tr-TR') : '—'}
-                </div>
-              )}
-              <div style={{ color: p.is_active ? '#10B981' : '#EF4444', flexShrink: 0 }}>
-                {p.is_active ? 'Aktif' : 'Pasif'}
-              </div>
+            )}
+            <div style={{ color: p.is_active ? '#3F7D4A' : CHROME_RENK.warn, flexShrink: 0, fontSize: 13, fontWeight: 600 }}>
+              {p.is_active ? 'Aktif' : 'Pasif'}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
