@@ -49,17 +49,6 @@ function NewSessionInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const patientId = searchParams?.get("patientId") || null
-  // NOTYA-RANDEVU-TARIH-01 (Kaan/Gökhan, 2026-09-22): randevudan "Muayeneyi Başlat"la gelindiyse
-  // randevunun kendi başlangıç saati OTOMATIK olarak muayene tarihi olur — DOKTORA GÖRÜNEN
-  // DÜZENLENEBİLİR BİR ALAN DEĞİL (Kaan'ın açık kararı: serbest düzenleme kayıt bütünlüğü
-  // riski taşır). Yalnız bilgilendirme amacıyla salt-okunur gösterilir. Randevusuz (walk-in)
-  // muayenede bu parametre yok — davranış aynen bugünkü gibi kalır (şimdiki zaman).
-  const randevuBaslangicParam = searchParams?.get("randevuBaslangic") || null
-  const randevuTarihIso = (() => {
-    if (!randevuBaslangicParam) return null
-    const t = new Date(randevuBaslangicParam)
-    return Number.isNaN(t.getTime()) ? null : t.toISOString()
-  })()
   const [specialty, setSpecialty] = useState("genel")
   const [bransKilitli, setBransKilitli] = useState(false)
 
@@ -119,9 +108,6 @@ function NewSessionInner() {
   // geçmiş tarih. Boş bırakılırsa hiçbir şey değişmez (varsayılan: şimdi). Sadece GEÇMİŞ tarih
   // kabul edilir; gelecek tarih sunucuda yok sayılır (aşağıdaki API'ler).
   const [gecmisTarih, setGecmisTarih] = useState("")
-  // Manuel test alanı (geçici) doktorun kendi seçimi olduğu için öncelikli; aksi halde
-  // randevudan gelen otomatik, düzenlenemeyen değer kullanılır; ikisi de yoksa şimdi.
-  const efektifTarihIso = gecmisTarih ? new Date(gecmisTarih).toISOString() : randevuTarihIso
   const [seconds, setSeconds] = useState(0)
   const [transcript, setTranscript] = useState("")
   const [isRecordingVoice, setIsRecordingVoice] = useState(false)
@@ -158,7 +144,7 @@ function NewSessionInner() {
       const resp = await fetch("/api/sessions/ses-yukle", {
         method: "POST",
         headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ path: yol, patientId: patientId || null, specialty, ...(efektifTarihIso ? { tarih: efektifTarihIso } : {}) }),
+        body: JSON.stringify({ path: yol, patientId: patientId || null, specialty, ...(gecmisTarih ? { tarih: new Date(gecmisTarih).toISOString() } : {}) }),
       })
       const d = await resp.json()
       if (!resp.ok) throw new Error(d.error || "Not üretilemedi.")
@@ -240,7 +226,7 @@ function NewSessionInner() {
         doctor_id: user.id, patient_id: patientId, specialty, session_type: sessionType,
         status: "processing", duration_seconds: seconds,
         patient_consent_given: true, patient_consent_at: new Date().toISOString(),
-        ...(efektifTarihIso ? { started_at: efektifTarihIso } : {}),
+        ...(gecmisTarih ? { started_at: new Date(gecmisTarih).toISOString() } : {}),
       }).select().single()
       if (se || !session) throw new Error("Seans oluşturulamadı: " + se?.message)
 
@@ -256,7 +242,7 @@ function NewSessionInner() {
           transcript, duration_seconds: seconds, profession: "doktor",
           context: { specialty, session_type: sessionType },
           cekListe: cekIsaret,
-          ...(efektifTarihIso ? { tarih: efektifTarihIso } : {}),
+          ...(gecmisTarih ? { tarih: new Date(gecmisTarih).toISOString() } : {}),
         })
       })
 
@@ -351,12 +337,6 @@ function NewSessionInner() {
               style={S({width:"100%",padding:"16px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
-            {/* NOTYA-RANDEVU-TARIH-01: randevudan gelindiyse otomatik tarih — SALT-OKUNUR, düzenlenemez. */}
-            {randevuTarihIso && !gecmisTarih && (
-              <div style={S({marginTop:"14px",padding:"10px 12px",background:"#ECFDF5",border:"1px solid #6EE7B7",borderRadius:"10px",fontSize:"12px",color:"#065F46"})}>
-                📅 Bu muayene randevu saatiyle kaydedilecek: <strong>{new Date(randevuTarihIso).toLocaleString("tr-TR", { dateStyle: "long", timeStyle: "short" })}</strong>
-              </div>
-            )}
             {/* NOTYA-GECMIS-MUAYENE-01: geçmiş veri girişi/test için opsiyonel geçmiş tarih — boş
                 bırakılırsa hiçbir şey değişmez, not her zamanki gibi şimdiki tarihle kaydedilir. */}
             <div style={S({marginTop:"14px",padding:"10px 12px",background:"#F9FAFB",border:"1px dashed #D1D5DB",borderRadius:"10px"})}>

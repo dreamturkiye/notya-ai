@@ -56,7 +56,6 @@ export default function DoktorNav() {
       try {
         const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
         if (r.ok) { const d = await r.json(); if (d.rol === 'sekreter') setRol('sekreter'); }
-        /* Klinik ayrı kategori — doktor nav'a bağlanmaz. */
       } catch { /* stays 'doktor' on failure — least surprising default */ }
       try {
         const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
