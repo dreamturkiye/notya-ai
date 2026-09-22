@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
-import DoktorNav from '@/components/doktor/DoktorNav'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 type Provider = 'medula' | 'nvi_kps'
@@ -158,7 +157,6 @@ export default function EntegrasyonlarPage() {
 
   return (
     <div style={{ backgroundColor: BG, minHeight: '100vh', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px' }}>
         <a href="/dashboard/doktor/ayarlar" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
         <h1 style={{ fontSize: 28, fontWeight: 650, margin: '10px 0 8px' }}>Entegrasyonlar</h1>

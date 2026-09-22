@@ -6,7 +6,6 @@
  * e-postanın üstünde dursun.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import DoktorAvatar from '@/components/doktor/DoktorAvatar';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { AVATAR_IZINLI_MIME, AVATAR_MAX_BYTES, avatarDogrula, AvatarGecersizError } from '@/lib/doktor/avatar';
@@ -128,7 +127,6 @@ export default function HesabimPage() {
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 480, margin: '0 auto', padding: 24 }}>
         <a href="/dashboard/doktor/ayarlar" style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
         <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>Hesabım</h1>

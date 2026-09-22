@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { CihazdanAl, CihazDosyasi } from '@/components/core/CihazdanAl';
 import {
   getAccessToken, getAccessTokenAsync,
@@ -367,7 +366,6 @@ export default function IncelemePage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px' }}>
         <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>← Doktor</a>
         <h1 style={{ fontSize: 26, fontWeight: 700, margin: '10px 0 0' }}>İnceleme Kuyruğu</h1>

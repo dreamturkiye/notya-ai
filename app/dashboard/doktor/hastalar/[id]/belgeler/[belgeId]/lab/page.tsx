@@ -10,7 +10,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { hastaBelgelerHref, hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
 import { useParams, useSearchParams } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
@@ -164,7 +163,6 @@ export default function LabPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 1240, margin: '0 auto', padding: '14px 12px' }}>
         <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.35)', color: '#FBBF24', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 700, marginBottom: 12 }}>{UYARI_SERIDI}</div>
         {panel?.panel_type === 'enabiz_gecmis' && <div style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.4)', color: '#99F6E4', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 10 }}>e-Nabız geçmiş içe aktarma (yalnız yüklenen PDF — canlı e-Nabız çekimi yok). Her satır kendi basılı tarihini taşır; tarihsiz satır onaylı seriye girmez. Kimlik kontrolü ve Onayla kapısı her lab belgesiyle aynıdır.</div>}

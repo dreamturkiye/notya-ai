@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 export const dynamic = 'force-dynamic';
@@ -182,8 +181,6 @@ const Page: React.FC = () => {
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: 'white' }}>
       <style>{`@media print { nav, button { display: none !important; } }`}</style>
-
-      <DoktorNav />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 60px' }}>
         <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-block', marginTop: 24 }}>← Doktor</a>

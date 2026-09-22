@@ -8,7 +8,6 @@ export const dynamic = 'force-dynamic'
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import DoktorNav from '@/components/doktor/DoktorNav'
 import DocumentViewer from '@/components/doktor/DocumentViewer'
 import { trIcerir } from '@/lib/utils/turkceArama'
 import {
@@ -288,7 +287,6 @@ export default function BelgelerPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 16px 56px' }}>
         <GeriLink
           href={hastaId ? hastaBelgelerHref(hastaId) : DOKTOR_ANA}

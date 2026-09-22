@@ -4,7 +4,6 @@
  * Shared practice inbox — doktor + sekreter.
  */
 import React, { useCallback, useEffect, useState } from 'react'
-import DoktorNav from '@/components/doktor/DoktorNav'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 type Thread = {
@@ -108,7 +107,6 @@ export default function DoktorMesajlarPage() {
 
   return (
     <div style={{ background: '#0A1628', minHeight: '100vh', color: '#EDF1F7' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '20px 16px 48px' }}>
         <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>← Doktor</a>
         <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>

@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import IlacSecici from '@/components/doktor/IlacSecici';
 import {
   getAccessToken, getAccessTokenAsync,
@@ -396,8 +395,6 @@ export default function DoktorIlaclarPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
-
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px 56px' }}>
         <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>← Doktor</a>
         <h1 style={{ fontSize: 26, fontWeight: 700, margin: '10px 0 0' }}>İlaç Yönetimi</h1>

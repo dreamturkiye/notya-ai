@@ -7,7 +7,6 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 export const dynamic = 'force-dynamic';
@@ -113,7 +112,6 @@ export default function PersonelPage() {
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 680, margin: '0 auto', padding: 24 }}>
         <a href="/dashboard/doktor/ayarlar" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
         <h1 style={{ fontSize: 26, margin: '10px 0 4px' }}>Personel</h1>

@@ -52,7 +52,6 @@ import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { yasHesapla } from '@/lib/doktor/yas';
 import type { HastaOzetKayit } from '@/lib/doktor/hastaOzetKayit';
@@ -352,7 +351,6 @@ export default function HastaProfilPage() {
         .dosya-sekmeler::-webkit-scrollbar { display: none; }
         .dosya-satir:hover { background: rgba(255,255,255,0.04); }
       `}</style>
-      <DoktorNav />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 20px 40px' }}>
 
         {/* Kimlik başlığı — ana sayfa karşılama paneliyle aynı dil */}

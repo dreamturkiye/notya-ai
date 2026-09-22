@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { trIcerir } from '@/lib/utils/turkceArama';
 import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
@@ -144,7 +143,6 @@ export default function HastalarPage() {
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
           <h1 style={{ fontSize: 28, margin: 0 }}>Hastalar</h1>

@@ -4,9 +4,6 @@
  * kaldırılıp buraya toplandı. Rotalar değişmedi — bu sayfa yalnız bir yönlendirme katmanıdır.
  */
 'use client';
-
-import DoktorNav from '@/components/doktor/DoktorNav';
-
 const BOLUMLER = [
   { baslik: 'Entegrasyonlar', aciklama: 'Takvim, e-posta ve dış sistem bağlantıları', rota: '/dashboard/doktor/entegrasyonlar', ikon: '🔌' },
   { baslik: 'Hesabım', aciklama: 'E-posta ve şifre', rota: '/dashboard/doktor/hesap', ikon: '🔑' },
@@ -19,7 +16,6 @@ const BOLUMLER = [
 export default function AyarlarPage() {
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
         <a href="/dashboard/doktor" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Doktor</a>
         <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>Ayarlar</h1>

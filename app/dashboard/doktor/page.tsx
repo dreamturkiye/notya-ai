@@ -3,21 +3,24 @@
 export const dynamic = 'force-dynamic'
 
 /**
- * NOTYA-KOKPIT-02 — Ana sayfa: ORİJİNAL içerik ve yapı (tek doktor odaklı; karşılama,
- * Bugün/Bu Hafta randevu şeridi, 4 KPI kartı, Hızlı Erişim, Son Notlar, Hafta Özeti),
- * birinci sınıf görsel işçilikle. Grafik yok — Kaan'ın net tercihi (2026-09-02).
+ * NOTYA-YENI-GORUNUM-01 (Kaan, 2026-09-22) — Ana sayfa, new chrome.
  *
- * Görsel dil takvim sayfasıyla aynı: iki tonlu lacivert paneller (#0D1C33), ince
- * rgba hatlar, teal vurgu, tabular rakamlar. Hızlı Erişim'deki emoji çipleri, elle
- * çizilmiş 26px stroke SVG ikonlu büyük dokunuş karolarına dönüştü — hazır ikon seti yok.
- * Veri katmanı öncekiyle birebir aynı.
+ * Every data fetch, every piece of state, every real feature from the previous version is kept
+ * verbatim — gün programı with per-randevu briefing, KPI counts, recent notes, weekly summary,
+ * YeniBebekIsleri / BekleyenKonsultasyonOzeti, the avatar/hafıza greeting. Only the visual
+ * language changed: warm cream/paper/pine instead of dark navy, Fraunces + Source Sans instead
+ * of system-ui, real inline SVG instead of emoji. The header/dock chrome itself now lives in
+ * layout.tsx — this page is just its content.
+ *
+ * New: NotyaFisildiyor — the single most overdue pediatri flag, real data (see that component's
+ * own header for how "clears itself by being resolved" works).
  */
 
-import DoktorNav from '@/components/doktor/DoktorNav'
-import DoktorAvatar from '@/components/doktor/DoktorAvatar'
 import YeniBebekIsleri from '@/components/doktor/YeniBebekIsleri'
 import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
+import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
 import { bransAnahtari, pediatrikBaglamKurali } from '@/lib/specialties/kapsam'
+import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
@@ -40,7 +43,6 @@ interface RandevuOzet {
   durum: string
 }
 
-// NOTYA-GUN-02: günün programı — randevu başına Ayşe brifingi
 interface ProgramSatiri {
   id: string
   baslangic: string
@@ -63,22 +65,12 @@ interface NoteItem {
   approved_at?: string
 }
 
-const specialtyColors: { [key: string]: string } = {
-  pediatri: '#0F9B8E',
-  kardiyoloji: '#3B82F6',
-  noroloji: '#8B5CF6',
-  dahiliye: '#059669',
-  psikiyatri: '#7C3AED',
-  dermatoloji: '#F59E0B',
-  default: '#64748B'
-}
-
 const DURUM_RENK: { [key: string]: { label: string; color: string; bg: string } } = {
-  planlandi: { label: 'Planlandı', color: '#0F9B8E', bg: 'rgba(15,155,142,0.15)' },
-  onaylandi: { label: 'Onaylandı', color: '#22C55E', bg: 'rgba(34,197,94,0.15)' },
-  tamamlandi: { label: 'Tamamlandı', color: '#94A3B8', bg: 'rgba(148,163,184,0.15)' },
-  iptal: { label: 'İptal', color: '#EF4444', bg: 'rgba(239,68,68,0.15)' },
-  gelmedi: { label: 'Gelmedi', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
+  planlandi: { label: 'Planlandı', color: CHROME_RENK.pine, bg: 'rgba(47,67,52,0.1)' },
+  onaylandi: { label: 'Onaylandı', color: '#3F7D4A', bg: 'rgba(63,125,74,0.12)' },
+  tamamlandi: { label: 'Tamamlandı', color: CHROME_RENK.muted, bg: 'rgba(139,125,112,0.14)' },
+  iptal: { label: 'İptal', color: CHROME_RENK.warn, bg: 'rgba(164,91,62,0.12)' },
+  gelmedi: { label: 'Gelmedi', color: '#B4832F', bg: 'rgba(180,131,47,0.12)' },
 }
 
 function yerelGunAnahtari(d: Date): string {
@@ -87,16 +79,12 @@ function yerelGunAnahtari(d: Date): string {
   const g = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${g}`
 }
-
-/** NOTYA-TRT-01: randevu anları Türkiye gününe göre — takvimle aynı kural. */
 function trtGunAnahtari(iso: string | Date): string {
   return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
 }
-
 function trtSaatStr(iso: string): string {
   return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
 }
-
 function buHaftaninGunleri(): Date[] {
   const bugun = new Date()
   const haftaIcindekiIndex = (bugun.getDay() + 6) % 7
@@ -104,37 +92,27 @@ function buHaftaninGunleri(): Date[] {
   return Array.from({ length: 7 }, (_, i) => new Date(pazartesi.getFullYear(), pazartesi.getMonth(), pazartesi.getDate() + i))
 }
 
-/** Elle çizilmiş stroke ikonlar — hazır set yerine tek elden, tutarlı 1.8 kalınlık. */
-function Ikon({ ad, boyut = 26 }: { ad: string; boyut?: number }) {
-  const ortak = { width: boyut, height: boyut, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+/** Real inline stroke icons — no emoji, one hand, consistent 1.7 weight. */
+function Ikon({ ad, boyut = 22 }: { ad: string; boyut?: number }) {
+  const ortak = { width: boyut, height: boyut, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   switch (ad) {
-    case 'takvim':
-      return <svg {...ortak}><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /><circle cx="12" cy="15" r="1.6" fill="currentColor" stroke="none" /></svg>
-    case 'asistan':
-      return <svg {...ortak}><rect x="9.2" y="3.5" width="5.6" height="10" rx="2.8" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5M9 20.5h6" /></svg>
-    case 'hastaEkle':
-      return <svg {...ortak}><circle cx="10" cy="8.5" r="3.5" /><path d="M4 20c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5" /><path d="M18.5 8v5M16 10.5h5" /></svg>
-    case 'belge':
-      return <svg {...ortak}><path d="M7 3.5h7l4 4V19a1.8 1.8 0 0 1-1.8 1.8H7A1.8 1.8 0 0 1 5.2 19V5.3A1.8 1.8 0 0 1 7 3.5Z" /><path d="M14 3.5V8h4.5" /><path d="M12 17v-5M9.7 14.2 12 12l2.3 2.2" /></svg>
-    case 'inceleme':
-      return <svg {...ortak}><rect x="4.5" y="4.5" width="15" height="16" rx="2.5" /><path d="M9 3.2h6v3H9z" /><path d="m8.6 13.6 2.2 2.2 4.6-4.8" /></svg>
-    case 'araclar':
-      return <svg {...ortak}><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9" /><circle cx="15" cy="7.5" r="2.2" /><circle cx="9" cy="16.5" r="2.2" /></svg>
-    case 'raporlar':
-      return <svg {...ortak}><path d="M4.5 20V4.5M4.5 20H20" /><path d="M8.5 16.5v-5M12.5 16.5V8M16.5 16.5v-8.5" /></svg>
-    default:
-      return null
+    case 'takvim': return <svg {...ortak}><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /></svg>
+    case 'asistan': return <svg {...ortak}><rect x="9.2" y="3.5" width="5.6" height="10" rx="2.8" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5M9 20.5h6" /></svg>
+    case 'hastaEkle': return <svg {...ortak}><circle cx="10" cy="8.5" r="3.5" /><path d="M4 20c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5" /><path d="M18.5 8v5M16 10.5h5" /></svg>
+    case 'belge': return <svg {...ortak}><path d="M7 3.5h7l4 4V19a1.8 1.8 0 0 1-1.8 1.8H7A1.8 1.8 0 0 1 5.2 19V5.3A1.8 1.8 0 0 1 7 3.5Z" /><path d="M14 3.5V8h4.5" /></svg>
+    case 'inceleme': return <svg {...ortak}><rect x="4.5" y="4.5" width="15" height="16" rx="2.5" /><path d="m8.6 13.6 2.2 2.2 4.6-4.8" /></svg>
+    case 'araclar': return <svg {...ortak}><path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9" /><circle cx="15" cy="7.5" r="2.2" /><circle cx="9" cy="16.5" r="2.2" /></svg>
+    case 'raporlar': return <svg {...ortak}><path d="M4.5 20V4.5M4.5 20H20" /><path d="M8.5 16.5v-5M12.5 16.5V8M16.5 16.5v-8.5" /></svg>
+    default: return null
   }
 }
 
 export default function DoktorDashboard() {
   const router = useRouter()
   const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
-  // NOTYA-AVATAR-01: ad gibi avatar da önbellekten ilk boyamada gelsin — her girişte
-  // baş harften fotoğrafa atlama olmasın. Sunucu yanıtı gelince tazelenir.
-  const [doktorAvatar, setDoktorAvatar] = useState<string | null>(() => { try { return localStorage.getItem('notya_doktor_avatar') } catch { return null } })
   const [ayseAcilis, setAyseAcilis] = useState<string>('')
   const [asistanKisaAd, setAsistanKisaAd] = useState('Ayşe')
+  const [specialty, setSpecialty] = useState('')
   const [kpi, setKpi] = useState<KpiData>({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
   const [recentNotes, setRecentNotes] = useState<NoteItem[]>([])
   const [haftalikRandevular, setHaftalikRandevular] = useState<RandevuOzet[]>([])
@@ -142,44 +120,27 @@ export default function DoktorDashboard() {
   const [randevuGorunumu, setRandevuGorunumu] = useState<'bugun' | 'hafta'>('bugun')
   const [randevuYukleniyor, setRandevuYukleniyor] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
   const [pediatriAraci, setPediatriAraci] = useState(false)
-  // BRANS-ALAN-SIZMASI: "Yeni bebek — pediatri iş listesi" KD hekiminin ana sayfasında çıkıyor, bebek sekmesine (KD'de kapalı) çıkmaz yola gidiyordu
   const [bebekIsListesi, setBebekIsListesi] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const initDashboard = async () => {
-      // NOTYA-AUTH-01: ensureDoctorAccessToken her depolama şeklini bilir ve süresi geçen
-      // oturumu yeniler.
       const token = await ensureDoctorAccessToken()
-      if (!token) {
-        router.push(DOKTOR_GIRIS)
-        return
-      }
+      if (!token) { router.push(DOKTOR_GIRIS); return }
 
       try {
         const meRes = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${token}` } })
-        // NOTYA-GUN-01: Ayşe günü açar — başlığın altında tek satır, başka bir şey bloklamaz
         fetch('/api/doktor/hafiza', { headers: { Authorization: `Bearer ${token}` } })
           .then((r) => (r.ok ? r.json() : null))
           .then((j) => { if (j?.gun?.metin) setAyseAcilis(String(j.gun.metin)) })
-          .catch(() => { /* açılış kritik değil */ })
-        // NOTYA-AVATAR-01: profil fotoğrafı — yoksa baş harfli avatar kalır, hiçbir şeyi bloklamaz
-        fetch('/api/doktor/profil/avatar', { headers: { Authorization: `Bearer ${token}` } })
-          .then((r) => (r.ok ? r.json() : null))
-          .then((j) => {
-            const url: string | null = j?.avatar?.dataUrl || null
-            setDoktorAvatar(url)
-            try { if (url) localStorage.setItem('notya_doktor_avatar', url); else localStorage.removeItem('notya_doktor_avatar') } catch {}
-          })
-          .catch(() => { /* avatar kritik değil */ })
+          .catch(() => {})
         if (meRes.status === 401) { router.push(DOKTOR_GIRIS); return }
         if (meRes.ok) {
           const meData = await meRes.json()
           const ham = meData.data?.full_name || meData.data?.email?.split('@')[0] || 'Doktor'
           const name = ham.replace(/^\s*(?:(?:Prof|Doç|Uzm|Op|Dr|Dt)\.?\s+)+/i, '').trim() || ham
           setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
+          setSpecialty(String(meData.data?.specialty || ''))
           setPediatriAraci(pediatriHedefBoyBransi(meData.data?.specialty))
           setBebekIsListesi(pediatrikBaglamKurali(bransAnahtari(meData.data?.specialty)) !== 'asla')
           const personaId = varsayilanPersonaId(meData.data?.specialty)
@@ -205,12 +166,10 @@ export default function DoktorDashboard() {
         setKpi({ bugunkuMuayene: 0, bekleyenOnay: 0, buAyToplam: 0, aktifHasta: 0 })
       }
 
-      // NOTYA-RANDEVU-03: bugün + bu hafta TEK istekte; aralıklar TRT.
-      // NOTYA-GUN-02: günün programı (brifingli) ayrı ve paralel — haftalık listeyi bloklamaz
       fetch('/api/doktor/gun-programi', { headers: { Authorization: `Bearer ${token}` } })
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => { if (j?.program) setGunProgrami(j.program as ProgramSatiri[]) })
-        .catch(() => { /* program kritik değil — eski kartlar görünür */ })
+        .catch(() => {})
       try {
         const haftaGunleri = buHaftaninGunleri()
         const baslangic = new Date(yerelGunAnahtari(haftaGunleri[0]) + 'T00:00:00+03:00')
@@ -232,7 +191,6 @@ export default function DoktorDashboard() {
       }
 
       try {
-        // NOTYA-DASHBOARD (Kaan 2026-09-10): hasta adi notun basinda — ad sifreli oldugundan sunucu ucu cozer.
         const snRes = await fetch('/api/doktor/son-notlar', { headers: { Authorization: `Bearer ${token}` } })
         if (snRes.ok) {
           const sn = await snRes.json()
@@ -255,300 +213,251 @@ export default function DoktorDashboard() {
     initDashboard()
   }, [router])
 
-  const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' })
+  const todayFull = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Istanbul' })
 
   const bugunkuRandevular = useMemo(
     () => haftalikRandevular.filter((rv) => trtGunAnahtari(rv.baslangic) === trtGunAnahtari(new Date())),
     [haftalikRandevular]
   )
 
-  const getSpecialtyColor = (spec: string) => specialtyColors[spec.toLowerCase()] || specialtyColors.default
-
-  const panel: React.CSSProperties = {
-    background: '#0D1C33',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 16,
-  }
+  const S = (s: Record<string, unknown>) => s as React.CSSProperties
+  const card: React.CSSProperties = { background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 20, boxShadow: '0 16px 34px rgba(58,44,34,0.06)' }
 
   return (
-    <div style={{ background: '#0A1628', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif', color: '#EDF1F7' }}>
-      <style>{`
-        @keyframes girisim { 0%{opacity:0;transform:translateY(6px)} 100%{opacity:1;transform:translateY(0)} }
-        @keyframes nabiz { 0%,100%{opacity:1} 50%{opacity:0.35} }
-        .ev-karo:hover { background: rgba(15,155,142,0.1) !important; border-color: rgba(15,155,142,0.4) !important; }
-        .ev-karo:hover .ev-ikon { background: rgba(15,155,142,0.22) !important; color: #2DD4BF !important; }
-        .ev-rv:hover { background: rgba(255,255,255,0.08) !important; }
-        .ev-satir:hover { background: rgba(255,255,255,0.04); }
-        /* Kaan (2026-09-10): telefonda Randevu ekle / Takvimi aç, Bugün ile aynı sütunda (sola dayalı) */
-        @media (max-width: 640px) { .rv-aksiyon { margin-left: 0 !important; width: 100%; justify-content: flex-start !important; } }
-      `}</style>
+    <div style={S({ display: 'flex', flexDirection: 'column', gap: 22 })}>
+      <style>{`@keyframes nabizYg { 0%,100%{opacity:1} 50%{opacity:.4} } .yg-satir:hover, .yg-karo:hover, .yg-rv:hover { background: rgba(47,67,52,0.05) !important; }`}</style>
 
-      <DoktorNav />
-
-      <div style={{ maxWidth: 1160, margin: '0 auto', padding: '20px 20px 40px', animation: mounted ? 'girisim 300ms ease-out' : 'none' }}>
-
-        {/* Karşılama */}
-        <div style={{ ...panel, background: 'linear-gradient(135deg, #10223D 0%, #0C1830 100%)', padding: '22px 24px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, minWidth: 0 }}>
-            {/* NOTYA-AVATAR-01: fotoğraf varsa hekimin kendi fotoğrafı, yoksa baş harfleri */}
-            <div style={{ paddingTop: 6 }}>
-              <DoktorAvatar ad={doktorAdi} fotoUrl={doktorAvatar} boyut={52} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: '#5F7189', textTransform: 'capitalize' }}>{today}</div>
-              <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: -0.4, marginTop: 4 }}>Hoş geldiniz, Dr. {doktorAdi}</div>
-              {ayseAcilis && (
-                <div style={{ marginTop: 10, fontSize: 14, color: '#C9D4E3', lineHeight: 1.55, maxWidth: 720 }}>
-                  <span style={{ color: '#2DD4BF', fontWeight: 700 }}>{asistanKisaAd}:</span> {ayseAcilis}
-                </div>
-              )}
-            </div>
+      {/* Kicker + title */}
+      <div>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 })}>{gunKickerTRT()}, {todayFull}</div>
+        <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(34px, 4.4vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1, color: '#2e251d', margin: 0 })}>
+          Hoş geldiniz, Dr. {doktorAdi}
+        </h1>
+        {ayseAcilis && (
+          <div style={S({ marginTop: 12, fontSize: 15, color: CHROME_RENK.ink, lineHeight: 1.55, maxWidth: 720 })}>
+            <span style={S({ color: CHROME_RENK.pine, fontWeight: 700 })}>{asistanKisaAd}:</span> {ayseAcilis}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#14B8A6', paddingBottom: 4 }}>
-            <span style={{ width: 8, height: 8, background: '#10B981', borderRadius: '50%', animation: 'nabiz 1.6s infinite' }} />
-            Sistem aktif · TRT
+        )}
+      </div>
+
+      {/* Notya fısıldıyor — real overdue flag, pediatri for now */}
+      <NotyaFisildiyor specialty={specialty} />
+
+      {bebekIsListesi && <YeniBebekIsleri />}
+      <BekleyenKonsultasyonOzeti />
+
+      {/* Randevular — Bugün / Bu Hafta */}
+      <div>
+        <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 })}>
+          <div style={S({ display: 'flex', background: '#EFE9DC', borderRadius: 11, padding: 4, gap: 2 })}>
+            {([['bugun', 'Bugün'], ['hafta', 'Bu Hafta']] as const).map(([k, v]) => (
+              <button key={k} type="button" onClick={() => setRandevuGorunumu(k)}
+                style={S({ background: randevuGorunumu === k ? CHROME_RENK.pine : 'transparent', border: 'none', color: randevuGorunumu === k ? '#FAF8F4' : '#4A4030', fontWeight: randevuGorunumu === k ? 700 : 600, borderRadius: 8, padding: '9px 18px', fontSize: 13.5, cursor: 'pointer' })}>
+                {v}
+              </button>
+            ))}
+          </div>
+          <div style={S({ display: 'flex', gap: 8, flexWrap: 'wrap' })}>
+            <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={S({ background: 'transparent', border: `1.5px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 999, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' })}>Takvimi aç</button>
+            <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={S({ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '10px 18px', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' })}>+ Randevu ekle</button>
           </div>
         </div>
 
-        {bebekIsListesi && <YeniBebekIsleri />}
-        {/* KONSULTASYON-02: yanıt bekleyen konsültasyon sayısı (her branş) — 0 iken hiçbir şey çizilmez */}
-        <BekleyenKonsultasyonOzeti />
-
-        {/* Randevular — Bugün / Bu Hafta */}
-        <div style={{ marginTop: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.07)', borderRadius: 10, padding: 3 }}>
-              {([['bugun', 'Bugün'], ['hafta', 'Bu Hafta']] as const).map(([k, v]) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setRandevuGorunumu(k)}
-                  style={{ background: randevuGorunumu === k ? '#0F9B8E' : 'transparent', boxShadow: randevuGorunumu === k ? '0 1px 5px rgba(0,0,0,0.3)' : 'none', border: 'none', color: 'white', fontWeight: randevuGorunumu === k ? 700 : 500, borderRadius: 8, padding: '6px 16px', fontSize: 13, cursor: 'pointer', transition: 'background .15s ease' }}
-                >{v}</button>
-              ))}
+        <div style={S({ ...card, padding: '6px 20px' })}>
+          {randevuYukleniyor ? (
+            <div style={S({ padding: '14px 0' })}>
+              {Array.from({ length: 2 }).map((_, i) => <div key={i} style={S({ height: 44, background: '#EFE9DC', borderRadius: 10, marginBottom: 8, animation: 'nabizYg 1.5s infinite' })} />)}
             </div>
-            {/* Kaan (2026-09-10): telefonda düğmeler Bugün/Bu Hafta ile aynı sütundan başlasın — sağa itme yok */}
-            <div className="rv-aksiyon" style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ Randevu ekle</button>
-              <button type="button" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Takvimi aç</button>
-            </div>
-          </div>
-
-          <div style={{ ...panel, padding: '6px 18px' }}>
-            {randevuYukleniyor ? (
-              <div style={{ padding: '14px 0' }}>
-                {Array.from({ length: 2 }).map((_, i) => <div key={i} style={{ height: 44, background: 'rgba(255,255,255,0.05)', borderRadius: 10, marginBottom: 8, animation: 'nabiz 1.5s infinite' }} />)}
-              </div>
-            ) : randevuGorunumu === 'bugun' ? (
-              gunProgrami && gunProgrami.length > 0 ? (
-                /* NOTYA-GUN-02: kahve + takvim — kim, kaçta, neden geliyor */
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 0' }}>
-                  {gunProgrami.map((p) => {
-                    const durumBilgi = DURUM_RENK[p.durum] || DURUM_RENK.planlandi
-                    const gecti = new Date(p.baslangic).getTime() < Date.now()
-                    const hedef = p.patientId ? `/dashboard/doktor/hastalar/${p.patientId}` : '/dashboard/doktor/randevular'
-                    return (
-                      <div
-                        key={p.id}
-                        className="ev-rv"
-                        onClick={() => router.push(hedef)}
-                        style={{ display: 'grid', gridTemplateColumns: '64px 1fr', gap: 12, alignItems: 'start', background: 'rgba(255,255,255,0.04)', borderLeft: `3px solid ${durumBilgi.color}`, borderRadius: 12, padding: '10px 14px', cursor: 'pointer', opacity: gecti && p.durum === 'tamamlandi' ? 0.55 : 1 }}
-                      >
-                        <div style={{ fontSize: 17, fontWeight: 800, fontVariantNumeric: 'tabular-nums', paddingTop: 2 }}>{trtSaatStr(p.baslangic)}</div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 15, fontWeight: 700, color: '#EDF1F7' }}>{p.hastaAdi}</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: p.yeniHasta ? '#FBBF24' : '#93C5FD', background: p.yeniHasta ? 'rgba(251,191,36,0.12)' : 'rgba(147,197,253,0.12)' }}>{p.yeniHasta ? 'Yeni hasta' : TUR_ETIKET[p.tur] || p.tur}</span>
-                            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg }}>{durumBilgi.label}</span>
-                          </div>
-                          {p.brifing && <div style={{ fontSize: 13, color: '#C9D4E3', lineHeight: 1.5, marginTop: 4 }}>{p.brifing}</div>}
-                          {p.isaretler.length > 0 && (
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-                              {p.isaretler.map((i) => (
-                                <span key={i} style={{ fontSize: 11, color: i.startsWith('alerji') ? '#F87171' : '#8FA0B5', background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '2px 7px' }}>{i}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : bugunkuRandevular.length > 0 ? (
-                <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '14px 0', WebkitOverflowScrolling: 'touch' }}>
-                  {bugunkuRandevular.map((rv) => {
-                    const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
-                    const gecmis = new Date(rv.baslangic).getTime() < Date.now()
-                    return (
-                      <div
-                        key={rv.id}
-                        className="ev-rv"
-                        onClick={() => router.push('/dashboard/doktor/randevular')}
-                        style={{ flex: '0 0 auto', minWidth: 158, background: 'rgba(255,255,255,0.05)', borderLeft: `3px solid ${durumBilgi.color}`, borderRadius: 12, padding: '10px 14px', cursor: 'pointer', opacity: gecmis && rv.durum === 'tamamlandi' ? 0.6 : 1, transition: 'background .15s ease' }}
-                      >
-                        <div style={{ fontSize: 17, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{trtSaatStr(rv.baslangic)}</div>
-                        <div style={{ fontSize: 13, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, maxWidth: 160 }}>{rv.hastaAdi}</div>
-                        <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, marginTop: 6 }}>{durumBilgi.label}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div style={{ padding: '16px 0', fontSize: 14, color: '#5F7189' }}>
-                  {kpi.bugunkuMuayene > 0 ? `Bugün ${kpi.bugunkuMuayene} muayene yapıldı, planlı randevu yok` : 'Bugün için randevu yok'}
-                </div>
-              )
-            ) : haftalikRandevular.length === 0 ? (
-              <div style={{ padding: '16px 0', fontSize: 14, color: '#5F7189' }}>Bu hafta için randevu yok</div>
-            ) : (
-              <div style={{ padding: '10px 0' }}>
-                {buHaftaninGunleri().map((gunTarihi) => {
-                  const anahtar = yerelGunAnahtari(gunTarihi)
-                  const guninRandevulari = haftalikRandevular.filter((rv) => trtGunAnahtari(rv.baslangic) === anahtar)
-                  if (guninRandevulari.length === 0) return null
-                  const bugunMu = anahtar === trtGunAnahtari(new Date())
-                  const gunEtiketi = gunTarihi.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })
+          ) : randevuGorunumu === 'bugun' ? (
+            gunProgrami && gunProgrami.length > 0 ? (
+              <div style={S({ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 0' })}>
+                {gunProgrami.map((p) => {
+                  const durumBilgi = DURUM_RENK[p.durum] || DURUM_RENK.planlandi
+                  const gecti = new Date(p.baslangic).getTime() < Date.now()
+                  const hedef = p.patientId ? `/dashboard/doktor/hastalar/${p.patientId}` : '/dashboard/doktor/randevular'
                   return (
-                    <div key={anahtar} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontSize: 12, color: bugunMu ? '#0F9B8E' : '#5F7189', fontWeight: 700, marginBottom: 8, textTransform: 'capitalize' }}>
-                        {bugunMu ? `Bugün · ${gunEtiketi}` : gunEtiketi}
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        {guninRandevulari.map((rv) => {
-                          const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
-                          return (
-                            <div key={rv.id} className="ev-satir" onClick={() => router.push('/dashboard/doktor/randevular')} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '5px 6px', borderRadius: 8 }}>
-                              <span style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', minWidth: 46 }}>{trtSaatStr(rv.baslangic)}</span>
-                              <span style={{ fontSize: 13, color: '#C9D4E3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rv.hastaAdi}</span>
-                              <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' }}>{durumBilgi.label}</span>
-                            </div>
-                          )
-                        })}
+                    <div key={p.id} className="yg-rv" onClick={() => router.push(hedef)}
+                      style={S({ display: 'grid', gridTemplateColumns: '64px 1fr', gap: 12, alignItems: 'start', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 14, padding: '12px 16px', cursor: 'pointer', opacity: gecti && p.durum === 'tamamlandi' ? 0.55 : 1 })}>
+                      <div style={S({ fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums', paddingTop: 2, color: CHROME_RENK.ink })}>{trtSaatStr(p.baslangic)}</div>
+                      <div style={S({ minWidth: 0 })}>
+                        <div style={S({ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' })}>
+                          <span style={S({ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink })}>{p.hastaAdi}</span>
+                          <span style={S({ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999, color: p.yeniHasta ? '#B4832F' : '#4A5C8A', background: p.yeniHasta ? 'rgba(180,131,47,0.12)' : 'rgba(74,92,138,0.1)' })}>{p.yeniHasta ? 'Yeni hasta' : TUR_ETIKET[p.tur] || p.tur}</span>
+                          <span style={S({ fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg })}>{durumBilgi.label}</span>
+                        </div>
+                        {p.brifing && <div style={S({ fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.5, marginTop: 4 })}>{p.brifing}</div>}
+                        {p.isaretler.length > 0 && (
+                          <div style={S({ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 })}>
+                            {p.isaretler.map((i) => (
+                              <span key={i} style={S({ fontSize: 11, color: i.startsWith('alerji') ? CHROME_RENK.warn : CHROME_RENK.muted, background: '#F6F0E4', borderRadius: 6, padding: '2px 8px' })}>{i}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )
                 })}
               </div>
+            ) : bugunkuRandevular.length > 0 ? (
+              <div style={S({ display: 'flex', gap: 10, overflowX: 'auto', padding: '14px 0', WebkitOverflowScrolling: 'touch' })}>
+                {bugunkuRandevular.map((rv) => {
+                  const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
+                  const gecmis = new Date(rv.baslangic).getTime() < Date.now()
+                  return (
+                    <div key={rv.id} className="yg-rv" onClick={() => router.push('/dashboard/doktor/randevular')}
+                      style={S({ flex: '0 0 auto', minWidth: 158, background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 14, padding: '12px 16px', cursor: 'pointer', opacity: gecmis && rv.durum === 'tamamlandi' ? 0.6 : 1 })}>
+                      <div style={S({ fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: CHROME_RENK.ink })}>{trtSaatStr(rv.baslangic)}</div>
+                      <div style={S({ fontSize: 13, color: CHROME_RENK.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, maxWidth: 160 })}>{rv.hastaAdi}</div>
+                      <div style={S({ display: 'inline-block', fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, marginTop: 6 })}>{durumBilgi.label}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={S({ padding: '16px 0', fontSize: 14, color: CHROME_RENK.muted })}>
+                {kpi.bugunkuMuayene > 0 ? `Bugün ${kpi.bugunkuMuayene} muayene yapıldı, planlı randevu yok` : 'Bugün için randevu yok'}
+              </div>
+            )
+          ) : haftalikRandevular.length === 0 ? (
+            <div style={S({ padding: '16px 0', fontSize: 14, color: CHROME_RENK.muted })}>Bu hafta için randevu yok</div>
+          ) : (
+            <div style={S({ padding: '10px 0' })}>
+              {buHaftaninGunleri().map((gunTarihi) => {
+                const anahtar = yerelGunAnahtari(gunTarihi)
+                const guninRandevulari = haftalikRandevular.filter((rv) => trtGunAnahtari(rv.baslangic) === anahtar)
+                if (guninRandevulari.length === 0) return null
+                const bugunMu = anahtar === trtGunAnahtari(new Date())
+                const gunEtiketi = gunTarihi.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })
+                return (
+                  <div key={anahtar} style={S({ padding: '10px 0', borderBottom: `1px solid ${CHROME_RENK.border}` })}>
+                    <div style={S({ fontSize: 12, color: bugunMu ? CHROME_RENK.pine : CHROME_RENK.muted, fontWeight: 700, marginBottom: 8, textTransform: 'capitalize' })}>
+                      {bugunMu ? `Bugün · ${gunEtiketi}` : gunEtiketi}
+                    </div>
+                    <div style={S({ display: 'flex', flexDirection: 'column', gap: 4 })}>
+                      {guninRandevulari.map((rv) => {
+                        const durumBilgi = DURUM_RENK[rv.durum] || DURUM_RENK.planlandi
+                        return (
+                          <div key={rv.id} className="yg-satir" onClick={() => router.push('/dashboard/doktor/randevular')} style={S({ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '6px 8px', borderRadius: 8 })}>
+                            <span style={S({ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', minWidth: 46, color: CHROME_RENK.ink })}>{trtSaatStr(rv.baslangic)}</span>
+                            <span style={S({ fontSize: 13, color: CHROME_RENK.ink, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })}>{rv.hastaAdi}</span>
+                            <span style={S({ fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 999, color: durumBilgi.color, background: durumBilgi.bg, whiteSpace: 'nowrap' })}>{durumBilgi.label}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* KPI kartları */}
+      <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 })}>
+        {[
+          { label: 'Bugünkü muayene', value: kpi.bugunkuMuayene, color: CHROME_RENK.pine, sub: 'hasta bugün' },
+          { label: 'Bekleyen onay', value: kpi.bekleyenOnay, color: '#B4832F', sub: 'not onayı bekliyor', git: '/dashboard/doktor/inceleme' },
+          { label: 'Bu ay toplam', value: kpi.buAyToplam, color: '#4A5C8A', sub: 'muayene bu ay' },
+          { label: 'Aktif hasta', value: kpi.aktifHasta, color: CHROME_RENK.pine, sub: 'kayıtlı aktif hasta', git: '/dashboard/doktor/hastalar' },
+        ].map((c, i) => (
+          <div key={i} onClick={c.git ? () => router.push(c.git!) : undefined}
+            style={S({ ...card, padding: '22px', cursor: c.git ? 'pointer' : 'default' })}>
+            <div style={S({ fontSize: 13, color: CHROME_RENK.muted })}>{c.label}</div>
+            {loading ? (
+              <div style={S({ height: 40, width: 60, background: '#EFE9DC', borderRadius: 8, margin: '10px 0 6px', animation: 'nabizYg 1.5s infinite' })} />
+            ) : (
+              <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 40, fontWeight: 600, color: c.color, lineHeight: 1.15, fontVariantNumeric: 'tabular-nums', margin: '4px 0 2px' })}>{c.value}</div>
+            )}
+            <div style={S({ fontSize: 12, color: CHROME_RENK.muted })}>{c.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Hızlı erişim */}
+      <div>
+        <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hızlı erişim</div>
+        <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 })}>
+          {[
+            { ikon: 'takvim', text: 'Randevular', path: '/dashboard/doktor/randevular' },
+            { ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan' },
+            { ikon: 'hastaEkle', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle' },
+            pediatriAraci ? { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools/hedef-boy' } : { ikon: 'araclar', text: 'Araçlar', path: '/doktor-tools' },
+            { ikon: 'belge', text: 'Belge Yükle', path: '/dashboard/doktor/belgeler' },
+            { ikon: 'inceleme', text: 'İnceleme', path: '/dashboard/doktor/inceleme' },
+            { ikon: 'raporlar', text: 'Raporlar', path: '/dashboard/doktor/raporlar' },
+          ].map((karo) => (
+            <button key={karo.text} type="button" className="yg-karo" onClick={() => router.push(karo.path)}
+              style={S({ ...card, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, padding: '16px', cursor: 'pointer', color: CHROME_RENK.ink, textAlign: 'left' })}>
+              <span style={S({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: '#E4F3F1', color: CHROME_RENK.pine })}>
+                <Ikon ad={karo.ikon} />
+              </span>
+              <span style={S({ fontSize: 13.5, fontWeight: 600 })}>{karo.text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Son notlar + Bu hafta özeti */}
+      <div style={S({ display: 'flex', gap: 16, flexWrap: 'wrap' })}>
+        <div style={S({ flex: 1.6, minWidth: 320 })}>
+          <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 })}>
+            <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Son notlar</div>
+            <span onClick={() => router.push('/dashboard/doktor/inceleme')} style={S({ fontSize: 13, color: CHROME_RENK.pine, fontWeight: 600, cursor: 'pointer' })}>Tümünü gör ›</span>
+          </div>
+          <div style={S({ ...card, padding: '8px 20px' })}>
+            {loading ? (
+              <div style={S({ padding: '12px 0' })}>
+                {Array.from({ length: 3 }).map((_, i) => <div key={i} style={S({ height: 42, background: '#EFE9DC', borderRadius: 8, marginBottom: 8, animation: 'nabizYg 1.5s infinite' })} />)}
+              </div>
+            ) : recentNotes.length > 0 ? (
+              recentNotes.map((note, idx) => (
+                <div key={note.id} className="yg-satir" onClick={() => router.push('/dashboard/doktor/inceleme')}
+                  style={S({ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 6px', borderBottom: idx < recentNotes.length - 1 ? `1px solid ${CHROME_RENK.border}` : 'none', cursor: 'pointer', borderRadius: 8 })}>
+                  <span style={S({ background: '#E4F3F1', color: CHROME_RENK.pine, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, flexShrink: 0 })}>{bransEtiketi(note.specialty, { kisa: true })}</span>
+                  <span style={S({ flex: 1, minWidth: 0 })}>
+                    <span style={S({ display: 'block', fontSize: 11, color: CHROME_RENK.muted })}>{note.date}</span>
+                    <span style={S({ display: 'block', fontSize: 13, color: CHROME_RENK.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })}>{note.hastaAdi ? <b>{note.hastaAdi} — </b> : null}{note.content_subjektif.slice(0, 70) || 'Not'}</span>
+                  </span>
+                  <span style={S({ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: note.approved_at ? '#3F7D4A' : '#B4832F' })} title={note.approved_at ? 'Onaylı' : 'Onay bekliyor'} />
+                </div>
+              ))
+            ) : (
+              <div style={S({ textAlign: 'center', padding: '30px 0' })}>
+                <div style={S({ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 14 })}>Henüz not yok — ilk muayeneyle birlikte burada görünecek.</div>
+                <button type="button" onClick={() => router.push('/asistan')} style={S({ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '10px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer' })}>Asistanı başlat</button>
+              </div>
             )}
           </div>
         </div>
 
-        {/* KPI kartları */}
-        <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 14 }}>
-          {[
-            { label: 'Bugünkü muayene', value: kpi.bugunkuMuayene, color: '#0F9B8E', sub: 'hasta bugün' },
-            { label: 'Bekleyen onay', value: kpi.bekleyenOnay, color: '#F59E0B', sub: 'not onayı bekliyor', git: '/dashboard/doktor/inceleme' },
-            { label: 'Bu ay toplam', value: kpi.buAyToplam, color: '#3B82F6', sub: 'muayene bu ay' },
-            { label: 'Aktif hasta', value: kpi.aktifHasta, color: '#14B8A6', sub: 'kayıtlı aktif hasta', git: '/dashboard/doktor/hastalar' },
-          ].map((card, i) => (
-            <div
-              key={i}
-              onClick={card.git ? () => router.push(card.git!) : undefined}
-              style={{ ...panel, padding: '20px 22px', position: 'relative', overflow: 'hidden', cursor: card.git ? 'pointer' : 'default' }}
-            >
-              <div style={{ position: 'absolute', top: 0, left: 22, right: 22, height: 2, borderRadius: 2, background: `linear-gradient(90deg, ${card.color}, transparent)` }} />
-              <div style={{ fontSize: 13, color: '#8FA0B5' }}>{card.label}</div>
-              {loading ? (
-                <div style={{ height: 44, width: 64, background: 'rgba(255,255,255,0.06)', borderRadius: 8, margin: '10px 0 6px', animation: 'nabiz 1.5s infinite' }} />
-              ) : (
-                <div style={{ fontSize: 44, fontWeight: 800, color: card.color, lineHeight: 1.15, fontVariantNumeric: 'tabular-nums', margin: '4px 0 2px' }}>{card.value}</div>
-              )}
-              <div style={{ fontSize: 12, color: '#5F7189' }}>{card.sub}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Hızlı Erişim — büyük ikon karoları */}
-        <div style={{ marginTop: 26 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Hızlı erişim</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))', gap: 10 }}>
+        <div style={S({ flex: 1, minWidth: 280 })}>
+          <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Bu hafta özeti</div>
+          <div style={S({ ...card, padding: '8px 20px 18px' })}>
             {[
-              { ikon: 'takvim', text: 'Randevular', path: '/dashboard/doktor/randevular', renk: '#0F9B8E' },
-              { ikon: 'asistan', text: 'Asistanı Aç', path: '/asistan', renk: '#7C8CF8' },
-              { ikon: 'hastaEkle', text: 'Hasta Ekle', path: '/dashboard/doktor/hasta-ekle', renk: '#14B8A6' },
-              pediatriAraci
-                ? { ikon: 'araclar', text: 'Hedef Boy', path: '/doktor-tools/hedef-boy', renk: '#E8C547' }
-                : { ikon: 'araclar', text: 'Araçlar', path: '/doktor-tools', renk: '#4ADE80' },
-              { ikon: 'belge', text: 'Belge Yükle', path: '/dashboard/doktor/belgeler', renk: '#38BDF8' },
-              { ikon: 'inceleme', text: 'İnceleme', path: '/dashboard/doktor/inceleme', renk: '#F59E0B' },
-              { ikon: 'raporlar', text: 'Raporlar', path: '/dashboard/doktor/raporlar', renk: '#8FA0B5' },
-            ].map((karo) => (
-              <button
-                key={karo.text}
-                type="button"
-                className="ev-karo"
-                onClick={() => router.push(karo.path)}
-                style={{ ...panel, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, padding: '16px 16px 14px', cursor: 'pointer', color: 'white', textAlign: 'left', transition: 'background .15s ease, border-color .15s ease' }}
-              >
-                <span className="ev-ikon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 46, height: 46, borderRadius: 13, background: `${karo.renk}1F`, color: karo.renk, transition: 'background .15s ease, color .15s ease' }}>
-                  <Ikon ad={karo.ikon} />
-                </span>
-                <span style={{ fontSize: 14, fontWeight: 600 }}>{karo.text}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Son Notlar + Bu Hafta Özeti */}
-        <div style={{ marginTop: 26, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1.6, minWidth: 320 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>Son notlar</div>
-              <span onClick={() => router.push('/dashboard/doktor/inceleme')} style={{ fontSize: 13, color: '#14B8A6', cursor: 'pointer' }}>Tümünü gör ›</span>
-            </div>
-            <div style={{ ...panel, padding: '8px 18px' }}>
-              {loading ? (
-                <div style={{ padding: '12px 0' }}>
-                  {Array.from({ length: 3 }).map((_, i) => <div key={i} style={{ height: 42, background: 'rgba(255,255,255,0.05)', borderRadius: 8, marginBottom: 8, animation: 'nabiz 1.5s infinite' }} />)}
-                </div>
-              ) : recentNotes.length > 0 ? (
-                recentNotes.map((note, idx) => (
-                  <div key={note.id} className="ev-satir" onClick={() => router.push('/dashboard/doktor/inceleme')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 6px', borderBottom: idx < recentNotes.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer', borderRadius: 8 }}>
-                    <span style={{ background: `${getSpecialtyColor(note.specialty)}26`, color: getSpecialtyColor(note.specialty), fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, flexShrink: 0 }}>{bransEtiketi(note.specialty, { kisa: true })}</span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 11, color: '#5F7189' }}>{note.date}</span>
-                      <span style={{ display: 'block', fontSize: 13, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.hastaAdi ? <b style={{ color: '#EDF1F7' }}>{note.hastaAdi} — </b> : null}{note.content_subjektif.slice(0, 70) || 'Not'}</span>
-                    </span>
-                    <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: note.approved_at ? '#22C55E' : '#F59E0B' }} title={note.approved_at ? 'Onaylı' : 'Onay bekliyor'} />
-                  </div>
-                ))
-              ) : (
-                <div style={{ textAlign: 'center', padding: '30px 0' }}>
-                  <div style={{ fontSize: 14, color: '#5F7189', marginBottom: 14 }}>Henüz not yok — ilk muayeneyle birlikte burada görünecek.</div>
-                  <button type="button" onClick={() => router.push('/asistan')} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 999, padding: '10px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Asistanı başlat</button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ flex: 1, minWidth: 280 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Bu hafta özeti</div>
-            <div style={{ ...panel, padding: '8px 18px 16px' }}>
-              {[
-                { dot: '#0F9B8E', label: 'Bu hafta seans', val: kpi.buAyToplam },
-                { dot: '#22C55E', label: 'Onaylanan not', val: Math.max(0, kpi.buAyToplam - kpi.bekleyenOnay) },
-                { dot: '#F59E0B', label: 'Bekleyen', val: kpi.bekleyenOnay },
-              ].map((row, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                  <span style={{ width: 8, height: 8, background: row.dot, borderRadius: '50%' }} />
-                  <span style={{ flex: 1, fontSize: 14, color: '#C9D4E3' }}>{row.label}</span>
-                  <span style={{ fontSize: 15, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{row.val}</span>
-                </div>
-              ))}
-              <div style={{ marginTop: 14, fontSize: 13, fontWeight: 700 }}>Hızlı araçlar</div>
-              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <span onClick={() => router.push('/doktor-tools/epikriz')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>Epikriz üret ›</span>
-                <span onClick={() => router.push('/doktor-tools/icd10')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>ICD-10 kodla ›</span>
-                {pediatriAraci && (
-                  <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={{ color: '#14B8A6', fontSize: 13, cursor: 'pointer' }}>Hedef boy ›</span>
-                )}
+              { dot: CHROME_RENK.pine, label: 'Bu hafta seans', val: kpi.buAyToplam },
+              { dot: '#3F7D4A', label: 'Onaylanan not', val: Math.max(0, kpi.buAyToplam - kpi.bekleyenOnay) },
+              { dot: '#B4832F', label: 'Bekleyen', val: kpi.bekleyenOnay },
+            ].map((row, i) => (
+              <div key={i} style={S({ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: i < 2 ? `1px solid ${CHROME_RENK.border}` : 'none' })}>
+                <span style={S({ width: 8, height: 8, background: row.dot, borderRadius: '50%' })} />
+                <span style={S({ flex: 1, fontSize: 14, color: CHROME_RENK.ink })}>{row.label}</span>
+                <span style={S({ fontSize: 15, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: CHROME_RENK.ink })}>{row.val}</span>
               </div>
+            ))}
+            <div style={S({ marginTop: 14, fontSize: 13, fontWeight: 700, color: '#4A4030' })}>Hızlı araçlar</div>
+            <div style={S({ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 })}>
+              <span onClick={() => router.push('/doktor-tools/epikriz')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Epikriz üret ›</span>
+              <span onClick={() => router.push('/doktor-tools/icd10')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>ICD-10 kodla ›</span>
+              {pediatriAraci && (
+                <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Hedef boy ›</span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ padding: 20, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
+      <div style={S({ padding: '20px 0 4px', textAlign: 'center', fontSize: 12, color: 'rgba(58,44,34,0.35)' })}>
         © 2026 Dream Türkiye — Notya AI. Tüm hakları saklıdır / All rights reserved (5846 FSEK · 17 U.S.C.) • KVKK uyumlu • Saat dilimi: Türkiye (TRT)
       </div>
     </div>

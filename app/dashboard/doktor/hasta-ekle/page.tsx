@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import IdCardCapture from '@/components/doktor/IdCardCapture';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
@@ -284,7 +283,6 @@ export default function HastaEklePage() {
 
   return (
     <div style={{ backgroundColor: '#060C18', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '28px 20px' }}>
         <a href="/dashboard/doktor/hastalar" style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Hastalar</a>
         <h1 style={{ fontSize: 28, fontWeight: 600, color: '#fff', margin: '10px 0 8px' }}>Yeni Hasta</h1>

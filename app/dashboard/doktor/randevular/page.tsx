@@ -16,7 +16,6 @@
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { resmiTatilMi } from '@/lib/randevu/resmiTatiller';
 import { randevuAksiyonlari, REAKTIVASYON_DURUMU } from '@/lib/randevu/randevuDurum';
@@ -762,7 +761,6 @@ export default function RandevularPage() {
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <DoktorNav />
       <style>{`
         @media (max-width: 1023px) { .fv-aside { display: none !important; } }
         @media (max-width: 639px) {

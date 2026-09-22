@@ -4,7 +4,6 @@
  * Şifre/TC şifreli saklanır, ekrana asla açık dönmez. e-imza PIN'i işlem bazlıdır — burada istenmez.
  */
 import React, { useEffect, useState } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 
 interface Goruntu { tesisKodu: number | null; bransKodu: number | null; doktorTcMaske: string; sifreVar: boolean; ortam: 'test' | 'gercek'; imzaYontemi: 'token' | 'mobil' | 'yok'; sonTest: { tarih: string; durum: string; mesaj: string } | null; eksikler: string[]; hazir: boolean; gonderebilir: boolean }
@@ -70,7 +69,6 @@ export default function EReceteAyarPage() {
 
   return (
     <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <DoktorNav />
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
         <a href="/dashboard/doktor/ayarlar" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
         <h1 style={{ fontSize: 22, margin: '10px 0 6px' }}>💊 e-Reçete</h1>

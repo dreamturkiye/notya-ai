@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 import { bransGoruntulemeGruplari, imagingDisplayLabel, imagingModalityMeta } from '@/lib/doktor/imagingModalities';
 import { bransAnahtari } from '@/lib/specialties/kapsam';
@@ -302,7 +301,6 @@ const Page = () => {
 
   return (
     <div style={{ background: '#060C18', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#fff' }}>
-      <DoktorNav />
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 'calc(100vh - 64px)' }}>
         <div style={{
           width: isMobile ? '100%' : '360px',

@@ -6,7 +6,6 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import DoktorGeriLink from '@/components/doktor/DoktorGeriLink';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import { getAccessTokenAsync, toolsShell, toolsCard, toolsInput } from '@/lib/doktor/toolsUi';
@@ -240,7 +239,6 @@ export default function BelgeAnalizPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '14px 12px' }}>
         <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.35)', color: '#FBBF24', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 700, marginBottom: 12 }}>{UYARI_SERIDI}</div>
         <div className="notya-grid-yigin" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 14 }}>
