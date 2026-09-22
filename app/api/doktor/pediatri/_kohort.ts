@@ -7,8 +7,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { notifyPatientNewPracticeMessage } from '@/lib/portal/notifyPatientEmail'
-import { pediKohortSatirlari, pediHatirlatmaMesaji, PEDI_HATIRLATMA_KONU, type PediKohortBayrak, type PediKohortGirdi } from '@/specialties/pediatri/engines/kohort'
+import { pediKohortSatirlari, type PediKohortGirdi } from '@/specialties/pediatri/engines/kohort'
 import type { AsiKaydi } from '@/specialties/pediatri/engines/asiPlan'
 import type { TaramaKaydi, TaramaSonuc, TaramaTur } from '@/specialties/pediatri/engines/gelisimPlan'
 import type { Olcum } from '@/specialties/pediatri/engines/buyume'
@@ -108,19 +107,4 @@ export async function pediKohortGirdileri(sb: SupabaseClient, doktorId: string, 
 export async function pediKohortVerisi(sb: SupabaseClient, doktorId: string, bugun: string, sadece?: string[]) {
   const { girdiler, taramaTablosu } = await pediKohortGirdileri(sb, doktorId, bugun, sadece)
   return { satirlar: pediKohortSatirlari(girdiler, bugun), toplamCocuk: girdiler.length, taramaTablosu }
-}
-
-/**
- * Tek hastaya hatırlatma. Çağıran, patientId'nin hekimin kohortunda (doctor_id süzgeci) olduğunu ÖNCE doğrulamış olmalı.
- * 7 gün içinde aynı konu gönderildiyse atlar.
- */
-export async function pediHatirlatmaGonder(sb: SupabaseClient, doktorId: string, patientId: string, bayraklar: PediKohortBayrak[]): Promise<'gonderildi' | 'yakin' | 'hata'> {
-  const { data: yakin } = await sb.from('hasta_mesaj_konulari').select('id').eq('doctor_id', doktorId).eq('patient_id', patientId).eq('konu', PEDI_HATIRLATMA_KONU).gte('son_mesaj_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(1)
-  if (yakin?.length) return 'yakin'
-  const m = pediHatirlatmaMesaji(bayraklar)
-  const { data: konu, error } = await sb.from('hasta_mesaj_konulari').insert({ doctor_id: doktorId, patient_id: patientId, konu: m.konu, hasta_klasor: 'gelen', son_mesaj_at: new Date().toISOString(), okundu_hasta: false, okundu_pratik: true }).select('id').single()
-  if (error || !konu) return 'hata'
-  await sb.from('hasta_mesajlar').insert({ konu_id: konu.id, taraf: 'doktor', yazar_user_id: doktorId, metin: m.metin })
-  try { await notifyPatientNewPracticeMessage(sb, { doctorId: doktorId, patientId }) } catch { /* e-posta hatası gönderimi bozmaz */ }
-  return 'gonderildi'
 }

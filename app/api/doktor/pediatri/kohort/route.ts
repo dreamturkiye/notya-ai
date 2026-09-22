@@ -7,7 +7,8 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pediOturum, bugunTr } from '../_ortak'
-import { pediKohortVerisi, pediHatirlatmaGonder } from '../_kohort'
+import { pediKohortVerisi } from '../_kohort'
+import { pediHatirlatmaGonder } from '../_kohortHatirlatma'
 
 export const dynamic = 'force-dynamic'
 

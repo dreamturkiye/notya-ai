@@ -58,7 +58,10 @@ test('kohort hatırlatma: hasta-güvenli (tanı / değer / hafta / ilaç yok) + 
 })
 
 test('kohort API: hasta kimlikleri yalnız doctor_id kapsamlı satırlardan; her sorgu doctor_id ile', () => {
+  // NOTYA-EYLEM-24: yazma yolu (hatırlatma) _kohortHatirlatma.ts'e taşındı (bkz. o dosyanın üstündeki not) — kohort
+  // yüzeyinin bütünü hâlâ iki dosyada birlikte yaşıyor, bu yüzden doctor_id taraması ikisinin birleşimine bakar.
   const src = fs.readFileSync(path.join(KOK, 'app/api/doktor/gebelik/_kohort.ts'), 'utf8')
+    + fs.readFileSync(path.join(KOK, 'app/api/doktor/gebelik/_kohortHatirlatma.ts'), 'utf8')
   const from = src.match(/\.from\('[a-z_]+'\)/g) || []
   const eq = src.match(/\.from\('[a-z_]+'\)\.(select|insert)\([^)]*\)(\.eq\('doctor_id', doctorId\))?/g) || []
   assert.ok(from.length >= 9)

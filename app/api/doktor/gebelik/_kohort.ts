@@ -7,11 +7,10 @@
  */
 import type { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
-import { notifyPatientNewPracticeMessage } from '@/lib/portal/notifyPatientEmail'
 import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
 import { doneWindowIdsFromClinic } from '@/specialties/kadin-dogum/engines/clinic-fit'
 import { addDays } from '@/specialties/kadin-dogum/engines/dates'
-import { kdKohortSatirlari, kdHatirlatmaMesaji, KD_HATIRLATMA_KONU, LOHUSA_GORUNUR_GUN, type KdKohortBayrak, type KdKohortGirdi } from '@/specialties/kadin-dogum/engines/kd-kohort'
+import { kdKohortSatirlari, LOHUSA_GORUNUR_GUN, type KdKohortGirdi } from '@/specialties/kadin-dogum/engines/kd-kohort'
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
@@ -93,16 +92,4 @@ export async function kdKohortVerisi(sb: Sb, doctorId: string, bugun: string, sa
     }
   })
   return { satirlar: kdKohortSatirlari(girdi, bugun), toplamHasta: girdi.length }
-}
-
-/** Tek hastaya hatırlatma. Çağıran, patientId'nin hekime ait olduğunu ÖNCE kdKohortVerisi(doctorId) ile doğrulamış olmalı. */
-export async function kdHatirlatmaGonder(sb: Sb, doctorId: string, patientId: string, bayraklar: KdKohortBayrak[]): Promise<'gonderildi' | 'yakin' | 'hata'> {
-  const { data: yakin } = await sb.from('hasta_mesaj_konulari').select('id').eq('doctor_id', doctorId).eq('patient_id', patientId).eq('konu', KD_HATIRLATMA_KONU).gte('son_mesaj_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(1)
-  if (yakin?.length) return 'yakin'
-  const m = kdHatirlatmaMesaji(bayraklar)
-  const { data: konu, error } = await sb.from('hasta_mesaj_konulari').insert({ doctor_id: doctorId, patient_id: patientId, konu: m.konu, hasta_klasor: 'gelen', son_mesaj_at: new Date().toISOString(), okundu_hasta: false, okundu_pratik: true }).select('id').single()
-  if (error || !konu) return 'hata'
-  await sb.from('hasta_mesajlar').insert({ konu_id: konu.id, taraf: 'doktor', yazar_user_id: doctorId, metin: m.metin })
-  try { await notifyPatientNewPracticeMessage(sb, { doctorId, patientId }) } catch { /* e-posta hatası gönderimi bozmaz */ }
-  return 'gonderildi'
 }
