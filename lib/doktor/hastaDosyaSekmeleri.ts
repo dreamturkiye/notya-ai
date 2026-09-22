@@ -51,6 +51,14 @@ export type HastaDosyaSekmeId =
   | 'kalp-damar'
   | 'radyo'
   | 'konsultasyon'
+  | 'sac-ekimi'
+  | 'medikal-estetik'
+  | 'longevity'
+  | 'fizyoterapi'
+  | 'klinik-psikolog'
+  | 'diyetisyen'
+  | 'ergoterapi'
+  | 'odyoloji'
 
 export type HastaDosyaSekme = { id: HastaDosyaSekmeId; label: string }
 
@@ -60,7 +68,7 @@ const PED_TAB_IDS: ReadonlySet<HastaDosyaSekmeId> = new Set(['buyume', 'mchat', 
 export function ozelBolumBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return false
-  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|çocuk cerrah|cocuk cerrah|cocuk-cerrahisi|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|göğüs cerrah|gogus cerrah|gogus-cerrah|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin|romato|gastro|nefroloji|b[öo]brek hastal|enfeksiyon|infeksiyon|onkolo|genel.?cerrah|plastik|beyin.?cerrah|anestez|reanimasyon|acil.?t[ıi]p|acil tip|radyolo|radiolo/.test(b)
+  return /göz|goz|oftalm|derma|deri ve z|dahiliye|iç hast|ic hast|kadın|kadin|jinek|obstet|pediatri|çocuk sağlığı|cocuk sagligi|çocuk hast|cocuk hast|çocuk cerrah|cocuk cerrah|cocuk-cerrahisi|psikiyatri|ruh sağlığı|ruh sagligi|kulak burun|kulak-burun|\bkbb\b|otolaring|göğüs hastal|gogus-hastalik|gogus hastal|göğüs cerrah|gogus cerrah|gogus-cerrah|kardiyo|kalp|n[öo]roloji|noroloji|[üu]roloji|urology|ortopedi|travmatoloji|orthop|fizik.?tedavi|fiziksel.?t[ıi]p|\bftr\b|spor hekim|spor-hekim|sports medicine|endokrin|romato|gastro|nefroloji|b[öo]brek hastal|enfeksiyon|infeksiyon|onkolo|genel.?cerrah|plastik|beyin.?cerrah|anestez|reanimasyon|acil.?t[ıi]p|acil tip|radyolo|radiolo|sa[cç].?ekim|medikal.?estetik|longevity|fizyoterapi|klinik.?psikolog|diyetisyen|ergoterapi|odyoloji/.test(b)
 }
 
 /**
@@ -448,6 +456,8 @@ export function hastaDosyaSekmeleri(opts: {
   acilTipUygun?: boolean
   /** RADYOLOJI-EXCEPTIONAL-01: doctor specialty radyoloji only */
   radyolojiUygun?: boolean
+  /** KLINIK-AYNA-01 — tek klinik bölüm sekmesi (8 yeni dal). TUS chapter sekmelerine sızmaz. */
+  klinikBolum?: { id: HastaDosyaSekmeId; label: string } | null
   pediatriUygun: boolean
   gebelikUygun: boolean
 }): HastaDosyaSekme[] {
@@ -498,6 +508,7 @@ export function hastaDosyaSekmeleri(opts: {
   if (opts.anesteziUygun) tabs.push({ id: 'anestezi', label: 'Anestezi' })
   if (opts.acilTipUygun) tabs.push({ id: 'acil', label: 'Acil Tıp' })
   if (opts.radyolojiUygun) tabs.push({ id: 'radyo', label: 'Radyoloji' })
+  if (opts.klinikBolum) tabs.push(opts.klinikBolum)
   return tabs
 }
 

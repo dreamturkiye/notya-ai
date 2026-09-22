@@ -195,9 +195,11 @@ Cihaz Köprüsü ile aynı kural: onay kartı HER ZAMAN, sessiz yazma ASLA.
   agent’lara (Ayşe/Mehmet/Elif) `scripts/_el-tool-kur.mts` / `npm run ses:eylem-tools` ile
   `dosyaya_kayit_hazirla` · `eylem_onayla` · `eylem_vazgec` bağlandı (hasta_bul ile aynı yol). Kalan:
   Dr. Gökhan ile bir mic smoke (yazıver → Evet).
-- **NOTYA-EYLEM-20 — klinik dikeyi aynası (P3, ŞİPLENMEDİ).** Omurga branştan bağımsız olduğu için `/asistan/klinik`
-  personalarına bağlamak yalnız rota işi; ama klinik dikeyinin hasta/kayıt modeli (clinics / clinic_members / Pabau)
-  doktor dikeyinden ayrı ve hangi tabloya yazılacağı ürün kararı. Kaan'ın kararını bekliyor.
+- ~~**NOTYA-EYLEM-20 — klinik dikeyi aynası (P3).**~~ **KAPANDI 2026-09-22 (KLINIK-AYNA-01).**
+  Kaan kararı: klinik-uzman / saglik-uzmani → `/dashboard/doktor` (SOAP / İnceleme / dosya kopyasız).
+  8 yeni SpecialtyKey + chapter; estetik-cerrahi → plastik; klinik dermatoloji → dermatoloji.
+  Müttefik meslek tanı koyamaz. Audit: `/klinik-presprint-audit.html` + `/klinik-exceptional-audit.html`.
+  Kalan açık: Pabau E2E, kohort 1-tap persistence, uzman-dogrulandi saha.
 - ~~**NOTYA-EYLEM-21 — ilaç etkileşim uyarısının KART ÜZERİNE basılması (mimari §5).**~~ **KAPANDI 2026-09-19**
   (`fix/eylem-sessiz-yol-ve-etkilesim`) — aşağıdaki "2026-09-19 düzeltme turu" tablosuna bakın.
 - **NOTYA-EYLEM-22 — canlı uçtan uca model testi.** Üretimde propose→commit→satır→geri al akışı QA hesabıyla
@@ -1006,7 +1008,7 @@ bulk rename.
 | 2026-09-02 | **SOAP ogrenme v2 + not PDF** | (a) not_duzenlemeleri farklarini periyodik damitip doktor stil profiline cevir ve prompta ekle (v1 few-shot bugun aktif). (b) Onayli notun PDF/yazdir cikti. (c) Inceleme Reddet butonuna gercek yeniden-uretim akisi. Claude yapar |
 | 2026-09-02 | **SOAP-03 kapanan kalemler** | Ses dosyasi yukle->SOAP (ElevenLabs Scribe, ham ses silinir), plan surekliligi (onceki vizit plani degerlendirilir), Yazdir/PDF sayfasi (attestasyon + duzenleme sayisi + imza alani). Kalan: ekranda satir-satir versiyon gecmisi UI (log tabloda birikiyor); ambient diarized kayit v2. Claude yapar |
 | 2026-09-03 | **Sesli-Ayse (ElevenLabs) dosya bilinci + kademe zorlamasi** | (a) ElevenLabs ajanina webhook tool eklenip dosya sorgulari sunucudan cevaplanacak (endpoint + kisa omurlu token mimarisi hazir degil; ajan konfigurasyon oturumu gerekli - Kaan ile birlikte). (b) Abonelik lansmaninda kademe zorlamasi: temel=yazili sohbet, orta/pro=sesli 1:1 + seans limitleri (ai_kullanim tablosu altyapi olarak hazir). Claude yapar |
-| 2026-09-03 | **Klinik = Doktor aynalama karari** | Klinik vertikali bugun hasta/seans/not altyapisindan yoksun (Pabau + 10 sesli persona). Onerilen mimari: klinik hekimlerine doktor-vertikal hesabi acip klinige baglamak (personel modeli genisletmesi) - boylece SOAP motoru, Inceleme, dosya, ogrenme AYNEN gecerli olur; ayri kod tabani kopyalanmaz. Kaan karari bekliyor; karar sonrasi 1-2 odakli oturum. |
+| 2026-09-22 | **Klinik = Doktor aynalama (KLINIK-AYNA-01) — SHIPPED** | Kaan kararı: klinik-uzman / saglik-uzmani onboarding ve giriş → `/dashboard/doktor` (SOAP / İnceleme / dosya / Araçlar kopyasız). 8 yeni SpecialtyKey + chapter (saç ekimi, medikal estetik, longevity, fizyoterapi, klinik-psikolog, diyetisyen, ergoterapi, odyoloji). Estetik-cerrahi → plastik; klinik dermatoloji → dermatoloji. Müttefik meslek e-reçete/Medula/ICD gizler, tanı koyamaz. Klinik admin (`/dashboard/klinik`) koltuk/Pabau olarak durur. Audit: `/klinik-presprint-audit.html` + `/klinik-exceptional-audit.html`. Kalan: Pabau E2E, kohort 1-tap persistence, uzman-dogrulandi saha. | SHIPPED |
 | 2026-09-04 | **Resend + sender domain for Sağlığım patient mail** | Code is live (`lib/mail/resend.ts`, notify on practice reply). Needs `RESEND_API_KEY` + verified `RESEND_FROM_EMAIL` on Vercel **after domain is fixed**. Without it, patient e-mail notifies silently skip. |
 | 2026-09-04 | **Sağlığım SMS/e-posta OTP (stronger access gate)** | 6-digit doctor PIN shipped. OTP each session (Epic-like) waits on domain + Resend/SMS. Build after domain is fixed. |
 

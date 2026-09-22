@@ -28,6 +28,8 @@ import GogusHome from '@/specialties/gogus-hastaliklari/ui/GogusHome';
 import NorolojiHome from '@/specialties/noroloji/ui/NorolojiHome';
 import UrolojiHome from '@/specialties/uroloji/ui/UrolojiHome';
 import SporHekimligiHome from '@/specialties/spor-hekimligi/ui/SporHekimligiHome';
+import KlinikBolumHome from '@/components/klinik/KlinikBolumHome';
+import { klinikYeniSlugMu, klinikSlugCoz, KLINIK_ETIKET } from '@/lib/specialties/klinikDikey';
 import OrtopediHome from '@/specialties/ortopedi/ui/OrtopediHome';
 import FtrHome from '@/specialties/fizik-tedavi/ui/FtrHome';
 import AileHome from '@/specialties/aile-hekimligi/ui/AileHome';
@@ -188,7 +190,11 @@ export default function HastaProfilPage() {
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
     : false;
   const dahiliyeUygun = dahiliyeAraci && !pediatriUygun;
-  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci, anesteziUygun: anesteziAraci, kalpDamarCerrahisiUygun: kdcAraci, acilTipUygun: acilAraci, radyolojiUygun: radyoAraci });
+  const klinikSlug = klinikSlugCoz(doktorBransi);
+  const klinikBolum = klinikSlug && klinikYeniSlugMu(klinikSlug)
+    ? { id: klinikSlug, label: KLINIK_ETIKET[klinikSlug] }
+    : null;
+  const tabs = hastaDosyaSekmeleri({ pediatriUygun, gebelikUygun, dahiliyeUygun, gozUygun: gozAraci, deriUygun: deriAraci, psikiyatriUygun: psikAraci, kbbUygun: kbbAraci, kardiyolojiUygun: kardioAraci, gogusUygun: gogusAraci, norolojiUygun: noroAraci, urolojiUygun: uroAraci, ortopediUygun: ortoAraci, fizikTedaviUygun: ftrAraci, aileUygun: aileAraci, sporHekimligiUygun: sporAraci, endokrinolojiUygun: endoAraci, enfeksiyonUygun: enfAraci, gastroenterolojiUygun: gastroAraci, nefrolojiUygun: nefAraci, romatolojiUygun: romaAraci, onkolojiUygun: onkoAraci, gogusCerrahisiUygun: gogusCerrahiAraci, genelCerrahiUygun: gcAraci, plastikUygun: plastikAraci, beyinCerrahisiUygun: beyinAraci, cocukCerrahisiUygun: ccAraci, anesteziUygun: anesteziAraci, kalpDamarCerrahisiUygun: kdcAraci, acilTipUygun: acilAraci, radyolojiUygun: radyoAraci, klinikBolum });
 
   /** Keep ?tab= in the URL so Geri from lab/röntgen returns to Belgeler (not Özet).
    *  Kadın Sağlığı & Gebelik lives under Muayene Geçmişi — deep link ?tab=gebelik still works. */
@@ -582,6 +588,7 @@ export default function HastaProfilPage() {
         {!loading && !error && activeTab === 'noroloji' && noroAraci && <NorolojiHome patientId={patientId} />}
         {!loading && !error && activeTab === 'uroloji' && uroAraci && <UrolojiHome patientId={patientId} />}
         {!loading && !error && activeTab === 'spor-hekimligi' && sporAraci && <SporHekimligiHome patientId={patientId} />}
+        {!loading && !error && klinikBolum && activeTab === klinikBolum.id && <KlinikBolumHome patientId={patientId} slug={klinikBolum.id} />}
         {!loading && !error && activeTab === 'ortopedi' && ortoAraci && <OrtopediHome patientId={patientId} />}
         {!loading && !error && activeTab === 'fizik-tedavi' && ftrAraci && <FtrHome patientId={patientId} />}
         {!loading && !error && activeTab === 'aile' && aileAraci && <AileHome patientId={patientId} />}

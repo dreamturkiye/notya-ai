@@ -43,6 +43,15 @@ export type SpecialtyKey =
   | 'cocuk-cerrahisi'
   | 'aile-hekimligi'
   | 'spor-hekimligi'
+  /** KLINIK-AYNA-01 — klinik dikeyi (TUS değil; doktor omurgasını kullanır). */
+  | 'sac-ekimi'
+  | 'medikal-estetik'
+  | 'longevity'
+  | 'fizyoterapi'
+  | 'klinik-psikolog'
+  | 'diyetisyen'
+  | 'ergoterapi'
+  | 'odyoloji'
 
 export const TURKISH_REFS: Record<SpecialtyKey, string[]> = {
   pediatri: [
@@ -255,6 +264,62 @@ export const TURKISH_REFS: Record<SpecialtyKey, string[]> = {
     'Türkiye Anti-Doping mevzuatı farkındalığı (hekim sorumluluğu)',
     'SGK spor hekimliği işlem / rapor çerçevesi (ilgili branş kodları)',
   ],
+  'sac-ekimi': [
+    'T.C. SB — Saç Ekimi Uygulayıcı Sertifikası / ayakta teşhis estetik girişim çerçevesi',
+    'Türk Plastik Rekonstrüktif ve Estetik Cerrahi Derneği (TPRECD) saç restorasyonu önerileri',
+    'Ayakta Teşhis ve Tedavi Yapılan Özel Sağlık Kuruluşları Yönetmeliği — estetik girişim kapsamı',
+    'ISHRS prensiplerinin TR uygulayıcı sertifikası üzerinden yorumu (ikincil)',
+    'SGK saç ekimini estetik kabul eder — paket/rapor iddiası yok',
+  ],
+  'medikal-estetik': [
+    'T.C. SB medikal estetik sertifika / ayakta teşhis estetik girişim çerçevesi',
+    'TPRECD + TDD ortak botulinum / dolgu güvenlik önerileri (TR)',
+    'Ayakta Teşhis yönetmeliği — soğuma, onam, salon vs sağlık tesisi ayrımı',
+    'TİTCK KÜB — botulinum ve hyaluronik asit ürünleri; doz hekimde',
+    'Vasküler oklüzyon / anafilaksi: 112 — ayaktan izlem değil',
+  ],
+  longevity: [
+    'T.C. SB ayakta teşhis / IV ilaç güvenliği ve endikasyon çerçevesi',
+    'TEMD endokrin / metabolizma kılavuzları (hormon iddiası hekim kilidinde)',
+    'TİTCK KÜB — IV ürün; karışım ve doz uydurulmaz',
+    'Türk İç Hastalıkları / koruyucu hekimlik kaynakları (ikincil derinlik)',
+    'SGK longevity/IV “paket tedavi” iddiası yok',
+  ],
+  fizyoterapi: [
+    '29.03.2025 yönetmeliği — fizyoterapist bağımsız klinik; tanı hekimde',
+    'Türkiye Fizyoterapistler Derneği / kanıta dayalı uygulama önerileri',
+    'ICF (WHO) işlevsellik sınıflaması — TR eğitim kullanımı',
+    'T.C. SB rehabilitasyon ve seans çerçevesi; SGK seans tavanı hekim/rapor ile',
+    'Kırmızı bayrak (cauda, efor göğüs, ilerleyici nöro) → 112 / hekime iade',
+  ],
+  'klinik-psikolog': [
+    '29.03.2025 yönetmeliği — klinik psikolog bağımsız klinik; tıbbi tanı hekimde',
+    'Türk Psikologlar Derneği etik yönetmeliği ve sır saklama',
+    'TPD / T.C. SB ruh sağlığı çerçeveleri (ölçek = tarama, tanı değil)',
+    'Kriz, intihar düşüncesi, psikoz şüphesi → 112 / psikiyatri sevk; portal mesajı değil',
+    'Reçete ve psikotrop doz YASAK',
+  ],
+  diyetisyen: [
+    '29.03.2025 yönetmeliği — diyetisyen bağımsız çalışma; tıbbi tanı hekimde',
+    'Türkiye Diyetisyenler Derneği tıbbi beslenme tedavisi önerileri',
+    'TEMD diyabet / obezite kılavuzları — diyetisyen planı hekim tanısına bağlı',
+    'TİTCK / takviye iddiası yok; doz ve ilaç yazılmaz',
+    'SGK tıbbi beslenme raporu hekim imzasına bağlıdır',
+  ],
+  ergoterapi: [
+    '29.03.2025 yönetmeliği — ergoterapist bağımsız klinik; tanı hekimde',
+    'Türkiye Ergoterapi Derneği / GYA ve uyarlanabilir ekipman çerçevesi',
+    'ICF etkinlik ve katılım — TR eğitim kullanımı',
+    'Pediatrik motor izlem bu bölümde; pediatri Neyzi/baş çevresi sızmaz',
+    'SGK ortez/cihaz raporu hekim imzasına bağlıdır',
+  ],
+  odyoloji: [
+    '29.03.2025 yönetmeliği — odyolog bağımsız çalışma; işitme kaybı tanısı hekimde',
+    'Türk Odyoloji ve Konuşma Bozuklukları Derneği uygulama önerileri',
+    'Saf ses ortalaması bantları = eşik kaydı (karar desteği), tanı değil',
+    'TKBBD / SB ani işitme kaybı — saatler içinde KBB; ayaktan sıra beklenmez',
+    'SGK işitme cihazı SUT — odyolojik belge + uzman hekim raporu',
+  ],
 }
 
 /** Secondary international texts — depth only; never override TURKISH_REFS. */
@@ -408,5 +473,37 @@ export const SECONDARY_TEXTBOOKS: Record<SpecialtyKey, string[]> = {
     "Brukner & Khan's Clinical Sports Medicine (uluslararası destek — çakışmada Türkiye Spor Hekimliği Derneği öncelikli)",
     'ACSM Sports Medicine',
     'IOC consensus (TR anti-doping/SB çerçevesinde)',
+  ],
+  'sac-ekimi': [
+    'ISHRS / Unger hair restoration (uluslararası destek — çakışmada SB sertifika / TPRECD öncelikli)',
+    'Norwood-Hamilton / Ludwig evre çerçeveleri (karar desteği)',
+  ],
+  'medikal-estetik': [
+    'Allergan / Galderma eğitim atlasları (uluslararası — çakışmada TİTCK KÜB / TPRECD öncelikli)',
+    'ASPS filler safety (ikincil)',
+  ],
+  longevity: [
+    'Harrison / koruyucu hekimlik metinleri (uluslararası — çakışmada TEMD/SB öncelikli)',
+    'Endocrine Society menopause/androgen (ikincil; doz yok)',
+  ],
+  fizyoterapi: [
+    'Guide to Physical Therapist Practice (uluslararası — çakışmada TR dernek / ICF öncelikli)',
+    'O’Sullivan Physical Rehabilitation (ikincil)',
+  ],
+  'klinik-psikolog': [
+    'Beck CBT (uluslararası — çakışmada TPD etik / 29.03.2025 öncelikli)',
+    'DSM-5-TR tarama dili (tanı kilidi hekimde)',
+  ],
+  diyetisyen: [
+    'Krause Food & the Nutrition Care Process (uluslararası — çakışmada TDD / TEMD öncelikli)',
+    'Academy of Nutrition MNT (ikincil)',
+  ],
+  ergoterapi: [
+    'Willard & Spackman Occupational Therapy (uluslararası — çakışmada TR dernek / ICF öncelikli)',
+    'COPM çerçevesi (ikincil; skor yorumu yok)',
+  ],
+  odyoloji: [
+    'Katz Handbook of Clinical Audiology (uluslararası — çakışmada TR odyoloji derneği öncelikli)',
+    'AAA / ASHA kılavuzları (ikincil; tanı hekimde)',
   ],
 }

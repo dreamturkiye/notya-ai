@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Klinik dikeyi — Exceptional-01 audit · Notya</title>
+  <meta name="description" content="KLINIK-AYNA-01 + 8 chapter: Klinik=Doktor omurgası, 11 Araç, 8 portal, müttefik tanı yasağı. Honest wow ~88%. No PHI." />
+  <style>
+    :root { --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10); --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --teal:#14B8A6; --amber:#F59E0B; --red:#F87171; --blue:#60A5FA; --green:#2DD4BF; }
+    * { box-sizing:border-box; } body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid rgba(21,128,61,.4); background:rgba(21,128,61,.12); color:#86EFAC; }
+    h1 { margin:0 0 8px; font-size:28px; } h2 { margin:28px 0 12px; font-size:18px; } .lede { color:var(--muted); max-width:920px; }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; margin:0 6px 6px 0; border:1px solid transparent; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); } .pill.warning { background:rgba(245,158,11,.14); color:var(--amber); } .pill.info { background:rgba(96,165,250,.14); color:var(--blue); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:18px 0; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; }
+    .stat .v { font-size:24px; font-weight:700; } .stat .l { font-size:12px; color:var(--muted); }
+    .callout { background:rgba(96,165,250,.12); border:1px solid rgba(96,165,250,.28); border-radius:12px; padding:16px 18px; margin:14px 0 22px; font-size:14px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; background:var(--surface); border-radius:12px; overflow:hidden; margin-bottom:22px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; }
+    td.note { color:var(--muted); } td.gap { color:#FBBF24; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,260px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--teal); border-radius:999px; }
+    .cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-weight:650; margin-bottom:6px; } .card .body { font-size:12px; color:var(--muted); }
+    a { color:#4ADE80; } .foot { margin-top:36px; font-size:12px; color:var(--dim); }
+    @media (max-width:900px) { .stats,.cards { grid-template-columns:1fr 1fr; } .cards { grid-template-columns:1fr; } .bar-row { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+    <span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:700;">Notya · Post-sprint specialty audit</span>
+    <a href="/klinik-presprint-audit.html">← Pre-sprint (~12%)</a>
+  </div>
+  <div class="banner">Post-sprint · KLINIK-AYNA-01 + KLINIK-EXCEPTIONAL-01 · 2026-09-22</div>
+  <h1>Klinik 10 dal — exceptional</h1>
+  <p class="lede">Code × 29.03.2025 yönetmeliği × Ayakta Teşhis × TPRECD/TDD × ICF × TPD etik × TR odyoloji. <b>Ürün cevap: evet — honest wow ~88% (presprint ~12%).</b> Olgunluk: beta-hazir. Uzman-dogrulandi saha pending.</p>
+  <div>
+    <span class="pill success">Aynalama shipped</span>
+    <span class="pill success">8 yeni chapter</span>
+    <span class="pill success">Honest wow ~88%</span>
+    <span class="pill warning">Kohort persistence yok</span>
+    <span class="pill info"><a href="/klinik-presprint-audit.html">Pre-sprint ~12%</a></span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v success">10</div><div class="l">Dal (8 yeni + 2 TUS reuse)</div></div>
+    <div class="stat"><div class="v success">19</div><div class="l">Klinik-only Araç</div></div>
+    <div class="stat"><div class="v success">8</div><div class="l">Sağlığım modülü</div></div>
+    <div class="stat"><div class="v info">~88%</div><div class="l">Wow (from ~12%)</div></div>
+  </div>
+  <div class="callout">
+    Klinik kullanıcı artık doktor omurgasında: Hastalar, seans, SOAP, İnceleme, Araçlar. Ayrı kod tabanı yok.
+    Müttefik meslek (fizyo / psikolog / diyet / ergo / odyo) tanı koyamaz, e-reçete görmez.
+    Fizyoterapi ≠ FTR, klinik-psikolog ≠ psikiyatri, odyoloji ≠ KBB — TUS gridlerine sızmaz.
+  </div>
+  <h2>Wow bar (klinik sandalye)</h2>
+  <p class="lede" style="font-size:13px">0–100 = meşgul TR klinik uzmanının günlük eşiği vs doktor exceptional. Source: bu sprint.</p>
+  <div class="bar-row"><span>Omurga (SOAP/dosya)</span><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><b>92</b></div>
+  <div class="bar-row"><span>Saç Ekimi</span><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><b>88</b></div>
+  <div class="bar-row"><span>Medikal Estetik</span><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><b>88</b></div>
+  <div class="bar-row"><span>Longevity</span><div class="bar-track"><div class="bar-fill" style="width:84%"></div></div><b>84</b></div>
+  <div class="bar-row"><span>Fizyoterapi</span><div class="bar-track"><div class="bar-fill" style="width:87%"></div></div><b>87</b></div>
+  <div class="bar-row"><span>Klinik Psikoloji</span><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><b>85</b></div>
+  <div class="bar-row"><span>Diyetisyen</span><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><b>85</b></div>
+  <div class="bar-row"><span>Ergoterapi</span><div class="bar-track"><div class="bar-fill" style="width:84%"></div></div><b>84</b></div>
+  <div class="bar-row"><span>Odyoloji</span><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><b>86</b></div>
+  <div class="bar-row"><span>Derm / plastik (reuse)</span><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><b>90</b></div>
+  <h2>Coverage depth</h2>
+  <table>
+    <tr><th>Domain</th><th>Depth</th><th>In product</th><th>Gap to wow</th></tr>
+    <tr><td>Doktor omurgası</td><td><span class="pill success">Strong</span></td><td class="note">Onboarding → /dashboard/doktor</td><td class="note">—</td></tr>
+    <tr><td>Saç ekimi Araç + çek</td><td><span class="pill success">Strong</span></td><td class="note">Greft bandı · yıkama takvimi · Norwood</td><td class="gap">Canlı kohort yok</td></tr>
+    <tr><td>Medikal estetik</td><td><span class="pill success">Strong</span></td><td class="note">Soğuma · bakım takvimi · 112</td><td class="gap">Ünite haritası el ile</td></tr>
+    <tr><td>Longevity</td><td><span class="pill success">Strong</span></td><td class="note">Seans vadesi · sınıf · IV 112</td><td class="gap">Lab köprüsü yok</td></tr>
+    <tr><td>Fizyoterapi</td><td><span class="pill success">Strong</span></td><td class="note">ICF · seans vadesi · hekim tanı zorunlu</td><td class="gap">Egzersiz kütüphanesi yok</td></tr>
+    <tr><td>Klinik psikolog</td><td><span class="pill success">Strong</span></td><td class="note">Seans çerçevesi · kriz 112 · reçete yok</td><td class="gap">Ölçek skor motoru yok (bilerek)</td></tr>
+    <tr><td>Diyetisyen</td><td><span class="pill success">Strong</span></td><td class="note">Makro bandı · hekim tanı</td><td class="gap">Öğün şablonu yok</td></tr>
+    <tr><td>Ergoterapi</td><td><span class="pill success">Strong</span></td><td class="note">GYA · hekim tanı · Neyzi sızmaz</td><td class="gap">Ekipman katalog yok</td></tr>
+    <tr><td>Odyoloji</td><td><span class="pill success">Strong</span></td><td class="note">PTA kayıt · cihaz listesi · KBB acil</td><td class="gap">KBB odyometri motoru kopyalanmadı</td></tr>
+    <tr><td>Hasta portalı</td><td><span class="pill success">Strong</span></td><td class="note">8 gated modül, hasta-güvenli kopya</td><td class="gap">Tarih bundle henüz boş state</td></tr>
+    <tr><td>Pabau / koltuk</td><td><span class="pill warning">Partial</span></td><td class="note">Admin duruyor</td><td class="gap">Canlı klinik anahtarı E2E</td></tr>
+  </table>
+  <h2>Mandate / practice</h2>
+  <table>
+    <tr><th>Mandate</th><th>Level</th><th>In product</th><th>Gap</th></tr>
+    <tr><td>29.03.2025 tanı hekimde</td><td>Law</td><td>SOAP kilit + e-reçete gizli + ICF/GYA zorunlu referans</td><td>—</td></tr>
+    <tr><td>Ayakta Teşhis soğuma / onam</td><td>Reg</td><td>Soğuma kaydı</td><td>e-imza yok (bilerek)</td></tr>
+    <tr><td>Vasküler / IV / ani işitme → 112</td><td>BP</td><td>Intake + motor + portal</td><td>—</td></tr>
+    <tr><td>SGK paket / greft iddiası</td><td>—</td><td>Yazılmaz</td><td>Intentional out</td></tr>
+  </table>
+  <h2>Pain → now</h2>
+  <div class="cards">
+    <div class="card"><div class="title">“Klinik hesapta hasta yoktu”</div><div class="body"><b>Now:</b> Aynı omurga — Hastalar, seans, SOAP, İnceleme.</div></div>
+    <div class="card"><div class="title">“Fizyoterapist tanı yazıyordu”</div><div class="body"><b>Now:</b> Hekim tanı referansı olmadan ICF açılmaz; e-reçete yok.</div></div>
+    <div class="card"><div class="title">“3180 greft uyduracaktı”</div><div class="body"><b>Now:</b> Greft bandı karar desteği; kilit hekimde.</div></div>
+    <div class="card"><div class="title">“KBB odyometrisi odyoloğa sızacak”</div><div class="body"><b>Now:</b> Ayrı chapter; KBB araçları odyolojide yok.</div></div>
+  </div>
+  <h2>Game changers (shipped)</h2>
+  <table>
+    <tr><th>#</th><th>Move</th><th>Why they care</th><th>Size</th></tr>
+    <tr><td>1</td><td>Klinik = Doktor aynalama</td><td>Ayrı ürün yazılmaz</td><td>L</td></tr>
+    <tr><td>2</td><td>Donör greft bandı</td><td>Seans planı 30 sn</td><td>M</td></tr>
+    <tr><td>3</td><td>Yıkama / bakım takvimi</td><td>Post-op telefon azalır</td><td>S</td></tr>
+    <tr><td>4</td><td>Soğuma + vasküler 112</td><td>Mevzuat + komplikasyon</td><td>M</td></tr>
+    <tr><td>5</td><td>ICF + hekim tanı kilidi</td><td>29.03.2025</td><td>M</td></tr>
+    <tr><td>6</td><td>Seans çerçevesi / kriz</td><td>Etik + 112</td><td>M</td></tr>
+    <tr><td>7</td><td>Makro bandı</td><td>Plan hızı</td><td>S</td></tr>
+    <tr><td>8</td><td>GYA özeti</td><td>Odak net</td><td>S</td></tr>
+    <tr><td>9</td><td>PTA eşik kaydı</td><td>Tanı değil, belge</td><td>M</td></tr>
+    <tr><td>10</td><td>8 unique Sağlığım</td><td>Hasta cebinden tarih</td><td>M</td></tr>
+  </table>
+  <h2>Recommended next</h2>
+  <div class="cards">
+    <div class="card"><div class="title">Impress</div><div class="body">Kohort 1-tap (yıkama/seans vadesi) + portal bundle tarihi nota bağla.</div></div>
+    <div class="card"><div class="title">Mandate</div><div class="body">Pabau E2E bir pilot klinik anahtarıyla.</div></div>
+    <div class="card"><div class="title">Saha</div><div class="body">Bir saç + bir fizyo beta haftası → uzman-dogrulandi.</div></div>
+  </div>
+  <p class="foot">Intentional out: ulusal AHIS, tanı auto-lock, uydurma doz/greft, KBB motor kopyası, doping/IV karışım. No PHI.<br>
+  HTML: /klinik-exceptional-audit.html · Araçlar gridine bağlanmaz · <a href="/klinik-presprint-audit.html">presprint</a></p>
+</div>
+</body>
+</html>

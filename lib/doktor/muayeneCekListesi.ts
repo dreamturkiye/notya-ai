@@ -112,6 +112,39 @@ const BRANS_EK: Partial<Record<SpecialtyKey, CekMadde[]>> = {
     { id: 'burun', etiket: 'Burun / orofarenks', grup: 'fizik', anahtarlar: ['burun', 'orofarenks', 'tonsil'] },
     { id: 'boyun', etiket: 'Boyun / lenf', grup: 'fizik', anahtarlar: ['boyun', 'lenf'] },
   ],
+  'sac-ekimi': [
+    { id: 'sac-donor', etiket: 'Donör alan değerlendirmesi', grup: 'fizik', anahtarlar: ['donor', 'oksiput'] },
+    { id: 'sac-cizgi', etiket: 'Saç çizgisi / Norwood-Ludwig', grup: 'fizik', anahtarlar: ['norwood', 'ludwig', 'sac cizgi'] },
+    { id: 'sac-yikama', etiket: 'Yıkama / kontrol planı', grup: 'kapanis', anahtarlar: ['yikama', 'kabuk'] },
+  ],
+  'medikal-estetik': [
+    { id: 'est-onam', etiket: 'Onam / soğuma kaydı', grup: 'anamnez', anahtarlar: ['onam', 'soguma'] },
+    { id: 'est-bolge', etiket: 'İşlem bölgesi ve ürün sınıfı', grup: 'fizik', anahtarlar: ['botoks', 'dolgu', 'bolge'] },
+  ],
+  longevity: [
+    { id: 'long-hedef', etiket: 'Protokol sınıfı (karışım yok)', grup: 'anamnez', anahtarlar: ['iv', 'protokol'] },
+    { id: 'long-reaksiyon', etiket: 'IV reaksiyon uyanıklığı', grup: 'fizik', anahtarlar: ['reaksiyon', 'infuzyon'] },
+  ],
+  fizyoterapi: [
+    { id: 'fiz-tani', etiket: 'Hekim tanı referansı', grup: 'anamnez', anahtarlar: ['hekim tani', 'sevk'] },
+    { id: 'fiz-icf', etiket: 'ICF aktivite / katılım', grup: 'fizik', anahtarlar: ['icf', 'fonksiyon'] },
+  ],
+  'klinik-psikolog': [
+    { id: 'psi-guvenlik', etiket: 'Kriz / güvenlik taraması', grup: 'anamnez', anahtarlar: ['kriz', 'intihar', 'guvenlik'] },
+    { id: 'psi-cerceve', etiket: 'Seans çerçevesi (tanı değil)', grup: 'kapanis', anahtarlar: ['bdt', 'emdr', 'seans'] },
+  ],
+  diyetisyen: [
+    { id: 'diy-tani', etiket: 'Hekim tanı / sevk', grup: 'anamnez', anahtarlar: ['hekim tani'] },
+    { id: 'diy-makro', etiket: 'Beslenme hedefi', grup: 'kapanis', anahtarlar: ['makro', 'ogun'] },
+  ],
+  ergoterapi: [
+    { id: 'erg-tani', etiket: 'Hekim tanı referansı', grup: 'anamnez', anahtarlar: ['hekim tani'] },
+    { id: 'erg-gya', etiket: 'GYA odak alanları', grup: 'fizik', anahtarlar: ['gya', 'giyinme'] },
+  ],
+  odyoloji: [
+    { id: 'ody-esik', etiket: 'Odyometri eşik kaydı', grup: 'olcum', anahtarlar: ['odyometri', 'pta', 'db'] },
+    { id: 'ody-ani', etiket: 'Ani kayıp / KBB acil taraması', grup: 'anamnez', anahtarlar: ['ani isitme', 'yuz felci'] },
+  ],
 }
 
 export function muayeneCekListesi(g: CekListeGirdi): CekMadde[] {

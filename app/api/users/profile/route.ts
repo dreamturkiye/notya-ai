@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
     if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
     if (specialty && profession_type === 'doktor') updatePayload.specialty = specialty
     if (specialty && (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'mali' || profession_type === 'psikolog')) {
-      updatePayload.specialty = specialty
+      const { klinikUzmanlikNorm } = await import('@/lib/specialties/klinikDikey')
+      updatePayload.specialty = (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'psikolog')
+        ? klinikUzmanlikNorm(specialty)
+        : specialty
     }
     if (uzmanlik && profession_type === 'avukat') updatePayload.specialty = uzmanlik
     if (plan) updatePayload.plan = plan

@@ -41,6 +41,7 @@ export default function DoktorNav() {
   // flash clinical items before hiding them.
   const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
   const [mesajUnread, setMesajUnread] = useState(0);
+  const [klinikAdmin, setKlinikAdmin] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -56,6 +57,12 @@ export default function DoktorNav() {
       try {
         const r = await fetch('/api/personel/me', { headers: { Authorization: `Bearer ${t}` } });
         if (r.ok) { const d = await r.json(); if (d.rol === 'sekreter') setRol('sekreter'); }
+        const me = await fetch('/api/users/me', { headers: { Authorization: `Bearer ${t}` } });
+        if (me.ok) {
+          const j = await me.json();
+          const tip = String(j?.data?.profession_type || '');
+          if (tip === 'klinik-uzman' || tip === 'saglik-uzmani') setKlinikAdmin(true);
+        }
       } catch { /* stays 'doktor' on failure — least surprising default */ }
       try {
         const r = await fetch('/api/doktor/mesajlar/unread-count', { headers: { Authorization: `Bearer ${t}` } });
@@ -97,7 +104,10 @@ export default function DoktorNav() {
     checkAuth();
   }, []);
 
-  const gorunurItems = navItems.filter(i => !(i.sadeceDoktor && rol === 'sekreter'))
+  const gorunurItems = [
+    ...navItems.filter(i => !(i.sadeceDoktor && rol === 'sekreter')),
+    ...(klinikAdmin ? [{ label: 'Klinik', route: '/dashboard/klinik', color: '#2563EB', sadeceDoktor: true } as NavItem] : []),
+  ]
   const mobileItems = gorunurItems.filter(i => !(i.hideOnMobile && isMobile))
 
   return (

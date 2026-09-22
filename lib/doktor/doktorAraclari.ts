@@ -11,6 +11,7 @@ import { portalBransAnahtari } from '@/lib/portal/moduller'
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+import { muttefikAracGizliMi, muttefikMeslekMi } from '@/lib/specialties/klinikDikey'
 
 export type DoktorArac = {
   circleColor: string
@@ -256,6 +257,27 @@ export const BRANS_DOKTOR_ARACLARI: readonly DoktorArac[] = [
   { circleColor: '#0E7490', icon: 'YD', title: 'Yara / dren izlem', desc: 'Pediatrik cerrahi ofis · yara · dren · dikiş — enfeksiyon tanısı ve doz yok', route: '/doktor-tools/cc-yara-dren', branslar: ['cocuk-cerrahisi'] },
   { circleColor: '#155E75', icon: 'OV', title: 'Onam / veli checklist', desc: 'Yaşa göre veli maddeleri · yazılı onam hatırlatma — canlı e-imza yok', route: '/doktor-tools/cc-onam-veli', branslar: ['cocuk-cerrahisi'] },
   { circleColor: '#164E63', icon: 'CK', title: 'Çocuk cerrahisi kohort', desc: 'Geciken kontrol · pre-op · yara · onam/veli · açık acil · 1-tap hatırlatma', route: '/doktor-tools/cc-kohort', branslar: ['cocuk-cerrahisi'] },
+
+  // KLINIK-AYNA-01 — specialty-only klinik dikeyi. TUS gridlerine sızmaz.
+  { circleColor: '#2563EB', icon: 'GR', title: 'Donör greft bandı', desc: 'cm² × yoğunluk → greft bandı (karar desteği) — nihai greft hekimde', route: '/doktor-tools/sac-greft', branslar: ['sac-ekimi'] },
+  { circleColor: '#1D4ED8', icon: 'YT', title: 'Yıkama takvimi', desc: 'Ameliyat günü → 1/3/10/14. gün bakım vadeleri — tanı yok', route: '/doktor-tools/sac-takvim', branslar: ['sac-ekimi'] },
+  { circleColor: '#1E40AF', icon: 'SK', title: 'Saç ekimi kohort', desc: 'Geciken yıkama · 10/14. gün kontrol · açık kırmızı bayrak · 1-tap hatırlatma', route: '/doktor-tools/sac-kohort', branslar: ['sac-ekimi'] },
+  { circleColor: '#9333EA', icon: 'SG', title: 'Onam / soğuma', desc: 'Ayakta Teşhis soğuma kaydı · vasküler acil 112 — doz yok', route: '/doktor-tools/estetik-soguma', branslar: ['medikal-estetik'] },
+  { circleColor: '#7E22CE', icon: 'BK', title: 'İşlem bakım takvimi', desc: '1 / 14 / 28. gün kontrol vadeleri — ünite ve ürün yok', route: '/doktor-tools/estetik-takvim', branslar: ['medikal-estetik'] },
+  { circleColor: '#6B21A8', icon: 'EK', title: 'Estetik kohort', desc: 'Soğuma · 14/28. gün kontrol · vasküler bayrak · 1-tap hatırlatma', route: '/doktor-tools/estetik-kohort', branslar: ['medikal-estetik'] },
+  { circleColor: '#059669', icon: 'IV', title: 'Sonraki seans vadesi', desc: 'IV / izlem aralığı — karışım ve doz yazılmaz', route: '/doktor-tools/long-vade', branslar: ['longevity'] },
+  { circleColor: '#047857', icon: 'LK', title: 'Longevity kohort', desc: 'Geciken seans · IV izlem · açık 112 bayrağı · 1-tap hatırlatma', route: '/doktor-tools/long-kohort', branslar: ['longevity'] },
+  { circleColor: '#0EA5E9', icon: 'IC', title: 'ICF seans özeti', desc: 'Hekim tanı referansı zorunlu · ICF aktivite/katılım — tanı yok', route: '/doktor-tools/fizyo-icf', branslar: ['fizyoterapi'] },
+  { circleColor: '#0284C7', icon: 'SS', title: 'Seans vadesi', desc: 'Sonraki seans ve tavan hatırlatma — SGK hak iddiası yok', route: '/doktor-tools/fizyo-seans', branslar: ['fizyoterapi'] },
+  { circleColor: '#0369A1', icon: 'FK', title: 'Fizyoterapi kohort', desc: 'Geciken seans · tanı referansı eksik · 1-tap hatırlatma', route: '/doktor-tools/fizyo-kohort', branslar: ['fizyoterapi'] },
+  { circleColor: '#6366F1', icon: 'SN', title: 'Seans çerçevesi', desc: 'Yaklaşım + ölçek kaydı · kriz 112 — tıbbi tanı ve reçete yok', route: '/doktor-tools/psikolog-seans', branslar: ['klinik-psikolog'] },
+  { circleColor: '#4F46E5', icon: 'PK', title: 'Klinik psikoloji kohort', desc: 'Geciken seans · açık kriz bayrağı · 1-tap hatırlatma', route: '/doktor-tools/psikolog-kohort', branslar: ['klinik-psikolog'] },
+  { circleColor: '#10B981', icon: 'MK', title: 'Makro bandı', desc: 'kcal / protein karar desteği · hekim tanısı — takviye dozu yok', route: '/doktor-tools/diyet-makro', branslar: ['diyetisyen'] },
+  { circleColor: '#059669', icon: 'DK', title: 'Diyetisyen kohort', desc: 'Geciken kontrol · tanı referansı · 1-tap hatırlatma', route: '/doktor-tools/diyet-kohort', branslar: ['diyetisyen'] },
+  { circleColor: '#8B5CF6', icon: 'GY', title: 'GYA özeti', desc: 'Hekim tanı + GYA odak — bağımsızlık yorumu ve Neyzi yok', route: '/doktor-tools/ergo-gya', branslar: ['ergoterapi'] },
+  { circleColor: '#7C3AED', icon: 'EG', title: 'Ergoterapi kohort', desc: 'Geciken seans · GYA odak · 1-tap hatırlatma', route: '/doktor-tools/ergo-kohort', branslar: ['ergoterapi'] },
+  { circleColor: '#F97316', icon: 'PT', title: 'Eşik kaydı', desc: 'Saf ses ortalaması bandı — işitme kaybı tanısı değil', route: '/doktor-tools/odyo-esik', branslar: ['odyoloji'] },
+  { circleColor: '#EA580C', icon: 'OK', title: 'Odyoloji kohort', desc: 'Geciken eşik · cihaz izlem · ani işitme 112 · 1-tap hatırlatma', route: '/doktor-tools/odyo-kohort', branslar: ['odyoloji'] },
 ]
 
 /**
@@ -312,6 +334,7 @@ export function doktorAraciBransaUygun(
   route: string,
   doktorBransi: string | null | undefined,
 ): boolean {
+  if (muttefikMeslekMi(doktorBransi) && muttefikAracGizliMi(route)) return false
   const arac = TUM_DOKTOR_ARACLARI.find((a) => a.route === route)
   if (!arac) return true // unknown shared subpages (hatirlatma, …) use their own gates
   if (!arac.branslar) return true
@@ -322,7 +345,9 @@ export function doktorAraciBransaUygun(
 /** Filtered Araçlar grid for /doktor-tools. */
 export function doktorAraclariListesi(doktorBransi: string | null | undefined): DoktorArac[] {
   const key = doktorAracBransi(doktorBransi)
+  const muttefik = muttefikMeslekMi(doktorBransi) || muttefikMeslekMi(key)
   return TUM_DOKTOR_ARACLARI.filter((a) => {
+    if (muttefik && muttefikAracGizliMi(a.route)) return false
     if (!a.branslar) return true
     return !!key && a.branslar.includes(key)
   })

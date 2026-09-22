@@ -120,7 +120,7 @@ function OnboardingInner() {
           const type = profile?.profession_type || validPreset || 'doktor'
           if (type === 'mali' || type === 'mali_musavirlik') router.replace('/dashboard/mali')
           else if (type === 'avukat') router.replace('/dashboard/avukat')
-          else if (type === 'klinik-uzman' || type === 'saglik-uzmani') router.replace('/dashboard/klinik')
+          else if (type === 'klinik-uzman' || type === 'saglik-uzmani') router.replace('/dashboard/doktor')
           else router.replace('/dashboard/doktor')
           return
         }
@@ -194,8 +194,8 @@ function OnboardingInner() {
     if (profession === 'doktor') return '/dashboard/doktor';
     if (profession === 'mali') return '/dashboard/mali';
     if (profession === 'avukat') return '/dashboard/avukat';
-    if (profession === 'klinik-uzman') return '/dashboard/klinik';
-    if (profession === 'saglik-uzmani') return '/dashboard/klinik';
+    if (profession === 'klinik-uzman') return '/dashboard/doktor';
+    if (profession === 'saglik-uzmani') return '/dashboard/doktor';
     return '/dashboard';
   };
 
@@ -227,10 +227,10 @@ function OnboardingInner() {
     } else if (profession_type === 'psikolog') {
       finalSpecialty = 'Psikoloji';
     } else if (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani') {
-      finalSpecialty = uzmanlikSecimi;
+      finalSpecialty = agentMapping[uzmanlikSecimi] || uzmanlikSecimi;
     }
 
-    const agent = agentMapping[specialty] || 'default';
+    const agent = agentMapping[specialty] || agentMapping[uzmanlikSecimi] || 'default';
 
     const profilePayload = {
       profession_type,

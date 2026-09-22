@@ -139,6 +139,14 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   // RADYOLOJI-EXCEPTIONAL-01 — Tetkiklerim yalnız radyoloji hekiminin token'ında;
   // dahiliye / onkoloji / göğüs'e taşınmaz.
   if (brans === 'radyoloji') aktif.add('tetkiklerim')
+  if (brans === 'sac-ekimi') aktif.add('sacim')
+  if (brans === 'medikal-estetik') aktif.add('estetik-bakimim')
+  if (brans === 'longevity') aktif.add('longevitim')
+  if (brans === 'fizyoterapi') aktif.add('fizyom')
+  if (brans === 'klinik-psikolog') aktif.add('seanslarim')
+  if (brans === 'diyetisyen') aktif.add('beslenmem')
+  if (brans === 'ergoterapi') aktif.add('ergom')
+  if (brans === 'odyoloji') aktif.add('isitmem-odyoloji')
   // ASI-KARNESI-01 — evrensel: kayıt varsa her branşta (göz hekiminin kaydettiği grip aşısı da karnede görünür).
   if (g.asiKaydi) aktif.add('asi-karnesi')
 
@@ -159,6 +167,14 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     'acil-sonrasi': 'acil-tip',
     'damar-cerrahisi-takibi': 'kalp-damar-cerrahisi',
     tetkiklerim: 'radyoloji',
+    sacim: 'sac-ekimi',
+    'estetik-bakimim': 'medikal-estetik',
+    longevitim: 'longevity',
+    fizyom: 'fizyoterapi',
+    seanslarim: 'klinik-psikolog',
+    beslenmem: 'diyetisyen',
+    ergom: 'ergoterapi',
+    'isitmem-odyoloji': 'odyoloji',
   }
   const nav = sirali.flatMap((id) => (id === 'asi-karnesi' ? [ASI_KARNESI_NAV] : modul(SAHIP[id], id)?.nav || []))
   return { moduller: sirali, nav }

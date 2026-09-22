@@ -38,6 +38,14 @@ import { ANESTEZI_PROFILE } from './anestezi'
 import { ACIL_TIP_PROFILE } from './acil-tip'
 import { RADYOLOJI_PROFILE } from './radyoloji'
 import { KALP_DAMAR_CERRAHISI_PROFILE } from './kalp-damar-cerrahisi'
+import { SAC_EKIMI_PROFILE } from './sac-ekimi'
+import { MEDIKAL_ESTETIK_PROFILE } from './medikal-estetik'
+import { LONGEVITY_PROFILE } from './longevity'
+import { FIZYOTERAPI_PROFILE } from './fizyoterapi'
+import { KLINIK_PSIKOLOG_PROFILE } from './klinik-psikolog'
+import { DIYETISYEN_PROFILE } from './diyetisyen'
+import { ERGOTERAPI_PROFILE } from './ergoterapi'
+import { ODYLOJI_PROFILE } from './odyoloji'
 
 const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   pediatri: PEDIATRI_PROFILE,
@@ -70,6 +78,14 @@ const CHAPTERS: Partial<Record<SpecialtyKey, SpecialtyProfile>> = {
   'acil-tip': ACIL_TIP_PROFILE,
   radyoloji: RADYOLOJI_PROFILE,
   'kalp-damar-cerrahisi': KALP_DAMAR_CERRAHISI_PROFILE,
+  'sac-ekimi': SAC_EKIMI_PROFILE,
+  'medikal-estetik': MEDIKAL_ESTETIK_PROFILE,
+  longevity: LONGEVITY_PROFILE,
+  fizyoterapi: FIZYOTERAPI_PROFILE,
+  'klinik-psikolog': KLINIK_PSIKOLOG_PROFILE,
+  diyetisyen: DIYETISYEN_PROFILE,
+  ergoterapi: ERGOTERAPI_PROFILE,
+  odyoloji: ODYLOJI_PROFILE,
 }
 
 export function specialtyProfile(keyHam: string | null | undefined): SpecialtyProfile {

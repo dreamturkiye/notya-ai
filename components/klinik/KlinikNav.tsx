@@ -7,11 +7,13 @@ interface KlinikNavProps {
 }
 
 const navItems = [
+  { label: 'Hastalar', href: '/dashboard/doktor/hastalar' },
+  { label: 'Randevular', href: '/dashboard/doktor/randevular' },
+  { label: 'Araçlar', href: '/doktor-tools' },
   { label: 'Genel Bakis', href: '/dashboard/klinik' },
   { label: 'Uzmanlar', href: '/asistan/klinik' },
   { label: 'Kullanicilar', href: '/dashboard/klinik/kullanicilar' },
   { label: 'Klinik Ayarlari', href: '/dashboard/klinik/ayarlar' },
-  { label: 'Fatura & Plan', href: '/dashboard/klinik/fatura' },
   { label: 'Pabau', href: '/dashboard/klinik/pabau' },
 ]
 
