@@ -394,7 +394,9 @@ export default function DoktorDashboard() {
                   })}
                 </div>
               ) : (
-                <div style={{ padding: '16px 0', fontSize: 14, color: '#5F7189' }}>Bugün için randevu yok</div>
+                <div style={{ padding: '16px 0', fontSize: 14, color: '#5F7189' }}>
+                  {kpi.bugunkuMuayene > 0 ? `Bugün ${kpi.bugunkuMuayene} muayene yapıldı, planlı randevu yok` : 'Bugün için randevu yok'}
+                </div>
               )
             ) : haftalikRandevular.length === 0 ? (
               <div style={{ padding: '16px 0', fontSize: 14, color: '#5F7189' }}>Bu hafta için randevu yok</div>
