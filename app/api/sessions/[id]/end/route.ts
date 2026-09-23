@@ -220,18 +220,21 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       hastaDogumIso(getSupabase(), user.id, hastaId),
       hastaCinsiyet(getSupabase(), user.id, hastaId),
     ])
-    const { cekListeDogrula, cekListeDogrulamaMetni, cekListePromptBlogu, muayeneCekListesi } = await import('@/lib/doktor/muayeneCekListesi')
+    const { cekBlokSil, cekListePromptBlogu, cekNotMetni } = await import('@/lib/doktor/muayeneCekListesi')
+    const { cekListeHesapla, cekListeVerisiYukle } = await import('@/lib/doktor/cekListeSunucu')
     const isaretler = body.cekListe && typeof body.cekListe === 'object' && !Array.isArray(body.cekListe)
       ? body.cekListe as Record<string, boolean>
       : {}
-    const cekMaddeler = muayeneCekListesi({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso })
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekMaddeler, isaretler) })
-    const cekListeDogrulama = cekListeDogrula(cekMaddeler, {
-      transcript,
-      soap: [noteData?.soap?.subjektif, noteData?.soap?.objektif, noteData?.soap?.degerlendirme, noteData?.soap?.plan, noteData?.anamnez, noteData?.fizik_muayene].filter(Boolean).join(' '),
-      isaretler,
-    })
-    const cekMetin = cekListeDogrulamaMetni(cekListeDogrulama)
+    // NOTYA-CEK-DOGRULA-02: not sayfası / onay ile aynı tek kaynak — hastanın tarama kayıtları ve dosyası dahil.
+    const cekVeri = await cekListeVerisiYukle(getSupabase(), { doktorId: user.id, patientId: hastaId, seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso || new Date().toISOString() })
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) })
+    // Çek listesi yalnız notun kendisine bakar (sayfada yeniden hesaplandığında aynı sonucu versin); LLM bloğu yazamaz.
+    const { satirlar: cekListeDogrulama, metin: cekMetin } = cekListeHesapla(cekVeri, cekNotMetni({
+      basvuruYakinmasi: noteData?.basvuruYakinmasi, subjektif: noteData?.soap?.subjektif, objektif: noteData?.soap?.objektif,
+      degerlendirme: noteData?.soap?.degerlendirme, plan: noteData?.soap?.plan, anamnez: noteData?.anamnez, fizikMuayene: noteData?.fizik_muayene,
+      tani: noteData?.tani, tedavi: noteData?.tedavi, vitaller: noteData?.vitaller, ilaclar: noteData?.ilaclar,
+    }), isaretler)
+    if (typeof noteData?.aiDegerlendirme === 'string') noteData.aiDegerlendirme = cekBlokSil(noteData.aiDegerlendirme)
     const { bransKapsami } = await import('@/lib/specialties/kapsam')
     const { buyumePersentilleriniHesapla, buyumeYorumunuEkle } = await import('@/lib/clinical/buyumeEgrisi')
     const buyume = bransKapsami({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso }).pediatrik

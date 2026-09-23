@@ -28,6 +28,7 @@ import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
 import { bugunTRT } from '@/core/eylemler/types'
 import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { cekBlokSil } from '@/lib/doktor/muayeneCekListesi'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -76,6 +77,9 @@ export async function POST(req: NextRequest) {
   let hafizaBlogu = ''
   try { hafizaBlogu = hafizaBloguSohbet(await hafizaYukle(supabase, doktorId)) } catch { /* hafıza kritik değil */ }
 
+  // NOTYA-CEK-DOGRULA-02: ÇEK LİSTESİ bloğu deterministiktir — modele gösterilmez (kopyalamasın), yanıtından da silinir.
+  if (taslak && typeof taslak.aiDegerlendirme === 'string') taslak.aiDegerlendirme = cekBlokSil(taslak.aiDegerlendirme)
+
   const trtBugun = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   // BRANS-ALAN-SIZMASI: hitap (hasta/veli), vital anahtarları ve persentil kuralı notun branş kapsamından
   const kapsam = await notKapsamiGetir(supabase, { doctorId: doktorId, seansBransi: seans?.specialty ?? null, patientId: seans?.patient_id ? String(seans.patient_id) : null })
@@ -121,6 +125,7 @@ export async function POST(req: NextRequest) {
     for (const [k, v] of Object.entries(dzHam)) { const hedef = ESLE[k] || ESLE[k.toLowerCase()] || k; dz[hedef] = v }
     // BRANS-ALAN-SIZMASI: pediatrik olmayan notta model pediatrik ölçüm (baş çevresi) öneremez
     if (dz.vitaller && typeof dz.vitaller === 'object') dz.vitaller = vitalleriKapsamaGoreSuz(dz.vitaller, kapsam)
+    if (typeof dz.aiDegerlendirme === 'string') dz.aiDegerlendirme = cekBlokSil(dz.aiDegerlendirme)
     sonuc.duzenlemeler = dz
     if (typeof sonuc.cevap === 'string' && sonuc.cevap.trim().startsWith('{')) sonuc.cevap = 'Düzenlemeyi ekrana işledim Hocam.'
     // NOTYA-EYLEM: tool_use → taslak öneri. Hiçbir şey yazılmadı; hekim kartta onaylayacak.

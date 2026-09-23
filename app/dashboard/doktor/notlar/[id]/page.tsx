@@ -26,6 +26,14 @@ import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
 } from '@/lib/doktor/notYenidenDegerlendir';
+import {
+  CEK_BLOK_BASLIK,
+  cekBlokDegistir,
+  cekListeDogrula,
+  cekListeDogrulamaMetni,
+  cekNotMetni,
+  type CekMadde,
+} from '@/lib/doktor/muayeneCekListesi';
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
 interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
@@ -52,6 +60,9 @@ interface NotVeri {
     receteOnerisi?: ReceteOner[]
     aiDegerlendirme?: string
     bransKapsami?: BransKapsami
+    tani?: string
+    /** NOTYA-CEK-DOGRULA-02: çek listesi girdileri — panel bunlardan ve formun GÜNCEL alanlarından hesaplanır. */
+    cek?: { maddeler: CekMadde[]; oncekiIdler: string[]; isaretler: Record<string, boolean> } | null
   }
   hasta: { ad: string; patientId: string | null }
   doktor: { ad: string }
@@ -131,6 +142,23 @@ export default function NotSayfasi() {
   }, [params.id]);
 
   const isaretle = <T,>(set: (v: T) => void) => (v: T) => { set(v); setDegisti(true); };
+
+  // NOTYA-CEK-DOGRULA-02 (Gökhan, 2026-09-23): "Kalça muayenesi yapıldı" yazıp yeniden değerlendirince kalça listede
+  // kalıyordu — panel not oluşturulurken yazılan metinden okunuyordu. Artık her düzenlemede formun GÜNCEL alanlarından
+  // deterministik hesaplanır (LLM yok); kayıtta blok onay anında sunucuda aynı fonksiyonla yeniden yazılır.
+  const cekSatirlari = () => {
+    const c = veri?.not.cek;
+    if (!c) return null;
+    const metin = cekNotMetni({
+      basvuruYakinmasi: basvuru, subjektif: taslak.subjektif, objektif: taslak.objektif, degerlendirme: taslak.degerlendirme,
+      plan: taslak.plan, tani: veri?.not.tani, vitaller: vital, ilaclar: ilacMetniniCoz(ilac),
+    });
+    return cekListeDogrula(c.maddeler, { soap: metin, isaretler: c.isaretler, oncekiIdler: c.oncekiIdler });
+  };
+  const aiDegGuncel = () => {
+    const s = cekSatirlari();
+    return s ? cekBlokDegistir(aiDeg, cekListeDogrulamaMetni(s)) : aiDeg;
+  };
 
   const aiYenidenOku = async () => {
     if (aiBekliyorRef.current || !veri) return;
@@ -230,7 +258,7 @@ export default function NotSayfasi() {
             ilaclar: ilacMetniniCoz(ilac),
             icdKodlari: icd,
             receteOnerisi: recete,
-            aiDegerlendirme: aiDeg,
+            aiDegerlendirme: aiDegGuncel(),
           },
         }) });
       const j = await r.json();
@@ -246,8 +274,14 @@ export default function NotSayfasi() {
   const { not, hasta } = veri;
   const onayli = !!not.approvedAt;
   const kapsam = istemciKapsami(not.bransKapsami);
-  const cekVar = aiDeg.includes('ÇEK LİSTESİ DOĞRULAMA');
-  const eksikler = aiDeg.split('\n').map((s) => s.match(EKSIK_SATIR)?.[1]?.trim()).filter((x): x is string => !!x);
+  const cekCanli = cekSatirlari();
+  const aiDegGorunen = aiDegGuncel();
+  const cekVar = !!cekCanli || aiDeg.includes(CEK_BLOK_BASLIK);
+  // Girdiler gelmediyse (eski yanıt / hata) kayıtlı bloktan okunur.
+  const eksikler = cekCanli
+    ? cekCanli.filter((s) => s.durum === 'eksik').map((s) => s.etiket)
+    : aiDeg.split('\n').map((s) => s.match(EKSIK_SATIR)?.[1]?.trim()).filter((x): x is string => !!x);
+  const oncekiler = (cekCanli || []).filter((s) => s.durum === 'onceki').map((s) => s.etiket);
 
   return (
     <div style={{ minHeight: '100vh', background: '#0B1628', color: '#EDF1F7', fontFamily: 'system-ui' }}>
@@ -323,10 +357,10 @@ export default function NotSayfasi() {
             <div style={{ fontSize: 12, color: '#64748B' }}>Henüz ICD önerisi yok — notu düzenleyince Ayşe günceller.</div>
           )}
         </div>
-        {aiDeg.trim() ? (
+        {aiDegGorunen.trim() ? (
           <div>
             <div style={etiket}>Klinik değerlendirme (AI · hastaya görünmez)</div>
-            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: '#CBD5E1' }}>{aiDeg}</div>
+            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: '#CBD5E1' }}>{aiDegGorunen}</div>
           </div>
         ) : null}
         <div>
@@ -347,7 +381,7 @@ export default function NotSayfasi() {
           <div style={{ fontSize: 13, fontWeight: 800, color: '#F59E0B' }}>
             {eksikler.length ? `Eksik kalanlar (${eksikler.length})` : 'Çek listesi tamam'}
           </div>
-          <div style={{ fontSize: 11, color: '#8FA0B5', margin: '2px 0 8px' }}>Çek listesi · karar desteği, hekim değerlendirir</div>
+          <div style={{ fontSize: 11, color: '#8FA0B5', margin: '2px 0 8px' }}>Çek listesi · notu düzenledikçe güncellenir · karar desteği, hekim değerlendirir</div>
           {eksikler.length ? (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>
               {eksikler.map((e, i) => (
@@ -359,6 +393,12 @@ export default function NotSayfasi() {
           ) : (
             <div style={{ fontSize: 13, color: '#22C55E' }}>Boş madde kalmadı.</div>
           )}
+          {oncekiler.length ? (
+            <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 11, color: '#8FA0B5', marginBottom: 4 }}>✓ önceki kayıtta var</div>
+              <div style={{ fontSize: 12, color: '#9FB3C8', lineHeight: 1.5 }}>{oncekiler.join(' · ')}</div>
+            </div>
+          ) : null}
         </aside>
       ) : null}
       </div>
