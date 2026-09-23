@@ -4,6 +4,7 @@
  * Shared practice inbox — doktor + sekreter.
  */
 import React, { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import DoktorNav from '@/components/doktor/DoktorNav'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
@@ -27,6 +28,7 @@ type Msg = {
 }
 
 export default function DoktorMesajlarPage() {
+  const searchParams = useSearchParams()
   const [threads, setThreads] = useState<Thread[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -75,13 +77,17 @@ export default function DoktorMesajlarPage() {
     ;(async () => {
       try {
         await loadList()
+        // NOTYA-FISILTI-UNIVERSAL: ?konu=<id> deep-link, e.g. from fısıltı -- opens straight to
+        // that thread instead of just the inbox list.
+        const konuId = searchParams?.get('konu')
+        if (konuId) await openThread(konuId)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Yüklenemedi')
       } finally {
         setLoading(false)
       }
     })()
-  }, [loadList])
+  }, [loadList, openThread, searchParams])
 
   async function sendReply() {
     if (!activeId || !reply.trim()) return
