@@ -17,6 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       .select('id, created_at, notes(id, approved_at, basvuru_yakinmasi, content_tani, content_degerlendirme)')
       .eq('patient_id', params.id)
       .eq('doctor_id', user.id)
+      .is('archived_at', null)
       .order('created_at', { ascending: false })
       .limit(20)
     if (qErr) console.error('hasta sessions sorgu hatasi:', qErr.message)
