@@ -9,6 +9,7 @@ import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { persentilEgrileri, ayFarki, type Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 import { cmCoz, kiloCoz } from '@/lib/clinical/olcumCoz'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,8 +43,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const mevcutYasAy = ayFarki(dogumIso) ?? 0
 
   // Onaylı notlardan vitaller + tarih — hastanın kendi büyüme noktaları
-  const { data: notlar } = await supabase
-    .from('notes').select('created_at, vitaller, sessions!inner(patient_id)')
+  // NOTYA-ARSIV-01: arşivlenmiş muayenenin ölçümü eğriye nokta olarak girmez.
+  const { data: notlar } = await arsivsizNotlar(supabase, 'created_at, vitaller, sessions!inner(patient_id)')
     .eq('sessions.patient_id', patientId).not('approved_at', 'is', null).not('vitaller', 'is', null)
     .order('created_at', { ascending: true }).limit(200)
 

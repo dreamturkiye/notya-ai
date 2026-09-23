@@ -8,6 +8,7 @@ import {
   gcKohortSatirlari, gcRecallMesaji, type GcKohortBayrak, type GcKohortGirdi,
 } from '@/specialties/gogus-cerrahisi/engines/kohort'
 import { patolojiNormalize } from '@/specialties/gogus-cerrahisi/engines/patoloji'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
@@ -30,7 +31,7 @@ export async function gcKohortVerisi(sb: Sb, doctorId: string, bugun: string, sa
     sb.from('hasta_gogus_cerrahisi').select('patient_id, next_kontrol, preop, tup_yara, patoloji').eq('doctor_id', doctorId).in('patient_id', ids),
     sb.from('goc_acil').select('patient_id, bayraklar, hekim_onay, tarih').eq('doctor_id', doctorId).in('patient_id', ids).order('tarih', { ascending: false }).limit(3000),
     sb.from('goc_gorevleri').select('patient_id, kod, due').eq('doctor_id', doctorId).eq('durum', 'acik').in('patient_id', ids).limit(5000),
-    sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
+    arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
 

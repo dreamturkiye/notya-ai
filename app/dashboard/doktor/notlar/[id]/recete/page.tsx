@@ -29,6 +29,8 @@ interface Veri {
   baslik: { doktor: { unvan: string; ad: string; brans: string; klinik: string }; ozel?: { satirlar: string[]; diplomaNo: string; logoDataUrl: string }; taslakMi?: boolean; hasta: { ad: string; dogum: string | null; cinsiyet: string | null }; tarih: string }
   xml: string
   enabiz?: Record<string, unknown>
+  /** NOTYA-ARSIV-01 */
+  arsivde?: boolean
 }
 
 const BRANS_AD: Record<string, string> = BRANS_ETIKETLERI as Record<string, string>; // 30 branş (Kaan 2026-09-10)
@@ -199,6 +201,12 @@ export default function ReceteYazdirPage() {
           </span>
         )}
       </div>
+
+      {veri.arsivde && (
+        <div className="yazdirma-gizle" role="status" style={{ maxWidth: en, margin: '12px auto 0', padding: '10px 14px', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#334155' }}>
+          <b>Arşivde</b> — bu muayene arşivlendi; panoda, listelerde ve hasta portalında görünmez. Geri almak için Muayene Geçmişi › Arşivlenenler › Arşivden çıkar.
+        </div>
+      )}
 
       {uyarilar.length > 0 && (
         <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '10px 14px', background: '#FFF7E6', border: '1px solid #F5C36A', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#5C3D00' }}>

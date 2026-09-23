@@ -301,11 +301,14 @@ export default function HastaProfilPage() {
   }, [patientId, router]);
 
   // Muayene Geçmişi: sekme ilk açıldığında tembel yüklenir; arşiv görünümü değiştikce yeniden çeker.
+  // NOTYA-ARSIV-01: arşiv listesi YALNIZ Muayene Geçmişi › Arşivlenenler'de; Özet zaman çizelgesi aynı
+  // listeyi kullandığı için arşiv görünümü açık kalsa bile Özet'e arşivli muayene düşmez.
+  const arsivListesi = arsivGorunum && activeTab === 'muayene';
   const seansYukle = useCallback(async () => {
     setSeansYukleniyor(true);
     try {
       const token = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions${arsivGorunum ? '?arsiv=1' : ''}`, { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions${arsivListesi ? '?arsiv=1' : ''}`, { headers: { Authorization: `Bearer ${token}` } });
       const d = await r.json();
       const liste = Array.isArray(d.sessions) ? d.sessions : Array.isArray(d.data) ? d.data : Array.isArray(d) ? d : [];
       setSeanslar(liste);
@@ -314,11 +317,11 @@ export default function HastaProfilPage() {
     } finally {
       setSeansYukleniyor(false);
     }
-  }, [patientId, arsivGorunum]);
+  }, [patientId, arsivListesi]);
 
   useEffect(() => {
     if (activeTab === 'muayene' || activeTab === 'ozet') seansYukle()
-  }, [activeTab, arsivGorunum, seansYukle])
+  }, [activeTab, seansYukle])
 
   // NOTYA-MUAYENE-ARSIV: yumuşak arşivleme -- listeden çıkarır, kaydı silmez.
   const muayeneArsivle = async (sessionId: string) => {
@@ -328,6 +331,20 @@ export default function HastaProfilPage() {
       const token = await ensureDoctorAccessToken();
       const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/arsivle`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
+    } finally {
+      setArsivleniyor(null);
+    }
+  };
+
+  // NOTYA-ARSIV-01: arşivden çıkar -- muayene ve notu tüm yüzeylerde (pano, İnceleme, Ayşe, portal) yeniden görünür.
+  const muayeneArsivdenCikar = async (sessionId: string) => {
+    setArsivleniyor(sessionId);
+    try {
+      const token = await ensureDoctorAccessToken();
+      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/arsivden-cikar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
+      else window.alert(j.error || 'Arşivden çıkarılamadı');
     } finally {
       setArsivleniyor(null);
     }
@@ -591,7 +608,18 @@ export default function HastaProfilPage() {
                           🖨️ Yazdır / PDF
                         </button>
                       )}
-                      {arsivGorunum ? (
+                      {arsivListesi && (
+                        <button
+                          type="button"
+                          onClick={() => void muayeneArsivdenCikar(s.id)}
+                          disabled={arsivleniyor === s.id}
+                          title="Arşivden çıkar -- muayene tüm listelerde yeniden görünür"
+                          style={{ background: 'rgba(45,212,191,0.10)', border: '1px solid rgba(45,212,191,0.45)', color: '#2DD4BF', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: arsivleniyor === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: arsivleniyor === s.id ? 0.5 : 1 }}
+                        >
+                          {arsivleniyor === s.id ? 'Çıkarılıyor…' : 'Arşivden çıkar'}
+                        </button>
+                      )}
+                      {arsivListesi ? (
                         <button
                           type="button"
                           onClick={() => void muayeneKaliciSil(s.id)}

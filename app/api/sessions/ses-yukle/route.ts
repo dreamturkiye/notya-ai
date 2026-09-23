@@ -17,6 +17,7 @@ import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -108,9 +109,8 @@ export async function POST(req: NextRequest) {
     if (patientId) {
       const dosya = await hastaDosyasiniDerle(supabase, doktorId, String(patientId))
       if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
-      const { data: oncekiVizit } = await supabase
-        .from('notes')
-        .select('content_plan, content_tani, created_at, sessions!inner(patient_id)')
+      // NOTYA-ARSIV-01: arşivlenmiş muayene önceki vizit / stil örneği olarak kullanılmaz.
+      const { data: oncekiVizit } = await arsivsizNotlar(supabase, 'content_plan, content_tani, created_at, sessions!inner(patient_id)')
         .eq('sessions.patient_id', patientId)
         .eq('doctor_id', doktorId)
         .not('approved_at', 'is', null)
@@ -126,9 +126,7 @@ export async function POST(req: NextRequest) {
 
   let stilOrnekleri = ''
   try {
-    const { data: oncekiNotlar } = await supabase
-      .from('notes')
-      .select('content_subjektif, content_plan')
+    const { data: oncekiNotlar } = await arsivsizNotlar(supabase, 'content_subjektif, content_plan')
       .eq('doctor_id', doktorId)
       .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })

@@ -22,6 +22,7 @@ import { notuHl7Yap } from '@/lib/entegrasyon/hl7v2Mapper'
 import { htmlBelgeYap } from '@/lib/entegrasyon/belgeHtml'
 import { decryptPII } from '@/lib/security/encryption'
 import { kritikAlarm } from '@/lib/alarm'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -72,9 +73,8 @@ async function calistir() {
     // Approved notes by linked doctors, not yet queued for this kurum
     // QA-2026-09-06: notes tablosunda 'status' kolonu YOK — onay gerçeği approved_at'tir.
     // (İlk sürüm status='approved' filtreliyordu → sorgu hiç eşleşmezdi.)
-    const { data: notlar } = await sb
-      .from('notes')
-      .select('id, created_at, doctor_id, approved_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, icd10_codes, vitaller, basvuru_yakinmasi, recete_onerisi, sessions!inner(patient_id, context)')
+    // NOTYA-ARSIV-01: an archived muayene's note is never exported (FHIR / HL7 / webhook).
+    const { data: notlar } = await arsivsizNotlar(sb, 'id, created_at, doctor_id, approved_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, icd10_codes, vitaller, basvuru_yakinmasi, recete_onerisi, sessions!inner(patient_id, context)')
       .in('doctor_id', doktorIdler)
       .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })

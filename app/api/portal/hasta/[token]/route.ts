@@ -237,6 +237,7 @@ import {
   AILE_IPUCLARI,
 } from '@/specialties/aile-hekimligi/engines/portal-saglik-paketim'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import type {
   PortalBundle,
   PortalMedication,
@@ -343,9 +344,8 @@ export async function GET(
   // column). Previously every session mapped to a patient-visible visit regardless, leaking
   // drafts and even sessions whose note was unapproved/absent. Now: pull sessions, then keep only
   // those whose note is approved.
-  const { data: sessionsRaw } = await sb
-    .from('sessions')
-    .select('id, created_at, specialty')
+  // NOTYA-ARSIV-01: an archived muayene never reaches Sağlığım (lib/doktor/arsiv).
+  const { data: sessionsRaw } = await arsivsizSeanslar(sb, 'id, created_at, specialty')
     .eq('patient_id', patientId)
     // HASTA-IZOLASYON-01: every portal read is scoped to the token's linked doctor as well as the
     // patient — a row another doctor managed to file under this patient id never reaches the portal.
@@ -353,7 +353,7 @@ export async function GET(
     .order('created_at', { ascending: false })
     .limit(40)
 
-  const sessionIds = (sessionsRaw || []).map((s) => s.id)
+  const sessionIds = ((sessionsRaw || []) as { id: string }[]).map((s) => s.id)
   type NoteRow = {
     session_id: string
     content_subjektif?: string | null
@@ -371,11 +371,10 @@ export async function GET(
     // with 42703, the error was discarded, and every patient's Ziyaretler and
     // Takip rendered empty — even for approved notes. Branch comes from the
     // session row instead, and query errors are no longer swallowed silently.
-    const { data: notes, error: notesError } = await sb
-      .from('notes')
-      .select(
-        'session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, created_at, approved_at'
-      )
+    const { data: notes, error: notesError } = await arsivsizNotlar(
+      sb,
+      'session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, created_at, approved_at'
+    )
       .in('session_id', sessionIds)
       .eq('doctor_id', doctorId)
       .not('approved_at', 'is', null)
@@ -433,9 +432,8 @@ export async function GET(
   // hastaya GÖSTERİLMEZ — hangisinin aktif olduğuna doktor panelden karar verir
   // (Dr. Mamur, 2026-09-08 — Seçenek C). Biten bir antibiyotik kürünü aylar sonra
   // "Aktif" diye göstermek zararlı olacağı için karar tahmin edilmez.
-  const { data: medsRaw } = await sb
-    .from('hasta_ilaclar')
-    .select('id, ilac_adi, doz, kullanim_sikli, notlar, aktif, baslangic_tarihi, bitis_tarihi, yazan_doktor')
+  // NOTYA-ARSIV-02: arşivlenmiş muayenenin yazdığı ilaç İlaçlarım'da görünmez (arşivden çıkınca geri gelir).
+  const { data: medsRaw } = await arsivsizIlaclar(sb, 'id, ilac_adi, doz, kullanim_sikli, notlar, aktif, baslangic_tarihi, bitis_tarihi, yazan_doktor')
     .eq('patient_id', patientId)
     .eq('doctor_id', doctorId)
     .eq('onay_durumu', 'onayli')

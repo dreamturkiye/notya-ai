@@ -13,6 +13,7 @@ import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from 
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
+import { seansArsivdeMi } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,9 +28,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { supabase, doktorId } = oturum
   const { id } = await params
 
+  // NOTYA-ARSIV-01: opening one note by id stays allowed even when its muayene is archived (the doctor
+  // reaches it from Arşivlenenler) — the page shows an "Arşivde" banner from `arsivde`.
   const { data: not } = await supabase
     .from('notes')
-    .select('*, sessions(patient_id, specialty)')
+    .select('*, sessions(patient_id, specialty, archived_at)')
     .eq('id', id)
     .eq('doctor_id', doktorId)
     .maybeSingle()
@@ -131,6 +134,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       hastaOzeti: not.hasta_ozeti || '',
       aiDegerlendirme: buyumeYorumunuEkle(not.ai_degerlendirme || '', buyume),
       takipSuresi: not.takip_suresi || '',
+      arsivde: seansArsivdeMi(not.sessions),
     },
     hasta: { ...hasta, patientId: seans?.patient_id ? String(seans.patient_id) : null },
     doktor: { ad: doktorAd, diplomaNo, ozelBaslikSatirlari, ozelLogo },

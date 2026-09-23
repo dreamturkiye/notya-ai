@@ -302,8 +302,9 @@ describe('NOTYA-EYLEM-21 · hafıza bir güvenlik kontrolünü ASLA yumuşatamaz
       assert.ok(!kod.includes(yasak.toLowerCase()), `ilacUyari.ts "${yasak}" okuyor — bir güvenlik kontrolü öğretilebilir olamaz`)
     }
     // Ve yalnız iki kaynaktan besleniyor: ilaç tablosu + hastanın kendi kayıtları.
+    // (NOTYA-ARSIV-01: lib/doktor/arsiv yalnız arşivlenmiş muayeneyi eleyen okuma filtresidir — kaynak değil.)
     const ithaller = [...kod.matchAll(/from\s+'([^']+)'/g)].map((m) => m[1])
-    assert.deepEqual(ithaller.sort(), ['./types', '@/lib/asistan/turkishdrugs', '@/lib/doktor/hastakayitalanlari'])
+    assert.deepEqual(ithaller.sort(), ['./types', '@/lib/asistan/turkishdrugs', '@/lib/doktor/arsiv', '@/lib/doktor/hastakayitalanlari'])
   })
 
   it('hafızada "uyarıları gösterme" yazsa da uyarılar birebir aynı çıkar', async () => {

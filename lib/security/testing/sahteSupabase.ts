@@ -18,9 +18,13 @@ export type Satir = Record<string, any>
 
 const tekil = (ad: string) => (ad.endsWith('s') ? ad.slice(0, -1) : ad)
 
-type Gomme = { ad: string; inner: boolean; alt: Gomme[] }
+/**
+ * `anahtar` = the key the embed lands under on the row: the alias if one was given (`alias:rel(...)`), else the relation name.
+ * `fk` = an explicit FK column hint (`notes!kaynak_note_id(...)`); default is `<singular rel>_id`.
+ */
+type Gomme = { ad: string; anahtar: string; inner: boolean; fk?: string; alt: Gomme[] }
 
-/** "id, notes(id, x), sessions!inner(patient_id)" → embeds (columns are not projected: full rows are returned). */
+/** "id, notes(id, x), sessions!inner(patient_id), a:notes!kaynak_note_id(s:sessions!inner(archived_at))" → embeds (columns are not projected: full rows are returned). */
 function gommeleriCoz(secim: string): Gomme[] {
   const parcalar: string[] = []
   let derinlik = 0, bas = 0
@@ -33,8 +37,11 @@ function gommeleriCoz(secim: string): Gomme[] {
   parcalar.push(secim.slice(bas))
   const out: Gomme[] = []
   for (const ham of parcalar.map((p) => p.trim()).filter(Boolean)) {
-    const m = ham.match(/^(?:\w+:)?(\w+)(!inner)?\s*\(([\s\S]*)\)$/)
-    if (m) out.push({ ad: m[1], inner: !!m[2], alt: gommeleriCoz(m[3]) })
+    const m = ham.match(/^(?:(\w+):)?(\w+)((?:!\w+)*)\s*\(([\s\S]*)\)$/)
+    if (!m) continue
+    const ipuclari = m[3].split('!').filter(Boolean)
+    const fk = ipuclari.find((x) => x !== 'inner')
+    out.push({ ad: m[2], anahtar: m[1] || m[2], inner: ipuclari.includes('inner'), ...(fk ? { fk } : {}), alt: gommeleriCoz(m[4]) })
   }
   return out
 }
@@ -123,6 +130,7 @@ class Sorgu {
   private guncelleme: Satir = {}
   private cakisma: string[] = ['id']
   private kosullar: Kosul[] = []
+  private veyaGruplari: Kosul[][] = []
   private siralar: { kolon: string; artan: boolean }[] = []
   private sinir: number | null = null
   private aralik: [number, number] | null = null
@@ -178,6 +186,21 @@ class Sorgu {
     }
     throw new Error(`[sahteSupabase] desteklenmeyen .not(${k}, ${op})`)
   }
+  /** `.or('a.is.null,emb.not.is.null,b.eq.x')` — top-level columns or embed keys; only is/eq (optionally `not.`). */
+  or(ifade: string) {
+    const grup = ifade.split(',').map((ham) => {
+      const m = ham.trim().match(/^(\w+)\.(not\.)?(is|eq)\.(.*)$/)
+      if (!m) throw new Error(`[sahteSupabase] desteklenmeyen .or() koşulu: ${ham}`)
+      const [, kolon, degil, op, d] = m
+      const deger = op === 'is' ? ({ null: null, true: true, false: false } as Record<string, unknown>)[d] : d
+      if (op === 'is' && deger === undefined) throw new Error(`[sahteSupabase] desteklenmeyen .or() is değeri: ${d}`)
+      const bos = (v: unknown) => v == null || (Array.isArray(v) && !v.length)
+      const temel = (v: unknown) => (op === 'is' ? (deger === null ? bos(v) : v === deger) : esit(v, deger))
+      return { kolon, test: (v: unknown) => (degil ? !temel(v) : temel(v)) }
+    })
+    this.veyaGruplari.push(grup)
+    return this
+  }
   order(kolon: string, o?: { ascending?: boolean }) { this.siralar.push({ kolon, artan: o?.ascending !== false }); return this }
   limit(n: number) { this.sinir = n; return this }
   range(a: number, b: number) { this.aralik = [a, b]; return this }
@@ -190,9 +213,9 @@ class Sorgu {
 
   /** Embeds relation `g` onto row `r` of table `tabloAd`; returns the embedded value (object, array or null). */
   private gom(tabloAd: string, r: Satir, g: Gomme): unknown {
-    const fk = `${tekil(g.ad)}_id`
+    const fk = g.fk || `${tekil(g.ad)}_id`
     const hedefSatirlar = this.db.tablo(g.ad)
-    if (fk in r) {
+    if (fk in r || g.fk) {
       const e = hedefSatirlar.find((x) => esit(x.id, r[fk]))
       return e ? this.gommeleriUygula(g.ad, { ...e }, g.alt) : null
     }
@@ -200,24 +223,33 @@ class Sorgu {
     return hedefSatirlar.filter((x) => esit(x[geriFk], r.id)).map((x) => this.gommeleriUygula(g.ad, { ...x }, g.alt))
   }
   private gommeleriUygula(tabloAd: string, r: Satir, gommeler: Gomme[]): Satir {
-    for (const g of gommeler) r[g.ad] = this.gom(tabloAd, r, g)
+    for (const g of gommeler) r[g.anahtar] = this.gom(tabloAd, r, g)
     return r
   }
 
+  /**
+   * `a.b.col` filter: narrows embed `a`, then its embed `b`, to rows passing `test` on `col` (PostgREST
+   * semantics). An `!inner` level left empty drops its parent — the row itself at the top level, or the
+   * parent embed (→ null / filtered array) one level down.
+   */
+  private yolFiltrele(r: Satir, gommeler: Gomme[], parcalar: string[], test: (v: unknown) => boolean): boolean {
+    if (parcalar.length === 1) return test(r[parcalar[0]])
+    const rel = parcalar[0]
+    const g = gommeler.find((x) => x.anahtar === rel)
+    if (!g) throw new Error(`[sahteSupabase] ${this.ad}: '${parcalar.join('.')}' filtresi gömülü '${rel}' olmadan kullanıldı`)
+    const deger = r[rel]
+    const liste = Array.isArray(deger) ? deger : deger ? [deger] : []
+    const kalan = liste.filter((x: Satir) => this.yolFiltrele(x, g.alt, parcalar.slice(1), test))
+    if (g.inner && !kalan.length) return false
+    r[rel] = Array.isArray(deger) ? kalan : kalan[0] ?? null
+    return true
+  }
+
   private eslesir(r: Satir, gommeler: Gomme[]): boolean {
-    for (const k of this.kosullar) {
-      const nokta = k.kolon.indexOf('.')
-      if (nokta < 0) { if (!k.test(r[k.kolon])) return false; continue }
-      const rel = k.kolon.slice(0, nokta), kolon = k.kolon.slice(nokta + 1)
-      const g = gommeler.find((x) => x.ad === rel)
-      if (!g) throw new Error(`[sahteSupabase] ${this.ad}: '${k.kolon}' filtresi gömülü '${rel}' olmadan kullanıldı`)
-      const deger = r[rel]
-      const liste = Array.isArray(deger) ? deger : deger ? [deger] : []
-      const kalan = liste.filter((x: Satir) => k.test(x[kolon]))
-      if (g.inner) { if (!kalan.length) return false; r[rel] = Array.isArray(deger) ? kalan : kalan[0] }
-      else r[rel] = Array.isArray(deger) ? kalan : kalan[0] ?? null
-    }
-    for (const g of gommeler) if (g.inner && (r[g.ad] == null || (Array.isArray(r[g.ad]) && !r[g.ad].length))) return false
+    for (const k of this.kosullar) if (!this.yolFiltrele(r, gommeler, k.kolon.split('.'), k.test)) return false
+    for (const g of gommeler) if (g.inner && (r[g.anahtar] == null || (Array.isArray(r[g.anahtar]) && !r[g.anahtar].length))) return false
+    // `.or()` is evaluated after the embed filters above, like PostgREST (an embed a filter emptied is null here).
+    for (const grup of this.veyaGruplari) if (!grup.some((k) => k.test(r[k.kolon]))) return false
     return true
   }
 

@@ -8,6 +8,7 @@ import {
   endoKohortSatirlari, endoRecallMesaji, type EndoKohortBayrak, type EndoKohortGirdi,
 } from '@/specialties/endokrinoloji/engines/kohort'
 import { labSkorla } from '@/specialties/endokrinoloji/engines/labIzlem'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
@@ -31,7 +32,7 @@ export async function endoKohortVerisi(sb: Sb, doctorId: string, bugun: string, 
     sb.from('endo_lab').select('patient_id, tur, deger, tarih').eq('doctor_id', doctorId).eq('tur', 'hba1c').in('patient_id', ids).order('tarih', { ascending: false }).limit(3000),
     sb.from('endo_acil').select('patient_id, bayraklar, hekim_onay, tarih').eq('doctor_id', doctorId).in('patient_id', ids).order('tarih', { ascending: false }).limit(3000),
     sb.from('endo_gorevleri').select('patient_id, kod, due').eq('doctor_id', doctorId).eq('durum', 'acik').in('patient_id', ids).limit(5000),
-    sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
+    arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
 

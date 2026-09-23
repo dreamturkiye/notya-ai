@@ -19,6 +19,7 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
+import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -42,8 +43,10 @@ export async function hastaDosyaPaketiniDerle(
   // HASTA-IZOLASYON-01: every child read is scoped to the doctor as well as the patient, so a row
   // another doctor filed under this patient id can never enter this doctor's file or AI context.
   const [seanslarQ, ilaclarQ, asilarQ, intakeQ, goruntulemeQ, belgelerQ, cihazQ, analizQ, hekimQ, randevuQ, labQ, calismaQ] = await Promise.all([
-    supabase.from('sessions').select('id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
-    supabase.from('hasta_ilaclar').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
+    // NOTYA-ARSIV-01: arşivlenmiş muayene (ve notu) Ayşe'nin dosyasına / kartına girmez.
+    arsivsizSeanslar(supabase, 'id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
+    // NOTYA-ARSIV-02: arşivlenmiş muayenenin yazdığı ilaç da dosyaya / etkileşim bağlamına girmez.
+    arsivsizIlaclar(supabase, '*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
     supabase.from('asilar').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
     supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('created_at', { ascending: false }).limit(1),
     supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
@@ -60,7 +63,7 @@ export async function hastaDosyaPaketiniDerle(
   const seanslar = seanslarQ.data || []
   let notlar: Record<string, unknown>[] = []
   if (seanslar.length > 0) {
-    const { data } = await supabase.from('notes').select('*').eq('doctor_id', doktorId).in('session_id', seanslar.map((s) => s.id))
+    const { data } = await arsivsizNotlar(supabase, '*').eq('doctor_id', doktorId).in('session_id', seanslar.map((s: { id: string }) => s.id))
     notlar = (data || []) as Record<string, unknown>[]
   }
   const notHaritasi = new Map<string, Record<string, unknown>>()

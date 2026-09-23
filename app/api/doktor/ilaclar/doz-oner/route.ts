@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import Anthropic from '@anthropic-ai/sdk'
 import { aiCagir } from '@/lib/ai/cagir'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -55,9 +56,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Son onaylı notun vitallerinden kilo
-    const { data: notlar } = await sb
-      .from('notes')
-      .select('vitaller, created_at, sessions!inner(patient_id)')
+    // NOTYA-ARSIV-01: arşivlenmiş muayenenin kilosu doz önerisine girmez.
+    const { data: notlar } = await arsivsizNotlar(sb, 'vitaller, created_at, sessions!inner(patient_id)')
       .eq('sessions.patient_id', patientId)
       .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })

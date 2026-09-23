@@ -13,6 +13,7 @@ import { medulaOrtami, ereceteGiris } from '@/lib/medula/soapIstemci'
 import { BRANS_SGK } from '@/lib/medula/brans'
 import { ayarBransKodu } from '@/lib/medula/ayar'
 import { TEST_ORTAMI, SGK_BRANS_KODU } from '@/lib/medula/tipler'
+import { arsivsizIlaclar, seansArsivdeMi } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -23,11 +24,12 @@ function coz(v: string | null | undefined): string { if (!v) return ''; try { re
 
 async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string, noteId: string) {
   const sb = supabase as any
-  const { data: not } = await sb.from('notes').select('id, icd10_codes, created_at, approved_at, content_ilaclar, recete_onerisi, sessions!inner(patient_id)').eq('id', noteId).eq('doctor_id', doktorId).maybeSingle()
+  // NOTYA-ARSIV-01: by-id open stays allowed for an archived muayene; `arsivde` drives the page banner.
+  const { data: not } = await sb.from('notes').select('id, icd10_codes, created_at, approved_at, content_ilaclar, recete_onerisi, sessions!inner(patient_id, archived_at)').eq('id', noteId).eq('doctor_id', doktorId).maybeSingle()
   if (!not) return null
   const pid = Array.isArray(not.sessions) ? not.sessions[0]?.patient_id : not.sessions?.patient_id
   const [{ data: ilaclar }, { data: hasta }, { data: doktor }] = await Promise.all([
-    sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, doz, kullanim_sikli, notlar, baslangic_tarihi, bitis_tarihi').eq('kaynak_note_id', noteId).eq('onay_durumu', 'onayli'),
+    arsivsizIlaclar(sb, 'ilac_adi, etken_madde, doz, kullanim_sikli, notlar, baslangic_tarihi, bitis_tarihi').eq('kaynak_note_id', noteId).eq('onay_durumu', 'onayli'),
     pid ? sb.from('patients').select('name_encrypted, dob_encrypted, gender_encrypted').eq('id', pid).eq('doctor_id', doktorId).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('users').select('first_name, last_name, full_name, specialty, title, clinic_name, recete_baslik, erecete_ayar').eq('id', doktorId).maybeSingle(),
   ])
@@ -65,7 +67,7 @@ async function taslakUret(supabase: ReturnType<typeof Object>, doktorId: string,
     hasta: { ad: `${ad} ${soyad}`.trim(), dogum: coz(hasta?.dob_encrypted) || null, cinsiyet: cins || null },
     tarih: not.created_at,
   }
-  return { ...taslak, baslik }
+  return { ...taslak, baslik, arsivde: seansArsivdeMi(not.sessions) }
 }
 
 export async function GET(req: NextRequest) {
@@ -79,7 +81,7 @@ export async function GET(req: NextRequest) {
   if (!t) return NextResponse.json({ error: 'Not bulunamadı.' }, { status: 404 })
   const xml = ereceteXml(t.erecete)
   const enabiz = enabizErecete({ xml, metin: t.metin, eksikler: t.eksikler, erecete: t.erecete as unknown as Record<string, unknown> })
-  return NextResponse.json({ metin: t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, tanilar: t.erecete.ereceteTaniBilgisi, baslik: t.baslik, xml, enabiz, ortam: medulaOrtami() })
+  return NextResponse.json({ metin: t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, tanilar: t.erecete.ereceteTaniBilgisi, baslik: t.baslik, arsivde: t.arsivde, xml, enabiz, ortam: medulaOrtami() })
 }
 
 export async function POST(req: NextRequest) {

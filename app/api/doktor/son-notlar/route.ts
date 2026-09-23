@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -25,9 +26,8 @@ export async function GET(req: NextRequest) {
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
   const { supabase, doktorId } = oturum
-  const { data, error } = await supabase
-    .from('notes')
-    .select('id, created_at, content_subjektif, basvuru_yakinmasi, approved_at, sessions(specialty, patient_id)')
+  // NOTYA-ARSIV-01: arşivlenmiş muayenenin notu "Son notlar"da görünmez.
+  const { data, error } = await arsivsizNotlar(supabase, 'id, created_at, content_subjektif, basvuru_yakinmasi, approved_at, sessions(specialty, patient_id)')
     .eq('doctor_id', doktorId)
     .order('created_at', { ascending: false })
     .limit(5)

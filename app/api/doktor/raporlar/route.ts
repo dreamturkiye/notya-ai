@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,9 +65,8 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Bu ay muayene sayısı
-    const { count: buAyMuayene } = await supabase
-      .from('sessions')
-      .select('*', { count: 'exact', head: true })
+    // NOTYA-ARSIV-01: every count/list here excludes archived muayeneler (lib/doktor/arsiv).
+    const { count: buAyMuayene } = await arsivsizSeanslar(supabase, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctor_id)
       .gte('started_at', startISO)
       .lte('started_at', endISO);
@@ -76,17 +76,13 @@ export async function GET(request: NextRequest) {
     const trtBugun = simdi.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
     const trtOffsetMs = new Date(simdi.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })).getTime() - new Date(simdi.toLocaleString('en-US', { timeZone: 'UTC' })).getTime();
     const gunBas = new Date(new Date(`${trtBugun}T00:00:00Z`).getTime() - trtOffsetMs);
-    const { count: bugunkuMuayene } = await supabase
-      .from('sessions')
-      .select('*', { count: 'exact', head: true })
+    const { count: bugunkuMuayene } = await arsivsizSeanslar(supabase, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctor_id)
       .gte('started_at', gunBas.toISOString())
       .lt('started_at', new Date(gunBas.getTime() + 86400000).toISOString());
 
     // 2. Toplam muayene sayısı
-    const { count: toplamMuayene } = await supabase
-      .from('sessions')
-      .select('*', { count: 'exact', head: true })
+    const { count: toplamMuayene } = await arsivsizSeanslar(supabase, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctor_id);
 
     // 3. Aktif hasta sayısı
@@ -97,25 +93,19 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true);
 
     // 4. Bekleyen onay sayısı
-    const { count: bekleyenOnay } = await supabase
-      .from('notes')
-      .select('*', { count: 'exact', head: true })
+    const { count: bekleyenOnay } = await arsivsizNotlar(supabase, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctor_id)
       .is('approved_at', null);
 
     // 5. Tamamlanan not sayısı (bu ay)
-    const { count: tamamlananNot } = await supabase
-      .from('notes')
-      .select('*', { count: 'exact', head: true })
+    const { count: tamamlananNot } = await arsivsizNotlar(supabase, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctor_id)
       .not('approved_at', 'is', null)
       .gte('created_at', startISO)
       .lte('created_at', endISO);
 
     // 6. Top tanılar (JSONB parse + aggregate)
-    const { data: notesData } = await supabase
-      .from('notes')
-      .select('icd10_codes')
+    const { data: notesData } = await arsivsizNotlar(supabase, 'icd10_codes')
       .eq('doctor_id', doctor_id)
       .gte('created_at', startISO)
       .lte('created_at', endISO);
@@ -136,9 +126,7 @@ export async function GET(request: NextRequest) {
       .map(([kod, sayi]) => ({ kod, aciklama: kod, sayi }));
 
     // 7. Uzmanlık dağılımı
-    const { data: uzmanlikData } = await supabase
-      .from('sessions')
-      .select('specialty')
+    const { data: uzmanlikData } = await arsivsizSeanslar(supabase, 'specialty')
       .eq('doctor_id', doctor_id)
       .gte('started_at', startISO)
       .lte('started_at', endISO);
@@ -154,9 +142,7 @@ export async function GET(request: NextRequest) {
     );
 
     // 8. Günlük aktivite
-    const { data: dailyData } = await supabase
-      .from('sessions')
-      .select('started_at')
+    const { data: dailyData } = await arsivsizSeanslar(supabase, 'started_at')
       .eq('doctor_id', doctor_id)
       .gte('started_at', startISO)
       .lte('started_at', endISO);

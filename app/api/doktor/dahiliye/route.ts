@@ -24,6 +24,7 @@ import { wow3Verisi, wow3Post } from './_wow3'
 import { wow4Verisi, wow4Post } from './_wow4'
 import { wow5Verisi, wow5Post } from './_wow5'
 import { type Sb, type LabSatir, labSerisi, son, sonDeger, gorevEkle, hastaBilgi, hastaAdi, hekimKimlik, labKayit } from './_ortak'
+import { arsivsizIlaclar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 const bugun = () => new Date().toISOString().slice(0, 10)
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     if (b.sevk) {
       const labs = await labSerisi(sb, hasta.id)
-      const [dm, ht, lipid, ilaclar] = await Promise.all([sb.from('dahiliye_dm').select('*').eq('patient_id', hasta.id).maybeSingle(), sb.from('dahiliye_ht').select('*').eq('patient_id', hasta.id).order('tarih', { ascending: false }).limit(1).maybeSingle(), sb.from('dahiliye_lipid').select('*').eq('patient_id', hasta.id).maybeSingle(), sb.from('hasta_ilaclar').select('id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, aktif').eq('patient_id', hasta.id).eq('aktif', true)])
+      const [dm, ht, lipid, ilaclar] = await Promise.all([sb.from('dahiliye_dm').select('*').eq('patient_id', hasta.id).maybeSingle(), sb.from('dahiliye_ht').select('*').eq('patient_id', hasta.id).order('tarih', { ascending: false }).limit(1).maybeSingle(), sb.from('dahiliye_lipid').select('*').eq('patient_id', hasta.id).maybeSingle(), arsivsizIlaclar(sb, 'id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, aktif').eq('patient_id', hasta.id).eq('aktif', true)])
       const w = await wowVerisi(sb, user.id, hasta, labs, (ilaclar.data || []) as IlacRow[], dm.data, ht.data, lipid.data, T)
       const panel = ['eGFR', 'Kre', 'UACR', 'K', 'Na', 'Hb', 'HbA1c'].map((k) => { const r = son(labs, k); return r && r.kanonik_deger != null ? { ad: k, deger: String(r.kanonik_deger), tarih: r.numune_tarihi || '' } : null }).filter((x): x is { ad: string; deger: string; tarih: string } => !!x)
       const paket = nefroSevkPaketi(w.ckdSonuc, panel, { yas: hasta.yas, kadin: hasta.kadin }, (ilaclar.data || []).map((i) => i.ilac_adi))
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
   }
   if (adim === 'ilacizlem') {
     const labs = await labSerisi(sb, hasta.id)
-    const { data: ilaclar } = await sb.from('hasta_ilaclar').select('id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, aktif').eq('patient_id', hasta.id).eq('aktif', true)
+    const { data: ilaclar } = await arsivsizIlaclar(sb, 'id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, aktif').eq('patient_id', hasta.id).eq('aktif', true)
     const sonLab: Record<string, string | null> = {}
     for (const [k, arr] of labs) sonLab[k] = arr[0]?.numune_tarihi || null
     const g = ilacIzlemGorevleri(((ilaclar || []) as IlacRow[]).map((i) => ({ ad: i.ilac_adi, etken: i.etken_madde, baslangic: i.baslangic_tarihi, aktif: true })), sonLab, T)
@@ -140,7 +141,7 @@ export async function POST(req: NextRequest) {
     if (!SGK_SABLONLARI.some((x) => x.id === sablon)) return NextResponse.json({ error: 'Şablon geçersiz' }, { status: 400 })
     const [labs, ilaclar, htQ, dmQ, kvrQ, kilitQ, ad, hekim] = await Promise.all([
       labSerisi(sb, hasta.id),
-      sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, aktif').eq('patient_id', hasta.id).eq('aktif', true),
+      arsivsizIlaclar(sb, 'ilac_adi, etken_madde, aktif').eq('patient_id', hasta.id).eq('aktif', true),
       sb.from('dahiliye_ht').select('sbp, dbp, tarih, evre_hekim').eq('patient_id', hasta.id).order('tarih', { ascending: false }).limit(3),
       sb.from('dahiliye_dm').select('tip').eq('patient_id', hasta.id).maybeSingle(),
       sb.from('dahiliye_kvr').select('askvh').eq('patient_id', hasta.id).maybeSingle(),
@@ -178,7 +179,7 @@ export async function POST(req: NextRequest) {
     const sbp = num(b.sbp), dbp = num(b.dbp)
     if (sbp == null || dbp == null) return NextResponse.json({ error: 'SBP/DBP zorunlu (her vizit)' }, { status: 400 })
     const { data: onceki } = await sb.from('dahiliye_ht').select('sbp, dbp, tarih').eq('patient_id', hasta.id).order('tarih', { ascending: false }).limit(3)
-    const { data: ilaclar } = await sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, aktif').eq('patient_id', hasta.id).eq('aktif', true)
+    const { data: ilaclar } = await arsivsizIlaclar(sb, 'ilac_adi, etken_madde, aktif').eq('patient_id', hasta.id).eq('aktif', true)
     const anti = (ilaclar || []).filter((i) => /ramipril|lisinopril|enalapril|perindopril|valsartan|losartan|telmisartan|kandesartan|irbesartan|olmesartan|amlodipin|nifedipin|lerkanidipin|hidroklorotiyazid|indapamid|klortalidon|spironolakton|bisoprolol|metoprolol|nebivolol|doksazosin|pril|sartan|dipin/i.test(`${i.ilac_adi} ${i.etken_madde || ''}`))
     const diuretik = anti.some((i) => /hidroklorotiyazid|indapamid|klortalidon|spironolakton|furosemid/i.test(`${i.ilac_adi} ${i.etken_madde || ''}`))
     const d = htDegerlendir({ sbp, dbp, yas: hasta.yas, kirilgan: !!b.kirilgan, onceki: (onceki || []).map((o) => ({ sbp: Number(o.sbp), dbp: Number(o.dbp), tarih: String(o.tarih) })), aktifAntihipertansif: anti.length, diuretikVar: diuretik, sekonderSuphe: !!b.sekonderSuphe })
@@ -266,7 +267,7 @@ export async function GET(req: NextRequest) {
     sb.from('dahiliye_checkup').select('*').eq('patient_id', hasta.id).order('tarih', { ascending: false }).limit(3),
     sb.from('dahiliye_gorevleri').select('*').eq('patient_id', hasta.id).eq('durum', 'acik').order('due'),
     sb.from('sevkler').select('*').eq('patient_id', hasta.id).eq('durum', 'acik').order('created_at', { ascending: false }),
-    sb.from('hasta_ilaclar').select('id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, aktif').eq('patient_id', hasta.id).order('created_at', { ascending: false }),
+    arsivsizIlaclar(sb, 'id, ilac_adi, etken_madde, doz, kullanim_sikli, baslangic_tarihi, aktif').eq('patient_id', hasta.id).order('created_at', { ascending: false }),
     sb.from('gebelikler').select('durum').eq('patient_id', hasta.id),
     hasta.kadin ? sb.from('jine_gorevleri').select('ad, due').eq('patient_id', hasta.id).eq('durum', 'acik').in('kod', ['pap', 'hpv', 'mamografi']).limit(3) : Promise.resolve({ data: [] as { ad: string; due: string | null }[] }),
     sb.from('dahiliye_sgk_raporlari').select('id, sablon, draft, sut_kontrol, eksikler, durum, kilit_at, created_at').eq('patient_id', hasta.id).order('created_at', { ascending: false }).limit(6),
