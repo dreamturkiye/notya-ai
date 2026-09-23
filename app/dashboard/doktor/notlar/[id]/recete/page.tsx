@@ -41,8 +41,8 @@ function yas(dogum: string | null): string {
 }
 function trTarih(iso: string): string { return new Date(iso).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' }); }
 
-const buyukDugme: React.CSSProperties = { background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '12px 22px', fontFamily: 'system-ui', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 10px rgba(15,155,142,0.35)' };
-const kucukBaglanti: React.CSSProperties = { background: 'transparent', border: 'none', color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 12, textDecoration: 'underline', cursor: 'pointer', padding: '6px 4px' };
+const buyukDugme: React.CSSProperties = { background: '#2f4334', border: 'none', color: '#FAF8F4', borderRadius: 10, padding: '12px 22px', fontFamily: 'system-ui', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 10px rgba(47,67,52,0.35)' };
+const kucukBaglanti: React.CSSProperties = { background: 'transparent', border: 'none', color: '#3b2e24', fontFamily: 'system-ui', fontSize: 12, textDecoration: 'underline', cursor: 'pointer', padding: '6px 4px' };
 
 export default function ReceteYazdirPage() {
   const params = useParams<{ id: string }>();
@@ -173,10 +173,10 @@ export default function ReceteYazdirPage() {
       `}</style>
 
       {/* Üst çubuk: tek büyük düğme (doktorun yolu) + küçük diğerleri */}
-      <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+      <div className="yazdirma-gizle" style={{ background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href={`/dashboard/doktor/notlar/${params.id}/yazdir`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap', padding: '6px 0' }}>← Geri</a>
-          <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
+          <a href={`/dashboard/doktor/notlar/${params.id}/yazdir`} style={{ color: '#8b7d70', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap', padding: '6px 0' }}>← Geri</a>
+          <span style={{ color: '#2e251d', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
         </span>
         {yol !== null && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -195,7 +195,7 @@ export default function ReceteYazdirPage() {
                 <button type="button" onClick={() => window.print()} style={kucukBaglanti}>Kâğıda yazdır</button>
               </>
             )}
-            <button type="button" onClick={() => setYol(null)} title="Reçete yolunu değiştir" style={{ ...kucukBaglanti, color: '#6B7F95' }}>değiştir</button>
+            <button type="button" onClick={() => setYol(null)} title="Reçete yolunu değiştir" style={{ ...kucukBaglanti, color: '#8b7d70' }}>değiştir</button>
           </span>
         )}
       </div>
@@ -209,11 +209,11 @@ export default function ReceteYazdirPage() {
       {/* Kaan (2026-09-13): "buton yok" şikâyeti — iki büyük düğme üst çubukta başlıkla aynı satıra
           sıkışıyor, ikincisi ekran dışında kalabiliyordu. Kendi tam genişlikte panelinde, net görünür. */}
       {yol === null && (
-        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '14px 16px', background: '#0F1E33', border: '1px solid rgba(45,212,191,0.35)', borderRadius: 8, fontFamily: 'system-ui' }}>
-          <div style={{ color: '#C9D4E3', fontSize: 13, marginBottom: 10 }}><b style={{ color: '#2DD4BF' }}>Ayşe:</b> Reçeteyi nasıl yazıyorsunuz? Aşağıdan seçin, bir daha sormayayım.</div>
+        <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '14px 16px', background: '#F6F0E4', border: '1px solid rgba(47,67,52,0.35)', borderRadius: 8, fontFamily: 'system-ui' }}>
+          <div style={{ color: '#3b2e24', fontSize: 13, marginBottom: 10 }}><b style={{ color: '#2f4334' }}>Ayşe:</b> Reçeteyi nasıl yazıyorsunuz? Aşağıdan seçin, bir daha sormayayım.</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button type="button" onClick={() => yolSec('kagit')} style={buyukDugme}>🖨️ Kâğıda yazdırıyorum</button>
-            <button type="button" onClick={() => yolSec('mbys')} style={{ ...buyukDugme, background: '#1F5F8B' }}>💻 Programa giriyorum (MBYS / Medula)</button>
+            <button type="button" onClick={() => yolSec('mbys')} style={{ ...buyukDugme, background: '#4A5C8A' }}>💻 Programa giriyorum (MBYS / Medula)</button>
           </div>
         </div>
       )}
@@ -243,7 +243,7 @@ export default function ReceteYazdirPage() {
               {bLogo && <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><img src={bLogo} alt="logo" style={{ height: 36 }} /><button type="button" onClick={() => setBLogo('')} style={{ background: 'transparent', border: 'none', color: '#B91C1C', cursor: 'pointer', fontSize: 12 }}>kaldır</button></span>}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" onClick={baslikKaydet} disabled={bKaydediyor} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}>{bKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>
+              <button type="button" onClick={baslikKaydet} disabled={bKaydediyor} style={{ background: '#2f4334', color: '#FAF8F4', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}>{bKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>
               <button type="button" onClick={() => setBaslikDuzenle(false)} style={{ background: 'transparent', border: '1px solid #D1D5DB', borderRadius: 6, padding: '8px 14px', cursor: 'pointer' }}>Vazgeç</button>
             </div>
           </div>
