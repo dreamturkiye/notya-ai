@@ -265,18 +265,25 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
                 <strong style={S({ display: 'block', color: CHROME_RENK.ink, fontSize: 19, fontWeight: 650, whiteSpace: 'nowrap' })}>
                   {ad ? `Dr. ${ad}` : '\u00A0'}
                 </strong>
-                <small style={S({ color: '#8a7b6c', fontSize: 14 })}>{BRANS_ETIKET[brans] || '\u00A0'}</small>
+                <small style={S({ color: '#8a7b6c', fontSize: 16, fontWeight: 400 })}>{BRANS_ETIKET[brans] || '\u00A0'}</small>
               </div>
               <div style={S({ width: 1, height: 46, background: 'rgba(58,44,34,0.16)' })} />
               <div>
                 <div style={S({ fontVariantNumeric: 'tabular-nums', fontSize: 24, fontWeight: 600, color: CHROME_RENK.ink, lineHeight: 1 })}>{saat}</div>
                 {hava && (
-                  <div style={S({ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 13, color: '#8a7b6c' })}>
-                    <span style={S({ fontSize: 14 })}>{havaIkonu(hava.kod)}</span>
+                  <div style={S({ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, fontSize: 24, fontWeight: 600, color: '#8a7b6c', lineHeight: 1 })}>
+                    <span style={S({ fontSize: 24 })}>{havaIkonu(hava.kod)}</span>
                     <span>{hava.sicaklik}°</span>
                   </div>
                 )}
               </div>
+              <div style={S({ width: 1, height: 46, background: 'rgba(58,44,34,0.16)' })} />
+              <button
+                onClick={handleCikis}
+                style={S({ padding: '9px 16px', borderRadius: 999, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 })}
+              >
+                Çıkış Yap
+              </button>
             </div>
           )}
 
@@ -318,12 +325,14 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               );
             })}
             <BransDegistir />
-            <button
-              onClick={handleCikis}
-              style={S({ padding: '11px 16px', borderRadius: 999, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, fontSize: 14, fontWeight: 600, cursor: 'pointer' })}
-            >
-              Çıkış Yap
-            </button>
+            {isMobile && (
+              <button
+                onClick={handleCikis}
+                style={S({ padding: '11px 16px', borderRadius: 999, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, fontSize: 14, fontWeight: 600, cursor: 'pointer' })}
+              >
+                Çıkış Yap
+              </button>
+            )}
           </nav>
         )}
       </div>
