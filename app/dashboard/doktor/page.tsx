@@ -109,7 +109,7 @@ function Ikon({ ad, boyut = 22 }: { ad: string; boyut?: number }) {
 
 export default function DoktorDashboard() {
   const router = useRouter()
-  const [doktorAdi, setDoktorAdi] = useState(() => { try { const c = localStorage.getItem('notya_doktor_name'); return c || 'Doktor' } catch { return 'Doktor' } })
+  const [doktorAdi, setDoktorAdi] = useState('Doktor')
   const [ayseAcilis, setAyseAcilis] = useState<string>('')
   const [asistanKisaAd, setAsistanKisaAd] = useState('Ayşe')
   const [specialty, setSpecialty] = useState('')
@@ -122,6 +122,13 @@ export default function DoktorDashboard() {
   const [loading, setLoading] = useState(true)
   const [pediatriAraci, setPediatriAraci] = useState(false)
   const [bebekIsListesi, setBebekIsListesi] = useState(false)
+
+  useEffect(() => {
+    // Cached name from a previous session -- read after mount only, never during the initial
+    // render, so the client's first paint matches the server's (no localStorage there) and
+    // hydration never mismatches. The real fetch below still overwrites this with fresh data.
+    try { const c = localStorage.getItem('notya_doktor_name'); if (c) setDoktorAdi(c) } catch {}
+  }, [])
 
   useEffect(() => {
     const initDashboard = async () => {

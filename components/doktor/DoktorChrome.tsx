@@ -9,9 +9,9 @@
  * allowed to quietly disappear under a reskin — that was the exact gap found in the Grok
  * concept (it dropped Mesajlar and Çıkış Yap entirely).
  *
- * Everything else — doctor photo, name, specialty, clock — is real, fetched from the actual
- * account, not hardcoded. No fake weather: there's no weather feature in the app, so rather
- * than fabricate one, it's simply not there.
+ * Everything else — doctor photo, name, specialty, clock, weather — is real. Weather (2026-09-24,
+ * Kaan): browser geolocation + Open-Meteo (free, keyless) — no fabricated numbers; if the doctor
+ * declines the location prompt or the fetch fails, the weather chip simply doesn't render.
  */
 
 import React, { useEffect, useState, createContext, useContext } from 'react';
@@ -94,6 +94,19 @@ const BRANS_ETIKET: Record<string, string> = {
   'aile-hekimligi': 'Aile Hekimi',
 };
 
+/** WMO weather code (Open-Meteo) -> a simple glyph. https://open-meteo.com/en/docs (WMO Weather interpretation codes). */
+function havaIkonu(kod: number): string {
+  if (kod === 0) return '☀️';
+  if (kod <= 3) return '⛅';
+  if (kod === 45 || kod === 48) return '🌫️';
+  if (kod >= 51 && kod <= 57) return '🌦️';
+  if (kod >= 61 && kod <= 67) return '🌧️';
+  if (kod >= 71 && kod <= 77) return '❄️';
+  if (kod >= 80 && kod <= 82) return '🌦️';
+  if (kod >= 95) return '⛈️';
+  return '🌤️';
+}
+
 export default function DoktorChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
@@ -103,6 +116,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const [brans, setBrans] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [saat, setSaat] = useState('');
+  const [hava, setHava] = useState<{ sicaklik: number; kod: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [gizli, setGizli] = useState(false);
 
@@ -117,6 +131,28 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     setSaat(saatTRT());
     const t = setInterval(() => setSaat(saatTRT()), 30000);
     return () => clearInterval(t);
+  }, []);
+
+  // Kaan (2026-09-24): iPhone-style weather chip under the clock. Real geolocation + Open-Meteo
+  // (free, no API key). Silent no-render on denial/failure -- never a fabricated number.
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    let iptal = false;
+    navigator.geolocation.getCurrentPosition(
+      (konum) => {
+        const { latitude, longitude } = konum.coords;
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => {
+            if (iptal || !d?.current) return;
+            setHava({ sicaklik: Math.round(d.current.temperature_2m), kod: Number(d.current.weather_code) });
+          })
+          .catch(() => {});
+      },
+      () => {}, // izin reddedildi / konum alınamadı -- sessizce yok say
+      { timeout: 8000, maximumAge: 30 * 60 * 1000 },
+    );
+    return () => { iptal = true; };
   }, []);
 
   useEffect(() => {
@@ -213,26 +249,34 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           </div>
 
           {!isMobile && (
-            <div style={S({ display: 'flex', alignItems: 'center', gap: 12, color: '#6e6256', fontSize: 15, flexShrink: 0 })}>
+            <div style={S({ display: 'flex', alignItems: 'center', gap: 16, color: '#6e6256', fontSize: 15, flexShrink: 0 })}>
               <div
                 title={ad || 'Doktor'}
                 style={S({
-                  width: 50, height: 50, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                  width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
                   background: CHROME_RENK.pine, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: CHROME_RENK.gold, fontWeight: 700, fontSize: 16,
+                  color: CHROME_RENK.gold, fontWeight: 700, fontSize: 20,
                   boxShadow: `0 0 0 3px ${CHROME_RENK.paper}, 0 0 0 4px rgba(47,67,52,0.16)`,
                 })}
               >
                 {avatarUrl ? <img src={avatarUrl} alt={ad} style={S({ width: '100%', height: '100%', objectFit: 'cover' })} /> : initials}
               </div>
               <div>
-                <strong style={S({ display: 'block', color: CHROME_RENK.ink, fontSize: 16, fontWeight: 650, whiteSpace: 'nowrap' })}>
+                <strong style={S({ display: 'block', color: CHROME_RENK.ink, fontSize: 19, fontWeight: 650, whiteSpace: 'nowrap' })}>
                   {ad ? `Dr. ${ad}` : '\u00A0'}
                 </strong>
-                <small style={S({ color: '#8a7b6c', fontSize: 13 })}>{BRANS_ETIKET[brans] || '\u00A0'}</small>
+                <small style={S({ color: '#8a7b6c', fontSize: 14 })}>{BRANS_ETIKET[brans] || '\u00A0'}</small>
               </div>
-              <div style={S({ width: 1, height: 38, background: 'rgba(58,44,34,0.16)' })} />
-              <div style={S({ fontVariantNumeric: 'tabular-nums', fontSize: 19, fontWeight: 600, color: CHROME_RENK.ink })}>{saat}</div>
+              <div style={S({ width: 1, height: 46, background: 'rgba(58,44,34,0.16)' })} />
+              <div>
+                <div style={S({ fontVariantNumeric: 'tabular-nums', fontSize: 24, fontWeight: 600, color: CHROME_RENK.ink, lineHeight: 1 })}>{saat}</div>
+                {hava && (
+                  <div style={S({ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, fontSize: 13, color: '#8a7b6c' })}>
+                    <span style={S({ fontSize: 14 })}>{havaIkonu(hava.kod)}</span>
+                    <span>{hava.sicaklik}°</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
