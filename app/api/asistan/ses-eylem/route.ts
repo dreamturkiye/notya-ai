@@ -85,10 +85,64 @@ export async function POST(req: NextRequest) {
     const hasta = await hastaOzetiGetir(supabase, user.id, cozum.patientId)
     if (!hasta) return sesYanit('Hasta bulunamadı.', {}, 404)
 
+    // Spoken dates: "bugün" and dd.mm.yyyy become YYYY-MM-DD (the card's date inputs need ISO).
+    const tarihNormal = (v: unknown): unknown => {
+      const s = String(v ?? '').trim().toLocaleLowerCase('tr-TR')
+      if (s === 'bugün' || s === 'bugun') return bugunTRT()
+      const m = s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/)
+      return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : v
+    }
+    for (const a of eylem.alanlar) {
+      if (a.tip === 'tarih' && alanlarHam[a.anahtar] != null) alanlarHam[a.anahtar] = tarihNormal(alanlarHam[a.anahtar])
+    }
+
+    // NOTYA-SES-KART-GUNCELLE-01 (Dr. Gökhan, 2026-09-23): "o tarihi ekler misin" — the doctor dictates a
+    // missing/wrong field for the card Ayşe just prepared. Calling hazirla again for the same patient +
+    // eylem within an hour now UPDATES that card: old fields kept, spoken ones override (source =
+    // doktor_soyledi), the old taslak is withdrawn. Still only a taslak — the doctor's Evet commits it.
+    const yeniAnahtarlar = new Set(Object.keys(alanlarHam).filter((k2) => alanlarHam[k2] != null && String(alanlarHam[k2]).trim() !== ''))
+    let eskiTaslakId: string | null = null
+    let eskiKaynaklar: Record<string, unknown> = {}
+    try {
+      const esik = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+      const { data: eskiler } = await supabase
+        .from('eylem_onerileri')
+        .select('*')
+        .eq('doctor_id', user.id)
+        .eq('hasta_id', hasta.id)
+        .eq('eylem_anahtar', eylem.anahtar)
+        .eq('durum', 'taslak')
+        .eq('yuzey', 'ses')
+        .gte('created_at', esik)
+        .order('created_at', { ascending: false })
+        .limit(1)
+      const eski = (eskiler?.[0] || null) as Record<string, unknown> | null
+      if (eski) {
+        const eskiVeri = (eski.veri || {}) as Record<string, unknown>
+        const birlesik: Record<string, unknown> = {}
+        for (const a of eylem.alanlar) {
+          const v = eskiVeri[a.anahtar]
+          if (v != null && String(v).trim() !== '') birlesik[a.anahtar] = v
+        }
+        for (const k2 of yeniAnahtarlar) birlesik[k2] = alanlarHam[k2]
+        alanlarHam = birlesik
+        const kk = (eski.alan_kaynaklari || eskiVeri.alan_kaynaklari || {}) as Record<string, unknown>
+        eskiKaynaklar = Object.fromEntries(Object.entries(kk).filter(([k2]) => !yeniAnahtarlar.has(k2)))
+        eskiTaslakId = String(eski.id)
+      }
+    } catch { /* no previous card — normal hazirla */ }
+
     const kaynaklarHam = body.alan_kaynaklari ?? body.alanKaynaklari
     // Default undeclared fields to doktor_soyledi on voice — the doctor is speaking the values.
-    const alanKaynaklari: Record<string, unknown> =
-      kaynaklarHam && typeof kaynaklarHam === 'object' ? { ...(kaynaklarHam as Record<string, unknown>) } : {}
+    const alanKaynaklari: Record<string, unknown> = {
+      ...eskiKaynaklar,
+      ...(kaynaklarHam && typeof kaynaklarHam === 'object' ? (kaynaklarHam as Record<string, unknown>) : {}),
+    }
+    for (const k2 of yeniAnahtarlar) {
+      if (!(kaynaklarHam && typeof kaynaklarHam === 'object' && (kaynaklarHam as Record<string, unknown>)[k2])) {
+        alanKaynaklari[k2] = { kaynak: 'doktor_soyledi' }
+      }
+    }
     for (const a of eylem.alanlar) {
       if (alanlarHam[a.anahtar] == null || String(alanlarHam[a.anahtar]).trim() === '') continue
       if (!alanKaynaklari[a.anahtar]) alanKaynaklari[a.anahtar] = { kaynak: 'doktor_soyledi' }
@@ -117,6 +171,9 @@ export async function POST(req: NextRequest) {
       suzgec: { brans, hasta },
     })
     if (!o) return sesYanit('Bu kaydı bu hasta / branş için hazırlayamadım. Ekrandan deneyin.')
+    if (eskiTaslakId && eskiTaslakId !== o.id) {
+      try { await eylemVazgec(supabase, user.id, eskiTaslakId) } catch { /* old card just stays as a taslak */ }
+    }
 
     let takvimEk = ''
     if (eylemAnahtar === 'kontrol_randevusu_olustur') {
