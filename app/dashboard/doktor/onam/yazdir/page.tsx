@@ -20,7 +20,7 @@ function OnamYazdirIc() {
     <div style={{ maxWidth: 760, margin: '0 auto', padding: 32, fontFamily: 'Georgia, serif', color: '#111', background: '#fff' }}>
       <style>{`@media print { .no-print { display: none } body { background: #fff } }`}</style>
       <div className="no-print" style={{ display: 'flex', gap: 8, marginBottom: 16, fontFamily: 'system-ui', fontSize: 13, alignItems: 'center', flexWrap: 'wrap' }}>
-        <a href={onamGeriHref(patientId)} style={{ color: '#0F9B8E', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>{patientId ? '← Gebelik' : '← Geri'}</a>
+        <a href={onamGeriHref(patientId)} style={{ color: '#2f4334', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>{patientId ? '← Gebelik' : '← Geri'}</a>
         <input value={ad} onChange={(e) => setAd(e.target.value)} placeholder="Hasta adı soyadı" style={{ padding: 6, flex: 1 }} />
         <input value={hekim} onChange={(e) => setHekim(e.target.value)} placeholder="Hekim" style={{ padding: 6, flex: 1 }} />
         <button type="button" onClick={() => window.print()} style={{ padding: '6px 14px', fontWeight: 700 }}>Yazdır / PDF</button>
