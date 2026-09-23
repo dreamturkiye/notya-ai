@@ -15,6 +15,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
@@ -91,8 +92,8 @@ function trTarih(iso: string | null): string {
 
 /** Adayın son onaylı notundan kısa, sesli okunacak bir özet — "son şikayetle ayırt et" için. */
 async function sonZiyaretOzeti(supabase: SupabaseClient, doctorId: string, patientId: string): Promise<string> {
-  const { data } = await supabase
-    .from('notes').select('basvuru_yakinmasi, content_degerlendirme, sessions!inner(patient_id)')
+  // NOTYA-ARSIV-01: arşivlenmiş muayene "son ziyaret" / "son hastam" olarak okunmaz.
+  const { data } = await arsivsizNotlar(supabase, 'basvuru_yakinmasi, content_degerlendirme, sessions!inner(patient_id)')
     .eq('sessions.patient_id', patientId).eq('doctor_id', doctorId).not('approved_at', 'is', null)
     .order('created_at', { ascending: false }).limit(1)
   const n = data?.[0] as { basvuru_yakinmasi?: string | null; content_degerlendirme?: string | null } | undefined
@@ -122,8 +123,7 @@ export async function hastaninSozunuCoz(
   const m = ' ' + duzle(mesaj) + ' '
   // "son hastam" / "az önceki hasta" / "en son gelen hasta"
   if (/ (son|az onceki|en son)( gelen| muayene ettigim)? hasta/.test(m)) {
-    const { data } = await supabase
-      .from('sessions').select('patient_id').eq('doctor_id', doctorId)
+    const { data } = await arsivsizSeanslar(supabase, 'patient_id').eq('doctor_id', doctorId)
       .not('patient_id', 'is', null).order('created_at', { ascending: false }).limit(1)
     const pid = data?.[0]?.patient_id
     if (pid) {

@@ -49,6 +49,7 @@ import {
 } from '@/lib/asistan/turkishDrugs'
 import { alerjiListe, notAlanlariCoz } from '@/lib/doktor/hastaKayitAlanlari'
 import type { EylemBaglami } from './types'
+import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type UyariSiddeti = 'ciddi' | 'orta' | 'bilgi'
 export type UyariTuru =
@@ -363,11 +364,9 @@ export function ciddiUyariVarMi(uyarilar: readonly IlacUyarisi[]): boolean {
   return uyarilar.some((u) => u.siddet === 'ciddi')
 }
 
-/** Rows from `hasta_ilaclar`, this doctor's, this patient's, active only. */
+/** Rows from `hasta_ilaclar`, this doctor's, this patient's, active only (NOTYA-ARSIV-02: not an archived muayene's). */
 async function aktifIlaclar(ctx: EylemBaglami): Promise<AktifIlacSatiri[]> {
-  const { data } = await ctx.supabase
-    .from('hasta_ilaclar')
-    .select('id, ilac_adi, etken_madde')
+  const { data } = await arsivsizIlaclar(ctx.supabase, 'id, ilac_adi, etken_madde')
     .eq('doctor_id', ctx.doktorId)
     .eq('patient_id', ctx.hasta.id)
     .eq('aktif', true)
@@ -391,17 +390,14 @@ async function hastaAlerjileri(ctx: EylemBaglami): Promise<string[]> {
  * Only asked for when the patient is a child — an adult card pays nothing for this.
  */
 async function sonKiloKg(ctx: EylemBaglami): Promise<number | null> {
-  const { data: seanslar } = await ctx.supabase
-    .from('sessions')
-    .select('id')
+  // NOTYA-ARSIV-01: arşivlenmiş muayenenin kilosu doz uyarısına girmez.
+  const { data: seanslar } = await arsivsizSeanslar(ctx.supabase, 'id')
     .eq('doctor_id', ctx.doktorId)
     .eq('patient_id', ctx.hasta.id)
     .order('created_at', { ascending: false })
     .limit(20)
   if (!seanslar?.length) return null
-  const { data: notlar } = await ctx.supabase
-    .from('notes')
-    .select('vitaller, created_at')
+  const { data: notlar } = await arsivsizNotlar(ctx.supabase, 'vitaller, created_at')
     .in('session_id', seanslar.map((s) => (s as { id: string }).id))
     .order('created_at', { ascending: false })
     .limit(20)

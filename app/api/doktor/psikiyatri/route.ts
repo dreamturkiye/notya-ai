@@ -22,6 +22,7 @@ import { psikIlacIzlemGorevleri, duzeyVadesi } from '@/specialties/psikiyatri/en
 import { psikSeridi } from '@/specialties/psikiyatri/engines/serit'
 import { REF_ACIKLAMA, HEKIM_KILIT_METNI, ACIL_YONLENDIRME_METNI, gunEkle } from '@/specialties/psikiyatri/engines/psikiyatri'
 import { PSIK_RAPOR_SABLONLARI } from '@/specialties/psikiyatri/engines/sgkRapor'
+import { arsivsizIlaclar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 
@@ -170,7 +171,7 @@ export async function POST(req: NextRequest) {
 
   if (adim === 'ilac_izlem') {
     const [{ data: ilaclar }, sonLab] = await Promise.all([
-      sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, baslangic_tarihi, aktif').eq('patient_id', patientId).eq('aktif', true),
+      arsivsizIlaclar(sb, 'ilac_adi, etken_madde, baslangic_tarihi, aktif').eq('patient_id', patientId).eq('aktif', true),
       sonLabTarihleri(sb, patientId),
     ])
     const g = psikIlacIzlemGorevleri(
@@ -198,7 +199,7 @@ export async function GET(req: NextRequest) {
     sb.from('psik_olcek').select('id, tip, skor, maddeler, tarih, hekim_kilit, not_hekim').eq('patient_id', patientId).eq('doctor_id', user.id).order('tarih', { ascending: false }).limit(40),
     sb.from('psik_risk').select('id, tarih, bayraklar, eylem, hekim_onay').eq('patient_id', patientId).eq('doctor_id', user.id).order('tarih', { ascending: false }).limit(10),
     sb.from('psik_gorevleri').select('id, kod, ad, due, durum, kaynak').eq('patient_id', patientId).eq('doctor_id', user.id).eq('durum', 'acik').order('due', { ascending: true, nullsFirst: false }),
-    sb.from('hasta_ilaclar').select('id, ilac_adi, etken_madde, baslangic_tarihi, aktif').eq('patient_id', patientId).eq('aktif', true),
+    arsivsizIlaclar(sb, 'id, ilac_adi, etken_madde, baslangic_tarihi, aktif').eq('patient_id', patientId).eq('aktif', true),
     sonLabTarihleri(sb, patientId),
   ])
 

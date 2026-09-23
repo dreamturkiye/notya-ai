@@ -74,8 +74,10 @@ describe('görüntü ceketi — portal kapısı', () => {
   })
 
   it('chip bugün / tarih', () => {
-    const bugun = new Date().toISOString().slice(0, 10)
-    assert.match(goruntuChip('ekg', bugun), /bugün/)
+    // Fixed clock: "today" is an Istanbul date — a UTC date here failed every night 21:00–24:00 UTC.
+    const simdi = Date.parse('2026-09-23T21:30:00Z') // 24 Eyl 00:30 İstanbul
+    assert.match(goruntuChip('ekg', '2026-09-24', simdi), /bugün/)
+    assert.match(goruntuChip('ekg', '2026-09-23', simdi), /23 Eyl/)
     assert.match(goruntuChip('xr', '2026-09-12'), /XR/)
   })
 

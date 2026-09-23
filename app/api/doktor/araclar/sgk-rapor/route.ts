@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 import {
   addDaysTr,
   resolveRaporTipi,
@@ -102,9 +103,10 @@ export async function POST(request: NextRequest) {
       /* keep default */
     }
 
-    const { data: notes } = await sb
-      .from('notes')
-      .select('content_degerlendirme, content_plan, content_objektif')
+    // NOTYA-ARSIV-01: archive rule applied. NOTE (2026-09-23): notes has no patient_id column, so this
+    // query errors and `notes` is always null (the report falls back to hekimNotu). Left as is on
+    // purpose: fixing it would start sending note text to the Groq/xAI model above — Kaan's call.
+    const { data: notes } = await arsivsizNotlar(sb, 'content_degerlendirme, content_plan, content_objektif')
       .eq('patient_id', hastaId)
       .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })

@@ -8,6 +8,7 @@
 import type { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import { dermKohortSatirlari, type DermKohortGirdi } from '@/specialties/dermatoloji/engines/kohort'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
@@ -56,7 +57,7 @@ export async function dermKohortVerisi(sb: Sb, doctorId: string, bugun: string, 
     epIds.length ? sb.from('derm_yama_kurslari').select('hasta_derm_id, applied_at, read_d2, read_d4').in('hasta_derm_id', epIds).limit(5000) : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     epIds.length ? sb.from('derm_fototerapi_seanslari').select('hasta_derm_id, seans_tarihi, burn').in('hasta_derm_id', epIds).limit(5000) : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     epIds.length ? sb.from('derm_lezyonlar').select('hasta_derm_id, dermoskop_uyari, acil').in('hasta_derm_id', epIds).limit(5000) : Promise.resolve({ data: [] as Record<string, unknown>[] }),
-    sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
+    arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
 

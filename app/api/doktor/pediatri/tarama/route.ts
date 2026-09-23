@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pediOturum, pediHasta, bulunamadi, bugunTr } from '../_ortak'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { TARAMA_TURLERI, taramaNotSatiri, type TaramaSonuc, type TaramaTur, type TaramaKaydi } from '@/specialties/pediatri/engines/gelisimPlan'
 
 export const dynamic = 'force-dynamic'
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
     o.sb.from('pedi_taramalar').select('tur, tarih, sonuc, not_metni, created_at').eq('doctor_id', o.doktorId).eq('patient_id', h.id).order('tarih', { ascending: false }).limit(200),
     o.sb.from('mchat_testleri').select('toplam_puan, risk_seviyesi, created_at').eq('doctor_id', o.doktorId).eq('patient_id', h.id).order('created_at', { ascending: false }).limit(20),
     o.sb.from('gelisim_taramalari').select('sevk_onerisi, created_at').eq('doctor_id', o.doktorId).eq('patient_id', h.id).order('created_at', { ascending: false }).limit(20),
-    o.sb.from('sessions').select('created_at').eq('doctor_id', o.doktorId).eq('patient_id', h.id).order('created_at', { ascending: false }).limit(300),
+    arsivsizSeanslar(o.sb, 'created_at').eq('doctor_id', o.doktorId).eq('patient_id', h.id).order('created_at', { ascending: false }).limit(300),
     o.sb.from('bebek_kartlari').select('yenidogan_tarama, gebelik_haftasi, kilo_gram, dogum_zamani, created_at').eq('doctor_id', o.doktorId).eq('bebek_patient_id', h.id).order('created_at', { ascending: false }).limit(1),
   ])
   const taramalar: TaramaKaydi[] = (tQ.data || []).map((r) => ({ tur: r.tur as TaramaTur, tarih: gun(r.tarih), sonuc: r.sonuc as TaramaSonuc, kaynak: 'panel' as const }))

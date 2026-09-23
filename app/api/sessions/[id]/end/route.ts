@@ -8,6 +8,7 @@ import { aiCagir } from "@/lib/ai/cagir"
 import { modelSec } from "@/lib/ai/modeller"
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { seansSahibi } from '@/lib/doktor/hastaSahipligi'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 // AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
 // aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
@@ -178,9 +179,8 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
         if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
         // NOTYA-SOAP-03: plan sürekliliği — son onaylı vizitin planı/tanısı bağlama eklenir,
         // yeni not önceki planın akıbetini değerlendirerek yazılır (izole not yerine devamlılık).
-        const { data: oncekiVizit } = await getSupabase()
-          .from('notes')
-          .select('content_plan, content_tani, created_at, sessions!inner(patient_id)')
+        // NOTYA-ARSIV-01: arşivlenmiş muayenenin planı "önceki vizit" olarak bağlama girmez.
+        const { data: oncekiVizit } = await arsivsizNotlar(getSupabase(), 'content_plan, content_tani, created_at, sessions!inner(patient_id)')
           .eq('sessions.patient_id', seansSatiri.patient_id)
           .eq('doctor_id', user.id)
           .not('approved_at', 'is', null)
@@ -196,9 +196,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     let stilOrnekleri = ''
     try {
-      const { data: oncekiNotlar } = await getSupabase()
-        .from('notes')
-        .select('content_subjektif, content_plan')
+      const { data: oncekiNotlar } = await arsivsizNotlar(getSupabase(), 'content_subjektif, content_plan')
         .eq('doctor_id', user.id)
         .not('approved_at', 'is', null)
         .order('created_at', { ascending: false })

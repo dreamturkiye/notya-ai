@@ -35,6 +35,8 @@ interface NotVeri {
     id: string
     createdAt: string
     approvedAt: string | null
+    /** NOTYA-ARSIV-01: muayenesi arşivde — hiçbir listede görünmez, yalnız doğrudan açılır. */
+    arsivde?: boolean
     specialty: string
     basvuruYakinmasi: string
     subjektif: string
@@ -274,6 +276,12 @@ export default function NotSayfasi() {
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
       </div>
+
+      {not.arsivde && (
+        <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10, background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.35)', color: '#CBD5E1', fontSize: 13 }}>
+          <b>Arşivde</b> — bu muayene arşivlendi; panoda, listelerde, aramada ve hasta portalında görünmez. Geri almak için Muayene Geçmişi › Arşivlenenler › <b>Arşivden çıkar</b>.
+        </div>
+      )}
 
       <style>{NOT_DUZEN_CSS}</style>
       <div className={cekVar ? 'notDuzen' : 'notDuzen tek'}>

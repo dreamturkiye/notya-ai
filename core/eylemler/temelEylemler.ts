@@ -25,6 +25,7 @@ import {
   type HastaNotAlanlari,
 } from '@/lib/doktor/hastaKayitAlanlari'
 import { gununNotunaEkle, gununNotunaVitalEkle, notVitalleriGeriYukle } from '@/lib/doktor/gununNotunaEkle'
+import { arsivsizIlaclar } from '@/lib/doktor/arsiv'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { ilacUyarilariHesapla } from './ilacUyari'
@@ -166,9 +167,7 @@ export const ILAC_EKLE = eylem({
   makullukKontrol: (ctx, v) => tarihMakul('Başlangıç tarihi', v.baslangic_tarihi, ctx.hasta, '9999-12-31'),
   mukerrerKontrol: async (ctx, v) => {
     if (!v.ilac_adi) return null
-    const { data } = await ctx.supabase
-      .from('hasta_ilaclar')
-      .select('id, ilac_adi')
+    const { data } = await arsivsizIlaclar(ctx.supabase, 'id, ilac_adi')
       .eq('doctor_id', ctx.doktorId)
       .eq('patient_id', ctx.hasta.id)
       .eq('aktif', true)
@@ -434,15 +433,15 @@ export const FISILTI_SESSIZE_AL = eylem({
 /* ─────────────────────────────── T2 · İlaç düzeltmeleri ─────────────────────────────── */
 
 async function aktifIlac(ctx: EylemBaglami, ad: string) {
-  const { data } = await ctx.supabase
-    .from('hasta_ilaclar')
-    .select('id, ilac_adi, doz, kullanim_sikli, aktif, bitis_tarihi')
+  // NOTYA-ARSIV-02: an archived muayene's drug is not on the list, so Ayşe cannot stop / re-dose it either.
+  const { data } = await arsivsizIlaclar(ctx.supabase, 'id, ilac_adi, doz, kullanim_sikli, aktif, bitis_tarihi')
     .eq('doctor_id', ctx.doktorId)
     .eq('patient_id', ctx.hasta.id)
     .eq('aktif', true)
     .ilike('ilac_adi', ad)
     .limit(2)
-  return data || []
+  // The filter's embed stays out of the audit snapshot (eylem_kayitlari.once/sonra).
+  return ((data || []) as Record<string, unknown>[]).map(({ arsiv_kaynak: _k, ...r }) => r)
 }
 
 export const ILAC_SONLANDIR = eylem({

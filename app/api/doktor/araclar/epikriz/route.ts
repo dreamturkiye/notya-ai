@@ -17,6 +17,7 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs';
 import { epikrizKapsamliSistem, epikrizKlinikSatiri, epikrizTekVizitSistem, epikrizUnvanSatiri } from '@/lib/doktor/epikrizMetinleri';
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
+import { arsivsizNotlar } from '@/lib/doktor/arsiv';
 
 export const dynamic = 'force-dynamic';
 
@@ -181,8 +182,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { data: note, error: noteError } = await supabase
-      .from('notes').select('*, sessions!inner(patient_id, specialty, started_at)')
+    // NOTYA-ARSIV-01: arşivlenmiş muayeneden epikriz üretilmez (önce arşivden çıkarılmalı).
+    const { data: note, error: noteError } = await arsivsizNotlar(supabase, '*, sessions!inner(patient_id, specialty, started_at)')
       .eq('session_id', seansId).eq('doctor_id', user.id).single();
     if (noteError || !note) {
       return NextResponse.json({ hata: 'SOAP notu bulunamadı.' }, { status: 404 });

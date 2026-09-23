@@ -1,6 +1,7 @@
 import { createHmac } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { generatePortalPin, hashPortalPin, isValidPortalPin } from '@/lib/portal/pinAuth';
+import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,20 +29,17 @@ export type PortalPaylasimOzeti = {
 /** What will this patient actually see when they open the portal? */
 async function portalPaylasimOzeti(patientId: string, doctorId: string): Promise<PortalPaylasimOzeti> {
   // HASTA-IZOLASYON-01: counted exactly as the portal reads — patient AND linked doctor.
-  const { data: sessions } = await supabase
-    .from('sessions')
-    .select('id')
+  // NOTYA-ARSIV-01: arşivlenmiş muayene portalda görünmediği için burada da sayılmaz.
+  const { data: sessions } = await arsivsizSeanslar(supabase, 'id')
     .eq('patient_id', patientId)
     .eq('doctor_id', doctorId)
     .limit(200);
-  const sessionIds = (sessions || []).map((s) => s.id as string);
+  const sessionIds = ((sessions || []) as { id: string }[]).map((s) => s.id);
 
   let onayliZiyaret = 0;
   let onaysizNot = 0;
   if (sessionIds.length) {
-    const { data: notes } = await supabase
-      .from('notes')
-      .select('session_id, approved_at')
+    const { data: notes } = await arsivsizNotlar(supabase, 'session_id, approved_at')
       .in('session_id', sessionIds)
       .eq('doctor_id', doctorId);
     const approvedSessions = new Set<string>();
@@ -57,13 +55,18 @@ async function portalPaylasimOzeti(patientId: string, doctorId: string): Promise
     const { count } = await (extra ? extra(base) : base);
     return count ?? 0;
   };
+  // NOTYA-ARSIV-02: portal arşivlenmiş muayenenin ilaçlarını göstermez — sayım da göstermez.
+  const ilacSay = async (extra: (q: any) => any) => {
+    const { count } = await extra(arsivsizIlaclar(supabase, 'id', { count: 'exact', head: true }).eq('patient_id', patientId).eq('doctor_id', doctorId));
+    return count ?? 0;
+  };
 
   // Hastanın gerçekten göreceği ilaç sayısı: yalnızca hekimin onayladığı aktif
   // satırlar. 'beklemede' olanlar nottan aktarılmıştır ve portalda çıkmaz.
-  const aktifIlac = await countFor('hasta_ilaclar', (q) =>
+  const aktifIlac = await ilacSay((q) =>
     q.eq('aktif', true).eq('onay_durumu', 'onayli')
   );
-  const bekleyenRecete = await countFor('hasta_ilaclar', (q) => q.eq('onay_durumu', 'beklemede'));
+  const bekleyenRecete = await ilacSay((q) => q.eq('onay_durumu', 'beklemede'));
   const labSonuc = await countFor('hasta_lab_sonuclari');
   const goruntuleme = await countFor('hasta_goruntulemeler');
 

@@ -4,6 +4,7 @@
 import type { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import { notifyPatientNewPracticeMessage } from '@/lib/portal/notifyPatientEmail'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import {
   ftrKohortSatirlari, ftrRecallMesaji, type FtrKohortBayrak, type FtrKohortGirdi,
 } from '@/specialties/fizik-tedavi/engines/kohort'
@@ -30,7 +31,7 @@ export async function ftrKohortVerisi(sb: Sb, doctorId: string, bugun: string, s
     sb.from('ftr_olcek').select('patient_id, tip, bant, tarih').eq('doctor_id', doctorId).in('patient_id', ids).order('tarih', { ascending: false }).limit(3000),
     sb.from('ftr_risk').select('patient_id, bayraklar, hekim_onay, tarih').eq('doctor_id', doctorId).in('patient_id', ids).order('tarih', { ascending: false }).limit(3000),
     sb.from('ftr_gorevleri').select('patient_id, kod, due').eq('doctor_id', doctorId).eq('durum', 'acik').in('patient_id', ids).limit(5000),
-    sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
+    arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
 

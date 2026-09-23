@@ -11,6 +11,7 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { UYARI_SERIDI } from '@/core/belgeler/yazar'
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
 import type { BelgeRaporu } from '@/core/belgeler/types'
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,9 +73,10 @@ export async function POST(req: NextRequest) {
     if (!noteId && a.belge_id) {
       const { data: belge } = await supabase.from('medical_documents').select('visit_id').eq('id', a.belge_id).eq('doctor_id', user.id).maybeSingle()
       if (belge?.visit_id) {
-        const { data: ziyaret } = await supabase.from('sessions').select('id').eq('id', belge.visit_id).eq('doctor_id', user.id).eq('patient_id', a.patient_id).maybeSingle()
+        // NOTYA-ARSIV-01: an archived visit is not a target -- falls through to the latest non-archived note.
+        const { data: ziyaret } = await arsivsizSeanslar(supabase, 'id').eq('id', belge.visit_id).eq('doctor_id', user.id).eq('patient_id', a.patient_id).maybeSingle()
         if (ziyaret) {
-          const { data: visitNot } = await supabase.from('notes').select('id').eq('session_id', ziyaret.id).eq('doctor_id', user.id).maybeSingle()
+          const { data: visitNot } = await arsivsizNotlar(supabase, 'id').eq('session_id', ziyaret.id).eq('doctor_id', user.id).maybeSingle()
           if (visitNot) {
             noteId = visitNot.id
           } else {
@@ -87,7 +89,7 @@ export async function POST(req: NextRequest) {
       }
     }
     if (!noteId) {
-      const { data: son } = await supabase.from('notes').select('id, sessions!inner(patient_id)').eq('doctor_id', user.id).eq('sessions.patient_id', a.patient_id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      const { data: son } = await arsivsizNotlar(supabase, 'id, sessions!inner(patient_id)').eq('doctor_id', user.id).eq('sessions.patient_id', a.patient_id).order('created_at', { ascending: false }).limit(1).maybeSingle()
       noteId = son?.id || null
     }
     if (!noteId) {

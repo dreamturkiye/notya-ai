@@ -219,6 +219,8 @@ export async function nottanIlacAktar(
   if (!ilaclar.length) return { aktarilan: 0, atlanan: 0, hata: null }
 
   // Bu hastada hâlihazırda kayıtlı ilaçlar — elle eklenmişi ezmeyelim.
+  // NOTYA-ARSIV-02: raw read on purpose — rows hidden by an archived source note are included, so a
+  // re-prescription re-claims that row (it reappears under this live note) instead of duplicating it.
   const { data: mevcut } = await sb
     .from('hasta_ilaclar')
     .select('id, ilac_adi, aktif, onay_durumu, baslangic_tarihi, doz, kullanim_sikli, kaynak_note_id')
@@ -261,7 +263,17 @@ export async function nottanIlacAktar(
     const g = guncelKayit(ilac.ilac_adi)
     if (g) {
       const degisti = (g.doz || '') !== (ilac.doz || '') || (g.kullanim_sikli || '') !== (ilac.kullanim_sikli || '') || g.onay_durumu === 'beklemede' || !g.aktif
-      if (!degisti) { atlanan += 1; continue }
+      if (!degisti) {
+        // NOTYA-ARSIV-02: the row follows the latest approved note that wrote it. Left on the older note,
+        // archiving that note would hide a drug this live note still prescribes. A hand-added row
+        // (kaynak_note_id NULL) stays the doctor's own and always visible.
+        if (g.kaynak_note_id && g.kaynak_note_id !== opts.noteId) {
+          const { error: kErr } = await sb.from('hasta_ilaclar').update({ kaynak_note_id: opts.noteId }).eq('id', g.id)
+          if (kErr) return { aktarilan, atlanan, hata: kErr.message }
+        }
+        atlanan += 1
+        continue
+      }
       const { error: gErr } = await sb.from('hasta_ilaclar').update({
         doz: ilac.doz, kullanim_sikli: ilac.kullanim_sikli, notlar: ilac.notlar,
         aktif: true, onay_durumu: 'onayli', kaynak_note_id: opts.noteId, baslangic_tarihi: baslangic,

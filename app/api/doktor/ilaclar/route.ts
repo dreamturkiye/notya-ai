@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
+import { arsivsizIlaclar } from '@/lib/doktor/arsiv';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,9 +25,8 @@ export async function GET(request: NextRequest) {
   // NOTYA-RECETE-01: 'beklemede' satırlar nottan aktarılmış, doktorun kararını
   // bekleyen reçeteler. Doktora hepsi döner (kuyruk burada gösterilir); hastaya
   // yalnızca 'onayli' olanlar gider — bkz. app/api/portal/hasta/[token]/route.ts
-  const { data, error } = await supabase
-    .from('hasta_ilaclar')
-    .select('*')
+  // NOTYA-ARSIV-02: arşivlenmiş muayenenin notunun yazdığı ilaçlar dosyada görünmez.
+  const { data, error } = await arsivsizIlaclar(supabase, '*')
     .eq('doctor_id', user.id)
     .eq('patient_id', hastaId)
     .order('onay_durumu', { ascending: true })

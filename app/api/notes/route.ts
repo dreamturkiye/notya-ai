@@ -13,6 +13,7 @@ import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from 
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 
@@ -93,18 +94,15 @@ export async function GET(req: NextRequest) {
   // sessions ilişkisi kurulamazsa (PostgREST embed hatası) düz seçime düş
   let rows: NoteRow[] = []
 
-  const joined = await supabase
-    .from('notes')
-    .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, session_id, sessions(specialty, patient_id)')
+  // NOTYA-ARSIV-01: arşivlenmiş muayenenin notu İnceleme kuyruğuna girmez (lib/doktor/arsiv).
+  const joined = await arsivsizNotlar(supabase, 'id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, session_id, sessions(specialty, patient_id)')
     .eq('doctor_id', user.id)
     .is('approved_at', null)
     .order('created_at', { ascending: false })
     .limit(50)
 
   if (joined.error) {
-    const plain = await supabase
-      .from('notes')
-      .select('id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, session_id')
+    const plain = await arsivsizNotlar(supabase, 'id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, content_ilaclar, icd10_codes, kritik_bulgular, hasta_ozeti, basvuru_yakinmasi, vitaller, recete_onerisi, alarm_bulgulari, ai_degerlendirme, session_id')
       .eq('doctor_id', user.id)
       .is('approved_at', null)
       .order('created_at', { ascending: false })

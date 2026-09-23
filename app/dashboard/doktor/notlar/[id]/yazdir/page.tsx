@@ -22,7 +22,7 @@ import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 
 interface NotVeri {
   not: {
-    createdAt?: string; approvedAt?: string | null; specialty?: string; basvuruYakinmasi?: string;
+    createdAt?: string; approvedAt?: string | null; arsivde?: boolean; specialty?: string; basvuruYakinmasi?: string;
     subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; tani?: string;
     ilaclar?: { ad?: string; doz?: string; kullanim?: string; sure?: string }[];
     receteOnerisi?: { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }[];
@@ -159,6 +159,11 @@ export default function NotYazdir() {
           <button type="button" onClick={() => window.print()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF kaydet</button>
         </span>
       </div>
+      {not.arsivde && (
+        <div className="yazdirma-gizle" role="status" style={{ maxWidth: 760, margin: '12px auto 0', padding: '10px 14px', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#334155' }}>
+          <b>Arşivde</b> — bu muayene arşivlendi; panoda, listelerde ve hasta portalında görünmez. Geri almak için Muayene Geçmişi › Arşivlenenler › Arşivden çıkar.
+        </div>
+      )}
       {medulaUyarilar.length > 0 && (
         <div className="no-print" style={{ maxWidth: 760, margin: '12px auto 0', padding: '10px 14px', background: '#FFF7E6', border: '1px solid #F5C36A', borderRadius: 8, fontFamily: 'system-ui', fontSize: 13, color: '#5C3D00' }}>
           <div style={{ fontWeight: 700, marginBottom: 4 }}>Ayşe — Medula'ya girmeden önce:</div>
