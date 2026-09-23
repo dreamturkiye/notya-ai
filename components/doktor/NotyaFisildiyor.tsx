@@ -27,13 +27,14 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { PEDI_BAYRAK_AD, type PediKohortSatir } from '@/specialties/pediatri/engines/kohort'
 import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
-// Sampled from public/doktor-chrome/plant.jpg (dark-blue leaf tones), not a design-system token --
+// Sampled from public/doktor-chrome/plant.jpg (blue-green leaf tones), not a design-system token --
 // this box is deliberately its own accent, separate from the page's pine.
-// 2026-09-24 (Kaan): recomputed to the color as actually SEEN on screen -- the raw file's tone run
-// through the page's own filter (saturate .65, contrast .88, brightness 1.1) and 50% opacity blend
-// over the cream background, not the raw pixel value.
-const FISILTI_KOYU = '#9cbcbf'
-const FISILTI_KOYU2 = '#b4d0d2'
+// 2026-09-24 (Kaan): the lighter leaf, as actually seen on screen -- raw tone run through the
+// page's own filter (saturate .65, contrast .88, brightness 1.1) and 50% opacity blend over the
+// cream background. Border added since this tone sits close to the page bg in lightness.
+const FISILTI_KOYU = '#d0d8d5'
+const FISILTI_KOYU2 = '#dde3e0'
+const FISILTI_BORDER = 'rgba(30,51,54,0.18)'
 
 const LEAF = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -81,8 +82,9 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
       <div
         style={S({
           background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
+          border: `1px solid ${FISILTI_BORDER}`,
           color: '#1e3336', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
-          boxShadow: '0 16px 36px rgba(156,188,191,0.35)',
+          boxShadow: '0 12px 28px rgba(30,51,54,0.1)',
         })}
       >
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
@@ -103,10 +105,10 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
       type="button"
       onClick={() => router.push(`/dashboard/doktor/hastalar/${satir.patientId}?tab=${satir.sekme}`)}
       style={S({
-        display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', border: 'none',
+        display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', border: `1px solid ${FISILTI_BORDER}`,
         background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
         color: '#1e3336', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
-        boxShadow: '0 16px 36px rgba(156,188,191,0.35)',
+        boxShadow: '0 12px 28px rgba(30,51,54,0.1)',
       })}
     >
       <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
