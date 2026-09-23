@@ -71,8 +71,8 @@ function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: str
 }
 function trTarih(iso: string | null): string { if (!iso) return ''; return new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
-const kutu: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 13.5, lineHeight: 1.6, padding: '10px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' };
-const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 4 };
+const kutu: React.CSSProperties = { width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: '#3b2e24', fontSize: 13.5, lineHeight: 1.6, padding: '10px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' };
+const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 4 };
 
 export default function NotSayfasi() {
   const params = useParams<{ id: string }>();
@@ -232,15 +232,15 @@ export default function NotSayfasi() {
     } catch (e) { setDurum('hata'); alert(e instanceof Error ? e.message : 'Onaylanamadı'); setTimeout(() => setDurum('bos'), 2500); }
   };
 
-  if (hata) return <div style={{ padding: 40, color: '#EDF1F7', fontFamily: 'system-ui' }}>{hata}</div>;
-  if (!veri) return <div style={{ padding: 40, color: '#8FA0B5', fontFamily: 'system-ui' }}>Not yükleniyor…</div>;
+  if (hata) return <div style={{ padding: 40, color: '#3b2e24', fontFamily: 'system-ui' }}>{hata}</div>;
+  if (!veri) return <div style={{ padding: 40, color: '#8b7d70', fontFamily: 'system-ui' }}>Not yükleniyor…</div>;
   const { not, hasta } = veri;
   const onayli = !!not.approvedAt;
   const kapsam = istemciKapsami(not.bransKapsami);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0B1628', color: '#EDF1F7', fontFamily: 'system-ui' }}>
-      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0B1628', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent', color: '#3b2e24', fontFamily: 'system-ui' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <GeriLink
           href={notDuzenleGeriHref(hasta.patientId)}
           ileriHref={`/dashboard/doktor/notlar/${not.id}/yazdir`}
@@ -248,10 +248,10 @@ export default function NotSayfasi() {
         >
           {hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}
         </GeriLink>
-        <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: '#9FB3C8', fontSize: 13, textDecoration: 'none' }}>{hasta.patientId ? 'Muayene Geçmişi →' : 'Hastalar →'}</a>
+        <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: '#8b7d70', fontSize: 13, textDecoration: 'none' }}>{hasta.patientId ? 'Muayene Geçmişi →' : 'Hastalar →'}</a>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: '#8FA0B5', fontWeight: 500 }}>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)}</span></div>
-          <div style={{ fontSize: 12, color: onayli ? '#22C55E' : '#F59E0B' }}>
+          <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: '#8b7d70', fontWeight: 500 }}>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)}</span></div>
+          <div style={{ fontSize: 12, color: onayli ? '#2E6E4E' : '#B4832F' }}>
             {onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}
             {degisti ? ' · kaydedilmemiş değişiklik var' : ''}
             {aiDurum === 'bekliyor' ? ' · Ayşe notu yeniden okuyor…' : ''}
@@ -259,9 +259,9 @@ export default function NotSayfasi() {
             {aiDurum === 'hata' ? ' · AI öneri güncellemesi başarısız' : ''}
           </div>
         </div>
-        <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: '#C9D4E3', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
-        <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(45,212,191,0.35)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
-        <button type="button" onClick={kaydetVeOnayla} disabled={durum === 'kaydediyor'} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
+        <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: '#3b2e24', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
+        <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: '#2f4334', fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
+        <button type="button" onClick={kaydetVeOnayla} disabled={durum === 'kaydediyor'} style={{ background: '#2f4334', border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
       </div>
@@ -283,7 +283,7 @@ export default function NotSayfasi() {
             onDegis={(k, v) => isaretle((x: string) => setVital({ ...vital, [k]: x }))(v)}
             persentiller={veri.not.buyumePersentilleri}
             girdiStili={{ ...kutu, width: 76, padding: '6px 8px' }}
-            persentilRengi="#0F9B8E"
+            persentilRengi="#2f4334"
             eriskinVkiGoster={!kapsam.pediatrik}
           />
         </div>
@@ -295,31 +295,31 @@ export default function NotSayfasi() {
         ))}
         <div>
           <div style={{ ...etiket, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span>ICD-10 <span style={{ fontWeight: 400, color: '#64748B' }}>(onayınıza tabi)</span></span>
-            <button type="button" disabled={aiDurum === 'bekliyor'} onClick={() => { void aiYenidenOku(); }} style={{ background: 'transparent', border: '1px solid rgba(245,158,11,0.4)', color: '#F59E0B', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: aiDurum === 'bekliyor' ? 'default' : 'pointer', opacity: aiDurum === 'bekliyor' ? 0.5 : 1 }}>🔄 Notu AI ile yeniden değerlendir</button>
+            <span>ICD-10 <span style={{ fontWeight: 400, color: '#8b7d70' }}>(onayınıza tabi)</span></span>
+            <button type="button" disabled={aiDurum === 'bekliyor'} onClick={() => { void aiYenidenOku(); }} style={{ background: 'transparent', border: '1px solid rgba(180,131,47,0.4)', color: '#B4832F', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: aiDurum === 'bekliyor' ? 'default' : 'pointer', opacity: aiDurum === 'bekliyor' ? 0.5 : 1 }}>🔄 Notu AI ile yeniden değerlendir</button>
           </div>
           {icd.length > 0 ? (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{icd.map((c, i) => <span key={i} style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px' }}>{c.code}{(c.description_tr || c.description) ? ` — ${c.description_tr || c.description}` : ''}</span>)}</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{icd.map((c, i) => <span key={i} style={{ fontSize: 12, background: '#F6F0E4', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 999, padding: '3px 10px' }}>{c.code}{(c.description_tr || c.description) ? ` — ${c.description_tr || c.description}` : ''}</span>)}</div>
           ) : (
-            <div style={{ fontSize: 12, color: '#64748B' }}>Henüz ICD önerisi yok — notu düzenleyince Ayşe günceller.</div>
+            <div style={{ fontSize: 12, color: '#8b7d70' }}>Henüz ICD önerisi yok — notu düzenleyince Ayşe günceller.</div>
           )}
         </div>
         {aiDeg.trim() ? (
           <div>
             <div style={etiket}>Klinik değerlendirme (AI · hastaya görünmez)</div>
-            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: '#CBD5E1' }}>{aiDeg}</div>
+            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: '#3b2e24' }}>{aiDeg}</div>
           </div>
         ) : null}
         <div>
-          <div style={etiket}>İlaçlar <span style={{ fontWeight: 400, color: '#64748B' }}>(her satır bir ilaç: Ad — doz — kullanım — süre)</span></div>
+          <div style={etiket}>İlaçlar <span style={{ fontWeight: 400, color: '#8b7d70' }}>(her satır bir ilaç: Ad — doz — kullanım — süre)</span></div>
           <textarea value={ilac} onChange={(e) => isaretle(setIlac)(e.target.value)} rows={Math.max(2, ilac.split('\n').length)} placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam" style={kutu} />
         </div>
         <div>
-          <div style={etiket}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>({kapsam.hitap.evdeDikkatHedefi} · her satır bir madde)</span></div>
+          <div style={etiket}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#8b7d70' }}>({kapsam.hitap.evdeDikkatHedefi} · her satır bir madde)</span></div>
           <textarea value={alarm} onChange={(e) => isaretle(setAlarm)(e.target.value)} rows={Math.max(3, alarm.split('\n').length)} style={kutu} />
         </div>
         <div>
-          <div style={etiket}>{kapsam.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: '#64748B' }}>(portala gider)</span></div>
+          <div style={etiket}>{kapsam.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: '#8b7d70' }}>(portala gider)</span></div>
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
       </div>
