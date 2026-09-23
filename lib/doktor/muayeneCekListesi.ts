@@ -25,6 +25,8 @@ export interface CekListeGirdi {
   seansBransi?: string | null
   doktorBransi?: string | null
   hastaDogumIso?: string | null
+  /** Vizitin tarihi (geçmiş tarihli muayene) — yaş bandı bugüne göre değil o güne göre. */
+  referansIso?: string | null
 }
 
 export type CekDurum = 'hekim' | 'dosyada' | 'eksik'
@@ -124,7 +126,7 @@ export function muayeneCekListesi(g: CekListeGirdi): CekMadde[] {
   const liste = [...ORTAK]
   if (ped) {
     liste.push(...PEDIATRI)
-    liste.push(...saglamCocukCekMaddeleri(g.hastaDogumIso))
+    liste.push(...saglamCocukCekMaddeleri(g.hastaDogumIso, g.referansIso || undefined))
   }
   if (brans && BRANS_EK[brans]) liste.push(...BRANS_EK[brans]!)
   const gorulen = new Set<string>()

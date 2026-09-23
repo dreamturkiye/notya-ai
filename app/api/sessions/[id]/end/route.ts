@@ -226,7 +226,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     const isaretler = body.cekListe && typeof body.cekListe === 'object' && !Array.isArray(body.cekListe)
       ? body.cekListe as Record<string, boolean>
       : {}
-    const cekMaddeler = muayeneCekListesi({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso })
+    const cekMaddeler = muayeneCekListesi({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso })
     const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekMaddeler, isaretler) })
     const cekListeDogrulama = cekListeDogrula(cekMaddeler, {
       transcript,
@@ -237,7 +237,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     const { bransKapsami } = await import('@/lib/specialties/kapsam')
     const { buyumePersentilleriniHesapla, buyumeYorumunuEkle } = await import('@/lib/clinical/buyumeEgrisi')
     const buyume = bransKapsami({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso }).pediatrik
-      ? buyumePersentilleriniHesapla(noteData?.vitaller, dogumIso, cinsiyet, new Date().toISOString())
+      ? buyumePersentilleriniHesapla(noteData?.vitaller, dogumIso, cinsiyet, gecmisTarihIso || new Date().toISOString())
       : null
 
     // Save note
