@@ -319,7 +319,7 @@ export function cekBlokDegistir(aiDegerlendirme: string | null | undefined, yeni
 export function cekListePromptBlogu(maddeler: CekMadde[], isaretler: Record<string, boolean>): string {
   if (!maddeler.length) return ''
   const satir = maddeler.map((m) => `- ${m.etiket}: ${isaretler[m.id] ? 'hekim işaretledi' : 'işaretlenmedi'}`).join('\n')
-  return `\nÇEK LİSTESİ (hekim işaretleri — not gövdesine uydurma YASAK):\n${satir}\nEksik maddeleri YALNIZ aiDegerlendirme'de "çek listesinde bakılmayan:" diye söyle. Transkriptte olmayan bulguyu objektif/değerlendirme/plan'a YAZMA.`
+  return `\nÇEK LİSTESİ (hekim işaretleri — not gövdesine uydurma YASAK):\n${satir}\naiDegerlendirme'de de eksik madde listesi YAZMA: çek listesi sistem tarafından hesaplanıp ayrıca gösteriliyor (NOTYA-CEK-DOGRULA-03). Transkriptte olmayan bulguyu objektif/değerlendirme/plan'a YAZMA.`
 }
 
 const DEPO_ON = 'notya.muayeneCek.'
