@@ -14,6 +14,8 @@ import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 import { seansArsivdeMi } from '@/lib/doktor/arsiv'
+import { cekBlokVarMi } from '@/lib/doktor/muayeneCekListesi'
+import { cekListeVerisiYukle, kayitliHekimIsaretleri } from '@/lib/doktor/cekListeSunucu'
 
 export const dynamic = 'force-dynamic'
 
@@ -108,6 +110,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const bransKapsami = { brans: kapsam.brans, pediatrik: kapsam.pediatrik, veliDili: kapsam.veliDili, olcumler: kapsam.olcumler, hitap: kapsam.hitap }
   const buyume = kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null
 
+  // NOTYA-CEK-DOGRULA-02: çek listesi girdileri — sayfa paneli notun GÜNCEL alanlarından her düzenlemede yeniden hesaplar.
+  // Yalnız kayıtlı ÇEK LİSTESİ bloğu olan notlarda (panel kapsamı değişmez).
+  let cek: { maddeler: unknown[]; oncekiIdler: string[]; isaretler: Record<string, boolean> } | null = null
+  if (cekBlokVarMi(not.ai_degerlendirme)) {
+    try {
+      const veri = await cekListeVerisiYukle(supabase, {
+        doktorId, patientId: seans?.patient_id ? String(seans.patient_id) : null, seansBransi: seans?.specialty ?? null,
+        doktorBransi: kapsam.doktorBransi, hastaDogumIso: dogumIso, referansIso: not.created_at, haricNotId: not.id,
+      })
+      cek = { maddeler: veri.maddeler, oncekiIdler: veri.oncekiIdler, isaretler: kayitliHekimIsaretleri(not.ai_degerlendirme, veri) }
+    } catch (e) { console.error('[notes/get] cek-liste', e) }
+  }
+
   return NextResponse.json({
     not: {
       id: not.id,
@@ -135,6 +150,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       aiDegerlendirme: buyumeYorumunuEkle(not.ai_degerlendirme || '', buyume),
       takipSuresi: not.takip_suresi || '',
       arsivde: seansArsivdeMi(not.sessions),
+      cek,
     },
     hasta: { ...hasta, patientId: seans?.patient_id ? String(seans.patient_id) : null },
     doktor: { ad: doktorAd, diplomaNo, ozelBaslikSatirlari, ozelLogo },

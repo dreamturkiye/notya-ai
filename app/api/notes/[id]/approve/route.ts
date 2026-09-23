@@ -6,6 +6,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
+import { cekBlokDegistir, cekBlokVarMi, cekNotMetni } from '@/lib/doktor/muayeneCekListesi'
+import { cekListeHesapla, cekListeVerisiYukle, kayitliHekimIsaretleri } from '@/lib/doktor/cekListeSunucu'
+import { hekimBransi } from '@/lib/doktor/hekimAdi'
+import { hastaDogumIso } from '@/lib/specialties/kapsamSunucu'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: existing } = await supabase
     .from('notes')
     .select(
-      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, icd10_codes, recete_onerisi, ai_degerlendirme, created_at, sessions(patient_id)'
+      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, icd10_codes, recete_onerisi, ai_degerlendirme, created_at, sessions(patient_id, specialty)'
     )
     .eq('id', noteId)
     .eq('doctor_id', user.id)
@@ -134,7 +138,28 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   // Ayşe'nin değerlendirmesi (metin, hastaya görünmez) — tanı değişince yeniden üretilebilir
-  const yeniAiDeg = duzenlemeler.aiDegerlendirme
+  let yeniAiDeg = duzenlemeler.aiDegerlendirme
+  // NOTYA-CEK-DOGRULA-02: ÇEK LİSTESİ bloğu istemciden / LLM'den alınmaz — onaylanan GÜNCEL alanlardan sunucuda yeniden hesaplanır.
+  const aiTaban = typeof yeniAiDeg === 'string' && yeniAiDeg.trim() ? yeniAiDeg : String(existing.ai_degerlendirme || '')
+  if (cekBlokVarMi(existing.ai_degerlendirme) || cekBlokVarMi(aiTaban)) {
+    try {
+      const seansC = (Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions) as { patient_id?: string | null; specialty?: string | null } | null
+      const patientId = seansC?.patient_id ? String(seansC.patient_id) : null
+      const son = (kolon: string) => (kolon in guncelleme ? guncelleme[kolon] : (existing as Record<string, unknown>)[kolon]) as string | null
+      const [doktorBransi, dogumIso] = await Promise.all([hekimBransi(supabase, user.id), hastaDogumIso(supabase, user.id, patientId)])
+      const veri = await cekListeVerisiYukle(supabase, {
+        doktorId: user.id, patientId, seansBransi: seansC?.specialty ?? null, doktorBransi, hastaDogumIso: dogumIso,
+        referansIso: existing.created_at as string, haricNotId: noteId,
+      })
+      const { metin } = cekListeHesapla(veri, cekNotMetni({
+        basvuruYakinmasi: son('basvuru_yakinmasi'), subjektif: son('content_subjektif'), objektif: son('content_objektif'),
+        degerlendirme: son('content_degerlendirme'), plan: son('content_plan'), anamnez: son('content_anamnez'),
+        fizikMuayene: son('content_fizik_muayene'), tani: son('content_tani'), tedavi: son('content_tedavi'),
+        vitaller: (son('vitaller') as unknown as Record<string, unknown>) || null, ilaclar: son('content_ilaclar'),
+      }), kayitliHekimIsaretleri(existing.ai_degerlendirme, veri))
+      yeniAiDeg = cekBlokDegistir(aiTaban, metin)
+    } catch (e) { console.error('[approve] cek-liste', e) }
+  }
   if (typeof yeniAiDeg === 'string' && yeniAiDeg.trim() && yeniAiDeg.trim() !== String(existing.ai_degerlendirme || '').trim()) {
     guncelleme.ai_degerlendirme = yeniAiDeg.trim().slice(0, 4000)
     loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'ai_degerlendirme', onceki: String(existing.ai_degerlendirme || '').slice(0, 2000), sonraki: yeniAiDeg.trim().slice(0, 2000) })
