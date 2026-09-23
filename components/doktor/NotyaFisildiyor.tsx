@@ -31,27 +31,54 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
   const router = useRouter()
   const [satir, setSatir] = useState<PediKohortSatir | null>(null)
   const [toplam, setToplam] = useState(0)
+  const [yukleniyor, setYukleniyor] = useState(true)
 
   useEffect(() => {
-    if (specialty !== 'pediatri') return // other specialties: extend per-branş later, same pattern
+    if (specialty !== 'pediatri') { setYukleniyor(false); return } // other branş: not built yet -- different from "checked, nothing found"
     let iptal = false
     ;(async () => {
       try {
         const t = await ensureDoctorAccessToken()
-        if (!t) return
+        if (!t) { if (!iptal) setYukleniyor(false); return }
         const r = await fetch('/api/doktor/pediatri/kohort', { headers: { Authorization: `Bearer ${t}` } })
-        if (!r.ok) return
+        if (!r.ok) { if (!iptal) setYukleniyor(false); return }
         const j = await r.json()
         const satirlar = (j.satirlar || []) as PediKohortSatir[]
-        if (!iptal && satirlar.length) { setSatir(satirlar[0]); setToplam(satirlar.length) }
-      } catch { /* fısıltı kritik değil — sessizce görünmez kalır */ }
+        if (!iptal) {
+          if (satirlar.length) { setSatir(satirlar[0]); setToplam(satirlar.length) }
+          setYukleniyor(false)
+        }
+      } catch { if (!iptal) setYukleniyor(false) /* fısıltı kritik değil — sessizce boş kalır */ }
     })()
     return () => { iptal = true }
   }, [specialty])
 
-  if (!satir) return null
+  // Pediatri dışı branşlarda motor henüz yok -- kart hiç görünmez (bu, "kontrol edildi, boşçıktı"dan farklı).
+  if (specialty !== 'pediatri') return null
+  // Bir anı kontrol sürerken boş durumun yanıp sönmesini önler.
+  if (yukleniyor) return null
 
   const S = (s: Record<string, unknown>) => s as React.CSSProperties
+
+  if (!satir) {
+    // Gerçekten kontrol edildi, bekleyen yok -- kart kaybolmaz, durumu dürüstçe söyler.
+    return (
+      <div
+        style={S({
+          background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 20,
+          padding: '20px 22px 18px', boxShadow: '0 16px 34px rgba(58,44,34,0.06)',
+        })}
+      >
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: CHROME_RENK.pine, fontSize: 16, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
+          {LEAF} Notya fısıldıyor
+        </div>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, color: CHROME_RENK.ink })}>
+          Şu an bekleyen bir şey yok — her şey güncel.
+        </div>
+      </div>
+    )
+  }
+
   const baslikBayrak = PEDI_BAYRAK_AD[satir.bayraklar[0]]
   const detaySatiri = satir.detay[0] || ''
 
