@@ -410,6 +410,27 @@ export const DOSYA_NOTU_EKLE = eylem({
   // removes the line in the note editor, where they can see what else changed.
 })
 
+/* ───────────────────────────── T1 · Fısıltı sessize alma ────────────────────────────── */
+
+export const FISILTI_SESSIZE_AL = eylem({
+  anahtar: 'fisilti_sessize_al',
+  etiket: 'Fısıltıyı sessize al',
+  aciklama: "Bu hastanın fısıltı hatırlatmasını susturur -- örn. aşı başka bir klinikte yapıldıysa ve bunu şimdilik kayda geçirmek mümkün değilse. Sessiz kayıt görünür kalır (kim, ne zaman, neden); tıklamayla değil, yalnız bu eylemle kaldırılır.",
+  alanlar: [{ anahtar: 'sebep', etiket: 'Sebep', tip: 'uzunMetin', zorunlu: true }],
+  zorunlu: ['sebep'],
+  kademe: 'T1',
+  branslar: 'hepsi',
+  calistir: async (ctx, v) => {
+    const { fisiltiSessizeAlEkle } = await import('@/lib/doktor/fisiltiSessizeAl')
+    const r = await fisiltiSessizeAlEkle(ctx.supabase, ctx.doktorId, ctx.hasta.id, String(ctx.brans || ''), String(v.sebep).trim())
+    return { hedefTablo: 'fisilti_sessizler', hedefId: r.id, once: null, sonra: { sebep: v.sebep, brans: ctx.brans } }
+  },
+  geriAl: async (ctx, kayit) => {
+    const { fisiltiSessizeAlGeriAl } = await import('@/lib/doktor/fisiltiSessizeAl')
+    await fisiltiSessizeAlGeriAl(ctx.supabase, kayit.hedefId)
+  },
+})
+
 /* ─────────────────────────────── T2 · İlaç düzeltmeleri ─────────────────────────────── */
 
 async function aktifIlac(ctx: EylemBaglami, ad: string) {
@@ -565,6 +586,7 @@ export const TEMEL_EYLEMLER: EylemTanimi[] = [
   BAS_CEVRESI_EKLE,
   KONTROL_RANDEVUSU_OLUSTUR,
   DOSYA_NOTU_EKLE,
+  FISILTI_SESSIZE_AL,
   ILAC_SONLANDIR,
   ILAC_DOZ_DEGISTIR,
   ALERJI_KALDIR,

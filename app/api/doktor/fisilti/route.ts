@@ -45,9 +45,25 @@ export async function GET(req: NextRequest) {
 
   if (!satirlar.length) return NextResponse.json({ item: null, toplam: 0 })
 
-  const item: FisiltiItem | null = normalizeKohortSatiri(satirlar[0], brans)
-  if (!item) return NextResponse.json({ item: null, toplam: 0 })
-  item.toplamBekleyen = satirlar.length
+  // Skip patients the doctor has muted for this branş (fisilti_sessize_al) -- visible mute, not a
+  // silent dismiss: the row stays in fisilti_sessizler with who/when/why, just excluded here.
+  const { data: sessizler } = await supabase
+    .from('fisilti_sessizler')
+    .select('patient_id')
+    .eq('doctor_id', user.id)
+    .eq('brans', brans)
+    .is('kaldirildi_at', null)
+  const susturulmusHastalar = new Set((sessizler || []).map((s) => String(s.patient_id)))
+  const gorunurSatirlar = satirlar.filter((s) => {
+    const pid = String(s.patientId || s.patient_id || '')
+    return pid && !susturulmusHastalar.has(pid)
+  })
 
-  return NextResponse.json({ item, toplam: satirlar.length })
+  if (!gorunurSatirlar.length) return NextResponse.json({ item: null, toplam: 0 })
+
+  const item: FisiltiItem | null = normalizeKohortSatiri(gorunurSatirlar[0], brans)
+  if (!item) return NextResponse.json({ item: null, toplam: 0 })
+  item.toplamBekleyen = gorunurSatirlar.length
+
+  return NextResponse.json({ item, toplam: gorunurSatirlar.length })
 }
