@@ -15,5 +15,5 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="İşitme takibim" subtitle="Kontrol tarihi. dB yorumu ve tanı yoktur." acil="Ani işitme kaybı: KBB / 112." basePath={basePath} />
+  return <KlinikHatirlatmaView title="İşitme takibim" subtitle="Kontrol tarihi. dB yorumu ve tanı yoktur." acil="Ani işitme kaybı: KBB / 112." basePath={basePath} ritim={['Kontrol tarihi uzmanın kaydıyladır', 'dB yorumu ve cihaz raporu yoktur']} />
 }

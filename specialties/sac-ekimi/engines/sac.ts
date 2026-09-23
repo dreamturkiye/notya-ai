@@ -32,6 +32,12 @@ export function yikamaTakvimi(ameliyatIso: string, bugunIso: string): Array<{ gu
   }))
 }
 
+export function fotoKvkkRiza(onamVar: boolean, ameliyatIso: string): { ozet: string } | { hata: string } {
+  if (!onamVar) return { hata: 'Saç fotoğrafı için ayrı KVKK rızası işaretleyin — işlem onamı yetmez.' }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ameliyatIso)) return { hata: 'Foto tarihini girin.' }
+  return { ozet: `Foto KVKK rızası kayıtlı (${ameliyatIso}). Yayın / sosyal medya izni bu kutudan doğmaz.` }
+}
+
 export const INTAKE_ACIL = [
   'Yeni ekim alanında hızla yayılan kızarıklık, ateş veya irin',
   'Ani yüz şişmesi veya nefes darlığı (ilaç / anestezi sonrası)',

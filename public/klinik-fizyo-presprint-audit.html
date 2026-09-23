@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fizyoterapi — Klinik pre-sprint audit · Notya</title>
+  <meta name="description" content="Eylül 19 chrome. Fizyoterapi Klinik dalı baseline ~14%. Chapter/Araç/portal yok. No PHI." />
+  <style>    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#15803D;
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:#4ADE80; text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+    td.domain { font-weight:600; } td.note { color:var(--muted); } td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:#15803D; border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(21,128,61,.12); border-color:rgba(21,128,61,.4); color:#86EFAC; }
+    .banner.warn { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.4); color:#FBBF24; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); }
+    @media (max-width:900px) { .stats,.cards,.cards.three { grid-template-columns:1fr 1fr; } .cards,.cards.three { grid-template-columns:1fr; } .bar-row { grid-template-columns:1fr; } }</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Pre-sprint Klinik audit · Fizyoterapi</span>
+    <span>
+      <a href="/klinik-fizyo-exceptional-audit.html">Post-exceptional →</a> ·
+      <a href="/klinik-presprint-audit.html">Klinik base →</a>
+    </span>
+  </div>
+  <div class="banner warn"><b>Pre-sprint lock · 2026-09-22</b> — Klinik ayrı kategori. Doktor TUS gold’u bu dalın gold’u değildir. ≠ FTR (fizik-tedavi) / FTR’m / enjeksiyon. Deploy yok (go bekleniyor).</div>
+  <h1>Fizyoterapi — Pre-sprint Audit (~14%)</h1>
+  <p class="lede">29.03.2025 müttefik yönetmeliği × ICF × TR ayaktan fizyo seans ritüeli. Soru: bu Klinik dal exceptional barda mı? <b>Hayır — honest wow ~14%.</b> Landing persona + Pabau admin var; motor, Araçlar, hasta dosyası, Sağlığım yok.</p>
+  <div class="pills">
+    <span class="pill danger">KLINIK-FIZYO-EXCEPTIONAL-01 baseline</span>
+    <span class="pill warning">müttefik 29.03.2025</span>
+    <span class="pill info">Honest wow ~14%</span>
+    <span class="pill danger">Araçlar 0</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (landing)</div></div>
+    <div class="stat"><div class="v danger">6</div><div class="l">Missing domains</div></div>
+    <div class="stat"><div class="v danger">0</div><div class="l">Klinik Araç</div></div>
+    <div class="stat"><div class="v danger">0</div><div class="l">Portal Strong</div></div>
+  </div>
+  <div class="callout warning"><h2>Gap</h2><p>Chapter motor, Klinik Araçlar, kohort, Fizyom portal, hasta/randevu omurgası ve ≠ FTR (fizik-tedavi) / FTR’m / enjeksiyon kapısı yok. Bu haliyle TR klinik uzmanı “ulan bu başka” demez.</p></div>
+  <h2>Wow bar</h2>
+  <div class="bars">
+    <div class="bar-row"><span>Fizyoterapi</span><div class="bar-track"><div class="bar-fill warn" style="width:14%"></div></div><b>14</b></div>
+    <div class="bar-row"><span>Klinik omurga</span><div class="bar-track"><div class="bar-fill warn" style="width:12%"></div></div><b>12</b></div>
+    <div class="bar-row"><span>Hasta portalı</span><div class="bar-track"><div class="bar-fill warn" style="width:0%"></div></div><b>0</b></div>
+  </div>
+  <h2>Coverage depth</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Depth</th><th>Note</th><th>Gap to wow</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Landing / persona</td><td><span class="pill warning">Partial</span></td><td class="note">/klinik# hash + sesli persona</td><td class="gap">Ürün yüzeyi yok</td></tr>
+      <tr><td class="domain">Motor / chapter</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">Deterministik motor</td></tr>
+      <tr><td class="domain">Klinik Araçlar</td><td><span class="pill danger">Missing</span></td><td class="note">/klinik-tools boş</td><td class="gap">2–3 tile + kohort</td></tr>
+      <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill danger">Missing</span></td><td class="note">Çekirdek yok (hasta yok)</td><td class="gap">Fizyom</td></tr>
+      <tr><td class="domain">Omurga (hasta/randevu)</td><td><span class="pill danger">Thin</span></td><td class="note">Pabau notu</td><td class="gap">Klinik Hastalar / Randevular</td></tr>
+      <tr><td class="domain">Sızıntı kapısı</td><td><span class="pill danger">Missing</span></td><td class="note">≠ FTR (fizik-tedavi) / FTR’m / enjeksiyon</td><td class="gap">Test + slug</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Mandate / practice</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate</th><th>Level</th><th>In product today</th><th>Gap to wow</th></tr></thead>
+    <tbody><tr><td class="domain">29.03.2025 tanı hekimde</td><td class="note">Law · 29.03.2025</td><td class="note">Yok</td><td class="gap">Exceptional pack</td></tr><tr><td class="domain">ICF</td><td class="note">Law · 29.03.2025</td><td class="note">Yok</td><td class="gap">Exceptional pack</td></tr><tr><td class="domain">e-reçete gizli</td><td class="note">Law · 29.03.2025</td><td class="note">Yok</td><td class="gap">Exceptional pack</td></tr></tbody>
+  </table></div>
+  <h2>Planned Klinik-only Araçlar</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tool</th><th>Route</th><th>Bucket</th></tr></thead>
+    <tbody><tr><td class="domain">ICF seans özeti</td><td class="note">/klinik-tools/fizyo-icf</td><td><span class="pill info">Klinik specialty-only</span></td></tr><tr><td class="domain">Seans vadesi</td><td class="note">/klinik-tools/fizyo-seans</td><td><span class="pill info">Klinik specialty-only</span></td></tr><tr><td class="domain">Fizyoterapi kohort</td><td class="note">/klinik-tools/fizyo-kohort</td><td><span class="pill info">Klinik specialty-only</span></td></tr>
+      <tr><td class="domain">Doktor TUS Araçları</td><td class="note">Görünmez</td><td><span class="pill success">Locked</span></td></tr>
+    </tbody>
+  </table></div>
+  <h2>Golden TR references (planned lock)</h2>
+  <p class="lede" style="font-size:13px">TR klinisyen / müttefik meslek altın kaynakları (doktor TURKISH_REFS ile aynı 5’li kalıp). Çakışmada TR &gt; uluslararası. Katalog: <code>lib/klinik/klinikTurkishRefs.ts</code> — Doktor TURKISH_REFS’e eklenmez.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Golden TR reference</th></tr></thead>
+    <tbody><tr><td>1</td><td class="domain">T.C. SB Sağlık Meslek Mensuplarının Serbest Meslek İcrası Hakkında Yönetmelik (RG 29.03.2025/32856) — fizyoterapist; tanı/reçete yok</td></tr><tr><td>2</td><td class="domain">Türkiye Fizyoterapistler Derneği (TFTD) meslek çerçevesi ve eğitim önerileri</td></tr><tr><td>3</td><td class="domain">ICF (WHO) — TR fizyoterapi eğitiminde kullanılan işlevsellik dili (tanı değil)</td></tr><tr><td>4</td><td class="domain">T.C. SB rehabilitasyon hizmetleri: hekim tanı referansı zorunlu</td></tr><tr><td>5</td><td class="domain">SGK fizik tedavi seans hakkı iddia edilmez — FTR raporu hekimdedir</td></tr></tbody>
+  </table></div>
+  <h2>Planned game changers (exceptional sprint)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Why they care</th><th>Size</th></tr></thead>
+    <tbody><tr><td>1</td><td class="domain">ICF + hekim tanı kilidi</td><td class="note">Tanısız ICF açılmaz (29.03.2025)</td><td><span class="pill info">L</span></td></tr><tr><td>2</td><td class="domain">Seans vadesi</td><td class="note">SGK seans hakkı iddia edilmez</td><td><span class="pill info">S</span></td></tr><tr><td>3</td><td class="domain">Fizyom</td><td class="note">Tarih; tanı/egzersiz reçetesi yok</td><td><span class="pill info">M</span></td></tr><tr><td>4</td><td class="domain">FTR sızıntısı yok</td><td class="note">fizik-tedavi araçları bu gridde yok</td><td><span class="pill info">M</span></td></tr></tbody>
+  </table></div>
+  <p class="foot">Pre-sprint · 2026-09-22 · KLINIK-FIZYO-EXCEPTIONAL-01 baseline · No PHI · not on Doktor Araçları · <a href="/klinik-fizyo-exceptional-audit.html">after →</a></p>
+</div>
+</body>
+</html>

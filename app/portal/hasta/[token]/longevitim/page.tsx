@@ -15,5 +15,5 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Planım" subtitle="Sonraki seans tarihi. Protokol içeriği ve doz yoktur." acil="IV reaksiyon: 112." basePath={basePath} />
+  return <KlinikHatirlatmaView title="Planım" subtitle="Sonraki seans tarihi. Protokol içeriği ve doz yoktur." acil="IV reaksiyon: 112." basePath={basePath} ritim={['Sonraki seans hekim kaydınca', 'IV sırasında yalnız bırakılmayın']} />
 }

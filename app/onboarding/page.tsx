@@ -227,7 +227,19 @@ function OnboardingInner() {
     } else if (profession_type === 'psikolog') {
       finalSpecialty = 'Psikoloji';
     } else if (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani') {
-      finalSpecialty = agentMapping[uzmanlikSecimi] || uzmanlikSecimi;
+      const klinikMap: Record<string, string> = {
+        'Estetik & Plastik Cerrahi': 'estetik-cerrahi',
+        'Sac Ekimi': 'sac-ekimi',
+        Dermatoloji: 'klinik-dermatoloji',
+        'Medikal Estetik': 'medikal-estetik',
+        'Longevity & Wellness': 'longevity',
+        Fizyoterapi: 'fizyoterapi',
+        'Klinik Psikoloji': 'klinik-psikolog',
+        Diyetisyen: 'diyetisyen',
+        Ergoterapi: 'ergoterapi',
+        Odyoloji: 'odyoloji',
+      }
+      finalSpecialty = klinikMap[uzmanlikSecimi] || uzmanlikSecimi
     }
 
     const agent = agentMapping[specialty] || agentMapping[uzmanlikSecimi] || 'default';

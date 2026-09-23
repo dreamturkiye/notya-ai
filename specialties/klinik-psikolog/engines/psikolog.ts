@@ -9,6 +9,18 @@ export function seansCercevesi(yaklasim: string, olcek: string | null, kriz: boo
   return { ozet: `Seans çerçevesi: ${yaklasim.trim()}. ${olcekSatir} Tıbbi tanı ve ilaç yok.` }
 }
 
+export function seansVadesi(sonIso: string, aralikGun: number, bugun: string): { due: string; ozet: string } | { hata: string } {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(sonIso) || !(aralikGun >= 3 && aralikGun <= 60)) {
+    return { hata: 'Son seans ve 3–60 gün aralık girin. Skor yorumu yok.' }
+  }
+  const d = new Date(sonIso + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + aralikGun)
+  const due = d.toISOString().slice(0, 10)
+  const fark = Math.round((Date.parse(due + 'T12:00:00Z') - Date.parse(bugun + 'T12:00:00Z')) / 86400000)
+  const durum = fark < 0 ? 'gecikti' : fark === 0 ? 'bugün' : `${fark} gün sonra`
+  return { due, ozet: `Sonraki seans ${due} (${durum}). Ölçek yorumu / tanı yok.` }
+}
+
 export const INTAKE_ACIL = [
   'Kendine zarar verme veya intihar düşüncesi',
   'Başkasına zarar verme düşüncesi',

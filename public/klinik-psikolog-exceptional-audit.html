@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Klinik Psikoloji — Klinik post-exceptional audit · Notya</title>
+  <meta name="description" content="KLINIK-PSIKOLOG-EXCEPTIONAL-01: Klinik Psikoloji ~12% → ~91%. 3 Klinik Araç. Seanslarım Strong. No PHI." />
+  <style>    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#15803D;
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:#4ADE80; text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+    td.domain { font-weight:600; } td.note { color:var(--muted); } td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:#15803D; border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(21,128,61,.12); border-color:rgba(21,128,61,.4); color:#86EFAC; }
+    .banner.warn { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.4); color:#FBBF24; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); }
+    @media (max-width:900px) { .stats,.cards,.cards.three { grid-template-columns:1fr 1fr; } .cards,.cards.three { grid-template-columns:1fr; } .bar-row { grid-template-columns:1fr; } }</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional Klinik audit · Klinik Psikoloji</span>
+    <span>
+      <a href="/klinik-psikolog-presprint-audit.html">Pre-sprint (~12%) →</a> ·
+      <a href="/klinik-exceptional-audit.html">Klinik 10 →</a>
+    </span>
+  </div>
+  <div class="banner ok"><b>Post-exceptional KLINIK-PSIKOLOG-EXCEPTIONAL-01</b> — 2026-09-22 · Eylül 19 chrome. Klinik ayrı kategori. ≠ psikiyatri Ruh Sağlığım / PHQ-9 skor / psikotrop. <b>Local pack — merge/deploy yalnız go.</b></div>
+  <h1>Klinik Psikoloji — Post-exceptional Audit</h1>
+  <p class="lede">29.03.2025 × TPD etik / sır saklama × BDT-EMDR-ACT çerçevesi (tanı değil). Soru: Doktor exceptional barında mı (Klinik yüzeyinde)? <b>Ürün cevap: evet — honest wow ~91% (pre ~12%).</b> Olgunluk: beta-hazir. Uzman-dogrulandi saha pending.</p>
+  <div class="pills">
+    <span class="pill success">KLINIK-PSIKOLOG-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">3 Klinik Araç</span>
+    <span class="pill success">Seanslarım Strong</span>
+    <span class="pill info">Honest wow ~91%</span>
+    <span class="pill warning">müttefik — tanı yok</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v success">9</div><div class="l">Strong slices</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (SBİYS)</div></div>
+    <div class="stat"><div class="v success">3</div><div class="l">Klinik-only Araç</div></div>
+    <div class="stat"><div class="v success">1</div><div class="l">Portal Strong</div></div>
+  </div>
+  <div class="callout info"><h2>Executive verdict</h2><p>Klinik Psikoloji Klinik sandalye için ≥90: deterministik motor, 3 Klinik-only araç, gerçek kohort (geciken / rıza-eksik / 112), seans + iki nüsha rıza dosyada, Seanslarım ritim. ≠ psikiyatri Ruh Sağlığım / PHQ-9 skor / psikotrop. 29.03.2025: tanı ve e-reçete yok; hekim referansı zorunlu. Tek Partial: canlı SBİYS / e-imza (iddia yok). Bu paket go demeden production’a çıkmaz.</p></div>
+  <h2>Trajectory</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pre-sprint</div><div class="body">Landing + persona · ~12%</div></div>
+    <div class="card"><div class="title">KLINIK-PSIKOLOG-EXCEPTIONAL-01</div><div class="body">3 Araç · Seanslarım · ~91%</div></div>
+    <div class="card"><div class="title">Next</div><div class="body">go → deploy · MD saha haftası</div></div>
+  </div>
+  <h2>Wow bar</h2>
+  <div class="bars">
+    <div class="bar-row"><span>Pre</span><div class="bar-track"><div class="bar-fill warn" style="width:12%"></div></div><b>12</b></div>
+    <div class="bar-row"><span>Post-exceptional</span><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><b>91</b></div>
+  </div>
+  <h2>Coverage depth</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Depth</th><th>In product</th><th>Gap</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Motor</td><td><span class="pill success">Strong</span></td><td class="note">KLINIK-PSIKOLOG-EXCEPTIONAL-01 deterministik</td><td class="note">—</td></tr>
+      <tr><td class="domain">Klinik Araçlar</td><td><span class="pill success">Strong</span></td><td class="note">Seans çerçevesi · Seans vadesi · Klinik psikoloji kohort</td><td class="note">Doktor’a sızmaz</td></tr>
+      <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill success">Strong</span></td><td class="note">Seanslarım /seanslarim — tanı/doz yok</td><td class="gap">Tarih bundle boş state</td></tr>
+      <tr><td class="domain">Kohort</td><td><span class="pill success">Strong</span></td><td class="note">Geciken · rıza-eksik · 112 listesi</td><td class="note">SBİYS yok</td></tr>
+      <tr><td class="domain">Seans / rıza kaydı</td><td><span class="pill success">Strong</span></td><td class="note">İki nüsha + veli/plan; cihaz dosyası</td><td class="gap">Ölçek skor motoru yok (bilerek)</td></tr>
+      <tr><td class="domain">Sızıntı</td><td><span class="pill success">Strong</span></td><td class="note">≠ psikiyatri Ruh Sağlığım / PHQ-9 skor / psikotrop</td><td class="note">Test kilitli</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Mandate / practice</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate</th><th>Level</th><th>In product today</th><th>Gap to wow</th></tr></thead>
+    <tbody><tr><td class="domain">29.03.2025</td><td class="note">Law · 29.03.2025</td><td class="note">Exceptional pack’te</td><td class="note">—</td></tr><tr><td class="domain">TPD etik</td><td class="note">Law · 29.03.2025</td><td class="note">Exceptional pack’te</td><td class="note">—</td></tr><tr><td class="domain">Reçete/tanı yasağı</td><td class="note">Law · 29.03.2025</td><td class="note">Exceptional pack’te</td><td class="note">—</td></tr>
+      <tr><td class="domain">Doktor Araçları sızıntısı</td><td class="note">Product</td><td class="note">/klinik-tools only</td><td class="note">—</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Klinik-only Araçlar</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tool</th><th>Route</th><th>Bucket</th><th>Visibility</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Seans çerçevesi</td><td class="note">Yaklaşım + ölçek kaydı. Tıbbi tanı ve reçete yok.</td><td><span class="pill info">Klinik specialty-only</span></td><td class="note">/klinik-tools/psikolog-seans · yalnız Klinik Psikoloji</td></tr><tr><td class="domain">Seans vadesi</td><td class="note">3–60 gün aralık — skor yorumu yok.</td><td><span class="pill info">Klinik specialty-only</span></td><td class="note">/klinik-tools/psikolog-vade · yalnız Klinik Psikoloji</td></tr><tr><td class="domain">Klinik psikoloji kohort</td><td class="note">Geciken seans · kriz 112.</td><td><span class="pill info">Klinik specialty-only</span></td><td class="note">/klinik-tools/psikolog-kohort · yalnız Klinik Psikoloji</td></tr>
+      <tr><td class="domain">Doktor / FTR / KBB / psik / derm TUS</td><td class="note">Görünmez</td><td><span class="pill success">Locked</span></td><td class="note">≠ psikiyatri Ruh Sağlığım / PHQ-9 skor / psikotrop</td></tr>
+      <tr><td class="domain">Bu audit HTML</td><td class="note">—</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">/klinik-tools’a bağlanmaz</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Game changers</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Why they care</th><th>Size</th></tr></thead>
+    <tbody><tr><td>1</td><td class="domain">Seans çerçevesi</td><td class="note">BDT/EMDR/ACT kaydı; DSM tanı yok</td><td><span class="pill info">M</span></td></tr><tr><td>2</td><td class="domain">Kriz 112</td><td class="note">Ölçek yorumu yok; kriz bayrağı 112</td><td><span class="pill info">M</span></td></tr><tr><td>3</td><td class="domain">Seanslarım</td><td class="note">Tarih; tanı/skor yok</td><td><span class="pill info">M</span></td></tr><tr><td>4</td><td class="domain">Psikiyatri kapısı</td><td class="note">PHQ motoru / yeşil reçete açılmaz</td><td><span class="pill info">L</span></td></tr></tbody>
+  </table></div>
+  <h2>Pain → now</h2>
+  <div class="cards">
+    <div class="card"><div class="title">“Ölçek skorunu sistem yorumlamasın”</div><div class="body"><b>Now:</b> Yalnız ölçek adı kaydı.</div></div><div class="card"><div class="title">“Krizi mesajda kaçırma”</div><div class="body"><b>Now:</b> Bayrak + 112.</div></div>
+  </div>
+  <h2>Sources — Golden TR references</h2>
+  <p class="lede" style="font-size:13px">TR klinisyen / müttefik meslek altın kaynakları (doktor TURKISH_REFS ile aynı 5’li kalıp). Çakışmada TR &gt; uluslararası. Katalog: <code>lib/klinik/klinikTurkishRefs.ts</code> — Doktor TURKISH_REFS’e eklenmez.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Golden TR reference</th></tr></thead>
+    <tbody><tr><td>1</td><td class="domain">T.C. SB Sağlık Meslek Mensuplarının Serbest Meslek İcrası Hakkında Yönetmelik (RG 29.03.2025/32856) — klinik psikolog; tıbbi tanı/reçete yok</td></tr><tr><td>2</td><td class="domain">Türk Psikologlar Derneği (psikolog.org.tr) Etik Yönetmeliği — sır saklama / yetkinlik</td></tr><tr><td>3</td><td class="domain">Bilişsel Davranışçı Psikoterapiler Derneği eğitim çerçevesi (BDT kaydı; DSM tanı motoru yok)</td></tr><tr><td>4</td><td class="domain">T.C. SB kriz yönlendirme / 112 — ölçek skoru yorumlanmaz</td></tr><tr><td>5</td><td class="domain">SGK reçete-rapor çerçevesi bu meslekte yoktur — psikotrop yazılmaz</td></tr></tbody>
+  </table></div>
+  <h2>Intentionally out</h2>
+  <p class="lede" style="font-size:13px">PHQ-9/GAD-7 skor motoru · kapalı servis · psikotrop. SOAP Doktor kopyası yok. Audit Araçlar’a bağlanmaz.</p>
+  <h2>Recommended next</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress</div><div class="body">Kohort persist + portal tarih bundle.</div></div>
+    <div class="card"><div class="title">Mandate</div><div class="body">29.03.2025 kilit saha teyidi.</div></div>
+    <div class="card"><div class="title">Saha</div><div class="body">Bir beta haftası → uzman-dogrulandi.</div></div>
+  </div>
+  <p class="foot">Post-exceptional KLINIK-PSIKOLOG-EXCEPTIONAL-01 · 2026-09-22 · No PHI · wait for go · <a href="/klinik-psikolog-presprint-audit.html">pre →</a></p>
+</div>
+</body>
+</html>

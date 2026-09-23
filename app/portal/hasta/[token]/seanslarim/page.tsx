@@ -15,5 +15,5 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Görüşmelerim" subtitle="Sonraki görüşme tarihi. Tanı ve ilaç yoktur." acil="Krizde 112 veya en yakın acil." basePath={basePath} />
+  return <KlinikHatirlatmaView title="Görüşmelerim" subtitle="Sonraki görüşme tarihi. Tanı ve ilaç yoktur." acil="Krizde 112 veya en yakın acil." basePath={basePath} ritim={['Sonraki görüşme tarihi uzmanın kaydıyladır', 'Ölçek skoru burada yorumlanmaz']} />
 }

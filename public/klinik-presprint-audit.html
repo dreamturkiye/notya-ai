@@ -3,64 +3,125 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Klinik dikeyi — Pre-sprint audit · Notya</title>
-  <meta name="description" content="2026-09-22 lock: 10 klinik dal persona + Pabau only. Exceptional yok. No PHI." />
+  <title>Klinik base — Pre-sprint audit (Eylül 19 chrome) · Notya</title>
+  <meta name="description" content="Klinik kategori base pre-sprint: 10 landing dal, exceptional 0/10, omurga Thin, Araçlar Missing. Doktor’a birleşmez. No PHI." />
   <style>
-    :root { --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10); --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --amber:#F59E0B; --red:#F87171; --blue:#60A5FA; --green:#34D399; }
+    :root { --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10); --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14); --red:#F87171; --red-soft:rgba(248,113,113,0.14); --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --green:#34D399; }
     * { box-sizing:border-box; } body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; }
     .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:#4ADE80; text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; } h2 { margin:28px 0 12px; font-size:18px; }
+    .lede { color:var(--muted); max-width:920px; }
     .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid rgba(245,158,11,.4); background:rgba(245,158,11,.12); color:#FBBF24; }
-    h1 { margin:0 0 8px; font-size:28px; } .lede { color:var(--muted); max-width:920px; }
-    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; margin:0 6px 6px 0; }
-    .pill.danger { background:rgba(248,113,113,.14); color:var(--red); } .pill.warning { background:rgba(245,158,11,.14); color:var(--amber); } .pill.info { background:rgba(96,165,250,.14); color:var(--blue); }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; margin:0 6px 6px 0; border:1px solid transparent; }
+    .pill.danger { background:var(--red-soft); color:var(--red); } .pill.warning { background:var(--amber-soft); color:var(--amber); } .pill.info { background:var(--blue-soft); color:var(--blue); } .pill.success { background:rgba(52,211,153,.14); color:var(--green); }
     .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:18px 0; }
     .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; }
     .stat .v { font-size:24px; font-weight:700; } .stat .l { font-size:12px; color:var(--muted); }
-    table { width:100%; border-collapse:collapse; font-size:13px; background:var(--surface); border-radius:12px; overflow:hidden; }
-    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); }
+    .callout { background:var(--amber-soft); border:1px solid rgba(245,158,11,.3); border-radius:12px; padding:16px 18px; margin:14px 0 22px; font-size:14px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; background:var(--surface); border-radius:12px; overflow:hidden; margin-bottom:22px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
     th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; }
-    .bar-row { display:grid; grid-template-columns:220px 1fr 36px; gap:10px; align-items:center; margin:8px 0; }
-    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; } .bar-fill { height:100%; background:var(--amber); border-radius:999px; }
+    td.gap { color:#FBBF24; } td.note { color:var(--muted); }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,260px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--amber); border-radius:999px; }
+    .cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-weight:650; margin-bottom:6px; } .card .body { font-size:12px; color:var(--muted); }
     a { color:#4ADE80; } .foot { margin-top:36px; font-size:12px; color:var(--dim); }
-    @media (max-width:900px) { .stats { grid-template-columns:1fr 1fr; } .bar-row { grid-template-columns:1fr; } }
+    @media (max-width:900px) { .stats,.cards { grid-template-columns:1fr; } .bar-row { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="banner">Pre-sprint lock · 2026-09-22 · Klinik dikeyi (10 dal) · exceptional henüz yok</div>
-  <h1>Klinik 10 dal — presprint</h1>
-  <p class="lede">Landing + 10 sesli persona + Pabau admin. Hasta / seans / SOAP / Araçlar / portal chapter <b>yok</b>. Doktor TUS exceptional’ları (derm, plastik, FTR, psik, KBB) bu dikeyin gold’u değildir.</p>
+  <div class="brand">
+    <span class="tag">Notya · Pre-sprint Klinik BASE · Eylül 19 chrome</span>
+    <a href="/klinik-exceptional-audit.html">Post-exceptional 10 dal →</a>
+  </div>
+  <div class="banner"><b>Pre-sprint lock · 2026-09-22</b> — Klinik ayrı kategoridir (Doktor / Mali / Avukat). Exceptional 0/10. Doktor TUS gold’u kopyalanmaz. Deploy yok.</div>
+  <h1>Klinik kategori — base pre-sprint (~12%)</h1>
+  <p class="lede">
+    Landing 10 dal × 29.03.2025 müttefik yönetmeliği × Ayakta Teşhis × KVKK × Pabau entegrasyon notu.
+    Soru: Klinik, Doktor exceptional derinliğinde mi?
+    <b>Hayır — honest wow ~12%.</b> Persona ve koltuk var; hasta, randevu, Araçlar, chapter, Sağlığım yok.
+  </p>
   <div>
     <span class="pill danger">Exceptional 0/10</span>
-    <span class="pill warning">Honest wow ~12%</span>
-    <span class="pill info">Karar bekliyor: Klinik = Doktor aynalama</span>
+    <span class="pill warning">Omurga Thin</span>
+    <span class="pill danger">Araçlar Missing</span>
+    <span class="pill info">Ayrı kategori (birleşmez)</span>
   </div>
   <div class="stats">
     <div class="stat"><div class="v">10</div><div class="l">Landing dalı</div></div>
-    <div class="stat"><div class="v danger">0</div><div class="l">Chapter klasörü</div></div>
-    <div class="stat"><div class="v danger">0</div><div class="l">Klinik Araç</div></div>
-    <div class="stat"><div class="v warning">~12%</div><div class="l">Wow vs doktor gold</div></div>
+    <div class="stat"><div class="v" style="color:#F87171">0</div><div class="l">Chapter / motor</div></div>
+    <div class="stat"><div class="v" style="color:#F87171">0</div><div class="l">Klinik Araç</div></div>
+    <div class="stat"><div class="v" style="color:#F59E0B">~12%</div><div class="l">Wow vs Doktor gold</div></div>
   </div>
-  <h2>Wow bar (önce)</h2>
+  <div class="callout">
+    TR klinik uzmanı bu haliyle “ulan bu başka” demez. Doktor SOAP’ına birleştirmek çözüm değildir — Mali/Avukat gibi kendi omurgası + 10 exceptional pack gerekir.
+  </div>
+  <h2>Wow bar — 10 dal (önce)</h2>
+  <div class="bar-row"><span>Omurga</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
   <div class="bar-row"><span>Saç Ekimi</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
-  <div class="bar-row"><span>Medikal Estetik</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
+  <div class="bar-row"><span>Estetik cerrahi</span><div class="bar-track"><div class="bar-fill" style="width:18%"></div></div><b>18</b></div>
+  <div class="bar-row"><span>Medikal estetik</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
+  <div class="bar-row"><span>Dermatoloji (Klinik)</span><div class="bar-track"><div class="bar-fill" style="width:18%"></div></div><b>18</b></div>
   <div class="bar-row"><span>Longevity</span><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><b>10</b></div>
   <div class="bar-row"><span>Fizyoterapi</span><div class="bar-track"><div class="bar-fill" style="width:14%"></div></div><b>14</b></div>
-  <div class="bar-row"><span>Klinik Psikoloji</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
+  <div class="bar-row"><span>Klinik psikoloji</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
   <div class="bar-row"><span>Diyetisyen</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
   <div class="bar-row"><span>Ergoterapi</span><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><b>10</b></div>
   <div class="bar-row"><span>Odyoloji</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><b>12</b></div>
-  <div class="bar-row"><span>Dermatoloji (klinik)</span><div class="bar-track"><div class="bar-fill" style="width:18%"></div></div><b>18</b></div>
-  <div class="bar-row"><span>Estetik cerrahi (klinik)</span><div class="bar-track"><div class="bar-fill" style="width:18%"></div></div><b>18</b></div>
-  <h2>Coverage</h2>
+  <h2>Coverage — kategori</h2>
   <table>
-    <tr><th>Domain</th><th>Depth</th><th>Note</th><th>Gap</th></tr>
-    <tr><td>Doktor omurgası</td><td><span class="pill danger">Missing</span></td><td>Onboarding → /dashboard/klinik (koltuk)</td><td>SOAP/dosya yok</td></tr>
-    <tr><td>Chapter / Araçlar</td><td><span class="pill danger">Missing</span></td><td>—</td><td>8 yeni dal + kapı</td></tr>
-    <tr><td>Hasta portalı</td><td><span class="pill danger">Missing</span></td><td>Çekirdek yok (hasta yok)</td><td>Dal-özel Sağlığım</td></tr>
-    <tr><td>29.03.2025 müttefik</td><td><span class="pill warning">Thin</span></td><td>Seans notu tanı yasağı var</td><td>Araç/çek/portal yok</td></tr>
+    <tr><th>Domain</th><th>Depth</th><th>Note</th><th>Gap to wow</th></tr>
+    <tr><td>Kategori kimliği</td><td><span class="pill warning">Partial</span></td><td class="note">/klinik landing + onboarding klinik-uzman</td><td class="gap">Ürün omurgası</td></tr>
+    <tr><td>Hastalar / Randevular</td><td><span class="pill danger">Thin</span></td><td class="note">Pabau cümlesi</td><td class="gap">Liste / ekle / gün</td></tr>
+    <tr><td>Klinik Araçlar</td><td><span class="pill danger">Missing</span></td><td class="note">—</td><td class="gap">10 dal × 2–3 tile</td></tr>
+    <tr><td>Hasta portalı</td><td><span class="pill danger">Missing</span></td><td class="note">Hasta yok</td><td class="gap">10 unique Sağlığım</td></tr>
+    <tr><td>29.03.2025</td><td><span class="pill warning">Thin</span></td><td class="note">Metin var</td><td class="gap">Tanı/reçete kilidi</td></tr>
   </table>
-  <p class="foot">Snapshot · no patient data · <a href="/klinik-exceptional-audit.html">Post-sprint →</a></p>
+  <h2>Per-dal pre-sprint (Eylül 19 çiftleri)</h2>
+  <table>
+    <tr><th>Dal</th><th>Pre</th><th>After (hedef)</th></tr>
+    <tr><td>Saç Ekimi</td><td><a href="/klinik-sac-presprint-audit.html">pre ~12%</a></td><td><a href="/klinik-sac-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Estetik cerrahi</td><td><a href="/klinik-estetik-cerrahi-presprint-audit.html">pre ~18%</a></td><td><a href="/klinik-estetik-cerrahi-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Medikal estetik</td><td><a href="/klinik-medikal-estetik-presprint-audit.html">pre ~12%</a></td><td><a href="/klinik-medikal-estetik-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Dermatoloji (Klinik)</td><td><a href="/klinik-derm-presprint-audit.html">pre ~18%</a></td><td><a href="/klinik-derm-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Longevity</td><td><a href="/klinik-long-presprint-audit.html">pre ~10%</a></td><td><a href="/klinik-long-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Fizyoterapi</td><td><a href="/klinik-fizyo-presprint-audit.html">pre ~14%</a></td><td><a href="/klinik-fizyo-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Klinik psikoloji</td><td><a href="/klinik-psikolog-presprint-audit.html">pre ~12%</a></td><td><a href="/klinik-psikolog-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Diyetisyen</td><td><a href="/klinik-diyet-presprint-audit.html">pre ~12%</a></td><td><a href="/klinik-diyet-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Ergoterapi</td><td><a href="/klinik-ergo-presprint-audit.html">pre ~10%</a></td><td><a href="/klinik-ergo-exceptional-audit.html">exceptional</a></td></tr>
+    <tr><td>Odyoloji</td><td><a href="/klinik-odyo-presprint-audit.html">pre ~12%</a></td><td><a href="/klinik-odyo-exceptional-audit.html">exceptional</a></td></tr>
+  </table>
+  <h2>Golden TR references (planned — same 5-slot as Doktor TURKISH_REFS)</h2>
+  <table>
+    <tr><th>Dal</th><th>Primary TR stack (klinisyen / meslek derneği)</th></tr>
+    <tr><td>Saç Ekimi</td><td class="note">SB uygulayıcı sertifikası · TPRECD · EPCD · Ayakta Teşhis · SGK FUE iddia yok</td></tr>
+    <tr><td>Estetik cerrahi</td><td class="note">Ayakta Teşhis soğuma · TPRECD · EPCD · SB cerrahi güvenlik · SGK kozmetik iddia yok</td></tr>
+    <tr><td>Medikal estetik</td><td class="note">Ayakta Teşhis · TPRECD/EPCD · TİTCK KÜB · 112 vasküler · SGK dolgu iddia yok</td></tr>
+    <tr><td>Dermatoloji (Klinik)</td><td class="note">Ayakta Teşhis · TDD kozmetik/lazer · TİTCK cihaz · SGK lazer iddia yok ≠ TUS Derim</td></tr>
+    <tr><td>Longevity</td><td class="note">Ayakta Teşhis IV · Türk Geriatri Derneği · TİTCK · TEMD yaşam tarzı (tanı ref) · SGK wellness iddia yok</td></tr>
+    <tr><td>Fizyoterapi</td><td class="note">29.03.2025 RG 32856 · Türkiye Fizyoterapistler Derneği · ICF · SB rehabilitasyon · SGK seans hakkı yok ≠ FTR</td></tr>
+    <tr><td>Klinik psikoloji</td><td class="note">29.03.2025 · Türk Psikologlar Derneği Etik · BDT Derneği · 112 · reçete yok ≠ psikiyatri</td></tr>
+    <tr><td>Diyetisyen</td><td class="note">29.03.2025 · Türkiye Diyetisyenler Derneği TBT · SB HSGM · TEMD yalnız tanı ref · SGK doz yok</td></tr>
+    <tr><td>Ergoterapi</td><td class="note">29.03.2025 · Ergoterapi Derneği (WFOT) · ICF/GYA · SB işlevsellik · pediatri büyüme yok</td></tr>
+    <tr><td>Odyoloji</td><td class="note">29.03.2025 · TOKSUD · Odyologlar Derneği · SB tarama · SGK cihaz hekim raporu ≠ KBB</td></tr>
+  </table>
+  <h2>Planned category game changers</h2>
+  <table>
+    <tr><th>#</th><th>Move</th><th>Why</th><th>Size</th></tr>
+    <tr><td>1</td><td>Klinik omurga (Hastalar / Randevular / Araçlar)</td><td>Doktor derinliği, Doktor chrome değil</td><td>L</td></tr>
+    <tr><td>2</td><td>10 exceptional pack</td><td>Landing boş kart olmasın</td><td>L</td></tr>
+    <tr><td>3</td><td>TUS sızıntı kapısı</td><td>derm ≠ Derim · estetik ≠ Yaram · fizyo ≠ FTR</td><td>L</td></tr>
+    <tr><td>4</td><td>Müttefik tanı yasağı</td><td>29.03.2025</td><td>M</td></tr>
+    <tr><td>5</td><td>10 unique Sağlığım</td><td>Hasta cebinden vade</td><td>M</td></tr>
+  </table>
+  <p class="foot">Base pre-sprint · 2026-09-22 · Eylül 19 chrome · No PHI · Doktor dosyasına dokunulmadı · <a href="/klinik-exceptional-audit.html">after →</a></p>
 </div>
 </body>
 </html>

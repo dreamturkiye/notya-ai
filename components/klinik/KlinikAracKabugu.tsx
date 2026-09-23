@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
 import { klinikAraciDalaUygun } from '@/lib/klinik/klinikAraclari'
+import { klinikMevzuatOzet } from '@/lib/klinik/klinikMevzuat'
 import type { AracVurgu } from '@/lib/doktor/aracUi'
 
 export default function KlinikAracKabugu({
@@ -17,6 +18,7 @@ export default function KlinikAracKabugu({
 }) {
   const router = useRouter()
   const [izin, setIzin] = useState<boolean | null>(null)
+  const [mevzuat, setMevzuat] = useState('')
   useEffect(() => {
     let iptal = false
     ;(async () => {
@@ -28,7 +30,11 @@ export default function KlinikAracKabugu({
         const j = r.ok ? await r.json() : null
         const tip = String(j?.data?.profession_type || '')
         const ok = (tip === 'klinik-uzman' || tip === 'saglik-uzmani') && klinikAraciDalaUygun(route, j?.data?.specialty)
-        if (!iptal) { setIzin(ok); if (!ok) router.replace('/klinik-tools') }
+        if (!iptal) {
+          setIzin(ok)
+          setMevzuat(klinikMevzuatOzet(j?.data?.specialty))
+          if (!ok) router.replace('/klinik-tools')
+        }
       } catch { if (!iptal) { setIzin(false); router.replace('/klinik-tools') } }
     })()
     return () => { iptal = true }
@@ -44,7 +50,8 @@ export default function KlinikAracKabugu({
           <>
             <div style={{ fontSize: 12, fontWeight: 700, color: vurgu.ana, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Klinik Araçlar · {etiket}</div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0A1628', margin: 0 }}>{baslik}</h1>
-            <p style={{ margin: '8px 0 20px', fontSize: 15, color: 'rgba(10,22,40,0.55)', maxWidth: 680 }}>{aciklama}</p>
+            <p style={{ margin: '8px 0 12px', fontSize: 15, color: 'rgba(10,22,40,0.55)', maxWidth: 680 }}>{aciklama}</p>
+            {mevzuat ? <p style={{ margin: '0 0 20px', fontSize: 12, color: 'rgba(10,22,40,0.5)', maxWidth: 720, lineHeight: 1.45 }}>{mevzuat}</p> : null}
             {children}
           </>
         )}

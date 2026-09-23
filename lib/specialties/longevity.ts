@@ -12,7 +12,7 @@ export const LONGEVITY_PROFILE = {
   sekmeler: [{ id: 'longevity', etiket: 'Longevity', bilesen: 'LongevityHome', sira: 14 }],
   goruntu: null,
   belgeler: BASELINE_BELGELER,
-  ekKaynaklar: ['specialties/longevity/engines/long.ts'],
+  ekKaynaklar: ['lib/klinik/klinikTurkishRefs.ts KLINIK_TURKISH_REFS.longevity (Ayakta Teşhis IV, Türk Geriatri Derneği, TİTCK, TEMD yaşam tarzı, SGK wellness iddia yok)'],
   promptNotlari: ['IV karışım/doz yok; reaksiyon → 112.'],
   specialistReview: [{ konu: 'IV içerik ve hormon', neden: 'Karışım ve doz hekimdedir.' }],
   portal: [{

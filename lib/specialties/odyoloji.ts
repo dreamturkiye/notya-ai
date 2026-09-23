@@ -12,7 +12,7 @@ export const ODYLOJI_PROFILE = {
   sekmeler: [{ id: 'odyoloji', etiket: 'Odyoloji', bilesen: 'OdyolojiHome', sira: 14 }],
   goruntu: null,
   belgeler: BASELINE_BELGELER,
-  ekKaynaklar: ['specialties/odyoloji/engines/odyo.ts'],
+  ekKaynaklar: ['lib/klinik/klinikTurkishRefs.ts KLINIK_TURKISH_REFS.odyoloji (29.03.2025, TOKSUD, Odyologlar Derneği, SB tarama, SGK cihaz hekim raporu — KBB değil)'],
   promptNotlari: ['İşitme kaybı tanısı yok; ani kayıp → KBB acil.'],
   specialistReview: [{ konu: 'SUT cihaz', neden: 'Uzman hekim raporu zorunlu; marka/bedel yok.' }],
   portal: [{

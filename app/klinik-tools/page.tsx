@@ -59,7 +59,7 @@ export default function KlinikToolsPage() {
           ))}
         </div>
         {araclar && araclar.length === 0 && (
-          <p style={{ color: 'rgba(10,22,40,0.45)' }}>Bu dal için henüz araç yok — dermatoloji / estetik cerrahi Klinik chapter’ı sıradaki exceptional turda.</p>
+          <p style={{ color: 'rgba(10,22,40,0.45)' }}>Bu dal için araç yok. Onboarding’de Klinik uzmanlık seçin — Doktor branşı burada açılmaz.</p>
         )}
       </div>
     </div>

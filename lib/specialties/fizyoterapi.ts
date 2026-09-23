@@ -13,7 +13,7 @@ export const FIZYOTERAPI_PROFILE = {
   sekmeler: [{ id: 'fizyoterapi', etiket: 'Fizyoterapi', bilesen: 'FizyoterapiHome', sira: 14 }],
   goruntu: null,
   belgeler: BASELINE_BELGELER,
-  ekKaynaklar: ['specialties/fizyoterapi/engines/fizyo.ts'],
+  ekKaynaklar: ['lib/klinik/klinikTurkishRefs.ts KLINIK_TURKISH_REFS.fizyoterapi (29.03.2025, TFTD, ICF, SB rehabilitasyon, SGK seans hakkı yok — FTR değil)'],
   promptNotlari: ['Tanı koyma; hekim referansı zorunlu; cauda/göğüs → 112.'],
   specialistReview: [{ konu: 'Seans tavanı', neden: 'SGK metni değişir; hak iddia edilmez.' }],
   portal: [{

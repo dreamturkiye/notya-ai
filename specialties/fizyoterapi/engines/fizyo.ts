@@ -20,6 +20,12 @@ export function seansVadesi(sonIso: string, periyotGun: number, tavan: number, y
   return { ozet: `Önerilen sonraki seans ${due} (${durum}). ${tavan > 0 ? `Kayıt ${yapilan}/${tavan}.` : ''} Tanı yok.` }
 }
 
+export function hekimPlaniKayit(tani: string, planTarih: string): { ozet: string } | { hata: string } {
+  if (!tani.trim()) return { hata: '29.03.2025 md.16: hekim tanısı + tedavi planı olmadan seans yok.' }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(planTarih)) return { hata: 'Hekim planı tarihini girin.' }
+  return { ozet: `Hekim planı referansı ${planTarih}: ${tani.trim()}. Tanı fizyoterapiste ait değil.` }
+}
+
 export const INTAKE_ACIL = [
   'Eyer tarzı uyuşukluk veya idrar / gaita kaçırma (cauda şüphesi)',
   'Egzersiz sırasında göğüs ağrısı veya bayılma',

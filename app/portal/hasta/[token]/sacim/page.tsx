@@ -15,5 +15,5 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Saçım" subtitle="Yıkama ve kontrol tarihleri. Greft, tanı ve ilaç yoktur." acil="Kızarıklık+ateş veya nefes darlığında 112." basePath={basePath} />
+  return <KlinikHatirlatmaView title="Saçım" subtitle="Yıkama ve kontrol tarihleri. Greft, tanı ve ilaç yoktur." acil="Kızarıklık+ateş veya nefes darlığında 112." basePath={basePath} ritim={['1. gün ilk pansuman', '3. gün nazik yıkama', '10. gün kabuk kontrolü', '14. gün kontrol']} />
 }

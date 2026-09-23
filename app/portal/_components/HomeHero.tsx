@@ -5,6 +5,7 @@ import type { PortalBundle } from '@/lib/portal/types'
 import { SoftPanel, formatTrDate } from './ui'
 import { HedefBoyAileKart } from '@/components/hedefBoy/HedefBoyManken'
 import { portalModulAktif } from '@/lib/portal/moduller'
+import { KLINIK_PORTAL_IPUCU } from '@/lib/klinik/klinikPortal'
 
 const MODUL_IPUCU: Record<string, string> = {
   gozlerim: 'Kontrol, damla ve ölçümleriniz',
@@ -51,7 +52,11 @@ export function HomeHero({ basePath, data }: { basePath: string; data: PortalBun
     { label: 'Öykü', href: `${basePath}/gecmis`, hint: 'Alerji ve geçmiş' },
     { label: 'Takip', href: `${basePath}/takip`, hint: 'Yaşamsal bulgular' },
     // SAGLIGIM-PORTAL-REGISTRY — attached chapter modules only (e.g. Gözlerim for a göz practice)
-    ...(data.portal?.nav || []).map((n) => ({ label: n.label, href: `${basePath}${n.path}`, hint: MODUL_IPUCU[n.key] || 'Doktorunuzun takibi' })),
+    ...(data.portal?.nav || []).map((n) => ({
+      label: n.label,
+      href: `${basePath}${n.path}`,
+      hint: MODUL_IPUCU[n.key] || KLINIK_PORTAL_IPUCU[n.key as keyof typeof KLINIK_PORTAL_IPUCU] || 'Uzmanınızın takibi',
+    })),
   ]
 
   return (

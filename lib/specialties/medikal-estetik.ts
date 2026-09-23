@@ -13,7 +13,7 @@ export const MEDIKAL_ESTETIK_PROFILE = {
   sekmeler: [{ id: 'medikal-estetik', etiket: 'Medikal Estetik', bilesen: 'MedikalEstetikHome', sira: 14 }],
   goruntu: { modaliteler: ['foto'], zamanCizgisi: true, ayseSinir: 'Önce/sonra foto karar desteği; doz ve tanı hekimde.' },
   belgeler: BASELINE_BELGELER,
-  ekKaynaklar: ['specialties/medikal-estetik/engines/estetik.ts'],
+  ekKaynaklar: ['lib/klinik/klinikTurkishRefs.ts KLINIK_TURKISH_REFS.medikal-estetik (Ayakta Teşhis, TPRECD/EPCD, TİTCK KÜB, 112, SGK iddia yok)'],
   promptNotlari: ['Ünite/mL uydurma yok; vasküler oklüzyon → 112.'],
   specialistReview: [{ konu: 'Hyaluronidaz ve ünite', neden: 'Komplikasyon ve doz hekimdedir.' }],
   portal: [{

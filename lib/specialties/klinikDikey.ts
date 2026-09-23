@@ -1,16 +1,22 @@
 /**
- * KLINIK-AYNA-01 — Klinik dikeyi doktor omurgasına bağlanır; ayrı SOAP/dosya kopyası yok.
+ * Klinik dikeyi — Doktor’dan ayrı kategori (Mali / Avukat / Doktor ile aynı katman).
  *
  * Landing 10 dal (`components/klinik-landing/content.ts`):
- *   Hekim klinik: saç ekimi, medikal estetik, longevity (+ dermatoloji / estetik-cerrahi = mevcut TUS chapter)
+ *   Hekim klinik: saç ekimi, estetik-cerrahi, medikal-estetik, klinik-dermatoloji, longevity
  *   Müttefik (29.03.2025): fizyoterapi, klinik-psikolog, diyetisyen, ergoterapi, odyoloji
  *
- * Estetik & Plastik Cerrahi → `plastik-cerrahi` (TPRECD chapter, kopya yok).
- * Klinik dermatoloji → `dermatoloji` (TDD chapter, kopya yok).
+ * TUS alias YOK. dermatoloji (TDD) ≠ klinik-dermatoloji. plastik-cerrahi ≠ estetik-cerrahi.
  * Fizyoterapi ≠ FTR; klinik-psikolog ≠ psikiyatri; odyoloji ≠ KBB.
  */
 
-export const KLINIK_HEKIM_SLUGS = ['sac-ekimi', 'medikal-estetik', 'longevity'] as const
+export const KLINIK_HEKIM_SLUGS = [
+  'sac-ekimi',
+  'estetik-cerrahi',
+  'medikal-estetik',
+  'klinik-dermatoloji',
+  'longevity',
+] as const
+
 export const KLINIK_MUTTEFIK_SLUGS = [
   'fizyoterapi',
   'klinik-psikolog',
@@ -18,21 +24,31 @@ export const KLINIK_MUTTEFIK_SLUGS = [
   'ergoterapi',
   'odyoloji',
 ] as const
+
 export const KLINIK_YENI_SLUGS = [...KLINIK_HEKIM_SLUGS, ...KLINIK_MUTTEFIK_SLUGS] as const
 
 export type KlinikYeniSlug = (typeof KLINIK_YENI_SLUGS)[number]
 
-/** Landing slug → Klinik dal (TUS'a alias yok — Klinik ayrı kategori). */
-export const KLINIK_ALIAS: Record<string, string> = {
+/** Landing marketing slug → Klinik kanonik dal. `dermatoloji` yalnız landing; ürün slug’ı klinik-dermatoloji. */
+export const KLINIK_LANDING_ALIAS: Record<string, KlinikYeniSlug> = {
+  'sac-ekimi': 'sac-ekimi',
   'estetik-cerrahi': 'estetik-cerrahi',
-  'estetik & plastik cerrahi': 'estetik-cerrahi',
-  'estetik ve plastik cerrahi': 'estetik-cerrahi',
-  dermatoloji: 'dermatoloji',
+  'medikal-estetik': 'medikal-estetik',
+  dermatoloji: 'klinik-dermatoloji',
+  'klinik-dermatoloji': 'klinik-dermatoloji',
+  longevity: 'longevity',
+  fizyoterapi: 'fizyoterapi',
+  'klinik-psikolog': 'klinik-psikolog',
+  diyetisyen: 'diyetisyen',
+  ergoterapi: 'ergoterapi',
+  odyoloji: 'odyoloji',
 }
 
 export const KLINIK_ETIKET: Record<KlinikYeniSlug, string> = {
   'sac-ekimi': 'Saç Ekimi',
+  'estetik-cerrahi': 'Estetik & Plastik Cerrahi',
   'medikal-estetik': 'Medikal Estetik',
+  'klinik-dermatoloji': 'Dermatoloji (Klinik)',
   longevity: 'Longevity & Wellness',
   fizyoterapi: 'Fizyoterapi',
   'klinik-psikolog': 'Klinik Psikoloji',
@@ -45,8 +61,14 @@ const ETIKET_SLUG: Record<string, KlinikYeniSlug> = {
   'sac ekimi': 'sac-ekimi',
   'saç ekimi': 'sac-ekimi',
   'sac-ekimi': 'sac-ekimi',
+  'estetik-cerrahi': 'estetik-cerrahi',
+  'estetik & plastik cerrahi': 'estetik-cerrahi',
+  'estetik ve plastik cerrahi': 'estetik-cerrahi',
   'medikal estetik': 'medikal-estetik',
   'medikal-estetik': 'medikal-estetik',
+  'klinik-dermatoloji': 'klinik-dermatoloji',
+  'klinik dermatoloji': 'klinik-dermatoloji',
+  'klinik dermatolojisi': 'klinik-dermatoloji',
   longevity: 'longevity',
   'longevity & wellness': 'longevity',
   'longevity ve wellness': 'longevity',
@@ -95,27 +117,34 @@ export function klinikDikeyMi(ham: string | null | undefined): boolean {
   return YENI_SET.has(k)
 }
 
-/** Ham etiket / slug → Klinik dal; TUS SpecialtyKey döndürmez. */
+/**
+ * Ham etiket / slug → Klinik dal.
+ * Çıplak `dermatoloji` / `Dermatoloji` TUS’tur — burada çözülmez (Derim sızıntısı yok).
+ */
 export function klinikSlugCoz(ham: string | null | undefined): KlinikYeniSlug | null {
   const t = String(ham || '').trim().toLocaleLowerCase('tr-TR')
   if (!t) return null
   if (ETIKET_SLUG[t]) return ETIKET_SLUG[t]
   if (YENI_SET.has(t)) return t as KlinikYeniSlug
-  return null
+  return KLINIK_LANDING_ALIAS[t] && t !== 'dermatoloji' ? KLINIK_LANDING_ALIAS[t] : null
 }
 
-/** Onboarding / profil kaydı: Türkçe etiket veya slug → kanonik slug. */
+export function klinikLandingSlugCoz(ham: string | null | undefined): KlinikYeniSlug | null {
+  const t = String(ham || '').trim().toLocaleLowerCase('tr-TR')
+  if (!t) return null
+  return klinikSlugCoz(t) || KLINIK_LANDING_ALIAS[t] || null
+}
+
 export function klinikUzmanlikNorm(ham: string | null | undefined): string {
   return klinikSlugCoz(ham) || String(ham || '').trim()
 }
 
-/** Müttefik meslek reçete / Medula / ICD tanı kodlayıcı görmez (29.03.2025 — tanı hekimde). */
 export function muttefikAracGizliMi(route: string): boolean {
   return RECETE_ARAC_YOLLARI.has(route)
 }
 
 export const MUTTEFIK_TANI_KILIT =
-  'Bu meslek grubu tanı koyamaz. Hekim tanısı referansı olmadan tanı, ICD kilidi veya reçete yazılmaz. Seans notu yalnızca yapılan uygulamayı ve hekimin planını belgeler.'
+  '29.03.2025 md.16: tanı koyamaz; hekim tanısı + tedavi planı olmadan uygulama yok. Her işlemde yazılı rıza (iki nüsha). Tetkik istenemez, takviye satılamaz. Seans notu yapılan uygulamayı belgeler — ICD/reçete yok. Kayıt md.18 elektronik muhafaza (KVKK m.6).'
 
 export const KLINIK_HEKIM_KILIT =
-  'Greft sayısı, ünite, mL ve doz KARAR DESTEĞİDİR — hekim kilitler. Uydurma doz / uydurma greft / uydurma form adı YASAK. Vasküler oklüzyon, anafilaksi, donor nekroz, IV reaksiyon: 112.'
+  'Ayakta Teşhis md.24 + Hasta Hakları m.26: elektronik kayıt, iki nüsha rıza. Greft/ünite/mL KARAR DESTEĞİDİR — hekim kilitler. Foto için ayrı KVKK rızası. Uydurma doz/greft YASAK. Vasküler oklüzyon, anafilaksi, donor nekroz, IV reaksiyon: 112.'

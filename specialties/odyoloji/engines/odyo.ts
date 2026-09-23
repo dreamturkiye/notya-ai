@@ -16,6 +16,16 @@ export function cihazListe(hekimRapor: boolean): { ozet: string } {
   }
 }
 
+export function sessizOdaKayit(metrekare: number, tarama: boolean): { ozet: string } | { hata: string } {
+  if (!(metrekare > 0 && metrekare < 80)) return { hata: 'Oda m² girin (29.03.2025 md.11 — ≥3 m² sessiz oda).' }
+  const uygun = metrekare >= 3
+  return {
+    ozet: uygun
+      ? `Sessiz oda ${metrekare} m² — md.11 tabanı karşılandı.${tarama ? ' Tarama kaydı (tanı değil).' : ''} Kayıp tanısı yok.`
+      : `Sessiz oda ${metrekare} m² — md.11 ≥3 m² şartı zayıf. Eşik alınır, iddia yok.`,
+  }
+}
+
 export const INTAKE_ACIL = [
   'Saatler / günler içinde ani işitme kaybı',
   'Yüz felci ile birlikte işitme kaybı',
