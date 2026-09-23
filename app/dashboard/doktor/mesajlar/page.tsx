@@ -3,7 +3,7 @@
 /**
  * Shared practice inbox — doktor + sekreter.
  */
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import DoktorNav from '@/components/doktor/DoktorNav'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
@@ -28,6 +28,19 @@ type Msg = {
 }
 
 export default function DoktorMesajlarPage() {
+  // NOTYA-FISILTI-UNIVERSAL fix: useSearchParams() forces client-side rendering for whatever
+  // reads it -- Next requires that piece behind a Suspense boundary for static prerendering to
+  // succeed (dev server doesn't enforce this, `next build` does). Isolated to its own inner
+  // component so the rest of the page (list of threads, an open conversation, replying) has
+  // nothing to do with why the wrapper exists.
+  return (
+    <Suspense fallback={null}>
+      <DoktorMesajlarIcerik />
+    </Suspense>
+  )
+}
+
+function DoktorMesajlarIcerik() {
   const searchParams = useSearchParams()
   const [threads, setThreads] = useState<Thread[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
