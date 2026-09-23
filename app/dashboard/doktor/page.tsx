@@ -247,8 +247,16 @@ export default function DoktorDashboard() {
         )}
       </div>
 
-      {/* Notya fısıldıyor — real overdue flag, pediatri for now */}
-      <NotyaFisildiyor specialty={specialty} />
+      {/* Hızlı araçlar — compact links, moved up here (was inside Bu Hafta Özeti); fısıltı now
+          sits under Bu Hafta Özeti instead (Kaan, 2026-09-24) */}
+      <div style={S({ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' })}>
+        <span style={S({ fontSize: 12, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Hızlı araçlar</span>
+        <span onClick={() => router.push('/doktor-tools/epikriz')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Epikriz üret ›</span>
+        <span onClick={() => router.push('/doktor-tools/icd10')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>ICD-10 kodla ›</span>
+        {pediatriAraci && (
+          <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Hedef boy ›</span>
+        )}
+      </div>
 
       {bebekIsListesi && <YeniBebekIsleri />}
       <BekleyenKonsultasyonOzeti />
@@ -452,14 +460,11 @@ export default function DoktorDashboard() {
                 <span style={S({ fontSize: 15, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: CHROME_RENK.ink })}>{row.val}</span>
               </div>
             ))}
-            <div style={S({ marginTop: 14, fontSize: 13, fontWeight: 700, color: '#4A4030' })}>Hızlı araçlar</div>
-            <div style={S({ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 })}>
-              <span onClick={() => router.push('/doktor-tools/epikriz')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Epikriz üret ›</span>
-              <span onClick={() => router.push('/doktor-tools/icd10')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>ICD-10 kodla ›</span>
-              {pediatriAraci && (
-                <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Hedef boy ›</span>
-              )}
-            </div>
+          </div>
+
+          {/* Notya fısıldıyor — moved here under Bu Hafta Özeti, own dark-blue identity (Kaan, 2026-09-24) */}
+          <div style={S({ marginTop: 16 })}>
+            <NotyaFisildiyor specialty={specialty} />
           </div>
         </div>
       </div>

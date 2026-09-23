@@ -14,12 +14,23 @@
  * Pediatri-only for now, same incremental pattern as YeniBebekIsleri / BekleyenKonsultasyonOzeti:
  * narrow, correct, and the obvious shape to extend per-specialty later (every specialty built
  * tonight has its own <brans>_gorevleri table with the same due/status shape).
+ *
+ * Placement + color (Kaan, 2026-09-24): moved from top-of-page to sitting under Bu Hafta Özeti
+ * (narrower right column, not full width); box uses a dark blue sampled directly from the header
+ * photo's leaves (#042b40), not the pine used everywhere else on the page — gives fısıltı its own
+ * visual identity tied to the artwork. Same dark box for both the urgent-flag state and the
+ * honest empty state; only the message inside changes.
  */
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { PEDI_BAYRAK_AD, type PediKohortSatir } from '@/specialties/pediatri/engines/kohort'
-import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
+
+// Sampled from public/doktor-chrome/plant.jpg (dark-blue leaf tones), not a design-system token --
+// this box is deliberately its own accent, separate from the page's pine.
+const FISILTI_KOYU = '#042b40'
+const FISILTI_KOYU2 = '#0a3d57'
 
 const LEAF = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -62,17 +73,19 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
 
   if (!satir) {
     // Gerçekten kontrol edildi, bekleyen yok -- kart kaybolmaz, durumu dürüstçe söyler.
+    // Aynı koyu mavi kutu, sadece mesaj değişiyor -- iki durumda da fısıltının kendi kimliği.
     return (
       <div
         style={S({
-          background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 20,
-          padding: '20px 22px 18px', boxShadow: '0 16px 34px rgba(58,44,34,0.06)',
+          background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
+          color: '#eaf2f6', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
+          boxShadow: '0 16px 36px rgba(4,43,64,0.25)',
         })}
       >
-        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: CHROME_RENK.pine, fontSize: 16, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#9fc4d6', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
           {LEAF} Notya fısıldıyor
         </div>
-        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, color: CHROME_RENK.ink })}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 500 })}>
           Şu an bekleyen bir şey yok — her şey güncel.
         </div>
       </div>
@@ -88,15 +101,15 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
       onClick={() => router.push(`/dashboard/doktor/hastalar/${satir.patientId}?tab=${satir.sekme}`)}
       style={S({
         display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', border: 'none',
-        background: `linear-gradient(165deg, ${CHROME_RENK.pine}, ${CHROME_RENK.nav})`,
-        color: '#f4ead7', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
-        boxShadow: '0 16px 36px rgba(42,59,46,0.2)',
+        background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
+        color: '#eaf2f6', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
+        boxShadow: '0 16px 36px rgba(4,43,64,0.25)',
       })}
     >
-      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: CHROME_RENK.gold, fontSize: 16, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
+      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#9fc4d6', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
         {LEAF} Notya fısıldıyor
       </div>
-      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 21, lineHeight: 1.3, fontWeight: 500 })}>
+      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500 })}>
         {satir.ad} — {baslikBayrak.toLowerCase()}
       </div>
       {detaySatiri && (
