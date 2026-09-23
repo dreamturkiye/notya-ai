@@ -2528,3 +2528,15 @@ tutulur; üzerine sessizce yazılmaz.
 | 2026-09-24 | Sprint 1 (Doktor) -- build now, this session. | IN PROGRESS |
 | 2026-09-24 | Sprint 2 (Klinik) -- kohort layer + eylem mirror, ground-up. | OPEN, scheduled after Sprint 1 |
 | 2026-09-24 | Sprint 3 (Mali + Avukat) -- beyan engine backward-looking flags, new eylem system for mali, avukat scope investigation + build. | OPEN, scheduled last |
+
+
+## NOTYA-IO-DOMAIN — Domain purchased, migration parked until new website is done (Kaan, 2026-09-24)
+
+Kaan bought notya.io. Once the new marketing website is finished, move to using this domain
+(sender/brand domain decision that was previously open per the 2026-08-26 note in this file --
+this resolves which domain, "notya.io", but the actual cutover is sequenced AFTER the new site).
+
+### ACIK (OPEN)
+| Date | Item | Durum |
+|---|---|---|
+| 2026-09-24 | notya.io domain owned; migrate once the new website ships (DNS, sender domain for email/SMTP, any hardcoded notya.ai references). | OPEN, waits on new website completion |
