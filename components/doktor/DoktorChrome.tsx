@@ -280,7 +280,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               <div style={S({ width: 1, height: 46, background: 'rgba(58,44,34,0.16)' })} />
               <button
                 onClick={handleCikis}
-                style={S({ padding: '9px 16px', borderRadius: 999, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 })}
+                style={S({ padding: '9px 16px', borderRadius: 999, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 })}
               >
                 Çıkış Yap
               </button>
