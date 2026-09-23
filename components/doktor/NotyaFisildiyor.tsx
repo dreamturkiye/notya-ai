@@ -1,31 +1,24 @@
 'use client'
 
 /**
- * NOTYA-YENI-GORUNUM-01 — "Notya fısıldıyor": the doctor's single most overdue item, surfaced
- * on Ana Sayfa. Real data, not a notification table — it reads the SAME pediatri kohort flag
- * engine that already powers Araçlar › Pediatri kohort (aşı gecikmesi, kaçan izlem, persentil
- * kayması, D vit/demir, tarama gecikmesi), already sorted oldest-overdue-first.
+ * NOTYA-FISILTI-UNIVERSAL (Kaan, 2026-09-24) — "Notya fısıldıyor" is no longer pediatri-only.
+ * It now calls the universal `/api/doktor/fisilti` endpoint, which resolves the doctor's own
+ * branş to the right existing kohort route and normalizes the result -- this component doesn't
+ * need to know which of the 29 branş engines produced the flag.
  *
- * "Clear by resolving, not dismissing" comes for free from that engine: a flag is computed
- * fresh from the patient's actual record every time this loads. Once the doctor updates the
- * thing itself (logs the vaccine, adds the missing visit, etc.), the flag simply stops being
- * true next render — there is no separate dismiss state to get out of sync.
- *
- * Pediatri-only for now, same incremental pattern as YeniBebekIsleri / BekleyenKonsultasyonOzeti:
- * narrow, correct, and the obvious shape to extend per-specialty later (every specialty built
- * tonight has its own <brans>_gorevleri table with the same due/status shape).
- *
- * Placement + color (Kaan, 2026-09-24): moved from top-of-page to sitting under Bu Hafta Özeti
- * (narrower right column, not full width); box uses a dark blue sampled directly from the header
- * photo's leaves (#042b40), not the pine used everywhere else on the page — gives fısıltı its own
- * visual identity tied to the artwork. Same dark box for both the urgent-flag state and the
- * honest empty state; only the message inside changes.
+ * Everything from the original design carries over unchanged:
+ * - "Clear by resolving, not dismissing": recomputed fresh from the real record every load, no
+ *   separate dismiss state to get out of sync.
+ * - Honest empty state when the doctor's branş IS supported but genuinely has nothing pending
+ *   (renders a calm card, not nothing) -- vs. silently rendering nothing when the branş has no
+ *   kohort engine at all yet (radyoloji has one; klinik doesn't -- that's Sprint 2).
+ * - Own dark-blue visual identity (sampled from the header photo's leaves), separate from pine.
  */
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
-import { PEDI_BAYRAK_AD, type PediKohortSatir } from '@/specialties/pediatri/engines/kohort'
 import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import type { FisiltiItem } from '@/lib/doktor/fisiltiOrtak'
 
 // Sampled from public/doktor-chrome/plant.jpg (blue-green leaf tones), not a design-system token --
 // this box is deliberately its own accent, separate from the page's pine.
@@ -44,40 +37,40 @@ const LEAF = (
 
 export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
   const router = useRouter()
-  const [satir, setSatir] = useState<PediKohortSatir | null>(null)
+  const [item, setItem] = useState<FisiltiItem | null>(null)
   const [toplam, setToplam] = useState(0)
+  const [kapsamDisi, setKapsamDisi] = useState(false)
   const [yukleniyor, setYukleniyor] = useState(true)
 
   useEffect(() => {
-    if (specialty !== 'pediatri') { setYukleniyor(false); return } // other branş: not built yet -- different from "checked, nothing found"
     let iptal = false
     ;(async () => {
       try {
         const t = await ensureDoctorAccessToken()
         if (!t) { if (!iptal) setYukleniyor(false); return }
-        const r = await fetch('/api/doktor/pediatri/kohort', { headers: { Authorization: `Bearer ${t}` } })
+        const r = await fetch('/api/doktor/fisilti', { headers: { Authorization: `Bearer ${t}` } })
         if (!r.ok) { if (!iptal) setYukleniyor(false); return }
         const j = await r.json()
-        const satirlar = (j.satirlar || []) as PediKohortSatir[]
         if (!iptal) {
-          if (satirlar.length) { setSatir(satirlar[0]); setToplam(satirlar.length) }
+          setItem(j.item || null)
+          setToplam(Number(j.toplam) || 0)
+          setKapsamDisi(!!j.kapsamDisi)
           setYukleniyor(false)
         }
-      } catch { if (!iptal) setYukleniyor(false) /* fısıltı kritik değil — sessizce boş kalır */ }
+      } catch { if (!iptal) setYukleniyor(false) /* fısıltı kritik değil -- sessizce boş kalır */ }
     })()
     return () => { iptal = true }
   }, [specialty])
 
-  // Pediatri dışı branşlarda motor henüz yok -- kart hiç görünmez (bu, "kontrol edildi, boşçıktı"dan farklı).
-  if (specialty !== 'pediatri') return null
-  // Bir anı kontrol sürerken boş durumun yanıp sönmesini önler.
+  // Bu branşta motor henüz yok -- kart hiç görünmez (bu, "kontrol edildi, boşçıktı"dan farklı).
+  if (kapsamDisi) return null
+  // Kontrol sürerken boş durumun yanıp sönmesini önler.
   if (yukleniyor) return null
 
   const S = (s: Record<string, unknown>) => s as React.CSSProperties
 
-  if (!satir) {
+  if (!item) {
     // Gerçekten kontrol edildi, bekleyen yok -- kart kaybolmaz, durumu dürüstçe söyler.
-    // Aynı koyu mavi kutu, sadece mesaj değişiyor -- iki durumda da fısıltının kendi kimliği.
     return (
       <div
         style={S({
@@ -90,20 +83,17 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
           {LEAF} Notya fısıldıyor
         </div>
-        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 500 })}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 500, color: '#1e3336' })}>
           Şu an bekleyen bir şey yok — her şey güncel.
         </div>
       </div>
     )
   }
 
-  const baslikBayrak = PEDI_BAYRAK_AD[satir.bayraklar[0]]
-  const detaySatiri = satir.detay[0] || ''
-
   return (
     <button
       type="button"
-      onClick={() => router.push(`/dashboard/doktor/hastalar/${satir.patientId}?tab=${satir.sekme}`)}
+      onClick={() => router.push(item.hedefYol)}
       style={S({
         display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', border: `1px solid ${FISILTI_BORDER}`,
         background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
@@ -115,13 +105,13 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
         {LEAF} Notya fısıldıyor
       </div>
       <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500, color: '#1e3336' })}>
-        {satir.ad} — {baslikBayrak.toLowerCase()}
+        {item.ad} — {item.baslik}
       </div>
-      {detaySatiri && (
-        <div style={S({ marginTop: 8, fontSize: 13, opacity: 0.8, lineHeight: 1.5, color: '#1e3336' })}>{detaySatiri}</div>
+      {item.detay[0] && (
+        <div style={S({ marginTop: 8, fontSize: 13, opacity: 0.8, lineHeight: 1.5, color: '#1e3336' })}>{item.detay[0]}</div>
       )}
       {toplam > 1 && (
-        <div style={S({ marginTop: 10, fontSize: 12, opacity: 0.65, color: '#1e3336' })}>+{toplam - 1} çocukta daha bekleyen kontrol var</div>
+        <div style={S({ marginTop: 10, fontSize: 12, opacity: 0.65, color: '#1e3336' })}>+{toplam - 1} hastada daha bekleyen kontrol var</div>
       )}
     </button>
   )

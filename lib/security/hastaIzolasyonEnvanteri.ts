@@ -102,6 +102,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/pediatri/_ortak.ts': I('pediHasta: patients by id AND doctor_id — the gate every pediatri handler passes first; pediOturum = doktorOturum + users.specialty pediatri'),
   'app/api/doktor/pediatri/tarama/route.ts': T,
   'app/api/doktor/pediatri/kohort/route.ts': T,
+  'app/api/doktor/fisilti/route.ts': I('proxies exactly one branş kohort route via an internal same-origin fetch, forwarding the SAME caller bearer token unchanged -- that downstream route re-runs doktorOturum + its own doctor_id scoping independently (see its own entry above/below); this file issues no Supabase query of its own, so it cannot leak a foreign patient even if the caller supplied one, and identifies the target branş only from users.specialty of the AUTHENTICATED doctor, never from request input'),
   'app/api/doktor/pediatri/_kohort.ts': I('kohort: patients .eq(doctor_id) → ids; every source query .eq(doctor_id|doktor_id).in(patient_id, ids) (read-only — pediHatirlatmaGonder lives in _kohortHatirlatma.ts, NOTYA-EYLEM-24)'),
   'app/api/doktor/pediatri/_kohortHatirlatma.ts': I('pediHatirlatmaGonder — split out of _kohort.ts (NOTYA-EYLEM-24); runs only on ids that passed pediKohortVerisi(doktorId) in kohort/route.ts'),
   'app/api/doktor/dahiliye/route.ts': T,

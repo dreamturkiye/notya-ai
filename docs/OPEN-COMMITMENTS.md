@@ -2504,3 +2504,27 @@ tutulur; üzerine sessizce yazılmaz.
 
 - 2026-09-22 — UYGULANDI (NOTYA-RANDEVU-TARIH-01, Kaan'ın düzeltmesiyle): "🩺 Muayeneyi Başlat" (hem gün görünümündeki hem modal içindeki iki düğme) artık randevunun `baslangic` değerini `randevuBaslangic` query paramıyla `session/new`'e taşıyor. `session/new` sayfasında bu değer SALT-OKUNUR bir rozet olarak gösteriliyor ("Bu muayene randevu saatiyle kaydedilecek: ...") — düzenlenebilir bir alan/input DEĞİL, doktorun değiştirebileceği hiçbir kontrol yok. Randevu değerini otomatik kullanır (sunucu tarafında aynı `tarih` paramı üzerinden, NOTYA-GECMIS-MUAYENE-01'deki doğrulamayla aynı mekanizma); randevusuz (walk-in) muayenede parametre yok, davranış aynen bugünkü gibi kalır (şimdiki zaman) — Kaan'ın sorduğu tam olarak buydu. NOTYA-GECMIS-MUAYENE-01'deki ayrı manuel test alanı (geçici, Dr. Gökhan'ın test hastası için) hala duruyor ve dokunulmadı — aynı gating TODO'su (yukarıda) hala geçerli, iki mekanizma birbirinden bağımsız (manuel alan set edilmişse o öncelikli, randevu değeri yalnız manuel boş bırakıldığında devreye girer). `npm test`: 2543/2543 yeşil. Branch: feat/randevu-tarih.
   ARA OLAY: bu özellik ilk kez uygulanırken (commit henüz atılmamış, iş ağacında) Cursor'ın KLINIK-AYNA-01 push'ı onay alınmadan yapılmış (Kaan: "screwed up") ve tip hatalarıyla `main`'i kırmıştı; Cursor bunu geri alırken aynı çalışma dizininde (`~/notya-ai`) yaptığı işlem Claude'un henüz commit edilmemiş yerel değişikliklerini de sildi — iş kaybolmadan (Claude hafızasından) yeniden uygulandı ama bu, aynı klasörü paylaşan ajanların birbirinin commit edilmemiş işini silebileceğini gösteriyor. İkinci belirti: docs commit'i ilk denemede yanlışlıkla başka bir yerel dala (Cursor'ın çalıştığı varsayılan `feat/klinik-10-exceptional`) düştü — paylaşılan dizinde çalışırken hangi dalın checkout edildiği herhangi bir anda değişebiliyor. İleride: her ajan kendi feature branch'inde çalışıp sık sık commit etsin (yalnız iş ağacında tutmak riskli), commit öncesi `git branch --show-current` ile doğrulansın.
+
+
+## NOTYA-FISILTI-UNIVERSAL — Fısıltı as a cross-product reminder + Ayşe action layer (Kaan, 2026-09-24)
+
+**Concept (Kaan's directive):** "Fısıltı ile artık hiçbirşeyi unutmuyorsunuz" — Fısıltı stops being pediatri-only and becomes a universal, self-clearing "everything overdue" layer across all of Notya: doktor (all 29 branş), klinik, and mali/müşavir/avukat. Two properties make it more than a list: (1) it clears itself the moment the underlying thing is genuinely resolved (recomputed fresh, never a stale dismiss flag), and (2) Ayşe can read it and act on it conversationally -- "Ayşe, fısıltıda ne var?", "şunu aç", "bunu işle" -- using the existing prepare-then-confirm eylem architecture (core/eylemler, EylemKarti.tsx, /api/doktor/eylem), not a new write path. A fisilti_sessize_al (mute) action closes the "doctor sees the same flag for a year and gets annoyed" risk honestly -- visible mute with a reason/date, never a silent dismiss.
+
+**Verified before building (not assumed):**
+- Doktor: all 29 branş already have a real kohort.ts engine + wired /api/doktor/<branş>/kohort route. Field shapes vary per branş (some use bayraklar+detay, kardiyoloji uses acikRiskBayraklari, dahiliye has no sekme/deep-link field) -- genuine heterogeneity, not a uniform contract.
+- Ayşe's confirm-and-commit action system is real and live today: core/eylemler registry, T1 actions including asi_kaydi_ekle (source: kayit/beyan/dış kurum), dosya_notu_ekle, kontrol_randevusu_olustur, branş-specific görev actions; EylemKarti.tsx (429 lines); /api/doktor/eylem route. See docs/AYSE-EYLEM-MIMARISI.md.
+- Klinik: no kohort-equivalent exists at all today. docs/AYSE-EYLEM-MIMARISI.md P3 already names "the klinik vertical mirror" as planned but unbuilt.
+- Mali: lib/mali/beyanTakvimiEngine.ts computes upcoming filing deadlines per müşteri with risk tiers, but is forward-looking only (60-day window) -- does not currently flag a deadline once it has already passed. No eylem-equivalent action system exists for mali.
+- Avukat: not investigated yet as of this entry.
+
+**Sprint plan (Kaan's explicit ordering, 3 separate sprints):**
+1. Doktor (this sprint) -- generalize Fısıltı to all 29 branş via a new aggregation layer; wire Ayşe's read access + the highest-value existing eylem actions (aşı kaydı, dosya notu, kontrol randevusu) to fısıltı items; build the fisilti_sessize_al mute action.
+2. Klinik (next) -- needs its own kohort-engine layer built from scratch (no existing pattern to lean on beyond doktor's), then the eylem mirror per AYSE-EYLEM-MIMARISI.md P3.
+3. Mali + Avukat (last) -- extend the mali beyan engine backward for missed deadlines, build mali's own eylem action system from scratch (none exists), then investigate and build the avukat equivalent (not yet scoped).
+
+### ACIK (OPEN)
+| Date | Item | Durum |
+|---|---|---|
+| 2026-09-24 | Sprint 1 (Doktor) -- build now, this session. | IN PROGRESS |
+| 2026-09-24 | Sprint 2 (Klinik) -- kohort layer + eylem mirror, ground-up. | OPEN, scheduled after Sprint 1 |
+| 2026-09-24 | Sprint 3 (Mali + Avukat) -- beyan engine backward-looking flags, new eylem system for mali, avukat scope investigation + build. | OPEN, scheduled last |
