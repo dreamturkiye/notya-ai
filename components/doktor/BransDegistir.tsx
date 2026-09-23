@@ -79,7 +79,7 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0 }}>
       <label
         htmlFor="superuser-brans"
-        style={{ color: '#8FA0B5', fontSize: mobil ? 11 : 12, fontWeight: 500, whiteSpace: 'nowrap' }}
+        style={{ color: '#8b7d70', fontSize: mobil ? 11 : 12, fontWeight: 500, whiteSpace: 'nowrap' }}
       >
         Branş:
       </label>
@@ -90,9 +90,9 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
         onChange={(e) => degistir(e.target.value)}
         title={hata || 'Aktif branşınızı değiştirin'}
         style={{
-          background: 'rgba(255,255,255,0.08)',
-          color: hata ? '#F87171' : '#DCE4EE',
-          border: `1px solid ${hata ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.14)'}`,
+          background: '#F6F0E4',
+          color: hata ? '#a45b3e' : '#3b2e24',
+          border: `1px solid ${hata ? 'rgba(164,91,62,0.5)' : 'rgba(58,44,34,0.14)'}`,
           borderRadius: 8,
           padding: mobil ? '5px 6px' : '6px 8px',
           fontSize: mobil ? 11 : 12,
@@ -106,7 +106,7 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
       >
         {!brans && <option value="">Seçiniz</option>}
         {secenekler.map((s) => (
-          <option key={s.anahtar} value={s.anahtar} style={{ background: '#0A1628' }}>
+          <option key={s.anahtar} value={s.anahtar} style={{ background: '#FFFFFF' }}>
             {s.etiket}
           </option>
         ))}
