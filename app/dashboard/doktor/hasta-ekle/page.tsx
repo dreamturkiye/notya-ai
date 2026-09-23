@@ -258,10 +258,10 @@ export default function HastaEklePage() {
     width: '100%',
     height: 52,
     fontSize: 17,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    border: `1.5px solid ${highlight ? '#14B8A6' : 'rgba(255,255,255,0.1)'}`,
+    backgroundColor: '#F6F0E4',
+    border: `1.5px solid ${highlight ? '#2f4334' : 'rgba(58,44,34,0.1)'}`,
     borderRadius: 14,
-    color: '#fff',
+    color: '#3b2e24',
     padding: '0 18px',
     outline: 'none',
     boxSizing: 'border-box',
@@ -270,11 +270,11 @@ export default function HastaEklePage() {
   const tileStyle: React.CSSProperties = {
     textAlign: 'left',
     width: '100%',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    background: '#F6F0E4',
+    border: '1px solid rgba(58,44,34,0.1)',
     borderRadius: 16,
     padding: '20px 18px',
-    color: '#fff',
+    color: '#3b2e24',
     cursor: 'pointer',
   };
 
@@ -282,17 +282,17 @@ export default function HastaEklePage() {
     phase === 'health' ? 'Sağlık' : phase === 'kvkk' ? 'KVKK' : phase === 'review' ? 'Onay' : 'Kimlik';
 
   return (
-    <div style={{ backgroundColor: '#060C18', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ backgroundColor: 'transparent', minHeight: '100vh', fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '28px 20px' }}>
-        <a href="/dashboard/doktor/hastalar" style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Hastalar</a>
-        <h1 style={{ fontSize: 28, fontWeight: 600, color: '#fff', margin: '10px 0 8px' }}>Yeni Hasta</h1>
+        <a href="/dashboard/doktor/hastalar" style={{ color: '#2f4334', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>← Hastalar</a>
+        <h1 style={{ fontSize: 28, fontWeight: 600, color: '#3b2e24', margin: '10px 0 8px' }}>Yeni Hasta</h1>
         {phase !== 'chooser' && (
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>{stepLabel}</div>
+          <div style={{ fontSize: 13, color: '#8b7d70', marginBottom: 24 }}>{stepLabel}</div>
         )}
 
         {phase === 'chooser' && (
           <div>
-            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, marginBottom: 24, lineHeight: 1.5 }}>
+            <p style={{ color: '#8b7d70', fontSize: 15, marginBottom: 24, lineHeight: 1.5 }}>
               Hastayı nasıl eklemek istersiniz?
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -305,7 +305,7 @@ export default function HastaEklePage() {
                 }}
               >
                 <div style={{ fontSize: 17, fontWeight: 650 }}>TC ile getir</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 6 }}>
+                <div style={{ fontSize: 13, color: '#8b7d70', marginTop: 6 }}>
                   NVI bağlıysa ad soyad otomatik dolar
                 </div>
               </button>
@@ -318,7 +318,7 @@ export default function HastaEklePage() {
                 }}
               >
                 <div style={{ fontSize: 17, fontWeight: 650 }}>Kimlik kartı</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 6 }}>
+                <div style={{ fontSize: 13, color: '#8b7d70', marginTop: 6 }}>
                   Fotoğraf veya galeri — eski / yeni kimlik
                 </div>
               </button>
@@ -331,7 +331,7 @@ export default function HastaEklePage() {
                 }}
               >
                 <div style={{ fontSize: 17, fontWeight: 650 }}>Manuel</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 6 }}>
+                <div style={{ fontSize: 13, color: '#8b7d70', marginTop: 6 }}>
                   Karttaki alanları yazın
                 </div>
               </button>
@@ -341,7 +341,7 @@ export default function HastaEklePage() {
 
         {phase === 'tc' && (
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#fff', marginBottom: 16 }}>TC ile getir</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#3b2e24', marginBottom: 16 }}>TC ile getir</h2>
             <input
               type="text"
               inputMode="numeric"
@@ -350,10 +350,10 @@ export default function HastaEklePage() {
               onChange={(e) => handleTCChange(e.target.value)}
               style={{
                 ...inputStyle(),
-                borderColor: tcError ? '#EF4444' : tcValid ? '#14B8A6' : 'rgba(255,255,255,0.1)',
+                borderColor: tcError ? '#a45b3e' : tcValid ? '#2f4334' : 'rgba(58,44,34,0.1)',
               }}
             />
-            {tcError && <div style={{ color: '#EF4444', fontSize: 13, marginTop: 8 }}>{tcError}</div>}
+            {tcError && <div style={{ color: '#a45b3e', fontSize: 13, marginTop: 8 }}>{tcError}</div>}
 
             <button
               type="button"
@@ -365,8 +365,8 @@ export default function HastaEklePage() {
                 marginTop: 20,
                 border: 'none',
                 borderRadius: 12,
-                background: tcValid ? '#14B8A6' : 'rgba(255,255,255,0.1)',
-                color: tcValid ? '#041016' : 'rgba(255,255,255,0.4)',
+                background: tcValid ? '#2f4334' : 'rgba(58,44,34,0.1)',
+                color: tcValid ? '#FAF8F4' : '#8b7d70',
                 fontWeight: 650,
                 fontSize: 16,
                 cursor: tcValid && !mernisLoading ? 'pointer' : 'not-allowed',
@@ -384,7 +384,7 @@ export default function HastaEklePage() {
                 height: 40,
                 border: 'none',
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.45)',
+                color: '#8b7d70',
                 fontSize: 14,
                 cursor: 'pointer',
               }}
@@ -400,12 +400,12 @@ export default function HastaEklePage() {
                   borderRadius: 10,
                   backgroundColor:
                     banner.type === 'success'
-                      ? 'rgba(52,211,153,0.1)'
+                      ? '#E4F3EA'
                       : banner.type === 'warn'
-                        ? 'rgba(251,191,36,0.1)'
-                        : 'rgba(248,113,113,0.1)',
+                        ? '#FBF3DE'
+                        : '#FBEAE3',
                   color:
-                    banner.type === 'success' ? '#34D399' : banner.type === 'warn' ? '#FBBF24' : '#F87171',
+                    banner.type === 'success' ? '#2E6E4E' : banner.type === 'warn' ? '#B4832F' : '#a45b3e',
                   fontSize: 14,
                 }}
               >
@@ -422,7 +422,7 @@ export default function HastaEklePage() {
                 height: 40,
                 border: 'none',
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.5)',
+                color: '#8b7d70',
                 cursor: 'pointer',
               }}
             >
@@ -454,7 +454,7 @@ export default function HastaEklePage() {
 
         {phase === 'manual' && (
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#fff', marginBottom: 20 }}>Manuel giriş</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#3b2e24', marginBottom: 20 }}>Manuel giriş</h2>
             <input
               type="text"
               placeholder="TC Kimlik Numarası"
@@ -462,10 +462,10 @@ export default function HastaEklePage() {
               onChange={(e) => handleTCChange(e.target.value)}
               style={{
                 ...inputStyle(),
-                borderColor: tcError ? '#EF4444' : tcValid ? '#14B8A6' : 'rgba(255,255,255,0.1)',
+                borderColor: tcError ? '#a45b3e' : tcValid ? '#2f4334' : 'rgba(58,44,34,0.1)',
               }}
             />
-            {tcError && <div style={{ color: '#EF4444', fontSize: 13, marginTop: 6 }}>{tcError}</div>}
+            {tcError && <div style={{ color: '#a45b3e', fontSize: 13, marginTop: 6 }}>{tcError}</div>}
             <div style={{ height: 16 }} />
             <input
               type="text"
@@ -485,7 +485,7 @@ export default function HastaEklePage() {
             <select
               value={formData.cinsiyet}
               onChange={(e) => updateFormData('cinsiyet', e.target.value)}
-              style={{ ...inputStyle(), color: formData.cinsiyet ? '#fff' : 'rgba(255,255,255,0.3)' }}
+              style={{ ...inputStyle(), color: formData.cinsiyet ? '#3b2e24' : '#a89a86' }}
             >
               <option value="">Cinsiyet</option>
               <option value="Erkek">Erkek</option>
@@ -500,7 +500,7 @@ export default function HastaEklePage() {
               style={inputStyle()}
             />
             {banner && (
-              <div style={{ marginTop: 12, color: '#F87171', fontSize: 14 }}>{banner.message}</div>
+              <div style={{ marginTop: 12, color: '#a45b3e', fontSize: 14 }}>{banner.message}</div>
             )}
             <button
               type="button"
@@ -511,8 +511,8 @@ export default function HastaEklePage() {
                 marginTop: 24,
                 border: 'none',
                 borderRadius: 12,
-                background: '#14B8A6',
-                color: '#041016',
+                background: '#2f4334',
+                color: '#FAF8F4',
                 fontWeight: 650,
                 fontSize: 16,
                 cursor: 'pointer',
@@ -529,7 +529,7 @@ export default function HastaEklePage() {
                 height: 40,
                 border: 'none',
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.5)',
+                color: '#8b7d70',
                 cursor: 'pointer',
               }}
             >
@@ -540,15 +540,15 @@ export default function HastaEklePage() {
 
         {phase === 'review' && (
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#fff', marginBottom: 8 }}>Kontrol et</h2>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, marginBottom: 20 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#3b2e24', marginBottom: 8 }}>Kontrol et</h2>
+            <p style={{ color: '#8b7d70', fontSize: 14, marginBottom: 20 }}>
               Kaydetmeden önce bilgileri doğrulayın
             </p>
 
             <div
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: '#F6F0E4',
+                border: '1px solid rgba(58,44,34,0.1)',
                 borderRadius: 16,
                 padding: 18,
                 marginBottom: 16,
@@ -560,8 +560,8 @@ export default function HastaEklePage() {
                     display: 'inline-block',
                     fontSize: 12,
                     fontWeight: 600,
-                    color: '#14B8A6',
-                    background: 'rgba(20,184,166,0.12)',
+                    color: '#2f4334',
+                    background: '#E4F3F1',
                     padding: '4px 10px',
                     borderRadius: 8,
                     marginBottom: 14,
@@ -596,7 +596,7 @@ export default function HastaEklePage() {
               <select
                 value={formData.cinsiyet}
                 onChange={(e) => updateFormData('cinsiyet', e.target.value)}
-                style={{ ...inputStyle(), color: formData.cinsiyet ? '#fff' : 'rgba(255,255,255,0.3)' }}
+                style={{ ...inputStyle(), color: formData.cinsiyet ? '#3b2e24' : '#a89a86' }}
               >
                 <option value="">Cinsiyet</option>
                 <option value="Erkek">Erkek</option>
@@ -621,8 +621,8 @@ export default function HastaEklePage() {
                 height: 48,
                 border: 'none',
                 borderRadius: 12,
-                background: formData.adSoyad.trim() ? '#14B8A6' : 'rgba(255,255,255,0.1)',
-                color: formData.adSoyad.trim() ? '#041016' : 'rgba(255,255,255,0.4)',
+                background: formData.adSoyad.trim() ? '#2f4334' : 'rgba(58,44,34,0.1)',
+                color: formData.adSoyad.trim() ? '#FAF8F4' : '#8b7d70',
                 fontWeight: 650,
                 fontSize: 16,
                 cursor: formData.adSoyad.trim() ? 'pointer' : 'not-allowed',
@@ -639,7 +639,7 @@ export default function HastaEklePage() {
                 height: 40,
                 border: 'none',
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.5)',
+                color: '#8b7d70',
                 cursor: 'pointer',
               }}
             >
@@ -650,9 +650,9 @@ export default function HastaEklePage() {
 
         {phase === 'health' && (
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#fff', marginBottom: 24 }}>Sağlık Geçmişi</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#3b2e24', marginBottom: 24 }}>Sağlık Geçmişi</h2>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ color: '#fff', marginBottom: 10, fontSize: 15 }}>Kronik Hastalıklar</div>
+              <div style={{ color: '#3b2e24', marginBottom: 10, fontSize: 15 }}>Kronik Hastalıklar</div>
               {['Diyabet', 'Hipertansiyon', 'Astım', 'Kalp Hastalığı'].map((h) => (
                 <button
                   key={h}
@@ -662,11 +662,11 @@ export default function HastaEklePage() {
                     padding: '8px 16px',
                     margin: '4px 6px 4px 0',
                     borderRadius: 20,
-                    border: '1px solid #14B8A6',
+                    border: '1px solid #2f4334',
                     backgroundColor: formData.kronikHastaliklar.includes(h)
-                      ? '#14B8A6'
-                      : 'rgba(255,255,255,0.06)',
-                    color: '#fff',
+                      ? '#2f4334'
+                      : '#F6F0E4',
+                    color: formData.kronikHastaliklar.includes(h) ? '#FAF8F4' : '#3b2e24',
                     fontSize: 14,
                   }}
                 >
@@ -704,8 +704,8 @@ export default function HastaEklePage() {
                 style={{
                   flex: 1,
                   height: 48,
-                  border: '1.5px solid rgba(255,255,255,0.2)',
-                  color: '#fff',
+                  border: '1.5px solid rgba(58,44,34,0.16)',
+                  color: '#3b2e24',
                   backgroundColor: 'transparent',
                   borderRadius: 12,
                   fontSize: 16,
@@ -719,8 +719,8 @@ export default function HastaEklePage() {
                 style={{
                   flex: 1,
                   height: 48,
-                  backgroundColor: '#14B8A6',
-                  color: '#041016',
+                  backgroundColor: '#2f4334',
+                  color: '#FAF8F4',
                   border: 'none',
                   borderRadius: 12,
                   fontSize: 16,
@@ -735,7 +735,7 @@ export default function HastaEklePage() {
 
         {phase === 'kvkk' && (
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#fff', marginBottom: 24 }}>İletişim & KVKK</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, color: '#3b2e24', marginBottom: 24 }}>İletişim & KVKK</h2>
             <input
               type="tel"
               placeholder="Telefon"
@@ -760,7 +760,7 @@ export default function HastaEklePage() {
               style={inputStyle()}
             />
             <div style={{ height: 24 }} />
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#fff', fontSize: 14 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#3b2e24', fontSize: 14 }}>
               <input
                 type="checkbox"
                 checked={formData.kvkkOnay}
@@ -768,9 +768,9 @@ export default function HastaEklePage() {
               />
               KVKK Aydınlatma Metni&apos;ni okudum ve onaylıyorum
             </label>
-            {submitError && <div style={{ color: '#EF4444', marginTop: 16, fontSize: 14 }}>{submitError}</div>}
+            {submitError && <div style={{ color: '#a45b3e', marginTop: 16, fontSize: 14 }}>{submitError}</div>}
             {submitSuccess && (
-              <div style={{ color: '#14B8A6', marginTop: 16, fontSize: 14 }}>Hasta başarıyla kaydedildi.</div>
+              <div style={{ color: '#2f4334', marginTop: 16, fontSize: 14 }}>Hasta başarıyla kaydedildi.</div>
             )}
             <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
               <button
@@ -779,8 +779,8 @@ export default function HastaEklePage() {
                 style={{
                   flex: 1,
                   height: 48,
-                  border: '1.5px solid rgba(255,255,255,0.2)',
-                  color: '#fff',
+                  border: '1.5px solid rgba(58,44,34,0.16)',
+                  color: '#3b2e24',
                   backgroundColor: 'transparent',
                   borderRadius: 12,
                   fontSize: 16,
@@ -795,8 +795,8 @@ export default function HastaEklePage() {
                 style={{
                   flex: 1,
                   height: 48,
-                  backgroundColor: '#14B8A6',
-                  color: '#041016',
+                  backgroundColor: '#2f4334',
+                  color: '#FAF8F4',
                   border: 'none',
                   borderRadius: 12,
                   fontSize: 16,
@@ -815,7 +815,7 @@ export default function HastaEklePage() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.65)',
+            background: 'rgba(0,0,0,0.5)',
             zIndex: 200,
             display: 'flex',
             alignItems: 'flex-end',
@@ -828,17 +828,17 @@ export default function HastaEklePage() {
             style={{
               width: '100%',
               maxWidth: 520,
-              background: '#0B1220',
+              background: '#FAF8F4',
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
-              border: '1px solid rgba(255,255,255,0.1)',
+              border: '1px solid rgba(58,44,34,0.1)',
               padding: '24px 20px calc(24px + env(safe-area-inset-bottom))',
             }}
           >
-            <div style={{ fontSize: 18, fontWeight: 650, color: '#fff', marginBottom: 8 }}>
+            <div style={{ fontSize: 18, fontWeight: 650, color: '#3b2e24', marginBottom: 8 }}>
               NVI bağlı değil
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
+            <p style={{ color: '#8b7d70', fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
               TC doğrulandı. Ad soyad için NVI hesabınızı bağlayın veya manuel devam edin.
             </p>
             <button
@@ -851,8 +851,8 @@ export default function HastaEklePage() {
                 height: 48,
                 border: 'none',
                 borderRadius: 12,
-                background: '#14B8A6',
-                color: '#041016',
+                background: '#2f4334',
+                color: '#FAF8F4',
                 fontWeight: 650,
                 marginBottom: 10,
                 cursor: 'pointer',
@@ -871,9 +871,9 @@ export default function HastaEklePage() {
                 width: '100%',
                 height: 44,
                 borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.2)',
+                border: '1px solid rgba(58,44,34,0.16)',
                 background: 'transparent',
-                color: '#fff',
+                color: '#3b2e24',
                 cursor: 'pointer',
               }}
             >
