@@ -117,6 +117,7 @@ interface PatientData {
 
 interface SeansNotu {
   id?: string
+  created_at?: string | null
   content_tani?: string | null
   content_subjektif?: string | null
   basvuru_yakinmasi?: string | null
@@ -371,6 +372,14 @@ export default function HastaProfilPage() {
     return Array.isArray(s.notes) ? s.notes[0] || null : s.notes;
   };
 
+  // NOTYA-MUAYENE-TARIH-DUZELT (Kaan/Dr. Gökhan, 2026-09-23): Muayene Geçmişi listesi
+  // sessions.created_at (satır ne zaman oluşturuldu) gösteriyordu -- geçmişe işlenmiş bir
+  // muayene için bu, kaydın DOSYAYA GİRİLDİğİ gün, hastanın GERÇEKTEN GÖRÜLDÜĞÜ gün değil --
+  // bu yüzden yazdır/PDF (notes.created_at okur, doğru) ile listedeki tarih birbirini
+  // tutmuyordu. Not varsa onun kendi tarihi esas alınır; not yoksa ("Not bulunamadı" hayalet
+  // kayıtlar) seansın oluşturulma tarihine düşer -- başka doğru tarih zaten yok.
+  const seansTarihi = (s: Seans): string => notCek(s)?.created_at || s.created_at;
+
   const vaultSpecialtyGeri: 'deri' | 'goz' | 'gebelik' | 'dahiliye' | null = searchParams?.get('dermModality')
     ? 'deri'
     : activeTab === 'deri' || activeTab === 'goz' || activeTab === 'dahiliye'
@@ -495,7 +504,7 @@ export default function HastaProfilPage() {
                       opacity: n?.id ? 1 : 0.55,
                     }}
                   >
-                    <span style={{ display: 'block', fontSize: 12, color: '#5F7189', fontWeight: 600 }}>{trTarih(s.created_at)}</span>
+                    <span style={{ display: 'block', fontSize: 12, color: '#5F7189', fontWeight: 600 }}>{trTarih(seansTarihi(s))}</span>
                     <span style={{ display: 'block', fontSize: 13.5, color: n?.id ? '#2DD4BF' : '#C9D4E3', marginTop: 2, lineHeight: 1.35, textDecoration: n?.id ? 'underline' : 'none', textUnderlineOffset: 3 }}>{ozet}</span>
                   </button>
                 )
@@ -570,7 +579,7 @@ export default function HastaProfilPage() {
                         onKeyDown={(e) => { if (e.key === 'Enter' && n?.id) router.push(`/dashboard/doktor/notlar/${n.id}/yazdir`); }}
                         title={n?.id ? 'Raporu aç — düzenlemek için Yeniden Düzenle' : undefined}
                         style={{ minWidth: 0, flex: 1, cursor: n?.id ? 'pointer' : 'default' }}>
-                        <span style={{ display: 'block', fontSize: 12, color: '#5F7189' }}>{trTarih(s.created_at)}</span>
+                        <span style={{ display: 'block', fontSize: 12, color: '#5F7189' }}>{trTarih(seansTarihi(s))}</span>
                         <span style={{ display: 'block', fontSize: 13.5, color: '#C9D4E3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
                       </span>
                       {n?.id && (
