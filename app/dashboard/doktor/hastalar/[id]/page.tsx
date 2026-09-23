@@ -155,6 +155,9 @@ export default function HastaProfilPage() {
   // NOTYA-MUAYENE-ARSIV: yanlışlıkla açılmış ya da notsuz kalmış bir muayeneyi hekimin
   // temizleyebilmesi için -- yumuşak arşivleme, sert silme değil.
   const [arsivleniyor, setArsivleniyor] = useState<string | null>(null);
+  // NOTYA-MUAYENE-KALICI-SIL: 2. kademe -- arşivlenmiş muayeneleri görüp kalıcı silebilme.
+  const [arsivGorunum, setArsivGorunum] = useState(false);
+  const [silinenSeans, setSilinenSeans] = useState<string | null>(null);
   const [pediatriAraci, setPediatriAraci] = useState(false);
   const [dahiliyeAraci, setDahiliyeAraci] = useState(false); // NOTYA-DAH-01: iç hastalıkları / aile / genel dahiliye
   const [gozAraci, setGozAraci] = useState(false); // GOZ-CHAPTER: göz hastalıkları hekimi
@@ -296,13 +299,12 @@ export default function HastaProfilPage() {
     })();
   }, [patientId, router]);
 
-  // Muayene Geçmişi: sekme ilk açıldığında tembel yüklenir
+  // Muayene Geçmişi: sekme ilk açıldığında tembel yüklenir; arşiv görünümü değiştikce yeniden çeker.
   const seansYukle = useCallback(async () => {
-    if (seanslar !== null || seansYukleniyor) return;
     setSeansYukleniyor(true);
     try {
       const token = await ensureDoctorAccessToken();
-      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions`, { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions${arsivGorunum ? '?arsiv=1' : ''}`, { headers: { Authorization: `Bearer ${token}` } });
       const d = await r.json();
       const liste = Array.isArray(d.sessions) ? d.sessions : Array.isArray(d.data) ? d.data : Array.isArray(d) ? d : [];
       setSeanslar(liste);
@@ -311,11 +313,11 @@ export default function HastaProfilPage() {
     } finally {
       setSeansYukleniyor(false);
     }
-  }, [patientId, seanslar, seansYukleniyor]);
+  }, [patientId, arsivGorunum]);
 
   useEffect(() => {
     if (activeTab === 'muayene' || activeTab === 'ozet') seansYukle()
-  }, [activeTab, seansYukle])
+  }, [activeTab, arsivGorunum, seansYukle])
 
   // NOTYA-MUAYENE-ARSIV: yumuşak arşivleme -- listeden çıkarır, kaydı silmez.
   const muayeneArsivle = async (sessionId: string) => {
@@ -327,6 +329,21 @@ export default function HastaProfilPage() {
       if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
     } finally {
       setArsivleniyor(null);
+    }
+  };
+
+  // NOTYA-MUAYENE-KALICI-SIL: 2. kademe -- geri alınamaz, yalnız zaten arşivlenmiş bir muayene için.
+  const muayeneKaliciSil = async (sessionId: string) => {
+    if (!window.confirm('Bu muayeneyi KALICI OLARAK silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ -- not, bağlı belge değerlendirmeleri ve lab tabloları tamamen silinir.')) return;
+    setSilinenSeans(sessionId);
+    try {
+      const token = await ensureDoctorAccessToken();
+      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/kalici-sil`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
+      else window.alert(j.error || 'Silinemedi');
+    } finally {
+      setSilinenSeans(null);
     }
   };
 
@@ -528,9 +545,18 @@ export default function HastaProfilPage() {
               </div>
             ) : (
               <>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 0 4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setArsivGorunum((v) => !v)}
+                    style={{ background: 'transparent', border: 'none', color: arsivGorunum ? '#2DD4BF' : '#8FA0B5', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                  >
+                    {arsivGorunum ? '← Aktif muayeneler' : 'Arşivlenenler ›'}
+                  </button>
+                </div>
                 {seansYukleniyor && <div style={{ padding: '14px 0', color: '#8FA0B5', fontSize: 14 }}>Vizitler yükleniyor…</div>}
                 {!seansYukleniyor && seanslar !== null && seanslar.length === 0 && (
-                  <div style={{ padding: '18px 0', color: '#8FA0B5', fontSize: 14 }}>Henüz muayene kaydı yok — ilk muayeneyle birlikte burada görünecek.</div>
+                  <div style={{ padding: '18px 0', color: '#8FA0B5', fontSize: 14 }}>{arsivGorunum ? 'Arşivlenmiş muayene yok.' : 'Henüz muayene kaydı yok — ilk muayeneyle birlikte burada görünecek.'}</div>
                 )}
                 {!seansYukleniyor && (seanslar || []).map((s, idx) => {
                   const n = notCek(s);
@@ -556,15 +582,27 @@ export default function HastaProfilPage() {
                           🖨️ Yazdır / PDF
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => void muayeneArsivle(s.id)}
-                        disabled={arsivleniyor === s.id}
-                        title="Muayeneyi arşivle -- listeden kaldırır, kaydı silmez"
-                        style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', color: '#F87171', borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: arsivleniyor === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: arsivleniyor === s.id ? 0.5 : 1 }}
-                      >
-                        {arsivleniyor === s.id ? 'Arşivleniyor…' : 'Arşivle'}
-                      </button>
+                      {arsivGorunum ? (
+                        <button
+                          type="button"
+                          onClick={() => void muayeneKaliciSil(s.id)}
+                          disabled={silinenSeans === s.id}
+                          title="Kalıcı olarak sil -- geri alınamaz"
+                          style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.5)', color: '#F87171', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: silinenSeans === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: silinenSeans === s.id ? 0.5 : 1 }}
+                        >
+                          {silinenSeans === s.id ? 'Siliniyor…' : 'Kalıcı olarak sil'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void muayeneArsivle(s.id)}
+                          disabled={arsivleniyor === s.id}
+                          title="Muayeneyi arşivle -- listeden kaldırır, kaydı silmez"
+                          style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', color: '#F87171', borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: arsivleniyor === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: arsivleniyor === s.id ? 0.5 : 1 }}
+                        >
+                          {arsivleniyor === s.id ? 'Arşivleniyor…' : 'Arşivle'}
+                        </button>
+                      )}
                     </div>
                   );
                 })}
