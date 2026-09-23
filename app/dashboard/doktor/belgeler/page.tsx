@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import DocumentViewer from '@/components/doktor/DocumentViewer'
 import { trIcerir } from '@/lib/utils/turkceArama'
+import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import {
   getAccessTokenAsync,
   normalizeHastalar,
@@ -287,15 +288,15 @@ export default function BelgelerPage() {
 
   return (
     <div style={toolsShell}>
-      <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 16px 56px' }}>
+      <div style={{ maxWidth: 880 }}>
         <GeriLink
           href={hastaId ? hastaBelgelerHref(hastaId) : DOKTOR_ANA}
           style={{ display: 'inline-block', marginBottom: 10 }}
         >
           {hastaId ? '← Hasta Belgeler' : '← Doktor'}
         </GeriLink>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Belge Kasası</h1>
-        <p style={{ color: '#94A3B8', fontSize: 14, margin: '6px 0 20px' }}>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: 0, color: '#2e251d', letterSpacing: '-0.02em' }}>Belge Kasası</h1>
+        <p style={{ color: '#8b7d70', fontSize: 14, margin: '6px 0 20px' }}>
           PDF, JPEG, PNG — hastaya bağlı, şifreli saklama (beta)
         </p>
 
@@ -336,7 +337,7 @@ export default function BelgelerPage() {
                     transform: 'translateY(-50%)',
                     background: 'none',
                     border: 'none',
-                    color: '#94A3B8',
+                    color: '#8b7d70',
                     fontSize: 15,
                     cursor: 'pointer',
                     padding: 4,
@@ -354,16 +355,16 @@ export default function BelgelerPage() {
                   left: 0,
                   right: 0,
                   marginTop: 4,
-                  background: '#0D1C33',
-                  border: '1px solid rgba(255,255,255,0.14)',
+                  background: '#FFFFFF',
+                  border: '1px solid rgba(58,44,34,0.14)',
                   borderRadius: 12,
                   maxHeight: 240,
                   overflowY: 'auto',
-                  boxShadow: '0 12px 30px rgba(0,0,0,0.45)',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
                 }}
               >
                 {suzulen.length === 0 && (
-                  <div style={{ padding: '11px 14px', fontSize: 13, color: '#94A3B8' }}>Eşleşen hasta yok</div>
+                  <div style={{ padding: '11px 14px', fontSize: 13, color: '#8b7d70' }}>Eşleşen hasta yok</div>
                 )}
                 {suzulen.map((h) => (
                   <div
@@ -377,9 +378,9 @@ export default function BelgelerPage() {
                     style={{
                       padding: '10px 14px',
                       fontSize: 13.5,
-                      color: h.id === hastaId ? '#2DD4BF' : '#E2E8F0',
+                      color: h.id === hastaId ? '#2f4334' : '#3b2e24',
                       cursor: 'pointer',
-                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      borderBottom: '1px solid #FFFFFF',
                     }}
                   >
                     {h.label}
@@ -395,7 +396,7 @@ export default function BelgelerPage() {
             </label>
             <select id="belge-turu" value={belgeType} onChange={(e) => setBelgeType(e.target.value)} style={toolsInput}>
               {belgeTurleri.map((t) => (
-                <option key={t} value={t} style={{ background: '#0A1628', color: '#fff' }}>
+                <option key={t} value={t} style={{ background: '#FFFFFF', color: '#3b2e24' }}>
                   {t}
                 </option>
               ))}
@@ -407,9 +408,9 @@ export default function BelgelerPage() {
               Muayene (görüntü / ses bu vizite bağlanır)
             </label>
             <select id="belge-muayene" value={visitId} onChange={(e) => setVisitId(e.target.value)} disabled={!hastaId} style={toolsInput}>
-              <option value="" style={{ background: '#0A1628', color: '#fff' }}>Hasta dosyası — muayene dışı</option>
+              <option value="" style={{ background: '#FFFFFF', color: '#3b2e24' }}>Hasta dosyası — muayene dışı</option>
               {seanslar.map((s) => (
-                <option key={s.id} value={s.id} style={{ background: '#0A1628', color: '#fff' }}>{s.etiket}</option>
+                <option key={s.id} value={s.id} style={{ background: '#FFFFFF', color: '#3b2e24' }}>{s.etiket}</option>
               ))}
             </select>
           </div>
@@ -463,15 +464,15 @@ export default function BelgelerPage() {
                     flexShrink: 0,
                     padding: '6px 12px',
                     borderRadius: 8,
-                    background: 'rgba(255,255,255,0.1)',
-                    border: '1px solid rgba(255,255,255,0.18)',
-                    color: '#F8FAFC',
+                    background: 'rgba(58,44,34,0.1)',
+                    border: '1px solid rgba(58,44,34,0.18)',
+                    color: '#3b2e24',
                     fontWeight: 600,
                   }}
                 >
                   Dosya Seç
                 </span>
-                <span style={{ color: '#94A3B8' }}>PDF, görüntü, ses (≤4 MB)</span>
+                <span style={{ color: '#8b7d70' }}>PDF, görüntü, ses (≤4 MB)</span>
               </button>
             ) : (
               <div
@@ -485,8 +486,8 @@ export default function BelgelerPage() {
                   boxSizing: 'border-box',
                 }}
               >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#E2E8F0', fontSize: 13 }}>
-                  {file.name} <span style={{ color: '#64748B' }}>({Math.max(1, Math.round(file.size / 1024))} KB)</span>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3b2e24', fontSize: 13 }}>
+                  {file.name} <span style={{ color: '#8b7d70' }}>({Math.max(1, Math.round(file.size / 1024))} KB)</span>
                 </span>
                 <button
                   type="button"
@@ -494,9 +495,9 @@ export default function BelgelerPage() {
                   onClick={dosyayiKaldir}
                   style={{
                     flexShrink: 0,
-                    background: 'rgba(239,68,68,0.15)',
-                    border: '1px solid rgba(239,68,68,0.4)',
-                    color: '#FCA5A5',
+                    background: '#FBEAE3',
+                    border: '1px solid rgba(164,91,62,0.4)',
+                    color: '#7A3D28',
                     borderRadius: 8,
                     padding: '5px 10px',
                     fontSize: 12,
@@ -521,9 +522,9 @@ export default function BelgelerPage() {
                 marginTop: 12,
                 padding: '12px 14px',
                 borderRadius: 12,
-                background: 'rgba(15,155,142,0.14)',
-                border: '1px solid rgba(94,234,212,0.32)',
-                color: '#99F6E4',
+                background: '#E4F3F1',
+                border: '1px solid rgba(47,67,52,0.4)',
+                color: '#2f4334',
                 fontSize: 13,
                 lineHeight: 1.45,
               }}
@@ -535,15 +536,15 @@ export default function BelgelerPage() {
 
         {hastaId && (
           <div style={{ ...toolsCard, marginTop: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#E2E8F0', marginBottom: 4 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#3b2e24', marginBottom: 4 }}>
               Kasa ({docs.length})
             </div>
-            <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 12, color: '#8b7d70', marginBottom: 12, lineHeight: 1.45 }}>
               Belge adına tıklayın: önizleme açılır. “Değerlendir” lab tablosu veya görüntü taslağı üretir;
               “Asistana raporla” epikriz / genel belge taslağı yazar. Resmi tanı onayıyla Objektif’e eklenir.
             </div>
             {!docs.length ? (
-              <div style={{ fontSize: 13, color: '#94A3B8' }}>Bu hasta için henüz belge yok.</div>
+              <div style={{ fontSize: 13, color: '#8b7d70' }}>Bu hasta için henüz belge yok.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {docs.map((d) => (
@@ -557,10 +558,10 @@ export default function BelgelerPage() {
                       flexWrap: 'wrap',
                       gap: 8,
                       padding: '10px 12px',
-                      background: viewer?.id === d.id ? 'rgba(45,212,191,0.1)' : 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.08)',
+                      background: viewer?.id === d.id ? '#E4F3F1' : '#FFFFFF',
+                      border: '1px solid rgba(58,44,34,0.08)',
                       borderRadius: 12,
-                      color: '#E2E8F0',
+                      color: '#3b2e24',
                     }}
                   >
                     <span
@@ -569,16 +570,16 @@ export default function BelgelerPage() {
                     >
                       {d.fileName}
                     </span>
-                    <span style={{ fontSize: 11, color: '#94A3B8' }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · bu muayene' : ''}</span>
-                    <span style={{ fontSize: 11, color: '#64748B' }}>{Math.max(1, Math.round(d.fileSize / 1024))} KB</span>
+                    <span style={{ fontSize: 11, color: '#8b7d70' }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · bu muayene' : ''}</span>
+                    <span style={{ fontSize: 11, color: '#8b7d70' }}>{Math.max(1, Math.round(d.fileSize / 1024))} KB</span>
                     {/* KASA-BELGE-01: lab → /lab; röntgen → analiz; asla röntgende lab CTA */}
                     {belgeDegerlendirmeCtalari(d).map((cta) => {
                       const href =
                         cta.yol === 'lab'
                           ? `/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}/lab`
                           : `/dashboard/doktor/hastalar/${hastaId}/belgeler/${d.id}`
-                      const color = cta.tur === 'lab' ? '#FBBF24' : '#2DD4BF'
-                      const border = cta.tur === 'lab' ? 'rgba(251,191,36,0.4)' : 'rgba(45,212,191,0.4)'
+                      const color = cta.tur === 'lab' ? '#B4832F' : '#2f4334'
+                      const border = cta.tur === 'lab' ? 'rgba(180,131,47,0.4)' : 'rgba(47,67,52,0.4)'
                       return (
                         <a
                           key={cta.tur}
@@ -597,8 +598,8 @@ export default function BelgelerPage() {
                       title="Belgeyi sil"
                       style={{
                         background: 'transparent',
-                        border: '1px solid rgba(248,113,113,0.35)',
-                        color: '#F87171',
+                        border: '1px solid rgba(164,91,62,0.4)',
+                        color: '#a45b3e',
                         borderRadius: 8,
                         padding: '4px 10px',
                         fontSize: 12,
