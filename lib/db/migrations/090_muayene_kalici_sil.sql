@@ -1,0 +1,14 @@
+-- 090 — NOTYA-MUAYENE-KALICI-SIL (Kaan, 2026-09-23): tier 2 of the muayene delete capability.
+--
+-- Tier 1 (088... wait, 089) already shipped: sessions.archived_at, soft, reversible, hides from
+-- the default list. Tier 2 here is the real, irreversible permanent delete -- deliberately only
+-- reachable for an ALREADY-ARCHIVED muayene (the archive step is the safety gate: you must pass
+-- through "hide it" before "destroy it" is even offered). No schema change needed for tier 2
+-- itself -- this migration exists only to record the two-tier design in one place next to tier 1,
+-- since the actual delete logic (app/api/doktor/hastalar/[id]/sessions/[sessionId]/kalici-sil)
+-- walks the real FK graph (reviewed by hand against pg_constraint, not guessed) rather than
+-- adding new columns.
+--
+-- NO SCHEMA CHANGE. This file is a marker/doc entry only, kept for the same reason every other
+-- feature here gets a numbered migration: one place to read what shipped and why.
+select 1;

@@ -133,7 +133,7 @@ export const ASI_KAYDI_EKLE = eylem({
       ;({ data, error } = await ctx.supabase.from('asilar').insert(eski).select('id').single())
     }
     if (error || !data) throw new Error(error?.message || 'Aşı kaydedilemedi.')
-    return { hedefTablo: 'asilar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'Aşılar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=asilar` } }
+    return { hedefTablo: 'asilar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'Aşılar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=asilar` } }
   },
   geriAl: async (ctx, k) => {
     await ctx.supabase.from('asilar').delete().eq('id', k.hedefId).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
@@ -201,7 +201,7 @@ export const ILAC_EKLE = eylem({
     }
     const { data, error } = await ctx.supabase.from('hasta_ilaclar').insert(satir).select('id').single()
     if (error || !data) throw new Error(error?.message || 'İlaç kaydedilemedi.')
-    return { hedefTablo: 'hasta_ilaclar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=ilaclar` } }
+    return { hedefTablo: 'hasta_ilaclar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
   geriAl: async (ctx, k) => {
     await ctx.supabase.from('hasta_ilaclar').delete().eq('id', k.hedefId).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
@@ -316,7 +316,7 @@ export const BAS_CEVRESI_EKLE = eylem({
   calistir: async (ctx, v) => {
     const r = await gununNotunaVitalEkle(ctx.supabase, ctx.doktorId, ctx.hasta.id, { basCevresi: v.basCevresi })
     if (!r.eklendi || !r.notId) throw new Error(r.sebep || 'Ölçüm eklenemedi.')
-    return { hedefTablo: 'notes', hedefId: r.notId, once: r.once, sonra: r.sonra || {}, ilgiliSekme: { etiket: 'Büyüme eğrilerinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=buyume` } }
+    return { hedefTablo: 'notes', hedefId: r.notId, once: r.once, sonra: r.sonra || {}, ilgiliSekme: { etiket: 'Büyüme eğrilerinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=buyume` } }
   },
   geriAl: async (ctx, k) => {
     await notVitalleriGeriYukle(ctx.supabase, k.hedefId, k.once)
@@ -472,7 +472,7 @@ export const ILAC_SONLANDIR = eylem({
     const yama = Object.fromEntries(Object.entries(guncel).filter(([, x]) => x !== undefined))
     const { error } = await ctx.supabase.from('hasta_ilaclar').update(yama).eq('id', once.id).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
     if (error) throw new Error(error.message)
-    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=ilaclar` } }
+    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
 })
 
@@ -513,7 +513,7 @@ export const ILAC_DOZ_DEGISTIR = eylem({
     if (v.yeni_kullanim) yama.kullanim_sikli = v.yeni_kullanim
     const { error } = await ctx.supabase.from('hasta_ilaclar').update(yama).eq('id', once.id).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
     if (error) throw new Error(error.message)
-    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=ilaclar` } }
+    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
 })
 
