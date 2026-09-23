@@ -20,6 +20,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/hastalar/route.ts': T,
   'app/api/doktor/hastalar/[id]/route.ts': T,
   'app/api/doktor/hastalar/[id]/sessions/route.ts': T,
+  'app/api/doktor/hastalar/[id]/sessions/[sessionId]/arsivle/route.ts': I('session looked up AND updated with doctor_id = user.id AND patient_id = params.id together — 404 for a foreign session or a session belonging to a different patient'),
   'app/api/doktor/hastalar/[id]/buyume-egrileri/route.ts': T,
   'app/api/doktor/hastalar/[id]/hedef-boy/route.ts': T,
   // ── Notlar / seanslar ──

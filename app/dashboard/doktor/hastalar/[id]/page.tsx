@@ -152,6 +152,9 @@ export default function HastaProfilPage() {
   const [error, setError] = useState('');
   const [seanslar, setSeanslar] = useState<Seans[] | null>(null);
   const [seansYukleniyor, setSeansYukleniyor] = useState(false);
+  // NOTYA-MUAYENE-ARSIV: yanlışlıkla açılmış ya da notsuz kalmış bir muayeneyi hekimin
+  // temizleyebilmesi için -- yumuşak arşivleme, sert silme değil.
+  const [arsivleniyor, setArsivleniyor] = useState<string | null>(null);
   const [pediatriAraci, setPediatriAraci] = useState(false);
   const [dahiliyeAraci, setDahiliyeAraci] = useState(false); // NOTYA-DAH-01: iç hastalıkları / aile / genel dahiliye
   const [gozAraci, setGozAraci] = useState(false); // GOZ-CHAPTER: göz hastalıkları hekimi
@@ -313,6 +316,19 @@ export default function HastaProfilPage() {
   useEffect(() => {
     if (activeTab === 'muayene' || activeTab === 'ozet') seansYukle()
   }, [activeTab, seansYukle])
+
+  // NOTYA-MUAYENE-ARSIV: yumuşak arşivleme -- listeden çıkarır, kaydı silmez.
+  const muayeneArsivle = async (sessionId: string) => {
+    if (!window.confirm('Bu muayeneyi arşivlemek istediğinize emin misiniz? Kayıt silinmez, yalnızca listeden kaldırılır.')) return;
+    setArsivleniyor(sessionId);
+    try {
+      const token = await ensureDoctorAccessToken();
+      const r = await fetch(`/api/doktor/hastalar/${patientId}/sessions/${sessionId}/arsivle`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) setSeanslar((prev) => (prev || []).filter((s) => s.id !== sessionId));
+    } finally {
+      setArsivleniyor(null);
+    }
+  };
 
   // Doğum tarihi her yerde Gün.Ay.Yıl + yaş; bebeklerde gün hassasiyeti ("8 ay 3 günlük")
   const dogumGoster = (() => {
@@ -540,6 +556,15 @@ export default function HastaProfilPage() {
                           🖨️ Yazdır / PDF
                         </button>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => void muayeneArsivle(s.id)}
+                        disabled={arsivleniyor === s.id}
+                        title="Muayeneyi arşivle -- listeden kaldırır, kaydı silmez"
+                        style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', color: '#F87171', borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: arsivleniyor === s.id ? 'default' : 'pointer', flexShrink: 0, opacity: arsivleniyor === s.id ? 0.5 : 1 }}
+                      >
+                        {arsivleniyor === s.id ? 'Arşivleniyor…' : 'Arşivle'}
+                      </button>
                     </div>
                   );
                 })}

@@ -38,6 +38,12 @@ export default function BelgeAnalizPage() {
   const [analiz, setAnaliz] = useState<Analiz | null>(null);
   const [bransKey, setBransKey] = useState('genel');
   const [modalite, setModalite] = useState<Modalite | ''>('');
+  // NOTYA-BELGE-MODALITE-SESSIZ (Kaan, 2026-09-23): confidently auto-detected type (deep-link
+  // param, or a plain PDF -- both deterministic, not a guess) shows as a quiet label instead of
+  // an editable-looking dropdown; a weak guess (audio kalp/akciğer split, röntgen heuristic, the
+  // arbitrary fallback) still shows the dropdown directly, since those really can be wrong.
+  const [modaliteGuvenli, setModaliteGuvenli] = useState(false);
+  const [modaliteDuzenleAcik, setModaliteDuzenleAcik] = useState(false);
   const [klinikNot, setKlinikNot] = useState('');
   const [fundusGoz, setFundusGoz] = useState<'sag' | 'sol' | 'iki' | ''>('');
   const [tekAlanFundus, setTekAlanFundus] = useState(true);
@@ -88,13 +94,14 @@ export default function BelgeAnalizPage() {
     const q = searchParams?.get('modalityFinal') || searchParams?.get('dermModality') || '';
     if (q && (kural.modaliteler as string[]).includes(q)) {
       setModalite(q as Modalite);
+      setModaliteGuvenli(true); // came from another page's explicit context, not a guess
       return;
     }
     if (!doc) return;
-    if (doc.fileType.startsWith('audio/')) setModalite(kural.modaliteler.includes('ses_kalp') && doc.category === 'cihaz-kaydi' ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp');
-    else if (belgeRontgenMi(doc) && kural.modaliteler.includes('cxr')) setModalite('cxr');
-    else if (doc.fileType === 'application/pdf') setModalite('pdf_rapor');
-    else setModalite(kural.modaliteler.find((m) => !m.startsWith('ses') && m !== 'pdf_rapor') || 'serbest');
+    if (doc.fileType.startsWith('audio/')) { setModalite(kural.modaliteler.includes('ses_kalp') && doc.category === 'cihaz-kaydi' ? 'ses_kalp' : kural.modaliteler.includes('ses_akciger') ? 'ses_akciger' : 'ses_kalp'); setModaliteGuvenli(false) }
+    else if (belgeRontgenMi(doc) && kural.modaliteler.includes('cxr')) { setModalite('cxr'); setModaliteGuvenli(false) }
+    else if (doc.fileType === 'application/pdf') { setModalite('pdf_rapor'); setModaliteGuvenli(true) } // file type alone is deterministic here
+    else { setModalite(kural.modaliteler.find((m) => !m.startsWith('ses') && m !== 'pdf_rapor') || 'serbest'); setModaliteGuvenli(false) }
   }, [doc, kural, modalite, searchParams]);
 
   const raporla = async () => {
@@ -253,10 +260,19 @@ export default function BelgeAnalizPage() {
               </div>
               <div style={etiket}>{personaAd} ile değerlendir · {kural.ad}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <select value={modalite} onChange={(e) => setModalite(e.target.value as Modalite)} style={{ ...toolsInput, width: 'auto' }}>
-                  {kural.modaliteler.map((m) => <option key={m} value={m} style={{ color: '#000' }}>{MODALITE_TR[m]}</option>)}
-                  <option value="serbest" style={{ color: '#000' }}>Serbest görüntü (yalnızca tarif)</option>
-                </select>
+                {modaliteGuvenli && !modaliteDuzenleAcik && modalite ? (
+                  <span style={{ fontSize: 13, color: '#8FA0B5' }}>
+                    Tespit edilen tür: <span style={{ color: '#EDF1F7', fontWeight: 700 }}>{MODALITE_TR[modalite]}</span>{' '}
+                    <button type="button" onClick={() => setModaliteDuzenleAcik(true)} style={{ background: 'none', border: 'none', color: '#0F9B8E', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+                      · değiştir
+                    </button>
+                  </span>
+                ) : (
+                  <select value={modalite} onChange={(e) => { setModalite(e.target.value as Modalite); setModaliteGuvenli(false); setModaliteDuzenleAcik(false) }} style={{ ...toolsInput, width: 'auto' }}>
+                    {kural.modaliteler.map((m) => <option key={m} value={m} style={{ color: '#000' }}>{MODALITE_TR[m]}</option>)}
+                    <option value="serbest" style={{ color: '#000' }}>Serbest görüntü (yalnızca tarif)</option>
+                  </select>
+                )}
                 {(modalite === 'fundus' || modalite === 'oct') && (
                   <select value={fundusGoz} onChange={(e) => setFundusGoz(e.target.value as typeof fundusGoz)} style={{ ...toolsInput, width: 'auto' }} aria-label="Göz">
                     <option value="" style={{ color: '#000' }}>Göz seçin</option>

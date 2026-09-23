@@ -86,7 +86,7 @@ export default function LabPage() {
   const hücreKaydet = async (s: Satir, alan: string, deger: string) => { if (!panel) return; try { await api({ adim: 'satir', panelId: panel.id, satirId: s.id, alan, deger }); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
   const takmaAd = async (s: Satir, key: string) => { if (!panel || !key) return; try { await api({ adim: 'takma_ad', panelId: panel.id, satirId: s.id, canonical_key: key }); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
   const tabloOnayla = async () => { if (!panel) return; try { await api({ adim: 'tablo_onayla', panelId: panel.id }); setMesaj('Tablo onaylandı.'); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
-  const kimlikOnayla = async () => { if (!panel) return; try { await api({ adim: 'kimlik_onayla', panelId: panel.id }); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
+  const kimlikOnayla = async () => { if (!panel) return; try { await api({ adim: 'kimlik_onayla', panelId: panel.id }); setMesaj('Hasta eşleşmesi onaylandı — şimdi tekrar değerlendirebilirsiniz.'); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } };
   const raporla = async () => { if (!panel) return; setDurum('raporluyor'); setMesaj(`${persona} raporluyor…`); try { await api({ adim: 'raporla', panelId: panel.id }); setMesaj('Taslak rapor hazır. Resmi tanıyı siz kilitlersiniz.'); await yukle(); } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); } setDurum('hazir'); };
 
   /** One click: approve table + generate Ayşe/Elif draft — was stuck after extract with no report. */
@@ -185,7 +185,20 @@ export default function LabPage() {
                 <button type="button" onClick={cikar} disabled={durum !== 'hazir' || kilitli} style={{ ...btn, opacity: durum !== 'hazir' ? 0.6 : 1 }}>{durum === 'cikariyor' ? 'Tablo çıkarılıyor…' : panel ? 'Tabloyu yeniden çıkar' : 'Tabloyu çıkar'}</button>
                 {panel && <span style={{ fontSize: 11, color: '#64748B' }}>{panel.lab_adi || ''}{panel.numune_tarihi ? ` · numune ${new Date(panel.numune_tarihi).toLocaleDateString('tr-TR')}` : ''} · kaynak: {panel.kaynaklar?.join(' + ') || '—'} · kalite {panel.kalite}</span>}
               </div>
-              {mesaj && <div style={{ marginTop: 8, fontSize: 12, color: /Hata|amadı|eşleşmiyor/.test(mesaj) ? '#F87171' : '#2DD4BF' }}>{mesaj}</div>}
+              {mesaj && (
+                <div style={{ marginTop: 8, fontSize: 12, color: /Hata|amadı|eşleşmiyor/.test(mesaj) ? '#F87171' : '#2DD4BF' }}>
+                  {mesaj}
+                  {/* NOTYA-LAB-KIMLIK-CTA: the identity-mismatch error can surface here (via
+                      onaylaVeDegerlendir -> raporla's server-side gate) as well as in the
+                      top-of-page banner -- the confirm action must be reachable from wherever
+                      the doctor actually hits the wall, not just one of the two spots. */}
+                  {/eşleşmiyor/.test(mesaj) && (
+                    <button type="button" onClick={() => void kimlikOnayla()} style={{ ...btnGhost, marginLeft: 8, padding: '4px 10px', fontSize: 12 }}>
+                      Bu hasta — devam et
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
