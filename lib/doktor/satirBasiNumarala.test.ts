@@ -52,3 +52,9 @@ describe('satirBasiNumarala — tanı/tedavi satır başı (gerileme kilidi)', (
     assert.equal(veri.vitaller.kilo, '3.18')
   })
 })
+
+it('NOTYA-SIRA-01: aşı dozları ve ay/gün sıra sayıları satır bölmez (Gökhan 2026-09-23)', () => {
+  const g = 'Aşı durumu: Hepatit B 1. dozu uygulandı; önceki planda DTaP-IPV-Hib 2. doz, PCV 2. doz, Rotavirüs 2. doz planlanmıştı. 6. ay kontrolünde 3. doz.'
+  assert.equal(satirBasiNumarala(g), g)
+  assert.equal(satirBasiNumarala('1. Sağlam çocuk 2. Hepatit B 2. doz uygulandı'), '1. Sağlam çocuk \n2. Hepatit B 2. doz uygulandı')
+})

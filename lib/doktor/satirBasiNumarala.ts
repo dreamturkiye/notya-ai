@@ -19,11 +19,17 @@ function satirOnuneKoy(
   })
 }
 
+/**
+ * Gökhan (2026-09-23): "Hepatit B 1. dozu", "DTaP-IPV-Hib 2. doz", "3. ay kontrolü" are ordinals in prose,
+ * not list items — breaking the line there split the aşı sentence into fake numbered lines.
+ */
+const SIRA_SAYISI = /^(persentil|doz|dozu|dozun|dozunu|dozlar|dozları|ay|aylık|ayında|ayda|gün|günlük|gününde|hafta|haftalık|haftasında|yaş|yaşında|kez|defa|sınıf|derece|basamak|trimester|kuşak|sıra|satır)(?![a-zçğıöşü])/
+
 export function satirBasiNumarala(metin: string): string {
   if (!metin) return metin
   let s = String(metin).replace(/\r\n/g, '\n')
   // 1. 3 günlük / 2. Fizyolojik — noktadan sonra boşluk (ondalık ve ICD eşleşmez)
-  s = satirOnuneKoy(s, /(?<![A-Za-z0-9.])\d{1,2}\.\s+/g, (sonra) => /^persentil\b/i.test(sonra))
+  s = satirOnuneKoy(s, /(?<![A-Za-z0-9.])\d{1,2}\.\s+/g, (sonra) => SIRA_SAYISI.test(sonra))
   // 1.TEDAVİ / 2.TAKİP — boşluksuz büyük harf başlık
   s = satirOnuneKoy(s, /(?<![A-Za-z0-9.])\d{1,2}\.(?=[A-ZÇĞİÖŞÜ]{2,})/g)
   // 1) tedavi  ·  a) D vitamini
