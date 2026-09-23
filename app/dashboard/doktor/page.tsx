@@ -17,6 +17,7 @@ import DoktorNav from '@/components/doktor/DoktorNav'
 import DoktorAvatar from '@/components/doktor/DoktorAvatar'
 import YeniBebekIsleri from '@/components/doktor/YeniBebekIsleri'
 import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
+import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
 import { bransAnahtari, pediatrikBaglamKurali } from '@/lib/specialties/kapsam'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -144,6 +145,9 @@ export default function DoktorDashboard() {
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [pediatriAraci, setPediatriAraci] = useState(false)
+  // NOTYA-FISILTI-UNIVERSAL (Kaan, 2026-09-24): prod page never tracked specialty before -- the
+  // fısıltı card needs it to know which branş kohort route to call.
+  const [specialty, setSpecialty] = useState('')
   // BRANS-ALAN-SIZMASI: "Yeni bebek — pediatri iş listesi" KD hekiminin ana sayfasında çıkıyor, bebek sekmesine (KD'de kapalı) çıkmaz yola gidiyordu
   const [bebekIsListesi, setBebekIsListesi] = useState(false)
 
@@ -180,6 +184,7 @@ export default function DoktorDashboard() {
           const ham = meData.data?.full_name || meData.data?.email?.split('@')[0] || 'Doktor'
           const name = ham.replace(/^\s*(?:(?:Prof|Doç|Uzm|Op|Dr|Dt)\.?\s+)+/i, '').trim() || ham
           setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
+          setSpecialty(String(meData.data?.specialty || ''))
           setPediatriAraci(pediatriHedefBoyBransi(meData.data?.specialty))
           setBebekIsListesi(pediatrikBaglamKurali(bransAnahtari(meData.data?.specialty)) !== 'asla')
           const personaId = varsayilanPersonaId(meData.data?.specialty)
@@ -313,6 +318,10 @@ export default function DoktorDashboard() {
         {bebekIsListesi && <YeniBebekIsleri />}
         {/* KONSULTASYON-02: yanıt bekleyen konsültasyon sayısı (her branş) — 0 iken hiçbir şey çizilmez */}
         <BekleyenKonsultasyonOzeti />
+
+        {/* NOTYA-FISILTI-UNIVERSAL (Kaan, 2026-09-24): prod port for Dr. Gökhan to test -- see
+            docs/OPEN-COMMITMENTS.md. Not part of the yeni-görünüm redesign merge decision. */}
+        <NotyaFisildiyor specialty={specialty} />
 
         {/* Randevular — Bugün / Bu Hafta */}
         <div style={{ marginTop: 18 }}>
