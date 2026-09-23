@@ -577,6 +577,59 @@ export const HASTA_BILGISI_DUZELT = eylem({
   },
 })
 
+/* ─────────────── T1 · Mesaj — hasta ile konuşuldu, kapat ─────────────── */
+
+export const MESAJ_HASTA_ILE_KONUSULDU = eylem({
+  anahtar: 'mesaj_hasta_ile_konusuldu',
+  etiket: 'Mesaj — hasta ile konuşuldu',
+  aciklama: "Hekim hastayla başka bir yoldan (telefon, yüz yüze) konuştuğunda bir mesaj konusunu kapatır: konuya 'hasta ile konuşuldu' notu düşer ve konuyu okundu işaretler -- bu, fısıltıdaki 'yanıt bekleyen mesaj' bayrağının da kalkmasını sağlar (aynı alan, ikinci bir kapatma yolu yok). konuId fısıltı öğesinden ya da konuşmadan gelir; hekimin bu hastaya ait olmayan bir konuya erişmesi sunucuda engellenir.",
+  alanlar: [
+    { anahtar: 'konuId', etiket: 'Mesaj konusu', tip: 'metin', zorunlu: true, aciklama: 'hasta_mesaj_konulari.id -- resolved from the fısıltı item or the current conversation context, never guessed' },
+    { anahtar: 'not', etiket: 'Not', tip: 'uzunMetin', zorunlu: true, aciklama: 'What actually happened, e.g. "Hasta ile telefonla görüşüldü." Never invent details the doctor did not say.' },
+  ],
+  zorunlu: ['konuId', 'not'],
+  kademe: 'T1',
+  branslar: 'hepsi',
+  calistir: async (ctx, v) => {
+    const konuId = String(v.konuId)
+    const { data: konu } = await ctx.supabase
+      .from('hasta_mesaj_konulari')
+      .select('id, okundu_pratik, son_mesaj_at')
+      .eq('id', konuId)
+      .eq('doctor_id', ctx.doktorId)
+      .eq('patient_id', ctx.hasta.id)
+      .maybeSingle()
+    if (!konu) throw new Error('Mesaj konusu bulunamadı.')
+    const not = String(v.not).trim()
+    const { data: mesaj, error: mErr } = await ctx.supabase
+      .from('hasta_mesajlar')
+      .insert({ konu_id: konuId, taraf: 'doktor', yazar_user_id: ctx.doktorId, metin: `${not} (Ayşe hazırladı, hekim onayladı — ${ctx.bugunTRT})` })
+      .select('id')
+      .single()
+    if (mErr || !mesaj) throw new Error('Not eklenemedi.')
+    const simdi = new Date().toISOString()
+    const { error: kErr } = await ctx.supabase
+      .from('hasta_mesaj_konulari')
+      .update({ okundu_pratik: true, son_mesaj_at: simdi })
+      .eq('id', konuId)
+      .eq('doctor_id', ctx.doktorId)
+    if (kErr) throw new Error(kErr.message)
+    return {
+      hedefTablo: 'hasta_mesaj_konulari',
+      hedefId: konuId,
+      once: { okundu_pratik: konu.okundu_pratik, son_mesaj_at: konu.son_mesaj_at },
+      sonra: { okundu_pratik: true, mesajId: mesaj.id },
+      ilgiliSekme: { etiket: 'Mesajlarda gör', yol: `/dashboard/doktor/mesajlar?konu=${konuId}` },
+    }
+  },
+  geriAl: async (ctx, kayit) => {
+    const once = kayit.once as { okundu_pratik?: boolean; son_mesaj_at?: string } | null
+    const sonra = kayit.sonra as { mesajId?: string } | null
+    if (sonra?.mesajId) await ctx.supabase.from('hasta_mesajlar').delete().eq('id', sonra.mesajId)
+    if (once) await ctx.supabase.from('hasta_mesaj_konulari').update({ okundu_pratik: once.okundu_pratik ?? false, son_mesaj_at: once.son_mesaj_at }).eq('id', kayit.hedefId)
+  },
+})
+
 export const TEMEL_EYLEMLER: EylemTanimi[] = [
   ASI_KAYDI_EKLE,
   ILAC_EKLE,
@@ -587,6 +640,7 @@ export const TEMEL_EYLEMLER: EylemTanimi[] = [
   KONTROL_RANDEVUSU_OLUSTUR,
   DOSYA_NOTU_EKLE,
   FISILTI_SESSIZE_AL,
+  MESAJ_HASTA_ILE_KONUSULDU,
   ILAC_SONLANDIR,
   ILAC_DOZ_DEGISTIR,
   ALERJI_KALDIR,

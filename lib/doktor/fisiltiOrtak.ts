@@ -27,6 +27,13 @@ export interface FisiltiItem {
    * branş route doesn't compute its own target tab (most don't yet -- only pediatri does today). */
   hedefYol: string
   toplamBekleyen: number
+  /** NOTYA-FISILTI-MESAJ (Kaan, 2026-09-24): 'klinik' = from a branş kohort engine (the original
+   * source); 'mesaj' = an unread patient-portal message the practice hasn't answered in a while.
+   * Same card, same self-clearing rule, different resolving eylem (mesaj_hasta_ile_konusuldu vs.
+   * the clinical actions) -- kaynak tells the UI/Ayşe which one applies. */
+  kaynak: 'klinik' | 'mesaj'
+  /** Only set when kaynak === 'mesaj': the hasta_mesaj_konulari.id the resolving action needs. */
+  konuId?: string
 }
 
 /** SpecialtyKey (lib/doktor/specialties.ts) -> kohort API route slug. Identical for all but two. */
@@ -90,5 +97,31 @@ export function normalizeKohortSatiri(satir: Record<string, unknown>, brans: str
     enErkenTarih,
     hedefYol,
     toplamBekleyen: 0, // filled in by the caller, which knows the full satirlar.length
+    kaynak: 'klinik',
+  }
+}
+
+/** Unread portal messages the practice hasn't answered in this long become a fısıltı candidate too. */
+export const MESAJ_GECIKME_SAAT = 24
+
+export function normalizeMesajOgesi(thread: {
+  id: string
+  patientId: string
+  hastaAdi: string
+  ozet: string
+  sonMesajAt: string
+}): FisiltiItem {
+  return {
+    id: `mesaj:${thread.patientId}:${thread.id}`,
+    brans: '',
+    patientId: thread.patientId,
+    ad: thread.hastaAdi,
+    baslik: 'yanıt bekleyen mesaj',
+    detay: thread.ozet ? [thread.ozet] : [],
+    enErkenTarih: thread.sonMesajAt,
+    hedefYol: `/dashboard/doktor/mesajlar?konu=${thread.id}`,
+    toplamBekleyen: 0,
+    kaynak: 'mesaj',
+    konuId: thread.id,
   }
 }

@@ -306,6 +306,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           <nav style={S({ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 28, position: 'relative', zIndex: 2 })}>
             {mobileItems.map((item) => {
               const active = pathname === item.route || (item.route !== '/dashboard/doktor' && pathname?.startsWith(item.route));
+              const rozet = item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? mesajUnread : 0;
               return (
                 <button
                   key={item.route}
@@ -316,11 +317,21 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
                     color: active ? '#f4ead7' : '#6a5d50',
                     border: `1px solid ${active ? CHROME_RENK.nav : 'rgba(58,44,34,0.05)'}`,
                     boxShadow: '0 8px 18px rgba(58,44,34,0.045)', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                    position: 'relative',
                   })}
                 >
                   {DOCK_ICON[item.route]}
                   {item.label}
-                  {item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? ` (${mesajUnread})` : ''}
+                  {rozet > 0 && (
+                    <span style={S({
+                      position: 'absolute', top: -7, right: -7, minWidth: 20, height: 20, padding: '0 5px',
+                      borderRadius: 999, background: CHROME_RENK.warn, color: '#FAF8F4', fontSize: 11, fontWeight: 800,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontVariantNumeric: 'tabular-nums',
+                      boxShadow: `0 0 0 2px ${CHROME_RENK.cream}`,
+                    })}>
+                      {rozet > 9 ? '9+' : rozet}
+                    </span>
+                  )}
                 </button>
               );
             })}

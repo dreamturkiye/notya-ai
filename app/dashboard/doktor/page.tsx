@@ -65,6 +65,14 @@ interface NoteItem {
   approved_at?: string
 }
 
+interface MesajOzet {
+  id: string
+  patientId: string
+  hastaAdi: string
+  ozet: string
+  sonMesajAt: string
+}
+
 const DURUM_RENK: { [key: string]: { label: string; color: string; bg: string } } = {
   planlandi: { label: 'Planlandı', color: CHROME_RENK.pine, bg: 'rgba(47,67,52,0.1)' },
   onaylandi: { label: 'Onaylandı', color: '#3F7D4A', bg: 'rgba(63,125,74,0.12)' },
@@ -84,6 +92,14 @@ function trtGunAnahtari(iso: string | Date): string {
 }
 function trtSaatStr(iso: string): string {
   return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
+}
+function trtGorelZaman(iso: string): string {
+  const fark = Date.now() - new Date(iso).getTime()
+  const saat = Math.floor(fark / 3600_000)
+  if (saat < 1) return 'az önce'
+  if (saat < 24) return `${saat} saat önce`
+  const gun = Math.floor(saat / 24)
+  return gun === 1 ? 'dün' : `${gun} gün önce`
 }
 function buHaftaninGunleri(): Date[] {
   const bugun = new Date()
@@ -122,6 +138,7 @@ export default function DoktorDashboard() {
   const [loading, setLoading] = useState(true)
   const [pediatriAraci, setPediatriAraci] = useState(false)
   const [bebekIsListesi, setBebekIsListesi] = useState(false)
+  const [yeniMesajlar, setYeniMesajlar] = useState<MesajOzet[]>([])
 
   useEffect(() => {
     // Cached name from a previous session -- read after mount only, never during the initial
@@ -214,6 +231,13 @@ export default function DoktorDashboard() {
       } catch {
         setRecentNotes([])
       }
+
+      // NOTYA-FISILTI-MESAJ (Kaan, 2026-09-24): unread patient-portal messages, right on Ana Sayfa --
+      // "Bugün" was showing only randevular before; new messages belong in that same at-a-glance zone.
+      fetch('/api/doktor/mesajlar?unread=1', { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => { if (Array.isArray(j?.threads)) setYeniMesajlar(j.threads.slice(0, 4)) })
+        .catch(() => {})
 
       setLoading(false)
     }
@@ -367,6 +391,30 @@ export default function DoktorDashboard() {
           )}
         </div>
       </div>
+
+      {/* Yeni mesajlar — hasta portalından gelen, henüz okunmamış konular; "Bugün" alanının hemen
+          altında, sadece randevuların değil (Kaan, 2026-09-24) */}
+      {yeniMesajlar.length > 0 && (
+        <div>
+          <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 })}>
+            <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Yeni mesajlar</div>
+            <span onClick={() => router.push('/dashboard/doktor/mesajlar')} style={S({ fontSize: 13, color: CHROME_RENK.pine, fontWeight: 600, cursor: 'pointer' })}>Tümünü gör ›</span>
+          </div>
+          <div style={S({ ...card, padding: '6px 20px' })}>
+            {yeniMesajlar.map((m, idx) => (
+              <div key={m.id} className="yg-satir" onClick={() => router.push(`/dashboard/doktor/mesajlar?konu=${m.id}`)}
+                style={S({ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 6px', borderBottom: idx < yeniMesajlar.length - 1 ? `1px solid ${CHROME_RENK.border}` : 'none', cursor: 'pointer', borderRadius: 8 })}>
+                <span style={S({ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: CHROME_RENK.warn })} />
+                <span style={S({ flex: 1, minWidth: 0 })}>
+                  <span style={S({ display: 'block', fontSize: 13, fontWeight: 700, color: CHROME_RENK.ink })}>{m.hastaAdi}</span>
+                  <span style={S({ display: 'block', fontSize: 13, color: CHROME_RENK.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })}>{m.ozet}</span>
+                </span>
+                <span style={S({ fontSize: 11, color: CHROME_RENK.muted, flexShrink: 0, whiteSpace: 'nowrap' })}>{trtGorelZaman(m.sonMesajAt)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* KPI kartları */}
       <div style={S({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 })}>
