@@ -447,8 +447,9 @@ export default function DoktorDashboard() {
         </div>
 
         <div style={S({ flex: 1, minWidth: 280 })}>
-          <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Bu hafta özeti</div>
-          <div style={S({ ...card, padding: '8px 20px 18px' })}>
+          <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>&nbsp;</div>
+          <div style={S({ ...card, padding: '20px 20px 18px' })}>
+            <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Bu hafta özeti</div>
             {[
               { dot: CHROME_RENK.pine, label: 'Bu hafta seans', val: kpi.buAyToplam },
               { dot: '#3F7D4A', label: 'Onaylanan not', val: Math.max(0, kpi.buAyToplam - kpi.bekleyenOnay) },
