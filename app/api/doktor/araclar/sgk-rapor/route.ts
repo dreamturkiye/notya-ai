@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudonymize'
 import { decrypt } from '@/lib/security/encryption'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
+import { aiCagir } from '@/lib/ai/cagir'
 import {
   addDaysTr,
   resolveRaporTipi,
@@ -13,37 +14,21 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-async function groqChat(system: string, user: string): Promise<SgkRaporDraft> {
-  const apiKey = process.env.GROQ_API_KEY || process.env.XAI_API_KEY || process.env.GROK_API_KEY || ''
-  if (!apiKey) throw new Error('GROQ_API_KEY tanımlı değil')
-
-  const response = await fetch(
-    process.env.GROQ_API_KEY
-      ? 'https://api.groq.com/openai/v1/chat/completions'
-      : 'https://api.x.ai/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.GROQ_API_KEY ? 'llama-3.3-70b-versatile' : 'grok-3-mini',
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        temperature: 0.2,
-        max_tokens: 2200,
-      }),
-    }
-  )
-
-  if (!response.ok) throw new Error('LLM API hatası')
-  const data = await response.json()
-  const content = data.choices?.[0]?.message?.content
+// NOTYA-SGK-RAPOR-02 (Kaan, 2026-09-23): the SGK draft now uses the patient's approved notes.
+// Routed through the same Anthropic path as every other clinical call (aiCagir, ai-model-politikasi)
+// instead of Groq/xAI: no new processor for health data (KVKK), same logging/cost metering.
+// The pseudonymize/restore map and the TCKN guard stay in front of the call.
+async function taslakUret(system: string, user: string, doctorId: string): Promise<SgkRaporDraft> {
+  const yanit = await aiCagir({
+    gorev: 'klinik-analiz',
+    maxTokens: 2200,
+    doctorId,
+    system,
+    messages: [{ role: 'user', content: user }],
+  })
+  const blok = yanit.content.find((c) => c.type === 'text')
+  const content = blok && blok.type === 'text' ? blok.text : ''
   if (!content) throw new Error('Yanıt boş')
-
   const cleaned = String(content)
     .replace(/^```json\s*/i, '')
     .replace(/^```\s*/i, '')
@@ -103,11 +88,11 @@ export async function POST(request: NextRequest) {
       /* keep default */
     }
 
-    // NOTYA-ARSIV-01: archive rule applied. NOTE (2026-09-23): notes has no patient_id column, so this
-    // query errors and `notes` is always null (the report falls back to hekimNotu). Left as is on
-    // purpose: fixing it would start sending note text to the Groq/xAI model above — Kaan's call.
-    const { data: notes } = await arsivsizNotlar(sb, 'content_degerlendirme, content_plan, content_objektif')
-      .eq('patient_id', hastaId)
+    // Notes link to the patient through sessions (notes has no patient_id). Only this doctor's
+    // approved, non-archived notes (arsivsizNotlar), newest 3.
+    const { data: notes } = await arsivsizNotlar(sb, 'content_degerlendirme, content_plan, content_objektif, sessions!inner(patient_id)')
+      .eq('sessions.patient_id', hastaId)
+      .eq('doctor_id', user.id)
       .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })
       .limit(3)
@@ -126,7 +111,7 @@ export async function POST(request: NextRequest) {
     const userPrompt = `Rapor tipi: ${tip.label} (${tip.id}). Süre: ${sureLabel}. Hasta: [HASTA]. Hasta notları: ${guvenliNotlar}`
     assertNoTckn(userPrompt, 'sgk-rapor')
 
-    const rapor = restoreDeep(await groqChat(systemPromptFor(tip), userPrompt), map) as SgkRaporDraft
+    const rapor = restoreDeep(await taslakUret(systemPromptFor(tip), userPrompt, user.id), map) as SgkRaporDraft
     rapor.hastaAdi = hastaAdi
     rapor.tcSon4 = ''
     rapor.hekim_notu = hekimNotu
