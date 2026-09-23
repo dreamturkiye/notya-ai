@@ -86,7 +86,7 @@ export const JINE_GOREVI_EKLE = gorevEylemi({
   aciklama: 'Jinekoloji takip görevi açar (serviks taraması, CYBH kontrolü, RİA kontrolü gibi).',
   tablo: 'jine_gorevleri',
   branslar: ['kadin-hastaliklari-dogum'],
-  sekme: { etiket: 'Kadın sağlığı sekmesinde gör', yol: (id) => `/dashboard/doktor/hastalar/${id}?sekme=gebelik` },
+  sekme: { etiket: 'Kadın sağlığı sekmesinde gör', yol: (id) => `/dashboard/doktor/hastalar/${id}?tab=gebelik` },
 })
 
 export const DERM_GOREVI_EKLE = gorevEylemi({
@@ -95,7 +95,7 @@ export const DERM_GOREVI_EKLE = gorevEylemi({
   aciklama: 'Dermatoloji takip görevi açar (lezyon kontrolü, ilaç güvenlik takibi, fototerapi seansı gibi).',
   tablo: 'derm_gorevleri',
   branslar: ['dermatoloji'],
-  sekme: { etiket: 'Dermatoloji sekmesinde gör', yol: (id) => `/dashboard/doktor/hastalar/${id}?sekme=dermatoloji` },
+  sekme: { etiket: 'Dermatoloji sekmesinde gör', yol: (id) => `/dashboard/doktor/hastalar/${id}?tab=deri` },
 })
 
 export const DAHILIYE_GOREVI_EKLE = gorevEylemi({
@@ -104,7 +104,7 @@ export const DAHILIYE_GOREVI_EKLE = gorevEylemi({
   aciklama: 'Dahiliye takip görevi açar (HbA1c kontrolü, KB takibi, lipid kontrolü gibi).',
   tablo: 'dahiliye_gorevleri',
   branslar: ['dahiliye'],
-  sekme: { etiket: 'Dahiliye sekmesinde gör', yol: (id) => `/dashboard/doktor/hastalar/${id}?sekme=dahiliye` },
+  sekme: { etiket: 'Dahiliye sekmesinde gör', yol: (id) => `/dashboard/doktor/hastalar/${id}?tab=dahiliye` },
 })
 
 export const BRANS_EYLEMLERI: EylemTanimi[] = [JINE_GOREVI_EKLE, DERM_GOREVI_EKLE, DAHILIYE_GOREVI_EKLE]
