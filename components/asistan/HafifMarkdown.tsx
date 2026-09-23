@@ -91,6 +91,17 @@ export default function HafifMarkdown({ metin, karanlik = true }: { metin: strin
       cikti.push(<div key={`g${i}`} style={{ fontWeight: 700, fontSize: baslik[1].length === 1 ? '1.12em' : baslik[1].length === 2 ? '1.06em' : '1em', margin: '8px 0 2px', color: karanlik ? '#EDF1F7' : '#111' }}>{kalin(baslik[2], karanlik)}</div>);
       continue;
     }
+    // NOTYA-AYSE-DANIS-BICIM (Kaan/Dr. Gökhan, 2026-09-23): a long structured report (çek listesi +
+    // Öneri) writes its section labels as a WHOLE line of just "**Etiket:**" or "**Etiket**" -- not
+    // real markdown headings (#), and not caught by the "**Etiket:** değer" two-column layout above
+    // (that one needs a value on the SAME line). Without this, such a line just fell through to a
+    // plain paragraph -- same size, same spacing as body text, so a long report read as one flat
+    // block. Treat a line that IS ONLY a bold span (optionally with a trailing colon) as a heading.
+    const saltKalinBaslik = t.match(/^\*\*([^*]+?)\*\*:?$/);
+    if (saltKalinBaslik) {
+      cikti.push(<div key={`gb${i}`} style={{ fontWeight: 700, fontSize: '1.03em', margin: '12px 0 3px', color: karanlik ? '#EDF1F7' : '#111' }}>{saltKalinBaslik[1]}</div>);
+      continue;
+    }
     cikti.push(<div key={`p${i}`} style={karanlik ? undefined : { color: '#222' }}>{kalin(t, karanlik)}</div>);
   }
   maddeyiBos('son');
