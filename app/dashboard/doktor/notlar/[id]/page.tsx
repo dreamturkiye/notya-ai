@@ -73,6 +73,13 @@ function trTarih(iso: string | null): string { if (!iso) return ''; return new D
 
 const kutu: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 13.5, lineHeight: 1.6, padding: '10px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 4 };
+// NOTYA-CEK-EKSIK-SAG-01 (Gökhan, 2026-09-23): çek listesinde "✗ eksik" kalanlar formun sağında,
+// göz önünde durmalı (tam doğrulama metni aşağıda AI değerlendirmesinde aynen kalır). Telefonda üste gelir.
+const NOT_DUZEN_CSS = `.notDuzen{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 280px;align-items:start}
+.notDuzen.tek{max-width:860px;grid-template-columns:minmax(0,1fr)}
+.notDuzen aside{position:sticky;top:84px}
+@media (max-width:900px){.notDuzen{grid-template-columns:minmax(0,1fr)}.notDuzen aside{order:-1;position:static}}`;
+const EKSIK_SATIR = /^\s*-\s*(.+?):\s*[✗✕×]\s*eksik\s*$/;
 
 export default function NotSayfasi() {
   const params = useParams<{ id: string }>();
@@ -237,6 +244,8 @@ export default function NotSayfasi() {
   const { not, hasta } = veri;
   const onayli = !!not.approvedAt;
   const kapsam = istemciKapsami(not.bransKapsami);
+  const cekVar = aiDeg.includes('ÇEK LİSTESİ DOĞRULAMA');
+  const eksikler = aiDeg.split('\n').map((s) => s.match(EKSIK_SATIR)?.[1]?.trim()).filter((x): x is string => !!x);
 
   return (
     <div style={{ minHeight: '100vh', background: '#0B1628', color: '#EDF1F7', fontFamily: 'system-ui' }}>
@@ -266,7 +275,9 @@ export default function NotSayfasi() {
         </button>
       </div>
 
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '18px 16px 60px', display: 'grid', gap: 16 }}>
+      <style>{NOT_DUZEN_CSS}</style>
+      <div className={cekVar ? 'notDuzen' : 'notDuzen tek'}>
+      <div style={{ display: 'grid', gap: 16, minWidth: 0 }}>
         <div>
           <div style={etiket}>Başvuru Yakınması</div>
           <input value={basvuru} onChange={(e) => isaretle(setBasvuru)(e.target.value)} style={{ ...kutu, fontStyle: 'italic' }} />
@@ -322,6 +333,26 @@ export default function NotSayfasi() {
           <div style={etiket}>{kapsam.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: '#64748B' }}>(portala gider)</span></div>
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
+      </div>
+      {cekVar ? (
+        <aside style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.30)', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#F59E0B' }}>
+            {eksikler.length ? `Eksik kalanlar (${eksikler.length})` : 'Çek listesi tamam'}
+          </div>
+          <div style={{ fontSize: 11, color: '#8FA0B5', margin: '2px 0 8px' }}>Çek listesi · karar desteği, hekim değerlendirir</div>
+          {eksikler.length ? (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>
+              {eksikler.map((e, i) => (
+                <li key={i} style={{ fontSize: 13, color: '#EDF1F7', lineHeight: 1.4, display: 'flex', gap: 6 }}>
+                  <span style={{ color: '#F87171', fontWeight: 800 }}>✗</span><span>{e}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div style={{ fontSize: 13, color: '#22C55E' }}>Boş madde kalmadı.</div>
+          )}
+        </aside>
+      ) : null}
       </div>
     </div>
   );

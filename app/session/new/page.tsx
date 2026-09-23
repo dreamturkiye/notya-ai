@@ -134,7 +134,7 @@ function NewSessionInner() {
   const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>({})
   const [cekDogrulama, setCekDogrulama] = useState<CekDogrulamaSatir[] | null>(null)
   const [hastaDogumIso, setHastaDogumIso] = useState<string | null>(null)
-  const cekGirdi = { seansBransi: specialty, hastaDogumIso }
+  const cekGirdi = { seansBransi: specialty, hastaDogumIso, referansIso: efektifTarihIso }
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
