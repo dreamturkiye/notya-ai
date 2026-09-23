@@ -29,8 +29,11 @@ import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 // Sampled from public/doktor-chrome/plant.jpg (dark-blue leaf tones), not a design-system token --
 // this box is deliberately its own accent, separate from the page's pine.
-const FISILTI_KOYU = '#042b40'
-const FISILTI_KOYU2 = '#0a3d57'
+// 2026-09-24 (Kaan): recomputed to the color as actually SEEN on screen -- the raw file's tone run
+// through the page's own filter (saturate .65, contrast .88, brightness 1.1) and 50% opacity blend
+// over the cream background, not the raw pixel value.
+const FISILTI_KOYU = '#9cbcbf'
+const FISILTI_KOYU2 = '#b4d0d2'
 
 const LEAF = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -78,11 +81,11 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
       <div
         style={S({
           background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
-          color: '#eaf2f6', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
-          boxShadow: '0 16px 36px rgba(4,43,64,0.25)',
+          color: '#1e3336', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
+          boxShadow: '0 16px 36px rgba(156,188,191,0.35)',
         })}
       >
-        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#9fc4d6', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
           {LEAF} Notya fısıldıyor
         </div>
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 500 })}>
@@ -102,21 +105,21 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
       style={S({
         display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', border: 'none',
         background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
-        color: '#eaf2f6', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
-        boxShadow: '0 16px 36px rgba(4,43,64,0.25)',
+        color: '#1e3336', borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
+        boxShadow: '0 16px 36px rgba(156,188,191,0.35)',
       })}
     >
-      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#9fc4d6', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
+      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
         {LEAF} Notya fısıldıyor
       </div>
-      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500 })}>
+      <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500, color: '#1e3336' })}>
         {satir.ad} — {baslikBayrak.toLowerCase()}
       </div>
       {detaySatiri && (
-        <div style={S({ marginTop: 8, fontSize: 13, opacity: 0.85, lineHeight: 1.5 })}>{detaySatiri}</div>
+        <div style={S({ marginTop: 8, fontSize: 13, opacity: 0.8, lineHeight: 1.5, color: '#1e3336' })}>{detaySatiri}</div>
       )}
       {toplam > 1 && (
-        <div style={S({ marginTop: 10, fontSize: 12, opacity: 0.65 })}>+{toplam - 1} çocukta daha bekleyen kontrol var</div>
+        <div style={S({ marginTop: 10, fontSize: 12, opacity: 0.65, color: '#1e3336' })}>+{toplam - 1} çocukta daha bekleyen kontrol var</div>
       )}
     </button>
   )
