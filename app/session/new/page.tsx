@@ -162,7 +162,7 @@ function NewSessionInner() {
       })
       const d = await resp.json()
       if (!resp.ok) throw new Error(d.error || "Not üretilemedi.")
-      router.push(INCELEME_KUYRUGU_YOLU)  // yeni not kuyruğa düştü — kuyruk burada doğru hedef
+      router.push(d.noteId ? muayeneFormuYolu(String(d.noteId)) : INCELEME_KUYRUGU_YOLU)  // NOTYA-NOT-DUZENLE-01: ses dosyası da doğrudan düzenlenebilir forma
     } catch (e) {
       setSesHata(e instanceof Error ? e.message : "Yükleme başarısız oldu.")
     } finally {
@@ -275,6 +275,11 @@ function NewSessionInner() {
         const maddeler = muayeneCekListesi(cekGirdi)
         setCekDogrulama(cekListeDogrula(maddeler, { transcript, soap: JSON.stringify(not), isaretler: cekIsaret }))
       }
+      // NOTYA-NOT-DUZENLE-01 (Gökhan, 2026-09-23): "Notu oluştur"dan sonra salt-okunur "Not Hazır"
+      // ara ekranı çıkıyordu; hekim doğrudan düzenlenebilir muayene formuna gitmeli. Önceki düzeltme
+      // yalnız "Not Revizyonu" butonunun hedefini değiştirmişti, ara ekran kalmıştı. Çek-liste
+      // doğrulaması ai_degerlendirme'ye yazıldığı için formda kaybolmaz. Kimlik yoksa eski ekran yedek.
+      if (not?.id) { router.replace(muayeneFormuYolu(String(not.id))); return }
       setStep("done")
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Bir hata oluştu")
