@@ -15,6 +15,7 @@
  * yedeği. Bundan sonra hangi kapta olursa olsun daire kalır.
  */
 import { doktorBasHarfleri } from '@/lib/doktor/avatar'
+import { hekimUnvanli } from '@/lib/doktor/hekimAdi'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 export default function DoktorAvatar({
@@ -47,7 +48,7 @@ export default function DoktorAvatar({
       // eslint-disable-next-line @next/next/no-img-element -- data URL; next/image optimizasyonu geçersiz
       <img
         src={fotoUrl}
-        alt={`Dr. ${ad} profil fotoğrafı`}
+        alt={`${hekimUnvanli(ad)} profil fotoğrafı`}
         width={boyut}
         height={boyut}
         style={{ ...ortak, objectFit: 'cover', objectPosition: 'center', display: 'block', background: CHROME_RENK.pine }}
@@ -57,7 +58,7 @@ export default function DoktorAvatar({
 
   return (
     <div
-      aria-label={`Dr. ${ad} baş harfleri`}
+      aria-label={`${hekimUnvanli(ad)} baş harfleri`}
       style={{
         ...ortak,
         background: 'rgba(15,155,142,0.18)',

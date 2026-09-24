@@ -19,6 +19,7 @@ import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki';
 import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
+import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface NotVeri {
@@ -38,12 +39,6 @@ interface NotVeri {
   hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string; patientId?: string | null };
   doktor: { ad: string; diplomaNo?: string; ozelBaslikSatirlari?: string[]; ozelLogo?: string };
   duzenlemeSayisi: number;
-}
-
-/** "Dr. Dr. Gökhan" tekrarını önler — ad zaten unvanla başlıyorsa dokunmaz (Gökhan, 2026-09-08). */
-function doktorUnvanli(ad: string): string {
-  const t = String(ad || '').trim()
-  return /^(dr|doç|doc|prof|uzm|op)\.?\s/i.test(t) ? t : `Dr. ${t}`
 }
 
 function trTarih(iso?: string | null): string {
@@ -187,7 +182,7 @@ export default function NotYazdir() {
             {doktor.ozelLogo && <img src={doktor.ozelLogo} alt="" style={{ height: 32, marginBottom: 4 }} />}
             {doktor.ozelBaslikSatirlari && doktor.ozelBaslikSatirlari.length > 0
               ? doktor.ozelBaslikSatirlari.map((s, i) => <div key={i} style={{ font: i === 0 ? '13px system-ui' : '11px system-ui', fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#111' : '#444' }}>{s}</div>)
-              : <div style={{ font: '12px system-ui', color: '#444' }}>{doktorUnvanli(doktor.ad)}</div>}
+              : <div style={{ font: '12px system-ui', color: '#444' }}>{hekimUnvanli(doktor.ad)}</div>}
           </div>
         </div>
 
@@ -254,7 +249,7 @@ export default function NotYazdir() {
           {!not.approvedAt && <div style={{ font: '11px system-ui', color: '#B45309' }}>TASLAK — henüz doktor onayından geçmemiştir.</div>}
           <div style={{ marginTop: 26, display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #333', width: 220, paddingTop: 4 }}>{doktorUnvanli(doktor.ad)} — İmza / Kaşe</div>
+              <div style={{ borderTop: '1px solid #333', width: 220, paddingTop: 4 }}>{hekimUnvanli(doktor.ad)} — İmza / Kaşe</div>
               <div style={{ font: '11px system-ui', color: '#555', marginTop: 2 }}>Diploma No: {doktor.diplomaNo || '____________'}</div>
             </div>
           </div>

@@ -310,6 +310,7 @@ export default function RandevularPage() {
       if (liste) {
         const g: Record<string, number> = {};
         for (const rv of liste) {
+          if (rv.durum === 'iptal') continue;
           const k = trtGunAnahtari(rv.baslangic);
           g[k] = (g[k] || 0) + 1;
         }
@@ -695,9 +696,10 @@ export default function RandevularPage() {
     const bugunK = trtGunAnahtari(new Date());
     const yarinK = trtGunAnahtari(new Date(Date.now() + 86400000));
     const sirala = (l: Randevu[]) => l.sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime());
+    const iptalsiz = kenarRandevular.filter((r) => r.durum !== 'iptal');
     return {
-      bugun: sirala(kenarRandevular.filter((r) => trtGunAnahtari(r.baslangic) === bugunK)),
-      yarin: sirala(kenarRandevular.filter((r) => trtGunAnahtari(r.baslangic) === yarinK)),
+      bugun: sirala(iptalsiz.filter((r) => trtGunAnahtari(r.baslangic) === bugunK)),
+      yarin: sirala(iptalsiz.filter((r) => trtGunAnahtari(r.baslangic) === yarinK)),
     };
   }, [kenarRandevular]);
 
@@ -809,7 +811,7 @@ export default function RandevularPage() {
                   const anahtar = yerelGunAnahtari(d);
                   const bugunMu = anahtar === bugunAnahtari;
                   const buAy = d.getMonth() === ay.getMonth();
-                  const dolu = (aylikRandevular[anahtar] || []).length > 0;
+                  const dolu = (aylikRandevular[anahtar] || []).some((r) => r.durum !== 'iptal');
                   return (
                     <button
                       key={i2}
@@ -929,7 +931,7 @@ export default function RandevularPage() {
                       const buAyIcinde = d.getMonth() === ay.getMonth();
                       const bugunMu = anahtar === bugunAnahtari;
                       const tatil = resmiTatilMi(d);
-                      const gunRandevulari = (aylikRandevular[anahtar] || []).sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime());
+                      const gunRandevulari = (aylikRandevular[anahtar] || []).filter((rv) => rv.durum !== 'iptal').sort((a, b) => new Date(a.baslangic).getTime() - new Date(b.baslangic).getTime());
                       const gosterilen = gunRandevulari.slice(0, 3);
                       const fazlaSayisi = gunRandevulari.length - gosterilen.length;
                       const hedefMi = surukleId && surukleHedef === anahtar;
