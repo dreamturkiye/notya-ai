@@ -3,6 +3,8 @@
  * (notes.content_asilar) that reaches the aşı kartı (table asilar) when the note is approved (lib/doktor/notAsiAktarim).
  *
  * Pure — the note form (client), SOAP generation, the approve route and the backfill preview share it.
+ * NOTYA-ASI-LOT-01: `asiLotYeriBul` reads a vaccine's lot no / uygulama yeri from its own clause (SOAP backstop +
+ * scripts/asi-lot-backfill.mts).
  *
  *  • ONLY vaccines stated as given IN THIS VISIT ("yapıldı", "uygulandı", "vuruldu", "verildi", "bugün yapıldı").
  *    Planned / recommended / next-visit / given-before vaccines stay in the plan text, never in the list.
@@ -207,6 +209,121 @@ export function uygulananAsilariSuz(liste: NotAsisi[], transcript: string | null
     out.push(temiz)
   }
   return out
+}
+
+// ─── NOTYA-ASI-LOT-01 — lot no + uygulama yeri from the text ────────────────────────────────────────
+// Lot: an explicit marker ("lot", "lot no", "lot numarası", "seri no") + a code that has a digit. Read on the raw text so
+// the code keeps its case ("Vaxi12345").
+const LOT = /(?:^|[^\p{L}\p{N}])(?:lot(?:\s*(?:no|nr|numaras[ıi]))?|seri\s*(?:no|numaras[ıi]))\s*[:.#-]?\s*([\p{L}\p{N}][\p{L}\p{N}/-]{2,39})/iu
+// Site, on folded text: route + body location. Shown in canonical Turkish spelling.
+const YOL = /\b(im|sc|id|intramuskuler|intramuskular|subkutan|intradermal|oral|agizdan|agiz yoluyla|deri alti|kas ici)\b/g
+const YER = /\b(?:(sag|sol)\s+)?(ust kol|uyluk|deltoid|omuz|bacak|kalca|gluteal|vastus lateralis)\b|\b(sag|sol) kol\b/g
+const YOL_AD: Record<string, string> = {
+  im: 'IM', sc: 'SC', id: 'ID', intramuskuler: 'intramüsküler', intramuskular: 'intramüsküler', agizdan: 'ağızdan',
+  'agiz yoluyla': 'ağız yoluyla', 'deri alti': 'deri altı', 'kas ici': 'kas içi',
+}
+const YER_AD: Record<string, string> = { sag: 'sağ', 'ust kol': 'üst kol', kalca: 'kalça' }
+
+function lotBul(ham: string): string | null {
+  const m = ham.match(LOT)
+  const kod = m?.[1]?.replace(/[/-]+$/, '')
+  return kod && /\d/.test(kod) ? kod : null
+}
+
+function yerBul(katli: string): string | null {
+  const out: string[] = []
+  for (const m of katli.matchAll(YOL)) out.push(YOL_AD[m[1]] ?? m[1])
+  for (const m of katli.matchAll(YER)) {
+    const taraf = m[1] || m[3]
+    const bolge = m[2] || 'kol'
+    out.push([taraf ? YER_AD[taraf] ?? taraf : '', YER_AD[bolge] ?? bolge].filter(Boolean).join(' '))
+  }
+  const tekil = [...new Set(out)]
+  return tekil.length ? tekil.join(' ') : null
+}
+
+interface AsiBolumu { seriler: string[]; ham: string; katli: string; verildi: boolean; devam: string[] }
+
+/**
+ * The text split into per-vaccine segments. Lines (and ";") first, then sentences; inside a sentence fragments split on
+ * "," / "ve" / "ile" / "+" (as uygulananAsiParcalari). A fragment naming a vaccine starts that vaccine's segment; the
+ * fragments after it (its dose, "(sol omuz", "lot: MMR12345)") belong to it until the next vaccine is named — so in
+ * "KKK 1. doz (sol omuz, lot: MMR12345), Suçiçeği 1. doz (sağ omuz, lot: Rix12345) uygulandı" each lot stays with its
+ * own vaccine. A later sentence on the same line that names no vaccine ("Menactra aşısı IM uygulandı. Lot no: acwy12345")
+ * adds only its lot to the line's last segment (`devam`) — never a site.
+ */
+function asiBolumleri(hamMetin: string): AsiBolumu[] {
+  const out: AsiBolumu[] = []
+  const satirlar = String(hamMetin || '').replace(/\n(?=\s*\d{1,2}\.\s*doz)/g, ' ').split(/[;\n]+/)
+  for (const satir of satirlar) {
+    let sonSatirBolumu: AsiBolumu | null = null
+    // "…lot: A111. Sonraki cümle" ends a sentence after a digit too (a capital follows); "2. doz" does not.
+    for (const cumle of satir.split(/(?<!\d)[.!?]+(?:\s+|$)|(?<=\d)[.!?]+(?:\s+(?=[A-ZÇĞİÖŞÜ])|$)/)) {
+      const katliCumle = trAramaNormalize(cumle)
+      if (!katliCumle) continue
+      const verildi = VERILDI.test(katliCumle) && !PLAN.test(katliCumle) && !ONCEKI.test(katliCumle)
+      const asiCumlesi = ASI_SOZU.test(katliCumle)
+      let bolum: AsiBolumu | null = null
+      let seriBulundu = false
+      for (const parca of cumle.split(/\s*,\s*|\s+ve\s+|\s+ile\s+|\s*\+\s*/i).filter(Boolean)) {
+        // A lot code must not name a series ("acwy12345").
+        const lot = lotBul(parca)
+        const katli = trAramaNormalize(lot ? parca.replace(lot, ' ') : parca)
+        const seriler = asiCumlesi ? parcaSerileri(katli) : []
+        if (seriler.length) {
+          seriBulundu = true
+          bolum = { seriler, ham: parca, katli, verildi, devam: [] }
+          if (!PLAN.test(katli) && !ONCEKI.test(katli) && !/\bonceki\b/.test(katli)) out.push(bolum)
+          sonSatirBolumu = bolum
+        } else if (bolum) {
+          bolum.ham += `, ${parca}`
+          bolum.katli += `, ${katli}`
+        }
+      }
+      if (!seriBulundu && sonSatirBolumu) sonSatirBolumu.devam.push(cumle)
+    }
+  }
+  return out
+}
+
+/**
+ * NOTYA-ASI-LOT-01 — lot no + uygulama yeri the text states for THIS vaccine (its own segment, see asiBolumleri).
+ * Segments in a "given this visit" sentence win over neutral mentions (plan list "KKK (MMR) 1. dozu — sol omuz, lot: …");
+ * two different values → empty. Never invented: no marker → null.
+ */
+export function asiLotYeriBul(hamMetin: string | null | undefined, asiAdi: string): { lot_no: string | null; uygulama_yeri: string | null; cumle: string | null } {
+  const seri = kayitSerisi(asiAdi)
+  const ad = trAramaNormalize(asiAdi).replace(/\(.*?\)|\basisi\b|\basi\b/g, ' ').replace(/\s+/g, ' ').trim()
+  const bolumler = asiBolumleri(String(hamMetin || '')).filter((b) => (seri ? b.seriler.includes(seri) : ad.length >= 3 && b.katli.includes(ad)))
+  const sec = (deger: (b: AsiBolumu) => string | null): { v: string | null; b: AsiBolumu | null } => {
+    for (const grup of [bolumler.filter((b) => b.verildi), bolumler]) {
+      const adaylar = grup.map((b) => ({ v: deger(b), b })).filter((x): x is { v: string; b: AsiBolumu } => !!x.v)
+      const farkli = new Set(adaylar.map((x) => x.v.toLocaleLowerCase('tr-TR').replace(/[^\p{L}\p{N}]/gu, '')))
+      if (farkli.size === 1) return adaylar[0]
+      if (farkli.size > 1) return { v: null, b: null }
+    }
+    return { v: null, b: null }
+  }
+  const lot = sec((b) => lotBul(b.ham) ?? b.devam.map(lotBul).find(Boolean) ?? null)
+  const yer = sec((b) => yerBul(b.katli))
+  const kaynak = lot.b || yer.b
+  return {
+    lot_no: lot.v ? lot.v.slice(0, 60) : null,
+    uygulama_yeri: yer.v ? yer.v.slice(0, 80) : null,
+    cumle: kaynak ? [kaynak.ham, ...kaynak.devam].join('. ').replace(/\s+/g, ' ').trim().slice(0, 200) : null,
+  }
+}
+
+/** SOAP backstop: lot / site the model left empty are filled from the transcript when it states them for that vaccine. */
+export function asiLotYeriTamamla(liste: NotAsisi[], transcript: string | null | undefined): NotAsisi[] {
+  return liste.map((a) => {
+    if (a.lot_no && a.uygulama_yeri) return a
+    const b = asiLotYeriBul(transcript, a.asi_adi)
+    const out = { ...a }
+    if (!out.lot_no && b.lot_no) out.lot_no = b.lot_no
+    if (!out.uygulama_yeri && b.uygulama_yeri) out.uygulama_yeri = b.uygulama_yeri
+    return out
+  })
 }
 
 /** Folded clauses that carry a "given" verb and no plan / before word (off-schedule name check). */
