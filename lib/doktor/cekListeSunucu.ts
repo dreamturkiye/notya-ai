@@ -52,7 +52,7 @@ const INTAKE_DISI = new Set([
   'dogumTarihi', 'dogumYeri', 'cinsiyet', 'medeniDurum', 'sigortaTuru', 'kvkkOnay', 'iletisimOnay', 'basvuruNedeniPed', 'basvuruNedeni',
 ])
 
-const NOT_ALANLARI = 'id, created_at, basvuru_yakinmasi, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, content_ilaclar, sessions!inner(patient_id, doctor_id)'
+const NOT_ALANLARI = 'id, created_at, basvuru_yakinmasi, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, content_ilaclar, content_asilar, sessions!inner(patient_id, doctor_id)'
 
 async function pediKayitlariYukle(sb: SupabaseClient, doktorId: string, patientId: string): Promise<{ kayit: SaglamCocukKayitlari; satirlar: string[] } | null> {
   // Kohort / Gelişim paneliyle aynı yükleyici (bebek kartı işitmesi dahil) — kopya sorgu yok.
@@ -95,6 +95,7 @@ async function dosyaMetniYukle(sb: SupabaseClient, g: CekListeSunucuGirdisi, ek:
       basvuruYakinmasi: n.basvuru_yakinmasi as string, subjektif: n.content_subjektif as string, objektif: n.content_objektif as string,
       degerlendirme: n.content_degerlendirme as string, plan: n.content_plan as string, anamnez: n.content_anamnez as string,
       fizikMuayene: n.content_fizik_muayene as string, tani: n.content_tani as string, tedavi: n.content_tedavi as string, ilaclar: n.content_ilaclar,
+      asilar: n.content_asilar,
     }))
   }
   for (const i of (ilacQ.data || []) as { ilac_adi?: string | null; etken_madde?: string | null }[]) {

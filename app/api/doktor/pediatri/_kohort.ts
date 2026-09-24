@@ -12,7 +12,7 @@ import type { AsiKaydi } from '@/specialties/pediatri/engines/asiPlan'
 import type { TaramaKaydi, TaramaSonuc, TaramaTur } from '@/specialties/pediatri/engines/gelisimPlan'
 import type { Olcum } from '@/specialties/pediatri/engines/buyume'
 import { gunFarki } from '@/specialties/pediatri/engines/girdi'
-import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 const cozum = (v: unknown): string => { if (!v) return ''; try { return decrypt(String(v)) } catch { return '' } }
 const gun = (v: unknown) => String(v || '').slice(0, 10)
@@ -50,7 +50,8 @@ export async function pediKohortGirdileri(sb: SupabaseClient, doktorId: string, 
   if (!ids.length) return { girdiler: [], taramaTablosu: true }
 
   const [asilar, taramalarQ, mchat, gidr, seanslar, ilaclar, gorevler, kartlar, portal, notlar] = await Promise.all([
-    topla(ids, (p) => sb.from('asilar').select('id, patient_id, asi_adi, doz_no, uygulama_tarihi, kaynak, kategori').eq('doktor_id', doktorId).in('patient_id', p).limit(20000)),
+    // NOTYA-ASI-NOT-01: kohort / Fısıltı / çek listesi do not count a vaccine hidden with its archived muayene.
+    topla<{ id: string; patient_id: string; asi_adi: string | null; doz_no: number | null; uygulama_tarihi: string | null; kaynak: string | null; kategori: string | null }>(ids, (p) => arsivsizAsilar(sb, 'id, patient_id, asi_adi, doz_no, uygulama_tarihi, kaynak, kategori').eq('doktor_id', doktorId).in('patient_id', p).limit(20000)),
     Promise.all(parcala(ids).map((p) => sb.from('pedi_taramalar').select('patient_id, tur, tarih, sonuc').eq('doctor_id', doktorId).in('patient_id', p).limit(20000))),
     topla(ids, (p) => sb.from('mchat_testleri').select('patient_id, risk_seviyesi, toplam_puan, created_at').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),
     topla(ids, (p) => sb.from('gelisim_taramalari').select('patient_id, sevk_onerisi, created_at').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),

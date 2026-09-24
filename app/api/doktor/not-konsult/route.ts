@@ -29,6 +29,7 @@ import { bugunTRT } from '@/core/eylemler/types'
 import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { cekBlokSil } from '@/lib/doktor/muayeneCekListesi'
+import { notAsilariniTemizle } from '@/lib/doktor/notAsilari'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { noteId, taslak, mesajlar } = body as {
     noteId?: string
-    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
+    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; asilar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
     mesajlar?: Mesaj[]
   }
   if (!noteId || !Array.isArray(mesajlar) || mesajlar.length === 0) {
@@ -126,6 +127,8 @@ export async function POST(req: NextRequest) {
     // BRANS-ALAN-SIZMASI: pediatrik olmayan notta model pediatrik ölçüm (baş çevresi) öneremez
     if (dz.vitaller && typeof dz.vitaller === 'object') dz.vitaller = vitalleriKapsamaGoreSuz(dz.vitaller, kapsam)
     if (typeof dz.aiDegerlendirme === 'string') dz.aiDegerlendirme = cekBlokSil(dz.aiDegerlendirme)
+    // NOTYA-ASI-NOT-01: aşı listesi düzenlemesi sunucuda temizlenir (ad normalize, doz 1–12, tarih ISO; boş satır atılır).
+    if ('asilar' in dz) { if (Array.isArray(dz.asilar)) dz.asilar = notAsilariniTemizle(dz.asilar); else delete dz.asilar }
     sonuc.duzenlemeler = dz
     if (typeof sonuc.cevap === 'string' && sonuc.cevap.trim().startsWith('{')) sonuc.cevap = 'Düzenlemeyi ekrana işledim Hocam.'
     // NOTYA-EYLEM: tool_use → taslak öneri. Hiçbir şey yazılmadı; hekim kartta onaylayacak.

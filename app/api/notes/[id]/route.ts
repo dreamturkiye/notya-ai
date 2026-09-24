@@ -16,6 +16,8 @@ import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
 import { seansArsivdeMi } from '@/lib/doktor/arsiv'
 import { cekBlokVarMi } from '@/lib/doktor/muayeneCekListesi'
 import { cekListeVerisiYukle, kayitliHekimIsaretleri } from '@/lib/doktor/cekListeSunucu'
+import { notAsilariniTemizle, type KartAsisi } from '@/lib/doktor/notAsilari'
+import { notAsiKarti } from '@/lib/doktor/notAsiAktarim'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string } = { ad: '', dogum: '', yas: '', cinsiyet: '', tc: '' }
   let dogumIso: string | null = null
   let cinsiyetHam: 'male' | 'female' | null = null
+  let hastaBenim = false
   if (seans?.patient_id) {
     const { data: p } = await supabase
       .from('patients')
@@ -52,6 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .eq('doctor_id', doktorId)
       .maybeSingle()
     if (p) {
+      hastaBenim = true
       const hamAd = coz(p.name_encrypted)
       try { hasta.ad = String(JSON.parse(hamAd).ad || hamAd) } catch { hasta.ad = hamAd }
       const dogum = coz(p.dob_encrypted)
@@ -123,6 +127,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     } catch (e) { console.error('[notes/get] cek-liste', e) }
   }
 
+  // NOTYA-ASI-NOT-01: the card (minus this note's own rows) so the form warns before approval — "zaten kayıtlı" / conflict.
+  let asiKart: KartAsisi[] = []
+  if (hastaBenim && seans?.patient_id) {
+    try { asiKart = await notAsiKarti(supabase, doktorId, String(seans.patient_id), not.id) } catch (e) { console.error('[notes/get] asi-kart', e) }
+  }
+
   return NextResponse.json({
     not: {
       id: not.id,
@@ -136,6 +146,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       plan: not.content_plan || '',
       tani: not.content_tani || '',
       ilaclar: Array.isArray(not.content_ilaclar) ? not.content_ilaclar : [],
+      asilar: notAsilariniTemizle(not.content_asilar),
+      asiKart,
       receteOnerisi: Array.isArray(not.recete_onerisi) ? not.recete_onerisi : [],
       icdKodlari: Array.isArray(not.icd10_codes) ? not.icd10_codes : [],
       kritikBulgular: Array.isArray(not.kritik_bulgular) ? not.kritik_bulgular : [],

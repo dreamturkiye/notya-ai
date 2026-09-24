@@ -202,6 +202,16 @@ export function takvimEslestir(asiAdi: string): KarneEslesme {
   return { grup: 'ozel', kod: k as OzelKod, etiket: `Özel aşı · ${ozel?.ad || k}` }
 }
 
+/** SB ulusal takvim matcher — "Hep B" / "Hepatit B aşısı" → "Hepatit B" so duplicate + portal grouping align with karne.
+ *  Shared by voice Ayşe (asi_kaydi_ekle) and the muayene note (lib/doktor/notAsilari). Özel / takvim dışı adlar aynen kalır. */
+export function asiAdiNormalize(ad: string): string {
+  const t = String(ad || '').trim()
+  if (!t) return t
+  const k = kayitSerisi(t)
+  if (k && k in SERI_AD) return SERI_AD[k as SeriKod]
+  return t
+}
+
 // ─── Onay (sunucu) ───────────────────────────────────────────────────────────────────────────────────
 export interface OnayliSatir { asiAdi: string; dozNo: number | null; uygulamaTarihi: string | null }
 

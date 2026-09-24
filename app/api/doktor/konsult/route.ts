@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaDosyasiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
-import { arsivsizIlaclar, arsivsizNotlar } from '@/lib/doktor/arsiv'
+import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar } from '@/lib/doktor/arsiv'
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir'
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
   let boslukEk = ''
   if (araclar.length) {
     const [asiSay, ilacSay, hastaSatiri, notSatiri] = await Promise.all([
-      supabase.from('asilar').select('id', { count: 'exact', head: true }).eq('doktor_id', doktorId).eq('patient_id', patientId),
+      arsivsizAsilar(supabase, 'id', { count: 'exact', head: true }).eq('doktor_id', doktorId).eq('patient_id', patientId),
       arsivsizIlaclar(supabase, 'id', { count: 'exact', head: true }).eq('doctor_id', doktorId).eq('patient_id', patientId).eq('aktif', true),
       supabase.from('patients').select('notes_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
       arsivsizNotlar(supabase, 'vitaller, sessions!inner(patient_id)').eq('sessions.patient_id', patientId).not('vitaller', 'is', null).limit(1),

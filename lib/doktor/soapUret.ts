@@ -127,6 +127,7 @@ ANAMNEZ (şikayet → hikaye → özgeçmiş → soygeçmiş → alışkanlıkla
   söylemediği öneri/eğitim/ilaç EKLEME (onlar aiDegerlendirme/receteOnerisi'ne gider).
   NUMARALAMA: 1) / a) maddeleri de YENİ SATIRDA; "1. TEDAVİ: a) ... b) ... 2. TAKİP" tek satır YASAK.
 - ilaclar: plan'daki TEDAVİ satırlarının (ilaç/takviye kalemleri) YAPILANDIRILMIŞ hâlidir — AYRI BİR KAYNAK DEĞİL. Her kalem için ad/doz/kullanım/süre plan'da yazdığınla BİREBİR AYNI ürün adı ve dozu taşımalı (ör. plan'da "Wellcare D vitamini damlası 1000ü/damla haftada 5 damla" yazdıysan, ilaclar'da da aynı ürün adı ve aynı doz olmalı — farklı bir marka/doz uydurma). Reçete doğrudan bu alandan üretilir; tutarsızlık yanlış ilaç yazılmasına yol açar.
+- asilar: YALNIZ BU MUAYENEDE UYGULANDIĞI söylenen aşılar ("yapıldı", "uygulandı", "vuruldu", "verildi", "bugün yapıldı"). Planlanan, önerilen, sonraki kontrolde yapılacak ya da daha önce / başka yerde yapılmış aşıları bu listeye KOYMA — onlar yalnız plan / özgeçmiş metninde kalır. Her öğe: asi_adi (Ulusal Aşı Takvimi adıyla — "Hepatit B", "DaBT-İPA-Hib", "KPA", "KKK", "Suçiçeği", "Hepatit A", "BCG", "OPA", "Td", "Grip"…), doz_no (YALNIZ söylendiyse sayı, söylenmediyse null — tahmin ETME), lot_no ve uygulama_yeri (yalnız söylendiyse, yoksa boş), notlar. Tarih YAZMA — uygulama muayene tarihini kendisi koyar. Bu muayenede aşı yapılmadıysa boş dizi [].
 - aiDegerlendirme: SENİN klinik yorumun — hastaya GÖRÜNMEZ, yalnız doktora. Ayırıcı tanı
   düşünüşü, dışlanan tanılar, doktorun atlamış olabileceği noktalar, ek tetkik/tedavi önerisi.
   "Öneri (doktor onayına tabi):" diye başla. Doktorun kesin dediğini burada tekrar etme.${ped('\n  BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, sayı uydurma, WHO referansı kullanma: uygulama Neyzi sonucunu senin çıktından SONRA aiDegerlendirme\'ye ekler. Kendi "X. persentil" sayını yazma. Büyüme persentiline bakınız demek yeter; resmi tanıya persentilden tanı (obezite, malnütrisyon) doktor söylemedikçe koyma.', '')}
@@ -148,6 +149,7 @@ SADECE geçerli JSON döndür:
   "tani": "",
   "tedavi": "",
   "ilaclar": [{"ad": "", "doz": "", "kullanim": "", "sure": ""}],
+  "asilar": [{"asi_adi": "", "doz_no": null, "lot_no": "", "uygulama_yeri": "", "notlar": ""}],
   "receteOnerisi": [{"etkenMadde": "", "ticariOrnek": "", "doz": "", "kullanim": "", "sure": "", "not": ""}],
   "icd10_codes": [{"code": "", "description": "", "description_tr": "", "is_primary": true}],
   "kritik_bulgular": [],
@@ -194,6 +196,8 @@ export interface SoapNotu {
   tani?: string
   tedavi?: string
   ilaclar?: unknown[]
+  /** NOTYA-ASI-NOT-01: raw model list — routes pass it through muayeneAsilariniHazirla before saving. */
+  asilar?: unknown[]
   receteOnerisi?: ReceteOnerisi[]
   icd10_codes?: unknown[]
   kritik_bulgular?: unknown[]
