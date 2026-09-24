@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
  *
  * Every data fetch, every piece of state, every real feature from the previous version is kept
  * verbatim — gün programı with per-randevu briefing, KPI counts, recent notes, weekly summary,
- * YeniBebekIsleri / BekleyenKonsultasyonOzeti, the avatar/hafıza greeting. Only the visual
+ * BekleyenKonsultasyonOzeti, the avatar/hafıza greeting. Only the visual
  * language changed: warm cream/paper/pine instead of dark navy, Fraunces + Source Sans instead
  * of system-ui, real inline SVG instead of emoji. The header/dock chrome itself now lives in
  * layout.tsx — this page is just its content.
@@ -16,10 +16,8 @@ export const dynamic = 'force-dynamic'
  * own header for how "clears itself by being resolved" works).
  */
 
-import YeniBebekIsleri from '@/components/doktor/YeniBebekIsleri'
 import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
 import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
-import { bransAnahtari, pediatrikBaglamKurali } from '@/lib/specialties/kapsam'
 import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -137,7 +135,6 @@ export default function DoktorDashboard() {
   const [randevuYukleniyor, setRandevuYukleniyor] = useState(true)
   const [loading, setLoading] = useState(true)
   const [pediatriAraci, setPediatriAraci] = useState(false)
-  const [bebekIsListesi, setBebekIsListesi] = useState(false)
   const [yeniMesajlar, setYeniMesajlar] = useState<MesajOzet[]>([])
 
   useEffect(() => {
@@ -166,7 +163,6 @@ export default function DoktorDashboard() {
           setDoktorAdi(name); try { localStorage.setItem('notya_doktor_name', name) } catch {}
           setSpecialty(String(meData.data?.specialty || ''))
           setPediatriAraci(pediatriHedefBoyBransi(meData.data?.specialty))
-          setBebekIsListesi(pediatrikBaglamKurali(bransAnahtari(meData.data?.specialty)) !== 'asla')
           const personaId = varsayilanPersonaId(meData.data?.specialty)
           setAsistanKisaAd(PERSONAS[personaId]?.shortName || 'Ayşe')
         }
@@ -282,7 +278,6 @@ export default function DoktorDashboard() {
         )}
       </div>
 
-      {bebekIsListesi && <YeniBebekIsleri />}
       <BekleyenKonsultasyonOzeti />
 
       {/* Randevular — Bugün / Bu Hafta */}

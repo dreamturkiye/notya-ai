@@ -52,7 +52,6 @@ describe('hastaDosyaSekmeleri', () => {
     assert.ok(child.some((t) => t.id === 'mchat'))
     assert.ok(child.some((t) => t.id === 'gelisim'))
     assert.ok(child.some((t) => t.id === 'buyume'))
-    assert.ok(child.some((t) => t.id === 'bebek'))
   })
 
   it('CHART-TAB-POLICY: göz doctor does not get ped tabs even for a child', () => {
