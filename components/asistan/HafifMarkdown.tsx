@@ -37,7 +37,7 @@ function kalin(metin: string, karanlik: boolean): React.ReactNode[] {
   return parcalar.map((p, i) => (p.startsWith('**') && p.endsWith('**') ? <b key={i} style={{ color: karanlik ? '#EDF1F7' : '#111' }}>{p.slice(2, -2)}</b> : <React.Fragment key={i}>{p}</React.Fragment>));
 }
 
-export default function HafifMarkdown({ metin, karanlik = true }: { metin: string; karanlik?: boolean }) {
+export default function HafifMarkdown({ metin, karanlik = false }: { metin: string; karanlik?: boolean }) {
   const etiketRenk = karanlik ? '#7FB8B0' : '#0F6B5C';
   const satirlar = metin.replace(/\r/g, '').split('\n');
   const cikti: React.ReactNode[] = [];

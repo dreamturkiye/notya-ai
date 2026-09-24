@@ -146,7 +146,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
     if (kayitlar.length === 0) return null;
     return (
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{baslik}</div>
+        <div style={{ fontSize: 12, color: '#8b7d70', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{baslik}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {kayitlar.map((a) => {
             const yaklasan = a.sonraki_doz_tarihi && new Date(a.sonraki_doz_tarihi) >= new Date() && new Date(a.sonraki_doz_tarihi) <= new Date(Date.now() + 7 * 86400000);
@@ -154,21 +154,21 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
             const rozet = asiKaynakRozeti(tur, hitap.beyanEtiketi);
             const lotYer = lotYerSatiri(a);
             return (
-              <div key={a.id} data-asi-kaynak={tur} style={{ background: '#111C33', borderRadius: 10, padding: 12, borderLeft: `3px solid ${KAYNAK_KENAR[tur]}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div key={a.id} data-asi-kaynak={tur} style={{ background: '#F6F0E4', borderRadius: 10, padding: 12, borderLeft: `3px solid ${KAYNAK_KENAR[tur]}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{a.asi_adi}{a.doz_no ? ` · ${a.doz_no}. doz` : ''}</div>
-                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 4, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     <span>{a.uygulama_tarihi ? `Uygulandı: ${trTarih(a.uygulama_tarihi)}` : 'Uygulama tarihi girilmedi'}</span>
                     <Rozet ton={rozet.ton}>{rozet.metin}</Rozet>
                   </div>
-                  {lotYer && <div data-asi-lot-yer="" style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{lotYer}</div>}
+                  {lotYer && <div data-asi-lot-yer="" style={{ fontSize: 12, color: '#8b7d70', marginTop: 2 }}>{lotYer}</div>}
                   {a.sonraki_doz_tarihi && (
                     <div style={{ fontSize: 12, marginTop: 2, color: yaklasan ? '#F59E0B' : CHROME_RENK.muted }}>
                       Sonraki doz: {trTarih(a.sonraki_doz_tarihi)}{yaklasan ? ' · Yaklaşıyor' : ''}
                     </div>
                   )}
                 </div>
-                <button type="button" onClick={() => sil(a.id)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#EF4444', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>Sil</button>
+                <button type="button" onClick={() => sil(a.id)} style={{ background: '#FBEAE3', border: 'none', color: '#EF4444', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>Sil</button>
               </div>
             );
           })}
@@ -180,14 +180,14 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 13, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aşılar</div>
+        <div style={{ fontSize: 13, color: '#8b7d70', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aşılar</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button type="button" onClick={() => { setKarneAcik((v) => !v); setBilgi(''); }} style={{ background: 'rgba(255,255,255,0.08)', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 40 }}>
+          <button type="button" onClick={() => { setKarneAcik((v) => !v); setBilgi(''); }} style={{ background: '#F6F0E4', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.16)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 40 }}>
             {karneAcik ? 'Karne yüklemeyi kapat' : '📷 Aşı karnesi yükle'}
           </button>
           {/* BRANS-ALAN-SIZMASI: SB çocukluk dönemi takvimi yalnız çocuk hastada / pediatrik bağlamda — KD'nin erişkin hastasında yok */}
           {(cocukHasta || pediatrikBaglam) && (
-            <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: 'rgba(255,255,255,0.08)', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: '#F6F0E4', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.16)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
               {takvimAcik ? 'Takvimi Gizle' : '📋 Ulusal Aşı Takvimi'}
             </button>
           )}
@@ -214,9 +214,9 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
       {hata && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#EF4444', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
 
       {takvimAcik && (cocukHasta || pediatrikBaglam) && (
-        <div style={{ background: '#111C33', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+        <div style={{ background: '#F6F0E4', borderRadius: 12, padding: 16, marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{TAKVIM_SURUM}</div>
-          <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: '#8b7d70', marginBottom: 12 }}>
             2025 GBP güncellemesi: Hepatit B artık 6’lı karmanın içinde — 1. aydaki tekil doz kaldırıldı (istisna: anne HBsAg+). “Ekle” formatı doldurur, tarih seçip kaydedersiniz.
           </div>
           {ULUSAL_TAKVIM.map((d) => (
@@ -224,9 +224,9 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
               <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{d.donem}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {d.asilar.map((a) => (
-                  <div key={d.donem + a.ad} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', flexWrap: 'wrap' }}>
+                  <div key={d.donem + a.ad} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8, background: 'rgba(58,44,34,0.035)', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 150 }}>{a.ad}</span>
-                    <span style={{ fontSize: 11, color: '#94A3B8' }}>{a.dozEtiket}</span>
+                    <span style={{ fontSize: 11, color: '#8b7d70' }}>{a.dozEtiket}</span>
                     {a.not && <span style={{ fontSize: 10, color: '#F59E0B', width: '100%' }}>{a.not}</span>}
                     <button type="button" onClick={() => takvimdenEkle(a.ad, a.doz)} style={{ background: 'rgba(15,155,142,0.2)', color: '#0F9B8E', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Ekle</button>
                   </div>
@@ -239,8 +239,8 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
             {OZEL_ASILAR.map((a) => (
               <div key={a.ad} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8, background: 'rgba(245,158,11,0.06)', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 150 }}>{a.ad}</span>
-                <span style={{ fontSize: 11, color: '#94A3B8' }}>{a.onerilenDonem}</span>
-                <span style={{ fontSize: 10, color: '#94A3B8', width: '100%' }}>{a.not}</span>
+                <span style={{ fontSize: 11, color: '#8b7d70' }}>{a.onerilenDonem}</span>
+                <span style={{ fontSize: 10, color: '#8b7d70', width: '100%' }}>{a.not}</span>
                 <button type="button" onClick={() => takvimdenEkle(a.ad, null)} style={{ background: 'rgba(245,158,11,0.2)', color: '#F59E0B', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Ekle</button>
               </div>
             ))}
@@ -249,54 +249,54 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
       )}
 
       {formAcik && (
-        <form onSubmit={kaydet} style={{ background: '#111C33', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+        <form onSubmit={kaydet} style={{ background: '#F6F0E4', borderRadius: 12, padding: 16, marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Aşı Adı *</label>
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Aşı Adı *</label>
               <input
                 value={asiAdi}
                 onChange={(e) => setAsiAdi(e.target.value)}
                 list="yaygin-asilar"
                 placeholder="Örn. Hepatit B, Tetanoz-Difteri, Grip"
-                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
+                style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
               />
               <datalist id="yaygin-asilar">
                 {[...PEDIATRIK_ASI_ADLARI, ...YAYGIN_YETISKIN].map((a) => <option key={a} value={a} />)}
               </datalist>
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Kategori</label>
-              <select value={kategori} onChange={(e) => setKategori(e.target.value as 'pediatrik' | 'yetiskin')} style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Kategori</label>
+              <select value={kategori} onChange={(e) => setKategori(e.target.value as 'pediatrik' | 'yetiskin')} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>
                 <option value="pediatrik">Pediatrik</option>
                 <option value="yetiskin">Yetişkin</option>
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Doz No</label>
-              <input type="number" min={1} value={dozNo} onChange={(e) => setDozNo(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Doz No</label>
+              <input type="number" min={1} value={dozNo} onChange={(e) => setDozNo(e.target.value)} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Uygulama Tarihi</label>
-              <input type="date" value={uygulamaTarihi} onChange={(e) => setUygulamaTarihi(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Uygulama Tarihi</label>
+              <input type="date" value={uygulamaTarihi} onChange={(e) => setUygulamaTarihi(e.target.value)} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Sonraki Doz / Hatırlatma Tarihi</label>
-              <input type="date" value={sonrakiDozTarihi} onChange={(e) => setSonrakiDozTarihi(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Sonraki Doz / Hatırlatma Tarihi</label>
+              <input type="date" value={sonrakiDozTarihi} onChange={(e) => setSonrakiDozTarihi(e.target.value)} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Kaynak</label>
-              <select value={kaynak} onChange={(e) => setKaynak(e.target.value as 'kayit' | 'beyan')} style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Kaynak</label>
+              <select value={kaynak} onChange={(e) => setKaynak(e.target.value as 'kayit' | 'beyan')} style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>
                 <option value="kayit">Bu klinikte uygulandı</option>
                 <option value="beyan">{hitap.beyanEtiketi}</option>
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Lot no</label>
-              <input value={lotNo} onChange={(e) => setLotNo(e.target.value)} maxLength={LOT_AZAMI} placeholder="İsteğe bağlı" style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Lot no</label>
+              <input value={lotNo} onChange={(e) => setLotNo(e.target.value)} maxLength={LOT_AZAMI} placeholder="İsteğe bağlı" style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Uygulama yeri</label>
-              <input value={uygulamaYeri} onChange={(e) => setUygulamaYeri(e.target.value)} maxLength={YER_AZAMI} placeholder="Örn. IM sol deltoid" style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+              <label style={{ fontSize: 12, color: '#8b7d70', display: 'block', marginBottom: 4 }}>Uygulama yeri</label>
+              <input value={uygulamaYeri} onChange={(e) => setUygulamaYeri(e.target.value)} maxLength={YER_AZAMI} placeholder="Örn. IM sol deltoid" style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
             </div>
           </div>
           <button type="submit" disabled={kaydediyor} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}>
@@ -305,8 +305,8 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
         </form>
       )}
 
-      {yukleniyor && <p style={{ color: '#94A3B8' }}>Yükleniyor…</p>}
-      {!yukleniyor && asilar.length === 0 && <p style={{ color: '#94A3B8' }}>Henüz aşı kaydı yok.</p>}
+      {yukleniyor && <p style={{ color: '#8b7d70' }}>Yükleniyor…</p>}
+      {!yukleniyor && asilar.length === 0 && <p style={{ color: '#8b7d70' }}>Henüz aşı kaydı yok.</p>}
 
       <Liste baslik="Pediatrik" kayitlar={pediatrikler} />
       <Liste baslik="Yetişkin" kayitlar={yetiskinler} />
