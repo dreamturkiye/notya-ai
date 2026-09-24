@@ -407,7 +407,7 @@ export default function HastaProfilPage() {
         : null;
 
   return (
-    <div style={{ backgroundColor: 'transparent', minHeight: '100vh', color: '#3b2e24', fontFamily: CHROME_FONT.sans }}>
+    <div style={{ backgroundColor: 'transparent', minHeight: '100vh', color: CHROME_RENK.ink, fontFamily: CHROME_FONT.sans }}>
       <style>{`
         .dosya-sekmeler::-webkit-scrollbar { display: none; }
         .dosya-satir:hover { background: #F6F0E4; }
@@ -424,7 +424,7 @@ export default function HastaProfilPage() {
             {kimlikCipleri.length > 0 && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
                 {kimlikCipleri.map((c, i) => (
-                  <span key={i} style={{ fontSize: 11.5, color: '#3b2e24', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 999, padding: '3px 10px' }}>{c}</span>
+                  <span key={i} style={{ fontSize: 11.5, color: CHROME_RENK.ink, background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 999, padding: '3px 10px' }}>{c}</span>
                 ))}
               </div>
             )}
@@ -456,7 +456,7 @@ export default function HastaProfilPage() {
                 padding: '8px 16px',
                 background: activeTab === tab.id ? CHROME_RENK.pine : '#FFFFFF',
                 border: activeTab === tab.id ? `1px solid ${CHROME_RENK.pine}` : `1px solid ${CHROME_RENK.border}`,
-                color: activeTab === tab.id ? '#FAF8F4' : '#3b2e24',
+                color: activeTab === tab.id ? '#FAF8F4' : CHROME_RENK.ink,
                 fontWeight: activeTab === tab.id ? 700 : 500,
                 borderRadius: 999,
                 fontSize: 13,
@@ -490,7 +490,7 @@ export default function HastaProfilPage() {
             />
             <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: `linear-gradient(90deg, ${CHROME_RENK.pine}, transparent)` }} />
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: '#3b2e24' }}>Gelişler ve tanılar</div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: CHROME_RENK.ink }}>Gelişler ve tanılar</div>
               {seansYukleniyor && <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Yükleniyor…</div>}
               {!seansYukleniyor && seanslar !== null && seanslar.length === 0 && (
                 <div style={{ fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.45 }}>Henüz muayene yok. İlk vizitten sonra tarihler ve tanılar burada tıklanır.</div>
@@ -522,7 +522,7 @@ export default function HastaProfilPage() {
                     }}
                   >
                     <span style={{ display: 'block', fontSize: 12, color: CHROME_RENK.muted, fontWeight: 600 }}>{trTarih(seansTarihi(s))}</span>
-                    <span style={{ display: 'block', fontSize: 13.5, color: n?.id ? CHROME_RENK.pine : '#3b2e24', marginTop: 2, lineHeight: 1.35, textDecoration: n?.id ? 'underline' : 'none', textUnderlineOffset: 3 }}>{ozet}</span>
+                    <span style={{ display: 'block', fontSize: 13.5, color: n?.id ? CHROME_RENK.pine : CHROME_RENK.ink, marginTop: 2, lineHeight: 1.35, textDecoration: n?.id ? 'underline' : 'none', textUnderlineOffset: 3 }}>{ozet}</span>
                   </button>
                 )
               })}
@@ -597,13 +597,13 @@ export default function HastaProfilPage() {
                         title={n?.id ? 'Raporu aç — düzenlemek için Yeniden Düzenle' : undefined}
                         style={{ minWidth: 0, flex: 1, cursor: n?.id ? 'pointer' : 'default' }}>
                         <span style={{ display: 'block', fontSize: 12, color: CHROME_RENK.muted }}>{trTarih(seansTarihi(s))}</span>
-                        <span style={{ display: 'block', fontSize: 13.5, color: '#3b2e24', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
+                        <span style={{ display: 'block', fontSize: 13.5, color: CHROME_RENK.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ozet}</span>
                       </span>
                       {n?.id && (
                         <button
                           type="button"
                           onClick={() => window.open(`/dashboard/doktor/notlar/${n.id}/yazdir`, '_blank')}
-                          style={{ background: '#F6F0E4', border: `1px solid ${CHROME_RENK.border}`, color: '#3b2e24', borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}
+                          style={{ background: '#F6F0E4', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 999, padding: '5px 12px', fontSize: 12, cursor: 'pointer', flexShrink: 0 }}
                         >
                           🖨️ Yazdır / PDF
                         </button>

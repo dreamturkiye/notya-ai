@@ -356,7 +356,7 @@ export default function IncelemePage() {
 
   const btnStyle = (bg: string, disabled: boolean): React.CSSProperties => ({
     background: disabled ? '#D8D0BE' : bg,
-    color: disabled ? '#8b7d70' : '#FAF8F4',
+    color: disabled ? CHROME_RENK.muted : '#FAF8F4',
     padding: '8px 14px',
     borderRadius: 9,
     border: 'none',
@@ -370,7 +370,7 @@ export default function IncelemePage() {
       <div style={{ maxWidth: 1000 }}>
         <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
         <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: 0, color: '#2e251d', letterSpacing: '-0.02em' }}>İnceleme Kuyruğu</h1>
-        <p style={{ color: '#8b7d70', fontSize: 14, margin: '6px 0 20px' }}>
+        <p style={{ color: CHROME_RENK.muted, fontSize: 14, margin: '6px 0 20px' }}>
           Onay bekleyen klinik notları inceleyin
         </p>
 
@@ -381,31 +381,31 @@ export default function IncelemePage() {
         {sonOnaylanan && notes.length > 0 && (
           <div style={{ ...toolsCard, marginTop: 0, marginBottom: 16, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, border: '1px solid rgba(46,110,78,0.4)' }}>
             <span style={{ color: '#2E6E4E', fontSize: 13, fontWeight: 600 }}>✓ Not onaylandı{sonOnaylanan.hasta ? ` — ${sonOnaylanan.hasta}` : ''}</span>
-            <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: '#2f4334', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
-            <a href={hastaDosyasiYolu(sonOnaylanan.patientId, 'muayene')} style={{ color: '#8b7d70', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Muayene Geçmişi →</a>
+            <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
+            <a href={hastaDosyasiYolu(sonOnaylanan.patientId, 'muayene')} style={{ color: CHROME_RENK.muted, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Muayene Geçmişi →</a>
           </div>
         )}
 
         {loading ? (
-          <div style={{ ...toolsCard, textAlign: 'center', color: '#8b7d70' }}>Yükleniyor...</div>
+          <div style={{ ...toolsCard, textAlign: 'center', color: CHROME_RENK.muted }}>Yükleniyor...</div>
         ) : notes.length === 0 ? (
           /* NOTYA-ONAY-DONUS-01: "Bekleyen not yok" tek başına çıkmazdı — hekimin buradan
              gidecek yeri yoktu. Boş kuyruk artık her zaman çıkış yolu gösterir; son onaylanan
              not varsa önce ona döner. */
-          <div style={{ ...toolsCard, textAlign: 'center', color: '#8b7d70' }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#3b2e24' }}>Bekleyen not yok</div>
+          <div style={{ ...toolsCard, textAlign: 'center', color: CHROME_RENK.muted }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: CHROME_RENK.ink }}>Bekleyen not yok</div>
             <div style={{ fontSize: 13, marginTop: 6 }}>
               {sonOnaylanan ? 'Son not onaylandı — kuyruk boşaldı.' : 'Onay bekleyen klinik not kalmadı.'}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginTop: 14 }}>
               {sonOnaylanan && (
-                <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: '#2f4334', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
+                <a href={onaylananNotYolu(sonOnaylanan.id)} style={{ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ONAYLANAN_NOTU_AC}</a>
               )}
               {sonOnaylanan?.patientId && (
-                <a href={hastaDosyasiYolu(sonOnaylanan.patientId)} style={{ color: '#2f4334', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Hasta Dosyası →</a>
+                <a href={hastaDosyasiYolu(sonOnaylanan.patientId)} style={{ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>Hasta Dosyası →</a>
               )}
-              <a href={HASTA_LISTESI_YOLU} style={{ color: '#8b7d70', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{HASTA_LISTESINE_DON}</a>
-              <a href={DOKTOR_ANA_SAYFA_YOLU} style={{ color: '#8b7d70', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ANA_SAYFAYA_DON}</a>
+              <a href={HASTA_LISTESI_YOLU} style={{ color: CHROME_RENK.muted, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{HASTA_LISTESINE_DON}</a>
+              <a href={DOKTOR_ANA_SAYFA_YOLU} style={{ color: CHROME_RENK.muted, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 36 }}>{ANA_SAYFAYA_DON}</a>
             </div>
           </div>
         ) : (
@@ -422,7 +422,7 @@ export default function IncelemePage() {
                     alignItems: 'center',
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#3b2e24', minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: CHROME_RENK.ink, minWidth: 0 }}>
                     {[note.maskedPatient, bransEtiketi(note.specialty), note.date].filter(Boolean).join(' • ')}
                     {acikId === note.id && kBekliyor ? <span style={{ color: '#B4832F', fontWeight: 500 }}> · Ayşe notu yeniden okuyor…</span> : null}
                   </div>
@@ -441,20 +441,20 @@ export default function IncelemePage() {
                   tabIndex={0}
                   onClick={() => (acikId === note.id ? setAcikId('') : notuAc(note))}
                   onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) (acikId === note.id ? setAcikId('') : notuAc(note)); }}
-                  style={{ marginTop: 12, color: '#8b7d70', fontSize: 13, lineHeight: 1.55, cursor: 'pointer' }}
+                  style={{ marginTop: 12, color: CHROME_RENK.muted, fontSize: 13, lineHeight: 1.55, cursor: 'pointer' }}
                 >
                   {acikId === note.id ? (
                     /* Kaan (2026-09-10): Ayşe kutusunda Enter notu daraltıyordu — klavye olayı kartın başlığına yükselmesin */
                     <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
                       {/* NOTYA-SOAP-02: tam not incelemesi — doktor DÜZENLEYEREK onaylar; düzenlemeler Ayşe'nin öğrenme verisidir */}
                       <div style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 3 }}>Başvuru Yakınması <span style={{ fontWeight: 400, color: '#8b7d70' }}>· düzenlenebilir</span></div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 3 }}>Başvuru Yakınması <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· düzenlenebilir</span></div>
                         <input value={basvuruTaslak} onChange={(e) => setBasvuruTaslak(e.target.value)} placeholder="Hastanın geliş nedeni"
-                          style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: '#3b2e24', fontSize: 13, padding: '8px 10px', fontStyle: 'italic', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                          style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 13, padding: '8px 10px', fontStyle: 'italic', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                       </div>
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 3 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: '#2f4334' }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: '#8b7d70' }}>· düzenlenebilir</span></span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine }}>Yaşamsal Bulgular <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· düzenlenebilir</span></span>
                           {/* NOTYA-BLE-01/02 (Kaan 2026-09-15): Bluetooth cihazdan ölçüm + cihaz uygulamasından dosya — core, tüm branşlar */}
                           <CihazdanAl hastaId={note.patientId} notId={note.id} onOlcum={(v) => setVitalTaslak({ ...vitalTaslak, ...v })} />
                           <CihazDosyasi hastaId={note.patientId} notId={note.id} />
@@ -471,51 +471,51 @@ export default function IncelemePage() {
                       </div>
                       {(['subjektif', 'objektif', 'degerlendirme', 'plan'] as const).map((alan) => (
                         <div key={alan} style={{ marginBottom: 10 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 3 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 3 }}>
                             {alan === 'subjektif' ? 'Anamnez — Şikayet · Şikayetin Hikayesi · Özgeçmiş · Soygeçmiş' : alan === 'objektif' ? 'Fizik Muayene (+ Laboratuvar / Görüntüleme)' : alan === 'degerlendirme' ? 'Tanı' : 'Tedavi'}
-                            <span style={{ fontWeight: 400, color: '#8b7d70' }}> · düzenlenebilir</span>
+                            <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}> · düzenlenebilir</span>
                           </div>
                           <textarea
                             value={taslak[alan]}
                             onChange={(e) => setTaslak({ ...taslak, [alan]: e.target.value })}
                             rows={Math.min(8, Math.max(2, Math.ceil(taslak[alan].length / 90)))}
-                            style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: '#3b2e24', fontSize: 13, lineHeight: 1.5, padding: '8px 10px', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                            style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 13, lineHeight: 1.5, padding: '8px 10px', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
                           />
                         </div>
                       ))}
                       <div style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span>Tanı / ICD-10 önerileri <span style={{ fontWeight: 400, color: '#8b7d70' }}>(onayınıza tabi — otomatik yazılmaz)</span></span>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span>Tanı / ICD-10 önerileri <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(onayınıza tabi — otomatik yazılmaz)</span></span>
                           {/* Kaan (2026-09-14): "tanı değişince ICD-10 ve öneriler de değişmeli, AI tüm notu yeniden değerlendirmeli" */}
                           <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, NOT_YENIDEN_DEGERLENDIR_ISTEK)} style={{ background: 'transparent', border: '1px solid rgba(180,131,47,0.4)', color: '#B4832F', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>🔄 Notu AI ile yeniden değerlendir</button>
                         </div>
                         {icdTaslak.length > 0 ? (
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {icdTaslak.map((k, i2) => (
-                              <span key={i2} style={{ fontSize: 12, fontWeight: k.is_primary ? 700 : 500, padding: '4px 10px', borderRadius: 999, background: '#E4F3F1', color: '#2f4334', border: k.is_primary ? '1px solid #2f4334' : '1px solid transparent' }}>
+                              <span key={i2} style={{ fontSize: 12, fontWeight: k.is_primary ? 700 : 500, padding: '4px 10px', borderRadius: 999, background: '#E4F3F1', color: CHROME_RENK.pine, border: k.is_primary ? `1px solid ${CHROME_RENK.pine}` : '1px solid transparent' }}>
                                 {k.code} · {k.description_tr || k.description || ''}
                               </span>
                             ))}
                           </div>
-                        ) : <div style={{ fontSize: 12, color: '#8b7d70' }}>ICD-10 önerisi yok</div>}
+                        ) : <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>ICD-10 önerisi yok</div>}
                       </div>
                       <div style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 3 }}>İlaçlar <span style={{ fontWeight: 400, color: '#8b7d70' }}>(her satır bir ilaç: Ad — doz — kullanım — süre · düzenlenebilir)</span></div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 3 }}>İlaçlar <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(her satır bir ilaç: Ad — doz — kullanım — süre · düzenlenebilir)</span></div>
                         <textarea value={ilacTaslak} onChange={(e) => setIlacTaslak(e.target.value)} rows={Math.max(2, ilacTaslak.split('\n').length)}
                           placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam"
-                          style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: '#3b2e24', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                          style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
                       </div>
                       {aiDegTaslak.trim() && (
                         <div style={{ marginBottom: 10, background: '#FBF3DE', border: '1px solid rgba(180,131,47,0.35)', borderRadius: 8, padding: '8px 10px' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#B4832F', marginBottom: 5 }}>Ayşe'nin değerlendirmesi <span style={{ fontWeight: 400, color: '#8b7d70' }}>(öneridir — nota ve hastaya yansımaz, yalnız size)</span></div>
-                          <div style={{ fontSize: 13, color: '#3b2e24' }}><HafifMarkdown metin={aiDegTaslak} /></div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#B4832F', marginBottom: 5 }}>Ayşe'nin değerlendirmesi <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(öneridir — nota ve hastaya yansımaz, yalnız size)</span></div>
+                          <div style={{ fontSize: 13, color: CHROME_RENK.ink }}><HafifMarkdown metin={aiDegTaslak} /></div>
                         </div>
                       )}
                       {receteTaslak.length > 0 && (
                         <div style={{ marginBottom: 10, background: '#E4F3F1', border: '1px solid rgba(47,67,52,0.35)', borderRadius: 8, padding: '8px 10px' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 5 }}>Ayşe'nin reçete önerisi <span style={{ fontWeight: 400, color: '#8b7d70' }}>(öneridir — reçeteyi doktor yazar)</span></div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 5 }}>Ayşe'nin reçete önerisi <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(öneridir — reçeteyi doktor yazar)</span></div>
                           {receteTaslak.map((r, i2) => (
-                            <div key={i2} style={{ fontSize: 13, color: '#3b2e24', marginBottom: 3 }}>
+                            <div key={i2} style={{ fontSize: 13, color: CHROME_RENK.ink, marginBottom: 3 }}>
                               • {[r.ticariOrnek, r.etkenMadde ? `(${r.etkenMadde})` : '', r.doz, r.kullanim, r.sure].filter(Boolean).join(' — ')}
                               {r.sgkListesinde && <span style={{ marginLeft: 6, fontSize: 11, color: '#2E6E4E' }}>SGK ✓</span>}
                               {r.not && <div style={{ fontSize: 12, color: '#B4832F', marginLeft: 12 }}>⚠ {r.not}</div>}
@@ -524,42 +524,42 @@ export default function IncelemePage() {
                         </div>
                       )}
                       <div style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 3 }}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#8b7d70' }}>({note.bransKapsami.hitap.evdeDikkatHedefi} anlatılacak · her satır bir madde · düzenlenebilir)</span></div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 3 }}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>({note.bransKapsami.hitap.evdeDikkatHedefi} anlatılacak · her satır bir madde · düzenlenebilir)</span></div>
                         <textarea value={alarmTaslak} onChange={(e) => setAlarmTaslak(e.target.value)} rows={Math.max(3, alarmTaslak.split('\n').length)}
                           placeholder="Her satıra bir uyarı yazın"
-                          style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: '#3b2e24', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                          style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
                       </div>
                       {note.kritikBulgular.length > 0 && (
                         <div style={{ marginBottom: 10, background: '#FBF3DE', border: '1px solid rgba(180,131,47,0.35)', borderRadius: 8, padding: '8px 10px' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#B4832F', marginBottom: 3 }}>Dikkate almayı düşünür müsünüz? <span style={{ fontWeight: 400, color: '#8b7d70' }}>(öneridir — nota ve hastaya yansımaz)</span></div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#B4832F', marginBottom: 3 }}>Dikkate almayı düşünür müsünüz? <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>(öneridir — nota ve hastaya yansımaz)</span></div>
                           {note.kritikBulgular.map((kb, i2) => <div key={i2} style={{ fontSize: 13, color: '#7A5B1E' }}>• {kb}</div>)}
                         </div>
                       )}
                       <div style={{ background: '#F6F0E4', border: '1px dashed rgba(58,44,34,0.16)', borderRadius: 8, padding: '8px 10px' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#8b7d70', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.muted, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
                           {/* BRANS-ALAN-SIZMASI: "veli" yalnız pediatrik bağlamda — KD/dahiliye/göz/derm notunda "Hasta özeti" */}
-                          <span>{note.bransKapsami.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: '#8b7d70' }}>· portala gider · düzenlenebilir</span></span>
-                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, note.bransKapsami.hitap.ozetYenileIstegi)} style={{ background: 'transparent', border: '1px solid rgba(47,67,52,0.4)', color: '#2f4334', borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>↻ Notuma göre yenile</button>
+                          <span>{note.bransKapsami.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>· portala gider · düzenlenebilir</span></span>
+                          <button type="button" disabled={kBekliyor} onClick={() => konsultGonder(note, note.bransKapsami.hitap.ozetYenileIstegi)} style={{ background: 'transparent', border: '1px solid rgba(47,67,52,0.4)', color: CHROME_RENK.pine, borderRadius: 999, padding: '2px 10px', fontSize: 11, cursor: kBekliyor ? 'default' : 'pointer', opacity: kBekliyor ? 0.5 : 1 }}>↻ Notuma göre yenile</button>
                         </div>
                         <textarea value={ozetTaslak} onChange={(e) => setOzetTaslak(e.target.value)} rows={Math.max(3, Math.ceil(ozetTaslak.length / 110))}
                           placeholder={note.bransKapsami.hitap.ozetYerTutucu}
-                          style={{ width: '100%', background: 'transparent', border: '1px solid rgba(58,44,34,0.1)', borderRadius: 6, color: '#3b2e24', fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                          style={{ width: '100%', background: 'transparent', border: '1px solid rgba(58,44,34,0.1)', borderRadius: 6, color: CHROME_RENK.ink, fontSize: 13, lineHeight: 1.55, padding: '8px 10px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
                       </div>
                       {/* NOTYA-KONSULT-03: Ayşe ile not üzerinde konsult, sözle düzenleme, tek-dokunuş takip eylemleri */}
                       <div style={{ marginTop: 12, borderTop: '1px solid rgba(58,44,34,0.08)', paddingTop: 10 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 6 }}>🩺 Ayşe ile bu notu konuşun <span style={{ fontWeight: 400, color: '#8b7d70' }}>— soru sorun ya da “planı kısalt” gibi düzenleme isteyin</span></div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 6 }}>🩺 Ayşe ile bu notu konuşun <span style={{ fontWeight: 400, color: CHROME_RENK.muted }}>— soru sorun ya da “planı kısalt” gibi düzenleme isteyin</span></div>
                         {kMesajlar.length > 0 && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto', marginBottom: 8 }}>
                             {kMesajlar.map((m, i2) => (
-                              <div key={i2} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '92%', background: m.rol === 'doktor' ? '#2f4334' : '#F6F0E4', color: m.rol === 'doktor' ? '#FAF8F4' : '#3b2e24', borderRadius: 10, padding: '7px 10px', fontSize: 13, lineHeight: 1.5, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
+                              <div key={i2} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'flex-start', maxWidth: '92%', background: m.rol === 'doktor' ? CHROME_RENK.pine : '#F6F0E4', color: m.rol === 'doktor' ? '#FAF8F4' : CHROME_RENK.ink, borderRadius: 10, padding: '7px 10px', fontSize: 13, lineHeight: 1.5, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
                             ))}
-                            {kBekliyor && <div style={{ fontSize: 12, color: '#8b7d70' }}>Ayşe düşünüyor…</div>}
+                            {kBekliyor && <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>Ayşe düşünüyor…</div>}
                           </div>
                         )}
                         {eylemler.map((e, i2) => (
-                          <div key={i2} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', background: e.durum === 'eklendi' ? '#E4F3EA' : '#E4F3F1', border: `1px solid ${e.durum === 'eklendi' ? 'rgba(46,110,78,0.4)' : 'rgba(47,67,52,0.4)'}`, borderRadius: 9, padding: '7px 10px', marginBottom: 6, fontSize: 12, color: '#3b2e24' }}>
+                          <div key={i2} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', background: e.durum === 'eklendi' ? '#E4F3EA' : '#E4F3F1', border: `1px solid ${e.durum === 'eklendi' ? 'rgba(46,110,78,0.4)' : 'rgba(47,67,52,0.4)'}`, borderRadius: 9, padding: '7px 10px', marginBottom: 6, fontSize: 12, color: CHROME_RENK.ink }}>
                             <span>{e.tur === 'takip_aramasi' ? '📞' : '📅'} {e.tur === 'takip_aramasi' ? `Takip araması (${e.kim === 'sekreter' ? 'sekreter/hemşire' : 'doktor'})` : 'Kontrol randevusu'} — {e.tarih} {e.saat || '10:00'}</span>
-                            {e.durum === 'oneri' && <button type="button" onClick={() => eylemOnayla(note, i2)} style={{ background: '#2f4334', border: 'none', color: 'white', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Takvime ekle</button>}
+                            {e.durum === 'oneri' && <button type="button" onClick={() => eylemOnayla(note, i2)} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Takvime ekle</button>}
                             {e.durum === 'eklendi' && <span style={{ color: '#2E6E4E', fontWeight: 700 }}>✓ Takvime eklendi</span>}
                             {e.durum === 'hata' && <span style={{ color: '#7A3D28' }}>Eklenemedi — takvimden elle ekleyin</span>}
                           </div>
@@ -570,22 +570,22 @@ export default function IncelemePage() {
                             : <EylemKarti oneri={eylemOnerileri[0]} hasta={eylemHastasi} tokenAl={getAccessTokenAsync} />
                         ) : null}
                         <form onSubmit={(ev) => { ev.preventDefault(); konsultGonder(note); }} style={{ display: 'flex', gap: 6 }}>
-                          <input value={kGirdi} onChange={(ev) => setKGirdi(ev.target.value)} placeholder="Örn. prognoz? / kontrolü 5 gün sonraya planla / planı kısalt" style={{ flex: 1, background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', color: '#3b2e24', borderRadius: 9, padding: '8px 10px', fontSize: 13, minWidth: 0 }} />
-                          <button type="submit" disabled={kBekliyor || !kGirdi.trim()} style={{ background: '#2f4334', border: 'none', color: 'white', borderRadius: 9, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: kBekliyor || !kGirdi.trim() ? 0.5 : 1 }}>Sor</button>
+                          <input value={kGirdi} onChange={(ev) => setKGirdi(ev.target.value)} placeholder="Örn. prognoz? / kontrolü 5 gün sonraya planla / planı kısalt" style={{ flex: 1, background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', color: CHROME_RENK.ink, borderRadius: 9, padding: '8px 10px', fontSize: 13, minWidth: 0 }} />
+                          <button type="submit" disabled={kBekliyor || !kGirdi.trim()} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 9, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: kBekliyor || !kGirdi.trim() ? 0.5 : 1 }}>Sor</button>
                         </form>
                       </div>
                       <div style={{ marginTop: 10, display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <span role="button" tabIndex={0} onClick={() => setAcikId('')} onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(''); }} style={{ fontSize: 12, color: '#2f4334', cursor: 'pointer' }}>Daralt ▴</span>
-                        <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank'); }} style={{ fontSize: 12, color: '#8b7d70', cursor: 'pointer' }}>🖨️ Yazdır / PDF</span>
+                        <span role="button" tabIndex={0} onClick={() => setAcikId('')} onKeyDown={(e) => { if (e.key === 'Enter') setAcikId(''); }} style={{ fontSize: 12, color: CHROME_RENK.pine, cursor: 'pointer' }}>Daralt ▴</span>
+                        <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/yazdir`, '_blank'); }} style={{ fontSize: 12, color: CHROME_RENK.muted, cursor: 'pointer' }}>🖨️ Yazdır / PDF</span>
                         {note.ilaclar.length > 0 && (
-                          <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank'); }} style={{ fontSize: 12, color: '#2f4334', cursor: 'pointer', fontWeight: 600 }}>🧾 Reçete ({note.ilaclar.length} ilaç)</span>
+                          <span role="button" tabIndex={0} onClick={() => window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank')} onKeyDown={(e) => { if (e.key === 'Enter') window.open(`/dashboard/doktor/notlar/${note.id}/recete`, '_blank'); }} style={{ fontSize: 12, color: CHROME_RENK.pine, cursor: 'pointer', fontWeight: 600 }}>🧾 Reçete ({note.ilaclar.length} ilaç)</span>
                         )}
                       </div>
                     </div>
                   ) : (
                     <>
                       {snippet(note.subjektif)}
-                      <span style={{ color: '#2f4334', marginLeft: 8 }}>Notu incele ▾</span>
+                      <span style={{ color: CHROME_RENK.pine, marginLeft: 8 }}>Notu incele ▾</span>
                     </>
                   )}
                 </div>

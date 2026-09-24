@@ -22,7 +22,7 @@ export function BekleyenKonsultasyonOzetiKarti({ ozet }: { ozet: BekleyenOzeti |
     <a
       href={BEKLEYEN_KONSULTASYONLAR_ROTASI}
       data-bekleyen-konsultasyon-ozeti=""
-      style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', minHeight: 44, boxSizing: 'border-box', background: '#faf6ee', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '12px 18px', color: CHROME_RENK.ink, textDecoration: 'none' }}
+      style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', minHeight: 44, boxSizing: 'border-box', background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '12px 18px', color: CHROME_RENK.ink, textDecoration: 'none' }}
     >
       <span style={{ fontSize: 26, fontWeight: 800, color: '#F59E0B', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{ozet.sayi}</span>
       <span style={{ fontSize: 14, fontWeight: 700 }}>yanıt bekleyen konsültasyon</span>

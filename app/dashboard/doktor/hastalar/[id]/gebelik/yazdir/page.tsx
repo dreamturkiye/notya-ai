@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 type Bio = { deger: number; persentil: number };
 type Veri = {
@@ -52,10 +53,10 @@ export default function GebeIzlemKartiYazdir() {
       <style>{`@media print { .yazdirma-gizle { display: none !important; } body { -webkit-print-color-adjust: exact; } @page { size: A4; margin: 14mm; } }`}</style>
       <div className="yazdirma-gizle" style={{ background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href={`/dashboard/doktor/hastalar/${params.id}?tab=gebelik`} style={{ color: '#8b7d70', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Gebelik</a>
+          <a href={`/dashboard/doktor/hastalar/${params.id}?tab=gebelik`} style={{ color: CHROME_RENK.muted, fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Gebelik</a>
           <span style={{ color: '#2e251d', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Gebe İzlem Kartı · {b.hastaAd || 'Hasta'}</span>
         </span>
-        <button type="button" onClick={() => window.print()} style={{ background: '#2f4334', border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '10px 18px', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF (A4)</button>
+        <button type="button" onClick={() => window.print()} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '10px 18px', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF (A4)</button>
       </div>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 40px' }}>
@@ -66,7 +67,7 @@ export default function GebeIzlemKartiYazdir() {
               <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
             </div>
             <div style={{ fontSize: 22, fontWeight: 500 }}>Gebe İzlem Kartı</div>
-            <div style={{ fontSize: 11.5, color: '#8b7d70' }}>T.C. Sağlık Bakanlığı Doğum Öncesi Bakım Yönetim Rehberi esaslı</div>
+            <div style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>T.C. Sağlık Bakanlığı Doğum Öncesi Bakım Yönetim Rehberi esaslı</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             {b.logoDataUrl && <img src={b.logoDataUrl} alt="" style={{ height: 38, marginBottom: 4 }} />}

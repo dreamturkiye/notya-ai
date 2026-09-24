@@ -8,6 +8,7 @@
 import React from 'react';
 import { ACILIYET_ETIKETI, trGun, type Aciliyet } from '@/lib/doktor/konsultasyon';
 import { yasHesapla } from '@/lib/doktor/yas';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 export type IstemFormuVerisi = {
   konsultasyon: {
@@ -38,7 +39,7 @@ export default function KonsultasyonIstemFormuKagidi({ v }: { v: IstemFormuVeris
             <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
           </div>
           <div style={{ fontSize: 22, fontWeight: 500 }}>Konsültasyon İstem Formu</div>
-          <div style={{ fontSize: 11.5, color: '#8b7d70' }}>Meslektaş görüşü istemi</div>
+          <div style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>Meslektaş görüşü istemi</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           {b.logoDataUrl && <img src={b.logoDataUrl} alt="" style={{ height: 38, marginBottom: 4 }} />}

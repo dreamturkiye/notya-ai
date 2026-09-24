@@ -9,6 +9,7 @@ import { bransAnahtari } from '@/lib/specialties/kapsam';
 import GeriLink from '@/components/navigasyon/GeriLink';
 import { DOKTOR_ANA, hastaDosyaHref, hastaGoruntulemeHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface Goruntuleme {
   id: string;
@@ -300,7 +301,7 @@ const Page = () => {
   const bugun = bugunTR();
 
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh', fontFamily: "'Source Sans 3', system-ui, sans-serif", color: '#3b2e24' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh', fontFamily: "'Source Sans 3', system-ui, sans-serif", color: CHROME_RENK.ink }}>
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 'calc(100vh - 64px)' }}>
         <div style={{
           width: isMobile ? '100%' : '360px',
@@ -314,7 +315,7 @@ const Page = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: 8 }}>
             <div>
               <GeriLink href={parentGeri.href}>{parentGeri.label}</GeriLink>
-              <div style={{ fontSize: '16px', fontWeight: 600, marginTop: 6, color: '#3b2e24' }}>Görüntüleme arşivi</div>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginTop: 6, color: CHROME_RENK.ink }}>Görüntüleme arşivi</div>
             </div>
             <button
               type="button"
@@ -324,7 +325,7 @@ const Page = () => {
                 setUploadData((prev) => ({ ...prev, tarih: prev.tarih || bugunTR() }));
                 if (!selectedHastaId && filterHastaId) setSelectedHastaId(filterHastaId);
               }}
-              style={{ background: '#2f4334', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', height: '36px' }}
+              style={{ background: CHROME_RENK.pine, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', height: '36px' }}
             >
               Yükle
             </button>
@@ -335,7 +336,7 @@ const Page = () => {
               <select
                 value={selectedHastaId}
                 onChange={(e) => setSelectedHastaId(e.target.value)}
-                style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: '#3b2e24', border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '12px' }}
+                style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: CHROME_RENK.ink, border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '12px' }}
               >
                 <option value="">Hasta seçin</option>
                 {patients.map((p) => (
@@ -358,7 +359,7 @@ const Page = () => {
                     }
                     style={{
                       padding: '4px 12px',
-                      background: uploadData.modalite === m ? '#2f4334' : 'rgba(58,44,34,0.08)',
+                      background: uploadData.modalite === m ? CHROME_RENK.pine : 'rgba(58,44,34,0.08)',
                       borderRadius: '9999px',
                       fontSize: '12px',
                       whiteSpace: 'nowrap',
@@ -371,7 +372,7 @@ const Page = () => {
                   </button>
                 );
                 const satir = { display: 'flex', gap: '6px', overflowX: 'auto' as const, marginBottom: '12px' };
-                const baslik = { fontSize: 11, color: '#8b7d70', marginBottom: 6 };
+                const baslik = { fontSize: 11, color: CHROME_RENK.muted, marginBottom: 6 };
                 if (oncelikli.length === 0) return <div style={satir}>{digerleri.map(cip)}</div>;
                 return (
                   <>
@@ -385,7 +386,7 @@ const Page = () => {
 
               {gozGoruntuModalitesiMi(uploadData.modalite) ? (
                 <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 11, color: '#8b7d70', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginBottom: 6 }}>
                     Göz (zorunlu) · sağ ve sol için iki ayrı fotoğraf yükleyin
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -396,7 +397,7 @@ const Page = () => {
                         onClick={() => setUploadData({ ...uploadData, vucut_bolgesi: g.kod })}
                         style={{
                           padding: '6px 14px',
-                          background: uploadData.vucut_bolgesi === g.kod ? '#2f4334' : 'rgba(58,44,34,0.08)',
+                          background: uploadData.vucut_bolgesi === g.kod ? CHROME_RENK.pine : 'rgba(58,44,34,0.08)',
                           borderRadius: 8,
                           fontSize: 12,
                           fontWeight: 600,
@@ -415,11 +416,11 @@ const Page = () => {
                   placeholder="Başlık / vücut bölgesi (örn. Akciğer PA)"
                   value={uploadData.vucut_bolgesi}
                   onChange={(e) => setUploadData({ ...uploadData, vucut_bolgesi: e.target.value })}
-                  style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: '#3b2e24', border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '8px' }}
+                  style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: CHROME_RENK.ink, border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '8px' }}
                 />
               )}
-              <label style={{ display: 'block', fontSize: 11, color: '#8b7d70', marginBottom: 4 }}>
-                Görüntüleme tarihi <span style={{ color: '#8b7d70' }}>(varsayılan bugün · geçmiş için takvim)</span>
+              <label style={{ display: 'block', fontSize: 11, color: CHROME_RENK.muted, marginBottom: 4 }}>
+                Görüntüleme tarihi <span style={{ color: CHROME_RENK.muted }}>(varsayılan bugün · geçmiş için takvim)</span>
               </label>
               <input
                 type="date"
@@ -430,7 +431,7 @@ const Page = () => {
                   width: '100%',
                   padding: '8px',
                   background: '#FFFFFF',
-                  color: '#3b2e24',
+                  color: CHROME_RENK.ink,
                   border: '1px solid rgba(58,44,34,0.1)',
                   borderRadius: '6px',
                   marginBottom: '8px',
@@ -452,12 +453,12 @@ const Page = () => {
                 value={uploadData.rapor}
                 onChange={(e) => setUploadData({ ...uploadData, rapor: e.target.value })}
                 rows={3}
-                style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: '#3b2e24', border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '12px' }}
+                style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: CHROME_RENK.ink, border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '12px' }}
               />
 
               {(uploadProgress > 0 || isUploading) && (
                 <div style={{ height: '4px', background: 'rgba(58,44,34,0.1)', borderRadius: '2px', marginBottom: '12px' }}>
-                  <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#2f4334', transition: 'width 0.2s' }} />
+                  <div style={{ width: `${uploadProgress}%`, height: '100%', background: CHROME_RENK.pine, transition: 'width 0.2s' }} />
                 </div>
               )}
 
@@ -471,7 +472,7 @@ const Page = () => {
                 disabled={isUploading}
                 style={{
                   width: '100%',
-                  background: '#2f4334',
+                  background: CHROME_RENK.pine,
                   color: '#fff',
                   padding: '10px',
                   border: 'none',
@@ -486,14 +487,14 @@ const Page = () => {
             </div>
           )}
 
-          <div style={{ fontSize: '13px', marginBottom: '8px', color: '#8b7d70' }}>Arşiv</div>
+          <div style={{ fontSize: '13px', marginBottom: '8px', color: CHROME_RENK.muted }}>Arşiv</div>
           <select
             value={filterHastaId}
             onChange={(e) => {
               setFilterHastaId(e.target.value);
               if (e.target.value) setSelectedHastaId(e.target.value);
             }}
-            style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: '#3b2e24', border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '12px' }}
+            style={{ width: '100%', padding: '8px', background: '#FFFFFF', color: CHROME_RENK.ink, border: '1px solid rgba(58,44,34,0.1)', borderRadius: '6px', marginBottom: '12px' }}
           >
             <option value="">Tüm hastalar</option>
             {patients.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -501,7 +502,7 @@ const Page = () => {
 
           <div style={{ flex: 1, overflowY: 'auto', minHeight: 120 }}>
             {!filteredList.length && (
-              <div style={{ fontSize: 12, color: '#8b7d70', padding: '8px 0' }}>Bu hasta için henüz görüntü yok.</div>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted, padding: '8px 0' }}>Bu hasta için henüz görüntü yok.</div>
             )}
             {filteredList.map((g) => (
               <div
@@ -510,7 +511,7 @@ const Page = () => {
                 style={{
                   padding: '12px',
                   background: selectedGoruntuleme?.id === g.id ? '#E4F3F1' : 'transparent',
-                  borderLeft: selectedGoruntuleme?.id === g.id ? '3px solid #2f4334' : '3px solid transparent',
+                  borderLeft: selectedGoruntuleme?.id === g.id ? `3px solid ${CHROME_RENK.pine}` : '3px solid transparent',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -518,10 +519,10 @@ const Page = () => {
                   marginBottom: '4px',
                 }}
               >
-                <div style={{ background: imagingModalityMeta(g.modalite).color || '#8b7d70', color: '#fff', fontSize: '10px', padding: '2px 8px', borderRadius: '9999px' }}>{imagingDisplayLabel(g.modalite)}</div>
+                <div style={{ background: imagingModalityMeta(g.modalite).color || CHROME_RENK.muted, color: '#fff', fontSize: '10px', padding: '2px 8px', borderRadius: '9999px' }}>{imagingDisplayLabel(g.modalite)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.vucut_bolgesi || g.dosya_adi}</div>
-                  <div style={{ fontSize: '12px', color: '#8b7d70' }}>{g.tarih || '—'}</div>
+                  <div style={{ fontSize: '12px', color: CHROME_RENK.muted }}>{g.tarih || '—'}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <span>↗</span>
@@ -534,7 +535,7 @@ const Page = () => {
 
         <div ref={setViewerRef} style={{ flex: 1, background: '#020812', display: 'flex', flexDirection: 'column' }}>
           {!selectedGoruntuleme ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#8b7d70' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: CHROME_RENK.muted }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🩺</div>
               <div>Görüntüleme seçin</div>
               <div style={{ fontSize: '13px', marginTop: '8px' }}>Desteklenen formatlar: DICOM, JPEG, PNG, PDF</div>
@@ -542,25 +543,25 @@ const Page = () => {
           ) : selectedGoruntuleme.tur === 'pdf' ? (
             <>
               <div style={{ height: '44px', background: '#F6F0E4', display: 'flex', alignItems: 'center', padding: '0 16px', gap: '16px', fontSize: '14px' }}>
-                <button type="button" onClick={() => setSelectedGoruntuleme(null)} style={{ background: 'transparent', border: 'none', color: '#2f4334', cursor: 'pointer', fontWeight: 600, padding: 0 }}>← Geri</button>
-                <div style={{ flex: 1, color: '#3b2e24' }}>{selectedGoruntuleme.dosya_adi}</div>
+                <button type="button" onClick={() => setSelectedGoruntuleme(null)} style={{ background: 'transparent', border: 'none', color: CHROME_RENK.pine, cursor: 'pointer', fontWeight: 600, padding: 0 }}>← Geri</button>
+                <div style={{ flex: 1, color: CHROME_RENK.ink }}>{selectedGoruntuleme.dosya_adi}</div>
               </div>
               <iframe src={selectedGoruntuleme.dosya_url} style={{ width: '100%', height: '100%', border: 'none' }} title={selectedGoruntuleme.dosya_adi} />
             </>
           ) : selectedGoruntuleme.tur === 'dicom' ? (
             <div style={{ padding: '40px', textAlign: 'center' }}>
-              <button type="button" onClick={() => setSelectedGoruntuleme(null)} style={{ background: 'transparent', border: 'none', color: '#2f4334', cursor: 'pointer', fontWeight: 600, marginBottom: 16 }}>← Geri</button>
+              <button type="button" onClick={() => setSelectedGoruntuleme(null)} style={{ background: 'transparent', border: 'none', color: CHROME_RENK.pine, cursor: 'pointer', fontWeight: 600, marginBottom: 16 }}>← Geri</button>
               <div style={{ background: '#FFFFFF', padding: '24px', borderRadius: '12px', maxWidth: '480px', margin: '0 auto' }}>
                 <div>Doğrudan DICOM görüntülemesi için harici DICOM viewer açılacak</div>
                 <button
                   type="button"
                   onClick={() => window.open(`https://viewer.cornerstonejs.org?file=${encodeURIComponent(selectedGoruntuleme.dosya_url)}`, '_blank')}
-                  style={{ marginTop: '24px', background: '#2f4334', color: '#fff', padding: '14px 32px', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer' }}
+                  style={{ marginTop: '24px', background: CHROME_RENK.pine, color: '#fff', padding: '14px 32px', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer' }}
                 >
                   Cornerstone Viewer&apos;da Aç
                 </button>
                 <div style={{ marginTop: '24px' }}>
-                  <a href={selectedGoruntuleme.dosya_url} download style={{ color: '#2f4334' }}>DICOM Dosyasını İndir</a>
+                  <a href={selectedGoruntuleme.dosya_url} download style={{ color: CHROME_RENK.pine }}>DICOM Dosyasını İndir</a>
                 </div>
               </div>
             </div>
@@ -570,16 +571,16 @@ const Page = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedGoruntuleme(null)}
-                  style={{ background: 'transparent', border: 'none', color: '#2f4334', cursor: 'pointer', fontWeight: 600, padding: 0 }}
+                  style={{ background: 'transparent', border: 'none', color: CHROME_RENK.pine, cursor: 'pointer', fontWeight: 600, padding: 0 }}
                 >
                   ← Geri
                 </button>
-                <div style={{ flex: 1, color: '#3b2e24' }}>{selectedGoruntuleme.dosya_adi}</div>
-                <button type="button" onClick={() => handleZoom(0.2)} style={{ background: 'transparent', border: 'none', color: '#3b2e24', cursor: 'pointer' }}>+</button>
-                <button type="button" onClick={() => handleZoom(-0.2)} style={{ background: 'transparent', border: 'none', color: '#3b2e24', cursor: 'pointer' }}>-</button>
-                <button type="button" onClick={handleRotate} style={{ background: 'transparent', border: 'none', color: '#3b2e24', cursor: 'pointer' }}>↻</button>
-                <button type="button" onClick={handleFullscreen} style={{ background: 'transparent', border: 'none', color: '#3b2e24', cursor: 'pointer' }}>⛶</button>
-                <a href={selectedGoruntuleme.dosya_url} download style={{ color: '#3b2e24', textDecoration: 'none' }}>⬇</a>
+                <div style={{ flex: 1, color: CHROME_RENK.ink }}>{selectedGoruntuleme.dosya_adi}</div>
+                <button type="button" onClick={() => handleZoom(0.2)} style={{ background: 'transparent', border: 'none', color: CHROME_RENK.ink, cursor: 'pointer' }}>+</button>
+                <button type="button" onClick={() => handleZoom(-0.2)} style={{ background: 'transparent', border: 'none', color: CHROME_RENK.ink, cursor: 'pointer' }}>-</button>
+                <button type="button" onClick={handleRotate} style={{ background: 'transparent', border: 'none', color: CHROME_RENK.ink, cursor: 'pointer' }}>↻</button>
+                <button type="button" onClick={handleFullscreen} style={{ background: 'transparent', border: 'none', color: CHROME_RENK.ink, cursor: 'pointer' }}>⛶</button>
+                <a href={selectedGoruntuleme.dosya_url} download style={{ color: CHROME_RENK.ink, textDecoration: 'none' }}>⬇</a>
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#020812' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}

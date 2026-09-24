@@ -15,6 +15,7 @@ import { toolsShell } from '@/lib/doktor/toolsUi';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { AracVurguSaglayici, aracStil, HastaSecici, KopyalaButonu, Secim, Segment, Onay, VURGU_PSIK } from '@/lib/doktor/aracUi';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 export const PSIK_VURGU = VURGU_PSIK;
 export const psikStil = aracStil(PSIK_VURGU);
@@ -75,13 +76,13 @@ export default function PsikAracKabugu({ route, baslik, aciklama, children }: { 
       <div style={{ ...toolsShell, overflowX: 'hidden' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px', boxSizing: 'border-box' }}>
           {!izin ? (
-            <div style={{ color: '#8b7d70', fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca psikiyatri için.'}</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca psikiyatri için.'}</div>
           ) : (
             <>
               <div style={{ marginBottom: 18 }}>
                 <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Araçlar · Psikiyatri</div>
                 <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{baslik}</h1>
-                <p style={{ margin: '8px 0 0', fontSize: 15, color: '#8b7d70', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
+                <p style={{ margin: '8px 0 0', fontSize: 15, color: CHROME_RENK.muted, lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
               </div>
               {children}
             </>

@@ -18,6 +18,7 @@ import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari';
 import { receteGruplari, belirsizKontrol, RENK_ETIKET } from '@/lib/doktor/receteRengi';
 import RrsPaneli from '@/components/doktor/RrsPaneli';
 import EReceteDurum from '@/components/doktor/EReceteDurum';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 type Yol = 'kagit' | 'mbys';
 interface Satir { ilacAdi: string; etkenMadde: string; dozMetni: string; kullanimOzeti: string; gunSayisi: number | null; kutu: number }
@@ -43,8 +44,8 @@ function yas(dogum: string | null): string {
 }
 function trTarih(iso: string): string { return new Date(iso).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' }); }
 
-const buyukDugme: React.CSSProperties = { background: '#2f4334', border: 'none', color: '#FAF8F4', borderRadius: 10, padding: '12px 22px', fontFamily: 'system-ui', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 10px rgba(47,67,52,0.35)' };
-const kucukBaglanti: React.CSSProperties = { background: 'transparent', border: 'none', color: '#3b2e24', fontFamily: 'system-ui', fontSize: 12, textDecoration: 'underline', cursor: 'pointer', padding: '6px 4px' };
+const buyukDugme: React.CSSProperties = { background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 10, padding: '12px 22px', fontFamily: 'system-ui', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 10px rgba(47,67,52,0.35)' };
+const kucukBaglanti: React.CSSProperties = { background: 'transparent', border: 'none', color: CHROME_RENK.ink, fontFamily: 'system-ui', fontSize: 12, textDecoration: 'underline', cursor: 'pointer', padding: '6px 4px' };
 
 export default function ReceteYazdirPage() {
   const params = useParams<{ id: string }>();
@@ -177,7 +178,7 @@ export default function ReceteYazdirPage() {
       {/* Üst çubuk: tek büyük düğme (doktorun yolu) + küçük diğerleri */}
       <div className="yazdirma-gizle" style={{ background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href={`/dashboard/doktor/notlar/${params.id}/yazdir`} style={{ color: '#8b7d70', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap', padding: '6px 0' }}>← Geri</a>
+          <a href={`/dashboard/doktor/notlar/${params.id}/yazdir`} style={{ color: CHROME_RENK.muted, fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap', padding: '6px 0' }}>← Geri</a>
           <span style={{ color: '#2e251d', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Reçete · {baslik.hasta.ad || 'Hasta'}</span>
         </span>
         {yol !== null && (
@@ -197,7 +198,7 @@ export default function ReceteYazdirPage() {
                 <button type="button" onClick={() => window.print()} style={kucukBaglanti}>Kâğıda yazdır</button>
               </>
             )}
-            <button type="button" onClick={() => setYol(null)} title="Reçete yolunu değiştir" style={{ ...kucukBaglanti, color: '#8b7d70' }}>değiştir</button>
+            <button type="button" onClick={() => setYol(null)} title="Reçete yolunu değiştir" style={{ ...kucukBaglanti, color: CHROME_RENK.muted }}>değiştir</button>
           </span>
         )}
       </div>
@@ -218,7 +219,7 @@ export default function ReceteYazdirPage() {
           sıkışıyor, ikincisi ekran dışında kalabiliyordu. Kendi tam genişlikte panelinde, net görünür. */}
       {yol === null && (
         <div className="yazdirma-gizle" style={{ maxWidth: en, margin: '12px auto 0', padding: '14px 16px', background: '#F6F0E4', border: '1px solid rgba(47,67,52,0.35)', borderRadius: 8, fontFamily: 'system-ui' }}>
-          <div style={{ color: '#3b2e24', fontSize: 13, marginBottom: 10 }}><b style={{ color: '#2f4334' }}>Ayşe:</b> Reçeteyi nasıl yazıyorsunuz? Aşağıdan seçin, bir daha sormayayım.</div>
+          <div style={{ color: CHROME_RENK.ink, fontSize: 13, marginBottom: 10 }}><b style={{ color: CHROME_RENK.pine }}>Ayşe:</b> Reçeteyi nasıl yazıyorsunuz? Aşağıdan seçin, bir daha sormayayım.</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button type="button" onClick={() => yolSec('kagit')} style={buyukDugme}>🖨️ Kâğıda yazdırıyorum</button>
             <button type="button" onClick={() => yolSec('mbys')} style={{ ...buyukDugme, background: '#4A5C8A' }}>💻 Programa giriyorum (MBYS / Medula)</button>
@@ -251,7 +252,7 @@ export default function ReceteYazdirPage() {
               {bLogo && <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><img src={bLogo} alt="logo" style={{ height: 36 }} /><button type="button" onClick={() => setBLogo('')} style={{ background: 'transparent', border: 'none', color: '#B91C1C', cursor: 'pointer', fontSize: 12 }}>kaldır</button></span>}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" onClick={baslikKaydet} disabled={bKaydediyor} style={{ background: '#2f4334', color: '#FAF8F4', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}>{bKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>
+              <button type="button" onClick={baslikKaydet} disabled={bKaydediyor} style={{ background: CHROME_RENK.pine, color: '#FAF8F4', border: 'none', borderRadius: 6, padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}>{bKaydediyor ? 'Kaydediliyor…' : 'Kaydet'}</button>
               <button type="button" onClick={() => setBaslikDuzenle(false)} style={{ background: 'transparent', border: '1px solid #D1D5DB', borderRadius: 6, padding: '8px 14px', cursor: 'pointer' }}>Vazgeç</button>
             </div>
           </div>

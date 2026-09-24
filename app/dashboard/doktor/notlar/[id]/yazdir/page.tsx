@@ -19,6 +19,7 @@ import { YASAMSAL_BULGULAR_BASLIK, yasamsalBulguSatirlari } from '@/lib/clinical
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki';
 import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface NotVeri {
   not: {
@@ -138,7 +139,7 @@ export default function NotYazdir() {
         /* NOTYA-PDF-01 (Gökhan): sayfalandırma — başlık sayfa sonunda yetim kalmasın,
            başlık+içerik blokları mümkünse bölünmeden birlikte taşınsın. */
         .not-bolum { margin-bottom: 14px; break-inside: avoid; page-break-inside: avoid; }
-        .not-etiket { font: 700 11px/1.4 system-ui; letter-spacing: 0.06em; color: #2f4334; text-transform: uppercase; margin-bottom: 3px; break-after: avoid; page-break-after: avoid; }
+        .not-etiket { font: 700 11px/1.4 system-ui; letter-spacing: 0.06em; color: ${CHROME_RENK.pine}; text-transform: uppercase; margin-bottom: 3px; break-after: avoid; page-break-after: avoid; }
         .not-metin { font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; }
       `}</style>
 
@@ -147,16 +148,16 @@ export default function NotYazdir() {
         <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {/* NOTYA-ONAY-DONUS-01: dönüş bağlantısı KOŞULSUZ — hastaya bağlı olmayan notta
               (seansa hasta seçilmeden üretilen not) bu sayfanın hiçbir çıkışı kalmıyordu. */}
-          <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: '#8b7d70', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', marginRight: 4 }}>
+          <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: CHROME_RENK.muted, fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none', marginRight: 4 }}>
             {hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}
           </a>
           {/* Kaan (2026-09-13): Muayene Geçmişi artık bu raporu açar; düzenleme buradan başlar */}
           <a href={`/dashboard/doktor/notlar/${params.id}`} style={{ background: '#4A5C8A', border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>✏️ Yeniden Düzenle</a>
-          <button type="button" onClick={hbysKopyala} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{kopyalandi ? '✓ Kopyalandı' : '📋 HBYS için kopyala'}</button>
-          <button type="button" onClick={htmlIndir} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>⬇ HTML indir</button>
-          <button type="button" onClick={medulaKopyala} disabled={medulaDurum === 'yukleniyor'} style={{ background: '#E4F3F1', border: '1px solid rgba(47,67,52,0.4)', color: '#2f4334', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{medulaDurum === 'kopyalandi' ? '✓ Medula için kopyalandı' : medulaDurum === 'yukleniyor' ? 'Hazırlanıyor…' : medulaDurum === 'hata' ? 'Reçete yok' : '📋 Medula için kopyala'}</button>
-          <a href={`/dashboard/doktor/notlar/${params.id}/recete`} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>🧾 Reçete (kâğıt / MBYS)</a>
-          <button type="button" onClick={() => window.print()} style={{ background: '#2f4334', border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF kaydet</button>
+          <button type="button" onClick={hbysKopyala} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{kopyalandi ? '✓ Kopyalandı' : '📋 HBYS için kopyala'}</button>
+          <button type="button" onClick={htmlIndir} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>⬇ HTML indir</button>
+          <button type="button" onClick={medulaKopyala} disabled={medulaDurum === 'yukleniyor'} style={{ background: '#E4F3F1', border: '1px solid rgba(47,67,52,0.4)', color: CHROME_RENK.pine, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{medulaDurum === 'kopyalandi' ? '✓ Medula için kopyalandı' : medulaDurum === 'yukleniyor' ? 'Hazırlanıyor…' : medulaDurum === 'hata' ? 'Reçete yok' : '📋 Medula için kopyala'}</button>
+          <a href={`/dashboard/doktor/notlar/${params.id}/recete`} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>🧾 Reçete (kâğıt / MBYS)</a>
+          <button type="button" onClick={() => window.print()} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF kaydet</button>
         </span>
       </div>
       {not.arsivde && (

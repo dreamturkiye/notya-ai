@@ -10,6 +10,7 @@
  */
 import React, { useEffect, useState } from 'react'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 type Secenek = { anahtar: string; etiket: string }
 
@@ -79,7 +80,7 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0 }}>
       <label
         htmlFor="superuser-brans"
-        style={{ color: '#8b7d70', fontSize: mobil ? 11 : 12, fontWeight: 500, whiteSpace: 'nowrap' }}
+        style={{ color: CHROME_RENK.muted, fontSize: mobil ? 11 : 12, fontWeight: 500, whiteSpace: 'nowrap' }}
       >
         Branş:
       </label>
@@ -91,7 +92,7 @@ export default function BransDegistir({ mobil = false }: { mobil?: boolean }) {
         title={hata || 'Aktif branşınızı değiştirin'}
         style={{
           background: '#F6F0E4',
-          color: hata ? '#a45b3e' : '#3b2e24',
+          color: hata ? '#a45b3e' : CHROME_RENK.ink,
           border: `1px solid ${hata ? 'rgba(164,91,62,0.5)' : 'rgba(58,44,34,0.14)'}`,
           borderRadius: 8,
           padding: mobil ? '5px 6px' : '6px 8px',

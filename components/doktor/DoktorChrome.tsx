@@ -313,7 +313,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       {!isMobile && (
         <nav
           style={S({
-            width: 248, flexShrink: 0, minHeight: '100vh', background: '#faf6ee',
+            width: 248, flexShrink: 0, minHeight: '100vh', background: CHROME_RENK.paper,
             borderRight: `1px solid ${CHROME_RENK.border}`, display: 'flex', flexDirection: 'column',
             padding: '22px 14px', boxSizing: 'border-box', position: 'sticky', top: 0,
             alignSelf: 'flex-start', maxHeight: '100vh', overflowY: 'auto',
@@ -396,7 +396,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
                   <button
                     onClick={() => setMenuOpen((v) => !v)}
                     aria-label="Menü"
-                    style={S({ background: '#faf6ee', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 10, width: 42, height: 42, fontSize: 18, cursor: 'pointer', color: CHROME_RENK.ink })}
+                    style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 10, width: 42, height: 42, fontSize: 18, cursor: 'pointer', color: CHROME_RENK.ink })}
                   >
                     {menuOpen ? '✕' : '☰'}
                   </button>
@@ -404,7 +404,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               </header>
 
               {menuOpen && (
-                <div style={S({ background: '#faf6ee', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 12px', marginBottom: 20, boxShadow: '0 8px 18px rgba(58,44,34,0.06)' })}>
+                <div style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 12px', marginBottom: 20, boxShadow: '0 8px 18px rgba(58,44,34,0.06)' })}>
                   {asistanItem && navRow(asistanItem, true)}
                   <div style={S({ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: digerItems.length ? 12 : 0 })}>
                     {calismaItems.map((i) => navRow(i))}

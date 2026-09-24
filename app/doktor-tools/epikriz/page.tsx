@@ -556,7 +556,7 @@ export default function EpikrizPage() {
               <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
             </div>
             <div style={{ fontSize: 22, fontWeight: 500 }}>Epikriz</div>
-            <div style={{ fontSize: 11.5, color: '#8b7d70' }}>Türkiye Sağlık Bakanlığı standart formatı</div>
+            <div style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>Türkiye Sağlık Bakanlığı standart formatı</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             {sonuc.letterhead?.logoDataUrl && <img src={sonuc.letterhead.logoDataUrl} alt="" style={{ height: 40, marginBottom: 4 }} />}
