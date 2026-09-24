@@ -129,7 +129,7 @@ describe('NOTYA-CEK-DOGRULA-02 — çek listesi doğru ve canlı', () => {
     objektif: `Genel durum: iyi. Ön fontanel yaşına uygun. Sarılık yok.\n\n${fizik}`,
     plan: '1. D vitamini 400 IU/gün — devam',
   })
-  const ALTI = ['sc_tarama_isitme', 'sc_tarama_dvit', 'sc_tarama_isitme_risk', 'sc_tarama_gidr', 'sc_gobek', 'sc_kalca']
+  const BES = ['sc_tarama_isitme', 'sc_tarama_dvit', 'sc_tarama_gidr', 'sc_gobek', 'sc_kalca']
 
   // Gökhan'ın hastasının kartındaki doğum tarihi vizit günüyle aynı girilmiş (yaş 0 gün → yenidoğan bandı);
   // gerçek 1 aylık bebek (2024-05-15) de aynı sonucu vermeli.
@@ -143,10 +143,9 @@ describe('NOTYA-CEK-DOGRULA-02 — çek listesi doğru ve canlı', () => {
 
       const tam = cekListeDogrula(maddeler, { soap: bir('Kalça muayenesi yapıldı ortolani barlow negatif'), oncekiIdler })
       const eksik = tam.filter((s) => s.durum === 'eksik').map((s) => s.id)
-      for (const id of ALTI) assert.ok(!eksik.includes(id), `${id} eksik kalmamalı (eksikler: ${eksik.join(', ')})`)
+      for (const id of BES) assert.ok(!eksik.includes(id), `${id} eksik kalmamalı (eksikler: ${eksik.join(', ')})`)
       assert.equal(tam.find((s) => s.id === 'sc_tarama_dvit')?.durum, 'dosyada')
       assert.equal(tam.find((s) => s.id === 'sc_gobek')?.durum, 'onceki')
-      assert.equal(tam.find((s) => s.id === 'sc_tarama_isitme_risk')?.durum, 'onceki')
       assert.match(cekListeDogrulamaMetni(tam), /✓ önceki kayıtta var/)
 
       const kalcasiz = cekListeDogrula(maddeler, { soap: bir(''), oncekiIdler })

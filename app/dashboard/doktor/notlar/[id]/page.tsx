@@ -34,7 +34,7 @@ import {
   cekNotMetni,
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi';
-import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
+import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
@@ -257,6 +257,12 @@ export default function NotSayfasi() {
   }, [basvuru, vital, taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan, veri?.not.id]);
 
   const kaydetVeOnayla = async () => {
+    // NOTYA-ASI-NOT-04: boş yapılı aşı listesi + metinde aşı uygulandı ipucu → onaydan önce hatırlat.
+    // Blok değil — hekim gerekçesini bilir, son karar her zaman onun.
+    if (asilar.length === 0 && notMetninAsiIpucuVarMi([taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan])) {
+      const devam = window.confirm('Notunuzda bu muayenede bir aşı uygulandığına dair bir ifade var gibi görünüyor, ama “Bu muayenede uygulanan aşılar” listesi boş — bu liste boş kaldığı sürece aşı kartına hiçbir şey işlenmez. Yine de onaylamak istiyor musunuz?')
+      if (!devam) return
+    }
     setDurum('kaydediyor');
     try {
       const t = await ensureDoctorAccessToken();

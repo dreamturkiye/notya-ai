@@ -20,6 +20,7 @@ import { toAddressableUser, type DoctorProfile } from "@/lib/userProfile"
 import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAuth"
 import { address } from '@/lib/address'
 import { EylemKarti, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
@@ -598,32 +599,32 @@ export default function AsistanPage() {
   }[status]
 
   return (
-    <div style={{ height: "100dvh", minHeight: 0, background: "#080F1A", display: "flex", flexDirection: isMobile ? "column" : "row",
-                  fontFamily: "system-ui,sans-serif", overflow: "hidden", userSelect: "none" }}>
+    <div style={{ height: "100dvh", minHeight: 0, background: CHROME_RENK.cream, display: "flex", flexDirection: isMobile ? "column" : "row",
+                  fontFamily: CHROME_FONT.sans, overflow: "hidden", userSelect: "none" }}>
 
       {!isMobile && persona.photo && (
-        <div style={{ width: "320px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRight: "1px solid rgba(255,255,255,.08)", background: "#0A1525", padding: "40px 28px", gap: "20px" }}>
-          <img src={persona.photo} alt={persona.name} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", objectPosition: "center top", border: "3px solid " + persona.color + "CC", boxShadow: "0 0 60px " + persona.color + "44" }} />
+        <div style={{ width: "320px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRight: `1px solid ${CHROME_RENK.border}`, background: "#faf6ee", padding: "40px 28px", gap: "20px" }}>
+          <img src={persona.photo} alt={persona.name} style={{ width: "200px", height: "200px", borderRadius: "50%", objectFit: "cover", objectPosition: "center top", border: "3px solid " + persona.color + "CC", boxShadow: "0 0 60px " + persona.color + "33" }} />
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>{formatColleagueTabLabel(persona.name)}</div>
-            <div style={{ fontSize: "13px", color: "rgba(255,255,255,.5)", marginBottom: "16px" }}>{persona.title}</div>
+            <div style={{ fontSize: "20px", fontWeight: 700, color: CHROME_RENK.ink, marginBottom: "6px" }}>{formatColleagueTabLabel(persona.name)}</div>
+            <div style={{ fontSize: "13px", color: CHROME_RENK.muted, marginBottom: "16px" }}>{persona.title}</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: status === "speaking" ? "#10B981" : status === "listening" ? "#3B82F6" : "#6B7280" }} />
-              <span style={{ fontSize: "12px", color: "rgba(255,255,255,.4)" }}>{statusLabel}</span>
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: status === "speaking" ? "#10B981" : status === "listening" ? "#3B82F6" : CHROME_RENK.muted }} />
+              <span style={{ fontSize: "12px", color: CHROME_RENK.muted }}>{statusLabel}</span>
             </div>
           </div>
         </div>
       )}
       {/* chat col */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
-      <div style={{ padding: "12px 16px", paddingTop: "calc(16px + env(safe-area-inset-top, 0px))", borderBottom: "1px solid rgba(255,255,255,.08)", background: "#0A1525", flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px", paddingTop: "calc(16px + env(safe-area-inset-top, 0px))", borderBottom: `1px solid ${CHROME_RENK.border}`, background: "#faf6ee", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
           <div onClick={() => { void stopConversation(); router.push("/dashboard/doktor") }}
-            style={{ color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: "24px", padding: "6px 8px", flexShrink: 0, lineHeight: 1 }}>‹</div>
+            style={{ color: CHROME_RENK.muted, cursor: "pointer", fontSize: "24px", padding: "6px 8px", flexShrink: 0, lineHeight: 1 }}>‹</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "15px", fontWeight: 600, color: "#fff", lineHeight: 1.35, overflow: "hidden",
+            <div style={{ fontSize: "15px", fontWeight: 600, color: CHROME_RENK.ink, lineHeight: 1.35, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatColleagueTabLabel(persona.name)}</div>
-            <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", overflow: "hidden",
+            <div style={{ fontSize: "11px", color: CHROME_RENK.muted, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{persona.title}</div>
           </div>
         </div>
@@ -638,9 +639,9 @@ export default function AsistanPage() {
                 title={`${p.name} — ${branş}`}
                 style={{ padding: "6px 10px", borderRadius: "999px", fontSize: "11px", cursor: "pointer",
                          fontWeight: active ? 700 : 500, flexShrink: 0, whiteSpace: "nowrap",
-                         background: active ? p.color : "rgba(255,255,255,.08)",
-                         color: active ? "#fff" : "rgba(255,255,255,.55)",
-                         border: `1px solid ${active ? p.color : "rgba(255,255,255,.12)"}` }}>
+                         background: active ? p.color : "#F6F0E4",
+                         color: active ? "#fff" : CHROME_RENK.muted,
+                         border: `1px solid ${active ? p.color : CHROME_RENK.border}` }}>
                 {formatColleagueDisplayName(p.name)} · {branş}
               </button>
             )
@@ -653,18 +654,18 @@ export default function AsistanPage() {
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
                         justifyContent: "center", gap: "12px" }}>
             <div style={{ width: 128, height: 128, borderRadius: '50%',
-                          background: '#060C18',
+                          background: '#faf6ee',
                           border: '3px solid ' + persona.color + 'CC',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                           fontSize: '30px', fontWeight: 700, color: persona.color,
-                          boxShadow: '0 0 48px ' + persona.color + '55' }}>
+                          boxShadow: '0 0 48px ' + persona.color + '33' }}>
               {persona.photo
                 ? <img src={persona.photo} alt={persona.name} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',borderRadius:'50%'}}/>
                 : persona.shortName.slice(0, 2).toUpperCase()}
             </div>
-            <div style={{ fontSize: "16px", fontWeight: "600", color: "#fff" }}>{formatColleagueTabLabel(persona.name)}</div>
-            <div style={{ fontSize: "13px", color: "rgba(255,255,255,.4)" }}>{persona.title}</div>
-            <div style={{ fontSize: "12px", color: "rgba(255,255,255,.25)", marginTop: "8px",
+            <div style={{ fontSize: "16px", fontWeight: "600", color: CHROME_RENK.ink }}>{formatColleagueTabLabel(persona.name)}</div>
+            <div style={{ fontSize: "13px", color: CHROME_RENK.muted }}>{persona.title}</div>
+            <div style={{ fontSize: "12px", color: CHROME_RENK.muted, marginTop: "8px",
                           textAlign: "center", maxWidth: "260px", lineHeight: "1.6" }}>
               1:1 sesli görüşme — doğal konuşun
             </div>
@@ -681,7 +682,9 @@ export default function AsistanPage() {
             )}
             <div style={{ maxWidth: "78%", padding: "10px 14px", fontSize: "14px", lineHeight: "1.55",
                           borderRadius: msg.role === "user" ? "16px 16px 3px 16px" : "16px 16px 16px 3px",
-                          background: msg.role === "user" ? "#006699" : "#1A2B40", color: "#fff" }}>
+                          background: msg.role === "user" ? "#0F9B8E" : "#FFFFFF",
+                          border: msg.role === "user" ? "none" : `1px solid ${CHROME_RENK.border}`,
+                          color: msg.role === "user" ? "#fff" : CHROME_RENK.ink }}>
               {msg.text}
             </div>
           </div>
@@ -692,11 +695,11 @@ export default function AsistanPage() {
                           display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>
               {persona.shortName.slice(0, 1)}
             </div>
-            <div style={{ padding: "12px 16px", background: "#1A2B40", borderRadius: "16px 16px 16px 3px",
+            <div style={{ padding: "12px 16px", background: "#FFFFFF", border: `1px solid ${CHROME_RENK.border}`, borderRadius: "16px 16px 16px 3px",
                           display: "flex", gap: "5px", alignItems: "center" }}>
               {[0, 1, 2].map((i) => (
                 <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%",
-                                      background: "rgba(255,255,255,.4)",
+                                      background: CHROME_RENK.muted,
                                       animation: `bounce 1.2s ease-in-out ${i * .2}s infinite` }} />
               ))}
             </div>
@@ -706,7 +709,7 @@ export default function AsistanPage() {
       </div>
 
       {sesKarti && (
-        <div style={{ flexShrink: 0, maxHeight: '46%', overflowY: 'auto', padding: '8px 12px 4px', borderTop: '1px solid rgba(15,155,142,0.35)', background: '#0C1A14' }}>
+        <div style={{ flexShrink: 0, maxHeight: '46%', overflowY: 'auto', padding: '8px 12px 4px', borderTop: '1px solid rgba(15,155,142,0.3)', background: '#F0FDFA' }}>
           <EylemKarti
             oneri={sesKarti.oneri}
             hasta={sesKarti.hasta}
@@ -719,28 +722,28 @@ export default function AsistanPage() {
       )}
 
       <div style={{ padding: "16px 16px 24px", display: "flex", flexDirection: "column",
-                    alignItems: "center", gap: "12px", borderTop: "1px solid rgba(255,255,255,.06)",
-                    background: "#0A1525" }}>
+                    alignItems: "center", gap: "12px", borderTop: `1px solid ${CHROME_RENK.border}`,
+                    background: "#faf6ee" }}>
         {errorMsg && (
-          <div style={{ fontSize: "13px", color: "#FEE2E2", background: "#7F1D1D",
-                        border: "1px solid #FCA5A5", padding: "12px 16px", borderRadius: "10px",
+          <div style={{ fontSize: "13px", color: CHROME_RENK.warn, background: "#FBEAE3",
+                        border: `1px solid ${CHROME_RENK.warn}70`, padding: "12px 16px", borderRadius: "10px",
                         textAlign: "center", maxWidth: "340px", lineHeight: "1.5",
                         fontWeight: 500 }}>{errorMsg}</div>
         )}
-        <div style={{ fontSize: "13px", color: "rgba(255,255,255,.45)",
+        <div style={{ fontSize: "13px", color: CHROME_RENK.muted,
                       display: "flex", alignItems: "center", gap: "8px" }}>
           {isActive && (
             <div style={{ width: "7px", height: "7px", borderRadius: "50%",
                           background: status === "speaking" ? persona.color
-                            : status === "connecting" ? "#F59E0B" : "#22C55E",
+                            : status === "connecting" ? "#B4832F" : "#22C55E",
                           boxShadow: `0 0 8px ${status === "speaking" ? persona.color : "#22C55E"}` }} />
           )}
           {statusLabel}
         </div>
         {sureUzatmaGoster && (
-          <div style={{ padding: "10px 14px", background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 10, textAlign: "center", maxWidth: 280 }}>
-            <div style={{ fontSize: 12, color: "#FCD34D", marginBottom: 8 }}>Süre 5 dakika içinde dolacak</div>
-            <button type="button" onClick={() => sureUzat(30)} style={{ background: "#F59E0B", border: "none", color: "#1F2937", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+30 dakika uzat</button>
+          <div style={{ padding: "10px 14px", background: "#FBF3DE", border: "1px solid #E4C989", borderRadius: 10, textAlign: "center", maxWidth: 280 }}>
+            <div style={{ fontSize: 12, color: "#7A5B1E", marginBottom: 8 }}>Süre 5 dakika içinde dolacak</div>
+            <button type="button" onClick={() => sureUzat(30)} style={{ background: "#B4832F", border: "none", color: "#fff", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+30 dakika uzat</button>
           </div>
         )}
         <div onClick={isActive ? () => void stopConversation() : () => void startConversation()}
@@ -748,12 +751,12 @@ export default function AsistanPage() {
                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px",
                    background: isActive
                      ? `radial-gradient(circle,${persona.color},${persona.color}88)`
-                     : "rgba(255,255,255,.1)",
-                   border: `2px solid ${isActive ? persona.color : "rgba(255,255,255,.2)"}`,
+                     : "#F6F0E4",
+                   border: `2px solid ${isActive ? persona.color : CHROME_RENK.border}`,
                    boxShadow: isActive ? `0 0 32px ${persona.color}55` : "none",
                    transition: "all .25s" }}>
           {status === 'idle' || status === 'error' ? (
-            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke={CHROME_RENK.ink} strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
               <rect x='9' y='2' width='6' height='11' rx='3'/>
               <path d='M5 10a7 7 0 0 0 14 0'/>
               <line x1='12' y1='21' x2='12' y2='17'/>
@@ -767,9 +770,9 @@ export default function AsistanPage() {
               <rect x='22' y='6' width='4' height='12' rx='2' fill='white' style={{animation:'wave2 0.7s ease-in-out 0.15s infinite'}}/>
             </svg>
           ) : status === 'connecting' ? (
-            <div style={{width:26,height:26,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.15)',borderTopColor:'#F59E0B',animation:'spin 0.8s linear infinite'}}/>
+            <div style={{width:26,height:26,borderRadius:'50%',border:`2.5px solid ${CHROME_RENK.border}`,borderTopColor:'#B4832F',animation:'spin 0.8s linear infinite'}}/>
           ) : (
-            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.85)' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='white' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
               <rect x='9' y='2' width='6' height='11' rx='3'/>
               <path d='M5 10a7 7 0 0 0 14 0'/>
               <line x1='12' y1='21' x2='12' y2='17'/>
@@ -777,7 +780,7 @@ export default function AsistanPage() {
             </svg>
           )}
         </div>
-        <div style={{ fontSize: "11px", color: "rgba(255,255,255,.2)" }}>
+        <div style={{ fontSize: "11px", color: CHROME_RENK.muted }}>
           {isActive ? "Bitirmek için dokunun" : "Konuşmayı başlatmak için dokunun"}
         </div>
       </div>
