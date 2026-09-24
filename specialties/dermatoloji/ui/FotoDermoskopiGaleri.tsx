@@ -33,8 +33,8 @@ export function FotoDermoskopiGaleri({
       </p>
       {patientId && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-          <a href={goruntulemeCaptureHref(patientId, 'derm')} style={{ fontSize: 12, color: '#2DD4BF' }}>Klinik foto ekle</a>
-          <a href={goruntulemeCaptureHref(patientId, 'dermatoskopi')} style={{ fontSize: 12, color: '#2DD4BF' }}>Dermoskopi ekle</a>
+          <a href={goruntulemeCaptureHref(patientId, 'derm')} style={{ fontSize: 12, color: '#0F9B8E' }}>Klinik foto ekle</a>
+          <a href={goruntulemeCaptureHref(patientId, 'dermatoskopi')} style={{ fontSize: 12, color: '#0F9B8E' }}>Dermoskopi ekle</a>
         </div>
       )}
       {photos.length === 0 && <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Görüntüleme kaydı yok.</p>}
@@ -62,7 +62,7 @@ export function FotoDermoskopiGaleri({
                   href={p.documentId
                     ? belgeAnalizHref(patientId, p.documentId, p.kind.startsWith('dermoskopi') ? 'dermatoskopi' : 'derm', fitzpatrick)
                     : belgelerTabHref(patientId, p.kind.startsWith('dermoskopi') ? 'dermatoskopi' : 'derm')}
-                  style={{ fontSize: 11, color: '#2DD4BF' }}
+                  style={{ fontSize: 11, color: '#0F9B8E' }}
                 >
                   Asistana raporla
                 </a>

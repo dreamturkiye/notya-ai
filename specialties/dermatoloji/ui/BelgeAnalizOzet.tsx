@@ -104,7 +104,7 @@ export function BelgeAnalizOzet({
                   </button>
                 </div>
                 {mesaj[a.id] && (
-                  <div style={{ fontSize: 12, marginTop: 6, color: /gönderildi/.test(mesaj[a.id]) ? '#2DD4BF' : '#F87171' }}>{mesaj[a.id]}</div>
+                  <div style={{ fontSize: 12, marginTop: 6, color: /gönderildi/.test(mesaj[a.id]) ? '#0F9B8E' : '#F87171' }}>{mesaj[a.id]}</div>
                 )}
                 {!fitzpatrick && (
                   <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>

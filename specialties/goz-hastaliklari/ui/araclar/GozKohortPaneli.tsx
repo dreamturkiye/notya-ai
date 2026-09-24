@@ -13,7 +13,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const BAYRAKLAR = Object.keys(GOZ_BAYRAK_AD) as GozKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
-const chip = (on: boolean): React.CSSProperties => ({ background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)', color: on ? '#5EEAD4' : CHROME_RENK.muted, border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 });
+const chip = (on: boolean): React.CSSProperties => ({ background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)', color: on ? '#0F9B8E' : CHROME_RENK.muted, border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 });
 const btn: React.CSSProperties = { ...gozStil.btn, padding: '12px 18px', fontSize: 15 };
 const ghost: React.CSSProperties = { ...gozStil.ghost, borderRadius: 10, padding: '8px 12px', minHeight: 40 };
 
@@ -62,7 +62,7 @@ export default function GozKohortPaneli() {
     <div style={{ background: '#0C1830', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '20px 18px 24px' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#2DD4BF', marginBottom: 6 }}>Göz kohortu</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F9B8E', marginBottom: 6 }}>Göz kohortu</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: CHROME_RENK.ink }}>Takip bayrakları</div>
           <div style={{ ...muted, marginTop: 6, maxWidth: 560 }}>{v ? `${v.toplamHasta} göz kaydı olan hasta · ${v.satirlar.length} bayraklı · yalnız hekimin girdiği tarih ve görevler` : hata || 'Yükleniyor…'}</div>
         </div>
@@ -83,7 +83,7 @@ export default function GozKohortPaneli() {
         <button type="button" style={{ ...btn, opacity: secili.length && !gonderiyor ? 1 : 0.45, cursor: secili.length ? 'pointer' : 'not-allowed' }} disabled={!secili.length || gonderiyor} onClick={gonder}>{gonderiyor ? 'Gönderiliyor…' : `1-tap hatırlatma gönder (${secili.length})`}</button>
         <span style={{ ...muted, flex: '1 1 220px', fontSize: 13 }}>Mesaj tanı ve klinik değer içermez — kontrol / tetkik zamanı + acil durumda 112 yönlendirmesi.</span>
       </div>
-      {mesaj && <div style={{ fontSize: 15, color: '#5EEAD4', marginBottom: 12 }}>{mesaj}</div>}
+      {mesaj && <div style={{ fontSize: 15, color: '#0F9B8E', marginBottom: 12 }}>{mesaj}</div>}
       <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
         {gorunen.map((s, i) => (
           <div key={s.patientId} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', fontSize: 15, color: CHROME_RENK.ink, background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)', padding: '12px 14px', borderBottom: i === gorunen.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>

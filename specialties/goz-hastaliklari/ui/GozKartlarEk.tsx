@@ -253,7 +253,7 @@ export function BiyoKarti({ v, calistir, salt }: { v: GozEkVeri; calistir: Calis
       {son && <div style={{ ...metin, padding: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 8, marginBottom: 6 }}>{son.tarih}: {biyoMetni(son)}</div>}
       {!salt && <>
         <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12 }}>
-          <span /><b style={{ color: '#2DD4BF' }}>OD (sağ)</b><b style={{ color: '#60A5FA' }}>OS (sol)</b>
+          <span /><b style={{ color: '#0F9B8E' }}>OD (sağ)</b><b style={{ color: '#60A5FA' }}>OS (sol)</b>
           {BIYO_ALANLAR.map(([a, ad]) => <React.Fragment key={a}><span style={kucuk}>{ad}</span><input aria-label={`Sağ ${ad}`} value={al('sag', a)} onChange={(e) => setF({ ...f, [`sag_${a}`]: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} /><input aria-label={`Sol ${ad}`} value={al('sol', a)} onChange={(e) => setF({ ...f, [`sol_${a}`]: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} /></React.Fragment>)}
         </div>
         <div style={satir}>
@@ -359,7 +359,7 @@ export function RefraksiyonAlanlari({ deger, set }: { deger: Record<string, stri
       <span /><span style={kucuk}>Sferik (D)</span><span style={kucuk}>Silindir (D)</span><span style={kucuk}>Aks (°)</span>
       {(['sag', 'sol'] as const).map((t) => (
         <React.Fragment key={t}>
-          <b style={{ color: t === 'sag' ? '#2DD4BF' : '#60A5FA' }}>{t === 'sag' ? 'OD' : 'OS'}</b>
+          <b style={{ color: t === 'sag' ? '#0F9B8E' : '#60A5FA' }}>{t === 'sag' ? 'OD' : 'OS'}</b>
           {(['sph', 'cyl', 'aks'] as const).map((a) => <input key={a} aria-label={`${t === 'sag' ? 'Sağ' : 'Sol'} ${a}`} value={deger[`${t}_${a}`] || ''} onChange={(e) => set({ ...deger, [`${t}_${a}`]: e.target.value })} placeholder={a === 'aks' ? '0–180' : '−1,25'} inputMode="decimal" style={{ ...toolsInput, minWidth: 0 }} />)}
         </React.Fragment>
       ))}
@@ -374,7 +374,7 @@ export function GlokomOneriDugmeleri({ oneriler, etiketMetni, secili, sec, kayna
   return (
     <div style={{ marginTop: 8 }}>
       <div style={kucuk}>Aralık ön ayarı (EGS 5 — TOD birim metni doğrulanana dek) · <b style={{ color: '#FBBF24' }}>{etiketMetni}</b></div>
-      <div style={satir}>{oneriler.map((x) => <button key={x.kod} type="button" onClick={() => sec(x)} title={x.aralikMetni} style={{ ...ghost, color: secili === x.kod ? '#2DD4BF' : CHROME_RENK.muted, borderColor: secili === x.kod ? 'rgba(45,212,191,0.5)' : 'rgba(255,255,255,0.15)' }}>{x.ad}</button>)}</div>
+      <div style={satir}>{oneriler.map((x) => <button key={x.kod} type="button" onClick={() => sec(x)} title={x.aralikMetni} style={{ ...ghost, color: secili === x.kod ? '#0F9B8E' : CHROME_RENK.muted, borderColor: secili === x.kod ? 'rgba(45,212,191,0.5)' : 'rgba(255,255,255,0.15)' }}>{x.ad}</button>)}</div>
       {o && <div style={{ ...metin, marginTop: 4 }}>{o.ad}: {o.aralikMetni} — {o.not} <span style={{ ...kucuk, color: '#FBBF24' }}>Kaydet'e basınca hekim kilidi olur.</span>{kaynak([o.dipnot])}</div>}
     </div>
   );

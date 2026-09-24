@@ -105,7 +105,7 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
 
       {basamak && (
         <>
-          <div style={{ fontSize: 13, color: '#2DD4BF', fontWeight: 700 }}>{basamak.etiket} basamağı ({mevcutYasAy !== null ? `${Math.round(mevcutYasAy)} aylık` : ''})</div>
+          <div style={{ fontSize: 13, color: '#0F9B8E', fontWeight: 700 }}>{basamak.etiket} basamağı ({mevcutYasAy !== null ? `${Math.round(mevcutYasAy)} aylık` : ''})</div>
           <div style={kutu}>
             {(['iletisim', 'alici-dil', 'hareket-kaba', 'hareket-ince', 'iliski', 'oyun-kendine-bakim'] as const).map((alan) => {
               const maddeler = basamak.maddeler.filter((m) => m.alan === alan);

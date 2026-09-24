@@ -37,7 +37,7 @@ type Veri = {
   taslak?: JineOfisSoap
 }
 
-const etiket: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: '#2DD4BF', marginBottom: 8 }
+const etiket: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: '#0F9B8E', marginBottom: 8 }
 const kucuk: React.CSSProperties = { fontSize: 11.5, color: CHROME_RENK.muted }
 const bolum: React.CSSProperties = { ...kutu, marginBottom: 10 }
 const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }
@@ -250,7 +250,7 @@ export function BugunkuJineMuayene({
                 <div style={{ marginTop: 10 }}>
                   {v.due.map((d) => (
                     <div key={d.kod} style={{ fontSize: 12, color: CHROME_RENK.muted, padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <b style={{ color: d.durum === 'gecikti' ? '#F87171' : d.takvim === 'SB' ? '#93C5FD' : '#2DD4BF' }}>{d.takvim === 'her_ikisi' ? 'SB + ofis' : d.takvim === 'SB' ? 'SB/KETEM' : 'Ofis'}</b>
+                      <b style={{ color: d.durum === 'gecikti' ? '#F87171' : d.takvim === 'SB' ? '#93C5FD' : '#0F9B8E' }}>{d.takvim === 'her_ikisi' ? 'SB + ofis' : d.takvim === 'SB' ? 'SB/KETEM' : 'Ofis'}</b>
                       {' · '}{d.ad}{d.due ? ` · ${isoToTr(d.due)}` : ''} · {d.not}
                     </div>
                   ))}

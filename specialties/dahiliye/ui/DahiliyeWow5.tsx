@@ -15,9 +15,9 @@ const govde: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, margi
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const kirmiziBtn: React.CSSProperties = { ...btn, background: '#B91C1C' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#2DD4BF' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const Liste = ({ x, renk, on }: { x: string[]; renk?: string; on?: string }) => <>{x.map((y) => <div key={y} style={{ color: renk || CHROME_RENK.ink }}>{on || '•'} {y}</div>)}</>;
-const SIDDET_RENK: Record<string, string> = { durdur: '#F87171', gozden_gecir: '#FBBF24', baslat: '#2DD4BF' };
+const SIDDET_RENK: Record<string, string> = { durdur: '#F87171', gozden_gecir: '#FBBF24', baslat: '#0F9B8E' };
 const SIDDET_AD: Record<string, string> = { durdur: 'DURDURMA ÖNERİSİ', gozden_gecir: 'gözden geçir', baslat: 'eksik tedavi (START)' };
 
 /** Kilitli plan + "Nota ekle" — plan kilitlenmeden nota gitmez. */
@@ -113,7 +113,7 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
       <div style={satir}><button type="button" style={btn} onClick={() => calistir(govdeBody(), 'Sigara kartı güncellendi.')}>Değerlendir</button><button type="button" style={ghost} onClick={() => calistir({ ...govdeBody(), gorevAc: true }, 'İzlem görevleri açıldı.')}>Kaydet + izlem görevleri</button></div>
       <div style={govde}>
         <div>Paket-yıl: <b>{r.paketYil ?? '—'}</b> · HSI: <b>{r.hsi ?? '—'}</b>{r.bagimlilik ? ` (${r.bagimlilik} bağımlılık)` : ''}{r.evreAd ? ` · evre: ${r.evreAd}` : ''}</div>
-        <Liste x={r.yaklasim} /><Liste x={r.farmakoterapiSinifi} renk="#2DD4BF" on="℞ sınıf:" /><Liste x={r.uyarilar} renk="#FBBF24" on="⚠" />
+        <Liste x={r.yaklasim} /><Liste x={r.farmakoterapiSinifi} renk="#0F9B8E" on="℞ sınıf:" /><Liste x={r.uyarilar} renk="#FBBF24" on="⚠" />
         {r.gorevler.length > 0 && <div style={kucuk}>Görevler: {r.gorevler.map((x) => `${x.ad} (${x.due})`).join(' · ')}</div>}
         <Liste x={r.sevk} renk="#F87171" on="→" />
         {r.sevk.length > 0 && <button type="button" style={ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'sigara_birakma', not: r.sevk.join(' · ') }, 'Sigara bırakma polikliniği sevki kaydedildi.')}>Sigara bırakma polikliniği sevk</button>}
@@ -162,8 +162,8 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
     return (<div>
       <div style={etiket}>e-Nabız geçmiş PDF → Belgeler <span style={kucuk}>· yalnız hekimin yüklediği PDF (canlı e-Nabız çekimi yok) · aynı lab hattı: çıkar → tablo onayla → raporla → Onayla · kimlik kontrolü aynı</span></div>
       <div style={kucuk}>Hasta e-Nabız’dan “Tahlillerim” çıktısını PDF olarak verir. Her satır basılı tarihini taşır; tarihi okunamayan satır onaylanana kadar kartlara ve şeride girmez.</div>
-      <div style={satir}><input type="file" accept="application/pdf" onChange={(e) => { const x = e.target.files?.[0]; if (x) yukle(x); }} style={{ ...kucuk }} />{yukleme && <span style={{ ...kucuk, color: /Hata|amadı|kabul/.test(yukleme) ? '#F87171' : '#2DD4BF' }}>{yukleme}</span>}</div>
-      <div style={govde}>{w5.enabiz.paneller.map((p) => <div key={p.id}><a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab?geriTab=dahiliye`} style={{ color: '#2DD4BF' }}>e-Nabız geçmiş · {String(p.created_at).slice(0, 10)}</a> <span style={kucuk}>· durum {p.durum}{p.numune_tarihi ? ` · en yeni ${p.numune_tarihi}` : ''}{(p.kimlik_uyari as { eslesme?: boolean } | null)?.eslesme === false ? ' · ⚠ kimlik eşleşmiyor' : ''}</span></div>)}{!w5.enabiz.paneller.length && <span style={kucuk}>Henüz içe aktarma yok.</span>}</div>
+      <div style={satir}><input type="file" accept="application/pdf" onChange={(e) => { const x = e.target.files?.[0]; if (x) yukle(x); }} style={{ ...kucuk }} />{yukleme && <span style={{ ...kucuk, color: /Hata|amadı|kabul/.test(yukleme) ? '#F87171' : '#0F9B8E' }}>{yukleme}</span>}</div>
+      <div style={govde}>{w5.enabiz.paneller.map((p) => <div key={p.id}><a href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab?geriTab=dahiliye`} style={{ color: '#0F9B8E' }}>e-Nabız geçmiş · {String(p.created_at).slice(0, 10)}</a> <span style={kucuk}>· durum {p.durum}{p.numune_tarihi ? ` · en yeni ${p.numune_tarihi}` : ''}{(p.kimlik_uyari as { eslesme?: boolean } | null)?.eslesme === false ? ' · ⚠ kimlik eşleşmiyor' : ''}</span></div>)}{!w5.enabiz.paneller.length && <span style={kucuk}>Henüz içe aktarma yok.</span>}</div>
     </div>);
   }
 
@@ -178,7 +178,7 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
       <div style={govde}>
         <Liste x={r.kirmizi} renk="#F87171" on="⛔" />
         <div>Evre taslak: <b>{r.evre.replace(/_/g, ' ')}</b>{g.kilitTani ? ` · hekim tanısı: ${g.kilitTani}` : ''}{r.ultEndikasyon ? ` · ULT endikasyonu: ${r.ultEndikasyon}` : ''}{r.hedefUrik ? ` · hedef <${r.hedefUrik} mg/dL` : ''}</div>
-        <Liste x={r.atakSinif} renk="#2DD4BF" on="atak:" /><Liste x={r.ultNeden} on="·" /><Liste x={r.ultMerdiven} /><Liste x={r.profilaksi} /><Liste x={r.ilacUyari} renk="#FBBF24" on="⚠" />
+        <Liste x={r.atakSinif} renk="#0F9B8E" on="atak:" /><Liste x={r.ultNeden} on="·" /><Liste x={r.ultMerdiven} /><Liste x={r.profilaksi} /><Liste x={r.ilacUyari} renk="#FBBF24" on="⚠" />
         {r.diyet.length > 0 && <div style={{ marginTop: 4 }}><b>Diyet danışmanlığı</b><Liste x={r.diyet} /></div>}
         <Liste x={r.sevk} renk="#F87171" on="→" />
         {r.sevk.length > 0 && <div style={satir}>{r.sevk.some((x) => /[Rr]omatoloji|aspirasyon|Acil/.test(x)) && <button type="button" style={r.kirmizi.length ? kirmiziBtn : ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'romatoloji', not: r.sevk.join(' · ') }, 'Romatoloji sevki kaydedildi.')}>Romatoloji sevk</button>}{r.sevk.some((x) => /Üroloji/.test(x)) && <button type="button" style={ghost} onClick={() => calistir({ adim: 'sevk', hedef: 'uroloji', not: 'Ürat taşı öyküsü' }, 'Üroloji sevki kaydedildi.')}>Üroloji sevk</button>}</div>}
@@ -213,7 +213,7 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
         <div>Sınıf taslak: <b>{r.sinif ? r.sinif.replace('_', ' ') : 'T-skoru yok'}</b>{r.enDusukT != null ? ` · en düşük T ${String(r.enDusukT).replace('.', ',')} (${r.enDusukBolge ? o.bolgeAd[r.enDusukBolge] : ''})` : ''}{r.klinikOsteoporoz ? ' · kırılganlık kırığı → klinik osteoporoz' : ''}{o.kilitTani ? ` · hekim tanısı: ${o.kilitTani}` : ''}</div>
         {r.riskBayraklari.length > 0 && <div style={kucuk}>Risk bayrakları: {r.riskBayraklari.join(' · ')}</div>}
         <div style={kucuk}>{r.fraxNotu}</div>
-        <Liste x={r.tedaviSinifi} renk="#2DD4BF" on="℞ sınıf:" /><Liste x={r.plan} /><Liste x={r.uyarilar} renk="#FBBF24" on="⚠" />
+        <Liste x={r.tedaviSinifi} renk="#0F9B8E" on="℞ sınıf:" /><Liste x={r.plan} /><Liste x={r.uyarilar} renk="#FBBF24" on="⚠" />
         {r.sekonderTetkik.length > 0 && <div style={kucuk}>Sekonder neden tetkikleri: {r.sekonderTetkik.join(' · ')}</div>}
         <div>DXA aralığı taslak: {r.dxaAraligiAy ? `${r.dxaAraligiAy} ay` : '—'}{r.sonrakiDxa ? ` → ${r.sonrakiDxa}` : ''}</div>
         <Liste x={r.sevk} renk="#F87171" on="→" />

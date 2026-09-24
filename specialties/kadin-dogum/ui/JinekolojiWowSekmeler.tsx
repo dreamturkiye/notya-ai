@@ -44,7 +44,7 @@ const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted }
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }
 const chk = (label: string, v: boolean, on: (x: boolean) => void) => (
-  <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : CHROME_RENK.muted }}>
+  <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#0F9B8E' : CHROME_RENK.muted }}>
     <input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}
   </label>
 )
@@ -107,7 +107,7 @@ export function JinekolojiWowSekmeler({
         {plan?.satirlar?.map((r) => (
           <div key={r.baslik} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '8px 0', fontSize: 12, color: CHROME_RENK.ink }}>
             <b>{r.baslik}</b>
-            <div style={{ color: '#2DD4BF' }}>1. basamak: {r.birinciBasamak}</div>
+            <div style={{ color: '#0F9B8E' }}>1. basamak: {r.birinciBasamak}</div>
             {r.alternatif && <div style={kucuk}>Alt: {r.alternatif}</div>}
             <div style={{ color: '#FBBF24' }}>Partner: {r.partner}</div>
             {r.toc && <div style={kucuk}>TOC: {r.toc}</div>}
@@ -144,7 +144,7 @@ export function JinekolojiWowSekmeler({
         {acil?.oneri && <div style={{ fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 }}><b>{acil.oneri}</b></div>}
         {acil?.secenekler?.map((c) => <div key={c.ad} style={{ fontSize: 12, color: CHROME_RENK.ink, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}><b>{c.ad}</b> · {c.pencere} · {c.etkinlik}<div style={kucuk}>{c.not}</div></div>)}
         {acil?.sonrasi?.map((x) => <div key={x} style={kucuk}>→ {x}</div>)}
-        {acil?.mec && <div style={{ marginTop: 8, fontSize: 12, color: acil.mec.kategori >= 4 ? '#F87171' : acil.mec.kategori === 3 ? '#FBBF24' : '#2DD4BF' }}>MEC {acil.mec.yontem}: kat {acil.mec.kategori} — {acil.mec.not}{acil.mec.engeller?.map((e) => <div key={e}>✖ {e}</div>)}{acil.mec.dikkat?.map((e) => <div key={e}>⚠ {e}</div>)}</div>}
+        {acil?.mec && <div style={{ marginTop: 8, fontSize: 12, color: acil.mec.kategori >= 4 ? '#F87171' : acil.mec.kategori === 3 ? '#FBBF24' : '#0F9B8E' }}>MEC {acil.mec.yontem}: kat {acil.mec.kategori} — {acil.mec.not}{acil.mec.engeller?.map((e) => <div key={e}>✖ {e}</div>)}{acil.mec.dikkat?.map((e) => <div key={e}>⚠ {e}</div>)}</div>}
         {acil?.postpartum?.map((p) => <div key={p.yontem} style={{ fontSize: 12, color: CHROME_RENK.ink }}>{p.yontem}: {p.baslangic} <span style={kucuk}>{p.not}</span></div>)}
       </div>
     )
@@ -310,7 +310,7 @@ export function JinekolojiWowSekmeler({
           <button type="button" onClick={() => calistir({ adim: 'onkoloji_iota', kistSolid: b('sol'), asit: b('asit'), papiller: b('pap'), dopplerGuclu: b('dop'), menopoz: b('mp'), ca125: s('ca') }, 'IOTA triyaj.')} style={btn}>Onkoloji triyaj</button>
         </div>
         {u && <div style={{ fontSize: 12, color: CHROME_RENK.ink }}>Ürojine öncelik: {u.oncelik}{u.gorevler?.map((g) => <div key={g}>• {g}</div>)}<div style={kucuk}>{u.not}</div></div>}
-        {o && <div style={{ fontSize: 12, color: o.sevk ? '#F87171' : '#2DD4BF' }}>Over risk: {o.risk} {o.sevk ? '→ SEVK' : ''}{o.not?.map((n) => <div key={n} style={kucuk}>{n}</div>)}</div>}
+        {o && <div style={{ fontSize: 12, color: o.sevk ? '#F87171' : '#0F9B8E' }}>Over risk: {o.risk} {o.sevk ? '→ SEVK' : ''}{o.not?.map((n) => <div key={n} style={kucuk}>{n}</div>)}</div>}
       </div>
     )
   }
@@ -325,7 +325,7 @@ export function JinekolojiWowSekmeler({
           {kodlar.map((k) => chk(k, ((f.inf as string[]) || []).includes(k), (x) => set('inf', x ? [...((f.inf as string[]) || []), k] : ((f.inf as string[]) || []).filter((y) => y !== k))))}
         </div>
         <div style={satir}><button type="button" onClick={() => calistir({ adim: 'infertilite_sevk', tamamlanan: f.inf || [] }, 'Sevk paketi güncellendi.')} style={btn}>Sevk paketi</button></div>
-        {inf && <div style={{ fontSize: 12, color: inf.hazir ? '#2DD4BF' : '#FBBF24' }}>{inf.sevkMetni}{inf.eksik?.map((e) => <div key={e}>✖ {e}</div>)}</div>}
+        {inf && <div style={{ fontSize: 12, color: inf.hazir ? '#0F9B8E' : '#FBBF24' }}>{inf.sevkMetni}{inf.eksik?.map((e) => <div key={e}>✖ {e}</div>)}</div>}
       </div>
     )
   }

@@ -19,7 +19,7 @@ const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border:
 const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 };
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
-const durumRenk: Record<string, string> = { bekliyor: CHROME_RENK.muted, pencerede: '#FBBF24', kacirildi: '#F87171', tamam: '#2DD4BF', atlandi: '#94A3B8' };
+const durumRenk: Record<string, string> = { bekliyor: CHROME_RENK.muted, pencerede: '#FBBF24', kacirildi: '#F87171', tamam: '#0F9B8E', atlandi: '#94A3B8' };
 const SEKME = ['Takip', 'Onam', 'Travay', 'Doğum', 'Lohusa & Taburcu', 'Bebek'] as const;
 const TABURCU_MADDELERI: [string, string, boolean][] = [['ntp1', 'NTP-1 topuk kanı', true], ['hepb1', 'Hepatit B 1. doz', true], ['vitk', 'K vitamini', true], ['isitme', 'İşitme taraması', true], ['ntp2_randevu', 'NTP-2 randevusu (ASM 3–5 g)', false], ['pulseox', 'Pulse oksimetre', false], ['kirmizi_refleks', 'Kırmızı refleks', false], ['gkd', 'GKD → kalça US planı', false], ['dvit', 'D vitamini 3 damla', false], ['emzirme', 'Emzirme danışmanlığı', false]];
 
@@ -53,9 +53,9 @@ export function DogumSpine({ gebelikId, patientId }: { gebelikId: string; patien
   return (
     <div style={{ ...toolsCard, marginBottom: 12 }} data-chapter="kadin-dogum-spine">
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-        {SEKME.map((s) => <button key={s} type="button" onClick={() => setSekme(s)} style={{ ...ghost, background: sekme === s ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === s ? '#2DD4BF' : CHROME_RENK.muted, borderRadius: 999 }}>{s}{s === 'Takip' && v.gorevler.some((g) => g.durum === 'kacirildi') ? ' ⚠' : ''}{s === 'Bebek' && v.bebekler.length ? ` (${v.bebekler.length})` : ''}</button>)}
+        {SEKME.map((s) => <button key={s} type="button" onClick={() => setSekme(s)} style={{ ...ghost, background: sekme === s ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === s ? '#0F9B8E' : CHROME_RENK.muted, borderRadius: 999 }}>{s}{s === 'Takip' && v.gorevler.some((g) => g.durum === 'kacirildi') ? ' ⚠' : ''}{s === 'Bebek' && v.bebekler.length ? ` (${v.bebekler.length})` : ''}</button>)}
       </div>
-      {mesaj && <div style={{ fontSize: 12, color: /amadı|gerek|geçersiz|Hata/.test(mesaj) ? '#F87171' : '#2DD4BF', marginBottom: 8 }}>{mesaj}</div>}
+      {mesaj && <div style={{ fontSize: 12, color: /amadı|gerek|geçersiz|Hata/.test(mesaj) ? '#F87171' : '#0F9B8E', marginBottom: 8 }}>{mesaj}</div>}
 
       {sekme === 'Takip' && (
         <div>
@@ -190,12 +190,12 @@ export function DogumSpine({ gebelikId, patientId }: { gebelikId: string; patien
               <div style={etiket}>Lohusa izlemleri (anne)</div>
               {v.kutuphane.lohusa.map((z) => { const yapilan = d.lohusa?.ziyaretler?.find((x) => x.kod === z.kod); return (
                 <div key={z.kod} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0', fontSize: 12, color: CHROME_RENK.ink }}>
-                  <span style={{ minWidth: 20, color: yapilan ? '#2DD4BF' : CHROME_RENK.muted }}>{yapilan ? '✓' : '○'}</span><span style={{ flex: 1 }}>{z.ad}{yapilan ? <span style={kucuk}> · {new Date(yapilan.tarih).toLocaleDateString('tr-TR')}{yapilan.not ? ` · ${yapilan.not}` : ''}</span> : null}</span>
+                  <span style={{ minWidth: 20, color: yapilan ? '#0F9B8E' : CHROME_RENK.muted }}>{yapilan ? '✓' : '○'}</span><span style={{ flex: 1 }}>{z.ad}{yapilan ? <span style={kucuk}> · {new Date(yapilan.tarih).toLocaleDateString('tr-TR')}{yapilan.not ? ` · ${yapilan.not}` : ''}</span> : null}</span>
                   {!yapilan && <><input value={f('lz_' + z.kod)} onChange={(e) => set('lz_' + z.kod, e.target.value)} placeholder="TA, kanama, EPDS, emzirme…" style={{ ...toolsInput, width: 220 }} /><button type="button" onClick={() => calistir({ adim: 'lohusa_ziyaret', dogumId: d.id, kod: z.kod, not: f('lz_' + z.kod) })} style={{ ...ghost, padding: '3px 8px', fontSize: 11 }}>Kaydet</button></>}
                 </div>); })}
               {v.bebekler.filter((b) => b.canli).map((b) => { const tc = v.taburcu.find((t) => t.bebek_id === b.id); const m = { ...(tc?.maddeler || {}), ...((form['tab_' + b.id] as Record<string, boolean>) || {}) }; const ist = (form['ist_' + b.id] as { tur: string; aciklama: string } | undefined) || tc?.istisna || null; return (
                 <div key={b.id} style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8 }}>
-                  <div style={etiket}>Taburcu kontrol listesi — Bebek {b.sira} {tc?.kapatildi ? <span style={{ color: '#2DD4BF' }}>· kapatıldı</span> : null}</div>
+                  <div style={etiket}>Taburcu kontrol listesi — Bebek {b.sira} {tc?.kapatildi ? <span style={{ color: '#0F9B8E' }}>· kapatıldı</span> : null}</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{TABURCU_MADDELERI.map(([k, ad, zorunlu]) => <label key={k} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', color: zorunlu ? CHROME_RENK.ink : CHROME_RENK.muted }}><input type="checkbox" disabled={tc?.kapatildi} checked={!!m[k]} onChange={(e) => set('tab_' + b.id, { ...m, [k]: e.target.checked })} />{ad}{zorunlu ? ' *' : ''}</label>)}</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
                     <select value={ist?.tur || ''} disabled={tc?.kapatildi} onChange={(e) => set('ist_' + b.id, e.target.value ? { tur: e.target.value, aciklama: ist?.aciklama || '' } : null)} style={{ ...toolsInput, width: 'auto' }}><option value="">istisna yok</option><option value="red" style={{ color: '#000' }}>Aile reddi</option><option value="erken_taburcu" style={{ color: '#000' }}>Erken taburcu</option><option value="sevk" style={{ color: '#000' }}>Sevk</option></select>
@@ -214,8 +214,8 @@ export function DogumSpine({ gebelikId, patientId }: { gebelikId: string; patien
           {!v.bebekler.length && <div style={kucuk}>Canlı doğum kaydedildiğinde bebek kartı burada oluşur; sonrası pediatriye (Ayşe) aittir.</div>}
           {v.bebekler.map((b) => (
             <div key={b.id} style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '8px 0' }}>
-              <div style={etiket}>Bebek {b.sira} <span style={kucuk}>· {b.cinsiyet === 'E' ? 'erkek' : b.cinsiyet === 'K' ? 'kız' : '—'} · {b.kilo_gram ?? '—'} g · Apgar {b.apgar1 ?? '—'}/{b.apgar5 ?? '—'} · {b.gebelik_haftasi ?? '—'} hf {b.bebek_patient_id && <a href={`/dashboard/doktor/hastalar/${b.bebek_patient_id}`} style={{ color: '#2DD4BF' }}>· dosyayı aç →</a>}</span></div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{b.gorevler.map((g) => <label key={g.kod} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: g.tamam ? '#2DD4BF' : CHROME_RENK.ink }}><input type="checkbox" checked={!!g.tamam} onChange={(e) => calistir({ adim: 'bebek_tarama', bebekId: b.id, alan: g.kod, deger: e.target.checked })} />{g.ad} <span style={kucuk}>({g.sahip})</span></label>)}</div>
+              <div style={etiket}>Bebek {b.sira} <span style={kucuk}>· {b.cinsiyet === 'E' ? 'erkek' : b.cinsiyet === 'K' ? 'kız' : '—'} · {b.kilo_gram ?? '—'} g · Apgar {b.apgar1 ?? '—'}/{b.apgar5 ?? '—'} · {b.gebelik_haftasi ?? '—'} hf {b.bebek_patient_id && <a href={`/dashboard/doktor/hastalar/${b.bebek_patient_id}`} style={{ color: '#0F9B8E' }}>· dosyayı aç →</a>}</span></div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{b.gorevler.map((g) => <label key={g.kod} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: g.tamam ? '#0F9B8E' : CHROME_RENK.ink }}><input type="checkbox" checked={!!g.tamam} onChange={(e) => calistir({ adim: 'bebek_tarama', bebekId: b.id, alan: g.kod, deger: e.target.checked })} />{g.ad} <span style={kucuk}>({g.sahip})</span></label>)}</div>
               {b.komplikasyonlar.length > 0 && <div style={{ fontSize: 12, color: '#F87171', marginTop: 4 }}>Komplikasyon: {b.komplikasyonlar.join(', ')}</div>}
               {b.cinsiyet === 'E' && <div style={{ ...kucuk, marginTop: 4 }}>Erkek bebek: {ERKEK_BEBEK_EK.join(' · ')} — ayrı lab paneli yoktur.</div>}
             </div>

@@ -229,7 +229,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
         <div style={{ marginTop: 10 }}>
           <div style={{ ...pediStil.satir, marginTop: 0 }}>
             {SONUC_SECENEK[tur].map(([s, ad]) => (
-              <button key={s} type="button" aria-pressed={secim === s} onClick={() => setSecim(secim === s ? null : s)} style={{ ...ghost, ...(secim === s ? { background: 'rgba(15,155,142,0.22)', color: '#5EEAD4', borderColor: 'rgba(45,212,191,0.5)' } : {}) }}>{ad}</button>
+              <button key={s} type="button" aria-pressed={secim === s} onClick={() => setSecim(secim === s ? null : s)} style={{ ...ghost, ...(secim === s ? { background: 'rgba(15,155,142,0.22)', color: '#0F9B8E', borderColor: 'rgba(45,212,191,0.5)' } : {}) }}>{ad}</button>
             ))}
           </div>
           {secim && (
@@ -249,7 +249,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
               <div style={{ ...kucuk, marginTop: 6 }}>Nota eklenecek satır: “{`${k.ad.replace(/\s*\(.*\)$/, '')}: ${SONUC_AD[secim]}`}…” — siz basmadan yazılmaz.</div>
             </div>
           )}
-          {mesaj && <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}><span style={{ fontSize: 13, color: /eklenemedi|edilemedi|kontrol/.test(mesaj) ? '#7A5B1E' : '#5EEAD4' }}>{mesaj}</span><MuayeneFormunaDon notId={notId} /></div>}
+          {mesaj && <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}><span style={{ fontSize: 13, color: /eklenemedi|edilemedi|kontrol/.test(mesaj) ? '#7A5B1E' : '#0F9B8E' }}>{mesaj}</span><MuayeneFormunaDon notId={notId} /></div>}
         </div>
       )}
 

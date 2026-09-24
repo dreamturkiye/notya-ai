@@ -66,7 +66,7 @@ export default function DoktorAvatar({
         justifyContent: 'center',
         fontSize: Math.round(boyut * 0.36),
         fontWeight: 800,
-        color: '#2DD4BF',
+        color: '#0F9B8E',
         letterSpacing: 0.5,
         lineHeight: 1,
       }}

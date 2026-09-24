@@ -186,7 +186,7 @@ export default function Sablonlarim() {
             {kaydediyor ? 'Kaydediliyor…' : duzenlenen ? 'Değişiklikleri kaydet' : 'Şablonu kaydet'}
           </button>
           {duzenlenen && <button type="button" onClick={() => { setDuzenlenen(null); setTaslak(BOS); }} style={ghost}>Vazgeç</button>}
-          {mesaj && <span style={{ fontSize: 13, color: /edilemedi|kontrol/.test(mesaj) ? '#7A5B1E' : '#5EEAD4' }} aria-live="polite">{mesaj}</span>}
+          {mesaj && <span style={{ fontSize: 13, color: /edilemedi|kontrol/.test(mesaj) ? '#7A5B1E' : '#0F9B8E' }} aria-live="polite">{mesaj}</span>}
         </div>
         <Katlanir baslik="Şablonlar kime ait, ne içerir">
           <div style={kucuk}>Şablonlar yalnız size aittir; başka hekim göremez. İçerik tamamen sizin yazdığınız metindir — Notya hazır şablon, ilaç ya da doz önermez. Şablondan doldurulan her alan vizit sırasında serbestçe değiştirilebilir.</div>

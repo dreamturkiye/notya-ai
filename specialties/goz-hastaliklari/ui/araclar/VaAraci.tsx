@@ -103,7 +103,7 @@ export default function VaAraci() {
         <div style={kaydir}>
           <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 8, alignItems: 'center', minWidth: 280 }}>
             <span />
-            <b style={{ color: '#2DD4BF', fontSize: 13 }}>OD (sağ)</b>
+            <b style={{ color: '#0F9B8E', fontSize: 13 }}>OD (sağ)</b>
             <b style={{ color: '#60A5FA', fontSize: 13 }}>OS (sol)</b>
             <span style={kucuk}>Önceki vizit</span>{alan('odOnce', '0,5', 'Sağ önceki VA')}{alan('osOnce', '0,6', 'Sol önceki VA')}
             <span style={kucuk}>Bugün</span>{alan('odSimdi', '0,8', 'Sağ bugünkü VA')}{alan('osSimdi', '6/12', 'Sol bugünkü VA')}

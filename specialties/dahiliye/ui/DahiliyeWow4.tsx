@@ -51,7 +51,7 @@ const kohortKutu: React.CSSProperties = {
 const kohortMuted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 }
 const kohortChip = (on: boolean): React.CSSProperties => ({
   background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)',
-  color: on ? '#5EEAD4' : CHROME_RENK.muted,
+  color: on ? '#0F9B8E' : CHROME_RENK.muted,
   border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`,
   borderRadius: 999,
   padding: '10px 16px',
@@ -93,7 +93,7 @@ export function KohortPanel() {
     <div style={kohortKutu}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#2DD4BF', marginBottom: 6 }}>Kronik kohort</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F9B8E', marginBottom: 6 }}>Kronik kohort</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: CHROME_RENK.ink, letterSpacing: -0.3 }}>Takip bayrakları</div>
           <div style={{ ...kohortMuted, marginTop: 6, maxWidth: 520 }}>
             {v
@@ -103,7 +103,7 @@ export function KohortPanel() {
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <div style={{ background: 'rgba(15,155,142,0.12)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#5EEAD4', fontVariantNumeric: 'tabular-nums' }}>{v?.toplamHasta ?? '—'}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#0F9B8E', fontVariantNumeric: 'tabular-nums' }}>{v?.toplamHasta ?? '—'}</div>
             <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>hasta</div>
           </div>
           <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.28)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}>
@@ -144,7 +144,7 @@ export function KohortPanel() {
         <span style={{ ...kohortMuted, flex: '1 1 220px' }}>Mesaj klinik değer içermez — kontrol / tahlil / aşı-tarama hatırlatması.</span>
       </div>
 
-      {mesaj && <div style={{ fontSize: 15, color: '#5EEAD4', marginBottom: 14, lineHeight: 1.45 }}>{mesaj}</div>}
+      {mesaj && <div style={{ fontSize: 15, color: '#0F9B8E', marginBottom: 14, lineHeight: 1.45 }}>{mesaj}</div>}
 
       <div style={{ display: 'grid', gap: 0, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
         {gorunen.map((s, i) => (

@@ -14,7 +14,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const BAYRAKLAR = Object.keys(PEDI_BAYRAK_AD) as PediKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
-const chip = (on: boolean): React.CSSProperties => ({ background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)', color: on ? '#5EEAD4' : CHROME_RENK.muted, border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 });
+const chip = (on: boolean): React.CSSProperties => ({ background: on ? 'rgba(15,155,142,0.22)' : 'rgba(255,255,255,0.04)', color: on ? '#0F9B8E' : CHROME_RENK.muted, border: `1px solid ${on ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 });
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#041016', border: 'none', borderRadius: 12, padding: '12px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 44 };
 const ghost: React.CSSProperties = { background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 44, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' };
 
@@ -68,12 +68,12 @@ export default function PediKohortPaneli() {
     <div style={{ background: '#0C1830', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '20px 18px 24px', minWidth: 0 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#2DD4BF', marginBottom: 6 }}>Pediatri kohortu</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F9B8E', marginBottom: 6 }}>Pediatri kohortu</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: CHROME_RENK.ink }}>Takip bayrakları</div>
           <div style={{ ...muted, marginTop: 6, maxWidth: 600 }}>{v ? `${v.toplamCocuk} çocuk (18 yaş altı) · ${v.satirlar.length} bayraklı · yalnız sizin kayıtlarınız` : hata || 'Yükleniyor…'}</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <div style={{ background: 'rgba(15,155,142,0.12)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}><div style={{ fontSize: 22, fontWeight: 800, color: '#5EEAD4' }}>{v?.toplamCocuk ?? '—'}</div><div style={{ fontSize: 12, color: CHROME_RENK.muted }}>çocuk</div></div>
+          <div style={{ background: 'rgba(15,155,142,0.12)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}><div style={{ fontSize: 22, fontWeight: 800, color: '#0F9B8E' }}>{v?.toplamCocuk ?? '—'}</div><div style={{ fontSize: 12, color: CHROME_RENK.muted }}>çocuk</div></div>
           <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.28)', borderRadius: 14, padding: '12px 16px', minWidth: 88, textAlign: 'center' }}><div style={{ fontSize: 22, fontWeight: 800, color: CHROME_RENK.warn }}>{v ? v.satirlar.length : '—'}</div><div style={{ fontSize: 12, color: CHROME_RENK.muted }}>bayraklı</div></div>
         </div>
       </div>
@@ -91,7 +91,7 @@ export default function PediKohortPaneli() {
         <span style={{ ...muted, flex: '1 1 220px', fontSize: 13 }}>Veliye giden mesaj tanı, ölçüm ya da ilaç adı içermez — yalnız kontrol zamanı ve acil durumda 112.</span>
       </div>
       {onizleme && <div style={{ whiteSpace: 'pre-wrap', fontSize: 14, color: CHROME_RENK.muted, background: 'rgba(0,0,0,0.25)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 12, padding: 12, marginBottom: 14 }}>{pediHatirlatmaMesaji(seciliBayraklar.length ? seciliBayraklar : ['asi_gecikti']).metin}</div>}
-      {mesaj && <div style={{ fontSize: 15, color: '#5EEAD4', marginBottom: 12 }}>{mesaj}</div>}
+      {mesaj && <div style={{ fontSize: 15, color: '#0F9B8E', marginBottom: 12 }}>{mesaj}</div>}
       <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
         {gorunen.map((s, i) => (
           <div key={s.patientId} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', fontSize: 15, color: CHROME_RENK.ink, background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)', padding: '12px 14px', borderBottom: i === gorunen.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>

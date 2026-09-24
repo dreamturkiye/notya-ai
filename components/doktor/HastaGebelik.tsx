@@ -603,12 +603,12 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             <div style={kutu}>
               <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 4 }}>Doğum kaydı — Anne | Bebek</div>
               <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginBottom: 10 }}>Canlı doğum bebek kartını zorunlu açar (anneye bağlı). {KADIN_HASTALIKLARI_DOGUM_ETIKETI} ilk örnek ve taburcu paketini; Ayşe sonrası izlemi sahiplenir.</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 6 }}>Anne</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 }}>Anne</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('dogumTarihi', 'Doğum tarihi', d, setD, 'date')}
                 <label style={{ display: 'block' }}><span style={etiketS}>Doğum şekli</span><select value={d.dogumSekli || 'NSD'} onChange={(e) => setD({ ...d, dogumSekli: e.target.value })} style={giris}><option value="NSD">NSD (normal)</option><option value="Sezaryen">C/S (sezaryen)</option></select></label>
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', margin: '14px 0 6px' }}>Bebek</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', margin: '14px 0 6px' }}>Bebek</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('apgar1', 'APGAR (1 dk)', d, setD, 'number')}{alan('apgar5', 'APGAR (5 dk)', d, setD, 'number')}
                 {alan('yenidoganAdi', 'Bebeğin adı (isterseniz sonra girin)', d, setD)}
@@ -694,7 +694,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                           if (!b) return i.usg ? Object.entries(i.usg).map(([k, v]) => `${k.toUpperCase()} ${v}`).join(' · ') : '—';
                           const r = (ad: string, x: Bio | null) => x ? <span key={ad} style={{ color: x.durum === 'normal' ? CHROME_RENK.muted : '#F59E0B', marginRight: 8 }}>{ad} {x.deger} <b>p{x.persentil}</b></span> : null;
                           return <>{r('HC', b.hc)}{r('BPD', b.bpd)}{r('AC', b.ac)}{r('FL', b.fl)}{b.efw ? (
-                            <span style={{ color: '#2DD4BF' }} title={b.efwKaynak === 'hadlock' ? 'Hadlock 1985 (HC-AC-FL)' : undefined}>
+                            <span style={{ color: '#0F9B8E' }} title={b.efwKaynak === 'hadlock' ? 'Hadlock 1985 (HC-AC-FL)' : undefined}>
                               EFW {b.efw} g{b.efwKaynak === 'hadlock' ? ` (Hadlock${b.efwGirilen && b.efwGirilen !== b.efw ? `; girilen ${b.efwGirilen} g` : ''})` : ''}
                             </span>
                           ) : null}</>;

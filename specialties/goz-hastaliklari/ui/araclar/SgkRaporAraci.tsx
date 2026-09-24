@@ -80,8 +80,8 @@ export default function SgkRaporAraci() {
       <div style={kutu}>
         <div style={etiket}>Hasta (isteğe bağlı)</div>
         <GozHastaSecici secili={hasta.id} sec={hastadanDoldur} />
-        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#2DD4BF' }}>{mesaj}</div>}
-        {hasta.id && <div style={{ marginTop: 6 }}><a href={hastaDosyaHref(hasta.id, 'goz')} style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 700 }}>Hastada aç (Göz › SGK rapor) — taslağı kaydedip kilitleyin →</a></div>}
+        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#0F9B8E' }}>{mesaj}</div>}
+        {hasta.id && <div style={{ marginTop: 6 }}><a href={hastaDosyaHref(hasta.id, 'goz')} style={{ color: '#0F9B8E', fontSize: 13, fontWeight: 700 }}>Hastada aç (Göz › SGK rapor) — taslağı kaydedip kilitleyin →</a></div>}
       </div>
 
       <div style={kutu}>
@@ -130,8 +130,8 @@ export default function SgkRaporAraci() {
         <pre style={{ ...metin, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: '6px 0' }}>{sonuc.draft.mevcutDurum || ''}</pre>
         {!!sonuc.draft.zorunluTetkikler?.length && <div style={kucuk}>Tetkikler: {sonuc.draft.zorunluTetkikler.join(' · ')}</div>}
         <div style={{ ...metin, marginTop: 4 }}>{sonuc.draft.hekim_degerlendirmesi}</div>
-        <div style={{ marginTop: 8 }}>{sonuc.sutKontrol.map((x) => <div key={x.madde} style={{ ...metin, color: x.tamam === true ? '#2DD4BF' : x.tamam === false ? '#F87171' : CHROME_RENK.muted }}>{x.tamam === true ? '✓' : x.tamam === false ? '✕' : '?'} {x.madde}</div>)}</div>
-        {sonuc.eksikler.length > 0 ? <div style={{ marginTop: 8 }}>{sonuc.eksikler.map((x) => <div key={x} style={{ ...metin, color: '#FBBF24' }}>Eksik: {x}</div>)}</div> : <div style={{ ...metin, color: '#2DD4BF', marginTop: 8 }}>Zorunlu maddelerde eksik yok.</div>}
+        <div style={{ marginTop: 8 }}>{sonuc.sutKontrol.map((x) => <div key={x.madde} style={{ ...metin, color: x.tamam === true ? '#0F9B8E' : x.tamam === false ? '#F87171' : CHROME_RENK.muted }}>{x.tamam === true ? '✓' : x.tamam === false ? '✕' : '?'} {x.madde}</div>)}</div>
+        {sonuc.eksikler.length > 0 ? <div style={{ marginTop: 8 }}>{sonuc.eksikler.map((x) => <div key={x} style={{ ...metin, color: '#FBBF24' }}>Eksik: {x}</div>)}</div> : <div style={{ ...metin, color: '#0F9B8E', marginTop: 8 }}>Zorunlu maddelerde eksik yok.</div>}
         <div style={satir}>
           <KopyalaButonu metin={gozSgkMetni(sonuc)} etiket="Taslağı kopyala" />
           <span style={{ ...ghost, cursor: 'default' }} title="Notya Medula'ya canlı gönderim yapmaz">Medula'da hekim e-imza ile girilir</span>

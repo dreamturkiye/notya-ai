@@ -132,9 +132,9 @@ export default function CihazPaylasPage() {
         <button type="button" onClick={yukle} disabled={!dosya || !hastaId || durum === 'yukluyor' || durum === 'tamam'} style={{ width: '100%', background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: !dosya || !hastaId || durum !== 'hazir' ? 0.55 : 1 }}>
           {durum === 'yukluyor' ? 'Yükleniyor…' : durum === 'tamam' ? 'Eklendi ✓' : 'Hasta dosyasına ekle'}
         </button>
-        {mesaj && <div style={{ marginTop: 8, fontSize: 13, color: durum === 'hata' ? '#F87171' : '#2DD4BF' }}>{mesaj}</div>}
+        {mesaj && <div style={{ marginTop: 8, fontSize: 13, color: durum === 'hata' ? '#F87171' : '#0F9B8E' }}>{mesaj}</div>}
         {durum === 'tamam' && hastaId && (
-          <div style={{ marginTop: 10 }}><a href={`/dashboard/doktor/hastalar/${hastaId}`} style={{ color: '#2DD4BF', fontSize: 13 }}>Hasta dosyasını aç →</a></div>
+          <div style={{ marginTop: 10 }}><a href={`/dashboard/doktor/hastalar/${hastaId}`} style={{ color: '#0F9B8E', fontSize: 13 }}>Hasta dosyasını aç →</a></div>
         )}
       </div>
     </div>

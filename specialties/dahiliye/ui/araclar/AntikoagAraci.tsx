@@ -144,7 +144,7 @@ export default function AntikoagAraci() {
         {chaSatirlari.map(([ad, p]) => (
           <div key={ad} style={{ ...metin, marginTop: 4, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ color: p ? CHROME_RENK.ink : CHROME_RENK.muted }}>{ad}</span>
-            <span style={{ fontWeight: 700, color: p ? '#5EEAD4' : CHROME_RENK.muted }}>{p}</span>
+            <span style={{ fontWeight: 700, color: p ? '#0F9B8E' : CHROME_RENK.muted }}>{p}</span>
           </div>
         ))}
         <div style={{ ...kucuk, marginTop: 10 }}>Toplam yalnız işaretlenen bileşenlerden hesaplanır; antikoagülan endikasyonu hekim kararıdır.</div>

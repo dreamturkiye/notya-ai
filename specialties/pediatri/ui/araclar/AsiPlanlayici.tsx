@@ -275,7 +275,7 @@ export default function AsiPlanlayici() {
             </div>
           )}
           {yerelSayisi > 0 && <div aria-hidden style={{ height: 150 }} />}
-          {kayitMesaj && <div style={{ ...(kayitMesaj.includes('kaydedilemedi') ? kirmizi : { ...uyari, color: '#5EEAD4', borderColor: 'rgba(45,212,191,0.4)', background: 'rgba(45,212,191,0.08)' }), marginBottom: 14 }}>{kayitMesaj}</div>}
+          {kayitMesaj && <div style={{ ...(kayitMesaj.includes('kaydedilemedi') ? kirmizi : { ...uyari, color: '#0F9B8E', borderColor: 'rgba(45,212,191,0.4)', background: 'rgba(45,212,191,0.08)' }), marginBottom: 14 }}>{kayitMesaj}</div>}
 
           <div style={kutu}>
             <Katlanir baslik="Minimum yaş ve aralık ön ayarları" rozet={Object.keys(onAyar).length ? 'hekim değiştirdi' : undefined}>
@@ -329,7 +329,7 @@ function DozSatiri({ d, isaret, isaretle, geriAl, ilkBekleyen, bugun, vurgu }: {
         </span>
       )}
       {d.durum !== 'yapildi' && d.durum !== 'yas_disi' && ilkBekleyen && (d.plan ? d.plan <= bugun : false) && (
-        <button type="button" onClick={() => isaretle(d)} style={{ ...ghost, borderColor: 'rgba(45,212,191,0.45)', color: '#5EEAD4' }}>Yapıldı ✓</button>
+        <button type="button" onClick={() => isaretle(d)} style={{ ...ghost, borderColor: 'rgba(45,212,191,0.45)', color: '#0F9B8E' }}>Yapıldı ✓</button>
       )}
       {d.durum !== 'yapildi' && d.durum !== 'yas_disi' && ilkBekleyen && !(d.plan ? d.plan <= bugun : false) && d.onerilen <= bugun && (
         <button type="button" onClick={() => isaretle(d, d.onerilen <= bugun ? d.onerilen : bugun, 'beyan')} style={ghost} title="Başka yerde yapılmışsa (aşı kartı) beyan olarak işaretleyin; tarihi sonra düzeltebilirsiniz">Yapılmış (beyan)</button>
@@ -358,7 +358,7 @@ function TakvimListesi({ plan, gorunum, isaretler, isaretle, geriAl, bugun }: {
         return (
           <div key={g.baslik}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: hepsi ? '#5EEAD4' : CHROME_RENK.muted }}>{hepsi ? '✓ ' : ''}{g.baslik}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: hepsi ? '#0F9B8E' : CHROME_RENK.muted }}>{hepsi ? '✓ ' : ''}{g.baslik}</span>
               {g.alt && <span style={kucuk}>{g.alt}</span>}
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
@@ -387,7 +387,7 @@ function OzelAsilar({ ozel }: { ozel: OzelPlan[] }) {
             </div>
             <div style={{ ...kucuk, marginTop: 4 }}>{o.onerilenDonem}</div>
             <div style={{ ...kucuk, marginTop: 2 }}>{o.not}</div>
-            {o.kayitlar.length > 0 && <div style={{ ...kucuk, marginTop: 4, color: '#5EEAD4' }}>{o.kayitlar.map((k) => (k.tarih ? tarihGoster(k.tarih) : 'tarih yok')).join(' · ')}</div>}
+            {o.kayitlar.length > 0 && <div style={{ ...kucuk, marginTop: 4, color: '#0F9B8E' }}>{o.kayitlar.map((k) => (k.tarih ? tarihGoster(k.tarih) : 'tarih yok')).join(' · ')}</div>}
           </div>
         ))}
       </div>

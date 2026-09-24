@@ -35,7 +35,7 @@ function yasMetniUzun(ay: number): string {
   return kalanAy > 0 ? `${yil} yaş ${kalanAy} aylıkken` : `${yil} yaşındayken`;
 }
 
-const RENK_50 = '#2DD4BF';
+const RENK_50 = '#0F9B8E';
 const RENK_BAND_DIS = 'rgba(148,163,184,0.55)'; // 3/97
 const RENK_BAND_ORTA = 'rgba(94,234,212,0.55)'; // 10/90
 const RENK_BAND_IC = 'rgba(45,212,191,0.75)';   // 25/75
@@ -239,7 +239,7 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
           >
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>{PARAM_BASLIK[anahtar]} <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>({pVeri.birim})</span></span>
-              <span style={{ fontSize: 11, color: '#2DD4BF' }}>Büyüt ⤢</span>
+              <span style={{ fontSize: 11, color: '#0F9B8E' }}>Büyüt ⤢</span>
             </div>
             <Grafik veri={pVeri} birim={pVeri.birim} />
           </button>

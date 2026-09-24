@@ -50,7 +50,7 @@ type Veri = {
 
 const URG: Record<string, string> = { ok: '#22C55E', amber: '#F59E0B', red: '#EF4444' }
 const FLAG: Record<string, string> = {
-  normal: '#2DD4BF',
+  normal: '#0F9B8E',
   sinir: '#FBBF24',
   pozitif_suphe: '#F87171',
   yetersiz_ornek: '#FB923C',
@@ -115,7 +115,7 @@ export default function HastaBebekKarti({ patientId }: { patientId: string }) {
       <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 12 }}>
         Ayşe / pediatri sahiplenir. {KADIN_HASTALIKLARI_DOGUM_ETIKETI} doğum + ilk örnek + lohusayı tutar. Notya e-Nabız veya ulusal tarama kaydı değildir.
         {veri.anne?.patientId && (
-          <> · <Link href={`/dashboard/doktor/hastalar/${veri.anne.patientId}?tab=gebelik`} style={{ color: '#2DD4BF' }}>Anne dosyası</Link></>
+          <> · <Link href={`/dashboard/doktor/hastalar/${veri.anne.patientId}?tab=gebelik`} style={{ color: '#0F9B8E' }}>Anne dosyası</Link></>
         )}
       </div>
       {veri.dogum && (
@@ -161,7 +161,7 @@ export default function HastaBebekKarti({ patientId }: { patientId: string }) {
         {(veri.ntp || []).map((p) => (
           <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13, color: CHROME_RENK.muted, padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <span>NTP-{p.sample_no || '?'} · {p.durum} · {p.numune_tarihi ? new Date(p.numune_tarihi).toLocaleDateString('tr-TR') : '—'}</span>
-            <Link href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab`} style={{ color: '#2DD4BF', fontWeight: 700 }}>Asistana raporla →</Link>
+            <Link href={`/dashboard/doktor/hastalar/${patientId}/belgeler/${p.belge_id}/lab`} style={{ color: '#0F9B8E', fontWeight: 700 }}>Asistana raporla →</Link>
           </div>
         ))}
       </div>
@@ -192,7 +192,7 @@ export default function HastaBebekKarti({ patientId }: { patientId: string }) {
           NTP-2 aile SMS metnini kopyala
         </button>
       )}
-      {mesaj && <div style={{ marginTop: 8, color: '#2DD4BF', fontSize: 12 }}>{mesaj}</div>}
+      {mesaj && <div style={{ marginTop: 8, color: '#0F9B8E', fontSize: 12 }}>{mesaj}</div>}
       {hata && <div style={{ marginTop: 8, color: '#F87171', fontSize: 12 }}>{hata}</div>}
     </div>
   )

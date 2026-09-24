@@ -16,7 +16,7 @@ const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: C
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 };
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 
 export function Kaynak({ dipnotlar, acik, refler }: { dipnotlar?: Dipnot[] | null; acik: boolean; refler: Record<string, string> }) {
   if (!acik || !dipnotlar?.length) return null;
@@ -60,7 +60,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
           {son.postmenopoz && !son.pmp_kapatildi && <button type="button" onClick={() => calistir({ adim: 'aub_guncelle', aubId: son.id, ornekleme: s('orn_tur') ? { tur: s('orn_tur'), sonuc: s('orn_sonuc') } : undefined, pmpKapat: true, sitolojiVar: b('sit') }, 'PMP yolu kapatıldı (TVUS + örnekleme tamam).')} style={btn}>PMP yolunu kapat</button>}
           {son.postmenopoz && chk('yalnız sitoloji var', b('sit'), (x) => set('sit', x))}
         </div>
-        {son.hekim_plani && <div style={{ ...kucuk, color: '#2DD4BF' }}>Hekim planı: {son.hekim_plani}</div>}
+        {son.hekim_plani && <div style={{ ...kucuk, color: '#0F9B8E' }}>Hekim planı: {son.hekim_plani}</div>}
       </div>)}
     </div>);
   }
@@ -85,7 +85,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
         <input value={s('ovr')} onChange={(e) => set('ovr', e.target.value)} placeholder="MEC 4 override gerekçesi (≥15 karakter)" style={{ ...toolsInput, minWidth: 260 }} />
       </div>
       {son?.sonuc && (<div style={{ marginTop: 8, fontSize: 12 }}>
-        <div style={{ fontWeight: 800, color: son.sonuc.kategori === 4 ? '#F87171' : son.sonuc.kategori === 3 ? '#FBBF24' : '#2DD4BF' }}>MEC kategori {son.sonuc.kategori} · karar: {son.karar}{son.override ? ` · OVERRIDE: ${son.override_gerekce}` : ''}{son.preparat ? ` · ${son.preparat}` : ''}</div>
+        <div style={{ fontWeight: 800, color: son.sonuc.kategori === 4 ? '#F87171' : son.sonuc.kategori === 3 ? '#FBBF24' : '#0F9B8E' }}>MEC kategori {son.sonuc.kategori} · karar: {son.karar}{son.override ? ` · OVERRIDE: ${son.override_gerekce}` : ''}{son.preparat ? ` · ${son.preparat}` : ''}</div>
         {son.sonuc.engeller.map((e) => <div key={e} style={{ color: '#F87171' }}>✖ {e}</div>)}{son.sonuc.dikkat.map((e) => <div key={e} style={{ color: '#FBBF24' }}>⚠ {e}</div>)}{son.sonuc.alternatif.map((e) => <div key={e} style={{ color: CHROME_RENK.muted }}>→ {e}</div>)}
         <Kaynak dipnotlar={son.sonuc.dipnotlar} acik={kaynakAcik} refler={refler} />
       </div>)}
@@ -131,7 +131,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
 
   if (sekme === 'Erken gebelik kaybı') {
     const son = v2.egk[0] as { id: string; taslak?: { tanı: string; gerekce: string; secenekler: string[]; gorevler: string[]; dipnotlar: Dipnot[]; bhcgTrend?: string }; secenek?: string | null; gebelik_id?: string | null } | undefined;
-    const tanıRenk: Record<string, string> = { kesin_nonviabl: '#F87171', suphe: '#FBBF24', viabl: '#2DD4BF', belirsiz: CHROME_RENK.muted };
+    const tanıRenk: Record<string, string> = { kesin_nonviabl: '#F87171', suphe: '#FBBF24', viabl: '#0F9B8E', belirsiz: CHROME_RENK.muted };
     return (<div>
       <div style={etiket}>Erken gebelik kaybı <span style={kucuk}>· kesin nonviabilite yalnız CRL ≥7 mm FHR yok / MSD ≥25 mm embriyo yok; β-hCG serisi Lab + elle; D&C onamı kütüphanede</span></div>
       <div style={satir}>

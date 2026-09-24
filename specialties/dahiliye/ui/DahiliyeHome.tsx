@@ -22,7 +22,7 @@ const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
 const chip = (ad: string, v: string, kirmizi = false) => <span key={ad} style={{ border: `1px solid ${kirmizi ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: kirmizi ? '#F87171' : CHROME_RENK.ink }}><span style={{ color: CHROME_RENK.muted }}>{ad} </span>{v}</span>;
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const Kaynak = ({ d, acik, refler }: { d?: Dip[] | null; acik: boolean; refler: Record<string, string> }) => (!acik || !d?.length ? null : <div style={{ ...kucuk, marginTop: 4, borderLeft: '2px solid rgba(15,155,142,0.5)', paddingLeft: 8 }}>{d.map((x, i) => <div key={i}><b>{x.ref}</b> — {x.not} <span style={{ opacity: 0.7 }}>({refler[x.ref] || x.ref})</span></div>)}</div>);
 /** Sekme grupları (DAH-WOW): hepsi görünür — hasta dosyası › Dahiliye › sekme = 2 dokunuş. */
 const GRUPLAR: { ad: string; sekmeler: readonly string[] }[] = [
@@ -63,12 +63,12 @@ export default function DahiliyeHome({ patientId }: { patientId: string }) {
       {v.hasta.gebe && <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)', color: '#FBBF24', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Gebe — ilaçları gözden geçir (ACEi/ARB, statin, metformin dışı OAD). Obstetri araçları burada çalışmaz.</div>}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {chip('KB', c.kb ? `${c.kb.sbp}/${c.kb.dbp}` : 'yok', !c.kb?.bugun)}{chip('HbA1c', c.hba1c ? `${c.hba1c.deger}%${c.hba1c.delta != null ? ` (${c.hba1c.delta > 0 ? '+' : ''}${c.hba1c.delta})` : ''}` : '—')}{chip('LDL', fmt(c.ldl))}{chip('eGFR', fmt(c.egfr))}{chip('TSH', fmt(c.tsh))}{chip('İlaç', String(c.ilacSayi), c.polifarmasi)}{c.kirmizi && chip('!', 'geciken görev / bugün KB yok', true)}
-        <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#2DD4BF' : CHROME_RENK.muted, marginLeft: 'auto' }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
+        <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#0F9B8E' : CHROME_RENK.muted, marginLeft: 'auto' }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
       </div>
-      {GRUPLAR.map((g) => <div key={g.ad} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6, alignItems: 'center' }}><span style={{ ...kucuk, width: 62 }}>{g.ad}</span>{g.sekmeler.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : CHROME_RENK.muted, borderRadius: 999 }}>{x}{x === 'Ön anket' && v.wow?.w2?.anket && !v.wow.w2.anket.okundu ? ' •' : ''}</button>)}</div>)}
+      {GRUPLAR.map((g) => <div key={g.ad} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6, alignItems: 'center' }}><span style={{ ...kucuk, width: 62 }}>{g.ad}</span>{g.sekmeler.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#0F9B8E' : CHROME_RENK.muted, borderRadius: 999 }}>{x}{x === 'Ön anket' && v.wow?.w2?.anket && !v.wow.w2.anket.okundu ? ' •' : ''}</button>)}</div>)}
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: /amadı|zorunlu|Kırmızı|geçersiz|Hata/.test(mesaj) ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>
+          <span style={{ fontSize: 12, color: /amadı|zorunlu|Kırmızı|geçersiz|Hata/.test(mesaj) ? '#F87171' : '#0F9B8E' }}>{mesaj}</span>
           <MuayeneFormunaDon notId={eklenenNot} />
         </div>
       )}

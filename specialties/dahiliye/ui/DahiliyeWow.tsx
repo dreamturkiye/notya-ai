@@ -44,7 +44,7 @@ export function VizitSeridiBar({ s, onPlan }: { s: VizitSeridi; onPlan: () => vo
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0B1B2F', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '6px 10px', marginBottom: 8 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ ...kucuk, fontWeight: 700, color: '#2DD4BF' }}>BUGÜNKÜ VİZİT</span>
+        <span style={{ ...kucuk, fontWeight: 700, color: '#0F9B8E' }}>BUGÜNKÜ VİZİT</span>
         {s.chips.map((c) => <span key={c.ad} title={c.alt || ''} style={{ fontSize: 12, color: CHROME_RENK.ink, border: `1px solid ${renk(c.durum)}`, borderRadius: 999, padding: '2px 8px' }}>{c.ad} <b>{c.deger}</b>{c.alt ? <span style={{ ...kucuk, marginLeft: 4 }}>{c.alt}</span> : null}</span>)}
         <button type="button" onClick={() => { setAcik(!acik); if (!acik) onPlan(); }} style={{ ...btn, marginLeft: 'auto', padding: '4px 10px' }}>{acik ? 'Planı kapat' : '1-tap bugünkü plan'}</button>
       </div>

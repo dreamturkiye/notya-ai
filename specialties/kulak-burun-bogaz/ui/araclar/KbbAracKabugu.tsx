@@ -17,7 +17,7 @@ import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
 import { AracVurguSaglayici, aracStil, HastaSecici, Segment, type AracVurgu } from '@/lib/doktor/aracUi';
 
 /** KBB vurgusu — indigo gövde, teal başlık (psikiyatri indigo'sundan ayrışır). */
-export const KBB_VURGU: AracVurgu = { ana: '#4F46E5', anaMetin: '#EEF2FF', yumusak: '#99F6E4', baslik: '#2DD4BF' };
+export const KBB_VURGU: AracVurgu = { ana: '#4F46E5', anaMetin: '#EEF2FF', yumusak: '#99F6E4', baslik: '#0F9B8E' };
 export const kbbStil = aracStil(KBB_VURGU);
 
 export {

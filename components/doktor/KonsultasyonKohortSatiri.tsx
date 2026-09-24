@@ -47,7 +47,7 @@ export function KonsultasyonKohortListesi({ bekleyenler, yanitSuresi, hazir = tr
             )}
       <div style={{ ...stil.kucuk, marginTop: 8 }}>
         Hatırlatma ve yanıt ekleme hasta dosyası › Konsültasyonlar'dadır; tüm liste ve işlemler için{' '}
-        <a href={BEKLEYEN_KONSULTASYONLAR_ROTASI} style={{ color: '#2DD4BF', display: 'inline-block', padding: '12px 0' }}>Bekleyen Konsültasyonlar ›</a>
+        <a href={BEKLEYEN_KONSULTASYONLAR_ROTASI} style={{ color: '#0F9B8E', display: 'inline-block', padding: '12px 0' }}>Bekleyen Konsültasyonlar ›</a>
       </div>
     </div>
   );

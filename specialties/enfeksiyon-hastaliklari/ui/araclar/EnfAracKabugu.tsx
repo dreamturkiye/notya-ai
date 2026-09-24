@@ -11,7 +11,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
 
-export const ENF_VURGU: AracVurgu = { ana: '#0D9488', anaMetin: '#F0FDFA', yumusak: '#5EEAD4', baslik: '#2DD4BF' }
+export const ENF_VURGU: AracVurgu = { ana: '#0D9488', anaMetin: '#F0FDFA', yumusak: '#0F9B8E', baslik: '#0F9B8E' }
 export const enfStil = aracStil(ENF_VURGU)
 
 export {

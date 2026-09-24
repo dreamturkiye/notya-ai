@@ -27,7 +27,7 @@ const yeniSatir = (tarih = ''): Satir => ({ id: Math.random().toString(36).slice
 function PersentilRozet({ p }: { p: number }) {
   const uc = p < 3 || p > 97;
   const orta = !uc && (p < 10 || p > 90);
-  return <span style={{ fontSize: 26, fontWeight: 800, color: uc ? CHROME_RENK.warn : orta ? '#7A5B1E' : '#5EEAD4', letterSpacing: '-0.5px' }}>{persentilKisa(p)} <span style={{ fontSize: 14, fontWeight: 600 }}>persentil</span></span>;
+  return <span style={{ fontSize: 26, fontWeight: 800, color: uc ? CHROME_RENK.warn : orta ? '#7A5B1E' : '#0F9B8E', letterSpacing: '-0.5px' }}>{persentilKisa(p)} <span style={{ fontSize: 14, fontWeight: 600 }}>persentil</span></span>;
 }
 
 export default function BuyumeStudyosu() {
@@ -208,7 +208,7 @@ export default function BuyumeStudyosu() {
               {grafikVeri.noktalar.length || grafikVeri.egriler.length ? <Grafik veri={grafikVeri} birim={grafikVeri.birim} /> : <div style={kucuk}>Bu ölçüm için eğri yok.</div>}
             </div>
           </div>
-          <div style={{ ...kucuk, marginTop: 6 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>●</span> ölçümler · <span style={{ color: '#2DD4BF', fontWeight: 700 }}>—</span> 50. persentil · kesikli 3/10/25/75/90/97</div>
+          <div style={{ ...kucuk, marginTop: 6 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>●</span> ölçümler · <span style={{ color: '#0F9B8E', fontWeight: 700 }}>—</span> 50. persentil · kesikli 3/10/25/75/90/97</div>
         </div>
       )}
 

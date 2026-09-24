@@ -164,7 +164,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
             <button key={c.id} type="button" onClick={() => setSecili(c.id)} style={{
               ...ghost, padding: '6px 10px', borderRadius: 999,
               borderColor: secili === c.id ? '#0F9B8E' : 'rgba(255,255,255,0.15)',
-              color: secili === c.id ? '#2DD4BF' : CHROME_RENK.ink,
+              color: secili === c.id ? '#0F9B8E' : CHROME_RENK.ink,
             }}>
               {goruntuChip(c.tip, c.tarih || c.created_at)}
             </button>
@@ -187,7 +187,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
           {satir?.tip === tip && <span style={{ fontSize: 12, color: CHROME_RENK.muted }}>Seçili çalışmaya eklenir (MG iki kare / seri).</span>}
         </div>
         {hacimAiKapali(tip) && <div style={{ fontSize: 11, color: '#FBBF24', marginTop: 8 }}>CT/MR/PET: yalnız anahtar kare + rapor. Hacim arşivi yok.</div>}
-        {mesaj && <div style={{ fontSize: 12, color: /paylaşıldı|yok/.test(mesaj) && !/Paylaşılamadı/.test(mesaj) ? '#2DD4BF' : '#F87171', marginTop: 8 }}>{mesaj}</div>}
+        {mesaj && <div style={{ fontSize: 12, color: /paylaşıldı|yok/.test(mesaj) && !/Paylaşılamadı/.test(mesaj) ? '#0F9B8E' : '#F87171', marginTop: 8 }}>{mesaj}</div>}
       </div>
 
       {satir && (
@@ -239,7 +239,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
                 {satir.onay_durum === 'hasta_paylas' ? 'Paylaşıldı' : satir.tip === 'goz' && satir.modalite !== 'fundus' ? 'Portala yalnız fundus' : 'Onayla ve paylaş'}
               </button>
             </div>
-            {satir.hastane_link && <a href={satir.hastane_link} style={{ display: 'block', marginTop: 10, fontSize: 12, color: '#2DD4BF' }}>Hastane bağlantısı →</a>}
+            {satir.hastane_link && <a href={satir.hastane_link} style={{ display: 'block', marginTop: 10, fontSize: 12, color: '#0F9B8E' }}>Hastane bağlantısı →</a>}
           </div>
         </div>
       )}

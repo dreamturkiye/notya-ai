@@ -47,12 +47,12 @@ export function LezyonKarti({
             {l.body_map_node ? ` · işaret ${l.body_map_node}` : ''}
             {patientId && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-                <a href={goruntulemeCaptureHref(patientId, 'dermatoskopi')} style={{ fontSize: 12, color: '#2DD4BF' }}>Dermoskopi ekle</a>
+                <a href={goruntulemeCaptureHref(patientId, 'dermatoskopi')} style={{ fontSize: 12, color: '#0F9B8E' }}>Dermoskopi ekle</a>
                 <a
                   href={l.documentId
                     ? belgeAnalizHref(patientId, l.documentId, 'dermatoskopi', fitzpatrick)
                     : belgelerTabHref(patientId, 'dermatoskopi')}
-                  style={{ fontSize: 12, color: '#2DD4BF' }}
+                  style={{ fontSize: 12, color: '#0F9B8E' }}
                 >
                   Belgelerde analiz et
                 </a>

@@ -14,7 +14,7 @@ const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', 
 const govde: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#2DD4BF' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 export const Kaynak = ({ d, acik, refler }: { d?: Dip[] | null; acik: boolean; refler: Record<string, string> }) => (!acik || !d?.length ? null : <div style={{ ...kucuk, marginTop: 4, borderLeft: '2px solid rgba(45,212,191,0.4)', paddingLeft: 6 }}>{d.map((x, i) => <div key={i}>[{refler[x.ref] || x.ref}] {x.not}</div>)}</div>);
 const DURUM_RENK: Record<string, string> = { gecikti: '#F87171', sevk: '#F87171', zamani: '#FBBF24', seroloji: '#FBBF24', yaklasiyor: '#FBBF24', planli: CHROME_RENK.muted, tamam: '#22C55E', bilgi: CHROME_RENK.muted, uygun_degil: CHROME_RENK.muted };
 const ASILAR: [string, string][] = [['grip', 'Grip'], ['pcv20', 'PCV20'], ['pcv13', 'PCV13'], ['ppsv23', 'PPSV23'], ['zona', 'Zona'], ['td', 'Td/Tdap'], ['hbv', 'HBV'], ['covid', 'COVID-19']];
@@ -156,7 +156,7 @@ export default function DahiliyeWow2({ sekme, w2, kaynak, refler, calistir }: Pr
     return (<div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8 }}>
       <div style={etiket}>HT başlangıç paneli <span style={kucuk}>· tek tıkla istem · 14 gün sonuçlanmazsa takip görevi · yalnız onaylı lab "geldi" sayılır</span></div>
       <div style={kucuk}>{p.kalemler.map((k) => k.ad).join(' · ')}</div>
-      <div style={satir}><button type="button" style={btn} onClick={() => calistir({ adim: 'htpanel' }, 'HT başlangıç paneli istendi (bugünkü nota eklendi). Tetkik İstek formundan yazdırabilirsiniz.')}>1-tık panel iste</button><a href="/doktor-tools/tetkik" style={{ ...kucuk, color: '#2DD4BF' }}>Tetkik İstek formu →</a></div>
+      <div style={satir}><button type="button" style={btn} onClick={() => calistir({ adim: 'htpanel' }, 'HT başlangıç paneli istendi (bugünkü nota eklendi). Tetkik İstek formundan yazdırabilirsiniz.')}>1-tık panel iste</button><a href="/doktor-tools/tetkik" style={{ ...kucuk, color: '#0F9B8E' }}>Tetkik İstek formu →</a></div>
       {p.istemler.map((i) => (<div key={i.id} style={{ ...govde, marginTop: 6 }}>
         <div>{i.tarih} · {i.durum.gunGecen} gün · <b style={{ color: i.durum.tamam ? '#22C55E' : i.durum.gecikti ? '#F87171' : '#FBBF24' }}>{i.durum.tamam ? 'tamam' : i.durum.gecikti ? 'GECİKTİ' : 'bekleniyor'}</b></div>
         {i.durum.bekleyen.length > 0 && <div style={kucuk}>Bekleyen: {i.durum.bekleyen.join(', ')}</div>}

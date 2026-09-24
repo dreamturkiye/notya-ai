@@ -15,7 +15,7 @@ import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 export interface BuyumePersentilleri { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string; uyari?: string }
 
 export default function YasamsalBulgularFormu({
-  olcumler, degerler, onDegis, persentiller, girdiStili, persentilRengi = '#2DD4BF', eriskinVkiGoster = true,
+  olcumler, degerler, onDegis, persentiller, girdiStili, persentilRengi = '#0F9B8E', eriskinVkiGoster = true,
 }: {
   olcumler: NotOlcumu[];
   degerler: Record<string, string>;

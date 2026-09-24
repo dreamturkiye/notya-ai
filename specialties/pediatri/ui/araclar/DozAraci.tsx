@@ -105,7 +105,7 @@ export default function DozAraci() {
           <>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'baseline' }}>
               {s.dozMlYuvarlak != null ? (
-                <div><div style={{ fontSize: 40, fontWeight: 800, color: s.tavanli ? CHROME_RENK.warn : '#5EEAD4', letterSpacing: '-1px', lineHeight: 1.05 }}>{fmt(s.dozMlYuvarlak, 2)} mL</div><div style={kucuk}>doz başına{s.dozMl != null && Math.abs(s.dozMl - s.dozMlYuvarlak) > 1e-9 ? ` (tam: ${fmt(s.dozMl, 2)} mL)` : ''}</div></div>
+                <div><div style={{ fontSize: 40, fontWeight: 800, color: s.tavanli ? CHROME_RENK.warn : '#0F9B8E', letterSpacing: '-1px', lineHeight: 1.05 }}>{fmt(s.dozMlYuvarlak, 2)} mL</div><div style={kucuk}>doz başına{s.dozMl != null && Math.abs(s.dozMl - s.dozMlYuvarlak) > 1e-9 ? ` (tam: ${fmt(s.dozMl, 2)} mL)` : ''}</div></div>
               ) : null}
               <div><div style={{ fontSize: s.dozMlYuvarlak != null ? 24 : 40, fontWeight: 800, color: CHROME_RENK.ink, lineHeight: 1.1 }}>{fmt(s.dozMg, 1)} mg</div><div style={kucuk}>doz başına</div></div>
               <div><div style={{ fontSize: 18, fontWeight: 700, color: CHROME_RENK.muted }}>günde {dozSayisi} kez</div><div style={kucuk}>{fmt(s.aralikSaat, 1)} saatte bir</div></div>

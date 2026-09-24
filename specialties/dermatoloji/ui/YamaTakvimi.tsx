@@ -100,7 +100,7 @@ export function YamaTakvimi({
                 <span>D2 {t.readD2 || t.d2} · D4 {t.readD4 || t.d4}</span>
                 <span>{dermLabel(DERM_PATCH_STATUS, t.durum)}</span>
                 <span>{t.pozitifSayisi} pozitif</span>
-                {t.aktif && <span style={{ color: '#2DD4BF' }}>aktif</span>}
+                {t.aktif && <span style={{ color: '#0F9B8E' }}>aktif</span>}
               </li>
             ))}
           </ul>
@@ -112,7 +112,7 @@ export function YamaTakvimi({
       {patientId && (
         <div style={{ display: 'grid', gap: 3, marginTop: 8 }} data-derm="yama-foto-ipucu">
           {OKUMA_FOTO_IPUCU.map((o) => (
-            <a key={o.kind} href={goruntulemeCaptureHref(patientId, 'derm')} style={{ fontSize: 12, color: '#2DD4BF' }}>
+            <a key={o.kind} href={goruntulemeCaptureHref(patientId, 'derm')} style={{ fontSize: 12, color: '#0F9B8E' }}>
               {dermLabel(DERM_PHOTO_KIND, o.kind)} ekle — {o.ipucu}
             </a>
           ))}

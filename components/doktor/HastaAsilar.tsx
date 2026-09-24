@@ -197,7 +197,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
         </div>
       </div>
 
-      {bilgi && <div role="status" style={{ background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.4)', color: '#5EEAD4', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{bilgi}</div>}
+      {bilgi && <div role="status" style={{ background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.4)', color: '#0F9B8E', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{bilgi}</div>}
       {karneAcik && (
         <AsiKarnesiOkuma
           patientId={patientId}

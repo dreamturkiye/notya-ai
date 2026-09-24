@@ -18,7 +18,7 @@ export default function MuayeneFormunaDon({ notId, style }: { notId?: string | n
   return (
     <a
       href={muayeneFormuYolu(notId)}
-      style={{ fontSize: 12, color: '#2DD4BF', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', minHeight: 36, ...style }}
+      style={{ fontSize: 12, color: '#0F9B8E', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', minHeight: 36, ...style }}
     >
       {MUAYENE_FORMUNA_DON}
     </a>

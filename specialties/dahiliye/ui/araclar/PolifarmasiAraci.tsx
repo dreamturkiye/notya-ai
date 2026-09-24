@@ -16,7 +16,7 @@ const bugun = () => new Date().toISOString().slice(0, 10);
 const sayi = (s: string): number | null => { const t = s.trim().replace(',', '.'); return t === '' || !Number.isFinite(Number(t)) ? null : Number(t); };
 
 const SIDDET_AD: Record<PoliSiddet, string> = { durdur: 'Durdurmayı değerlendir', gozden_gecir: 'Gözden geçir', baslat: 'Başlatmayı değerlendir' };
-const SIDDET_RENK: Record<PoliSiddet, string> = { durdur: '#F87171', gozden_gecir: '#FBBF24', baslat: '#5EEAD4' };
+const SIDDET_RENK: Record<PoliSiddet, string> = { durdur: '#F87171', gozden_gecir: '#FBBF24', baslat: '#0F9B8E' };
 
 const TANI_ALANLARI = [
   ['askvh', 'Aterosklerotik KVH'],

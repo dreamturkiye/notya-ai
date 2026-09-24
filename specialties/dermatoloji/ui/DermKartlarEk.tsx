@@ -648,7 +648,7 @@ export function AkneKarti({
           {karar.fotoCue.map((c) => <li key={c}>{c}</li>)}
         </ul>
       )}
-      {fotoHref && <a href={fotoHref} style={{ fontSize: 12, color: '#2DD4BF' }}>Klinik foto ekle (ay-0 / ay-3 serisi)</a>}
+      {fotoHref && <a href={fotoHref} style={{ fontSize: 12, color: '#0F9B8E' }}>Klinik foto ekle (ay-0 / ay-3 serisi)</a>}
       {karar.gerekce.length > 0 && <p style={{ ...satirlik, marginTop: 6 }}>{karar.gerekce.join(' · ')}</p>}
       {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
       <p style={kucuk}>{karar.kilitNotu}</p>
