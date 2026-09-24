@@ -2538,3 +2538,10 @@ tutulur; üzerine sessizce yazılmaz.
 | Date | Item | Gerekçe + öneri | Durum |
 |---|---|---|---|
 | 2026-09-24 | Design-token consolidation pass for the doctor UI — replace all remaining literal color/font hex values across `app/dashboard/doktor/**`, `app/doktor-tools/**`, `app/cihaz/**` with references to `lib/doktor/chromeTheme.ts` (or promote to CSS custom properties in `globals.css` if that proves cleaner), so a future re-theme requires editing one file only. | Scheduled AFTER Kaan's visual review/sign-off of NOTYA-YENI-GORUNUM-01 and BEFORE merge to `main` — deliberately deferred so we don't tokenize values that review may still change. | OPEN (waits on Kaan's review) |
+
+## NOTYA-KAYIT-SURE-01 — muayene kayıt süresi (2026-09-23)
+
+| ID | Durum | Not |
+|---|---|---|
+| NOTYA-KAYIT-SURE-01 | **DONE 2026-09-23** (PR #382) | Yeni Seans: 60 dk, 55. dk bip + banner, +30 dk uzat (en fazla 120), süre dolunca dikte durur; ses tanıma kendiliğinden kapanırsa otomatik yeniden başlar, olmazsa kırmızı "Kayıt durdu". |
+| NOTYA-KAYIT-SURE-02 | OPEN — waits on Claude (QA) + Dr. Gökhan (real device) | Canlı test yapılmadı: Samsung/Chrome ve iPhone/Safari üzerinde uzun sessizlik sonrası otomatik yeniden başlama ve kırmızı uyarı doğrulanmalı. |
