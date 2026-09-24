@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
-import { eylemOnayla, eylemVazgec } from '@/core/eylemler/onayla'
+import { eylemOnayla, eylemVazgec, suresiDolduMu } from '@/core/eylemler/onayla'
 import { eylemGeriAl } from '@/core/eylemler/geriAl'
 import { eylemBul } from '@/core/eylemler/kayit'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
@@ -53,10 +53,16 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false })
     .limit(20)
 
-  const oneriler = (data || []).map((o) => {
-    const e = eylemBul(String(o.eylem_anahtar))
-    return { ...o, etiket: e?.etiket || o.eylem_anahtar, alanlar: e?.alanlar || [], zorunlu: e?.zorunlu || [], portalaYansir: Boolean(e?.portalaYansir) }
-  })
+  // NOTYA-EYLEM-STALE-02 (Kaan, 2026-09-24): a draft older than the 24h window (ONERI_OMRU_MS,
+  // suresiDolduMu) was only ever refused at APPROVE time -- this listing still returned it as
+  // "bekleyen", so an expired test/investigation artifact kept resurfacing on every page load
+  // indefinitely until someone happened to click it. Filtered here too, so the two surfaces agree.
+  const oneriler = (data || [])
+    .filter((o) => !suresiDolduMu(o as { created_at: string }))
+    .map((o) => {
+      const e = eylemBul(String(o.eylem_anahtar))
+      return { ...o, etiket: e?.etiket || o.eylem_anahtar, alanlar: e?.alanlar || [], zorunlu: e?.zorunlu || [], portalaYansir: Boolean(e?.portalaYansir) }
+    })
   return NextResponse.json({ oneriler, hasta: { ad: hasta.ad, dogumTarihi: hasta.dogumTarihi } })
 }
 
