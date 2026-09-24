@@ -37,6 +37,23 @@ export function useChromeGizle(gizli: boolean) {
   useEffect(() => { setGizli(gizli); return () => setGizli(false); }, [gizli, setGizli]);
 }
 
+/**
+ * NOTYA-CHROME-KOMPAKT-01 (Kaan, 2026-09-24) — "Asistana sor sayfasini daha iyi yap. Burdada
+ * solda full menu ve logo olsun etc." A voice-call page needs the sidebar (Kaan's ask), but its
+ * own full-height, app-like layout (persona panel | conversation | bottom control bar, all sized
+ * to exactly the viewport) can't coexist with DoktorChrome's own header row, footer, and
+ * max-width content wrapper — stacking those on top would push the page past 100vh and force an
+ * outer scroll the voice UI was never designed for. useChromeGizle is all-or-nothing (drops the
+ * sidebar too), so this is a second, narrower context: keep the sidebar, drop only the header,
+ * footer, and the max-width/padding wrapper around {children}, leaving the content free to size
+ * itself to the remaining space exactly as useChromeGizle's content already does.
+ */
+const ChromeKompaktContext = createContext<(kompakt: boolean) => void>(() => {});
+export function useChromeKompakt(kompakt: boolean) {
+  const setKompakt = useContext(ChromeKompaktContext);
+  useEffect(() => { setKompakt(kompakt); return () => setKompakt(false); }, [kompakt, setKompakt]);
+}
+
 interface NavItem {
   label: string;
   route: string;
@@ -125,6 +142,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const [hava, setHava] = useState<{ sicaklik: number; kod: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [gizli, setGizli] = useState(false);
+  const [kompakt, setKompakt] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 900);
@@ -302,6 +320,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
 
   return (
     <ChromeGizleContext.Provider value={setGizli}>
+    <ChromeKompaktContext.Provider value={setKompakt}>
     <div
       style={S({
         minHeight: '100vh', position: 'relative',
@@ -329,6 +348,10 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       )}
 
       <div style={S({ flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden' })}>
+        {kompakt ? (
+          <div style={S({ position: 'absolute', inset: 0 })}>{children}</div>
+        ) : (
+        <>
         <img
           src="/doktor-chrome/plant.jpg"
           alt=""
@@ -435,8 +458,11 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
             © 2026 Dream Türkiye — Notya AI. Tüm hakları saklıdır / All rights reserved (5846 FSEK · 17 U.S.C.) · KVKK uyumlu · Saat dilimi: Türkiye (TRT)
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
+    </ChromeKompaktContext.Provider>
     </ChromeGizleContext.Provider>
   );
 }

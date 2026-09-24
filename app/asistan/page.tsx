@@ -21,13 +21,34 @@ import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAu
 import { address } from '@/lib/address'
 import { EylemKarti, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import DoktorChrome, { useChromeKompakt } from '@/components/doktor/DoktorChrome'
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
 
 type ActiveConversation = Awaited<ReturnType<typeof Conversation.startSession>>
 
+// NOTYA-CHROME-KOMPAKT-01 (Kaan, 2026-09-24): useContext reads from the nearest ANCESTOR
+// provider -- calling useChromeKompakt at the top of the same component that RETURNS
+// <DoktorChrome> doesn't work, because at the point the hook runs, this component hasn't
+// rendered its own JSX yet, so there is no provider above it yet (DoktorChrome is a CHILD in the
+// tree this component produces, not an ancestor of it). Split into a thin outer wrapper that owns
+// the <DoktorChrome> boundary, and an inner component -- a genuine descendant -- that calls the
+// hook and holds every bit of this page's existing logic unchanged.
 export default function AsistanPage() {
+  return (
+    <DoktorChrome>
+      <AsistanPageInner />
+    </DoktorChrome>
+  )
+}
+
+function AsistanPageInner() {
+  // NOTYA-CHROME-KOMPAKT-01 (Kaan, 2026-09-24): "solda full menu ve logo olsun" — sidebar+logo
+  // now come from DoktorChrome, wrapped around this component one level up (AsistanPage above).
+  // This hook keeps the sidebar while telling DoktorChrome to skip its own header/footer/max-width
+  // wrapper, so this page's own full-height persona/conversation/control-bar layout keeps working.
+  useChromeKompakt(true)
   const router = useRouter()
   const [persona, setPersona] = useState<Persona>(PERSONAS.aysekaya)
   const [personaKey, setPersonaKey] = useState<PersonaId>("aysekaya")
