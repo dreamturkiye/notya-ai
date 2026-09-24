@@ -134,6 +134,28 @@ export const asiKarnesiDoluMu = (k: Pick<AsiKarnesi, 'yapilanlar' | 'siradakiler
 export const dozMetni = (doz: number | null): string => (doz ? `${doz}. doz` : '—')
 export const tarihMetni = (iso: string | null): string => (iso ? trTarih(iso) : 'Tarih kayıtlı değil')
 
+/**
+ * NOTYA-ASI-YAS-01 (Kaan, 2026-09-24) — "Hepatit B aşısı 2. doz satırında 1 aylık" gibi, uygulama
+ * anındaki yaklaşık yaşı. Kesin gün sayısı değil — Kaan'ın kendi örnekleri (40 günlük → "1 aylık",
+ * 68 günlük → "2 aylık") tamamlanmış ay sayısına (floor) karşılık geliyor — pediatri kaynağında
+ * "N aylık bebek" hep tamamlanmış ay anlamına gelir, en yakına yuvarlama değil. İki uzantı eklendi:
+ * doğum günü (0 gün) için "doğumda", ay henüz dolmamışsa "N günlük", ve 2 yaşı (730+ gün) sonrası
+ * için "N yaşında" — okul çağı rapellerinde "144 aylık" yerine "12 yaşında" okunaklı kalır. Tarih ya
+ * doğum tarihi eksikse '' (asiLotYeri.ts'teki aynı felsefe: hiçbir şey uydurulmaz, boş kalır).
+ */
+export function yasMetni(dogumTarihi: string | null, tarih: string | null): string {
+  if (!dogumTarihi || !tarih) return ''
+  const d0 = new Date(dogumTarihi + 'T00:00:00')
+  const d1 = new Date(tarih + 'T00:00:00')
+  if (Number.isNaN(d0.getTime()) || Number.isNaN(d1.getTime())) return ''
+  const gun = Math.floor((d1.getTime() - d0.getTime()) / 86400000)
+  if (gun < 0) return ''
+  if (gun === 0) return 'doğumda'
+  if (gun < 30) return `${gun} günlük`
+  if (gun < 730) return `${Math.floor(gun / 30)} aylık`
+  return `${Math.floor(gun / 365)} yaşında`
+}
+
 /** İndirilen dosyanın adı — hasta adı dosya adına yazılmaz (paylaşımda / indirilenler klasöründe PHI yok). */
 export function asiKarnesiDosyaAdi(k: Pick<AsiKarnesi, 'uretimTarihi'>): string {
   return `asi-karnesi-${k.uretimTarihi}.pdf`
