@@ -16,7 +16,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   asiKarnesiOlustur, asiKarnesiDoluMu, asiKarnesiDosyaAdi, ASI_KARNESI_YAZDIRMA_CSS, E_NABIZ_BASLIK, E_NABIZ_UYARISI,
-  HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, LOT_YER_BASLIK, PAYLAS_IPUCU, type AsiKarnesi,
+  HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, PAYLAS_IPUCU, yasMetni, type AsiKarnesi,
 } from './karneBelgesi'
 import { lotYerHucresi, lotYerSatiri, notlardanLotYeri } from './asiLotYeri'
 import { KARNE_NOT_ONEKI } from './karneOkuma'
@@ -119,7 +119,10 @@ describe('NOTYA-ASI-LOT-01 — lot no / uygulama yeri', () => {
     assert.equal(lotYerSatiri({ lot_no: '  ', uygulama_yeri: null }), '')
   })
   it('Sağlığım ekranında kayıtlıysa görünür', () => {
-    assert.ok(ekran().includes(`${LOT_YER_BASLIK}: MMR-LOT-77 · SC sol üst kol`))
+    // NOTYA-ASI-YAS-01 (Kaan, 2026-09-24): lot ve uygulama yeri artık ayrı, açıkça etiketli —
+    // "Lot / Uygulama yeri: X · Y" belirsizdi (sadece biri bilinince hangisi olduğu belli değildi).
+    assert.ok(ekran().includes('Lot: MMR-LOT-77'))
+    assert.ok(ekran().includes('Uygulama yeri: SC sol üst kol'))
   })
   it('eski paketli notlar → kolonlar; diğer metin aynen ve aynı sırada kalır (093 göçünün kuralı)', () => {
     assert.deepEqual(notlardanLotYeri('Lot: Vaxi12345 · Uygulama yeri: IM · Muayene notundan aktarıldı (hekim onaylı).'),
@@ -137,6 +140,27 @@ describe('NOTYA-ASI-LOT-01 — lot no / uygulama yeri', () => {
     assert.match(sql, /add column if not exists uygulama_yeri text;/)
     assert.doesNotMatch(sql.replace(/--.*$/gm, ''), /\b(drop|delete|truncate)\b/i)
     assert.match(sql, /regexp_split_to_array\(x\.notlar, '\\s\*·\\s\*'\)/)
+  })
+})
+
+describe('NOTYA-ASI-YAS-01 — uygulama anındaki yaklaşık yaş', () => {
+  it('Kaan\'ın kendi örnekleri: 40 günlük → 1 aylık, 68 günlük → 2 aylık (tamamlanmış ay, en yakına yuvarlama değil)', () => {
+    assert.equal(yasMetni('2024-01-01', '2024-02-10'), '1 aylık') // 40 gün
+    assert.equal(yasMetni('2024-01-01', '2024-03-09'), '2 aylık') // 68 gün
+  })
+  it('doğum günü (0 gün) → "doğumda"', () => {
+    assert.equal(yasMetni('2024-06-15', '2024-06-15'), 'doğumda')
+  })
+  it('ay dolmadan (1–29 gün) → gün cinsinden', () => {
+    assert.equal(yasMetni('2024-01-01', '2024-01-15'), '14 günlük')
+  })
+  it('2 yaşı (730+ gün) sonrası → yaş cinsinden, aylık değil', () => {
+    assert.equal(yasMetni('2020-01-01', '2032-01-01'), '12 yaşında')
+  })
+  it('doğum tarihi ya da tarih eksikse boş — hiçbir şey uydurulmaz', () => {
+    assert.equal(yasMetni(null, '2024-06-15'), '')
+    assert.equal(yasMetni('2024-06-15', null), '')
+    assert.equal(yasMetni(null, null), '')
   })
 })
 
@@ -218,9 +242,13 @@ describe('PDF — Türkçe karakter, e-Nabız, kaynak ayrımı (üretilen PDF me
     assert.ok(metin.includes('01.03.2027'), 'sıradaki aşı tarihi')
     assert.ok(metin.includes('Oluşturulma: 19.09.2026'))
   })
-  it('NOTYA-ASI-LOT-01: "Lot / Uygulama yeri" sütunu PDF\'te; kayıtlı değer görünür', () => {
-    assert.ok(metin.includes('LOT / UYGULAMA YERİ'), 'sütun başlığı')
-    assert.ok(metin.includes('MMR-LOT-77 · SC sol üst kol'))
+  it('NOTYA-ASI-YAS-01: "Lot" ve "Uygulama yeri" ayrı sütunlarda PDF\'te; kayıtlı değerler görünür', () => {
+    // Kaan (2026-09-24): tek "Lot / Uygulama yeri" sütunu ikiye ayrıldı — sadece biri bilinince
+    // hangisi olduğu belirsizdi. Başlıklar ve değerler artık ayrı hücreler.
+    assert.ok(metin.includes('LOT'), 'Lot sütun başlığı')
+    assert.ok(metin.includes('UYGULAMA YERI') || metin.includes('UYGULAMA YERİ'), 'Uygulama yeri sütun başlığı')
+    assert.ok(metin.includes('MMR-LOT-77'), 'lot değeri')
+    assert.ok(metin.includes('SC sol üst kol'), 'uygulama yeri değeri')
   })
   it('Vercel paketi: iki PDF rotası fontu izler (outputFileTracingIncludes)', () => {
     const cfg = oku('next.config.mjs')

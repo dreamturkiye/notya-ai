@@ -373,9 +373,11 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     const kGrip = b.json.asiKarnesi.yapilanlar.find((a: { ad: string }) => a.ad === 'Grip')
     assert.deepEqual([kGrip.lotNo, kGrip.uygulamaYeri], ['Vaxi12345', 'IM'])
     const hekim = await pdfMetni((await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`, { token: A.token })))).bayt)
-    // Only the lot is matched in the extracted text: after earlier renders in one process react-pdf may re-emit "I" as a
-    // duplicate subset glyph without a ToUnicode entry (drawn correctly — same advance width — but extracts as "?").
-    assert.ok(hekim.includes('Vaxi12345 · ') && hekim.includes('LOT / UYGULAMA YERİ'), hekim.slice(hekim.indexOf('YAPILAN')))
+    // Only the lot is matched in the extracted text: after earlier renders in one process react-pdf may re-emit "I"
+    // (ASCII, no dot — as in "IM") as a duplicate subset glyph without a ToUnicode entry (drawn correctly — same
+    // advance width — but extracts as "?"). The Turkish İ in "UYGULAMA YERİ" is a different codepoint and unaffected.
+    // NOTYA-ASI-YAS-01 (Kaan, 2026-09-24): Lot / Uygulama yeri are separate cells now, not joined by " · ".
+    assert.ok(hekim.includes('Vaxi12345') && hekim.includes('LOT') && hekim.includes('UYGULAMA YER'), hekim.slice(hekim.indexOf('YAPILAN')))
     const p = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${A.portalToken}/asi-karnesi/pdf`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
     assert.equal(await pdfMetni(p.bayt), hekim, 'hekim ve Sağlığım aynı PDF')
   })

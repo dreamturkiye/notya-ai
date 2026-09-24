@@ -21,9 +21,9 @@ import { useEffect, useState } from 'react'
 import type { PortalAsiKarnesi } from '@/lib/portal/types'
 import {
   ASI_KARNESI_BASLIK, ASI_KARNESI_YAZDIRMA_CSS, asiKarnesiDosyaAdi, dozMetni, HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI,
-  KAYNAK_SIRASI, LOT_YER_BASLIK, PAYLAS_IPUCU, tarihMetni,
+  KAYNAK_SIRASI, PAYLAS_IPUCU, tarihMetni, yasMetni,
 } from '@/lib/asi/karneBelgesi'
-import { lotYerHucresi } from '@/lib/asi/asiLotYeri'
+import { lotYerTemizle, LOT_AZAMI, YER_AZAMI } from '@/lib/asi/asiLotYeri'
 import { trTarih, type AsiKaynakTuru } from '@/lib/asi/karneOkuma'
 import { dosyaPaylasimiVar } from '@/lib/asi/karnePaylasim'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
@@ -155,10 +155,17 @@ export function AsiKarnesiView({ karne, basePath, pdfUrl }: { karne: PortalAsiKa
               <li key={i} className="asi-karnesi-satir" data-kaynak={a.kaynak} style={{ padding: '10px 12px', borderRadius: 12, border: '1px solid var(--sg-line)', borderLeft: `4px solid ${ROZET_RENK[a.kaynak].bd}`, display: 'grid', gap: 6, minHeight: 44 }}>
                 <div style={{ fontWeight: 700, fontSize: 15.5, overflowWrap: 'anywhere' }}>{a.ad}</div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 14.5 }}>{a.doz ? `${dozMetni(a.doz)} · ` : ''}{tarihMetni(a.tarih)}</span>
+                  <span style={{ fontSize: 14.5 }}>{a.doz ? `${dozMetni(a.doz)} · ` : ''}{tarihMetni(a.tarih)}{yasMetni(karne.hasta.dogumTarihi, a.tarih) ? ` · ${yasMetni(karne.hasta.dogumTarihi, a.tarih)}` : ''}</span>
                   <Rozet tur={a.kaynak} />
                 </div>
-                {lotYerHucresi(a) && <div className="sg-goz-meta" data-lot-yer="" style={{ fontSize: 13.5 }}>{LOT_YER_BASLIK}: {lotYerHucresi(a)}</div>}
+                {(lotYerTemizle(a.lotNo, LOT_AZAMI) || lotYerTemizle(a.uygulamaYeri, YER_AZAMI)) && (
+                  <div className="sg-goz-meta" data-lot-yer="" style={{ fontSize: 13.5 }}>
+                    {[
+                      lotYerTemizle(a.lotNo, LOT_AZAMI) ? `Lot: ${lotYerTemizle(a.lotNo, LOT_AZAMI)}` : '',
+                      lotYerTemizle(a.uygulamaYeri, YER_AZAMI) ? `Uygulama yeri: ${lotYerTemizle(a.uygulamaYeri, YER_AZAMI)}` : '',
+                    ].filter(Boolean).join(' · ')}
+                  </div>
+                )}
               </li>
             ))}
           </ol>
