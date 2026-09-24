@@ -11,7 +11,7 @@
  */
 import path from 'node:path'
 import React from 'react'
-import { Document, Font, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer'
+import { Document, Font, Page, Path, StyleSheet, Svg, Text, View, renderToBuffer } from '@react-pdf/renderer'
 import { ASI_KARNESI_BASLIK, dozMetni, HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, KAYNAK_SIRASI, LOT_YER_BASLIK, tarihMetni, type AsiKarnesi } from './karneBelgesi'
 import { lotYerHucresi } from './asiLotYeri'
 import { trTarih } from './karneOkuma'
@@ -40,17 +40,25 @@ function fontKaydet() {
 /** Büyük harf Türkçe kuralıyla (i → İ). react-pdf'in textTransform'u yerel ayar bilmez: "Tarih" → "TARIH" yazardı. */
 const B = (metin: string) => metin.toLocaleUpperCase('tr-TR')
 
-const MURKEKKEP = '#111827'
-const GRI = '#4B5563'
-const CIZGI = '#D1D5DB'
+// NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): recolored from grayscale to the same cream/pine
+// tokens as the rest of the redesign. Font stays Liberation Sans (no italic registered) --
+// this file's own comments document real past bugs around Helvetica's missing Turkish glyphs,
+// so a new font-weight registration wasn't worth the risk for a decorative flourish; the leaf
+// mark is added instead as a plain vector Path (Svg/Path are both real react-pdf exports, no
+// font dependency at all).
+const MURKEKKEP = '#3b2e24'
+const GRI = '#8b7d70'
+const CIZGI = '#ded2c3'
+const PINE = '#2f4334'
 
 const s = StyleSheet.create({
   sayfa: { padding: 36, paddingBottom: 48, backgroundColor: '#FFFFFF', fontFamily: KARNE_FONT, fontSize: 10, color: MURKEKKEP },
   ustSatir: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  marka: { fontSize: 9, color: GRI },
+  markaSatir: { flexDirection: 'row', alignItems: 'center' },
+  marka: { fontSize: 9, color: GRI, marginLeft: 4 },
   baslik: { fontSize: 20, fontWeight: 700, marginTop: 2 },
   uretim: { fontSize: 9, color: GRI, textAlign: 'right' },
-  uyari: { borderWidth: 1.5, borderColor: MURKEKKEP, padding: 10, marginBottom: 14 },
+  uyari: { borderWidth: 1.5, borderColor: PINE, padding: 10, marginBottom: 14 },
   uyariBaslik: { fontSize: 11, fontWeight: 700, marginBottom: 3 },
   uyariMetin: { fontSize: 10, lineHeight: 1.4 },
   kimlik: { flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderBottomWidth: 1, borderColor: CIZGI, paddingVertical: 8, marginBottom: 14 },
@@ -62,7 +70,7 @@ const s = StyleSheet.create({
   siradakiAna: { fontSize: 12, fontWeight: 700 },
   siradakiDiger: { fontSize: 9.5, color: GRI, marginTop: 3 },
   tablo: { borderWidth: 1, borderColor: CIZGI },
-  tabloBaslik: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: MURKEKKEP, paddingVertical: 5, paddingHorizontal: 6 },
+  tabloBaslik: { flexDirection: 'row', backgroundColor: '#F6F0E4', borderBottomWidth: 1, borderBottomColor: PINE, paddingVertical: 5, paddingHorizontal: 6 },
   satir: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: CIZGI, paddingVertical: 5, paddingHorizontal: 6 },
   hucreBaslik: { fontSize: 8, fontWeight: 700, color: GRI },
   colAd: { width: '30%', paddingRight: 6 },
@@ -70,7 +78,7 @@ const s = StyleSheet.create({
   colTarih: { width: '16%' },
   colLotYer: { width: '20%', paddingRight: 6 },
   colKaynak: { width: '24%' },
-  rozet: { alignSelf: 'flex-start', borderWidth: 0.75, borderColor: MURKEKKEP, borderRadius: 6, paddingVertical: 1, paddingHorizontal: 4, fontSize: 8 },
+  rozet: { alignSelf: 'flex-start', borderWidth: 0.75, borderColor: PINE, borderRadius: 6, paddingVertical: 1, paddingHorizontal: 4, fontSize: 8, color: PINE },
   bos: { fontSize: 10, color: GRI, padding: 10 },
   aciklama: { fontSize: 8.5, color: GRI, marginTop: 10, lineHeight: 1.4 },
   altBilgi: { position: 'absolute', bottom: 20, left: 36, right: 36, flexDirection: 'row', justifyContent: 'space-between', fontSize: 8, color: GRI },
@@ -83,7 +91,12 @@ export function AsiKarnesiPdfBelgesi({ karne }: { karne: AsiKarnesi }) {
       <Page size="A4" style={s.sayfa}>
         <View style={s.ustSatir}>
           <View>
-            <Text style={s.marka}>Notya · Sağlığım</Text>
+            <View style={s.markaSatir}>
+              <Svg width={10} height={10} viewBox="0 0 24 24">
+                <Path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth={1.6} fill="none" />
+              </Svg>
+              <Text style={s.marka}>Notya · Sağlığım</Text>
+            </View>
             <Text style={s.baslik}>{ASI_KARNESI_BASLIK}</Text>
           </View>
           <Text style={s.uretim}>Oluşturulma: {trTarih(karne.uretimTarihi)}</Text>

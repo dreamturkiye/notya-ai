@@ -3,7 +3,7 @@
  *  - tek içerik modeli: kaynak ayrımı (karneden aktarıldı / klinikte uygulandı / beyan), sıradaki aşı yalnız hekimin tarihi
  *  - KLİNİK YORUM YOK (portal dili) · e-Nabız uyarısı ekranda, çıktıda ve PDF'te
  *  - PDF: Türkçe karakterler (ı ş ğ İ Ş Ğ ö ç ü) üretilen PDF METNİNDE bozulmadan — gömülü TrueType, Helvetica değil
- *  - yazdırma: kabuk/düğmeler gizli, beyaz zemin + siyah metin, satırlar bölünmez
+ *  - yazdırma: kabuk/düğmeler gizli, beyaz zemin + sıcak koyu (kahverengi) metin, satırlar bölünmez
  *  - portalde e-posta gönderme yüzeyi YOK (Kaan, 2026-09-19 — regresyon koruması)
  *  - evrensel modül: branş kapısı yok, yalnız aşı kaydı varsa
  * Sentetik veri.
@@ -171,14 +171,16 @@ describe('Sağlığım ekranı (SSR)', () => {
     assert.ok(!html.includes('data-eylem="paylas"'), 'desteklenmeyen ortamda sessiz düğme bırakılmaz')
     assert.ok(html.includes('<style>') && html.includes('@media print'))
   })
-  it('yazdırma CSS: kabuk + gezinme + düğmeler gizli, beyaz zemin siyah metin, satır bölünmez, uyarı gizlenmez', () => {
+  it('yazdırma CSS: kabuk + gezinme + düğmeler gizli, beyaz zemin sıcak koyu metin, satır bölünmez, uyarı gizlenmez', () => {
     const css = ASI_KARNESI_YAZDIRMA_CSS
     assert.match(css, /@media print/)
     const gizle = css.match(/([^{}]+)\{\s*display:\s*none !important;\s*\}/)?.[1] || ''
     for (const s of ['.sg-header', '.sg-nav', '.sg-footer', '[data-yazdirma-gizle]']) assert.ok(gizle.includes(s), s)
     assert.ok(!gizle.includes('asi-karnesi-uyari') && !gizle.includes('asi-karnesi-rozet'), 'e-Nabız uyarısı ve kaynak rozeti basılır')
     assert.match(css, /background: #fff !important;/)
-    assert.match(css, /color: #000 !important;/)
+    // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): "no B&W rapor/pdf" yönergesi sonrası saf siyahtan
+    // sıcak mürekkep tonuna (#3b2e24) geçildi; ink-economy amacı (beyaz zemin, düşük doygunluk) aynı kaldı.
+    assert.match(css, /color: #3b2e24 !important;/)
     assert.match(css, /\.asi-karnesi-satir[^{]*\{[^}]*break-inside: avoid/)
   })
   it('PortalShell sınıfları gerçekten o adları taşır (CSS ile kabuk eşleşir)', () => {
