@@ -169,7 +169,7 @@ export default function ReceteYazdirPage() {
   const boy = kagit === 'A5' ? mm(210) : mm(297);
 
   return (
-    <div style={{ background: '#E5E7EB', minHeight: '100vh' }}>
+    <div style={{ background: '#e9e2d3', minHeight: '100vh' }}>
       <style>{`
         @media print { .yazdirma-gizle { display: none !important; } body { background: white !important; } .recete-kagit { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: auto !important; } .kutu-giris { border: none !important; background: transparent !important; width: 2.2em !important; text-align: right; padding: 0 !important; } .kutu-eksi, .kutu-arti { display: none !important; } @page { size: ${kagit} portrait; margin: 12mm; } }
       `}</style>

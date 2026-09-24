@@ -518,9 +518,6 @@ export default function DoktorDashboard() {
         </div>
       </div>
 
-      <div style={S({ padding: '20px 0 4px', textAlign: 'center', fontSize: 12, color: 'rgba(58,44,34,0.35)' })}>
-        © 2026 Dream Türkiye — Notya AI. Tüm hakları saklıdır / All rights reserved (5846 FSEK · 17 U.S.C.) • KVKK uyumlu • Saat dilimi: Türkiye (TRT)
-      </div>
     </div>
   )
 }

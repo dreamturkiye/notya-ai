@@ -279,7 +279,7 @@ export default function TetkikPage() {
             id="print-area"
             style={{
               background: '#fff',
-              color: '#0F172A',
+              color: CHROME_RENK.ink,
               width: '100%',
               maxWidth: 720,
               maxHeight: '90dvh',
@@ -288,9 +288,13 @@ export default function TetkikPage() {
               padding: 22,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #CBD5E1', paddingBottom: 12, marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${CHROME_RENK.border}`, paddingBottom: 12, marginBottom: 16 }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: 18 }}>TETKİK İSTEK FORMU</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+                  <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: '#6d6055' }}>Notya</span>
+                </div>
+                <div style={{ fontWeight: 600, fontSize: 18 }}>Tetkik İstek Formu</div>
                 <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>TC SAĞLIK BAKANLIĞI</div>
               </div>
               <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{new Date().toLocaleDateString('tr-TR')}</div>
@@ -349,8 +353,8 @@ export default function TetkikPage() {
                 onClick={() => setShowPrintable(false)}
                 style={{
                   ...toolsPrimaryBtn(false),
-                  background: '#E2E8F0',
-                  color: '#0F172A',
+                  background: '#EFE9DC',
+                  color: CHROME_RENK.ink,
                 }}
               >
                 Kapat

@@ -247,13 +247,17 @@ export default function SgkRaporPage() {
             style={{
               marginTop: 20,
               background: '#FFFFFF',
-              color: '#0F172A',
+              color: CHROME_RENK.ink,
               borderRadius: 16,
               padding: 22,
               border: '1px solid #E5DFD0',
             }}
           >
-            <div style={{ textAlign: 'center', borderBottom: '2px solid #0F172A', paddingBottom: 12, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 6 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+              <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
+            </div>
+            <div style={{ textAlign: 'center', borderBottom: `2px solid ${CHROME_RENK.ink}`, paddingBottom: 12, marginBottom: 16 }}>
               <div style={{ fontWeight: 800, letterSpacing: 1.2 }}>
                 {draftTip.kanal === 'sgk_medula' ? 'SGK / MEDULA RAPOR TASLAĞI' : 'MUAYENEHANE İSTİRAHAT BELGESİ'}
               </div>
@@ -528,16 +532,16 @@ export default function SgkRaporPage() {
 const sec: React.CSSProperties = { marginBottom: 14, fontSize: 14, lineHeight: 1.55 }
 const secHead: React.CSSProperties = {
   fontWeight: 700,
-  borderBottom: '1px solid #CBD5E1',
+  borderBottom: `1px solid ${CHROME_RENK.border}`,
   marginBottom: 6,
 }
 const noteBox: React.CSSProperties = {
   marginTop: 16,
   padding: '10px 12px',
-  background: '#F8FAFC',
-  border: '1px solid #E2E8F0',
+  background: '#F6F0E4',
+  border: `1px solid ${CHROME_RENK.border}`,
   borderRadius: 8,
   fontSize: 11,
   lineHeight: 1.55,
-  color: '#475569',
+  color: '#5a4e42',
 }

@@ -25,7 +25,11 @@ function OnamYazdirIc() {
         <input value={hekim} onChange={(e) => setHekim(e.target.value)} placeholder="Hekim" style={{ padding: 6, flex: 1 }} />
         <button type="button" onClick={() => window.print()} style={{ padding: '6px 14px', fontWeight: 700 }}>Yazdır / PDF</button>
       </div>
-      <h1 style={{ fontSize: 20, marginBottom: 4 }}>{s.ad}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+        <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: '#6d6055' }}>Notya</span>
+      </div>
+      <h1 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>{s.ad}</h1>
       <div style={{ fontSize: 12, color: '#555', marginBottom: 16 }}>Bilgilendirilmiş Onam Formu · Tarih: {new Date().toLocaleDateString('tr-TR')}</div>
       <p style={{ fontSize: 13 }}><b>Hasta:</b> {ad || '______________________'} &nbsp; <b>Hekim:</b> {hekim || '______________________'}</p>
       <h2 style={{ fontSize: 15 }}>Bilgilendirme</h2>

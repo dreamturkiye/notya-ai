@@ -138,7 +138,7 @@ export default function NotYazdir() {
         /* NOTYA-PDF-01 (Gökhan): sayfalandırma — başlık sayfa sonunda yetim kalmasın,
            başlık+içerik blokları mümkünse bölünmeden birlikte taşınsın. */
         .not-bolum { margin-bottom: 14px; break-inside: avoid; page-break-inside: avoid; }
-        .not-etiket { font: 700 11px/1.4 system-ui; letter-spacing: 0.06em; color: #0B6B62; text-transform: uppercase; margin-bottom: 3px; break-after: avoid; page-break-after: avoid; }
+        .not-etiket { font: 700 11px/1.4 system-ui; letter-spacing: 0.06em; color: #2f4334; text-transform: uppercase; margin-bottom: 3px; break-after: avoid; page-break-after: avoid; }
         .not-metin { font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; }
       `}</style>
 
@@ -174,7 +174,11 @@ export default function NotYazdir() {
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 24px 40px' }}>
         <div style={{ borderBottom: '2px solid #111', paddingBottom: 10, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>MUAYENE NOTU</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+              <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 500 }}>Muayene Notu</div>
             <div style={{ font: '12px system-ui', color: '#444' }}>{bransEtiketi(not.specialty)} · {trTarih(not.createdAt)} (TRT)</div>
             {/* Akış: Anamnez → Fizik Muayene → Tanı → Tedavi (Dr. Gökhan referansları) */}
           </div>

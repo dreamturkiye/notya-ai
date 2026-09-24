@@ -3,7 +3,7 @@
  *   • zaman çizelgesi: durum rozeti, hedef branş, klinik soru, istem tarihi; yanıtlandıysa özet + tarih + 📎 rapor +
  *     "Muayene notuna eklendi"; açıksa N gündür + Yanıt ekle / Hatırlat / Yanıtsız kapat; eski kayıt rozeti
  *   • terim: UI "Konsültasyon" der, "sevk" yalnız SGK uyarı cümlesinde geçer
- *   • istem formu kağıdı: başlık KONSÜLTASYON İSTEM FORMU, SGK sevk belgesi olmadığı notu, TTB alanları, veli satırı yaşa bağlı
+ *   • istem formu kağıdı: başlık Konsültasyon İstem Formu, SGK sevk belgesi olmadığı notu, TTB alanları, veli satırı yaşa bağlı
  *   • evrensel: hiçbir branşa özgü alan (Baş Çevresi, Neyzi…) taşımaz; dokunma hedefleri ≥ 44 px
  */
 import { describe, it } from 'node:test'
@@ -140,15 +140,18 @@ describe('KONSULTASYON-01 — yeni istem formu (SSR)', () => {
   })
 })
 
-describe('KONSULTASYON-01 — KONSÜLTASYON İSTEM FORMU kağıdı (SSR)', () => {
+describe('KONSULTASYON-01 — Konsültasyon İstem Formu kağıdı (SSR)', () => {
   const v = (veli: boolean): IstemFormuVerisi => ({
     konsultasyon: { id: 'k', hedefEtiketi: 'KBB', hedef_hekim: 'Dr. QA Konsültan', klinik_soru: 'İşitme kaybı var mı?', not_metni: null, aciliyet: 'oncelikli', tanilar: 'İşitme kaybı şüphesi', mevcut_durum: null, istem_tarihi: '2026-09-12', created_at: '2026-09-12T08:00:00Z' },
     hasta: { adSoyad: 'QA Çocuk', dogumTarihi: '2020-05-01', cinsiyet: 'Erkek', veliSatiri: veli },
     baslik: { hekim: 'Dr. QA Müdavi', brans: 'Çocuk Sağlığı ve Hastalıkları', satirlar: ['Dr. QA Müdavi', 'QA Muayenehanesi'], logoDataUrl: '', diplomaNo: '123' },
   })
   const h = renderToStaticMarkup(createElement(KonsultasyonIstemFormuKagidi, { v: v(true) }))
-  it('başlık KONSÜLTASYON İSTEM FORMU; SGK sevk belgesi olmadığı notu altta', () => {
-    assert.match(h, /KONSÜLTASYON İSTEM FORMU/)
+  it('başlık Konsültasyon İstem Formu; SGK sevk belgesi olmadığı notu altta', () => {
+    // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): başlık bütün yazdırılabilir belgelerde ALL-CAPS'ten
+    // Title Case'e geçti (Fraunces başlık slebi ile tutarlı — Muayene Notu, Epikriz, Gebe İzlem
+    // Kartı aynı düzeltmeyi aldı), bu yüzden regex de güncellendi; anlam değişmedi.
+    assert.match(h, /Konsültasyon İstem Formu/)
     assert.doesNotMatch(h, /HASTA SEVK FORMU|SEVK BELGESİ/, 'SGK formu başlığı taklit edilmez')
     assert.match(h, /Bu belge SGK sevk belgesi \(SUT EK-2\/F Hasta Sevk Formu \/ e-sevk\) değildir/)
     assert.match(h, /MEDULA üzerinden düzenlenir/)

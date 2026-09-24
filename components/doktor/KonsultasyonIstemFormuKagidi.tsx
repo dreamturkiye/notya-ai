@@ -33,8 +33,12 @@ export default function KonsultasyonIstemFormuKagidi({ v }: { v: IstemFormuVeris
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px clamp(16px, 5vw, 40px)', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', borderBottom: '2px solid #111', paddingBottom: 12, marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>KONSÜLTASYON İSTEM FORMU</div>
-          <div style={{ fontSize: 11.5, color: '#555' }}>Meslektaş görüşü istemi</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+            <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 500 }}>Konsültasyon İstem Formu</div>
+          <div style={{ fontSize: 11.5, color: '#8b7d70' }}>Meslektaş görüşü istemi</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           {b.logoDataUrl && <img src={b.logoDataUrl} alt="" style={{ height: 38, marginBottom: 4 }} />}
