@@ -50,6 +50,19 @@ describe('yenidoğan ölçüm birimleri — Neyzi persentili', () => {
     assert.equal(buyumeYorumunuEkle(ai, p), ai)
   })
 
+  it('NOTYA-VKI-ESIK-01: 23 aylık bir "24 aylık rutin kontrol" ziyaretinde VKİ artık hesaplanır', () => {
+    // Kaan (2026-09-24): Umutcan Türkoğlu, doğum 15.06.2024, ziyaret 15.05.2026 -- tam 23.0 ay,
+    // eski eşik (>=24) VKİ'yi tamamen atlıyor ve işlem erişkin WHO sınıflandırmasına düşüyordu.
+    const p23 = buyumePersentilleriniHesapla({ kilo: '11', boy: '85' }, '2024-06-15', 'male', '2026-05-15')
+    assert.ok(p23?.vki, '23 aylıkta VKİ artık hesaplanmalı')
+    assert.ok(p23?.vkiSinif, '23 aylıkta VKİ sınıfı artık atanmalı')
+  })
+
+  it('NOTYA-VKI-ESIK-01: 22 aylıkta VKİ hala hesaplanmaz -- genişleme yalnız bir aylık', () => {
+    const p22 = buyumePersentilleriniHesapla({ kilo: '11', boy: '84' }, '2024-06-15', 'male', '2026-04-15')
+    assert.equal(p22?.vki, undefined, '22 aylıkta VKİ hâlâ hesaplanmamalı -- eşik yalnız 1 ay genişledi, tamamen kaldırılmadı')
+  })
+
   it('birim silinip 3180 kg sanılırsa 100. persentil olur — bu yüzden gram çevrilir', () => {
     const ham = parseFloat(String('3180 gr').replace(',', '.').replace(/[^0-9.]/g, ''))
     assert.equal(ham, 3180)

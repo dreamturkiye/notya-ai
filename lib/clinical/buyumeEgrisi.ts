@@ -320,7 +320,15 @@ export function buyumePersentilleriniHesapla(
   if (kilo != null) { const r = persentilHesapla('kilo', cinsiyet, ayYas, kilo); if (r) out.kilo = persentilMetni(r.persentil) }
   if (boy != null) { const r = persentilHesapla('boy', cinsiyet, ayYas, boy); if (r) out.boy = persentilMetni(r.persentil) }
   if (bas != null) { const r = persentilHesapla('basCevresi', cinsiyet, ayYas, bas); if (r) out.basCevresi = persentilMetni(r.persentil) }
-  if (kilo != null && boy != null && ayYas >= 24) {
+  // NOTYA-VKI-ESIK-01 (Kaan, 2026-09-24): 23 aylık bir "24 aylık rutin kontrol" ziyaretinde VKİ
+  // hiç görünmüyordu -- gerçek doğum tarihinden hesaplanan yaş tam 23.0 aydı, eşik ise katı 24 idi.
+  // Bu, klinik gerçekliğe uymuyordu: "2 yaş kontrolü" muayeneleri rutin olarak birkaç hafta erken ya
+  // da geç yapılır, ve VKİ-yaş eğrisinde tam 24.0 ayda klinik olarak anlamlı bir sınır yok (referans
+  // noktaları zaten 21. aydan itibaren mevcut -- yukarıdaki VKI_ERKEK/VKI_KIZ). Eşik 23 aya çekildi:
+  // aslında 2 yaşından küçük bir bebeği yanlışlıkla değerlendirmeye almadan, bir aylık normal
+  // randevu sapmasını kapsayacak en dar genişleme. "2 yaş ve üzeri" ilkesi (Kaan, 2026-09-13,
+  // vkiSiniflandir) değişmedi -- yalnız kesin sınır gerçekçi bir tolerans kazandı.
+  if (kilo != null && boy != null && ayYas >= 23) {
     const vki = kilo / Math.pow(boy / 100, 2)
     const r = persentilHesapla('vki', cinsiyet, ayYas, vki)
     if (r) { out.vki = persentilMetni(r.persentil); out.vkiSinif = vkiSinifEtiket(vkiSiniflandir(r.persentil)) }
