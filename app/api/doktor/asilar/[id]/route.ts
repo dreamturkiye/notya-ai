@@ -1,6 +1,7 @@
 /** NOTYA-INTAKE-02 — tekil aşı kaydı: güncelle, sil. */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
+import { LOT_AZAMI, lotYerTemizle, YER_AZAMI } from '@/lib/asi/asiLotYeri'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { supabase, doktorId } = oturum
 
   const body = await req.json().catch(() => ({}))
-  const { asiAdi, dozNo, kategori, uygulamaTarihi, sonrakiDozTarihi, kaynak, notlar } = body as {
+  const { asiAdi, dozNo, kategori, uygulamaTarihi, sonrakiDozTarihi, kaynak, notlar, lotNo, uygulamaYeri } = body as {
     asiAdi?: string
     dozNo?: number
     kategori?: string
@@ -18,6 +19,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     sonrakiDozTarihi?: string
     kaynak?: string
     notlar?: string
+    lotNo?: string | null
+    uygulamaYeri?: string | null
   }
 
   const guncelleme: Record<string, unknown> = {}
@@ -33,6 +36,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   if (kaynak !== undefined) guncelleme.kaynak = kaynak === 'beyan' ? 'beyan' : 'kayit'
   if (notlar !== undefined) guncelleme.notlar = notlar?.trim() || null
+  if (lotNo !== undefined) guncelleme.lot_no = lotYerTemizle(lotNo, LOT_AZAMI)
+  if (uygulamaYeri !== undefined) guncelleme.uygulama_yeri = lotYerTemizle(uygulamaYeri, YER_AZAMI)
 
   if (Object.keys(guncelleme).length === 0) {
     return NextResponse.json({ error: 'G\u00fcncellenecek alan yok.' }, { status: 400 })

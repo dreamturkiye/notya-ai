@@ -12,7 +12,8 @@
 import path from 'node:path'
 import React from 'react'
 import { Document, Font, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer'
-import { ASI_KARNESI_BASLIK, dozMetni, HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, KAYNAK_SIRASI, tarihMetni, type AsiKarnesi } from './karneBelgesi'
+import { ASI_KARNESI_BASLIK, dozMetni, HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, KAYNAK_SIRASI, LOT_YER_BASLIK, tarihMetni, type AsiKarnesi } from './karneBelgesi'
+import { lotYerHucresi } from './asiLotYeri'
 import { trTarih } from './karneOkuma'
 
 export const KARNE_FONT = 'NotyaKarneSans'
@@ -64,10 +65,11 @@ const s = StyleSheet.create({
   tabloBaslik: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: MURKEKKEP, paddingVertical: 5, paddingHorizontal: 6 },
   satir: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: CIZGI, paddingVertical: 5, paddingHorizontal: 6 },
   hucreBaslik: { fontSize: 8, fontWeight: 700, color: GRI },
-  colAd: { width: '40%', paddingRight: 6 },
-  colDoz: { width: '12%' },
-  colTarih: { width: '18%' },
-  colKaynak: { width: '30%' },
+  colAd: { width: '30%', paddingRight: 6 },
+  colDoz: { width: '10%' },
+  colTarih: { width: '16%' },
+  colLotYer: { width: '20%', paddingRight: 6 },
+  colKaynak: { width: '24%' },
   rozet: { alignSelf: 'flex-start', borderWidth: 0.75, borderColor: MURKEKKEP, borderRadius: 6, paddingVertical: 1, paddingHorizontal: 4, fontSize: 8 },
   bos: { fontSize: 10, color: GRI, padding: 10 },
   aciklama: { fontSize: 8.5, color: GRI, marginTop: 10, lineHeight: 1.4 },
@@ -117,6 +119,7 @@ export function AsiKarnesiPdfBelgesi({ karne }: { karne: AsiKarnesi }) {
             <Text style={[s.hucreBaslik, s.colAd]}>{B('Aşı')}</Text>
             <Text style={[s.hucreBaslik, s.colDoz]}>{B('Doz')}</Text>
             <Text style={[s.hucreBaslik, s.colTarih]}>{B('Tarih')}</Text>
+            <Text style={[s.hucreBaslik, s.colLotYer]}>{B(LOT_YER_BASLIK)}</Text>
             <Text style={[s.hucreBaslik, s.colKaynak]}>{B('Kaynak')}</Text>
           </View>
           {karne.yapilanlar.length === 0 && <Text style={s.bos}>Kayıtlı aşı yok.</Text>}
@@ -125,6 +128,7 @@ export function AsiKarnesiPdfBelgesi({ karne }: { karne: AsiKarnesi }) {
               <Text style={s.colAd}>{a.ad}</Text>
               <Text style={s.colDoz}>{dozMetni(a.doz)}</Text>
               <Text style={s.colTarih}>{tarihMetni(a.tarih)}</Text>
+              <Text style={s.colLotYer}>{lotYerHucresi(a)}</Text>
               <View style={s.colKaynak}><Text style={s.rozet}>{a.kaynakEtiketi}</Text></View>
             </View>
           ))}

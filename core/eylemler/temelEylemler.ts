@@ -31,6 +31,7 @@ import { bransKapsami } from '@/lib/specialties/kapsam'
 import { ilacUyarilariHesapla } from './ilacUyari'
 import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
 import { asiAdiNormalize } from '@/lib/asi/karneOkuma'
+import { LOT_AZAMI, lotYerTemizle, YER_AZAMI } from '@/lib/asi/asiLotYeri'
 import { encrypt } from '@/lib/security/encryption'
 
 /** Helper: build a definition with the schema derived from its own field list. */
@@ -62,6 +63,9 @@ const ASI_ALANLARI: AlanTanimi[] = [
     ],
   },
   { anahtar: 'sonraki_doz_tarihi', etiket: 'Sonraki doz', tip: 'tarih', aciklama: 'Next dose due date, only if the source states it' },
+  // NOTYA-ASI-LOT-01: optional; filled only when the doctor / document states them — never guessed.
+  { anahtar: 'lot_no', etiket: 'Lot no', tip: 'metin', aciklama: 'Lot / batch number exactly as stated (e.g. "Vaxi12345"). Only if the doctor or the document says it; otherwise leave empty' },
+  { anahtar: 'uygulama_yeri', etiket: 'Uygulama yeri', tip: 'metin', aciklama: 'Injection site / route as stated (e.g. "IM", "sol deltoid", "sağ uyluk", "ağızdan"). Only if stated; otherwise leave empty' },
   { anahtar: 'notlar', etiket: 'Not', tip: 'metin' },
 ]
 
@@ -119,12 +123,14 @@ export const ASI_KAYDI_EKLE = eylem({
       sonraki_doz_tarihi: v.sonraki_doz_tarihi ?? null,
       kaynak: v.kaynak === 'kayit' ? 'kayit' : 'beyan',
       notlar: v.notlar ?? null,
+      lot_no: lotYerTemizle(v.lot_no, LOT_AZAMI),
+      uygulama_yeri: lotYerTemizle(v.uygulama_yeri, YER_AZAMI),
       belge_id: belgeId,
       hekim_onay_at: new Date().toISOString(),
     }
     let { data, error } = await ctx.supabase.from('asilar').insert(satir).select('id').single()
-    if (error && /belge_id|hekim_onay_at|column/i.test(String(error.message || ''))) {
-      const { belge_id: _b, hekim_onay_at: _h, ...eski } = satir
+    if (error && /belge_id|hekim_onay_at|lot_no|uygulama_yeri|column/i.test(String(error.message || ''))) {
+      const { belge_id: _b, hekim_onay_at: _h, lot_no: _l, uygulama_yeri: _y, ...eski } = satir
       ;({ data, error } = await ctx.supabase.from('asilar').insert(eski).select('id').single())
     }
     if (error || !data) throw new Error(error?.message || 'Aşı kaydedilemedi.')

@@ -259,6 +259,23 @@ describe('Onay: doğrulama, makullük, mükerrer, idempotans', () => {
     assert.equal(kayit.doctor_id, DOKTOR, 'denetim satırı onaylayanı yazmıyor')
   })
 
+  it('NOTYA-ASI-LOT-01: lot no / uygulama yeri söylenirse kolona yazılır; tahmin edilen lot düşer', async () => {
+    const o = await oneriAc('asi_kaydi_ekle', hepsiDoktordan({ asi_adi: 'Grip', uygulama_tarihi: '2025-02-15', kaynak: 'kayit', lot_no: 'Vaxi12345', uygulama_yeri: 'IM' }))
+    assert.equal(o!.veri.lot_no, 'Vaxi12345')
+    const s = await eylemOnayla({ supabase: sb, doktorId: DOKTOR, oneriId: o!.id, brans: 'pediatri' })
+    assert.equal(s.ok, true)
+    const satir = db.tablo('asilar').at(-1)!
+    assert.equal(satir.lot_no, 'Vaxi12345')
+    assert.equal(satir.uygulama_yeri, 'IM')
+    assert.equal(satir.notlar, null, 'lot / yer notlar\'a paketlenmez')
+    const t = await oneriAc('asi_kaydi_ekle', {
+      asi_adi: 'KKK', uygulama_tarihi: '2025-03-01', lot_no: 'UYDURMA1',
+      alan_kaynaklari: { asi_adi: { kaynak: 'doktor_soyledi' }, uygulama_tarihi: { kaynak: 'doktor_soyledi' }, lot_no: { kaynak: 'tahmin' } },
+    })
+    assert.equal(t!.veri.lot_no, undefined, 'tahmin edilen lot değer olarak yazıldı')
+    assert.ok(!t!.eksik_alanlar.includes('asi_adi'))
+  })
+
   it('Hep B → Hepatit B normalize; belge_id kaynaklardan taşınır', async () => {
     assert.equal(asiAdiNormalize('Hep B'), 'Hepatit B')
     assert.equal(asiAdiNormalize('Hepatit B aşısı'), 'Hepatit B')

@@ -12,7 +12,8 @@
  *     saklamaz (sağlık verisini Notya altyapısından geçirmek gereksiz KVKK sorumluluğu — karar ledger'da).
  *  3. Yazdır — tarayıcının yazdırma diyaloğu; @media print kabuğu/düğmeleri gizler, beyaz zemin + siyah metin basar.
  *
- * KLİNİK YORUM YOK: yalnız kayıtlı aşı · doz · tarih · kaynak ve hekimin girdiği sonraki doz tarihi.
+ * KLİNİK YORUM YOK: yalnız kayıtlı aşı · doz · tarih · lot / uygulama yeri (kayıtlıysa) · kaynak ve hekimin girdiği
+ * sonraki doz tarihi.
  * e-Nabız uyarısı ZORUNLU ve tam boyutta — gizlenmez, küçültülmez, çıktıda da yer alır.
  */
 import Link from 'next/link'
@@ -20,8 +21,9 @@ import { useEffect, useState } from 'react'
 import type { PortalAsiKarnesi } from '@/lib/portal/types'
 import {
   ASI_KARNESI_BASLIK, ASI_KARNESI_YAZDIRMA_CSS, asiKarnesiDosyaAdi, dozMetni, HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI,
-  KAYNAK_SIRASI, PAYLAS_IPUCU, tarihMetni,
+  KAYNAK_SIRASI, LOT_YER_BASLIK, PAYLAS_IPUCU, tarihMetni,
 } from '@/lib/asi/karneBelgesi'
+import { lotYerHucresi } from '@/lib/asi/asiLotYeri'
 import { trTarih, type AsiKaynakTuru } from '@/lib/asi/karneOkuma'
 import { dosyaPaylasimiVar } from '@/lib/asi/karnePaylasim'
 import { EmptyState, SectionHeader, SoftPanel } from './ui'
@@ -156,6 +158,7 @@ export function AsiKarnesiView({ karne, basePath, pdfUrl }: { karne: PortalAsiKa
                   <span style={{ fontSize: 14.5 }}>{a.doz ? `${dozMetni(a.doz)} · ` : ''}{tarihMetni(a.tarih)}</span>
                   <Rozet tur={a.kaynak} />
                 </div>
+                {lotYerHucresi(a) && <div className="sg-goz-meta" data-lot-yer="" style={{ fontSize: 13.5 }}>{LOT_YER_BASLIK}: {lotYerHucresi(a)}</div>}
               </li>
             ))}
           </ol>
