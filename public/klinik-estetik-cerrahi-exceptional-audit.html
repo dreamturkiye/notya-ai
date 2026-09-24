@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Estetik & Plastik Cerrahi — Klinik post-exceptional audit · Notya</title>
+  <meta name="description" content="KLINIK-ESTETIK-CERRAHI-EXCEPTIONAL-01: Estetik & Plastik Cerrahi ~18% → ~91%. 3 Klinik Araç. Ameliyat bakımım Strong. No PHI." />
+  <style>    :root {
+      --bg:#060C18; --surface:#0D1526; --surface2:#121C30; --stroke:rgba(255,255,255,0.10);
+      --text:#EDF1F7; --muted:#8FA0B5; --dim:#64748B; --indigo:#15803D;
+      --blue:#60A5FA; --blue-soft:rgba(96,165,250,0.14); --amber:#F59E0B; --amber-soft:rgba(245,158,11,0.14);
+      --red:#F87171; --red-soft:rgba(248,113,113,0.14); --green:#34D399;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.45; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 72px; }
+    .brand { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
+    .brand .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; }
+    .brand a { color:#4ADE80; text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:700; letter-spacing:-.02em; }
+    h2 { margin:28px 0 12px; font-size:18px; font-weight:700; }
+    .lede { margin:0 0 14px; color:var(--muted); font-size:15px; max-width:920px; }
+    .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+    .pill { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid transparent; }
+    .pill.success { background:rgba(52,211,153,.14); color:var(--green); border-color:rgba(52,211,153,.25); }
+    .pill.warning { background:var(--amber-soft); color:var(--amber); border-color:rgba(245,158,11,.28); }
+    .pill.danger { background:var(--red-soft); color:var(--red); border-color:rgba(248,113,113,.3); }
+    .pill.info { background:var(--blue-soft); color:var(--blue); border-color:rgba(96,165,250,.25); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px 14px; }
+    .stat .v { font-size:24px; font-weight:700; margin-bottom:4px; }
+    .stat .v.success { color:var(--green); } .stat .v.warning { color:var(--amber); } .stat .v.danger { color:var(--red); }
+    .stat .l { font-size:12px; color:var(--muted); }
+    .callout { border-radius:12px; padding:16px 18px; margin:14px 0 22px; border:1px solid; }
+    .callout.info { background:var(--blue-soft); border-color:rgba(96,165,250,.28); }
+    .callout.warning { background:var(--amber-soft); border-color:rgba(245,158,11,.3); }
+    .callout h2 { margin:0 0 6px; font-size:12px; text-transform:uppercase; }
+    .callout.info h2 { color:var(--blue); } .callout.warning h2 { color:var(--amber); }
+    .callout p { margin:0; font-size:14px; }
+    .table-wrap { border:1px solid var(--stroke); border-radius:12px; overflow:auto; margin-bottom:22px; background:var(--surface); }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+    th,td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--stroke); vertical-align:top; }
+    th { background:var(--surface2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+    td.domain { font-weight:600; } td.note { color:var(--muted); } td.gap { color:#FBBF24; }
+    .bars { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:16px; margin-bottom:22px; }
+    .bar-row { display:grid; grid-template-columns:minmax(160px,280px) 1fr 40px; gap:10px; align-items:center; margin:8px 0; }
+    .bar-track { height:10px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:#15803D; border-radius:999px; }
+    .bar-fill.warn { background:var(--amber); }
+    .cards { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px; }
+    .cards.three { grid-template-columns:repeat(3,1fr); }
+    .card { background:var(--surface); border:1px solid var(--stroke); border-radius:12px; padding:14px; }
+    .card .title { font-size:14px; font-weight:650; margin-bottom:6px; }
+    .card .body { font-size:12px; color:var(--muted); }
+    .banner { border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; border:1px solid; }
+    .banner.ok { background:rgba(21,128,61,.12); border-color:rgba(21,128,61,.4); color:#86EFAC; }
+    .banner.warn { background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.4); color:#FBBF24; }
+    .foot { margin-top:36px; padding-top:16px; border-top:1px solid var(--stroke); font-size:12px; color:var(--dim); }
+    @media (max-width:900px) { .stats,.cards,.cards.three { grid-template-columns:1fr 1fr; } .cards,.cards.three { grid-template-columns:1fr; } .bar-row { grid-template-columns:1fr; } }</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <span class="tag">Notya · Post-exceptional Klinik audit · Estetik & Plastik Cerrahi</span>
+    <span>
+      <a href="/klinik-estetik-cerrahi-presprint-audit.html">Pre-sprint (~18%) →</a> ·
+      <a href="/klinik-exceptional-audit.html">Klinik 10 →</a>
+    </span>
+  </div>
+  <div class="banner ok"><b>Post-exceptional KLINIK-ESTETIK-CERRAHI-EXCEPTIONAL-01</b> — 2026-09-22 · Eylül 19 chrome. Klinik ayrı kategori. ≠ plastik-cerrahi TUS (Yaram, rekonstrüksiyon, OR HIS). <b>Local pack — merge/deploy yalnız go.</b></div>
+  <h1>Estetik & Plastik Cerrahi — Post-exceptional Audit</h1>
+  <p class="lede">Ayakta Teşhis soğuma × TPRECD etik × TR ayaktan rino/lipo/meme izlem ritüeli. Soru: Doktor exceptional barında mı (Klinik yüzeyinde)? <b>Ürün cevap: evet — honest wow ~91% (pre ~18%).</b> Olgunluk: beta-hazir. Uzman-dogrulandi saha pending.</p>
+  <div class="pills">
+    <span class="pill success">KLINIK-ESTETIK-CERRAHI-EXCEPTIONAL-01</span>
+    <span class="pill warning">olgunluk beta-hazir</span>
+    <span class="pill success">3 Klinik Araç</span>
+    <span class="pill success">Ameliyat bakımım Strong</span>
+    <span class="pill info">Honest wow ~91%</span>
+    <span class="pill info">hekim klinik</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v success">9</div><div class="l">Strong slices</div></div>
+    <div class="stat"><div class="v warning">1</div><div class="l">Partial (SBİYS)</div></div>
+    <div class="stat"><div class="v success">3</div><div class="l">Klinik-only Araç</div></div>
+    <div class="stat"><div class="v success">1</div><div class="l">Portal Strong</div></div>
+  </div>
+  <div class="callout info"><h2>Executive verdict</h2><p>Estetik & Plastik Cerrahi Klinik sandalye için ≥90: deterministik motor, 3 Klinik-only araç, gerçek kohort (geciken / rıza-eksik / 112), seans + iki nüsha rıza dosyada, Ameliyat bakımım ritim. ≠ plastik-cerrahi TUS (Yaram, rekonstrüksiyon, OR HIS). Doz/greft/ünite karar desteğidir — kilit hekimde. Tek Partial: canlı SBİYS / e-imza (iddia yok). Bu paket go demeden production’a çıkmaz.</p></div>
+  <h2>Trajectory</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Pre-sprint</div><div class="body">Landing + persona · ~18%</div></div>
+    <div class="card"><div class="title">KLINIK-ESTETIK-CERRAHI-EXCEPTIONAL-01</div><div class="body">3 Araç · Ameliyat bakımım · ~91%</div></div>
+    <div class="card"><div class="title">Next</div><div class="body">go → deploy · MD saha haftası</div></div>
+  </div>
+  <h2>Wow bar</h2>
+  <div class="bars">
+    <div class="bar-row"><span>Pre</span><div class="bar-track"><div class="bar-fill warn" style="width:18%"></div></div><b>18</b></div>
+    <div class="bar-row"><span>Post-exceptional</span><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><b>91</b></div>
+  </div>
+  <h2>Coverage depth</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Domain</th><th>Depth</th><th>In product</th><th>Gap</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Motor</td><td><span class="pill success">Strong</span></td><td class="note">KLINIK-ESTETIK-CERRAHI-EXCEPTIONAL-01 deterministik</td><td class="note">—</td></tr>
+      <tr><td class="domain">Klinik Araçlar</td><td><span class="pill success">Strong</span></td><td class="note">Elektif onam / soğuma · Ameliyat sonrası takvim · Estetik cerrahi kohort</td><td class="note">Doktor’a sızmaz</td></tr>
+      <tr><td class="domain">Hasta portalı (Sağlığım)</td><td><span class="pill success">Strong</span></td><td class="note">Ameliyat bakımım /estetik-ameliyatim — tanı/doz yok</td><td class="gap">Tarih bundle boş state</td></tr>
+      <tr><td class="domain">Kohort</td><td><span class="pill success">Strong</span></td><td class="note">Geciken · rıza-eksik · 112 listesi</td><td class="note">SBİYS yok</td></tr>
+      <tr><td class="domain">Seans / rıza kaydı</td><td><span class="pill success">Strong</span></td><td class="note">İki nüsha + veli/plan; cihaz dosyası</td><td class="gap">SBİYS / e-imza resmi kayıt iddia edilmez</td></tr>
+      <tr><td class="domain">Sızıntı</td><td><span class="pill success">Strong</span></td><td class="note">≠ plastik-cerrahi TUS (Yaram, rekonstrüksiyon, OR HIS)</td><td class="note">Test kilitli</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Mandate / practice</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Mandate</th><th>Level</th><th>In product today</th><th>Gap to wow</th></tr></thead>
+    <tbody><tr><td class="domain">Ayakta Teşhis soğuma</td><td class="note">Reg / BP</td><td class="note">Exceptional pack’te</td><td class="note">—</td></tr><tr><td class="domain">TPRECD etik</td><td class="note">Reg / BP</td><td class="note">Exceptional pack’te</td><td class="note">—</td></tr><tr><td class="domain">TUS plastik sızıntısı yok</td><td class="note">Reg / BP</td><td class="note">Exceptional pack’te</td><td class="note">—</td></tr>
+      <tr><td class="domain">Doktor Araçları sızıntısı</td><td class="note">Product</td><td class="note">/klinik-tools only</td><td class="note">—</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Klinik-only Araçlar</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tool</th><th>Route</th><th>Bucket</th><th>Visibility</th></tr></thead>
+    <tbody>
+      <tr><td class="domain">Elektif onam / soğuma</td><td class="note">Onam → ameliyat gün farkı. Kesi/implant yok.</td><td><span class="pill info">Klinik specialty-only</span></td><td class="note">/klinik-tools/cerrahi-onam · yalnız Estetik & Plastik Cerrahi</td></tr><tr><td class="domain">Ameliyat sonrası takvim</td><td class="note">1 / 7 / 14 / 42. gün pansuman ve izlem.</td><td><span class="pill info">Klinik specialty-only</span></td><td class="note">/klinik-tools/cerrahi-takvim · yalnız Estetik & Plastik Cerrahi</td></tr><tr><td class="domain">Estetik cerrahi kohort</td><td class="note">Soğuma · geç izlem · emboli 112.</td><td><span class="pill info">Klinik specialty-only</span></td><td class="note">/klinik-tools/cerrahi-kohort · yalnız Estetik & Plastik Cerrahi</td></tr>
+      <tr><td class="domain">Doktor / FTR / KBB / psik / derm TUS</td><td class="note">Görünmez</td><td><span class="pill success">Locked</span></td><td class="note">≠ plastik-cerrahi TUS (Yaram, rekonstrüksiyon, OR HIS)</td></tr>
+      <tr><td class="domain">Bu audit HTML</td><td class="note">—</td><td><span class="pill danger">FORBIDDEN</span></td><td class="note">/klinik-tools’a bağlanmaz</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Game changers</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Move</th><th>Why they care</th><th>Size</th></tr></thead>
+    <tbody><tr><td>1</td><td class="domain">Elektif soğuma kaydı</td><td class="note">Aynı gün işlem bayrağı — mevzuat hatırlatması</td><td><span class="pill info">M</span></td></tr><tr><td>2</td><td class="domain">42. gün izlem</td><td class="note">Rino/lipo/meme pansuman ritüeli</td><td><span class="pill info">M</span></td></tr><tr><td>3</td><td class="domain">Ameliyat bakımım</td><td class="note">Hasta-güvenli tarih; kesi yok</td><td><span class="pill info">M</span></td></tr><tr><td>4</td><td class="domain">Emboli 112</td><td class="note">Nefes / bacak şişliği portal beklenmez</td><td><span class="pill info">S</span></td></tr><tr><td>5</td><td class="domain">TUS Yaram kapısı</td><td class="note">Plastik-cerrahi araçları bu dalda açılmaz</td><td><span class="pill info">M</span></td></tr></tbody>
+  </table></div>
+  <h2>Pain → now</h2>
+  <div class="cards">
+    <div class="card"><div class="title">“Onamı aynı gün aldım, sistem uyarmadı”</div><div class="body"><b>Now:</b> Soğuma kaydı: <1 gün zayıf.</div></div><div class="card"><div class="title">“Pansuman gününü deftere yazıyorum”</div><div class="body"><b>Now:</b> 1/7/14/42 takvim + portal.</div></div>
+  </div>
+  <h2>Sources — Golden TR references</h2>
+  <p class="lede" style="font-size:13px">TR klinisyen / müttefik meslek altın kaynakları (doktor TURKISH_REFS ile aynı 5’li kalıp). Çakışmada TR &gt; uluslararası. Katalog: <code>lib/klinik/klinikTurkishRefs.ts</code> — Doktor TURKISH_REFS’e eklenmez.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Golden TR reference</th></tr></thead>
+    <tbody><tr><td>1</td><td class="domain">T.C. SB Ayakta Teşhis ve Tedavi Yapılan Özel Sağlık Kuruluşları Hakkında Yönetmelik (elektif soğuma / onam)</td></tr><tr><td>2</td><td class="domain">Türk Plastik Rekonstrüktif ve Estetik Cerrahi Derneği (TPRECD) etik ve hasta güvenliği</td></tr><tr><td>3</td><td class="domain">Estetik Plastik Cerrahi Derneği (EPCD) rino/lipo/meme izlem pratik önerileri</td></tr><tr><td>4</td><td class="domain">T.C. SB ameliyathane / cerrahi güvenlik protokolleri (ayaktan elektif)</td></tr><tr><td>5</td><td class="domain">SGK elektif kozmetik paket iddiası yazılmaz — rekonstrüktif HIS TUS plastiktedir</td></tr></tbody>
+  </table></div>
+  <h2>Intentionally out</h2>
+  <p class="lede" style="font-size:13px">OR scheduling · implant seçimi · rekonstrüktif HIS. SOAP Doktor kopyası yok. Audit Araçlar’a bağlanmaz.</p>
+  <h2>Recommended next</h2>
+  <div class="cards three">
+    <div class="card"><div class="title">Impress</div><div class="body">Kohort persist + portal tarih bundle.</div></div>
+    <div class="card"><div class="title">Mandate</div><div class="body">Soğuma e-imza out (bilerek).</div></div>
+    <div class="card"><div class="title">Saha</div><div class="body">Bir beta haftası → uzman-dogrulandi.</div></div>
+  </div>
+  <p class="foot">Post-exceptional KLINIK-ESTETIK-CERRAHI-EXCEPTIONAL-01 · 2026-09-22 · No PHI · wait for go · <a href="/klinik-estetik-cerrahi-presprint-audit.html">pre →</a></p>
+</div>
+</body>
+</html>

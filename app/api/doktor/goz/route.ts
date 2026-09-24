@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { olcumSchema, enjeksiyonSchema, drSchema, fundusSchema, SGK_SABLON } from '@/specialties/goz-hastaliklari/schema'
 import { fundusBosMu, fundusMetni, fundusNormalize, type FundusKayit } from '@/specialties/goz-hastaliklari/engines/fundus'
 import { vaCoz, vaGoster, enIyiUzak, kopyaIleriTaslak, type VaSeti } from '@/specialties/goz-hastaliklari/engines/va'
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
     sb.from('goz_kontroller').select('id, tarih, neden, dilatasyon, durum').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).limit(20),
     sb.from('goz_pediatrik').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).maybeSingle(),
     sb.from('sevkler').select('id, not_metni, kaynak, created_at, doctor_id').eq('patient_id', h.id).eq('hedef', 'goz').eq('durum', 'acik').order('created_at', { ascending: false }).limit(5),
-    sb.from('sessions').select('id').eq('patient_id', h.id).eq('doctor_id', doktorId).gte('created_at', `${T}T00:00:00`).limit(5),
+    arsivsizSeanslar(sb, 'id').eq('patient_id', h.id).eq('doctor_id', doktorId).gte('created_at', `${T}T00:00:00`).limit(5),
     sb.from('goz_kuru_goz').select('*').eq('patient_id', h.id).eq('doctor_id', doktorId).order('tarih', { ascending: false }).limit(20),
   ])
 
@@ -136,10 +137,10 @@ export async function GET(req: NextRequest) {
   const intakeYanit = await sonIntake(sb, doktorId, h.id)
   const intake = intakeYanit ? intakeSubjektif(intakeYanit) : null
   let bugunSikayet: string[] = []
-  const seansIdler = (notQ.data || []).map((s) => s.id)
+  const seansIdler = ((notQ.data || []) as { id: string }[]).map((s) => s.id)
   if (seansIdler.length) {
-    const { data: notlar } = await sb.from('notes').select('basvuru_yakinmasi, content_subjektif').in('session_id', seansIdler).limit(5)
-    bugunSikayet = (notlar || []).flatMap((n) => [n.basvuru_yakinmasi, n.content_subjektif]).filter(Boolean) as string[]
+    const { data: notlar } = await arsivsizNotlar(sb, 'basvuru_yakinmasi, content_subjektif').in('session_id', seansIdler).limit(5)
+    bugunSikayet = ((notlar || []) as { basvuru_yakinmasi: string | null; content_subjektif: string | null }[]).flatMap((n) => [n.basvuru_yakinmasi, n.content_subjektif]).filter(Boolean) as string[]
   }
   const sikayetler = [...bugunSikayet, intake?.subjektif || '']
 

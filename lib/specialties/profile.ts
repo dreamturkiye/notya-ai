@@ -61,9 +61,9 @@ export interface UzmanIncelemeMaddesi { konu: string; neden: string }
 export type PortalModulId = 'buyume' | 'gebelik' | 'jinekoloji' | 'dahiliye' | 'gozlerim' | 'dermatoloji' | 'psikiyatri' | 'kulaklarim' | 'kalbim' | 'norolojim' | 'akcigerlerim' | 'urolojim' | 'sporum' | 'saglik-paketim' | 'eklemlerim' | 'ftrm' | 'hormonlarim' | 'bobreklerim' | 'sindirimim' | 'enfeksiyon-takibim' | 'romatizmam' | 'tedavim' | 'gogus-cerrahisi-takibim' | 'ameliyatim' | 'yaram' | 'beyin-takibi' | 'cocugumun-cerrahisi' | 'acil-sonrasi' | 'anestezi-oncesi' | 'damar-cerrahisi-takibi' | 'tetkiklerim'
   /** ASI-KARNESI-01 — EVRENSEL (branş kapısı yok): hastanın aşı kaydı varsa. Hiçbir chapter'ın malı değil. */
   | 'asi-karnesi'
-  | 'sacim' | 'estetik-bakimim' | 'longevitim' | 'fizyom' | 'seanslarim' | 'beslenmem' | 'ergom' | 'isitmem-odyoloji'
+  | 'sacim' | 'estetik-bakimim' | 'estetik-ameliyatim' | 'klinik-derim' | 'longevitim' | 'fizyom' | 'seanslarim' | 'beslenmem' | 'ergom' | 'isitmem-odyoloji'
 /** Typed PortalBundle slices a module may fill (null in the bundle when the module is not attached). */
-export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz' | 'deri' | 'kronik' | 'psik' | 'kulak' | 'kalp' | 'akciger' | 'noro' | 'uro' | 'eklem' | 'ftr' | 'aile' | 'endo' | 'spor' | 'enfeksiyon' | 'gastro' | 'nef' | 'roma' | 'onko' | 'gc' | 'plastik' | 'gogusCerrahi' | 'beyin' | 'cc' | 'anestezi' | 'damarCerrahisi' | 'acil' | 'acilSonrasi' | 'radyo' | 'sac' | 'medikalEstetik' | 'longevity' | 'fizyo' | 'klinikPsik' | 'diyet' | 'ergo' | 'odyo'
+export type PortalBundleAnahtari = 'buyume' | 'hedefBoy' | 'gebelik' | 'jinekoloji' | 'goz' | 'deri' | 'kronik' | 'psik' | 'kulak' | 'kalp' | 'akciger' | 'noro' | 'uro' | 'eklem' | 'ftr' | 'aile' | 'endo' | 'spor' | 'enfeksiyon' | 'gastro' | 'nef' | 'roma' | 'onko' | 'gc' | 'plastik' | 'gogusCerrahi' | 'beyin' | 'cc' | 'anestezi' | 'damarCerrahisi' | 'acil' | 'acilSonrasi' | 'radyo' | 'sac' | 'medikalEstetik' | 'estetikCerrahi' | 'klinikDerm' | 'longevity' | 'fizyo' | 'klinikPsik' | 'diyet' | 'ergo' | 'odyo'
 export interface PortalNavOge { key: string; label: string; path: string }
 export interface PortalModulu {
   id: PortalModulId

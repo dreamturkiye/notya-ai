@@ -11,6 +11,7 @@
  */
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { findSpecialistForSpecialty } from '@/lib/asistan/specialistsCatalog'
+import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
 
 /** Eski hesaplardaki serbest metin ("Kadın Doğum Uzmanı", "Göz Hastalıkları Uzmanı", "Jinekoloji ve Obstetrik"). Sıra önemli. */
 const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
@@ -72,6 +73,7 @@ const SERBEST_METIN: ReadonlyArray<[RegExp, SpecialtyKey]> = [
 /** Ham değer ('kadin-dogum', 'Kadın Hastalıkları ve Doğum', 'genel-cerrahi') → kanonik anahtar; "genel"/boş/bilinmeyen → null. */
 export function bransAnahtari(ham: string | null | undefined): SpecialtyKey | null {
   if (!ham || !String(ham).trim()) return null
+  if (klinikSlugCoz(ham)) return null
   const tam = findSpecialistForSpecialty(String(ham))?.specialtyKey
   if (tam) return tam
   const b = String(ham).trim().toLocaleLowerCase('tr-TR')

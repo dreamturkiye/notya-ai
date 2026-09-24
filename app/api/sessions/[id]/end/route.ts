@@ -8,6 +8,7 @@ import { aiCagir } from "@/lib/ai/cagir"
 import { modelSec } from "@/lib/ai/modeller"
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { seansSahibi } from '@/lib/doktor/hastaSahipligi'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 // AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
 // aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
@@ -178,9 +179,8 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
         if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
         // NOTYA-SOAP-03: plan sürekliliği — son onaylı vizitin planı/tanısı bağlama eklenir,
         // yeni not önceki planın akıbetini değerlendirerek yazılır (izole not yerine devamlılık).
-        const { data: oncekiVizit } = await getSupabase()
-          .from('notes')
-          .select('content_plan, content_tani, created_at, sessions!inner(patient_id)')
+        // NOTYA-ARSIV-01: arşivlenmiş muayenenin planı "önceki vizit" olarak bağlama girmez.
+        const { data: oncekiVizit } = await arsivsizNotlar(getSupabase(), 'content_plan, content_tani, created_at, sessions!inner(patient_id)')
           .eq('sessions.patient_id', seansSatiri.patient_id)
           .eq('doctor_id', user.id)
           .not('approved_at', 'is', null)
@@ -196,9 +196,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     let stilOrnekleri = ''
     try {
-      const { data: oncekiNotlar } = await getSupabase()
-        .from('notes')
-        .select('content_subjektif, content_plan')
+      const { data: oncekiNotlar } = await arsivsizNotlar(getSupabase(), 'content_subjektif, content_plan')
         .eq('doctor_id', user.id)
         .not('approved_at', 'is', null)
         .order('created_at', { ascending: false })
@@ -222,22 +220,31 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       hastaDogumIso(getSupabase(), user.id, hastaId),
       hastaCinsiyet(getSupabase(), user.id, hastaId),
     ])
-    const { cekListeDogrula, cekListeDogrulamaMetni, cekListePromptBlogu, muayeneCekListesi } = await import('@/lib/doktor/muayeneCekListesi')
+    const { cekBlokSil, cekListePromptBlogu, cekNotMetni } = await import('@/lib/doktor/muayeneCekListesi')
+    const { cekListeHesapla, cekListeVerisiYukle } = await import('@/lib/doktor/cekListeSunucu')
     const isaretler = body.cekListe && typeof body.cekListe === 'object' && !Array.isArray(body.cekListe)
       ? body.cekListe as Record<string, boolean>
       : {}
-    const cekMaddeler = muayeneCekListesi({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso })
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekMaddeler, isaretler) })
-    const cekListeDogrulama = cekListeDogrula(cekMaddeler, {
-      transcript,
-      soap: [noteData?.soap?.subjektif, noteData?.soap?.objektif, noteData?.soap?.degerlendirme, noteData?.soap?.plan, noteData?.anamnez, noteData?.fizik_muayene].filter(Boolean).join(' '),
-      isaretler,
-    })
-    const cekMetin = cekListeDogrulamaMetni(cekListeDogrulama)
+    // NOTYA-CEK-DOGRULA-02: not sayfası / onay ile aynı tek kaynak — hastanın tarama kayıtları ve dosyası dahil.
+    const cekVeri = await cekListeVerisiYukle(getSupabase(), { doktorId: user.id, patientId: hastaId, seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso || new Date().toISOString() })
+    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) })
+    // NOTYA-ASI-NOT-01: yalnız bu vizitte uygulandığı söylenen aşılar, vizit tarihiyle; söylenmeyen doz karttan hesaplanır.
+    let notAsilari: unknown[] = []
+    try {
+      const { muayeneAsilariniHazirla } = await import('@/lib/doktor/notAsiAktarim')
+      notAsilari = await muayeneAsilariniHazirla(getSupabase(), { doktorId: user.id, patientId: hastaId, transcript, ham: noteData?.asilar, ziyaretIso: gecmisTarihIso })
+    } catch (e) { console.error('[asi-not] sessions/end', e) }
+    // Çek listesi yalnız notun kendisine bakar (sayfada yeniden hesaplandığında aynı sonucu versin); LLM bloğu yazamaz.
+    const { satirlar: cekListeDogrulama, metin: cekMetin } = cekListeHesapla(cekVeri, cekNotMetni({
+      basvuruYakinmasi: noteData?.basvuruYakinmasi, subjektif: noteData?.soap?.subjektif, objektif: noteData?.soap?.objektif,
+      degerlendirme: noteData?.soap?.degerlendirme, plan: noteData?.soap?.plan, anamnez: noteData?.anamnez, fizikMuayene: noteData?.fizik_muayene,
+      tani: noteData?.tani, tedavi: noteData?.tedavi, vitaller: noteData?.vitaller, ilaclar: noteData?.ilaclar, asilar: notAsilari,
+    }), isaretler)
+    if (typeof noteData?.aiDegerlendirme === 'string') noteData.aiDegerlendirme = cekBlokSil(noteData.aiDegerlendirme)
     const { bransKapsami } = await import('@/lib/specialties/kapsam')
     const { buyumePersentilleriniHesapla, buyumeYorumunuEkle } = await import('@/lib/clinical/buyumeEgrisi')
     const buyume = bransKapsami({ seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso }).pediatrik
-      ? buyumePersentilleriniHesapla(noteData?.vitaller, dogumIso, cinsiyet, new Date().toISOString())
+      ? buyumePersentilleriniHesapla(noteData?.vitaller, dogumIso, cinsiyet, gecmisTarihIso || new Date().toISOString())
       : null
 
     // Save note
@@ -257,6 +264,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       content_tani: noteData?.tani || null,
       content_tedavi: noteData?.tedavi || null,
       content_ilaclar: noteData?.ilaclar || null,
+      content_asilar: notAsilari.length ? notAsilari : null,
       icd10_codes: noteData?.icd10_codes || null,
       kritik_bulgular: noteData?.kritik_bulgular || null,
       takip_suresi: noteData?.takip_suresi || null,

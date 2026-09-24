@@ -6,6 +6,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { kohortSatirlari, type KohortGirdi } from '@/specialties/dahiliye/engines/kohort'
 import { kilitDegeri, type HekimKilit } from '@/specialties/dahiliye/engines/kart'
 import type { Sb } from './_ortak'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 const KART_TABLOLARI = ['dahiliye_ht', 'dahiliye_dm', 'dahiliye_lipid', 'dahiliye_ckd', 'dahiliye_kvr', 'dahiliye_hf', 'dahiliye_antikoagulan', 'dahiliye_pulm', 'dahiliye_tiroid']
 
@@ -23,7 +24,7 @@ export async function kohortVerisi(sb: Sb, doctorId: string, bugun: string, sade
     sb.from('dahiliye_kart_kilitleri').select('patient_id, kart, alan, deger, created_at').in('patient_id', ids).eq('kart', 'kvr').eq('alan', 'hedef_ldl').order('created_at', { ascending: false }).limit(3000),
     sb.from('lab_satirlar').select('patient_id, canonical_key, kanonik_deger, numune_tarihi').in('patient_id', ids).eq('onayli', true).in('canonical_key', ['HbA1c', 'LDL', 'eGFR']).not('numune_tarihi', 'is', null).order('numune_tarihi', { ascending: false }).limit(5000),
     sb.from('dahiliye_gorevleri').select('patient_id, kod, kaynak, due').eq('doctor_id', doctorId).eq('durum', 'acik').in('patient_id', ids).lt('due', bugun).limit(5000),
-    sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
+    arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
   const ad = new Map<string, string>()

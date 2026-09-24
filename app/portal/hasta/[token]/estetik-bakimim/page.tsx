@@ -15,5 +15,5 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Bakımım" subtitle="İşlem sonrası bakım tarihleri. Ünite, ürün ve tanı yoktur." acil="Görme kaybı veya livedo: 112." basePath={basePath} />
+  return <KlinikHatirlatmaView title="Bakımım" subtitle="İşlem sonrası bakım tarihleri. Ünite, ürün ve tanı yoktur." acil="Görme kaybı veya livedo: 112." basePath={basePath} ritim={['1. gün erken kontrol', '14. gün botoks etki kontrolü', '28. gün dolgu oturma']} />
 }

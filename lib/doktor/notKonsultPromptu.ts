@@ -7,7 +7,7 @@
  */
 import type { BransKapsami } from '@/lib/specialties/kapsam'
 
-export interface NotKonsultTaslak { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
+export interface NotKonsultTaslak { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; asilar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
 export interface NotKonsultNot { vitaller?: unknown; icd10_codes?: unknown; recete_onerisi?: unknown; alarm_bulgulari?: unknown; basvuru_yakinmasi?: string | null; hasta_ozeti?: string | null }
 
 export const PEDIATRIK_PERSENTIL_KURALI = 'BÜYÜME/VKİ PERSENTİLİ KENDİN HESAPLAMA, WHO referansı verme — bu hesap ayrı, doğrulanmış bir bölümde (Neyzi standartları) gösteriliyor. Doktor açıkça söylemediyse persentile dayalı bir tanı (ör. "obezite") yazma/ekleme.'
@@ -51,6 +51,7 @@ DÜZENLEYEBİLECEĞİN ALANLAR ve TAM ANAHTARLARI (başka anahtar KULLANMA; İng
 - "vitaller" → nesne, anahtarlar: ${vitalAnahtarlari} (değerler metin, örn. {"nabiz":"100"})
 - "alarmBulgulari" → dizi (evde dikkat edilmesi gerekenler, her öğe bir madde)
 - "ilaclar" → dizi, her öğe {"ad","doz","kullanim","sure"} (doktorun ilaç listesi)
+- "asilar" → dizi, her öğe {"asi_adi","doz_no","uygulama_tarihi","lot_no","uygulama_yeri","notlar"} (BU MUAYENEDE uygulanan aşılar — onayda aşı kartına geçer). YALNIZ doktor bu muayenede bir aşının yapıldığını söylerse ya da listeyi açıkça düzeltmeni isterse döndür; planlanan / önerilen / daha önce yapılmış aşıyı ekleme, söylenmeyen doz / lot / yer uydurma.
 - "hastaOzeti" → metin (${g.kapsam.hitap.ozetPromptTarifi})
 - "icdKodlari" → dizi, her öğe {"code","description_tr","is_primary"} (ICD-10 önerileri)
 - "receteOnerisi" → dizi, her öğe {"ticariOrnek","etkenMadde","doz","kullanim","sure","sgkListesinde","not"} (Ayşe'nin reçete önerisi — doktorun kendi "ilaclar" listesinden AYRI)
@@ -71,6 +72,7 @@ Başvuru yakınması: ${taslak?.basvuruYakinmasi || not.basvuru_yakinmasi || ''}
 Evde dikkat (taslak): ${JSON.stringify(taslak?.alarmBulgulari || not.alarm_bulgulari || [])}
 ${g.kapsam.hitap.ozetPromptEtiketi}: ${taslak?.hastaOzeti || not.hasta_ozeti || ''}
 İlaçlar (doktorun listesi, taslak): ${JSON.stringify(taslak?.ilaclar || [])}
+Bu muayenede uygulanan aşılar (taslak): ${JSON.stringify(taslak?.asilar || [])}
 ICD-10 önerileri (taslak): ${JSON.stringify(taslak?.icdKodlari || not.icd10_codes || [])}
 Reçete önerisi (taslak): ${JSON.stringify(taslak?.receteOnerisi || not.recete_onerisi || [])}
 

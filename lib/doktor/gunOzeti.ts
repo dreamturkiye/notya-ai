@@ -17,6 +17,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { address, type AddressableUser } from '@/lib/address'
 import { asamaBul, type DoktorIliski } from '@/lib/doktor/hafiza'
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type GunFazi = 'basi' | 'orta' | 'sonu'
 
@@ -73,11 +74,12 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
     sb.from('randevular').select('tur', { count: 'exact' })
       .eq('doktor_id', doctorId).gte('baslangic', yarinS.bas).lt('baslangic', yarinS.son)
       .not('durum', 'in', '("iptal","gelmedi")').limit(200),
-    sb.from('sessions').select('id', { count: 'exact', head: true })
+    // NOTYA-ARSIV-01: arşivlenmiş muayene ne "bugün/dün hasta" ne "onay bekliyor" sayısına girer.
+    arsivsizSeanslar(sb, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).gte('started_at', bugunS.bas).lt('started_at', bugunS.son),
-    sb.from('sessions').select('id', { count: 'exact', head: true })
+    arsivsizSeanslar(sb, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).gte('started_at', dunS.bas).lt('started_at', dunS.son),
-    sb.from('notes').select('id', { count: 'exact', head: true })
+    arsivsizNotlar(sb, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).is('approved_at', null),
     sb.from('hasta_mesaj_konulari').select('id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).eq('okundu_pratik', false).eq('pratik_arsiv', false),

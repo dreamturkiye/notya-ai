@@ -45,6 +45,7 @@ import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { decrypt } from '@/lib/security/encryption'
@@ -161,15 +162,16 @@ function vitalMetni(v: unknown): string {
 async function istemKaynaginiOku(sb: SupabaseClient, doktorId: string, patientId: string, hedefBrans: string, hekimNotu: string): Promise<IstemKaynagi | null> {
   const [{ data: hasta }, seansQ, ilacQ, intakeQ, brans] = await Promise.all([
     sb.from('patients').select('dob_encrypted, gender_encrypted').eq('id', patientId).eq('doctor_id', doktorId).maybeSingle(),
-    sb.from('sessions').select('id, created_at').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }).limit(200),
-    sb.from('hasta_ilaclar').select('ilac_adi, doz, kullanim_sikli, aktif').eq('patient_id', patientId).eq('doctor_id', doktorId).limit(40),
+    // NOTYA-ARSIV-01: arşivlenmiş muayene sevk/konsültasyon taslağının kaynağına girmez.
+    arsivsizSeanslar(sb, 'id, created_at').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }).limit(200),
+    arsivsizIlaclar(sb, 'ilac_adi, doz, kullanim_sikli, aktif').eq('patient_id', patientId).eq('doctor_id', doktorId).limit(40),
     sb.from('hasta_intake_formlari').select('form_data_encrypted, created_at').eq('patient_id', patientId).eq('doktor_id', doktorId).order('created_at', { ascending: false }).limit(1),
     hekimBransi(sb, doktorId),
   ])
   if (!hasta) return null
   const seanslar = (seansQ.data || []) as Array<{ id: string; created_at: string }>
   const notlar = seanslar.length
-    ? ((await sb.from('notes').select('session_id, created_at, approved_at, basvuru_yakinmasi, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, icd10_codes, content_ilaclar, kritik_bulgular, vitaller')
+    ? ((await arsivsizNotlar(sb, 'session_id, created_at, approved_at, basvuru_yakinmasi, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, icd10_codes, content_ilaclar, kritik_bulgular, vitaller')
       .eq('doctor_id', doktorId).in('session_id', seanslar.map((x) => x.id))).data || []) as Array<Record<string, unknown>>
     : []
   const notHaritasi = new Map<string, Record<string, unknown>>()

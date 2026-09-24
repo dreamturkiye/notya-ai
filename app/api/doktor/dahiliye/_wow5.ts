@@ -15,6 +15,7 @@ import { gutDegerlendir, DIYET_ONERILERI } from '@/specialties/dahiliye/engines/
 import { osteoDegerlendir, tSkoruCikar, BOLGE_AD, type OsteoRiskler, type DxaBolge } from '@/specialties/dahiliye/engines/osteoporoz'
 import { kilitDegeri, type HekimKilit } from '@/specialties/dahiliye/engines/kart'
 import { type Sb, type LabSatir, son, sonDeger, gorevEkle, hastaAdi, hekimKimlik } from './_ortak'
+import { arsivsizIlaclar } from '@/lib/doktor/arsiv'
 
 type Hasta = { id: string; yas: number | null; kadin: boolean }
 type Ilac = { ilac_adi: string; etken_madde: string | null; baslangic_tarihi: string | null; aktif: boolean | null }
@@ -107,7 +108,7 @@ export async function wow5Post(adim: string, b: Record<string, unknown>, sb: Sb,
   const ADIMLAR = ['polifarmasi_karar', 'polifarmasi_nota', 'hedefkart', 'sigara', 'vitamin', 'gut', 'osteo', 'osteo_belge', 'kart_nota']
   if (!ADIMLAR.includes(adim)) return null
   const userId = user.id
-  const hazirla = async () => { const [labs, ilaclar, c] = await Promise.all([labsYukle(), sb.from('hasta_ilaclar').select('ilac_adi, etken_madde, baslangic_tarihi, aktif').eq('patient_id', hasta.id).eq('aktif', true), baglam(sb, hasta)]); return { labs, c, h: hesapla(hasta, labs, (ilaclar.data || []) as Ilac[], c, T) } }
+  const hazirla = async () => { const [labs, ilaclar, c] = await Promise.all([labsYukle(), arsivsizIlaclar(sb, 'ilac_adi, etken_madde, baslangic_tarihi, aktif').eq('patient_id', hasta.id).eq('aktif', true), baglam(sb, hasta)]); return { labs, c, h: hesapla(hasta, labs, (ilaclar.data || []) as Ilac[], c, T) } }
 
   if (adim === 'polifarmasi_karar') {
     // Öneri sunucuda yeniden hesaplanır (istemciye güvenilmez). hasta_ilaclar'a DOKUNULMAZ — karar yalnız kayıt + gerekçe.

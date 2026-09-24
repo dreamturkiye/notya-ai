@@ -39,9 +39,9 @@ export const SAGLIGIM_DEMO: PortalBundle = {
     hekim: { ad: 'Dr. Demo Hekim', klinik: 'İç Hastalıkları Uzmanı' },
     uretimTarihi: '2026-09-19',
     yapilanlar: [
-      { ad: 'Td (tetanos-difteri)', doz: null, tarih: '2021-03-18', kaynak: 'karne', kaynakEtiketi: 'Karneden aktarıldı · hekim onaylı' },
-      { ad: 'COVID-19 (son doz)', doz: null, tarih: '2024-10-12', kaynak: 'beyan', kaynakEtiketi: 'Beyana göre kaydedildi' },
-      { ad: 'Influenza', doz: null, tarih: '2025-10-05', kaynak: 'klinik', kaynakEtiketi: 'Klinikte uygulandı' },
+      { ad: 'Td (tetanos-difteri)', doz: null, tarih: '2021-03-18', kaynak: 'karne', kaynakEtiketi: 'Karneden aktarıldı · hekim onaylı', lotNo: null, uygulamaYeri: null },
+      { ad: 'COVID-19 (son doz)', doz: null, tarih: '2024-10-12', kaynak: 'beyan', kaynakEtiketi: 'Beyana göre kaydedildi', lotNo: null, uygulamaYeri: null },
+      { ad: 'Influenza', doz: null, tarih: '2025-10-05', kaynak: 'klinik', kaynakEtiketi: 'Klinikte uygulandı', lotNo: 'DEMO-LOT-01', uygulamaYeri: 'IM sol deltoid' },
     ],
     siradakiler: [{ ad: 'Influenza', tarih: '2026-10-05' }],
     uyari: { baslik: E_NABIZ_BASLIK, metin: E_NABIZ_UYARISI },

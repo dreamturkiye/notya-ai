@@ -14,6 +14,19 @@ export function taniReferansi(hekimTani: string): { ozet: string } | { hata: str
   return { ozet: `Hekim tanısı (referans): ${hekimTani.trim()}. Plan buna bağlı; ICD kilidi yok.` }
 }
 
+export function kontrolTakvimi(baslangicIso: string, bugun: string): Array<{ hafta: number; ad: string; durum: 'gecikti' | 'bugun' | 'planli' }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(baslangicIso) || !/^\d{4}-\d{2}-\d{2}$/.test(bugun)) return []
+  const gecen = Math.round((Date.parse(bugun + 'T12:00:00Z') - Date.parse(baslangicIso + 'T12:00:00Z')) / 86400000)
+  return [
+    { hafta: 2, ad: 'Erken uyum kontrolü (öğün şablonu yok)' },
+    { hafta: 4, ad: 'Kilo / semptom kaydı (yorum hekimde)' },
+    { hafta: 8, ad: 'Plan gözden geçirme' },
+  ].map((x) => {
+    const gun = x.hafta * 7
+    return { ...x, durum: gecen > gun ? 'gecikti' as const : gecen === gun ? 'bugun' as const : 'planli' as const }
+  })
+}
+
 export const INTAKE_ACIL = [
   'Kontrolsüz kusma veya bilinç değişikliği (diyabet şüphesi)',
   'Ağır alerjik reaksiyon',

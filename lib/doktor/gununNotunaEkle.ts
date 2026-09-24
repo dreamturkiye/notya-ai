@@ -5,6 +5,7 @@
  * bölümüne bir satır ekle, öğrenme loguna yaz.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export interface GununNotunaEkleSonuc { eklendi: boolean; notId: string | null; sebep?: string }
 
@@ -16,14 +17,13 @@ export async function gununNotunaEkle(
   alan: 'content_degerlendirme' | 'content_subjektif' | 'content_objektif' = 'content_degerlendirme',
 ): Promise<GununNotunaEkleSonuc> {
   const bugunBasi = new Date(); bugunBasi.setHours(0, 0, 0, 0)
-  const { data: seanslar } = await supabase
-    .from('sessions').select('id, created_at').eq('doctor_id', doktorId).eq('patient_id', patientId)
+  // NOTYA-ARSIV-01: arşivlenmiş bir muayene "bugünkü not" sayılmaz — sonuç ona yazılmaz.
+  const { data: seanslar } = await arsivsizSeanslar(supabase, 'id, created_at').eq('doctor_id', doktorId).eq('patient_id', patientId)
     .gte('created_at', bugunBasi.toISOString()).order('created_at', { ascending: false }).limit(5)
   if (!seanslar?.length) return { eklendi: false, notId: null, sebep: 'Bugün bu hastaya ait bir muayene bulunamadı.' }
 
-  const seansIdler = seanslar.map((s) => s.id)
-  const { data: notlar } = await supabase
-    .from('notes').select('id, content_degerlendirme, content_subjektif, content_objektif, session_id').in('session_id', seansIdler)
+  const seansIdler = seanslar.map((s: { id: string }) => s.id)
+  const { data: notlar } = await arsivsizNotlar(supabase, 'id, content_degerlendirme, content_subjektif, content_objektif, session_id').in('session_id', seansIdler)
     .order('created_at', { ascending: false }).limit(1)
   const not = notlar?.[0]
   if (!not) return { eklendi: false, notId: null, sebep: 'Bugünkü muayenenin henüz bir notu yok.' }
@@ -64,13 +64,11 @@ export async function gununNotunaVitalEkle(
   vitaller: Record<string, unknown>,
 ): Promise<VitalEkleSonuc> {
   const bugunBasi = new Date(); bugunBasi.setHours(0, 0, 0, 0)
-  const { data: seanslar } = await supabase
-    .from('sessions').select('id, created_at').eq('doctor_id', doktorId).eq('patient_id', patientId)
+  const { data: seanslar } = await arsivsizSeanslar(supabase, 'id, created_at').eq('doctor_id', doktorId).eq('patient_id', patientId)
     .gte('created_at', bugunBasi.toISOString()).order('created_at', { ascending: false }).limit(5)
   if (!seanslar?.length) return { eklendi: false, notId: null, once: null, sonra: null, sebep: 'Bugün bu hastaya ait bir muayene bulunamadı.' }
 
-  const { data: notlar } = await supabase
-    .from('notes').select('id, vitaller').in('session_id', seanslar.map((s) => s.id))
+  const { data: notlar } = await arsivsizNotlar(supabase, 'id, vitaller').in('session_id', seanslar.map((s: { id: string }) => s.id))
     .order('created_at', { ascending: false }).limit(1)
   const not = notlar?.[0]
   if (!not) return { eklendi: false, notId: null, once: null, sonra: null, sebep: 'Bugünkü muayenenin henüz bir notu yok.' }

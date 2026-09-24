@@ -17,6 +17,7 @@ import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti'
 import { kritikAlarm } from '@/lib/alarm'
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -108,9 +109,8 @@ export async function POST(req: NextRequest) {
     if (patientId) {
       const dosya = await hastaDosyasiniDerle(supabase, doktorId, String(patientId))
       if (dosya) klinikBaglam = dosya.split('## VİZİT GEÇMİŞİ')[0].slice(0, 4000)
-      const { data: oncekiVizit } = await supabase
-        .from('notes')
-        .select('content_plan, content_tani, created_at, sessions!inner(patient_id)')
+      // NOTYA-ARSIV-01: arşivlenmiş muayene önceki vizit / stil örneği olarak kullanılmaz.
+      const { data: oncekiVizit } = await arsivsizNotlar(supabase, 'content_plan, content_tani, created_at, sessions!inner(patient_id)')
         .eq('sessions.patient_id', patientId)
         .eq('doctor_id', doktorId)
         .not('approved_at', 'is', null)
@@ -126,9 +126,7 @@ export async function POST(req: NextRequest) {
 
   let stilOrnekleri = ''
   try {
-    const { data: oncekiNotlar } = await supabase
-      .from('notes')
-      .select('content_subjektif, content_plan')
+    const { data: oncekiNotlar } = await arsivsizNotlar(supabase, 'content_subjektif, content_plan')
       .eq('doctor_id', doktorId)
       .not('approved_at', 'is', null)
       .order('created_at', { ascending: false })
@@ -149,6 +147,12 @@ export async function POST(req: NextRequest) {
     const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId), hastaDogumIso(supabase, doktorId, patientId || null)])
     const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId })
+    // NOTYA-ASI-NOT-01: sessions/end ile aynı — yalnız bu vizitte uygulanan aşılar, vizit tarihiyle.
+    let notAsilari: unknown[] = []
+    try {
+      const { muayeneAsilariniHazirla } = await import('@/lib/doktor/notAsiAktarim')
+      notAsilari = await muayeneAsilariniHazirla(supabase, { doktorId, patientId: patientId ? String(patientId) : null, transcript, ham: noteData?.asilar, ziyaretIso: gecmisTarihIso })
+    } catch (e) { console.error('[asi-not] ses-yukle', e) }
 
     const { data: note, error: noteError } = await supabase.from('notes').insert({
       session_id: seans.id,
@@ -165,6 +169,7 @@ export async function POST(req: NextRequest) {
       content_tani: noteData?.tani || null,
       content_tedavi: noteData?.tedavi || null,
       content_ilaclar: noteData?.ilaclar || null,
+      content_asilar: notAsilari.length ? notAsilari : null,
       icd10_codes: noteData?.icd10_codes || null,
       kritik_bulgular: noteData?.kritik_bulgular || null,
       takip_suresi: noteData?.takip_suresi || null,

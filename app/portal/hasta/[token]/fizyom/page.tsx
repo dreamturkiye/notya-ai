@@ -15,5 +15,5 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Egzersizim" subtitle="Seans ve ev programı tarihleri. Tanı yoktur." acil="Eyer uyuşukluğu veya göğüs ağrısı: 112." basePath={basePath} />
+  return <KlinikHatirlatmaView title="Egzersizim" subtitle="Seans ve ev programı tarihleri. Tanı yoktur." acil="Eyer uyuşukluğu veya göğüs ağrısı: 112." basePath={basePath} ritim={['Seans tarihi uzmanın kaydıyladır', 'Ev programı reçete değildir']} />
 }

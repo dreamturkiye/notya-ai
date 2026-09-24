@@ -11,6 +11,7 @@ import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { UYARI_SERIDI } from '@/core/belgeler/yazar'
 import { MODALITE_TR, type Modalite } from '@/core/belgeler/ontoloji'
 import type { BelgeRaporu } from '@/core/belgeler/types'
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,16 +55,41 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as { analizId?: string; adim?: 'onayla' | 'muayene_onayla'; plan?: string; noteId?: string } | null
   if (!body?.analizId || !body.adim) return NextResponse.json({ error: 'analizId ve adim gerekli' }, { status: 400 })
 
-  const { data: a } = await supabase.from('belge_analizleri').select('id, patient_id, note_id, sonuc, hekim_tanisi, hekim_ozet, modality_final, durum, olusturuldu').eq('id', body.analizId).eq('doctor_id', user.id).maybeSingle()
+  const { data: a } = await supabase.from('belge_analizleri').select('id, patient_id, belge_id, note_id, sonuc, hekim_tanisi, hekim_ozet, modality_final, durum, olusturuldu').eq('id', body.analizId).eq('doctor_id', user.id).maybeSingle()
   if (!a || !a.sonuc) return NextResponse.json({ error: 'Analiz bulunamadı' }, { status: 404 })
   if (a.durum === 'kalite_dusuk') return NextResponse.json({ error: 'Kalitesi düşük değerlendirme muayeneye eklenemez.' }, { status: 409 })
 
   if (body.adim === 'onayla') {
     if (!Array.isArray(a.hekim_tanisi) || a.hekim_tanisi.length === 0) return NextResponse.json({ error: 'Önce resmi tanıyı kilitleyin (en az bir hekim tanısı).' }, { status: 400 })
-    // Target muayene: explicit noteId, else the patient's latest note
+    // Target muayene: explicit noteId, else the analiz's own note, else -- when the doctor already
+    // told the vault which visit this document belongs to (the "muayene seçin" picker on the
+    // Belgeler tab, medical_documents.visit_id) -- that visit's own note. Only when NEITHER of
+    // those exists does this fall back to the patient's most-recently-created note, or fabricate
+    // a brand-new one dated today. Previously this step skipped the document's own visit link
+    // entirely and always used "most recently created note" -- so a document explicitly attached
+    // to an earlier visit (e.g. the newborn's discharge date) could silently land on a same-day
+    // note instead, or spawn a dateless new one when no note existed yet for that patient.
     let noteId = body.noteId || a.note_id || null
+    if (!noteId && a.belge_id) {
+      const { data: belge } = await supabase.from('medical_documents').select('visit_id').eq('id', a.belge_id).eq('doctor_id', user.id).maybeSingle()
+      if (belge?.visit_id) {
+        // NOTYA-ARSIV-01: an archived visit is not a target -- falls through to the latest non-archived note.
+        const { data: ziyaret } = await arsivsizSeanslar(supabase, 'id').eq('id', belge.visit_id).eq('doctor_id', user.id).eq('patient_id', a.patient_id).maybeSingle()
+        if (ziyaret) {
+          const { data: visitNot } = await arsivsizNotlar(supabase, 'id').eq('session_id', ziyaret.id).eq('doctor_id', user.id).maybeSingle()
+          if (visitNot) {
+            noteId = visitNot.id
+          } else {
+            // Linked visit exists but has no note yet -- create it FOR THAT VISIT (keeps its real
+            // date, via the same randevu-stamped session) instead of falling through below.
+            const { data: yeniNot, error: eNot } = await supabase.from('notes').insert({ session_id: ziyaret.id, doctor_id: user.id, note_type: 'soap', content_subjektif: a.modality_final === 'lab' ? 'Lab değerlendirme (belge).' : 'Belge değerlendirme.', content_objektif: null, content_degerlendirme: null, content_plan: null }).select('id').single()
+            if (!eNot && yeniNot) noteId = yeniNot.id
+          }
+        }
+      }
+    }
     if (!noteId) {
-      const { data: son } = await supabase.from('notes').select('id, sessions!inner(patient_id)').eq('doctor_id', user.id).eq('sessions.patient_id', a.patient_id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      const { data: son } = await arsivsizNotlar(supabase, 'id, sessions!inner(patient_id)').eq('doctor_id', user.id).eq('sessions.patient_id', a.patient_id).order('created_at', { ascending: false }).limit(1).maybeSingle()
       noteId = son?.id || null
     }
     if (!noteId) {

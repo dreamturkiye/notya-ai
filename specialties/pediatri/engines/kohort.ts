@@ -13,10 +13,11 @@ import { olcumSatirlari, persentilKaymalari, persentilKisa, PARAM_AD, type Olcum
 import { gunFarki, tarihGoster, yasMetni } from './girdi'
 import type { Cinsiyet } from '@/lib/clinical/buyumeEgrisi'
 
-export type PediKohortBayrak = 'asi_gecikti' | 'izlem_kacti' | 'persentil_kaymasi' | 'profilaksi' | 'tarama_gecikti'
+export type PediKohortBayrak = 'asi_gecikti' | 'asi_kayit_tutarsiz' | 'izlem_kacti' | 'persentil_kaymasi' | 'profilaksi' | 'tarama_gecikti'
 
 export const PEDI_BAYRAK_AD: Record<PediKohortBayrak, string> = {
   asi_gecikti: 'Aşı gecikmiş',
+  asi_kayit_tutarsiz: 'Aşı kaydı tutarsız',
   izlem_kacti: 'Sağlam çocuk izlemi kaçmış',
   persentil_kaymasi: 'Persentil kayması',
   profilaksi: 'D vitamini / demir',
@@ -72,7 +73,22 @@ export function pediKohortSatiri(g: PediKohortGirdi, bugun: string): PediKohortS
   // Yalnız kaydı tutulan seriler: seri başlamışsa sıradaki dozun gecikmesi anlamlıdır; hiç kaydı olmayan seri ASM'de
   // yapılmış olabilir (aşı planı ekranında ayrıca görünür).
   const izlenen = new Set(plan.seriler.filter((s) => s.dozlar.some((d) => d.durum === 'yapildi')).map((s) => s.seri))
-  const gecikmis = plan.gecikmis.filter((d) => izlenen.has(d.seri))
+  // NOTYA-FISILTI-GIZLE-01: doğumdan önce ya da minimum yaş/aralıktan önce (aynı gün dahil) görünen kayıt büyük olasılıkla
+  // yanlış tarih / yanlış doğum tarihi — bu seride "gecikti" demek yerine kaydın kontrolünü iste (aralıklar asiPlan / GBP'den).
+  const tutarsiz: Array<{ etiket: string; tarih: string; seri: string }> = []
+  for (const s of plan.seriler) {
+    for (const d of s.dozlar) {
+      const k = d.gecersizler.find((x) => x.tarih) || (d.kayit?.tarih && d.kayit.tarih < g.dogumIso ? d.kayit : null)
+      if (k?.tarih) { tutarsiz.push({ etiket: dozKisa(d), tarih: k.tarih, seri: s.seri }); break }
+    }
+  }
+  if (tutarsiz.length) {
+    bayraklar.push('asi_kayit_tutarsiz')
+    detay.push(`Aşı kaydı tutarsız — ${tutarsiz.map((t) => t.etiket).join(', ')} tarihi / doğum tarihini kontrol edin`)
+    tarihler.push([...tutarsiz].sort((a, b) => a.tarih.localeCompare(b.tarih))[0].tarih)
+  }
+  const tutarsizSeri = new Set(tutarsiz.map((t) => t.seri))
+  const gecikmis = plan.gecikmis.filter((d) => izlenen.has(d.seri) && !tutarsizSeri.has(d.seri))
   if (gecikmis.length) {
     bayraklar.push('asi_gecikti')
     const g3 = [...gecikmis].sort((a, b) => a.onerilen.localeCompare(b.onerilen))
@@ -124,7 +140,7 @@ export function pediKohortSatiri(g: PediKohortGirdi, bugun: string): PediKohortS
   if (yasGun > demirSon + 30 && yasGun < 3 * 365 && aktifIlac(DEMIR_RE)) prof.push('Demir profilaksi süresi doldu — devam kararı')
   if (prof.length) { bayraklar.push('profilaksi'); detay.push(prof.join(' · ')) }
 
-  const sekme: PediSekme = bayraklar.includes('asi_gecikti') ? 'asilar' : bayraklar.includes('persentil_kaymasi') ? 'buyume'
+  const sekme: PediSekme = bayraklar.includes('asi_gecikti') || bayraklar.includes('asi_kayit_tutarsiz') ? 'asilar' : bayraklar.includes('persentil_kaymasi') ? 'buyume'
     : tarama.includes('otizm / M-CHAT') ? 'mchat' : 'ozet'
   return { patientId: g.patientId, ad: g.ad, yas: yasMetni(g.dogumIso, bugun), bayraklar, detay, enErkenTarih: tarihler.sort()[0] ?? null, sonVizit, portalVar: g.portalVar, sekme }
 }
@@ -138,6 +154,11 @@ export function pediKohortSatirlari(girdiler: PediKohortGirdi[], bugun: string):
 export const PEDI_HATIRLATMA_KONU = 'Çocuğunuzun kontrol hatırlatması'
 
 export const PEDI_ACIL_METNI = 'Bu mesaj kanalı acil durumlar için değildir. Çocuğunuzda yüksek ateş, nefes almada zorluk, havale, bilinç değişikliği ya da sizi endişelendiren ani bir durum olursa beklemeden 112\'yi arayın veya en yakın acil servise başvurun.'
+
+/** Kayıt tutarsızlığı hekimin düzelteceği bir kayıt işidir — veliye hatırlatma sebebi değil. */
+export function veliHatirlatmaBayraklari(bayraklar: PediKohortBayrak[]): PediKohortBayrak[] {
+  return bayraklar.filter((b) => b !== 'asi_kayit_tutarsiz')
+}
 
 /** Veliye giden hasta-güvenli metin: tanı, ölçüm, persentil, ilaç adı içermez. */
 export function pediHatirlatmaMesaji(bayraklar: PediKohortBayrak[]): { konu: string; metin: string } {

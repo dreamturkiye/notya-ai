@@ -16,8 +16,9 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   asiKarnesiOlustur, asiKarnesiDoluMu, asiKarnesiDosyaAdi, ASI_KARNESI_YAZDIRMA_CSS, E_NABIZ_BASLIK, E_NABIZ_UYARISI,
-  HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, PAYLAS_IPUCU, type AsiKarnesi,
+  HASTA_KAYNAK_ETIKETI, KAYNAK_ACIKLAMASI, LOT_YER_BASLIK, PAYLAS_IPUCU, type AsiKarnesi,
 } from './karneBelgesi'
+import { lotYerHucresi, lotYerSatiri, notlardanLotYeri } from './asiLotYeri'
 import { KARNE_NOT_ONEKI } from './karneOkuma'
 import { asiKarnesiPdf, KARNE_FONT_DOSYALARI } from './karnePdf'
 import { portalModulleri, type PortalUygunlukGirdisi } from '../portal/moduller'
@@ -35,7 +36,7 @@ const bosluk = (s: string) => s.replace(/\s+/g, ' ')
 
 const ORNEK = () => asiKarnesiOlustur({
   asilar: [
-    { asi_adi: 'KKK (Kızamık-Kızamıkçık-Kabakulak)', doz_no: 1, uygulama_tarihi: '2025-03-12', sonraki_doz_tarihi: '2027-03-01', kaynak: 'kayit' },
+    { asi_adi: 'KKK (Kızamık-Kızamıkçık-Kabakulak)', doz_no: 1, uygulama_tarihi: '2025-03-12', sonraki_doz_tarihi: '2027-03-01', kaynak: 'kayit', lot_no: 'MMR-LOT-77', uygulama_yeri: 'SC sol üst kol' },
     { asi_adi: 'Hepatit B', doz_no: 1, uygulama_tarihi: '2024-03-10', kaynak: 'beyan', belge_id: 'b1' },
     { asi_adi: 'Hepatit B', doz_no: 2, uygulama_tarihi: '2024-04-12', kaynak: 'beyan', notlar: KARNE_NOT_ONEKI },
     { asi_adi: 'Suçiçeği', doz_no: null, uygulama_tarihi: null, kaynak: 'beyan', notlar: null },
@@ -95,6 +96,47 @@ describe('karne modeli (tek içerik)', () => {
     assert.equal(asiKarnesiDoluMu(ORNEK()), true)
     assert.equal(asiKarnesiDoluMu(asiKarnesiOlustur({ asilar: [], hasta: { adSoyad: null, dogumTarihi: null }, hekim: { ad: null, klinik: null }, bugunIso: '2026-09-19' })), false)
     assert.equal(asiKarnesiDosyaAdi(ORNEK()), 'asi-karnesi-2026-09-19.pdf')
+  })
+})
+
+describe('NOTYA-ASI-LOT-01 — lot no / uygulama yeri', () => {
+  it('karne verisi alanları taşır; bilinmeyen boş (null), uydurulmaz', () => {
+    const k = ORNEK()
+    const kkk = k.yapilanlar.find((a) => a.ad.startsWith('KKK'))!
+    assert.equal(kkk.lotNo, 'MMR-LOT-77')
+    assert.equal(kkk.uygulamaYeri, 'SC sol üst kol')
+    assert.equal(lotYerHucresi(kkk), 'MMR-LOT-77 · SC sol üst kol')
+    for (const a of k.yapilanlar.filter((x) => x !== kkk)) {
+      assert.equal(a.lotNo, null)
+      assert.equal(a.uygulamaYeri, null)
+      assert.equal(lotYerHucresi(a), '')
+    }
+    assert.equal(lotYerHucresi({ lotNo: null, uygulamaYeri: 'IM' }), 'IM')
+  })
+  it('hekim listesi satırı: yalnız bilinen parça', () => {
+    assert.equal(lotYerSatiri({ lot_no: 'Vaxi12345', uygulama_yeri: 'IM' }), 'Lot: Vaxi12345 · Yer: IM')
+    assert.equal(lotYerSatiri({ lot_no: 'Vaxi12345' }), 'Lot: Vaxi12345')
+    assert.equal(lotYerSatiri({ lot_no: '  ', uygulama_yeri: null }), '')
+  })
+  it('Sağlığım ekranında kayıtlıysa görünür', () => {
+    assert.ok(ekran().includes(`${LOT_YER_BASLIK}: MMR-LOT-77 · SC sol üst kol`))
+  })
+  it('eski paketli notlar → kolonlar; diğer metin aynen ve aynı sırada kalır (093 göçünün kuralı)', () => {
+    assert.deepEqual(notlardanLotYeri('Lot: Vaxi12345 · Uygulama yeri: IM · Muayene notundan aktarıldı (hekim onaylı).'),
+      { lot_no: 'Vaxi12345', uygulama_yeri: 'IM', notlar: 'Muayene notundan aktarıldı (hekim onaylı).' })
+    assert.deepEqual(notlardanLotYeri('ateş olursa parasetamol · Lot: AB 12 · Muayene notundan aktarıldı (hekim onaylı).'),
+      { lot_no: 'AB 12', uygulama_yeri: null, notlar: 'ateş olursa parasetamol · Muayene notundan aktarıldı (hekim onaylı).' })
+    assert.deepEqual(notlardanLotYeri('bir aylıkken'), { lot_no: null, uygulama_yeri: null, notlar: 'bir aylıkken' })
+    assert.deepEqual(notlardanLotYeri('Lot numarası bilinmiyor'), { lot_no: null, uygulama_yeri: null, notlar: 'Lot numarası bilinmiyor' }, '"Lot:" öneki değilse dokunulmaz')
+    assert.deepEqual(notlardanLotYeri('Uygulama yeri: sağ uyluk'), { lot_no: null, uygulama_yeri: 'sağ uyluk', notlar: null })
+    assert.deepEqual(notlardanLotYeri(null), { lot_no: null, uygulama_yeri: null, notlar: null })
+  })
+  it('093 göçü yalnız ekleme + aynı kural (kolonlar nullable, "Lot:" / "Uygulama yeri:" parçası)', () => {
+    const sql = oku('lib/db/migrations/093_asi_lot_yeri.sql')
+    assert.match(sql, /add column if not exists lot_no text;/)
+    assert.match(sql, /add column if not exists uygulama_yeri text;/)
+    assert.doesNotMatch(sql.replace(/--.*$/gm, ''), /\b(drop|delete|truncate)\b/i)
+    assert.match(sql, /regexp_split_to_array\(x\.notlar, '\\s\*·\\s\*'\)/)
   })
 })
 
@@ -173,6 +215,10 @@ describe('PDF — Türkçe karakter, e-Nabız, kaynak ayrımı (üretilen PDF me
     assert.ok(metin.includes('Klinikte uygulandı'))
     assert.ok(metin.includes('01.03.2027'), 'sıradaki aşı tarihi')
     assert.ok(metin.includes('Oluşturulma: 19.09.2026'))
+  })
+  it('NOTYA-ASI-LOT-01: "Lot / Uygulama yeri" sütunu PDF\'te; kayıtlı değer görünür', () => {
+    assert.ok(metin.includes('LOT / UYGULAMA YERİ'), 'sütun başlığı')
+    assert.ok(metin.includes('MMR-LOT-77 · SC sol üst kol'))
   })
   it('Vercel paketi: iki PDF rotası fontu izler (outputFileTracingIncludes)', () => {
     const cfg = oku('next.config.mjs')

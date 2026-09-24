@@ -68,6 +68,11 @@ export default function HastaKonsult({
   const [hata, setHata] = useState('')
   const [bekleyen, setBekleyen] = useState<EylemOneriGorunumu[]>([])
   const [kartHastasi, setKartHastasi] = useState<EylemHasta | null>(null)
+  // NOTYA-AYSE-DANIS-DUZENLE (Kaan/Dr. Gökhan, 2026-09-23): asistan cevabı (ör. uzun bir çek
+  // listesi + Öneri raporu) hekimin düzeltebileceği bir metin olsun -- yalnız bu sohbetin
+  // görünümünde, salt-okunur balona kilitli kalmasın.
+  const [duzenlenenIndex, setDuzenlenenIndex] = useState<number | null>(null)
+  const [duzenlemeMetni, setDuzenlemeMetni] = useState('')
   const [cekIsaret, setCekIsaret] = useState<Record<string, boolean>>(() => cekListeOku(patientId))
   const [cekAcik, setCekAcik] = useState(false)
   const [bransOnbel, setBransOnbel] = useState<string | null>(doktorBransi)
@@ -296,25 +301,66 @@ export default function HastaKonsult({
             </div>
           ) : null}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10, maxHeight: 280, overflowY: 'auto', paddingTop: mesajlar.length ? 12 : 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10, maxHeight: 560, overflowY: 'auto', paddingTop: mesajlar.length ? 12 : 0 }}>
             {mesajlar.map((m, i) => (
               <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'stretch', maxWidth: m.rol === 'doktor' ? '88%' : '100%' }}>
-                <div
-                  style={{
-                    display: 'inline-block',
-                    maxWidth: '100%',
-                    background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)',
-                    border: m.rol === 'doktor' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                    color: 'white',
-                    borderRadius: 14,
-                    padding: '9px 12px',
-                    fontSize: 13.5,
-                    lineHeight: 1.55,
-                    whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal',
-                  }}
-                >
-                  {m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}
-                </div>
+                {duzenlenenIndex === i ? (
+                  <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(45,212,191,0.4)', borderRadius: 14, padding: '9px 12px' }}>
+                    <textarea
+                      value={duzenlemeMetni}
+                      onChange={(e) => setDuzenlemeMetni(e.target.value)}
+                      rows={Math.min(20, Math.max(4, duzenlemeMetni.split('\n').length))}
+                      style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13.5, lineHeight: 1.55, fontFamily: 'inherit', resize: 'vertical' }}
+                    />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMesajlar((prev) => prev.map((x, xi) => (xi === i ? { ...x, icerik: duzenlemeMetni } : x)))
+                          setDuzenlenenIndex(null)
+                        }}
+                        style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Kaydet
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDuzenlenenIndex(null)}
+                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', color: '#C9D4E3', borderRadius: 8, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        Vazgeç
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'inline-block',
+                      maxWidth: '100%',
+                      background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)',
+                      border: m.rol === 'doktor' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                      color: 'white',
+                      borderRadius: 14,
+                      padding: '9px 12px',
+                      fontSize: 13.5,
+                      lineHeight: 1.55,
+                      whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal',
+                      position: 'relative',
+                    }}
+                  >
+                    {m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}
+                    {m.rol === 'asistan' && (
+                      <button
+                        type="button"
+                        onClick={() => { setDuzenlemeMetni(m.icerik); setDuzenlenenIndex(i) }}
+                        title="Bu cevabı düzenle"
+                        style={{ display: 'block', marginTop: 6, background: 'none', border: 'none', color: '#7FB8B0', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                      >
+                        ✏️ Düzenle
+                      </button>
+                    )}
+                  </div>
+                )}
                 {m.oneriler?.length && m.hasta ? (
                   m.oneriler.length > 1
                     ? <EylemToplu oneriler={m.oneriler} hasta={m.hasta} />

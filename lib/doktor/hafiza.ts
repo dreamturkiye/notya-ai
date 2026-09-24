@@ -33,6 +33,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type Anthropic from '@anthropic-ai/sdk'
 import { aiCagir } from '@/lib/ai/cagir'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type HafizaKategori = 'klinik' | 'uslup' | 'rutin' | 'iletisim' | 'kisisel' | 'uygulama'
 export type HafizaKaynak = 'doktor_soyledi' | 'duzeltme' | 'gozlem'
@@ -158,9 +159,8 @@ export async function seansIsle(
 /** LLM'siz gözlem: son 30 günün seans verisinden doktorun ritmi. */
 export async function rutinHesapla(sb: SupabaseClient, doctorId: string): Promise<Record<string, unknown>> {
   const baslangic = new Date(Date.now() - 30 * 86400000).toISOString()
-  const { data } = await sb
-    .from('sessions')
-    .select('started_at, patient_id')
+  // NOTYA-ARSIV-01: arşivlenmiş muayene doktorun ritim gözlemine girmez.
+  const { data } = await arsivsizSeanslar(sb, 'started_at, patient_id')
     .eq('doctor_id', doctorId)
     .gte('started_at', baslangic)
     .limit(2000)

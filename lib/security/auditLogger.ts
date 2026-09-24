@@ -140,6 +140,28 @@ export async function logAudioDeletion(
   })
 }
 
+/**
+ * NOTYA-FISILTI-GIZLE-01 — hekim bir Fısıltı uyarısını gizledi / geri getirdi (klinik veri değişmez).
+ */
+export async function logFisiltiGizleme(
+  userId: string,
+  patientId: string,
+  islem: 'gizle' | 'geri_getir',
+  ayrinti: Record<string, unknown>,
+  request?: Request
+): Promise<void> {
+  await writeAuditLog({
+    user_id: userId,
+    action: islem === 'gizle' ? 'create' : 'update',
+    resource_type: 'fisilti_gizlenen',
+    resource_id: patientId,
+    new_values: { islem, ...ayrinti },
+    ip_address: getClientIP(request),
+    user_agent: request?.headers.get('user-agent') || undefined,
+    success: true,
+  })
+}
+
 // ============================================================
 // İÇ YARDIMCILAR
 // ============================================================

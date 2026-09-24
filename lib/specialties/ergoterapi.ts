@@ -12,7 +12,7 @@ export const ERGOTERAPI_PROFILE = {
   sekmeler: [{ id: 'ergoterapi', etiket: 'Ergoterapi', bilesen: 'ErgoterapiHome', sira: 14 }],
   goruntu: null,
   belgeler: BASELINE_BELGELER,
-  ekKaynaklar: ['specialties/ergoterapi/engines/ergo.ts'],
+  ekKaynaklar: ['lib/klinik/klinikTurkishRefs.ts KLINIK_TURKISH_REFS.ergoterapi (29.03.2025, Ergoterapi Derneği, ICF/GYA, SB işlevsellik — Neyzi yok)'],
   promptNotlari: ['Tanı yok; Neyzi/baş çevresi sızmaz.'],
   specialistReview: [{ konu: 'Ekipman sınıfı', neden: 'Rapor hekim imzasına bağlıdır.' }],
   portal: [{

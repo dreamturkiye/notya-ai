@@ -14,6 +14,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { bugunTRT, yasAyHesapla, type HastaOzeti } from './types'
 import { dogumTarihiTara } from '@/lib/doktor/dosyaAlanTara'
+import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -67,18 +68,15 @@ async function dosyadanDogumTarihi(
   doktorId: string,
   patientId: string
 ): Promise<string | null> {
-  const { data: seanslar } = await supabase
-    .from('sessions')
-    .select('id')
+  // NOTYA-ARSIV-01: arşivlenmiş muayenenin notu doğum tarihi kaynağı olarak okunmaz.
+  const { data: seanslar } = await arsivsizSeanslar(supabase, 'id')
     .eq('patient_id', patientId)
     .eq('doctor_id', doktorId)
     .limit(30)
-  const seansIdler = (seanslar || []).map((s) => String(s.id))
+  const seansIdler = (seanslar || []).map((s: { id: string }) => String(s.id))
   const [notlar, analiz, belgeler, intake] = await Promise.all([
     seansIdler.length
-      ? supabase
-          .from('notes')
-          .select('content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani')
+      ? arsivsizNotlar(supabase, 'content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani')
           .eq('doctor_id', doktorId)
           .in('session_id', seansIdler)
           .limit(20)

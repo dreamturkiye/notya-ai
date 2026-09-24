@@ -16,6 +16,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { doktorOturum } from '@/lib/doktor/serverAuth'
 import { getDocumentMeta, downloadDocument } from '@/lib/vault/service'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizNotlar } from '@/lib/doktor/arsiv'
 import { bransAnahtari, bransKurali } from '@/core/belgeler/router'
 import { csvXlsxCoz, pdfMetinCoz, gorselCikar, type CikarimSonucu } from '@/core/lab/cikarim'
 import { satirKur, uzlastir, panelOzeti, ozelHesaplar, type HamSatir, type LabSatir, type OncekiSatir } from '@/core/lab/trend'
@@ -204,7 +205,8 @@ export async function POST(req: NextRequest) {
       sb.from('lab_satirlar').select('*').eq('panel_id', panel.id).order('sira'),
       sb.from('users').select('specialty').eq('id', user.id).maybeSingle(),
       sb.from('patients').select('dob_encrypted, gender_encrypted').eq('id', panel.patient_id).maybeSingle(),
-      sb.from('notes').select('id, content_plan, sessions!inner(patient_id)').eq('doctor_id', user.id).eq('sessions.patient_id', panel.patient_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      // NOTYA-ARSIV-01: "son not" arşivlenmiş muayeneden alınmaz.
+      arsivsizNotlar(sb, 'id, content_plan, sessions!inner(patient_id)').eq('doctor_id', user.id).eq('sessions.patient_id', panel.patient_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
     const satirlar: LabSatir[] = (rows || []).map((r) => ({ raw_name: r.raw_name, canonical_key: r.canonical_key, loinc: r.loinc, value_num: r.value_num == null ? null : Number(r.value_num), value_text: r.value_text, unit: r.unit, kanonik_deger: r.kanonik_deger == null ? null : Number(r.kanonik_deger), kanonik_birim: r.kanonik_birim, ref_low: r.ref_low == null ? null : Number(r.ref_low), ref_high: r.ref_high == null ? null : Number(r.ref_high), flag: r.flag, kritik: r.kritik, kritik_neden: r.kritik_neden, prior_value: r.prior_value == null ? null : Number(r.prior_value), prior_date: r.prior_date, prior_series: [], delta: r.delta == null ? null : Number(r.delta), delta_pct: r.delta_pct == null ? null : Number(r.delta_pct), trend: r.trend, page: r.page, dogrulanacak: r.dogrulanacak, dogrulama_notu: r.dogrulama_notu, doctor_corrected: r.doctor_corrected }))
     // prior series for sentences

@@ -15,6 +15,19 @@ export function sonrakiInfuzon(sonIso: string, aralikGun: number, bugun: string)
   return { due, durum: fark < 0 ? 'gecikti' : fark <= 7 ? 'yaklasiyor' : 'planli' }
 }
 
+export const GUVENLIK_MADDELERI = [
+  'IV set ve ürün lotu kaydı (karışım yazılmaz)',
+  'Alerji / önceki reaksiyon soruldu',
+  'Acil set / 112 yolu görünür',
+  'Hasta işlem sırasında yalnız bırakılmadı',
+] as const
+
+export function ivGuvenlik(isaret: string[]): { ozet: string } | { hata: string } {
+  const s = GUVENLIK_MADDELERI.filter((m) => isaret.includes(m))
+  if (s.length < 3) return { hata: 'En az 3 güvenlik maddesi işaretleyin — doz/karışım yazılmaz.' }
+  return { ozet: `IV güvenlik kaydı: ${s.join(' · ')}. Karışım ve mL hekimde.` }
+}
+
 export const INTAKE_ACIL = [
   'IV sırasında nefes darlığı, yaygın kaşıntı veya tansiyon düşmesi',
   'Göğüs ağrısı',

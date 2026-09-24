@@ -31,6 +31,14 @@ export function islemTakvimi(islemIso: string, bugun: string): Array<{ gun: numb
   }))
 }
 
+export function vaskulerBayrak(belirti: boolean): { ozet: string } {
+  return {
+    ozet: belirti
+      ? 'Görme kaybı / livedo / ani ağrı işaretli — 112. Hyaluronidaz dozu yazılmaz.'
+      : 'Vasküler bayrak yok. Ünite/mL yine hekimde.',
+  }
+}
+
 export const INTAKE_ACIL = [
   'İşlem sonrası görme kaybı veya ani şiddetli ağrı (dolgu)',
   'Yüzde solukluk / livedo (vasküler oklüzyon şüphesi)',

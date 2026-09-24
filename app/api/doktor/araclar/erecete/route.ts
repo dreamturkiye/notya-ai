@@ -7,6 +7,7 @@ import { pseudonymize, restoreDeep, assertNoTckn } from '@/lib/security/pseudony
 import { aiKotaKullan, KOTA_MESAJI } from '@/lib/doktor/hizLimiti';
 import { kritikAlarm } from '@/lib/alarm';
 import { aiCagir, AiCagriHatasi, yanitMetni } from '@/lib/ai/cagir';
+import { arsivsizIlaclar } from '@/lib/doktor/arsiv';
 
 interface IlacInput {
   ad: string;
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
     // modele (kimliksiz) verilir; önceden boş placeholder gidiyordu.
     let mevcutIlaclar = 'kayıtlı sürekli ilaç yok';
     try {
-      const { data: hi } = await sb.from('hasta_ilaclar').select('*').eq('patient_id', hastaId).limit(30);
+      const { data: hi } = await arsivsizIlaclar(sb, '*').eq('patient_id', hastaId).limit(30);
       if (hi?.length) {
         mevcutIlaclar = hi.map((i: Record<string, unknown>) => [i.ilac_adi || i.ad, i.doz, i.kullanim].filter(Boolean).join(' ')).filter(Boolean).join('; ');
       }

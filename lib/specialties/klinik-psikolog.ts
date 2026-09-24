@@ -7,12 +7,12 @@ export const KLINIK_PSIKOLOG_PROFILE = {
   pediatrikBaglam: 'asla',
   olcumler: BASELINE_OLCUMLER,
   hesaplayicilar: [
-    { id: 'seans', ad: 'Seans çerçevesi (tanı değil)', kaynak: 'TPD etik + 29.03.2025', motor: 'specialties/klinik-psikolog/engines/psikolog', deterministik: true },
+    { id: 'seans', ad: 'Seans çerçevesi (tanı değil)', kaynak: 'Türk Psikologlar Derneği etik + 29.03.2025', motor: 'specialties/klinik-psikolog/engines/psikolog', deterministik: true },
   ],
   sekmeler: [{ id: 'klinik-psikolog', etiket: 'Klinik Psikoloji', bilesen: 'KlinikPsikologHome', sira: 14 }],
   goruntu: null,
   belgeler: BASELINE_BELGELER,
-  ekKaynaklar: ['specialties/klinik-psikolog/engines/psikolog.ts'],
+  ekKaynaklar: ['lib/klinik/klinikTurkishRefs.ts KLINIK_TURKISH_REFS.klinik-psikolog (29.03.2025, Türk Psikologlar Derneği Etik, BDT derneği, 112 — psikiyatri değil)'],
   promptNotlari: ['Tıbbi tanı ve reçete yok; kriz → 112.'],
   specialistReview: [{ konu: 'Kriz eşiği', neden: 'Klinik bağlam; sevk kararı uzmandadır.' }],
   portal: [{

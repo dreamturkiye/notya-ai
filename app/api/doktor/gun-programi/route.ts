@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizIlaclar, arsivsizNotlar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -81,10 +82,11 @@ export async function GET(req: NextRequest) {
   const [hastalarQ, notlarQ, ilaclarQ, mesajQ, intakeQ] = hastaIdler.length
     ? await Promise.all([
         supabase.from('patients').select('id, name_encrypted').eq('doctor_id', doktorId).in('id', hastaIdler),
-        supabase.from('notes').select('created_at, content_degerlendirme, content_plan, icd10_codes, sessions!inner(patient_id)')
+        // NOTYA-ARSIV-01: arşivlenmiş muayene "son vizit" / vizit sayısı olarak brifinge girmez.
+        arsivsizNotlar(supabase, 'created_at, content_degerlendirme, content_plan, icd10_codes, sessions!inner(patient_id)')
           .eq('doctor_id', doktorId).not('approved_at', 'is', null).in('sessions.patient_id', hastaIdler)
           .order('created_at', { ascending: false }).limit(400),
-        supabase.from('hasta_ilaclar').select('patient_id').eq('doctor_id', doktorId).in('patient_id', hastaIdler).eq('aktif', true),
+        arsivsizIlaclar(supabase, 'patient_id').eq('doctor_id', doktorId).in('patient_id', hastaIdler).eq('aktif', true),
         supabase.from('hasta_mesaj_konulari').select('patient_id').eq('doctor_id', doktorId).in('patient_id', hastaIdler).eq('okundu_pratik', false).eq('pratik_arsiv', false),
         supabase.from('hasta_intake_formlari').select('patient_id, durum, form_data_encrypted, created_at').eq('doktor_id', doktorId).in('patient_id', hastaIdler).order('created_at', { ascending: false }),
       ])

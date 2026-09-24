@@ -17,6 +17,7 @@ import { ULUSAL_TAKVIM, OZEL_ASILAR, PEDIATRIK_ASI_ADLARI, TAKVIM_SURUM } from '
 import { hitapMetinleri } from '@/lib/specialties/hitap';
 import { Rozet } from '@/lib/doktor/aracUi';
 import { asiKaynakRozeti, asiKaynakTuru, trTarih } from '@/lib/asi/karneOkuma';
+import { LOT_AZAMI, lotYerSatiri, YER_AZAMI } from '@/lib/asi/asiLotYeri';
 import AsiKarnesiOkuma from '@/components/doktor/AsiKarnesiOkuma';
 import AsiKarnesiEylemleri from '@/components/doktor/AsiKarnesiEylemleri';
 import AsiHatirlatmaListesi from '@/components/doktor/AsiHatirlatmaListesi';
@@ -31,6 +32,8 @@ interface Asi {
   kaynak: 'beyan' | 'kayit';
   notlar: string | null;
   belge_id?: string | null;
+  lot_no?: string | null;
+  uygulama_yeri?: string | null;
 }
 
 const KAYNAK_KENAR = { karne: 'rgba(96,165,250,0.55)', beyan: 'rgba(255,255,255,0.18)', klinik: 'rgba(45,212,191,0.55)' } as const;
@@ -56,6 +59,8 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
   const [uygulamaTarihi, setUygulamaTarihi] = useState('');
   const [sonrakiDozTarihi, setSonrakiDozTarihi] = useState('');
   const [kaynak, setKaynak] = useState<'kayit' | 'beyan'>('kayit');
+  const [lotNo, setLotNo] = useState('');
+  const [uygulamaYeri, setUygulamaYeri] = useState('');
   const [kaydediyor, setKaydediyor] = useState(false);
   const [takvimAcik, setTakvimAcik] = useState(false);
   const [karneAcik, setKarneAcik] = useState(false);
@@ -83,7 +88,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
   useEffect(() => { yukle(); }, [yukle]);
 
   function formuSifirla() {
-    setAsiAdi(''); setDozNo(''); setUygulamaTarihi(''); setSonrakiDozTarihi(''); setKaynak('kayit');
+    setAsiAdi(''); setDozNo(''); setUygulamaTarihi(''); setSonrakiDozTarihi(''); setKaynak('kayit'); setLotNo(''); setUygulamaYeri('');
   }
 
   /** NOTYA-ASI-01: takvimden tek tıkla ön dolu ekleme — doktor adı/dozu elle yazmaz. */
@@ -109,6 +114,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
         body: JSON.stringify({
           patientId, asiAdi, dozNo: dozNo ? Number(dozNo) : null, kategori,
           uygulamaTarihi: uygulamaTarihi || null, sonrakiDozTarihi: sonrakiDozTarihi || null, kaynak,
+          lotNo: lotNo.trim() || null, uygulamaYeri: uygulamaYeri.trim() || null,
         }),
       });
       if (!r.ok) { const j = await r.json().catch(() => ({})); setHata(j.error || 'Kaydedilemedi.'); return; }
@@ -145,6 +151,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
             const yaklasan = a.sonraki_doz_tarihi && new Date(a.sonraki_doz_tarihi) >= new Date() && new Date(a.sonraki_doz_tarihi) <= new Date(Date.now() + 7 * 86400000);
             const tur = asiKaynakTuru(a);
             const rozet = asiKaynakRozeti(tur, hitap.beyanEtiketi);
+            const lotYer = lotYerSatiri(a);
             return (
               <div key={a.id} data-asi-kaynak={tur} style={{ background: '#111C33', borderRadius: 10, padding: 12, borderLeft: `3px solid ${KAYNAK_KENAR[tur]}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <div>
@@ -153,6 +160,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
                     <span>{a.uygulama_tarihi ? `Uygulandı: ${trTarih(a.uygulama_tarihi)}` : 'Uygulama tarihi girilmedi'}</span>
                     <Rozet ton={rozet.ton}>{rozet.metin}</Rozet>
                   </div>
+                  {lotYer && <div data-asi-lot-yer="" style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{lotYer}</div>}
                   {a.sonraki_doz_tarihi && (
                     <div style={{ fontSize: 12, marginTop: 2, color: yaklasan ? '#F59E0B' : '#64748B' }}>
                       Sonraki doz: {trTarih(a.sonraki_doz_tarihi)}{yaklasan ? ' · Yaklaşıyor' : ''}
@@ -280,6 +288,14 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
                 <option value="kayit">Bu klinikte uygulandı</option>
                 <option value="beyan">{hitap.beyanEtiketi}</option>
               </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Lot no</label>
+              <input value={lotNo} onChange={(e) => setLotNo(e.target.value)} maxLength={LOT_AZAMI} placeholder="İsteğe bağlı" style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Uygulama yeri</label>
+              <input value={uygulamaYeri} onChange={(e) => setUygulamaYeri(e.target.value)} maxLength={YER_AZAMI} placeholder="Örn. IM sol deltoid" style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }} />
             </div>
           </div>
           <button type="submit" disabled={kaydediyor} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}>

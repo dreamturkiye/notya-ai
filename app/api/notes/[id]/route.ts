@@ -13,6 +13,11 @@ import { buyumePersentilleriniHesapla, buyumeYorumunuEkle, type Cinsiyet } from 
 import { vitalOlcumleriniNormallestir } from '@/lib/clinical/olcumCoz'
 import { eriskinVkiVitalerden } from '@/lib/clinical/eriskinVki'
 import { notKapsamiGetir } from '@/lib/specialties/kapsamSunucu'
+import { seansArsivdeMi } from '@/lib/doktor/arsiv'
+import { cekBlokVarMi } from '@/lib/doktor/muayeneCekListesi'
+import { cekListeVerisiYukle, kayitliHekimIsaretleri } from '@/lib/doktor/cekListeSunucu'
+import { notAsilariniTemizle, type KartAsisi } from '@/lib/doktor/notAsilari'
+import { notAsiKarti } from '@/lib/doktor/notAsiAktarim'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,9 +32,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { supabase, doktorId } = oturum
   const { id } = await params
 
+  // NOTYA-ARSIV-01: opening one note by id stays allowed even when its muayene is archived (the doctor
+  // reaches it from Arşivlenenler) — the page shows an "Arşivde" banner from `arsivde`.
   const { data: not } = await supabase
     .from('notes')
-    .select('*, sessions(patient_id, specialty)')
+    .select('*, sessions(patient_id, specialty, archived_at)')
     .eq('id', id)
     .eq('doctor_id', doktorId)
     .maybeSingle()
@@ -39,6 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const hasta: { ad: string; dogum: string; yas: string; cinsiyet: string; tc: string } = { ad: '', dogum: '', yas: '', cinsiyet: '', tc: '' }
   let dogumIso: string | null = null
   let cinsiyetHam: 'male' | 'female' | null = null
+  let hastaBenim = false
   if (seans?.patient_id) {
     const { data: p } = await supabase
       .from('patients')
@@ -47,6 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .eq('doctor_id', doktorId)
       .maybeSingle()
     if (p) {
+      hastaBenim = true
       const hamAd = coz(p.name_encrypted)
       try { hasta.ad = String(JSON.parse(hamAd).ad || hamAd) } catch { hasta.ad = hamAd }
       const dogum = coz(p.dob_encrypted)
@@ -105,6 +114,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const bransKapsami = { brans: kapsam.brans, pediatrik: kapsam.pediatrik, veliDili: kapsam.veliDili, olcumler: kapsam.olcumler, hitap: kapsam.hitap }
   const buyume = kapsam.pediatrik ? buyumePersentilleriniHesapla(not.vitaller, dogumIso, cinsiyetHam, not.created_at) : null
 
+  // NOTYA-CEK-DOGRULA-02: çek listesi girdileri — sayfa paneli notun GÜNCEL alanlarından her düzenlemede yeniden hesaplar.
+  // Yalnız kayıtlı ÇEK LİSTESİ bloğu olan notlarda (panel kapsamı değişmez).
+  let cek: { maddeler: unknown[]; oncekiIdler: string[]; isaretler: Record<string, boolean> } | null = null
+  if (cekBlokVarMi(not.ai_degerlendirme)) {
+    try {
+      const veri = await cekListeVerisiYukle(supabase, {
+        doktorId, patientId: seans?.patient_id ? String(seans.patient_id) : null, seansBransi: seans?.specialty ?? null,
+        doktorBransi: kapsam.doktorBransi, hastaDogumIso: dogumIso, referansIso: not.created_at, haricNotId: not.id,
+      })
+      cek = { maddeler: veri.maddeler, oncekiIdler: veri.oncekiIdler, isaretler: kayitliHekimIsaretleri(not.ai_degerlendirme, veri) }
+    } catch (e) { console.error('[notes/get] cek-liste', e) }
+  }
+
+  // NOTYA-ASI-NOT-01: the card (minus this note's own rows) so the form warns before approval — "zaten kayıtlı" / conflict.
+  let asiKart: KartAsisi[] = []
+  if (hastaBenim && seans?.patient_id) {
+    try { asiKart = await notAsiKarti(supabase, doktorId, String(seans.patient_id), not.id) } catch (e) { console.error('[notes/get] asi-kart', e) }
+  }
+
   return NextResponse.json({
     not: {
       id: not.id,
@@ -118,6 +146,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       plan: not.content_plan || '',
       tani: not.content_tani || '',
       ilaclar: Array.isArray(not.content_ilaclar) ? not.content_ilaclar : [],
+      asilar: notAsilariniTemizle(not.content_asilar),
+      asiKart,
       receteOnerisi: Array.isArray(not.recete_onerisi) ? not.recete_onerisi : [],
       icdKodlari: Array.isArray(not.icd10_codes) ? not.icd10_codes : [],
       kritikBulgular: Array.isArray(not.kritik_bulgular) ? not.kritik_bulgular : [],
@@ -131,6 +161,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       hastaOzeti: not.hasta_ozeti || '',
       aiDegerlendirme: buyumeYorumunuEkle(not.ai_degerlendirme || '', buyume),
       takipSuresi: not.takip_suresi || '',
+      arsivde: seansArsivdeMi(not.sessions),
+      cek,
     },
     hasta: { ...hasta, patientId: seans?.patient_id ? String(seans.patient_id) : null },
     doktor: { ad: doktorAd, diplomaNo, ozelBaslikSatirlari, ozelLogo },

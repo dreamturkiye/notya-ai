@@ -56,6 +56,12 @@ export const FISILTI_DESTEKLI_BRANSLAR = new Set([
   'beyin-cerrahisi', 'kadin-hastaliklari-dogum', 'radyoloji',
 ])
 
+/** Flag codes whose snake_case fallback reads wrong (no Turkish letters). NOTYA-FISILTI-GIZLE-01. */
+const BAYRAK_ETIKET: Record<string, string> = {
+  asi_gecikti: 'aşı gecikti',
+  asi_kayit_tutarsiz: 'aşı kaydı tutarsız',
+}
+
 /**
  * Defensive normalizer. `satir` is one row from ANY branş kohort route's `{ satirlar: [...] }`
  * response, typed loosely on purpose (crossing an HTTP boundary -- not worth importing 29
@@ -77,7 +83,7 @@ export function normalizeKohortSatiri(satir: Record<string, unknown>, brans: str
   // Human label for the flag: prefer a `baslik`/`bayrakAd` field if the branş route already
   // resolved one server-side; otherwise fall back to the raw flag code (readable enough --
   // Turkish snake_case like 'tbse_gecikti' reads plainly) or the first detay line.
-  const baslik = String(satir.baslik || satir.bayrakAd || ilkBayrak.replace(/_/g, ' ') || detay[0] || 'Bekleyen kontrol')
+  const baslik = String(satir.baslik || satir.bayrakAd || BAYRAK_ETIKET[ilkBayrak] || ilkBayrak.replace(/_/g, ' ') || detay[0] || 'Bekleyen kontrol')
 
   const enErkenTarih = (satir.enErkenTarih as string | null | undefined) ?? null
 

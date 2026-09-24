@@ -28,6 +28,8 @@ import { EYLEM_ISTEM_BLOGU } from '@/core/eylemler/istem'
 import { bugunTRT } from '@/core/eylemler/types'
 import { ayseUyariCumlesi } from '@/core/eylemler/ilacUyari'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
+import { cekBlokSil } from '@/lib/doktor/muayeneCekListesi'
+import { notAsilariniTemizle } from '@/lib/doktor/notAsilari'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { noteId, taslak, mesajlar } = body as {
     noteId?: string
-    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
+    taslak?: { subjektif?: string; objektif?: string; degerlendirme?: string; plan?: string; basvuruYakinmasi?: string; vitaller?: Record<string, string>; alarmBulgulari?: string[]; hastaOzeti?: string; ilaclar?: unknown[]; asilar?: unknown[]; icdKodlari?: unknown[]; receteOnerisi?: unknown[]; aiDegerlendirme?: string }
     mesajlar?: Mesaj[]
   }
   if (!noteId || !Array.isArray(mesajlar) || mesajlar.length === 0) {
@@ -75,6 +77,9 @@ export async function POST(req: NextRequest) {
   // NOTYA-OGRENME-03: Ayşe'ye Danış da aynı meslektaş hafızasını okur
   let hafizaBlogu = ''
   try { hafizaBlogu = hafizaBloguSohbet(await hafizaYukle(supabase, doktorId)) } catch { /* hafıza kritik değil */ }
+
+  // NOTYA-CEK-DOGRULA-02: ÇEK LİSTESİ bloğu deterministiktir — modele gösterilmez (kopyalamasın), yanıtından da silinir.
+  if (taslak && typeof taslak.aiDegerlendirme === 'string') taslak.aiDegerlendirme = cekBlokSil(taslak.aiDegerlendirme)
 
   const trtBugun = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
   // BRANS-ALAN-SIZMASI: hitap (hasta/veli), vital anahtarları ve persentil kuralı notun branş kapsamından
@@ -121,6 +126,9 @@ export async function POST(req: NextRequest) {
     for (const [k, v] of Object.entries(dzHam)) { const hedef = ESLE[k] || ESLE[k.toLowerCase()] || k; dz[hedef] = v }
     // BRANS-ALAN-SIZMASI: pediatrik olmayan notta model pediatrik ölçüm (baş çevresi) öneremez
     if (dz.vitaller && typeof dz.vitaller === 'object') dz.vitaller = vitalleriKapsamaGoreSuz(dz.vitaller, kapsam)
+    if (typeof dz.aiDegerlendirme === 'string') dz.aiDegerlendirme = cekBlokSil(dz.aiDegerlendirme)
+    // NOTYA-ASI-NOT-01: aşı listesi düzenlemesi sunucuda temizlenir (ad normalize, doz 1–12, tarih ISO; boş satır atılır).
+    if ('asilar' in dz) { if (Array.isArray(dz.asilar)) dz.asilar = notAsilariniTemizle(dz.asilar); else delete dz.asilar }
     sonuc.duzenlemeler = dz
     if (typeof sonuc.cevap === 'string' && sonuc.cevap.trim().startsWith('{')) sonuc.cevap = 'Düzenlemeyi ekrana işledim Hocam.'
     // NOTYA-EYLEM: tool_use → taslak öneri. Hiçbir şey yazılmadı; hekim kartta onaylayacak.

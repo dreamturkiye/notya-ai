@@ -25,10 +25,13 @@ import {
   type HastaNotAlanlari,
 } from '@/lib/doktor/hastaKayitAlanlari'
 import { gununNotunaEkle, gununNotunaVitalEkle, notVitalleriGeriYukle } from '@/lib/doktor/gununNotunaEkle'
+import { arsivsizAsilar, arsivsizIlaclar } from '@/lib/doktor/arsiv'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { ilacUyarilariHesapla } from './ilacUyari'
-import { kayitSerisi, SERI_AD, type SeriKod } from '@/specialties/pediatri/engines/asiPlan'
+import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
+import { asiAdiNormalize } from '@/lib/asi/karneOkuma'
+import { LOT_AZAMI, lotYerTemizle, YER_AZAMI } from '@/lib/asi/asiLotYeri'
 import { encrypt } from '@/lib/security/encryption'
 
 /** Helper: build a definition with the schema derived from its own field list. */
@@ -60,17 +63,14 @@ const ASI_ALANLARI: AlanTanimi[] = [
     ],
   },
   { anahtar: 'sonraki_doz_tarihi', etiket: 'Sonraki doz', tip: 'tarih', aciklama: 'Next dose due date, only if the source states it' },
+  // NOTYA-ASI-LOT-01: optional; filled only when the doctor / document states them — never guessed.
+  { anahtar: 'lot_no', etiket: 'Lot no', tip: 'metin', aciklama: 'Lot / batch number exactly as stated (e.g. "Vaxi12345"). Only if the doctor or the document says it; otherwise leave empty' },
+  { anahtar: 'uygulama_yeri', etiket: 'Uygulama yeri', tip: 'metin', aciklama: 'Injection site / route as stated (e.g. "IM", "sol deltoid", "sağ uyluk", "ağızdan"). Only if stated; otherwise leave empty' },
   { anahtar: 'notlar', etiket: 'Not', tip: 'metin' },
 ]
 
-/** SB ulusal takvim matcher — "Hep B" / "Hepatit B aşısı" → "Hepatit B" so duplicate + portal grouping align with karne. */
-export function asiAdiNormalize(ad: string): string {
-  const t = String(ad || '').trim()
-  if (!t) return t
-  const k = kayitSerisi(t)
-  if (k && k in SERI_AD) return SERI_AD[k as SeriKod]
-  return t
-}
+/** SB ulusal takvim matcher — moved to lib/asi/karneOkuma so the muayene note (NOTYA-ASI-NOT-01) uses the same one. */
+export { asiAdiNormalize }
 
 async function asiBelgeId(ctx: EylemBaglami): Promise<string | null> {
   if (!ctx.oneriId) return null
@@ -94,9 +94,8 @@ export const ASI_KAYDI_EKLE = eylem({
   mukerrerKontrol: async (ctx, v) => {
     if (!v.asi_adi) return null
     const hedefSeri = kayitSerisi(String(v.asi_adi))
-    const { data } = await ctx.supabase
-      .from('asilar')
-      .select('id, asi_adi, uygulama_tarihi')
+    // NOTYA-ASI-NOT-01: a vaccine hidden with its archived muayene is not a duplicate.
+    const { data } = await arsivsizAsilar(ctx.supabase, 'id, asi_adi, uygulama_tarihi')
       .eq('doktor_id', ctx.doktorId)
       .eq('patient_id', ctx.hasta.id)
       .limit(40)
@@ -124,16 +123,18 @@ export const ASI_KAYDI_EKLE = eylem({
       sonraki_doz_tarihi: v.sonraki_doz_tarihi ?? null,
       kaynak: v.kaynak === 'kayit' ? 'kayit' : 'beyan',
       notlar: v.notlar ?? null,
+      lot_no: lotYerTemizle(v.lot_no, LOT_AZAMI),
+      uygulama_yeri: lotYerTemizle(v.uygulama_yeri, YER_AZAMI),
       belge_id: belgeId,
       hekim_onay_at: new Date().toISOString(),
     }
     let { data, error } = await ctx.supabase.from('asilar').insert(satir).select('id').single()
-    if (error && /belge_id|hekim_onay_at|column/i.test(String(error.message || ''))) {
-      const { belge_id: _b, hekim_onay_at: _h, ...eski } = satir
+    if (error && /belge_id|hekim_onay_at|lot_no|uygulama_yeri|column/i.test(String(error.message || ''))) {
+      const { belge_id: _b, hekim_onay_at: _h, lot_no: _l, uygulama_yeri: _y, ...eski } = satir
       ;({ data, error } = await ctx.supabase.from('asilar').insert(eski).select('id').single())
     }
     if (error || !data) throw new Error(error?.message || 'Aşı kaydedilemedi.')
-    return { hedefTablo: 'asilar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'Aşılar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=asilar` } }
+    return { hedefTablo: 'asilar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'Aşılar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=asilar` } }
   },
   geriAl: async (ctx, k) => {
     await ctx.supabase.from('asilar').delete().eq('id', k.hedefId).eq('doktor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
@@ -166,9 +167,7 @@ export const ILAC_EKLE = eylem({
   makullukKontrol: (ctx, v) => tarihMakul('Başlangıç tarihi', v.baslangic_tarihi, ctx.hasta, '9999-12-31'),
   mukerrerKontrol: async (ctx, v) => {
     if (!v.ilac_adi) return null
-    const { data } = await ctx.supabase
-      .from('hasta_ilaclar')
-      .select('id, ilac_adi')
+    const { data } = await arsivsizIlaclar(ctx.supabase, 'id, ilac_adi')
       .eq('doctor_id', ctx.doktorId)
       .eq('patient_id', ctx.hasta.id)
       .eq('aktif', true)
@@ -201,7 +200,7 @@ export const ILAC_EKLE = eylem({
     }
     const { data, error } = await ctx.supabase.from('hasta_ilaclar').insert(satir).select('id').single()
     if (error || !data) throw new Error(error?.message || 'İlaç kaydedilemedi.')
-    return { hedefTablo: 'hasta_ilaclar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=ilaclar` } }
+    return { hedefTablo: 'hasta_ilaclar', hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
   geriAl: async (ctx, k) => {
     await ctx.supabase.from('hasta_ilaclar').delete().eq('id', k.hedefId).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
@@ -316,7 +315,7 @@ export const BAS_CEVRESI_EKLE = eylem({
   calistir: async (ctx, v) => {
     const r = await gununNotunaVitalEkle(ctx.supabase, ctx.doktorId, ctx.hasta.id, { basCevresi: v.basCevresi })
     if (!r.eklendi || !r.notId) throw new Error(r.sebep || 'Ölçüm eklenemedi.')
-    return { hedefTablo: 'notes', hedefId: r.notId, once: r.once, sonra: r.sonra || {}, ilgiliSekme: { etiket: 'Büyüme eğrilerinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=buyume` } }
+    return { hedefTablo: 'notes', hedefId: r.notId, once: r.once, sonra: r.sonra || {}, ilgiliSekme: { etiket: 'Büyüme eğrilerinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=buyume` } }
   },
   geriAl: async (ctx, k) => {
     await notVitalleriGeriYukle(ctx.supabase, k.hedefId, k.once)
@@ -434,15 +433,15 @@ export const FISILTI_SESSIZE_AL = eylem({
 /* ─────────────────────────────── T2 · İlaç düzeltmeleri ─────────────────────────────── */
 
 async function aktifIlac(ctx: EylemBaglami, ad: string) {
-  const { data } = await ctx.supabase
-    .from('hasta_ilaclar')
-    .select('id, ilac_adi, doz, kullanim_sikli, aktif, bitis_tarihi')
+  // NOTYA-ARSIV-02: an archived muayene's drug is not on the list, so Ayşe cannot stop / re-dose it either.
+  const { data } = await arsivsizIlaclar(ctx.supabase, 'id, ilac_adi, doz, kullanim_sikli, aktif, bitis_tarihi')
     .eq('doctor_id', ctx.doktorId)
     .eq('patient_id', ctx.hasta.id)
     .eq('aktif', true)
     .ilike('ilac_adi', ad)
     .limit(2)
-  return data || []
+  // The filter's embed stays out of the audit snapshot (eylem_kayitlari.once/sonra).
+  return ((data || []) as Record<string, unknown>[]).map(({ arsiv_kaynak: _k, ...r }) => r)
 }
 
 export const ILAC_SONLANDIR = eylem({
@@ -472,7 +471,7 @@ export const ILAC_SONLANDIR = eylem({
     const yama = Object.fromEntries(Object.entries(guncel).filter(([, x]) => x !== undefined))
     const { error } = await ctx.supabase.from('hasta_ilaclar').update(yama).eq('id', once.id).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
     if (error) throw new Error(error.message)
-    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=ilaclar` } }
+    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
 })
 
@@ -513,7 +512,7 @@ export const ILAC_DOZ_DEGISTIR = eylem({
     if (v.yeni_kullanim) yama.kullanim_sikli = v.yeni_kullanim
     const { error } = await ctx.supabase.from('hasta_ilaclar').update(yama).eq('id', once.id).eq('doctor_id', ctx.doktorId).eq('patient_id', ctx.hasta.id)
     if (error) throw new Error(error.message)
-    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?sekme=ilaclar` } }
+    return { hedefTablo: 'hasta_ilaclar', hedefId: String(once.id), once, sonra: { ...once, ...yama }, ilgiliSekme: { etiket: 'İlaçlar sekmesinde gör', yol: `/dashboard/doktor/hastalar/${ctx.hasta.id}?tab=ilaclar` } }
   },
 })
 

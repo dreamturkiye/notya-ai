@@ -26,6 +26,15 @@ import {
   NOT_YENIDEN_DEGERLENDIR_DEBOUNCE_MS,
   NOT_YENIDEN_DEGERLENDIR_ISTEK,
 } from '@/lib/doktor/notYenidenDegerlendir';
+import {
+  CEK_BLOK_BASLIK,
+  cekBlokDegistir,
+  cekListeDogrula,
+  cekListeDogrulamaMetni,
+  cekNotMetni,
+  type CekMadde,
+} from '@/lib/doktor/muayeneCekListesi';
+import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
 interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
@@ -35,6 +44,8 @@ interface NotVeri {
     id: string
     createdAt: string
     approvedAt: string | null
+    /** NOTYA-ARSIV-01: muayenesi arşivde — hiçbir listede görünmez, yalnız doğrudan açılır. */
+    arsivde?: boolean
     specialty: string
     basvuruYakinmasi: string
     subjektif: string
@@ -44,12 +55,18 @@ interface NotVeri {
     alarmBulgulari: string[]
     vitaller: Record<string, unknown> | null
     ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]
+    /** NOTYA-ASI-NOT-01: bu muayenede uygulanan aşılar (onayda aşı kartına geçer) + kart (bu notun satırları hariç). */
+    asilar?: NotAsisi[]
+    asiKart?: KartAsisi[]
     buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null
     hastaOzeti: string
     icdKodlari: IcdOner[]
     receteOnerisi?: ReceteOner[]
     aiDegerlendirme?: string
     bransKapsami?: BransKapsami
+    tani?: string
+    /** NOTYA-CEK-DOGRULA-02: çek listesi girdileri — panel bunlardan ve formun GÜNCEL alanlarından hesaplanır. */
+    cek?: { maddeler: CekMadde[]; oncekiIdler: string[]; isaretler: Record<string, boolean> } | null
   }
   hasta: { ad: string; patientId: string | null }
   doktor: { ad: string }
@@ -69,10 +86,21 @@ function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: str
     return { ad: p[0] || '', doz: p[1] || '', kullanim: p[2] || '', sure: p[3] || '' }
   }).filter((i) => i.ad)
 }
+/** Form satırı → gönderilecek aşı (boş ad atılır; doz boşsa null). */
+function asiSatirlari(liste: NotAsisi[]): NotAsisi[] {
+  return liste.filter((a) => a.asi_adi.trim()).map((a) => ({ ...a, asi_adi: a.asi_adi.trim() }))
+}
 function trTarih(iso: string | null): string { if (!iso) return ''; return new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
 const kutu: React.CSSProperties = { width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, color: '#3b2e24', fontSize: 13.5, lineHeight: 1.6, padding: '10px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#2f4334', marginBottom: 4 };
+// NOTYA-CEK-EKSIK-SAG-01 (Gökhan, 2026-09-23): çek listesinde "✗ eksik" kalanlar formun sağında,
+// göz önünde durmalı (tam doğrulama metni aşağıda AI değerlendirmesinde aynen kalır). Telefonda üste gelir.
+const NOT_DUZEN_CSS = `.notDuzen{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 280px;align-items:start}
+.notDuzen.tek{max-width:860px;grid-template-columns:minmax(0,1fr)}
+.notDuzen aside{position:sticky;top:84px}
+@media (max-width:900px){.notDuzen{grid-template-columns:minmax(0,1fr)}.notDuzen aside{order:-1;position:static}}`;
+const EKSIK_SATIR = /^\s*-\s*(.+?):\s*[✗✕×]\s*eksik\s*$/;
 
 export default function NotSayfasi() {
   const params = useParams<{ id: string }>();
@@ -85,6 +113,7 @@ export default function NotSayfasi() {
   const [alarm, setAlarm] = useState('');
   const [ozet, setOzet] = useState('');
   const [ilac, setIlac] = useState('');
+  const [asilar, setAsilar] = useState<NotAsisi[]>([]);
   const [icd, setIcd] = useState<IcdOner[]>([]);
   const [recete, setRecete] = useState<ReceteOner[]>([]);
   const [aiDeg, setAiDeg] = useState('');
@@ -114,6 +143,7 @@ export default function NotSayfasi() {
         setAlarm((j.not.alarmBulgulari || []).join('\n'));
         setOzet(j.not.hastaOzeti || '');
         setIlac((j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
+        setAsilar(Array.isArray(j.not.asilar) ? j.not.asilar : []);
         setIcd(Array.isArray(j.not.icdKodlari) ? j.not.icdKodlari : []);
         setRecete(Array.isArray(j.not.receteOnerisi) ? j.not.receteOnerisi : []);
         setAiDeg(String(j.not.aiDegerlendirme || ''));
@@ -122,6 +152,23 @@ export default function NotSayfasi() {
   }, [params.id]);
 
   const isaretle = <T,>(set: (v: T) => void) => (v: T) => { set(v); setDegisti(true); };
+
+  // NOTYA-CEK-DOGRULA-02 (Gökhan, 2026-09-23): "Kalça muayenesi yapıldı" yazıp yeniden değerlendirince kalça listede
+  // kalıyordu — panel not oluşturulurken yazılan metinden okunuyordu. Artık her düzenlemede formun GÜNCEL alanlarından
+  // deterministik hesaplanır (LLM yok); kayıtta blok onay anında sunucuda aynı fonksiyonla yeniden yazılır.
+  const cekSatirlari = () => {
+    const c = veri?.not.cek;
+    if (!c) return null;
+    const metin = cekNotMetni({
+      basvuruYakinmasi: basvuru, subjektif: taslak.subjektif, objektif: taslak.objektif, degerlendirme: taslak.degerlendirme,
+      plan: taslak.plan, tani: veri?.not.tani, vitaller: vital, ilaclar: ilacMetniniCoz(ilac), asilar: asiSatirlari(asilar),
+    });
+    return cekListeDogrula(c.maddeler, { soap: metin, isaretler: c.isaretler, oncekiIdler: c.oncekiIdler });
+  };
+  const aiDegGuncel = () => {
+    const s = cekSatirlari();
+    return s ? cekBlokDegistir(aiDeg, cekListeDogrulamaMetni(s)) : aiDeg;
+  };
 
   const aiYenidenOku = async () => {
     if (aiBekliyorRef.current || !veri) return;
@@ -144,6 +191,7 @@ export default function NotSayfasi() {
             alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean),
             hastaOzeti: ozet,
             ilaclar: ilacMetniniCoz(ilac),
+            asilar: asiSatirlari(asilar),
             icdKodlari: icd,
             receteOnerisi: recete,
             aiDegerlendirme: aiDeg,
@@ -165,6 +213,7 @@ export default function NotSayfasi() {
         }).join('\n'));
         setDegisti(true);
       }
+      if (Array.isArray(dz.asilar)) { setAsilar(dz.asilar as NotAsisi[]); setDegisti(true); }
       if (Array.isArray(dz.icdKodlari)) {
         setIcd((dz.icdKodlari as unknown[]).map((it) => {
           const o = it as Record<string, unknown>
@@ -219,13 +268,16 @@ export default function NotSayfasi() {
             alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean),
             hastaOzeti: ozet,
             ilaclar: ilacMetniniCoz(ilac),
+            asilar: asiSatirlari(asilar),
             icdKodlari: icd,
             receteOnerisi: recete,
-            aiDegerlendirme: aiDeg,
+            aiDegerlendirme: aiDegGuncel(),
           },
         }) });
       const j = await r.json();
       if (!r.ok || j.success === false) throw new Error(j.error || 'Onaylanamadı');
+      const catisma = (j.asiAktarim?.catisma || []) as { mesaj: string }[];
+      if (catisma.length) alert(`Not onaylandı. Şu aşı${catisma.length > 1 ? 'lar' : ''} aşı kartına yazılmadı:\n${catisma.map((c) => `• ${c.mesaj}`).join('\n')}\nDoz numarasını düzeltip yeniden onaylayabilirsiniz.`);
       setDurum('kaydedildi'); setDegisti(false);
       setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString() } } : v);
       setTimeout(() => router.push(onaylananNotYolu(params.id)), 700);
@@ -237,6 +289,14 @@ export default function NotSayfasi() {
   const { not, hasta } = veri;
   const onayli = !!not.approvedAt;
   const kapsam = istemciKapsami(not.bransKapsami);
+  const cekCanli = cekSatirlari();
+  const aiDegGorunen = aiDegGuncel();
+  const cekVar = !!cekCanli || aiDeg.includes(CEK_BLOK_BASLIK);
+  // Girdiler gelmediyse (eski yanıt / hata) kayıtlı bloktan okunur.
+  const eksikler = cekCanli
+    ? cekCanli.filter((s) => s.durum === 'eksik').map((s) => s.etiket)
+    : aiDeg.split('\n').map((s) => s.match(EKSIK_SATIR)?.[1]?.trim()).filter((x): x is string => !!x);
+  const oncekiler = (cekCanli || []).filter((s) => s.durum === 'onceki').map((s) => s.etiket);
 
   return (
     <div style={{ minHeight: '100vh', background: 'transparent', color: '#3b2e24', fontFamily: 'system-ui' }}>
@@ -266,7 +326,15 @@ export default function NotSayfasi() {
         </button>
       </div>
 
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '18px 16px 60px', display: 'grid', gap: 16 }}>
+      {not.arsivde && (
+        <div role="status" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 10, background: 'rgba(139,125,112,0.12)', border: '1px solid rgba(139,125,112,0.35)', color: '#6d6055', fontSize: 13 }}>
+          <b>Arşivde</b> — bu muayene arşivlendi; panoda, listelerde, aramada ve hasta portalında görünmez. Geri almak için Muayene Geçmişi › Arşivlenenler › <b>Arşivden çıkar</b>.
+        </div>
+      )}
+
+      <style>{NOT_DUZEN_CSS}</style>
+      <div className={cekVar ? 'notDuzen' : 'notDuzen tek'}>
+      <div style={{ display: 'grid', gap: 16, minWidth: 0 }}>
         <div>
           <div style={etiket}>Başvuru Yakınması</div>
           <input value={basvuru} onChange={(e) => isaretle(setBasvuru)(e.target.value)} style={{ ...kutu, fontStyle: 'italic' }} />
@@ -304,15 +372,46 @@ export default function NotSayfasi() {
             <div style={{ fontSize: 12, color: '#8b7d70' }}>Henüz ICD önerisi yok — notu düzenleyince Ayşe günceller.</div>
           )}
         </div>
-        {aiDeg.trim() ? (
+        {aiDegGorunen.trim() ? (
           <div>
             <div style={etiket}>Klinik değerlendirme (AI · hastaya görünmez)</div>
-            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: '#3b2e24' }}>{aiDeg}</div>
+            <div style={{ ...kutu, whiteSpace: 'pre-wrap', color: '#3b2e24' }}>{aiDegGorunen}</div>
           </div>
         ) : null}
         <div>
           <div style={etiket}>İlaçlar <span style={{ fontWeight: 400, color: '#8b7d70' }}>(her satır bir ilaç: Ad — doz — kullanım — süre)</span></div>
           <textarea value={ilac} onChange={(e) => isaretle(setIlac)(e.target.value)} rows={Math.max(2, ilac.split('\n').length)} placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam" style={kutu} />
+        </div>
+        <div>
+          <div style={etiket}>Bu muayenede uygulanan aşılar <span style={{ fontWeight: 400, color: '#8b7d70' }}>(onayda aşı kartına işlenir · planlanan aşılar burada değil, planda kalır)</span></div>
+          {asilar.length === 0 ? (
+            <div style={{ fontSize: 12, color: '#8b7d70', marginBottom: 6 }}>Bu muayenede uygulanan aşı yok.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: 8, marginBottom: 6 }}>
+              {asilar.map((a, i) => {
+                const guncelle = (p: Partial<NotAsisi>) => isaretle(setAsilar)(asilar.map((x, j) => (j === i ? { ...x, ...p } : x)));
+                const kartDurumu = a.asi_adi.trim() ? notAsisiKartDurumu(a, veri.not.asiKart || []) : null;
+                return (
+                  <div key={i} style={{ border: '1px solid rgba(58,44,34,0.14)', borderRadius: 8, padding: 8 }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <input aria-label="Aşı" value={a.asi_adi} onChange={(e) => guncelle({ asi_adi: e.target.value })} placeholder="Aşı (örn. Hepatit B)" style={{ ...kutu, flex: '2 1 180px', width: 'auto', padding: '6px 8px' }} />
+                      <input aria-label="Doz" type="number" min={1} max={12} value={a.doz_no ?? ''} onChange={(e) => guncelle({ doz_no: e.target.value ? Number(e.target.value) : null, doz_hesaplandi: false })} placeholder="Doz" style={{ ...kutu, width: 70, padding: '6px 8px', ...(a.doz_hesaplandi ? { borderColor: '#B4832F', background: 'rgba(180,131,47,0.12)' } : {}) }} />
+                      <input aria-label="Tarih" type="date" value={a.uygulama_tarihi || ''} onChange={(e) => guncelle({ uygulama_tarihi: e.target.value || null })} style={{ ...kutu, width: 150, padding: '6px 8px' }} />
+                      <input aria-label="Lot" value={a.lot_no || ''} onChange={(e) => guncelle({ lot_no: e.target.value || null })} placeholder="Lot (ops.)" style={{ ...kutu, width: 110, padding: '6px 8px' }} />
+                      <input aria-label="Uygulama yeri" value={a.uygulama_yeri || ''} onChange={(e) => guncelle({ uygulama_yeri: e.target.value || null })} placeholder="Yer (ops.)" style={{ ...kutu, width: 130, padding: '6px 8px' }} />
+                      <button type="button" onClick={() => isaretle(setAsilar)(asilar.filter((_, j) => j !== i))} aria-label="Aşıyı kaldır" style={{ background: 'transparent', border: '1px solid rgba(180,60,40,0.4)', color: '#A4453C', borderRadius: 8, padding: '5px 10px', fontSize: 12, cursor: 'pointer' }}>Kaldır</button>
+                    </div>
+                    {a.doz_hesaplandi ? <div style={{ fontSize: 12, color: '#B4832F', marginTop: 4 }}>Doz: {DOZ_HESAPLANDI_ETIKETI}</div> : null}
+                    {kartDurumu?.tur === 'kartta_var' ? <div style={{ fontSize: 12, color: '#8b7d70', marginTop: 4 }}>Bu aşı aynı tarihle aşı kartında zaten var — ikinci kayıt açılmaz.</div> : null}
+                    {kartDurumu?.tur === 'catisma' ? <div role="alert" style={{ fontSize: 12, color: '#B4832F', marginTop: 4 }}>⚠ {kartDurumu.mesaj}. Doz numarasını değiştirene kadar bu satır aşı kartına yazılmaz.</div> : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {asilar.length < NOT_ASI_AZAMI ? (
+            <button type="button" onClick={() => isaretle(setAsilar)([...asilar, { asi_adi: '', doz_no: null, uygulama_tarihi: new Date(not.createdAt).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }) }])} style={{ background: 'transparent', border: '1px solid rgba(47,67,52,0.4)', color: '#2f4334', borderRadius: 999, padding: '4px 12px', fontSize: 12, cursor: 'pointer' }}>+ Aşı ekle</button>
+          ) : null}
         </div>
         <div>
           <div style={etiket}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#8b7d70' }}>({kapsam.hitap.evdeDikkatHedefi} · her satır bir madde)</span></div>
@@ -322,6 +421,32 @@ export default function NotSayfasi() {
           <div style={etiket}>{kapsam.hitap.ozetEtiketi} <span style={{ fontWeight: 400, color: '#8b7d70' }}>(portala gider)</span></div>
           <textarea value={ozet} onChange={(e) => isaretle(setOzet)(e.target.value)} rows={4} style={kutu} />
         </div>
+      </div>
+      {cekVar ? (
+        <aside style={{ background: 'rgba(180,131,47,0.08)', border: '1px solid rgba(180,131,47,0.30)', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#B4832F' }}>
+            {eksikler.length ? `Eksik kalanlar (${eksikler.length})` : 'Çek listesi tamam'}
+          </div>
+          <div style={{ fontSize: 11, color: '#8b7d70', margin: '2px 0 8px' }}>Çek listesi · notu düzenledikçe güncellenir · karar desteği, hekim değerlendirir</div>
+          {eksikler.length ? (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>
+              {eksikler.map((e, i) => (
+                <li key={i} style={{ fontSize: 13, color: '#3b2e24', lineHeight: 1.4, display: 'flex', gap: 6 }}>
+                  <span style={{ color: '#A4453C', fontWeight: 800 }}>✗</span><span>{e}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div style={{ fontSize: 13, color: '#2E6E4E' }}>Boş madde kalmadı.</div>
+          )}
+          {oncekiler.length ? (
+            <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(58,44,34,0.1)' }}>
+              <div style={{ fontSize: 11, color: '#8b7d70', marginBottom: 4 }}>✓ önceki kayıtta var</div>
+              <div style={{ fontSize: 12, color: '#8b7d70', lineHeight: 1.5 }}>{oncekiler.join(' · ')}</div>
+            </div>
+          ) : null}
+        </aside>
+      ) : null}
       </div>
     </div>
   );

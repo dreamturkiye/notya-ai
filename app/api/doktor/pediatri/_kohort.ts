@@ -12,6 +12,7 @@ import type { AsiKaydi } from '@/specialties/pediatri/engines/asiPlan'
 import type { TaramaKaydi, TaramaSonuc, TaramaTur } from '@/specialties/pediatri/engines/gelisimPlan'
 import type { Olcum } from '@/specialties/pediatri/engines/buyume'
 import { gunFarki } from '@/specialties/pediatri/engines/girdi'
+import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 const cozum = (v: unknown): string => { if (!v) return ''; try { return decrypt(String(v)) } catch { return '' } }
 const gun = (v: unknown) => String(v || '').slice(0, 10)
@@ -49,16 +50,17 @@ export async function pediKohortGirdileri(sb: SupabaseClient, doktorId: string, 
   if (!ids.length) return { girdiler: [], taramaTablosu: true }
 
   const [asilar, taramalarQ, mchat, gidr, seanslar, ilaclar, gorevler, kartlar, portal, notlar] = await Promise.all([
-    topla(ids, (p) => sb.from('asilar').select('id, patient_id, asi_adi, doz_no, uygulama_tarihi, kaynak, kategori').eq('doktor_id', doktorId).in('patient_id', p).limit(20000)),
+    // NOTYA-ASI-NOT-01: kohort / Fısıltı / çek listesi do not count a vaccine hidden with its archived muayene.
+    topla<{ id: string; patient_id: string; asi_adi: string | null; doz_no: number | null; uygulama_tarihi: string | null; kaynak: string | null; kategori: string | null }>(ids, (p) => arsivsizAsilar(sb, 'id, patient_id, asi_adi, doz_no, uygulama_tarihi, kaynak, kategori').eq('doktor_id', doktorId).in('patient_id', p).limit(20000)),
     Promise.all(parcala(ids).map((p) => sb.from('pedi_taramalar').select('patient_id, tur, tarih, sonuc').eq('doctor_id', doktorId).in('patient_id', p).limit(20000))),
     topla(ids, (p) => sb.from('mchat_testleri').select('patient_id, risk_seviyesi, toplam_puan, created_at').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),
     topla(ids, (p) => sb.from('gelisim_taramalari').select('patient_id, sevk_onerisi, created_at').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),
-    topla(ids, (p) => sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),
-    topla(ids, (p) => sb.from('hasta_ilaclar').select('patient_id, ilac_adi, etken_madde, aktif, baslangic_tarihi, bitis_tarihi').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),
+    topla<{ patient_id: string; created_at: string }>(ids, (p) => arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),
+    topla<{ patient_id: string; ilac_adi: string | null; etken_madde: string | null; aktif: boolean | null; baslangic_tarihi: string | null; bitis_tarihi: string | null }>(ids, (p) => arsivsizIlaclar(sb, 'patient_id, ilac_adi, etken_madde, aktif, baslangic_tarihi, bitis_tarihi').eq('doctor_id', doktorId).in('patient_id', p).limit(20000)),
     topla(ids, (p) => sb.from('bebek_gorevleri').select('bebek_id, kind, due_at, due_end_at, status, title').eq('doctor_id', doktorId).in('bebek_id', p).limit(20000)),
     topla(ids, (p) => sb.from('bebek_kartlari').select('bebek_patient_id, gebelik_haftasi, kilo_gram, yenidogan_tarama, dogum_zamani').eq('doctor_id', doktorId).in('bebek_patient_id', p).limit(5000)),
     topla(ids, (p) => sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doktorId).in('patient_id', p).gt('expires_at', new Date().toISOString())),
-    topla(ids, (p) => sb.from('notes').select('created_at, vitaller, sessions!inner(patient_id, doctor_id)').eq('doctor_id', doktorId).eq('sessions.doctor_id', doktorId).in('sessions.patient_id', p).not('approved_at', 'is', null).not('vitaller', 'is', null).limit(20000)),
+    topla(ids, (p) => arsivsizNotlar(sb, 'created_at, vitaller, sessions!inner(patient_id, doctor_id)').eq('doctor_id', doktorId).eq('sessions.doctor_id', doktorId).in('sessions.patient_id', p).not('approved_at', 'is', null).not('vitaller', 'is', null).limit(20000)),
   ])
   const taramaTablosu = taramalarQ.every((r) => !r.error)
   const taramalar = taramalarQ.flatMap((r) => r.data || [])

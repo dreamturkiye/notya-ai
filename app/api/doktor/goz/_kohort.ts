@@ -6,6 +6,7 @@
 import type { doktorOturum } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import { gozKohortSatirlari, type GozKohortGirdi } from '@/specialties/goz-hastaliklari/engines/kohort'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
@@ -29,7 +30,7 @@ export async function gozKohortVerisi(sb: Sb, doctorId: string, bugun: string, s
     sb.from('goz_enjeksiyonlar').select('patient_id, tarih, goz').eq('doctor_id', doctorId).eq('durum', 'planli').in('patient_id', ids).limit(5000),
     sb.from('goz_dr').select('patient_id, sonraki_kontrol').eq('doctor_id', doctorId).in('patient_id', ids),
     sb.from('goz_kontroller').select('patient_id, tarih, neden').eq('doctor_id', doctorId).eq('durum', 'planli').in('patient_id', ids).limit(5000),
-    sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
+    arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
   const ad = new Map<string, string>()

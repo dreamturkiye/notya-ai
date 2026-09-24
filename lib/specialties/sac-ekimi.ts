@@ -13,7 +13,7 @@ export const SAC_EKIMI_PROFILE = {
   sekmeler: [{ id: 'sac-ekimi', etiket: 'Saç Ekimi', bilesen: 'SacEkimiHome', sira: 14 }],
   goruntu: { modaliteler: ['foto'], zamanCizgisi: true, ayseSinir: 'Saç fotoğrafı karar desteğidir; greft sayısı ve tanı hekimde.' },
   belgeler: BASELINE_BELGELER,
-  ekKaynaklar: ['specialties/sac-ekimi/engines/sac.ts'],
+  ekKaynaklar: ['lib/klinik/klinikTurkishRefs.ts KLINIK_TURKISH_REFS.sac-ekimi (SB sertifika, TPRECD, EPCD, Ayakta Teşhis, SGK iddia yok)'],
   promptNotlari: ['Greft/doz uydurma yok; nekroz/anafilaksi → 112.'],
   specialistReview: [
     { konu: 'Greft bandı ve hairline', neden: 'Donor kapasite ve çizgi hekim / uygulayıcı kararıdır.' },

@@ -6,6 +6,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { hastaAdiCoz } from '@/core/eylemler/hasta'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import {
@@ -196,34 +197,29 @@ export async function klinikAramaYurut(
   const gunSpan = p ? Math.max(1, Math.round((Date.parse(p.bitIso) - Date.parse(p.basIso)) / 86400000)) : 30
   const seansLimit = q.minSeans || gunSpan >= 60 ? 800 : 400
 
-  const seansQ = supabase
-    .from('sessions')
-    .select('id, patient_id, created_at, started_at, ended_at, duration_seconds')
+  // NOTYA-ARSIV-01: arşivlenmiş muayene ve notu aramada bulunmaz.
+  const seansQ = arsivsizSeanslar(supabase, 'id, patient_id, created_at, started_at, ended_at, duration_seconds')
     .eq('doctor_id', doktorId)
     .not('patient_id', 'is', null)
     .order('created_at', { ascending: false })
     .limit(seansLimit)
   if (p) seansQ.gte('created_at', p.basIso).lte('created_at', p.bitIso)
 
-  const notQ = supabase
-    .from('notes')
-    .select('session_id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, basvuru_yakinmasi, icd10_codes, content_ilaclar, vitaller')
+  const notQ = arsivsizNotlar(supabase, 'session_id, created_at, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_tani, basvuru_yakinmasi, icd10_codes, content_ilaclar, vitaller')
     .eq('doctor_id', doktorId)
     .order('created_at', { ascending: false })
     .limit(400)
   if (p) notQ.gte('created_at', p.basIso)
 
-  const asiQ = supabase
-    .from('asilar')
-    .select('patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
+  // NOTYA-ASI-NOT-01: an archived muayene's vaccine is not in search either.
+  const asiQ = arsivsizAsilar(supabase, 'patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
     .eq('doktor_id', doktorId)
     .order('uygulama_tarihi', { ascending: false })
     .limit(200)
   if (p) asiQ.gte('uygulama_tarihi', p.basGun).lte('uygulama_tarihi', p.bitGun)
 
-  const ilacQ = supabase
-    .from('hasta_ilaclar')
-    .select('patient_id, ilac_adi, etken_madde, created_at, baslangic_tarihi')
+  // NOTYA-ARSIV-02: arşivlenmiş muayenenin yazdığı ilaç aramada da yok.
+  const ilacQ = arsivsizIlaclar(supabase, 'patient_id, ilac_adi, etken_madde, created_at, baslangic_tarihi')
     .eq('doctor_id', doktorId)
     .order('created_at', { ascending: false })
     .limit(q.kirilim === 'ilac_adi' ? 800 : 200)
@@ -324,12 +320,10 @@ export async function klinikAramaYurut(
   if ((notlar.data || []).length) {
     const eksik = [...new Set((notlar.data || []).map((n) => String(n.session_id)).filter((id) => !seansHasta.has(id)))]
     if (eksik.length) {
-      const { data: ek } = await supabase
-        .from('sessions')
-        .select('id, patient_id')
+      const { data: ek } = await arsivsizSeanslar(supabase, 'id, patient_id')
         .eq('doctor_id', doktorId)
         .in('id', eksik.slice(0, 250))
-      for (const s of ek || []) if (s.patient_id) seansHasta.set(String(s.id), String(s.patient_id))
+      for (const s of (ek || []) as { id: string; patient_id: string | null }[]) if (s.patient_id) seansHasta.set(String(s.id), String(s.patient_id))
     }
   }
 
@@ -627,12 +621,10 @@ async function notHastaHaritasi(
   const map = new Map<string, string>()
   const ids = [...new Set(notlar.map((n) => String(n.session_id || '')).filter(Boolean))]
   if (!ids.length) return map
-  const { data } = await supabase
-    .from('sessions')
-    .select('id, patient_id')
+  const { data } = await arsivsizSeanslar(supabase, 'id, patient_id')
     .eq('doctor_id', doktorId)
     .in('id', ids.slice(0, 400))
-  for (const s of data || []) if (s.patient_id) map.set(String(s.id), String(s.patient_id))
+  for (const s of (data || []) as { id: string; patient_id: string | null }[]) if (s.patient_id) map.set(String(s.id), String(s.patient_id))
   return map
 }
 
@@ -647,9 +639,7 @@ async function pratikKirilimYurut(
   const ham: HamSatir[] = []
 
   if (q.kirilim === 'asi_adi') {
-    const asiQ = supabase
-      .from('asilar')
-      .select('patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
+    const asiQ = arsivsizAsilar(supabase, 'patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
       .eq('doktor_id', doktorId)
       .order('uygulama_tarihi', { ascending: false })
       .limit(800)
@@ -673,9 +663,7 @@ async function pratikKirilimYurut(
     return { adaylar: [], q, istatistik, tur: 'pivot' }
   }
 
-  const notQ = supabase
-    .from('notes')
-    .select('session_id, created_at, content_tani, basvuru_yakinmasi, icd10_codes, content_ilaclar')
+  const notQ = arsivsizNotlar(supabase, 'session_id, created_at, content_tani, basvuru_yakinmasi, icd10_codes, content_ilaclar')
     .eq('doctor_id', doktorId)
     .order('created_at', { ascending: false })
     .limit(800)
@@ -684,9 +672,7 @@ async function pratikKirilimYurut(
   const seansHasta = await notHastaHaritasi(supabase, doktorId, notlar || [])
 
   if (q.kirilim === 'ilac_adi' || q.olcum === 'ilac') {
-    const ilacQ = supabase
-      .from('hasta_ilaclar')
-      .select('patient_id, ilac_adi, etken_madde, created_at, baslangic_tarihi')
+    const ilacQ = arsivsizIlaclar(supabase, 'patient_id, ilac_adi, etken_madde, created_at, baslangic_tarihi')
       .eq('doctor_id', doktorId)
       .order('created_at', { ascending: false })
       .limit(800)

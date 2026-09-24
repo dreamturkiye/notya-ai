@@ -10,24 +10,38 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
-import { saglamCocukCekMaddeleri } from '@/specialties/pediatri/engines/saglamCocukCek'
+import { notAsiMetinSatirlari } from '@/lib/doktor/notAsilari'
+import { saglamCocukCekMaddeleri, type SaglamCocukKayitlari } from '@/specialties/pediatri/engines/saglamCocukCek'
 
 export type CekGrup = 'anamnez' | 'olcum' | 'fizik' | 'kapanis'
+
+/**
+ * NOTYA-CEK-DOGRULA-02: 'vizit' = bu muayenede yazılmalı (fizik bulgu, ölçüm, şikayet…);
+ * 'dosya' = bir kez yapılan / süregiden — dosyanın herhangi bir yerinde (önceki onaylı not, kayıt formu,
+ * tarama / aşı kaydı, ilaç listesi) varsa karşılanmış sayılır. Belirtilmezse 'vizit'.
+ */
+export type CekKapsam = 'vizit' | 'dosya'
 
 export interface CekMadde {
   id: string
   etiket: string
   grup: CekGrup
   anahtarlar: string[]
+  kapsam?: CekKapsam
 }
 
 export interface CekListeGirdi {
   seansBransi?: string | null
   doktorBransi?: string | null
   hastaDogumIso?: string | null
+  /** Vizitin tarihi (geçmiş tarihli muayene) — yaş bandı bugüne göre değil o güne göre. */
+  referansIso?: string | null
+  /** Pediatri: hastanın tarama / M-CHAT / GİDR / seans kayıtları — kayıtlı tarama "tamam" sayılır (sunucu yükler). */
+  pediKayitlari?: SaglamCocukKayitlari | null
 }
 
-export type CekDurum = 'hekim' | 'dosyada' | 'eksik'
+/** hekim = hekim işaretledi · dosyada = bu notta yazılı · onceki = dosyanın başka bir kaydında (yalnız 'dosya' kapsamı) · eksik */
+export type CekDurum = 'hekim' | 'dosyada' | 'onceki' | 'eksik'
 
 export interface CekDogrulamaSatir {
   id: string
@@ -53,8 +67,8 @@ export function cekGrupEtiket(g: CekGrup): string {
 const ORTAK: CekMadde[] = [
   { id: 'sikayet', etiket: 'Başvuru yakınması / şikayet', grup: 'anamnez', anahtarlar: ['sikayet', 'yakinma', 'basvuru'] },
   { id: 'hikaye', etiket: 'Şikayetin hikayesi', grup: 'anamnez', anahtarlar: ['hikaye', 'baslangic', 'ne zamandir'] },
-  { id: 'ozgecmis', etiket: 'Özgeçmiş (hastalık, alerji, ilaç)', grup: 'anamnez', anahtarlar: ['ozgecmis', 'alerji', 'surekli ilac'] },
-  { id: 'soygecmis', etiket: 'Soygeçmiş', grup: 'anamnez', anahtarlar: ['soygecmis', 'ailede'] },
+  { id: 'ozgecmis', etiket: 'Özgeçmiş (hastalık, alerji, ilaç)', grup: 'anamnez', anahtarlar: ['ozgecmis', 'alerji', 'surekli ilac', 'kronik hastalik', 'kronikhastalik'], kapsam: 'dosya' },
+  { id: 'soygecmis', etiket: 'Soygeçmiş', grup: 'anamnez', anahtarlar: ['soygecmis', 'ailede', 'aile oykusu', 'aileoykusu'], kapsam: 'dosya' },
   { id: 'genel', etiket: 'Genel durum', grup: 'fizik', anahtarlar: ['genel durum', 'hidrasyon', 'bilinc'] },
   { id: 'tani', etiket: 'Tanı (hekim)', grup: 'kapanis', anahtarlar: ['tani', 'teshis'] },
   { id: 'tedavi', etiket: 'Tedavi / plan', grup: 'kapanis', anahtarlar: ['tedavi', 'recete', 'plan'] },
@@ -62,8 +76,8 @@ const ORTAK: CekMadde[] = [
 
 const PEDIATRI: CekMadde[] = [
   { id: 'beslenme', etiket: 'Beslenme / alışkanlıklar', grup: 'anamnez', anahtarlar: ['beslenme', 'emzirme', 'mama'] },
-  { id: 'asi', etiket: 'Aşı durumu', grup: 'anamnez', anahtarlar: ['asi', 'asisi', 'asi karnesi'] },
-  { id: 'prenatal', etiket: 'Prenatal / natal / postnatal öykü', grup: 'anamnez', anahtarlar: ['prenatal', 'dogum', 'natal'] },
+  { id: 'asi', etiket: 'Aşı durumu', grup: 'anamnez', anahtarlar: ['asi', 'asisi', 'asi karnesi'], kapsam: 'dosya' },
+  { id: 'prenatal', etiket: 'Prenatal / natal / postnatal öykü', grup: 'anamnez', anahtarlar: ['prenatal', 'dogum', 'natal', 'gebelik'], kapsam: 'dosya' },
   { id: 'ates', etiket: 'Ateş', grup: 'olcum', anahtarlar: ['ates', 'derece', '38'] },
   { id: 'kilo', etiket: 'Kilo', grup: 'olcum', anahtarlar: ['kilo', 'kg'] },
   { id: 'boy', etiket: 'Boy', grup: 'olcum', anahtarlar: ['boy', 'cm'] },
@@ -124,7 +138,7 @@ export function muayeneCekListesi(g: CekListeGirdi): CekMadde[] {
   const liste = [...ORTAK]
   if (ped) {
     liste.push(...PEDIATRI)
-    liste.push(...saglamCocukCekMaddeleri(g.hastaDogumIso))
+    liste.push(...saglamCocukCekMaddeleri(g.hastaDogumIso, g.referansIso || undefined, g.pediKayitlari || undefined))
   }
   if (brans && BRANS_EK[brans]) liste.push(...BRANS_EK[brans]!)
   const gorulen = new Set<string>()
@@ -154,40 +168,162 @@ export function cekListeAsistanCevabi(maddeler: CekMadde[]): string {
   return `Bu muayenede yapılması önerilenler (çek listesi). İşaretledikleriniz seansın sağında durur; notu üretirken doğrularım, eksik maddeyi not gövdesine uydurmam.\n\n${gruplar.join('\n\n')}`
 }
 
+const kacis = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/** Anahtar metinde bir kelimenin BAŞINDA geçiyor mu ("asi" "hastasi"nın içinde sayılmaz; "kalca" "kalçada"yı bulur). */
+export function cekAnahtarVar(normalMetin: string, anahtar: string): boolean {
+  const k = trAramaNormalize(anahtar)
+  if (!k) return false
+  return new RegExp(`(^|[^a-z0-9])${kacis(k)}`).test(normalMetin)
+}
+
+function maddeMetindeMi(m: CekMadde, normalMetin: string): boolean {
+  return m.anahtarlar.some((a) => cekAnahtarVar(normalMetin, a))
+}
+
+/** 'dosya' kapsamındaki maddelerden dosya metninde (önceki onaylı notlar, kayıt formu, kayıtlar) karşılananlar. */
+export function cekOncekiKarsilanan(maddeler: CekMadde[], dosyaMetni: string): string[] {
+  const ham = trAramaNormalize(dosyaMetni)
+  if (!ham) return []
+  return maddeler.filter((m) => m.kapsam === 'dosya' && maddeMetindeMi(m, ham)).map((m) => m.id)
+}
+
 export function cekListeDogrula(
   maddeler: CekMadde[],
-  g: { transcript?: string; soap?: string; isaretler?: Record<string, boolean> },
+  g: { transcript?: string; soap?: string; isaretler?: Record<string, boolean>; oncekiIdler?: string[] },
 ): CekDogrulamaSatir[] {
   const ham = trAramaNormalize(`${g.transcript || ''} ${g.soap || ''}`)
+  const onceki = new Set(g.oncekiIdler || [])
   return maddeler.map((m) => {
-    if (g.isaretler?.[m.id]) return { id: m.id, etiket: m.etiket, grup: m.grup, durum: 'hekim' as const }
-    const dosyada = m.anahtarlar.some((a) => ham.includes(trAramaNormalize(a)))
-    return { id: m.id, etiket: m.etiket, grup: m.grup, durum: dosyada ? 'dosyada' : 'eksik' }
+    const satir = { id: m.id, etiket: m.etiket, grup: m.grup }
+    if (g.isaretler?.[m.id]) return { ...satir, durum: 'hekim' as const }
+    if (maddeMetindeMi(m, ham)) return { ...satir, durum: 'dosyada' as const }
+    if (m.kapsam === 'dosya' && onceki.has(m.id)) return { ...satir, durum: 'onceki' as const }
+    return { ...satir, durum: 'eksik' as const }
   })
 }
 
+const DURUM_METNI: Record<CekDurum, string> = {
+  hekim: '✓ hekim işaretledi',
+  dosyada: '✓ notta var',
+  onceki: '✓ önceki kayıtta var',
+  eksik: '✗ eksik',
+}
+
+export const CEK_BLOK_BASLIK = 'ÇEK LİSTESİ DOĞRULAMA'
+
 export function cekListeDogrulamaMetni(satirlar: CekDogrulamaSatir[]): string {
-  const hekim = satirlar.filter((s) => s.durum === 'hekim').length
-  const dosya = satirlar.filter((s) => s.durum === 'dosyada').length
+  const say = (d: CekDurum) => satirlar.filter((s) => s.durum === d).length
+  const hekim = say('hekim'), notta = say('dosyada'), onceki = say('onceki')
   const eksik = satirlar.filter((s) => s.durum === 'eksik')
-  const satir = satirlar.map((s) => {
-    const im = s.durum === 'hekim' ? '✓ hekim işaretledi' : s.durum === 'dosyada' ? '✓ dosyada var' : '✗ eksik'
-    return `- ${s.etiket}: ${im}`
-  })
   return [
-    'ÇEK LİSTESİ DOĞRULAMA (karar desteği — tanı değildir)',
-    `${hekim + dosya}/${satirlar.length} madde karşılandı (${hekim} hekim, ${dosya} dosyada).`,
-    ...satir,
+    `${CEK_BLOK_BASLIK} (karar desteği — tanı değildir)`,
+    `${hekim + notta + onceki}/${satirlar.length} madde karşılandı (${hekim} hekim, ${notta} notta${onceki ? `, ${onceki} önceki kayıtta` : ''}).`,
+    ...satirlar.map((s) => `- ${s.etiket}: ${DURUM_METNI[s.durum]}`),
     eksik.length
       ? `Eksik: ${eksik.map((s) => s.etiket).join('; ')}. Not gövdesine uydurulmadı.`
       : 'Çek listesinde boş madde kalmadı.',
   ].join('\n')
 }
 
+/** Nottaki alanlar tek metin — çek listesi yalnız notun GÜNCEL içeriğine bakar (transkript / LLM değil). */
+export function cekNotMetni(n: {
+  basvuruYakinmasi?: string | null
+  subjektif?: string | null
+  objektif?: string | null
+  degerlendirme?: string | null
+  plan?: string | null
+  anamnez?: string | null
+  fizikMuayene?: string | null
+  tani?: string | null
+  tedavi?: string | null
+  vitaller?: Record<string, unknown> | null
+  ilaclar?: unknown
+  /** NOTYA-ASI-NOT-01: "Bu muayenede uygulanan aşılar" — a vaccine given in this visit satisfies "Aşı durumu". */
+  asilar?: unknown
+}): string {
+  const p: string[] = []
+  if (String(n.basvuruYakinmasi || '').trim()) p.push(`Başvuru yakınması: ${n.basvuruYakinmasi}`)
+  for (const x of [n.subjektif, n.objektif, n.degerlendirme, n.anamnez, n.fizikMuayene, n.tedavi]) {
+    if (String(x || '').trim()) p.push(String(x))
+  }
+  // Dolu plan bölümü planın kendisidir ("Tedavi / plan" maddesi başlık kelimesini aramasın).
+  if (String(n.plan || '').trim()) p.push(`Plan: ${n.plan}`)
+  if (String(n.tani || '').trim()) p.push(`Tanı: ${n.tani}`)
+  const v = n.vitaller && typeof n.vitaller === 'object' ? Object.entries(n.vitaller).filter(([, d]) => String(d ?? '').trim()) : []
+  if (v.length) p.push(v.map(([k, d]) => `${k}: ${d}`).join(' · '))
+  if (Array.isArray(n.ilaclar)) {
+    for (const i of n.ilaclar) {
+      const o = (i || {}) as Record<string, unknown>
+      const s = [o.ad, o.doz, o.kullanim, o.sure].filter(Boolean).join(' ')
+      if (s.trim()) p.push(`İlaç: ${s}`)
+    }
+  }
+  p.push(...notAsiMetinSatirlari(n.asilar))
+  return p.join('\n')
+}
+
+const BLOK_SATIRI = [/^\d+\/\d+ madde karşılandı/, /^- .+: [✓✗✕×]/]
+const BLOK_SONU = /^(Eksik: .*|Çek listesinde boş madde kalmadı\.?)$/
+
+/** ai_degerlendirme içindeki ÇEK LİSTESİ bloğunun [başlangıç, bitiş) satır aralığı; yoksa null. */
+function blokAraligi(satirlar: string[]): [number, number] | null {
+  const bas = satirlar.findIndex((s) => s.trim().startsWith(CEK_BLOK_BASLIK))
+  if (bas < 0) return null
+  let i = bas + 1
+  while (i < satirlar.length) {
+    const s = satirlar[i].trim()
+    if (BLOK_SONU.test(s)) { i++; break }
+    if (!BLOK_SATIRI.some((r) => r.test(s))) break
+    i++
+  }
+  return [bas, i]
+}
+
+export function cekBlokVarMi(aiDegerlendirme: string | null | undefined): boolean {
+  return !!blokAraligi(String(aiDegerlendirme || '').split('\n'))
+}
+
+/** Hekimin işaretlediği maddeler — kayıtlı bloğun "✓ hekim işaretledi" satırlarından geri okunur. */
+export function cekHekimIsaretleri(aiDegerlendirme: string | null | undefined, maddeler: CekMadde[]): Record<string, boolean> {
+  const out: Record<string, boolean> = {}
+  const satirlar = String(aiDegerlendirme || '').split('\n')
+  const ar = blokAraligi(satirlar)
+  if (!ar) return out
+  for (const s of satirlar.slice(ar[0], ar[1])) {
+    const e = s.trim().match(/^- (.+?): ✓ hekim işaretledi$/)
+    const m = e ? maddeler.find((x) => x.etiket === e[1].trim()) : undefined
+    if (m) out[m.id] = true
+  }
+  return out
+}
+
+/** Bloğu metinden çıkarır — LLM (not-konsult) bu bloğu asla yazamaz / taşıyamaz. */
+export function cekBlokSil(aiDegerlendirme: string | null | undefined): string {
+  let satirlar = String(aiDegerlendirme || '').split('\n')
+  for (let ar = blokAraligi(satirlar); ar; ar = blokAraligi(satirlar)) {
+    satirlar = [...satirlar.slice(0, ar[0]), ...satirlar.slice(ar[1])]
+  }
+  return satirlar.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+}
+
+/** Bloğu güncel deterministik metinle değiştirir (bloğun eski yeri korunur; yoksa başa eklenir). */
+export function cekBlokDegistir(aiDegerlendirme: string | null | undefined, yeniBlok: string): string {
+  const satirlar = String(aiDegerlendirme || '').split('\n')
+  const ar = blokAraligi(satirlar)
+  if (!ar) {
+    const govde = String(aiDegerlendirme || '').trim()
+    return govde ? `${yeniBlok}\n\n${govde}` : yeniBlok
+  }
+  const once = satirlar.slice(0, ar[0]).join('\n').trim()
+  const sonra = cekBlokSil(satirlar.slice(ar[1]).join('\n'))
+  return [once, yeniBlok, sonra].filter(Boolean).join('\n\n')
+}
+
 export function cekListePromptBlogu(maddeler: CekMadde[], isaretler: Record<string, boolean>): string {
   if (!maddeler.length) return ''
   const satir = maddeler.map((m) => `- ${m.etiket}: ${isaretler[m.id] ? 'hekim işaretledi' : 'işaretlenmedi'}`).join('\n')
-  return `\nÇEK LİSTESİ (hekim işaretleri — not gövdesine uydurma YASAK):\n${satir}\nEksik maddeleri YALNIZ aiDegerlendirme'de "çek listesinde bakılmayan:" diye söyle. Transkriptte olmayan bulguyu objektif/değerlendirme/plan'a YAZMA.`
+  return `\nÇEK LİSTESİ (hekim işaretleri — not gövdesine uydurma YASAK):\n${satir}\naiDegerlendirme'de de eksik madde listesi YAZMA: çek listesi sistem tarafından hesaplanıp ayrıca gösteriliyor (NOTYA-CEK-DOGRULA-03). Transkriptte olmayan bulguyu objektif/değerlendirme/plan'a YAZMA.`
 }
 
 const DEPO_ON = 'notya.muayeneCek.'

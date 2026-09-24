@@ -15,5 +15,5 @@ export default function Page() {
       </div>
     )
   }
-  return <KlinikHatirlatmaView title="Beslenmem" subtitle="Kontrol tarihi. Kalori yorumu ve tanı yoktur." acil="Ağır alerji veya bilinç değişikliği: 112." basePath={basePath} />
+  return <KlinikHatirlatmaView title="Beslenmem" subtitle="Kontrol tarihi. Kalori yorumu ve tanı yoktur." acil="Ağır alerji veya bilinç değişikliği: 112." basePath={basePath} ritim={['2 / 4 / 8. hafta kontrol ritmi', 'Kalori hedefi burada kilitlenmez']} />
 }

@@ -22,6 +22,7 @@
 import { specialtyProfile } from '@/lib/specialties/registry'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { klinikSlugCoz } from '@/lib/specialties/klinikDikey'
+import { KLINIK_PORTAL_MODUL, klinikPortalNav } from '@/lib/klinik/klinikPortal'
 import type { PortalModulId, PortalModulu, PortalNavOge } from '@/lib/specialties/profile'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 
@@ -141,29 +142,17 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   // dahiliye / onkoloji / göğüs'e taşınmaz.
   if (brans === 'radyoloji') aktif.add('tetkiklerim')
   const klinikDal = klinikSlugCoz(g.doktorBransi)
-  if (klinikDal === 'sac-ekimi') aktif.add('sacim')
-  if (klinikDal === 'medikal-estetik') aktif.add('estetik-bakimim')
-  if (klinikDal === 'longevity') aktif.add('longevitim')
-  if (klinikDal === 'fizyoterapi') aktif.add('fizyom')
-  if (klinikDal === 'klinik-psikolog') aktif.add('seanslarim')
-  if (klinikDal === 'diyetisyen') aktif.add('beslenmem')
-  if (klinikDal === 'ergoterapi') aktif.add('ergom')
-  if (klinikDal === 'odyoloji') aktif.add('isitmem-odyoloji')
+  if (klinikDal) {
+    aktif.delete('dermatoloji')
+    aktif.delete('yaram')
+    aktif.delete('ameliyatim')
+  }
+  if (klinikDal) aktif.add(KLINIK_PORTAL_MODUL[klinikDal])
   // ASI-KARNESI-01 — evrensel: kayıt varsa her branşta (göz hekiminin kaydettiği grip aşısı da karnede görünür).
   if (g.asiKaydi) aktif.add('asi-karnesi')
 
   // Nav: own chapter's modules first, then anything else that attached (e.g. Gebeliğim for a göz patient).
   const sirali = [...kendiModulleri.map((m) => m.id).filter((id) => aktif.has(id)), ...[...aktif].filter((id) => !kendiModulleri.some((m) => m.id === id))]
-  const KLINIK_NAV: Partial<Record<PortalModulId, PortalNavOge[]>> = {
-    sacim: [{ key: 'sacim', label: 'Saçım', path: '/sacim' }],
-    'estetik-bakimim': [{ key: 'estetik-bakimim', label: 'Estetik bakımım', path: '/estetik-bakimim' }],
-    longevitim: [{ key: 'longevitim', label: 'Longevitim', path: '/longevitim' }],
-    fizyom: [{ key: 'fizyom', label: 'Fizyom', path: '/fizyom' }],
-    seanslarim: [{ key: 'seanslarim', label: 'Seanslarım', path: '/seanslarim' }],
-    beslenmem: [{ key: 'beslenmem', label: 'Beslenmem', path: '/beslenmem' }],
-    ergom: [{ key: 'ergom', label: 'Ergom', path: '/ergom' }],
-    'isitmem-odyoloji': [{ key: 'isitmem-odyoloji', label: 'İşitmem', path: '/isitmem-odyoloji' }],
-  }
   const SAHIP: Record<Exclude<PortalModulId, 'asi-karnesi'>, SpecialtyKey | 'klinik'> = {
     buyume: 'pediatri', gebelik: 'kadin-hastaliklari-dogum', jinekoloji: 'kadin-hastaliklari-dogum',
     dahiliye: 'dahiliye', gozlerim: 'goz-hastaliklari', dermatoloji: 'dermatoloji', psikiyatri: 'psikiyatri',
@@ -181,6 +170,8 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
     tetkiklerim: 'radyoloji',
     sacim: 'klinik',
     'estetik-bakimim': 'klinik',
+    'estetik-ameliyatim': 'klinik',
+    'klinik-derim': 'klinik',
     longevitim: 'klinik',
     fizyom: 'klinik',
     seanslarim: 'klinik',
@@ -190,7 +181,10 @@ export function portalModulleri(g: PortalUygunlukGirdisi): PortalModulSonucu {
   }
   const nav = sirali.flatMap((id) => {
     if (id === 'asi-karnesi') return [ASI_KARNESI_NAV]
-    if (SAHIP[id] === 'klinik') return KLINIK_NAV[id] || []
+    if (SAHIP[id] === 'klinik') {
+      const n = klinikPortalNav(id)
+      return n ? [n] : []
+    }
     return modul(SAHIP[id], id)?.nav || []
   })
   return { moduller: sirali, nav }

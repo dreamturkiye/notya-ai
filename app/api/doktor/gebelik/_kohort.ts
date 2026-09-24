@@ -11,6 +11,7 @@ import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
 import { doneWindowIdsFromClinic } from '@/specialties/kadin-dogum/engines/clinic-fit'
 import { addDays } from '@/specialties/kadin-dogum/engines/dates'
 import { kdKohortSatirlari, LOHUSA_GORUNUR_GUN, type KdKohortGirdi } from '@/specialties/kadin-dogum/engines/kd-kohort'
+import { arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 export type Sb = Awaited<ReturnType<typeof doktorOturum>> extends infer T ? (T extends { supabase: infer S } ? S : never) : never
 
@@ -50,7 +51,7 @@ export async function kdKohortVerisi(sb: Sb, doctorId: string, bugun: string, sa
     gebIds.length ? sb.from('gebelik_izlemleri').select('gebelik_id, hafta, usg, ogtt, gbs_kultur').eq('doctor_id', doctorId).in('gebelik_id', gebIds).limit(10000) : bos,
     gebIds.length ? sb.from('genetik_taramalar').select('gebelik_id, tur').eq('doctor_id', doctorId).in('gebelik_id', gebIds).limit(5000) : bos,
     gebIds.length ? sb.from('lohusa_izlemleri').select('gebelik_id, dogum_sonrasi_gun').eq('doctor_id', doctorId).in('gebelik_id', gebIds).limit(5000) : bos,
-    sb.from('sessions').select('patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
+    arsivsizSeanslar(sb, 'patient_id, created_at').eq('doctor_id', doctorId).in('patient_id', ids).order('created_at', { ascending: false }).limit(5000),
     sb.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doctorId).in('patient_id', ids).gt('expires_at', new Date().toISOString()),
   ])
   const coz = (v: unknown) => { try { return v ? decrypt(String(v)) : '' } catch { return '' } }
