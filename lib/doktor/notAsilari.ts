@@ -110,7 +110,9 @@ const VERILDI = /(yapild|uyguland|vuruld|verild|yaptik|uyguladik|vurduk|yapilmis
 const PLAN = /(planlan|planli|yapilacak|uygulanacak|verilecek|vurulacak|yapilmali|uygulanmali|oneril|sonraki|gelecek|randevu|yapilmasi|uygulanmasi|hatirlat|ertelen|yapilmadi|uygulanmadi|verilmedi|vurulmadi|reddet|istemedi)/
 // "Grip", "kızamık", "suçiçeği", "hepatit" are also diseases — a fragment counts only with a vaccine word or abbreviation.
 const ASI_SOZU = /\basi(si|lari|lar|yi|sini|larini|nin|sinin)?\b|\bdoz|\brapel|\b(dabt|kpa|opa|kkk|bcg|td|hpv|mmr|dtap|ipa|hib|hexa|heksa|penta|prevenar|synflorix|priorix|varilrix|varivax|gardasil|rotarix|rotateq|bexsero|nimenrix|menactra|vaxigrip|influvac)\b/
-const ONCEKI = /(daha once|onceden|gecen (ay|yil|hafta|sefer|vizit|kontrol)|yapilmis(?!tir)|uygulanmis(?!tir)|olmus|karnesinde|karneye gore|aile hekimi|\basm\b|baska (yerde|kurumda|merkezde))/
+// NOTYA-ASI-NOT-03 (2026-09-24): history lines ("Aşı durumu: Hepatit B 1. dozu uygulandı (Haziran 2024)",
+// "doğum dozu", an explicit earlier date) describe past doses, not this visit — backfill preview caught them.
+const ONCEKI = /(daha once|onceden|gecen (ay|yil|hafta|sefer|vizit|kontrol)|yapilmis(?!tir)|uygulanmis(?!tir)|olmus|karnesinde|karneye gore|aile hekimi|\basm\b|baska (yerde|kurumda|merkezde)|asi durumu|dogumda|dogum dozu|hastanede|(ocak|subat|mart|nisan|mayis|haziran|temmuz|agustos|eylul|ekim|kasim|aralik) \d{4}|\d{1,2}[./]\d{1,2}[./]\d{2,4})/
 const SIRA_KELIME: Record<string, number> = { birinci: 1, ilk: 1, ikinci: 2, ucuncu: 3, dorduncu: 4, besinci: 5, altinci: 6 }
 
 export interface UygulananAsiParcasi {
@@ -145,7 +147,8 @@ function parcaSerileri(parca: string): string[] {
  */
 export function uygulananAsiParcalari(hamMetin: string | null | undefined): UygulananAsiParcasi[] {
   const out: UygulananAsiParcasi[] = []
-  const cumleler = String(hamMetin || '').split(/[;\n]+|(?<!\d)[.!?]+(?:\s+|$)/)
+  // Rejoin the old line-numbering artifact ("Hepatit B\n1. dozu uygulandı") before splitting (NOTYA-SIRA-01).
+  const cumleler = String(hamMetin || '').replace(/\n(?=\s*\d{1,2}\.\s*doz)/g, ' ').split(/[;\n]+|(?<!\d)[.!?]+(?:\s+|$)/)
   for (const cumleHam of cumleler) {
     const cumle = trAramaNormalize(cumleHam)
     if (!cumle) continue

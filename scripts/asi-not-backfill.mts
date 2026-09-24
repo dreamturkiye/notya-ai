@@ -71,7 +71,8 @@ for (const n of (notlar || []) as Record<string, unknown>[]) {
   const seans = (Array.isArray(n.sessions) ? n.sessions[0] : n.sessions) as { patient_id?: string } | null
   const pid = seans?.patient_id ? String(seans.patient_id) : null
   if (!pid) continue
-  const metin = [n.basvuru_yakinmasi, n.content_subjektif, n.content_objektif, n.content_degerlendirme, n.content_plan, n.content_anamnez, n.content_tedavi]
+  // NOTYA-ASI-NOT-03: only this-visit sections; anamnez / özgeçmiş / değerlendirme describe history.
+  const metin = [n.content_objektif, n.content_plan, n.content_tedavi]
     .map((x) => String(x || '')).filter(Boolean).join('\n')
   const parcalar = uygulananAsiParcalari(metin)
   if (!parcalar.length) continue
