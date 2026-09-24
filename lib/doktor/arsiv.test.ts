@@ -245,7 +245,7 @@ describe('NOTYA-ARSIV-02 — arsivsizIlaclar + re-prescription keeps the row on 
     const { db, sb, d, p, sA, sB, nA, nB } = kur()
     await nottanIlacAktar(sb, { noteId: nA.id, doctorId: d, patientId: p })
     const r = await nottanIlacAktar(sb, { noteId: nB.id, doctorId: d, patientId: p })
-    assert.deepEqual(r, { aktarilan: 0, atlanan: 1, hata: null })
+    assert.deepEqual(r, { aktarilan: 0, atlanan: 1, sonlandirilan: 0, hata: null })
     const satirlar = db.tablo('hasta_ilaclar').filter((x) => x.ilac_adi === 'Amoksisilin')
     assert.equal(satirlar.length, 1, 'no duplicate row')
     assert.equal(satirlar[0].kaynak_note_id, nB.id)
@@ -262,6 +262,64 @@ describe('NOTYA-ARSIV-02 — arsivsizIlaclar + re-prescription keeps the row on 
     assert.equal(db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'Metformin')!.kaynak_note_id, null)
     arsivle(db, sA.id, '2026-09-23T10:00:00Z')
     assert.deepEqual(await gorunen(sb, d), ['Metformin'])
+  })
+})
+
+describe("NOTYA-RECETE-02 — revizyonla düşülen ilaç hasta_ilaclar'da sonlandırılır", () => {
+  // Kaan (2026-09-24), canlı hata raporu: "tedavimi değiştirdikten sonra ... reçete
+  // bölümünde eski ilaçlar devam ediyordu ... Ayşe'ye sordum, o da reçetedeki (eski) ilacı
+  // söyledi." Aşağıdaki senaryo bunu birebir sentetik DB'de tekrar eder: aynı not önce bir
+  // antibiyotik yazar ve onaylanır, sonra REVIZE EDİLİP FARKLI bir antibiyotikle yeniden
+  // onaylanır — eskisi kaybolmalı, hasta_ilaclar'da aktif kalmamalı.
+  function kur() {
+    const db = new SahteVeritabani()
+    const d = randomUUID(), p = randomUUID()
+    const s = db.ekle('sessions', { doctor_id: d, patient_id: p, archived_at: null })
+    const n = db.ekle('notes', { session_id: s.id, doctor_id: d, created_at: '2026-09-24T10:00:00Z', content_ilaclar: [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon', doz: '7,5 mL', kullanim: '12 saatte bir' }], recete_onerisi: [] })
+    const elle = db.ekle('hasta_ilaclar', { doctor_id: d, patient_id: p, ilac_adi: 'Metformin', aktif: true, onay_durumu: 'onayli', kaynak_note_id: null })
+    return { db, sb: db.istemci() as never, d, p, s, n, elle }
+  }
+
+  it('aynı not farklı bir ilaçla yeniden onaylanınca eski ilaç sonlandırılır, elle eklenen dokunulmaz', async () => {
+    const { db, sb, d, p, n } = kur()
+    const ilk = await nottanIlacAktar(sb, { noteId: n.id, doctorId: d, patientId: p })
+    assert.deepEqual(ilk, { aktarilan: 1, atlanan: 0, sonlandirilan: 0, hata: null })
+    assert.equal(db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'Amoksisilin 400 mg/5 mL süspansiyon')!.aktif, true)
+
+    // Revizyon: hekim antibiyotiği değiştirdi — aynı not, YENİ ilaç.
+    db.tablo('notes').find((x) => x.id === n.id)!.content_ilaclar = [{ ad: 'Klaritromisin 125 mg/5 mL süspansiyon', doz: '5 mL', kullanim: '12 saatte bir' }]
+    const revize = await nottanIlacAktar(sb, { noteId: n.id, doctorId: d, patientId: p })
+    assert.deepEqual(revize, { aktarilan: 1, atlanan: 0, sonlandirilan: 1, hata: null })
+
+    const eski = db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'Amoksisilin 400 mg/5 mL süspansiyon')!
+    assert.equal(eski.aktif, false, 'düşülen ilaç artık aktif olmamalı — Ayşe onu güncel tedavi olarak okumamalı')
+    const yeni = db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'Klaritromisin 125 mg/5 mL süspansiyon')!
+    assert.equal(yeni.aktif, true)
+    assert.equal(yeni.kaynak_note_id, n.id)
+
+    // Elle eklenen (kaynak_note_id NULL) hiçbir zaman bu geçişin kurbanı olmaz.
+    assert.equal(db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'Metformin')!.aktif, true)
+  })
+
+  it('başka bir notun ilacı bu notun sonlandırma geçişinden etkilenmez', async () => {
+    const { db, sb, d, p, s, n } = kur()
+    const digerNot = db.ekle('notes', { session_id: s.id, doctor_id: d, content_ilaclar: [{ ad: 'D vitamini damla' }], recete_onerisi: [] })
+    await nottanIlacAktar(sb, { noteId: digerNot.id, doctorId: d, patientId: p })
+    assert.equal(db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'D vitamini damla')!.aktif, true)
+
+    // n'in kendi ilaç listesi değişip yeniden aktarılıyor — digerNot'un ilacına dokunmamalı.
+    db.tablo('notes').find((x) => x.id === n.id)!.content_ilaclar = [{ ad: 'Ibuprofen süspansiyon' }]
+    await nottanIlacAktar(sb, { noteId: n.id, doctorId: d, patientId: p })
+    assert.equal(db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'D vitamini damla')!.aktif, true, 'başka notun ilacı sonlandırılmamalı')
+  })
+
+  it('not ilaç listesi tamamen boşaltılırsa notun kendi tüm ilacı sonlandırılır', async () => {
+    const { db, sb, d, p, n } = kur()
+    await nottanIlacAktar(sb, { noteId: n.id, doctorId: d, patientId: p })
+    db.tablo('notes').find((x) => x.id === n.id)!.content_ilaclar = []
+    const r = await nottanIlacAktar(sb, { noteId: n.id, doctorId: d, patientId: p })
+    assert.deepEqual(r, { aktarilan: 0, atlanan: 0, sonlandirilan: 1, hata: null })
+    assert.equal(db.tablo('hasta_ilaclar').find((x) => x.ilac_adi === 'Amoksisilin 400 mg/5 mL süspansiyon')!.aktif, false)
   })
 })
 

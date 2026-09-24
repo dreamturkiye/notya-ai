@@ -192,6 +192,10 @@ export function nottanIlaclariCikar(not: {
 export type AktarimSonucu = {
   aktarilan: number
   atlanan: number
+  /** NOTYA-RECETE-02 (Kaan, 2026-09-24): "revizyona uğramış ilaç mutlaka reçetede de değişmeli" --
+   * how many hasta_ilaclar rows this call deactivated because the note's current medication list
+   * no longer includes them (see the deactivation pass below). */
+  sonlandirilan: number
   hata: string | null
 }
 
@@ -212,11 +216,10 @@ export async function nottanIlacAktar(
     .eq('id', opts.noteId)
     .maybeSingle()
 
-  if (notHata) return { aktarilan: 0, atlanan: 0, hata: notHata.message }
-  if (!not) return { aktarilan: 0, atlanan: 0, hata: 'Not bulunamadı' }
+  if (notHata) return { aktarilan: 0, atlanan: 0, sonlandirilan: 0, hata: notHata.message }
+  if (!not) return { aktarilan: 0, atlanan: 0, sonlandirilan: 0, hata: 'Not bulunamadı' }
 
   const ilaclar = nottanIlaclariCikar(not)
-  if (!ilaclar.length) return { aktarilan: 0, atlanan: 0, hata: null }
 
   // Bu hastada hâlihazırda kayıtlı ilaçlar — elle eklenmişi ezmeyelim.
   // NOTYA-ARSIV-02: raw read on purpose — rows hidden by an archived source note are included, so a
@@ -229,6 +232,31 @@ export async function nottanIlacAktar(
     .eq('doctor_id', opts.doctorId)
 
   const baslangic = String(opts.tarih || not.created_at || new Date().toISOString()).slice(0, 10)
+
+  // NOTYA-RECETE-02 (Kaan, 2026-09-24): "tedavimi değiştirdikten sonra ... reçete bölümünde eski
+  // ilaçlar devam ediyordu ... revizyona uğramış ilaç mutlaka reçetede de değişmeli." Kaan swapped
+  // one antibiotic for another on the revision page; the note's own content_ilaclar updated
+  // correctly, but nothing ever told hasta_ilaclar the OLD drug was gone — the insert/update loop
+  // below only ever ADDS or UPDATES rows that match a CURRENT medication name, it never notices one
+  // that disappeared. So Ayşe, asked "which medication did we give," read the still-active old row
+  // straight out of hasta_ilaclar and reported it — correctly, given what the table actually said.
+  // Fix: any row this SAME note previously wrote (kaynak_note_id = this note), still active, whose
+  // name doesn't match anything in the note's CURRENT list, is deactivated here — the doctor's
+  // latest, approved decision no longer includes it. A hand-added row (kaynak_note_id NULL) or one
+  // written by a different note is never touched by this pass — same boundary the rest of this
+  // file already draws.
+  let sonlandirilan = 0
+  for (const m of (mevcut || []) as { id: string; ilac_adi: string | null; aktif: boolean | null; kaynak_note_id: string | null }[]) {
+    if (m.kaynak_note_id !== opts.noteId) continue
+    if (!m.aktif) continue
+    const hala_listede = ilaclar.some((i) => ayniIlac(String(m.ilac_adi || ''), i.ilac_adi))
+    if (hala_listede) continue
+    const { error: dErr } = await sb.from('hasta_ilaclar').update({ aktif: false }).eq('id', m.id)
+    if (dErr) return { aktarilan: 0, atlanan: 0, sonlandirilan, hata: dErr.message }
+    sonlandirilan += 1
+  }
+
+  if (!ilaclar.length) return { aktarilan: 0, atlanan: 0, sonlandirilan, hata: null }
 
   /**
    * Aynı ilaç zaten listede mi?
@@ -269,7 +297,7 @@ export async function nottanIlacAktar(
         // (kaynak_note_id NULL) stays the doctor's own and always visible.
         if (g.kaynak_note_id && g.kaynak_note_id !== opts.noteId) {
           const { error: kErr } = await sb.from('hasta_ilaclar').update({ kaynak_note_id: opts.noteId }).eq('id', g.id)
-          if (kErr) return { aktarilan, atlanan, hata: kErr.message }
+          if (kErr) return { aktarilan, atlanan, sonlandirilan, hata: kErr.message }
         }
         atlanan += 1
         continue
@@ -278,7 +306,7 @@ export async function nottanIlacAktar(
         doz: ilac.doz, kullanim_sikli: ilac.kullanim_sikli, notlar: ilac.notlar,
         aktif: true, onay_durumu: 'onayli', kaynak_note_id: opts.noteId, baslangic_tarihi: baslangic,
       }).eq('id', g.id)
-      if (gErr) return { aktarilan, atlanan, hata: gErr.message }
+      if (gErr) return { aktarilan, atlanan, sonlandirilan, hata: gErr.message }
       aktarilan += 1
       continue
     }
@@ -302,10 +330,10 @@ export async function nottanIlacAktar(
         atlanan += 1
         continue
       }
-      return { aktarilan, atlanan, hata: error.message }
+      return { aktarilan, atlanan, sonlandirilan, hata: error.message }
     }
     aktarilan += 1
   }
 
-  return { aktarilan, atlanan, hata: null }
+  return { aktarilan, atlanan, sonlandirilan, hata: null }
 }
