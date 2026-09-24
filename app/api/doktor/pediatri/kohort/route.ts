@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pediOturum, bugunTr } from '../_ortak'
 import { pediKohortVerisi } from '../_kohort'
 import { pediHatirlatmaGonder } from '../_kohortHatirlatma'
+import { veliHatirlatmaBayraklari } from '@/specialties/pediatri/engines/kohort'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,10 @@ export async function POST(req: NextRequest) {
   const { satirlar } = await pediKohortVerisi(o.sb, o.doktorId, bugunTr(), ids)
   let gonderilen = 0, atlanan = 0
   for (const s of satirlar) {
-    const r = await pediHatirlatmaGonder(o.sb, o.doktorId, s.patientId, s.bayraklar)
+    // Yalnız "aşı kaydı tutarsız" olan çocuk: hekimin kayıt işi, veliye mesaj gitmez.
+    const bayraklar = veliHatirlatmaBayraklari(s.bayraklar)
+    if (!bayraklar.length) { atlanan++; continue }
+    const r = await pediHatirlatmaGonder(o.sb, o.doktorId, s.patientId, bayraklar)
     if (r === 'gonderildi') gonderilen++; else atlanan++
   }
   // Seçilip kohortta olmayan (bayraksız / başka hekimin) kimlikler sessizce atlanır.

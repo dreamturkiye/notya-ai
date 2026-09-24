@@ -102,7 +102,7 @@ export default function PediKohortPaneli() {
             <span style={{ fontSize: 13, color: '#8FA0B5', flex: '1 1 100%', overflowWrap: 'anywhere' }}>{s.detay.join(' · ')}{s.sonVizit ? ` · son muayene ${tarihGoster(s.sonVizit)}` : ''}{s.portalVar ? '' : ' · portal bağlantısı yok (mesaj portal açılınca görünür)'}</span>
             <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <a href={hastaDosyaHref(s.patientId, s.sekme === 'ozet' ? null : s.sekme)} style={ghost}>Dosyayı aç</a>
-              {s.bayraklar.includes('asi_gecikti') && <a href={`/doktor-tools/pedi-asi?hasta=${encodeURIComponent(s.patientId)}`} style={ghost}>Aşı planı</a>}
+              {(s.bayraklar.includes('asi_gecikti') || s.bayraklar.includes('asi_kayit_tutarsiz')) && <a href={`/doktor-tools/pedi-asi?hasta=${encodeURIComponent(s.patientId)}`} style={ghost}>Aşı planı</a>}
               {(s.bayraklar.includes('tarama_gecikti') || s.bayraklar.includes('izlem_kacti') || s.bayraklar.includes('profilaksi')) && <a href={`/doktor-tools/pedi-gelisim?hasta=${encodeURIComponent(s.patientId)}`} style={ghost}>Gelişim paneli</a>}
               <button type="button" onClick={() => whatsapp(s)} style={ghost}>WhatsApp&apos;tan gönder</button>
             </span>

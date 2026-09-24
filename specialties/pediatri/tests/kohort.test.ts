@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { pediKohortSatiri, pediKohortSatirlari, pediHatirlatmaMesaji, type PediKohortGirdi } from '../engines/kohort'
+import { pediKohortSatiri, pediKohortSatirlari, pediHatirlatmaMesaji, veliHatirlatmaBayraklari, type PediKohortGirdi } from '../engines/kohort'
 
 const BUGUN = '2026-09-18'
 const bos = (ek: Partial<PediKohortGirdi>): PediKohortGirdi => ({
@@ -18,6 +18,48 @@ describe('pediatri kohort — bayraklar diğer pediatri motorlarından', () => {
     assert.match(s.detay.join(' '), /Karma 2\. doz/)
     assert.doesNotMatch(s.detay.join(' '), /Hep B|BCG/) // kaydı hiç olmayan seri bayrak üretmez
     assert.equal(s.sekme, 'asilar')
+  })
+  // NOTYA-FISILTI-GIZLE-01 — Dr. Gökhan'ın vakası (Umutcan): kart DOB yanlış, iki doz aynı gün kayıtlı.
+  const HEPB_BUGUN = '2026-09-24'
+  it('Umutcan: DOB 2024-06-15, Hep B 1 ve 2 aynı gün → "kayıt tutarsız", "gecikti" değil', () => {
+    const s = pediKohortSatiri(bos({ dogumIso: '2024-06-15', asilar: [
+      { id: 'h1', ad: 'Hepatit B', dozNo: 1, tarih: '2024-06-15', kaynak: 'beyan' },
+      { id: 'h2', ad: 'Hepatit B', dozNo: 2, tarih: '2024-06-15', kaynak: 'kayit' },
+    ] }), HEPB_BUGUN)
+    assert.ok(s.bayraklar.includes('asi_kayit_tutarsiz'), JSON.stringify(s))
+    assert.ok(!s.bayraklar.includes('asi_gecikti'), JSON.stringify(s))
+    assert.match(s.detay.join(' '), /Aşı kaydı tutarsız — Hep B 2\. doz tarihi \/ doğum tarihini kontrol edin/)
+    assert.doesNotMatch(s.detay.join(' '), /Aşı: Hep B/)
+    assert.equal(s.sekme, 'asilar')
+  })
+  it('Umutcan düzeltilmiş: DOB 2024-05-15, Hep B 0-1-6. ay → Hep B bayrağı yok', () => {
+    const s = pediKohortSatiri(bos({ dogumIso: '2024-05-15', asilar: [
+      { id: 'h1', ad: 'Hepatit B', dozNo: 1, tarih: '2024-05-15', kaynak: 'beyan' },
+      { id: 'h2', ad: 'Hepatit B', dozNo: 2, tarih: '2024-06-15', kaynak: 'kayit' },
+      { id: 'h3', ad: 'Hepatit B', dozNo: 3, tarih: '2024-11-15', kaynak: 'kayit' },
+    ] }), HEPB_BUGUN)
+    assert.ok(!s.bayraklar.includes('asi_kayit_tutarsiz'), JSON.stringify(s))
+    assert.ok(!s.bayraklar.includes('asi_gecikti'), JSON.stringify(s))
+    assert.doesNotMatch(s.detay.join(' '), /Hep B/)
+  })
+  it('doğumdan önce tarihli doz → kayıt tutarsız', () => {
+    const s = pediKohortSatiri(bos({ dogumIso: '2025-01-10', asilar: [{ id: 'a', ad: 'Hepatit B', dozNo: 1, tarih: '2024-12-20', kaynak: 'kayit' }] }), BUGUN)
+    assert.ok(s.bayraklar.includes('asi_kayit_tutarsiz'))
+    assert.match(s.detay.join(' '), /Hep B 1\. doz tarihi/)
+  })
+  it('tutarsız seri dışındaki gerçek gecikme yine "gecikti" kalır', () => {
+    const s = pediKohortSatiri(bos({ asilar: [
+      { id: 'h1', ad: 'Hepatit B', dozNo: 1, tarih: '2025-01-10', kaynak: 'kayit' },
+      { id: 'h2', ad: 'Hepatit B', dozNo: 2, tarih: '2025-01-10', kaynak: 'kayit' },
+      { id: 'k1', ad: "5'li karma", tarih: '2025-03-10', kaynak: 'kayit' },
+    ] }), BUGUN)
+    assert.ok(s.bayraklar.includes('asi_kayit_tutarsiz'))
+    assert.ok(s.bayraklar.includes('asi_gecikti'))
+    assert.match(s.detay.join(' '), /Karma 2\. doz/)
+  })
+  it('yalnız kayıt tutarsızlığı veliye hatırlatma sebebi değil', () => {
+    assert.deepEqual(veliHatirlatmaBayraklari(['asi_kayit_tutarsiz']), [])
+    assert.deepEqual(veliHatirlatmaBayraklari(['asi_kayit_tutarsiz', 'izlem_kacti']), ['izlem_kacti'])
   })
   it('izlem: daha önce muayene olmuş çocukta son 180 günde kapanan pencerede muayene yoksa bayrak', () => {
     // 2025-01-10 doğum → 18. ay penceresi 2026-05-06 – 2026-08-03; önceki muayene 12. ayda
