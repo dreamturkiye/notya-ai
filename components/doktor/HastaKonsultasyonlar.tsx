@@ -17,6 +17,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DocumentViewer from '@/components/doktor/DocumentViewer';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { konsultasyonApi, konsultasyonIslemi, istemTaslagiIste, yanitTaslagiIsteVeGerekirseKimliksizlestir, YANITSIZ_KAPAT_ONAYI, YANITSIZ_SIL_ONAYI, HATIRLATMA_GONDERILDI } from '@/lib/doktor/konsultasyonIstemci';
 import { taslakUygulanir } from '@/lib/doktor/konsultasyonTaslagi';
 import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu';
@@ -300,8 +301,8 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
   const hazir = ozet.trim().length >= 3 && !gonderiyor;
 
   return (
-    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 12, paddingTop: 12, display: 'grid', gap: 12 }}>
-      <Alan etiket="Konsültan raporu (Kasa)" ipucu={<>Rapor henüz kasada değilse <a href={kasaYukle} style={{ color: '#2DD4BF' }}>kasaya yükleyin ›</a> — yüklerken bu konsültasyonu seçebilirsiniz.</>}>
+    <div style={{ borderTop: '1px solid rgba(58,44,34,0.08)', marginTop: 12, paddingTop: 12, display: 'grid', gap: 12 }}>
+      <Alan etiket="Konsültan raporu (Kasa)" ipucu={<>Rapor henüz kasada değilse <a href={kasaYukle} style={{ color: CHROME_RENK.pine }}>kasaya yükleyin ›</a> — yüklerken bu konsültasyonu seçebilirsiniz.</>}>
         <select aria-label="Konsültan raporu" value={belgeId} onChange={(e) => setBelgeId(e.target.value)} style={stil.input}>
           <option value="" style={{ color: '#000' }}>{belgeler == null ? 'Kasa yükleniyor…' : belgeler.length ? 'Rapor seçilmedi (isteğe bağlı)' : 'Kasada belge yok'}</option>
           {(belgeler || []).map((b) => <option key={b.id} value={b.id} style={{ color: '#000' }}>{b.fileName} · {trGun(b.createdAt)}</option>)}
@@ -309,7 +310,7 @@ export function YanitFormu({ k, patientId, kaydedildi, vazgec }: {
       </Alan>
       {belgeId && (
         <div style={{ ...stil.kucuk }}>
-          <a href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(belgeId)}`} style={{ color: '#2DD4BF' }}>Belgeyi değerlendir (Asistana raporla) ›</a> — belgeden taslak özet çıkarır; onay yine sizindir.
+          <a href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}/belgeler/${encodeURIComponent(belgeId)}`} style={{ color: CHROME_RENK.pine }}>Belgeyi değerlendir (Asistana raporla) ›</a> — belgeden taslak özet çıkarır; onay yine sizindir.
         </div>
       )}
       <AyseTaslakDurumu t={taslak} yon="yanit" taslagiKullan={bekleyeniKullan} />
@@ -369,7 +370,7 @@ export function IstemDuzenleFormu({ k, kaydedildi, vazgec }: {
   };
 
   return (
-    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 12, paddingTop: 12, display: 'grid', gap: 12 }}>
+    <div style={{ borderTop: '1px solid rgba(58,44,34,0.08)', marginTop: 12, paddingTop: 12, display: 'grid', gap: 12 }}>
       <Alan etiket="İstem metni (klinik soru)" ipucu="Yanıt gelene kadar düzenleyebilirsiniz; önceki metin düzenleme geçmişinde saklanır.">
         <textarea aria-label="İstem metni" value={soru} onChange={(e) => setSoru(e.target.value)} maxLength={KONSULTASYON_SINIRLARI.klinikSoru} rows={6} style={{ ...stil.input, resize: 'vertical', fontFamily: 'inherit' }} />
       </Alan>
@@ -409,10 +410,10 @@ export function DuzenlemeGecmisi({ liste }: { liste: KonsultasyonRevizyonu[] }) 
     <Katlanir baslik="Düzenleme geçmişi" rozet={`${liste.length}`}>
       <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
         {[...liste].reverse().map((r) => (
-          <li key={r.id} data-revizyon={r.id} style={{ borderLeft: '2px solid rgba(255,255,255,0.14)', paddingLeft: 10, minWidth: 0 }}>
+          <li key={r.id} data-revizyon={r.id} style={{ borderLeft: '2px solid rgba(58,44,34,0.14)', paddingLeft: 10, minWidth: 0 }}>
             <div style={stil.kucuk}>{trGun(r.created_at)} · {REVIZYON_ALAN_ETIKETI[r.alan] || r.alan} değiştirildi (hekim)</div>
-            <div style={{ ...stil.kucuk, color: '#C9D4E3', marginTop: 2 }}>Önceki:</div>
-            <div style={{ ...stil.metin, fontSize: 13, color: '#9BB0C7', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{r.alan === 'aciliyet' && r.onceki ? (ACILIYET_ETIKETI[r.onceki as Aciliyet] || r.onceki) : (r.onceki || '(boş)')}</div>
+            <div style={{ ...stil.kucuk, color: CHROME_RENK.muted, marginTop: 2 }}>Önceki:</div>
+            <div style={{ ...stil.metin, fontSize: 13, color: CHROME_RENK.muted, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{r.alan === 'aciliyet' && r.onceki ? (ACILIYET_ETIKETI[r.onceki as Aciliyet] || r.onceki) : (r.onceki || '(boş)')}</div>
           </li>
         ))}
       </ol>
@@ -515,7 +516,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
     <div ref={kartRef} style={{ ...stil.kutu, marginBottom: 10, scrollMarginTop: 80 }} data-konsultasyon={k.id}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {rozet}
-        <span style={{ fontSize: 15, fontWeight: 700, color: '#EDF1F7' }}>{k.hedefEtiketi}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink }}>{k.hedefEtiketi}</span>
         {k.aciliyet === 'acil' && <Rozet ton="kirmizi">Acil</Rozet>}
         {k.aciliyet === 'oncelikli' && <Rozet ton="uyari">Öncelikli</Rozet>}
         {k.eskiKayit && <Rozet ton="bilgi">eski kayıt</Rozet>}
@@ -531,8 +532,8 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
       </div>
 
       {g === 'yanitlandi' && (
-        <div style={{ marginTop: 10, background: 'rgba(45,212,191,0.06)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: 12, padding: '10px 12px' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#5EEAD4' }}>Yanıt · {trGun(k.yanit_tarihi)}{k.hedef_hekim ? ` · ${k.hedef_hekim}` : ''}</div>
+        <div style={{ marginTop: 10, background: 'rgba(47,67,52,0.06)', border: '1px solid rgba(47,67,52,0.25)', borderRadius: 12, padding: '10px 12px' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#2E6E4E' }}>Yanıt · {trGun(k.yanit_tarihi)}{k.hedef_hekim ? ` · ${k.hedef_hekim}` : ''}</div>
           {k.yanit_ozeti ? (
             <div style={{ marginTop: 4 }}>
               <UzunMetin metin={k.yanit_ozeti} stilMetin={stil.metin} />
@@ -557,7 +558,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
 
       <div style={stil.satir}>
         {g === 'yanitlandi' && (k.note_id || eklenenNot
-          ? <a href={muayeneFormuYolu(eklenenNot || k.note_id!)} style={{ ...stil.ghost, color: '#5EEAD4' }}>Muayene notuna eklendi →</a>
+          ? <a href={muayeneFormuYolu(eklenenNot || k.note_id!)} style={{ ...stil.ghost, color: '#2E6E4E' }}>Muayene notuna eklendi →</a>
           : <button type="button" onClick={() => islem('nota_ekle')} disabled={!!calisiyor} style={stil.btn}>{calisiyor === 'nota_ekle' ? 'Ekleniyor…' : 'Bugünkü muayene formuna ekle'}</button>)}
         {g !== 'yanitlandi' && !yanitAcik && (
           <button type="button" onClick={() => setYanitAcik(true)} style={stil.btn}>{g === 'kapandi' ? 'Geç gelen raporu ekle' : 'Yanıt ekle'}</button>
@@ -588,7 +589,7 @@ export function KonsultasyonKarti({ k, patientId, guncelle, yenile, silindi, yan
       </div>
       {mesaj && (
         <div style={{ ...stil.satir }}>
-          <span style={{ fontSize: 13, color: mesaj.iyi ? '#5EEAD4' : '#FDE68A' }} aria-live="polite">{mesaj.metin}</span>
+          <span style={{ fontSize: 13, color: mesaj.iyi ? '#2E6E4E' : '#7A5B1E' }} aria-live="polite">{mesaj.metin}</span>
           <MuayeneFormunaDon notId={eklenenNot} />
         </div>
       )}
@@ -629,7 +630,7 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
     <div style={{ minWidth: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
         <div style={{ minWidth: 0, flex: '1 1 240px' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#EDF1F7' }}>Konsültasyonlar</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: CHROME_RENK.ink }}>Konsültasyonlar</div>
           <div style={{ ...stil.kucuk, marginTop: 2 }}>Meslektaşınızdan görüş isteyin; gelen raporu bu dosyaya kanıt olarak bağlayın.{liste.length ? ` ${bekleyen} yanıt bekliyor · ${yanitli} yanıtlandı.` : ''}</div>
         </div>
         {!yeni && tabloHazir && <button type="button" onClick={() => setYeni(true)} style={stil.btn}>+ Yeni konsültasyon</button>}
@@ -640,7 +641,7 @@ export function KonsultasyonCizelgesi({ patientId, liste, hedefler, setListe, ye
           olustu={(k) => { setListe((l) => [k, ...l]); setYeni(false); }} />
       )}
       {tabloHazir && !liste.length && !yeni && (
-        <div style={{ ...stil.kutu, color: '#8FA0B5', fontSize: 14 }}>Bu hasta için konsültasyon kaydı yok. Bir meslektaşınızın görüşünü istediğinizde buradan istem oluşturun; gelen raporu Kasa'ya yükleyip bu kayda bağlayın.</div>
+        <div style={{ ...stil.kutu, color: CHROME_RENK.muted, fontSize: 14 }}>Bu hasta için konsültasyon kaydı yok. Bir meslektaşınızın görüşünü istediğinizde buradan istem oluşturun; gelen raporu Kasa'ya yükleyip bu kayda bağlayın.</div>
       )}
       {liste.map((k) => <KonsultasyonKarti key={k.id} k={k} patientId={patientId} guncelle={guncelle(k.id)} yenile={yenile} silindi={silSatir(k.id)} yanitAcikBaslar={!!yanitAc && k.id === yanitAc} />)}
     </div>
@@ -669,9 +670,9 @@ export default function HastaKonsultasyonlar({ patientId, yanitAc }: { patientId
 
   return (
     <AracVurguSaglayici vurgu={VURGU_TEAL}>
-      <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', minWidth: 0 }}>
-        {durum === 'yukleniyor' && <div style={{ fontSize: 14, color: '#8FA0B5' }}>Konsültasyonlar yükleniyor…</div>}
-        {durum === 'hata' && <div style={{ fontSize: 14, color: '#FCA5A5' }}>{hata}</div>}
+      <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '18px 16px', minWidth: 0, boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+        {durum === 'yukleniyor' && <div style={{ fontSize: 14, color: CHROME_RENK.muted }}>Konsültasyonlar yükleniyor…</div>}
+        {durum === 'hata' && <div style={{ fontSize: 14, color: CHROME_RENK.warn }}>{hata}</div>}
         {durum === 'hazir' && <KonsultasyonCizelgesi patientId={patientId} liste={liste} hedefler={hedefler} setListe={setListe} yenile={() => yukle(true)} tabloHazir={tabloHazir} yanitAc={yanitAc} />}
       </div>
     </AracVurguSaglayici>

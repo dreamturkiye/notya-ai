@@ -228,12 +228,16 @@ export function OneriRozet() {
 
 /** Büyük sayı kartı — sonuç ekranının üst şeridi. */
 export function Istatistik({ deger, etiket, ton = 'notr' }: { deger: React.ReactNode; etiket: string; ton?: 'iyi' | 'uyari' | 'kirmizi' | 'notr' }) {
-  const stil = useAracStil();
   const renk = { iyi: '#2E6E4E', uyari: '#7A5B1E', kirmizi: '#7A3D28', notr: CHROME_RENK.ink }[ton];
   return (
     <div style={{ background: '#F6F0E4', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 14, padding: '12px 14px', flex: '1 1 120px', minWidth: 0 }}>
       <div style={{ fontSize: 24, fontWeight: 800, color: renk, letterSpacing: '-0.5px', lineHeight: 1.15, overflowWrap: 'anywhere' }}>{deger}</div>
-      <div style={{ ...stil.kucuk, marginTop: 2 }}>{etiket}</div>
+      {/* NOTYA-ARACLAR-KONTRAST-01 (Kaan, 2026-09-24): bu etiket CHROME_RENK.muted (#8b7d70) ile
+          #F6F0E4 kart zemininde ~3.5:1 kontrast veriyordu -- 12px metin için WCAG AA eşiği (4.5:1)
+          altında, gerçekten "silik". Bu etiket kartlık büyük sayının ne olduğunu söyleyen ana
+          bilgidir, ikincil ipucu değil -- CHROME_RENK.ink + biraz daha ağır punto ile okunur.
+          Istatistik paylaşılan bir bileşen: bu düzeltme her araç sayfasında aynı anda geçerli olur. */}
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: CHROME_RENK.ink, marginTop: 3, lineHeight: 1.35 }}>{etiket}</div>
     </div>
   );
 }

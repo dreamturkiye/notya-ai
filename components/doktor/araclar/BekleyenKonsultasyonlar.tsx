@@ -14,6 +14,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAracStil, Istatistik, Rozet } from '@/lib/doktor/aracUi';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import {
   ACILIYET_ETIKETI, BEKLEME_DIKKAT_GUN, BEKLEME_KIRMIZI_GUN, HATIRLATMA_ARALIGI_GUN,
   beklemeVurgusu, bekleyenOzeti, hatirlatmaBeklemesi, trGun, type Aciliyet, type BekleyenKonsultasyon,
@@ -53,8 +54,8 @@ export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemY
     <div style={{ ...stil.kutu, marginBottom: 10, borderColor: kenar }} data-bekleyen-konsultasyon={b.id} data-vurgu={vurgu}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <Rozet ton={vurgu}>{b.gun === 0 ? 'bugün istendi' : `${b.gun} gündür bekliyor`}</Rozet>
-        <span style={{ fontSize: 15, fontWeight: 700, color: '#EDF1F7', minWidth: 0, overflowWrap: 'anywhere' }}>{b.hastaAdi}</span>
-        <span style={{ ...stil.kucuk, color: '#C9D4E3' }}>→ {b.hedef}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink, minWidth: 0, overflowWrap: 'anywhere' }}>{b.hastaAdi}</span>
+        <span style={{ ...stil.kucuk }}>→ {b.hedef}</span>
         <AciliyetRozeti aciliyet={b.aciliyet} />
         {b.eskiKayit && <Rozet ton="bilgi">eski kayıt</Rozet>}
       </div>
@@ -73,7 +74,7 @@ export function BekleyenSatir({ b, islemYap }: { b: BekleyenKonsultasyon; islemY
         <button type="button" onClick={() => calistir('kapat')} disabled={!!calisiyor} style={stil.ghost}>{calisiyor === 'kapat' ? 'Kapatılıyor…' : 'Yanıtsız kapat'}</button>
       </div>
       {sonraki && !mesaj && <div style={{ ...stil.kucuk, marginTop: 6 }}>Sonraki hatırlatma {trGun(sonraki)} tarihinden itibaren gönderilebilir.</div>}
-      {mesaj && <div style={{ fontSize: 13, marginTop: 8, color: mesaj.iyi ? '#5EEAD4' : '#FDE68A' }} aria-live="polite">{mesaj.metin}</div>}
+      {mesaj && <div style={{ fontSize: 13, marginTop: 8, color: mesaj.iyi ? '#2E6E4E' : '#7A5B1E' }} aria-live="polite">{mesaj.metin}</div>}
     </div>
   );
 }
@@ -102,7 +103,7 @@ export function BekleyenKonsultasyonListesi({ bekleyenler, yanitSuresi, hazir = 
       </div>
 
       {!bekleyenler.length ? (
-        <div style={{ ...stil.kutu, color: '#8FA0B5', fontSize: 14 }}>
+        <div style={{ ...stil.kutu, color: CHROME_RENK.muted, fontSize: 14 }}>
           Yanıt bekleyen konsültasyonunuz yok. Konsültasyon istemini hasta dosyası › Konsültasyonlar'dan oluşturursunuz; yanıt gelene kadar burada izlenir.
         </div>
       ) : (
