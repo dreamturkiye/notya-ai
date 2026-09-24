@@ -12,6 +12,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { antikoagulanDegerlendir, type Ajan } from '../../engines/antikoagulan';
 import { chaVascSkoru } from '../../engines/sgkRapor';
 import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -142,8 +143,8 @@ export default function AntikoagAraci() {
         </div>
         {chaSatirlari.map(([ad, p]) => (
           <div key={ad} style={{ ...metin, marginTop: 4, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ color: p ? '#EDF1F7' : '#8FA0B5' }}>{ad}</span>
-            <span style={{ fontWeight: 700, color: p ? '#5EEAD4' : '#8FA0B5' }}>{p}</span>
+            <span style={{ color: p ? CHROME_RENK.ink : CHROME_RENK.muted }}>{ad}</span>
+            <span style={{ fontWeight: 700, color: p ? '#0F9B8E' : CHROME_RENK.muted }}>{p}</span>
           </div>
         ))}
         <div style={{ ...kucuk, marginTop: 10 }}>Toplam yalnız işaretlenen bileşenlerden hesaplanır; antikoagülan endikasyonu hekim kararıdır.</div>

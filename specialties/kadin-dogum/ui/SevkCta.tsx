@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { kutu, btn, giris, etiketS } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function SevkCta({
   sevk,
@@ -42,18 +43,18 @@ export function SevkCta({
   }
   return (
     <section style={{ ...kutu, borderColor: sevk ? 'rgba(239,68,68,0.45)' : undefined }} data-kd="sevk-cta" data-sevk={sevk ? 'aktif' : 'yok'}>
-      <h2 style={{ margin: 0, fontSize: 16, color: sevk ? '#FCA5A5' : undefined }}>
+      <h2 style={{ margin: 0, fontSize: 16, color: sevk ? CHROME_RENK.warn : undefined }}>
         {sevk ? 'Perinatoloji sevk önerisi' : 'Perinatoloji sevk'}
       </h2>
       {sevk ? (
         <>
-          <p style={{ fontSize: 12, color: '#8FA0B5' }}>Sipariş değildir. Risk formu / Riskli Gebelikler tetikledi.</p>
-          <ul style={{ fontSize: 13, color: '#EDF1F7' }}>
+          <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Sipariş değildir. Risk formu / Riskli Gebelikler tetikledi.</p>
+          <ul style={{ fontSize: 13, color: CHROME_RENK.ink }}>
             {nedenler.map((n) => <li key={n}>{tr[n] || n}</li>)}
           </ul>
         </>
       ) : (
-        <p style={{ fontSize: 13, color: '#8FA0B5', margin: '8px 0 0' }} data-sevk-durum="oneri-yok">
+        <p style={{ fontSize: 13, color: CHROME_RENK.muted, margin: '8px 0 0' }} data-sevk-durum="oneri-yok">
           Şu an sevk önerisi yok. Yüksek risk, previa, mo-di ikiz veya Riskli Gebelikler tetikleyince burada görünür. Sipariş değildir.
         </p>
       )}

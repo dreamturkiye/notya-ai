@@ -15,6 +15,7 @@ import {
 } from '../../engines/buyume';
 import { cmCoz, kiloCoz, tarihCoz, tarihGoster, yasMetni, ondalikAy, tr } from '../../engines/girdi';
 import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, OncekiVizit, PediHastaSecici, usePediHasta } from './PediAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, input, ghost, uyari, kirmizi, kaydir } = pediStil;
 const bugun = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -26,7 +27,7 @@ const yeniSatir = (tarih = ''): Satir => ({ id: Math.random().toString(36).slice
 function PersentilRozet({ p }: { p: number }) {
   const uc = p < 3 || p > 97;
   const orta = !uc && (p < 10 || p > 90);
-  return <span style={{ fontSize: 26, fontWeight: 800, color: uc ? '#FCA5A5' : orta ? '#FDE68A' : '#5EEAD4', letterSpacing: '-0.5px' }}>{persentilKisa(p)} <span style={{ fontSize: 14, fontWeight: 600 }}>persentil</span></span>;
+  return <span style={{ fontSize: 26, fontWeight: 800, color: uc ? CHROME_RENK.warn : orta ? '#7A5B1E' : '#0F9B8E', letterSpacing: '-0.5px' }}>{persentilKisa(p)} <span style={{ fontSize: 14, fontWeight: 600 }}>persentil</span></span>;
 }
 
 export default function BuyumeStudyosu() {
@@ -163,8 +164,8 @@ export default function BuyumeStudyosu() {
                 const r = son.sonuc[p];
                 const sinif = r ? vkiSinifi(ref, son.ay, r.persentil) : null;
                 return (
-                  <button key={p} type="button" onClick={() => setParam(p)} style={{ textAlign: 'left', background: param === p ? 'rgba(45,212,191,0.08)' : 'rgba(0,0,0,0.18)', border: `1px solid ${param === p ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 14, padding: 12, cursor: 'pointer', minHeight: 44, color: '#EDF1F7' }}>
-                    <div style={{ fontSize: 13, color: '#9BB0C7' }}>{PARAM_AD[p]} · {tr(son.deger[p]!, 2)} {PARAM_BIRIM[p]}</div>
+                  <button key={p} type="button" onClick={() => setParam(p)} style={{ textAlign: 'left', background: param === p ? 'rgba(45,212,191,0.08)' : 'rgba(0,0,0,0.18)', border: `1px solid ${param === p ? 'rgba(45,212,191,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 14, padding: 12, cursor: 'pointer', minHeight: 44, color: CHROME_RENK.ink }}>
+                    <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>{PARAM_AD[p]} · {tr(son.deger[p]!, 2)} {PARAM_BIRIM[p]}</div>
                     {r ? (<><PersentilRozet p={r.persentil} /><div style={kucuk}>z {zMetni(r.z)}{sinif ? ` · ${sinif}` : ''}</div></>) : (
                       <div style={{ ...kucuk, marginTop: 4 }}>{ref === 'who' && p === 'basCevresi' ? 'WHO baş çevresi 5 yaşa kadar' : ref === 'who' && p === 'kilo' ? 'WHO yaşa göre kilo 10 yaşa kadar' : 'Bu yaş referans kapsamı dışında'}</div>
                     )}
@@ -185,7 +186,7 @@ export default function BuyumeStudyosu() {
                 {hizlar.map((h) => (
                   <div key={h.param} style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 12px', minWidth: 150, flex: '1 1 150px' }}>
                     <div style={kucuk}>{PARAM_AD[h.param]} hızı</div>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#EDF1F7' }}>{tr(h.yillik, 1)} {h.param === 'kilo' ? 'kg' : 'cm'}/yıl</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: CHROME_RENK.ink }}>{tr(h.yillik, 1)} {h.param === 'kilo' ? 'kg' : 'cm'}/yıl</div>
                     <div style={kucuk}>{tr(h.fark, 1)} {h.param === 'kilo' ? 'kg' : 'cm'} / {tr(h.aralikAy, 1)} ay{h.kisaAralik ? ' · aralık 6 aydan kısa, ölçüm hatasına duyarlı' : ''}</div>
                   </div>
                 ))}
@@ -207,7 +208,7 @@ export default function BuyumeStudyosu() {
               {grafikVeri.noktalar.length || grafikVeri.egriler.length ? <Grafik veri={grafikVeri} birim={grafikVeri.birim} /> : <div style={kucuk}>Bu ölçüm için eğri yok.</div>}
             </div>
           </div>
-          <div style={{ ...kucuk, marginTop: 6 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>●</span> ölçümler · <span style={{ color: '#2DD4BF', fontWeight: 700 }}>—</span> 50. persentil · kesikli 3/10/25/75/90/97</div>
+          <div style={{ ...kucuk, marginTop: 6 }}><span style={{ color: '#F59E0B', fontWeight: 700 }}>●</span> ölçümler · <span style={{ color: '#0F9B8E', fontWeight: 700 }}>—</span> 50. persentil · kesikli 3/10/25/75/90/97</div>
         </div>
       )}
 

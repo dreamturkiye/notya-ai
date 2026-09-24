@@ -15,6 +15,7 @@ import {
   type Manevra, type ManevraSonucu,
 } from '../../engines/vertigo';
 import { YAN_AD, REF_ACIKLAMA } from '../../engines/kbb';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = kbbStil;
 const SONUC_SECENEK: Array<[string, string]> = (Object.keys(SONUC_AD) as ManevraSonucu[]).map((k) => [k, SONUC_AD[k]]);
@@ -88,10 +89,10 @@ export default function KbbVertigoAraci() {
 
       <div style={S.kutu}>
         <div style={S.etiket}>Not önizleme</div>
-        {sonuc.uyarilar.map((u) => <div key={u} style={{ ...S.metin, color: '#FCA5A5' }}>{u}</div>)}
+        {sonuc.uyarilar.map((u) => <div key={u} style={{ ...S.metin, color: CHROME_RENK.warn }}>{u}</div>)}
         {sonuc.satirlar.length ? sonuc.satirlar.map((x) => <div key={x} style={S.metin}>{x}</div>) : <div style={S.kucuk}>Henüz manevra işaretlenmedi.</div>}
         {sonuc.eksikler.length > 0 && (
-          <div style={{ ...S.kucuk, marginTop: 8, color: '#FDE68A' }}>{sonuc.eksikler.map((e) => <div key={e}>• {e}</div>)}</div>
+          <div style={{ ...S.kucuk, marginTop: 8, color: '#7A5B1E' }}>{sonuc.eksikler.map((e) => <div key={e}>• {e}</div>)}</div>
         )}
         <TaslakNotu>Manevra sonuçları muayene bulgusudur; tanı, tedavi ve ileri tetkik kararı hekimindedir.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>

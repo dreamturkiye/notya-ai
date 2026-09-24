@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { ortoStil, Istatistik, TaslakNotu, Rozet } from './OrtoAracKabugu'
 import { ORTO_BAYRAK_AD, ortoKohortFiltre, type OrtoKohortBayrak, type OrtoKohortSatir } from '../../engines/kohort'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = ortoStil
 const BAYRAKLAR = Object.keys(ORTO_BAYRAK_AD) as OrtoKohortBayrak[]
@@ -63,7 +64,7 @@ export default function OrtoKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(217,119,6,0.25)' : 'transparent', color: suzgec.includes(b) ? '#FDE68A' : '#C9D4E3' }}
+              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(217,119,6,0.25)' : 'transparent', color: suzgec.includes(b) ? '#7A5B1E' : CHROME_RENK.muted }}
             >{ORTO_BAYRAK_AD[b]}</button>
           ))}
         </div>

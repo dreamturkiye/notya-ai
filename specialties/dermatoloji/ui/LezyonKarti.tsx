@@ -6,6 +6,7 @@ import type { Lesion } from '../schema'
 import { DERM_MORPHOLOGY, bolgeEtiketi, dermLabel } from './labels'
 import { btn, giris, etiketS } from './clinic-styles'
 import { belgeAnalizHref, belgelerTabHref, goruntulemeCaptureHref } from '../engines/clinic-fit'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -33,7 +34,7 @@ export function LezyonKarti({
       <h2 style={{ margin: 0, fontSize: 16 }}>Lezyon kartı</h2>
       {lesions.length === 0 && (
         <div>
-          <p style={{ fontSize: 13, color: '#8FA0B5' }}>
+          <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>
             Henüz lezyon yok — lezyonlar mevcut görüntüleme kayıtlarından türetilir veya buradan eklenir.
           </p>
           {emptyAction}
@@ -46,12 +47,12 @@ export function LezyonKarti({
             {l.body_map_node ? ` · işaret ${l.body_map_node}` : ''}
             {patientId && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-                <a href={goruntulemeCaptureHref(patientId, 'dermatoskopi')} style={{ fontSize: 12, color: '#2DD4BF' }}>Dermoskopi ekle</a>
+                <a href={goruntulemeCaptureHref(patientId, 'dermatoskopi')} style={{ fontSize: 12, color: '#0F9B8E' }}>Dermoskopi ekle</a>
                 <a
                   href={l.documentId
                     ? belgeAnalizHref(patientId, l.documentId, 'dermatoskopi', fitzpatrick)
                     : belgelerTabHref(patientId, 'dermatoskopi')}
-                  style={{ fontSize: 12, color: '#2DD4BF' }}
+                  style={{ fontSize: 12, color: '#0F9B8E' }}
                 >
                   Belgelerde analiz et
                 </a>

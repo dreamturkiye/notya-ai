@@ -15,6 +15,7 @@
  * yedeği. Bundan sonra hangi kapta olursa olsun daire kalır.
  */
 import { doktorBasHarfleri } from '@/lib/doktor/avatar'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 export default function DoktorAvatar({
   ad,
@@ -49,7 +50,7 @@ export default function DoktorAvatar({
         alt={`Dr. ${ad} profil fotoğrafı`}
         width={boyut}
         height={boyut}
-        style={{ ...ortak, objectFit: 'cover', objectPosition: 'center', display: 'block', background: '#0D1C33' }}
+        style={{ ...ortak, objectFit: 'cover', objectPosition: 'center', display: 'block', background: CHROME_RENK.pine }}
       />
     )
   }
@@ -65,7 +66,7 @@ export default function DoktorAvatar({
         justifyContent: 'center',
         fontSize: Math.round(boyut * 0.36),
         fontWeight: 800,
-        color: '#2DD4BF',
+        color: '#0F9B8E',
         letterSpacing: 0.5,
         lineHeight: 1,
       }}

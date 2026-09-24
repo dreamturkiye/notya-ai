@@ -36,9 +36,9 @@ const nextConfig = {
         source: "/(.*)",
         headers: [
           {
-            // Allow microphone from all origins including ElevenLabs WebRTC
+            // Allow microphone from all origins including ElevenLabs WebRTC; geolocation same-origin only (weather chip)
             key: "Permissions-Policy",
-            value: "microphone=*, camera=(), geolocation=()",
+            value: "microphone=*, camera=(), geolocation=(self)",
           },
           {
             // Allow connections to ElevenLabs WebSocket and Supabase
@@ -51,7 +51,7 @@ const nextConfig = {
               "img-src 'self' data: https: blob:",
               "media-src 'self' blob: https:",
               // Critical: allow ElevenLabs WebSocket connections
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com https://api.groq.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com https://api.groq.com https://api.open-meteo.com",
               "worker-src 'self' blob: data:",
             ].join("; "),
           },

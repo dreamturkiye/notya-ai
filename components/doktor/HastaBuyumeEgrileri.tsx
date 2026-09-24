@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HedefBoyManken from '@/components/hedefBoy/HedefBoyManken';
 import type { HedefBoySonuc } from '@/lib/clinical/hedefBoy';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 interface EgriNoktasi { ay: number; deger: number }
 interface EgriSerisi { persentil: number; noktalar: EgriNoktasi[] }
@@ -34,7 +35,7 @@ function yasMetniUzun(ay: number): string {
   return kalanAy > 0 ? `${yil} yaş ${kalanAy} aylıkken` : `${yil} yaşındayken`;
 }
 
-const RENK_50 = '#2DD4BF';
+const RENK_50 = '#0F9B8E';
 const RENK_BAND_DIS = 'rgba(148,163,184,0.55)'; // 3/97
 const RENK_BAND_ORTA = 'rgba(94,234,212,0.55)'; // 10/90
 const RENK_BAND_IC = 'rgba(45,212,191,0.75)';   // 25/75
@@ -82,14 +83,14 @@ export function Grafik({ veri, birim, buyuk }: { veri: ParamVeri; birim: string;
         return (
           <g key={i}>
             <line x1={L} x2={W - R} y1={T + f * (H - T - B)} y2={T + f * (H - T - B)} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
-            <text x={L - (buyuk ? 10 : 6)} y={T + f * (H - T - B) + 3.5} textAnchor="end" fontSize={buyuk ? 13 : 9.5} fill="#8FA0B5">{Math.round(v * 10) / 10}</text>
+            <text x={L - (buyuk ? 10 : 6)} y={T + f * (H - T - B) + 3.5} textAnchor="end" fontSize={buyuk ? 13 : 9.5} fill={CHROME_RENK.muted}>{Math.round(v * 10) / 10}</text>
           </g>
         );
       })}
       {etiketler.map((ay, i) => (
         <g key={i}>
           <line x1={x(ay)} x2={x(ay)} y1={T} y2={H - B} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-          <text x={x(ay)} y={H - B + (buyuk ? 20 : 12)} textAnchor="middle" fontSize={buyuk ? 12.5 : 9} fill="#8FA0B5">{yasEtiketi(ay)}</text>
+          <text x={x(ay)} y={H - B + (buyuk ? 20 : 12)} textAnchor="middle" fontSize={buyuk ? 12.5 : 9} fill={CHROME_RENK.muted}>{yasEtiketi(ay)}</text>
         </g>
       ))}
       {alanYolu && <path d={alanYolu} fill={`url(#fill-${uid}${buyuk ? '-b' : ''})`} />}
@@ -147,17 +148,17 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
   const hedefKart = hedefBoyGoster ? (
     <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 14, padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>Anne-Baba Boylarına Göre Hedef Boy</div>
-        <a href={`/doktor-tools/hedef-boy?patientId=${patientId}`} style={{ color: '#FDE68A', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hedef Boy</a>
+        <div style={{ fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>Anne-Baba Boylarına Göre Hedef Boy</div>
+        <a href={`/doktor-tools/hedef-boy?patientId=${patientId}`} style={{ color: '#7A5B1E', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hedef Boy</a>
       </div>
       {hedef ? (
         <HedefBoyManken sonuc={hedef} tema="doktor" style={{ marginTop: 8 }} />
       ) : hedefYuklendi ? (
-        <p style={{ margin: '10px 0 0', fontSize: 13, color: '#8FA0B5', lineHeight: 1.5 }}>
+        <p style={{ margin: '10px 0 0', fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.5 }}>
           Intake zorunlu değil. Anne ve baba boyunu Araçlar’dan girin — sonuç aileye mankenlerle gösterilir.
         </p>
       ) : (
-        <p style={{ margin: '10px 0 0', fontSize: 13, color: '#64748B' }}>Hedef boy yükleniyor…</p>
+        <p style={{ margin: '10px 0 0', fontSize: 13, color: CHROME_RENK.muted }}>Hedef boy yükleniyor…</p>
       )}
     </div>
   ) : null;
@@ -170,11 +171,11 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
       </div>
     );
   }
-  if (!veri) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Büyüme eğrileri hazırlanıyor…</div>;
+  if (!veri) return <div style={{ padding: 20, color: CHROME_RENK.muted, fontSize: 13 }}>Büyüme eğrileri hazırlanıyor…</div>;
   if (veri.dogumBilinmiyor) {
     return (
       <div style={{ display: 'grid', gap: 16, padding: 4 }}>
-        <div style={{ padding: '8px 4px', color: '#8FA0B5', fontSize: 13 }}>Doğum tarihi veya cinsiyet kayıtlı değil — büyüme eğrisi çizilemiyor.</div>
+        <div style={{ padding: '8px 4px', color: CHROME_RENK.muted, fontSize: 13 }}>Doğum tarihi veya cinsiyet kayıtlı değil — büyüme eğrisi çizilemiyor.</div>
         {hedefKart}
       </div>
     );
@@ -192,11 +193,11 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
         <div className="buyume-buyuk-bas" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexWrap: 'wrap', gap: 10 }}>
           <button type="button" onClick={() => setBuyukIndex(null)} style={{ background: 'transparent', border: 'none', color: '#9FB3C8', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>← Geri</button>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#EDF1F7' }}>{PARAM_BASLIK[anahtar]} Büyüme Eğrisi <span style={{ fontWeight: 400, color: '#64748B', fontSize: 14 }}>({pVeri.birim})</span></div>
-            <div style={{ fontSize: 13, color: '#8FA0B5', marginTop: 2 }}>{veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni} · Neyzi Türk çocukları standartları</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: CHROME_RENK.ink }}>{PARAM_BASLIK[anahtar]} Büyüme Eğrisi <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 14 }}>({pVeri.birim})</span></div>
+            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 2 }}>{veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni} · Neyzi Türk çocukları standartları</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" disabled={buyukIndex === 0} onClick={() => setBuyukIndex((i) => (i! - 1 + paramlar.length) % paramlar.length)} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: buyukIndex === 0 ? '#475569' : '#EDF1F7', borderRadius: 8, padding: '8px 14px', cursor: buyukIndex === 0 ? 'default' : 'pointer', fontSize: 14 }}>‹ Önceki</button>
+            <button type="button" disabled={buyukIndex === 0} onClick={() => setBuyukIndex((i) => (i! - 1 + paramlar.length) % paramlar.length)} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: buyukIndex === 0 ? '#475569' : CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', cursor: buyukIndex === 0 ? 'default' : 'pointer', fontSize: 14 }}>‹ Önceki</button>
             <button type="button" onClick={() => setBuyukIndex((i) => (i! + 1) % paramlar.length)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>Sonraki ›</button>
           </div>
         </div>
@@ -205,13 +206,13 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
             <Grafik veri={pVeri} birim={pVeri.birim} buyuk />
           </div>
         </div>
-        <div style={{ padding: '10px 24px 20px', textAlign: 'center', fontSize: 13, color: '#8FA0B5' }}>
+        <div style={{ padding: '10px 24px 20px', textAlign: 'center', fontSize: 13, color: CHROME_RENK.muted }}>
           <span style={{ color: RENK_NOKTA, fontWeight: 700 }}>●</span> Hastanın ölçümleri
           <span style={{ margin: '0 10px', color: '#334155' }}>·</span>
           <span style={{ color: RENK_50, fontWeight: 700 }}>—</span> 50. persentil
           <span style={{ margin: '0 10px', color: '#334155' }}>·</span>
           kesikli çizgiler 3 / 10 / 25 / 75 / 90 / 97. persentil bantları
-          {sonOlcum && <div style={{ marginTop: 6, color: '#64748B' }}>Son ölçüm: {sonOlcum.deger} {pVeri.birim}, {yasMetniUzun(sonOlcum.ay)} ({new Date(sonOlcum.tarih).toLocaleDateString('tr-TR')})</div>}
+          {sonOlcum && <div style={{ marginTop: 6, color: CHROME_RENK.muted }}>Son ölçüm: {sonOlcum.deger} {pVeri.birim}, {yasMetniUzun(sonOlcum.ay)} ({new Date(sonOlcum.tarih).toLocaleDateString('tr-TR')})</div>}
         </div>
       </div>
     );
@@ -219,12 +220,12 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ fontSize: 13, color: '#8FA0B5', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      <div style={{ fontSize: 13, color: CHROME_RENK.muted, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <span>Neyzi Türk çocukları büyüme standartları · {veri.cinsiyet === 'female' ? 'Kız' : 'Erkek'} · {yasMetni}</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
           <span><span style={{ color: RENK_NOKTA, fontWeight: 700 }}>●</span> ölçüm</span>
           <span><span style={{ color: RENK_50, fontWeight: 700 }}>—</span> 50p</span>
-          <span style={{ color: '#64748B' }}>┄ 3/10/25/75/90/97p</span>
+          <span style={{ color: CHROME_RENK.muted }}>┄ 3/10/25/75/90/97p</span>
         </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
@@ -237,15 +238,15 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: 16, textAlign: 'left', cursor: 'pointer', transition: 'transform .15s, border-color .15s, background .15s' }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>{PARAM_BASLIK[anahtar]} <span style={{ fontWeight: 400, color: '#64748B', fontSize: 12 }}>({pVeri.birim})</span></span>
-              <span style={{ fontSize: 11, color: '#2DD4BF' }}>Büyüt ⤢</span>
+              <span style={{ fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>{PARAM_BASLIK[anahtar]} <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>({pVeri.birim})</span></span>
+              <span style={{ fontSize: 11, color: '#0F9B8E' }}>Büyüt ⤢</span>
             </div>
             <Grafik veri={pVeri} birim={pVeri.birim} />
           </button>
         ))}
       </div>
       {!vki && (
-        <div style={{ fontSize: 12, color: '#64748B' }}>Vücut Kitle İndeksi eğrisi 2 yaşından itibaren gösterilir.</div>
+        <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>Vücut Kitle İndeksi eğrisi 2 yaşından itibaren gösterilir.</div>
       )}
       {hedefKart}
       <style>{`

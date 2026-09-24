@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { gcStil, GcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './GcAracKabugu'
 import { PREOP_MADDELER, preopSkorla, type PreopKod } from '../../engines/preop'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export default function GcPreopAraci() {
   const [secilen, setSecilen] = useState<PreopKod[]>([])
@@ -41,7 +42,7 @@ export default function GcPreopAraci() {
         <GcHastaSecici secili={hastaId} sec={(id) => setHastaId(id)} />
         <div style={{ ...gcStil.etiket, marginTop: 12 }}>Pre-op solunum maddeleri (tanı / doz yok)</div>
         {PREOP_MADDELER.map((m) => (
-          <label key={m.kod} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 6, fontSize: 13, color: '#EDF1F7' }}>
+          <label key={m.kod} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 6, fontSize: 13, color: CHROME_RENK.ink }}>
             <input type="checkbox" checked={secilen.includes(m.kod)} onChange={() => toggle(m.kod)} />
             <span>{m.ad}</span>
           </label>

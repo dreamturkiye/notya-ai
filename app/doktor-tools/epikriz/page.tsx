@@ -1,9 +1,8 @@
 'use client';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
-
-import DoktorNav from '@/components/doktor/DoktorNav'
 import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
 
@@ -191,34 +190,33 @@ export default function EpikrizPage() {
     <>
     <div className="yazdirma-gizle" style={{ 
       minHeight: '100vh', 
-      backgroundColor: '#060C18', 
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+      backgroundColor: 'transparent', 
+      fontFamily: CHROME_FONT.sans 
     }}>
-      <DoktorNav />
-      
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '20px 16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 0 20px' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '40px' }}>
           <div style={{ 
-            color: '#14B8A6', 
-            fontSize: '13px', 
-            fontWeight: 600, 
-            letterSpacing: '1.5px',
-            marginBottom: '8px' 
+            fontFamily: CHROME_FONT.serif,
+            fontStyle: 'italic',
+            color: '#6d6055', 
+            fontSize: '15px', 
+            marginBottom: '4px' 
           }}>
-            EPIKRİZ
+            Epikriz
           </div>
           <h1 style={{ 
-            fontSize: '28px', 
-            fontWeight: 700, 
-            color: '#fff', 
+            fontFamily: CHROME_FONT.serif,
+            fontWeight: 500,
+            fontSize: '32px', 
+            color: '#2e251d', 
             margin: 0,
-            letterSpacing: '-0.6px'
+            letterSpacing: '-0.02em'
           }}>
             Epikriz Üretici
           </h1>
           <p style={{ 
-            color: '#8A94A8', 
+            color: CHROME_RENK.muted, 
             fontSize: '15px', 
             marginTop: '8px' 
           }}>
@@ -234,16 +232,16 @@ export default function EpikrizPage() {
           {/* LEFT - FORM */}
           <div>
             <div style={{
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              backgroundColor: '#FFFFFF',
+              border: `1px solid ${CHROME_RENK.border}`,
               borderRadius: '18px',
               padding: '24px',
-              backdropFilter: 'blur(20px)'
+              boxShadow: '0 8px 18px rgba(58,44,34,0.045)'
             }}>
               <div style={{ 
                 fontSize: '18px', 
                 fontWeight: 600, 
-                color: '#fff', 
+                color: CHROME_RENK.ink, 
                 marginBottom: '24px' 
               }}>
                 Epikriz Bilgileri
@@ -253,7 +251,7 @@ export default function EpikrizPage() {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
-                  color: '#A1A9BB', 
+                  color: CHROME_RENK.muted, 
                   fontSize: '13px', 
                   marginBottom: '8px' 
                 }}>
@@ -266,10 +264,10 @@ export default function EpikrizPage() {
                   style={{
                     width: '100%',
                     height: '48px',
-                    backgroundColor: '#0F1729',
-                    border: '1px solid #2A3448',
+                    backgroundColor: '#FFFFFF',
+                    border: `1px solid ${CHROME_RENK.border}`,
                     borderRadius: '10px',
-                    color: '#fff',
+                    color: CHROME_RENK.ink,
                     fontSize: '15px',
                     padding: '0 14px',
                     outline: 'none'
@@ -290,16 +288,16 @@ export default function EpikrizPage() {
                   <button key={m} type="button" onClick={() => setMod(m)}
                     style={{
                       flex: 1, padding: '10px 12px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                      border: mod === m ? '1px solid #14B8A6' : '1px solid #2A3448',
-                      background: mod === m ? 'rgba(20,184,166,0.15)' : '#0F1729',
-                      color: mod === m ? '#5EEAD4' : '#A1A9BB',
+                      border: mod === m ? `1px solid ${CHROME_RENK.pine}` : `1px solid ${CHROME_RENK.border}`,
+                      background: mod === m ? '#E4F3F1' : '#FFFFFF',
+                      color: mod === m ? CHROME_RENK.pine : CHROME_RENK.muted,
                     }}>
                     {etiket}
                   </button>
                 ))}
               </div>
               {mod === 'tumSeanslar' && (
-                <div style={{ marginBottom: '16px', fontSize: 13, color: '#A1A9BB', lineHeight: 1.5 }}>
+                <div style={{ marginBottom: '16px', fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.5 }}>
                   Hastanın ilk geldiğinden son gelişine kadar tüm muayeneleri, geliş tanıları (rutin kontroller ve geçirdiği hastalıklar ayrı, tarihli), kayıtlı aşılar ve kullanılan ilaç/takviyeler tek özette birleştirilir.
                 </div>
               )}
@@ -307,7 +305,7 @@ export default function EpikrizPage() {
               <div style={{ marginBottom: '20px', display: mod === 'tumSeanslar' ? 'none' : 'block' }}>
                 <label style={{ 
                   display: 'block', 
-                  color: '#A1A9BB', 
+                  color: CHROME_RENK.muted, 
                   fontSize: '13px', 
                   marginBottom: '8px' 
                 }}>
@@ -320,10 +318,10 @@ export default function EpikrizPage() {
                   style={{
                     width: '100%',
                     height: '48px',
-                    backgroundColor: '#0F1729',
-                    border: '1px solid #2A3448',
+                    backgroundColor: '#FFFFFF',
+                    border: `1px solid ${CHROME_RENK.border}`,
                     borderRadius: '10px',
-                    color: '#fff',
+                    color: CHROME_RENK.ink,
                     fontSize: '15px',
                     padding: '0 14px',
                     outline: 'none'
@@ -337,7 +335,7 @@ export default function EpikrizPage() {
                   ))}
                 </select>
                 {seansError && (
-                  <div style={{ color: '#EF4444', fontSize: '13px', marginTop: '6px' }}>
+                  <div style={{ color: CHROME_RENK.warn, fontSize: '13px', marginTop: '6px' }}>
                     {seansError}
                   </div>
                 )}
@@ -347,7 +345,7 @@ export default function EpikrizPage() {
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ 
                   display: 'block', 
-                  color: '#A1A9BB', 
+                  color: CHROME_RENK.muted, 
                   fontSize: '13px', 
                   marginBottom: '8px' 
                 }}>
@@ -360,10 +358,10 @@ export default function EpikrizPage() {
                   placeholder="Ek klinik bilgi veya notlar..."
                   style={{
                     width: '100%',
-                    backgroundColor: '#0F1729',
-                    border: '1px solid #2A3448',
+                    backgroundColor: '#FFFFFF',
+                    border: `1px solid ${CHROME_RENK.border}`,
                     borderRadius: '10px',
-                    color: '#fff',
+                    color: CHROME_RENK.ink,
                     fontSize: '15px',
                     padding: '14px',
                     resize: 'vertical',
@@ -378,8 +376,8 @@ export default function EpikrizPage() {
                 style={{
                   width: '100%',
                   height: '52px',
-                  backgroundColor: '#14B8A6',
-                  color: '#fff',
+                  backgroundColor: CHROME_RENK.pine,
+                  color: '#FAF8F4',
                   fontSize: '15px',
                   fontWeight: 600,
                   border: 'none',
@@ -396,15 +394,15 @@ export default function EpikrizPage() {
                   <div style={{
                     width: '18px',
                     height: '18px',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTopColor: '#fff',
+                    border: '2px solid rgba(250,248,244,0.4)',
+                    borderTopColor: '#FAF8F4',
                     borderRadius: '50%',
                     animation: 'spin 0.8s linear infinite'
                   }} />
                 )}
                 Epikriz Üret
               </button>
-              {uretHata && <div style={{ marginTop: 10, fontSize: 13, color: '#F87171' }}>{uretHata}</div>}
+              {uretHata && <div style={{ marginTop: 10, fontSize: 13, color: CHROME_RENK.warn }}>{uretHata}</div>}
             </div>
           </div>
 
@@ -418,17 +416,17 @@ export default function EpikrizPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                backgroundColor: '#FFFFFF',
+                border: `1px solid ${CHROME_RENK.border}`,
                 borderRadius: '18px',
                 padding: '48px 32px'
               }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C9BEA9" strokeWidth="1.5">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
                 <p style={{ 
-                  color: '#64748B', 
+                  color: CHROME_RENK.muted, 
                   fontSize: '15px', 
                   marginTop: '20px',
                   textAlign: 'center'
@@ -438,37 +436,38 @@ export default function EpikrizPage() {
               </div>
             ) : (
               <div style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: '#FFFFFF',
+                border: `1px solid ${CHROME_RENK.border}`,
                 borderRadius: '18px',
                 padding: '28px',
-                color: '#fff'
+                color: CHROME_RENK.ink,
+                boxShadow: '0 8px 18px rgba(58,44,34,0.045)'
               }}>
-                <div style={{ marginBottom: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '16px 18px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: '#2DD4BF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hasta Bilgileri</div>
-                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{sonuc.hastaBilgileri}</div>
+                <div style={{ marginBottom: '24px', background: '#F6F0E4', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 12, padding: '16px 18px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: CHROME_RENK.pine, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hasta Bilgileri</div>
+                  <div style={{ color: CHROME_RENK.ink, fontSize: '15px', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{sonuc.hastaBilgileri}</div>
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: '#2DD4BF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tanı ve Tedavi</div>
-                  <div style={{ color: '#CBD5E1', fontSize: '15px', lineHeight: '1.6' }}>
-                    <HafifMarkdown metin={sonuc.taniVeTedavi} />
+                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: CHROME_RENK.pine, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tanı ve Tedavi</div>
+                  <div style={{ color: CHROME_RENK.ink, fontSize: '15px', lineHeight: '1.6' }}>
+                    <HafifMarkdown metin={sonuc.taniVeTedavi} karanlik={false} />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: '#2DD4BF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Taburcu Özeti</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px', color: CHROME_RENK.pine, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Taburcu Özeti</div>
                   <div style={{ 
-                    color: '#CBD5E1', 
+                    color: CHROME_RENK.ink, 
                     fontSize: '15px', 
                     lineHeight: '1.6',
                   }}>
-                    <HafifMarkdown metin={sonuc.taburcuOzeti} />
+                    <HafifMarkdown metin={sonuc.taburcuOzeti} karanlik={false} />
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '18px' }}>
-                  <div style={{ color: '#8FA0B5', fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-line', textAlign: 'right' }}>{sonuc.imza}</div>
+                <div style={{ borderTop: `1px solid ${CHROME_RENK.border}`, paddingTop: '18px' }}>
+                  <div style={{ color: CHROME_RENK.muted, fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-line', textAlign: 'right' }}>{sonuc.imza}</div>
                 </div>
 
                 <div style={{ 
@@ -481,8 +480,8 @@ export default function EpikrizPage() {
                     flex: 1,
                     height: '44px',
                     backgroundColor: 'transparent',
-                    color: '#14B8A6',
-                    border: '1px solid #14B8A6',
+                    color: CHROME_RENK.pine,
+                    border: `1px solid ${CHROME_RENK.pine}`,
                     borderRadius: '10px',
                     fontSize: '14px',
                     fontWeight: 500,
@@ -495,8 +494,8 @@ export default function EpikrizPage() {
                       flex: 1,
                       height: '44px',
                       backgroundColor: 'transparent',
-                      color: '#94A3B8',
-                      border: '1px solid rgba(148,163,184,0.5)',
+                      color: CHROME_RENK.muted,
+                      border: `1px solid ${CHROME_RENK.border}`,
                       borderRadius: '10px',
                       fontSize: '14px',
                       fontWeight: 500,
@@ -509,8 +508,8 @@ export default function EpikrizPage() {
                     flex: 1,
                     height: '44px',
                     backgroundColor: 'transparent',
-                    color: '#14B8A6',
-                    border: '1px solid #14B8A6',
+                    color: CHROME_RENK.pine,
+                    border: `1px solid ${CHROME_RENK.pine}`,
                     borderRadius: '10px',
                     fontSize: '14px',
                     fontWeight: 500,
@@ -522,8 +521,8 @@ export default function EpikrizPage() {
                     flex: 1,
                     height: '44px',
                     backgroundColor: 'transparent',
-                    color: '#14B8A6',
-                    border: '1px solid #14B8A6',
+                    color: CHROME_RENK.pine,
+                    border: `1px solid ${CHROME_RENK.pine}`,
                     borderRadius: '10px',
                     fontSize: '14px',
                     fontWeight: 500,
@@ -552,8 +551,12 @@ export default function EpikrizPage() {
       <div className="epikriz-kagit" style={{ display: 'none', background: 'white', color: '#111', fontFamily: 'Georgia, "Times New Roman", serif', maxWidth: 760, margin: '0 auto', padding: '36px 40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #111', paddingBottom: 14, marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '0.02em' }}>EPİKRİZ</div>
-            <div style={{ fontSize: 12, color: '#555' }}>Türkiye Sağlık Bakanlığı standart formatı</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+              <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 500 }}>Epikriz</div>
+            <div style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>Türkiye Sağlık Bakanlığı standart formatı</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             {sonuc.letterhead?.logoDataUrl && <img src={sonuc.letterhead.logoDataUrl} alt="" style={{ height: 40, marginBottom: 4 }} />}

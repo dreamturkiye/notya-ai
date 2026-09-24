@@ -85,7 +85,7 @@ export default function KbbOtoskopiAraci() {
           </div>
         )}
         {sonuc.eksikler.length > 0 && (
-          <div style={{ ...S.kucuk, marginTop: 8, color: '#FDE68A' }}>
+          <div style={{ ...S.kucuk, marginTop: 8, color: '#7A5B1E' }}>
             {sonuc.eksikler.map((e) => <div key={e}>• {e}</div>)}
           </div>
         )}

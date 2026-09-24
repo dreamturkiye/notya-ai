@@ -1,7 +1,5 @@
 'use client'
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
-
-import DoktorNav from '@/components/doktor/DoktorNav'
 import HastaTypeahead from '@/components/doktor/HastaTypeahead'
 import {
   getAccessTokenAsync,
@@ -19,6 +17,7 @@ import {
   type SgkRaporDraft,
 } from '@/lib/sgk/raporTipleri'
 import React, { useMemo, useState } from 'react'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 export default function SgkRaporPage() {
   const [hastaId, setHastaId] = useState('')
@@ -97,13 +96,12 @@ export default function SgkRaporPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 48px' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', letterSpacing: 1.2, marginBottom: 8 }}>
-          ARAÇLAR
+        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>
+          Araçlar
         </div>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#FFFFFF' }}>Hasta Raporu Oluştur</h1>
-        <p style={{ marginTop: 8, color: '#94A3B8', fontSize: 14, lineHeight: 1.5 }}>
+        <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, color: '#2e251d', letterSpacing: '-0.02em' }}>Hasta Raporu Oluştur</h1>
+        <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14, lineHeight: 1.5 }}>
           SGK Medula taslakları ile özel muayenehane belgelerini ayrı tutun. Canlı Medula gönderimi değildir.
         </p>
 
@@ -112,7 +110,7 @@ export default function SgkRaporPage() {
         <div style={{ ...toolsCard, marginTop: 20 }} className="no-print">
           <label style={toolsLabel}>Rapor Tipi</label>
 
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#5EEAD4', letterSpacing: 0.6, margin: '4px 0 8px' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: CHROME_RENK.pine, letterSpacing: 0.6, margin: '4px 0 8px' }}>
             SGK / MEDULA
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
@@ -125,8 +123,8 @@ export default function SgkRaporPage() {
                   gap: 10,
                   padding: '10px 12px',
                   borderRadius: 12,
-                  border: `1px solid ${raporTipiId === tip.id ? 'rgba(15,155,142,0.55)' : 'rgba(255,255,255,0.12)'}`,
-                  background: raporTipiId === tip.id ? 'rgba(15,155,142,0.12)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${raporTipiId === tip.id ? CHROME_RENK.pine + '88' : CHROME_RENK.border}`,
+                  background: raporTipiId === tip.id ? '#E4F3F1' : '#FFFFFF',
                   cursor: 'pointer',
                 }}
               >
@@ -136,13 +134,13 @@ export default function SgkRaporPage() {
                   value={tip.id}
                   checked={raporTipiId === tip.id}
                   onChange={() => onTipChange(tip.id)}
-                  style={{ marginTop: 3, accentColor: '#0F9B8E', flexShrink: 0 }}
+                  style={{ marginTop: 3, accentColor: CHROME_RENK.pine, flexShrink: 0 }}
                 />
                 <span>
-                  <span style={{ display: 'block', color: '#F8FAFC', fontSize: 14, fontWeight: 650, lineHeight: 1.35 }}>
+                  <span style={{ display: 'block', color: CHROME_RENK.ink, fontSize: 14, fontWeight: 650, lineHeight: 1.35 }}>
                     {tip.label}
                   </span>
-                  <span style={{ display: 'block', marginTop: 4, color: '#94A3B8', fontSize: 12, lineHeight: 1.4 }}>
+                  <span style={{ display: 'block', marginTop: 4, color: CHROME_RENK.muted, fontSize: 12, lineHeight: 1.4 }}>
                     {tip.aciklama}
                   </span>
                 </span>
@@ -150,7 +148,7 @@ export default function SgkRaporPage() {
             ))}
           </div>
 
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#FBBF24', letterSpacing: 0.6, margin: '4px 0 8px' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#B4832F', letterSpacing: 0.6, margin: '4px 0 8px' }}>
             ÖZEL MUAYENEHANE / PRIVATE PRACTICE
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
@@ -163,8 +161,8 @@ export default function SgkRaporPage() {
                   gap: 10,
                   padding: '10px 12px',
                   borderRadius: 12,
-                  border: `1px solid ${raporTipiId === tip.id ? 'rgba(245,158,11,0.55)' : 'rgba(255,255,255,0.12)'}`,
-                  background: raporTipiId === tip.id ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${raporTipiId === tip.id ? '#B4832F88' : CHROME_RENK.border}`,
+                  background: raporTipiId === tip.id ? '#FBF3DE' : '#FFFFFF',
                   cursor: 'pointer',
                 }}
               >
@@ -174,13 +172,13 @@ export default function SgkRaporPage() {
                   value={tip.id}
                   checked={raporTipiId === tip.id}
                   onChange={() => onTipChange(tip.id)}
-                  style={{ marginTop: 3, accentColor: '#F59E0B', flexShrink: 0 }}
+                  style={{ marginTop: 3, accentColor: '#B4832F', flexShrink: 0 }}
                 />
                 <span>
-                  <span style={{ display: 'block', color: '#F8FAFC', fontSize: 14, fontWeight: 650, lineHeight: 1.35 }}>
+                  <span style={{ display: 'block', color: CHROME_RENK.ink, fontSize: 14, fontWeight: 650, lineHeight: 1.35 }}>
                     {tip.label}
                   </span>
-                  <span style={{ display: 'block', marginTop: 4, color: '#94A3B8', fontSize: 12, lineHeight: 1.4 }}>
+                  <span style={{ display: 'block', marginTop: 4, color: CHROME_RENK.muted, fontSize: 12, lineHeight: 1.4 }}>
                     {tip.aciklama}
                   </span>
                 </span>
@@ -249,13 +247,17 @@ export default function SgkRaporPage() {
             style={{
               marginTop: 20,
               background: '#FFFFFF',
-              color: '#0F172A',
+              color: CHROME_RENK.ink,
               borderRadius: 16,
               padding: 22,
-              border: '1px solid rgba(255,255,255,0.2)',
+              border: '1px solid #E5DFD0',
             }}
           >
-            <div style={{ textAlign: 'center', borderBottom: '2px solid #0F172A', paddingBottom: 12, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 6 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+              <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
+            </div>
+            <div style={{ textAlign: 'center', borderBottom: `2px solid ${CHROME_RENK.ink}`, paddingBottom: 12, marginBottom: 16 }}>
               <div style={{ fontWeight: 800, letterSpacing: 1.2 }}>
                 {draftTip.kanal === 'sgk_medula' ? 'SGK / MEDULA RAPOR TASLAĞI' : 'MUAYENEHANE İSTİRAHAT BELGESİ'}
               </div>
@@ -264,7 +266,7 @@ export default function SgkRaporPage() {
                   ? 'Medula veri girişi için hazırlanmış taslak — canlı gönderim değildir'
                   : 'Özel hasta / işveren için klinik belge taslağı'}
               </div>
-              <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 4 }}>
                 Rapor tarihi: {tarih}
                 {hekim?.tesisKodu ? ` · Tesis Kodu: ${hekim.tesisKodu}` : ''}
                 {draftTip.kanal === 'sgk_medula' ? ' · Rapor No: Medula tarafından atanır' : ''}
@@ -363,7 +365,7 @@ export default function SgkRaporPage() {
               <section style={sec}>
                 <div style={secHead}>RAPOR SÜRESİ</div>
                 <div>{rapor.onerilen_sure_ay ?? sure} ay</div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 4 }}>
                   Başlangıç: {rapor.baslangicTarihi || tarih} (bitiş Medula / SUT kurallarına göre)
                 </div>
               </section>
@@ -436,7 +438,7 @@ export default function SgkRaporPage() {
                   {hekim?.tesisKodu ? (
                     <div>
                       <strong>Sağlık tesisi kodu:</strong> {hekim.tesisKodu}{' '}
-                      <span style={{ color: '#64748B' }}>(Medula)</span>
+                      <span style={{ color: CHROME_RENK.muted }}>(Medula)</span>
                     </div>
                   ) : null}
                 </div>
@@ -445,7 +447,7 @@ export default function SgkRaporPage() {
                     {draftTip.kanal === 'sgk_medula' ? 'e-İMZA (MEDULA)' : 'İMZA / KAŞE'}
                   </div>
                   <div style={{ height: 64, border: '1px dashed #CBD5E1', borderRadius: 6 }} />
-                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 4 }}>
                     {draftTip.kanal === 'sgk_medula'
                       ? 'e-İmza Medula’da uygulanır. Rapor No Medula tarafından atanır.'
                       : 'Islak imza ve kaşe — işverene verilen nüsha için'}
@@ -505,7 +507,7 @@ export default function SgkRaporPage() {
                       const t = String((enabiz as { kopya_metin?: string }).kopya_metin || '')
                       if (t) void navigator.clipboard.writeText(t)
                     }}
-                    style={{ ...toolsPrimaryBtn(false), background: 'transparent', border: '1px solid #14B8A6', color: '#14B8A6' }}
+                    style={{ ...toolsPrimaryBtn(false), background: 'transparent', border: `1px solid ${CHROME_RENK.pine}`, color: CHROME_RENK.pine }}
                   >
                     📋 Medula alanlarını kopyala
                   </button>
@@ -530,16 +532,16 @@ export default function SgkRaporPage() {
 const sec: React.CSSProperties = { marginBottom: 14, fontSize: 14, lineHeight: 1.55 }
 const secHead: React.CSSProperties = {
   fontWeight: 700,
-  borderBottom: '1px solid #CBD5E1',
+  borderBottom: `1px solid ${CHROME_RENK.border}`,
   marginBottom: 6,
 }
 const noteBox: React.CSSProperties = {
   marginTop: 16,
   padding: '10px 12px',
-  background: '#F8FAFC',
-  border: '1px solid #E2E8F0',
+  background: '#F6F0E4',
+  border: `1px solid ${CHROME_RENK.border}`,
   borderRadius: 8,
   fontSize: 11,
   lineHeight: 1.55,
-  color: '#475569',
+  color: '#5a4e42',
 }

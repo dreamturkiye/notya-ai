@@ -2,6 +2,7 @@
 
 import type { ChecklistState } from '../engines/clinic-fit'
 import { etiketS, giris } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function IzlemChecklist({
   izlemNo,
@@ -22,7 +23,7 @@ export function IzlemChecklist({
   }
   return (
     <div data-kd="izlem-checklist" style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 6 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.muted, marginBottom: 6 }}>
         DÖBYR {izlemNo}. izlem kontrol listesi
       </div>
       <div style={{ display: 'grid', gap: 6 }}>
@@ -30,7 +31,7 @@ export function IzlemChecklist({
           const row = state[m] || { durum: 'bekliyor' as const }
           return (
             <div key={m} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
-              <label style={{ fontSize: 12.5, color: '#EDF1F7', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <label style={{ fontSize: 12.5, color: CHROME_RENK.ink, display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input
                   type="checkbox"
                   checked={row.durum === 'yapildi'}
@@ -44,7 +45,7 @@ export function IzlemChecklist({
                 style={{
                   background: row.durum === 'reddedildi' ? 'rgba(239,68,68,0.2)' : 'transparent',
                   border: '1px solid rgba(255,255,255,0.12)',
-                  color: row.durum === 'reddedildi' ? '#FCA5A5' : '#8FA0B5',
+                  color: row.durum === 'reddedildi' ? CHROME_RENK.warn : CHROME_RENK.muted,
                   borderRadius: 6,
                   fontSize: 11,
                   padding: '4px 8px',

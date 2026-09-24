@@ -10,7 +10,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
+import { CHROME_FONT, CHROME_RENK} from '@/lib/doktor/chromeTheme';
 import { toolsShell, getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
@@ -31,12 +31,12 @@ export {
 /** Pencere durum renkleri — "kapanmak üzere" en baskın (geri alınamaz). */
 export const DURUM_RENK: Record<PencereDurum, { fg: string; bg: string; kenar: string }> = {
   kapaniyor: { fg: '#FFFFFF', bg: '#C2410C', kenar: '#FB923C' },
-  kacirildi: { fg: '#FCA5A5', bg: 'rgba(248,113,113,0.12)', kenar: 'rgba(248,113,113,0.45)' },
-  gecti: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
+  kacirildi: { fg: CHROME_RENK.warn, bg: 'rgba(248,113,113,0.12)', kenar: 'rgba(248,113,113,0.45)' },
+  gecti: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
   acik: { fg: '#6EE7B7', bg: 'rgba(16,185,129,0.12)', kenar: 'rgba(16,185,129,0.4)' },
   yaklasiyor: { fg: '#93C5FD', bg: 'rgba(59,130,246,0.12)', kenar: 'rgba(59,130,246,0.35)' },
-  yapildi: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
-  ileride: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.08)' },
+  yapildi: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
+  ileride: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.08)' },
 };
 
 /** Çift sütun (yasal asgari vs klinik öneri) — çakışma asla tek öneriye indirgenmez. */
@@ -134,16 +134,15 @@ export default function KdAracKabugu({ route, baslik, aciklama, children }: { ro
   return (
     <AracVurguSaglayici vurgu={KD_VURGU}>
       <div style={{ ...toolsShell, overflowX: 'hidden' }}>
-        <DoktorNav />
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px', boxSizing: 'border-box' }}>
           {!izin ? (
-            <div style={{ color: '#9BB0C7', fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca kadın hastalıkları ve doğum için.'}</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca kadın hastalıkları ve doğum için.'}</div>
           ) : (
             <>
               <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: KD_VURGU.baslik, letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar · {KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI}</div>
-                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>{baslik}</h1>
-                <p style={{ margin: '8px 0 0', fontSize: 15, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
+                <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Araçlar · {KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI}</div>
+                <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{baslik}</h1>
+                <p style={{ margin: '8px 0 0', fontSize: 15, color: CHROME_RENK.muted, lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
               </div>
               {children}
             </>

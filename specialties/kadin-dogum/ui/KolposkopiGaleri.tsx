@@ -2,6 +2,7 @@
 
 import type { ColpoImage } from '../schema'
 import { kutu } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function KolposkopiGaleri({
   images,
@@ -13,13 +14,13 @@ export function KolposkopiGaleri({
   return (
     <section style={kutu} data-kd="kolposkopi">
       <h2 style={{ margin: 0, fontSize: 16 }}>Kolposkopi arşivi</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
         Görüntüler mevcut Görüntüleme kaydına bağlıdır; ayrı depo yok.
       </p>
       {images.length === 0 ? (
-        <p style={{ fontSize: 13, color: '#8FA0B5' }}>
+        <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>
           Kolposkopi görüntüsü yok.{' '}
-          <span style={{ color: '#FDE68A' }}>Kolposkopi görüntüsü ekle</span>
+          <span style={{ color: '#7A5B1E' }}>Kolposkopi görüntüsü ekle</span>
           {' — Görüntüleme sekmesinden yükleyin (bölge/not: kolposkopi).'}
         </p>
       ) : (
@@ -32,7 +33,7 @@ export function KolposkopiGaleri({
               ) : (
                 <div style={{ width: 72, height: 72, borderRadius: 8, background: 'rgba(255,255,255,0.06)' }} />
               )}
-              <div style={{ fontSize: 13, color: '#C9D4E3' }}>
+              <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>
                 {img.capturedAt}
                 {img.kvkk_consent ? '' : ' · KVKK onamı işaretlenmedi'}
               </div>

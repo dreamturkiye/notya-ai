@@ -10,11 +10,12 @@
 import React from 'react';
 import type { NotOlcumu } from '@/lib/specialties/kapsam';
 import { eriskinVkiHesapla } from '@/lib/clinical/eriskinVki';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export interface BuyumePersentilleri { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string; uyari?: string }
 
 export default function YasamsalBulgularFormu({
-  olcumler, degerler, onDegis, persentiller, girdiStili, persentilRengi = '#2DD4BF', eriskinVkiGoster = true,
+  olcumler, degerler, onDegis, persentiller, girdiStili, persentilRengi = '#0F9B8E', eriskinVkiGoster = true,
 }: {
   olcumler: NotOlcumu[];
   degerler: Record<string, string>;
@@ -36,12 +37,12 @@ export default function YasamsalBulgularFormu({
         {olcumler.map(({ anahtar, etiket, birim }) => {
           const persentil = anahtar === 'kilo' || anahtar === 'boy' || anahtar === 'basCevresi' ? persentiller?.[anahtar] : undefined;
           return (
-            <label key={anahtar} data-olcum={anahtar} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#8FA0B5', minWidth: 96 }}>
+            <label key={anahtar} data-olcum={anahtar} style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: CHROME_RENK.muted, minWidth: 96 }}>
               {etiket}
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <input value={degerler[anahtar] ?? ''} onChange={(e) => onDegis(anahtar, e.target.value)} placeholder="—"
-                  style={girdiStili ?? { width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
-                <span style={{ color: '#64748B' }}>{birim}</span>
+                  style={girdiStili ?? { width: 72, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: CHROME_RENK.ink, fontSize: 13, padding: '5px 8px', fontFamily: 'inherit' }} />
+                <span style={{ color: CHROME_RENK.muted }}>{birim}</span>
               </span>
               {persentil && <span style={{ fontSize: 10, color: persentilRengi }}>{persentil}</span>}
             </label>
@@ -53,12 +54,12 @@ export default function YasamsalBulgularFormu({
       )}
       {persentiller?.vki && !persentiller.uyari && (
         <div style={{ marginTop: 6, fontSize: 11, color: persentilRengi }}>
-          VKİ: {persentiller.vki}{persentiller.vkiSinif ? ` — ${persentiller.vkiSinif}` : ''} <span style={{ color: '#64748B' }}>(Neyzi standartları)</span>
+          VKİ: {persentiller.vki}{persentiller.vkiSinif ? ` — ${persentiller.vkiSinif}` : ''} <span style={{ color: CHROME_RENK.muted }}>(Neyzi standartları)</span>
         </div>
       )}
       {eriskin && (
         <div style={{ marginTop: 6, fontSize: 11, color: persentilRengi }} data-testid="eriskin-vki">
-          VKİ: {eriskin.ozet} <span style={{ color: '#64748B' }}>(WHO)</span>
+          VKİ: {eriskin.ozet} <span style={{ color: CHROME_RENK.muted }}>(WHO)</span>
         </div>
       )}
     </div>

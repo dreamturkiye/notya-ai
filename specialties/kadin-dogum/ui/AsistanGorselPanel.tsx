@@ -6,6 +6,7 @@ import type { NstStudyPayload, UsgStudyPayload, VisionRead } from '../schema'
 import { analyzeNst, analyzeUsg, uzmanOnay, VISION_DISCLAIMER, type Actor } from '../imaging/vision-tools'
 import { NstStrip } from './NstStrip'
 import { KD_ACTOR, KD_VISION_STATUS, KD_VISION_TASK, kdLabel } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -85,7 +86,7 @@ export function AsistanGorselPanel({
         {rows.map((r) => (
           <li key={r.id} style={{ marginBottom: 8 }}>
             {kdLabel(KD_VISION_TASK, r.task)} · {kdLabel(KD_VISION_STATUS, r.status)} · {kdLabel(KD_ACTOR, r.drafted_by)}
-            <div style={{ color: '#8FA0B5', fontSize: 12 }}>{r.findings}</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 12 }}>{r.findings}</div>
             {r.status === 'draft' && (
               <button
                 type="button"
@@ -98,7 +99,7 @@ export function AsistanGorselPanel({
             )}
           </li>
         ))}
-        {rows.length === 0 && <li style={{ color: '#8FA0B5' }}>Taslak yok — Asistan finalize edemez.</li>}
+        {rows.length === 0 && <li style={{ color: CHROME_RENK.muted }}>Taslak yok — Asistan finalize edemez.</li>}
       </ul>
       {nst && <NstStrip nst={nst} />}
     </section>

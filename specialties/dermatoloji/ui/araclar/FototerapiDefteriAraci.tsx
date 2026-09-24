@@ -11,6 +11,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { PHOTO_DEVICES, BURN_CHECKLIST, cumulativeJ, fototerapiOzeti, SOLARIUM_FORBIDDEN, type PhotoDevice, type PhotoSession } from '../../engines/phototherapy-log';
 import { DERM_PHOTO_DEVICE, dermLabel } from '../labels';
 import { dermStil, Secim, Kutu, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -63,7 +64,7 @@ export default function FototerapiDefteriAraci() {
     <>
       {SOLARIUM_FORBIDDEN && (
         <div style={{ ...kutu, background: 'rgba(248,113,113,0.08)', borderColor: 'rgba(248,113,113,0.4)' }}>
-          <div style={{ ...metin, fontWeight: 700, color: '#FCA5A5' }}>Solaryum tedavi cihazı değildir</div>
+          <div style={{ ...metin, fontWeight: 700, color: CHROME_RENK.warn }}>Solaryum tedavi cihazı değildir</div>
           <div style={kucuk}>Türkiye&apos;de solaryum kullanımı 2018&apos;den beri yasaktır; cihaz listesinde yer almaz ve fototerapi yerine geçmez.</div>
         </div>
       )}
@@ -99,7 +100,7 @@ export default function FototerapiDefteriAraci() {
           </div>
         {f.yanik && (
           <div style={{ marginTop: 8, borderLeft: '2px solid rgba(248,113,113,0.5)', paddingLeft: 10 }}>
-            <div style={{ ...kucuk, color: '#FCA5A5', marginBottom: 4 }}>Yanık kontrol listesi — işaretlenenler seans satırına yazılır.</div>
+            <div style={{ ...kucuk, color: CHROME_RENK.warn, marginBottom: 4 }}>Yanık kontrol listesi — işaretlenenler seans satırına yazılır.</div>
             {BURN_CHECKLIST.map((m) => (
               <label key={m.kod} style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 40, ...metin }}>
                 <input
@@ -131,16 +132,16 @@ export default function FototerapiDefteriAraci() {
         {ozet.sonrakiDozTaslagi != null && (
           <div style={metin}>Girdiğiniz artış adımıyla sonraki doz taslağı: <b>{ozet.sonrakiDozTaslagi} J/cm²</b> <span style={kucuk}>— aritmetiktir, doz kararı hekimindir.</span></div>
         )}
-        {ozet.yanik > 0 && <div style={{ ...metin, color: '#FCA5A5' }}>Son seansta yanık işaretliyse doz taslağı verilmez.</div>}
+        {ozet.yanik > 0 && <div style={{ ...metin, color: CHROME_RENK.warn }}>Son seansta yanık işaretliyse doz taslağı verilmez.</div>}
         {!ozet.medJ && ozet.seans > 0 && <div style={satir}><Rozet ton="uyari">MED eşiği girilmedi — SUT defterinde MED kaydı aranır</Rozet></div>}
         <div style={{ ...kaydir, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', marginTop: 10 }}>
           {cihazSeanslari.map((s, i) => (
-            <div key={`${s.date}-${i}`} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', padding: '10px 12px', fontSize: 14, color: '#EDF1F7', background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)' }}>
+            <div key={`${s.date}-${i}`} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', padding: '10px 12px', fontSize: 14, color: CHROME_RENK.ink, background: i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)' }}>
               <span style={{ minWidth: 100, fontWeight: 700 }}>{s.date}</span>
               <span style={{ minWidth: 90 }}>{s.j_cm2} J/cm²</span>
               {s.dose_step != null && <span style={kucuk}>adım +{s.dose_step}</span>}
               {s.med_test && <span style={kucuk}>MED testi{s.med_j_cm2 != null ? ` ${s.med_j_cm2} J/cm²` : ''}</span>}
-              {s.burn && <span style={{ fontSize: 13, color: '#FCA5A5', fontWeight: 700 }}>YANIK{s.burn_checklist?.length ? ` · ${s.burn_checklist.length} madde` : ''}</span>}
+              {s.burn && <span style={{ fontSize: 13, color: CHROME_RENK.warn, fontWeight: 700 }}>YANIK{s.burn_checklist?.length ? ` · ${s.burn_checklist.length} madde` : ''}</span>}
               <button type="button" onClick={() => setSeanslar((p) => p.filter((x) => x !== s))} style={{ ...ghost, marginLeft: 'auto', minHeight: 40 }}>Sil</button>
             </div>
           ))}

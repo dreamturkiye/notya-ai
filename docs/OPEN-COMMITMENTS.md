@@ -2548,16 +2548,50 @@ tutulur; üzerine sessizce yazılmaz.
   ARA OLAY: bu özellik ilk kez uygulanırken (commit henüz atılmamış, iş ağacında) Cursor'ın KLINIK-AYNA-01 push'ı onay alınmadan yapılmış (Kaan: "screwed up") ve tip hatalarıyla `main`'i kırmıştı; Cursor bunu geri alırken aynı çalışma dizininde (`~/notya-ai`) yaptığı işlem Claude'un henüz commit edilmemiş yerel değişikliklerini de sildi — iş kaybolmadan (Claude hafızasından) yeniden uygulandı ama bu, aynı klasörü paylaşan ajanların birbirinin commit edilmemiş işini silebileceğini gösteriyor. İkinci belirti: docs commit'i ilk denemede yanlışlıkla başka bir yerel dala (Cursor'ın çalıştığı varsayılan `feat/klinik-10-exceptional`) düştü — paylaşılan dizinde çalışırken hangi dalın checkout edildiği herhangi bir anda değişebiliyor. İleride: her ajan kendi feature branch'inde çalışıp sık sık commit etsin (yalnız iş ağacında tutmak riskli), commit öncesi `git branch --show-current` ile doğrulansın.
 
 
+## NOTYA-FISILTI-UNIVERSAL — Fısıltı as a cross-product reminder + Ayşe action layer (Kaan, 2026-09-24)
+
+**Concept (Kaan's directive):** "Fısıltı ile artık hiçbirşeyi unutmuyorsunuz" — Fısıltı stops being pediatri-only and becomes a universal, self-clearing "everything overdue" layer across all of Notya: doktor (all 29 branş), klinik, and mali/müşavir/avukat. Two properties make it more than a list: (1) it clears itself the moment the underlying thing is genuinely resolved (recomputed fresh, never a stale dismiss flag), and (2) Ayşe can read it and act on it conversationally -- "Ayşe, fısıltıda ne var?", "şunu aç", "bunu işle" -- using the existing prepare-then-confirm eylem architecture (core/eylemler, EylemKarti.tsx, /api/doktor/eylem), not a new write path. A fisilti_sessize_al (mute) action closes the "doctor sees the same flag for a year and gets annoyed" risk honestly -- visible mute with a reason/date, never a silent dismiss.
+
+**Verified before building (not assumed):**
+- Doktor: all 29 branş already have a real kohort.ts engine + wired /api/doktor/<branş>/kohort route. Field shapes vary per branş (some use bayraklar+detay, kardiyoloji uses acikRiskBayraklari, dahiliye has no sekme/deep-link field) -- genuine heterogeneity, not a uniform contract.
+- Ayşe's confirm-and-commit action system is real and live today: core/eylemler registry, T1 actions including asi_kaydi_ekle (source: kayit/beyan/dış kurum), dosya_notu_ekle, kontrol_randevusu_olustur, branş-specific görev actions; EylemKarti.tsx (429 lines); /api/doktor/eylem route. See docs/AYSE-EYLEM-MIMARISI.md.
+- Klinik: no kohort-equivalent exists at all today. docs/AYSE-EYLEM-MIMARISI.md P3 already names "the klinik vertical mirror" as planned but unbuilt.
+- Mali: lib/mali/beyanTakvimiEngine.ts computes upcoming filing deadlines per müşteri with risk tiers, but is forward-looking only (60-day window) -- does not currently flag a deadline once it has already passed. No eylem-equivalent action system exists for mali.
+- Avukat: not investigated yet as of this entry.
+
+**Sprint plan (Kaan's explicit ordering, 3 separate sprints):**
+1. Doktor (this sprint) -- generalize Fısıltı to all 29 branş via a new aggregation layer; wire Ayşe's read access + the highest-value existing eylem actions (aşı kaydı, dosya notu, kontrol randevusu) to fısıltı items; build the fisilti_sessize_al mute action.
+2. Klinik (next) -- needs its own kohort-engine layer built from scratch (no existing pattern to lean on beyond doktor's), then the eylem mirror per AYSE-EYLEM-MIMARISI.md P3.
+3. Mali + Avukat (last) -- extend the mali beyan engine backward for missed deadlines, build mali's own eylem action system from scratch (none exists), then investigate and build the avukat equivalent (not yet scoped).
+
+### ACIK (OPEN)
+| Date | Item | Durum |
+|---|---|---|
+| 2026-09-24 | Sprint 1 (Doktor) -- build now, this session. | IN PROGRESS |
+| 2026-09-24 | Sprint 2 (Klinik) -- kohort layer + eylem mirror, ground-up. | OPEN, scheduled after Sprint 1 |
+| 2026-09-24 | Sprint 3 (Mali + Avukat) -- beyan engine backward-looking flags, new eylem system for mali, avukat scope investigation + build. | OPEN, scheduled last |
+
+
+## NOTYA-IO-DOMAIN — Domain purchased, migration parked until new website is done (Kaan, 2026-09-24)
+
+Kaan bought notya.io. Once the new marketing website is finished, move to using this domain
+(sender/brand domain decision that was previously open per the 2026-08-26 note in this file --
+this resolves which domain, "notya.io", but the actual cutover is sequenced AFTER the new site).
+
+### ACIK (OPEN)
+| Date | Item | Durum |
+|---|---|---|
+| 2026-09-24 | notya.io domain owned; migrate once the new website ships (DNS, sender domain for email/SMTP, any hardcoded notya.ai references). | OPEN, waits on new website completion |
 ## NOTYA-YENI-GORUNUM-02 — Design token consolidation, so the next re-theme is fast (Kaan, 2026-09-24)
 
 **Why:** NOTYA-YENI-GORUNUM-01 (full doctor-UI redesign to the warm cream/pine palette) took roughly half a day and touched ~150 files, because colors and fonts were hardcoded as literal hex/rgba values directly inside `style={{}}` objects across most doktor pages, rather than being sourced from one shared place. A token file (`lib/doktor/chromeTheme.ts` — `CHROME_RENK`, `CHROME_FONT`) was created during that pass, and the `.ni-*` CSS classes in `globals.css` are already centralized and cascade automatically. But adoption of the token file was not universal — many pages still have literal color values typed directly in place of importing the constant, which is why the redesign required page-by-page find/fix/verify work instead of a single change.
 
 **Kaan's instruction (2026-09-24):** finish the current redesign and get it through visual review and sign-off first — don't tokenize colors that might still change. Once the design is stable, do a dedicated consolidation pass so every color/font/radius value used across the doctor UI is sourced from exactly one place, with zero remaining literal duplicates. Goal: the next full re-theme (new template) should be a change in one file, not a repeat of this half-day, page-by-page effort.
 
-### AÇIK (OPEN)
-| Date | Item | Gerekçe + öneri | Durum |
+### TAMAMLANDI (DONE)
+| Date | Item | Sonuç | Durum |
 |---|---|---|---|
-| 2026-09-24 | Design-token consolidation pass for the doctor UI — replace all remaining literal color/font hex values across `app/dashboard/doktor/**`, `app/doktor-tools/**`, `app/cihaz/**` with references to `lib/doktor/chromeTheme.ts` (or promote to CSS custom properties in `globals.css` if that proves cleaner), so a future re-theme requires editing one file only. | Scheduled AFTER Kaan's visual review/sign-off of NOTYA-YENI-GORUNUM-01 and BEFORE merge to `main` — deliberately deferred so we don't tokenize values that review may still change. | OPEN (waits on Kaan's review) |
+| 2026-09-24 | Design-token consolidation pass for the doctor UI — replace all remaining literal color/font hex values across `app/dashboard/doktor/**`, `app/doktor-tools/**`, `app/cihaz/**`, `components/doktor/**`, `specialties/**` with references to `lib/doktor/chromeTheme.ts`. | Two passes: a script converting standalone quoted literals to bare CHROME_RENK token references (49 files) using the same brace-depth-aware import injection proven in the color audit, then a small hand pass for hex values embedded inside longer compound strings (5 spots) that the script correctly left alone. Caught and fixed one real regression along the way (a JSX attribute missing its `{}` wrapper after substitution) via typecheck, not by reverting. Verified zero literal occurrences of the five core token values remain anywhere in the doktor scope. Verified twice: typecheck clean (same 4 pre-existing klinik errors), production build clean, full suite 2617/2617 green after each pass. | **DONE 2026-09-24** (commit `dad54fe9` on `feat/yeni-gorunum`) |
 
 ## NOTYA-KAYIT-SURE-01 — muayene kayıt süresi (2026-09-23)
 
@@ -2567,3 +2601,33 @@ tutulur; üzerine sessizce yazılmaz.
 | NOTYA-KAYIT-SURE-02 | OPEN — waits on Claude (QA) + Dr. Gökhan (real device) | Canlı test yapılmadı: Samsung/Chrome ve iPhone/Safari üzerinde uzun sessizlik sonrası otomatik yeniden başlama ve kırmızı uyarı doğrulanmalı. |
 
 | NOTYA-ASI-NOT-02 | **DONE 2026-09-24** (Kaan: "backfill all") | scripts/asi-not-backfill-yaz.mts on dr.gokhan@notya.ai: 9 rows written from 3 notes (16.07.2024 DaBT-İPA-Hib/KPA/Rota 1; 15.02.2025 Grip 1, MenACWY 1 (Ayşe-calculated dose); 15.05.2025 KKK 1, Suçiçeği 1, MenACWY 2, Hep A 1 — the last note was approved after the preview). Hep B 2 (15.06.2024) not written: conflict with the Hep B 1 row dated the same day — waits on Dr. Gökhan (DOB + Hep B 1 date). Rollback: ~/notya-ai-asi-backfill-rollback-2026-09-24.json |
+
+
+## NOTYA-YENI-GORUNUM-03 — İki sprint'lik launch planı: önce doktor, sonra klinik (Kaan, 2026-09-24)
+
+**Kaan'ın kararı (2026-09-24):** iki sprint.
+1. Doktor tarafındaki yeni görünümü (`feat/yeni-gorunum`) TAMAMEN bitir, sonra production'a al.
+2. Ardından Klinik tarafına geç — doktor için yapılanların hepsini Klinik'e de uygula (aynı şablon).
+
+**Sprint 1 — Doktor (production'a alınmadan önce hiçbir parça canlıya çıkmaz):**
+- **DONE** — Yedek: `dark-theme-backup-2026-09-24` git tag, mevcut dark-navy production'ın değişmez referans noktası (commit 87f72def).
+- **DONE** — Kontrast/leftover renk düzeltmesi başladı: `Istatistik` (paylaşılan bileşen, tüm araç sayfalarını etkiler), `BekleyenKonsultasyonlar.tsx`, `HastaKonsultasyonlar.tsx` düzeltildi ve doğrulandı (build+typecheck+2617 test+canlı görsel kontrol).
+- **DONE 2026-09-24** — Kalan renk denetimi tamamlandı: 252 dosya, 4 doğrulanmış batch (159+31+11+51 dosya — `#EDF1F7`/`#8FA0B5`/`#C9D4E3`/`#9BB0C7`/`#FCA5A5`/`#64748B`, `#FDE68A`, `#0D1C33` + komşu `rgba(255,255,255,*)` artıkları, `#2DD4BF`+`#5EEAD4`). Her batch build+typecheck+2617 test+canlı görsel kontrolle doğrulandı; yol boyunca gerçek bug'lar bulunup düzeltildi (import bozulması, SVG JSX quote-stripping, bir regex testi eski metne kilitliydi). `#2DD4BF`/`#5EEAD4` batch'inden önce bunların gerçekten VURGU_TEAL/VURGU_DAHILIYE token'ı olarak mı yoksa düz literal mi kullanıldığı doğrulanmıştı (yalnız HastaKonsultasyonlar.tsx gerçekten token kullanıyordu).
+- **DONE 2026-09-24** — Sidebar B gerçek koda geçirildi: `components/doktor/DoktorChrome.tsx` yeniden yazıldı (gruplu sol sidebar, Ayşe CTA satırı, gerçek hava durumu/konum, okunmamış mesaj rozeti, mobil hamburger KORUNDU). İkinci entegrasyon noktası (`/doktor-tools/*`) ayrıca yapılması gerekmedi — `app/doktor-tools/layout.tsx` zaten aynı `DoktorChrome`'u sarıyordu, düzeltme otomatik olarak oraya da yayıldı; canlıda doğrulandı.
+- **DONE 2026-09-24** — Yazdırılabilir belgelerin hepsi gerçek koda geçirildi: Muayene Notu, Reçete, Epikriz, SGK Raporu, Tetkik İstek Formu, Konsültasyon İstem Formu, Gebe İzlem Kartı, Onam Formu — leaf-mark + Notya başlığı, ALL-CAPS'ten Title Case'e geçiş, off-palette slate/gray renkler CHROME_RENK token'larına taşındı. Aşı Karnesi ayrıca ele alındı: gerçek PDF üreticisi (`lib/asi/karnePdf.tsx`, @react-pdf/renderer) yeniden renklendirildi + yaprak simgesi vektör Path olarak eklendi (font riski olmadan), yazdırma CSS'i (`ASI_KARNESI_YAZDIRMA_CSS`) saf siyahtan sıcak mürekkebe çevrildi — ink-economy (beyaz zemin) korunarak. Bir regex testi ('KONSÜLTASYON İSTEM FORMU', sonra '#000') düzeltildi, geri alınmadı.
+- **DONE 2026-09-24** — KVKK/footer taraması: copyright/KVKK footer'ı `DoktorChrome.tsx`'e taşındı — artık her sayfada otomatik görünüyor (önceden yalnız ana dashboard'da vardı). Diğer 3 dosyadaki KVKK referansları (onam adımı, uyarı mesajları) sayfa-özel, kasıtlı içerik olduğu için dokunulmadı.
+- **DONE 2026-09-24** — NOTYA-YENI-GORUNUM-02 (yukarıda) — design-token konsolidasyonu tamamlandı. 49 dosya, iki pass (script + 5 dosyada elle düzeltme), doğrulama iki kez koşuldu.
+- **DONE 2026-09-24** — Ek kapsam, Kaan'ın açık onayıyla: Sağlığım hasta portalı (`app/portal/sagligim.css` + `layout.tsx`) doktor tarafının cream/pine/teal palettine hizalandı. Bu dosya kendi ayrı, kasıtlı tasarlanmış "cool mist clinic" kimliğine sahipti (doktor redesign'ından önce vardı, leftover dark-theme hatası değildi) — retheme etmeden önce Kaan'a açıkça soruldu, o da onayladı. :root token değerleri chromeTheme.ts'teki gerçek kaynak değerlerle eşleştirildi; dosya genelindeki bağımsız literal rgba()/hex değerleri (:root'tan geçmeyenler) script ile bulunup değiştirildi. Görüntüleme görüntüleyicisinin koyu zemini (tıbbi görüntü kontrastı için doğru bir seçim) bilerek dokunulmadı bırakıldı. Font (Newsreader/Outfit) değiştirilmedi — Fraunces'a geçiş dosyanın elle ayarlanmış mobil breakpoint'leri için gereksiz risk taşıyordu, bilinçli bir kapsam kararı olarak not edildi.
+- **DONE 2026-09-24** — Kaan'ın talebi üzerine, canlıya alırken güvenli ileri/geri dönüş doğrulandı (kod değişikliği gerekmedi — Vercel'in kendi mekanizması zaten var). Mevcut production (`main`, dark-navy) deployment ID: `dpl_7famcvoTRGVQQbd2tZWHEUFMgVTi` (commit `87f72def`, `dark-theme-backup-2026-09-24` tag'iyle aynı), `isRollbackCandidate: true` doğrulandı. `feat/yeni-gorunum`'un son preview build'i (commit `e9625ef6`, tüm Sprint 1): `dpl_9NQrDn9tUvyYLK4oxRrfDjPfHiDy`. Vercel `request_promote` (herhangi bir build'i — preview dahil — rebuild gerekmeden production'a alır) ve `request_rollback` (production'ı geçmiş bir production deployment'ına anlık geri alır) ile ileri/geri istenildiği kadar tekrarlanabilir, ikisi de anlık. Hiçbir eylem tetiklenmedi — bu bir kapasite doğrulamasıydı, deploy değil.
+- **OPEN** — Sprint 1'in tamamı bitti: tam build+typecheck+test doğrulaması (2617/2617, temiz build, sadece 4 önceden var olan klinik hatası) yapıldı, canlı görsel kontrol (Ana Sayfa + KVKK footer + bir Araçlar sayfası) tamamlandı. Kalan tek şey: Kaan'ın son onayı ve açık "git" talimatı — bu olmadan `main`'e merge / production'a deploy YAPILMAZ.
+
+**Sprint 2 — Klinik (Sprint 1 tamamen bitip canlıya alınana kadar başlamaz):**
+- Kapsam ölçüldü (2026-09-24): hasta portalında 49 ayrı sayfa (akcigerlerim, kalbim, beyin-takibi, hormonlarim, vb.) + doktor tarafında ayrı `app/dashboard/klinik` + `app/klinik-tools` içinde 41 sayfa = toplam **~90 sayfa**. `chromeTheme`/`CHROME_RENK` hiçbir Klinik dosyasında kullanılmıyor (0 dosya) — tamamen ayrı, dokunulmamış bir yüzey, doktor redesign'ı kadar (veya daha) büyük.
+- Hedef: doktor tarafında yapılanların hepsi (yeni görünüm, Sidebar B, yazdırılabilir belgeler, KVKK, vb.) Klinik'e de uygulanacak — "aynı şablon."
+- Henüz başlanmadı.
+
+### AÇIK (OPEN)
+| Date | Item | Durum |
+|---|---|---|
+| 2026-09-24 | Sprint 1 (doktor): tüm iş bitti (renk denetimi 252 dosya, Sidebar B, 8 yazdırılabilir belge + Aşı Karnesi, KVKK footer, design-token konsolidasyonu, Sağlığım portal hizalaması — son madde Kaan'ın açık onayıyla eklendi). Tam doğrulama temiz (2617/2617, build clean). Kalan tek şey Kaan'ın son onayı + açık "git" talimatı. | OPEN — waits on Kaan's go-ahead to merge to `main` |
+| 2026-09-24 | Sprint 2 (klinik): Sprint 1 canlıya alındıktan SONRA başlar — ~90 sayfa, aynı şablon (doktor redesign'ı ile aynı boyutta veya daha büyük). | OPEN — Sprint 1'i bekliyor |

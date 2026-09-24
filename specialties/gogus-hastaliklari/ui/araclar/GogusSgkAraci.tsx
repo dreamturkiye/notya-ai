@@ -5,6 +5,7 @@ import {
   GogusHastaSecici, gogusStil, Alan, Secim, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, useUrlHasta, Rozet,
 } from './GogusAracKabugu'
 import { gogusRaporTaslagi, GOGUS_RAPOR_SABLONLARI, type GogusRaporSablon } from '../../engines/sgkRapor'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = gogusStil
 
@@ -61,7 +62,7 @@ export default function GogusSgkAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>SUT kontrol listesi</div>
         {sonuc.kontrolListesi.map((k, i) => (
-          <label key={k.madde} style={{ display: 'flex', gap: 8, fontSize: 13, color: '#EDF1F7', marginTop: 4 }}>
+          <label key={k.madde} style={{ display: 'flex', gap: 8, fontSize: 13, color: CHROME_RENK.ink, marginTop: 4 }}>
             <input type="checkbox" checked={isaret[i] === true} onChange={() => {
               const next = [...isaret]
               while (next.length < sonuc.kontrolListesi.length) next.push(null)

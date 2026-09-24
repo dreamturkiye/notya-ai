@@ -21,6 +21,7 @@ import {
   yuzBolgeleri,
   type BodyYuz,
 } from '../engines/body-map'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const semaKutu: CSSProperties = {
   position: 'relative',
@@ -37,7 +38,7 @@ function bolgeStili(secili: boolean, onam: boolean): CSSProperties {
     position: 'absolute',
     border: `1px solid ${secili ? 'rgba(45,212,191,0.9)' : 'rgba(255,255,255,0.18)'}`,
     background: secili ? 'rgba(15,155,142,0.45)' : 'rgba(255,255,255,0.04)',
-    color: '#EDF1F7',
+    color: CHROME_RENK.ink,
     borderRadius: 6,
     fontSize: 8.5,
     lineHeight: 1.1,
@@ -125,21 +126,21 @@ export function VucutHaritasi({
     <section style={kutu} data-tab="VucutHaritasi">
       <h2 style={{ margin: 0, fontSize: 16 }}>TBSE / vücut haritası</h2>
       {month === euromelanomaMonth() && (
-        <p style={{ fontSize: 12, color: '#FDE68A' }}>Euromelanoma Mayıs ayı — deri tarama vurgusu. KETEM deri kanseri programı değildir.</p>
+        <p style={{ fontSize: 12, color: '#7A5B1E' }}>Euromelanoma Mayıs ayı — deri tarama vurgusu. KETEM deri kanseri programı değildir.</p>
       )}
       {KETEM_IS_NOT_SKIN_CANCER && (
-        <p style={{ fontSize: 11, color: '#8FA0B5' }}>KETEM ipuçları yalnız meme / serviks / kolon — deri kanseri değil.</p>
+        <p style={{ fontSize: 11, color: CHROME_RENK.muted }}>KETEM ipuçları yalnız meme / serviks / kolon — deri kanseri değil.</p>
       )}
 
       {map && (
-        <p style={{ fontSize: 13, color: '#8FA0B5' }}>
+        <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>
           {dermLabel(DERM_TBM_DEVICE, map.deviceHint)} · takip {map.followUpMonths} ay
           {lastTbseIso ? ` · son TBSE ${lastTbseIso}` : ' · TBSE henüz yok'}
         </p>
       )}
       {!map && (
         <div>
-          <p style={{ fontSize: 13, color: '#8FA0B5' }}>Harita yok — şemadan bölge seçerek başlayın; lezyon kayıtları da eşlenir.</p>
+          <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Harita yok — şemadan bölge seçerek başlayın; lezyon kayıtları da eşlenir.</p>
           {emptyAction}
         </div>
       )}
@@ -153,23 +154,23 @@ export function VucutHaritasi({
         <Sema yuz={yuz} secili={nodeIds} onToggle={toggle} />
         <div style={{ flex: '1 1 240px', minWidth: 220 }}>
           <div style={etiketS}>İşaretli bölgeler ({nodeIds.length})</div>
-          {nodeIds.length === 0 && <p style={{ fontSize: 12.5, color: '#8FA0B5' }}>Şemadan bölge seçin.</p>}
+          {nodeIds.length === 0 && <p style={{ fontSize: 12.5, color: CHROME_RENK.muted }}>Şemadan bölge seçin.</p>}
           <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 3 }} data-derm="vucut-secili">
             {nodeIds.map((id) => (
               <li key={id} style={{ fontSize: 12.5, display: 'flex', gap: 6, alignItems: 'center' }}>
                 <button type="button" style={{ ...btn(), padding: '2px 7px', fontSize: 11 }} onClick={() => toggle(id)} aria-label={`${bolgeAdi(id)} kaldır`}>×</button>
                 <span>{bolgeAdi(id)}</span>
                 {lezyonEslesmeleri.filter((x) => x.kod === id).length > 0 && (
-                  <span style={{ color: '#8FA0B5' }}>· {lezyonEslesmeleri.filter((x) => x.kod === id).length} lezyon</span>
+                  <span style={{ color: CHROME_RENK.muted }}>· {lezyonEslesmeleri.filter((x) => x.kod === id).length} lezyon</span>
                 )}
               </li>
             ))}
           </ul>
-          <p style={{ fontSize: 11.5, color: '#8FA0B5', marginTop: 6 }}>
+          <p style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 6 }}>
             Bölge dağılımı — baş/boyun {dagilim.head} · üst ekstremite {dagilim.upper} · gövde {dagilim.trunk} · alt ekstremite {dagilim.lower}
           </p>
           {onamGereken.length > 0 && (
-            <p style={{ fontSize: 11.5, color: '#FDE68A' }}>
+            <p style={{ fontSize: 11.5, color: '#7A5B1E' }}>
               {onamGereken.map(bolgeAdi).join(', ')} — fotoğraf için ek onam gerekir.
             </p>
           )}
@@ -184,7 +185,7 @@ export function VucutHaritasi({
             </button>
           )}
           {eslenmemis.length > 0 && (
-            <p style={{ fontSize: 11.5, color: '#8FA0B5', marginTop: 4 }}>
+            <p style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 4 }}>
               Şemaya eşlenemeyen lezyon bölgesi: {eslenmemis.map((l) => l.region).join(', ')} — elle işaretleyin.
             </p>
           )}
@@ -226,7 +227,7 @@ export function VucutHaritasi({
           </div>
         </div>
       )}
-      <p style={{ fontSize: 11, color: '#8FA0B5', marginTop: 6 }}>
+      <p style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>
         Şema işaretleme ızgarasıdır; alan yüzdesi PASI / EASI alan skorunda hekim tarafından girilir.
         ({BODY_BOLGELERI.length} bölge)
       </p>

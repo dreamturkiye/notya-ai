@@ -7,8 +7,8 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,14 +112,13 @@ export default function PersonelPage() {
   }
 
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', color: 'white' }}>
-      <DoktorNav />
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: 24 }}>
-        <a href="/dashboard/doktor/ayarlar" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
-        <h1 style={{ fontSize: 26, margin: '10px 0 4px' }}>Personel</h1>
-        <p style={{ color: '#94A3B8', fontSize: 14, marginBottom: 20 }}>
-          Sekreterinizi davet edin — randevularınızı sizin adınıza görüp yönetebilir. Klinik notlara, e-reçeteye ve SGK araçlarına erişemez.
-        </p>
+    <div>
+      <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+      <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 4px', color: '#2e251d', letterSpacing: '-0.02em' }}>Personel</h1>
+      <p style={{ color: CHROME_RENK.muted, fontSize: 14, marginBottom: 20 }}>
+        Sekreterinizi davet edin — randevularınızı sizin adınıza görüp yönetebilir. Klinik notlara, e-reçeteye ve SGK araçlarına erişemez.
+      </p>
+      <div style={{ maxWidth: 640 }}>
 
         {hata && <div className="ni-error" style={{ marginBottom: 16 }}>{hata}</div>}
 
@@ -156,18 +155,18 @@ export default function PersonelPage() {
         )}
 
         <div style={{ marginTop: 20 }}>
-          {yukleniyor && <p style={{ color: '#94A3B8' }}>Yükleniyor…</p>}
-          {!yukleniyor && liste.length === 0 && <p style={{ color: '#94A3B8' }}>Henüz personel eklenmedi.</p>}
+          {yukleniyor && <p style={{ color: CHROME_RENK.muted }}>Yükleniyor…</p>}
+          {!yukleniyor && liste.length === 0 && <p style={{ color: CHROME_RENK.muted }}>Henüz personel eklenmedi.</p>}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {liste.map((p) => (
-              <div key={p.id} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div key={p.id} style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
                 <div>
-                  <div style={{ fontWeight: 600 }}>{p.adSoyad} <span style={{ fontWeight: 400, color: '#94A3B8', fontSize: 12 }}>· Sekreter</span></div>
-                  <div style={{ fontSize: 13, color: '#94A3B8' }}>{p.email}</div>
+                  <div style={{ fontWeight: 600, color: CHROME_RENK.ink }}>{p.adSoyad} <span style={{ fontWeight: 400, color: CHROME_RENK.muted, fontSize: 12 }}>· Sekreter</span></div>
+                  <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>{p.email}</div>
                   <div style={{ fontSize: 12, marginTop: 4 }}>
-                    {p.davetSuresiDoldu && <span style={{ color: '#EF4444' }}>Davetin süresi doldu</span>}
-                    {!p.davetSuresiDoldu && p.davetBeklemede && <span style={{ color: '#F59E0B' }}>Davet bekleniyor</span>}
-                    {!p.davetBeklemede && <span style={{ color: p.aktif ? '#22C55E' : '#64748B' }}>{p.aktif ? 'Aktif' : 'Pasif'}</span>}
+                    {p.davetSuresiDoldu && <span style={{ color: CHROME_RENK.warn }}>Davetin süresi doldu</span>}
+                    {!p.davetSuresiDoldu && p.davetBeklemede && <span style={{ color: '#B4832F' }}>Davet bekleniyor</span>}
+                    {!p.davetBeklemede && <span style={{ color: p.aktif ? '#3F7D4A' : CHROME_RENK.muted }}>{p.aktif ? 'Aktif' : 'Pasif'}</span>}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -176,7 +175,7 @@ export default function PersonelPage() {
                       {p.aktif ? 'Pasif Yap' : 'Aktif Yap'}
                     </button>
                   )}
-                  <button type="button" onClick={() => kaldir(p.id)} style={{ ...aksiyonBtn, color: '#EF4444' }}>Kaldır</button>
+                  <button type="button" onClick={() => kaldir(p.id)} style={{ ...aksiyonBtn, color: CHROME_RENK.warn }}>Kaldır</button>
                 </div>
               </div>
             ))}
@@ -188,9 +187,9 @@ export default function PersonelPage() {
 }
 
 const aksiyonBtn: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.08)',
+  background: '#EFE9DC',
   border: 'none',
-  color: '#CBD5E1',
+  color: CHROME_RENK.ink,
   borderRadius: 8,
   padding: '6px 12px',
   fontSize: 12,

@@ -15,6 +15,7 @@ import type { GozKaynak } from '../protocols/sources';
 import type { Dipnot } from '../protocols/sources';
 import { AsistanaRaporla, AcilSablon, FundusDrPaneli, LazerKarti, IvtKontrolPaneli, KataraktEk, BiyoKarti, OctKalinlik, RopKarti, HatirlatmaKarti, GlokomOneriDugmeleri, refraksiyonOzet, type GozEkVeri } from './GozKartlarEk';
 import type { Biyometri, PostopKayit } from '../engines/katarakt';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export { stil } from './stil';
 import { stil } from './stil';
@@ -74,14 +75,14 @@ function GibGrafik({ seriSag, seriSol, hedefSag, hedefSol }: { seriSag: { tarih:
   const cizgi = (s: { tarih: string; deger: number }[]) => s.map((p) => `${x(p.tarih)},${y(p.deger)}`).join(' ');
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: 420, display: 'block' }} role="img" aria-label="GİB trendi">
-      {[min, Math.round((min + max) / 2), max].map((v) => <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.08)" /><text x={L - 4} y={y(v) + 3} fontSize="9" textAnchor="end" fill="#64748B">{v}</text></g>)}
-      {hedefSag != null && <line x1={L} x2={W - R} y1={y(hedefSag)} y2={y(hedefSag)} stroke="#2DD4BF" strokeDasharray="4 3" opacity="0.6" />}
+      {[min, Math.round((min + max) / 2), max].map((v) => <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.08)" /><text x={L - 4} y={y(v) + 3} fontSize="9" textAnchor="end" fill={CHROME_RENK.muted}>{v}</text></g>)}
+      {hedefSag != null && <line x1={L} x2={W - R} y1={y(hedefSag)} y2={y(hedefSag)} stroke="#0F9B8E" strokeDasharray="4 3" opacity="0.6" />}
       {hedefSol != null && <line x1={L} x2={W - R} y1={y(hedefSol)} y2={y(hedefSol)} stroke="#60A5FA" strokeDasharray="4 3" opacity="0.6" />}
-      <polyline points={cizgi(seriSag)} fill="none" stroke="#2DD4BF" strokeWidth="2" />
+      <polyline points={cizgi(seriSag)} fill="none" stroke="#0F9B8E" strokeWidth="2" />
       <polyline points={cizgi(seriSol)} fill="none" stroke="#60A5FA" strokeWidth="2" />
-      {seriSag.map((p) => <circle key={`d${p.tarih}`} cx={x(p.tarih)} cy={y(p.deger)} r="3" fill="#2DD4BF"><title>{`OD ${p.tarih}: ${p.deger}`}</title></circle>)}
+      {seriSag.map((p) => <circle key={`d${p.tarih}`} cx={x(p.tarih)} cy={y(p.deger)} r="3" fill="#0F9B8E"><title>{`OD ${p.tarih}: ${p.deger}`}</title></circle>)}
       {seriSol.map((p) => <circle key={`s${p.tarih}`} cx={x(p.tarih)} cy={y(p.deger)} r="3" fill="#60A5FA"><title>{`OS ${p.tarih}: ${p.deger}`}</title></circle>)}
-      <text x={L} y={H - 4} fontSize="9" fill="#64748B">{tarihler[0]}</text><text x={W - R} y={H - 4} fontSize="9" fill="#64748B" textAnchor="end">{tarihler[tarihler.length - 1]}</text>
+      <text x={L} y={H - 4} fontSize="9" fill={CHROME_RENK.muted}>{tarihler[0]}</text><text x={W - R} y={H - 4} fontSize="9" fill={CHROME_RENK.muted} textAnchor="end">{tarihler[tarihler.length - 1]}</text>
     </svg>
   );
 }
@@ -115,15 +116,15 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
       <div style={etiket}>Açık görevler ({v.gorevler.length})</div>
       {!v.gorevler.length && <div style={kucuk}>Açık görev yok.</div>}
       {v.gorevler.map((g) => (
-        <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun() ? '#F87171' : '#EDF1F7', padding: '2px 0' }}>
+        <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun() ? '#F87171' : CHROME_RENK.ink, padding: '2px 0' }}>
           <span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due || 'tarih yok'}</span></span>
           {!salt && <button type="button" aria-label="Tamamlandı" onClick={() => yaz({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })} style={{ ...ghost, minWidth: 36 }}>✓</button>}
         </div>
       ))}
       <div style={{ ...etiket, marginTop: 10 }}>Ölçüm geçmişi</div>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#EDF1F7', minWidth: 320 }}>
-          <thead><tr style={{ color: '#8FA0B5', textAlign: 'left' }}><th style={{ padding: 4 }}>Tarih</th><th>VA OD</th><th>VA OS</th><th>GİB OD</th><th>GİB OS</th></tr></thead>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: CHROME_RENK.ink, minWidth: 320 }}>
+          <thead><tr style={{ color: CHROME_RENK.muted, textAlign: 'left' }}><th style={{ padding: 4 }}>Tarih</th><th>VA OD</th><th>VA OS</th><th>GİB OD</th><th>GİB OS</th></tr></thead>
           <tbody>{v.muayeneler.map((m) => <tr key={m.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 4, whiteSpace: 'nowrap' }}>{m.tarih}{m.kaynak === 'kopya_onayli' ? ' ⧉' : ''}</td><td>{m.gosterim.sag}</td><td>{m.gosterim.sol}</td><td>{m.gib_sag ?? '—'}</td><td>{m.gib_sol ?? '—'}</td></tr>)}</tbody>
         </table>
       </div>
@@ -168,7 +169,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
       <div>
         <div style={etiket}>Göz dibi (fundus) <span style={kucuk}>· TR sıra: disk (3C) → damar → makula → perifer · OD/OS ayrı · tanı/DR evresi yok</span></div>
         <div style={{ ...kucuk, marginBottom: 8 }}>
-          Dilate muayene kaydı hekimindir. Fotoğraf AI’si: Belge › Fundus › Asistana raporla (tek foto = bir göz; güven ≤%70). DR evresi için <b style={{ color: '#8FA0B5', fontWeight: 600 }}>DR</b> sekmesi.
+          Dilate muayene kaydı hekimindir. Fotoğraf AI’si: Belge › Fundus › Asistana raporla (tek foto = bir göz; güven ≤%70). DR evresi için <b style={{ color: CHROME_RENK.muted, fontWeight: 600 }}>DR</b> sekmesi.
         </div>
         {onizleme && <div style={{ ...metin, marginBottom: 8, padding: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>{onizleme}</div>}
         {!salt && <>
@@ -183,7 +184,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
           </div>
           <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12, marginTop: 8 }}>
             <span />
-            <b style={{ color: '#2DD4BF' }}>OD (sağ)</b>
+            <b style={{ color: '#0F9B8E' }}>OD (sağ)</b>
             <b style={{ color: '#60A5FA' }}>OS (sol)</b>
             <span style={kucuk}>Disk</span>{gozAlan('sag', 'disk', 'pembe, kenar net')}{gozAlan('sol', 'disk', 'pembe, kenar net')}
             <span style={kucuk}>C/D</span>{gozAlan('sag', 'cd', '0,3')}{gozAlan('sol', 'cd', '0,3')}
@@ -224,7 +225,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             <div style={kucuk}>Yüklü fundus fotoğrafları · Ayşe taslağı Görüntü sekmesinde</div>
             {fundusFotolar.slice(0, 6).map((g) => (
               <div key={g.id} style={{ ...metin, marginTop: 4 }}>
-                {g.tarih} · {gozAd(g.goz)} {g.url && <>· <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>aç</a></>}
+                {g.tarih} · {gozAd(g.goz)} {g.url && <>· <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#0F9B8E' }}>aç</a></>}
               </div>
             ))}
           </div>
@@ -241,7 +242,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         <div style={etiket}>Glokom döngüsü <span style={kucuk}>· tanı, hedef GİB, damla, GA/OCT aralığı hekimin · motor titrasyon önermez</span></div>
         {d && <>
           <GibGrafik seriSag={d.gozler.find((g) => g.goz === 'sag')?.seri || []} seriSol={d.gozler.find((g) => g.goz === 'sol')?.seri || []} hedefSag={k?.hedefSag ?? null} hedefSol={k?.hedefSol ?? null} />
-          <div style={kucuk}><span style={{ color: '#2DD4BF' }}>━ OD</span> · <span style={{ color: '#60A5FA' }}>━ OS</span> · kesik çizgi = hekim hedefi</div>
+          <div style={kucuk}><span style={{ color: '#0F9B8E' }}>━ OD</span> · <span style={{ color: '#60A5FA' }}>━ OS</span> · kesik çizgi = hekim hedefi</div>
           {d.bayraklar.map((b) => <div key={b} style={{ ...metin, color: '#FBBF24' }}>⚠ {b}</div>)}
           {d.gorevler.map((g) => <div key={g.kod} style={metin}>• {g.ad}{g.due ? ` — ${g.due}` : ''}</div>)}
           {d.rejim.length > 0 && <div style={{ ...metin, marginTop: 4 }}>Rejim: {d.rejim.join(' | ')}</div>}
@@ -305,7 +306,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
             {!salt && <div style={satir}><button type="button" onClick={async () => { const j = await calistir({ adim: 'dr_sevk_kapat', sevkId: sv.id }, 'Sevk kapatıldı; dahiliye DM kartına göz dibi tarihi yazıldı.'); if (j?.geriBildirim) setSonuc(j); }} style={btn}>Sevki kapat + dahiliyeye geri bildir</button><span style={kucuk}>önce aşağıda evre + fundus tarihi</span></div>}
           </div>
         ))}
-        {typeof sonuc?.geriBildirim === 'string' && <div style={{ ...metin, color: '#2DD4BF' }}>Geri bildirim: {sonuc.geriBildirim as string}</div>}
+        {typeof sonuc?.geriBildirim === 'string' && <div style={{ ...metin, color: '#0F9B8E' }}>Geri bildirim: {sonuc.geriBildirim as string}</div>}
         {d && <>
           {d.taramaGorevi && <div style={{ ...metin, color: '#FBBF24' }}>⚠ {d.taramaGorevi.ad}</div>}
           {d.kontrol && (
@@ -349,8 +350,8 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         <div style={etiket}>İntravitreal enjeksiyon <span style={kucuk}>· SUT 4.2.33 · karar, doz ve idame aralığı hekimin</span></div>
         {(['sag', 'sol'] as const).map((g) => <div key={g} style={metin}><b>{gozAd(g)}:</b> {v.sonrakiDoz[g].not}{v.sonrakiDoz[g].enErken ? ` — pencere ${v.sonrakiDoz[g].enErken} → ${v.sonrakiDoz[g].enGec}` : ''}</div>)}
         <div style={{ overflowX: 'auto', marginTop: 6 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#EDF1F7', minWidth: 360 }}>
-            <thead><tr style={{ color: '#8FA0B5', textAlign: 'left' }}><th style={{ padding: 4 }}>Tarih</th><th>Göz</th><th>Ajan</th><th>Faz</th><th>Durum</th></tr></thead>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: CHROME_RENK.ink, minWidth: 360 }}>
+            <thead><tr style={{ color: CHROME_RENK.muted, textAlign: 'left' }}><th style={{ padding: 4 }}>Tarih</th><th>Göz</th><th>Ajan</th><th>Faz</th><th>Durum</th></tr></thead>
             <tbody>{v.enjeksiyonlar.map((x) => <tr key={x.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 4 }}>{x.tarih}</td><td>{gozAd(x.goz)}</td><td>{AJAN_ADI[x.ajan]}</td><td>{x.faz === 'yukleme' ? `yükleme ${x.dozNo ?? ''}` : 'idame'}</td><td>{x.durum}{x.durum === 'yapildi' && x.ivtKontrol ? <span style={kucuk} title="IVT odası kontrol listesi">{(x.ivtKontrol as { gecmisKayit?: boolean }).gecmisKayit ? ' · geçmiş kayıt' : ` · ✓ liste${(x.ivtKontrol as { lot?: string }).lot ? ` · lot ${(x.ivtKontrol as { lot?: string }).lot}` : ''}`}</span> : null}{!salt && x.durum === 'planli' && <button type="button" onClick={() => set('ivtId', x.id)} style={{ ...ghost, marginLeft: 6, padding: '2px 8px' }}>yapıldı</button>}</td></tr>)}</tbody>
           </table>
         </div>
@@ -376,7 +377,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         {kapi && <div style={{ marginTop: 6 }}>
           {kapi.engeller.map((x) => <div key={x} style={{ ...metin, color: '#F87171' }}>✕ {x}</div>)}
           {kapi.uyarilar.map((x) => <div key={x} style={{ ...metin, color: '#FBBF24' }}>⚠ {x}</div>)}
-          {!kapi.engeller.length && !kapi.uyarilar.length && <div style={{ ...metin, color: '#2DD4BF' }}>SUT kapılarında engel yok.</div>}
+          {!kapi.engeller.length && !kapi.uyarilar.length && <div style={{ ...metin, color: '#0F9B8E' }}>SUT kapılarında engel yok.</div>}
           <Kaynak d={kapi.dipnotlar} acik={kaynak} k={v.kaynaklar} />
         </div>}
         {takvim.length > 0 && <div style={{ ...metin, marginTop: 4 }}>Yükleme takvimi taslağı: {takvim.map((t) => `${t.dozNo}. doz ${t.enErken === t.enGec ? t.enErken : `${t.enErken}–${t.enGec}`}`).join(' · ')}</div>}
@@ -409,12 +410,12 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: '4px 0' }}>{String(r.draft.mevcutDurum || '')}</pre>
           {(r.draft.zorunluTetkikler as string[] | undefined)?.length ? <div style={kucuk}>Tetkikler: {(r.draft.zorunluTetkikler as string[]).join(' · ')}</div> : null}
           <div>{String(r.draft.hekim_degerlendirmesi || '')}</div>
-          {r.sutKontrol.map((x) => <div key={x.madde} style={{ color: x.tamam === true ? '#2DD4BF' : x.tamam === false ? '#F87171' : '#8FA0B5' }}>{x.tamam === true ? '✓' : x.tamam === false ? '✕' : '?'} {x.madde}</div>)}
+          {r.sutKontrol.map((x) => <div key={x.madde} style={{ color: x.tamam === true ? '#0F9B8E' : x.tamam === false ? '#F87171' : CHROME_RENK.muted }}>{x.tamam === true ? '✓' : x.tamam === false ? '✕' : '?'} {x.madde}</div>)}
           {r.eksikler.map((x) => <div key={x} style={{ color: '#FBBF24' }}>Eksik: {x}</div>)}
           <Kaynak d={r.dipnotlar} acik={kaynak} k={v.kaynaklar} />
         </div>}
         <div style={{ ...etiket, marginTop: 10 }}>Kayıtlı taslaklar</div>
-        {v.sgkRaporlari.map((x) => <div key={x.id} style={{ ...metin, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><span>{x.created_at.slice(0, 10)} · {v.sgkSablonlari.find((t) => t.id === x.sablon)?.ad} · <b>{x.durum}</b>{x.eksikler.length ? ` · ${x.eksikler.length} eksik` : ''}</span>{!salt && x.durum === 'taslak' && <button type="button" onClick={() => { const eksikVar = x.eksikler.length > 0; if (eksikVar && !window.confirm(`${x.eksikler.length} eksik var:\n- ${x.eksikler.join('\n- ')}\n\nYine de kilitlensin mi? (hekim sorumluluğunda)`)) return; calistir({ adim: 'sgkrapor_kilit', id: x.id, eksikRaganKilitle: eksikVar }, eksikVar ? 'Rapor eksiklerle hekim onayıyla kilitlendi.' : 'Rapor kilitlendi.'); }} style={ghost}>Kilitle</button>}{x.durum === 'kilitli' && <span style={{ ...kucuk, color: '#2DD4BF' }}>Kilitli — Medula'ya hekim e-imza ile girilir (Notya canlı gönderim yapmaz)</span>}</div>)}
+        {v.sgkRaporlari.map((x) => <div key={x.id} style={{ ...metin, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><span>{x.created_at.slice(0, 10)} · {v.sgkSablonlari.find((t) => t.id === x.sablon)?.ad} · <b>{x.durum}</b>{x.eksikler.length ? ` · ${x.eksikler.length} eksik` : ''}</span>{!salt && x.durum === 'taslak' && <button type="button" onClick={() => { const eksikVar = x.eksikler.length > 0; if (eksikVar && !window.confirm(`${x.eksikler.length} eksik var:\n- ${x.eksikler.join('\n- ')}\n\nYine de kilitlensin mi? (hekim sorumluluğunda)`)) return; calistir({ adim: 'sgkrapor_kilit', id: x.id, eksikRaganKilitle: eksikVar }, eksikVar ? 'Rapor eksiklerle hekim onayıyla kilitlendi.' : 'Rapor kilitlendi.'); }} style={ghost}>Kilitle</button>}{x.durum === 'kilitli' && <span style={{ ...kucuk, color: '#0F9B8E' }}>Kilitli — Medula'ya hekim e-imza ile girilir (Notya canlı gönderim yapmaz)</span>}</div>)}
         {!v.sgkRaporlari.length && <div style={kucuk}>Taslak yok.</div>}
       </div>
     );
@@ -456,7 +457,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
       <div key={o.id} style={{ marginTop: 4, padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
         <div style={kucuk}>{o.kaynak === 'belge_tier_a' ? `Asistan (Tier A görüntü okuma${o.guven_ust_pct != null ? ` · güven ≤%${o.guven_ust_pct}` : ''}${o.tek_alan ? ' · tek alan' : ''})` : o.kaynak === 'ayse_iskelet' ? 'Asistan kontrol listesi' : o.taslak_yazan === 'asistan' ? 'Asistan / Ayşe taslağı' : 'Uzman taslağı'} · {gozAd(o.goz)} · {o.durum === 'draft' ? 'onay bekliyor' : o.durum}</div>
         <div style={{ whiteSpace: 'pre-wrap' }}>{o.taslak}</div>
-        {o.uzman_metin && <div style={{ color: '#2DD4BF' }}>Uzman: {o.uzman_metin}</div>}
+        {o.uzman_metin && <div style={{ color: '#0F9B8E' }}>Uzman: {o.uzman_metin}</div>}
         {!salt && o.durum === 'draft' && <div style={satir}>
           <button type="button" onClick={() => calistir({ adim: 'goruntu_okuma', eylem: 'onayla', id: o.id }, 'Okuma uzman onaylı.')} style={btn}>Onayla</button>
           <input value={s(`duz_${o.id}`)} onChange={(e) => set(`duz_${o.id}`, e.target.value)} placeholder="düzeltilmiş metin" style={{ ...toolsInput, minWidth: 160, flex: 1 }} />
@@ -485,7 +486,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
               {([{ u: (sonuc.a as { url?: string }).url, t: (sonuc.a as { tarih?: string }).tarih }, { u: (sonuc.b as { url?: string }).url, t: (sonuc.b as { tarih?: string }).tarih }]).map((x, i) => (
                 <div key={i} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: 6, ...metin }}>
                   <div style={kucuk}>{x.t}</div>
-                  {x.u ? <a href={x.u} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>Görüntüyü aç</a> : 'URL yok'}
+                  {x.u ? <a href={x.u} target="_blank" rel="noreferrer" style={{ color: '#0F9B8E' }}>Görüntüyü aç</a> : 'URL yok'}
                   {(() => { const o = v.octOlcumleri.find((m) => m.goruntu_id === (i === 0 ? (sonuc.a as { id?: string }).id : (sonuc.b as { id?: string }).id)); return o ? <div style={kucuk}>MFK {o.mfk_mikron ?? '—'} µm · RNFL {o.rnfl_mikron ?? '—'} µm (hekim)</div> : null; })()}
                 </div>
               ))}
@@ -496,7 +497,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         {!v.goruntuler.length && <div style={{ ...kucuk, marginTop: 6 }}>Göz görüntüsü yok.</div>}
         {v.goruntuler.map((g) => (
           <div key={g.id} style={{ borderLeft: '2px solid rgba(99,102,241,0.6)', paddingLeft: 10, margin: '10px 0', ...metin }}>
-            <div><b>{g.tarih}</b> · {MOD_ADI[g.modalite] || g.modalite} · {g.goz || 'göz belirtilmedi'}{g.url && <> · <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#2DD4BF' }}>aç</a></>}</div>
+            <div><b>{g.tarih}</b> · {MOD_ADI[g.modalite] || g.modalite} · {g.goz || 'göz belirtilmedi'}{g.url && <> · <a href={g.url} target="_blank" rel="noreferrer" style={{ color: '#0F9B8E' }}>aç</a></>}</div>
             {g.modalite === 'oct' && <OctKalinlik goruntuId={g.id} goz={g.goz} olcum={v.octOlcumleri.find((x) => x.goruntu_id === g.id) || null} calistir={calistir} salt={salt} />}
             {g.okumalar.map((o) => okumaGoster(o))}
             {!salt && <div style={satir}>
@@ -593,7 +594,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         <div key={p.id} style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, ...metin }}>
           <div style={etiket}>{p.ad}</div>
           <div style={kucuk}>Sorgu</div>{p.sorgu.map((x) => <div key={x}>• {x}</div>)}
-          <div style={{ ...kucuk, color: '#F87171', marginTop: 4 }}>Kırmızı bayrak</div>{p.kirmiziBayrak.map((x) => <div key={x} style={{ color: '#FCA5A5' }}>• {x}</div>)}
+          <div style={{ ...kucuk, color: '#F87171', marginTop: 4 }}>Kırmızı bayrak</div>{p.kirmiziBayrak.map((x) => <div key={x} style={{ color: CHROME_RENK.warn }}>• {x}</div>)}
           <div style={{ ...kucuk, marginTop: 4 }}>Yaklaşım (sınıf düzeyi, doz hekimin)</div>{p.yaklasim.map((x) => <div key={x}>• {x}</div>)}
           {p.sgk.length > 0 && <><div style={{ ...kucuk, marginTop: 4 }}>SGK</div>{p.sgk.map((x) => <div key={x}>• {x}</div>)}</>}
           <Kaynak d={p.dipnotlar} acik={kaynak} k={v.kaynaklar} />

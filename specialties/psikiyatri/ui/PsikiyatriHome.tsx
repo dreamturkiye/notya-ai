@@ -15,6 +15,7 @@ import { PHQ9_BANT_AD, PHQ9_ISLEVSELLIK_SORUSU, PHQ9_ISLEVSELLIK_SECENEKLERI, sk
 import { GAD7_BANT_AD, skorla as gad7Skorla } from '../engines/gad7';
 import { psikRaporTaslagi, PSIK_RAPOR_SABLONLARI, type PsikRaporSablon } from '../engines/sgkRapor';
 import type { PsikSerit } from '../engines/serit';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Siklik = { deger: 0 | 1 | 2 | 3; etiket: string };
 type Olcek = { id: string; tip: string; skor: number; maddeler: Record<string, unknown> | null; tarih: string; hekim_kilit: boolean; not_hekim: string | null };
@@ -44,22 +45,22 @@ type Veri = {
 
 const ACCENT = '#6366F1';
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#A5B4FC', marginBottom: 6 };
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5', lineHeight: 1.45 };
-const metin: React.CSSProperties = { fontSize: 12, color: '#EDF1F7', lineHeight: 1.5 };
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 };
+const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
 
 const SEKMELER = ['Özet', 'Ölçekler', 'Risk', 'İlaç izlem', 'Görevler', 'SGK'] as const;
 type Sekme = (typeof SEKMELER)[number];
 
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: '#64748B' };
+const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted };
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
-    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || '#EDF1F7', whiteSpace: 'nowrap' }}>
-      <span style={{ color: '#8FA0B5' }}>{ad} </span>{deger}
-      {alt && <span style={{ color: '#64748B' }}> · {alt}</span>}
+    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
+      <span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}
+      {alt && <span style={{ color: CHROME_RENK.muted }}> · {alt}</span>}
     </span>
   );
 }
@@ -86,7 +87,7 @@ function OlcekFormu({
                 type="button"
                 onClick={() => set(i, degerler[i] === s.deger ? null : s.deger)}
                 aria-pressed={degerler[i] === s.deger}
-                style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: degerler[i] === s.deger ? 'rgba(99,102,241,0.25)' : 'transparent', color: degerler[i] === s.deger ? '#C7D2FE' : '#8FA0B5' }}
+                style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: degerler[i] === s.deger ? 'rgba(99,102,241,0.25)' : 'transparent', color: degerler[i] === s.deger ? '#C7D2FE' : CHROME_RENK.muted }}
               >{s.deger} · {s.etiket}</button>
             ))}
           </div>
@@ -94,7 +95,7 @@ function OlcekFormu({
       ))}
       {ek}
       <div style={{ ...satir, marginTop: 10 }}>
-        <span style={{ fontSize: 18, fontWeight: 800, color: sonuc.tamamMi ? '#C7D2FE' : '#64748B' }}>{sonuc.toplam}</span>
+        <span style={{ fontSize: 18, fontWeight: 800, color: sonuc.tamamMi ? '#C7D2FE' : CHROME_RENK.muted }}>{sonuc.toplam}</span>
         <span style={metin}>{sonuc.tamamMi ? sonuc.bantAd : `${sonuc.eksikMadde} madde boş — toplam yorumlanmaz`}</span>
         <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ</span>
       </div>
@@ -154,7 +155,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
     bugun: new Date().toISOString().slice(0, 10),
   }) : null, [v, raporSablon, raporIcd, raporIcdAd, raporNot]);
 
-  if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Psikiyatri yükleniyor…</div>;
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Psikiyatri yükleniyor…</div>;
 
   const bugun = new Date().toISOString().slice(0, 10);
 
@@ -165,15 +166,15 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
         {v.serit.chips.map((c) => <Cip key={c.ad} {...c} />)}
       </div>
       {v.serit.kirmizi.length > 0 && (
-        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
+        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: CHROME_RENK.warn, borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
           {v.serit.kirmizi.map((k) => <div key={k}>⚑ {k}</div>)}
-          <div style={{ ...kucuk, color: '#FCA5A5', marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
+          <div style={{ ...kucuk, color: CHROME_RENK.warn, marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
         </div>
       )}
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {SEKMELER.map((x) => (
-          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(99,102,241,0.2)' : 'transparent', color: sekme === x ? '#C7D2FE' : '#8FA0B5' }}>{x}</button>
+          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(99,102,241,0.2)' : 'transparent', color: sekme === x ? '#C7D2FE' : CHROME_RENK.muted }}>{x}</button>
         ))}
       </div>
 
@@ -223,14 +224,14 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
                 <div style={kucuk}>{PHQ9_ISLEVSELLIK_SORUSU} <span style={{ opacity: 0.8 }}>(toplama girmez)</span></div>
                 <div style={satir}>
                   {PHQ9_ISLEVSELLIK_SECENEKLERI.map((s) => (
-                    <button key={s} type="button" onClick={() => setIslevsellik(islevsellik === s ? '' : s)} style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: islevsellik === s ? 'rgba(99,102,241,0.25)' : 'transparent', color: islevsellik === s ? '#C7D2FE' : '#8FA0B5' }}>{s}</button>
+                    <button key={s} type="button" onClick={() => setIslevsellik(islevsellik === s ? '' : s)} style={{ ...ghost, padding: '4px 10px', minHeight: 30, background: islevsellik === s ? 'rgba(99,102,241,0.25)' : 'transparent', color: islevsellik === s ? '#C7D2FE' : CHROME_RENK.muted }}>{s}</button>
                   ))}
                 </div>
               </div>
             }
           />
           {phqSonuc.ozkıyımMadde9 && (
-            <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 10px', fontSize: 12, marginTop: 8 }}>
+            <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: CHROME_RENK.warn, borderRadius: 8, padding: '8px 10px', fontSize: 12, marginTop: 8 }}>
               9. madde pozitif — güvenlik değerlendirmesi zorunlu. Risk sekmesinden kaydedin.
             </div>
           )}
@@ -322,7 +323,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
             <>
               <div style={{ ...etiket, marginTop: 12 }}>Güvenlik kayıtları</div>
               {v.risk.gecmis.map((r) => (
-                <div key={r.id} style={{ ...kucuk, color: r.hekim_onay ? '#8FA0B5' : '#FCA5A5' }}>
+                <div key={r.id} style={{ ...kucuk, color: r.hekim_onay ? CHROME_RENK.muted : CHROME_RENK.warn }}>
                   {r.tarih} · {r.bayraklar.length ? r.bayraklar.join(', ') : 'bayrak yok'} · {r.hekim_onay ? 'hekim onaylı' : 'ONAY BEKLİYOR'}{r.eylem ? ` — ${r.eylem}` : ''}
                 </div>
               ))}
@@ -336,7 +337,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Psikotrop izlem takvimi <span style={kucuk}>· sınıf düzeyi; doz ve titrasyon hekimin</span></div>
           {!v.ilaclar.length && <div style={kucuk}>Aktif ilaç yok. İzlem görevleri hasta ilaç listesinden üretilir; Notya ilaç eklemez.</div>}
           {v.izlem.map((g) => (
-            <div key={g.kod} style={{ ...metin, color: g.due < bugun ? '#FCA5A5' : '#EDF1F7', padding: '3px 0' }}>
+            <div key={g.kod} style={{ ...metin, color: g.due < bugun ? CHROME_RENK.warn : CHROME_RENK.ink, padding: '3px 0' }}>
               • {g.ad} <span style={kucuk}>· {g.ilac} · {g.due}{g.labs.length ? ` · ${g.labs.join(', ')}` : ''}</span>
             </div>
           ))}
@@ -354,7 +355,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Açık görevler ({v.gorevler.length})</div>
           {!v.gorevler.length && <div style={kucuk}>Açık görev yok.</div>}
           {v.gorevler.map((g) => (
-            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#F87171' : '#EDF1F7', padding: '2px 0' }}>
+            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#F87171' : CHROME_RENK.ink, padding: '2px 0' }}>
               <span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due || ''}{g.kaynak ? ` · ${g.kaynak}` : ''}</span></span>
               <button type="button" style={{ ...ghost, padding: '4px 10px', minWidth: 36, minHeight: 28, flexShrink: 0 }} onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })}>✓</button>
             </div>
@@ -381,7 +382,7 @@ export default function PsikiyatriHome({ patientId }: { patientId: string }) {
             <>
               <div style={{ ...etiket, marginTop: 10 }}>Reçete türü</div>
               {raporSonuc.receteNotlari.map((r) => (
-                <div key={r.ilac} style={{ ...kucuk, color: r.renk === 'normal' ? '#8FA0B5' : '#FBBF24' }}>
+                <div key={r.ilac} style={{ ...kucuk, color: r.renk === 'normal' ? CHROME_RENK.muted : '#FBBF24' }}>
                   {r.ilac} — {r.etiket}{r.dogrulanmali ? ` · ${r.dogrulanmali}` : ''}
                 </div>
               ))}

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
 
@@ -131,9 +131,9 @@ const Page: React.FC = () => {
   const maxUzmanlik = Math.max(...(data.uzmanlik.length ? data.uzmanlik.map(u => u.count) : [1]), 1);
 
   const getActivityColor = (val: number) => {
-    if (val === 0) return 'rgba(255,255,255,0.05)';
-    if (val <= 2) return 'rgba(15,155,142,0.6)';
-    return '#0F9B8E';
+    if (val === 0) return '#EFE9DC';
+    if (val <= 2) return `${CHROME_RENK.pine}99`;
+    return CHROME_RENK.pine;
   };
 
   const printPDF = async () => {
@@ -173,135 +173,130 @@ const Page: React.FC = () => {
   };
 
   const kpiCards = [
-    { label: 'Bu Ay Muayene', value: data.muayene, color: '#0F9B8E' },
-    { label: 'Bekleyen Onay', value: data.bekleyen, color: '#F59E0B' },
-    { label: 'Aktif Hasta', value: data.aktifHasta, color: '#3B82F6' },
-    { label: 'Tamamlanan Not', value: data.tamamlananNot, color: '#10B981' },
+    { label: 'Bu Ay Muayene', value: data.muayene, color: CHROME_RENK.pine },
+    { label: 'Bekleyen Onay', value: data.bekleyen, color: '#B4832F' },
+    { label: 'Aktif Hasta', value: data.aktifHasta, color: '#4A5C8A' },
+    { label: 'Tamamlanan Not', value: data.tamamlananNot, color: CHROME_RENK.pine },
   ];
 
   return (
-    <div style={{ backgroundColor: '#0A1628', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: 'white' }}>
+    <div>
       <style>{`@media print { nav, button { display: none !important; } }`}</style>
 
-      <DoktorNav />
+      {/* NOTYA-SADE-01 (Ö5): İnceleme üst menüden kalktı — onay kuyruğuna buradan tek tık */}
+      <a href="/dashboard/doktor/inceleme" style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#FBF3DE', border: '1px solid #E4C989', color: '#7A5B1E', borderRadius: 14, padding: '12px 16px', marginBottom: 20, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+        🟠 Onay Bekleyen Notlar (İnceleme) <span style={{ marginLeft: 'auto', fontSize: 16 }}>›</span>
+      </a>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '28px' }}>
+        <div style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 28, color: '#2e251d', letterSpacing: '-0.02em' }}>Aylık Klinik Raporu</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <button onClick={() => changeMonth(-1)} style={{ fontSize: '20px', background: 'none', border: 'none', color: CHROME_RENK.pine, cursor: 'pointer', flexShrink: 0 }}>←</button>
+          <div style={{ fontSize: '15px', fontWeight: 600, whiteSpace: 'nowrap', color: CHROME_RENK.ink }}>{monthLabel}</div>
+          <button onClick={() => changeMonth(1)} style={{ fontSize: '20px', background: 'none', border: 'none', color: CHROME_RENK.pine, cursor: 'pointer', flexShrink: 0 }}>→</button>
+          <button onClick={printPDF} disabled={pdfLoading} style={{ background: CHROME_RENK.pine, color: '#FAF8F4', border: 'none', padding: '9px 16px', borderRadius: '999px', fontSize: '13.5px', fontWeight: 700, cursor: pdfLoading ? 'not-allowed' : 'pointer', opacity: pdfLoading ? 0.6 : 1, flexShrink: 0, whiteSpace: 'nowrap' }}>{pdfLoading ? 'Hazırlanıyor...' : 'PDF İndir'}</button>
+        </div>
+      </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 60px' }}>
-        <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-block', marginTop: 24 }}>← Doktor</a>
-        {/* NOTYA-SADE-01 (Ö5): İnceleme üst menüden kalktı — onay kuyruğuna buradan tek tık */}
-        <a href="/dashboard/doktor/inceleme" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.4)', color: '#FDBA74', borderRadius: 12, padding: '12px 16px', marginTop: 12, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
-          🟠 Onay Bekleyen Notlar (İnceleme) <span style={{ marginLeft: 'auto', fontSize: 16 }}>›</span>
-        </a>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', paddingTop: '32px', marginBottom: '32px' }}>
-          <div style={{ fontSize: '24px', fontWeight: 700 }}>Aylık Klinik Raporu</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <button onClick={() => changeMonth(-1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer', flexShrink: 0 }}>←</button>
-            <div style={{ fontSize: '16px', fontWeight: 500, whiteSpace: 'nowrap' }}>{monthLabel}</div>
-            <button onClick={() => changeMonth(1)} style={{ fontSize: '24px', background: 'none', border: 'none', color: '#0F9B8E', cursor: 'pointer', flexShrink: 0 }}>→</button>
-            <button onClick={printPDF} disabled={pdfLoading} style={{ background: '#0F9B8E', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', cursor: pdfLoading ? 'not-allowed' : 'pointer', opacity: pdfLoading ? 0.6 : 1, flexShrink: 0, whiteSpace: 'nowrap' }}>{pdfLoading ? 'Hazırlanıyor...' : 'PDF İndir'}</button>
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', margin: '0 0 24px' }}>
+        {kpiCards.map((card, idx) => (
+          <div key={idx} style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: '16px', padding: '20px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+            {loading ? (
+              <div style={{ height: '48px', background: '#EFE9DC', borderRadius: '8px' }} />
+            ) : (
+              <>
+                <div style={{ fontFamily: CHROME_FONT.serif, fontSize: '32px', fontWeight: 600, color: card.color }}>{card.value}</div>
+                <div style={{ fontSize: '13px', color: CHROME_RENK.muted, marginTop: '4px' }}>{card.label}</div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Two Column Layout */}
+      <div style={{ display: 'flex', gap: '16px', flexDirection: isNarrow ? 'column' : 'row' }}>
+        {/* LEFT 60% */}
+        <div style={{ flex: '0 0 60%' }}>
+          {/* Son Tanılar */}
+          <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: '16px', padding: '22px', marginBottom: '18px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', color: CHROME_RENK.pine, textTransform: 'uppercase', marginBottom: '16px' }}>En Çok Konulan Tanılar</div>
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => <div key={i} style={{ height: '42px', background: '#F6F0E4', marginBottom: '8px', borderRadius: '6px' }} />)
+            ) : data.tanilar.length === 0 ? (
+              <div style={{ color: CHROME_RENK.muted, fontSize: '14px' }}>Henüz tanı kaydedilmedi</div>
+            ) : (
+              data.tanilar.slice(0, 5).map((t, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ width: '70px', fontSize: '13px', fontWeight: 700, color: CHROME_RENK.pine }}>{t.code}</div>
+                  <div style={{ flex: 1, fontSize: '14px', color: CHROME_RENK.ink }}>{t.name}</div>
+                  <div style={{ width: '40px', textAlign: 'right', fontSize: '13px', color: CHROME_RENK.muted }}>{t.count}</div>
+                  <div style={{ width: '120px', marginLeft: '12px', background: '#EFE9DC', height: '6px', borderRadius: '3px' }}>
+                    <div style={{ width: `${(t.count / maxTanilar) * 100}%`, height: '100%', background: CHROME_RENK.pine, borderRadius: '3px' }} />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Aktivite Takvimi */}
+          <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: '16px', padding: '22px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', color: CHROME_RENK.pine, textTransform: 'uppercase', marginBottom: '16px' }}>Aktivite Takvimi</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 20px)', gap: '4px' }}>
+              {data.activity.map((val, i) => (
+                <div key={i} style={{ width: '20px', height: '20px', background: getActivityColor(val), borderRadius: '3px' }} />
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 20px)', gap: '4px', marginTop: '4px' }}>
+              {Array.from({ length: 35 }).map((_, i) => (
+                <div key={i} style={{ fontSize: '9px', color: CHROME_RENK.muted, textAlign: 'center' }}>{((i % 7) + 1)}</div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', margin: '24px 0' }}>
-          {kpiCards.map((card, idx) => (
-            <div key={idx} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderLeft: `4px solid ${card.color}`, borderRadius: '16px', padding: '20px' }}>
-              {loading ? (
-                <div style={{ height: '60px', background: 'rgba(255,255,255,0.06)', borderRadius: '8px' }} />
-              ) : (
-                <>
-                  <div style={{ fontSize: '32px', fontWeight: 700 }}>{card.value}</div>
-                  <div style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '4px' }}>{card.label}</div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Two Column Layout */}
-        <div style={{ display: 'flex', gap: '20px', flexDirection: isNarrow ? 'column' : 'row' }}>
-          {/* LEFT 60% */}
-          <div style={{ flex: '0 0 60%' }}>
-            {/* Son Tanılar */}
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>EN ÇOK KONULAN TANILAR</div>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => <div key={i} style={{ height: '42px', background: 'rgba(255,255,255,0.06)', marginBottom: '8px', borderRadius: '6px' }} />)
-              ) : data.tanilar.length === 0 ? (
-                <div style={{ color: '#9CA3AF', fontSize: '14px' }}>Henüz tanı kaydedilmedi</div>
-              ) : (
-                data.tanilar.slice(0, 5).map((t, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ width: '70px', fontSize: '13px', fontWeight: 700, color: '#0F9B8E' }}>{t.code}</div>
-                    <div style={{ flex: 1, fontSize: '14px' }}>{t.name}</div>
-                    <div style={{ width: '40px', textAlign: 'right', fontSize: '13px', color: '#9CA3AF' }}>{t.count}</div>
-                    <div style={{ width: '120px', marginLeft: '12px', background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '3px' }}>
-                      <div style={{ width: `${(t.count / maxTanilar) * 100}%`, height: '100%', background: '#0F9B8E', borderRadius: '3px' }} />
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Aktivite Takvimi */}
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px' }}>
-              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>AKTİVİTE TAKVİMİ</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 20px)', gap: '4px' }}>
-                {data.activity.map((val, i) => (
-                  <div key={i} style={{ width: '20px', height: '20px', background: getActivityColor(val), borderRadius: '3px' }} />
-                ))}
+        {/* RIGHT 40% */}
+        <div style={{ flex: '0 0 40%' }}>
+          {/* Uzmanlık Dağılımı */}
+          <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: '16px', padding: '22px', marginBottom: '18px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', color: CHROME_RENK.pine, textTransform: 'uppercase', marginBottom: '16px' }}>Uzmanlık Dağılımı</div>
+            {loading ? Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ height: '32px', background: '#F6F0E4', marginBottom: '10px', borderRadius: '4px' }} />) : data.uzmanlik.map((u, idx) => (
+              <div key={idx} style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px', color: CHROME_RENK.ink }}>
+                  <span>{u.name}</span><span>{u.count}</span>
+                </div>
+                <div style={{ height: '6px', background: '#EFE9DC', borderRadius: '3px' }}>
+                  <div style={{ width: `${(u.count / maxUzmanlik) * 100}%`, height: '100%', background: CHROME_RENK.pine, borderRadius: '3px' }} />
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 20px)', gap: '4px', marginTop: '4px' }}>
-                {Array.from({ length: 35 }).map((_, i) => (
-                  <div key={i} style={{ fontSize: '9px', color: '#6B7280', textAlign: 'center' }}>{((i % 7) + 1)}</div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* RIGHT 40% */}
-          <div style={{ flex: '0 0 40%' }}>
-            {/* Uzmanlık Dağılımı */}
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>UZMANLIK DAĞILIMI</div>
-              {loading ? Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ height: '32px', background: 'rgba(255,255,255,0.06)', marginBottom: '10px', borderRadius: '4px' }} />) : data.uzmanlik.map((u, idx) => (
-                <div key={idx} style={{ marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                    <span>{u.name}</span><span>{u.count}</span>
-                  </div>
-                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px' }}>
-                    <div style={{ width: `${(u.count / maxUzmanlik) * 100}%`, height: '100%', background: '#0F9B8E', borderRadius: '3px' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Bu Hafta */}
+          <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: '16px', padding: '22px', marginBottom: '18px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', color: CHROME_RENK.pine, textTransform: 'uppercase', marginBottom: '16px' }}>Bu Hafta</div>
+            {[
+              { label: 'Seans', val: data.hafta.seans, color: CHROME_RENK.pine },
+              { label: 'Onaylanan', val: data.hafta.onaylanan, color: '#4A5C8A' },
+              { label: 'Bekleyen', val: data.hafta.bekleyen, color: '#B4832F' },
+            ].map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ width: '8px', height: '8px', background: s.color, borderRadius: '50%', marginRight: '10px' }} />
+                <div style={{ flex: 1, fontSize: '14px', color: CHROME_RENK.ink }}>{s.label}</div>
+                <div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>{s.val}</div>
+              </div>
+            ))}
+          </div>
 
-            {/* Bu Hafta */}
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>BU HAFTA</div>
-              {[
-                { label: 'Seans', val: data.hafta.seans, color: '#0F9B8E' },
-                { label: 'Onaylanan', val: data.hafta.onaylanan, color: '#3B82F6' },
-                { label: 'Bekleyen', val: data.hafta.bekleyen, color: '#F59E0B' },
-              ].map((s, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <div style={{ width: '8px', height: '8px', background: s.color, borderRadius: '50%', marginRight: '10px' }} />
-                  <div style={{ flex: 1, fontSize: '14px' }}>{s.label}</div>
-                  <div style={{ fontWeight: 600 }}>{s.val}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Hızlı Erişim */}
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '24px' }}>
-              <div style={{ fontSize: '10px', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '16px' }}>HIZLI ERİŞİM</div>
-              <a href="/doktor-tools/epikriz" style={{ display: 'flex', justifyContent: 'space-between', color: '#0F9B8E', fontSize: '14px', marginBottom: '12px', textDecoration: 'none' }}>
-                Epikriz Üret <span>→</span>
-              </a>
-              <a href="/doktor-tools/icd10" style={{ display: 'flex', justifyContent: 'space-between', color: '#0F9B8E', fontSize: '14px', textDecoration: 'none' }}>
-                ICD-10 Kodla <span>→</span>
-              </a>
-            </div>
+          {/* Hızlı Erişim */}
+          <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: '16px', padding: '22px', boxShadow: '0 8px 18px rgba(58,44,34,0.045)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', color: CHROME_RENK.pine, textTransform: 'uppercase', marginBottom: '16px' }}>Hızlı Erişim</div>
+            <a href="/doktor-tools/epikriz" style={{ display: 'flex', justifyContent: 'space-between', color: CHROME_RENK.pine, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textDecoration: 'none' }}>
+              Epikriz Üret <span>→</span>
+            </a>
+            <a href="/doktor-tools/icd10" style={{ display: 'flex', justifyContent: 'space-between', color: CHROME_RENK.pine, fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>
+              ICD-10 Kodla <span>→</span>
+            </a>
           </div>
         </div>
       </div>

@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
-import DoktorNav from '@/components/doktor/DoktorNav'
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 type Provider = 'medula' | 'nvi_kps'
 
@@ -14,12 +14,14 @@ type IntegrationStatus = {
   lastError: string | null
 }
 
-const TEAL = '#14B8A6'
-const AMBER = '#F59E0B'
-const GREEN = '#10B981'
-const BG = '#060C18'
-const CARD = 'rgba(255,255,255,0.04)'
-const BORDER = 'rgba(255,255,255,0.1)'
+const TEAL = CHROME_RENK.pine
+const AMBER = '#B4832F'
+const GREEN = '#3F7D4A'
+const BG = 'transparent'
+const CARD = '#FFFFFF'
+const BORDER = CHROME_RENK.border
+const INK = CHROME_RENK.ink
+const MUTED = CHROME_RENK.muted
 
 const LABELS: Record<Provider, { title: string; subtitle: string }> = {
   medula: {
@@ -147,27 +149,26 @@ export default function EntegrasyonlarPage() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
     border: `1px solid ${BORDER}`,
     borderRadius: 10,
     padding: '12px 14px',
-    color: '#fff',
+    color: INK,
     fontSize: 15,
     boxSizing: 'border-box',
   }
 
   return (
-    <div style={{ backgroundColor: BG, minHeight: '100vh', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
-      <DoktorNav />
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px' }}>
-        <a href="/dashboard/doktor/ayarlar" style={{ color: '#8FA0B5', fontSize: 13, textDecoration: 'none' }}>← Ayarlar</a>
-        <h1 style={{ fontSize: 28, fontWeight: 650, margin: '10px 0 8px' }}>Entegrasyonlar</h1>
-        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, margin: '0 0 28px', lineHeight: 1.5 }}>
+    <div style={{ backgroundColor: BG, color: INK, fontFamily: CHROME_FONT.sans }}>
+      <div style={{ maxWidth: 560 }}>
+        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Ayarlar</div>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, margin: '0 0 8px', color: '#2e251d', letterSpacing: '-0.02em' }}>Entegrasyonlar</h1>
+        <p style={{ color: MUTED, fontSize: 14, margin: '0 0 28px', lineHeight: 1.5 }}>
           Şifreniz şifreli saklanır; sorgular sizin yetkinizle yapılır.
         </p>
 
         {loading ? (
-          <div style={{ color: 'rgba(255,255,255,0.5)' }}>Yükleniyor…</div>
+          <div style={{ color: MUTED }}>Yükleniyor…</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {(['medula', 'nvi_kps'] as Provider[]).map((p) => {
@@ -184,23 +185,24 @@ export default function EntegrasyonlarPage() {
                     border: `1px solid ${BORDER}`,
                     borderRadius: 16,
                     padding: '18px 20px',
-                    color: '#fff',
+                    color: INK,
                     cursor: 'pointer',
+                    boxShadow: '0 8px 18px rgba(58,44,34,0.045)',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                     <div>
                       <div style={{ fontSize: 17, fontWeight: 600 }}>{LABELS[p].title}</div>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>
+                      <div style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>
                         {LABELS[p].subtitle}
                       </div>
                       {connected && st?.meta?.hekimTcMasked ? (
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>
+                        <div style={{ fontSize: 12, color: MUTED, marginTop: 6 }}>
                           TC: {String(st.meta.hekimTcMasked)}
                         </div>
                       ) : null}
                       {connected && st?.meta?.usernameMasked ? (
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>
+                        <div style={{ fontSize: 12, color: MUTED, marginTop: 6 }}>
                           Kullanıcı: {String(st.meta.usernameMasked)}
                         </div>
                       ) : null}
@@ -223,7 +225,7 @@ export default function EntegrasyonlarPage() {
         )}
 
         {error && !active ? (
-          <div style={{ marginTop: 16, color: '#FBBF24', fontSize: 14 }}>{error}</div>
+          <div style={{ marginTop: 16, color: '#7A5B1E', fontSize: 14 }}>{error}</div>
         ) : null}
       </div>
 
@@ -232,7 +234,7 @@ export default function EntegrasyonlarPage() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.65)',
+            background: 'rgba(0,0,0,0.5)',
             zIndex: 200,
             display: 'flex',
             alignItems: 'flex-end',
@@ -245,22 +247,22 @@ export default function EntegrasyonlarPage() {
             style={{
               width: '100%',
               maxWidth: 520,
-              background: '#0B1220',
+              background: '#FAF8F4',
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               border: `1px solid ${BORDER}`,
               padding: '24px 20px calc(24px + env(safe-area-inset-bottom))',
             }}
           >
-            <div style={{ fontSize: 18, fontWeight: 650, marginBottom: 6 }}>{LABELS[active].title}</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 20, lineHeight: 1.45 }}>
+            <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 20, fontWeight: 500, marginBottom: 6, color: '#2e251d' }}>{LABELS[active].title}</div>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 20, lineHeight: 1.45 }}>
               Şifreniz şifreli saklanır; sorgular sizin yetkinizle yapılır. Kaydettikten sonra şifre tarayıcıya geri dönmez.
             </div>
 
             {active === 'medula' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Hekim TC</label>
+                  <label style={{ fontSize: 12, color: MUTED }}>Hekim TC</label>
                   <input
                     value={medulaForm.hekimTc}
                     maxLength={11}
@@ -272,7 +274,7 @@ export default function EntegrasyonlarPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Kurumsal şifre</label>
+                  <label style={{ fontSize: 12, color: MUTED }}>Kurumsal şifre</label>
                   <div style={{ position: 'relative' }}>
                     <input
                       type={showPw ? 'text' : 'password'}
@@ -290,7 +292,7 @@ export default function EntegrasyonlarPage() {
                         transform: 'translateY(-50%)',
                         background: 'none',
                         border: 'none',
-                        color: '#94A3B8',
+                        color: MUTED,
                         cursor: 'pointer',
                       }}
                     >
@@ -299,7 +301,7 @@ export default function EntegrasyonlarPage() {
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Tesis kodu (opsiyonel)</label>
+                  <label style={{ fontSize: 12, color: MUTED }}>Tesis kodu (opsiyonel)</label>
                   <input
                     value={medulaForm.tesisKodu}
                     onChange={(e) => setMedulaForm((f) => ({ ...f, tesisKodu: e.target.value }))}
@@ -307,7 +309,7 @@ export default function EntegrasyonlarPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Sicil no (opsiyonel)</label>
+                  <label style={{ fontSize: 12, color: MUTED }}>Sicil no (opsiyonel)</label>
                   <input
                     value={medulaForm.sicilNo}
                     onChange={(e) => setMedulaForm((f) => ({ ...f, sicilNo: e.target.value }))}
@@ -318,7 +320,7 @@ export default function EntegrasyonlarPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Kullanıcı adı</label>
+                  <label style={{ fontSize: 12, color: MUTED }}>Kullanıcı adı</label>
                   <input
                     value={nviForm.username}
                     onChange={(e) => setNviForm((f) => ({ ...f, username: e.target.value }))}
@@ -327,7 +329,7 @@ export default function EntegrasyonlarPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Şifre</label>
+                  <label style={{ fontSize: 12, color: MUTED }}>Şifre</label>
                   <input
                     type={showPw ? 'text' : 'password'}
                     value={nviForm.password}
@@ -339,7 +341,7 @@ export default function EntegrasyonlarPage() {
               </div>
             )}
 
-            {error ? <div style={{ color: '#F87171', fontSize: 13, marginTop: 12 }}>{error}</div> : null}
+            {error ? <div style={{ color: CHROME_RENK.warn, fontSize: 13, marginTop: 12 }}>{error}</div> : null}
 
             <button
               type="button"
@@ -352,7 +354,7 @@ export default function EntegrasyonlarPage() {
                 border: 'none',
                 borderRadius: 12,
                 background: TEAL,
-                color: '#041016',
+                color: '#FAF8F4',
                 fontWeight: 650,
                 fontSize: 16,
                 cursor: saving ? 'wait' : 'pointer',
@@ -373,7 +375,7 @@ export default function EntegrasyonlarPage() {
                   borderRadius: 12,
                   border: `1px solid ${BORDER}`,
                   background: 'transparent',
-                  color: '#F87171',
+                  color: CHROME_RENK.warn,
                   fontSize: 15,
                   cursor: 'pointer',
                 }}
@@ -391,7 +393,7 @@ export default function EntegrasyonlarPage() {
                 height: 40,
                 border: 'none',
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.5)',
+                color: MUTED,
                 cursor: 'pointer',
               }}
             >

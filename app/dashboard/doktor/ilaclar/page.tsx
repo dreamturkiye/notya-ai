@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import IlacSecici from '@/components/doktor/IlacSecici';
 import {
   getAccessToken, getAccessTokenAsync,
@@ -16,6 +15,7 @@ import {
   toolsErrorBox,
   type HastaOption,
 } from '@/lib/doktor/toolsUi';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 interface Ilac {
   id: string;
@@ -313,9 +313,9 @@ export default function DoktorIlaclarPage() {
     >
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#F8FAFC' }}>{ilac.ad}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: CHROME_RENK.ink }}>{ilac.ad}</div>
           {ilac.etkenMadde && (
-            <div style={{ fontSize: 13, color: '#94A3B8', marginTop: 2 }}>{ilac.etkenMadde}</div>
+            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 2 }}>{ilac.etkenMadde}</div>
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -328,8 +328,8 @@ export default function DoktorIlaclarPage() {
               fontWeight: 600,
               cursor: 'pointer',
               background: 'transparent',
-              color: pasif ? '#6EE7B7' : '#FCD34D',
-              border: `1px solid ${pasif ? 'rgba(110,231,183,0.4)' : 'rgba(252,211,77,0.4)'}`,
+              color: pasif ? '#2E6E4E' : '#7A5B1E',
+              border: `1px solid ${pasif ? 'rgba(46,110,78,0.4)' : 'rgba(122,91,30,0.4)'}`,
             }}
           >
             {pasif ? 'Yeniden Başlat' : 'Durdur'}
@@ -343,8 +343,8 @@ export default function DoktorIlaclarPage() {
               fontWeight: 600,
               cursor: 'pointer',
               background: 'transparent',
-              color: '#FCA5A5',
-              border: '1px solid rgba(252,165,165,0.4)',
+              color: CHROME_RENK.warn,
+              border: `1px solid ${CHROME_RENK.warn}66`,
             }}
           >
             Sil
@@ -355,9 +355,9 @@ export default function DoktorIlaclarPage() {
       <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
         <span
           style={{
-            background: 'rgba(15,155,142,0.16)',
-            color: '#5EEAD4',
-            border: '1px solid rgba(94,234,212,0.25)',
+            background: '#E4F3F1',
+            color: CHROME_RENK.pine,
+            border: `1px solid ${CHROME_RENK.pine}40`,
             padding: '4px 11px',
             borderRadius: 9999,
             fontSize: 12,
@@ -367,11 +367,11 @@ export default function DoktorIlaclarPage() {
           {[ilac.doz, KULLANIM_ETIKET[ilac.kullanim] || ilac.kullanim].filter(Boolean).join(' • ') ||
             'Doz belirtilmemiş'}
         </span>
-        <span style={{ fontSize: 12, color: '#94A3B8' }}>{tarihAraligi(ilac)}</span>
+        <span style={{ fontSize: 12, color: CHROME_RENK.muted }}>{tarihAraligi(ilac)}</span>
       </div>
 
       {ilac.notlar && (
-        <div style={{ marginTop: 10, fontSize: 13, color: '#CBD5E1', lineHeight: 1.5 }}>{ilac.notlar}</div>
+        <div style={{ marginTop: 10, fontSize: 13, color: CHROME_RENK.ink, lineHeight: 1.5 }}>{ilac.notlar}</div>
       )}
     </div>
   );
@@ -384,7 +384,7 @@ export default function DoktorIlaclarPage() {
           fontSize: 11,
           fontWeight: 700,
           color: renk,
-          background: 'rgba(255,255,255,0.07)',
+          background: '#F6F0E4',
           padding: '2px 9px',
           borderRadius: 9999,
         }}
@@ -396,12 +396,10 @@ export default function DoktorIlaclarPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
-
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px 56px' }}>
-        <a href="/dashboard/doktor" style={{ color: '#2DD4BF', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>← Doktor</a>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: '10px 0 0' }}>İlaç Yönetimi</h1>
-        <p style={{ color: '#94A3B8', fontSize: 14, margin: '6px 0 20px' }}>
+      <div style={{ maxWidth: 900 }}>
+        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
+        <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: 0, color: '#2e251d', letterSpacing: '-0.02em' }}>İlaç Yönetimi</h1>
+        <p style={{ color: CHROME_RENK.muted, fontSize: 14, margin: '6px 0 20px' }}>
           Hasta ilaçlarını görüntüleyin ve yönetin
         </p>
 
@@ -420,7 +418,7 @@ export default function DoktorIlaclarPage() {
             {!loading && hastalar.length === 0 && <option value="">Hasta bulunamadı</option>}
             {!loading && hastalar.length > 0 && <option value="">Hasta seçin</option>}
             {hastalar.map((h) => (
-              <option key={h.id} value={h.id} style={{ background: '#0A1628', color: '#fff' }}>
+              <option key={h.id} value={h.id} style={{ background: '#FFFFFF', color: '#000' }}>
                 {h.label}
               </option>
             ))}
@@ -443,9 +441,9 @@ export default function DoktorIlaclarPage() {
                 marginTop: 12,
                 padding: '12px 14px',
                 borderRadius: 12,
-                background: 'rgba(15,155,142,0.14)',
-                border: '1px solid rgba(94,234,212,0.32)',
-                color: '#99F6E4',
+                background: '#E4F3F1',
+                border: `1px solid ${CHROME_RENK.pine}55`,
+                color: '#2E6E4E',
                 fontSize: 13,
               }}
             >
@@ -456,7 +454,7 @@ export default function DoktorIlaclarPage() {
 
         {showAddForm && selectedHastaId && (
           <div style={{ ...toolsCard, marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>Yeni İlaç Ekle</h2>
+            <h2 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 20, margin: '0 0 16px', color: '#2e251d' }}>Yeni İlaç Ekle</h2>
             {/* Picker first: brand from the SGK list, then the pharmacy pack. Fills the fields below. */}
             <div style={{ marginBottom: 14 }}>
               <IlacSecici
@@ -514,7 +512,7 @@ export default function DoktorIlaclarPage() {
                   style={toolsInput}
                 >
                   {KULLANIM_SECENEKLERI.map((o) => (
-                    <option key={o.value} value={o.value} style={{ background: '#0A1628', color: '#fff' }}>
+                    <option key={o.value} value={o.value} style={{ background: '#FFFFFF', color: '#000' }}>
                       {o.label}
                     </option>
                   ))}
@@ -562,29 +560,29 @@ export default function DoktorIlaclarPage() {
         )}
 
         {loading ? (
-          <div style={{ ...toolsCard, textAlign: 'center', color: '#94A3B8' }}>Yükleniyor...</div>
+          <div style={{ ...toolsCard, textAlign: 'center', color: CHROME_RENK.muted }}>Yükleniyor...</div>
         ) : !selectedHastaId ? (
-          <div style={{ ...toolsCard, textAlign: 'center', color: '#94A3B8' }}>
+          <div style={{ ...toolsCard, textAlign: 'center', color: CHROME_RENK.muted }}>
             {hastalar.length === 0
               ? 'Kayıtlı hasta bulunamadı. Önce hasta ekleyin.'
               : 'Lütfen bir hasta seçin.'}
           </div>
         ) : ilaclar.length === 0 ? (
-          <div style={{ ...toolsCard, textAlign: 'center', color: '#94A3B8' }}>
+          <div style={{ ...toolsCard, textAlign: 'center', color: CHROME_RENK.muted }}>
             Bu hasta için henüz ilaç eklenmedi.
           </div>
         ) : (
           <div>
             {aktifIlaclar.length > 0 && (
               <div style={{ marginBottom: 24 }}>
-                {bolumBasligi('AKTİF İLAÇLAR', aktifIlaclar.length, '#5EEAD4')}
+                {bolumBasligi('AKTİF İLAÇLAR', aktifIlaclar.length, CHROME_RENK.pine)}
                 {aktifIlaclar.map((ilac) => renderIlacKarti(ilac, false))}
               </div>
             )}
 
             {pasifIlaclar.length > 0 && (
               <div>
-                {bolumBasligi('PASİF İLAÇLAR', pasifIlaclar.length, '#94A3B8')}
+                {bolumBasligi('PASİF İLAÇLAR', pasifIlaclar.length, CHROME_RENK.muted)}
                 {pasifIlaclar.map((ilac) => renderIlacKarti(ilac, true))}
               </div>
             )}

@@ -9,17 +9,18 @@ import { getAccessTokenAsync, toolsCard, toolsInput } from '@/lib/doktor/toolsUi
 import { JinekolojiV2Sekmeler } from './JinekolojiV2Sekmeler';
 import { TrTarihAlan } from './TrTarihAlan';
 import { JinekolojiWowSekmeler, WOW_SEKME, type WowVeri } from './JinekolojiWowSekmeler';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 type Due = { kod: string; ad: string; due: string | null; durum: string; not: string; takvim: string };
 type Gorev = { id: string; kod: string; ad: string; due: string | null; kaynak: string };
 type Serviks = { id: string; tarih: string; pap_sonuc: string | null; hpv: string | null; taslak_aksiyon: { adim: string; sonrakiAy: number | null; guven: number; gerekce: string; kolposkopi: boolean } | null; resmi_plan: string | null; sonraki_due: string | null; hekim_onayladi: boolean; kolposkopi: Record<string, unknown> | null };
 type Veri = { kadinSagligi: Record<string, unknown> | null; due: Due[]; serviks: Serviks[]; cybh: { id: string; tarih: string; etkenler: string[]; on_tani: { etken: string | null; guven: number; gerekce: string } | null; partner: { gerekli: boolean } | null; ilk_genital_ulser: boolean }[]; pcos: { kriterler: Record<string, unknown>; dislama: Record<string, boolean>; degerlendirme: { kriterSayisi: number; rotterdamKarsilar: boolean; dislamaTam: boolean; not: string[] } | null; hekim_tanisi: string | null; amenore_gun: number | null } | null; lezyonlar: { id: string; tur: string; boyut_mm: number | null; figo_tip: string | null; yer: string | null; semptom: string | null; sonraki_us: string | null; created_at: string }[]; kontrasepsiyon: { id: string; yontem: string; baslangic: string | null; son_kullanim: string | null; aktif: boolean; ria_notu: { ip_kontrol_tarihi?: string; pid_uyari_bitis?: string } | null }[]; hrt: { hrt_basladi: boolean; hrt_baslangic: string | null; rejim: string | null; degerlendirme: { engeller: string[]; uyarilar: string[]; eksikler: string[] } | null } | null; gorevler: Gorev[]; gebe: boolean; v2?: { aub: Record<string, unknown>[]; kok: Record<string, unknown>[]; endo: Record<string, unknown> | null; rm: Record<string, unknown> | null; egk: Record<string, unknown>[] }; wow?: WowVeri & { kokYillik?: { due: string; maddeler: string[] } | null }; kutuphane: { etkenler: readonly string[]; hrtYillik: string[]; infertilite: string[]; refler?: Record<string, string> } };
 
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 };
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : '#8FA0B5' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
-const dueRenk: Record<string, string> = { gecikti: '#F87171', yaklasiyor: '#FBBF24', planli: '#2DD4BF', uygun_degil: '#64748B' };
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#0F9B8E' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const dueRenk: Record<string, string> = { gecikti: '#F87171', yaklasiyor: '#FBBF24', planli: '#0F9B8E', uygun_degil: CHROME_RENK.muted };
 const SEKME = ['Tarama & Görevler', 'Serviks', 'CYBH', 'PCOS', 'Kontrasepsiyon', 'Menopoz / HRT', 'Lezyon', 'İnfertilite', 'AUB / PMP', 'KOK kapısı', 'Endometriozis', 'Tekrarlayan kayıp', 'Erken gebelik kaybı', ...WOW_SEKME] as const;
 const PAP = ['NILM', 'ASC-US', 'ASC-H', 'LSIL', 'HSIL', 'AGC', 'CA', 'yetersiz'], HPV = [['neg', 'Negatif'], ['16', 'HPV 16'], ['18', 'HPV 18'], ['other_hr', 'Diğer HR'], ['low_risk', 'Düşük risk']];
 
@@ -38,19 +39,19 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
   useEffect(() => { yukle(); }, [yukle]);
   const calistir = async (body: Record<string, unknown>, ok?: string) => { setMesaj(''); try { const j = await api(body); setMesaj(ok || 'Kaydedildi.'); await yukle(); return j; } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; } };
 
-  if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Jinekoloji yükleniyor…</div>;
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Jinekoloji yükleniyor…</div>;
   const ks = v.kadinSagligi || {};
 
   return (
     <div style={{ ...toolsCard, marginBottom: 12 }} data-chapter="jinekoloji-spine">
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>{SEKME.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999 }}>{x}{x === 'Tarama & Görevler' && v.due.some((d) => d.durum === 'gecikti') ? ' ⚠' : ''}</button>)}</div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -4, marginBottom: 6 }}><button type="button" onClick={() => setKaynakAcik(!kaynakAcik)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynakAcik ? '#2DD4BF' : '#64748B' }}>{kaynakAcik ? 'Kaynak: açık (yalnız hekim)' : 'Kaynak'}</button></div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>{SEKME.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#0F9B8E' : CHROME_RENK.muted, borderRadius: 999 }}>{x}{x === 'Tarama & Görevler' && v.due.some((d) => d.durum === 'gecikti') ? ' ⚠' : ''}</button>)}</div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -4, marginBottom: 6 }}><button type="button" onClick={() => setKaynakAcik(!kaynakAcik)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynakAcik ? '#0F9B8E' : CHROME_RENK.muted }}>{kaynakAcik ? 'Kaynak: açık (yalnız hekim)' : 'Kaynak'}</button></div>
       {v.gebe && <div style={{ ...kucuk, color: '#FBBF24', marginBottom: 6 }}>Aktif gebelik var — gebelik akışı Doğum spine'da; burada yalnız gebelik dışı ofis jinekolojisi.</div>}
-      {mesaj && <div style={{ fontSize: 12, color: /amadı|gerek|geçersiz|Hata|engel|onaylanmalı/.test(mesaj) ? '#F87171' : '#2DD4BF', marginBottom: 8 }}>{mesaj}</div>}
+      {mesaj && <div style={{ fontSize: 12, color: /amadı|gerek|geçersiz|Hata|engel|onaylanmalı/.test(mesaj) ? '#F87171' : '#0F9B8E', marginBottom: 8 }}>{mesaj}</div>}
 
       {sekme === 'Tarama & Görevler' && (<div>
         <div style={etiket}>Tarama takvimi <span style={kucuk}>· SB (KETEM) + ofis; yaşa göre motor hesaplar</span></div>
-        {v.due.map((d) => <div key={d.kod} style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 12, color: '#EDF1F7', borderTop: '1px solid rgba(255,255,255,0.06)' }}><span style={{ minWidth: 90, color: dueRenk[d.durum], fontWeight: 800 }}>{d.durum === 'gecikti' ? '✖ gecikti' : d.durum === 'yaklasiyor' ? '● yaklaşıyor' : d.durum === 'planli' ? '○ planlı' : '— uygun değil'}</span><span style={{ flex: 1 }}>{d.ad} <span style={kucuk}>{d.due ? `· ${d.due}` : ''} · {d.takvim} · {d.not}</span></span></div>)}
+        {v.due.map((d) => <div key={d.kod} style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 12, color: CHROME_RENK.ink, borderTop: '1px solid rgba(255,255,255,0.06)' }}><span style={{ minWidth: 90, color: dueRenk[d.durum], fontWeight: 800 }}>{d.durum === 'gecikti' ? '✖ gecikti' : d.durum === 'yaklasiyor' ? '● yaklaşıyor' : d.durum === 'planli' ? '○ planlı' : '— uygun değil'}</span><span style={{ flex: 1 }}>{d.ad} <span style={kucuk}>{d.due ? `· ${d.due}` : ''} · {d.takvim} · {d.not}</span></span></div>)}
         <div style={{ ...etiket, marginTop: 10 }}>Son tarama tarihleri (düzenle)</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {[['son_pap', 'Son Pap'], ['son_hpv', 'Son HPV'], ['son_mamografi', 'Son mamografi'], ['son_dxa', 'Son DXA'], ['son_kolorektal', 'Son GGK']].map(([k, ad]) => <div key={k} style={{ width: 160 }}><TrTarihAlan label={ad} value={String(ks[k] || s(k))} onChange={(iso) => { set(k, iso); if (iso !== String(ks[k] || '')) calistir({ adim: 'kadin_sagligi', alanlar: { [k]: iso } }); }} /></div>)}
@@ -58,7 +59,7 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
         </div>
         <div style={{ ...etiket, marginTop: 10 }}>Açık görevler ({v.gorevler.length})</div>
         {!v.gorevler.length && <div style={kucuk}>Açık görev yok.</div>}
-        {v.gorevler.map((g) => <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '3px 0', fontSize: 12, color: '#EDF1F7' }}><span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due ? `· ${g.due}` : ''} · {g.kaynak}</span></span><button type="button" onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })} style={{ ...ghost, padding: '2px 8px', fontSize: 11 }}>Tamam</button></div>)}
+        {v.gorevler.map((g) => <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '3px 0', fontSize: 12, color: CHROME_RENK.ink }}><span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due ? `· ${g.due}` : ''} · {g.kaynak}</span></span><button type="button" onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })} style={{ ...ghost, padding: '2px 8px', fontSize: 11 }}>Tamam</button></div>)}
         {!ofisModulleri && <><div style={{ ...etiket, marginTop: 10 }}>Yıllık kontrol kaydı</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ width: 160 }}><TrTarihAlan label="Jine SAT" value={s('lmp')} onChange={(iso) => set('lmp', iso)} /></div>
@@ -79,9 +80,9 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
           <select value={s('hpv')} onChange={(e) => set('hpv', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="">HPV</option>{HPV.map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}</select>
           <button type="button" onClick={() => calistir({ adim: 'serviks', tarih: s('sv_tarih') || undefined, pap: s('pap') || null, hpv: s('hpv') || null }, 'Sonuç kaydedildi; taslak aksiyon üretildi.')} style={btn}>Kaydet</button>
         </div>
-        {v.serviks.map((k) => <div key={k.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 0', fontSize: 12, color: '#EDF1F7' }}>
+        {v.serviks.map((k) => <div key={k.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '6px 0', fontSize: 12, color: CHROME_RENK.ink }}>
           <div><b>{k.tarih}</b> · Pap {k.pap_sonuc || '—'} · HPV {k.hpv || '—'}{k.taslak_aksiyon && <span style={kucuk}> · taslak: {k.taslak_aksiyon.adim} (%{k.taslak_aksiyon.guven}, {k.taslak_aksiyon.gerekce}){k.taslak_aksiyon.kolposkopi ? ' · kolposkopi görevi' : ''}</span>}</div>
-          {k.hekim_onayladi ? <div style={{ ...kucuk, color: '#2DD4BF' }}>✓ Resmi plan (hekim): {k.resmi_plan}{k.sonraki_due ? ` · sonraki ${k.sonraki_due}` : ''}</div> : <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}><input value={s('rp_' + k.id) || k.taslak_aksiyon?.adim || ''} onChange={(e) => set('rp_' + k.id, e.target.value)} style={{ ...toolsInput, minWidth: 260 }} /><div style={{ width: 160 }}><TrTarihAlan label="Sonraki" value={s('rd_' + k.id) || k.sonraki_due || ''} onChange={(iso) => set('rd_' + k.id, iso)} /></div><button type="button" onClick={() => calistir({ adim: 'serviks_onayla', kayitId: k.id, resmiPlan: s('rp_' + k.id) || k.taslak_aksiyon?.adim, sonrakiDue: s('rd_' + k.id) || k.sonraki_due }, 'Plan kilitlendi.')} style={btn}>Planı kilitle</button></div>}
+          {k.hekim_onayladi ? <div style={{ ...kucuk, color: '#0F9B8E' }}>✓ Resmi plan (hekim): {k.resmi_plan}{k.sonraki_due ? ` · sonraki ${k.sonraki_due}` : ''}</div> : <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}><input value={s('rp_' + k.id) || k.taslak_aksiyon?.adim || ''} onChange={(e) => set('rp_' + k.id, e.target.value)} style={{ ...toolsInput, minWidth: 260 }} /><div style={{ width: 160 }}><TrTarihAlan label="Sonraki" value={s('rd_' + k.id) || k.sonraki_due || ''} onChange={(iso) => set('rd_' + k.id, iso)} /></div><button type="button" onClick={() => calistir({ adim: 'serviks_onayla', kayitId: k.id, resmiPlan: s('rp_' + k.id) || k.taslak_aksiyon?.adim, sonrakiDue: s('rd_' + k.id) || k.sonraki_due }, 'Plan kilitlendi.')} style={btn}>Planı kilitle</button></div>}
           {k.taslak_aksiyon?.kolposkopi && !k.kolposkopi && <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}><input value={s('kb_' + k.id)} onChange={(e) => set('kb_' + k.id, e.target.value)} placeholder="Kolposkopi bulgu / biyopsi sonucu (CIN?)" style={{ ...toolsInput, minWidth: 260 }} /><button type="button" onClick={() => calistir({ adim: 'kolposkopi', kayitId: k.id, veri: { tarih: new Date().toISOString().slice(0, 10), bulgu: s('kb_' + k.id) } })} style={ghost}>Kolposkopi kaydet</button></div>}
           {k.kolposkopi && <div style={kucuk}>Kolposkopi: {String(k.kolposkopi.bulgu || '')} ({String(k.kolposkopi.tarih || '')})</div>}
         </div>)}
@@ -100,7 +101,7 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
           <button type="button" onClick={() => calistir({ adim: 'cybh', sikayet: { ph: s('ph'), whiff: b('whiff'), clue_cell: b('clue'), hif: b('hif'), trichomonas: b('trich') }, etkenler: f.etk || [], ilkGenitalUlser: b('ulser'), hsv: s('hsvTip') ? { tip: s('hsvTip'), ilkAtak: b('ilkAtak'), atakYil: Number(s('atakYil')) || 0, supresyon: false } : null }, 'Episod kaydedildi; görevler oluştu.')} style={btn}>Kaydet</button>
           <button type="button" onClick={() => { setSekme('CYBH tedavi'); set('etk', f.etk || []); }} style={ghost}>Tedavi motoruna geç →</button>
         </div>
-        {v.cybh.map((c) => <div key={c.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '5px 0', fontSize: 12, color: '#EDF1F7' }}><b>{c.tarih}</b> · {c.etkenler.join(', ') || '—'}{c.on_tani?.etken ? <span style={kucuk}> · ön tanı: {c.on_tani.etken} (%{c.on_tani.guven})</span> : null}{c.partner?.gerekli ? <span style={{ color: '#FBBF24' }}> · partner tedavisi</span> : null}{c.ilk_genital_ulser ? <span style={{ color: '#F87171' }}> · ilk ülser: HIV/RPR</span> : null}</div>)}
+        {v.cybh.map((c) => <div key={c.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '5px 0', fontSize: 12, color: CHROME_RENK.ink }}><b>{c.tarih}</b> · {c.etkenler.join(', ') || '—'}{c.on_tani?.etken ? <span style={kucuk}> · ön tanı: {c.on_tani.etken} (%{c.on_tani.guven})</span> : null}{c.partner?.gerekli ? <span style={{ color: '#FBBF24' }}> · partner tedavisi</span> : null}{c.ilk_genital_ulser ? <span style={{ color: '#F87171' }}> · ilk ülser: HIV/RPR</span> : null}</div>)}
       </div>)}
 
       {sekme === 'PCOS' && (<div>
@@ -112,7 +113,7 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
           <input value={s('pcosTani')} onChange={(e) => set('pcosTani', e.target.value)} placeholder="Hekim tanısı (isteğe bağlı)" style={{ ...toolsInput, minWidth: 200 }} />
           <button type="button" onClick={() => calistir({ adim: 'pcos', kriterler: { oligoAnovulasyon: b('oa'), hiperandrojenizm: b('ha'), pcomUs: b('pcom'), menarsYil: s('menars') || null }, dislama: { tsh: b('tsh'), prl: b('prl'), ohp17: b('ohp') }, amenoreGun: s('amenore') || null, hekimTanisi: s('pcosTani') || null }, 'PCOS kartı güncellendi.')} style={btn}>Değerlendir</button>
         </div>
-        {v.pcos?.degerlendirme && <div style={{ fontSize: 12, color: '#EDF1F7', marginTop: 6 }}>Kriter: {v.pcos.degerlendirme.kriterSayisi}/3 · Rotterdam {v.pcos.degerlendirme.rotterdamKarsilar ? 'karşılanıyor (hekim kararı)' : 'karşılanmıyor / eksik'} · dışlama {v.pcos.degerlendirme.dislamaTam ? 'tam' : 'eksik'}{v.pcos.hekim_tanisi ? ` · Hekim tanısı: ${v.pcos.hekim_tanisi}` : ''}<ul style={{ ...kucuk, margin: '4px 0 0', paddingLeft: 18 }}>{v.pcos.degerlendirme.not.map((n) => <li key={n}>{n}</li>)}</ul></div>}
+        {v.pcos?.degerlendirme && <div style={{ fontSize: 12, color: CHROME_RENK.ink, marginTop: 6 }}>Kriter: {v.pcos.degerlendirme.kriterSayisi}/3 · Rotterdam {v.pcos.degerlendirme.rotterdamKarsilar ? 'karşılanıyor (hekim kararı)' : 'karşılanmıyor / eksik'} · dışlama {v.pcos.degerlendirme.dislamaTam ? 'tam' : 'eksik'}{v.pcos.hekim_tanisi ? ` · Hekim tanısı: ${v.pcos.hekim_tanisi}` : ''}<ul style={{ ...kucuk, margin: '4px 0 0', paddingLeft: 18 }}>{v.pcos.degerlendirme.not.map((n) => <li key={n}>{n}</li>)}</ul></div>}
       </div>)}
 
       {sekme === 'Kontrasepsiyon' && (<div>
@@ -123,7 +124,7 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
           {s('yontem').startsWith('ria_') && chk('CYBH taraması (klamidya/gonore) yapıldı', b('sti'), (x) => set('sti', x))}
           <button type="button" disabled={!s('yontem')} onClick={() => calistir({ adim: 'kontrasepsiyon', yontem: s('yontem'), baslangic: s('kb') || undefined, stiTaramaOnaylandi: b('sti') })} style={btn}>Kaydet</button>
         </div>
-        {v.kontrasepsiyon.map((k) => <div key={k.id} style={{ fontSize: 12, color: k.aktif ? '#EDF1F7' : '#64748B', padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>{k.aktif ? '● ' : '○ '}{k.yontem} <span style={kucuk}>{k.baslangic || ''}{k.son_kullanim ? ` → ${k.son_kullanim}` : ''}{k.ria_notu?.ip_kontrol_tarihi ? ` · ip kontrol ${k.ria_notu.ip_kontrol_tarihi} · PID uyarı ${k.ria_notu.pid_uyari_bitis}` : ''}</span></div>)}
+        {v.kontrasepsiyon.map((k) => <div key={k.id} style={{ fontSize: 12, color: k.aktif ? CHROME_RENK.ink : CHROME_RENK.muted, padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>{k.aktif ? '● ' : '○ '}{k.yontem} <span style={kucuk}>{k.baslangic || ''}{k.son_kullanim ? ` → ${k.son_kullanim}` : ''}{k.ria_notu?.ip_kontrol_tarihi ? ` · ip kontrol ${k.ria_notu.ip_kontrol_tarihi} · PID uyarı ${k.ria_notu.pid_uyari_bitis}` : ''}</span></div>)}
       </div>)}
 
       {sekme === 'Menopoz / HRT' && (<div>
@@ -136,7 +137,7 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
           <button type="button" onClick={() => calistir({ adim: 'hrt', onKontrol: { mamografi12Ay: b('mg12'), vteOykusu: b('vte'), memeCa: b('mca'), tanisizKanama: b('tk'), karacigerHastaligi: b('kc'), sigara: b('sig'), tvusEt: s('et') || null, menopozYil: s('mpy') || null }, hrtBasladi: false }, 'Ön kontrol kaydedildi.')} style={ghost}>Ön kontrol</button>
           <button type="button" onClick={() => calistir({ adim: 'hrt', onKontrol: { mamografi12Ay: b('mg12'), vteOykusu: b('vte'), memeCa: b('mca'), tanisizKanama: b('tk'), karacigerHastaligi: b('kc'), sigara: b('sig'), tvusEt: s('et') || null, menopozYil: s('mpy') || null }, hrtBasladi: true, rejim: s('rejim') }, 'HRT başlangıcı kaydedildi; yıllık kontrol görevi açıldı.')} style={btn}>HRT başlat (hekim kararı)</button>
         </div>
-        {v.hrt?.degerlendirme && <div style={{ fontSize: 12, marginTop: 6 }}>{v.hrt.degerlendirme.engeller.map((e) => <div key={e} style={{ color: '#F87171' }}>✖ {e}</div>)}{v.hrt.degerlendirme.uyarilar.map((e) => <div key={e} style={{ color: '#FBBF24' }}>⚠ {e}</div>)}{v.hrt.degerlendirme.eksikler.map((e) => <div key={e} style={{ color: '#8FA0B5' }}>○ eksik: {e}</div>)}{v.hrt.hrt_basladi && <div style={{ color: '#2DD4BF' }}>✓ HRT {v.hrt.hrt_baslangic}{v.hrt.rejim ? ` · ${v.hrt.rejim}` : ''} · yıllık: {v.kutuphane.hrtYillik.join(', ')}</div>}</div>}
+        {v.hrt?.degerlendirme && <div style={{ fontSize: 12, marginTop: 6 }}>{v.hrt.degerlendirme.engeller.map((e) => <div key={e} style={{ color: '#F87171' }}>✖ {e}</div>)}{v.hrt.degerlendirme.uyarilar.map((e) => <div key={e} style={{ color: '#FBBF24' }}>⚠ {e}</div>)}{v.hrt.degerlendirme.eksikler.map((e) => <div key={e} style={{ color: CHROME_RENK.muted }}>○ eksik: {e}</div>)}{v.hrt.hrt_basladi && <div style={{ color: '#0F9B8E' }}>✓ HRT {v.hrt.hrt_baslangic}{v.hrt.rejim ? ` · ${v.hrt.rejim}` : ''} · yıllık: {v.kutuphane.hrtYillik.join(', ')}</div>}</div>}
       </div>)}
 
       {sekme === 'Lezyon' && (<div>
@@ -149,13 +150,13 @@ export function JinekolojiSpine({ patientId, ofisModulleri }: { patientId: strin
           <div style={{ width: 160 }}><TrTarihAlan label="Sonraki US" value={s('lu')} onChange={(iso) => set('lu', iso)} /></div>
           <button type="button" onClick={() => calistir({ adim: 'lezyon', tur: s('lt') || 'myom', boyutMm: s('lb') || null, figoTip: s('lf') || null, semptom: s('ls') || null, sonrakiUs: s('lu') || null })} style={btn}>Kaydet</button>
         </div>
-        {v.lezyonlar.map((l) => <div key={l.id} style={{ fontSize: 12, color: '#EDF1F7', padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>{l.tur} {l.boyut_mm ? `${l.boyut_mm} mm` : ''} {l.figo_tip || l.yer || ''} <span style={kucuk}>{l.semptom || ''}{l.sonraki_us ? ` · kontrol US ${l.sonraki_us}` : ''} · {new Date(l.created_at).toLocaleDateString('tr-TR')}</span></div>)}
+        {v.lezyonlar.map((l) => <div key={l.id} style={{ fontSize: 12, color: CHROME_RENK.ink, padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>{l.tur} {l.boyut_mm ? `${l.boyut_mm} mm` : ''} {l.figo_tip || l.yer || ''} <span style={kucuk}>{l.semptom || ''}{l.sonraki_us ? ` · kontrol US ${l.sonraki_us}` : ''} · {new Date(l.created_at).toLocaleDateString('tr-TR')}</span></div>)}
         <div style={{ ...kucuk, marginTop: 6 }}>Ektopik ve D&C: onam kütüphanesinde (Doğum spine › Onam); β-hCG serisi Lab ile izlenir.</div>
       </div>)}
 
       {sekme === 'İnfertilite' && (<div>
         <div style={etiket}>İnfertilite — 1. basamak <span style={kucuk}>· Notya sevkte durur; IVF laboratuvarı kapsam dışı</span></div>
-        <ol style={{ fontSize: 12, color: '#EDF1F7', margin: 0, paddingLeft: 18 }}>{v.kutuphane.infertilite.map((a) => <li key={a}>{a}</li>)}</ol>
+        <ol style={{ fontSize: 12, color: CHROME_RENK.ink, margin: 0, paddingLeft: 18 }}>{v.kutuphane.infertilite.map((a) => <li key={a}>{a}</li>)}</ol>
       </div>)}
       {/* NOTYA-JINE-02 */}
       <JinekolojiV2Sekmeler sekme={sekme} v2={v.v2 || { aub: [], kok: [], endo: null, rm: null, egk: [] }} refler={v.kutuphane.refler || {}} calistir={calistir} kaynakAcik={kaynakAcik} />

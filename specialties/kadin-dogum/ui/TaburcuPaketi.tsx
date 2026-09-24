@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { kutu, giris, etiketS, btn } from './clinic-styles'
 import { NTP_DISCLAIMER, TABURCU_ETIKET } from '@/lib/clinical/yenidogan/constants'
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Taburcu = {
   ntp1_alindi_at?: string | null
@@ -76,9 +77,9 @@ export default function TaburcuPaketi({
 
   return (
     <div style={kutu} data-kd="taburcu-paketi">
-      <div style={{ fontWeight: 800, color: '#EDF1F7', marginBottom: 4 }}>Taburcu paketi</div>
+      <div style={{ fontWeight: 800, color: CHROME_RENK.ink, marginBottom: 4 }}>Taburcu paketi</div>
       <div style={{ fontSize: 12, color: '#FBBF24', marginBottom: 8 }}>{NTP_DISCLAIMER}</div>
-      <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 12 }}>
+      <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginBottom: 12 }}>
         {KADIN_HASTALIKLARI_DOGUM_ETIKETI}: doğum + ilk örnek + lohusa. Pediatri (Ayşe) taburcu sonrası bebeği sahiplenir. Notya e-Nabız yerine geçmez.
       </div>
 
@@ -88,7 +89,7 @@ export default function TaburcuPaketi({
         ['vitkAt', 'vitk', taburcu?.vitk_at, TABURCU_ETIKET.vitk],
         ['isitmeAt', 'isitme', taburcu?.isitme_at, TABURCU_ETIKET.isitme],
       ] as const).map(([alan, kalem, at, etiket]) => (
-        <label key={kalem} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8, color: '#EDF1F7', fontSize: 13 }}>
+        <label key={kalem} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8, color: CHROME_RENK.ink, fontSize: 13 }}>
           <input type="checkbox" disabled={kilitli} checked={Boolean(at)} onChange={(e) => tik(alan, e.target.checked)} />
           <span>
             <b>{etiket}</b>
@@ -100,7 +101,7 @@ export default function TaburcuPaketi({
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, margin: '10px 0' }}>
         <label><span style={etiketS}>NTP-1 barkod</span><input value={t.ntp1Barkod || ''} disabled={kilitli} onChange={(e) => setT({ ...t, ntp1Barkod: e.target.value })} onBlur={() => onKaydet({ ntp1Barkod: t.ntp1Barkod })} style={giris} /></label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#C9D4E3', fontSize: 13, marginTop: 18 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: CHROME_RENK.muted, fontSize: 13, marginTop: 18 }}>
           <input type="checkbox" disabled={kilitli} checked={Boolean(taburcu?.ntp1_beslenme_sonrasi)} onChange={(e) => onKaydet({ ntp1BeslenmeSonrasi: e.target.checked })} /> Oral beslenme sonrası
         </label>
         <label><span style={etiketS}>İşitme sonuç</span>
@@ -120,16 +121,16 @@ export default function TaburcuPaketi({
         </label>
       </div>
 
-      <label style={{ display: 'flex', gap: 8, color: '#EDF1F7', fontSize: 13, marginBottom: 6 }}>
+      <label style={{ display: 'flex', gap: 8, color: CHROME_RENK.ink, fontSize: 13, marginBottom: 6 }}>
         <input type="checkbox" disabled={kilitli} checked={Boolean(taburcu?.kirmizi_refleks)} onChange={(e) => onKaydet({ kirmiziRefleks: e.target.checked })} /> Kırmızı refleks
       </label>
-      <label style={{ display: 'flex', gap: 8, color: '#EDF1F7', fontSize: 13, marginBottom: 6 }}>
+      <label style={{ display: 'flex', gap: 8, color: CHROME_RENK.ink, fontSize: 13, marginBottom: 6 }}>
         <input type="checkbox" disabled={kilitli} checked={Boolean(taburcu?.gkd_risk)} onChange={(e) => onKaydet({ gkdRisk: e.target.checked })} /> GKD riski (kalça US 6. haftaya)
       </label>
-      <label style={{ display: 'flex', gap: 8, color: '#EDF1F7', fontSize: 13, marginBottom: 6 }}>
+      <label style={{ display: 'flex', gap: 8, color: CHROME_RENK.ink, fontSize: 13, marginBottom: 6 }}>
         <input type="checkbox" disabled={kilitli} checked={Boolean(taburcu?.dvit_baslandi)} onChange={(e) => onKaydet({ dvitBaslandi: e.target.checked })} /> D vitamini başlandı (400 IU / 3 damla)
       </label>
-      <label style={{ display: 'flex', gap: 8, color: '#EDF1F7', fontSize: 13, marginBottom: 12 }}>
+      <label style={{ display: 'flex', gap: 8, color: CHROME_RENK.ink, fontSize: 13, marginBottom: 12 }}>
         <input type="checkbox" disabled={kilitli} checked={Boolean(taburcu?.emzirme_danismanlik)} onChange={(e) => onKaydet({ emzirmeDanismanlik: e.target.checked })} /> Emzirme danışmanlığı
       </label>
 
@@ -148,11 +149,11 @@ export default function TaburcuPaketi({
       </details>
 
       {!zorunluOk && (
-        <div style={{ fontSize: 12.5, color: '#FCA5A5', marginBottom: 8 }}>{gate.neden}</div>
+        <div style={{ fontSize: 12.5, color: CHROME_RENK.warn, marginBottom: 8 }}>{gate.neden}</div>
       )}
 
       <details style={{ marginBottom: 10 }}>
-        <summary style={{ cursor: 'pointer', color: '#C9D4E3', fontSize: 13 }}>İstisna (erken taburcu / redd / sevk) + görev</summary>
+        <summary style={{ cursor: 'pointer', color: CHROME_RENK.muted, fontSize: 13 }}>İstisna (erken taburcu / redd / sevk) + görev</summary>
         <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
           <select value={istisna.neden} onChange={(e) => setIstisna({ ...istisna, neden: e.target.value })} style={giris}>
             <option value="">—</option>
@@ -179,7 +180,7 @@ export default function TaburcuPaketi({
         )}
       </div>
       {sms && (
-        <p style={{ fontSize: 12, color: '#C9D4E3', marginTop: 10 }}>
+        <p style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 10 }}>
           Aile SMS metni (isteğe bağlı): <button type="button" style={btn()} onClick={() => navigator.clipboard.writeText(sms)}>Kopyala</button>
         </p>
       )}

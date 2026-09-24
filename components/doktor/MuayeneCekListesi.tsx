@@ -12,6 +12,7 @@ import {
   type CekGrup,
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const GRUP_SIRA: CekGrup[] = ['anamnez', 'olcum', 'fizik', 'kapanis']
 
@@ -30,11 +31,14 @@ export default function MuayeneCekListesi({
   acikRenk?: boolean
 }) {
   const [acik, setAcik] = useState(!!dogrulama)
-  const yazi = acikRenk ? '#0A1628' : '#EDF1F7'
-  const soluk = acikRenk ? '#64748B' : '#8FA0B5'
-  const kutu: CSSProperties = acikRenk
-    ? { background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 16, padding: 16 }
-    : { background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 16 }
+  // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): both branches now converge on the same cream/pine
+  // tokens -- acikRenk's dark branch was still #0D1C33 + white-based fills (the redesign never
+  // reached it), and even its "light" branch used an off-palette blue-gray (#F8FAFC/#E5E7EB/
+  // #0A1628) instead of the established warm tokens. Kept the acikRenk prop itself (callers still
+  // pass it) rather than removing it, since that's a bigger change than this pass calls for.
+  const yazi = CHROME_RENK.ink
+  const soluk = CHROME_RENK.muted
+  const kutu: CSSProperties = { background: acikRenk ? '#F8FAFC' : '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 16 }
 
   if (!maddeler.length) {
     return (
@@ -84,7 +88,7 @@ export default function MuayeneCekListesi({
           if (!alt.length) return null
           return (
             <div key={g} style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: acikRenk ? '#2563EB' : '#2DD4BF', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 6 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: acikRenk ? '#2563EB' : '#0F9B8E', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 6 }}>
                 {cekGrupEtiket(g)}
               </div>
               {alt.map((m) => {
@@ -96,7 +100,7 @@ export default function MuayeneCekListesi({
                     <span>
                       {m.etiket}
                       {dog && dog.durum === 'eksik' && !on && (
-                        <span style={{ display: 'block', fontSize: 11, color: acikRenk ? '#B45309' : '#FBBF24' }}>notta yok</span>
+                        <span style={{ display: 'block', fontSize: 11, color: '#B45309' }}>notta yok</span>
                       )}
                     </span>
                   </label>

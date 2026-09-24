@@ -19,7 +19,7 @@ type Ek = {
 const btn: React.CSSProperties = {
   background: 'rgba(15,155,142,0.14)',
   border: '1px solid rgba(15,155,142,0.45)',
-  color: '#2DD4BF',
+  color: '#0F9B8E',
   borderRadius: 8,
   padding: '6px 10px',
   fontSize: 12,
@@ -114,7 +114,7 @@ export default function MuayeneEkleri({
           ))}
         </ul>
       )}
-      {mesaj && <div style={{ fontSize: 11, color: '#2DD4BF', marginTop: 4 }}>{mesaj}</div>}
+      {mesaj && <div style={{ fontSize: 11, color: '#0F9B8E', marginTop: 4 }}>{mesaj}</div>}
       {hata && <div style={{ fontSize: 11, color: '#F87171', marginTop: 4 }}>{hata}</div>}
     </div>
   )

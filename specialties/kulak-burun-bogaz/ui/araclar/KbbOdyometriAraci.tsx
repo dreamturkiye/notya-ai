@@ -42,7 +42,7 @@ function Kulak({
         <Istatistik deger={sonuc.tamamMi ? `${sonuc.pta} dB` : '—'} etiket="PTA (0,5–4 kHz)" ton={sonuc.tamamMi ? 'notr' : 'uyari'} />
         <Istatistik deger={sonuc.bantAd} etiket="Şiddet bandı · karar desteği" />
       </div>
-      {!sonuc.tamamMi && <div style={{ ...S.kucuk, color: '#FDE68A', marginTop: 6 }}>{sonuc.eksikFrekans} frekans boş — ortalama yorumlanmaz.</div>}
+      {!sonuc.tamamMi && <div style={{ ...S.kucuk, color: '#7A5B1E', marginTop: 6 }}>{sonuc.eksikFrekans} frekans boş — ortalama yorumlanmaz.</div>}
       <div style={{ marginTop: 8 }}>
         <Etiketli ad="Önceki PTA (varsa)">
           <input type="number" inputMode="numeric" aria-label={`${ad} önceki PTA`} value={onceki} onChange={(e) => setOnceki(e.target.value)} style={{ ...S.input, width: 110 }} />

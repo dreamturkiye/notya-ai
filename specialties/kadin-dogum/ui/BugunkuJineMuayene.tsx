@@ -21,6 +21,7 @@ import {
 } from '../engines/jine-ofis-vizit'
 import type { Due } from '../engines/jinekoloji-spine'
 import type { ColpoImage } from '../schema'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type VizitSatir = { id: string; tur: string; alanlar: Record<string, unknown> | null; soap?: unknown; kontrol_tarihi?: string | null; kontrol_neden?: string | null; created_at: string }
 type Veri = {
@@ -36,8 +37,8 @@ type Veri = {
   taslak?: JineOfisSoap
 }
 
-const etiket: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: '#2DD4BF', marginBottom: 8 }
-const kucuk: React.CSSProperties = { fontSize: 11.5, color: '#8FA0B5' }
+const etiket: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: '#0F9B8E', marginBottom: 8 }
+const kucuk: React.CSSProperties = { fontSize: 11.5, color: CHROME_RENK.muted }
 const bolum: React.CSSProperties = { ...kutu, marginBottom: 10 }
 const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }
 
@@ -165,7 +166,7 @@ export function BugunkuJineMuayene({
   const hpvBos = !soap?.tarama.hpv && !v?.kadinSagligi?.son_hpv && !v?.serviks[0]?.hpv
   const colpoBos = colpoImages.length === 0
 
-  if (!v || !soap || !h) return <div style={{ ...kutu, color: '#8FA0B5', fontSize: 13 }}>Jinekoloji muayenesi yükleniyor…</div>
+  if (!v || !soap || !h) return <div style={{ ...kutu, color: CHROME_RENK.muted, fontSize: 13 }}>Jinekoloji muayenesi yükleniyor…</div>
 
   return (
     <div data-kd="bugunku-jine">
@@ -182,7 +183,7 @@ export function BugunkuJineMuayene({
       <div id="bugunku-jine-muayene" style={{ ...kutu, marginTop: 12 }} data-kd="jine-vizit-form">
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', alignItems: 'baseline' }}>
           <div>
-            <div style={{ fontWeight: 800, color: '#EDF1F7', fontSize: 16 }}>Bugünkü jinekoloji muayenesi</div>
+            <div style={{ fontWeight: 800, color: CHROME_RENK.ink, fontSize: 16 }}>Bugünkü jinekoloji muayenesi</div>
             <div style={kucuk}>ACOG pratik gold · SB/KETEM tarama · Berek &amp; Novak / Temel KD. Çelişki iki sütun; birleştirilmez. Gebelik GA/TDT bu omurgada yok.</div>
           </div>
           <button type="button" style={btn()} onClick={() => setFormAcik((x) => !x)}>{formAcik ? 'Küçült' : 'Aç'}</button>
@@ -231,7 +232,7 @@ export function BugunkuJineMuayene({
 
             <section style={bolum} data-jine-bolum="tarama">
               <div style={etiket}>4. Tarama / patoloji</div>
-              {soap.tarama.dueCue && <div style={{ ...kucuk, marginBottom: 8, color: '#FDE68A' }}>{soap.tarama.dueCue}</div>}
+              {soap.tarama.dueCue && <div style={{ ...kucuk, marginBottom: 8, color: '#7A5B1E' }}>{soap.tarama.dueCue}</div>}
               <div style={grid}>
                 {alan('Pap', soap.tarama.pap, (x) => setT('pap', x), 'NILM / ASC-US / …')}
                 {alan('HPV', soap.tarama.hpv, (x) => setT('hpv', x), 'negatif / 16 / 18')}
@@ -248,8 +249,8 @@ export function BugunkuJineMuayene({
               {v.due.length > 0 && (
                 <div style={{ marginTop: 10 }}>
                   {v.due.map((d) => (
-                    <div key={d.kod} style={{ fontSize: 12, color: '#C9D4E3', padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <b style={{ color: d.durum === 'gecikti' ? '#F87171' : d.takvim === 'SB' ? '#93C5FD' : '#2DD4BF' }}>{d.takvim === 'her_ikisi' ? 'SB + ofis' : d.takvim === 'SB' ? 'SB/KETEM' : 'Ofis'}</b>
+                    <div key={d.kod} style={{ fontSize: 12, color: CHROME_RENK.muted, padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                      <b style={{ color: d.durum === 'gecikti' ? '#F87171' : d.takvim === 'SB' ? '#93C5FD' : '#0F9B8E' }}>{d.takvim === 'her_ikisi' ? 'SB + ofis' : d.takvim === 'SB' ? 'SB/KETEM' : 'Ofis'}</b>
                       {' · '}{d.ad}{d.due ? ` · ${isoToTr(d.due)}` : ''} · {d.not}
                     </div>
                   ))}

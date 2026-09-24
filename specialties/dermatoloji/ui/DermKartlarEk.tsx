@@ -67,11 +67,12 @@ import { ISLEM_SABLONLARI, DERM_ONAMLAR, type IslemTuru } from '../engines/derm-
 import { dipnotMetni, type Dipnot } from '../protocols/sources'
 import type { BzbhKind } from '../protocols/endemic-bzbh'
 import { derimHatirlatmaOnerileri, hatirlatmaGecerliMi, type DerimHatirlatma, type HatirlatmaGirdi } from '../engines/derimHatirlatma'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export type Kaydet = (body: Record<string, unknown>, ok?: string) => void
 
 const ic: CSSProperties = { border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginTop: 8 }
-const kucuk: CSSProperties = { fontSize: 11.5, color: '#8FA0B5' }
+const kucuk: CSSProperties = { fontSize: 11.5, color: CHROME_RENK.muted }
 const satirlik: CSSProperties = { fontSize: 12.5 }
 
 function Kutucuk({ c, set, children }: { c: boolean; set: (v: boolean) => void; children: React.ReactNode }) {
@@ -163,7 +164,7 @@ export function AcilBandi({
       {bayraklar.length > 0 ? (
         <>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: hemen ? '#FCA5A5' : '#FDE68A' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: hemen ? CHROME_RENK.warn : '#7A5B1E' }}>
               {acilBandMetni(bayraklar).join('  ·  ')}
             </div>
             <button type="button" style={btn(true)} onClick={() => setAcik((v) => !v)} data-derm="acil-eylem-ac">
@@ -176,7 +177,7 @@ export function AcilBandi({
           <Dipnotlar liste={bayraklar.map((b) => b.dipnot)} />
         </>
       ) : (
-        <div style={{ fontSize: 12.5, color: '#8FA0B5' }}>Acil kırmızı bayrak işareti yok. Hekim elle işaretleyebilir.</div>
+        <div style={{ fontSize: 12.5, color: CHROME_RENK.muted }}>Acil kırmızı bayrak işareti yok. Hekim elle işaretleyebilir.</div>
       )}
 
       {acik && (
@@ -324,7 +325,7 @@ export function BiyolojikSutKarti({
       </div>
 
       <div style={ic}>
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Önceki basamaklar (hekim beyanı)</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Önceki basamaklar (hekim beyanı)</div>
         {(Object.keys(ONCEKI_BASAMAK_ADI) as OncekiBasamak[]).map((b) => (
           <div key={b} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', fontSize: 12.5, marginTop: 4 }}>
             <span style={{ flex: '1 1 180px' }}>{ONCEKI_BASAMAK_ADI[b]}</span>
@@ -344,7 +345,7 @@ export function BiyolojikSutKarti({
       </div>
 
       <div style={ic}>
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Tarama ve güvenlik</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Tarama ve güvenlik</div>
         <Kutucuk c={lab.tb} set={(v) => setLab((p) => ({ ...p, tb: v }))}>Tüberküloz taraması (PPD / IGRA) yapıldı</Kutucuk>
         <Kutucuk c={lab.hbv} set={(v) => setLab((p) => ({ ...p, hbv: v }))}>HBV serolojisi var</Kutucuk>
         <Kutucuk c={lab.hcv} set={(v) => setLab((p) => ({ ...p, hcv: v }))}>HCV serolojisi var</Kutucuk>
@@ -375,11 +376,11 @@ export function BiyolojikSutKarti({
       </div>
 
       <div style={ic} data-derm="biyolojik-sut-kontrol">
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Zorunlu maddeler</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Zorunlu maddeler</div>
         <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 3 }}>
           {sonuc.sutKontrol.map((k, i) => (
             <li key={i} style={satirlik}>
-              <span style={{ color: k.tamam === true ? '#86EFAC' : k.tamam === false ? '#FCA5A5' : '#FDE68A' }}>
+              <span style={{ color: k.tamam === true ? '#86EFAC' : k.tamam === false ? CHROME_RENK.warn : '#7A5B1E' }}>
                 {k.tamam === true ? '✓' : k.tamam === false ? '✗' : '•'}
               </span>{' '}
               {k.madde}
@@ -387,7 +388,7 @@ export function BiyolojikSutKarti({
           ))}
         </ul>
         {sonuc.eksikler.length > 0 && (
-          <p style={{ fontSize: 12.5, color: '#FCA5A5', marginTop: 6 }}>
+          <p style={{ fontSize: 12.5, color: CHROME_RENK.warn, marginTop: 6 }}>
             Eksikler: {sonuc.eksikler.join(' · ')}
           </p>
         )}
@@ -529,14 +530,14 @@ export function PsoriasisMerdiveniKarti({
       </ul>
 
       {karar.gerekce.length > 0 && <p style={{ ...satirlik, marginTop: 6 }}>Gerekçe: {karar.gerekce.join(' · ')}</p>}
-      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
+      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
 
       <div style={ic} data-derm="psa-triyaj">
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Eklem (PsA) triyajı</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Eklem (PsA) triyajı</div>
         {PSA_TRIYAJ_MADDELERI.map((m) => (
           <Kutucuk key={m.kod} c={!!psa[m.kod]} set={(v) => setPsa((p) => ({ ...p, [m.kod]: v }))}>{m.ad}</Kutucuk>
         ))}
-        <p style={{ ...satirlik, color: triyaj.sevkOnerilir ? '#FDE68A' : '#8FA0B5', marginTop: 4 }}>{triyaj.hint}</p>
+        <p style={{ ...satirlik, color: triyaj.sevkOnerilir ? '#7A5B1E' : CHROME_RENK.muted, marginTop: 4 }}>{triyaj.hint}</p>
         {onPsaKaydet && (
           <button type="button" style={{ ...btn(true), marginTop: 6 }} onClick={() => onPsaKaydet(psa, triyaj.sevkOnerilir)} data-derm="psa-kaydet">
             Eklem triyajını kaydet
@@ -607,7 +608,7 @@ export function AtopiKarti({
         })}
       </ul>
       {karar.gerekce.length > 0 && <p style={{ ...satirlik, marginTop: 6 }}>Gerekçe: {karar.gerekce.join(' · ')}</p>}
-      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
+      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
       <Dipnotlar liste={karar.dipnotlar} />
     </section>
   )
@@ -647,9 +648,9 @@ export function AkneKarti({
           {karar.fotoCue.map((c) => <li key={c}>{c}</li>)}
         </ul>
       )}
-      {fotoHref && <a href={fotoHref} style={{ fontSize: 12, color: '#2DD4BF' }}>Klinik foto ekle (ay-0 / ay-3 serisi)</a>}
+      {fotoHref && <a href={fotoHref} style={{ fontSize: 12, color: '#0F9B8E' }}>Klinik foto ekle (ay-0 / ay-3 serisi)</a>}
       {karar.gerekce.length > 0 && <p style={{ ...satirlik, marginTop: 6 }}>{karar.gerekce.join(' · ')}</p>}
-      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
+      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
       <p style={kucuk}>{karar.kilitNotu}</p>
       <Dipnotlar liste={karar.dipnotlar} />
     </section>
@@ -705,7 +706,7 @@ export function DermoskopiSkorKarti({
           </label>
         )}
       </div>
-      {!fitzpatrick && <p style={{ fontSize: 11.5, color: '#FDE68A' }}>Fitzpatrick girilmedi — dermoskopi ve ışık temelli kararlarda kaydedilmesi önerilir.</p>}
+      {!fitzpatrick && <p style={{ fontSize: 11.5, color: '#7A5B1E' }}>Fitzpatrick girilmedi — dermoskopi ve ışık temelli kararlarda kaydedilmesi önerilir.</p>}
 
       <div style={ic}>
         {alg === 'uc_nokta' && UC_NOKTA_OLCUTLERI.map((o) => (
@@ -803,7 +804,7 @@ export function SacTirnakKarti({
       <p style={satirlik}>SALT <b>{kart.saltToplam ?? '—'}</b>{kart.saltBant ? ` — ${kart.saltBant}` : ''}</p>
 
       <div style={ic}>
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Trikoskopi bulguları</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Trikoskopi bulguları</div>
         {TRIKOSKOPI_ALANLARI.map((t) => (
           <Kutucuk key={t.kod} c={!!trik[t.kod]} set={(v) => setTrik((p) => ({ ...p, [t.kod]: v }))}>
             {t.ad} <span style={kucuk}>· {t.ipucu}</span>
@@ -815,13 +816,13 @@ export function SacTirnakKarti({
       </div>
 
       <div style={ic}>
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Tırnak bulguları</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Tırnak bulguları</div>
         {TIRNAK_BULGULARI.map((t) => (
           <Kutucuk key={t.kod} c={!!tirnak[t.kod]} set={(v) => setTirnak((p) => ({ ...p, [t.kod]: v }))}>{t.ad}</Kutucuk>
         ))}
       </div>
 
-      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {kart.eksikler.join(' · ')}</p>}
+      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {kart.eksikler.join(' · ')}</p>}
       <ul style={{ paddingLeft: 18, fontSize: 12.5 }}>{kart.sonrakiAdim.map((s) => <li key={s}>{s}</li>)}</ul>
       {onKaydet && (
         <button
@@ -841,14 +842,14 @@ export function SacTirnakKarti({
 // ────────────────────────────── İzlem kartı ortak görünümü ──────────────────────────────
 
 function TakipGovdesi({ kart }: { kart: TakipKarti }) {
-  const renk = kart.aciliyet === 'acil' ? '#FCA5A5' : kart.aciliyet === 'ivedi' ? '#FDE68A' : '#8FA0B5'
+  const renk = kart.aciliyet === 'acil' ? CHROME_RENK.warn : kart.aciliyet === 'ivedi' ? '#7A5B1E' : CHROME_RENK.muted
   return (
     <>
       <p style={{ fontSize: 11.5, color: renk, margin: '2px 0 6px' }}>
         {kart.aciliyet === 'acil' ? 'Acil' : kart.aciliyet === 'ivedi' ? 'İvedi' : 'Rutin izlem'}
       </p>
       <ul style={{ paddingLeft: 18, margin: 0, fontSize: 12.5 }}>{kart.bulgular.map((b, i) => <li key={i}>{b}</li>)}</ul>
-      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A', marginTop: 6 }}>Eksik: {kart.eksikler.join(' · ')}</p>}
+      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E', marginTop: 6 }}>Eksik: {kart.eksikler.join(' · ')}</p>}
       {kart.sonrakiAdim.length > 0 && (
         <>
           <div style={{ ...etiketS, marginTop: 6 }}>Sıradaki adım</div>
@@ -877,7 +878,7 @@ export function BehcetTakipKarti({ kart, bugun, onKaydet }: { kart: BehcetCard |
         </label>
       </div>
       <div style={ic}>
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Organ tutulumu (ISG dışı)</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Organ tutulumu (ISG dışı)</div>
         {(['vaskuler', 'noro', 'eklem', 'gis', 'deri'] as const).map((k) => (
           <Kutucuk key={k} c={!!ek[k]} set={(v) => setEk((p) => ({ ...p, [k]: v }))}>
             {k === 'vaskuler' ? 'Damar tutulumu' : k === 'noro' ? 'Nörolojik tutulum' : k === 'eklem' ? 'Artrit / artralji' : k === 'gis' ? 'Gastrointestinal bulgu' : 'Deri lezyonu'}
@@ -907,7 +908,7 @@ export function BullozTakipKarti({ workup, onKaydet }: { workup: BullousWorkup |
         <input style={giris} inputMode="numeric" value={bsa} onChange={(e) => setBsa(e.target.value)} />
       </label>
       <div style={ic}>
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Mukoza tutulumu</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Mukoza tutulumu</div>
         {[['oral', 'Ağız mukozası'], ['farenks', 'Farenks / larenks'], ['goz', 'Konjonktiva'], ['genital', 'Genital mukoza'], ['anal', 'Anal mukoza'], ['ozofagus', 'Özofagus']].map(([k, ad]) => (
           <Kutucuk key={k} c={!!mukoza[k]} set={(v) => setMukoza((p) => ({ ...p, [k]: v }))}>{ad}</Kutucuk>
         ))}
@@ -977,7 +978,7 @@ export function BzbhForm014Karti({
         <Kutucuk c={partner} set={setPartner}>Partner / temaslı bilgilendirme planlandı</Kutucuk>
       </div>
       <TakipGovdesi kart={izlem} />
-      {form.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Form eksikleri: {form.eksikler.join(' · ')}</p>}
+      {form.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Form eksikleri: {form.eksikler.join(' · ')}</p>}
       <button type="button" style={btn(true)} onClick={() => yazdirTaslak(form.taslak)} data-derm="form014-yazdir">
         Form 014 taslağını yazdır
       </button>
@@ -1036,7 +1037,7 @@ export function EstetikKarti({ fitzpatrick, bugun, onKaydet }: { fitzpatrick?: s
       <Kutucuk c={f.testSpot} set={(v) => setF((p) => ({ ...p, testSpot: v }))}>Test spot yapıldı</Kutucuk>
 
       <div style={ic}>
-        <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>Komplikasyon</div>
+        <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Komplikasyon</div>
         {KOZMETIK_KOMPLIKASYONLARI.map((k) => (
           <Kutucuk key={k.kod} c={!!komp[k.kod]} set={(v) => setKomp((p) => ({ ...p, [k.kod]: v }))}>
             {k.ad}{k.acil ? ' ⚠' : ''}
@@ -1047,8 +1048,8 @@ export function EstetikKarti({ fitzpatrick, bugun, onKaydet }: { fitzpatrick?: s
         </label>
       </div>
 
-      {kontrol.acilMetni && <p style={{ fontSize: 13, color: '#FCA5A5', fontWeight: 700 }}>{kontrol.acilMetni}</p>}
-      {kontrol.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {kontrol.eksikler.join(' · ')}</p>}
+      {kontrol.acilMetni && <p style={{ fontSize: 13, color: CHROME_RENK.warn, fontWeight: 700 }}>{kontrol.acilMetni}</p>}
+      {kontrol.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {kontrol.eksikler.join(' · ')}</p>}
       {kontrol.uyarilar.length > 0 && <p style={kucuk}>{kontrol.uyarilar.join(' · ')}</p>}
       <p style={satirlik}>İzlenebilirlik: {kontrol.izlenebilirlikTam ? 'tam' : 'eksik'}</p>
       {onKaydet && (
@@ -1158,7 +1159,7 @@ export function IslemOdasiYazdir({
         )}
       </div>
       {etiketler[0]?.eksikler.length > 0 && (
-        <p style={{ fontSize: 12.5, color: '#FDE68A', marginTop: 6 }}>Etiket eksikleri: {etiketler[0].eksikler.join(' · ')}</p>
+        <p style={{ fontSize: 12.5, color: '#7A5B1E', marginTop: 6 }}>Etiket eksikleri: {etiketler[0].eksikler.join(' · ')}</p>
       )}
       {onam && (
         <details style={{ marginTop: 8 }}>

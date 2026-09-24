@@ -132,7 +132,7 @@ export default function KbbSgkAraci() {
             : <Rozet ton="iyi">Kontrol listesi tamam — hekim onayıyla kullanılabilir</Rozet>}
         </div>
         {sonuc.eksikler.length > 0 && (
-          <div style={{ ...S.kucuk, marginTop: 8, color: '#FDE68A' }}>{sonuc.eksikler.map((e) => <div key={e}>• {e}</div>)}</div>
+          <div style={{ ...S.kucuk, marginTop: 8, color: '#7A5B1E' }}>{sonuc.eksikler.map((e) => <div key={e}>• {e}</div>)}</div>
         )}
         <TaslakNotu>Rapor metni taslaktır; SUT koşullarının güncelliğini ve tanıyı hekim doğrular. Medula girişi ve e-imza hekimin kendi sistemindedir.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>

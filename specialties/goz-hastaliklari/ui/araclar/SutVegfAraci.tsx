@@ -78,8 +78,8 @@ export default function SutVegfAraci() {
         <div style={etiket}>Enjeksiyon geçmişi</div>
         <div style={kucuk}>Hastayı seçerseniz kayıtlı enjeksiyonlar yüklenir; seçmeden aşağıya elle satır ekleyebilirsiniz.</div>
         <GozHastaSecici secili={hasta.id} sec={hastadanYukle} />
-        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#2DD4BF' }}>{mesaj}</div>}
-        {hasta.id && <div style={{ marginTop: 6 }}><a href={hastaDosyaHref(hasta.id, 'goz')} style={{ color: '#2DD4BF', fontSize: 13, fontWeight: 700 }}>Hastada aç (Göz) →</a></div>}
+        {mesaj && <div style={{ ...kucuk, marginTop: 6, color: '#0F9B8E' }}>{mesaj}</div>}
+        {hasta.id && <div style={{ marginTop: 6 }}><a href={hastaDosyaHref(hasta.id, 'goz')} style={{ color: '#0F9B8E', fontSize: 13, fontWeight: 700 }}>Hastada aç (Göz) →</a></div>}
         <div style={kaydir}>
         {gecmis.map((e, i) => (
           <div key={e.id || i} style={{ ...satir, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
@@ -102,7 +102,7 @@ export default function SutVegfAraci() {
           <Istatistik deger={kapi.uyarilar.length} etiket="uyarı" ton={kapi.uyarilar.length ? 'uyari' : 'notr'} />
           <Istatistik deger={gecmis.length} etiket="geçmiş enjeksiyon" />
         </div>
-        <div style={{ ...metin, fontWeight: 700, color: kapi.engeller.length ? '#F87171' : kapi.odenebilir === null ? '#FBBF24' : '#2DD4BF' }}>
+        <div style={{ ...metin, fontWeight: 700, color: kapi.engeller.length ? '#F87171' : kapi.odenebilir === null ? '#FBBF24' : '#0F9B8E' }}>
           {kapi.engeller.length ? 'SGK ödeme engeli var' : kapi.odenebilir === null ? 'Muayenehane — SGK basamağı değil (uyarıları okuyun)' : 'SUT kapılarında engel yok'}
         </div>
         {kapi.engeller.map((x) => <div key={x} style={{ ...metin, color: '#F87171' }}>✕ {x}</div>)}

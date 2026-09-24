@@ -53,7 +53,7 @@ export default function UroIpssAraci() {
           <Istatistik deger={sonuc.tamamMi ? String(sonuc.toplam) : '—'} etiket="Toplam / 35" ton={sonuc.tamamMi ? 'notr' : 'uyari'} />
           <Istatistik deger={sonuc.bantAd} etiket="Şiddet bandı · karar desteği" />
         </div>
-        {!sonuc.tamamMi && <div style={{ ...S.kucuk, color: '#FDE68A', marginTop: 6 }}>{sonuc.eksikMadde} madde boş — toplam yorumlanmaz.</div>}
+        {!sonuc.tamamMi && <div style={{ ...S.kucuk, color: '#7A5B1E', marginTop: 6 }}>{sonuc.eksikMadde} madde boş — toplam yorumlanmaz.</div>}
       </div>
       <div style={S.kutu}>
         <div style={S.etiket}>Özet</div>

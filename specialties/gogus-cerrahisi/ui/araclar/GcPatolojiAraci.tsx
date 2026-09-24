@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { gcStil, GcHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUrlHasta } from './GcAracKabugu'
 import { patolojiSkorla } from '../../engines/patoloji'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export default function GcPatolojiAraci() {
   const [ornekTarihi, setOrnek] = useState('')
@@ -41,7 +42,7 @@ export default function GcPatolojiAraci() {
           <label style={gcStil.kucuk}>Örnek tarihi<input type="date" value={ornekTarihi} onChange={(e) => setOrnek(e.target.value)} style={{ ...gcStil.input, display: 'block' }} /></label>
           <label style={gcStil.kucuk}>Rapor tarihi<input type="date" value={raporHazirTarihi} onChange={(e) => setRapor(e.target.value)} style={{ ...gcStil.input, display: 'block' }} /></label>
         </div>
-        <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, fontSize: 13, color: '#EDF1F7' }}>
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, fontSize: 13, color: CHROME_RENK.ink }}>
           <input type="checkbox" checked={hazir} onChange={(e) => setHazir(e.target.checked)} />
           Rapor hazır (hekim değerlendirmesi — tanı yazılmaz)
         </label>

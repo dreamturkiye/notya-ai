@@ -11,6 +11,7 @@ import { GozKartlar, type GozVeri, stil } from './GozKartlar';
 import { AcilSablon, RefraksiyonAlanlari } from './GozKartlarEk';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { btn, ghost, etiket, kucuk, satir } = stil;
 const ALANLAR = [['uzak_sc', 'Uzak sc'], ['uzak_cc', 'Uzak cc'], ['yakin', 'Yakın']] as const;
@@ -51,7 +52,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
     } catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null; }
   }, [patientId, yukle, setMesaj]);
 
-  if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>{mesaj || 'Göz yükleniyor…'}</div>;
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>{mesaj || 'Göz yükleniyor…'}</div>;
   const s = v.serit;
   const salt = v.rol !== 'doktor';
   // GOZ-EXCEPTIONAL-01: Pediatrik sekme yalnız bilinen yaş <18 veya kayıtlı pediatrik/ROP verisi (bilinmeyen yaş çocuk sayılmaz).
@@ -78,14 +79,14 @@ export default function GozHome({ patientId }: { patientId: string }) {
     if (j) { setForm(bosForm()); setKopyaOnay(false); }
   };
 
-  const chip = (ad: string, deger: string, renk = '#EDF1F7') => <span style={{ border: `1px solid ${renk === '#EDF1F7' ? 'rgba(255,255,255,0.12)' : renk}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: renk, whiteSpace: 'nowrap' }}><span style={{ color: '#8FA0B5' }}>{ad} </span>{deger}</span>;
+  const chip = (ad: string, deger: string, renk: string = CHROME_RENK.ink) => <span style={{ border: `1px solid ${renk === CHROME_RENK.ink ? 'rgba(255,255,255,0.12)' : renk}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: renk, whiteSpace: 'nowrap' }}><span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}</span>;
   const harf = (x: number | null) => (x == null ? '' : ` (${x > 0 ? '+' : ''}${x} harf)`);
 
   return (
     <div style={{ ...toolsCard }} data-chapter="goz-hastaliklari">
       {/* Acil bandı — gecikme yok */}
       {v.acil.length > 0 && (
-        <div role="alert" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.6)', color: '#FCA5A5', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12 }}>
+        <div role="alert" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.6)', color: CHROME_RENK.warn, borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 12 }}>
           {v.acil.map((a) => <div key={a.kod}><b style={{ color: '#F87171' }}>{a.oncelik === 'hemen' ? 'HEMEN' : 'AYNI GÜN'} · {a.ad}:</b> {a.eylem}</div>)}
           <div style={{ ...kucuk, marginTop: 4 }}>Şikâyet metni / ön form kırmızı bayrak kutularından otomatik eşleşme — klinik karar hekimin; 112 / acil yönlendirmesini geciktirmeyin.</div>
           <AcilSablon acil={v.acil} v={v} calistir={calistir} salt={salt} />
@@ -94,16 +95,16 @@ export default function GozHome({ patientId }: { patientId: string }) {
 
       {/* Yapışkan şerit */}
       <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#0D1526', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '6px 0 8px', marginBottom: 8, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        {chip('VA OD', `${s.va.sag}${harf(s.va.harfSag)}`, s.va.harfSag != null && s.va.harfSag <= -5 ? '#FBBF24' : '#EDF1F7')}
-        {chip('VA OS', `${s.va.sol}${harf(s.va.harfSol)}`, s.va.harfSol != null && s.va.harfSol <= -5 ? '#FBBF24' : '#EDF1F7')}
-        {chip('GİB OD', `${s.gib.sag ?? '—'}${s.gib.hedefSag != null ? ` / hedef ${s.gib.hedefSag}` : ''}`, s.gib.ustSag ? '#F87171' : '#EDF1F7')}
-        {chip('GİB OS', `${s.gib.sol ?? '—'}${s.gib.hedefSol != null ? ` / hedef ${s.gib.hedefSol}` : ''}`, s.gib.ustSol ? '#F87171' : '#EDF1F7')}
+        {chip('VA OD', `${s.va.sag}${harf(s.va.harfSag)}`, s.va.harfSag != null && s.va.harfSag <= -5 ? '#FBBF24' : CHROME_RENK.ink)}
+        {chip('VA OS', `${s.va.sol}${harf(s.va.harfSol)}`, s.va.harfSol != null && s.va.harfSol <= -5 ? '#FBBF24' : CHROME_RENK.ink)}
+        {chip('GİB OD', `${s.gib.sag ?? '—'}${s.gib.hedefSag != null ? ` / hedef ${s.gib.hedefSag}` : ''}`, s.gib.ustSag ? '#F87171' : CHROME_RENK.ink)}
+        {chip('GİB OS', `${s.gib.sol ?? '—'}${s.gib.hedefSol != null ? ` / hedef ${s.gib.hedefSol}` : ''}`, s.gib.ustSol ? '#F87171' : CHROME_RENK.ink)}
         {s.drEvre && chip('DR', s.drEvre)}
-        {s.sonrakiEnjeksiyon && chip('Enjeksiyon', s.sonrakiEnjeksiyon, '#2DD4BF')}
+        {s.sonrakiEnjeksiyon && chip('Enjeksiyon', s.sonrakiEnjeksiyon, '#0F9B8E')}
         {s.gecikenGorev > 0 && chip('Geciken görev', String(s.gecikenGorev), '#F87171')}
         {!s.bugunOlcumVar && chip('Bugün', 'VA/GİB girilmedi', '#FBBF24')}
         {!salt && <button type="button" onClick={() => calistir({ adim: 'serit_nota' }, 'Şerit (VA + GİB + son göz dibi) bugünkü notun Objektif bölümüne yazıldı.')} style={{ ...ghost, padding: '2px 8px', fontSize: 11, marginLeft: 'auto' }} title="VA + GİB + RAPD + son fundus satırı">Şeridi Objektif&apos;e yaz</button>}
-        <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#2DD4BF' : '#64748B', marginLeft: salt ? 'auto' : undefined }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
+        <button type="button" onClick={() => setKaynak(!kaynak)} style={{ ...ghost, padding: '2px 8px', fontSize: 10, color: kaynak ? '#0F9B8E' : CHROME_RENK.muted, marginLeft: salt ? 'auto' : undefined }}>{kaynak ? 'Kaynak: açık' : 'Kaynak'}</button>
       </div>
 
       {/* Bilateral hızlı giriş */}
@@ -115,7 +116,7 @@ export default function GozHome({ patientId }: { patientId: string }) {
           </div>
           <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12 }}>
             <span />
-            <b style={{ color: '#2DD4BF' }}>OD (sağ)</b>
+            <b style={{ color: '#0F9B8E' }}>OD (sağ)</b>
             <b style={{ color: '#60A5FA' }}>OS (sol)</b>
             {ALANLAR.map(([k, ad]) => (
               <React.Fragment key={k}>
@@ -134,14 +135,14 @@ export default function GozHome({ patientId }: { patientId: string }) {
                 {[['', '—'], ['yok', 'Yok'], ['sag', 'Sağ (OD)'], ['sol', 'Sol (OS)']].map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}
               </select>
             </label>
-            <button type="button" onClick={() => setRefAcik(!refAcik)} style={{ ...ghost, color: refAcik ? '#2DD4BF' : '#8FA0B5' }}>{refAcik ? 'Refraksiyonu gizle' : '+ Refraksiyon (opsiyonel)'}</button>
+            <button type="button" onClick={() => setRefAcik(!refAcik)} style={{ ...ghost, color: refAcik ? '#0F9B8E' : CHROME_RENK.muted }}>{refAcik ? 'Refraksiyonu gizle' : '+ Refraksiyon (opsiyonel)'}</button>
           </div>
           {refAcik && <RefraksiyonAlanlari deger={form.ref} set={(ref) => setForm({ ...form, ref })} />}
           <div style={satir}>
             <select value={form.gibYontem} onChange={(e) => setForm({ ...form, gibYontem: e.target.value })} style={{ ...toolsInput, width: 'auto' }}>
               {[['nct', 'NCT (hava)'], ['applanasyon', 'Aplanasyon'], ['tonopen', 'Tono-Pen'], ['icare', 'iCare'], ['diger', 'Diğer']].map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}
             </select>
-            {form.kopya && <label style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', color: kopyaOnay ? '#2DD4BF' : '#FBBF24' }}><input type="checkbox" checked={kopyaOnay} onChange={(e) => setKopyaOnay(e.target.checked)} />Kopyalanan değerleri bugün ölçtüm / onaylıyorum</label>}
+            {form.kopya && <label style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', color: kopyaOnay ? '#0F9B8E' : '#FBBF24' }}><input type="checkbox" checked={kopyaOnay} onChange={(e) => setKopyaOnay(e.target.checked)} />Kopyalanan değerleri bugün ölçtüm / onaylıyorum</label>}
             <button type="button" onClick={kaydet} style={btn}>Kaydet</button>
             <button type="button" onClick={() => calistir({ adim: 'olcum_nota' }, 'Son VA/GİB bugünkü notun Objektif bölümüne eklendi.')} style={ghost}>Nota ekle (O)</button>
           </div>
@@ -149,11 +150,11 @@ export default function GozHome({ patientId }: { patientId: string }) {
       )}
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-        {sekmeler.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#2DD4BF' : '#8FA0B5', borderRadius: 999, minHeight: 30 }}>{x}{x === 'DR' && v.acikGozSevkleri.length ? ' •' : ''}</button>)}
+        {sekmeler.map((x) => <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, background: sekme === x ? 'rgba(15,155,142,0.2)' : 'transparent', color: sekme === x ? '#0F9B8E' : CHROME_RENK.muted, borderRadius: 999, minHeight: 30 }}>{x}{x === 'DR' && v.acikGozSevkleri.length ? ' •' : ''}</button>)}
       </div>
       {mesaj && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: /okunamadı|Hata|hatalı|yok|girin|onaylayın|Eksik|bulunamadı|seçin|olamaz|Asistan/.test(mesaj) ? '#F87171' : '#2DD4BF' }}>{mesaj}</span>
+          <span style={{ fontSize: 12, color: /okunamadı|Hata|hatalı|yok|girin|onaylayın|Eksik|bulunamadı|seçin|olamaz|Asistan/.test(mesaj) ? '#F87171' : '#0F9B8E' }}>{mesaj}</span>
           <MuayeneFormunaDon notId={eklenenNot} />
         </div>
       )}

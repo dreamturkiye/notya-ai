@@ -1,9 +1,8 @@
 'use client';
-
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { useState, useEffect } from 'react';
 import { getDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { useRouter } from 'next/navigation';
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,38 +99,41 @@ export default function ICD10Page() {
   };
 
   const containerStyle: React.CSSProperties = {
-    backgroundColor: '#0A1628',
+    background: 'transparent',
     minHeight: '100vh',
-    fontFamily: '-apple-system,BlinkMacSystemFont,system-ui',
-    color: 'white'
+    fontFamily: CHROME_FONT.sans,
+    color: CHROME_RENK.ink
   };
 
   const contentStyle: React.CSSProperties = {
     maxWidth: '800px',
     margin: '0 auto',
-    padding: '24px',
+    padding: '0',
     boxSizing: 'border-box',
     animation: 'fadeIn 0.3s ease-out'
   };
 
   const headerStyle: React.CSSProperties = {
-    paddingTop: '40px'
+    paddingTop: '0'
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: '28px',
-    fontWeight: 700,
+    fontFamily: CHROME_FONT.serif,
+    fontWeight: 500,
+    fontSize: '34px',
+    letterSpacing: '-0.02em',
+    color: '#2e251d',
     marginBottom: '8px'
   };
 
   const subtitleStyle: React.CSSProperties = {
     fontSize: '14px',
-    color: 'rgba(255,255,255,0.5)'
+    color: CHROME_RENK.muted
   };
 
   const searchWrapperStyle: React.CSSProperties = {
     position: 'relative',
-    marginTop: '32px',
+    marginTop: '28px',
     marginBottom: '24px'
   };
 
@@ -140,10 +142,10 @@ export default function ICD10Page() {
     boxSizing: 'border-box',
     height: '56px',
     fontSize: '18px',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    border: '1.5px solid rgba(255,255,255,0.12)',
+    backgroundColor: '#FFFFFF',
+    border: `1.5px solid ${CHROME_RENK.border}`,
     borderRadius: '16px',
-    color: 'white',
+    color: CHROME_RENK.ink,
     padding: '0 90px 0 20px',
     outline: 'none'
   };
@@ -153,8 +155,8 @@ export default function ICD10Page() {
     right: '8px',
     top: '8px',
     height: '40px',
-    backgroundColor: '#0F9B8E',
-    color: 'white',
+    backgroundColor: CHROME_RENK.pine,
+    color: '#FAF8F4',
     border: 'none',
     borderRadius: '12px',
     padding: '0 16px',
@@ -171,40 +173,42 @@ export default function ICD10Page() {
   };
 
   const pillStyle: React.CSSProperties = {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: '#EFE9DC',
     borderRadius: '20px',
     padding: '8px 14px',
     fontSize: '12px',
-    color: 'white',
+    color: CHROME_RENK.ink,
     cursor: 'pointer'
   };
 
   const resultCardStyle: React.CSSProperties = {
     backgroundColor: 'white',
+    border: `1px solid ${CHROME_RENK.border}`,
     borderRadius: '16px',
     padding: '20px',
     marginBottom: '12px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+    boxShadow: '0 8px 18px rgba(58,44,34,0.045)',
     cursor: 'pointer',
     transition: 'transform 0.2s, box-shadow 0.2s'
   };
 
   const codeStyle: React.CSSProperties = {
-    fontSize: '24px',
-    fontWeight: 700,
-    color: '#0F9B8E'
+    fontFamily: CHROME_FONT.serif,
+    fontSize: '26px',
+    fontWeight: 600,
+    color: CHROME_RENK.pine
   };
 
   const chapterLabelStyle: React.CSSProperties = {
     fontSize: '10px',
     textTransform: 'uppercase',
-    color: '#666',
+    color: CHROME_RENK.muted,
     letterSpacing: '0.5px'
   };
 
   const copyBtnStyle: React.CSSProperties = {
-    border: '1px solid #0F9B8E',
-    color: '#0F9B8E',
+    border: `1px solid ${CHROME_RENK.pine}`,
+    color: CHROME_RENK.pine,
     background: 'transparent',
     padding: '6px 14px',
     borderRadius: '8px',
@@ -213,7 +217,7 @@ export default function ICD10Page() {
   };
 
   const skeletonStyle: React.CSSProperties = {
-    backgroundColor: '#1a2a40',
+    backgroundColor: '#EFE9DC',
     height: '120px',
     borderRadius: '16px',
     marginBottom: '12px',
@@ -223,7 +227,7 @@ export default function ICD10Page() {
   const emptyStyle: React.CSSProperties = {
     textAlign: 'center',
     padding: '60px 20px',
-    color: 'rgba(255,255,255,0.6)'
+    color: CHROME_RENK.muted
   };
 
   const toastStyle: React.CSSProperties = {
@@ -231,8 +235,8 @@ export default function ICD10Page() {
     bottom: '24px',
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: '#0F9B8E',
-    color: 'white',
+    backgroundColor: CHROME_RENK.pine,
+    color: '#FAF8F4',
     padding: '12px 24px',
     borderRadius: '12px',
     fontSize: '14px'
@@ -240,7 +244,6 @@ export default function ICD10Page() {
 
   return (
     <div style={containerStyle}>
-      <DoktorNav />
       <div style={contentStyle}>
         <div style={headerStyle}>
           <div style={titleStyle}>ICD-10 Kodlayıcı</div>
@@ -286,11 +289,11 @@ export default function ICD10Page() {
                 onClick={() => copyToClipboard(result.code)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.01)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+                  e.currentTarget.style.boxShadow = '0 12px 26px rgba(58,44,34,0.1)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.2)';
+                  e.currentTarget.style.boxShadow = '0 8px 18px rgba(58,44,34,0.045)';
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -305,13 +308,13 @@ export default function ICD10Page() {
                     Kopyala
                   </button>
                 </div>
-                <div style={{ marginTop: '12px', fontSize: '16px', fontWeight: 600, color: '#111' }}>
+                <div style={{ marginTop: '12px', fontSize: '16px', fontWeight: 600, color: CHROME_RENK.ink }}>
                   {result.turkish}
                 </div>
-                <div style={{ marginTop: '4px', fontSize: '13px', color: '#666' }}>
+                <div style={{ marginTop: '4px', fontSize: '13px', color: CHROME_RENK.muted }}>
                   {result.english}
                 </div>
-                <div style={{ marginTop: '10px', display: 'inline-block', background: '#E6F7F5', color: '#0F9B8E', fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>
+                <div style={{ marginTop: '10px', display: 'inline-block', background: '#E4F3F1', color: CHROME_RENK.pine, fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>
                   {result.chapter}
                 </div>
               </div>

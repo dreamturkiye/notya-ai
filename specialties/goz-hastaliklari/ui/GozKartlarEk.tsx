@@ -15,6 +15,7 @@ import type { AcilBayrak, AcilKod } from '../engines/acil';
 import type { Biyometri, PostopKayit } from '../engines/katarakt';
 import type { GlokomOneri } from '../engines/glokom';
 import type { Dipnot } from '../protocols/sources';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { btn, ghost, etiket, kucuk, satir, metin } = stil;
 type Calistir = (b: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null>;
@@ -77,9 +78,9 @@ export function AcilSablon({ acil, v, calistir, salt }: { acil: AcilBayrak[]; v:
   };
   return (
     <div style={{ marginTop: 6 }}>
-      <button type="button" onClick={() => setAcik(!acik)} style={{ ...ghost, color: '#FCA5A5', borderColor: 'rgba(248,113,113,0.5)' }}>{acik ? 'Acil şablonu kapat' : 'Acil şablon — eylem listesi' + (kimyasal ? ' + yıkama zamanlayıcısı' : '')}</button>
+      <button type="button" onClick={() => setAcik(!acik)} style={{ ...ghost, color: CHROME_RENK.warn, borderColor: 'rgba(248,113,113,0.5)' }}>{acik ? 'Acil şablonu kapat' : 'Acil şablon — eylem listesi' + (kimyasal ? ' + yıkama zamanlayıcısı' : '')}</button>
       {acik && (
-        <div style={{ marginTop: 8, color: '#EDF1F7' }}>
+        <div style={{ marginTop: 8, color: CHROME_RENK.ink }}>
           {(kimyasal || aktif) && !salt && (
             <div style={{ border: '1px solid rgba(248,113,113,0.5)', borderRadius: 8, padding: 8, marginBottom: 8 }}>
               <div style={{ ...etiket, color: '#F87171' }}>Kimyasal yıkama zamanlayıcısı</div>
@@ -90,7 +91,7 @@ export function AcilSablon({ acil, v, calistir, salt }: { acil: AcilBayrak[]; v:
                 </div>
               ) : (
                 <div style={satir}>
-                  <span style={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: '#FCA5A5' }} aria-live="polite">{sure != null ? mmss(sure) : '—'}</span>
+                  <span style={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: CHROME_RENK.warn }} aria-live="polite">{sure != null ? mmss(sure) : '—'}</span>
                   <span style={kucuk}>başladı {saat(aktif.baslangic)}</span>
                   <button type="button" onClick={() => calistir({ adim: 'acil_kayit', eylem: 'bitir', id: aktif.id }, 'Yıkama bitti — süre kaydedildi.')} style={btn}>Yıkamayı BİTİR</button>
                 </div>
@@ -252,7 +253,7 @@ export function BiyoKarti({ v, calistir, salt }: { v: GozEkVeri; calistir: Calis
       {son && <div style={{ ...metin, padding: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 8, marginBottom: 6 }}>{son.tarih}: {biyoMetni(son)}</div>}
       {!salt && <>
         <div className="goz-giris" style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) minmax(0,1fr)', gap: 6, alignItems: 'center', fontSize: 12 }}>
-          <span /><b style={{ color: '#2DD4BF' }}>OD (sağ)</b><b style={{ color: '#60A5FA' }}>OS (sol)</b>
+          <span /><b style={{ color: '#0F9B8E' }}>OD (sağ)</b><b style={{ color: '#60A5FA' }}>OS (sol)</b>
           {BIYO_ALANLAR.map(([a, ad]) => <React.Fragment key={a}><span style={kucuk}>{ad}</span><input aria-label={`Sağ ${ad}`} value={al('sag', a)} onChange={(e) => setF({ ...f, [`sag_${a}`]: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} /><input aria-label={`Sol ${ad}`} value={al('sol', a)} onChange={(e) => setF({ ...f, [`sol_${a}`]: e.target.value })} style={{ ...toolsInput, minWidth: 0 }} /></React.Fragment>)}
         </div>
         <div style={satir}>
@@ -309,7 +310,7 @@ export function RopKarti({ v, calistir, salt }: { v: GozEkVeri; calistir: Calist
   return (
     <div style={{ ...kutu, borderColor: 'rgba(251,191,36,0.4)' }}>
       <div style={etiket}>ROP tarama kartı <span style={kucuk}>· zon / evre / plus hekim girer (ICROP adları) · sonraki taramayı hekim kilitler</span></div>
-      {v.ropEndikasyon && <div style={{ ...metin, color: v.ropEndikasyon.var ? '#FBBF24' : '#8FA0B5' }}>{v.ropEndikasyon.metin}</div>}
+      {v.ropEndikasyon && <div style={{ ...metin, color: v.ropEndikasyon.var ? '#FBBF24' : CHROME_RENK.muted }}>{v.ropEndikasyon.metin}</div>}
       {v.rop.map((x) => <div key={x.id} style={metin}>• {x.metin}</div>)}
       {!salt && <>
         <div style={satir}>
@@ -341,7 +342,7 @@ export function HatirlatmaKarti({ v, calistir, salt }: { v: GozEkVeri; calistir:
   return (
     <div style={{ ...kutu, borderColor: 'rgba(251,191,36,0.4)', marginTop: 0, marginBottom: 10 }}>
       <div style={etiket}>Geciken takip <span style={kucuk}>· hastaya Sağlığım mesajı (tanı / değer içermez) + dönüş görevi</span></div>
-      {h.bayraklar.map((b) => <span key={b} style={{ display: 'inline-block', border: '1px solid rgba(248,113,113,0.45)', borderRadius: 999, padding: '2px 8px', fontSize: 11, color: '#FCA5A5', marginRight: 6 }}>{GOZ_BAYRAK_AD[b]}</span>)}
+      {h.bayraklar.map((b) => <span key={b} style={{ display: 'inline-block', border: '1px solid rgba(248,113,113,0.45)', borderRadius: 999, padding: '2px 8px', fontSize: 11, color: CHROME_RENK.warn, marginRight: 6 }}>{GOZ_BAYRAK_AD[b]}</span>)}
       {h.detay.length > 0 && <div style={{ ...kucuk, marginTop: 4 }}>{h.detay.join(' · ')}</div>}
       <div style={satir}>
         {!salt && h.bayraklar.length > 0 && <button type="button" onClick={() => calistir({ adim: 'hatirlatma' }, 'Hatırlatma gönderildi — Sağlığım › Mesajlar; dönüş görevi açıldı.')} style={btn}>Hastaya hatırlatma gönder</button>}
@@ -358,7 +359,7 @@ export function RefraksiyonAlanlari({ deger, set }: { deger: Record<string, stri
       <span /><span style={kucuk}>Sferik (D)</span><span style={kucuk}>Silindir (D)</span><span style={kucuk}>Aks (°)</span>
       {(['sag', 'sol'] as const).map((t) => (
         <React.Fragment key={t}>
-          <b style={{ color: t === 'sag' ? '#2DD4BF' : '#60A5FA' }}>{t === 'sag' ? 'OD' : 'OS'}</b>
+          <b style={{ color: t === 'sag' ? '#0F9B8E' : '#60A5FA' }}>{t === 'sag' ? 'OD' : 'OS'}</b>
           {(['sph', 'cyl', 'aks'] as const).map((a) => <input key={a} aria-label={`${t === 'sag' ? 'Sağ' : 'Sol'} ${a}`} value={deger[`${t}_${a}`] || ''} onChange={(e) => set({ ...deger, [`${t}_${a}`]: e.target.value })} placeholder={a === 'aks' ? '0–180' : '−1,25'} inputMode="decimal" style={{ ...toolsInput, minWidth: 0 }} />)}
         </React.Fragment>
       ))}
@@ -373,7 +374,7 @@ export function GlokomOneriDugmeleri({ oneriler, etiketMetni, secili, sec, kayna
   return (
     <div style={{ marginTop: 8 }}>
       <div style={kucuk}>Aralık ön ayarı (EGS 5 — TOD birim metni doğrulanana dek) · <b style={{ color: '#FBBF24' }}>{etiketMetni}</b></div>
-      <div style={satir}>{oneriler.map((x) => <button key={x.kod} type="button" onClick={() => sec(x)} title={x.aralikMetni} style={{ ...ghost, color: secili === x.kod ? '#2DD4BF' : '#8FA0B5', borderColor: secili === x.kod ? 'rgba(45,212,191,0.5)' : 'rgba(255,255,255,0.15)' }}>{x.ad}</button>)}</div>
+      <div style={satir}>{oneriler.map((x) => <button key={x.kod} type="button" onClick={() => sec(x)} title={x.aralikMetni} style={{ ...ghost, color: secili === x.kod ? '#0F9B8E' : CHROME_RENK.muted, borderColor: secili === x.kod ? 'rgba(45,212,191,0.5)' : 'rgba(255,255,255,0.15)' }}>{x.ad}</button>)}</div>
       {o && <div style={{ ...metin, marginTop: 4 }}>{o.ad}: {o.aralikMetni} — {o.not} <span style={{ ...kucuk, color: '#FBBF24' }}>Kaydet'e basınca hekim kilidi olur.</span>{kaynak([o.dipnot])}</div>}
     </div>
   );

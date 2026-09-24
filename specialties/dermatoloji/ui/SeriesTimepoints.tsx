@@ -3,6 +3,7 @@
 import type { ImageSeries, PhotoAsset } from '../schema'
 import { kutu } from './clinic-styles'
 import { bolgeEtiketi } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function SeriesTimepoints({
   series,
@@ -16,16 +17,16 @@ export function SeriesTimepoints({
   return (
     <section style={kutu} data-derm="series-timepoints">
       <h2 style={{ margin: 0, fontSize: 16 }}>Seri zaman noktaları</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
         İzotretinoin ay-0 / ay-3 ve tedavi yanıtı aynı seride tutulur. Pikseller görüntülemede kalır.
       </p>
-      {series.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Henüz seri yok — aynı lezyona iki zaman noktası ekleyin.</p>}
+      {series.length === 0 && <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Henüz seri yok — aynı lezyona iki zaman noktası ekleyin.</p>}
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 12 }}>
         {series.map((s) => {
           const lesionPhoto = photos.find((p) => p.lesionId === s.lesionId)
           return (
             <li key={s.id}>
-              <div style={{ fontSize: 12, color: '#8FA0B5', marginBottom: 6 }}>{bolgeEtiketi(lesionPhoto?.region)}</div>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 6 }}>{bolgeEtiketi(lesionPhoto?.region)}</div>
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
                 {s.timepoints.map((t) => {
                   const id = t.photoIds[0]
@@ -39,7 +40,7 @@ export function SeriesTimepoints({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={src} alt="" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8 }} />
                       ) : (
-                        <div style={{ width: 120, height: 90, borderRadius: 8, background: 'rgba(255,255,255,0.06)', fontSize: 11, color: '#8FA0B5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Önizleme yok</div>
+                        <div style={{ width: 120, height: 90, borderRadius: 8, background: 'rgba(255,255,255,0.06)', fontSize: 11, color: CHROME_RENK.muted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Önizleme yok</div>
                       )}
                     </div>
                   )

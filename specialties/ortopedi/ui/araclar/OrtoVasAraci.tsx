@@ -54,7 +54,7 @@ export default function OrtoVasAraci() {
           <Istatistik deger={sonuc.tamamMi ? String(sonuc.fonksiyonToplam) : '—'} etiket="Fonksiyon / 16" />
           <Istatistik deger={sonuc.bantAd} etiket="Şiddet bandı · karar desteği" />
         </div>
-        {!sonuc.tamamMi && <div style={{ ...S.kucuk, color: '#FDE68A', marginTop: 6 }}>{sonuc.eksikMadde} alan boş — bant yorumlanmaz.</div>}
+        {!sonuc.tamamMi && <div style={{ ...S.kucuk, color: '#7A5B1E', marginTop: 6 }}>{sonuc.eksikMadde} alan boş — bant yorumlanmaz.</div>}
       </div>
       <div style={S.kutu}>
         <div style={S.etiket}>Özet</div>

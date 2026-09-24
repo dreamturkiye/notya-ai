@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react'
 import { CERVIX_SCREENING, CONTRACEPTION, cycleNote } from '../protocols/jinekoloji'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -28,13 +29,13 @@ export function JinekolojiKart({
     <section style={box} data-tab="JinekolojiKart" data-kd="jine-kart">
       <h2 style={{ margin: 0, fontSize: 16 }}>Jinekoloji kartı</h2>
       <p style={{ fontSize: 13 }}>Jinekoloji SAT {lmp ?? '—'} · {cycle.label}</p>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{CERVIX_SCREENING.map((c) => `${c.label} (${c.interval})`).join(' · ')}</p>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>{CERVIX_SCREENING.map((c) => `${c.label} (${c.interval})`).join(' · ')}</p>
       <p style={{ fontSize: 12 }}>
         HPV/Pap: {sonServiks ? new Date(sonServiks).toLocaleDateString('tr-TR') : 'kayıt yok'}
         {sonServiksSonuc ? ` · ${sonServiksSonuc}` : ''}
       </p>
       <p style={{ fontSize: 12 }}>Kontrasepsiyon: {kontrasepsiyon || CONTRACEPTION.join(', ')}</p>
-      <p style={{ fontSize: 11, color: '#64748B' }}>Temel KD dilinde siklus günü yalnız jinekoloji SAT’sinden hesaplanır; gebelik SAT kullanılmaz.</p>
+      <p style={{ fontSize: 11, color: CHROME_RENK.muted }}>Temel KD dilinde siklus günü yalnız jinekoloji SAT’sinden hesaplanır; gebelik SAT kullanılmaz.</p>
     </section>
   )
 }

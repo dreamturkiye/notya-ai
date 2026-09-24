@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { kardioStil, Istatistik, TaslakNotu, Rozet } from './KardioAracKabugu';
 import { KARDIO_BAYRAK_AD, kardioKohortFiltre, type KardioKohortBayrak, type KardioKohortSatir } from '../../engines/kohort';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = kardioStil;
 const BAYRAKLAR = Object.keys(KARDIO_BAYRAK_AD) as KardioKohortBayrak[];
@@ -63,7 +64,7 @@ export default function KardioKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(220,38,38,0.25)' : 'transparent', color: suzgec.includes(b) ? '#FECACA' : '#C9D4E3' }}
+              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(220,38,38,0.25)' : 'transparent', color: suzgec.includes(b) ? '#FECACA' : CHROME_RENK.muted }}
             >{KARDIO_BAYRAK_AD[b]}</button>
           ))}
         </div>

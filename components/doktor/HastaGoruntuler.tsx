@@ -21,6 +21,7 @@ import {
 } from '@/lib/doktor/goruntuCalisma'
 import type { Modalite } from '@/core/belgeler/ontoloji'
 import { MODALITE_TR } from '@/core/belgeler/ontoloji'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Calisma = {
   id: string
@@ -40,9 +41,9 @@ type Calisma = {
 type Analiz = { id: string; belge_id?: string; durum: string; sonuc?: { ozet?: string; bulgular?: string[] } | null; hekim_ozet?: string | null }
 
 const TIPS: GoruntuTip[] = ['xr', 'ekg', 'goz', 'derm', 'mg', 'us', 'ct', 'mr', 'pet']
-const panel: React.CSSProperties = { background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 16 }
+const panel: React.CSSProperties = { background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 16 }
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' }
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: `1px solid ${CHROME_RENK.border}` }
 
 export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   const [liste, setListe] = useState<Calisma[]>([])
@@ -156,19 +157,19 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div style={panel}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#EDF1F7' }}>Görüntüler</div>
-        <div style={{ fontSize: 13, color: '#8FA0B5', margin: '4px 0 12px' }}>Bu hastanın filmleri.</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: CHROME_RENK.ink }}>Görüntüler</div>
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, margin: '4px 0 12px' }}>Bu hastanın filmleri.</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
           {liste.map((c) => (
             <button key={c.id} type="button" onClick={() => setSecili(c.id)} style={{
               ...ghost, padding: '6px 10px', borderRadius: 999,
               borderColor: secili === c.id ? '#0F9B8E' : 'rgba(255,255,255,0.15)',
-              color: secili === c.id ? '#2DD4BF' : '#EDF1F7',
+              color: secili === c.id ? '#0F9B8E' : CHROME_RENK.ink,
             }}>
               {goruntuChip(c.tip, c.tarih || c.created_at)}
             </button>
           ))}
-          {liste.length === 0 && <span style={{ fontSize: 13, color: '#64748B' }}>Henüz film yok.</span>}
+          {liste.length === 0 && <span style={{ fontSize: 13, color: CHROME_RENK.muted }}>Henüz film yok.</span>}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
           <select value={tip} onChange={(e) => { setTip(e.target.value as GoruntuTip); setAlt('') }} style={sel}>
@@ -181,12 +182,12 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
             </select>
           )}
           <input value={bolge} onChange={(e) => setBolge(e.target.value)} placeholder="Bölge (akciğer, meme-R…)" style={inp} />
-          <input type="file" accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} onChange={(e) => setDosya(e.target.files?.[0] || null)} style={{ color: '#8FA0B5', fontSize: 12 }} />
+          <input type="file" accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} onChange={(e) => setDosya(e.target.files?.[0] || null)} style={{ color: CHROME_RENK.muted, fontSize: 12 }} />
           <button type="button" onClick={() => void gonder()} disabled={yukleniyor || (altTipSecilmeli(tip) && !alt)} style={btn}>{yukleniyor ? 'Yükleniyor…' : 'Kasa’ya al'}</button>
-          {satir?.tip === tip && <span style={{ fontSize: 12, color: '#8FA0B5' }}>Seçili çalışmaya eklenir (MG iki kare / seri).</span>}
+          {satir?.tip === tip && <span style={{ fontSize: 12, color: CHROME_RENK.muted }}>Seçili çalışmaya eklenir (MG iki kare / seri).</span>}
         </div>
         {hacimAiKapali(tip) && <div style={{ fontSize: 11, color: '#FBBF24', marginTop: 8 }}>CT/MR/PET: yalnız anahtar kare + rapor. Hacim arşivi yok.</div>}
-        {mesaj && <div style={{ fontSize: 12, color: /paylaşıldı|yok/.test(mesaj) && !/Paylaşılamadı/.test(mesaj) ? '#2DD4BF' : '#F87171', marginTop: 8 }}>{mesaj}</div>}
+        {mesaj && <div style={{ fontSize: 12, color: /paylaşıldı|yok/.test(mesaj) && !/Paylaşılamadı/.test(mesaj) ? '#0F9B8E' : '#F87171', marginTop: 8 }}>{mesaj}</div>}
       </div>
 
       {satir && (
@@ -211,17 +212,17 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
             )}
           </div>
           <div style={panel}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#EDF1F7', marginBottom: 6 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: CHROME_RENK.ink, marginBottom: 6 }}>
               {TIP_ETIKET[satir.tip]} {satir.bolge ? `· ${satir.bolge}` : ''}
             </div>
-            <div style={{ fontSize: 12, color: '#8FA0B5', marginBottom: 10 }}>{onayDurumDipnot(satir.onay_durum)}</div>
+            <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 10 }}>{onayDurumDipnot(satir.onay_durum)}</div>
             {satir.tip === 'mg' && <div style={{ fontSize: 12, color: '#FBBF24', marginBottom: 10 }}>{MG_DIPNOT}</div>}
-            <div style={{ fontSize: 13, color: '#EDF1F7', marginBottom: 8 }}>
+            <div style={{ fontSize: 13, color: CHROME_RENK.ink, marginBottom: 8 }}>
               <b>{analiz?.hekim_ozet ? 'Hekim özeti' : 'Asistan taslağı'}</b>
-              <div style={{ color: '#8FA0B5', fontWeight: 400, marginTop: 4 }}>{analiz?.hekim_ozet || analiz?.sonuc?.ozet || 'Henüz taslak yok.'}</div>
+              <div style={{ color: CHROME_RENK.muted, fontWeight: 400, marginTop: 4 }}>{analiz?.hekim_ozet || analiz?.sonuc?.ozet || 'Henüz taslak yok.'}</div>
             </div>
             {!!analiz?.sonuc?.bulgular?.length && (
-              <div style={{ fontSize: 13, color: '#EDF1F7', marginBottom: 8 }}>
+              <div style={{ fontSize: 13, color: CHROME_RENK.ink, marginBottom: 8 }}>
                 <b>Bulgular</b>
                 <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{analiz.sonuc.bulgular.map((b, i) => <li key={i}>{b}</li>)}</ul>
               </div>
@@ -238,7 +239,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
                 {satir.onay_durum === 'hasta_paylas' ? 'Paylaşıldı' : satir.tip === 'goz' && satir.modalite !== 'fundus' ? 'Portala yalnız fundus' : 'Onayla ve paylaş'}
               </button>
             </div>
-            {satir.hastane_link && <a href={satir.hastane_link} style={{ display: 'block', marginTop: 10, fontSize: 12, color: '#2DD4BF' }}>Hastane bağlantısı →</a>}
+            {satir.hastane_link && <a href={satir.hastane_link} style={{ display: 'block', marginTop: 10, fontSize: 12, color: '#0F9B8E' }}>Hastane bağlantısı →</a>}
           </div>
         </div>
       )}
@@ -246,7 +247,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   )
 }
 
-const sel: React.CSSProperties = { background: '#0A1220', color: '#EDF1F7', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 10px', fontSize: 13 }
+const sel: React.CSSProperties = { background: '#0A1220', color: CHROME_RENK.ink, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 10px', fontSize: 13 }
 const inp: React.CSSProperties = { ...sel, minWidth: 160 }
 
 function GoruntuIzleyici({ belgeId, tip, ikiUp }: { belgeId: string | null; tip: GoruntuTip; ikiUp: string[] | null }) {
@@ -314,7 +315,7 @@ function GoruntuIzleyici({ belgeId, tip, ikiUp }: { belgeId: string | null; tip:
         background: '#020812',
       }}
     />
-  ) : <div style={{ color: '#64748B', fontSize: 13, padding: 24 }}>Kare yok.</div>
+  ) : <div style={{ color: CHROME_RENK.muted, fontSize: 13, padding: 24 }}>Kare yok.</div>
 
   return (
     <div>

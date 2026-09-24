@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { gopIsotretinoin, acitretinPregnancyBanYears, type GopInput, type GopSex } from '../engines/gop-isotretinoin'
 import { btn, giris, etiketS } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -55,7 +56,7 @@ export function GopBlok({
     <section style={boxStyle} data-tab="GopBlok" data-gop={result.allowed ? 'ok' : 'blocked'} data-sex={sex}>
       <h2 style={{ margin: 0, fontSize: 16 }}>GÖP izotretinoin</h2>
       {maleNa && (
-        <p style={{ fontSize: 13, color: '#8FA0B5' }}>
+        <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>
           Gebelik önleme maddeleri (çift kontrasepsiyon, negatif β-hCG, siklus 2–3. gün) erkek hasta için geçerli değildir.
         </p>
       )}
@@ -70,8 +71,8 @@ export function GopBlok({
         </p>
       ) : (
         <div>
-          <p style={{ fontSize: 13, color: '#FCA5A5', marginBottom: 6 }}>Paket eksik — reçete bloke.</p>
-          <ul style={{ fontSize: 13, paddingLeft: 18, color: '#FCA5A5' }}>
+          <p style={{ fontSize: 13, color: CHROME_RENK.warn, marginBottom: 6 }}>Paket eksik — reçete bloke.</p>
+          <ul style={{ fontSize: 13, paddingLeft: 18, color: CHROME_RENK.warn }}>
             {result.blocks.map((b) => <li key={b}>{b}</li>)}
           </ul>
         </div>

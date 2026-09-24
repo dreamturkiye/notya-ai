@@ -21,6 +21,7 @@ import {
   KARNE_BELGE_KATEGORISI, OKUNAMADI_ETIKETI, takvimEslestir,
   type KarneEslesme, type KarneSatiri, type Okunabilirlik,
 } from '@/lib/asi/karneOkuma';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type TaslakSatir = KarneSatiri & { eslesme: KarneEslesme; hekimDuzeltti: boolean };
 
@@ -56,7 +57,7 @@ async function karneDosyasiHazirla(dosya: File): Promise<File> {
 const OKUNABILIRLIK_AD: Record<Okunabilirlik, string> = { iyi: 'Okunabilirlik iyi', kismi: 'Kısmi okuma', dusuk: 'Okunabilirlik düşük' };
 
 const girdi: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 14, minHeight: 40 };
-const ikincilDugme: React.CSSProperties = { background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '10px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 };
+const ikincilDugme: React.CSSProperties = { background: 'rgba(255,255,255,0.08)', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '10px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 };
 
 export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId: string; onKaydedildi: (adet: number) => void }) {
   const kameraRef = useRef<HTMLInputElement>(null);
@@ -162,7 +163,7 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
           {kirmizi && <Rozet ton="kirmizi">{OKUNAMADI_ETIKETI}</Rozet>}
           {s.okunamadi && s.hekimDuzeltti && <Rozet ton="iyi">Hekim kontrol etti</Rozet>}
           <Rozet ton={s.eslesme.grup === 'takvim' ? 'bilgi' : 'uyari'}>{s.eslesme.etiket}</Rozet>
-          {s.okunamadiNedeni && <span style={{ fontSize: 12, color: '#FCA5A5' }}>{s.okunamadiNedeni}</span>}
+          {s.okunamadiNedeni && <span style={{ fontSize: 12, color: CHROME_RENK.warn }}>{s.okunamadiNedeni}</span>}
         </div>
         {s.hamMetin && <div style={{ fontSize: 12, color: '#94A3B8' }}>Karnede: “{s.hamMetin}”</div>}
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(72px, 0.6fr) minmax(0, 1.4fr)', gap: 8 }}>
@@ -178,7 +179,7 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {kirmizi && <button type="button" onClick={() => kontrolEttim(s.anahtar)} style={ikincilDugme}>Karneyle karşılaştırdım, böyle kalsın</button>}
-          <button type="button" onClick={() => cikar(s.anahtar)} style={{ ...ikincilDugme, color: '#FCA5A5' }}>Çıkar</button>
+          <button type="button" onClick={() => cikar(s.anahtar)} style={{ ...ikincilDugme, color: CHROME_RENK.warn }}>Çıkar</button>
         </div>
       </div>
     );
@@ -201,12 +202,12 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
       )}
 
       {(asama === 'yukleniyor' || asama === 'okunuyor') && (
-        <div style={{ background: '#111C33', borderRadius: 12, padding: 14, fontSize: 13, color: '#C9D4E3' }}>
+        <div style={{ background: '#111C33', borderRadius: 12, padding: 14, fontSize: 13, color: CHROME_RENK.muted }}>
           {asama === 'yukleniyor' ? 'Karne Kasa\'ya yükleniyor…' : 'Ayşe karneyi okuyor… (el yazısı ve soluk kaşeler biraz sürebilir)'}
         </div>
       )}
 
-      {hata && <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#FCA5A5', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginTop: 8 }}>{hata}</div>}
+      {hata && <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: CHROME_RENK.warn, borderRadius: 8, padding: '10px 12px', fontSize: 13, marginTop: 8 }}>{hata}</div>}
 
       {(asama === 'onay' || asama === 'kaydediliyor') && okuma && (
         <div data-karne-onay="" style={{ background: '#111C33', borderRadius: 12, padding: 14, display: 'grid', gap: 12 }}>
@@ -215,8 +216,8 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
             <Rozet ton={okuma.okunabilirlik === 'iyi' ? 'iyi' : okuma.okunabilirlik === 'kismi' ? 'uyari' : 'kirmizi'}>{OKUNABILIRLIK_AD[okuma.okunabilirlik]}</Rozet>
           </div>
           <div style={{ fontSize: 12, color: '#94A3B8' }}>Taslaktır. Her satırı karneyle karşılaştırın; yanlış okunanı düzeltin, istemediğinizi çıkarın. Kaydedilenler “Karneden aktarıldı · hekim onaylı” olarak, bu klinikte uygulanan dozlardan ayrı görünür.</div>
-          {okuma.kimlikUyarisi && <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)', color: '#FDE68A', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>{okuma.kimlikUyarisi}</div>}
-          {!okuma.asiKarnesiMi && <div style={{ fontSize: 13, color: '#FDE68A' }}>Bu belge bir aşı karnesine benzemiyor. Aşıları elle girebilirsiniz.</div>}
+          {okuma.kimlikUyarisi && <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)', color: '#7A5B1E', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>{okuma.kimlikUyarisi}</div>}
+          {!okuma.asiKarnesiMi && <div style={{ fontSize: 13, color: '#7A5B1E' }}>Bu belge bir aşı karnesine benzemiyor. Aşıları elle girebilirsiniz.</div>}
           {okuma.not && <div style={{ fontSize: 12, color: '#94A3B8' }}>Okuma notu: {okuma.not}</div>}
           {!satirlar.length && <div style={{ fontSize: 13, color: '#94A3B8' }}>Aktarılacak satır kalmadı.</div>}
 
@@ -234,7 +235,7 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
           )}
 
           {(bekleyen > 0 || adsiz > 0) && (
-            <div style={{ fontSize: 12, color: '#FCA5A5' }}>
+            <div style={{ fontSize: 12, color: CHROME_RENK.warn }}>
               {bekleyen > 0 && `${bekleyen} satır okunamadı — düzeltin, "böyle kalsın" deyin ya da çıkarın. `}
               {adsiz > 0 && `${adsiz} satırda aşı adı boş.`}
             </div>
@@ -246,7 +247,7 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
             </button>
             <button type="button" onClick={sifirla} disabled={asama === 'kaydediliyor'} style={ikincilDugme}>Vazgeç</button>
           </div>
-          <div style={{ fontSize: 11, color: '#64748B' }}>Karne Kasa'da kalır; vazgeçerseniz aşı kaydı yazılmaz.</div>
+          <div style={{ fontSize: 11, color: CHROME_RENK.muted }}>Karne Kasa'da kalır; vazgeçerseniz aşı kaydı yazılmaz.</div>
         </div>
       )}
     </div>

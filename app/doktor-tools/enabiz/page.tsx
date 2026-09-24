@@ -1,9 +1,8 @@
 'use client'
-
-import DoktorNav from '@/components/doktor/DoktorNav'
 import { toolsCard, toolsPrimaryBtn, toolsShell } from '@/lib/doktor/toolsUi'
 import { ENABIZ_ARTEFAKTLAR } from '@/lib/enabiz/paket'
 import { useState } from 'react'
+import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 
 const steps = [
   {
@@ -64,38 +63,37 @@ export default function ENabizGuidePage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px 48px' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', letterSpacing: 1.2, marginBottom: 8 }}>
-          ARAÇLAR
+        <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>
+          Araçlar
         </div>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#FFFFFF', lineHeight: 1.25 }}>
+        <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
           e-Nabız format hazırlığı
         </h1>
-        <p style={{ marginTop: 8, color: '#94A3B8', fontSize: 14, lineHeight: 1.5 }}>
+        <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14, lineHeight: 1.5 }}>
           Canlı e-Nabız / USS bağlantısı yok. Reçete, rapor, epikriz, USG ve gebe/e-Doğum çıktıları yine de
           doğru kanal formatında üretilir (FHIR R4, Medula XML, USS form JSON) — kopyala / indir hazır.
         </p>
 
         <div style={{ ...toolsCard, marginTop: 20, padding: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#14B8A6', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 10 }}>
             Notya’da üretilen e-Nabız artefaktları
           </div>
-          <ul style={{ margin: 0, paddingLeft: 18, color: '#E2E8F0', fontSize: 13, lineHeight: 1.55 }}>
+          <ul style={{ margin: 0, paddingLeft: 18, color: CHROME_RENK.ink, fontSize: 13, lineHeight: 1.55 }}>
             {ENABIZ_ARTEFAKTLAR.map((a) => (
               <li key={a.tur} style={{ marginBottom: 8 }}>
-                <span style={{ color: '#2DD4BF', fontWeight: 600 }}>{a.ad}</span>
-                <span style={{ color: '#94A3B8' }}> · {a.kanal}</span>
-                <div style={{ color: '#64748B', fontSize: 12 }}>{a.ornek}</div>
+                <span style={{ color: CHROME_RENK.pine, fontWeight: 600 }}>{a.ad}</span>
+                <span style={{ color: CHROME_RENK.muted }}> · {a.kanal}</span>
+                <div style={{ color: CHROME_RENK.muted, fontSize: 12 }}>{a.ornek}</div>
                 {a.tur === 'sgk_rapor' && (
-                  <a href="/doktor-tools/sgk-rapor" style={{ color: '#14B8A6', fontSize: 12, display: 'inline-block', marginTop: 4 }}>
+                  <a href="/doktor-tools/sgk-rapor" style={{ color: CHROME_RENK.pine, fontSize: 12, display: 'inline-block', marginTop: 4 }}>
                     Araçlar → Hasta Raporları (kanon) ›
                   </a>
                 )}
               </li>
             ))}
           </ul>
-          <p style={{ margin: '12px 0 0', color: '#FBBF24', fontSize: 12, lineHeight: 1.45 }}>
+          <p style={{ margin: '12px 0 0', color: '#7A5B1E', fontSize: 12, lineHeight: 1.45 }}>
             live_write her zaman false. P4 (USS üretici kaydı + hekim şifresi) gelene kadar hekim MBYS/Medula/e-Nabız
             ekranına kendisi aktarır.
           </p>
@@ -113,8 +111,8 @@ export default function ENabizGuidePage() {
           }}
         >
           <div>
-            <div style={{ color: '#FFFFFF', fontWeight: 600, fontSize: 14 }}>Resmi e-Nabız portalı</div>
-            <div style={{ color: '#64748B', fontSize: 12, marginTop: 4 }}>{link}</div>
+            <div style={{ color: CHROME_RENK.ink, fontWeight: 600, fontSize: 14 }}>Resmi e-Nabız portalı</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 12, marginTop: 4 }}>{link}</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" onClick={copyLink} style={toolsPrimaryBtn(false)}>
@@ -126,7 +124,7 @@ export default function ENabizGuidePage() {
           </div>
         </div>
 
-        <h2 style={{ margin: '28px 0 12px', fontSize: 16, color: '#E2E8F0' }}>Kurumsal erişim rehberi</h2>
+        <h2 style={{ margin: '28px 0 12px', fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 20, color: '#2e251d' }}>Kurumsal erişim rehberi</h2>
         {steps.map((s) => (
           <div key={s.number} style={{ ...toolsCard, marginBottom: 10, padding: 14 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -135,8 +133,8 @@ export default function ENabizGuidePage() {
                   width: 28,
                   height: 28,
                   borderRadius: 8,
-                  background: 'rgba(20,184,166,0.15)',
-                  color: '#14B8A6',
+                  background: '#E4F3F1',
+                  color: CHROME_RENK.pine,
                   fontWeight: 800,
                   fontSize: 13,
                   display: 'flex',
@@ -148,9 +146,9 @@ export default function ENabizGuidePage() {
                 {s.number}
               </div>
               <div>
-                <div style={{ color: '#FFFFFF', fontWeight: 700, fontSize: 14 }}>{s.title}</div>
-                <div style={{ color: '#94A3B8', fontSize: 13, marginTop: 4, lineHeight: 1.5 }}>{s.content}</div>
-                <div style={{ color: '#64748B', fontSize: 12, marginTop: 6 }}>İpucu: {s.tip}</div>
+                <div style={{ color: CHROME_RENK.ink, fontWeight: 700, fontSize: 14 }}>{s.title}</div>
+                <div style={{ color: CHROME_RENK.muted, fontSize: 13, marginTop: 4, lineHeight: 1.5 }}>{s.content}</div>
+                <div style={{ color: CHROME_RENK.muted, fontSize: 12, marginTop: 6 }}>İpucu: {s.tip}</div>
               </div>
             </div>
           </div>

@@ -21,6 +21,7 @@ import { LOT_AZAMI, lotYerSatiri, YER_AZAMI } from '@/lib/asi/asiLotYeri';
 import AsiKarnesiOkuma from '@/components/doktor/AsiKarnesiOkuma';
 import AsiKarnesiEylemleri from '@/components/doktor/AsiKarnesiEylemleri';
 import AsiHatirlatmaListesi from '@/components/doktor/AsiHatirlatmaListesi';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 interface Asi {
   id: string;
@@ -162,7 +163,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
                   </div>
                   {lotYer && <div data-asi-lot-yer="" style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{lotYer}</div>}
                   {a.sonraki_doz_tarihi && (
-                    <div style={{ fontSize: 12, marginTop: 2, color: yaklasan ? '#F59E0B' : '#64748B' }}>
+                    <div style={{ fontSize: 12, marginTop: 2, color: yaklasan ? '#F59E0B' : CHROME_RENK.muted }}>
                       Sonraki doz: {trTarih(a.sonraki_doz_tarihi)}{yaklasan ? ' · Yaklaşıyor' : ''}
                     </div>
                   )}
@@ -181,12 +182,12 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aşılar</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button type="button" onClick={() => { setKarneAcik((v) => !v); setBilgi(''); }} style={{ background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 40 }}>
+          <button type="button" onClick={() => { setKarneAcik((v) => !v); setBilgi(''); }} style={{ background: 'rgba(255,255,255,0.08)', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer', minHeight: 40 }}>
             {karneAcik ? 'Karne yüklemeyi kapat' : '📷 Aşı karnesi yükle'}
           </button>
           {/* BRANS-ALAN-SIZMASI: SB çocukluk dönemi takvimi yalnız çocuk hastada / pediatrik bağlamda — KD'nin erişkin hastasında yok */}
           {(cocukHasta || pediatrikBaglam) && (
-            <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setTakvimAcik((v) => !v)} style={{ background: 'rgba(255,255,255,0.08)', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>
               {takvimAcik ? 'Takvimi Gizle' : '📋 Ulusal Aşı Takvimi'}
             </button>
           )}
@@ -196,7 +197,7 @@ export default function HastaAsilar({ patientId, pediatrikBaglam = false, veliDi
         </div>
       </div>
 
-      {bilgi && <div role="status" style={{ background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.4)', color: '#5EEAD4', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{bilgi}</div>}
+      {bilgi && <div role="status" style={{ background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.4)', color: '#0F9B8E', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{bilgi}</div>}
       {karneAcik && (
         <AsiKarnesiOkuma
           patientId={patientId}

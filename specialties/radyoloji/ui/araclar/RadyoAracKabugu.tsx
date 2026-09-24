@@ -5,13 +5,14 @@
  */
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import DoktorNav from '@/components/doktor/DoktorNav'
+import { CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import { toolsShell } from '@/lib/doktor/toolsUi'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
-export const RADYO_VURGU: AracVurgu = { ana: '#0D9488', anaMetin: '#F0FDFA', yumusak: '#5EEAD4', baslik: '#2DD4BF' }
+export const RADYO_VURGU: AracVurgu = { ana: '#0D9488', anaMetin: '#F0FDFA', yumusak: '#0F9B8E', baslik: '#0F9B8E' }
 export const radyoStil = aracStil(RADYO_VURGU)
 
 export {
@@ -44,16 +45,15 @@ export default function RadyoAracKabugu({ route, baslik, aciklama, children }: {
   return (
     <AracVurguSaglayici vurgu={RADYO_VURGU}>
       <div style={{ ...toolsShell, overflowX: 'hidden' }}>
-        <DoktorNav />
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px 56px', boxSizing: 'border-box' }}>
           {!izin ? (
-            <div style={{ color: '#9BB0C7', fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca radyoloji için.'}</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 15, padding: '12px 0' }}>{izin === null ? 'Yükleniyor…' : 'Bu araç yalnızca radyoloji için.'}</div>
           ) : (
             <>
               <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: RADYO_VURGU.baslik, letterSpacing: '1.4px', textTransform: 'uppercase', marginBottom: 8 }}>Araçlar · Radyoloji</div>
-                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#EDF1F7', margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>{baslik}</h1>
-                <p style={{ margin: '8px 0 0', fontSize: 15, color: '#9BB0C7', lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
+                <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Araçlar · Radyoloji</div>
+                <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, color: '#2e251d', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{baslik}</h1>
+                <p style={{ margin: '8px 0 0', fontSize: 15, color: CHROME_RENK.muted, lineHeight: 1.5, maxWidth: 680 }}>{aciklama}</p>
               </div>
               {children}
             </>

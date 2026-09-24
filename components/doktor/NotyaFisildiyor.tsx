@@ -1,26 +1,41 @@
 'use client'
 
 /**
- * NOTYA-FISILTI-UNIVERSAL (Kaan, 2026-09-24) -- standalone production port of "Notya fısıldıyor",
- * styled for the CURRENT dark-navy production theme (this file intentionally does not import
- * anything from the yeni-görünüm redesign -- lib/doktor/chromeTheme.ts etc. don't exist on main).
- * Purpose: let Dr. Gökhan test the real capability on production without the redesign merge
- * decision being made for anyone -- see docs/OPEN-COMMITMENTS.md NOTYA-FISILTI-UNIVERSAL.
+ * NOTYA-FISILTI-UNIVERSAL (Kaan, 2026-09-24) — "Notya fısıldıyor" is no longer pediatri-only.
+ * It now calls the universal `/api/doktor/fisilti` endpoint, which resolves the doctor's own
+ * branş to the right existing kohort route and normalizes the result -- this component doesn't
+ * need to know which of the 29 branş engines produced the flag.
  *
- * Same backend, same behavior as the redesign version: calls the universal /api/doktor/fisilti
- * endpoint (resolves the doctor's own branş, reuses that branş's existing kohort route, also
- * checks overdue unread portal messages), same "clear by resolving, not dismissing" rule, same
- * honest empty state instead of rendering nothing.
+ * Everything from the original design carries over unchanged:
+ * - "Clear by resolving, not dismissing": recomputed fresh from the real record every load, no
+ *   separate dismiss state to get out of sync.
+ * - Honest empty state when the doctor's branş IS supported but genuinely has nothing pending
+ *   (renders a calm card, not nothing) -- vs. silently rendering nothing when the branş has no
+ *   kohort engine at all yet (radyoloji has one; klinik doesn't -- that's Sprint 2).
+ * - Own dark-blue visual identity (sampled from the header photo's leaves), separate from pine.
  *
- * NOTYA-FISILTI-GIZLE-01: "Gizle" per item — until the facts change, or "7 gün sonra hatırlat".
- * "Gizlenenler (n)" lists hidden items with "Geri getir". Hiding never changes clinical data and
- * there is deliberately no delete (clinical safety). Every fetch is no-store so a dose written by
- * an approved note (NOTYA-ASI-NOT) shows on the next load.
+ * NOTYA-FISILTI-GIZLE-01 (merged in from the production port's later work, 2026-09-24): "Gizle"
+ * per item — until the facts change, or "7 gün sonra hatırlat". "Gizlenenler (n)" lists hidden
+ * items with "Geri getir". Hiding never changes clinical data and there is deliberately no delete
+ * (clinical safety). Every fetch is no-store so a dose written by an approved note (NOTYA-ASI-NOT)
+ * shows on the next load. Functionality ported as-is from the production (dark-navy) version;
+ * restyled here to the redesign's own cream/pine identity rather than carrying dark-theme colors.
  */
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
+import { CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import type { FisiltiItem } from '@/lib/doktor/fisiltiOrtak'
+
+// Sampled from public/doktor-chrome/plant.jpg (blue-green leaf tones), not a design-system token --
+// this box is deliberately its own accent, separate from the page's pine.
+// 2026-09-24 (Kaan): the lighter leaf, as actually seen on screen -- raw tone run through the
+// page's own filter (saturate .65, contrast .88, brightness 1.1) and 50% opacity blend over the
+// cream background. Border added since this tone sits close to the page bg in lightness.
+const FISILTI_KOYU = '#d0d8d5'
+const FISILTI_KOYU2 = '#dde3e0'
+const FISILTI_BORDER = 'rgba(30,51,54,0.18)'
+const FISILTI_INK = '#1e3336'
 
 interface Gizlenen { gizleId: string; ad: string; baslik: string; detay: string; until: string | null }
 
@@ -31,10 +46,10 @@ const LEAF = (
 )
 
 const kucukBtn: React.CSSProperties = {
-  background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 999, color: '#C9D4E3',
-  fontSize: 12, padding: '6px 12px', minHeight: 32, cursor: 'pointer',
+  background: 'transparent', border: `1px solid ${FISILTI_BORDER}`, borderRadius: 999, color: FISILTI_INK,
+  fontSize: 12, padding: '6px 12px', minHeight: 32, cursor: 'pointer', fontFamily: 'inherit',
 }
-const linkBtn: React.CSSProperties = { background: 'none', border: 'none', padding: '6px 0', color: '#8FA0B5', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }
+const linkBtn: React.CSSProperties = { background: 'none', border: 'none', padding: '6px 0', color: '#3f5b5f', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }
 
 const tarihGoster = (iso: string) => new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -101,17 +116,19 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
     } finally { setMesgul(false) }
   }
 
+  // Bu branşta motor henüz yok -- kart hiç görünmez (bu, "kontrol edildi, boşçıktı"dan farklı).
   if (kapsamDisi) return null
+  // Kontrol sürerken boş durumun yanıp sönmesini önler.
   if (yukleniyor) return null
 
-  const panel: React.CSSProperties = {
-    background: '#0D1C33',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderLeft: '3px solid #0F9B8E',
-    borderRadius: 16,
-    padding: '18px 20px',
-    marginTop: 18,
-  }
+  const S = (s: Record<string, unknown>) => s as React.CSSProperties
+
+  const kartStil = S({
+    background: `linear-gradient(165deg, ${FISILTI_KOYU}, ${FISILTI_KOYU2})`,
+    border: `1px solid ${FISILTI_BORDER}`,
+    color: FISILTI_INK, borderRadius: 20, padding: '20px 22px 18px', position: 'relative', overflow: 'hidden',
+    boxShadow: '0 12px 28px rgba(30,51,54,0.1)',
+  })
 
   const gizlenenBolumu = gizliSayisi > 0 && (
     <div style={{ marginTop: 10 }}>
@@ -121,27 +138,28 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
       {gizlenenler && (
         <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {gizlenenler.map((g) => (
-            <div key={g.gizleId} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 13, color: '#C9D4E3', background: 'rgba(0,0,0,0.2)', borderRadius: 10, padding: '8px 10px' }}>
+            <div key={g.gizleId} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', fontSize: 13, color: FISILTI_INK, background: 'rgba(30,51,54,0.06)', borderRadius: 10, padding: '8px 10px' }}>
               <span style={{ flex: '1 1 220px', overflowWrap: 'anywhere' }}>
-                <strong style={{ color: '#EDF1F7' }}>{g.ad}</strong> — {g.baslik}
-                {g.until && <span style={{ color: '#8FA0B5' }}> · {tarihGoster(g.until)} tarihinde yeniden görünecek</span>}
+                <strong>{g.ad}</strong> — {g.baslik}
+                {g.until && <span style={{ opacity: 0.7 }}> · {tarihGoster(g.until)} tarihinde yeniden görünecek</span>}
               </span>
               <button type="button" style={kucukBtn} disabled={mesgul} onClick={() => geriGetir(g.gizleId)}>Geri getir</button>
             </div>
           ))}
-          {!gizlenenler.length && <div style={{ fontSize: 12, color: '#8FA0B5' }}>Gizlenen uyarı yok.</div>}
+          {!gizlenenler.length && <div style={{ fontSize: 12, opacity: 0.7 }}>Gizlenen uyarı yok.</div>}
         </div>
       )}
     </div>
   )
 
   if (!item) {
+    // Gerçekten kontrol edildi, bekleyen yok -- kart kaybolmaz, durumu dürüstçe söyler.
     return (
-      <div style={panel}>
-        <div style={{ fontStyle: 'italic', color: '#2DD4BF', fontSize: 14, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+      <div style={kartStil}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 })}>
           {LEAF} Notya fısıldıyor
         </div>
-        <div style={{ fontStyle: 'italic', fontSize: 16, lineHeight: 1.3, color: '#EDF1F7' }}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 500, color: FISILTI_INK })}>
           Şu an bekleyen bir şey yok — her şey güncel.
         </div>
         {gizlenenBolumu}
@@ -150,23 +168,23 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
   }
 
   return (
-    <div style={panel}>
+    <div style={kartStil}>
       <button
         type="button"
         onClick={() => router.push(item.hedefYol)}
-        style={{ display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', background: 'none', border: 'none', padding: 0, color: 'inherit' }}
+        style={S({ display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', background: 'none', border: 'none', padding: 0, color: 'inherit' })}
       >
-        <div style={{ fontStyle: 'italic', color: '#2DD4BF', fontSize: 14, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
           {LEAF} Notya fısıldıyor
         </div>
-        <div style={{ fontStyle: 'italic', fontSize: 17, lineHeight: 1.3, fontWeight: 600, color: '#EDF1F7' }}>
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500, color: FISILTI_INK })}>
           {item.ad} — {item.baslik}
         </div>
         {item.detay[0] && (
-          <div style={{ marginTop: 8, fontSize: 13, color: '#C9D4E3', lineHeight: 1.5 }}>{item.detay[0]}</div>
+          <div style={S({ marginTop: 8, fontSize: 13, opacity: 0.8, lineHeight: 1.5, color: FISILTI_INK })}>{item.detay[0]}</div>
         )}
         {toplam > 1 && (
-          <div style={{ marginTop: 10, fontSize: 12, color: '#8FA0B5' }}>+{toplam - 1} hastada daha bekleyen kontrol var</div>
+          <div style={S({ marginTop: 10, fontSize: 12, opacity: 0.65, color: FISILTI_INK })}>+{toplam - 1} hastada daha bekleyen kontrol var</div>
         )}
       </button>
       <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -180,8 +198,8 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
           </>
         )}
       </div>
-      {gizleMenu && <div style={{ marginTop: 6, fontSize: 12, color: '#8FA0B5' }}>Gizlemek kayıtları değiştirmez; uyarının içeriği değişirse (yeni gecikme, yeni tarih) yeniden görünür.</div>}
-      {hata && <div style={{ marginTop: 6, fontSize: 12, color: '#FCA5A5' }}>{hata}</div>}
+      {gizleMenu && <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7 }}>Gizlemek kayıtları değiştirmez; uyarının içeriği değişirse (yeni gecikme, yeni tarih) yeniden görünür.</div>}
+      {hata && <div style={{ marginTop: 6, fontSize: 12, color: '#B4453C' }}>{hata}</div>}
       {gizlenenBolumu}
     </div>
   )

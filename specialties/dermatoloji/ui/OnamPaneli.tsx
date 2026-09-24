@@ -4,6 +4,7 @@ import type { PhotoAsset } from '../schema'
 import { etiketS, kutu } from './clinic-styles'
 import { genitalOrChildBlocked } from '../imaging/consent-kvkk'
 import { bolgeEtiketi } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export type FotoOnamPatch = {
   coreImageId: string
@@ -27,13 +28,13 @@ export function OnamPaneli({
   return (
     <section style={kutu} data-derm="onam-paneli">
       <h2 style={{ margin: 0, fontSize: 16 }}>KVKK görüntü onamı</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
         Genital görüntü onamsız açılmaz / dışa aktarılmaz. 18 yaş altı, eğitim anonim ve hasta paylaşımı ayrı işaretlenir.
       </p>
       {kilitli.length > 0 && (
-        <p style={{ fontSize: 13, color: '#FCA5A5' }}>{kilitli.length} görüntü genital onam olmadan kilitli.</p>
+        <p style={{ fontSize: 13, color: CHROME_RENK.warn }}>{kilitli.length} görüntü genital onam olmadan kilitli.</p>
       )}
-      {photos.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Onam bağlanacak görüntü yok.</p>}
+      {photos.length === 0 && <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Onam bağlanacak görüntü yok.</p>}
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
         {photos.map((p) => (
           <li key={p.id} style={{ fontSize: 12.5, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 8 }}>
@@ -102,7 +103,7 @@ export function OnamPaneli({
         ))}
       </ul>
       {genital.length > 0 && !onKaydet && (
-        <p style={{ fontSize: 12, color: '#FCA5A5' }}>Onam kaydı için klinik API gerekir.</p>
+        <p style={{ fontSize: 12, color: CHROME_RENK.warn }}>Onam kaydı için klinik API gerekir.</p>
       )}
     </section>
   )

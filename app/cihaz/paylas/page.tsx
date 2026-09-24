@@ -7,10 +7,10 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DoktorNav from '@/components/doktor/DoktorNav';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { normalizeHastalar, toolsShell, toolsCard, toolsInput, type HastaOption } from '@/lib/doktor/toolsUi';
 import { trIcerir } from '@/lib/utils/turkceArama';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const DOSYA_TURLERI: [string, string][] = [['steteskop', 'Steteskop kaydı'], ['ekg', 'EKG'], ['usg', 'Ultrason görüntüsü'], ['diger', 'Diğer cihaz çıktısı']];
 
@@ -82,39 +82,38 @@ export default function CihazPaylasPage() {
 
   return (
     <div style={toolsShell}>
-      <DoktorNav />
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '16px 12px' }}>
-        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#EDF1F7', margin: '8px 0 4px' }}>🎧 Cihazdan gelen dosya</h1>
-        <div style={{ fontSize: 13, color: '#8FA0B5', marginBottom: 14 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: CHROME_RENK.ink, margin: '8px 0 4px' }}>🎧 Cihazdan gelen dosya</h1>
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 14 }}>
           Steteskop kaydı, EKG raporu veya ultrason görüntüsünü hastanın dosyasına ekleyin. Android'de cihaz uygulamasının Paylaş menüsünden Notya'yı seçtiğinizde dosya buraya düşer.
         </div>
 
         <div style={{ ...toolsCard, marginBottom: 12 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 }}>1 · Dosya</div>
           {dosya ? (
-            <div style={{ fontSize: 13, color: '#EDF1F7' }}>
-              {dosya.name} <span style={{ color: '#8FA0B5' }}>· {(dosya.size / 1024 / 1024).toFixed(2)} MB · {dosya.type || 'tür bilinmiyor'}{kaynak === 'share-target' ? ' · paylaşımla geldi' : ''}</span>
+            <div style={{ fontSize: 13, color: CHROME_RENK.ink }}>
+              {dosya.name} <span style={{ color: CHROME_RENK.muted }}>· {(dosya.size / 1024 / 1024).toFixed(2)} MB · {dosya.type || 'tür bilinmiyor'}{kaynak === 'share-target' ? ' · paylaşımla geldi' : ''}</span>
               {dosya.type.startsWith('audio/') && <audio controls src={URL.createObjectURL(dosya)} style={{ display: 'block', width: '100%', marginTop: 6 }} />}
-              <div style={{ marginTop: 6 }}><button type="button" onClick={() => { setDosya(null); setKaynak('dosya-import'); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#8FA0B5', borderRadius: 6, padding: '4px 8px', fontSize: 12 }}>Başka dosya</button></div>
+              <div style={{ marginTop: 6 }}><button type="button" onClick={() => { setDosya(null); setKaynak('dosya-import'); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: CHROME_RENK.muted, borderRadius: 6, padding: '4px 8px', fontSize: 12 }}>Başka dosya</button></div>
             </div>
           ) : (
-            <input type="file" accept="audio/*,application/pdf,image/*" onChange={(e) => { const f = e.target.files?.[0] || null; setDosya(f); if (f) setTur(turTahmin(f.type)); }} style={{ fontSize: 13, color: '#8FA0B5' }} />
+            <input type="file" accept="audio/*,application/pdf,image/*" onChange={(e) => { const f = e.target.files?.[0] || null; setDosya(f); if (f) setTur(turTahmin(f.type)); }} style={{ fontSize: 13, color: CHROME_RENK.muted }} />
           )}
-          <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>En çok 4 MB. Uzun steteskop kayıtlarını cihaz uygulamasında kısaltın.</div>
+          <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>En çok 4 MB. Uzun steteskop kayıtlarını cihaz uygulamasında kısaltın.</div>
         </div>
 
         <div style={{ ...toolsCard, marginBottom: 12 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 }}>2 · Hasta</div>
           {secili ? (
-            <div style={{ fontSize: 13, color: '#EDF1F7' }}>{secili.label} <button type="button" onClick={() => setHastaId('')} style={{ marginLeft: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#8FA0B5', borderRadius: 6, padding: '2px 8px', fontSize: 12 }}>Değiştir</button></div>
+            <div style={{ fontSize: 13, color: CHROME_RENK.ink }}>{secili.label} <button type="button" onClick={() => setHastaId('')} style={{ marginLeft: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: CHROME_RENK.muted, borderRadius: 6, padding: '2px 8px', fontSize: 12 }}>Değiştir</button></div>
           ) : (
             <>
               <input value={ara} onChange={(e) => setAra(e.target.value)} placeholder="Hasta adı yazın" style={toolsInput} autoFocus />
               <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {filtre.map((h) => (
-                  <button key={h.id} type="button" onClick={() => setHastaId(h.id)} style={{ textAlign: 'left', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#EDF1F7', borderRadius: 8, padding: '8px 10px', fontSize: 13, cursor: 'pointer' }}>{h.label}</button>
+                  <button key={h.id} type="button" onClick={() => setHastaId(h.id)} style={{ textAlign: 'left', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 10px', fontSize: 13, cursor: 'pointer' }}>{h.label}</button>
                 ))}
-                {!filtre.length && <div style={{ fontSize: 12, color: '#64748B' }}>{hastalar.length ? 'Eşleşen hasta yok' : 'Hastalar yükleniyor…'}</div>}
+                {!filtre.length && <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{hastalar.length ? 'Eşleşen hasta yok' : 'Hastalar yükleniyor…'}</div>}
               </div>
             </>
           )}
@@ -133,9 +132,9 @@ export default function CihazPaylasPage() {
         <button type="button" onClick={yukle} disabled={!dosya || !hastaId || durum === 'yukluyor' || durum === 'tamam'} style={{ width: '100%', background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: !dosya || !hastaId || durum !== 'hazir' ? 0.55 : 1 }}>
           {durum === 'yukluyor' ? 'Yükleniyor…' : durum === 'tamam' ? 'Eklendi ✓' : 'Hasta dosyasına ekle'}
         </button>
-        {mesaj && <div style={{ marginTop: 8, fontSize: 13, color: durum === 'hata' ? '#F87171' : '#2DD4BF' }}>{mesaj}</div>}
+        {mesaj && <div style={{ marginTop: 8, fontSize: 13, color: durum === 'hata' ? '#F87171' : '#0F9B8E' }}>{mesaj}</div>}
         {durum === 'tamam' && hastaId && (
-          <div style={{ marginTop: 10 }}><a href={`/dashboard/doktor/hastalar/${hastaId}`} style={{ color: '#2DD4BF', fontSize: 13 }}>Hasta dosyasını aç →</a></div>
+          <div style={{ marginTop: 10 }}><a href={`/dashboard/doktor/hastalar/${hastaId}`} style={{ color: '#0F9B8E', fontSize: 13 }}>Hasta dosyasını aç →</a></div>
         )}
       </div>
     </div>

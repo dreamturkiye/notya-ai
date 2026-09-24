@@ -16,6 +16,7 @@ import { dogumVeyaYasCoz, gebelikHaftasiCoz, gramCoz, tarihCoz, tarihGoster, yas
 import {
   pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici, usePediHasta, useUrlHasta, Rozet, OneriRozet, Istatistik,
 } from './PediAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, input, ghost, btn, uyari, kirmizi } = pediStil;
 const bugunTr = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -232,7 +233,7 @@ export default function AsiPlanlayici() {
               <div style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.3)', borderRadius: 12, padding: 12, marginTop: 14 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#BFDBFE', marginBottom: 6 }}>{plan.hicAsisiz.baslik}</div>
                 <div style={{ display: 'grid', gap: 4 }}>
-                  {plan.hicAsisiz.adimlar.map((a) => <div key={a.zaman} style={{ ...pediStil.metin, display: 'flex', gap: 10, flexWrap: 'wrap' }}><span style={{ minWidth: 92, color: '#9BB0C7' }}>{a.zaman}</span><span>{a.asilar}</span></div>)}
+                  {plan.hicAsisiz.adimlar.map((a) => <div key={a.zaman} style={{ ...pediStil.metin, display: 'flex', gap: 10, flexWrap: 'wrap' }}><span style={{ minWidth: 92, color: CHROME_RENK.muted }}>{a.zaman}</span><span>{a.asilar}</span></div>)}
                 </div>
                 <div style={{ ...kucuk, marginTop: 6 }}>{plan.hicAsisiz.not}</div>
               </div>
@@ -249,7 +250,7 @@ export default function AsiPlanlayici() {
                 {[2, 4, 6, 12, 18, 24, 48].filter((ay) => dogumIso && gunFarki(dogumIso, bugun) >= ay * 30).map((ay) => (
                   <button key={ay} type="button" onClick={() => kartTam(ay)} style={ghost}>{ay < 24 ? `${ay}. ay` : `${ay / 12} yaş`}a kadar tam</button>
                 ))}
-                {yerelSayisi > 0 && <button type="button" onClick={() => setIsaretler({})} style={{ ...ghost, color: '#FCA5A5' }}>İşaretleri temizle</button>}
+                {yerelSayisi > 0 && <button type="button" onClick={() => setIsaretler({})} style={{ ...ghost, color: CHROME_RENK.warn }}>İşaretleri temizle</button>}
               </div>
             </Katlanir>
           </div>
@@ -263,7 +264,7 @@ export default function AsiPlanlayici() {
                 <div style={{ flex: '1 1 220px', ...pediStil.metin }}><b>{yerelSayisi} doz işaretlendi</b> {hastaId ? '— henüz kayda yazılmadı.' : '— hasta seçilmedi, yalnız bu ekranda.'}</div>
                 {hastaId ? (
                   <>
-                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, color: '#C9D4E3', minHeight: 44, cursor: 'pointer' }}>
+                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, color: CHROME_RENK.muted, minHeight: 44, cursor: 'pointer' }}>
                       <input type="checkbox" checked={hatirlatmaYaz} onChange={(e) => setHatirlatmaYaz(e.target.checked)} style={{ width: 20, height: 20 }} />
                       Sonraki doz tarihini de yaz (hatırlatma listenize düşer — onayınızla gönderilir)
                     </label>
@@ -274,11 +275,11 @@ export default function AsiPlanlayici() {
             </div>
           )}
           {yerelSayisi > 0 && <div aria-hidden style={{ height: 150 }} />}
-          {kayitMesaj && <div style={{ ...(kayitMesaj.includes('kaydedilemedi') ? kirmizi : { ...uyari, color: '#5EEAD4', borderColor: 'rgba(45,212,191,0.4)', background: 'rgba(45,212,191,0.08)' }), marginBottom: 14 }}>{kayitMesaj}</div>}
+          {kayitMesaj && <div style={{ ...(kayitMesaj.includes('kaydedilemedi') ? kirmizi : { ...uyari, color: '#0F9B8E', borderColor: 'rgba(45,212,191,0.4)', background: 'rgba(45,212,191,0.08)' }), marginBottom: 14 }}>{kayitMesaj}</div>}
 
           <div style={kutu}>
             <Katlanir baslik="Minimum yaş ve aralık ön ayarları" rozet={Object.keys(onAyar).length ? 'hekim değiştirdi' : undefined}>
-              <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, color: '#C9D4E3', minHeight: 44, cursor: 'pointer', marginBottom: 8 }}>
+              <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, color: CHROME_RENK.muted, minHeight: 44, cursor: 'pointer', marginBottom: 8 }}>
                 <input type="checkbox" checked={gecersizSay} onChange={(e) => setGecersizSay(e.target.checked)} style={{ width: 20, height: 20 }} />
                 Minimum yaş / aralıktan önce yapılan dozu geçersiz say ve tekrarla (GBP Genelgesi)
               </label>
@@ -310,13 +311,13 @@ function DozSatiri({ d, isaret, isaretle, geriAl, ilkBekleyen, bugun, vurgu }: {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', padding: '10px 12px', borderRadius: 12, background: vurgu ? 'rgba(96,165,250,0.06)' : 'rgba(0,0,0,0.16)', border: `1px solid ${vurgu ? 'rgba(96,165,250,0.25)' : 'rgba(255,255,255,0.06)'}` }}>
       <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#EDF1F7' }}>{dozKisa(d)}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink }}>{dozKisa(d)}</div>
         <div style={kucuk}>
           {d.urun} · önerilen {tarihGoster(d.onerilen)}
-          {d.durum !== 'yapildi' && d.plan && d.plan !== d.onerilen ? <> · <span style={{ color: '#FDE68A' }}>{d.plan <= bugun ? 'telafi: bugün' : `telafi: ${tarihGoster(d.plan)}`}</span></> : null}
-          {d.durum !== 'yapildi' && d.gecikmeGun > GECIKME_ESIGI_GUN ? <> · <span style={{ color: '#FCA5A5' }}>{d.gecikmeGun} gün gecikti</span></> : null}
+          {d.durum !== 'yapildi' && d.plan && d.plan !== d.onerilen ? <> · <span style={{ color: '#7A5B1E' }}>{d.plan <= bugun ? 'telafi: bugün' : `telafi: ${tarihGoster(d.plan)}`}</span></> : null}
+          {d.durum !== 'yapildi' && d.gecikmeGun > GECIKME_ESIGI_GUN ? <> · <span style={{ color: CHROME_RENK.warn }}>{d.gecikmeGun} gün gecikti</span></> : null}
         </div>
-        {d.uyarilar.map((u) => <div key={u} style={{ ...kucuk, color: '#FDE68A', marginTop: 2 }}>⚠ {u}</div>)}
+        {d.uyarilar.map((u) => <div key={u} style={{ ...kucuk, color: '#7A5B1E', marginTop: 2 }}>⚠ {u}</div>)}
         {d.not && <div style={{ ...kucuk, marginTop: 2 }}>{d.not}</div>}
       </div>
       <Rozet ton={d.durum !== 'yapildi' && d.gecikmeGun > GECIKME_ESIGI_GUN && d.durum === 'bugun' ? 'kirmizi' : DURUM_TON[d.durum]}>{durumMetni}</Rozet>
@@ -328,7 +329,7 @@ function DozSatiri({ d, isaret, isaretle, geriAl, ilkBekleyen, bugun, vurgu }: {
         </span>
       )}
       {d.durum !== 'yapildi' && d.durum !== 'yas_disi' && ilkBekleyen && (d.plan ? d.plan <= bugun : false) && (
-        <button type="button" onClick={() => isaretle(d)} style={{ ...ghost, borderColor: 'rgba(45,212,191,0.45)', color: '#5EEAD4' }}>Yapıldı ✓</button>
+        <button type="button" onClick={() => isaretle(d)} style={{ ...ghost, borderColor: 'rgba(45,212,191,0.45)', color: '#0F9B8E' }}>Yapıldı ✓</button>
       )}
       {d.durum !== 'yapildi' && d.durum !== 'yas_disi' && ilkBekleyen && !(d.plan ? d.plan <= bugun : false) && d.onerilen <= bugun && (
         <button type="button" onClick={() => isaretle(d, d.onerilen <= bugun ? d.onerilen : bugun, 'beyan')} style={ghost} title="Başka yerde yapılmışsa (aşı kartı) beyan olarak işaretleyin; tarihi sonra düzeltebilirsiniz">Yapılmış (beyan)</button>
@@ -357,7 +358,7 @@ function TakvimListesi({ plan, gorunum, isaretler, isaretle, geriAl, bugun }: {
         return (
           <div key={g.baslik}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: hepsi ? '#5EEAD4' : '#C9D4E3' }}>{hepsi ? '✓ ' : ''}{g.baslik}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: hepsi ? '#0F9B8E' : CHROME_RENK.muted }}>{hepsi ? '✓ ' : ''}{g.baslik}</span>
               {g.alt && <span style={kucuk}>{g.alt}</span>}
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
@@ -381,12 +382,12 @@ function OzelAsilar({ ozel }: { ozel: OzelPlan[] }) {
         {ozel.map((o) => (
           <div key={o.kod} style={{ background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#EDF1F7' }}>{o.ad}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink }}>{o.ad}</span>
               {o.kayitlar.length ? <Rozet ton="iyi">{o.kayitlar.length} doz kayıtlı</Rozet> : <Rozet ton={ton[o.uygunluk]}>{metin[o.uygunluk]}</Rozet>}
             </div>
             <div style={{ ...kucuk, marginTop: 4 }}>{o.onerilenDonem}</div>
             <div style={{ ...kucuk, marginTop: 2 }}>{o.not}</div>
-            {o.kayitlar.length > 0 && <div style={{ ...kucuk, marginTop: 4, color: '#5EEAD4' }}>{o.kayitlar.map((k) => (k.tarih ? tarihGoster(k.tarih) : 'tarih yok')).join(' · ')}</div>}
+            {o.kayitlar.length > 0 && <div style={{ ...kucuk, marginTop: 4, color: '#0F9B8E' }}>{o.kayitlar.map((k) => (k.tarih ? tarihGoster(k.tarih) : 'tarih yok')).join(' · ')}</div>}
           </div>
         ))}
       </div>
@@ -415,10 +416,10 @@ function OnAyarlar({ onAyar, kaydet }: { onAyar: Partial<Record<SeriKod, SeriKur
           return (
             <div key={s} style={{ background: 'rgba(0,0,0,0.14)', borderRadius: 12, padding: 10 }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#EDF1F7' }}>{SERI_AD[s]}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: CHROME_RENK.ink }}>{SERI_AD[s]}</span>
                 {onAyar[s] ? <Rozet ton="bilgi">hekim ön ayarı</Rozet> : VARSAYILAN_KURALLAR[s].dogrulandi ? <Rozet ton="iyi">GBP Genelgesi</Rozet> : <OneriRozet />}
               </div>
-              <div style={{ ...kucuk, margin: '4px 0 6px' }}>{VARSAYILAN_KURALLAR[s].kaynak}{VARSAYILAN_KURALLAR[s].dogrulanmayan ? <> · <span style={{ color: '#FDE68A' }}>öneri — hekim kilitler: {VARSAYILAN_KURALLAR[s].dogrulanmayan}</span></> : null}</div>
+              <div style={{ ...kucuk, margin: '4px 0 6px' }}>{VARSAYILAN_KURALLAR[s].kaynak}{VARSAYILAN_KURALLAR[s].dogrulanmayan ? <> · <span style={{ color: '#7A5B1E' }}>öneri — hekim kilitler: {VARSAYILAN_KURALLAR[s].dogrulanmayan}</span></> : null}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {dozlar.map((no) => (
                   <React.Fragment key={no}>

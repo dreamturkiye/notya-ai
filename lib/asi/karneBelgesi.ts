@@ -151,7 +151,7 @@ export const ASI_KARNESI_YAZDIRMA_CSS = `
   @page { size: A4; margin: 14mm; }
   html, body, .sagligim-root, .sg-shell, .sg-main, .sg-fade, .sg-panel, .asi-karnesi, .asi-karnesi * {
     background: #fff !important;
-    color: #000 !important;
+    color: #3b2e24 !important;
     box-shadow: none !important;
     text-shadow: none !important;
     backdrop-filter: none !important;
@@ -162,8 +162,8 @@ export const ASI_KARNESI_YAZDIRMA_CSS = `
   .sg-main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
   .asi-karnesi-satir, .asi-karnesi-siradaki, .asi-karnesi-uyari, .asi-karnesi-kimlik { break-inside: avoid; page-break-inside: avoid; }
   .asi-karnesi-liste { break-inside: auto; }
-  .asi-karnesi-uyari { border: 1.5pt solid #000 !important; font-size: 11pt !important; }
-  .asi-karnesi-rozet { border: 0.75pt solid #000 !important; }
-  a { color: #000 !important; text-decoration: none !important; }
+  .asi-karnesi-uyari { border: 1.5pt solid #2f4334 !important; font-size: 11pt !important; }
+  .asi-karnesi-rozet { border: 0.75pt solid #2f4334 !important; color: #2f4334 !important; }
+  a { color: #2f4334 !important; text-decoration: none !important; }
 }
 `

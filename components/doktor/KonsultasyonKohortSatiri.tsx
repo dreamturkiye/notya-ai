@@ -13,6 +13,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { useAracStil, Rozet } from '@/lib/doktor/aracUi';
 import { beklemeVurgusu, trGun, type BekleyenKonsultasyon } from '@/lib/doktor/konsultasyon';
 import { BEKLEYEN_KONSULTASYONLAR_ROTASI, konsultasyonDosyaYolu } from '@/lib/doktor/konsultasyonIstemci';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export type { BekleyenKonsultasyon };
 export type YanitSuresi = { adet: number; medyanGun: number | null; enUzunGun: number | null }
@@ -35,7 +36,7 @@ export function KonsultasyonKohortListesi({ bekleyenler, yanitSuresi, hazir = tr
               <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
                 {bekleyenler.slice(0, 30).map((b) => (
                   <a key={b.id} href={konsultasyonDosyaYolu(b.patientId)}
-                    style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', minHeight: 44, padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.12)', textDecoration: 'none', color: '#EDF1F7' }}>
+                    style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', minHeight: 44, padding: '8px 10px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.12)', textDecoration: 'none', color: CHROME_RENK.ink }}>
                     <Rozet ton={beklemeVurgusu(b.gun)}>{b.gun === 0 ? 'bugün' : `${b.gun} gündür açık`}</Rozet>
                     <span style={{ fontWeight: 700, fontSize: 14, minWidth: 0, overflowWrap: 'anywhere' }}>{b.hastaAdi}</span>
                     <span style={stil.kucuk}>→ {b.hedef} · istem {trGun(b.istemTarihi)}{b.aciliyet === 'acil' ? ' · acil' : b.aciliyet === 'oncelikli' ? ' · öncelikli' : ''}{b.eskiKayit ? ' · eski kayıt' : ''}</span>
@@ -46,7 +47,7 @@ export function KonsultasyonKohortListesi({ bekleyenler, yanitSuresi, hazir = tr
             )}
       <div style={{ ...stil.kucuk, marginTop: 8 }}>
         Hatırlatma ve yanıt ekleme hasta dosyası › Konsültasyonlar'dadır; tüm liste ve işlemler için{' '}
-        <a href={BEKLEYEN_KONSULTASYONLAR_ROTASI} style={{ color: '#2DD4BF', display: 'inline-block', padding: '12px 0' }}>Bekleyen Konsültasyonlar ›</a>
+        <a href={BEKLEYEN_KONSULTASYONLAR_ROTASI} style={{ color: '#0F9B8E', display: 'inline-block', padding: '12px 0' }}>Bekleyen Konsültasyonlar ›</a>
       </div>
     </div>
   );

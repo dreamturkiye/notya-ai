@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 type Bio = { deger: number; persentil: number };
 type Veri = {
@@ -50,19 +51,23 @@ export default function GebeIzlemKartiYazdir() {
   return (
     <div style={{ background: 'white', color: '#111', minHeight: '100vh', fontFamily: 'Georgia, "Times New Roman", serif' }}>
       <style>{`@media print { .yazdirma-gizle { display: none !important; } body { -webkit-print-color-adjust: exact; } @page { size: A4; margin: 14mm; } }`}</style>
-      <div className="yazdirma-gizle" style={{ background: '#0B1628', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+      <div className="yazdirma-gizle" style={{ background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href={`/dashboard/doktor/hastalar/${params.id}?tab=gebelik`} style={{ color: '#9FB3C8', fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Gebelik</a>
-          <span style={{ color: 'white', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Gebe İzlem Kartı · {b.hastaAd || 'Hasta'}</span>
+          <a href={`/dashboard/doktor/hastalar/${params.id}?tab=gebelik`} style={{ color: CHROME_RENK.muted, fontFamily: 'system-ui', fontSize: 13, textDecoration: 'none' }}>← Gebelik</a>
+          <span style={{ color: '#2e251d', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700 }}>Gebe İzlem Kartı · {b.hastaAd || 'Hasta'}</span>
         </span>
-        <button type="button" onClick={() => window.print()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '10px 18px', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF (A4)</button>
+        <button type="button" onClick={() => window.print()} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '10px 18px', fontFamily: 'system-ui', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF (A4)</button>
       </div>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #111', paddingBottom: 12, marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>GEBE İZLEM KARTI</div>
-            <div style={{ fontSize: 11.5, color: '#555' }}>T.C. Sağlık Bakanlığı Doğum Öncesi Bakım Yönetim Rehberi esaslı</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
+              <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12, color: '#6d6055' }}>Notya</span>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 500 }}>Gebe İzlem Kartı</div>
+            <div style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>T.C. Sağlık Bakanlığı Doğum Öncesi Bakım Yönetim Rehberi esaslı</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             {b.logoDataUrl && <img src={b.logoDataUrl} alt="" style={{ height: 38, marginBottom: 4 }} />}

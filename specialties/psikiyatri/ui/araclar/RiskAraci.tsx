@@ -9,6 +9,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { psikStil, PsikHastaSecici, PsikOnay, PsikKopyala, Istatistik, TaslakNotu } from './PsikAracKabugu';
 import { acilTara, hekimOnayiGerekliMi, ACIL_KODLARI, GUVENLIK_KONTROL_LISTESI, HASTA_ACIL_METNI, type AcilKod } from '../../engines/acil';
 import { ACIL_YONLENDIRME_METNI } from '../../engines/psikiyatri';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export default function RiskAraci() {
   const [isaretli, setIsaretli] = useState<AcilKod[]>([]);
@@ -86,7 +87,7 @@ export default function RiskAraci() {
         {!bayraklar.length && <div style={psikStil.metin}>Bayrak yok. Klinik kanı bayraktan önce gelir — riski siz görüyorsanız işaretleyin.</div>}
         {bayraklar.map((b) => (
           <div key={b.kod} style={{ ...(b.oncelik === 'hemen' ? psikStil.kirmizi : psikStil.kutu), marginBottom: 8 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: b.oncelik === 'hemen' ? '#FCA5A5' : '#EDF1F7' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: b.oncelik === 'hemen' ? CHROME_RENK.warn : CHROME_RENK.ink }}>
               {b.oncelik === 'hemen' ? '⚑ HEMEN' : '• AYNI GÜN'} — {b.ad}
             </div>
             <div style={{ ...psikStil.metin, marginTop: 4 }}>{b.eylem}</div>

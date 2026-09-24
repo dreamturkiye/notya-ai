@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import BransDegistir from './BransDegistir';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 interface NavItem {
   label: string;
@@ -197,8 +198,8 @@ export default function DoktorNav() {
         <div style={{ marginTop: '10px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '6px', zIndex: 50 }}>
           {mobileItems.map((item, idx) => {
             const aktif = typeof window !== 'undefined' && window.location.pathname === item.route
-            const NOKTA: Record<string, string> = { '/asistan': '#8B5CF6', '/dashboard/doktor/randevular': '#2DD4BF', '/dashboard/doktor/hastalar': '#38BDF8', '/dashboard/doktor/mesajlar': '#F59E0B', '/dashboard/doktor/raporlar': '#60A5FA', '/doktor-tools': '#4ADE80', '/dashboard/doktor/ayarlar': '#94A3B8' }
-            const isaret = NOKTA[item.route] || '#8FA0B5'
+            const NOKTA: Record<string, string> = { '/asistan': '#8B5CF6', '/dashboard/doktor/randevular': '#0F9B8E', '/dashboard/doktor/hastalar': '#38BDF8', '/dashboard/doktor/mesajlar': '#F59E0B', '/dashboard/doktor/raporlar': '#60A5FA', '/doktor-tools': '#4ADE80', '/dashboard/doktor/ayarlar': '#94A3B8' }
+            const isaret = NOKTA[item.route] || CHROME_RENK.muted
             const etiket = item.label.replace(/^⚙\s*/, '')
             const okunmamis = item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? mesajUnread : 0
             return (

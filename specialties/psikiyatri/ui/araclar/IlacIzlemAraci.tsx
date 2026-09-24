@@ -10,6 +10,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { psikStil, PsikHastaSecici, PsikKopyala, Istatistik, TaslakNotu, MuayeneFormunaEkle } from './PsikAracKabugu';
 import { PSIK_IZLEM_KURALLARI } from '../../engines/ilacIzlem';
 import { HEKIM_KILIT_METNI } from '../../engines/psikiyatri';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Gorev = { kod: string; ad: string; due: string; labs: string[]; ilac: string; kaynak: string };
 type Veri = { izlem: Gorev[]; ilaclar: Array<{ id: string; ilac_adi: string; etken_madde: string | null }> };
@@ -67,7 +68,7 @@ export default function IlacIzlemAraci() {
           {!veri.ilaclar.length && <div style={psikStil.kucuk}>Aktif psikotrop kaydı yok. Görevler hasta ilaç listesinden üretilir; Notya ilaç eklemez.</div>}
           {veri.izlem.map((g) => (
             <div key={g.kod} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ ...psikStil.metin, color: g.due < bugun ? '#FCA5A5' : '#EDF1F7' }}>{g.ad}</div>
+              <div style={{ ...psikStil.metin, color: g.due < bugun ? CHROME_RENK.warn : CHROME_RENK.ink }}>{g.ad}</div>
               <div style={psikStil.kucuk}>{g.ilac} · vade {g.due}{g.labs.length ? ` · ${g.labs.join(', ')}` : ''}</div>
             </div>
           ))}

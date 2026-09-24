@@ -5,6 +5,7 @@ import {
   GogusHastaSecici, gogusStil, Alan, Secim, Segment, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, useUrlHasta, Rozet,
 } from './GogusAracKabugu'
 import { aksiyonPlaniOlustur, type AksiyonHedef } from '../../engines/aksiyonPlani'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = gogusStil
 
@@ -77,7 +78,7 @@ export default function GogusAksiyonPlaniAraci() {
               ['Kurtarıcı ihtiyacı >2/hafta', kurt, setKurt],
               ['Aktivite kısıtı', aktivite, setAktivite],
             ] as const).map(([ad, v, set]) => (
-              <label key={ad} style={{ display: 'flex', gap: 8, fontSize: 13, color: '#EDF1F7', marginTop: 4 }}>
+              <label key={ad} style={{ display: 'flex', gap: 8, fontSize: 13, color: CHROME_RENK.ink, marginTop: 4 }}>
                 <input type="checkbox" checked={v} onChange={() => set(!v)} /> {ad}
               </label>
             ))}

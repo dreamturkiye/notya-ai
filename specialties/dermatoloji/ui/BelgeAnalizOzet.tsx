@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { kutu, btn, giris } from './clinic-styles'
 import { belgeAnalizHref, belgeDurumEtiket, belgeHekimOnayli, belgelerTabHref, type DermBelgeOzet } from '../engines/clinic-fit'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 /** DERM-EXCEPTIONAL-01 — köprüden geçen modaliteler (imaging/belgeKopru ile aynı liste). */
 const KOPRU_MODALITELERI = ['dermatoskopi', 'derm', 'yara']
@@ -56,7 +57,7 @@ export function BelgeAnalizOzet({
         Tarama desteği, tanı değildir. Doktor onayı gerekir.
       </p>
       {analizler.length === 0 && (
-        <p style={{ fontSize: 13, color: '#8FA0B5' }}>
+        <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>
           Bu hastada dermatoskopi / deri / yara belgesi analizi yok. Önce belge yükleyip Asistana raporlayın.
         </p>
       )}
@@ -66,13 +67,13 @@ export function BelgeAnalizOzet({
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8, margin: 0 }}>
         {analizler.map((a) => (
           <li key={a.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 10 }}>
-            <div style={{ fontSize: 12, color: belgeHekimOnayli(a.durum) ? '#86EFAC' : '#FDE68A' }}>
+            <div style={{ fontSize: 12, color: belgeHekimOnayli(a.durum) ? '#86EFAC' : '#7A5B1E' }}>
               {belgeDurumEtiket(a.durum)} · {a.modality}
               {belgeHekimOnayli(a.durum) ? '' : ' — tanı değildir'}
             </div>
             <div style={{ fontSize: 13, marginTop: 4 }}>{a.ozet || 'Özet yok'}</div>
             {a.tanilar.length > 0 && (
-              <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 4 }}>
                 {belgeHekimOnayli(a.durum) ? 'Hekim tanısı' : 'Taslak ayırıcı'}: {a.tanilar.join(', ')}
               </div>
             )}
@@ -81,7 +82,7 @@ export function BelgeAnalizOzet({
             </a>
             {KOPRU_MODALITELERI.includes(a.modality) && a.durum !== 'kalite_dusuk' && a.durum !== 'hata' && (
               <div style={{ marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8 }}>
-                <div style={{ fontSize: 11, color: '#8FA0B5', marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginBottom: 6 }}>
                   Dual-sign taslak — uzman onayı Deri › Görüntü okumalarında. Tanı aktarılmaz; resmî tanı lezyon kartında hekim kilididir.
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -103,10 +104,10 @@ export function BelgeAnalizOzet({
                   </button>
                 </div>
                 {mesaj[a.id] && (
-                  <div style={{ fontSize: 12, marginTop: 6, color: /gönderildi/.test(mesaj[a.id]) ? '#2DD4BF' : '#F87171' }}>{mesaj[a.id]}</div>
+                  <div style={{ fontSize: 12, marginTop: 6, color: /gönderildi/.test(mesaj[a.id]) ? '#0F9B8E' : '#F87171' }}>{mesaj[a.id]}</div>
                 )}
                 {!fitzpatrick && (
-                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>
+                  <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>
                     Deri tipi (Fitzpatrick) kayıtlı değil — taslak güven üst sınırı %70.
                   </div>
                 )}
