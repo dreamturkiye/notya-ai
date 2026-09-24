@@ -166,7 +166,8 @@ export function vizitPlani(g: VizitGirdisi): VizitPlani {
       kaynak: KAYNAK_ISITME, dogrulandi: true, arac: 'isaret', son: s ? { tarih: s.tarih, sonuc: SONUC_AD[s.sonuc] } : null,
     })
   }
-  kalemler.push({ kod: 'isitme_risk', ad: 'İşitme risk faktörleri', durum: 'surekli', pencere: 'her izlemde', ne: 'Risk faktörlerini her izlemde gözden geçirin.', kaynak: KAYNAK_IZLEM, dogrulandi: true, arac: 'bilgi' })
+  // NOTYA-TARAMA-KAPSAM-01 (Kaan, 2026-09-24): İşitme risk faktörleri hatırlatıcısı kaldırıldı — tarama
+  // listesinden çıkarılması istendi. Yenidoğan işitme taramasının kendisi (yukarıdaki blok) etkilenmedi.
 
   // ─── Görme ────────────────────────────────────────────────────────────────────────────────────
   const ropRiski = (g.gebelikHaftasi != null && g.gebelikHaftasi <= 32) || (g.dogumKiloGr != null && g.dogumKiloGr <= 1500)
@@ -174,11 +175,9 @@ export function vizitPlani(g: VizitGirdisi): VizitPlani {
     const r = pencereliKalem(yasGun, g.dogumIso, tarihleri('rop'), 21, 35, 21)
     kalemler.push({ kod: 'rop', ad: 'ROP muayenesi yönlendirmesi', durum: r.durum, pencere: '4. hafta', ne: '≤ 32 hafta ya da ≤ 1500 g: 4. haftada göz muayenesine yönlendirin.', kaynak: KAYNAK_IZLEM, dogrulandi: true, arac: 'isaret', son: r.son ? { tarih: r.son, sonuc: 'yapıldı' } : null })
   }
-  if (yasGun <= 10 * 365) {
-    const vizitBas = simdikiVizit ? simdikiVizit.bas : gunEkle(g.bugunIso, -30)
-    const bu = tarihleri('kirmizi_refle').filter((t) => t >= vizitBas).sort().pop()
-    kalemler.push({ kod: 'kirmizi_refle', ad: 'Kırmızı refle', durum: bu ? 'tamam' : simdikiVizit ? 'simdi' : 'surekli', pencere: 'her izlemde (0–10 yaş)', ne: 'Her izlemde kırmızı refle bakın; anormal refle → göz hekimine yönlendirme.', kaynak: KAYNAK_IZLEM, dogrulandi: true, arac: 'isaret', son: bu ? { tarih: bu, sonuc: 'bakıldı' } : null })
-  }
+  // NOTYA-TARAMA-KAPSAM-01 (Kaan, 2026-09-24): Kırmızı refle hatırlatıcısı kaldırıldı — tarama
+  // listesinden çıkarılması istendi. 'kirmizi_refle' TaramaTur olarak (başka bir yüzeyde kayıt
+  // desteği varsa diye) dokunulmadan kaldı; yalnız bu otomatik hatırlatıcı çıkarıldı.
   for (const p of [
     { bas: ayGun(36), son: ayGun(48) - 1, ad: 'Görme taraması (36–48 ay)', ne: 'Lea sembolleriyle görme keskinliği; < 0,5 ya da iki göz arasında 2 sıra fark → sevk.', dogrulandi: true },
     { bas: yasGunu(6), son: yasGunu(7) - 1, ad: 'Görme taraması (ilkokul 1. sınıf / 6 yaş)', ne: 'Görme keskinliği ≤ 0,7 ya da iki göz arasında 2 sıra fark → sevk.', dogrulandi: false },

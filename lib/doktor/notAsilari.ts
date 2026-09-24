@@ -375,3 +375,18 @@ export function notAsisiKartDurumu(a: NotAsisi, kart: KartAsisi[]): AsiKartDurum
 export function notAsiMetinSatirlari(ham: unknown): string[] {
   return notAsilariniTemizle(ham).map((a) => `Aşı: ${a.asi_adi}${a.doz_no ? ` ${a.doz_no}. doz` : ''} uygulandı`)
 }
+
+/**
+ * NOTYA-ASI-NOT-04 (Kaan/Dr. Gökhan, 2026-09-24) — a note approved with an empty "Bu muayenede
+ * uygulanan aşılar" list, but whose free text reads like a vaccine WAS given this visit (the doctor
+ * wrote it as prose — anamnez/plan — instead of also using the structured section), silently never
+ * reaches the aşı kartı: nottanAsiAktar only ever reads content_asilar, correctly, and has nothing
+ * to sync. This is the deterministic backstop for THAT gap — reuses uygulananAsiParcalari (already
+ * careful to exclude history/planned mentions: ONCEKI matches "aşı durumu", month+year, dated
+ * references) across the note's own text fields, not a live transcript. A true finding here is a
+ * reminder to the doctor before they approve, never a block — the doctor may have a real reason
+ * (already entered elsewhere, genuinely just narrative) and always has the final say.
+ */
+export function notMetninAsiIpucuVarMi(metinler: (string | null | undefined)[]): boolean {
+  return metinler.some((m) => m && uygulananAsiParcalari(m).length > 0)
+}

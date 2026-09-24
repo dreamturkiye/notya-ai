@@ -21,6 +21,7 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
@@ -358,7 +359,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               </div>
               <div>
                 <strong style={S({ display: 'block', color: CHROME_RENK.ink, fontSize: 14.5, fontWeight: 650, whiteSpace: 'nowrap' })}>
-                  {ad ? `Dr. ${ad}` : '\u00A0'}
+                  {ad ? hekimUnvanli(ad) : '\u00A0'}
                 </strong>
                 <small style={S({ color: '#8a7b6c', fontSize: 12 })}>{BRANS_ETIKET[brans] || '\u00A0'}</small>
               </div>

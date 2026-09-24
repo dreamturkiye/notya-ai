@@ -3,7 +3,7 @@
  *
  * Rules (specialty-universal-vs-chapter + CHART-TAB-POLICY 2026-09-17):
  *  - Exclusive chapter tabs (Göz, Deri, Dahiliye) only when that doctor’s specialty owns them.
- *  - Pediatric tool tabs (büyüme / M-CHAT / gelişim / bebek) only when age qualifies AND the
+ *  - Pediatric tool tabs (büyüme / M-CHAT / gelişim) only when age qualifies AND the
  *    doctor is pediatri or a baseline/aile-style practice — never on göz/derm/KD/dahiliye charts.
  *  - Gebelik tab stays sex+age (mixed care); portal Gebeliğim has its own eligibility.
  *  - Adults must not see M-CHAT / gelişim / büyüme.
@@ -23,7 +23,6 @@ export type HastaDosyaSekmeId =
   | 'gebelik'
   | 'deri'
   | 'dahiliye'
-  | 'bebek'
   | 'goz'
   | 'psikiyatri'
   | 'kbb'
@@ -466,7 +465,7 @@ export function hastaDosyaSekmeleri(opts: {
     { id: 'asilar', label: 'Aşılar' },
   )
   if (opts.pediatriUygun) {
-    tabs.push({ id: 'bebek', label: 'Bebek kartı' }, { id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
+    tabs.push({ id: 'mchat', label: 'M-CHAT-R/F' }, { id: 'gelisim', label: 'Gelişim Taraması' })
   }
   if (opts.gozUygun) tabs.push({ id: 'goz', label: 'Göz' })
   // Ayşe'ye Danış artık sekme değil — sekmeler ile içerik arasında şerit (HastaKonsult).

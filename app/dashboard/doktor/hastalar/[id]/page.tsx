@@ -17,7 +17,6 @@ import HastaBuyumeEgrileri from '@/components/doktor/HastaBuyumeEgrileri';
 import HastaMchat from '@/components/doktor/HastaMchat';
 import HastaGelisimTaramasi from '@/components/doktor/HastaGelisimTaramasi';
 import HastaGebelik from '@/components/doktor/HastaGebelik';
-import HastaBebekKarti from '@/components/doktor/HastaBebekKarti';
 import HastaDermatoloji from '@/components/doktor/HastaDermatoloji';
 import DahiliyeHome from '@/specialties/dahiliye/ui/DahiliyeHome';
 import GozHome from '@/specialties/goz-hastaliklari/ui/GozHome';
@@ -225,7 +224,7 @@ export default function HastaProfilPage() {
     }
     const bilinen: HastaDosyaSekmeId[] = [
       'ozet', 'muayene', 'buyume', 'belgeler', 'goruntuleme', 'ilaclar', 'formu', 'asilar',
-      'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'bebek', 'goz',
+      'mchat', 'gelisim', 'ayse', 'gebelik', 'deri', 'dahiliye', 'goz',
       'psikiyatri', 'kbb', 'kardiyoloji', 'gogus', 'noroloji', 'uroloji', 'spor-hekimligi', 'ortopedi', 'fizik-tedavi', 'aile', 'endokrinoloji', 'enfeksiyon', 'gastroenteroloji', 'nefroloji', 'romatoloji', 'onkoloji', 'genel-cerrahi', 'plastik', 'beyin', 'gogus-cerrahisi', 'cocuk-cerrahisi', 'konsultasyon',
     ];
     if (!bilinen.includes(tabParam as HastaDosyaSekmeId)) return;
@@ -670,7 +669,6 @@ export default function HastaProfilPage() {
         )}
         {!loading && !error && pediatriUygun && activeTab === 'mchat' && <HastaMchat patientId={patientId} />}
         {!loading && !error && pediatriUygun && activeTab === 'gelisim' && <HastaGelisimTaramasi patientId={patientId} />}
-        {!loading && !error && pediatriUygun && activeTab === 'bebek' && <HastaBebekKarti patientId={patientId} />}
         {/* Ayşe şeritte — ayrı sekme içeriği yok */}
         {/* BRANS-ALAN-SIZMASI: ?tab=dahiliye / ?tab=deri derin bağlantısı bölüm içeriğini branş kapısı olmadan açıyordu */}
         {!loading && !error && activeTab === 'dahiliye' && dahiliyeUygun && <DahiliyeHome patientId={patientId} />}

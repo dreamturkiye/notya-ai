@@ -13,6 +13,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz';
 import { EylemKarti, EylemToplu, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 // NOTYA-EYLEM: cards ride ON the assistant message. This surface has no patientId on the client —
 // the patient is resolved server-side from free text — so both the proposal ids and the header name
@@ -118,44 +119,49 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
     }
   }
 
+  // NOTYA-YENI-GORUNUM-03 (Kaan, 2026-09-24): this panel was still fully dark-navy (#0D1C33 +
+  // white-based translucent fills) -- the redesign never reached it, since it lives outside
+  // app/dashboard/doktor and app/doktor-tools (the original audit's scope). Recolored to the same
+  // light mint/teal "Ayşe" treatment used in HastaKonsult.tsx for visual consistency between the
+  // two Ayşe chat surfaces.
   return (
     <div style={{ maxWidth: 560, margin: '18px auto 30px', padding: '0 16px' }}>
       {!acik ? (
         <button
           type="button"
           onClick={() => setAcik(true)}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#C9D4E3', borderRadius: 14, padding: '13px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#F0FDFA', border: '1px solid #99F6E4', color: '#0F9B8E', borderRadius: 14, padding: '13px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
         >
-          💬 Yazılı sohbet — sesli sorun, {personaAdi} yazsın <span style={{ fontSize: 11, color: '#5F7189' }}>(hasta dosyası bilinciyle)</span>
+          💬 Yazılı sohbet — sesli sorun, {personaAdi} yazsın <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>(hasta dosyası bilinciyle)</span>
         </button>
       ) : (
-        <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16 }}>
+        <div style={{ background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#EDF1F7' }}>💬 Yazılı sohbet{aktifHasta ? <span style={{ fontWeight: 400, fontSize: 12, color: '#2DD4BF' }}> · aktif hasta: {aktifHasta}</span> : ''}</span>
-            <span role="button" tabIndex={0} onClick={() => setAcik(false)} onKeyDown={(e) => { if (e.key === 'Enter') setAcik(false); }} style={{ fontSize: 12, color: '#5F7189', cursor: 'pointer' }}>Kapat ✕</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: CHROME_RENK.ink }}>💬 Yazılı sohbet{aktifHasta ? <span style={{ fontWeight: 400, fontSize: 12, color: '#0F9B8E' }}> · aktif hasta: {aktifHasta}</span> : ''}</span>
+            <span role="button" tabIndex={0} onClick={() => setAcik(false)} onKeyDown={(e) => { if (e.key === 'Enter') setAcik(false); }} style={{ fontSize: 12, color: CHROME_RENK.muted, cursor: 'pointer' }}>Kapat ✕</span>
           </div>
           {mesajlar.length === 0 && (
-            <div style={{ fontSize: 12.5, color: '#8FA0B5', lineHeight: 1.6, marginBottom: 10 }}>
+            <div style={{ fontSize: 12.5, color: CHROME_RENK.muted, lineHeight: 1.6, marginBottom: 10 }}>
               Hastanın adını söylemeniz yeterli: &ldquo;Mehmet Yılmaz kaç kez geldi?&rdquo;, &ldquo;son hastamın ilaçları neydi?&rdquo; — {personaAdi} dosyadan cevaplar, ilaç etkileşimlerinde kendiliğinden uyarır.
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
             {mesajlar.map((m, i) => (
               <div key={i} style={{ alignSelf: m.rol === 'doktor' ? 'flex-end' : 'stretch', maxWidth: m.rol === 'doktor' ? '90%' : '100%', minWidth: 0 }}>
-                <div style={{ display: 'inline-block', maxWidth: '100%', background: m.rol === 'doktor' ? '#0F9B8E' : 'rgba(255,255,255,0.06)', color: '#EDF1F7', borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal', overflowWrap: 'anywhere' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
+                <div style={{ display: 'inline-block', maxWidth: '100%', background: m.rol === 'doktor' ? '#0F9B8E' : '#FFFFFF', border: m.rol === 'doktor' ? 'none' : `1px solid ${CHROME_RENK.border}`, color: m.rol === 'doktor' ? '#fff' : CHROME_RENK.ink, borderRadius: 12, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.55, whiteSpace: m.rol === 'doktor' ? 'pre-wrap' : 'normal', overflowWrap: 'anywhere' }}>{m.rol === 'asistan' ? <HafifMarkdown metin={m.icerik} /> : m.icerik}</div>
                 {m.oneriler?.length && m.hasta ? (
                   m.oneriler.length > 1 ? <EylemToplu oneriler={m.oneriler} hasta={m.hasta} /> : <EylemKarti oneri={m.oneriler[0]} hasta={m.hasta} />
                 ) : null}
                 {m.yonlendirme?.yol && m.yonlendirme.etiket ? (
                   <div style={{ marginTop: 6 }}>
-                    <a href={m.yonlendirme.yol} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, color: '#2DD4BF', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}>
+                    <a href={m.yonlendirme.yol} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, color: '#0F9B8E', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}>
                       {m.yonlendirme.etiket} ›
                     </a>
                   </div>
                 ) : null}
               </div>
             ))}
-            {bekliyor && <div style={{ fontSize: 12, color: '#5F7189' }}>{personaAdi} dosyaya bakıyor…</div>}
+            {bekliyor && <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{personaAdi} dosyaya bakıyor…</div>}
             <div ref={altRef} />
           </div>
           <form onSubmit={(e) => { e.preventDefault(); gonder(); }} style={{ display: 'flex', gap: 6 }}>
@@ -163,7 +169,7 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
               type="button"
               onClick={mikrofon}
               title={dinliyor ? 'Dinlemeyi durdur' : 'Sesle sorun'}
-              style={{ width: 42, flexShrink: 0, background: dinliyor ? '#EF4444' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: 'white', borderRadius: 10, fontSize: 16, cursor: 'pointer' }}
+              style={{ width: 42, flexShrink: 0, background: dinliyor ? '#EF4444' : '#FFFFFF', border: `1px solid ${dinliyor ? '#EF4444' : CHROME_RENK.border}`, color: dinliyor ? 'white' : CHROME_RENK.ink, borderRadius: 10, fontSize: 16, cursor: 'pointer' }}
             >
               {dinliyor ? '⏹' : '🎤'}
             </button>
@@ -171,7 +177,7 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
               value={girdi}
               onChange={(e) => setGirdi(e.target.value)}
               placeholder={dinliyor ? 'Dinliyorum…' : 'Sorunuzu yazın ya da 🎤 ile söyleyin'}
-              style={{ flex: 1, minWidth: 0, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.14)', color: '#EDF1F7', borderRadius: 10, padding: '10px 12px', fontSize: 14 }}
+              style={{ flex: 1, minWidth: 0, background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 10, padding: '10px 12px', fontSize: 14 }}
             />
             <button type="submit" disabled={bekliyor || !girdi.trim()} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 10, padding: '0 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: bekliyor || !girdi.trim() ? 0.5 : 1 }}>Sor</button>
           </form>

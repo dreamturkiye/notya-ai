@@ -1,15 +1,11 @@
 'use client';
 import HafifMarkdown from '@/components/asistan/HafifMarkdown';
 import React, { useState, useEffect } from 'react';
-import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { HastaSecici } from '@/lib/doktor/aracUi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
-
-interface Hasta {
-  id: string;
-  masked_name: string;
-}
 
 interface Seans {
   id: string;
@@ -34,7 +30,6 @@ interface EpikrizSonuc {
 
 
 export default function EpikrizPage() {
-  const [hastalar, setHastalar] = useState<Hasta[]>([]);
   const [seciliHastaId, setSeciliHastaId] = useState('');
   const [seanslar, setSeanslar] = useState<Seans[]>([]);
   const [seciliSeansId, setSeciliSeansId] = useState('');
@@ -44,37 +39,9 @@ export default function EpikrizPage() {
   const [loading, setLoading] = useState(false);
   const [seansLoading, setSeansLoading] = useState(false);
   const [seansError, setSeansError] = useState('');
-  const [hastaLoading, setHastaLoading] = useState(true);
   const [uretHata, setUretHata] = useState('');
 
-  const getToken = () => getDoctorAccessToken() || null; // NOTYA-AUTH-01
-
-  useEffect(() => {
-    const fetchHastalar = async () => {
-      const token = getToken();
-      if (!token) {
-        setHastaLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch('/api/doktor/hastalar', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setHastalar(Array.isArray(data.patients) ? data.patients : []);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setHastaLoading(false);
-      }
-    };
-    fetchHastalar();
-  }, []);
-
-  const handleHastaChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const hastaId = e.target.value;
+  const handleHastaChange = async (hastaId: string) => {
     setSeciliHastaId(hastaId);
     setSeciliSeansId('');
     setSeanslar([]);
@@ -84,7 +51,7 @@ export default function EpikrizPage() {
     if (!hastaId) return;
 
     setSeansLoading(true);
-    const token = getToken();
+    const token = await ensureDoctorAccessToken();
     if (!token) {
       setSeansLoading(false);
       return;
@@ -247,7 +214,12 @@ export default function EpikrizPage() {
                 Epikriz Bilgileri
               </div>
 
-              {/* Hasta Select */}
+              {/* Hasta Seçici — arama destekli (NOTYA-EPIKRIZ-HASTA-01, Kaan 2026-09-24): eski native <select>
+                  hem seçilemiyordu (getDoctorAccessToken senkron okuşu, kimlik doğrulama hazır olmadan
+                  boş dönüyordu — liste hiç dolmuyordu) hem de 100+ hastası olan bir hekim için aranamaz,
+                  kaydırılması gereken düz bir listeydi. HastaSecici (lib/doktor/aracUi.tsx) zaten
+                  başka araçlarda kullanılan, kendi arama/yükleme durumunu yöneten, doğru async token
+                  akışını kullanan hazır bileşen — yeniden yazılmadı, buraya bağlandı. */}
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
@@ -257,29 +229,10 @@ export default function EpikrizPage() {
                 }}>
                   Hasta
                 </label>
-                <select 
-                  value={seciliHastaId} 
-                  onChange={handleHastaChange}
-                  disabled={hastaLoading}
-                  style={{
-                    width: '100%',
-                    height: '48px',
-                    backgroundColor: '#FFFFFF',
-                    border: `1px solid ${CHROME_RENK.border}`,
-                    borderRadius: '10px',
-                    color: CHROME_RENK.ink,
-                    fontSize: '15px',
-                    padding: '0 14px',
-                    outline: 'none'
-                  }}
-                >
-                  <option value="">Hasta seçin</option>
-                  {hastalar.map(h => (
-                    <option key={h.id} value={h.id} style={{ color: '#000', background: '#fff' }}>
-                      {h.masked_name}
-                    </option>
-                  ))}
-                </select>
+                <HastaSecici
+                  secili={seciliHastaId}
+                  sec={(id) => { void handleHastaChange(id) }}
+                />
               </div>
 
               {/* Kaan (2026-09-13): "tüm seansları özetleyecek şekilde de bir seçenek olmalı" */}
