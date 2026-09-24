@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,9 +20,8 @@ export async function GET(req: NextRequest) {
   const patientId = url.searchParams.get('patientId')
   if (!patientId) return NextResponse.json({ error: 'patientId zorunludur.' }, { status: 400 })
 
-  const { data, error } = await supabase
-    .from('asilar')
-    .select('*')
+  // NOTYA-ASI-NOT-01: a vaccine written by an archived muayene's note is hidden until it is unarchived.
+  const { data, error } = await arsivsizAsilar(supabase, '*')
     .eq('doktor_id', doktorId)
     .eq('patient_id', patientId)
     .order('uygulama_tarihi', { ascending: false, nullsFirst: false })

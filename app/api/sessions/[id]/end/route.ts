@@ -228,11 +228,17 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     // NOTYA-CEK-DOGRULA-02: not sayfası / onay ile aynı tek kaynak — hastanın tarama kayıtları ve dosyası dahil.
     const cekVeri = await cekListeVerisiYukle(getSupabase(), { doktorId: user.id, patientId: hastaId, seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso || new Date().toISOString() })
     const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) })
+    // NOTYA-ASI-NOT-01: yalnız bu vizitte uygulandığı söylenen aşılar, vizit tarihiyle; söylenmeyen doz karttan hesaplanır.
+    let notAsilari: unknown[] = []
+    try {
+      const { muayeneAsilariniHazirla } = await import('@/lib/doktor/notAsiAktarim')
+      notAsilari = await muayeneAsilariniHazirla(getSupabase(), { doktorId: user.id, patientId: hastaId, transcript, ham: noteData?.asilar, ziyaretIso: gecmisTarihIso })
+    } catch (e) { console.error('[asi-not] sessions/end', e) }
     // Çek listesi yalnız notun kendisine bakar (sayfada yeniden hesaplandığında aynı sonucu versin); LLM bloğu yazamaz.
     const { satirlar: cekListeDogrulama, metin: cekMetin } = cekListeHesapla(cekVeri, cekNotMetni({
       basvuruYakinmasi: noteData?.basvuruYakinmasi, subjektif: noteData?.soap?.subjektif, objektif: noteData?.soap?.objektif,
       degerlendirme: noteData?.soap?.degerlendirme, plan: noteData?.soap?.plan, anamnez: noteData?.anamnez, fizikMuayene: noteData?.fizik_muayene,
-      tani: noteData?.tani, tedavi: noteData?.tedavi, vitaller: noteData?.vitaller, ilaclar: noteData?.ilaclar,
+      tani: noteData?.tani, tedavi: noteData?.tedavi, vitaller: noteData?.vitaller, ilaclar: noteData?.ilaclar, asilar: notAsilari,
     }), isaretler)
     if (typeof noteData?.aiDegerlendirme === 'string') noteData.aiDegerlendirme = cekBlokSil(noteData.aiDegerlendirme)
     const { bransKapsami } = await import('@/lib/specialties/kapsam')
@@ -258,6 +264,7 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       content_tani: noteData?.tani || null,
       content_tedavi: noteData?.tedavi || null,
       content_ilaclar: noteData?.ilaclar || null,
+      content_asilar: notAsilari.length ? notAsilari : null,
       icd10_codes: noteData?.icd10_codes || null,
       kritik_bulgular: noteData?.kritik_bulgular || null,
       takip_suresi: noteData?.takip_suresi || null,

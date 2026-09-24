@@ -54,11 +54,21 @@ const IZINLI_ILAC: Record<string, { adet: number; neden: string }> = {
   'lib/doktor/receteAktarim.ts': { adet: 1, neden: 'approval write path: must see hidden rows so a re-prescription re-claims the row (kaynak_note_id → this live note) instead of duplicating it' },
 }
 
+/**
+ * NOTYA-ASI-NOT-01 — raw `asilar` reads that legitimately see a vaccine hidden with its archived muayene. Everything
+ * else (aşı kartı, Sağlığım / portal karne + PDF, Ayşe dossier / konsült / eylem mükerrer, kohort / Fısıltı / çek
+ * listesi, hatırlatma, search) must use arsivsizAsilar. Writes are ignored as above.
+ */
+const IZINLI_ASI: Record<string, { adet: number; neden: string }> = {
+  'lib/doktor/notAsiAktarim.ts': { adet: 1, neden: 'approval write path: must see this note\'s own rows and rows hidden by an archived note so re-approval updates / deletes / re-claims instead of duplicating' },
+}
+
 const TARANAN = ['app', 'lib', 'components', 'specialties', 'core']
 const ATLA = [/\.test\.tsx?$/, /(^|\/)tests\//, /^lib\/security\/testing\//, /^lib\/doktor\/arsiv\.ts$/]
 const OKUMA = /\.from\(\s*['"`](notes|sessions)['"`]\s*\)/g
 // Any call taking the table name — `.from('hasta_ilaclar')` and helpers like `countFor('hasta_ilaclar', …)`.
 const ILAC_OKUMA = /\(\s*['"`]hasta_ilaclar['"`]\s*[,)]/g
+const ASI_OKUMA = /\(\s*['"`]asilar['"`]\s*[,)]/g
 const YAZMA = /^\s*\.(insert|update|delete|upsert)\(/
 
 function dosyalar(dizin: string, out: string[] = []): string[] {
@@ -106,7 +116,7 @@ describe('NOTYA-ARSIV-01 guard — notes/sessions reads go through lib/doktor/ar
   })
 
   it('every allowlist entry has a reason', () => {
-    for (const [yol, { neden }] of Object.entries({ ...IZINLI, ...IZINLI_ILAC })) assert.ok(neden.trim().length > 10, yol)
+    for (const [yol, { neden }] of Object.entries({ ...IZINLI, ...IZINLI_ILAC, ...IZINLI_ASI })) assert.ok(neden.trim().length > 10, yol)
   })
 })
 
@@ -133,6 +143,24 @@ describe('NOTYA-ARSIV-02 guard — hasta_ilaclar reads go through arsivsizIlacla
     assert.equal(say(`countFor('hasta_ilaclar', (q) => q)`), 1)
     assert.equal(say(`sb.from('hasta_ilaclar')\n  .update({ aktif: false })`), 0)
     assert.equal(say(`hedefTablo: 'hasta_ilaclar'`), 0)
+  })
+})
+
+describe('NOTYA-ASI-NOT-01 guard — asilar reads go through arsivsizAsilar', () => {
+  it('no raw asilar read outside the allowlist', () => {
+    const ihlal: string[] = []
+    for (const [yol, adet] of hamOkumalar(ASI_OKUMA)) {
+      const izin = IZINLI_ASI[yol]
+      if (!izin) ihlal.push(`${yol}: ${adet} raw asilar read(s) — use arsivsizAsilar (lib/doktor/arsiv) or allowlist with a reason`)
+      else if (adet > izin.adet) ihlal.push(`${yol}: ${adet} raw asilar reads, allowlisted ${izin.adet} — new read must use the helper`)
+    }
+    assert.deepEqual(ihlal, [], `An archived muayene's vaccine could leak:\n${ihlal.join('\n')}`)
+  })
+
+  it('allowlist is not stale', () => {
+    const sayim = hamOkumalar(ASI_OKUMA)
+    const eski = Object.entries(IZINLI_ASI).filter(([yol, { adet }]) => (sayim.get(yol) || 0) !== adet).map(([yol, { adet }]) => `${yol}: allowlisted ${adet}, found ${sayim.get(yol) || 0}`)
+    assert.deepEqual(eski, [])
   })
 })
 
@@ -283,6 +311,8 @@ describe('NOTYA-ARSIV-01 — real routes (fake DB): arşivle hides, arşivden ç
       arsivle: await ice('app/api/doktor/hastalar/[id]/sessions/[sessionId]/arsivle/route'),
       cikar: await ice('app/api/doktor/hastalar/[id]/sessions/[sessionId]/arsivden-cikar/route'),
       ilaclar: await ice('app/api/doktor/ilaclar/route'),
+      approve: await ice('app/api/notes/[id]/approve/route'),
+      asilar: await ice('app/api/doktor/asilar/route'),
     }
     ;({ gunVerisiDerle } = await import('./gunOzeti'))
   })
@@ -354,6 +384,33 @@ describe('NOTYA-ARSIV-01 — real routes (fake DB): arşivle hides, arşivden ç
     assert.deepEqual(await durum(), once)
     const tek2 = await coz(R.notTek.GET(iste('GET', `/api/notes/${s.not}`, s.token), { params: Promise.resolve({ id: s.not }) }))
     assert.equal(tek2.j.not.arsivde, false)
+  })
+
+  it('NOTYA-ASI-NOT-01: approve writes the note vaccine to the aşı kartı; archiving the muayene hides it, unarchive brings it back', async () => {
+    const onayla = (govde: unknown) => coz(R.approve.POST(
+      new NextRequestSinifi('http://localhost/api/notes/x/approve', { method: 'POST', headers: { authorization: `Bearer ${s.token}`, 'content-type': 'application/json' }, body: JSON.stringify(govde) }),
+      { params: { id: s.not } },
+    ))
+    const kart = async () => (((await coz(R.asilar.GET(iste('GET', `/api/doktor/asilar?patientId=${s.hasta}`, s.token)))).j.asilar || []) as { asi_adi: string }[]).map((x) => x.asi_adi).sort()
+    db.ekle('asilar', { doktor_id: s.d, patient_id: s.hasta, asi_adi: 'KKK', doz_no: 1, kategori: 'pediatrik', uygulama_tarihi: '2025-01-01', kaynak: 'kayit', kaynak_note_id: null })
+
+    const a = await onayla({ duzenlemeler: { asilar: [{ asi_adi: 'Hep B', doz_no: 2, uygulama_tarihi: '2026-09-23' }] } })
+    assert.equal(a.status, 200, JSON.stringify(a.j))
+    assert.equal(a.j.asiAktarim.yazilan, 1)
+    assert.deepEqual(await kart(), ['Hepatit B', 'KKK'])
+    const satir = db.tablo('asilar').find((x) => x.kaynak_note_id === s.not)!
+    assert.equal(satir.kaynak, 'kayit')
+    assert.ok(satir.hekim_onay_at)
+
+    // Re-approve unchanged (İnceleme sends no asilar) → synced from the stored list, no duplicate.
+    const b = await onayla({ duzenlemeler: {} })
+    assert.equal(b.j.asiAktarim.guncellenen, 1)
+    assert.equal(db.tablo('asilar').filter((x) => x.asi_adi === 'Hepatit B').length, 1)
+
+    await coz(R.arsivle.POST(iste('POST', 'x', s.token), { params: { id: s.hasta, sessionId: s.seans } }))
+    assert.deepEqual(await kart(), ['KKK'], 'the archived muayene\'s vaccine leaves the aşı kartı')
+    await coz(R.cikar.POST(iste('POST', 'x', s.token), { params: { id: s.hasta, sessionId: s.seans } }))
+    assert.deepEqual(await kart(), ['Hepatit B', 'KKK'])
   })
 
   it('arsivden-cikar: 404 for a foreign doctor or the wrong patient', async () => {

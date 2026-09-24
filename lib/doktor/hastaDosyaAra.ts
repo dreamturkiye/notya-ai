@@ -6,7 +6,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
-import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { hastaAdiCoz } from '@/core/eylemler/hasta'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 import {
@@ -211,9 +211,8 @@ export async function klinikAramaYurut(
     .limit(400)
   if (p) notQ.gte('created_at', p.basIso)
 
-  const asiQ = supabase
-    .from('asilar')
-    .select('patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
+  // NOTYA-ASI-NOT-01: an archived muayene's vaccine is not in search either.
+  const asiQ = arsivsizAsilar(supabase, 'patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
     .eq('doktor_id', doktorId)
     .order('uygulama_tarihi', { ascending: false })
     .limit(200)
@@ -640,9 +639,7 @@ async function pratikKirilimYurut(
   const ham: HamSatir[] = []
 
   if (q.kirilim === 'asi_adi') {
-    const asiQ = supabase
-      .from('asilar')
-      .select('patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
+    const asiQ = arsivsizAsilar(supabase, 'patient_id, asi_adi, uygulama_tarihi, notlar, kaynak')
       .eq('doktor_id', doktorId)
       .order('uygulama_tarihi', { ascending: false })
       .limit(800)

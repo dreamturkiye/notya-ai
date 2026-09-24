@@ -19,6 +19,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { notifyPatientNewPracticeMessage } from '@/lib/portal/notifyPatientEmail'
 import { veliOnamGerekliMi } from '@/lib/specialties/kapsam'
 import { bugunTrIso } from '@/lib/asi/karneSunucu'
+import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import {
   asiHatirlatmaMesaji, durumEtiketi, hatirlatmaDurumu, hatirlatmaPenceresi, hatirlatmaSirala, sonrakiDozKarsilandiMi,
   type AsiHatirlatmaSatiri,
@@ -39,9 +40,8 @@ export async function GET(req: NextRequest) {
   const tekHasta = req.nextUrl.searchParams.get('patientId')
   if (tekHasta && !(await hastaSahibiMi(supabase, doktorId, tekHasta))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
-  let sorgu = supabase
-    .from('asilar')
-    .select('id, patient_id, asi_adi, doz_no, uygulama_tarihi, sonraki_doz_tarihi, hatirlatma_gonderildi')
+  // NOTYA-ASI-NOT-01: vaccines hidden with an archived muayene get no reminder (list, "karşılandı" check and send).
+  let sorgu = arsivsizAsilar(supabase, 'id, patient_id, asi_adi, doz_no, uygulama_tarihi, sonraki_doz_tarihi, hatirlatma_gonderildi')
     .eq('doktor_id', doktorId)
   if (tekHasta) sorgu = sorgu.eq('patient_id', tekHasta)
   const { data: adaylar, error } = await sorgu
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
   const [hastalar, tumAsilar, portal] = await Promise.all([
     Promise.all(parcala(ids).map((p) => supabase.from('patients').select('id, name_encrypted, dob_encrypted, is_active').eq('doctor_id', doktorId).in('id', p))),
-    Promise.all(parcala(ids).map((p) => supabase.from('asilar').select('id, patient_id, asi_adi, uygulama_tarihi').eq('doktor_id', doktorId).in('patient_id', p).limit(5000))),
+    Promise.all(parcala(ids).map((p) => arsivsizAsilar(supabase, 'id, patient_id, asi_adi, uygulama_tarihi').eq('doktor_id', doktorId).in('patient_id', p).limit(5000))),
     Promise.all(parcala(ids).map((p) => supabase.from('hasta_portal_tokens').select('patient_id').eq('doctor_id', doktorId).in('patient_id', p).gt('expires_at', new Date().toISOString()))),
   ])
   const hasta = new Map<string, { ad: string; cocuk: boolean }>()
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   const asiId = String(body.asiId || '')
   if (!asiId) return NextResponse.json({ error: 'asiId zorunludur.' }, { status: 400 })
 
-  const { data: asi } = await supabase.from('asilar').select('id, patient_id, sonraki_doz_tarihi, hatirlatma_gonderildi').eq('id', asiId).eq('doktor_id', doktorId).maybeSingle()
+  const { data: asi } = await arsivsizAsilar(supabase, 'id, patient_id, sonraki_doz_tarihi, hatirlatma_gonderildi').eq('id', asiId).eq('doktor_id', doktorId).maybeSingle()
   if (!asi) return NextResponse.json({ error: 'Aşı kaydı bulunamadı.' }, { status: 404 })
   const patientId = String(asi.patient_id)
   if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Aşı kaydı bulunamadı.' }, { status: 404 })

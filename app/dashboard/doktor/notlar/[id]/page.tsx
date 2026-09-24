@@ -34,6 +34,7 @@ import {
   cekNotMetni,
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi';
+import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
 interface ReceteOner { etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; sure?: string; not?: string; sgkListesinde?: boolean }
@@ -54,6 +55,9 @@ interface NotVeri {
     alarmBulgulari: string[]
     vitaller: Record<string, unknown> | null
     ilaclar: { ad: string; doz: string; kullanim: string; sure: string }[]
+    /** NOTYA-ASI-NOT-01: bu muayenede uygulanan aşılar (onayda aşı kartına geçer) + kart (bu notun satırları hariç). */
+    asilar?: NotAsisi[]
+    asiKart?: KartAsisi[]
     buyumePersentilleri?: { kilo?: string; boy?: string; basCevresi?: string; vki?: string; vkiSinif?: string } | null
     hastaOzeti: string
     icdKodlari: IcdOner[]
@@ -82,6 +86,10 @@ function ilacMetniniCoz(metin: string): { ad: string; doz: string; kullanim: str
     return { ad: p[0] || '', doz: p[1] || '', kullanim: p[2] || '', sure: p[3] || '' }
   }).filter((i) => i.ad)
 }
+/** Form satırı → gönderilecek aşı (boş ad atılır; doz boşsa null). */
+function asiSatirlari(liste: NotAsisi[]): NotAsisi[] {
+  return liste.filter((a) => a.asi_adi.trim()).map((a) => ({ ...a, asi_adi: a.asi_adi.trim() }))
+}
 function trTarih(iso: string | null): string { if (!iso) return ''; return new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
 const kutu: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 13.5, lineHeight: 1.6, padding: '10px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' };
@@ -105,6 +113,7 @@ export default function NotSayfasi() {
   const [alarm, setAlarm] = useState('');
   const [ozet, setOzet] = useState('');
   const [ilac, setIlac] = useState('');
+  const [asilar, setAsilar] = useState<NotAsisi[]>([]);
   const [icd, setIcd] = useState<IcdOner[]>([]);
   const [recete, setRecete] = useState<ReceteOner[]>([]);
   const [aiDeg, setAiDeg] = useState('');
@@ -134,6 +143,7 @@ export default function NotSayfasi() {
         setAlarm((j.not.alarmBulgulari || []).join('\n'));
         setOzet(j.not.hastaOzeti || '');
         setIlac((j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
+        setAsilar(Array.isArray(j.not.asilar) ? j.not.asilar : []);
         setIcd(Array.isArray(j.not.icdKodlari) ? j.not.icdKodlari : []);
         setRecete(Array.isArray(j.not.receteOnerisi) ? j.not.receteOnerisi : []);
         setAiDeg(String(j.not.aiDegerlendirme || ''));
@@ -151,7 +161,7 @@ export default function NotSayfasi() {
     if (!c) return null;
     const metin = cekNotMetni({
       basvuruYakinmasi: basvuru, subjektif: taslak.subjektif, objektif: taslak.objektif, degerlendirme: taslak.degerlendirme,
-      plan: taslak.plan, tani: veri?.not.tani, vitaller: vital, ilaclar: ilacMetniniCoz(ilac),
+      plan: taslak.plan, tani: veri?.not.tani, vitaller: vital, ilaclar: ilacMetniniCoz(ilac), asilar: asiSatirlari(asilar),
     });
     return cekListeDogrula(c.maddeler, { soap: metin, isaretler: c.isaretler, oncekiIdler: c.oncekiIdler });
   };
@@ -181,6 +191,7 @@ export default function NotSayfasi() {
             alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean),
             hastaOzeti: ozet,
             ilaclar: ilacMetniniCoz(ilac),
+            asilar: asiSatirlari(asilar),
             icdKodlari: icd,
             receteOnerisi: recete,
             aiDegerlendirme: aiDeg,
@@ -202,6 +213,7 @@ export default function NotSayfasi() {
         }).join('\n'));
         setDegisti(true);
       }
+      if (Array.isArray(dz.asilar)) { setAsilar(dz.asilar as NotAsisi[]); setDegisti(true); }
       if (Array.isArray(dz.icdKodlari)) {
         setIcd((dz.icdKodlari as unknown[]).map((it) => {
           const o = it as Record<string, unknown>
@@ -256,6 +268,7 @@ export default function NotSayfasi() {
             alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean),
             hastaOzeti: ozet,
             ilaclar: ilacMetniniCoz(ilac),
+            asilar: asiSatirlari(asilar),
             icdKodlari: icd,
             receteOnerisi: recete,
             aiDegerlendirme: aiDegGuncel(),
@@ -263,6 +276,8 @@ export default function NotSayfasi() {
         }) });
       const j = await r.json();
       if (!r.ok || j.success === false) throw new Error(j.error || 'Onaylanamadı');
+      const catisma = (j.asiAktarim?.catisma || []) as { mesaj: string }[];
+      if (catisma.length) alert(`Not onaylandı. Şu aşı${catisma.length > 1 ? 'lar' : ''} aşı kartına yazılmadı:\n${catisma.map((c) => `• ${c.mesaj}`).join('\n')}\nDoz numarasını düzeltip yeniden onaylayabilirsiniz.`);
       setDurum('kaydedildi'); setDegisti(false);
       setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString() } } : v);
       setTimeout(() => router.push(onaylananNotYolu(params.id)), 700);
@@ -366,6 +381,37 @@ export default function NotSayfasi() {
         <div>
           <div style={etiket}>İlaçlar <span style={{ fontWeight: 400, color: '#64748B' }}>(her satır bir ilaç: Ad — doz — kullanım — süre)</span></div>
           <textarea value={ilac} onChange={(e) => isaretle(setIlac)(e.target.value)} rows={Math.max(2, ilac.split('\n').length)} placeholder="Örn. D vitamini — 600 ünite/gün — Günde 1 kez oral — Devam" style={kutu} />
+        </div>
+        <div>
+          <div style={etiket}>Bu muayenede uygulanan aşılar <span style={{ fontWeight: 400, color: '#64748B' }}>(onayda aşı kartına işlenir · planlanan aşılar burada değil, planda kalır)</span></div>
+          {asilar.length === 0 ? (
+            <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6 }}>Bu muayenede uygulanan aşı yok.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: 8, marginBottom: 6 }}>
+              {asilar.map((a, i) => {
+                const guncelle = (p: Partial<NotAsisi>) => isaretle(setAsilar)(asilar.map((x, j) => (j === i ? { ...x, ...p } : x)));
+                const kartDurumu = a.asi_adi.trim() ? notAsisiKartDurumu(a, veri.not.asiKart || []) : null;
+                return (
+                  <div key={i} style={{ border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, padding: 8 }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <input aria-label="Aşı" value={a.asi_adi} onChange={(e) => guncelle({ asi_adi: e.target.value })} placeholder="Aşı (örn. Hepatit B)" style={{ ...kutu, flex: '2 1 180px', width: 'auto', padding: '6px 8px' }} />
+                      <input aria-label="Doz" type="number" min={1} max={12} value={a.doz_no ?? ''} onChange={(e) => guncelle({ doz_no: e.target.value ? Number(e.target.value) : null, doz_hesaplandi: false })} placeholder="Doz" style={{ ...kutu, width: 70, padding: '6px 8px', ...(a.doz_hesaplandi ? { borderColor: '#F59E0B', background: 'rgba(245,158,11,0.12)' } : {}) }} />
+                      <input aria-label="Tarih" type="date" value={a.uygulama_tarihi || ''} onChange={(e) => guncelle({ uygulama_tarihi: e.target.value || null })} style={{ ...kutu, width: 150, padding: '6px 8px' }} />
+                      <input aria-label="Lot" value={a.lot_no || ''} onChange={(e) => guncelle({ lot_no: e.target.value || null })} placeholder="Lot (ops.)" style={{ ...kutu, width: 110, padding: '6px 8px' }} />
+                      <input aria-label="Uygulama yeri" value={a.uygulama_yeri || ''} onChange={(e) => guncelle({ uygulama_yeri: e.target.value || null })} placeholder="Yer (ops.)" style={{ ...kutu, width: 130, padding: '6px 8px' }} />
+                      <button type="button" onClick={() => isaretle(setAsilar)(asilar.filter((_, j) => j !== i))} aria-label="Aşıyı kaldır" style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.4)', color: '#F87171', borderRadius: 8, padding: '5px 10px', fontSize: 12, cursor: 'pointer' }}>Kaldır</button>
+                    </div>
+                    {a.doz_hesaplandi ? <div style={{ fontSize: 12, color: '#F59E0B', marginTop: 4 }}>Doz: {DOZ_HESAPLANDI_ETIKETI}</div> : null}
+                    {kartDurumu?.tur === 'kartta_var' ? <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Bu aşı aynı tarihle aşı kartında zaten var — ikinci kayıt açılmaz.</div> : null}
+                    {kartDurumu?.tur === 'catisma' ? <div role="alert" style={{ fontSize: 12, color: '#F59E0B', marginTop: 4 }}>⚠ {kartDurumu.mesaj}. Doz numarasını değiştirene kadar bu satır aşı kartına yazılmaz.</div> : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {asilar.length < NOT_ASI_AZAMI ? (
+            <button type="button" onClick={() => isaretle(setAsilar)([...asilar, { asi_adi: '', doz_no: null, uygulama_tarihi: new Date(not.createdAt).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }) }])} style={{ background: 'transparent', border: '1px solid rgba(15,155,142,0.5)', color: '#2DD4BF', borderRadius: 999, padding: '4px 12px', fontSize: 12, cursor: 'pointer' }}>+ Aşı ekle</button>
+          ) : null}
         </div>
         <div>
           <div style={etiket}>Evde dikkat edilmesi gerekenler <span style={{ fontWeight: 400, color: '#64748B' }}>({kapsam.hitap.evdeDikkatHedefi} · her satır bir madde)</span></div>

@@ -10,6 +10,7 @@ import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
+import { notAsiMetinSatirlari } from '@/lib/doktor/notAsilari'
 import { saglamCocukCekMaddeleri, type SaglamCocukKayitlari } from '@/specialties/pediatri/engines/saglamCocukCek'
 
 export type CekGrup = 'anamnez' | 'olcum' | 'fizik' | 'kapanis'
@@ -238,6 +239,8 @@ export function cekNotMetni(n: {
   tedavi?: string | null
   vitaller?: Record<string, unknown> | null
   ilaclar?: unknown
+  /** NOTYA-ASI-NOT-01: "Bu muayenede uygulanan aşılar" — a vaccine given in this visit satisfies "Aşı durumu". */
+  asilar?: unknown
 }): string {
   const p: string[] = []
   if (String(n.basvuruYakinmasi || '').trim()) p.push(`Başvuru yakınması: ${n.basvuruYakinmasi}`)
@@ -256,6 +259,7 @@ export function cekNotMetni(n: {
       if (s.trim()) p.push(`İlaç: ${s}`)
     }
   }
+  p.push(...notAsiMetinSatirlari(n.asilar))
   return p.join('\n')
 }
 

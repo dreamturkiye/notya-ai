@@ -147,6 +147,12 @@ export async function POST(req: NextRequest) {
     const { hastaDogumIso } = await import('@/lib/specialties/kapsamSunucu')
     const [doktorAdi, doktorBransi, dogumIso] = await Promise.all([hekimAdi(supabase, doktorId), hekimBransi(supabase, doktorId), hastaDogumIso(supabase, doktorId, patientId || null)])
     const noteData = await soapNotuUret(anthropic, { transcript, specialty: brans, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: doktorId })
+    // NOTYA-ASI-NOT-01: sessions/end ile aynı — yalnız bu vizitte uygulanan aşılar, vizit tarihiyle.
+    let notAsilari: unknown[] = []
+    try {
+      const { muayeneAsilariniHazirla } = await import('@/lib/doktor/notAsiAktarim')
+      notAsilari = await muayeneAsilariniHazirla(supabase, { doktorId, patientId: patientId ? String(patientId) : null, transcript, ham: noteData?.asilar, ziyaretIso: gecmisTarihIso })
+    } catch (e) { console.error('[asi-not] ses-yukle', e) }
 
     const { data: note, error: noteError } = await supabase.from('notes').insert({
       session_id: seans.id,
@@ -163,6 +169,7 @@ export async function POST(req: NextRequest) {
       content_tani: noteData?.tani || null,
       content_tedavi: noteData?.tedavi || null,
       content_ilaclar: noteData?.ilaclar || null,
+      content_asilar: notAsilari.length ? notAsilari : null,
       icd10_codes: noteData?.icd10_codes || null,
       kritik_bulgular: noteData?.kritik_bulgular || null,
       takip_suresi: noteData?.takip_suresi || null,

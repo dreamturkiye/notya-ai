@@ -10,6 +10,8 @@ import { cekBlokDegistir, cekBlokVarMi, cekNotMetni } from '@/lib/doktor/muayene
 import { cekListeHesapla, cekListeVerisiYukle, kayitliHekimIsaretleri } from '@/lib/doktor/cekListeSunucu'
 import { hekimBransi } from '@/lib/doktor/hekimAdi'
 import { hastaDogumIso } from '@/lib/specialties/kapsamSunucu'
+import { notAsilariniTemizle } from '@/lib/doktor/notAsilari'
+import { nottanAsiAktar, type AsiAktarimSonucu } from '@/lib/doktor/notAsiAktarim'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: existing } = await supabase
     .from('notes')
     .select(
-      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, icd10_codes, recete_onerisi, ai_degerlendirme, created_at, sessions(patient_id, specialty)'
+      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, content_asilar, icd10_codes, recete_onerisi, ai_degerlendirme, created_at, sessions(patient_id, specialty)'
     )
     .eq('id', noteId)
     .eq('doctor_id', user.id)
@@ -113,6 +115,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
   }
 
+  // NOTYA-ASI-NOT-01: "Bu muayenede uygulanan aşılar" (dizi) — hekim formda düzenler; onayda aşı kartına aktarılır
+  // (nottanAsiAktar aşağıda). Liste sunucuda temizlenir: ad normalize, doz 1–12, tarih ISO — değer uydurulmaz.
+  const yeniAsilar = duzenlemeler.asilar
+  if (Array.isArray(yeniAsilar)) {
+    const temiz = notAsilariniTemizle(yeniAsilar)
+    const eskiStr = JSON.stringify(existing.content_asilar || [])
+    const yeniStr = JSON.stringify(temiz)
+    if (eskiStr !== yeniStr) {
+      guncelleme.content_asilar = temiz
+      loglar.push({ note_id: noteId, doctor_id: user.id, alan: 'content_asilar', onceki: eskiStr.slice(0, 2000), sonraki: yeniStr.slice(0, 2000) })
+    }
+  }
+
   // ICD-10 önerileri (dizi) — Ayşe tanı değişince yeniden üretebilir, doktor onaylar
   const yeniIcd = duzenlemeler.icdKodlari
   if (Array.isArray(yeniIcd)) {
@@ -156,6 +171,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         degerlendirme: son('content_degerlendirme'), plan: son('content_plan'), anamnez: son('content_anamnez'),
         fizikMuayene: son('content_fizik_muayene'), tani: son('content_tani'), tedavi: son('content_tedavi'),
         vitaller: (son('vitaller') as unknown as Record<string, unknown>) || null, ilaclar: son('content_ilaclar'),
+        asilar: son('content_asilar'),
       }), kayitliHekimIsaretleri(existing.ai_degerlendirme, veri))
       yeniAiDeg = cekBlokDegistir(aiTaban, metin)
     } catch (e) { console.error('[approve] cek-liste', e) }
@@ -194,13 +210,35 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // (Dr. Mamur, 2026-09-08 — Seçenek C). Aktarım başarısız olursa onay yine
   // geçerlidir; reçete aktarımı onayı bloklamamalı.
   let receteAktarim: { aktarilan: number; atlanan: number } | null = null
+  let asiAktarim: Omit<AsiAktarimSonucu, 'hata'> | null = null
+  const seansA = Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions
+  const hastaIdA = (seansA as { patient_id?: string } | null)?.patient_id
+  // HASTA-IZOLASYON-01: only into this doctor's OWN patient — a session can carry a foreign patient_id
+  // (sessions are also inserted from the browser), and hasta_ilaclar / asilar feed the patient portal.
+  let hastaBenim = false
   try {
-    const seans = Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions
-    const patientId = (seans as { patient_id?: string } | null)?.patient_id
-    // HASTA-IZOLASYON-01: only into this doctor's OWN patient — a session can carry a foreign patient_id
-    // (sessions are also inserted from the browser), and hasta_ilaclar feeds the patient portal.
     const { hastaSahibiMi } = await import('@/lib/doktor/hastaSahipligi')
-    if (patientId && (await hastaSahibiMi(supabase, user.id, patientId))) {
+    hastaBenim = !!hastaIdA && (await hastaSahibiMi(supabase, user.id, hastaIdA))
+  } catch (e) { console.error('[approve] sahiplik', e) }
+
+  // NOTYA-ASI-NOT-01: not onayı = aşı kartı. Her onayda (ilk + yeniden) notun aşıları kartla eşitlenir; aktarım
+  // başarısız olursa onay yine geçerlidir (ilaç aktarımıyla aynı kural).
+  if (hastaBenim && hastaIdA) {
+    try {
+      const sonAsilar = 'content_asilar' in guncelleme ? guncelleme.content_asilar : existing.content_asilar
+      const s = await nottanAsiAktar(supabase, {
+        noteId, doctorId: user.id, patientId: hastaIdA, asilar: sonAsilar,
+        notTarihi: existing.created_at as string | null, dogumIso: await hastaDogumIso(supabase, user.id, hastaIdA),
+      })
+      if (s.hata) console.error('[asi-aktarim]', s.hata)
+      const { hata: _h, ...ozet } = s
+      asiAktarim = ozet
+    } catch (e) { console.error('[asi-aktarim]', e) }
+  }
+
+  try {
+    const patientId = hastaIdA
+    if (patientId && hastaBenim) {
       const { nottanIlacAktar } = await import('@/lib/doktor/receteAktarim')
       const sonuc = await nottanIlacAktar(supabase, {
         noteId,
@@ -258,5 +296,5 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (e) { console.error('[ogrenme] damitma', e) }
   }
 
-  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim })
+  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim })
 }

@@ -25,11 +25,12 @@ import {
   type HastaNotAlanlari,
 } from '@/lib/doktor/hastaKayitAlanlari'
 import { gununNotunaEkle, gununNotunaVitalEkle, notVitalleriGeriYukle } from '@/lib/doktor/gununNotunaEkle'
-import { arsivsizIlaclar } from '@/lib/doktor/arsiv'
+import { arsivsizAsilar, arsivsizIlaclar } from '@/lib/doktor/arsiv'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 import { bransKapsami } from '@/lib/specialties/kapsam'
 import { ilacUyarilariHesapla } from './ilacUyari'
-import { kayitSerisi, SERI_AD, type SeriKod } from '@/specialties/pediatri/engines/asiPlan'
+import { kayitSerisi } from '@/specialties/pediatri/engines/asiPlan'
+import { asiAdiNormalize } from '@/lib/asi/karneOkuma'
 import { encrypt } from '@/lib/security/encryption'
 
 /** Helper: build a definition with the schema derived from its own field list. */
@@ -64,14 +65,8 @@ const ASI_ALANLARI: AlanTanimi[] = [
   { anahtar: 'notlar', etiket: 'Not', tip: 'metin' },
 ]
 
-/** SB ulusal takvim matcher — "Hep B" / "Hepatit B aşısı" → "Hepatit B" so duplicate + portal grouping align with karne. */
-export function asiAdiNormalize(ad: string): string {
-  const t = String(ad || '').trim()
-  if (!t) return t
-  const k = kayitSerisi(t)
-  if (k && k in SERI_AD) return SERI_AD[k as SeriKod]
-  return t
-}
+/** SB ulusal takvim matcher — moved to lib/asi/karneOkuma so the muayene note (NOTYA-ASI-NOT-01) uses the same one. */
+export { asiAdiNormalize }
 
 async function asiBelgeId(ctx: EylemBaglami): Promise<string | null> {
   if (!ctx.oneriId) return null
@@ -95,9 +90,8 @@ export const ASI_KAYDI_EKLE = eylem({
   mukerrerKontrol: async (ctx, v) => {
     if (!v.asi_adi) return null
     const hedefSeri = kayitSerisi(String(v.asi_adi))
-    const { data } = await ctx.supabase
-      .from('asilar')
-      .select('id, asi_adi, uygulama_tarihi')
+    // NOTYA-ASI-NOT-01: a vaccine hidden with its archived muayene is not a duplicate.
+    const { data } = await arsivsizAsilar(ctx.supabase, 'id, asi_adi, uygulama_tarihi')
       .eq('doktor_id', ctx.doktorId)
       .eq('patient_id', ctx.hasta.id)
       .limit(40)

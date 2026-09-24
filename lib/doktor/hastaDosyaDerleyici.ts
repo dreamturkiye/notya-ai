@@ -19,7 +19,7 @@ import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
-import { arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -47,7 +47,8 @@ export async function hastaDosyaPaketiniDerle(
     arsivsizSeanslar(supabase, 'id, created_at, status, specialty, session_type').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: true }),
     // NOTYA-ARSIV-02: arşivlenmiş muayenenin yazdığı ilaç da dosyaya / etkileşim bağlamına girmez.
     arsivsizIlaclar(supabase, '*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }),
-    supabase.from('asilar').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
+    // NOTYA-ASI-NOT-01: nor the vaccines its note wrote into the aşı kartı.
+    arsivsizAsilar(supabase, '*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('uygulama_tarihi', { ascending: false }),
     supabase.from('hasta_intake_formlari').select('*').eq('patient_id', patientId).eq('doktor_id', doktorId).order('created_at', { ascending: false }).limit(1),
     supabase.from('hasta_goruntulemeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),
     supabase.from('hasta_belgeler').select('*').eq('patient_id', patientId).eq('doctor_id', doktorId).order('created_at', { ascending: false }).limit(20),

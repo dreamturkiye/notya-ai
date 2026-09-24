@@ -7,6 +7,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
+import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { asiKarnesiOlustur, type AsiKarnesi, type AsiKaydiSatiri } from './karneBelgesi'
 
 const coz = (v: unknown): string | null => {
@@ -20,7 +21,8 @@ export const bugunTrIso = (): string => new Date(Date.now() + 3 * 3600e3).toISOS
 export async function asiKarnesiVerisi(sb: SupabaseClient, doctorId: string, patientId: string, bugunIso = bugunTrIso()): Promise<AsiKarnesi> {
   const [asiQ, hastaQ, hekimQ] = await Promise.all([
     // select('*'): 084 kolonları (belge_id) uygulanmamış ortamda da sorgu düşmesin.
-    sb.from('asilar').select('*').eq('doktor_id', doctorId).eq('patient_id', patientId).limit(300),
+    // NOTYA-ASI-NOT-01: a vaccine written by an archived muayene's note is not on the karne (portal + PDF).
+    arsivsizAsilar(sb, '*').eq('doktor_id', doctorId).eq('patient_id', patientId).limit(300),
     sb.from('patients').select('name_encrypted, dob_encrypted').eq('id', patientId).eq('doctor_id', doctorId).maybeSingle(),
     sb.from('users').select('full_name, recete_baslik').eq('id', doctorId).maybeSingle(),
   ])

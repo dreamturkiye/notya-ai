@@ -60,6 +60,21 @@ export function arsivsizIlaclar(sb: Istemci, secim: string, o?: Sayim) {
     .or('kaynak_note_id.is.null,arsiv_kaynak.not.is.null')
 }
 
+/**
+ * NOTYA-ASI-NOT-01 (Kaan + Dr. Gökhan, 2026-09-23): a vaccine a muayene's note wrote into the aşı kartı
+ * (`asilar.kaynak_note_id`, lib/doktor/notAsiAktarim) is hidden with that muayene — aşı kartı, Sağlığım /
+ * portal karne, Ayşe dossier, kohort / Fısıltı, hatırlatma, search, exports. Same read filter as
+ * arsivsizIlaclar: rows with `kaynak_note_id` NULL (manual form, voice Ayşe, karne) are always visible.
+ */
+export const ASI_ARSIV_GOMME = ILAC_ARSIV_GOMME
+
+/** `asilar` read without vaccines written by an archived muayene's note. Chain filters as usual after it. */
+export function arsivsizAsilar(sb: Istemci, secim: string, o?: Sayim) {
+  return sb.from('asilar').select(`${secim}, ${ASI_ARSIV_GOMME}` as '*', o)
+    .is('arsiv_kaynak.arsiv_seans.archived_at', null)
+    .or('kaynak_note_id.is.null,arsiv_kaynak.not.is.null')
+}
+
 /** Embedded `sessions` value (object or 1-element array) → is that muayene archived? */
 export function seansArsivdeMi(seans: unknown): boolean {
   const s = (Array.isArray(seans) ? seans[0] : seans) as { archived_at?: string | null } | null | undefined
