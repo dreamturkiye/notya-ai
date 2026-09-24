@@ -2601,3 +2601,31 @@ this resolves which domain, "notya.io", but the actual cutover is sequenced AFTE
 | NOTYA-KAYIT-SURE-02 | OPEN — waits on Claude (QA) + Dr. Gökhan (real device) | Canlı test yapılmadı: Samsung/Chrome ve iPhone/Safari üzerinde uzun sessizlik sonrası otomatik yeniden başlama ve kırmızı uyarı doğrulanmalı. |
 
 | NOTYA-ASI-NOT-02 | **DONE 2026-09-24** (Kaan: "backfill all") | scripts/asi-not-backfill-yaz.mts on dr.gokhan@notya.ai: 9 rows written from 3 notes (16.07.2024 DaBT-İPA-Hib/KPA/Rota 1; 15.02.2025 Grip 1, MenACWY 1 (Ayşe-calculated dose); 15.05.2025 KKK 1, Suçiçeği 1, MenACWY 2, Hep A 1 — the last note was approved after the preview). Hep B 2 (15.06.2024) not written: conflict with the Hep B 1 row dated the same day — waits on Dr. Gökhan (DOB + Hep B 1 date). Rollback: ~/notya-ai-asi-backfill-rollback-2026-09-24.json |
+
+
+## NOTYA-YENI-GORUNUM-03 — İki sprint'lik launch planı: önce doktor, sonra klinik (Kaan, 2026-09-24)
+
+**Kaan'ın kararı (2026-09-24):** iki sprint.
+1. Doktor tarafındaki yeni görünümü (`feat/yeni-gorunum`) TAMAMEN bitir, sonra production'a al.
+2. Ardından Klinik tarafına geç — doktor için yapılanların hepsini Klinik'e de uygula (aynı şablon).
+
+**Sprint 1 — Doktor (production'a alınmadan önce hiçbir parça canlıya çıkmaz):**
+- **DONE** — Yedek: `dark-theme-backup-2026-09-24` git tag, mevcut dark-navy production'ın değişmez referans noktası (commit 87f72def).
+- **DONE** — Kontrast/leftover renk düzeltmesi başladı: `Istatistik` (paylaşılan bileşen, tüm araç sayfalarını etkiler), `BekleyenKonsultasyonlar.tsx`, `HastaKonsultasyonlar.tsx` düzeltildi ve doğrulandı (build+typecheck+2617 test+canlı görsel kontrol).
+- **OPEN** — Kalan renk denetimi: doktor yüzeyi (`app/dashboard/doktor`, `app/doktor-tools`, `app/cihaz`, `components/doktor`, `specialties`) tarandı — **179 farklı dosyada** hâlâ eski koyu-tema rengi var (`#EDF1F7`, `#8FA0B5`, `#64748B`, `#2DD4BF`, `#FCA5A5` vb.). Tek tek düzeltilip her biri build+typecheck+test+canlı görsel kontrolle doğrulanacak.
+- **OPEN** — Sidebar B (menü öğeleri artık alt dock değil, sol sidebar) — **canvas'ta tasarlandı ve onaylandı, henüz gerçek koda geçirilmedi.** Ana entegrasyon noktası: `components/doktor/DoktorChrome.tsx` (tüm `/dashboard/doktor/*` sayfalarının tek ortak layout'u — gerçek hava durumu/konum, okunmamış mesaj rozeti, doktor/sekreter rol filtresi, mobil hamburger menüsü KORUNARAK yeniden yazılacak). İkinci, ayrı entegrasyon noktası: `/doktor-tools/*` (bugün hiç dock/nav yok, `OrtakAracKabugu` kullanıyor).
+- **OPEN** — Yazdırılabilir belgeler — hepsi canvas'ta tasarlandı ve Kaan onayına sunuldu, **henüz gerçek koda geçirilmedi**: Muayene Notu (yazdır/PDF), Reçete, Epikriz (yazdır kısmı), SGK Raporu (üretilen rapor kartı), Tetkik İstek Formu (yazdır modalı), Konsültasyon İstem Formu, Gebe İzlem Kartı, Onam Formu. (e-Reçete zaten tamamdı, iş gerekmiyor.) Yeni Muayene (kayıt + not hazır ekranları) ve Aşı Karnesi de canvas'ta onaylandı, gerçek koda geçirilecek.
+- **OPEN** — KVKK/footer taraması: şu an doktor yüzeyinde sadece 4 dosyada KVKK referansı var — muhtemelen aynı "redesign hiç dokunmadı" kök nedeni; tüm sayfalarda olması gerekiyor.
+- **OPEN** — NOTYA-YENI-GORUNUM-02 (yukarıda) — design-token konsolidasyonu artık Sprint 1'in parçası; doktor tamamlanmadan bitirilecek.
+- **OPEN** — Sprint 1'in tamamı bittiğinde: tam build+typecheck+test doğrulaması, Kaan'ın son onayı, ve Kaan'ın açık "git" talimatı olmadan `main`'e merge / production'a deploy YAPILMAZ.
+
+**Sprint 2 — Klinik (Sprint 1 tamamen bitip canlıya alınana kadar başlamaz):**
+- Kapsam ölçüldü (2026-09-24): hasta portalında 49 ayrı sayfa (akcigerlerim, kalbim, beyin-takibi, hormonlarim, vb.) + doktor tarafında ayrı `app/dashboard/klinik` + `app/klinik-tools` içinde 41 sayfa = toplam **~90 sayfa**. `chromeTheme`/`CHROME_RENK` hiçbir Klinik dosyasında kullanılmıyor (0 dosya) — tamamen ayrı, dokunulmamış bir yüzey, doktor redesign'ı kadar (veya daha) büyük.
+- Hedef: doktor tarafında yapılanların hepsi (yeni görünüm, Sidebar B, yazdırılabilir belgeler, KVKK, vb.) Klinik'e de uygulanacak — "aynı şablon."
+- Henüz başlanmadı.
+
+### AÇIK (OPEN)
+| Date | Item | Durum |
+|---|---|---|
+| 2026-09-24 | Sprint 1 (doktor): kalan renk denetimi (179 dosya), Sidebar B gerçek kod, 8+ yazdırılabilir belge gerçek kod, KVKK taraması, design-token konsolidasyonu — hepsi bitmeden production'a alınmaz. | OPEN — Claude'da, sprint devam ediyor |
+| 2026-09-24 | Sprint 2 (klinik): Sprint 1 canlıya alındıktan SONRA başlar — ~90 sayfa, aynı şablon (doktor redesign'ı ile aynı boyutta veya daha büyük). | OPEN — Sprint 1'i bekliyor |
