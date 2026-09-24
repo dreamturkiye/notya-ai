@@ -209,7 +209,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // kararını doktor panelden verir ve portal yalnızca onaylı satırları gösterir
   // (Dr. Mamur, 2026-09-08 — Seçenek C). Aktarım başarısız olursa onay yine
   // geçerlidir; reçete aktarımı onayı bloklamamalı.
-  let receteAktarim: { aktarilan: number; atlanan: number } | null = null
+  let receteAktarim: { aktarilan: number; atlanan: number; sonlandirilan: number } | null = null
   let asiAktarim: Omit<AsiAktarimSonucu, 'hata'> | null = null
   const seansA = Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions
   const hastaIdA = (seansA as { patient_id?: string } | null)?.patient_id
@@ -247,7 +247,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         tarih: existing.created_at as string | null,
       })
       if (sonuc.hata) console.error('[recete-aktarim]', sonuc.hata)
-      receteAktarim = { aktarilan: sonuc.aktarilan, atlanan: sonuc.atlanan }
+      receteAktarim = { aktarilan: sonuc.aktarilan, atlanan: sonuc.atlanan, sonlandirilan: sonuc.sonlandirilan }
     }
   } catch (e) {
     console.error('[recete-aktarim]', e)
