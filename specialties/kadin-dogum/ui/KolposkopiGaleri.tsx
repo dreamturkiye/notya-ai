@@ -20,7 +20,7 @@ export function KolposkopiGaleri({
       {images.length === 0 ? (
         <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>
           Kolposkopi görüntüsü yok.{' '}
-          <span style={{ color: '#FDE68A' }}>Kolposkopi görüntüsü ekle</span>
+          <span style={{ color: '#7A5B1E' }}>Kolposkopi görüntüsü ekle</span>
           {' — Görüntüleme sekmesinden yükleyin (bölge/not: kolposkopi).'}
         </p>
       ) : (

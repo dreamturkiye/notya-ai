@@ -126,7 +126,7 @@ export function VucutHaritasi({
     <section style={kutu} data-tab="VucutHaritasi">
       <h2 style={{ margin: 0, fontSize: 16 }}>TBSE / vücut haritası</h2>
       {month === euromelanomaMonth() && (
-        <p style={{ fontSize: 12, color: '#FDE68A' }}>Euromelanoma Mayıs ayı — deri tarama vurgusu. KETEM deri kanseri programı değildir.</p>
+        <p style={{ fontSize: 12, color: '#7A5B1E' }}>Euromelanoma Mayıs ayı — deri tarama vurgusu. KETEM deri kanseri programı değildir.</p>
       )}
       {KETEM_IS_NOT_SKIN_CANCER && (
         <p style={{ fontSize: 11, color: CHROME_RENK.muted }}>KETEM ipuçları yalnız meme / serviks / kolon — deri kanseri değil.</p>
@@ -170,7 +170,7 @@ export function VucutHaritasi({
             Bölge dağılımı — baş/boyun {dagilim.head} · üst ekstremite {dagilim.upper} · gövde {dagilim.trunk} · alt ekstremite {dagilim.lower}
           </p>
           {onamGereken.length > 0 && (
-            <p style={{ fontSize: 11.5, color: '#FDE68A' }}>
+            <p style={{ fontSize: 11.5, color: '#7A5B1E' }}>
               {onamGereken.map(bolgeAdi).join(', ')} — fotoğraf için ek onam gerekir.
             </p>
           )}

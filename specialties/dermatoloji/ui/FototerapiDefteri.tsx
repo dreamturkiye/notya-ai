@@ -118,7 +118,7 @@ export function FototerapiDefteri({
                 <span>{c.seans} seans</span>
                 <span>kümülatif {c.kumulatifJ} J/cm²</span>
                 {c.sonSeans && <span>son {c.sonSeans}</span>}
-                <span style={{ color: m ? '#86EFAC' : '#FDE68A' }}>
+                <span style={{ color: m ? '#86EFAC' : '#7A5B1E' }}>
                   {m ? `MED ${m.deger} ${m.birim} (${m.date})` : 'MED kaydı yok'}
                 </span>
               </li>
@@ -128,13 +128,13 @@ export function FototerapiDefteri({
       )}
 
       {medEksik.length > 0 && (
-        <p style={{ fontSize: 12, color: '#FDE68A' }} data-derm="ft-med-eksik">
+        <p style={{ fontSize: 12, color: '#7A5B1E' }} data-derm="ft-med-eksik">
           MED kaydı eksik cihaz: {medEksik.map((d) => dermLabel(DERM_PHOTO_DEVICE, d)).join(', ')} — SUT defteri için girilmeli.
         </p>
       )}
-      {ara && <p style={{ fontSize: 12, color: '#FDE68A' }} data-derm="ft-ara-verme">{ara}</p>}
+      {ara && <p style={{ fontSize: 12, color: '#7A5B1E' }} data-derm="ft-ara-verme">{ara}</p>}
       {tbse && (
-        <p style={{ fontSize: 12, color: tbse.gerekli ? '#FDE68A' : CHROME_RENK.muted }} data-derm="ft-tbse">
+        <p style={{ fontSize: 12, color: tbse.gerekli ? '#7A5B1E' : CHROME_RENK.muted }} data-derm="ft-tbse">
           TBSE · {tbse.metin}
         </p>
       )}

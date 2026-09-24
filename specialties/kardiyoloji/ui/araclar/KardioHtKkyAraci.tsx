@@ -68,7 +68,7 @@ export default function KardioHtKkyAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Özet</div>
         <Istatistik deger={String(sonuc.gorevler.length)} etiket="Görev taslağı" ton={sonuc.eksikler.length ? 'uyari' : 'notr'} />
-        {sonuc.eksikler.length > 0 && <div style={{ ...S.kucuk, color: '#FDE68A', marginTop: 8 }}>Henüz ölçüm veya not girilmedi — dürüst boş durum.</div>}
+        {sonuc.eksikler.length > 0 && <div style={{ ...S.kucuk, color: '#7A5B1E', marginTop: 8 }}>Henüz ölçüm veya not girilmedi — dürüst boş durum.</div>}
         <div style={{ ...S.metin, marginTop: 8 }}>{sonuc.ozet}</div>
         {sonuc.uyarilar.map((u, i) => <div key={i} style={{ ...S.kucuk, color: '#FBBF24', marginTop: 4 }}>{u}</div>)}
         <ul style={{ ...S.kucuk, marginTop: 8 }}>

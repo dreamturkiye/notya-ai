@@ -145,7 +145,7 @@ export default function GebelikTakvimAraci() {
               <div style={kucuk}>Hangi tarihin kilitleneceği hekimin kararıdır; takvim şu an {t.yontemAd} ile hesaplanıyor.</div>
             </div>
           )}
-          {t.uyari.map((u) => <div key={u} style={{ ...kutu, borderColor: 'rgba(251,191,36,0.4)', color: '#FDE68A', fontSize: 14 }}>{u}</div>)}
+          {t.uyari.map((u) => <div key={u} style={{ ...kutu, borderColor: 'rgba(251,191,36,0.4)', color: '#7A5B1E', fontSize: 14 }}>{u}</div>)}
 
           {t.kapaniyor.length > 0 && (
             <div role="alert" style={{ background: 'linear-gradient(135deg, #9A3412, #C2410C)', border: '2px solid #FB923C', borderRadius: 16, padding: 18, marginBottom: 14, boxShadow: '0 8px 28px rgba(194,65,12,0.35)' }}>

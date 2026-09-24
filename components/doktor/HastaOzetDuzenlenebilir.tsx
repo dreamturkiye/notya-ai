@@ -297,7 +297,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
                 syncForm(patient)
                 setSaglikAcik(true)
               }}
-              style={{ background: 'transparent', border: '1px solid rgba(251,191,36,0.4)', color: '#FDE68A', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+              style={{ background: 'transparent', border: '1px solid rgba(251,191,36,0.4)', color: '#7A5B1E', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
             >
               Düzenle
             </button>

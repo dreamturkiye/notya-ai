@@ -249,7 +249,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
               <div style={{ ...kucuk, marginTop: 6 }}>Nota eklenecek satır: “{`${k.ad.replace(/\s*\(.*\)$/, '')}: ${SONUC_AD[secim]}`}…” — siz basmadan yazılmaz.</div>
             </div>
           )}
-          {mesaj && <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}><span style={{ fontSize: 13, color: /eklenemedi|edilemedi|kontrol/.test(mesaj) ? '#FDE68A' : '#5EEAD4' }}>{mesaj}</span><MuayeneFormunaDon notId={notId} /></div>}
+          {mesaj && <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}><span style={{ fontSize: 13, color: /eklenemedi|edilemedi|kontrol/.test(mesaj) ? '#7A5B1E' : '#5EEAD4' }}>{mesaj}</span><MuayeneFormunaDon notId={notId} /></div>}
         </div>
       )}
 

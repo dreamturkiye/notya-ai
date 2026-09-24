@@ -164,7 +164,7 @@ export function AcilBandi({
       {bayraklar.length > 0 ? (
         <>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: hemen ? CHROME_RENK.warn : '#FDE68A' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: hemen ? CHROME_RENK.warn : '#7A5B1E' }}>
               {acilBandMetni(bayraklar).join('  ·  ')}
             </div>
             <button type="button" style={btn(true)} onClick={() => setAcik((v) => !v)} data-derm="acil-eylem-ac">
@@ -380,7 +380,7 @@ export function BiyolojikSutKarti({
         <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 3 }}>
           {sonuc.sutKontrol.map((k, i) => (
             <li key={i} style={satirlik}>
-              <span style={{ color: k.tamam === true ? '#86EFAC' : k.tamam === false ? CHROME_RENK.warn : '#FDE68A' }}>
+              <span style={{ color: k.tamam === true ? '#86EFAC' : k.tamam === false ? CHROME_RENK.warn : '#7A5B1E' }}>
                 {k.tamam === true ? '✓' : k.tamam === false ? '✗' : '•'}
               </span>{' '}
               {k.madde}
@@ -530,14 +530,14 @@ export function PsoriasisMerdiveniKarti({
       </ul>
 
       {karar.gerekce.length > 0 && <p style={{ ...satirlik, marginTop: 6 }}>Gerekçe: {karar.gerekce.join(' · ')}</p>}
-      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
+      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
 
       <div style={ic} data-derm="psa-triyaj">
         <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>Eklem (PsA) triyajı</div>
         {PSA_TRIYAJ_MADDELERI.map((m) => (
           <Kutucuk key={m.kod} c={!!psa[m.kod]} set={(v) => setPsa((p) => ({ ...p, [m.kod]: v }))}>{m.ad}</Kutucuk>
         ))}
-        <p style={{ ...satirlik, color: triyaj.sevkOnerilir ? '#FDE68A' : CHROME_RENK.muted, marginTop: 4 }}>{triyaj.hint}</p>
+        <p style={{ ...satirlik, color: triyaj.sevkOnerilir ? '#7A5B1E' : CHROME_RENK.muted, marginTop: 4 }}>{triyaj.hint}</p>
         {onPsaKaydet && (
           <button type="button" style={{ ...btn(true), marginTop: 6 }} onClick={() => onPsaKaydet(psa, triyaj.sevkOnerilir)} data-derm="psa-kaydet">
             Eklem triyajını kaydet
@@ -608,7 +608,7 @@ export function AtopiKarti({
         })}
       </ul>
       {karar.gerekce.length > 0 && <p style={{ ...satirlik, marginTop: 6 }}>Gerekçe: {karar.gerekce.join(' · ')}</p>}
-      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
+      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
       <Dipnotlar liste={karar.dipnotlar} />
     </section>
   )
@@ -650,7 +650,7 @@ export function AkneKarti({
       )}
       {fotoHref && <a href={fotoHref} style={{ fontSize: 12, color: '#2DD4BF' }}>Klinik foto ekle (ay-0 / ay-3 serisi)</a>}
       {karar.gerekce.length > 0 && <p style={{ ...satirlik, marginTop: 6 }}>{karar.gerekce.join(' · ')}</p>}
-      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
+      {karar.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {karar.eksikler.join(' · ')}</p>}
       <p style={kucuk}>{karar.kilitNotu}</p>
       <Dipnotlar liste={karar.dipnotlar} />
     </section>
@@ -706,7 +706,7 @@ export function DermoskopiSkorKarti({
           </label>
         )}
       </div>
-      {!fitzpatrick && <p style={{ fontSize: 11.5, color: '#FDE68A' }}>Fitzpatrick girilmedi — dermoskopi ve ışık temelli kararlarda kaydedilmesi önerilir.</p>}
+      {!fitzpatrick && <p style={{ fontSize: 11.5, color: '#7A5B1E' }}>Fitzpatrick girilmedi — dermoskopi ve ışık temelli kararlarda kaydedilmesi önerilir.</p>}
 
       <div style={ic}>
         {alg === 'uc_nokta' && UC_NOKTA_OLCUTLERI.map((o) => (
@@ -822,7 +822,7 @@ export function SacTirnakKarti({
         ))}
       </div>
 
-      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {kart.eksikler.join(' · ')}</p>}
+      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {kart.eksikler.join(' · ')}</p>}
       <ul style={{ paddingLeft: 18, fontSize: 12.5 }}>{kart.sonrakiAdim.map((s) => <li key={s}>{s}</li>)}</ul>
       {onKaydet && (
         <button
@@ -842,14 +842,14 @@ export function SacTirnakKarti({
 // ────────────────────────────── İzlem kartı ortak görünümü ──────────────────────────────
 
 function TakipGovdesi({ kart }: { kart: TakipKarti }) {
-  const renk = kart.aciliyet === 'acil' ? CHROME_RENK.warn : kart.aciliyet === 'ivedi' ? '#FDE68A' : CHROME_RENK.muted
+  const renk = kart.aciliyet === 'acil' ? CHROME_RENK.warn : kart.aciliyet === 'ivedi' ? '#7A5B1E' : CHROME_RENK.muted
   return (
     <>
       <p style={{ fontSize: 11.5, color: renk, margin: '2px 0 6px' }}>
         {kart.aciliyet === 'acil' ? 'Acil' : kart.aciliyet === 'ivedi' ? 'İvedi' : 'Rutin izlem'}
       </p>
       <ul style={{ paddingLeft: 18, margin: 0, fontSize: 12.5 }}>{kart.bulgular.map((b, i) => <li key={i}>{b}</li>)}</ul>
-      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A', marginTop: 6 }}>Eksik: {kart.eksikler.join(' · ')}</p>}
+      {kart.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E', marginTop: 6 }}>Eksik: {kart.eksikler.join(' · ')}</p>}
       {kart.sonrakiAdim.length > 0 && (
         <>
           <div style={{ ...etiketS, marginTop: 6 }}>Sıradaki adım</div>
@@ -978,7 +978,7 @@ export function BzbhForm014Karti({
         <Kutucuk c={partner} set={setPartner}>Partner / temaslı bilgilendirme planlandı</Kutucuk>
       </div>
       <TakipGovdesi kart={izlem} />
-      {form.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Form eksikleri: {form.eksikler.join(' · ')}</p>}
+      {form.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Form eksikleri: {form.eksikler.join(' · ')}</p>}
       <button type="button" style={btn(true)} onClick={() => yazdirTaslak(form.taslak)} data-derm="form014-yazdir">
         Form 014 taslağını yazdır
       </button>
@@ -1049,7 +1049,7 @@ export function EstetikKarti({ fitzpatrick, bugun, onKaydet }: { fitzpatrick?: s
       </div>
 
       {kontrol.acilMetni && <p style={{ fontSize: 13, color: CHROME_RENK.warn, fontWeight: 700 }}>{kontrol.acilMetni}</p>}
-      {kontrol.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#FDE68A' }}>Eksik: {kontrol.eksikler.join(' · ')}</p>}
+      {kontrol.eksikler.length > 0 && <p style={{ fontSize: 12.5, color: '#7A5B1E' }}>Eksik: {kontrol.eksikler.join(' · ')}</p>}
       {kontrol.uyarilar.length > 0 && <p style={kucuk}>{kontrol.uyarilar.join(' · ')}</p>}
       <p style={satirlik}>İzlenebilirlik: {kontrol.izlenebilirlikTam ? 'tam' : 'eksik'}</p>
       {onKaydet && (
@@ -1159,7 +1159,7 @@ export function IslemOdasiYazdir({
         )}
       </div>
       {etiketler[0]?.eksikler.length > 0 && (
-        <p style={{ fontSize: 12.5, color: '#FDE68A', marginTop: 6 }}>Etiket eksikleri: {etiketler[0].eksikler.join(' · ')}</p>
+        <p style={{ fontSize: 12.5, color: '#7A5B1E', marginTop: 6 }}>Etiket eksikleri: {etiketler[0].eksikler.join(' · ')}</p>
       )}
       {onam && (
         <details style={{ marginTop: 8 }}>

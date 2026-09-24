@@ -79,7 +79,7 @@ export function AsistanGorselPanel({
         style={{
           fontSize: 13,
           fontWeight: 700,
-          color: '#FDE68A',
+          color: '#7A5B1E',
           background: 'rgba(245,158,11,0.14)',
           border: '1px solid rgba(245,158,11,0.4)',
           borderRadius: 8,

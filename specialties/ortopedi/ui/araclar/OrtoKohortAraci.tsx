@@ -64,7 +64,7 @@ export default function OrtoKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(217,119,6,0.25)' : 'transparent', color: suzgec.includes(b) ? '#FDE68A' : CHROME_RENK.muted }}
+              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(217,119,6,0.25)' : 'transparent', color: suzgec.includes(b) ? '#7A5B1E' : CHROME_RENK.muted }}
             >{ORTO_BAYRAK_AD[b]}</button>
           ))}
         </div>

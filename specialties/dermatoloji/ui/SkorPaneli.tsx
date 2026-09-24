@@ -152,7 +152,7 @@ function BolgeSayfasi({
         <b>{skor === 'pasi' ? 'PASI' : 'EASI'} {dokum.toplam}</b> — {dokum.bant}
       </p>
       {dokum.eksikBolgeler.length > 0 && (
-        <p style={{ fontSize: 11.5, color: '#FDE68A' }}>
+        <p style={{ fontSize: 11.5, color: '#7A5B1E' }}>
           Girilmemiş bölge: {dokum.eksikBolgeler.join(', ')} (tutulum yoksa 0 bırakmak geçerlidir)
         </p>
       )}
@@ -321,7 +321,7 @@ export function SkorPaneli({
                 <b>SCORAD {scoradSonuc.toplam}</b> — {scoradSonuc.bant} (A {scoradSonuc.a} · B {scoradSonuc.b} · C {scoradSonuc.c})
               </p>
               {scoradSonuc.eksikler.length > 0 && (
-                <p style={{ fontSize: 11.5, color: '#FDE68A' }}>Eksik: {scoradSonuc.eksikler.join(', ')}</p>
+                <p style={{ fontSize: 11.5, color: '#7A5B1E' }}>Eksik: {scoradSonuc.eksikler.join(', ')}</p>
               )}
             </div>
           )}

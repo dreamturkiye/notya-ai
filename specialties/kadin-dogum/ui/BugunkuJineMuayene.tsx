@@ -232,7 +232,7 @@ export function BugunkuJineMuayene({
 
             <section style={bolum} data-jine-bolum="tarama">
               <div style={etiket}>4. Tarama / patoloji</div>
-              {soap.tarama.dueCue && <div style={{ ...kucuk, marginBottom: 8, color: '#FDE68A' }}>{soap.tarama.dueCue}</div>}
+              {soap.tarama.dueCue && <div style={{ ...kucuk, marginBottom: 8, color: '#7A5B1E' }}>{soap.tarama.dueCue}</div>}
               <div style={grid}>
                 {alan('Pap', soap.tarama.pap, (x) => setT('pap', x), 'NILM / ASC-US / …')}
                 {alan('HPV', soap.tarama.hpv, (x) => setT('hpv', x), 'negatif / 16 / 18')}

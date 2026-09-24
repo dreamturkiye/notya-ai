@@ -149,7 +149,7 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
     <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 14, padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>Anne-Baba Boylarına Göre Hedef Boy</div>
-        <a href={`/doktor-tools/hedef-boy?patientId=${patientId}`} style={{ color: '#FDE68A', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hedef Boy</a>
+        <a href={`/doktor-tools/hedef-boy?patientId=${patientId}`} style={{ color: '#7A5B1E', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>Araçlar › Hedef Boy</a>
       </div>
       {hedef ? (
         <HedefBoyManken sonuc={hedef} tema="doktor" style={{ marginTop: 8 }} />

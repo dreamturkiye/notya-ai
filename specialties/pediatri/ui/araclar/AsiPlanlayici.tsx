@@ -314,10 +314,10 @@ function DozSatiri({ d, isaret, isaretle, geriAl, ilkBekleyen, bugun, vurgu }: {
         <div style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink }}>{dozKisa(d)}</div>
         <div style={kucuk}>
           {d.urun} · önerilen {tarihGoster(d.onerilen)}
-          {d.durum !== 'yapildi' && d.plan && d.plan !== d.onerilen ? <> · <span style={{ color: '#FDE68A' }}>{d.plan <= bugun ? 'telafi: bugün' : `telafi: ${tarihGoster(d.plan)}`}</span></> : null}
+          {d.durum !== 'yapildi' && d.plan && d.plan !== d.onerilen ? <> · <span style={{ color: '#7A5B1E' }}>{d.plan <= bugun ? 'telafi: bugün' : `telafi: ${tarihGoster(d.plan)}`}</span></> : null}
           {d.durum !== 'yapildi' && d.gecikmeGun > GECIKME_ESIGI_GUN ? <> · <span style={{ color: CHROME_RENK.warn }}>{d.gecikmeGun} gün gecikti</span></> : null}
         </div>
-        {d.uyarilar.map((u) => <div key={u} style={{ ...kucuk, color: '#FDE68A', marginTop: 2 }}>⚠ {u}</div>)}
+        {d.uyarilar.map((u) => <div key={u} style={{ ...kucuk, color: '#7A5B1E', marginTop: 2 }}>⚠ {u}</div>)}
         {d.not && <div style={{ ...kucuk, marginTop: 2 }}>{d.not}</div>}
       </div>
       <Rozet ton={d.durum !== 'yapildi' && d.gecikmeGun > GECIKME_ESIGI_GUN && d.durum === 'bugun' ? 'kirmizi' : DURUM_TON[d.durum]}>{durumMetni}</Rozet>
@@ -419,7 +419,7 @@ function OnAyarlar({ onAyar, kaydet }: { onAyar: Partial<Record<SeriKod, SeriKur
                 <span style={{ fontSize: 14, fontWeight: 700, color: CHROME_RENK.ink }}>{SERI_AD[s]}</span>
                 {onAyar[s] ? <Rozet ton="bilgi">hekim ön ayarı</Rozet> : VARSAYILAN_KURALLAR[s].dogrulandi ? <Rozet ton="iyi">GBP Genelgesi</Rozet> : <OneriRozet />}
               </div>
-              <div style={{ ...kucuk, margin: '4px 0 6px' }}>{VARSAYILAN_KURALLAR[s].kaynak}{VARSAYILAN_KURALLAR[s].dogrulanmayan ? <> · <span style={{ color: '#FDE68A' }}>öneri — hekim kilitler: {VARSAYILAN_KURALLAR[s].dogrulanmayan}</span></> : null}</div>
+              <div style={{ ...kucuk, margin: '4px 0 6px' }}>{VARSAYILAN_KURALLAR[s].kaynak}{VARSAYILAN_KURALLAR[s].dogrulanmayan ? <> · <span style={{ color: '#7A5B1E' }}>öneri — hekim kilitler: {VARSAYILAN_KURALLAR[s].dogrulanmayan}</span></> : null}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {dozlar.map((no) => (
                   <React.Fragment key={no}>

@@ -647,7 +647,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           <div style={kutu} data-kd="nst-panel">
             <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 8 }}>NST kaydı</div>
             {showNst ? (
-              <p style={{ fontSize: 12.5, color: '#FDE68A', margin: '0 0 8px' }}>
+              <p style={{ fontSize: 12.5, color: '#7A5B1E', margin: '0 0 8px' }}>
                 NST izlemi endike (28. hafta, yüksek risk veya kayıt var).
               </p>
             ) : (

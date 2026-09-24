@@ -216,8 +216,8 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
             <Rozet ton={okuma.okunabilirlik === 'iyi' ? 'iyi' : okuma.okunabilirlik === 'kismi' ? 'uyari' : 'kirmizi'}>{OKUNABILIRLIK_AD[okuma.okunabilirlik]}</Rozet>
           </div>
           <div style={{ fontSize: 12, color: '#94A3B8' }}>Taslaktır. Her satırı karneyle karşılaştırın; yanlış okunanı düzeltin, istemediğinizi çıkarın. Kaydedilenler “Karneden aktarıldı · hekim onaylı” olarak, bu klinikte uygulanan dozlardan ayrı görünür.</div>
-          {okuma.kimlikUyarisi && <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)', color: '#FDE68A', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>{okuma.kimlikUyarisi}</div>}
-          {!okuma.asiKarnesiMi && <div style={{ fontSize: 13, color: '#FDE68A' }}>Bu belge bir aşı karnesine benzemiyor. Aşıları elle girebilirsiniz.</div>}
+          {okuma.kimlikUyarisi && <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)', color: '#7A5B1E', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>{okuma.kimlikUyarisi}</div>}
+          {!okuma.asiKarnesiMi && <div style={{ fontSize: 13, color: '#7A5B1E' }}>Bu belge bir aşı karnesine benzemiyor. Aşıları elle girebilirsiniz.</div>}
           {okuma.not && <div style={{ fontSize: 12, color: '#94A3B8' }}>Okuma notu: {okuma.not}</div>}
           {!satirlar.length && <div style={{ fontSize: 13, color: '#94A3B8' }}>Aktarılacak satır kalmadı.</div>}
 

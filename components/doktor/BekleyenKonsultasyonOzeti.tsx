@@ -12,7 +12,7 @@ import { beklemeVurgusu, type BekleyenOzeti } from '@/lib/doktor/konsultasyon'
 import { BEKLEYEN_KONSULTASYONLAR_ROTASI } from '@/lib/doktor/konsultasyonIstemci'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
-const VURGU_RENK = { kirmizi: CHROME_RENK.warn, uyari: '#FDE68A', notr: CHROME_RENK.muted } as const
+const VURGU_RENK = { kirmizi: CHROME_RENK.warn, uyari: '#7A5B1E', notr: CHROME_RENK.muted } as const
 
 /** Sunumsal kısım (SSR testi için ayrı). */
 export function BekleyenKonsultasyonOzetiKarti({ ozet }: { ozet: BekleyenOzeti | null }) {

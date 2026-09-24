@@ -107,7 +107,7 @@ export function YamaTakvimi({
         </div>
       )}
 
-      {ipucu && <p style={{ fontSize: 12, color: '#FDE68A', marginTop: 6 }} data-derm="yama-ipucu">{ipucu}</p>}
+      {ipucu && <p style={{ fontSize: 12, color: '#7A5B1E', marginTop: 6 }} data-derm="yama-ipucu">{ipucu}</p>}
 
       {patientId && (
         <div style={{ display: 'grid', gap: 3, marginTop: 8 }} data-derm="yama-foto-ipucu">

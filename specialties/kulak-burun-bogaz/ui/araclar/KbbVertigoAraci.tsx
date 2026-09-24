@@ -92,7 +92,7 @@ export default function KbbVertigoAraci() {
         {sonuc.uyarilar.map((u) => <div key={u} style={{ ...S.metin, color: CHROME_RENK.warn }}>{u}</div>)}
         {sonuc.satirlar.length ? sonuc.satirlar.map((x) => <div key={x} style={S.metin}>{x}</div>) : <div style={S.kucuk}>Henüz manevra işaretlenmedi.</div>}
         {sonuc.eksikler.length > 0 && (
-          <div style={{ ...S.kucuk, marginTop: 8, color: '#FDE68A' }}>{sonuc.eksikler.map((e) => <div key={e}>• {e}</div>)}</div>
+          <div style={{ ...S.kucuk, marginTop: 8, color: '#7A5B1E' }}>{sonuc.eksikler.map((e) => <div key={e}>• {e}</div>)}</div>
         )}
         <TaslakNotu>Manevra sonuçları muayene bulgusudur; tanı, tedavi ve ileri tetkik kararı hekimindedir.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>

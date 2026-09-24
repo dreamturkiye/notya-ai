@@ -32,7 +32,7 @@ type Veri = {
 const ACCENT = '#D97706'
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 }
 const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }
-const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#FDE68A', marginBottom: 6 }
+const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#7A5B1E', marginBottom: 6 }
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 }
 const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 }
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }
@@ -109,7 +109,7 @@ export default function OrtopediHome({ patientId }: { patientId: string }) {
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {SEKMELER.map((x) => (
-          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(217,119,6,0.22)' : 'transparent', color: sekme === x ? '#FDE68A' : CHROME_RENK.muted }}>{x}</button>
+          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(217,119,6,0.22)' : 'transparent', color: sekme === x ? '#7A5B1E' : CHROME_RENK.muted }}>{x}</button>
         ))}
       </div>
 

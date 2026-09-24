@@ -67,7 +67,7 @@ export function BelgeAnalizOzet({
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8, margin: 0 }}>
         {analizler.map((a) => (
           <li key={a.id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 10 }}>
-            <div style={{ fontSize: 12, color: belgeHekimOnayli(a.durum) ? '#86EFAC' : '#FDE68A' }}>
+            <div style={{ fontSize: 12, color: belgeHekimOnayli(a.durum) ? '#86EFAC' : '#7A5B1E' }}>
               {belgeDurumEtiket(a.durum)} · {a.modality}
               {belgeHekimOnayli(a.durum) ? '' : ' — tanı değildir'}
             </div>

@@ -68,7 +68,7 @@ export default function KardioScore2Araci() {
           <Istatistik deger={sonuc.kovaAd} etiket="Risk bandı · karar desteği" />
         </div>
         {!sonuc.tamamMi && (
-          <div style={{ ...S.kucuk, color: '#FDE68A', marginTop: 8 }}>
+          <div style={{ ...S.kucuk, color: '#7A5B1E', marginTop: 8 }}>
             {sonuc.eksikler.length ? sonuc.eksikler.join(' · ') : 'Girdileri tamamlayın — ortalama yorumlanmaz.'}
           </div>
         )}

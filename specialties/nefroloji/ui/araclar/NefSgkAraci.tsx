@@ -60,7 +60,7 @@ export default function NefSgkAraci() {
       <div style={S.kutu}>
         <Istatistik deger={String(sonuc.eksikler.length)} etiket="Eksik madde" ton={sonuc.eksikler.length ? 'uyari' : 'iyi'} />
         <div style={{ ...S.kucuk, marginTop: 8 }}>T.C. kimlik numarası bu çıktıda yer almaz. ESA / ilaç dozu ve Medula e-imza hekimindir — canlı gönderim yok.</div>
-        {sonuc.eksikler.slice(0, 5).map((e, i) => <div key={i} style={{ ...S.kucuk, color: '#FDE68A' }}>{e}</div>)}
+        {sonuc.eksikler.slice(0, 5).map((e, i) => <div key={i} style={{ ...S.kucuk, color: '#7A5B1E' }}>{e}</div>)}
         <TaslakNotu>TASLAK — SUT kontrol listesi karar desteğidir; tanı hekimde, ESA dozu yazılmaz, Medula canlı yok.</TaslakNotu>
         <KopyalaButonu metin={[sonuc.draft.sablonAd, sonuc.draft.hekimDegerlendirmesi, ...(sonuc.draft.tani ? [`ICD: ${sonuc.draft.tani.icd10}`] : [])].join('\n')} />
       </div>

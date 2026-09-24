@@ -27,7 +27,7 @@ const yeniSatir = (tarih = ''): Satir => ({ id: Math.random().toString(36).slice
 function PersentilRozet({ p }: { p: number }) {
   const uc = p < 3 || p > 97;
   const orta = !uc && (p < 10 || p > 90);
-  return <span style={{ fontSize: 26, fontWeight: 800, color: uc ? CHROME_RENK.warn : orta ? '#FDE68A' : '#5EEAD4', letterSpacing: '-0.5px' }}>{persentilKisa(p)} <span style={{ fontSize: 14, fontWeight: 600 }}>persentil</span></span>;
+  return <span style={{ fontSize: 26, fontWeight: 800, color: uc ? CHROME_RENK.warn : orta ? '#7A5B1E' : '#5EEAD4', letterSpacing: '-0.5px' }}>{persentilKisa(p)} <span style={{ fontSize: 14, fontWeight: 600 }}>persentil</span></span>;
 }
 
 export default function BuyumeStudyosu() {
