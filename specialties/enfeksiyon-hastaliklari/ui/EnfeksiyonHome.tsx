@@ -32,8 +32,8 @@ type Veri = {
 
 const ACCENT = '#0D9488'
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 }
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }
-const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#5EEAD4', marginBottom: 6 }
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: `1px solid ${CHROME_RENK.border}` }
+const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: ACCENT, marginBottom: 6 }
 const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 }
 const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 }
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }
@@ -44,7 +44,7 @@ const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: 
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
-    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
+    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(164,91,62,0.6)' : CHROME_RENK.border}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
       <span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}
       {alt && <span style={{ color: CHROME_RENK.muted }}> · {alt}</span>}
     </span>
@@ -94,7 +94,7 @@ export default function EnfeksiyonHome({ patientId }: { patientId: string }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ ...toolsCard, padding: 12, position: 'sticky', top: 0, zIndex: 2, background: '#0D1C33' }}>
+      <div style={{ ...toolsCard, padding: 12, position: 'sticky', top: 0, zIndex: 2 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {v.serit.chips.map((c) => <Cip key={c.ad} {...c} />)}
         </div>
@@ -198,7 +198,7 @@ export default function EnfeksiyonHome({ patientId }: { patientId: string }) {
         <div style={{ ...toolsCard, padding: 14 }}>
           {(v.gorevler || []).length === 0 && <div style={kucuk}>Açık görev yok.</div>}
           {(v.gorevler || []).map((g) => (
-            <div key={g.id} style={{ ...satir, justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '8px 0' }}>
+            <div key={g.id} style={{ ...satir, justifyContent: 'space-between', borderBottom: `1px solid ${CHROME_RENK.border}`, padding: '8px 0' }}>
               <div>
                 <div style={metin}>{g.ad}</div>
                 <div style={kucuk}>{g.due || '—'} · {g.kod}</div>

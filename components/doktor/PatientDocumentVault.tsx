@@ -112,10 +112,10 @@ export default function PatientDocumentVault({
     }
   }
   return (
-    <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 20 }}>
+    <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#E2E8F0' }}>Belge kasası</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: CHROME_RENK.ink }}>Belge kasası</div>
           <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>Şifreli PDF / görüntü / ses — muayeneye bağlanabilir</div>
         </div>
         <Link
@@ -130,7 +130,7 @@ export default function PatientDocumentVault({
         <select
           value={visitId}
           onChange={(e) => setVisitId(e.target.value)}
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 12, padding: '6px 8px', width: '100%', maxWidth: 420 }}
+          style={{ background: '#F6F0E4', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 8, color: CHROME_RENK.ink, fontSize: 12, padding: '6px 8px', width: '100%', maxWidth: 420 }}
         >
           <option value="" style={{ color: '#000' }}>Hasta dosyası — muayene seçin (görüntü/ses bağlamak için)</option>
           {seanslar.map((s) => (
@@ -140,16 +140,16 @@ export default function PatientDocumentVault({
         <MuayeneEkleri hastaId={patientId} visitId={visitId || null} onYuklendi={() => void load()} />
       </div>
       {loading && <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Yükleniyor…</div>}
-      {error && <div style={{ fontSize: 13, color: '#F87171' }}>{error}</div>}
+      {error && <div style={{ fontSize: 13, color: CHROME_RENK.warn }}>{error}</div>}
       {!loading && !error && !docs.length && (
         <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Bu hasta için kasa boş. Belge merkezinden yükleyin.</div>
       )}
       {!loading && !error && docs.length > 0 && (() => {
         const yenidoganSayisi = docs.filter((d) => belgeYenidoganTaburcuEpikriziMi(d)).length
         const chip = (aktif: boolean) => ({
-          background: aktif ? 'rgba(15,155,142,0.2)' : 'transparent',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: aktif ? '#2DD4BF' : CHROME_RENK.muted,
+          background: aktif ? 'rgba(15,155,142,0.15)' : 'transparent',
+          border: `1px solid ${CHROME_RENK.border}`,
+          color: aktif ? '#0F9B8E' : CHROME_RENK.muted,
           borderRadius: 999,
           padding: '3px 10px',
           fontSize: 11,
@@ -184,15 +184,15 @@ export default function PatientDocumentVault({
                 gap: 10,
                 alignItems: 'center',
                 padding: '10px 12px',
-                background: viewer?.id === d.id ? 'rgba(15,155,142,0.15)' : 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: viewer?.id === d.id ? 'rgba(15,155,142,0.1)' : '#FFFFFF',
+                border: `1px solid ${CHROME_RENK.border}`,
                 borderRadius: 12,
                 cursor: 'pointer',
-                color: '#E2E8F0',
+                color: CHROME_RENK.ink,
                 textAlign: 'left',
               }}
             >
-              <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: CHROME_RENK.muted, marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(96,165,250,0.5)' : 'rgba(248,113,113,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#60A5FA' : '#F87171', fontWeight: 700 }}>{o}</span>)}</span>}</span>
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#7A5B1E', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: CHROME_RENK.muted, marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(74,92,138,0.5)' : 'rgba(164,91,62,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#4A5C8A' : CHROME_RENK.warn, fontWeight: 700 }}>{o}</span>)}</span>}</span>
               <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · muayene' : ''}</span>
               {belgeDegerlendirmeCtalari(d).map((cta) => {
                 const base =
@@ -200,8 +200,8 @@ export default function PatientDocumentVault({
                     ? `/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}/lab`
                     : `/dashboard/doktor/hastalar/${patientId}/belgeler/${d.id}`
                 const href = specialtyGeri ? `${base}?geriTab=${specialtyGeri}` : base
-                const color = cta.tur === 'lab' ? '#FBBF24' : '#2DD4BF'
-                const border = cta.tur === 'lab' ? 'rgba(251,191,36,0.4)' : 'rgba(45,212,191,0.4)'
+                const color = cta.tur === 'lab' ? '#7A5B1E' : '#0F9B8E'
+                const border = cta.tur === 'lab' ? 'rgba(251,191,36,0.4)' : 'rgba(15,155,142,0.4)'
                 return (
                   <a
                     key={cta.tur}
@@ -221,8 +221,8 @@ export default function PatientDocumentVault({
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: '#F87171',
-                  border: '1px solid rgba(248,113,113,0.4)',
+                  color: CHROME_RENK.warn,
+                  border: `1px solid ${CHROME_RENK.warn}70`,
                   borderRadius: 999,
                   padding: '3px 9px',
                   whiteSpace: 'nowrap',

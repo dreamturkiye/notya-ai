@@ -35,15 +35,15 @@ export default function YeniBebekIsleri() {
   if (!liste.length) return null
 
   return (
-    <div style={{ marginTop: 18, background: '#0D1C33', border: '1px solid rgba(251,191,36,0.28)', borderRadius: 16, padding: '14px 18px' }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#FBBF24', marginBottom: 8 }}>Yeni bebek — pediatri iş listesi</div>
+    <div style={{ marginTop: 18, background: '#FBF3DE', border: '1px solid #E4C989', borderRadius: 16, padding: '14px 18px' }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: '#7A5B1E', marginBottom: 8 }}>Yeni bebek — pediatri iş listesi</div>
       <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginBottom: 10 }}>{KADIN_HASTALIKLARI_DOGUM_ETIKETI} taburcu paketinden. Ayşe bebek kartını açabilir. Notya e-Nabız değildir.</div>
       {liste.slice(0, 8).map((g) => (
         <button
           key={g.id}
           type="button"
           onClick={() => router.push(`/dashboard/doktor/hastalar/${g.bebek_id}?tab=bebek`)}
-          style={{ display: 'block', width: '100%', textAlign: 'left', background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: 10, padding: '8px 12px', marginBottom: 6, color: CHROME_RENK.ink, fontSize: 13, cursor: 'pointer' }}
+          style={{ display: 'block', width: '100%', textAlign: 'left', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 10, padding: '8px 12px', marginBottom: 6, color: CHROME_RENK.ink, fontSize: 13, cursor: 'pointer' }}
         >
           {g.bebekAd || 'Yenidoğan'} · bebek kartı
         </button>

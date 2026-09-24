@@ -99,17 +99,17 @@ export default function HastaBebekKarti({ patientId }: { patientId: string }) {
   if (yukleniyor) return <div style={{ padding: 16, color: CHROME_RENK.muted, fontSize: 13 }}>Bebek kartı yükleniyor…</div>
   if (!veri?.bebek) {
     return (
-      <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 20, color: CHROME_RENK.muted, fontSize: 13 }}>
+      <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 20, color: CHROME_RENK.muted, fontSize: 13 }}>
         Bu dosyada bebek kartı yok. Canlı doğum kaydı {KADIN_HASTALIKLARI_DOGUM_ETIKETI} bölümünde bebek kartını otomatik açar.
       </div>
     )
   }
 
   const tl = veri.timeline
-  const kutu: React.CSSProperties = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: 16, marginBottom: 12 }
+  const kutu: React.CSSProperties = { background: '#F6F0E4', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 12, padding: 16, marginBottom: 12 }
 
   return (
-    <div style={{ background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 20 }}>
+    <div style={{ background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 20 }}>
       <div style={{ fontSize: 16, fontWeight: 800, color: CHROME_RENK.ink }}>Bebek kartı · {veri.bebek.ad || 'Yenidoğan'}</div>
       <div style={{ fontSize: 12.5, color: '#FBBF24', margin: '6px 0 10px' }}>{veri.disclaimer || NTP_DISCLAIMER}</div>
       <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 12 }}>

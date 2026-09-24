@@ -77,8 +77,8 @@ import type { BzbhKind } from '@/specialties/dermatoloji/protocols/endemic-bzbh'
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const panel: React.CSSProperties = {
-  background: '#0D1C33',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: '#FFFFFF',
+  border: `1px solid ${CHROME_RENK.border}`,
   borderRadius: 16,
   padding: 16,
 }
@@ -99,7 +99,7 @@ const cta: React.CSSProperties = {
 
 const ctaGhost: React.CSSProperties = {
   ...cta,
-  background: 'rgba(255,255,255,0.08)',
+  background: '#F6F0E4',
   color: CHROME_RENK.ink,
 }
 
@@ -353,7 +353,7 @@ export default function HastaDermatoloji({
       />
 
       {hata && <div style={{ color: CHROME_RENK.warn, fontSize: 13 }}>{hata}</div>}
-      {mesaj && <div style={{ color: '#86EFAC', fontSize: 13 }}>{mesaj}</div>}
+      {mesaj && <div style={{ color: '#2E6E4E', fontSize: 13 }}>{mesaj}</div>}
       {yukleniyor && <div style={{ color: CHROME_RENK.muted, fontSize: 13 }}>Yükleniyor…</div>}
 
       <AsistanGorselPanel

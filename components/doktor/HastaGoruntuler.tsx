@@ -41,9 +41,9 @@ type Calisma = {
 type Analiz = { id: string; belge_id?: string; durum: string; sonuc?: { ozet?: string; bulgular?: string[] } | null; hekim_ozet?: string | null }
 
 const TIPS: GoruntuTip[] = ['xr', 'ekg', 'goz', 'derm', 'mg', 'us', 'ct', 'mr', 'pet']
-const panel: React.CSSProperties = { background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 16 }
+const panel: React.CSSProperties = { background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: 16 }
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: `1px solid ${CHROME_RENK.border}` }
 
 export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   const [liste, setListe] = useState<Calisma[]>([])
