@@ -352,6 +352,33 @@ describe('ASI-KARNESI-01 — dijital aşı karnesi: Sağlığım bundle + PDF (g
     const sekreter = await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`, { token: A.sekreterToken })))
     assert.equal(sekreter.status, 200)
   })
+
+  it('NOTYA-ASI-LOT-01: Aşılar formu lot / yer kaydeder → liste, Sağlığım bundle, hekim ve portal PDF aynı değeri gösterir', async () => {
+    const { A } = sahneKur()
+    const liste = await import('../../app/api/doktor/asilar/route')
+    const ekle = await coz(liste.POST(iste('POST', '/api/doktor/asilar', { token: A.token, govde: {
+      patientId: A.hasta, asiAdi: 'Grip', uygulamaTarihi: '2025-02-15', kaynak: 'kayit', lotNo: '  Vaxi12345 ', uygulamaYeri: 'IM',
+    } })))
+    assert.equal(ekle.status, 200, ekle.metin.slice(0, 200))
+    assert.equal(ekle.json.asi.lot_no, 'Vaxi12345')
+    assert.equal(ekle.json.asi.uygulama_yeri, 'IM')
+    const bos = await coz(liste.POST(iste('POST', '/api/doktor/asilar', { token: A.token, govde: { patientId: A.hasta, asiAdi: 'KPA', uygulamaTarihi: '2025-02-15' } })))
+    assert.equal(bos.json.asi.lot_no, null, 'girilmeyen lot boş kalır')
+    assert.equal(bos.json.asi.uygulama_yeri, null)
+    const oku = await coz(liste.GET(iste('GET', `/api/doktor/asilar?patientId=${A.hasta}`, { token: A.token })))
+    const grip = oku.json.asilar.find((a: { asi_adi: string }) => a.asi_adi === 'Grip')
+    assert.deepEqual([grip.lot_no, grip.uygulama_yeri], ['Vaxi12345', 'IM'])
+
+    const b = await coz(portal.GET(iste('GET', `/api/portal/hasta/${A.portalToken}`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
+    const kGrip = b.json.asiKarnesi.yapilanlar.find((a: { ad: string }) => a.ad === 'Grip')
+    assert.deepEqual([kGrip.lotNo, kGrip.uygulamaYeri], ['Vaxi12345', 'IM'])
+    const hekim = await pdfMetni((await coz(hekimPdf.GET(iste('GET', `/api/doktor/asilar/karne/pdf?patientId=${A.hasta}`, { token: A.token })))).bayt)
+    // Only the lot is matched in the extracted text: after earlier renders in one process react-pdf may re-emit "I" as a
+    // duplicate subset glyph without a ToUnicode entry (drawn correctly — same advance width — but extracts as "?").
+    assert.ok(hekim.includes('Vaxi12345 · ') && hekim.includes('LOT / UYGULAMA YERİ'), hekim.slice(hekim.indexOf('YAPILAN')))
+    const p = await coz(portalPdf.GET(iste('GET', `/api/portal/hasta/${A.portalToken}/asi-karnesi/pdf`, { cerez: await portalCerezi(A.portalToken) }), prm({ token: A.portalToken })))
+    assert.equal(await pdfMetni(p.bayt), hekim, 'hekim ve Sağlığım aynı PDF')
+  })
 })
 
 describe('ASI-KARNESI-01 — hekim onaylı aşı hatırlatması (gerçek rota)', () => {

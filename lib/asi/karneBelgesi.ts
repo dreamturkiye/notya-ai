@@ -8,11 +8,13 @@
  * portal ve hekim aynı üretici) HEPSİ `asiKarnesiOlustur()` çıktısından ve buradaki sabitlerden çizilir. Metin, sıra,
  * kaynak etiketi ve e-Nabız uyarısı yalnız burada yazılır; iki görünüm ayrı ayrı bakım istemez.
  *
- * Portal dili: KLİNİK YORUM YOK — yalnız kayıtlı aşı, doz, tarih, kaynak ve hekimin girdiği sonraki doz tarihi.
+ * Portal dili: KLİNİK YORUM YOK — yalnız kayıtlı aşı, doz, tarih, lot / uygulama yeri, kaynak ve hekimin girdiği
+ * sonraki doz tarihi.
  * "Eksik", "gecikmiş", risk, öneri gibi çıkarım yapılmaz (takvim motoru burada ÇALIŞMAZ).
  */
 import { asiKaynakTuru, KARNE_ROZETI, trTarih, type AsiKaynakTuru } from './karneOkuma'
 import { sonrakiDozKarsilandiMi } from './hatirlatma'
+import { LOT_AZAMI, lotYerTemizle, YER_AZAMI } from './asiLotYeri'
 
 /** e-Nabız uyarısı — ZORUNLU, ekranda / çıktıda / PDF'te görünür ve küçültülmez (Kaan). */
 export const E_NABIZ_BASLIK = 'Bu karne bilgi amaçlıdır'
@@ -47,6 +49,8 @@ export interface AsiKaydiSatiri {
   kaynak?: string | null
   notlar?: string | null
   belge_id?: string | null
+  lot_no?: string | null
+  uygulama_yeri?: string | null
 }
 
 export interface AsiKarnesiSatiri {
@@ -56,7 +60,13 @@ export interface AsiKarnesiSatiri {
   tarih: string | null
   kaynak: AsiKaynakTuru
   kaynakEtiketi: string
+  /** NOTYA-ASI-LOT-01: hekimin kaydettiği lot no / uygulama yeri; bilinmiyorsa null (hücre boş kalır). */
+  lotNo: string | null
+  uygulamaYeri: string | null
 }
+
+/** "Lot / Uygulama yeri" sütun başlığı — ekran, yazdırma ve PDF aynı metin. */
+export const LOT_YER_BASLIK = 'Lot / Uygulama yeri'
 
 export interface AsiKarnesiSiradaki {
   ad: string
@@ -97,7 +107,10 @@ export function asiKarnesiOlustur(g: {
     if (!ad) continue
     const kaynak = asiKaynakTuru(a)
     const doz = Number.isInteger(a.doz_no) && (a.doz_no as number) > 0 ? (a.doz_no as number) : null
-    yapilanlar.push({ ad, doz, tarih: gun(a.uygulama_tarihi), kaynak, kaynakEtiketi: HASTA_KAYNAK_ETIKETI[kaynak] })
+    yapilanlar.push({
+      ad, doz, tarih: gun(a.uygulama_tarihi), kaynak, kaynakEtiketi: HASTA_KAYNAK_ETIKETI[kaynak],
+      lotNo: lotYerTemizle(a.lot_no, LOT_AZAMI), uygulamaYeri: lotYerTemizle(a.uygulama_yeri, YER_AZAMI),
+    })
     const sonraki = gun(a.sonraki_doz_tarihi)
     if (sonraki && sonraki >= g.bugunIso && !sonrakiDozKarsilandiMi(karsilama[i], karsilama)) siradaki.set(`${ad}|${sonraki}`, { ad, tarih: sonraki })
   }

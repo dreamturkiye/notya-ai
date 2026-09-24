@@ -128,6 +128,20 @@ describe('NOTYA-ASI-NOT-01 — approval sync (nottanAsiAktar)', () => {
     assert.ok(String(s.sonraki_doz_tarihi) > '2026-09-23', String(s.sonraki_doz_tarihi))
   })
 
+  it('NOTYA-ASI-LOT-01: lot / site go to their own columns, notlar keeps only the provenance text', async () => {
+    const { aktar, satirlar } = kur()
+    await aktar([{ asi_adi: 'Grip', doz_no: null, uygulama_tarihi: '2026-09-23', lot_no: 'Vaxi12345', uygulama_yeri: 'IM' }])
+    const [s] = satirlar()
+    assert.equal(s.lot_no, 'Vaxi12345')
+    assert.equal(s.uygulama_yeri, 'IM')
+    assert.equal(s.notlar, 'Muayene notundan aktarıldı (hekim onaylı).')
+    // re-approval with lot removed from the note clears it (the note is this row's source)
+    await aktar([{ asi_adi: 'Grip', doz_no: null, uygulama_tarihi: '2026-09-23' }])
+    assert.equal(satirlar().length, 1)
+    assert.equal(satirlar()[0].lot_no, null)
+    assert.equal(satirlar()[0].uygulama_yeri, null)
+  })
+
   it('re-approve unchanged → no duplicate; re-approve with the row deleted → row removed', async () => {
     const { aktar, satirlar } = kur()
     await aktar(HEPB2)

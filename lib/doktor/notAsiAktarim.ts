@@ -134,15 +134,12 @@ export async function nottanAsiAktar(
 
     const kategori = karneKategorisi(o.dogumIso, a.uygulama_tarihi, bugun, a.asi_adi)
     const sonraki = kategori === 'pediatrik' ? sonrakiDozTarihi(o.dogumIso, a, [...diger, ...liste.filter((x) => x !== a)]) : null
-    const notlar = [
-      a.notlar || '',
-      a.lot_no ? `Lot: ${a.lot_no}` : '',
-      a.uygulama_yeri ? `Uygulama yeri: ${a.uygulama_yeri}` : '',
-      'Muayene notundan aktarıldı (hekim onaylı).',
-    ].filter(Boolean).join(' · ')
+    const notlar = [a.notlar || '', 'Muayene notundan aktarıldı (hekim onaylı).'].filter(Boolean).join(' · ')
+    // NOTYA-ASI-LOT-01: lot / site in their own columns (shown on the Aşılar list and the karne), not packed in notlar.
     const satir: Record<string, unknown> = {
       asi_adi: a.asi_adi, doz_no: a.doz_no, kategori, uygulama_tarihi: a.uygulama_tarihi, sonraki_doz_tarihi: sonraki,
       kaynak: 'kayit', notlar, hekim_onay_at: simdi, kaynak_note_id: o.noteId,
+      lot_no: a.lot_no || null, uygulama_yeri: a.uygulama_yeri || null,
     }
     if (hedef) {
       kullanilan.add(hedef.id)
