@@ -9,6 +9,7 @@ import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { muayeneFormuYolu } from "@/lib/doktor/muayeneFormuYolu"
 import { onaylananNotYolu, INCELEME_KUYRUGU_YOLU } from "@/lib/doktor/onaySonrasiYol"
 import { seansGeriHref } from "@/lib/doktor/geriNavigasyon"
+import { CHROME_FONT } from "@/lib/doktor/chromeTheme"
 import MuayeneCekListesi from "@/components/doktor/MuayeneCekListesi"
 import {
   cekListeDogrula,
@@ -39,7 +40,7 @@ interface SpeechRecognitionEvent extends Event {
 
 export default function NewSession() {
   return (
-    <Suspense fallback={<div style={{minHeight:"100vh",background:"#0A1628"}} />}>
+    <Suspense fallback={<div style={{minHeight:"100vh",background:"#f4eee3"}} />}>
       <NewSessionInner />
     </Suspense>
   )
@@ -404,11 +405,11 @@ function NewSessionInner() {
   const S = (s: Record<string,unknown>) => s as React.CSSProperties
 
   return (
-    <div className="notya-seans-sayfa" style={S({minHeight:"100vh",background:"#0A1628",fontFamily:"system-ui,sans-serif",padding:"20px"})}>
+    <div className="notya-seans-sayfa" style={S({minHeight:"100vh",background:"#f4eee3",fontFamily:CHROME_FONT.sans,padding:"20px"})}>
       <div style={S({maxWidth: step === "recording" || step === "done" ? "980px" : "600px", margin:"0 auto"})}>
         <div style={S({display:"flex",alignItems:"center",gap:"12px",marginBottom:"24px"})}>
-          <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"rgba(255,255,255,.6)",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
-          <div style={S({fontSize:"18px",fontWeight:"600",color:"#fff"})}>Yeni Seans</div>
+          <div onClick={()=>router.push(seansGeriHref(patientId))} style={S({color:"#8b7d70",cursor:"pointer",fontSize:"14px"})}>← Geri</div>
+          <div style={S({fontSize:"18px",fontWeight:"600",color:"#3b2e24"})}>Yeni Seans</div>
         </div>
 
         {error && <div style={S({background:"#FCEBEB",border:"1px solid #F09595",borderRadius:"12px",padding:"14px",fontSize:"13px",color:"#A32D2D",marginBottom:"16px"})}>{error}</div>}
@@ -419,30 +420,30 @@ function NewSessionInner() {
               <div style={S({display:"flex",alignItems:"center",gap:"8px",marginBottom:"20px",padding:"10px 12px",background:"#F0FDFA",border:"1px solid #99F6E4",borderRadius:"10px",fontSize:"13px",color:"#0F766E",fontWeight:"600"})}>
                 <span>{SPECIALTIES.find(s=>s.id===specialty)?.emoji}</span>
                 <span>Branş: {SPECIALTIES.find(s=>s.id===specialty)?.label}</span>
-                <span style={S({fontWeight:"400",color:"#64748B"})}>· profilinizden</span>
+                <span style={S({fontWeight:"400",color:"#8b7d70"})}>· profilinizden</span>
               </div>
             ) : (<>
-            <div style={S({fontSize:"15px",fontWeight:"600",color:"#0A1628",marginBottom:"16px"})}>Uzmanlık Seçin</div>
+            <div style={S({fontSize:"15px",fontWeight:"600",color:"#f4eee3",marginBottom:"16px"})}>Uzmanlık Seçin</div>
             <div style={S({display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"20px"})}>
               {SPECIALTIES.map(s => (
                 <div key={s.id} onClick={()=>setSpecialty(s.id)}
-                  style={S({padding:"10px 12px",borderRadius:"10px",border:`1.5px solid ${specialty===s.id?"#2563EB":"#E5E7EB"}`,background:specialty===s.id?"#EFF6FF":"#fff",cursor:"pointer",display:"flex",alignItems:"center",gap:"8px",fontSize:"13px",fontWeight:specialty===s.id?"600":"400",color:specialty===s.id?"#1D4ED8":"#374151"})}>
+                  style={S({padding:"10px 12px",borderRadius:"10px",border:`1.5px solid ${specialty===s.id?"#0F9B8E":"#e5ddd0"}`,background:specialty===s.id?"#E4F3F1":"#fff",cursor:"pointer",display:"flex",alignItems:"center",gap:"8px",fontSize:"13px",fontWeight:specialty===s.id?"600":"400",color:specialty===s.id?"#0F9B8E":"#3b2e24"})}>
                   <span>{s.emoji}</span>{s.label}
                 </div>
               ))}
             </div>
             </>)}
-            <div style={S({fontSize:"15px",fontWeight:"600",color:"#0A1628",marginBottom:"12px"})}>Seans Türü</div>
+            <div style={S({fontSize:"15px",fontWeight:"600",color:"#f4eee3",marginBottom:"12px"})}>Seans Türü</div>
             <div style={S({display:"flex",gap:"8px",marginBottom:"20px"})}>
               {["muayene","kontrol","konsültasyon"].map(t=>(
                 <div key={t} onClick={()=>setSessionType(t)}
-                  style={S({padding:"8px 16px",borderRadius:"20px",border:`1.5px solid ${sessionType===t?"#2563EB":"#E5E7EB"}`,background:sessionType===t?"#EFF6FF":"#fff",cursor:"pointer",fontSize:"13px",fontWeight:sessionType===t?"600":"400",color:sessionType===t?"#1D4ED8":"#374151"})}>
+                  style={S({padding:"8px 16px",borderRadius:"20px",border:`1.5px solid ${sessionType===t?"#0F9B8E":"#e5ddd0"}`,background:sessionType===t?"#E4F3F1":"#fff",cursor:"pointer",fontSize:"13px",fontWeight:sessionType===t?"600":"400",color:sessionType===t?"#0F9B8E":"#3b2e24"})}>
                   {t}
                 </div>
               ))}
             </div>
             <button onClick={()=>{cekListeSifirla(patientId);setCekIsaret({});setSeconds(0);setStep("recording")}}
-              style={S({width:"100%",padding:"16px",background:"#2563EB",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
+              style={S({width:"100%",padding:"16px",background:"#0F9B8E",color:"#fff",border:"none",borderRadius:"12px",fontSize:"16px",fontWeight:"600",cursor:"pointer"})}>
               🎙️ Seansa Başla
             </button>
             {/* NOTYA-RANDEVU-TARIH-01: randevudan gelindiyse otomatik tarih — SALT-OKUNUR, düzenlenemez. */}
@@ -453,13 +454,13 @@ function NewSessionInner() {
             )}
             {/* NOTYA-GECMIS-MUAYENE-01: geçmiş veri girişi/test için opsiyonel geçmiş tarih — boş
                 bırakılırsa hiçbir şey değişmez, not her zamanki gibi şimdiki tarihle kaydedilir. */}
-            <div style={S({marginTop:"14px",padding:"10px 12px",background:"#F9FAFB",border:"1px dashed #D1D5DB",borderRadius:"10px"})}>
-              <label style={S({display:"block",fontSize:"12px",fontWeight:"600",color:"#374151",marginBottom:"6px"})}>
-                📅 Geçmişe dönük tarih <span style={S({fontWeight:"400",color:"#94A3B8"})}>(opsiyonel — geçmiş kayıt girişi için)</span>
+            <div style={S({marginTop:"14px",padding:"10px 12px",background:"#F6F0E4",border:"1px dashed #c9bfa9",borderRadius:"10px"})}>
+              <label style={S({display:"block",fontSize:"12px",fontWeight:"600",color:"#3b2e24",marginBottom:"6px"})}>
+                📅 Geçmişe dönük tarih <span style={S({fontWeight:"400",color:"#8b7d70"})}>(opsiyonel — geçmiş kayıt girişi için)</span>
               </label>
               <input type="datetime-local" value={gecmisTarih} max={new Date(Date.now() - 60000).toISOString().slice(0,16)}
                 onChange={e=>setGecmisTarih(e.target.value)}
-                style={S({width:"100%",padding:"8px 10px",border:"1.5px solid #E5E7EB",borderRadius:"8px",fontSize:"13px",color:"#374151",boxSizing:"border-box"})} />
+                style={S({width:"100%",padding:"8px 10px",border:"1.5px solid #e5ddd0",borderRadius:"8px",fontSize:"13px",color:"#3b2e24",boxSizing:"border-box"})} />
               {gecmisTarih && (
                 <div style={S({fontSize:"11px",color:"#0F9B8E",marginTop:"6px"})}>
                   Bu muayene {new Date(gecmisTarih).toLocaleDateString("tr-TR")} tarihiyle kaydedilecek — 
@@ -469,8 +470,8 @@ function NewSessionInner() {
             </div>
             {/* NOTYA-SES-01: hazır ses kaydı yükle — telefonda kaydedilen ya da kayıt başlatılmayı
                 unutulan muayeneler için aynı Ayşe Kaya SOAP motoru. Ses, transkript sonrası silinir. */}
-            <div style={S({textAlign:"center",margin:"14px 0 6px",color:"#9CA3AF",fontSize:"12px"})}>ya da</div>
-            <label style={S({display:"block",width:"100%",padding:"13px",background:sesYukleniyor?"#EFF6FF":"#F9FAFB",color:"#374151",border:"1.5px dashed #D1D5DB",borderRadius:"12px",fontSize:"14px",fontWeight:"600",cursor:sesYukleniyor?"default":"pointer",textAlign:"center",boxSizing:"border-box"})}>
+            <div style={S({textAlign:"center",margin:"14px 0 6px",color:"#8b7d70",fontSize:"12px"})}>ya da</div>
+            <label style={S({display:"block",width:"100%",padding:"13px",background:sesYukleniyor?"#E4F3F1":"#F6F0E4",color:"#3b2e24",border:"1.5px dashed #c9bfa9",borderRadius:"12px",fontSize:"14px",fontWeight:"600",cursor:sesYukleniyor?"default":"pointer",textAlign:"center",boxSizing:"border-box"})}>
               {sesYukleniyor ? "⏳ Ses çözümlüyor ve not üretiliyor… birkaç dakika sürebilir, sayfayı kapatmayın" : "📁 Ses dosyası yükle (m4a / mp3 / wav)"}
               <input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg" style={{display:"none"}} disabled={sesYukleniyor}
                 onChange={(e)=>{const f=e.target.files?.[0]; if(f) sesDosyasiIsle(f); e.target.value=""}} />
@@ -483,15 +484,15 @@ function NewSessionInner() {
           <div className="notya-grid-yigin notya-seans-cek" style={S({display:"grid",gridTemplateColumns:"minmax(0,1.15fr) minmax(240px,0.85fr)",gap:"16px",alignItems:"start"})}>
           <div className="notya-seans-kayit" style={S({background:"#fff",borderRadius:"20px",padding:"24px"})}>
             <div style={S({textAlign:"center",marginBottom:"20px"})}>
-              <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#EFF6FF",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
-              <div style={S({fontSize:"32px",fontWeight:"600",color:"#0A1628",fontFamily:"monospace",marginBottom:"4px"})}>{fmt(seconds)}</div>
-              <div style={S({fontSize:"13px",color:"#64748B",lineHeight:1.45,padding:"0 4px"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label} · üst sınır {kayitHedefDk} dk</div>
+              <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#E4F3F1",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
+              <div style={S({fontSize:"32px",fontWeight:"600",color:"#f4eee3",fontFamily:"monospace",marginBottom:"4px"})}>{fmt(seconds)}</div>
+              <div style={S({fontSize:"13px",color:"#8b7d70",lineHeight:1.45,padding:"0 4px"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label} · üst sınır {kayitHedefDk} dk</div>
             </div>
 
             {/* Voice recording button */}
             <div style={S({display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",marginBottom:"14px"})}>
               <button onClick={toggleVoice}
-                style={S({padding:"10px 20px",background:isRecordingVoice?"#DC2626":"#2563EB",color:"#fff",border:"none",borderRadius:"20px",fontSize:"13px",fontWeight:"600",cursor:"pointer",display:"flex",alignItems:"center",gap:"6px"})}>
+                style={S({padding:"10px 20px",background:isRecordingVoice?"#DC2626":"#0F9B8E",color:"#fff",border:"none",borderRadius:"20px",fontSize:"13px",fontWeight:"600",cursor:"pointer",display:"flex",alignItems:"center",gap:"6px"})}>
                 {isRecordingVoice ? "⏹ Sesi Durdur" : "🎤 Sesle Dikte Et"}
               </button>
               {isRecordingVoice && <span style={S({fontSize:"12px",color:"#DC2626",animation:"pulse 1s infinite"})}>● Dinliyor...</span>}
@@ -517,25 +518,25 @@ function NewSessionInner() {
               </div>
             )}
 
-            <div style={S({fontSize:"13px",fontWeight:"500",color:"#374151",marginBottom:"8px"})}>
+            <div style={S({fontSize:"13px",fontWeight:"500",color:"#3b2e24",marginBottom:"8px"})}>
               Seans notları <span style={S({color:"#DC2626"})}>*</span>
-              <span style={S({fontSize:"11px",color:"#94A3B8",marginLeft:"8px",fontWeight:"400"})}>Sesle veya yazarak girin</span>
+              <span style={S({fontSize:"11px",color:"#8b7d70",marginLeft:"8px",fontWeight:"400"})}>Sesle veya yazarak girin</span>
             </div>
             <textarea value={transcript} onChange={e=>setTranscript(e.target.value)}
               placeholder={"Muayene bulgularını buraya yazın...\n\nÖrnek: 7 yaşında erkek hasta, 3 gündür devam eden ateş şikayeti var. Ateş 38.8°C. Boğaz kırmızı, tonsiller hiperemik..."}
-              style={S({width:"100%",minHeight:"180px",padding:"12px",border:"1.5px solid #E5E7EB",borderRadius:"10px",fontSize:"16px",fontFamily:"system-ui",resize:"vertical",marginBottom:"16px",color:"#374151",lineHeight:"1.6",outline:"none",boxSizing:"border-box"})}
+              style={S({width:"100%",minHeight:"180px",padding:"12px",border:"1.5px solid #e5ddd0",borderRadius:"10px",fontSize:"16px",fontFamily:"system-ui",resize:"vertical",marginBottom:"16px",color:"#3b2e24",lineHeight:"1.6",outline:"none",boxSizing:"border-box"})}
             />
             <div className="notya-seans-aksiyon" style={S({display:"flex",gap:"10px"})}>
               <button onClick={()=>{istenenKayitRef.current=false;stopTimer();recognitionRef.current?.stop();setIsRecordingVoice(false);setStep("setup");setSeconds(0);setTranscript("");setKayitHedefDk(KAYIT_VARSAYILAN_DK);uyariCalindiRef.current=false;setSureUyari(false);setSureDoldu(false);setKayitDurdu(false)}}
-                style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#374151",border:"none",borderRadius:"10px",fontSize:"14px",cursor:"pointer"})}>
+                style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#3b2e24",border:"none",borderRadius:"10px",fontSize:"14px",cursor:"pointer"})}>
                 İptal
               </button>
               <button onClick={processSession}
-                style={S({flex:2,padding:"14px",background:transcript.trim()?"#DC2626":"#94A3B8",color:"#fff",border:"none",borderRadius:"10px",fontSize:"15px",fontWeight:"600",cursor:transcript.trim()?"pointer":"not-allowed"})}>
+                style={S({flex:2,padding:"14px",background:transcript.trim()?"#DC2626":"#8b7d70",color:"#fff",border:"none",borderRadius:"10px",fontSize:"15px",fontWeight:"600",cursor:transcript.trim()?"pointer":"not-allowed"})}>
                 ⏹ Seansı Bitir → Not Oluştur
               </button>
             </div>
-            <div style={S({textAlign:"center",marginTop:"10px",fontSize:"11px",color:"#94A3B8"})}>
+            <div style={S({textAlign:"center",marginTop:"10px",fontSize:"11px",color:"#8b7d70"})}>
               Notları yazdıktan sonra "Seansı Bitir" butonuna basın
             </div>
           </div>
@@ -555,31 +556,31 @@ function NewSessionInner() {
         {step === "processing" && (
           <div style={S({background:"#fff",borderRadius:"20px",padding:"48px",textAlign:"center"})}>
             <div style={S({fontSize:"48px",marginBottom:"16px"})}>⚙️</div>
-            <div style={S({fontSize:"18px",fontWeight:"600",color:"#0A1628",marginBottom:"8px"})}>AI Not Oluşturuyor</div>
-            <div style={S({fontSize:"13px",color:"#94A3B8"})}>30-60 saniye...</div>
+            <div style={S({fontSize:"18px",fontWeight:"600",color:"#f4eee3",marginBottom:"8px"})}>AI Not Oluşturuyor</div>
+            <div style={S({fontSize:"13px",color:"#8b7d70"})}>30-60 saniye...</div>
           </div>
         )}
 
         {step === "done" && note && (
           <div style={S({background:"#fff",borderRadius:"20px",padding:"24px"})}>
-            <div style={S({display:"flex",alignItems:"center",gap:"10px",marginBottom:"20px",paddingBottom:"16px",borderBottom:"1px solid #E5E7EB"})}>
+            <div style={S({display:"flex",alignItems:"center",gap:"10px",marginBottom:"20px",paddingBottom:"16px",borderBottom:"1px solid #e5ddd0"})}>
               <div style={S({fontSize:"24px"})}>✅</div>
               <div>
-                <div style={S({fontSize:"16px",fontWeight:"600",color:"#0A1628"})}>Not Hazır</div>
-                <div style={S({fontSize:"12px",color:"#64748B"})}>AI güveni: {Math.round(((note.ai_confidence as number)||0.9)*100)}%</div>
+                <div style={S({fontSize:"16px",fontWeight:"600",color:"#f4eee3"})}>Not Hazır</div>
+                <div style={S({fontSize:"12px",color:"#8b7d70"})}>AI güveni: {Math.round(((note.ai_confidence as number)||0.9)*100)}%</div>
               </div>
             </div>
             {/* NOTYA-BASLIK-01: Anamnez bölümleri kendi başlıklarıyla (Şikayet, Şikayetin Hikayesi, Özgeçmiş...) */}
             {anamnezParcala(String((note as Record<string, unknown>).content_subjektif || '')).map((b, bi) => (
               <div key={'anm' + bi} style={S({marginBottom:"14px"})}>
-                <div style={S({fontSize:"10px",fontWeight:"600",color:"#2563EB",textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{b.baslik}</div>
-                <div style={S({fontSize:"13px",color:"#374151",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F8FAFC",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
+                <div style={S({fontSize:"10px",fontWeight:"600",color:"#0F9B8E",textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{b.baslik}</div>
+                <div style={S({fontSize:"13px",color:"#3b2e24",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F6F0E4",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
               </div>
             ))}
             {fizikParcala(String((note as Record<string, unknown>).content_objektif || '')).map((b, bi) => (
               <div key={'fm' + bi} style={S({marginBottom:"14px"})}>
                 <div style={S({fontSize:"10px",fontWeight:"600",color:"#059669",textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{b.baslik}</div>
-                <div style={S({fontSize:"13px",color:"#374151",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F8FAFC",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
+                <div style={S({fontSize:"13px",color:"#3b2e24",lineHeight:"1.6",whiteSpace:"pre-wrap",background:"#F6F0E4",borderRadius:"10px",padding:"12px"})}>{b.metin}</div>
               </div>
             ))}
             {([
@@ -588,7 +589,7 @@ function NewSessionInner() {
             ] as {label:string;key:string;color:string}[]).filter(s=>(note as Record<string,unknown>)[s.key]).map(section=>(
               <div key={section.key} style={S({marginBottom:"14px"})}>
                 <div style={S({fontSize:"10px",fontWeight:"600",color:section.color,textTransform:"uppercase",letterSpacing:".5px",marginBottom:"5px"})}>{section.label}</div>
-                <div style={S({fontSize:"13px",color:"#374151",background:"#F8FAFC",borderRadius:"8px",padding:"10px 12px",lineHeight:"1.6"})}>{String((note as Record<string,unknown>)[section.key])}</div>
+                <div style={S({fontSize:"13px",color:"#3b2e24",background:"#F6F0E4",borderRadius:"8px",padding:"10px 12px",lineHeight:"1.6"})}>{String((note as Record<string,unknown>)[section.key])}</div>
               </div>
             ))}
             {Array.isArray(note.kritik_bulgular) && (note.kritik_bulgular as string[]).length > 0 && (
@@ -598,7 +599,7 @@ function NewSessionInner() {
               </div>
             )}
             {!!note.takip_suresi && (
-              <div style={S({fontSize:"13px",color:"#374151",background:"#EFF6FF",borderRadius:"8px",padding:"10px 12px",marginBottom:"14px"})}>
+              <div style={S({fontSize:"13px",color:"#3b2e24",background:"#E4F3F1",borderRadius:"8px",padding:"10px 12px",marginBottom:"14px"})}>
                 📅 <strong>Takip:</strong> {String(note.takip_suresi)}
               </div>
             )}
@@ -606,7 +607,7 @@ function NewSessionInner() {
               {/* NOTYA-ONAY-DONUS-01: "Not Revizyonu" genel kuyruğa atıyordu — notu orada aramak
                   gerekiyordu. Not kimliği varsa doğrudan O notun muayene formuna gider. */}
               <button onClick={()=>router.push(note?.id ? muayeneFormuYolu(String(note.id)) : INCELEME_KUYRUGU_YOLU)}
-                style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#374151",border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:"600",cursor:"pointer"})}>
+                style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#3b2e24",border:"none",borderRadius:"10px",fontSize:"14px",fontWeight:"600",cursor:"pointer"})}>
                 Not Revizyonu
               </button>
               <button onClick={notuOnayla} disabled={onayDurumu==="gonderiliyor"}
