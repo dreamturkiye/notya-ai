@@ -12,6 +12,8 @@ import { randomUUID } from 'node:crypto'
 import { SahteVeritabani } from '../security/testing/sahteSupabase'
 import { arsivsizAsilar } from './arsiv'
 import {
+  asiLotYeriBul,
+  asiLotYeriTamamla,
   dozlariTamamla,
   notAsilariniTemizle,
   notAsisiKartDurumu,
@@ -228,6 +230,53 @@ describe('NOTYA-ASI-NOT-01 — checklist "Aşı durumu"', () => {
 describe('ziyaretGunu', () => {
   it('Europe/Istanbul calendar day', () => {
     assert.equal(ziyaretGunu('2026-09-22T22:30:00Z'), '2026-09-23')
+  })
+})
+
+describe('NOTYA-ASI-LOT-01 — lot no / uygulama yeri from the vaccine\'s own clause', () => {
+  const GOLDEN = 'İnfluenza aşısı Vaxigrip Tetra yapıldı IM Lot no: Vaxi12345 bugün ilk dozu. Bir sonraki dozu bir ay sonra.'
+  it('golden: lot "Vaxi12345", site "IM"', () => {
+    const r = asiLotYeriBul(GOLDEN, 'Grip (influenza)')
+    assert.equal(r.lot_no, 'Vaxi12345')
+    assert.equal(r.uygulama_yeri, 'IM')
+  })
+  it('a clause without lot → empty (never invented)', () => {
+    assert.deepEqual([asiLotYeriBul('Hepatit B 2. doz aşısı bugün uygulandı.', 'Hepatit B').lot_no, asiLotYeriBul('Hepatit B 2. doz aşısı bugün uygulandı.', 'Hepatit B').uygulama_yeri], [null, null])
+    assert.equal(asiLotYeriBul('KKK aşısı yapıldı, lot numarası bilinmiyor.', 'KKK').lot_no, null, 'a marker without a code is not a lot')
+    assert.equal(asiLotYeriBul(GOLDEN, 'KKK').lot_no, null, 'a vaccine not in the text gets nothing')
+  })
+  it('a different vaccine\'s lot in the same sentence is not borrowed (per-vaccine split)', () => {
+    const t = 'Bugün KKK 1. doz (sol omuz, lot: MMR12345), Suçiçeği 1. doz (sağ omuz, lot: Rix12345), Menactra 2. doz (sol bacak, lot: Men12345), Hepatit A 1. doz (sağ bacak, lot: Hav12345) uygulandı'
+    const g = (ad: string) => { const r = asiLotYeriBul(t, ad); return [r.lot_no, r.uygulama_yeri] }
+    assert.deepEqual(g('KKK (kızamık-kızamıkçık-kabakulak)'), ['MMR12345', 'sol omuz'])
+    assert.deepEqual(g('Suçiçeği'), ['Rix12345', 'sağ omuz'])
+    assert.deepEqual(g('Meningokok ACWY'), ['Men12345', 'sol bacak'])
+    assert.deepEqual(g('Hepatit A'), ['Hav12345', 'sağ bacak'])
+  })
+  it('lot in the next sentence of the same item joins its vaccine; a lot code never names a series', () => {
+    const t = 'c) Menactra aşısı IM uygulandı. Lot no: acwy12345\nb) ' + GOLDEN
+    assert.deepEqual([asiLotYeriBul(t, 'Meningokok ACWY').lot_no, asiLotYeriBul(t, 'Meningokok ACWY').uygulama_yeri], ['acwy12345', 'IM'])
+    assert.equal(asiLotYeriBul(t, 'Grip').lot_no, 'Vaxi12345')
+  })
+  it('route + location words; planned / earlier clauses and conflicting values give nothing', () => {
+    assert.equal(asiLotYeriBul('Rotavirüs aşısı (ağızdan) verildi.', 'Rotavirüs').uygulama_yeri, 'ağızdan')
+    assert.equal(asiLotYeriBul('Hepatit B aşısı intramüsküler sol uyluk uygulandı, seri no: HB-778', 'Hepatit B').uygulama_yeri, 'intramüsküler sol uyluk')
+    assert.equal(asiLotYeriBul('Hepatit B aşısı intramüsküler sol uyluk uygulandı, seri no: HB-778', 'Hepatit B').lot_no, 'HB-778')
+    assert.equal(asiLotYeriBul('KKK 2. doz 4 yaşta yapılacak, sol kol, lot: X9981.', 'KKK').lot_no, null, 'planned')
+    assert.equal(asiLotYeriBul('KKK aşısı yapıldı lot: A111. KKK aşısı uygulandı lot: B222.', 'KKK').lot_no, null, 'two different lots → empty')
+  })
+  it('SOAP backstop: model left lot / site empty, transcript states them → filled; model value kept', () => {
+    const r = asiLotYeriTamamla([{ asi_adi: 'Grip (influenza)', doz_no: 1, uygulama_tarihi: null }, { asi_adi: 'KKK', doz_no: 1, uygulama_tarihi: null, uygulama_yeri: 'sağ kol' }], GOLDEN + ' KKK aşısı yapıldı sol uyluk.')
+    assert.deepEqual([r[0].lot_no, r[0].uygulama_yeri], ['Vaxi12345', 'IM'])
+    assert.equal(r[1].uygulama_yeri, 'sağ kol')
+    assert.equal(r[1].lot_no, undefined)
+  })
+  it('SOAP generation fills lot / site from the transcript', async () => {
+    const db = new SahteVeritabani()
+    const liste = await muayeneAsilariniHazirla(db.istemci() as never, {
+      doktorId: randomUUID(), patientId: null, transcript: GOLDEN, ham: [{ asi_adi: 'Grip', doz_no: 1 }], ziyaretIso: '2025-02-15T09:00:00Z',
+    })
+    assert.deepEqual(liste, [{ asi_adi: 'Grip', doz_no: 1, uygulama_tarihi: '2025-02-15', lot_no: 'Vaxi12345', uygulama_yeri: 'IM' }], '"ilk dozu" → 1')
   })
 })
 

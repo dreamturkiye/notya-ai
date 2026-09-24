@@ -22,6 +22,7 @@ import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { karneKategorisi } from '@/lib/asi/karneOkuma'
 import { asiPlani, kayitSerisi, onerilenDonem, SERI_AD, type AsiKaydi } from '@/specialties/pediatri/engines/asiPlan'
 import {
+  asiLotYeriTamamla,
   asiSeriAnahtari,
   dozlariTamamla,
   notAsilariniTemizle,
@@ -46,7 +47,9 @@ export async function muayeneAsilariniHazirla(
   g: { doktorId: string; patientId: string | null; transcript: string; ham: unknown; ziyaretIso?: string | null },
 ): Promise<NotAsisi[]> {
   const gun = ziyaretGunu(g.ziyaretIso)
-  let liste: NotAsisi[] = uygulananAsilariSuz(notAsilariniTemizle(g.ham), g.transcript).map((a) => ({ ...a, uygulama_tarihi: gun }))
+  // NOTYA-ASI-LOT-01: lot / site the model left empty are read from the transcript (same vaccine's own clause only).
+  let liste: NotAsisi[] = asiLotYeriTamamla(uygulananAsilariSuz(notAsilariniTemizle(g.ham), g.transcript), g.transcript)
+    .map((a) => ({ ...a, uygulama_tarihi: gun }))
   if (!liste.length || !g.patientId || !liste.some((a) => a.doz_no == null)) return liste
   try {
     const { data } = await arsivsizAsilar(sb, 'asi_adi, doz_no, uygulama_tarihi').eq('doktor_id', g.doktorId).eq('patient_id', g.patientId).limit(300)
