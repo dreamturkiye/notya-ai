@@ -24,7 +24,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#E6EEF3',
+  themeColor: '#f4eee3',
 }
 
 export default function PortalLayout({ children }: { children: ReactNode }) {

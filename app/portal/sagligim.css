@@ -1,24 +1,30 @@
-/* Sağlığım — cool mist clinic + human warmth (teal / coral / sun) */
+/* Sağlığım — aligned to the doktor redesign's cream/pine/teal palette (NOTYA-YENI-GORUNUM-03,
+   Kaan, 2026-09-24). Was previously its own separate "cool mist clinic" identity (teal/coral/sun
+   on cool blue-gray) -- Kaan explicitly confirmed bringing it in line with the doktor side.
+   Font stays Newsreader/Outfit (set inline in layout.tsx) rather than switching to Fraunces --
+   both are warm, tasteful serif/humanist pairings tuned to this file's own letter-spacing and
+   breakpoints; swapping the actual font family carries real layout risk across the file's many
+   hand-tuned mobile breakpoints for a difference that reads as "a serif", not as inconsistent. */
 
 :root {
-  --sg-bg: #e6eef3;
-  --sg-bg-deep: #d3dee6;
+  --sg-bg: #f4eee3;
+  --sg-bg-deep: #e9e2d3;
   --sg-surface: #ffffff;
-  --sg-ink: #0a1628;
-  --sg-muted: #5a6a78;
-  --sg-line: rgba(10, 22, 40, 0.1);
-  --sg-accent: #0a7a8a;
-  --sg-accent-soft: #d2eef2;
-  --sg-accent-ink: #055864;
-  --sg-coral: #e07a5f;
-  --sg-coral-soft: #fce8e2;
-  --sg-coral-ink: #9a3f2a;
-  --sg-sun: #d4a017;
-  --sg-sun-soft: #fbf3dc;
-  --sg-sun-ink: #7a5a08;
-  --sg-warn: #c45c26;
-  --sg-danger: #b42318;
-  --sg-ok: #1a8a63;
+  --sg-ink: #3b2e24;
+  --sg-muted: #8b7d70;
+  --sg-line: rgba(58, 44, 34, 0.1);
+  --sg-accent: #0F9B8E;
+  --sg-accent-soft: #E4F3F1;
+  --sg-accent-ink: #0F9B8E;
+  --sg-coral: #a45b3e;
+  --sg-coral-soft: #FBEAE3;
+  --sg-coral-ink: #7A3D28;
+  --sg-sun: #B4832F;
+  --sg-sun-soft: #FBF3DE;
+  --sg-sun-ink: #7A5B1E;
+  --sg-warn: #a45b3e;
+  --sg-danger: #8B3A2E;
+  --sg-ok: #2E6E4E;
   --sg-radius: 14px;
   --sg-radius-lg: 20px;
   --sg-font-display: 'Newsreader', Georgia, serif;
@@ -42,10 +48,10 @@ body:has(.sagligim-root) {
   min-height: 100dvh;
   min-height: -webkit-fill-available;
   background:
-    radial-gradient(900px 480px at 0% -5%, rgba(10, 122, 138, 0.11), transparent 55%),
-    radial-gradient(700px 420px at 100% 0%, rgba(224, 122, 95, 0.08), transparent 50%),
-    radial-gradient(600px 360px at 70% 100%, rgba(212, 160, 23, 0.06), transparent 45%),
-    linear-gradient(180deg, #eef4f7 0%, var(--sg-bg) 42%, #e2eaf0 100%);
+    radial-gradient(900px 480px at 0% -5%, rgba(15, 155, 142, 0.11), transparent 55%),
+    radial-gradient(700px 420px at 100% 0%, rgba(164, 91, 62, 0.08), transparent 50%),
+    radial-gradient(600px 360px at 70% 100%, rgba(180, 131, 47, 0.06), transparent 45%),
+    linear-gradient(180deg, #faf6ee 0%, var(--sg-bg) 42%, #efe9dc 100%);
   color: var(--sg-ink);
   font-family: var(--sg-font-ui);
   -webkit-font-smoothing: antialiased;
@@ -63,12 +69,12 @@ body:has(.sagligim-root) {
 .sagligim-root a {
   color: inherit;
   text-decoration: none;
-  -webkit-tap-highlight-color: rgba(0, 107, 125, 0.12);
+  -webkit-tap-highlight-color: rgba(15, 155, 142, 0.12);
 }
 
 .sagligim-root button {
   font-family: inherit;
-  -webkit-tap-highlight-color: rgba(0, 107, 125, 0.12);
+  -webkit-tap-highlight-color: rgba(15, 155, 142, 0.12);
   touch-action: manipulation;
 }
 
@@ -351,7 +357,7 @@ body:has(.sagligim-root) {
 .sg-pin-input:focus {
   outline: none;
   border-color: var(--sg-accent);
-  box-shadow: 0 0 0 3px rgba(0, 107, 125, 0.18);
+  box-shadow: 0 0 0 3px rgba(15, 155, 142, 0.18);
 }
 
 .sg-pin-btn {
@@ -419,8 +425,8 @@ body:has(.sagligim-root) {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(10, 22, 40, 0.08) 0%, rgba(10, 22, 40, 0.42) 48%, rgba(10, 22, 40, 0.78) 100%),
-    linear-gradient(90deg, rgba(10, 22, 40, 0.5) 0%, rgba(10, 22, 40, 0.12) 60%);
+    linear-gradient(180deg, rgba(58, 44, 34, 0.08) 0%, rgba(58, 44, 34, 0.42) 48%, rgba(58, 44, 34, 0.78) 100%),
+    linear-gradient(90deg, rgba(58, 44, 34, 0.5) 0%, rgba(58, 44, 34, 0.12) 60%);
 }
 
 .sg-hero-copy {
@@ -453,7 +459,7 @@ body:has(.sagligim-root) {
   font-weight: 650;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(210, 238, 242, 0.95);
+  color: rgba(212, 193, 150, 0.95);
 }
 
 .sg-hero-rule {
@@ -541,7 +547,7 @@ body:has(.sagligim-root) {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #fff;
-  background: linear-gradient(180deg, transparent, rgba(10, 22, 40, 0.72));
+  background: linear-gradient(180deg, transparent, rgba(58, 44, 34, 0.72));
 }
 
 /* Below fold — restored chip / shortcut wireframe */
@@ -566,19 +572,19 @@ body:has(.sagligim-root) {
 }
 
 .sg-chip:nth-child(1) {
-  border-color: rgba(10, 122, 138, 0.22);
+  border-color: rgba(15, 155, 142, 0.22);
   background: linear-gradient(160deg, #fff 60%, var(--sg-accent-soft));
 }
 .sg-chip:nth-child(2) {
-  border-color: rgba(224, 122, 95, 0.25);
+  border-color: rgba(164, 91, 62, 0.25);
   background: linear-gradient(160deg, #fff 60%, var(--sg-coral-soft));
 }
 .sg-chip:nth-child(3) {
-  border-color: rgba(212, 160, 23, 0.28);
+  border-color: rgba(180, 131, 47, 0.28);
   background: linear-gradient(160deg, #fff 60%, var(--sg-sun-soft));
 }
 .sg-chip:nth-child(4) {
-  border-color: rgba(10, 122, 138, 0.18);
+  border-color: rgba(15, 155, 142, 0.18);
   background: var(--sg-surface);
 }
 
@@ -925,7 +931,7 @@ body:has(.sagligim-root) {
 }
 
 .sg-list-row-link:hover .sg-list-row {
-  background: rgba(212, 237, 242, 0.25);
+  background: rgba(228, 243, 241, 0.25);
 }
 
 .sg-list-row-main {
@@ -1028,7 +1034,7 @@ body:has(.sagligim-root) {
   padding: 12px 14px;
   border-radius: var(--sg-radius);
   border: 1px solid var(--sg-line);
-  background: #f7fafb;
+  background: #F6F0E4;
   color: var(--sg-ink);
   font: inherit;
   /* 16px floor — iOS Safari zooms focused inputs below this. */
@@ -1038,7 +1044,7 @@ body:has(.sagligim-root) {
 .sg-field:focus {
   outline: none;
   border-color: var(--sg-accent);
-  box-shadow: 0 0 0 3px rgba(0, 107, 125, 0.15);
+  box-shadow: 0 0 0 3px rgba(15, 155, 142, 0.15);
 }
 
 .sg-bubble {
@@ -1463,7 +1469,7 @@ body:has(.sagligim-root) {
 .sg-goz-acil {
   border: 1px solid rgba(180, 35, 24, 0.28);
   border-left: 4px solid var(--sg-danger);
-  background: #fdf0ee;
+  background: #FBEAE3;
   border-radius: var(--sg-radius);
   padding: 12px 14px;
   color: var(--sg-ink);
