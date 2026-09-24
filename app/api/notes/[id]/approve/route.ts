@@ -208,9 +208,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // doktorun ilaç listesine 'beklemede' olarak aktarılır; aktif/sonlandırıldı
   // kararını doktor panelden verir ve portal yalnızca onaylı satırları gösterir
   // (Dr. Mamur, 2026-09-08 — Seçenek C). Aktarım başarısız olursa onay yine
-  // geçerlidir; reçete aktarımı onayı bloklamamalı.
-  let receteAktarim: { aktarilan: number; atlanan: number; sonlandirilan: number } | null = null
-  let asiAktarim: Omit<AsiAktarimSonucu, 'hata'> | null = null
+  // geçerlidir; reçete aktarımı onayı bloklamamalı. NOTYA-AKTARIM-HATA-01 (Kaan,
+  // 2026-09-24): hata alanı artık istemciye gönderiliyor — önceden yalnız sunucu
+  // logunda kalıyordu, hekim aktarımın sessizce başarısız olduğunu hiçbir zaman
+  // göremiyordu (çakışma uyarısı vardı, gerçek hata yoktu).
+  let receteAktarim: { aktarilan: number; atlanan: number; sonlandirilan: number; hata: string | null } | null = null
+  let asiAktarim: AsiAktarimSonucu | null = null
   const seansA = Array.isArray(existing.sessions) ? existing.sessions[0] : existing.sessions
   const hastaIdA = (seansA as { patient_id?: string } | null)?.patient_id
   // HASTA-IZOLASYON-01: only into this doctor's OWN patient — a session can carry a foreign patient_id
@@ -231,8 +234,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         notTarihi: existing.created_at as string | null, dogumIso: await hastaDogumIso(supabase, user.id, hastaIdA),
       })
       if (s.hata) console.error('[asi-aktarim]', s.hata)
-      const { hata: _h, ...ozet } = s
-      asiAktarim = ozet
+      asiAktarim = s
     } catch (e) { console.error('[asi-aktarim]', e) }
   }
 
@@ -247,7 +249,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         tarih: existing.created_at as string | null,
       })
       if (sonuc.hata) console.error('[recete-aktarim]', sonuc.hata)
-      receteAktarim = { aktarilan: sonuc.aktarilan, atlanan: sonuc.atlanan, sonlandirilan: sonuc.sonlandirilan }
+      receteAktarim = { aktarilan: sonuc.aktarilan, atlanan: sonuc.atlanan, sonlandirilan: sonuc.sonlandirilan, hata: sonuc.hata }
     }
   } catch (e) {
     console.error('[recete-aktarim]', e)
