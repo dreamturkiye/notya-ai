@@ -10,9 +10,10 @@
 import React, { useEffect, useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { dosyaPaylasimiVar, pdfYazdir } from '@/lib/asi/karnePaylasim';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const DOSYA_ADI = 'asi-karnesi.pdf';
-const dugme: React.CSSProperties = { background: 'rgba(255,255,255,0.08)', color: '#C9D4E3', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 12px', fontSize: 13, cursor: 'pointer', minHeight: 40 };
+const dugme: React.CSSProperties = { background: 'rgba(255,255,255,0.08)', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 12px', fontSize: 13, cursor: 'pointer', minHeight: 40 };
 
 export default function AsiKarnesiEylemleri({ patientId, kayitSayisi }: { patientId: string; kayitSayisi: number }) {
   const [paylasimVar, setPaylasimVar] = useState(false);
@@ -80,7 +81,7 @@ export default function AsiKarnesiEylemleri({ patientId, kayitSayisi }: { patien
         </div>
       </div>
       {!paylasimVar && <div style={{ fontSize: 12, color: '#94A3B8' }}>Göndermek için PDF'i indirip kendi e-postanızdan ya da mesaj uygulamanızdan iletebilirsiniz.</div>}
-      {hata && <div role="alert" style={{ fontSize: 12, color: '#FCA5A5' }}>{hata}</div>}
+      {hata && <div role="alert" style={{ fontSize: 12, color: CHROME_RENK.warn }}>{hata}</div>}
     </div>
   );
 }

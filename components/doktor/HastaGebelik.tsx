@@ -57,6 +57,7 @@ import { gdmKarti, gbsKarti, peKarti, rhKarti } from '@/specialties/kadin-dogum/
 import { tehlikeDanismanlikMetni } from '@/specialties/kadin-dogum/protocols/tehlike';
 import TaburcuPaketi from '@/specialties/kadin-dogum/ui/TaburcuPaketi';
 import LohusaPaketi from '@/specialties/kadin-dogum/ui/LohusaPaketi';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Uyari = { seviye: 'kritik' | 'dikkat' | 'bilgi'; metin: string };
 type Pencere = { no: number; etiket: string; haftaBas: number; haftaSon: number; maddeler: string[]; durum: 'tamamlandi' | 'zamani' | 'gecikmis' | 'ileride' };
@@ -317,7 +318,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
     try { await navigator.clipboard.writeText(metin); setMesaj('Tehlike işaretleri kopyalandı.'); } catch { setMesaj(metin); }
   };
 
-  if (yukleniyor) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Yükleniyor…</div>;
+  if (yukleniyor) return <div style={{ padding: 20, color: CHROME_RENK.muted, fontSize: 13 }}>Yükleniyor…</div>;
 
   const onceki = veri ? oncekiGebelikleriFiltrele(veri.gecmis, veri.gebelik) : [];
   const alan = (key: string, label: string, state: Record<string, string>, set: React.Dispatch<React.SetStateAction<Record<string, string>>>, tip = 'text', ph = '') => (
@@ -402,7 +403,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ fontSize: 13, color: '#8FA0B5' }}>
+      <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>
         Gebelik Takibi — ACOG pratik gold + DÖBYR 2026 yasal asgari (4 izlem). Hafta/tarih/uyarı hesapları deterministik; nihai karar hekimindir. ACOG ile DÖBYR çelişirse iki sütun gösterilir.
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} data-kd="mod-toggle">
@@ -432,8 +433,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       {!veri?.gebelik && etkinMod === 'klinik' && (
         <div style={kutu} data-kd="empty-start">
-          <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 6 }}>Aktif gebelik kaydı yok</div>
-          <p style={{ fontSize: 13, color: '#8FA0B5' }}>Jinekoloji kaydı Jinekoloji sekmesinde. Gebelik başlatınca izlem yüzeyi açılır.</p>
+          <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 6 }}>Aktif gebelik kaydı yok</div>
+          <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Jinekoloji kaydı Jinekoloji sekmesinde. Gebelik başlatınca izlem yüzeyi açılır.</p>
           {!baslatAcik ? <button type="button" style={btn(true)} onClick={() => setBaslatAcik(true)}>+ Gebelik Takibi Başlat</button> : (
             <form onSubmit={(e) => { e.preventDefault(); baslat(); }} style={{ display: 'grid', gap: 10, marginTop: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
@@ -463,8 +464,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       {etkinMod === 'lohusa' && !veri?.lohusa && (
         <div style={kutu} data-kd="lohusa-empty">
-          <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 6 }}>Lohusa izlemi henüz açılmadı</div>
-          <p style={{ fontSize: 13, color: '#8FA0B5', lineHeight: 1.55, margin: 0 }}>
+          <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 6 }}>Lohusa izlemi henüz açılmadı</div>
+          <p style={{ fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.55, margin: 0 }}>
             Doğum Sonu Bakım (DSBYR) yüzeyi, doğum kaydı oluşunca otomatik açılır.
             {veri?.gebelik
               ? ' Aktif gebelik var — doğumu kaydettiğinizde (Doğum / taburcu) lohusa takvimi ve izlem formu burada görünür.'
@@ -510,13 +511,13 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             goruntuUrl={goruntuUrl}
           />
           <details style={kutu} data-kd="jine-moduller">
-            <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7' }}>Modül kartları (isteğe bağlı) — CYBH, PCOS, AUB, serviks, HRT…</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 700, color: CHROME_RENK.ink }}>Modül kartları (isteğe bağlı) — CYBH, PCOS, AUB, serviks, HRT…</summary>
             <div style={{ marginTop: 10 }}>
               <JinekolojiSpine patientId={patientId} ofisModulleri />
             </div>
           </details>
           <details style={kutu} data-kd="jine-ketem">
-            <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7' }}>Kadın sağlığı / KETEM paneli</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 700, color: CHROME_RENK.ink }}>Kadın sağlığı / KETEM paneli</summary>
             <div style={{ marginTop: 10 }}>
               <KadinSagligiPaneli patientId={patientId} />
             </div>
@@ -548,7 +549,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
           {izlemAcik && (
             <div style={kutu} data-kd="izlem-form">
-              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 10 }}>Yeni İzlem</div>
+              <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 10 }}>Yeni İzlem</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('tarih', 'Tarih', g, setG, 'date')}{alan('kilo', 'Kilo (kg)', g, setG, 'number')}
                 {alan('ts', 'TA sistolik', g, setG, 'number')}{alan('td', 'TA diastolik', g, setG, 'number')}
@@ -562,7 +563,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 </label>
               </div>
               <IzlemChecklist izlemNo={pencere.izlem_no} maddeler={pencere.checklist} state={checklist} onChange={setChecklist} />
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', margin: '14px 0 6px' }}>USG (isteğe bağlı — ölçümler kaydedilir; persentil yorumu hekimindir)</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.muted, margin: '14px 0 6px' }}>USG (isteğe bağlı — ölçümler kaydedilir; persentil yorumu hekimindir)</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
                 {alan('crl', 'CRL (mm)', g, setG)}{alan('bpd', 'BPD (mm)', g, setG)}{alan('hc', 'HC (mm)', g, setG)}{alan('ac', 'AC (mm)', g, setG)}{alan('fl', 'FL (mm)', g, setG)}{alan('efw', 'EFW (g)', g, setG)}
                 {alan('amnion', 'Amnion (AFI/normal)', g, setG)}{alan('plasenta', 'Plasenta', g, setG)}{alan('prezentasyon', 'Prezentasyon', g, setG, 'text', 'Sefalik / Makat')}
@@ -578,12 +579,12 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
           {(randevuOneri || (veri.onerilenSonrakiTarih && !veri.sonrakiRandevu)) && (
             <div style={kutu} data-kd="randevu-onerisi">
-              <div style={{ fontWeight: 700, color: '#EDF1F7' }}>Sonraki randevu</div>
+              <div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>Sonraki randevu</div>
               {veri.sonrakiRandevu ? (
-                <p style={{ fontSize: 13, color: '#C9D4E3' }}>Kayıtlı randevu: {trTarih(veri.sonrakiRandevu.baslangic)}</p>
+                <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Kayıtlı randevu: {trTarih(veri.sonrakiRandevu.baslangic)}</p>
               ) : (
                 <>
-                  <p style={{ fontSize: 13, color: '#C9D4E3' }}>Önerilen sonraki tarih: {trTarih(randevuOneri || veri.onerilenSonrakiTarih)}</p>
+                  <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Önerilen sonraki tarih: {trTarih(randevuOneri || veri.onerilenSonrakiTarih)}</p>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                     <input type="time" value={randevuSaat} onChange={(e) => setRandevuSaat(e.target.value)} style={{ ...giris, width: 120 }} />
                     <button type="button" style={btn(true)} onClick={randevuOlustur}>Randevu oluştur</button>
@@ -600,8 +601,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
           {dogumAcik && (
             <div style={kutu}>
-              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 4 }}>Doğum kaydı — Anne | Bebek</div>
-              <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>Canlı doğum bebek kartını zorunlu açar (anneye bağlı). {KADIN_HASTALIKLARI_DOGUM_ETIKETI} ilk örnek ve taburcu paketini; Ayşe sonrası izlemi sahiplenir.</div>
+              <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 4 }}>Doğum kaydı — Anne | Bebek</div>
+              <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginBottom: 10 }}>Canlı doğum bebek kartını zorunlu açar (anneye bağlı). {KADIN_HASTALIKLARI_DOGUM_ETIKETI} ilk örnek ve taburcu paketini; Ayşe sonrası izlemi sahiplenir.</div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#2DD4BF', marginBottom: 6 }}>Anne</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('dogumTarihi', 'Doğum tarihi', d, setD, 'date')}
@@ -625,7 +626,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           {veri.uyarilar.length > 0 && (
             <div style={{ display: 'grid', gap: 6 }}>
               {veri.uyarilar.map((u, i) => (
-                <div key={i} style={{ borderLeft: `3px solid ${RENK[u.seviye]}`, background: RENK[u.seviye] + '12', padding: '8px 12px', borderRadius: 8, fontSize: 13, color: '#EDF1F7' }}>{u.metin}</div>
+                <div key={i} style={{ borderLeft: `3px solid ${RENK[u.seviye]}`, background: RENK[u.seviye] + '12', padding: '8px 12px', borderRadius: 8, fontSize: 13, color: CHROME_RENK.ink }}>{u.metin}</div>
               ))}
             </div>
           )}
@@ -644,13 +645,13 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
           />
 
           <div style={kutu} data-kd="nst-panel">
-            <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>NST kaydı</div>
+            <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 8 }}>NST kaydı</div>
             {showNst ? (
               <p style={{ fontSize: 12.5, color: '#FDE68A', margin: '0 0 8px' }}>
                 NST izlemi endike (28. hafta, yüksek risk veya kayıt var).
               </p>
             ) : (
-              <p style={{ fontSize: 12.5, color: '#8FA0B5', margin: '0 0 8px' }}>
+              <p style={{ fontSize: 12.5, color: CHROME_RENK.muted, margin: '0 0 8px' }}>
                 NST henüz rutin endike değil (28. hafta veya yüksek risk). Kayıt yine de eklenebilir.
               </p>
             )}
@@ -663,7 +664,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
                 </select>
               </label>
               <label><span style={etiketS}>Süre (dk)</span><input type="number" value={nstForm.sure} onChange={(e) => setNstForm({ ...nstForm, sure: e.target.value })} style={giris} /></label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 18, color: '#C9D4E3', fontSize: 13 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 18, color: CHROME_RENK.muted, fontSize: 13 }}>
                 <input type="checkbox" checked={nstForm.toco} onChange={(e) => setNstForm({ ...nstForm, toco: e.target.checked })} /> Toko
               </label>
             </div>
@@ -678,20 +679,20 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
           {veri.izlemler.length > 0 && (
             <div style={kutu}>
-              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>İzlem Geçmişi</div>
+              <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 8 }}>İzlem Geçmişi</div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, color: '#C9D4E3' }}>
-                  <thead><tr style={{ color: '#8FA0B5', textAlign: 'left' }}><th style={{ padding: 6 }}>Tarih</th><th>Hafta</th><th>Kilo</th><th>TA</th><th>Fundus</th><th>FKA</th><th>Prot.</th><th>USG</th></tr></thead>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, color: CHROME_RENK.muted }}>
+                  <thead><tr style={{ color: CHROME_RENK.muted, textAlign: 'left' }}><th style={{ padding: 6 }}>Tarih</th><th>Hafta</th><th>Kilo</th><th>TA</th><th>Fundus</th><th>FKA</th><th>Prot.</th><th>USG</th></tr></thead>
                   <tbody>
                     {[...veri.izlemler].reverse().map((i) => (
                       <tr key={i.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                         <td style={{ padding: 6 }}>{trTarih(i.tarih)}</td><td>{i.hafta}</td><td>{i.kilo ?? '—'}</td>
                         <td>{i.tansiyon_sistolik && i.tansiyon_diastolik ? `${i.tansiyon_sistolik}/${i.tansiyon_diastolik}` : '—'}</td>
                         <td>{i.fundus_yuksekligi ?? '—'}</td><td>{i.fetal_kalp_atimi ?? '—'}</td><td>{i.proteinuri ?? '—'}</td>
-                        <td style={{ color: '#8FA0B5' }}>{(() => {
+                        <td style={{ color: CHROME_RENK.muted }}>{(() => {
                           const b = veri.biyometri?.find((x) => x.izlemId === i.id);
                           if (!b) return i.usg ? Object.entries(i.usg).map(([k, v]) => `${k.toUpperCase()} ${v}`).join(' · ') : '—';
-                          const r = (ad: string, x: Bio | null) => x ? <span key={ad} style={{ color: x.durum === 'normal' ? '#C9D4E3' : '#F59E0B', marginRight: 8 }}>{ad} {x.deger} <b>p{x.persentil}</b></span> : null;
+                          const r = (ad: string, x: Bio | null) => x ? <span key={ad} style={{ color: x.durum === 'normal' ? CHROME_RENK.muted : '#F59E0B', marginRight: 8 }}>{ad} {x.deger} <b>p{x.persentil}</b></span> : null;
                           return <>{r('HC', b.hc)}{r('BPD', b.bpd)}{r('AC', b.ac)}{r('FL', b.fl)}{b.efw ? (
                             <span style={{ color: '#2DD4BF' }} title={b.efwKaynak === 'hadlock' ? 'Hadlock 1985 (HC-AC-FL)' : undefined}>
                               EFW {b.efw} g{b.efwKaynak === 'hadlock' ? ` (Hadlock${b.efwGirilen && b.efwGirilen !== b.efw ? `; girilen ${b.efwGirilen} g` : ''})` : ''}
@@ -708,10 +709,10 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
           <div style={kutu}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <div style={{ fontWeight: 700, color: '#EDF1F7' }}>Genetik / Kromozomal Tarama</div>
+              <div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>Genetik / Kromozomal Tarama</div>
               {veri.ileriAnneYasi && <span style={{ fontSize: 11.5, color: '#F59E0B', fontWeight: 700 }}>İleri anne yaşı (≥35)</span>}
             </div>
-            <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>
+            <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginBottom: 10 }}>
               Bu bölüm yalnız laboratuvarın/sertifikalı yazılımın (FMF/Astraia vb.) bildirdiği sonucu kaydeder — <b>risk oranını burada hesaplamıyoruz</b>. NT için yalnız mutlak bir eşik (≥3.5mm) bayrak kaldırır; kombine risk her zaman sertifikalı yazılımınızdan gelir.
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
@@ -764,11 +765,11 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             {veri.genetikTaramalar && veri.genetikTaramalar.length > 0 && (
               <div style={{ display: 'grid', gap: 6 }}>
                 {[...veri.genetikTaramalar].reverse().map((gRow) => (
-                  <div key={gRow.id} style={{ fontSize: 12.5, color: '#C9D4E3', borderLeft: gRow.ntDegerlendirme?.bayrak ? '3px solid #F59E0B' : '3px solid rgba(255,255,255,0.1)', padding: '6px 10px', background: gRow.ntDegerlendirme?.bayrak ? '#F59E0B10' : 'transparent', borderRadius: 6 }}>
-                    <b style={{ color: '#EDF1F7' }}>{{ ikili: 'İkili Test', 'uclu-dortlu': 'Üçlü/Dörtlü Test', nipt: 'NIPT', invazif: 'İnvaziv Test', 'risk-sorgu': 'Risk Sorgusu' }[gRow.tur] || gRow.tur}</b>
+                  <div key={gRow.id} style={{ fontSize: 12.5, color: CHROME_RENK.muted, borderLeft: gRow.ntDegerlendirme?.bayrak ? '3px solid #F59E0B' : '3px solid rgba(255,255,255,0.1)', padding: '6px 10px', background: gRow.ntDegerlendirme?.bayrak ? '#F59E0B10' : 'transparent', borderRadius: 6 }}>
+                    <b style={{ color: CHROME_RENK.ink }}>{{ ikili: 'İkili Test', 'uclu-dortlu': 'Üçlü/Dörtlü Test', nipt: 'NIPT', invazif: 'İnvaziv Test', 'risk-sorgu': 'Risk Sorgusu' }[gRow.tur] || gRow.tur}</b>
                     {' · '}{trTarih(gRow.tarih)}{gRow.hafta ? ` · ${gRow.hafta}. hafta` : ''}
                     {' — '}{Object.entries(gRow.veri).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(', ')}
-                    {gRow.ntDegerlendirme && <div style={{ color: gRow.ntDegerlendirme.bayrak ? '#F59E0B' : '#64748B', marginTop: 2 }}>{gRow.ntDegerlendirme.not}</div>}
+                    {gRow.ntDegerlendirme && <div style={{ color: gRow.ntDegerlendirme.bayrak ? '#F59E0B' : CHROME_RENK.muted, marginTop: 2 }}>{gRow.ntDegerlendirme.not}</div>}
                   </div>
                 ))}
               </div>
@@ -818,7 +819,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               )}
           {lohusaAcik && (
             <div style={kutu}>
-              <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 10 }}>Yeni Lohusa İzlemi</div>
+              <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 10 }}>Yeni Lohusa İzlemi</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 {alan('tarih', 'Tarih', l, setL, 'date')}{alan('ts', 'TA sistolik', l, setL, 'number')}{alan('td', 'TA diastolik', l, setL, 'number')}{alan('ates', 'Ateş (°C)', l, setL, 'number')}
                 <label style={{ display: 'block' }}><span style={etiketS}>Kanama (loşi)</span><select value={l.kanama || ''} onChange={(e) => setL({ ...l, kanama: e.target.value })} style={giris}><option value="">—</option><option>Normal</option><option>Fazla</option><option>Kötü kokulu</option><option>Kesildi</option></select></label>
@@ -837,21 +838,21 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
             </div>
           )}
           <div style={kutu}>
-            <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 4 }}>Lohusa izlem takvimi (DSBYR + hastane/ASM)</div>
-            <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>Doğum Sonu Bakım Yönetim Rehberi — ilk 24 saat hastane, sonrası 42. güne kadar. EPDS, emzirme ve postpartum kontrasepsiyon bu izlemde.</div>
+            <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 4 }}>Lohusa izlem takvimi (DSBYR + hastane/ASM)</div>
+            <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 10 }}>Doğum Sonu Bakım Yönetim Rehberi — ilk 24 saat hastane, sonrası 42. güne kadar. EPDS, emzirme ve postpartum kontrasepsiyon bu izlemde.</div>
             <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
               {(veri.lohusa?.takvim || []).map((p) => (
                 <details key={p.no} style={{ border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 12px' }}>
-                  <summary style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5, color: '#EDF1F7' }}>
+                  <summary style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13.5, color: CHROME_RENK.ink }}>
                     <span><b>{p.etiket}</b></span>
                     <span style={{ color: DURUM_RENK[p.durum], fontWeight: 700, fontSize: 12 }}>{DURUM_ETIKET[p.durum]}</span>
                   </summary>
-                  <ul style={{ margin: '8px 0 4px', paddingLeft: 18, color: '#C9D4E3', fontSize: 12.5, lineHeight: 1.6 }}>{p.maddeler.map((m, i) => <li key={i}>{m}</li>)}</ul>
+                  <ul style={{ margin: '8px 0 4px', paddingLeft: 18, color: CHROME_RENK.muted, fontSize: 12.5, lineHeight: 1.6 }}>{p.maddeler.map((m, i) => <li key={i}>{m}</li>)}</ul>
                 </details>
               ))}
             </div>
             {visits.filter((v) => v.layer === 'lohusa').length > 0 && (
-              <ul style={{ fontSize: 12.5, color: '#C9D4E3' }}>
+              <ul style={{ fontSize: 12.5, color: CHROME_RENK.muted }}>
                 {visits.filter((v) => v.layer === 'lohusa').map((v, i) => (
                   <li key={i} style={{ color: v.done ? '#86EFAC' : undefined }}>
                     {v.kind === 'lohusa_hastane' ? 'Hastane' : 'ASM'} · PP {v.ga_or_pp_day}. gün{v.done ? ' · Yapıldı' : ''} · {v.checklist.join(', ')}
@@ -860,8 +861,8 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
               </ul>
             )}
             {veri.lohusa && veri.lohusa.izlemler.length > 0 && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, color: '#C9D4E3', marginTop: 12 }}>
-                <thead><tr style={{ color: '#8FA0B5', textAlign: 'left' }}><th style={{ padding: 6 }}>Tarih</th><th>Gün</th><th>TA</th><th>Loşi</th><th>Emzirme</th><th>Duygu</th><th>EPDS</th></tr></thead>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, color: CHROME_RENK.muted, marginTop: 12 }}>
+                <thead><tr style={{ color: CHROME_RENK.muted, textAlign: 'left' }}><th style={{ padding: 6 }}>Tarih</th><th>Gün</th><th>TA</th><th>Loşi</th><th>Emzirme</th><th>Duygu</th><th>EPDS</th></tr></thead>
                 <tbody>{[...veri.lohusa.izlemler].reverse().map((x) => (
                   <tr key={x.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 6 }}>{trTarih(x.tarih)}</td><td>{x.dogum_sonrasi_gun}</td><td>{x.tansiyon_sistolik && x.tansiyon_diastolik ? `${x.tansiyon_sistolik}/${x.tansiyon_diastolik}` : '—'}</td><td>{x.kanama ?? '—'}</td><td>{x.emzirme ?? '—'}</td><td>{x.duygu_durumu ?? '—'}</td><td>{x.epds_puan ?? '—'}</td></tr>
                 ))}</tbody>
@@ -878,16 +879,16 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
 
       {veri && (
         <div style={kutu}>
-          <div style={{ fontWeight: 700, color: '#EDF1F7', marginBottom: 8 }}>Önceki Gebelikler</div>
+          <div style={{ fontWeight: 700, color: CHROME_RENK.ink, marginBottom: 8 }}>Önceki Gebelikler</div>
           {onceki.length === 0 ? (
-            <div style={{ fontSize: 13, color: '#8FA0B5' }}>Yok</div>
+            <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Yok</div>
           ) : onceki.map((p) => {
             const tur = oncekiGebelikEtiketTuru(p.durum);
             const durumYazi = tur === 'dogum'
               ? `Doğum ${trTarih(p.dogum_tarihi)}${p.dogum_sekli ? ` (${p.dogum_sekli})` : ''}`
               : oncekiGebelikDurumMetni(p.durum);
             return (
-              <div key={p.id} style={{ fontSize: 13, color: '#C9D4E3', padding: '4px 0' }}>TDT {trTarih(p.tdt)} · {durumYazi}</div>
+              <div key={p.id} style={{ fontSize: 13, color: CHROME_RENK.muted, padding: '4px 0' }}>TDT {trTarih(p.tdt)} · {durumYazi}</div>
             );
           })}
         </div>
@@ -926,14 +927,14 @@ function KadinSagligiPaneli({ patientId }: { patientId: string }) {
   return (
     <div style={kutu}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div><div style={{ fontWeight: 700, color: '#EDF1F7' }}>Kadın Sağlığı</div><div style={{ fontSize: 12, color: '#64748B' }}>SB Kanser Tarama Standartları (KETEM) · Aile planlaması · Menopoz{d.yas !== null ? ` · ${d.yas} yaş` : ''}</div></div>
+        <div><div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>Kadın Sağlığı</div><div style={{ fontSize: 12, color: CHROME_RENK.muted }}>SB Kanser Tarama Standartları (KETEM) · Aile planlaması · Menopoz{d.yas !== null ? ` · ${d.yas} yaş` : ''}</div></div>
         <button type="button" style={btn()} onClick={() => setAcik((v) => !v)}>{acik ? 'Kapat' : 'Düzenle'}</button>
       </div>
       {mesaj && <div style={{ fontSize: 12, color: '#22C55E', marginBottom: 6 }}>{mesaj}</div>}
       <div style={{ display: 'grid', gap: 6, marginBottom: 10 }}>
         {d.taramalar.map((t) => (
           <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 13, borderLeft: `3px solid ${RK[t.durum]}`, padding: '6px 10px', background: RK[t.durum] + '10', borderRadius: 6 }}>
-            <span style={{ color: '#EDF1F7' }}>{t.ad} <span style={{ color: '#64748B', fontSize: 11.5 }}>({t.yasBas}-{t.yasSon} yaş, {t.aralikYil} yılda bir)</span></span>
+            <span style={{ color: CHROME_RENK.ink }}>{t.ad} <span style={{ color: CHROME_RENK.muted, fontSize: 11.5 }}>({t.yasBas}-{t.yasSon} yaş, {t.aralikYil} yılda bir)</span></span>
             <span style={{ color: RK[t.durum], fontWeight: 700, whiteSpace: 'nowrap' }}>{TR[t.durum]}{t.sonrakiTarih ? ` · ${new Date(t.sonrakiTarih).toLocaleDateString('tr-TR')}` : ''}</span>
           </div>
         ))}
@@ -957,7 +958,7 @@ function KadinSagligiPaneli({ patientId }: { patientId: string }) {
           </div>
           <label style={{ display: 'block' }}><span style={etiketS}>Notlar</span><textarea value={f.notlar || ''} onChange={(e) => setF({ ...f, notlar: e.target.value })} style={{ ...giris, minHeight: 56 }} /></label>
           {(f.menopoz_durumu === 'perimenopoz' || f.menopoz_durumu === 'postmenopoz') && (
-            <div style={{ fontSize: 12, color: '#8FA0B5' }}><b style={{ color: '#EDF1F7' }}>Menopoz değerlendirme başlıkları:</b><ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{d.menopozBasliklari.map((m, i) => <li key={i}>{m}</li>)}</ul></div>
+            <div style={{ fontSize: 12, color: CHROME_RENK.muted }}><b style={{ color: CHROME_RENK.ink }}>Menopoz değerlendirme başlıkları:</b><ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{d.menopozBasliklari.map((m, i) => <li key={i}>{m}</li>)}</ul></div>
           )}
           <div><button type="button" style={btn(true)} onClick={kaydet}>Kaydet</button></div>
         </div>

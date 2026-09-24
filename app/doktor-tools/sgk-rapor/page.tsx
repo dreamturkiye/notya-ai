@@ -262,7 +262,7 @@ export default function SgkRaporPage() {
                   ? 'Medula veri girişi için hazırlanmış taslak — canlı gönderim değildir'
                   : 'Özel hasta / işveren için klinik belge taslağı'}
               </div>
-              <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 4 }}>
                 Rapor tarihi: {tarih}
                 {hekim?.tesisKodu ? ` · Tesis Kodu: ${hekim.tesisKodu}` : ''}
                 {draftTip.kanal === 'sgk_medula' ? ' · Rapor No: Medula tarafından atanır' : ''}
@@ -361,7 +361,7 @@ export default function SgkRaporPage() {
               <section style={sec}>
                 <div style={secHead}>RAPOR SÜRESİ</div>
                 <div>{rapor.onerilen_sure_ay ?? sure} ay</div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 4 }}>
                   Başlangıç: {rapor.baslangicTarihi || tarih} (bitiş Medula / SUT kurallarına göre)
                 </div>
               </section>
@@ -434,7 +434,7 @@ export default function SgkRaporPage() {
                   {hekim?.tesisKodu ? (
                     <div>
                       <strong>Sağlık tesisi kodu:</strong> {hekim.tesisKodu}{' '}
-                      <span style={{ color: '#64748B' }}>(Medula)</span>
+                      <span style={{ color: CHROME_RENK.muted }}>(Medula)</span>
                     </div>
                   ) : null}
                 </div>
@@ -443,7 +443,7 @@ export default function SgkRaporPage() {
                     {draftTip.kanal === 'sgk_medula' ? 'e-İMZA (MEDULA)' : 'İMZA / KAŞE'}
                   </div>
                   <div style={{ height: 64, border: '1px dashed #CBD5E1', borderRadius: 6 }} />
-                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 4 }}>
                     {draftTip.kanal === 'sgk_medula'
                       ? 'e-İmza Medula’da uygulanır. Rapor No Medula tarafından atanır.'
                       : 'Islak imza ve kaşe — işverene verilen nüsha için'}

@@ -9,6 +9,7 @@ import { draftDermKdHandoff } from '../../../bridges/derm-kadin-dogum'
 import { draftDermRomatolojiHandoff } from '../../../bridges/derm-romatoloji'
 import { KADIN_HASTALIKLARI_DOGUM_ETIKETI } from '@/lib/doktor/specialties'
 import type { ClinicUnit } from '../types'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 function copyJson(obj: unknown) {
   const text = JSON.stringify(obj, null, 2)
@@ -66,7 +67,7 @@ export function UnitePanelleri({
       {(unit === 'psoriasis' || unit === 'genel') && (
         <section style={kutu} data-derm="psoriasis-panel">
           <h2 style={{ margin: 0, fontSize: 16 }}>Psoriazis ünitesi</h2>
-          <p style={{ fontSize: 13, color: '#8FA0B5' }}>PASI / DLQI / eklem. Biyolojik doz uydurulmaz — SUT basamak kartına bakın.</p>
+          <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>PASI / DLQI / eklem. Biyolojik doz uydurulmaz — SUT basamak kartına bakın.</p>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}>
             <input type="checkbox" checked={!!acitretinBan} onChange={(e) => onAcitretin?.(e.target.checked)} />
             Asitretin 3 yıl gebelik yasağı işaretli
@@ -77,7 +78,7 @@ export function UnitePanelleri({
       {(unit === 'pediatrik' || pediatric) && (
         <section style={kutu} data-derm="ped-panel">
           <h2 style={{ margin: 0, fontSize: 16 }}>Pediatrik dermatoloji</h2>
-          <p style={{ fontSize: 13, color: '#8FA0B5' }}>18 yaş altı görüntü onamı zorunlu. Pediatri ağacı değiştirilmez — elden teslim CTA.</p>
+          <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>18 yaş altı görüntü onamı zorunlu. Pediatri ağacı değiştirilmez — elden teslim CTA.</p>
           <button type="button" style={btn()} onClick={() => copyJson(pedHandoff)} data-derm="cta-ped-handoff">
             Pediatri dosyasına foto devri
           </button>
@@ -88,7 +89,7 @@ export function UnitePanelleri({
         <section style={kutu} data-derm="kozmetik-panel">
           <h2 style={{ margin: 0, fontSize: 16 }}>Kozmetik — Ayakta Teşhis</h2>
           <p style={{ fontSize: 13 }}>{aes.next[0]}</p>
-          <p style={{ fontSize: 12, color: '#8FA0B5' }}>Hekim lazer vs salon IPL ayrı sütunlarda (karar kartı). Test spot ve lot no zorunlu.</p>
+          <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Hekim lazer vs salon IPL ayrı sütunlarda (karar kartı). Test spot ve lot no zorunlu.</p>
         </section>
       )}
 
@@ -124,7 +125,7 @@ export function UnitePanelleri({
       {unit === 'bullu' && (
         <section style={{ ...kutu, borderColor: bullous?.dif ? 'rgba(255,255,255,0.09)' : 'rgba(248,113,113,0.45)' }} data-derm="bullu-panel">
           <h2 style={{ margin: 0, fontSize: 16 }}>Büllü hastalık — DIF kapısı</h2>
-          <p style={{ fontSize: 13, color: bullous?.dif ? '#86EFAC' : '#FCA5A5' }}>
+          <p style={{ fontSize: 13, color: bullous?.dif ? '#86EFAC' : CHROME_RENK.warn }}>
             {bullous?.dif ? 'DIF yapılmış.' : 'Biyopsi + DIF zorunlu. DIF olmadan tanı kilitlenmez.'}
           </p>
           <label style={{ display: 'flex', gap: 8, fontSize: 13 }}>
@@ -191,7 +192,7 @@ export function UnitePanelleri({
 
       <section style={kutu} data-derm="handoff-cta">
         <h2 style={{ margin: 0, fontSize: 16 }}>Branş köprüleri</h2>
-        <p style={{ fontSize: 12, color: '#8FA0B5' }}>{KADIN_HASTALIKLARI_DOGUM_ETIKETI} / pediatri ağaçları değiştirilmez. Elden teslim JSON panoya kopyalanır.</p>
+        <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>{KADIN_HASTALIKLARI_DOGUM_ETIKETI} / pediatri ağaçları değiştirilmez. Elden teslim JSON panoya kopyalanır.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <a href={`/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}?tab=gebelik`} style={{ ...btn(), textDecoration: 'none' }} data-derm="cta-kd-handoff">
             Kadın sağlığı — GÖP / gebelik

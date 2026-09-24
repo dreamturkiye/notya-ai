@@ -12,6 +12,7 @@ import {
   saglikGecmisiEksikMi,
   type HastaOzetKayit,
 } from '@/lib/doktor/hastaOzetKayit'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const panel: React.CSSProperties = {
   background: '#0D1C33',
@@ -159,7 +160,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
   return (
     <>
       {hata && (
-        <div style={{ ...panel, padding: 12, marginBottom: 12, color: '#FCA5A5', fontSize: 13, borderColor: 'rgba(239,68,68,0.4)', gridColumn: '1 / -1' }}>
+        <div style={{ ...panel, padding: 12, marginBottom: 12, color: CHROME_RENK.warn, fontSize: 13, borderColor: 'rgba(239,68,68,0.4)', gridColumn: '1 / -1' }}>
           {hata}
         </div>
       )}
@@ -217,7 +218,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
             {bilgiSatiri('Telefon', patient.telefon)}
             {bilgiSatiri('E-posta', patient.eposta)}
             {bilgiSatiri('Şehir', patient.sehir)}
-            {bilgiSatiri('Kan grubu', patient.kan_grubu ? cipListesi([patient.kan_grubu], '#FCA5A5', '#EF4444') : null)}
+            {bilgiSatiri('Kan grubu', patient.kan_grubu ? cipListesi([patient.kan_grubu], CHROME_RENK.warn, '#EF4444') : null)}
           </>
         ) : (
           <div onClick={(e) => e.stopPropagation()}>
@@ -253,7 +254,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
                   syncForm(patient)
                   setDemografiAcik(false)
                 }}
-                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#C9D4E3', borderRadius: 999, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: CHROME_RENK.muted, borderRadius: 999, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
               >
                 Vazgeç
               </button>
@@ -308,7 +309,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
         {!saglikAcik ? (
           <>
             {bilgiSatiri('Kronik hastalıklar', patient.kronik_hastaliklar?.length ? cipListesi(patient.kronik_hastaliklar, '#FDBA74', '#F59E0B') : null)}
-            {bilgiSatiri('Alerjiler', patient.alerjiler ? cipListesi(patient.alerjiler.split(',').map((a) => a.trim()).filter(Boolean), '#FCA5A5', '#EF4444') : null)}
+            {bilgiSatiri('Alerjiler', patient.alerjiler ? cipListesi(patient.alerjiler.split(',').map((a) => a.trim()).filter(Boolean), CHROME_RENK.warn, '#EF4444') : null)}
             {bilgiSatiri('Sürekli ilaçlar', patient.surekli_ilaclar)}
             {bilgiSatiri('Sigara / Alkol', patient.sigara_alkol)}
           </>
@@ -334,7 +335,7 @@ export default function HastaOzetDuzenlenebilir({ patientId, patient, dogumGoste
                   syncForm(patient)
                   setSaglikAcik(false)
                 }}
-                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#C9D4E3', borderRadius: 999, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: CHROME_RENK.muted, borderRadius: 999, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
               >
                 Vazgeç
               </button>

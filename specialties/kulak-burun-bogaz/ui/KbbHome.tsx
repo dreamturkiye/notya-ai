@@ -14,6 +14,7 @@ import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
 import { skorla as odyoSkorla, PTA_FREKANSLARI } from '../engines/odyometri';
 import { kbbRaporTaslagi, KBB_RAPOR_SABLONLARI, type KbbRaporSablon } from '../engines/sgkRapor';
 import type { KbbSerit } from '../engines/serit';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Odyo = { id: string; tarih: string; yan: string; pta_db: number | null; tip: string | null; maddeler: Record<string, unknown> | null; hekim_kilit: boolean; not_hekim: string | null };
 type Veri = {
@@ -41,22 +42,22 @@ type Veri = {
 
 const ACCENT = '#4F46E5';
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#99F6E4', marginBottom: 6 };
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5', lineHeight: 1.45 };
-const metin: React.CSSProperties = { fontSize: 12, color: '#EDF1F7', lineHeight: 1.5 };
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 };
+const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
 
 const SEKMELER = ['Özet', 'Otoskopi', 'Odyometri', 'Vertigo', 'Risk', 'Görevler', 'SGK'] as const;
 type Sekme = (typeof SEKMELER)[number];
 
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: '#64748B' };
+const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted };
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
-    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || '#EDF1F7', whiteSpace: 'nowrap' }}>
-      <span style={{ color: '#8FA0B5' }}>{ad} </span>{deger}
-      {alt && <span style={{ color: '#64748B' }}> · {alt}</span>}
+    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
+      <span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}
+      {alt && <span style={{ color: CHROME_RENK.muted }}> · {alt}</span>}
     </span>
   );
 }
@@ -139,7 +140,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
     bugun: new Date().toISOString().slice(0, 10),
   }) : null, [v, raporSablon, raporIcd, raporIcdAd, raporNot]);
 
-  if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>KBB yükleniyor…</div>;
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>KBB yükleniyor…</div>;
 
   const bugun = new Date().toISOString().slice(0, 10);
   const cevir = (liste: string[], x: string) => (liste.includes(x) ? liste.filter((y) => y !== x) : [...liste, x]);
@@ -151,15 +152,15 @@ export default function KbbHome({ patientId }: { patientId: string }) {
         {v.serit.chips.map((c) => <Cip key={c.ad} {...c} />)}
       </div>
       {v.serit.kirmizi.length > 0 && (
-        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
+        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: CHROME_RENK.warn, borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
           {v.serit.kirmizi.map((k) => <div key={k}>⚑ {k}</div>)}
-          <div style={{ ...kucuk, color: '#FCA5A5', marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
+          <div style={{ ...kucuk, color: CHROME_RENK.warn, marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
         </div>
       )}
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {SEKMELER.map((x) => (
-          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(79,70,229,0.22)' : 'transparent', color: sekme === x ? '#C7D2FE' : '#8FA0B5' }}>{x}</button>
+          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(79,70,229,0.22)' : 'transparent', color: sekme === x ? '#C7D2FE' : CHROME_RENK.muted }}>{x}</button>
         ))}
       </div>
 
@@ -234,7 +235,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Saf ses eşikleri (dB HL) <span style={kucuk}>· 0,5 / 1 / 2 / 4 kHz hava yolu</span></div>
           <div style={satir}>
             {(['sag', 'sol', 'iki'] as const).map((y) => (
-              <button key={y} type="button" onClick={() => setOdyoYan(y)} style={{ ...ghost, background: odyoYan === y ? 'rgba(79,70,229,0.22)' : 'transparent', color: odyoYan === y ? '#C7D2FE' : '#8FA0B5' }}>
+              <button key={y} type="button" onClick={() => setOdyoYan(y)} style={{ ...ghost, background: odyoYan === y ? 'rgba(79,70,229,0.22)' : 'transparent', color: odyoYan === y ? '#C7D2FE' : CHROME_RENK.muted }}>
                 {y === 'sag' ? 'Sağ' : y === 'sol' ? 'Sol' : 'İki'}
               </button>
             ))}
@@ -248,7 +249,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
             ))}
           </div>
           <div style={satir}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: odyoSonuc.tamamMi ? '#C7D2FE' : '#64748B' }}>{odyoSonuc.pta ?? '—'}</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: odyoSonuc.tamamMi ? '#C7D2FE' : CHROME_RENK.muted }}>{odyoSonuc.pta ?? '—'}</span>
             <span style={metin}>{odyoSonuc.tamamMi ? odyoSonuc.bantAd : `${odyoSonuc.eksikFrekans} frekans boş — ortalama yorumlanmaz`}</span>
             <span style={{ ...kucuk, color: '#FBBF24', fontWeight: 700 }}>KARAR DESTEĞİ</span>
           </div>
@@ -282,7 +283,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Santral şüphesi işaretleri <span style={kucuk}>· işaretliyse repozisyon manevrası uygun değil</span></div>
           {v.kutuphane.vertigo.santral.map((x) => <Kutucuk key={x} ad={x} secili={santral.includes(x)} tikla={() => setSantral((p) => cevir(p, x))} />)}
           {santral.length > 0 && (
-            <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 10px', fontSize: 12, marginTop: 8 }}>
+            <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: CHROME_RENK.warn, borderRadius: 8, padding: '8px 10px', fontSize: 12, marginTop: 8 }}>
               ⚑ Santral şüphesi işareti var — manevra yerine acil / nöroloji değerlendirmesi (112 veya en yakın acil).
             </div>
           )}
@@ -344,7 +345,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
             <>
               <div style={{ ...etiket, marginTop: 12 }}>Kırmızı bayrak kayıtları</div>
               {v.risk.gecmis.map((r) => (
-                <div key={r.id} style={{ ...kucuk, color: r.hekim_onay ? '#8FA0B5' : '#FCA5A5' }}>
+                <div key={r.id} style={{ ...kucuk, color: r.hekim_onay ? CHROME_RENK.muted : CHROME_RENK.warn }}>
                   {r.tarih} · {r.bayraklar.length ? r.bayraklar.join(', ') : 'bayrak yok'} · {r.hekim_onay ? 'hekim onaylı' : 'ONAY BEKLİYOR'}{r.eylem ? ` — ${r.eylem}` : ''}
                 </div>
               ))}
@@ -358,7 +359,7 @@ export default function KbbHome({ patientId }: { patientId: string }) {
           <div style={etiket}>Açık görevler ({v.gorevler.length})</div>
           {!v.gorevler.length && <div style={kucuk}>Açık görev yok.</div>}
           {v.gorevler.map((g) => (
-            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#F87171' : '#EDF1F7', padding: '2px 0' }}>
+            <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: g.due && g.due < bugun ? '#F87171' : CHROME_RENK.ink, padding: '2px 0' }}>
               <span style={{ flex: 1 }}>{g.ad} <span style={kucuk}>{g.due || ''}{g.kaynak ? ` · ${g.kaynak}` : ''}</span></span>
               <button type="button" style={{ ...ghost, padding: '4px 10px', minWidth: 36, minHeight: 28, flexShrink: 0 }} onClick={() => calistir({ adim: 'gorev', gorevId: g.id, durum: 'tamam' })}>✓</button>
             </div>

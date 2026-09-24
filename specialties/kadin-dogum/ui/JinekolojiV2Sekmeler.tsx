@@ -6,16 +6,17 @@
 import React, { useState } from 'react';
 import { toolsInput } from '@/lib/doktor/toolsUi';
 import { PALM, COEIN, type Dipnot } from '../engines/jinekoloji-v2';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Calistir = (body: Record<string, unknown>, ok?: string) => Promise<unknown>;
 type V2 = { aub: Record<string, unknown>[]; kok: Record<string, unknown>[]; endo: Record<string, unknown> | null; rm: Record<string, unknown> | null; egk: Record<string, unknown>[] };
 
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 };
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5' };
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : '#8FA0B5' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '2px 8px', color: v ? '#2DD4BF' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 
 export function Kaynak({ dipnotlar, acik, refler }: { dipnotlar?: Dipnot[] | null; acik: boolean; refler: Record<string, string> }) {
   if (!acik || !dipnotlar?.length) return null;
@@ -45,8 +46,8 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
         {chk('postmenopozal', b('pmp'), (x) => set('pmp', x))}{chk('obezite', b('ob'), (x) => set('ob', x))}{chk('anovulasyon öyküsü', b('anov'), (x) => set('anov', x))}{chk('kronik/dirençli', b('kr'), (x) => set('kr', x))}
         <button type="button" onClick={() => calistir({ adim: 'aub', girdi: { palm: Object.fromEntries(PALM.map(([k]) => [k, b('p_' + k)])), coein: Object.fromEntries(COEIN.map(([k]) => [k, b('c_' + k)])), sureGun: s('sure'), pedAdet: s('ped'), pihti: b('pihti'), hb: s('hb'), ferritin: s('fer'), tvusEt: s('et'), postmenopoz: b('pmp'), obezite: b('ob'), anovulasyon: b('anov'), kronik: b('kr') } }, 'AUB kartı oluşturuldu; plan taslağı hazır.')} style={btn}>Değerlendir</button>
       </div>
-      {son?.taslak && (<div style={{ marginTop: 8, fontSize: 12, color: '#EDF1F7' }}>
-        {son.postmenopoz && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.5)', color: '#FCA5A5', borderRadius: 8, padding: '6px 10px', fontWeight: 800, marginBottom: 6 }}>PMP kanama — TVUS ET + endometriyal örnekleme zorunlu · sitoloji/Pap bu yolu kapatmaz{son.pmp_kapatildi ? ' · ✓ kapatıldı' : ''}</div>}
+      {son?.taslak && (<div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.ink }}>
+        {son.postmenopoz && <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.5)', color: CHROME_RENK.warn, borderRadius: 8, padding: '6px 10px', fontWeight: 800, marginBottom: 6 }}>PMP kanama — TVUS ET + endometriyal örnekleme zorunlu · sitoloji/Pap bu yolu kapatmaz{son.pmp_kapatildi ? ' · ✓ kapatıldı' : ''}</div>}
         <div>Menoraji: {son.taslak.menoraji ? 'evet' : 'hayır'} · anemi {son.taslak.anemi}{son.menoraji?.hbKaynak ? ` (Hb ${son.menoraji.hb} — ${son.menoraji.hbKaynak})` : ''} · örnekleme {son.taslak.endometrialOrnekZorunlu ? 'ZORUNLU' : 'gerekli değil'}</div>
         <ul style={{ margin: '4px 0', paddingLeft: 18 }}>{son.taslak.tetkikler.map((t) => <li key={t}>{t}</li>)}</ul>
         {son.taslak.gerekce.map((g) => <div key={g} style={{ ...kucuk, color: '#FBBF24' }}>{g}</div>)}
@@ -85,7 +86,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
       </div>
       {son?.sonuc && (<div style={{ marginTop: 8, fontSize: 12 }}>
         <div style={{ fontWeight: 800, color: son.sonuc.kategori === 4 ? '#F87171' : son.sonuc.kategori === 3 ? '#FBBF24' : '#2DD4BF' }}>MEC kategori {son.sonuc.kategori} · karar: {son.karar}{son.override ? ` · OVERRIDE: ${son.override_gerekce}` : ''}{son.preparat ? ` · ${son.preparat}` : ''}</div>
-        {son.sonuc.engeller.map((e) => <div key={e} style={{ color: '#F87171' }}>✖ {e}</div>)}{son.sonuc.dikkat.map((e) => <div key={e} style={{ color: '#FBBF24' }}>⚠ {e}</div>)}{son.sonuc.alternatif.map((e) => <div key={e} style={{ color: '#8FA0B5' }}>→ {e}</div>)}
+        {son.sonuc.engeller.map((e) => <div key={e} style={{ color: '#F87171' }}>✖ {e}</div>)}{son.sonuc.dikkat.map((e) => <div key={e} style={{ color: '#FBBF24' }}>⚠ {e}</div>)}{son.sonuc.alternatif.map((e) => <div key={e} style={{ color: CHROME_RENK.muted }}>→ {e}</div>)}
         <Kaynak dipnotlar={son.sonuc.dipnotlar} acik={kaynakAcik} refler={refler} />
       </div>)}
     </div>);
@@ -101,7 +102,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
         <input value={s('ehp')} onChange={(e) => set('ehp', e.target.value)} placeholder="Hekim planı" style={{ ...toolsInput, minWidth: 200 }} />
         <button type="button" onClick={() => calistir({ adim: 'endometriozis', girdi: { dismenore: b('dis'), disparoni: b('dsp'), kronikPelvikAgri: b('kpa'), infertilite: b('inf'), diskezi: b('dsk'), gebelikIstegi: b('gi'), tedaviyeDirenc: b('dir'), endometriomaCm: s('endo'), ca125: s('ca') }, hekimPlani: s('ehp') || null }, 'Endometriozis kartı güncellendi.')} style={btn}>Değerlendir</button>
       </div>
-      {t && (<div style={{ marginTop: 8, fontSize: 12, color: '#EDF1F7' }}>
+      {t && (<div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.ink }}>
         <div>Triad puanı {t.triadPuan} · olasılık <b>{t.olasilik}</b>{v2.endo?.hekim_plani ? ` · Hekim planı: ${String(v2.endo.hekim_plani)}` : ''}</div>
         {t.ampirik.map((a) => <div key={a}>• {a}</div>)}{t.sevk.map((a) => <div key={a} style={{ color: '#FBBF24' }}>→ {a}</div>)}{t.not.map((a) => <div key={a} style={kucuk}>{a}</div>)}
         <Kaynak dipnotlar={t.dipnotlar} acik={kaynakAcik} refler={refler} />
@@ -119,9 +120,9 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
         <input value={s('rhp')} onChange={(e) => set('rhp', e.target.value)} placeholder="Hekim planı" style={{ ...toolsInput, minWidth: 200 }} />
         <button type="button" onClick={() => calistir({ adim: 'rm', girdi: { klinikKayipSayisi: s('kayip'), hekimEsigi3: b('e3'), ardisik: b('ard') }, hekimPlani: s('rhp') || null }, 'RM kartı güncellendi; rutin tetkik görevleri açıldı.')} style={btn}>Değerlendir</button>
       </div>
-      {t && (<div style={{ marginTop: 8, fontSize: 12, color: '#EDF1F7' }}>
+      {t && (<div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.ink }}>
         <div>Kriter {t.kriterKarsilandi ? 'karşılandı' : 'karşılanmadı'}</div>
-        {t.tetkikler.map((x) => <div key={x.ad} style={{ color: x.oneri === 'rutin' ? '#EDF1F7' : x.oneri === 'secili' ? '#FBBF24' : '#64748B' }}>{x.oneri === 'rutin' ? '● ' : x.oneri === 'secili' ? '○ ' : '✖ '}{x.ad} <span style={kucuk}>({x.oneri})</span></div>)}
+        {t.tetkikler.map((x) => <div key={x.ad} style={{ color: x.oneri === 'rutin' ? CHROME_RENK.ink : x.oneri === 'secili' ? '#FBBF24' : CHROME_RENK.muted }}>{x.oneri === 'rutin' ? '● ' : x.oneri === 'secili' ? '○ ' : '✖ '}{x.ad} <span style={kucuk}>({x.oneri})</span></div>)}
         {t.not.map((n) => <div key={n} style={kucuk}>{n}</div>)}
         <Kaynak dipnotlar={t.dipnotlar} acik={kaynakAcik} refler={refler} />
       </div>)}
@@ -130,7 +131,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
 
   if (sekme === 'Erken gebelik kaybı') {
     const son = v2.egk[0] as { id: string; taslak?: { tanı: string; gerekce: string; secenekler: string[]; gorevler: string[]; dipnotlar: Dipnot[]; bhcgTrend?: string }; secenek?: string | null; gebelik_id?: string | null } | undefined;
-    const tanıRenk: Record<string, string> = { kesin_nonviabl: '#F87171', suphe: '#FBBF24', viabl: '#2DD4BF', belirsiz: '#8FA0B5' };
+    const tanıRenk: Record<string, string> = { kesin_nonviabl: '#F87171', suphe: '#FBBF24', viabl: '#2DD4BF', belirsiz: CHROME_RENK.muted };
     return (<div>
       <div style={etiket}>Erken gebelik kaybı <span style={kucuk}>· kesin nonviabilite yalnız CRL ≥7 mm FHR yok / MSD ≥25 mm embriyo yok; β-hCG serisi Lab + elle; D&C onamı kütüphanede</span></div>
       <div style={satir}>
@@ -143,7 +144,7 @@ export function JinekolojiV2Sekmeler({ sekme, v2, refler, calistir, kaynakAcik }
         <input value={s('b1')} onChange={(e) => set('b1', e.target.value)} placeholder="β-hCG önceki" style={{ ...toolsInput, width: 110 }} /><input value={s('b2')} onChange={(e) => set('b2', e.target.value)} placeholder="β-hCG şimdi" style={{ ...toolsInput, width: 110 }} />
         <button type="button" onClick={() => { const bh: { at: string; value: string }[] = []; const bugun = new Date(); if (s('b1')) bh.push({ at: new Date(bugun.getTime() - 2 * 864e5).toISOString().slice(0, 10), value: s('b1') }); if (s('b2')) bh.push({ at: bugun.toISOString().slice(0, 10), value: s('b2') }); calistir({ adim: 'egk', girdi: { hafta: s('hf'), crlMm: s('crl'), fhrVar: tri('fhr'), msdMm: s('msd'), embriyoVar: tri('emb'), rhNegatif: b('rh') }, bhcg: bh }, 'Erken gebelik kaybı kartı oluşturuldu.'); }} style={btn}>Değerlendir</button>
       </div>
-      {son?.taslak && (<div style={{ marginTop: 8, fontSize: 12, color: '#EDF1F7' }}>
+      {son?.taslak && (<div style={{ marginTop: 8, fontSize: 12, color: CHROME_RENK.ink }}>
         <div style={{ fontWeight: 800, color: tanıRenk[son.taslak.tanı] }}>{son.taslak.tanı.replace('_', ' ')} — {son.taslak.gerekce}{son.taslak.bhcgTrend ? ` · β-hCG ${son.taslak.bhcgTrend}` : ''}{son.gebelik_id ? ' · obstetri kaydına bağlı' : ''}</div>
         {son.taslak.secenekler.map((x) => <div key={x}>• {x}</div>)}{son.taslak.gorevler.map((x) => <div key={x} style={{ color: '#FBBF24' }}>→ {x}</div>)}
         <Kaynak dipnotlar={son.taslak.dipnotlar} acik={kaynakAcik} refler={refler} />

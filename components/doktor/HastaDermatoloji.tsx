@@ -74,6 +74,7 @@ import {
 } from '@/specialties/dermatoloji/ui/DermKartlarEk'
 import { acilBandMetni, dermAcilTara, type DermAcilKod } from '@/specialties/dermatoloji/engines/acil'
 import type { BzbhKind } from '@/specialties/dermatoloji/protocols/endemic-bzbh'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const panel: React.CSSProperties = {
   background: '#0D1C33',
@@ -99,7 +100,7 @@ const cta: React.CSSProperties = {
 const ctaGhost: React.CSSProperties = {
   ...cta,
   background: 'rgba(255,255,255,0.08)',
-  color: '#EDF1F7',
+  color: CHROME_RENK.ink,
 }
 
 type Ziyaret = { id: string; tarih: string; unit: string; visit_type: string; checklist?: ChecklistState; not_metni?: string | null }
@@ -339,7 +340,7 @@ export default function HastaDermatoloji({
     <div style={{ display: 'grid', gap: 12 }} data-chapter="dermatoloji">
       <div style={{ ...panel, padding: '12px 16px' }}>
         <div style={{ fontWeight: 700, fontSize: 15 }}>Deri & Lezyon</div>
-        <p style={{ margin: '6px 0 0', fontSize: 12, color: '#8FA0B5' }}>
+        <p style={{ margin: '6px 0 0', fontSize: 12, color: CHROME_RENK.muted }}>
           Ziyaret-önce klinik yüzey. Lezyonlar görüntülemeden türetilir; ayrı fotoğraf deposu yoktur.
           Tarama desteği, tanı değildir. Doktor onayı gerekir. KETEM deri kanseri taraması değildir.
         </p>
@@ -351,9 +352,9 @@ export default function HastaDermatoloji({
         onChange={(u) => kaydet({ action: 'klinik', unit: u, visit_type: defaultVisitType(u) }, `${dermLabel(DERM_UNIT, u)} seçildi.`)}
       />
 
-      {hata && <div style={{ color: '#FCA5A5', fontSize: 13 }}>{hata}</div>}
+      {hata && <div style={{ color: CHROME_RENK.warn, fontSize: 13 }}>{hata}</div>}
       {mesaj && <div style={{ color: '#86EFAC', fontSize: 13 }}>{mesaj}</div>}
-      {yukleniyor && <div style={{ color: '#8FA0B5', fontSize: 13 }}>Yükleniyor…</div>}
+      {yukleniyor && <div style={{ color: CHROME_RENK.muted, fontSize: 13 }}>Yükleniyor…</div>}
 
       <AsistanGorselPanel
         reads={payload?.vision_reads ?? []}
@@ -401,7 +402,7 @@ export default function HastaDermatoloji({
           {muayeneAcik && (
             <section style={kutu} data-derm="bugunku-muayene">
               <h2 style={{ margin: 0, fontSize: 16 }}>Bugünkü muayene · {profil?.label}</h2>
-              <p style={{ fontSize: 12, color: '#8FA0B5' }}>Ünite kontrol listesi. Yapıldı / reddedildi (neden zorunlu).</p>
+              <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Ünite kontrol listesi. Yapıldı / reddedildi (neden zorunlu).</p>
               <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 6 }}>
                 {checklistMaddeler.map((m) => {
                   const st = checklist[m]?.durum || 'bekliyor'
@@ -717,7 +718,7 @@ export default function HastaDermatoloji({
           {visitType === 'islem' && (
             <section style={kutu} data-derm="sut-islem-visit">
               <h2 style={{ margin: 0, fontSize: 16 }}>İşlem ziyareti — SUT</h2>
-              <p style={{ fontSize: 13, color: '#8FA0B5' }}>700.100 dermoskopi · 530.070 deri biyopsi</p>
+              <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>700.100 dermoskopi · 530.070 deri biyopsi</p>
             </section>
           )}
         </>

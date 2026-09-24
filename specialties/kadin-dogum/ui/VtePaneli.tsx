@@ -2,6 +2,7 @@
 
 import { DOBYR_VTE_MADDELERI, vteHint } from '../protocols/vte-formu'
 import { kutu, btn } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const TRIAGE_TR: Record<string, string> = {
   routine: 'Rutin',
@@ -25,16 +26,16 @@ export function VtePaneli({
   return (
     <section style={kutu} data-kd="vte-formu">
       <h2 style={{ margin: 0, fontSize: 16 }}>VTE risk skoru (DÖBYR)</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
-        Puan <b style={{ color: '#EDF1F7' }}>{hint.puan}</b> · {TRIAGE_TR[hint.triage] || hint.triage}
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
+        Puan <b style={{ color: CHROME_RENK.ink }}>{hint.puan}</b> · {TRIAGE_TR[hint.triage] || hint.triage}
         {hint.puan >= 3 ? ' · Tromboprofilaksi notu: gebelikte enoksaparin değerlendirmesi (doz uydurulmaz).' : ' · Mobilizasyon / hidrasyon'}
       </p>
       <div style={{ display: 'grid', gap: 6 }}>
         {DOBYR_VTE_MADDELERI.map((m) => (
-          <label key={m.id} style={{ fontSize: 13, color: '#C9D4E3', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <label key={m.id} style={{ fontSize: 13, color: CHROME_RENK.muted, display: 'flex', gap: 8, alignItems: 'center' }}>
             <input type="checkbox" checked={maddeler.includes(m.id)} onChange={() => toggle(m.id)} />
             {m.etiket}
-            <span style={{ fontSize: 11, color: '#8FA0B5' }}>+{m.puan}</span>
+            <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>+{m.puan}</span>
           </label>
         ))}
       </div>

@@ -8,6 +8,7 @@ import {
 } from './OrtoAracKabugu'
 import { ozetle, BOLGELER, TARAFLAR, NV_DURUMLARI, TIP_AD, type KirikAlciTip } from '../../engines/kirikAlci'
 import { REF_ACIKLAMA } from '../../engines/ortopedi'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = ortoStil
 const TIPLER = Object.keys(TIP_AD).filter((t) => t !== 'op_sonrasi') as KirikAlciTip[]
@@ -75,7 +76,7 @@ export default function OrtoKirikAlciAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Özet</div>
         {satirlar.map((x) => <div key={x} style={S.metin}>{x}</div>)}
-        {sonuc.uyarilar.map((u) => <div key={u} style={{ ...S.kucuk, color: '#FCA5A5' }}>⚑ {u}</div>)}
+        {sonuc.uyarilar.map((u) => <div key={u} style={{ ...S.kucuk, color: CHROME_RENK.warn }}>⚑ {u}</div>)}
         <TaslakNotu>İzlem özeti karar desteğidir; kaynama / artroz tanısı yazılmaz. OR scheduling yoktur.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>
           <KopyalaButonu metin={satirlar.join('\n')} etiket="Özeti kopyala" />

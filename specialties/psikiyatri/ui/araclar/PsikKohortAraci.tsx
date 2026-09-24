@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { psikStil, Istatistik, TaslakNotu, Rozet } from './PsikAracKabugu';
 import { PSIK_BAYRAK_AD, psikKohortFiltre, type PsikKohortBayrak, type PsikKohortSatir } from '../../engines/kohort';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const BAYRAKLAR = Object.keys(PSIK_BAYRAK_AD) as PsikKohortBayrak[];
 
@@ -65,7 +66,7 @@ export default function PsikKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...psikStil.ghost, background: suzgec.includes(b) ? 'rgba(99,102,241,0.25)' : 'transparent', color: suzgec.includes(b) ? '#C7D2FE' : '#C9D4E3' }}
+              style={{ ...psikStil.ghost, background: suzgec.includes(b) ? 'rgba(99,102,241,0.25)' : 'transparent', color: suzgec.includes(b) ? '#C7D2FE' : CHROME_RENK.muted }}
             >{PSIK_BAYRAK_AD[b]}</button>
           ))}
         </div>

@@ -12,6 +12,7 @@ import {
   type CekGrup,
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const GRUP_SIRA: CekGrup[] = ['anamnez', 'olcum', 'fizik', 'kapanis']
 
@@ -30,8 +31,8 @@ export default function MuayeneCekListesi({
   acikRenk?: boolean
 }) {
   const [acik, setAcik] = useState(!!dogrulama)
-  const yazi = acikRenk ? '#0A1628' : '#EDF1F7'
-  const soluk = acikRenk ? '#64748B' : '#8FA0B5'
+  const yazi = acikRenk ? '#0A1628' : CHROME_RENK.ink
+  const soluk = acikRenk ? CHROME_RENK.muted : CHROME_RENK.muted
   const kutu: CSSProperties = acikRenk
     ? { background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: 16, padding: 16 }
     : { background: '#0D1C33', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 16 }

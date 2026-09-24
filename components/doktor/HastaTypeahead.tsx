@@ -14,6 +14,7 @@ import {
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
 import { trParcaEslesir } from '@/lib/utils/turkceArama'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 /**
  * Match query against full label or any name-part prefix (ad / soyad initials).
@@ -221,7 +222,7 @@ export default function HastaTypeahead({
       </div>
 
       {!loading && (
-        <div style={{ marginTop: 6, fontSize: 11, color: '#64748B' }}>
+        <div style={{ marginTop: 6, fontSize: 11, color: CHROME_RENK.muted }}>
           {hastalar.length === 0
             ? 'Kayıtlı hasta yok — önce Hasta Ekle ile ekleyin.'
             : `${hastalar.length} hasta · ad veya soyad baş harfleriyle daraltın`}
@@ -280,7 +281,7 @@ export default function HastaTypeahead({
             )
           })}
           {hastalar.filter((h) => hastaMatchesQuery(h, query)).length > listLimit && (
-            <li style={{ padding: '8px 10px', color: '#64748B', fontSize: 11 }}>
+            <li style={{ padding: '8px 10px', color: CHROME_RENK.muted, fontSize: 11 }}>
               Daha fazla sonuç için yazmaya devam edin…
             </li>
           )}

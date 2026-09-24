@@ -15,6 +15,7 @@ import { GOZ_KAYNAKLAR } from '../../protocols/sources';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { gozStil, Secim, Segment, Etiketli, Onay, Istatistik, Katlanir, KopyalaButonu, MuayeneFormunaEkle, Rozet, TaslakNotu, GozHastaSecici } from './GozAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, input, ghost } = gozStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -129,7 +130,7 @@ export default function SgkRaporAraci() {
         <pre style={{ ...metin, whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: '6px 0' }}>{sonuc.draft.mevcutDurum || ''}</pre>
         {!!sonuc.draft.zorunluTetkikler?.length && <div style={kucuk}>Tetkikler: {sonuc.draft.zorunluTetkikler.join(' · ')}</div>}
         <div style={{ ...metin, marginTop: 4 }}>{sonuc.draft.hekim_degerlendirmesi}</div>
-        <div style={{ marginTop: 8 }}>{sonuc.sutKontrol.map((x) => <div key={x.madde} style={{ ...metin, color: x.tamam === true ? '#2DD4BF' : x.tamam === false ? '#F87171' : '#8FA0B5' }}>{x.tamam === true ? '✓' : x.tamam === false ? '✕' : '?'} {x.madde}</div>)}</div>
+        <div style={{ marginTop: 8 }}>{sonuc.sutKontrol.map((x) => <div key={x.madde} style={{ ...metin, color: x.tamam === true ? '#2DD4BF' : x.tamam === false ? '#F87171' : CHROME_RENK.muted }}>{x.tamam === true ? '✓' : x.tamam === false ? '✕' : '?'} {x.madde}</div>)}</div>
         {sonuc.eksikler.length > 0 ? <div style={{ marginTop: 8 }}>{sonuc.eksikler.map((x) => <div key={x} style={{ ...metin, color: '#FBBF24' }}>Eksik: {x}</div>)}</div> : <div style={{ ...metin, color: '#2DD4BF', marginTop: 8 }}>Zorunlu maddelerde eksik yok.</div>}
         <div style={satir}>
           <KopyalaButonu metin={gozSgkMetni(sonuc)} etiket="Taslağı kopyala" />

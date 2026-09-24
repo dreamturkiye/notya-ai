@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { sporStil, Istatistik, TaslakNotu, Rozet } from './SporAracKabugu'
 import { SPOR_BAYRAK_AD, sporKohortFiltre, type SporKohortBayrak, type SporKohortSatir } from '../../engines/kohort'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = sporStil
 const BAYRAKLAR = Object.keys(SPOR_BAYRAK_AD) as SporKohortBayrak[]
@@ -70,7 +71,7 @@ export default function SporKohortAraci() {
               key={b}
               type="button"
               onClick={() => toggleBayrak(b)}
-              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(180,83,9,0.25)' : 'transparent', color: suzgec.includes(b) ? '#FCD34D' : '#C9D4E3' }}
+              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(180,83,9,0.25)' : 'transparent', color: suzgec.includes(b) ? '#FCD34D' : CHROME_RENK.muted }}
             >{SPOR_BAYRAK_AD[b]}</button>
           ))}
         </div>

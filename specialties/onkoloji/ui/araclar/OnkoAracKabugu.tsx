@@ -5,13 +5,13 @@
  */
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { CHROME_FONT, CHROME_RENK} from '@/lib/doktor/chromeTheme';
 import { toolsShell } from '@/lib/doktor/toolsUi'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari'
 import { AracVurguSaglayici, aracStil, HastaSecici, type AracVurgu } from '@/lib/doktor/aracUi'
 
-export const ONKO_VURGU: AracVurgu = { ana: '#DC2626', anaMetin: '#FEF2F2', yumusak: '#FCA5A5', baslik: '#F87171' }
+export const ONKO_VURGU: AracVurgu = { ana: '#DC2626', anaMetin: '#FEF2F2', yumusak: CHROME_RENK.warn, baslik: '#F87171' }
 export const onkoStil = aracStil(ONKO_VURGU)
 
 export {

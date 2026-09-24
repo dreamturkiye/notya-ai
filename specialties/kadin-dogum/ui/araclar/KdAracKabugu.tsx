@@ -10,7 +10,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { CHROME_FONT, CHROME_RENK} from '@/lib/doktor/chromeTheme';
 import { toolsShell, getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { doktorAraciBransaUygun } from '@/lib/doktor/doktorAraclari';
@@ -31,12 +31,12 @@ export {
 /** Pencere durum renkleri — "kapanmak üzere" en baskın (geri alınamaz). */
 export const DURUM_RENK: Record<PencereDurum, { fg: string; bg: string; kenar: string }> = {
   kapaniyor: { fg: '#FFFFFF', bg: '#C2410C', kenar: '#FB923C' },
-  kacirildi: { fg: '#FCA5A5', bg: 'rgba(248,113,113,0.12)', kenar: 'rgba(248,113,113,0.45)' },
-  gecti: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
+  kacirildi: { fg: CHROME_RENK.warn, bg: 'rgba(248,113,113,0.12)', kenar: 'rgba(248,113,113,0.45)' },
+  gecti: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
   acik: { fg: '#6EE7B7', bg: 'rgba(16,185,129,0.12)', kenar: 'rgba(16,185,129,0.4)' },
   yaklasiyor: { fg: '#93C5FD', bg: 'rgba(59,130,246,0.12)', kenar: 'rgba(59,130,246,0.35)' },
-  yapildi: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
-  ileride: { fg: '#8FA0B5', bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.08)' },
+  yapildi: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.1)' },
+  ileride: { fg: CHROME_RENK.muted, bg: 'rgba(255,255,255,0.03)', kenar: 'rgba(255,255,255,0.08)' },
 };
 
 /** Çift sütun (yasal asgari vs klinik öneri) — çakışma asla tek öneriye indirgenmez. */

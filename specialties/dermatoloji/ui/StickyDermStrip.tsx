@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import { kutu, btn } from './clinic-styles'
 import { DERM_UNIT, dermLabel } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export type StickyDermStripProps = {
   fitzpatrick: string
@@ -33,7 +34,7 @@ const chip: CSSProperties = {
   borderRadius: 8,
   padding: '6px 10px',
   fontSize: 12.5,
-  color: '#EDF1F7',
+  color: CHROME_RENK.ink,
 }
 
 const acilSatiri: CSSProperties = {

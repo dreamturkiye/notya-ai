@@ -9,6 +9,7 @@ import React, { useMemo, useState } from 'react';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { gopIsotretinoin, acitretinPregnancyBanYears, type GopSex } from '../../engines/gop-isotretinoin';
 import { dermStil, Secim, Onay, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -120,7 +121,7 @@ export default function GopKapiAraci() {
           {sonuc.allowed ? 'Kapılarda engel yok — başlatma kararı hekimindir' : `${engeller.length} engel var — başlatılamaz`}
         </div>
         {engeller.map((b) => <div key={b} style={{ ...metin, color: '#F87171' }}>✕ {b}</div>)}
-        {(sonuc.notApplicable || []).map((n) => <div key={n} style={{ ...metin, color: '#8FA0B5' }}>— {n}: uygulanmaz</div>)}
+        {(sonuc.notApplicable || []).map((n) => <div key={n} style={{ ...metin, color: CHROME_RENK.muted }}>— {n}: uygulanmaz</div>)}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
         <Katlanir baslik="Asitretin farkı">
           <div style={kucuk}>Asitretin için gebelik yasağı tedavi bitiminden sonra {acitretinPregnancyBanYears()} yıl sürer — izotretinoin kapıları asitretin için yeterli değildir.</div>

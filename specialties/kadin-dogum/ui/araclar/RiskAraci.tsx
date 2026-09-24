@@ -12,6 +12,7 @@ import {
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { diffDays } from '../../engines/dates';
 import { kdStil, Segment, Kutu, Etiketli, CiftSutun, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti, panoya } from './KdAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -20,7 +21,7 @@ function Cipler({ liste, secili, degis, renk }: { liste: RiskFaktoru[]; secili: 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
       {liste.map((f) => { const on = secili.includes(f.kod); return (
-        <button key={f.kod} type="button" aria-pressed={on} onClick={() => degis(f.kod)} style={{ minHeight: 44, borderRadius: 999, padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', border: `1px solid ${on ? renk : 'rgba(255,255,255,0.14)'}`, background: on ? `${renk}26` : 'rgba(255,255,255,0.03)', color: on ? '#FFFFFF' : '#C9D4E3' }}>{on ? '✓ ' : ''}{f.ad}</button>
+        <button key={f.kod} type="button" aria-pressed={on} onClick={() => degis(f.kod)} style={{ minHeight: 44, borderRadius: 999, padding: '9px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', border: `1px solid ${on ? renk : 'rgba(255,255,255,0.14)'}`, background: on ? `${renk}26` : 'rgba(255,255,255,0.03)', color: on ? '#FFFFFF' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{f.ad}</button>
       ); })}
     </div>
   );
@@ -84,7 +85,7 @@ export default function RiskAraci() {
   };
 
   const alan = (k: keyof typeof f, ph: string, ad: string, w: number | string = 150, mod: 'numeric' | 'decimal' | 'text' = 'numeric') => <Etiketli ad={ad} genislik={w}><input inputMode={mod} value={f[k]} onChange={(e) => set(k, e.target.value)} placeholder={ph} aria-label={ad} style={{ ...input, width: w, maxWidth: '100%' }} /></Etiketli>;
-  const pencereRenk = asp.pencere === 'ideal_kapaniyor' ? '#FB923C' : asp.pencere === 'ideal' ? '#6EE7B7' : asp.pencere === 'gec' ? '#FCD34D' : asp.pencere === 'kapandi' ? '#FCA5A5' : '#93C5FD';
+  const pencereRenk = asp.pencere === 'ideal_kapaniyor' ? '#FB923C' : asp.pencere === 'ideal' ? '#6EE7B7' : asp.pencere === 'gec' ? '#FCD34D' : asp.pencere === 'kapandi' ? CHROME_RENK.warn : '#93C5FD';
 
   return (
     <>
@@ -140,7 +141,7 @@ export default function RiskAraci() {
             </div>
             <div style={satir}><span style={kucuk}>Hasta tercihi</span><Segment etiket="Hasta tercihi" deger={(v.tercih || '') as 'ssvd'} set={(x) => setV({ ...v, tercih: x })} secenekler={[['ssvd', 'SSVD denemek'], ['elektif_cs', 'Tekrar sezaryen'], ['kararsiz', 'Kararsız']]} /></div>
             <div style={{ marginTop: 10 }}>
-              {vb.engel.map((x) => <div key={x} style={{ ...metin, color: '#FCA5A5' }}>✕ {x}</div>)}
+              {vb.engel.map((x) => <div key={x} style={{ ...metin, color: CHROME_RENK.warn }}>✕ {x}</div>)}
               {vb.dikkat.map((x) => <div key={x} style={{ ...metin, color: '#FCD34D' }}>⚠ {x}</div>)}
               {vb.lehte.map((x) => <div key={x} style={{ ...metin, color: '#6EE7B7' }}>✓ {x}</div>)}
               {vb.eksik.map((x) => <div key={x} style={{ ...kucuk }}>Eksik: {x}</div>)}
@@ -171,7 +172,7 @@ export default function RiskAraci() {
           <>
             <div style={{ ...kucuk, margin: '12px 0 6px' }}>Endikasyon (birden fazla seçilebilir)</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {CS_ENDIKASYONLARI.map((e) => { const on = endikasyon.includes(e); return <button key={e} type="button" aria-pressed={on} onClick={() => setEndikasyon(on ? endikasyon.filter((x) => x !== e) : [...endikasyon, e])} style={{ minHeight: 44, borderRadius: 12, padding: '9px 12px', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', border: `1px solid ${on ? '#F472B6' : 'rgba(255,255,255,0.14)'}`, background: on ? 'rgba(219,39,119,0.18)' : 'rgba(255,255,255,0.03)', color: on ? '#FFFFFF' : '#C9D4E3' }}>{on ? '✓ ' : ''}{e}</button>; })}
+              {CS_ENDIKASYONLARI.map((e) => { const on = endikasyon.includes(e); return <button key={e} type="button" aria-pressed={on} onClick={() => setEndikasyon(on ? endikasyon.filter((x) => x !== e) : [...endikasyon, e])} style={{ minHeight: 44, borderRadius: 12, padding: '9px 12px', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left', border: `1px solid ${on ? '#F472B6' : 'rgba(255,255,255,0.14)'}`, background: on ? 'rgba(219,39,119,0.18)' : 'rgba(255,255,255,0.03)', color: on ? '#FFFFFF' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{e}</button>; })}
             </div>
             {endikasyon.some((x) => x.startsWith('Diğer')) && <div style={satir}>{alan('diger', 'Diğer endikasyonu açıklayın', 'Diğer endikasyon açıklaması', '100%', 'text')}</div>}
             <div style={satir}>

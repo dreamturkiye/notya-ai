@@ -10,6 +10,7 @@ import {
   KD_RISK_CLASS,
   kdLabel,
 } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -33,7 +34,7 @@ export function GebeKarti({ payload, live }: { payload: KadinDogumPayload; live?
   return (
     <section style={box} data-tab="GebeKarti">
       <h2 style={{ margin: 0, fontSize: 16 }}>Gebe kartı</h2>
-      <p style={{ color: '#8FA0B5', fontSize: 13 }} title={payload.episode_id}>
+      <p style={{ color: CHROME_RENK.muted, fontSize: 13 }} title={payload.episode_id}>
         {kdLabel(KD_EPISODE_STATUS, payload.episode_status)} · risk {live?.riskKnown === false ? '—' : kdLabel(KD_RISK_CLASS, payload.risk_class)}
       </p>
       <dl style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>

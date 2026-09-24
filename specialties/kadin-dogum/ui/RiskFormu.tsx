@@ -3,6 +3,7 @@
 import { DOBYR_RISK_MADDELERI, riskClassFromForm } from '../protocols/risk-formu'
 import { KD_RISK_CLASS, kdLabel } from './labels'
 import { kutu, btn } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function RiskFormu({
   maddeler,
@@ -20,12 +21,12 @@ export function RiskFormu({
   return (
     <section style={kutu} data-kd="risk-formu">
       <h2 style={{ margin: 0, fontSize: 16 }}>Gebelikte risk değerlendirme (DÖBYR)</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
-        Yasal taban: DÖBYR 2026 / Riskli Gebelikler. Sınıf: <b style={{ color: '#EDF1F7' }}>{kdLabel(KD_RISK_CLASS, sinif)}</b>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
+        Yasal taban: DÖBYR 2026 / Riskli Gebelikler. Sınıf: <b style={{ color: CHROME_RENK.ink }}>{kdLabel(KD_RISK_CLASS, sinif)}</b>
       </p>
       <div style={{ display: 'grid', gap: 6 }}>
         {DOBYR_RISK_MADDELERI.map((m) => (
-          <label key={m.id} style={{ fontSize: 13, color: '#C9D4E3', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <label key={m.id} style={{ fontSize: 13, color: CHROME_RENK.muted, display: 'flex', gap: 8, alignItems: 'center' }}>
             <input type="checkbox" checked={maddeler.includes(m.id)} onChange={() => toggle(m.id)} />
             {m.etiket}
             <span style={{ fontSize: 11, color: m.sinif === 'yuksek' ? '#F87171' : '#FBBF24' }}>

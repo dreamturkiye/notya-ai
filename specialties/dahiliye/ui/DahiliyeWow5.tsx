@@ -4,18 +4,19 @@ import React, { useState } from 'react';
 import { getAccessTokenAsync, toolsInput } from '@/lib/doktor/toolsUi';
 import type { Wow5Veri } from '@/app/api/doktor/dahiliye/_wow5';
 import { Kaynak } from './DahiliyeWow2';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Props = { sekme: string; w5: Wow5Veri; patientId: string; kaynak: boolean; refler: Record<string, string>; calistir: (body: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null> };
 
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5' };
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
-const govde: React.CSSProperties = { fontSize: 12, color: '#EDF1F7', marginTop: 8 };
+const govde: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const kirmiziBtn: React.CSSProperties = { ...btn, background: '#B91C1C' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#2DD4BF' : '#8FA0B5' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
-const Liste = ({ x, renk, on }: { x: string[]; renk?: string; on?: string }) => <>{x.map((y) => <div key={y} style={{ color: renk || '#EDF1F7' }}>{on || '•'} {y}</div>)}</>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#2DD4BF' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const Liste = ({ x, renk, on }: { x: string[]; renk?: string; on?: string }) => <>{x.map((y) => <div key={y} style={{ color: renk || CHROME_RENK.ink }}>{on || '•'} {y}</div>)}</>;
 const SIDDET_RENK: Record<string, string> = { durdur: '#F87171', gozden_gecir: '#FBBF24', baslat: '#2DD4BF' };
 const SIDDET_AD: Record<string, string> = { durdur: 'DURDURMA ÖNERİSİ', gozden_gecir: 'gözden geçir', baslat: 'eksik tedavi (START)' };
 
@@ -71,7 +72,7 @@ export default function DahiliyeWow5({ sekme, w5, patientId, kaynak, refler, cal
     return (<div>
       <div style={etiket}>Hasta hedef kartı + eğitim yaprakları <span style={kucuk}>· yalnız hekimin kilitlediği hedefler · hasta dilinde tek sayfa · yazdırma hekim onayıyla</span></div>
       <table style={{ ...govde, borderCollapse: 'collapse', width: '100%' }}><tbody>
-        {r.satirlar.map((x) => <tr key={x.kod} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}><td style={{ padding: 4 }}>{x.ad}</td><td style={{ padding: 4, fontWeight: 700, color: x.durum === 'hekim_belirleyecek' ? '#FBBF24' : '#EDF1F7' }}>{x.hedef}</td><td style={{ padding: 4 }}>{x.son || '—'}</td><td style={{ padding: 4, color: x.durum === 'hedefte' ? '#22C55E' : x.durum === 'hedef_disi' ? '#F87171' : '#8FA0B5' }}>{x.kod === 'kvr' ? '' : x.durum.replace('_', ' ')}</td></tr>)}
+        {r.satirlar.map((x) => <tr key={x.kod} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}><td style={{ padding: 4 }}>{x.ad}</td><td style={{ padding: 4, fontWeight: 700, color: x.durum === 'hekim_belirleyecek' ? '#FBBF24' : CHROME_RENK.ink }}>{x.hedef}</td><td style={{ padding: 4 }}>{x.son || '—'}</td><td style={{ padding: 4, color: x.durum === 'hedefte' ? '#22C55E' : x.durum === 'hedef_disi' ? '#F87171' : CHROME_RENK.muted }}>{x.kod === 'kvr' ? '' : x.durum.replace('_', ' ')}</td></tr>)}
       </tbody></table>
       {!r.satirlar.length && <div style={kucuk}>Aktif HT/DM/lipid kartı yok — yalnız yaşam tarzı yaprağı basılabilir.</div>}
       {r.eksikKilit.length > 0 && <div style={{ ...kucuk, color: '#FBBF24', marginTop: 4 }}>Kilitsiz hedef: {r.eksikKilit.join(', ')} — kartta “Hekiminiz belirleyecek” yazar. HbA1c hedefi DM sekmesinde, LDL hedefi ve KVR kategorisi KVR sekmesinde kilitlenir.</div>}

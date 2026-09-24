@@ -9,6 +9,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { GELISIM_ALAN_BASLIK, GIDR_3_YAS_SONRASI_REHBERLIK, type GelisimYasBasamagi } from '@/lib/clinical/gelisimTaramasi';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 interface GecmisTarama { id: string; ay_yas: number; yas_basamak_etiket: string; ai_yorum: string | null; sevk_onerisi: boolean; created_at: string }
 
@@ -83,23 +84,23 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
 
   const kutu: React.CSSProperties = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: 16 };
 
-  if (yukleniyor) return <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Yükleniyor…</div>;
+  if (yukleniyor) return <div style={{ padding: 20, color: CHROME_RENK.muted, fontSize: 13 }}>Yükleniyor…</div>;
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ fontSize: 13, color: '#8FA0B5' }}>
+      <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>
         Gelişim Taraması — T.C. Sağlık Bakanlığı Gelişimi İzleme ve Değerlendirme Rehberi (GİDR) esaslı. Sabit bir skor üretmez; her maddeyi aileden açık uçlu sorup işaretleyin.
       </div>
 
       {!basamak && mevcutYasAy !== null && mevcutYasAy > 24 && (
         <div style={kutu}>
           <div style={{ fontWeight: 700, color: '#F59E0B', marginBottom: 8 }}>{GIDR_3_YAS_SONRASI_REHBERLIK.baslik}</div>
-          <div style={{ fontSize: 12, color: '#64748B', marginBottom: 8 }}>Bu yaş için itemli bir kontrol listesi yok; kaynak rehber destekleyici gözlem önerir:</div>
-          {GIDR_3_YAS_SONRASI_REHBERLIK.ozet.map((s, i) => <div key={i} style={{ fontSize: 13, color: '#C9D4E3', marginBottom: 4 }}>• {s}</div>)}
+          <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 8 }}>Bu yaş için itemli bir kontrol listesi yok; kaynak rehber destekleyici gözlem önerir:</div>
+          {GIDR_3_YAS_SONRASI_REHBERLIK.ozet.map((s, i) => <div key={i} style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 4 }}>• {s}</div>)}
         </div>
       )}
       {!basamak && mevcutYasAy === null && (
-        <div style={{ padding: 20, color: '#8FA0B5', fontSize: 13 }}>Doğum tarihi kayıtlı değil — yaşa uygun basamak belirlenemiyor.</div>
+        <div style={{ padding: 20, color: CHROME_RENK.muted, fontSize: 13 }}>Doğum tarihi kayıtlı değil — yaşa uygun basamak belirlenemiyor.</div>
       )}
 
       {basamak && (
@@ -111,12 +112,12 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
               if (!maddeler.length) return null;
               return (
                 <div key={alan} style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#8FA0B5', marginBottom: 6 }}>{GELISIM_ALAN_BASLIK[alan]}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.muted, marginBottom: 6 }}>{GELISIM_ALAN_BASLIK[alan]}</div>
                   {maddeler.map((m) => {
                     const key = `${m.alan}::${m.madde}`;
                     return (
                       <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <span style={{ color: '#EDF1F7', fontSize: 13.5, flex: 1 }}>{m.madde}</span>
+                        <span style={{ color: CHROME_RENK.ink, fontSize: 13.5, flex: 1 }}>{m.madde}</span>
                         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                           {(['Yapıyor', 'Yapmıyor'] as const).map((etiket, i) => {
                             const deger = i === 0;
@@ -138,14 +139,14 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
           </div>
 
           <button type="button" disabled={!hepsiYanitlandi || degerlendiriliyor} onClick={degerlendir}
-            style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: hepsiYanitlandi ? 'white' : '#64748B', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
+            style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: hepsiYanitlandi ? 'white' : CHROME_RENK.muted, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
             {degerlendiriliyor ? 'Değerlendiriliyor…' : 'Testi Değerlendir'}
           </button>
 
           {sonuc && (
             <div style={{ ...kutu, borderColor: (sonuc.sevkOnerisi ? '#F59E0B' : '#22C55E') + '55', background: (sonuc.sevkOnerisi ? '#F59E0B' : '#22C55E') + '14' }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: sonuc.sevkOnerisi ? '#F59E0B' : '#22C55E', marginBottom: 6 }}>{sonuc.sevkOnerisi ? 'İleri değerlendirme önerilir' : 'Yaşına uygun gelişim'}</div>
-              <div style={{ fontSize: 13, color: '#C9D4E3' }}>{sonuc.yorum}</div>
+              <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>{sonuc.yorum}</div>
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button type="button" disabled={degerlendiriliyor} onClick={muayeneFormunaEkle} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Bugünkü Muayene Formuna Ekle</button>
               </div>
@@ -163,14 +164,14 @@ export default function HastaGelisimTaramasi({ patientId }: { patientId: string 
 
       {gecmis.length > 0 && (
         <div style={kutu}>
-          <div style={{ fontWeight: 700, marginBottom: 8, color: '#EDF1F7' }}>Geçmiş Taramalar</div>
+          <div style={{ fontWeight: 700, marginBottom: 8, color: CHROME_RENK.ink }}>Geçmiş Taramalar</div>
           {gecmis.map((g) => (
             <div key={g.id} style={{ padding: '8px 0', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#8FA0B5' }}>{new Date(g.created_at).toLocaleDateString('tr-TR')} · {g.yas_basamak_etiket}</span>
+                <span style={{ color: CHROME_RENK.muted }}>{new Date(g.created_at).toLocaleDateString('tr-TR')} · {g.yas_basamak_etiket}</span>
                 <span style={{ color: g.sevk_onerisi ? '#F59E0B' : '#22C55E' }}>{g.sevk_onerisi ? 'İleri değerlendirme önerildi' : 'Uygun'}</span>
               </div>
-              {g.ai_yorum && <div style={{ color: '#64748B', fontSize: 12, marginTop: 4 }}>{g.ai_yorum}</div>}
+              {g.ai_yorum && <div style={{ color: CHROME_RENK.muted, fontSize: 12, marginTop: 4 }}>{g.ai_yorum}</div>}
             </div>
           ))}
         </div>

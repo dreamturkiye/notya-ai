@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { kbbStil, Istatistik, TaslakNotu, Rozet } from './KbbAracKabugu';
 import { KBB_BAYRAK_AD, kbbKohortFiltre, type KbbKohortBayrak, type KbbKohortSatir } from '../../engines/kohort';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = kbbStil;
 const BAYRAKLAR = Object.keys(KBB_BAYRAK_AD) as KbbKohortBayrak[];
@@ -67,7 +68,7 @@ export default function KbbKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(79,70,229,0.25)' : 'transparent', color: suzgec.includes(b) ? '#C7D2FE' : '#C9D4E3' }}
+              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(79,70,229,0.25)' : 'transparent', color: suzgec.includes(b) ? '#C7D2FE' : CHROME_RENK.muted }}
             >{KBB_BAYRAK_AD[b]}</button>
           ))}
         </div>

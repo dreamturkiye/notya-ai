@@ -1,6 +1,7 @@
 'use client'
 
 import { kutu, giris, etiketS } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Lohusa = {
   kanama?: string | null
@@ -22,8 +23,8 @@ export default function LohusaPaketi({
   const l = lohusa || {}
   return (
     <div style={kutu} data-kd="lohusa-paket">
-      <div style={{ fontWeight: 800, color: '#EDF1F7', marginBottom: 4 }}>Lohusa kontrol listesi (anne)</div>
-      <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>
+      <div style={{ fontWeight: 800, color: CHROME_RENK.ink, marginBottom: 4 }}>Lohusa kontrol listesi (anne)</div>
+      <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 10 }}>
         DSBYR — kanama, meme, epizyo/kesi, duygu durum, endike ise Anti-D, demir devam. Yenidoğan tarama sonuçları burada ve anne Belgeler’de tutulmaz.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
@@ -62,7 +63,7 @@ export default function LohusaPaketi({
           </select>
         </label>
       </div>
-      <label style={{ display: 'flex', gap: 8, marginTop: 10, color: '#EDF1F7', fontSize: 13 }}>
+      <label style={{ display: 'flex', gap: 8, marginTop: 10, color: CHROME_RENK.ink, fontSize: 13 }}>
         <input type="checkbox" defaultChecked={Boolean(l.rhogam_endike)} onChange={(e) => onKaydet({ rhogamEndike: e.target.checked })} />
         Anti-D (Rhogam) endike
       </label>
@@ -72,11 +73,11 @@ export default function LohusaPaketi({
           <input type="datetime-local" defaultValue={l.rhogam_at ? l.rhogam_at.slice(0, 16) : ''} onBlur={(e) => onKaydet({ rhogamAt: e.target.value || null })} style={giris} />
         </label>
       )}
-      <label style={{ display: 'flex', gap: 8, marginTop: 8, color: '#EDF1F7', fontSize: 13 }}>
+      <label style={{ display: 'flex', gap: 8, marginTop: 8, color: CHROME_RENK.ink, fontSize: 13 }}>
         <input type="checkbox" defaultChecked={Boolean(l.demir_devam)} onChange={(e) => onKaydet({ demirDevam: e.target.checked })} />
         Demir profilaksisine devam
       </label>
-      <div style={{ marginTop: 10, fontSize: 11.5, color: '#64748B' }}>Kaynak: SB DSBYR lohusa izlemi. DÖBYR gebelik izlemi ile birleştirilmez.</div>
+      <div style={{ marginTop: 10, fontSize: 11.5, color: CHROME_RENK.muted }}>Kaynak: SB DSBYR lohusa izlemi. DÖBYR gebelik izlemi ile birleştirilmez.</div>
     </div>
   )
 }

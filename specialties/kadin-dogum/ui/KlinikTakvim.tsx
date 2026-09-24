@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import type { PlannedVisit } from '../engines/izlem-calendar'
 import { kutu } from './clinic-styles'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const col: CSSProperties = {
   background: 'rgba(255,255,255,0.02)',
@@ -29,10 +30,10 @@ export function KlinikTakvim({
           DÖBYR uyum {sbYapildi}/{sbToplam}
         </span>
       </div>
-      <p style={{ fontSize: 12, color: '#8FA0B5', margin: '6px 0 10px' }}>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted, margin: '6px 0 10px' }}>
         Özel pratik varsayılanı ACOG kadansı. DÖBYR 4 izlem yasal asgari — birleştirilmez.
       </p>
-      <ol style={{ fontSize: 13, paddingLeft: 18, color: '#C9D4E3', margin: 0 }}>
+      <ol style={{ fontSize: 13, paddingLeft: 18, color: CHROME_RENK.muted, margin: 0 }}>
         {clinic.map((v, i) => (
           <li key={`acog-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>
             {v.ga_or_pp_day} hf · {v.duration_min} dk
@@ -49,16 +50,16 @@ export function DualTakvimAccordion({ visits }: { visits: PlannedVisit[] }) {
   const klinik = visits.filter((v) => v.acog_recommended)
   return (
     <details style={{ ...kutu, padding: '10px 14px' }} data-kd="dual-takvim">
-      <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>
         Yasal asgari vs klinik öneri
       </summary>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>Sütunlar birleştirilmez. Kayıtlı izlem haftaları Yapıldı işaretler.</p>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Sütunlar birleştirilmez. Kayıtlı izlem haftaları Yapıldı işaretler.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={col} data-column="yasal">
           <div style={{ fontSize: 12, fontWeight: 700, color: '#FBBF24', marginBottom: 6 }}>Yasal (DÖBYR)</div>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {yasal.map((v, i) => (
-              <li key={`sb-${v.izlem_no}-${i}`} style={{ color: v.done ? '#86EFAC' : '#C9D4E3' }}>
+              <li key={`sb-${v.izlem_no}-${i}`} style={{ color: v.done ? '#86EFAC' : CHROME_RENK.muted }}>
                 {v.izlem_no ? `İzlem ${v.izlem_no} · ` : ''}{v.ga_or_pp_day} hf
                 {v.done ? ' · Yapıldı' : ''}
               </li>
@@ -69,7 +70,7 @@ export function DualTakvimAccordion({ visits }: { visits: PlannedVisit[] }) {
           <div style={{ fontSize: 12, fontWeight: 700, color: '#38BDF8', marginBottom: 6 }}>Klinik (ACOG)</div>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {klinik.map((v, i) => (
-              <li key={`k-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : '#C9D4E3' }}>
+              <li key={`k-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : CHROME_RENK.muted }}>
                 {v.ga_or_pp_day} hf{v.sb_required ? '' : ' · klinik ek izlem'}
                 {v.done ? ' · Yapıldı' : ''}
               </li>

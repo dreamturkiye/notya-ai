@@ -3,6 +3,7 @@
 import { kutu, DURUM_RENK, DURUM_ETIKET } from './clinic-styles'
 import { KD_WINDOW_STATUS, kdLabel } from './labels'
 import type { EvaluatedWindow } from '../engines/test-windows'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function AktifIsler({
   gecikmisIzlem,
@@ -16,7 +17,7 @@ export function AktifIsler({
   const bos = gecikmisIzlem.length === 0 && acikPencereler.length === 0 && eksikLab.length === 0
   return (
     <details open style={{ ...kutu, padding: '10px 14px' }} data-kd="aktif-isler">
-      <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>
         Aktif işler
         {!bos && (
           <span style={{ marginLeft: 8, fontSize: 12, color: '#F59E0B', fontWeight: 600 }}>
@@ -25,11 +26,11 @@ export function AktifIsler({
         )}
       </summary>
       {bos ? (
-        <p style={{ fontSize: 13, color: '#8FA0B5', margin: '8px 0 0' }}>Gecikmiş izlem, açık tarama penceresi veya eksik laboratuvar yok.</p>
+        <p style={{ fontSize: 13, color: CHROME_RENK.muted, margin: '8px 0 0' }}>Gecikmiş izlem, açık tarama penceresi veya eksik laboratuvar yok.</p>
       ) : (
         <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
           {gecikmisIzlem.map((g) => (
-            <div key={g.etiket} style={{ fontSize: 13, color: '#EDF1F7', borderLeft: `3px solid ${DURUM_RENK.gecikmis}`, padding: '4px 10px' }}>
+            <div key={g.etiket} style={{ fontSize: 13, color: CHROME_RENK.ink, borderLeft: `3px solid ${DURUM_RENK.gecikmis}`, padding: '4px 10px' }}>
               Gecikmiş izlem · {g.etiket}
               {g.haftaBas != null ? ` (${g.haftaBas}–${g.haftaSon}. hafta)` : ''} · {DURUM_ETIKET.gecikmis}
             </div>
@@ -40,7 +41,7 @@ export function AktifIsler({
             </div>
           ))}
           {eksikLab.map((k) => (
-            <div key={k} style={{ fontSize: 13, color: '#C9D4E3', borderLeft: '3px solid #38BDF8', padding: '4px 10px' }}>
+            <div key={k} style={{ fontSize: 13, color: CHROME_RENK.muted, borderLeft: '3px solid #38BDF8', padding: '4px 10px' }}>
               Eksik lab · {k}
             </div>
           ))}

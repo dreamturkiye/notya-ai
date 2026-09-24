@@ -32,6 +32,7 @@ import {
   type BolgeGirdisi,
   type SkorDokumu,
 } from '../engines/score-calculator'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export type SkorKayit = {
   pasi?: number
@@ -104,14 +105,14 @@ function BolgeSayfasi({
 
   return (
     <div data-derm={`skor-bolge-${skor}`}>
-      <p style={{ fontSize: 12, color: '#8FA0B5', margin: '4px 0 8px' }}>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted, margin: '4px 0 8px' }}>
         Bölge bölge girilir; toplam otomatik hesaplanır. Yetişkin bölge katsayıları kullanılır — çocukta katsayı
         farkı hekim teyidiyle değerlendirilir.
       </p>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 520 }}>
           <thead>
-            <tr style={{ color: '#8FA0B5', fontSize: 11.5 }}>
+            <tr style={{ color: CHROME_RENK.muted, fontSize: 11.5 }}>
               <th style={hucre}>Bölge</th>
               {alanlar.map((a) => <th key={a.id} style={hucre}>{a.ad} (0–{a.max})</th>)}
               <th style={hucre}>Alan (0–6)</th>
@@ -125,7 +126,7 @@ function BolgeSayfasi({
                 <tr key={b.id} style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                   <td style={hucre}>
                     <div style={{ fontWeight: 600 }}>{b.ad}</div>
-                    <div style={{ fontSize: 10.5, color: '#8FA0B5' }}>×{b.agirlik} · {b.ipucu}</div>
+                    <div style={{ fontSize: 10.5, color: CHROME_RENK.muted }}>×{b.agirlik} · {b.ipucu}</div>
                   </td>
                   {alanlar.map((a) => (
                     <td key={a.id} style={hucre}>
@@ -249,7 +250,7 @@ export function SkorPaneli({
   return (
     <section style={kutu} data-tab="SkorPaneli">
       <h2 style={{ margin: 0, fontSize: 16 }}>Skor paneli</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
         PASI / EASI / DLQI bu bölümde tutulur — çekirdek hasta kartına yazılmaz. PASI ve EASI bölge çalışma
         sayfasından hesaplanır; elle toplam girilmez.
       </p>
@@ -263,7 +264,7 @@ export function SkorPaneli({
         {showIga && <div><dt>IGA</dt><dd>{iga ?? '—'}</dd></div>}
       </dl>
       {empty && (
-        <p style={{ fontSize: 12.5, color: '#8FA0B5', marginBottom: emptyAction || onKaydet ? 8 : 0 }}>
+        <p style={{ fontSize: 12.5, color: CHROME_RENK.muted, marginBottom: emptyAction || onKaydet ? 8 : 0 }}>
           Henüz skor yok. Çalışma sayfasından PASI / EASI / DLQI hesaplayın.
         </p>
       )}
@@ -327,7 +328,7 @@ export function SkorPaneli({
 
           {sayfa === 'dlqi' && (
             <div data-derm="skor-dlqi">
-              <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+              <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
                 Hastanın doldurduğu DLQI formundaki 10 sorunun puanları girilir (her soru 0–3). Soru metinleri
                 Notya'da tutulmaz — hekim kendi formunu kullanır.
               </p>
@@ -350,7 +351,7 @@ export function SkorPaneli({
 
           {sayfa === 'uas7' && showUas7 && (
             <div data-derm="skor-uas7">
-              <p style={{ fontSize: 12, color: '#8FA0B5' }}>7 gün × (kabartı 0–3 + kaşıntı 0–3) = 0–42.</p>
+              <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>7 gün × (kabartı 0–3 + kaşıntı 0–3) = 0–42.</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 6 }}>
                 {uasGun.map((g, i) => (
                   <div key={i} style={{ border: '1px solid rgba(255,255,255,0.09)', borderRadius: 8, padding: 6 }}>
@@ -372,7 +373,7 @@ export function SkorPaneli({
 
           {sayfa === 'salt' && showSalt && (
             <div data-derm="skor-salt">
-              <p style={{ fontSize: 12, color: '#8FA0B5' }}>Saçlı deri dört bölgesi ağırlıklı toplanır.</p>
+              <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Saçlı deri dört bölgesi ağırlıklı toplanır.</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
                 {SALT_BOLGELERI.map((b) => (
                   <label key={b.id} style={{ fontSize: 12.5 }}>
@@ -392,7 +393,7 @@ export function SkorPaneli({
 
           {sayfa === 'iga' && showIga && (
             <div data-derm="skor-iga">
-              <p style={{ fontSize: 12, color: '#8FA0B5' }}>Akne şiddeti hekim değerlendirmesi (0–4). Tedavi seçimi ve doz hekimindir.</p>
+              <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>Akne şiddeti hekim değerlendirmesi (0–4). Tedavi seçimi ve doz hekimindir.</p>
               <div style={{ display: 'grid', gap: 4 }}>
                 {AKNE_IGA.map((x) => (
                   <label key={x.skor} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5 }}>

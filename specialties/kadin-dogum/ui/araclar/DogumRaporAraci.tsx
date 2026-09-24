@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { analikIzni, istirahatRaporuTaslagi, eddHesapla, tarihOku, trTarih, RAPORSUZ_ISTIRAHAT_UYARISI, EMZIRME_ODENEGI_NOTU, ANALIK } from '../../engines/araclar';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { kdStil, Segment, Kutu, Etiketli, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti, panoya } from './KdAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -16,7 +17,7 @@ function Tarih({ ad, t, alt, vurgu }: { ad: string; t: string; alt?: string; vur
   return (
     <div style={{ flex: '1 1 150px', background: vurgu ? 'rgba(219,39,119,0.12)' : 'rgba(0,0,0,0.15)', border: `1px solid ${vurgu ? 'rgba(244,114,182,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, padding: '10px 12px' }}>
       <div style={kucuk}>{ad}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: vurgu ? '#F9A8D4' : '#EDF1F7' }}>{trTarih(t)}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: vurgu ? '#F9A8D4' : CHROME_RENK.ink }}>{trTarih(t)}</div>
       {alt && <div style={kucuk}>{alt}</div>}
     </div>
   );
@@ -110,7 +111,7 @@ export default function DogumRaporAraci() {
 
       {!a ? (
         <div style={{ ...kutu, textAlign: 'center', padding: '28px 18px' }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#C9D4E3', marginBottom: 6 }}>Analık tarihleri için TDT yeterli</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: CHROME_RENK.muted, marginBottom: 6 }}>Analık tarihleri için TDT yeterli</div>
           <div style={{ ...kucuk, fontSize: 14 }}>Tahmini doğum tarihini (veya SAT) girin; tarihler anında hesaplanır.</div>
         </div>
       ) : (
@@ -133,7 +134,7 @@ export default function DogumRaporAraci() {
           </div>
 
           <div role="note" style={{ background: 'rgba(220,38,38,0.12)', border: '2px solid rgba(248,113,113,0.6)', borderRadius: 16, padding: 18, marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#FCA5A5', letterSpacing: '1px', textTransform: 'uppercase' }}>Hastaya söyleyin — ödenek kaybı</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: CHROME_RENK.warn, letterSpacing: '1px', textTransform: 'uppercase' }}>Hastaya söyleyin — ödenek kaybı</div>
             <div style={{ fontSize: 16, color: '#FEE2E2', lineHeight: 1.55, marginTop: 6 }}>{RAPORSUZ_ISTIRAHAT_UYARISI}</div>
             <div style={satir}><button type="button" style={ghost} onClick={() => kopyala(RAPORSUZ_ISTIRAHAT_UYARISI, 'Uyarı metni kopyalandı.')}>Uyarıyı kopyala</button></div>
             <div style={{ ...kucuk, marginTop: 4 }}>Kaynak: SGK — Analık Halinde Geçici İş Göremezlik Ödeneği Ödenmesi.</div>

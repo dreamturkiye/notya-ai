@@ -10,6 +10,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { plannedReads, patchStatus, EUROPEAN_BASELINE } from '../../engines/patch-calendar';
 import { DERM_PATCH_STATUS, dermLabel } from '../labels';
 import { dermStil, Istatistik, Katlanir, MuayeneFormunaEkle, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost, kaydir } = dermStil;
 const bugun = () => new Date().toISOString().slice(0, 10);
@@ -115,7 +116,7 @@ export default function YamaAraci() {
                 style={{
                   minHeight: 40, borderRadius: 999, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                   background: pozitif.includes(a.kod) ? 'rgba(248,113,113,0.18)' : 'transparent',
-                  color: pozitif.includes(a.kod) ? '#FCA5A5' : '#C9D4E3',
+                  color: pozitif.includes(a.kod) ? CHROME_RENK.warn : CHROME_RENK.muted,
                   border: `1px solid ${pozitif.includes(a.kod) ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.16)'}`,
                 }}
               >Pozitif</button>

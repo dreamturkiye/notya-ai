@@ -23,6 +23,7 @@ import {
 import { DERM_PATCH_STATUS, DERM_PHOTO_KIND, dermLabel } from './labels'
 import { btn, giris, etiketS, kutu } from './clinic-styles'
 import { goruntulemeCaptureHref } from '../engines/clinic-fit'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function YamaTakvimi({
   course,
@@ -74,11 +75,11 @@ export function YamaTakvimi({
   return (
     <section style={kutu} data-tab="YamaTakvimi">
       <h2 style={{ margin: 0, fontSize: 16 }}>Yama takvimi</h2>
-      {!course && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Aktif yama serisi yok.</p>}
+      {!course && <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Aktif yama serisi yok.</p>}
       {course && (
         <>
           <p style={{ fontSize: 13 }}>Durum: {status ? dermLabel(DERM_PATCH_STATUS, status) : '—'}</p>
-          <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+          <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
             Uygulama {course.appliedAt} · D2 {plan?.d2} · D4 {plan?.d4}
           </p>
           <p style={{ fontSize: 12 }}>
@@ -117,7 +118,7 @@ export function YamaTakvimi({
           ))}
         </div>
       )}
-      <p style={{ fontSize: 11.5, color: '#8FA0B5', marginTop: 4 }}>
+      <p style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 4 }}>
         Geç okuma (D7) gerekebilecek maddeler: {GEC_OKUMA_IPUCU_ALERJENLERI.join(', ')} — karar hekimin.
       </p>
 
@@ -139,7 +140,7 @@ export function YamaTakvimi({
               <input type="date" style={giris} value={f.readD4} onChange={(e) => setF((p) => ({ ...p, readD4: e.target.value }))} />
             </label>
           </div>
-          <p style={{ fontSize: 11.5, color: '#8FA0B5', marginTop: 4 }}>
+          <p style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 4 }}>
             {PATCH_SERILERI.find((s) => s.id === seri)?.aciklama}
           </p>
 
@@ -149,12 +150,12 @@ export function YamaTakvimi({
 
           {izgaraAcik && (
             <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginTop: 8 }} data-derm="yama-alerjen-izgarasi">
-              <p style={{ fontSize: 11.5, color: '#8FA0B5', margin: '0 0 6px' }}>
+              <p style={{ fontSize: 11.5, color: CHROME_RENK.muted, margin: '0 0 6px' }}>
                 Her madde için D2 ve D4 okuma derecesi (ICDRG). Konsantrasyon ve vehikül ünitenin hazır bandındadır.
               </p>
               {gruplar.map((g) => (
                 <div key={g.grup} style={{ marginBottom: 10 }}>
-                  <div style={{ ...etiketS, color: '#EDF1F7', fontWeight: 700 }}>{g.ad}</div>
+                  <div style={{ ...etiketS, color: CHROME_RENK.ink, fontWeight: 700 }}>{g.ad}</div>
                   <div style={{ display: 'grid', gap: 4 }}>
                     {g.alerjenler.map((a) => (
                       <div key={a.kod} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', fontSize: 12.5 }}>
@@ -189,7 +190,7 @@ export function YamaTakvimi({
                   <input style={giris} value={ekMadde} onChange={(e) => setEkMadde(e.target.value)} placeholder="hastanın getirdiği ürün, vb." />
                 </label>
               )}
-              <p style={{ fontSize: 11.5, color: '#8FA0B5' }}>
+              <p style={{ fontSize: 11.5, color: CHROME_RENK.muted }}>
                 Derece anlamları: {ICDRG_DERECELERI.map((x) => `${x.ad} ${x.aciklama}`).join(' · ')}
               </p>
             </div>

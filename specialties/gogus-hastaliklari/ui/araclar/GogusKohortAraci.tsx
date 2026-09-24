@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { gogusStil, Rozet } from './GogusAracKabugu'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { GOGUS_BAYRAK_AD, type GogusKohortBayrak } from '../../engines/kohort'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = gogusStil
 
@@ -61,7 +62,7 @@ export default function GogusKohortAraci() {
       {satirlar.map((s) => (
         <div key={s.patientId} style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '10px 0', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontWeight: 700, color: '#EDF1F7' }}>{s.ad}</div>
+            <div style={{ fontWeight: 700, color: CHROME_RENK.ink }}>{s.ad}</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
               {s.bayraklar.map((b) => <Rozet key={b} ton={b === 'risk_acik' ? 'uyari' : 'notr'}>{GOGUS_BAYRAK_AD[b]}</Rozet>)}
             </div>

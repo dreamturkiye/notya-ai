@@ -18,6 +18,7 @@ import {
   cekListeYaz,
   muayeneCekListesi,
 } from '@/lib/doktor/muayeneCekListesi'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 // NOTYA-EYLEM: an assistant turn may carry confirm cards. They live ON the message so they stay in
 // place as the conversation grows — a card that jumps to the bottom is a card tapped for the wrong turn.
@@ -195,8 +196,8 @@ export default function HastaKonsult({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', flexWrap: 'wrap' }}>
         <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(15,155,142,0.22)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>🩺</span>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#EDF1F7' }}>Ayşe&apos;ye Danış</div>
-          <div style={{ fontSize: 11, color: '#8FA0B5', marginTop: 1 }}>Dosyayı bilir, kayıt da hazırlar · onaylamadan hiçbir şey yazılmaz</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: CHROME_RENK.ink }}>Ayşe&apos;ye Danış</div>
+          <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 1 }}>Dosyayı bilir, kayıt da hazırlar · onaylamadan hiçbir şey yazılmaz</div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button
@@ -206,7 +207,7 @@ export default function HastaKonsult({
               padding: '8px 14px',
               background: dinliyor ? 'rgba(239,68,68,0.2)' : 'rgba(15,155,142,0.18)',
               border: `1px solid ${dinliyor ? 'rgba(248,113,113,0.55)' : 'rgba(45,212,191,0.45)'}`,
-              color: dinliyor ? '#FCA5A5' : '#2DD4BF',
+              color: dinliyor ? CHROME_RENK.warn : '#2DD4BF',
               borderRadius: 999,
               fontSize: 12.5,
               fontWeight: 700,
@@ -225,7 +226,7 @@ export default function HastaKonsult({
               padding: '8px 14px',
               background: acik && mod === 'yaz' ? 'rgba(15,155,142,0.25)' : 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.16)',
-              color: '#C9D4E3',
+              color: CHROME_RENK.muted,
               borderRadius: 999,
               fontSize: 12.5,
               fontWeight: 700,
@@ -244,7 +245,7 @@ export default function HastaKonsult({
               padding: '8px 12px',
               background: 'transparent',
               border: '1px solid rgba(255,255,255,0.12)',
-              color: '#8FA0B5',
+              color: CHROME_RENK.muted,
               borderRadius: 999,
               fontSize: 12,
               fontWeight: 600,
@@ -265,7 +266,7 @@ export default function HastaKonsult({
                   key={s}
                   type="button"
                   onClick={() => void gonder(s)}
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#C9D4E3', borderRadius: 999, padding: '6px 11px', fontSize: 11.5, cursor: 'pointer' }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: CHROME_RENK.muted, borderRadius: 999, padding: '6px 11px', fontSize: 11.5, cursor: 'pointer' }}
                 >
                   {s}
                 </button>
@@ -294,7 +295,7 @@ export default function HastaKonsult({
 
           {bekleyen.length > 0 && kartHastasi ? (
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 11, color: '#8FA0B5', marginBottom: 4 }}>Onayınızı bekleyen kayıtlar</div>
+              <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginBottom: 4 }}>Onayınızı bekleyen kayıtlar</div>
               {bekleyen.map((o) => (
                 <EylemKarti key={o.id} oneri={o} hasta={kartHastasi} onSonuc={({ oneriId }) => setBekleyen((b) => b.filter((x) => x.id !== oneriId))} />
               ))}
@@ -326,7 +327,7 @@ export default function HastaKonsult({
                       <button
                         type="button"
                         onClick={() => setDuzenlenenIndex(null)}
-                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', color: '#C9D4E3', borderRadius: 8, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
+                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', color: CHROME_RENK.muted, borderRadius: 8, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
                       >
                         Vazgeç
                       </button>
@@ -373,7 +374,7 @@ export default function HastaKonsult({
           </div>
 
           {hata && (
-            <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#FCA5A5', borderRadius: 8, padding: '8px 11px', fontSize: 12.5, marginBottom: 8 }}>{hata}</div>
+            <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: CHROME_RENK.warn, borderRadius: 8, padding: '8px 11px', fontSize: 12.5, marginBottom: 8 }}>{hata}</div>
           )}
 
           <form

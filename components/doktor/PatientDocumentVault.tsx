@@ -6,6 +6,7 @@ import DocumentViewer from '@/components/doktor/DocumentViewer'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { belgeDegerlendirmeCtalari, belgeKategoriEtiket, belgeYenidoganTaburcuEpikriziMi } from '@/lib/doktor/belgeTur'
 import MuayeneEkleri from '@/components/doktor/MuayeneEkleri'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type VaultDoc = {
   id: string
@@ -115,7 +116,7 @@ export default function PatientDocumentVault({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#E2E8F0' }}>Belge kasası</div>
-          <div style={{ fontSize: 12, color: '#8FA0B5', marginTop: 2 }}>Şifreli PDF / görüntü / ses — muayeneye bağlanabilir</div>
+          <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>Şifreli PDF / görüntü / ses — muayeneye bağlanabilir</div>
         </div>
         <Link
           href={patientId ? `/dashboard/doktor/belgeler?hastaId=${encodeURIComponent(patientId)}` : '/dashboard/doktor/belgeler'}
@@ -129,7 +130,7 @@ export default function PatientDocumentVault({
         <select
           value={visitId}
           onChange={(e) => setVisitId(e.target.value)}
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#EDF1F7', fontSize: 12, padding: '6px 8px', width: '100%', maxWidth: 420 }}
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 12, padding: '6px 8px', width: '100%', maxWidth: 420 }}
         >
           <option value="" style={{ color: '#000' }}>Hasta dosyası — muayene seçin (görüntü/ses bağlamak için)</option>
           {seanslar.map((s) => (
@@ -138,17 +139,17 @@ export default function PatientDocumentVault({
         </select>
         <MuayeneEkleri hastaId={patientId} visitId={visitId || null} onYuklendi={() => void load()} />
       </div>
-      {loading && <div style={{ fontSize: 13, color: '#8FA0B5' }}>Yükleniyor…</div>}
+      {loading && <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Yükleniyor…</div>}
       {error && <div style={{ fontSize: 13, color: '#F87171' }}>{error}</div>}
       {!loading && !error && !docs.length && (
-        <div style={{ fontSize: 13, color: '#8FA0B5' }}>Bu hasta için kasa boş. Belge merkezinden yükleyin.</div>
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Bu hasta için kasa boş. Belge merkezinden yükleyin.</div>
       )}
       {!loading && !error && docs.length > 0 && (() => {
         const yenidoganSayisi = docs.filter((d) => belgeYenidoganTaburcuEpikriziMi(d)).length
         const chip = (aktif: boolean) => ({
           background: aktif ? 'rgba(15,155,142,0.2)' : 'transparent',
           border: '1px solid rgba(255,255,255,0.12)',
-          color: aktif ? '#2DD4BF' : '#8FA0B5',
+          color: aktif ? '#2DD4BF' : CHROME_RENK.muted,
           borderRadius: 999,
           padding: '3px 10px',
           fontSize: 11,
@@ -191,8 +192,8 @@ export default function PatientDocumentVault({
                 textAlign: 'left',
               }}
             >
-              <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: '#8FA0B5', marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(96,165,250,0.5)' : 'rgba(248,113,113,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#60A5FA' : '#F87171', fontWeight: 700 }}>{o}</span>)}</span>}</span>
-              <span style={{ fontSize: 11, color: '#8FA0B5' }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · muayene' : ''}</span>
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.fileName}{labOzet[d.id]?.panel_type === 'yenidogan_tarama' && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#FBBF24', border: '1px solid rgba(251,191,36,0.5)', borderRadius: 999, padding: '1px 7px' }}>NTP-{labOzet[d.id].sample_no || '?'}</span>}{labOzet[d.id] && <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: CHROME_RENK.muted, marginTop: 2 }}>{labOzet[d.id].toplam} parametre · {labOzet[d.id].yuksek} yüksek · {labOzet[d.id].dusuk} düşük{labOzet[d.id].kritik ? ` · ${labOzet[d.id].kritik} kritik` : ''} {labOzet[d.id].onemli.map((o) => <span key={o} style={{ marginLeft: 6, border: `1px solid ${o.endsWith('↓') ? 'rgba(96,165,250,0.5)' : 'rgba(248,113,113,0.5)'}`, borderRadius: 999, padding: '1px 7px', color: o.endsWith('↓') ? '#60A5FA' : '#F87171', fontWeight: 700 }}>{o}</span>)}</span>}</span>
+              <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>{belgeKategoriEtiket(d)}{d.visitId ? ' · muayene' : ''}</span>
               {belgeDegerlendirmeCtalari(d).map((cta) => {
                 const base =
                   cta.yol === 'lab'

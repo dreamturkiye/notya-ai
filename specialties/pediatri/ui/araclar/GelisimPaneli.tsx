@@ -20,6 +20,7 @@ import { dogumVeyaYasCoz, gebelikHaftasiCoz, gramCoz, tarihCoz, tarihGoster, yas
 import {
   pediStil, Alan, Katlanir, TaslakNotu, KopyalaButonu, PediHastaSecici, usePediHasta, useUrlHasta, Rozet, OneriRozet, Istatistik,
 } from './PediAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, input, ghost, btn, uyari } = pediStil;
 const bugunTr = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -118,8 +119,8 @@ export default function GelisimPaneli() {
           <div style={{ ...kucuk, fontSize: 14 }}>Doğum tarihini (ya da yaşı) yazın — bu vizitte gereken taramalar yazdıkça listelenir.</div>
         ) : (
           <>
-            <div style={{ fontSize: 13, color: '#9BB0C7', marginBottom: 4 }}>{yasMetni(dogumIso!, bugun)}{plan.duzeltilmisGun != null ? ` · düzeltilmiş ${plan.duzeltilmisGun < 31 ? `${plan.duzeltilmisGun} gün` : `${Math.floor(plan.duzeltilmisGun / 30.4375)} ay`} (gelişim için)` : ''}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#EDF1F7', letterSpacing: '-0.3px' }}>
+            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginBottom: 4 }}>{yasMetni(dogumIso!, bugun)}{plan.duzeltilmisGun != null ? ` · düzeltilmiş ${plan.duzeltilmisGun < 31 ? `${plan.duzeltilmisGun} gün` : `${Math.floor(plan.duzeltilmisGun / 30.4375)} ay`} (gelişim için)` : ''}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: CHROME_RENK.ink, letterSpacing: '-0.3px' }}>
               {plan.simdikiVizit ? `${plan.simdikiVizit.etiket} izlemi` : 'İzlem penceresi dışında'}
             </div>
             <div style={{ ...kucuk, marginTop: 2 }}>
@@ -154,7 +155,7 @@ export default function GelisimPaneli() {
               <div style={{ ...kucuk, marginBottom: 8 }}>{hastaId && veri ? 'Pencere içinde muayene kaydı varsa "muayene var".' : 'Hasta seçerseniz muayene kayıtlarıyla eşleştirilir.'}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {plan.izlem.map((v) => (
-                  <span key={v.id} title={`${tarihGoster(v.bas)} – ${tarihGoster(v.son)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', padding: '6px 10px', borderRadius: 10, background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 13, color: '#EDF1F7' }}>
+                  <span key={v.id} title={`${tarihGoster(v.bas)} – ${tarihGoster(v.son)}`} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', padding: '6px 10px', borderRadius: 10, background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 13, color: CHROME_RENK.ink }}>
                     {v.etiket} <Rozet ton={IZLEM_TON[v.durum]}>{IZLEM_AD[v.durum]}</Rozet>
                   </span>
                 ))}
@@ -213,7 +214,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
     <div style={{ ...kutu, marginBottom: 0, borderColor: vurgu ? 'rgba(248,113,113,0.35)' : k.durum === 'simdi' ? 'rgba(96,165,250,0.3)' : 'rgba(255,255,255,0.1)' }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0, flex: '1 1 220px' }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#EDF1F7' }}>{k.ad}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: CHROME_RENK.ink }}>{k.ad}</div>
           <div style={{ ...kucuk, marginTop: 2 }}>{k.pencere}{k.son ? ` · son: ${k.son.sonuc}, ${tarihGoster(k.son.tarih)}` : ''}</div>
         </div>
         <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -271,7 +272,7 @@ function KalemKarti({ k, hastaId, bugun, dogumIso, acikArac, setAcikArac, yerelI
         ) : gidrMaddeleri ? (
           <Katlanir baslik={`GİDR ${gidrMaddeleri.etiket} — beklenen işlevler`}>
             <div style={{ display: 'grid', gap: 6 }}>
-              {gidrMaddeleri.maddeler.map((m) => <div key={m.madde} style={kucuk}><b style={{ color: '#C9D4E3' }}>{GELISIM_ALAN_BASLIK[m.alan]}:</b> {m.madde}</div>)}
+              {gidrMaddeleri.maddeler.map((m) => <div key={m.madde} style={kucuk}><b style={{ color: CHROME_RENK.muted }}>{GELISIM_ALAN_BASLIK[m.alan]}:</b> {m.madde}</div>)}
             </div>
             <div style={{ ...kucuk, marginTop: 8 }}>Kaydetmek ve nota eklemek için hasta seçin.</div>
           </Katlanir>

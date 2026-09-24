@@ -20,6 +20,7 @@ import type { BelgeRaporu, MotorCiktisi } from '@/core/belgeler/types';
 import { belgeLabMi, belgeRontgenMi } from '@/lib/doktor/belgeTur';
 import { hastaBelgelerHref, hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import type { HastaDosyaSekmeId } from '@/lib/doktor/hastaDosyaSekmeleri';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Doc = { id: string; fileName: string; fileType: string; fileSize: number; category: string | null; createdAt: string };
 type Analiz = { id: string; durum: string; sonuc: BelgeRaporu | null; fusion: { fused: { kod: string; label_tr: string; p: number; sources: string[]; karsi: string[] }[]; capPct: number; acilNedenler: string[]; duzeltmeler: string[] } | null; motor_ciktilari: MotorCiktisi[]; hekim_tanisi: { ad: string; icd10?: string | null }[]; hekim_ozet: string | null; note_id: string | null; onaylandi_at: string | null; olusturuldu: string; modality_final: string };
@@ -259,8 +260,8 @@ export default function BelgeAnalizPage() {
               <div style={etiket}>{personaAd} ile değerlendir · {kural.ad}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 {modaliteGuvenli && !modaliteDuzenleAcik && modalite ? (
-                  <span style={{ fontSize: 13, color: '#8FA0B5' }}>
-                    Tespit edilen tür: <span style={{ color: '#EDF1F7', fontWeight: 700 }}>{MODALITE_TR[modalite]}</span>{' '}
+                  <span style={{ fontSize: 13, color: CHROME_RENK.muted }}>
+                    Tespit edilen tür: <span style={{ color: CHROME_RENK.ink, fontWeight: 700 }}>{MODALITE_TR[modalite]}</span>{' '}
                     <button type="button" onClick={() => setModaliteDuzenleAcik(true)} style={{ background: 'none', border: 'none', color: '#0F9B8E', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
                       · değiştir
                     </button>

@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import type { PlannedVisit } from '../engines/izlem-calendar'
 import { UI_HINT_YASAL_VS_KLINIK } from '../protocols/sources'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -42,11 +43,11 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
   return (
     <section style={box} data-tab="IzlemTimeline" data-calendar="dual">
       <h2 style={{ margin: 0, fontSize: 16 }}>İzlem zaman çizelgesi</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{UI_HINT_YASAL_VS_KLINIK} — sütunlar birleştirilmez.</p>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>{UI_HINT_YASAL_VS_KLINIK} — sütunlar birleştirilmez.</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={col} data-column="yasal">
           <span style={badge('Yasal (DÖBYR)', 'yasal')} data-badge="yasal">Yasal (DÖBYR)</span>
-          <p style={{ fontSize: 11, color: '#8FA0B5' }}>Yasal asgari (DÖBYR)</p>
+          <p style={{ fontSize: 11, color: CHROME_RENK.muted }}>Yasal asgari (DÖBYR)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {yasal.map((v, i) => (
               <li key={`sb-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>
@@ -59,7 +60,7 @@ export function IzlemTimeline({ visits }: { visits: PlannedVisit[] }) {
         </div>
         <div style={col} data-column="klinik">
           <span style={badge('Klinik (ACOG)', 'klinik')} data-badge="klinik">Klinik (ACOG)</span>
-          <p style={{ fontSize: 11, color: '#8FA0B5' }}>Klinik öneri (ACOG)</p>
+          <p style={{ fontSize: 11, color: CHROME_RENK.muted }}>Klinik öneri (ACOG)</p>
           <ol style={{ fontSize: 13, paddingLeft: 18 }}>
             {klinik.map((v, i) => (
               <li key={`acog-${v.kind}-${v.ga_or_pp_day}-${i}`} style={{ color: v.done ? '#86EFAC' : undefined }}>

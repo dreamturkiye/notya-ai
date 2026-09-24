@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import type { NstStudyPayload } from '../schema'
 import { KD_NST_CATEGORY, kdLabel } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -24,7 +25,7 @@ export function NstStrip({ nst }: { nst: NstStudyPayload }) {
       <p style={{ fontSize: 13 }}>
         {kdLabel(KD_NST_CATEGORY, nst.category)} · {nst.durationMin} dk
       </p>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{NST_AKSIYON_TR[nst.category]}</p>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>{NST_AKSIYON_TR[nst.category]}</p>
     </section>
   )
 }

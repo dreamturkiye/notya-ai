@@ -8,6 +8,7 @@ import {
   inhalerIzlem, inhalerCihazGecerliMi, INHALER_CIHAZLARI, INHALER_CIHAZ_AD, INHALER_TEKNIK_ORTAK, INHALER_TEKNIK_CIHAZ,
   type InhalerCihaz,
 } from '../../engines/inhaler'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = gogusStil
 
@@ -39,7 +40,7 @@ export default function GogusInhalerAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Teknik kontrol listesi</div>
         {liste.map((m) => (
-          <label key={m} style={{ display: 'flex', gap: 8, fontSize: 13, color: '#EDF1F7', marginTop: 4 }}>
+          <label key={m} style={{ display: 'flex', gap: 8, fontSize: 13, color: CHROME_RENK.ink, marginTop: 4 }}>
             <input type="checkbox" checked={tamam.includes(m)} onChange={() => cevir(m)} /> {m}
           </label>
         ))}

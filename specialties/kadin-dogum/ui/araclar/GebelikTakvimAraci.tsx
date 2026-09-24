@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { eddHesapla, gebelikTakvimi, takvimHastaMetni, tarihOku, haftaOku, sayiOku, trTarih, PENCERE_DURUM_AD, type TarihlemeYontemi, type TakvimTarama, type TakvimIzlem, type WindowId } from '../../engines/araclar';
 import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { kdStil, DURUM_RENK, Segment, Kutu, Etiketli, CiftSutun, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti, panoya } from './KdAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, input, btn, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -108,7 +109,7 @@ export default function GebelikTakvimAraci() {
             <div style={satir}><span style={kucuk}>Hesap tarihi</span>{alan('bugun', 'bugün', 'Hesap tarihi', 150)}{yorum(f.bugun, okunan.bugun)}</div>
             {t && <div style={{ marginTop: 8 }}>
               <div style={kucuk}>Yapılanları işaretleyin (hasta seçiliyse kayıttan gelir):</div>
-              <div style={satir}>{t.taramalar.map((x) => { const on = yapilan.includes(x.id); return <button key={x.id} type="button" aria-pressed={on} onClick={() => setYapilan(on ? yapilan.filter((y) => y !== x.id) : [...yapilan, x.id])} style={{ ...ghost, minHeight: 40, padding: '8px 12px', background: on ? 'rgba(16,185,129,0.14)' : 'transparent', color: on ? '#6EE7B7' : '#C9D4E3' }}>{on ? '✓ ' : ''}{x.ad}</button>; })}</div>
+              <div style={satir}>{t.taramalar.map((x) => { const on = yapilan.includes(x.id); return <button key={x.id} type="button" aria-pressed={on} onClick={() => setYapilan(on ? yapilan.filter((y) => y !== x.id) : [...yapilan, x.id])} style={{ ...ghost, minHeight: 40, padding: '8px 12px', background: on ? 'rgba(16,185,129,0.14)' : 'transparent', color: on ? '#6EE7B7' : CHROME_RENK.muted }}>{on ? '✓ ' : ''}{x.ad}</button>; })}</div>
             </div>}
           </div>
         )}
@@ -116,7 +117,7 @@ export default function GebelikTakvimAraci() {
 
       {!eddS.ok ? (
         <div style={{ ...kutu, textAlign: 'center', padding: '28px 18px' }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#C9D4E3', marginBottom: 6 }}>Takvim için bir tarih yeterli</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: CHROME_RENK.muted, marginBottom: 6 }}>Takvim için bir tarih yeterli</div>
           <div style={{ ...kucuk, fontSize: 14 }}>{eddS.hata}</div>
         </div>
       ) : t && (
@@ -124,7 +125,7 @@ export default function GebelikTakvimAraci() {
           <div style={{ ...kutu, display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'flex-end' }}>
             <div style={{ flex: '1 1 200px' }}>
               <div style={kucuk}>Bugün ({trTarih(okunan.bugun)})</div>
-              <div style={{ fontSize: 34, fontWeight: 800, color: '#EDF1F7', letterSpacing: '-0.6px', lineHeight: 1.1 }}>{t.ga.weeks}<span style={{ fontSize: 18, color: '#9BB0C7' }}> hf </span>{t.ga.days}<span style={{ fontSize: 18, color: '#9BB0C7' }}> gün</span></div>
+              <div style={{ fontSize: 34, fontWeight: 800, color: CHROME_RENK.ink, letterSpacing: '-0.6px', lineHeight: 1.1 }}>{t.ga.weeks}<span style={{ fontSize: 18, color: CHROME_RENK.muted }}> hf </span>{t.ga.days}<span style={{ fontSize: 18, color: CHROME_RENK.muted }}> gün</span></div>
               <div style={kucuk}>{t.trimester}. trimester · {t.yontemAd}</div>
             </div>
             <div style={{ flex: '1 1 160px' }}>
@@ -134,7 +135,7 @@ export default function GebelikTakvimAraci() {
             </div>
             <div style={{ flex: '1 1 160px' }}>
               <div style={kucuk}>DÖBYR asgari izlem</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: t.izlemler.some((x) => x.durum === 'kacirildi') ? '#FCA5A5' : '#EDF1F7' }}>{t.izlemYapilan} / 4</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: t.izlemler.some((x) => x.durum === 'kacirildi') ? CHROME_RENK.warn : CHROME_RENK.ink }}>{t.izlemYapilan} / 4</div>
               <div style={kucuk}>{izlemHaftalari.length ? 'kayıtlı izlemlere göre' : 'izlem kaydı girilmedi'}</div>
             </div>
           </div>
@@ -165,7 +166,7 @@ export default function GebelikTakvimAraci() {
           )}
           {t.kacirilan.length > 0 && (
             <div style={{ ...kutu, background: 'rgba(248,113,113,0.08)', borderColor: 'rgba(248,113,113,0.45)' }}>
-              <div style={{ ...etiket, color: '#FCA5A5' }}>Kaçırılan pencereler</div>
+              <div style={{ ...etiket, color: CHROME_RENK.warn }}>Kaçırılan pencereler</div>
               {t.kacirilan.map((x) => <div key={x.id} style={{ ...metin, marginTop: 4 }}><b>{x.ad}</b> ({x.pencereHafta}, son gün {trTarih(x.kapanis)}){x.kacirilinca ? <div style={kucuk}>{x.kacirilinca}</div> : null}</div>)}
             </div>
           )}

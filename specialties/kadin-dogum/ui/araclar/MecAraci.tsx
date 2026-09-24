@@ -8,6 +8,7 @@ import { yontemMec, acilKontrasepsiyon, postpartumKontrasepsiyonBaslangic, YONTE
 import { sayiOku, tarihOku } from '../../engines/araclar';
 import { diffDays } from '../../engines/dates';
 import { kdStil, Segment, Kutu, Etiketli, KdHastaSecici, MuayeneFormunaEkle, kdHastaOzeti } from './KdAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, input, ghost, hata } = kdStil;
 const bugunIso = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -16,7 +17,7 @@ const KAT_RENK: Record<MecKat, { fg: string; bg: string; kenar: string; ad: stri
   1: { fg: '#6EE7B7', bg: 'rgba(16,185,129,0.12)', kenar: 'rgba(16,185,129,0.4)', ad: 'MEC 1–2' },
   2: { fg: '#A7F3D0', bg: 'rgba(16,185,129,0.08)', kenar: 'rgba(16,185,129,0.3)', ad: 'MEC 2' },
   3: { fg: '#FCD34D', bg: 'rgba(245,158,11,0.12)', kenar: 'rgba(245,158,11,0.45)', ad: 'MEC 3' },
-  4: { fg: '#FCA5A5', bg: 'rgba(239,68,68,0.14)', kenar: 'rgba(239,68,68,0.5)', ad: 'MEC 4' },
+  4: { fg: CHROME_RENK.warn, bg: 'rgba(239,68,68,0.14)', kenar: 'rgba(239,68,68,0.5)', ad: 'MEC 4' },
 };
 const ANA_YONTEMLER: YontemKod[] = ['kok', 'pop', 'implant', 'enjeksiyon', 'ria_lng', 'ria_cu', 'kondom', 'lam', 'tup_ligasyonu'];
 const yontemAd = (k: YontemKod) => YONTEM_KATALOG.find((y) => y.kod === k)?.ad || k;
@@ -128,7 +129,7 @@ export default function MecAraci() {
                     <Rozet k={s.kategori} />
                   </div>
                   <div style={{ ...kucuk, marginTop: 6, color: r.fg }}>{s.not}</div>
-                  {s.engeller.map((x) => <div key={x} style={{ ...metin, fontSize: 13, color: '#FCA5A5' }}>✕ {x}</div>)}
+                  {s.engeller.map((x) => <div key={x} style={{ ...metin, fontSize: 13, color: CHROME_RENK.warn }}>✕ {x}</div>)}
                   {s.dikkat.map((x) => <div key={x} style={{ ...metin, fontSize: 13, color: '#FCD34D' }}>⚠ {x}</div>)}
                 </div>
               );
@@ -153,7 +154,7 @@ export default function MecAraci() {
           <div style={etiket}>Acil kontrasepsiyon zamanlaması</div>
           <div style={satir}>{alan('saat', 'Korunmasız ilişkiden bu yana — 36 veya 2 gün', 'İlişkiden bu yana geçen süre', 300)}{saat != null && <span style={{ ...kucuk, color: '#6EE7B7' }}>→ {saat} saat</span>}</div>
           <Kutu on={b.kok} set={tik('kok')}>Düzenli KOK kullanıyor (hap kaçırma)</Kutu>
-          <div style={{ ...metin, fontWeight: 700, margin: '8px 0', color: saat != null && saat > 120 ? '#FCA5A5' : '#EDF1F7' }}>{saat == null ? 'Süreyi girin — pencereler buna göre daralır.' : acil.oneri}</div>
+          <div style={{ ...metin, fontWeight: 700, margin: '8px 0', color: saat != null && saat > 120 ? CHROME_RENK.warn : CHROME_RENK.ink }}>{saat == null ? 'Süreyi girin — pencereler buna göre daralır.' : acil.oneri}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
             {acil.secenekler.map((s) => (
               <div key={s.kod} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 12, background: 'rgba(0,0,0,0.15)' }}>
@@ -164,7 +165,7 @@ export default function MecAraci() {
               </div>
             ))}
           </div>
-          {!acil.secenekler.length && <div style={{ ...metin, color: '#FCA5A5' }}>Hap seçeneklerinin penceresi geçti.</div>}
+          {!acil.secenekler.length && <div style={{ ...metin, color: CHROME_RENK.warn }}>Hap seçeneklerinin penceresi geçti.</div>}
           <ul style={{ ...metin, fontSize: 13, margin: '10px 0 0', paddingLeft: 18 }}>{acil.sonrasi.map((x) => <li key={x}>{x}</li>)}</ul>
         </div>
       )}

@@ -291,9 +291,9 @@ export default function TetkikPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #CBD5E1', paddingBottom: 12, marginBottom: 16 }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 18 }}>TETKİK İSTEK FORMU</div>
-                <div style={{ fontSize: 12, color: '#64748B' }}>TC SAĞLIK BAKANLIĞI</div>
+                <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>TC SAĞLIK BAKANLIĞI</div>
               </div>
-              <div style={{ fontSize: 12, color: '#64748B' }}>{new Date().toLocaleDateString('tr-TR')}</div>
+              <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{new Date().toLocaleDateString('tr-TR')}</div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16, fontSize: 14 }}>
@@ -317,7 +317,7 @@ export default function TetkikPage() {
                       return (
                         <li key={t}>
                           {t}
-                          {k ? <span style={{ color: '#64748B', fontSize: 12 }}> — {NUMUNE_ADI[k.n]}{k.aclik ? ', açlık gerekir' : ''}{k.not ? `, ${k.not}` : ''}</span> : null}
+                          {k ? <span style={{ color: CHROME_RENK.muted, fontSize: 12 }}> — {NUMUNE_ADI[k.n]}{k.aclik ? ', açlık gerekir' : ''}{k.not ? `, ${k.not}` : ''}</span> : null}
                         </li>
                       )
                     })

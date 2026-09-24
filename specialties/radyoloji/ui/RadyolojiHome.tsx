@@ -12,6 +12,7 @@ import type { RadyoSerit } from '../engines/serit'
 import { RADYO_MODALITELER, RADYO_ONCELIKLER, RADYO_DURUMLAR, type RadyoModalite, type RadyoOncelik, type RadyoDurum } from '../engines/kuyruk'
 import { BIRADS_KATEGORILER, RAPOR_SABLON, type BiradsKategori, type RaporSablonKod } from '../engines/rapor'
 import { KRITIK_BAYRAKLAR, BILDIRIM_MADDELER, type KritikBayrak, type BildirimMadde } from '../engines/kritik'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Veri = {
   serit: RadyoSerit
@@ -29,21 +30,21 @@ type Veri = {
 
 const ACCENT = '#0D9488'
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 }
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' }
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#5EEAD4', marginBottom: 6 }
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5', lineHeight: 1.45 }
-const metin: React.CSSProperties = { fontSize: 12, color: '#EDF1F7', lineHeight: 1.5 }
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 }
+const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 }
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }
 
 const SEKMELER = ['Özet', 'Kuyruk', 'Rapor', 'Kritik', 'Belge', 'Acil', 'Görevler'] as const
 type Sekme = (typeof SEKMELER)[number]
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: '#64748B' }
+const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted }
 
 function Cip({ ad, deger, durum, alt }: { ad: string; deger: string; durum: string; alt?: string }) {
   return (
-    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || '#EDF1F7', whiteSpace: 'nowrap' }}>
-      <span style={{ color: '#8FA0B5' }}>{ad} </span>{deger}
-      {alt && <span style={{ color: '#64748B' }}> · {alt}</span>}
+    <span style={{ border: `1px solid ${durum === 'kotu' ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[durum] || CHROME_RENK.ink, whiteSpace: 'nowrap' }}>
+      <span style={{ color: CHROME_RENK.muted }}>{ad} </span>{deger}
+      {alt && <span style={{ color: CHROME_RENK.muted }}> · {alt}</span>}
     </span>
   )
 }
@@ -97,7 +98,7 @@ export default function RadyolojiHome({ patientId }: { patientId: string }) {
     catch (e) { setMesaj(e instanceof Error ? e.message : 'Hata'); return null }
   }
 
-  if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Radyoloji yükleniyor…</div>
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Radyoloji yükleniyor…</div>
 
   return (
     <div style={toolsCard} data-chapter="radyoloji">
@@ -105,15 +106,15 @@ export default function RadyolojiHome({ patientId }: { patientId: string }) {
         {v.serit.chips.map((c) => <Cip key={c.ad} {...c} />)}
       </div>
       {v.serit.kirmizi.length > 0 && (
-        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#FCA5A5', borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
+        <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: CHROME_RENK.warn, borderRadius: 8, padding: '8px 10px', fontSize: 12, marginBottom: 8 }}>
           {v.serit.kirmizi.map((k) => <div key={k}>⚑ {k}</div>)}
-          <div style={{ ...kucuk, color: '#FCA5A5', marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
+          <div style={{ ...kucuk, color: CHROME_RENK.warn, marginTop: 4 }}>{v.kutuphane.acilYonlendirme}</div>
         </div>
       )}
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         {SEKMELER.map((x) => (
-          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(13,148,136,0.22)' : 'transparent', color: sekme === x ? '#CCFBF1' : '#8FA0B5' }}>{x}</button>
+          <button key={x} type="button" onClick={() => setSekme(x)} style={{ ...ghost, borderRadius: 999, background: sekme === x ? 'rgba(13,148,136,0.22)' : 'transparent', color: sekme === x ? '#CCFBF1' : CHROME_RENK.muted }}>{x}</button>
         ))}
       </div>
 

@@ -9,6 +9,7 @@ import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { dozHesapla, dozOzetMetni, konsantrasyonCoz, fmt, type DozModu } from '../../engines/doz';
 import { kiloCoz, sayiCoz, tarihGoster } from '../../engines/girdi';
 import { pediStil, Alan, Segment, Katlanir, TaslakNotu, KopyalaButonu, MuayeneFormunaEkle, PediHastaSecici } from './PediAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, input, uyari, kirmizi } = pediStil;
 const SIKLIK: Array<[number, string]> = [[1, '1×'], [2, '2×'], [3, '3×'], [4, '4×'], [6, '6×']];
@@ -104,10 +105,10 @@ export default function DozAraci() {
           <>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'baseline' }}>
               {s.dozMlYuvarlak != null ? (
-                <div><div style={{ fontSize: 40, fontWeight: 800, color: s.tavanli ? '#FCA5A5' : '#5EEAD4', letterSpacing: '-1px', lineHeight: 1.05 }}>{fmt(s.dozMlYuvarlak, 2)} mL</div><div style={kucuk}>doz başına{s.dozMl != null && Math.abs(s.dozMl - s.dozMlYuvarlak) > 1e-9 ? ` (tam: ${fmt(s.dozMl, 2)} mL)` : ''}</div></div>
+                <div><div style={{ fontSize: 40, fontWeight: 800, color: s.tavanli ? CHROME_RENK.warn : '#5EEAD4', letterSpacing: '-1px', lineHeight: 1.05 }}>{fmt(s.dozMlYuvarlak, 2)} mL</div><div style={kucuk}>doz başına{s.dozMl != null && Math.abs(s.dozMl - s.dozMlYuvarlak) > 1e-9 ? ` (tam: ${fmt(s.dozMl, 2)} mL)` : ''}</div></div>
               ) : null}
-              <div><div style={{ fontSize: s.dozMlYuvarlak != null ? 24 : 40, fontWeight: 800, color: '#EDF1F7', lineHeight: 1.1 }}>{fmt(s.dozMg, 1)} mg</div><div style={kucuk}>doz başına</div></div>
-              <div><div style={{ fontSize: 18, fontWeight: 700, color: '#C9D4E3' }}>günde {dozSayisi} kez</div><div style={kucuk}>{fmt(s.aralikSaat, 1)} saatte bir</div></div>
+              <div><div style={{ fontSize: s.dozMlYuvarlak != null ? 24 : 40, fontWeight: 800, color: CHROME_RENK.ink, lineHeight: 1.1 }}>{fmt(s.dozMg, 1)} mg</div><div style={kucuk}>doz başına</div></div>
+              <div><div style={{ fontSize: 18, fontWeight: 700, color: CHROME_RENK.muted }}>günde {dozSayisi} kez</div><div style={kucuk}>{fmt(s.aralikSaat, 1)} saatte bir</div></div>
             </div>
             <div style={{ ...pediStil.metin, marginTop: 10 }}>Günlük toplam <b>{fmt(s.gunlukMg, 1)} mg</b>{s.gunlukMl != null ? <> · <b>{fmt(s.gunlukMl, 2)} mL</b></> : null}</div>
             {s.tavanli && (

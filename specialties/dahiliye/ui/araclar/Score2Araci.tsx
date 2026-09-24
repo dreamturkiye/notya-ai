@@ -14,6 +14,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { kvrDegerlendir, type Bolge, type Cinsiyet, type KvrKova } from '../../engines/score2';
 import { dahStil, Secim, Segment, Alan, Onay, Sayi, Istatistik, Katlanir, KayitButonu, MuayeneFormunaEkle, OncekiVizit, Rozet, TaslakNotu, DahHastaSecici, KopyalaButonu } from './DahiliyeAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn } = dahStil;
 
@@ -178,7 +179,7 @@ export default function Score2Araci() {
         {sonuc.kovaNedeni && <div style={{ ...kucuk, marginTop: 4 }}>{sonuc.kovaNedeni}</div>}
         {sonuc.score2Notu && <div style={{ ...kucuk, marginTop: 8, color: '#FBBF24' }}>{sonuc.score2Notu}</div>}
         <div style={{ ...metin, marginTop: 10 }}>{sonuc.hedefNotu}</div>
-        {sonuc.statinAcigi.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6, color: '#C9D4E3' }}>• {x}</div>)}
+        {sonuc.statinAcigi.map((x) => <div key={x} style={{ ...kucuk, marginTop: 6, color: CHROME_RENK.muted }}>• {x}</div>)}
         {!riskAd && <div style={satir}><Rozet ton="uyari">yaş, SBP, kolesterol ve HDL girilince sayısal risk hesaplanır</Rozet></div>}
         <div style={satir}><KopyalaButonu metin={kopyaMetni} /></div>
         <MuayeneFormunaEkle hastaId={hasta.id} arac="SCORE2 / KVR değerlendirmesi" satirlar={notSatirlari} />

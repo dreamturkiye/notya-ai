@@ -28,6 +28,7 @@ import {
 } from '../engines/phototherapy-log'
 import { btn, giris, etiketS, kutu } from './clinic-styles'
 import { DERM_PHOTO_DEVICE, dermLabel } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export function FototerapiDefteri({
   sessions,
@@ -102,7 +103,7 @@ export function FototerapiDefteri({
         Toplam kümülatif {cumulativeJ(sessions)} J/cm² · {sessions.length} seans
         {SOLARIUM_FORBIDDEN ? ' · solaryum yok' : ''}
       </p>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>
         SUT: endikasyon raporu + MED + J/cm² defteri. Solaryum 2018 yasağı — cihaz listesinde yok. {DOZ_ADIMI_KILIDI}
       </p>
 
@@ -133,18 +134,18 @@ export function FototerapiDefteri({
       )}
       {ara && <p style={{ fontSize: 12, color: '#FDE68A' }} data-derm="ft-ara-verme">{ara}</p>}
       {tbse && (
-        <p style={{ fontSize: 12, color: tbse.gerekli ? '#FDE68A' : '#8FA0B5' }} data-derm="ft-tbse">
+        <p style={{ fontSize: 12, color: tbse.gerekli ? '#FDE68A' : CHROME_RENK.muted }} data-derm="ft-tbse">
           TBSE · {tbse.metin}
         </p>
       )}
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>{dozAdimiOzeti(sessions, f.device)}</p>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>{dozAdimiOzeti(sessions, f.device)}</p>
 
-      {sessions.length === 0 && <p style={{ fontSize: 13, color: '#8FA0B5' }}>Seans kaydı yok.</p>}
+      {sessions.length === 0 && <p style={{ fontSize: 13, color: CHROME_RENK.muted }}>Seans kaydı yok.</p>}
       {sessions.length > 0 && (
         <div style={{ overflowX: 'auto', marginTop: 6 }}>
           <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 520, fontSize: 12.5 }}>
             <thead>
-              <tr style={{ color: '#8FA0B5', fontSize: 11.5, textAlign: 'left' }}>
+              <tr style={{ color: CHROME_RENK.muted, fontSize: 11.5, textAlign: 'left' }}>
                 <th style={{ padding: 4 }}>Tarih</th>
                 <th style={{ padding: 4 }}>Cihaz</th>
                 <th style={{ padding: 4 }}>Seans</th>
@@ -162,7 +163,7 @@ export function FototerapiDefteri({
                   <td style={{ padding: 4 }}>{s.seans_no ?? '—'}</td>
                   <td style={{ padding: 4 }}>{s.j_cm2}</td>
                   <td style={{ padding: 4 }}>{s.doz_adimi_pct != null ? `%${s.doz_adimi_pct}` : '—'}</td>
-                  <td style={{ padding: 4, color: s.burn || s.eritem === 'agrili' || s.eritem === 'bullu' ? '#FCA5A5' : undefined }}>
+                  <td style={{ padding: 4, color: s.burn || s.eritem === 'agrili' || s.eritem === 'bullu' ? CHROME_RENK.warn : undefined }}>
                     {s.eritem ? ERITEM_ADI[s.eritem] : s.burn ? 'Yanık' : '—'}
                   </td>
                   <td style={{ padding: 4 }}>{[s.med_test ? 'MED' : '', s.kacirilan_gun ? `${s.kacirilan_gun} gün ara` : '', s.not || ''].filter(Boolean).join(' · ') || '—'}</td>
@@ -258,14 +259,14 @@ export function FototerapiDefteri({
             </label>
           </div>
           {aktifMed && (
-            <p style={{ fontSize: 11.5, color: '#8FA0B5', marginTop: 4 }}>
+            <p style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 4 }}>
               Bu cihaz için son MED: {aktifMed.deger} {aktifMed.birim} ({aktifMed.date}). Başlangıç dozu ve artış oranı hekim protokolünden.
             </p>
           )}
 
           {yanikGerekli && (
             <div style={{ border: '1px solid rgba(252,165,165,0.4)', borderRadius: 8, padding: 8, marginTop: 8 }} data-derm="ft-yanik-protokolu">
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#FCA5A5' }}>Yanık protokolü — tüm maddeler işaretlenmeli</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: CHROME_RENK.warn }}>Yanık protokolü — tüm maddeler işaretlenmeli</div>
               <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 4, marginTop: 6 }}>
                 {YANIK_PROTOKOLU.map((m) => (
                   <li key={m.kod}>
@@ -284,7 +285,7 @@ export function FototerapiDefteri({
             </div>
           )}
 
-          {hata && <p style={{ fontSize: 12.5, color: '#FCA5A5' }}>{hata}</p>}
+          {hata && <p style={{ fontSize: 12.5, color: CHROME_RENK.warn }}>{hata}</p>}
           <button type="button" style={{ ...btn(true), marginTop: 8 }} onClick={gonder} data-derm="ft-seans-ekle">Seans ekle</button>
         </div>
       )}

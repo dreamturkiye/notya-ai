@@ -22,6 +22,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { GruplanmisIlac, SunumSecenegi } from '@/app/api/doktor/ilac-ara/route';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 interface Ilac {
   id: string;
@@ -400,8 +401,8 @@ export default function HastaIlaclar({ patientId }: { patientId: string }) {
           </div>
         )}
 
-        {dozOneriYukleniyor && (<div style={{ margin: '4px 0 10px', padding: '8px 12px', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.25)', borderRadius: 10, fontSize: 13, color: '#64748B' }}>Ayşe doz önerisi hazırlıyor…</div>)}
-        {!dozOneriYukleniyor && dozOnerisi && (dozOnerisi.doz || dozOnerisi.kullanim) && (<div style={{ margin: '4px 0 10px', padding: '10px 12px', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: 10 }}><div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Ayşe’nin doz önerisi <span style={{ fontWeight: 400, color: '#94A3B8' }}>(öneridir — doz kararı hekimindir)</span></div><div style={{ fontSize: 13, color: '#334155', marginBottom: 8 }}><strong>{dozOnerisi.doz || '—'}</strong>{dozOnerisi.kullanim ? ` · ${dozOnerisi.kullanim}` : ''}{dozOnerisi.aciklama ? <span style={{ color: '#64748B' }}> — {dozOnerisi.aciklama}</span> : null}</div><button type="button" onClick={() => { if (dozOnerisi.doz) setDoz(dozOnerisi.doz); if (dozOnerisi.kullanim) setSiklik(dozOnerisi.kullanim); setDozOnerisi(null); }} style={{ background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Öneriyi kullan</button></div>)}
+        {dozOneriYukleniyor && (<div style={{ margin: '4px 0 10px', padding: '8px 12px', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.25)', borderRadius: 10, fontSize: 13, color: CHROME_RENK.muted }}>Ayşe doz önerisi hazırlıyor…</div>)}
+        {!dozOneriYukleniyor && dozOnerisi && (dozOnerisi.doz || dozOnerisi.kullanim) && (<div style={{ margin: '4px 0 10px', padding: '10px 12px', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: 10 }}><div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Ayşe’nin doz önerisi <span style={{ fontWeight: 400, color: '#94A3B8' }}>(öneridir — doz kararı hekimindir)</span></div><div style={{ fontSize: 13, color: '#334155', marginBottom: 8 }}><strong>{dozOnerisi.doz || '—'}</strong>{dozOnerisi.kullanim ? ` · ${dozOnerisi.kullanim}` : ''}{dozOnerisi.aciklama ? <span style={{ color: CHROME_RENK.muted }}> — {dozOnerisi.aciklama}</span> : null}</div><button type="button" onClick={() => { if (dozOnerisi.doz) setDoz(dozOnerisi.doz); if (dozOnerisi.kullanim) setSiklik(dozOnerisi.kullanim); setDozOnerisi(null); }} style={{ background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Öneriyi kullan</button></div>)}
         {!dozOneriYukleniyor && dozOneriNot && (<div style={{ margin: '4px 0 10px', padding: '8px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, fontSize: 12.5, color: '#92700A' }}>{dozOneriNot}</div>)}
         <div className="ni-grid">
           <div className="ni-field">

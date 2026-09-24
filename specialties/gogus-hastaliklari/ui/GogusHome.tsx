@@ -10,6 +10,7 @@ import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon'
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu'
 import { catMmrcDegerlendir, CAT_MADDELER, MMRC_AD, type MmrcSeviye } from '../engines/catMmrc'
 import type { GogusSerit } from '../engines/serit'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Veri = {
   serit: GogusSerit
@@ -28,14 +29,14 @@ type Veri = {
 
 const ACCENT = '#0284C7'
 const btn: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', minHeight: 32 }
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' }
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' }
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#7DD3FC', marginBottom: 6 }
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5', lineHeight: 1.45 }
-const metin: React.CSSProperties = { fontSize: 12, color: '#EDF1F7', lineHeight: 1.5 }
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted, lineHeight: 1.45 }
+const metin: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, lineHeight: 1.5 }
 
 const SEKMELER = ['Özet', 'CAT/mMRC', 'Spirometri', 'Risk', 'Görevler'] as const
 type Sekme = (typeof SEKMELER)[number]
-const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: '#64748B' }
+const RENK: Record<string, string> = { iyi: '#34D399', dikkat: '#FBBF24', kotu: '#F87171', yok: CHROME_RENK.muted }
 
 export default function GogusHome({ patientId }: { patientId: string }) {
   const [v, setV] = useState<Veri | null>(null)
@@ -83,15 +84,15 @@ export default function GogusHome({ patientId }: { patientId: string }) {
     fev1Yuzde: fev1 === '' ? null : Number(fev1),
   }), [maddeler, mmrc, orta, yatis, fev1])
 
-  if (!v) return <div style={{ ...toolsCard, color: '#8FA0B5', fontSize: 12 }}>Göğüs yükleniyor…</div>
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Göğüs yükleniyor…</div>
 
   return (
     <div style={toolsCard} data-chapter="gogus-hastaliklari">
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
         {v.serit.chips.map((c) => (
-          <span key={c.ad} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[c.durum] || '#EDF1F7' }}>
-            <span style={{ color: '#8FA0B5' }}>{c.ad} </span>{c.deger}
-            {c.alt && <span style={{ color: '#64748B' }}> · {c.alt}</span>}
+          <span key={c.ad} style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '3px 10px', fontSize: 11, color: RENK[c.durum] || CHROME_RENK.ink }}>
+            <span style={{ color: CHROME_RENK.muted }}>{c.ad} </span>{c.deger}
+            {c.alt && <span style={{ color: CHROME_RENK.muted }}> · {c.alt}</span>}
           </span>
         ))}
       </div>

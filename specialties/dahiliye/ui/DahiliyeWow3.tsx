@@ -6,19 +6,20 @@ import type { Wow3Veri } from '@/app/api/doktor/dahiliye/_wow3';
 import type { EkgSonuc } from '../engines/ekg';
 import type { RaporBolum } from '../engines/checkupPaket';
 import { Kaynak } from './DahiliyeWow2';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 type Props = { sekme: string; w3: Wow3Veri; kaynak: boolean; refler: Record<string, string>; calistir: (body: Record<string, unknown>, ok?: string) => Promise<Record<string, unknown> | null> };
 
-const kucuk: React.CSSProperties = { fontSize: 11, color: '#8FA0B5' };
+const kucuk: React.CSSProperties = { fontSize: 11, color: CHROME_RENK.muted };
 const etiket: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#0F9B8E', marginBottom: 6 };
 const satir: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 };
-const govde: React.CSSProperties = { fontSize: 12, color: '#EDF1F7', marginTop: 8 };
+const govde: React.CSSProperties = { fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 };
 const btn: React.CSSProperties = { background: '#0F9B8E', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: '#8FA0B5', border: '1px solid rgba(255,255,255,0.15)' };
+const ghost: React.CSSProperties = { ...btn, background: 'transparent', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)' };
 const kirmiziBtn: React.CSSProperties = { ...btn, background: '#B91C1C' };
-const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#2DD4BF' : '#8FA0B5' }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
+const chk = (label: string, v: boolean, on: (x: boolean) => void) => <label key={label} style={{ ...kucuk, display: 'flex', gap: 4, alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 8px', cursor: 'pointer', color: v ? '#2DD4BF' : CHROME_RENK.muted }}><input type="checkbox" checked={v} onChange={(e) => on(e.target.checked)} />{label}</label>;
 const sec = (v: string, on: (x: string) => void, ops: [string, string][], ph?: string) => <select value={v} onChange={(e) => on(e.target.value)} style={{ ...toolsInput, width: 'auto' }}>{ph && <option value="">{ph}</option>}{ops.map(([k, a]) => <option key={k} value={k} style={{ color: '#000' }}>{a}</option>)}</select>;
-const Liste = ({ x, renk, on }: { x: string[]; renk?: string; on?: string }) => <>{x.map((y) => <div key={y} style={{ color: renk || '#EDF1F7' }}>{on || '•'} {y}</div>)}</>;
+const Liste = ({ x, renk, on }: { x: string[]; renk?: string; on?: string }) => <>{x.map((y) => <div key={y} style={{ color: renk || CHROME_RENK.ink }}>{on || '•'} {y}</div>)}</>;
 const esc = (x: unknown) => String(x ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
 function yazdir(baslik: string, govdeHtml: string) {
   const w = window.open('', '_blank'); if (!w) return;
@@ -47,7 +48,7 @@ export default function DahiliyeWow3({ sekme, w3, kaynak, refler, calistir }: Pr
       </div>
       {r && (<div style={govde}>
         <div>Kategori: <b>{r.efKategori || 'EF bilinmiyor'}</b></div>
-        {r.sutunlar.map((x) => <div key={x.kod} style={{ color: !x.endike ? '#64748B' : x.var ? '#22C55E' : '#FBBF24' }}>{!x.endike ? '–' : x.var ? '✓' : '□'} {x.ad}{x.not ? ` (${x.not})` : ''}{!x.endike ? ' · bu kategoride zorunlu sütun değil' : ''}</div>)}
+        {r.sutunlar.map((x) => <div key={x.kod} style={{ color: !x.endike ? CHROME_RENK.muted : x.var ? '#22C55E' : '#FBBF24' }}>{!x.endike ? '–' : x.var ? '✓' : '□'} {x.ad}{x.not ? ` (${x.not})` : ''}{!x.endike ? ' · bu kategoride zorunlu sütun değil' : ''}</div>)}
         <Liste x={r.uyarilar} renk="#FBBF24" on="⚠" /><Liste x={r.plan} /><Liste x={r.sevk} renk="#F87171" on="→" />
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
         <div style={satir}><input value={s('hfplan')} onChange={(e) => set('hfplan', e.target.value)} placeholder="hekim planı (kilitlenir)" style={{ ...toolsInput, minWidth: 260 }} /><button type="button" style={btn} disabled={!s('hfplan')} onClick={() => calistir({ adim: 'kilit', kart: 'hf', alan: 'plan', deger: s('hfplan') }, 'KY planı kilitlendi.')}>Kilitle</button>
@@ -73,7 +74,7 @@ export default function DahiliyeWow3({ sekme, w3, kaynak, refler, calistir }: Pr
         <div>Ajan (hasta_ilaclar): <b>{r.ajan || '—'}</b>{r.krkl != null ? ` · KrKl (Cockcroft-Gault) ${r.krkl} mL/dk` : ''}{r.ttr != null ? ` · TTR %${r.ttr}` : ''}{r.sonInr ? ` · son INR ${String(r.sonInr.deger).replace('.', ',')} (${r.sonInr.tarih})` : ''}{r.sonrakiInr ? ` · sonraki INR ${r.sonrakiInr}` : ''}</div>
         <Liste x={r.kirmizi} renk="#F87171" on="⚑" /><Liste x={r.uygunluk} /><Liste x={r.uyarilar} renk="#FBBF24" on="⚠" /><Liste x={r.plan} />
         <div style={{ ...kucuk, marginTop: 6 }}>HAS-BLED maddeleri (kontrol listesi — skor değil; değiştirilebilir olanlara odaklan):</div>
-        {r.hasBledMaddeleri.map((m) => <div key={m.madde} style={{ ...kucuk, color: m.var ? (m.degistirilebilir ? '#FBBF24' : '#EDF1F7') : '#64748B' }}>{m.var == null ? '?' : m.var ? '■' : '□'} {m.madde}{m.var && m.degistirilebilir ? ' — değiştirilebilir' : ''}</div>)}
+        {r.hasBledMaddeleri.map((m) => <div key={m.madde} style={{ ...kucuk, color: m.var ? (m.degistirilebilir ? '#FBBF24' : CHROME_RENK.ink) : CHROME_RENK.muted }}>{m.var == null ? '?' : m.var ? '■' : '□'} {m.madde}{m.var && m.degistirilebilir ? ' — değiştirilebilir' : ''}</div>)}
         <Kaynak d={r.dipnotlar} acik={kaynak} refler={refler} />
         <div style={satir}>{r.sonrakiInr && <button type="button" style={ghost} onClick={() => calistir({ adim: 'antikoagulan', endikasyon: a?.endikasyon, hedefInrAlt: a?.hedef_inr_alt, hedefInrUst: a?.hedef_inr_ust, kiloKg: a?.kilo_kg, hasBled: hb, inrGorev: r.sonrakiInr }, 'INR görevi açıldı.')}>INR görevi aç ({r.sonrakiInr})</button>}
           {sec(s('kaj'), (x) => set('kaj', x), [['warfarin', 'warfarin'], ['apiksaban', 'apiksaban'], ['rivaroksaban', 'rivaroksaban'], ['dabigatran', 'dabigatran'], ['edoksaban', 'edoksaban']], 'ajan kilitle (hekim)')}<button type="button" style={btn} disabled={!s('kaj')} onClick={() => calistir({ adim: 'kilit', kart: 'antikoagulan', alan: 'ajan', deger: s('kaj') }, 'Ajan kilitlendi.')}>Kilitle</button></div>
@@ -235,7 +236,7 @@ export default function DahiliyeWow3({ sekme, w3, kaynak, refler, calistir }: Pr
       <Kaynak d={c.dipnotlar} acik={kaynak} refler={refler} />
       {c.paketler.map((p) => (<div key={p.id} style={{ ...govde, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 8 }}>
         <div><b>{p.ad}</b> · {p.tarih} · {p.tamamlanan}/{p.zorunluToplam} zorunlu kalem{p.ucret != null ? ` · ₺${p.ucret}` : ''} · kendi ödemeli{p.raporKilitli ? ' · rapor onaylı' : ''}</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>{p.kalemler.map((k) => <label key={k.kod} title={k.not || ''} style={{ ...kucuk, border: `1px solid ${k.tamam ? '#22C55E' : k.opsiyonel ? 'rgba(255,255,255,0.1)' : '#FBBF24'}`, borderRadius: 999, padding: '2px 8px', color: k.tamam ? '#22C55E' : '#8FA0B5', display: 'flex', gap: 4, alignItems: 'center' }}><input type="checkbox" checked={k.tamam} disabled={k.kaynak === 'lab' || k.kaynak === 'belge' || k.kaynak === 'tarama'} onChange={(e) => calistir({ adim: 'checkupmanuel', paketId: p.id, kod: k.kod, tamam: e.target.checked }, 'Kalem güncellendi.')} />{k.ad}{k.opsiyonel ? ' (ops.)' : ''}{k.kaynak ? ` · ${k.kaynak}` : ''}</label>)}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>{p.kalemler.map((k) => <label key={k.kod} title={k.not || ''} style={{ ...kucuk, border: `1px solid ${k.tamam ? '#22C55E' : k.opsiyonel ? 'rgba(255,255,255,0.1)' : '#FBBF24'}`, borderRadius: 999, padding: '2px 8px', color: k.tamam ? '#22C55E' : CHROME_RENK.muted, display: 'flex', gap: 4, alignItems: 'center' }}><input type="checkbox" checked={k.tamam} disabled={k.kaynak === 'lab' || k.kaynak === 'belge' || k.kaynak === 'tarama'} onChange={(e) => calistir({ adim: 'checkupmanuel', paketId: p.id, kod: k.kod, tamam: e.target.checked }, 'Kalem güncellendi.')} />{k.ad}{k.opsiyonel ? ' (ops.)' : ''}{k.kaynak ? ` · ${k.kaynak}` : ''}</label>)}</div>
         <div style={satir}>
           <button type="button" style={btn} onClick={async () => { const j = await calistir({ adim: 'checkuprapor', paketId: p.id }, 'Birleşik rapor hazır.'); const rp = j?.rapor as { bolumler: RaporBolum[]; taslak: boolean } | undefined; if (rp) setRapor({ paketId: p.id, ...rp }); }}>Birleşik rapor</button>
           {!p.raporKilitli && <button type="button" style={ghost} onClick={() => calistir({ adim: 'checkupkilit', paketId: p.id }, 'Birleşik rapor hekim onayıyla kilitlendi.')}>Hekim onayı (kilitle)</button>}

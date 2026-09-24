@@ -23,6 +23,7 @@ import {
   payloadFromGebelikApi,
   type LiveGebelikVeri,
 } from '@/lib/specialties/kadin-dogum-live'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export default function HastaKdChapter({
   patientId,
@@ -68,11 +69,11 @@ export default function HastaKdChapter({
     {/* NOTYA-KD-02: obstetrics spine — görevler · onam · travay/partograf · doğum & C/S · lohusa/taburcu · bebek kartı (kadın-doğum only) */}
     {veri.gebelik?.id && <DogumSpine gebelikId={veri.gebelik.id} patientId={patientId} />}
     <details style={{ border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '10px 14px' }} data-chapter="kadin-dogum">
-      <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#EDF1F7', fontSize: 14 }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 700, color: CHROME_RENK.ink, fontSize: 14 }}>
         Bölüm derinliği (ACOG / DÖBYR / Williams)
       </summary>
       <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-        <p style={{ margin: 0, fontSize: 12, color: '#8FA0B5' }}>
+        <p style={{ margin: 0, fontSize: 12, color: CHROME_RENK.muted }}>
           TR pratik gold: ACOG. Yasal taban: DÖBYR 2026. Ders kitabı: Williams. Çelişince iki sütun — birleştirilmez.
         </p>
         <GebeKarti
@@ -89,7 +90,7 @@ export default function HastaKdChapter({
         {windows.length > 0 && <TaramaPencereleri windows={windows} />}
         {showNst && nstList[0] && <NstStrip nst={nstList[0]} />}
         {showNst && nstList.length === 0 && (
-          <p style={{ fontSize: 13, color: '#8FA0B5' }} data-kd="nst-placeholder">
+          <p style={{ fontSize: 13, color: CHROME_RENK.muted }} data-kd="nst-placeholder">
             NST izlemi endike (28. hafta veya yüksek risk). Aşağıdaki NST kaydından ekleyin.
           </p>
         )}

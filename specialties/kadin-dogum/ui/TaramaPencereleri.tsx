@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import type { EvaluatedWindow } from '../engines/test-windows'
 import { KD_WINDOW_STATUS, kdLabel } from './labels'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -22,7 +23,7 @@ export function TaramaPencereleri({ windows }: { windows: EvaluatedWindow[] }) {
   return (
     <section style={box} data-tab="TaramaPencereleri">
       <h2 style={{ margin: 0, fontSize: 16 }}>Tarama pencereleri</h2>
-      <p style={{ fontSize: 12, color: '#8FA0B5' }}>SUT ikili/üçlü yasal; NIPT klinik öneri, cepte.</p>
+      <p style={{ fontSize: 12, color: CHROME_RENK.muted }}>SUT ikili/üçlü yasal; NIPT klinik öneri, cepte.</p>
       <ul style={{ listStyle: 'none', padding: 0, fontSize: 13 }}>
         {windows.map((w) => (
           <li key={w.id} style={{ color: color[w.status], marginBottom: 6 }}>

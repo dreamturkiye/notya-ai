@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import { kutu, btn } from './clinic-styles'
 import type { JineStickyChip } from '../engines/jine-ofis-vizit'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export type StickyJineStripProps = {
   chips: JineStickyChip[]
@@ -26,7 +27,7 @@ const chipS: CSSProperties = {
   borderRadius: 8,
   padding: '6px 10px',
   fontSize: 12.5,
-  color: '#EDF1F7',
+  color: CHROME_RENK.ink,
 }
 
 export function StickyJineStrip(p: StickyJineStripProps) {

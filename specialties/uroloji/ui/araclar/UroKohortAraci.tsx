@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi'
 import { uroStil, Istatistik, TaslakNotu, Rozet } from './UroAracKabugu'
 import { URO_BAYRAK_AD, uroKohortFiltre, type UroKohortBayrak, type UroKohortSatir } from '../../engines/kohort'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const S = uroStil
 const BAYRAKLAR = Object.keys(URO_BAYRAK_AD) as UroKohortBayrak[]
@@ -63,7 +64,7 @@ export default function UroKohortAraci() {
               key={b}
               type="button"
               onClick={() => setSuzgec((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]))}
-              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(13,148,136,0.25)' : 'transparent', color: suzgec.includes(b) ? '#99F6E4' : '#C9D4E3' }}
+              style={{ ...S.ghost, background: suzgec.includes(b) ? 'rgba(13,148,136,0.25)' : 'transparent', color: suzgec.includes(b) ? '#99F6E4' : CHROME_RENK.muted }}
             >{URO_BAYRAK_AD[b]}</button>
           ))}
         </div>

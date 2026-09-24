@@ -20,6 +20,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { resmiTatilMi } from '@/lib/randevu/resmiTatiller';
 import { randevuAksiyonlari, REAKTIVASYON_DURUMU } from '@/lib/randevu/randevuDurum';
 import { trAramaNormalize, trIcerir } from '@/lib/utils/turkceArama';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 export const dynamic = 'force-dynamic';
 
@@ -1228,7 +1229,7 @@ export default function RandevularPage() {
                             </div>
                             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
                               <button type="button" onClick={modalAktifEt} style={{ ...modalAksiyonBtn, background: '#0F9B8E', color: 'white', borderColor: '#0F9B8E', fontWeight: 700 }}>↺ Aktif Hale Getir</button>
-                              <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: '#64748B' }}>Sil</button>
+                              <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: CHROME_RENK.muted }}>Sil</button>
                             </div>
                           </div>
                         )}
@@ -1258,7 +1259,7 @@ export default function RandevularPage() {
                             {aks.iptalEt && (
                               <button type="button" onClick={() => { setModalIptalNedeni(''); setModalIptalAcik(true); }} style={{ ...modalAksiyonBtn, color: '#EF4444', borderColor: '#EF4444' }}>İptal Et</button>
                             )}
-                            <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: '#64748B' }}>Sil</button>
+                            <button type="button" onClick={modalSil} style={{ ...modalAksiyonBtn, color: CHROME_RENK.muted }}>Sil</button>
                           </div>
                         )}
                         {modalIptalAcik && (
@@ -1340,7 +1341,7 @@ export default function RandevularPage() {
                   <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: 12, background: '#ECFDF5', border: '2px solid #0F9B8E' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: '#0F766E', textTransform: 'uppercase' }}>Seçilen hasta</div>
                     <div style={{ fontSize: 22, fontWeight: 800, color: '#0A1628', lineHeight: 1.2, marginTop: 2 }}>{seciliHasta.name}</div>
-                    <button type="button" onClick={() => { setSeciliHasta(null); setKayitsizMod(false); }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', textDecoration: 'underline', fontSize: 13, padding: 0 }}>değiştir</button>
+                    <button type="button" onClick={() => { setSeciliHasta(null); setKayitsizMod(false); }} style={{ marginTop: 8, background: 'none', border: 'none', color: CHROME_RENK.muted, cursor: 'pointer', textDecoration: 'underline', fontSize: 13, padding: 0 }}>değiştir</button>
                   </div>
                 )}
                 {/* NOTYA-RANDEVU-12: kayıtsız yola yalnız (a) gerçekten arayıp bulamayınca veya
@@ -1412,7 +1413,7 @@ export default function RandevularPage() {
                     <input className="ni-input" value={serbestTelefon} onChange={(e) => setSerbestTelefon(e.target.value)} placeholder="05xx xxx xx xx" />
                   </div>
                   <div className="ni-field">
-                    <label className="ni-label">E-posta <span style={{ color: '#8FA0B5', fontWeight: 400 }}>(isteğe bağlı — portal daveti için)</span></label>
+                    <label className="ni-label">E-posta <span style={{ color: CHROME_RENK.muted, fontWeight: 400 }}>(isteğe bağlı — portal daveti için)</span></label>
                     <input className="ni-input" type="email" value={serbestEmail} onChange={(e) => setSerbestEmail(e.target.value)} placeholder="ornek@eposta.com" />
                   </div>
                 </div>
@@ -1460,7 +1461,7 @@ export default function RandevularPage() {
                       {cakisan.length ? `Bu saat dolu (${cakisan.map((r) => r.hastaAdi).join(', ')})` : `Bu günün randevuları${gunListe.length ? ` (${gunListe.length})` : ''}`}
                     </div>
                     {gunListe.length === 0 ? (
-                      <div style={{ fontSize: 13, color: '#64748B' }}>Bu günde başka randevu yok — {saat} boş.</div>
+                      <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Bu günde başka randevu yok — {saat} boş.</div>
                     ) : (
                       <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#0A1628', lineHeight: 1.55 }}>
                         {gunListe.map((r) => {

@@ -7,6 +7,7 @@ import { analyzeImage, uzmanOnay, VISION_DISCLAIMER, type Actor } from '../imagi
 import { DERM_ACTOR, DERM_VISION_STATUS, DERM_VISION_TASK, dermLabel } from './labels'
 import type { DermBelgeOzet } from '../engines/clinic-fit'
 import { belgeDurumEtiket, belgeHekimOnayli } from '../engines/clinic-fit'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const box: CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -93,7 +94,7 @@ export function AsistanGorselPanel({
       </button>
       {belgeOzet.length > 0 && (
         <div style={{ marginTop: 10, fontSize: 12.5 }}>
-          <div style={{ color: '#8FA0B5', marginBottom: 4 }}>Belgeler AI özeti (tanı değildir)</div>
+          <div style={{ color: CHROME_RENK.muted, marginBottom: 4 }}>Belgeler AI özeti (tanı değildir)</div>
           {belgeOzet.slice(0, 3).map((a) => (
             <div key={a.id} style={{ marginBottom: 4 }}>
               {belgeDurumEtiket(a.durum)}
@@ -107,7 +108,7 @@ export function AsistanGorselPanel({
         {rows.map((r) => (
           <li key={r.id} style={{ marginBottom: 8 }}>
             {dermLabel(DERM_VISION_TASK, r.task)} · {dermLabel(DERM_VISION_STATUS, r.status)} · {dermLabel(DERM_ACTOR, r.drafted_by)}
-            <div style={{ color: '#8FA0B5', fontSize: 12 }}>{r.observations}</div>
+            <div style={{ color: CHROME_RENK.muted, fontSize: 12 }}>{r.observations}</div>
             {r.status === 'draft' && (
               <button
                 type="button"
@@ -120,7 +121,7 @@ export function AsistanGorselPanel({
             )}
           </li>
         ))}
-        {rows.length === 0 && <li style={{ color: '#8FA0B5' }}>Taslak yok — Asistan kendi kaydını onaylayamaz.</li>}
+        {rows.length === 0 && <li style={{ color: CHROME_RENK.muted }}>Taslak yok — Asistan kendi kaydını onaylayamaz.</li>}
       </ul>
     </section>
   )

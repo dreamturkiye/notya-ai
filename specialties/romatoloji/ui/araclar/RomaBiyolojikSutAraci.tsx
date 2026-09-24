@@ -5,6 +5,7 @@ import { romaStil, RomaHastaSecici, KopyalaButonu, Istatistik, TaslakNotu, useUr
 import {
   biyolojikSutKontrol, BIYO_ENDIKASYON_ADI, type BiyolojikEndikasyon,
 } from '../../engines/biyolojikSut'
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const ENDIKASYONLAR = Object.keys(BIYO_ENDIKASYON_ADI) as BiyolojikEndikasyon[]
 
@@ -84,7 +85,7 @@ export default function RomaBiyolojikSutAraci() {
           <Istatistik deger={sonuc.eksikler.length} etiket="Eksik madde" ton={sonuc.eksikler.length ? 'uyari' : 'iyi'} />
           <Istatistik deger={sonuc.tamamMi ? 'Hazır' : 'Taslak'} etiket="Durum" ton={sonuc.tamamMi ? 'iyi' : 'notr'} />
         </div>
-        <ul style={{ margin: 0, paddingLeft: 18, color: '#EDF1F7', fontSize: 13 }}>
+        <ul style={{ margin: 0, paddingLeft: 18, color: CHROME_RENK.ink, fontSize: 13 }}>
           {sonuc.kontrol.map((k) => (
             <li key={k.id}>{k.tamam === true ? '✓' : k.tamam === false ? '✗' : '○'} {k.madde}</li>
           ))}

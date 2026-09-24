@@ -10,6 +10,7 @@ import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { MCHAT_R_SORULARI, mchatPuanla, type MchatSonuc } from '@/lib/clinical/mchatR';
 import MuayeneFormunaDon from '@/components/doktor/MuayeneFormunaDon';
 import { eklenenNotId } from '@/lib/doktor/muayeneFormuYolu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 interface GecmisTest { id: string; toplam_puan: number; risk_seviyesi: string; sonuc_metni: string; created_at: string }
 
@@ -76,7 +77,7 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ fontSize: 13, color: '#8FA0B5' }}>
+      <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>
         M-CHAT-R/F — Değiştirilmiş Erken Çocukluk Dönemi Otizm Tarama Ölçeği (resmi Türkçe çeviri, Robins/Fein/Barton 2009 · mchatscreen.com). Aileye sorup işaretleyin.
       </div>
 
@@ -85,8 +86,8 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
           <div key={s.no} style={{ padding: '10px 0', borderBottom: s.no < 20 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <span style={{ color: '#EDF1F7', fontSize: 13.5 }}>{s.no}. {s.metin}</span>
-                {s.ornek && <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{s.ornek}</div>}
+                <span style={{ color: CHROME_RENK.ink, fontSize: 13.5 }}>{s.no}. {s.metin}</span>
+                {s.ornek && <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>{s.ornek}</div>}
               </div>
               <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 {(['Evet', 'Hayır'] as const).map((etiket, i) => {
@@ -106,19 +107,19 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
       </div>
 
       <button type="button" disabled={!hepsiYanitlandi} onClick={degerlendir}
-        style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: hepsiYanitlandi ? 'white' : '#64748B', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
+        style={{ background: hepsiYanitlandi ? '#0F9B8E' : 'rgba(255,255,255,0.08)', border: 'none', color: hepsiYanitlandi ? 'white' : CHROME_RENK.muted, borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: hepsiYanitlandi ? 'pointer' : 'default' }}>
         Testi Değerlendir {!hepsiYanitlandi && `(${MCHAT_R_SORULARI.filter((s) => cevaplar[s.no] === null).length} soru kaldı)`}
       </button>
 
       {sonuc && (
         <div style={{ ...kutu, borderColor: RISK_RENK[sonuc.riskSeviyesi] + '55', background: RISK_RENK[sonuc.riskSeviyesi] + '14' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: RISK_RENK[sonuc.riskSeviyesi] }}>{sonuc.sonucMetni}</div>
-          <div style={{ fontSize: 13, color: '#C9D4E3', marginTop: 4 }}>Toplam puan: {sonuc.toplamPuan}/20 — {sonuc.riskEtiket}</div>
+          <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 4 }}>Toplam puan: {sonuc.toplamPuan}/20 — {sonuc.riskEtiket}</div>
           {sonuc.riskSeviyesi === 'orta' && (
-            <div style={{ fontSize: 12, color: '#64748B', marginTop: 8 }}>Not: 3-7 puan resmi araçta önce İzlem (Follow-Up) görüşmesi gerektirir; bu uygulama şimdilik doğrudan sevk önerisi veriyor.</div>
+            <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 8 }}>Not: 3-7 puan resmi araçta önce İzlem (Follow-Up) görüşmesi gerektirir; bu uygulama şimdilik doğrudan sevk önerisi veriyor.</div>
           )}
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#EDF1F7', borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>Sadece Kaydet</button>
+            <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(false)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontSize: 13, cursor: 'pointer' }}>Sadece Kaydet</button>
             <button type="button" disabled={kaydediyor} onClick={() => kaydetVeEkle(true)} style={{ background: '#0F9B8E', border: 'none', color: 'white', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{kaydediyor ? 'Kaydediliyor…' : 'Bugünkü Muayene Formuna Ekle'}</button>
           </div>
           {notEklendi && (
@@ -133,10 +134,10 @@ export default function HastaMchat({ patientId }: { patientId: string }) {
 
       {gecmis.length > 0 && (
         <div style={kutu}>
-          <div style={{ fontWeight: 700, marginBottom: 8, color: '#EDF1F7' }}>Geçmiş Uygulamalar</div>
+          <div style={{ fontWeight: 700, marginBottom: 8, color: CHROME_RENK.ink }}>Geçmiş Uygulamalar</div>
           {gecmis.map((g) => (
             <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <span style={{ color: '#8FA0B5' }}>{new Date(g.created_at).toLocaleDateString('tr-TR')}</span>
+              <span style={{ color: CHROME_RENK.muted }}>{new Date(g.created_at).toLocaleDateString('tr-TR')}</span>
               <span style={{ color: RISK_RENK[g.risk_seviyesi] }}>{g.toplam_puan}/20 — {g.sonuc_metni}</span>
             </div>
           ))}

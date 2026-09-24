@@ -13,6 +13,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
 import { pasi, easi, scorad, pasiBandi, easiBandi, scoradBandi, type PasiRegion } from '../../engines/score-calculator';
 import { dermStil, Alan, Segment, Istatistik, Katlanir, KayitButonu, MuayeneFormunaEkle, OncekiVizit, Rozet, TaslakNotu, DermHastaSecici, KopyalaButonu } from './DermAracKabugu';
+import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 
 const { kutu, etiket, kucuk, metin, satir, btn, ghost } = dermStil;
 
@@ -52,7 +53,7 @@ const BOS: Record<BolgeAnahtar, PasiRegion> = {
 function Derece({ etiketAd, deger, enCok, set }: { etiketAd: string; deger: number; enCok: number; set: (n: number) => void }) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
-      <span style={{ ...kucuk, flex: '1 1 150px', color: '#C9D4E3' }}>{etiketAd}</span>
+      <span style={{ ...kucuk, flex: '1 1 150px', color: CHROME_RENK.muted }}>{etiketAd}</span>
       <div role="group" aria-label={etiketAd} style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {Array.from({ length: enCok + 1 }, (_, n) => (
           <button
@@ -63,7 +64,7 @@ function Derece({ etiketAd, deger, enCok, set }: { etiketAd: string; deger: numb
             style={{
               minWidth: 44, minHeight: 44, borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
               background: deger === n ? '#DB2777' : 'rgba(255,255,255,0.05)',
-              color: deger === n ? '#FFF1F7' : '#C9D4E3',
+              color: deger === n ? '#FFF1F7' : CHROME_RENK.muted,
               border: `1px solid ${deger === n ? 'rgba(244,114,182,0.6)' : 'rgba(255,255,255,0.14)'}`,
             }}
           >{n}</button>
@@ -153,7 +154,7 @@ export default function PasiEasiAraci() {
         <div key={k} style={kutu}>
           <div style={{ ...etiket, display: 'flex', justifyContent: 'space-between' }}>
             <span>{ad}</span>
-            <span style={{ ...kucuk, color: '#8FA0B5' }}>{agirlik}</span>
+            <span style={{ ...kucuk, color: CHROME_RENK.muted }}>{agirlik}</span>
           </div>
           {oge.map((o) => (
             <Derece key={String(o.k)} etiketAd={`${ad} — ${o.ad}`} deger={Number(bolge[k][o.k] ?? 0)} enCok={enCokSiddet} set={(n) => guncelle(k, o.k, n)} />
