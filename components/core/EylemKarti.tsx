@@ -54,6 +54,15 @@ export interface EylemOneriGorunumu {
   portalaYansir?: boolean
   /** T2 only — what the row looks like today, so the card can show önce → sonra. */
   once?: Record<string, unknown> | null
+  /**
+   * NOTYA-EYLEM-STALE-01 (Kaan, 2026-09-24) — "sesli ve yazılı olarak hiçbir kayıt yapamıyorum":
+   * traced to draft öneriler from up to 18+ hours earlier still surfacing as "onayınızı bekleyen
+   * kayıtlar" with no indication of their age, indistinguishable from something the doctor just
+   * said. The API already selects created_at (app/api/doktor/eylem/route.ts) -- it just never
+   * reached this type or the card. Optional so callers that build a card without it (tests, other
+   * surfaces) don't need updating.
+   */
+  created_at?: string
 }
 
 export interface EylemHasta {
@@ -117,7 +126,30 @@ function trTarih(iso?: string | null): string {
   return `${g}.${a}.${y}`
 }
 
-function Baslik({ hasta, etiket, kademe }: { hasta: EylemHasta; etiket: string; kademe: 'T1' | 'T2' }) {
+/**
+ * NOTYA-EYLEM-STALE-01 (Kaan, 2026-09-24) — how long ago this draft was proposed, so a card from
+ * hours (or a previous day) earlier reads as stale on sight rather than looking like something the
+ * doctor just said. Coarse buckets, not a live-ticking clock — this is a glance-and-move-on label,
+ * not a stopwatch.
+ */
+function goreliZaman(iso?: string): string {
+  if (!iso) return ''
+  const t = new Date(iso).getTime()
+  if (Number.isNaN(t)) return ''
+  const dk = Math.floor((Date.now() - t) / 60000)
+  if (dk < 1) return 'az önce'
+  if (dk < 60) return `${dk} dakika önce`
+  const sa = Math.floor(dk / 60)
+  if (sa < 24) return `${sa} saat önce`
+  const gun = Math.floor(sa / 24)
+  if (gun === 1) return 'dün'
+  if (gun < 7) return `${gun} gün önce`
+  const d = new Date(iso)
+  return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })
+}
+
+function Baslik({ hasta, etiket, kademe, createdAt }: { hasta: EylemHasta; etiket: string; kademe: 'T1' | 'T2'; createdAt?: string }) {
+  const goreli = goreliZaman(createdAt)
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.25 }}>{hasta.ad}</div>
@@ -125,6 +157,7 @@ function Baslik({ hasta, etiket, kademe }: { hasta: EylemHasta; etiket: string; 
       <div style={{ ...kucuk, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>
         {etiket}
         {kademe === 'T2' ? ' · değişiklik' : ''}
+        {goreli ? ` · ${goreli}` : ''}
       </div>
     </div>
   )
@@ -237,7 +270,7 @@ export function EylemKarti({
 
   return (
     <div style={kart}>
-      <Baslik hasta={hasta} etiket={oneri.etiket} kademe={oneri.kademe} />
+      <Baslik hasta={hasta} etiket={oneri.etiket} kademe={oneri.kademe} createdAt={oneri.created_at} />
 
       <EylemUyarilari uyarilar={uyarilar} />
 
@@ -397,7 +430,7 @@ export function EylemToplu({
                 style={{ marginTop: 3 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600 }}>{o.etiket}</div>
+                <div style={{ fontWeight: 600 }}>{o.etiket}{goreliZaman(o.created_at) ? <span style={{ ...kucuk, fontWeight: 400 }}> · {goreliZaman(o.created_at)}</span> : null}</div>
                 <div style={kucuk}>{ozet(o) || '—'}</div>
                 <EylemUyarilari uyarilar={o.uyari_detay} />
                 {ciddiOlan(o) ? (
