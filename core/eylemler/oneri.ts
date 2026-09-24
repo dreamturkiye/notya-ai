@@ -56,6 +56,8 @@ export interface HazirOneri {
    *  the client never keeps its own copy of the labels that could drift from the schema. */
   alanlar: readonly AlanTanimi[]
   zorunlu: readonly string[]
+  /** NOTYA-EYLEM-STALE-01 (Kaan, 2026-09-24): so the card can show how long ago this was proposed. */
+  created_at?: string
 }
 
 const GECERLI_KAYNAK = new Set<AlanKaynagi>(['doktor_soyledi', 'dosyadan', 'tahmin'])
@@ -195,7 +197,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
       uyarilar,
       mesaj_id: g.mesajId || null,
     })
-    .select('id')
+    .select('id, created_at')
     .single()
   if (error || !data) return null
 
@@ -213,6 +215,7 @@ export async function oneriHazirla(g: OneriGirdisi): Promise<HazirOneri | null> 
     grup_id: g.grupId || null,
     alanlar: eylem.alanlar,
     zorunlu: eylem.zorunlu,
+    created_at: data.created_at ? String(data.created_at) : undefined,
   }
 }
 

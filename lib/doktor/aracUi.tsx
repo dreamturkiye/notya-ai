@@ -12,7 +12,7 @@
  * `gozStil` / `dermStil` / `dahStil` / `kdStil` / `pediStil` dışa aktarımları kabuklarda duruyor —
  * artık `aracStil(<vurgu>)` sonucunu gösteren ince sarmalayıcılar, 27 aracın importu kırılmıyor.
  */
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toolsShell, toolsInput, getAccessTokenAsync, normalizeHastalar, type HastaOption } from '@/lib/doktor/toolsUi';
 import { klinikAramaMi } from '@/lib/doktor/hastaAramaFiltre';
@@ -284,6 +284,14 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
   const [q, setQ] = useState('');
   const [klinikListe, setKlinikListe] = useState<HastaOption[] | null>(null);
   const [hata, setHata] = useState('');
+  // NOTYA-HASTA-ARA-02 (Kaan, 2026-09-24): "basit bir search olmalı, sadece listeleme değil" --
+  // 100+ hastası olan bir hekim için ayrı bir metin kutusu + ayrı bir açılır menü iki ayrı kontrol
+  // gibi davranıyordu (yazıp sonra AYRICA menüyü açıp seçmek gerekiyordu). Tek metin kutusu + yazdıkça
+  // altında beliren tıklanabilir sonuç listesi (klasik autocomplete) olarak yeniden yazıldı.
+  const [acik, setAcik] = useState(false);
+  const [vurgulu, setVurgulu] = useState(0);
+  const kutuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     let iptal = false;
     (async () => {
@@ -296,6 +304,7 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
     })();
     return () => { iptal = true; };
   }, []);
+
   useEffect(() => {
     const query = q.trim();
     if (!query || !klinikAramaMi(query)) { setKlinikListe(null); return; }
@@ -310,15 +319,32 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
     }, 350);
     return () => { iptal = true; window.clearTimeout(t); };
   }, [q]);
+
+  // Kutu dışına tıklayınca kapanır.
+  useEffect(() => {
+    if (!acik) return;
+    const kapat = (e: MouseEvent) => { if (kutuRef.current && !kutuRef.current.contains(e.target as Node)) setAcik(false); };
+    document.addEventListener('mousedown', kapat);
+    return () => document.removeEventListener('mousedown', kapat);
+  }, [acik]);
+
   const kucukHarf = (s: string) => s.toLocaleLowerCase('tr-TR');
   const kaynak = klinikListe || liste;
   const gorunen = (kaynak || []).filter((h) => klinikListe || !q.trim() || kucukHarf(h.label).includes(kucukHarf(q.trim()))).slice(0, 50);
   const seciliKayit = (liste || []).find((h) => h.id === secili) || (klinikListe || []).find((h) => h.id === secili);
   const seciliAd = seciliKayit?.label || '';
+
+  const secimYap = (h: HastaOption) => {
+    sec(h.id, (h.ad ? `${h.ad} ${h.soyad}`.trim() : h.label) || '');
+    setQ('');
+    setAcik(false);
+    setVurgulu(0);
+  };
+
   return (
     <div>
       {/* SECILI-HASTA-BASLIGI (Kaan, 2026-09-19): seçili hasta yalnız açılır menünün içinde,
-          diğer her şeyle aynı puntoda duruyordu — hangi hastanın dosyasında çalışıldığı
+          diğer her şeyle aynı puntoda duruyordu -- hangi hastanın dosyasında çalışıldığı
           belirsizdi. Seçim yapılınca adı büyük ve kalın bir başlık olarak gösterilir. */}
       {secili && seciliAd && (
         <div
@@ -346,18 +372,67 @@ export function HastaSecici({ secili, sec, bosEtiket = 'Hasta seçilmedi' }: { s
           </button>
         </div>
       )}
-      <div style={{ ...stil.satir, marginTop: 0 }}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ad, yaş, şikayet, tanı, bu hafta…" aria-label="Hasta ara" style={{ ...stil.input, flex: '1 1 180px', width: 'auto', minWidth: 0 }} />
-        <select aria-label="Hasta seç" value={secili} onChange={(e) => { const h = (liste || []).find((x) => x.id === e.target.value) || (klinikListe || []).find((x) => x.id === e.target.value); sec(e.target.value, (h?.ad ? `${h.ad} ${h.soyad}`.trim() : h?.label) || ''); }} style={{ ...stil.input, flex: '1 1 200px', width: 'auto', minWidth: 0 }}>
-          <option value="" style={{ color: '#000' }}>{liste == null ? (hata ? 'Liste yüklenemedi' : 'Yükleniyor…') : liste.length ? bosEtiket : 'Kayıtlı hasta yok'}</option>
-          {gorunen.map((h) => <option key={h.id} value={h.id} style={{ color: '#000' }}>{h.label}</option>)}
-        </select>
+      <div ref={kutuRef} style={{ position: 'relative' }}>
+        <input
+          value={q}
+          onChange={(e) => { setQ(e.target.value); setAcik(true); setVurgulu(0); }}
+          onFocus={() => setAcik(true)}
+          onKeyDown={(e) => {
+            if (!acik && (e.key === 'ArrowDown' || e.key === 'Enter')) { setAcik(true); return; }
+            if (e.key === 'ArrowDown') { e.preventDefault(); setVurgulu((i) => Math.min(i + 1, gorunen.length - 1)); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); setVurgulu((i) => Math.max(i - 1, 0)); }
+            else if (e.key === 'Enter') { e.preventDefault(); if (gorunen[vurgulu]) secimYap(gorunen[vurgulu]); }
+            else if (e.key === 'Escape') { setAcik(false); }
+          }}
+          placeholder={liste == null ? (hata ? 'Liste yüklenemedi' : 'Yükleniyor…') : 'Ad, yaş, şikayet, tanı, bu hafta…'}
+          aria-label="Hasta ara"
+          role="combobox"
+          aria-expanded={acik}
+          aria-autocomplete="list"
+          disabled={liste == null && !hata}
+          style={{ ...stil.input, width: '100%' }}
+        />
+        {acik && (
+          <div
+            role="listbox"
+            style={{
+              position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 20,
+              background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, borderRadius: 12,
+              boxShadow: '0 12px 28px rgba(58,44,34,0.12)', maxHeight: 280, overflowY: 'auto',
+            }}
+          >
+            {gorunen.length === 0 ? (
+              <div style={{ padding: '12px 14px', fontSize: 13.5, color: CHROME_RENK.muted }}>
+                {liste == null ? (hata || 'Yükleniyor…') : liste.length ? 'Sonuç yok' : 'Kayıtlı hasta yok'}
+              </div>
+            ) : (
+              gorunen.map((h, i) => (
+                <div
+                  key={h.id}
+                  role="option"
+                  aria-selected={i === vurgulu}
+                  onMouseDown={(e) => { e.preventDefault(); secimYap(h); }}
+                  onMouseEnter={() => setVurgulu(i)}
+                  style={{
+                    padding: '10px 14px', fontSize: 14.5, color: CHROME_RENK.ink, cursor: 'pointer',
+                    background: i === vurgulu ? `${v.ana}14` : 'transparent',
+                    borderBottom: `1px solid ${CHROME_RENK.border}`,
+                  }}
+                >
+                  {h.label}
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
+      {!secili && !acik && bosEtiket !== 'Hasta seçilmedi' && (
+        <div style={{ ...stil.kucuk, marginTop: 4 }}>{bosEtiket}</div>
+      )}
       {hata && <div style={{ ...stil.hata, marginTop: 6 }}>{hata}</div>}
     </div>
   );
 }
-
 /** Kohort satırından derin bağlantı — /doktor-tools/<arac>?hasta=<id>. Sahiplik yine sunucuda doğrulanır. */
 export function useUrlHasta(set: (id: string) => void) {
   useEffect(() => {
