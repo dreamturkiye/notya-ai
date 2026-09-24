@@ -139,6 +139,19 @@ function NewSessionInner() {
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
 
+  // NOTYA-KAYIT-SURE-01 (Kaan, 2026-09-23): muayene kaydı 60 dk; 55. dk'da sesli (bip) + görsel uyarı,
+  // "+30 dk uzat" (en fazla 120 dk). Süre dolunca dikte durur, yazılan her şey ekranda kalır.
+  // Tarayıcı ses tanıma kendiliğinden kapanırsa otomatik yeniden başlar; başlayamazsa kırmızı uyarı.
+  // Uyarı konuşma değil bip: mikrofon açıkken TTS cümlesi nota yazılırdı.
+  const KAYIT_VARSAYILAN_DK = 60, KAYIT_TAVAN_DK = 120, KAYIT_UYARI_ONCE_DK = 5
+  const [kayitHedefDk, setKayitHedefDk] = useState(KAYIT_VARSAYILAN_DK)
+  const [sureUyari, setSureUyari] = useState(false)
+  const [sureDoldu, setSureDoldu] = useState(false)
+  const [kayitDurdu, setKayitDurdu] = useState(false)
+  const istenenKayitRef = useRef(false)
+  const yenidenBaslamaRef = useRef<number[]>([])
+  const uyariCalindiRef = useRef(false)
+
   // NOTYA-SES-01: hazır ses dosyasını doğrudan Storage'a yükle (Vercel gövde limiti aşılır),
   // sunucu transkript + SOAP üretir, not İnceleme kuyruğuna düşer. Ham ses sunucuda silinir.
   async function sesDosyasiIsle(dosya: File) {
@@ -184,12 +197,62 @@ function NewSessionInner() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
   }
 
+  function uyariSesi(kez: number) {
+    try {
+      const w = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }
+      const AC = w.AudioContext || w.webkitAudioContext
+      if (!AC) return
+      const ctx = new AC()
+      for (let i = 0; i < kez; i++) {
+        const o = ctx.createOscillator(); const g = ctx.createGain()
+        o.frequency.value = 880; g.gain.value = 0.18
+        o.connect(g); g.connect(ctx.destination)
+        const t0 = ctx.currentTime + i * 0.5
+        o.start(t0); o.stop(t0 + 0.3)
+      }
+      setTimeout(() => { try { void ctx.close() } catch { /* yok */ } }, kez * 500 + 400)
+    } catch { /* ses çalınamazsa görsel uyarı yeterli */ }
+  }
+
+  function kayitKesildi() {
+    setIsRecordingVoice(false); stopTimer(); setKayitDurdu(true); uyariSesi(2)
+  }
+
+  function sureUzat() {
+    setKayitHedefDk((h) => Math.min(KAYIT_TAVAN_DK, h + 30))
+    uyariCalindiRef.current = false
+    setSureUyari(false); setSureDoldu(false)
+  }
+
+  // Süre denetimi — sayaç yalnız gerçek kayıtta ilerler.
+  useEffect(() => {
+    if (!isRecordingVoice) return
+    const hedefSn = kayitHedefDk * 60
+    if (seconds >= hedefSn) {
+      istenenKayitRef.current = false
+      recognitionRef.current?.stop()
+      setIsRecordingVoice(false); stopTimer()
+      setSureUyari(false); setSureDoldu(true); uyariSesi(2)
+      return
+    }
+    if (seconds >= hedefSn - KAYIT_UYARI_ONCE_DK * 60 && !uyariCalindiRef.current) {
+      uyariCalindiRef.current = true
+      setSureUyari(true); uyariSesi(1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seconds, isRecordingVoice, kayitHedefDk])
+
+  // Sayfadan çıkınca mikrofonu bırak.
+  useEffect(() => () => { istenenKayitRef.current = false; try { recognitionRef.current?.stop() } catch { /* yok */ } }, [])
+
   function toggleVoice() {
     if (isRecordingVoice) {
+      istenenKayitRef.current = false
       recognitionRef.current?.stop()
       setIsRecordingVoice(false)
       return
     }
+    if (seconds >= kayitHedefDk * 60) { setSureDoldu(true); return }
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionInstance; webkitSpeechRecognition?: new () => SpeechRecognitionInstance }
     const SR = w.SpeechRecognition || w.webkitSpeechRecognition
     if (!SR) { setError("Tarayıcınız ses tanımayı desteklemiyor. Chrome veya Safari kullanın."); return }
@@ -212,10 +275,33 @@ function NewSessionInner() {
       }
     }
 
-    r.onerror = () => { setIsRecordingVoice(false); stopTimer() }
-    r.onend = () => { setIsRecordingVoice(false); stopTimer() }
+    r.onerror = (e: Event) => {
+      // İzin/mikrofon hatası kalıcıdır — yeniden deneme yok, kırmızı uyarı. Diğerleri (no-speech,
+      // network, aborted) onend'de otomatik yeniden başlatılır.
+      const kod = (e as unknown as { error?: string }).error
+      if (kod === 'not-allowed' || kod === 'service-not-allowed' || kod === 'audio-capture') {
+        istenenKayitRef.current = false
+        kayitKesildi()
+      }
+    }
+    r.onend = () => {
+      if (istenenKayitRef.current && recognitionRef.current === r) {
+        const simdi = Date.now()
+        yenidenBaslamaRef.current = yenidenBaslamaRef.current.filter((t) => simdi - t < 15000).concat(simdi)
+        if (yenidenBaslamaRef.current.length <= 5) {
+          try { r.start(); return } catch { /* aşağıda uyarı */ }
+        }
+        istenenKayitRef.current = false
+        kayitKesildi()
+        return
+      }
+      setIsRecordingVoice(false); stopTimer()
+    }
 
     recognitionRef.current = r
+    istenenKayitRef.current = true
+    yenidenBaslamaRef.current = []
+    setKayitDurdu(false); setSureDoldu(false)
     r.start()
     setIsRecordingVoice(true)
     // NOTYA-KAYIT-01 (canlı defter): sayaç ve "devam ediyor" ancak gerçek kayıtla başlar.
@@ -223,6 +309,9 @@ function NewSessionInner() {
   }
 
   async function processSession() {
+    istenenKayitRef.current = false
+    try { recognitionRef.current?.stop() } catch { /* yok */ }
+    setIsRecordingVoice(false)
     stopTimer()
     if (!transcript.trim()) {
       setError("Lütfen önce muayene notlarını yazın veya sesle kaydedin.")
@@ -396,7 +485,7 @@ function NewSessionInner() {
             <div style={S({textAlign:"center",marginBottom:"20px"})}>
               <div style={S({width:"64px",height:"64px",background:isRecordingVoice?"#FEE2E2":"#EFF6FF",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:"28px"})}>🎙️</div>
               <div style={S({fontSize:"32px",fontWeight:"600",color:"#0A1628",fontFamily:"monospace",marginBottom:"4px"})}>{fmt(seconds)}</div>
-              <div style={S({fontSize:"13px",color:"#64748B",lineHeight:1.45,padding:"0 4px"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label}</div>
+              <div style={S({fontSize:"13px",color:"#64748B",lineHeight:1.45,padding:"0 4px"})}>{isRecordingVoice ? "Kayıt devam ediyor" : seconds > 0 ? "Kayıt duraklatıldı" : "Kayıt başlamadı — 🎤 Sesle Dikte Et'e basın"} · {SPECIALTIES.find(s=>s.id===specialty)?.label} · üst sınır {kayitHedefDk} dk</div>
             </div>
 
             {/* Voice recording button */}
@@ -408,6 +497,26 @@ function NewSessionInner() {
               {isRecordingVoice && <span style={S({fontSize:"12px",color:"#DC2626",animation:"pulse 1s infinite"})}>● Dinliyor...</span>}
             </div>
 
+            {sureUyari && !sureDoldu && (
+              <div style={S({background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:"10px",padding:"10px 12px",marginBottom:"12px",fontSize:"13px",color:"#92400E",display:"flex",alignItems:"center",gap:"10px",flexWrap:"wrap"})}>
+                <span>⏱️ Kayıt {Math.max(1, Math.ceil((kayitHedefDk * 60 - seconds) / 60))} dakika içinde duracak.</span>
+                {kayitHedefDk < KAYIT_TAVAN_DK
+                  ? <button type="button" onClick={sureUzat} style={S({background:"#F59E0B",border:"none",color:"#1F2937",borderRadius:"8px",padding:"6px 12px",fontSize:"13px",fontWeight:"700",cursor:"pointer"})}>+30 dk uzat</button>
+                  : <span>(en fazla {KAYIT_TAVAN_DK} dk)</span>}
+              </div>
+            )}
+            {sureDoldu && (
+              <div style={S({background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:"10px",padding:"10px 12px",marginBottom:"12px",fontSize:"13px",color:"#92400E",display:"flex",alignItems:"center",gap:"10px",flexWrap:"wrap"})}>
+                <span>⏱️ {kayitHedefDk} dakikalık süre doldu, dikte durdu. Yazılanlar aşağıda duruyor — "Seansı Bitir → Not Oluştur"a basabilirsiniz.</span>
+                {kayitHedefDk < KAYIT_TAVAN_DK && <button type="button" onClick={sureUzat} style={S({background:"#F59E0B",border:"none",color:"#1F2937",borderRadius:"8px",padding:"6px 12px",fontSize:"13px",fontWeight:"700",cursor:"pointer"})}>+30 dk uzat, sonra 🎤</button>}
+              </div>
+            )}
+            {kayitDurdu && !sureDoldu && (
+              <div style={S({background:"#FEE2E2",border:"1px solid #DC2626",borderRadius:"10px",padding:"10px 12px",marginBottom:"12px",fontSize:"13px",color:"#991B1B",fontWeight:"600"})}>
+                ⚠️ Kayıt durdu — mikrofon dinlemeyi bıraktı. Devam etmek için "🎤 Sesle Dikte Et"e tekrar basın. Yazılanlar kaybolmadı.
+              </div>
+            )}
+
             <div style={S({fontSize:"13px",fontWeight:"500",color:"#374151",marginBottom:"8px"})}>
               Seans notları <span style={S({color:"#DC2626"})}>*</span>
               <span style={S({fontSize:"11px",color:"#94A3B8",marginLeft:"8px",fontWeight:"400"})}>Sesle veya yazarak girin</span>
@@ -417,7 +526,7 @@ function NewSessionInner() {
               style={S({width:"100%",minHeight:"180px",padding:"12px",border:"1.5px solid #E5E7EB",borderRadius:"10px",fontSize:"16px",fontFamily:"system-ui",resize:"vertical",marginBottom:"16px",color:"#374151",lineHeight:"1.6",outline:"none",boxSizing:"border-box"})}
             />
             <div className="notya-seans-aksiyon" style={S({display:"flex",gap:"10px"})}>
-              <button onClick={()=>{stopTimer();recognitionRef.current?.stop();setStep("setup");setSeconds(0);setTranscript("")}}
+              <button onClick={()=>{istenenKayitRef.current=false;stopTimer();recognitionRef.current?.stop();setIsRecordingVoice(false);setStep("setup");setSeconds(0);setTranscript("");setKayitHedefDk(KAYIT_VARSAYILAN_DK);uyariCalindiRef.current=false;setSureUyari(false);setSureDoldu(false);setKayitDurdu(false)}}
                 style={S({flex:1,padding:"14px",background:"#F1F5F9",color:"#374151",border:"none",borderRadius:"10px",fontSize:"14px",cursor:"pointer"})}>
                 İptal
               </button>
