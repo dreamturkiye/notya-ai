@@ -216,3 +216,12 @@ describe('ziyaretGunu', () => {
     assert.equal(ziyaretGunu('2026-09-22T22:30:00Z'), '2026-09-23')
   })
 })
+
+describe('NOTYA-ASI-NOT-03: history lines are not this visit', () => {
+  it('Özgeçmiş aşı durumu with an earlier date, doğum dozu and explicit dates are dropped', () => {
+    assert.equal(uygulananAsiParcalari('Aşı durumu: Hepatit B 1. dozu uygulandı (Haziran 2024).').length, 0)
+    assert.equal(uygulananAsiParcalari('Hepatit B doğum dozu uygulandı.').length, 0)
+    assert.equal(uygulananAsiParcalari('Hepatit B 1. doz 15.06.2024 tarihinde uygulandı.').length, 0)
+    assert.equal(uygulananAsiParcalari('Bugün Hepatit B 2. doz uygulandı.').length, 1)
+  })
+})
