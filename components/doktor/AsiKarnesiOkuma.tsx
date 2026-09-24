@@ -56,8 +56,8 @@ async function karneDosyasiHazirla(dosya: File): Promise<File> {
 
 const OKUNABILIRLIK_AD: Record<Okunabilirlik, string> = { iyi: 'Okunabilirlik iyi', kismi: 'Kısmi okuma', dusuk: 'Okunabilirlik düşük' };
 
-const girdi: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 14, minHeight: 40 };
-const ikincilDugme: React.CSSProperties = { background: 'rgba(255,255,255,0.08)', color: CHROME_RENK.muted, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '10px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 };
+const girdi: React.CSSProperties = { width: '100%', background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: '#3b2e24', borderRadius: 8, padding: '8px 10px', fontSize: 14, minHeight: 40 };
+const ikincilDugme: React.CSSProperties = { background: '#F6F0E4', color: CHROME_RENK.muted, border: '1px solid rgba(58,44,34,0.16)', borderRadius: 8, padding: '10px 14px', fontSize: 13, cursor: 'pointer', minHeight: 44 };
 
 export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId: string; onKaydedildi: (adet: number) => void }) {
   const kameraRef = useRef<HTMLInputElement>(null);
@@ -158,22 +158,22 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
   function satirCiz(s: TaslakSatir) {
     const kirmizi = s.okunamadi && !s.hekimDuzeltti;
     return (
-      <div key={s.anahtar} data-karne-satir={s.anahtar} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${kirmizi ? 'rgba(248,113,113,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 10, padding: 10, display: 'grid', gap: 8 }}>
+      <div key={s.anahtar} data-karne-satir={s.anahtar} style={{ background: '#FFFFFF', border: `1px solid ${kirmizi ? 'rgba(248,113,113,0.45)' : 'rgba(58,44,34,0.16)'}`, borderRadius: 10, padding: 10, display: 'grid', gap: 8 }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           {kirmizi && <Rozet ton="kirmizi">{OKUNAMADI_ETIKETI}</Rozet>}
           {s.okunamadi && s.hekimDuzeltti && <Rozet ton="iyi">Hekim kontrol etti</Rozet>}
           <Rozet ton={s.eslesme.grup === 'takvim' ? 'bilgi' : 'uyari'}>{s.eslesme.etiket}</Rozet>
           {s.okunamadiNedeni && <span style={{ fontSize: 12, color: CHROME_RENK.warn }}>{s.okunamadiNedeni}</span>}
         </div>
-        {s.hamMetin && <div style={{ fontSize: 12, color: '#94A3B8' }}>Karnede: “{s.hamMetin}”</div>}
+        {s.hamMetin && <div style={{ fontSize: 12, color: '#8b7d70' }}>Karnede: “{s.hamMetin}”</div>}
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(72px, 0.6fr) minmax(0, 1.4fr)', gap: 8 }}>
-          <label style={{ fontSize: 11, color: '#94A3B8', gridColumn: '1 / -1' }}>Aşı adı
+          <label style={{ fontSize: 11, color: '#8b7d70', gridColumn: '1 / -1' }}>Aşı adı
             <input aria-label="Aşı adı" value={s.asiAdi} onChange={(e) => duzelt(s.anahtar, { asiAdi: e.target.value })} placeholder="Elle girin" style={girdi} />
           </label>
-          <label style={{ fontSize: 11, color: '#94A3B8' }}>Doz
+          <label style={{ fontSize: 11, color: '#8b7d70' }}>Doz
             <input aria-label="Doz no" type="number" min={1} max={10} value={s.dozNo ?? ''} onChange={(e) => duzelt(s.anahtar, { dozNo: e.target.value ? Number(e.target.value) : null })} placeholder="—" style={girdi} />
           </label>
-          <label style={{ fontSize: 11, color: '#94A3B8' }}>Uygulama tarihi
+          <label style={{ fontSize: 11, color: '#8b7d70' }}>Uygulama tarihi
             <input aria-label="Uygulama tarihi" type="date" value={s.uygulamaTarihi ?? ''} onChange={(e) => duzelt(s.anahtar, { uygulamaTarihi: e.target.value || null })} style={girdi} />
           </label>
         </div>
@@ -191,9 +191,9 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
       <input ref={dosyaRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={dosyaSecildi} style={{ display: 'none' }} data-karne-dosya="" />
 
       {asama === 'bos' && (
-        <div style={{ background: '#111C33', borderRadius: 12, padding: 14, display: 'grid', gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>Aşı karnesi yükle</div>
-          <div style={{ fontSize: 12, color: '#94A3B8' }}>Kağıt aşı karnesinin fotoğrafını çekin ya da PDF'ini seçin. Ayşe okur, siz satır satır kontrol edip tek seferde onaylarsınız — onaysız hiçbir satır kaydedilmez. Karne Kasa'da şifreli saklanır.</div>
+        <div style={{ background: '#F6F0E4', borderRadius: 12, padding: 14, display: 'grid', gap: 10 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#3b2e24' }}>Aşı karnesi yükle</div>
+          <div style={{ fontSize: 12, color: '#8b7d70' }}>Kağıt aşı karnesinin fotoğrafını çekin ya da PDF'ini seçin. Ayşe okur, siz satır satır kontrol edip tek seferde onaylarsınız — onaysız hiçbir satır kaydedilmez. Karne Kasa'da şifreli saklanır.</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button type="button" onClick={() => kameraRef.current?.click()} style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>📷 Fotoğraf çek</button>
             <button type="button" onClick={() => dosyaRef.current?.click()} style={ikincilDugme}>Dosya seç (fotoğraf / PDF)</button>
@@ -202,7 +202,7 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
       )}
 
       {(asama === 'yukleniyor' || asama === 'okunuyor') && (
-        <div style={{ background: '#111C33', borderRadius: 12, padding: 14, fontSize: 13, color: CHROME_RENK.muted }}>
+        <div style={{ background: '#F6F0E4', borderRadius: 12, padding: 14, fontSize: 13, color: CHROME_RENK.muted }}>
           {asama === 'yukleniyor' ? 'Karne Kasa\'ya yükleniyor…' : 'Ayşe karneyi okuyor… (el yazısı ve soluk kaşeler biraz sürebilir)'}
         </div>
       )}
@@ -210,16 +210,16 @@ export default function AsiKarnesiOkuma({ patientId, onKaydedildi }: { patientId
       {hata && <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: CHROME_RENK.warn, borderRadius: 8, padding: '10px 12px', fontSize: 13, marginTop: 8 }}>{hata}</div>}
 
       {(asama === 'onay' || asama === 'kaydediliyor') && okuma && (
-        <div data-karne-onay="" style={{ background: '#111C33', borderRadius: 12, padding: 14, display: 'grid', gap: 12 }}>
+        <div data-karne-onay="" style={{ background: '#F6F0E4', borderRadius: 12, padding: 14, display: 'grid', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Karneden okunanlar — hekim onayı bekliyor</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#3b2e24' }}>Karneden okunanlar — hekim onayı bekliyor</div>
             <Rozet ton={okuma.okunabilirlik === 'iyi' ? 'iyi' : okuma.okunabilirlik === 'kismi' ? 'uyari' : 'kirmizi'}>{OKUNABILIRLIK_AD[okuma.okunabilirlik]}</Rozet>
           </div>
-          <div style={{ fontSize: 12, color: '#94A3B8' }}>Taslaktır. Her satırı karneyle karşılaştırın; yanlış okunanı düzeltin, istemediğinizi çıkarın. Kaydedilenler “Karneden aktarıldı · hekim onaylı” olarak, bu klinikte uygulanan dozlardan ayrı görünür.</div>
+          <div style={{ fontSize: 12, color: '#8b7d70' }}>Taslaktır. Her satırı karneyle karşılaştırın; yanlış okunanı düzeltin, istemediğinizi çıkarın. Kaydedilenler “Karneden aktarıldı · hekim onaylı” olarak, bu klinikte uygulanan dozlardan ayrı görünür.</div>
           {okuma.kimlikUyarisi && <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)', color: '#7A5B1E', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}>{okuma.kimlikUyarisi}</div>}
           {!okuma.asiKarnesiMi && <div style={{ fontSize: 13, color: '#7A5B1E' }}>Bu belge bir aşı karnesine benzemiyor. Aşıları elle girebilirsiniz.</div>}
-          {okuma.not && <div style={{ fontSize: 12, color: '#94A3B8' }}>Okuma notu: {okuma.not}</div>}
-          {!satirlar.length && <div style={{ fontSize: 13, color: '#94A3B8' }}>Aktarılacak satır kalmadı.</div>}
+          {okuma.not && <div style={{ fontSize: 12, color: '#8b7d70' }}>Okuma notu: {okuma.not}</div>}
+          {!satirlar.length && <div style={{ fontSize: 13, color: '#8b7d70' }}>Aktarılacak satır kalmadı.</div>}
 
           {takvimSatirlari.length > 0 && (
             <div style={{ display: 'grid', gap: 8 }}>

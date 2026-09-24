@@ -379,6 +379,21 @@ describe('Onay: doğrulama, makullük, mükerrer, idempotans', () => {
     assert.ok(suresiDolduMu({ created_at: satir.created_at as string }))
   })
 
+  it('NOTYA-EYLEM-STALE-02: 24 saati geçmiş taslak, "bekleyen kayıtlar" listelemesinde artık görünmüyor', async () => {
+    // Kaan (2026-09-24): "ısrarla bir Dosya Notu var, artık aramasın" -- kök neden buydu: suresiDolduMu
+    // yalnız ONAYLAMA anında uygulanıyordu (app/api/doktor/eylem/route.ts GET, o mantığı hiç
+    // taşımıyordu) -- 7 test taslağı günlerce "onayınızı bekleyen kayıtlar" olarak görünmeye devam
+    // etti. Route'un kendisini HTTP olarak çağırmadan, GET'in artık kullandığı filtreyi doğrudan sınar.
+    const taze = await oneriAc('ilac_ekle', hepsiDoktordan({ ilac_adi: 'Parol', doz: '250 mg', kullanim_sikli: '3x1' }))
+    const eski = await oneriAc('ilac_ekle', hepsiDoktordan({ ilac_adi: 'Nurofen', doz: '100 mg', kullanim_sikli: '2x1' }))
+    const eskiSatir = db.tablo('eylem_onerileri').find((x) => x.id === eski!.id)!
+    eskiSatir.created_at = new Date(Date.now() - 25 * 3600e3).toISOString()
+    const hamListe = db.tablo('eylem_onerileri').filter((x) => x.id === taze!.id || x.id === eski!.id)
+    const gorunen = hamListe.filter((o) => !suresiDolduMu(o as { created_at: string }))
+    assert.ok(gorunen.some((o) => o.id === taze!.id), 'taze taslak listeden düşmemeli')
+    assert.ok(!gorunen.some((o) => o.id === eski!.id), '25 saatlik taslak hâlâ "bekleyen" olarak görünüyor')
+  })
+
   it('ilaç kaydı onaylı + aktif yazılır (Sağlığım portalı kuralı)', async () => {
     const o = await oneriAc('ilac_ekle', hepsiDoktordan({ ilac_adi: 'Ventolin', doz: '100 mcg', kullanim_sikli: 'gerektikçe' }))
     assert.equal(o!.portalaYansir, true, 'kart hastaya görüneceğini söylemiyor')
