@@ -2559,3 +2559,5 @@ tutulur; üzerine sessizce yazılmaz.
 |---|---|---|
 | NOTYA-KAYIT-SURE-01 | **DONE 2026-09-23** (PR #382) | Yeni Seans: 60 dk, 55. dk bip + banner, +30 dk uzat (en fazla 120), süre dolunca dikte durur; ses tanıma kendiliğinden kapanırsa otomatik yeniden başlar, olmazsa kırmızı "Kayıt durdu". |
 | NOTYA-KAYIT-SURE-02 | OPEN — waits on Claude (QA) + Dr. Gökhan (real device) | Canlı test yapılmadı: Samsung/Chrome ve iPhone/Safari üzerinde uzun sessizlik sonrası otomatik yeniden başlama ve kırmızı uyarı doğrulanmalı. |
+
+| NOTYA-ASI-NOT-02 | **DONE 2026-09-24** (Kaan: "backfill all") | scripts/asi-not-backfill-yaz.mts on dr.gokhan@notya.ai: 9 rows written from 3 notes (16.07.2024 DaBT-İPA-Hib/KPA/Rota 1; 15.02.2025 Grip 1, MenACWY 1 (Ayşe-calculated dose); 15.05.2025 KKK 1, Suçiçeği 1, MenACWY 2, Hep A 1 — the last note was approved after the preview). Hep B 2 (15.06.2024) not written: conflict with the Hep B 1 row dated the same day — waits on Dr. Gökhan (DOB + Hep B 1 date). Rollback: ~/notya-ai-asi-backfill-rollback-2026-09-24.json |
