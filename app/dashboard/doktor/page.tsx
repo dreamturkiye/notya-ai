@@ -25,6 +25,7 @@ import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth'
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy'
 import { PERSONAS, varsayilanPersonaId } from '@/lib/asistan/personaEngine'
 import { bransEtiketi } from '@/lib/doktor/bransAdlari'
+import { muayeneFormuYolu } from '@/lib/doktor/muayeneFormuYolu'
 
 interface KpiData {
   bugunkuMuayene: number
@@ -456,11 +457,16 @@ export default function DoktorDashboard() {
         </div>
       </div>
 
-      {/* Son notlar + Bu hafta özeti */}
+      {/* Onay Bekleyen Muayene Notları + Bu hafta özeti. NOTYA-DASHBOARD-BEKLEYEN-01 (Kaan, 2026-09-24):
+          panel "Son notlar" idi ve durumdan bağımsız gösteriyordu -- bir ONAYLI notu tıklayıp jenerik
+          İnceleme Kuyruğu'na düşmek (o not zaten kuyrukta olmadığı için "bekleyen not yok" görünmesi)
+          kafa karıştırıyordu. API artık yalnız onay bekleyeni döndürür (son-notlar/route.ts); panel de
+          hiçbir şey bekleniyorsa hiç görünmez -- boş bir "henüz not yok" kartı yerine. */}
       <div style={S({ display: 'flex', gap: 16, flexWrap: 'wrap' })}>
+        {(loading || recentNotes.length > 0) && (
         <div style={S({ flex: 1.6, minWidth: 320 })}>
           <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 })}>
-            <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Son notlar</div>
+            <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Onay bekleyen muayene notları</div>
             <span onClick={() => router.push('/dashboard/doktor/inceleme')} style={S({ fontSize: 13, color: CHROME_RENK.pine, fontWeight: 600, cursor: 'pointer' })}>Tümünü gör ›</span>
           </div>
           <div style={S({ ...card, padding: '8px 20px' })}>
@@ -468,26 +474,22 @@ export default function DoktorDashboard() {
               <div style={S({ padding: '12px 0' })}>
                 {Array.from({ length: 3 }).map((_, i) => <div key={i} style={S({ height: 42, background: '#EFE9DC', borderRadius: 8, marginBottom: 8, animation: 'nabizYg 1.5s infinite' })} />)}
               </div>
-            ) : recentNotes.length > 0 ? (
+            ) : (
               recentNotes.map((note, idx) => (
-                <div key={note.id} className="yg-satir" onClick={() => router.push('/dashboard/doktor/inceleme')}
+                <div key={note.id} className="yg-satir" onClick={() => router.push(muayeneFormuYolu(note.id))}
                   style={S({ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 6px', borderBottom: idx < recentNotes.length - 1 ? `1px solid ${CHROME_RENK.border}` : 'none', cursor: 'pointer', borderRadius: 8 })}>
                   <span style={S({ background: '#E4F3F1', color: CHROME_RENK.pine, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999, flexShrink: 0 })}>{bransEtiketi(note.specialty, { kisa: true })}</span>
                   <span style={S({ flex: 1, minWidth: 0 })}>
                     <span style={S({ display: 'block', fontSize: 11, color: CHROME_RENK.muted })}>{note.date}</span>
                     <span style={S({ display: 'block', fontSize: 13, color: CHROME_RENK.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })}>{note.hastaAdi ? <b>{note.hastaAdi} — </b> : null}{note.content_subjektif.slice(0, 70) || 'Not'}</span>
                   </span>
-                  <span style={S({ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: note.approved_at ? '#3F7D4A' : '#B4832F' })} title={note.approved_at ? 'Onaylı' : 'Onay bekliyor'} />
+                  <span style={S({ width: 9, height: 9, borderRadius: '50%', flexShrink: 0, background: '#B4832F' })} title="Onay bekliyor" />
                 </div>
               ))
-            ) : (
-              <div style={S({ textAlign: 'center', padding: '30px 0' })}>
-                <div style={S({ fontSize: 14, color: CHROME_RENK.muted, marginBottom: 14 })}>Henüz not yok — ilk muayeneyle birlikte burada görünecek.</div>
-                <button type="button" onClick={() => router.push('/asistan')} style={S({ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 999, padding: '10px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer' })}>Asistanı başlat</button>
-              </div>
             )}
           </div>
         </div>
+        )}
 
         <div style={S({ flex: 1, minWidth: 280 })}>
           <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>&nbsp;</div>

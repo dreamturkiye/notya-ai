@@ -444,29 +444,35 @@ export default function HastaProfilPage() {
           <DoktorGeriLink href="/dashboard/doktor/hastalar">← Hastalar</DoktorGeriLink>
         </div>
 
-        {/* Hap sekmeler — mobilde yatay kaydırma */}
-        <div className="dosya-sekmeler" style={{ display: 'flex', gap: 6, margin: '16px 0 12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => secSekme(tab.id)}
-              style={{
-                flexShrink: 0,
-                padding: '8px 16px',
-                background: activeTab === tab.id ? CHROME_RENK.pine : '#FFFFFF',
-                border: activeTab === tab.id ? `1px solid ${CHROME_RENK.pine}` : `1px solid ${CHROME_RENK.border}`,
-                color: activeTab === tab.id ? '#FAF8F4' : CHROME_RENK.ink,
-                fontWeight: activeTab === tab.id ? 700 : 500,
-                borderRadius: 999,
-                fontSize: 13,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'background .15s ease',
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Hap sekmeler — mobilde yatay kaydırma. NOTYA-SEKME-KAYDIR-01 (Kaan, 2026-09-24): son sekme
+            kesik görünüyordu — kaydırılabilir şerit gizli scrollbar'la sessizce kesiliyordu, "devamı
+            var" diye hiçbir ipucu yoktu. Sağ kenara soluk bir geçiş eklendi (sabit, tepki vermez —
+            tıklamayı engellemez), en sondaki sekmeye kaydırıldığında bile kalması zararsız. */}
+        <div style={{ position: 'relative' }}>
+          <div className="dosya-sekmeler" style={{ display: 'flex', gap: 6, margin: '16px 0 12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => secSekme(tab.id)}
+                style={{
+                  flexShrink: 0,
+                  padding: '8px 16px',
+                  background: activeTab === tab.id ? CHROME_RENK.pine : '#FFFFFF',
+                  border: activeTab === tab.id ? `1px solid ${CHROME_RENK.pine}` : `1px solid ${CHROME_RENK.border}`,
+                  color: activeTab === tab.id ? '#FAF8F4' : CHROME_RENK.ink,
+                  fontWeight: activeTab === tab.id ? 700 : 500,
+                  borderRadius: 999,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'background .15s ease',
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, bottom: 2, width: 28, background: `linear-gradient(to right, transparent, ${CHROME_RENK.cream})`, pointerEvents: 'none' }} />
         </div>
 
         {/* Ayşe şeridi: sekmeler ↔ içerik (Konuş + Yaz) — Gökhan/Boss 2026-09-20 */}
