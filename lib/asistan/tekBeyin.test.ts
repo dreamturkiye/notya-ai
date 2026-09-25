@@ -298,7 +298,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
 
   it('model cevabı: yazı ve ses aynı ekranı verir; ses önce bekletme sözü, sonra model yazdıkça aynı içerik', async () => {
     const ekranMetni = 'Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi.\n\n- Öneri 1\n- Öneri 2\n\nAnnesine 0532 700 11 22 numarasından ulaşabilirsiniz.'
-    const soru = 'Merhaba Ayşe, bugün Umutcan Türkoğlu geldi, genel durumunu ve takip planını bir özetler misin?'
+    const soru = 'Merhaba Ayşe, bugün Umutcan Türkoğlu geldi, genel durumunu bir değerlendirir misin?'
     const a = sahne()
     yanit = { metin: JSON.stringify({ speech: ekranMetni }) }
     const t = await yazi(a, soru)
