@@ -18,6 +18,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
+import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
 
@@ -42,6 +43,28 @@ export function cozumKonus(cozum: HastaCozumu): string | null {
 const TR_MAP: Record<string, string> = { 'ç': 'c', 'Ç': 'c', 'ğ': 'g', 'Ğ': 'g', 'ı': 'i', 'I': 'i', 'İ': 'i', 'ö': 'o', 'Ö': 'o', 'ş': 's', 'Ş': 's', 'ü': 'u', 'Ü': 'u' }
 function duzle(s: string): string {
   return s.replace(/[çÇğĞıIİöÖşŞüÜ]/g, (c) => TR_MAP[c] || c).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/ +/g, ' ').trim()
+}
+/**
+ * NOTYA-SES-DOLGU-01 (Dr. Gökhan, 2026-09-25): spoken requests carry pauses and fillers
+ * ("Umutcan, eee, Türkoğlu'nun…") and speech recognition may split a name ("Umut Can").
+ * Tokens of the (duzle'd) message without fillers / single letters, plus adjacent pairs joined.
+ */
+const DOLGU = new Set(['e', 'ee', 'eee', 'eeee', 'i', 'ii', 'iii', 'hm', 'hmm', 'hmmm', 'mm', 'mmm', 'sey', 'ya', 'yani', 'hani'])
+/** Addressing the assistant ("Merhaba Ayşe," / "Ayşe Hocam,") is not a patient name. */
+const HITAP = new RegExp('(^|(merhaba|selam|günaydın|iyi akşamlar|hey|bak) +)(ayşe|mehmet|elif|zeynep|deniz|hakan|burak|selin)( +(hanım|hocam|hoca))? *[,.!?]', 'giu')
+export function hitapsiz(mesaj: string): string {
+  return String(mesaj || '').replace(HITAP, (_t, bas) => String(bas || '') + ' ')
+}
+export function sesliSozTokenlari(duzMesaj: string): Set<string> {
+  const t = duzMesaj.split(' ').filter((x) => x.length >= 2 && !DOLGU.has(x))
+  const s = new Set(t)
+  for (let i = 0; i + 1 < t.length; i++) s.add(t[i] + t[i + 1])
+  return s
+}
+/** Every part of a multi-word name appears as a word (any order, words in between allowed). */
+export function tumAdParcalariVar(adDuz: string, tokenlar: Set<string>): boolean {
+  const p = adDuz.split(' ').filter(Boolean)
+  return p.length >= 2 && p.every((x) => tokenlar.has(x))
 }
 function adCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
@@ -137,6 +160,9 @@ export async function hastaninSozunuCoz(
   const { data: hastalar } = await supabase
     .from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).eq('is_active', true).limit(500)
   if (!hastalar || hastalar.length === 0) return { tur: 'yok' }
+  const adMesaji = hitapsiz(mesaj)
+  const mAd = ' ' + duzle(adMesaji) + ' '
+  const tokenlar = sesliSozTokenlari(duzle(adMesaji))
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
   for (const h of hastalar) {
@@ -144,9 +170,9 @@ export async function hastaninSozunuCoz(
     if (!ad) continue
     const adDuz = duzle(ad)
     if (!adDuz) continue
-    if (m.includes(' ' + adDuz + ' ')) { tam.push({ id: h.id, ad }); continue }
+    if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar)) { tam.push({ id: h.id, ad }); continue }
     const parcalar = adDuz.split(' ').filter((p) => p.length >= 3)
-    if (parcalar.some((p) => m.includes(' ' + p + ' '))) kismi.push({ id: h.id, ad })
+    if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || tokenlar.has(p))) kismi.push({ id: h.id, ad })
   }
 
   const cozAdaylar = async (adaylar: { id: string; ad: string }[]): Promise<HastaCozumu> => {
@@ -196,6 +222,9 @@ async function dosyaIleDaralt(
 ): Promise<HastaCozumu> {
   const klinik = klinikAramaMi(mesaj)
   if (ad.tur === 'tek' && !klinik) return ad
+  // NOTYA-SES-DOLGU-01: a single named patient with a question about him/her ("Umutcan kaç yaşında") is final;
+  // only explicit many-patient questions run the clinical search.
+  if (ad.tur === 'tek' && !kohortSorusuMu(mesaj)) return ad
   // NOTYA-AYSE-HASTA-01: adı geçen tek hastanın sıralama sorusu o hastanın dosyasından cevaplanır.
   if (tekHastaSorusuMu(ad.tur, mesaj)) return ad
   if (ad.tur === 'coklu' && !klinik) return ad
@@ -204,7 +233,8 @@ async function dosyaIleDaralt(
   const { adaylar: ara, istatistik } = await klinikAramaYurut(supabase, doctorId, mesaj)
   // NOTYA-SES-HASTA-01: a named patient is never dropped just because the extra words found nothing.
   // List/cohort questions ("ateşli hastalarım kimler") keep the old answer, so "Merhaba Ayşe" never picks a patient.
-  if (!ara.length) return ad.tur === 'tek' && !listeSorgusuMu(mesaj) ? ad : { tur: 'yok', sayiMetin: istatistik.cumle }
+  // NOTYA-SES-DOLGU-01: "kaç yaşında" about a named patient is not a count; only explicit many-patient questions are.
+  if (!ara.length) return ad.tur === 'tek' && !kohortSorusuMu(mesaj) ? ad : { tur: 'yok', sayiMetin: istatistik.cumle }
 
   const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle)
   if (ad.tur === 'coklu') {
