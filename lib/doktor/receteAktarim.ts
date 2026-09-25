@@ -75,7 +75,7 @@ const FORM_KELIMELERI = new Set([
 ])
 
 /** Eşleştirmede kullanılacak anlamlı kelimeler (form/doz kelimeleri hariç). */
-function anlamliKelimeler(ad: string): Set<string> {
+export function anlamliKelimeler(ad: string): Set<string> {
   const out = new Set<string>()
   for (const kelime of adAnahtari(ad).split(' ')) {
     if (kelime.length < 4) continue
@@ -92,6 +92,32 @@ function ayniIlac(a: string, b: string): boolean {
   const kb = anlamliKelimeler(b)
   for (const k of ka) if (kb.has(k)) return true
   return false
+}
+
+/**
+ * NOTYA-RECETE-04 (Kaan, 2026-09-24) — canlı vaka: hekim notun serbest metin "Plan"
+ * alanındaki "1. TEDAVİ:" bölümünü elle düzenleyip "Amoksisilin ... 7 gün" yazısını
+ * "Augmentin ES ... 10 gün" ile değiştirdi, ama AYRI bir alan olan yapılandırılmış
+ * "İlaçlar" listesini (content_ilaclar — reçeteye ve hasta_ilaclar'a giden TEK kaynak)
+ * güncellemedi. Sonuç: not "Augmentin, 10 gün" okunurken, gerçek reçete "Amoksisilin, 7
+ * gün" basıyordu — farklı antibiyotik, farklı süre, hiçbir uyarı olmadan.
+ *
+ * Bu, notMetninAsiIpucuVarMi (lib/doktor/notAsilari.ts) ile aynı desendeki bir geri bildirim
+ * ağı: serbest metin planın hiçbir yerinde, yapılandırılmış listedeki hiçbir ilacın adı
+ * geçmiyorsa, ikisi muhtemelen birbirinden kopmuştur — hekime onaydan önce hatırlatılır,
+ * bloklanmaz (aslında tutarlı olabilir, kelime eşleşmesi kaba bir sezgidir).
+ */
+export function planIlacTutarsizMi(planMetni: string | null | undefined, ilaclar: { ad: string }[]): boolean {
+  const plan = String(planMetni || '').trim()
+  if (!plan || !ilaclar.length) return false
+  const planKelimeleri = anlamliKelimeler(plan)
+  if (!planKelimeleri.size) return false
+  return !ilaclar.some((i) => {
+    const kelimeler = anlamliKelimeler(i.ad)
+    if (!kelimeler.size) return false
+    for (const k of kelimeler) if (planKelimeleri.has(k)) return true
+    return false
+  })
 }
 
 /**

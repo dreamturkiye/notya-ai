@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { ilacAdiniSadelestir, nottanIlaclariCikar } from './receteAktarim'
+import { ilacAdiniSadelestir, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
 
 test('ilacAdiniSadelestir: alternatif ve açıklama kuyruğunu atar, dozu korur', () => {
   assert.equal(
@@ -97,4 +97,32 @@ test('nottanIlaclariCikar: reçetesiz not boş liste döner', () => {
   assert.deepEqual(nottanIlaclariCikar({}), [])
   assert.deepEqual(nottanIlaclariCikar({ content_ilaclar: null, recete_onerisi: null }), [])
   assert.deepEqual(nottanIlaclariCikar({ content_ilaclar: [{ ad: '  ' }] }), [])
+})
+
+test('planIlacTutarsizMi: canlı vaka — plan "Augmentin ES" der, yapılandırılmış liste "Amoksisilin" — uyuşmazlık yakalanır', () => {
+  // Kaan (2026-09-24): gerçek olay — hekim Plan metnindeki 1. TEDAVİ bölümünü elle
+  // "Augmentin ES süspansiyon sabah akşam 7.5 ml. 10 gün" olarak değiştirdi, ama ayrı
+  // İlaçlar listesi hiç dokunulmadan "Amoksisilin 400 mg/5 mL süspansiyon" olarak kaldı.
+  const plan = '1. TEDAVİ:\na) Augmentin ES süspansiyon sabah akşam 7.5 ml. 10 gün\nb) Calpol şurup en sık 4 st ara ile 5ml lüzümlü halde.'
+  const ilaclar = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon' }, { ad: 'Parasetamol süspansiyon (160 mg/5 mL)' }]
+  assert.equal(planIlacTutarsizMi(plan, ilaclar), true)
+})
+
+test('planIlacTutarsizMi: plan ve liste aynı ilacı paylaşıyorsa uyuşmazlık yok', () => {
+  const plan = '1. TEDAVİ:\na) Amoksisilin 400 mg/5 mL süspansiyon — 7,5 mL (600 mg) 12 saatte bir, 7 gün.'
+  const ilaclar = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon' }, { ad: 'Parasetamol süspansiyon (160 mg/5 mL)' }]
+  assert.equal(planIlacTutarsizMi(plan, ilaclar), false)
+})
+
+test('planIlacTutarsizMi: birden çok ilaçtan yalnız biri geçse bile uyarı vermez (yanlış pozitifi azaltır)', () => {
+  const plan = 'Ateş için parasetamol önerildi, bol sıvı alımı tavsiye edildi.'
+  const ilaclar = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon' }, { ad: 'Parasetamol süspansiyon (160 mg/5 mL)' }]
+  assert.equal(planIlacTutarsizMi(plan, ilaclar), false)
+})
+
+test('planIlacTutarsizMi: boş İlaçlar listesi ya da boş plan metni uyarı üretmez', () => {
+  assert.equal(planIlacTutarsizMi('1. TEDAVİ: Augmentin ES 10 gün', []), false)
+  assert.equal(planIlacTutarsizMi('', [{ ad: 'Amoksisilin' }]), false)
+  assert.equal(planIlacTutarsizMi(null, [{ ad: 'Amoksisilin' }]), false)
+  assert.equal(planIlacTutarsizMi(undefined, [{ ad: 'Amoksisilin' }]), false)
 })

@@ -35,6 +35,7 @@ import {
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi';
 import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
+import { planIlacTutarsizMi } from '@/lib/doktor/receteAktarim';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
@@ -261,6 +262,18 @@ export default function NotSayfasi() {
     // Blok değil — hekim gerekçesini bilir, son karar her zaman onun.
     if (asilar.length === 0 && notMetninAsiIpucuVarMi([taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan])) {
       const devam = window.confirm('Notunuzda bu muayenede bir aşı uygulandığına dair bir ifade var gibi görünüyor, ama “Bu muayenede uygulanan aşılar” listesi boş — bu liste boş kaldığı sürece aşı kartına hiçbir şey işlenmez. Yine de onaylamak istiyor musunuz?')
+      if (!devam) return
+    }
+    // NOTYA-RECETE-04 (Kaan, 2026-09-24): canlı vaka — Plan metnindeki "1. TEDAVİ:" hekim
+    // tarafından elle "Augmentin ES ... 10 gün" olarak değiştirildi, ama ayrı bir alan olan
+    // yapılandırılmış İlaçlar listesi (aşağıdaki ilacMetniniCoz(ilac) — reçeteye/hasta
+    // dosyasına giden TEK kaynak) hiç güncellenmedi, "Amoksisilin ... 7 gün" olarak kaldı —
+    // not okunan ile reçeteye yazılan birbirinden tamamen farklıydı, hiçbir uyarı olmadan.
+    // Aynı desen: blok değil, onaydan önce hekime açıkça gösterip hatırlatma.
+    const onaylanacakIlaclar = ilacMetniniCoz(ilac)
+    if (planIlacTutarsizMi(taslak.plan, onaylanacakIlaclar)) {
+      const liste = onaylanacakIlaclar.map((i) => `• ${i.ad}`).join('\n')
+      const devam = window.confirm(`Plan metninizdeki tedavi, aşağıdaki yapılandırılmış İlaçlar listesinden farklı görünüyor — reçeteye ve hasta dosyasına YALNIZCA bu liste yazılacak:\n${liste || '(boş)'}\n\nPlan metniyle uyuşmuyorsa İlaçlar listesini güncelleyin. Yine de bu haliyle onaylamak istiyor musunuz?`)
       if (!devam) return
     }
     setDurum('kaydediyor');
