@@ -285,6 +285,11 @@ export default function NotSayfasi() {
       if (!r.ok || j.success === false) throw new Error(j.error || 'Onaylanamadı');
       const catisma = (j.asiAktarim?.catisma || []) as { mesaj: string }[];
       if (catisma.length) alert(`Not onaylandı. Şu aşı${catisma.length > 1 ? 'lar' : ''} aşı kartına yazılmadı:\n${catisma.map((c) => `• ${c.mesaj}`).join('\n')}\nDoz numarasını düzeltip yeniden onaylayabilirsiniz.`);
+      // NOTYA-AKTARIM-HATA-01 (Kaan, 2026-09-24): aşı/reçete aktarımı (sistem hatası —
+      // çakışma değil) sessizce yutuluyordu; not onaylanıyor ama hasta dosyasına/karta
+      // hiçbir şey yazılmıyordu ve hekimin bunu fark etmesinin hiçbir yolu yoktu.
+      const aktarimHatalari = [j.asiAktarim?.hata, j.receteAktarim?.hata].filter(Boolean) as string[];
+      if (aktarimHatalari.length) alert(`Not onaylandı, ama aşağıdaki aktarım(lar) başarısız oldu — hasta dosyasına/aşı kartına/reçeteye yansımamış olabilir:\n${aktarimHatalari.map((h) => `• ${h}`).join('\n')}\nLütfen notu tekrar açıp yeniden onaylayın; sorun devam ederse destek ekibine bildirin.`);
       setDurum('kaydedildi'); setDegisti(false);
       setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString() } } : v);
       setTimeout(() => router.push(onaylananNotYolu(params.id)), 700);
