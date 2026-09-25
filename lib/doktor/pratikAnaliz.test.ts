@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { antibiyotikMi, ilacAdiKir, klinikAramaMi, pratikKirilimCikar, sikayetAnahtar, siraKir, sorguyuAyikla } from './hastaAramaFiltre'
+import { antibiyotikMi, ilacAdiKir, klinikAramaMi, pratikKirilimCikar, sikayetAnahtar, siraKir, sorguyuAyikla, tekHastaSorusuMu } from './hastaAramaFiltre'
 
 const PAZAR = new Date('2026-09-20T15:00:00+03:00')
 
@@ -78,4 +78,20 @@ describe('pratik analiz — temel hekim soruları', () => {
     ], { donem: 'bu hafta', birim: 'şikayet', yok: 'şikayet kaydı yok', fiil: 'görülen', anahtar: sikayetAnahtar })
     assert.equal(sik.sira[0].n, 2)
   })
+})
+
+// NOTYA-AYSE-HASTA-01 (Kaan, 2026-09-25): adı geçen tek hastanın sorusu pratik geneli istatistiğe düşmez.
+const GOKHAN = 'Umutcan Türkoğlu' + String.fromCharCode(39) + 'na hiç antibiyotik vermiş miyim ve verdiysem hangisini vermişim.'
+
+it('tekHastaSorusuMu: canlı vaka — tek hasta adıyla antibiyotik sorusu hastanın dosyasına gider', () => {
+  assert.equal(tekHastaSorusuMu('tek', GOKHAN), true)
+})
+
+it('tekHastaSorusuMu: hasta çözülmediyse / birden çok adaysa pratik geneli davranış korunur', () => {
+  assert.equal(tekHastaSorusuMu('yok', 'Son üç ayda en çok yazdığım antibiyotik?'), false)
+  assert.equal(tekHastaSorusuMu('coklu', GOKHAN), false)
+})
+
+it('tekHastaSorusuMu: sıralama olmayan tek-hasta sorusu bu kurala girmez', () => {
+  assert.equal(tekHastaSorusuMu('tek', 'Umutcan son geldiğinde ateşi kaçtı?'), false)
 })

@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { ilacAdiniSadelestir, ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi, ilacOnerisiCoz, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
+import { ilacAdiniSadelestir, ilacDetayMetni, ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi, ilacOnerisiCoz, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
 
 test('ilacAdiniSadelestir: alternatif ve açıklama kuyruğunu atar, dozu korur', () => {
   assert.equal(
@@ -194,4 +194,10 @@ test('ilacKontrolSonucu: Ayşe okuyamadı → somut uyuşmazlıkta uyarı, yaln�
   assert.equal(ilacKontrolSonucu(true, LISTE, null), 'uyari')
   assert.equal(ilacKontrolSonucu(false, LISTE, null), 'devam')
   assert.equal(ilacKontrolSonucu(true, LISTE, []), 'uyari')
+})
+
+test('ilacDetayMetni: boş alanlar atlanır, çift tire yok (Kaan, 2026-09-25)', () => {
+  assert.equal(ilacDetayMetni({ doz: '', kullanim: '3x1', sure: '5 gün' }), '3x1 · 5 gün')
+  assert.equal(ilacDetayMetni({ doz: '7,5 mL', kullanim: 'sabah akşam', sure: '10 gün' }), '7,5 mL · sabah akşam · 10 gün')
+  assert.equal(ilacDetayMetni({ doz: ' ', kullanim: null, sure: undefined }), '')
 })
