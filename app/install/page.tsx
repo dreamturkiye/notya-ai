@@ -23,7 +23,7 @@ export default function InstallPage() {
             </div>
           </div>
           {[
-            ["1", "Safari'de notya-ai.vercel.app aç"],
+            ["1", "Safari'de www.notya.io aç"],
             ["2", "Alt çubukta Paylaş  ↑  butonuna bas"],
             ["3", "\"Ana Ekrana Ekle\" seç"],
             ["4", "Sağ üstte \"Ekle\" ye bas"],
@@ -48,7 +48,7 @@ export default function InstallPage() {
             </div>
           </div>
           {[
-            ["1", "Chrome'da notya-ai.vercel.app aç"],
+            ["1", "Chrome'da www.notya.io aç"],
             ["2", "Sağ üst 3 nokta menüsüne bas"],
             ["3", "\"Uygulamayı Yükle\" veya \"Ana Ekrana Ekle\" seç"],
             ["4", "\"Yükle\" ye bas — hazır!"],

@@ -25,7 +25,7 @@ function validateTwilioSignature(req: NextRequest, params: Record<string, string
 
   const url =
     process.env.TWILIO_WEBHOOK_URL ||
-    `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/api/mali/whatsapp`
+    `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.notya.io'}/api/mali/whatsapp`
 
   const data = Object.keys(params)
     .sort()
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
     }
     const ok = results.filter(r => (Number((r.analiz as Record<string,unknown>)?.guvenSkor) || 0) > 0)
     const msg = ok.length === 0
-      ? "Belge islenemedi. Daha net fotograf gonderin.": ("Derya " + ok.length + " belgeyi isledi. Detay: notya-ai.vercel.app/dashboard/mali/belgeler")
+      ? "Belge islenemedi. Daha net fotograf gonderin.": ("Derya " + ok.length + " belgeyi isledi. Detay: www.notya.io/dashboard/mali/belgeler")
     await replyWA(from_num, msg)
     return new NextResponse("<Response></Response>", { headers: { "Content-Type": "text/xml" } })
   } catch {

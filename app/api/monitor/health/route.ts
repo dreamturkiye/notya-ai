@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const TELEGRAM_BOT = "8920614347"
 const TELEGRAM_CHAT = "5545242725"
-const BASE_URL = "https://notya-ai.vercel.app"
+const BASE_URL = "https://www.notya.io"
 
 async function sendTelegram(msg: string) {
   await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT}/sendMessage`, {

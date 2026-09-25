@@ -49,11 +49,11 @@ export async function middleware(req: NextRequest) {
     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com https://api.groq.com https://api.deepgram.com wss://api.deepgram.com https://api.open-meteo.com; worker-src 'self' blob: data: https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' blob:; script-src-elem 'self' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net"
   )
 
-  // CORS - Sadece notya.ai domaininden
+  // CORS - Sadece notya.io domaininden (Kaan, 2026-09-25: notya.io yayında)
   const origin = req.headers.get('origin')
   const allowedOrigins = [
-    'https://notya.ai',
-    'https://www.notya.ai',
+    'https://notya.io',
+    'https://www.notya.io',
     process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '',
   ].filter(Boolean)
 

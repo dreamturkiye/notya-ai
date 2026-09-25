@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
   if (error || !form) return NextResponse.json({ error: 'Form olu\u015fturulamad\u0131.' }, { status: 500 })
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://notya-ai.vercel.app'
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.notya.io'
   const link = `${site}/intake/${token}`
 
   let whatsappGonderildi = false

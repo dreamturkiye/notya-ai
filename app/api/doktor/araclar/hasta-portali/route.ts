@@ -189,7 +189,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/portal/hasta/${hmac}`;
+    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.notya.io'}/portal/hasta/${hmac}`;
 
     // QA 2026-09-08: the portal only shares notes with approved_at set, so a
     // patient with unapproved notes opens a completely empty portal and the

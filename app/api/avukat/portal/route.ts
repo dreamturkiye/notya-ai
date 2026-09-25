@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       const registered = await registerPortalToken(sb, ownerId, muvekkilId, portalToken, expiresAt)
       if (!registered) return NextResponse.json({ error: 'Erişim anahtarı kaydedilemedi.' }, { status: 500 })
-      const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'}/portal/avukat/${portalToken}`
+      const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.notya.io'}/portal/avukat/${portalToken}`
       return NextResponse.json({ success: true, data: { portalUrl, token: portalToken } })
     }
 
