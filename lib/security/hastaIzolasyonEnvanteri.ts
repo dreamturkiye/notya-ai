@@ -79,6 +79,10 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/iletisim/kayit/route.ts': T,
   'app/api/doktor/iletisim/izin/route.ts': T,
   'app/api/doktor/iletisim/kuyruk/route.ts': T,
+  // NOTYA-GELEN-BELGELER — Gelen Belgeler kutusu (lib/gelenBelgeler): liste/ekleme/hasta arama, dosyala/sil, sekreter anahtarı
+  'app/api/doktor/gelen-belgeler/route.ts': T,
+  'app/api/doktor/gelen-belgeler/[id]/route.ts': T,
+  'app/api/doktor/gelen-belgeler/ayar/route.ts': I('users row of doktorId only (sadeceDoktor); takes no patient id and reads no patient table'),
   'app/api/doktor/iletisim/ayarlar/route.ts': I('users row of doktorId only (sadeceDoktor); takes no patient id and reads no patient table'),
   'app/api/doktor/intake-formlari/route.ts': T,
   'app/api/doktor/intake-formlari/[id]/route.ts': I('form by id AND doktor_id'),
@@ -240,12 +244,12 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/portal/hasta/[token]/asi-karnesi/pdf/route.ts': T,
   'app/api/portal/hasta/[token]/dahiliye-anket/route.ts': I('token → (patient_id, doctor_id); every read/write scoped by both'),
   'app/api/portal/hasta/[token]/unlock/route.ts': I('PIN check for the token row only'),
-  'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check); NOTYA-ILETISIM-01 consent write scoped by that row\'s patient_id AND doktor_id'),
+  'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check); NOTYA-ILETISIM-01 / NOTYA-GELEN-BELGELER consent writes scoped by that row\'s patient_id AND doktor_id'),
   // ── Entegrasyon / cron (oturumsuz, sunucu içi) ──
   'app/api/entegrasyon/fhir/isle/route.ts': I('cron-secret gated; exports notes only of doctors enrolled in that institution'),
   'app/api/entegrasyon/hl7/al/route.ts': I('per-institution inbound key; patient mapping scoped by kurum_id'),
   'app/api/entegrasyon/yonetim/route.ts': I('ADMIN_EMAILS only'),
   'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; enqueues tomorrow\'s reminder into the booking owner\'s queue only when patients.id is re-found with doctor_id = the row\'s doktor_id; then (NOTYA-ILETISIM-04) the dispatcher sends from each item\'s own doctor\'s account — see iletisim-otomatik'),
   'app/api/cron/iletisim-otomatik/route.ts': I('cron-secret gated; NOTYA-ILETISIM-04 dispatcher (lib/iletisim/otomatikGonderim.ts): every queue item is re-read via iletisimHazirla with the item\'s own doctor_id (queue row, appointment and patient each resolved with doctor_id), sent only from that doctor\'s own connected account, every write .eq(doctor_id)'),
-  'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path'),
+  'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path (NOTYA-GELEN-BELGELER: deletes unfiled inbox rows + their files by age only, returns counts)'),
 }

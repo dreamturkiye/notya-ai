@@ -25,7 +25,11 @@ export async function POST(req: NextRequest) {
     .upload(user.id + '/' + hastaId + '/' + Date.now() + '.' + ext,
       Buffer.from(base64, 'base64'), { contentType: mimeType })
   if (uploadError) return NextResponse.json({ error: 'Dosya yüklenemedi.' }, { status: 500 })
-  const dosya_url = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public/hasta-belgeler/' + uploadData.path
+  // NOTYA-GELEN-BELGELER: hasta-belgeler is a PRIVATE bucket. We used to store a public-style URL here, which either
+  // 404s or — if the bucket were ever flipped public — exposes the file to anyone with the link. Store a storage
+  // reference instead and hand the caller a short-lived signed URL.
+  const dosya_url = 'hasta-belgeler/' + uploadData.path
+  const { data: imzali } = await sb.storage.from('hasta-belgeler').createSignedUrl(uploadData.path, 600)
   const sysMap: Record<string,string> = {
     'Lab Sonucu': 'Tibbi lab belgesi. JSON: {"testler":[{"ad":"","deger":"","birim":"","referansAralik":"","anormal":false}],"labAdi":"","tarih":""}',
     'Goruntulemeler': 'Radyoloji. JSON: {"modalite":"","bolge":"","bulgular":"","izlenim":"","radyolog":"","tarih":""}',
@@ -43,5 +47,5 @@ export async function POST(req: NextRequest) {
     .insert({ doctor_id: user.id, patient_id: hastaId, belge_turu: belgeType, dosya_url, ai_ozet: aiOzet, inceleme_bekliyor: true })
     .select().single()
   if (error) return NextResponse.json({ error: 'Kaydedilemedi' }, { status: 500 })
-  return NextResponse.json({ belge, aiOzet })
+  return NextResponse.json({ belge, aiOzet, imzaliUrl: imzali?.signedUrl ?? null })
 }

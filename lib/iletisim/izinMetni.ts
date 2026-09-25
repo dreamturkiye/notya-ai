@@ -30,3 +30,16 @@ export function intakeIzinleri(yanitlar: Record<string, unknown>): Record<Iletis
     eposta: yanitlar[IZIN_ALANI.eposta] === IZIN_EVET,
   }
 }
+
+/**
+ * NOTYA-GELEN-BELGELER — the patient's consent that what they send (documents, photos, voice messages) may be filed.
+ * Intake form (patient's voice) and the hasta profili box (doctor's view) say the same thing.
+ */
+export const GELEN_BELGE_IZIN_METNI = 'Gönderdiğiniz belgeler, fotoğraflar ve sesli mesajlar dosyanıza eklenebilir.'
+export const GELEN_BELGE_IZIN_PROFIL = 'Gönderdiği belgeler, fotoğraflar ve sesli mesajlar dosyasına eklenebilir'
+export const GELEN_BELGE_IZIN_ALANI = 'gelenBelgeIzni'
+
+/** Intake answers → gelen belge consent (unticked = no consent). */
+export function intakeGelenBelgeIzni(yanitlar: Record<string, unknown>): boolean {
+  return yanitlar[GELEN_BELGE_IZIN_ALANI] === IZIN_EVET
+}

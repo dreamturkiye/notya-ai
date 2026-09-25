@@ -24,7 +24,7 @@
  * Alan şeması TÜRKÇE, çünkü form doğrudan hastaya gösteriliyor — İngilizce id/type dışında her
  * şey hastanın göreceği metin.
  */
-import { IZIN_ACIKLAMASI, IZIN_ALANI, IZIN_EVET, IZIN_METNI } from '@/lib/iletisim/izinMetni'
+import { GELEN_BELGE_IZIN_ALANI, GELEN_BELGE_IZIN_METNI, IZIN_ACIKLAMASI, IZIN_ALANI, IZIN_EVET, IZIN_METNI } from '@/lib/iletisim/izinMetni'
 
 export type IntakeAlanTuru = 'text' | 'tel' | 'email' | 'date' | 'select' | 'textarea' | 'radio' | 'checkbox-grup' | 'bolum-basligi'
 
@@ -150,6 +150,9 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
       // Optional; left empty = the patient did not consent to that channel. Written to patients.iletisim_izni_* on submit.
       { id: IZIN_ALANI.whatsapp, etiket: IZIN_METNI.whatsapp, tur: 'radio', secenekler: [IZIN_EVET] },
       { id: IZIN_ALANI.eposta, etiket: IZIN_METNI.eposta, tur: 'radio', secenekler: [IZIN_EVET], yardim: IZIN_ACIKLAMASI },
+      // NOTYA-GELEN-BELGELER: optional; what the patient sends (lab results, photos, voice messages) may be filed.
+      // Written to patients.gelen_belge_izni on submit (migration 099).
+      { id: GELEN_BELGE_IZIN_ALANI, etiket: GELEN_BELGE_IZIN_METNI, tur: 'radio', secenekler: [IZIN_EVET] },
     ],
   },
 ]

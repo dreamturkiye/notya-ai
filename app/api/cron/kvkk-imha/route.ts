@@ -16,6 +16,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { cronYetkiliMi } from '@/lib/cronYetki'
+import { gelenleriTemizle } from '@/lib/gelenBelgeler/sunucu'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -70,6 +71,14 @@ export async function GET(req: Request) {
 
   // Operational logs, at the published 2-year window.
   await purge('access_logs', 'created_at', RETENTION.access_logs, 'erisim_kayitlari')
+
+  // NOTYA-GELEN-BELGELER: incoming documents nobody filed within 30 days — file + row destroyed (and deleted rows).
+  try {
+    const g = await gelenleriTemizle(s)
+    report.gelen_belgeler = g.hata ? `hata: ${g.hata.slice(0, 80)}` : g.silinen
+  } catch (e: any) {
+    report.gelen_belgeler = `hata: ${String(e?.message || e).slice(0, 80)}`
+  }
 
   console.log('[kvkk-imha]', JSON.stringify(report))
   return NextResponse.json({ ok: true, rapor: report })

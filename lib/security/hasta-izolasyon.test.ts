@@ -130,6 +130,8 @@ type Hekim = {
   eylemOneri: string; eylemKayit: string
   /** NOTYA-ILETISIM-01: Hazır mesajlar kuyruğunda bekleyen bir öğe */
   kuyruk: string
+  /** NOTYA-GELEN-BELGELER: dosyalanmamış bir gelen belge (dosyası özel kovada, önerilen hasta = kendi hastası) */
+  gelenBelge: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -216,7 +218,17 @@ function hekimKur(harf: Harf): Hekim {
   // NOTYA-ILETISIM-01: bekleyen bir "Sağlığım'da yeni mesaj" öğesi + geçmiş bir iletişim kaydı
   const kuyruk = db.ekle('iletisim_kuyrugu', { doctor_id: id, patient_id: hasta, tur: 'saglikim_yeni_mesaj', konu_id: konu, planlanan_gun: trGun(0, 12).slice(0, 10), tekil_anahtar: `saglikim_yeni_mesaj:${konu}`, durum: 'bekliyor', ertelendi_at: null }).id
   db.ekle('iletisim_kayitlari', { doctor_id: id, patient_id: hasta, kanal: 'whatsapp', tur: 'randevu_hatirlatma', durum: 'gonderildi', gonderen_personel_id: null })
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, kuyruk, hileliSeans: '', hileliNot: '' }
+  // NOTYA-GELEN-BELGELER: kutuda bekleyen bir tahlil PDF'i — okuma şifreli, önerilen hasta bu hekimin hastası
+  const gelenBelge = randomUUID()
+  const gelenYol = `${id}/gelen/${gelenBelge}.pdf`
+  db.dosyaKoy('hasta-belgeler', gelenYol, Buffer.from(`%PDF-1.4 sentetik ${m}`))
+  db.ekle('gelen_belgeler', {
+    id: gelenBelge, doctor_id: id, patient_id: null, kaynak: 'surukle', durum: 'yeni', dosya_adi: 'qa-gelen.pdf', mime: 'application/pdf', bicim: 'pdf',
+    boyut: 20, sha256: 'a'.repeat(63) + harf, depo_yolu: gelenYol, belge_turu: 'Lab Sonucu', okundu: true,
+    okuma_sifreli: encrypt(JSON.stringify({ ozet: `Hemogram ${m}`, belgeTuru: 'Lab Sonucu', metin: null, kimlik: { ad: null, dogum: null, tc: null, tcSon: null }, belgeTarihi: null, konsultasyonYaniti: false, okundu: true })),
+    gonderen_sifreli: null, oneriler: [{ patient_id: hasta, guven: 85, kesinlik: 'eminim', nedenler: ['ad soyad'] }],
+  })
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, kuyruk, gelenBelge, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -233,6 +245,8 @@ function hileliKur(x: Hekim, y: Hekim) {
   // NOTYA-ILETISIM-01: X'in kuyruğunda Y'nin hastasına düşmüş öğe + kaydı — X'in listesinde Y'nin hasta adı çözülmemeli
   db.ekle('iletisim_kuyrugu', { doctor_id: x.id, patient_id: y.hasta, tur: 'saglikim_yeni_mesaj', planlanan_gun: trGun(0, 12).slice(0, 10), tekil_anahtar: `hileli:${m}`, durum: 'bekliyor' })
   db.ekle('iletisim_kayitlari', { doctor_id: x.id, patient_id: y.hasta, kanal: 'whatsapp', tur: 'randevu_hatirlatma', durum: 'gonderildi' })
+  // NOTYA-GELEN-BELGELER: X'in kutusunda Y'nin hastasını öneren bayat öğe — X'in listesinde Y'nin hasta adı çözülmemeli
+  db.ekle('gelen_belgeler', { doctor_id: x.id, patient_id: null, kaynak: 'yukleme', durum: 'yeni', dosya_adi: 'hileli.pdf', mime: 'application/pdf', bicim: 'pdf', boyut: 1, sha256: 'b'.repeat(63) + x.harf, depo_yolu: null, belge_turu: 'Diğer', okundu: false, okuma_sifreli: null, oneriler: [{ patient_id: y.hasta, guven: 90, kesinlik: 'eminim', nedenler: [] }] })
 }
 
 function sahneKur(): { A: Hekim; B: Hekim } {
@@ -548,6 +562,20 @@ const VAKALAR: Vaka[] = [
   { ad: 'PATCH /api/doktor/iletisim/kuyruk (atla)', red: 404,
     yazdi: (a) => tablo('iletisim_kuyrugu').find((x) => x.id === a.kuyruk)?.durum === 'atlandi',
     cagir: (r, a, h) => coz(r.iletisimKuyruk.PATCH(iste('PATCH', '/api/doktor/iletisim/kuyruk', { token: a.token, govde: { id: h.kuyruk, islem: 'atla' } }))) },
+  // NOTYA-GELEN-BELGELER — Gelen Belgeler kutusu. Liste yalnız kendi öğeleri + kendi hastalarının adı; yabancı öğe / hasta 404.
+  { ad: 'GET /api/doktor/gelen-belgeler (kutu)', okur: true,
+    cagir: (r, a) => coz(r.gelenBelgeler.GET(iste('GET', '/api/doktor/gelen-belgeler', { token: a.token }))) },
+  { ad: 'GET /api/doktor/gelen-belgeler?hastaAra (Başka hasta seç)', okur: true,
+    cagir: (r, a) => coz(r.gelenBelgeler.GET(iste('GET', `/api/doktor/gelen-belgeler?hastaAra=${encodeURIComponent('QA Hasta')}`, { token: a.token }))) },
+  { ad: 'PATCH /api/doktor/gelen-belgeler/[id] (dosyala)', red: 404,
+    yazdi: (a) => tablo('medical_documents').some((x) => x.patient_id === a.hasta && x.file_name === 'qa-gelen.pdf') && tablo('gelen_belgeler').find((x) => x.id === a.gelenBelge)?.durum === 'dosyalandi',
+    cagir: (r, a, h) => coz(r.gelenBelge.PATCH(iste('PATCH', `/api/doktor/gelen-belgeler/${h.gelenBelge}`, { token: a.token, govde: { islem: 'dosyala', patientId: h.hasta } }), prm({ id: h.gelenBelge }))) },
+  { ad: 'PATCH /api/doktor/gelen-belgeler/[id] (kendi öğesi + yabancı hasta dosyalanmaz)', red: 404,
+    yazdi: (a) => tablo('medical_documents').some((x) => x.patient_id === a.hasta && x.file_name === 'qa-gelen.pdf'),
+    cagir: (r, a, h) => coz(r.gelenBelge.PATCH(iste('PATCH', `/api/doktor/gelen-belgeler/${a.gelenBelge}`, { token: a.token, govde: { islem: 'dosyala', patientId: h.hasta } }), prm({ id: a.gelenBelge }))) },
+  { ad: 'PATCH /api/doktor/gelen-belgeler/[id] (sil)', red: 404,
+    yazdi: (a) => tablo('gelen_belgeler').find((x) => x.id === a.gelenBelge)?.durum === 'silindi',
+    cagir: (r, a, h) => coz(r.gelenBelge.PATCH(iste('PATCH', `/api/doktor/gelen-belgeler/${h.gelenBelge}`, { token: a.token, govde: { islem: 'sil' } }), prm({ id: h.gelenBelge }))) },
   { ad: 'POST /api/doktor/intake-formlari', red: 404,
     yazdi: (a) => tablo('hasta_intake_formlari').some((x) => x.patient_id === a.hasta),
     cagir: (r, a, h) => coz(r.intake.POST(iste('POST', '/api/doktor/intake-formlari', { token: a.token, govde: { patientId: h.hasta } }))) },
@@ -660,6 +688,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       iletisimKayit: await ice('app/api/doktor/iletisim/kayit/route'),
       iletisimIzin: await ice('app/api/doktor/iletisim/izin/route'),
       iletisimKuyruk: await ice('app/api/doktor/iletisim/kuyruk/route'),
+      gelenBelgeler: await ice('app/api/doktor/gelen-belgeler/route'),
+      gelenBelge: await ice('app/api/doktor/gelen-belgeler/[id]/route'),
       intake: await ice('app/api/doktor/intake-formlari/route'),
       asistanLearn: await ice('app/api/asistan/learn/route'),
       asistanChat: await ice('app/api/asistan/chat/route'),

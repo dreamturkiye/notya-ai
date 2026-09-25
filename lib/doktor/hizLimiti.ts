@@ -11,6 +11,7 @@ export const KOVA_LIMITLERI: Record<string, number> = {
   sohbet: 300,   // asistan yazılı sohbet mesajı / gün
   konsult: 200,  // hasta dosyası + not konsultları / gün
   soap: 80,      // not üretimi (canlı + ses yükleme) / gün
+  belge: 200,    // NOTYA-GELEN-BELGELER: gelen belgeyi okuma / gün (aşılırsa belge okunmadan kutuya düşer)
 }
 
 export async function aiKotaKullan(
