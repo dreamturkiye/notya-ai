@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { ilacAdiniSadelestir, ilacListeleriAyniMi, ilacOnerisiCoz, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
+import { ilacAdiniSadelestir, ilacKontroluGerekliMi, ilacKontrolSonucu, ilacListeleriAyniMi, ilacOnerisiCoz, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
 
 test('ilacAdiniSadelestir: alternatif ve açıklama kuyruğunu atar, dozu korur', () => {
   assert.equal(
@@ -154,4 +154,44 @@ test('planIlacTutarsizMi: boş İlaçlar listesi ya da boş plan metni uyarı ü
   assert.equal(planIlacTutarsizMi('', [{ ad: 'Amoksisilin' }]), false)
   assert.equal(planIlacTutarsizMi(null, [{ ad: 'Amoksisilin' }]), false)
   assert.equal(planIlacTutarsizMi(undefined, [{ ad: 'Amoksisilin' }]), false)
+})
+
+
+// NOTYA-RECETE-05 (Kaan, 2026-09-25): Plan'a YENİ ilaç eklenmesi de yakalanır; gereksiz bekleme yok.
+const LISTE = [
+  { ad: 'Amoksisilin 400 mg/5 mL süspansiyon', doz: '7,5 mL', kullanim: '2x1', sure: '7 gün' },
+  { ad: 'Parasetamol süspansiyon (160 mg/5 mL)', doz: '5 mL', kullanim: 'gerektiğinde', sure: '' },
+]
+const PLAN_ILK = '1. TEDAVİ:' + String.fromCharCode(10) + 'a) Amoksisilin süspansiyon 2x7.5 ml 7 gün' + String.fromCharCode(10) + 'b) Parasetamol 5 ml gerektiğinde'
+
+test('ilacKontroluGerekliMi: Plan düzenlenmedi ve tutarlı → kontrol yok (hekim beklemez)', () => {
+  assert.deepEqual(ilacKontroluGerekliMi(PLAN_ILK, PLAN_ILK, LISTE), { gerekli: false, tutarsiz: false })
+})
+
+test('ilacKontroluGerekliMi: listedeki ilaçlar dururken Plan’a yeni ilaç eklendi → kontrol gerekir', () => {
+  const yeni = PLAN_ILK + String.fromCharCode(10) + 'c) Ventolin nebül 3x1 5 gün'
+  assert.deepEqual(ilacKontroluGerekliMi(yeni, PLAN_ILK, LISTE), { gerekli: true, tutarsiz: false })
+})
+
+test('ilacKontroluGerekliMi: canlı vaka (Amoksisilin→Augmentin) → kontrol gerekir ve tutarsız', () => {
+  const plan = '1. TEDAVİ: a) Augmentin ES süspansiyon 2x7.5 ml 10 gün b) Calpol şurup 5ml lüzumunda'
+  assert.deepEqual(ilacKontroluGerekliMi(plan, PLAN_ILK, LISTE), { gerekli: true, tutarsiz: true })
+})
+
+test('ilacKontroluGerekliMi: ilk Plan bilinmiyorsa yalnız somut uyuşmazlığa bakar; boş Plan kontrol üretmez', () => {
+  assert.deepEqual(ilacKontroluGerekliMi(PLAN_ILK, null, LISTE), { gerekli: false, tutarsiz: false })
+  assert.deepEqual(ilacKontroluGerekliMi('', PLAN_ILK, LISTE), { gerekli: false, tutarsiz: false })
+  assert.deepEqual(ilacKontroluGerekliMi('  ' + PLAN_ILK + '  ', PLAN_ILK, LISTE), { gerekli: false, tutarsiz: false })
+})
+
+test('ilacKontrolSonucu: aynı liste → devam; farklı → öneri kartı', () => {
+  assert.equal(ilacKontrolSonucu(false, LISTE, LISTE.map((i) => ({ ...i }))), 'devam')
+  const ek = [...LISTE, { ad: 'Ventolin nebül', doz: '', kullanim: '3x1', sure: '5 gün' }]
+  assert.equal(ilacKontrolSonucu(false, LISTE, ek), 'oneri')
+})
+
+test('ilacKontrolSonucu: Ayşe okuyamadı → somut uyuşmazlıkta uyarı, yalnız düzenlemede sessizce devam', () => {
+  assert.equal(ilacKontrolSonucu(true, LISTE, null), 'uyari')
+  assert.equal(ilacKontrolSonucu(false, LISTE, null), 'devam')
+  assert.equal(ilacKontrolSonucu(true, LISTE, []), 'uyari')
 })
