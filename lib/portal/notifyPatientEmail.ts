@@ -3,7 +3,7 @@ import { decrypt } from '@/lib/security/encryption'
 import { sendResendEmail } from '@/lib/mail/resend'
 
 function appBaseUrl(): string {
-  return String(process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app').replace(/\/$/, '')
+  return String(process.env.NEXT_PUBLIC_APP_URL || 'https://www.notya.io').replace(/\/$/, '')
 }
 
 async function patientEmail(sb: SupabaseClient, patientId: string, doctorId: string): Promise<string | null> {

@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: mesaj }, { status: 400 })
   }
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://notya-ai.vercel.app'
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.notya.io'
   return NextResponse.json({
     personel: { id: data.id, adSoyad: data.ad_soyad, email: data.email },
     davetLinki: `${site}/davet/personel/${token}`,

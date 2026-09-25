@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: insertError.message }, { status: 500 })
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://notya-ai.vercel.app'
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.notya.io'
       return NextResponse.json({
         success: true,
         token: result.token,
