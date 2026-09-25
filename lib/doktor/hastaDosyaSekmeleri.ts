@@ -360,9 +360,46 @@ export function pediatriAracSekmesiUygun(input: {
  * Diğer tüm branşlar (kardiyoloji, KBB, üroloji, ortopedi, göz, derm, KD, dahiliye …) pediatrik araç sekmesi görmez.
  */
 export function pediatriCaprazBransi(specialtyHam: string | null | undefined): boolean {
+  return birinciBasamakBransi(specialtyHam)
+}
+
+/** Birinci basamak: aile hekimliği, genel pratisyen ya da branşsız hekim — çocuk ve gebeye doğal olarak bakar. */
+export function birinciBasamakBransi(specialtyHam: string | null | undefined): boolean {
   const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
   if (!b) return true
   return /aile\s*hekim|aile-hekimligi|genel pratisyen|pratisyen/.test(b)
+}
+
+/** Kadın hastalıkları ve doğum + yan dalları (perinatoloji, jinekolojik onkoloji, üreme endokrinolojisi). */
+export function kadinDogumBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  return /kadın.?doğum|kadin.?dogum|kadın hastalık|kadin hastalik|jinekolo|obstetri|perinatolo|üreme endokrin|ureme endokrin/.test(b)
+}
+
+/**
+ * BRANS-SIZMASI-KD (Kaan, 2026-09-25), Türkiye pratiği:
+ * - Tam "Kadın Sağlığı & Gebelik" bölümü (gebe izlem, NST, risk formu, VTE, gebe kartı): kadın doğum ve yan dalları.
+ * - Çapraz geçiş: birinci basamak — SB doğum öncesi bakımı aile hekimi ile kadın doğum uzmanı birlikte verir.
+ * - Diğer tüm branşlar tam bölümü görmez; gebelik bilgisi onlara yalnız güvenlik bayrağı olarak gider
+ *   (gebeBayrakMetni): izotretinoin öncesi gebelik testi (TİTCK KÜB), iyonizan görüntüleme öncesi gebelik sorgusu, ilaç.
+ */
+export function kadinSagligiBolumuBransi(specialtyHam: string | null | undefined): boolean {
+  return kadinDogumBransi(specialtyHam) || birinciBasamakBransi(specialtyHam)
+}
+
+/** Hasta başlığındaki güvenlik bayrağı: "Gebe · 24. hafta" (SAT'tan; yoksa TDT'den). Tarih yoksa "Gebe". */
+export function gebeBayrakMetni(g: { sat?: string | null; tdt?: string | null } | null, nowMs = Date.now()): string | null {
+  if (!g) return null
+  const hf = 7 * 86400000
+  let hafta: number | null = null
+  const sat = g.sat ? Date.parse(g.sat) : NaN
+  if (Number.isFinite(sat)) hafta = Math.floor((nowMs - sat) / hf)
+  else {
+    const tdt = g.tdt ? Date.parse(g.tdt) : NaN
+    if (Number.isFinite(tdt)) hafta = 40 - Math.ceil((tdt - nowMs) / hf)
+  }
+  if (hafta == null || hafta < 0 || hafta > 45) return 'Gebe'
+  return 'Gebe · ' + hafta + '. hafta'
 }
 
 /**
@@ -397,8 +434,12 @@ export function dahiliyeSekmesiBransi(specialtyHam: string | null | undefined): 
 export function gebelikSekmesiUygun(input: {
   cinsiyet: string | null | undefined
   dogumIso: string | null | undefined
+  /** Verilirse branş kuralı uygulanır (BRANS-SIZMASI-KD). */
+  doktorBransi?: string | null
 }, nowMs = Date.now()): boolean {
   if (!input.cinsiyet || input.cinsiyet !== 'Kadın') return false
+  // BRANS-SIZMASI-KD (Kaan, 2026-09-25): tam KD bölümü yalnız kadın doğum + birinci basamak (aile hekimi DÖB'ü paylaşır).
+  if ('doktorBransi' in input && !kadinSagligiBolumuBransi(input.doktorBransi)) return false
   const y = yasYilKesir(input.dogumIso, nowMs)
   if (y == null) return true
   return y >= 12
