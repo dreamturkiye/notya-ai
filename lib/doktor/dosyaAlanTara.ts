@@ -20,7 +20,7 @@ const GIZLI = new Set([
   'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik',
   'policeNo', 'kurumAdi',
   'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi',
-  'kvkkOnay', 'iletisimOnay',
+  'kvkkOnay', 'iletisimOnay', 'iletisimIzniWhatsapp', 'iletisimIzniEposta',
 ])
 
 /** Pediatri form + clinical headings that must not leak to adult branşlar. */

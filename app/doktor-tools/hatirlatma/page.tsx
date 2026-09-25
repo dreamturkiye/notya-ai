@@ -1,154 +1,60 @@
 'use client'
+/**
+ * Araçlar › Hasta Hatırlatma — NOTYA-ILETISIM-01 (Kaan, 2026-09-25): the message leaves from the doctor's
+ * OWN WhatsApp or e-mail through the one send button (GonderDugmesi). The old Twilio SMS/WhatsApp path and
+ * the "scheduled date" field (it only ever logged, nothing was scheduled) are gone. History = the contact log.
+ */
 import {
   normalizeHastalar,
   toolsCard,
   toolsErrorBox,
   toolsInput,
-  toolsPrimaryBtn,
   toolsShell,
   type HastaOption,
 } from '@/lib/doktor/toolsUi'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
-import React, { useEffect, useState } from 'react'
+import { iletisimIstek } from '@/lib/iletisim/istemci'
+import { KANAL_ETIKETI, TUR_ETIKETI, type IletisimKanali, type MesajTuru } from '@/lib/iletisim/tipler'
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi'
+import React, { useCallback, useEffect, useState } from 'react'
 
-type HatirlatmaItem = {
-  id: string
-  hastaAdi: string
-  mesaj: string
-  kanal: string
-  tarih: string
-  durum: 'gonderildi' | 'bekliyor' | 'hata'
-}
+type Kayit = { id: string; hastaAdi: string; kanal: IletisimKanali; tur: MesajTuru; durum: 'acildi' | 'gonderildi'; gonderen: string; tarih: string }
 
-function normalizeHatirlatmalar(payload: unknown, hastalar: HastaOption[]): HatirlatmaItem[] {
-  const raw = Array.isArray(payload)
-    ? payload
-    : payload && typeof payload === 'object' && Array.isArray((payload as { hatirlatmalar?: unknown[] }).hatirlatmalar)
-      ? (payload as { hatirlatmalar: unknown[] }).hatirlatmalar
-      : []
-
-  return raw.map((item, idx) => {
-    const row = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>
-    const patientId = String(row.patient_id || row.hastaId || '')
-    const matched = hastalar.find((h) => h.id === patientId)
-    const kanalRaw = String(row.kanal || 'SMS').toLowerCase()
-    const kanal = kanalRaw.includes('kisisel') ? 'WhatsApp (kendi)' : kanalRaw.includes('whats') ? 'WhatsApp' : 'SMS'
-    const gonderildi = Boolean(row.gonderildi)
-    return {
-      id: String(row.id || idx),
-      hastaAdi: String(row.hastaAdi || matched?.label || 'Hasta'),
-      mesaj: String(row.mesaj || ''),
-      kanal,
-      tarih: String(row.gonder_tarih || row.tarih || row.created_at || ''),
-      durum: gonderildi ? 'gonderildi' : 'bekliyor',
-    }
-  })
+/** Plain, non-clinical starting texts (no drug, test or result — details stay in Sağlığım). */
+const SABLONLAR: Record<string, string> = {
+  'Kontrol zamanı': 'Kontrol zamanınız geldi. Randevu için bizi arayabilir ya da bu mesaja yanıt yazabilirsiniz.',
+  'Takip randevusu': 'Takip randevunuz yaklaşıyor. Uygun olduğunuz gün ve saati bize iletebilir misiniz?',
+  'Tetkik ve raporlar': 'Bir sonraki randevunuza gelirken elinizdeki tetkik sonuçlarını ve raporları da getirmenizi rica ederiz.',
+  'Sağlığım’a bakın': 'Sağlığım’da sizin için yeni bir bilgi var. Muayenehanemizin verdiği bağlantı ve PIN ile girebilirsiniz.',
 }
 
 export default function HatirlatmaPage() {
   const [hastalar, setHastalar] = useState<HastaOption[]>([])
-  const [hatirlatmalar, setHatirlatmalar] = useState<HatirlatmaItem[]>([])
+  const [kayitlar, setKayitlar] = useState<Kayit[]>([])
   const [selectedHasta, setSelectedHasta] = useState('')
   const [mesaj, setMesaj] = useState('')
-  const [tarihSaat, setTarihSaat] = useState('')
-  const [kanal, setKanal] = useState<'WhatsApp' | 'SMS'>('WhatsApp')
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  const fetchAll = async () => {
-    const token = await ensureDoctorAccessToken()
-    if (!token) {
-      setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
-      return
-    }
+  const kayitlariYukle = useCallback(async () => {
     try {
-      const [hRes, listRes] = await Promise.all([
-        fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/doktor/hatirlatma', { headers: { Authorization: `Bearer ${token}` } }),
-      ])
-      if (hRes.status === 401 || listRes.status === 401) {
-        setError('Oturum geçersiz. Lütfen tekrar giriş yapın.')
-        return
-      }
-      const patients = hRes.ok ? normalizeHastalar(await hRes.json()) : []
-      setHastalar(patients)
-      if (listRes.ok) {
-        setHatirlatmalar(normalizeHatirlatmalar(await listRes.json(), patients))
-      } else {
-        setHatirlatmalar([])
-      }
-    } catch {
-      setError('Veriler alınamadı.')
-    }
-  }
-
-  useEffect(() => {
-    void fetchAll()
+      const j = await iletisimIstek<{ kayitlar: Kayit[] }>('/api/doktor/iletisim/kayit')
+      setKayitlar(j.kayitlar || [])
+    } catch { setKayitlar([]) }
   }, [])
 
-  const sablonlar: Record<string, string> = {
-    'Takip Randevusu': 'Merhaba, takip randevunuz yaklaşıyor. Lütfen tarih ve saati onaylayın.',
-    'Ilac Yenilemesi': 'İlaç reçeteniz yenilenmeye hazır. Eczaneden alabilirsiniz.',
-    'Lab Sonucu Hazir': 'Laboratuvar sonuçlarınız hazır. Detaylar için uygulamayı kontrol edin.',
-    'Kontrol Zamani': 'Kontrol zamanınız geldi. Randevu için iletişime geçin.',
-  }
-
-  const handleGonder = async () => {
-    if (!selectedHasta || !mesaj || !tarihSaat) {
-      setError('Lütfen tüm alanları doldurun.')
-      return
-    }
-    setLoading(true)
-    setError('')
-    setSuccess(false)
-    // iOS Safari: pencere yalnız dokunuş anında açılabilir — önce boş aç, cevap gelince wa.me'ye yönlendir
-    const waPencere = kanal === 'WhatsApp' ? window.open('about:blank', '_blank') : null
-    const token = await ensureDoctorAccessToken()
-    if (!token) {
-      setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
-      setLoading(false)
-      return
-    }
-    try {
-      const res = await fetch('/api/doktor/hatirlatma', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          hastaId: selectedHasta,
-          mesaj,
-          kanal: kanal === 'WhatsApp' ? 'whatsapp_kisisel' : 'sms',
-          tarih: tarihSaat,
-        }),
-      })
-      const body = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        throw new Error(String((body as { error?: string }).error || 'Gönderim başarısız'))
-      }
-      if ((body as { gonderildi?: boolean }).gonderildi === false) {
-        throw new Error(String((body as { error?: string }).error || 'Mesaj gönderilemedi'))
-      }
-      // Kaan (2026-09-10): WhatsApp = doktorun kendi hesabı. wa.me bağlantısı mesajı hazır açar;
-      // doktor WhatsApp'ta tek dokunuşla gönderir. Twilio/Meta yok, mesaj onun numarasından gider.
-      const waLink = (body as { waLink?: string }).waLink
-      if (waLink) { if (waPencere) waPencere.location.href = waLink; else window.open(waLink, '_blank') }
-      else waPencere?.close()
-      setSuccess(true)
-      setMesaj('')
-      setTarihSaat('')
-      setSelectedHasta('')
-      await fetchAll()
-    } catch (e: unknown) {
-      waPencere?.close()
-      setError(e instanceof Error ? e.message : 'Gönderim başarısız')
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    void (async () => {
+      const token = await ensureDoctorAccessToken()
+      if (!token) { setError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.'); return }
+      try {
+        const hRes = await fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } })
+        if (hRes.status === 401) { setError('Oturum geçersiz. Lütfen tekrar giriş yapın.'); return }
+        setHastalar(hRes.ok ? normalizeHastalar(await hRes.json()) : [])
+      } catch { setError('Hastalar alınamadı.') }
+      await kayitlariYukle()
+    })()
+  }, [kayitlariYukle])
 
   return (
     <div style={toolsShell}>
@@ -157,11 +63,11 @@ export default function HatirlatmaPage() {
           Araçlar
         </div>
         <h1 style={{ margin: 0, fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 32, color: '#2e251d', letterSpacing: '-0.02em' }}>Hasta Hatırlatma</h1>
-        <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14 }}>WhatsApp veya SMS ile hasta bildirimi gönderin</p>
+        <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14 }}>Kendi WhatsApp’ınızdan ya da e-postanızdan, tek dokunuşla.</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 20 }}>
           <div style={toolsCard}>
-            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 16 }}>Yeni Hatırlatma</div>
+            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 16 }}>Yeni hatırlatma</div>
             <select value={selectedHasta} onChange={(e) => setSelectedHasta(e.target.value)} style={{ ...toolsInput, marginBottom: 12 }}>
               <option value="">Hasta seçin</option>
               {hastalar.map((h) => (
@@ -177,41 +83,12 @@ export default function HatirlatmaPage() {
               placeholder="Mesajınızı yazın..."
               style={{ ...toolsInput, resize: 'vertical', marginBottom: 12 }}
             />
-            <input
-              type="datetime-local"
-              value={tarihSaat}
-              onChange={(e) => setTarihSaat(e.target.value)}
-              style={{ ...toolsInput, marginBottom: 12 }}
-            />
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-              {(['WhatsApp', 'SMS'] as const).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setKanal(k)}
-                  style={{
-                    flex: 1,
-                    minWidth: 120,
-                    padding: '10px 0',
-                    borderRadius: 999,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: kanal === k ? (k === 'WhatsApp' ? '#3F7D4A' : CHROME_RENK.pine) : '#EFE9DC',
-                    color: kanal === k ? '#FAF8F4' : CHROME_RENK.muted,
-                    fontWeight: 700,
-                    fontSize: 14,
-                  }}
-                >
-                  {k === 'WhatsApp' ? 'WhatsApp (kendi numaranız)' : k}
-                </button>
-              ))}
-            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-              {Object.keys(sablonlar).map((key) => (
+              {Object.keys(SABLONLAR).map((key) => (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setMesaj(sablonlar[key])}
+                  onClick={() => setMesaj(SABLONLAR[key])}
                   style={{
                     padding: '6px 12px',
                     background: '#EFE9DC',
@@ -226,54 +103,40 @@ export default function HatirlatmaPage() {
                 </button>
               ))}
             </div>
-            <button type="button" onClick={() => void handleGonder()} disabled={loading} style={toolsPrimaryBtn(loading)}>
-              {loading ? 'Gönderiliyor...' : 'Hatırlatmayı Gönder'}
-            </button>
-            {success && (
-              <div style={{ marginTop: 12, padding: 12, background: '#E4F3EA', borderRadius: 12, color: '#2E6E4E', fontSize: 14 }}>
-                {kanal === 'WhatsApp' ? 'WhatsApp açıldı — mesaj hazır, Gönder\'e dokunmanız yeterli' : `${kanal} mesajı gönderildi`}
-              </div>
+            {selectedHasta && mesaj.trim() ? (
+              // Re-keyed on every change so the prepared text is always exactly what is in the box.
+              <GonderDugmesi key={`${selectedHasta}|${mesaj}`} tur="serbest" patientId={selectedHasta} metin={mesaj} etiket="Gönder" onGonderildi={() => { setMesaj(''); void kayitlariYukle() }} />
+            ) : (
+              <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>Hasta seçip mesajı yazın; sonra kendi WhatsApp’ınızdan ya da e-postanızdan gönderin.</div>
             )}
             {error && <div style={toolsErrorBox}>{error}</div>}
           </div>
 
           <div style={toolsCard}>
-            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 16 }}>Gönderilen Hatırlatmalar</div>
-            {hatirlatmalar.length === 0 && (
-              <div style={{ textAlign: 'center', color: CHROME_RENK.muted, padding: '40px 0' }}>Henüz hatırlatma yok</div>
+            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 16 }}>Son gönderilenler</div>
+            {kayitlar.length === 0 && (
+              <div style={{ textAlign: 'center', color: CHROME_RENK.muted, padding: '40px 0' }}>Henüz mesaj yok</div>
             )}
-            {hatirlatmalar.map((item) => (
+            {kayitlar.map((item) => (
               <div
                 key={item.id}
-                style={{
-                  padding: '14px 0',
-                  borderBottom: `1px solid ${CHROME_RENK.border}`,
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 12,
-                }}
+                style={{ padding: '14px 0', borderBottom: `1px solid ${CHROME_RENK.border}`, display: 'flex', alignItems: 'flex-start', gap: 12 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>{item.hastaAdi}</div>
-                  <div style={{ color: CHROME_RENK.muted, fontSize: 14, margin: '2px 0', wordBreak: 'break-word' }}>
-                    {(item.mesaj || '').slice(0, 80)}
-                    {(item.mesaj || '').length > 80 ? '...' : ''}
-                  </div>
+                  <div style={{ color: CHROME_RENK.muted, fontSize: 14, margin: '2px 0' }}>{TUR_ETIKETI[item.tur] || 'Mesaj'} · {KANAL_ETIKETI[item.kanal] || item.kanal}</div>
                   <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>
-                    {item.tarih ? new Date(item.tarih).toLocaleString('tr-TR') : '—'} · {item.kanal}
+                    {item.tarih ? new Date(item.tarih).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '—'} · {item.gonderen}
                   </div>
                 </div>
                 <div
                   style={{
-                    padding: '2px 10px',
-                    borderRadius: 999,
-                    fontSize: 12,
-                    flexShrink: 0,
+                    padding: '2px 10px', borderRadius: 999, fontSize: 12, flexShrink: 0,
                     background: item.durum === 'gonderildi' ? '#E4F3EA' : '#FBF3DE',
                     color: item.durum === 'gonderildi' ? '#2E6E4E' : '#7A5B1E',
                   }}
                 >
-                  {item.durum}
+                  {item.durum === 'gonderildi' ? 'Gönderildi' : 'Açıldı'}
                 </div>
               </div>
             ))}

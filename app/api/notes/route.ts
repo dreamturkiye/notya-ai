@@ -4,7 +4,6 @@
 //
 // Tek not işlemleri: /api/notes/[id] (GET/PUT)
 // Onaylama: /api/notes/[id]/approve (POST)
-// WhatsApp: /api/notes/whatsapp (POST)
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server'

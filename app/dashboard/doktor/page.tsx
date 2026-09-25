@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 
 import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
 import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
+import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
 import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -278,6 +279,9 @@ export default function DoktorDashboard() {
           <span onClick={() => router.push('/doktor-tools/hedef-boy')} style={S({ color: CHROME_RENK.pine, fontSize: 13, fontWeight: 600, cursor: 'pointer' })}>Hedef boy ›</span>
         )}
       </div>
+
+      {/* NOTYA-ILETISIM-01: prepared patient messages — hidden when there are none */}
+      <HazirMesajlar />
 
       <BekleyenKonsultasyonOzeti />
 

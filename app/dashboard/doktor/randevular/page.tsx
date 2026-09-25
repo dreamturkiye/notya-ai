@@ -21,6 +21,8 @@ import { resmiTatilMi } from '@/lib/randevu/resmiTatiller';
 import { randevuAksiyonlari, REAKTIVASYON_DURUMU } from '@/lib/randevu/randevuDurum';
 import { trAramaNormalize, trIcerir } from '@/lib/utils/turkceArama';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import RandevuMesaji from '@/components/doktor/iletisim/RandevuMesaji';
+import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar';
 
 export const dynamic = 'force-dynamic';
 
@@ -788,6 +790,9 @@ export default function RandevularPage() {
           )}
         </div>
 
+        {/* NOTYA-ILETISIM-01: the secretary has no Ana Sayfa — prepared appointment messages live here for them */}
+        {rol === 'sekreter' && <HazirMesajlar kartStili={{ marginBottom: 14 }} />}
+
         <div style={{ display: 'flex', alignItems: 'stretch', borderRadius: 16, overflow: 'hidden', boxShadow: '0 10px 44px rgba(58,44,34,0.14)', border: '1px solid rgba(58,44,34,0.08)' }}>
 
           {/* ——— Kenar çubuğu — koyu iki tonun koyusu: mini ay + Bugün/Yarın ajandası ——— */}
@@ -1276,6 +1281,15 @@ export default function RandevularPage() {
                             <button type="button" onClick={() => modalDurumDegistir('iptal', modalIptalNedeni)} style={{ ...modalAksiyonBtn, background: '#EF4444', color: 'white', borderColor: '#EF4444' }}>Onayla</button>
                             <button type="button" onClick={() => { setModalIptalAcik(false); setModalIptalNedeni(''); }} style={modalAksiyonBtn}>Vazgeç</button>
                           </div>
+                        )}
+                        {/* NOTYA-ILETISIM-01: tell the patient from this device's own WhatsApp / mail */}
+                        {!modalIptalAcik && (
+                          <RandevuMesaji
+                            key={duzenlenenRandevu.id}
+                            randevuId={duzenlenenRandevu.id}
+                            patientId={duzenlenenRandevu.patientId}
+                            iptal={duzenlenenRandevu.durum === 'iptal'}
+                          />
                         )}
                       </>
                     );

@@ -2,8 +2,8 @@
 /**
  * Araçlar › KD kohort paneli (Dahiliye / Göz kohort kalitesi). /api/doktor/gebelik/kohort — yalnız hekimin kendi hastaları.
  * Lohusa 1. ve 6. hafta kontrolü kaçıranlar en üstte ve ayrı vurgulu: doğum sonu kontrol en sık atlanan vizittir.
- * 1-tap hatırlatma: Sağlığım › Mesajlar (hasta-güvenli metin, klinik değer yok) + e-posta bildirimi; satır başına dosyayı aç
- * veya kendi WhatsApp'ınızdan gönder (mevcut /api/doktor/hatirlatma whatsapp_kisisel yolu).
+ * 1-tap hatırlatma: Sağlığım › Mesajlar (hasta-güvenli metin, klinik değer yok) + Hazır mesajlar bildirimi; satır başına dosyayı aç
+ * veya kendi WhatsApp'ınızdan / e-postanızdan gönder (GonderDugmesi, NOTYA-ILETISIM-01).
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
@@ -11,6 +11,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
 import { KD_BAYRAK_AD, LOHUSA_BAYRAKLARI, kdHatirlatmaMesaji, type KdKohortBayrak, type KdKohortSatir } from '../../engines/kd-kohort';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
 const BAYRAKLAR = Object.keys(KD_BAYRAK_AD) as KdKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
@@ -51,16 +52,6 @@ export default function KdKohortPaneli() {
       await yukle();
     } catch { setMesaj('Gönderilemedi — bağlantıyı kontrol edin.'); } finally { setGonderiyor(false); }
   };
-  const whatsapp = async (s: KdKohortSatir) => {
-    setMesaj('');
-    try {
-      const t = await getAccessTokenAsync();
-      const m = kdHatirlatmaMesaji(s.bayraklar);
-      const r = await fetch('/api/doktor/hatirlatma', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ hastaId: s.patientId, mesaj: m.metin, tarih: new Date().toISOString().slice(0, 10), kanal: 'whatsapp_kisisel' }) });
-      const j = await r.json().catch(() => ({}));
-      if (r.ok && j.waLink) window.open(j.waLink, '_blank', 'noopener'); else setMesaj(j.error || 'WhatsApp bağlantısı oluşturulamadı');
-    } catch { setMesaj('WhatsApp bağlantısı oluşturulamadı.'); }
-  };
 
   const satir = (s: KdKohortSatir, i: number, son: boolean) => (
     <div key={s.patientId} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', fontSize: 15, color: CHROME_RENK.ink, background: s.lohusa ? 'rgba(234,88,12,0.10)' : i % 2 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)', padding: '12px 14px', borderLeft: s.lohusa ? '4px solid #FB923C' : '4px solid transparent', borderBottom: son ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
@@ -72,7 +63,7 @@ export default function KdKohortPaneli() {
       <span style={{ fontSize: 13, color: CHROME_RENK.muted, flex: '1 1 100%' }}>{s.detay.join(' · ')}{s.sonVizit ? ` · son vizit ${s.sonVizit.split('-').reverse().join('.')}` : ''}{s.portalVar ? '' : ' · portal bağlantısı yok (mesaj portal açılınca görünür)'}</span>
       <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <a href={hastaDosyaHref(s.patientId, 'gebelik')} style={ghost}>Dosyayı aç</a>
-        <button type="button" onClick={() => whatsapp(s)} style={ghost}>WhatsApp&apos;tan gönder</button>
+        <GonderDugmesi sessiz tur="serbest" patientId={s.patientId} metin={kdHatirlatmaMesaji(s.bayraklar).metin} etiket="WhatsApp / e-posta ile gönder" />
       </span>
     </div>
   );

@@ -36,7 +36,7 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 | `/raporlar` | `/api/doktor/raporlar`, `/api/notes/pdf` | notes, sessions |
 | `/inceleme` | `/api/notes`, `/api/notes/[id]/approve` | notes |
 | `/entegrasyonlar` | `/api/doktor/integrations[/provider]` | doctor_integrations |
-| `/doktor-tools/*` (icd10, erecete, epikriz, ilac-interaksiyon, sgk-rapor, hasta-portali, tetkik, enabiz, sgk-medula, hatirlatma) | `/api/doktor/araclar/*`, `/api/doktor/sgk`, `/api/doktor/hatirlatma` | notes, hasta_hatirlatma, hasta_portal_tokens |
+| `/doktor-tools/*` (icd10, erecete, epikriz, ilac-interaksiyon, sgk-rapor, hasta-portali, tetkik, enabiz, sgk-medula, hatirlatma) | `/api/doktor/araclar/*`, `/api/doktor/sgk`, `/api/doktor/iletisim/*` | notes, iletisim_kayitlari, hasta_portal_tokens |
 | `/randevular` (NOTYA-RANDEVU-01, day view, shared with sekreter) | `/api/doktor/randevular[/id]`, `/api/doktor/calisma-saatleri` | randevular, doktor_calisma_saatleri, patients |
 | `/mesajlar` (Sağlığım practice inbox — doktor + sekreter) | `/api/doktor/mesajlar`, `/api/doktor/mesajlar/[konuId]`, `/api/doktor/mesajlar/unread-count` | hasta_mesaj_konulari, hasta_mesajlar |
 | `/personel` (doktor-only, sadeceDoktor guard) | `/api/doktor/personel[/id]`, `/api/personel/davet/[token]`, `/api/personel/kabul`, `/api/personel/me` | personel |
@@ -46,7 +46,7 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 ### Sağlığım messaging + notifications
 - Shared practice inbox (Option D): doktor + sekreter see the same queue via `pratikOturum` (**in-app only** for practice).
 - Patient send → auto-ack klinik message + `okundu_pratik=false` → optional WhatsApp ping to doctor if `whatsapp_enabled` (no PHI, 30 min throttle).
-- Practice reply / new thread → **patient e-mail** via Resend (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`) — link to portal Mesajlar, **no message body**; skips if patient has no `email_encrypted` or Resend unset.
+- Practice reply / new thread → a "Sağlığım'da yeni mesajınız var" item in the doctor's **Hazır mesajlar** queue (NOTYA-ILETISIM-01; one per thread per day). The doctor opens it in their own WhatsApp / mail — link to portal Mesajlar, **no message body**. Resend patient e-mail retired.
 - In-app badge: DoktorNav → Mesajlar `(n)` from `/api/doktor/mesajlar/unread-count`.
 - Patient copy: non-urgent disclaimer; acil → 112.
 
@@ -74,7 +74,7 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 
 ## Randevu + Personel (NOTYA-RANDEVU-01)
 - Public accept page: `/davet/personel/[token]` (no auth). Doctor generates the link from `/dashboard/doktor/personel`, shares it manually (WhatsApp/SMS) — no email is sent, sidesteps the SMTP blocker.
-- Reminder cron: `/api/cron/randevu-hatirlatma`, hourly (`vercel.json`), WhatsApp via existing `lib/doktor/twilioNotify.ts`, fires 2–3h before `randevular.baslangic`.
+- Reminder cron: `/api/cron/randevu-hatirlatma`, 07:00 + 17:00 TRT (`vercel.json`) — sends nothing; enqueues tomorrow's appointments (registered patients) into each doctor's Hazır mesajlar queue (`iletisim_kuyrugu`), sent one tap at a time from the practice's own WhatsApp / mail (NOTYA-ILETISIM-01, `lib/iletisim/README.md`).
 - Overlap prevention is server-side in both POST (create) and PATCH (reschedule) on `/api/doktor/randevular`.
 - `DoktorNav.tsx` is role-aware: items tagged `sadeceDoktor: true` are hidden when `/api/personel/me` reports `rol: 'sekreter'`.
 
@@ -88,7 +88,7 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 
 ## Cross-cutting
 - Users/plans: users, subscriptions; `/api/users/{me,profile,trial}`; `/api/billing/webhook`.
-- WhatsApp (Twilio): `/api/notes/whatsapp`, `/api/mali/whatsapp`, `lib/notifications.ts`.
+- WhatsApp: patient messages open in the sender's own WhatsApp (`wa.me`, `lib/iletisim`); Twilio only for internal alerts (`lib/alarm.ts` ALERT_WHATSAPP, `lib/portal/notifyPractice.ts` doctor ping); `/api/mali/whatsapp`, `lib/notifications.ts`. `/api/notes/whatsapp` (Meta) removed — nothing called it.
 - Monitoring: `/api/monitor/health`, `/api/monitor/alert`. Help widget: `components/HelpWidget.tsx` → `/api/help/chat`.
 - Data files: `data/sgk-ilaclar.json` (refresh: `scripts/import-sgk-ilac.mjs` then `scripts/import-titck-etken.mjs <xlsx>`).
 - Cihaz Köprüsü (NOTYA-BLE, core, all branşlar): `core/bluetooth/*` (standard GATT medical profiles + IEEE 11073), `components/core/CihazdanAl.tsx` (📶 Cihazdan al · 🎧 Cihazdan gelen dosya — used in İnceleme vitaller and `/dashboard/doktor/notlar/[id]`), `/api/doktor/cihaz-olcum` (audit rows, GET history) + `/api/doktor/cihaz-olcum/dosya` (→ vault category `cihaz-kaydi`), `/cihaz/paylas` (Android Web Share Target landing via `public/sw.js` POST intercept + manual file page); tables `cihaz_olcumleri`, `doktor_cihazlar`, `cihaz_uyumsuzluk_raporlari` (migration 024). Docs: `docs/CIHAZ-KOPRUSU-MIMARI.md`, `docs/CIHAZ-UYUMLULUK.md` (field-only list).

@@ -56,7 +56,6 @@ function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { hea
 }
 mock.module(yerel('lib/dr-ayse/groq.ts'), { namedExports: { groqChat: async () => { throw new Error('model yok') } } })
 mock.module(yerel('lib/alarm.ts'), { namedExports: { kritikAlarm: async () => undefined } })
-mock.module(yerel('lib/mail/resend.ts'), { namedExports: { sendResendEmail: async () => ({ ok: true }) } })
 globalThis.fetch = (async (g: unknown) => { throw new Error(`konsültasyon testi ağ erişimi yapamaz: ${String(g)}`) }) as typeof fetch
 
 let NextRequestSinifi: typeof import('next/server').NextRequest

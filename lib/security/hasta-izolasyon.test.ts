@@ -102,7 +102,6 @@ mock.module(yerel('lib/doktor/hizLimiti.ts'), { namedExports: { aiKotaKullan: as
 mock.module(yerel('lib/alarm.ts'), { namedExports: { kritikAlarm: async () => undefined } })
 mock.module(yerel('lib/transcription/deepgramClient.ts'), { namedExports: { createDeepgramToken: async () => ({ token: 'sahte', expires_at: new Date(Date.now() + 3600e3).toISOString() }) } })
 mock.module(yerel('lib/doktor/twilioNotify.ts'), { namedExports: { sendTwilioMessage: async () => ({ ok: true, sid: 'sahte' }), normalizeTrPhoneE164: (x: string) => x } })
-mock.module(yerel('lib/mail/resend.ts'), { namedExports: { sendResendEmail: async () => ({ ok: true }) } })
 
 // No network, ever. The one allowed call is the speech-to-text step of ses-yukle (synthetic transcript).
 globalThis.fetch = (async (girdi: unknown) => {
@@ -129,6 +128,8 @@ type Hekim = {
   asiHatirlatma: string
   /** NOTYA-EYLEM: Ayşe'nin hazırladığı bekleyen taslak + onaylanmış (geri alınabilir) eylem kaydı */
   eylemOneri: string; eylemKayit: string
+  /** NOTYA-ILETISIM-01: Hazır mesajlar kuyruğunda bekleyen bir öğe */
+  kuyruk: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -158,6 +159,8 @@ function hekimKur(harf: Harf): Hekim {
     phone_encrypted: encrypt(harf === 'A' ? '05550000001' : '05550000002'),
     email_encrypted: encrypt(`qa-hasta-${harf.toLowerCase()}@ornek.test`),
     notes_encrypted: encrypt(JSON.stringify({ sehir: `Sehir ${m}` })),
+    // NOTYA-ILETISIM-01: WhatsApp izni verilmiş (e-posta izni bilinmiyor)
+    iletisim_izni_whatsapp: true, iletisim_izni_eposta: null,
   }).id
   const dun = new Date(Date.now() - 86400e3).toISOString()
   const seans = db.ekle('sessions', { doctor_id: id, patient_id: hasta, specialty: 'pediatri', status: 'completed', created_at: dun }).id
@@ -210,7 +213,10 @@ function hekimKur(harf: Harf): Hekim {
     kaynak: 'ayse_oneri', geri_alindi_at: null,
   }).id
   db.dosyaKoy('ses-kayitlari', `${id}/qa-kayit.m4a`, new Blob(['sentetik ses']))
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, hileliSeans: '', hileliNot: '' }
+  // NOTYA-ILETISIM-01: bekleyen bir "Sağlığım'da yeni mesaj" öğesi + geçmiş bir iletişim kaydı
+  const kuyruk = db.ekle('iletisim_kuyrugu', { doctor_id: id, patient_id: hasta, tur: 'saglikim_yeni_mesaj', konu_id: konu, planlanan_gun: trGun(0, 12).slice(0, 10), tekil_anahtar: `saglikim_yeni_mesaj:${konu}`, durum: 'bekliyor', ertelendi_at: null }).id
+  db.ekle('iletisim_kayitlari', { doctor_id: id, patient_id: hasta, kanal: 'whatsapp', tur: 'randevu_hatirlatma', durum: 'gonderildi', gonderen_personel_id: null })
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, kuyruk, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -224,6 +230,9 @@ function hileliKur(x: Hekim, y: Hekim) {
   db.ekle('sevkler', { doctor_id: x.id, patient_id: y.hasta, hedef: 'kulak-burun-bogaz', hedef_brans: 'kulak-burun-bogaz', klinik_soru: `Hileli ${m}`, durum: 'yanit_bekleniyor', istem_tarihi: '2026-09-05', kaynak: 'konsultasyon' })
   // ASI-KARNESI-01 (D): X'in Y'nin hastasına iliştirdiği aşı — X'in hatırlatma listesinde Y'nin hasta adı çözülmemeli
   db.ekle('asilar', { doktor_id: x.id, patient_id: y.hasta, asi_adi: `Hileli asi ${m}`, kategori: 'pediatrik', uygulama_tarihi: '2026-01-01', sonraki_doz_tarihi: trGun(5, 12).slice(0, 10), kaynak: 'kayit', hatirlatma_gonderildi: false })
+  // NOTYA-ILETISIM-01: X'in kuyruğunda Y'nin hastasına düşmüş öğe + kaydı — X'in listesinde Y'nin hasta adı çözülmemeli
+  db.ekle('iletisim_kuyrugu', { doctor_id: x.id, patient_id: y.hasta, tur: 'saglikim_yeni_mesaj', planlanan_gun: trGun(0, 12).slice(0, 10), tekil_anahtar: `hileli:${m}`, durum: 'bekliyor' })
+  db.ekle('iletisim_kayitlari', { doctor_id: x.id, patient_id: y.hasta, kanal: 'whatsapp', tur: 'randevu_hatirlatma', durum: 'gonderildi' })
 }
 
 function sahneKur(): { A: Hekim; B: Hekim } {
@@ -507,9 +516,38 @@ const VAKALAR: Vaka[] = [
     cagir: (r, a, h) => coz(r.mesajlar.POST(iste('POST', '/api/doktor/mesajlar', { token: a.token, govde: { patientId: h.hasta, konu: 'QA', metin: 'QA mesaj' } }))) },
   { ad: 'GET /api/doktor/mesajlar/[konuId]', red: 404, okur: true,
     cagir: (r, a, h) => coz(r.mesajKonu.GET(iste('GET', `/api/doktor/mesajlar/${h.konu}`, { token: a.token }), prm({ konuId: h.konu }))) },
-  { ad: 'POST /api/doktor/hatirlatma', red: 404,
-    yazdi: (a) => tablo('hasta_hatirlatma').some((x) => x.patient_id === a.hasta),
-    cagir: (r, a, h) => coz(r.hatirlatma.POST(iste('POST', '/api/doktor/hatirlatma', { token: a.token, govde: { hastaId: h.hasta, mesaj: 'QA hatırlatma', tarih: '2026-09-20', kanal: 'sms' } }))) },
+  // NOTYA-ILETISIM-01 — tek dokunuş iletişim. Yabancı hasta / kuyruk / randevu / aşı kimliği 404; adı, telefonu, e-postası dönmez.
+  { ad: 'POST /api/doktor/iletisim/hazirla (patientId)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.iletisimHazirla.POST(iste('POST', '/api/doktor/iletisim/hazirla', { token: a.token, govde: { tur: 'kontrol_hatirlatma', patientId: h.hasta } }))) },
+  { ad: 'POST /api/doktor/iletisim/hazirla (kuyrukId)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.iletisimHazirla.POST(iste('POST', '/api/doktor/iletisim/hazirla', { token: a.token, govde: { kuyrukId: h.kuyruk } }))) },
+  { ad: 'POST /api/doktor/iletisim/hazirla (randevuId)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.iletisimHazirla.POST(iste('POST', '/api/doktor/iletisim/hazirla', { token: a.token, govde: { tur: 'randevu_hatirlatma', randevuId: h.randevu } }))) },
+  { ad: 'POST /api/doktor/iletisim/hazirla (kendi hastası + yabancı aşı kaydı)', red: 404,
+    cagir: (r, a, h) => coz(r.iletisimHazirla.POST(iste('POST', '/api/doktor/iletisim/hazirla', { token: a.token, govde: { tur: 'asi_hatirlatma', patientId: a.hasta, asiId: h.asiHatirlatma } }))) },
+  { ad: 'GET /api/doktor/iletisim/kayit?patientId', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.iletisimKayit.GET(iste('GET', `/api/doktor/iletisim/kayit?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/iletisim/kayit (son gönderilenler)', okur: true,
+    cagir: (r, a) => coz(r.iletisimKayit.GET(iste('GET', '/api/doktor/iletisim/kayit', { token: a.token }))) },
+  { ad: 'POST /api/doktor/iletisim/kayit (açıldı)', red: 404,
+    yazdi: (a) => tablo('iletisim_kayitlari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id && x.durum === 'acildi'),
+    cagir: (r, a, h) => coz(r.iletisimKayit.POST(iste('POST', '/api/doktor/iletisim/kayit', { token: a.token, govde: { patientId: h.hasta, kanal: 'whatsapp', tur: 'kontrol_hatirlatma' } }))) },
+  { ad: 'PATCH /api/doktor/iletisim/kayit (gönderildi → kuyruk öğesi kapanır)', red: 404,
+    yazdi: (a) => tablo('iletisim_kuyrugu').find((x) => x.id === a.kuyruk)?.durum === 'gonderildi',
+    cagir: (r, a, h) => coz(r.iletisimKayit.PATCH(iste('PATCH', '/api/doktor/iletisim/kayit', { token: a.token, govde: { patientId: h.hasta, tur: 'saglikim_yeni_mesaj', kuyrukId: h.kuyruk } }))) },
+  { ad: 'PATCH /api/doktor/iletisim/kayit (kendi hastası + yabancı aşı kaydı işaretlenmez)',
+    yazdi: (a) => tablo('asilar').find((x) => x.id === a.asiHatirlatma)?.hatirlatma_gonderildi === true,
+    cagir: (r, a, h) => coz(r.iletisimKayit.PATCH(iste('PATCH', '/api/doktor/iletisim/kayit', { token: a.token, govde: { patientId: a.hasta, tur: 'asi_hatirlatma', asiId: h.asiHatirlatma } }))) },
+  { ad: 'POST /api/doktor/iletisim/izin', red: 404,
+    yazdi: (a) => tablo('patients').find((x) => x.id === a.hasta)?.iletisim_izni_eposta === true && tablo('iletisim_izin_kayitlari').some((x) => x.patient_id === a.hasta && x.doctor_id === a.id),
+    cagir: (r, a, h) => coz(r.iletisimIzin.POST(iste('POST', '/api/doktor/iletisim/izin', { token: a.token, govde: { patientId: h.hasta, kanal: 'eposta', izin: true } }))) },
+  { ad: 'GET /api/doktor/iletisim/izin', red: 404,
+    cagir: (r, a, h) => coz(r.iletisimIzin.GET(iste('GET', `/api/doktor/iletisim/izin?patientId=${h.hasta}`, { token: a.token }))) },
+  { ad: 'GET /api/doktor/iletisim/kuyruk (Hazır mesajlar)', okur: true,
+    cagir: (r, a) => coz(r.iletisimKuyruk.GET(iste('GET', '/api/doktor/iletisim/kuyruk', { token: a.token }))) },
+  { ad: 'PATCH /api/doktor/iletisim/kuyruk (atla)', red: 404,
+    yazdi: (a) => tablo('iletisim_kuyrugu').find((x) => x.id === a.kuyruk)?.durum === 'atlandi',
+    cagir: (r, a, h) => coz(r.iletisimKuyruk.PATCH(iste('PATCH', '/api/doktor/iletisim/kuyruk', { token: a.token, govde: { id: h.kuyruk, islem: 'atla' } }))) },
   { ad: 'POST /api/doktor/intake-formlari', red: 404,
     yazdi: (a) => tablo('hasta_intake_formlari').some((x) => x.patient_id === a.hasta),
     cagir: (r, a, h) => coz(r.intake.POST(iste('POST', '/api/doktor/intake-formlari', { token: a.token, govde: { patientId: h.hasta } }))) },
@@ -618,7 +656,10 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       cihaz: await ice('app/api/doktor/cihaz-olcum/route'),
       mesajlar: await ice('app/api/doktor/mesajlar/route'),
       mesajKonu: await ice('app/api/doktor/mesajlar/[konuId]/route'),
-      hatirlatma: await ice('app/api/doktor/hatirlatma/route'),
+      iletisimHazirla: await ice('app/api/doktor/iletisim/hazirla/route'),
+      iletisimKayit: await ice('app/api/doktor/iletisim/kayit/route'),
+      iletisimIzin: await ice('app/api/doktor/iletisim/izin/route'),
+      iletisimKuyruk: await ice('app/api/doktor/iletisim/kuyruk/route'),
       intake: await ice('app/api/doktor/intake-formlari/route'),
       asistanLearn: await ice('app/api/asistan/learn/route'),
       asistanChat: await ice('app/api/asistan/chat/route'),

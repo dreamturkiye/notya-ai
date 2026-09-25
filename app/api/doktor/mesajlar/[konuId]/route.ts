@@ -125,9 +125,10 @@ export async function POST(
     await notifyPatientNewPracticeMessage(supabase, {
       doctorId: doktorId,
       patientId: konu.patient_id,
+      konuId: konu.id,
     })
   } catch {
-    /* never fail the reply on mail errors */
+    /* never fail the reply on queue errors */
   }
 
   return NextResponse.json({ ok: true })
