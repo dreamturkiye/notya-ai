@@ -470,7 +470,9 @@ export default function HastaProfilPage() {
             var" diye hiçbir ipucu yoktu. Sağ kenara soluk bir geçiş eklendi (sabit, tepki vermez —
             tıklamayı engellemez), en sondaki sekmeye kaydırıldığında bile kalması zararsız. */}
         <div style={{ position: 'relative' }}>
-          <div className="dosya-sekmeler" style={{ display: 'flex', gap: 6, margin: '16px 0 12px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+          {/* NOTYA-SEKME-SAR-01 (Kaan / Dr. Gökhan, 2026-09-25): the fade still made the last tab look cut, even when
+            selected. Tabs now wrap onto a second line, so every tab is always fully visible — no scrolling, no fade. */}
+          <div className="dosya-sekmeler" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '16px 0 12px', paddingBottom: 2 }}>
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -493,7 +495,6 @@ export default function HastaProfilPage() {
               </button>
             ))}
           </div>
-          <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, bottom: 2, width: 28, background: `linear-gradient(to right, transparent, ${CHROME_RENK.cream})`, pointerEvents: 'none' }} />
         </div>
 
         {/* Ayşe şeridi: sekmeler ↔ içerik (Konuş + Yaz) — Gökhan/Boss 2026-09-20 */}
