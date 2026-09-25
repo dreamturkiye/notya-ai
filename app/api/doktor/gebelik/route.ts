@@ -38,6 +38,10 @@ export async function GET(req: NextRequest) {
     .eq('patient_id', patientId).eq('doctor_id', doktorId)
     .order('created_at', { ascending: false })
   const gebelikAktif = (tumGebelikler || []).find((g) => aktifGebelikDurumu(g.durum)) || null
+  // BRANS-SIZMASI-KD (Kaan, 2026-09-25): hasta başlığındaki gebelik güvenlik bayrağı için hafif özet.
+  if (new URL(req.url).searchParams.get('ozet') === '1') {
+    return NextResponse.json({ aktif: Boolean(gebelikAktif), sat: gebelikAktif?.sat ?? null, tdt: gebelikAktif?.tdt ?? null })
+  }
   // aktif yoksa: son 42 gün içinde doğum yapmış (lohusa dönemi) gebeliği göster
   let gebelik = gebelikAktif
   if (!gebelik) {

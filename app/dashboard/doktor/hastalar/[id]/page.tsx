@@ -56,6 +56,7 @@ import { yasHesapla } from '@/lib/doktor/yas';
 import type { HastaOzetKayit } from '@/lib/doktor/hastaOzetKayit';
 import {
   gebelikSekmesiUygun,
+  gebeBayrakMetni,
   hastaDosyaSekmeleri,
   dahiliyeSekmesiBransi,
   psikiyatriSekmesiBransi,
@@ -190,7 +191,25 @@ export default function HastaProfilPage() {
   const [acilAraci, setAcilAraci] = useState(false); // ACIL-TIP-EXCEPTIONAL-01: yalnız acil-tip
   const [doktorBransi, setDoktorBransi] = useState<string | null>(null);
 
-  const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi }) : false;
+  // BRANS-SIZMASI-KD (Kaan, 2026-09-25): aktif gebelik her branşta başlıkta güvenlik bayrağı olarak görünür.
+  const [gebeBayrak, setGebeBayrak] = useState<string | null>(null);
+  useEffect(() => {
+    const pid = patient?.id;
+    if (!pid || patient?.cinsiyet !== 'Kadın') { setGebeBayrak(null); return; }
+    let iptal = false;
+    void (async () => {
+      try {
+        const token = await ensureDoctorAccessToken();
+        if (!token) return;
+        const r = await fetch(`/api/doktor/gebelik?patientId=${pid}&ozet=1`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (!iptal) setGebeBayrak(j?.aktif ? gebeBayrakMetni({ sat: j.sat, tdt: j.tdt }) : null);
+      } catch { /* bayrak isteğe bağlı */ }
+    })();
+    return () => { iptal = true; };
+  }, [patient?.id, patient?.cinsiyet]);
+  const gebelikUygun = patient ? gebelikSekmesiUygun({ cinsiyet: patient.cinsiyet, dogumIso: patient.dogum_tarihi, doktorBransi }) : false;
   const pediatriUygun = patient
     ? pediatriAracSekmesiUygun({ dogumIso: patient.dogum_tarihi, doktorBransi, pediatriDoktoru: pediatriAraci })
     : false;
@@ -377,6 +396,7 @@ export default function HastaProfilPage() {
   const kimlikCipleri = patient
     ? [
         patient.cinsiyet,
+        gebeBayrak,
         dogumGoster,
         patient.telefon,
         patient.sehir,

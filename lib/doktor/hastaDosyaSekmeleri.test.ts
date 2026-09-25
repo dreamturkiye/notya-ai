@@ -12,7 +12,7 @@ import {
   urolojiSekmesiBransi,
   sporHekimligiSekmesiBransi,
   ortopediSekmesiBransi,
-  genelCerrahiSekmesiBransi, pediatriCaprazBransi
+  genelCerrahiSekmesiBransi, pediatriCaprazBransi, gebeBayrakMetni, kadinSagligiBolumuBransi
 } from './hastaDosyaSekmeleri'
 
 const NOW = Date.parse('2026-09-15T00:00:00Z')
@@ -196,5 +196,37 @@ describe('pediatri sekmeleri — branş sızması yok', () => {
   it('erişkin hastada aile hekiminde ve pediatride bile yok', () => {
     assert.equal(uygun('aile hekimliği', false, ERISKIN), false)
     assert.equal(uygun('pediatri', true, ERISKIN), false)
+  })
+})
+
+
+// BRANS-SIZMASI-KD (Kaan, 2026-09-25): tam KD bölümü kadın doğum + birinci basamak; diğerlerine yalnız gebelik bayrağı.
+describe('Kadın Sağlığı & Gebelik — branş sızması yok, Türkiye pratiği', () => {
+  const KADIN = { cinsiyet: 'Kadın', dogumIso: '1994-05-01' }
+  const SIMDI = Date.parse('2026-09-25T12:00:00Z')
+
+  it('kadın doğum ve yan dalları + aile hekimi / pratisyen tam bölümü görür', () => {
+    for (const b of ['kadın hastalıkları ve doğum', 'kadin-dogum', 'perinatoloji', 'jinekolojik onkoloji', 'aile hekimliği', 'genel pratisyen', '']) {
+      assert.equal(gebelikSekmesiUygun({ ...KADIN, doktorBransi: b }, SIMDI), true, b)
+    }
+  })
+
+  it('dermatoloji / radyoloji / dahiliye / KBB / kardiyoloji / göz / pediatri tam bölümü GÖRMEZ', () => {
+    for (const b of ['dermatoloji', 'radyoloji', 'dahiliye', 'kulak burun boğaz', 'kardiyoloji', 'goz', 'pediatri']) {
+      assert.equal(gebelikSekmesiUygun({ ...KADIN, doktorBransi: b }, SIMDI), false, b)
+    }
+    assert.equal(kadinSagligiBolumuBransi('dermatoloji'), false)
+  })
+
+  it('erkek hastada hiç yok; branş verilmeyen eski çağrı eski davranışı korur', () => {
+    assert.equal(gebelikSekmesiUygun({ cinsiyet: 'Erkek', dogumIso: '1994-05-01', doktorBransi: 'kadin-dogum' }, SIMDI), false)
+    assert.equal(gebelikSekmesiUygun(KADIN, SIMDI), true)
+  })
+
+  it('gebeBayrakMetni: SAT ya da TDT ile hafta; tarih yoksa yalnız Gebe; kayıt yoksa null', () => {
+    assert.equal(gebeBayrakMetni({ sat: '2026-04-10' }, SIMDI), 'Gebe · 24. hafta')
+    assert.equal(gebeBayrakMetni({ tdt: '2026-12-25' }, SIMDI), 'Gebe · 27. hafta')
+    assert.equal(gebeBayrakMetni({}, SIMDI), 'Gebe')
+    assert.equal(gebeBayrakMetni(null, SIMDI), null)
   })
 })
