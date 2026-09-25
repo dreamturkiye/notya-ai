@@ -55,6 +55,18 @@ function nesneSonu(metin: string): number {
   return -1
 }
 
+/**
+ * NOTYA-TEK-BEYIN — akış sırasında (model henüz yazarken) "speech" alanının o ana kadarki çözülmüş metni.
+ * JSON biçimi → alanın açılan tırnağından sonrası; düz metin cevap → metnin kendisi; henüz belli değilse ''.
+ */
+export function speechOneki(ham: string): string {
+  const metin = String(ham || '').replace(/```[a-z]*/gi, '').trimStart()
+  if (!metin || metin.startsWith('`')) return ''
+  if (!metin.startsWith('{')) return metin.search(/\{\s*"/) === -1 ? metin : ''
+  const s = alanOku(metin, 'speech')
+  return s ? s.deger : ''
+}
+
 export function asistanYanitiCoz(ham: string, stopReason?: string | null): AsistanYaniti {
   const metin = String(ham || '').replace(/```[a-z]*/gi, '').trim()
   const tavan = stopReason === 'max_tokens'

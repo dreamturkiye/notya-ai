@@ -116,7 +116,7 @@ describe('hasta dosya kartı — temel hekim soruları (yalnız bu dosya)', () =
 
 describe('hasta dosya derleyici — kart başta kalır, izolasyon', () => {
   const derle = readFileSync(new URL('./hastaDosyaDerleyici.ts', KOK), 'utf8')
-  const chat = readFileSync(new URL('../../app/api/asistan/chat/route.ts', KOK), 'utf8')
+  const chat = readFileSync(new URL('../asistan/ayseCevapla.ts', KOK), 'utf8') // NOTYA-TEK-BEYIN: chat pipeline
   const ses = readFileSync(new URL('../../app/api/asistan/hasta-bul/route.ts', KOK), 'utf8')
 
   it('uzun dosyada kart + kimlik başta, eski vizit ortadan kesilir', () => {

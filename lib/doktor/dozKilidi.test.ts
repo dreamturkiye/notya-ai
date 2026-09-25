@@ -121,7 +121,7 @@ test('both call paths are wired for every branch, not only dozKilitliBrans', () 
   // SOAP: the ternary has no bare `: veri` escape hatch left
   assert.ok(oku('lib/doktor/soapUret.ts').includes('? soapDozKilidi(veri, girdi.transcript, girdi.klinikBaglam) : soapDozUydurmaKilidi(veri, girdi.transcript, girdi.klinikBaglam)'))
   // chat: the cleaner runs before the chapter-only branch, so no `if (dozKilitliBrans(...))` gates it
-  const chat = oku('app/api/asistan/chat/route.ts')
+  const chat = oku('lib/asistan/ayseCevapla.ts') // NOTYA-TEK-BEYIN: the chat route's pipeline lives here
   assert.ok(chat.indexOf('const dozTemiz = uydurmaDozTemizle(') < chat.indexOf('if (dozKilitliBrans(hekimBransi, specialty))'))
   assert.ok(chat.includes('aiData.speech = dozTemiz.metin'))
 })

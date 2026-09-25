@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getPersona, getPersonaForSpecialty } from '@/lib/asistan/personaEngine';
+import { asistanOturumuAc } from '@/lib/asistan/ayseCevapla';
+import { sesJetonuImzala, tekBeyinAcikMi } from '@/lib/asistan/sesJetonu';
+import { TEK_BEYIN_AJANLARI } from '@/lib/asistan/tekBeyinAjanlari';
+import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi';
 
 const AYSE_AGENT =
   process.env.ELEVENLABS_AGENT_PEDIATRI ||
@@ -93,8 +97,21 @@ export async function GET(req: NextRequest) {
     ? getPersona(personaParam)
     : getPersona(getPersonaForSpecialty(specialtyParam));
 
-  const AGENT_ID = agentForPersona(persona);
+  let AGENT_ID = agentForPersona(persona);
   const voiceId = persona.voiceId;
+
+  // NOTYA-TEK-BEYIN: bayraktaki doktor Custom LLM'li test kopyasına geçer — beyin /api/asistan/ses-llm (yazılı sohbetle
+  // aynı fonksiyon, aynı oturum). Bayrak boşsa / kopya ya da jeton anahtarı yoksa eski ajan, eski akış.
+  let tekBeyin: { asistan_session_id: string; notya_jeton: string; baslangic: string } | null = null;
+  const kopya = TEK_BEYIN_AJANLARI[AGENT_ID];
+  if (kopya && tekBeyinAcikMi(auth.userId)) {
+    try {
+      tekBeyin = await tekBeyinHazirla(auth.userId, persona.id, specialtyParam, req.nextUrl.searchParams);
+      if (tekBeyin) AGENT_ID = kopya;
+    } catch (e) {
+      console.error('[signed-url] tek beyin', e instanceof Error ? e.name : 'hata');
+    }
+  }
 
   const wssUrl = await getElevenLabsSignedUrl(AGENT_ID);
 
@@ -114,5 +131,31 @@ export async function GET(req: NextRequest) {
     persona_name: persona.name,
     persona_title: persona.title,
     specialist_total: 30,
+    ...(tekBeyin ? { tek_beyin: true, ...tekBeyin } : {}),
   });
+}
+
+/**
+ * Ortak asistan oturumu (yazılı sohbetin oturumu verildiyse ve bu doktorunsa o; değilse yeni) + imzalı konuşma jetonu.
+ * HASTA-IZOLASYON-01: sayfa hastası (patientId) jetona girmeden önce bu doktorun hastası olmalı.
+ */
+async function tekBeyinHazirla(doktorId: string, personaId: string, specialty: string, q: URLSearchParams) {
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } });
+  const istenenHasta = String(q.get('patientId') || '').trim() || null;
+  const patientId = istenenHasta && (await hastaSahibiMi(sb, doktorId, istenenHasta)) ? istenenHasta : null;
+  let oturumId: string | null = null;
+  const istenenOturum = String(q.get('asistanSessionId') || '').trim();
+  if (istenenOturum) {
+    const { data } = await sb.from('asistan_sessions').select('id').eq('id', istenenOturum).eq('doctor_id', doktorId).maybeSingle();
+    oturumId = (data as { id?: string } | null)?.id || null;
+  }
+  if (!oturumId) {
+    const { data: u } = await sb.from('users').select('specialty').eq('id', doktorId).maybeSingle();
+    const yeni = await asistanOturumuAc(sb, { doktorId, personaId, specialty, hekimBransi: (u as { specialty?: string } | null)?.specialty, patientId });
+    oturumId = (yeni?.id as string) || null;
+  }
+  if (!oturumId) return null;
+  const jeton = sesJetonuImzala({ d: doktorId, o: oturumId, s: specialty, p: patientId, pe: personaId });
+  // baslangic: sayfanın ses-ekran yoklaması sunucu saatinden sayar (istemci saati kayık olabilir).
+  return jeton ? { asistan_session_id: oturumId, notya_jeton: jeton, baslangic: new Date().toISOString() } : null;
 }

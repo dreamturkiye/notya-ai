@@ -59,7 +59,7 @@ describe('(c) wired into the runtime call paths', () => {
     assert.ok(kadinDogumKilidi('ogrenme').includes('Dual-sign is the product'))
   })
   it('call sites use the loader (chat, hafıza/voice, SOAP, approve distiller, next.config tracing, session branch key)', () => {
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('kadinDogumKilidi("asistan")'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('kadinDogumKilidi("asistan")'))
     assert.ok(kaynak('app/api/doktor/hafiza/route.ts').includes("kadinDogumKilidi('ses')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("kadinDogumKilidi('soap')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("kadinDogumKilidi('ogrenme')"))
@@ -112,7 +112,7 @@ describe('(d) hekim / uzman lock language', () => {
     for (const y of ['soap', 'asistan', 'ses'] as const) assert.ok(kadinDogumKilidi(y).includes('Doz yazma; hafızadan veya kılavuzdan doz uydurma'), y)
     assert.ok(kadinDogumKilidi('soap').includes('receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA'))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes('dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi('))
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
   })
   it('Kaynak kilidi (KD-KAYNAK-KILIDI): Turkish source first, no guideline number / year from memory; verified list in SOAP + chat; backstop in code', () => {
     const p = kadinDogumPromptlari()
@@ -122,7 +122,7 @@ describe('(d) hekim / uzman lock language', () => {
     for (const y of ['soap', 'asistan'] as const) assert.ok(kadinDogumKilidi(y).includes('## Doğrulanmış kaynaklar (Kaynak kilidi') && kadinDogumKilidi(y).includes('gbs: Türk rehberi repoda yok; uluslararası: ACOG CO 797'), y)
     assert.ok(!kadinDogumKilidi('ses').includes('## Doğrulanmış kaynaklar'), 'voice stays short: rule only, so no number at all')
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes('kadinDogumMi(girdi.specialty, girdi.doktorBransi) ? soapKaynakKilidi(dozlu, kdDogrulanmisKaynaklar())'))
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('uydurmaKaynakTemizle(String(aiData.speech || ""), liste)'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('uydurmaKaynakTemizle(String(aiData.speech || ""), liste)'))
     assert.ok(!kadinDogumKilidi('asistan').includes('pratik gold standard'))
   })
 })

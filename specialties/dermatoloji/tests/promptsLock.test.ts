@@ -63,7 +63,7 @@ describe('(c) wired into the runtime call paths', () => {
     assert.ok(dermatolojiKilidi('ogrenme').includes('Dual-sign is the product'))
   })
   it('call sites use the loader (chat, hafıza/voice, SOAP, approve distiller, next.config tracing)', () => {
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('dermatolojiKilidi("asistan")'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('dermatolojiKilidi("asistan")'))
     assert.ok(kaynak('app/api/doktor/hafiza/route.ts').includes("dermatolojiKilidi('ses')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("dermatolojiKilidi('soap')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("dermatolojiKilidi('ogrenme')"))
@@ -98,7 +98,7 @@ describe('(d) hekim / uzman lock language', () => {
     for (const y of ['soap', 'asistan', 'ses'] as const) assert.ok(dermatolojiKilidi(y).includes('Doz yazma; hafızadan veya kılavuzdan doz uydurma'), y)
     assert.ok(dermatolojiKilidi('soap').includes('receteOnerisi: yalnız etken madde / sınıf — doz, kullanım sıklığı ve mg YAZMA'))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes('dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi('))
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
   })
   it('Onam / iç alan (KD-DERM-SAFETY-FINDINGS F4): BZBH Form 014 is labelled as bildirim, no invented form names, no coreImageId in the SOAP lock instruction; output cleaned in code', () => {
     const p = dermatolojiPromptlari()
@@ -108,6 +108,6 @@ describe('(d) hekim / uzman lock language', () => {
     for (const y of ['soap', 'asistan'] as const) assert.ok(dermatolojiKilidi(y).includes('iç alan veya araç adı yazma'), y)
     assert.ok(!dermatolojiKilidi('soap').includes('kimliği (coreImageId)'))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes('return notMetinleriniTemizle('))
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('aiData.speech = doktorMetniTemizle(aiData.speech)'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('aiData.speech = doktorMetniTemizle(aiData.speech)'))
   })
 })

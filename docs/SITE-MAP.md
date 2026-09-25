@@ -58,7 +58,7 @@ Generated 2026-09-01 for live-session speed. Production: https://notya-ai.vercel
 - Do **not** invent a code fallback for a missing secret (CSO). Fix the env, then redeploy the Preview if needed.
 
 ## Voice/asistan wiring
-- `/asistan` → `/api/asistan/signed-url?specialty&persona` → ElevenLabs base agent per gender (`ELEVENLABS_AGENT_*`, fallbacks hardcoded) → client overrides prompt + `tts.voiceId` + firstMessage. Text chat `/api/asistan/chat` (Anthropic, pseudonymised via `lib/security/pseudonymize.ts`). Sessions: asistan_sessions, asistan_actions, sessions/notes via `/api/sessions/start|[id]/end`.
+- `/asistan` → `/api/asistan/signed-url?specialty&persona` → ElevenLabs base agent per gender (`ELEVENLABS_AGENT_*`, fallbacks hardcoded) → client overrides prompt + `tts.voiceId` + firstMessage. Text chat `/api/asistan/chat` (Anthropic, pseudonymised via `lib/security/pseudonymize.ts`). NOTYA-TEK-BEYIN: both run through `lib/asistan/ayseCevapla.ts`; doctors in `NOTYA_TEK_BEYIN_DOKTORLAR` get a Custom LLM test agent (`lib/asistan/tekBeyinAjanlari.ts`) whose brain is `/api/asistan/ses-llm/v1/chat/completions` (SSE), screen text + cards via `/api/asistan/ses-ekran`. Sessions: asistan_sessions, asistan_actions, sessions/notes via `/api/sessions/start|[id]/end`.
 - Klinik: `/api/asistan/klinik-signed-url?persona=<slug>`; 10 slugs = sac-ekimi, estetik-cerrahi, medikal-estetik, dermatoloji, longevity, fizyoterapi, klinik-psikolog, diyetisyen, ergoterapi, odyoloji.
 - Voice pool: `lib/asistan/elevenVoices.ts` (TR_VOICES).
 

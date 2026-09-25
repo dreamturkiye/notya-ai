@@ -29,13 +29,18 @@ interface Tanima {
   start: () => void; stop: () => void;
 }
 
-export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe' }: { personaId?: string; specialty?: string; personaAdi?: string }) {
+export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe', oturumId: disOturumId, onOturumId }: {
+  personaId?: string; specialty?: string; personaAdi?: string
+  /** NOTYA-TEK-BEYIN: sayfanın ortak asistan oturumu (sesli görüşmeyle aynı konuşma). */
+  oturumId?: string | null; onOturumId?: (id: string) => void
+}) {
   const [acik, setAcik] = useState(false);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);
   const [girdi, setGirdi] = useState('');
   const [bekliyor, setBekliyor] = useState(false);
   const [dinliyor, setDinliyor] = useState(false);
-  const [oturumId, setOturumId] = useState<string | null>(null);
+  const [oturumId, setOturumId] = useState<string | null>(disOturumId ?? null);
+  useEffect(() => { if (disOturumId) setOturumId(disOturumId); }, [disOturumId]);
   const [aktifHasta, setAktifHasta] = useState<string | null>(null);
   const tanimaRef = useRef<Tanima | null>(null);
   const altRef = useRef<HTMLDivElement>(null);
@@ -106,7 +111,10 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
       // The route answers in data.speech (F3: the panel read response/message and showed "Yanıt alınamadı." for every answer).
       // Parsed once more as a guard so a JSON-shaped text can never reach the bubble.
       const cevap = asistanYanitiCoz(String(veri.speech || veri.response || veri.message || veri.cevap || '')).speech;
-      if (veri.asistanSessionId) setOturumId(String(veri.asistanSessionId));
+      if (veri.asistanSessionId) {
+        setOturumId(String(veri.asistanSessionId));
+        onOturumId?.(String(veri.asistanSessionId));
+      }
       if (veri.aktifHasta) setAktifHasta(String(veri.aktifHasta));
       // NOTYA-EYLEM-24: Ayşe bir şeyi bu yoldan yapmıyorsa (reçete, tanı, hasta açma) cümlesi
       // baloncukta; ilgili ekranın bağlantısı burada, baloncuğun altında tek satır.
