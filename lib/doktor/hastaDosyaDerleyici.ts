@@ -304,7 +304,8 @@ function kartKur(g: {
 }): HastaDosyaKart {
   const k = bosKart()
   k.yas = g.yas
-  k.cinsiyet = g.cinsiyet
+  // NOTYA-SES-KART-01: a child is "kız / erkek çocuk", not "Kadın / Erkek".
+  k.cinsiyet = g.pediatrik && /^kad/i.test(g.cinsiyet) ? 'kız çocuk' : g.pediatrik && /^erk/i.test(g.cinsiyet) ? 'erkek çocuk' : g.cinsiyet
   const y = g.yanitlar || {}
   const alerji = String(y.alerjiAciklama || y.alerji || '').trim()
   if (alerji) k.alerji = alerji
@@ -334,6 +335,13 @@ function kartKur(g: {
     k.sonVizit = `${trTarih(son.created_at)}${sikayet ? ` — ${sikayet}` : ''}`
     if (sikayet) k.sonSikayet = sikayet
     if (n?.content_tani) k.sonTani = String(n.content_tani)
+    // NOTYA-SES-KART-01 (Dr. Gökhan): the voice card also carries the examination and the plan / follow-up;
+    // without them voice answered "kontrol bilgisi dosyada yok" although the note had it.
+    const satir = (v: unknown) => String(v || '').split(String.fromCharCode(10)).map((x) => x.trim()).filter(Boolean).join(' ')
+    const bulgu = satir(n?.content_objektif)
+    if (bulgu) k.sonBulgu = bulgu.slice(0, 400)
+    const plan = satir(n?.content_plan)
+    if (plan) k.sonPlan = plan.slice(0, 700)
   }
 
   const receteler: string[] = []

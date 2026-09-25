@@ -14,6 +14,9 @@ export interface HastaDosyaKart {
   sonVizit: string
   sonSikayet: string
   sonTani: string
+  /** NOTYA-SES-KART-01: last visit examination findings and plan / follow-up (voice card). */
+  sonBulgu: string
+  sonPlan: string
   sonRecete: string
   asilar: string
   olcum: string
@@ -48,6 +51,8 @@ export function bosKart(): HastaDosyaKart {
     sonVizit: 'kayıt yok',
     sonSikayet: 'kayıt yok',
     sonTani: 'kayıt yok',
+    sonBulgu: '',
+    sonPlan: '',
     sonRecete: 'kayıt yok',
     asilar: 'kayıtlı aşı yok',
     olcum: 'kayıt yok',
@@ -87,11 +92,13 @@ export function kartSoyle(k: HastaDosyaKart): string {
   p.push(`alerji ${k.alerji}`)
   if (!kartBosMu(k.kronik)) p.push(`kronik ${k.kronik}`)
   if (!kartBosMu(k.kanGrubu)) p.push(`kan grubu ${k.kanGrubu}`)
-  if (!kartBosMu(k.ilaclar)) p.push(`sürekli ilaç ${k.ilaclar}`)
+  if (!kartBosMu(k.ilaclar)) p.push(`aktif ilaç ${k.ilaclar}`)
   if (!kartBosMu(k.sonVizit)) p.push(`son vizit ${k.sonVizit}`)
   if (!kartBosMu(k.sonSikayet)) p.push(`şikayet ${k.sonSikayet}`)
   if (!kartBosMu(k.sonTani)) p.push(`son tanı ${k.sonTani}`)
+  if (!kartBosMu(k.sonBulgu)) p.push(`muayene bulgusu ${k.sonBulgu}`)
   if (!kartBosMu(k.sonRecete)) p.push(`son reçete ${k.sonRecete}`)
+  if (!kartBosMu(k.sonPlan)) p.push(`plan ve takip ${k.sonPlan}`)
   if (!kartBosMu(k.asilar)) p.push(`aşı ${k.asilar}`)
   if (!kartBosMu(k.olcum)) p.push(`ölçüm ${k.olcum}`)
   if (!kartBosMu(k.lab)) p.push(`lab ${k.lab}`)
@@ -129,7 +136,10 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
     ekle('son reçete', k.sonRecete)
   }
   if (/\basi/.test(n) && !/antibiyoti/.test(n)) ekle('aşı', k.asilar)
-  if (/surekli ilac|ne kullaniyor|ilaclari ne|aktif ilac/.test(n)) ekle('sürekli ilaç', k.ilaclar)
+  if (/surekli ilac|ne kullaniyor|ilaclari ne|aktif ilac/.test(n)) ekle('aktif ilaç', k.ilaclar)
+  // NOTYA-SES-KART-01 (Dr. Gökhan): kontrol / takip soruları son muayenenin planından cevaplanır.
+  if (/kontrol|takip|plan|ne zaman gel|tekrar gel/.test(n)) ekle('plan ve takip', k.sonPlan)
+  if (/muayene bulgu|fizik muayene|dinleme|bulgular/.test(n)) ekle('muayene bulgusu', k.sonBulgu)
   if (/randevu|siradaki kontrol|gelecek kontrol|ne zaman gelecek/.test(n)) ekle('randevu', k.randevu)
   if (/hba1c|egfr|tahlil|laboratuvar|\blab\b|kan sayimi|son onayli lab/.test(n)) ekle('onaylı lab', k.lab)
   if (/ates|kilo|tansiyon|nabiz|spo2|olcum|vital/.test(n)) ekle('son ölçüm', k.olcum)
