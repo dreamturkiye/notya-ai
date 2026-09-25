@@ -4,6 +4,11 @@
  * NOTYA-INTAKE-01 — hasta dosyasındaki Hasta Bilgi Formu sekmesi: form gönder, doldurulmuş
  * yanıtları görüntüle, "incelendi" işaretle. Doktor randevu öncesi bu sekmeden formu okuyup
  * muayeneye hazır gelir — istenen tam olarak buydu ("prior to the visit to save time").
+ *
+ * NOTYA-YENI-GORUNUM-04 (Kaan, 2026-09-25): "Abi bu sayfa da siyah kalmış" — bu bileşen orijinal
+ * redesign denetiminin kapsamı dışında kalmış (components/doktor/HastaAsilar.tsx ve
+ * app/asistan/page.tsx ile aynı sebep), baştan sona hâlâ tam koyu lacivertti (#111C33/#0B1424,
+ * translucent-white dolgular). Kremsi/çam paletine çevrildi; işlevsel mantığın tamamı korundu.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -25,9 +30,9 @@ interface IntakeFormOzet {
 }
 
 const DURUM_ETIKET: Record<string, { label: string; color: string; bg: string }> = {
-  gonderildi: { label: 'Gönderildi, bekleniyor', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
-  dolduruldu: { label: 'Dolduruldu — incelenmedi', color: '#0F9B8E', bg: 'rgba(15,155,142,0.15)' },
-  incelendi: { label: 'İncelendi', color: '#22C55E', bg: 'rgba(34,197,94,0.15)' },
+  gonderildi: { label: 'Gönderildi, bekleniyor', color: '#B4832F', bg: 'rgba(180,131,47,0.14)' },
+  dolduruldu: { label: 'Dolduruldu — incelenmedi', color: '#0F9B8E', bg: 'rgba(15,155,142,0.12)' },
+  incelendi: { label: 'İncelendi', color: '#3F7D4A', bg: 'rgba(63,125,74,0.14)' },
 };
 
 // Kaan (2026-09-10): doktor inceleme görünümünde ham alan kimliği (tcKimlik, dogumTarihi) değil,
@@ -161,7 +166,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 13, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hasta Bilgi Formu</div>
+        <div style={{ fontSize: 13, color: CHROME_RENK.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hasta Bilgi Formu</div>
         <button
           type="button"
           onClick={() => setGonderPaneliAcik((v) => !v)}
@@ -171,28 +176,28 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
         </button>
       </div>
 
-      {hata && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', color: '#EF4444', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
+      {hata && <div style={{ background: '#FBEAE3', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>{hata}</div>}
 
       {gonderPaneliAcik && (
-        <div style={{ background: '#111C33', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+        <div style={{ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Branş</label>
+              <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Branş</label>
               <select
                 value={secilenBrans}
                 onChange={(e) => setSecilenBrans(e.target.value)}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
+                style={{ width: '100%', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
               >
                 <option value="genel">Genel (branşsız)</option>
                 {branslar.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, color: '#94A3B8', display: 'block', marginBottom: 4 }}>Gönderim Şekli</label>
+              <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Gönderim Şekli</label>
               <select
                 value={secilenKanal}
                 onChange={(e) => setSecilenKanal(e.target.value as 'whatsapp' | 'elden')}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
+                style={{ width: '100%', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
               >
                 <option value="whatsapp">WhatsApp (otomatik gönder)</option>
                 <option value="elden">Sadece link oluştur (elden paylaş)</option>
@@ -209,11 +214,11 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
           </button>
 
           {olusturulanLink && (
-            <div style={{ marginTop: 12, padding: 12, background: 'rgba(15,155,142,0.1)', borderRadius: 8 }}>
+            <div style={{ marginTop: 12, padding: 12, background: 'rgba(15,155,142,0.08)', border: '1px solid rgba(15,155,142,0.25)', borderRadius: 8 }}>
               {olusturulanLink.whatsappGonderildi && <p style={{ fontSize: 12, color: '#0F9B8E', marginBottom: 8 }}>WhatsApp ile gönderildi ✓</p>}
               <div style={{ display: 'flex', gap: 8 }}>
-                <input readOnly value={olusturulanLink.link} onFocus={(e) => e.target.select()} style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', borderRadius: 8, padding: '6px 10px', fontSize: 12 }} />
-                <button type="button" onClick={linkiKopyala} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>
+                <input readOnly value={olusturulanLink.link} onFocus={(e) => e.target.select()} style={{ flex: 1, background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 8, padding: '6px 10px', fontSize: 12 }} />
+                <button type="button" onClick={linkiKopyala} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>
                   {kopyalandi ? 'Kopyalandı ✓' : 'Kopyala'}
                 </button>
               </div>
@@ -222,8 +227,8 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
         </div>
       )}
 
-      {yukleniyor && <p style={{ color: '#94A3B8' }}>Yükleniyor…</p>}
-      {!yukleniyor && formlar.length === 0 && <p style={{ color: '#94A3B8' }}>Henüz form gönderilmedi.</p>}
+      {yukleniyor && <p style={{ color: CHROME_RENK.muted }}>Yükleniyor…</p>}
+      {!yukleniyor && formlar.length === 0 && <p style={{ color: CHROME_RENK.muted }}>Henüz form gönderilmedi.</p>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {formlar.map((f) => {
@@ -234,14 +239,14 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
               <div
                 onClick={() => (f.durum === 'gonderildi' ? null : formuAc(acikFormId === f.id ? '' : f.id))}
                 style={{
-                  background: '#111C33', borderRadius: 12, padding: 14,
+                  background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 12, padding: 14,
                   cursor: f.durum === 'gonderildi' ? 'default' : 'pointer',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap',
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{bransEtiket}</div>
-                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: CHROME_RENK.ink }}>{bransEtiket}</div>
+                  <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginTop: 2 }}>
                     Gönderildi: {new Date(f.gonderildi_at).toLocaleDateString('tr-TR')}
                     {f.dolduruldu_at ? ` · Dolduruldu: ${new Date(f.dolduruldu_at).toLocaleDateString('tr-TR')}` : ''}
                   </div>
@@ -252,15 +257,15 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
               </div>
 
               {acikFormId === f.id && (
-                <div style={{ background: '#0B1424', borderRadius: 12, padding: 14, marginTop: 4, border: '1px solid rgba(255,255,255,0.08)' }}>
-                  {detayYukleniyor && <p style={{ color: '#94A3B8', fontSize: 13 }}>Yükleniyor…</p>}
+                <div style={{ background: '#FBF8F2', borderRadius: 12, padding: 14, marginTop: 4, border: `1px solid ${CHROME_RENK.border}` }}>
+                  {detayYukleniyor && <p style={{ color: CHROME_RENK.muted, fontSize: 13 }}>Yükleniyor…</p>}
                   {acikFormDetay && (
                     <>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
                         {(() => { const etk = etiketHaritasi(f.brans); return Object.entries(acikFormDetay.yanitlar).map(([k, v]) => (
-                          <div key={k} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', columnGap: 16, alignItems: 'start', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '6px 0' }}>
+                          <div key={k} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', columnGap: 16, alignItems: 'start', fontSize: 13, borderBottom: `1px solid ${CHROME_RENK.border}`, padding: '6px 0' }}>
                             <span style={{ color: CHROME_RENK.muted }}>{etk[k] || k}</span>
-                            <span style={{ color: 'white', wordBreak: 'break-word' }}>{degerGoster(v)}</span>
+                            <span style={{ color: CHROME_RENK.ink, wordBreak: 'break-word' }}>{degerGoster(v)}</span>
                           </div>
                         )); })()}
                       </div>
@@ -268,7 +273,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
                         <button
                           type="button"
                           onClick={() => incelendiIsaretle(f.id)}
-                          style={{ marginTop: 12, background: '#22C55E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}
+                          style={{ marginTop: 12, background: '#3F7D4A', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}
                         >
                           İncelendi Olarak İşaretle
                         </button>
