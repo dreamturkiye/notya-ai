@@ -17,6 +17,8 @@ function doluKart(): HastaDosyaKart {
     sonVizit: '12 Eylül 2026 — öksürük',
     sonSikayet: 'öksürük',
     sonTani: 'Akut bronşit',
+    sonBulgu: '',
+    sonPlan: '',
     sonRecete: 'Augmentin 400 (12 Eylül 2026)',
     asilar: 'KPA 10 Eylül 2026',
     olcum: 'Ateş: 37.8 · Kilo: 16 kg',
@@ -178,5 +180,22 @@ describe('arama çözümü — pratik sayı LLM’e gitmez', () => {
     assert.equal(cozumKonus({ tur: 'yok', sayiMetin: 'Bu dönemde 0 hasta.' }), 'Bu dönemde 0 hasta.')
     assert.equal(cozumKonus({ tur: 'yok' }), null)
     assert.equal(cozumKonus({ tur: 'tek', patientId: 'x', ad: 'Elif' }), null)
+  })
+})
+
+// NOTYA-SES-KART-01 (Dr. Gökhan, 2026-09-25): voice said the follow-up was not in the file although the note had it.
+describe('sesli kart: plan / takip ve muayene bulgusu', () => {
+  const k = { ...doluKart(), sonBulgu: 'Bilateral krepitan raller.', sonPlan: 'TAKİP: Bir hafta sonra kontrol muayenesine gelsin.' }
+  it('ne zaman kontrole gelmesi gerekiyor -> plandan cevaplanır', () => {
+    assert.match(String(dosyaSoruCevap('Ayşe Yeşilin ne zaman kontrole gelmesi gerekiyor', k)), /Bir hafta sonra kontrol/)
+  })
+  it('muayene bulguları -> son muayenenin bulgusu', () => {
+    assert.match(String(dosyaSoruCevap('muayene bulguları neydi', k)), /krepitan/)
+  })
+  it('sesli kart planı ve bulguyu içerir; ilaçlar aktif ilaç diye okunur', () => {
+    const m = kartSoyle(k)
+    assert.match(m, /plan ve takip TAKİP/)
+    assert.match(m, /muayene bulgusu Bilateral/)
+    assert.doesNotMatch(m, /sürekli ilaç/)
   })
 })
