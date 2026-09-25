@@ -2,16 +2,14 @@
  * NOTYA-INTAKE-01 — hasta bilgi formu oluşturma/listeleme.
  *
  * POST bir form linki üretir (davet_token_hash desenindeki gibi: satırın kendisi token taşır,
- * ayrı bir tablo yok). SMTP kurulmadığı için (docs/OPEN-COMMITMENTS.md) e-posta GÖNDERİLMİYOR —
- * link WhatsApp üzerinden gönderiliyor (mevcut Twilio altyapısı) veya doktora/sekretere kopyalama
- * için döndürülüyor ("elden" paylaşım). Kanal alanı yalnızca kayıt amaçlı; e-posta kanalı
- * eklendiğinde tek değişen şey gönderim yöntemi olacak.
+ * ayrı bir tablo yok) ve linki döndürür. Sunucu HİÇBİR ŞEY GÖNDERMEZ (NOTYA-ILETISIM-01, Kaan
+ * 2026-09-25): link, hasta dosyasındaki tek gönder düğmesiyle (components/doktor/iletisim/GonderDugmesi)
+ * doktorun ya da sekreterin KENDİ WhatsApp'ından / e-postasından açılır; eski Twilio gönderimi kaldırıldı.
+ * Kanal alanı yalnızca kayıt amaçlı.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes, createHash } from 'crypto'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
-import { decrypt } from '@/lib/security/encryption'
-import { sendTwilioMessage } from '@/lib/doktor/twilioNotify'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   const { data: hasta } = await supabase
     .from('patients')
-    .select('id, name_encrypted, phone_encrypted')
+    .select('id')
     .eq('id', patientId)
     .eq('doctor_id', doktorId)
     .maybeSingle()
@@ -80,18 +78,5 @@ export async function POST(req: NextRequest) {
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.notya.io'
   const link = `${site}/intake/${token}`
 
-  let whatsappGonderildi = false
-  if (kanal === 'whatsapp') {
-    let telefon = ''
-    let ad = 'Hastam\u0131z'
-    try { if (hasta.phone_encrypted) telefon = decrypt(hasta.phone_encrypted) || '' } catch { /* ignore */ }
-    try { if (hasta.name_encrypted) ad = (JSON.parse(decrypt(hasta.name_encrypted)).ad || '').trim() || ad } catch { /* ignore */ }
-    if (telefon) {
-      const mesaj = `Merhaba ${ad}, randevunuzdan \u00f6nce doldurman\u0131z\u0131 rica etti\u011fimiz Hasta Bilgi Formu haz\u0131r: ${link}\n\nBu k\u0131sa formu doldurman\u0131z muayene s\u00fcresini sizin i\u00e7in daha verimli k\u0131lacak. Te\u015fekk\u00fcrler.`
-      const sonuc = await sendTwilioMessage({ channel: 'whatsapp', toPhone: telefon, body: mesaj })
-      whatsappGonderildi = sonuc.ok
-    }
-  }
-
-  return NextResponse.json({ formId: form.id, link, whatsappGonderildi })
+  return NextResponse.json({ formId: form.id, link })
 }

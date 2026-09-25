@@ -15,12 +15,13 @@ import { useAracStil, Rozet } from '@/lib/doktor/aracUi';
 import { trTarih } from '@/lib/asi/karneOkuma';
 import type { AsiHatirlatmaSatiri } from '@/lib/asi/hatirlatma';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
 export const asiDosyaYolu = (patientId: string) => `/dashboard/doktor/hastalar/${encodeURIComponent(patientId)}?tab=asilar`;
 
 /** Sunumsal liste (SSR testi için ayrı). */
 export function AsiHatirlatmaListesiGorunum({
-  satirlar, acik, setAcik, gonder, gonderilen, hata, hastaModu,
+  satirlar, acik, setAcik, gonder, gonderilen, hata, hastaModu, isaretle,
 }: {
   satirlar: AsiHatirlatmaSatiri[] | null
   acik: string | null
@@ -29,6 +30,8 @@ export function AsiHatirlatmaListesiGorunum({
   gonderilen: string | null
   hata: string
   hastaModu: boolean
+  /** Sent from the doctor's own WhatsApp / mail → show the row as reminded. */
+  isaretle?: (asiId: string) => void
 }) {
   const stil = useAracStil();
   const bekleyen = (satirlar || []).filter((s) => !s.gonderildi).length;
@@ -60,10 +63,15 @@ export function AsiHatirlatmaListesiGorunum({
                     <div data-onizleme="" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 8, display: 'grid', gap: 8 }}>
                       <div style={stil.kucuk}>Gidecek mesaj (Sağlığım › Mesajlar, konu: “{s.onizleme.konu}”):</div>
                       <div style={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.5, color: CHROME_RENK.ink, background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '8px 10px' }}>{s.onizleme.metin}</div>
-                      {!s.portalVar && <div style={stil.kucuk}>Hastanın geçerli Sağlığım bağlantısı yok — mesaj, bağlantı açıldığında görünür; e-posta kayıtlıysa içeriksiz bir bildirim gider.</div>}
+                      {!s.portalVar && <div style={stil.kucuk}>Hastanın geçerli Sağlığım bağlantısı yok — mesaj, bağlantı açıldığında görünür.</div>}
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <button type="button" disabled={gonderilen === s.asiId} onClick={() => gonder(s.asiId)} style={{ ...stil.btn, minHeight: 44 }}>{gonderilen === s.asiId ? 'Gönderiliyor…' : 'Onayla ve gönder'}</button>
                         <button type="button" onClick={() => setAcik(null)} style={{ ...stil.ghost, minHeight: 44 }}>Vazgeç</button>
+                      </div>
+                      {/* NOTYA-ILETISIM-01: the same reminder from the doctor's own WhatsApp / mail (tapping send there = the approval) */}
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        <div style={stil.kucuk}>Ya da aynı hatırlatmayı kendi WhatsApp’ınızdan / e-postanızdan gönderin:</div>
+                        <GonderDugmesi sessiz tur="asi_hatirlatma" asiId={s.asiId} patientId={s.patientId} etiket="WhatsApp / e-posta" onGonderildi={() => isaretle?.(s.asiId)} />
                       </div>
                     </div>
                   )}
@@ -110,5 +118,9 @@ export default function AsiHatirlatmaListesi({ patientId, yenile = 0 }: { patien
 
   // Hasta dosyasında: listelenecek bir şey yoksa bölüm hiç görünmez.
   if (patientId && satirlar && satirlar.length === 0) return null;
-  return <AsiHatirlatmaListesiGorunum satirlar={satirlar} acik={acik} setAcik={setAcik} gonder={gonder} gonderilen={gonderilen} hata={hata} hastaModu={!!patientId} />;
+  const isaretle = (asiId: string) => {
+    setAcik(null);
+    setSatirlar((xs) => (xs || []).map((s) => (s.asiId === asiId ? { ...s, gonderildi: true } : s)));
+  };
+  return <AsiHatirlatmaListesiGorunum satirlar={satirlar} acik={acik} setAcik={setAcik} gonder={gonder} gonderilen={gonderilen} hata={hata} hastaModu={!!patientId} isaretle={isaretle} />;
 }

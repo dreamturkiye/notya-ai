@@ -18,6 +18,7 @@ import { bransAnahtari } from '@/lib/specialties/kapsam';
 import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar';
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
 interface IntakeFormOzet {
   id: string;
@@ -76,9 +77,8 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [secilenKanal, setSecilenKanal] = useState<'whatsapp' | 'elden'>('whatsapp');
   const [gonderiliyor, setGonderiliyor] = useState(false);
-  const [olusturulanLink, setOlusturulanLink] = useState<{ link: string; whatsappGonderildi: boolean } | null>(null);
+  const [olusturulanLink, setOlusturulanLink] = useState<{ link: string } | null>(null);
   const [kopyalandi, setKopyalandi] = useState(false);
 
   const [acikFormId, setAcikFormId] = useState<string | null>(null);
@@ -116,11 +116,11 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
       const r = await fetch('/api/doktor/intake-formlari', {
         method: 'POST',
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ patientId, brans: secilenBrans, kanal: secilenKanal }),
+        body: JSON.stringify({ patientId, brans: secilenBrans }),
       });
       const d = await r.json();
       if (!r.ok) { setHata(d.error || 'Form oluşturulamadı.'); return; }
-      setOlusturulanLink({ link: d.link, whatsappGonderildi: d.whatsappGonderildi });
+      setOlusturulanLink({ link: d.link });
       await yukle();
     } catch {
       setHata('Form oluşturulamadı.');
@@ -169,7 +169,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
         <div style={{ fontSize: 13, color: CHROME_RENK.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hasta Bilgi Formu</div>
         <button
           type="button"
-          onClick={() => setGonderPaneliAcik((v) => !v)}
+          onClick={() => { setOlusturulanLink(null); setGonderPaneliAcik((v) => !v); }}
           style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}
         >
           + Form Gönder
@@ -180,7 +180,7 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
 
       {gonderPaneliAcik && (
         <div style={{ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 320px)', gap: 10, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Branş</label>
               <select
@@ -192,34 +192,26 @@ export default function HastaIntake({ patientId }: { patientId: string }) {
                 {branslar.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
               </select>
             </div>
-            <div>
-              <label style={{ fontSize: 12, color: CHROME_RENK.muted, display: 'block', marginBottom: 4 }}>Gönderim Şekli</label>
-              <select
-                value={secilenKanal}
-                onChange={(e) => setSecilenKanal(e.target.value as 'whatsapp' | 'elden')}
-                style={{ width: '100%', background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 10px', fontSize: 13 }}
-              >
-                <option value="whatsapp">WhatsApp (otomatik gönder)</option>
-                <option value="elden">Sadece link oluştur (elden paylaş)</option>
-              </select>
-            </div>
           </div>
-          <button
-            type="button"
-            onClick={formGonder}
-            disabled={gonderiliyor}
-            style={{ background: '#0F9B8E', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}
-          >
-            {gonderiliyor ? 'Oluşturuluyor…' : 'Formu Oluştur'}
-          </button>
+          {!olusturulanLink && (
+            <button
+              type="button"
+              onClick={formGonder}
+              disabled={gonderiliyor}
+              style={{ background: CHROME_RENK.pine, color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer' }}
+            >
+              {gonderiliyor ? 'Hazırlanıyor…' : 'Formu hazırla'}
+            </button>
+          )}
 
           {olusturulanLink && (
-            <div style={{ marginTop: 12, padding: 12, background: 'rgba(15,155,142,0.08)', border: '1px solid rgba(15,155,142,0.25)', borderRadius: 8 }}>
-              {olusturulanLink.whatsappGonderildi && <p style={{ fontSize: 12, color: '#0F9B8E', marginBottom: 8 }}>WhatsApp ile gönderildi ✓</p>}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input readOnly value={olusturulanLink.link} onFocus={(e) => e.target.select()} style={{ flex: 1, background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.ink, borderRadius: 8, padding: '6px 10px', fontSize: 12 }} />
-                <button type="button" onClick={linkiKopyala} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer' }}>
-                  {kopyalandi ? 'Kopyalandı ✓' : 'Kopyala'}
+            <div style={{ marginTop: 4 }}>
+              {/* NOTYA-ILETISIM-01: the link goes out from this device's own WhatsApp / e-mail (no Twilio). */}
+              <GonderDugmesi acikBaslat tur="bilgi_formu" patientId={patientId} link={olusturulanLink.link} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+                <input readOnly aria-label="Form bağlantısı" value={olusturulanLink.link} onFocus={(e) => e.target.select()} style={{ flex: 1, minWidth: 0, background: '#FFFFFF', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.muted, borderRadius: 8, padding: '6px 10px', fontSize: 12 }} />
+                <button type="button" onClick={linkiKopyala} style={{ background: 'none', border: `1px solid ${CHROME_RENK.border}`, color: CHROME_RENK.pine, borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                  {kopyalandi ? 'Kopyalandı ✓' : 'Bağlantıyı kopyala'}
                 </button>
               </div>
             </div>

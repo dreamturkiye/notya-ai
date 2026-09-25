@@ -24,6 +24,7 @@
  * Alan şeması TÜRKÇE, çünkü form doğrudan hastaya gösteriliyor — İngilizce id/type dışında her
  * şey hastanın göreceği metin.
  */
+import { IZIN_ACIKLAMASI, IZIN_ALANI, IZIN_EVET, IZIN_METNI } from '@/lib/iletisim/izinMetni'
 
 export type IntakeAlanTuru = 'text' | 'tel' | 'email' | 'date' | 'select' | 'textarea' | 'radio' | 'checkbox-grup' | 'bolum-basligi'
 
@@ -145,7 +146,10 @@ export const CORE_BOLUMLER: IntakeBolum[] = [
     baslik: 'Onay',
     alanlar: [
       { id: 'kvkkOnay', etiket: 'KVKK Aydınlatma Metni\'ni okudum, kişisel verilerimin ilgili mevzuat kapsamında işlenmesini kabul ediyorum.', tur: 'radio', zorunlu: true, secenekler: ['Kabul ediyorum'] },
-      { id: 'iletisimOnay', etiket: 'Gerekli durumlarda tarafımla telefon veya SMS yoluyla iletişime geçilmesini kabul ediyorum.', tur: 'radio', secenekler: ['Kabul ediyorum'] },
+      // NOTYA-ILETISIM-01: one clear line per channel (KVKK açık rıza — randevu + bilgilendirme only, no clinical content).
+      // Optional; left empty = the patient did not consent to that channel. Written to patients.iletisim_izni_* on submit.
+      { id: IZIN_ALANI.whatsapp, etiket: IZIN_METNI.whatsapp, tur: 'radio', secenekler: [IZIN_EVET] },
+      { id: IZIN_ALANI.eposta, etiket: IZIN_METNI.eposta, tur: 'radio', secenekler: [IZIN_EVET], yardim: IZIN_ACIKLAMASI },
     ],
   },
 ]

@@ -10,6 +10,7 @@ import {
 } from '@/lib/doktor/toolsUi'
 import React, { useState } from 'react'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi'
 
 type PortalPaylasim = {
   onayliZiyaret: number
@@ -239,8 +240,13 @@ export default function HastaPortaliPage() {
               {portalUrl}
             </div>
             <p style={{ margin: '10px 0 0', fontSize: 12, color: CHROME_RENK.muted, lineHeight: 1.45 }}>
-              PIN tekrar gösterilmez. Hastaya WhatsApp / yüz yüze iletin; linki PIN’siz paylaşmayın.
+              PIN tekrar gösterilmez. Bağlantıyı aşağıdan hastanın WhatsApp’ına ya da e-postasına gönderin; PIN’i
+              yüz yüze ya da telefonla ayrıca iletin.
             </p>
+            {/* NOTYA-ILETISIM-01: the link (never the PIN) leaves from the doctor's own WhatsApp / e-mail */}
+            <div style={{ marginTop: 12 }}>
+              <GonderDugmesi key={portalUrl} acikBaslat tur="saglikim_baglanti" patientId={selectedHasta} link={portalUrl} />
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
               <button
                 type="button"
@@ -248,9 +254,9 @@ export default function HastaPortaliPage() {
                 style={{
                   padding: '10px 14px',
                   borderRadius: 10,
-                  border: 'none',
-                  background: CHROME_RENK.pine,
-                  color: '#FAF8F4',
+                  border: `1px solid ${CHROME_RENK.pine}`,
+                  background: 'transparent',
+                  color: CHROME_RENK.pine,
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}

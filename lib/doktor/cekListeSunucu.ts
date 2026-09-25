@@ -49,7 +49,7 @@ export interface CekListeSunucuGirdisi {
 const INTAKE_DISI = new Set([
   'tcKimlik', 'tcKimlikNo', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'il', 'ilce', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik',
   'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi', 'veliYakinligi', 'babaAdi', 'anneAdi',
-  'dogumTarihi', 'dogumYeri', 'cinsiyet', 'medeniDurum', 'sigortaTuru', 'kvkkOnay', 'iletisimOnay', 'basvuruNedeniPed', 'basvuruNedeni',
+  'dogumTarihi', 'dogumYeri', 'cinsiyet', 'medeniDurum', 'sigortaTuru', 'kvkkOnay', 'iletisimOnay', 'iletisimIzniWhatsapp', 'iletisimIzniEposta', 'basvuruNedeniPed', 'basvuruNedeni',
 ])
 
 const NOT_ALANLARI = 'id, created_at, basvuru_yakinmasi, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, content_ilaclar, content_asilar, sessions!inner(patient_id, doctor_id)'

@@ -29,7 +29,6 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/notes/route.ts': T,
   'app/api/notes/[id]/route.ts': T,
   'app/api/notes/[id]/approve/route.ts': T,
-  'app/api/notes/whatsapp/route.ts': I('note loaded by id AND doctor_id = user.id before anything is sent'),
   'app/api/notes/pdf/route.ts': I('renders only the body it is given (mali note); reads no patient table'),
   'app/api/doktor/son-notlar/route.ts': T,
   'app/api/sessions/start/route.ts': T,
@@ -75,7 +74,12 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/mesajlar/route.ts': T,
   'app/api/doktor/mesajlar/[konuId]/route.ts': T,
   'app/api/doktor/mesajlar/unread-count/route.ts': I('count scoped by doctor_id'),
-  'app/api/doktor/hatirlatma/route.ts': T,
+  // NOTYA-ILETISIM-01 — tek dokunuş iletişim (hekimin kendi WhatsApp / e-postası), Hazır mesajlar, izin, kayıt
+  'app/api/doktor/iletisim/hazirla/route.ts': T,
+  'app/api/doktor/iletisim/kayit/route.ts': T,
+  'app/api/doktor/iletisim/izin/route.ts': T,
+  'app/api/doktor/iletisim/kuyruk/route.ts': T,
+  'app/api/doktor/iletisim/ayarlar/route.ts': I('users row of doktorId only (sadeceDoktor); takes no patient id and reads no patient table'),
   'app/api/doktor/intake-formlari/route.ts': T,
   'app/api/doktor/intake-formlari/[id]/route.ts': I('form by id AND doktor_id'),
   // ── Branş modülleri ──
@@ -236,11 +240,11 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/portal/hasta/[token]/asi-karnesi/pdf/route.ts': T,
   'app/api/portal/hasta/[token]/dahiliye-anket/route.ts': I('token → (patient_id, doctor_id); every read/write scoped by both'),
   'app/api/portal/hasta/[token]/unlock/route.ts': I('PIN check for the token row only'),
-  'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check)'),
+  'app/api/intake/[token]/route.ts': I('token → form row; patient from that row (form was created after an ownership check); NOTYA-ILETISIM-01 consent write scoped by that row\'s patient_id AND doktor_id'),
   // ── Entegrasyon / cron (oturumsuz, sunucu içi) ──
   'app/api/entegrasyon/fhir/isle/route.ts': I('cron-secret gated; exports notes only of doctors enrolled in that institution'),
   'app/api/entegrasyon/hl7/al/route.ts': I('per-institution inbound key; patient mapping scoped by kurum_id'),
   'app/api/entegrasyon/yonetim/route.ts': I('ADMIN_EMAILS only'),
-  'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; reminder only to the patient of the booking owner (doctor_id = row doktor_id)'),
+  'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; sends nothing (NOTYA-ILETISIM-01) — enqueues tomorrow\'s reminder into the booking owner\'s queue only when patients.id is re-found with doctor_id = the row\'s doktor_id'),
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path'),
 }

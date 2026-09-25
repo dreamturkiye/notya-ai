@@ -35,7 +35,6 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'app/api/notes/[id]/route.ts': { adet: 1, neden: 'open one note by id — allowed for archived, page shows the "Arşivde" banner' },
   'app/api/doktor/medula/recete/route.ts': { adet: 1, neden: 'open one note by id (reçete) — allowed for archived, page shows the "Arşivde" banner' },
   'app/api/notes/[id]/approve/route.ts': { adet: 1, neden: 'doctor action on one note by id (approve), ownership-scoped' },
-  'app/api/notes/whatsapp/route.ts': { adet: 1, neden: 'doctor action on one note by id (send), ownership-scoped' },
   'app/api/doktor/not-konsult/route.ts': { adet: 1, neden: 'the note the doctor has open, by id; its patient context comes from hastaDosyaDerleyici (archive-filtered)' },
   'app/api/doktor/rrs/route.ts': { adet: 1, neden: 'note by id → patient ownership check' },
   'app/api/doktor/cihaz-olcum/dosya/route.ts': { adet: 1, neden: 'note by id → its visit id for the document link (ownership-scoped)' },

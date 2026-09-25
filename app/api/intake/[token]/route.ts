@@ -14,6 +14,7 @@ import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar'
 import { intakeGorunmeyenYanitlariAyikla, intakeSunucuHataMetni } from '@/lib/intake/dogrula'
 import { BRANS_SORULARI, BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
+import { intakeIzinleri } from '@/lib/iletisim/izinMetni'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const { data: form } = await supabase
     .from('hasta_intake_formlari')
-    .select('id, durum, token_expires_at, patient_id, brans')
+    .select('id, durum, token_expires_at, patient_id, brans, doktor_id')
     .eq('token_hash', tokenHash)
     .maybeSingle()
 
@@ -119,6 +120,23 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       const { intakeYanitlariniHastayaAktar } = await import('@/lib/intake/hastaKaydinaAktar')
       await intakeYanitlariniHastayaAktar(supabase, form.patient_id, kayitYanitlari)
     } catch (e) { console.error('[intake→hasta]', e) }
+    // NOTYA-ILETISIM-01: the patient's WhatsApp / e-posta consent from the two Onay lines (unticked = no).
+    // Scoped by the form row's own patient_id AND doktor_id; fails soft before migration 095.
+    if (form.doktor_id) {
+      try {
+        const izin = intakeIzinleri(kayitYanitlari)
+        const simdi = new Date().toISOString()
+        const { error: izinHata } = await supabase.from('patients')
+          .update({ iletisim_izni_whatsapp: izin.whatsapp, iletisim_izni_eposta: izin.eposta, iletisim_izni_guncelleme: simdi, iletisim_izni_guncelleyen: null })
+          .eq('id', form.patient_id).eq('doctor_id', form.doktor_id)
+        if (!izinHata) {
+          await supabase.from('iletisim_izin_kayitlari').insert((['whatsapp', 'eposta'] as const).map((kanal) => ({
+            doctor_id: form.doktor_id, patient_id: form.patient_id, kanal, izin: izin[kanal], kaynak: 'bilgi_formu',
+            kaydeden_user_id: null, kaydeden_personel_id: null,
+          })))
+        }
+      } catch (e) { console.error('[intake→iletişim izni]', e) }
+    }
   }
   return NextResponse.json({ basarili: true })
 }

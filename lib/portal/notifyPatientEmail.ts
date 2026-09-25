@@ -1,26 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { decrypt } from '@/lib/security/encryption'
-import { sendResendEmail } from '@/lib/mail/resend'
+import { saglikimMesajiKuyrugaEkle } from '@/lib/iletisim/sunucu'
 
 function appBaseUrl(): string {
   return String(process.env.NEXT_PUBLIC_APP_URL || 'https://www.notya.io').replace(/\/$/, '')
-}
-
-async function patientEmail(sb: SupabaseClient, patientId: string, doctorId: string): Promise<string | null> {
-  const { data } = await sb
-    .from('patients')
-    .select('email_encrypted')
-    .eq('id', patientId)
-    .eq('doctor_id', doctorId)
-    .maybeSingle()
-  if (!data?.email_encrypted) return null
-  try {
-    const raw = decrypt(data.email_encrypted).trim()
-    if (!raw.includes('@')) return null
-    return raw
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -52,40 +34,23 @@ export async function ensurePatientPortalUrl(
 }
 
 /**
- * Email the patient when practice sends/replies. No message body / clinical text in the mail.
- * Doctor/sekreter stay on in-app Mesajlar only for this path.
+ * The practice wrote to the patient in Sağlığım → a "Sağlığım'da yeni mesajınız var" item in the
+ * doctor's Hazır mesajlar queue (NOTYA-ILETISIM-01). The doctor or the secretary opens it in their
+ * OWN WhatsApp / mail with one tap. This used to send a Resend email from a Notya address; Resend is
+ * retired for patient mail. One item per thread (or patient) per day — repeated messages never
+ * pile up. No message body or clinical text ever leaves Sağlığım.
+ *
+ * Name kept so the ~35 existing callers (Mesajlar, konsültasyon, aşı and every branş kohort
+ * hatırlatma) switch over without touching each one. Never throws.
  */
 export async function notifyPatientNewPracticeMessage(
   sb: SupabaseClient,
-  opts: { doctorId: string; patientId: string }
-): Promise<{ sent: boolean; reason?: string }> {
-  const email = await patientEmail(sb, opts.patientId, opts.doctorId)
-  if (!email) return { sent: false, reason: 'no_email' }
-
-  const portalUrl = await ensurePatientPortalUrl(sb, opts.doctorId, opts.patientId)
-  if (!portalUrl) return { sent: false, reason: 'no_portal_link' }
-
-  const subject = 'Notya · Sağlığım — yeni mesajınız var'
-  const text = [
-    'Doktorunuz / klinik ekibiniz Sağlığım üzerinden size bir mesaj gönderdi.',
-    '',
-    'Mesaj içeriği güvenlik nedeniyle e-postada gösterilmez.',
-    'Okumak ve yanıtlamak için portalınıza girin (doktorunuzun verdiği 6 haneli PIN gerekir):',
-    portalUrl,
-    '',
-    'Acil durumda 112’yi veya muayenehaneyi arayın — portal mesajları acil değildir.',
-    '',
-    'Notya · Sağlığım',
-  ].join('\n')
-
-  const html = `
-    <p>Doktorunuz / klinik ekibiniz <strong>Sağlığım</strong> üzerinden size bir mesaj gönderdi.</p>
-    <p>Mesaj içeriği güvenlik nedeniyle e-postada gösterilmez.</p>
-    <p><a href="${portalUrl}">Portalınıza girip mesajı okuyun</a> — doktorunuzun verdiği 6 haneli PIN gerekir.</p>
-    <p style="color:#666;font-size:13px">Acil durumda 112’yi veya muayenehaneyi arayın — portal mesajları acil değildir.</p>
-  `
-
-  const result = await sendResendEmail({ to: email, subject, text, html })
-  if (!result.ok) return { sent: false, reason: result.reason }
-  return { sent: true }
+  opts: { doctorId: string; patientId: string; konuId?: string | null }
+): Promise<{ sent: boolean; queued: boolean; reason?: string }> {
+  try {
+    const eklenen = await saglikimMesajiKuyrugaEkle(sb, opts)
+    return { sent: false, queued: eklenen > 0, reason: eklenen > 0 ? undefined : 'zaten_kuyrukta_veya_tablo_yok' }
+  } catch {
+    return { sent: false, queued: false, reason: 'kuyruk_hatasi' }
+  }
 }

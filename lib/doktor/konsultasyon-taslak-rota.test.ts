@@ -72,7 +72,6 @@ mock.module(yerel('lib/vault/service.ts'), {
   },
 })
 mock.module(yerel('lib/alarm.ts'), { namedExports: { kritikAlarm: async () => undefined } })
-mock.module(yerel('lib/mail/resend.ts'), { namedExports: { sendResendEmail: async () => ({ ok: true }) } })
 globalThis.fetch = (async (g: unknown) => { throw new Error(`taslak testi ağ erişimi yapamaz: ${String(g)}`) }) as typeof fetch
 
 let NextRequestSinifi: typeof import('next/server').NextRequest
