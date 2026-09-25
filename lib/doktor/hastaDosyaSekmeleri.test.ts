@@ -12,7 +12,7 @@ import {
   urolojiSekmesiBransi,
   sporHekimligiSekmesiBransi,
   ortopediSekmesiBransi,
-  genelCerrahiSekmesiBransi,
+  genelCerrahiSekmesiBransi, pediatriCaprazBransi
 } from './hastaDosyaSekmeleri'
 
 const NOW = Date.parse('2026-09-15T00:00:00Z')
@@ -166,5 +166,35 @@ describe('hastaDosyaSekmeleri', () => {
     assert.equal(genelCerrahiSekmesiBransi('plastik-cerrahi'), false)
     assert.equal(genelCerrahiSekmesiBransi('cocuk-cerrahisi'), false)
     assert.equal(ozelBolumBransi('genel-cerrahi'), true)
+  })
+})
+
+
+// BRANS-SIZMASI-PEDIATRI (Kaan, 2026-09-25): pediatri alanı pediatride kalır; çapraz geçiş aile / pratisyen.
+describe('pediatri sekmeleri — branş sızması yok', () => {
+  const COCUK = '2021-03-01'
+  const ERISKIN = '1980-03-01'
+  const SIMDI = Date.parse('2026-09-25T12:00:00Z')
+  const uygun = (brans: string | null, pediatriDoktoru = false, dogum = COCUK) =>
+    pediatriAracSekmesiUygun({ dogumIso: dogum, doktorBransi: brans, pediatriDoktoru }, SIMDI)
+
+  it('kardiyoloji / KBB / üroloji / ortopedi / göz / derm / KD / dahiliye / yeni branş çocuk hastada GÖRMEZ', () => {
+    for (const b of ['kardiyoloji', 'kulak burun boğaz', 'uroloji', 'ortopedi', 'goz', 'dermatoloji', 'kadin-dogum', 'dahiliye', 'yeni-bir-brans']) {
+      assert.equal(uygun(b), false, b)
+    }
+  })
+
+  it('pediatri her zaman; çapraz geçiş aile hekimliği / pratisyen / branşsız görür', () => {
+    assert.equal(uygun('pediatri', true), true)
+    assert.equal(uygun('aile hekimliği'), true)
+    assert.equal(uygun('aile-hekimligi'), true)
+    assert.equal(uygun('genel pratisyen'), true)
+    assert.equal(uygun(''), true)
+    assert.equal(pediatriCaprazBransi('kardiyoloji'), false)
+  })
+
+  it('erişkin hastada aile hekiminde ve pediatride bile yok', () => {
+    assert.equal(uygun('aile hekimliği', false, ERISKIN), false)
+    assert.equal(uygun('pediatri', true, ERISKIN), false)
   })
 })

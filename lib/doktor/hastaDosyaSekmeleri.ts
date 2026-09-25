@@ -3,8 +3,8 @@
  *
  * Rules (specialty-universal-vs-chapter + CHART-TAB-POLICY 2026-09-17):
  *  - Exclusive chapter tabs (Göz, Deri, Dahiliye) only when that doctor’s specialty owns them.
- *  - Pediatric tool tabs (büyüme / M-CHAT / gelişim) only when age qualifies AND the
- *    doctor is pediatri or a baseline/aile-style practice — never on göz/derm/KD/dahiliye charts.
+ *  - Pediatric tool tabs (büyüme / M-CHAT / gelişim) only when age qualifies AND the doctor is pediatri,
+ *    or aile hekimliği / genel pratisyen / branşsız (crossover). Every other branch: never (Kaan, 2026-09-25).
  *  - Gebelik tab stays sex+age (mixed care); portal Gebeliğim has its own eligibility.
  *  - Adults must not see M-CHAT / gelişim / büyüme.
  */
@@ -349,7 +349,20 @@ export function pediatriAracSekmesiUygun(input: {
   if (!pediatriSekmesiUygun(input.dogumIso, nowMs)) return false
   if (input.pediatriDoktoru) return true
   if (yasYilKesir(input.dogumIso, nowMs) == null) return false
-  return !ozelBolumBransi(input.doktorBransi)
+  // BRANS-SIZMASI-PEDIATRI (Kaan, 2026-09-25): izin listesi. Eskiden "özel bölümü olmayan her branş" görüyordu;
+  // listeye girmeyen her branş (ve ileride eklenecekler) çocuk hastada büyüme / M-CHAT / gelişim sekmesi alıyordu.
+  return pediatriCaprazBransi(input.doktorBransi)
+}
+
+/**
+ * BRANS-SIZMASI-PEDIATRI (Kaan, 2026-09-25): "Pediatri alanı pediatride kalır, çapraz geçiş dışında."
+ * Çapraz geçiş = çocuk hastaya doğal olarak bakan birinci basamak: aile hekimliği, genel pratisyen, branşsız hekim.
+ * Diğer tüm branşlar (kardiyoloji, KBB, üroloji, ortopedi, göz, derm, KD, dahiliye …) pediatrik araç sekmesi görmez.
+ */
+export function pediatriCaprazBransi(specialtyHam: string | null | undefined): boolean {
+  const b = String(specialtyHam || '').trim().toLocaleLowerCase('tr-TR')
+  if (!b) return true
+  return /aile\s*hekim|aile-hekimligi|genel pratisyen|pratisyen/.test(b)
 }
 
 /**
