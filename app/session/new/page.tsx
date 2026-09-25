@@ -160,11 +160,30 @@ function NewSessionInner() {
     if (dosya.size > 60 * 1024 * 1024) { setSesHata("Dosya 60 MB'ı aşıyor. Daha kısa bir kayıt deneyin."); return }
     setSesYukleniyor(true)
     try {
-      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { data: { session: authSession } } = await sb.auth.getSession()
-      const authToken = authSession?.access_token
-      const userId = authSession?.user?.id
-      if (!authToken || !userId) throw new Error("Oturum bulunamadı. Yeniden giriş yapın.")
+      // NOTYA-AUTH-01 (Kaan, 2026-09-24): bu, çalışmayan eşdolaylı versiyonuydu — taze bir
+      // createClient() oluşturup sb.auth.getSession() çağırmak Supabase JS SDK'nin KENDİ varsayılan
+      // oturum saklamasını (sb-<ref>-auth-token) okur; ama bu uygulama HER YERDE ensureDoctorAccessToken()
+      // ile KENDİ jetonunu ('auth-token' anahtarı, doğrudan REST çağrılarıyla yönetilir) kullanır ve
+      // SDK'nin kendi oturum kurulumunu hiçbir zaman çağırmaz. Bu ikisi hiçbir zaman eşleşmez, yani
+      // authSession HER ZAMAN null döner ve doktor bir sonraki satırda "Oturum bulunamadı" görür
+      // — hesabı ne kadar yeni giriş yapmış olursa olsun. Bu aynı hatanın aileşi, lib/doktor/
+      // clientAuth.ts'in kendi baş yorumunun uyardığı ("iki hata boyle oldu") türünden — sayfa/bileşen
+      // kendi localStorage okumasını icat ettiğinde. Düzeltme: her yerdeki gibi ensureDoctorAccessToken()
+      // ile jetonu al, Supabase istemcisine Authorization başlığı olarak geç (storage RLS bu şekilde
+      // doğru auth.uid()'i görür) — kullanıcı kimliği de zaten elimizdeki JWT'nin sub alanından çıkar,
+      // ayrı bir ağ isteği gerekmez.
+      const { ensureDoctorAccessToken } = await import('@/lib/doktor/clientAuth')
+      const authToken = await ensureDoctorAccessToken()
+      if (!authToken) throw new Error("Oturum bulunamadı. Yeniden giriş yapın.")
+      let userId: string | null = null
+      try {
+        const payloadB64 = authToken.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/')
+        userId = payloadB64 ? (JSON.parse(atob(payloadB64)) as { sub?: string }).sub || null : null
+      } catch { /* aşağıda null kontrolü yakalar */ }
+      if (!userId) throw new Error("Oturum bulunamadı. Yeniden giriş yapın.")
+      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+        global: { headers: { Authorization: `Bearer ${authToken}` } },
+      })
       const guvenliAd = dosya.name.replace(/[^a-zA-Z0-9_.-]/g, "_").slice(-60) || "kayit"
       const yol = `${userId}/${Date.now()}-${guvenliAd}`
       const { error: yuklemeHatasi } = await sb.storage.from("ses-kayitlari").upload(yol, dosya, { contentType: dosya.type || "audio/mpeg" })
@@ -172,7 +191,7 @@ function NewSessionInner() {
       const resp = await fetch("/api/sessions/ses-yukle", {
         method: "POST",
         headers: { "Authorization": `Bearer ${authToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ path: yol, patientId: patientId || null, specialty, ...(efektifTarihIso ? { tarih: efektifTarihIso } : {}) }),
+        body: JSON.stringify({ path: yol, patientId: patientId || null, specialty, sessionType, ...(efektifTarihIso ? { tarih: efektifTarihIso } : {}) }),
       })
       const d = await resp.json()
       if (!resp.ok) throw new Error(d.error || "Not üretilemedi.")
