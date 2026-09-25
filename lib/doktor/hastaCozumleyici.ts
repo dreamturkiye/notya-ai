@@ -17,6 +17,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
+import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
 
@@ -186,6 +187,8 @@ async function dosyaIleDaralt(
 ): Promise<HastaCozumu> {
   const klinik = klinikAramaMi(mesaj)
   if (ad.tur === 'tek' && !klinik) return ad
+  // NOTYA-AYSE-HASTA-01: adı geçen tek hastanın sıralama sorusu o hastanın dosyasından cevaplanır.
+  if (tekHastaSorusuMu(ad.tur, mesaj)) return ad
   if (ad.tur === 'coklu' && !klinik) return ad
   if (ad.tur === 'yok' && !klinik) return ad
 

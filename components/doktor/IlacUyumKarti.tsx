@@ -12,7 +12,7 @@
  */
 import { useEffect, useState } from 'react';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
-import { ILAC_UYUM_ISTEK, ilacOnerisiCoz, type IlacSatiri } from '@/lib/doktor/receteAktarim';
+import { ILAC_UYUM_ISTEK, ilacDetayMetni, ilacOnerisiCoz, type IlacSatiri } from '@/lib/doktor/receteAktarim';
 
 export type IlacUyumDurumu =
   | { tur: 'kontrol' }
@@ -72,13 +72,28 @@ const dugme = (ana: boolean): React.CSSProperties => ({
   borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
 });
 
+/** Okunur ilaç satırları: ad kalın, ayrıntı gri tek satır (boş alanlar atlanır). */
+function IlacSatirlari({ ilaclar, vurgu }: { ilaclar: IlacSatiri[]; vurgu?: boolean }) {
+  return (
+    <div style={{ background: '#FFFFFF', border: vurgu ? '1px solid rgba(47,67,52,0.35)' : '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: '2px 12px', color: CHROME_RENK.ink }}>
+      {ilaclar.length ? ilaclar.map((i, k) => {
+        const detay = ilacDetayMetni(i);
+        return (
+          <div key={k} style={{ padding: '8px 0', borderTop: k ? '1px solid rgba(58,44,34,0.08)' : 'none' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>{i.ad}</div>
+            {detay ? <div style={{ fontSize: 12.5, color: CHROME_RENK.muted, lineHeight: 1.4, marginTop: 2 }}>{detay}</div> : null}
+          </div>
+        );
+      }) : <div style={{ color: CHROME_RENK.muted, padding: '8px 0', fontSize: 13.5 }}>(boş)</div>}
+    </div>
+  );
+}
+
 function Liste({ baslik, ilaclar }: { baslik: string; ilaclar: IlacSatiri[] }) {
   return (
     <div>
       <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.muted, marginBottom: 4 }}>{baslik}</div>
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.12)', borderRadius: 8, padding: '8px 12px', fontSize: 13.5, lineHeight: 1.6, color: CHROME_RENK.ink }}>
-        {ilaclar.length ? ilaclar.map((i, k) => <div key={k}>• {ilacSatiriMetni(i)}</div>) : <div style={{ color: CHROME_RENK.muted }}>(boş)</div>}
-      </div>
+      <IlacSatirlari ilaclar={ilaclar} />
     </div>
   );
 }
@@ -90,8 +105,10 @@ export default function IlacUyumKarti({ durum, onGuncelleOnayla, onMevcutlaOnayl
   onVazgec: () => void;
 }) {
   const [metin, setMetin] = useState('');
+  const [duzenle, setDuzenle] = useState(false);
   useEffect(() => {
     if (durum.tur === 'oneri') setMetin(durum.oneri.map(ilacSatiriMetni).join('\n'));
+    setDuzenle(false);
   }, [durum]);
 
   return (
@@ -110,15 +127,27 @@ export default function IlacUyumKarti({ durum, onGuncelleOnayla, onMevcutlaOnayl
           <div style={{ display: 'grid', gap: 12 }}>
             <Liste baslik="Şu anki İlaçlar listesi" ilaclar={durum.mevcut} />
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 4 }}>Plan'a göre (düzenleyebilirsiniz)</div>
-              <textarea
-                data-testid="ilac-uyum-oneri"
-                value={metin}
-                onChange={(e) => setMetin(e.target.value)}
-                rows={Math.max(3, durum.oneri.length + 1)}
-                style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(47,67,52,0.35)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 13.5, lineHeight: 1.6, padding: '8px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }}
-              />
-              <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 2 }}>Her satır bir ilaç: Ad — doz — kullanım — süre</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: CHROME_RENK.pine }}>Plan'a göre</div>
+                {duzenle ? null : (
+                  <button type='button' data-testid='ilac-uyum-duzenle' onClick={() => setDuzenle(true)} style={{ border: 'none', background: 'transparent', color: CHROME_RENK.pine, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>Düzenle</button>
+                )}
+              </div>
+              {duzenle ? (
+                <>
+                  <textarea
+                    data-testid='ilac-uyum-oneri'
+                    value={metin}
+                    autoFocus
+                    onChange={(e) => setMetin(e.target.value)}
+                    rows={Math.max(3, durum.oneri.length + 1)}
+                    style={{ width: '100%', background: '#FFFFFF', border: '1px solid rgba(47,67,52,0.35)', borderRadius: 8, color: CHROME_RENK.ink, fontSize: 13.5, lineHeight: 1.6, padding: '8px 12px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }}
+                  />
+                  <div style={{ fontSize: 11.5, color: CHROME_RENK.muted, marginTop: 2 }}>Her satır bir ilaç: Ad — doz — kullanım — süre. Bilinmeyen alanı boş bırakabilirsiniz.</div>
+                </>
+              ) : (
+                <IlacSatirlari ilaclar={durum.oneri} vurgu />
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
               <button type="button" data-testid="ilac-uyum-guncelle" disabled={!metin.trim()} onClick={() => onGuncelleOnayla(metin)} style={{ ...dugme(true), opacity: metin.trim() ? 1 : 0.5 }}>Plan'a göre güncelle ve onayla</button>

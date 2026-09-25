@@ -646,6 +646,16 @@ export function klinikAramaMi(mesaj: string, now = new Date()): boolean {
   return sorguyuAyikla(mesaj, now).klinik
 }
 
+/**
+ * NOTYA-AYSE-HASTA-01 (Kaan, 2026-09-25): soru TEK bir hastayı adıyla anıyorsa "hangisi / en çok / hiç … verdim mi"
+ * türü bir sıralama sorusu O HASTANIN kaydıyla ilgilidir; muayenehane geneli istatistiğe (son 30 gün) düşmez.
+ * Canlı vaka (Dr. Gökhan): "Umutcan Türkoğlu'na hiç antibiyotik vermiş miyim, verdiysem hangisini" →
+ * Ayşe pratik geneli "son 30 gün en çok yazdığın antibiyotik" cümlesini döndürdü (yanlış kaynak, yanlış pencere).
+ */
+export function tekHastaSorusuMu(cozumTuru: string, mesaj: string, now = new Date()): boolean {
+  return cozumTuru === 'tek' && Boolean(sorguyuAyikla(mesaj, now).kirilim)
+}
+
 export function listeSorgusuMu(mesaj: string, q?: SorguAyik): boolean {
   const s = q || sorguyuAyikla(mesaj)
   return s.cogul || s.sayim || Boolean(s.kirilim) || Boolean(s.yas && (s.ziyaret || s.pencere))

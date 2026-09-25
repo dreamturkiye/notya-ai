@@ -167,6 +167,14 @@ export function ilacListeleriAyniMi(a: IlacSatiri[], b: IlacSatiri[]): boolean {
 }
 
 /**
+ * Kartta okunur ilaç ayrıntısı: boş alanlar atlanır, çift tire görünmez
+ * ("Ventolin nebül — — 3x1 — 5 gün" yerine ad + "3x1 · 5 gün"). Kaan, 2026-09-25.
+ */
+export function ilacDetayMetni(i: { doz?: string | null; kullanim?: string | null; sure?: string | null }): string {
+  return [i.doz, i.kullanim, i.sure].map((x) => String(x || '').trim()).filter(Boolean).join(' · ')
+}
+
+/**
  * NOTYA-RECETE-05 (Kaan, 2026-09-25): Onayla anında Ayşe karşılaştırması gerekir mi?
  * - tutarsiz: listedeki bir ilaç Plan metninde geçmiyor (değişen/çıkarılan ilaç).
  * - Plan düzenlendi: listedeki ilaçlar dururken Plan'a YENİ bir ilaç eklenmesini de yakalar
