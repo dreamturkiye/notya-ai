@@ -29,6 +29,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/notes/route.ts': T,
   'app/api/notes/[id]/route.ts': T,
   'app/api/notes/[id]/approve/route.ts': T,
+  'app/api/notes/[id]/ilac-sonlandir-geri-al/route.ts': T,
   'app/api/notes/pdf/route.ts': I('renders only the body it is given (mali note); reads no patient table'),
   'app/api/doktor/son-notlar/route.ts': T,
   'app/api/sessions/start/route.ts': T,

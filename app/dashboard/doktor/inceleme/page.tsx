@@ -16,6 +16,7 @@ import {
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
 import { ilacKontroluGerekliMi, ilacKontrolSonucu } from '@/lib/doktor/receteAktarim';
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
+import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import {
   onaySonrasiHedef, onaylananNotYolu, hastaDosyasiYolu,
   ONAYLANAN_NOTU_AC, HASTA_LISTESINE_DON, ANA_SAYFAYA_DON,
@@ -125,6 +126,7 @@ export default function IncelemePage() {
   const [alarmTaslak, setAlarmTaslak] = useState('');   // satır başına bir madde
   const [ozetTaslak, setOzetTaslak] = useState('');
   const [uyum, setUyum] = useState<{ id: string; durum: IlacUyumDurumu } | null>(null);
+  const [sonlandirma, setSonlandirma] = useState<(IlacSonlandirmaBilgisi & { devamHref?: string }) | null>(null);
   const [ilacTaslak, setIlacTaslak] = useState('');   // "Ad — doz — kullanım — süre", satır başına bir ilaç
   const [icdTaslak, setIcdTaslak] = useState<IcdOner[]>([]);
   const [receteTaslak, setReceteTaslak] = useState<ReceteOner[]>([]);
@@ -371,6 +373,7 @@ export default function IncelemePage() {
         return;
       }
 
+      const onayYaniti = await res.json().catch(() => null);
       const onaylanan = notlarRef.current.find((n) => n.id === id) || null;
       const kalan = notlarRef.current.filter((n) => n.id !== id);
       notlariYaz(kalan);
@@ -378,7 +381,10 @@ export default function IncelemePage() {
       setSonOnaylanan({ id, hasta: onaylanan?.maskedPatient || '', patientId: onaylanan?.patientId ?? null });
 
       const hedef = onaySonrasiHedef(id, kalan.length);
-      if (hedef.tur === 'not') router.push(hedef.yol);
+      // NOTYA-ILAC-SONLANDIR-01: not bir ilacı kestiyse tek satır + Geri al; kuyruk boşsa hekim Devam ile geçer.
+      const sonlanan = ilacSonlandirmaBilgisi(id, onayYaniti);
+      setSonlandirma(sonlanan ? { ...sonlanan, devamHref: hedef.tur === 'not' ? hedef.yol : undefined } : null);
+      if (hedef.tur === 'not' && !sonlanan) router.push(hedef.yol);
     } catch {
       setError('Not onaylanamadı. Bağlantınızı kontrol edin.');
     } finally {
@@ -406,6 +412,9 @@ export default function IncelemePage() {
     <div style={toolsShell}>
       {uyum ? (
         <IlacUyumKarti durum={uyum.durum} onGuncelleOnayla={(m) => { void approve(uyum.id, m) }} onMevcutlaOnayla={() => { void approve(uyum.id, ilacTaslak) }} onVazgec={() => setUyum(null)} />
+      ) : null}
+      {sonlandirma ? (
+        <IlacSonlandirmaSatiri key={sonlandirma.noteId} bilgi={sonlandirma} devamHref={sonlandirma.devamHref} onKapat={() => setSonlandirma(null)} />
       ) : null}
       <div style={{ maxWidth: 1000 }}>
         <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>

@@ -255,6 +255,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     console.error('[recete-aktarim]', e)
   }
 
+  // NOTYA-ILAC-SONLANDIR-01 (Kaan / Dr. Gökhan, 2026-09-25): not bir ilacı kesiyorsa ("Klacid'i keselim",
+  // "artık vermiyoruz") o ilaç hastanın İlaçlar listesinde sonlandırılır — yalnız onayda, aktarımdan SONRA
+  // (bu notun yeniden yazdığı ilaçlar asla kesilmez). Hata onayı bloklamaz; hekime tek satır + Geri al gider.
+  let ilacSonlandirma: { sonlandirilan: { id: string; ad: string; alinti: string }[]; mesaj: string; hata: string | null } | null = null
+  if (hastaIdA && hastaBenim) {
+    try {
+      const { nottanIlacSonlandir } = await import('@/lib/doktor/ilacSonlandir')
+      const son = (kolon: string) => (kolon in guncelleme ? guncelleme[kolon] : (existing as Record<string, unknown>)[kolon])
+      ilacSonlandirma = await nottanIlacSonlandir(supabase, {
+        noteId, doctorId: user.id, patientId: hastaIdA,
+        not: {
+          content_subjektif: son('content_subjektif'), content_anamnez: son('content_anamnez'), content_objektif: son('content_objektif'),
+          content_degerlendirme: son('content_degerlendirme'), content_tani: son('content_tani'), content_plan: son('content_plan'),
+          content_tedavi: son('content_tedavi'), content_ilaclar: son('content_ilaclar'), recete_onerisi: son('recete_onerisi'),
+        },
+      })
+      if (ilacSonlandirma.hata) console.error('[ilac-sonlandir]', ilacSonlandirma.hata)
+    } catch (e) { console.error('[ilac-sonlandir]', e) }
+  }
+
   // NOTYA-OGRENME-03: her onay ilişki sayacına işler (not + düzeltme adedi)
   try {
     const { seansIsle } = await import('@/lib/doktor/hafiza')
@@ -298,5 +318,5 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (e) { console.error('[ogrenme] damitma', e) }
   }
 
-  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim })
+  return NextResponse.json({ success: true, duzenlenenAlanSayisi: loglar.length, receteAktarim, asiAktarim, ilacSonlandirma })
 }
