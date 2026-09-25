@@ -1,9 +1,9 @@
 'use client';
 /**
  * PEDI-ARACLAR-02 — Araçlar › Pediatri kohort paneli (Göz / KD kohort kalıbı). /api/doktor/pediatri/kohort — yalnız hekimin
- * kendi 18 yaş altı hastaları. 1-tap hatırlatma: Sağlığım › Mesajlar (hasta-güvenli metin, klinik değer yok) + e-posta bildirimi.
- * Satır başına: dosyayı aç (ilgili sekme), aşı planı / gelişim paneli derin bağlantısı, kendi WhatsApp'ınızdan gönder
- * (mevcut /api/doktor/hatirlatma whatsapp_kisisel yolu).
+ * kendi 18 yaş altı hastaları. 1-tap hatırlatma: Sağlığım › Mesajlar (hasta-güvenli metin, klinik değer yok) + Hazır mesajlar bildirimi.
+ * Satır başına: dosyayı aç (ilgili sekme), aşı planı / gelişim paneli derin bağlantısı, kendi WhatsApp'ınızdan / e-postanızdan
+ * gönder (GonderDugmesi, NOTYA-ILETISIM-01).
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
@@ -11,6 +11,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { PEDI_BAYRAK_AD, pediHatirlatmaMesaji, type PediKohortBayrak, type PediKohortSatir } from '../../engines/kohort';
 import { tarihGoster } from '../../engines/girdi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
 const BAYRAKLAR = Object.keys(PEDI_BAYRAK_AD) as PediKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
@@ -52,16 +53,6 @@ export default function PediKohortPaneli() {
       await yukle();
     } catch { setMesaj('Gönderilemedi — bağlantıyı kontrol edin.'); }
     finally { setGonderiyor(false); }
-  };
-  const whatsapp = async (s: PediKohortSatir) => {
-    setMesaj('');
-    try {
-      const t = await getAccessTokenAsync();
-      const m = pediHatirlatmaMesaji(s.bayraklar);
-      const r = await fetch('/api/doktor/hatirlatma', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ hastaId: s.patientId, mesaj: m.metin, tarih: new Date().toISOString().slice(0, 10), kanal: 'whatsapp_kisisel' }) });
-      const j = await r.json().catch(() => ({}));
-      if (r.ok && j.waLink) window.open(j.waLink, '_blank', 'noopener'); else setMesaj(j.error || 'WhatsApp bağlantısı oluşturulamadı');
-    } catch { setMesaj('WhatsApp bağlantısı oluşturulamadı — bağlantıyı kontrol edin.'); }
   };
 
   return (
@@ -105,7 +96,7 @@ export default function PediKohortPaneli() {
               <a href={hastaDosyaHref(s.patientId, s.sekme === 'ozet' ? null : s.sekme)} style={ghost}>Dosyayı aç</a>
               {(s.bayraklar.includes('asi_gecikti') || s.bayraklar.includes('asi_kayit_tutarsiz')) && <a href={`/doktor-tools/pedi-asi?hasta=${encodeURIComponent(s.patientId)}`} style={ghost}>Aşı planı</a>}
               {(s.bayraklar.includes('tarama_gecikti') || s.bayraklar.includes('izlem_kacti') || s.bayraklar.includes('profilaksi')) && <a href={`/doktor-tools/pedi-gelisim?hasta=${encodeURIComponent(s.patientId)}`} style={ghost}>Gelişim paneli</a>}
-              <button type="button" onClick={() => whatsapp(s)} style={ghost}>WhatsApp&apos;tan gönder</button>
+              <GonderDugmesi sessiz tur="serbest" patientId={s.patientId} metin={pediHatirlatmaMesaji(s.bayraklar).metin} etiket="WhatsApp / e-posta ile gönder" />
             </span>
           </div>
         ))}

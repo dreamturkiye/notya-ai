@@ -1,8 +1,8 @@
 'use client';
 /**
  * GOZ-EXCEPTIONAL-01 — Araçlar › Göz kohort paneli (Dahiliye kohort kalitesi). /api/doktor/goz/kohort — yalnız hekimin kendi hastaları.
- * 1-tap hatırlatma: Sağlığım › Mesajlar (hasta-güvenli metin, klinik değer yok) + e-posta bildirimi + dönüş görevi.
- * Satır başına: hasta dosyasını aç (Göz) veya kendi WhatsApp'ınızdan gönder (mevcut /api/doktor/hatirlatma whatsapp_kisisel yolu).
+ * 1-tap hatırlatma: Sağlığım › Mesajlar (hasta-güvenli metin, klinik değer yok) + Hazır mesajlar bildirimi + dönüş görevi.
+ * Satır başına: hasta dosyasını aç (Göz) veya kendi WhatsApp'ınızdan / e-postanızdan gönder (GonderDugmesi, NOTYA-ILETISIM-01).
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { getAccessTokenAsync } from '@/lib/doktor/toolsUi';
@@ -10,6 +10,7 @@ import { hastaDosyaHref } from '@/lib/doktor/geriNavigasyon';
 import { GOZ_BAYRAK_AD, gozHatirlatmaMesaji, type GozKohortBayrak, type GozKohortSatir } from '../../engines/kohort';
 import { gozStil, Istatistik, Rozet } from './GozAracKabugu';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
 
 const BAYRAKLAR = Object.keys(GOZ_BAYRAK_AD) as GozKohortBayrak[];
 const muted: React.CSSProperties = { fontSize: 14, color: CHROME_RENK.muted, lineHeight: 1.5 };
@@ -49,14 +50,6 @@ export default function GozKohortPaneli() {
       await yukle();
     } finally { setGonderiyor(false); }
   };
-  const whatsapp = async (s: GozKohortSatir) => {
-    setMesaj('');
-    const t = await getAccessTokenAsync();
-    const m = gozHatirlatmaMesaji(s.bayraklar);
-    const r = await fetch('/api/doktor/hatirlatma', { method: 'POST', headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ hastaId: s.patientId, mesaj: m.metin, tarih: new Date().toISOString().slice(0, 10), kanal: 'whatsapp_kisisel' }) });
-    const j = await r.json().catch(() => ({}));
-    if (r.ok && j.waLink) window.open(j.waLink, '_blank', 'noopener'); else setMesaj(j.error || 'WhatsApp bağlantısı oluşturulamadı');
-  };
 
   return (
     <div style={{ background: '#0C1830', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '20px 18px 24px' }}>
@@ -95,7 +88,7 @@ export default function GozKohortPaneli() {
             <span style={{ fontSize: 13, color: CHROME_RENK.muted, flex: '1 1 100%' }}>{s.detay.join(' · ')}{s.sonVizit ? ` · son vizit ${s.sonVizit}` : ''}{s.portalVar ? '' : ' · portal bağlantısı yok (mesaj portal açılınca görünür)'}</span>
             <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <a href={hastaDosyaHref(s.patientId, 'goz')} style={ghost}>Dosyayı aç</a>
-              <button type="button" onClick={() => whatsapp(s)} style={ghost}>WhatsApp'tan gönder</button>
+              <GonderDugmesi sessiz tur="serbest" patientId={s.patientId} metin={gozHatirlatmaMesaji(s.bayraklar).metin} etiket="WhatsApp / e-posta ile gönder" />
             </span>
           </div>
         ))}
