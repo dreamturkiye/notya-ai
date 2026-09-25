@@ -29,6 +29,14 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}))
   const { path, patientId, specialty } = body as { path?: string; patientId?: string | null; specialty?: string }
+  // NOTYA-SES-02 (Kaan, 2026-09-24): sessions.session_type has a DB check constraint allowing only
+  // muayene/kontrol/konsültasyon/telesağlık -- this route always inserted the literal 'ses_yukleme',
+  // which is none of those, so the insert below ALWAYS failed with a constraint violation and every
+  // audio-file upload died with "Seans kaydı oluşturulamadı," regardless of anything else being
+  // correct. The live-recording flow on this same page (app/session/new/page.tsx line ~349) already
+  // sends the doctor's own Seans Türü selection; reusing that here instead of a made-up value.
+  const SESSION_TYPE_IZIN = new Set(['muayene', 'kontrol', 'konsültasyon', 'telesağlık'])
+  const sessionType = typeof body.sessionType === 'string' && SESSION_TYPE_IZIN.has(body.sessionType) ? body.sessionType : 'muayene'
   if (!path || !path.startsWith(`${doktorId}/`) || path.split('/').includes('..')) {
     return NextResponse.json({ error: 'Geçersiz dosya yolu.' }, { status: 400 })
   }
@@ -91,7 +99,7 @@ export async function POST(req: NextRequest) {
       doctor_id: doktorId,
       patient_id: patientId || null,
       specialty: brans,
-      session_type: 'ses_yukleme',
+      session_type: sessionType,
       status: 'completed',
       transcript_cleaned: transcript,
       ...(gecmisTarihIso ? { started_at: gecmisTarihIso } : {}),
@@ -180,7 +188,12 @@ export async function POST(req: NextRequest) {
       alarm_bulgulari: noteData?.alarmBulgulari || null,
       ai_model: modelSec('soap').model, // NOTYA-MALIYET-01: etiket politikadan
       ai_confidence: noteData?.ai_confidence || 0.9,
-      specialty: brans,
+      // NOTYA-SES-03 (Kaan, 2026-09-24): notes tablosunda specialty kolonu hiç yok — branch bilgisi
+      // yalnız sessions.specialty'de tutulur, notes buraya sessions üzerinden join'lenir (approve
+      // route'un kendi .select()'i de bunu doğrular: 'sessions(specialty, patient_id)'). Bu satır
+      // olmayan bir kolona yazmaya çalışıyordu, INSERT HER ZAMAN "Could not find the 'specialty'
+      // column of 'notes'" ile patlıyordu — ses başarıyla çözümlüyor, SOAP üretiliyor, ama not hiçbir
+      // zaman kaydedilemiyordu. sessions.insert'te birkaç satır yukarıda zaten doğru yazılıyor.
       ...(gecmisTarihIso ? { created_at: gecmisTarihIso } : {}),
     }).select('id').single()
     if (noteError || !note) throw new Error(noteError?.message || 'not kaydedilemedi')
