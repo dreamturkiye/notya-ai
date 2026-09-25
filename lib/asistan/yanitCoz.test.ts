@@ -48,7 +48,7 @@ test('complete JSON keeps the action', () => {
 test('chat route and written-chat panel both go through the parser; panel reads data.speech', async () => {
   const fs = await import('node:fs'); const path = await import('node:path')
   const kok = path.join(import.meta.dirname, '..', '..')
-  const rota = fs.readFileSync(path.join(kok, 'app/api/asistan/chat/route.ts'), 'utf8')
+  const rota = fs.readFileSync(path.join(kok, 'lib/asistan/ayseCevapla.ts'), 'utf8') // NOTYA-TEK-BEYIN: chat pipeline
   assert.ok(rota.includes('asistanYanitiCoz(rawResponse, response.stop_reason)')); assert.ok(!rota.includes('aiData = { speech: rawResponse'))
   const ui = fs.readFileSync(path.join(kok, 'components/asistan/YaziliSohbet.tsx'), 'utf8')
   assert.ok(ui.includes('asistanYanitiCoz(String(veri.speech ||'))

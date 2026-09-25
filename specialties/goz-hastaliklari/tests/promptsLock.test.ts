@@ -70,7 +70,7 @@ describe('(c) wired into the runtime call paths', () => {
     assert.ok(gozKilidi('ogrenme').includes('doz kalıpları öğrenilse bile taslağa yazılmaz'))
   })
   it('call sites use the loader (chat, hafıza/voice, SOAP, distiller, next.config tracing)', () => {
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('gozKilidi("asistan")'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('gozKilidi("asistan")'))
     assert.ok(kaynak('app/api/doktor/hafiza/route.ts').includes("gozKilidi('ses')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("gozKilidi('soap')"))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes("gozKilidi('ogrenme')"))
@@ -94,7 +94,7 @@ describe('(d) hekim lock language + enforced in code', () => {
   it('code-level dose lock applies to göz (SOAP + chat) and reçete önerisi is stripped', () => {
     assert.ok(dozKilitliBrans('goz-hastaliklari')); assert.ok(dozKilitliBrans(null, 'Göz Hastalıkları'))
     assert.ok(kaynak('lib/doktor/soapUret.ts').includes('dozKilitliBrans(girdi.specialty, girdi.doktorBransi) ? soapDozKilidi('))
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('if (dozKilitliBrans(hekimBransi, specialty))'))
     const r = gozReceteDozsuz<{ etkenMadde?: string; ticariOrnek?: string; doz?: string; kullanim?: string; not?: string }>([{ etkenMadde: 'latanoprost', ticariOrnek: 'Xalatan %0,005', doz: '1 damla', kullanim: '1x1 akşam' }])
     assert.equal(r[0].doz, undefined); assert.equal(r[0].kullanim, undefined); assert.equal(r[0].etkenMadde, 'latanoprost'); assert.ok(r[0].not!.includes('Doz hekim yazar'))
   })

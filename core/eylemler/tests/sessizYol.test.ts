@@ -61,6 +61,10 @@ const GIRIS_NOKTALARI = [
   'app/api/doktor/konsult/route.ts',
   'app/api/doktor/not-konsult/route.ts',
   'app/asistan/page.tsx', // sesli Ayşe (ElevenLabs client tools)
+  // NOTYA-TEK-BEYIN: yazılı ve sesli Ayşe'nin ortak model turu. (Ses ucu app/api/asistan/ses-llm bilerek giriş
+  // noktası DEĞİL: sözlü "Evet"i lib/asistan/sesliOnay.ts ile — model turu dışında — dokunuşun omurgasına verir,
+  // tıpkı eski /api/asistan/ses-eylem gibi.)
+  'lib/asistan/ayseCevapla.ts',
 ]
 
 const UZANTILAR = ['.ts', '.tsx', '/index.ts', '/index.tsx']
@@ -156,7 +160,8 @@ describe('NOTYA-EYLEM-24 — sohbet/ses yolundan sessiz klinik yazma YOK', () =>
 
   it('sesli yüzeyin clientTools yazmaz — yalnız fetch (hasta_bul + eylem ses araçları)', () => {
     const metin = g.get('app/asistan/page.tsx') as string
-    const blok = /clientTools:\s*\{([\s\S]*?)\n\s{8}\},/.exec(metin)
+    // NOTYA-TEK-BEYIN: tek beyinli seste araç yok (`tekBeyin ? {} :`); eski sesli akışın araçları aynen denetlenir.
+    const blok = /clientTools:\s*(?:tekBeyin \? \{\} : )?\{([\s\S]*?)\n\s{8}\},/.exec(metin)
     assert.ok(blok, 'clientTools bloğu bulunamadı — sesli yüzeyin araç listesi değişmiş olabilir')
     const araclar = [...blok[1].matchAll(/^\s{10}([a-z_][a-z0-9_]*)\s*:/gim)].map((m) => m[1])
     assert.deepEqual(

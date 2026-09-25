@@ -71,6 +71,12 @@ function AsistanPageInner() {
   const sureHitapRef = useRef<string>("Hocam")
   const [sureUzatmaGoster, setSureUzatmaGoster] = useState(false)
   const [sesKarti, setSesKarti] = useState<{ oneri: EylemOneriGorunumu; hasta: EylemHasta } | null>(null)
+  /** NOTYA-TEK-BEYIN: yazılı sohbet ile sesin ORTAK asistan oturumu — tek konuşma, tek aktif hasta. */
+  const [ortakOturumId, setOrtakOturumId] = useState<string | null>(null)
+  /** Tek beyinli sesli görüşme sürerken: oturum + ses-ekran yoklamasının imleci (sunucu saati). */
+  const tekBeyinRef = useRef<{ oturumId: string; sonra: string } | null>(null)
+  const yoklamaRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const sesKartiIdRef = useRef<string | null>(null)
   const SURE_TAVAN_DK = 120 // ElevenLabs platform sınırı 7200 sn — agent config'te de bu değere çekildi
 
   const sureTimerlariTemizle = () => {
@@ -216,6 +222,8 @@ function AsistanPageInner() {
    *  yolla. keepalive: sekme kapanırken/navigasyonda istek yarım kalmasın.
    */
   function sesOgrenGonder() {
+    // NOTYA-TEK-BEYIN: tek beyinli seste her tur sunucuda, yazılı sohbetle aynı yoldan öğrenilir — ikinci kez yollanmaz.
+    if (tekBeyinRef.current) return
     try {
       const doktorSozleri = messagesRef.current.filter((m) => m.role === "user").map((m) => m.text).join("\n").slice(0, 4000)
       if (!doktorSozleri || !authToken) return
@@ -235,7 +243,48 @@ function AsistanPageInner() {
       sesOgrenGonder()
       try { await conv.endSession() } catch { /* ignore */ }
     }
+    yoklamayiDurdur()
     setStatus("idle")
+  }
+
+  /**
+   * NOTYA-TEK-BEYIN: sesli Ayşe yalnız kısa sözlü biçimi konuşur; tam cevap (liste, tablo, kimlik değerleri) ve
+   * onay kartları ortak oturuma yazılır. Görüşme sürerken burada hafifçe yoklanır ve baloncuğa / karta taşınır.
+   */
+  async function ekranYokla() {
+    const tb = tekBeyinRef.current
+    if (!tb) return
+    try {
+      const t = await ensureDoctorAccessToken()
+      if (!t) return
+      const r = await fetch(`/api/asistan/ses-ekran?oturum=${encodeURIComponent(tb.oturumId)}&sonra=${encodeURIComponent(tb.sonra)}`, {
+        headers: { Authorization: `Bearer ${t}` },
+      })
+      if (!r.ok || tekBeyinRef.current !== tb) return
+      const j = (await r.json()) as { turlar?: { zaman: string; metin: string; kartlar: string[]; hastaId: string | null }[]; bekleyen?: string[] }
+      for (const tur of j.turlar || []) {
+        if (tur.zaman > tb.sonra) tb.sonra = tur.zaman
+        addMsg("ai", tur.metin)
+        if (tur.kartlar?.length && tur.hastaId) void kartiYukle(tur.hastaId, tur.kartlar[tur.kartlar.length - 1])
+      }
+      // Sesle onaylanan / vazgeçilen kart artık bekleyen değil → kapat.
+      if (sesKartiIdRef.current && Array.isArray(j.bekleyen) && !j.bekleyen.includes(sesKartiIdRef.current)) {
+        sesKartiIdRef.current = null
+        setSesKarti(null)
+      }
+    } catch { /* yoklama kritik değil — bir sonraki turda tekrar */ }
+  }
+
+  function yoklamayiBaslat() {
+    if (yoklamaRef.current) clearInterval(yoklamaRef.current)
+    yoklamaRef.current = setInterval(() => { void ekranYokla() }, 1500)
+  }
+
+  function yoklamayiDurdur() {
+    if (yoklamaRef.current) { clearInterval(yoklamaRef.current); yoklamaRef.current = null }
+    // Son turun ekranını da al, sonra bu görüşmenin imlecini bırak (yeni görüşme kendi imlecini kurmuş olabilir).
+    const tb = tekBeyinRef.current
+    if (tb) void ekranYokla().finally(() => { if (tekBeyinRef.current === tb) tekBeyinRef.current = null })
   }
 
   function isFirstMessageOverrideError(msg: string): boolean {
@@ -244,10 +293,11 @@ function AsistanPageInner() {
     return /first[_ ]?message/i.test(msg || "")
   }
 
-  async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string }> {
+  async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {
     if (!authToken) throw new Error("Oturum bulunamadı")
+    const oturumParam = ortakOturumId ? `&asistanSessionId=${encodeURIComponent(ortakOturumId)}` : ""
     const resp = await fetch(
-      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}`,
+      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}${oturumParam}`,
       { headers: { Authorization: `Bearer ${authToken}` } }
     )
     if (!resp.ok) {
@@ -259,6 +309,10 @@ function AsistanPageInner() {
     return {
       signedUrl: body.signed_url as string,
       voiceId: (body.voice_id as string) || p.voiceId,
+      // NOTYA-TEK-BEYIN: yalnız bayraktaki doktorda gelir; yoksa eski sesli akış birebir sürer.
+      tekBeyin: body.tek_beyin && body.notya_jeton && body.asistan_session_id
+        ? { oturumId: String(body.asistan_session_id), jeton: String(body.notya_jeton), baslangic: String(body.baslangic || new Date().toISOString()) }
+        : null,
     }
   }
 
@@ -296,7 +350,11 @@ function AsistanPageInner() {
       } catch { /* hafıza kritik değil */ }
       const firstMessage = `Merhaba ${address(doctor || { firstName: 'Hocam' }, 'named')}. Nasıl yardımcı olabilirim?`
       const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
-      const { signedUrl, voiceId } = await fetchSignedUrl(p)
+      const { signedUrl, voiceId, tekBeyin } = await fetchSignedUrl(p)
+      if (tekBeyin) {
+        tekBeyinRef.current = { oturumId: tekBeyin.oturumId, sonra: tekBeyin.baslangic }
+        setOrtakOturumId(tekBeyin.oturumId)
+      }
 
       // Pre-regression path (c38e18e): same for all personas — personalized
       // first_message with single-flight fallback; always pass tts.voiceId.
@@ -308,6 +366,7 @@ function AsistanPageInner() {
         {
           tryFirstMessage: true,
           refreshSignedUrl: () => fetchSignedUrl(p).then((r) => r.signedUrl),
+          notyaJeton: tekBeyin?.jeton,
         }
       )
     } catch (e: unknown) {
@@ -330,8 +389,12 @@ function AsistanPageInner() {
     opts?: {
       tryFirstMessage?: boolean
       refreshSignedUrl?: () => Promise<string>
+      /** NOTYA-TEK-BEYIN: imzalı konuşma jetonu → Custom LLM extra body; varken tarayıcı araçları kullanılmaz. */
+      notyaJeton?: string
     }
   ) {
+    const tekBeyin = Boolean(opts?.notyaJeton)
+    let doktorKonustu = false
     const tryFirst = Boolean(opts?.tryFirstMessage)
     let usedFirstMessage = tryFirst
     let retriedWithoutFirst = false
@@ -385,6 +448,8 @@ function AsistanPageInner() {
           },
           tts: { voiceId },
         },
+        // NOTYA-TEK-BEYIN: ElevenLabs bunu her LLM isteğinde elevenlabs_extra_body olarak /api/asistan/ses-llm'e taşır.
+        ...(tekBeyin ? { customLlmExtraBody: { notya_jeton: opts?.notyaJeton } } : {}),
         // Kaan (2026-09-14): "Ayşe Hocam bana fırça attı, dosyalara giremiyorum diyor" —
         // sesli Ayşe'nin gerçekten hasta dosyasına erişimi yoktu (yazılı sohbette vardı).
         // ElevenLabs client tool: doktor bir hasta adı söylediğinde agent bunu çağırır,
@@ -393,7 +458,8 @@ function AsistanPageInner() {
         // NOTYA-EYLEM-19 — dosyaya kayıt HAZIRLAMA + sözlü onay. Bu araçlar klinik tabloya
         // yazmaz: /api/asistan/ses-eylem yalnız taslak açar veya eylemOnayla omurgasını çağırır.
         // Canlı ElevenLabs ajanına araç şeması Kaan tarafından yapıştırılmalı (docs/README_EYLEM.md).
-        clientTools: {
+        // NOTYA-TEK-BEYIN: tek beyinli seste hasta arama, kart hazırlama ve sözlü onay sunucuda — tarayıcı aracı yok.
+        clientTools: tekBeyin ? {} : {
           hasta_bul: async (params: { isim?: string }) => {
             try {
               const t = await ensureDoctorAccessToken()
@@ -524,9 +590,11 @@ function AsistanPageInner() {
           if (!includeFirstMessage) {
             addMsg("ai", firstMessage)
           }
+          if (tekBeyin) yoklamayiBaslat()
         },
         onDisconnect: (details) => {
           sureTimerlariTemizle()
+          if (tekBeyin) yoklamayiDurdur()
           setSureUzatmaGoster(false)
           if (details.reason === "error") {
             const msg = details.message || ""
@@ -554,6 +622,11 @@ function AsistanPageInner() {
           if (role !== "user" && skipNextAgentTranscript) {
             skipNextAgentTranscript = false
             return
+          }
+          // NOTYA-TEK-BEYIN: açılış selamından sonra Ayşe'nin baloncuğu sözlü kısa biçim değil, ekran biçimidir (ekranYokla).
+          if (tekBeyin) {
+            if (role === "user") doktorKonustu = true
+            else if (doktorKonustu) return
           }
           addMsg(role === "user" ? "user" : "ai", message)
         },
@@ -591,7 +664,10 @@ function AsistanPageInner() {
       })
       const j = (await r.json()) as { oneriler?: EylemOneriGorunumu[]; hasta?: EylemHasta }
       const oneri = (j.oneriler || []).find((o) => o.id === oneriId) || (j.oneriler || [])[0]
-      if (oneri && j.hasta) setSesKarti({ oneri, hasta: j.hasta })
+      if (oneri && j.hasta) {
+        sesKartiIdRef.current = oneri.id
+        setSesKarti({ oneri, hasta: j.hasta })
+      }
     } catch { /* kart yoksa ses özeti yine durur */ }
   }
 
@@ -809,7 +885,7 @@ function AsistanPageInner() {
         </div>
       </div>
       {/* NOTYA-KADEME-01: temel kademe yüzeyi — sesli sor (tarayıcı STT), yazılı cevap; dosya bilinçli */}
-      <YaziliSohbet personaId={personaKey} personaAdi={persona.shortName} />
+      <YaziliSohbet personaId={personaKey} personaAdi={persona.shortName} oturumId={ortakOturumId} onOturumId={setOrtakOturumId} />
       <style>{`@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wave1{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}@keyframes wave2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.4)}}`}</style>
     </div>
       </div>

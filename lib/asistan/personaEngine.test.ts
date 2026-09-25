@@ -37,7 +37,7 @@ test('KD / derm ignore stale localStorage Ayşe after branş switch', () => {
 
 test('chat route and asistan page use the branch-aware default, not a hardcoded pediatri fallback', () => {
   const kok = path.join(import.meta.dirname, '..', '..')
-  const rota = fs.readFileSync(path.join(kok, 'app/api/asistan/chat/route.ts'), 'utf8')
+  const rota = fs.readFileSync(path.join(kok, 'lib/asistan/ayseCevapla.ts'), 'utf8') // NOTYA-TEK-BEYIN: chat pipeline
   assert.ok(rota.includes('varsayilanPersonaId(specialty, hekimBransi)')); assert.ok(!rota.includes('getPersonaForSpecialty(specialty || "pediatri")'))
   assert.ok(!rota.includes('prefs?.preferred_persona'), 'schema default elifsahin (nöroloji) is never a doctor pick')
   assert.ok(fs.readFileSync(path.join(kok, 'app/asistan/page.tsx'), 'utf8').includes('resolveOpeningPersonaId('))

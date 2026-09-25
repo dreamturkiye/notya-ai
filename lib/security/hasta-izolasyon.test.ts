@@ -37,6 +37,8 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://sahte.supabase.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sahte-servis-anahtari'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sahte-anon-anahtari'
 process.env.ANTHROPIC_API_KEY = 'sahte'
+process.env.NOTYA_SES_LLM_SECRET = 'qa-sentetik-ses-llm-sirri-0123456789abcdef'
+process.env.NOTYA_SES_JETON_SECRET = 'qa-sentetik-ses-jeton-anahtari-0123456789ab'
 
 // ─── Sahte altyapı ──────────────────────────────────────────────────────────────────────────────
 let db = new SahteVeritabani()
@@ -132,6 +134,8 @@ type Hekim = {
   kuyruk: string
   /** NOTYA-GELEN-BELGELER: dosyalanmamış bir gelen belge (dosyası özel kovada, önerilen hasta = kendi hastası) */
   gelenBelge: string
+  /** NOTYA-TEK-BEYIN: yazı + sesin ortak asistan oturumu (bir sesli tur, işaretli) */
+  asistanOturum: string
   /** Rows THIS doctor filed under the OTHER doctor's patient — the contamination a pre-fix IDOR left behind. */
   hileliSeans: string; hileliNot: string
 }
@@ -228,7 +232,12 @@ function hekimKur(harf: Harf): Hekim {
     okuma_sifreli: encrypt(JSON.stringify({ ozet: `Hemogram ${m}`, belgeTuru: 'Lab Sonucu', metin: null, kimlik: { ad: null, dogum: null, tc: null, tcSon: null }, belgeTarihi: null, konsultasyonYaniti: false, okundu: true })),
     gonderen_sifreli: null, oneriler: [{ patient_id: hasta, guven: 85, kesinlik: 'eminim', nedenler: ['ad soyad'] }],
   })
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, kuyruk, gelenBelge, hileliSeans: '', hileliNot: '' }
+  const zaman = new Date(Date.now() - 60e3).toISOString()
+  const asistanOturum = db.ekle('asistan_sessions', {
+    doctor_id: id, patient_id: null, persona_id: 'aysekaya', active_context: {},
+    messages: [{ role: 'user', content: 'Sentetik soru', kanal: 'ses', zaman }, { role: 'assistant', content: `Cevap ${m}`, kanal: 'ses', zaman }],
+  }).id
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -300,6 +309,14 @@ function iste(yontem: string, yol: string, o: { token?: string; govde?: unknown;
   return new NextRequestSinifi(`http://localhost${yol}`, {
     method: yontem, headers: basliklar,
     body: o.form ?? (o.govde !== undefined ? JSON.stringify(o.govde) : undefined),
+  } as ConstructorParameters<typeof NextRequestSinifi>[1])
+}
+/** NOTYA-TEK-BEYIN: ElevenLabs'in Custom LLM isteği — sunucu sırrı başlıkta, imzalı konuşma jetonu extra body'de. */
+function sesLlmIste(r: Record<string, any>, j: { d: string; o: string; s: string; p: string | null; pe: string }, mesaj: string) {
+  return new NextRequestSinifi('http://localhost/api/asistan/ses-llm/v1/chat/completions', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${process.env.NOTYA_SES_LLM_SECRET}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ model: 'notya', stream: true, messages: [{ role: 'system', content: 'x' }, { role: 'user', content: mesaj }], elevenlabs_extra_body: { notya_jeton: r.sesJetonuImzala(j) } }),
   } as ConstructorParameters<typeof NextRequestSinifi>[1])
 }
 /** Works for both `{ params: { id } }` and `{ params: Promise<{ id }> }` handler signatures. */
@@ -623,6 +640,15 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/asistan/chat (hasta bağlamı modele gider)', red: 404,
     yazdi: (a) => modelIstekleri.some((m) => m.includes(a.hasta)),
     cagir: (r, a, h) => coz(r.asistanChat.POST(iste('POST', '/api/asistan/chat', { token: a.token, govde: { message: 'Hastanın durumu nasıl?', patientId: h.hasta, specialty: 'pediatri' } }))) },
+  // NOTYA-TEK-BEYIN: sesli Ayşe'nin Custom LLM ucu — kimlikler yalnız imzalı jetondan; jetondaki hasta ve oturum yine doktora kapsanır
+  { ad: 'POST /api/asistan/ses-llm (jetondaki hasta modele gider)',
+    yazdi: (a) => modelIstekleri.some((m) => m.includes(a.hasta)),
+    cagir: (r, a, h) => coz(r.sesLlm.POST(sesLlmIste(r, { d: a.id, o: a.asistanOturum, s: 'pediatri', p: h.hasta, pe: 'aysekaya' }, 'Hastanın durumu nasıl?'))) },
+  { ad: 'POST /api/asistan/ses-llm (jetondaki oturumun geçmişi modele gider)',
+    yazdi: (a) => modelIstekleri.some((m) => m.includes(isaret(a.harf))),
+    cagir: (r, a, h) => coz(r.sesLlm.POST(sesLlmIste(r, { d: a.id, o: h.asistanOturum, s: 'pediatri', p: null, pe: 'aysekaya' }, 'Az önce ne demiştin?'))) },
+  { ad: 'GET /api/asistan/ses-ekran (sesli turların ekran biçimi)', red: 404, okur: true,
+    cagir: (r, a, h) => coz(r.sesEkran.GET(iste('GET', `/api/asistan/ses-ekran?oturum=${h.asistanOturum}`, { token: a.token }))) },
   { ad: 'POST /api/asistan/learn (düzeltme işareti)',
     yazdi: (a) => tablo('asistan_actions').find((x) => x.id === a.asistanEylem)?.was_corrected === true,
     cagir: (r, a, h) => coz(r.asistanLearn.POST(iste('POST', '/api/asistan/learn', { token: a.token, govde: { actionId: h.asistanEylem, correctionType: 'ton', original: 'a', corrected: 'b' } }))) },
@@ -693,6 +719,9 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       intake: await ice('app/api/doktor/intake-formlari/route'),
       asistanLearn: await ice('app/api/asistan/learn/route'),
       asistanChat: await ice('app/api/asistan/chat/route'),
+      sesLlm: await ice('app/api/asistan/ses-llm/v1/chat/completions/route'),
+      sesEkran: await ice('app/api/asistan/ses-ekran/route'),
+      sesJetonuImzala: (await import('../asistan/sesJetonu')).sesJetonuImzala,
       portal: await ice('app/api/portal/hasta/[token]/route'),
       portalMesajlar: await ice('app/api/portal/hasta/[token]/mesajlar/route'),
       MCHAT_R_SORULARI: (await import('../clinical/mchatR')).MCHAT_R_SORULARI,

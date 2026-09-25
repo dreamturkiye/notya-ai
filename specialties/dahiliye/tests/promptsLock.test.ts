@@ -60,7 +60,7 @@ describe('(c) wired into the runtime call paths', () => {
     assert.ok(dahiliyeKilidi('ogrenme').includes('doz kalıpları öğrenilse bile taslağa yazılmaz'))
   })
   it('call sites use the loader (chat, hafıza/voice, SOAP routes, approve distiller)', () => {
-    assert.ok(kaynak('app/api/asistan/chat/route.ts').includes('dahiliyeKilidi("asistan")'))
+    assert.ok(kaynak('lib/asistan/ayseCevapla.ts').includes('dahiliyeKilidi("asistan")'))
     assert.ok(kaynak('app/api/doktor/hafiza/route.ts').includes("dahiliyeKilidi('ses')"))
     assert.match(kaynak('app/api/sessions/[id]/end/route.ts'), /soapNotuUret\([^\n]*\bdoktorBransi\b/) // BRANS-ALAN-SIZMASI: hastaDogumIso de geçer
     assert.match(kaynak('app/api/sessions/ses-yukle/route.ts'), /soapNotuUret\([^\n]*\bdoktorBransi\b/) // BRANS-ALAN-SIZMASI: hastaDogumIso de geçer

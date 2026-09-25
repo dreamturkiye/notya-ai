@@ -157,3 +157,63 @@ export async function aiCagir(g: AiCagriGirdisi): Promise<Anthropic.Message> {
   try { await olc(g, govde, yanit) } catch { /* ölçüm çağrıyı asla düşürmez */ }
   return yanit
 }
+
+type AkisOlayi = {
+  type?: string
+  index?: number
+  message?: { model?: string; usage?: Record<string, number | null> }
+  content_block?: { type?: string; id?: string; name?: string; text?: string }
+  delta?: { type?: string; text?: string; partial_json?: string; stop_reason?: string | null }
+  usage?: Record<string, number | null>
+}
+
+/**
+ * NOTYA-TEK-BEYIN — aiCagir'in akışlı eşi (sesli Ayşe ilk sözü model yazarken söyler). İstek gövdesi, kademe,
+ * GÖRSEL = GÜÇLÜ ve ölçüm aiCagir'le aynı; `metinParcasi` her text_delta'da çağrılır. Dönen mesaj akıştan
+ * birleştirilir (text + tool_use blokları, stop_reason, usage) — çağıran onu aiCagir yanıtıyla aynı işler.
+ */
+export async function aiAkis(g: AiCagriGirdisi & { istemci: AiIstemci }, metinParcasi: (parca: string) => void): Promise<Anthropic.Message> {
+  const govde: Record<string, unknown> = { ...istekGovdesi(g), stream: true }
+  const ham = (await g.istemci.messages.create(govde as never)) as unknown
+  // Akış yerine tam mesaj dönen istemci (test sahtesi, vekil) → metni tek parça ver, aynen işle.
+  if (!ham || typeof (ham as AsyncIterable<unknown>)[Symbol.asyncIterator] !== 'function') {
+    const tam = ham as Anthropic.Message
+    const t = yanitMetni(tam)
+    if (t) metinParcasi(t)
+    try { await olc(g, govde, tam) } catch { /* ölçüm çağrıyı asla düşürmez */ }
+    return tam
+  }
+  const akis = ham as AsyncIterable<AkisOlayi>
+  const bloklar: Record<string, unknown>[] = []
+  const jsonlar: string[] = []
+  let model = String(govde.model)
+  let usage: Record<string, number | null> = {}
+  let stopReason: string | null = null
+  for await (const o of akis) {
+    if (o.type === 'message_start') {
+      model = o.message?.model || model
+      usage = { ...(o.message?.usage || {}) }
+    } else if (o.type === 'content_block_start' && o.index !== undefined) {
+      bloklar[o.index] = { ...(o.content_block || {}) }
+      if (o.content_block?.type === 'tool_use') jsonlar[o.index] = ''
+    } else if (o.type === 'content_block_delta' && o.index !== undefined) {
+      const b = bloklar[o.index] || (bloklar[o.index] = { type: 'text', text: '' })
+      if (o.delta?.type === 'text_delta' && o.delta.text) {
+        b.text = String(b.text || '') + o.delta.text
+        metinParcasi(o.delta.text)
+      } else if (o.delta?.type === 'input_json_delta') {
+        jsonlar[o.index] = (jsonlar[o.index] || '') + String(o.delta.partial_json || '')
+      }
+    } else if (o.type === 'message_delta') {
+      stopReason = o.delta?.stop_reason ?? stopReason
+      usage = { ...usage, ...(o.usage || {}) }
+    }
+  }
+  jsonlar.forEach((j, i) => {
+    if (!bloklar[i]) return
+    try { bloklar[i].input = j ? JSON.parse(j) : {} } catch { bloklar[i].input = {} }
+  })
+  const yanit = { model, content: bloklar.filter(Boolean), stop_reason: stopReason, usage } as unknown as Anthropic.Message
+  try { await olc(g, govde, yanit) } catch { /* ölçüm çağrıyı asla düşürmez */ }
+  return yanit
+}
