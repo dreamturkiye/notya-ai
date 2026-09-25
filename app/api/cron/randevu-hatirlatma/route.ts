@@ -12,14 +12,14 @@ import { NextResponse } from 'next/server'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
 import { decrypt } from '@/lib/security/encryption'
 import { sendTwilioMessage } from '@/lib/doktor/twilioNotify'
+import { cronYetkiliMi } from '@/lib/cronYetki'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 export async function GET(req: Request) {
-  const secret = new URL(req.url).searchParams.get('secret')
-  const isCron = req.headers.get('x-vercel-cron') === '1'
-  if (!isCron && secret !== process.env.CRON_SECRET) {
+  // SEC-CRON-01: sahte x-vercel-cron başlığı yerine Vercel'in Bearer CRON_SECRET'ı (ya da elle ?secret=).
+  if (!cronYetkiliMi(req)) {
     return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 })
   }
 
