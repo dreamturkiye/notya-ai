@@ -35,6 +35,8 @@ import {
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi';
 import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
+import { ilacListeleriAyniMi, planIlacTutarsizMi } from '@/lib/doktor/receteAktarim';
+import IlacUyumKarti, { planaGoreIlacOnerisi, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
@@ -121,6 +123,7 @@ export default function NotSayfasi() {
   const [durum, setDurum] = useState<'bos' | 'kaydediyor' | 'kaydedildi' | 'hata'>('bos');
   const [degisti, setDegisti] = useState(false);
   const [aiDurum, setAiDurum] = useState<'bos' | 'bekliyor' | 'guncellendi' | 'hata'>('bos');
+  const [uyum, setUyum] = useState<IlacUyumDurumu | null>(null);
   const atlaOtomatikRef = useRef(true);
   const aiBekliyorRef = useRef(false);
 
@@ -256,13 +259,34 @@ export default function NotSayfasi() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basvuru, vital, taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan, veri?.not.id]);
 
-  const kaydetVeOnayla = async () => {
-    // NOTYA-ASI-NOT-04: boş yapılı aşı listesi + metinde aşı uygulandı ipucu → onaydan önce hatırlat.
-    // Blok değil — hekim gerekçesini bilir, son karar her zaman onun.
-    if (asilar.length === 0 && notMetninAsiIpucuVarMi([taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan])) {
-      const devam = window.confirm('Notunuzda bu muayenede bir aşı uygulandığına dair bir ifade var gibi görünüyor, ama “Bu muayenede uygulanan aşılar” listesi boş — bu liste boş kaldığı sürece aşı kartına hiçbir şey işlenmez. Yine de onaylamak istiyor musunuz?')
-      if (!devam) return
+  /** ilacOnayli: İlaç uyum kartından gelen (hekimin seçtiği) İlaçlar metni — varsa kontroller atlanır. */
+  const kaydetVeOnayla = async (ilacOnayli?: string) => {
+    if (ilacOnayli === undefined) {
+      // NOTYA-ASI-NOT-04: boş yapılı aşı listesi + metinde aşı uygulandı ipucu → onaydan önce hatırlat.
+      // Blok değil — hekim gerekçesini bilir, son karar her zaman onun.
+      if (asilar.length === 0 && notMetninAsiIpucuVarMi([taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan])) {
+        const devam = window.confirm('Notunuzda bu muayenede bir aşı uygulandığına dair bir ifade var gibi görünüyor, ama “Bu muayenede uygulanan aşılar” listesi boş — bu liste boş kaldığı sürece aşı kartına hiçbir şey işlenmez. Yine de onaylamak istiyor musunuz?')
+        if (!devam) return
+      }
+      // NOTYA-RECETE-04 (Kaan, 2026-09-25): Plan metni ile İlaçlar listesi (reçeteye/dosyaya giden TEK kaynak)
+      // ayrışmışsa Ayşe Plan'dan listeyi çıkarır, hekim kartta seçer. Listeler aynı çıkarsa kart açılmaz.
+      const mevcut = ilacMetniniCoz(ilac)
+      if (planIlacTutarsizMi(taslak.plan, mevcut)) {
+        setUyum({ tur: 'kontrol' })
+        let oneri = null
+        try {
+          oneri = await planaGoreIlacOnerisi((await ensureDoctorAccessToken()) || '', params.id, {
+            ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, hastaOzeti: ozet, ilaclar: mevcut,
+            asilar: asiSatirlari(asilar), icdKodlari: icd, receteOnerisi: recete, aiDegerlendirme: aiDeg,
+          })
+        } catch { oneri = null }
+        if (!oneri) { setUyum({ tur: 'uyari', mevcut }); return }
+        if (!ilacListeleriAyniMi(mevcut, oneri)) { setUyum({ tur: 'oneri', mevcut, oneri }); return }
+        setUyum(null)
+      }
     }
+    const ilacMetni = ilacOnayli ?? ilac
+    if (ilacOnayli !== undefined) { setIlac(ilacOnayli); setUyum(null) }
     setDurum('kaydediyor');
     try {
       const t = await ensureDoctorAccessToken();
@@ -274,7 +298,7 @@ export default function NotSayfasi() {
             vitaller: vital,
             alarmBulgulari: alarm.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean),
             hastaOzeti: ozet,
-            ilaclar: ilacMetniniCoz(ilac),
+            ilaclar: ilacMetniniCoz(ilacMetni),
             asilar: asiSatirlari(asilar),
             icdKodlari: icd,
             receteOnerisi: recete,
@@ -312,6 +336,9 @@ export default function NotSayfasi() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'transparent', color: CHROME_RENK.ink, fontFamily: 'system-ui' }}>
+      {uyum ? (
+        <IlacUyumKarti durum={uyum} onGuncelleOnayla={(m) => { void kaydetVeOnayla(m) }} onMevcutlaOnayla={() => { void kaydetVeOnayla(ilac) }} onVazgec={() => setUyum(null)} />
+      ) : null}
       <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <GeriLink
           href={notDuzenleGeriHref(hasta.patientId)}
@@ -333,7 +360,7 @@ export default function NotSayfasi() {
         </div>
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.ink, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
-        <button type="button" onClick={kaydetVeOnayla} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
+        <button type="button" onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
       </div>

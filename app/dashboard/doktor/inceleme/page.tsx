@@ -14,6 +14,8 @@ import {
   toolsErrorBox,
 } from '@/lib/doktor/toolsUi';
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme';
+import { ilacListeleriAyniMi, planIlacTutarsizMi } from '@/lib/doktor/receteAktarim';
+import IlacUyumKarti, { planaGoreIlacOnerisi, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import {
   onaySonrasiHedef, onaylananNotYolu, hastaDosyasiYolu,
   ONAYLANAN_NOTU_AC, HASTA_LISTESINE_DON, ANA_SAYFAYA_DON,
@@ -122,6 +124,7 @@ export default function IncelemePage() {
   const [vitalTaslak, setVitalTaslak] = useState<Record<string, string>>({});
   const [alarmTaslak, setAlarmTaslak] = useState('');   // satır başına bir madde
   const [ozetTaslak, setOzetTaslak] = useState('');
+  const [uyum, setUyum] = useState<{ id: string; durum: IlacUyumDurumu } | null>(null);
   const [ilacTaslak, setIlacTaslak] = useState('');   // "Ad — doz — kullanım — süre", satır başına bir ilaç
   const [icdTaslak, setIcdTaslak] = useState<IcdOner[]>([]);
   const [receteTaslak, setReceteTaslak] = useState<ReceteOner[]>([]);
@@ -318,15 +321,31 @@ export default function IncelemePage() {
    * Artık: kuyruk boşaldıysa notun kesinleşmiş haline gidilir (hasta dosyasından açılan sayfa);
    * kuyrukta iş varsa akış bölünmez ama onaylanan nota giden bağlantı ekranda kalır.
    */
-  const approve = async (id: string) => {
+  const approve = async (id: string, ilacOnayli?: string) => {
     setError('');
+    // NOTYA-RECETE-04 (Kaan, 2026-09-25): açık notta Plan ile İlaçlar listesi ayrışmışsa önce uyum kartı.
+    if (acikId === id && ilacOnayli === undefined) {
+      const mevcut = ilacMetniniCoz(ilacTaslak);
+      if (planIlacTutarsizMi(taslak.plan, mevcut)) {
+        setUyum({ id, durum: { tur: 'kontrol' } });
+        let oneri = null;
+        try {
+          oneri = await planaGoreIlacOnerisi(await getAccessTokenAsync(), id, { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, hastaOzeti: ozetTaslak, ilaclar: mevcut, icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak });
+        } catch { oneri = null; }
+        if (!oneri) { setUyum({ id, durum: { tur: 'uyari', mevcut } }); return; }
+        if (!ilacListeleriAyniMi(mevcut, oneri)) { setUyum({ id, durum: { tur: 'oneri', mevcut, oneri } }); return; }
+        setUyum(null);
+      }
+    }
+    const ilacMetni = ilacOnayli ?? ilacTaslak;
+    if (ilacOnayli !== undefined) { setIlacTaslak(ilacOnayli); setUyum(null); }
     setBusyId(id);
     try {
       const token = await getAccessTokenAsync();
       const res = await fetch(`/api/notes/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacTaslak), icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak } } : {}),
+        body: JSON.stringify(acikId === id ? { duzenlemeler: { ...taslak, basvuruYakinmasi: basvuruTaslak, vitaller: vitalTaslak, alarmBulgulari: alarmTaslak.split('\n').map((x) => x.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean), hastaOzeti: ozetTaslak, ilaclar: ilacMetniniCoz(ilacMetni), icdKodlari: icdTaslak, receteOnerisi: receteTaslak, aiDegerlendirme: aiDegTaslak } } : {}),
       });
 
       if (!res.ok) {
@@ -367,6 +386,9 @@ export default function IncelemePage() {
 
   return (
     <div style={toolsShell}>
+      {uyum ? (
+        <IlacUyumKarti durum={uyum.durum} onGuncelleOnayla={(m) => { void approve(uyum.id, m) }} onMevcutlaOnayla={() => { void approve(uyum.id, ilacTaslak) }} onVazgec={() => setUyum(null)} />
+      ) : null}
       <div style={{ maxWidth: 1000 }}>
         <div style={{ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 15, color: '#6d6055', marginBottom: 4 }}>Doktor</div>
         <h1 style={{ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 30, margin: 0, color: '#2e251d', letterSpacing: '-0.02em' }}>İnceleme Kuyruğu</h1>

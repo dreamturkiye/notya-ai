@@ -75,7 +75,7 @@ const FORM_KELIMELERI = new Set([
 ])
 
 /** Eşleştirmede kullanılacak anlamlı kelimeler (form/doz kelimeleri hariç). */
-function anlamliKelimeler(ad: string): Set<string> {
+export function anlamliKelimeler(ad: string): Set<string> {
   const out = new Set<string>()
   for (const kelime of adAnahtari(ad).split(' ')) {
     if (kelime.length < 4) continue
@@ -92,6 +92,78 @@ function ayniIlac(a: string, b: string): boolean {
   const kb = anlamliKelimeler(b)
   for (const k of ka) if (kb.has(k)) return true
   return false
+}
+
+/**
+ * NOTYA-RECETE-04 (Kaan, 2026-09-24) — canlı vaka: hekim notun serbest metin "Plan"
+ * alanındaki "1. TEDAVİ:" bölümünü elle düzenleyip "Amoksisilin ... 7 gün" yazısını
+ * "Augmentin ES ... 10 gün" ile değiştirdi, ama AYRI bir alan olan yapılandırılmış
+ * "İlaçlar" listesini (content_ilaclar — reçeteye ve hasta_ilaclar'a giden TEK kaynak)
+ * güncellemedi. Sonuç: not "Augmentin, 10 gün" okunurken, gerçek reçete "Amoksisilin, 7
+ * gün" basıyordu — farklı antibiyotik, farklı süre, hiçbir uyarı olmadan.
+ *
+ * Bu, notMetninAsiIpucuVarMi (lib/doktor/notAsilari.ts) ile aynı desendeki bir geri bildirim
+ * ağı: serbest metin planın hiçbir yerinde, yapılandırılmış listedeki hiçbir ilacın adı
+ * geçmiyorsa, ikisi muhtemelen birbirinden kopmuştur — hekime onaydan önce hatırlatılır,
+ * bloklanmaz (aslında tutarlı olabilir, kelime eşleşmesi kaba bir sezgidir).
+ */
+export function planIlacTutarsizMi(planMetni: string | null | undefined, ilaclar: { ad: string }[]): boolean {
+  const plan = String(planMetni || '').trim()
+  if (!plan || !ilaclar.length) return false
+  const planKelimeleri = anlamliKelimeler(plan)
+  if (!planKelimeleri.size) return false
+  // 2026-09-25: "hiçbiri geçmiyor" yerine "herhangi biri geçmiyor" — yalnız bir ilacın değiştiği
+  // (Amoksisilin→Augmentin, Parasetamol aynı) revizyon da yakalanır. Yanlış pozitifin bedeli yalnız
+  // Ayşe'nin bir karşılaştırması; listeler aynı çıkarsa kart hiç açılmaz (ilacListeleriAyniMi).
+  return ilaclar.some((i) => {
+    const kelimeler = anlamliKelimeler(i.ad)
+    if (!kelimeler.size) return false
+    for (const k of kelimeler) if (planKelimeleri.has(k)) return false
+    return true
+  })
+}
+
+/** Formdaki / nottaki yapılandırılmış ilaç satırı. */
+export type IlacSatiri = { ad: string; doz: string; kullanim: string; sure: string }
+
+/**
+ * NOTYA-RECETE-04 (Kaan, 2026-09-25): uyuşmazlıkta Ayşe'ye (not-konsult) giden dar istek —
+ * yalnız İlaçlar listesini Plan metninden çıkarır; sonucu hekim kartta görüp onaylar.
+ */
+export const ILAC_UYUM_ISTEK =
+  "Yalnızca İlaçlar listesini, Plan / Tedavi metninde yazan ilaçlara göre baştan çıkar: her ilaç için ad (Plan'daki ürün adıyla birebir), doz, kullanım ve süre. Plan'da olmayan bir ilacı listeye koyma, Plan'daki hiçbir ilacı atlama; Plan'da yazmayan doz veya süreyi uydurma, boş bırak. Başka hiçbir alanı değiştirme — duzenlemeler içinde yalnızca ilaclar döndür."
+
+/** Ayşe yanıtındaki duzenlemeler.ilaclar → satırlar. Nesne veya "Ad — doz — kullanım — süre" metni kabul edilir; boş/geçersiz → null. */
+export function ilacOnerisiCoz(v: unknown): IlacSatiri[] | null {
+  if (!Array.isArray(v)) return null
+  const out: IlacSatiri[] = []
+  for (const it of v) {
+    if (typeof it === 'string') {
+      const p = it.split(' — ').map((x) => x.trim())
+      if (p[0]) out.push({ ad: p[0], doz: p[1] || '', kullanim: p[2] || '', sure: p[3] || '' })
+    } else if (it && typeof it === 'object') {
+      const o = it as Record<string, unknown>
+      const ad = metin(o.ad)
+      if (ad) out.push({ ad, doz: metin(o.doz), kullanim: metin(o.kullanim), sure: metin(o.sure) })
+    }
+  }
+  return out.length ? out : null
+}
+
+function sade(v: string): string {
+  return (v || '').toLocaleLowerCase('tr-TR').replace(/,/g, '.').replace(/[^\p{L}\p{N}./]+/gu, '')
+}
+
+/** İki liste aynı tedaviyi mi anlatıyor? (aynı ilaçlar, aynı doz/kullanım/süre; yazım farkları yok sayılır) */
+export function ilacListeleriAyniMi(a: IlacSatiri[], b: IlacSatiri[]): boolean {
+  if (a.length !== b.length) return false
+  const kalan = [...b]
+  for (const x of a) {
+    const i = kalan.findIndex((y) => ayniIlac(x.ad, y.ad) && sade(x.doz) === sade(y.doz) && sade(x.kullanim) === sade(y.kullanim) && sade(x.sure) === sade(y.sure))
+    if (i < 0) return false
+    kalan.splice(i, 1)
+  }
+  return true
 }
 
 /**
