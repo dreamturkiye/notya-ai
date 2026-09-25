@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server'
 import { gununNotunaEkle } from '@/lib/doktor/gununNotunaEkle'
 import { aktifGebelikDurumu } from '@/lib/clinical/gebelikDurum'
 import { polifarmasiDegerlendir, kararDogrula, OVERRIDE_MIN, type PoliGirdi } from '@/specialties/dahiliye/engines/polifarmasi'
-import { hedefKarti, yazdirHtml, EGITIM_YAPRAKLARI, type HedefKartGirdi } from '@/specialties/dahiliye/engines/hedefKart'
+import { hedefKarti, yazdirHtml, EGITIM_YAPRAKLARI, type HedefKartGirdi, kbHedefCoz } from '@/specialties/dahiliye/engines/hedefKart'
 import { sigaraDegerlendir, BES_A, EVRE_AD, type DegisimEvresi } from '@/specialties/dahiliye/engines/sigara'
 import { vitaminDegerlendir } from '@/specialties/dahiliye/engines/vitamin'
 import { gutDegerlendir, DIYET_ONERILERI } from '@/specialties/dahiliye/engines/gut'
@@ -63,7 +63,7 @@ function hesapla(hasta: Hasta, labs: Map<string, LabSatir[]>, ilaclar: Ilac[], c
   const hb = son(labs, 'HbA1c'), ldl = son(labs, 'LDL')
   const htHedefTaslak = (c.ht?.degerlendirme as { hedef?: { hedefSbp?: number[]; hedefDbp?: number[] | null } } | null)?.hedef
   const hedefGirdi: HedefKartGirdi = {
-    kbHedef: kilitDegeri<{ sbpUst: number; dbpUst: number | null }>(c.kilitler, 'ht', 'hedef'),
+    kbHedef: kbHedefCoz(kilitDegeri<unknown>(c.kilitler, 'ht', 'hedef')),
     hba1cHedef: kilitDegeri<number>(c.kilitler, 'dm', 'hedef_hba1c') ?? (c.dm?.hedef_hba1c != null ? Number(c.dm.hedef_hba1c) : null),
     ldlHedef: kilitDegeri<number>(c.kilitler, 'kvr', 'hedef_ldl') ?? (c.lipid?.hedef_ldl != null ? Number(c.lipid.hedef_ldl) : null),
     kvrKategori: kilitDegeri<string>(c.kilitler, 'kvr', 'kategori'), ht: c.ht != null, dm: c.dm != null, statin: var_(/atorvastatin|rosuvastatin|simvastatin|pravastatin|pitavastatin|fluvastatin|lovastatin/),

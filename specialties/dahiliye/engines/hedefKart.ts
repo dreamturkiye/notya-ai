@@ -75,3 +75,20 @@ export function yazdirHtml(k: HedefKartSonuc, secili: YaprakKod[], o: { hastaAdi
   const yaprak = secili.map((kod) => { const y = EGITIM_YAPRAKLARI[kod]; return `<section class="sayfa"><h1>${kacis(y.baslik)}</h1>${y.bolumler.map((b) => `<h2>${kacis(b.baslik)}</h2><ul>${b.maddeler.map((m) => `<li>${kacis(m)}</li>`).join('')}</ul>`).join('')}<p class="alt">Bu yaprak genel bilgilendirme içindir; hekiminizin size özel önerilerinin yerine geçmez.</p></section>` }).join('')
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Sağlık hedeflerim</title><style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:0}.sayfa{padding:18mm 16mm;page-break-after:always}h1{font-size:20px;margin:0 0 8px}h2{font-size:15px;margin:14px 0 4px}table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}td,th{border:1px solid #bbb;padding:7px;text-align:left}li{margin:3px 0;font-size:14px;line-height:1.45}.alt{font-size:11px;color:#555;margin-top:16px}.ust{font-size:12px;color:#444}</style></head><body><section class="sayfa"><h1>Sağlık hedeflerim</h1><div class="ust">${kacis(o.hastaAdi)} · ${kacis(o.tarih)} · Hekim: ${kacis(o.hekimAdi)}</div><table><tr><th>Ne?</th><th>Hedefim</th><th>Son değerim</th><th>Durum</th></tr>${satir}</table><h2>Bir sonraki kontrolüme kadar</h2><ul><li>İlaçlarımı her gün, hekimimin söylediği şekilde kullanacağım.</li><li>Ev ölçümlerimi (tansiyon / şeker) yazıp kontrolüme getireceğim.</li><li>Sorularımı not edip kontrolde soracağım.</li></ul><p class="alt">Hedefler hekiminiz tarafından belirlenmiştir. Acil durumda 112.</p></section>${yaprak}</body></html>`
 }
+
+
+/**
+ * HEDEF-KARTI-KB-UNDEFINED (Kaan, 2026-09-25): HT kilidi iki biçimde yazılmış olabilir — {sbpUst, dbpUst}
+ * (Hedef kartı) ya da {sbp, dbp} (check-up raporu). Kart eskiden yalnız ilkini okuyup
+ * "Tansiyon undefined mmHg altı" yazıyor, durumu da undefined'a göre hesaplıyordu. İki biçimi de okur;
+ * geçersizse null ("Hekiminiz belirleyecek").
+ */
+export function kbHedefCoz(v: unknown): { sbpUst: number; dbpUst: number | null } | null {
+  if (!v || typeof v !== 'object') return null
+  const o = v as Record<string, unknown>
+  const sbp = Number(o.sbpUst ?? o.sbp)
+  if (!Number.isFinite(sbp) || sbp <= 0) return null
+  const dHam = o.dbpUst ?? o.dbp
+  const dbp = dHam == null || dHam === '' ? null : Number(dHam)
+  return { sbpUst: sbp, dbpUst: dbp != null && Number.isFinite(dbp) && dbp > 0 ? dbp : null }
+}
