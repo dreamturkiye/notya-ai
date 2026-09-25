@@ -403,6 +403,9 @@ function AsistanPageInner() {
                 body: JSON.stringify({ isim: params?.isim || "" }),
               })
               const j = await r.json()
+              // NOTYA-BETA-0925: kimlik / iletişim değerleri (anne-baba adı, telefon…) yalnız ekrana yazılır;
+              // ajana dönen `sonuc` bu değerleri taşımaz.
+              if (j.ekran) addMsg("ai", String(j.ekran))
               return String(j.sonuc || "Dosyaya şu an ulaşamadım.")
             } catch {
               return "Dosyaya şu an ulaşamadım, bağlantı sorunu olabilir."

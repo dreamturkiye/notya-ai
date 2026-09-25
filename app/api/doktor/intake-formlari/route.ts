@@ -10,6 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes, createHash } from 'crypto'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
+import { bransAnahtari } from '@/lib/specialties/kapsam'
+import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +57,22 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamad\u0131.' }, { status: 404 })
 
+  // HASTA-IZOLASYON-01: randevuId de g\u00f6vdeden gelir \u2014 yaln\u0131z bu doktorun, bu hastaya ait randevusu ba\u011flan\u0131r.
+  let bagliRandevu: string | null = null
+  if (randevuId) {
+    const { data: rv } = await supabase.from('randevular').select('id')
+      .eq('id', randevuId).eq('doktor_id', doktorId).eq('patient_id', patientId).maybeSingle()
+    bagliRandevu = rv?.id ?? null
+  }
+  // NOTYA-BETA-0925: bran\u015f verilmezse (randevu penceresi, sekreter) prati\u011fin hekiminin bran\u015f\u0131 \u2014 pediatri hastas\u0131
+  // genel form de\u011fil pediatri formu als\u0131n (HastaIntake varsay\u0131lan\u0131yla ayn\u0131 karar).
+  let formBransi = brans || ''
+  if (!formBransi) {
+    const { data: hekim } = await supabase.from('users').select('specialty').eq('id', doktorId).maybeSingle()
+    const k = bransAnahtari((hekim as { specialty?: string } | null)?.specialty)
+    formBransi = k && Object.prototype.hasOwnProperty.call(BRANS_ETIKETLERI, k) ? k : 'genel'
+  }
+
   const token = randomBytes(24).toString('hex')
   const tokenHash = createHash('sha256').update(token).digest('hex')
   const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 g\u00fcn
@@ -64,8 +82,8 @@ export async function POST(req: NextRequest) {
     .insert({
       doktor_id: doktorId,
       patient_id: patientId,
-      randevu_id: randevuId || null,
-      brans: brans || 'genel',
+      randevu_id: bagliRandevu,
+      brans: formBransi,
       gonderim_kanali: kanal || 'elden',
       token_hash: tokenHash,
       token_expires_at: expiresAt,

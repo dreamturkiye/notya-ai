@@ -14,7 +14,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/security/encryption'
 import { yasHesapla } from '@/lib/doktor/yas'
 import { cinsiyetTr } from '@/lib/utils/cinsiyet'
-import { formAlanlariniTara, dosyaAlanOzeti } from '@/lib/doktor/dosyaAlanTara'
+import { formAlanlariniTara, dosyaAlanOzeti, MODELE_GITMEYEN_KIMLIK } from '@/lib/doktor/dosyaAlanTara'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
 import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
@@ -24,6 +24,21 @@ import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } fro
 function coz(v: string | null | undefined): string {
   if (!v) return ''
   try { return decrypt(v) } catch { return '' }
+}
+
+/**
+ * NOTYA-BETA-0925: patients.notes_encrypted bir JSON kaydıdır (hasta kartı + form aktarımı: kan grubu, kronik,
+ * alerji… ama AYNI ZAMANDA anne / baba adı, şehir). Eskiden tamamı "Doktor notu" olarak modele gidiyordu — kimlik
+ * anahtarları atılır; düz metin not (eski kayıtlar) aynen kalır.
+ */
+const NOT_KIMLIK_ANAHTARLARI = new Set(['anneAdi', 'babaAdi', 'dogumYeri', 'sehir', 'adres', 'telefon', 'eposta', 'anneId', 'anneGebelikId'])
+function modeleGidenNot(ham: string): string {
+  if (!ham.trim().startsWith('{')) return ham
+  try {
+    const o = JSON.parse(ham) as Record<string, unknown>
+    const kalan = Object.fromEntries(Object.entries(o).filter(([k, v]) => !NOT_KIMLIK_ANAHTARLARI.has(k) && v != null && v !== '' && !(Array.isArray(v) && !v.length)))
+    return Object.keys(kalan).length ? JSON.stringify(kalan) : ''
+  } catch { return ham }
 }
 
 function trTarih(d: string | null | undefined): string {
@@ -73,7 +88,7 @@ export async function hastaDosyaPaketiniDerle(
   const b: string[] = []
   const dogum = coz(hasta.dob_encrypted)
   const cinsiyet = cinsiyetTr(coz(hasta.gender_encrypted))
-  const doktorNotu = coz(hasta.notes_encrypted)
+  const doktorNotu = modeleGidenNot(coz(hasta.notes_encrypted))
 
   const brans = bransAnahtari((hekimQ.data as { specialty?: string } | null)?.specialty)
   const pediatrik = pediatrikBaglamMi({ doktorBransi: brans, hastaDogumIso: dogum || null })
@@ -98,7 +113,9 @@ export async function hastaDosyaPaketiniDerle(
     try {
       if (!yanitlar) throw new Error('intake çözülemedi')
       // VELI-YASAL-ONAM: veli / yasal temsilcinin kimlik + iletişim bilgisi de modele gitmez (yakınlık gider: "anne beyanı")
-      const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi'])
+      // NOTYA-BETA-0925: anne / baba adı ve doğum yeri de kimliktir — modele gitmez; doktor sorarsa sunucu cevaplar
+      // (lib/doktor/kimlikSorusu.ts, değer model bağlamına hiç girmez).
+      const gizli = new Set(['tcKimlik', 'ad', 'soyad', 'telefon', 'eposta', 'adres', 'acilKisiAdi', 'acilKisiTelefon', 'acilKisiYakinlik', 'policeNo', 'kurumAdi', 'veliAd', 'veliSoyad', 'veliTelefon', 'veliDigerAdSoyad', 'veliKimlikTeyidi', ...MODELE_GITMEYEN_KIMLIK])
       for (const [k, v] of Object.entries(yanitlar)) {
         if (gizli.has(k) || v == null || v === '') continue
         const deger = Array.isArray(v) ? v.join(', ') : String(v)
@@ -228,7 +245,7 @@ export async function hastaDosyaPaketiniDerle(
     const idx = b.findIndex((s) => s.startsWith('- Doğum tarihi:'))
     if (idx >= 0) b[idx] = kimlikDobSatiri(dosyadanDob.deger, `dosyadan, “${dosyadanDob.alinti}”`)
   }
-  const ozet = dosyaAlanOzeti(taranan)
+  const ozet = dosyaAlanOzeti(taranan.filter((x) => !MODELE_GITMEYEN_KIMLIK.has(x.id)))
   if (ozet) b.push(ozet)
 
   const kart = kartKur({

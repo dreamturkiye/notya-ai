@@ -23,6 +23,8 @@ import { trAramaNormalize, trIcerir } from '@/lib/utils/turkceArama';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import RandevuMesaji from '@/components/doktor/iletisim/RandevuMesaji';
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar';
+import GonderDugmesi from '@/components/doktor/iletisim/GonderDugmesi';
+import { cepTelefonuDogrula, TELEFON_MESAJ } from '@/lib/iletisim/cepTelefonu';
 
 export const dynamic = 'force-dynamic';
 
@@ -193,6 +195,17 @@ export default function RandevularPage() {
   const [serbestTelefon, setSerbestTelefon] = useState('');
   const [serbestEmail, setSerbestEmail] = useState('');
 
+  // NOTYA-BETA-0925: kayıtlı hastanın cep telefonu (hasta kaydından dolar, kayıtlı değilse zorunlu) + WhatsApp izni.
+  const [hastaTelefon, setHastaTelefon] = useState('');
+  const [kayitliTelefon, setKayitliTelefon] = useState<string | null>(null); // null = henüz okunmadı
+  const [whatsappIzniVar, setWhatsappIzniVar] = useState(false);
+  const [whatsappKabul, setWhatsappKabul] = useState(false);
+  const [telefonHata, setTelefonHata] = useState('');
+  /** Kayıttan sonra tek, sakin soru: Hasta Bilgi Formu WhatsApp'tan gitsin mi? */
+  const [formSorusu, setFormSorusu] = useState<{ patientId: string; randevuId: string | null; ad: string } | null>(null);
+  const [formLinki, setFormLinki] = useState<string | null>(null);
+  const [formLinkiHazirlaniyor, setFormLinkiHazirlaniyor] = useState(false);
+  const [formLinkiHata, setFormLinkiHata] = useState('');
   const [kaydediliyor, setKaydediyor] = useState(false);
   const [iptalId, setIptalId] = useState<string | null>(null);
   const [iptalNedeni, setIptalNedeni] = useState('');
@@ -429,6 +442,72 @@ export default function RandevularPage() {
 
   useEffect(() => { setAktifSonucIdx(0); }, [hastaArama]);
 
+  // NOTYA-BETA-0925: seçilen kayıtlı hastanın telefonu ve WhatsApp izni (doktor da sekreter de okuyabilir —
+  // /api/doktor/iletisim/izin, sahiplik sunucuda).
+  const seciliHastaId = formAcik ? seciliHasta?.id ?? null : null;
+  useEffect(() => {
+    setTelefonHata('');
+    setWhatsappKabul(false);
+    setWhatsappIzniVar(false);
+    setKayitliTelefon(null);
+    setHastaTelefon('');
+    if (!seciliHastaId) return;
+    let iptal = false;
+    (async () => {
+      try {
+        const t = await token();
+        if (!t) return;
+        const r = await fetch(`/api/doktor/iletisim/izin?patientId=${encodeURIComponent(seciliHastaId)}`, { headers: { Authorization: `Bearer ${t}` } });
+        const d = await r.json().catch(() => ({}));
+        if (iptal || !r.ok) return;
+        const tel = String(d.telefon || '');
+        setKayitliTelefon(tel);
+        setHastaTelefon((mevcut) => mevcut || tel);
+        setWhatsappIzniVar(d.whatsapp === true);
+      } catch { if (!iptal) setKayitliTelefon(''); }
+    })();
+    return () => { iptal = true; };
+  }, [seciliHastaId, token]);
+
+  async function formLinkiHazirla() {
+    if (!formSorusu) return;
+    setFormLinkiHazirlaniyor(true);
+    setFormLinkiHata('');
+    try {
+      const t = await token();
+      if (!t) { setFormLinkiHata('Oturum bulunamadı. Lütfen tekrar giriş yapın.'); return; }
+      const r = await fetch('/api/doktor/intake-formlari', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patientId: formSorusu.patientId, randevuId: formSorusu.randevuId, kanal: 'whatsapp' }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.link) { setFormLinkiHata(d.error || 'Form bağlantısı hazırlanamadı.'); return; }
+      setFormLinki(String(d.link));
+    } catch {
+      setFormLinkiHata('Form bağlantısı hazırlanamadı. Bağlantınızı kontrol edin.');
+    } finally {
+      setFormLinkiHazirlaniyor(false);
+    }
+  }
+
+  function formSorusunuKapat() {
+    setFormSorusu(null);
+    setFormLinki(null);
+    setFormLinkiHata('');
+  }
+
+  /** Hasta formu zaten doldurduysa soru sorulmaz. */
+  async function formDolduMu(patientId: string): Promise<boolean> {
+    try {
+      const t = await token();
+      if (!t) return false;
+      const r = await fetch(`/api/doktor/intake-formlari?patientId=${encodeURIComponent(patientId)}`, { headers: { Authorization: `Bearer ${t}` } });
+      const d = await r.json().catch(() => ({}));
+      return (d.formlar || []).some((f: { durum?: string }) => f.durum === 'dolduruldu' || f.durum === 'incelendi');
+    } catch { return false; }
+  }
+
   /** Listeden hasta seçmek: randevu gerçek patient_id'ye bağlanır, serbest metin yolu kapanır. */
   function hastaSec(h: HastaAramaSonucu) {
     setSeciliHasta(h);
@@ -523,6 +602,23 @@ export default function RandevularPage() {
       setHata('E-posta adresi geçersiz görünüyor.');
       return;
     }
+    // NOTYA-BETA-0925 (Dr. Gökhan): cep telefonu — hastanın kayıtlı telefonu yoksa zorunlu; yazıldıysa geçerli olmalı
+    // (Türk cep numarası ya da + ile yurt dışı numarası). Sunucu aynı kuralla yeniden denetler.
+    setTelefonHata('');
+    const telefonGirdisi = (seciliHasta ? hastaTelefon : serbestTelefon).trim();
+    const telefonZorunlu = seciliHasta ? !kayitliTelefon : true;
+    let telefonDegeri: string | null = null;
+    if (telefonGirdisi) {
+      const t = cepTelefonuDogrula(telefonGirdisi);
+      if (!t.ok) { setTelefonHata(t.hata); setHata(t.hata); return; }
+      telefonDegeri = t.deger;
+    } else if (telefonZorunlu && (!seciliHasta || kayitliTelefon !== null)) {
+      const m = seciliHasta ? 'Hastanın kayıtlı cep telefonu yok. Lütfen cep telefonunu yazın.' : TELEFON_MESAJ.bos;
+      setTelefonHata(m); setHata(m); return;
+    }
+    const kayitliNormal = kayitliTelefon ? (cepTelefonuDogrula(kayitliTelefon) as { deger?: string }).deger || kayitliTelefon : '';
+    const telefonDegisti = !!seciliHasta && !!telefonDegeri && telefonDegeri !== kayitliNormal;
+    const izinVerildi = !!seciliHasta && whatsappKabul && !whatsappIzniVar;
     setKaydediyor(true);
     setHata('');
     setBasariMesaji('');
@@ -537,7 +633,9 @@ export default function RandevularPage() {
       const govde = {
         patientId: seciliHasta?.id || null,
         hastaAdiSerbest: seciliHasta ? null : serbestAd.trim(),
-        hastaTelefonSerbest: seciliHasta ? null : serbestTelefon.trim(),
+        hastaTelefonSerbest: seciliHasta ? null : telefonDegeri || '',
+        ...(telefonDegisti ? { hastaTelefon: telefonDegeri } : {}),
+        ...(izinVerildi ? { whatsappIzni: true } : {}),
         hastaEmailSerbest: seciliHasta ? null : serbestEmail.trim(),
         baslangic: baslangicTarihi.toISOString(),
         bitis: bitisTarihi.toISOString(),
@@ -553,14 +651,23 @@ export default function RandevularPage() {
         headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(govde),
       });
+      const j = await r.json().catch(() => ({}));
       if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
         setHata(j.error || 'Randevu kaydedilemedi.');
         return;
       }
+      // Kayıttan sonra tek soru: yeni randevuda ya da telefon / izin yeni girildiyse, hasta formu henüz doldurmadıysa.
+      const soruHastasi = seciliHasta && (!duzenlenenId || telefonDegisti || izinVerildi)
+        ? { patientId: seciliHasta.id, randevuId: (j.randevu?.id as string | undefined) || duzenlenenId, ad: seciliHasta.name }
+        : null;
       formuSifirla();
       setFormAcik(false);
       await yenile();
+      if (soruHastasi && !(await formDolduMu(soruHastasi.patientId))) {
+        setFormLinki(null);
+        setFormLinkiHata('');
+        setFormSorusu(soruHastasi);
+      }
     } catch {
       setHata('Randevu kaydedilemedi. Bağlantınızı kontrol edin.');
     } finally {
@@ -1425,13 +1532,68 @@ export default function RandevularPage() {
                     <input className="ni-input" value={serbestAd} onChange={(e) => setSerbestAd(e.target.value)} placeholder="Ad Soyad" />
                   </div>
                   <div className="ni-field">
-                    <label className="ni-label">Telefon</label>
-                    <input className="ni-input" value={serbestTelefon} onChange={(e) => setSerbestTelefon(e.target.value)} placeholder="05xx xxx xx xx" />
+                    <label className="ni-label" htmlFor="randevu-serbest-telefon">Cep telefonu *</label>
+                    <input
+                      id="randevu-serbest-telefon"
+                      className="ni-input"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={serbestTelefon}
+                      onChange={(e) => { setSerbestTelefon(e.target.value); setTelefonHata(''); }}
+                      placeholder="0532 123 45 67"
+                      aria-invalid={telefonHata ? true : undefined}
+                    />
+                    {telefonHata && <div className="ni-error" style={{ marginTop: 6 }}>{telefonHata}</div>}
                   </div>
                   <div className="ni-field">
                     <label className="ni-label">E-posta <span style={{ color: CHROME_RENK.muted, fontWeight: 400 }}>(isteğe bağlı — portal daveti için)</span></label>
                     <input className="ni-input" type="email" value={serbestEmail} onChange={(e) => setSerbestEmail(e.target.value)} placeholder="ornek@eposta.com" />
                   </div>
+                </div>
+              )}
+
+              {/* NOTYA-BETA-0925 (Dr. Gökhan): kayıtlı hastanın cep telefonu — kayıttan dolar, yoksa zorunlu; hasta
+                  kaydına yazılır. Tek kutu: WhatsApp'tan randevu ve form mesajı izni (doktor ve sekreter). */}
+              {seciliHasta && (
+                <div className="ni-field">
+                  <label className="ni-label" htmlFor="randevu-cep-telefonu">
+                    Cep telefonu{kayitliTelefon === '' ? ' *' : ''}
+                  </label>
+                  <input
+                    id="randevu-cep-telefonu"
+                    className="ni-input"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={hastaTelefon}
+                    onChange={(e) => { setHastaTelefon(e.target.value); setTelefonHata(''); }}
+                    placeholder={kayitliTelefon === null ? 'Yükleniyor…' : '0532 123 45 67'}
+                    aria-invalid={telefonHata ? true : undefined}
+                    aria-describedby="randevu-cep-telefonu-ipucu"
+                  />
+                  {telefonHata
+                    ? <div className="ni-error" style={{ marginTop: 6 }}>{telefonHata}</div>
+                    : (
+                      <p className="ni-hint" id="randevu-cep-telefonu-ipucu">
+                        {kayitliTelefon === ''
+                          ? 'Hastanın kayıtlı telefonu yok — randevu için gerekli, hasta kaydına da yazılır. Yurt dışı numarası için + ile başlayın.'
+                          : 'Hasta kaydındaki numara. Değiştirirseniz hasta kaydı da güncellenir.'}
+                      </p>
+                    )}
+                  {whatsappIzniVar ? (
+                    <p className="ni-hint" style={{ color: CHROME_RENK.pine, fontWeight: 600 }}>✓ WhatsApp mesaj izni kayıtlı.</p>
+                  ) : (
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10, fontSize: 14, lineHeight: 1.45, color: CHROME_RENK.ink, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={whatsappKabul}
+                        onChange={(e) => setWhatsappKabul(e.target.checked)}
+                        style={{ width: 20, height: 20, marginTop: 1, flexShrink: 0, accentColor: CHROME_RENK.pine }}
+                      />
+                      Hasta, randevu ve form mesajlarını WhatsApp&apos;tan almayı kabul etti
+                    </label>
+                  )}
                 </div>
               )}
 
@@ -1535,6 +1697,59 @@ export default function RandevularPage() {
                 >Vazgeç</button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* NOTYA-BETA-0925: kayıttan sonra tek, sakin soru — Hasta Bilgi Formu WhatsApp'tan gitsin mi? Gönderim
+            her zamanki tek düğmeyle (GonderDugmesi, tür bilgi_formu), bu cihazın kendi WhatsApp'ından. */}
+        {formSorusu && !formAcik && (
+          <div
+            role="dialog"
+            aria-label="Hasta Bilgi Formu"
+            style={{ position: 'fixed', left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', padding: '0 12px 16px', zIndex: 190, pointerEvents: 'none' }}
+          >
+            <div style={{ pointerEvents: 'auto', width: '100%', maxWidth: 480, background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 18, padding: 16, boxShadow: '0 8px 28px rgba(47,67,52,0.18)', color: CHROME_RENK.ink }}>
+              {!formLinki ? (
+                <>
+                  <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Randevu kaydedildi.</div>
+                  <div style={{ fontSize: 15, lineHeight: 1.5, marginBottom: 12 }}>
+                    Hasta Bilgi Formu’nu WhatsApp’tan gönderelim mi?
+                    <span style={{ display: 'block', fontSize: 13, color: CHROME_RENK.muted, marginTop: 2 }}>{formSorusu.ad}</span>
+                  </div>
+                  {formLinkiHata && <div className="ni-error" style={{ marginBottom: 10 }}>{formLinkiHata}</div>}
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => void formLinkiHazirla()}
+                      disabled={formLinkiHazirlaniyor}
+                      style={{ flex: 1, minHeight: 48, borderRadius: 14, border: 'none', background: CHROME_RENK.pine, color: CHROME_RENK.paper, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {formLinkiHazirlaniyor ? 'Hazırlanıyor…' : 'Evet, gönder'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={formSorusunuKapat}
+                      style={{ flex: 1, minHeight: 48, borderRadius: 14, border: `1px solid ${CHROME_RENK.border}`, background: CHROME_RENK.paper, color: CHROME_RENK.ink, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Şimdi değil
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <GonderDugmesi
+                    acikBaslat
+                    tur="bilgi_formu"
+                    patientId={formSorusu.patientId}
+                    link={formLinki}
+                    onGonderildi={() => setTimeout(formSorusunuKapat, 1500)}
+                  />
+                  <div style={{ textAlign: 'center', marginTop: 8 }}>
+                    <button type="button" onClick={formSorusunuKapat} style={{ background: 'none', border: 'none', color: CHROME_RENK.muted, fontSize: 14, cursor: 'pointer', padding: 6 }}>Kapat</button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>

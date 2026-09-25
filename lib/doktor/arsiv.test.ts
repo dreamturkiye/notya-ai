@@ -42,6 +42,7 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'lib/doktor/receteAktarim.ts': { adet: 1, neden: 'approval path: the note being approved, by id → hasta_ilaclar' },
   'lib/doktor/hastaSahipligi.ts': { adet: 1, neden: 'ownership check of a session id' },
   'lib/vault/service.ts': { adet: 1, neden: 'ownership check of a visit id before filing a document' },
+  'lib/doktor/soapYeniden.ts': { adet: 2, neden: 'status bookkeeping only (NOTYA-BETA-0925): stuck `processing` sessions → failed; must see archived notes too so a session that has a note is never marked failed. Nothing reaches a screen or the model' },
 }
 
 /**

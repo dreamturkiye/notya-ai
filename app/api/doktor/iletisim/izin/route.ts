@@ -1,7 +1,7 @@
 /**
  * NOTYA-ILETISIM-01 — patient contact consent (KVKK açık rıza, randevu + bilgilendirme messages).
  *
- * GET  ?patientId → { whatsapp, eposta, guncelleme, kaydedilebilir } (null = unknown)
+ * GET  ?patientId → { whatsapp, eposta, guncelleme, kaydedilebilir, telefon } (null = unknown)
  * POST { patientId, kanal, izin: boolean, kaynak: 'hasta_profili' | 'gonder_dugmesi' } → sets the current value on
  *      patients and appends a history row (who: the logged-in user + personel row, when: now).
  *
@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { kanalMi } from '@/lib/iletisim/tipler'
+import { decrypt } from '@/lib/security/encryption'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,16 +26,23 @@ export async function GET(req: NextRequest) {
   const { supabase, doktorId } = oturum
   const patientId = req.nextUrl.searchParams.get('patientId')
   if (!(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
+  // NOTYA-BETA-0925: randevu penceresi "Cep telefonu"nu hasta kaydından doldurur (sekreter de) — yalnız bu
+  // pratiğin hastası (hastaSahibiMi yukarıda), şifre sunucuda çözülür.
+  const { data: tel } = await supabase.from('patients')
+    .select('phone_encrypted').eq('id', String(patientId)).eq('doctor_id', doktorId).maybeSingle()
+  let telefon = ''
+  try { telefon = tel?.phone_encrypted ? decrypt(String(tel.phone_encrypted)) : '' } catch { telefon = '' }
   const { data, error } = await supabase.from('patients')
     .select('iletisim_izni_whatsapp, iletisim_izni_eposta, iletisim_izni_guncelleme')
     .eq('id', String(patientId)).eq('doctor_id', doktorId).maybeSingle()
-  if (error) return NextResponse.json({ whatsapp: null, eposta: null, guncelleme: null, kaydedilebilir: false })
+  if (error) return NextResponse.json({ whatsapp: null, eposta: null, guncelleme: null, kaydedilebilir: false, telefon })
   const deger = (v: unknown) => (typeof v === 'boolean' ? v : null)
   return NextResponse.json({
     whatsapp: deger(data?.iletisim_izni_whatsapp),
     eposta: deger(data?.iletisim_izni_eposta),
     guncelleme: data?.iletisim_izni_guncelleme ?? null,
     kaydedilebilir: true,
+    telefon,
   })
 }
 

@@ -16,6 +16,7 @@ import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { cozumKonus, hastaninSozunuCoz } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyaPaketiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
 import { dosyaSoruCevap } from "@/lib/doktor/hastaDosyaKart"
+import { kimlikSorusunuCevapla, type KimlikCevabi } from "@/lib/doktor/kimlikSorusu"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPatientData, extractPrescriptionData } from "@/lib/asistan/intentParser"
 import { executeAction, eskiEylemKarari, type ActionResult } from "@/lib/asistan/actionExecutor"
@@ -163,6 +164,49 @@ ${ilacBaglamMetni(drugs[0])}`
     let cozulenHasta: { id: string; ad: string } | null = null
     let kesinDosyaCevap: string | null = null
     let aramaCevabi: string | null = null
+    // NOTYA-BETA-0925: kimlik / iletişim sorusu (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri/tarihi)
+    // sunucuda, modelsiz cevaplanır. Değerler yalnız bu yanıtın ekran metnindedir; saklanan geçmişe (sonraki
+    // turlarda modele giden) değersiz metin yazılır — VELI-YASAL-ONAM kuralı korunur.
+    let kimlikCevabi: KimlikCevabi | null = null
+    if (!kayitNiyetiMi(String(message || ""))) {
+      try {
+        kimlikCevabi = await kimlikSorusunuCevapla(getSupabase(), user.id, String(message || ""), contextPatientId ? String(contextPatientId) : null)
+      } catch (e) { console.error("[asistan/chat] kimlik cevabı", e instanceof Error ? e.message : String(e)) }
+    }
+    if (kimlikCevabi) {
+      const kimlikHastasi = kimlikCevabi.hasta
+      await getSupabase().from("asistan_sessions").update({
+        messages: [
+          ...messages,
+          { role: "user", content: message },
+          { role: "assistant", content: kimlikCevabi.model },
+        ].slice(-SOHBET_SAKLANAN_MESAJ),
+        ...(kimlikHastasi ? {
+          patient_id: kimlikHastasi.id,
+          active_context: {
+            ...(asistanSession?.active_context as Record<string, unknown> || {}),
+            currentPatientId: kimlikHastasi.id,
+            patientName: kimlikHastasi.ad,
+          },
+        } : {}),
+      }).eq("id", asistanSession?.id)
+      return NextResponse.json({
+        success: true,
+        data: {
+          eylemOnerileri: [],
+          eylemYonlendirme: null,
+          eylemHastasi: null,
+          speech: kimlikCevabi.ekran,
+          proactiveWarning: null,
+          action: null,
+          actionResult: null,
+          asistanSessionId: asistanSession?.id,
+          aktifHasta: kimlikHastasi?.ad || null,
+          personaId,
+          personaName: persona.name,
+        },
+      })
+    }
     try {
       const cozum = await hastaninSozunuCoz(getSupabase(), user.id, message)
       const konus = cozumKonus(cozum)

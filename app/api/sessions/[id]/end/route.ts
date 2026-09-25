@@ -9,6 +9,7 @@ import { modelSec } from "@/lib/ai/modeller"
 import { hekimAdi, hekimBransi } from '@/lib/doktor/hekimAdi'
 import { seansSahibi } from '@/lib/doktor/hastaSahipligi'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
+import { seansiBasarisizIsaretle, soapHataKodu, soapHataLogMetni, soapUretYeniden, takiliSeanslariKapat } from '@/lib/doktor/soapYeniden'
 
 // AUDIT-2026-09-03: not üretimi (dosya bağlamı + Sonnet) varsayılan fonksiyon süresini
 // aşıyordu — Dr. Gökhan canlı betada 504 aldı. Ses-yükleme rotasıyla aynı sınır.
@@ -22,6 +23,9 @@ const getSupabase = () => createClient(
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const baslangicMs = Date.now()
+  // NOTYA-BETA-0925: hata yakalandığında seansı failed işaretleyebilmek için (yalnız sahiplik doğrulandıktan sonra dolar).
+  let isaretlenecek: { doktorId: string; sessionId: string } | null = null
   try {
     const authHeader = req.headers.get("Authorization")
     if (!authHeader?.startsWith("Bearer ")) {
@@ -53,6 +57,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!seans) {
       return NextResponse.json({ success: false, error: "Seans bulunamadı" }, { status: 404 })
     }
+    isaretlenecek = { doktorId: user.id, sessionId }
+
+    // NOTYA-BETA-0925 (e): bu doktorun `processing`'de takılı kalmış eski seansları (not yok, 15 dk'dan eski) failed
+    // olur — ör. 2026-09-25 19:45'te 500 alıp işaretlenmeden kalan seans. Kritik değil: hata bitişi engellemez.
+    try {
+      const kapanan = await takiliSeanslariKapat(getSupabase(), user.id, sessionId)
+      if (kapanan.length) console.warn(`[sessions/end] takılı seans failed işaretlendi: ${kapanan.join(', ')}`)
+    } catch (e) { console.error(`[sessions/end] takılı seans taraması: ${soapHataLogMetni(e)}`) }
 
     // Build transcript from segments or use raw text
     const transcript = segments
@@ -62,6 +74,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Update session as processing
     await getSupabase().from("sessions").update({
       status: "processing",
+      // Önceki başarısız denemenin kodu (aynı seans yeniden bitiriliyorsa) temizlenir.
+      error_message: null,
       ended_at: new Date().toISOString(),
       transcript_cleaned: transcript,
       duration_seconds: body.duration_seconds || 0,
@@ -162,7 +176,10 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 
     // NOTYA-KOTA-01: not üretimi günlük kotaya tabi
     const kota = await aiKotaKullan(getSupabase(), user.id, 'soap')
-    if (!kota.izin) return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
+    if (!kota.izin) {
+      await seansiBasarisizIsaretle(getSupabase(), user.id, sessionId, 'KotaAsimi status=429')
+      return NextResponse.json({ error: KOTA_MESAJI }, { status: 429 })
+    }
 
     // NOTYA-SOAP-02: dünya standardı üretici — Ayşe Kaya personası + gürültü filtresi +
     // SGK doğrulamalı reçete önerisi + onaylı notlardan stil öğrenmesi, tek modülde
@@ -227,7 +244,12 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       : {}
     // NOTYA-CEK-DOGRULA-02: not sayfası / onay ile aynı tek kaynak — hastanın tarama kayıtları ve dosyası dahil.
     const cekVeri = await cekListeVerisiYukle(getSupabase(), { doktorId: user.id, patientId: hastaId, seansBransi: specialty, doktorBransi, hastaDogumIso: dogumIso, referansIso: gecmisTarihIso || new Date().toISOString() })
-    const noteData = await soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) })
+    // NOTYA-BETA-0925 (a): geçici hatada (bozuk JSON, overloaded / 5xx / 529, ağ, zaman aşımı) bir kez daha — yalnız
+    // maxDuration içinde yeterli pay kaldıysa (lib/doktor/soapYeniden.ts).
+    const { sonuc: noteData } = await soapUretYeniden(
+      () => soapNotuUret(getAnthropic(), { transcript, specialty, klinikBaglam, stilOrnekleri, stilProfili, doktorAdi, doktorBransi, hastaDogumIso: dogumIso, doctorId: user.id, cekListeBlogu: cekListePromptBlogu(cekVeri.maddeler, isaretler) }),
+      { baslangicMs, sureSiniriMs: maxDuration * 1000, uyar: (satir) => console.warn(satir) },
+    )
     // NOTYA-ASI-NOT-01: yalnız bu vizitte uygulandığı söylenen aşılar, vizit tarihiyle; söylenmeyen doz karttan hesaplanır.
     let notAsilari: unknown[] = []
     try {
@@ -304,7 +326,14 @@ SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     return NextResponse.json({ success: true, data: { session_id: sessionId, note_id: note.id, note, cekListeDogrulama } })
 
   } catch (error: unknown) {
-    console.error("[sessions/end]", error)
+    // NOTYA-BETA-0925 (c): hata kendi tek satırında — Vercel logunda nesne dökümü yerine okunur metin.
+    const kod = soapHataKodu(error)
+    console.error(`[sessions/end] not üretilemedi: ${kod} — ${soapHataLogMetni(error)}`)
+    // (b) seans processing'de takılı kalmasın: failed + kısa, temizlenmiş kod (model çıktısı / transkript yok).
+    if (isaretlenecek) {
+      try { await seansiBasarisizIsaretle(getSupabase(), isaretlenecek.doktorId, isaretlenecek.sessionId, kod) }
+      catch (e) { console.error(`[sessions/end] seans failed işaretlenemedi: ${soapHataLogMetni(e)}`) }
+    }
     await kritikAlarm('SOAP uretim hatasi (sessions/end)', error instanceof Error ? error.message : String(error))
     // NOTYA-SEANS-05: ham API hataları (özellikle Anthropic kredi/limit JSON'u) doktora
     // asla gösterilmez — loglanır, kullanıcıya Türkçe ve eyleme dönük mesaj gider.

@@ -170,6 +170,32 @@ export function formAlanlariniTara(metin: string, sec: TaraSecenek = {}): DosyaA
   return cikti
 }
 
+/**
+ * NOTYA-BETA-0925 — kimlik satırları (anne / baba adı, doğum yeri). formAlanlariniTara bunları bulur ama
+ * hastaDosyaDerleyici modele VERMEZ (VELI-YASAL-ONAM); yalnız sunucudaki kimlik cevabı okur (lib/doktor/kimlikSorusu).
+ */
+export const MODELE_GITMEYEN_KIMLIK = new Set(['anneAdi', 'babaAdi', 'dogumYeri'])
+const KIMLIK_ETIKETI: Record<string, string> = { anneAdi: 'Anne adı', babaAdi: 'Baba adı', dogumYeri: 'Doğum yeri' }
+
+/** Belge / not metninden kimlik satırları + etiketli doğum tarihi — yalnız sunucu tarafındaki kimlik cevabı için. */
+export function kimlikAlanlariniTara(metin: string): DosyaAlanBulgu[] {
+  const ham = String(metin || '')
+  if (!ham.trim()) return []
+  const cikti: DosyaAlanBulgu[] = []
+  const d = dogumTarihiTara(ham)
+  if (d) cikti.push(d)
+  for (const id of MODELE_GITMEYEN_KIMLIK) {
+    const liste = [...(EK_ETIKET[id] || [])].sort((a, b) => b.length - a.length)
+    for (const et of liste) {
+      const bulundu = satirDeger(ham, et)
+      if (!bulundu) continue
+      cikti.push({ id, etiket: KIMLIK_ETIKETI[id] || id, deger: bulundu.deger, alinti: bulundu.alinti })
+      break
+    }
+  }
+  return cikti
+}
+
 export function dosyaAlanOzeti(bulgular: DosyaAlanBulgu[]): string {
   if (!bulgular.length) return ''
   const satir = bulgular.map((b) => `- ${b.etiket}: ${b.deger} (dosyadan — “${b.alinti}”)`)
