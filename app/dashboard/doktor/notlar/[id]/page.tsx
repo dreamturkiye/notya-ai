@@ -37,6 +37,7 @@ import {
 import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
 import { ilacKontroluGerekliMi, ilacKontrolSonucu } from '@/lib/doktor/receteAktarim';
 import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
+import IlacSonlandirmaSatiri, { ilacSonlandirmaBilgisi, type IlacSonlandirmaBilgisi } from '@/components/doktor/IlacSonlandirmaSatiri';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
@@ -124,6 +125,7 @@ export default function NotSayfasi() {
   const [degisti, setDegisti] = useState(false);
   const [aiDurum, setAiDurum] = useState<'bos' | 'bekliyor' | 'guncellendi' | 'hata'>('bos');
   const [uyum, setUyum] = useState<IlacUyumDurumu | null>(null);
+  const [sonlandirma, setSonlandirma] = useState<IlacSonlandirmaBilgisi | null>(null);
   const atlaOtomatikRef = useRef(true);
   const aiBekliyorRef = useRef(false);
   // NOTYA-RECETE-05: not açıldığındaki Plan — Onayla'da 'Plan düzenlendi mi' karşılaştırması için.
@@ -339,7 +341,10 @@ export default function NotSayfasi() {
       if (aktarimHatalari.length) alert(`Not onaylandı, ama aşağıdaki aktarım(lar) başarısız oldu — hasta dosyasına/aşı kartına/reçeteye yansımamış olabilir:\n${aktarimHatalari.map((h) => `• ${h}`).join('\n')}\nLütfen notu tekrar açıp yeniden onaylayın; sorun devam ederse destek ekibine bildirin.`);
       setDurum('kaydedildi'); setDegisti(false);
       setVeri((v) => v ? { ...v, not: { ...v.not, approvedAt: new Date().toISOString() } } : v);
-      setTimeout(() => router.push(onaylananNotYolu(params.id)), 700);
+      // NOTYA-ILAC-SONLANDIR-01: not bir ilacı kestiyse sayfa hemen geçmez — hekim satırı (ve Geri al'ı) görür, Devam ile geçer.
+      const sonlanan = ilacSonlandirmaBilgisi(params.id, j);
+      if (sonlanan) setSonlandirma(sonlanan);
+      else setTimeout(() => router.push(onaylananNotYolu(params.id)), 700);
     } catch (e) { setDurum('hata'); alert(e instanceof Error ? e.message : 'Onaylanamadı'); setTimeout(() => setDurum('bos'), 2500); }
   };
 
@@ -362,6 +367,7 @@ export default function NotSayfasi() {
       {uyum ? (
         <IlacUyumKarti durum={uyum} onGuncelleOnayla={(m) => { void kaydetVeOnayla(m) }} onMevcutlaOnayla={() => { void kaydetVeOnayla(ilac) }} onVazgec={() => setUyum(null)} />
       ) : null}
+      {sonlandirma ? <IlacSonlandirmaSatiri bilgi={sonlandirma} devamHref={onaylananNotYolu(params.id)} /> : null}
       <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <GeriLink
           href={notDuzenleGeriHref(hasta.patientId)}

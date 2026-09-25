@@ -130,6 +130,8 @@ type Hekim = {
   asiHatirlatma: string
   /** NOTYA-EYLEM: Ayşe'nin hazırladığı bekleyen taslak + onaylanmış (geri alınabilir) eylem kaydı */
   eylemOneri: string; eylemKayit: string
+  /** NOTYA-ILAC-SONLANDIR-01: muayene notunun sonlandırdığı ilaç (Geri al hedefi) */
+  sonlanmisIlac: string
   /** NOTYA-ILETISIM-01: Hazır mesajlar kuyruğunda bekleyen bir öğe */
   kuyruk: string
   /** NOTYA-GELEN-BELGELER: dosyalanmamış bir gelen belge (dosyası özel kovada, önerilen hasta = kendi hastası) */
@@ -174,6 +176,7 @@ function hekimKur(harf: Harf): Hekim {
   const seans2 = db.ekle('sessions', { doctor_id: id, patient_id: hasta, specialty: 'pediatri', status: 'completed' }).id
   const bekleyenNot = db.ekle('notes', { session_id: seans2, doctor_id: id, note_type: 'soap', approved_at: null, content_plan: `Bekleyen ${m}`, content_ilaclar: [], vitaller: {} }).id
   const ilac = db.ekle('hasta_ilaclar', { doctor_id: id, patient_id: hasta, ilac_adi: `Ilac ${m}`, etken_madde: 'sentetik', doz: '1', kullanim_sikli: '1x1', baslangic_tarihi: '2026-09-01', aktif: true, onay_durumu: 'onayli' }).id
+  const sonlanmisIlac = db.ekle('hasta_ilaclar', { doctor_id: id, patient_id: hasta, ilac_adi: `Sonlanmis ${m}`, etken_madde: 'sentetik', doz: '1', kullanim_sikli: '1x1', baslangic_tarihi: '2026-09-01', bitis_tarihi: '2026-09-20', aktif: false, onay_durumu: 'onayli', notlar: 'Muayene notunda sonlandırıldı: “Sonlanmis keselim”' }).id
   db.ekle('hasta_lab_sonuclari', { doctor_id: id, patient_id: hasta, lab_adi: `Lab ${m}`, testler: [{ ad: 'Hb', deger: '12', birim: 'g/dL' }], sonuc_tarihi: '2026-09-10' })
   const belge = randomUUID()
   const panel = db.ekle('lab_paneller', { doctor_id: id, patient_id: hasta, belge_id: belge, lab_adi: `Panel ${m}`, durum: 'cikarildi', panel_type: 'genel', kaynaklar: [] }).id
@@ -237,7 +240,7 @@ function hekimKur(harf: Harf): Hekim {
     doctor_id: id, patient_id: null, persona_id: 'aysekaya', active_context: {},
     messages: [{ role: 'user', content: 'Sentetik soru', kanal: 'ses', zaman }, { role: 'assistant', content: `Cevap ${m}`, kanal: 'ses', zaman }],
   }).id
-  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
+  return { harf, id, token, hasta, seans, not, bekleyenNot, ilac, panel, belge, randevu, serbestRandevu, hastaDerm, lezyon, dogum, bebekKart, portalToken, konu, asistanEylem, gozGoruntu, belgeAnaliz, dermAnaliz, konsultasyon, konsultasyonYanitli, kasaBelge, asiHatirlatma, eylemOneri, eylemKayit, sonlanmisIlac, kuyruk, gelenBelge, asistanOturum, hileliSeans: '', hileliNot: '' }
 }
 
 /** Contamination X planted under Y's patient before the fixes (anon-key session insert, unchecked POSTs). */
@@ -367,6 +370,12 @@ const VAKALAR: Vaka[] = [
   { ad: 'POST /api/notes/[id]/approve (not onayı)', red: 404,
     yazdi: (a) => !!tablo('notes').find((n) => n.id === a.bekleyenNot)?.approved_at,
     cagir: (r, a, h) => coz(r.notOnay.POST(iste('POST', `/api/notes/${h.bekleyenNot}/approve`, { token: a.token, govde: {} }), prm({ id: h.bekleyenNot }))) },
+  // NOTYA-ILAC-SONLANDIR-01: onay satırındaki "Geri al" — yabancı notla ya da yabancı ilaç kimliğiyle hiçbir satır dirilmez
+  { ad: 'POST /api/notes/[id]/ilac-sonlandir-geri-al (Geri al)', red: 404,
+    yazdi: (a) => tablo('hasta_ilaclar').find((x) => x.id === a.sonlanmisIlac)?.aktif === true,
+    cagir: (r, a, h) => coz(r.ilacSonlandirGeriAl.POST(iste('POST', `/api/notes/${h.not}/ilac-sonlandir-geri-al`, { token: a.token, govde: { ilacIds: [h.sonlanmisIlac] } }), prm({ id: h.not }))) },
+  { ad: 'POST /api/notes/[id]/ilac-sonlandir-geri-al (kendi notu + yabancı ilaç kimliği)',
+    cagir: (r, a, h) => coz(r.ilacSonlandirGeriAl.POST(iste('POST', `/api/notes/${a.not}/ilac-sonlandir-geri-al`, { token: a.token, govde: { ilacIds: [h.sonlanmisIlac] } }), prm({ id: a.not }))) },
   { ad: 'GET /api/doktor/son-notlar', okur: true,
     cagir: (r, a) => coz(r.sonNotlar.GET(iste('GET', '/api/doktor/son-notlar', { token: a.token }))) },
   // Seans / SOAP üretimi
@@ -670,6 +679,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       notlar: await ice('app/api/notes/route'),
       notDetay: await ice('app/api/notes/[id]/route'),
       notOnay: await ice('app/api/notes/[id]/approve/route'),
+      ilacSonlandirGeriAl: await ice('app/api/notes/[id]/ilac-sonlandir-geri-al/route'),
       sonNotlar: await ice('app/api/doktor/son-notlar/route'),
       seansBaslat: await ice('app/api/sessions/start/route'),
       seansBitir: await ice('app/api/sessions/[id]/end/route'),

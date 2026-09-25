@@ -87,7 +87,7 @@ export function anlamliKelimeler(ad: string): Set<string> {
 }
 
 /** İki ad aynı ilacı mı anlatıyor? Ortak anlamlı kelime varsa evet. */
-function ayniIlac(a: string, b: string): boolean {
+export function ayniIlac(a: string, b: string): boolean {
   const ka = anlamliKelimeler(a)
   const kb = anlamliKelimeler(b)
   for (const k of ka) if (kb.has(k)) return true
@@ -131,7 +131,7 @@ export type IlacSatiri = { ad: string; doz: string; kullanim: string; sure: stri
  * yalnız İlaçlar listesini Plan metninden çıkarır; sonucu hekim kartta görüp onaylar.
  */
 export const ILAC_UYUM_ISTEK =
-  "Yalnızca İlaçlar listesini, Plan / Tedavi metninde yazan ilaçlara göre baştan çıkar: her ilaç için ad (Plan'daki ürün adıyla birebir), doz, kullanım ve süre. Plan'da olmayan bir ilacı listeye koyma, Plan'daki hiçbir ilacı atlama; Plan'da yazmayan doz veya süreyi uydurma, boş bırak. Başka hiçbir alanı değiştirme — duzenlemeler içinde yalnızca ilaclar döndür."
+  "Yalnızca İlaçlar listesini, Plan / Tedavi metninde yazan ilaçlara göre baştan çıkar: her ilaç için ad (Plan'daki ürün adıyla birebir), doz, kullanım ve süre. Plan'da olmayan bir ilacı listeye koyma, Plan'daki hiçbir ilacı atlama; Plan'da kesilen/sonlandırılan/bırakılan bir ilacı (keselim, iptal, artık vermiyoruz) listeye koyma; Plan'da yazmayan doz veya süreyi uydurma, boş bırak. Başka hiçbir alanı değiştirme — duzenlemeler içinde yalnızca ilaclar döndür."
 
 /** Ayşe yanıtındaki duzenlemeler.ilaclar → satırlar. Nesne veya "Ad — doz — kullanım — süre" metni kabul edilir; boş/geçersiz → null. */
 export function ilacOnerisiCoz(v: unknown): IlacSatiri[] | null {

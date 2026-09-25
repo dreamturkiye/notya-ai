@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
 import { ILAC_UYUM_ISTEK, ilacDetayMetni, ilacOnerisiCoz, type IlacSatiri } from '@/lib/doktor/receteAktarim';
+import { notunKestigiIlaclariCikar } from '@/lib/doktor/ilacSonlandirMetin';
 
 export type IlacUyumDurumu =
   | { tur: 'kontrol' }
@@ -37,7 +38,9 @@ export async function planaGoreIlacOnerisi(token: string, noteId: string, taslak
     });
     if (!r.ok) return null;
     const d = await r.json();
-    return ilacOnerisiCoz(d?.duzenlemeler?.ilaclar);
+    const oneri = ilacOnerisiCoz(d?.duzenlemeler?.ilaclar);
+    // NOTYA-ILAC-SONLANDIR-01: Plan'ın açıkça kestiği ilaç ("Klacid'i keselim") öneriye geri eklenmez.
+    return oneri ? notunKestigiIlaclariCikar(oneri, String(taslak.plan || '')) : null;
   } catch {
     return null;
   } finally {
