@@ -55,6 +55,10 @@ export const VAULT_ALLOWED_MIME = [
   'text/csv',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  // NOTYA-GELEN-BELGELER: Word belgeleri ve yapıştırılan metin (ör. e-postadan kopyalanan lab tablosu)
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'text/plain',
   // Görüntüler — kısa US klip (vault 4 MB sınırı duruyor)
   'video/mp4',
   'video/webm',

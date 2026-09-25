@@ -110,6 +110,7 @@ export class SahteVeritabani {
           },
           remove: async (yollar: string[]) => { for (const y of yollar) db.depolama.get(kova)?.delete(y); return { data: null, error: null } },
           getPublicUrl: (yol: string) => ({ data: { publicUrl: `https://sahte.supabase.test/storage/v1/object/public/${kova}/${yol}` } }),
+          createSignedUrl: async (yol: string, sn: number) => ({ data: { signedUrl: `https://sahte.supabase.test/storage/v1/object/sign/${kova}/${yol}?token=sahte&expiresIn=${sn}` }, error: null }),
         }),
       },
       rpc: async (ad: string, args: Record<string, string>) => {

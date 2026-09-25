@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic'
 import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
 import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
+import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
 import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -282,6 +283,9 @@ export default function DoktorDashboard() {
 
       {/* NOTYA-ILETISIM-01: prepared patient messages — hidden when there are none */}
       <HazirMesajlar />
+
+      {/* NOTYA-GELEN-BELGELER: "N yeni belge" — hidden when 0 */}
+      <GelenBelgelerKarti />
 
       <BekleyenKonsultasyonOzeti />
 

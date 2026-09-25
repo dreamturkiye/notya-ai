@@ -23,6 +23,8 @@ import { usePathname } from 'next/navigation';
 import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
+import GelenBelgeBirak from './gelenBelgeler/GelenBelgeBirak';
+import { GELEN_OLAY } from '@/lib/gelenBelgeler/istemci';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
 
@@ -58,6 +60,8 @@ interface NavItem {
   label: string;
   route: string;
   sadeceDoktor?: boolean;
+  /** NOTYA-GELEN-BELGELER: shown to a secretary only when the doctor opened access (server decides). */
+  gelenBelge?: boolean;
 }
 
 // Kept in lockstep with the pre-Sidebar-B dock's navItems -- same routes, same sadeceDoktor gating.
@@ -69,6 +73,7 @@ const navItems: (NavItem & { grup: 'asistan' | 'calisma' | 'diger' })[] = [
   { label: 'Randevular', route: '/dashboard/doktor/randevular', grup: 'calisma' },
   { label: 'Hastalar', route: '/dashboard/doktor/hastalar', grup: 'calisma' },
   { label: 'Mesajlar', route: '/dashboard/doktor/mesajlar', grup: 'calisma' },
+  { label: 'Gelen Belgeler', route: '/dashboard/doktor/gelen-belgeler', gelenBelge: true, grup: 'calisma' },
   { label: 'Raporlar', route: '/dashboard/doktor/raporlar', sadeceDoktor: true, grup: 'diger' },
   { label: 'Araçlar', route: '/doktor-tools', sadeceDoktor: true, grup: 'diger' },
   { label: 'Ayarlar', route: '/dashboard/doktor/ayarlar', sadeceDoktor: true, grup: 'diger' },
@@ -97,6 +102,9 @@ const NAV_ICON: Record<string, React.ReactNode> = {
   ),
   '/dashboard/doktor/mesajlar': (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" /><path d="M4.5 6.5 12 12.5l7.5-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
+  ),
+  '/dashboard/doktor/gelen-belgeler': (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 13.5 6.5 6h11L20 13.5V18a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18v-4.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /><path d="M4 13.5h4.5l1.2 2h4.6l1.2-2H20" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>
   ),
   '/dashboard/doktor/raporlar': (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 19V10M10 19V6M15 19v-7M20 19V8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
@@ -135,6 +143,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const [isMobile, setIsMobile] = useState(false);
   const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
   const [mesajUnread, setMesajUnread] = useState(0);
+  const [gelenSayi, setGelenSayi] = useState(0);
+  const [gelenErisim, setGelenErisim] = useState(false);
   const [ad, setAd] = useState('');
   const [brans, setBrans] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -207,6 +217,21 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     })();
   }, []);
 
+  // NOTYA-GELEN-BELGELER: badge + whether this user may use the inbox at all (doctor; secretary with the switch on).
+  useEffect(() => {
+    const yukle = async () => {
+      const t = await ensureDoctorAccessToken();
+      if (!t) return;
+      try {
+        const r = await fetch('/api/doktor/gelen-belgeler?sayi=1', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' });
+        if (r.ok) { const d = await r.json(); setGelenErisim(d.erisim === true); setGelenSayi(Number(d.sayi) || 0); }
+      } catch { /* no badge */ }
+    };
+    void yukle();
+    window.addEventListener(GELEN_OLAY, yukle);
+    return () => window.removeEventListener(GELEN_OLAY, yukle);
+  }, []);
+
   useEffect(() => {
     const raw = getDoctorAccessToken();
     if (!raw) window.location.href = '/giris/doktor';
@@ -227,7 +252,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     window.location.href = '/giris/doktor';
   }
 
-  const gorunurItems = navItems.filter((i) => !(i.sadeceDoktor && rol === 'sekreter'));
+  const gorunurItems = navItems.filter((i) => !(i.sadeceDoktor && rol === 'sekreter') && !(i.gelenBelge && !gelenErisim));
   const asistanItem = gorunurItems.find((i) => i.grup === 'asistan');
   const calismaItems = gorunurItems.filter((i) => i.grup === 'calisma');
   const digerItems = gorunurItems.filter((i) => i.grup === 'diger');
@@ -237,7 +262,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
 
   function navRow(item: NavItem, highlight = false) {
     const active = pathname === item.route || (item.route !== '/dashboard/doktor' && pathname?.startsWith(item.route));
-    const rozet = item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? mesajUnread : 0;
+    const rozet = item.route === '/dashboard/doktor/mesajlar' && mesajUnread > 0 ? mesajUnread : item.route === '/dashboard/doktor/gelen-belgeler' ? gelenSayi : 0;
     if (highlight) {
       return (
         <div
@@ -321,6 +346,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   return (
     <ChromeGizleContext.Provider value={setGizli}>
     <ChromeKompaktContext.Provider value={setKompakt}>
+    {gelenErisim && <GelenBelgeBirak />}
     <div
       style={S({
         minHeight: '100vh', position: 'relative',

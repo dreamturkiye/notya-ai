@@ -14,7 +14,7 @@ import { coreBolumlerIcin } from '@/lib/intake/coreAlanlar'
 import { intakeGorunmeyenYanitlariAyikla, intakeSunucuHataMetni } from '@/lib/intake/dogrula'
 import { BRANS_SORULARI, BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
 import type { SpecialtyKey } from '@/lib/asistan/turkishSpecialtyRefs'
-import { intakeIzinleri } from '@/lib/iletisim/izinMetni'
+import { intakeGelenBelgeIzni, intakeIzinleri } from '@/lib/iletisim/izinMetni'
 
 export const dynamic = 'force-dynamic'
 
@@ -136,6 +136,20 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
           })))
         }
       } catch (e) { console.error('[intake→iletişim izni]', e) }
+      // NOTYA-GELEN-BELGELER: "Gönderdiğiniz belgeler, fotoğraflar ve sesli mesajlar dosyanıza eklenebilir." — separate
+      // write so that before migration 099 the contact consents above still land.
+      try {
+        const izin = intakeGelenBelgeIzni(kayitYanitlari)
+        const { error: gbHata } = await supabase.from('patients')
+          .update({ gelen_belge_izni: izin, gelen_belge_izni_guncelleme: new Date().toISOString(), gelen_belge_izni_guncelleyen: null })
+          .eq('id', form.patient_id).eq('doctor_id', form.doktor_id)
+        if (!gbHata) {
+          await supabase.from('iletisim_izin_kayitlari').insert({
+            doctor_id: form.doktor_id, patient_id: form.patient_id, kanal: 'gelen_belge', izin, kaynak: 'bilgi_formu',
+            kaydeden_user_id: null, kaydeden_personel_id: null,
+          })
+        }
+      } catch (e) { console.error('[intake→gelen belge izni]', e) }
     }
   }
   return NextResponse.json({ basarili: true })
