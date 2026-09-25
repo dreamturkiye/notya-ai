@@ -139,6 +139,8 @@ function NewSessionInner() {
   const timerRef = useRef<ReturnType<typeof setInterval>|null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance|null>(null)
   const transcriptRef = useRef("")  // Keep ref in sync for speech callbacks
+  /** NOTYA-BETA-0925 (d): sunucunun açıkça başarısız dediği seans — tekrar denemede yeniden kullanılır. */
+  const basarisizSeansRef = useRef<{ id: string; anahtar: string } | null>(null)
 
   // NOTYA-KAYIT-SURE-01 (Kaan, 2026-09-23): muayene kaydı 60 dk; 55. dk'da sesli (bip) + görsel uyarı,
   // "+30 dk uzat" (en fazla 120 dk). Süre dolunca dikte durur, yazılan her şey ekranda kalır.
@@ -345,13 +347,24 @@ function NewSessionInner() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push("/giris"); return }
 
-      const { data: session, error: se } = await supabase.from("sessions").insert({
-        doctor_id: user.id, patient_id: patientId, specialty, session_type: sessionType,
-        status: "processing", duration_seconds: seconds,
-        patient_consent_given: true, patient_consent_at: new Date().toISOString(),
-        ...(efektifTarihIso ? { started_at: efektifTarihIso } : {}),
-      }).select().single()
-      if (se || !session) throw new Error("Seans oluşturulamadı: " + se?.message)
+      // NOTYA-BETA-0925 (d): "Seansı Bitir"e yeniden basmak her seferinde YENİ bir seans satırı açıyordu; ilki
+      // processing'de takılı kalıyordu. Sunucu açıkça "not oluşturulamadı" dediyse (JSON hata yanıtı — not
+      // kaydedilmedi, seans failed işaretlendi) aynı hasta / branş / tür / tarih için aynı seans yeniden kullanılır.
+      // Sonucu bilinmeyen yanıtta (504, bağlantı koptu) not kaydedilmiş olabilir — o zaman eskisi gibi yeni seans.
+      const anahtar = [patientId || "", specialty, sessionType, efektifTarihIso || ""].join("|")
+      const onceki = basarisizSeansRef.current
+      let session: { id: string } | null = onceki && onceki.anahtar === anahtar ? { id: onceki.id } : null
+      if (!session) {
+        const { data, error: se } = await supabase.from("sessions").insert({
+          doctor_id: user.id, patient_id: patientId, specialty, session_type: sessionType,
+          status: "processing", duration_seconds: seconds,
+          patient_consent_given: true, patient_consent_at: new Date().toISOString(),
+          ...(efektifTarihIso ? { started_at: efektifTarihIso } : {}),
+        }).select().single()
+        if (se || !data) throw new Error("Seans oluşturulamadı: " + se?.message)
+        session = data as { id: string }
+      }
+      basarisizSeansRef.current = null
 
       const { data: { session: authSession } } = await (async () => { const raw = localStorage.getItem(Object.keys(localStorage).find(k=>k.includes('auth-token'))||''); return raw ? { data: { session: JSON.parse(raw) } } : { data: { session: null } } })()
       const authToken = authSession?.access_token
@@ -375,7 +388,11 @@ function NewSessionInner() {
       try { result = JSON.parse(hamMetin) } catch {
         throw new Error("Sunucu geçici bir sorun yaşadı. Notlarınız güvende — birkaç saniye bekleyip 'Seansı Bitir'e yeniden basın.")
       }
-      if (!resp.ok || !result.success) throw new Error(result.error || "Not oluşturulamadı")
+      if (!resp.ok || !result.success) {
+        // Sunucu açık hata döndürdü: not kaydedilmedi → tekrar denemede aynı seans kullanılır.
+        if (resp.status >= 500 || resp.status === 429) basarisizSeansRef.current = { id: session.id, anahtar }
+        throw new Error(result.error || "Not oluşturulamadı")
+      }
       const not = (result.data as { note: Record<string, unknown>; cekListeDogrulama?: CekDogrulamaSatir[] }).note
       setNote(not)
       const dog = (result.data as { cekListeDogrulama?: CekDogrulamaSatir[] }).cekListeDogrulama

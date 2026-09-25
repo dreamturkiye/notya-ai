@@ -229,9 +229,9 @@ async function main() {
     await el('PATCH', `/tools/${hasta.id}`, {
       tool_config: clientTool(
         'hasta_bul',
-        'Doktor hasta listesi, sayısı, kendi pratiği VEYA açık bir hastanın dosyası sorduğunda çağır: ad, yaş, alerji, son reçete, kaç vizit, randevu, lab, aşı, "hangi antibiyotiği / ilacı / aşıyı / tanıyı en fazla yazdım-koydum". Tam cümleyi isim olarak gönder. Dönen sayıyı, sıralamayı ve "Dosyada …" cümlesini oku. "erişimim yok" / "bilemedim" DEME.',
+        'Doktor hasta listesi, sayısı, kendi pratiği VEYA açık bir hastanın dosyası sorduğunda çağır: ad, yaş, alerji, son reçete, kaç vizit, randevu, lab, aşı, "hangi antibiyotiği / ilacı / aşıyı / tanıyı en fazla yazdım-koydum", kimlik / iletişim (anne-baba adı, veli, telefon, e-posta, adres, doğum yeri). Tam cümleyi isim olarak gönder. Dönen sayıyı, sıralamayı ve "Dosyada …" cümlesini oku. Kimlik değerleri sana gelmez, ekrana yazılır — "ekranınıza yazdım" de, değer uydurma. "erişimim yok" / "bilemedim" DEME.',
         ['isim'],
-        { isim: strParam('Tam cümle. Örn: "Ahmet\'in alerjisi ne", "son reçetesi", "kaç viziti var", "son bir ay içinde hangi antibiyotiği en fazla yazdım", "Ayşe Metin"') }
+        { isim: strParam('Tam cümle. Örn: "Ahmet\'in alerjisi ne", "son reçetesi", "kaç viziti var", "son bir ay içinde hangi antibiyotiği en fazla yazdım", "Ayşe Metin", "Umutcan\'ın annesinin adı ne"') }
       ),
     })
     console.log(`  tool güncellendi: hasta_bul → ${hasta.id}`)

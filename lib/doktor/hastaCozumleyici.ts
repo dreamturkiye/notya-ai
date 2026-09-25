@@ -119,7 +119,9 @@ async function adaylariZenginlestir(supabase: SupabaseClient, doctorId: string, 
 export async function hastaninSozunuCoz(
   supabase: SupabaseClient,
   doctorId: string,
-  mesaj: string
+  mesaj: string,
+  /** NOTYA-BETA-0925: kimlik sorusu ("annesinin adı ne") yalnız adla çözülür — "anne" kelimesi klinik arama filtresine dönmez. */
+  secenek: { yalnizAd?: boolean } = {}
 ): Promise<HastaCozumu> {
   const m = ' ' + duzle(mesaj) + ' '
   // "son hastam" / "az önceki hasta" / "en son gelen hasta"
@@ -174,6 +176,7 @@ export async function hastaninSozunuCoz(
     return { tur: 'coklu', adaylar: zengin }
   }
 
+  if (secenek.yalnizAd) return cozAdaylar(tam.length > 0 ? tam : kismi)
   if (tam.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(tam))
   if (kismi.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(kismi))
   return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' })

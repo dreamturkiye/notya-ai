@@ -16,6 +16,7 @@ import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 import { cozumKonus, hastaninSozunuCoz } from '@/lib/doktor/hastaCozumleyici'
 import { hastaDosyaPaketiniDerle } from '@/lib/doktor/hastaDosyaDerleyici'
 import { dosyaSoruCevap, kartSoyle } from '@/lib/doktor/hastaDosyaKart'
+import { kimlikSorusunuCevapla } from '@/lib/doktor/kimlikSorusu'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,16 @@ export async function POST(req: NextRequest) {
   if (!soz) return NextResponse.json({ sonuc: 'Hasta adını anlayamadım, tekrar söyler misiniz?' })
 
   try {
+    // NOTYA-BETA-0925: kimlik / iletişim sorusu → değerler yalnız `ekran` ile tarayıcıya (sesli sayfa bunu sohbet
+    // balonuna yazar); ElevenLabs ajanına giden `sonuc` değer taşımaz — kimlik bilgisi hiçbir model bağlamına girmez.
+    const kimlik = await kimlikSorusunuCevapla(supabase, doktorId, soz, null)
+    if (kimlik) {
+      return NextResponse.json({
+        sonuc: kimlik.model,
+        ekran: kimlik.ekran,
+        ...(kimlik.hasta ? { patientId: kimlik.hasta.id, ad: kimlik.hasta.ad } : {}),
+      })
+    }
     const cozum = await hastaninSozunuCoz(supabase, doktorId, soz)
     const konus = cozumKonus(cozum)
     if (cozum.tur === 'coklu') {

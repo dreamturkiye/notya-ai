@@ -22,18 +22,20 @@ function gridSablonu(secenekler: string[]): string {
   return `repeat(auto-fit, minmax(${minGenislik}px, 1fr))`;
 }
 
-function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unknown; onChange: (v: unknown) => void }) {
+function AlanGirdisi({ alan, deger, onChange, hata }: { alan: IntakeAlan; deger: unknown; onChange: (v: unknown) => void; hata?: string }) {
   const ortakStil: React.CSSProperties = {
-    width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(10,22,40,0.15)',
+    width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${hata ? '#DC2626' : 'rgba(10,22,40,0.15)'}`,
     fontSize: 14, background: 'white', color: '#0A1628',
   };
+  // NOTYA-BETA-0925: hata satırı ekran okuyucuya da bağlı (tarayıcı baloncuğu yok — form noValidate).
+  const erisim = hata ? { 'aria-invalid': true, 'aria-describedby': `alan-hata-${alan.id}` } : {};
 
   if (alan.tur === 'textarea') {
-    return <textarea style={{ ...ortakStil, minHeight: 64, resize: 'vertical' }} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} />;
+    return <textarea style={{ ...ortakStil, minHeight: 64, resize: 'vertical' }} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} placeholder={alan.placeholder} {...erisim} />;
   }
   if (alan.tur === 'select') {
     return (
-      <select style={ortakStil} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)}>
+      <select style={ortakStil} value={(deger as string) || ''} onChange={(e) => onChange(e.target.value)} {...erisim}>
         <option value="">Seçiniz…</option>
         {alan.secenekler?.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
@@ -83,18 +85,20 @@ function AlanGirdisi({ alan, deger, onChange }: { alan: IntakeAlan; deger: unkno
   const desenGecersiz = !!alan.desen && !!(deger as string) && !new RegExp(alan.desen).test(String(deger))
   return (
     <>
-      <input style={ortakStil} type={inputTur} value={(deger as string) || ''} onChange={(e) => onChange(alan.desen ? e.target.value.replace(/\D/g, '') : e.target.value)} placeholder={alan.placeholder} {...tarihSinir} {...desenSinir} />
-      {desenGecersiz && alan.desenHata && <div style={{ fontSize: 12, color: '#DC2626', marginTop: 4 }}>{alan.desenHata}</div>}
+      <input style={ortakStil} type={inputTur} value={(deger as string) || ''} onChange={(e) => onChange(alan.desen ? e.target.value.replace(/\D/g, '') : e.target.value)} placeholder={alan.placeholder} {...tarihSinir} {...desenSinir} {...erisim} />
+      {desenGecersiz && alan.desenHata && !hata && <div style={{ fontSize: 12, color: '#DC2626', marginTop: 4 }}>{alan.desenHata}</div>}
     </>
   );
 }
 
 /** Görünen bölümleri sırayla, 1'den numaralayarak çizer. `bolumler` tam form listesidir (onay sonda). */
-export default function IntakeBolumleri({ bolumler, yanitlar, onDegis, nowMs }: {
+export default function IntakeBolumleri({ bolumler, yanitlar, onDegis, nowMs, hatalar = {} }: {
   bolumler: IntakeBolum[];
   yanitlar: Record<string, unknown>;
   onDegis: (id: string, deger: unknown) => void;
   nowMs?: number;
+  /** Alan kimliği → Türkçe hata satırı (lib/intake/dogrula.ts → intakeAlanHatalari). */
+  hatalar?: Record<string, string>;
 }) {
   return (
     <>
@@ -121,12 +125,14 @@ export default function IntakeBolumleri({ bolumler, yanitlar, onDegis, nowMs }: 
                 );
               }
               if (!intakeAlanGorunur(alan, yanitlar)) return null;
+              const hata = hatalar[alan.id];
               return (
-                <div key={alan.id}>
+                <div key={alan.id} id={`alan-${alan.id}`}>
                   <label style={{ display: 'block', fontSize: 13, color: '#0A1628', marginBottom: 6, fontWeight: 500 }}>
                     {alan.etiket}{alan.zorunlu && <span style={{ color: '#EF4444' }}> *</span>}
                   </label>
-                  <AlanGirdisi alan={alan} deger={yanitlar[alan.id]} onChange={(v) => onDegis(alan.id, v)} />
+                  <AlanGirdisi alan={alan} deger={yanitlar[alan.id]} onChange={(v) => onDegis(alan.id, v)} hata={hata} />
+                  {hata && <div id={`alan-hata-${alan.id}`} role="alert" style={{ fontSize: 12.5, color: '#DC2626', marginTop: 4 }}>{hata}</div>}
                   {alan.yardim && <p style={{ fontSize: 11.5, color: 'rgba(10,22,40,0.5)', marginTop: 4 }}>{alan.yardim}</p>}
                 </div>
               );

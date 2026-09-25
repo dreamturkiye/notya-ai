@@ -14,6 +14,8 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { decrypt } from '@/lib/security/encryption'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
+import { telefonAlani } from '@/lib/iletisim/cepTelefonu'
+import { randevuIletisiminiKaydet } from '@/lib/randevu/hastaIletisimKaydet'
 
 export const dynamic = 'force-dynamic'
 
@@ -89,10 +91,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { supabase, doktorId, user } = oturum
+  const { supabase, doktorId, user, rol, personelId } = oturum
 
   const body = await req.json().catch(() => ({}))
-  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaEmailSerbest, baslangic, bitis, tur, notlar, hastaDurumu } = body as {
+  const { patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaEmailSerbest, baslangic, bitis, tur, notlar, hastaDurumu, hastaTelefon, whatsappIzni } = body as {
     patientId?: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
@@ -102,7 +104,16 @@ export async function POST(req: NextRequest) {
     tur?: string
     notlar?: string
     hastaDurumu?: string
+    /** NOTYA-BETA-0925: kayıtlı hastanın cep telefonu — hasta kaydına yazılır. */
+    hastaTelefon?: string
+    /** NOTYA-BETA-0925: "Hasta, randevu ve form mesajlarını WhatsApp'tan almayı kabul etti". */
+    whatsappIzni?: boolean
   }
+
+  // NOTYA-BETA-0925: telefon (kayıtlı hastanınki de, kayıtsız randevununki de) yazıldıysa geçerli bir cep numarası
+  // olmalı; Türkçe, açık hata. Boş bırakmak burada serbest — modal "kayıtlı telefonu yoksa zorunlu" kuralını uygular.
+  const telefon = telefonAlani(patientId ? hastaTelefon : hastaTelefonSerbest)
+  if ('hata' in telefon) return NextResponse.json({ error: telefon.hata }, { status: 400 })
 
   if (!baslangic || !bitis) {
     return NextResponse.json({ error: 'Başlangıç ve bitiş saati zorunludur.' }, { status: 400 })
@@ -138,7 +149,7 @@ export async function POST(req: NextRequest) {
       doktor_id: doktorId,
       patient_id: patientId || null,
       hasta_adi_serbest: patientId ? null : hastaAdiSerbest?.trim() || null,
-      hasta_telefon_serbest: patientId ? null : hastaTelefonSerbest?.trim() || null,
+      hasta_telefon_serbest: patientId ? null : telefon.deger,
       // NOTYA-OPS-02: yeni randevuda e-posta zorunlu (karşılama e-postası + form linki bu adrese gidecek)
       hasta_email_serbest: patientId ? null : hastaEmailSerbest?.trim() || null,
       baslangic,
@@ -152,5 +163,10 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: 'Randevu oluşturulamadı.' }, { status: 500 })
-  return NextResponse.json({ randevu: data })
+
+  // Sahiplik yukarıda (hastaSahibiMi) doğrulandı; yazmalar id + doctor_id ile.
+  const iletisim = patientId && (telefon.deger || whatsappIzni === true)
+    ? await randevuIletisiminiKaydet(supabase, { doktorId, patientId, userId: user.id, rol, personelId, telefon: telefon.deger, whatsappIzni: whatsappIzni === true })
+    : null
+  return NextResponse.json({ randevu: data, iletisim })
 }

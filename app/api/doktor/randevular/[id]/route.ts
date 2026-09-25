@@ -19,13 +19,15 @@ import { otomatikHastaKaydiOlustur } from '@/lib/doktor/otomatikHastaKaydi'
 import { randevuCakismasiVarMi, CAKISMA_MESAJI, CAKISMA_KONTROL_HATASI } from '@/lib/randevu/cakisma'
 import { randevuGuncellemePlani } from '@/lib/randevu/randevuDurum'
 import { hastaSahibiMi } from '@/lib/doktor/hastaSahipligi'
+import { telefonAlani } from '@/lib/iletisim/cepTelefonu'
+import { randevuIletisiminiKaydet } from '@/lib/randevu/hastaIletisimKaydet'
 
 export const dynamic = 'force-dynamic'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata
-  const { supabase, doktorId } = oturum
+  const { supabase, doktorId, user, rol, personelId } = oturum
 
   const { data: mevcut } = await supabase
     .from('randevular')
@@ -36,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!mevcut) return NextResponse.json({ error: 'Randevu bulunamadı.' }, { status: 404 })
 
   const body = await req.json().catch(() => ({}))
-  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaTelefonSerbest, hastaEmailSerbest, hastaDurumu } = body as {
+  const { baslangic, bitis, durum, iptalNedeni, tur, notlar, patientId, hastaAdiSerbest, hastaEmailSerbest, hastaDurumu, hastaTelefon, whatsappIzni } = body as {
     baslangic?: string
     bitis?: string
     durum?: string
@@ -48,7 +50,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     hastaAdiSerbest?: string
     hastaTelefonSerbest?: string
     hastaEmailSerbest?: string
+    /** NOTYA-BETA-0925: kayıtlı hastanın cep telefonu — hasta kaydına yazılır. */
+    hastaTelefon?: string
+    whatsappIzni?: boolean
   }
+  // NOTYA-BETA-0925: yazılan telefon geçerli bir cep numarası olmalı (kayıtsız randevununki de); biçimlenmiş hali saklanır.
+  const telefon = telefonAlani(hastaTelefon)
+  if ('hata' in telefon) return NextResponse.json({ error: telefon.hata }, { status: 400 })
+  const serbestTelefon = telefonAlani(body.hastaTelefonSerbest)
+  if ('hata' in serbestTelefon) return NextResponse.json({ error: serbestTelefon.hata }, { status: 400 })
+  const hastaTelefonSerbest: string | undefined = body.hastaTelefonSerbest === undefined ? undefined : serbestTelefon.deger ?? ''
 
   const plan = randevuGuncellemePlani(
     { baslangic: mevcut.baslangic, bitis: mevcut.bitis, durum: mevcut.durum },
@@ -125,20 +136,31 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (hastaEmailSerbest !== undefined) guncelleme.hasta_email_serbest = hastaEmailSerbest?.trim() || null
   }
 
-  if (Object.keys(guncelleme).length === 0) {
+  const iletisimVar = !!telefon.deger || whatsappIzni === true
+  if (Object.keys(guncelleme).length === 0 && !iletisimVar) {
     return NextResponse.json({ error: 'Güncellenecek alan yok.' }, { status: 400 })
   }
 
-  const { data, error } = await supabase
-    .from('randevular')
-    .update(guncelleme)
-    .eq('id', params.id)
-    .eq('doktor_id', doktorId)
-    .select()
-    .single()
+  let data: unknown = mevcut
+  if (Object.keys(guncelleme).length > 0) {
+    const sonuc = await supabase
+      .from('randevular')
+      .update(guncelleme)
+      .eq('id', params.id)
+      .eq('doktor_id', doktorId)
+      .select()
+      .single()
+    if (sonuc.error) return NextResponse.json({ error: 'Randevu güncellenemedi.' }, { status: 500 })
+    data = sonuc.data
+  }
 
-  if (error) return NextResponse.json({ error: 'Randevu güncellenemedi.' }, { status: 500 })
-  return NextResponse.json({ randevu: data, yeniHasta, reaktivasyon: plan.reaktivasyon })
+  // NOTYA-BETA-0925: telefon / WhatsApp izni randevunun bağlı olduğu hastaya — yeni bağlanan hasta yukarıda
+  // hastaSahibiMi'den geçti; mevcut bağlantı bu doktorun kendi randevu satırından (yazmalar yine doctor_id'li).
+  const bagliHasta = (guncelleme.patient_id as string | undefined) || (mevcut.patient_id as string | null)
+  const iletisim = bagliHasta && iletisimVar
+    ? await randevuIletisiminiKaydet(supabase, { doktorId, patientId: bagliHasta, userId: user.id, rol, personelId, telefon: telefon.deger, whatsappIzni: whatsappIzni === true })
+    : null
+  return NextResponse.json({ randevu: data, yeniHasta, reaktivasyon: plan.reaktivasyon, iletisim })
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {

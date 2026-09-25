@@ -17,7 +17,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { intakeFormBolumleri, type IntakeBolum } from '@/lib/intake/coreAlanlar';
-import { intakeGorunmeyenYanitlariAyikla, intakeIstemciHataMetni } from '@/lib/intake/dogrula';
+import { intakeAlanHatalari, intakeGorunmeyenYanitlariAyikla } from '@/lib/intake/dogrula';
 import IntakeBolumleri from '@/components/intake/IntakeBolumleri';
 
 export const dynamic = 'force-dynamic';
@@ -40,6 +40,7 @@ export default function IntakeFormPage() {
   const [yanitlar, setYanitlar] = useState<Record<string, unknown>>({});
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [formHata, setFormHata] = useState('');
+  const [alanHatalari, setAlanHatalari] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!token) return;
@@ -61,7 +62,13 @@ export default function IntakeFormPage() {
     const bolumler = intakeFormBolumleri(sema?.coreBolumler || [], sema?.bransBolumu || null)
     // Gizlenen alanın yanıtı atılır: gosterEger koşulu bozulan alan (gebelik haftası) ve VELI-YASAL-ONAM — doğum
     // tarihi erişkine düzeltilince Veli / Yasal Temsilci bölümü (sunucu da aynı süzgeci uygular).
-    setYanitlar((y) => intakeGorunmeyenYanitlariAyikla(bolumler, { ...y, [id]: deger }))
+    const yeni = intakeGorunmeyenYanitlariAyikla(bolumler, { ...yanitlar, [id]: deger })
+    setYanitlar(yeni)
+    // Gönderimden sonra işaretlenen alanlar yazdıkça yeniden denetlenir; düzelen alanın satırı kalkar.
+    if (Object.keys(alanHatalari).length) {
+      const guncel = intakeAlanHatalari(bolumler, yeni)
+      setAlanHatalari(Object.fromEntries(Object.entries(guncel).filter(([k]) => k in alanHatalari)))
+    }
   }
 
   async function gonder(e: React.FormEvent) {
@@ -70,9 +77,18 @@ export default function IntakeFormPage() {
 
     // NOTYA-INTAKE-08: zorunluluk/desen kurallari sunucuyla TEK govdeden (lib/intake/dogrula.ts)
     // okunur — istemcinin "zorunlu" tanimi sunucununkinden ayrisamasin diye.
+    // NOTYA-BETA-0925: form noValidate — tarayıcının İngilizce baloncukları yerine her alanın altında Türkçe satır.
     const tumBolumler = intakeFormBolumleri(sema?.coreBolumler || [], sema?.bransBolumu || null);
-    const hata = intakeIstemciHataMetni(tumBolumler, yanitlar);
-    if (hata) { setFormHata(hata); return; }
+    const hatalar = intakeAlanHatalari(tumBolumler, yanitlar);
+    const hataliAlanlar = Object.keys(hatalar);
+    setAlanHatalari(hatalar);
+    if (hataliAlanlar.length) {
+      setFormHata(hataliAlanlar.length === 1 ? 'Lütfen işaretli alanı düzeltin.' : `Lütfen işaretli ${hataliAlanlar.length} alanı düzeltin.`);
+      const ilk = document.getElementById(`alan-${hataliAlanlar[0]}`);
+      ilk?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      ilk?.querySelector<HTMLElement>('input, textarea, select')?.focus({ preventScroll: true });
+      return;
+    }
 
     setGonderiliyor(true);
     try {
@@ -107,7 +123,7 @@ export default function IntakeFormPage() {
       )}
 
       {durum === 'gecerli' && sema && (
-        <form onSubmit={gonder} style={kutu}>
+        <form onSubmit={gonder} noValidate style={kutu}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
             <h2 style={{ fontSize: 22, margin: 0, color: '#0A1628' }}>Hasta Bilgi Formu</h2>
             <span style={{ fontSize: 11, color: '#0F9B8E', background: 'rgba(15,155,142,0.1)', padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap', fontWeight: 600 }}>
@@ -120,7 +136,7 @@ export default function IntakeFormPage() {
             randevunuz öncesinde bu kısa formu doldurmanız muayene sürenizi daha verimli kılar.
           </p>
 
-          <IntakeBolumleri bolumler={tumBolumler} yanitlar={yanitlar} onDegis={alanDegistir} />
+          <IntakeBolumleri bolumler={tumBolumler} yanitlar={yanitlar} onDegis={alanDegistir} hatalar={alanHatalari} />
 
           {formHata && (
             <div style={{ background: '#FEE2E2', border: '1px solid #EF4444', color: '#991B1B', borderRadius: 8, padding: '10px 12px', fontSize: 13, marginBottom: 16 }}>

@@ -224,12 +224,18 @@ export interface SoapGirdi {
  * DİZİ ORTASINDA kesilebiliyor — düz parse da köşeli-dilim de patlıyordu. Bu onarıcı:
  * (1) düz dener, (2) ilk '{'dan gövdeyi alıp dener, (3) kesik çıktıyı son tam öğede kırkıp
  * açık string'i ve parantez YĨĞININI doğru sırayla kapatarak dener. Başarısızsa açık hata. */
+/** NOTYA-BETA-0925: ayrıştırılamayan model çıktısı — geçici sayılır, seans bitişinde bir kez daha denenir
+ * (lib/doktor/soapYeniden.ts). Mesajı sabit metindir; model çıktısı taşımaz. */
+export class SoapCiktiHatasi extends Error {
+  constructor(mesaj: string) { super(mesaj); this.name = 'SoapCiktiHatasi' }
+}
+
 function jsonKurtar(metin: string): SoapNotu {
   const dene = (s: string): SoapNotu | null => { try { return JSON.parse(s) as SoapNotu } catch { return null } }
   let v = dene(metin)
   if (v) return v
   const bas = metin.indexOf('{')
-  if (bas === -1) throw new Error('SOAP çıktısı ayrıştırılamadı (JSON yok)')
+  if (bas === -1) throw new SoapCiktiHatasi('SOAP çıktısı ayrıştırılamadı (JSON yok)')
   const govde = metin.slice(bas)
   v = dene(govde)
   if (v) return v
@@ -256,7 +262,7 @@ function jsonKurtar(metin: string): SoapNotu {
     v = dene(aday)
     if (v) return v
   }
-  throw new Error('SOAP çıktısı ayrıştırılamadı (onarılamadı)')
+  throw new SoapCiktiHatasi('SOAP çıktısı ayrıştırılamadı (onarılamadı)')
 }
 
 /** Persona key: the session branch when it is a known specialty; otherwise users.specialty (KD-PROMPTS-LOCK: a KD doctor's
@@ -303,7 +309,8 @@ export async function soapNotuUret(anthropic: Anthropic, girdi: SoapGirdi): Prom
     system: sistem,
     messages: [{ role: 'user', content: `Muayene transkripti:\n\n${girdi.transcript}` }],
   })
-  const ham = yanit.content[0].type === 'text' ? yanit.content[0].text : ''
+  // Boş içerik (content: []) eskiden TypeError'dı; artık ayrıştırılamayan çıktı olarak geçici hata sayılır.
+  const ham = yanit.content?.[0]?.type === 'text' ? yanit.content[0].text : ''
   const temiz = ham.replace(/```json\n?|\n?```/g, '').trim()
   const veri = jsonKurtar(temiz)
   if (Array.isArray(veri.receteOnerisi)) veri.receteOnerisi = sgkDogrula(veri.receteOnerisi as ReceteOnerisi[])

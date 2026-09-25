@@ -7,6 +7,9 @@
     "fra1"
   ],
   "functions": {
+    "app/api/sessions/[id]/end/route.ts": {
+      "maxDuration": 300
+    },
     "app/api/**/*.ts": {
       "maxDuration": 60
     }
