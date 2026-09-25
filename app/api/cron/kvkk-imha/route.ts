@@ -15,6 +15,7 @@
  */
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { cronYetkiliMi } from '@/lib/cronYetki'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -38,9 +39,8 @@ function cutoff(days: number): string {
 
 export async function GET(req: Request) {
   // Cron-authenticated only: this destroys data and must never be reachable from a browser.
-  const secret = new URL(req.url).searchParams.get('secret')
-  const isCron = req.headers.get('x-vercel-cron') === '1'
-  if (!isCron && secret !== process.env.CRON_SECRET) {
+  // SEC-CRON-01: sahte x-vercel-cron başlığı yerine Vercel'in Bearer CRON_SECRET'ı (ya da elle ?secret=).
+  if (!cronYetkiliMi(req)) {
     return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 })
   }
 

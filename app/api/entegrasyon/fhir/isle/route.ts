@@ -23,6 +23,7 @@ import { htmlBelgeYap } from '@/lib/entegrasyon/belgeHtml'
 import { decryptPII } from '@/lib/security/encryption'
 import { kritikAlarm } from '@/lib/alarm'
 import { arsivsizNotlar } from '@/lib/doktor/arsiv'
+import { cronYetkiliMi } from '@/lib/cronYetki'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,9 +53,8 @@ export async function POST(req: NextRequest) {
 
 // P2 — Vercel cron girişi (evin deseni: x-vercel-cron ya da ?secret=CRON_SECRET).
 export async function GET(req: NextRequest) {
-  const secret = new URL(req.url).searchParams.get('secret')
-  const isCron = req.headers.get('x-vercel-cron') === '1'
-  if (!isCron && secret !== process.env.CRON_SECRET) {
+  // SEC-CRON-01: sahte x-vercel-cron başlığı yerine Vercel'in Bearer CRON_SECRET'ı (ya da elle ?secret=).
+  if (!cronYetkiliMi(req)) {
     return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 })
   }
   return calistir()
