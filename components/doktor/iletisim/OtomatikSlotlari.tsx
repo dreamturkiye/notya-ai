@@ -1,43 +1,24 @@
 'use client'
 /**
- * NOTYA-ILETISIM-01 — the two "automatic sending" rows on Ayarlar › İletişim.
+ * NOTYA-ILETISIM-01 → 04 — the two "automatic sending" rows on Ayarlar › İletişim.
  *
- * Today both are a calm "Yakında". Jobs B (Gmail / Outlook bağlantısı, NOTYA-ILETISIM-02) and C
- * (WhatsApp Business bağlantısı, NOTYA-ILETISIM-03) replace ONLY this file — the card around it,
- * the send button and the queue stay as they are. Contract: lib/iletisim/README.md.
+ *   • EpostaBaglan   (NOTYA-ILETISIM-02): Gmail ile bağlan / Outlook ile bağlan — reminders leave from the doctor's
+ *                    own address
+ *   • WhatsAppBaglan (NOTYA-ILETISIM-03): WhatsApp'ı bağla — reminders leave from the doctor's own number
+ *
+ * Each stays a calm "Yakında" line until its env vars exist (its API answers 503). Once connected, the dispatcher
+ * (lib/iletisim/otomatikGonderim.ts) sends the non-clinical queue items by itself; without a connection the
+ * one-tap flow is unchanged. Contract: lib/iletisim/README.md.
  */
 import React from 'react'
-import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
-
-const SATIRLAR = [
-  {
-    baslik: 'Gmail / Outlook bağlantısı',
-    aciklama: 'Hatırlatmalar sizin e-posta adresinizden kendiliğinden gitsin.',
-  },
-  {
-    baslik: 'WhatsApp Business bağlantısı',
-    aciklama: 'Randevu hatırlatmaları sizin WhatsApp numaranızdan kendiliğinden gitsin.',
-  },
-]
+import EpostaBaglan from './EpostaBaglan'
+import WhatsAppBaglan from './WhatsAppBaglan'
 
 export default function OtomatikSlotlari() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontFamily: CHROME_FONT.sans }}>
-      {SATIRLAR.map((s) => (
-        <div
-          key={s.baslik}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-            padding: '12px 14px', borderRadius: 12, background: CHROME_RENK.cream, border: `1px solid ${CHROME_RENK.borderSoft}`,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: CHROME_RENK.ink }}>{s.baslik}</div>
-            <div style={{ fontSize: 13, color: CHROME_RENK.muted, marginTop: 2 }}>{s.aciklama}</div>
-          </div>
-          <span style={{ fontSize: 13, color: CHROME_RENK.muted, fontStyle: 'italic', fontFamily: CHROME_FONT.serif, flexShrink: 0 }}>Yakında</span>
-        </div>
-      ))}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <WhatsAppBaglan />
+      <EpostaBaglan />
     </div>
   )
 }

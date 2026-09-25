@@ -245,6 +245,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/entegrasyon/fhir/isle/route.ts': I('cron-secret gated; exports notes only of doctors enrolled in that institution'),
   'app/api/entegrasyon/hl7/al/route.ts': I('per-institution inbound key; patient mapping scoped by kurum_id'),
   'app/api/entegrasyon/yonetim/route.ts': I('ADMIN_EMAILS only'),
-  'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; sends nothing (NOTYA-ILETISIM-01) — enqueues tomorrow\'s reminder into the booking owner\'s queue only when patients.id is re-found with doctor_id = the row\'s doktor_id'),
+  'app/api/cron/randevu-hatirlatma/route.ts': I('cron-secret gated; enqueues tomorrow\'s reminder into the booking owner\'s queue only when patients.id is re-found with doctor_id = the row\'s doktor_id; then (NOTYA-ILETISIM-04) the dispatcher sends from each item\'s own doctor\'s account — see iletisim-otomatik'),
+  'app/api/cron/iletisim-otomatik/route.ts': I('cron-secret gated; NOTYA-ILETISIM-04 dispatcher (lib/iletisim/otomatikGonderim.ts): every queue item is re-read via iletisimHazirla with the item\'s own doctor_id (queue row, appointment and patient each resolved with doctor_id), sent only from that doctor\'s own connected account, every write .eq(doctor_id)'),
   'app/api/cron/kvkk-imha/route.ts': I('cron-secret gated retention job; no cross-doctor read path'),
 }

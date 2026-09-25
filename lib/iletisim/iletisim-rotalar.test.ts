@@ -29,10 +29,25 @@ function eksikTabloZinciri(): unknown {
   const z: any = new Proxy({}, { get: (_h, k) => (k === 'then' ? (coz: (v: unknown) => unknown) => Promise.resolve(sonuc).then(coz) : () => z) })
   return z
 }
+/** Columns that "do not exist yet" (migration 098 not applied) — a select naming one answers 42703. */
+const eksikKolonlar = new Set<string>()
+function eksikKolonZinciri(): unknown {
+  const sonuc = { data: null, error: { code: '42703', message: 'column does not exist' } }
+  const z: any = new Proxy({}, { get: (_h, k) => (k === 'then' ? (coz: (v: unknown) => unknown) => Promise.resolve(sonuc).then(coz) : () => z) })
+  return z
+}
+function kolonDenetimli(q: any): any {
+  if (!eksikKolonlar.size) return q
+  return new Proxy(q, {
+    get: (h, k) => (k === 'select'
+      ? (secim: string, ...r: unknown[]) => ([...eksikKolonlar].some((x) => String(secim).includes(x)) ? eksikKolonZinciri() : h.select(secim, ...r))
+      : h[k]),
+  })
+}
 function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { headers?: Record<string, string> } }) {
   const c = () => db.istemci(opts)
   return {
-    from: (t: string) => (eksikTablolar.has(t) ? eksikTabloZinciri() : c().from(t)),
+    from: (t: string) => (eksikTablolar.has(t) ? eksikTabloZinciri() : kolonDenetimli(c().from(t))),
     auth: { getUser: (j?: string) => c().auth.getUser(j) },
     storage: { from: (k: string) => c().storage.from(k) },
     rpc: (ad: string, a: Record<string, string>) => c().rpc(ad, a),
@@ -73,6 +88,7 @@ type Sahne = {
 function sahne(kuyruklu = true): Sahne {
   db = new SahteVeritabani()
   eksikTablolar.clear()
+  eksikKolonlar.clear()
   const kullanici = (email: string) => { const id = randomUUID(); const token = `qa-${id}`; db.kullanicilar.set(token, { id, email }); return { id, token } }
   const doktor = kullanici('qa-hekim@ornek.test')
   const digerDoktor = kullanici('qa-hekim-2@ornek.test')
@@ -126,6 +142,7 @@ before(async () => {
     kuyruk: await ice('app/api/doktor/iletisim/kuyruk/route'),
     ayarlar: await ice('app/api/doktor/iletisim/ayarlar/route'),
     cron: await ice('app/api/cron/randevu-hatirlatma/route'),
+    otomatikCron: await ice('app/api/cron/iletisim-otomatik/route'),
     bildirim: await import('../portal/notifyPatientEmail'),
   }
 })
@@ -339,5 +356,75 @@ describe('migration 095 uygulanmadan: yumuşak düşüş', () => {
     assert.equal(h.status, 200, h.metin)
     const c = await coz(R.cron.GET(new Request('http://localhost/api/cron/randevu-hatirlatma', { headers: { authorization: 'Bearer qa-cron-sirri' } })))
     assert.equal(c.status, 200, c.metin)
+  })
+})
+
+describe('kendiliğinden gönderilenler (NOTYA-ILETISIM-04)', () => {
+  let s: Sahne
+  beforeEach(() => { s = sahne() })
+  const guncelle = (id: string, g: Record<string, unknown>) => Object.assign(tablo('iletisim_kuyrugu').find((x) => x.id === id)!, g)
+  const tarama = (sir = true) => coz(R.otomatikCron.GET(new Request('http://localhost/api/cron/iletisim-otomatik', sir ? { headers: { authorization: 'Bearer qa-cron-sirri' } } : {})))
+
+  it('Ana Sayfa sayısı: bekleyenler + bugün kendiliğinden gidenler; sekreter yalnız randevu türlerini sayar', async () => {
+    guncelle(s.kuyrukSaglikim, { durum: 'gonderildi', otomatik_durum: 'gonderildi' })
+    db.ekle('iletisim_kayitlari', { doctor_id: s.doktor.id, patient_id: s.hasta, kanal: 'whatsapp', tur: 'saglikim_yeni_mesaj', durum: 'gonderildi', otomatik: true, kuyruk_id: s.kuyrukSaglikim })
+    db.ekle('iletisim_kayitlari', { doctor_id: s.doktor.id, patient_id: s.hasta, kanal: 'eposta', tur: 'randevu_hatirlatma', durum: 'gonderildi', otomatik: true })
+    const d = await coz(R.kuyruk.GET(iste('GET', '/api/doktor/iletisim/kuyruk?sayi=1', { token: s.doktor.token })))
+    assert.deepEqual(d.json, { sayi: 2, otomatik: 2 })
+    const k = await coz(R.kuyruk.GET(iste('GET', '/api/doktor/iletisim/kuyruk?sayi=1', { token: s.sekreter.token })))
+    assert.deepEqual(k.json, { sayi: 1, otomatik: 1 })
+  })
+
+  it('şu an gönderilen öğe listede yok; başarısız olan kısa nedeniyle listede', async () => {
+    guncelle(s.kuyrukRandevu, { otomatik_durum: 'gonderiliyor', otomatik_deneme_at: new Date().toISOString() })
+    guncelle(s.kuyrukSaglikim, { otomatik_durum: 'gonderilemedi', otomatik_hata: 'Kendiliğinden gönderilemedi: WhatsApp şu an ulaşılamıyor.' })
+    const y = await coz(R.kuyruk.GET(iste('GET', '/api/doktor/iletisim/kuyruk', { token: s.doktor.token })))
+    const ids = y.json.ogeler.map((o: { id: string }) => o.id)
+    assert.ok(!ids.includes(s.kuyrukRandevu))
+    assert.equal(y.json.ogeler.find((o: { id: string }) => o.id === s.kuyrukSaglikim).not, 'Kendiliğinden gönderilemedi: WhatsApp şu an ulaşılamıyor.')
+  })
+
+  it('insan öğeyi açınca makineye kapanır; makine gönderdiyse 410 ve "Atla" onu bozmaz', async () => {
+    const h = await hazirla(s.sekreter.token, { kuyrukId: s.kuyrukRandevu })
+    assert.equal(h.status, 200, h.metin)
+    assert.equal(tablo('iletisim_kuyrugu').find((x) => x.id === s.kuyrukRandevu)!.otomatik_durum, 'elle')
+    // a secretary cannot claim a clinical item: 404 before any claim
+    assert.equal((await hazirla(s.sekreter.token, { kuyrukId: s.kuyrukAsi })).status, 404)
+    assert.equal(tablo('iletisim_kuyrugu').find((x) => x.id === s.kuyrukAsi)!.otomatik_durum, undefined)
+
+    guncelle(s.kuyrukSaglikim, { durum: 'gonderildi', otomatik_durum: 'gonderildi' })
+    const g = await hazirla(s.doktor.token, { kuyrukId: s.kuyrukSaglikim })
+    assert.deepEqual([g.status, g.json.kendiliginden], [410, true])
+    const a = await coz(R.kuyruk.PATCH(iste('PATCH', '/api/doktor/iletisim/kuyruk', { token: s.doktor.token, govde: { id: s.kuyrukSaglikim, islem: 'atla' } })))
+    assert.equal(a.status, 200)
+    assert.equal(tablo('iletisim_kuyrugu').find((x) => x.id === s.kuyrukSaglikim)!.durum, 'gonderildi')
+  })
+
+  it('kayıt listesi kendiliğinden gidenleri "Kendiliğinden" gösterir', async () => {
+    db.ekle('iletisim_kayitlari', { doctor_id: s.doktor.id, patient_id: s.hasta, kanal: 'whatsapp', tur: 'randevu_hatirlatma', durum: 'gonderildi', otomatik: true })
+    const y = await coz(R.kayit.GET(iste('GET', `/api/doktor/iletisim/kayit?patientId=${s.hasta}`, { token: s.doktor.token })))
+    assert.deepEqual([y.json.kayitlar[0].gonderen, y.json.kayitlar[0].otomatik], ['Kendiliğinden', true])
+  })
+
+  it('tarama cron\'u: sırsız 401; bağlı hesap yokken hiçbir şey göndermez, kuyruk aynen kalır', async () => {
+    assert.equal((await tarama(false)).status, 401)
+    const y = await tarama()
+    assert.equal(y.status, 200, y.metin)
+    assert.equal(y.json.gonderilen, 0)
+    assert.ok(tablo('iletisim_kuyrugu').every((x) => x.durum === 'bekliyor' && x.otomatik_durum == null))
+  })
+
+  it('migration 098 uygulanmadan: kuyruk ve kayıtlar eskisi gibi, 410 yok, tarama hiçbir şey sahiplenmez', async () => {
+    for (const k of ['otomatik_durum', 'otomatik', 'saglayici']) eksikKolonlar.add(k)
+    const k = await coz(R.kuyruk.GET(iste('GET', '/api/doktor/iletisim/kuyruk', { token: s.doktor.token })))
+    assert.equal(k.status, 200)
+    assert.equal(k.json.ogeler.length, 3)
+    assert.equal(k.json.otomatik, 0)
+    const l = await coz(R.kayit.GET(iste('GET', '/api/doktor/iletisim/kayit', { token: s.doktor.token })))
+    assert.equal(l.status, 200)
+    assert.equal((await hazirla(s.doktor.token, { kuyrukId: s.kuyrukRandevu })).status, 200)
+    const y = await tarama()
+    assert.equal(y.status, 200)
+    assert.equal(y.json.gonderilen, 0)
   })
 })

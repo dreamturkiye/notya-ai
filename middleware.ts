@@ -44,9 +44,11 @@ export async function middleware(req: NextRequest) {
     'max-age=31536000; includeSubDomains; preload'
   )
   // frame-src blob: — belge kasası PDF önizlemesi (DocumentViewer) şifresi çözülmüş dosyayı blob: iframe'de gösterir; default-src engelliyordu.
+  // NOTYA-ILETISIM-03: connect.facebook.net (Facebook JS SDK, yalnız WhatsAppBaglan yükler) + *.facebook.com
+  // (SDK'nın giriş/iletişim çerçeveleri ve istekleri) — "WhatsApp'ı bağla" (Embedded Signup) için.
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com https://api.groq.com https://api.deepgram.com wss://api.deepgram.com https://api.open-meteo.com; worker-src 'self' blob: data: https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' blob:; script-src-elem 'self' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.anthropic.com https://api.groq.com https://api.deepgram.com wss://api.deepgram.com https://api.open-meteo.com https://*.facebook.com; worker-src 'self' blob: data: https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' blob: https://*.facebook.com; script-src-elem 'self' 'unsafe-inline' blob: https://unpkg.com https://cdn.jsdelivr.net https://connect.facebook.net"
   )
 
   // CORS - Sadece notya.io domaininden (Kaan, 2026-09-25: notya.io yayında)
