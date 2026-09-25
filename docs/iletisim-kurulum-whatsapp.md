@@ -100,6 +100,11 @@ On connect, Notya creates these in the doctor's own WABA. Category is **UTILITY*
 - The card shows **Onay bekliyor** until both are approved, then **Hazır**. If Meta rejects or pauses one, it shows **Onaylanmadı**.
 - Status comes from the `message_template_status_update` webhook. `/status` also re-reads it from Meta while anything is still pending.
 - If Meta re-categorises a template as MARKETING, the price changes. Keep the wording purely transactional.
+- Automatic sending (NOTYA-ILETISIM-04): only these two message types ever go out on WhatsApp by themselves, and only
+  as these templates. For a patient under 18, {{1}} is *Sayın Veli* (the reminder speaks to the parent). Everything
+  else (randevu değişikliği / iptali, bilgi formu) goes by e-posta if connected, otherwise stays one-tap. The Sağlığım
+  button only works when `NEXT_PUBLIC_APP_URL` is `https://www.notya.io` (the template's fixed URL prefix); with any
+  other value the notice falls back to e-posta.
 
 Sources:
 - https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/utility-templates/utility-templates

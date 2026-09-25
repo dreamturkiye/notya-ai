@@ -34,12 +34,18 @@ export async function GET(req: NextRequest) {
   const patientId = req.nextUrl.searchParams.get('patientId')
   if (patientId && !(await hastaSahibiMi(supabase, doktorId, patientId))) return NextResponse.json({ error: 'Hasta bulunamadı.' }, { status: 404 })
 
-  let q = supabase.from('iletisim_kayitlari')
-    .select('id, patient_id, kanal, tur, durum, gonderen_personel_id, created_at')
-    .eq('doctor_id', doktorId)
-  if (patientId) q = q.eq('patient_id', patientId)
-  if (rol !== 'doktor') q = q.in('tur', [...PERSONEL_TURLERI])
-  const { data, error } = await q.order('created_at', { ascending: false }).limit(patientId ? 10 : 50)
+  const oku = (kolonlar: string) => {
+    let q = supabase.from('iletisim_kayitlari').select(kolonlar).eq('doctor_id', doktorId)
+    if (patientId) q = q.eq('patient_id', patientId)
+    if (rol !== 'doktor') q = q.in('tur', [...PERSONEL_TURLERI])
+    return q.order('created_at', { ascending: false }).limit(patientId ? 10 : 50)
+  }
+  type KayitSatiri = { id: string; patient_id: string; kanal: string; tur: string; durum: string; gonderen_personel_id: string | null; created_at: string; otomatik?: boolean | null }
+  const KOLONLAR = 'id, patient_id, kanal, tur, durum, gonderen_personel_id, created_at'
+  // `otomatik` arrives with migration 098 (NOTYA-ILETISIM-04); before it the log reads as before.
+  let { data: ham, error } = await oku(`${KOLONLAR}, otomatik`)
+  if (error && tabloYokMu(error)) ({ data: ham, error } = await oku(KOLONLAR))
+  const data = ham as unknown as KayitSatiri[] | null
   if (error) return NextResponse.json({ kayitlar: [], hazir: !tabloYokMu(error) })
 
   const ids = Array.from(new Set((data || []).map((r) => String(r.patient_id))))
@@ -60,7 +66,8 @@ export async function GET(req: NextRequest) {
       kanal: r.kanal,
       tur: r.tur,
       durum: r.durum,
-      gonderen: r.gonderen_personel_id ? personelAdi.get(String(r.gonderen_personel_id)) || 'Sekreter' : 'Doktor',
+      gonderen: r.otomatik ? 'Kendiliğinden' : r.gonderen_personel_id ? personelAdi.get(String(r.gonderen_personel_id)) || 'Sekreter' : 'Doktor',
+      otomatik: r.otomatik === true,
       tarih: r.created_at,
     }))
   return NextResponse.json({ kayitlar, hazir: true })

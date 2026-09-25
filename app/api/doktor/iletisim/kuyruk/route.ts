@@ -1,8 +1,10 @@
 /**
  * NOTYA-ILETISIM-01 — Hazır mesajlar (iletisim_kuyrugu).
  *
- * GET [?sayi=1] → today's waiting items, oldest first, "Sonra" ones last: { ogeler: [{ id, tur, patientId, hastaAdi }] }
- *                 or just { sayi }. The full message for one item comes from POST /api/doktor/iletisim/hazirla
+ * GET [?sayi=1] → today's waiting items, oldest first, "Sonra" ones last: { ogeler: [{ id, tur, patientId, hastaAdi, not? }], otomatik }
+ *                 or just { sayi, otomatik }. `otomatik` = messages that left by themselves today (NOTYA-ILETISIM-04);
+ *                 an item being sent automatically right now is not listed, one whose automatic attempt failed
+ *                 carries a short `not`. The full message for one item comes from POST /api/doktor/iletisim/hazirla
  *                 { kuyrukId } — the flow shows one patient at a time.
  *                 For the doctor, due vaccine reminders are (re)built here first — deliberately not in a cron
  *                 (lib/asi/hatirlatma.test.ts: no cron touches asilar).
@@ -19,7 +21,8 @@ import { pratikOturum } from '@/lib/doktor/pratikOturum'
 import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { bugunTrIso } from '@/lib/iletisim/sablonlar'
 import { PERSONEL_TURLERI, bugunGosterilecekler, kuyrukGuncellemesi, kuyrukIslemiMi, turIzinliMi } from '@/lib/iletisim/kuyruk'
-import { asiKuyrukAdaylari, hastaAdiCoz, kuyrugaEkle } from '@/lib/iletisim/sunucu'
+import { asiKuyrukAdaylari, hastaAdiCoz, kuyrugaEkle, tabloYokMu } from '@/lib/iletisim/sunucu'
+import { bugunOtomatikSayisi, insanGorunumu } from '@/lib/iletisim/otomatikGonderim'
 import { mesajTuruMu, type MesajTuru, type KuyrukDurumu } from '@/lib/iletisim/tipler'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +30,12 @@ export const dynamic = 'force-dynamic'
 type Satir = {
   id: string; patient_id: string; tur: MesajTuru; durum: KuyrukDurumu; planlanan_gun: string
   randevu_id: string | null; asi_id: string | null; ertelendi_at: string | null; created_at: string | null
+  otomatik_durum?: string | null; otomatik_deneme_at?: string | null; otomatik_hata?: string | null
 }
+
+const KOLONLAR = 'id, patient_id, tur, durum, planlanan_gun, randevu_id, asi_id, ertelendi_at, created_at'
+/** 098 columns; before 098 the query falls back to KOLONLAR. */
+const OTOMATIK_KOLONLAR = `${KOLONLAR}, otomatik_durum, otomatik_deneme_at, otomatik_hata`
 
 export async function GET(req: NextRequest) {
   const oturum = await pratikOturum(req)
@@ -40,19 +48,25 @@ export async function GET(req: NextRequest) {
     try { await kuyrugaEkle(supabase, await asiKuyrukAdaylari(supabase, doktorId, bugun)) } catch { /* the queue still shows what exists */ }
   }
 
-  let q = supabase.from('iletisim_kuyrugu')
-    .select('id, patient_id, tur, durum, planlanan_gun, randevu_id, asi_id, ertelendi_at, created_at')
-    .eq('doctor_id', doktorId)
-    .eq('durum', 'bekliyor')
-    .lte('planlanan_gun', bugun)
-  if (rol !== 'doktor') q = q.in('tur', [...PERSONEL_TURLERI])
-  const { data, error } = await q.limit(200)
-  if (error) return NextResponse.json(sadeceSayi ? { sayi: 0 } : { ogeler: [] })
+  const oku = (kolonlar: string) => {
+    let q = supabase.from('iletisim_kuyrugu')
+      .select(kolonlar)
+      .eq('doctor_id', doktorId)
+      .eq('durum', 'bekliyor')
+      .lte('planlanan_gun', bugun)
+    if (rol !== 'doktor') q = q.in('tur', [...PERSONEL_TURLERI])
+    return q.limit(200)
+  }
+  let { data, error } = await oku(OTOMATIK_KOLONLAR)
+  if (error && tabloYokMu(error)) ({ data, error } = await oku(KOLONLAR))
+  const otomatik = await bugunOtomatikSayisi(supabase, doktorId, rol === 'doktor' ? undefined : PERSONEL_TURLERI)
+  if (error) return NextResponse.json(sadeceSayi ? { sayi: 0, otomatik } : { ogeler: [], otomatik })
 
+  const simdi = new Date()
   let satirlar = bugunGosterilecekler(
-    (data || []).filter((s) => mesajTuruMu(s.tur)).map((s) => ({ ...s, id: String(s.id), patient_id: String(s.patient_id) }) as Satir),
+    ((data || []) as unknown as Satir[]).filter((s) => mesajTuruMu(s.tur)).map((s) => ({ ...s, id: String(s.id), patient_id: String(s.patient_id) })),
     rol, bugun,
-  )
+  ).filter((s) => insanGorunumu(s, simdi) !== 'gizle')
 
   // Close items whose source no longer needs a message.
   const kapat: string[] = []
@@ -87,9 +101,13 @@ export async function GET(req: NextRequest) {
   const ad = new Map((hastalar || []).filter((p) => p.is_active !== false).map((p) => [String(p.id), hastaAdiCoz(p.name_encrypted) || 'Hasta']))
   const ogeler = satirlar
     .filter((s) => ad.has(s.patient_id))
-    .map((s) => ({ id: s.id, tur: s.tur, patientId: s.patient_id, hastaAdi: ad.get(s.patient_id) as string, ertelendi: !!s.ertelendi_at }))
+    .map((s) => {
+      const g = insanGorunumu(s, simdi)
+      const not = g !== 'gizle' ? g.not : undefined
+      return { id: s.id, tur: s.tur, patientId: s.patient_id, hastaAdi: ad.get(s.patient_id) as string, ertelendi: !!s.ertelendi_at, ...(not ? { not } : {}) }
+    })
 
-  return NextResponse.json(sadeceSayi ? { sayi: ogeler.length } : { ogeler })
+  return NextResponse.json(sadeceSayi ? { sayi: ogeler.length, otomatik } : { ogeler, otomatik })
 }
 
 export async function PATCH(req: NextRequest) {
@@ -104,7 +122,8 @@ export async function PATCH(req: NextRequest) {
   if (!k || !mesajTuruMu(k.tur) || !turIzinliMi(rol, k.tur)) return NextResponse.json({ error: 'Mesaj bulunamadı.' }, { status: 404 })
 
   const guncelleme = kuyrukGuncellemesi(b.islem, new Date().toISOString(), { userId: user.id, personelId: rol === 'sekreter' ? personelId : null })
-  const { error } = await supabase.from('iletisim_kuyrugu').update(guncelleme).eq('id', id).eq('doctor_id', doktorId)
+  // Only a waiting item changes: one that already left by itself is never turned into "atlandi".
+  const { error } = await supabase.from('iletisim_kuyrugu').update(guncelleme).eq('id', id).eq('doctor_id', doktorId).eq('durum', 'bekliyor')
   if (error) return NextResponse.json({ error: 'Kaydedilemedi.' }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

@@ -7,7 +7,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decryptPII, encryptPII } from '@/lib/security/encryption'
-import { saglayiciHazirMi } from './ayar'
+import { saglayiciHazirMi, type Saglayici } from './ayar'
 import { baglantiGetir, baglantiGuncelle } from './depo'
 import { epostaGecerliMi } from './mime'
 import { erisimAl, gonder as saglayiciyaGonder } from './saglayicilar'
@@ -21,7 +21,8 @@ export type GonderGirdisi = {
   degiskenler?: string[]
 }
 
-export type GonderSonucu = { ok: true; disId?: string } | { ok: false; hata: string }
+/** `saglayici` tells the caller which mailbox actually sent (logged by the automatic sender, NOTYA-ILETISIM-04). */
+export type GonderSonucu = { ok: true; disId?: string; saglayici?: Saglayici } | { ok: false; hata: string }
 
 export const VARSAYILAN_KONU = 'Randevunuz hakkında'
 const METIN_SINIRI = 20_000
@@ -96,5 +97,5 @@ export async function epostaGonder(sb: SupabaseClient, g: GonderGirdisi): Promis
     return { ok: false, hata: HATA.gecici }
   }
   if (b.son_hata) await baglantiGuncelle(sb, g.doktorId, { son_hata: null }).catch(() => {})
-  return { ok: true, ...(sonuc.disId ? { disId: sonuc.disId } : {}) }
+  return { ok: true, saglayici: b.saglayici, ...(sonuc.disId ? { disId: sonuc.disId } : {}) }
 }

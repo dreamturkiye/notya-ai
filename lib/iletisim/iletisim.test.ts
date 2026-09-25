@@ -260,9 +260,10 @@ describe('personel (sekreter) yetkisi', () => {
   })
 })
 
-describe('otomatik gönderim yuvası (iş B ve C)', () => {
-  it('bugün kayıtlı gönderici yok; hazır gönderici her zaman null', async () => {
-    assert.deepEqual(otomatikGondericiler(), [])
+describe('otomatik gönderim yuvası (iş B ve C, NOTYA-ILETISIM-04)', () => {
+  it('WhatsApp ve e-posta kayıtlı (WhatsApp önce); ortam yokken hazır gönderici null → tek dokunuş', async () => {
+    for (const k of ['META_APP_ID', 'META_APP_SECRET', 'META_ES_CONFIG_ID', 'GOOGLE_OAUTH_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_SECRET', 'MS_OAUTH_CLIENT_ID', 'MS_OAUTH_CLIENT_SECRET']) delete process.env[k]
+    assert.deepEqual(otomatikGondericiler().map((g) => [g.kanal, g.saglayici]), [['whatsapp', 'whatsapp_business'], ['eposta', 'eposta']])
     assert.equal(await hazirOtomatikGonderici('D1', 'whatsapp'), null)
     assert.equal(await hazirOtomatikGonderici('D1', 'eposta'), null)
   })
@@ -299,8 +300,8 @@ describe('kaynak kilitleri', () => {
   })
   it('otomatik gönderim satırları yalnız OtomatikSlotlari\'ndan; UI\'da jargon yok', () => {
     assert.match(oku('components/doktor/iletisim/IletisimAyarKarti.tsx'), /<OtomatikSlotlari \/>/)
-    for (const f of ['GonderDugmesi', 'HazirMesajlar', 'IletisimAyarKarti', 'OtomatikSlotlari', 'RandevuMesaji', 'HastaIletisim']) {
-      const kod = oku(`components/doktor/iletisim/${f}.tsx`).split('\n').filter((l) => !/^\s*(\*|\/\/|\/\*\*|\{\/\*)/.test(l)).join('\n')
+    for (const f of ['GonderDugmesi', 'HazirMesajlar', 'IletisimAyarKarti', 'OtomatikSlotlari', 'EpostaBaglan', 'WhatsAppBaglan', 'RandevuMesaji', 'HastaIletisim']) {
+      const kod = oku(`components/doktor/iletisim/${f}.tsx`).split('\n').filter((l) => !/^\s*(\*|\/\/|\/\*\*|\{\/\*|import\s)/.test(l)).join('\n')
       const metinler = [...kod.matchAll(/>([^<>{}]*[A-Za-zÇĞİÖŞÜçğıöşü][^<>{}]*)</g), ...kod.matchAll(/'([^'\n]*\s[^'\n]*)'/g)].map((m) => m[1])
       for (const m of metinler) assert.doesNotMatch(m, /deep ?link|\bAPI\b|OAuth|token/i, `${f}: "${m}"`)
     }

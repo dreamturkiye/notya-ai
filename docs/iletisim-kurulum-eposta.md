@@ -58,7 +58,7 @@ Open **Google Auth Platform** (https://console.cloud.google.com/auth/overview) �
   - User support email: your address
   - App logo: the Notya logo, 120×120. A logo triggers brand review, so leave it out if you want the fastest path.
   - App home page: `https://www.notya.io`
-  - Privacy policy: `https://www.notya.io/kvkk`. This is the only privacy page in the app today (`app/kvkk/page.tsx`). It must be on the same domain as the home page and linked from the home page, and before verification it needs the Gmail paragraph described in 1.4.
+  - Privacy policy: `https://www.notya.io/kvkk#eposta-baglantisi`. This is the only privacy page in the app today (`app/kvkk/page.tsx`). It must be on the same domain as the home page and linked from the home page. The section **Gmail / Outlook bağlantısı** (anchor `#eposta-baglantisi`) holds the Gmail paragraph described in 1.4, in Turkish, plus the Google API Services User Data Policy / Limited Use statement in English.
   - Terms of service: optional; leave it empty. There is no terms page yet.
   - Authorized domains: `notya.io`
   - Developer contact: your address
@@ -90,7 +90,9 @@ Click **Publish app** under **Audience**, then submit for verification under **V
 2. **Home page** on `www.notya.io` that describes what Notya does. A bare login page is not accepted.
 3. **Privacy policy** on the same domain, linked from the home page. It must say what Gmail
    data is used: sending appointment reminders on the doctor's behalf, no reading of mail. It
-   must also include Google's Limited Use wording for user data.
+   must also include Google's Limited Use wording for user data. Done: https://www.notya.io/kvkk#eposta-baglantisi
+   (Turkish explanation + the English Limited Use statement). Check that the notya.io home page links
+   to `/kvkk` before submitting.
 4. **Scope justification**: one short paragraph. For example: *"Notya sends appointment reminder
    emails from the doctor's own Gmail account so patients recognise the sender and replies reach
    the doctor. We only send; we never read, list or modify mail."*
@@ -136,10 +138,11 @@ Sources:
    Copy the **Value** (not the Secret ID) into `MS_OAUTH_CLIENT_SECRET` right away. It is shown only once.
 2. **API permissions → Add a permission → Microsoft Graph → Delegated permissions**:
    - `Mail.Send`
+   - `User.Read` (Entra adds it by default; **keep it**). Notya uses it only to read the connected
+     mailbox address from `/me` (see 2.5).
    - `offline_access`, `openid`, `email` (under "OpenId permissions")
-   - Remove the default `User.Read` if you like. Notya doesn't use it.
-   - `Mail.Send` delegated does **not** need admin consent. By default each user can consent for
-     their own mailbox.
+   - None of these need admin consent (`Mail.Send` and `User.Read` delegated). By default each user can
+     consent for their own mailbox.
 
 ### 2.3 Publisher verification (strongly recommended before inviting clinics on Microsoft 365)
 Some organisations only let users approve apps from a **verified publisher**. Microsoft's
@@ -164,12 +167,13 @@ https://account.live.com/consent/Manage (personal). Google, by contrast, is revo
 Google when the doctor disconnects.
 
 ### 2.5 The connected address
-The address shown on the card comes from the `email` claim in the sign-in response. For
-personal accounts it falls back to `preferred_username` when that is an email address. Microsoft
-does not guarantee `email` for every work account; for example, a user without a mailbox
-attribute won't have one. That doctor would see *Bağlanamadı*. Fixing it would mean adding the
-`User.Read` permission and reading `/me` from Graph. It was left out to keep permissions minimal.
-Sending itself does not depend on this address.
+Right after sign-in Notya reads `GET /me?$select=mail,userPrincipalName` from Graph (the
+`User.Read` permission) and shows `mail`, or `userPrincipalName` when `mail` is empty and it is an
+address. Microsoft does not put `email` in the sign-in token for every work (Microsoft 365) account,
+so without `/me` such a doctor would see *Bağlanamadı* (NOTYA-ILETISIM-04 added it for that reason).
+If `/me` fails, the `email` / `preferred_username` claims of the sign-in response are still used.
+Sending itself does not depend on this address. `User.Read` reads the doctor's own profile only; it
+gives no access to mail.
 
 Sources:
 - Auth code flow, `/common`, PKCE, `response_mode`, combining scopes: https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
@@ -194,6 +198,10 @@ Sources:
    Sent folder.
 4. Optional: remove Notya at https://myaccount.google.com/permissions → the next send marks the
    card **Yeniden bağlan**.
+5. Automatic sending (NOTYA-ILETISIM-04, needs migration 098): mark one test patient's e-posta consent,
+   give them a booking for tomorrow, and wait for the 17:00 randevu cron (or the 10-minute sweep,
+   07:00–21:00). The reminder leaves from his address, Ana Sayfa shows *Bugün 1 mesaj kendiliğinden
+   gönderildi*, and the hasta profili log shows it as *Kendiliğinden*.
 
 ## 4. How it behaves (for support)
 | What happened | What the doctor sees | What Notya does |
@@ -201,7 +209,7 @@ Sources:
 | Doctor pressed Cancel on the provider's screen | *Bağlantı yapılmadı…* | nothing is stored |
 | Doctor unticked "send email" on Google's screen | *E-posta gönderme izni verilmedi…* | nothing is stored |
 | Permission withdrawn, password changed, 7-day Testing expiry, 90 idle days (Microsoft) | **Yeniden bağlan** | status `yenilenmeli`, sending stops |
-| Gmail daily sending limit, provider outage | the message is reported failed; the queue may retry | connection stays active |
+| Gmail daily sending limit, provider outage | the item stays in **Hazır mesajlar** with *Kendiliğinden gönderilemedi: …* for one-tap sending; it is not retried automatically | connection stays active |
 | **Bağlantıyı kaldır** | card back to the two buttons | Google: revoked at Google; both: row deleted |
 
 What is stored (`doktor_eposta_baglantilari`): provider, address, the long-lived credential

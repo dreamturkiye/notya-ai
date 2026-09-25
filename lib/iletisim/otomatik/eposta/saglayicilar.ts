@@ -11,6 +11,12 @@ import { donusAdresi, saglayiciAyari, type Saglayici } from './ayar'
 
 export const GMAIL_GONDER_KAPSAMI = 'https://www.googleapis.com/auth/gmail.send'
 export const GRAPH_GONDER_KAPSAMI = 'https://graph.microsoft.com/Mail.Send'
+/**
+ * Read the signed-in user's own profile (GET /me), only to learn the connected address. Microsoft does
+ * not put `email` in the id_token for every work (Microsoft 365) account, and `preferred_username` is the
+ * sign-in name, which is not always the mailbox address. Gives no access to any mail.
+ */
+export const GRAPH_PROFIL_KAPSAMI = 'https://graph.microsoft.com/User.Read'
 
 const GOOGLE = {
   yetki: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -25,7 +31,8 @@ const MICROSOFT = {
   yetki: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
   jeton: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
   gonder: 'https://graph.microsoft.com/v1.0/me/sendMail',
-  kapsamlar: ['openid', 'email', 'offline_access', GRAPH_GONDER_KAPSAMI],
+  profil: 'https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName',
+  kapsamlar: ['openid', 'email', 'offline_access', GRAPH_PROFIL_KAPSAMI, GRAPH_GONDER_KAPSAMI],
 }
 
 const YETKI_KAYBI = /insufficient|ACCESS_TOKEN_SCOPE|ErrorAccessDenied|InvalidAuthenticationToken/i
@@ -83,6 +90,23 @@ function adresBul(s: Saglayici, talepler: Record<string, unknown>): string | nul
   return null
 }
 
+/** Microsoft: the mailbox address from Graph /me (`mail`, else the sign-in name when it is an address). */
+async function microsoftProfilAdresi(erisimJetonu: unknown): Promise<string | null> {
+  if (typeof erisimJetonu !== 'string' || !erisimJetonu) return null
+  try {
+    const yanit = await fetch(MICROSOFT.profil, {
+      headers: { Authorization: `Bearer ${erisimJetonu}`, Accept: 'application/json' },
+      cache: 'no-store',
+    })
+    if (!yanit.ok) return null
+    const veri = (await yanit.json().catch(() => ({}))) as { mail?: unknown; userPrincipalName?: unknown }
+    for (const a of [veri.mail, veri.userPrincipalName]) if (typeof a === 'string' && a.includes('@')) return a.trim().toLowerCase()
+    return null
+  } catch {
+    return null
+  }
+}
+
 function kapsamVar(veri: Record<string, unknown>, kapsam: string, kisa: string): boolean {
   const verilen = typeof veri.scope === 'string' ? veri.scope.split(/\s+/) : []
   return verilen.some((k) => k === kapsam || k.toLowerCase() === kisa.toLowerCase())
@@ -138,7 +162,8 @@ export async function kodTakas(s: Saglayici, p: { kod: string; dogrulayici: stri
   const gonderIzni = s === 'google' ? kapsamVar(veri, GMAIL_GONDER_KAPSAMI, 'gmail.send') : kapsamVar(veri, GRAPH_GONDER_KAPSAMI, 'Mail.Send')
   if (!gonderIzni) return { ok: false, neden: 'izin-eksik', hata: 'send_scope_not_granted' }
   if (typeof veri.refresh_token !== 'string' || !veri.refresh_token) return { ok: false, neden: 'hata', hata: 'no_refresh_token' }
-  const adres = adresBul(s, idJetonuTalepleri(veri.id_token))
+  // Microsoft: Graph /me first (reliable for work accounts), the id_token claims only as a fallback.
+  const adres = (s === 'microsoft' ? await microsoftProfilAdresi(veri.access_token) : null) ?? adresBul(s, idJetonuTalepleri(veri.id_token))
   if (!adres) return { ok: false, neden: 'hata', hata: 'no_email_claim' }
   return { ok: true, yenilemeJetonu: veri.refresh_token, adres }
 }

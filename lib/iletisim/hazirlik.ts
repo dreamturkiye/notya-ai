@@ -37,6 +37,10 @@ export type Hazirlik = {
   randevuId: string | null
   asiId: string | null
   kuyrukId: string | null
+  /** The appointment behind the message (start, state, already reminded) — the automatic sender checks it. */
+  randevu: { baslangic: string; durum: string; hatirlatmaGonderildi: boolean } | null
+  /** Sağlığım link that went into the message (saglikim_yeni_mesaj / bilgi_formu), else null. */
+  link: string | null
 }
 
 export type HazirlikHatasi = { durum: 400 | 403 | 404; hata: string }
@@ -83,14 +87,16 @@ export async function iletisimHazirla(
   if (!turIzinliMi(rol, tur)) return { durum: 403, hata: 'Bu mesajı yalnızca doktor hazırlayabilir.' }
 
   let randevuIso: string | null = null
+  let randevu: Hazirlik["randevu"] = null
   if (randevuId) {
     const { data: r } = await sb.from('randevular')
-      .select('id, patient_id, baslangic').eq('id', randevuId).eq('doktor_id', doktorId).maybeSingle()
+      .select('id, patient_id, baslangic, durum, hatirlatma_gonderildi').eq('id', randevuId).eq('doktor_id', doktorId).maybeSingle()
     if (!r) return { durum: 404, hata: 'Randevu bulunamadı.' }
     if (!r.patient_id) return { durum: 400, hata: 'Bu randevu bir hasta kaydına bağlı değil. Önce hastayı kaydedin; iletişim izni hasta kaydında tutulur.' }
     if (patientId && patientId !== String(r.patient_id)) return { durum: 404, hata: 'Randevu bulunamadı.' }
     patientId = String(r.patient_id)
     randevuIso = String(r.baslangic)
+    randevu = { baslangic: randevuIso, durum: String(r.durum ?? ''), hatirlatmaGonderildi: r.hatirlatma_gonderildi === true }
   }
 
   let asiTarih: string | null = null
@@ -118,7 +124,7 @@ export async function iletisimHazirla(
     tarihIso: asiTarih,
     metin: tur === 'serbest' ? str(g.metin).slice(0, 1500) : null,
   })
-  return { tur, hasta, mesaj, sonKanal: await sonKanal(sb, doktorId, patientId), randevuId, asiId, kuyrukId }
+  return { tur, hasta, mesaj, sonKanal: await sonKanal(sb, doktorId, patientId), randevuId, asiId, kuyrukId, randevu, link }
 }
 
 export function hataMi(x: Hazirlik | HazirlikHatasi): x is HazirlikHatasi {

@@ -3,8 +3,10 @@
  *
  * An automatic pre-visit reminder is still the biggest lever on no-shows, but it no longer leaves
  * from a Twilio number: once a day this cron PREPARES tomorrow's reminders in each doctor's
- * "Hazır mesajlar" queue (iletisim_kuyrugu). The doctor or the secretary opens them in the morning
- * and sends each one from the practice's OWN WhatsApp / mail with one tap. Nothing is sent here.
+ * "Hazır mesajlar" queue (iletisim_kuyrugu). NOTYA-ILETISIM-04: right after, the dispatcher sends the ones it can
+ * from the doctor's OWN connected WhatsApp / mailbox (lib/iletisim/otomatikGonderim.ts); everything else — every
+ * doctor who connected nothing, patients without consent for a ready channel, failures — waits in the queue and
+ * the doctor or the secretary sends it with one tap.
  *
  * Runs every day at 07:00 and 17:00 TRT (vercel.json) — the second run catches bookings made during the
  * day for tomorrow. De-duplicated by (doctor_id, tekil_anahtar = appointment id + start time):
@@ -17,6 +19,7 @@ import { cronYetkiliMi } from '@/lib/cronYetki'
 import { bugunTrIso } from '@/lib/iletisim/sablonlar'
 import { gunEkle, randevuAdaylari, trGunAraligi, type RandevuSatiri } from '@/lib/iletisim/kuyruk'
 import { kuyrugaEkle } from '@/lib/iletisim/sunucu'
+import { otomatikGonder } from '@/lib/iletisim/otomatikGonderim'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -27,6 +30,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 })
   }
 
+  const baslangic = Date.now()
   const supabase = servisSupabase()
   const bugun = bugunTrIso()
   const { bas, son } = trGunAraligi(gunEkle(bugun, 1))
@@ -54,10 +58,17 @@ export async function GET(req: Request) {
   }
 
   const eklenen = await kuyrugaEkle(supabase, gecerli)
+  // Never throws; one doctor's error never blocks the others. Leaves ~15 s of the 60 s for the response.
+  const otomatik = await otomatikGonder(supabase, {
+    doktorIds: Array.from(new Set(gecerli.map((a) => a.doctor_id))),
+    sureButcesiMs: Math.max(5_000, 45_000 - (Date.now() - baslangic)),
+  })
   return NextResponse.json({
     calisma_zamani: new Date().toISOString(),
     yarin_randevu: randevular?.length || 0,
     hazirlanan: eklenen,
     zaten_hazir_veya_atlandi: gecerli.length - eklenen,
+    kendiliginden_gonderilen: otomatik.gonderilen,
+    kendiliginden_gonderilemeyen: otomatik.basarisiz,
   })
 }

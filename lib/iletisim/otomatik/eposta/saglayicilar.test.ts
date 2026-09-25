@@ -50,10 +50,14 @@ test('yetkiAdresi google: yalnız gönderme + kimlik, çevrimdışı, PKCE, izin
   assert.equal(p.get('include_granted_scopes'), null)
 })
 
-test('yetkiAdresi microsoft: common kiracı (iş + kişisel), Mail.Send + offline_access', () => {
+test('yetkiAdresi microsoft: common kiracı (iş + kişisel), Mail.Send + User.Read + offline_access', () => {
   const u = new URL(yetkiAdresi('microsoft', { durum: 'D', meydanOkuma: 'M' }))
   assert.equal(u.origin + u.pathname, 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize')
-  assert.deepEqual(u.searchParams.get('scope')!.split(' ').sort(), ['email', 'https://graph.microsoft.com/Mail.Send', 'offline_access', 'openid'])
+  assert.deepEqual(u.searchParams.get('scope')!.split(' ').sort(), [
+    'email', 'https://graph.microsoft.com/Mail.Send', 'https://graph.microsoft.com/User.Read', 'offline_access', 'openid',
+  ])
+  // Still nothing that can read mail.
+  assert.doesNotMatch(u.searchParams.get('scope')!, /Mail\.Read|Mail\.ReadWrite/i)
   assert.equal(u.searchParams.get('redirect_uri'), 'https://www.notya.io/api/iletisim/eposta/microsoft/donus')
   assert.equal(u.searchParams.get('code_challenge_method'), 'S256')
 })
@@ -77,13 +81,35 @@ test('kodTakas google: doktor "gönder" iznini kaldırdıysa izin-eksik', async 
   assert.equal(!t.ok && t.neden, 'izin-eksik')
 })
 
-test('kodTakas microsoft: email yoksa preferred_username; e-posta biçimi değilse hata', async () => {
-  yanitlar.push(json(200, { access_token: 'at', refresh_token: 'rt', scope: 'https://graph.microsoft.com/Mail.Send openid email', id_token: idJetonu({ preferred_username: 'doktor@outlook.com' }) }))
-  assert.deepEqual(await kodTakas('microsoft', { kod: 'K', dogrulayici: 'V' }), { ok: true, yenilemeJetonu: 'rt', adres: 'doktor@outlook.com' })
+test('kodTakas microsoft: adres Graph /me mail alanından (iş hesabı, id_token e-postasız)', async () => {
+  yanitlar.push(json(200, { access_token: 'at', refresh_token: 'rt', scope: 'https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read openid email', id_token: idJetonu({ preferred_username: 'g.yilmaz@klinik.onmicrosoft.com' }) }))
+  yanitlar.push(json(200, { mail: 'Dr.Gokhan@Klinik.com.tr', userPrincipalName: 'g.yilmaz@klinik.onmicrosoft.com' }))
+  assert.deepEqual(await kodTakas('microsoft', { kod: 'K', dogrulayici: 'V' }), { ok: true, yenilemeJetonu: 'rt', adres: 'dr.gokhan@klinik.com.tr' })
   assert.equal(cagrilar[0].url, 'https://login.microsoftonline.com/common/oauth2/v2.0/token')
+  assert.equal(cagrilar[1].url, 'https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName')
+  assert.equal((cagrilar[1].init.headers as Record<string, string>).Authorization, 'Bearer at')
+  assert.equal(cagrilar[1].init.method ?? 'GET', 'GET')
+})
+
+test('kodTakas microsoft: /me mail boşsa userPrincipalName; /me başarısızsa id_token; hiçbiri adres değilse hata', async () => {
+  yanitlar.push(json(200, { access_token: 'at', refresh_token: 'rt', scope: 'Mail.Send', id_token: idJetonu({}) }))
+  yanitlar.push(json(200, { mail: null, userPrincipalName: 'doktor@klinik.com' }))
+  assert.deepEqual(await kodTakas('microsoft', { kod: 'K', dogrulayici: 'V' }), { ok: true, yenilemeJetonu: 'rt', adres: 'doktor@klinik.com' })
+
+  yanitlar.push(json(200, { access_token: 'at', refresh_token: 'rt', scope: 'https://graph.microsoft.com/Mail.Send openid email', id_token: idJetonu({ preferred_username: 'doktor@outlook.com' }) }))
+  yanitlar.push(json(403, { error: { code: 'Authorization_RequestDenied' } }))
+  assert.deepEqual(await kodTakas('microsoft', { kod: 'K', dogrulayici: 'V' }), { ok: true, yenilemeJetonu: 'rt', adres: 'doktor@outlook.com' })
+
   yanitlar.push(json(200, { access_token: 'at', refresh_token: 'rt', scope: 'Mail.Send', id_token: idJetonu({ preferred_username: '+905551112233' }) }))
+  yanitlar.push(json(200, { mail: null, userPrincipalName: '+905551112233' }))
   const t = await kodTakas('microsoft', { kod: 'K', dogrulayici: 'V' })
   assert.equal(t.ok, false)
+})
+
+test('kodTakas google: Graph /me çağrılmaz', async () => {
+  yanitlar.push(json(200, { access_token: 'at', refresh_token: 'rt', scope: 'openid https://www.googleapis.com/auth/gmail.send', id_token: idJetonu({ email: 'a@b.com' }) }))
+  assert.equal((await kodTakas('google', { kod: 'K', dogrulayici: 'V' })).ok, true)
+  assert.equal(cagrilar.length, 1)
 })
 
 test('kodTakas: sağlayıcı hatası iletilir, jeton yoksa hata', async () => {

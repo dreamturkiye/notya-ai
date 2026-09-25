@@ -54,7 +54,7 @@ test('yapılandırılmamışken her rota 503 + Türkçe mesaj, oturum bile sorul
 test('yapılandırılmamışken dönüş Ayarlar\'a sakin bir sonuçla yönlenir', async () => {
   const r = await donusRota.GET(istek('/api/iletisim/eposta/google/donus?code=x&state=y'), { params: { saglayici: 'google' } })
   assert.equal(r.status, 303)
-  assert.equal(r.headers.get('location'), 'https://www.notya.io/dashboard/doktor/ayarlar?eposta=kapali')
+  assert.equal(r.headers.get('location'), 'https://www.notya.io/dashboard/doktor/ayarlar/iletisim?eposta=kapali')
 })
 
 test('bilinmeyen sağlayıcı 404', async () => {
@@ -72,7 +72,7 @@ test('başlat: oturumsuz 401', async () => {
 test('dönüş: doktor vazgeçtiyse "vazgecildi", ağa çıkmaz', async () => {
   ac()
   const r = await donusRota.GET(istek('/api/iletisim/eposta/google/donus?error=access_denied&state=x'), { params: { saglayici: 'google' } })
-  assert.equal(r.headers.get('location'), 'https://www.notya.io/dashboard/doktor/ayarlar?eposta=vazgecildi')
+  assert.equal(r.headers.get('location'), 'https://www.notya.io/dashboard/doktor/ayarlar/iletisim?eposta=vazgecildi')
 })
 
 test('dönüş: çerez yok / nonce uyuşmuyor / sağlayıcı farklı / imza bozuk → hata, ağa çıkmaz', async () => {
@@ -92,7 +92,7 @@ test('dönüş: çerez yok / nonce uyuşmuyor / sağlayıcı farklı / imza bozu
   }
   for (const [s, q, init] of vakalar) {
     const r = await donusRota.GET(istek(`/api/iletisim/eposta/${s}/donus${q}`, init), { params: { saglayici: s } })
-    assert.equal(r.headers.get('location'), 'https://www.notya.io/dashboard/doktor/ayarlar?eposta=hata', `${s}${q}`)
+    assert.equal(r.headers.get('location'), 'https://www.notya.io/dashboard/doktor/ayarlar/iletisim?eposta=hata', `${s}${q}`)
     assert.match(r.headers.get('set-cookie') ?? '', new RegExp(`${CEREZ_ADI}=;`), 'tek kullanımlık çerez silinmeli')
   }
 })

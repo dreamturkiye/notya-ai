@@ -18,7 +18,7 @@ import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
 import { epostaLinki, whatsappLinki } from '@/lib/iletisim/baglantilar'
 import { kanalAciklamasi, kanalDurumu, onerilenKanal, type IzinDegeri } from '@/lib/iletisim/izin'
 import {
-  baglantiyiAc, cihazEpostaAcilisi, cihazEpostaAcilisiniKaydet, cihazSonKanal, cihazSonKanaliKaydet, iletisimIstek,
+  IletisimHatasi, baglantiyiAc, cihazEpostaAcilisi, cihazEpostaAcilisiniKaydet, cihazSonKanal, cihazSonKanaliKaydet, iletisimIstek,
 } from '@/lib/iletisim/istemci'
 import { KANAL_ETIKETI, TUR_ETIKETI, type EpostaAcilis, type IletisimKanali, type MesajTuru } from '@/lib/iletisim/tipler'
 
@@ -41,6 +41,8 @@ export type GonderDugmesiProps = {
   /** Closed state as a quiet outline button (lists where every row has one). */
   sessiz?: boolean
   onGonderildi?: () => void
+  /** Queue item that already left by itself from the doctor's own account (NOTYA-ILETISIM-04): nothing to send. */
+  onKendiligindenGonderildi?: () => void
 }
 
 type Hazirlik = {
@@ -100,10 +102,12 @@ export default function GonderDugmesi(p: GonderDugmesiProps) {
       setEpostaAcilis(cihazEpostaAcilisi() || j.epostaAcilis || 'uygulama')
     } catch (e) {
       setV(null)
+      if (e instanceof IletisimHatasi && e.durum === 410 && p.onKendiligindenGonderildi) { p.onKendiligindenGonderildi(); return }
       setHata(e instanceof Error ? e.message : 'Mesaj hazırlanamadı.')
     } finally {
       setYukleniyor(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.tur, p.patientId, p.randevuId, p.asiId, p.kuyrukId, p.link, p.metin])
 
   useEffect(() => { if (acik) void hazirla() }, [acik, hazirla])

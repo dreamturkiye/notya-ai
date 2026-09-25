@@ -21,7 +21,7 @@ export default function KvkkPage() {
     <div style={S.page}>
       <Link href="/doktor" style={{ fontSize: '13px', color: '#2563EB', textDecoration: 'none' }}>← Notya AI</Link>
       <h1 style={S.h1}>Kişisel Verilerin Korunması ve İşlenmesi Aydınlatma Metni</h1>
-      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 25 Ağustos 2026 (v2)</p>
+      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 25 Eylül 2026 (v3)</p>
 
       <div style={S.box}>
         Bu metin, Notya AI hizmetini kullanan sağlık profesyonellerini ve onların hastalarına ait
@@ -135,6 +135,49 @@ export default function KvkkPage() {
         Bir veri ihlali tespit edilmesi hâlinde durum, en kısa sürede ve her hâlükârda
         <strong> 72 saat</strong> içinde Kişisel Verileri Koruma Kurulu&apos;na, ayrıca etkilenen
         ilgili kişilere bildirilir.
+      </p>
+
+      <h2 id="eposta-baglantisi" style={S.h2}>10. Gmail / Outlook bağlantısı</h2>
+      <p style={S.p}>
+        Hekim isterse Ayarlar › İletişim bölümünden kendi Gmail ya da Outlook hesabını Notya&apos;ya
+        bağlayabilir. Bu bağlantı isteğe bağlıdır; bağlanmadığında mesajlar yine hekimin kendi
+        cihazından tek dokunuşla gönderilir.
+      </p>
+      <ul>
+        <li style={S.li}>
+          Notya bu hesaptan <strong>yalnızca hekimin açtığı hatırlatma e-postalarını</strong> gönderir
+          (randevu hatırlatması, hasta bilgi formu, Sağlığım&apos;da yeni mesaj bildirimi). Bu e-postalar
+          klinik ayrıntı içermez ve yalnızca bu tür iletilere izin vermiş hastalara gider.
+        </li>
+        <li style={S.li}>
+          Notya hekimin e-postalarını <strong>okumaz</strong>, listelemez, silmez ve değiştirmez. İstenen
+          izin yalnızca göndermeyi kapsar; Outlook&apos;ta ayrıca yalnızca bağlanan e-posta adresini
+          öğrenmek için hekimin kendi profili okunur.
+        </li>
+        <li style={S.li}>
+          Gönderim izni sunucularımızda <strong>şifrelenerek</strong> saklanır, tarayıcıya hiçbir zaman
+          gönderilmez ve başka hiçbir amaçla kullanılmaz ya da kimseyle paylaşılmaz. Gönderilen
+          e-postaların metni Notya&apos;da saklanmaz; yalnızca kime, ne zaman ve hangi tür mesaj
+          gönderildiği kayıt altında tutulur.
+        </li>
+        <li style={S.li}>
+          Hekim bağlantıyı istediği an Ayarlar › İletişim › <strong>Bağlantıyı kaldır</strong> ile
+          kaldırabilir. Kaldırıldığında izin silinir (Gmail&apos;de Google tarafında da geri alınır).
+          İzin, Google hesabında (myaccount.google.com/permissions) veya Microsoft hesabında da geri
+          alınabilir.
+        </li>
+      </ul>
+      <p style={S.p} lang="en">
+        <strong>Google user data.</strong> Notya&apos;s use and transfer to any other app of information
+        received from Google APIs will adhere to the{' '}
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" style={{ color: '#2563EB' }}>
+          Google API Services User Data Policy
+        </a>
+        , including the Limited Use requirements. Notya requests only permission to send email
+        (gmail.send) and the connected address; it does not read, store or share the contents of the
+        doctor&apos;s mailbox, does not use Google user data for advertising, and does not use it to
+        train artificial intelligence or machine learning models. No human reads this data unless the
+        doctor asks us to for support, it is needed for security, or the law requires it.
       </p>
 
       <p style={{ ...S.meta, marginTop: '48px' }}>

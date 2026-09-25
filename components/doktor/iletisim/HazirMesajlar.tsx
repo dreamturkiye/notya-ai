@@ -5,7 +5,11 @@
  * already chosen, the other one as a quiet link), then "Gönderildi mi?". Evet moves to the next patient
  * by itself; Atla drops the message, Sonra puts it at the back of the line.
  *
- * Hidden when there is nothing to send (and before migration 095: the API answers 0).
+ * NOTYA-ILETISIM-04: messages that already left by themselves from the doctor's own WhatsApp / mailbox are shown as
+ * done in one calm line ("Bugün 6 mesaj kendiliğinden gönderildi · 2 mesaj sizi bekliyor"); an item whose automatic
+ * attempt failed shows the short reason under the patient's name.
+ *
+ * Hidden when there is nothing to send and nothing went by itself (and before migration 095: the API answers 0).
  * A secretary only ever receives appointment items — the server filters, this component just shows.
  */
 import React, { useCallback, useEffect, useState } from 'react'
@@ -14,12 +18,21 @@ import { iletisimIstek } from '@/lib/iletisim/istemci'
 import { TUR_ETIKETI, type MesajTuru } from '@/lib/iletisim/tipler'
 import GonderDugmesi from './GonderDugmesi'
 
-type Oge = { id: string; tur: MesajTuru; patientId: string; hastaAdi: string }
+type Oge = { id: string; tur: MesajTuru; patientId: string; hastaAdi: string; not?: string }
+
+/** The card's one line. Pure, exported for the SSR test. */
+export function kartBasligi(bekleyen: number, otomatik: number): string {
+  const oto = `Bugün ${otomatik} mesaj kendiliğinden gönderildi`
+  if (otomatik > 0 && bekleyen > 0) return `${oto} · ${bekleyen} mesaj sizi bekliyor`
+  if (otomatik > 0) return oto
+  return `Bugün ${bekleyen} mesaj hazır`
+}
 
 const R = CHROME_RENK
 
 export default function HazirMesajlar({ kartStili }: { kartStili?: React.CSSProperties } = {}) {
   const [sayi, setSayi] = useState(0)
+  const [otomatik, setOtomatik] = useState(0)
   const [acik, setAcik] = useState(false)
   const [ogeler, setOgeler] = useState<Oge[] | null>(null)
   const [hata, setHata] = useState('')
@@ -27,17 +40,19 @@ export default function HazirMesajlar({ kartStili }: { kartStili?: React.CSSProp
 
   const sayiYukle = useCallback(async () => {
     try {
-      const j = await iletisimIstek<{ sayi: number }>('/api/doktor/iletisim/kuyruk?sayi=1')
+      const j = await iletisimIstek<{ sayi: number; otomatik?: number }>('/api/doktor/iletisim/kuyruk?sayi=1')
       setSayi(Number(j.sayi) || 0)
-    } catch { setSayi(0) }
+      setOtomatik(Number(j.otomatik) || 0)
+    } catch { setSayi(0); setOtomatik(0) }
   }, [])
   useEffect(() => { void sayiYukle() }, [sayiYukle])
 
   const baslat = async () => {
     setAcik(true); setOgeler(null); setHata(''); setBitenSayisi(0)
     try {
-      const j = await iletisimIstek<{ ogeler: Oge[] }>('/api/doktor/iletisim/kuyruk')
+      const j = await iletisimIstek<{ ogeler: Oge[]; otomatik?: number }>('/api/doktor/iletisim/kuyruk')
       setOgeler(j.ogeler || [])
+      setOtomatik(Number(j.otomatik) || 0)
     } catch (e) {
       setHata(e instanceof Error ? e.message : 'Mesajlar alınamadı.')
       setOgeler([])
@@ -78,7 +93,23 @@ export default function HazirMesajlar({ kartStili }: { kartStili?: React.CSSProp
     else setOgeler((l) => (l && l.length > 1 ? [...l.filter((x) => x.id !== o.id), o] : l))
   }
 
-  if (!acik && sayi <= 0) return null
+  // left by itself while this person had the flow open: counts as done, next patient
+  const kendiliginden = (id: string) => { setOtomatik((n) => n + 1); cikar(id) }
+
+  if (!acik && sayi <= 0 && otomatik <= 0) return null
+
+  // Everything went by itself: one calm line, nothing to press.
+  if (!acik && sayi <= 0) {
+    return (
+      <div style={{
+        background: R.paper, border: `1px solid ${R.border}`, borderRadius: 20, padding: '14px 20px',
+        display: 'flex', alignItems: 'center', gap: 10, fontFamily: CHROME_FONT.sans, color: R.muted, fontSize: 15, ...kartStili,
+      }}>
+        <span aria-hidden style={{ color: R.pine, fontWeight: 700 }}>✓</span>
+        <span>{kartBasligi(0, otomatik)}.</span>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -89,7 +120,7 @@ export default function HazirMesajlar({ kartStili }: { kartStili?: React.CSSProp
           fontFamily: CHROME_FONT.sans, ...kartStili,
         }}>
           <div style={{ flex: '1 1 220px', minWidth: 0 }}>
-            <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, fontWeight: 500, color: R.ink }}>Bugün {sayi} mesaj hazır</div>
+            <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 22, fontWeight: 500, color: R.ink }}>{kartBasligi(sayi, otomatik)}</div>
             <div style={{ fontSize: 14, color: R.muted, marginTop: 4 }}>Tek tek açın, kendi WhatsApp’ınızdan ya da e-postanızdan gönderin.</div>
           </div>
           <button type="button" onClick={() => void baslat()} style={{ minHeight: 48, padding: '0 26px', borderRadius: 14, border: 'none', background: R.pine, color: R.paper, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
@@ -117,7 +148,7 @@ export default function HazirMesajlar({ kartStili }: { kartStili?: React.CSSProp
               <div style={{ textAlign: 'center', marginTop: 60 }}>
                 <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 28, fontWeight: 500, marginBottom: 8 }}>Hepsi tamam</div>
                 <div style={{ fontSize: 15, color: R.muted, marginBottom: 28 }}>
-                  {bitenSayisi > 0 ? `${bitenSayisi} mesaj gönderildi. ` : ''}Bugün hazır mesaj kalmadı.
+                  {bitenSayisi > 0 ? `${bitenSayisi} mesaj gönderildi. ` : ''}{otomatik > 0 ? `${otomatik} mesaj kendiliğinden gönderildi. ` : ''}Bugün hazır mesaj kalmadı.
                 </div>
                 <button type="button" onClick={kapat} style={{ minHeight: 50, padding: '0 32px', borderRadius: 14, border: 'none', background: R.pine, color: R.paper, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Kapat</button>
               </div>
@@ -126,8 +157,9 @@ export default function HazirMesajlar({ kartStili }: { kartStili?: React.CSSProp
             {simdiki && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ fontSize: 14, color: R.muted, marginBottom: 6 }}>{TUR_ETIKETI[simdiki.tur]}</div>
-                <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 30, fontWeight: 500, textAlign: 'center', marginBottom: 22, overflowWrap: 'anywhere' }}>{simdiki.hastaAdi}</div>
-                <GonderDugmesi key={simdiki.id} tam tur={simdiki.tur} kuyrukId={simdiki.id} onGonderildi={() => gonderildi(simdiki.id)} />
+                <div style={{ fontFamily: CHROME_FONT.serif, fontSize: 30, fontWeight: 500, textAlign: 'center', marginBottom: simdiki.not ? 8 : 22, overflowWrap: 'anywhere' }}>{simdiki.hastaAdi}</div>
+                {simdiki.not && <div style={{ fontSize: 14, color: R.muted, textAlign: 'center', marginBottom: 18, maxWidth: 440 }}>{simdiki.not}</div>}
+                <GonderDugmesi key={simdiki.id} tam tur={simdiki.tur} kuyrukId={simdiki.id} onGonderildi={() => gonderildi(simdiki.id)} onKendiligindenGonderildi={() => kendiliginden(simdiki.id)} />
                 <div style={{ display: 'flex', gap: 28, marginTop: 22 }}>
                   <button type="button" onClick={() => void islem(simdiki, 'sonra')} style={{ background: 'none', border: 'none', color: R.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}>Sonra</button>
                   <button type="button" onClick={() => void islem(simdiki, 'atla')} style={{ background: 'none', border: 'none', color: R.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}>Atla</button>

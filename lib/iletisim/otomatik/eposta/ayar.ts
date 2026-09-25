@@ -41,8 +41,8 @@ export function donusAdresi(s: Saglayici): string {
   return `${siteAdresi()}/api/iletisim/eposta/${s}/donus`
 }
 
-/** Where the doctor lands after connecting. The card reads `?eposta=<sonuc>` there. */
-export const AYARLAR_YOLU = '/dashboard/doktor/ayarlar'
+/** Where the doctor lands after connecting: Ayarlar › İletişim, whose card reads `?eposta=<sonuc>`. */
+export const AYARLAR_YOLU = '/dashboard/doktor/ayarlar/iletisim'
 
 export type BaglantiSonucu = 'baglandi' | 'vazgecildi' | 'izin-eksik' | 'hata' | 'kapali'
 
