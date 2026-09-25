@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
-import { ilacAdiniSadelestir, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
+import { ilacAdiniSadelestir, ilacListeleriAyniMi, ilacOnerisiCoz, nottanIlaclariCikar, planIlacTutarsizMi } from './receteAktarim'
 
 test('ilacAdiniSadelestir: alternatif ve açıklama kuyruğunu atar, dozu korur', () => {
   assert.equal(
@@ -108,16 +108,45 @@ test('planIlacTutarsizMi: canlı vaka — plan "Augmentin ES" der, yapılandır�
   assert.equal(planIlacTutarsizMi(plan, ilaclar), true)
 })
 
-test('planIlacTutarsizMi: plan ve liste aynı ilacı paylaşıyorsa uyuşmazlık yok', () => {
-  const plan = '1. TEDAVİ:\na) Amoksisilin 400 mg/5 mL süspansiyon — 7,5 mL (600 mg) 12 saatte bir, 7 gün.'
+test('planIlacTutarsizMi: listedeki her ilaç Plan metninde geçiyorsa uyuşmazlık yok', () => {
+  const plan = '1. TEDAVİ:\na) Amoksisilin 400 mg/5 mL süspansiyon — 7,5 mL (600 mg) 12 saatte bir, 7 gün.\nb) Parasetamol süspansiyon lüzumlu halde.'
   const ilaclar = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon' }, { ad: 'Parasetamol süspansiyon (160 mg/5 mL)' }]
   assert.equal(planIlacTutarsizMi(plan, ilaclar), false)
 })
 
-test('planIlacTutarsizMi: birden çok ilaçtan yalnız biri geçse bile uyarı vermez (yanlış pozitifi azaltır)', () => {
-  const plan = 'Ateş için parasetamol önerildi, bol sıvı alımı tavsiye edildi.'
+test('planIlacTutarsizMi: yalnız bir ilaç değişmişse de yakalanır (Amoksisilin→Augmentin, Parasetamol aynı)', () => {
+  const plan = '1. TEDAVİ:\na) Augmentin ES süspansiyon sabah akşam 7.5 ml. 10 gün\nb) Parasetamol süspansiyon lüzumlu halde.'
   const ilaclar = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon' }, { ad: 'Parasetamol süspansiyon (160 mg/5 mL)' }]
-  assert.equal(planIlacTutarsizMi(plan, ilaclar), false)
+  assert.equal(planIlacTutarsizMi(plan, ilaclar), true)
+})
+
+test('planIlacTutarsizMi: listedeki bir ilaç Plan metninden çıkarılmışsa da yakalanır', () => {
+  const plan = '1. TEDAVİ:\na) Amoksisilin 400 mg/5 mL süspansiyon — 7,5 mL 12 saatte bir, 7 gün.'
+  const ilaclar = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon' }, { ad: 'Parasetamol süspansiyon (160 mg/5 mL)' }]
+  assert.equal(planIlacTutarsizMi(plan, ilaclar), true)
+})
+
+test('ilacListeleriAyniMi: yazım farkları (virgül/nokta, boşluk, büyük harf, sıra) aynı sayılır', () => {
+  const a = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon', doz: '7,5 mL', kullanim: '12 saatte bir', sure: '7 gün' }, { ad: 'Parasetamol', doz: '5 ml', kullanim: 'lüzumlu halde', sure: '' }]
+  const b = [{ ad: 'Parasetamol şurup', doz: '5ml', kullanim: 'Lüzumlu halde', sure: '' }, { ad: 'Amoksisilin süspansiyon', doz: '7.5 ml', kullanim: '12 saatte bir', sure: '7 gün' }]
+  assert.equal(ilacListeleriAyniMi(a, b), true)
+})
+
+test('ilacListeleriAyniMi: canlı vaka — farklı ilaç ya da farklı süre aynı sayılmaz', () => {
+  const mevcut = [{ ad: 'Amoksisilin 400 mg/5 mL süspansiyon', doz: '7,5 mL', kullanim: '12 saatte bir', sure: '7 gün' }]
+  assert.equal(ilacListeleriAyniMi(mevcut, [{ ad: 'Augmentin ES süspansiyon', doz: '7,5 mL', kullanim: 'sabah-akşam', sure: '10 gün' }]), false)
+  assert.equal(ilacListeleriAyniMi(mevcut, [{ ...mevcut[0], sure: '10 gün' }]), false)
+  assert.equal(ilacListeleriAyniMi(mevcut, []), false)
+})
+
+test('ilacOnerisiCoz: nesne ve metin satırlarını okur, boş/geçersiz yanıtta null döner', () => {
+  assert.deepEqual(ilacOnerisiCoz([{ ad: 'Augmentin ES', doz: '7,5 mL', kullanim: 'sabah-akşam', sure: '10 gün' }, 'Calpol şurup — 5 mL — lüzumlu halde']), [
+    { ad: 'Augmentin ES', doz: '7,5 mL', kullanim: 'sabah-akşam', sure: '10 gün' },
+    { ad: 'Calpol şurup', doz: '5 mL', kullanim: 'lüzumlu halde', sure: '' },
+  ])
+  assert.equal(ilacOnerisiCoz(undefined), null)
+  assert.equal(ilacOnerisiCoz([]), null)
+  assert.equal(ilacOnerisiCoz([{ doz: '5 mL' }, '  ']), null)
 })
 
 test('planIlacTutarsizMi: boş İlaçlar listesi ya da boş plan metni uyarı üretmez', () => {
