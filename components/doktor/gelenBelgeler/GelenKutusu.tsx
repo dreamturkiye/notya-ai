@@ -13,7 +13,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CHROME_FONT, CHROME_RENK } from '@/lib/doktor/chromeTheme'
-import { dosyaGonder, gelenIstek, gelenDegisti, GELEN_OLAY, GELEN_BEKLEYEN_OLAY, bekleyenSayisi, GelenHatasi } from '@/lib/gelenBelgeler/istemci'
+import { dosyaGonder, gelenIstek, gelenDegisti, gelenSayiDegisti, GELEN_OLAY, GELEN_BEKLEYEN_OLAY, bekleyenSayisi, GelenHatasi } from '@/lib/gelenBelgeler/istemci'
 import { KABUL_EDILEN } from '@/lib/gelenBelgeler/bicim'
 import { KAYNAK_ETIKETI, KESINLIK_ETIKETI, type GelenKaynak, type GelenOge, type Kesinlik } from '@/lib/gelenBelgeler/tipler'
 import { durumGrubu } from '@/lib/doktor/konsultasyon'
@@ -117,6 +117,7 @@ function OgeKarti({ o, rol, turler, bitti }: { o: GelenOge; rol: 'doktor' | 'sek
       }
       const yol = `/dashboard/doktor/hastalar/${j.patientId}/belgeler/${j.belgeId}${lab ? '/lab' : ''}`
       setSonuc({ yol, metin: `${hasta.ad} dosyasına eklendi.${ek}` })
+      gelenSayiDegisti()
       // Refresh counts only after the confirmation has been seen — a reload now would drop this card at once.
       setTimeout(() => { bitti(o.id); gelenDegisti() }, 7000)
     } catch (e) {

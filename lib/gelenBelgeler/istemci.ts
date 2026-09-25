@@ -14,6 +14,9 @@ import { EN_BUYUK_BAYT, type GelenKaynak } from './tipler'
 
 export const GELEN_OLAY = 'notya:gelen-belge'
 export const gelenDegisti = () => { try { window.dispatchEvent(new Event(GELEN_OLAY)) } catch { /* SSR */ } }
+/** Badge-only refresh: the sidebar count updates at once, without reloading the inbox list (which would drop the confirmation card). */
+export const GELEN_SAYI_OLAY = 'notya:gelen-sayi'
+export const gelenSayiDegisti = () => { try { window.dispatchEvent(new Event(GELEN_SAYI_OLAY)) } catch { /* SSR */ } }
 
 /** How many files are being read right now (any page) — the inbox shows "Notya okuyor…" while > 0. */
 export const GELEN_BEKLEYEN_OLAY = 'notya:gelen-bekleyen'
