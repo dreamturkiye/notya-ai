@@ -21,6 +21,11 @@ test('çok hastalı sorular arama olarak kalır', () => {
 
 test('açık hasta yoksa, ad eşleştiyse ya da ad birden çok hastaya uyuyorsa aktif hastaya dönülmez', () => {
   assert.equal(aktif('En son ne zaman geldi?', 'yok', true, false), false)
-  assert.equal(aktif('Ayşe Yeşil ne zaman geldi?', 'tek'), false)
+  assert.equal(aktif('Ayşe Yeşil ne zaman geldi?', 'tek', false), false)
   assert.equal(aktif('Ayşe ne zaman geldi?', 'coklu', false), false)
+})
+
+test('NOTYA-SES-DOLGU-01: açık hasta varken tek arama sonucu adla bulunmuş hastanın yerine geçmez', () => {
+  assert.equal(aktif('Ayşe, en son ne zaman geldi', 'tek', true), true)
+  assert.equal(aktif('Umutcan kaç yaşında', 'tek', false), false)
 })

@@ -6,7 +6,7 @@
  */
 import { trAramaNormalize } from '@/lib/utils/turkceArama'
 
-const KOHORT = /\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
+const KOHORT = /hasta var mi|hasta geldi mi|hastam var mi|\bhastalar|\bhastalarim|kac hasta|kac kisi|kac cocuk|kac vaka|hangi hasta|\bkimler\b|tum hasta|butun hasta|en cok|en sik|\btoplam\b|istatistik/
 
 export function kohortSorusuMu(mesaj: string): boolean {
   return KOHORT.test(' ' + trAramaNormalize(String(mesaj || '')) + ' ')
@@ -19,7 +19,9 @@ export function aktifHastaKullanilsinMi(g: {
   aramaSonucu: boolean
   mesaj: string
 }): boolean {
-  if (!g.aktifHastaVar || g.cozumTur === 'tek') return false
+  if (!g.aktifHastaVar) return false
+  // A patient found BY NAME wins; a single hit of an all-patients search (has a count sentence) does not.
+  if (g.cozumTur === 'tek' && !g.aramaSonucu) return false
   if (g.cozumTur === 'coklu' && !g.aramaSonucu) return false
   return !kohortSorusuMu(g.mesaj)
 }
