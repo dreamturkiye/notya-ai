@@ -45,6 +45,26 @@ export async function planaGoreIlacOnerisi(token: string, noteId: string, taslak
   }
 }
 
+/**
+ * NOTYA-RECETE-05 (Kaan, 2026-09-25): aynı Plan metni için Ayşe'ye ikinci kez gidilmez. Sayfa Plan
+ * düzenlenince arka planda önceden okur; Onayla'da hazır sonuç kullanılır (bekleme olmaz).
+ * Başarısız okuma önbellekte tutulmaz, Onayla'da yeniden denenir.
+ */
+const oneriOnbellegi = new Map<string, Promise<IlacSatiri[] | null>>();
+export function planaGoreIlacOnerisiOnbellekli(token: string, noteId: string, plan: string, taslak: Record<string, unknown>): Promise<IlacSatiri[] | null> {
+  const anahtar = noteId + '|' + plan.trim();
+  const hazir = oneriOnbellegi.get(anahtar);
+  if (hazir) return hazir;
+  const p = planaGoreIlacOnerisi(token, noteId, taslak);
+  oneriOnbellegi.set(anahtar, p);
+  void p.then((r) => { if (!r) oneriOnbellegi.delete(anahtar); });
+  if (oneriOnbellegi.size > 20) {
+    const ilk = oneriOnbellegi.keys().next().value;
+    if (ilk !== undefined) oneriOnbellegi.delete(ilk);
+  }
+  return p;
+}
+
 const dugme = (ana: boolean): React.CSSProperties => ({
   background: ana ? CHROME_RENK.pine : '#FFFFFF',
   color: ana ? '#FFFFFF' : CHROME_RENK.ink,

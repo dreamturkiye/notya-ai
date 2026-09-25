@@ -167,6 +167,36 @@ export function ilacListeleriAyniMi(a: IlacSatiri[], b: IlacSatiri[]): boolean {
 }
 
 /**
+ * NOTYA-RECETE-05 (Kaan, 2026-09-25): Onayla anında Ayşe karşılaştırması gerekir mi?
+ * - tutarsiz: listedeki bir ilaç Plan metninde geçmiyor (değişen/çıkarılan ilaç).
+ * - Plan düzenlendi: listedeki ilaçlar dururken Plan'a YENİ bir ilaç eklenmesini de yakalar
+ *   (kelime eşleşmesi bunu göremez). ilkPlan = not açıldığında Plan metni; null ise bilinmiyor.
+ */
+export function ilacKontroluGerekliMi(
+  plan: string | null | undefined,
+  ilkPlan: string | null | undefined,
+  ilaclar: { ad: string }[],
+): { gerekli: boolean; tutarsiz: boolean } {
+  const tutarsiz = planIlacTutarsizMi(plan, ilaclar)
+  const simdi = String(plan || '').trim()
+  const planDegisti = !!simdi && ilkPlan != null && simdi !== String(ilkPlan).trim()
+  return { gerekli: tutarsiz || planDegisti, tutarsiz }
+}
+
+/**
+ * NOTYA-RECETE-05: Ayşe önerisine göre karar. Aynıysa sessizce devam (kart yok). Ayşe okuyamadıysa
+ * yalnız somut uyuşmazlık varken düz uyarı; yalnız Plan düzenlendiyse hekimi bekletmeden devam.
+ */
+export function ilacKontrolSonucu(
+  tutarsiz: boolean,
+  mevcut: IlacSatiri[],
+  oneri: IlacSatiri[] | null,
+): 'devam' | 'uyari' | 'oneri' {
+  if (!oneri || !oneri.length) return tutarsiz ? 'uyari' : 'devam'
+  return ilacListeleriAyniMi(mevcut, oneri) ? 'devam' : 'oneri'
+}
+
+/**
  * İlaç adını listeye yazılabilir hale getirir.
  *
  * Not üreticisi adı sık sık alternatiflerle ve açıklamayla birlikte yazıyor:

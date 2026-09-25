@@ -35,8 +35,8 @@ import {
   type CekMadde,
 } from '@/lib/doktor/muayeneCekListesi';
 import { DOZ_HESAPLANDI_ETIKETI, NOT_ASI_AZAMI, notAsisiKartDurumu, notMetninAsiIpucuVarMi, type KartAsisi, type NotAsisi } from '@/lib/doktor/notAsilari';
-import { ilacListeleriAyniMi, planIlacTutarsizMi } from '@/lib/doktor/receteAktarim';
-import IlacUyumKarti, { planaGoreIlacOnerisi, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
+import { ilacKontroluGerekliMi, ilacKontrolSonucu } from '@/lib/doktor/receteAktarim';
+import IlacUyumKarti, { planaGoreIlacOnerisiOnbellekli, type IlacUyumDurumu } from '@/components/doktor/IlacUyumKarti';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
 
 interface IcdOner { code?: string; description?: string; description_tr?: string; is_primary?: boolean }
@@ -126,6 +126,8 @@ export default function NotSayfasi() {
   const [uyum, setUyum] = useState<IlacUyumDurumu | null>(null);
   const atlaOtomatikRef = useRef(true);
   const aiBekliyorRef = useRef(false);
+  // NOTYA-RECETE-05: not açıldığındaki Plan — Onayla'da 'Plan düzenlendi mi' karşılaştırması için.
+  const ilkPlanRef = useRef<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -146,6 +148,7 @@ export default function NotSayfasi() {
         });
         setAlarm((j.not.alarmBulgulari || []).join('\n'));
         setOzet(j.not.hastaOzeti || '');
+        ilkPlanRef.current = satirBasiNumarala(j.not.plan || '');
         setIlac((j.not.ilaclar || []).map((il: { ad?: string; doz?: string; kullanim?: string; sure?: string }) => [il.ad, il.doz, il.kullanim, il.sure].filter(Boolean).join(' — ')).join('\n'));
         setAsilar(Array.isArray(j.not.asilar) ? j.not.asilar : []);
         setIcd(Array.isArray(j.not.icdKodlari) ? j.not.icdKodlari : []);
@@ -259,6 +262,27 @@ export default function NotSayfasi() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basvuru, vital, taslak.subjektif, taslak.objektif, taslak.degerlendirme, taslak.plan, veri?.not.id]);
 
+  // NOTYA-RECETE-05: Plan düzenlenince Ayşe İlaçlar listesini arka planda önceden okur (önbellekli),
+  // böylece Onayla'da hekim çoğunlukla hiç beklemez.
+  useEffect(() => {
+    if (!veri || ilkPlanRef.current === null) return;
+    const plan = taslak.plan.trim();
+    if (!plan || plan === ilkPlanRef.current.trim()) return;
+    const zamanlayici = setTimeout(() => {
+      void (async () => {
+        try {
+          const tok = (await ensureDoctorAccessToken()) || '';
+          await planaGoreIlacOnerisiOnbellekli(tok, params.id, taslak.plan, {
+            ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, hastaOzeti: ozet, ilaclar: ilacMetniniCoz(ilac),
+            asilar: asiSatirlari(asilar), icdKodlari: icd, receteOnerisi: recete, aiDegerlendirme: aiDeg,
+          });
+        } catch { /* Onayla'da yeniden denenir */ }
+      })();
+    }, 2500);
+    return () => clearTimeout(zamanlayici);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taslak.plan, veri?.not.id]);
+
   /** ilacOnayli: İlaç uyum kartından gelen (hekimin seçtiği) İlaçlar metni — varsa kontroller atlanır. */
   const kaydetVeOnayla = async (ilacOnayli?: string) => {
     if (ilacOnayli === undefined) {
@@ -271,17 +295,16 @@ export default function NotSayfasi() {
       // NOTYA-RECETE-04 (Kaan, 2026-09-25): Plan metni ile İlaçlar listesi (reçeteye/dosyaya giden TEK kaynak)
       // ayrışmışsa Ayşe Plan'dan listeyi çıkarır, hekim kartta seçer. Listeler aynı çıkarsa kart açılmaz.
       const mevcut = ilacMetniniCoz(ilac)
-      if (planIlacTutarsizMi(taslak.plan, mevcut)) {
+      const kontrol = ilacKontroluGerekliMi(taslak.plan, ilkPlanRef.current, mevcut)
+      if (kontrol.gerekli) {
         setUyum({ tur: 'kontrol' })
-        let oneri = null
-        try {
-          oneri = await planaGoreIlacOnerisi((await ensureDoctorAccessToken()) || '', params.id, {
-            ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, hastaOzeti: ozet, ilaclar: mevcut,
-            asilar: asiSatirlari(asilar), icdKodlari: icd, receteOnerisi: recete, aiDegerlendirme: aiDeg,
-          })
-        } catch { oneri = null }
-        if (!oneri) { setUyum({ tur: 'uyari', mevcut }); return }
-        if (!ilacListeleriAyniMi(mevcut, oneri)) { setUyum({ tur: 'oneri', mevcut, oneri }); return }
+        const oneri = await planaGoreIlacOnerisiOnbellekli((await ensureDoctorAccessToken()) || '', params.id, taslak.plan, {
+          ...taslak, basvuruYakinmasi: basvuru, vitaller: vital, hastaOzeti: ozet, ilaclar: mevcut,
+          asilar: asiSatirlari(asilar), icdKodlari: icd, receteOnerisi: recete, aiDegerlendirme: aiDeg,
+        }).catch(() => null)
+        const sonuc = ilacKontrolSonucu(kontrol.tutarsiz, mevcut, oneri)
+        if (sonuc === 'uyari') { setUyum({ tur: 'uyari', mevcut }); return }
+        if (sonuc === 'oneri' && oneri) { setUyum({ tur: 'oneri', mevcut, oneri }); return }
         setUyum(null)
       }
     }
