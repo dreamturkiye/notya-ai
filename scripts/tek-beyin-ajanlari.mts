@@ -14,7 +14,7 @@
  *
  *   npx tsx scripts/tek-beyin-ajanlari.mts --dry     # yalnız plan
  *   npx tsx scripts/tek-beyin-ajanlari.mts           # kopyala / güncelle
- *   NOTYA_SES_LLM_URL=https://notya.ai (varsayılan) · NOTYA_SES_LLM_SECRET (.env.local ya da ortam, ≥32 karakter)
+ *   NOTYA_SES_LLM_URL=https://www.notya.io (varsayılan) · NOTYA_SES_LLM_SECRET (.env.local ya da ortam, ≥32 karakter)
  *   --sir-yenile : ElevenLabs sırrını NOTYA_SES_LLM_SECRET'in şimdiki değeriyle yeniden yazar (döndürme)
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
@@ -37,7 +37,7 @@ for (const f of ['.env.local', '.env']) {
 
 const KEY = process.env.ELEVENLABS_API_KEY
 const SIR = String(process.env.NOTYA_SES_LLM_SECRET || '').trim()
-const TABAN_URL = String(process.env.NOTYA_SES_LLM_URL || 'https://notya.ai').replace(/\/$/, '')
+const TABAN_URL = String(process.env.NOTYA_SES_LLM_URL || 'https://www.notya.io').replace(/\/$/, '')
 if (!KEY) { console.error('ELEVENLABS_API_KEY gerekli (.env.local veya ortam)'); process.exit(1) }
 if (SIR.length < 32 && !DRY) { console.error('NOTYA_SES_LLM_SECRET gerekli (≥32 karakter) — sunucuda da aynı değer olmalı'); process.exit(1) }
 
