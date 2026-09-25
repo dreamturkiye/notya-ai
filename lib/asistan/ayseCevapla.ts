@@ -56,6 +56,7 @@ import { bugunTRT, type HastaOzeti } from "@/core/eylemler/types"
 import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { konusmaYap, SesAkisi } from "@/lib/asistan/konusma"
+import { aktifHastaKullanilsinMi } from "@/lib/asistan/aktifHasta"
 
 export type Kanal = "yazi" | "ses"
 
@@ -239,7 +240,14 @@ ${ilacBaglamMetni(drugs[0])}`
     const aktifOnceden = contextPatientId ? String(contextPatientId) : null
     const aktifPaketSozu = aktifOnceden ? hastaDosyaPaketiniDerle(supabase, doktorId, aktifOnceden).catch(() => null) : null
     cozum = await hastaninSozunuCoz(supabase, doktorId, message)
-    const konus = cozumKonus(cozum)
+    // NOTYA-AKTIF-HASTA-01: with a patient open, an unnamed question is about that patient, not a search.
+    const aktifeDon = aktifHastaKullanilsinMi({
+      aktifHastaVar: Boolean(aktifOnceden),
+      cozumTur: cozum.tur,
+      aramaSonucu: Boolean((cozum as { sayiMetin?: string }).sayiMetin),
+      mesaj: String(message || ''),
+    })
+    const konus = aktifeDon ? null : cozumKonus(cozum)
     if (konus) {
       aramaCevabi = konus
     } else {
