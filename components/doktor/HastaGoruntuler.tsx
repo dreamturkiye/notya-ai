@@ -157,13 +157,13 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div style={panel}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: CHROME_RENK.ink }}>Görüntüler</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: CHROME_RENK.ink }}>Görüntüleme</div>
         <div style={{ fontSize: 13, color: CHROME_RENK.muted, margin: '4px 0 12px' }}>Bu hastanın filmleri.</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
           {liste.map((c) => (
             <button key={c.id} type="button" onClick={() => setSecili(c.id)} style={{
               ...ghost, padding: '6px 10px', borderRadius: 999,
-              borderColor: secili === c.id ? '#0F9B8E' : 'rgba(255,255,255,0.15)',
+              borderColor: secili === c.id ? '#0F9B8E' : CHROME_RENK.border,
               color: secili === c.id ? '#0F9B8E' : CHROME_RENK.ink,
             }}>
               {goruntuChip(c.tip, c.tarih || c.created_at)}
@@ -173,20 +173,24 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
           <select value={tip} onChange={(e) => { setTip(e.target.value as GoruntuTip); setAlt('') }} style={sel}>
-            {TIPS.map((t) => <option key={t} value={t} style={{ color: '#000' }}>{TIP_ETIKET[t]}</option>)}
+            {TIPS.map((t) => <option key={t} value={t}>{TIP_ETIKET[t]}</option>)}
           </select>
           {alts.length > 1 && (
             <select value={alt} onChange={(e) => setAlt(e.target.value)} style={sel}>
-              <option value="" style={{ color: '#000' }}>Alt tip</option>
-              {alts.map((m) => <option key={m} value={m} style={{ color: '#000' }}>{MODALITE_TR[m]}</option>)}
+              <option value="">Alt tip</option>
+              {alts.map((m) => <option key={m} value={m}>{MODALITE_TR[m]}</option>)}
             </select>
           )}
           <input value={bolge} onChange={(e) => setBolge(e.target.value)} placeholder="Bölge (akciğer, meme-R…)" style={inp} />
-          <input type="file" accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} onChange={(e) => setDosya(e.target.files?.[0] || null)} style={{ color: CHROME_RENK.muted, fontSize: 12 }} />
+          {/* Kaan, 2026-09-25: tarayıcının İngilizce 'Choose File / No file chosen' düğmesi yerine Türkçe düğme. */}
+          <label style={{ ...ghost, display: 'inline-flex', alignItems: 'center', maxWidth: 240, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: dosya ? CHROME_RENK.ink : CHROME_RENK.muted }}>
+            <input type="file" accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} onChange={(e) => setDosya(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+            {dosya ? dosya.name : 'Dosya seç'}
+          </label>
           <button type="button" onClick={() => void gonder()} disabled={yukleniyor || (altTipSecilmeli(tip) && !alt)} style={btn}>{yukleniyor ? 'Yükleniyor…' : 'Kasa’ya al'}</button>
           {satir?.tip === tip && <span style={{ fontSize: 12, color: CHROME_RENK.muted }}>Seçili çalışmaya eklenir (MG iki kare / seri).</span>}
         </div>
-        {hacimAiKapali(tip) && <div style={{ fontSize: 11, color: '#FBBF24', marginTop: 8 }}>CT/MR/PET: yalnız anahtar kare + rapor. Hacim arşivi yok.</div>}
+        {hacimAiKapali(tip) && <div style={{ fontSize: 11, color: '#B45309', marginTop: 8 }}>CT/MR/PET: yalnız anahtar kare + rapor. Hacim arşivi yok.</div>}
         {mesaj && <div style={{ fontSize: 12, color: /paylaşıldı|yok/.test(mesaj) && !/Paylaşılamadı/.test(mesaj) ? '#0F9B8E' : '#F87171', marginTop: 8 }}>{mesaj}</div>}
       </div>
 
@@ -216,7 +220,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
               {TIP_ETIKET[satir.tip]} {satir.bolge ? `· ${satir.bolge}` : ''}
             </div>
             <div style={{ fontSize: 12, color: CHROME_RENK.muted, marginBottom: 10 }}>{onayDurumDipnot(satir.onay_durum)}</div>
-            {satir.tip === 'mg' && <div style={{ fontSize: 12, color: '#FBBF24', marginBottom: 10 }}>{MG_DIPNOT}</div>}
+            {satir.tip === 'mg' && <div style={{ fontSize: 12, color: '#B45309', marginBottom: 10 }}>{MG_DIPNOT}</div>}
             <div style={{ fontSize: 13, color: CHROME_RENK.ink, marginBottom: 8 }}>
               <b>{analiz?.hekim_ozet ? 'Hekim özeti' : 'Asistan taslağı'}</b>
               <div style={{ color: CHROME_RENK.muted, fontWeight: 400, marginTop: 4 }}>{analiz?.hekim_ozet || analiz?.sonuc?.ozet || 'Henüz taslak yok.'}</div>
@@ -247,7 +251,7 @@ export default function HastaGoruntuler({ patientId }: { patientId: string }) {
   )
 }
 
-const sel: React.CSSProperties = { background: '#0A1220', color: CHROME_RENK.ink, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 10px', fontSize: 13 }
+const sel: React.CSSProperties = { background: '#FFFFFF', color: CHROME_RENK.ink, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 8, padding: '8px 10px', fontSize: 13 }
 const inp: React.CSSProperties = { ...sel, minWidth: 160 }
 
 function GoruntuIzleyici({ belgeId, tip, ikiUp }: { belgeId: string | null; tip: GoruntuTip; ikiUp: string[] | null }) {
