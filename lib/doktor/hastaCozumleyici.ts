@@ -177,6 +177,12 @@ export async function hastaninSozunuCoz(
   }
 
   if (secenek.yalnizAd) return cozAdaylar(tam.length > 0 ? tam : kismi)
+  // NOTYA-SES-HASTA-01 (Kaan, 2026-09-25): voice sends the doctor's whole sentence ("Ayşe Yeşil adında bir
+  // hastamız vardı, en son muayenesinin özeti"); the clinical words used to become search filters that
+  // excluded the exactly-named patient and the answer was "kayıt yok". A single patient whose FULL name
+  // (at least two words) appears in the sentence is final. Single-word names never qualify, so addressing
+  // the assistant ("Merhaba Ayşe") cannot pick a patient.
+  if (tam.length === 1 && duzle(tam[0].ad).includes(' ')) return { tur: 'tek', patientId: tam[0].id, ad: tam[0].ad }
   if (tam.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(tam))
   if (kismi.length > 0) return dosyaIleDaralt(supabase, doctorId, mesaj, await cozAdaylar(kismi))
   return dosyaIleDaralt(supabase, doctorId, mesaj, { tur: 'yok' })
@@ -196,7 +202,9 @@ async function dosyaIleDaralt(
   if (ad.tur === 'yok' && !klinik) return ad
 
   const { adaylar: ara, istatistik } = await klinikAramaYurut(supabase, doctorId, mesaj)
-  if (!ara.length) return { tur: 'yok', sayiMetin: istatistik.cumle }
+  // NOTYA-SES-HASTA-01: a named patient is never dropped just because the extra words found nothing.
+  // List/cohort questions ("ateşli hastalarım kimler") keep the old answer, so "Merhaba Ayşe" never picks a patient.
+  if (!ara.length) return ad.tur === 'tek' && !listeSorgusuMu(mesaj) ? ad : { tur: 'yok', sayiMetin: istatistik.cumle }
 
   const liste = listeSorgusuMu(mesaj) || Boolean(istatistik.birim !== 'hasta' && istatistik.cumle)
   if (ad.tur === 'coklu') {
