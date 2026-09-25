@@ -24,7 +24,7 @@ import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clie
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
 import GelenBelgeBirak from './gelenBelgeler/GelenBelgeBirak';
-import { GELEN_OLAY } from '@/lib/gelenBelgeler/istemci';
+import { GELEN_OLAY, GELEN_SAYI_OLAY } from '@/lib/gelenBelgeler/istemci';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
 
@@ -229,7 +229,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     };
     void yukle();
     window.addEventListener(GELEN_OLAY, yukle);
-    return () => window.removeEventListener(GELEN_OLAY, yukle);
+    window.addEventListener(GELEN_SAYI_OLAY, yukle);
+    return () => { window.removeEventListener(GELEN_OLAY, yukle); window.removeEventListener(GELEN_SAYI_OLAY, yukle); };
   }, []);
 
   useEffect(() => {
