@@ -30,3 +30,12 @@ test('NOTYA-HASTA-ODAK-01: cümle ortasındaki hitap (Dr. Gökhan canlı vaka) v
   assert.match(hitapsiz('Bana Ayşe Hocam, Ayşe Yeşil dosyasını aç'), /Ayşe Yeşil/)
   assert.match(hitapsiz('Ayşe Yeşil adında bir hastamız vardı'), /Ayşe Yeşil/)
 })
+
+test('NOTYA-HASTA-ODAK-01: hastaAdiCoz JSON {ad} yükünü de düz adı da çözer — dosya cümlesi ham JSON söylemez', async () => {
+  process.env.ENCRYPTION_MASTER_KEY ||= 'qa-sentetik-tek-beyin-anahtari'
+  const { encrypt } = await import('../security/encryption')
+  const { hastaAdiCoz } = await import('./hastaCozumleyici')
+  assert.equal(hastaAdiCoz(encrypt(JSON.stringify({ ad: 'Sentetik Bebek Test' }))), 'Sentetik Bebek Test')
+  assert.equal(hastaAdiCoz(encrypt('Umutcan Türkoğlu')), 'Umutcan Türkoğlu')
+  assert.equal(hastaAdiCoz(null), '')
+})

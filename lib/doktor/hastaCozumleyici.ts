@@ -98,7 +98,8 @@ export function tumAdParcalariVar(adDuz: string, tokenlar: Set<string>): boolean
   const p = adDuz.split(' ').filter(Boolean)
   return p.length >= 2 && p.every((x) => tokenlar.has(x))
 }
-function adCoz(nameEncrypted: string | null): string {
+/** patients.name_encrypted holds either a plain name or a JSON {ad} payload — always unwrap. */
+export function hastaAdiCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
   try {
     const ham = decrypt(nameEncrypted)
@@ -186,7 +187,7 @@ export async function hastaninSozunuCoz(
     const pid = data?.[0]?.patient_id
     if (pid) {
       const { data: p } = await supabase.from('patients').select('id, name_encrypted').eq('id', pid).eq('doctor_id', doctorId).maybeSingle()
-      if (p) return { tur: 'tek', patientId: p.id, ad: adCoz(p.name_encrypted) || 'son hasta' }
+      if (p) return { tur: 'tek', patientId: p.id, ad: hastaAdiCoz(p.name_encrypted) || 'son hasta' }
     }
   }
   const { data: hastalar } = await supabase
@@ -198,7 +199,7 @@ export async function hastaninSozunuCoz(
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
   for (const h of hastalar) {
-    const ad = adCoz(h.name_encrypted)
+    const ad = hastaAdiCoz(h.name_encrypted)
     if (!ad) continue
     const adDuz = duzle(ad)
     if (!adDuz) continue
