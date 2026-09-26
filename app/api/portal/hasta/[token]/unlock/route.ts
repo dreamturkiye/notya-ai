@@ -4,6 +4,7 @@ import { resolvePortalToken } from '@/lib/portal/messages'
 import {
   clearUnlockCookie,
   isValidPortalPin,
+  pinKilitliMi,
   readUnlockCookie,
   setUnlockCookie,
   verifyPortalPin,
@@ -68,8 +69,35 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     return NextResponse.json({ error: 'PIN 6 haneli rakam olmalıdır.' }, { status: 400 })
   }
 
+  const { data: kilit, error: kilitHata } = await client
+    .from('hasta_portal_tokens')
+    .select('pin_hata_sayisi, pin_kilit_bitis')
+    .eq('token_hash', params.token)
+    .maybeSingle()
+  if (kilitHata || !kilit) {
+    return NextResponse.json({ error: 'Portal kilit kontrolü yapılandırılmamış.' }, { status: 503 })
+  }
+  if (pinKilitliMi(kilit.pin_kilit_bitis)) {
+    return NextResponse.json({ error: 'Çok fazla hatalı deneme. Bir süre sonra tekrar deneyin.' }, { status: 429 })
+  }
+
   if (!verifyPortalPin(pin, tok.pin_hash)) {
+    const { data: kilitBitis, error: sayacHata } = await client.rpc('portal_pin_hata', { p_token: params.token })
+    if (sayacHata) {
+      return NextResponse.json({ error: 'Portal kilit kontrolü yapılandırılmamış.' }, { status: 503 })
+    }
+    if (kilitBitis) {
+      return NextResponse.json({ error: 'Çok fazla hatalı deneme. Bir süre sonra tekrar deneyin.' }, { status: 429 })
+    }
     return NextResponse.json({ error: 'PIN hatalı. Tekrar deneyin.' }, { status: 401 })
+  }
+
+  const { error: sifirHata } = await client
+    .from('hasta_portal_tokens')
+    .update({ pin_hata_sayisi: 0, pin_kilit_bitis: null })
+    .eq('token_hash', params.token)
+  if (sifirHata) {
+    return NextResponse.json({ error: 'Portal kilit kontrolü yapılandırılmamış.' }, { status: 503 })
   }
 
   const res = NextResponse.json({ ok: true, unlocked: true })

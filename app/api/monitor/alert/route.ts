@@ -1,26 +1,29 @@
-// /Users/kaan/notya-ai/app/api/monitor/alert/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { cronYetkiliMi } from '@/lib/cronYetki'
+import { telegramGonder } from '@/lib/uyari/telegram'
 
-import { NextRequest, NextResponse } from "next/server"
-
-const TELEGRAM_BOT = "8920614347"
-const TELEGRAM_CHAT = "5545242725"
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  try {
-    const { message } = await req.json()
-    if (!message) {
-      return NextResponse.json({ error: "Mesaj alanı zorunludur." }, { status: 400 })
-    }
-
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT, text: message, parse_mode: "HTML" })
-    })
-
-    return NextResponse.json({ ok: true }, { status: 200 })
-  } catch (error) {
-    console.error("Alert failed:", error)
-    return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 })
+  if (!cronYetkiliMi(req)) {
+    return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
   }
+
+  let body: { message?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Geçersiz istek' }, { status: 400 })
+  }
+
+  const message = String(body?.message || '').trim()
+  if (!message) {
+    return NextResponse.json({ error: 'Mesaj alanı zorunludur.' }, { status: 400 })
+  }
+
+  const gitti = await telegramGonder(message.slice(0, 2000))
+  if (!gitti) {
+    return NextResponse.json({ error: 'Uyarı gönderilemedi' }, { status: 502 })
+  }
+  return NextResponse.json({ ok: true })
 }

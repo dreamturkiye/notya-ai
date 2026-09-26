@@ -6,6 +6,15 @@ const UNLOCK_COOKIE = 'sagligim_unlock'
 const UNLOCK_HOURS = 12
 const SCRYPT_KEYLEN = 32
 
+/** Beş yanlış deneme bu süre kilitler. Sayaç SQL fonksiyonundadır (102_portal_pin_kilit). */
+export const PIN_KILIT_MS = 15 * 60 * 1000
+
+export function pinKilitliMi(kilitBitis: string | null | undefined, simdi = Date.now()): boolean {
+  if (!kilitBitis) return false
+  const an = new Date(kilitBitis).getTime()
+  return Number.isFinite(an) && an > simdi
+}
+
 function portalSecret(): string {
   const s = process.env.PORTAL_TOKEN_SECRET
   if (!s) throw new Error('PORTAL_TOKEN_SECRET tanımlı değil')

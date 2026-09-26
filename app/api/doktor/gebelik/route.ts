@@ -283,7 +283,9 @@ export async function POST(req: NextRequest) {
         yenidoganPatientId = kart.bebekPatientId
         dogumId = kart.dogumId
       } catch (e) {
-        return NextResponse.json({ error: e instanceof Error ? e.message : 'Bebek kartı oluşturulamadı.' }, { status: 500 })
+        const mesaj = e instanceof Error ? e.message : 'Bebek kartı oluşturulamadı.'
+        const yok = mesaj === 'Hasta bulunamadı.' || mesaj === 'Gebelik bulunamadı.' || mesaj === 'Doğum bulunamadı.' || mesaj === 'Bebek kartı bulunamadı.'
+        return NextResponse.json({ error: yok ? 'Kayıt bulunamadı.' : mesaj }, { status: yok ? 404 : 500 })
       }
     }
 

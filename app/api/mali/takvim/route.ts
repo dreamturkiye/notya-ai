@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getBeyanlarimForMusteri, getKritikBeyanlar, formatTelegramAlert } from '@/lib/mali/beyanTakvimiEngine'
+import { telegramGonder } from '@/lib/uyari/telegram'
 
 function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }) }
-const TELEGRAM_BOT = '8920614347'
-const TELEGRAM_CHAT = '5545242725'
-
-async function sendTelegram(text: string) {
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: TELEGRAM_CHAT, text }),
-  })
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -30,7 +21,7 @@ export async function GET(req: NextRequest) {
     let müşteriler: any[] = []
 
     if (musteriId) {
-      const { data } = await getSupabase().from('mali_musteriler').select('*').eq('id', musteriId).single()
+      const { data } = await getSupabase().from('mali_musteriler').select('*').eq('id', musteriId).eq('musavir_id', user.id).maybeSingle()
       if (data) müşteriler = [data]
     } else {
       const { data } = await getSupabase().from('mali_musteriler').select('*').eq('musavir_id', user.id)
@@ -46,10 +37,10 @@ export async function GET(req: NextRequest) {
     allItems.sort((a, b) => a.daysLeft - b.daysLeft)
     const kritikItems = getKritikBeyanlar(allItems)
 
-    if (sendAlert) {
-      for (const item of kritikItems) {
-        await sendTelegram(formatTelegramAlert(item))
-      }
+    let uyariGonderildi = false
+    if (sendAlert && kritikItems.length) {
+      const sonuclar = await Promise.all(kritikItems.map((item) => telegramGonder(formatTelegramAlert(item))))
+      uyariGonderildi = sonuclar.every(Boolean)
     }
 
     return NextResponse.json({
@@ -58,6 +49,7 @@ export async function GET(req: NextRequest) {
         items: allItems,
         kritikCount: kritikItems.length,
         müşteriler: müşteriler.length,
+        uyariGonderildi,
       },
     })
   } catch (e) {

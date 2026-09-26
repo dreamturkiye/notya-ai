@@ -1,6 +1,7 @@
 // app/api/users/profile/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { bransDegistirebilir } from '@/lib/auth/superuserBranslar'
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,11 +23,14 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
     const body = await req.json()
-    const { profession_type, unvan, büro_adi, uzmanlik_alani, sehir, full_name, plan, trial_start,
+    const { profession_type, unvan, büro_adi, uzmanlik_alani, sehir, full_name,
             gender, addressing_preference, title, specialty, hospital, baro, uzmanlik, yil,
             firstName, lastName, addressingPreference } = body
 
-    // Only write columns that exist in the DB users table
+    const { data: kayit } = await getSupabase().from('users').select('id, specialty, onboarding_completed').eq('id', userId).maybeSingle()
+    const bransYazilabilir = !kayit?.onboarding_completed || bransDegistirebilir(userId)
+
+    // Plan ve deneme süresi istemciden yazılmaz. Deneme yalnız PUT /api/users/trial ile başlar.
     const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
       onboarding_completed: true,
@@ -37,17 +41,21 @@ export async function POST(req: NextRequest) {
     if (unvan) updatePayload.unvan = unvan
     if (büro_adi) updatePayload.büro_adi = büro_adi
     if (sehir) updatePayload.sehir = sehir
-    if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
-    if (specialty && profession_type === 'doktor') updatePayload.specialty = specialty
-    if (specialty && (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'mali' || profession_type === 'psikolog')) {
-      const { klinikUzmanlikNorm } = await import('@/lib/specialties/klinikDikey')
-      updatePayload.specialty = (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'psikolog')
-        ? klinikUzmanlikNorm(specialty)
-        : specialty
+    if (bransYazilabilir) {
+      if (uzmanlik_alani) updatePayload.specialty = uzmanlik_alani
+      if (specialty && profession_type === 'doktor') updatePayload.specialty = specialty
+      if (specialty && (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'mali' || profession_type === 'psikolog')) {
+        const { klinikUzmanlikNorm } = await import('@/lib/specialties/klinikDikey')
+        updatePayload.specialty = (profession_type === 'klinik-uzman' || profession_type === 'saglik-uzmani' || profession_type === 'psikolog')
+          ? klinikUzmanlikNorm(specialty)
+          : specialty
+      }
+      if (uzmanlik && profession_type === 'avukat') updatePayload.specialty = uzmanlik
     }
-    if (uzmanlik && profession_type === 'avukat') updatePayload.specialty = uzmanlik
-    if (plan) updatePayload.plan = plan
-    if (trial_start) updatePayload.trial_start = trial_start
+
+    const uzmanlikMetin = bransYazilabilir
+      ? (specialty || uzmanlik || existingMeta.specialty || null)
+      : (kayit?.specialty || existingMeta.specialty || null)
 
     // Always stamp auth metadata so login redirects don't bounce to onboarding again.
     await getSupabase().auth.admin.updateUserById(userId, {
@@ -63,13 +71,13 @@ export async function POST(req: NextRequest) {
         baro: baro || existingMeta.baro || null,
         yil: yil || existingMeta.yil || null,
         hospital: hospital || existingMeta.hospital || null,
-        specialty: specialty || uzmanlik || existingMeta.specialty || null,
+        specialty: uzmanlikMetin,
         profession_type: profession_type || existingMeta.profession_type || null,
         onboarding_completed: true,
       },
     })
 
-    const { data: existing } = await getSupabase().from('users').select('id').eq('id', userId).single()
+    const existing = kayit
     let result
     if (existing) {
       const { data, error } = await getSupabase().from('users').update(updatePayload).eq('id', userId).select().single()

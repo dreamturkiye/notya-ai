@@ -56,11 +56,21 @@ export async function PUT(req: NextRequest) {
     const user = await getUser(req)
     if (!user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
     const body = await req.json()
-    const { id, ...updates } = body
+    const id = body?.id
     if (!id) return NextResponse.json({ error: 'ID gerekli' }, { status: 400 })
+    const izin = ['sirket_adi', 'vergi_no', 'yetkili_kisi', 'telefon', 'email', 'faaliyet_alani', 'sirket_turu', 'notlar'] as const
+    const guncel: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    for (const alan of izin) {
+      if (body[alan] === undefined) continue
+      const deger = body[alan]
+      guncel[alan] = typeof deger === 'string' ? deger.trim() : deger
+    }
+    if (typeof guncel.sirket_adi === 'string' && !guncel.sirket_adi) {
+      return NextResponse.json({ error: 'Sirket adi gerekli' }, { status: 400 })
+    }
     const sb = getSupabase()
     const { data, error } = await sb.from('mali_musteriler')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(guncel)
       .eq('id', id).eq('musavir_id', user.id).select().single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, data })

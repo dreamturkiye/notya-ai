@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
     const dogumZamani = b.dogumZamani ? new Date(String(b.dogumZamani)).toISOString() : new Date().toISOString()
     const e = await guncelle({ dogum_sekli: sekil, dogum_zamani: dogumZamani, canli_dogum: canli, durum: 'lohusa' })
     if (e) return NextResponse.json({ error: 'Doğum kaydedilemedi' }, { status: 500 })
-    await sb.from('gebelikler').update({ durum: canli ? 'dogum_yapti' : 'olu_dogum', dogum_tarihi: dogumZamani.slice(0, 10) }).eq('id', d!.gebelik_id)
+    await sb.from('gebelikler').update({ durum: canli ? 'dogum_yapti' : 'olu_dogum', dogum_tarihi: dogumZamani.slice(0, 10) }).eq('id', d!.gebelik_id).eq('doctor_id', user.id)
     const bebekler = (Array.isArray(b.bebekler) ? b.bebekler : [{}]) as Record<string, unknown>[]
     const olusan: string[] = []
     for (let i = 0; i < bebekler.length; i++) {
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
       let bebekPatientId: string | null = null
       if (canli) {
         // Live birth → Bebek kartı + a patient record in this doctor's roster (pediatri owns the baby after)
-        const { data: anne } = await sb.from('patients').select('name_encrypted').eq('id', d!.patient_id).maybeSingle()
+        const { data: anne } = await sb.from('patients').select('name_encrypted').eq('id', d!.patient_id).eq('doctor_id', user.id).maybeSingle()
         let anneAd = 'Anne'; try { anneAd = anne?.name_encrypted ? ((JSON.parse(decrypt(String(anne.name_encrypted))) as { ad?: string }).ad || 'Anne') : 'Anne' } catch { anneAd = 'Anne' }
         const bebekAd = `${anneAd.split(' ')[0]} Bebeği${bebekler.length > 1 ? ` ${i + 1}` : ''}`
         const { data: bp } = await sb.from('patients').insert({ doctor_id: user.id, name_encrypted: encrypt(JSON.stringify({ ad: bebekAd })), dob_encrypted: encrypt(dogumZamani.slice(0, 10)), gender_encrypted: cins ? encrypt(cins === 'E' ? 'Erkek' : 'Kız') : null, is_active: true }).select('id').single()

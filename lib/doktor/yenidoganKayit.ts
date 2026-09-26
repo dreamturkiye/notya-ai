@@ -171,9 +171,25 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
   kartId: string
   zatenVar: boolean
 }> {
-  const { data: gebelik } = await sb.from('gebelikler').select('yenidogan_patient_id').eq('id', g.gebelikId).eq('doctor_id', g.doktorId).maybeSingle()
-  if (gebelik?.yenidogan_patient_id) {
-    const { data: kart } = await sb.from('bebek_kartlari').select('id, dogum_id').eq('bebek_patient_id', gebelik.yenidogan_patient_id).maybeSingle()
+  const { data: gebelik } = await sb.from('gebelikler').select('patient_id, yenidogan_patient_id').eq('id', g.gebelikId).eq('doctor_id', g.doktorId).maybeSingle()
+  if (!gebelik?.patient_id) throw new Error('Gebelik bulunamadı.')
+  if (String(gebelik.patient_id) !== String(g.anneId)) throw new Error('Hasta bulunamadı.')
+  const { data: anneKayit } = await sb.from('patients').select('name_encrypted').eq('id', g.anneId).eq('doctor_id', g.doktorId).maybeSingle()
+  if (!anneKayit) throw new Error('Hasta bulunamadı.')
+  if (g.mevcutDogumId) {
+    const { data: dogumSahip } = await sb.from('dogum_olaylari').select('id').eq('id', g.mevcutDogumId).eq('doctor_id', g.doktorId).eq('gebelik_id', g.gebelikId).maybeSingle()
+    if (!dogumSahip) throw new Error('Doğum bulunamadı.')
+  }
+  if (g.mevcutBebekPatientId) {
+    const { data: bebekSahip } = await sb.from('patients').select('id').eq('id', g.mevcutBebekPatientId).eq('doctor_id', g.doktorId).maybeSingle()
+    if (!bebekSahip) throw new Error('Hasta bulunamadı.')
+  }
+  if (g.mevcutKartId) {
+    const { data: kartSahip } = await sb.from('bebek_kartlari').select('id').eq('id', g.mevcutKartId).eq('doctor_id', g.doktorId).maybeSingle()
+    if (!kartSahip) throw new Error('Bebek kartı bulunamadı.')
+  }
+  if (gebelik.yenidogan_patient_id) {
+    const { data: kart } = await sb.from('bebek_kartlari').select('id, dogum_id').eq('bebek_patient_id', gebelik.yenidogan_patient_id).eq('doctor_id', g.doktorId).maybeSingle()
     if (kart) {
       await baglaLohusaVeTakvim(sb, {
         doktorId: g.doktorId,
@@ -232,6 +248,7 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
   const { data: mevcutKart } = await sb.from('bebek_kartlari')
     .select('id, bebek_patient_id')
     .eq('dogum_id', dogumId)
+    .eq('doctor_id', g.doktorId)
     .not('bebek_patient_id', 'is', null)
     .order('sira', { ascending: true })
     .limit(1)
@@ -255,10 +272,9 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
 
   let bebekPatientId = g.mevcutBebekPatientId || null
   if (!bebekPatientId) {
-    const { data: anne } = await sb.from('patients').select('name_encrypted').eq('id', g.anneId).maybeSingle()
     let anneSoyad = ''
     try {
-      const n = JSON.parse(anne?.name_encrypted ? decrypt(anne.name_encrypted) : '{}') as { ad?: string; soyad?: string }
+      const n = JSON.parse(anneKayit.name_encrypted ? decrypt(anneKayit.name_encrypted) : '{}') as { ad?: string; soyad?: string }
       anneSoyad = String(n.soyad || n.ad || '').split(' ').slice(-1)[0] || ''
     } catch { /* ad çözülemedi */ }
 
@@ -325,7 +341,7 @@ export async function olusturCanliDogum(sb: Sb, g: CanliDogumGirdi): Promise<{
       preterm,
       lbw,
       kan_grubu: g.kanGrubu ?? null,
-    }).eq('id', kartId)
+    }).eq('id', kartId).eq('doctor_id', g.doktorId)
   }
   if (!kartId) throw new Error('Bebek kartı oluşturulamadı')
 

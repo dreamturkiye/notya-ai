@@ -11,6 +11,20 @@ export async function PUT(req: NextRequest) {
   const { data: { user }, error } = await sb().auth.getUser(tok)
   if (error || !user) return NextResponse.json({ error: 'Oturum bulunamadı. Lütfen tekrar giriş yapın.' }, { status: 401 })
 
+  const meta = user.user_metadata || {}
+  if (meta.trial_ends) {
+    const end = new Date(meta.trial_ends)
+    const days = Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000))
+    return NextResponse.json({
+      ok: true,
+      plan: meta.plan || 'professional',
+      trial_start: meta.trial_start || null,
+      trial_ends: meta.trial_ends,
+      days_remaining: days,
+      already_started: true,
+    })
+  }
+
   const trialStart = new Date()
   const trialEnd = new Date(trialStart)
   trialEnd.setDate(trialEnd.getDate() + 15)

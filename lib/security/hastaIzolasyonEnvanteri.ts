@@ -104,7 +104,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/gebelik/kohort/route.ts': T,
   'app/api/doktor/gebelik/_kohort.ts': I('patient ids drawn only from gebelikler / kadin_sagligi rows with doctor_id = doctorId; every secondary read (patients, izlem, genetik, lohusa, sessions, portal) doctor_id-scoped (read-only — kdHatirlatmaGonder lives in _kohortHatirlatma.ts, NOTYA-EYLEM-24)'),
   'app/api/doktor/gebelik/_kohortHatirlatma.ts': I('kdHatirlatmaGonder — split out of _kohort.ts (NOTYA-EYLEM-24); runs only on ids that passed kdKohortVerisi(doctorId) in kohort/route.ts'),
-  'app/api/doktor/yenidogan/route.ts': I('baby card fetched by patient AND doctor_id; every derived id comes from that card; patient reads doctor-scoped'),
+  'app/api/doktor/yenidogan/route.ts': I('baby card fetched by patient AND doctor_id; every derived id comes from that card; patient reads doctor-scoped; canli-dogum-onar goes through olusturCanliDogum which requires gebelik.patient_id = body anne AND patients.doctor_id before any name decrypt or write'),
   'app/api/doktor/jinekoloji/route.ts': T,
   'app/api/doktor/goz/route.ts': T,
   'app/api/doktor/goz/kohort/route.ts': T,
