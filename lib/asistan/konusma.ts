@@ -2,8 +2,9 @@
  * NOTYA-TEK-BEYIN — Ayşe'nin ekran cevabından SÖZLÜ biçim (Kaan, 2026-09-25).
  *
  * Tek beyin iki biçim üretir: `ekran` (biçimli metin — başlık, madde, tablo) ve `konusma` (doğal Türkçe cümleler).
- * Dr. Gökhan / Kaan (NOTYA-TEK-BEYIN ek şartı): sesli cevap yazılı cevap kadar AYRINTILIDIR — özet bölümleri,
- * muayene, tanı, dozlu tedavi, takip aynen okunur; kısa bir özet DEĞİLDİR. Ekran aynı anda biçimli metni gösterir.
+ * 2026-09-25 rule (Dr. Gökhan / Kaan): the spoken answer was as detailed as the written one. REVERSED by Kaan on
+ * 2026-09-26 (NOTYA-SES-SLUR-01): reading the chart like a document produced late-turn slur. Now: ekran stays full;
+ * konusma = at most SOZ_BEAT_SINIRI sentences, lists of LISTE_ESIGI+ items become "N madde, ekranınızda".
  * Yalnız iki şey ekranda kalır:
  *   - kimlik / iletişim değeri (VELI-YASAL-ONAM): telefon, e-posta, T.C. kimlik no içeren cümle ve "(d.t. …)"
  *     doğum tarihi okunmaz; bir kez "İletişim bilgisini ekranınıza yazdım." denir;
@@ -17,6 +18,14 @@
 export const EKRANA_YAZDIM = 'Ayrıntıları ekranınıza yazdım Hocam.'
 export const ILETISIM_EKRANDA = 'İletişim bilgisini ekranınıza yazdım.'
 export const TABLO_EKRANDA = 'Tabloyu ekranınıza yazdım.'
+/** NOTYA-SES-SLUR-01 (Kaan, 2026-09-26): a spoken turn is at most this many sentences; the rest stays on screen. */
+export const SOZ_BEAT_SINIRI = 5
+export const DEVAMI_EKRANDA = 'Devamı ekranınızda Hocam.'
+/** Lists of this many items or more are not read item by item — one sentence points to the screen. */
+export const LISTE_ESIGI = 3
+export function listeEkranda(n: number): string { return `${n} madde, ekranınızda.` }
+const BASLIK_SATIRI = /^\s*#{1,6}\s+/
+const LISTE_MADDESI = /^\s*(?:[-*•]\s+|\d{1,2}\.\s+)/
 
 /** ElevenLabs: bekletme sözü "... " (üç nokta + boşluk) ile biter — ardından gelen cevapla doğal birleşir. */
 export const DOLGU_BAKIYORUM = 'Bakıyorum Hocam... '
@@ -32,9 +41,6 @@ const MADDE_IMI = /^\s*(?:[-*•]\s+|\d{1,2}\.\s+|#{1,6}\s+|>\s*)/
 const BUYUK = 'A-ZÇĞİÖŞÜ'
 // Cümle sonu: nokta/ünlem/soru + boşluk + büyük harf (ya da satır içi "2)" numarası). "d.t. 20.05" bölünmez.
 const CUMLE_SONU = new RegExp(`([.!?…])\\s+(?=["“'(]?[${BUYUK}]|\\d{1,2}\\))`)
-/** İlk cümlenin ilk bölümü: en az 25 karakter, sonra ", " / " — " / " – " (ardından bir kelime başlamış olmalı). */
-const ILK_BOLUM = /^[^\n]{25,}?(?:,|\s[—–])(?=\s+\S)/
-
 /** Bir cümlede okunmaması gereken kimlik / iletişim değeri var mı? */
 export function kimlikDegeriVarMi(s: string): boolean {
   return TELEFON.test(s) || EPOSTA.test(s) || TC_NO.test(s)
@@ -69,6 +75,9 @@ export class SesAkisi {
   private tampon = ''
   private iletisimNotu = false
   private tabloNotu = false
+  private devamNotu = false
+  private beat = 0
+  private liste: string[] = []
   readonly soylenen: string[] = []
 
   constructor(
@@ -85,28 +94,34 @@ export class SesAkisi {
 
   bitir(): string {
     this.isle(true)
+    this.listeyiBitir()
     return this.soylenen.join(' ').trim()
   }
 
-  private soyle(s: string): void {
+  /** Notes ("ekranınıza yazdım") do not count as beats; sentences do. */
+  private soyle(s: string, not = false): void {
+    if (!not) {
+      if (this.beat >= SOZ_BEAT_SINIRI) {
+        if (!this.devamNotu) { this.devamNotu = true; this.soylenen.push(DEVAMI_EKRANDA); this.yay(`${DEVAMI_EKRANDA} `) }
+        return
+      }
+      this.beat++
+    }
     this.soylenen.push(s)
     this.yay(`${s} `)
   }
 
+  /**
+   * NOTYA-SES-SLUR-01 (Kaan, 2026-09-26): only FINISHED sentences reach the voice. The old "first clause at the
+   * first comma" flush fed ConvAI half-sentences that were synthesised separately and came out slurred; it is gone.
+   * A sentence ends at . ! ? … (followed by a capital or an inline number) or at a newline; bitir() speaks the tail.
+   */
   private isle(son: boolean): void {
     for (;;) {
       this.tampon = satirIciNumara(this.tampon)
       const nl = this.tampon.indexOf('\n')
       const m = CUMLE_SONU.exec(this.tampon)
       let kesit: string | null = null
-      // Hız: ilk söz, ilk cümle bitmeden ilk virgül / tirede gider (seslendirme erken başlar); aynı süzgeçlerden geçer.
-      const ilkParca = !this.soylenen.length && nl === -1 && !m && !son && !TABLO_SATIRI.test(this.tampon) ? ILK_BOLUM.exec(this.tampon) : null
-      if (ilkParca) {
-        const t = this.tampon.slice(0, ilkParca.index + ilkParca[0].length)
-        this.tampon = this.tampon.slice(t.length)
-        this.cumle(t, true)
-        continue
-      }
       if (nl !== -1 && (!m || nl < m.index)) {
         kesit = this.tampon.slice(0, nl)
         this.tampon = this.tampon.slice(nl + 1)
@@ -118,25 +133,41 @@ export class SesAkisi {
         this.tampon = ''
       }
       if (kesit === null) return
-      this.cumle(kesit, false)
+      this.cumle(kesit)
       if (son && !this.tampon) return
     }
   }
 
-  private cumle(ham: string, bolum: boolean): void {
+  /** List items are held; ${LISTE_ESIGI}+ items become one pointer sentence, fewer are read as sentences. */
+  private listeyiBitir(): void {
+    const items = this.liste
+    this.liste = []
+    if (!items.length) return
+    if (items.length >= LISTE_ESIGI) { this.soyle(listeEkranda(items.length)); return }
+    for (const s of items) this.soyle(s)
+  }
+
+  private cumle(ham: string): void {
     if (!ham.trim() || AYIRAC_SATIRI.test(ham)) return
     if (TABLO_SATIRI.test(ham)) {
-      if (!this.tabloNotu) { this.tabloNotu = true; this.soyle(TABLO_EKRANDA) }
+      this.listeyiBitir()
+      if (!this.tabloNotu) { this.tabloNotu = true; this.soyle(TABLO_EKRANDA, true) }
       return
     }
+    const madde = LISTE_MADDESI.test(ham)
+    if (!madde) this.listeyiBitir()
     const s = this.temizle(satirIciSade(ham)).trim()
     if (!s) return
     if (kimlikDegeriVarMi(s)) {
-      if (!this.iletisimNotu) { this.iletisimNotu = true; this.soyle(ILETISIM_EKRANDA) }
+      if (!this.iletisimNotu) { this.iletisimNotu = true; this.soyle(ILETISIM_EKRANDA, true) }
       return
     }
     // Başlık / madde satırı nokta ile bitmez — konuşmada cümle sonu olsun ("Muayene:" → "Muayene.").
-    this.soyle(bolum || /[.!?…]$/.test(s) ? s : `${s.replace(/[:;,]$/, '')}.`)
+    const cumle = /[.!?…]$/.test(s) ? s : `${s.replace(/[:;,]$/, '')}.`
+    // A heading ("## Muayene", "Tedavi:") is structure, not content: spoken, but not counted as a beat.
+    const baslik = BASLIK_SATIRI.test(ham) || (/[:]\s*$/.test(ham.trim()) && ham.trim().split(/\s+/).length <= 4)
+    if (madde) this.liste.push(cumle)
+    else this.soyle(cumle, baslik)
   }
 }
 

@@ -37,7 +37,7 @@ import { asistanYanitiCoz, speechOneki } from "@/lib/asistan/yanitCoz"
 import { doktorMetniTemizle } from "@/lib/doktor/klinikMetin"
 import { cozumKonus, hastaninSozunuCoz, type HastaCozumu } from "@/lib/doktor/hastaCozumleyici"
 import { hastaDosyaPaketiniDerle } from "@/lib/doktor/hastaDosyaDerleyici"
-import { dosyaSoruCevap } from "@/lib/doktor/hastaDosyaKart"
+import { adliDosyaCevabi, dosyaSoruCevap } from "@/lib/doktor/hastaDosyaKart"
 import { kimlikSorusunuCevapla, type KimlikCevabi } from "@/lib/doktor/kimlikSorusu"
 import { aiKotaKullan, KOTA_MESAJI } from "@/lib/doktor/hizLimiti"
 import { quickClassify, extractPrescriptionData } from "@/lib/asistan/intentParser"
@@ -256,12 +256,16 @@ ${ilacBaglamMetni(drugs[0])}`
         const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await hastaDosyaPaketiniDerle(supabase, doktorId, aktifId)
         if (paket) {
           if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
-          const aktifAd = cozum.tur === "tek" ? cozum.ad : "aktif hasta"
-          kesinDosyaCevap = dosyaSoruCevap(String(message || ""), paket.kart)
+          const aktifAd = cozum.tur === "tek" ? cozum.ad : (paket.ad || "aktif hasta")
+          // NOTYA-HASTA-ODAK-01 (Dr. Gökhan canlı vaka, 2026-09-26): "Dosyada aşı: kayıtlı aşı yok" doğruydu ama
+          // BAŞKA hastanın dosyasıydı ve cümlede ad yoktu — doktor konuştuğu hasta sanıp "aşı yok deyip aşıları
+          // gösterdi" dedi. Kesin dosya cevabı her zaman hastanın adıyla başlar; yanlış hasta anında görülür.
+          const kesinHam = dosyaSoruCevap(String(message || ""), paket.kart)
+          kesinDosyaCevap = kesinHam ? adliDosyaCevabi(aktifAd, kesinHam) : null
           const kesinBlok = kesinDosyaCevap
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
             : ""
-          dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===${kesinBlok}\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
+          dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===${kesinBlok}\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
         }
       }
     }
