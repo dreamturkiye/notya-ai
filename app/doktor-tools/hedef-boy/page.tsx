@@ -29,8 +29,8 @@ export default function HedefBoyAracPage() {
   }
 
   return (
-    <div style={toolsShell}>
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: aile ? 0 : '24px 16px 48px' }}>
+    <div className="hedef-boy-sayfa" style={toolsShell}>
+      <div className="hedef-boy-icerik" style={{ maxWidth: 1180, margin: '0 auto', padding: aile ? 0 : '24px 16px 48px' }}>
         <Suspense fallback={<div style={{ padding: 40, color: CHROME_RENK.muted }}>Yükleniyor…</div>}>
           <HedefBoyAracPaneli onAileModu={setAile} />
         </Suspense>
