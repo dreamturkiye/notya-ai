@@ -7,6 +7,28 @@ import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
 
 export const dynamic = 'force-dynamic'
 
+export async function GET(req: NextRequest) {
+  const oturum = await pratikOturum(req)
+  if ('hata' in oturum) return oturum.hata
+  const engel = sadeceDoktor(oturum)
+  if (engel) return engel
+  const { data } = await oturum.supabase
+    .from('users')
+    .select('full_name, unvan, title, specialty, clinic_name, recete_baslik')
+    .eq('id', oturum.doktorId)
+    .maybeSingle()
+  const rb = (data?.recete_baslik && typeof data.recete_baslik === 'object' ? data.recete_baslik : {}) as { satirlar?: string[]; diplomaNo?: string; logoDataUrl?: string }
+  return NextResponse.json({
+    hekim: String(data?.full_name || '').trim(),
+    unvan: String(data?.title || data?.unvan || 'Dr.'),
+    brans: String(data?.specialty || ''),
+    klinik: String(data?.clinic_name || ''),
+    satirlar: Array.isArray(rb.satirlar) ? rb.satirlar.map(String).filter(Boolean) : [],
+    diplomaNo: String(rb.diplomaNo || ''),
+    logoDataUrl: String(rb.logoDataUrl || ''),
+  })
+}
+
 export async function POST(req: NextRequest) {
   const oturum = await pratikOturum(req)
   if ('hata' in oturum) return oturum.hata

@@ -1,6 +1,6 @@
 'use client'
 import {
-  getAccessToken, getAccessTokenAsync,
+  getAccessTokenAsync,
   normalizeHastalar,
   toolsCard,
   toolsErrorBox,
@@ -13,6 +13,8 @@ import {
 import React, { useEffect, useMemo, useState } from 'react'
 import { TETKIK_KATALOGU, TETKIK_PANELLERI, TETKIK_BOLUMU, NUMUNE_ADI, TUM_TETKIKLER, tetkikAra } from '@/lib/doktor/tetkikKatalogu'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
+import { BRANS_ETIKETLERI } from '@/lib/intake/bransSorulari'
+import { hekimUnvanli } from '@/lib/doktor/hekimAdi'
 
 
 const vucutBolgeleri = ['Baş', 'Boyun', 'Göğüs', 'Karın', 'Pelvis', 'Omurga', 'Kol', 'Bacak']
@@ -32,29 +34,72 @@ export default function TetkikPage() {
   const [modalite, setModalite] = useState('')
   const [showPrintable, setShowPrintable] = useState(false)
   const [error, setError] = useState('')
-  const [doktorAdi, setDoktorAdi] = useState('Doktor')
+  const [baslik, setBaslik] = useState<{
+    unvan: string
+    ad: string
+    brans: string
+    klinik: string
+    satirlar: string[]
+    diplomaNo: string
+    logoDataUrl: string
+  }>({ unvan: 'Dr.', ad: '', brans: '', klinik: '', satirlar: [], diplomaNo: '', logoDataUrl: '' })
+  const [hastaYas, setHastaYas] = useState('')
 
   useEffect(() => {
-    try {
-      setDoktorAdi(localStorage.getItem('notya_doktor_name') || 'Doktor')
-    } catch {
-      /* ignore */
-    }
     const load = async () => {
       const token = await getAccessTokenAsync()
       if (!token) return
       try {
-        const res = await fetch('/api/doktor/hastalar', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) return
-        setHastalar(normalizeHastalar(await res.json()))
+        const [hastaR, baslikR] = await Promise.all([
+          fetch('/api/doktor/hastalar', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/doktor/recete-baslik', { headers: { Authorization: `Bearer ${token}` } }),
+        ])
+        if (hastaR.ok) setHastalar(normalizeHastalar(await hastaR.json()))
+        if (baslikR.ok) {
+          const p = await baslikR.json() as {
+            hekim?: string; unvan?: string; brans?: string; klinik?: string
+            satirlar?: string[]; diplomaNo?: string; logoDataUrl?: string
+          }
+          setBaslik({
+            unvan: String(p.unvan || 'Dr.'),
+            ad: String(p.hekim || ''),
+            brans: String(p.brans || ''),
+            klinik: String(p.klinik || ''),
+            satirlar: Array.isArray(p.satirlar) ? p.satirlar.map(String).filter(Boolean) : [],
+            diplomaNo: String(p.diplomaNo || ''),
+            logoDataUrl: String(p.logoDataUrl || ''),
+          })
+        }
       } catch {
         setError('Hasta listesi alınamadı.')
       }
     }
     void load()
   }, [])
+
+  useEffect(() => {
+    if (!selectedHastaId) { setHastaYas(''); return }
+    let iptal = false
+    void (async () => {
+      const token = await getAccessTokenAsync()
+      if (!token) return
+      try {
+        const r = await fetch(`/api/doktor/hastalar/${encodeURIComponent(selectedHastaId)}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!r.ok || iptal) return
+        const j = await r.json() as { patient?: { dogum_tarihi?: string | null; cinsiyet?: string | null } }
+        const dogum = j.patient?.dogum_tarihi || ''
+        if (!dogum) { if (!iptal) setHastaYas(''); return }
+        const d = new Date(dogum)
+        if (isNaN(d.getTime())) { if (!iptal) setHastaYas(''); return }
+        const ay = Math.floor((Date.now() - d.getTime()) / (30.44 * 86400000))
+        const yas = ay < 24 ? `${ay} aylık` : `${Math.floor(ay / 12)} yaş`
+        const cins = j.patient?.cinsiyet
+        const c = cins === 'male' || cins === 'Erkek' ? 'E' : cins === 'female' || cins === 'Kadın' || cins === 'Kız/Kadın' ? 'K' : ''
+        if (!iptal) setHastaYas(c ? `${yas} · ${c}` : yas)
+      } catch { /* yaş kâğıtta boş kalır */ }
+    })()
+    return () => { iptal = true }
+  }, [selectedHastaId])
 
   const selectedHasta = hastalar.find((h) => h.id === selectedHastaId) || null
   const selectedTests = Object.keys(selectedLabTests).filter((t) => selectedLabTests[t])
@@ -262,12 +307,20 @@ export default function TetkikPage() {
         </div>
       </div>
 
-      {showPrintable && (
+      {showPrintable && (() => {
+        const bransAd = (BRANS_ETIKETLERI[baslik.brans as keyof typeof BRANS_ETIKETLERI] || baslik.brans || '').replace(/\s*\(.*\)\s*$/, '')
+        const hekimSatir = hekimUnvanli(baslik.ad || `${baslik.unvan}`.trim()) || '________________'
+        const tarih = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' })
+        const hastaAd = [selectedHasta?.ad, selectedHasta?.soyad].filter(Boolean).join(' ') || selectedHasta?.label?.split(' — ')[0] || '________________'
+        const tetkikler = activeTab === 'lab'
+          ? [...selectedTests, ...(customTests ? [customTests] : [])]
+          : [vucutBolgesi && modalite ? `${modalite} — ${vucutBolgesi}` : modalite || vucutBolgesi].filter(Boolean) as string[]
+        return (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.7)',
+            background: 'rgba(0,0,0,0.55)',
             zIndex: 200,
             display: 'flex',
             alignItems: 'center',
@@ -275,76 +328,82 @@ export default function TetkikPage() {
             padding: 16,
           }}
         >
-          <div
-            id="print-area"
-            style={{
-              background: '#fff',
-              color: CHROME_RENK.ink,
-              width: '100%',
-              maxWidth: 720,
-              maxHeight: '90dvh',
-              overflow: 'auto',
-              borderRadius: 16,
-              padding: 22,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${CHROME_RENK.border}`, paddingBottom: 12, marginBottom: 16 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 19c1.6-5.8 3.4-9.6 7.2-14.2.8 3.4.8 6.4-.2 9.2-1.5 2.4-4 4-7 5z" stroke="#6a7563" strokeWidth="1.3"/></svg>
-                  <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 11, color: '#6d6055' }}>Notya</span>
-                </div>
-                <div style={{ fontWeight: 600, fontSize: 18 }}>Tetkik İstek Formu</div>
-                <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>T.C. SAĞLIK BAKANLIĞI</div>
-              </div>
-              <div style={{ fontSize: 12, color: CHROME_RENK.muted }}>{new Date().toLocaleDateString('tr-TR')}</div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16, fontSize: 14 }}>
-              <div>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Doktor</div>
-                <div>Dr. {doktorAdi}</div>
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Hasta</div>
-                <div>{selectedHasta?.label || '—'}</div>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: 16, fontSize: 14 }}>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>İstenen Tetkikler</div>
-              {activeTab === 'lab' ? (
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  {[...selectedTests, ...(customTests ? [customTests] : [])].length ? (
-                    [...selectedTests, ...(customTests ? [customTests] : [])].map((t) => {
-                      const k = TUM_TETKIKLER.find((x) => x.ad === t)
-                      return (
-                        <li key={t}>
-                          {t}
-                          {k ? <span style={{ color: CHROME_RENK.muted, fontSize: 12 }}> — {NUMUNE_ADI[k.n]}{k.aclik ? ', açlık gerekir' : ''}{k.not ? `, ${k.not}` : ''}</span> : null}
-                        </li>
-                      )
-                    })
-                  ) : (
-                    <li>Seçili tetkik yok</li>
+          <div style={{ maxHeight: '92dvh', overflow: 'auto', width: '100%', maxWidth: 560 }}>
+            <div
+              id="print-area"
+              className="tetkik-kagit"
+              style={{
+                background: 'white',
+                color: '#111',
+                width: '100%',
+                minHeight: 740,
+                boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+                padding: '36px 40px',
+                boxSizing: 'border-box',
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <div style={{ textAlign: 'center', borderBottom: '1.5px solid #111', paddingBottom: 8, marginBottom: 14 }}>
+                {baslik.logoDataUrl && <img src={baslik.logoDataUrl} alt="" style={{ height: 44, marginBottom: 4 }} />}
+                {baslik.satirlar.length > 0
+                  ? baslik.satirlar.map((s, i) => (
+                      <div key={i} style={i === 0 ? { fontSize: 16, fontWeight: 700, letterSpacing: 0.3 } : { fontSize: i === 1 ? 12 : 11, color: i === 1 ? '#111' : '#333' }}>{s}</div>
+                    ))
+                  : (
+                    <>
+                      <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 0.3 }}>{hekimSatir}</div>
+                      {bransAd && <div style={{ fontSize: 12 }}>{bransAd} Uzmanı</div>}
+                      {baslik.klinik && <div style={{ fontSize: 11, color: '#333' }}>{baslik.klinik}</div>}
+                    </>
                   )}
-                </ul>
-              ) : (
-                <div>
-                  <div>Vücut Bölgesi: {vucutBolgesi || '—'}</div>
-                  <div>Modalite: {modalite || '—'}</div>
-                </div>
-              )}
-            </div>
+                <div style={{ fontSize: 13, fontStyle: 'italic', marginTop: 8 }}>Tetkik İstek Formu</div>
+              </div>
 
-            <div style={{ marginBottom: 18, fontSize: 14 }}>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>Klinik Endikasyon</div>
-              <div style={{ border: '1px solid #CBD5E1', borderRadius: 12, padding: 12, minHeight: 64 }}>
-                {klinikEndikasyon || 'Belirtilmemiş'}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 16, gap: 12 }}>
+                <div>
+                  <div><b>Hasta:</b> {hastaAd}</div>
+                  <div><b>Yaş:</b> {hastaYas || '____'}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div><b>Tarih:</b> {tarih}</div>
+                </div>
+              </div>
+
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>İstenen tetkikler</div>
+              {tetkikler.length === 0 ? (
+                <div style={{ fontSize: 12, color: '#666' }}>Seçili tetkik yok.</div>
+              ) : (
+                <ol style={{ margin: 0, paddingLeft: 22, fontSize: 13, lineHeight: 1.55 }}>
+                  {tetkikler.map((t) => {
+                    const k = TUM_TETKIKLER.find((x) => x.ad === t)
+                    return (
+                      <li key={t} style={{ marginBottom: 8 }}>
+                        <b>{t}</b>
+                        {k ? <div style={{ paddingLeft: 2, fontStyle: 'italic', color: '#333' }}>{NUMUNE_ADI[k.n]}{k.aclik ? ', açlık gerekir' : ''}{k.not ? `, ${k.not}` : ''}</div> : null}
+                      </li>
+                    )
+                  })}
+                </ol>
+              )}
+
+              <div style={{ marginTop: 18, fontSize: 13 }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Klinik endikasyon</div>
+                <div style={{ borderBottom: '1px solid #111', minHeight: 48, paddingBottom: 6, whiteSpace: 'pre-wrap' }}>
+                  {klinikEndikasyon || ' '}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 'auto', paddingTop: 48, display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ textAlign: 'center', fontSize: 11, color: '#333', borderTop: '1px solid #111', paddingTop: 6, minWidth: 180 }}>
+                  Kaşe / İmza<br />
+                  <span style={{ color: '#666' }}>Diploma No: {baslik.diplomaNo || '____________'}</span>
+                </div>
               </div>
             </div>
 
-            <div className="no-print" style={{ display: 'flex', gap: 10 }}>
+            <div className="no-print" style={{ display: 'flex', gap: 10, marginTop: 12, justifyContent: 'flex-end' }}>
               <button type="button" onClick={() => window.print()} style={toolsPrimaryBtn(false)}>
                 Yazdır
               </button>
@@ -362,14 +421,17 @@ export default function TetkikPage() {
             </div>
           </div>
         </div>
-      )}
+        )
+      })()}
 
       <style>{`
         @media print {
           .no-print, nav { display: none !important; }
+          body { background: white !important; }
           body * { visibility: hidden !important; }
           #print-area, #print-area * { visibility: visible !important; }
-          #print-area { position: absolute; left: 0; top: 0; width: 100%; max-height: none; }
+          #print-area { position: absolute; left: 0; top: 0; width: 100%; max-height: none; box-shadow: none !important; min-height: auto !important; }
+          @page { size: A4 portrait; margin: 12mm; }
         }
       `}</style>
     </div>

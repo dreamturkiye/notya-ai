@@ -216,7 +216,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/doktor/araclar/ilac-interaksiyon/route.ts': I('drug names from the body only; no patient table'),
   // ── Doktor hesabı (hasta verisi yok) ──
   'app/api/doktor/erecete-ayar/route.ts': I('users row of doktorId only'),
-  'app/api/doktor/recete-baslik/route.ts': I('users row of doktorId only'),
+  'app/api/doktor/recete-baslik/route.ts': I('GET/POST users row of doktorId only — letterhead, no patient id'),
   'app/api/doktor/hafiza/route.ts': I('doktor_hafiza scoped by doctor_id; no patient data'),
   'app/api/doktor/hesap/sifre-degistir/route.ts': I('own auth account only'),
   'app/api/doktor/id-card/parse/route.ts': I('OCR of an uploaded image; stores nothing'),

@@ -170,6 +170,15 @@ test('göz studio pages: guarded, card-opened, never on the landing', () => {
   assert.doesNotMatch(landing, /VaAraci|SutVegfAraci|SgkRaporAraci|GilKodAraci|GozKohortPaneli|goz-exceptional-audit/)
 })
 
+test('tetkik print paper matches the prescription letterhead, not a ministry claim', () => {
+  const sayfa = fs.readFileSync(path.join(import.meta.dirname, '../../app/doktor-tools/tetkik/page.tsx'), 'utf8')
+  assert.match(sayfa, /\/api\/doktor\/recete-baslik/)
+  assert.match(sayfa, /Diploma No/)
+  assert.match(sayfa, /Kaşe \/ İmza/)
+  assert.match(sayfa, /hekimUnvanli/)
+  assert.doesNotMatch(sayfa, /T\.C\. SAĞLIK BAKANLIĞI|T\.C\. Sağlık Bakanlığı resmi/)
+})
+
 test('commercial grid: no internal audits, sprint jargon, or named beta-doctor copy', () => {
   const blob = TUM_DOKTOR_ARACLARI.map((a) => `${a.title} ${a.desc} ${a.route}`).join('\n')
   assert.doesNotMatch(blob, /audit|presprint|post-sprint|pre-sprint|wow|JINE-|Gökhan|Gokhan|Gaps \+|sprint/i)
