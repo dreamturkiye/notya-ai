@@ -55,7 +55,7 @@ import { EYLEM_ISTEM_BLOGU } from "@/core/eylemler/istem"
 import { bugunTRT, type HastaOzeti } from "@/core/eylemler/types"
 import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
-import { konusmaYap, SesAkisi } from "@/lib/asistan/konusma"
+import { konusmaYap, okumaIstegiMi, SesAkisi } from "@/lib/asistan/konusma"
 import { aktifHastaKullanilsinMi } from "@/lib/asistan/aktifHasta"
 import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
 import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
@@ -240,6 +240,19 @@ ${ilacBaglamMetni(drugs[0])}`
     soyle(konusma)
     return sade(kimlikCevabi.ekran, konusma, kimlikHastasi?.ad || null)
   }
+  // NOTYA-SES-OKU-01: "bana anlat / devamını oku" — read the last screen answer aloud, uncapped, no model.
+  if (ses && okumaIstegiMi(String(message || ""))) {
+    const sonEkran = [...messages].reverse().find((m) => m.role === "assistant" && String(m.content || "").trim())
+    if (sonEkran) {
+      const tam = konusmaYap(String(sonEkran.content), undefined, { sinirsiz: true }) // screen text is already the cleaned, doctor-visible answer
+      const okuma = tam || "Ekranda okunacak bir cevap bulamadım Hocam."
+      soyle(okuma)
+      const ekranNotu = "Ekrandaki cevabı sesli okudum Hocam."
+      await oturumuYaz(ekranNotu, {})
+      return sade(ekranNotu, okuma, baglam.patientName ? String(baglam.patientName) : null)
+    }
+  }
+
   try {
     // NOTYA-TEK-BEYIN (hız): takip sorusunda aktif hastanın dosyası, mesajdaki hasta çözülürken paralel derlenir;
     // mesaj başka bir hastayı adlandırırsa bu derleme kullanılmaz (doktora kapsanmış bir okuma — sızıntı değil).
