@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
-import { asistanOturumuSuruyor, asistanSayfasiMi, mikrofonEtiketi, sesAktifMi, yuzenPanelGorunur, type YuzenPanelGirdisi } from './yuzenPanel'
+import { asistanOturumuSuruyor, asistanSayfasiMi, mikrofonEtiketi, sayfaHastaId, sesAktifMi, yuzenPanelGorunur, type YuzenPanelGirdisi } from './yuzenPanel'
 
 const bos: YuzenPanelGirdisi = { sesDurumu: 'idle', sesMesajiVar: false, yaziliAcik: false, yaziliDoktorMesajiVar: false, pathname: '/dashboard/doktor' }
 
@@ -77,4 +77,21 @@ test('yaşam döngüsü: provider kök düzende, /asistan kendi oturumunu açmaz
   assert.ok(!/window\.location\.href\s*=\s*route/.test(chrome), 'DoktorChrome gezinmesi tam sayfa yüklemesi yapmamalı')
   assert.ok(chrome.includes('router.push(route)'))
   assert.ok(!oku('components/asistan/YaziliSohbet.tsx').includes('<a href'), 'yönlendirme bağlantısı next/link olmalı')
+})
+
+test('NOTYA-SAYFA-HASTA-01 sayfaHastaId: hasta sayfası ve alt sayfaları hastanın kimliğini verir; başka yol vermez', () => {
+  const id = '3f2a9c1e-7b4d-4e8a-9c0f-1a2b3c4d5e6f'
+  assert.equal(sayfaHastaId(`/dashboard/doktor/hastalar/${id}`), id)
+  assert.equal(sayfaHastaId(`/dashboard/doktor/hastalar/${id}/`), id)
+  assert.equal(sayfaHastaId(`/dashboard/doktor/hastalar/${id}/buyume`), id)
+  assert.equal(sayfaHastaId(`/dashboard/doktor/hastalar/${id}/belgeler/abc/lab`), id)
+  assert.equal(sayfaHastaId(`/dashboard/doktor/hastalar/${id.toUpperCase()}`), id)
+  assert.equal(sayfaHastaId('/dashboard/doktor/hastalar'), null)
+  assert.equal(sayfaHastaId('/dashboard/doktor/hastalar/yeni'), null)
+  assert.equal(sayfaHastaId(`/dashboard/doktor/hastalar/${id}x`), null)
+  assert.equal(sayfaHastaId(`/dashboard/doktor/notlar/${id}`), null)
+  assert.equal(sayfaHastaId(`/x/dashboard/doktor/hastalar/${id}`), null)
+  assert.equal(sayfaHastaId('/asistan'), null)
+  assert.equal(sayfaHastaId(null), null)
+  assert.equal(sayfaHastaId(undefined), null)
 })

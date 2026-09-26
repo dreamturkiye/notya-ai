@@ -12,7 +12,7 @@
  */
 
 import { createContext, useContext, useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
 import { connectionErrorHelp, micPermissionHelp, isAndroid } from "@/lib/asistan/platform"
 import {
@@ -27,7 +27,7 @@ import { ensureDoctorAccessToken, isOnboardingDone } from "@/lib/doktor/clientAu
 import { address } from '@/lib/address'
 import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz'
 import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKarti'
-import type { SesDurumu } from '@/lib/asistan/yuzenPanel'
+import { sayfaHastaId, type SesDurumu } from '@/lib/asistan/yuzenPanel'
 import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 import { DEVAM_ISARETI } from '@/lib/asistan/konusma'
 
@@ -148,6 +148,19 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const [yaziliDinliyor, setYaziliDinliyor] = useState(false)
   const [aktifHasta, setAktifHasta] = useState<string | null>(null)
   const tanimaRef = useRef<Tanima | null>(null)
+
+  /**
+   * NOTYA-SAYFA-HASTA-01 (Dr. Gökhan canlı vaka, Kaan kuralı, 2026-09-26): the assistant follows the doctor. Opening a
+   * patient's page is an explicit focus signal, equal to naming the patient; the most recent explicit signal wins.
+   * Sent ONCE per navigation into a patient's pages (not per message — NOTYA-HASTA-ODAK-01). No voice announcement:
+   * the panel's "aktif hasta" is the signal; Ayşe's next turn reads the new focus and says the name first.
+   * `onceki` = the page patient last seen (undefined before the first render); `bekleyen` = a page switch that has not
+   * reached a shared session yet (consumed when ortakOturumId appears, or dropped when a new session takes the page).
+   */
+  const sayfaHasta = sayfaHastaId(usePathname())
+  const sayfaHastaRef = useRef<string | null>(sayfaHasta)
+  sayfaHastaRef.current = sayfaHasta
+  const sayfaOdakRef = useRef<{ onceki: string | null | undefined; bekleyen: string | null }>({ onceki: undefined, bekleyen: null })
 
   const sureTimerlariTemizle = () => {
     if (sureUyariRef.current) { clearTimeout(sureUyariRef.current); sureUyariRef.current = null }
@@ -360,12 +373,13 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     return /first[_ ]?message/i.test(msg || "")
   }
 
-  async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {
+  async function fetchSignedUrl(p: Persona, sayfaHastasi: string | null = null): Promise<{ signedUrl: string; voiceId: string; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {
     const token = authTokenRef.current
     if (!token) throw new Error("Oturum bulunamadı")
     const oturumParam = ortakOturumId ? `&asistanSessionId=${encodeURIComponent(ortakOturumId)}` : ""
+    const hastaParam = sayfaHastasi ? `&patientId=${encodeURIComponent(sayfaHastasi)}` : ""
     const resp = await fetch(
-      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}${oturumParam}`,
+      `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}${oturumParam}${hastaParam}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
     if (!resp.ok) {
@@ -423,10 +437,13 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       } catch { /* hafıza kritik değil */ }
       const firstMessage = `Merhaba ${address(doctor || { firstName: 'Hocam' }, 'named')}. Nasıl yardımcı olabilirim?`
       const voicePrompt = buildVoiceSystemPrompt(p, doctor, [hafiza.sesBlogu, hafiza.gun?.blok].filter(Boolean).join("\n\n") || undefined)
-      const { signedUrl, voiceId, tekBeyin } = await fetchSignedUrl(p)
+      const sayfaHastasi = ortakOturumId ? null : yeniOturumSayfaHastasi()
+      const { signedUrl, voiceId, tekBeyin } = await fetchSignedUrl(p, sayfaHastasi)
       if (tekBeyin) {
         tekBeyinRef.current = { oturumId: tekBeyin.oturumId, sonra: tekBeyin.baslangic }
         setOrtakOturumId(tekBeyin.oturumId)
+        // NOTYA-SAYFA-HASTA-01: the new session already holds the page's patient; this only fetches the panel label.
+        if (sayfaHastasi) void odagiSayfayaAl(tekBeyin.oturumId, sayfaHastasi)
       }
 
       // Pre-regression path (c38e18e): same for all personas — personalized
@@ -438,7 +455,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
         voiceId,
         {
           tryFirstMessage: true,
-          refreshSignedUrl: () => fetchSignedUrl(p).then((r) => r.signedUrl),
+          refreshSignedUrl: () => fetchSignedUrl(p, sayfaHastasi).then((r) => r.signedUrl),
           notyaJeton: tekBeyin?.jeton,
         }
       )
@@ -763,6 +780,40 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     setSesKarti(null)
   }
 
+  async function odagiSayfayaAl(oturumId: string, patientId: string) {
+    try {
+      const t = await ensureDoctorAccessToken()
+      if (!t) return
+      const r = await fetch("/api/asistan/oturum-hasta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+        body: JSON.stringify({ asistanSessionId: oturumId, patientId }),
+      })
+      if (!r.ok) return
+      const j = (await r.json()) as { ad?: string | null }
+      if (j.ad) setAktifHasta(String(j.ad))
+    } catch { /* odak kritik değil — doktor hastayı adıyla da söyleyebilir */ }
+  }
+
+  /** New shared session: it starts on the page's patient (signed-url / chat patientId); a pending page switch is spent. */
+  function yeniOturumSayfaHastasi(): string | null {
+    sayfaOdakRef.current.bekleyen = null
+    return sayfaHastaRef.current
+  }
+
+  useEffect(() => {
+    const o = sayfaOdakRef.current
+    if (sayfaHasta !== o.onceki) {
+      o.onceki = sayfaHasta
+      if (sayfaHasta) o.bekleyen = sayfaHasta
+    }
+    if (!ortakOturumId || !o.bekleyen) return
+    const id = o.bekleyen
+    o.bekleyen = null
+    void odagiSayfayaAl(ortakOturumId, id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sayfaHasta, ortakOturumId])
+
   function switchPersona(key: PersonaId) {
     void stopConversation()
     personaKeyRef.current = key
@@ -849,12 +900,14 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     ekle({ rol: 'doktor', icerik: metin })
     setYaziliBekliyor(true)
     const personaAdi = persona.shortName
+    // NOTYA-SAYFA-HASTA-01: the first message of a new session starts on the page's patient.
+    const sayfaHastasi = ortakOturumId ? null : yeniOturumSayfaHastasi()
     try {
       const token = await ensureDoctorAccessToken()
       const r = await fetch('/api/asistan/chat', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: metin, personaId: personaKey, asistanSessionId: ortakOturumId }),
+        body: JSON.stringify({ message: metin, personaId: personaKey, asistanSessionId: ortakOturumId, ...(sayfaHastasi ? { patientId: sayfaHastasi } : {}) }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || `${personaAdi} yanıt veremedi.`)
@@ -864,6 +917,8 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       const cevap = asistanYanitiCoz(String(veri.speech || veri.response || veri.message || veri.cevap || '')).speech
       if (veri.asistanSessionId) setOrtakOturumId(String(veri.asistanSessionId))
       if (veri.aktifHasta) setAktifHasta(String(veri.aktifHasta))
+      // Unnamed first question on a patient's page: focus stayed on the page patient — fetch its name for the panel.
+      else if (sayfaHastasi && veri.asistanSessionId) void odagiSayfayaAl(String(veri.asistanSessionId), sayfaHastasi)
       // NOTYA-EYLEM-24: Ayşe bir şeyi bu yoldan yapmıyorsa (reçete, tanı, hasta açma) cümlesi
       // baloncukta; ilgili ekranın bağlantısı burada, baloncuğun altında tek satır.
       ekle({ rol: 'asistan', icerik: cevap || 'Yanıt alınamadı.', oneriler: (veri.eylemOnerileri as EylemOneriGorunumu[]) || [], hasta: (veri.eylemHastasi as EylemHasta) || undefined, yonlendirme: (veri.eylemYonlendirme as Yonlendirme) || null })
@@ -890,6 +945,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     setYaziliMesajlar([])
     setYaziliGirdi('')
     setAktifHasta(null)
+    sayfaOdakRef.current.bekleyen = null
   }
 
   const isActive = ["connecting", "listening", "speaking"].includes(status)

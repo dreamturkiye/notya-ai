@@ -53,3 +53,13 @@ export function mikrofonEtiketi(sesDurumu: SesDurumu, yaziliDinliyor: boolean): 
   if (sesDurumu === 'error') return 'Bağlantı koptu'
   return yaziliDinliyor ? 'Dinliyor' : 'Yazılı sohbet'
 }
+
+/**
+ * NOTYA-SAYFA-HASTA-01: the patient whose page the doctor has open — /dashboard/doktor/hastalar/<uuid>[/…] — or null.
+ * Opening that page is an explicit focus signal (equal to naming the patient); the context sends it once per navigation.
+ */
+const SAYFA_HASTA = /^\/dashboard\/doktor\/hastalar\/([0-9a-f-]{36})(?:\/|$)/i
+export function sayfaHastaId(pathname: string | null | undefined): string | null {
+  const m = SAYFA_HASTA.exec(pathname || '')
+  return m ? m[1].toLowerCase() : null
+}
