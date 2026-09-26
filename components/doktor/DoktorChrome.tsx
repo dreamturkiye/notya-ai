@@ -405,6 +405,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       .notya-yan { display: flex; }
       .notya-masa-ust { display: flex; }
       .notya-telefon-ust, .notya-telefon-menu, .notya-telefon-perde, .notya-alt-nav { display: none; }
+      /* globals.css pins every fixed nav to top:0. With bottom:0 that stretched the tab bar over the page. */
+      body .notya-alt-nav { top: auto !important; height: auto !important; bottom: 0 !important; }
       .notya-icerik {
         width: min(1120px, calc(100% - 64px));
         margin: 0 auto;
@@ -592,7 +594,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         </>
       )}
 
-      <nav className="notya-alt-nav" aria-label="Ana menü" style={S({
+      <div className="notya-alt-nav" role="navigation" aria-label="Ana menü" style={S({
         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 38,
         background: CHROME_RENK.paper, borderTop: `1px solid ${CHROME_RENK.border}`,
         padding: '4px env(safe-area-inset-right, 0px) calc(4px + env(safe-area-inset-bottom, 0px)) env(safe-area-inset-left, 0px)',
@@ -656,7 +658,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           </span>
           <span>Menü</span>
         </button>
-      </nav>
+      </div>
     </div>
     </ChromeKompaktContext.Provider>
     </ChromeGizleContext.Provider>
