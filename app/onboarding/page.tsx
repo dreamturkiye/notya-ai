@@ -443,7 +443,7 @@ function OnboardingInner() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#060C18', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#fff', padding: '40px 20px' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: '#060C18', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#fff', padding: 'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
         <div style={{ marginBottom: '40px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

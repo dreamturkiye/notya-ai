@@ -5,7 +5,9 @@
  * and it's the same one everywhere in the app, not a second design.
  */
 import DoktorChrome from '@/components/doktor/DoktorChrome';
-import { CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+import { CHROME_FONT_HREF, doktorViewport } from '@/lib/doktor/chromeTheme';
+
+export const viewport = doktorViewport;
 
 export default function DoktorToolsLayout({ children }: { children: React.ReactNode }) {
   return (

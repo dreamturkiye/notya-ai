@@ -50,7 +50,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{minHeight:"100vh",background:"#0A1628",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",padding:"20px"}}>
+    <div style={{minHeight:"100dvh",background:"#0A1628",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",padding:"calc(20px + env(safe-area-inset-top, 0px)) 16px calc(20px + env(safe-area-inset-bottom, 0px))",boxSizing:"border-box"}}>
       <div style={{background:"#fff",borderRadius:"24px",padding:"40px",width:"100%",maxWidth:"400px"}}>
         <div style={{textAlign:"center",marginBottom:"28px"}}>
           <div style={{fontSize:"26px",fontWeight:"600",color:"#0A1628",marginBottom:"6px"}}>

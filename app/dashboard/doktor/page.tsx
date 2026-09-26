@@ -260,7 +260,7 @@ export default function DoktorDashboard() {
       {/* Kicker + title */}
       <div>
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, color: '#6d6055', marginBottom: 2 })}>{gunKickerTRT()}, {todayFull}</div>
-        <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(34px, 4.4vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1, color: '#2e251d', margin: 0 })}>
+        <h1 style={S({ fontFamily: CHROME_FONT.serif, fontWeight: 500, fontSize: 'clamp(28px, 8vw, 48px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: '#2e251d', margin: 0 })}>
           Hoş geldiniz, Dr. {doktorAdi}
         </h1>
         {ayseAcilis && (
@@ -472,7 +472,7 @@ export default function DoktorDashboard() {
           hiçbir şey bekleniyorsa hiç görünmez -- boş bir "henüz not yok" kartı yerine. */}
       <div style={S({ display: 'flex', gap: 16, flexWrap: 'wrap' })}>
         {(loading || recentNotes.length > 0) && (
-        <div style={S({ flex: 1.6, minWidth: 320 })}>
+        <div style={S({ flex: '1 1 280px', minWidth: 0 })}>
           <div style={S({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 })}>
             <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', textTransform: 'uppercase', letterSpacing: '0.04em' })}>Onay bekleyen muayene notları</div>
             <span onClick={() => router.push('/dashboard/doktor/inceleme')} style={S({ fontSize: 13, color: CHROME_RENK.pine, fontWeight: 600, cursor: 'pointer' })}>Tümünü gör ›</span>
@@ -499,7 +499,7 @@ export default function DoktorDashboard() {
         </div>
         )}
 
-        <div style={S({ flex: 1, minWidth: 280 })}>
+        <div style={S({ flex: '1 1 240px', minWidth: 0 })}>
           <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' })}>&nbsp;</div>
           <div style={S({ ...card, padding: '20px 20px 18px' })}>
             <div style={S({ fontSize: 14, fontWeight: 700, color: '#4A4030', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.04em' })}>Bu hafta özeti</div>

@@ -44,8 +44,8 @@ export default function Giris() {
   const inp: React.CSSProperties = { width: '100%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px 14px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }
 
   return (
-    <div style={{minHeight:'100vh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px 16px',fontFamily:'system-ui,sans-serif'}}>
-      <div style={{background:'#111827',borderRadius:'20px',padding:'40px',maxWidth:'420px',width:'100%',border:'1px solid rgba(255,255,255,0.08)'}}>
+    <div style={{minHeight:'100dvh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',padding:'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))',fontFamily:'system-ui,sans-serif',boxSizing:'border-box'}}>
+      <div style={{background:'#111827',borderRadius:'20px',padding:'clamp(24px, 6vw, 40px)',maxWidth:'420px',width:'100%',border:'1px solid rgba(255,255,255,0.08)',boxSizing:'border-box'}}>
         <div style={{textAlign:'center',marginBottom:'28px'}}>
           <div style={{fontSize:'36px',marginBottom:'8px'}}>&#9878;&#65039;</div>
           <div style={{fontSize:'22px',fontWeight:700,color:'#fff'}}><span style={{color:'#7C3AED'}}>Notya Hukuk</span> AI</div>

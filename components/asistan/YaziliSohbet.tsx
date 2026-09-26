@@ -133,12 +133,12 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
   // light mint/teal "Ayşe" treatment used in HastaKonsult.tsx for visual consistency between the
   // two Ayşe chat surfaces.
   return (
-    <div style={{ maxWidth: 560, margin: '18px auto 30px', padding: '0 16px' }}>
+    <div style={{ maxWidth: 560, margin: '18px auto 30px', padding: '0 16px', flexShrink: 0 }}>
       {!acik ? (
         <button
           type="button"
           onClick={() => setAcik(true)}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#F0FDFA', border: '1px solid #99F6E4', color: '#0F9B8E', borderRadius: 14, padding: '13px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', textAlign: 'center', lineHeight: 1.4, background: '#F0FDFA', border: '1px solid #99F6E4', color: '#0F9B8E', borderRadius: 14, padding: '13px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
         >
           💬 Yazılı sohbet — sesli sorun, {personaAdi} yazsın <span style={{ fontSize: 11, color: CHROME_RENK.muted }}>(hasta dosyası bilinciyle)</span>
         </button>

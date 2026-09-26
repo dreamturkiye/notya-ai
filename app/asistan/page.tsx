@@ -22,6 +22,7 @@ import { address } from '@/lib/address'
 import { EylemKarti, type EylemHasta, type EylemOneriGorunumu } from '@/components/core/EylemKarti'
 import { CHROME_RENK, CHROME_FONT } from '@/lib/doktor/chromeTheme'
 import DoktorChrome, { useChromeKompakt } from '@/components/doktor/DoktorChrome'
+import { pwaIkonundanAsistanMi } from '@/lib/pwa/ikonAcilis'
 
 type ConvStatus = "idle" | "connecting" | "listening" | "speaking" | "error"
 type Message = { id: string; role: "user" | "ai"; text: string }
@@ -133,6 +134,10 @@ function AsistanPageInner() {
 
   // Opening colleague: branch doctors (KD → Fatma) ignore stale localStorage Ayşe.
   useEffect(() => {
+    if (pwaIkonundanAsistanMi()) {
+      window.location.replace('/dashboard/doktor')
+      return
+    }
     ;(async () => {
       let token = await ensureDoctorAccessToken()
       if (!token) {
@@ -699,7 +704,7 @@ function AsistanPageInner() {
   }[status]
 
   return (
-    <div style={{ height: "100dvh", minHeight: 0, background: CHROME_RENK.cream, display: "flex", flexDirection: isMobile ? "column" : "row",
+    <div style={{ height: "100%", minHeight: 0, background: CHROME_RENK.cream, display: "flex", flexDirection: isMobile ? "column" : "row",
                   fontFamily: CHROME_FONT.sans, overflow: "hidden", userSelect: "none" }}>
 
       {!isMobile && persona.photo && (
@@ -717,7 +722,7 @@ function AsistanPageInner() {
       )}
       {/* chat col */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
-      <div style={{ padding: "12px 16px", paddingTop: "calc(16px + env(safe-area-inset-top, 0px))", borderBottom: `1px solid ${CHROME_RENK.border}`, background: "#faf6ee", flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px", borderBottom: `1px solid ${CHROME_RENK.border}`, background: "#faf6ee", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
           <div onClick={() => { void stopConversation(); router.push("/dashboard/doktor") }}
             style={{ color: CHROME_RENK.muted, cursor: "pointer", fontSize: "24px", padding: "6px 8px", flexShrink: 0, lineHeight: 1 }}>‹</div>
@@ -821,7 +826,7 @@ function AsistanPageInner() {
         </div>
       )}
 
-      <div style={{ padding: "16px 16px 24px", display: "flex", flexDirection: "column",
+      <div style={{ padding: "16px 16px 24px", flexShrink: 0, display: "flex", flexDirection: "column",
                     alignItems: "center", gap: "12px", borderTop: `1px solid ${CHROME_RENK.border}`,
                     background: "#faf6ee" }}>
         {errorMsg && (

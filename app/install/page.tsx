@@ -1,8 +1,8 @@
 
 export default function InstallPage() {
   return (
-    <div style={{minHeight:"100vh",background:"#0A1628",color:"#fff",fontFamily:"system-ui,sans-serif",
-                 display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+    <div style={{minHeight:"100dvh",background:"#0A1628",color:"#fff",fontFamily:"system-ui,sans-serif",
+                 display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))",boxSizing:"border-box"}}>
       <div style={{maxWidth:"400px",width:"100%",textAlign:"center"}}>
         <div style={{fontSize:"64px",marginBottom:"16px"}}>🩺</div>
         <h1 style={{fontSize:"28px",fontWeight:"700",marginBottom:"8px"}}>
@@ -62,7 +62,7 @@ export default function InstallPage() {
           ))}
         </div>
 
-        <a href="/asistan" style={{display:"block",background:"linear-gradient(135deg,#7C3AED,#2563EB)",
+        <a href="/dashboard/doktor" style={{display:"block",background:"linear-gradient(135deg,#7C3AED,#2563EB)",
                                     color:"#fff",textDecoration:"none",borderRadius:"14px",
                                     padding:"16px",fontSize:"16px",fontWeight:"700"}}>
           🩺 Hemen Başla — Tarayıcıda Aç
