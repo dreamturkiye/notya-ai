@@ -55,6 +55,15 @@ export default function YaziliSohbet({ personaId, specialty, personaAdi = 'Ayşe
     (async () => {
       try {
         const token = await ensureDoctorAccessToken();
+        // NOTYA-ASISTAN-AKICI-01: önce geçmiş — sohbet, panel her açılışında sıfırdan başlamasın. Geçmiş varsa karşılama tekrarlanmaz.
+        try {
+          const gr = await fetch('/api/asistan/gecmis', { headers: { Authorization: `Bearer ${token}` } });
+          if (gr.ok) {
+            const gj = await gr.json();
+            const eski = (gj?.mesajlar || []) as { rol: 'doktor' | 'asistan'; metin: string }[];
+            if (eski.length && !iptal) { setMesajlar((m) => (m.length === 0 ? eski.map((e) => ({ rol: e.rol, icerik: e.metin })) : m)); return; }
+          }
+        } catch { /* geçmiş kritik değil */ }
         const r = await fetch('/api/doktor/hafiza', { headers: { Authorization: `Bearer ${token}` } });
         if (!r.ok) return;
         const j = await r.json();

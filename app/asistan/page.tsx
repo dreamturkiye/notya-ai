@@ -166,6 +166,15 @@ function AsistanPageInner() {
           return
         }
       }
+      // NOTYA-ASISTAN-AKICI-01: sayfaya dönünce eski sohbet geri gelsin — balonlar asistan_actions günlüğünden çizilir.
+      try {
+        const gr = await fetch("/api/asistan/gecmis", { headers: { Authorization: `Bearer ${token}` } })
+        if (gr.ok) {
+          const gj = await gr.json()
+          const eski = (gj?.mesajlar || []) as { rol: "doktor" | "asistan"; metin: string }[]
+          if (eski.length) setMessages((m) => (m.length === 0 ? eski.map((e, i) => ({ id: "g" + i, role: e.rol === "doktor" ? "user" as const : "ai" as const, text: e.metin })) : m))
+        }
+      } catch { /* geçmiş kritik değil */ }
       const profileData = await resp.json().catch(() => ({} as { data?: DoctorProfile }))
       if (!isOnboardingDone(profileData.data)) {
         router.replace("/onboarding?p=doktor")

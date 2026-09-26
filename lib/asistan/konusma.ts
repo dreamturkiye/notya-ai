@@ -20,7 +20,14 @@ export const TABLO_EKRANDA = 'Tabloyu ekranınıza yazdım.'
 
 /** ElevenLabs: bekletme sözü "... " (üç nokta + boşluk) ile biter — ardından gelen cevapla doğal birleşir. */
 export const DOLGU_BAKIYORUM = 'Bakıyorum Hocam... '
+/** NOTYA-SES-DOLGU-02 (Kaan, 2026-09-26): her istekte aynı “Bakıyorum Hocam” robotik kaldı — dolgu havuzdan döner,
+ * aynı oturumda üst üste aynı söz söylenmez. Seçim mesajın özünden deterministiktir (test edilebilir); son söz
+ * oturum başına hafızada tutulur (sıcak lambda içinde geçerli; soğuk başlangıçta en kötü ihtimal bir kez üst üste gelir). */
+export const DOLGULAR_BAKIYORUM = [DOLGU_BAKIYORUM, 'Hemen bakıyorum... ', 'Bir saniye Hocam... ', 'Şimdi bakıyorum Hocam... ', 'Dosyaya bakıyorum... '] as const
+/** NOTYA-ASISTAN-AKICI-01: dolgu ancak gerçek cevap bu kadar gecikirse söylenir — hızlı turda hiç söylenmez. */
+export const DOLGU_GECIKME_MS = 900
 export const DOLGU_KAYDEDIYORUM = 'Tamam Hocam... '
+export const DOLGULAR_KAYDEDIYORUM = [DOLGU_KAYDEDIYORUM, 'Oldu Hocam... ', 'Hemen Hocam... '] as const
 
 const TELEFON = /(?:\+?90[\s-]?)?\(?0?5\d{2}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}\b|\b0?\d{3}[\s-]\d{3}[\s-]\d{2}[\s-]\d{2}\b/
 const EPOSTA = /[\w.+-]+@[\w-]+\.[\w.]+/
@@ -151,7 +158,14 @@ export function konusmaYap(ekran: string, temizle?: (cumle: string) => string): 
  * Hangi turda bekletme sözü söylenir: sunucu bir arama ya da model çağrısı yapacaksa hep. Net selamlaşma
  * (hızlı model, kısa cevap) ve vazgeç (anında) sözsüz; sesli onay "Tamam Hocam..." ile başlar.
  */
-export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sosyal: boolean }): string {
+const sonDolgular = new Map<string, string>()
+export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sosyal: boolean }, oturumId?: string): string {
   if (g.vazgec || g.sosyal || !String(mesaj || '').trim()) return ''
-  return g.onay ? DOLGU_KAYDEDIYORUM : DOLGU_BAKIYORUM
+  const havuz = g.onay ? DOLGULAR_KAYDEDIYORUM : DOLGULAR_BAKIYORUM
+  let toplam = 0
+  for (const kod of String(mesaj)) toplam = (toplam * 31 + kod.charCodeAt(0)) >>> 0
+  let i = toplam % havuz.length
+  if (oturumId && sonDolgular.get(oturumId) === havuz[i]) i = (i + 1) % havuz.length
+  if (oturumId) { sonDolgular.set(oturumId, havuz[i]); if (sonDolgular.size > 500) { const ilk = sonDolgular.keys().next().value; if (ilk !== undefined) sonDolgular.delete(ilk) } }
+  return havuz[i]
 }

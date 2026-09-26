@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
-import { dolguSec } from '@/lib/asistan/konusma'
+import { dolguSec, DOLGU_GECIKME_MS } from '@/lib/asistan/konusma'
 import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
@@ -82,7 +82,8 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
       })
       const yaz = (t: string) => { if (!t) return; parca({ content: t }); ilk = false }
       let cevapSoylendi = false
-      const cevapYaz = (t: string) => { if (t.trim()) cevapSoylendi = true; yaz(t) }
+      let dolguZamanlayici: ReturnType<typeof setTimeout> | null = null
+      const cevapYaz = (t: string) => { if (t.trim()) { cevapSoylendi = true; if (dolguZamanlayici) { clearTimeout(dolguZamanlayici); dolguZamanlayici = null } } yaz(t) }
       let bitis = 'stop'
       try {
         if (mesaj && vedaMi(mesaj) && aracVarMi(govde.tools, 'end_call')) {
@@ -91,7 +92,10 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           ilk = false
           bitis = 'tool_calls'
         } else if (mesaj) {
-          yaz(dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }))
+          // NOTYA-ASISTAN-AKICI-01 (Kaan, 2026-09-26): “Bakıyorum Hocam” her turda söylenmesin — ElevenLabs jetonu boşa gidiyor.
+          // Dolgu artık gecikme kapılı: gerçek cevap DOLGU_GECIKME_MS içinde başlarsa dolgu hiç söylenmez.
+          const dolgu = dolguSec(mesaj, { onay: sesOnayMetniGecerliMi(mesaj), vazgec: sesVazgecMetniMi(mesaj), sosyal: netSosyalMi(mesaj) }, jeton.o)
+          if (dolgu) dolguZamanlayici = setTimeout(() => { dolguZamanlayici = null; yaz(dolgu) }, DOLGU_GECIKME_MS)
           const supabase = getSupabase()
           // Sözlü onay / ret bir model turu değildir: bekleyen kart varsa dokunuşun omurgasından geçer, model çağrılmaz.
           const karar = await sesliKarariUygula(supabase, jeton.d, jeton.o, mesaj)
@@ -113,6 +117,7 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
         console.error('[ses-llm]', e instanceof Error ? e.name : 'hata')
         cevapYaz('Şu an dosyaya ulaşamadım Hocam, bir daha söyler misiniz?')
       }
+      if (dolguZamanlayici) { clearTimeout(dolguZamanlayici); dolguZamanlayici = null }
       parca({}, bitis)
       if (!kapali) {
         try { controller.enqueue(enc.encode('data: [DONE]\n\n')); controller.close() } catch { /* bağlantı kapandı */ }

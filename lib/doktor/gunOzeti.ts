@@ -30,6 +30,8 @@ export interface GunVerisi {
   bugunHasta: number            // bugün başlayan seanslar
   dunHasta: number
   onaysizNot: number
+  /** NOTYA-ASISTAN-AKICI-01: bekleyen notların künyesi — doktor “notu aç” dediğinde asistan kime ait olduğunu bilsin. */
+  onaysizNotDetay: { ad: string | null; tarih: string }[]
   okunmamisMesaj: number
   yeniBelge: number             // son 24 saat
 }
@@ -79,8 +81,8 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
       .eq('doctor_id', doctorId).gte('started_at', bugunS.bas).lt('started_at', bugunS.son),
     arsivsizSeanslar(sb, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).gte('started_at', dunS.bas).lt('started_at', dunS.son),
-    arsivsizNotlar(sb, 'id', { count: 'exact', head: true })
-      .eq('doctor_id', doctorId).is('approved_at', null),
+    arsivsizNotlar(sb, 'id, session_id, created_at', { count: 'exact' })
+      .eq('doctor_id', doctorId).is('approved_at', null).order('created_at', { ascending: false }).limit(3),
     sb.from('hasta_mesaj_konulari').select('id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).eq('okundu_pratik', false).eq('pratik_arsiv', false),
     sb.from('medical_documents').select('id', { count: 'exact', head: true })
@@ -99,6 +101,32 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
       }
     } catch { /* ad kritik değil */ }
   }
+  // NOTYA-ASISTAN-AKICI-01: onaysız notların hastası + tarihi (en yeni 3) — “notu aç” sözü artık boşluğa düşmesin.
+  const onaysizNotDetay: { ad: string | null; tarih: string }[] = []
+  try {
+    const hamNotlar = (notRes.data || []) as { session_id: string | null; created_at: string }[]
+    const seansIdler = hamNotlar.map((n) => n.session_id).filter(Boolean) as string[]
+    const seansHasta = new Map<string, string>()
+    if (seansIdler.length) {
+      // NOTYA-ARSIV: idler arşivsiz notlardan geliyor ama seans okuması da arşivsiz yardımcıdan geçer (nöbetçi kuralı).
+      const { data: seanslar } = await arsivsizSeanslar(sb, 'id, patient_id').in('id', seansIdler)
+      const hastaIdler = [...new Set(((seanslar || []) as { id: string; patient_id: string | null }[]).map((x) => x.patient_id).filter(Boolean))] as string[]
+      const adlar = new Map<string, string>()
+      if (hastaIdler.length) {
+        const { data: hastalar } = await sb.from('patients').select('id, name_encrypted').eq('doctor_id', doctorId).in('id', hastaIdler)
+        const { decrypt } = await import('@/lib/security/encryption')
+        for (const h of (hastalar || []) as { id: string; name_encrypted: string | null }[]) {
+          try { if (h.name_encrypted) adlar.set(h.id, (JSON.parse(decrypt(h.name_encrypted)).ad || '').trim()) } catch { /* ad kritik değil */ }
+        }
+      }
+      for (const se of (seanslar || []) as { id: string; patient_id: string | null }[]) {
+        if (se.patient_id && adlar.get(se.patient_id)) seansHasta.set(se.id, adlar.get(se.patient_id)!)
+      }
+    }
+    for (const n of hamNotlar) {
+      onaysizNotDetay.push({ ad: (n.session_id && seansHasta.get(n.session_id)) || null, tarih: new Date(n.created_at).toLocaleDateString('tr-TR', { timeZone: TZ, day: '2-digit', month: '2-digit' }) })
+    }
+  } catch { /* detay kritik değil, sayı yeter */ }
   const kalan = randevular.filter((r) => new Date(r.baslangic) > simdi && r.durum !== 'tamamlandi').length
   const yarin = (yarinRes.data || []) as { tur: string }[]
 
@@ -117,6 +145,7 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
     bugunHasta: bugunSeansRes.count || 0,
     dunHasta: dunSeansRes.count || 0,
     onaysizNot: notRes.count || 0,
+    onaysizNotDetay,
     okunmamisMesaj: mesajRes.count || 0,
     yeniBelge: belgeRes.count || 0,
   }
@@ -180,6 +209,6 @@ export function gunOzetiMetni(
 export function gunBlogu(v: GunVerisi, faz: GunFazi): string {
   return `=== GÜNÜN DURUMU (${v.bugun} ${v.haftaGunu}, saat ${String(v.saatTRT).padStart(2, '0')}:00 TRT, faz: ${faz}) ===
 Bugün randevu: ${v.randevu.toplam} (kontrol ${v.randevu.kontrol}, kalan ${v.randevu.kalan}${v.randevu.ilkSaat ? `, ilki ${v.randevu.ilkSaat}` : ''}) | Bugün seans: ${v.bugunHasta} | Dün: ${v.dunHasta} | Yarın randevu: ${v.yarinRandevu.toplam} (kontrol ${v.yarinRandevu.kontrol})
-Onaysız not: ${v.onaysizNot} | Okunmamış hasta mesajı: ${v.okunmamisMesaj} | Son 24 saatte yeni belge: ${v.yeniBelge}
+Onaysız not: ${v.onaysizNot}${v.onaysizNotDetay.length ? ' (' + v.onaysizNotDetay.map((n) => (n.ad || 'hasta belirsiz') + ' · ' + n.tarih).join('; ') + ')' : ''} | Okunmamış hasta mesajı: ${v.okunmamisMesaj} | Son 24 saatte yeni belge: ${v.yeniBelge}
 Sohbet açılışında bunlardan doğal ve KISA söz et (meslektaş gibi, liste okuma); doktor konuya girdiyse tekrar etme.`
 }

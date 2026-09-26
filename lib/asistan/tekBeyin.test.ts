@@ -232,12 +232,24 @@ describe('sözlü biçim — yazılı kadar ayrıntılı, doğal cümleler, kiml
     b.ekle(`Annesinin numarası ${TEL} olarak kayıtlı, ister misiniz`)
     assert.ok(!b.bitir().includes('0532'))
   })
-  it('bekletme sözü: arama / model turunda var, net selamda ve vazgeçte yok; "... " ile biter', () => {
-    assert.equal(K.dolguSec('Umutcan’ın aşıları', { onay: false, vazgec: false, sosyal: false }), K.DOLGU_BAKIYORUM)
-    assert.ok(K.DOLGU_BAKIYORUM.endsWith('... '))
+  it('bekletme sözü: arama / model turunda havuzdan, net selamda ve vazgeçte yok; "... " ile biter', () => {
+    const d = K.dolguSec('Umutcan’ın aşıları', { onay: false, vazgec: false, sosyal: false })
+    assert.ok((K.DOLGULAR_BAKIYORUM as readonly string[]).includes(d), d)
+    for (const x of [...K.DOLGULAR_BAKIYORUM, ...K.DOLGULAR_KAYDEDIYORUM]) assert.ok(x.endsWith('... '), x)
     assert.equal(K.dolguSec('teşekkürler', { onay: false, vazgec: false, sosyal: true }), '')
     assert.equal(K.dolguSec('hayır', { onay: false, vazgec: true, sosyal: false }), '')
-    assert.equal(K.dolguSec('evet', { onay: true, vazgec: false, sosyal: false }), K.DOLGU_KAYDEDIYORUM)
+    assert.ok((K.DOLGULAR_KAYDEDIYORUM as readonly string[]).includes(K.dolguSec('evet', { onay: true, vazgec: false, sosyal: false })))
+  })
+
+  it('NOTYA-SES-DOLGU-02: aynı oturumda üst üste aynı bekletme sözü söylenmez, seçim mesajdan deterministiktir', () => {
+    const g = { onay: false, vazgec: false, sosyal: false }
+    assert.equal(K.dolguSec('aynı soru', g), K.dolguSec('aynı soru', g), 'oturumsuz: aynı mesaj aynı sözü verir')
+    const a = K.dolguSec('aynı soru', g, 'oturum-1')
+    const b = K.dolguSec('aynı soru', g, 'oturum-1')
+    assert.notEqual(a, b, 'aynı oturumda peş peşe aynı söz yok')
+    const sesler = new Set<string>()
+    for (let i = 0; i < 8; i++) sesler.add(K.dolguSec('soru ' + i, g, 'oturum-2'))
+    assert.ok(sesler.size >= 3, 'farklı mesajlar havuzu geçekten çeşitlendirir: ' + [...sesler].join(' | '))
   })
   it('konuşmanın son doktor cümlesi; son mesaj doktorun değilse cevap yok; veda tanınır', () => {
     assert.equal(L.sonDoktorCumlesi([{ role: 'user', content: 'a' }, { role: 'assistant', content: 'b' }, { role: 'user', content: [{ type: 'text', text: 'Umutcan  nasıl' }] }]), 'Umutcan nasıl')
@@ -310,10 +322,11 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const v = await ses({ sahne: b, mesaj: soru })
     assert.equal(v.status, 200)
     assert.equal(modelIstekleri.at(-1)?.stream, true, 'ses yolu modeli akışla çağırır')
-    assert.equal(v.parcalar[0], K.DOLGU_BAKIYORUM, 'ilk parça bekletme sözü')
+    // NOTYA-ASISTAN-AKICI-01: dolgu artık gecikme kapılı (DOLGU_GECIKME_MS) — hızlı (sahte) modelde hiç söylenmez, jeton yakmaz.
+    for (const d of K.DOLGULAR_BAKIYORUM) assert.ok(!v.metin.includes(d), 'hızlı cevapta bekletme sözü söylenmemeli: ' + d)
     assert.ok(v.parcalar.length >= 3, 'cevap tek parça değil, cümle cümle akar')
     assert.ok(!v.metin.includes('0532'), v.metin)
-    assert.equal(v.metin.slice(K.DOLGU_BAKIYORUM.length).replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
+    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
 
     const e = await sesEkrani(b)
     assert.equal(e.turlar.at(-1)?.metin, t.speech, 'ses turunun ekranı yazılı cevapla aynı')
@@ -388,7 +401,8 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
 
     const modelOnce = modelIstekleri.length
     const onay = await ses({ sahne: s, mesaj: 'Evet' })
-    assert.equal(onay.parcalar[0], K.DOLGU_KAYDEDIYORUM)
+    // NOTYA-ASISTAN-AKICI-01: modelsiz onay anında kaydedilir — gecikme kapısı dolguyu söyletmez.
+    assert.ok(!onay.metin.includes(K.DOLGU_KAYDEDIYORUM), 'anında kaydın önünde bekletme sözü olmamalı')
     assert.match(onay.metin, /Kaydedildi Hocam — Aşı kaydı\./)
     assert.equal(modelIstekleri.length, modelOnce, '"Evet" bir model turu değildir')
     assert.equal(db.tablo('asilar').filter((x) => x.patient_id === s.hasta && x.doktor_id === s.doktor.id).length, 1)
