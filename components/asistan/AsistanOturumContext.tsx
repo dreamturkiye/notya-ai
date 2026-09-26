@@ -820,9 +820,27 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     setYaziliDinliyor(true)
   }
 
+  /**
+   * NOTYA-SES-SESSIZ-01 (Dr. Gökhan, 2026-09-26): he typed in the written panel while the mic was open; the written
+   * answer came, but the voice agent kept talking ("Buradayım, devam edebiliriz", silence prompts). From the moment
+   * the written panel is engaged the voice side goes silent: the ElevenLabs session ends (its silence prompts live
+   * there), the server conversation stays, and the mic button reconnects to the same session.
+   */
+  async function sesiYaziliIcinSustur() {
+    if (!['connecting', 'listening', 'speaking'].includes(status) && !conversationRef.current) return
+    await endConversation()
+    setStatus('sessiz')
+  }
+  const yaziliGirdiAyarla: typeof setYaziliGirdi = (g) => {
+    setYaziliGirdi(g)
+    const v = typeof g === 'function' ? '' : g
+    if (v.trim()) void sesiYaziliIcinSustur()
+  }
+
   async function yaziliGonder() {
     const metin = yaziliGirdi.trim()
     if (!metin || yaziliBekliyor) return
+    await sesiYaziliIcinSustur()
     try { tanimaRef.current?.stop() } catch { /* sessiz */ }
     setYaziliDinliyor(false)
     setYaziliGirdi('')
@@ -894,7 +912,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     sesKartiniKapat,
     yazili: { acik: yaziliAcik, mesajlar: yaziliMesajlar, girdi: yaziliGirdi, bekliyor: yaziliBekliyor, dinliyor: yaziliDinliyor, aktifHasta },
     setYaziliAcik,
-    setYaziliGirdi,
+    setYaziliGirdi: yaziliGirdiAyarla,
     yaziliGonder,
     yaziliMikrofon,
     oturumuKapat,
