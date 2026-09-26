@@ -232,9 +232,8 @@ describe('sözlü biçim — yazılı kadar ayrıntılı, doğal cümleler, kiml
     b.ekle(`Annesinin numarası ${TEL} olarak kayıtlı, ister misiniz`)
     assert.ok(!b.bitir().includes('0532'))
   })
-  it('bekletme sözü: arama / model turunda var, net selamda ve vazgeçte yok; "... " ile biter', () => {
-    assert.equal(K.dolguSec('Umutcan’ın aşıları', { onay: false, vazgec: false, sosyal: false }), K.DOLGU_BAKIYORUM)
-    assert.ok(K.DOLGU_BAKIYORUM.endsWith('... '))
+  it('bekletme sözü yok (NOTYA-AYSE-ACILIS-01): aramada da sessiz; yalnız sesli onay teyitle başlar', () => {
+    assert.equal(K.dolguSec('Umutcan’ın aşıları', { onay: false, vazgec: false, sosyal: false }), '')
     assert.equal(K.dolguSec('teşekkürler', { onay: false, vazgec: false, sosyal: true }), '')
     assert.equal(K.dolguSec('hayır', { onay: false, vazgec: true, sosyal: false }), '')
     assert.equal(K.dolguSec('evet', { onay: true, vazgec: false, sosyal: false }), K.DOLGU_KAYDEDIYORUM)
@@ -310,10 +309,10 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const v = await ses({ sahne: b, mesaj: soru })
     assert.equal(v.status, 200)
     assert.equal(modelIstekleri.at(-1)?.stream, true, 'ses yolu modeli akışla çağırır')
-    assert.equal(v.parcalar[0], K.DOLGU_BAKIYORUM, 'ilk parça bekletme sözü')
+    assert.ok(!v.parcalar[0].startsWith('Bakıyorum'), 'bekletme sözü yok — ilk parça doğrudan cevap')
     assert.ok(v.parcalar.length >= 3, 'cevap tek parça değil, cümle cümle akar')
     assert.ok(!v.metin.includes('0532'), v.metin)
-    assert.equal(v.metin.slice(K.DOLGU_BAKIYORUM.length).replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
+    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi. Öneri 1. Öneri 2. ${K.ILETISIM_EKRANDA}`)
 
     const e = await sesEkrani(b)
     assert.equal(e.turlar.at(-1)?.metin, t.speech, 'ses turunun ekranı yazılı cevapla aynı')
@@ -347,7 +346,7 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     const t = await yazi(a, soru)
     const b = sahne()
     const v = await ses({ sahne: b, mesaj: soru })
-    assert.ok(v.metin.trim().length > K.DOLGU_BAKIYORUM.length)
+    assert.ok(v.metin.trim().length > 0)
     const e = await sesEkrani(b)
     assert.equal(e.turlar.at(-1)?.metin, t.speech)
     assert.equal(e.aktifHasta, 'Umutcan Türkoğlu')

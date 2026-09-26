@@ -148,10 +148,11 @@ export function konusmaYap(ekran: string, temizle?: (cumle: string) => string): 
 }
 
 /**
- * Hangi turda bekletme sözü söylenir: sunucu bir arama ya da model çağrısı yapacaksa hep. Net selamlaşma
- * (hızlı model, kısa cevap) ve vazgeç (anında) sözsüz; sesli onay "Tamam Hocam..." ile başlar.
+ * NOTYA-AYSE-ACILIS-01 (Kaan, 2026-09-26): "Bakıyorum Hocam" her cevabın önüne geliyordu ve rahatsız ediciydi —
+ * bekletme sözü tamamen kaldırıldı (süreye bağlı söylemek güvenilir ölçülemez). Yalnız sesli onayda
+ * "Kaydediyorum Hocam..." kalır — o bir bekletme değil, işlemin alındığının teyididir.
  */
 export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sosyal: boolean }): string {
   if (g.vazgec || g.sosyal || !String(mesaj || '').trim()) return ''
-  return g.onay ? DOLGU_KAYDEDIYORUM : DOLGU_BAKIYORUM
+  return g.onay ? DOLGU_KAYDEDIYORUM : ''
 }
