@@ -153,9 +153,9 @@ export function HedefBoyAracPaneli({
         </>
       )}
 
-      <div className="hedef-boy-grid" style={{ display: aileGoster ? 'block' : 'grid', gridTemplateColumns: 'minmax(0, 300px) minmax(0, 1fr)', gap: 18, alignItems: 'start' }}>
+      <div className="hedef-boy-grid" style={{ display: aileGoster ? 'block' : 'grid', gridTemplateColumns: 'minmax(0, 300px) minmax(0, 1fr)', gap: 18, alignItems: 'start', minWidth: 0, maxWidth: '100%' }}>
         {!aileGoster && (
-          <div style={toolsCard}>
+          <div className="hedef-boy-form" style={{ ...toolsCard, minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
             <label style={toolsLabel}>Baba boyu</label>
             <input
               style={{ ...toolsInput, fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }}
@@ -238,7 +238,7 @@ export function HedefBoyAracPaneli({
           </div>
         )}
 
-        <div ref={sahneRef} style={aileGoster ? { minHeight: '100dvh', background: '#050910', display: 'flex', flexDirection: 'column', padding: '12px 12px 20px' } : undefined}>
+        <div className="hedef-boy-sahne" ref={sahneRef} style={aileGoster ? { minHeight: '100dvh', background: '#050910', display: 'flex', flexDirection: 'column', padding: '12px 12px 20px', minWidth: 0, maxWidth: '100%' } : { minWidth: 0, maxWidth: '100%' }}>
           {aileGoster && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px 10px' }}>
               <div style={{ fontSize: 13, color: '#E8C547', fontWeight: 800, letterSpacing: '0.08em' }}>
@@ -275,8 +275,13 @@ export function HedefBoyAracPaneli({
         </div>
       </div>
       <style>{`
+        .hedef-boy-sayfa, .hedef-boy-icerik, .hedef-boy-grid, .hedef-boy-form, .hedef-boy-sahne {
+          min-width: 0;
+          max-width: 100%;
+        }
+        .hedef-boy-grid > * { min-width: 0; max-width: 100%; }
         @media (max-width: 899px) {
-          .hedef-boy-sayfa { min-height: 0 !important; }
+          .hedef-boy-sayfa { min-height: 0 !important; overflow-x: clip; }
           .hedef-boy-icerik { padding: 4px 0 28px !important; }
           .hedef-boy-grid { grid-template-columns: 1fr !important; }
           .hedef-boy-kicker { color: #2f4334 !important; letter-spacing: 0.08em !important; }
@@ -293,7 +298,6 @@ export function HedefBoyAracPaneli({
             color: #faf6ee !important;
             border-color: #2f4334 !important;
           }
-          figure[data-hedef-boy="manken"] { zoom: 0.58; }
         }
       `}</style>
     </div>
