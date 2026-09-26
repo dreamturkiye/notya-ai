@@ -9,7 +9,8 @@ import { decryptPII } from '@/lib/security/encryption'
 import { tabloYokMu, hastaAdiCoz } from '@/lib/iletisim/sunucu'
 import { sutKurallari, kopyaKilitliMi, kapiModu, gerekceGecerli } from '@/lib/seansPaketi/sutKurallari'
 import { mbysMetni, enabizDosyasi } from '@/lib/seansPaketi/mbys'
-import { bosGovde, type SeansPaketGovde } from '@/lib/seansPaketi/tip'
+import { type SeansPaketGovde } from '@/lib/seansPaketi/tip'
+import { bosGovde } from '@/lib/seansPaketi/doldur'
 
 export const dynamic = 'force-dynamic'
 
