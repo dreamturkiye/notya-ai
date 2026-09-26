@@ -6,7 +6,7 @@
  * MD-TABLO (2026-09-17): pipe tabloları gerçek tablo (dar ekranda yalnız tablo yatay kayar, sayfa taşmaz), # / ## / ### başlık, --- ayraç.
  */
 import React from 'react';
-import { tabloBasiMi, tabloOku, ayiriciMi, type Tablo } from '@/lib/asistan/markdownTablo';
+import { tabloBasiMi, tabloOku, ayiriciMi, inlineMaddeAyir, type Tablo } from '@/lib/asistan/markdownTablo';
 
 const HIZA = { sol: 'left', orta: 'center', sag: 'right' } as const;
 
@@ -40,6 +40,8 @@ function kalin(metin: string, karanlik: boolean): React.ReactNode[] {
 export default function HafifMarkdown({ metin, karanlik = false }: { metin: string; karanlik?: boolean }) {
   const etiketRenk = karanlik ? '#7FB8B0' : '#0F6B5C';
   const satirlar = metin.replace(/\r/g, '').split('\n');
+  // NOTYA-ASISTAN-REHBER-01: tek satıra • ile zincirlenmiş maddeler gerçek madde satırlarına açılır.
+  const acik = satirlar.flatMap(inlineMaddeAyir);
   const cikti: React.ReactNode[] = [];
   let madde: string[] = [];
   const maddeyiBos = (key: string) => {
@@ -68,11 +70,11 @@ export default function HafifMarkdown({ metin, karanlik = false }: { metin: stri
     );
     madde = [];
   };
-  for (let i = 0; i < satirlar.length; i++) {
-    const t = satirlar[i].trim();
-    if (tabloBasiMi(satirlar, i)) {
+  for (let i = 0; i < acik.length; i++) {
+    const t = acik[i].trim();
+    if (tabloBasiMi(acik, i)) {
       maddeyiBos(`m${i}`);
-      const { tablo, sonraki } = tabloOku(satirlar, i);
+      const { tablo, sonraki } = tabloOku(acik, i);
       cikti.push(<TabloGorunum key={`t${i}`} tablo={tablo} karanlik={karanlik} />);
       i = sonraki - 1;
       continue;

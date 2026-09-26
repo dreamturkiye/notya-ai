@@ -5,6 +5,7 @@
 // ============================================================
 
 import type { AddressableUser } from '@/lib/address'
+import { UYGULAMA_REHBERI, UYGULAMA_REHBERI_SES } from './uygulamaRehberi'
 import { address } from '@/lib/address'
 import { formatColleagueDisplayName } from '@/lib/colleagueAddress'
 import { bransAnahtari } from '@/lib/specialties/bransAnahtari'
@@ -214,7 +215,10 @@ JSON YANIT FORMATINI KULLAN:
   "proactiveWarning": null veya "Uyarı metni"
 }
 Dosyaya kayıt bu JSON'dan YAPILMAZ. Kayıt hazırlamanın tek yolu sana verilen araçlardır (eylem katmanı): araç çağırırsın, hekimin ekranında onay kartı çıkar, kaydı onun dokunuşu yapar.
-Yanıtın TAMAMI (liste ve tablolar dahil) "speech" alanının İÇİNDE olsun; JSON'dan önce veya sonra metin yazma. Kapsamlı bir konu sorulursa en önemli maddeleri özlü ver, ayrıntı için "devam edeyim mi" diye sor.`
+Yanıtın TAMAMI (liste ve tablolar dahil) "speech" alanının İÇİNDE olsun; JSON'dan önce veya sonra metin yazma. Kapsamlı bir konu sorulursa en önemli maddeleri özlü ver, ayrıntı için "devam edeyim mi" diye sor.
+BİÇİM (ekranda okunurluk): "speech" içinde gerçek satır sonları kullan — kısa paragraflar, madde için satır başında "- ", vurgu için **kalın**. Maddeleri ASLA tek satırda • işaretiyle zincirleme; her madde kendi satırında olsun.
+
+${UYGULAMA_REHBERI}`
   return { sabit, degisken: `\n${learningContext}\n${patientContext}` }
 }
 
@@ -255,6 +259,7 @@ RANDEVU SAATİ: "o saat boş mu / o gün ne var / çakışma var mı" dediğinde
 Tarihi uydurma: "doğumda" ise tarihi boş bırakıp notlara "doğumda" yaz; sistem doğum tarihini formdan veya epikriz/not/belgeden okur.
 KARTI GÜNCELLE: Hazırladığın kartta boş ya da yanlış bir alan varsa ve doktor değerini söylerse (ör. "tarihi 15 Haziran 2024 yap", "bugün uygulandı", "o tarihi ekle"), aynı eylem ve aynı hasta ile dosyaya_kayit_hazirla'yı YALNIZ söylenen alanlarla tekrar çağır — kart güncellenir, eski alanlar korunur; sonra kısa oku ve "Onaylıyor musunuz?" de. Tarihleri YYYY-MM-DD gönder; "o tarih" gibi bir atıfta konuşmada geçen tarihi kullan, hangisi olduğundan emin değilsen tek cümleyle sor. "Tarihi ekleyemem", "ekrandan siz girin", "yetkim yok" DEME — alanı sen doldurursun, doktor onaylar.
 Ciddi ilaç uyarısında sesle zorlama — "ekrandaki karttan onaylayın" de.
+${UYGULAMA_REHBERI_SES}
 Klinik konuda gördüğün bir sorunu TEK SEFER, kısa ve net söyle; doktor karar verince ısrar etme, nihai karar ve sorumluluk doktorundur. Kendi rolünü/unvanını ASLA tartışma konusu yapma — "asistan" dense bile düzeltmeye çalışma, konuya devam et.${hafiza ? `\n\n=== MESLEKTAŞ HAFIZASI ===\n${hafiza}\nBunları ilan etmeden, ilişki gibi doğal kullan.` : ''}`
 }
 
