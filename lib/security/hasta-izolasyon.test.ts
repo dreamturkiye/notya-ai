@@ -727,6 +727,8 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       gelenBelgeler: await ice('app/api/doktor/gelen-belgeler/route'),
       gelenBelge: await ice('app/api/doktor/gelen-belgeler/[id]/route'),
       kalkan: await ice('app/api/doktor/fisilti/kalkan/route'),
+      seansPaketi: await ice('app/api/doktor/seans-paketi/route'),
+      seansPaketiBugun: await ice('app/api/doktor/seans-paketi/bugun/route'),
       intake: await ice('app/api/doktor/intake-formlari/route'),
       asistanLearn: await ice('app/api/asistan/learn/route'),
       asistanChat: await ice('app/api/asistan/chat/route'),
@@ -993,6 +995,33 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         assert.equal(db.tablo('wa_taslak').find((r) => r.id === kendi)?.durum, 'onaylandi')
         assert.ok(db.tablo('audit_logs').some((r) => r.user_id === x.id && r.resource_id === x.ilac))
         assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === k.ilac)?.aktif, true)
+      })
+    }
+  })
+
+  describe('Seans paketi başka hekimin notuna açılmaz', () => {
+    for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
+      it(`${saldiran} yabancı not 404; gerekçesiz yazılmaz, gerekçeli kendi paketini kesmez`, async () => {
+        const s = sahneKur()
+        const x = s[saldiran], k = s[kurbanHarf]
+        db.ekle('seans_paketleri', {
+          doctor_id: x.id, patient_id: x.hasta, note_id: x.not, durum: 'hekim_onayli',
+          json_encrypted: encrypt(JSON.stringify({ sikayet: 'öksürük', fizikOzeti: '', icd10: [], ilaclar: [{ ad: 'Amoksisilin', eylem: 'basla', kaynak: 'vizit' }], islemTaslak: [], yasAy: 80, kilo: null, brans: 'pediatri', enabizIzin: false })),
+          uyari_gecildi: false, kaynak: 'soap',
+        })
+        const yabanci = await coz(R.seansPaketi.GET(iste('GET', `/api/doktor/seans-paketi?noteId=${k.not}`, { token: x.token })))
+        assert.equal(yabanci.status, 404)
+        assert.ok(!yabanci.metin.includes(isaret(kurbanHarf)))
+        const kisa = await coz(R.seansPaketi.POST(iste('POST', '/api/doktor/seans-paketi', { token: x.token, govde: { islem: 'yine_de_yaz', noteId: x.not, gerekce: 'kısa' } })))
+        assert.equal(kisa.status, 400)
+        assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === x.ilac)?.aktif, true)
+        const uzun = await coz(R.seansPaketi.POST(iste('POST', '/api/doktor/seans-paketi', { token: x.token, govde: { islem: 'yine_de_yaz', noteId: x.not, gerekce: 'Hekim klinik gerekçeyi yazdı' } })))
+        assert.equal(uzun.status, 200, uzun.metin.slice(0, 180))
+        assert.equal(db.tablo('seans_paketleri').find((r) => r.note_id === x.not)?.uyari_gecildi, true)
+        assert.ok(db.tablo('audit_logs').some((r) => r.user_id === x.id && r.resource_type === 'seans_paketleri'))
+        assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === x.ilac)?.aktif, true)
+        const yabanciYaz = await coz(R.seansPaketi.POST(iste('POST', '/api/doktor/seans-paketi', { token: x.token, govde: { islem: 'yine_de_yaz', noteId: k.not, gerekce: 'Hekim klinik gerekçeyi yazdı' } })))
+        assert.equal(yabanciYaz.status, 404)
       })
     }
   })

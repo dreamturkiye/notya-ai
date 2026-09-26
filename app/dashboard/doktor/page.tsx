@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 
 import BekleyenKonsultasyonOzeti from '@/components/doktor/BekleyenKonsultasyonOzeti'
 import NotyaFisildiyor from '@/components/doktor/NotyaFisildiyor'
+import PaketSayacSeridi from '@/components/doktor/seans/PaketSayacSeridi'
 import HazirMesajlar from '@/components/doktor/iletisim/HazirMesajlar'
 import GelenBelgelerKarti from '@/components/doktor/gelenBelgeler/GelenBelgelerKarti'
 import { CHROME_RENK, CHROME_FONT, gunKickerTRT } from '@/lib/doktor/chromeTheme'
@@ -274,6 +275,8 @@ export default function DoktorDashboard() {
           </div>
         )}
       </div>
+
+      <PaketSayacSeridi />
 
       {/* Hızlı araçlar — compact links, moved up here (was inside Bu Hafta Özeti); fısıltı now
           sits under Bu Hafta Özeti instead (Kaan, 2026-09-24) */}

@@ -51,6 +51,7 @@ import HastaKonsultasyonlar from '@/components/doktor/HastaKonsultasyonlar';
 import HastaOzetDuzenlenebilir from '@/components/doktor/HastaOzetDuzenlenebilir';
 import HastaIletisim from '@/components/doktor/iletisim/HastaIletisim';
 import KalkanTaslak from '@/components/doktor/iletisim/KalkanTaslak';
+import EnabizIzinKutusu from '@/components/doktor/seans/EnabizIzinKutusu';
 import { pediatriHedefBoyBransi } from '@/lib/clinical/hedefBoy';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
@@ -519,6 +520,7 @@ export default function HastaProfilPage() {
             {/* NOTYA-ILETISIM-01: WhatsApp / e-posta consent + last contacts */}
             <HastaIletisim patientId={patientId} />
             <KalkanTaslak patientId={patientId} />
+            <EnabizIzinKutusu patientId={patientId} />
             <div style={{ ...panel, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 20, right: 20, height: 2, borderRadius: 2, background: `linear-gradient(90deg, ${CHROME_RENK.pine}, transparent)` }} />
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: CHROME_RENK.ink }}>Gelişler ve tanılar</div>

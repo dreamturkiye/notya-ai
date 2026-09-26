@@ -81,7 +81,20 @@ export async function GET(req: NextRequest) {
   if (!t) return NextResponse.json({ error: 'Not bulunamadı.' }, { status: 404 })
   const xml = ereceteXml(t.erecete)
   const enabiz = enabizErecete({ xml, metin: t.metin, eksikler: t.eksikler, erecete: t.erecete as unknown as Record<string, unknown> })
-  return NextResponse.json({ metin: t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, tanilar: t.erecete.ereceteTaniBilgisi, baslik: t.baslik, arsivde: t.arsivde, xml, enabiz, ortam: medulaOrtami() })
+  let kopyaKilit = false
+  try {
+    const { data: paket, error: pHata } = await oturum.supabase.from('seans_paketleri').select('json_encrypted, uyari_gecildi').eq('doctor_id', oturum.doktorId).eq('note_id', noteId).maybeSingle()
+    if (!pHata && paket && !paket.uyari_gecildi) {
+      const { decryptPII } = await import('@/lib/security/encryption')
+      const { sutKurallari, kopyaKilitliMi, kapiModu } = await import('@/lib/seansPaketi/sutKurallari')
+      const govde = JSON.parse(decryptPII(String(paket.json_encrypted || '')))
+      const sut = sutKurallari(govde, { onayli: true })
+      const { data: plan } = await oturum.supabase.from('users').select('subscription_tier').eq('id', oturum.doktorId).maybeSingle()
+      const tier = plan?.subscription_tier ? String(plan.subscription_tier) : null
+      kopyaKilit = kapiModu(tier) === 'tam' && kopyaKilitliMi(tier, sut, false)
+    }
+  } catch { /* tablo yoksa eski kopya durur */ }
+  return NextResponse.json({ metin: kopyaKilit ? '' : t.metin, uyarilar: t.uyarilar, eksikler: t.eksikler, satirlar: t.satirlar, tanilar: t.erecete.ereceteTaniBilgisi, baslik: t.baslik, arsivde: t.arsivde, xml, enabiz, ortam: medulaOrtami(), kopyaKilit })
 }
 
 export async function POST(req: NextRequest) {

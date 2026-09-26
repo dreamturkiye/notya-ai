@@ -48,6 +48,11 @@ export async function kalkanOnayla(sb: Sb, g: { doktorId: string; taslakId: stri
       if (error) throw error
     }
     await sb.from('audit_logs').insert({ user_id: g.doktorId, action: 'update', resource_type: 'hasta_ilaclar', resource_id: ilacId, new_values: { kalkan: eylem, kapsam, taslak_id: t.id, patient_id: t.patient_id } })
+    try {
+      const { paketKalkanIsle } = await import('@/lib/seansPaketi/doldur')
+      const paketEylem = eylem === 'ilac_durdur' ? 'durdur' as const : 'son_doz' as const
+      await paketKalkanIsle(sb, { doktorId: g.doktorId, patientId: String(t.patient_id), taslakDurum: 'onaylandi', taslakId: String(t.id), ilacAd: String(ilac.ilac_adi || ''), eylem: paketEylem })
+    } catch (e) { console.error('[seans-paketi] kalkan', e) }
   } else {
     await sb.from('audit_logs').insert({ user_id: g.doktorId, action: 'update', resource_type: 'wa_taslak', resource_id: t.id, new_values: { kalkan: eylem, patient_id: t.patient_id } })
   }

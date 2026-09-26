@@ -105,3 +105,8 @@ Otomatik cevap yalnız sabit cümledir (ilaç adı yok). Hekimin kendi cümlesi 
 Starter planda ve migration 103 uygulanmamışsa bu katman susar; one-tap ve şablon yolu aynı kalır.
 `notya_kalkan_yonlendirme` UTILITY şablonu bu depoda oluşturulmaz — Meta’ya elle sunulur.
 Ayarlar’daki muayenehane numarası tek başına “bağlı” değildir; Meta’da görünen numarayla aynı olmalıdır.
+
+## Seans paketi (NOTYA-PAKET-01)
+
+Onaylı SOAP ve Kalkan Onayla aynı paketi doldurur. Kapı 3 uyarır, kapı 2 kopyalar. İkisi de ilaç kartını kesmez.
+Migration `104_seans_paketi.sql` uygulanmadan kapılar susar.

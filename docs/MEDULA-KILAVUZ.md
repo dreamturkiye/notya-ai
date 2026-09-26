@@ -69,3 +69,8 @@ Muğla İSM "Özel hekimlerin dikkatine — e-Reçete Medula kayıt işlemi".
 - Canlı kayıt (`imzaliEreceteGiris`) e-imza aracı (NOTYA-ERECETE-02) kurulana kadar pasif; PIN işlem bazlı, saklanmaz.
 - Renkli/beyaz reçete: RRS, Sağlık Bakanlığı **Reçetem** (recetem.enabiz.gov.tr) altına taşındı; hekim girişi yalnız e-imza, ilk girişte Doktor Bilgi Bankası kontrolü. Entegre MBYS'ler token ile imzasız yönlendirme alabilir (vendor kimliği = KTS/SBSGM kaydı, P4).
 
+## Ek (2026-09-26) — NOTYA-PAKET-01 / NOTYA-SUT-01
+- Onaylı seans paketi (`lib/seansPaketi`, migration 104) SOAP onayı ve Kalkan Onayla ile dolar. İlaç listesini bu paket kesmez.
+- Kapı 3 uyarır (`sutKurallari`). Kapı 2 aynı paketten düz metin kopyalar ve `notya.enabiz.v1` dosyası indirir. Canlı e-Nabız veya Medula push yok.
+- 104 uygulanmadıysa kapılar susar; “Medula için kopyala” eskisi gibi kalır.
+

@@ -21,6 +21,7 @@ import { hastaDosyasiYolu } from '@/lib/doktor/onaySonrasiYol';
 import { satirBasiNumarala } from '@/lib/doktor/satirBasiNumarala';
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme'
+import SeansKapilari from '@/components/doktor/seans/SeansKapilari'
 
 interface NotVeri {
   not: {
@@ -54,6 +55,7 @@ export default function NotYazdir() {
   // NOTYA-MEDULA P1: Medula'ya hazır reçete — kopyala + Ayşe'nin SUT/güvenlik uyarıları
   const [medulaDurum, setMedulaDurum] = useState<'bos' | 'yukleniyor' | 'kopyalandi' | 'hata'>('bos');
   const [medulaUyarilar, setMedulaUyarilar] = useState<string[]>([]);
+  const [kopyaKilit, setKopyaKilit] = useState(false);
   const medulaKopyala = async () => {
     setMedulaDurum('yukleniyor');
     try {
@@ -150,7 +152,7 @@ export default function NotYazdir() {
           <a href={`/dashboard/doktor/notlar/${params.id}`} style={{ background: '#4A5C8A', border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>✏️ Yeniden Düzenle</a>
           <button type="button" onClick={hbysKopyala} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{kopyalandi ? '✓ Kopyalandı' : '📋 HBYS için kopyala'}</button>
           <button type="button" onClick={htmlIndir} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>⬇ HTML indir</button>
-          <button type="button" onClick={medulaKopyala} disabled={medulaDurum === 'yukleniyor'} style={{ background: '#E4F3F1', border: '1px solid rgba(47,67,52,0.4)', color: CHROME_RENK.pine, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{medulaDurum === 'kopyalandi' ? '✓ Medula için kopyalandı' : medulaDurum === 'yukleniyor' ? 'Hazırlanıyor…' : medulaDurum === 'hata' ? 'Reçete yok' : '📋 Medula için kopyala'}</button>
+          <button type="button" onClick={medulaKopyala} disabled={medulaDurum === 'yukleniyor' || kopyaKilit} style={{ background: '#E4F3F1', border: '1px solid rgba(47,67,52,0.4)', color: CHROME_RENK.pine, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, cursor: kopyaKilit ? 'not-allowed' : 'pointer', opacity: kopyaKilit ? 0.55 : 1 }}>{medulaDurum === 'kopyalandi' ? '✓ Medula için kopyalandı' : medulaDurum === 'yukleniyor' ? 'Hazırlanıyor…' : medulaDurum === 'hata' ? 'Reçete yok' : '📋 Medula için kopyala'}</button>
           <a href={`/dashboard/doktor/notlar/${params.id}/recete`} style={{ background: '#FFFFFF', border: '1px solid rgba(58,44,34,0.16)', color: CHROME_RENK.ink, borderRadius: 8, padding: '8px 14px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>🧾 Reçete (kâğıt / MBYS)</a>
           <button type="button" onClick={() => window.print()} style={{ background: CHROME_RENK.pine, border: 'none', color: '#FAF8F4', borderRadius: 8, padding: '8px 18px', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🖨️ Yazdır / PDF kaydet</button>
         </span>
@@ -166,6 +168,7 @@ export default function NotYazdir() {
           {medulaUyarilar.map((u, i) => <div key={i}>• {u}</div>)}
         </div>
       )}
+      <SeansKapilari noteId={params.id} onKilit={setKopyaKilit} />
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '28px 24px 40px' }}>
         <div style={{ borderBottom: '2px solid #111', paddingBottom: 10, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>

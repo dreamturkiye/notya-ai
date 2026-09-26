@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: existing } = await supabase
     .from('notes')
     .select(
-      'id, doctor_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, content_asilar, icd10_codes, recete_onerisi, ai_degerlendirme, created_at, sessions(patient_id, specialty)'
+      'id, doctor_id, session_id, content_subjektif, content_objektif, content_degerlendirme, content_plan, content_anamnez, content_fizik_muayene, content_tani, content_tedavi, basvuru_yakinmasi, vitaller, hasta_ozeti, alarm_bulgulari, content_ilaclar, content_asilar, icd10_codes, recete_onerisi, ai_degerlendirme, created_at, sessions(patient_id, specialty)'
     )
     .eq('id', noteId)
     .eq('doctor_id', user.id)
@@ -281,6 +281,35 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await seansIsle(supabase, user.id, 'not')
     if (loglar.length > 0) await seansIsle(supabase, user.id, 'duzeltme', loglar.length)
   } catch (e) { console.error('[hafiza] onay', e) }
+
+  if (hastaBenim && hastaIdA) {
+    try {
+      const { paketSoapKaydet } = await import('@/lib/seansPaketi/doldur')
+      const { decrypt } = await import('@/lib/security/encryption')
+      const son = (kolon: string) => (kolon in guncelleme ? guncelleme[kolon] : (existing as Record<string, unknown>)[kolon])
+      const hamIlac = son('content_ilaclar')
+      const ilaclar = Array.isArray(hamIlac) ? hamIlac.map((it) => { const o = (it || {}) as { ad?: string; sure?: string }; return { ad: String(o.ad || ''), sure: o.sure || null } }).filter((i) => i.ad) : []
+      let dogum: string | null = null
+      const { data: hastaSatir } = await supabase.from('patients').select('dob_encrypted').eq('id', hastaIdA).eq('doctor_id', user.id).maybeSingle()
+      try { dogum = hastaSatir?.dob_encrypted ? String(decrypt(String(hastaSatir.dob_encrypted)) || '') : null } catch { dogum = null }
+      await paketSoapKaydet(supabase, {
+        doktorId: user.id,
+        patientId: hastaIdA,
+        noteId,
+        seansId: (existing as { session_id?: string }).session_id || null,
+        not: {
+          sikayet: son('basvuru_yakinmasi'),
+          fizik: son('content_objektif'),
+          icd: son('icd10_codes'),
+          ilaclar,
+          vitaller: (son('vitaller') || null) as { kilo?: number | null } | null,
+          brans: (seansA as { specialty?: string } | null)?.specialty || null,
+          dogum,
+        },
+        duranAdlar: (ilacSonlandirma?.sonlandirilan || []).map((s) => s.ad),
+      })
+    } catch (e) { console.error('[seans-paketi]', e) }
+  }
 
   if (loglar.length > 0) {
     try { await supabase.from('not_duzenlemeleri').insert(loglar) } catch { /* öğrenme logu kritik değil */ }
