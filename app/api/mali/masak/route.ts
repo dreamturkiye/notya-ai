@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { analizMasakRisk, kontrolEtAylikIslemler, MasakIslem } from '@/lib/mali/masakEngine'
+import { telegramGonder } from '@/lib/uyari/telegram'
 
 function getSupabase() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }) }
-const TELEGRAM_BOT = '8920614347'
-const TELEGRAM_CHAT = '5545242725'
-
-async function sendTelegram(text: string) {
-  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: TELEGRAM_CHAT, text }),
-  })
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,12 +30,11 @@ export async function POST(req: NextRequest) {
 
     const anyBildirim = results.some(r => r.bildirimGerekiyor)
 
+    let alertGonderildi = false
     if (sendAlert && anyBildirim) {
-      for (const r of results) {
-        if (r.bildirimGerekiyor && r.telegramMesaji) {
-          await sendTelegram(r.telegramMesaji)
-        }
-      }
+      const mesajlar = results.filter((r) => r.bildirimGerekiyor && r.telegramMesaji).map((r) => String(r.telegramMesaji))
+      const sonuclar = mesajlar.length ? await Promise.all(mesajlar.map((m) => telegramGonder(m))) : []
+      alertGonderildi = sonuclar.length > 0 && sonuclar.every(Boolean)
     }
 
     await getSupabase().from('mali_actions').insert({
@@ -55,7 +45,7 @@ export async function POST(req: NextRequest) {
       action_data: results,
     })
 
-    return NextResponse.json({ success: true, data: results, alertGönderildi: sendAlert && anyBildirim })
+    return NextResponse.json({ success: true, data: results, alertGönderildi: alertGonderildi })
   } catch (e) {
     return NextResponse.json({ success: false, error: 'Sunucu hatası.' }, { status: 500 })
   }
