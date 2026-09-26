@@ -133,6 +133,7 @@ export default function GelenBelgeBirak() {
       {not && (
         <div
           role="status"
+          className="notya-alt-yuzer"
           style={{
             position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 9001,
             background: not.tur === 'hata' ? R.warn : R.pine, color: '#FAF8F4', borderRadius: 999,

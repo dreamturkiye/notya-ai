@@ -6,7 +6,8 @@
  * were reviewed. This is the "expanded, grouped" option — full labels, Asistan pulled out as its
  * own highlighted row, Ana Sayfa/Randevular/Hastalar/Mesajlar under "Çalışma alanı", Raporlar/
  * Araçlar/Ayarlar under "Diğer". Desktop only; mobile keeps a hamburger that reveals the same
- * grouped list inline (not a pill dock) so today's mobile behavior isn't reinvented, just restyled.
+ * grouped list. On a phone the same items sit in a bottom tab bar (Ana Sayfa, Randevular,
+ * Hastalar, Mesajlar) plus a Menü sheet for the rest — the desktop sidebar is unchanged.
  *
  * Functional parity with the pre-Sidebar-B dock (and with DoktorNav before that) is deliberate:
  * same nav items, same doktor/sekreter role filtering, same real unread-mesaj badge, same logout,
@@ -116,6 +117,42 @@ const NAV_ICON: Record<string, React.ReactNode> = {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2.8" stroke="currentColor" strokeWidth="1.45" /><path d="M12 4.6v1.8M12 17.6v1.8M4.6 12h1.8M17.6 12h1.8" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" /></svg>
   ),
 };
+
+/** Phone tab bar. Four daily destinations; everything else opens from Menü. Desktop keeps the sidebar. */
+const SEKME_YOLLARI = [
+  '/dashboard/doktor',
+  '/dashboard/doktor/randevular',
+  '/dashboard/doktor/hastalar',
+  '/dashboard/doktor/mesajlar',
+] as const;
+
+const MENU_IKON = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <circle cx="6" cy="12" r="1.6" />
+    <circle cx="12" cy="12" r="1.6" />
+    <circle cx="18" cy="12" r="1.6" />
+  </svg>
+);
+
+/** Back target for a page that is not itself a nav root. Nearest section, so the link always exists. */
+function mobilGeri(pathname: string | null): { yol: string; etiket: string } | null {
+  if (!pathname) return null;
+  const temiz = pathname.replace(/\/$/, '') || '/';
+  if (navItems.some((i) => i.route === temiz)) return null;
+  const sahip = [...navItems].sort((a, b) => b.route.length - a.route.length).find((i) => temiz.startsWith(`${i.route}/`));
+  if (!sahip) return { yol: '/dashboard/doktor', etiket: 'Ana Sayfa' };
+  return { yol: sahip.route, etiket: sahip.label };
+}
+
+function sekmeAktif(route: string, pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (route === '/dashboard/doktor') {
+    if (pathname === '/dashboard/doktor') return true;
+    if (!pathname.startsWith('/dashboard/doktor/')) return false;
+    return !SEKME_YOLLARI.some((r) => r !== '/dashboard/doktor' && (pathname === r || pathname.startsWith(`${r}/`)));
+  }
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
 
 const BRANS_ETIKET: Record<string, string> = {
   pediatri: 'Pediatrist', kardiyoloji: 'Kardiyolog', noroloji: 'Nörolog', psikiyatri: 'Psikiyatrist',
@@ -266,6 +303,12 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const asistanItem = gorunurItems.find((i) => i.grup === 'asistan');
   const calismaItems = gorunurItems.filter((i) => i.grup === 'calisma');
   const digerItems = gorunurItems.filter((i) => i.grup === 'diger');
+  const sekmeItems = SEKME_YOLLARI.map((route) => gorunurItems.find((i) => i.route === route)).filter((i): i is NonNullable<typeof i> => Boolean(i));
+  const menuItems = gorunurItems.filter((i) => !(SEKME_YOLLARI as readonly string[]).includes(i.route));
+  const geri = mobilGeri(pathname);
+  const menuAktif = menuOpen || menuItems.some((i) => sekmeAktif(i.route, pathname));
+
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
   const initials = ad.split(' ').filter(Boolean).slice(-2).map((s) => s[0]).join('').toUpperCase() || 'D';
 
   const S = (s: Record<string, unknown>) => s as React.CSSProperties;
@@ -361,7 +404,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       html, body { background: ${CHROME_RENK.cream}; }
       .notya-yan { display: flex; }
       .notya-masa-ust { display: flex; }
-      .notya-telefon-ust, .notya-telefon-menu { display: none; }
+      .notya-telefon-ust, .notya-telefon-menu, .notya-telefon-perde, .notya-alt-nav { display: none; }
       .notya-icerik {
         width: min(1120px, calc(100% - 64px));
         margin: 0 auto;
@@ -384,8 +427,10 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
       @media (max-width: 899px) {
         .notya-yan, .notya-masa-ust { display: none !important; }
         .notya-telefon-ust { display: flex !important; }
-        .notya-telefon-menu { display: block !important; }
-        .notya-icerik { width: calc(100% - 32px); padding-top: 0; }
+        .notya-telefon-perde { display: block !important; }
+        .notya-telefon-menu { display: flex !important; }
+        .notya-alt-nav { display: flex !important; }
+        .notya-icerik { width: calc(100% - 32px); padding-top: 0; padding-bottom: 72px; }
         .notya-telefon-ust {
           position: sticky;
           top: 0;
@@ -396,6 +441,12 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           border-bottom: 1px solid ${CHROME_RENK.border};
         }
         .notya-bitki { opacity: 0.28; }
+        .notya-kompakt { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+        .notya-telefon-menu [role="link"] { min-height: 44px; box-sizing: border-box; }
+        .notya-alt-yuzer { bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important; }
+      }
+      @media print {
+        .notya-alt-nav, .notya-telefon-menu, .notya-telefon-perde { display: none !important; }
       }
     `}</style>
     <div
@@ -482,49 +533,26 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               </button>
             </div>
             <header className="notya-telefon-ust" style={S({ alignItems: 'center', justifyContent: 'space-between', gap: 12 })}>
-                <div onClick={() => handleNav('/dashboard/doktor')} style={S({ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', minHeight: 44 })}>
-                  <div style={S({ color: '#6a7563' })}>{LEAF}</div>
-                  <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 24, fontWeight: 500, letterSpacing: '-0.02em', color: CHROME_RENK.ink })}>Notya</div>
-                </div>
-                <div style={S({ display: 'flex', alignItems: 'center', gap: 10 })}>
-                  {mesajUnread > 0 && (
-                    <span style={S({ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: CHROME_RENK.warn, color: '#FAF8F4', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' })}>
-                      {mesajUnread > 9 ? '9+' : mesajUnread}
-                    </span>
-                  )}
+                {geri ? (
                   <button
-                    onClick={() => setMenuOpen((v) => !v)}
-                    aria-label="Menü"
-                    aria-expanded={menuOpen}
-                    style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 10, width: 44, height: 44, fontSize: 18, cursor: 'pointer', color: CHROME_RENK.ink })}
+                    type="button"
+                    onClick={() => handleNav(geri.yol)}
+                    aria-label={`${geri.etiket} sayfasına dön`}
+                    style={S({ display: 'flex', alignItems: 'center', gap: 4, minHeight: 44, padding: '0 4px', border: 'none', background: 'transparent', color: CHROME_RENK.pine, fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' })}
                   >
-                    {menuOpen ? '✕' : '☰'}
+                    <span aria-hidden style={S({ fontSize: 26, lineHeight: 1, marginTop: -2 })}>‹</span>
+                    {geri.etiket}
                   </button>
-                </div>
+                ) : (
+                  <div onClick={() => handleNav('/dashboard/doktor')} style={S({ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', minHeight: 44 })}>
+                    <div style={S({ color: '#6a7563' })}>{LEAF}</div>
+                    <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 24, fontWeight: 500, letterSpacing: '-0.02em', color: CHROME_RENK.ink })}>Notya</div>
+                  </div>
+                )}
+                {geri && (
+                  <div onClick={() => handleNav('/dashboard/doktor')} style={S({ fontFamily: CHROME_FONT.serif, fontSize: 18, fontWeight: 500, color: CHROME_RENK.ink, cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center' })}>Notya</div>
+                )}
               </header>
-
-              {menuOpen && (
-                <div className="notya-telefon-menu" style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 12px', marginBottom: 20, boxShadow: '0 8px 18px rgba(58,44,34,0.06)' })}>
-                  {asistanItem && navRow(asistanItem, true)}
-                  <div style={S({ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: digerItems.length ? 12 : 0 })}>
-                    {calismaItems.map((i) => navRow(i))}
-                  </div>
-                  {digerItems.length > 0 && (
-                    <div style={S({ display: 'flex', flexDirection: 'column', gap: 2, borderTop: `1px solid ${CHROME_RENK.border}`, paddingTop: 10 })}>
-                      {digerItems.map((i) => navRow(i))}
-                    </div>
-                  )}
-                  <div style={S({ borderTop: `1px solid ${CHROME_RENK.border}`, marginTop: 12, paddingTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
-                    <BransDegistir mobil />
-                    <button
-                      onClick={handleCikis}
-                      style={S({ padding: '9px 15px', borderRadius: 999, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, fontSize: 13, fontWeight: 700, cursor: 'pointer' })}
-                    >
-                      Çıkış Yap
-                    </button>
-                  </div>
-                </div>
-              )}
 
           <div>{children}</div>
 
@@ -535,6 +563,100 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
         </>
         )}
       </div>
+
+      {menuOpen && (
+        <>
+          <button type="button" className="notya-telefon-perde" aria-label="Menüyü kapat" onClick={() => setMenuOpen(false)} style={S({ position: 'fixed', inset: 0, zIndex: 32, border: 'none', background: 'rgba(58,44,34,0.32)', padding: 0 })} />
+          <div className="notya-telefon-menu" role="dialog" aria-label="Menü" style={S({
+            position: 'fixed', left: 12, right: 12, zIndex: 36, flexDirection: 'column',
+            bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+            maxHeight: 'min(70dvh, 520px)', overflowY: 'auto',
+            background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 18,
+            padding: '14px 12px', boxShadow: '0 12px 32px rgba(58,44,34,0.16)',
+          })}>
+            {menuItems.filter((i) => i.grup === 'asistan').map((i) => navRow(i, true))}
+            <div style={S({ display: 'flex', flexDirection: 'column', gap: 2 })}>
+              {menuItems.filter((i) => i.grup !== 'asistan').map((i) => navRow(i))}
+            </div>
+            <div style={S({ borderTop: `1px solid ${CHROME_RENK.border}`, marginTop: 12, paddingTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
+              <BransDegistir mobil />
+              <button
+                type="button"
+                onClick={handleCikis}
+                style={S({ padding: '9px 15px', minHeight: 44, borderRadius: 999, background: 'transparent', border: `1px solid ${CHROME_RENK.warn}66`, color: CHROME_RENK.warn, fontSize: 13, fontWeight: 700, cursor: 'pointer' })}
+              >
+                Çıkış Yap
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      <nav className="notya-alt-nav" aria-label="Ana menü" style={S({
+        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 38,
+        background: CHROME_RENK.paper, borderTop: `1px solid ${CHROME_RENK.border}`,
+        padding: '4px env(safe-area-inset-right, 0px) calc(4px + env(safe-area-inset-bottom, 0px)) env(safe-area-inset-left, 0px)',
+        justifyContent: 'space-around', alignItems: 'stretch',
+      })}>
+        {sekmeItems.map((item) => {
+          const aktif = sekmeAktif(item.route, pathname);
+          const rozet = item.route === '/dashboard/doktor/mesajlar' ? mesajUnread : 0;
+          return (
+            <button
+              key={item.route}
+              type="button"
+              onClick={() => handleNav(item.route)}
+              aria-current={aktif ? 'page' : undefined}
+              style={S({
+                flex: '1 1 0', minWidth: 0, minHeight: 48, border: 'none', background: 'transparent', cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                color: aktif ? CHROME_RENK.pine : '#8a7b6c', fontFamily: 'inherit', fontSize: 10, fontWeight: aktif ? 700 : 600,
+                padding: '4px 2px',
+              })}
+            >
+              <span style={S({ position: 'relative', display: 'flex', width: 24, height: 22, alignItems: 'center', justifyContent: 'center' })}>
+                {NAV_ICON[item.route]}
+                {rozet > 0 && (
+                  <span style={S({
+                    position: 'absolute', top: -4, right: -8, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999,
+                    background: CHROME_RENK.warn, color: '#FAF8F4', fontSize: 9, fontWeight: 800,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  })}>
+                    {rozet > 9 ? '9+' : rozet}
+                  </span>
+                )}
+              </span>
+              <span style={S({ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' })}>{item.label}</span>
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-expanded={menuOpen}
+          aria-current={menuAktif ? 'page' : undefined}
+          style={S({
+            flex: '1 1 0', minWidth: 0, minHeight: 48, border: 'none', background: 'transparent', cursor: 'pointer',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+            color: menuAktif ? CHROME_RENK.pine : '#8a7b6c', fontFamily: 'inherit', fontSize: 10, fontWeight: menuAktif ? 700 : 600,
+            padding: '4px 2px',
+          })}
+        >
+          <span style={S({ position: 'relative', display: 'flex', width: 24, height: 22, alignItems: 'center', justifyContent: 'center' })}>
+            {MENU_IKON}
+            {gelenSayi > 0 && (
+              <span style={S({
+                position: 'absolute', top: -4, right: -8, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999,
+                background: CHROME_RENK.warn, color: '#FAF8F4', fontSize: 9, fontWeight: 800,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              })}>
+                {gelenSayi > 9 ? '9+' : gelenSayi}
+              </span>
+            )}
+          </span>
+          <span>Menü</span>
+        </button>
+      </nav>
     </div>
     </ChromeKompaktContext.Provider>
     </ChromeGizleContext.Provider>

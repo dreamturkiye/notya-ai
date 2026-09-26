@@ -1708,7 +1708,7 @@ export default function RandevularPage() {
           <div
             role="dialog"
             aria-label="Hasta Bilgi Formu"
-            style={{ position: 'fixed', left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', padding: '0 12px 16px', zIndex: 190, pointerEvents: 'none' }}
+            style={{ position: 'fixed', left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', padding: '0 12px calc(16px + env(safe-area-inset-bottom, 0px))', zIndex: 190, pointerEvents: 'none' }}
           >
             <div style={{ pointerEvents: 'auto', width: '100%', maxWidth: 480, background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 18, padding: 16, boxShadow: '0 8px 28px rgba(47,67,52,0.18)', color: CHROME_RENK.ink }}>
               {!formLinki ? (
