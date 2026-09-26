@@ -25,6 +25,7 @@ import { getDoctorAccessToken, ensureDoctorAccessToken } from '@/lib/doktor/clie
 import { hekimUnvanli } from '@/lib/doktor/hekimAdi';
 import BransDegistir from './BransDegistir';
 import GelenBelgeBirak from './gelenBelgeler/GelenBelgeBirak';
+import SesleUyandir from '@/components/asistan/SesleUyandir';
 import { GELEN_OLAY, GELEN_SAYI_OLAY } from '@/lib/gelenBelgeler/istemci';
 import { CHROME_RENK, CHROME_FONT, saatTRT } from '@/lib/doktor/chromeTheme';
 import { KADIN_HASTALIKLARI_DOGUM_KISA_ETIKETI } from '@/lib/doktor/specialties';
@@ -400,7 +401,12 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   if (gizli) {
     // Aile / embed modu: sayfa kendi tam ekran deneyimini yönetir -- hiçbir sarmalayıcı yok,
     // yalnız içerik. Görünürlük geri değiştiğinde (useChromeGizle temizlenince) normale döner.
-    return <ChromeGizleContext.Provider value={setGizli}>{children}</ChromeGizleContext.Provider>;
+    return (
+      <ChromeGizleContext.Provider value={setGizli}>
+        {children}
+        <SesleUyandir doktor={rol === 'doktor'} gizli />
+      </ChromeGizleContext.Provider>
+    );
   }
 
   return (
@@ -600,6 +606,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
           </div>
         </>
       )}
+
+      <SesleUyandir doktor={rol === 'doktor'} />
 
       <div className="notya-alt-nav" role="navigation" aria-label="Ana menü" style={S({
         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 38,

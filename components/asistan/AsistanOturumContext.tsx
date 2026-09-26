@@ -28,6 +28,7 @@ import { address } from '@/lib/address'
 import { asistanYanitiCoz } from '@/lib/asistan/yanitCoz'
 import type { EylemHasta, EylemOneriGorunumu } from '@/components/core/EylemKarti'
 import type { SesDurumu } from '@/lib/asistan/yuzenPanel'
+import { asistaniKapatMi } from '@/lib/asistan/uyandirSoz'
 
 export type ConvStatus = SesDurumu
 /** sira: sesli ve yazılı mesajları yüzen panelde tek zaman çizgisinde sıralamak için. */
@@ -100,6 +101,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   const [messages, setMessages] = useState<Message[]>([])
   const [errorMsg, setErrorMsg] = useState("")
   const [authToken, setAuthToken] = useState<string | null>(null)
+  const authTokenRef = useRef<string | null>(null)
+  const personaKeyRef = useRef<PersonaId>("aysekaya")
+  const doctorRef = useRef<ReturnType<typeof toAddressableUser> | null>(null)
   const [doctorProfile, setDoctorProfile] = useState<ReturnType<typeof toAddressableUser> | null>(null)
   const conversationRef = useRef<ActiveConversation | null>(null)
   /** NOTYA-OGRENME-03: addMsg ile eş zamanlı tutulur — endConversation()'ın kullandığı kapanışlar
@@ -183,6 +187,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   async function hazirla(): Promise<HazirlaSonucu> {
     let token = await ensureDoctorAccessToken()
     if (!token) return "giris"
+    authTokenRef.current = token
     setAuthToken(token)
 
     let resp = await fetch("/api/users/me", {
@@ -192,6 +197,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     if (resp.status === 401) {
       token = await ensureDoctorAccessToken({ forceRefresh: true })
       if (!token) return "giris"
+      authTokenRef.current = token
       setAuthToken(token)
       resp = await fetch("/api/users/me", {
         headers: { Authorization: `Bearer ${token}` },
@@ -200,7 +206,9 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     }
     const profileData = await resp.json().catch(() => ({} as { data?: DoctorProfile }))
     if (!isOnboardingDone(profileData.data)) return "onboarding"
-    setDoctorProfile(toAddressableUser(profileData.data as DoctorProfile))
+    const doktor = toAddressableUser(profileData.data as DoctorProfile)
+    doctorRef.current = doktor
+    setDoctorProfile(doktor)
     if (personaHazirRef.current) return "tamam"
     personaHazirRef.current = true
     let secili: string | null = null
@@ -209,6 +217,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
       (profileData.data as { specialty?: string } | undefined)?.specialty,
       secili,
     )
+    personaKeyRef.current = acilis
     setPersonaKey(acilis)
     setPersona(PERSONAS[acilis])
     try {
@@ -326,11 +335,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   async function fetchSignedUrl(p: Persona): Promise<{ signedUrl: string; voiceId: string; tekBeyin: { oturumId: string; jeton: string; baslangic: string } | null }> {
-    if (!authToken) throw new Error("Oturum bulunamadı")
+    const token = authTokenRef.current
+    if (!token) throw new Error("Oturum bulunamadı")
     const oturumParam = ortakOturumId ? `&asistanSessionId=${encodeURIComponent(ortakOturumId)}` : ""
     const resp = await fetch(
       `/api/asistan/signed-url?specialty=${p.primarySpecialty}&persona=${p.id}${oturumParam}`,
-      { headers: { Authorization: `Bearer ${authToken}` } }
+      { headers: { Authorization: `Bearer ${token}` } }
     )
     if (!resp.ok) {
       const errBody = await resp.json().catch(() => ({}))
@@ -349,7 +359,12 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
   }
 
   async function startConversation() {
-    if (!authToken) { router.push("/giris"); return }
+    if (!authTokenRef.current) {
+      const sonuc = await hazirla()
+      if (sonuc === "giris") { router.push("/giris"); return }
+      if (sonuc === "onboarding") { router.push("/onboarding?p=doktor"); return }
+    }
+    if (!authTokenRef.current) { router.push("/giris"); return }
     await endConversation()
     setStatus("connecting")
     setErrorMsg("")
@@ -371,13 +386,13 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
     }
 
     try {
-      const doctor = doctorProfile || toAddressableUser(null)
-      const p = PERSONAS[personaKey]
+      const doctor = doctorRef.current || doctorProfile || toAddressableUser(null)
+      const p = PERSONAS[personaKeyRef.current] || PERSONAS[personaKey]
       // NOTYA-OGRENME-03: sesli Ayşe de meslektaş hafızasını okur — 5+ seansta kendini
       // tanıtmayı bırakır, bildiklerini promptta taşır. Başarısızlıkta eski davranış.
       let hafiza: { karsilama?: { tanit: boolean; onSoz: string }; sesBlogu?: string; gun?: { metin: string; blok: string } | null } = {}
       try {
-        const hr = await fetch("/api/doktor/hafiza", { headers: { Authorization: `Bearer ${authToken}` } })
+        const hr = await fetch("/api/doktor/hafiza", { headers: { Authorization: `Bearer ${authTokenRef.current}` } })
         if (hr.ok) hafiza = await hr.json()
       } catch { /* hafıza kritik değil */ }
       const firstMessage = `Merhaba ${address(doctor || { firstName: 'Hocam' }, 'named')}. Nasıl yardımcı olabilirim?`
@@ -651,6 +666,11 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
           setStatus("error")
         },
         onMessage: ({ message, role }) => {
+          if (role === "user" && asistaniKapatMi(message)) {
+            addMsg("user", message)
+            void endConversation()
+            return
+          }
           if (role !== "user" && skipNextAgentTranscript) {
             skipNextAgentTranscript = false
             return
@@ -714,6 +734,7 @@ export function AsistanOturumProvider({ children }: { children: React.ReactNode 
 
   function switchPersona(key: PersonaId) {
     void stopConversation()
+    personaKeyRef.current = key
     setPersonaKey(key)
     setPersona(PERSONAS[key])
     setMessages([])
