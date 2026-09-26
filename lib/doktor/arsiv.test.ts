@@ -34,6 +34,7 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/kalici-sil/route.ts': { adet: 2, neden: 'archive management: permanent delete of an already-archived muayene' },
   'app/api/notes/[id]/route.ts': { adet: 2, neden: 'open (GET) and delete (DELETE, NOTYA-NOT-SIL-01) one note by id — both ownership-scoped; a draft stays deletable even when its muayene is archived' },
   'app/api/doktor/medula/recete/route.ts': { adet: 1, neden: 'open one note by id (reçete) — allowed for archived, page shows the "Arşivde" banner' },
+  'app/api/doktor/seans-paketi/route.ts': { adet: 2, neden: 'open one note by id (GET and POST), ownership-scoped — same print page as Medula; does not list visits' },
   'app/api/notes/[id]/approve/route.ts': { adet: 1, neden: 'doctor action on one note by id (approve), ownership-scoped' },
   'app/api/notes/[id]/ilac-sonlandir-geri-al/route.ts': { adet: 1, neden: 'Geri al after approving one note by id, ownership-scoped (same note as approve)' },
   'app/api/doktor/not-konsult/route.ts': { adet: 1, neden: 'the note the doctor has open, by id; its patient context comes from hastaDosyaDerleyici (archive-filtered)' },
@@ -54,6 +55,7 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
 const IZINLI_ILAC: Record<string, { adet: number; neden: string }> = {
   'lib/doktor/receteAktarim.ts': { adet: 1, neden: 'approval write path: must see hidden rows so a re-prescription re-claims the row (kaynak_note_id → this live note) instead of duplicating it' },
   'lib/doktor/ilacSonlandir.ts': { adet: 1, neden: 'NOTYA-ILAC-SONLANDIR-01 Geri al: re-activates exactly the rows this note ended, by id, doctor + patient scoped (the ending pass itself uses arsivsizIlaclar)' },
+  'lib/iletisim/kalkan/onayla.ts': { adet: 1, neden: 'Kalkan Onayla reads exactly the drug on the approved draft, by id, doctor + patient scoped, then writes the stop' },
 }
 
 /**

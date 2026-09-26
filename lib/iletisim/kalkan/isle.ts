@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { encryptPII, decryptPII } from '@/lib/security/encryption'
 import { whatsappNumarasi } from '@/lib/iletisim/baglantilar'
 import { tabloYokMu } from '@/lib/iletisim/sunucu'
+import { arsivsizIlaclar } from '@/lib/doktor/arsiv'
 import { graph } from '@/lib/iletisim/otomatik/whatsapp/graph'
 import type { KalkanHam } from '@/lib/iletisim/otomatik/whatsapp/webhook'
 import { mesaiDisiMi, otomatikMetinMi, siniflandir, yanitMetni, type KalkanSinif } from './sinif'
@@ -210,7 +211,7 @@ async function taslakYaz(sb: Sb, g: {
   zaman: string
   wamid: string
 }): Promise<boolean> {
-  const { data: ilaclar } = await sb.from('hasta_ilaclar').select('id, ilac_adi, aktif').eq('doctor_id', g.doktorId).eq('patient_id', g.hastaId).eq('aktif', true)
+  const { data: ilaclar } = await arsivsizIlaclar(sb, 'id, ilac_adi, aktif').eq('doctor_id', g.doktorId).eq('patient_id', g.hastaId).eq('aktif', true)
   const acik = (ilaclar || []).map((i) => ({ id: String(i.id), ad: String(i.ilac_adi || '') }))
   const sec = ilacSec(acik, g.metin)
   const emin = g.niyet.emin && (g.niyet.eylem !== 'ilac_durdur' || Boolean(sec))
