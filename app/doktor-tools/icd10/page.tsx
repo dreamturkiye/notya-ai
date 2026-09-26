@@ -333,7 +333,7 @@ export default function ICD10Page() {
         )}
       </div>
 
-      {toast && <div style={toastStyle}>{toast}</div>}
+      {toast && <div className="notya-alt-yuzer" style={toastStyle}>{toast}</div>}
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
