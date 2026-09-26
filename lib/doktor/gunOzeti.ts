@@ -30,6 +30,8 @@ export interface GunVerisi {
   bugunHasta: number            // bugün başlayan seanslar
   dunHasta: number
   onaysizNot: number
+  /** Bekleyen notların hasta adları (en çok 3, yeniden eskiye). */
+  onaysizNotlar?: string[]
   okunmamisMesaj: number
   yeniBelge: number             // son 24 saat
 }
@@ -79,8 +81,10 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
       .eq('doctor_id', doctorId).gte('started_at', bugunS.bas).lt('started_at', bugunS.son),
     arsivsizSeanslar(sb, 'id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).gte('started_at', dunS.bas).lt('started_at', dunS.son),
-    arsivsizNotlar(sb, 'id', { count: 'exact', head: true })
-      .eq('doctor_id', doctorId).is('approved_at', null),
+    // NOTYA-AYSE-ACILIS-01 (Kaan, 2026-09-26): yalnız sayı yetmiyor — “hangi hastanın?” sorusuna
+    // cevap için bekleyen notların hastaları da gelir (en çok 3 ad selamda söylenir).
+    arsivsizNotlar(sb, 'id, created_at, sessions(patient_id)', { count: 'exact' })
+      .eq('doctor_id', doctorId).is('approved_at', null).order('created_at', { ascending: false }).limit(3),
     sb.from('hasta_mesaj_konulari').select('id', { count: 'exact', head: true })
       .eq('doctor_id', doctorId).eq('okundu_pratik', false).eq('pratik_arsiv', false),
     sb.from('medical_documents').select('id', { count: 'exact', head: true })
@@ -99,6 +103,20 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
       }
     } catch { /* ad kritik değil */ }
   }
+  // NOTYA-AYSE-ACILIS-01: bekleyen notların hasta adları (şifre çözülür; ad kritik değil, hata yutulur).
+  const onaysizNotlar: string[] = []
+  try {
+    const bekleyen = (notRes.data || []) as { sessions?: { patient_id?: string } | { patient_id?: string }[] }[]
+    const pidler = [...new Set(bekleyen.map((n) => (Array.isArray(n.sessions) ? n.sessions[0] : n.sessions)?.patient_id).filter((x): x is string => !!x))]
+    if (pidler.length) {
+      const { data: adlar } = await sb.from('patients').select('id, name_encrypted').in('id', pidler).eq('doctor_id', doctorId)
+      const { decrypt } = await import('@/lib/security/encryption')
+      for (const a of adlar || []) {
+        try { const ad = (JSON.parse(decrypt(a.name_encrypted)).ad || '').trim(); if (ad) onaysizNotlar.push(ad) } catch { /* ad kritik değil */ }
+      }
+    }
+  } catch { /* ad kritik değil */ }
+
   const kalan = randevular.filter((r) => new Date(r.baslangic) > simdi && r.durum !== 'tamamlandi').length
   const yarin = (yarinRes.data || []) as { tur: string }[]
 
@@ -117,6 +135,7 @@ export async function gunVerisiDerle(sb: SupabaseClient, doctorId: string): Prom
     bugunHasta: bugunSeansRes.count || 0,
     dunHasta: dunSeansRes.count || 0,
     onaysizNot: notRes.count || 0,
+    onaysizNotlar,
     okunmamisMesaj: mesajRes.count || 0,
     yeniBelge: belgeRes.count || 0,
   }
@@ -166,7 +185,7 @@ export function gunOzetiMetni(
   }
 
   const bekleyen: string[] = []
-  if (v.onaysizNot > 0) bekleyen.push(`${v.onaysizNot} not onay bekliyor`)
+  if (v.onaysizNot > 0) bekleyen.push(`${v.onaysizNot} not onay bekliyor${v.onaysizNotlar?.length ? ` (${v.onaysizNotlar.slice(0, 2).join(', ')})` : ''}`)
   if (v.okunmamisMesaj > 0) bekleyen.push(`${v.okunmamisMesaj} okunmamış hasta mesajı var`)
   if (v.yeniBelge > 0 && faz !== 'sonu') bekleyen.push(`${v.yeniBelge} yeni belge geldi`)
   if (bekleyen.length) c.push(`${bekleyen.join(', ')}.`)
@@ -180,6 +199,6 @@ export function gunOzetiMetni(
 export function gunBlogu(v: GunVerisi, faz: GunFazi): string {
   return `=== GÜNÜN DURUMU (${v.bugun} ${v.haftaGunu}, saat ${String(v.saatTRT).padStart(2, '0')}:00 TRT, faz: ${faz}) ===
 Bugün randevu: ${v.randevu.toplam} (kontrol ${v.randevu.kontrol}, kalan ${v.randevu.kalan}${v.randevu.ilkSaat ? `, ilki ${v.randevu.ilkSaat}` : ''}) | Bugün seans: ${v.bugunHasta} | Dün: ${v.dunHasta} | Yarın randevu: ${v.yarinRandevu.toplam} (kontrol ${v.yarinRandevu.kontrol})
-Onaysız not: ${v.onaysizNot} | Okunmamış hasta mesajı: ${v.okunmamisMesaj} | Son 24 saatte yeni belge: ${v.yeniBelge}
+Onaysız not: ${v.onaysizNot}${v.onaysizNotlar?.length ? ` — ${v.onaysizNotlar.join(', ')}` : ''} | Okunmamış hasta mesajı: ${v.okunmamisMesaj} | Son 24 saatte yeni belge: ${v.yeniBelge}
 Sohbet açılışında bunlardan doğal ve KISA söz et (meslektaş gibi, liste okuma); doktor konuya girdiyse tekrar etme.`
 }
