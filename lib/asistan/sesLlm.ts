@@ -16,7 +16,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { ayseCevapla } from '@/lib/asistan/ayseCevapla'
-import { dolguSec } from '@/lib/asistan/konusma'
+import { DEVAMI_EKRANDA, dolguSec } from '@/lib/asistan/konusma'
+import { waitUntil } from '@vercel/functions'
 import { sesJetonuDogrula, sesSirriGecerliMi } from '@/lib/asistan/sesJetonu'
 import { eskiSesTaslaklariniCek, sesliKarariUygula } from '@/lib/asistan/sesliOnay'
 import { sesOnayMetniGecerliMi, sesVazgecMetniMi } from '@/core/eylemler/sesKapilari'
@@ -26,6 +27,13 @@ const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: (u, o) => fetch(u, { ...o, cache: 'no-store' }) } }
 )
+
+/** NOTYA-SES-ERKEN-01: the voice turn never runs longer than this; the screen answer is not bound by it. */
+const SES_BEKCI_MS = 22_000
+/** Keep a background promise alive after the SSE closes (Vercel freezes the function otherwise). */
+function arkaPlandaSurdur(p: Promise<unknown>): void {
+  try { waitUntil(p) } catch { void p /* yerel çalışma: söz zaten sürer */ }
+}
 
 type ElMesaj = { role?: string; content?: unknown }
 type ElArac = { type?: string; function?: { name?: string }; name?: string }
@@ -98,14 +106,27 @@ export async function sesLlmPost(req: NextRequest): Promise<Response> {
           if (karar) {
             cevapYaz(karar.soz)
           } else {
-            const sonuc = await ayseCevapla({
+            // NOTYA-SES-ERKEN-01 (Dr. Gökhan, 2026-09-26 — "Bağlantı kurulamadı"): ElevenLabs drops a Custom LLM
+            // stream that runs ~30 s (LLM Cascade TimeoutError). Long file answers (özet, aşı, açık işler) take
+            // longer than that on the screen. So the VOICE turn ends at the spoken cap ("Devamı ekranınızda") or
+            // at the guard timer, whichever comes first; the screen answer keeps generating in the background.
+            let sesSinirCoz: () => void = () => {}
+            const sesSiniri = new Promise<void>((r) => { sesSinirCoz = r })
+            const sonucSozu = ayseCevapla({
               supabase, doktorId: jeton.d, oturumId: jeton.o, mesaj, kanal: 'ses',
               specialty: jeton.s, patientId: jeton.p, personaId: jeton.pe || null, sozParcasi: cevapYaz,
+              sesSiniri: () => sesSinirCoz(),
             })
-            if (!sonuc.ok) cevapYaz(sonuc.soz)
-            else {
+            const sonrasi = sonucSozu.then(async (sonuc) => {
+              if (!sonuc.ok) { cevapYaz(sonuc.soz); return }
               if (!cevapSoylendi) cevapYaz(sonuc.cevap.konusma || 'Ekranınıza yazdım Hocam.')
               if (sonuc.cevap.kartlar.length) await eskiSesTaslaklariniCek(supabase, jeton.d, sonuc.cevap.oncekiBekleyen || [], sonuc.cevap.kartlar, sonuc.cevap.kartHastaId ?? null)
+            }).catch((e) => { console.error('[ses-llm/arka]', e instanceof Error ? e.name : 'hata') })
+            const bekci = new Promise<'bekci'>((r) => setTimeout(() => r('bekci'), SES_BEKCI_MS))
+            const kim = await Promise.race([sonrasi.then(() => 'bitti' as const), sesSiniri.then(() => 'sinir' as const), bekci])
+            if (kim !== 'bitti') {
+              if (kim === 'bekci') cevapYaz(cevapSoylendi ? DEVAMI_EKRANDA : 'Dosyayı inceliyorum Hocam, cevabı ekranınıza yazıyorum.')
+              arkaPlandaSurdur(sonrasi)
             }
           }
         }
