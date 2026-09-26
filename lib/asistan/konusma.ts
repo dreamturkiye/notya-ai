@@ -85,6 +85,8 @@ export class SesAkisi {
     private readonly temizle: (cumle: string) => string = (c) => c,
     /** NOTYA-SES-ERKEN-01: fired once, right after "Devamı ekranınızda" — the voice turn can close here. */
     private readonly onSinir?: () => void,
+    /** NOTYA-SES-OKU-01: sentence cap for this stream; Infinity reads everything ("bana anlat"). */
+    private readonly sinir: number = SOZ_BEAT_SINIRI,
   ) {}
 
   ekle(tamMetin: string): void {
@@ -103,7 +105,7 @@ export class SesAkisi {
   /** Notes ("ekranınıza yazdım") do not count as beats; sentences do. */
   private soyle(s: string, not = false): void {
     if (!not) {
-      if (this.beat >= SOZ_BEAT_SINIRI) {
+      if (this.beat >= this.sinir) {
         if (!this.devamNotu) { this.devamNotu = true; this.soylenen.push(DEVAMI_EKRANDA); this.yay(`${DEVAMI_EKRANDA} `); try { this.onSinir?.() } catch { /* yok */ } }
         return
       }
@@ -174,8 +176,8 @@ export class SesAkisi {
 }
 
 /** Akışsız: ekran metninin tamamından sözlü biçim. */
-export function konusmaYap(ekran: string, temizle?: (cumle: string) => string): string {
-  const a = new SesAkisi(() => {}, temizle)
+export function konusmaYap(ekran: string, temizle?: (cumle: string) => string, secenek?: { sinirsiz?: boolean }): string {
+  const a = new SesAkisi(() => {}, temizle, undefined, secenek?.sinirsiz ? Number.POSITIVE_INFINITY : SOZ_BEAT_SINIRI)
   a.ekle(String(ekran || ''))
   return a.bitir()
 }
@@ -188,4 +190,15 @@ export function konusmaYap(ekran: string, temizle?: (cumle: string) => string): 
 export function dolguSec(mesaj: string, g: { onay: boolean; vazgec: boolean; sosyal: boolean }): string {
   if (g.vazgec || g.sosyal || !String(mesaj || '').trim()) return ''
   return g.onay ? DOLGU_KAYDEDIYORUM : ''
+}
+
+/**
+ * NOTYA-SES-OKU-01 (Dr. Gökhan, 2026-09-26: "Devamını ekranda görüyorum ama sen bana anlat"): the doctor asks
+ * to HEAR the answer that is already on screen. No model call — the screen text is read aloud without the
+ * sentence cap. Lists are still summarised ("N madde") because a list is not speech; prose is read in full.
+ */
+const OKU_ISTEGI = /(?:bana\s+(?:anlat|oku|söyle)|anlat(?:ır|sana)?\s*mısın|anlat\s*bakalım|devam(?:ını|ı)?\s*(?:anlat|oku|söyle)|sesli\s*(?:anlat|oku|söyle)|oku(?:r|sana)?\s*mısın|ekrandakini\s*(?:anlat|oku)|sen\s+bana\s+anlat|tamamını\s*(?:anlat|oku)|hepsini\s*(?:anlat|oku)|(?:^|\s)oku(?:sana)?\s*[.!?]?\s*$)/iu
+export function okumaIstegiMi(mesaj: string): boolean {
+  const m = String(mesaj || '').trim()
+  return m.length <= 160 && OKU_ISTEGI.test(m)
 }

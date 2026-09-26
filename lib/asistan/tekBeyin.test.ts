@@ -452,3 +452,13 @@ describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', 
     assert.equal(z.bitis, 'stop')
   })
 })
+
+describe('NOTYA-SES-OKU-01: "bana anlat" ekrandaki cevabı sınırsız okur, model çağrılmaz', () => {
+  it('okumaIstegiMi ve sınırsız okuma', () => {
+    for (const m of ['Bana anlatır mısın lütfen? Devamını ekranda görüyorum ama sen bana anlat.', 'devamını oku', 'Sesli anlat', 'oku', 'Hepsini anlat Ayşe']) assert.ok(K.okumaIstegiMi(m), m)
+    for (const m of ['Umutcan Türkoğlu kaç kilo?', 'aşıları tam mı', 'anlatılan şikayet nedir']) assert.ok(!K.okumaIstegiMi(m), m)
+    const uzun = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi. Sekiz.'
+    assert.equal(K.konusmaYap(uzun, undefined, { sinirsiz: true }), uzun)
+    assert.equal(K.konusmaYap(uzun), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+  })
+})
