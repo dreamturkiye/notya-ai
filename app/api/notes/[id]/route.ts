@@ -169,3 +169,32 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     duzenlemeSayisi,
   })
 }
+
+
+/**
+ * NOTYA-NOT-SIL-01 (Kaan, 2026-09-26): onay bekleyen (taslak) not silinebilir; onaylı not
+ * tıbbi kayıttır, silinemez. Sahiplik pratikOturum + doctor_id ile doğrulanır.
+ * Nota bağlı gevşek referanslar (cihaz ölçümü, belge analizi, aşı kaynağı) önce koparulur,
+ * düzenleme günlüğü silinir; kalan bir FK engeli varsa 409 ile açıkça söylenir.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const oturum = await pratikOturum(req)
+  if ('hata' in oturum) return oturum.hata
+  const { supabase, doktorId } = oturum
+  const { id } = await params
+  const { data: not } = await supabase
+    .from('notes')
+    .select('id, approved_at')
+    .eq('id', id)
+    .eq('doctor_id', doktorId)
+    .maybeSingle()
+  if (!not) return NextResponse.json({ error: 'Not bulunamadı.' }, { status: 404 })
+  if (not.approved_at) return NextResponse.json({ error: 'Onaylı not silinemez — tıbbi kayıttır.' }, { status: 409 })
+  await supabase.from('cihaz_olcumleri').update({ note_id: null }).eq('note_id', id)
+  await supabase.from('belge_analizleri').update({ note_id: null }).eq('note_id', id)
+  await supabase.from('asilar').update({ kaynak_note_id: null }).eq('kaynak_note_id', id)
+  await supabase.from('not_duzenlemeleri').delete().eq('note_id', id)
+  const { error } = await supabase.from('notes').delete().eq('id', id).eq('doctor_id', doktorId)
+  if (error) return NextResponse.json({ error: 'Bu nota bağlı kayıtlar var, silinemedi.' }, { status: 409 })
+  return NextResponse.json({ silindi: true })
+}

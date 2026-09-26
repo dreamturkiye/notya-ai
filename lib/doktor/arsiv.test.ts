@@ -32,7 +32,7 @@ const IZINLI: Record<string, { adet: number; neden: string }> = {
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/arsivle/route.ts': { adet: 1, neden: 'archive management: ownership check + reads archived_at' },
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/arsivden-cikar/route.ts': { adet: 1, neden: 'archive management: ownership check + reads archived_at' },
   'app/api/doktor/hastalar/[id]/sessions/[sessionId]/kalici-sil/route.ts': { adet: 2, neden: 'archive management: permanent delete of an already-archived muayene' },
-  'app/api/notes/[id]/route.ts': { adet: 1, neden: 'open one note by id — allowed for archived, page shows the "Arşivde" banner' },
+  'app/api/notes/[id]/route.ts': { adet: 2, neden: 'open (GET) and delete (DELETE, NOTYA-NOT-SIL-01) one note by id — both ownership-scoped; a draft stays deletable even when its muayene is archived' },
   'app/api/doktor/medula/recete/route.ts': { adet: 1, neden: 'open one note by id (reçete) — allowed for archived, page shows the "Arşivde" banner' },
   'app/api/notes/[id]/approve/route.ts': { adet: 1, neden: 'doctor action on one note by id (approve), ownership-scoped' },
   'app/api/notes/[id]/ilac-sonlandir-geri-al/route.ts': { adet: 1, neden: 'Geri al after approving one note by id, ownership-scoped (same note as approve)' },

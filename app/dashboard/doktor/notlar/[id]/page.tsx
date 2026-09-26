@@ -286,6 +286,17 @@ export default function NotSayfasi() {
   }, [taslak.plan, veri?.not.id]);
 
   /** ilacOnayli: İlaç uyum kartından gelen (hekimin seçtiği) İlaçlar metni — varsa kontroller atlanır. */
+  /** NOTYA-NOT-SIL-01: yalnız onay bekleyen (taslak) not silinebilir; onaylı not tıbbi kayıttır. */
+  const notuSil = async () => {
+    if (!window.confirm('Bu taslak not silinsin mi? Bu işlem geri alınamaz.')) return;
+    try {
+      const t = await ensureDoctorAccessToken();
+      const r = await fetch(`/api/notes/${params.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${t}` } });
+      if (!r.ok) { const j = await r.json().catch(() => null); window.alert(j?.error || 'Not silinemedi.'); return; }
+      router.push(hasta.patientId ? hastaDosyasiYolu(hasta.patientId, 'muayene') : '/dashboard/doktor');
+    } catch { window.alert('Not silinemedi.'); }
+  };
+
   const kaydetVeOnayla = async (ilacOnayli?: string) => {
     if (ilacOnayli === undefined) {
       // NOTYA-ASI-NOT-04: boş yapılı aşı listesi + metinde aşı uygulandı ipucu → onaydan önce hatırlat.
@@ -371,24 +382,28 @@ export default function NotSayfasi() {
       <div style={{ position: 'sticky', top: 0, zIndex: 5, background: '#F6F0E4', borderBottom: '1px solid rgba(58,44,34,0.1)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <GeriLink
           href={notDuzenleGeriHref(hasta.patientId)}
-          ileriHref={`/dashboard/doktor/notlar/${not.id}/yazdir`}
-          ileriLabel="Yazdır / PDF"
         >
           {hasta.patientId ? '← Muayene Geçmişi' : '← Hastalar'}
         </GeriLink>
-        <a href={hastaDosyasiYolu(hasta.patientId, 'muayene')} style={{ color: CHROME_RENK.muted, fontSize: 13, textDecoration: 'none' }}>{hasta.patientId ? 'Muayene Geçmişi →' : 'Hastalar →'}</a>
+        
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>{hasta.ad} <span style={{ color: CHROME_RENK.muted, fontWeight: 500 }}>· {bransEtiketi(not.specialty)} · {trTarih(not.createdAt)}</span></div>
-          <div style={{ fontSize: 12, color: onayli ? '#2E6E4E' : '#B4832F' }}>
-            {onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}
+          <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
+            <span style={{ padding: '2px 10px', borderRadius: 999, fontWeight: 700, fontSize: 11.5, background: onayli ? 'rgba(46,110,78,0.12)' : 'rgba(180,131,47,0.14)', color: onayli ? '#2E6E4E' : '#B4832F', border: `1px solid ${onayli ? 'rgba(46,110,78,0.35)' : 'rgba(180,131,47,0.4)'}` }}>{onayli ? `Onaylı — ${trTarih(not.approvedAt)}` : 'Onay bekliyor'}</span>
+            <span style={{ color: '#B4832F' }}>
             {degisti ? ' · kaydedilmemiş değişiklik var' : ''}
             {aiDurum === 'bekliyor' ? ' · Ayşe notu yeniden okuyor…' : ''}
             {aiDurum === 'guncellendi' ? ' · öneriler güncellendi' : ''}
-            {aiDurum === 'hata' ? ' · AI öneri güncellemesi başarısız' : ''}
+            {aiDurum === 'hata' ? ' · AI öneri güncellemesi başarısız' : ''}</span>
           </div>
         </div>
         <a href={`/dashboard/doktor/notlar/${not.id}/yazdir`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.ink, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(58,44,34,0.16)', borderRadius: 999, padding: '7px 12px' }}>🖨️ Yazdır / PDF</a>
         <a href={`/dashboard/doktor/notlar/${not.id}/recete`} target="_blank" rel="noreferrer" style={{ color: CHROME_RENK.pine, fontSize: 13, textDecoration: 'none', border: '1px solid rgba(47,67,52,0.4)', borderRadius: 999, padding: '7px 12px' }}>🧾 Reçete</a>
+        {!onayli && (
+          <button type="button" onClick={() => { void notuSil() }} disabled={durum === 'kaydediyor'} style={{ background: 'transparent', border: '1px solid rgba(178,58,58,0.5)', color: '#B23A3A', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            Sil
+          </button>
+        )}
         <button type="button" onClick={() => { void kaydetVeOnayla() }} disabled={durum === 'kaydediyor'} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: aiDurum === 'bekliyor' ? 0.85 : 1 }}>
           {durum === 'kaydediyor' ? 'Kaydediliyor…' : durum === 'kaydedildi' ? '✓ Onaylandı' : onayli ? 'Kaydet ve yeniden onayla' : 'Onayla'}
         </button>
