@@ -134,14 +134,18 @@ const MENU_IKON = (
   </svg>
 );
 
-/** Back target for a page that is not itself a nav root. Nearest section, so the link always exists. */
+/** Phone back target. Ana Sayfa has none. A section (Randevular, Araçlar, …) returns home.
+ *  A page inside a section returns that section (Hedef Boy → Araçlar). */
 function mobilGeri(pathname: string | null): { yol: string; etiket: string } | null {
   if (!pathname) return null;
   const temiz = pathname.replace(/\/$/, '') || '/';
-  if (navItems.some((i) => i.route === temiz)) return null;
-  const sahip = [...navItems].sort((a, b) => b.route.length - a.route.length).find((i) => temiz.startsWith(`${i.route}/`));
-  if (!sahip) return { yol: '/dashboard/doktor', etiket: 'Ana Sayfa' };
-  return { yol: sahip.route, etiket: sahip.label };
+  if (temiz === '/dashboard/doktor') return null;
+  const sahip = [...navItems]
+    .filter((i) => i.route !== '/dashboard/doktor')
+    .sort((a, b) => b.route.length - a.route.length)
+    .find((i) => temiz === i.route || temiz.startsWith(`${i.route}/`));
+  if (sahip && temiz !== sahip.route) return { yol: sahip.route, etiket: sahip.label };
+  return { yol: '/dashboard/doktor', etiket: 'Ana Sayfa' };
 }
 
 function sekmeAktif(route: string, pathname: string | null): boolean {

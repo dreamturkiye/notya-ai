@@ -143,11 +143,11 @@ export function HedefBoyAracPaneli({
     <div>
       {!aileGoster && (
         <>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#E8C547', letterSpacing: '1.4px' }}>PEDİATRİ · AİLEYE GÖSTER</div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, margin: '6px 0 8px', letterSpacing: '-0.4px' }}>
+          <div className="hedef-boy-kicker" style={{ fontSize: 11, fontWeight: 800, color: '#E8C547', letterSpacing: '1.4px' }}>PEDİATRİ · AİLEYE GÖSTER</div>
+          <h2 className="hedef-boy-baslik" style={{ fontSize: 22, fontWeight: 800, margin: '6px 0 8px', letterSpacing: '-0.4px' }}>
             Anne-Baba Boylarına Göre Hedef Boy
           </h2>
-          <p style={{ color: '#9CA3AF', fontSize: 14, maxWidth: 720, lineHeight: 1.5, margin: '0 0 18px' }}>
+          <p className="hedef-boy-aciklama" style={{ color: '#9CA3AF', fontSize: 14, maxWidth: 720, lineHeight: 1.5, margin: '0 0 18px' }}>
             Baba ve anne boyunu girin — stüdyo bu sayfada açılır. Dizüstü bilgisayarı veya telefonu ebeveyne çevirin.
           </p>
         </>
@@ -185,6 +185,8 @@ export function HedefBoyAracPaneli({
                   key={val}
                   type="button"
                   onClick={() => setCinsiyet(val)}
+                  className="hedef-boy-cins"
+                  data-secili={cinsiyet === val ? 'true' : 'false'}
                   style={{
                     flex: 1,
                     padding: '10px 12px',
@@ -211,7 +213,7 @@ export function HedefBoyAracPaneli({
               placeholder="Çocuk adı yazın…"
             />
             {hastaAd && (
-              <div style={{ marginTop: 8, fontSize: 13, color: '#CBD5E1' }}>
+              <div className="hedef-boy-hasta" style={{ marginTop: 8, fontSize: 13, color: '#CBD5E1' }}>
                 {hastaAd}
                 {cinsiyet ? ` · ${cinsiyet === 'Kadın' ? 'Kız' : cinsiyet}` : ''}
               </div>
@@ -266,15 +268,32 @@ export function HedefBoyAracPaneli({
             </p>
           )}
           {!aileGoster && gorsel && (
-            <p style={{ fontSize: 12.5, color: '#8FA0B5', lineHeight: 1.55, margin: '10px 4px 0' }}>
+            <p className="hedef-boy-not" style={{ fontSize: 12.5, color: '#8FA0B5', lineHeight: 1.55, margin: '10px 4px 0' }}>
               Formül {gorsel.formul}. Aralık ±8,5 cm. «Aileye göster» ile ekranı ebeveyne çevirin.
             </p>
           )}
         </div>
       </div>
       <style>{`
-        @media (max-width: 860px) {
+        @media (max-width: 899px) {
+          .hedef-boy-sayfa { min-height: 0 !important; }
+          .hedef-boy-icerik { padding: 4px 0 28px !important; }
           .hedef-boy-grid { grid-template-columns: 1fr !important; }
+          .hedef-boy-kicker { color: #2f4334 !important; letter-spacing: 0.08em !important; }
+          .hedef-boy-baslik { color: #2e251d !important; font-size: 26px !important; line-height: 1.15 !important; }
+          .hedef-boy-aciklama, .hedef-boy-not, .hedef-boy-hasta { color: #6e6256 !important; }
+          .hedef-boy-cins {
+            min-height: 44px;
+            background: #faf6ee !important;
+            color: #3b2e24 !important;
+            border: 1px solid rgba(58,44,34,0.16) !important;
+          }
+          .hedef-boy-cins[data-secili="true"] {
+            background: #2f4334 !important;
+            color: #faf6ee !important;
+            border-color: #2f4334 !important;
+          }
+          figure[data-hedef-boy="manken"] { zoom: 0.58; }
         }
       `}</style>
     </div>
