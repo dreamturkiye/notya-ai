@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   const html = `<!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8">
-<title>Danismanlik Notu - ${müşteri_name}</title>
+<title>Danışmanlık Notu - ${müşteri_name}</title>
 <style>
   body { font-family: Georgia, 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #1a1a1a; font-size: 14px; line-height: 1.6; }
   .header { border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; margin-bottom: 30px; }
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   <div class="müşavir-info">${müşavir_name} &nbsp;|&nbsp; SMMM</div>
   <div class="meta-row"><span>Dosya No: ${dosyaNo}</span><span>Tarih: ${today}</span><span>Müşteri: ${müşteri_name}</span></div>
 </div>
-<h2>Konu ve Görüşme Ozeti</h2>
+<h2>Konu ve Görüşme Özeti</h2>
 <p><strong>${note_data.konu}</strong></p><p>${note_data.müşteri_ozeti}</p>
 <p><em>Görüşme Turu: ${note_data.görüşme_turu}</em></p>
 <h2>Yasal Dayanak</h2><ol>
@@ -74,12 +74,12 @@ ${(note_data.tespitler||[]).map((t: string) => '<li>' + t + '</li>').join('')}
 ${(note_data.tavsiyeler||[]).map((t: string) => '<li>&#x2713; ' + t + '</li>').join('')}
 </ul>
 <h2>Riskler</h2>
-<table><tr><th>Risk</th><th>Oneri</th><th>Seviye</th></tr>
+<table><tr><th>Risk</th><th>Öneri</th><th>Seviye</th></tr>
 ${(note_data.riskler||[]).map((r: {risk:string;oneri:string;seviye:string}) => 
   '<tr><td>' + r.risk + '</td><td>' + r.oneri + '</td><td style="color:' + severityColor(r.seviye) + ';font-weight:bold">' + r.seviye.toUpperCase() + '</td></tr>').join('')}
 </table>
 <h2>Eylem Maddeleri</h2>
-<table><tr><th>Gorev</th><th>Sorumlu</th><th>Son Tarih</th><th>Oncelik</th></tr>
+<table><tr><th>Görev</th><th>Sorumlu</th><th>Son Tarih</th><th>Öncelik</th></tr>
 ${(note_data.eylem_maddeleri||[]).map((e: {gorev:string;sorumlu:string;son_tarih?:string;oncelik:string}) => 
   '<tr><td>' + e.gorev + '</td><td>' + e.sorumlu + '</td><td>' + (e.son_tarih||'-') + '</td><td>' + e.oncelik + '</td></tr>').join('')}
 </table>
@@ -93,7 +93,7 @@ ${(note_data.beyan_tarihleri||[]).map((b: {beyan:string;tarih:string}) => '<li>&
 ${(note_data.onemli_uyarilar||[]).map((u: string) => '<div class="alert">&#9888; ' + u + '</div>').join('')}
 <div class="footer">
   <p>Bu danismanlik notu <strong>${müşavir_name}</strong> (SMMM) tarafindan Notya AI destegiyle hazırlanmistir.</p>
-  <p>Mesleki sorumluluk sigortasi kapsamindadir. Tarih: ${today}</p>
+  <p>Mesleki sorumluluk sigortası kapsamındadır. Tarih: ${today}</p>
   <div class="sig-line"></div><p style="margin-top:4px;font-size:11px">${müşavir_name} - SMMM Imzasi</p>
 </div></body></html>`
 

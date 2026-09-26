@@ -74,7 +74,7 @@ export default function HastaKdChapter({
       </summary>
       <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
         <p style={{ margin: 0, fontSize: 12, color: CHROME_RENK.muted }}>
-          TR pratik gold: ACOG. Yasal taban: DÖBYR 2026. Ders kitabı: Williams. Çelişince iki sütun — birleştirilmez.
+          TR pratiğinde altın standart: ACOG. Yasal taban: DÖBYR 2026. Ders kitabı: Williams. Çelişince iki sütun — birleştirilmez.
         </p>
         <GebeKarti
           payload={payload}

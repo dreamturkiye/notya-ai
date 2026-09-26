@@ -20,7 +20,7 @@ export type Ref =
 export type Dipnot = { ref: Ref; not: string }
 
 export const REF_ACIKLAMA: Record<Ref, string> = {
-  TCD: 'Türk Cerrahi Derneği (TCD) klinik kılavuz ve konsensusları; güncel metni hekim doğrular',
+  TCD: 'Türk Cerrahi Derneği (TCD) klinik kılavuz ve konsensüsleri; güncel metni hekim doğrular',
   SB_CERRAHI: 'T.C. Sağlık Bakanlığı — ameliyathane güvenliği / cerrahi klinik protokolleri; ayaktan izlem yeterli değildir',
   TKRCD: 'Türk Kolon ve Rektum Cerrahisi Derneği (TKRCD) ilgili rehberler — TR uygulama derinliği',
   UTACD: 'Ulusal Travma ve Acil Cerrahi Derneği (UTACD) travma yaklaşımları (TR)',
@@ -35,7 +35,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Şiddetli karın ağrısı + ateş/kusma, bol kanama, sıkışmış fıtık, ameliyat sonrası ateş + kötüleşen karın, gaz-gaita çıkaramama ile kusma varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan genel cerrahi muayenehanesi / polikliniği ürünü. Ameliyathane planlaması, OR scheduling, full surgical HIS ve canlı Medula e-imza bu bölümün kapsamı değildir.'
+  'Ayaktan genel cerrahi muayenehanesi / polikliniği ürünü. Ameliyathane planlaması, tam cerrahi HIS ve canlı Medula e-imza bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

@@ -167,7 +167,7 @@ export default function NefrolojiHome({ patientId }: { patientId: string }) {
               {v.serit.planTaslagi.map((p) => <div key={p} style={metin}>• {p}</div>)}
             </>
           )}
-          <div style={{ ...etiket, marginTop: 12 }}>İlaç sınıfı checklist (doz yok)</div>
+          <div style={{ ...etiket, marginTop: 12 }}>İlaç sınıfı kontrol listesi (doz yok)</div>
           {v.kutuphane.ilacUyariListesi.map((x) => <div key={x} style={kucuk}>☐ {x}</div>)}
           <div style={{ ...kucuk, marginTop: 10 }}>{v.kutuphane.hekimKilidi}</div>
           <div style={kucuk}>{v.kutuphane.kapsam}</div>

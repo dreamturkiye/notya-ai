@@ -25,7 +25,7 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   SB_ORTO: 'T.C. Sağlık Bakanlığı — travma / kırık / acil ortopedi klinik protokolleri; ayaktan izlem yeterli değildir',
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — protez, implant, ortopedik malzeme rapor koşulları; güncel metin hekim teyidi',
   TITCK: 'TİTCK — KÜB; ilaç dozu Notya tarafından üretilmez',
-  VAS: 'VAS (Visual Analog Scale) 0–10 — ağrı şiddeti karar desteğidir; tanı değildir',
+  VAS: 'VAS (Vizüel Analog Skala) 0–10 — ağrı şiddeti karar desteğidir; tanı değildir',
   FONKSIYON: 'Mini fonksiyon maddeleri — günlük aktivite kısıt şiddet bandı; tanı veya engellilik kararı değildir',
 }
 
@@ -36,7 +36,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Şiddetli şişlik + dayanılmaz ağrı (kompartman şüphesi), ani his/güç kaybı, açık kırık, ateşli sıcak eklem, bel+bacak+idrar/gaita kontrol kaybı veya çıkıkta nabız kaybı varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan ortopedi muayenehanesi / polikliniği ürünü. Ameliyathane planlaması, OR scheduling, cerrahi HIS ve canlı Medula e-imza bu bölümün kapsamı değildir.'
+  'Ayaktan ortopedi muayenehanesi / polikliniği ürünü. Ameliyathane planlaması, cerrahi HIS ve canlı Medula e-imza bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

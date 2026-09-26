@@ -144,8 +144,8 @@ export function JinekolojiWowSekmeler({
         {acil?.oneri && <div style={{ fontSize: 12, color: CHROME_RENK.ink, marginTop: 8 }}><b>{acil.oneri}</b></div>}
         {acil?.secenekler?.map((c) => <div key={c.ad} style={{ fontSize: 12, color: CHROME_RENK.ink, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}><b>{c.ad}</b> · {c.pencere} · {c.etkinlik}<div style={kucuk}>{c.not}</div></div>)}
         {acil?.sonrasi?.map((x) => <div key={x} style={kucuk}>→ {x}</div>)}
-        {acil?.mec && <div style={{ marginTop: 8, fontSize: 12, color: acil.mec.kategori >= 4 ? '#F87171' : acil.mec.kategori === 3 ? '#FBBF24' : '#0F9B8E' }}>MEC {acil.mec.yontem}: kat {acil.mec.kategori} — {acil.mec.not}{acil.mec.engeller?.map((e) => <div key={e}>✖ {e}</div>)}{acil.mec.dikkat?.map((e) => <div key={e}>⚠ {e}</div>)}</div>}
-        {acil?.postpartum?.map((p) => <div key={p.yontem} style={{ fontSize: 12, color: CHROME_RENK.ink }}>{p.yontem}: {p.baslangic} <span style={kucuk}>{p.not}</span></div>)}
+        {acil?.mec && <div style={{ marginTop: 8, fontSize: 12, color: acil.mec.kategori >= 4 ? '#F87171' : acil.mec.kategori === 3 ? '#FBBF24' : '#0F9B8E' }}>MEC {YONTEM_KATALOG.find((y) => y.kod === acil.mec!.yontem)?.ad ?? acil.mec.yontem}: kat {acil.mec.kategori} — {acil.mec.not}{acil.mec.engeller?.map((e) => <div key={e}>✖ {e}</div>)}{acil.mec.dikkat?.map((e) => <div key={e}>⚠ {e}</div>)}</div>}
+        {acil?.postpartum?.map((p) => <div key={p.yontem} style={{ fontSize: 12, color: CHROME_RENK.ink }}>{YONTEM_KATALOG.find((y) => y.kod === p.yontem)?.ad ?? p.yontem}: {p.baslangic} <span style={kucuk}>{p.not}</span></div>)}
       </div>
     )
   }
@@ -242,7 +242,7 @@ export function JinekolojiWowSekmeler({
           <input value={s('kilo')} onChange={(e) => set('kilo', e.target.value)} placeholder="g" style={{ ...toolsInput, width: 70 }} />
           <select value={s('canli')} onChange={(e) => set('canli', e.target.value)} style={{ ...toolsInput, width: 'auto' }}><option value="canli" style={{ color: '#000' }}>canlı</option><option value="olu" style={{ color: '#000' }}>ölü</option></select>
           <input value={s('cin')} onChange={(e) => set('cin', e.target.value)} placeholder="cinsiyet" style={{ ...toolsInput, width: 90 }} />
-          <button type="button" onClick={() => calistir({ adim: 'e_dogum', payload: { dogum_tarih_saat: s('dz'), dogum_sekli: s('sekil'), gebelik_haftasi: s('hf'), kilo: s('kilo'), canli_olu: s('canli') || 'canli', cinsiyet: s('cin'), dogum_yeri: 'klinik', anne_tc: 'hasta' } }, 'e-Doğum USS paketı hazır.')} style={btn}>Paket oluştur</button>
+          <button type="button" onClick={() => calistir({ adim: 'e_dogum', payload: { dogum_tarih_saat: s('dz'), dogum_sekli: s('sekil'), gebelik_haftasi: s('hf'), kilo: s('kilo'), canli_olu: s('canli') || 'canli', cinsiyet: s('cin'), dogum_yeri: 'klinik', anne_tc: 'hasta' } }, 'e-Doğum USS paketi hazır.')} style={btn}>Paket oluştur</button>
         </div>
         {e?.tamam === false && <div style={{ color: '#FBBF24', fontSize: 12 }}>Eksik zorunlu alanlar var</div>}
         {e?.uyari?.map((u) => <div key={u} style={{ color: '#F87171', fontSize: 12 }}>⚠ {u}</div>)}
@@ -310,7 +310,7 @@ export function JinekolojiWowSekmeler({
           <button type="button" onClick={() => calistir({ adim: 'onkoloji_iota', kistSolid: b('sol'), asit: b('asit'), papiller: b('pap'), dopplerGuclu: b('dop'), menopoz: b('mp'), ca125: s('ca') }, 'IOTA triyaj.')} style={btn}>Onkoloji triyaj</button>
         </div>
         {u && <div style={{ fontSize: 12, color: CHROME_RENK.ink }}>Ürojine öncelik: {u.oncelik}{u.gorevler?.map((g) => <div key={g}>• {g}</div>)}<div style={kucuk}>{u.not}</div></div>}
-        {o && <div style={{ fontSize: 12, color: o.sevk ? '#F87171' : '#0F9B8E' }}>Over risk: {o.risk} {o.sevk ? '→ SEVK' : ''}{o.not?.map((n) => <div key={n} style={kucuk}>{n}</div>)}</div>}
+        {o && <div style={{ fontSize: 12, color: o.sevk ? '#F87171' : '#0F9B8E' }}>Over risk: {({ benign_olasi: 'benign olası', ara: 'ara grup', yuksek: 'yüksek' } as Record<string, string>)[o.risk ?? ''] ?? o.risk} {o.sevk ? '→ SEVK' : ''}{o.not?.map((n) => <div key={n} style={kucuk}>{n}</div>)}</div>}
       </div>
     )
   }
@@ -343,7 +343,7 @@ export function JinekolojiWowSekmeler({
           <input type="date" value={s('kokb')} onChange={(e) => set('kokb', e.target.value)} style={{ ...toolsInput, width: 140 }} />
           <button type="button" onClick={() => calistir({ adim: 'kok_yillik', baslangic: s('kokb') }, 'KOK yıllık güvenlik görevi.')} style={ghost}>KOK yıllık görev</button>
         </div>
-        {sid && <div style={{ fontSize: 12, color: sid.durum === 'evet' ? '#F87171' : CHROME_RENK.muted }}>{sid.durum}: {sid.not}{sid.gorevler?.map((g) => <div key={g}>• {g}</div>)}</div>}
+        {sid && <div style={{ fontSize: 12, color: sid.durum === 'evet' ? '#F87171' : CHROME_RENK.muted }}>{({ sorulmadi: 'Sorulmadı', hayir: 'Hayır', evet: 'Evet' } as Record<string, string>)[sid.durum ?? ''] ?? sid.durum}: {sid.not}{sid.gorevler?.map((g) => <div key={g}>• {g}</div>)}</div>}
         {kok && <div style={{ fontSize: 12, color: CHROME_RENK.ink }}>KOK yıllık due {kok.due}: {kok.maddeler.join(', ')}</div>}
       </div>
     )

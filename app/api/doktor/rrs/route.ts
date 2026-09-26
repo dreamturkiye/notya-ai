@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   if (engel) return engel
   const sb = oturum.supabase
   const body = await req.json().catch(() => ({})) as { noteId?: string; renk?: string; satirlar?: unknown[] }
-  if (!body.noteId || !body.renk || !RENKLER.has(body.renk)) return NextResponse.json({ error: 'noteId ve renk (kirmizi|yesil) zorunludur.' }, { status: 400 })
+  if (!body.noteId || !body.renk || !RENKLER.has(body.renk)) return NextResponse.json({ error: 'noteId ve renk (kırmızı ya da yeşil) zorunludur.' }, { status: 400 })
   const satirlar = Array.isArray(body.satirlar) ? body.satirlar.slice(0, 30) : []
   if (satirlar.some((s) => JSON.stringify(s).match(/\b\d{11}\b/))) return NextResponse.json({ error: 'Satırlarda TC olamaz.' }, { status: 400 })
 

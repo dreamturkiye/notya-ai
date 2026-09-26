@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 
 type Props = {
   token: string
@@ -36,7 +37,7 @@ export function PinGate({ token, onUnlocked }: Props) {
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         if ((json as { code?: string }).code === 'legacy_no_pin') setLegacy(true)
-        setError(String((json as { error?: string }).error || 'PIN doğrulanamadı'))
+        setError(turkceHataMesaji((json as { error?: string }).error) || 'PIN doğrulanamadı. Lütfen tekrar deneyin.')
         setPin('')
         inputRef.current?.focus()
         return

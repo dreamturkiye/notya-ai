@@ -45,7 +45,7 @@ export default function RadyoKritikAraci() {
             {m.ad}
           </label>
         ))}
-        <div style={{ ...radyoStil.etiket, marginTop: 12 }}>Klinisyen bildirimi checklist</div>
+        <div style={{ ...radyoStil.etiket, marginTop: 12 }}>Klinisyen bildirimi kontrol listesi</div>
         {BILDIRIM_MADDELER.map((m) => (
           <label key={m.kod} style={{ ...radyoStil.metin, display: 'flex', gap: 8, padding: '3px 0' }}>
             <input type="checkbox" checked={bildirim.includes(m.kod)} onChange={() => setBildirim((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />

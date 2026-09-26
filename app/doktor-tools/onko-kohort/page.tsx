@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <OnkoAracKabugu route="/doktor-tools/onko-kohort" baslik="Onkoloji kohort paneli" aciklama="Geciken kontrol · kür · toksisite · açık acil · görüntü zaman çizelgesi · 1-tap hatırlatma.">
+    <OnkoAracKabugu route="/doktor-tools/onko-kohort" baslik="Onkoloji kohort paneli" aciklama="Geciken kontrol · kür · toksisite · açık acil · görüntü zaman çizelgesi · tek dokunuşla hatırlatma.">
       <OnkoKohortAraci />
     </OnkoAracKabugu>
   )

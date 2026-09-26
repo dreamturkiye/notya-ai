@@ -31,10 +31,10 @@ export async function POST(req: NextRequest) {
   const dosya_url = 'hasta-belgeler/' + uploadData.path
   const { data: imzali } = await sb.storage.from('hasta-belgeler').createSignedUrl(uploadData.path, 600)
   const sysMap: Record<string,string> = {
-    'Lab Sonucu': 'Tibbi lab belgesi. JSON: {"testler":[{"ad":"","deger":"","birim":"","referansAralik":"","anormal":false}],"labAdi":"","tarih":""}',
+    'Lab Sonucu': 'Tıbbi lab belgesi. JSON: {"testler":[{"ad":"","deger":"","birim":"","referansAralik":"","anormal":false}],"labAdi":"","tarih":""}',
     'Goruntulemeler': 'Radyoloji. JSON: {"modalite":"","bolge":"","bulgular":"","izlenim":"","radyolog":"","tarih":""}',
   }
-  const systemPrompt = sysMap[belgeType] || 'Tibbi belge. JSON: {"tip":"","icerik":"","tarih":""}'
+  const systemPrompt = sysMap[belgeType] || 'Tıbbi belge. JSON: {"tip":"","icerik":"","tarih":""}'
   let aiOzet: Record<string,unknown> = {}
   try {
     const raw = await groqChat([
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       { role: 'user', content: 'Analiz et. Sadece JSON.' }
     ], { temperature: 0.1, maxTokens: 1500, jsonMode: true })
     aiOzet = JSON.parse(raw)
-  } catch { aiOzet = { hata: 'basarisiz' } }
+  } catch { aiOzet = { hata: 'başarısız' } }
   const { data: belge, error } = await sb.from('hasta_belgeler')
     .insert({ doctor_id: user.id, patient_id: hastaId, belge_turu: belgeType, dosya_url, ai_ozet: aiOzet, inceleme_bekliyor: true })
     .select().single()

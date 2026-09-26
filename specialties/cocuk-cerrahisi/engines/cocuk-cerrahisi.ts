@@ -22,20 +22,20 @@ export type Dipnot = { ref: Ref; not: string }
 export const REF_ACIKLAMA: Record<Ref, string> = {
   CCD: 'Çocuk Cerrahisi Derneği klinik pratik kaynakları; güncel metni hekim doğrular',
   SB_CERRAHI: 'T.C. Sağlık Bakanlığı — cerrahi güvenlik / çocuk cerrahisi klinik protokolleri',
-  TCD: 'Türk Cerrahi Derneği ilgili konsensuslar (yetişkin genel cerrahi sızmaz; yalnız ortak güvenlik dili)',
+  TCD: 'Türk Cerrahi Derneği ilgili konsensüsler (yetişkin genel cerrahi sızmaz; yalnız ortak güvenlik dili)',
   SGK_SUT: 'SGK SUT — cerrahi paket / rapor kuralları; güncel metin hekim teyidi',
   TITCK: 'TİTCK — KÜB; ilaç dozu Notya tarafından üretilmez',
-  VELI_ONAM: 'Türk hukuku — 18 yaşını doldurmamış hastada veli/yasal temsilci onamı (VELI-YASAL-ONAM); yaşa göre',
+  VELI_ONAM: 'Türk hukuku — 18 yaşını doldurmamış hastada veli/yasal temsilci onamı; yaşa göre',
 }
 
 export const HEKIM_KILIT_METNI =
-  'Pre/post-op, yara/dren ve onam checklist karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya doz üretmez ve tanı kilitlemez.'
+  'Pre/post-op, yara/dren ve onam kontrol listesi karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya doz üretmez ve tanı kilitlemez.'
 
 export const ACIL_YONLENDIRME_METNI =
   'Şiddetli karın ağrısı + ateş/kusma, sıkışmış fıtık, ameliyat sonrası ateş ile kötüleşme veya gaz-gaita çıkaramama ile kusma varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan çocuk cerrahisi muayenehanesi / polikliniği ürünü. OR scheduling, full HIS, pediatri büyüme/Neyzi studio ve canlı Medula e-imza bu bölümün kapsamı değildir.'
+  'Ayaktan çocuk cerrahisi muayenehanesi / polikliniği ürünü. Ameliyathane planlaması, tam HIS, pediatri büyüme/Neyzi aracı ve canlı Medula e-imza bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth';
 import { bleYetenek, bluetoothOlcumAl } from '@/core/bluetooth/webBluetooth';
 import type { NotyaOlcum } from '@/core/bluetooth/types';
+import { DosyaSecDugmesi } from './DosyaSecDugmesi';
 
 const ETIKET: Record<string, string> = { ates: 'Ateş', tansiyon: 'Tansiyon', nabiz: 'Nabız', spo2: 'SpO₂', kilo: 'Kilo', glukoz: 'Glukoz' };
 
@@ -91,7 +92,7 @@ export function CihazdanAl({ hastaId, notId, onOlcum }: { hastaId: string | null
           </div>
           <div style={{ ...kucuk, marginTop: 4 }}>
             {cihazAdi(olcumler[0])}
-            {olcumler[0].cihaz.seriNo ? ` · SN ${olcumler[0].cihaz.seriNo}` : ''}
+            {olcumler[0].cihaz.seriNo ? ` · Seri no ${olcumler[0].cihaz.seriNo}` : ''}
             {olcumler[0].olcumZamani ? ` · cihaz saati ${new Date(olcumler[0].olcumZamani).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : ''}
           </div>
           <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
@@ -141,7 +142,7 @@ export function CihazDosyasi({ hastaId, notId, onYuklendi }: { hastaId: string |
               {DOSYA_TURLERI.map(([k, ad]) => <option key={k} value={k} style={{ color: '#000' }}>{ad}</option>)}
             </select>
             <input value={cihazAd} onChange={(e) => setCihazAd(e.target.value)} placeholder="Cihaz (örn. Eko CORE 500)" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#EDF1F7', fontSize: 12, padding: '5px 8px', width: 180 }} />
-            <input type="file" accept="audio/*,application/pdf,image/*" onChange={(e) => setDosya(e.target.files?.[0] || null)} style={{ fontSize: 12, color: '#8FA0B5' }} />
+            <DosyaSecDugmesi dosya={dosya} onSec={setDosya} accept="audio/*,application/pdf,image/*" style={{ fontSize: 12, color: '#8FA0B5' }} />
             <button type="button" onClick={yukle} disabled={!dosya || !hastaId || durum === 'yukluyor'} style={{ ...btn, background: '#0F9B8E', color: '#fff', opacity: !dosya || durum === 'yukluyor' ? 0.5 : 1 }}>{durum === 'yukluyor' ? 'Yükleniyor…' : 'Ekle'}</button>
           </div>
           {mesaj && <div style={{ ...kucuk, marginTop: 6, color: durum === 'hata' ? '#F87171' : '#2DD4BF' }}>{mesaj}</div>}

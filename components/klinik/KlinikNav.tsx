@@ -7,13 +7,13 @@ interface KlinikNavProps {
 }
 
 const navItems = [
-  { label: 'Genel Bakis', href: '/dashboard/klinik' },
+  { label: 'Genel Bakış', href: '/dashboard/klinik' },
   { label: 'Hastalar', href: '/dashboard/klinik/hastalar' },
   { label: 'Randevular', href: '/dashboard/klinik/randevular' },
   { label: 'Araçlar', href: '/klinik-tools' },
   { label: 'Uzmanlar', href: '/asistan/klinik' },
-  { label: 'Kullanicilar', href: '/dashboard/klinik/kullanicilar' },
-  { label: 'Klinik Ayarlari', href: '/dashboard/klinik/ayarlar' },
+  { label: 'Kullanıcılar', href: '/dashboard/klinik/kullanicilar' },
+  { label: 'Klinik Ayarları', href: '/dashboard/klinik/ayarlar' },
   { label: 'Pabau', href: '/dashboard/klinik/pabau' },
 ]
 
@@ -59,7 +59,7 @@ export default function KlinikNav({ clinicName, adminName }: KlinikNavProps) {
         <button onClick={logout} style={{
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: '12px', color: '#2563EB', letterSpacing: '0.05em'
-        }}>Cikis</button>
+        }}>Çıkış</button>
       </div>
     </nav>
   )

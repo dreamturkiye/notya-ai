@@ -135,7 +135,7 @@ export default function TaburcuPaketi({
       </label>
 
       <details style={{ marginBottom: 10 }}>
-        <summary style={{ cursor: 'pointer', color: '#FBBF24', fontSize: 13 }}>Ebeveyn reddi (status=red — takvim satırı silinmez)</summary>
+        <summary style={{ cursor: 'pointer', color: '#FBBF24', fontSize: 13 }}>Ebeveyn reddi (ret kaydı — takvim satırı silinmez)</summary>
         <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
           <select value={redKalem} onChange={(e) => setRedKalem(e.target.value)} style={giris}>
             <option value="ntp1">NTP-1</option>

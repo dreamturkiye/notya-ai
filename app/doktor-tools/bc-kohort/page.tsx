@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <BcAracKabugu route="/doktor-tools/bc-kohort" baslik="Beyin cerrahisi kohort paneli" aciklama="Geciken kontrol · post-op · bilinç · açık acil · görüntü — hasta-güvenli 1-tap hatırlatma.">
+    <BcAracKabugu route="/doktor-tools/bc-kohort" baslik="Beyin cerrahisi kohort paneli" aciklama="Geciken kontrol · post-op · bilinç · açık acil · görüntü — tek dokunuşla hasta-güvenli hatırlatma.">
       <BcKohortAraci />
     </BcAracKabugu>
   )

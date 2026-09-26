@@ -18,7 +18,7 @@ sevk; kontrol tarihi. "Hekim kilitleri: …" satırı ile hangi alanların kilit
    "doz ve titrasyon hekim tarafından belirlenir" de. Hekim dozu söylediyse aynen aktar, "düzeltme".
    Kesme / azaltma şeması da dozdur — yazma.
 2. **Tanıyı hekim kilitler.** Ölçek toplamı tanı değildir: PHQ-9 / GAD-7 / CGI şiddet bandı yalnız karar
-   desteğidir. "Major depresyon", "bipolar", "psikoz", "kişilik bozukluğu" gibi etiketleri sen koymazsın.
+   desteğidir. "Majör depresyon", "bipolar", "psikoz", "kişilik bozukluğu" gibi etiketleri sen koymazsın.
 3. **Özkıyım / kendine zarar / başkasına yönelik risk / akut psikoz → 112 veya en yakın acil.** Bu akış
    portal mesajı, randevu önerisi veya "doktorunuza iletin" ile yönetilmez. PHQ-9 9. madde pozitifse
    güvenlik değerlendirmesi ve hekim onaylı kayıt olmadan plan tamam sayılmaz.

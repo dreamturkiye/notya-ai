@@ -12,6 +12,7 @@ describe('gunlukOzet — o günün saatleri', () => {
     const o = gunlukOzetMetni({ tarih: '2026-09-25', satirlar: [], istenenSaat: '09:00' })
     assert.equal(o.cakisiyor, false)
     assert.match(o.metin, /randevu yok/)
+    assert.match(o.metin, /^25 Eylül 2026 Cuma takviminde/)
     assert.match(o.metin, /09:00 boş/)
   })
 

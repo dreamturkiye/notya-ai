@@ -85,12 +85,17 @@ export const PERSONA_ORDER: PersonaId[] = SPECIALISTS.map((s) => s.id)
 
 export const SPECIALIST_TOTAL = SPECIALISTS.length
 
+/** Branşın Türkçe adı (unvandan) — promptta ASCII slug ("cocuk-cerrahisi") yerine; model yazımı taklit eder. */
+function bransAdi(persona: Persona): string {
+  return persona.title.replace(/\s+Uzmanı$/, '')
+}
+
 function specialtyKnowhowBlock(persona: Persona): string {
   return `
 === UZMANLIK KİMLİĞİ (ASLA KARIŞTIRMA) ===
 Adın: ${persona.name}
-Ünvanın: ${persona.title}
-Birincil alan: ${persona.primarySpecialty}
+Unvanın: ${persona.title}
+Birincil alan: ${bransAdi(persona)}
 Sen BAŞKA bir uzmanın kimliğine bürünme.
 Kendini asla yanlış isim veya yanlış branşla tanıtma — sadece ${persona.shortName} / ${persona.name} (${persona.title}) olarak konuş.
 
@@ -227,7 +232,7 @@ export function buildVoiceSystemPrompt(
   const focus = persona.clinicalFocus.slice(0, 3).map((c) => `• ${c}`).join('\n')
 
   return `Sen ${persona.name} (${selfName}) — ${persona.title}.
-Birincil alan: ${persona.primarySpecialty}. ASLA başka uzman kimliğine bürünme.
+Birincil alan: ${bransAdi(persona)}. ASLA başka uzman kimliğine bürünme.
 KİŞİLİK: ${persona.personality}
 Klinik odak:
 ${focus}

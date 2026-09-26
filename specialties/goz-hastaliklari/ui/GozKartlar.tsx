@@ -352,7 +352,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
         <div style={{ overflowX: 'auto', marginTop: 6 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: CHROME_RENK.ink, minWidth: 360 }}>
             <thead><tr style={{ color: CHROME_RENK.muted, textAlign: 'left' }}><th style={{ padding: 4 }}>Tarih</th><th>Göz</th><th>Ajan</th><th>Faz</th><th>Durum</th></tr></thead>
-            <tbody>{v.enjeksiyonlar.map((x) => <tr key={x.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 4 }}>{x.tarih}</td><td>{gozAd(x.goz)}</td><td>{AJAN_ADI[x.ajan]}</td><td>{x.faz === 'yukleme' ? `yükleme ${x.dozNo ?? ''}` : 'idame'}</td><td>{x.durum}{x.durum === 'yapildi' && x.ivtKontrol ? <span style={kucuk} title="IVT odası kontrol listesi">{(x.ivtKontrol as { gecmisKayit?: boolean }).gecmisKayit ? ' · geçmiş kayıt' : ` · ✓ liste${(x.ivtKontrol as { lot?: string }).lot ? ` · lot ${(x.ivtKontrol as { lot?: string }).lot}` : ''}`}</span> : null}{!salt && x.durum === 'planli' && <button type="button" onClick={() => set('ivtId', x.id)} style={{ ...ghost, marginLeft: 6, padding: '2px 8px' }}>yapıldı</button>}</td></tr>)}</tbody>
+            <tbody>{v.enjeksiyonlar.map((x) => <tr key={x.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}><td style={{ padding: 4 }}>{x.tarih}</td><td>{gozAd(x.goz)}</td><td>{AJAN_ADI[x.ajan]}</td><td>{x.faz === 'yukleme' ? `yükleme ${x.dozNo ?? ''}` : 'idame'}</td><td>{({ planli: 'planlı', yapildi: 'yapıldı', iptal: 'iptal' } as Record<string, string>)[x.durum] ?? x.durum}{x.durum === 'yapildi' && x.ivtKontrol ? <span style={kucuk} title="IVT odası kontrol listesi">{(x.ivtKontrol as { gecmisKayit?: boolean }).gecmisKayit ? ' · geçmiş kayıt' : ` · ✓ liste${(x.ivtKontrol as { lot?: string }).lot ? ` · lot ${(x.ivtKontrol as { lot?: string }).lot}` : ''}`}</span> : null}{!salt && x.durum === 'planli' && <button type="button" onClick={() => set('ivtId', x.id)} style={{ ...ghost, marginLeft: 6, padding: '2px 8px' }}>yapıldı</button>}</td></tr>)}</tbody>
           </table>
         </div>
         {!salt && (() => { const x = v.enjeksiyonlar.find((y) => y.id === f.ivtId); return x ? <IvtKontrolPaneli goz={x.goz} maddeler={v.ivtKontrol} iptal={() => set('ivtId', null)} onay={async (k) => { const j = await calistir({ adim: 'enjeksiyon', id: x.id, ivtKontrol: k, enjeksiyon: { goz: x.goz, ajan: x.ajan, endikasyon: x.endikasyon, faz: x.faz, dozNo: x.dozNo ?? undefined, tarih: x.tarih, durum: 'yapildi' } }, 'Yapıldı — IVT kontrol listesi kaydedildi.'); if (j) set('ivtId', null); }} /> : null; })()}
@@ -428,7 +428,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
       <div>
         <div style={etiket}>Katarakt / GİL ön-op <span style={kucuk}>· GİL gücü biyometri cihazı + hekim; Notya hesaplamaz · EK-3/G kod (bedel yok)</span></div>
         {katRows.map((k) => <div key={k.id} style={{ ...metin, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, marginBottom: 6 }}>
-          <b>{gozAd(k.goz)}</b> · {k.durum} · {k.hazirlik.tamam}/{k.hazirlik.toplam}{k.gil_tipi_hekim ? ` · GİL: ${k.gil_tipi_hekim}` : ''}{k.planlanan_tarih ? ` · ${k.planlanan_tarih}` : ''}
+          <b>{gozAd(k.goz)}</b> · {({ planlama: 'planlama', hazir: 'hazır', yapildi: 'yapıldı', iptal: 'iptal' } as Record<string, string>)[k.durum] ?? k.durum} ·{k.hazirlik.tamam}/{k.hazirlik.toplam}{k.gil_tipi_hekim ? ` · GİL: ${k.gil_tipi_hekim}` : ''}{k.planlanan_tarih ? ` · ${k.planlanan_tarih}` : ''}
           {k.gilSgk?.kalem && <div style={kucuk}>SGK EK-3/G: {k.gilSgk.kalem.kod} — {k.gilSgk.kalem.ad}</div>}
           {(k.gilSgk?.uyari || []).map((u) => <div key={u} style={{ color: '#FBBF24' }}>• {u}</div>)}
           {k.hazirlik.eksikZorunlu.map((x) => <div key={x} style={{ color: '#FBBF24' }}>• {x}</div>)}
@@ -455,7 +455,7 @@ export function GozKartlar({ v, sekme, kaynak, salt, calistir }: { v: GozVeri; s
     const kiyasA = s('kiyasA'), kiyasB = s('kiyasB')
     const okumaGoster = (o: Okuma) => (
       <div key={o.id} style={{ marginTop: 4, padding: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
-        <div style={kucuk}>{o.kaynak === 'belge_tier_a' ? `Asistan (Tier A görüntü okuma${o.guven_ust_pct != null ? ` · güven ≤%${o.guven_ust_pct}` : ''}${o.tek_alan ? ' · tek alan' : ''})` : o.kaynak === 'ayse_iskelet' ? 'Asistan kontrol listesi' : o.taslak_yazan === 'asistan' ? 'Asistan / Ayşe taslağı' : 'Uzman taslağı'} · {gozAd(o.goz)} · {o.durum === 'draft' ? 'onay bekliyor' : o.durum}</div>
+        <div style={kucuk}>{o.kaynak === 'belge_tier_a' ? `Asistan (Tier A görüntü okuma${o.guven_ust_pct != null ? ` · güven ≤%${o.guven_ust_pct}` : ''}${o.tek_alan ? ' · tek alan' : ''})` : o.kaynak === 'ayse_iskelet' ? 'Asistan kontrol listesi' : o.taslak_yazan === 'asistan' ? 'Asistan / Ayşe taslağı' : 'Uzman taslağı'} · {gozAd(o.goz)} · {o.durum === 'draft' ? 'onay bekliyor' : o.durum === 'onayli' ? 'onaylı' : o.durum === 'duzeltilmis' ? 'düzeltilmiş' : o.durum === 'reddedildi' ? 'reddedildi' : o.durum}</div>
         <div style={{ whiteSpace: 'pre-wrap' }}>{o.taslak}</div>
         {o.uzman_metin && <div style={{ color: '#0F9B8E' }}>Uzman: {o.uzman_metin}</div>}
         {!salt && o.durum === 'draft' && <div style={satir}>

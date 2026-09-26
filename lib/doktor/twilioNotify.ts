@@ -116,7 +116,7 @@ export async function sendTwilioMessage(opts: {
     const raw =
       json.error_message || json.message || text.slice(0, 180) || `Twilio ${resp.status}`
     const lower = raw.toLowerCase()
-    let error = raw
+    let error = `Mesaj gönderilemedi (Twilio): ${raw}`
     if (
       lower.includes('region indicated') ||
       lower.includes('geo') ||

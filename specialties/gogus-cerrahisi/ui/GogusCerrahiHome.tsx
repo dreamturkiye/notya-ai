@@ -132,7 +132,7 @@ export default function GogusCerrahiHome({ patientId }: { patientId: string }) {
       {sekme === 'Özet' && (
         <div>
           <div style={etiket}>Bu vizit</div>
-          <div style={metin}>Pre-op, tüp/yara ve patoloji köprü karar desteğidir. Tanı / doz / OR planı hekimdedir. CAT/mMRC bu bölümde yoktur.</div>
+          <div style={metin}>Pre-op, tüp/yara ve patoloji köprü karar desteğidir. Tanı / doz / ameliyathane planı hekimdedir. CAT/mMRC bu bölümde yoktur.</div>
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -151,7 +151,7 @@ export default function GogusCerrahiHome({ patientId }: { patientId: string }) {
 
       {sekme === 'Pre-op' && (
         <div>
-          <div style={etiket}>Pre-op solunum checklist</div>
+          <div style={etiket}>Pre-op solunum kontrol listesi</div>
           {PREOP_MADDELER.map((m) => (
             <label key={m.kod} style={{ display: 'flex', gap: 8, marginTop: 4, fontSize: 12, color: CHROME_RENK.ink }}>
               <input type="checkbox" checked={preopSec.includes(m.kod)} onChange={() => setPreopSec((p) => p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod])} />

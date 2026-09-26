@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <RomaAracKabugu route="/doktor-tools/roma-biyolojik-sut" baslik="Biyolojik SUT checklist" aciklama="TB/HBV/HCV ve basamak kontrol listesi. Doz, yükleme şeması ve infüzyon HIS yazılmaz.">
+    <RomaAracKabugu route="/doktor-tools/roma-biyolojik-sut" baslik="Biyolojik SUT kontrol listesi" aciklama="TB/HBV/HCV ve basamak kontrol listesi. Doz, yükleme şeması ve infüzyon takibi (HBYS) yazılmaz.">
       <RomaBiyolojikSutAraci />
     </RomaAracKabugu>
   )

@@ -125,7 +125,7 @@ export function medEksikCihazlar(sessions: PhotoSession[], medler: MedKaydi[]): 
 export const YANIK_PROTOKOLU: Array<{ kod: string; ad: string }> = [
   { kod: 'seans_durdur', ad: 'Sonraki seans durduruldu — hekime bildirildi' },
   { kod: 'alan_kaydi', ad: 'Etkilenen alan ve yüzdesi kaydedildi' },
-  { kod: 'foto', ad: 'Alan fotoğrafı çekildi (core görüntüleme)' },
+  { kod: 'foto', ad: 'Alan fotoğrafı çekildi (Görüntüleme)' },
   { kod: 'sogutma', ad: 'Soğutma / nemlendirme uygulandı (ünite protokolü)' },
   { kod: 'bul_kontrol', ad: 'Bül / erozyon varlığı kontrol edildi' },
   { kod: 'doz_geri', ad: 'Doz geri alma kararı hekimden alındı ve deftere yazıldı' },

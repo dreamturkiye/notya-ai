@@ -62,7 +62,7 @@ export async function callMedulaSOAP(endpoint: string, soapBody: string, action:
     },
     body: soapBody,
   })
-  if (!response.ok) throw new Error(`SGK SOAP error: ${response.status}`)
+  if (!response.ok) throw new Error(`SGK SOAP hatası: ${response.status}`)
   return response.text()
 }
 
@@ -86,7 +86,7 @@ export async function sgkUyumKontrol(ilacBarkod: string, icd10: string): Promise
   const blocked = blockedCombos[prefix] || []
   const ilacLower = ilacBarkod.toLowerCase()
   if (blocked.some(b => ilacLower.includes(b))) {
-    return { ok: false, mesaj: 'SGK bu tani icin bu ilaci desteklememektedir' }
+    return { ok: false, mesaj: 'SGK bu tanı için bu ilacı desteklememektedir' }
   }
   return { ok: true, mesaj: 'SGK uyumlu' }
 }

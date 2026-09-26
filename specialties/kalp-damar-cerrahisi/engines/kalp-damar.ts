@@ -23,19 +23,19 @@ export type Dipnot = { ref: Ref; not: string }
 export const REF_ACIKLAMA: Record<Ref, string> = {
   TKDCD: 'Türk Kalp ve Damar Cerrahisi Derneği klinik yaklaşımları — izlem ve güvenlik; tanı/doz hekimin',
   SB_KV: 'T.C. Sağlık Bakanlığı kardiyak / vasküler cerrahi ve perioperatif yönlendirme düzenlemeleri',
-  TKD_DAMAR: 'Türk Damar Cerrahisi / periferik arter hastalıkları konsensusları — tanı hekimde',
+  TKD_DAMAR: 'Türk Damar Cerrahisi / periferik arter hastalıkları konsensüsleri — tanı hekimde',
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — kalp-damar cerrahi paket/rapor; güncel metin hekim doğrular; canlı e-imza yok',
   TITCK: 'TİTCK — KÜB; antikoagülan dozu Notya tarafından üretilmez',
 }
 
 export const HEKIM_KILIT_METNI =
-  'Pre-op risk checklist, greft/yara izlem ve antikoagülasyon vade hatırlatmaları karar desteğidir. Tanı, cerrahi karar ve doz hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane / OR HIS entegre etmez. SCORE2 / Kalbim bu bölümde yoktur.'
+  'Pre-op risk kontrol listesi, greft/yara izlem ve antikoagülasyon vade hatırlatmaları karar desteğidir. Tanı, cerrahi karar ve doz hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane HIS entegre etmez. SCORE2 / Kalbim bu bölümde yoktur.'
 
 export const ACIL_YONLENDIRME_METNI =
   'Ani soğuk/soluk ekstremite, şiddetli bacak ağrısı, greft bölgesinde ani şişlik/kanama veya antikoagülan altında majör kanama şüphesi varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan kalp-damar cerrahisi muayenehanesi / polikliniği ürünü. Ameliyathane / full OR HIS, tanı auto-lock, uydurma antikoagülan dozu, canlı Medula e-imza ve kardiyoloji SCORE2/Kalbim bu bölümün kapsamı değildir.'
+  'Ayaktan kalp-damar cerrahisi muayenehanesi / polikliniği ürünü. Tam ameliyathane HIS, otomatik tanı kilidi, uydurma antikoagülan dozu, canlı Medula e-imza ve kardiyoloji SCORE2/Kalbim bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <AnesteziAracKabugu route="/doktor-tools/anestezi-asa" baslik="ASA / pre-op değerlendirme" aciklama="Pre-op checklist maddeleri ve ASA sınıfı. Tanı, OR anestezi makinesi HIS ve ilaç dozu yazılmaz.">
+    <AnesteziAracKabugu route="/doktor-tools/anestezi-asa" baslik="ASA / pre-op değerlendirme" aciklama="Pre-op kontrol listesi maddeleri ve ASA sınıfı. Tanı, ameliyathane anestezi cihazı / HBYS bağlantısı ve ilaç dozu yazılmaz.">
       <AnesteziAsaAraci />
     </AnesteziAracKabugu>
   )

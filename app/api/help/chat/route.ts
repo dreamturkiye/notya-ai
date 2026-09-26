@@ -34,16 +34,16 @@ export async function POST(req: NextRequest) {
     let systemPrompt = ''
     switch (professionType) {
       case 'doktor':
-        systemPrompt = 'Sen Notya AI yardim asistanisin. Kullanicilar Türkçe konusuyor. Notya AI bir Türk AI saglik platformudur. Prof. Ayse ile sesli konusma, hasta notu kaydetme, SOAP formati, dashboard özellikleri hakkinda yardim et. Kısa ve net cevaplar ver. Maksimum 3 cumle.'
+        systemPrompt = 'Sen Notya AI yardım asistanısın. Kullanıcılar Türkçe konuşuyor. Notya AI bir Türk AI sağlık platformudur. Prof. Ayşe ile sesli konuşma, hasta notu kaydetme, SOAP formatı, panel özellikleri hakkında yardım et. Kısa ve net cevaplar ver. Maksimum 3 cümle.'
         break
       case 'mali_musavirlik':
-        systemPrompt = 'Sen Notya AI yardim asistanisin. Kullanicilar Türkçe konusuyor. Notya AI bir Türk AI mali müşavirlik platformudur. Uzm. Derya ile konusma, beyan takvimi, mevzuat arama, müşteri yönetimi hakkinda yardim et. Kısa ve net cevaplar ver. Maksimum 3 cumle.'
+        systemPrompt = 'Sen Notya AI yardım asistanısın. Kullanıcılar Türkçe konuşuyor. Notya AI bir Türk AI mali müşavirlik platformudur. Uzm. Derya ile konuşma, beyan takvimi, mevzuat arama, müşteri yönetimi hakkında yardım et. Kısa ve net cevaplar ver. En fazla 3 cümle.'
         break
       case 'avukat':
-        systemPrompt = 'Sen Notya AI yardim asistanisin. Kullanicilar Türkçe konusuyor. Notya AI bir Türk AI hukuk asistan platformudur. 9 uzman avukatla konusma, sure takibi, dilekçe oluşturma, müvekkil yönetimi hakkinda yardim et. Kısa ve net cevaplar ver. Maksimum 3 cumle.'
+        systemPrompt = 'Sen Notya AI yardım asistanısın. Kullanıcılar Türkçe konuşuyor. Notya AI bir Türk AI hukuk asistan platformudur. 9 uzman avukatla konuşma, süre takibi, dilekçe oluşturma, müvekkil yönetimi hakkında yardım et. Kısa ve net cevaplar ver. En fazla 3 cümle.'
         break
       default:
-        systemPrompt = 'Sen Notya AI yardim asistanisin. Kullanicilar Türkçe konusuyor. Kısa ve net cevaplar ver. Maksimum 3 cumle.'
+        systemPrompt = 'Sen Notya AI yardım asistanısın. Kullanıcılar Türkçe konuşuyor. Kısa ve net cevaplar ver. Maksimum 3 cümle.'
     }
 
     const rawHistory = Array.isArray(history) ? history : []
@@ -74,6 +74,6 @@ export async function POST(req: NextRequest) {
       reply: response.content[0].type === 'text' ? response.content[0].text : 'Bir hata oluştu.',
     })
   } catch {
-    return NextResponse.json({ reply: 'Bir hata oluştu, lutfen tekrar deneyin.' }, { status: 500 })
+    return NextResponse.json({ reply: 'Bir hata oluştu, lütfen tekrar deneyin.' }, { status: 500 })
   }
 }

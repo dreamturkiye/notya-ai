@@ -308,5 +308,5 @@ export async function POST(req: NextRequest) {
     return sesYanit('Tamam, vazgeçtim — dosyaya hiçbir şey yazılmadı.', { ok: true })
   }
 
-  return sesYanit('Geçersiz adım. hazirla, onayla, vazgec veya takvim bekleniyor.', {}, 400)
+  return sesYanit('Geçersiz adım. Hazırla, onayla, vazgeç ya da takvim adımlarından biri bekleniyor.', {}, 400)
 }

@@ -68,7 +68,7 @@ export default function EnfIzolasyonAraci() {
         </div>
         {durum && <div style={{ ...enfStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...enfStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — izolasyon/bildirim hatırlatmasıdır. Hastane enfeksiyon kontrolü full HIS bu araçta yoktur. Tanı yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — izolasyon/bildirim hatırlatmasıdır. Hastane enfeksiyon kontrolü için tam HIS bu araçta yoktur. Tanı yazılmaz.</TaslakNotu>
       </div>
     </>
   )

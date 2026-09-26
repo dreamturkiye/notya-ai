@@ -71,7 +71,7 @@ export default function CcYaraDrenAraci() {
         </div>
         {durum && <div style={{ ...ccStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...ccStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>Pediatrik cerrahi ofis izlemi — enfeksiyon tanısı ve antibiyotik dozu hekimde. OR/HIS yok.</TaslakNotu>
+        <TaslakNotu>Pediatrik cerrahi ofis izlemi — enfeksiyon tanısı ve antibiyotik dozu hekimde. Ameliyathane/HIS yok.</TaslakNotu>
       </div>
     </>
   )

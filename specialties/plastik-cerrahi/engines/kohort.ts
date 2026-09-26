@@ -15,7 +15,7 @@ export const PLASTIK_BAYRAK_AD: Record<PlastikKohortBayrak, string> = {
   yara_greft_izlem: 'Yara / greft / pansuman izlem',
   foto_bekliyor: 'Foto zaman çizgisi',
   risk_acik: 'Açık plastik acil bayrağı',
-  onam_eksik: 'Onam checklist görevi',
+  onam_eksik: 'Onam kontrol listesi görevi',
 }
 
 export interface PlastikKohortGirdi {

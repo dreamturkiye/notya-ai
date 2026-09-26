@@ -12,7 +12,7 @@ export type KdcKohortBayrak =
 
 export const KDC_BAYRAK_AD: Record<KdcKohortBayrak, string> = {
   gecikmis_kontrol: 'Gecikmiş kontrol',
-  preop_eksik: 'Pre-op checklist eksik',
+  preop_eksik: 'Pre-op kontrol listesi eksik',
   greft_yara_izlem: 'Greft / yara izlem',
   antikoag_vade: 'Antikoagülan vadesi',
   risk_acik: 'Açık vasküler acil bayrağı',

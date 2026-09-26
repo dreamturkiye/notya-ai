@@ -27,13 +27,13 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
 }
 
 export const HEKIM_KILIT_METNI =
-  'ASA/pre-op checklist, hava yolu notu ve post-op ağrı bayrakları karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane anestezi makinesi HIS yönetmez.'
+  'ASA/pre-op kontrol listesi, hava yolu notu ve post-op ağrı bayrakları karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya doz üretmez, tanı kilitlemez ve ameliyathane anestezi makinesi HIS yönetmez.'
 
 export const ACIL_YONLENDIRME_METNI =
   'Zor hava yolu şüphesi, anafilaksi / ciddi alerji, malign hipertermi şüphesi, aspirasyon veya ani solunum yetmezliği varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan anestezi polikliniği / pre-op değerlendirme ürünü. Ameliyathane OR anestezi makinesi HIS, tanı auto-lock ve uydurma ilaç dozları bu bölümün kapsamı değildir. Genel cerrahi / göğüs cerrahisi araçları ayrı branştır.'
+  'Ayaktan anestezi polikliniği / pre-op değerlendirme ürünü. Ameliyathane anestezi makinesi HIS, otomatik tanı kilidi ve uydurma ilaç dozları bu bölümün kapsamı değildir. Genel cerrahi / göğüs cerrahisi araçları ayrı branştır.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

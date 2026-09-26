@@ -66,7 +66,7 @@ export default function KdcGreftYaraAraci() {
         </div>
         {durum && <div style={{ ...kdcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...kdcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — greft/yara izlem karar desteğidir; tanı, doz ve OR planı yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — greft/yara izlem karar desteğidir; tanı, doz ve ameliyathane planı yazılmaz.</TaslakNotu>
       </div>
     </>
   )

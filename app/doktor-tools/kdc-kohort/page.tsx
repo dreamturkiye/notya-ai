@@ -3,7 +3,7 @@ import KdcKohortAraci from '@/specialties/kalp-damar-cerrahisi/ui/araclar/KdcKoh
 
 export default function Page() {
   return (
-    <KdcAracKabugu route="/doktor-tools/kdc-kohort" baslik="Kalp damar cerrahisi kohort" aciklama="Geciken kontrol · pre-op · greft/yara · antikoag · açık acil · 1-tap hatırlatma.">
+    <KdcAracKabugu route="/doktor-tools/kdc-kohort" baslik="Kalp damar cerrahisi kohort" aciklama="Geciken kontrol · pre-op · greft/yara · antikoag · açık acil · tek dokunuşla hatırlatma.">
       <KdcKohortAraci />
     </KdcAracKabugu>
   )

@@ -81,7 +81,7 @@ export function kararKartlariFromClinic(g: KartGirdi): DermKararKart[] {
         'Doz uydurulmaz — yalnızca basamak / rapor kontrolü',
       ],
       true,
-      'Bolognia 5 — gold (rol; metin kopyalanmaz)',
+      'Bolognia 5 — altın standart (rol; metin kopyalanmaz)',
     ))
   }
 
@@ -130,7 +130,7 @@ export function kararKartlariFromClinic(g: KartGirdi): DermKararKart[] {
         ? ['KETEM deri kanseri tarama programı değildir', 'Yalnız ipucu: meme / serviks / kolon']
         : [],
       true,
-      'Bolognia 5 — onkoloji gold (rol)',
+      'Bolognia 5 — onkoloji altın standardı (rol)',
     ))
   }
 
@@ -143,7 +143,7 @@ export function kararKartlariFromClinic(g: KartGirdi): DermKararKart[] {
       'ayakta-teshis-lazer',
       'Kozmetik / Ayakta Teşhis',
       ev,
-      'Hekim lazer',
+      'Hekim lazeri',
       ['Tıbbi lazer / dolgu / botoks / derin peeling hekime aittir', 'Lot no', 'Test spot', `Fitzpatrick ${g.fitzpatrick || '—'}`],
       'Salon IPL',
       ['Salon IPL 600–1200 nm, diyot ≤ 20 J/cm²', 'Komplikasyon kabulü ayrı'],
@@ -178,7 +178,7 @@ export function kararKartlariFromClinic(g: KartGirdi): DermKararKart[] {
       'Bolognia 5',
       [g.bullous.dif ? 'DIF yapılmış' : 'Biyopsi + DIF zorunlu — tanı DIF olmadan kilitlenmez'],
       true,
-      'Bolognia 5 — büllü hastalık gold (rol)',
+      'Bolognia 5 — büllü hastalık altın standardı (rol)',
     ))
   }
 
@@ -206,7 +206,7 @@ export function kararKartlariFromClinic(g: KartGirdi): DermKararKart[] {
       'SUT 2026',
       ['700.100 dermoskopi', '530.070 deri biyopsi', 'İşlem öncesi / sonrası foto'],
       'TDD işlem',
-      ['Katalog stub — ücret uydurulmaz'],
+      ['Katalog taslağı — ücret uydurulmaz'],
       false,
       'SUT 2026 — devlet (rol)',
     ))

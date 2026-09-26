@@ -17,7 +17,7 @@ export type SevkMadde =
   | 'kontrol_randevu'
 
 export const SEVK_HEDEFLER: Array<{ kod: SevkHedef; ad: string }> = [
-  { kod: 'yatış', ad: 'Yatış paketi (boarding HIS yok)' },
+  { kod: 'yatış', ad: 'Yatış paketi (yatış bekletme HIS yok)' },
   { kod: 'sevk', ad: 'Sevk paketi' },
   { kod: 'taburcu_takip', ad: 'Taburcu + takip paketi' },
   { kod: 'konsultasyon', ad: 'Konsültasyon yönlendirme paketi' },
@@ -29,7 +29,7 @@ export const SEVK_MADDELER: Array<{ kod: SevkMadde; ad: string }> = [
   { kod: 'tetkik_liste', ad: 'Yapılan / bekleyen tetkik listesi' },
   { kod: 'ilac_liste_hekim', ad: 'İlaç listesi (doz hekim yazar; Notya üretmez)' },
   { kod: 'hedef_klinik', ad: 'Hedef klinik / branş belirtildi' },
-  { kod: 'nakil_guvenlik', ad: 'Nakil güvenlik checklist' },
+  { kod: 'nakil_guvenlik', ad: 'Nakil güvenlik kontrol listesi' },
   { kod: 'taburcu_egitim', ad: 'Taburcu uyarı / eğitim verildi' },
   { kod: 'kontrol_randevu', ad: 'Kontrol / acil sonrası randevu belirlendi' },
 ]
@@ -44,7 +44,7 @@ export interface SevkSonuc {
 }
 
 export function sevkSkorla(girdi: { hedef?: unknown; maddeler?: unknown; not?: string | null }): SevkSonuc {
-  const dipnot: Dipnot = { ref: 'SB_ACIL', not: 'Sevk/yatış paketi taslaktır; boarding HIS ve doz hekimin' }
+  const dipnot: Dipnot = { ref: 'SB_ACIL', not: 'Sevk/yatış paketi taslaktır; yatış bekletme HIS yok, doz hekimin' }
   if (girdi.not && dozIceriyorMu(girdi.not)) {
     return { tamamMi: false, hedef: null, maddeler: [], ozet: 'Sevk notunda mg / ilaç dozu yazılamaz.', gorevOnerileri: [], dipnot }
   }
@@ -72,7 +72,7 @@ export function sevkSkorla(girdi: { hedef?: unknown; maddeler?: unknown; not?: s
     tamamMi: true,
     hedef,
     maddeler,
-    ozet: `${hedefAd}: ${madAd.join('; ')}. Boarding HIS yok; tanı/doz hekimdedir.`,
+    ozet: `${hedefAd}: ${madAd.join('; ')}. Yatış bekletme HIS yok; tanı/doz hekimdedir.`,
     gorevOnerileri,
     dipnot,
   }

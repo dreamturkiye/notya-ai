@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
   if ('hata' in oturum) return oturum.hata
   const { user, supabase: sb } = oturum
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
-  if (!b?.adim) return NextResponse.json({ error: 'adim gerekli' }, { status: 400 })
+  if (!b?.adim) return NextResponse.json({ error: 'adım gerekli' }, { status: 400 })
   const adim = String(b.adim)
   const hasta = await hastaBilgi(sb, user.id, String(b.patientId || ''))
   if (!hasta) return NextResponse.json({ error: 'Hasta bulunamadı' }, { status: 404 })
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
     await gununNotunaEkle(sb, user.id, hasta.id, `Sevk: ${hedef}${b.not ? ` — ${String(b.not)}` : ''}${panel ? ' (son onaylı lab paneli eklendi)' : ''}`)
     return NextResponse.json({ ok: true })
   }
-  return NextResponse.json({ error: 'Geçersiz adim' }, { status: 400 })
+  return NextResponse.json({ error: 'Geçersiz adım' }, { status: 400 })
 }
 
 export async function GET(req: NextRequest) {

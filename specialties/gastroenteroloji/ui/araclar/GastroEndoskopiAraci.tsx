@@ -62,7 +62,7 @@ export default function GastroEndoskopiAraci() {
         </div>
         {durum && <div style={{ ...gastroStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...gastroStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — Belge köprüsü ve tarih. Tam endoskopi suite / HIS / ameliyathane bu araçta yoktur. Tanı yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — Belge köprüsü ve tarih. Tam endoskopi ünitesi / HIS / ameliyathane bu araçta yoktur. Tanı yazılmaz.</TaslakNotu>
       </div>
     </>
   )

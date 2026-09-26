@@ -25,7 +25,8 @@ export type KararKart = {
   citations: string[]
 }
 
-function trNext(items: string[]): string[] {
+/** Motor adım kodlarını (İngilizce anahtar) hekime görünen Türkçe metne çevirir. */
+export function trNext(items: string[]): string[] {
   const map: Record<string, string> = {
     'diet counseling if screen pending': 'Tarama bekliyorsa diyet danışmanlığı',
     '75g OGTT or 50+100 at 24–28w (DÖBYR/SUT)': '24–28. hafta 75 g OGTT veya 50+100 (DÖBYR / SUT) — yasal zorunlu tarama',

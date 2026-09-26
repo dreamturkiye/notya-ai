@@ -37,7 +37,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Ani yüz kayması, konuşma bozukluğu, kol/bacak güçsüzlüğü, ani görme kaybı, ani şiddetli baş ağrısı veya bilinç değişikliği varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan nöroloji muayenehanesi / polikliniği ürünü. İnme ünitesi / inpatient stroke HIS ve tanı kilidi bu bölümün kapsamı değildir.'
+  'Ayaktan nöroloji muayenehanesi / polikliniği ürünü. İnme ünitesi / yatan hasta inme HIS’i ve tanı kilidi bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

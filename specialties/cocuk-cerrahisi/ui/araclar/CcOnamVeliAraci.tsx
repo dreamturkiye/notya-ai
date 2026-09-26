@@ -30,7 +30,7 @@ export default function CcOnamVeliAraci() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
-      setDurum('Onam / veli checklist kaydedildi.')
+      setDurum('Onam / veli kontrol listesi kaydedildi.')
     } catch { setHata('Kaydedilemedi') }
   }
 
@@ -42,9 +42,9 @@ export default function CcOnamVeliAraci() {
         <div style={{ ...ccStil.etiket, marginTop: 12 }}>Hasta yaşı (yıl) — veli maddeleri &lt;18 veya boşta açılır</div>
         <input type="number" min={0} max={120} value={yas} onChange={(e) => { setYas(e.target.value); setSecilen([]) }} style={ccStil.input} />
         <div style={{ ...ccStil.kucuk, marginTop: 6 }}>
-          {sonuc.veliGerekli ? 'Veli / yasal temsilci maddeleri açık (VELI-YASAL-ONAM).' : 'Hasta ≥18 — veli maddeleri kapalı.'}
+          {sonuc.veliGerekli ? 'Veli / yasal temsilci maddeleri açık.' : 'Hasta ≥18 — veli maddeleri kapalı.'}
         </div>
-        <div style={{ ...ccStil.etiket, marginTop: 12 }}>Checklist</div>
+        <div style={{ ...ccStil.etiket, marginTop: 12 }}>Kontrol listesi</div>
         {maddeler.map((m) => (
           <label key={m.kod} style={{ ...ccStil.metin, display: 'flex', gap: 8, padding: '3px 0' }}>
             <input type="checkbox" checked={secilen.includes(m.kod)} onChange={() => setSecilen((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />
@@ -66,7 +66,7 @@ export default function CcOnamVeliAraci() {
         </div>
         {durum && <div style={{ ...ccStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...ccStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>Yazılı onam klinik süreçtedir. Doz / tanı kilidi / OR scheduling yazılmaz.</TaslakNotu>
+        <TaslakNotu>Yazılı onam klinik süreçtedir. Doz / tanı kilidi / ameliyathane planı yazılmaz.</TaslakNotu>
       </div>
     </>
   )

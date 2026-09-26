@@ -106,6 +106,6 @@ export async function hastaNotAlanlariGuncelle(
     .update({ notes_encrypted: encrypt(JSON.stringify(sonra)), updated_at: new Date().toISOString() })
     .eq('id', patientId)
     .eq('doctor_id', doktorId)
-  if (error) throw new Error(error.message)
+  if (error) { console.error('[hastaKayitAlanlari]', error.message); throw new Error('Hasta kaydı güncellenemedi.') }
   return { once, sonra }
 }

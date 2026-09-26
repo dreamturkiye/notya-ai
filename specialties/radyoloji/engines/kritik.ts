@@ -52,7 +52,7 @@ export interface KritikSonuc {
 }
 
 export function kritikSkorla(bayrakHam: unknown, bildirimHam: unknown, not?: string | null): KritikSonuc {
-  const dipnot: Dipnot = { ref: 'TRD', not: 'Kritik bulgu bildirimi checklist; tanı AI üretmez' }
+  const dipnot: Dipnot = { ref: 'TRD', not: 'Kritik bulgu bildirimi kontrol listesi; tanıyı yapay zekâ üretmez' }
   const izinB = new Set(KRITIK_BAYRAKLAR.map((b) => b.kod))
   const izinM = new Set(BILDIRIM_MADDELER.map((m) => m.kod))
   const bayraklar = (Array.isArray(bayrakHam) ? bayrakHam.map(String) : []).filter((k): k is KritikBayrak => izinB.has(k as KritikBayrak))

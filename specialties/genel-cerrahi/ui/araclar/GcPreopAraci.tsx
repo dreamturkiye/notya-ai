@@ -32,7 +32,7 @@ export default function GcPreopAraci() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
-      setDurum('Pre-op checklist hasta dosyasına kaydedildi.')
+      setDurum('Pre-op kontrol listesi hasta dosyasına kaydedildi.')
     } catch { setHata('Kaydedilemedi') }
   }
 
@@ -45,7 +45,7 @@ export default function GcPreopAraci() {
         <input value={etiket} onChange={(e) => setEtiket(e.target.value)} placeholder="örn. hekim kısa işlem adı" style={gcStil.input} />
         <div style={{ ...gcStil.etiket, marginTop: 12 }}>Planlanan tarih</div>
         <input type="date" value={tarih} onChange={(e) => setTarih(e.target.value)} style={gcStil.input} />
-        <div style={{ ...gcStil.etiket, marginTop: 12 }}>Checklist</div>
+        <div style={{ ...gcStil.etiket, marginTop: 12 }}>Kontrol listesi</div>
         {PREOP_MADDELER.map((m) => (
           <label key={m.id} style={{ ...gcStil.metin, display: 'flex', gap: 8, padding: '3px 0' }}>
             <input type="checkbox" checked={tamamlanan.includes(m.id)} onChange={() => setTamamlanan((p) => (p.includes(m.id) ? p.filter((x) => x !== m.id) : [...p, m.id]))} />
@@ -65,7 +65,7 @@ export default function GcPreopAraci() {
         </div>
         {durum && <div style={{ ...gcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...gcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — pre-op checklist karar desteğidir; doz, OR scheduling ve tanı kilidi yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — pre-op kontrol listesi karar desteğidir; doz, ameliyathane planı ve tanı kilidi yazılmaz.</TaslakNotu>
       </div>
     </>
   )

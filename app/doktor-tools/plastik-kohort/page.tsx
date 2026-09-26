@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <PlastikAracKabugu route="/doktor-tools/plastik-kohort" baslik="Plastik kohort paneli" aciklama="Geciken kontrol · yara/greft · foto · açık acil · onam · 1-tap hatırlatma.">
+    <PlastikAracKabugu route="/doktor-tools/plastik-kohort" baslik="Plastik kohort paneli" aciklama="Geciken kontrol · yara/greft · foto · açık acil · onam · tek dokunuşla hatırlatma.">
       <PlastikKohortAraci />
     </PlastikAracKabugu>
   )

@@ -34,7 +34,7 @@ export const KRITIK_MADDELER: Array<{ kod: KritikMadde; ad: string; yollar: Krit
   { kod: 'ekg_10dk', ad: 'Erken EKG planı (yorum hekimde; tanı yazılmaz)', yollar: ['stemi'] },
   { kod: 'noroloji_skala', ad: 'Odaklı nöro değerlendirme kaydı (skor tanı değildir)', yollar: ['inme'] },
   { kod: 'goruntu_plan', ad: 'Görüntüleme planı / köprü (tanı yok)', yollar: ['inme', 'travma'] },
-  { kod: 'travma_primer', ad: 'Primer survey checklist (ABCDE) — doz yok', yollar: ['travma'] },
+  { kod: 'travma_primer', ad: 'Primer değerlendirme kontrol listesi (ABCDE) — doz yok', yollar: ['travma'] },
   { kod: 'kan_kultur', ad: 'Enfeksiyon / sepsis paket maddesi (doz hekimde)', yollar: ['sepsis'] },
   { kod: 'hava_yolu_hazir', ad: 'Hava yolu ekipmanı / yardım çağrısı hazır', yollar: ['hava_yolu'] },
   { kod: 'hekim_yonlendirme', ad: 'Sevk / konsültasyon / yatış yönlendirmesi hekim kilitledi', yollar: ['stemi', 'inme', 'travma', 'sepsis', 'hava_yolu'] },
@@ -62,7 +62,7 @@ export function kritikYolSkorla(girdi: { yollar?: unknown; maddeler?: unknown; n
     return { tamamMi: false, yollar, maddeler, ozet: 'En az bir kritik yol bayrağı seçin.', gorevOnerileri: [], dipnot }
   }
   if (!maddeler.length) {
-    return { tamamMi: false, yollar, maddeler, ozet: 'En az bir checklist maddesi seçin.', gorevOnerileri: [], dipnot }
+    return { tamamMi: false, yollar, maddeler, ozet: 'En az bir kontrol listesi maddesi seçin.', gorevOnerileri: [], dipnot }
   }
   const yolAd = KRITIK_YOLLAR.filter((y) => yollar.includes(y.kod)).map((y) => y.ad)
   const madAd = KRITIK_MADDELER.filter((m) => maddeler.includes(m.kod)).map((m) => m.ad)

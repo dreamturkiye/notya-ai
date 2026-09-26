@@ -63,7 +63,7 @@ export function yaraSkorla(ham: unknown): YaraSonuc {
     return { tamamMi: false, kart, ozet: 'Bölge etiketi gerekli — tanı yazılmaz.', dipnot }
   }
   if (kart.not && dozVeyaTaniKilidiIceriyorMu(kart.not)) {
-    return { tamamMi: false, kart, ozet: 'Notta doz / tanı kilidi / OR planı yazılamaz.', dipnot }
+    return { tamamMi: false, kart, ozet: 'Notta doz / tanı kilidi / ameliyathane planı yazılamaz.', dipnot }
   }
   if (kart.bolge && dozVeyaTaniKilidiIceriyorMu(kart.bolge)) {
     return { tamamMi: false, kart, ozet: 'Bölge etiketinde doz veya tanı kilidi yazılamaz.', dipnot }

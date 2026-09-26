@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   const baslangic = url.searchParams.get('baslangic')
   const bitis = url.searchParams.get('bitis')
   if (!baslangic || !bitis) {
-    return NextResponse.json({ error: 'baslangic ve bitis (ISO tarih) zorunludur.' }, { status: 400 })
+    return NextResponse.json({ error: 'Başlangıç ve bitiş tarihi (ISO) zorunludur.' }, { status: 400 })
   }
 
   const { data, error } = await supabase

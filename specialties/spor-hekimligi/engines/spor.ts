@@ -21,10 +21,10 @@ export type Ref =
 export type Dipnot = { ref: Ref; not: string }
 
 export const REF_ACIKLAMA: Record<Ref, string> = {
-  TSHD: 'Türkiye Spor Hekimliği Derneği — ayaktan sporcu değerlendirme ve dönüş-to-play kaynakları; güncel metni hekim doğrular',
+  TSHD: 'Türkiye Spor Hekimliği Derneği — ayaktan sporcu değerlendirme ve spora dönüş kaynakları; güncel metni hekim doğrular',
   SB_SPOR: 'T.C. Sağlık Bakanlığı — sporcu sağlık kurulu mevzuatı ve muayene standartları',
   TOTBID_SPOR: 'TOTBİD + Spor Hekimliği Derneği — spor yaralanması ortak yaklaşımları (karar desteği)',
-  RTP_BASAMAK: 'Return-to-play basamakları (0–5) — klinik karar desteğidir; dönüş kararı ve tanı hekimindir',
+  RTP_BASAMAK: 'Spora dönüş (RTP) basamakları (0–5) — klinik karar desteğidir; dönüş kararı ve tanı hekimindir',
   SGK_SUT: 'SGK Sağlık Uygulama Tebliği (SUT) — spor hekimliği işlem / rapor çerçevesi; güncel metin hekim tarafından doğrulanır',
   TITCK: 'TİTCK — ürün kısa ürün bilgileri (KÜB); ilaç dozu Notya tarafından üretilmez',
 }
@@ -36,7 +36,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Konküzyon kırmızı bayrakları, egzersiz sırasında göğüs ağrısı / bayılma, şüpheli kırık ile nörolojik bulgu veya kompartman şüphesi varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan spor hekimliği muayenehanesi / polikliniği ürünü. Takım kadrosu HIS, doping panelleri (çekirdek ürün) ve tanı auto-lock bu bölümün kapsamı değildir.'
+  'Ayaktan spor hekimliği muayenehanesi / polikliniği ürünü. Takım kadrosu HIS, doping panelleri (çekirdek ürün) ve otomatik tanı kilidi bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

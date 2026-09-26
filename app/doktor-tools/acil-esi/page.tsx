@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <AtAracKabugu route="/doktor-tools/acil-esi" baslik="ESI triyaj" aciklama="ESI 1–5 seviye ve kaynak bayrakları. Tanı, doz ve ED bed board HIS yazılmaz.">
+    <AtAracKabugu route="/doktor-tools/acil-esi" baslik="ESI triyaj" aciklama="ESI 1–5 seviye ve kaynak bayrakları. Tanı, doz ve acil yatak panosu / HBYS yazılmaz.">
       <AtEsiAraci />
     </AtAracKabugu>
   )

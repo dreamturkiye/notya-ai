@@ -30,7 +30,7 @@ export default function AnesteziAsaAraci() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
-      setDurum('ASA/pre-op checklist hasta dosyasına kaydedildi.')
+      setDurum('ASA/pre-op kontrol listesi hasta dosyasına kaydedildi.')
     } catch { setHata('Kaydedilemedi') }
   }
 
@@ -39,7 +39,7 @@ export default function AnesteziAsaAraci() {
       <div style={anesteziStil.kutu}>
         <div style={anesteziStil.etiket}>Hasta (isteğe bağlı kayıt için)</div>
         <AnesteziHastaSecici secili={hastaId} sec={(id) => setHastaId(id)} />
-        <div style={{ ...anesteziStil.etiket, marginTop: 12 }}>Checklist maddeleri</div>
+        <div style={{ ...anesteziStil.etiket, marginTop: 12 }}>Kontrol listesi maddeleri</div>
         {ASA_MADDELER.map((m) => (
           <label key={m.kod} style={{ ...anesteziStil.metin, display: 'flex', gap: 8, padding: '3px 0' }}>
             <input type="checkbox" checked={secilen.includes(m.kod)} onChange={() => setSecilen((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />
@@ -66,7 +66,7 @@ export default function AnesteziAsaAraci() {
         </div>
         {durum && <div style={{ ...anesteziStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...anesteziStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — ASA/pre-op checklist karar desteğidir; tanı, OR anestezi makinesi HIS ve ilaç dozu yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — ASA/pre-op kontrol listesi karar desteğidir; tanı, ameliyathane anestezi makinesi HIS ve ilaç dozu yazılmaz.</TaslakNotu>
       </div>
     </>
   )

@@ -9,7 +9,7 @@ export default function InstallPage() {
           <span style={{color:"#2563EB"}}>Notya</span> AI
         </h1>
         <p style={{fontSize:"15px",color:"rgba(255,255,255,.6)",marginBottom:"36px"}}>
-          AI Uzman Asistan — Cebinizde dünyaca ünlü uzman
+          Yapay Zekâ Uzman Asistanı — Cebinizde dünyaca ünlü uzman
         </p>
 
         {/* iPhone */}

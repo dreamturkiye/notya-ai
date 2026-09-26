@@ -40,7 +40,7 @@ export interface OnamSonuc {
 }
 
 export function onamSkorla(secilenHam: unknown, hekimNot?: string | null): OnamSonuc {
-  const dipnot: Dipnot = { ref: 'TPRECD', not: 'Onam checklist karar desteğidir; tanı/doz/OR planı hekimin' }
+  const dipnot: Dipnot = { ref: 'TPRECD', not: 'Onam kontrol listesi karar desteğidir; tanı/doz/ameliyathane planı hekimin' }
   const izinli = new Set(ONAM_MADDELER.map((m) => m.kod))
   const secilen = (Array.isArray(secilenHam) ? secilenHam.map(String) : [])
     .filter((k): k is OnamKod => izinli.has(k as OnamKod))
@@ -48,12 +48,12 @@ export function onamSkorla(secilenHam: unknown, hekimNot?: string | null): OnamS
     return { tamamMi: false, secilen: [], ozet: 'En az bir onam maddesi işaretleyin.', taslak: '', dipnot, gorevOnerileri: [] }
   }
   if (hekimNot && dozVeyaTaniKilidiIceriyorMu(hekimNot)) {
-    return { tamamMi: false, secilen, ozet: 'Hekim notunda doz / tanı kilidi / OR planı yazılamaz.', taslak: '', dipnot, gorevOnerileri: [] }
+    return { tamamMi: false, secilen, ozet: 'Hekim notunda doz / tanı kilidi / ameliyathane planı yazılamaz.', taslak: '', dipnot, gorevOnerileri: [] }
   }
   const adlar = ONAM_MADDELER.filter((m) => secilen.includes(m.kod)).map((m) => m.ad)
   const taslak = [
     'TASLAK — Bilgilendirilmiş onam kontrol listesi (karar desteği).',
-    'Tanı auto-lock, doz ve ameliyathane planı bu listede yoktur; hekim kilidi gerektirir.',
+    'Otomatik tanı kilidi, doz ve ameliyathane planı bu listede yoktur; hekim kilidi gerektirir.',
     '',
     ...adlar.map((a) => `☐ ${a}`),
     hekimNot ? `\nHekim notu: ${hekimNot.slice(0, 400)}` : '',
@@ -70,7 +70,7 @@ export function onamSkorla(secilenHam: unknown, hekimNot?: string | null): OnamS
   return {
     tamamMi: true,
     secilen,
-    ozet: `Onam checklist: ${secilen.length}/${ONAM_MADDELER.length} madde. Karar desteğidir; tanı/doz hekimin.`,
+    ozet: `Onam kontrol listesi: ${secilen.length}/${ONAM_MADDELER.length} madde. Karar desteğidir; tanı/doz hekimin.`,
     taslak,
     dipnot,
     gorevOnerileri,

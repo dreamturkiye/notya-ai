@@ -45,7 +45,7 @@ export function gcSeridi(g: GcSeritGirdi): GcSerit {
     ad: 'Pre-op',
     deger: g.preopSayi ? String(g.preopSayi) : '—',
     durum: g.preopSayi ? 'iyi' : 'yok',
-    alt: g.preopSayi ? 'madde' : 'checklist yok',
+    alt: g.preopSayi ? 'madde' : 'kontrol listesi yok',
   })
 
   chips.push(

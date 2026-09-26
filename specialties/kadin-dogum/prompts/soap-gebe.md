@@ -16,4 +16,4 @@ Assessment: risk_class dusuk|orta|yuksek; plurality; Rh/IDC.
 
 Plan: next visit week — show sb_required and acog_recommended as two columns (4 SB izlem vs ACOG q4w/q2w/weekly). Overdue windows; high-risk consent (NIPT / amnio / CS / VBAC) if indicated.
 
-If ACOG and DÖBYR differ, conflict: true, uiHint 'yasal asgari vs klinik öneri'. Do not compute secret risk ratios.
+If ACOG and DÖBYR differ, conflict: true, uiHint 'yasal asgari / klinik öneri'. Do not compute secret risk ratios.

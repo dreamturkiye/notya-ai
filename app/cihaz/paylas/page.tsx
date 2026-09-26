@@ -11,6 +11,7 @@ import { ensureDoctorAccessToken, DOKTOR_GIRIS } from '@/lib/doktor/clientAuth';
 import { normalizeHastalar, toolsShell, toolsCard, toolsInput, type HastaOption } from '@/lib/doktor/toolsUi';
 import { trIcerir } from '@/lib/utils/turkceArama';
 import { CHROME_RENK } from '@/lib/doktor/chromeTheme';
+import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi';
 
 const DOSYA_TURLERI: [string, string][] = [['steteskop', 'Steteskop kaydı'], ['ekg', 'EKG'], ['usg', 'Ultrason görüntüsü'], ['diger', 'Diğer cihaz çıktısı']];
 
@@ -97,7 +98,7 @@ export default function CihazPaylasPage() {
               <div style={{ marginTop: 6 }}><button type="button" onClick={() => { setDosya(null); setKaynak('dosya-import'); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: CHROME_RENK.muted, borderRadius: 6, padding: '4px 8px', fontSize: 12 }}>Başka dosya</button></div>
             </div>
           ) : (
-            <input type="file" accept="audio/*,application/pdf,image/*" onChange={(e) => { const f = e.target.files?.[0] || null; setDosya(f); if (f) setTur(turTahmin(f.type)); }} style={{ fontSize: 13, color: CHROME_RENK.muted }} />
+            <DosyaSecDugmesi dosya={dosya} accept="audio/*,application/pdf,image/*" onSec={(f) => { setDosya(f); if (f) setTur(turTahmin(f.type)); }} style={{ color: CHROME_RENK.muted }} />
           )}
           <div style={{ fontSize: 11, color: CHROME_RENK.muted, marginTop: 6 }}>En çok 4 MB. Uzun steteskop kayıtlarını cihaz uygulamasında kısaltın.</div>
         </div>

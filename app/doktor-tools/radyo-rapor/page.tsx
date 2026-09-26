@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <RadyoAracKabugu route="/doktor-tools/radyo-rapor" baslik="Yapılandırılmış rapor taslağı" aciklama="BI-RADS-style kategori hekim seçer — otomatik tanı değildir. Uydurma bulgu yok.">
+    <RadyoAracKabugu route="/doktor-tools/radyo-rapor" baslik="Yapılandırılmış rapor taslağı" aciklama="BI-RADS tarzı kategoriyi hekim seçer — otomatik tanı değildir. Uydurma bulgu yok.">
       <RadyoRaporAraci />
     </RadyoAracKabugu>
   )

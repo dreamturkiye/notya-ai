@@ -122,7 +122,7 @@ export function labRaporuDogrula(r: LabRapor, satirlar: LabSatir[], oncekiVar: b
   if (kritikler.length) { rapor.kritik = kritikler; if (!rapor.acil_bayrak) { rapor.acil_bayrak = true; d.push('acil bayrağı kuralla açıldı') } }
   else if (rapor.kritik.length) { rapor.kritik = []; d.push('model kritik listesi silindi (kural yok)') }
   const cap = oncekiVar ? 85 : 70
-  rapor.tanilar = rapor.tanilar.slice(0, 3).map((t) => { let p = Math.round(t.guven_pct); if (p > cap) { d.push(`${t.ad}: %${p} → cap %${cap}`); p = cap } if (p < 0) p = 0; return { ...t, guven_pct: p, guven_bant: p >= 80 ? 'yüksek' : p >= 55 ? 'orta' : 'düşük' } })
+  rapor.tanilar = rapor.tanilar.slice(0, 3).map((t) => { let p = Math.round(t.guven_pct); if (p > cap) { d.push(`${t.ad}: %${p} → üst sınır %${cap}`); p = cap } if (p < 0) p = 0; return { ...t, guven_pct: p, guven_bant: p >= 80 ? 'yüksek' : p >= 55 ? 'orta' : 'düşük' } })
   if (r.tanilar.length > 3) d.push(`${r.tanilar.length} tanı → 3`)
   if (rapor.recete_ipucu && /\d+\s*(mg|mcg|µg|ml|iu|ünite|tablet|tb|damla|x\s*\d)/i.test(rapor.recete_ipucu)) { rapor.recete_ipucu = null; d.push('reçete ipucu doz içeriyordu → silindi') }
   const dogrulanacak = satirlar.filter((s) => s.dogrulanacak).length

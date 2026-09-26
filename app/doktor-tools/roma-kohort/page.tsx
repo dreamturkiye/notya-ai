@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <RomaAracKabugu route="/doktor-tools/roma-kohort" baslik="Romatoloji kohort paneli" aciklama="Geciken kontrol · lab · yüksek skor bandı · açık acil · SUT eksik · 1-tap hatırlatma.">
+    <RomaAracKabugu route="/doktor-tools/roma-kohort" baslik="Romatoloji kohort paneli" aciklama="Geciken kontrol · lab · yüksek skor bandı · açık acil · SUT eksik · tek dokunuşla hatırlatma.">
       <RomaKohortAraci />
     </RomaAracKabugu>
   )

@@ -253,7 +253,7 @@ export function jineSticky(girdi: {
   ]
   return {
     chips,
-    gebeChip: girdi.gebe ? 'Aktif gebelik → Klinik/Doğum spine' : null,
+    gebeChip: girdi.gebe ? 'Aktif gebelik → Klinik/Doğum paneli' : null,
   }
 }
 

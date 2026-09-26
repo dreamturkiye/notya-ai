@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <RadyoAracKabugu route="/doktor-tools/radyo-kuyruk" baslik="Tetkik kuyruğu / öncelik" aciklama="Modalite, öncelik ve durum kaydı. PACS/RIS/HIS ve AI tanı yazılmaz.">
+    <RadyoAracKabugu route="/doktor-tools/radyo-kuyruk" baslik="Tetkik kuyruğu / öncelik" aciklama="Modalite, öncelik ve durum kaydı. PACS/RIS/HBYS kaydı ve yapay zekâ tanısı yazılmaz.">
       <RadyoKuyrukAraci />
     </RadyoAracKabugu>
   )

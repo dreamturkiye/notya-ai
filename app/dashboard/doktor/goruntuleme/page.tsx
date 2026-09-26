@@ -522,7 +522,7 @@ const Page = () => {
                 <div style={{ background: imagingModalityMeta(g.modalite).color || CHROME_RENK.muted, color: '#fff', fontSize: '10px', padding: '2px 8px', borderRadius: '9999px' }}>{imagingDisplayLabel(g.modalite)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.vucut_bolgesi || g.dosya_adi}</div>
-                  <div style={{ fontSize: '12px', color: CHROME_RENK.muted }}>{g.tarih || '—'}</div>
+                  <div style={{ fontSize: '12px', color: CHROME_RENK.muted }}>{/^\d{4}-\d{2}-\d{2}$/.test(g.tarih) ? new Date(`${g.tarih}T12:00:00`).toLocaleDateString('tr-TR') : g.tarih || '—'}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <span>↗</span>
@@ -552,7 +552,7 @@ const Page = () => {
             <div style={{ padding: '40px', textAlign: 'center' }}>
               <button type="button" onClick={() => setSelectedGoruntuleme(null)} style={{ background: 'transparent', border: 'none', color: CHROME_RENK.pine, cursor: 'pointer', fontWeight: 600, marginBottom: 16 }}>← Geri</button>
               <div style={{ background: '#FFFFFF', padding: '24px', borderRadius: '12px', maxWidth: '480px', margin: '0 auto' }}>
-                <div>Doğrudan DICOM görüntülemesi için harici DICOM viewer açılacak</div>
+                <div>Doğrudan DICOM görüntülemesi için harici DICOM görüntüleyici açılacak</div>
                 <button
                   type="button"
                   onClick={() => window.open(`https://viewer.cornerstonejs.org?file=${encodeURIComponent(selectedGoruntuleme.dosya_url)}`, '_blank')}

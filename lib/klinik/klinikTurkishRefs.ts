@@ -94,7 +94,7 @@ export const KLINIK_TURKISH_REFS: Record<KlinikYeniSlug, string[]> = {
 export const KLINIK_SECONDARY_TEXTBOOKS: Record<KlinikYeniSlug, string[]> = {
   'sac-ekimi': [
     'ISHRS / Unger Hair Transplantation (uluslararası destek — çakışmada SB sertifika + TPRECD öncelikli)',
-    'Hair transplant atlas (ikincil teknik derinlik)',
+    'Saç ekimi atlası (ikincil teknik derinlik)',
   ],
   'estetik-cerrahi': [
     "Grabb and Smith's Plastic Surgery (uluslararası destek — çakışmada Ayakta Teşhis + TPRECD/EPCD öncelikli)",
@@ -109,12 +109,12 @@ export const KLINIK_SECONDARY_TEXTBOOKS: Record<KlinikYeniSlug, string[]> = {
     'Lazer-doku etkileşimi metinleri (fluence hekimde)',
   ],
   longevity: [
-    'Geriatric / preventive medicine texts (uluslararası destek — çakışmada Türk Geriatri Derneği + TİTCK öncelikli)',
-    'IV nutrient literature (protokol yazılmaz)',
+    'Geriatri / koruyucu hekimlik metinleri (uluslararası destek — çakışmada Türk Geriatri Derneği + TİTCK öncelikli)',
+    'IV besin desteği literatürü (protokol yazılmaz)',
   ],
   fizyoterapi: [
-    'Kisner / Magee therapeutic exercise (uluslararası destek — çakışmada 29.03.2025 + TFTD öncelikli)',
-    'ICF practice manuals (tanı değil)',
+    'Kisner / Magee terapötik egzersiz (uluslararası destek — çakışmada 29.03.2025 + TFTD öncelikli)',
+    'ICF uygulama kılavuzları (tanı değil)',
   ],
   'klinik-psikolog': [
     "Beck CBT / Shapiro EMDR (uluslararası destek — çakışmada Türk Psikologlar Derneği Etik + 29.03.2025 öncelikli)",

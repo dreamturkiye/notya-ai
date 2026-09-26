@@ -84,7 +84,7 @@ export default function OrtoOpProtokolAraci() {
       <div style={S.kutu}>
         <div style={S.etiket}>Özet</div>
         {satirlar.map((x) => <div key={x} style={S.metin}>{x}</div>)}
-        <TaslakNotu>Ameliyathane planı / OR scheduling / HIS bu ürünün kapsamı değildir. Tanı ve doz hekimindir.</TaslakNotu>
+        <TaslakNotu>Ameliyathane planı / HIS bu ürünün kapsamı değildir. Tanı ve doz hekimindir.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>
           <KopyalaButonu metin={satirlar.join('\n')} etiket="Özeti kopyala" />
         </div>

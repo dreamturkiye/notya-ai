@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <EnfAracKabugu route="/doktor-tools/enfeksiyon-kohort" baslik="Enfeksiyon kohort paneli" aciklama="Geciken kontrol, ATB süre, viral izlem, izolasyon ve açık acil bayrak. 1-tap hasta-güvenli hatırlatma — tanı/doz yok.">
+    <EnfAracKabugu route="/doktor-tools/enfeksiyon-kohort" baslik="Enfeksiyon kohort paneli" aciklama="Geciken kontrol, ATB süre, viral izlem, izolasyon ve açık acil bayrak. Tek dokunuşla hasta-güvenli hatırlatma — tanı/doz yok.">
       <EnfKohortAraci />
     </EnfAracKabugu>
   )

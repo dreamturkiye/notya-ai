@@ -24,7 +24,7 @@ const steps = [
     title: 'Sisteme Giriş',
     content:
       'www.enabiz.gov.tr adresine gidin. e-Devlet, e-İmza veya kurumsal kimlik bilgileriniz ile giriş yapın.',
-    tip: 'İlk kez kullanıyorsanız e-Devlet üzerinden e-Nabız hesabını etkinleştirin. 2FA açıksa SMS doğrulaması gerekir.',
+    tip: 'İlk kez kullanıyorsanız e-Devlet üzerinden e-Nabız hesabını etkinleştirin. İki adımlı doğrulama açıksa SMS kodu gerekir.',
   },
   {
     number: 4,
@@ -37,7 +37,7 @@ const steps = [
     title: 'Görüntüleme İzinleri',
     content:
       'Hastanın açık rızası olmadan kayıtlara erişilemez. KVKK kapsamında bilgilendirme ve onay zorunludur.',
-    tip: 'Sistemde hasta onayı dijital kaydedilir; tarih/saat loglanır.',
+    tip: 'Sistemde hasta onayı dijital kaydedilir; tarih ve saat kayıt altına alınır.',
   },
   {
     number: 6,
@@ -72,12 +72,12 @@ export default function ENabizGuidePage() {
         </h1>
         <p style={{ marginTop: 8, color: CHROME_RENK.muted, fontSize: 14, lineHeight: 1.5 }}>
           Canlı e-Nabız / USS bağlantısı yok. Reçete, rapor, epikriz, USG ve gebe/e-Doğum çıktıları yine de
-          doğru kanal formatında üretilir (FHIR R4, Medula XML, USS form JSON) — kopyala / indir hazır.
+          doğru kanal formatında üretilir (FHIR R4, Medula XML, USS form JSON) — kopyalamaya ve indirmeye hazır.
         </p>
 
         <div style={{ ...toolsCard, marginTop: 20, padding: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: CHROME_RENK.pine, marginBottom: 10 }}>
-            Notya’da üretilen e-Nabız artefaktları
+            Notya’da üretilen e-Nabız çıktıları
           </div>
           <ul style={{ margin: 0, paddingLeft: 18, color: CHROME_RENK.ink, fontSize: 13, lineHeight: 1.55 }}>
             {ENABIZ_ARTEFAKTLAR.map((a) => (
@@ -87,15 +87,15 @@ export default function ENabizGuidePage() {
                 <div style={{ color: CHROME_RENK.muted, fontSize: 12 }}>{a.ornek}</div>
                 {a.tur === 'sgk_rapor' && (
                   <a href="/doktor-tools/sgk-rapor" style={{ color: CHROME_RENK.pine, fontSize: 12, display: 'inline-block', marginTop: 4 }}>
-                    Araçlar → Hasta Raporları (kanon) ›
+                    Araçlar → Hasta Raporları ›
                   </a>
                 )}
               </li>
             ))}
           </ul>
           <p style={{ margin: '12px 0 0', color: '#7A5B1E', fontSize: 12, lineHeight: 1.45 }}>
-            live_write her zaman false. P4 (USS üretici kaydı + hekim şifresi) gelene kadar hekim MBYS/Medula/e-Nabız
-            ekranına kendisi aktarır.
+            Canlı gönderim kapalıdır. USS üretici kaydı ve hekim şifresi tanımlanana kadar çıktıları hekim
+            MBYS / Medula / e-Nabız ekranına kendisi aktarır.
           </p>
         </div>
 

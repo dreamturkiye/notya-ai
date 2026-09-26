@@ -144,9 +144,9 @@ export function intakeAlanHatalari(bolumler: IntakeBolum[], yanitlar: Record<str
 export function intakeSunucuHataMetni(bolumler: IntakeBolum[], yanitlar: Record<string, unknown>, nowMs = Date.now()): string | null {
   const h = intakeIlkHata(bolumler, yanitlar, nowMs)
   if (!h) return null
-  if (h.sebep === 'zorunlu') return `"${h.alan.etiket}" alani zorunludur.`
-  if (h.sebep === 'bicim') return h.mesaj || `"${h.alan.etiket}" alani gecersiz.`
-  return h.alan.desenHata || `"${h.alan.etiket}" alani gecersiz.`
+  if (h.sebep === 'zorunlu') return `"${h.alan.etiket}" alanı zorunludur.`
+  if (h.sebep === 'bicim') return h.mesaj || `"${h.alan.etiket}" alanı geçersiz.`
+  return h.alan.desenHata || `"${h.alan.etiket}" alanı geçersiz.`
 }
 
 /** Hastaya gösterilen istemci mesajı (tam Türkçe — form ekranında okunuyor). */

@@ -40,7 +40,7 @@ export default function BcGoruntuAraci() {
         <div style={{ ...bcStil.etiket, marginTop: 12 }}>Etiket (tanı yok)</div>
         <input value={etiket} onChange={(e) => setEtiket(e.target.value)} placeholder="örn. Kontrol BT" style={bcStil.input} />
         <label style={{ ...bcStil.kucuk, display: 'block', marginTop: 10 }}>Kontrol tarihi<input type="date" value={tarih} onChange={(e) => setTarih(e.target.value)} style={{ ...bcStil.input, display: 'block', width: 160 }} /></label>
-        <label style={{ ...bcStil.kucuk, display: 'block', marginTop: 10 }}>Belge id (isteğe bağlı)<input value={belgeId} onChange={(e) => setBelgeId(e.target.value)} placeholder="vault belge kimliği" style={{ ...bcStil.input, display: 'block' }} /></label>
+        <label style={{ ...bcStil.kucuk, display: 'block', marginTop: 10 }}>Belge kimliği (isteğe bağlı)<input value={belgeId} onChange={(e) => setBelgeId(e.target.value)} placeholder="arşiv belge kimliği" style={{ ...bcStil.input, display: 'block' }} /></label>
       </div>
       <div style={bcStil.kutu}>
         <div style={bcStil.etiket}>Köprü özeti</div>
@@ -52,7 +52,7 @@ export default function BcGoruntuAraci() {
         </div>
         {durum && <div style={{ ...bcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...bcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — görüntü köprüsü zaman çizelgesidir; AI tanı ve rapor yorumu yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — görüntü köprüsü zaman çizelgesidir; yapay zekâ tanısı ve rapor yorumu yazılmaz.</TaslakNotu>
       </div>
     </>
   )

@@ -33,7 +33,7 @@ import {
 } from '@/specialties/dermatoloji/engines/clinic-fit'
 import { gopIsotretinoin } from '@/specialties/dermatoloji/engines/gop-isotretinoin'
 import { kararKartlariFromClinic } from '@/specialties/dermatoloji/protocols/karar-kartlari'
-import { CLINIC_UNIT_PROFILES } from '@/specialties/dermatoloji/protocols/clinic-units'
+import { CLINIC_UNIT_PROFILES, checklistEtiketi } from '@/specialties/dermatoloji/protocols/clinic-units'
 import type { ClinicUnit } from '@/specialties/dermatoloji/types'
 import { kutu, btn, giris, etiketS } from '@/specialties/dermatoloji/ui/clinic-styles'
 import StickyDermStrip from '@/specialties/dermatoloji/ui/StickyDermStrip'
@@ -414,7 +414,7 @@ export default function HastaDermatoloji({
                           checked={st === 'yapildi'}
                           onChange={(e) => setChecklist((prev) => ({ ...prev, [m]: { durum: e.target.checked ? 'yapildi' : 'bekliyor' } }))}
                         />
-                        {m}
+                        {checklistEtiketi(m)}
                         <button
                           type="button"
                           style={{ ...btn(), padding: '4px 8px', fontSize: 11 }}

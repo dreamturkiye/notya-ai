@@ -404,7 +404,7 @@ export default function HastaGebelik({ patientId }: { patientId: string }) {
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 13, color: CHROME_RENK.muted }}>
-        Gebelik Takibi — ACOG pratik gold + DÖBYR 2026 yasal asgari (4 izlem). Hafta/tarih/uyarı hesapları deterministik; nihai karar hekimindir. ACOG ile DÖBYR çelişirse iki sütun gösterilir.
+        Gebelik Takibi — ACOG (pratikte altın standart) + DÖBYR 2026 yasal asgari (4 izlem). Hafta/tarih/uyarı hesapları deterministik; nihai karar hekimindir. ACOG ile DÖBYR çelişirse iki sütun gösterilir.
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} data-kd="mod-toggle">
         {([

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <AtAracKabugu route="/doktor-tools/acil-kritik-yol" baslik="Kritik yol checklist" aciklama="STEMI / inme / travma / sepsis / hava yolu bayrakları. Tanı kilidi ve doz yazılmaz. Kardiyoloji/nöroloji tile değildir.">
+    <AtAracKabugu route="/doktor-tools/acil-kritik-yol" baslik="Kritik yol kontrol listesi" aciklama="STEMI / inme / travma / sepsis / hava yolu bayrakları. Tanı kilidi ve doz yazılmaz. Kardiyoloji / nöroloji aracı değildir.">
       <AtKritikYolAraci />
     </AtAracKabugu>
   )

@@ -129,7 +129,7 @@ export default function PlastikHome({ patientId }: { patientId: string }) {
       {sekme === 'Özet' && (
         <div>
           <div style={etiket}>Bu vizit</div>
-          <div style={metin}>Yara/greft, foto çizgisi ve onam checklist karar desteğidir. Tanı / doz / OR hekimdedir.</div>
+          <div style={metin}>Yara/greft, foto çizgisi ve onam kontrol listesi karar desteğidir. Tanı / doz / ameliyathane planı hekimdedir.</div>
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -179,20 +179,20 @@ export default function PlastikHome({ patientId }: { patientId: string }) {
             <input type="date" value={fotoForm.sonrakiKontrol} onChange={(e) => setFotoForm({ ...fotoForm, sonrakiKontrol: e.target.value })} style={{ ...toolsInput, width: 160 }} />
             <button type="button" style={btn} onClick={() => calistir({ adim: 'foto', foto: fotoForm, hekimKilit: true }, 'Foto çizgisi kaydedildi.')}>Kaydet</button>
           </div>
-          <div style={{ ...kucuk, marginTop: 8 }}>AI tanı / PASI yazılmaz — yalnız hekimin belirlediği tarih+etiket.</div>
+          <div style={{ ...kucuk, marginTop: 8 }}>Yapay zekâ tanısı / PASI yazılmaz — yalnız hekimin belirlediği tarih+etiket.</div>
         </div>
       )}
 
       {sekme === 'Onam' && (
         <div>
-          <div style={etiket}>Onam taslağı checklist</div>
+          <div style={etiket}>Onam taslağı kontrol listesi</div>
           {ONAM_MADDELER.map((m) => (
             <label key={m.kod} style={{ ...metin, display: 'flex', gap: 8, padding: '2px 0' }}>
               <input type="checkbox" checked={onamSec.includes(m.kod)} onChange={() => setOnamSec((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />
               {m.ad}
             </label>
           ))}
-          <button type="button" style={{ ...btn, marginTop: 8 }} onClick={() => calistir({ adim: 'onam', secilen: onamSec }, 'Onam checklist kaydedildi.')}>Kaydet</button>
+          <button type="button" style={{ ...btn, marginTop: 8 }} onClick={() => calistir({ adim: 'onam', secilen: onamSec }, 'Onam kontrol listesi kaydedildi.')}>Kaydet</button>
         </div>
       )}
 

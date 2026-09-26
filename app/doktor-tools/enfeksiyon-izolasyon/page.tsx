@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <EnfAracKabugu route="/doktor-tools/enfeksiyon-izolasyon" baslik="İzolasyon / bildirim hatırlatma" aciklama="İzolasyon tipi ve başlangıç/bitiş/bildirim tarihleri. Tanı yazılmaz. Hastane enfeksiyon kontrolü full HIS bu araçta yoktur.">
+    <EnfAracKabugu route="/doktor-tools/enfeksiyon-izolasyon" baslik="İzolasyon / bildirim hatırlatma" aciklama="İzolasyon tipi ve başlangıç/bitiş/bildirim tarihleri. Tanı yazılmaz. Hastane enfeksiyon kontrol sistemi (HBYS) bu araçta yoktur.">
       <EnfIzolasyonAraci />
     </EnfAracKabugu>
   )

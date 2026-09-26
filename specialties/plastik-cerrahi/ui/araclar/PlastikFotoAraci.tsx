@@ -37,7 +37,7 @@ export default function PlastikFotoAraci() {
       <div style={plastikStil.kutu}>
         <div style={plastikStil.etiket}>Hasta (isteğe bağlı kayıt için)</div>
         <PlastikHastaSecici secili={hastaId} sec={(id) => setHastaId(id)} />
-        <div style={{ ...plastikStil.etiket, marginTop: 12 }}>Etiket (AI tanı yok)</div>
+        <div style={{ ...plastikStil.etiket, marginTop: 12 }}>Etiket (yapay zekâ tanısı yok)</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
           {FOTO_ETIKET_ONERILERI.map((e) => (
             <button key={e} type="button" style={plastikStil.ghost} onClick={() => setEtiket(e)}>{e}</button>
@@ -62,7 +62,7 @@ export default function PlastikFotoAraci() {
         </div>
         {durum && <div style={{ ...plastikStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...plastikStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — foto köprüsü tarih+etikettir; derm skor / AI tanı ve doz yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — foto köprüsü tarih+etikettir; dermatoloji skoru / yapay zekâ tanısı ve doz yazılmaz.</TaslakNotu>
       </div>
     </>
   )

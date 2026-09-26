@@ -25,7 +25,7 @@ export type Dipnot = { ref: Ref; not: string }
 export const REF_ACIKLAMA: Record<Ref, string> = {
   TGD_IBD: 'Türk Gastroenteroloji Derneği (TGD) — IBD klinik kullanım; skor karar desteği, tanı/doz hekimin',
   TGD_IBS: 'TGD / Roma çerçevesi — IBS semptom şiddeti karar desteği; tanı hekimin',
-  TGD_ENDO: 'TGD endoskopi kalite / takip aralıkları — belge köprüsü; HIS suite core değil',
+  TGD_ENDO: 'TGD endoskopi kalite / takip aralıkları — belge köprüsü; endoskopi ünitesi HIS’i ürünün parçası değil',
   TKAD_HBV: 'Türk Karaciğer Araştırmaları Derneği (TKAD) / SB — HBV izlem vadeleri; antiviral doz hekimin',
   TKAD_HCV: 'TKAD / SB — HCV izlem vadeleri; antiviral doz hekimin',
   SB_GI: 'T.C. Sağlık Bakanlığı — GI kanama / akut karın birinci basamak yönlendirme',
@@ -40,7 +40,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Aktif GI kanama (hematemez / melena / hematokezya), akut karın, şiddetli pankreatit şüphesi veya hepatik ensefalopati belirtileri varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan gastroenteroloji muayenehanesi / polikliniği ürünü. Tam endoskopi suite / HIS, tanı kilidi ve uydurma antiviral / PPI / biyolojik dozu bu bölümün kapsamı değildir.'
+  'Ayaktan gastroenteroloji muayenehanesi / polikliniği ürünü. Tam endoskopi ünitesi / HIS, tanı kilidi ve uydurma antiviral / PPI / biyolojik dozu bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

@@ -14,15 +14,15 @@ const ciz = (C: ComponentType) => renderToStaticMarkup(createElement(C))
 const ARACLAR = [PlastikFotoAraci, PlastikYaraAraci, PlastikOnamAraci, PlastikKohortAraci]
 
 describe('Plastik araç bileşenleri (SSR)', () => {
-  it('Foto: TASLAK, AI tanı yok', () => {
+  it('Foto: TASLAK, yapay zekâ tanısı yok', () => {
     const h = ciz(PlastikFotoAraci)
     assert.match(h, /TASLAK/)
-    assert.match(h, /AI tanı|PASI/i)
+    assert.match(h, /yapay zekâ tanısı|PASI/i)
   })
-  it('Yara: TASLAK, OR/HIS yok', () => {
+  it('Yara: TASLAK, ameliyathane/HIS yok', () => {
     const h = ciz(PlastikYaraAraci)
     assert.match(h, /TASLAK/)
-    assert.match(h, /OR\/HIS|tanı/i)
+    assert.match(h, /ameliyathane\/HIS|tanı/i)
   })
   it('Onam: TASLAK', () => {
     const h = ciz(PlastikOnamAraci)

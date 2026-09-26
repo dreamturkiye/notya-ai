@@ -155,7 +155,7 @@ export default function HastaBuyumeEgrileri({ patientId, hedefBoyGoster = false 
         <HedefBoyManken sonuc={hedef} tema="doktor" style={{ marginTop: 8 }} />
       ) : hedefYuklendi ? (
         <p style={{ margin: '10px 0 0', fontSize: 13, color: CHROME_RENK.muted, lineHeight: 1.5 }}>
-          Intake zorunlu değil. Anne ve baba boyunu Araçlar’dan girin — sonuç aileye mankenlerle gösterilir.
+          Hasta bilgi formu zorunlu değil. Anne ve baba boyunu Araçlar’dan girin — sonuç aileye mankenlerle gösterilir.
         </p>
       ) : (
         <p style={{ margin: '10px 0 0', fontSize: 13, color: CHROME_RENK.muted }}>Hedef boy yükleniyor…</p>

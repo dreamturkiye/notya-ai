@@ -105,7 +105,7 @@ export const INFERTILITE_ADIM1 = [
   'TSH, PRL',
   'Semen analizi (partner sevk)',
   'HSG / SIS / 3D kavite + sonuç kaydı',
-  'Siklus takibi / ovulasyon',
+  'Siklus takibi / ovülasyon',
   'Bazal TVUS (AFC, endometrioma)',
   'ÜYTE/IVF merkezine sevk paketi (Notya burada durur)',
 ]

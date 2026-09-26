@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { MessageFolder, PortalBundle, PortalMessage } from '@/lib/portal/types'
 import { COMPOSE_DISCLAIMER } from '@/lib/portal/messageCopy'
 import { EmptyState, SectionHeader, SoftPanel, formatTrDate } from './ui'
+import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 
 type Props = {
   data: PortalBundle
@@ -110,7 +111,7 @@ export function MessagesView({ data, token, onMessagesUpdated }: Props) {
       setReplyMetin('')
       setComposeOpen(false)
     } catch (e) {
-      setSendError(e instanceof Error ? e.message : 'Gönderilemedi')
+      setSendError(turkceHataMesaji(e instanceof Error ? e.message : '') || 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.')
     } finally {
       setSending(false)
     }

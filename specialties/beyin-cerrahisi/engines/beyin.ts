@@ -27,13 +27,13 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
 }
 
 export const HEKIM_KILIT_METNI =
-  'Post-op checklist, görüntü köprüsü ve nöbet/bilinç bayrakları karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya AED dozu üretmez, tanı kilitlemez ve ameliyathane HIS yönetmez.'
+  'Post-op kontrol listesi, görüntü köprüsü ve nöbet/bilinç bayrakları karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya AED dozu üretmez, tanı kilitlemez ve ameliyathane HIS yönetmez.'
 
 export const ACIL_YONLENDIRME_METNI =
   'Ani bilinç kaybı / kötüleşme, yeni fokal güçsüzlük, şiddetli baş ağrısı + kusma, cerrahi yara sızıntısı / ateş veya ani konuşma bozukluğu varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan nöroşirürji muayenehanesi / polikliniği ürünü. Ameliyathane OR / full HIS, tanı auto-lock ve uydurma AED dozları bu bölümün kapsamı değildir. Nöroloji Migren/İnme araçları ayrı branştır.'
+  'Ayaktan nöroşirürji muayenehanesi / polikliniği ürünü. Ameliyathane / tam HIS, otomatik tanı kilidi ve uydurma AED dozları bu bölümün kapsamı değildir. Nöroloji Migren/İnme araçları ayrı branştır.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

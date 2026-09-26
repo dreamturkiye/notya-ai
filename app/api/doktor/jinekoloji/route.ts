@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   if ('hata' in oturum) return oturum.hata
   const { user, supabase: sb } = oturum
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null
-  if (!b?.adim) return NextResponse.json({ error: 'adim gerekli' }, { status: 400 })
+  if (!b?.adim) return NextResponse.json({ error: 'adım gerekli' }, { status: 400 })
   const adim = String(b.adim)
 
   if (adim === 'gorev') {
@@ -244,10 +244,10 @@ export async function POST(req: NextRequest) {
     const sonuc = kokDegerlendir(girdi)
     const karar = String(b.karar || 'beklemede')
     const override = karar === 'baslandi' && sonuc.kategori === 4
-    if (override && !(b.overrideGerekce && String(b.overrideGerekce).trim().length >= 15)) return NextResponse.json({ error: `KOK başlatılamaz (MEC 4): ${sonuc.engeller.join('; ')}. Hekim override için ≥15 karakter gerekçe zorunlu; kayda geçer.`, sonuc }, { status: 409 })
+    if (override && !(b.overrideGerekce && String(b.overrideGerekce).trim().length >= 15)) return NextResponse.json({ error: `KOK başlatılamaz (MEC 4): ${sonuc.engeller.join('; ')}. Yine de başlamak için en az 15 karakterlik hekim gerekçesi zorunlu; kayda geçer.`, sonuc }, { status: 409 })
     const { error } = await sb.from('jine_kok').insert({ patient_id: hasta.id, doctor_id: user.id, kontrol: girdi, sonuc, karar, override, override_gerekce: override ? String(b.overrideGerekce).slice(0, 500) : null, preparat: b.preparat ? String(b.preparat).slice(0, 120) : null })
     if (error) return NextResponse.json({ error: 'Yazılamadı' }, { status: 500 })
-    if (karar === 'baslandi') await gununNotunaEkle(sb, user.id, hasta.id, `KOK başlandı (hekim) — MEC kategori ${sonuc.kategori}${override ? ` — OVERRIDE: ${String(b.overrideGerekce).slice(0, 200)}` : ''}${b.preparat ? ` — ${String(b.preparat)}` : ''}`)
+    if (karar === 'baslandi') await gununNotunaEkle(sb, user.id, hasta.id, `KOK başlandı (hekim) — MEC kategori ${sonuc.kategori}${override ? ` — kontrendikasyona rağmen başlandı, gerekçe: ${String(b.overrideGerekce).slice(0, 200)}` : ''}${b.preparat ? ` — ${String(b.preparat)}` : ''}`)
     return NextResponse.json({ ok: true, sonuc, override })
   }
   if (adim === 'endometriozis') {
@@ -434,7 +434,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, gorevler })
   }
 
-  return NextResponse.json({ error: 'Geçersiz adim' }, { status: 400 })
+  return NextResponse.json({ error: 'Geçersiz adım' }, { status: 400 })
 }
 
 export async function GET(req: NextRequest) {

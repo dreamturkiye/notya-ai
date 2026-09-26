@@ -134,7 +134,7 @@ export default function AnesteziHome({ patientId }: { patientId: string }) {
       {sekme === 'Özet' && (
         <div>
           <div style={etiket}>Bu vizit</div>
-          <div style={metin}>ASA/pre-op checklist, hava yolu notu ve post-op ağrı izlemi karar desteğidir. Tanı / ilaç dozu hekimdedir. OR anestezi makinesi HIS yok.</div>
+          <div style={metin}>ASA/pre-op kontrol listesi, hava yolu notu ve post-op ağrı izlemi karar desteğidir. Tanı / ilaç dozu hekimdedir. Ameliyathane anestezi makinesi HIS yok.</div>
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -153,7 +153,7 @@ export default function AnesteziHome({ patientId }: { patientId: string }) {
 
       {sekme === 'ASA/Pre-op' && (
         <div>
-          <div style={etiket}>ASA / pre-op değerlendirme checklist</div>
+          <div style={etiket}>ASA / pre-op değerlendirme kontrol listesi</div>
           {ASA_MADDELER.map((m) => (
             <label key={m.kod} style={{ ...metin, display: 'flex', gap: 8, padding: '2px 0' }}>
               <input type="checkbox" checked={asaSec.includes(m.kod)} onChange={() => setAsaSec((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />

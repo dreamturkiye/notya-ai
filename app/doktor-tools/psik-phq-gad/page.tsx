@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <PsikAracKabugu route="/doktor-tools/psik-phq-gad" baslik="PHQ-9 / GAD-7" aciklama="Maddeleri işaretleyin; toplam ve şiddet bandı anında çıkar, istersen hasta dosyasına kaydedin. Bant karar desteğidir — DSM-5-TR tanısı hekimin. PHQ-9 9. madde pozitifse güvenlik değerlendirmesi zorunludur.">
+    <PsikAracKabugu route="/doktor-tools/psik-phq-gad" baslik="PHQ-9 / GAD-7" aciklama="Maddeleri işaretleyin; toplam ve şiddet bandı anında çıkar, isterseniz hasta dosyasına kaydedin. Bant karar desteğidir — DSM-5-TR tanısı hekimin. PHQ-9 9. madde pozitifse güvenlik değerlendirmesi zorunludur.">
       <PhqGadAraci />
     </PsikAracKabugu>
   )

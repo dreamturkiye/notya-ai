@@ -58,7 +58,7 @@ const KURALLAR: Array<{
     ad: 'Yara kenarı ayrışması / dikiş açılması',
     eylem: 'Aynı gün plastik değerlendirme. Onarım kararı hekimindir; tanı yazılmaz.',
     oncelik: 'ayni_gun',
-    dipnot: { ref: 'TPRECD', not: 'Dehiscence — klinik değerlendirme' },
+    dipnot: { ref: 'TPRECD', not: 'Yara ayrışması (dehisens) — klinik değerlendirme' },
   },
   {
     kod: 'kanama_siddetli',

@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type Dispa
 import type { PortalBundle } from '@/lib/portal/types'
 import { emptyPortalBundle } from '@/lib/portal/emptyBundle'
 import { PinGate } from './PinGate'
+import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 
 type LiveState = {
   loading: boolean
@@ -91,7 +92,8 @@ export function PortalLiveProvider({
       if (msg === 'PIN_REQUIRED') {
         setError(null)
       } else {
-        setError(msg)
+        // KURAL — TÜRKÇE: hastaya İngilizce sunucu / tarayıcı hatası gösterilmez ("Failed to fetch").
+        setError(turkceHataMesaji(msg) || 'Sağlık alanınız şu an açılamadı. Lütfen biraz sonra tekrar deneyin.')
       }
     } finally {
       setLoading(false)

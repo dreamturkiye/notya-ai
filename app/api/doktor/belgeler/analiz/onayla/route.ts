@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   if ('hata' in oturum) return oturum.hata
   const { user, supabase } = oturum
   const body = (await req.json().catch(() => null)) as { analizId?: string; adim?: 'onayla' | 'muayene_onayla'; plan?: string; noteId?: string } | null
-  if (!body?.analizId || !body.adim) return NextResponse.json({ error: 'analizId ve adim gerekli' }, { status: 400 })
+  if (!body?.analizId || !body.adim) return NextResponse.json({ error: 'analizId ve adım gerekli' }, { status: 400 })
 
   const { data: a } = await supabase.from('belge_analizleri').select('id, patient_id, belge_id, note_id, sonuc, hekim_tanisi, hekim_ozet, modality_final, durum, olusturuldu').eq('id', body.analizId).eq('doctor_id', user.id).maybeSingle()
   if (!a || !a.sonuc) return NextResponse.json({ error: 'Analiz bulunamadı' }, { status: 404 })

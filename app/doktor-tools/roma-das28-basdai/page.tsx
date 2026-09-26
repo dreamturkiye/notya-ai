@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <RomaAracKabugu route="/doktor-tools/roma-das28-basdai" baslik="DAS28 / BASDAI" aciklama="Aktivite skoru ve şiddet bandı karar desteğidir. Tanı yazılmaz, doz yazılmaz. İnfüzyon süiti HIS yoktur.">
+    <RomaAracKabugu route="/doktor-tools/roma-das28-basdai" baslik="DAS28 / BASDAI" aciklama="Aktivite skoru ve şiddet bandı karar desteğidir. Tanı yazılmaz, doz yazılmaz. İnfüzyon ünitesi takibi (HBYS) yoktur.">
       <RomaDas28BasdaiAraci />
     </RomaAracKabugu>
   )

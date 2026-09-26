@@ -115,7 +115,7 @@ export function intakeAcilKodlari(isaretli: unknown): AcilKod[] {
 export const ACIL_KONTROL_LISTESI: readonly string[] = [
   'Belirtilerin başlangıç saati kaydedildi',
   'Bilinç / pupil / fokal bulgu değerlendirildi (mümkünse)',
-  'Son ameliyat / işlem tarihi sorgulandı (OR HIS yok)',
+  'Son ameliyat / işlem tarihi sorgulandı (ameliyathane HIS yok)',
   'Hastaya / yakına 112 yolu anlatıldı',
   'Ayaktan randevu yerine acil yönlendirme kararı hekim tarafından kilitlendi',
 ]

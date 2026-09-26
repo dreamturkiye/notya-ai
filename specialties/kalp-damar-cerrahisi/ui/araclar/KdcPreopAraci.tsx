@@ -31,7 +31,7 @@ export default function KdcPreopAraci() {
       })
       const j = await r.json().catch(() => ({}))
       if (!r.ok) { setHata(j.error || 'Kaydedilemedi'); return }
-      setDurum('Pre-op checklist hasta dosyasına kaydedildi.')
+      setDurum('Pre-op kontrol listesi hasta dosyasına kaydedildi.')
     } catch { setHata('Kaydedilemedi') }
   }
 
@@ -49,7 +49,7 @@ export default function KdcPreopAraci() {
         ))}
       </div>
       <div style={kdcStil.kutu}>
-        <div style={kdcStil.etiket}>Checklist özeti (karar desteği)</div>
+        <div style={kdcStil.etiket}>Kontrol listesi özeti (karar desteği)</div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
           <Istatistik deger={secilen.length} etiket="Seçilen madde" ton={secilen.length ? 'iyi' : 'notr'} />
           <Istatistik deger={PREOP_MADDELER.length - secilen.length} etiket="Eksik" ton={secilen.length < PREOP_MADDELER.length ? 'uyari' : 'iyi'} />
@@ -61,7 +61,7 @@ export default function KdcPreopAraci() {
         </div>
         {durum && <div style={{ ...kdcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...kdcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — pre-op checklist karar desteğidir; SCORE2, doz ve OR planı yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — pre-op kontrol listesi karar desteğidir; SCORE2, doz ve ameliyathane planı yazılmaz.</TaslakNotu>
       </div>
     </>
   )

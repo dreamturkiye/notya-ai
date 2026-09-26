@@ -114,5 +114,5 @@ export const ILAC_DOZ_UYARI_LISTESI: readonly string[] = [
   'NSAİİ: KBH’de kaçınma / alternatif analjezi görüşüldü',
   'Potasyum bağlayıcı / diüretik: endikasyon hekim kararı (doz Notya yazmaz)',
   'ESA / demir: anemi paneli bakıldı; ESA dozu hekim reçetesinde (Notya üretmez)',
-  'Metformin / digoksin / diğer renal-clearance ilaçlar: doz ayarı hekimde',
+  'Metformin / digoksin / böbrekle atılan diğer ilaçlar: doz ayarı hekimde',
 ]

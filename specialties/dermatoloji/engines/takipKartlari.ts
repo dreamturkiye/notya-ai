@@ -258,7 +258,7 @@ export function sacTirnakTakip(g: SacTirnakGirdi): TakipKarti & { saltToplam: nu
   const trikAd = TRIKOSKOPI_ALANLARI.filter((t) => trik[t.kod]).map((t) => t.ad)
   if (trikAd.length) bulgular.push(`Trikoskopi: ${trikAd.join(', ')}`)
   else eksikler.push('Trikoskopi bulgu kaydı')
-  if (!g.trikoskopiFotoSayisi) eksikler.push('Trikoskopi fotoğrafı (core görüntüleme — aynı bölge, seri izlem)')
+  if (!g.trikoskopiFotoSayisi) eksikler.push('Trikoskopi fotoğrafı (Görüntüleme — aynı bölge, seri izlem)')
   else bulgular.push(`Trikoskopi fotoğrafı: ${g.trikoskopiFotoSayisi} kayıt`)
 
   if (g.cekmeTesti && g.cekmeTesti !== 'yapilmadi') bulgular.push(`Çekme testi: ${g.cekmeTesti}`)

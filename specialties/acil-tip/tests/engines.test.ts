@@ -35,10 +35,10 @@ describe('acil-tip kritik yol', () => {
 })
 
 describe('acil-tip sevk', () => {
-  it('paket; boarding HIS yok', () => {
+  it('paket; yatış bekletme HIS yok', () => {
     const s = sevkSkorla({ hedef: 'taburcu_takip', maddeler: ['taburcu_egitim', 'kontrol_randevu'] })
     assert.ok(s.tamamMi)
-    assert.match(s.ozet, /Boarding HIS yok/i)
+    assert.match(s.ozet, /Yatış bekletme HIS yok/i)
   })
 })
 

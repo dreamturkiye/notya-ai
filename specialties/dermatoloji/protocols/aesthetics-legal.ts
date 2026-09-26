@@ -11,11 +11,11 @@ export function evaluateAesthetics(input: {
   return {
     triage: 'routine',
     next: [
-      physicianOnly ? 'medical laser/filler/botox/deep peel physician-only' : `salon IPL ${SALON_IPL.nm_lo}–${SALON_IPL.nm_hi}nm diode ≤${SALON_IPL.diode_max_j} J/cm²`,
-      'complication intake',
-      'lot numbers',
+      physicianOnly ? 'Tıbbi lazer / dolgu / botoks / derin peeling yalnız hekim tarafından uygulanır' : `Salon IPL ${SALON_IPL.nm_lo}–${SALON_IPL.nm_hi} nm, diyot ≤${SALON_IPL.diode_max_j} J/cm²`,
+      'Komplikasyon kaydı',
+      'Lot numaraları',
       `Fitzpatrick ${input.fitzpatrick}`,
-      input.test_spot ? 'test spot done' : 'test spot',
+      input.test_spot ? 'Test spot yapıldı' : 'Test spot',
     ],
     citations: ['ayakta-teshis'],
     photoPlan: ['islem_oncesi', 'islem_sonrasi'],

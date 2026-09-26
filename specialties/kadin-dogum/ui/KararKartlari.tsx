@@ -40,7 +40,7 @@ export function KararKartlari({ kartlar }: { kartlar: KararKart[] }) {
             </div>
           </div>
           {k.conflict && (
-            <p style={{ fontSize: 11.5, color: '#F59E0B', margin: '8px 0 0' }}>yasal asgari vs klinik öneri — birleştirilmez</p>
+            <p style={{ fontSize: 11.5, color: '#F59E0B', margin: '8px 0 0' }}>yasal asgari / klinik öneri — birleştirilmez</p>
           )}
           <p style={{ fontSize: 11, color: CHROME_RENK.muted, margin: '8px 0 0' }} title={k.williams}>
             Williams: derinlik (ders kitabı rolü — metin kopyalanmaz)

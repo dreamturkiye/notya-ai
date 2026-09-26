@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <BcAracKabugu route="/doktor-tools/bc-postop" baslik="Nöro post-op checklist" aciklama="Ameliyat sonrası kontrol maddeleri ve tarihler. Tanı, OR/HIS ve AED dozu yazılmaz.">
+    <BcAracKabugu route="/doktor-tools/bc-postop" baslik="Nöro post-op kontrol listesi" aciklama="Ameliyat sonrası kontrol maddeleri ve tarihler. Tanı, ameliyathane / HBYS kaydı ve AED dozu yazılmaz.">
       <BcPostopAraci />
     </BcAracKabugu>
   )

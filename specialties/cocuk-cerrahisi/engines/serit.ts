@@ -52,7 +52,7 @@ export function ccSeridi(g: CcSeritGirdi): CcSerit {
       alt: g.ameliyatTarihi || undefined,
     })
   } else {
-    chips.push({ ad: 'Pre/post-op', deger: '—', durum: 'yok', alt: 'checklist yok' })
+    chips.push({ ad: 'Pre/post-op', deger: '—', durum: 'yok', alt: 'kontrol listesi yok' })
   }
 
   chips.push(

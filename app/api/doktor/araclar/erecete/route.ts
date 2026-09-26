@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const { hastaId, tani, notlar, ilaclar } = body;
 
     if (!hastaId || !tani) {
-      return NextResponse.json({ hata: 'hastaId ve tani zorunludur' }, { status: 400 });
+      return NextResponse.json({ hata: 'hastaId ve tanı zorunludur' }, { status: 400 });
     }
 
     const { data: hasta, error: hastaError } = await sb
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       if (!(e instanceof AiCagriHatasi)) throw e
       console.error('[erecete] anthropic', e.govde.slice(0, 300));
-      await kritikAlarm('erecete AI hatasi', e.govde.slice(0, 200));
+      await kritikAlarm('e-Reçete AI hatası', e.govde.slice(0, 200));
       return NextResponse.json({ hata: 'Reçete taslağı üretilemedi. Lütfen tekrar deneyin.' }, { status: 502 });
     }
     const temiz = hamMetin.replace(/```json\n?|\n?```/g, '').trim();

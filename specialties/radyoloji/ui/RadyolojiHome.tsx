@@ -199,7 +199,7 @@ export default function RadyolojiHome({ patientId }: { patientId: string }) {
               {m.ad}
             </label>
           ))}
-          <div style={{ ...etiket, marginTop: 10 }}>Bildirim checklist</div>
+          <div style={{ ...etiket, marginTop: 10 }}>Bildirim kontrol listesi</div>
           {BILDIRIM_MADDELER.map((m) => (
             <label key={m.kod} style={{ ...metin, display: 'flex', gap: 8, padding: '2px 0' }}>
               <input type="checkbox" checked={bildirimSec.includes(m.kod)} onChange={() => setBildirimSec((p) => (p.includes(m.kod) ? p.filter((x) => x !== m.kod) : [...p, m.kod]))} />

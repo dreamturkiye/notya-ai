@@ -63,7 +63,7 @@ export function sporSeridi(g: SporSeritGirdi): SporSerit {
 
   chips.push({
     ad: 'Yük',
-    deger: g.yuklenmeUyari ? 'uyarı' : 'ok',
+    deger: g.yuklenmeUyari ? 'uyarı' : 'normal',
     durum: g.yuklenmeUyari ? 'dikkat' : 'iyi',
     alt: g.yuklenmeUyari ? 'yüklenme uyarısı' : undefined,
   })

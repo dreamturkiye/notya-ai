@@ -266,12 +266,12 @@ export const SUBSCRIPTION_PLANS: Record<string, {
   features: string[]
 }> = {
   starter: {
-    name: 'Starter',
+    name: 'Başlangıç',
     price_try_monthly: 499,
     price_try_yearly: 399,
     session_limit: 50,
     user_limit: 1,
-    features: ['50 seans/ay', 'SOAP notları', 'WhatsApp gönderimi', 'Türkçe AI'],
+    features: ['50 seans/ay', 'SOAP notları', 'WhatsApp gönderimi', 'Türkçe yapay zekâ'],
   },
   pro: {
     name: 'Pro',
@@ -295,6 +295,6 @@ export const SUBSCRIPTION_PLANS: Record<string, {
     price_try_yearly: 0,
     session_limit: null,
     user_limit: 999,
-    features: ['Sınırsız kullanıcı', 'HIS entegrasyonu', 'SLA garantisi', 'Özel eğitim'],
+    features: ['Sınırsız kullanıcı', 'HBYS entegrasyonu', 'SLA garantisi', 'Özel eğitim'],
   },
 }

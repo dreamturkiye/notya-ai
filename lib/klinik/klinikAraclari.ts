@@ -19,7 +19,7 @@ export const KLINIK_ARACLARI: readonly KlinikArac[] = [
   { circleColor: '#0F172A', icon: 'KK', title: 'Kayıt · rıza · KVKK', desc: 'SB / Hasta Hakları / KVKK kayıt checklist — 10 dal', route: '/klinik-tools/kayit-kvkk', dallar: ['sac-ekimi', 'estetik-cerrahi', 'medikal-estetik', 'klinik-dermatoloji', 'longevity', 'fizyoterapi', 'klinik-psikolog', 'diyetisyen', 'ergoterapi', 'odyoloji'] },
   { circleColor: '#2563EB', icon: 'GR', title: 'Donör greft bandı', desc: 'cm² × yoğunluk → greft bandı (karar desteği) — nihai greft uzmanında', route: '/klinik-tools/sac-greft', dallar: ['sac-ekimi'] },
   { circleColor: '#1D4ED8', icon: 'YT', title: 'Yıkama takvimi', desc: 'Ameliyat günü → 1/3/10/14. gün bakım vadeleri', route: '/klinik-tools/sac-takvim', dallar: ['sac-ekimi'] },
-  { circleColor: '#1E40AF', icon: 'SK', title: 'Saç ekimi kohort', desc: 'Geciken yıkama · 10/14. gün kontrol · 1-tap hatırlatma', route: '/klinik-tools/sac-kohort', dallar: ['sac-ekimi'] },
+  { circleColor: '#1E40AF', icon: 'SK', title: 'Saç ekimi kohort', desc: 'Geciken yıkama · 10/14. gün kontrol · tek dokunuşla hatırlatma', route: '/klinik-tools/sac-kohort', dallar: ['sac-ekimi'] },
   { circleColor: '#E91E8C', icon: 'ON', title: 'Elektif onam / soğuma', desc: 'Ameliyat öncesi soğuma kaydı — kesi/implant yok', route: '/klinik-tools/cerrahi-onam', dallar: ['estetik-cerrahi'] },
   { circleColor: '#DB2777', icon: 'PO', title: 'Ameliyat sonrası takvim', desc: '1 / 7 / 14 / 42. gün pansuman ve izlem', route: '/klinik-tools/cerrahi-takvim', dallar: ['estetik-cerrahi'] },
   { circleColor: '#BE185D', icon: 'CK', title: 'Estetik cerrahi kohort', desc: 'Soğuma · geç izlem · emboli 112', route: '/klinik-tools/cerrahi-kohort', dallar: ['estetik-cerrahi'] },

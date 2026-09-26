@@ -14,6 +14,9 @@ function token(): string {
   } catch { return '' }
 }
 
+// DB durum değerleri (enum) → ekranda Türkçe etiket
+const DURUM_ETIKET: Record<string, string> = { planlandi: 'Planlandı', onaylandi: 'Onaylandı', tamamlandi: 'Tamamlandı', iptal: 'İptal', gelmedi: 'Gelmedi' }
+
 function gunAraligi(d: Date) {
   const bas = new Date(d); bas.setHours(0, 0, 0, 0)
   const bit = new Date(d); bit.setHours(23, 59, 59, 999)
@@ -80,7 +83,7 @@ export default function KlinikRandevularPage() {
             <div key={rv.id} style={{ padding: '14px 18px', borderBottom: '1px solid rgba(10,22,40,0.06)', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 600, color: '#0A1628' }}>{rv.hastaAdi}</div>
-                <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.5)' }}>{new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} · {rv.durum}</div>
+                <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.5)' }}>{new Date(rv.baslangic).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} · {DURUM_ETIKET[rv.durum] || rv.durum}</div>
               </div>
               {rv.patientId && (
                 <button type="button" onClick={() => router.push(`/dashboard/klinik/seans?patientId=${rv.patientId}`)} style={btn}>Seansı başlat</button>

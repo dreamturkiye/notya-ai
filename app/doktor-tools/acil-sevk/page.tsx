@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <AtAracKabugu route="/doktor-tools/acil-sevk" baslik="Sevk / yatış paket taslağı" aciklama="Yatış, sevk, taburcu veya konsültasyon paket maddeleri. Boarding HIS ve doz yazılmaz.">
+    <AtAracKabugu route="/doktor-tools/acil-sevk" baslik="Sevk / yatış paket taslağı" aciklama="Yatış, sevk, taburcu veya konsültasyon paket maddeleri. Acilde bekletme takibi / HBYS ve doz yazılmaz.">
       <AtSevkAraci />
     </AtAracKabugu>
   )

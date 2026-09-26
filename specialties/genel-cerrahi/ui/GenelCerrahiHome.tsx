@@ -127,7 +127,7 @@ export default function GenelCerrahiHome({ patientId }: { patientId: string }) {
       {sekme === 'Özet' && (
         <div>
           <div style={etiket}>Bu vizit</div>
-          <div style={metin}>Pre-op, yara/dren ve patoloji köprüsü karar desteğidir. Tanı / doz / OR scheduling hekimdedir.</div>
+          <div style={metin}>Pre-op, yara/dren ve patoloji köprüsü karar desteğidir. Tanı / doz / ameliyathane planı hekimdedir.</div>
           <div style={{ ...etiket, marginTop: 12 }}>Kontrol tarihi <span style={kucuk}>· hasta portalında &quot;Kontrol randevusu&quot;</span></div>
           <div style={satir}>
             <input type="date" value={kontrolTarih || v.bolum.nextKontrol || ''} onChange={(e) => setKontrolTarih(e.target.value)} style={{ ...toolsInput, width: 160 }} />
@@ -146,7 +146,7 @@ export default function GenelCerrahiHome({ patientId }: { patientId: string }) {
 
       {sekme === 'Pre-op' && (
         <div>
-          <div style={etiket}>Pre-op checklist (doz / OR slot yok)</div>
+          <div style={etiket}>Pre-op kontrol listesi (doz / ameliyathane saati yok)</div>
           <input value={etiketAmeliyat} onChange={(e) => setEtiketAmeliyat(e.target.value)} placeholder="İşlem etiketi (tanı yok)" style={{ ...toolsInput, width: '100%' }} />
           <div style={satir}>
             <input type="date" value={ameliyatTarihi} onChange={(e) => setAmeliyatTarihi(e.target.value)} style={{ ...toolsInput, width: 160 }} />

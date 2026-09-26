@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
-    <SporAracKabugu route="/doktor-tools/spor-rtp" baslik="RTP (return-to-play) basamak" aciklama="0–5 basamak karar desteği. Spora dönüş ve tanı hekimindir; doz yazılmaz.">
+    <SporAracKabugu route="/doktor-tools/spor-rtp" baslik="RTP (spora dönüş) basamakları" aciklama="0–5 basamak karar desteği. Spora dönüş ve tanı hekimindir; doz yazılmaz.">
       <SporRtpAraci />
     </SporAracKabugu>
   )

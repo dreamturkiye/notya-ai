@@ -77,7 +77,7 @@ export default function OrtoKirikAlciAraci() {
         <div style={S.etiket}>Özet</div>
         {satirlar.map((x) => <div key={x} style={S.metin}>{x}</div>)}
         {sonuc.uyarilar.map((u) => <div key={u} style={{ ...S.kucuk, color: CHROME_RENK.warn }}>⚑ {u}</div>)}
-        <TaslakNotu>İzlem özeti karar desteğidir; kaynama / artroz tanısı yazılmaz. OR scheduling yoktur.</TaslakNotu>
+        <TaslakNotu>İzlem özeti karar desteğidir; kaynama / artroz tanısı yazılmaz. Ameliyathane planlaması yoktur.</TaslakNotu>
         <div style={{ ...S.satir, marginTop: 10 }}>
           <KopyalaButonu metin={satirlar.join('\n')} etiket="Özeti kopyala" />
         </div>

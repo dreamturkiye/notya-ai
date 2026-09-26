@@ -111,13 +111,13 @@ const EYLEM_TOOLS = [
       ),
       hasta: strParam('Hasta adı (ör. "Ali Yılmaz", "Hasta 1")'),
       alanlar: strParam(
-        'Alanlar JSON metin. Örn: {"asi_adi":"Hepatit B","doz_no":1,"notlar":"doğumda"}. Uygulama tarihi yoksa doğumda yaz — sistem DOB kullanabilir.'
+        'Alanlar JSON metin. Örn: {"asi_adi":"Hepatit B","doz_no":1,"notlar":"doğumda"}. Uygulama tarihi yoksa doğumda yaz — sistem doğum tarihini kullanabilir.'
       ),
     }
   ),
   clientTool(
     'eylem_onayla',
-    'Doktor read-back sonrası net onay verdiğinde çağır: Evet, Onaylıyorum, Kaydet, Tamam. onayMetni = duyduğun kelime. Yalnızca önceki dosyaya_kayit_hazirla sonrası. Ambiguous (hmm, belki) ise ÇAĞIRMA — tekrar sor.',
+    'Kartı okuduktan sonra doktor net onay verdiğinde çağır: Evet, Onaylıyorum, Kaydet, Tamam. onayMetni = duyduğun kelime. Yalnızca önceki dosyaya_kayit_hazirla sonrası. Belirsizse (hmm, belki) ÇAĞIRMA — tekrar sor.',
     ['onayMetni'],
     { onayMetni: strParam('Doktorun söylediği onay (ör. "Evet", "Onaylıyorum")') }
   ),

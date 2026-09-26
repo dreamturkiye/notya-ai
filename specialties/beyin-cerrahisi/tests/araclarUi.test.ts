@@ -19,7 +19,7 @@ describe('beyin-cerrahisi araçlar UI kilitleri', () => {
   it('post-op / bilinç AED doz dilini reddeder', () => {
     const postop = oku('specialties/beyin-cerrahisi/ui/araclar/BcPostopAraci.tsx')
     const bilinc = oku('specialties/beyin-cerrahisi/ui/araclar/BcBilincAraci.tsx')
-    assert.match(postop, /AED doz|OR\/HIS/)
+    assert.match(postop, /AED doz|ameliyathane\/HIS/)
     assert.match(bilinc, /AED doz|mg/)
     assert.doesNotMatch(postop + bilinc, /noro-migren|İnme \/ TIA/)
   })

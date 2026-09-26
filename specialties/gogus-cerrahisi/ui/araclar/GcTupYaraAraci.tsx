@@ -66,7 +66,7 @@ export default function GcTupYaraAraci() {
         </div>
         {durum && <div style={{ ...gcStil.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...gcStil.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>TASLAK — tüp/yara izlem karar desteğidir; tanı, doz ve OR planı yazılmaz.</TaslakNotu>
+        <TaslakNotu>TASLAK — tüp/yara izlem karar desteğidir; tanı, doz ve ameliyathane planı yazılmaz.</TaslakNotu>
       </div>
     </>
   )

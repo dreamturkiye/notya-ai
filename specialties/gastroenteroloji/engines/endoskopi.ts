@@ -40,7 +40,7 @@ export function endoskopiPlanla(
   tarih: string | null | undefined,
   sonrakiHam?: string | null,
 ): EndoskopiSonuc {
-  const dipnot: Dipnot = { ref: 'TGD_ENDO', not: 'Endoskopi takip aralığı karar desteğidir; HIS suite core değildir' }
+  const dipnot: Dipnot = { ref: 'TGD_ENDO', not: 'Endoskopi takip aralığı karar desteğidir; endoskopi ünitesi HIS’i bu ürünün parçası değildir' }
   if (!tarih || !ISO_GUN.test(tarih)) {
     return {
       tamamMi: false, tur, tarih: null, sonrakiKontrol: null,
@@ -55,7 +55,7 @@ export function endoskopiPlanla(
     tur,
     tarih,
     sonrakiKontrol: sonraki,
-    ozet: `${ENDOSKOPI_TUR_ETIKET[tur]} ${tarih} kaydedildi · önerilen kontrol ${sonraki}. Tanı yazılmaz; tam endoskopi suite / HIS bu araçta yoktur.`,
+    ozet: `${ENDOSKOPI_TUR_ETIKET[tur]} ${tarih} kaydedildi · önerilen kontrol ${sonraki}. Tanı yazılmaz; tam endoskopi ünitesi / HIS bu araçta yoktur.`,
     dipnot,
   }
 }

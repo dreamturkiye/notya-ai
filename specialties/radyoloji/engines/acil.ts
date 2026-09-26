@@ -48,7 +48,7 @@ const KURALLAR: Array<{
     kod: 'kritik_bulgu_ileti',
     re: /kritik bulgu|acil bildirim|pn[öo]motoraks|intrakranial kanama|disseksiyon|pulmoner embol/i,
     ad: 'Kritik bulgu — klinisyen bildirimi',
-    eylem: 'İsteyen klinisyeni hemen bilgilendirin; bildirim checklist’ini kilitleyin.',
+    eylem: 'İsteyen klinisyeni hemen bilgilendirin; bildirim kontrol listesini kilitleyin.',
     oncelik: 'hemen',
     dipnot: { ref: 'TRD', not: 'Kritik bulgu iletişimi — tanı AI değil' },
   },

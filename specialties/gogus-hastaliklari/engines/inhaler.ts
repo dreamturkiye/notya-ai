@@ -9,7 +9,7 @@ export type InhalerCihaz = 'odi' | 'kti' | 'soft_mist' | 'nebul' | 'diger'
 export const INHALER_CIHAZ_AD: Record<InhalerCihaz, string> = {
   odi: 'Ölçülü doz inhaler (ÖDİ)',
   kti: 'Kuru toz inhaler (KTİ)',
-  soft_mist: 'Soft mist inhaler',
+  soft_mist: 'Yumuşak buhar inhaleri (soft mist)',
   nebul: 'Nebulizatör',
   diger: 'Diğer / hekim belirtti',
 }

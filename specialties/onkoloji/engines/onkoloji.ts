@@ -34,7 +34,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Febril nötropeni (ateş + düşkünlük), ani sırt ağrısı / bacak güçsüzlüğü (spinal bası şüphesi), şiddetli nefes darlığı, kontrolsüz kusma / dehidratasyon veya tümör lizis bulguları varsa ayaktan izlem yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan tıbbi onkoloji muayenehanesi / polikliniği ürünü. Eczane kemoterapi doz motoru, tanı/evre auto-lock, uydurma doz ve canlı Medula e-imza bu bölümün kapsamı değildir.'
+  'Ayaktan tıbbi onkoloji muayenehanesi / polikliniği ürünü. Eczane kemoterapi doz motoru, otomatik tanı/evre kilidi, uydurma doz ve canlı Medula e-imza bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

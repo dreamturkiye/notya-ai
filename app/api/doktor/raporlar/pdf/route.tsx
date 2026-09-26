@@ -203,7 +203,7 @@ function ReportDocument({ data }: { data: ReportBody }) {
   ];
 
   return (
-    <Document title={'Aylik Klinik Raporu - ' + data.monthLabel}>
+    <Document title={'Aylık Klinik Raporu - ' + data.monthLabel}>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
           <View>
@@ -314,7 +314,7 @@ export async function POST(req: NextRequest) {
     const buffer = await renderToBuffer(<ReportDocument data={body} />);
 
     const safeMonth = body.monthLabel.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u0131\u015f\u00e7\u011f\u00fc\u00f6-]/g, '');
-    const filename = 'aylik-rapor-' + (safeMonth || 'rapor') + '.pdf';
+    const filename = 'aylık-rapor-' + (safeMonth || 'rapor') + '.pdf';
 
     return new NextResponse(buffer as unknown as BodyInit, {
       status: 200,

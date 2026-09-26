@@ -46,7 +46,7 @@ export function DogumSpine({ gebelikId, patientId }: { gebelikId: string; patien
   const f = (k: string) => (form[k] as string) ?? '';
   const set = (k: string, val: unknown) => setForm((x) => ({ ...x, [k]: val }));
 
-  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Doğum spine yükleniyor…</div>;
+  if (!v) return <div style={{ ...toolsCard, color: CHROME_RENK.muted, fontSize: 12 }}>Doğum paneli yükleniyor…</div>;
   const d = v.dogum;
   const haftaTahmini = v.gebelik.sat ? Math.floor((Date.now() - new Date(v.gebelik.sat).getTime()) / (7 * 864e5)) : 0;
 
@@ -63,7 +63,7 @@ export function DogumSpine({ gebelikId, patientId }: { gebelikId: string; patien
             <div style={etiket}>Gebelik görevleri <span style={kucuk}>· SAT {v.gebelik.sat || '—'} · TDT {v.gebelik.tdt || '—'} · ~{haftaTahmini} hf · Rh {v.gebelik.kan_grubu || '?'}</span></div>
             <button type="button" onClick={() => calistir({ adim: 'gorevleri_olustur', gebelikId }, 'Görevler oluşturuldu (mevcutlar korundu).')} style={ghost}>{v.gorevler.length ? 'Eksik görevleri tamamla' : 'Görevleri oluştur'}</button>
           </div>
-          {!v.gorevler.length && <div style={kucuk}>Henüz görev yok. SAT/TDT girildiyse "Görevleri oluştur" ile Acıbadem/SB kadansı üretilir (ikili tarama ve GDM sert hatırlatmadır).</div>}
+          {!v.gorevler.length && <div style={kucuk}>Henüz görev yok. SAT/TDT girildiyse "Görevleri oluştur" ile Acıbadem/SB izlem takvimi üretilir (ikili tarama ve GDM sert hatırlatmadır).</div>}
           {v.gorevler.map((g) => (
             <div key={g.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.06)', background: g.durum === 'kacirildi' && g.sert ? 'rgba(248,113,113,0.06)' : 'transparent' }}>
               <span style={{ minWidth: 84, fontSize: 11, fontWeight: 800, color: durumRenk[g.durum] }}>{g.durum === 'pencerede' ? '● pencerede' : g.durum === 'kacirildi' ? '✖ kaçırıldı' : g.durum === 'tamam' ? '✓ tamam' : g.durum === 'atlandi' ? '— atlandı' : '○ bekliyor'}</span>

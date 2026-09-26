@@ -37,7 +37,7 @@ export const ACIL_YONLENDIRME_METNI =
   'Ani idrar / gaita kaçırma, eyer bölgesi uyuşukluğu, ilerleyici güç kaybı, ateşle birlikte bel ağrısı veya travma sonrası şiddetli ağrı varsa ayaktan seans yeterli değildir: 112 veya en yakın acil.'
 
 export const KAPSAM_NOTU =
-  'Ayaktan FTR muayenehanesi / polikliniği ürünü. Tam hastane rehabilitasyon HIS, tanı auto-lock ve canlı Medula e-imza bu bölümün kapsamı değildir.'
+  'Ayaktan FTR muayenehanesi / polikliniği ürünü. Tam hastane rehabilitasyon HIS, otomatik tanı kilidi ve canlı Medula e-imza bu bölümün kapsamı değildir.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

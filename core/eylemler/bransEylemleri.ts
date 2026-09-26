@@ -71,7 +71,10 @@ function gorevEylemi(o: {
         durum: 'acik',
       }
       const { data, error } = await (ctx.supabase as SupabaseClient).from(o.tablo).insert(satir).select('id').single()
-      if (error || !data) throw new Error(error?.message || 'Görev oluşturulamadı.')
+      if (error || !data) {
+        if (error) console.error(`[eylem] ${o.anahtar} yazılamadı`, error.message)
+        throw new Error('Görev oluşturulamadı.')
+      }
       return { hedefTablo: o.tablo, hedefId: String(data.id), once: null, sonra: satir, ilgiliSekme: { etiket: o.sekme.etiket, yol: o.sekme.yol(ctx.hasta.id) } }
     },
     geriAl: async (ctx, k) => {

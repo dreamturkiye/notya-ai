@@ -87,7 +87,7 @@ describe('jine mode sticky — no pregnancy GA/TDT', () => {
     assert.equal(s.chips.find((c) => c.kod === 'lmp')?.etiket, 'Jine SAT')
     assert.equal(s.chips.find((c) => c.kod === 'lmp')?.deger, '10.08.2026')
     assert.equal(s.chips.find((c) => c.kod === 'yas')?.deger, '36')
-    assert.equal(s.gebeChip, 'Aktif gebelik → Klinik/Doğum spine')
+    assert.equal(s.gebeChip, 'Aktif gebelik → Klinik/Doğum paneli')
     const bos = jineSticky({ lmp: null, yas: null, kontrasepsiyon: null, due: [], sonrakiKontrol: null, gebe: false })
     assert.equal(bos.gebeChip, null)
     assert.equal(jineStickyGebelikSizdiriyor(bos.chips), false)

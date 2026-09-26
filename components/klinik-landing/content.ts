@@ -39,8 +39,8 @@ export const HERO_FACTS = [
  * clinics exists at all.
  */
 export const BRANSLAR = [
-  { slug: "sac-ekimi", ad: "Saç Ekimi", renk: "#2563EB", odak: "FUE, DHI ve Safir FUE. Donör alan değerlendirmesi, greft hesabı, hairline tasarımı, PRP protokolleri.", yonetmelik: false },
-  { slug: "estetik-cerrahi", ad: "Estetik & Plastik Cerrahi", renk: "#E91E8C", odak: "Rinoplasti, liposuction, meme estetiği. Ameliyat öncesi risk değerlendirmesi, sonrası bakım planı.", yonetmelik: false },
+  { slug: "sac-ekimi", ad: "Saç Ekimi", renk: "#2563EB", odak: "FUE, DHI ve Safir FUE. Donör alan değerlendirmesi, greft hesabı, saç çizgisi tasarımı, PRP protokolleri.", yonetmelik: false },
+  { slug: "estetik-cerrahi", ad: "Estetik & Plastik Cerrahi", renk: "#E91E8C", odak: "Rinoplasti, liposaksiyon, meme estetiği. Ameliyat öncesi risk değerlendirmesi, sonrası bakım planı.", yonetmelik: false },
   { slug: "medikal-estetik", ad: "Medikal Estetik", renk: "#9333EA", odak: "Botoks, hyaluronik asit dolgu, PRP, mezoterapi. Yüz anatomisi, doz hesabı, vasküler komplikasyon yönetimi.", yonetmelik: false },
   { slug: "dermatoloji", ad: "Dermatoloji", renk: "#F59E0B", odak: "Lazer, botoks, dolgu, akne tedavisi. ICD-10 dermatoloji kodlaması, biyopsi kararı desteği.", yonetmelik: false },
   { slug: "longevity", ad: "Longevity & Wellness", renk: "#059669", odak: "IV terapi, hormonal optimizasyon, NAD+ protokolleri. Biyobelirteç analizi, kişiselleştirilmiş plan.", yonetmelik: false },

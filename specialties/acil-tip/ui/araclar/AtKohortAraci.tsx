@@ -67,7 +67,7 @@ export default function AtKohortAraci() {
         </div>
       </div>
       <div style={S.kutu}>
-        <div style={S.etiket}>Satırlar (bed board HIS değil)</div>
+        <div style={S.etiket}>Satırlar (yatak panosu HIS değil)</div>
         {!satirlar && <div style={S.kucuk}>Yükleniyor…</div>}
         {satirlar && !gorunen.length && <div style={S.kucuk}>Bayraklı hasta yok.</div>}
         {gorunen.map((s) => (
@@ -81,13 +81,13 @@ export default function AtKohortAraci() {
         ))}
         <div style={{ ...S.satir, marginTop: 12 }}>
           <button type="button" style={S.btn} disabled={!secili.length || gonderiliyor} onClick={gonder}>
-            {gonderiliyor ? 'Gönderiliyor…' : `1-tap hatırlatma (${secili.length})`}
+            {gonderiliyor ? 'Gönderiliyor…' : `Seçilenlere hatırlat (${secili.length})`}
           </button>
           <button type="button" style={S.ghost} onClick={yukle}>Yenile</button>
         </div>
         {durum && <div style={{ ...S.kucuk, color: '#34D399', marginTop: 8 }}>{durum}</div>}
         {hata && <div style={{ ...S.kucuk, color: '#F87171', marginTop: 8 }}>{hata}</div>}
-        <TaslakNotu>Hatırlatma tanı / doz / ESI sayı taşımaz. ED bed board HIS yoktur.</TaslakNotu>
+        <TaslakNotu>Hatırlatma tanı / doz / ESI sayı taşımaz. Acil servis yatak panosu HIS yoktur.</TaslakNotu>
       </div>
     </>
   )

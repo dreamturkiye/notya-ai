@@ -24,20 +24,20 @@ export const REF_ACIKLAMA: Record<Ref, string> = {
   TATD: 'Türkiye Acil Tıp Derneği (TATD) klinik protokolleri — triyaj ve kritik yol; tanı/doz hekimin',
   SB_ACIL: 'T.C. Sağlık Bakanlığı Acil Servis klinik protokolleri ve triaj standartları',
   ESI: 'Emergency Severity Index (ESI) — seviye 1–5 karar desteği; tanı yazılmaz',
-  ERC_TR: 'ERC resusitasyon eğitiminin TR acil pratiği — doz şeması Notya üretmez',
+  ERC_TR: 'ERC resüsitasyon eğitiminin TR acil pratiği — doz şeması Notya üretmez',
   ATLS_TR: 'ATLS Türkiye uygulamaları — travma yol bayrağı; tanı hekimde',
   SGK_ACIL: 'SGK acil işlem ve rapor kuralları — güncel metin hekim doğrular; canlı e-imza yok',
   TITCK: 'TİTCK — KÜB; ilaç doz Notya tarafından üretilmez',
 }
 
 export const HEKIM_KILIT_METNI =
-  'ESI seviyesi, kritik yol bayrakları ve sevk/yatış paket maddeleri karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya doz üretmez, tanı kilitlemez ve ED bed board / boarding HIS yönetmez.'
+  'ESI seviyesi, kritik yol bayrakları ve sevk/yatış paket maddeleri karar desteğidir. Tanı, ilaç ve doz kararı hekimindir; Notya doz üretmez, tanı kilitlemez ve acil servis yatak panosu / yatış bekletme HIS yönetmez.'
 
 export const ACIL_YONLENDIRME_METNI =
-  'Ani kötüleşme, hava yolu tehdidi, kontrolsüz kanama, ani bilinç kaybı veya resus ihtiyacı varsa portal mesajı yeterli değildir: hemen resus / 112 protokolü uygulanır.'
+  'Ani kötüleşme, hava yolu tehdidi, kontrolsüz kanama, ani bilinç kaybı veya resüsitasyon ihtiyacı varsa portal mesajı yeterli değildir: hemen resüsitasyon / 112 protokolü uygulanır.'
 
 export const KAPSAM_NOTU =
-  'Acil tıp klinik ürünü. Full ED bed board HIS, yatış boarding HIS, tanı auto-lock ve uydurma dozlar bu bölümün kapsamı değildir. Kardiyoloji STEMI / nöroloji İnme araçları ayrı branştır.'
+  'Acil tıp klinik ürünü. Tam acil servis yatak panosu HIS, yatış bekletme HIS, otomatik tanı kilidi ve uydurma dozlar bu bölümün kapsamı değildir. Kardiyoloji STEMI / nöroloji İnme araçları ayrı branştır.'
 
 export const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/
 

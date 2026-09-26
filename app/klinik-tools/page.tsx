@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import KlinikNav from '@/components/klinik/KlinikNav'
 import { klinikAraclariListesi, type KlinikArac } from '@/lib/klinik/klinikAraclari'
+import { klinikSlugCoz, KLINIK_ETIKET } from '@/lib/specialties/klinikDikey'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +24,9 @@ export default function KlinikToolsPage() {
         const tip = String(j?.data?.profession_type || '')
         if (tip !== 'klinik-uzman' && tip !== 'saglik-uzmani') { router.replace('/dashboard/klinik'); return }
         if (!iptal) {
-          setEtiket(j?.data?.specialty || 'Klinik')
+          // KURAL — TÜRKÇE: profilde slug ('sac-ekimi') saklanır; ekranda Türkçe etiket ('Saç Ekimi').
+          const slug = klinikSlugCoz(j?.data?.specialty)
+          setEtiket(slug ? KLINIK_ETIKET[slug] : (j?.data?.specialty || 'Klinik'))
           setAraclar(klinikAraclariListesi(j?.data?.specialty))
         }
       } catch {
@@ -59,7 +62,7 @@ export default function KlinikToolsPage() {
           ))}
         </div>
         {araclar && araclar.length === 0 && (
-          <p style={{ color: 'rgba(10,22,40,0.45)' }}>Bu dal için araç yok. Onboarding’de Klinik uzmanlık seçin — Doktor branşı burada açılmaz.</p>
+          <p style={{ color: 'rgba(10,22,40,0.45)' }}>Bu dal için araç yok. Kayıt adımında Klinik uzmanlık seçin — Doktor branşı burada açılmaz.</p>
         )}
       </div>
     </div>

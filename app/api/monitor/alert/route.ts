@@ -21,6 +21,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 200 })
   } catch (error) {
     console.error("Alert failed:", error)
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 })
   }
 }

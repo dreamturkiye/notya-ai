@@ -170,7 +170,7 @@ export default function HastalarPage() {
       />
       {klinikSonuc && search.trim() && (
         <div style={{ color: CHROME_RENK.muted, fontSize: 13, marginBottom: 16 }}>
-          {klinikSonuc.length} hasta eşleşti — dosya, not, aşı, ilaç, randevu ve belgeler AND ile tarandı.
+          {klinikSonuc.length} hasta eşleşti — dosya, not, aşı, ilaç, randevu ve belgeler birlikte (“ve” ile) tarandı.
         </div>
       )}
 

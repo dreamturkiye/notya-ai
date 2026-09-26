@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, noteId: note.id, sessionId: seans.id })
   } catch (e) {
     console.error('[ses-yukle] uretim', e)
-    await kritikAlarm('ses-yukle uretim hatasi', e instanceof Error ? e.message : String(e))
+    await kritikAlarm('Ses yükleme: not üretim hatası', e instanceof Error ? e.message : String(e))
     return NextResponse.json({ error: 'Not üretilemedi. Ses işlendi; İnceleme yerine tekrar deneyin ya da yöneticinize bildirin.' }, { status: 502 })
   }
 }

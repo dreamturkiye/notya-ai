@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   if ('hata' in oturum) return oturum.hata
   const { user, supabase: sb } = oturum
   const body = (await req.json().catch(() => null)) as Record<string, string> | null
-  if (!body?.adim) return NextResponse.json({ error: 'adim gerekli' }, { status: 400 })
+  if (!body?.adim) return NextResponse.json({ error: 'adım gerekli' }, { status: 400 })
 
   if (body.adim === 'cikar') {
     if (!body.documentId) return NextResponse.json({ error: 'documentId gerekli' }, { status: 400 })
@@ -254,7 +254,7 @@ export async function POST(req: NextRequest) {
     await sb.from('lab_paneller').update({ analiz_id: analiz.id, durum: 'raporlandi', updated_at: new Date().toISOString() }).eq('id', panel.id)
     return NextResponse.json({ ok: true, analizId: analiz.id, acil: rapor.acil_bayrak })
   }
-  return NextResponse.json({ error: 'Geçersiz adim' }, { status: 400 })
+  return NextResponse.json({ error: 'Geçersiz adım' }, { status: 400 })
 }
 
 export async function GET(req: NextRequest) {

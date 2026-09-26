@@ -1,5 +1,7 @@
 'use client'
 
+import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
+
 export default function Error({
   error,
   reset,
@@ -27,7 +29,8 @@ export default function Error({
       <div style={{ fontSize: '14px', color: '#E2E8F0', maxWidth: '420px', lineHeight: 1.5 }}>
         Bu sayfa yüklenirken bir sorun çıktı.
       </div>
-      {error?.message && (
+      {/* KURAL — TÜRKÇE: tarayıcının İngilizce çalışma hatası ("Cannot read properties…") gösterilmez; yalnız Türkçe mesaj. */}
+      {turkceHataMesaji(error?.message) && (
         <div
           style={{
             fontSize: '12px',
@@ -40,7 +43,7 @@ export default function Error({
             wordBreak: 'break-word',
           }}
         >
-          {error.message}
+          {turkceHataMesaji(error?.message)}
         </div>
       )}
       <button

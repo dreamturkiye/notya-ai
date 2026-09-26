@@ -195,7 +195,7 @@ Göz muayenesine özgü SOAP notu oluştur:
 - Pupil refleksi ve RAPD
 - Göz hareketleri ve strabismus
 - Refraksiyon ölçümü ve reçete
-- Fundus fotoğrafi bulguları (varsa)
+- Fundus fotoğrafı bulguları (varsa)
 - Görme alanı testi sonuçları (varsa)`,
       icd10_focus: ['H25', 'H40', 'H33', 'H35', 'H50'],
       critical_keywords: ['ani görme kaybı', 'retina dekolmanı', 'akut glokom', 'kimyasal yanık']
@@ -282,7 +282,7 @@ Onkoloji değerlendirmesine özgü SOAP notu oluştur:
       name: 'Acil Tıp',
       systemPrompt: `Sen deneyimli bir Türk acil tıp uzmanının klinik not asistanısın.
 
-ACİL TIP - HIZLI VE ÖZETLENMIŞ NOT FORMAT:
+ACİL TIP - HIZLI VE ÖZETLENMİŞ NOT FORMAT:
 
 - Triaj kategorisi (1-5, renk kodu)
 - Başvuru şikayeti ve başlangıç zamanı

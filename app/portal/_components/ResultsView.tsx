@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { DosyaSecDugmesi } from '@/components/core/DosyaSecDugmesi'
+import { turkceHataMesaji } from '@/lib/turkce/dogrulamaMesaji'
 import type { PortalBundle, PortalResult, ResultKind } from '@/lib/portal/types'
 import { imagingDisplayLabel } from '@/lib/doktor/imagingModalities'
 import { EmptyState, ListRow, SectionHeader, SoftPanel, formatTrDate } from './ui'
@@ -121,7 +123,7 @@ function HastaDisFilmYukle({ basePath }: { basePath: string }) {
     })
     const j = await r.json().catch(() => ({}))
     setYukleniyor(false)
-    if (!r.ok) { setMesaj(j.error || 'Yüklenemedi'); return }
+    if (!r.ok) { setMesaj(turkceHataMesaji(j.error) || 'Dosya yüklenemedi. Lütfen tekrar deneyin.'); return }
     setDosya(null)
     setMesaj('Dosya doktorunuza iletildi. Değerlendirme onaylanınca burada görünür.')
   }
@@ -141,7 +143,7 @@ function HastaDisFilmYukle({ basePath }: { basePath: string }) {
           <option value="mg">Mamografi</option>
           <option value="us">Ultrason</option>
         </select>
-        <input type="file" accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} onChange={(e) => setDosya(e.target.files?.[0] || null)} />
+        <DosyaSecDugmesi dosya={dosya} onSec={setDosya} accept={tip === 'us' ? 'image/*,.pdf,video/mp4,video/webm' : 'image/*,.pdf'} />
         <button type="button" className="sg-chip-btn is-active" disabled={yukleniyor} onClick={() => void gonder()}>
           {yukleniyor ? 'Gönderiliyor…' : 'Gönder'}
         </button>
