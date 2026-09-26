@@ -5,7 +5,9 @@
  * Bu dosya yalnız saf kararları taşır — React yok, test edilebilir.
  */
 
-export type SesDurumu = 'idle' | 'connecting' | 'listening' | 'speaking' | 'error'
+/** NOTYA-SES-SESSIZ-01: 'sessiz' = the doctor engaged the written panel while voice was live; voice session ended,
+ *  server conversation kept; the mic button reconnects to the same session. */
+export type SesDurumu = 'idle' | 'connecting' | 'listening' | 'speaking' | 'error' | 'sessiz'
 
 /** Sesli seans canlı mı (bağlanıyor / dinliyor / konuşuyor). */
 export function sesAktifMi(durum: SesDurumu): boolean {

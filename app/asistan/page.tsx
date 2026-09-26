@@ -78,6 +78,7 @@ function AsistanPageInner() {
     listening:  "Dinliyor — konuşabilirsiniz",
     speaking:   `${formatColleagueTabLabel(persona.name)} konuşuyor...`,
     error:      "Tekrar deneyin",
+    sessiz:     "Sessizde — yazılı sohbet açık. Devam için mikrofona dokunun",
   }[status]
 
   return (
@@ -237,7 +238,7 @@ function AsistanPageInner() {
                    border: `2px solid ${isActive ? persona.color : CHROME_RENK.border}`,
                    boxShadow: isActive ? `0 0 32px ${persona.color}55` : "none",
                    transition: "all .25s" }}>
-          {status === 'idle' || status === 'error' ? (
+          {status === 'idle' || status === 'error' || status === 'sessiz' ? (
             <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke={CHROME_RENK.ink} strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
               <rect x='9' y='2' width='6' height='11' rx='3'/>
               <path d='M5 10a7 7 0 0 0 14 0'/>
