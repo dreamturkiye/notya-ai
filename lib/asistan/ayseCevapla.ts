@@ -78,6 +78,8 @@ export interface AyseGirdisi {
   personaId?: string | null
   /** Ses: sözlü biçimin parçaları hazır oldukça (model yazarken) buraya akar. */
   sozParcasi?: (parca: string) => void
+  /** NOTYA-SES-ERKEN-01: called once when the spoken cap is reached; the voice channel may close, the screen answer continues. */
+  sesSiniri?: () => void
 }
 
 /** Sohbet geçmişi satırı. Sesli turlar ekrana taşınabilmek için `kanal` / `zaman` / `kartlar` da taşır; modele yalnız role + content gider. */
@@ -349,7 +351,7 @@ ${ilacBaglamMetni(drugs[0])}`
     if (kdMi) t = uydurmaKaynakTemizle(t, liste).metin
     return t
   }
-  const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle) : null
+  const sesAkisi = ses && g.sozParcasi ? new SesAkisi(g.sozParcasi, sesTemizle, g.sesSiniri) : null
 
   const cagri = {
     istemci: getAnthropic(),

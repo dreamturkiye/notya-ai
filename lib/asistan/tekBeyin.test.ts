@@ -47,7 +47,7 @@ function sahteCreateClient(_url?: string, _key?: string, opts?: { global?: { hea
 
 /** Sahte Claude: `yanit` her testte ayarlanır; stream:true istekte gerçek olay dizisini küçük parçalarla akıtır. */
 const modelIstekleri: { stream: boolean; govde: string }[] = []
-let yanit: { metin: string; araclar?: { name: string; input: Record<string, unknown> }[] } = { metin: JSON.stringify({ speech: 'Sentetik yanıt.' }) }
+let yanit: { metin: string; araclar?: { name: string; input: Record<string, unknown> }[]; gecikmeMs?: number; gecikmeSonrasi?: string } = { metin: JSON.stringify({ speech: 'Sentetik yanıt.' }) }
 function mesaj() {
   const content: Record<string, unknown>[] = [{ type: 'text', text: yanit.metin }]
   for (const [i, a] of (yanit.araclar || []).entries()) content.push({ type: 'tool_use', id: `toolu_${i}`, name: a.name, input: a.input })
@@ -58,6 +58,8 @@ async function* akis() {
   yield { type: 'message_start', message: { model: 'sahte', usage: { input_tokens: 1 } } }
   yield { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }
   for (let i = 0; i < yanit.metin.length; i += 7) yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: yanit.metin.slice(i, i + 7) } }
+  // NOTYA-SES-ERKEN-01: a slow tail — the model keeps writing after a pause (simulates a 30 s+ screen answer).
+  if (yanit.gecikmeMs) { await new Promise((r) => setTimeout(r, yanit.gecikmeMs)); for (const t of (yanit.gecikmeSonrasi || '').match(/[^]{1,7}/g) || []) yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: t } } }
   yield { type: 'content_block_stop', index: 0 }
   for (const [i, a] of (yanit.araclar || []).entries()) {
     yield { type: 'content_block_start', index: i + 1, content_block: { type: 'tool_use', id: `toolu_${i}`, name: a.name, input: {} } }
@@ -309,6 +311,24 @@ describe('kilitler — sunucu sırrı + imzalı konuşma jetonu', () => {
 describe('tek beyin — aynı soru, aynı ekran; ses aynı içeriği konuşur', () => {
   beforeEach(() => { sahne() })
 
+  it('NOTYA-SES-ERKEN-01: ses turu sözlü sınırda kapanır ([DONE]), ekran cevabı arka planda tamamlanır', async () => {
+    const bas = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi.'
+    const kuyruk = ' Sekiz. Dokuz. Ekrana yazılan uzun tablo satırı.'
+    const b = sahne()
+    // speech JSON is cut mid-string on purpose: the first half streams fast, the tail after 2.5 s
+    const tam = JSON.stringify({ speech: bas + kuyruk })
+    const kes = tam.indexOf('Yedi.') + 'Yedi.'.length
+    yanit = { metin: tam.slice(0, kes), gecikmeMs: 2500, gecikmeSonrasi: tam.slice(kes) }
+    const t0 = Date.now()
+    const v = await ses({ sahne: b, mesaj: 'Genel bir soru: bu yaşta uyku düzeni nasıl olmalı?' })
+    const gecen = Date.now() - t0
+    assert.equal(v.status, 200)
+    assert.ok(gecen < 2000, `ses turu sınırda kapanmalı, ${gecen} ms sürdü`)
+    assert.equal(v.metin.replace(/\s+/g, ' ').trim(), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+    await new Promise((r) => setTimeout(r, 3500))
+    const e = await sesEkrani(b)
+    assert.ok((e.turlar.at(-1)?.metin || '').includes('Dokuz.'), 'ekran cevabı arka planda tamamlanmalı')
+  })
   it('model cevabı: yazı ve ses aynı ekranı verir; ses önce bekletme sözü, sonra model yazdıkça aynı içerik', async () => {
     const ekranMetni = 'Hocam, Umutcan’ın son vizitinde öksürük vardı. Akciğer sesleri temizdi.\n\n- Öneri 1\n- Öneri 2\n\nAnnesine 0532 700 11 22 numarasından ulaşabilirsiniz.'
     const soru = 'Merhaba Ayşe, bugün Umutcan Türkoğlu geldi, genel durumunu bir değerlendirir misin?'

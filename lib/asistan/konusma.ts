@@ -83,6 +83,8 @@ export class SesAkisi {
   constructor(
     private readonly yay: (parca: string) => void,
     private readonly temizle: (cumle: string) => string = (c) => c,
+    /** NOTYA-SES-ERKEN-01: fired once, right after "Devamı ekranınızda" — the voice turn can close here. */
+    private readonly onSinir?: () => void,
   ) {}
 
   ekle(tamMetin: string): void {
@@ -102,7 +104,7 @@ export class SesAkisi {
   private soyle(s: string, not = false): void {
     if (!not) {
       if (this.beat >= SOZ_BEAT_SINIRI) {
-        if (!this.devamNotu) { this.devamNotu = true; this.soylenen.push(DEVAMI_EKRANDA); this.yay(`${DEVAMI_EKRANDA} `) }
+        if (!this.devamNotu) { this.devamNotu = true; this.soylenen.push(DEVAMI_EKRANDA); this.yay(`${DEVAMI_EKRANDA} `); try { this.onSinir?.() } catch { /* yok */ } }
         return
       }
       this.beat++
