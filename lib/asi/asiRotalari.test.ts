@@ -81,6 +81,7 @@ let encryptBytes: (b: Buffer) => Buffer
 let NextRequestSinifi: typeof import('next/server').NextRequest
 let gucluModel: () => string
 let hizliModel: () => string
+let dogrudanModelAdi: (m: string) => string
 
 type Hekim = { id: string; token: string; hasta: string; karne: string; sekreterToken: string; portalToken: string; bosHasta: string; bosPortalToken: string; yaklasanAsi: string; gecikenAsi: string; tarihsizAsi: string }
 /** Türkiye takvim gününe göre bugünden n gün sonrası (YYYY-MM-DD). */
@@ -178,6 +179,7 @@ describe('ASI-KARNESI-01 — karne okuma ve toplu onay (gerçek rota)', () => {
     ;({ encryptBytes } = await import('../vault/crypto'))
     NextRequestSinifi = (await import('next/server')).NextRequest
     ;({ gucluModel, hizliModel } = await import('../ai/modeller'))
+    ;({ dogrudanModelAdi } = await import('../ai/saglayici'))
     karne = await import('../../app/api/doktor/asilar/karne/route')
   })
 
@@ -190,8 +192,9 @@ describe('ASI-KARNESI-01 — karne okuma ve toplu onay (gerçek rota)', () => {
     assert.equal(y.json.taslak, true)
     // model kademesi: goruntu-inceleme → GÜÇLÜ; HIZLI değil
     assert.equal(modelIstekleri.length, 1)
-    assert.equal(modelIstekleri[0].model, gucluModel())
-    assert.notEqual(modelIstekleri[0].model, hizliModel())
+    // OPENROUTER_API_KEY yok → doğrudan Anthropic yolu (NOTYA-MODEL-LUNA-01): önek atılmış GÜÇLÜ kimliği
+    assert.equal(modelIstekleri[0].model, dogrudanModelAdi(gucluModel()))
+    assert.notEqual(modelIstekleri[0].model, dogrudanModelAdi(hizliModel()))
     const icerik = JSON.stringify(modelIstekleri[0].messages)
     assert.ok(icerik.includes('"type":"image"'), 'karne görüntüsü modele gitmeli')
     assert.ok(!icerik.includes('QA Çocuk'), 'hasta adı modele gitmez')

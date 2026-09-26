@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import { aiCagir, etkinSecim, gorselIcerirMi, istekGovdesi, sistemGovdesi, type AiMesaj } from './cagir'
 import { kullanimSatiri } from './kullanim'
 import { gucluModel, hizliModel } from './modeller'
+import { dogrudanModelAdi } from './saglayici'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -36,11 +37,12 @@ describe('GÖRSEL = GÜÇLÜ (Kaan, 2026-09-19 — istisnasız)', () => {
     assert.equal(etkinSecim({ gorev: 'goruntu-inceleme', messages: GORSEL }).yukseltildi, false)
   })
 
-  it('SDK istemcisine giden gerçek istek de GÜÇLÜ modeli taşır', async () => {
+  it('SDK istemcisine giden gerçek istek de GÜÇLÜ modeli taşır (OpenRouter yok → doğrudan Anthropic kimliği)', async () => {
+    delete process.env.OPENROUTER_API_KEY
     let giden: Record<string, unknown> | null = null
     const istemci = { messages: { create: async (g: never) => { giden = g as Record<string, unknown>; return { content: [{ type: 'text', text: 'ok' }], usage: {} } } } }
     await aiCagir({ istemci, gorev: 'siniflandirma', maxTokens: 20, messages: GORSEL })
-    assert.equal(giden!.model, gucluModel())
+    assert.equal(giden!.model, dogrudanModelAdi(gucluModel()))
     assert.equal(giden!.max_tokens, 20)
   })
 })
@@ -72,16 +74,19 @@ describe('prompt caching — system blok dizisi', () => {
 })
 
 describe('ölçüm satırı — yalnız sayaç', () => {
-  it('usage sayaçları + görev + model + hekim; içerik alanı yok', () => {
+  it('usage sayaçları + görev + model + hekim + kademe + neden; içerik alanı yok', () => {
     const satir = kullanimSatiri({
       doctorId: '11111111-2222-3333-4444-555555555555', gorev: 'sohbet-uzman', model: 'm',
       usage: { input_tokens: 120, output_tokens: 40, cache_read_input_tokens: 3000, cache_creation_input_tokens: 0 }, stopReason: 'max_tokens',
     })
     assert.deepEqual(satir, {
       doctor_id: '11111111-2222-3333-4444-555555555555', gorev: 'sohbet-uzman', model: 'm',
-      input_tokens: 120, output_tokens: 40, cache_read: 3000, cache_creation: 0, kesildi: true,
+      input_tokens: 120, output_tokens: 40, cache_read: 3000, cache_creation: 0, kesildi: true, kademe: null, neden: null,
     })
-    assert.deepEqual(Object.keys(satir).sort(), ['cache_creation', 'cache_read', 'doctor_id', 'gorev', 'input_tokens', 'kesildi', 'model', 'output_tokens'])
+    assert.deepEqual(Object.keys(satir).sort(), ['cache_creation', 'cache_read', 'doctor_id', 'gorev', 'input_tokens', 'kademe', 'kesildi', 'model', 'neden', 'output_tokens'])
+    const yukseltilmis = kullanimSatiri({ gorev: 'sohbet', model: 'm', kademe: 'guclu', neden: 'transport' })
+    assert.equal(yukseltilmis.kademe, 'guclu')
+    assert.equal(yukseltilmis.neden, 'transport')
   })
 
   it('UUID olmayan kimlik null yazılır; eksik/bozuk sayaç 0', () => {

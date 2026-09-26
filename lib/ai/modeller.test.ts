@@ -7,7 +7,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   asistanModelYonlendir, gecmisiKirp, GOREV_POLITIKASI, gucluModel, hizliModel, modelSec, netSosyalMi,
-  SOHBET_GECMIS_MESAJ, MODEL_GUCLU, MODEL_HIZLI, type Gorev,
+  SOHBET_GECMIS_MESAJ, MODEL_GUCLU, MODEL_HIZLI, type Gorev, gorevNedeni, guvenlikSinyaliVar, dusukGuvenMi,
 } from './modeller'
 
 describe('görev politikası — kademe tablosu', () => {
@@ -31,7 +31,7 @@ describe('görev politikası — kademe tablosu', () => {
     assert.ok(GOREV_POLITIKASI['sohbet-uzman'].maxTokens >= 1600)
   })
 
-  it('varsayılan modeller: Sonnet 4.6 / Haiku 4.5; ortam değişkeni geçerliyse onu, geçersizse varsayılanı kullanır', () => {
+  it('varsayılan modeller (karar A, 2026-09-26): Sonnet 5 / GPT-6 Luna; ortam değişkeni geçerliyse onu, geçersizse varsayılanı kullanır', () => {
     const eski = { g: process.env.NOTYA_MODEL_GUCLU, h: process.env.NOTYA_MODEL_HIZLI }
     try {
       delete process.env.NOTYA_MODEL_GUCLU
@@ -42,10 +42,38 @@ describe('görev politikası — kademe tablosu', () => {
       assert.equal(modelSec('soap').model, 'yeni-model-1')
       process.env.NOTYA_MODEL_GUCLU = 'bozuk model; drop'
       assert.equal(gucluModel(), MODEL_GUCLU)
+      // Geri dönüş anahtarı: OpenRouter slug'ı (eğik çizgi + nokta) geçerli bir değerdir
+      process.env.NOTYA_MODEL_HIZLI = 'anthropic/claude-haiku-4.5'
+      assert.equal(hizliModel(), 'anthropic/claude-haiku-4.5')
     } finally {
       if (eski.g === undefined) delete process.env.NOTYA_MODEL_GUCLU; else process.env.NOTYA_MODEL_GUCLU = eski.g
       if (eski.h === undefined) delete process.env.NOTYA_MODEL_HIZLI; else process.env.NOTYA_MODEL_HIZLI = eski.h
     }
+  })
+
+  it("varsayılan slug'ları: HIZLI = openai/gpt-6-luna, GÜÇLÜ = anthropic/claude-sonnet-5", () => {
+    assert.equal(MODEL_HIZLI, 'openai/gpt-6-luna')
+    assert.equal(MODEL_GUCLU, 'anthropic/claude-sonnet-5')
+  })
+
+  it('yükseltme nedeni: imzalı çıktı = onayla, görüntü = vision, diğer klinik = uzman, HIZLI = null', () => {
+    assert.equal(gorevNedeni('soap'), 'onayla')
+    assert.equal(gorevNedeni('not-uretimi'), 'onayla')
+    assert.equal(gorevNedeni('goruntu-inceleme'), 'vision')
+    for (const g of ['klinik-analiz', 'uzman-analiz', 'sohbet-uzman'] as Gorev[]) assert.equal(gorevNedeni(g), 'uzman', g)
+    for (const g of ['sohbet', 'siniflandirma', 'ozet', 'bicimlendirme', 'cikarim', 'kisa-yanit'] as Gorev[]) assert.equal(gorevNedeni(g), null, g)
+  })
+
+  it('güvenlik sinyali: gebe, emzirme, pediatrik doz, warfarin/NSAID, isotretinoin, kontrendikasyon', () => {
+    for (const m of ['hasta gebe mi', 'emziren anne', 'çocuk dozu mg/kg', 'warfarin kullanıyor', 'NSAİİ verelim mi', 'ibuprofen', 'isotretinoin başlanacak', 'kontrendike mi']) {
+      assert.equal(guvenlikSinyaliVar(m), true, m)
+    }
+    for (const m of ['şifremi unuttum', 'merhaba', 'karanlık mod']) assert.equal(guvenlikSinyaliVar(m), false, m)
+  })
+
+  it('düşük güven: "daha fazla bilgi şart", "emin değilim", ret kalıpları', () => {
+    for (const m of ['Bunun için daha fazla bilgi şart.', 'Emin değilim.', 'Bu konuda yardımcı olamam.', "I can't help with that."]) assert.equal(dusukGuvenMi(m), true, m)
+    for (const m of ['Merhaba hocam, kolay gelsin!', 'Ayarlar > Tema menüsünden karanlık modu açabilirsiniz.']) assert.equal(dusukGuvenMi(m), false, m)
   })
 
   it('bilinmeyen görev sessizce ucuz modele düşmez — hata fırlatır', () => {
