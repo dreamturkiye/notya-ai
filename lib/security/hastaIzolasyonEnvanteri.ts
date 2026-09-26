@@ -237,6 +237,7 @@ export const HASTA_IZOLASYON_ENVANTERI: Record<string, Siniflama> = {
   'app/api/asistan/ses-llm/v1/chat/completions/route.ts': T,
   'app/api/asistan/ses-llm/v1/route.ts': I('same handler as ses-llm/v1/chat/completions (lib/asistan/sesLlm.ts), covered there'),
   'app/api/asistan/ses-ekran/route.ts': T,
+  'app/api/asistan/oturum-hasta/route.ts': T,
   'app/api/asistan/klinik-signed-url/route.ts': I('voice-agent URL for the caller; no patient read'),
   'app/api/asistan/ses-ogren/route.ts': I('NOTYA-OGRENME-03: canli sesli Ayse ogrenme kancasi — body yalniz serbest metin (doktor konusma turleri), patient_id/hasta tablosu yok; yazar doktor_hafiza/doktor_iliski, ikisi de doctor_id scoped'),
   'app/api/asistan/avukat-chat/route.ts': I('lawyer product; no patient data'),

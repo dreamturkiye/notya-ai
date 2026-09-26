@@ -137,6 +137,7 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
   const patientId = g.patientId || null
   const ses = g.kanal === "ses"
   const soyle = (s: string) => { if (ses && g.sozParcasi && s) g.sozParcasi(`${s} `) }
+  const turBaslangic = simdi()
 
   // HASTA-IZOLASYON-01: the patient context comes from the request — it must be this doctor's patient
   // before it is stored on the assistant session or put into the model prompt.
@@ -187,17 +188,28 @@ export async function ayseCevapla(g: AyseGirdisi): Promise<AyseSonucu> {
     // NOTYA-SES-DEVAM-01: a new real doctor turn drops the previous turn's unspoken remainder.
     const { sesDevam: eskiDevam, ...oncekiBaglam } = baglam
     const sesDevam: SesDevam | null = ses && ek.sesDevamKalan ? { anahtar: asistanZamani, kalan: ek.sesDevamKalan, olusturma: simdi() } : null
+    // NOTYA-SAYFA-HASTA-01: the doctor opened another patient's page while this turn ran (a voice turn can take
+    // 30 s) — that page switch is the more recent explicit signal; this write must not put the old focus back.
+    let sayfaOdagi: Record<string, unknown> | null = null
+    if (ek.hasta || ek.bekleyen || eskiDevam || sesDevam) {
+      const { data: taze } = await supabase.from("asistan_sessions").select("active_context").eq("id", oturumId).eq("doctor_id", doktorId).maybeSingle()
+      const t = ((taze as { active_context?: Record<string, unknown> | null } | null)?.active_context || {}) as Record<string, unknown>
+      if (t.odakKaynak === "sayfa" && t.currentPatientId && String(t.odakZaman || "") > turBaslangic) {
+        sayfaOdagi = { currentPatientId: t.currentPatientId, patientName: t.patientName ?? null, odakKaynak: "sayfa", odakZaman: t.odakZaman }
+      }
+    }
     const yeniBaglam = ek.hasta || ek.bekleyen || eskiDevam || sesDevam
       ? {
           ...oncekiBaglam,
-          ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad } : {}),
+          ...(ek.hasta ? { currentPatientId: ek.hasta.id, patientName: ek.hasta.ad, odakKaynak: "soz", odakZaman: asistanZamani } : {}),
           ...(ek.bekleyen ? { bekleyenOneriler: ek.bekleyen } : {}),
-          ...(sesDevam ? { sesDevam } : {}),
+          ...(sesDevam && !sayfaOdagi ? { sesDevam } : {}),
+          ...(sayfaOdagi || {}),
         }
       : null
     await supabase.from("asistan_sessions").update({
       messages: [...messages, kullanici, asistan].slice(-SOHBET_SAKLANAN_MESAJ),
-      ...(ek.hasta ? { patient_id: ek.hasta.id } : {}),
+      ...(sayfaOdagi ? { patient_id: sayfaOdagi.currentPatientId } : ek.hasta ? { patient_id: ek.hasta.id } : {}),
       ...(yeniBaglam ? { active_context: yeniBaglam } : {}),
     }).eq("id", oturumId)
   }

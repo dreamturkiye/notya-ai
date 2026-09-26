@@ -185,6 +185,7 @@ before(async () => {
     chat: await import('../../app/api/asistan/chat/route'),
     sesLlm: await import('../../app/api/asistan/ses-llm/v1/chat/completions/route'),
     sesEkran: await import('../../app/api/asistan/ses-ekran/route'),
+    oturumHasta: await import('../../app/api/asistan/oturum-hasta/route'),
   }
 })
 
@@ -529,5 +530,119 @@ describe('NOTYA-SES-OKU-01: "bana anlat" ekrandaki cevabı sınırsız okur, mod
     const uzun = 'Bir. İki. Üç. Dört. Beş. Altı. Yedi. Sekiz.'
     assert.equal(K.konusmaYap(uzun, undefined, { sinirsiz: true }), uzun)
     assert.equal(K.konusmaYap(uzun), `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+  })
+})
+
+/**
+ * NOTYA-SAYFA-HASTA-01 (Dr. Gökhan canlı vaka, 2026-09-26): oturum Ayşe Yeşil'le başladı, doktor Umutcan Türkoğlu'nun
+ * Büyüme sayfasına geçti; panel hâlâ "aktif hasta: Ayşe Yeşil" dedi ve Ayşe büyüme sorularını yanlış çocuğun
+ * dosyasından cevapladı. Kural (Kaan): sayfayı açmak hastayı adıyla söylemekle eş değer; en son açık sinyal kazanır.
+ */
+describe('NOTYA-SAYFA-HASTA-01: asistan doktorun açtığı hasta sayfasını takip eder', () => {
+  const odakIste = (token: string | null, govde: unknown) => R.oturumHasta.POST(new NextRequestSinifi('http://localhost/api/asistan/oturum-hasta', {
+    method: 'POST', headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), 'content-type': 'application/json' }, body: JSON.stringify(govde),
+  } as ConstructorParameters<typeof NextRequestSinifi>[1])) as Promise<Response>
+  const oturumu = (id: string) => db.tablo('asistan_sessions').find((o) => o.id === id)!
+  /** İkinci hasta (Ayşe Yeşil) + iki çocuğun da onaylı cihaz kilosu; oturum Ayşe Yeşil'e odaklı başlar. */
+  function ikiHasta() {
+    const s = sahne()
+    const ayse = db.ekle('patients', { doctor_id: s.doktor.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'Ayşe Yeşil' })), dob_encrypted: encrypt('2021-02-03') }).id
+    db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: ayse, tur: 'kilo', deger: 18.4, birim: 'kg', alindi: '2026-09-20T09:00:00Z', onaylandi: true })
+    db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: s.hasta, tur: 'kilo', deger: 21.7, birim: 'kg', alindi: '2026-09-22T09:00:00Z', onaylandi: true })
+    oturumu(s.oturum).active_context = { specialty: 'pediatri', currentPatientId: ayse, patientName: 'Ayşe Yeşil' }
+    return { ...s, ayse }
+  }
+
+  it('rota: sahibi 200 + ad, odak oturuma yazılır; başka doktorun hastası 403 ve hiçbir şey yazılmaz; bilinmeyen / yabancı oturum 404; girişsiz 401', async () => {
+    const s = ikiHasta()
+    const yabanciHasta = db.ekle('patients', { doctor_id: s.diger.id, is_active: true, name_encrypted: encrypt(JSON.stringify({ ad: 'QA Yabancı Hasta' })) }).id
+    const yabanciOturum = db.ekle('asistan_sessions', { doctor_id: s.diger.id, persona_id: 'aysekaya', messages: [], active_context: {} }).id
+
+    const ok = await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.hasta })
+    assert.equal(ok.status, 200)
+    assert.deepEqual(await ok.json(), { ad: 'Umutcan Türkoğlu' })
+    const b = oturumu(s.oturum).active_context
+    assert.equal(b.currentPatientId, s.hasta)
+    assert.equal(b.patientName, 'Umutcan Türkoğlu')
+    assert.equal(b.odakKaynak, 'sayfa')
+    assert.ok(!Number.isNaN(Date.parse(b.odakZaman)))
+    assert.equal(b.specialty, 'pediatri', 'oturum bağlamının geri kalanı korunur')
+    assert.equal(oturumu(s.oturum).patient_id, s.hasta)
+
+    const once = JSON.stringify(oturumu(s.oturum))
+    const red = await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: yabanciHasta })
+    assert.equal(red.status, 403)
+    assert.ok(!JSON.stringify(await red.json()).includes('QA Yabancı Hasta'))
+    assert.equal(JSON.stringify(oturumu(s.oturum)), once, '403: oturuma hiçbir şey yazılmaz')
+
+    assert.equal((await odakIste(s.doktor.token, { asistanSessionId: randomUUID(), patientId: s.hasta })).status, 404)
+    assert.equal((await odakIste(s.doktor.token, { asistanSessionId: yabanciOturum, patientId: s.hasta })).status, 404)
+    assert.deepEqual(oturumu(yabanciOturum).active_context, {}, 'yabancı oturum değişmez')
+    assert.equal((await odakIste(null, { asistanSessionId: s.oturum, patientId: s.hasta })).status, 401)
+    assert.equal((await odakIste(s.doktor.token, { asistanSessionId: s.oturum })).status, 400)
+  })
+
+  it('sayfa geçişinden sonra adsız "kaç kilo" yeni hastanın dosyasından cevaplanır — yazı ve ses; model çağrılmaz', async () => {
+    const s = ikiHasta()
+    const once = await yazi(s, 'Kaç kilo?', s.oturum)
+    assert.match(once.speech, /^Ayşe Yeşil — /)
+    assert.ok(once.speech.includes('18.4') || once.speech.includes('18,4'), once.speech)
+
+    assert.equal((await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.hasta })).status, 200)
+    const t = await yazi(s, 'Kaç kilo?', s.oturum)
+    assert.match(t.speech, /^Umutcan Türkoğlu — /, t.speech)
+    assert.ok(t.speech.includes('21.7') || t.speech.includes('21,7'), t.speech)
+    assert.ok(!t.speech.includes('18.4') && !t.speech.includes('18,4'), 'eski hastanın ölçümü gelmez')
+
+    const v = await ses({ sahne: s, mesaj: 'Peki kaç kilo?' })
+    assert.equal(v.status, 200)
+    assert.ok(v.metin.startsWith('Umutcan Türkoğlu'), v.metin)
+    assert.equal(modelIstekleri.length, 0, 'kesin dosya cevabı modelsiz')
+    // Adsız takip odakta kalır (NOTYA-HASTA-ODAK-01) — sayfa sinyali tek seferliktir, her mesajda yeniden gelmez.
+    assert.equal(oturumu(s.oturum).active_context.currentPatientId, s.hasta)
+  })
+
+  it('Q3 büyüme: sayfa geçişinden sonra kanıt bloğu yeni çocuğun ölçüm serisini Neyzi ile taşır, eskisini taşımaz', async () => {
+    const s = ikiHasta()
+    db.tablo('patients').find((p) => p.id === s.hasta)!.gender_encrypted = encrypt('male')
+    db.ekle('cihaz_olcumleri', { doctor_id: s.doktor.id, patient_id: s.hasta, tur: 'kilo', deger: 19.9, birim: 'kg', alindi: '2026-03-22T09:00:00Z', onaylandi: true })
+    await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.hasta })
+    yanit = { metin: JSON.stringify({ speech: 'Umutcan Türkoğlu — büyüme değerlendirmesi.' }) }
+    await yazi(s, 'Büyümesi nasıl, persentili ne?', s.oturum)
+    assert.equal(modelIstekleri.length, 1)
+    const sistem = JSON.stringify(JSON.parse(modelIstekleri[0].govde).system)
+    assert.ok(sistem.includes('AKTİF HASTA DOSYASI: Umutcan Türkoğlu'), 'dosya bloğu yeni hastanın')
+    assert.ok(sistem.includes('Neyzi'), 'büyüme kanıtı Neyzi referansıyla')
+    assert.ok(/21[.,]7/.test(sistem) && /19[.,]9/.test(sistem), 'iki ölçüm de seride')
+    // (persona kuralları örnek cümlede "Ayşe Yeşil" adını sabit metin olarak taşır — ölçüm değeri taşımaz)
+    assert.ok(!/18[.,]4/.test(sistem) && !sistem.includes('AKTİF HASTA DOSYASI: Ayşe Yeşil'), 'eski hastanın ölçümü / dosyası bağlamda yok')
+  })
+
+  it('doktor sayfadan sonra başka hastayı adıyla söylerse o kazanır (en son açık sinyal)', async () => {
+    const s = ikiHasta()
+    await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.hasta })
+    const t = await yazi(s, 'Ayşe Yeşil kaç kilo?', s.oturum)
+    assert.match(t.speech, /^Ayşe Yeşil — /, t.speech)
+    assert.equal(oturumu(s.oturum).active_context.currentPatientId, s.ayse)
+    assert.equal(oturumu(s.oturum).active_context.odakKaynak, 'soz')
+  })
+
+  it('tur sürerken sayfa değişirse turun yazısı eski odağı geri getirmez', async () => {
+    const s = ikiHasta()
+    oturumu(s.oturum).active_context = { specialty: 'pediatri' }
+    // the model's JSON tail arrives after 400 ms — the doctor opens Ayşe Yeşil's page in between
+    const tam = JSON.stringify({ speech: 'Hocam, son vizitte öksürük vardı.' })
+    yanit = { metin: tam.slice(0, -2), gecikmeMs: 400, gecikmeSonrasi: tam.slice(-2) }
+    const tur = ses({ sahne: s, mesaj: 'Umutcan Türkoğlu için beslenme önerin nedir' })
+    await new Promise((r) => setTimeout(r, 150))
+    assert.equal((await odakIste(s.doktor.token, { asistanSessionId: s.oturum, patientId: s.ayse })).status, 200)
+    await tur
+    await new Promise((r) => setTimeout(r, 600))
+    const b = oturumu(s.oturum).active_context
+    assert.equal(b.currentPatientId, s.ayse, 'sayfa geçişi turdan yenidir — kazanır')
+    assert.equal(b.patientName, 'Ayşe Yeşil')
+    assert.equal(oturumu(s.oturum).patient_id, s.ayse)
+    assert.equal(modelIstekleri.length, 1, 'model turu — yazı modelden sonra gelir (yarış gerçekten kurulur)')
+    assert.ok(oturumu(s.oturum).messages.length >= 2, 'turun konuşması yine kaydedilir')
   })
 })
