@@ -9,6 +9,8 @@
  * system.
  */
 
+import type { Viewport } from 'next'
+
 export const CHROME_RENK = {
   cream: '#f4eee3',
   paper: '#faf6ee',
@@ -26,6 +28,16 @@ export const CHROME_FONT = {
   serif: `'Fraunces', Georgia, serif`,
   sans: `'Source Sans 3', system-ui, sans-serif`,
 } as const
+
+/** Installed-app status bar matches the cream chrome. Full object: a nested Next viewport export replaces the root one. */
+export const doktorViewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#f4eee3',
+  viewportFit: 'cover',
+}
 
 /** Google Fonts <link> href — same weights the Grok concept used. */
 export const CHROME_FONT_HREF =

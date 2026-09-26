@@ -5,7 +5,9 @@
  * layout now owns the chrome, which is the whole point of a Next.js layout.
  */
 import DoktorChrome from '@/components/doktor/DoktorChrome';
-import { CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+import { CHROME_FONT_HREF, doktorViewport } from '@/lib/doktor/chromeTheme';
+
+export const viewport = doktorViewport;
 
 export default function DoktorLayout({ children }: { children: React.ReactNode }) {
   return (

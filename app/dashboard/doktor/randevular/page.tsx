@@ -878,9 +878,11 @@ export default function RandevularPage() {
         @media (max-width: 639px) {
           .fv-wrap { padding: 10px !important; }
           .fv-toolbar { padding: 10px !important; gap: 8px !important; }
-          .fv-title { font-size: 14px !important; min-width: 0 !important; }
+          .fv-title { font-size: 14px !important; min-width: 0 !important; flex: 1 1 auto; }
           .fv-dateinput { display: none !important; }
-          .fv-seg-btn { padding: 5px 10px !important; font-size: 12px !important; }
+          .fv-modes { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .fv-seg-btn { padding: 8px 12px !important; font-size: 13px !important; min-height: 36px; }
+          .fv-ekle { width: 100%; min-height: 44px; }
         }
         .fv-cell:hover { background: #F6F0E4; }
         .fv-hrow:hover { background: rgba(58,44,34,0.09) !important; }
@@ -991,7 +993,7 @@ export default function RandevularPage() {
                 />
               )}
               <div style={{ flex: 1 }} />
-              <div style={{ display: 'flex', background: 'rgba(58,44,34,0.08)', borderRadius: 9, padding: 2 }}>
+              <div className="fv-modes" style={{ display: 'flex', background: 'rgba(58,44,34,0.08)', borderRadius: 9, padding: 2 }}>
                 {([['ay', 'Ay'], ['gun', 'Gün'], ['ajanda', 'Ajanda'], ['liste', 'Liste']] as const).map(([k, v]) => (
                   <button
                     key={k}
@@ -1002,7 +1004,7 @@ export default function RandevularPage() {
                   >{v}</button>
                 ))}
               </div>
-              <button type="button" onClick={() => yeniRandevuAc(gorunum === 'gun' ? gun : new Date())} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 9, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" className="fv-ekle" onClick={() => yeniRandevuAc(gorunum === 'gun' ? gun : new Date())} style={{ background: CHROME_RENK.pine, border: 'none', color: 'white', borderRadius: 9, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 + Randevu
               </button>
             </div>

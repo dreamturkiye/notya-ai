@@ -140,7 +140,6 @@ function havaIkonu(kod: number): string {
 
 export default function DoktorChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [isMobile, setIsMobile] = useState(false);
   const [rol, setRol] = useState<'doktor' | 'sekreter'>('doktor');
   const [mesajUnread, setMesajUnread] = useState(0);
   const [gelenSayi, setGelenSayi] = useState(0);
@@ -155,11 +154,21 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
   const [kompakt, setKompakt] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 900);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
+    const metas = document.querySelectorAll('meta[name="theme-color"]')
+    const onceki = Array.from(metas).map((m) => (m as HTMLMetaElement).content)
+    metas.forEach((m) => { (m as HTMLMetaElement).content = CHROME_RENK.cream })
+    const html = document.documentElement
+    const body = document.body
+    const oncekiHtml = html.style.background
+    const oncekiBody = body.style.background
+    html.style.background = CHROME_RENK.cream
+    body.style.background = CHROME_RENK.cream
+    return () => {
+      metas.forEach((m, i) => { (m as HTMLMetaElement).content = onceki[i] || '#0A1628' })
+      html.style.background = oncekiHtml
+      body.style.background = oncekiBody
+    }
+  }, [])
 
   useEffect(() => {
     setSaat(saatTRT());
@@ -348,54 +357,95 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
     <ChromeGizleContext.Provider value={setGizli}>
     <ChromeKompaktContext.Provider value={setKompakt}>
     {gelenErisim && <GelenBelgeBirak />}
+    <style>{`
+      html, body { background: ${CHROME_RENK.cream}; }
+      .notya-yan { display: flex; }
+      .notya-masa-ust { display: flex; }
+      .notya-telefon-ust, .notya-telefon-menu { display: none; }
+      .notya-icerik {
+        width: min(1120px, calc(100% - 64px));
+        margin: 0 auto;
+        padding: calc(22px + env(safe-area-inset-top, 0px)) 0 48px;
+        position: relative;
+        z-index: 1;
+        box-sizing: border-box;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      .notya-alt { margin-top: auto; }
+      .notya-bitki { opacity: 0.4; }
+      .notya-kompakt {
+        position: absolute;
+        left: 0; right: 0;
+        top: env(safe-area-inset-top, 0px);
+        bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (max-width: 899px) {
+        .notya-yan, .notya-masa-ust { display: none !important; }
+        .notya-telefon-ust { display: flex !important; }
+        .notya-telefon-menu { display: block !important; }
+        .notya-icerik { width: calc(100% - 32px); padding-top: 0; }
+        .notya-telefon-ust {
+          position: sticky;
+          top: 0;
+          z-index: 40;
+          margin: 0 -16px 16px;
+          padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 12px;
+          background: ${CHROME_RENK.cream};
+          border-bottom: 1px solid ${CHROME_RENK.border};
+        }
+        .notya-bitki { opacity: 0.28; }
+      }
+    `}</style>
     <div
+      className="notya-kabuk"
       style={S({
-        minHeight: '100vh', position: 'relative',
+        minHeight: '100dvh', position: 'relative',
         background: CHROME_RENK.cream, fontFamily: CHROME_FONT.sans, color: CHROME_RENK.ink,
         display: 'flex',
       })}
     >
-      {/* Sidebar -- desktop only. Mobile gets a hamburger that reveals the same grouped
-          list inline, below, rather than a fixed-width column that would eat the viewport. */}
-      {!isMobile && (
-        <nav
-          style={S({
-            width: 248, flexShrink: 0, minHeight: '100vh', background: CHROME_RENK.paper,
-            borderRight: `1px solid ${CHROME_RENK.border}`, display: 'flex', flexDirection: 'column',
-            padding: '22px 14px', boxSizing: 'border-box', position: 'sticky', top: 0,
-            alignSelf: 'flex-start', maxHeight: '100vh', overflowY: 'auto',
-          })}
-        >
+      <nav
+        className="notya-yan"
+        style={S({
+          width: 248, flexShrink: 0, minHeight: '100vh', background: CHROME_RENK.paper,
+          borderRight: `1px solid ${CHROME_RENK.border}`, flexDirection: 'column',
+          padding: '0 14px 22px', paddingTop: 'calc(22px + env(safe-area-inset-top, 0px))',
+          boxSizing: 'border-box', position: 'sticky', top: 0,
+          alignSelf: 'flex-start', maxHeight: '100vh', overflowY: 'auto',
+        })}
+      >
           {sidebarInner}
           <div style={S({ flex: 1 })} />
           <div style={S({ borderTop: `1px solid ${CHROME_RENK.border}`, paddingTop: 14, marginTop: 10 })}>
             <BransDegistir />
           </div>
         </nav>
-      )}
 
-      <div style={S({ flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden' })}>
+      <div className="notya-ana" style={S({ flex: 1, minWidth: 0, position: 'relative' })}>
         {kompakt ? (
-          <div style={S({ position: 'absolute', inset: 0 })}>{children}</div>
+          <div className="notya-kompakt">{children}</div>
         ) : (
         <>
+        <div style={S({ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 })}>
         <img
           src="/doktor-chrome/plant.jpg"
           alt=""
+          className="notya-bitki"
           style={S({
             position: 'absolute', right: '-2%', top: 0, bottom: 0, width: 'min(50vw, 700px)',
-            objectFit: 'cover', objectPosition: '58% 12%', pointerEvents: 'none', zIndex: 0,
-            opacity: isMobile ? 0.28 : 0.4,
+            objectFit: 'cover', objectPosition: '58% 12%',
             filter: 'saturate(.65) contrast(.88) brightness(1.1)',
             WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 30%)',
             maskImage: 'linear-gradient(90deg, transparent 0%, #000 30%)',
           })}
         />
+        </div>
 
-        <div style={S({ width: isMobile ? 'calc(100% - 32px)' : 'min(1120px, calc(100% - 64px))', margin: '0 auto', padding: '22px 0 48px', position: 'relative', zIndex: 1 })}>
+        <div className="notya-icerik">
 
-          {!isMobile ? (
-            <div style={S({ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16, color: '#6e6256', fontSize: 15, marginBottom: 24, flexWrap: 'wrap' })}>
+          <div className="notya-masa-ust" style={S({ alignItems: 'center', justifyContent: 'flex-end', gap: 16, color: '#6e6256', fontSize: 15, marginBottom: 24, flexWrap: 'wrap' })}>
               <div
                 title={ad || 'Doktor'}
                 style={S({
@@ -431,10 +481,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
                 Çıkış Yap
               </button>
             </div>
-          ) : (
-            <>
-              <header style={S({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20 })}>
-                <div onClick={() => handleNav('/dashboard/doktor')} style={S({ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' })}>
+            <header className="notya-telefon-ust" style={S({ alignItems: 'center', justifyContent: 'space-between', gap: 12 })}>
+                <div onClick={() => handleNav('/dashboard/doktor')} style={S({ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', minHeight: 44 })}>
                   <div style={S({ color: '#6a7563' })}>{LEAF}</div>
                   <div style={S({ fontFamily: CHROME_FONT.serif, fontSize: 24, fontWeight: 500, letterSpacing: '-0.02em', color: CHROME_RENK.ink })}>Notya</div>
                 </div>
@@ -447,7 +495,8 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
                   <button
                     onClick={() => setMenuOpen((v) => !v)}
                     aria-label="Menü"
-                    style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 10, width: 42, height: 42, fontSize: 18, cursor: 'pointer', color: CHROME_RENK.ink })}
+                    aria-expanded={menuOpen}
+                    style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 10, width: 44, height: 44, fontSize: 18, cursor: 'pointer', color: CHROME_RENK.ink })}
                   >
                     {menuOpen ? '✕' : '☰'}
                   </button>
@@ -455,7 +504,7 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
               </header>
 
               {menuOpen && (
-                <div style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 12px', marginBottom: 20, boxShadow: '0 8px 18px rgba(58,44,34,0.06)' })}>
+                <div className="notya-telefon-menu" style={S({ background: CHROME_RENK.paper, border: `1px solid ${CHROME_RENK.border}`, borderRadius: 16, padding: '14px 12px', marginBottom: 20, boxShadow: '0 8px 18px rgba(58,44,34,0.06)' })}>
                   {asistanItem && navRow(asistanItem, true)}
                   <div style={S({ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: digerItems.length ? 12 : 0 })}>
                     {calismaItems.map((i) => navRow(i))}
@@ -476,12 +525,10 @@ export default function DoktorChrome({ children }: { children: React.ReactNode }
                   </div>
                 </div>
               )}
-            </>
-          )}
 
           <div>{children}</div>
 
-          <div style={S({ padding: '20px 0 4px', textAlign: 'center', fontSize: 12, color: 'rgba(58,44,34,0.35)' })}>
+          <div className="notya-alt" style={S({ padding: '20px 0 4px', textAlign: 'center', fontSize: 12, color: 'rgba(58,44,34,0.35)' })}>
             © 2026 Dream Türkiye — Notya AI. Tüm hakları saklıdır / All rights reserved (5846 FSEK · 17 U.S.C.) · KVKK uyumlu · Saat dilimi: Türkiye (TRT)
           </div>
         </div>

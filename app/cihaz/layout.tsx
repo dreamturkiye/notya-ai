@@ -1,5 +1,7 @@
 import DoktorChrome from '@/components/doktor/DoktorChrome';
-import { CHROME_FONT_HREF } from '@/lib/doktor/chromeTheme';
+import { CHROME_FONT_HREF, doktorViewport } from '@/lib/doktor/chromeTheme';
+
+export const viewport = doktorViewport;
 
 export default function CihazLayout({ children }: { children: React.ReactNode }) {
   return (

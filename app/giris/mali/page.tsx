@@ -36,8 +36,8 @@ export default function MaliGiris() {
   }
 
   return (
-    <div style={{minHeight:'100vh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px 16px',fontFamily:'system-ui,sans-serif'}}>
-      <div style={{background:'#111827',borderRadius:'20px',padding:'40px',maxWidth:'420px',width:'100%',border:'1px solid rgba(16,185,129,0.2)'}}>
+    <div style={{minHeight:'100dvh',background:'#0A1628',display:'flex',alignItems:'center',justifyContent:'center',padding:'calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px))',fontFamily:'system-ui,sans-serif',boxSizing:'border-box'}}>
+      <div style={{background:'#111827',borderRadius:'20px',padding:'clamp(24px, 6vw, 40px)',maxWidth:'420px',width:'100%',border:'1px solid rgba(16,185,129,0.2)',boxSizing:'border-box'}}>
         <div style={{textAlign:'center',marginBottom:'28px'}}>
           <div style={{fontSize:'36px',marginBottom:'8px'}}>&#128176;</div>
           <div style={{fontSize:'22px',fontWeight:700,color:'#fff'}}><span style={{color:'#10B981'}}>Notya</span> AI</div>
