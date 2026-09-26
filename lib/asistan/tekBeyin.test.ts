@@ -59,7 +59,7 @@ async function* akis() {
   yield { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }
   for (let i = 0; i < yanit.metin.length; i += 7) yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: yanit.metin.slice(i, i + 7) } }
   // NOTYA-SES-ERKEN-01: a slow tail — the model keeps writing after a pause (simulates a 30 s+ screen answer).
-  if (yanit.gecikmeMs) { await new Promise((r) => setTimeout(r, yanit.gecikmeMs)); for (const t of (yanit.gecikmeSonrasi || '').match(/.{1,7}/gs) || []) yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: t } } }
+  if (yanit.gecikmeMs) { await new Promise((r) => setTimeout(r, yanit.gecikmeMs)); for (const t of (yanit.gecikmeSonrasi || '').match(/[^]{1,7}/g) || []) yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: t } } }
   yield { type: 'content_block_stop', index: 0 }
   for (const [i, a] of (yanit.araclar || []).entries()) {
     yield { type: 'content_block_start', index: i + 1, content_block: { type: 'tool_use', id: `toolu_${i}`, name: a.name, input: {} } }
