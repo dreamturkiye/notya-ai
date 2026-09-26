@@ -57,6 +57,10 @@ import { sesOzetMetni } from "@/core/eylemler/sesKapilari"
 import { bransAnahtari } from "@/lib/specialties/bransAnahtari"
 import { konusmaYap, SesAkisi } from "@/lib/asistan/konusma"
 import { aktifHastaKullanilsinMi } from "@/lib/asistan/aktifHasta"
+import { soruTuruBul, type SoruTuru } from "@/lib/asistan/dosyaSorgu/soruTuru"
+import { kanitBlogu } from "@/lib/asistan/dosyaSorgu/kanit"
+import { dosyaSorguKuralBlogu } from "@/lib/asistan/dosyaSorgu/kurallar"
+import { dosyaSorguVerisiDerle } from "@/lib/doktor/dosyaOlaylari"
 
 export type Kanal = "yazi" | "ses"
 
@@ -253,19 +257,29 @@ ${ilacBaglamMetni(drugs[0])}`
     } else {
       const aktifId = cozum.tur === "tek" ? cozum.patientId : aktifOnceden
       if (aktifId) {
+        // NOTYA-AYSE-STANDART-01: açık hasta + 10 kanonik dosya sorusundan biri → olay dizini (planlandı ≠ uygulandı)
+        // dosya paketiyle birlikte, paralel derlenir. Olay okumaları da doktora kapsanır (dosyaOlaylari).
+        const soruTuru: SoruTuru | null = soruTuruBul(String(message || ""))
+        const sorguSozu = soruTuru ? dosyaSorguVerisiDerle(supabase, doktorId, aktifId).catch(() => null) : null
         const paket = aktifId === aktifOnceden && aktifPaketSozu ? await aktifPaketSozu : await hastaDosyaPaketiniDerle(supabase, doktorId, aktifId)
+        const sorgu = sorguSozu ? await sorguSozu : null
         if (paket) {
           if (cozum.tur === "tek") cozulenHasta = { id: cozum.patientId, ad: cozum.ad }
           const aktifAd = cozum.tur === "tek" ? cozum.ad : (paket.ad || "aktif hasta")
           // NOTYA-HASTA-ODAK-01 (Dr. Gökhan canlı vaka, 2026-09-26): "Dosyada aşı: kayıtlı aşı yok" doğruydu ama
           // BAŞKA hastanın dosyasıydı ve cümlede ad yoktu — doktor konuştuğu hasta sanıp "aşı yok deyip aşıları
           // gösterdi" dedi. Kesin dosya cevabı her zaman hastanın adıyla başlar; yanlış hasta anında görülür.
-          const kesinHam = dosyaSoruCevap(String(message || ""), paket.kart)
+          // NOTYA-AYSE-STANDART-01: dosya sorusu (özet, aşı tam mı, ilaçlar, açık işler…) HIZLI KART'la cevaplanmaz —
+          // kart tek bilgilik sorular içindir (kan grubu, alerji, son vizit tarihi, telefon / kimlik).
+          const kesinHam = sorgu ? null : dosyaSoruCevap(String(message || ""), paket.kart)
           kesinDosyaCevap = kesinHam ? adliDosyaCevabi(aktifAd, kesinHam) : null
           const kesinBlok = kesinDosyaCevap
             ? `\n[KESİN DOSYA CEVABI — bu cümleyi AYNEN söyle, dosyada yoksa uydurma]: ${kesinDosyaCevap}`
             : ""
           dosyaEk = `\n\n=== AKTİF HASTA DOSYASI: ${aktifAd} ===\n${paket.metin}\n=== DOSYA SONU ===${kesinBlok}\n[KURALLAR: Bu hasta hakkındaki her soruda YALNIZCA yukarıdaki dosyaya ve HIZLI KART'a dayan; her kesin cümleye hastanın adıyla ("${aktifAd}") başla; aşı / ilaç / lab listesini yalnız bu bloktan kur, sohbet geçmişindeki listeden ya da başka hastadan kurma; aşı tablosu ile vizit notları çelişirse ikisini de adıyla söyle; ASLA "uydurdum" / "dayanağı yok" deme; dosyada olmayan bilgiyi uydurma, "dosyada bu bilgi yok Hocam" de. Vizit özetleri yoğun ve yaklaşık 1 dakikada okunur uzunlukta olsun; "kaçıncı ziyaret" sorulursa toplam vizit sayısını ve tarih aralığını söyle. Doktor yeni bir ilaçtan bahsederse hastanın sürekli ilaçlarıyla olası etkileşimi KENDİLİĞİNDEN kontrol et; risk varsa "Hocam, hasta şu an X kullanıyor; Y ile ... riski olabilir" formatında uyar. Kritik dosya bilgilerini (alerji, kronik hastalık, önceki kritik bulgu) yeri geldiğinde kendiliğinden hatırlat. Nihai klinik karar ve sorumluluk doktorundur.]`
+          if (sorgu && soruTuru) {
+            dosyaEk += `${dosyaSorguKuralBlogu(aktifAd)}\n${kanitBlogu(soruTuru, sorgu.olaylar, sorgu.hasta, { mesaj: String(message || "") })}`
+          }
         }
       }
     }
