@@ -20,6 +20,7 @@ import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -267,7 +268,7 @@ export async function hastaDosyaPaketiniDerle(
   const govde = b.join('\n')
   const metin = dosyaKirp(bas, govde)
   // NOTYA-HASTA-ODAK-01: every dossier fact sentence is spoken with the patient name in front of it.
-  return { metin, kart, ad: coz(hasta.name_encrypted) }
+  return { metin, kart, ad: hastaAdiCoz(hasta.name_encrypted) }
 }
 
 export async function hastaDosyasiniDerle(
