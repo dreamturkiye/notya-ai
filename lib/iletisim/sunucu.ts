@@ -10,6 +10,7 @@ import { arsivsizAsilar } from '@/lib/doktor/arsiv'
 import { sonrakiDozKarsilandiMi } from '@/lib/asi/hatirlatma'
 import { bugunTrIso } from './sablonlar'
 import { gunEkle, tekilAnahtar, yeniAdaylar, type KuyrukAdayi } from './kuyruk'
+import { whatsappNumarasi } from './baglantilar'
 import type { IzinDegeri } from './izin'
 import type { EpostaAcilis, IletisimKanali } from './tipler'
 
@@ -125,6 +126,19 @@ export async function doktorIletisimAyari(sb: Sb, doktorId: string): Promise<Dok
   if (k?.iletisim_eposta) ayar.eposta = String(k.iletisim_eposta)
   if (k?.iletisim_eposta_acilis === 'gmail' || k?.iletisim_eposta_acilis === 'outlook' || k?.iletisim_eposta_acilis === 'uygulama') ayar.epostaAcilis = k.iletisim_eposta_acilis
   return ayar
+}
+
+/** Muayenehane hattı — 095 kolonlarından AYRI select. Kolon yoksa 095 kaydedilebilir kalır. */
+export async function muayenehaneHatti(sb: Sb, doktorId: string): Promise<{ numara: string; bagli: boolean; kaydedilebilir: boolean }> {
+  const bos = { numara: '', bagli: false, kaydedilebilir: false }
+  const { data, error } = await sb.from('users').select('iletisim_whatsapp_muayenehane').eq('id', doktorId).maybeSingle()
+  if (error) return bos
+  const numara = String(data?.iletisim_whatsapp_muayenehane || '').trim()
+  const { data: bag, error: bagHata } = await sb.from('doktor_whatsapp_baglantilari').select('gorunen_numara, durum').eq('doctor_id', doktorId).eq('durum', 'bagli').maybeSingle()
+  if (bagHata) return { numara, bagli: false, kaydedilebilir: true }
+  const yazilan = whatsappNumarasi(numara)
+  const gorunen = whatsappNumarasi(String(bag?.gorunen_numara || ''))
+  return { numara, bagli: Boolean(yazilan && gorunen && yazilan === gorunen), kaydedilebilir: true }
 }
 
 /** Last channel used for this patient (from the log), or null. */

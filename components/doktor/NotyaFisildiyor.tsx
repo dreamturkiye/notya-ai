@@ -67,6 +67,7 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
   const [kapsamDisi, setKapsamDisi] = useState(false)
   const [yukleniyor, setYukleniyor] = useState(true)
   const [gizleMenu, setGizleMenu] = useState(false)
+  const [duzeltAcik, setDuzeltAcik] = useState(false)
   const [gizlenenler, setGizlenenler] = useState<Gizlenen[] | null>(null)
   const [mesgul, setMesgul] = useState(false)
   const [hata, setHata] = useState('')
@@ -103,6 +104,16 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
       setGizleMenu(false)
       await yukle()
       if (gizlenenler) await gizlenenleriYukle()
+    } finally { setMesgul(false) }
+  }
+
+  const kalkanKarar = async (islem: 'onayla' | 'duzelt', kapsam?: 'bu_gece' | 'kalan_kur') => {
+    if (!item?.kalkanTaslakId || mesgul) return
+    setMesgul(true); setHata('')
+    try {
+      const r = await istek('/api/doktor/fisilti/kalkan', { method: 'POST', body: JSON.stringify({ islem, taslakId: item.kalkanTaslakId, kapsam }) })
+      if (!r?.ok) { const j = await r?.json().catch(() => ({})); setHata(j?.error || 'Kaydedilemedi.'); return }
+      await yukle()
     } finally { setMesgul(false) }
   }
 
@@ -177,10 +188,10 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
         <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', color: '#2f5155', fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 })}>
           {LEAF} Notya fısıldıyor
         </div>
-        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500, color: FISILTI_INK })}>
-          {item.ad} — {item.baslik}
+        <div style={S({ fontFamily: CHROME_FONT.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.3, fontWeight: 500, color: FISILTI_INK, whiteSpace: 'pre-wrap' })}>
+          {item.kaynak === 'kalkan' ? item.detay[0] : `${item.ad} — ${item.baslik}`}
         </div>
-        {item.detay[0] && (
+        {item.kaynak !== 'kalkan' && item.detay[0] && (
           <div style={S({ marginTop: 8, fontSize: 13, opacity: 0.8, lineHeight: 1.5, color: FISILTI_INK })}>{item.detay[0]}</div>
         )}
         {toplam > 1 && (
@@ -188,6 +199,18 @@ export default function NotyaFisildiyor({ specialty }: { specialty: string }) {
         )}
       </button>
       <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        {item.kaynak === 'kalkan' && item.kalkanOnaylanabilir && (
+          <button type="button" style={kucukBtn} disabled={mesgul} onClick={() => void kalkanKarar('onayla')}>Onayla</button>
+        )}
+        {item.kaynak === 'kalkan' && !duzeltAcik && (
+          <button type="button" style={kucukBtn} onClick={() => setDuzeltAcik(true)}>Düzelt</button>
+        )}
+        {item.kaynak === 'kalkan' && duzeltAcik && (
+          <>
+            <button type="button" style={kucukBtn} disabled={mesgul} onClick={() => void kalkanKarar('duzelt', 'bu_gece')}>Yalnız bu gece</button>
+            <button type="button" style={kucukBtn} disabled={mesgul} onClick={() => void kalkanKarar('duzelt', 'kalan_kur')}>Kürü bitir</button>
+          </>
+        )}
         {!gizleMenu ? (
           <button type="button" style={kucukBtn} aria-expanded={false} onClick={() => setGizleMenu(true)}>Gizle</button>
         ) : (

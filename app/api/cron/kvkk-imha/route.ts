@@ -72,6 +72,9 @@ export async function GET(req: Request) {
   // Operational logs, at the published 2-year window.
   await purge('access_logs', 'created_at', RETENTION.access_logs, 'erisim_kayitlari')
 
+  // NOTYA-KALKAN-01: şifreli WhatsApp gövdeleri, aydınlatma metnindeki 2 yıl.
+  await purge('wa_satir', 'zaman', RETENTION.access_logs, 'wa_satir')
+
   // NOTYA-GELEN-BELGELER: incoming documents nobody filed within 30 days — file + row destroyed (and deleted rows).
   try {
     const g = await gelenleriTemizle(s)

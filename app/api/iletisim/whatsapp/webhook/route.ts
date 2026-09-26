@@ -2,9 +2,9 @@
  * NOTYA-ILETISIM-03 — Meta WhatsApp webhook. URL: https://www.notya.io/api/iletisim/whatsapp/webhook
  *
  * GET  → abonelik doğrulaması (hub.verify_token = WHATSAPP_WEBHOOK_VERIFY_TOKEN).
- * POST → X-Hub-Signature-256 (META_APP_SECRET ile HMAC) doğrulanır; yalnız teslim durumu, şablon onayı
- *        ve bağlantı kopması kaydedilir. Gelen mesaj gövdeleri HİÇBİR YERE yazılmaz (gizlilik).
- * Meta 200 almazsa yeniden dener; işleme hatası yine 200 döner ki aynı olay saatlerce tekrar gelmesin.
+ * POST → X-Hub-Signature-256 doğrulanır. Teslim ve şablon onayı eski yoldan kaydedilir.
+ * NOTYA-KALKAN-01: gelen satır ve hekim yankısı ayrıca deftere yazılır. Gövde şifrelidir.
+ * Tablo yoksa bu adım susar; eski gidiş aynen kalır. Meta 200 almazsa yeniden dener.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { servisSupabase } from '@/lib/doktor/serverAuth'
@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
   try { govde = JSON.parse(ham) } catch { return NextResponse.json({ ok: true }) }
   try {
     await webhookOlaylariniIsle(servisSupabase(), olaylariAyikla(govde))
+    const { kalkanIsle } = await import('@/lib/iletisim/kalkan/isle')
+    const { kalkanAyikla } = await import('@/lib/iletisim/otomatik/whatsapp/webhook')
+    await kalkanIsle(servisSupabase(), kalkanAyikla(govde))
   } catch (e) {
     console.error('[whatsapp-webhook] işlenemedi:', e instanceof Error ? e.message : 'bilinmeyen')
   }

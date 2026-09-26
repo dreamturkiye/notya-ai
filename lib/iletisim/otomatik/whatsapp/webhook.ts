@@ -1,9 +1,8 @@
 /**
  * NOTYA-ILETISIM-03 — Meta webhook yardımcıları.
  *
- * Gizlilik kuralı: bu dosya gelen mesajların GÖVDESİNİ asla döndürmez. `durumlariAyikla` yalnız
- * `statuses[]` (teslim durumu) ve `message_template_status_update` (şablon onayı) okur; `messages[]`,
- * `smb_message_echoes`, `history` gibi içerik taşıyan alanlar okunmadan atılır.
+ * `olaylariAyikla` gelen gövdeyi DÖNDÜRMEZ: yalnız teslim, şablon onayı ve bağlantı kopması.
+ * NOTYA-KALKAN-01: gövde ayrı `kalkanAyikla` ile okunur (defter). `history` hâlâ okunmaz.
  */
 import { createHmac, timingSafeEqual } from 'crypto'
 
@@ -76,7 +75,7 @@ export function olaylariAyikla(govde: unknown): { teslim: TeslimOlayi[]; sablon:
             hataKodu: hata.code != null ? String(hata.code) : null,
           })
         }
-        // v.messages (gelen hasta mesajları) BİLEREK okunmaz.
+        // v.messages burada okunmaz — gövde kalkanAyikla'dadır, bu dönüşe girmez.
       } else if (c.field === 'message_template_status_update') {
         const ad = String(v.message_template_name || '')
         const durum = String(v.event || '')
@@ -87,8 +86,66 @@ export function olaylariAyikla(govde: unknown): { teslim: TeslimOlayi[]; sablon:
         const olay = String(v.event || '')
         if (wabaId && (c.field === 'account_offboarded' || /PARTNER_REMOVED|ACCOUNT_DELETED/i.test(olay))) kaldirilanWabalar.push(wabaId)
       }
-      // history / smb_app_state_sync / smb_message_echoes: coexistence eşitlemesi — içerik, BİLEREK okunmaz.
+      // history / smb_app_state_sync: eşitleme dökümü, okunmaz. Echo gövdesi kalkanAyikla'da.
     }
   }
   return { teslim, sablon, kaldirilanWabalar }
+}
+
+export type KalkanYon = 'gelen' | 'giden_hekim'
+
+/** Gelen hasta satırı veya doktorun uygulamadan yazdığı yankı. history yok. */
+export interface KalkanHam {
+  phoneNumberId: string
+  wamid: string
+  karsiNumara: string
+  zaman: string | null
+  tip: string
+  govde: string
+  mediaId: string | null
+  yon: KalkanYon
+}
+
+function metinVeMedya(m: Obj): { govde: string; tip: string; mediaId: string | null } {
+  const tip = String(m.type || 'text')
+  const text = obj(m.text)
+  const govde = String(text.body || obj(m.image).caption || obj(m.audio).caption || obj(m.video).caption || obj(m.document).caption || '')
+  const media = obj(m.image).id || obj(m.audio).id || obj(m.video).id || obj(m.document).id || null
+  return { govde, tip, mediaId: media != null ? String(media) : null }
+}
+
+function zamanIso(ts: unknown): string | null {
+  const n = Number(ts)
+  return Number.isFinite(n) && n > 0 ? new Date(n * 1000).toISOString() : null
+}
+
+/** Gelen `messages[]` ve doktor yankısı `smb_message_echoes`. Teslim ayıklayıcısına gövde koymaz. */
+export function kalkanAyikla(govde: unknown): KalkanHam[] {
+  const out: KalkanHam[] = []
+  const g = obj(govde)
+  if (g.object !== 'whatsapp_business_account') return out
+  for (const entry of dizi(g.entry)) {
+    for (const change of dizi(obj(entry).changes)) {
+      const c = obj(change)
+      const v = obj(c.value)
+      const phoneNumberId = String(obj(v.metadata).phone_number_id || '')
+      if (!phoneNumberId) continue
+      if (c.field === 'messages') {
+        for (const raw of dizi(v.messages)) {
+          const m = obj(raw)
+          if (!m.id || !m.from) continue
+          const parca = metinVeMedya(m)
+          out.push({ phoneNumberId, wamid: String(m.id), karsiNumara: String(m.from), zaman: zamanIso(m.timestamp), ...parca, yon: 'gelen' })
+        }
+      } else if (c.field === 'smb_message_echoes') {
+        for (const raw of dizi(v.message_echoes)) {
+          const m = obj(raw)
+          if (!m.id || !m.to) continue
+          const parca = metinVeMedya(m)
+          out.push({ phoneNumberId, wamid: String(m.id), karsiNumara: String(m.to), zaman: zamanIso(m.timestamp), ...parca, yon: 'giden_hekim' })
+        }
+      }
+    }
+  }
+  return out
 }

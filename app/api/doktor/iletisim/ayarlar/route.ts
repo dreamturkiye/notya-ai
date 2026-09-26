@@ -9,7 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { pratikOturum, sadeceDoktor } from '@/lib/doktor/pratikOturum'
-import { doktorIletisimAyari } from '@/lib/iletisim/sunucu'
+import { doktorIletisimAyari, muayenehaneHatti, tabloYokMu } from '@/lib/iletisim/sunucu'
 import { epostaAdresi, whatsappNumarasi } from '@/lib/iletisim/baglantilar'
 import { epostaAcilisMi } from '@/lib/iletisim/tipler'
 
@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
   const yasak = sadeceDoktor(oturum)
   if (yasak) return yasak
   const a = await doktorIletisimAyari(oturum.supabase, oturum.doktorId)
-  return NextResponse.json({ whatsapp: a.whatsapp, eposta: a.eposta, epostaAcilis: a.epostaAcilis, kaydedilebilir: a.kaydedilebilir })
+  const hat = await muayenehaneHatti(oturum.supabase, oturum.doktorId)
+  return NextResponse.json({ whatsapp: a.whatsapp, eposta: a.eposta, epostaAcilis: a.epostaAcilis, kaydedilebilir: a.kaydedilebilir, muayenehane: hat.numara, muayenehaneBagli: hat.bagli, muayenehaneKaydedilebilir: hat.kaydedilebilir })
 }
 
 export async function PUT(req: NextRequest) {
@@ -47,9 +48,24 @@ export async function PUT(req: NextRequest) {
     if (!epostaAcilisMi(b.epostaAcilis)) return NextResponse.json({ error: 'Geçersiz seçim.' }, { status: 400 })
     g.iletisim_eposta_acilis = b.epostaAcilis
   }
-  if (!Object.keys(g).length) return NextResponse.json({ ok: true })
+  let muayenehane: string | null = null
+  if ('muayenehane' in b) {
+    const ham = String(b.muayenehane || '').trim()
+    if (ham && !whatsappNumarasi(ham)) return NextResponse.json({ error: 'WhatsApp numarası anlaşılamadı. Örnek: 0532 123 45 67' }, { status: 400 })
+    muayenehane = ham || null
+  }
+  if (!Object.keys(g).length && !('muayenehane' in b)) return NextResponse.json({ ok: true })
 
-  const { error } = await oturum.supabase.from('users').update(g).eq('id', oturum.doktorId)
-  if (error) return NextResponse.json({ error: 'Ayarlar şu an kaydedilemiyor. Lütfen biraz sonra yeniden deneyin.' }, { status: 503 })
+  if (Object.keys(g).length) {
+    const { error } = await oturum.supabase.from('users').update(g).eq('id', oturum.doktorId)
+    if (error) return NextResponse.json({ error: 'Ayarlar şu an kaydedilemiyor. Lütfen biraz sonra yeniden deneyin.' }, { status: 503 })
+  }
+  if ('muayenehane' in b) {
+    const { error } = await oturum.supabase.from('users').update({ iletisim_whatsapp_muayenehane: muayenehane }).eq('id', oturum.doktorId)
+    if (error) {
+      if (tabloYokMu(error)) return NextResponse.json({ ok: true, muayenehaneKaydedilebilir: false })
+      return NextResponse.json({ error: 'Ayarlar şu an kaydedilemiyor. Lütfen biraz sonra yeniden deneyin.' }, { status: 503 })
+    }
+  }
   return NextResponse.json({ ok: true })
 }

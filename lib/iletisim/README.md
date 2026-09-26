@@ -96,3 +96,12 @@ interface OtomatikGonderici {
   WhatsApp wamid); the queue item → `gonderildi`; a reminded appointment → `hatirlatma_gonderildi`.
 - **Off until** migration 098 is applied (no claim column → nothing is sent) and the doctor has connected an account
   whose env vars exist.
+
+## Klinik Kalkanı (NOTYA-KALKAN-01)
+
+Gelen hasta mesajı ve hekimin uygulamadan yazdığı yankı `wa_konusma` / `wa_satir` defterine düşer. Gövde şifrelidir.
+Otomatik cevap yalnız sabit cümledir (ilaç adı yok). Hekimin kendi cümlesi taslak olur; `hasta_ilaclar` Fısıltı’da
+**Onayla** olmadan değişmez. Bilinmeyen numara hasta açmaz. Aynı telefon iki kayıtta ise klinik işlem yok.
+Starter planda ve migration 103 uygulanmamışsa bu katman susar; one-tap ve şablon yolu aynı kalır.
+`notya_kalkan_yonlendirme` UTILITY şablonu bu depoda oluşturulmaz — Meta’ya elle sunulur.
+Ayarlar’daki muayenehane numarası tek başına “bağlı” değildir; Meta’da görünen numarayla aynı olmalıdır.

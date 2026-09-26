@@ -4,6 +4,7 @@
  * KVKK: şablonlarda klinik ayrıntı YOK — yalnız randevu bilgisi ve güvenli Sağlığım bağlantısı.
  * Meta kuralı: gövde bir değişkenle başlayamaz/bitemez ve her değişken için örnek zorunludur.
  * Şablonlar doktorun kendi WABA'sında oluşturulur (her doktor ayrı onaydan geçer; genelde dakikalar).
+ * notya_kalkan_yonlendirme bu haritaya EKLENMEZ — Meta’ya elle sunulur (NOTYA-KALKAN-01).
  */
 import { graph, GraphHatasi, type FetchFn } from './graph'
 

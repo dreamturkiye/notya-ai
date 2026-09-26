@@ -21,7 +21,7 @@ export default function KvkkPage() {
     <div style={S.page}>
       <Link href="/doktor" style={{ fontSize: '13px', color: '#2563EB', textDecoration: 'none' }}>← Notya AI</Link>
       <h1 style={S.h1}>Kişisel Verilerin Korunması ve İşlenmesi Aydınlatma Metni</h1>
-      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 25 Eylül 2026 (v3)</p>
+      <p style={S.meta}>6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) madde 10 uyarınca · Son güncelleme: 26 Eylül 2026 (v4)</p>
 
       <div style={S.box}>
         Bu metin, Notya AI hizmetini kullanan sağlık profesyonellerini ve onların hastalarına ait
@@ -110,6 +110,7 @@ export default function KvkkPage() {
         <li style={S.li}>Hasta kayıtları: ilgili sağlık mevzuatında öngörülen süre boyunca; hekimin talebi hâlinde daha erken silinir</li>
         <li style={S.li}>Hesap verileri: hesap açık olduğu sürece ve kapanışından itibaren 1 yıl</li>
         <li style={S.li}>Giriş/işlem kayıtları: 2 yıl</li>
+        <li style={S.li}>Kayıtlı muayenehane WhatsApp hattındaki yazışmalar: şifreli gövde, 2 yıl; süre dolunca günlük imha ile silinir. Amaç, bakımın koordinasyonu ve mesajın muayenehane kaydında durmasıdır. İlaç veya talimat ancak hekim Notya’da onayladıktan sonra hasta kartına işlenir.</li>
         <li style={S.li}>Süre sonunda veriler silinir, yok edilir veya anonim hâle getirilir</li>
       </ul>
 

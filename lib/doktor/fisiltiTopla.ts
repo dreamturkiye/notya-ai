@@ -68,9 +68,33 @@ export async function fisiltiOgeleri(req: NextRequest, supabase: SupabaseClient,
     // Fısıltı kritik değil.
   }
 
-  const ogeler = [...klinikOgeleri, ...mesajOgeleri]
+  let kalkanOgeleri: FisiltiItem[] = []
+  try {
+    const { data, error } = await supabase.from('wa_taslak').select('id, patient_id, metin, emin, ilac_id, eylem, zaman').eq('doctor_id', doktorId).eq('durum', 'bekliyor').order('zaman', { ascending: true })
+    if (!error && data?.length) {
+      kalkanOgeleri = data.map((t) => ({
+        id: `kalkan:${t.id}`,
+        brans: brans || '',
+        patientId: String(t.patient_id),
+        ad: String(t.metin || '').split('\n')[0] || 'Hasta',
+        baslik: 'Hekim onayı bekliyor',
+        detay: [String(t.metin || '')],
+        enErkenTarih: t.zaman ? String(t.zaman) : null,
+        hedefYol: `/dashboard/doktor/hastalar/${t.patient_id}`,
+        toplamBekleyen: 0,
+        kaynak: 'kalkan' as const,
+        kalkanTaslakId: String(t.id),
+        kalkanOnaylanabilir: Boolean(t.emin) && (String(t.eylem) !== 'ilac_durdur' || Boolean(t.ilac_id)),
+      }))
+    }
+  } catch {
+    // Tablo yoksa Kalkan kapalı; diğer fısıltılar durur.
+  }
+
+  const ogeler = [...kalkanOgeleri, ...klinikOgeleri, ...mesajOgeleri]
   // En eski gecikme üstte -- klinik motorlarının kendi kuralıyla aynı; tarihi olmayan öğeler en sona düşer.
   ogeler.sort((a, b) => String(a.enErkenTarih || '9999').localeCompare(String(b.enErkenTarih || '9999')))
+  ogeler.sort((a, b) => Number(a.kaynak !== 'kalkan') - Number(b.kaynak !== 'kalkan'))
   return { ogeler, bransDestekli }
 }
 

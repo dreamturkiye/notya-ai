@@ -22,6 +22,8 @@ const sessiz: React.CSSProperties = { background: 'none', border: 'none', paddin
 
 export default function IletisimAyarKarti() {
   const [whatsapp, setWhatsapp] = useState('')
+  const [muayenehane, setMuayenehane] = useState('')
+  const [muayenehaneBagli, setMuayenehaneBagli] = useState(false)
   const [eposta, setEposta] = useState('')
   const [acilis, setAcilis] = useState<EpostaAcilis>('uygulama')
   const [yuklendi, setYuklendi] = useState(false)
@@ -32,8 +34,10 @@ export default function IletisimAyarKarti() {
   useEffect(() => {
     void (async () => {
       try {
-        const j = await iletisimIstek<{ whatsapp: string; eposta: string; epostaAcilis: EpostaAcilis }>('/api/doktor/iletisim/ayarlar')
+        const j = await iletisimIstek<{ whatsapp: string; eposta: string; epostaAcilis: EpostaAcilis; muayenehane?: string; muayenehaneBagli?: boolean }>('/api/doktor/iletisim/ayarlar')
         setWhatsapp(j.whatsapp || '')
+        setMuayenehane(j.muayenehane || '')
+        setMuayenehaneBagli(Boolean(j.muayenehaneBagli))
         setEposta(j.eposta || '')
         setAcilis(cihazEpostaAcilisi() || j.epostaAcilis || 'uygulama')
       } catch (e) {
@@ -53,7 +57,7 @@ export default function IletisimAyarKarti() {
   const kaydet = async () => {
     setKaydediliyor(true); setHata(''); setMesaj('')
     try {
-      await iletisimIstek('/api/doktor/iletisim/ayarlar', { method: 'PUT', govde: { whatsapp, eposta, epostaAcilis: acilis } })
+      await iletisimIstek('/api/doktor/iletisim/ayarlar', { method: 'PUT', govde: { whatsapp, eposta, epostaAcilis: acilis, muayenehane } })
       setMesaj('Kaydedildi.')
     } catch (e) {
       setHata(e instanceof Error ? e.message : 'Kaydedilemedi.')
@@ -86,6 +90,15 @@ export default function IletisimAyarKarti() {
         <label style={etiket} htmlFor="iletisim-whatsapp">WhatsApp numaranız</label>
         <input id="iletisim-whatsapp" style={giris} inputMode="tel" autoComplete="tel" placeholder="0532 123 45 67" value={whatsapp} disabled={!yuklendi} onChange={(e) => setWhatsapp(e.target.value)} />
         <button type="button" style={sessiz} onClick={denemeWhatsapp}>Kendime deneme gönder</button>
+
+        <div style={{ height: 16 }} />
+        <label style={etiket} htmlFor="iletisim-muayenehane">Muayenehane WhatsApp hattı (varsa)</label>
+        <div style={{ fontSize: 14, color: R.muted, lineHeight: 1.5, marginBottom: 8 }}>
+          Muayenehanede ayrı bir WhatsApp hattınız var mı? Numarayı yazın, aşağıdan bağlayın. Hastalar o hatta yazacak; kişisel telefon sessizde kalabilir.
+          WhatsApp Business gerekir. Yalnızca yazmak bağlantı değildir.
+        </div>
+        <input id="iletisim-muayenehane" style={giris} inputMode="tel" autoComplete="tel" placeholder="0532 123 45 67" value={muayenehane} disabled={!yuklendi} onChange={(e) => { setMuayenehane(e.target.value); setMuayenehaneBagli(false) }} />
+        {muayenehaneBagli && <div style={{ fontSize: 13, color: R.pine, marginTop: 6, fontWeight: 600 }}>Bu numara bağlı hatla aynı.</div>}
 
         <div style={{ height: 12 }} />
         <label style={etiket} htmlFor="iletisim-eposta">E-posta adresiniz</label>

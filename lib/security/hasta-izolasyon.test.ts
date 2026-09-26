@@ -726,6 +726,7 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
       iletisimKuyruk: await ice('app/api/doktor/iletisim/kuyruk/route'),
       gelenBelgeler: await ice('app/api/doktor/gelen-belgeler/route'),
       gelenBelge: await ice('app/api/doktor/gelen-belgeler/[id]/route'),
+      kalkan: await ice('app/api/doktor/fisilti/kalkan/route'),
       intake: await ice('app/api/doktor/intake-formlari/route'),
       asistanLearn: await ice('app/api/asistan/learn/route'),
       asistanChat: await ice('app/api/asistan/chat/route'),
@@ -956,6 +957,42 @@ describe('HASTA-İZOLASYON: doktor A ve doktor B birbirinin hastasına hiçbir r
         assert.deepEqual([...sonraKurban.atiflar].filter((a) => !onceKurban.atiflar.has(a)), [])
         assert.equal(anlikGoruntu(x).sahip, onceKendi.sahip, 'kendi dosyasına da sessizce yazılmamalı')
         assert.ok(KLINIK_ESKI_EYLEM_TIPLERI.length >= 6)
+      })
+    }
+  })
+
+  describe('WhatsApp Kalkan taslağı yalnız kendi hekimi onaylar', () => {
+    for (const [saldiran, kurbanHarf] of [['A', 'B'], ['B', 'A']] as const) {
+      it(`${saldiran} yabancı taslağı onaylayamaz; kendi onayı ilacı kapatır`, async () => {
+        const s = sahneKur()
+        const x = s[saldiran], k = s[kurbanHarf]
+        const yabanci = db.ekle('wa_taslak', { doctor_id: k.id, patient_id: k.hasta, ilac_id: k.ilac, eylem: 'ilac_durdur', kapsam: 'bu_gece', emin: true, metin: `Taslak ${isaret(kurbanHarf)}`, durum: 'bekliyor', kaynak_wamid: `w-${kurbanHarf}`, zaman: new Date().toISOString() }).id
+        const kendi = db.ekle('wa_taslak', { doctor_id: x.id, patient_id: x.hasta, ilac_id: x.ilac, eylem: 'ilac_durdur', kapsam: 'bu_gece', emin: true, metin: 'kendi', durum: 'bekliyor', kaynak_wamid: `w-${saldiran}`, zaman: new Date().toISOString() }).id
+        const belirsiz = db.ekle('wa_taslak', { doctor_id: x.id, patient_id: x.hasta, ilac_id: null, eylem: 'ilac_durdur', kapsam: null, emin: false, metin: 'hangi', durum: 'bekliyor', kaynak_wamid: `w-${saldiran}-b`, zaman: new Date().toISOString() }).id
+
+        const yok = await coz(R.kalkan.POST(iste('POST', '/api/doktor/fisilti/kalkan', { token: x.token, govde: { islem: 'onayla', taslakId: yabanci } })))
+        assert.equal(yok.status, 404)
+        assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === k.ilac)?.aktif, true)
+        assert.ok(!JSON.stringify(yok.metin).includes(isaret(kurbanHarf)))
+
+        const dur = await coz(R.kalkan.POST(iste('POST', '/api/doktor/fisilti/kalkan', { token: x.token, govde: { islem: 'onayla', taslakId: belirsiz } })))
+        assert.equal(dur.status, 409)
+        assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === x.ilac)?.aktif, true, 'onaysız ve belirsiz onay kartı değiştirmez')
+
+        const sekreterId = randomUUID()
+        const sekreterToken = `qa-sekreter-kalkan-${saldiran}`
+        db.kullanicilar.set(sekreterToken, { id: sekreterId })
+        db.ekle('personel', { user_id: sekreterId, doktor_id: x.id, aktif: true })
+        const sek = await coz(R.kalkan.POST(iste('POST', '/api/doktor/fisilti/kalkan', { token: sekreterToken, govde: { islem: 'onayla', taslakId: kendi } })))
+        assert.equal(sek.status, 403)
+        assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === x.ilac)?.aktif, true)
+
+        const ok = await coz(R.kalkan.POST(iste('POST', '/api/doktor/fisilti/kalkan', { token: x.token, govde: { islem: 'onayla', taslakId: kendi } })))
+        assert.equal(ok.status, 200, ok.metin.slice(0, 200))
+        assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === x.ilac)?.aktif, false)
+        assert.equal(db.tablo('wa_taslak').find((r) => r.id === kendi)?.durum, 'onaylandi')
+        assert.ok(db.tablo('audit_logs').some((r) => r.user_id === x.id && r.resource_id === x.ilac))
+        assert.equal(db.tablo('hasta_ilaclar').find((r) => r.id === k.ilac)?.aktif, true)
       })
     }
   })
