@@ -20,6 +20,8 @@
  * app components). Works at 390px: fields stack, buttons wrap.
  */
 import React, { useMemo, useState } from 'react'
+// NOTYA-ASISTAN-YUZEN-01: next/link — kart asistan oturumunun içinde; tam sayfa yüklemesi oturumu öldürürdü.
+import Link from 'next/link'
 import { ensureDoctorAccessToken } from '@/lib/doktor/clientAuth'
 
 export interface EylemAlan {
@@ -257,9 +259,9 @@ export function EylemKarti({
         <div style={{ ...kucuk, marginTop: 2 }}>{hasta.ad}</div>
         <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {sonuc?.ilgiliSekme ? (
-            <a href={sonuc.ilgiliSekme.yol} style={{ ...btn, textDecoration: 'none', display: 'inline-block' }}>
+            <Link href={sonuc.ilgiliSekme.yol} style={{ ...btn, textDecoration: 'none', display: 'inline-block' }}>
               {sonuc.ilgiliSekme.etiket}
-            </a>
+            </Link>
           ) : null}
           <button type="button" onClick={geriAl} style={hayalet}>Geri al</button>
         </div>
