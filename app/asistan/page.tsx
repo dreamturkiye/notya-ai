@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic"
 
 import { useState, useEffect, useRef } from "react"
+import HafifMarkdown from "@/components/asistan/HafifMarkdown";
 import { useRouter } from "next/navigation"
 import { Conversation } from "@/components/AsistanConversation"
 import YaziliSohbet from "@/components/asistan/YaziliSohbet"
@@ -789,8 +790,10 @@ function AsistanPageInner() {
                           borderRadius: msg.role === "user" ? "16px 16px 3px 16px" : "16px 16px 16px 3px",
                           background: msg.role === "user" ? "#0F9B8E" : "#FFFFFF",
                           border: msg.role === "user" ? "none" : `1px solid ${CHROME_RENK.border}`,
-                          color: msg.role === "user" ? "#fff" : CHROME_RENK.ink }}>
-              {msg.text}
+                          color: msg.role === "user" ? "#fff" : CHROME_RENK.ink,
+                          whiteSpace: msg.role === "user" ? "pre-wrap" : "normal", overflowWrap: "anywhere" }}>
+              {/* NOTYA-ASISTAN-REHBER-01: asistan balonu ham ** ve tek satır • zinciri gösteriyordu; YaziliSohbet ile aynı hafif biçimlendirici. */}
+              {msg.role === "ai" ? <HafifMarkdown metin={msg.text} /> : msg.text}
             </div>
           </div>
         ))}

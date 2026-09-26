@@ -51,3 +51,18 @@ export function tabloOku(satirlar: string[], i: number): { tablo: Tablo; sonraki
   }
   return { tablo: { baslik, hizalar, satirlar: satirlarOut }, sonraki: j }
 }
+
+
+/**
+ * NOTYA-ASISTAN-REHBER-01 (Kaan, 2026-09-26): model maddeleri tek satırda • ile zincirleyebiliyor
+ * (“... yardımcı olabiliyorum: • **Hasta dosyası** — ... • **Muayene notu** — ...”) ve ekranda tek
+ * okunmaz blok çıkıyor. Satır içinde • varsa parçalarız: ilk parça kendi satırı, kalanlar “- ” maddesi.
+ * Satır başı • zaten madde demektir, o da “- ” olur. • içermeyen satır aynen döner.
+ */
+export function inlineMaddeAyir(satir: string): string[] {
+  if (!satir.includes('•')) return [satir]
+  const parcalar = satir.split(/\s*•\s*/)
+  const bas = parcalar[0].trim()
+  const maddeler = parcalar.slice(1).map((p) => p.trim()).filter(Boolean).map((p) => `- `+p)
+  return bas ? [bas, ...maddeler] : maddeler
+}
