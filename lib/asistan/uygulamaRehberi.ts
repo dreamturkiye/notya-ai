@@ -27,3 +27,30 @@ YENİ KULLANICIYA: Kısa bir özetle başla, tek seferde her şeyi anlatma; “n
 
 /** Sesli istem için tek satır — sesli istem kısa kalmalı (bkz. buildVoiceSystemPrompt). */
 export const UYGULAMA_REHBERI_SES = `Uygulama soruları (“bu program nasıl çalışıyor, şunu nerede yaparım”): sol menüyü bil — Ana Sayfa, Randevular, Hastalar, Mesajlar, Gelen Belgeler, Raporlar, Araçlar, Ayarlar — ve akışı bil: sen hazırlarsın, onay kartı ekranda çıkar, doktor onaylar; ayrıntılı anlatım gerekirse adım adım, menü adlarıyla anlat.`
+
+
+import { doktorAraclariGruplu } from '@/lib/doktor/doktorAraclari'
+import { bransEtiketi } from '@/lib/doktor/bransAdlari'
+
+/**
+ * Branşa özel yetenek bloğu — “bu uygulama dahiliyeye özel neler yapabiliyor?” sorusunun kaynağı.
+ * El yazısı liste DEĞİL: Araçlar menüsünün gerçek kataloğundan (doktorAraclariGruplu) türetilir,
+ * yeni araç eklenince istem kendiliğinden güncellenir. Branş sızması kuralı: her uzman YALNIZ kendi
+ * branşının araçlarını anlatır; başka branş sorulursa üst şeritten o uzmana geçmeyi söyler.
+ */
+export function bransaOzelBlok(primarySpecialty: string): string {
+  const gruplar = doktorAraclariGruplu(primarySpecialty)
+  const ad = bransEtiketi(primarySpecialty, { kisa: true })
+  const bolumler = gruplar.map((g) => g.baslik + ' (' + g.aciklama + '):\n' + g.araclar.map((a) => '- ' + a.title + ' — ' + a.desc).join('\n'))
+  return ['=== BRANŞA ÖZEL (' + ad + ') ===',
+    '“Bu uygulama ' + ad + ' için / branşıma özel neler yapabiliyor?” sorusuna buradan, Araçlar menüsündeki gerçek adlarla cevap ver:',
+    ...bolumler,
+    'Başka bir branşın özelliği sorulursa kendi branşının dışına çıkma; üstteki uzman şeridinden o branşın uzmanına geçilebileceğini söyle.'].join('\n')
+}
+
+/** Sesli istem için yalnız branş aracı ADLARI — kısa kalsın. */
+export function bransaOzelSes(primarySpecialty: string): string {
+  const bransa = doktorAraclariGruplu(primarySpecialty).find((g) => g.anahtar === 'brans')
+  if (!bransa || !bransa.araclar.length) return ''
+  return 'Branşa özel araçlar (Araçlar menüsü): ' + bransa.araclar.map((a) => a.title).join(', ') + '.'
+}

@@ -46,3 +46,28 @@ test('satır başı • maddesi “- ” olur; • içermeyen satır aynen döne
   assert.deepStrictEqual(inlineMaddeAyir('Düz bir cümle.'), ['Düz bir cümle.'])
   assert.deepStrictEqual(inlineMaddeAyir(''), [''])
 })
+
+test('branşa özel blok: her uzman kendi branşının araçlarını bilir, başkasınınkini anlatmaz (sızma kuralı)', () => {
+  const dahiliye = Object.values(PERSONAS).find((p) => p.primarySpecialty === 'dahiliye')!
+  const pediatri = Object.values(PERSONAS).find((p) => p.primarySpecialty === 'pediatri')!
+  const ds = buildSystemPromptParcalari(dahiliye, null, null).sabit
+  const ps = buildSystemPromptParcalari(pediatri, null, null).sabit
+  assert.ok(ds.includes('Dahiliye Kohort Paneli') && ds.includes('SCORE2'))
+  assert.ok(ps.includes('Hedef Boy') && ps.includes('Pediatri Kohort Paneli'))
+  assert.ok(!ps.includes('Dahiliye Kohort Paneli'))
+  assert.ok(!ds.includes('Hedef Boy'))
+  for (const persona of Object.values(PERSONAS)) {
+    const sabit = buildSystemPromptParcalari(persona, null, null).sabit
+    assert.ok(sabit.includes('=== BRANŞA ÖZEL ('), persona.id)
+    assert.ok(sabit.includes('üstteki uzman şeridinden o branşın uzmanına geçilebileceğini söyle'), persona.id)
+    assert.ok(sabit.includes('Temel Araçlar'), persona.id)
+  }
+})
+
+test('sesli istem: yalnız kendi branş aracı ADLARI (kısa), başka branşınki yok', () => {
+  const pediatri = Object.values(PERSONAS).find((p) => p.primarySpecialty === 'pediatri')!
+  const v = buildVoiceSystemPrompt(pediatri)
+  assert.ok(v.includes('Hedef Boy'))
+  assert.ok(!v.includes('Dahiliye Kohort Paneli'))
+  assert.ok(!v.includes('mg/kg ve konsantrasyonla')) // açıklamalar sesli isteme girmez, yalnız adlar
+})
