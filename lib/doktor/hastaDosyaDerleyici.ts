@@ -20,6 +20,7 @@ import { yasamsalBulguOzeti } from '@/lib/clinical/yasamsalBulgular'
 import { bosKart, kartBosMu, kartMetin, type HastaDosyaKart } from '@/lib/doktor/hastaDosyaKart'
 import { pediatrikBaglamMi } from '@/lib/specialties/kapsam'
 import { arsivsizAsilar, arsivsizIlaclar, arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
+import { hastaAdiCoz } from '@/lib/doktor/hastaCozumleyici'
 
 function coz(v: string | null | undefined): string {
   if (!v) return ''
@@ -50,7 +51,7 @@ export async function hastaDosyaPaketiniDerle(
   supabase: SupabaseClient,
   doktorId: string,
   patientId: string
-): Promise<{ metin: string; kart: HastaDosyaKart } | null> {
+): Promise<{ metin: string; kart: HastaDosyaKart; ad: string } | null> {
   const { data: hasta } = await supabase
     .from('patients').select('*').eq('id', patientId).eq('doctor_id', doktorId).single()
   if (!hasta) return null
@@ -266,7 +267,8 @@ export async function hastaDosyaPaketiniDerle(
   const bas = kartMetin(kart)
   const govde = b.join('\n')
   const metin = dosyaKirp(bas, govde)
-  return { metin, kart }
+  // NOTYA-HASTA-ODAK-01: every dossier fact sentence is spoken with the patient name in front of it.
+  return { metin, kart, ad: hastaAdiCoz(hasta.name_encrypted) }
 }
 
 export async function hastaDosyasiniDerle(

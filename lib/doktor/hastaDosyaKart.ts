@@ -147,3 +147,15 @@ export function dosyaSoruCevap(soru: string, k: HastaDosyaKart): string | null {
   if (!bulunan.length) return null
   return `${bulunan.join('. ')}.`
 }
+
+/**
+ * NOTYA-HASTA-ODAK-01 (2026-09-26): a deterministic dossier sentence always opens with the patient's name —
+ * "Umutcan Türkoğlu — dosyada aşı: ...". Spoken, the em dash reads as a short pause, so the doctor hears the
+ * name first and a wrong-patient answer is obvious at once. No Turkish genitive suffix is attempted on the name.
+ */
+export function adliDosyaCevabi(ad: string | null | undefined, cevap: string): string {
+  const a = String(ad || '').trim()
+  if (!a || a === 'aktif hasta') return cevap
+  const c = cevap.replace(/^Dosyada /, 'dosyada ')
+  return `${a} — ${c}`
+}

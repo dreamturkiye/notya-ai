@@ -191,7 +191,7 @@ describe('sözlü biçim — yazılı kadar ayrıntılı, doğal cümleler, kiml
     const k = K.konusmaYap('Hocam, son üç vizitte öksürük var.\n\n## Muayene\n- Akciğer: temiz\n- Ateş 38.5 derece\n\n**Tedavi:** amoksisilin 500 mg günde 3 kez.\n\n| Tarih | Ateş |\n|---|---|\n| 12.09 | 38.5 |\n---\nKontrol bir hafta sonra.')
     assert.equal(k, `Hocam, son üç vizitte öksürük var. Muayene. Akciğer: temiz. Ateş 38.5 derece. Tedavi: amoksisilin 500 mg günde 3 kez. ${K.TABLO_EKRANDA} Kontrol bir hafta sonra.`)
   })
-  it('uzun cevap da sonuna kadar okunur; markdown ve emoji atılır', () => {
+  it('beş cümlelik cevap tamamen okunur; markdown ve emoji atılır', () => {
     const k = K.konusmaYap('**Birinci** cümle. İkinci cümle. Üçüncü cümle. Dördüncü cümle. Beşinci 😊')
     assert.equal(k, 'Birinci cümle. İkinci cümle. Üçüncü cümle. Dördüncü cümle. Beşinci.')
     assert.equal(K.konusmaYap('Ateş 38.5 derece. Tamam.'), 'Ateş 38.5 derece. Tamam.')
@@ -221,16 +221,30 @@ describe('sözlü biçim — yazılı kadar ayrıntılı, doğal cümleler, kiml
     assert.equal(Y.speechOneki('```json\n{"speech": "Merhaba Hoc'), 'Merhaba Hoc')
     assert.equal(Y.speechOneki('Düz metin cevap'), 'Düz metin cevap')
   })
-  it('hız: ilk söz ilk cümle bitmeden ilk virgülde gider; telefon içeren ilk bölüm yine okunmaz', () => {
+  it('NOTYA-SES-SLUR-01: yalnız BİTMİŞ cümle sese gider — ilk virgülde parça yok; cümle tamamlanınca gider; telefonlu cümle yine okunmaz', () => {
     const parcalar: string[] = []
     const a = new K.SesAkisi((p) => parcalar.push(p))
     a.ekle('Genel bilgi sorusu bu Hocam, yatış kararında CURB-65 en pratik a')
-    assert.deepEqual(parcalar, ['Genel bilgi sorusu bu Hocam, '])
-    a.ekle('Genel bilgi sorusu bu Hocam, yatış kararında CURB-65 en pratik araçtır. Sonra.')
+    assert.deepEqual(parcalar, [], 'yarım cümle sese gitmez')
+    a.ekle('Genel bilgi sorusu bu Hocam, yatış kararında CURB-65 en pratik araçtır. Sonra')
+    assert.deepEqual(parcalar, ['Genel bilgi sorusu bu Hocam, yatış kararında CURB-65 en pratik araçtır. '])
     assert.equal(a.bitir(), 'Genel bilgi sorusu bu Hocam, yatış kararında CURB-65 en pratik araçtır. Sonra.')
     const b = new K.SesAkisi(() => {})
     b.ekle(`Annesinin numarası ${TEL} olarak kayıtlı, ister misiniz`)
     assert.ok(!b.bitir().includes('0532'))
+  })
+  it('NOTYA-SES-SLUR-01: 3+ maddelik liste okunmaz — "N madde, ekranınızda"; 1-2 madde cümle olarak okunur; dosya cümlesi hastanın adıyla başlar', () => {
+    const k = K.konusmaYap('Hocam, aşı durumu şöyle.\n\n**Hepatit B**\n- 1. doz — 15 Haziran 2024\n- 2. doz — 15 Temmuz 2024\n- 3. doz — Aralık 2024\n\nKontrol bir hafta sonra.')
+    assert.equal(k, `Hocam, aşı durumu şöyle. Hepatit B. ${K.listeEkranda(3)} Kontrol bir hafta sonra.`)
+    assert.equal(K.konusmaYap('İki madde:\n- bir\n- iki'), 'İki madde. bir. iki.')
+    assert.equal(K.konusmaYap('Umutcan Türkoğlu — dosyada aşı: Hib 15 Ağustos 2025; KKK 15 Mayıs 2025.'), 'Umutcan Türkoğlu — dosyada aşı: Hib 15 Ağustos 2025; KKK 15 Mayıs 2025.')
+  })
+  it('NOTYA-SES-SLUR-01: sözlü tur en çok 5 cümle, sonra bir kez "Devamı ekranınızda"; notlar sayılmaz; ekran metni değişmez', () => {
+    const k = K.konusmaYap('Bir. İki. Üç. Dört. Beş. Altı. Yedi.')
+    assert.equal(k, `Bir. İki. Üç. Dört. Beş. ${K.DEVAMI_EKRANDA}`)
+    assert.equal(K.konusmaYap('Bir. İki. Üç. Dört. Beş.'), 'Bir. İki. Üç. Dört. Beş.')
+    const t = K.konusmaYap(`Bir. İki. Üç. Dört. İletişim: ${TEL}. Beş. Altı.`)
+    assert.equal(t, `Bir. İki. Üç. Dört. ${K.ILETISIM_EKRANDA} Beş. ${K.DEVAMI_EKRANDA}`)
   })
   it('bekletme sözü yok (NOTYA-AYSE-ACILIS-01): aramada da sessiz; yalnız sesli onay teyitle başlar', () => {
     assert.equal(K.dolguSec('Umutcan’ın aşıları', { onay: false, vazgec: false, sosyal: false }), '')

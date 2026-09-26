@@ -19,6 +19,7 @@ import { arsivsizNotlar, arsivsizSeanslar } from '@/lib/doktor/arsiv'
 import { klinikAramaMi, klinikAramaYurut, listeSorgusuMu } from '@/lib/doktor/hastaDosyaAra'
 import { tekHastaSorusuMu } from '@/lib/doktor/hastaAramaFiltre'
 import { kohortSorusuMu } from '@/lib/asistan/aktifHasta'
+import { PERSONAS } from '@/lib/asistan/personaEngine'
 
 export interface CozumAday { id: string; ad: string; dobMetin: string; ozet: string }
 
@@ -50,10 +51,41 @@ function duzle(s: string): string {
  * Tokens of the (duzle'd) message without fillers / single letters, plus adjacent pairs joined.
  */
 const DOLGU = new Set(['e', 'ee', 'eee', 'eeee', 'i', 'ii', 'iii', 'hm', 'hmm', 'hmmm', 'mm', 'mmm', 'sey', 'ya', 'yani', 'hani'])
-/** Addressing the assistant ("Merhaba Ayşe," / "Ayşe Hocam,") is not a patient name. */
-const HITAP = new RegExp('(^|(merhaba|selam|günaydın|iyi akşamlar|hey|bak) +)(ayşe|mehmet|elif|zeynep|deniz|hakan|burak|selin)( +(hanım|hocam|hoca))? *[,.!?]', 'giu')
+/**
+ * NOTYA-HASTA-ODAK-01 (Dr. Gökhan canlı vaka, 2026-09-26): "Biraz koy. Ayşe, benim spesifik arzum... aşı karnesini
+ * gösterir misin?" — doktor asistana seslendi, çözümleyici "Ayşe"yi hasta adı sandı ve Ayşe Yeşil'in (5 yaş) dosyasını
+ * açtı; o sırada konuşulan hasta Umutcan Türkoğlu'ydu. Eski HITAP yalnız mesaj başındaki / "merhaba" sonrası hitabı
+ * siliyordu. Şimdi: (1) her persona adı (30 uzman), (2) cümle başında / noktalama sonrası / hitap fiilinden sonra ve
+ * ardından virgül-nokta gelen ya da "Hocam / Hanım" ile biten ad, mesajın NERESİNDE olursa olsun hitaptır;
+ * (3) tek başına bir persona adı kısmi eşleşmede (kismi) hiçbir hastayı seçemez — tam ad ("Ayşe Yeşil") aynen çalışır.
+ */
+function personaIlkAdlari(): string[] {
+  const adlar = new Set<string>()
+  for (const p of Object.values(PERSONAS)) {
+    const ham = String(p.name || '').replace(/^\s*(prof\.?\s*)?(dr\.?\s*)?/i, '').trim().split(/\s+/)[0] || ''
+    if (!ham) continue
+    adlar.add(ham.toLocaleLowerCase('tr'))
+    const duz = duzle(ham)
+    if (duz) adlar.add(duz)
+  }
+  return Array.from(adlar).filter(Boolean).sort((a, b) => b.length - a.length)
+}
+const PERSONA_ADLARI = personaIlkAdlari()
+/** duzle'd persona first names — partial-name matching must never be triggered by one of these. */
+const PERSONA_ADLARI_DUZ = new Set(PERSONA_ADLARI.map(duzle).filter(Boolean))
+const kacis = (x: string) => x.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&')
+const AD_ALT = PERSONA_ADLARI.map(kacis).join('|')
+const HITAP = new RegExp(
+  '(^|[.!?;:,]\\s*|\\b(?:merhaba|selam|günaydın|iyi akşamlar|iyi günler|hey|bak|bana|söyle|peki|tamam|evet|hayır|lütfen)\\s+)' +
+  '(?:' + AD_ALT + ')(?:\\s+(?:hanım|hanim|hocam|hoca))?\\s*(?:[,.!?;:]|$)',
+  'giu'
+)
+/** "Ayşe Hocam" / "Ayşe Hanım" anywhere is the assistant; no patient is addressed as Hocam. */
+const HITAP_HOCAM = new RegExp('\\b(?:' + AD_ALT + ')\\s+(?:hanım|hanim|hocam|hoca)\\b', 'giu')
 export function hitapsiz(mesaj: string): string {
-  return String(mesaj || '').replace(HITAP, (_t, bas) => String(bas || '') + ' ')
+  return String(mesaj || '')
+    .replace(HITAP, (_t, bas) => String(bas || '') + ' ')
+    .replace(HITAP_HOCAM, ' ')
 }
 export function sesliSozTokenlari(duzMesaj: string): Set<string> {
   const t = duzMesaj.split(' ').filter((x) => x.length >= 2 && !DOLGU.has(x))
@@ -66,7 +98,8 @@ export function tumAdParcalariVar(adDuz: string, tokenlar: Set<string>): boolean
   const p = adDuz.split(' ').filter(Boolean)
   return p.length >= 2 && p.every((x) => tokenlar.has(x))
 }
-function adCoz(nameEncrypted: string | null): string {
+/** patients.name_encrypted holds either a plain name or a JSON {ad} payload — always unwrap. */
+export function hastaAdiCoz(nameEncrypted: string | null): string {
   if (!nameEncrypted) return ''
   try {
     const ham = decrypt(nameEncrypted)
@@ -154,7 +187,7 @@ export async function hastaninSozunuCoz(
     const pid = data?.[0]?.patient_id
     if (pid) {
       const { data: p } = await supabase.from('patients').select('id, name_encrypted').eq('id', pid).eq('doctor_id', doctorId).maybeSingle()
-      if (p) return { tur: 'tek', patientId: p.id, ad: adCoz(p.name_encrypted) || 'son hasta' }
+      if (p) return { tur: 'tek', patientId: p.id, ad: hastaAdiCoz(p.name_encrypted) || 'son hasta' }
     }
   }
   const { data: hastalar } = await supabase
@@ -166,12 +199,13 @@ export async function hastaninSozunuCoz(
   const tam: { id: string; ad: string }[] = []
   const kismi: { id: string; ad: string }[] = []
   for (const h of hastalar) {
-    const ad = adCoz(h.name_encrypted)
+    const ad = hastaAdiCoz(h.name_encrypted)
     if (!ad) continue
     const adDuz = duzle(ad)
     if (!adDuz) continue
     if (mAd.includes(' ' + adDuz + ' ') || tumAdParcalariVar(adDuz, tokenlar)) { tam.push({ id: h.id, ad }); continue }
-    const parcalar = adDuz.split(' ').filter((p) => p.length >= 3)
+    // NOTYA-HASTA-ODAK-01: a persona first name alone ("Ayşe") never partially matches a patient.
+    const parcalar = adDuz.split(' ').filter((p) => p.length >= 3 && !PERSONA_ADLARI_DUZ.has(p))
     if (parcalar.some((p) => mAd.includes(' ' + p + ' ') || tokenlar.has(p))) kismi.push({ id: h.id, ad })
   }
 
